@@ -818,6 +818,8 @@ tdwithin_tpoint_geo_internal(Temporal *temp, GSERIALIZED *gs, Datum dist)
 	}
 	else if (temp->valuetypid == type_oid(T_GEOGRAPHY))
 		func = &geog_dwithin;
+	/* Store fcinfo into a global variable */
+	store_fcinfo(fcinfo);
 	Temporal *result = NULL;
 	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
@@ -1540,6 +1542,8 @@ tcovers_geo_tpoint(PG_FUNCTION_ARGS)
 		func = &geom_covers;
 	else if (temp->valuetypid == type_oid(T_GEOGRAPHY))
 		func = &geog_covers;
+	/* Store fcinfo into a global variable */
+	store_fcinfo(fcinfo);
 	Temporal *result = tspatialrel_tpoint_geo(temp, PointerGetDatum(gs), 
 		func, BOOLOID, true);
 	PG_FREE_IF_COPY(gs, 0);
@@ -1568,6 +1572,8 @@ tcovers_tpoint_geo(PG_FUNCTION_ARGS)
 		func = &geom_covers;
 	else if (temp->valuetypid == type_oid(T_GEOGRAPHY))
 		func = &geog_covers;
+	/* Store fcinfo into a global variable */
+	store_fcinfo(fcinfo);
 	Temporal *result = tspatialrel_tpoint_geo(temp, PointerGetDatum(gs), 
 		func, BOOLOID, false);
 	PG_FREE_IF_COPY(temp, 0);
@@ -1590,6 +1596,8 @@ tcovers_tpoint_tpoint(PG_FUNCTION_ARGS)
 		func = &geom_covers;
 	else if (temp1->valuetypid == type_oid(T_GEOGRAPHY))
 		func = &geog_covers;
+	/* Store fcinfo into a global variable */
+	store_fcinfo(fcinfo);
 	Temporal *result = sync_tfunc2_temporal_temporal_cross(temp1, temp2, 
 		func, BOOLOID);
 	PG_FREE_IF_COPY(temp1, 0);
@@ -1624,6 +1632,8 @@ tcoveredby_geo_tpoint(PG_FUNCTION_ARGS)
 		func = &geom_coveredby;
 	else if (temp->valuetypid == type_oid(T_GEOGRAPHY))
 		func = &geog_coveredby;
+	/* Store fcinfo into a global variable */
+	store_fcinfo(fcinfo);
 	Temporal *result = tspatialrel_tpoint_geo(temp, PointerGetDatum(gs), 
 		func, BOOLOID, true);
 	PG_FREE_IF_COPY(gs, 0);
@@ -1652,6 +1662,8 @@ tcoveredby_tpoint_geo(PG_FUNCTION_ARGS)
 		func = &geom_coveredby;
 	else if (temp->valuetypid == type_oid(T_GEOGRAPHY))
 		func = &geog_coveredby;
+	/* Store fcinfo into a global variable */
+	store_fcinfo(fcinfo);
 	Temporal *result = tspatialrel_tpoint_geo(temp, PointerGetDatum(gs), 
 		func, BOOLOID, false);
 	PG_FREE_IF_COPY(temp, 0);
@@ -1674,6 +1686,8 @@ tcoveredby_tpoint_tpoint(PG_FUNCTION_ARGS)
 		func = &geom_coveredby;
 	else if (temp1->valuetypid == type_oid(T_GEOGRAPHY))
 		func = &geog_coveredby;
+	/* Store fcinfo into a global variable */
+	store_fcinfo(fcinfo);
 	Temporal *result = sync_tfunc2_temporal_temporal_cross(temp1, temp2, 
 		func, BOOLOID);
 	PG_FREE_IF_COPY(temp1, 0);
@@ -1845,6 +1859,8 @@ tintersects_geo_tpoint(PG_FUNCTION_ARGS)
 	}
 	else if (temp->valuetypid == type_oid(T_GEOGRAPHY))
 		func = &geog_intersects;
+	/* Store fcinfo into a global variable */
+	store_fcinfo(fcinfo);
 	Temporal *result = tspatialrel_tpoint_geo(temp, PointerGetDatum(gs), 
 		func, BOOLOID, true);
 	PG_FREE_IF_COPY(gs, 0);
@@ -1877,6 +1893,8 @@ tintersects_tpoint_geo(PG_FUNCTION_ARGS)
 	}
 	else if (temp->valuetypid == type_oid(T_GEOGRAPHY))
 		func = &geog_intersects;
+	/* Store fcinfo into a global variable */
+	store_fcinfo(fcinfo);
 	Temporal *result = tspatialrel_tpoint_geo(temp, PointerGetDatum(gs), 
 		func, BOOLOID, false);
 	PG_FREE_IF_COPY(temp, 0);
@@ -1906,6 +1924,8 @@ tintersects_tpoint_tpoint(PG_FUNCTION_ARGS)
 	}
 	else if (temp1->valuetypid == type_oid(T_GEOGRAPHY))
 		func = &geog_intersects;
+	/* Store fcinfo into a global variable */
+	store_fcinfo(fcinfo);
 	Temporal *result = sync_tfunc2_temporal_temporal_cross(temp1, temp2, 
 		func, BOOLOID);
 	PG_FREE_IF_COPY(temp1, 0);
@@ -2129,6 +2149,8 @@ tdwithin_tpoint_tpoint(PG_FUNCTION_ARGS)
 	}
 	else if (temp1->valuetypid == type_oid(T_GEOGRAPHY))
 		func = &geog_dwithin;
+	/* Store fcinfo into a global variable */
+	store_fcinfo(fcinfo);
 
 	Temporal *result = NULL;
 	ensure_valid_duration(sync1->duration);

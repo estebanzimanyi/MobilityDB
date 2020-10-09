@@ -459,6 +459,8 @@ covers_geo_tpoint(PG_FUNCTION_ARGS)
 		func = &geom_covers;
 	else if (temp->valuetypid == type_oid(T_GEOGRAPHY))
 		func = &geog_covers;
+	/* Store fcinfo into a global variable */
+	store_fcinfo(fcinfo);
 	Datum result = spatialrel_tpoint_geo(temp, PointerGetDatum(gs), 
 		func, true);
 	PG_FREE_IF_COPY(gs, 0);
@@ -487,6 +489,8 @@ covers_tpoint_geo(PG_FUNCTION_ARGS)
 		func = &geom_covers;
 	else if (temp->valuetypid == type_oid(T_GEOGRAPHY))
 		func = &geog_covers;
+	/* Store fcinfo into a global variable */
+	store_fcinfo(fcinfo);
 	Datum result = spatialrel_tpoint_geo(temp, PointerGetDatum(gs), 
 		func, false);
 	PG_FREE_IF_COPY(temp, 0);
@@ -518,6 +522,8 @@ covers_tpoint_tpoint(PG_FUNCTION_ARGS)
 		func = &geom_covers;
 	else if (temp1->valuetypid == type_oid(T_GEOGRAPHY))
 		func = &geog_covers;
+	/* Store fcinfo into a global variable */
+	store_fcinfo(fcinfo);
 	Datum result = spatialrel_tpoint_tpoint(inter1, inter2, func);
 
 	pfree(inter1); pfree(inter2); 
@@ -551,6 +557,8 @@ coveredby_geo_tpoint(PG_FUNCTION_ARGS)
 		func = &geom_coveredby;
 	else if (temp->valuetypid == type_oid(T_GEOGRAPHY))
 		func = &geog_coveredby;
+	/* Store fcinfo into a global variable */
+	store_fcinfo(fcinfo);
 	Datum result = spatialrel_tpoint_geo(temp, PointerGetDatum(gs), 
 		func, false);
 	PG_FREE_IF_COPY(gs, 0);
@@ -579,6 +587,8 @@ coveredby_tpoint_geo(PG_FUNCTION_ARGS)
 		func = &geom_coveredby;
 	else if (temp->valuetypid == type_oid(T_GEOGRAPHY))
 		func = &geog_coveredby;
+	/* Store fcinfo into a global variable */
+	store_fcinfo(fcinfo);
 	Datum result = spatialrel_tpoint_geo(temp, PointerGetDatum(gs), 
 		func, false);
 	PG_FREE_IF_COPY(temp, 0);
@@ -610,6 +620,8 @@ coveredby_tpoint_tpoint(PG_FUNCTION_ARGS)
 		func = &geom_coveredby;
 	else if (temp1->valuetypid == type_oid(T_GEOGRAPHY))
 		func = &geog_coveredby;
+	/* Store fcinfo into a global variable */
+	store_fcinfo(fcinfo);
 	Datum result = spatialrel_tpoint_tpoint(inter1, inter2, func);
 
 	pfree(inter1); pfree(inter2); 
@@ -864,6 +876,8 @@ intersects_geo_tpoint(PG_FUNCTION_ARGS)
 	}
 	else if (temp->valuetypid == type_oid(T_GEOGRAPHY))
 		func = &geog_intersects;
+	/* Store fcinfo into a global variable */
+	store_fcinfo(fcinfo);
 	Datum result = spatialrel_tpoint_geo(temp, PointerGetDatum(gs), 
 		func, true);
 	PG_FREE_IF_COPY(gs, 0);
@@ -897,6 +911,8 @@ intersects_tpoint_geo(PG_FUNCTION_ARGS)
 	}
 	else if (temp->valuetypid == type_oid(T_GEOGRAPHY))
 		func = &geog_intersects;
+	/* Store fcinfo into a global variable */
+	store_fcinfo(fcinfo);
 	Datum result = spatialrel_tpoint_geo(temp, PointerGetDatum(gs),
 		func, false);
 	PG_FREE_IF_COPY(temp, 0);
@@ -928,6 +944,8 @@ intersects_tpoint_tpoint(PG_FUNCTION_ARGS)
 		func = &geom_intersects2d;
 	else if (temp1->valuetypid == type_oid(T_GEOGRAPHY))
 		func = &geog_intersects;
+	/* Store fcinfo into a global variable */
+	store_fcinfo(fcinfo);
 	Datum result = spatialrel_tpoint_tpoint(inter1, inter2, func);
 
 	pfree(inter1); pfree(inter2); 
@@ -1183,6 +1201,8 @@ dwithin_geo_tpoint(PG_FUNCTION_ARGS)
 	}
 	else if (temp->valuetypid == type_oid(T_GEOGRAPHY))
 		func = &geog_dwithin;
+	/* Store fcinfo into a global variable */
+	store_fcinfo(fcinfo);
 	Datum result = spatialrel3_tpoint_geo(temp, PointerGetDatum(gs), dist,
 		func, true);
 	PG_FREE_IF_COPY(gs, 0);
@@ -1217,6 +1237,8 @@ dwithin_tpoint_geo(PG_FUNCTION_ARGS)
 	}
 	else if (temp->valuetypid == type_oid(T_GEOGRAPHY))
 		func = &geog_dwithin;
+	/* Store fcinfo into a global variable */
+	store_fcinfo(fcinfo);
 	Datum result = spatialrel3_tpoint_geo(temp, PointerGetDatum(gs), dist,
 		func, false);
 	PG_FREE_IF_COPY(temp, 0);
@@ -1254,6 +1276,8 @@ dwithin_tpoint_tpoint(PG_FUNCTION_ARGS)
 	}
 	else if (temp1->valuetypid == type_oid(T_GEOGRAPHY))
 		func = &geog_dwithin;
+  /* Store fcinfo into a global variable */
+  store_fcinfo(fcinfo);
 
 	bool result = false;
 	ensure_valid_duration(sync1->duration);
