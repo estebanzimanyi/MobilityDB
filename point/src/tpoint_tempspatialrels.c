@@ -818,8 +818,6 @@ tdwithin_tpoint_geo_internal(Temporal *temp, GSERIALIZED *gs, Datum dist)
 	}
 	else if (temp->valuetypid == type_oid(T_GEOGRAPHY))
 		func = &geog_dwithin;
-	/* Store fcinfo into a global variable */
-	store_fcinfo(fcinfo);
 	Temporal *result = NULL;
 	ensure_valid_duration(temp->duration);
 	if (temp->duration == TEMPORALINST) 
@@ -2088,6 +2086,8 @@ tdwithin_geo_tpoint(PG_FUNCTION_ARGS)
 		PG_FREE_IF_COPY(temp, 1);
 		PG_RETURN_NULL();
 	}
+	/* Store fcinfo into a global variable */
+	store_fcinfo(fcinfo);
 	Temporal *result = tdwithin_tpoint_geo_internal(temp, gs, dist);
 	PG_FREE_IF_COPY(gs, 0);
 	PG_FREE_IF_COPY(temp, 1);
@@ -2149,8 +2149,6 @@ tdwithin_tpoint_tpoint(PG_FUNCTION_ARGS)
 	}
 	else if (temp1->valuetypid == type_oid(T_GEOGRAPHY))
 		func = &geog_dwithin;
-	/* Store fcinfo into a global variable */
-	store_fcinfo(fcinfo);
 
 	Temporal *result = NULL;
 	ensure_valid_duration(sync1->duration);
