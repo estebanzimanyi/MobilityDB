@@ -20,6 +20,9 @@
 
 /*****************************************************************************/
 
+extern FunctionCallInfo fetch_fcinfo();
+extern void store_fcinfo(FunctionCallInfo fcinfo);
+
 /* Parameter tests */
 
 extern void ensure_same_srid_tpoint(Temporal *temp1, Temporal *temp2);

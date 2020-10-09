@@ -1893,6 +1893,8 @@ tintersects_tpoint_tpoint(PG_FUNCTION_ARGS)
 	Temporal *temp2 = PG_GETARG_TEMPORAL(1);
 	ensure_same_srid_tpoint(temp1, temp2);
 	ensure_same_dimensionality_tpoint(temp1, temp2);
+  /* Store fcinfo into a global variable */
+  store_fcinfo(fcinfo);
 	Datum (*func)(Datum, Datum) = NULL;
 	ensure_point_base_type(temp1->valuetypid);
 	if (temp1->valuetypid == type_oid(T_GEOMETRY))
@@ -2104,6 +2106,8 @@ tdwithin_tpoint_tpoint(PG_FUNCTION_ARGS)
 	Datum dist = PG_GETARG_DATUM(2);
 	ensure_same_srid_tpoint(temp1, temp2);
 	ensure_same_dimensionality_tpoint(temp1, temp2);
+  /* Store fcinfo into a global variable */
+  store_fcinfo(fcinfo);
 	Temporal *sync1, *sync2;
 	/* Return false if the temporal points do not intersect in time
 	   The last parameter crossing must be set to false  */
