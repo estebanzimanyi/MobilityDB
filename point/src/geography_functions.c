@@ -37,9 +37,12 @@
 
 #include <postgres.h>
 #include <float.h>
+#include <math.h>
 #include <utils/array.h>
 #include <utils/builtins.h>
-#include <liblwgeom.h>
+// #if MOBDB_PGIS_VERSION < 030000
+// #include <liblwgeom.h>
+// #endif
 
 #include "postgis.h"
 #include "tpoint_spatialfuncs.h"
@@ -716,14 +719,14 @@ Datum geography_line_substring(PG_FUNCTION_ARGS)
   opa = geography_substring(lwline->points, from_fraction, to_fraction,
     FP_TOLERANCE);
 
-  lwgeom_free(lwline_as_lwgeom(lwline));
+  lwgeom_free((LWGEOM *)(lwline));
   PG_FREE_IF_COPY(gser, 0);
 
   if (opa->npoints <= 1)
   {
-    lwresult = lwpoint_as_lwgeom(lwpoint_construct(lwline->srid, NULL, opa));
+    lwresult = (LWGEOM *)(lwpoint_construct(lwline->srid, NULL, opa));
   } else {
-    lwresult = lwline_as_lwgeom(lwline_construct(lwline->srid, NULL, opa));
+    lwresult = (LWGEOM *)(lwline_construct(lwline->srid, NULL, opa));
   }
 
   lwgeom_set_geodetic(lwresult, true);
@@ -879,9 +882,9 @@ Datum geography_line_interpolate_point(PG_FUNCTION_ARGS)
 
   if (opa->npoints <= 1)
   {
-    lwresult = lwpoint_as_lwgeom(lwpoint_construct(srid, NULL, opa));
+    lwresult = (LWGEOM *) (lwpoint_construct(srid, NULL, opa));
   } else {
-    lwresult = lwmpoint_as_lwgeom(lwmpoint_construct(srid, opa));
+    lwresult = (LWGEOM *) (lwmpoint_construct(srid, opa));
   }
 
   lwgeom_set_geodetic(lwresult, true);
