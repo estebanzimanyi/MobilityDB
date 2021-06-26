@@ -37,9 +37,14 @@
 
 #include <postgres.h>
 #include <float.h>
+#include <math.h>
 #include <utils/array.h>
 #include <utils/builtins.h>
-#include <liblwgeom.h>
+// #if MOBDB_POSTGIS_VERSION >= 030000
+#include "pgis3_liblwgeom.h"
+// #else
+// #include <liblwgeom.h>
+// #endif
 
 #include "postgis.h"
 #include "tpoint_spatialfuncs.h"
@@ -353,8 +358,12 @@ Datum geography_closestpoint(PG_FUNCTION_ARGS)
   /* Get our geography objects loaded into memory. */
   g1 = PG_GETARG_GSERIALIZED_P(0);
   g2 = PG_GETARG_GSERIALIZED_P(1);
-
+#ifdef POSTGIS3
+  // gserialized_error_if_srid_mismatch(g1, g2, __func__);
+  ensure_same_srid(gserialized_get_srid(g1), gserialized_get_srid(g2));
+#else
   error_if_srid_mismatch(gserialized_get_srid(g1), gserialized_get_srid(g2));
+#endif
 
   /* Return NULL on empty arguments. */
   if ( gserialized_is_empty(g1) || gserialized_is_empty(g2) )
@@ -444,7 +453,12 @@ Datum geography_shortestline(PG_FUNCTION_ARGS)
   g1 = PG_GETARG_GSERIALIZED_P(0);
   g2 = PG_GETARG_GSERIALIZED_P(1);
 
+#ifdef POSTGIS3
+  // gserialized_error_if_srid_mismatch(g1, g2, __func__);
+  ensure_same_srid(gserialized_get_srid(g1), gserialized_get_srid(g2));
+#else
   error_if_srid_mismatch(gserialized_get_srid(g1), gserialized_get_srid(g2));
+#endif
 
   /* Read calculation type */
   if ( PG_NARGS() > 2 && ! PG_ARGISNULL(2) )
@@ -1126,7 +1140,12 @@ Datum geography_line_locate_point(PG_FUNCTION_ARGS)
     // spheroid_init_from_srid(fcinfo, srid, &s);
     spheroid_init(&s, WGS84_MAJOR_AXIS, WGS84_MINOR_AXIS);
 
+#ifdef POSTGIS3
+  // gserialized_error_if_srid_mismatch(gser1, gser2, __func__);
+  ensure_same_srid(gserialized_get_srid(gser1), gserialized_get_srid(gser2));
+#else
   error_if_srid_mismatch(gserialized_get_srid(gser1), gserialized_get_srid(gser2));
+#endif
 
   lwline = lwgeom_as_lwline(lwgeom_from_gserialized(gser1));
   lwpoint = lwgeom_as_lwpoint(lwgeom_from_gserialized(gser2));

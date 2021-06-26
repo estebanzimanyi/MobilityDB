@@ -29,11 +29,13 @@
 #ifndef _LIBLWGEOM_H
 #define _LIBLWGEOM_H 1
 
+#define POSTGIS3
+
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 
-#include "../postgis_config.h"
+#include "postgis_config.h"
 
 #if POSTGIS_PROJ_VERSION < 60
 #include "proj_api.h"

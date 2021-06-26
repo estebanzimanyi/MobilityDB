@@ -103,7 +103,7 @@
 #define WITH_Z          true
 #define NO_Z            false
 
-/* Determine whether reduce the roundoff errors with the range operations 
+/* Determine whether reduce the roundoff errors with the range operations
  * by taking the bounds instead of the projected value at the timestamp */
 #define RANGE_ROUNDOFF  false
 
@@ -184,7 +184,7 @@ struct tempsubtype_struct
 
 /*****************************************************************************
  * Macros for manipulating the 'flags' element with structure xGTZXLCB, where
- * x:unused bit, G:Coordinates are geodetic, T:has T coordinate, 
+ * x:unused bit, G:Coordinates are geodetic, T:has T coordinate,
  * Z:has Z coordinate, X:has value or X coordinate,
  * B:base type passed by value, L: Linear interpolation, C: Continuous base type
  * Notice that formally speaking the Linear interpolation flag is only needed
@@ -459,6 +459,7 @@ typedef struct
  * See PG_FREE_IF_COPY comment in src/include/fmgr.h in postgres source code
  * for more details.
  */
+/* POSTGIS 3
 #ifndef POSTGIS_FREE_IF_COPY_P
 #define POSTGIS_FREE_IF_COPY_P(ptrsrc, ptrori) \
   do { \
@@ -466,6 +467,7 @@ typedef struct
       pfree(ptrsrc); \
   } while (0)
 #endif
+*/
 
 /*****************************************************************************/
 
@@ -474,7 +476,7 @@ typedef struct
 extern void _PG_init(void);
 
 /* Typmod functions */
- 
+
 extern const char *tempsubtype_name(int16 subtype);
 extern bool tempsubtype_from_string(const char *str, int16 *subtype);
 
@@ -534,10 +536,10 @@ extern Datum tsequenceset_constructor(PG_FUNCTION_ARGS);
 extern Datum temporal_append_tinstant(PG_FUNCTION_ARGS);
 extern Datum temporal_merge(PG_FUNCTION_ARGS);
 extern Datum temporal_merge_array(PG_FUNCTION_ARGS);
- 
+
 extern Temporal *temporal_from_base(const Temporal *temp, Datum value,
   Oid basetypid, bool linear);
-  
+
 /* Cast functions */
 
 extern Datum tint_to_tfloat(PG_FUNCTION_ARGS);

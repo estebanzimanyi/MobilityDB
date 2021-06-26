@@ -35,10 +35,18 @@
 
 #define ACCEPT_USE_OF_DEPRECATED_PROJ_API_H 1
 
-#include <liblwgeom.h>
+// #if MOBDB_POSTGIS_VERSION >= 030000
+#include "pgis3_liblwgeom.h"
+// #else
+// #include <liblwgeom.h>
+// #endif
 
 /*****************************************************************************/
 // Definitions needed for developing geography_line_interpolate_point
+
+#ifndef M_PI
+  #define M_PI 3.14159265358979323846
+#endif
 
 /**
 * Conversion functions
@@ -92,12 +100,13 @@ extern double edge_distance_to_edge(const GEOGRAPHIC_EDGE *e1, const GEOGRAPHIC_
  * See PG_FREE_IF_COPY comment in src/include/fmgr.h in postgres source code
  * for more details.
  */
-
+/* POSTGIS 3
 #define POSTGIS_FREE_IF_COPY_P(ptrsrc, ptrori) \
   do { \
     if ((Pointer) (ptrsrc) != (Pointer) (ptrori)) \
       pfree(ptrsrc); \
   } while (0)
+*/
 
 /* Definitions copied from measures.h */
 
@@ -214,10 +223,12 @@ extern void srid_is_latlong(FunctionCallInfo fcinfo, int srid);
 extern int clamp_srid(int srid);
 extern int getSRIDbySRS(FunctionCallInfo fcinfo, const char *srs);
 
+#ifndef POSTGIS3
 extern char *getSRSbySRID(FunctionCallInfo fcinfo, int32_t srid, bool short_crs);
+extern char getMachineEndian(void);
+#endif
 
 extern int lwprint_double(double d, int maxdd, char *buf, size_t bufsize);
-extern char getMachineEndian(void);
 extern char lwpoint_same(const LWPOINT *p1, const LWPOINT *p2);
 
 extern Datum transform(PG_FUNCTION_ARGS);
@@ -291,7 +302,6 @@ extern Datum geography_lt(PG_FUNCTION_ARGS);
 #define PG_GETARG_GSERIALIZED_P_COPY(varno) ((GSERIALIZED *)PG_DETOAST_DATUM_COPY(PG_GETARG_DATUM(varno)))
 
 #include "temporal.h"
-#include <liblwgeom.h>
 
 #endif /* __TEMPORAL_POSTGIS_H__ */
 /*****************************************************************************/

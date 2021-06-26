@@ -33,6 +33,9 @@
 
 #include <assert.h>
 #include <float.h>
+// #ifdef POSTGIS3
+#include <executor/spi.h>
+// #endif
 #include <utils/builtins.h>
 
 #include "temporaltypes.h"
@@ -722,6 +725,7 @@ tpoint_as_mfjson(PG_FUNCTION_ARGS)
     option |= 2;
   if (srid != SRID_UNKNOWN)
   {
+#ifndef POSTGIS3
     if (option & 2)
       srs = getSRSbySRID(fcinfo, srid, true);
     else if (option & 4)
@@ -732,6 +736,7 @@ tpoint_as_mfjson(PG_FUNCTION_ARGS)
           srid);
       PG_RETURN_NULL();
     }
+#endif
   }
   if (option & 1)
     has_bbox = 1;
@@ -765,12 +770,12 @@ tpoint_as_mfjson(PG_FUNCTION_ARGS)
  *
  * The format of the MobilityDB binary format builds upon the one of PostGIS.
  * In particular, many of the flags defined in liblwgeom.h such as  WKB_NDR vs
- * WKB_XDR (for little- vs big-endian), WKB_EXTENDED (for the SRID), etc. 
+ * WKB_XDR (for little- vs big-endian), WKB_EXTENDED (for the SRID), etc.
  * In addition, we need additional flags such as MOBDB_WKB_LINEAR_INTERP for
  * linear interporation, etc.
- * 
- * The binary format obviously depends on the subtype of the temporal type 
- * (instant, instant set, ...). The specific binary format is specified in 
+ *
+ * The binary format obviously depends on the subtype of the temporal type
+ * (instant, instant set, ...). The specific binary format is specified in
  * the function corresponding to the subtype below.
  *****************************************************************************/
 
@@ -812,8 +817,13 @@ static inline bool
 wkb_swap_bytes(uint8_t variant)
 {
   /* If requested variant matches machine arch, we don't have to swap! */
+#ifdef POSTGIS3
+	if (((variant & WKB_NDR) && !IS_BIG_ENDIAN) ||
+	    ((!(variant & WKB_NDR)) && IS_BIG_ENDIAN))
+#else
   if (((variant & WKB_NDR) && (getMachineEndian() == NDR)) ||
      ((! (variant & WKB_NDR)) && (getMachineEndian() == XDR)))
+#endif
     return false;
   return true;
 }
@@ -1075,7 +1085,7 @@ tpoint_to_wkb_size(const Temporal *temp, uint8_t variant)
 /**
  * Writes into the buffer the flag containing the temporal type and
  * other characteristics represented in Well-Known Binary (WKB) format.
- * In binary format it is a byte as follows 
+ * In binary format it is a byte as follows
  * LSGZxTTT
  * L = Linear, S = SRID, G = Geodetic, Z = has Z, x = unused bit
  * TTT = Temporal subtype with values 1 to 4
@@ -1134,7 +1144,7 @@ coords_ts_to_wkb_buf(const TInstant *inst, uint8_t *buf, uint8_t variant)
 /**
  * Writes into the buffer the temporal instant point represented in
  * Well-Known Binary (WKB) format as follows
- * - Endian 
+ * - Endian
  * - Linear, SRID, Geodetic, Z, Temporal Subtype
  * - SRID (if requested)
  * - Output of a single instant by function coords_ts_to_wkb_buf
@@ -1155,7 +1165,7 @@ tpointinst_to_wkb_buf(const TInstant *inst, uint8_t *buf, uint8_t variant)
 /**
  * Writes into the buffer the temporal instant set point represented in
  * Well-Known Binary (WKB) format as follows
- * - Endian 
+ * - Endian
  * - Linear, SRID, Geodetic, Z, Temporal Subtype
  * - SRID (if requested)
  * - Number of instants
@@ -1212,7 +1222,7 @@ tpointseq_wkb_bounds(const TSequence *seq, uint8_t *buf, uint8_t variant)
 /**
  * Writes into the buffer the temporal sequence point represented in
  * Well-Known Binary (WKB) format as follows
- * - Endian 
+ * - Endian
  * - Linear, SRID, Geodetic, Z, Temporal Subtype
  * - SRID (if requested)
  * - Number of instants
@@ -1246,7 +1256,7 @@ tpointseq_to_wkb_buf(const TSequence *seq, uint8_t *buf, uint8_t variant)
 /**
  * Writes into the buffer the temporal sequence set point represented in
  * Well-Known Binary (WKB) format as follows
- * - Endian 
+ * - Endian
  * - Linear, SRID, Geodetic, Z, Temporal Subtype
  * - SRID (if requested)
  * - Number of sequences
@@ -1345,10 +1355,14 @@ tpoint_to_wkb(const Temporal *temp, uint8_t variant, size_t *size_out)
   if (! (variant & WKB_NDR || variant & WKB_XDR) ||
     (variant & WKB_NDR && variant & WKB_XDR))
   {
-    if (getMachineEndian() == NDR)
-      variant = variant | (uint8_t) WKB_NDR;
-    else
+#ifdef POSTGIS3
+    if (IS_BIG_ENDIAN)
+#else
+    if (getMachineEndian() == XDR)
+#endif
       variant = variant | (uint8_t) WKB_XDR;
+    else
+      variant = variant | (uint8_t) WKB_NDR;
   }
 
   /* Allocate the buffer */

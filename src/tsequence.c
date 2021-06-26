@@ -136,7 +136,7 @@ tlinearseq_intersection_value(const TInstant *inst1, const TInstant *inst2,
   else
     elog(ERROR, "unknown intersection function for continuous base type: %d",
       inst1->basetypid);
-    
+
   if (result && inter != NULL)
     /* We are sure it is linear interpolation */
     *inter = tsequence_value_at_timestamp1(inst1, inst2, LINEAR, *t);
@@ -386,8 +386,13 @@ datum_collinear(Oid basetypid, Datum value1, Datum value2, Datum value3,
   if (basetypid == type_oid(T_GEOMETRY) || basetypid == type_oid(T_GEOGRAPHY))
   {
     GSERIALIZED *gs = (GSERIALIZED *)DatumGetPointer(value1);
+#ifdef POSTGIS3
+    bool hasz = (bool) FLAGS_GET_Z(gs->gflags);
+    bool geodetic = (bool) FLAGS_GET_GEODETIC(gs->gflags);
+#else
     bool hasz = (bool) FLAGS_GET_Z(gs->flags);
     bool geodetic = (bool) FLAGS_GET_GEODETIC(gs->flags);
+#endif
     return geopoint_collinear(value1, value2, value3, ratio, hasz, geodetic);
   }
   if (basetypid == type_oid(T_DOUBLE3))
@@ -841,7 +846,7 @@ tsequencearr_normalize(const TSequence **sequences, int count, int *newcount)
       /* If float/point sequences and collinear last/first segments having the same duration
          ..., 1@t1, 2@t2) [2@t2, 3@t3, ... -> ..., 1@t1, 3@t3, ...
       */
-      (base_type_continuous(basetypid) && datum_eq(last1value, first1value, basetypid) && 
+      (base_type_continuous(basetypid) && datum_eq(last1value, first1value, basetypid) &&
       datum_collinear(basetypid, last2value, first1value, first2value,
         last2->t, first1->t, first2->t))
       ))
@@ -3089,7 +3094,7 @@ tnumberseq_restrict_ranges1(TSequence **result, const TSequence *seq,
      * Compute first the tnumberseq_at_ranges, then compute its complement
      * Notice that in this case due to rounoff errors it may be the case
      * that temp is not equal to merge(atRanges(temp, .),minusRanges(temp, .),
-     * since we kept the range values instead of the projected values when 
+     * since we kept the range values instead of the projected values when
      * computing atRanges
      */
     TSequenceSet *ts = tnumberseq_restrict_ranges(seq, newranges, newcount,

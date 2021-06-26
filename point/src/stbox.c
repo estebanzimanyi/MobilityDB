@@ -658,16 +658,23 @@ geo_to_stbox_internal(STBOX *box, const GSERIALIZED *gs)
   box->xmax = gbox.xmax;
   box->ymin = gbox.ymin;
   box->ymax = gbox.ymax;
-  if (FLAGS_GET_Z(gs->flags) || FLAGS_GET_GEODETIC(gs->flags))
+#ifdef POSTGIS3
+  bool hasz = FLAGS_GET_Z(gs->gflags);
+  bool geodetic = FLAGS_GET_GEODETIC(gs->gflags);
+#else
+  bool hasz = FLAGS_GET_Z(gs->flags);
+  bool geodetic = FLAGS_GET_GEODETIC(gs->flags);
+#endif
+  if (hasz || geodetic)
   {
     box->zmin = gbox.zmin;
     box->zmax = gbox.zmax;
   }
   box->srid = gserialized_get_srid(gs);
   MOBDB_FLAGS_SET_X(box->flags, true);
-  MOBDB_FLAGS_SET_Z(box->flags, FLAGS_GET_Z(gs->flags));
+  MOBDB_FLAGS_SET_Z(box->flags, hasz);
   MOBDB_FLAGS_SET_T(box->flags, false);
-  MOBDB_FLAGS_SET_GEODETIC(box->flags, FLAGS_GET_GEODETIC(gs->flags));
+  MOBDB_FLAGS_SET_GEODETIC(box->flags, geodetic);
   return true;
 }
 

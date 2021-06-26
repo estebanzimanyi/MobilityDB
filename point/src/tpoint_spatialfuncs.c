@@ -164,7 +164,11 @@ datum_get_point4d(POINT4D *p, Datum geom)
 {
   GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(geom);
   memset(p, 0, sizeof(POINT4D));
+#ifdef POSTGIS3
+  if (FLAGS_GET_Z(gs->gflags))
+#else
   if (FLAGS_GET_Z(gs->flags))
+#endif
   {
     POINT3DZ *point = (POINT3DZ *) GS_POINT_PTR(gs);
     p->x = point->x;
@@ -189,10 +193,19 @@ datum_point_eq(Datum geopoint1, Datum geopoint2)
   GSERIALIZED *gs1 = (GSERIALIZED *) DatumGetPointer(geopoint1);
   GSERIALIZED *gs2 = (GSERIALIZED *) DatumGetPointer(geopoint2);
   if (gserialized_get_srid(gs1) != gserialized_get_srid(gs2) ||
+#ifdef POSTGIS3
+    FLAGS_GET_Z(gs1->gflags) != FLAGS_GET_Z(gs2->gflags) ||
+    FLAGS_GET_GEODETIC(gs1->gflags) != FLAGS_GET_GEODETIC(gs2->gflags))
+#else
     FLAGS_GET_Z(gs1->flags) != FLAGS_GET_Z(gs2->flags) ||
     FLAGS_GET_GEODETIC(gs1->flags) != FLAGS_GET_GEODETIC(gs2->flags))
+#endif
     return false;
+#ifdef POSTGIS3
+  if (FLAGS_GET_Z(gs1->gflags))
+#else
   if (FLAGS_GET_Z(gs1->flags))
+#endif
   {
     const POINT3DZ *point1 = gs_get_point3dz_p(gs1);
     const POINT3DZ *point2 = gs_get_point3dz_p(gs2);
@@ -232,6 +245,28 @@ datum_transform(Datum value, Datum srid)
   return CallerFInfoFunctionCall2(transform, (fetch_fcinfo())->flinfo,
     InvalidOid, value, srid);
 }
+
+#ifdef POSTGIS3
+GSERIALIZED* gserialized_copy(const GSERIALIZED *g)
+{
+  GSERIALIZED *result = palloc(VARSIZE(g));
+  memcpy(result, g, VARSIZE(g));
+  return result;
+}
+
+/**
+ * Compute the azimuth of segment AB in radians.
+ * Return 0 on exception (same point), 1 otherwise.
+ */
+int
+azimuth_pt_pt(const POINT2D *A, const POINT2D *B, double *d)
+{
+	if (A->x == B->x && A->y == B->y)
+		return LW_FALSE;
+	*d = fmod(2 * M_PI + M_PI / 2 - atan2(B->y - A->y, B->x - A->x), 2 * M_PI);
+	return LW_TRUE;
+}
+#endif
 
 /*****************************************************************************
  * Generic functions
@@ -353,6 +388,18 @@ ensure_same_geodetic(int16 flags1, int16 flags2)
  * Ensure that the spatiotemporal boxes have the same SRID
  */
 void
+ensure_same_srid(int32 srid1, int32 srid2)
+{
+  if (srid1 != srid2)
+    ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+      errmsg("Operation on mixed SRID")));
+  return;
+}
+
+/**
+ * Ensure that the spatiotemporal boxes have the same SRID
+ */
+void
 ensure_same_srid_stbox(const STBOX *box1, const STBOX *box2)
 {
   if (MOBDB_FLAGS_GET_X(box1->flags) && MOBDB_FLAGS_GET_X(box2->flags) &&
@@ -456,7 +503,11 @@ ensure_same_spatial_dimensionality(int16 flags1, int16 flags2)
 void
 ensure_same_dimensionality_tpoint_gs(const Temporal *temp, const GSERIALIZED *gs)
 {
+#ifdef POSTGIS3
+  if (MOBDB_FLAGS_GET_Z(temp->flags) != FLAGS_GET_Z(gs->gflags))
+#else
   if (MOBDB_FLAGS_GET_Z(temp->flags) != FLAGS_GET_Z(gs->flags))
+#endif
     ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
       errmsg("The temporal point and the geometry must be of the same dimensionality")));
   return;
@@ -469,7 +520,11 @@ void
 ensure_same_spatial_dimensionality_stbox_gs(const STBOX *box, const GSERIALIZED *gs)
 {
   if (! MOBDB_FLAGS_GET_X(box->flags) ||
+#ifdef POSTGIS3
+      MOBDB_FLAGS_GET_Z(box->flags) != FLAGS_GET_Z(gs->gflags))
+#else
       MOBDB_FLAGS_GET_Z(box->flags) != FLAGS_GET_Z(gs->flags))
+#endif
     ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
       errmsg("The spatiotemporal box and the geometry must be of the same dimensionality")));
   return;
@@ -505,7 +560,11 @@ ensure_has_Z_tpoint(const Temporal *temp)
 void
 ensure_has_Z_gs(const GSERIALIZED *gs)
 {
+#ifdef POSTGIS3
+  if (! FLAGS_GET_Z(gs->gflags))
+#else
   if (! FLAGS_GET_Z(gs->flags))
+#endif
     ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
       errmsg("The geometry must have Z dimension")));
   return;
@@ -517,7 +576,11 @@ ensure_has_Z_gs(const GSERIALIZED *gs)
 void
 ensure_has_not_Z_gs(const GSERIALIZED *gs)
 {
+#ifdef POSTGIS3
+  if (FLAGS_GET_Z(gs->gflags))
+#else
   if (FLAGS_GET_Z(gs->flags))
+#endif
     ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
       errmsg("Only geometries without Z dimension accepted")));
   return;
@@ -529,7 +592,11 @@ ensure_has_not_Z_gs(const GSERIALIZED *gs)
 void
 ensure_has_M_gs(const GSERIALIZED *gs)
 {
+#ifdef POSTGIS3
+  if (! FLAGS_GET_M(gs->gflags))
+#else
   if (! FLAGS_GET_M(gs->flags))
+#endif
     ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
       errmsg("Only geometries with M dimension accepted")));
   return;
@@ -541,7 +608,11 @@ ensure_has_M_gs(const GSERIALIZED *gs)
 void
 ensure_has_not_M_gs(const GSERIALIZED *gs)
 {
+#ifdef POSTGIS3
+  if (FLAGS_GET_M(gs->gflags))
+#else
   if (FLAGS_GET_M(gs->flags))
+#endif
     ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
       errmsg("Only geometries without M dimension accepted")));
   return;
@@ -786,8 +857,13 @@ geoseg_interpolate_point(Datum start, Datum end, long double ratio)
   POINT4D p1, p2, p;
   datum_get_point4d(&p1, start);
   datum_get_point4d(&p2, end);
+#ifdef POSTGIS3
+  bool hasz = FLAGS_GET_Z(gs->gflags);
+  bool geodetic = FLAGS_GET_GEODETIC(gs->gflags);
+#else
   bool hasz = FLAGS_GET_Z(gs->flags);
   bool geodetic = FLAGS_GET_GEODETIC(gs->flags);
+#endif
   if (geodetic)
   {
     POINT3D q1, q2;
@@ -828,7 +904,13 @@ geoseg_locate_point(Datum start, Datum end, Datum point, double *dist)
 {
   GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(start);
   long double result;
+#ifdef POSTGIS3
+  bool hasz = FLAGS_GET_Z(gs->gflags);
+  if (FLAGS_GET_GEODETIC(gs->gflags))
+#else
+  bool hasz = FLAGS_GET_Z(gs->flags);
   if (FLAGS_GET_GEODETIC(gs->flags))
+#endif
   {
     POINT4D p1, p2, p, closest;
     datum_get_point4d(&p1, start);
@@ -847,14 +929,14 @@ geoseg_locate_point(Datum start, Datum end, Datum point, double *dist)
     {
       d = WGS84_RADIUS * d;
       /* Add to the distance the vertical displacement if we're in 3D */
-      if (FLAGS_GET_Z(gs->flags))
+      if (hasz)
         d = sqrt( (closest.z - p.z) * (closest.z - p.z) + d*d );
       *dist = d;
     }
   }
   else
   {
-    if (FLAGS_GET_Z(gs->flags))
+    if (hasz)
     {
       const POINT3DZ *p1 = datum_get_point3dz_p(start);
       const POINT3DZ *p2 = datum_get_point3dz_p(end);
@@ -2087,7 +2169,11 @@ datum_set_precision(Datum value, Datum prec)
   GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(value);
   int srid = gserialized_get_srid(gs);
   LWPOINT *lwpoint;
+#ifdef POSTGIS3
+  if (FLAGS_GET_Z(gs->gflags))
+#else
   if (FLAGS_GET_Z(gs->flags))
+#endif
   {
     const POINT3DZ *point = gs_get_point3dz_p(gs);
     double x = DatumGetFloat8(datum_round(Float8GetDatum(point->x), prec));
@@ -2102,8 +2188,11 @@ datum_set_precision(Datum value, Datum prec)
     double y = DatumGetFloat8(datum_round(Float8GetDatum(point->y), prec));
     lwpoint = lwpoint_make2d(srid, x, y);
   }
-  bool geodetic = FLAGS_GET_GEODETIC(gs->flags);
-  FLAGS_SET_GEODETIC(lwpoint->flags, geodetic);
+#ifdef POSTGIS3
+  FLAGS_SET_GEODETIC(lwpoint->flags, FLAGS_GET_GEODETIC(gs->gflags));
+#else
+  FLAGS_SET_GEODETIC(lwpoint->flags, FLAGS_GET_GEODETIC(gs->flags));
+#endif
   GSERIALIZED *result = geo_serialize((LWGEOM *) lwpoint);
   pfree(lwpoint);
   return PointerGetDatum(result);
@@ -3631,9 +3720,15 @@ tpointseq_timestamp_at_value1(const TInstant *inst1, const TInstant *inst2,
     gs1 = (GSERIALIZED *) DatumGetPointer(tinstant_value_copy(inst1));
     gs2 = (GSERIALIZED *) DatumGetPointer(tinstant_value_copy(inst2));
     gs = gserialized_copy((GSERIALIZED *) DatumGetPointer(value));
+#ifdef POSTGIS3
+    FLAGS_SET_Z(gs1->gflags, false);
+    FLAGS_SET_Z(gs2->gflags, false);
+    FLAGS_SET_Z(gs->gflags, false);
+#else
     FLAGS_SET_Z(gs1->flags, false);
     FLAGS_SET_Z(gs2->flags, false);
     FLAGS_SET_Z(gs->flags, false);
+#endif
     value1 = PointerGetDatum(gs1);
     value2 = PointerGetDatum(gs2);
     val = PointerGetDatum(gs);
@@ -3741,7 +3836,7 @@ tpointseq_interperiods(const TSequence *seq, GSERIALIZED *gsinter,
     *count = 1;
     return result;
   }
-  
+
   /* General case */
   LWGEOM *lwgeom_inter = lwgeom_from_gserialized(gsinter);
   int type = lwgeom_inter->type;
@@ -3999,7 +4094,7 @@ tpointseq_restrict_geometry(const TSequence *seq, Datum geom, bool atfunc)
     tpointseq_minus_geometry1(seq, geom, &count);
   if (sequences == NULL)
     return NULL;
-  
+
   /* It is necessary to sort the sequences */
   tsequencearr_sort((TSequence **) sequences, count);
   return tsequenceset_make_free(sequences, count, NORMALIZE);
