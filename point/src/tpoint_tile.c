@@ -35,11 +35,7 @@
 #if MOBDB_PGSQL_VERSION < 120000
 #include <access/htup_details.h>
 #endif
-// #if MOBDB_PGIS_VERSION < 030000
-// #include <liblwgeom.h>
-// #else
-#include "postgis.h"
-// #endif
+#include <liblwgeom.h>
 
 #include "tpoint_tile.h"
 #include "period.h"
@@ -247,7 +243,7 @@ Datum stbox_multidim_grid(PG_FUNCTION_ARGS)
     }
     ensure_non_empty(sorigin);
     ensure_point_type(sorigin);
-    /* Since we pass by default Point(0 0 0) as origin independently of the input
+    /* Since we pass by default Point(0 0 0) as origin independently of the input 
      * STBOX, we test the same spatial dimensionality only for STBOX Z */
     if (MOBDB_FLAGS_GET_Z(bounds->flags))
       ensure_same_spatial_dimensionality_stbox_gs(bounds, sorigin);
@@ -292,7 +288,7 @@ Datum stbox_multidim_grid(PG_FUNCTION_ARGS)
   tuple_arr[0] = Int32GetDatum(state->i);
   /* Generate box */
   tuple_arr[1] = PointerGetDatum(stbox_tile_get(state->x, state->y, state->z,
-    state->t, state->size, state->tunits, MOBDB_FLAGS_GET_Z(state->box.flags),
+    state->t, state->size, state->tunits, MOBDB_FLAGS_GET_Z(state->box.flags), 
     MOBDB_FLAGS_GET_T(state->box.flags), state->box.srid));
   /* Advance state */
   stbox_tile_state_next(state);
@@ -383,11 +379,11 @@ stbox_upper_bound(const STBOX *box)
   /* Compute the 2D upper bound of the box */
   LWGEOM *points[3];
   /* Top left */
-  points[0] = (LWGEOM *) lwpoint_make2d(box->srid, box->xmin, box->ymax);
+  points[0] = (LWGEOM *) lwpoint_make2d(box->srid, box->xmin, box->ymax); 
   /* Top right */
-  points[1] = (LWGEOM *) lwpoint_make2d(box->srid, box->xmax, box->ymax);
+  points[1] = (LWGEOM *) lwpoint_make2d(box->srid, box->xmax, box->ymax); 
   /* Bottom left */
-  points[2] = (LWGEOM *) lwpoint_make2d(box->srid, box->xmax, box->ymin);
+  points[2] = (LWGEOM *) lwpoint_make2d(box->srid, box->xmax, box->ymin); 
   FLAGS_SET_GEODETIC(points[0]->flags, false);
   FLAGS_SET_GEODETIC(points[1]->flags, false);
   FLAGS_SET_GEODETIC(points[2]->flags, false);
@@ -471,7 +467,7 @@ Datum tpoint_space_split(PG_FUNCTION_ARGS)
     if (state->done)
       SRF_RETURN_DONE(funcctx);
 
-    /* Generate the tile
+    /* Generate the tile 
      * We must generate a 2D/3D geometry for keeping the bounds and after we
      * set the box to 2D so that we can project a 3D point to a 2D geometry */
     bool hasz = MOBDB_FLAGS_GET_Z(state->temp->flags);
@@ -589,7 +585,7 @@ Datum tpoint_space_time_split(PG_FUNCTION_ARGS)
     if (state->done)
       SRF_RETURN_DONE(funcctx);
 
-    /* Generate the tile
+    /* Generate the tile 
      * We must generate a 2D/3D geometry for keeping the bounds and after we
      * set the box to 2D so that we can project a 3D point to a 2D geometry */
     bool hasz = MOBDB_FLAGS_GET_Z(state->temp->flags);
