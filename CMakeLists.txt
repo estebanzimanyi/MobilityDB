@@ -56,6 +56,9 @@ include(CheckSymbolExists)
 # MobilityDB definitions
 #-------------------------------------
 
+# Added to build on Windows to disable native language support
+set(ENABLE_NLS OFF)
+
 # Option for including network points
 option(MEOS
   "Set MEOS (default=OFF) to build the MEOS library instead of the MobilityDB

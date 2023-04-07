@@ -72,10 +72,9 @@
 #include <fcntl.h>				/* ensure O_BINARY is available */
 #endif
 #include <locale.h>
-// MobilityDB: Commented out to build on Windows
-// #ifdef ENABLE_NLS
-// #include <libintl.h>
-// #endif
+#ifdef ENABLE_NLS
+#include <libintl.h>
+#endif
 
 
 /* ----------------------------------------------------------------

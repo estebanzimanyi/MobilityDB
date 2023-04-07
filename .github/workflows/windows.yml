@@ -81,6 +81,8 @@ jobs:
       - name: Start PostgreSQL
         run: |
           $env:path += ";$(Get-Location)\pgsql\pgsql\bin\"
+          # List Paths
+          $env:path
           $env:path -split ";"
           initdb -D pgsql\data -U postgres
           pg_ctl -D pgsql\data start
