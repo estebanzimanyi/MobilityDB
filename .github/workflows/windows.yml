@@ -79,7 +79,8 @@ jobs:
         run: |
           curl https://download.osgeo.org/postgis/windows/pg${{ matrix.pg_version }}/postgis-bundle-pg${{ matrix.pg_version }}-${{ matrix.postgis_full_version }}x64.zip --output postgis.zip
           Expand-Archive 'postgis.zip' -Force
-          Copy-Item -Path "postgis\postgis-bundle-pg${{ matrix.pg_version }}-${{ matrix.postgis_full_version }}x64\" -Destination "${{ env.POSTGRESQL_DIR }}\" -Recurse -Container -Force -Verbose
+          cd postgis\postgis-bundle-pg${{ matrix.pg_version }}-${{ matrix.postgis_full_version }}x64
+          Copy-Item -Path "\" -Destination "${{ env.POSTGRESQL_DIR }}\" -Recurse -Container -Force -Verbose
           ${{ env.POSTGRESQL_DIR }}\bin\psql -U postgres -d postgres -c "CREATE EXTENSION postgis;"
       - name: Check PostGIS running
         run: |
