@@ -97,7 +97,7 @@ jobs:
         run: |
           ${{ env.POSTGRESQL_DIR }}\bin\psql -U postgres -d postgres -c "SELECT postgis_full_version();"
 
-      - name: Install GSL
+      - name: Install dependencies
         run: |
           git clone https://github.com/Microsoft/vcpkg.git
           cd vcpkg
@@ -105,6 +105,8 @@ jobs:
           ./vcpkg integrate install
           vcpkg install --triplet x64-windows gsl
           vcpkg install --triplet x64-windows proj
+          vcpkg install --triplet x64-windows geos
+          vcpkg install --triplet x64-windows json-c
           vcpkg list --triplet x64-windows
 
       - name: Configure
