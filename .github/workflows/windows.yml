@@ -103,7 +103,8 @@ jobs:
           cd vcpkg
           ./bootstrap-vcpkg.bat
           ./vcpkg integrate install
-          vcpkg install gsl
+          vcpkg install --triplet x64-windows gsl
+          vcpkg list --triplet x64-windows
 
       - name: Configure
         run: |
