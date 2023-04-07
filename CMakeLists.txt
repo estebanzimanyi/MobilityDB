@@ -143,12 +143,14 @@ endif()
   # add_definitions(-DNO_HSEARCH_R)
 # endif()
 
-# MobilityDB compiler flags
-add_definitions(-Wall -Wextra -std=gnu1x -Wunused-parameter -Wno-strict-aliasing)
-# add_definitions(-Wall -Wextra -std=gnu1x -Wno-unused-parameter)
-
-# Code coverage
+# Set default compile flags and code coverage for GCC
 if(CMAKE_COMPILER_IS_GNUCC)
+  # MobilityDB compiler flags
+  add_definitions(-Wall -Wextra -std=gnu1x -Wunused-parameter -Wno-strict-aliasing)
+  # -Wno-strict-aliasing was removed to access directly PostGIS points
+  # See file tpoint_spatialfuncs.h
+  # add_definitions(-Wall -Wextra -std=gnu1x -Wno-unused-parameter)
+  # Code coverage
   if(WITH_COVERAGE)
     message(STATUS "Generating code coverage")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
