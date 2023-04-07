@@ -65,7 +65,7 @@ jobs:
       - name: Install PostgreSQL
         run: |
           curl https://get.enterprisedb.com/postgresql/postgresql-${{ matrix.pg_major }}-1-windows-x64-binaries.zip --output pgsql.zip
-          Expand-Archive 'pgsql.zip' -Force
+          Expand-Archive 'pgsql.zip' -Verbose -Force
           $env:path += ";$(Get-Location)\pgsql\pgsql\bin\"
           $env:path -split ";"
           initdb -D pgsql\data -U postgres
@@ -78,7 +78,7 @@ jobs:
       - name: Install PostGIS
         run: |
           curl https://download.osgeo.org/postgis/windows/pg${{ matrix.pg_version }}/postgis-bundle-pg${{ matrix.pg_version }}-${{ matrix.postgis_full_version }}x64.zip --output postgis.zip
-          Expand-Archive 'postgis.zip' -Force
+          Expand-Archive 'postgis.zip' -Verbose -Force
           ${{ env.POSTGRESQL_DIR }}\bin\psql -U postgres -d postgres -c "CREATE EXTENSION postgis;"
       - name: Check PostGIS running
         run: |
