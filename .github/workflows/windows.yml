@@ -66,6 +66,7 @@ jobs:
         run: |
           curl https://get.enterprisedb.com/postgresql/postgresql-${{ matrix.pg_major }}-1-windows-x64-binaries.zip --output pgsql.zip
           Expand-Archive 'pgsql.zip' -Force
+          echo "POSTGRESQL_DIR=$pwd\pgsql\pgsql" >> $env:GITHUB_ENV
 
       - name: Install PostGIS
         run: |
@@ -82,7 +83,6 @@ jobs:
           $env:path -split ";"
           initdb -D pgsql\data -U postgres
           pg_ctl -D pgsql\data start
-          echo "POSTGRESQL_DIR=$pwd\pgsql\pgsql" >> $env:GITHUB_ENV
 
       - name: Check Postgres running
         run: |
