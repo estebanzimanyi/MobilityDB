@@ -4,9 +4,9 @@ name: Build for macOS
 # - macOS test takes too much time
 
 on:
-  workflow_dispatch:
-  push:
-    branch_ignore: gh-pages
+  # workflow_dispatch:
+  # push:
+    # branch_ignore: gh-pages
   pull_request:
     branch_ignore: gh-pages
 

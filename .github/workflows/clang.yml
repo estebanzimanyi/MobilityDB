@@ -11,10 +11,10 @@ name: Build for Ubuntu with clang
 # - postgis 3
 
 on:
-  push:
-    branches-ignore:
-      - 'gh-pages'
-    tags: []
+  # push:
+    # branches-ignore:
+      # - 'gh-pages'
+    # tags: []
 
   pull_request:
     branches-ignore:
