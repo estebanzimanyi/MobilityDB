@@ -67,7 +67,7 @@ jobs:
           curl https://get.enterprisedb.com/postgresql/postgresql-${{ matrix.pg_major }}-1-windows-x64-binaries.zip --output pgsql.zip
           Expand-Archive 'pgsql.zip' -Force
           echo "POSTGRESQL_DIR=$pwd\pgsql\pgsql" >> $env:GITHUB_ENV
-          echo "${{ env.POSTGRESQL_DIR }} <------------------"
+          echo "${{ env.POSTGRESQL_DIR }}"
 
       - name: Install PostGIS
         run: |
@@ -96,6 +96,14 @@ jobs:
       - name: Check PostGIS running
         run: |
           ${{ env.POSTGRESQL_DIR }}\bin\psql -U postgres -d postgres -c "SELECT postgis_full_version();"
+
+      - name: Install GSL
+        run: |
+          git clone https://github.com/Microsoft/vcpkg.git
+          cd vcpkg
+          ./bootstrap-vcpkg.sh
+          ./vcpkg integrate install
+          vcpkg install ms-gsl
 
       - name: Configure
         run: |
