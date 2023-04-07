@@ -1,7 +1,7 @@
 name: Build for Windows
 
 on:
-  push:
+  # push:
     # branches: [ main ]
   pull_request:
     branches: [ main ]

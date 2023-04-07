@@ -11,7 +11,7 @@ name: Build for Windows
 # - postgis 3
 
 on:
-  # push:
+  push:
     # paths:
       # - '.github/workflows/windows.yml'
       # - 'meos/**'
@@ -103,7 +103,7 @@ jobs:
           cd vcpkg
           ./bootstrap-vcpkg.bat
           ./vcpkg integrate install
-          vcpkg install ms-gsl
+          vcpkg install gsl
 
       - name: Configure
         run: |
