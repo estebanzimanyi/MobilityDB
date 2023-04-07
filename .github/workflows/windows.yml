@@ -11,6 +11,9 @@ jobs:
   build:
     name: windows
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
 
     steps:
       - name: Checkout repository
@@ -38,5 +41,7 @@ jobs:
           cmake -G"Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Release ..
       - name: build
         run: |
-          cd build
-          msbuild MOBILITYDB.sln /target:Build /property:Configuration=Release
+          cmake -G Ninja -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build
+          # cd build
+          # msbuild MOBILITYDB.sln /target:Build /property:Configuration=Release
