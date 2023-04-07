@@ -66,14 +66,6 @@ jobs:
         run: |
           curl https://get.enterprisedb.com/postgresql/postgresql-${{ matrix.pg_major }}-1-windows-x64-binaries.zip --output pgsql.zip
           Expand-Archive 'pgsql.zip' -Force
-          $env:path += ";$(Get-Location)\pgsql\pgsql\bin\"
-          $env:path -split ";"
-          initdb -D pgsql\data -U postgres
-          pg_ctl -D pgsql\data start
-          echo "POSTGRESQL_DIR=$pwd\pgsql\pgsql" >> $env:GITHUB_ENV
-      - name: Check Postgres running
-        run: |
-          ${{ env.POSTGRESQL_DIR }}\bin\psql -U postgres -d postgres -c "SELECT version()"
 
       - name: Install PostGIS
         run: |
@@ -83,7 +75,23 @@ jobs:
           Copy-Item -Path "bin\" -Destination "${{ env.POSTGRESQL_DIR }}\" -Recurse -Container -Force -Verbose
           Copy-Item -Path "lib\" -Destination "${{ env.POSTGRESQL_DIR }}\" -Recurse -Container -Force -Verbose
           Copy-Item -Path "share\" -Destination "${{ env.POSTGRESQL_DIR }}\" -Recurse -Container -Force -Verbose
+
+      - name: Start PostgreSQL
+        run: |
+          $env:path += ";$(Get-Location)\pgsql\pgsql\bin\"
+          $env:path -split ";"
+          initdb -D pgsql\data -U postgres
+          pg_ctl -D pgsql\data start
+          echo "POSTGRESQL_DIR=$pwd\pgsql\pgsql" >> $env:GITHUB_ENV
+
+      - name: Check Postgres running
+        run: |
+          ${{ env.POSTGRESQL_DIR }}\bin\psql -U postgres -d postgres -c "SELECT version()"
+
+      - name: Add PostGIS extension
+        run: |
           ${{ env.POSTGRESQL_DIR }}\bin\psql -U postgres -d postgres -c "CREATE EXTENSION postgis;"
+
       - name: Check PostGIS running
         run: |
           ${{ env.POSTGRESQL_DIR }}\bin\psql -U postgres -d postgres -c "SELECT postgis_full_version();"
