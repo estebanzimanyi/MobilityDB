@@ -104,6 +104,7 @@ jobs:
           ./bootstrap-vcpkg.bat
           ./vcpkg integrate install
           vcpkg install --triplet x64-windows gsl
+          vcpkg install --triplet x64-windows proj
           vcpkg list --triplet x64-windows
 
       - name: Configure
