@@ -1,116 +1,41 @@
 name: Build for Windows
 
-# This action runs:
-# - When this file changes
-# - When changes on code (src, include)
-# - When changes on data or testing scripts (tools/testers)
-# - When the way the build changes (CMakeLists.txt)
-#
-# Test is done on:
-# - the preinstalled postgres version
-# - postgis 3
-
 on:
   push:
-    paths:
-      - '.github/workflows/windows.yml'
-      - 'meos/**'
-      - 'mobilitydb/**'
-      - 'CMakeLists.txt'
-
-    branches-ignore:
-      - 'gh-pages'
-
-    tags: []
-
+    # branches: [ main ]
   pull_request:
-    paths:
-      - '.github/workflows/windows.yml'
-      - 'meos/**'
-      - 'mobilitydb/**'
-      - 'CMakeLists.txt'
-
-    branches-ignore:
-      - 'gh-pages'
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-permissions:
-  contents: read
-
-env:
-  postgis_version: 3
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
     name: windows
     runs-on: windows-latest
 
-    strategy:
-      matrix:
-        # pg_major: [12.14, 13.10, 14.7, 15.2]
-        pg_version: [15]
-        pg_major: [15.2]
-        postgis_full_version: [3.3.2]
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: 'Setup'
+        uses: msys2/setup-msys2@v2
+        with:
+          install: >-
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-make
+            mingw-w64-ucrt-x86_64-postgresql
+            mingw-w64-ucrt-x86_64-postgis
+            mingw-w64-ucrt-x86_64-gsl
+          update: true
+
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.3.1
-
-      - name: Install PostgreSQL
-        run: |
-          curl https://get.enterprisedb.com/postgresql/postgresql-${{ matrix.pg_major }}-1-windows-x64-binaries.zip --output pgsql.zip
-          Expand-Archive 'pgsql.zip' -Force
-          echo "POSTGRESQL_DIR=$pwd\pgsql\pgsql" >> $env:GITHUB_ENV
-          echo "${{ env.POSTGRESQL_DIR }}"
-
-      - name: Install PostGIS
-        run: |
-          curl https://download.osgeo.org/postgis/windows/pg${{ matrix.pg_version }}/postgis-bundle-pg${{ matrix.pg_version }}-${{ matrix.postgis_full_version }}x64.zip --output postgis.zip
-          Expand-Archive 'postgis.zip' -Force
-          cd postgis\postgis-bundle-pg${{ matrix.pg_version }}-${{ matrix.postgis_full_version }}x64
-          Copy-Item -Path "bin\" -Destination "${{ env.POSTGRESQL_DIR }}\" -Recurse -Container -Force
-          Copy-Item -Path "lib\" -Destination "${{ env.POSTGRESQL_DIR }}\" -Recurse -Container -Force
-          Copy-Item -Path "share\" -Destination "${{ env.POSTGRESQL_DIR }}\" -Recurse -Container -Force
-
-      - name: Start PostgreSQL
-        run: |
-          $env:path += ";$(Get-Location)\pgsql\pgsql\bin\"
-          $env:path -split ";"
-          initdb -D pgsql\data -U postgres
-          pg_ctl -D pgsql\data start
-
-      - name: Check Postgres running
-        run: |
-          ${{ env.POSTGRESQL_DIR }}\bin\psql -U postgres -d postgres -c "SELECT version()"
-
-      - name: Add PostGIS extension
-        run: |
-          ${{ env.POSTGRESQL_DIR }}\bin\psql -U postgres -d postgres -c "CREATE EXTENSION postgis;"
-
-      - name: Check PostGIS running
-        run: |
-          ${{ env.POSTGRESQL_DIR }}\bin\psql -U postgres -d postgres -c "SELECT postgis_full_version();"
-
-      - name: Install GSL
-        run: |
-          git clone https://github.com/Microsoft/vcpkg.git
-          cd vcpkg
-          ./bootstrap-vcpkg.bat
-          ./vcpkg integrate install
-          vcpkg install ms-gsl
 
       - name: Configure
         run: |
           mkdir build
           cd build
-          cmake "-DCMAKE_TOOLCHAIN_FILE=D:/a/MobilityDB/MobilityDB/vcpkg/scripts/buildsystems/vcpkg.cmake" -DPOSTGRESQL_BIN=${{ env.POSTGRESQL_DIR }}\bin -DPOSTGRESQL_INCLUDE_DIR="${{ env.POSTGRESQL_DIR }}\include;${{ env.POSTGRESQL_DIR }}\include\server" -G"Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Release ..
-
+          cmake -G"Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Release ..
       - name: build
         run: |
           cd build
