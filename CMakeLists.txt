@@ -143,6 +143,9 @@ endif()
   # add_definitions(-DNO_HSEARCH_R)
 # endif()
 
+# Added to build on Windows to avoid the error 'M_PI': undeclared identifier
+add_compile_definitions(_USE_MATH_DEFINES)
+
 # Set default compile flags and code coverage for GCC
 if(CMAKE_COMPILER_IS_GNUCC)
   # MobilityDB compiler flags
