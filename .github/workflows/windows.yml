@@ -74,9 +74,9 @@ jobs:
           curl https://download.osgeo.org/postgis/windows/pg${{ matrix.pg_version }}/postgis-bundle-pg${{ matrix.pg_version }}-${{ matrix.postgis_full_version }}x64.zip --output postgis.zip
           Expand-Archive 'postgis.zip' -Force
           cd postgis\postgis-bundle-pg${{ matrix.pg_version }}-${{ matrix.postgis_full_version }}x64
-          Copy-Item -Path "bin\" -Destination "${{ env.POSTGRESQL_DIR }}\" -Recurse -Container -Force -Verbose
-          Copy-Item -Path "lib\" -Destination "${{ env.POSTGRESQL_DIR }}\" -Recurse -Container -Force -Verbose
-          Copy-Item -Path "share\" -Destination "${{ env.POSTGRESQL_DIR }}\" -Recurse -Container -Force -Verbose
+          Copy-Item -Path "bin\" -Destination "${{ env.POSTGRESQL_DIR }}\" -Recurse -Container -Force
+          Copy-Item -Path "lib\" -Destination "${{ env.POSTGRESQL_DIR }}\" -Recurse -Container -Force
+          Copy-Item -Path "share\" -Destination "${{ env.POSTGRESQL_DIR }}\" -Recurse -Container -Force
 
       - name: Start PostgreSQL
         run: |
