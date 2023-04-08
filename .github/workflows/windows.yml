@@ -116,7 +116,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake "-DCMAKE_TOOLCHAIN_FILE=D:/a/MobilityDB/MobilityDB/vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows -UENABLE_NLS -DPOSTGRESQL_BIN=${{ env.POSTGRESQL_DIR }}\bin -DPOSTGRESQL_INCLUDE_DIR="${{ env.POSTGRESQL_DIR }}\include;${{ env.POSTGRESQL_DIR }}\include\server" -G"Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Release ..
+          cmake "-DCMAKE_TOOLCHAIN_FILE=D:/a/MobilityDB/MobilityDB/vcpkg/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows -D_CRT_NONSTDC_NO_DEPRECATE -D_CRT_SECURE_NO_WARNINGS -UENABLE_NLS -DPOSTGRESQL_BIN=${{ env.POSTGRESQL_DIR }}\bin -DPOSTGRESQL_INCLUDE_DIR="${{ env.POSTGRESQL_DIR }}\include;${{ env.POSTGRESQL_DIR }}\include\server" -G"Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Release ..
 
       - name: build
         run: |
