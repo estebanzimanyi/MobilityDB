@@ -37,9 +37,12 @@
 
 /* C */
 #include <math.h>
+/* PostgreSQL */
+#include <postgres.h>
 /* PostGIS */
 #include <liblwgeom.h>
 /* MEOS */
+#include <meos.h>
 #include "general/meos_catalog.h"
 #include "general/temporaltypes.h"
 #include "general/lifting.h"
