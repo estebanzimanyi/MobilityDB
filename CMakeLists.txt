@@ -58,11 +58,14 @@ include(CheckSymbolExists)
 
 # Windows build with MSVC
 if("${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC")
+  message(STATUS "Setting options for Visual Studio")
   set(MSVC 1)
   # Disable native language support
   set(ENABLE_NLS OFF)
   # Disable warning C4996: 'strcpy': This function or variable may be unsafe.
   add_definitions(-D_CRT_SECURE_NO_WARNINGS=1)
+else()
+  message(STATUS "No specific options set")
 endif()
 
 # Option for including network points
