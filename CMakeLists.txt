@@ -58,18 +58,7 @@ include(CheckSymbolExists)
 
 # Windows build with MSVC
 
-message(STATUS "Compiler is ${CMAKE_C_COMPILER_ID}")
-message(STATUS "Compiler is ${CMAKE_CXX_COMPILER_ID}")
-
-# First try
-if (MSVC)
-  message(STATUS "Setting options for Visual Studio")
-else()
-  message(STATUS "No specific options set")
-endif()
-
-# Second try
-if("${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC")
+if(CMAKE_GENERATOR STREQUAL "Visual Studio 17 2022")
   message(STATUS "Setting options for Visual Studio")
   set(MSVC 1)
   # Disable native language support
