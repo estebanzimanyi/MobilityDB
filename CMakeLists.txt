@@ -57,6 +57,18 @@ include(CheckSymbolExists)
 #-------------------------------------
 
 # Windows build with MSVC
+
+message(STATUS "Compiler is ${CMAKE_C_COMPILER_ID}")
+message(STATUS "Compiler is ${CMAKE_CXX_COMPILER_ID}")
+
+# First try
+if (MSVC)
+  message(STATUS "Setting options for Visual Studio")
+else()
+  message(STATUS "No specific options set")
+endif()
+
+# Second try
 if("${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC")
   message(STATUS "Setting options for Visual Studio")
   set(MSVC 1)
