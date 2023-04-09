@@ -56,8 +56,13 @@ include(CheckSymbolExists)
 # MobilityDB definitions
 #-------------------------------------
 
-# Added to build on Windows to disable native language support
-set(ENABLE_NLS OFF)
+# Windows build with MSVC
+if(MSVC)
+  # Disable native language support
+  set(ENABLE_NLS OFF)
+  # Disable warning C4996: 'strcpy': This function or variable may be unsafe.
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+endif()
 
 # Option for including network points
 option(MEOS
