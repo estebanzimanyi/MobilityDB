@@ -57,7 +57,8 @@ include(CheckSymbolExists)
 #-------------------------------------
 
 # Windows build with MSVC
-if(${CMAKE_C_COMPILER_ID} MATCHES "MSVC")
+if(${CMAKE_C_COMPILER_ID} STREQUAL "MSVC")
+  set(MSVC 1)
   # Disable native language support
   set(ENABLE_NLS OFF)
   # Disable warning C4996: 'strcpy': This function or variable may be unsafe.
