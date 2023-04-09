@@ -57,7 +57,7 @@ include(CheckSymbolExists)
 #-------------------------------------
 
 # Windows build with MSVC
-if(${CMAKE_C_COMPILER_ID} STREQUAL "MSVC")
+if("${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC")
   set(MSVC 1)
   # Disable native language support
   set(ENABLE_NLS OFF)
