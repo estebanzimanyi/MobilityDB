@@ -109,7 +109,7 @@ jobs:
           vcpkg install --triplet x64-windows proj
           vcpkg install --triplet x64-windows geos
           vcpkg install --triplet x64-windows json-c
-          # vcpkg install --triplet x64-windows gettext
+          vcpkg install --triplet x64-windows gettext
           vcpkg list --triplet x64-windows
 
       - name: Configure
