@@ -105,6 +105,21 @@ add_subdirectory("${CMAKE_SOURCE_DIR}/meos/src" "meos_src")
 include_directories("pg_include")
 add_subdirectory("src")
 
+# Must be after add_library
+if(CMAKE_GENERATOR STREQUAL "Visual Studio 17 2022")
+  # Disable all warnings on embeded code from PostgreSQL and PostGIS
+  target_compile_options(liblwgeom PRIVATE "/W0")
+  target_compile_options(libpgcommon PRIVATE "/W0")
+  target_compile_options(ryu PRIVATE "/W0")
+  # Enable all warnings on MEOS and MobilityDB
+  target_compile_options(general PRIVATE "/Wall")
+  target_compile_options(point PRIVATE "/Wall")
+  target_compile_options(npoint PRIVATE "/Wall")
+  target_compile_options(pg_general PRIVATE "/Wall")
+  target_compile_options(pg_point PRIVATE "/Wall")
+  target_compile_options(pg_npoint PRIVATE "/Wall")
+endif()
+
 #--------------------------------
 # Build MobilityDB library
 #--------------------------------
@@ -134,11 +149,6 @@ add_library(${MOBILITYDB_LIB_NAME} MODULE ${PROJECT_OBJECTS})
 if(APPLE)
   set_target_properties(${MOBILITYDB_LIB_NAME} PROPERTIES
     LINK_FLAGS "-Wl,-undefined,dynamic_lookup -bundle_loader /usr/local/bin/postgres")
-endif()
-
-if(CMAKE_GENERATOR STREQUAL "Visual Studio 17 2022")
-  # Enable all warnings on MobilityDB
-  target_compile_options(mobilitydb PRIVATE "/Wall")
 endif()
 
 #--------------------------------
