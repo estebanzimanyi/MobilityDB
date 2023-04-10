@@ -105,6 +105,11 @@ add_subdirectory("${CMAKE_SOURCE_DIR}/meos/src" "meos_src")
 include_directories("pg_include")
 add_subdirectory("src")
 
+if(CMAKE_GENERATOR STREQUAL "Visual Studio 17 2022")
+  # Enable all warnings on MobilityDB
+  target_compile_options(mobilitydb PRIVATE "/Wall")
+endif()
+
 #--------------------------------
 # Build MobilityDB library
 #--------------------------------
