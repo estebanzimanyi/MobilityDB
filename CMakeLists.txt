@@ -65,8 +65,17 @@ if(CMAKE_GENERATOR STREQUAL "Visual Studio 17 2022")
   set(ENABLE_NLS OFF)
   # Disable warning C4996: 'strcpy': This function or variable may be unsafe.
   add_definitions(-D_CRT_SECURE_NO_WARNINGS=1)
-else()
-  message(STATUS "No specific options set")
+  # Enable all warnings on MEOS and MobilityDB
+  target_compile_options(meos PRIVATE "/Wall")
+  target_compile_options(mobilitydb PRIVATE "/Wall")
+  # Disable warnings on embedded PostgreSQL code
+  target_compile_options(port PRIVATE "/W0")
+  target_compile_options(timezone PRIVATE "/W0")
+  target_compile_options(utils PRIVATE "/W0")
+  # Disable warnings on embedded PostGIS code
+  target_compile_options(liblwgeom PRIVATE "/W0")
+  target_compile_options(libpgcommon PRIVATE "/W0")
+  target_compile_options(ryu PRIVATE "/W0")
 endif()
 
 # Option for including network points
