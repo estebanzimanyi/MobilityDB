@@ -62,7 +62,7 @@ if(CMAKE_GENERATOR STREQUAL "Visual Studio 17 2022")
   message(STATUS "Setting options for Visual Studio")
   set(MSVC 1)
   # Disable native language support
-  set(ENABLE_NLS OFF)
+  add_definitions(-DENABLE_NLS=0)
   # Disable warning C4996: 'strcpy': This function or variable may be unsafe.
   add_definitions(-D_CRT_SECURE_NO_WARNINGS=1)
 endif()
