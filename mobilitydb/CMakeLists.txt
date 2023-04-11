@@ -163,6 +163,9 @@ target_link_libraries(${MOBILITYDB_LIB_NAME} ${JSON-C_LIBRARIES})
 target_link_libraries(${MOBILITYDB_LIB_NAME} ${LWGEOM_LIBRARIES})
 target_link_libraries(${MOBILITYDB_LIB_NAME} ${GSL_LIBRARY})
 target_link_libraries(${MOBILITYDB_LIB_NAME} ${GSL_CBLAS_LIBRARY})
+target_link_libraries(${MOBILITYDB_LIB_NAME} ${GEOS_LIBRARY})
+target_link_libraries(${MOBILITYDB_LIB_NAME} ${PROJ_LIBRARIES})
+target_link_libraries(${MOBILITYDB_LIB_NAME} ${POSTGIS_LIBRARY})
 
 #--------------------------------
 # Belongs to MobilityDB
