@@ -31,7 +31,6 @@ jobs:
             mingw-w64-ucrt-x86_64-postgresql
             mingw-w64-ucrt-x86_64-postgis
             mingw-w64-ucrt-x86_64-gsl
-          update: true
 
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.3.1
