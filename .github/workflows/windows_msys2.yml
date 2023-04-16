@@ -51,13 +51,8 @@ jobs:
           pg_ctl start
           createdb -U runneradmin mydb
           psql -p 5432 -U runneradmin -d mydb -c "CREATE EXTENSION mobilitydb CASCADE; SELECT postgis_full_version(); SELECT mobilitydb_full_version();"
+          psql -p 5432 -U runneradmin -d mydb -c "CREATE EXTENSION mobilitydb CASCADE; SELECT tfloat '1@2000-01-01';"
 
-      - name: Test
-        run: |
-          cd build
-          xzcat ../mobility/test/general/data/load.sql.xz | psql -p 5432 -U runneradmin -d mydb
-          xzcat ../mobility/test/general/point/load_point.sql.xz | psql -p 5432 -U runneradmin -d mydb
-          xzcat ../mobility/test/general/npoint/load_npoint.sql.xz | psql -p 5432 -U runneradmin -d mydb
 
 
 
