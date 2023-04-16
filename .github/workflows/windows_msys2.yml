@@ -46,12 +46,16 @@ jobs:
 
       - name: Test install
         run: |
+          # Set Paths
+          $env:path += ";D:/a/_temp/msys64/ucrt64/lib;D:/a/_temp/msys64/ucrt64/bin;"
+          # List Paths
+          $env:path -split ";"
+          # Create a new PostgreSQL database cluster and create the database
           export PGDATA="D:/a/_temp/msys64/usr/local/pgsql/data"
-          echo "${{ env.PATH }}"
-          echo "${{ env.LD_LIBRARY_PATH }}"
           initdb
           pg_ctl start
           createdb -U runneradmin mydb
+          # Create and test the extension
           psql -p 5432 -U runneradmin -d mydb -c "CREATE EXTENSION mobilitydb CASCADE; SELECT postgis_full_version(); SELECT mobilitydb_full_version();"
           psql -p 5432 -U runneradmin -d mydb -c "SELECT tfloat '[1@2000-01-01]';"
 
