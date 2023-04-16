@@ -47,8 +47,8 @@ jobs:
       - name: Test install
         run: |
           export PGDATA="D:/a/_temp/msys64/usr/local/pgsql/data"
-          echo $PATH
-          echo $LD_LIBRARY_PATH
+          echo "${{ env.$PATH }}"
+          echo "${{ env.$LD_LIBRARY_PATH }}"
           initdb
           pg_ctl start
           createdb -U runneradmin mydb
