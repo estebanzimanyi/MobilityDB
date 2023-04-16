@@ -53,7 +53,7 @@ jobs:
           pg_ctl start
           createdb -U runneradmin mydb
           psql -p 5432 -U runneradmin -d mydb -c "CREATE EXTENSION mobilitydb CASCADE; SELECT postgis_full_version(); SELECT mobilitydb_full_version();"
-          psql -p 5432 -U runneradmin -d mydb -c "SELECT tfloat '1@2000-01-01';"
+          psql -p 5432 -U runneradmin -d mydb -c "SELECT tfloat '[1@2000-01-01]';"
 
 
 
