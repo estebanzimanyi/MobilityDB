@@ -6,8 +6,8 @@ name: Main Build
 
 on:
   workflow_dispatch:
-  push:
-    branch_ignore: gh-pages
+  # push:
+    # branch_ignore: gh-pages
   pull_request:
     branch_ignore: gh-pages
 
