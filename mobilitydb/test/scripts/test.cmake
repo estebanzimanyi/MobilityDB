@@ -33,102 +33,112 @@ if(TEST_OPER MATCHES "test_setup")
   # Create test directories
   #-------------------------
 
-  if (NOT EXISTS "${TEST_DIR}")
-    message(STATUS "Test directory '${TEST_DIR}' does not exits, nothing done")
-  else()
-    message(STATUS "Removing test directory: '${TEST_DIR}'")
-    execute_process(
-      COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}
-      ERROR_VARIABLE TEST_ERROR
-      RESULT_VARIABLE TEST_RESULT
-    )
-    if(TEST_RESULT)
-      message(FATAL_ERROR "Failed to remove test directory:\n${TEST_RESULT}\n${TEST_ERROR}")
-    else()
-      message(STATUS "Test directory removed: '${TEST_DIR}'")
-    endif()
-  endif()
+  # if (NOT EXISTS "${TEST_DIR}")
+    # message(STATUS "Test directory '${TEST_DIR}' does not exits, nothing done")
+  # else()
+    # message(STATUS "Removing test directory: '${TEST_DIR}'")
+    # execute_process(
+      # COMMAND ${CMAKE_COMMAND} -E remove_directory ${TEST_DIR}
+      # ERROR_VARIABLE TEST_ERROR
+      # RESULT_VARIABLE TEST_RESULT
+    # )
+    # if(TEST_RESULT)
+      # message(FATAL_ERROR "Failed to remove test directory:\n${TEST_RESULT}\n${TEST_ERROR}")
+    # else()
+      # message(STATUS "Test directory removed: '${TEST_DIR}'")
+    # endif()
+  # endif()
 
-  execute_process(
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_DIR}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_DIR_DB}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_DIR_LOCK}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_DIR_LOG}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_DIR_OUT}
-    ERROR_VARIABLE TEST_ERROR
-    RESULT_VARIABLE TEST_RESULT
-  )
-  if(TEST_RESULT)
-    message(FATAL_ERROR "Failed to create test directories:\n${TEST_RESULT}\n${TEST_ERROR}")
-  else()
-    message(STATUS "Test directories created: '${TEST_DIR}'")
-  endif()
+  # execute_process(
+    # COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_DIR}
+    # COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_DIR_DB}
+    # COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_DIR_LOCK}
+    # COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_DIR_LOG}
+    # COMMAND ${CMAKE_COMMAND} -E make_directory ${TEST_DIR_OUT}
+    # ERROR_VARIABLE TEST_ERROR
+    # RESULT_VARIABLE TEST_RESULT
+  # )
+  # if(TEST_RESULT)
+    # message(FATAL_ERROR "Failed to create test directories:\n${TEST_RESULT}\n${TEST_ERROR}")
+  # else()
+    # message(STATUS "Test directories created: '${TEST_DIR}'")
+  # endif()
 
   #-------------------------
   # Create database cluster
   #-------------------------
 
-  execute_process(
-    COMMAND ${POSTGRESQL_BIN_DIR}/initdb -D ${TEST_DIR_DB}
-    OUTPUT_FILE ${TEST_DIR_LOG}/initdb.log
-    ERROR_FILE ${TEST_DIR_LOG}/initdb.log
-    ERROR_VARIABLE TEST_ERROR
-    RESULT_VARIABLE TEST_RESULT
-  )
-  if(TEST_RESULT)
-    message(FATAL_ERROR "Failed to create database cluster with initdb:\n${TEST_RESULT}\n${TEST_ERROR}")
-  else()
-    message(STATUS "Database cluster created with initdb")
-  endif()
+  # message(STATUS "${POSTGRESQL_BIN_DIR}/initdb -U postgres -D ${TEST_DIR_DB} <-----------")
+  # if(EXISTS "${TEST_DIR_DB}")
+    # message(STATUS "The directory '${TEST_DIR_DB}' exists")
+  # else()
+    # message(STATUS "The directory '${TEST_DIR_DB}' DOES NOT EXISTS !")
+  # endif()
+  # execute_process(
+    # COMMAND -E env "PGDATA=${TEST_DIR_DB}" env "PGUSER=postgres" ${POSTGRESQL_BIN_DIR}/initdb -d
+    # OUTPUT_FILE ${TEST_DIR_LOG}/initdb.log
+    # ERROR_FILE ${TEST_DIR_LOG}/initdb.log
+    # ERROR_VARIABLE TEST_ERROR
+    # RESULT_VARIABLE TEST_RESULT
+  # )
+  # if(TEST_RESULT)
+    # message(FATAL_ERROR "Failed to create database cluster with initdb:\n${TEST_RESULT}\n${TEST_ERROR}")
+  # else()
+    # message(STATUS "Database cluster created with initdb")
+  # endif()
 
   #--------------------------------
   # Configure file postgresql.conf
   #--------------------------------
 
-  set(mobilitydb.config "shared_preload_libraries = '${POSTGIS_LIBRARY}'\n")
-  string(APPEND mobilitydb.config "max_locks_per_transaction = 128\n")
-  string(APPEND mobilitydb.config "timezone = 'UTC'\n")
-  string(APPEND mobilitydb.config "parallel_tuple_cost = 100\n")
-  string(APPEND mobilitydb.config "parallel_setup_cost = 100\n")
-  string(APPEND mobilitydb.config "force_parallel_mode = off\n")
-  string(APPEND mobilitydb.config "min_parallel_table_scan_size = 0\n")
-  string(APPEND mobilitydb.config "min_parallel_index_scan_size = 0\n")
-  file(APPEND ${TEST_DIR_DB}/postgresql.conf "${mobilitydb.config}")
-  message(STATUS "PostgreSQL configured for MobilityDB: ${TEST_DIR_DB}/postgresql.conf")
+  # set(mobilitydb.config "shared_preload_libraries = '${POSTGIS_LIBRARY}'\n")
+  # string(APPEND mobilitydb.config "max_locks_per_transaction = 128\n")
+  # string(APPEND mobilitydb.config "timezone = 'UTC'\n")
+  # string(APPEND mobilitydb.config "parallel_tuple_cost = 100\n")
+  # string(APPEND mobilitydb.config "parallel_setup_cost = 100\n")
+  # string(APPEND mobilitydb.config "force_parallel_mode = off\n")
+  # string(APPEND mobilitydb.config "min_parallel_table_scan_size = 0\n")
+  # string(APPEND mobilitydb.config "min_parallel_index_scan_size = 0\n")
+  # file(APPEND ${TEST_DIR_DB}/postgresql.conf "${mobilitydb.config}")
+  # message(STATUS "PostgreSQL configured for MobilityDB: ${TEST_DIR_DB}/postgresql.conf")
 
   #-------------------------
   # Start PostgreSQL
   #-------------------------
 
-  execute_process(
-    COMMAND ${POSTGRESQL_BIN_DIR}/pg_ctl -w -D ${TEST_DIR_DB} -l ${TEST_DIR_LOG}/postgres.log -o -k -o ${TEST_DIR_LOCK} start -o -h -o ''
-    OUTPUT_FILE ${TEST_DIR_LOG}/pg_start.log
-    ERROR_FILE ${TEST_DIR_LOG}/pg_start.log
-    ERROR_VARIABLE TEST_ERROR
-    RESULT_VARIABLE TEST_RESULT
-  )
-  if(TEST_RESULT)
-    message(FATAL_ERROR "Failed to start PostgreSQL server:\n${TEST_RESULT}\n${TEST_ERROR}")
-  else()
-    message(STATUS "PostgreSQL server started")
-  endif()
+  # execute_process(
+    # COMMAND ${POSTGRESQL_BIN_DIR}/pg_ctl -w -D ${TEST_DIR_DB} -l ${TEST_DIR_LOG}/postgres.log -o -k -o ${TEST_DIR_LOCK} start -o -h -o ''
+    # OUTPUT_FILE ${TEST_DIR_LOG}/pg_start.log
+    # ERROR_FILE ${TEST_DIR_LOG}/pg_start.log
+    # ERROR_VARIABLE TEST_ERROR
+    # RESULT_VARIABLE TEST_RESULT
+  # )
+  # if(TEST_RESULT)
+    # message(FATAL_ERROR "Failed to start PostgreSQL server:\n${TEST_RESULT}\n${TEST_ERROR}")
+  # else()
+    # message(STATUS "PostgreSQL server started")
+  # endif()
 
   #------------------------------------------
   # Create PostGIS and MobilityDB extensions
   #------------------------------------------
 
+  # execute_process(
+    # COMMAND ${POSTGRESQL_BIN_DIR}/psql -e --set ON_ERROR_STOP=0 -d postgres -c "CREATE EXTENSION mobilitydb CASCADE; SELECT postgis_full_version(); SELECT mobilitydb_full_version();"
+    # OUTPUT_FILE ${TEST_DIR_LOG}/create_ext.log
+    # ERROR_FILE ${TEST_DIR_LOG}/create_ext.log
+    # ERROR_VARIABLE TEST_ERROR
+    # RESULT_VARIABLE TEST_RESULT
+  # )
+  # if(TEST_RESULT)
+    # message(FATAL_ERROR "Failed to create MobilityDB extension:\n${TEST_RESULT}\n${TEST_ERROR}")
+  # else()
+    # message(STATUS "MobilityDB extension created")
+  # endif()
+
   execute_process(
-    COMMAND ${POSTGRESQL_BIN_DIR}/psql -h ${TEST_DIR_LOCK} -e --set ON_ERROR_STOP=0 postgres -c "CREATE EXTENSION mobilitydb CASCADE; SELECT postgis_full_version(); SELECT mobilitydb_full_version();"
-    OUTPUT_FILE ${TEST_DIR_LOG}/create_ext.log
-    ERROR_FILE ${TEST_DIR_LOG}/create_ext.log
-    ERROR_VARIABLE TEST_ERROR
-    RESULT_VARIABLE TEST_RESULT
-  )
-  if(TEST_RESULT)
-    message(FATAL_ERROR "Failed to create MobilityDB extension:\n${TEST_RESULT}\n${TEST_ERROR}")
-  else()
-    message(STATUS "MobilityDB extension created")
-  endif()
+    COMMAND ${CMAKE_COMMAND} -E true)
+  message(STATUS "Test setup succeeded")
 
 #-------------------------------------------------------------------------------
 # Compare the actual and the expected results of the test
@@ -146,7 +156,7 @@ elseif(TEST_OPER MATCHES "run_compare")
 
   # Execute the test
   execute_process(
-    COMMAND ${POSTGRESQL_BIN_DIR}/psql -h ${TEST_DIR_LOCK} -e --set ON_ERROR_STOP=0 postgres
+    COMMAND ${POSTGRESQL_BIN_DIR}/psql -e --set ON_ERROR_STOP=0 -d postgres
     INPUT_FILE ${TEST_FILE}
     OUTPUT_FILE ${TEST_DIR_OUT}/${TEST_NAME}.out
     ERROR_FILE ${TEST_DIR_OUT}/${TEST_NAME}.out
@@ -220,14 +230,14 @@ elseif(TEST_OPER MATCHES "run_passfail")
     get_filename_component(TEST_FILE_NAME ${TEST_FILE} NAME_WLE)
     execute_process(
       COMMAND ${XZCAT_EXECUTABLE} ${TEST_FILE}
-      COMMAND ${POSTGRESQL_BIN_DIR}/psql -h ${TEST_DIR_LOCK} -e --set ON_ERROR_STOP=0 postgres
+      COMMAND ${POSTGRESQL_BIN_DIR}/psql -e --set ON_ERROR_STOP=0 -d postgres
       OUTPUT_QUIET
       ERROR_VARIABLE TEST_ERROR
       RESULT_VARIABLE TEST_RESULT
     )
   else()
     execute_process(
-      COMMAND ${POSTGRESQL_BIN_DIR}/psql -h ${TEST_DIR_LOCK} -e --set ON_ERROR_STOP=0 postgres
+      COMMAND ${POSTGRESQL_BIN_DIR}/psql -e --set ON_ERROR_STOP=0 -d postgres
       INPUT_FILE ${TEST_FILE}
       OUTPUT_FILE ${TEST_DIR_OUT}/${TESTNAME}.out
       ERROR_FILE ${TEST_DIR_OUT}/${TESTNAME}.out
@@ -246,7 +256,7 @@ elseif(TEST_OPER MATCHES "run_passfail")
 elseif(TEST_OPER MATCHES "teardown")
 
   execute_process(
-    COMMAND ${POSTGRESQL_BIN_DIR}/pg_ctl -w -D ${TEST_DIR_DB} stop
+    COMMAND ${POSTGRESQL_BIN_DIR}/pg_ctl -w stop
     OUTPUT_FILE ${TEST_DIR_LOG}/pg_stop.log
     ERROR_FILE ${TEST_DIR_LOG}/pg_stop.log
     ERROR_VARIABLE TEST_ERROR

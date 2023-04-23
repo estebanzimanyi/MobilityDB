@@ -48,6 +48,7 @@ jobs:
         run: |
           # Create a new PostgreSQL database cluster
           export PGDATA="D:/a/_temp/msys64/usr/local/pgsql/data"
+          export PGPORT=5432
           initdb
           # Configure PostgreSQL for MobilityDB
           {
@@ -63,11 +64,10 @@ jobs:
           } >> "${PGDATA}/postgresql.conf"
           # Start PostgreSQL
           pg_ctl start
-          # Create database and add the MobilityDB extension
-          createdb -U runneradmin mydb
-          psql -p 5432 -U runneradmin -d mydb -c "CREATE EXTENSION mobilitydb CASCADE; SELECT postgis_full_version(); SELECT mobilitydb_full_version(); SELECT tfloat '[1@2000-01-01]';"
+          # Add the MobilityDB extension to the default 'postgres' database
+          psql -U runneradmin -d postgres -c "CREATE EXTENSION mobilitydb CASCADE; SELECT postgis_full_version(); SELECT mobilitydb_full_version(); SELECT tfloat '[1@2000-01-01]';"
 
-      # - name: Run tests
-        # run: |
-          # cd build
-          # ctest --output-on-failure
+      - name: Run tests
+        run: |
+          cd build
+          ctest --output-on-failure -R 022_temporal
