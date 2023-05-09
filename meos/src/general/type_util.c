@@ -639,6 +639,17 @@ tseqarr_sort_cmp(TSequence **l, TSequence **r)
   return span_cmp(&lp, &rp);
 }
 
+/**
+ * @brief Comparator function for temporal sequences
+ */
+static int
+gserializedarr_sort_cmp(GSERIALIZED **l, GSERIALIZED **r)
+{
+  GSERIALIZED *lp = *l;
+  GSERIALIZED *rp = *r;
+  return gserialized_cmp(lp, rp);
+}
+
 /*****************************************************************************/
 
 /**
@@ -711,6 +722,16 @@ tseqarr_sort(TSequence **sequences, int count)
     (qsort_comparator) &tseqarr_sort_cmp);
 }
 
+/**
+ * @brief Sort function for GSERIALIZED
+ */
+void
+gserializedarr_sort(GSERIALIZED **geoms, int count)
+{
+  qsort(geoms, (size_t) count, sizeof(GSERIALIZED *),
+    (qsort_comparator) &gserializedarr_sort_cmp);
+}
+
 /*****************************************************************************
  * Remove duplicate functions
  * These functions assume that the array has been sorted before
@@ -755,6 +776,20 @@ tinstarr_remove_duplicates(const TInstant **instants, int count)
   for (int i = 1; i < count; i++)
     if (! tinstant_eq(instants[newcount], instants[i]))
       instants[++ newcount] = instants[i];
+  return newcount + 1;
+}
+
+/**
+ * @brief Remove duplicates from an array of datums
+ */
+int
+gserializedarr_remove_duplicates(GSERIALIZED **values, int count)
+{
+  assert (count > 0);
+  int newcount = 0;
+  for (int i = 1; i < count; i++)
+    if (gserialized_cmp(values[newcount], values[i]) != 0)
+      values[++ newcount] = values[i];
   return newcount + 1;
 }
 

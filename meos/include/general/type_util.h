@@ -70,6 +70,7 @@ extern void double3arr_sort(double3 *triples, int count);
 extern void spanarr_sort(Span *spans, int count);
 extern void tinstarr_sort(TInstant **instants, int count);
 extern void tseqarr_sort(TSequence **sequences, int count);
+extern void gserializedarr_sort(GSERIALIZED **geoms, int count);
 
 /* Remove duplicate functions */
 
@@ -77,6 +78,7 @@ extern int datumarr_remove_duplicates(Datum *values, int count,
   meosType basetype);
 extern int timestamparr_remove_duplicates(TimestampTz *values, int count);
 extern int tinstarr_remove_duplicates(const TInstant **instants, int count);
+extern int gserializedarr_remove_duplicates(GSERIALIZED **values, int count);
 
 /* Text functions */
 

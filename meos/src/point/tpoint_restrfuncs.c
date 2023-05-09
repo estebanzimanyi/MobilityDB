@@ -967,6 +967,188 @@ tpointseq_step_restrict_geom_time(const TSequence *seq,
 /*****************************************************************************/
 
 /**
+ * @brief Find the index of the geometry in a geometry array using binary
+ * search
+ *
+ * If the geometry g is "contained" in the array, the result is the index i of
+ * a geometry gi such gi <= g < gi+1. Otherwise, the result is -1.
+ * For example, given an array of 3 geometries and a geometry g,
+ * the value returned in the output parameter is as follows:
+ * @code
+ *           g0       g1       g2
+ *            |        |        |
+ * 1)    g^                             => result = -1
+ * 2)        g^                         => result = 0
+ * 3)              g^                   => result = 1
+ * 4)                 g^                => result = 1
+ * 5)                          g^       => result = 3
+ * 6)                             g^    => result = -1
+ * @endcode
+ *
+ * @param[in] geoms Array of geometries
+ * @param[in] g Geometry to find
+ * @result Return a positive integer if the point is "contained" in the array
+ */
+int
+geomarr_find_geom(GSERIALIZED **geoms, const GSERIALIZED *g, int count)
+{
+  int first = 0;
+  int last = count - 1;
+  while (first <= last)
+  {
+    int middle = (first + last) / 2;
+    int cmp = gserialized_cmp(g, geoms[middle]);
+    if (cmp == 0)
+      return middle;
+    if (cmp < 0)
+    {
+      /* Compare it with the element just after middle */
+      if (gserialized_cmp(g, geoms[middle + 1]) >= 0)
+        return middle;
+      last = middle - 1;
+    }
+    else /* cmp > 0 */
+    {
+      /* Compare it with the element just before middle */
+      if (gserialized_cmp(g, geoms[middle - 1]) <= 0)
+        return middle;
+      first = middle + 1;
+    }
+  }
+  return -1;
+}
+
+/**
+ * @brief Restrict a temporal sequence point with linear interpolation to a
+ * point.
+ */
+static TInstant *
+tpointseq_linear_at_point_iter(const TInstant *inst1, const TInstant *inst2,
+  bool lower_inc, bool upper_inc, const GSERIALIZED *gs, bool *tofree)
+{
+  TInstant *result = NULL;
+  *tofree = false;
+  Datum start = tinstant_value(inst1);
+  Datum end = tinstant_value(inst2);
+  double dist;
+  double fraction = (double) geosegm_locate_point(start, end,
+    PointerGetDatum(gs), &dist);
+  if (fabs(dist) < MEOS_EPSILON)
+  {
+    double duration = (double) (inst2->t - inst1->t);
+    /* Note that due to roundoff errors it may be the case that the
+     * resulting timestamp t may be equal to inst1->t or to inst2->t */
+    TimestampTz t = inst1->t + (TimestampTz) (duration * fraction);
+    if (t == inst1->t && lower_inc)
+      result = (TInstant *) inst1;
+    else if (t == inst2->t && upper_inc)
+      result = (TInstant *) inst2;
+    else if (inst1->t < t && t < inst2->t)
+    {
+      result = tsegment_at_timestamp(inst1, inst2, LINEAR, t);
+      *tofree = true;
+    }
+  }
+  return result;
+}
+
+/**
+ * @brief Restrict a temporal sequence point with linear interpolation to a
+ * point.
+ */
+static TSequenceSet *
+tpointseq_linear_at_point(const TSequence *seq, const GSERIALIZED *gs)
+{
+  assert(MEOS_FLAGS_GET_INTERP(seq->flags) == LINEAR);
+  assert(gserialized_get_type(gs) == POINTTYPE);
+  assert(seq->count > 1);
+
+  TSequence **sequences = palloc(sizeof(TSequence *) * seq->count);
+  const TInstant *inst1 = TSEQUENCE_INST_N(seq, 0);
+  bool lower_inc = seq->period.lower_inc;
+  int k = 0;
+  for (int i = 1; i < seq->count; i++)
+  {
+    const TInstant *inst2 = TSEQUENCE_INST_N(seq, i);
+    bool upper_inc = (i == seq->count - 1) ? seq->period.upper_inc : false;
+    bool tofree;
+    TInstant *instant = tpointseq_linear_at_point_iter(inst1, inst2,
+     lower_inc, upper_inc, gs, &tofree);
+    if (instant)
+      sequences[k++] = tsequence_make((const TInstant **) &instant, 1,
+        true, true, LINEAR, NORMALIZE_NO);
+    if (tofree)
+      pfree(instant);
+    inst1 = inst2;
+    lower_inc = true;
+  }
+  return tsequenceset_make_free(sequences, k, NORMALIZE_NO);
+}
+
+/**
+ * @brief Restrict a temporal sequence point with linear interpolation to a
+ * point.
+ */
+static TSequenceSet *
+tpointseq_linear_at_mpoint(const TSequence *seq, const GSERIALIZED *gs)
+{
+  assert(MEOS_FLAGS_GET_INTERP(seq->flags) == LINEAR);
+  assert(gserialized_get_type(gs) == MULTIPOINTTYPE);
+  assert(seq->count > 1);
+
+  /* Store the composing points in an array */
+  LWMPOINT *mpoint = lwgeom_as_lwmpoint(lwgeom_from_gserialized(gs));
+  GSERIALIZED **points = palloc(sizeof(GSERIALIZED *) * mpoint->ngeoms);
+  GSERIALIZED **newpoints = palloc(sizeof(GSERIALIZED *) * mpoint->ngeoms);
+  for (uint32_t j = 0; j < mpoint->ngeoms; j++)
+  {
+    LWGEOM *point = (LWGEOM *) mpoint->geoms[j];
+    points[j] = geo_serialize(point);
+    pfree(point);
+  }
+  /* Sort the point array so the points are sorted first on X, then on Y */
+  gserializedarr_sort(points, mpoint->ngeoms);
+  memcpy(newpoints, points, sizeof(GSERIALIZED *) * mpoint->ngeoms);
+  int newcount = gserializedarr_remove_duplicates(newpoints, mpoint->ngeoms);
+
+  TSequence **sequences = palloc(sizeof(TSequence *) * seq->count *
+    mpoint->ngeoms);
+  const TInstant *inst1 = TSEQUENCE_INST_N(seq, 0);
+  bool lower_inc = seq->period.lower_inc;
+  int k = 0;
+  for (int i = 1; i < seq->count; i++)
+  {
+    const TInstant *inst2 = TSEQUENCE_INST_N(seq, i);
+    bool upper_inc = (i == seq->count - 1) ? seq->period.upper_inc : false;
+    GSERIALIZED *start = (GSERIALIZED *) DatumGetPointer(&inst1->value);
+    int from = geomarr_find_geom(points, start, newcount);
+    if (from < 0)
+      continue;
+    for (int j = from; j < newcount; j++)
+    {
+      bool tofree;
+      TInstant *instant = tpointseq_linear_at_point_iter(inst1, inst2,
+        lower_inc, upper_inc, newpoints[j], &tofree);
+      if (instant)
+        sequences[k++] = tsequence_make((const TInstant **) &instant, 1,
+          true, true, LINEAR, NORMALIZE_NO);
+      if (tofree)
+        pfree(instant);
+    }
+    inst1 = inst2;
+    lower_inc = true;
+  }
+  pfree_array((void **) points, mpoint->ngeoms);
+  pfree(newpoints);
+  /* It is necessary to sort the array of sequences */
+  if (k > 1)
+    tseqarr_sort((TSequence **) sequences, k);
+  return tsequenceset_make_free(sequences, k, NORMALIZE_NO);
+}
+
+/*****************************************************************************/
+
+/**
  * @brief Return the timestamp at which a segment of a temporal point takes a
  * base value
  *
@@ -1218,6 +1400,12 @@ tpointseq_linear_at_geom(const TSequence *seq, const GSERIALIZED *gs)
   geo_set_stbox(gs, &box2);
   if (! overlaps_stbox_stbox(&box1, &box2))
     return NULL;
+
+  /* Take care of specific cases for geometry taken care above */
+  if (gserialized_get_type(gs) == POINTTYPE)
+    return tpointseq_linear_at_point(seq, gs);
+  else if (gserialized_get_type(gs) == MULTIPOINTTYPE)
+    return tpointseq_linear_at_mpoint(seq, gs);
 
   /* Convert the point to 2D before computing the restriction to geometry */
   bool hasz = MEOS_FLAGS_GET_Z(seq->flags);

@@ -44,6 +44,7 @@
 /* PostgreSQL */
 /* PostGIS */
 #include <liblwgeom.h>
+#include <liblwgeom_internal.h>
 #include <lwgeom_log.h>
 #include <lwgeom_geos.h>
 /* MEOS */
@@ -735,6 +736,77 @@ meos_point_in_polygon(const GSERIALIZED *geom1, const GSERIALIZED *geom2,
   }
 }
 
+/**
+ * @brief Return the intersection of a (multi)point and a (multi)polygon
+ * @note This function is based PostGIS function pip_short_circuit bypassing
+ * the cache
+ */
+GSERIALIZED *
+meos_point_inter_polygon(const GSERIALIZED *geom1, const GSERIALIZED *geom2)
+{
+  const GSERIALIZED *gpoly = gserialized_is_poly(geom1) ? geom1 : geom2;
+  const GSERIALIZED *gpoint = gserialized_is_point(geom1) ? geom1 : geom2;
+  GSERIALIZED *result = NULL;
+  LWGEOM *lwresult = NULL;
+  uint32_t i;
+
+  LWGEOM *poly = lwgeom_from_gserialized(gpoly);
+  int32 polytype = lwgeom_get_type(poly);
+  /* retval == 1: point completely inside
+   * retval == 0: point in the boundary
+   * retval == -1: point is outside */
+  int retval = -1;
+  if (gserialized_get_type(gpoint) == POINTTYPE)
+  {
+    LWGEOM *point = lwgeom_from_gserialized(gpoint);
+    if ( polytype == POLYGONTYPE )
+      retval = point_in_polygon(lwgeom_as_lwpoly(poly),
+        lwgeom_as_lwpoint(point));
+    else /* polytype == MULTIPOLYGONTYPE */
+      retval = point_in_multipolygon(lwgeom_as_lwmpoly(poly),
+        lwgeom_as_lwpoint(point));
+    lwgeom_free(point);
+    lwgeom_free(poly);
+    return retval >= 0 ? gserialized_copy(gpoint) : NULL;
+  }
+  else /* gserialized_get_type(gpoint) == MULTIPOINTTYPE */
+  {
+    LWMPOINT* mpoint = lwgeom_as_lwmpoint(lwgeom_from_gserialized(gpoint));
+    LWGEOM **respoints = palloc(sizeof(LWGEOM *) * mpoint->ngeoms);
+    uint32_t k = 0;
+    for (i = 0; i < mpoint->ngeoms; i++)
+    {
+       if ( polytype == POLYGONTYPE )
+        retval = point_in_polygon(lwgeom_as_lwpoly(poly), mpoint->geoms[i]);
+      else /* polytype == MULTIPOLYGONTYPE */
+        retval = point_in_multipolygon(lwgeom_as_lwmpoly(poly), mpoint->geoms[i]);
+      /* Output the point if retval != -1  */
+      if (retval >= 0)
+        respoints[k++] = lwpoint_as_lwgeom(mpoint->geoms[i]);
+    }
+    if (k == 1)
+    {
+      lwresult = lwpoint_as_lwgeom(lwgeom_as_lwpoint(respoints[0]));
+      result = geo_serialize(lwresult);
+    }
+    else if (k > 1)
+    {
+      lwresult = (LWGEOM *) lwcollection_construct(MULTIPOINTTYPE,
+        respoints[0]->srid, NULL, k, respoints);
+      FLAGS_SET_Z(result->gflags, FLAGS_GET_Z(respoints[0]->flags));
+      FLAGS_SET_GEODETIC(result->gflags,
+        FLAGS_GET_GEODETIC(respoints[0]->flags));
+      result = geo_serialize(lwresult);
+      for (i = 0; i < k; i++)
+        lwpoint_free((LWPOINT *) respoints[i]);
+    }
+    pfree(respoints);
+    lwmpoint_free(mpoint);
+    lwgeom_free(poly);
+    return result;
+  }
+}
+
 GEOSGeometry *
 POSTGIS2GEOS(const GSERIALIZED *pglwgeom)
 {
@@ -944,6 +1016,29 @@ gserialized_intersection(const GSERIALIZED *geom1, const GSERIALIZED *geom2)
   double prec = -1;
   lwgeom1 = lwgeom_from_gserialized(geom1);
   lwgeom2 = lwgeom_from_gserialized(geom2);
+
+  /*
+   * short-circuit 1: if geom2 bounding box does not overlap
+   * geom1 bounding box we can return NULL.
+   */
+  GBOX box1, box2;
+  if (gserialized_get_gbox_p(geom1, &box1) &&
+      gserialized_get_gbox_p(geom2, &box2))
+  {
+    if (gbox_overlaps_2d(&box1, &box2) == LW_FALSE)
+      return NULL;
+  }
+
+  /*
+   * short-circuit 2: if the geoms are a point and a polygon,
+   * call the point_inter_polygon function.
+   */
+  if ((gserialized_is_point(geom1) && gserialized_is_poly(geom2)) ||
+      (gserialized_is_poly(geom1) && gserialized_is_point(geom2)))
+  {
+    return meos_point_inter_polygon(geom1, geom2);
+  }
+
   lwresult = lwgeom_intersection_prec(lwgeom1, lwgeom2, prec);
   result = geo_serialize(lwresult);
   lwgeom_free(lwgeom1);
