@@ -173,7 +173,7 @@ extern Temporal *tpoint_get_coord(const Temporal *temp, int coord);
 extern TSequence **tpointseq_at_geom(const TSequence *seq,
   const GSERIALIZED *gs, int *count);
 extern Span *tpointseq_interperiods(const TSequence *seq,
-  GSERIALIZED *gsinter, int *count);
+  const GSERIALIZED *gs, int *count);
 
 /*****************************************************************************/
 
