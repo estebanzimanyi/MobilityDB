@@ -86,6 +86,7 @@
 #include "general/type_util.h"
 #include "point/pgis_call.h"
 #include "point/tpoint_spatialfuncs.h"
+#include "point/tpoint_restrfuncs.h"
 #include "point/tpoint_spatialrels.h"
 
 /*****************************************************************************
@@ -183,165 +184,9 @@ tinterrel_tpointseq_discstep_geom(const TSequence *seq, Datum geom,
  * @param[in] box Bounding box of the geometry
  * @param[in] tinter True when computing tintersects, false for tdisjoint
  * @param[out] count Number of elements in the resulting array
- * @pre The temporal point is simple, that is, non self-intersecting
  */
 static TSequence **
-tinterrel_tpointseq_simple_geom(const TSequence *seq, Datum geom,
-  const STBox *box, bool tinter, int *count)
-{
-  /* The temporal sequence has at least 2 instants since
-   * (1) the instantaneous full sequence test is done in the calling function
-   * (2) the simple components of a non self-intersecting sequence have at least
-   *     two instants */
-  assert(seq->count > 1);
-  TSequence **result;
-  /* Result depends on whether we are computing tintersects or tdisjoint */
-  Datum datum_yes = tinter ? BoolGetDatum(true) : BoolGetDatum(false);
-  Datum datum_no = tinter ? BoolGetDatum(false) : BoolGetDatum(true);
-
-  /* Bounding box test */
-  STBox *box1 = TSEQUENCE_BBOX_PTR(seq);
-  if (! overlaps_stbox_stbox(box1, box))
-  {
-    result = palloc(sizeof(TSequence *));
-    result[0] = tsequence_from_base_period(datum_no, T_TBOOL, &seq->period,
-      STEP);
-    *count = 1;
-    return result;
-  }
-
-  Datum traj = PointerGetDatum(tpointseq_cont_trajectory(seq));
-  Datum inter = geom_intersection2d(traj, geom);
-  GSERIALIZED *gsinter = DatumGetGserializedP(inter);
-  if (gserialized_is_empty(gsinter))
-  {
-    result = palloc(sizeof(TSequence *));
-    result[0] = tsequence_from_base_period(datum_no, T_TBOOL, &seq->period,
-      STEP);
-    pfree(DatumGetPointer(inter));
-    *count = 1;
-    return result;
-  }
-
-  const TInstant *start = TSEQUENCE_INST_N(seq, 0);
-  const TInstant *end = TSEQUENCE_INST_N(seq, seq->count - 1);
-  /* If the trajectory is a point the result is true due to the
-   * non-empty intersection test above */
-  if (seq->count == 2 &&
-    datum_point_eq(tinstant_value(start), tinstant_value(end)))
-  {
-    result = palloc(sizeof(TSequence *));
-    result[0] = tsequence_from_base_period(datum_yes, T_TBOOL, &seq->period,
-      STEP);
-    PG_FREE_IF_COPY_P(gsinter, DatumGetPointer(inter));
-    pfree(DatumGetPointer(inter));
-    *count = 1;
-    return result;
-  }
-
-  /* Get the periods at which the temporal point intersects the geometry */
-  int npers;
-  Span *periods = tpointseq_interperiods(seq, gsinter, &npers);
-  if (npers == 0)
-  {
-    result = palloc(sizeof(TSequence *));
-    result[0] = tsequence_from_base_period(datum_no, T_TBOOL, &seq->period,
-      STEP);
-    pfree(gsinter);
-    *count = 1;
-    return result;
-  }
-  SpanSet *ps;
-  if (npers == 1)
-    ps = minus_span_span(&seq->period, &periods[0]);
-  else
-  {
-    /* It is necessary to sort the periods */
-    spanarr_sort(periods, npers);
-    SpanSet *ps1 = spanset_make(periods, npers, NORMALIZE);
-    ps = minus_span_spanset(&seq->period, ps1);
-    pfree(ps1);
-  }
-  int nseqs = npers;
-  if (ps != NULL)
-    nseqs += ps->count;
-  result = palloc(sizeof(TSequence *) * nseqs);
-  for (int i = 0; i < npers; i++)
-    result[i] = tsequence_from_base_period(datum_yes, T_TBOOL, &periods[i],
-      STEP);
-  if (ps != NULL)
-  {
-    for (int i = 0; i < ps->count; i++)
-    {
-      const Span *p = spanset_sp_n(ps, i);
-      result[i + npers] = tsequence_from_base_period(datum_no, T_TBOOL, p,
-        STEP);
-    }
-    tseqarr_sort(result, nseqs);
-    pfree(ps);
-  }
-  pfree(periods);
-  *count = nseqs;
-  return result;
-}
-
-/**
- * @brief Evaluates tintersects/tdisjoint for a temporal point and a geometry.
- *
- * The function splits the temporal point in an array of fragments that are
- * simple (that is, not self-intersecting) and loops for each fragment.
- * @param[in] seq Temporal point
- * @param[in] geom Geometry
- * @param[in] box Bounding box of the geometry
- * @param[in] tinter True when computing tintersects, false for tdisjoint
- * @param[in] func PostGIS function to be used for instantaneous sequences
- * @param[out] count Number of elements in the output array
- */
-static TSequence **
-tinterrel_tpointseq_cont_geom_iter(const TSequence *seq, Datum geom,
-  const STBox *box, bool tinter, Datum (*func)(Datum, Datum), int *count)
-{
-  /* Instantaneous sequence */
-  if (seq->count == 1)
-  {
-    TInstant *inst = tinterrel_tpointinst_geom(TSEQUENCE_INST_N(seq, 0),
-      geom, tinter, func);
-    TSequence **result = palloc(sizeof(TSequence *));
-    result[0] = tinstant_to_tsequence(inst, STEP);
-    pfree(inst);
-    *count = 1;
-    return result;
-  }
-
-  /* Split the temporal point in an array of non self-intersecting
-   * temporal points */
-  int nsimple;
-  TSequence **simpleseqs = tpointseq_make_simple(seq, &nsimple);
-  TSequence ***sequences = palloc(sizeof(TSequence *) * nsimple);
-  /* palloc0 used due to initialize the counters to 0 */
-  int *countseqs = palloc0(sizeof(int) * nsimple);
-  int totalcount = 0;
-  for (int i = 0; i < nsimple; i++)
-  {
-    sequences[i] = tinterrel_tpointseq_simple_geom(simpleseqs[i], geom, box,
-      tinter, &countseqs[i]);
-    totalcount += countseqs[i];
-  }
-  *count = totalcount;
-  return tseqarr2_to_tseqarr(sequences, countseqs, nsimple, totalcount);
-}
-
-
-/**
- * @brief Evaluates tintersects/tdisjoint for a temporal point and a geometry.
- * @param[in] seq Temporal point
- * @param[in] geom Geometry
- * @param[in] box Bounding box of the geometry
- * @param[in] tinter True when computing tintersects, false for tdisjoint
- * @param[out] count Number of elements in the resulting array
- */
-static TSequence **
-tinterrel_tpointseq_cont_geom_iter_new1(const TSequence *seq, Datum geom,
+tinterrel_tpointseq_cont_geom_iter1(const TSequence *seq, Datum geom,
   const STBox *box, bool tinter, int *count)
 {
   /* The temporal sequence has at least 2 instants since
@@ -368,7 +213,7 @@ tinterrel_tpointseq_cont_geom_iter_new1(const TSequence *seq, Datum geom,
   /* Get the periods at which the temporal point intersects the geometry */
   GSERIALIZED *gs = DatumGetGserializedP(geom);
   int npers;
-  Span *periods = tpointseq_interperiods_new(seq, gs, &npers);
+  Span *periods = tpointseq_interperiods(seq, gs, &npers);
   PG_FREE_IF_COPY_P(gs, DatumGetPointer(geom));
   if (npers == 0)
   {
@@ -412,8 +257,16 @@ tinterrel_tpointseq_cont_geom_iter_new1(const TSequence *seq, Datum geom,
   return result;
 }
 
+/**
+ * @brief Evaluates tintersects/tdisjoint for a temporal point and a geometry.
+ * @param[in] seq Temporal point
+ * @param[in] geom Geometry
+ * @param[in] box Bounding box of the geometry
+ * @param[in] tinter True when computing tintersects, false for tdisjoint
+ * @param[out] count Number of elements in the resulting array
+ */
 static TSequence **
-tinterrel_tpointseq_cont_geom_iter_new(const TSequence *seq, Datum geom,
+tinterrel_tpointseq_cont_geom_iter(const TSequence *seq, Datum geom,
   const STBox *box, bool tinter, Datum (*func)(Datum, Datum), int *count)
 {
   /* Instantaneous sequence */
@@ -430,7 +283,7 @@ tinterrel_tpointseq_cont_geom_iter_new(const TSequence *seq, Datum geom,
 
   /* General case */
   int nseqs;
-  TSequence **result = tinterrel_tpointseq_cont_geom_iter_new1(seq, geom, box,
+  TSequence **result = tinterrel_tpointseq_cont_geom_iter1(seq, geom, box,
     tinter, &nseqs);
   *count = nseqs;
   return result;
@@ -455,8 +308,7 @@ tinterrel_tpointseq_cont_geom(const TSequence *seq, Datum geom,
   /* Split the temporal point in an array of non self-intersecting
    * temporal points */
   int count;
-  // TSequence **sequences = tinterrel_tpointseq_cont_geom_iter(seq, geom, box,
-  TSequence **sequences = tinterrel_tpointseq_cont_geom_iter_new(seq, geom, box,
+  TSequence **sequences = tinterrel_tpointseq_cont_geom_iter(seq, geom, box,
     tinter, func, &count);
   /* We are sure that count > 0 since the geometry is not empty */
   return tsequenceset_make_free(sequences, count, NORMALIZE);

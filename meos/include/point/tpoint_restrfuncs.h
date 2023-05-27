@@ -58,8 +58,6 @@ extern TSequence **tpointseq_at_geom(const TSequence *seq,
   const GSERIALIZED *gs, int *count);
 extern Span *tpointseq_interperiods(const TSequence *seq,
   const GSERIALIZED *gs, int *count);
-extern Span *tpointseq_interperiods_new(const TSequence *seq,
-  const GSERIALIZED *gs, int *count);
 
 /*****************************************************************************/
 

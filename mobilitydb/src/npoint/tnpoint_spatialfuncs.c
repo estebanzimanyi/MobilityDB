@@ -39,6 +39,7 @@
 /* MEOS */
 #include <meos.h>
 #include "point/tpoint_spatialfuncs.h"
+#include "point/tpoint_restrfuncs.h"
 /* MobilityDB */
 #include "pg_general/temporal.h"
 #include "pg_general/type_util.h"
