@@ -32,7 +32,7 @@
  * @brief Spatial restriction functions for temporal points.
  */
 
-#include "point/tpoint_spatialfuncs.h"
+#include "point/tpoint_restrfuncs.h"
 
 /* C */
 #include <assert.h>
@@ -52,6 +52,47 @@
 #include "general/tnumber_mathfuncs.h"
 #include "general/type_util.h"
 #include "point/tpoint_spatialrels.h"
+#include "point/tpoint_spatialfuncs.h"
+
+/*****************************************************************************
+ * Global structure to hold prepared geometries
+ *****************************************************************************/
+
+/**
+ * @brief Global structure to hold prepared geometries
+ */
+prepared_geom_struct _prepgeom = {NULL, NULL, NULL};
+
+/**
+ * @brief Function to prepare the geometry
+ */
+void
+meos_prepare_geom(const GSERIALIZED *gs)
+{
+  meos_free_prepared_geom();
+  /* Initialize GEOS */
+  initGEOS(lwnotice, lwgeom_geos_error);
+  /* Convert the PostGIS geometry into a GEOS geometry */
+  _prepgeom.lwgeom = lwgeom_from_gserialized(gs);
+  _prepgeom.geosgeom = LWGEOM2GEOS(_prepgeom.lwgeom, 1);
+  /* Prepare the geometry */
+  _prepgeom.prepgeom = GEOSPrepare(_prepgeom.geosgeom);
+}
+
+/**
+ * @brief Function to free the geometries in the prepared geometry structure
+ */
+void
+meos_free_prepared_geom(void)
+{
+  // if (_prepgeom.lwgeom)
+    // lwgeom_free(_prepgeom.lwgeom);
+  // if (_prepgeom.geosgeom)
+    // GEOSGeom_destroy(_prepgeom.geosgeom);
+  // if (_prepgeom.lwgeom)
+    // GEOSPreparedGeom_destroy(_prepgeom.prepgeom);
+  return;
+}
 
 /*****************************************************************************
  * Force a temporal point to be 2D
@@ -1187,7 +1228,7 @@ tpointsegm_interperiods(const TInstant *start, const TInstant *end,
  * @brief Get the periods at which a temporal sequence point with linear
  * interpolation intersects a geometry
  * @param[in] seq Temporal point
- * @param[in] gsinter Intersection of the temporal point and the geometry
+ * @param[in] gs Geometry
  * @param[out] count Number of elements in the resulting array
  * @pre The temporal sequence is simple, that is, non self-intersecting and
  * the intersecting geometry is non empty
@@ -1196,6 +1237,8 @@ Span *
 tpointseq_interperiods(const TSequence *seq, const GSERIALIZED *gs, int *count)
 {
   assert(MEOS_FLAGS_GET_LINEAR(seq->flags));
+  assert(_prepgeom.prepgeom);
+  assert(_prepgeom.geosgeom);
   *count = 0;
 
   /* Instantaneous sequence */
@@ -1226,14 +1269,6 @@ tpointseq_interperiods(const TSequence *seq, const GSERIALIZED *gs, int *count)
   else
     seq2d = (TSequence *) seq;
 
-  /* Initialize GEOS */
-  initGEOS(lwnotice, lwgeom_geos_error);
-  /* Convert the PostGIS geometry into a GEOS geometry */
-  LWGEOM *lwgeom = lwgeom_from_gserialized(gs);
-  GEOSGeometry *g = LWGEOM2GEOS(lwgeom, 1);
-  /* Prepare the geometry */
-  const GEOSPreparedGeometry *prep = GEOSPrepare(g);
-
   /* Iterate for each segment of the sequence */
   const TInstant *inst1 = TSEQUENCE_INST_N(seq2d, 0);
   bool lower_inc = seq2d->period.lower_inc;
@@ -1245,33 +1280,28 @@ tpointseq_interperiods(const TSequence *seq, const GSERIALIZED *gs, int *count)
   {
     const TInstant *inst2 = TSEQUENCE_INST_N(seq2d, i);
     bool upper_inc = (i == seq2d->count - 1) ? seq2d->period.upper_inc : false;
-    GEOSGeometry *line;
-    if (hasz)
-    {
-      const POINT3DZ *pt1 = DATUM_POINT3DZ_P(tinstant_value(inst1));
-      const POINT3DZ *pt2 = DATUM_POINT3DZ_P(tinstant_value(inst2));
-      /* Make a GEOS point */
-      GEOSCoordSequence *s = GEOSCoordSeq_create(2, 3);
-      GEOSCoordSeq_setXYZ(s, 0, pt1->x, pt1->y, pt1->z);
-      GEOSCoordSeq_setXYZ(s, 1, pt2->x, pt2->y, pt2->z);
-      line = GEOSGeom_createLineString(s);
-    }
+    Datum value1 = tinstant_value(inst1);
+    Datum value2 = tinstant_value(inst2);
+    bool values_eq = datum_point_eq(value1, value2);
+    GEOSGeometry *point_line;
+    const POINT2D *pt1 = DATUM_POINT2D_P(value1);
+    /* Make a GEOS point or line */
+    if (values_eq)
+      point_line = GEOSGeom_createPointFromXY(pt1->x, pt1->y);
     else
     {
-      const POINT2D *pt1 = DATUM_POINT2D_P(tinstant_value(inst1));
-      const POINT2D *pt2 = DATUM_POINT2D_P(tinstant_value(inst2));
-      /* Make a GEOS point */
+      const POINT2D *pt2 = DATUM_POINT2D_P(value2);
       GEOSCoordSequence *s = GEOSCoordSeq_create(2, 2);
       GEOSCoordSeq_setXY(s, 0, pt1->x, pt1->y);
       GEOSCoordSeq_setXY(s, 1, pt2->x, pt2->y);
-      line = GEOSGeom_createLineString(s);
+      point_line = GEOSGeom_createLineString(s);
     }
     /* Check if the point and polygon intersect */
-    int inter = GEOSPreparedIntersects(prep, line);
+    int inter = GEOSPreparedIntersects(_prepgeom.prepgeom, point_line);
     if (inter == 1)
     {
       /* Compute the intersection */
-      GEOSGeometry *inter = GEOSIntersection(g, line);
+      GEOSGeometry *inter = GEOSIntersection(_prepgeom.geosgeom, point_line);
       /* Transform the intersection from GEOS to PostGIS */
       LWGEOM *lwinter = GEOS2LWGEOM(inter, hasz ? 1 : 0);
       GEOSGeom_destroy(inter);
@@ -1286,7 +1316,7 @@ tpointseq_interperiods(const TSequence *seq, const GSERIALIZED *gs, int *count)
       }
     }
     /* Clean up and prepare the next iteration */
-    GEOSGeom_destroy(line);
+    GEOSGeom_destroy(point_line);
     inst1 = inst2;
     lower_inc =  true;
   }
@@ -1576,6 +1606,11 @@ tpoint_restrict_geom_time(const Temporal *temp, const GSERIALIZED *gs,
   if (! overlaps)
     return atfunc ? NULL : temporal_copy(temp);
 
+  /* Prepare the geometry for temporal points with linear interpolation */
+  bool linear = MEOS_FLAGS_GET_LINEAR(temp->flags);
+  if (linear)
+    meos_prepare_geom(gs);
+
   Temporal *result;
   assert(temptype_subtype(temp->subtype));
   if (temp->subtype == TINSTANT)
@@ -1587,6 +1622,10 @@ tpoint_restrict_geom_time(const Temporal *temp, const GSERIALIZED *gs,
   else /* temp->subtype == TSEQUENCESET */
     result = (Temporal *) tpointseqset_restrict_geom_time((TSequenceSet *)
       temp, gs, zspan, period, atfunc);
+
+  /* Clean up the prepared geometry */
+  if (linear)
+    meos_free_prepared_geom();
   return result;
 }
 

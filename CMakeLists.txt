@@ -147,13 +147,6 @@ if(NOT HAS_FFSL)
   add_definitions(-DNO_FFSL)
 endif()
 
-# TODO
-# Reentrant (_r) functions for POSIX hash table management (e.g. hsearch)
-# check_symbol_exists("hsearch_r" "search.h" HAS_HSEARCH_R)
-# if(NOT HAS_HSEARCH_R)
-  # add_definitions(-DNO_HSEARCH_R)
-# endif()
-
 # Added to build on Windows to avoid the error 'M_PI': undeclared identifier
 add_compile_definitions(_USE_MATH_DEFINES)
 

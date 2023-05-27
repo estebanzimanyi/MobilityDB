@@ -23,6 +23,13 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 add_definitions(-DSYSTEMTZDIR="/usr/share/zoneinfo")
 message(STATUS "Directory of the time zone database: /usr/share/zoneinfo")
 
+# Reentrant (_r) functions for POSIX hash table management (e.g. hsearch)
+# check_symbol_exists("hsearch_r" "search.h" HAS_HSEARCH_R)
+# if(NOT HAS_HSEARCH_R)
+if(WIN32)
+  add_definitions(-DNO_HSEARCH_R)
+endif()
+
 #-----------------------------------------
 # Set default PostgreSQL Version for MEOS
 #-----------------------------------------

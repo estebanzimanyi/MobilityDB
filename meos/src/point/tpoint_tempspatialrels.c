@@ -263,6 +263,7 @@ tinterrel_tpointseq_cont_geom_iter1(const TSequence *seq, Datum geom,
  * @param[in] geom Geometry
  * @param[in] box Bounding box of the geometry
  * @param[in] tinter True when computing tintersects, false for tdisjoint
+ * @param[in] func PostGIS function to be used for instantaneous sequences
  * @param[out] count Number of elements in the resulting array
  */
 static TSequence **
@@ -405,6 +406,11 @@ tinterrel_tpoint_geo(const Temporal *temp, const GSERIALIZED *gs, bool tinter,
   Datum (*func)(Datum, Datum) = MEOS_FLAGS_GET_Z(temp->flags) &&
     FLAGS_GET_Z(gs->gflags) ? &geom_intersects3d : &geom_intersects2d;
 
+  /* Prepare the geometry for temporal points with linear interpolation */
+  bool linear = MEOS_FLAGS_GET_LINEAR(temp->flags);
+  if (linear)
+    meos_prepare_geom(gs);
+
   Temporal *result = NULL;
   assert(temptype_subtype(temp->subtype));
   if (temp->subtype == TINSTANT)
@@ -419,6 +425,7 @@ tinterrel_tpoint_geo(const Temporal *temp, const GSERIALIZED *gs, bool tinter,
   else /* temp->subtype == TSEQUENCESET */
     result = (Temporal *) tinterrel_tpointseqset_geom((TSequenceSet *) temp,
       PointerGetDatum(gs), &box2, tinter, func);
+
   /* Restrict the result to the Boolean value in the third argument if any */
   if (result != NULL && restr)
   {
@@ -426,6 +433,10 @@ tinterrel_tpoint_geo(const Temporal *temp, const GSERIALIZED *gs, bool tinter,
     pfree(result);
     result = atresult;
   }
+
+  /* Clean up the prepared geometry */
+  if (linear)
+    meos_free_prepared_geom();
   return result;
 }
 
