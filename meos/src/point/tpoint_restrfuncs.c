@@ -1191,18 +1191,23 @@ tpointseq_interperiods(const TSequence *seq, const GSERIALIZED *gs, int *count)
       line = GEOSGeom_createLineString(s);
     }
     /* Check if the point and polygon intersect */
-    if (GEOSPreparedIntersects(prep, line))
+    int inter = GEOSPreparedIntersects(prep, line);
+    if (inter == 1)
     {
       /* Compute the intersection */
       GEOSGeometry *inter = GEOSIntersection(g, line);
       /* Transform the intersection from GEOS to PostGIS */
       LWGEOM *lwinter = GEOS2LWGEOM(inter, hasz ? 1 : 0);
       GEOSGeom_destroy(inter);
-      /* We are sure that gsinter is not empty */
-      periods[i] = tpointsegm_interperiods(inst1, inst2, lower_inc, upper_inc,
-        lwinter, &npers[i]);
-      totalpers += npers[i];
-      lwgeom_free(lwinter);
+      /* gsinter may be empty due to floating point imprecision !!!!
+       * It is not possible to solve this imprecision resulting from GEOS */
+      if (! lwgeom_is_empty(lwinter))
+      {
+        periods[i] = tpointsegm_interperiods(inst1, inst2, lower_inc, upper_inc,
+          lwinter, &npers[i]);
+        totalpers += npers[i];
+        lwgeom_free(lwinter);
+      }
     }
     /* Clean up and prepare the next iteration */
     GEOSGeom_destroy(line);

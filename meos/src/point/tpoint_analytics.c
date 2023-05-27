@@ -152,18 +152,19 @@ tpointseq_disc_to_geo_measure(const TSequence *seq, const TSequence *measure)
   }
   GSERIALIZED *result;
   if (seq->count == 1)
+  {
     result = geo_serialize(points[0]);
+    lwgeom_free(points[0]);
+    pfree(points);
+  }
   else
   {
     LWGEOM *mpoint = (LWGEOM *) lwcollection_construct(MULTIPOINTTYPE,
       points[0]->srid, NULL, (uint32_t) seq->count, points);
     FLAGS_SET_GEODETIC(mpoint->flags, geodetic);
     result = geo_serialize(mpoint);
-    pfree(mpoint);
+    lwgeom_free(mpoint);
   }
-  for (int i = 0; i < seq->count; i++)
-    lwgeom_free(points[i]);
-  pfree(points);
   return result;
 }
 
