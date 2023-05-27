@@ -1242,19 +1242,21 @@ geosegm_locate_point(Datum start, Datum end, Datum point, double *dist)
  * @param[in] inst1,inst2 Temporal instants defining the segment
  * @param[in] value Base value
  * @param[out] t Timestamp
- * @pre The geometry is not empty
+ * @pre The geometry is not empty, the two values of the segment are not equal
  */
 bool
 tpointsegm_intersection_value(const TInstant *inst1, const TInstant *inst2,
   Datum value, TimestampTz *t)
 {
+  /* The geometry is not empty */
   assert(! gserialized_is_empty(DatumGetGserializedP(value)));
-
-  /* We are sure that the trajectory is a line */
-  Datum start = tinstant_value(inst1);
-  Datum end = tinstant_value(inst2);
+  Datum value1 = tinstant_value(inst1);
+  Datum value2 = tinstant_value(inst2);
+  /* The trajectory of the segment is a line */
+  assert(! datum_point_eq(value1, value2));
   double dist;
-  double fraction = (double) geosegm_locate_point(start, end, value, &dist);
+  double fraction = (double) geosegm_locate_point(value1, value2, value,
+    &dist);
   if (fabs(dist) >= MEOS_EPSILON)
     return false;
   if (t != NULL)
@@ -2172,74 +2174,6 @@ tgeompoint_tgeogpoint(const Temporal *temp, bool oper)
   else /* temp->subtype == TSEQUENCESET */
     result = (Temporal *) tgeompointseqset_tgeogpointseqset(
       (TSequenceSet *) temp, oper);
-  return result;
-}
-
-/*****************************************************************************
- * Functions for extracting coordinates
- *****************************************************************************/
-
-/**
- * @brief Get the X coordinates of a temporal point
- */
-static Datum
-point_get_x(Datum point)
-{
-  POINT4D p;
-  datum_point4d(point, &p);
-  return Float8GetDatum(p.x);
-}
-
-/**
- * @brief Get the Y coordinates of a temporal point
- */
-static Datum
-point_get_y(Datum point)
-{
-  POINT4D p;
-  datum_point4d(point, &p);
-  return Float8GetDatum(p.y);
-}
-
-/**
- * @brief Get the Z coordinates of a temporal point
- */
-static Datum
-point_get_z(Datum point)
-{
-  POINT4D p;
-  datum_point4d(point, &p);
-  return Float8GetDatum(p.z);
-}
-
-/**
- * @ingroup libmeos_temporal_spatial_accessor
- * @brief Get one of the coordinates of a temporal point as a temporal float.
- * @param[in] temp Temporal point
- * @param[in] coord Coordinate number where 0 = X, 1 = Y, 2 = Z
- * @sqlfunc getX(), getY(), getZ()
- */
-Temporal *
-tpoint_get_coord(const Temporal *temp, int coord)
-{
-  assert(tgeo_type(temp->temptype));
-  if (coord == 2)
-    ensure_has_Z(temp->flags);
-  /* We only need to fill these parameters for tfunc_temporal */
-  LiftedFunctionInfo lfinfo;
-  memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
-  assert(coord >= 0 && coord <= 2);
-  if (coord == 0)
-    lfinfo.func = (varfunc) &point_get_x;
-  else if (coord == 1)
-    lfinfo.func = (varfunc) &point_get_y;
-  else /* coord == 2 */
-    lfinfo.func = (varfunc) &point_get_z;
-  lfinfo.numparam = 0;
-  lfinfo.restype = T_TFLOAT;
-  lfinfo.tpfunc_base = NULL;
-  lfinfo.tpfunc = NULL;
-  Temporal *result = tfunc_temporal(temp, &lfinfo);
   return result;
 }
 
