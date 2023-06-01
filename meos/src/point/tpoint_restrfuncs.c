@@ -382,16 +382,16 @@ tpointseq_linear_find_splits(const TSequence *seq, int *count)
 {
   assert(seq->count >= 2);
  /* points is an array of points in the sequence */
-  POINT2D *points = palloc0(sizeof(POINT2D) * seq->count);
+  const POINT2D **points = palloc0(sizeof(POINT2D *) * seq->count);
   /* bitarr is an array of bool for collecting the splits */
   bool *bitarr = palloc0(sizeof(bool) * seq->count);
-  points[0] = datum_point2d(tinstant_value(TSEQUENCE_INST_N(seq, 0)));
+  points[0] = DATUM_POINT2D_P(tinstant_value(TSEQUENCE_INST_N(seq, 0)));
   int numsplits = 0;
   for (int i = 1; i < seq->count; i++)
   {
-    points[i] = datum_point2d(tinstant_value(TSEQUENCE_INST_N(seq, i)));
+    points[i] = DATUM_POINT2D_P(tinstant_value(TSEQUENCE_INST_N(seq, i)));
     /* If stationary segment we need to split the sequence */
-    if (points[i - 1].x == points[i].x && points[i - 1].y == points[i].y)
+    if (points[i - 1]->x == points[i]->x && points[i - 1]->y == points[i]->y)
     {
       if (i > 1 && ! bitarr[i - 1])
       {
@@ -425,18 +425,18 @@ tpointseq_linear_find_splits(const TSequence *seq, int *count)
     while (j < end)
     {
       /* If the bounding boxes of the segments intersect */
-      if (lw_seg_interact(&points[i], &points[i + 1], &points[j],
-        &points[j + 1]))
+      if (lw_seg_interact(points[i], points[i + 1], points[j],
+        points[j + 1]))
       {
         /* Candidate for intersection */
         POINT2D p = { 0 }; /* make compiler quiet */
-        int intertype = seg2d_intersection(&points[i], &points[i + 1],
-          &points[j], &points[j + 1], &p);
+        int intertype = seg2d_intersection(points[i], points[i + 1],
+          points[j], points[j + 1], &p);
         if (intertype > 0 &&
           /* Exclude the case when two consecutive segments that
            * necessarily touch each other in their common point */
           (intertype != MEOS_SEG_TOUCH_END || j != i + 1 ||
-           p.x != points[j].x || p.y != points[j].y))
+           p.x != points[j]->x || p.y != points[j]->y))
         {
           /* Set the new end */
           end = j;
@@ -579,7 +579,7 @@ tpointseq_disc_split(const TSequence *seq, bool *splits, int count)
   const TInstant **instants = palloc(sizeof(TInstant *) * seq->count);
   TSequence **result = palloc(sizeof(TSequence *) * count);
   /* Create the splits */
-  int start = 0, k = 0;
+  int start = 0, nseqs = 0;
   while (start < seq->count)
   {
     int end = start + 1;
@@ -588,7 +588,7 @@ tpointseq_disc_split(const TSequence *seq, bool *splits, int count)
     /* Construct piece from start to end */
     for (int j = 0; j < end - start; j++)
       instants[j] = TSEQUENCE_INST_N(seq, j + start);
-    result[k++] = tsequence_make(instants, end - start, true, true,
+    result[nseqs++] = tsequence_make(instants, end - start, true, true,
       DISCRETE, NORMALIZE_NO);
     /* Continue with the next split */
     start = end;
@@ -829,7 +829,6 @@ tpoint_get_coord(const Temporal *temp, int coord)
   return result;
 }
 
-
 /*****************************************************************************
  * Restriction functions for geometry and possible a Z span and a time period
  * N.B. In the current PostGIS version there is no true ST_Intersection
@@ -838,7 +837,7 @@ tpoint_get_coord(const Temporal *temp, int coord)
 
 /**
  * @brief Restrict a temporal point instant to (the complement of) a
- * spatiotemporal box (iteration function).
+ * spatiotemporal box (iterator function).
  * @pre The arguments have the same SRID, the geometry is 2D and is not empty.
  * This is verified in #tpoint_restrict_geom_time
  */
@@ -1044,10 +1043,10 @@ tpointseq_step_restrict_geom_time(const TSequence *seq,
 
 /**
  * @brief Return the timestamp at which a segment of a temporal point takes a
- * base value
+ * base value (iterator function).
  *
- * This function must take into account the roundoff errors and thus it
- * compares two values so their coordinates may differ by MEOS_EPSILON.
+ * To take into account roundoff errors, the function considers that two
+ * values are equal even if their coordinates may differ by MEOS_EPSILON.
  * This function differs from #tpointsegm_intersection_value in particular
  * since the latter is used for finding crossings during synchronization and
  * thus it is required that the timestamp in strictly between the timestamps
@@ -1888,7 +1887,7 @@ liangBarskyClip(GSERIALIZED *point1, GSERIALIZED *point2, const STBox *box,
 
 /**
  * @brief Restrict a temporal point instant to (the complement of) a
- * spatiotemporal box (iteration function).
+ * spatiotemporal box (iterator function).
  * @pre The arguments have the same SRID. This is verified in
  * #tpoint_restrict_stbox
  */

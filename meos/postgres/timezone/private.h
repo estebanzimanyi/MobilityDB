@@ -21,7 +21,7 @@
  */
 
 #include <limits.h>				/* for CHAR_BIT et al. */
-// MobilityDB empty file
+// MEOS
 // #include <sys/wait.h>			/* for WIFEXITED and WEXITSTATUS */
 #include <unistd.h>				/* for F_OK and R_OK */
 
