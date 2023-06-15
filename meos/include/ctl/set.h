@@ -271,7 +271,7 @@ static inline void JOIN(A, free_node)(A *self, B *node)
 #else
     (void)self;
 #endif
-    free(node);
+    pfree(node);
 }
 
 static inline int JOIN(B, color)(B *node)

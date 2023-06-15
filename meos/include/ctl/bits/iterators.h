@@ -1,5 +1,5 @@
 /* Abstract iterators: T* value, B* node or size_t index
-   foreach, foreach_range.
+   foreach_elem, foreach_range.
 
    We have two kinds of iterators:
    - returning B* nodes (list, set, uset)
@@ -62,7 +62,7 @@
 #endif // not list
 
 // generic iters for algorithm
-#define foreach(A, self, pos)                                                                                          \
+#define foreach_elem(A, self, pos)                                                                                          \
     for (JOIN(A, it) pos = JOIN(A, begin)(self); !JOIN(JOIN(A, it), done)(&pos); JOIN(JOIN(A, it), next)(&pos))
 #define foreach_range(A, pos, first, last)                                                                             \
     JOIN(A, it) pos = *first;                                                                                          \

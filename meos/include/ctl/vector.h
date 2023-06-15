@@ -274,7 +274,7 @@ static inline void JOIN(A, free)(A *self)
     JOIN(A, clear)(self);
     JOIN(A, compare_fn) *compare = &self->compare;
     JOIN(A, compare_fn) *equal = &self->equal;
-    free(self->vector);
+    pfree(self->vector);
     *self = JOIN(A, init)();
     self->compare = *compare;
     self->equal = *equal;

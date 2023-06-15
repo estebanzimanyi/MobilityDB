@@ -49,6 +49,7 @@
 #include "general/set.h"
 #include "general/tsequence.h"
 #include "general/type_util.h"
+#include "point/tpoint_clipping.h"
 #include "point/tpoint_spatialfuncs.h"
 #include "point/tpoint_restrfuncs.h"
 /* MobilityDB */
@@ -1316,11 +1317,10 @@ is_poly(const GSERIALIZED* g)
   return type == POLYGONTYPE || type == MULTIPOLYGONTYPE;
 }
 
-PG_FUNCTION_INFO_V1(ST_Clip);
-Datum ST_Clip(PG_FUNCTION_ARGS)
+Datum clip_ext(FunctionCallInfo fcinfo, ClipOpType operation)
 {
-  const GSERIALIZED *geom1 = PG_GETARG_GSERIALIZED_P(0);
-  const GSERIALIZED *geom2 = PG_GETARG_GSERIALIZED_P(1);
+  GSERIALIZED *geom1 = PG_GETARG_GSERIALIZED_P(0);
+  GSERIALIZED *geom2 = PG_GETARG_GSERIALIZED_P(1);
   GBOX box1, box2;
 
   gserialized_error_if_srid_mismatch(geom1, geom2, __func__);
@@ -1343,10 +1343,40 @@ Datum ST_Clip(PG_FUNCTION_ARGS)
   if (! is_poly(geom2) || ! is_poly(geom2))
     elog(ERROR, "The function only accepts (multi)polygons.");
 
-  bool result = clip_poly_poly(geom1, geom2);
+  bool result = clip_poly_poly(geom1, geom2, operation);
   PG_FREE_IF_COPY(geom1, 0);
   PG_FREE_IF_COPY(geom2, 1);
   PG_RETURN_BOOL(result);
+}
+
+/*****************************************************************************/
+
+PG_FUNCTION_INFO_V1(cl_intersection);
+Datum
+cl_intersection(PG_FUNCTION_ARGS)
+{
+  return clip_ext(fcinfo, CL_INTERSECTION);
+}
+
+PG_FUNCTION_INFO_V1(cl_union);
+Datum
+cl_union(PG_FUNCTION_ARGS)
+{
+  return clip_ext(fcinfo, CL_UNION);
+}
+
+PG_FUNCTION_INFO_V1(cl_difference);
+Datum
+cl_difference(PG_FUNCTION_ARGS)
+{
+  return clip_ext(fcinfo, CL_DIFFERENCE);
+}
+
+PG_FUNCTION_INFO_V1(cl_symDifference);
+Datum
+cl_symDifference(PG_FUNCTION_ARGS)
+{
+  return clip_ext(fcinfo, CL_XOR);
 }
 
 /*****************************************************************************/

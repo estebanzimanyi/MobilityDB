@@ -34,6 +34,11 @@
 /* PostgreSQL */
 #include <postgres.h>
 #include <utils/float.h>
+#if MEOS
+  #define MaxAllocSize   ((Size) 0x3fffffff) /* 1 gigabyte - 1 */
+#else
+  #include <utils/memutils.h>
+#endif /* MEOS */
 /* PostGIS */
 #include <liblwgeom.h>
 /* MEOS */
@@ -50,6 +55,284 @@
 // #include <math.h>
 // #include <assert.h>
 // #include <float.h>
+
+/* Definition of vector of bool */
+
+#define POD
+#define vec__Bool vec_bool
+#define T bool
+#include <ctl/vector.h>
+
+/*****************************************************************************/
+#if 0 /* not used */
+/*****************************************************************************
+ * Vector data structure
+ *****************************************************************************/
+
+/* Constants defining the behaviour of skip lists */
+
+#define VECTOR_INITIAL_CAPACITY 1024
+#define VECTOR_GROW 1       /**< double the capacity to expand the vector */
+
+typedef struct
+{
+  int capacity;
+  int length;
+  void **elems;
+} Vector;
+
+/**
+ * @brief Return the position to store an additional element in the vector
+ */
+static int
+vector_alloc(Vector *vector)
+{
+  /* If there is no more available space expand the vector */
+  if (vector->length >= vector->capacity)
+  {
+    /* PostgreSQL has a limit of MaxAllocSize = 1 gigabyte - 1. By default,
+     * the vector doubles the size when expanded. If doubling the size goes
+     * beyond MaxAllocSize, we allocate the maximum number of elements that
+     * fit within MaxAllocSize. If this maximum has been previously reached
+     * and more capacity is required, an error is generated. */
+    if (vector->capacity == (int) floor(MaxAllocSize / sizeof(void *)))
+      elog(ERROR, "No more memory available to add elements to the vector");
+    if (sizeof(void *) * (vector->capacity << 2) > MaxAllocSize)
+      vector->capacity = (int) floor(MaxAllocSize / sizeof(void *));
+    else
+      vector->capacity <<= VECTOR_GROW;
+    vector->elems = repalloc(vector->elems, sizeof(void *) * vector->capacity);
+  }
+
+  /* Return the next available entry */
+  int result = vector->length++;
+  return result;
+}
+
+/**
+ * @brief Constructs a vector from the array of values
+ * @param[in] values Array of values
+ * @param[in] count Number of elements in the array
+ */
+Vector *
+vector_init(void **values, int count)
+{
+  assert(count > 0);
+
+  int capacity = VECTOR_INITIAL_CAPACITY;
+  while (capacity <= count)
+    capacity <<= 1;
+  Vector *result = palloc0(sizeof(Vector));
+  result->elems = palloc0(sizeof(void *) * capacity);
+  result->capacity = capacity;
+  result->length = count;
+  /* Fill values first */
+  for (int i = 0; i < count - 2; i++)
+    result->elems[i] = values[i];
+  return result;
+}
+
+/**
+ * @brief Free the vector
+ */
+void
+vector_free(Vector *vector)
+{
+  assert(vector);
+  if (vector->elems)
+  {
+    /* Free the element values of the vector if they are not NULL */
+    for (int i = 0; i < vector->length; i++)
+    {
+      if (vector->elems[i])
+        pfree(vector->elems[i]);
+    }
+    /* Free the element list */
+    pfree(vector->elems);
+  }
+  pfree(vector);
+  return;
+}
+
+/*****************************************************************************
+ * List data structure
+ *****************************************************************************/
+
+/* Constants defining the behaviour of skip lists */
+
+#define LIST_INITIAL_CAPACITY 1024
+#define LIST_GROW 1       /**< double the capacity to expand the list */
+#define LIST_INITIAL_FREELIST 32
+
+/**
+ * Structure to represent list elements
+ */
+
+typedef struct
+{
+  void *value;
+  int next;
+} ListElem;
+
+/**
+ * Structure to represent lists that keep the current state of a clipping operation
+ */
+typedef struct
+{
+  int capacity;
+  int next;
+  int length;
+  int *freed;
+  int freecount;
+  int freecap;
+  int tail;
+  ListElem *elems;
+} List;
+
+/**
+ * @brief Return the position to store an additional element in the list
+ */
+static int
+list_alloc(List *list)
+{
+  /* Increase the number of values stored in the skip list */
+  list->length++;
+
+  /* If there is unused space left by a previously deleted element, reuse it */
+  if (list->freecount)
+  {
+    list->freecount--;
+    return list->freed[list->freecount];
+  }
+
+  /* If there is no more available space expand the list */
+  if (list->next >= list->capacity)
+  {
+    /* PostgreSQL has a limit of MaxAllocSize = 1 gigabyte - 1. By default,
+     * the list doubles the size when expanded. If doubling the size goes
+     * beyond MaxAllocSize, we allocate the maximum number of elements that
+     * fit within MaxAllocSize. If this maximum has been previously reached
+     * and more capacity is required, an error is generated. */
+    if (list->capacity == (int) floor(MaxAllocSize / sizeof(ListElem)))
+      elog(ERROR, "No more memory available to add elements to the list");
+    if (sizeof(ListElem) * (list->capacity << 2) > MaxAllocSize)
+      list->capacity = (int) floor(MaxAllocSize / sizeof(ListElem));
+    else
+      list->capacity <<= LIST_GROW;
+    list->elems = repalloc(list->elems, sizeof(ListElem) * list->capacity);
+  }
+
+  /* Return the first available entry */
+  list->next++;
+  return list->next - 1;
+}
+
+/**
+ * @brief Delete an element from the list
+ * @note The calling function is responsible to delete the value pointed by the
+ * list element. This function simply sets the pointer to NULL.
+ */
+static void
+list_delete(List *list, int cur)
+{
+  /* If the free list has not been yet created */
+  if (! list->freed)
+  {
+    list->freecap = LIST_INITIAL_FREELIST;
+    list->freed = palloc(sizeof(int) * list->freecap);
+  }
+  /* If there is no more available space in the free list, expand it*/
+  else if (list->freecount == list->freecap)
+  {
+    list->freecap <<= 1;
+    list->freed = repalloc(list->freed, sizeof(int) * list->freecap);
+  }
+  /* Mark the element as free */
+  list->elems[cur].value = NULL;
+  list->freed[list->freecount++] = cur;
+  list->length--;
+  return;
+}
+
+/**
+ * @brief Free the list
+ */
+void
+list_free(List *list)
+{
+  assert(list);
+  if (list->freed)
+    pfree(list->freed);
+  if (list->elems)
+  {
+    /* Free the element values of the list if they are not NULL */
+    int cur = 0;
+    while (cur != -1)
+    {
+      ListElem *e = &list->elems[cur];
+      if (e->value)
+        pfree(e->value);
+      cur = e->next;
+    }
+    /* Free the element list */
+    pfree(list->elems);
+  }
+  pfree(list);
+  return;
+}
+
+/**
+ * @brief Return the value at the head of the list
+ */
+void *
+list_headval(List *list)
+{
+  return list->elems[list->elems->next].value;
+}
+
+/**
+ * @brief Return the value at the tail of the skiplist
+ */
+void *
+list_tailval(List *list)
+{
+  /* This is O(n) */
+  ListElem *e = &list->elems[0];
+  while (e->next != list->tail)
+    e = &list->elems[e->next];
+  return e->value;
+}
+
+/**
+ * @brief Constructs a list from the array of values
+ * @param[in] values Array of values
+ * @param[in] count Number of elements in the array
+ */
+List *
+list_make(void **values, int count)
+{
+  assert(count > 0);
+
+  int capacity = LIST_INITIAL_CAPACITY;
+  count += 2; /* Account for head and tail */
+  while (capacity <= count)
+    capacity <<= 1;
+  List *result = palloc0(sizeof(List));
+  result->elems = palloc0(sizeof(ListElem) * capacity);
+  result->capacity = capacity;
+  result->next = count;
+  result->length = count - 2;
+
+  /* Fill values first */
+  result->elems[0].value = NULL; /* set head value to NULL */
+  for (int i = 0; i < count - 2; i++)
+    result->elems[i + 1].value = values[i];
+  result->elems[count - 1].value = NULL; /* set tail value to NULL */
+  result->tail = count - 1;
+  return result;
+}
+
+#endif /* not used */
 
 /*****************************************************************************
  * Points
@@ -115,12 +398,42 @@ signedArea(const POINT2D *p0, const POINT2D *p1, const POINT2D *p2)
 // }
 
 /*****************************************************************************
+ * Contour
+ *****************************************************************************/
+
+// Contour *
+// cntr_make(void)
+// {
+  // Contour *result = palloc(sizeof(Contour));
+  // result->points = vec_pt_init();
+  // result->holeIds = [];
+  // result->holeOf = null;
+  // result->depth = null;
+// }
+
+
+Contour
+cntr_copy(Contour *c)
+{
+  Contour *result = palloc(sizeof(Contour));
+  memcpy(result, c, sizeof(Contour));
+  return *result;
+}
+
+void
+cntr_free(Contour *c)
+{
+  // pfree(c);
+  return;
+}
+
+/*****************************************************************************
  * SweepEvent
  *****************************************************************************/
 
 SweepEvent *
-swev_make(POINT2D *point, bool left, SweepEvent *otherEvent,
-  bool isSubject, EdgeType edgeType)
+swev_make(POINT2D *point, bool left, SweepEvent *otherEvent, bool isSubject,
+  EdgeType edgeType)
 {
   SweepEvent *result = malloc(sizeof(SweepEvent));
   result->left = left;
@@ -143,7 +456,7 @@ swev_make(POINT2D *point, bool left, SweepEvent *otherEvent,
 SweepEvent
 swev_copy(SweepEvent *e)
 {
-  SweepEvent *result = malloc(sizeof(SweepEvent));
+  SweepEvent *result = palloc(sizeof(SweepEvent));
   memcpy(result, e, sizeof(SweepEvent));
   return *result;
 }
@@ -151,7 +464,7 @@ swev_copy(SweepEvent *e)
 void
 swev_free(SweepEvent *e)
 {
-  free(e);
+  // pfree(e);
   return;
 }
 
@@ -696,17 +1009,18 @@ subdivide(pqu_swev *eventQueue, STBox *sbbox, STBox *clbox,
   ClipOpType operation)
 {
   SplayTree sweepLine = splay_new(&swev_compare);
-  vec_swev sortedEvents;
+  vec_swev sortedEvents = vec_swev_init();
   double rightbound = fmin(sbbox->xmax, clbox->xmax);
   SweepEvent *event, *prev, *next, *begin, *prevEvent, *prevprevEvent;
-  int nevents = 0;
+  // int nevents = 0;
   /* loop for every event in the queue */
   while (pqu_swev_size(eventQueue) != 0)
   {
     /* Remove the event from the queue and insert it into the sweepline */
     event = pqu_swev_top(eventQueue);
     pqu_swev_pop(eventQueue);
-    vec_swev_insert_index(&sortedEvents, nevents++, *event);
+    vec_swev_push_back(&sortedEvents, *event);
+    // nevents++;
 
     /* optimization by bboxes for intersection and difference goes here */
     if ((operation == CL_INTERSECTION && event->point.x > rightbound) ||
@@ -781,7 +1095,7 @@ processRing(POINTARRAY *contourOrHole, int depth, bool isSubject, STBox *bbox,
 {
   POINT2D *s1, *s2;
   SweepEvent *e1, *e2;
-  for (uint32_t i = 0, len = contourOrHole->npoints - 1; i < len; i++)
+  for (uint32_t i = 0; i < contourOrHole->npoints - 1; i++)
   {
     s1 = (POINT2D *) getPoint_internal(contourOrHole, i);
     s2 = (POINT2D *) getPoint_internal(contourOrHole, i + 1);
@@ -852,6 +1166,176 @@ fill_queue(LWGEOM *geom, bool isSubject, STBox *box, pqu_swev *eventQueue)
   return;
 }
 
+/*****************************************************************************
+ * Connect Edges
+ *****************************************************************************/
+/**
+ * @param  {Array.<SweepEvent>} sortedEvents
+ * @return {Array.<SweepEvent>}
+ */
+vec_swev
+orderEvents(vec_swev sortedEvents)
+{
+  vec_swev resultEvents = vec_swev_init();
+  SweepEvent *event, *next;
+  int i, len, tmp;
+  len = vec_swev_size(&sortedEvents);
+  for (i = 0; i < len; i++)
+  {
+    event = vec_swev_at(&sortedEvents, i);
+    if ((event->left && event->resultTransition != 0) ||
+      (!event->left && event->otherEvent->resultTransition != 0))
+    {
+      vec_swev_push_back(&resultEvents, *event);
+    }
+  }
+  // /* Due to overlapping edges the resultEvents array can be not wholly sorted */
+  bool sorted = false;
+  while (! sorted)
+  {
+    sorted = true;
+    len = vec_swev_size(&resultEvents);
+    for (i = 0; i < len - 1; i++)
+    {
+      event = vec_swev_at(&resultEvents, i);
+      next = vec_swev_at(&resultEvents, i + 1);
+      if (swev_compare(event, next) == 1)
+      {
+        vec_swev_insert_index(&resultEvents, i, *next);
+        vec_swev_insert_index(&resultEvents, i + 1, *event);
+        sorted = false;
+      }
+    }
+  }
+
+  for (i = 0; i < len; i++)
+  {
+    event = vec_swev_at(&resultEvents, i);
+    event->otherPos = i;
+  }
+
+  /* imagine, the right event is found in the beginning of the queue,
+   * when his left counterpart is not marked yet */
+  for (i = 0; i < len; i++)
+  {
+    event = vec_swev_at(&resultEvents, i);
+    if (! event->left)
+    {
+      tmp = event->otherPos;
+      event->otherPos = event->otherEvent->otherPos;
+      event->otherEvent->otherPos = tmp;
+    }
+  }
+  return resultEvents;
+}
+
+/**
+ * @param  {Number} pos
+ * @param  {Array.<SweepEvent>} resultEvents
+ * @param  {Object>}    processed
+ * @return {Number}
+ */
+int nextPos(int pos, vec_swev *resultEvents, vec_bool processed, int origPos)
+{
+  int newPos = pos + 1;
+  SweepEvent *event = vec_swev_at(resultEvents, pos);
+  POINT2D *p = &event->point, *p1;
+  int len = vec_swev_size(resultEvents);
+
+  if (newPos < len)
+  {
+    event = vec_swev_at(resultEvents, newPos);
+    p1 = &event->point;
+  }
+
+  while (newPos < len && p1->x == p->x && p1->y == p->y)
+  {
+    if (! vec_bool_at(&processed, newPos))
+      return newPos;
+    else
+      newPos++;
+    if (newPos < len)
+    {
+      event = vec_swev_at(resultEvents, newPos);
+      p1 = &event->point;
+    }
+  }
+
+  newPos = pos - 1;
+  while (vec_bool_at(&processed, newPos) && newPos > origPos)
+    newPos--;
+  return newPos;
+}
+
+/* Helper function that combines marking an event as processed with assigning
+ * its output contour ID */
+void markAsProcessed(int pos, vec_swev *resultEvents, vec_bool *processed,
+  int contourId)
+{
+  vec_bool_insert_index(processed, pos, true);
+  SweepEvent *event = vec_swev_at(resultEvents, pos);
+  int len = vec_swev_size(resultEvents);
+  if (pos < len && event)
+    event->outputContourId = contourId;
+};
+
+// Contour *
+// initializeContourFromContext(SweepEvent *event, vec_cont contours,
+  // int contourId)
+// {
+  // Contour *contour = cntr_make();
+  // if (event->prevInResult != NULL)
+  // {
+    // const prevInResult = event.prevInResult;
+    // /* Note that it is valid to query the "previous in result" for its output
+     // * contour id, because we must have already processed it (i.e., assigned an
+     // * output contour id) in an earlier iteration, otherwise it wouldn't be
+     // * possible that it is "previous in result". */
+    // const lowerContourId = prevInResult.outputContourId;
+    // const lowerResultTransition = prevInResult.resultTransition;
+    // if (lowerResultTransition > 0)
+    // {
+      // /* We are inside. Now we have to check if the thing below us is another
+       // * hole or an exterior contour. */
+      // const lowerContour = contours[lowerContourId];
+      // if (lowerContour.holeOf != NULL) {
+      // /* The lower contour is a hole => Connect the new contour as a hole
+       // * to its parent, and use same depth. */
+        // const parentContourId = lowerContour.holeOf;
+        // contours[parentContourId].holeIds.push(contourId);
+        // contour.holeOf = parentContourId;
+        // contour.depth = contours[lowerContourId].depth;
+      // }
+      // else
+      // {
+        // /* The lower contour is an exterior contour => Connect the new contour
+         // * as a hole,and increment depth. */
+        // contours[lowerContourId].holeIds.push(contourId);
+        // contour.holeOf = lowerContourId;
+        // contour.depth = contours[lowerContourId].depth + 1;
+      // }
+    // }
+    // else
+    // {
+      // /* We are outside => this contour is an exterior contour of same depth. */
+      // contour.holeOf = NULL;
+      // contour.depth = contours[lowerContourId].depth;
+    // }
+  // }
+  // else
+  // {
+    // /* There is no lower/previous contour => this contour is an exterior
+     // * contour of depth 0. */
+    // contour.holeOf = NULL;
+    // contour.depth = 0;
+  // }
+  // return contour;
+// }
+
+/*****************************************************************************
+ * Main
+ *****************************************************************************/
+
 bool
 clip_poly_poly(const GSERIALIZED *geom1, const GSERIALIZED *geom2,
   ClipOpType operation)
@@ -875,3 +1359,4 @@ clip_poly_poly(const GSERIALIZED *geom1, const GSERIALIZED *geom2,
 }
 
 /*****************************************************************************/
+

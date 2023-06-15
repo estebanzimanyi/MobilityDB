@@ -547,7 +547,7 @@ static inline void JOIN(A, _free_node)(A *self, B *n)
 #else
     ASSERT(!self->free || !"uset free with POD");
 #endif
-    free(n);
+    pfree(n);
     self->size--;
 }
 
@@ -670,7 +670,7 @@ static inline void JOIN(A, rehash)(A *self, size_t desired_count)
     rehashed.size = self->size;
     // LOGMSG ("rehash temp. from %lu to %lu, load %f\n", rehashed.size, rehashed.bucket_count,
     //     JOIN(A, load_factor)(self));
-    free(self->buckets);
+    pfree(self->buckets);
     // LOGMSG ("free old\n");
     *self = rehashed;
 }
@@ -703,7 +703,7 @@ static inline void JOIN(A, _rehash)(A *self, size_t count)
     rehashed.size = self->size;
     //LOGMSG ("_rehash from %lu to %lu, load %f\n", rehashed.size, count,
     //     JOIN(A, load_factor)(self));
-    free(self->buckets);
+    pfree(self->buckets);
     *self = rehashed;
 }
 
@@ -1012,7 +1012,7 @@ static inline void JOIN(A, free)(A *self)
 {
     // LOGMSG("free calloc %zu, %zu\n", self->bucket_max, self->size);
     JOIN(A, clear)(self);
-    free(self->buckets);
+    pfree(self->buckets);
     self->buckets = NULL;
     self->bucket_max = 0;
 }
@@ -1117,7 +1117,7 @@ static inline A JOIN(A, copy)(A *self)
     // LOGMSG ("copy\norig size: %lu\n", self->size);
     A other = JOIN(A, init)(self->hash, self->equal);
     JOIN(A, _reserve)(&other, self->bucket_max + 1);
-    foreach (A, self, it)
+    foreach_elem (A, self, it)
     {
         // LOGMSG ("size: %lu\n", other.size);
         JOIN(A, insert)(&other, self->copy(it.ref));
@@ -1156,9 +1156,9 @@ static inline A JOIN(A, union)(A *a, A *b)
 {
     A self = JOIN(A, init)(a->hash, a->equal);
     JOIN(A, _reserve)(&self, 1 + MAX(a->bucket_max, b->bucket_max));
-    foreach (A, a, it1)
+    foreach_elem (A, a, it1)
         JOIN(A, insert)(&self, self.copy(it1.ref));
-    foreach (A, b, it2)
+    foreach_elem (A, b, it2)
         JOIN(A, insert)(&self, self.copy(it2.ref));
     return self;
 }
@@ -1183,7 +1183,7 @@ static inline A JOIN(A, union_range)(I *r1, GI *r2)
 static inline A JOIN(A, intersection)(A *a, A *b)
 {
     A self = JOIN(A, init)(a->hash, a->equal);
-    foreach (A, a, it)
+    foreach_elem (A, a, it)
         if (JOIN(A, find_node)(b, *it.ref))
             JOIN(A, insert)(&self, self.copy(it.ref));
     return self;
@@ -1205,7 +1205,7 @@ static inline A JOIN(A, intersection_range)(I *r1, GI *r2)
         next2(r2);
     }
     /*
-    foreach (A, a, it)
+    foreach_elem (A, a, it)
         if (JOIN(A, find_node)(b, *it.ref))
             JOIN(A, insert)(&self, self.copy(it.ref));
     */
@@ -1215,12 +1215,12 @@ static inline A JOIN(A, intersection_range)(I *r1, GI *r2)
 static inline A JOIN(A, difference)(A *a, A *b)
 {
     A self = JOIN(A, init)(a->hash, a->equal);
-    foreach (A, a, it)
+    foreach_elem (A, a, it)
         if (!JOIN(A, find_node)(b, *it.ref))
             JOIN(A, insert)(&self, self.copy(it.ref));
     /*
     A self = JOIN(A, copy)(a);
-    foreach(A, b, it)
+    foreach_elem(A, b, it)
         JOIN(A, erase)(&self, *it.ref);
     */
     return self;
@@ -1229,7 +1229,7 @@ static inline A JOIN(A, difference)(A *a, A *b)
 static inline A JOIN(A, symmetric_difference)(A *a, A *b)
 {
     A self = JOIN(A, union)(a, b);
-    foreach (A, a, it)
+    foreach_elem (A, a, it)
         if (JOIN(A, find_node)(b, *it.ref))
             JOIN(A, erase)(&self, *it.ref);
     return self;
@@ -1240,10 +1240,10 @@ static inline int JOIN(A, equal)(A *self, A *other)
 {
     size_t count_a = 0;
     size_t count_b = 0;
-    foreach (A, self, it)
+    foreach_elem (A, self, it)
         if (JOIN(A, find_node)(self, *it.ref))
             count_a++;
-    foreach (A, other, it2)
+    foreach_elem (A, other, it2)
         if (JOIN(A, find_node)(other, *it2.ref))
             count_b++;
     return count_a == count_b;
@@ -1304,7 +1304,7 @@ static inline void JOIN(A, generate_n)(A *self, size_t n, T _gen(void))
 static inline A JOIN(A, transform)(A *self, T _unop(T *))
 {
     A other = JOIN(A, init_from)(self);
-    foreach (A, self, it)
+    foreach_elem (A, self, it)
     {
         T copy = self->copy(it.ref);
         T tmp = _unop(&copy);

@@ -343,7 +343,7 @@ static inline void JOIN(A, pop_front)(A *self)
     self->size--;
     if (page->a == page->b)
     {
-        free(page);
+        pfree(page);
         self->mark_a++;
     }
 }
@@ -388,7 +388,7 @@ static inline void JOIN(A, pop_back)(A *self)
 #endif
     if (page->b == page->a)
     {
-        free(page);
+        pfree(page);
         self->mark_b--;
     }
 }
@@ -481,7 +481,7 @@ static inline void JOIN(A, clear)(A *self)
 static inline void JOIN(A, free)(A *self)
 {
     JOIN(A, clear)(self);
-    free(self->pages);
+    pfree(self->pages);
     *self = JOIN(A, init)();
 }
 
@@ -699,7 +699,7 @@ static inline size_t JOIN(A, erase_if)(A *self, int (*_match)(T *))
 
 static inline I JOIN(A, find)(A *self, T key)
 {
-    foreach (A, self, i)
+    foreach_elem (A, self, i)
         if (JOIN(A, _equal)(self, i.ref, &key))
             return i;
     return JOIN(A, end)(self);

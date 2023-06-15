@@ -1,6 +1,7 @@
 add_library(point OBJECT
   geography_functions.c
   pgis_call.c
+  splay_tree.c
   stbox.c
   tpoint.c
   tpoint_aggfuncs.c

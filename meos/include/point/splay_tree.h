@@ -1,3 +1,8 @@
+/******************************************************************************
+ * Polymorphic implementation of Splay Trees, written in C.
+ * https://github.com/Tyresius92/splay-tree/
+ ******************************************************************************/
+
 #ifndef BASIC_SPLAY_H
 #define BASIC_SPLAY_H
 

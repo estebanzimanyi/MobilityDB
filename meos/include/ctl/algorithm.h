@@ -33,7 +33,7 @@
 
 static inline I JOIN(A, find_if)(A *self, int _match(T *))
 {
-    foreach (A, self, i)
+    foreach_elem (A, self, i)
         if (_match(i.ref))
             return i;
     return JOIN(A, end)(self);
@@ -42,7 +42,7 @@ static inline I JOIN(A, find_if)(A *self, int _match(T *))
 // C++11
 static inline I JOIN(A, find_if_not)(A *self, int _match(T *))
 {
-    foreach (A, self, i)
+    foreach_elem (A, self, i)
         if (!_match(i.ref))
             return i;
     return JOIN(A, end)(self);
@@ -231,7 +231,7 @@ static inline A JOIN(A, union_range)(I *r1, GI *r2)
     void (*next2)(struct I*) = r2->vtable.next;
     T* (*ref2)(struct I*) = r2->vtable.ref;
     int (*done2)(struct I*) = r2->vtable.done;
- 
+
     while (!JOIN(I, done)(r1))
     {
         if (done2(r2))
@@ -297,7 +297,7 @@ static inline A JOIN(A, intersection)(A *a, A *b)
 {
 #if 0
     A self = JOIN(A, init_from)(a);
-    foreach(A, a, it)
+    foreach_elem(A, a, it)
         if(JOIN(A, _found)(b, it.ref))
             JOIN(A, inserter)(&self, self.copy(it.ref));
     return self;
@@ -378,7 +378,7 @@ static inline A JOIN(A, difference)(A *a, A *b)
 {
 #if 0
     A self = JOIN(A, init_from)(a);
-    foreach(A, a, it)
+    foreach_elem(A, a, it)
         if(!JOIN(A, _found)(b, it.ref))
             JOIN(A, inserter)(&self, self.copy(it.ref));
     return self;
@@ -392,10 +392,10 @@ static inline A JOIN(A, symmetric_difference)(A *a, A *b)
 {
 #if 0
     A self = JOIN(A, init_from)(a);
-    foreach(A, a, it1)
+    foreach_elem(A, a, it1)
         if(!JOIN(A, _found)(b, it1.ref))
             JOIN(A, inserter)(&self, self.copy(it1.ref));
-    foreach(A, b, it2)
+    foreach_elem(A, b, it2)
         if(!JOIN(A, _found)(a, it2.ref))
             JOIN(A, inserter)(&self, self.copy(it2.ref));
     return self;
@@ -495,7 +495,7 @@ static inline bool JOIN(A, is_sorted)(I *range)
 
 static inline void JOIN(A, generate)(A *self, T _gen(void))
 {
-    foreach (A, self, i)
+    foreach_elem (A, self, i)
     {
 #ifndef POD
         if (self->free)
@@ -523,7 +523,7 @@ static inline void JOIN(A, generate_range)(I *range, T _gen(void))
 static inline A JOIN(A, transform)(A *self, T _unop(T *))
 {
     A other = JOIN(A, copy)(self);
-    foreach (A, &other, i)
+    foreach_elem (A, &other, i)
     {
 #ifndef POD
         T tmp = _unop(i.ref);
@@ -545,7 +545,7 @@ static inline A JOIN(A, transform_it)(A *self, I *pos, T _binop(T *, T *))
     if (self->size > 1)
         JOIN(A, fit)(&other, self->size - 1);
 #endif
-    foreach (A, self, i)
+    foreach_elem (A, self, i)
     {
         if (JOIN(I, done)(pos))
             break;
@@ -598,7 +598,7 @@ static inline I JOIN(A, transform_range)(I *range, I dest, T _unop(T *))
             break;
 #ifndef POD
         if (dest.container->free)
-            dest.container->free(dest.ref);
+            dest.container->pfree(dest.ref);
 #endif
         *dest.ref = _unop(i.ref);
         JOIN(I, next)(&dest);
@@ -615,7 +615,7 @@ static inline I JOIN(A, transform_it_range)(I *range, I *pos, I dest, T _binop(T
             break;
 #ifndef POD
         if (dest.container->free)
-            dest.container->free(dest.ref);
+            dest.container->pfree(dest.ref);
 #endif
         *dest.ref = _binop(i.ref, pos->ref);
         JOIN(JOIN(A, it), next)(pos);
@@ -762,7 +762,7 @@ static inline size_t JOIN(A, count_range)(I *range, T value)
 static inline size_t JOIN(A, count)(A *self, T value)
 {
     size_t count = 0;
-    foreach (A, self, i)
+    foreach_elem (A, self, i)
         if (JOIN(A, _equal)(self, i.ref, &value))
             count++;
     if (self->free)
@@ -847,7 +847,7 @@ static inline size_t JOIN(A, count_if_range)(I *range, int _match(T *))
 static inline size_t JOIN(A, count_if)(A *self, int _match(T *))
 {
     size_t count = 0;
-    foreach (A, self, i)
+    foreach_elem (A, self, i)
     {
         if (_match(i.ref))
             count++;

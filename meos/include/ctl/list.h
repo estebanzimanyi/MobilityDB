@@ -306,7 +306,7 @@ static inline void JOIN(A, erase_node)(A *self, B *node)
         JOIN(A, disconnect)(self, node);
     if (self->free)
         self->free(&node->value);
-    free(node);
+    pfree(node);
 }
 
 static inline void JOIN(A, erase)(I *it)

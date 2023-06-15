@@ -281,7 +281,7 @@ static inline B* JOIN(B, erase_node)(A *self, B *node)
     B *next = node->next;
     if (self->free)
         self->free(&node->value);
-    free(node);
+    pfree(node);
     return next;
 }
 
@@ -429,7 +429,7 @@ JOIN(A, resize)(A* self, size_t size, T value)
                 B *next = node->next;
                 if (self->free)
                     self->free(&node->value);
-                free(node);
+                pfree(node);
                 node = next->next;
             }
         else
@@ -603,7 +603,7 @@ static inline size_t JOIN(A, remove_if)(A *self, int _match(T *))
 static inline size_t JOIN(A, erase_if)(A *self, int _match(T *))
 {
     size_t erases = 0;
-    foreach (A, self, it)
+    foreach_elem (A, self, it)
         if (_match(it.ref))
         {
             JOIN(A, erase_after)(self, it.node);
@@ -617,7 +617,7 @@ static inline void JOIN(A, splice_after)(A *self, B *position, A *other)
     if (JOIN(A, empty)(self) && position == NULL)
         JOIN(A, swap)(self, other);
     else
-        foreach (A, other, it)
+        foreach_elem (A, other, it)
             JOIN(A, transfer_before)(self, other, position, it.node);
 }
 
@@ -851,7 +851,7 @@ static inline void JOIN(A, sort_range)(I *range)
 static inline void JOIN(A, unique)(A *self)
 {
     CTL_ASSERT_EQUAL
-    foreach (A, self, it)
+    foreach_elem (A, self, it)
         if (it.node->next && JOIN(A, _equal)(self, it.ref, &it.node->next->value))
             JOIN(A, erase_after)(self, it.node);
 }
@@ -859,7 +859,7 @@ static inline void JOIN(A, unique)(A *self)
 static inline I JOIN(A, find)(A *self, T key)
 {
     CTL_ASSERT_EQUAL
-    foreach (A, self, it)
+    foreach_elem (A, self, it)
         if (JOIN(A, _equal)(self, it.ref, &key))
             return it;
     return JOIN(A, end)(self);
@@ -1102,7 +1102,7 @@ static inline A JOIN(A, symmetric_difference)(A *a, A *b)
 //#ifdef DEBUG
 //void p_slist(A *a)
 //{
-//    foreach(A, a, it) printf("%d ", *it.ref->value);
+//    foreach_elem(A, a, it) printf("%d ", *it.ref->value);
 //    printf("\n");
 //}
 //#else

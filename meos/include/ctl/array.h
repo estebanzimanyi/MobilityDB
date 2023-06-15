@@ -346,7 +346,7 @@ static inline void JOIN(A, free)(A *self)
         // for security reasons?
         // memset (self->vector, 0, N * sizeof(T));
 #if N > CUTOFF
-    free(self->vector); // heap allocated
+    pfree(self->vector); // heap allocated
     self->vector = NULL;
 #else
     (void)self;
@@ -447,7 +447,7 @@ static inline A JOIN(A, copy)(A *self)
 
 static inline T *JOIN(A, find)(A *self, T key)
 {
-    foreach (A, self, it)
+    foreach_elem (A, self, it)
         if (JOIN(A, _equal)(self, it.ref, &key))
             return it.ref;
     return NULL;
@@ -457,7 +457,7 @@ static inline A JOIN(A, transform_it)(A *self, I *pos, T _binop(T *, T *))
 {
     A other = JOIN(A, init)();
     size_t i = 0;
-    foreach (A, self, it)
+    foreach_elem (A, self, it)
     {
         if (pos->ref == pos->end)
             break;

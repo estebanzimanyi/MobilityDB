@@ -312,6 +312,9 @@ skiplist_headval(SkipList *list)
 }
 
 #if 0 /* not used */
+/**
+ * @brief Return the value at the tail of the skiplist
+ */
 void *
 skiplist_tailval(SkipList *list)
 {
@@ -325,8 +328,7 @@ skiplist_tailval(SkipList *list)
 #endif /* not used */
 
 /**
- * @brief Constructs a skiplist from the array of values values
- *
+ * @brief Constructs a skiplist from the array of values
  * @param[in] values Array of values
  * @param[in] count Number of elements in the array
  */

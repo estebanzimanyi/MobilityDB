@@ -11,7 +11,7 @@
 
 static inline void JOIN(A, iota)(A *self, T value)
 {
-    foreach(A, self, i)
+    foreach_elem(A, self, i)
     {
 #ifdef POD
         *i.ref = value;
