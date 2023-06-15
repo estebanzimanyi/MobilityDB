@@ -179,7 +179,11 @@ int swev_cmp(const SweepEvent *a, const SweepEvent *b);
 #define T SweepEvent
 #include <ctl/vector.h>
 
-#endif
+extern bool clip_poly_poly(const GSERIALIZED *geom1, const GSERIALIZED *geom2,
+  ClipOpType operation);
 
 /*****************************************************************************/
+
+#endif
+
 

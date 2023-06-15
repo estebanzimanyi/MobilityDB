@@ -98,11 +98,11 @@ signedArea(const POINT2D *p0, const POINT2D *p1, const POINT2D *p2)
  * 1 if the result is the subject, 2 if the result is the union of both */
 // int
 // compareBBoxes(Polygon *subject, Polygon *clipping, STBox *sbbox,
-  // STBox *cbbox, ClipOpType operation)
+  // STBox *clbox, ClipOpType operation)
 // {
   // int result = -1;
-  // if (sbbox->xmin > cbbox->xmax || cbbox->xmin > sbbox->xmax ||
-      // sbbox->ymin > cbbox->ymax || cbbox->ymin > sbbox->ymax)
+  // if (sbbox->xmin > clbox->xmax || clbox->xmin > sbbox->xmax ||
+      // sbbox->ymin > clbox->ymax || clbox->ymin > sbbox->ymax)
   // {
     // if (operation == INTERSECTION)
       // result = 0;
@@ -191,8 +191,8 @@ int
 specialCases(const SweepEvent *e1, const SweepEvent *e2, const POINT2D *p1,
   const POINT2D *p2 __attribute__((unused)))
 {
-  // Same coordinates, but one is a left endpoint and the other is
-  // a right endpoint. The right endpoint is processed first
+  /* Same coordinates, but one is a left endpoint and the other is
+   * a right endpoint. The right endpoint is processed first */
   if (e1->left != e2->left)
     return e1->left ? 1 : -1;
 
@@ -210,7 +210,7 @@ specialCases(const SweepEvent *e1, const SweepEvent *e2, const POINT2D *p1,
 }
 
 int
-swev_compare(const SweepEvent *e1, const SweepEvent *e2)
+swev_compare(SweepEvent *e1, SweepEvent *e2)
 {
   const POINT2D *p1 = &e1->point;
   const POINT2D *p2 = &e2->point;
@@ -227,7 +227,7 @@ swev_compare(const SweepEvent *e1, const SweepEvent *e2)
 }
 
 int
-compareSegments(const SweepEvent *e1, const SweepEvent *e2)
+compareSegments(SweepEvent *e1, SweepEvent *e2)
 {
   if (e1 == e2) return 0;
 
@@ -239,7 +239,7 @@ compareSegments(const SweepEvent *e1, const SweepEvent *e2)
     if (point_eq(&e1->point, &e2->point))
       return swev_isBelow(e1, &e2->otherEvent->point) ? -1 : 1;
 
-    // Different left endpoint: use the left endpoint to sort
+    /* Different left endpoint: use the left endpoint to sort */
     if (e1->point.x == e2->point.x)
       return e1->point.y < e2->point.y ? -1 : 1;
 
@@ -288,15 +288,15 @@ divideSegment(SweepEvent *e, POINT2D *p, pqu_SweepEvent *queue)
 
   r->contourId = l->contourId = e->contourId;
 
-  // avoid a rounding error. The left event would be processed after the right event
+  // Avoid a rounding error: left event would be processed after the right event */
   if (swev_compare(l, e->otherEvent) > 0)
   {
     e->otherEvent->left = true;
     l->left = false;
   }
 
-  // avoid a rounding error. The left event would be processed after the right event
-  // if (compareEvents(e, r) > 0) {}
+  // Avoid a rounding error: left event would be processed after the right event */
+  // if (swev_compare(e, r) > 0) {}
 
   e->otherEvent->otherEvent = l;
   e->otherEvent = r;
@@ -367,14 +367,13 @@ determineResultTransition(SweepEvent *event, ClipOpType operation)
 }
 
 /**
- * @param  {SweepEvent} event
- * @param  {SweepEvent} prev
- * @param  {Operation} operation
+ * @param event,prev Sweepline events
+ * @param Operation Clipping operation
  */
 void
 computeFields(SweepEvent *event, SweepEvent *prev, ClipOpType operation)
 {
-  // compute inOut and otherInOut fields
+  /* compute inOut and otherInOut fields */
   if (prev == NULL)
   {
     event->inOut      = false;
@@ -406,7 +405,7 @@ computeFields(SweepEvent *event, SweepEvent *prev, ClipOpType operation)
     }
   }
 
-  // check if the line segment belongs to the Boolean operation
+  /* check if the line segment belongs to the Boolean operation */
   bool isInResult = inResult(event, operation);
   if (isInResult)
     event->resultTransition = determineResultTransition(event, operation);
@@ -450,13 +449,11 @@ void setPoint(const POINT2D *p, double s, const POINT2D *d, POINT2D *result)
  * http://www.cimec.org.ar/~ncalvo/Schneider_Eberly.pdf
  * Page 244.
  *
- * @param a1 point of first line
- * @param a2 point of first line
- * @param b1 point of second line
- * @param b2 point of second line
+ * @param a1,a2 points of the first segment
+ * @param b1,b2 points of the second segment
  * @param noEndpointTouch whether to skip single touchpoints (meaning
  * connected segments) as intersections
- * @returns If the lines intersect, return 1 and the point of intersection
+ * @returns If the segments intersect, return 1 and the point of intersection
  * in p1. If they overlap, return 2 and the two end points of the overlapping
  * segment in p1 and p2. Otherwise, return 0.
  */
@@ -669,14 +666,14 @@ possibleIntersection(SweepEvent *e1, SweepEvent *e2, pqu_SweepEvent *queue)
     return 2;
   }
 
-  // the line segments share the right endpoint
+  /* the line segments share the right endpoint */
   if (rightCoincide)
   {
     divideSegment(events[0], &events[1]->point, queue);
     return 3;
   }
 
-  // no line segment includes totally the other one
+  /* no line segment includes totally the other one */
   if (events[0] != events[3]->otherEvent)
   {
     divideSegment(events[0], &events[1]->point, queue);
@@ -684,7 +681,7 @@ possibleIntersection(SweepEvent *e1, SweepEvent *e2, pqu_SweepEvent *queue)
     return 3;
   }
 
-  // one line segment includes the other one
+  /* one line segment includes the other one */
   divideSegment(events[0], &events[1]->point, queue);
   divideSegment(events[3]->otherEvent, &events[2]->point, queue);
   return 3;
@@ -694,158 +691,187 @@ possibleIntersection(SweepEvent *e1, SweepEvent *e2, pqu_SweepEvent *queue)
  * SweepLine
  *****************************************************************************/
 
-// vec_swev
-// subdivide(pqu_swev *eventQueue, vec_poly subject, vec_poly clipping,
-  // STBox *sbbox, STBox *cbbox, ClipOpType operation)
- // {
-  // SplayTree sweepLine = splay_new(&swev_compare);
-  // vec_swev sortedEvents;
+vec_swev
+subdivide(pqu_swev *eventQueue, STBox *sbbox, STBox *clbox,
+  ClipOpType operation)
+{
+  SplayTree sweepLine = splay_new(&swev_compare);
+  vec_swev sortedEvents;
+  double rightbound = fmin(sbbox->xmax, clbox->xmax);
+  SweepEvent *event, *prev, *next, *begin, *prevEvent, *prevprevEvent;
+  int nevents = 0;
+  /* loop for every event in the queue */
+  while (pqu_swev_size(eventQueue) != 0)
+  {
+    /* Remove the event from the queue and insert it into the sweepline */
+    event = pqu_swev_top(eventQueue);
+    pqu_swev_pop(eventQueue);
+    vec_swev_insert_index(&sortedEvents, nevents++, *event);
 
-  // double rightbound = fmin(sbbox->xmax, cbbox->xmax);
+    /* optimization by bboxes for intersection and difference goes here */
+    if ((operation == CL_INTERSECTION && event->point.x > rightbound) ||
+        (operation == CL_DIFFERENCE   && event->point.x > sbbox->xmax))
+      break;
 
-  // SweepEvent *event, *prev, *next, *begin, *prevEvent, *prevprevEvent;
+    if (event->left)
+    {
+      next = prev = event;
+      splay_insert_value(sweepLine, event);
+      begin = splay_tree_minimum(sweepLine);
 
-  // while (pqu_swev_size(eventQueue) != 0)
-  // {
-    // event = pqu_swev_pop(eventQueue);
-    // sortedEvents.push(event);
+      if (prev != begin)
+        prev = splay_predecessor_of_value(sweepLine, prev);
+      else
+        prev = NULL;
 
-    // /* optimization by bboxes for intersection and difference goes here */
-    // if ((operation == CL_INTERSECTION && event->point.xmin > rightbound) ||
-        // (operation == CL_DIFFERENCE   && event->point.xmin > sbbox->xmax))
-      // break;
+      next = splay_successor_of_value(sweepLine, next);
 
-    // if (event->left)
-    // {
-      // next  = prev = splay_insert_value(sweepLine, event);
-      // begin = splay_tree_minimum(sweepLine);
+      prevEvent = prev ? prev : NULL;
+      computeFields(event, prevEvent, operation);
+      if (next)
+      {
+        if (possibleIntersection(event, next, eventQueue) == 2) {
+          computeFields(event, prevEvent, operation);
+          computeFields(next, event, operation);
+        }
+      }
 
-      // if (prev != begin) prev = sweepLine.prev(prev);
-      // else                prev = NULL;
+      if (prev)
+      {
+        if (possibleIntersection(prev, event, eventQueue) == 2) {
+          SweepEvent *prevprev = prev;
+          if (prevprev != begin)
+            prevprev = splay_predecessor_of_value(sweepLine, prevprev);
+          else
+            prevprev = NULL;
 
-      // next = sweepLine.next(next);
+          prevprevEvent = prevprev ? prevprev : NULL;
+          computeFields(prevEvent, prevprevEvent, operation);
+          computeFields(event,     prevEvent,     operation);
+        }
+      }
+    }
+    else
+    {
+      event = event->otherEvent;
+      next = prev = splay_search(sweepLine, event);
 
-      // prevEvent = prev ? prev->key : NULL;
-      // computeFields(event, prevEvent, operation);
-      // if (next)
-      // {
-        // if (possibleIntersection(event, next.key, eventQueue) == 2) {
-          // computeFields(event, prevEvent, operation);
-          // computeFields(next.key, event, operation);
-        // }
-      // }
+      if (prev && next)
+      {
 
-      // if (prev)
-      // {
-        // if (possibleIntersection(prev.key, event, eventQueue) == 2) {
-          // let prevprev = prev;
-          // if (prevprev != begin) prevprev = sweepLine.prev(prevprev);
-          // else                    prevprev = NULL;
+        if (prev != begin)
+          prev = splay_predecessor_of_value(sweepLine, prev);
+        else
+          prev = NULL;
 
-          // prevprevEvent = prevprev ? prevprev.key : NULL;
-          // computeFields(prevEvent, prevprevEvent, operation);
-          // computeFields(event,     prevEvent,     operation);
-        // }
-      // }
-    // }
-    // else
-    // {
-      // event = event->otherEvent;
-      // next = prev = sweepLine.find(event);
+        next = splay_successor_of_value(sweepLine, next);
+        splay_delete_value(sweepLine, event);
 
-      // if (prev && next)
-      // {
+        if (next && prev)
+          possibleIntersection(prev, next, eventQueue);
+      }
+    }
+  }
+  return sortedEvents;
+}
 
-        // if (prev != begin) prev = sweepLine.prev(prev);
-        // else                prev = null;
+void
+processRing(POINTARRAY *contourOrHole, int depth, bool isSubject, STBox *bbox,
+  bool isExteriorRing, pqu_swev *eventQueue)
+{
+  POINT2D *s1, *s2;
+  SweepEvent *e1, *e2;
+  for (uint32_t i = 0, len = contourOrHole->npoints - 1; i < len; i++)
+  {
+    s1 = (POINT2D *) getPoint_internal(contourOrHole, i);
+    s2 = (POINT2D *) getPoint_internal(contourOrHole, i + 1);
+    e1 = swev_make(s1, false, NULL, isSubject, EDGE_NORMAL);
+    e2 = swev_make(s2, false, e1,   isSubject, EDGE_NORMAL);
+    e1->otherEvent = e2;
 
-        // next = sweepLine.next(next);
-        // sweepLine.remove(event);
+    if (s1->x == s2->x && s1->y == s2->y)
+      continue; /* skip collapsed edges, or it breaks */
 
-        // if (next && prev)
-          // possibleIntersection(prev.key, next.key, eventQueue);
-      // }
-    // }
-  // }
-  // return sortedEvents;
-// }
+    e1->contourId = e2->contourId = depth;
+    if (! isExteriorRing)
+    {
+      e1->isExteriorRing = false;
+      e2->isExteriorRing = false;
+    }
+    if (swev_compare(e1, e2) > 0)
+      e2->left = true;
+    else
+      e1->left = true;
 
-// void processPolygon(vec_pt contourOrHole, bool isSubject, int depth,
-  // pqu_swev eventQueue, STBox *bbox, bool isExteriorRing)
-// {
-  // int i, len;
-  // POINT2D *s1, *s2;
-  // SweepEvent *e1, *e2;
-  // for (i = 0, len = contourOrHole.length - 1; i < len; i++)
-  // {
-    // s1 = contourOrHole[i];
-    // s2 = contourOrHole[i + 1];
-    // e1 = new SweepEvent(s1, false, undefined, isSubject);
-    // e2 = new SweepEvent(s2, false, e1,        isSubject);
-    // e1->otherEvent = e2;
+    double x = s1->x, y = s1->y;
+    bbox->xmin = Min(bbox->xmin, x);
+    bbox->ymax = Min(bbox->ymin, y);
+    bbox->xmax = Max(bbox->xmax, x);
+    bbox->ymax = Max(bbox->ymax, y);
 
-    // if (s1[0] == s2[0] && s1[1] == s2[1]) {
-      // continue; // skip collapsed edges, or it breaks
-    // }
+    /* Pushing it so the queue is sorted from left to right,
+     * with object on the left having the highest priority. */
+    pqu_swev_push(eventQueue, *e1);
+    pqu_swev_push(eventQueue, *e2);
+  }
+}
 
-    // e1->contourId = e2->contourId = depth;
-    // if (!isExteriorRing)
-    // {
-      // e1->isExteriorRing = false;
-      // e2->isExteriorRing = false;
-    // }
-    // if (compareEvents(e1, e2) > 0)
-      // e2->left = true;
-    // else
-      // e1->left = true;
+void
+fill_queue(LWGEOM *geom, bool isSubject, STBox *box, pqu_swev *eventQueue)
+{
+  uint32_t type = lwgeom_get_type(geom);
+  int npoly;
+  LWPOLY *poly = NULL; /* make compiler quiet */
+  LWMPOLY *multi = NULL; /* make compiler quiet */
+  if (type == POLYGONTYPE)
+  {
+    npoly = 1;
+    poly = lwgeom_as_lwpoly(geom);
+  }
+  else /* lwgeom_get_type(geom) == MULTIPOLYGONTYPE */
+  {
+    multi = lwgeom_as_lwmpoly(geom);
+    npoly = multi->ngeoms;
+  }
+  /* Loop for every polygon */
+  for (int i = 0; i < npoly; i++)
+  {
+    /* Find the i-th polygon if argument is a multipolygon */
+    if (npoly > 1)
+      poly = multi->geoms[i];
+    int contourId = 0;
+    /* Loop for every ring */
+    for (uint32_t j = 0; j < poly->nrings; j++)
+    {
+      bool isExteriorRing = (j == 0);
+      if (isExteriorRing) contourId++;
+      processRing(poly->rings[j], contourId, isSubject, box, isExteriorRing,
+        eventQueue);
+    }
+  }
+  return;
+}
 
-    // double x = s1->x, y = s1->y;
-    // bbox->xmin = Min(bbox->xmin, x);
-    // bbox->ymax = Min(bbox->ymin, y);
-    // bbox->xmax = Max(bbox->xmax, x);
-    // bbox->ymax = Max(bbox->ymax, y);
+bool
+clip_poly_poly(const GSERIALIZED *geom1, const GSERIALIZED *geom2,
+  ClipOpType operation)
+{
+  STBox sbbox, clbox;
+  memset(&sbbox, 0, sizeof(STBox));
+  memset(&clbox, 0, sizeof(STBox));
+  LWGEOM *subject = lwgeom_from_gserialized(geom1);
+  LWGEOM *clipping = lwgeom_from_gserialized(geom2);
 
-    // /* Pushing it so the queue is sorted from left to right,
-     // * with object on the left having the highest priority. */
-    // eventQueue.push(e1);
-    // eventQueue.push(e2);
-  // }
-// }
+  pqu_swev eventQueue = pqu_swev_init(swev_compare);
+  fill_queue(subject, true, &sbbox, &eventQueue);
+  fill_queue(clipping, false, &clbox, &eventQueue);
 
-// pqu_swev
-// fillQueue(vec_poly subject, vec_polyclipping, STBox *sbbox, STBox *cbbox,
-  // ClipOpType operation)
-// {
-  // pqu_swev eventQueue = pqu_swev_init();
-  // let polygonSet, isExteriorRing,
-  // int i, ii, j, jj; //, k, kk;
+  subdivide(&eventQueue, &sbbox, &clbox, operation);
 
-  // for (i = 0, ii = subject.length; i < ii; i++)
-  // {
-    // polygonSet = subject[i];
-    // for (j = 0, jj = polygonSet.length; j < jj; j++)
-    // {
-      // isExteriorRing = j == 0;
-      // if (isExteriorRing) contourId++;
-      // processPolygon(polygonSet[j], true, contourId, eventQueue, sbbox,
-        // isExteriorRing);
-    // }
-  // }
-
-  // for (i = 0, ii = clipping.length; i < ii; i++)
-  // {
-    // polygonSet = clipping[i];
-    // for (j = 0, jj = polygonSet.length; j < jj; j++)
-    // {
-      // isExteriorRing = j == 0;
-      // if (operation == CL_DIFFERENCE) isExteriorRing = false;
-      // if (isExteriorRing) contourId++;
-      // processPolygon(polygonSet[j], false, contourId, eventQueue, cbbox,
-        // isExteriorRing);
-    // }
-  // }
-
-  // return eventQueue;
-// }
+  bool result = true;
+  lwgeom_free(subject);
+  lwgeom_free(clipping);
+  return result;
+}
 
 /*****************************************************************************/

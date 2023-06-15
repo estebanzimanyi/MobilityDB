@@ -41,6 +41,7 @@
 #include <liblwgeom.h>
 #include <liblwgeom_internal.h>
 #include <lwgeodetic.h>
+#include <libpgcommon/lwgeom_pg.h>
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
@@ -1307,3 +1308,46 @@ Tpoint_minus_stbox(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************/
+
+static char
+is_poly(const GSERIALIZED* g)
+{
+  int type = gserialized_get_type(g);
+  return type == POLYGONTYPE || type == MULTIPOLYGONTYPE;
+}
+
+PG_FUNCTION_INFO_V1(ST_Clip);
+Datum ST_Clip(PG_FUNCTION_ARGS)
+{
+  const GSERIALIZED *geom1 = PG_GETARG_GSERIALIZED_P(0);
+  const GSERIALIZED *geom2 = PG_GETARG_GSERIALIZED_P(1);
+  GBOX box1, box2;
+
+  gserialized_error_if_srid_mismatch(geom1, geom2, __func__);
+
+  /* A.Intersects(Empty) == FALSE */
+  if (gserialized_is_empty(geom1) || gserialized_is_empty(geom2) )
+    PG_RETURN_BOOL(false);
+
+  /*
+   * short-circuit 1: if geom2 bounding box does not overlap
+   * geom1 bounding box we can return FALSE.
+   */
+  if (gserialized_get_gbox_p(geom1, &box1) &&
+       gserialized_get_gbox_p(geom2, &box2))
+  {
+    if (gbox_overlaps_2d(&box1, &box2) == LW_FALSE)
+      PG_RETURN_BOOL(false);
+  }
+
+  if (! is_poly(geom2) || ! is_poly(geom2))
+    elog(ERROR, "The function only accepts (multi)polygons.");
+
+  bool result = clip_poly_poly(geom1, geom2);
+  PG_FREE_IF_COPY(geom1, 0);
+  PG_FREE_IF_COPY(geom2, 1);
+  PG_RETURN_BOOL(result);
+}
+
+/*****************************************************************************/
+
