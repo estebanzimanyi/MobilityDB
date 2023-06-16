@@ -119,21 +119,21 @@ typedef struct
   vec_cntr contours;
 } Polygon;
 
-// /* Function prototypes for Polygon */
+/* Function prototypes for Polygon */
 
-// void poly_free(Polygon *);
-// Polygon poly_copy(Polygon *);
-// int poly_cmp(Polygon *a, Polygon *b);
+void poly_free(Polygon *);
+Polygon poly_copy(Polygon *);
+int poly_cmp(Polygon *a, Polygon *b);
 
-// #define Polygon_free poly_free
-// #define Polygon_copy poly_copy
-// #define Polygon_cmp poly_cmp
+#define Polygon_free poly_free
+#define Polygon_copy poly_copy
+#define Polygon_cmp poly_cmp
 
-// /* Definition of vector of Polygon */
+/* Definition of vector of Polygon */
 
-// #define vec_Polygon vec_poly
-// #define T Polygon
-// #include <ctl/vector.h>
+#define vec_Polygon vec_poly
+#define T Polygon
+#include <ctl/vector.h>
 
 /*****************************************************************************/
 
@@ -181,8 +181,8 @@ int swev_cmp(const SweepEvent *a, const SweepEvent *b);
 #define T SweepEvent
 #include <ctl/vector.h>
 
-extern bool clip_poly_poly(const GSERIALIZED *geom1, const GSERIALIZED *geom2,
-  ClipOpType operation);
+extern GSERIALIZED *clip_poly_poly(const GSERIALIZED *subj,
+  const GSERIALIZED *clip, ClipOpType operation);
 
 /*****************************************************************************/
 

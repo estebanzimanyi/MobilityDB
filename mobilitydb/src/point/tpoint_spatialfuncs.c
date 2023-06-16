@@ -1319,34 +1319,18 @@ is_poly(const GSERIALIZED* g)
 
 Datum clip_ext(FunctionCallInfo fcinfo, ClipOpType operation)
 {
-  GSERIALIZED *geom1 = PG_GETARG_GSERIALIZED_P(0);
-  GSERIALIZED *geom2 = PG_GETARG_GSERIALIZED_P(1);
-  GBOX box1, box2;
+  GSERIALIZED *subj = PG_GETARG_GSERIALIZED_P(0);
+  GSERIALIZED *clip = PG_GETARG_GSERIALIZED_P(1);
+  gserialized_error_if_srid_mismatch(subj, clip, __func__);
+  if (! is_poly(subj) || ! is_poly(clip))
+    elog(ERROR, "The function only accepts (multi)polygons");
 
-  gserialized_error_if_srid_mismatch(geom1, geom2, __func__);
-
-  /* A.Intersects(Empty) == FALSE */
-  if (gserialized_is_empty(geom1) || gserialized_is_empty(geom2) )
-    PG_RETURN_BOOL(false);
-
-  /*
-   * short-circuit 1: if geom2 bounding box does not overlap
-   * geom1 bounding box we can return FALSE.
-   */
-  if (gserialized_get_gbox_p(geom1, &box1) &&
-       gserialized_get_gbox_p(geom2, &box2))
-  {
-    if (gbox_overlaps_2d(&box1, &box2) == LW_FALSE)
-      PG_RETURN_BOOL(false);
-  }
-
-  if (! is_poly(geom2) || ! is_poly(geom2))
-    elog(ERROR, "The function only accepts (multi)polygons.");
-
-  bool result = clip_poly_poly(geom1, geom2, operation);
-  PG_FREE_IF_COPY(geom1, 0);
-  PG_FREE_IF_COPY(geom2, 1);
-  PG_RETURN_BOOL(result);
+  GSERIALIZED *result = clip_poly_poly(subj, clip, operation);
+  PG_FREE_IF_COPY(subj, 0);
+  PG_FREE_IF_COPY(clip, 1);
+  if (! result)
+    PG_RETURN_NULL();
+  PG_RETURN_POINTER(result);
 }
 
 /*****************************************************************************/

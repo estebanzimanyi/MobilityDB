@@ -31,6 +31,8 @@
  * @brief Clipping functions for temporal points.
  */
 
+#include "point/tpoint_clipping.h"
+
 /* PostgreSQL */
 #include <postgres.h>
 #include <utils/float.h>
@@ -46,7 +48,7 @@
 #include "point/splay_tree.h"
 #include "point/stbox.h"
 #include "point/tpoint.h"
-#include "point/tpoint_clipping.h"
+#include "point/tpoint_spatialfuncs.h"
 
 // #include <stdbool.h>
 // #include <stdio.h>
@@ -110,26 +112,30 @@ vector_alloc(Vector *vector)
 }
 
 /**
- * @brief Constructs a vector from the array of values
- * @param[in] values Array of values
- * @param[in] count Number of elements in the array
+ * @brief Constructs an empty vector
  */
 Vector *
-vector_init(void **values, int count)
+vector_init(void)
 {
-  assert(count > 0);
-
   int capacity = VECTOR_INITIAL_CAPACITY;
   while (capacity <= count)
     capacity <<= 1;
   Vector *result = palloc0(sizeof(Vector));
   result->elems = palloc0(sizeof(void *) * capacity);
   result->capacity = capacity;
-  result->length = count;
-  /* Fill values first */
-  for (int i = 0; i < count - 2; i++)
-    result->elems[i] = values[i];
+  result->length = 0;
   return result;
+}
+
+/**
+ * @brief Constructs an empty vector
+ */
+void
+vector_apend(Vector *vector, void *elem)
+{
+  int pos = vector_alloc(vector);
+  result->elems[pos] = elem;
+  return;
 }
 
 /**
@@ -338,15 +344,18 @@ list_make(void **values, int count)
  * Points
  *****************************************************************************/
 
-/** Are the points equal ? */
+/**
+ * @brief Are the points equal ?
+ */
 bool
 point_eq(const POINT2D *p1, const POINT2D *p2)
 {
   return float8_eq(p1->x, p2->x) && float8_eq(p1->y, p2->y);
 }
 
-
-/** Sign of the signed area of the triangle(p0, p1, p2) */
+/**
+ * @brief Sign of the signed area of the triangle(p0, p1, p2)
+ */
 int
 signedArea(const POINT2D *p0, const POINT2D *p1, const POINT2D *p2)
 {
@@ -356,51 +365,13 @@ signedArea(const POINT2D *p0, const POINT2D *p1, const POINT2D *p2)
   return 0;
 }
 
-/** Return -1 if the polygons are not empty, 0 if the result is empty,
- * 1 if the result is the subject, 2 if the result is the clipping */
-// int
-// trivialOperation(Polygon *subject, Polygon *clipping, ClipOpType operation)
-// {
-  // int ncontsubj = vec_cntr_size(&subject->contours);
-  // int ncontclip = vec_cntr_size(&clipping->contours);
-
-  // int result = -1;
-  // if (ncontsubj * ncontclip == 0)
-  // {
-    // if (operation == CL_INTERSECTION)
-      // result = 0;
-    // else if (operation == CL_DIFFERENCE)
-      // result = 1;
-    // else if (operation == CL_UNION || operation == XOR)
-      // result = (ncontsubj == 0) ? 2 : 1;
-  // }
-  // return result;
-// }
-
-/** Return -1 if the polygons are not empty, 0 if the result is empty,
- * 1 if the result is the subject, 2 if the result is the union of both */
-// int
-// compareBBoxes(Polygon *subject, Polygon *clipping, STBox *sbbox,
-  // STBox *clbox, ClipOpType operation)
-// {
-  // int result = -1;
-  // if (sbbox->xmin > clbox->xmax || clbox->xmin > sbbox->xmax ||
-      // sbbox->ymin > clbox->ymax || clbox->ymin > sbbox->ymax)
-  // {
-    // if (operation == INTERSECTION)
-      // result = 0;
-    // else if (operation == CL_DIFFERENCE)
-      // result = 1;
-    // else if (operation == CL_UNION || operation == XOR)
-      // result = 2;
-  // }
-  // return result;
-// }
-
 /*****************************************************************************
  * Contour
  *****************************************************************************/
 
+/**
+ * @brief
+ */
 Contour *
 cntr_make(void)
 {
@@ -412,6 +383,9 @@ cntr_make(void)
   return result;
 }
 
+/**
+ * @brief
+ */
 Contour
 cntr_copy(Contour *c)
 {
@@ -420,6 +394,9 @@ cntr_copy(Contour *c)
   return *result;
 }
 
+/**
+ * @brief
+ */
 void
 cntr_free(Contour *c)
 {
@@ -427,10 +404,53 @@ cntr_free(Contour *c)
   return;
 }
 
+
+
+
+
+/*****************************************************************************
+ * Polygon
+ *****************************************************************************/
+
+/**
+ * @brief
+ */
+Polygon *
+poly_make(void)
+{
+  Polygon *result = palloc(sizeof(Polygon));
+  result->contours = vec_cntr_init();
+  return result;
+}
+
+/**
+ * @brief
+ */
+Polygon
+poly_copy(Polygon *p)
+{
+  Polygon *result = palloc(sizeof(Polygon));
+  memcpy(result, p, sizeof(Polygon));
+  return *result;
+}
+
+/**
+ * @brief
+ */
+void
+poly_free(Polygon *p)
+{
+  // pfree(p);
+  return;
+}
+
 /*****************************************************************************
  * SweepEvent
  *****************************************************************************/
 
+/**
+ * @brief
+ */
 SweepEvent *
 swev_make(POINT2D *point, bool left, SweepEvent *otherEvent, bool isSubject,
   EdgeType edgeType)
@@ -453,6 +473,9 @@ swev_make(POINT2D *point, bool left, SweepEvent *otherEvent, bool isSubject,
   return result;
 }
 
+/**
+ * @brief
+ */
 SweepEvent
 swev_copy(SweepEvent *e)
 {
@@ -461,6 +484,9 @@ swev_copy(SweepEvent *e)
   return *result;
 }
 
+/**
+ * @brief
+ */
 void
 swev_free(SweepEvent *e)
 {
@@ -468,6 +494,9 @@ swev_free(SweepEvent *e)
   return;
 }
 
+/**
+ * @brief
+ */
 bool
 swev_isBelow(const SweepEvent *e, const POINT2D *p)
 {
@@ -479,12 +508,18 @@ swev_isBelow(const SweepEvent *e, const POINT2D *p)
     //signedArea(e->otherEvent.point, e->point, p) > 0;
 }
 
+/**
+ * @brief
+ */
 bool
 swev_isAbove(const SweepEvent *e, const POINT2D *p)
 {
   return ! swev_isBelow(e, p);
 }
 
+/**
+ * @brief
+ */
 bool
 swev_isVertical(const SweepEvent *e)
 {
@@ -492,7 +527,7 @@ swev_isVertical(const SweepEvent *e)
 }
 
 /**
- * Does event belong to result?
+ * @brief Does event belong to result?
  */
 bool
 swev_inResult(const SweepEvent *e)
@@ -500,6 +535,9 @@ swev_inResult(const SweepEvent *e)
   return e->resultTransition != 0;
 }
 
+/**
+ * @brief
+ */
 int
 specialCases(const SweepEvent *e1, const SweepEvent *e2, const POINT2D *p1,
   const POINT2D *p2 __attribute__((unused)))
@@ -522,6 +560,9 @@ specialCases(const SweepEvent *e1, const SweepEvent *e2, const POINT2D *p1,
   return (! e1->isSubject && e2->isSubject) ? 1 : -1;
 }
 
+/**
+ * @brief
+ */
 int
 swev_compare(SweepEvent *e1, SweepEvent *e2)
 {
@@ -539,6 +580,9 @@ swev_compare(SweepEvent *e1, SweepEvent *e2)
   return specialCases(e1, e2, p1, p2);
 }
 
+/**
+ * @brief
+ */
 int
 compareSegments(SweepEvent *e1, SweepEvent *e2)
 {
@@ -590,6 +634,10 @@ compareSegments(SweepEvent *e1, SweepEvent *e2)
   return swev_compare(e1, e2) == 1 ? 1 : -1;
 }
 
+/**
+ * @brief Divide the event of a segment into two events and push them into the
+ * queue
+ */
 pqu_SweepEvent *
 divideSegment(SweepEvent *e, POINT2D *p, pqu_SweepEvent *queue)
 {
@@ -620,7 +668,9 @@ divideSegment(SweepEvent *e, POINT2D *p, pqu_SweepEvent *queue)
   return queue;
 }
 
-
+/**
+ * @brief
+ */
 bool
 inResult(SweepEvent *event, ClipOpType operation)
 {
@@ -652,6 +702,9 @@ inResult(SweepEvent *event, ClipOpType operation)
   return false;
 }
 
+/**
+ * @brief
+ */
 int
 determineResultTransition(SweepEvent *event, ClipOpType operation)
 {
@@ -680,6 +733,7 @@ determineResultTransition(SweepEvent *event, ClipOpType operation)
 }
 
 /**
+ * @brief
  * @param event,prev Sweepline events
  * @param Operation Clipping operation
  */
@@ -704,9 +758,8 @@ computeFields(SweepEvent *event, SweepEvent *prev, ClipOpType operation)
     }
     else
     {
-      event->inOut      = !prev->otherInOut;
-      event->otherInOut = swev_isVertical(prev) ?
-        ! prev->inOut : prev->inOut;
+      event->inOut      = ! prev->otherInOut;
+      event->otherInOut = swev_isVertical(prev) ? ! prev->inOut : prev->inOut;
     }
 
     /* compute prevInResult field */
@@ -748,6 +801,9 @@ double dotProduct(POINT2D *a, POINT2D *b)
   return (a->x * b->x) + (a->y * b->y);
 }
 
+/**
+ * @brief
+ */
 void setPoint(const POINT2D *p, double s, const POINT2D *d, POINT2D *result)
 {
   result->x = p->x + s * d->x;
@@ -755,8 +811,8 @@ void setPoint(const POINT2D *p, double s, const POINT2D *d, POINT2D *result)
 }
 
 /**
- * Finds the intersection (if any) between two line segments a and b, given the
- * line segments' end points a1, a2 and b1, b2.
+ * @brief Find the intersection (if any) between two line segments a and b,
+ * given the line segments' end points a1, a2 and b1, b2.
  *
  * This algorithm is based on Schneider and Eberly.
  * http://www.cimec.org.ar/~ncalvo/Schneider_Eberly.pdf
@@ -1004,23 +1060,29 @@ possibleIntersection(SweepEvent *e1, SweepEvent *e2, pqu_SweepEvent *queue)
  * SweepLine
  *****************************************************************************/
 
+/**
+ * @brief
+ */
 vec_swev
-subdivide(pqu_swev *eventQueue, STBox *sbbox, STBox *clbox,
+subdivideSegments(pqu_swev *eventQueue, GBOX *sbbox, GBOX *clbox,
   ClipOpType operation)
 {
   SplayTree sweepLine = splay_new(&swev_compare);
   vec_swev sortedEvents = vec_swev_init();
   double rightbound = fmin(sbbox->xmax, clbox->xmax);
-  SweepEvent *event, *prev, *next, *begin = NULL, *prevEvent, *prevprevEvent;
-  // int nevents = 0;
+  SweepEvent *event, *save, *prev, *next, *begin = NULL, *prevEvent,
+    *prevprevEvent;
+  int nevents = 0;
   /* loop for every event in the queue */
   while (pqu_swev_size(eventQueue) != 0)
   {
     /* Remove the event from the queue and insert it into the sweepline */
     event = pqu_swev_top(eventQueue);
+    save = event;
+    vec_swev_insert_index(&sortedEvents, nevents++, *save);
     pqu_swev_pop(eventQueue);
-    vec_swev_push_back(&sortedEvents, *event);
-    // nevents++;
+    /* The value of event is modified by the pop operation above ??!!?? */
+    event = save;
 
     /* optimization by bboxes for intersection and difference goes here */
     if ((operation == CL_INTERSECTION && event->point.x > rightbound) ||
@@ -1089,8 +1151,11 @@ subdivide(pqu_swev *eventQueue, STBox *sbbox, STBox *clbox,
   return sortedEvents;
 }
 
+/**
+ * @brief
+ */
 void
-processRing(POINTARRAY *contourOrHole, int depth, bool isSubject, STBox *bbox,
+processRing(POINTARRAY *contourOrHole, int depth, bool isSubject,
   bool isExteriorRing, pqu_swev *eventQueue)
 {
   POINT2D *s1, *s2;
@@ -1117,12 +1182,6 @@ processRing(POINTARRAY *contourOrHole, int depth, bool isSubject, STBox *bbox,
     else
       e1->left = true;
 
-    double x = s1->x, y = s1->y;
-    bbox->xmin = Min(bbox->xmin, x);
-    bbox->ymax = Min(bbox->ymin, y);
-    bbox->xmax = Max(bbox->xmax, x);
-    bbox->ymax = Max(bbox->ymax, y);
-
     /* Pushing it so the queue is sorted from left to right,
      * with object on the left having the highest priority. */
     pqu_swev_push(eventQueue, *e1);
@@ -1130,8 +1189,11 @@ processRing(POINTARRAY *contourOrHole, int depth, bool isSubject, STBox *bbox,
   }
 }
 
+/**
+ * @brief
+ */
 void
-fill_queue(LWGEOM *geom, bool isSubject, STBox *box, pqu_swev *eventQueue)
+fill_queue(LWGEOM *geom, bool isSubject, pqu_swev *eventQueue)
 {
   uint32_t type = lwgeom_get_type(geom);
   int npoly;
@@ -1159,7 +1221,7 @@ fill_queue(LWGEOM *geom, bool isSubject, STBox *box, pqu_swev *eventQueue)
     {
       bool isExteriorRing = (j == 0);
       if (isExteriorRing) contourId++;
-      processRing(poly->rings[j], contourId, isSubject, box, isExteriorRing,
+      processRing(poly->rings[j], contourId, isSubject, isExteriorRing,
         eventQueue);
     }
   }
@@ -1169,7 +1231,9 @@ fill_queue(LWGEOM *geom, bool isSubject, STBox *box, pqu_swev *eventQueue)
 /*****************************************************************************
  * Connect Edges
  *****************************************************************************/
+
 /**
+ * @brief
  * @param  {Array.<SweepEvent>} sortedEvents
  * @return {Array.<SweepEvent>}
  */
@@ -1230,6 +1294,7 @@ orderEvents(vec_swev sortedEvents)
 }
 
 /**
+ * @brief
  * @param  {Number} pos
  * @param  {Array.<SweepEvent>} resultEvents
  * @param  {Object>}    processed
@@ -1267,18 +1332,9 @@ int nextPos(int pos, vec_swev *resultEvents, vec_bool processed, int origPos)
   return newPos;
 }
 
-/* Helper function that combines marking an event as processed with assigning
- * its output contour ID */
-void markAsProcessed(int pos, vec_swev *resultEvents, vec_bool *processed,
-  int contourId)
-{
-  vec_bool_insert_index(processed, pos, true);
-  SweepEvent *event = vec_swev_at(resultEvents, pos);
-  int len = vec_swev_size(resultEvents);
-  if (pos < len && event)
-    event->outputContourId = contourId;
-};
-
+/**
+ * @brief
+ */
 Contour *
 initializeContourFromContext(SweepEvent *event, vec_cntr contours,
   int contourId)
@@ -1335,29 +1391,202 @@ initializeContourFromContext(SweepEvent *event, vec_cntr contours,
   return contour;
 }
 
+/**
+ * @brief Helper macro that combines marking an event as processed with
+ * assigning its output contour ID
+ */
+#define markAsProcessed(pos) \
+  do { \
+    vec_bool_insert_index(&processed, (pos), true); \
+    SweepEvent *event = vec_swev_at(&resultEvents, (pos)); \
+    int len = vec_swev_size(&resultEvents); \
+    if ((pos) < len && event) \
+      event->outputContourId = contourId; \
+  } while(0)
+
+/**
+ * @brief Connect the edges from the events into an array of counts
+ * @param sortedEvents Array of sweepline events
+ * @return {Array.<*>} polygons
+ */
+vec_cntr connectEdges(vec_swev sortedEvents)
+{
+  int i, len;
+  vec_swev resultEvents = orderEvents(sortedEvents);
+
+  /* "false"-filled array */
+  vec_bool processed = vec_bool_init();
+  vec_cntr contours = vec_cntr_init();
+  len = vec_swev_size(&resultEvents);
+  for (i = 0; i < len; i++)
+  {
+    if (vec_bool_at(&processed, i))
+      continue;
+
+    int contourId = vec_cntr_size(&contours);
+    SweepEvent *event = vec_swev_at(&resultEvents, i);
+    Contour *contour = initializeContourFromContext(event, contours, contourId);
+
+    int pos = i;
+    int origPos = i;
+    POINT2D *initial = &event->point;
+    vec_pt_push_back(&contour->points, *initial);
+    while (true)
+    {
+      markAsProcessed(pos);
+      event = vec_swev_at(&resultEvents, pos);
+      pos = event->otherPos;
+      markAsProcessed(pos);
+      vec_pt_push_back(&contour->points, event->point);
+      pos = nextPos(pos, &resultEvents, processed, origPos);
+      len = vec_swev_size(&resultEvents);
+      if (pos == origPos || pos >= len || ! event)
+        break;
+    }
+    vec_cntr_push_back(&contours, *contour);
+  }
+  return contours;
+}
+
 /*****************************************************************************
  * Main
  *****************************************************************************/
 
-bool
-clip_poly_poly(const GSERIALIZED *geom1, const GSERIALIZED *geom2,
+/**
+ * @brief Contruct a POINTARRAY from a vector of POINT2D
+ */
+POINTARRAY *
+ptvec_to_ptarray(vec_pt *points)
+{
+  int len = vec_pt_size(points);
+  POINTARRAY *result = ptarray_construct(0, 0, len);
+  for (int i = 0; i < len; i++)
+  {
+    POINT2D *pt = vec_pt_at(points, i);
+    uint8_t *ptr = getPoint_internal(result, i);
+    memcpy(ptr, pt, sizeof(POINT2D));
+  }
+  return result;
+}
+
+/**
+ * @brief Clip the two polygons using the operation
+ */
+GSERIALIZED *
+clip_poly_poly(const GSERIALIZED *subj, const GSERIALIZED *clip,
   ClipOpType operation)
 {
-  STBox sbbox, clbox;
-  memset(&sbbox, 0, sizeof(STBox));
-  memset(&clbox, 0, sizeof(STBox));
-  LWGEOM *subject = lwgeom_from_gserialized(geom1);
-  LWGEOM *clipping = lwgeom_from_gserialized(geom2);
+  /* Trivial operation if at least one geometry is empty */
+  bool empty_subj = gserialized_is_empty(subj);
+  bool empty_clip = gserialized_is_empty(clip);
+  if (empty_subj || empty_clip)
+  {
+    if (operation == CL_INTERSECTION)
+      return NULL;
+    else if (operation == CL_DIFFERENCE)
+      return gserialized_copy(subj);
+    else if (operation == CL_UNION || operation == CL_XOR)
+      return empty_subj ? gserialized_copy(clip) : gserialized_copy(subj);
+  }
 
+  /* Trivial operation when the bounding boxes do not overlap */
+  GBOX sbbox, clbox;
+  memset(&sbbox, 0, sizeof(GBOX));
+  memset(&clbox, 0, sizeof(GBOX));
+  if (gserialized_get_gbox_p(subj, &sbbox) &&
+      gserialized_get_gbox_p(clip, &clbox) &&
+      gbox_overlaps_2d(&sbbox, &clbox) == LW_FALSE)
+  {
+    if (operation == CL_INTERSECTION)
+      return NULL;
+    else if (operation == CL_DIFFERENCE)
+      return gserialized_copy(subj);
+    else if (operation == CL_UNION || operation == CL_XOR)
+      return gserialized_copy(clip);
+  }
+
+  /* Fill the event queue with the segments of both polygons */
+  LWGEOM *subject = lwgeom_from_gserialized(subj);
+  LWGEOM *clipping = lwgeom_from_gserialized(clip);
   pqu_swev eventQueue = pqu_swev_init(swev_compare);
-  fill_queue(subject, true, &sbbox, &eventQueue);
-  fill_queue(clipping, false, &clbox, &eventQueue);
+  fill_queue(subject, true, &eventQueue);
+  fill_queue(clipping, false, &eventQueue);
 
-  subdivide(&eventQueue, &sbbox, &clbox, operation);
+  /* Subdivide edges */
+  vec_swev sortedEvents = subdivideSegments(&eventQueue, &sbbox, &clbox, operation);
 
-  bool result = true;
+  /* Connect vertices */
+  vec_cntr contours = connectEdges(sortedEvents);
+  int len = vec_cntr_size(&contours);
+
+  /* Convert contours to polygons */
+  vec_poly polygons = vec_poly_init();
+  for (int i = 0; i < len; i++)
+  {
+    Contour *contour = vec_cntr_at(&contours, i);
+    if (contour->holeOf == -1)
+    {
+      /* Create a new polygon */
+      Polygon *poly = poly_make();
+      /* The exterior ring goes first */
+      vec_cntr_push_back(&poly->contours, *contour);
+      /* Followed by holes if any */
+      int nholes = vec_int_size(&contour->holeIds);
+      for (int j = 0; j < nholes; j++)
+      {
+        int holeId = * vec_int_at(&contour->holeIds, j);
+        contour = vec_cntr_at(&contours, holeId);
+        vec_cntr_push_back(&poly->contours, *contour);
+      }
+      vec_poly_push_back(&polygons, *poly);
+    }
+  }
+
+  /* Convert polygons to LWGEOM */
+  uint32_t npoly = vec_poly_size(&polygons);
+  int32_t srid = gserialized_get_srid(subj);
+  LWGEOM *lwresult;
+  LWPOLY *poly;
+  if (npoly == 1)
+  {
+    /* Result is a LWPOLY */
+    Polygon *p = vec_poly_at(&polygons, 0);
+    int nrings = vec_cntr_size(&p->contours);
+    POINTARRAY **ptarrs = palloc(sizeof(POINTARRAY *) * nrings);
+    for (int j = 0; j < nrings; j++)
+    {
+      Contour *c = vec_cntr_at(&p->contours, j);
+      ptarrs[j] = ptvec_to_ptarray(&c->points);
+    }
+    poly = lwpoly_construct(srid, NULL, nrings, ptarrs);
+    lwresult = lwpoly_as_lwgeom(poly);
+  }
+  else
+  {
+    /* Result is a LWMPOLY */
+    LWGEOM **geoms = palloc(sizeof(LWGEOM *) * npoly);
+    for (uint32_t i = 0; i < npoly; i++)
+    {
+      Polygon *p = vec_poly_at(&polygons, i);
+      uint32_t nrings = vec_cntr_size(&p->contours);
+      POINTARRAY **ptarrs = palloc(sizeof(POINTARRAY *) * nrings);
+      for (uint32_t j = 0; j < nrings; j++)
+      {
+        Contour *c = vec_cntr_at(&p->contours, j);
+        ptarrs[j] = ptvec_to_ptarray(&c->points);
+      }
+      poly = lwpoly_construct(srid, NULL, nrings, ptarrs);
+      geoms[i] = lwpoly_as_lwgeom(poly);
+    }
+    LWCOLLECTION *coll = lwcollection_construct(MULTIPOLYGONTYPE, srid, NULL,
+      npoly, geoms);
+    lwresult = lwcollection_as_lwgeom(coll);
+  }
+
+  GSERIALIZED *result = geo_serialize(lwresult);
   lwgeom_free(subject);
   lwgeom_free(clipping);
+  lwgeom_free(lwresult);
   return result;
 }
 
