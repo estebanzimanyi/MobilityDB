@@ -65,8 +65,6 @@
 #define T bool
 #include <ctl/vector.h>
 
-/*****************************************************************************/
-#if 0 /* not used */
 /*****************************************************************************
  * Vector data structure
  *****************************************************************************/
@@ -118,8 +116,6 @@ Vector *
 vector_init(void)
 {
   int capacity = VECTOR_INITIAL_CAPACITY;
-  while (capacity <= count)
-    capacity <<= 1;
   Vector *result = palloc0(sizeof(Vector));
   result->elems = palloc0(sizeof(void *) * capacity);
   result->capacity = capacity;
@@ -131,10 +127,40 @@ vector_init(void)
  * @brief Constructs an empty vector
  */
 void
-vector_apend(Vector *vector, void *elem)
+vector_append(Vector *vector, void *elem)
 {
   int pos = vector_alloc(vector);
-  result->elems[pos] = elem;
+  vector->elems[pos] = elem;
+  return;
+}
+
+/**
+ * @brief Constructs an empty vector
+ */
+void *
+vector_at(Vector *vector, int pos)
+{
+  assert(pos >= 0 && pos < vector->length);
+  return vector->elems[pos];
+}
+
+/**
+ * @brief Constructs an empty vector
+ */
+void *
+vector_back(Vector *vector)
+{
+  return vector->elems[vector->length - 1];
+}
+
+/**
+ * @brief Constructs an empty vector
+ */
+void
+vector_set(Vector *vector, int pos, void *elem)
+{
+  assert(pos >= 0 && pos < vector->length);
+  vector->elems[pos] = elem;
   return;
 }
 
@@ -160,6 +186,8 @@ vector_free(Vector *vector)
   return;
 }
 
+/*****************************************************************************/
+#if 0 /* not used */
 /*****************************************************************************
  * List data structure
  *****************************************************************************/
@@ -348,7 +376,7 @@ list_make(void **values, int count)
  * @brief Are the points equal ?
  */
 bool
-point_eq(const POINT2D *p1, const POINT2D *p2)
+point2d_eq(const POINT2D *p1, const POINT2D *p2)
 {
   return float8_eq(p1->x, p2->x) && float8_eq(p1->y, p2->y);
 }
@@ -484,6 +512,14 @@ swev_copy(SweepEvent *e)
   return *result;
 }
 
+SweepEvent *
+SweepEvent_clone(SweepEvent *e)
+{
+  SweepEvent *result = palloc(sizeof(SweepEvent));
+  memcpy(result, e, sizeof(SweepEvent));
+  return result;
+}
+
 /**
  * @brief
  */
@@ -593,7 +629,7 @@ compareSegments(SweepEvent *e1, SweepEvent *e2)
     signedArea(&e1->point, &e1->otherEvent->point, &e2->otherEvent->point) != 0)
   {
     /* If they share their left endpoint use the right endpoint to sort */
-    if (point_eq(&e1->point, &e2->point))
+    if (point2d_eq(&e1->point, &e2->point))
       return swev_isBelow(e1, &e2->otherEvent->point) ? -1 : 1;
 
     /* Different left endpoint: use the left endpoint to sort */
@@ -615,7 +651,7 @@ compareSegments(SweepEvent *e1, SweepEvent *e2)
     /* same polygon */
     const POINT2D *p1 = &e1->point;
     const POINT2D *p2 = &e2->point;
-    if (p1->x == p2->x && p1->y == p2->y/*point_eq(e1->point, e2->point)*/)
+    if (p1->x == p2->x && p1->y == p2->y/*point2d_eq(e1->point, e2->point)*/)
     {
       p1 = &e1->otherEvent->point;
       p2 = &e2->otherEvent->point;
@@ -644,7 +680,7 @@ divideSegment(SweepEvent *e, POINT2D *p, pqu_SweepEvent *queue)
   SweepEvent *r = swev_make(p, false, e, e->isSubject, EDGE_NORMAL);
   SweepEvent *l = swev_make(p, true,  e->otherEvent, e->isSubject, EDGE_NORMAL);
 
-  if (point_eq(&e->point, &e->otherEvent->point))
+  if (point2d_eq(&e->point, &e->otherEvent->point))
     elog(WARNING, "what is that, a collapsed segment?");
 
   r->contourId = l->contourId = e->contourId;
@@ -960,8 +996,8 @@ possibleIntersection(SweepEvent *e1, SweepEvent *e2, pqu_SweepEvent *queue)
 
   /* the line segments intersect at an endpoint of both line segments */
   if ((nintersections == 1) &&
-      (point_eq(&e1->point, &e2->point) ||
-       point_eq(&e1->otherEvent->point, &e2->otherEvent->point)))
+      (point2d_eq(&e1->point, &e2->point) ||
+       point2d_eq(&e1->otherEvent->point, &e2->otherEvent->point)))
     return 0;
 
   if (nintersections == 2 && e1->isSubject == e2->isSubject)
@@ -978,11 +1014,11 @@ possibleIntersection(SweepEvent *e1, SweepEvent *e2, pqu_SweepEvent *queue)
   if (nintersections == 1)
   {
     /* if the intersection point is not an endpoint of e1 */
-    if (! point_eq(&e1->point, &p1) && !point_eq(&e1->otherEvent->point, &p1))
+    if (! point2d_eq(&e1->point, &p1) && !point2d_eq(&e1->otherEvent->point, &p1))
       divideSegment(e1, &p1, queue);
 
     /* if the intersection point is not an endpoint of e2 */
-    if (!point_eq(&e2->point, &p1) && !point_eq(&e2->otherEvent->point, &p1))
+    if (!point2d_eq(&e2->point, &p1) && !point2d_eq(&e2->otherEvent->point, &p1))
       divideSegment(e2, &p1, queue);
     return 1;
   }
@@ -992,7 +1028,7 @@ possibleIntersection(SweepEvent *e1, SweepEvent *e2, pqu_SweepEvent *queue)
   bool leftCoincide  = false;
   bool rightCoincide = false;
 
-  if (point_eq(&e1->point, &e2->point))
+  if (point2d_eq(&e1->point, &e2->point))
     leftCoincide = true; // linked
   else if (swev_compare(e1, e2) == 1)
   {
@@ -1006,7 +1042,7 @@ possibleIntersection(SweepEvent *e1, SweepEvent *e2, pqu_SweepEvent *queue)
   }
   int nevents = 2;
 
-  if (point_eq(&e1->otherEvent->point, &e2->otherEvent->point))
+  if (point2d_eq(&e1->otherEvent->point, &e2->otherEvent->point))
     rightCoincide = true;
   else if (swev_compare(e1->otherEvent, e2->otherEvent) == 1)
   {
@@ -1063,26 +1099,24 @@ possibleIntersection(SweepEvent *e1, SweepEvent *e2, pqu_SweepEvent *queue)
 /**
  * @brief
  */
-vec_swev
+Vector *
 subdivideSegments(pqu_swev *eventQueue, GBOX *sbbox, GBOX *clbox,
   ClipOpType operation)
 {
   SplayTree sweepLine = splay_new(&swev_compare);
-  vec_swev sortedEvents = vec_swev_init();
+  Vector *sortedEvents = vector_init();
   double rightbound = fmin(sbbox->xmax, clbox->xmax);
-  SweepEvent *event, *save, *prev, *next, *begin = NULL, *prevEvent,
+  SweepEvent *event, *prev, *next, *begin = NULL, *prevEvent,
     *prevprevEvent;
-  int nevents = 0;
   /* loop for every event in the queue */
   while (pqu_swev_size(eventQueue) != 0)
   {
     /* Remove the event from the queue and insert it into the sweepline */
     event = pqu_swev_top(eventQueue);
-    save = event;
-    vec_swev_insert_index(&sortedEvents, nevents++, *save);
+    /* The value of event is modified by the pop operation below ??!!?? */
+    vector_append(sortedEvents, SweepEvent_clone(event));
     pqu_swev_pop(eventQueue);
-    /* The value of event is modified by the pop operation above ??!!?? */
-    event = save;
+    event = vector_back(sortedEvents);
 
     /* optimization by bboxes for intersection and difference goes here */
     if ((operation == CL_INTERSECTION && event->point.x > rightbound) ||
@@ -1106,7 +1140,8 @@ subdivideSegments(pqu_swev *eventQueue, GBOX *sbbox, GBOX *clbox,
       computeFields(event, prevEvent, operation);
       if (next)
       {
-        if (possibleIntersection(event, next, eventQueue) == 2) {
+        if (possibleIntersection(event, next, eventQueue) == 2)
+        {
           computeFields(event, prevEvent, operation);
           computeFields(next, event, operation);
         }
@@ -1114,7 +1149,8 @@ subdivideSegments(pqu_swev *eventQueue, GBOX *sbbox, GBOX *clbox,
 
       if (prev)
       {
-        if (possibleIntersection(prev, event, eventQueue) == 2) {
+        if (possibleIntersection(prev, event, eventQueue) == 2)
+        {
           SweepEvent *prevprev = prev;
           if (prevprev != begin)
             prevprev = splay_predecessor_of_value(sweepLine, prevprev);
@@ -1237,55 +1273,51 @@ fill_queue(LWGEOM *geom, bool isSubject, pqu_swev *eventQueue)
  * @param  {Array.<SweepEvent>} sortedEvents
  * @return {Array.<SweepEvent>}
  */
-vec_swev
-orderEvents(vec_swev sortedEvents)
+Vector *
+orderEvents(Vector *sortedEvents)
 {
-  vec_swev resultEvents = vec_swev_init();
+  Vector *resultEvents = vector_init();
   SweepEvent *event, *next;
-  int i, len, tmp;
-  len = vec_swev_size(&sortedEvents);
-  for (i = 0; i < len; i++)
+  int i;
+  for (i = 0; i < resultEvents->length; i++)
   {
-    event = vec_swev_at(&sortedEvents, i);
+    event = vector_at(sortedEvents, i);
     if ((event->left && event->resultTransition != 0) ||
-      (!event->left && event->otherEvent->resultTransition != 0))
-    {
-      vec_swev_push_back(&resultEvents, *event);
-    }
+        (!event->left && event->otherEvent->resultTransition != 0))
+      vector_append(resultEvents, event);
   }
-  // /* Due to overlapping edges the resultEvents array can be not wholly sorted */
+  /* Due to overlapping edges the resultEvents array can be not wholly sorted */
   bool sorted = false;
   while (! sorted)
   {
     sorted = true;
-    len = vec_swev_size(&resultEvents);
-    for (i = 0; i < len - 1; i++)
+    for (i = 0; i < resultEvents->length - 1; i++)
     {
-      event = vec_swev_at(&resultEvents, i);
-      next = vec_swev_at(&resultEvents, i + 1);
+      event = vector_at(resultEvents, i);
+      next = vector_at(resultEvents, i + 1);
       if (swev_compare(event, next) == 1)
       {
-        vec_swev_insert_index(&resultEvents, i, *next);
-        vec_swev_insert_index(&resultEvents, i + 1, *event);
+        vector_set(resultEvents, i, next);
+        vector_set(resultEvents, i + 1, event);
         sorted = false;
       }
     }
   }
 
-  for (i = 0; i < len; i++)
+  for (i = 0; i < resultEvents->length; i++)
   {
-    event = vec_swev_at(&resultEvents, i);
+    event = vector_at(resultEvents, i);
     event->otherPos = i;
   }
 
   /* imagine, the right event is found in the beginning of the queue,
    * when his left counterpart is not marked yet */
-  for (i = 0; i < len; i++)
+  for (i = 0; i < resultEvents->length; i++)
   {
-    event = vec_swev_at(&resultEvents, i);
+    event = vector_at(resultEvents, i);
     if (! event->left)
     {
-      tmp = event->otherPos;
+      int tmp = event->otherPos;
       event->otherPos = event->otherEvent->otherPos;
       event->otherEvent->otherPos = tmp;
     }
@@ -1300,16 +1332,16 @@ orderEvents(vec_swev sortedEvents)
  * @param  {Object>}    processed
  * @return {Number}
  */
-int nextPos(int pos, vec_swev *resultEvents, vec_bool processed, int origPos)
+int nextPos(int pos, Vector *resultEvents, vec_bool processed, int origPos)
 {
   int newPos = pos + 1;
-  SweepEvent *event = vec_swev_at(resultEvents, pos);
+  SweepEvent *event = vector_at(resultEvents, pos);
   POINT2D *p = &event->point, *p1;
-  int len = vec_swev_size(resultEvents);
+  int len = resultEvents->length;
 
   if (newPos < len)
   {
-    event = vec_swev_at(resultEvents, newPos);
+    event = vector_at(resultEvents, newPos);
     p1 = &event->point;
   }
 
@@ -1321,7 +1353,7 @@ int nextPos(int pos, vec_swev *resultEvents, vec_bool processed, int origPos)
       newPos++;
     if (newPos < len)
     {
-      event = vec_swev_at(resultEvents, newPos);
+      event = vector_at(resultEvents, newPos);
       p1 = &event->point;
     }
   }
@@ -1398,9 +1430,8 @@ initializeContourFromContext(SweepEvent *event, vec_cntr contours,
 #define markAsProcessed(pos) \
   do { \
     vec_bool_insert_index(&processed, (pos), true); \
-    SweepEvent *event = vec_swev_at(&resultEvents, (pos)); \
-    int len = vec_swev_size(&resultEvents); \
-    if ((pos) < len && event) \
+    SweepEvent *event = vector_at(resultEvents, (pos)); \
+    if ((pos) < resultEvents->length && event) \
       event->outputContourId = contourId; \
   } while(0)
 
@@ -1409,22 +1440,20 @@ initializeContourFromContext(SweepEvent *event, vec_cntr contours,
  * @param sortedEvents Array of sweepline events
  * @return {Array.<*>} polygons
  */
-vec_cntr connectEdges(vec_swev sortedEvents)
+vec_cntr connectEdges(Vector *sortedEvents)
 {
-  int i, len;
-  vec_swev resultEvents = orderEvents(sortedEvents);
+  Vector *resultEvents = orderEvents(sortedEvents);
 
   /* "false"-filled array */
   vec_bool processed = vec_bool_init();
   vec_cntr contours = vec_cntr_init();
-  len = vec_swev_size(&resultEvents);
-  for (i = 0; i < len; i++)
+  for (int i = 0; i < resultEvents->length; i++)
   {
     if (vec_bool_at(&processed, i))
       continue;
 
     int contourId = vec_cntr_size(&contours);
-    SweepEvent *event = vec_swev_at(&resultEvents, i);
+    SweepEvent *event = vector_at(resultEvents, i);
     Contour *contour = initializeContourFromContext(event, contours, contourId);
 
     int pos = i;
@@ -1434,13 +1463,12 @@ vec_cntr connectEdges(vec_swev sortedEvents)
     while (true)
     {
       markAsProcessed(pos);
-      event = vec_swev_at(&resultEvents, pos);
+      event = vector_at(resultEvents, pos);
       pos = event->otherPos;
       markAsProcessed(pos);
       vec_pt_push_back(&contour->points, event->point);
-      pos = nextPos(pos, &resultEvents, processed, origPos);
-      len = vec_swev_size(&resultEvents);
-      if (pos == origPos || pos >= len || ! event)
+      pos = nextPos(pos, resultEvents, processed, origPos);
+      if (pos == origPos || pos >= resultEvents->length || ! event)
         break;
     }
     vec_cntr_push_back(&contours, *contour);
@@ -1513,7 +1541,7 @@ clip_poly_poly(const GSERIALIZED *subj, const GSERIALIZED *clip,
   fill_queue(clipping, false, &eventQueue);
 
   /* Subdivide edges */
-  vec_swev sortedEvents = subdivideSegments(&eventQueue, &sbbox, &clbox, operation);
+  Vector *sortedEvents = subdivideSegments(&eventQueue, &sbbox, &clbox, operation);
 
   /* Connect vertices */
   vec_cntr contours = connectEdges(sortedEvents);
