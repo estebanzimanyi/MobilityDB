@@ -1,4 +1,4 @@
-/*****************************************************************************
+  /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
  * Copyright (c) 2016-2023, Université libre de Bruxelles and MobilityDB
@@ -95,27 +95,29 @@ typedef struct
   /** Set of points conforming the external contour */
   vec_pt points;
   /** Holes of the contour. They are stored as the indexes of the holes in a polygon class */
-  vec_int holes;
+  vec_int holeIds;
+  int holeOf;
+  int depth;
   bool external; // is the contour an external contour? (i.e., is it not a hole?)
   bool precomputedCC;
   bool CC;
 } Contour;
 
-// /* Definition of vector of Contour */
+/* Definition of vector of Contour */
 
-// void cntr_free(Contour *);
-// Contour cntr_copy(Contour *);
+void cntr_free(Contour *);
+Contour cntr_copy(Contour *);
 
-// #define Contour_free cntr_free
-// #define Contour_copy cntr_copy
-// #define vec_Contour vec_cntr
-// #define T Contour
-// #include <ctl/vector.h>
+#define Contour_free cntr_free
+#define Contour_copy cntr_copy
+#define vec_Contour vec_cntr
+#define T Contour
+#include <ctl/vector.h>
 
-// typedef struct
-// {
-  // vec_cntr contours;
-// } Polygon;
+typedef struct
+{
+  vec_cntr contours;
+} Polygon;
 
 // /* Function prototypes for Polygon */
 

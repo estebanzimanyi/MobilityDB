@@ -401,16 +401,16 @@ signedArea(const POINT2D *p0, const POINT2D *p1, const POINT2D *p2)
  * Contour
  *****************************************************************************/
 
-// Contour *
-// cntr_make(void)
-// {
-  // Contour *result = palloc(sizeof(Contour));
-  // result->points = vec_pt_init();
-  // result->holeIds = [];
-  // result->holeOf = null;
-  // result->depth = null;
-// }
-
+Contour *
+cntr_make(void)
+{
+  Contour *result = palloc(sizeof(Contour));
+  result->points = vec_pt_init();
+  result->holeIds = vec_int_init();
+  result->holeOf = -1;
+  result->depth = -1;
+  return result;
+}
 
 Contour
 cntr_copy(Contour *c)
@@ -1011,7 +1011,7 @@ subdivide(pqu_swev *eventQueue, STBox *sbbox, STBox *clbox,
   SplayTree sweepLine = splay_new(&swev_compare);
   vec_swev sortedEvents = vec_swev_init();
   double rightbound = fmin(sbbox->xmax, clbox->xmax);
-  SweepEvent *event, *prev, *next, *begin, *prevEvent, *prevprevEvent;
+  SweepEvent *event, *prev, *next, *begin = NULL, *prevEvent, *prevprevEvent;
   // int nevents = 0;
   /* loop for every event in the queue */
   while (pqu_swev_size(eventQueue) != 0)
@@ -1279,58 +1279,61 @@ void markAsProcessed(int pos, vec_swev *resultEvents, vec_bool *processed,
     event->outputContourId = contourId;
 };
 
-// Contour *
-// initializeContourFromContext(SweepEvent *event, vec_cont contours,
-  // int contourId)
-// {
-  // Contour *contour = cntr_make();
-  // if (event->prevInResult != NULL)
-  // {
-    // const prevInResult = event.prevInResult;
-    // /* Note that it is valid to query the "previous in result" for its output
-     // * contour id, because we must have already processed it (i.e., assigned an
-     // * output contour id) in an earlier iteration, otherwise it wouldn't be
-     // * possible that it is "previous in result". */
-    // const lowerContourId = prevInResult.outputContourId;
-    // const lowerResultTransition = prevInResult.resultTransition;
-    // if (lowerResultTransition > 0)
-    // {
-      // /* We are inside. Now we have to check if the thing below us is another
-       // * hole or an exterior contour. */
-      // const lowerContour = contours[lowerContourId];
-      // if (lowerContour.holeOf != NULL) {
-      // /* The lower contour is a hole => Connect the new contour as a hole
-       // * to its parent, and use same depth. */
-        // const parentContourId = lowerContour.holeOf;
-        // contours[parentContourId].holeIds.push(contourId);
-        // contour.holeOf = parentContourId;
-        // contour.depth = contours[lowerContourId].depth;
-      // }
-      // else
-      // {
-        // /* The lower contour is an exterior contour => Connect the new contour
-         // * as a hole,and increment depth. */
-        // contours[lowerContourId].holeIds.push(contourId);
-        // contour.holeOf = lowerContourId;
-        // contour.depth = contours[lowerContourId].depth + 1;
-      // }
-    // }
-    // else
-    // {
-      // /* We are outside => this contour is an exterior contour of same depth. */
-      // contour.holeOf = NULL;
-      // contour.depth = contours[lowerContourId].depth;
-    // }
-  // }
-  // else
-  // {
-    // /* There is no lower/previous contour => this contour is an exterior
-     // * contour of depth 0. */
-    // contour.holeOf = NULL;
-    // contour.depth = 0;
-  // }
-  // return contour;
-// }
+Contour *
+initializeContourFromContext(SweepEvent *event, vec_cntr contours,
+  int contourId)
+{
+  Contour *c;
+  Contour *contour = cntr_make();
+  if (event->prevInResult != NULL)
+  {
+    SweepEvent *prevInResult = event->prevInResult;
+    /* Note that it is valid to query the "previous in result" for its output
+     * contour id, because we must have already processed it (i.e., assigned an
+     * output contour id) in an earlier iteration, otherwise it wouldn't be
+     * possible that it is "previous in result". */
+    int lowerContourId = prevInResult->outputContourId;
+    int lowerResultTransition = prevInResult->resultTransition;
+    if (lowerResultTransition > 0)
+    {
+      /* We are inside. Now we have to check if the thing below us is another
+       * hole or an exterior contour. */
+      Contour *lowerContour = vec_cntr_at(&contours, lowerContourId);
+      if (lowerContour->holeOf != -1) {
+      /* The lower contour is a hole => Connect the new contour as a hole
+       * to its parent, and use same depth. */
+        int parentContourId = lowerContour->holeOf;
+        c = vec_cntr_at(&contours, parentContourId);
+        vec_int_push_back(&c->holeIds, contourId);
+        contour->holeOf = parentContourId;
+        contour->depth = vec_cntr_at(&contours, lowerContourId)->depth;
+      }
+      else
+      {
+        /* The lower contour is an exterior contour => Connect the new contour
+         * as a hole,and increment depth. */
+        c = vec_cntr_at(&contours, lowerContourId);
+        vec_int_push_back(&c->holeIds, contourId);
+        contour->holeOf = lowerContourId;
+        contour->depth = vec_cntr_at(&contours, lowerContourId)->depth + 1;
+      }
+    }
+    else
+    {
+      /* We are outside => this contour is an exterior contour of same depth. */
+      contour->holeOf = -1;
+      contour->depth = vec_cntr_at(&contours, lowerContourId)->depth;
+    }
+  }
+  else
+  {
+    /* There is no lower/previous contour => this contour is an exterior
+     * contour of depth 0. */
+    contour->holeOf = -1;
+    contour->depth = 0;
+  }
+  return contour;
+}
 
 /*****************************************************************************
  * Main
