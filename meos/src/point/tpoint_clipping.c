@@ -28,19 +28,23 @@
  *****************************************************************************/
 
 /**
- * @brief Clipping functions for temporal points.
+ * @file
+ * @brief Clipping functions for temporal points based on the Martinez-Rueda
+ * clipping algorithm.
+ * @note This implementation is based on the Javascript implementation in
+ * https://github.com/w8r/martinez
  */
 
 #include "point/tpoint_clipping.h"
 
+/* C */
+#include <assert.h>
 /* PostgreSQL */
 #include <postgres.h>
 #include <utils/float.h>
-#if MEOS
-  #define MaxAllocSize   ((Size) 0x3fffffff) /* 1 gigabyte - 1 */
-#else
-  #include <utils/memutils.h>
-#endif /* MEOS */
+#if ! MEOS
+  #include <utils/memutils.h> /* for MaxAllocSize */
+#endif /* ! MEOS */
 /* PostGIS */
 #include <liblwgeom.h>
 /* MEOS */
@@ -56,20 +60,10 @@
  * Vector data structure
  *****************************************************************************/
 
-/* Constants defining the behaviour of skip lists */
+/* Constants defining the behaviour of expandable vectors */
 
 #define VECTOR_INITIAL_CAPACITY 1024
 #define VECTOR_GROW 1       /**< double the capacity to expand the vector */
-
-typedef struct
-{
-  int capacity;
-  int length;
-  int16 flags;   /**< Flags determining whether the elements are passed by
-                  * value or by reference */
-  int16 typlen;  /**< Size of the elements */
-  Datum *elems;
-} Vector;
 
 /**
  * @brief Return the position to store an additional element in the vector
@@ -100,23 +94,36 @@ vector_alloc(Vector *vector)
 }
 
 /**
- * @brief Constructs an empty vector
+ * @brief Construct an empty vector
  */
 Vector *
-vector_make(bool typbyval, int16 typlen)
+vector_make(bool typbyval)
 {
   int capacity = VECTOR_INITIAL_CAPACITY;
   Vector *result = palloc0(sizeof(Vector));
   result->elems = palloc0(sizeof(void *) * capacity);
   result->capacity = capacity;
   result->length = 0;
-  result->typlen = typlen;
   MEOS_FLAGS_SET_BYVAL(result->flags, typbyval);
   return result;
 }
 
+/* Wrapper function for the creation of vectors */
+Vector *
+vector_byref_make(void)
+{
+  return vector_make(TYPE_BY_REF);
+}
+
+/* Wrapper function for the creation of vectors */
+Vector *
+vector_byvalue_make(void)
+{
+  return vector_make(TYPE_BY_VALUE);
+}
+
 /**
- * @brief Append an element to the vector
+ * @brief Append an element to a vector
  */
 void
 vector_append(Vector *vector, Datum elem)
@@ -127,7 +134,7 @@ vector_append(Vector *vector, Datum elem)
 }
 
 /**
- * @brief Constructs an empty vector
+ * @brief Get the element of a vector at a position
  */
 Datum
 vector_at(Vector *vector, int pos)
@@ -137,16 +144,7 @@ vector_at(Vector *vector, int pos)
 }
 
 /**
- * @brief Constructs an empty vector
- */
-Datum
-vector_back(Vector *vector)
-{
-  return vector->elems[vector->length - 1];
-}
-
-/**
- * @brief Constructs an empty vector
+ * @brief Set the element of a vector at a position
  */
 void
 vector_set(Vector *vector, int pos, Datum elem)
@@ -189,7 +187,7 @@ vector_free(Vector *vector)
  * List data structure
  *****************************************************************************/
 
-/* Constants defining the behaviour of skip lists */
+/* Constants defining the behaviour of lists */
 
 #define LIST_INITIAL_CAPACITY 1024
 #define LIST_GROW 1       /**< double the capacity to expand the list */
@@ -198,7 +196,6 @@ vector_free(Vector *vector)
 /**
  * Structure to represent list elements
  */
-
 typedef struct
 {
   void *value;
@@ -206,7 +203,7 @@ typedef struct
 } ListElem;
 
 /**
- * Structure to represent lists that keep the current state of a clipping operation
+ * Structure to represent lists
  */
 typedef struct
 {
@@ -395,37 +392,28 @@ signedArea(const POINT2D *p0, const POINT2D *p1, const POINT2D *p2)
  *****************************************************************************/
 
 /**
- * @brief
+ * @brief Create a new countour
  */
 Contour *
 cntr_make(void)
 {
   Contour *result = palloc(sizeof(Contour));
-  result->points = vec_pt_init();
-  result->holeIds = vec_int_init();
+  result->points = vector_byref_make();
+  result->holeIds = vector_byvalue_make();
   result->holeOf = -1;
   result->depth = -1;
   return result;
 }
 
 /**
- * @brief
- */
-Contour
-cntr_copy(Contour *c)
-{
-  Contour *result = palloc(sizeof(Contour));
-  memcpy(result, c, sizeof(Contour));
-  return *result;
-}
-
-/**
- * @brief
+ * @brief Free a contour
  */
 void
 cntr_free(Contour *c)
 {
-  // pfree(c);
+  vector_free(c->points);
+  vector_free(c->holeIds);
+  pfree(c);
   return;
 }
 
@@ -434,34 +422,24 @@ cntr_free(Contour *c)
  *****************************************************************************/
 
 /**
- * @brief
+ * @brief Create a new polygon
  */
 Polygon *
 poly_make(void)
 {
   Polygon *result = palloc(sizeof(Polygon));
-  result->contours = vec_cntr_init();
+  result->contours = vector_byref_make();
   return result;
 }
 
 /**
- * @brief
- */
-Polygon
-poly_copy(Polygon *p)
-{
-  Polygon *result = palloc(sizeof(Polygon));
-  memcpy(result, p, sizeof(Polygon));
-  return *result;
-}
-
-/**
- * @brief
+ * @brief Free a polygon
  */
 void
 poly_free(Polygon *p)
 {
-  // pfree(p);
+  vector_free(p->contours);
+  pfree(p);
   return;
 }
 
@@ -470,7 +448,7 @@ poly_free(Polygon *p)
  *****************************************************************************/
 
 /**
- * @brief
+ * @brief Create a new sweepline event
  */
 SweepEvent *
 swev_make(POINT2D *point, bool left, SweepEvent *otherEvent, bool isSubject,
@@ -494,16 +472,8 @@ swev_make(POINT2D *point, bool left, SweepEvent *otherEvent, bool isSubject,
   return result;
 }
 
-SweepEvent *
-SweepEvent_copy(SweepEvent *e)
-{
-  SweepEvent *result = palloc(sizeof(SweepEvent));
-  memcpy(result, e, sizeof(SweepEvent));
-  return result;
-}
-
 /**
- * @brief
+ * @brief Return true if the sweepline event is below the point
  */
 bool
 swev_isBelow(const SweepEvent *e, const POINT2D *p)
@@ -517,7 +487,7 @@ swev_isBelow(const SweepEvent *e, const POINT2D *p)
 }
 
 /**
- * @brief
+ * @brief Return true if the sweepline event is above the point
  */
 bool
 swev_isAbove(const SweepEvent *e, const POINT2D *p)
@@ -526,7 +496,7 @@ swev_isAbove(const SweepEvent *e, const POINT2D *p)
 }
 
 /**
- * @brief
+ * @brief Return true if the sweepline event is vertical
  */
 bool
 swev_isVertical(const SweepEvent *e)
@@ -569,7 +539,7 @@ specialCases(const SweepEvent *e1, const SweepEvent *e2, const POINT2D *p1,
 }
 
 /**
- * @brief
+ * @brief Comparison of sweepline events
  */
 int
 swev_compare(const SweepEvent *e1, const SweepEvent *e2)
@@ -589,7 +559,7 @@ swev_compare(const SweepEvent *e1, const SweepEvent *e2)
 }
 
 /**
- * @brief
+ * @brief Comparison of segments associated to two sweepline events
  */
 int
 compareSegments(SweepEvent *e1, SweepEvent *e2)
@@ -657,14 +627,14 @@ divideSegment(SweepEvent *e, POINT2D *p, PQueue *queue)
 
   r->contourId = l->contourId = e->contourId;
 
-  // Avoid a rounding error: left event would be processed after the right event */
+  /* Avoid a rounding error: left event would be processed after the right event */
   if (swev_compare(l, e->otherEvent) > 0)
   {
     e->otherEvent->left = true;
     l->left = false;
   }
 
-  // Avoid a rounding error: left event would be processed after the right event */
+  /* Avoid a rounding error: left event would be processed after the right event */
   // if (swev_compare(e, r) > 0) {}
 
   e->otherEvent->otherEvent = l;
@@ -677,7 +647,7 @@ divideSegment(SweepEvent *e, POINT2D *p, PQueue *queue)
 }
 
 /**
- * @brief
+ * @brief Return true if the event is in the result of the operation
  */
 bool
 inResult(SweepEvent *event, ClipOpType operation)
@@ -761,7 +731,6 @@ computeFields(SweepEvent *event, SweepEvent *prev, ClipOpType operation)
     {
       event->inOut      = !prev->inOut;
       event->otherInOut = prev->otherInOut;
-
     }
     else
     {
@@ -787,8 +756,6 @@ computeFields(SweepEvent *event, SweepEvent *prev, ClipOpType operation)
     event->resultTransition = 0;
   return;
 }
-
-//const EPS = 1e-9;
 
 /**
  * @brief Return the magnitude of the cross product of two vectors (if we
@@ -957,7 +924,7 @@ segment_intersection(POINT2D *a1, POINT2D *a2, POINT2D *b1, POINT2D *b2,
 int
 possibleIntersection(SweepEvent *e1, SweepEvent *e2, PQueue *queue)
 {
-  // that disallows self-intersecting polygons,
+  // The following disallows self-intersecting polygons,
   // did cost us half a day, so I'll leave it out of respect
   // if (e1->isSubject == e2->isSubject) return;
   POINT2D p1, p2;
@@ -966,7 +933,7 @@ possibleIntersection(SweepEvent *e1, SweepEvent *e2, PQueue *queue)
 
   if (nintersections == 0) return 0; /* no intersection */
 
-  /* the line segments intersect at an endpoint of both line segments */
+  /* The line segments intersect at an endpoint of both line segments */
   if ((nintersections == 1) &&
       (point2d_eq(&e1->point, &e2->point) ||
        point2d_eq(&e1->otherEvent->point, &e2->otherEvent->point)))
@@ -974,22 +941,20 @@ possibleIntersection(SweepEvent *e1, SweepEvent *e2, PQueue *queue)
 
   if (nintersections == 2 && e1->isSubject == e2->isSubject)
   {
-    // if(e1->contourId == e2->contourId){
-    // console.warn('Edges of the same polygon overlap',
-    //   e1->point, e1->otherEvent->point, e2->point, e2->otherEvent->point);
-    // }
-    //throw new Error('Edges of the same polygon overlap');
+    // if(e1->contourId == e2->contourId)
+    //   elog(WARNING, 'Edges of the same polygon overlap',
+    //     e1->point, e1->otherEvent->point, e2->point, e2->otherEvent->point);
     return 0;
   }
 
   /* The line segments associated to e1 and e2 intersect */
   if (nintersections == 1)
   {
-    /* if the intersection point is not an endpoint of e1 */
+    /* If the intersection point is not an endpoint of e1 */
     if (! point2d_eq(&e1->point, &p1) && !point2d_eq(&e1->otherEvent->point, &p1))
       divideSegment(e1, &p1, queue);
 
-    /* if the intersection point is not an endpoint of e2 */
+    /* If the intersection point is not an endpoint of e2 */
     if (!point2d_eq(&e2->point, &p1) && !point2d_eq(&e2->otherEvent->point, &p1))
       divideSegment(e2, &p1, queue);
     return 1;
@@ -999,20 +964,20 @@ possibleIntersection(SweepEvent *e1, SweepEvent *e2, PQueue *queue)
   SweepEvent *events[4] = {0};
   bool leftCoincide  = false;
   bool rightCoincide = false;
+  int nevents = 0;
 
   if (point2d_eq(&e1->point, &e2->point))
     leftCoincide = true; // linked
   else if (swev_compare(e1, e2) == 1)
   {
-    events[0] = e2;
-    events[1] = e1;
+    events[nevents++] = e2;
+    events[nevents++] = e1;
   }
   else
   {
-    events[0] = e1;
-    events[1] = e2;
+    events[nevents++] = e1;
+    events[nevents++] = e2;
   }
-  int nevents = 2;
 
   if (point2d_eq(&e1->otherEvent->point, &e2->otherEvent->point))
     rightCoincide = true;
@@ -1029,12 +994,12 @@ possibleIntersection(SweepEvent *e1, SweepEvent *e2, PQueue *queue)
 
   if ((leftCoincide && rightCoincide) || leftCoincide)
   {
-    /* both line segments are equal or share the left endpoint */
+    /* Both line segments are equal or share the left endpoint */
     e2->type = EDGE_NON_CONTRIBUTING;
     e1->type = (e2->inOut == e1->inOut) ?
       EDGE_SAME_TRANSITION : EDGE_DIFFERENT_TRANSITION;
 
-    if (leftCoincide && !rightCoincide)
+    if (leftCoincide && ! rightCoincide)
     {
       /* honestly no idea, but changing events selection from [2, 1]
        * to [0, 1] fixes the overlapping self-intersecting polygons issue */
@@ -1043,14 +1008,14 @@ possibleIntersection(SweepEvent *e1, SweepEvent *e2, PQueue *queue)
     return 2;
   }
 
-  /* the line segments share the right endpoint */
+  /* The line segments share the right endpoint */
   if (rightCoincide)
   {
     divideSegment(events[0], &events[1]->point, queue);
     return 3;
   }
 
-  /* no line segment includes totally the other one */
+  /* No line segment includes totally the other one */
   if (events[0] != events[3]->otherEvent)
   {
     divideSegment(events[0], &events[1]->point, queue);
@@ -1058,7 +1023,7 @@ possibleIntersection(SweepEvent *e1, SweepEvent *e2, PQueue *queue)
     return 3;
   }
 
-  /* one line segment includes the other one */
+  /* One line segment includes the other one */
   divideSegment(events[0], &events[1]->point, queue);
   divideSegment(events[3]->otherEvent, &events[2]->point, queue);
   return 3;
@@ -1069,14 +1034,14 @@ possibleIntersection(SweepEvent *e1, SweepEvent *e2, PQueue *queue)
  *****************************************************************************/
 
 /**
- * @brief
+ * @brief Subdivide the segments of the event queue
  */
 Vector *
 subdivideSegments(PQueue *eventQueue, GBOX *sbbox, GBOX *clbox,
   ClipOpType operation)
 {
   SplayTree sweepLine = splay_new(&compareSegments);
-  Vector *sortedEvents = vector_make(TYPE_BY_REF, sizeof(SweepEvent));
+  Vector *sortedEvents = vector_byref_make();
   double rightbound = fmin(sbbox->xmax, clbox->xmax);
   SweepEvent *event, *prev, *next, *begin = NULL, *prevEvent,
     *prevprevEvent;
@@ -1152,12 +1117,13 @@ subdivideSegments(PQueue *eventQueue, GBOX *sbbox, GBOX *clbox,
       }
     }
   }
+  /* Free the sweepline */
   splay_free(sweepLine);
   return sortedEvents;
 }
 
 /**
- * @brief
+ * @brief Insert the points of a linear ring into the priority queue
  */
 void
 processRing(POINTARRAY *contourOrHole, int depth, bool isSubject,
@@ -1195,7 +1161,7 @@ processRing(POINTARRAY *contourOrHole, int depth, bool isSubject,
 }
 
 /**
- * @brief
+ * @brief Insert the points of a (multi)polygon into the priority queue
  */
 void
 fill_queue(LWGEOM *geom, bool isSubject, PQueue *eventQueue)
@@ -1238,20 +1204,20 @@ fill_queue(LWGEOM *geom, bool isSubject, PQueue *eventQueue)
  *****************************************************************************/
 
 /**
- * @brief
- * @param  {Array.<SweepEvent>} sortedEvents
+ * @brief Select the events that are in the result and order them
+ * @param sortedEvents Sorted sweepline events
  * @return {Array.<SweepEvent>}
  */
 Vector *
 orderEvents(Vector *sortedEvents)
 {
-  Vector *resultEvents = vector_make(TYPE_BY_REF, sizeof(SweepEvent));
+  Vector *resultEvents = vector_byref_make();
   SweepEvent *event, *next;
   int i;
-  for (i = 0; i < resultEvents->length; i++)
+  for (i = 0; i < sortedEvents->length; i++)
   {
-    event = (SweepEvent *) DatumGetPointer(vector_at(sortedEvents, i));
-    /* N.B. event->resultTransition != 0 is the definition of event.inResult  */
+    event = DatumGetSweepEventP(vector_at(sortedEvents, i));
+    /* N.B. event->resultTransition != 0 is the definition of event.inResult */
     if ((event->left && event->resultTransition != 0) ||
         (!event->left && event->otherEvent->resultTransition != 0))
       vector_append(resultEvents, PointerGetDatum(event));
@@ -1263,8 +1229,8 @@ orderEvents(Vector *sortedEvents)
     sorted = true;
     for (i = 0; i < resultEvents->length - 1; i++)
     {
-      event = (SweepEvent *) DatumGetPointer(vector_at(resultEvents, i));
-      next = (SweepEvent *) DatumGetPointer(vector_at(resultEvents, i + 1));
+      event = DatumGetSweepEventP(vector_at(resultEvents, i));
+      next = DatumGetSweepEventP(vector_at(resultEvents, i + 1));
       if (swev_compare(event, next) == 1)
       {
         vector_set(resultEvents, i, PointerGetDatum(next));
@@ -1276,7 +1242,7 @@ orderEvents(Vector *sortedEvents)
 
   for (i = 0; i < resultEvents->length; i++)
   {
-    event = (SweepEvent *) DatumGetPointer(vector_at(resultEvents, i));
+    event = DatumGetSweepEventP(vector_at(resultEvents, i));
     event->otherPos = i;
   }
 
@@ -1284,7 +1250,7 @@ orderEvents(Vector *sortedEvents)
    * when his left counterpart is not marked yet */
   for (i = 0; i < resultEvents->length; i++)
   {
-    event = (SweepEvent *) DatumGetPointer(vector_at(resultEvents, i));
+    event = DatumGetSweepEventP(vector_at(resultEvents, i));
     if (! event->left)
     {
       int tmp = event->otherPos;
@@ -1297,7 +1263,7 @@ orderEvents(Vector *sortedEvents)
 
 /**
  * @brief
- * @param  {Number} pos
+ * @param pos Position in the event array
  * @param  {Array.<SweepEvent>} resultEvents
  * @param  {Object>}    processed
  * @return {Number}
@@ -1305,12 +1271,12 @@ orderEvents(Vector *sortedEvents)
 int nextPos(int pos, Vector *resultEvents, Vector *processed, int origPos)
 {
   int newPos = pos + 1;
-  SweepEvent *event = (SweepEvent *) DatumGetPointer(vector_at(resultEvents, pos));
+  SweepEvent *event = DatumGetSweepEventP(vector_at(resultEvents, pos));
   POINT2D *p = &event->point, *p1;
 
   if (newPos < resultEvents->length)
   {
-    event = (SweepEvent *) DatumGetPointer(vector_at(resultEvents, newPos));
+    event = DatumGetSweepEventP(vector_at(resultEvents, newPos));
     p1 = &event->point;
   }
 
@@ -1322,7 +1288,7 @@ int nextPos(int pos, Vector *resultEvents, Vector *processed, int origPos)
       newPos++;
     if (newPos < resultEvents->length)
     {
-      event = (SweepEvent *) DatumGetPointer(vector_at(resultEvents, newPos));
+      event = DatumGetSweepEventP(vector_at(resultEvents, newPos));
       p1 = &event->point;
     }
   }
@@ -1337,7 +1303,7 @@ int nextPos(int pos, Vector *resultEvents, Vector *processed, int origPos)
  * @brief
  */
 Contour *
-initializeContourFromContext(SweepEvent *event, vec_cntr contours,
+initializeContourFromContext(SweepEvent *event, Vector *contours,
   int contourId)
 {
   Contour *c;
@@ -1355,31 +1321,32 @@ initializeContourFromContext(SweepEvent *event, vec_cntr contours,
     {
       /* We are inside. Now we have to check if the thing below us is another
        * hole or an exterior contour. */
-      Contour *lowerContour = vec_cntr_at(&contours, lowerContourId);
-      if (lowerContour->holeOf != -1) {
-      /* The lower contour is a hole => Connect the new contour as a hole
-       * to its parent, and use same depth. */
+      Contour *lowerContour = DatumGetContourP(vector_at(contours, lowerContourId));
+      if (lowerContour->holeOf != -1)
+      {
+        /* The lower contour is a hole => Connect the new contour as a hole
+         * to its parent, and use same depth. */
         int parentContourId = lowerContour->holeOf;
-        c = vec_cntr_at(&contours, parentContourId);
-        vec_int_push_back(&c->holeIds, contourId);
+        c = DatumGetContourP(vector_at(contours, parentContourId));
+        vector_append(c->holeIds, Int32GetDatum(contourId));
         contour->holeOf = parentContourId;
-        contour->depth = vec_cntr_at(&contours, lowerContourId)->depth;
+        contour->depth = DatumGetContourP(vector_at(contours, lowerContourId))->depth;
       }
       else
       {
         /* The lower contour is an exterior contour => Connect the new contour
          * as a hole,and increment depth. */
-        c = vec_cntr_at(&contours, lowerContourId);
-        vec_int_push_back(&c->holeIds, contourId);
+        c = DatumGetContourP(vector_at(contours, lowerContourId));
+        vector_append(c->holeIds, Int32GetDatum(contourId));
         contour->holeOf = lowerContourId;
-        contour->depth = vec_cntr_at(&contours, lowerContourId)->depth + 1;
+        contour->depth = DatumGetContourP(vector_at(contours, lowerContourId))->depth + 1;
       }
     }
     else
     {
       /* We are outside => this contour is an exterior contour of same depth. */
       contour->holeOf = -1;
-      contour->depth = vec_cntr_at(&contours, lowerContourId)->depth;
+      contour->depth = DatumGetContourP(vector_at(contours, lowerContourId))->depth;
     }
   }
   else
@@ -1399,67 +1366,70 @@ initializeContourFromContext(SweepEvent *event, vec_cntr contours,
 #define markAsProcessed(pos) \
   do { \
     vector_set(processed, (pos), BoolGetDatum(true)); \
-    SweepEvent *event = (SweepEvent *) DatumGetPointer(vector_at(resultEvents, (pos))); \
+    SweepEvent *event = DatumGetSweepEventP(vector_at(resultEvents, (pos))); \
     if ((pos) < resultEvents->length && event) \
       event->outputContourId = contourId; \
   } while(0)
 
 /**
- * @brief Connect the edges from the events into an array of counts
- * @param sortedEvents Array of sweepline events
- * @return {Array.<*>} polygons
+ * @brief Connect the edges from the events into an vector of polygons
+ * @param sortedEvents Vector of sweepline events
+ * @return polygons Vector of polygons
  */
-vec_cntr connectEdges(Vector *sortedEvents)
+Vector *
+connectEdges(Vector *sortedEvents)
 {
   Vector *resultEvents = orderEvents(sortedEvents);
 
-  /* "false"-filled array */
-  Vector *processed = vector_make(TYPE_BY_VALUE, sizeof(Datum));
-  vec_cntr contours = vec_cntr_init();
+  /* "false"-filled vector */
+  Vector *processed = vector_byvalue_make();
+  for (int i = 0; i < sortedEvents->length; i++)
+    vector_append(processed, BoolGetDatum(false));
+
+  Vector *contours = vector_byref_make();
   for (int i = 0; i < resultEvents->length; i++)
   {
     if (DatumGetBool(vector_at(processed, i)))
       continue;
 
-    int contourId = vec_cntr_size(&contours);
-    SweepEvent *event = (SweepEvent *) DatumGetPointer(vector_at(resultEvents, i));
+    int contourId = contours->length;
+    SweepEvent *event = DatumGetSweepEventP(vector_at(resultEvents, i));
     Contour *contour = initializeContourFromContext(event, contours, contourId);
 
     int pos = i;
     int origPos = i;
     POINT2D *initial = &event->point;
-    vec_pt_push_back(&contour->points, *initial);
+    vector_append(contour->points, PointerGetDatum(initial));
     while (true)
     {
       markAsProcessed(pos);
-      event = (SweepEvent *) DatumGetPointer(vector_at(resultEvents, pos));
+      event = DatumGetSweepEventP(vector_at(resultEvents, pos));
       pos = event->otherPos;
       markAsProcessed(pos);
-      vec_pt_push_back(&contour->points, event->point);
+      vector_append(contour->points, PointerGetDatum(&event->point));
       pos = nextPos(pos, resultEvents, processed, origPos);
       if (pos == origPos || pos >= resultEvents->length || ! event)
         break;
     }
-    vec_cntr_push_back(&contours, *contour);
+    vector_append(contours, PointerGetDatum(contour));
   }
   return contours;
 }
 
-/*****************************************************************************
- * Main
- *****************************************************************************/
+/*****************************************************************************/
 
 /**
  * @brief Contruct a POINTARRAY from a vector of POINT2D
  */
 POINTARRAY *
-ptvec_to_ptarray(vec_pt *points)
+ptvec_to_ptarray(Vector *points)
 {
-  int len = vec_pt_size(points);
+  int len = points->length;
   POINTARRAY *result = ptarray_construct(0, 0, len);
+  /* The two first points are equal, the first point should be the last one */
   for (int i = 0; i < len; i++)
   {
-    POINT2D *pt = vec_pt_at(points, i);
+    POINT2D *pt = DatumGetPoint2DP(vector_at(points, (i + 1) % len));
     uint8_t *ptr = getPoint_internal(result, i);
     memcpy(ptr, pt, sizeof(POINT2D));
   }
@@ -1512,49 +1482,51 @@ clip_poly_poly(const GSERIALIZED *subj, const GSERIALIZED *clip,
   /* Subdivide edges */
   Vector *sortedEvents = subdivideSegments(eventQueue, &sbbox, &clbox,
     operation);
+  /* Free the priority queue */
+  pqueue_free(eventQueue);
 
   /* Connect vertices */
-  vec_cntr contours = connectEdges(sortedEvents);
-  int len = vec_cntr_size(&contours);
+  Vector *contours = connectEdges(sortedEvents);
+  int len = contours->length;
 
   /* Convert contours to polygons */
-  vec_poly polygons = vec_poly_init();
+  Vector *polygons = vector_byref_make();
   for (int i = 0; i < len; i++)
   {
-    Contour *contour = vec_cntr_at(&contours, i);
+    Contour *contour = DatumGetContourP(vector_at(contours, i));
     if (contour->holeOf == -1)
     {
       /* Create a new polygon */
       Polygon *poly = poly_make();
       /* The exterior ring goes first */
-      vec_cntr_push_back(&poly->contours, *contour);
+      vector_append(poly->contours, PointerGetDatum(contour));
       /* Followed by holes if any */
-      int nholes = vec_int_size(&contour->holeIds);
+      int nholes = contour->holeIds->length;
       for (int j = 0; j < nholes; j++)
       {
-        int holeId = * vec_int_at(&contour->holeIds, j);
-        contour = vec_cntr_at(&contours, holeId);
-        vec_cntr_push_back(&poly->contours, *contour);
+        int holeId = DatumGetInt32(vector_at(contour->holeIds, j));
+        contour = DatumGetContourP(vector_at(contours, holeId));
+        vector_append(poly->contours, PointerGetDatum(contour));
       }
-      vec_poly_push_back(&polygons, *poly);
+      vector_append(polygons, PointerGetDatum(poly));
     }
   }
 
   /* Convert polygons to LWGEOM */
-  uint32_t npoly = vec_poly_size(&polygons);
+  uint32_t npoly = polygons->length;
   int32_t srid = gserialized_get_srid(subj);
   LWGEOM *lwresult;
   LWPOLY *poly;
   if (npoly == 1)
   {
     /* Result is a LWPOLY */
-    Polygon *p = vec_poly_at(&polygons, 0);
-    int nrings = vec_cntr_size(&p->contours);
+    Polygon *p = DatumGetPolygonP(vector_at(polygons, 0));
+    int nrings = p->contours->length;
     POINTARRAY **ptarrs = palloc(sizeof(POINTARRAY *) * nrings);
     for (int j = 0; j < nrings; j++)
     {
-      Contour *c = vec_cntr_at(&p->contours, j);
-      ptarrs[j] = ptvec_to_ptarray(&c->points);
+      Contour *c = DatumGetContourP(vector_at(p->contours, j));
+      ptarrs[j] = ptvec_to_ptarray(c->points);
     }
     poly = lwpoly_construct(srid, NULL, nrings, ptarrs);
     lwresult = lwpoly_as_lwgeom(poly);
@@ -1565,13 +1537,13 @@ clip_poly_poly(const GSERIALIZED *subj, const GSERIALIZED *clip,
     LWGEOM **geoms = palloc(sizeof(LWGEOM *) * npoly);
     for (uint32_t i = 0; i < npoly; i++)
     {
-      Polygon *p = vec_poly_at(&polygons, i);
-      uint32_t nrings = vec_cntr_size(&p->contours);
+      Polygon *p = DatumGetPolygonP(vector_at(polygons, i));
+      uint32_t nrings = p->contours->length;
       POINTARRAY **ptarrs = palloc(sizeof(POINTARRAY *) * nrings);
       for (uint32_t j = 0; j < nrings; j++)
       {
-        Contour *c = vec_cntr_at(&p->contours, j);
-        ptarrs[j] = ptvec_to_ptarray(&c->points);
+        Contour *c = DatumGetContourP(vector_at(p->contours, j));
+        ptarrs[j] = ptvec_to_ptarray(c->points);
       }
       poly = lwpoly_construct(srid, NULL, nrings, ptarrs);
       geoms[i] = lwpoly_as_lwgeom(poly);

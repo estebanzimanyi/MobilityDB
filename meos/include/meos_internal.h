@@ -41,6 +41,10 @@
 #include <meos.h>
 #include "general/meos_catalog.h" /* For meosType */
 
+#if MEOS
+  #define MaxAllocSize   ((Size) 0x3fffffff) /* 1 gigabyte - 1 */
+#endif
+
 /*****************************************************************************
  * Direct access to a single point in the GSERIALIZED struct
  *****************************************************************************/

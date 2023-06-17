@@ -1,4 +1,4 @@
-  /*****************************************************************************
+/*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
  * Copyright (c) 2016-2023, Université libre de Bruxelles and MobilityDB
@@ -28,7 +28,11 @@
  *****************************************************************************/
 
 /**
- * @brief Clipping functions for temporal points.
+ * @file
+ * @brief Clipping functions for temporal points based on the Martinez-Rueda
+ * clipping algorithm.
+ * @note This implementation is based on the Javascript implementation in
+ * https://github.com/w8r/martinez
  */
 
 #ifndef __TPOINT_CLIPPING_H__
@@ -44,58 +48,41 @@
 
 /*****************************************************************************/
 
-typedef enum {
+typedef enum
+{
   CL_INTERSECTION = 0,
   CL_UNION        = 1,
   CL_DIFFERENCE   = 2,
   CL_XOR          = 3,
 } ClipOpType;
 
-typedef enum {
+typedef enum
+{
   EDGE_NORMAL               = 0,
   EDGE_NON_CONTRIBUTING     = 1,
   EDGE_SAME_TRANSITION      = 2,
   EDGE_DIFFERENT_TRANSITION = 3,
 } EdgeType;
 
-/*****************************************************************************/
+/*****************************************************************************
+ * Vector data structure
+ *****************************************************************************/
 
-// typedef struct
-// {
-  // double x, y;
-// } Point;
-
-// typedef struct
-// {
-  // double xmin, ymin, xmax, ymax;
-// } BBOX;
-
-// typedef struct
-// {
-  // /** Segment endpoints */
-  // Point p1, p2;
-// } Segment;
-
-/* Definition of vector of Points */
-
-#define vec_POINT2D vec_pt
-#define POD
-#define NOT_INTEGRAL
-#define T POINT2D
-#include <ctl/vector.h>
-
-/* Definition of vector of integers */
-
-#define POD
-#define T int
-#include <ctl/vector.h>
+typedef struct
+{
+  int capacity;
+  int length;
+  int16 flags;   /**< Flags determining whether the elements are passed by
+                  * value or by reference */
+  Datum *elems;
+} Vector;
 
 typedef struct
 {
   /** Set of points conforming the external contour */
-  vec_pt points;
-  /** Holes of the contour. They are stored as the indexes of the holes in a polygon class */
-  vec_int holeIds;
+  Vector *points;
+  /** Holes of the contour. They are stored as the indexes of the holes in a polygon */
+  Vector *holeIds;
   int holeOf;
   int depth;
   bool external; // is the contour an external contour? (i.e., is it not a hole?)
@@ -103,37 +90,10 @@ typedef struct
   bool CC;
 } Contour;
 
-/* Definition of vector of Contour */
-
-void cntr_free(Contour *);
-Contour cntr_copy(Contour *);
-
-#define Contour_free cntr_free
-#define Contour_copy cntr_copy
-#define vec_Contour vec_cntr
-#define T Contour
-#include <ctl/vector.h>
-
 typedef struct
 {
-  vec_cntr contours;
+  Vector *contours;
 } Polygon;
-
-/* Function prototypes for Polygon */
-
-void poly_free(Polygon *);
-Polygon poly_copy(Polygon *);
-int poly_cmp(Polygon *a, Polygon *b);
-
-#define Polygon_free poly_free
-#define Polygon_copy poly_copy
-#define Polygon_cmp poly_cmp
-
-/* Definition of vector of Polygon */
-
-#define vec_Polygon vec_poly
-#define T Polygon
-#include <ctl/vector.h>
 
 /*****************************************************************************/
 
@@ -161,6 +121,16 @@ struct SweepEvent
 
 extern GSERIALIZED *clip_poly_poly(const GSERIALIZED *subj,
   const GSERIALIZED *clip, ClipOpType operation);
+
+/*****************************************************************************/
+
+/* Vector store Datums in order to differentiate elements passed by value and
+ * by reference */
+
+#define DatumGetPoint2DP(X)    ((POINT2D *) DatumGetPointer(X))
+#define DatumGetContourP(X)    ((Contour *) DatumGetPointer(X))
+#define DatumGetPolygonP(X)    ((Polygon *) DatumGetPointer(X))
+#define DatumGetSweepEventP(X) ((SweepEvent *) DatumGetPointer(X))
 
 /*****************************************************************************/
 

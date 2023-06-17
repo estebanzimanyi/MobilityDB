@@ -44,11 +44,9 @@
 #include <math.h>
 /* PostgreSQL */
 #include <postgres.h>
-#if MEOS
-  #define MaxAllocSize   ((Size) 0x3fffffff) /* 1 gigabyte - 1 */
-#else
-  #include <utils/memutils.h>
-#endif /* MEOS */
+#if ! MEOS
+  #include <utils/memutils.h> /* for MaxAllocSize */
+#endif /* ! MEOS */
 /* GSL */
 #include <gsl/gsl_rng.h>
 /* MEOS */

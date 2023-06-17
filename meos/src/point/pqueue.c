@@ -39,14 +39,9 @@
 #include <math.h>
 /* PostgreSQL */
 #include <postgres.h>
-#if MEOS
-  #define MaxAllocSize   ((Size) 0x3fffffff) /* 1 gigabyte - 1 */
-#else
-  #include <utils/memutils.h>
-#endif /* MEOS */
-
-// #include <stdlib.h>
-// #include <stdio.h>
+#if ! MEOS
+  #include <utils/memutils.h> /* for MaxAllocSize */
+#endif /* i MEOS */
 
 /*****************************************************************************/
 
@@ -90,33 +85,33 @@ queue_expand(PQueue *queue)
  */
 void pqueue_heapify(PQueue *q, size_t idx)
 {
-  /* left index, right index, largest */
+  /* left index, right index, smallest */
   void *tmp = NULL;
-  size_t l_idx, r_idx, lrg_idx;
+  size_t l_idx, r_idx, small_idx;
   NP_CHECK(q);
 
   l_idx = LEFT(idx);
   r_idx = RIGHT(idx);
 
   /* Left child exists, compare left child with its parent */
-  if (l_idx < q->length && q->cmp(q->elems[l_idx], q->elems[idx]) > 0)
-    lrg_idx = l_idx;
+  if (l_idx < q->length && q->cmp(q->elems[l_idx], q->elems[idx]) < 0)
+    small_idx = l_idx;
   else
-    lrg_idx = idx;
+    small_idx = idx;
 
-  /* Right child exists, compare right child with the largest element */
-  if (r_idx < q->length && q->cmp(q->elems[r_idx], q->elems[lrg_idx]) > 0)
-    lrg_idx = r_idx;
+  /* Right child exists, compare right child with the smallest element */
+  if (r_idx < q->length && q->cmp(q->elems[r_idx], q->elems[small_idx]) < 0)
+    small_idx = r_idx;
 
-  /* At this point largest element was determined */
-  if (lrg_idx != idx)
+  /* At this point smallest element was determined */
+  if (small_idx != idx)
   {
-    /* Swap between the index at the largest element */
-    tmp = q->elems[lrg_idx];
-    q->elems[lrg_idx] = q->elems[idx];
+    /* Swap between the index at the smallest element */
+    tmp = q->elems[small_idx];
+    q->elems[small_idx] = q->elems[idx];
     q->elems[idx] = tmp;
     /* Heapify again */
-    pqueue_heapify(q, lrg_idx);
+    pqueue_heapify(q, small_idx);
   }
 }
 
@@ -131,17 +126,17 @@ void pqueue_heapify(PQueue *q, size_t idx)
 PQueue *
 pqueue_make(int (*cmp)(const void *d1, const void *d2))
 {
-  PQueue *res = NULL;
+  PQueue *result = NULL;
   NP_CHECK(cmp);
-  res = malloc(sizeof(*res));
-  NP_CHECK(res);
-  res->cmp = cmp;
+  result = palloc(sizeof(*result));
+  NP_CHECK(result);
+  result->cmp = cmp;
   /* The inner representation of elements inside the queue is an array of void* */
-  res->elems = palloc(PQUEUE_INITIAL_CAPACITY * sizeof(*(res->elems)));
-  NP_CHECK(res->elems);
-  res->length = 0;
-  res->capacity = PQUEUE_INITIAL_CAPACITY;
-  return (res);
+  result->elems = palloc(PQUEUE_INITIAL_CAPACITY * sizeof(*(result->elems)));
+  NP_CHECK(result->elems);
+  result->length = 0;
+  result->capacity = PQUEUE_INITIAL_CAPACITY;
+  return (result);
 }
 
 /**
@@ -150,13 +145,12 @@ pqueue_make(int (*cmp)(const void *d1, const void *d2))
 void
 pqueue_free(PQueue *q)
 {
-  if (NULL == q)
+  if (q)
   {
-    DEBUG("Priority Queue is already NULL. Nothing to free.");
-    return;
+    pfree(q->elems);
+    pfree(q);
   }
-  pfree(q->elems);
-  pfree(q);
+  return;
 }
 
 /**
@@ -176,8 +170,8 @@ pqueue_enqueue(PQueue *q, const void *elem)
   i = q->length;
   q->length++;
   /* The new element is swapped with its parent as long as its
-   * precedence is higher */
-  while(i > 0 && q->cmp(q->elems[i], q->elems[PARENT(i)]) > 0)
+   * precedence is smaller */
+  while(i > 0 && q->cmp(q->elems[i], q->elems[PARENT(i)]) < 0)
   {
     tmp = q->elems[i];
     q->elems[i] = q->elems[PARENT(i)];
