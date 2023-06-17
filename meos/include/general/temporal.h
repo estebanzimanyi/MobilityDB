@@ -82,6 +82,10 @@ extern char *text_to_cstring(const text *t);
 #define ORDERED         true
 #define ORDERED_NO      false
 
+/** Symbolic constants for vectors */
+#define TYPE_BY_VALUE   true
+#define TYPE_BY_REF     false
+
 /** Symbolic constants for the output of string elements */
 #define QUOTES          true
 #define QUOTES_NO       false

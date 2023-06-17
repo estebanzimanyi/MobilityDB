@@ -159,28 +159,6 @@ struct SweepEvent
   bool isExteriorRing; /**< Is the exterior ring ? */
 };
 
-/* Function prototypes for SweepEvent */
-
-void swev_free(SweepEvent *);
-SweepEvent swev_copy(SweepEvent *);
-int swev_cmp(const SweepEvent *a, const SweepEvent *b);
-
-#define SweepEvent_free swev_free
-#define SweepEvent_copy swev_copy
-#define SweepEvent_cmp swev_cmp
-
-/* Definition of priority queue of SweepEvent */
-
-#define pqu_SweepEvent pqu_swev
-#define T SweepEvent
-#include <ctl/priority_queue.h>
-
-/* Definition of priority queue of SweepEvent */
-
-#define vec_SweepEvent vec_swev
-#define T SweepEvent
-#include <ctl/vector.h>
-
 extern GSERIALIZED *clip_poly_poly(const GSERIALIZED *subj,
   const GSERIALIZED *clip, ClipOpType operation);
 
