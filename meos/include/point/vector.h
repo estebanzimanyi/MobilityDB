@@ -45,8 +45,8 @@
  */
 typedef struct
 {
-  int capacity;
   int length;
+  int capacity;
   int16 flags;   /**< Flags determining whether the elements are passed by
                   * value or by reference */
   Datum *elems;

@@ -1317,7 +1317,7 @@ is_poly(const GSERIALIZED* g)
   return type == POLYGONTYPE || type == MULTIPOLYGONTYPE;
 }
 
-Datum clip_ext(FunctionCallInfo fcinfo, ClipOpType operation)
+Datum clip_ext(FunctionCallInfo fcinfo, ClipOper operation)
 {
   GSERIALIZED *subj = PG_GETARG_GSERIALIZED_P(0);
   GSERIALIZED *clip = PG_GETARG_GSERIALIZED_P(1);

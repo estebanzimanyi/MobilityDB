@@ -91,7 +91,7 @@ signedArea(const POINT2D *p0, const POINT2D *p1, const POINT2D *p2)
 Contour *
 cntr_make(void)
 {
-  Contour *result = palloc(sizeof(Contour));
+  Contour *result = palloc0(sizeof(Contour));
   result->points = vector_byref_make();
   result->holeIds = vector_byvalue_make();
   result->holeOf = -1;
@@ -121,7 +121,7 @@ cntr_free(Contour *c)
 Polygon *
 poly_make(void)
 {
-  Polygon *result = palloc(sizeof(Polygon));
+  Polygon *result = palloc0(sizeof(Polygon));
   result->contours = vector_byref_make();
   return result;
 }
@@ -148,7 +148,7 @@ SweepEvent *
 swev_make(POINT2D *point, bool left, SweepEvent *otherEvent, bool isSubject,
   EdgeType edgeType)
 {
-  SweepEvent *result = malloc(sizeof(SweepEvent));
+  SweepEvent *result = palloc0(sizeof(SweepEvent));
   result->left = left;
   result->point = *point;
   result->otherEvent = otherEvent;
@@ -344,7 +344,7 @@ divideSegment(SweepEvent *e, POINT2D *p, PQueue *queue)
  * @brief Return true if the event is in the result of the operation
  */
 bool
-inResult(SweepEvent *event, ClipOpType operation)
+inResult(SweepEvent *event, ClipOper operation)
 {
   switch (event->type)
   {
@@ -378,7 +378,7 @@ inResult(SweepEvent *event, ClipOpType operation)
  * @brief
  */
 int
-determineResultTransition(SweepEvent *event, ClipOpType operation)
+determineResultTransition(SweepEvent *event, ClipOper operation)
 {
   bool thisIn = ! event->inOut;
   bool thatIn = ! event->otherInOut;
@@ -410,7 +410,7 @@ determineResultTransition(SweepEvent *event, ClipOpType operation)
  * @param operation Clipping operation
  */
 void
-computeFields(SweepEvent *event, SweepEvent *prev, ClipOpType operation)
+computeFields(SweepEvent *event, SweepEvent *prev, ClipOper operation)
 {
   /* compute inOut and otherInOut fields */
   if (prev == NULL)
@@ -735,7 +735,7 @@ possibleIntersection(SweepEvent *e1, SweepEvent *e2, PQueue *queue)
  */
 Vector *
 subdivideSegments(PQueue *eventQueue, GBOX *sbbox, GBOX *clbox,
-  ClipOpType operation)
+  ClipOper operation)
 {
   SplayTree sweepLine = splay_new(&compareSegments);
   Vector *sortedEvents = vector_byref_make();
@@ -749,7 +749,7 @@ subdivideSegments(PQueue *eventQueue, GBOX *sbbox, GBOX *clbox,
     event = pqueue_dequeue(eventQueue);
     vector_append(sortedEvents, PointerGetDatum(event));
 
-    /* optimization by bboxes for intersection and difference goes here */
+    /* optimization by bboxes for intersection and difference */
     if ((operation == CL_INTERSECTION && event->point.x > rightbound) ||
         (operation == CL_DIFFERENCE   && event->point.x > sbbox->xmax))
       break;
@@ -916,10 +916,10 @@ orderEvents(Vector *sortedEvents)
     event = DatumGetSweepEventP(vector_at(sortedEvents, i));
     /* N.B. event->resultTransition != 0 is the definition of event.inResult */
     if ((event->left && event->resultTransition != 0) ||
-        (!event->left && event->otherEvent->resultTransition != 0))
+        (! event->left && event->otherEvent->resultTransition != 0))
       vector_append(resultEvents, PointerGetDatum(event));
   }
-  /* Due to overlapping edges the resultEvents array can be not wholly sorted */
+  /* Due to overlapping edges the resultEvents array may be not wholly sorted */
   bool sorted = false;
   while (! sorted)
   {
@@ -1071,17 +1071,15 @@ initializeContourFromContext(SweepEvent *event, Vector *contours,
 
 /**
  * @brief Connect the edges from the events into an vector of polygons
- * @param sortedEvents Vector of sweepline events
+ * @param resultEvents Vector of result events
  * @return Vector of contours
  */
 Vector *
-connectEdges(Vector *sortedEvents)
+connectEdges(Vector *resultEvents)
 {
-  Vector *resultEvents = orderEvents(sortedEvents);
-
   /* "false"-filled vector */
   Vector *processed = vector_byvalue_make();
-  for (int i = 0; i < sortedEvents->length; i++)
+  for (int i = 0; i < resultEvents->length; i++)
     vector_append(processed, BoolGetDatum(false));
 
   Vector *contours = vector_byref_make();
@@ -1139,7 +1137,7 @@ ptvec_to_ptarray(Vector *points)
  */
 GSERIALIZED *
 clip_poly_poly(const GSERIALIZED *subj, const GSERIALIZED *clip,
-  ClipOpType operation)
+  ClipOper operation)
 {
   /* Trivial operation if at least one geometry is empty */
   bool empty_subj = gserialized_is_empty(subj);
@@ -1183,8 +1181,13 @@ clip_poly_poly(const GSERIALIZED *subj, const GSERIALIZED *clip,
   /* Free the priority queue */
   pqueue_free(eventQueue);
 
+  /* Select the result events */
+  Vector *resultEvents = orderEvents(sortedEvents);
+  /* Free the sorted events */
+  vector_free(sortedEvents);
+
   /* Connect vertices */
-  Vector *contours = connectEdges(sortedEvents);
+  Vector *contours = connectEdges(resultEvents);
   int len = contours->length;
 
   /* Convert contours to polygons */

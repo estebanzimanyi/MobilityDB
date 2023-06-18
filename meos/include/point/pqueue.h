@@ -65,14 +65,11 @@
  */
 typedef struct PQueue_s
 {
-  /* The actual size of heap at a certain time */
-  size_t length;
-  /* The amount of allocated memory for the heap */
-  size_t capacity;
-  /* An array of (void*), the actual max-heap */
-  void **elems;
-  /* A pointer to a comparator function, used to prioritize elements */
+  size_t length;   /**< The actual size of heap at a certain time */
+  size_t capacity; /**< The amount of allocated memory for the heap */
+  void **elems;    /**< An array of (void *), the actual min-heap */
   int (*cmp)(const void *d1, const void *d2);
+    /**< A pointer to a comparator function for prioritizing elements */
 } PQueue;
 
 /*****************************************************************************/

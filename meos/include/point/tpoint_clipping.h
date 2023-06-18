@@ -55,7 +55,7 @@ typedef enum
   CL_UNION        = 1,
   CL_DIFFERENCE   = 2,
   CL_XOR          = 3,
-} ClipOpType;
+} ClipOper;
 
 typedef enum
 {
@@ -112,7 +112,7 @@ struct SweepEvent
 };
 
 extern GSERIALIZED *clip_poly_poly(const GSERIALIZED *subj,
-  const GSERIALIZED *clip, ClipOpType operation);
+  const GSERIALIZED *clip, ClipOper operation);
 
 /*****************************************************************************/
 

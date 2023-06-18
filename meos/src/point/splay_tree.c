@@ -128,6 +128,8 @@ SplayTree splay_new(void *comparison_func)
  * contained within it, then sets the value of the pointer to NULL
  * @param tree Tree to be freed
  * @pre tree is not NULL
+ * @note The values pointed by the nodes are NOT freed, this should be done
+ * by the calling function
  */
 void splay_free(SplayTree tree)
 {

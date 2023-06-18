@@ -128,11 +128,11 @@ PQueue *pqueue_make(int (*cmp)(const void *d1, const void *d2))
 {
   assert(cmp != NULL);
   PQueue *result = NULL;
-  result = palloc(sizeof(*result));
+  result = palloc0(sizeof(*result));
   NP_CHECK(result);
   result->cmp = cmp;
   /* The inner representation of elements inside the queue is an array of void* */
-  result->elems = palloc(PQUEUE_INITIAL_CAPACITY * sizeof(*(result->elems)));
+  result->elems = palloc0(PQUEUE_INITIAL_CAPACITY * sizeof(*(result->elems)));
   NP_CHECK(result->elems);
   result->length = 0;
   result->capacity = PQUEUE_INITIAL_CAPACITY;
@@ -142,6 +142,8 @@ PQueue *pqueue_make(int (*cmp)(const void *d1, const void *d2))
 /**
  * @brief De-allocate memory for a priority queue
  * @pre queue is not NULL
+ * @note The values pointed by the elements are NOT freed, this should be done
+ * by the calling function
  */
 void pqueue_free(PQueue *queue)
 {
