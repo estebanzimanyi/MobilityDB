@@ -28,7 +28,10 @@
  *****************************************************************************/
 
 /**
- * @brief Skiplist data structure used for performing temporal aggregates
+ * @file
+ * @brief Skiplist data structure
+ * https://en.wikipedia.org/wiki/Skip_list
+ * used for performing temporal aggregates
  */
 
 #ifndef __SKIPLIST_H__

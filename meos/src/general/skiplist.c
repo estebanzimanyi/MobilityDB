@@ -29,12 +29,12 @@
 
 /**
  * @file
- * @brief Functions manipulating skiplists.
- * @note See the description of skip lists in Wikipedia
+ * @brief Skiplist data structure
  * https://en.wikipedia.org/wiki/Skip_list
- * Note also that according to
+ * used for performing temporal aggregates
+ * @note According to
  * https://github.com/postgres/postgres/blob/master/src/backend/utils/mmgr/README#L99
- * pfree/repalloc Do Not Depend On CurrentMemoryContext
+ * pfree/repalloc DO NOT depend on CurrentMemoryContext
  */
 
 #include "general/skiplist.h"

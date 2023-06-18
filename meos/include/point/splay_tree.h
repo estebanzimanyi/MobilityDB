@@ -29,271 +29,218 @@
 
 /**
  * @file
- * @brief Splay Tree data structure based on
+ * @brief Splay Tree data structure
+ * https://en.wikipedia.org/wiki/Splay_tree
+ * based on
  * https://github.com/Tyresius92/splay-tree/
  */
 
-#ifndef BASIC_SPLAY_H
-#define BASIC_SPLAY_H
+#ifndef __SPLAY_TREE_H__
+#define __SPLAY_TREE_H__
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <stdbool.h>
 
 typedef struct splay_tree *SplayTree;
 
-/**********************
- * FUNCTION CONTRACTS *
- * AND DECLARATIONS   *
- **********************/
+/*****************************************************************************
+ * FUNCTION CONTRACTS AND DECLARATIONS
+ *****************************************************************************/
 
-/*
- * splay_new
+/**
+ * @brief Return a pointer to a new, empty splay tree
+ * @param comparison_func Pointer to a comparison function. If NULL is passed
+ * as argument, strcmp is assumed. The comparison function has two parameters
+ * - val1 Item being inserted
+ * - val2 Item from tree which we are comparing
+ * and returns and integer as follows
+ * - zero (0) if val1 == val2
+ * - positive value (n > 0) if val1 > val2
+ * - negative value (n < 0) if val1 < val2
+ * @return Pointer to empty splay_tree
  *
- * returns a pointer to a new, empty red black tree
- *
- * CREs         n/a
- * UREs         system out of memory
- *
- *
- * @param       void * - pointer to a comparison function. if NULL is passed
- *                              as argument, strcmp is assumed.
- *
- *              comparison_function
- *              @param          item being inserted (val1)
- *              @param          item from tree which we are comparing (val2)
- *              @return         int
- *                               - zero (0) if val1 == val2
- *                               - positive value (n > 0) if val1 > val2
- *                               - negative value (n < 0) if val1 < val2
- *
- * @return      pointer to empty splay_tree
+ * CREs n/a
+ * UREs system out of memory
  */
 SplayTree splay_new(void *comparison_func);
 
-/*
- * splay_tree_free
- *
- * given a pointer to a red black tree, deallocates the tree and all nodes
+/**
+ * @brief Given a pointer to a splay tree, deallocates the tree and all nodes
  * contained within it, then sets the value of the pointer to NULL
+ * @param tree Tree to be freed
  *
- * CREs         tree == NULL
- * UREs         n/a
- *
- * @param       RedBlack_T - the tree to be freed
- * @return      n/a
+ * CREs tree == NULL
+ * UREs n/a
  */
 void splay_free(SplayTree tree);
 
-/*
- * splay_is_empty
+/**
+ * @brief returns true if the tree is empty, and false otherwise
+ * @param tree Tree to be checked if empty
+ * @return True if empty, false otherwise
  *
- * returns true if the tree is empty, and false otherwise
- *
- * CREs         tree == NULL
- * UREs         n/a
- *
- * @param       Redblack_T - tree to be checked if empty
- * @return      bool - true if empty, false otherwise
+ * CREs tree == NULL
+ * UREs n/a
  */
 bool splay_is_empty(SplayTree tree);
 
-/*
- *
+/**
+ * @brief
  */
 void *splay_get_value_at_root(SplayTree tree);
 
-/*
- * insert_value
+/**
+ * @brief Given a value (cast to void), inserts the value into the given tree
+ * @param tree Tree in which to insert value
+ * @param value Pointer to any item to be inserted
  *
- * given a value (cast to void), inserts the value into the given SPLAY Tree
- *
- * CREs         tree == NULL
- *              value == NULL
- *
- * UREs         system out of memory
- *              attempting to pass in a value which cannot be compared with
- *                      your comparison function
- *
- * @param       SplayTree - tree in which to insert value
- * @param       void * - a pointer to any item to be inserted
- * @return      n/a
+ * CREs tree == NULL
+ *      value == NULL
+ * UREs system out of memory
+ *      attempting to pass in a value which cannot be compared with your
+ *      comparison function
  */
-int splay_insert_value(SplayTree tree, void *value);
+void splay_insert_value(SplayTree tree, void *value);
 
-/*
- * splay_search
- *
- * given a tree and a value to search for, returns a pointer to the stored
- * value, or NULL if the value is not found. If duplicates are in the tree,
- * returns the first one found
- *
- * @param       SplayTree - tree in which to search
- * @param       void * - value to search for
- * @return      void * - pointer to the value that was found
+/**
+ * @brief Given a tree and a value to search for, returns a pointer to the
+ * stored value, or NULL if the value is not found. If duplicates are in the
+ * tree, returns the first one found
+ * @param tree Tree in which to search
+ * @param value Value to search for
+ * @return Pointer to the value that was found
  */
 void *splay_search(SplayTree tree, void *value);
 
-/*
- * splay_delete_value
- *
- * given a value, deletes the first instance of it that is found in the tree
+/**
+ * @brief Given a value, deletes the first instance of it that is found in the tree
  * if a value is given that is not in the tree, this function has no effect
+ * @param tree Tree to find the value in
+ * @param value Pointer to the value to be deleted
  *
- * CREs         tree == NULL
- * UREs         n/a
- *
- * @param       SplayTree - tree to find the value in
- * @param       void * - pointer to the value to be deleted
- * @return      n/a
+ * CREs tree == NULL
+ * UREs n/a
  */
 void splay_delete_value(SplayTree tree, void *value);
 
-/*
- * splay_tree_minimum
+/**
+ * @brief Given a tree, returns the minimum value stored in the tree
+ * @param tree Tree to be searched
+ * @return Pointer to minimum value
  *
- * given a tree, returns the minimum value stored in the tree
- *
- * CREs         tree == NULL
- * UREs         n/a
- *
- * @param       SplayTree - tree to be searched
- * @return      void * - pointer to min value
+ * CREs tree == NULL
+ * UREs n/a
  */
 void *splay_tree_minimum(SplayTree tree);
 
-/*
- * splay_tree_maximum
- *
- * given a tree, returns the maximum value stored in the tree
- *
- * CREs         tree == NULL
- * UREs         n/a
- *
+/**
+ * @brief Given a tree, returns the maximum value stored in the tree
  * @param       SplayTree - tree to be searched
- * @return      void * - pointer to max value
+ * @return Pointer to maximum value
+ *
+ * CREs tree == NULL
+ * UREs n/a
  */
 void *splay_tree_maximum(SplayTree tree);
 
-/*
- * splay_successor_of_value
- *
- * given a tree and a value, returns the first successor of that value
+/**
+ * @brief Given a tree and a value, returns the first successor of that value
  * returned value will always be distinct from value, even if there are
  * duplicates; returns NULL if no successor
+ * @param tree Tree to be searched
+ * @param value Value to find the successor of
+ * @return Value of the successor
  *
- * CREs         tree == NULL
- *              value == NULL
- * UREs         n/a
- *
- * @param       SplayTree - tree to be searched
- * @param       void * - value to find the successor of
- * @return      void * - value of the successor
+ * CREs tree == NULL
+ *      value == NULL
+ * UREs n/a
  */
 void *splay_successor_of_value(SplayTree tree, void *value);
 
-/*
- * splay_predecessor_of_value
- *
- * given a tree and a value, returns the first predecessor of that value
+/**
+ * @brief Given a tree and a value, returns the first predecessor of that value
  * returned value will always be distinct from value, even if there are
  * duplicates; returns NULL if no predecessor
+ * @param tree Tree to be searched
+ * @param value Value to find the predecessor of
+ * @return Value of the predecessor
  *
- * CREs         tree == NULL
- *              value == NULL
- * UREs         n/a
+ * CREs tree == NULL
+ *      value == NULL
+ * UREs n/a
  *
- * @param       SplayTree - tree to be searched
- * @param       void * - value to find the predecessor of
- * @return      void * - value of the predecessor
  */
 void *splay_predecessor_of_value(SplayTree tree, void *value);
 
-/*
- * splay_map_inorder
+/**
+ * @brief Given a tree and a pointer to a function, applies the function to
+ * every element stored in the tree via an inorder walk.
  *
- * given a tree and a pointer to a function, applies the function to every
- * element stored in the tree via an inorder walk
- * example valid operations include:
- *              - print every value
- *              - increment every stored value by one
- *              - store every element in an array (stored in closure)
+ * Example valid operations include:
+ * - print every value
+ * - increment every stored value by one
+ * - store every element in an array (stored in closure)
  *
- * CREs         tree == NULL
- *              func_to_apply == NULL
- * UREs         func_to_apply modifies tree structure by performing different
- *                      operations on each node. (for instance, subtracting 1
- *                      from the first node, 2 from the second, 3 from the
- *                      third...and n from the nth could result in the SPLAY
- *                      property being invalidated)
+ * @param tree Tree to apply function to
+ * @param func_to_apply pointer to a function
+ * @param cl Closure item; can be anything you would like to make use of when
+ * evaluating your function
  *
- *
- * @param       Redblack_T - tree to apply function to
- * @param       void * - pointer to a function
- * @param       void * - a closure item; can be anything you would like to
- *                              make use of when evaluating your function
- * @return      n/a
+ * CREs tree == NULL
+ *      func_to_apply == NULL
+ * UREs func_to_apply modifies tree structure by performing different
+ *      operations on each node. (for instance, subtracting 1 from the first
+ *      node, 2 from the second, 3 from the third...and n from the nth could
+ *      result in the SPLAY property being invalidated)
  */
 void splay_map_inorder(SplayTree tree,
-                    void func_to_apply(void *value, int depth, void *cl),
-                    void *cl);
+  void func_to_apply(void *value, int depth, void *cl), void *cl);
 
-/*
- * splay_map_preorder
+/**
+ * @brief Given a tree and a pointer to a function, applies the function to
+ * every element stored in the tree via a preorder walk.
  *
- * given a tree and a pointer to a function, applies the function to every
- * element stored in the tree via a preorder walk
- * example valid operations include:
- *              - print every value
- *              - increment every stored value by one
- *              - store every element in an array (stored in closure)
+ * Example valid operations include:
+ * - print every value
+ * - increment every stored value by one
+ * - store every element in an array (stored in closure)
  *
- * CREs         tree == NULL
- *              func_to_apply == NULL
- * UREs         func_to_apply modifies tree structure by performing different
- *                      operations on each node. (for instance, subtracting 1
- *                      from the first node, 2 from the second, 3 from the
- *                      third...and n from the nth could result in the SPLAY
- *                      property being invalidated)
+ * @param tree Tree to apply function to
+ * @param func_to_apply pointer to a function
+ * @param cl Closure item, can be anything you would like to make use of when
+ * evaluating your function
  *
- *
- * @param       Redblack_T - tree to apply function to
- * @param       void * - pointer to a function
- * @param       void * - a closure item; can be anything you would like to
- *                              make use of when evaluating your function
- * @return      n/a
+ * CREs tree == NULL
+ *      func_to_apply == NULL
+ * UREs func_to_apply modifies tree structure by performing different
+ *      operations on each node. (for instance, subtracting 1 from the first
+ *      node, 2 from the second, 3 from the third...and n from the nth could
+ *      result in the SPLAY property being invalidated)
  */
 void splay_map_preorder(SplayTree tree,
-                     void func_to_apply(void *value, int depth, void *cl),
-                     void *cl);
+  void func_to_apply(void *value, int depth, void *cl), void *cl);
 
-/*
- * splay_map_postorder
+/**
+ * @brief Given a tree and a pointer to a function, applies the function to
+ * every element stored in the tree via a postorder walk.
  *
- * given a tree and a pointer to a function, applies the function to every
- * element stored in the tree via a postorder walk
- * example valid operations include:
- *              - print every value
- *              - increment every stored value by one
- *              - store every element in an array (stored in closure)
+ * Example valid operations include:
+ * - print every value
+ * - increment every stored value by one
+ * - store every element in an array (stored in closure)
  *
- * CREs         tree == NULL
- *              func_to_apply == NULL
- * UREs         func_to_apply modifies tree structure by performing different
- *                      operations on each node. (for instance, subtracting 1
- *                      from the first node, 2 from the second, 3 from the
- *                      third...and n from the nth could result in the SPLAY
- *                      property being invalidated)
+ * @param tree Tree to apply function to
+ * @param func_to_apply Pointer to a function
+ * @param cl Closure item; can be anything you would like to make use of when
+ * evaluating your function
  *
- *
- * @param       Redblack_T - tree to apply function to
- * @param       void * - pointer to a function
- * @param       void * - a closure item; can be anything you would like to
- *                              make use of when evaluating your function
- * @return      n/a
+ * CREs tree == NULL
+ *      func_to_apply == NULL
+ * UREs func_to_apply modifies tree structure by performing different
+ *      operations on each node. (for instance, subtracting 1 from the first
+ *      node, 2 from the second, 3 from the third...and n from the nth could
+ *      result in the SPLAY property being invalidated)
  */
 void splay_map_postorder(SplayTree tree,
-                      void func_to_apply(void *value, int depth, void *cl),
-                      void *cl);
+  void func_to_apply(void *value, int depth, void *cl), void *cl);
 
 #endif

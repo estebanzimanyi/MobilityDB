@@ -29,7 +29,9 @@
 
 /**
  * @file
- * @brief Priority Queue data structure derived from
+ * @brief Priority Queue data structure
+ * https://en.wikipedia.org/wiki/Priority_queue
+ * derived from
  * https://github.com/nomemory/c-generic-pqueue/
  */
 
@@ -45,16 +47,16 @@
 * line via 'stderr' .
 * If the check fails the program exits with error code (-1) .
 */
-#define NP_CHECK(ptr)                                                           \
-    {                                                                           \
-        if (NULL == (ptr)) {                                                    \
-            fprintf(stderr, "%s:%d NULL POINTER: %s n",                         \
-                __FILE__, __LINE__, #ptr);                                      \
-            exit(-1);                                                           \
-        }                                                                       \
-    }                                                                           \
+#define NP_CHECK(ptr) \
+  { \
+    if (NULL == (ptr)) { \
+      elog(ERROR, "%s:%d NULL POINTER: %s n", \
+        __FILE__, __LINE__, #ptr); \
+      exit(-1);  \
+    } \
+  } \
 
-#define DEBUG(msg) fprintf(stderr, "%s:%d %s", __FILE__, __LINE__, (msg))
+#define DEBUG(msg) elog(WARNING, "%s:%d %s", __FILE__, __LINE__, (msg))
 
 /**
 * Priority Queue Structure
@@ -71,18 +73,27 @@ typedef struct PQueue_s
   int (*cmp)(const void *d1, const void *d2);
 } PQueue;
 
-/** Allocates memory for a new Priority Queue .
-Needs a pointer to a comparator function, thus establishing priorities .
+/**
+ * @brief Create a new priority queue.
+ * @param cmp Pointer to a comparator function establishing priorities.
 */
 PQueue *pqueue_make(int (*cmp)(const void *d1, const void *d2));
 
-/** De-allocates memory for a given Priority Queue */
+/**
+ * @brief De-allocates memory for a priority queue
+ */
 void pqueue_free(PQueue *q);
 
-/** Add an element inside the Priority Queue */
+/**
+ * @brief Add an element to the priority queue
+ */
 void pqueue_enqueue(PQueue *q, const void *data);
 
-/** Removes the element with the greatest priority from within the queue */
+/**
+ * @brief Remove the element with the greatest priority from within the queue
+ */
 void *pqueue_dequeue(PQueue *q);
+
+/*****************************************************************************/
 
 #endif

@@ -29,7 +29,9 @@
 
 /**
  * @file
- * @brief Priority Queue data structure derived from
+ * @brief Priority Queue data structure
+ * https://en.wikipedia.org/wiki/Priority_queue
+ * derived from
  * https://github.com/nomemory/c-generic-pqueue/
  */
 
@@ -58,8 +60,7 @@
 /**
  * @brief Expand the queue if there is no more space
  */
-static void
-queue_expand(PQueue *queue)
+static void queue_expand(PQueue *queue)
 {
   /* If there is no more available space expand the queue */
   if (queue->length >= queue->capacity)
@@ -85,8 +86,7 @@ queue_expand(PQueue *queue)
  */
 void pqueue_heapify(PQueue *q, size_t idx)
 {
-  /* left index, right index, smallest */
-  void *tmp = NULL;
+  /* left index, right index, smallest index */
   size_t l_idx, r_idx, small_idx;
   NP_CHECK(q);
 
@@ -107,7 +107,7 @@ void pqueue_heapify(PQueue *q, size_t idx)
   if (small_idx != idx)
   {
     /* Swap between the index at the smallest element */
-    tmp = q->elems[small_idx];
+    void *tmp = q->elems[small_idx];
     q->elems[small_idx] = q->elems[idx];
     q->elems[idx] = tmp;
     /* Heapify again */
@@ -116,15 +116,13 @@ void pqueue_heapify(PQueue *q, size_t idx)
 }
 
 /**
- * @brief Allocate memory for a new priority queue
- *
- * 'cmp' function:
+ * @brief Create a new priority queue
+ * @param cmp Compare function that
  *   returns 0 if d1 and d2 have the same priorities
  *   returns [negative value] if d1 have a smaller priority than d2
  *   returns [positive value] if d1 have a greater priority than d2
 */
-PQueue *
-pqueue_make(int (*cmp)(const void *d1, const void *d2))
+PQueue *pqueue_make(int (*cmp)(const void *d1, const void *d2))
 {
   PQueue *result = NULL;
   NP_CHECK(cmp);
@@ -142,8 +140,7 @@ pqueue_make(int (*cmp)(const void *d1, const void *d2))
 /**
  * @brief De-allocate memory for a priority queue
  */
-void
-pqueue_free(PQueue *q)
+void pqueue_free(PQueue *q)
 {
   if (q)
   {
@@ -156,24 +153,21 @@ pqueue_free(PQueue *q)
 /**
  * @brief Add a new element to the priority queue
  */
-void
-pqueue_enqueue(PQueue *q, const void *elem)
+void pqueue_enqueue(PQueue *q, const void *elem)
 {
-  size_t i;
-  void *tmp = NULL;
   NP_CHECK(q);
   if (q->length >= q->capacity)
     queue_expand(q);
 
   /* Adds element last */
   q->elems[q->length] = (void *) elem;
-  i = q->length;
+  size_t i = q->length;
   q->length++;
   /* The new element is swapped with its parent as long as its
    * precedence is smaller */
   while(i > 0 && q->cmp(q->elems[i], q->elems[PARENT(i)]) < 0)
   {
-    tmp = q->elems[i];
+    void *tmp = q->elems[i];
     q->elems[i] = q->elems[PARENT(i)];
     q->elems[PARENT(i)] = tmp;
     i = PARENT(i);
