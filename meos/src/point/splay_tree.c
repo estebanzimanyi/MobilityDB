@@ -89,18 +89,28 @@ void zig_zig_right(SplayTree tree, Node *n);
 void zig_zag_right(SplayTree tree, Node *n);
 
 void splay_private_inorder_map(Node *root, int depth,
-  void func_to_apply(void *value, int depth, void *cl), void *cl);
+  void func(void *value, int depth, void *cl), void *cl);
 void splay_private_preorder_map(Node *root, int depth,
-  void func_to_apply(void *value, int depth, void *cl), void *cl);
+  void func(void *value, int depth, void *cl), void *cl);
 void splay_private_postorder_map(Node *root, int depth,
-  void func_to_apply(void *value, int depth, void *cl), void *cl);
+  void func(void *value, int depth, void *cl), void *cl);
 
 /*****************************************************************************
- * Function definitions
+ * External function definitions
  *****************************************************************************/
 
 /**
- * @brief
+ * @brief Create a new, empty splay tree
+ * @param comparison_func Pointer to a comparison function. If NULL is passed
+ * as argument, strcmp is assumed. The comparison function has two parameters
+ * - val1 Item being inserted
+ * - val2 Item from tree which we are comparing
+ * and returns and integer as follows
+ * - zero (0) if val1 == val2
+ * - positive value (n > 0) if val1 > val2
+ * - negative value (n < 0) if val1 < val2
+ * @return Pointer to empty splay_tree
+ * @exception System out of memory
  */
 SplayTree splay_new(void *comparison_func)
 {
@@ -114,7 +124,10 @@ SplayTree splay_new(void *comparison_func)
 }
 
 /**
- * @brief
+ * @brief Given a pointer to a splay tree, deallocates the tree and all nodes
+ * contained within it, then sets the value of the pointer to NULL
+ * @param tree Tree to be freed
+ * @pre tree is not NULL
  */
 void splay_free(SplayTree tree)
 {
@@ -122,10 +135,26 @@ void splay_free(SplayTree tree)
   private_splay_deallocate_all_tree_nodes(tree->root);
   pfree(tree);
   tree = NULL;
+  return;
 }
 
 /**
- * @brief
+ * @brief Return true if the tree is empty, and false otherwise
+ * @param tree Tree to be checked if empty
+ * @return True if empty, false otherwise
+ * @pre tree is not NULL
+ */
+bool splay_is_empty(SplayTree tree)
+{
+  assert(tree != NULL);
+  return tree->root == NULL;
+}
+
+/**
+ * @brief Return the value at the root of the tree
+ * @param tree Tree in which to look the root value
+ * @return Value at the root of the tree
+ * @pre tree is not NULL
  */
 void *splay_get_value_at_root(SplayTree tree)
 {
@@ -135,6 +164,225 @@ void *splay_get_value_at_root(SplayTree tree)
   else
     return NULL;
 }
+
+/**
+ * @brief Given a value (cast to void), insert the value into the given tree
+ * @param tree Tree in which to insert value
+ * @param value Pointer to any item to be inserted
+ * @pre tree is not NULL and value is not NULL
+ * @exception System out of memory
+ * @exception Attempting to pass in a value which cannot be compared with your
+ * comparison function
+ */
+void splay_insert_value(SplayTree tree, void *value)
+{
+  assert(tree != NULL && value != NULL);
+  Node *new_node = splay_construct_node(value);
+  tree->root = private_splay_insert_value(tree->root, new_node, tree->comparison_func);
+  splay_to_root(tree, new_node);
+  return;
+}
+
+/**
+ * @brief Given a tree and a value to search for, return a pointer to the
+ * stored value, or NULL if the value is not found. If duplicates are in the
+ * tree, returns the first one found
+ * @param tree Tree in which to search
+ * @param value Value to search for
+ * @return Pointer to the value that was found, if any
+ * @pre tree is not NULL and value is not NULL
+ */
+void *splay_search(SplayTree tree, void *value)
+{
+  assert(tree != NULL && value != NULL);
+  Node *result = private_splay_find_in_tree(tree, value, tree->comparison_func);
+  if (result != NULL)
+  {
+    splay_to_root(tree, result);
+    return (void *) result->value;
+  }
+  return result; /* AKA return NULL */
+}
+
+/**
+ * @brief Given a value, delete the first instance of it found in the tree.
+ * If a given value is not in the tree, the function has no effect
+ * @param tree Tree to find the value in
+ * @param value Pointer to the value to be deleted
+ * @pre tree is not NULL and value is not NULL
+ */
+void splay_delete_value(SplayTree tree, void *value)
+{
+  assert(tree != NULL && value != NULL);
+  Node *z = private_splay_find_in_tree(tree, value, tree->comparison_func);
+  if (z == NULL)
+    return;
+
+  splay_to_root(tree, z);
+  if (z->left == NULL)
+    private_splay_transplant(tree, z, z->right);
+  else if (z->right == NULL)
+    private_splay_transplant(tree, z, z->left);
+  else
+  {
+    Node *y = private_splay_minimum(z->right);
+    if (y->parent != z)
+    {
+      private_splay_transplant(tree, y, y->right);
+      y->right = z->right;
+      y->right->parent = y;
+    }
+    private_splay_transplant(tree, z, y);
+    y->left = z->left;
+    y->left->parent = y;
+  }
+  pfree(z);
+  return;
+}
+
+/**
+ * @brief Given a tree, returns the minimum value stored in the tree
+ * @param tree Tree to be searched
+ * @return Pointer to minimum value
+ * @pre tree is not NULL
+ */
+void *splay_tree_minimum(SplayTree tree)
+{
+  assert(tree != NULL);
+  Node *n = private_splay_minimum(tree->root);
+  if (n == NULL)
+    return NULL;
+
+  splay_to_root(tree, n);
+  return n->value;
+}
+
+/**
+ * @brief Given a tree, returns the maximum value stored in the tree
+ * @param tree Tree to be searched
+ * @return Pointer to maximum value
+ * @pre tree is not NULL
+ */
+void *splay_tree_maximum(SplayTree tree)
+{
+  assert(tree != NULL);
+  Node *n = private_splay_maximum(tree->root);
+  if (n == NULL)
+    return NULL;
+
+  splay_to_root(tree, n);
+  return n->value;
+}
+
+/**
+ * @brief Given a tree and a value, returns the first successor of that value
+ * returned value will always be distinct from value, even if there are
+ * duplicates; returns NULL if no successor
+ * @param tree Tree to be searched
+ * @param value Value to find the successor of
+ * @return Value of the successor
+ * @pre tree is not NULL and value is not NULL
+ */
+void *splay_successor_of_value(SplayTree tree, void *value)
+{
+  assert(tree != NULL && value != NULL);
+  Node *n = private_splay_successor_of_value(tree, value, tree->comparison_func);
+  if (n == NULL)
+    return NULL;
+
+  splay_to_root(tree, n);
+  return n->value;
+}
+
+/**
+ * @brief Given a tree and a value, returns the first predecessor of that value
+ * returned value will always be distinct from value, even if there are
+ * duplicates; returns NULL if no predecessor
+ * @param tree Tree to be searched
+ * @param value Value to find the predecessor of
+ * @return Value of the predecessor
+ * @pre tree is not NULL and value is not NULL
+ */
+void *splay_predecessor_of_value(SplayTree tree, void *value)
+{
+  assert(tree != NULL && value != NULL);
+  Node *n = private_splay_predecessor_of_value(tree, value, tree->comparison_func);
+  if (n == NULL)
+    return NULL;
+
+  splay_to_root(tree, n);
+  return n->value;
+}
+
+/*****************************************************************************
+ * Apply a function to each element of the tree using in-order, preorder, or
+ * postorder. Example valid operations include:
+ * - print every value
+ * - increment every stored value by one
+ * - store every element in an array (stored in closure)
+ * Uncaugth Exception: when func modifies tree structure by
+ * performing different operations on each node, for instance, subtracting 1
+ * from the first node, 2 from the second, 3 from the third... and n from the
+ * nth could result in the SPLAY property being invalidated
+ *****************************************************************************/
+
+/**
+ * @brief Given a tree and a pointer to a function, applies the function to
+ * every element stored in the tree via an inorder walk.
+ * @param tree Tree to apply function to
+ * @param func Pointer to a function to apply to every node of the tree
+ * @param cl Closure item; can be anything you would like to make use of when
+ * evaluating your function
+ * @pre tree is not NULL and value is not NULL
+ */
+void splay_map_inorder(SplayTree tree,
+  void func(void *value, int depth, void *cl), void *cl)
+{
+  assert(tree != NULL && func != NULL);
+  int depth = 0;
+  splay_private_inorder_map(tree->root, depth, func, cl);
+  return;
+}
+
+/**
+ * @brief Given a tree and a pointer to a function, applies the function to
+ * every element stored in the tree via a preorder walk.
+ * @param tree Tree to apply function to
+ * @param func Pointer to a function to apply to every node of the tree
+ * @param cl Closure item, can be anything you would like to make use of when
+ * evaluating your function
+ * @pre tree is not NULL and value is not NULL
+ */
+void splay_map_preorder(SplayTree tree,
+  void func(void *value, int depth, void *cl), void *cl)
+{
+  assert(tree != NULL && func != NULL);
+  int depth = 0;
+  splay_private_preorder_map(tree->root, depth, func, cl);
+  return;
+}
+
+/**
+ * @brief Given a tree and a pointer to a function, applies the function to
+ * every element stored in the tree via a postorder walk.
+ * @param tree Tree to apply function to
+ * @param func Pointer to a function to apply to every node of the tree
+ * @param cl Closure item; can be anything you would like to make use of when
+ * evaluating your function
+ * @pre tree is not NULL and value is not NULL
+ */
+void splay_map_postorder(SplayTree tree,
+  void func(void *value, int depth, void *cl), void *cl)
+{
+  assert(tree != NULL && func != NULL);
+  int depth = 0;
+  splay_private_postorder_map(tree->root, depth, func, cl);
+  return;
+}
+
+/*****************************************************************************
+ * Internal function definitions
+ *****************************************************************************/
 
 /**
  * @brief Given a tree and a node n, moves n's right child to be the child
@@ -356,27 +604,6 @@ void private_splay_deallocate_all_tree_nodes(Node *n)
 /**
  * @brief
  */
-bool splay_is_empty(SplayTree tree)
-{
-  assert(tree != NULL);
-  return tree->root == NULL;
-}
-
-/**
- * @brief
- */
-void splay_insert_value(SplayTree tree, void *value)
-{
-  assert(tree != NULL && value != NULL);
-  Node *new_node = splay_construct_node(value);
-  tree->root = private_splay_insert_value(tree->root, new_node, tree->comparison_func);
-  splay_to_root(tree, new_node);
-  return;
-}
-
-/**
- * @brief
- */
 Node *splay_construct_node(void *value)
 {
   Node *new_node = (Node *) palloc(sizeof(Node));
@@ -412,20 +639,6 @@ Node *private_splay_insert_value(Node *root, Node *new_node,
 /**
  * @brief
  */
-void *splay_search(SplayTree tree, void *value)
-{
-  Node *result = private_splay_find_in_tree(tree, value, tree->comparison_func);
-  if (result != NULL)
-  {
-    splay_to_root(tree, result);
-    return (void *) result->value;
-  }
-  return result; //AKA return NULL
-}
-
-/**
- * @brief
- */
 Node *private_splay_find_in_tree(SplayTree tree, void *value,
   void *comparison_func(void *val1, void *val2))
 {
@@ -442,37 +655,6 @@ Node *private_splay_find_in_tree(SplayTree tree, void *value,
       curr = curr->right;
   }
   return curr;
-}
-
-/**
- * @brief
- */
-void splay_delete_value(SplayTree tree, void *value)
-{
-  Node *z = private_splay_find_in_tree(tree, value, tree->comparison_func);
-  if (z == NULL)
-    return;
-
-  splay_to_root(tree, z);
-  if (z->left == NULL)
-    private_splay_transplant(tree, z, z->right);
-  else if (z->right == NULL)
-    private_splay_transplant(tree, z, z->left);
-  else
-  {
-    Node *y = private_splay_minimum(z->right);
-    if (y->parent != z)
-    {
-      private_splay_transplant(tree, y, y->right);
-      y->right = z->right;
-      y->right->parent = y;
-    }
-    private_splay_transplant(tree, z, y);
-    y->left = z->left;
-    y->left->parent = y;
-  }
-  pfree(z);
-  return;
 }
 
 /**
@@ -495,32 +677,6 @@ void private_splay_transplant(SplayTree tree, Node *u, Node *v)
 /**
  * @brief
  */
-void *splay_tree_minimum(SplayTree tree)
-{
-  Node *n = private_splay_minimum(tree->root);
-  if (n == NULL)
-    return NULL;
-
-  splay_to_root(tree, n);
-  return n->value;
-}
-
-/**
- * @brief
- */
-void *splay_tree_maximum(SplayTree tree)
-{
-  Node *n = private_splay_maximum(tree->root);
-  if (n == NULL)
-    return NULL;
-
-  splay_to_root(tree, n);
-  return n->value;
-}
-
-/**
- * @brief
- */
 Node *private_splay_minimum(Node *x)
 {
   while (x->left != NULL)
@@ -536,32 +692,6 @@ Node *private_splay_maximum(Node *x)
   while (x->right != NULL)
     x = x->right;
   return x;
-}
-
-/**
- * @brief
- */
-void *splay_successor_of_value(SplayTree tree, void *value)
-{
-  Node *n = private_splay_successor_of_value(tree, value, tree->comparison_func);
-  if (n == NULL)
-    return NULL;
-
-  splay_to_root(tree, n);
-  return n->value;
-}
-
-/**
- * @brief
- */
-void *splay_predecessor_of_value(SplayTree tree, void *value)
-{
-  Node *n = private_splay_predecessor_of_value(tree, value, tree->comparison_func);
-  if (n == NULL)
-    return NULL;
-
-  splay_to_root(tree, n);
-  return n->value;
 }
 
 /**
@@ -611,38 +741,16 @@ Node *private_splay_predecessor_of_value(SplayTree tree, void *value,
 /**
  * @brief
  */
-void splay_map_inorder(SplayTree tree,
-  void func_to_apply(void *value, int depth, void *cl), void *cl)
-{
-  int depth = 0;
-  splay_private_inorder_map(tree->root, depth, func_to_apply, cl);
-  return;
-}
-
-/**
- * @brief
- */
 void splay_private_inorder_map(Node *root, int depth,
-  void func_to_apply(void *value, int depth, void *cl), void *cl)
+  void func(void *value, int depth, void *cl), void *cl)
 {
   if (root->left != NULL)
-    splay_private_inorder_map(root->left, depth + 1, func_to_apply, cl);
+    splay_private_inorder_map(root->left, depth + 1, func, cl);
 
-  func_to_apply(root->value, depth, cl);
+  func(root->value, depth, cl);
 
   if (root->right != NULL)
-    splay_private_inorder_map(root->right, depth + 1, func_to_apply, cl);
-  return;
-}
-
-/**
- * @brief
- */
-void splay_map_preorder(SplayTree tree,
-  void func_to_apply(void *value, int depth, void *cl), void *cl)
-{
-  int depth = 0;
-  splay_private_preorder_map(tree->root, depth, func_to_apply, cl);
+    splay_private_inorder_map(root->right, depth + 1, func, cl);
   return;
 }
 
@@ -650,26 +758,15 @@ void splay_map_preorder(SplayTree tree,
  * @brief
  */
 void splay_private_preorder_map(Node *root, int depth,
-  void func_to_apply(void *value, int depth, void *cl), void *cl)
+  void func(void *value, int depth, void *cl), void *cl)
 {
-  func_to_apply(root->value, depth, cl);
+  func(root->value, depth, cl);
 
   if (root->left != NULL)
-    splay_private_preorder_map(root->left, depth + 1, func_to_apply, cl);
+    splay_private_preorder_map(root->left, depth + 1, func, cl);
 
   if (root->right != NULL)
-    splay_private_preorder_map(root->right, depth + 1, func_to_apply, cl);
-  return;
-}
-
-/**
- * @brief
- */
-void splay_map_postorder(SplayTree tree,
-  void func_to_apply(void *value, int depth, void *cl), void *cl)
-{
-  int depth = 0;
-  splay_private_postorder_map(tree->root, depth, func_to_apply, cl);
+    splay_private_preorder_map(root->right, depth + 1, func, cl);
   return;
 }
 
@@ -677,15 +774,15 @@ void splay_map_postorder(SplayTree tree,
  * @brief
  */
 void splay_private_postorder_map(Node *root, int depth,
-  void func_to_apply(void *value, int depth, void *cl), void *cl)
+  void func(void *value, int depth, void *cl), void *cl)
 {
   if (root->left != NULL)
-    splay_private_postorder_map(root->left, depth + 1, func_to_apply, cl);
+    splay_private_postorder_map(root->left, depth + 1, func, cl);
 
   if (root->right != NULL)
-    splay_private_postorder_map(root->right, depth + 1, func_to_apply, cl);
+    splay_private_postorder_map(root->right, depth + 1, func, cl);
 
-  func_to_apply(root->value, depth, cl);
+  func(root->value, depth, cl);
   return;
 }
 

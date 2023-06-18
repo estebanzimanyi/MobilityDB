@@ -58,9 +58,11 @@
 
 #define DEBUG(msg) elog(WARNING, "%s:%d %s", __FILE__, __LINE__, (msg))
 
+/*****************************************************************************/
+
 /**
-* Priority Queue Structure
-*/
+ * Priority queue data structure
+ */
 typedef struct PQueue_s
 {
   /* The actual size of heap at a certain time */
@@ -73,26 +75,12 @@ typedef struct PQueue_s
   int (*cmp)(const void *d1, const void *d2);
 } PQueue;
 
-/**
- * @brief Create a new priority queue.
- * @param cmp Pointer to a comparator function establishing priorities.
-*/
-PQueue *pqueue_make(int (*cmp)(const void *d1, const void *d2));
+/*****************************************************************************/
 
-/**
- * @brief De-allocates memory for a priority queue
- */
-void pqueue_free(PQueue *q);
-
-/**
- * @brief Add an element to the priority queue
- */
-void pqueue_enqueue(PQueue *q, const void *data);
-
-/**
- * @brief Remove the element with the greatest priority from within the queue
- */
-void *pqueue_dequeue(PQueue *q);
+extern PQueue *pqueue_make(int (*cmp)(const void *d1, const void *d2));
+extern void pqueue_free(PQueue *q);
+extern void pqueue_enqueue(PQueue *q, const void *data);
+extern void *pqueue_dequeue(PQueue *q);
 
 /*****************************************************************************/
 

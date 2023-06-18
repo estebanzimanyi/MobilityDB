@@ -45,6 +45,7 @@
 /* MEOS */
 #include "general/temporal.h"
 #include "point/tpoint.h"
+#include "point/vector.h"
 
 /*****************************************************************************/
 
@@ -67,15 +68,6 @@ typedef enum
 /*****************************************************************************
  * Vector data structure
  *****************************************************************************/
-
-typedef struct
-{
-  int capacity;
-  int length;
-  int16 flags;   /**< Flags determining whether the elements are passed by
-                  * value or by reference */
-  Datum *elems;
-} Vector;
 
 typedef struct
 {

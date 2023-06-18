@@ -986,10 +986,10 @@ closest_point3dz_on_segment_ratio(const POINT3DZ *p, const POINT3DZ *A,
  * @brief Return a float between 0 and 1 representing the location of the
  * closest point on the geography segment to the given point, as a fraction of
  * total segment length
- *@param[in] p Reference point
- *@param[in] A,B Points defining the segment
- *@param[out] closest Closest point in the segment
- *@param[out] dist Distance between the closest point and the reference point
+ * @param[in] p Reference point
+ * @param[in] A,B Points defining the segment
+ * @param[out] closest Closest point in the segment
+ * @param[out] dist Distance between the closest point and the reference point
  */
 long double
 closest_point_on_segment_sphere(const POINT4D *p, const POINT4D *A,
@@ -1032,7 +1032,7 @@ closest_point_on_segment_sphere(const POINT4D *p, const POINT4D *A,
 /**
  * @brief Find interpolation point p between geography points p1 and p2
  * so that the len(p1,p) == len(p1,p2)
- * f and p falls on p1,p2 segment
+ * @pre f and p falls on p1,p2 segment
  *
  * @param[in] p1,p2 3D-space points we are interpolating between
  * @param[in] v1,v2 real values and z/m coordinates
@@ -1128,9 +1128,9 @@ geosegm_interpolate_point(Datum start, Datum end, long double ratio)
  * @brief Return a float between 0 and 1 representing the location of the
  * closest point on the geometry segment to the given point, as a fraction of
  * total segment length
- *@param[in] start,end Points defining the segment
- *@param[in] point Reference point
- *@param[out] dist Distance
+ * @param[in] start,end Points defining the segment
+ * @param[in] point Reference point
+ * @param[out] dist Distance
  */
 long double
 geosegm_locate_point(Datum start, Datum end, Datum point, double *dist)

@@ -57,312 +57,6 @@
 #include "point/tpoint_spatialfuncs.h"
 
 /*****************************************************************************
- * Vector data structure
- *****************************************************************************/
-
-/* Constants defining the behaviour of expandable vectors */
-
-#define VECTOR_INITIAL_CAPACITY 1024
-#define VECTOR_GROW 1       /**< double the capacity to expand the vector */
-
-/**
- * @brief Return the position to store an additional element in the vector
- */
-static int
-vector_alloc(Vector *vector)
-{
-  /* If there is no more available space expand the vector */
-  if (vector->length >= vector->capacity)
-  {
-    /* PostgreSQL has a limit of MaxAllocSize = 1 gigabyte - 1. By default,
-     * the vector doubles the size when expanded. If doubling the size goes
-     * beyond MaxAllocSize, we allocate the maximum number of elements that
-     * fit within MaxAllocSize. If this maximum has been previously reached
-     * and more capacity is required, an error is generated. */
-    if (vector->capacity == (int) floor(MaxAllocSize / sizeof(void *)))
-      elog(ERROR, "No more memory available to add elements to the vector");
-    if (sizeof(void *) * (vector->capacity << 2) > MaxAllocSize)
-      vector->capacity = (int) floor(MaxAllocSize / sizeof(void *));
-    else
-      vector->capacity <<= VECTOR_GROW;
-    vector->elems = repalloc(vector->elems, sizeof(void *) * vector->capacity);
-  }
-
-  /* Return the next available entry */
-  int result = vector->length++;
-  return result;
-}
-
-/**
- * @brief Construct an empty vector
- */
-Vector *
-vector_make(bool typbyval)
-{
-  int capacity = VECTOR_INITIAL_CAPACITY;
-  Vector *result = palloc0(sizeof(Vector));
-  result->elems = palloc0(sizeof(void *) * capacity);
-  result->capacity = capacity;
-  result->length = 0;
-  MEOS_FLAGS_SET_BYVAL(result->flags, typbyval);
-  return result;
-}
-
-/* Wrapper function for the creation of vectors */
-Vector *
-vector_byref_make(void)
-{
-  return vector_make(TYPE_BY_REF);
-}
-
-/* Wrapper function for the creation of vectors */
-Vector *
-vector_byvalue_make(void)
-{
-  return vector_make(TYPE_BY_VALUE);
-}
-
-/**
- * @brief Append an element to a vector
- */
-void
-vector_append(Vector *vector, Datum elem)
-{
-  int pos = vector_alloc(vector);
-  vector->elems[pos] = elem;
-  return;
-}
-
-/**
- * @brief Get the element of a vector at a position
- */
-Datum
-vector_at(Vector *vector, int pos)
-{
-  assert(pos >= 0 && pos < vector->length);
-  return vector->elems[pos];
-}
-
-/**
- * @brief Set the element of a vector at a position
- */
-void
-vector_set(Vector *vector, int pos, Datum elem)
-{
-  assert(pos >= 0 && pos < vector->length);
-  vector->elems[pos] = elem;
-  return;
-}
-
-/**
- * @brief Free the vector
- */
-void
-vector_free(Vector *vector)
-{
-  assert(vector);
-  if (vector->elems)
-  {
-    /* Free the element values of the vector if they are passed by reference
-     * and they are not NULL */
-    if (MEOS_FLAGS_GET_BYVAL(vector->flags))
-    {
-      for (int i = 0; i < vector->length; i++)
-      {
-        void *ptr = DatumGetPointer(vector->elems[i]);
-        if (ptr)
-          pfree(ptr);
-      }
-    }
-    /* Free the element list */
-    pfree(vector->elems);
-  }
-  pfree(vector);
-  return;
-}
-
-/*****************************************************************************/
-#if 0 /* not used */
-/*****************************************************************************
- * List data structure
- *****************************************************************************/
-
-/* Constants defining the behaviour of lists */
-
-#define LIST_INITIAL_CAPACITY 1024
-#define LIST_GROW 1       /**< double the capacity to expand the list */
-#define LIST_INITIAL_FREELIST 32
-
-/**
- * Structure to represent list elements
- */
-typedef struct
-{
-  void *value;
-  int next;
-} ListElem;
-
-/**
- * Structure to represent lists
- */
-typedef struct
-{
-  int capacity;
-  int next;
-  int length;
-  int *freed;
-  int freecount;
-  int freecap;
-  int tail;
-  ListElem *elems;
-} List;
-
-/**
- * @brief Return the position to store an additional element in the list
- */
-static int
-list_alloc(List *list)
-{
-  /* Increase the number of values stored in the skip list */
-  list->length++;
-
-  /* If there is unused space left by a previously deleted element, reuse it */
-  if (list->freecount)
-  {
-    list->freecount--;
-    return list->freed[list->freecount];
-  }
-
-  /* If there is no more available space expand the list */
-  if (list->next >= list->capacity)
-  {
-    /* PostgreSQL has a limit of MaxAllocSize = 1 gigabyte - 1. By default,
-     * the list doubles the size when expanded. If doubling the size goes
-     * beyond MaxAllocSize, we allocate the maximum number of elements that
-     * fit within MaxAllocSize. If this maximum has been previously reached
-     * and more capacity is required, an error is generated. */
-    if (list->capacity == (int) floor(MaxAllocSize / sizeof(ListElem)))
-      elog(ERROR, "No more memory available to add elements to the list");
-    if (sizeof(ListElem) * (list->capacity << 2) > MaxAllocSize)
-      list->capacity = (int) floor(MaxAllocSize / sizeof(ListElem));
-    else
-      list->capacity <<= LIST_GROW;
-    list->elems = repalloc(list->elems, sizeof(ListElem) * list->capacity);
-  }
-
-  /* Return the first available entry */
-  list->next++;
-  return list->next - 1;
-}
-
-/**
- * @brief Delete an element from the list
- * @note The calling function is responsible to delete the value pointed by the
- * list element. This function simply sets the pointer to NULL.
- */
-static void
-list_delete(List *list, int cur)
-{
-  /* If the free list has not been yet created */
-  if (! list->freed)
-  {
-    list->freecap = LIST_INITIAL_FREELIST;
-    list->freed = palloc(sizeof(int) * list->freecap);
-  }
-  /* If there is no more available space in the free list, expand it*/
-  else if (list->freecount == list->freecap)
-  {
-    list->freecap <<= 1;
-    list->freed = repalloc(list->freed, sizeof(int) * list->freecap);
-  }
-  /* Mark the element as free */
-  list->elems[cur].value = NULL;
-  list->freed[list->freecount++] = cur;
-  list->length--;
-  return;
-}
-
-/**
- * @brief Free the list
- */
-void
-list_free(List *list)
-{
-  assert(list);
-  if (list->freed)
-    pfree(list->freed);
-  if (list->elems)
-  {
-    /* Free the element values of the list if they are not NULL */
-    int cur = 0;
-    while (cur != -1)
-    {
-      ListElem *e = &list->elems[cur];
-      if (e->value)
-        pfree(e->value);
-      cur = e->next;
-    }
-    /* Free the element list */
-    pfree(list->elems);
-  }
-  pfree(list);
-  return;
-}
-
-/**
- * @brief Return the value at the head of the list
- */
-void *
-list_headval(List *list)
-{
-  return list->elems[list->elems->next].value;
-}
-
-/**
- * @brief Return the value at the tail of the skiplist
- */
-void *
-list_tailval(List *list)
-{
-  /* This is O(n) */
-  ListElem *e = &list->elems[0];
-  while (e->next != list->tail)
-    e = &list->elems[e->next];
-  return e->value;
-}
-
-/**
- * @brief Constructs a list from the array of values
- * @param[in] values Array of values
- * @param[in] count Number of elements in the array
- */
-List *
-list_make(void **values, int count)
-{
-  assert(count > 0);
-
-  int capacity = LIST_INITIAL_CAPACITY;
-  count += 2; /* Account for head and tail */
-  while (capacity <= count)
-    capacity <<= 1;
-  List *result = palloc0(sizeof(List));
-  result->elems = palloc0(sizeof(ListElem) * capacity);
-  result->capacity = capacity;
-  result->next = count;
-  result->length = count - 2;
-
-  /* Fill values first */
-  result->elems[0].value = NULL; /* set head value to NULL */
-  for (int i = 0; i < count - 2; i++)
-    result->elems[i + 1].value = values[i];
-  result->elems[count - 1].value = NULL; /* set tail value to NULL */
-  result->tail = count - 1;
-  return result;
-}
-
-#endif /* not used */
-
-/*****************************************************************************
  * Points
  *****************************************************************************/
 
@@ -711,9 +405,9 @@ determineResultTransition(SweepEvent *event, ClipOpType operation)
 }
 
 /**
- * @brief
+ * @brief Compute the internal fields of the events
  * @param event,prev Sweepline events
- * @param Operation Clipping operation
+ * @param operation Clipping operation
  */
 void
 computeFields(SweepEvent *event, SweepEvent *prev, ClipOpType operation)
@@ -726,7 +420,7 @@ computeFields(SweepEvent *event, SweepEvent *prev, ClipOpType operation)
   }
   else
   {
-    /* previous line segment in sweepline belongs to the same polygon */
+    /* Previous line segment in sweepline belongs to the same polygon */
     if (event->isSubject == prev->isSubject)
     {
       event->inOut      = !prev->inOut;
@@ -734,12 +428,12 @@ computeFields(SweepEvent *event, SweepEvent *prev, ClipOpType operation)
     }
     else
     {
-      /* previous line segment in sweepline belongs to the clipping polygon */
+      /* Previous line segment in sweepline belongs to the clipping polygon */
       event->inOut      = ! prev->otherInOut;
       event->otherInOut = swev_isVertical(prev) ? ! prev->inOut : prev->inOut;
     }
 
-    /* compute prevInResult field */
+    /* Compute prevInResult field */
     if (prev)
     {
       event->prevInResult =
@@ -748,7 +442,7 @@ computeFields(SweepEvent *event, SweepEvent *prev, ClipOpType operation)
     }
   }
 
-  /* check if the line segment belongs to the Boolean operation */
+  /* Check if the line segment belongs to the Boolean operation */
   bool isInResult = inResult(event, operation);
   if (isInResult)
     event->resultTransition = determineResultTransition(event, operation);
@@ -758,8 +452,8 @@ computeFields(SweepEvent *event, SweepEvent *prev, ClipOpType operation)
 }
 
 /**
- * @brief Return the magnitude of the cross product of two vectors (if we
- * pretend they're in three dimensions)
+ * @brief Return the magnitude of the cross product of two vectors, pretending
+ * they are in three dimensions
  * @param a,b Vectors
  */
 double crossProduct(POINT2D *a, POINT2D *b)
@@ -777,7 +471,11 @@ double dotProduct(POINT2D *a, POINT2D *b)
 }
 
 /**
- * @brief
+ * @brief Set a point from a parametric equation
+ * @param[in] p Initial point
+ * @param[in] s Value in [0,1]
+ * @param[in] d Vector
+ * @param[out] result Resulting point
  */
 void setPoint(const POINT2D *p, double s, const POINT2D *d, POINT2D *result)
 {
@@ -788,15 +486,13 @@ void setPoint(const POINT2D *p, double s, const POINT2D *d, POINT2D *result)
 /**
  * @brief Find the intersection (if any) between two line segments a and b,
  * given the line segments' end points a1, a2 and b1, b2.
- *
- * This algorithm is based on Schneider and Eberly.
+ * @details This algorithm is based on Schneider and Eberly, page 244
  * http://www.cimec.org.ar/~ncalvo/Schneider_Eberly.pdf
- * Page 244.
- *
  * @param a1,a2 points of the first segment
  * @param b1,b2 points of the second segment
  * @param noEndpointTouch whether to skip single touchpoints (meaning
  * connected segments) as intersections
+ * @param[out] p1,p2 Intersection points, if any
  * @returns If the segments intersect, return 1 and the point of intersection
  * in p1. If they overlap, return 2 and the two end points of the overlapping
  * segment in p1 and p2. Otherwise, return 0.
@@ -917,9 +613,10 @@ segment_intersection(POINT2D *a1, POINT2D *a2, POINT2D *b1, POINT2D *b2,
 }
 
 /**
- * @param  e1, e2 SweepEvent
- * @param  {Queue}      queue
- * @return {Number}
+ * @brief Return the number of intersections between the segments associated to
+ * the events
+ * @param e1,e2 Sweepline events
+ * @param queue
  */
 int
 possibleIntersection(SweepEvent *e1, SweepEvent *e2, PQueue *queue)
@@ -1205,8 +902,8 @@ fill_queue(LWGEOM *geom, bool isSubject, PQueue *eventQueue)
 
 /**
  * @brief Select the events that are in the result and order them
- * @param sortedEvents Sorted sweepline events
- * @return {Array.<SweepEvent>}
+ * @param sortedEvents Vector of sorted sweepline events
+ * @return Vector of events
  */
 Vector *
 orderEvents(Vector *sortedEvents)
@@ -1262,13 +959,14 @@ orderEvents(Vector *sortedEvents)
 }
 
 /**
- * @brief
- * @param pos Position in the event array
- * @param  {Array.<SweepEvent>} resultEvents
- * @param  {Object>}    processed
- * @return {Number}
+ * @brief Return the number of the next position
+ * @param resultEvents Vector of sweepline events
+ * @param processed Vector of Boolean values stating whether the event has been
+ * already processed
+ * @param pos Position in the event vector
+ * @param origPos Original position in the event vector
  */
-int nextPos(int pos, Vector *resultEvents, Vector *processed, int origPos)
+int nextPos(Vector *resultEvents, Vector *processed, int pos, int origPos)
 {
   int newPos = pos + 1;
   SweepEvent *event = DatumGetSweepEventP(vector_at(resultEvents, pos));
@@ -1300,7 +998,7 @@ int nextPos(int pos, Vector *resultEvents, Vector *processed, int origPos)
 }
 
 /**
- * @brief
+ * @brief Create a contour from the argument contours
  */
 Contour *
 initializeContourFromContext(SweepEvent *event, Vector *contours,
@@ -1363,7 +1061,7 @@ initializeContourFromContext(SweepEvent *event, Vector *contours,
  * @brief Helper macro that combines marking an event as processed with
  * assigning its output contour ID
  */
-#define markAsProcessed(pos) \
+#define MARK_AS_PROCESSED(pos) \
   do { \
     vector_set(processed, (pos), BoolGetDatum(true)); \
     SweepEvent *event = DatumGetSweepEventP(vector_at(resultEvents, (pos))); \
@@ -1374,7 +1072,7 @@ initializeContourFromContext(SweepEvent *event, Vector *contours,
 /**
  * @brief Connect the edges from the events into an vector of polygons
  * @param sortedEvents Vector of sweepline events
- * @return polygons Vector of polygons
+ * @return Vector of contours
  */
 Vector *
 connectEdges(Vector *sortedEvents)
@@ -1402,12 +1100,12 @@ connectEdges(Vector *sortedEvents)
     vector_append(contour->points, PointerGetDatum(initial));
     while (true)
     {
-      markAsProcessed(pos);
+      MARK_AS_PROCESSED(pos);
       event = DatumGetSweepEventP(vector_at(resultEvents, pos));
       pos = event->otherPos;
-      markAsProcessed(pos);
+      MARK_AS_PROCESSED(pos);
       vector_append(contour->points, PointerGetDatum(&event->point));
-      pos = nextPos(pos, resultEvents, processed, origPos);
+      pos = nextPos(resultEvents, processed, pos, origPos);
       if (pos == origPos || pos >= resultEvents->length || ! event)
         break;
     }

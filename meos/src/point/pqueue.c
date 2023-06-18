@@ -38,6 +38,7 @@
 #include "point/pqueue.h"
 
 /* C */
+#include <assert.h>
 #include <math.h>
 /* PostgreSQL */
 #include <postgres.h>
@@ -84,48 +85,49 @@ static void queue_expand(PQueue *queue)
 /**
  * @brief Turn an "almost-heap" into a heap
  */
-void pqueue_heapify(PQueue *q, size_t idx)
+void pqueue_heapify(PQueue *queue, size_t idx)
 {
   /* left index, right index, smallest index */
   size_t l_idx, r_idx, small_idx;
-  NP_CHECK(q);
+  NP_CHECK(queue);
 
   l_idx = LEFT(idx);
   r_idx = RIGHT(idx);
 
   /* Left child exists, compare left child with its parent */
-  if (l_idx < q->length && q->cmp(q->elems[l_idx], q->elems[idx]) < 0)
+  if (l_idx < queue->length && queue->cmp(queue->elems[l_idx], queue->elems[idx]) < 0)
     small_idx = l_idx;
   else
     small_idx = idx;
 
   /* Right child exists, compare right child with the smallest element */
-  if (r_idx < q->length && q->cmp(q->elems[r_idx], q->elems[small_idx]) < 0)
+  if (r_idx < queue->length && queue->cmp(queue->elems[r_idx], queue->elems[small_idx]) < 0)
     small_idx = r_idx;
 
   /* At this point smallest element was determined */
   if (small_idx != idx)
   {
     /* Swap between the index at the smallest element */
-    void *tmp = q->elems[small_idx];
-    q->elems[small_idx] = q->elems[idx];
-    q->elems[idx] = tmp;
+    void *tmp = queue->elems[small_idx];
+    queue->elems[small_idx] = queue->elems[idx];
+    queue->elems[idx] = tmp;
     /* Heapify again */
-    pqueue_heapify(q, small_idx);
+    pqueue_heapify(queue, small_idx);
   }
 }
 
 /**
  * @brief Create a new priority queue
- * @param cmp Compare function that
- *   returns 0 if d1 and d2 have the same priorities
- *   returns [negative value] if d1 have a smaller priority than d2
- *   returns [positive value] if d1 have a greater priority than d2
+ * @param cmp Compare function that returns
+ * - 0 if d1 and d2 have the same priorities
+ * - [negative value] if d1 have a smaller priority than d2
+ * - [positive value] if d1 have a greater priority than d2
+ * @pre The argument function is not NULL
 */
 PQueue *pqueue_make(int (*cmp)(const void *d1, const void *d2))
 {
+  assert(cmp != NULL);
   PQueue *result = NULL;
-  NP_CHECK(cmp);
   result = palloc(sizeof(*result));
   NP_CHECK(result);
   result->cmp = cmp;
@@ -139,60 +141,62 @@ PQueue *pqueue_make(int (*cmp)(const void *d1, const void *d2))
 
 /**
  * @brief De-allocate memory for a priority queue
+ * @pre queue is not NULL
  */
-void pqueue_free(PQueue *q)
+void pqueue_free(PQueue *queue)
 {
-  if (q)
-  {
-    pfree(q->elems);
-    pfree(q);
-  }
+  assert(queue != NULL);
+  pfree(queue->elems);
+  pfree(queue);
+  queue = NULL;
   return;
 }
 
 /**
  * @brief Add a new element to the priority queue
+ * @pre queue is not NULL and elemen is not NULL
  */
-void pqueue_enqueue(PQueue *q, const void *elem)
+void pqueue_enqueue(PQueue *queue, const void *elem)
 {
-  NP_CHECK(q);
-  if (q->length >= q->capacity)
-    queue_expand(q);
+  assert(queue != NULL && elem != NULL);
+  if (queue->length >= queue->capacity)
+    queue_expand(queue);
 
   /* Adds element last */
-  q->elems[q->length] = (void *) elem;
-  size_t i = q->length;
-  q->length++;
+  queue->elems[queue->length] = (void *) elem;
+  size_t i = queue->length;
+  queue->length++;
   /* The new element is swapped with its parent as long as its
    * precedence is smaller */
-  while(i > 0 && q->cmp(q->elems[i], q->elems[PARENT(i)]) < 0)
+  while(i > 0 && queue->cmp(queue->elems[i], queue->elems[PARENT(i)]) < 0)
   {
-    void *tmp = q->elems[i];
-    q->elems[i] = q->elems[PARENT(i)];
-    q->elems[PARENT(i)] = tmp;
+    void *tmp = queue->elems[i];
+    queue->elems[i] = queue->elems[PARENT(i)];
+    queue->elems[PARENT(i)] = tmp;
     i = PARENT(i);
   }
 }
 
 /**
  * @brief Return the element with the highest priority from the queue
+ * @pre queue is not NULL
  */
 void *
-pqueue_dequeue(PQueue *q)
+pqueue_dequeue(PQueue *queue)
 {
+  assert(queue != NULL);
   void *result = NULL;
-  NP_CHECK(q);
-  if (q->length < 1)
+  if (queue->length < 1)
   {
      /* Priority Queue is empty */
-     DEBUG("Priority Queue underflow . Cannot remove another element .");
+     elog(WARNING, "Priority Queue underflow: Cannot remove another element.");
      return NULL;
   }
-  result = q->elems[0];
-  q->elems[0] = q->elems[q->length - 1];
-  q->length--;
+  result = queue->elems[0];
+  queue->elems[0] = queue->elems[queue->length - 1];
+  queue->length--;
   /* Restore heap property */
-  pqueue_heapify(q, 0);
+  pqueue_heapify(queue, 0);
   return (result);
 }
 
