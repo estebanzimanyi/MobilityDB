@@ -47,14 +47,14 @@ typedef struct splay_tree *SplayTree;
 extern SplayTree splay_new(void *comparison_func);
 extern void splay_free(SplayTree tree);
 extern bool splay_is_empty(SplayTree tree);
-extern void *splay_get_value_at_root(SplayTree tree);
-extern void splay_insert_value(SplayTree tree, void *value);
+extern void *splay_root(SplayTree tree);
+extern void splay_insert(SplayTree tree, void *value);
 extern void *splay_search(SplayTree tree, void *value);
-extern void splay_delete_value(SplayTree tree, void *value);
-extern void *splay_tree_minimum(SplayTree tree);
-extern void *splay_tree_maximum(SplayTree tree);
-extern void *splay_successor_of_value(SplayTree tree, void *value);
-extern void *splay_predecessor_of_value(SplayTree tree, void *value);
+extern void splay_delete(SplayTree tree, void *value);
+extern void *splay_min(SplayTree tree);
+extern void *splay_max(SplayTree tree);
+extern void *splay_next(SplayTree tree, void *value);
+extern void *splay_prev(SplayTree tree, void *value);
 extern void splay_map_inorder(SplayTree tree,
   void func_to_apply(void *value, int depth, void *cl), void *cl);
 extern void splay_map_preorder(SplayTree tree,

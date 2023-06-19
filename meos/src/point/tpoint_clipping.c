@@ -306,6 +306,179 @@ compareSegments(SweepEvent *e1, SweepEvent *e2)
   return swev_compare(e1, e2) == 1 ? 1 : -1;
 }
 
+/*****************************************************************************
+ * Queue
+ * -----
+ * To explain the various steps of the algorith we use the following example
+ * polygons P and Q
+ *
+ *                         3-----------------4
+ *    3-----------8        |                 |
+ *    |           |        |                 |
+ *    |  6-----7  |        |                 |
+ *    |  |     |  |        |                 |
+ *    |  |     |  |        |                 |
+ *    |  4-----5  |        |                 |
+ *    |           |        |                 |
+ *    1-----------2        |                 |
+ *                         1-----------------2
+ *         P                       Q
+ *
+ *  3*****************4      3-----------------4
+ *  *  3-----------8  *      |  3***********8  |
+ *  *  |           |  *      |  *           *  |
+ *  *  |  6*****7  |  *      |  *  6*****7  *  |
+ *  *  |  *     *  |  *      |  *  |     |  *  |
+ *  *  |  *     *  |  *      |  *  |     |  *  |
+ *  *  |  4*****5  |  *      |  *  4*****5  *  |
+ *  *  |           |  *      |  *           *  |
+ *  *  1-----------2  *      |  1***********2  |
+ *  1*****************2      1-----------------2
+ *       Union               Intersection
+ *
+ * The first step of the algorithm create sweepline events for the left and
+ * right point of each segment and introduces these events into a priority
+ * queue using a lexicographic order, i.e., based on the order of x and
+ * then y, and for edges sharing the same initial point, a vertical segment is
+ * after the other segments. Each left/rigth event is connected to the other
+ * event of the segment.
+ *
+ * The resulting queue after inserting the three contours is as follows, where
+ * the number between brackets is the position on the queue, the top point is
+ * the one of the event, and the bottom point is the one of the other event of
+ * the segment
+ * @code
+ *  [0]   [1]   [2]   [3]   [4]   [5]   [6]   [7]   [8]   [9]   [10]  [11] ...
+ * (0,0) (0,0) (0,6) (0,6) (1,1) (1,1) (5,5) (1,5) (2,3) (1,5) (3,4) (2,3) ...
+ *   |     |     |     |     |     |     |     |     |     |     |     |   ...
+ *   v     v     v     v     v     v     v     v     v     v     v     v   ...
+ * (6,0) (0,6) (6,6) (0,0) (1,5) (5,1) (1,5) (1,1) (3,2) (5,5) (4,3) (3,4) ...
+ *
+ *  [12]  [13]  [14]  [15]  [16]  [17]  [18]  [19]  [20]  [21]  [22]  [23]
+ * (6,6) (6,0) (6,0) (5,1) (5,5) (3,2) (3,2) (4,3) (5,1) (4,3) (6,6) (3,4)
+ *   |     |     |     |     |     |     |     |     |     |     |     |
+ *   v     v     v     v     v     v     v     v     v     v     v     v
+ * (6,0) (6,6) (0,0) (1,1) (5,1) (2,3) (4,3) (3,2) (5,5) (3,4) (0,6) (2,3)
+ * @endcode
+ *****************************************************************************/
+
+/**
+ * @brief Insert the points of a linear ring into the priority queue
+ */
+void
+processRing(POINTARRAY *contourOrHole, int depth, bool isSubject,
+  bool isExteriorRing, PQueue *eventQueue)
+{
+  POINT2D *s1, *s2;
+  SweepEvent *e1, *e2;
+  for (uint32_t i = 0; i < contourOrHole->npoints - 1; i++)
+  {
+    s1 = (POINT2D *) getPoint_internal(contourOrHole, i);
+    s2 = (POINT2D *) getPoint_internal(contourOrHole, i + 1);
+    e1 = swev_make(s1, false, NULL, isSubject, EDGE_NORMAL);
+    e2 = swev_make(s2, false, e1,   isSubject, EDGE_NORMAL);
+    e1->otherEvent = e2;
+
+    if (s1->x == s2->x && s1->y == s2->y)
+      continue; /* skip collapsed edges, or it breaks */
+
+    e1->contourId = e2->contourId = depth;
+    if (! isExteriorRing)
+    {
+      e1->isExteriorRing = false;
+      e2->isExteriorRing = false;
+    }
+    if (swev_compare(e1, e2) > 0)
+      e2->left = true;
+    else
+      e1->left = true;
+
+    /* Pushing it so the queue is sorted from left to right,
+     * with object on the left having the highest priority. */
+    pqueue_enqueue(eventQueue, e1);
+    pqueue_enqueue(eventQueue, e2);
+  }
+}
+
+/**
+ * @brief Insert the points of a (multi)polygon into the priority queue
+ */
+void
+fill_queue(LWGEOM *geom, bool isSubject, PQueue *eventQueue)
+{
+  uint32_t type = lwgeom_get_type(geom);
+  int npoly;
+  LWPOLY *poly = NULL; /* make compiler quiet */
+  LWMPOLY *multi = NULL; /* make compiler quiet */
+  if (type == POLYGONTYPE)
+  {
+    npoly = 1;
+    poly = lwgeom_as_lwpoly(geom);
+  }
+  else /* lwgeom_get_type(geom) == MULTIPOLYGONTYPE */
+  {
+    multi = lwgeom_as_lwmpoly(geom);
+    npoly = multi->ngeoms;
+  }
+  /* Loop for every polygon */
+  for (int i = 0; i < npoly; i++)
+  {
+    /* Find the i-th polygon if argument is a multipolygon */
+    if (npoly > 1)
+      poly = multi->geoms[i];
+    int contourId = 0;
+    /* Loop for every ring */
+    for (uint32_t j = 0; j < poly->nrings; j++)
+    {
+      bool isExteriorRing = (j == 0);
+      if (isExteriorRing) contourId++;
+      processRing(poly->rings[j], contourId, isSubject, isExteriorRing,
+        eventQueue);
+    }
+  }
+  return;
+}
+
+/*****************************************************************************
+ * Divide segments
+ * ---------------
+ * The second step of the algorithm divides segments that cross or overlap.
+ * In our example polygons above there are no intersections and no events are
+ * subdivided.
+ * In addition to this, this step computes internal fields of the event that
+ * are necessary for selecting only the events that will be in the result and
+ * that are passed to the second step of the algorithm to construct the rings.
+ * In our example above, for intersection the outer ring should be removed
+ * leading to the following vector of events
+ * @code
+ *  [0]   [1]   [2]   [3]   [4]   [5]   [6]   [7]   [8]   [9]   [10]  [11] ...
+ * (0,0) (0,0) (0,6) (0,6) (1,1) (1,1) (5,5) (1,5) (2,3) (1,5) (3,4) (2,3) ...
+ *   |     |     |     |     |     |     |     |     |     |     |     |   ...
+ *   v     v     v     v     v     v     v     v     v     v     v     v   ...
+ * (6,0) (0,6) (6,6) (0,0) (1,5) (5,1) (1,5) (1,1) (3,2) (5,5) (4,3) (3,4) ...
+ *
+ *  [12]  [13]  [14]  [15]  [16]  [17]  [18]  [19]  [20]  [21]  [22]  [23]
+ * (6,6) (6,0) (6,0) (5,1) (5,5) (3,2) (3,2) (4,3) (5,1) (4,3) (6,6) (3,4)
+ *   |     |     |     |     |     |     |     |     |     |     |     |
+ *   v     v     v     v     v     v     v     v     v     v     v     v
+ * (6,0) (6,6) (0,0) (1,1) (5,1) (2,3) (4,3) (3,2) (5,5) (3,4) (0,6) (2,3)
+ * @endcode
+ *
+ * @code
+ [0]   [1]   [2]   [3]   [4]   [5]   [6]   [7]   [8]   [9]   [10]
+(0,0) (0,0) (0,6) (0,6) (1,1) (1,1) (1,5) (1,5) (2,3) (2,3) (3,2)
+  |     |     |     |     |     |     |     |     |     |     |
+  v     v     v     v     v     v     v     v     v     v     v
+(6,0) (0,6) (0,0) (6,6) (5,1) (1,5) (1,1) (5,5) (3,2) (3,4) (2,3)
+
+ [11]  [12]  [13]  [14]  [15]  [16]  [17]  [18]  [19]  [20]
+(3,2) (3,4) (3,4) (4,3) (4,3) (5,1) (5,1) (5,5) (5,5) (6,0)
+  |     |     |     |     |     |     |     |     |     |
+  v     v     v     v     v     v     v     v     v     v
+(4,3) (2,3) (4,3) (3,2) (3,4) (1,1) (5,5) (5,1) (1,5) (0,0)
+ * @endcode
+ *****************************************************************************/
+
 /**
  * @brief Divide the event of a segment into two events and push them into the
  * queue
@@ -317,7 +490,7 @@ divideSegment(SweepEvent *e, POINT2D *p, PQueue *queue)
   SweepEvent *l = swev_make(p, true,  e->otherEvent, e->isSubject, EDGE_NORMAL);
 
   if (point2d_eq(&e->point, &e->otherEvent->point))
-    elog(WARNING, "what is that, a collapsed segment?");
+    elog(ERROR, "A collapsed segment cannot be in the result");
 
   r->contourId = l->contourId = e->contourId;
 
@@ -338,117 +511,6 @@ divideSegment(SweepEvent *e, POINT2D *p, PQueue *queue)
   pqueue_enqueue(queue, r);
 
   return queue;
-}
-
-/**
- * @brief Return true if the event is in the result of the operation
- */
-bool
-inResult(SweepEvent *event, ClipOper operation)
-{
-  switch (event->type)
-  {
-    case EDGE_NORMAL:
-      switch (operation)
-      {
-        case CL_INTERSECTION:
-          return ! event->otherInOut;
-        case CL_UNION:
-          return event->otherInOut;
-        case CL_DIFFERENCE:
-          // return (event->isSubject && !event->otherInOut) ||
-          //         (!event->isSubject && event->otherInOut);
-          return (event->isSubject && event->otherInOut) ||
-                  (! event->isSubject && ! event->otherInOut);
-        case CL_XOR:
-          return true;
-      }
-      break;
-    case EDGE_SAME_TRANSITION:
-      return operation == CL_INTERSECTION || operation == CL_UNION;
-    case EDGE_DIFFERENT_TRANSITION:
-      return operation == CL_DIFFERENCE;
-    case EDGE_NON_CONTRIBUTING:
-      return false;
-  }
-  return false;
-}
-
-/**
- * @brief
- */
-int
-determineResultTransition(SweepEvent *event, ClipOper operation)
-{
-  bool thisIn = ! event->inOut;
-  bool thatIn = ! event->otherInOut;
-  bool isIn = false; /* make compiler quiet */
-  switch (operation)
-  {
-    case CL_INTERSECTION:
-      isIn = thisIn && thatIn;
-      break;
-    case CL_UNION:
-      isIn = thisIn || thatIn;
-      break;
-    case CL_XOR:
-      isIn = thisIn ^ thatIn;
-      break;
-    case CL_DIFFERENCE:
-      if (event->isSubject)
-        isIn = thisIn && ! thatIn;
-      else
-        isIn = thatIn && ! thisIn;
-      break;
-  }
-  return isIn ? +1 : -1;
-}
-
-/**
- * @brief Compute the internal fields of the events
- * @param event,prev Sweepline events
- * @param operation Clipping operation
- */
-void
-computeFields(SweepEvent *event, SweepEvent *prev, ClipOper operation)
-{
-  /* compute inOut and otherInOut fields */
-  if (prev == NULL)
-  {
-    event->inOut      = false;
-    event->otherInOut = true;
-  }
-  else
-  {
-    /* Previous line segment in sweepline belongs to the same polygon */
-    if (event->isSubject == prev->isSubject)
-    {
-      event->inOut      = !prev->inOut;
-      event->otherInOut = prev->otherInOut;
-    }
-    else
-    {
-      /* Previous line segment in sweepline belongs to the clipping polygon */
-      event->inOut      = ! prev->otherInOut;
-      event->otherInOut = swev_isVertical(prev) ? ! prev->inOut : prev->inOut;
-    }
-
-    /* Compute prevInResult field */
-    if (prev)
-    {
-      event->prevInResult =
-        (! inResult(prev, operation) || swev_isVertical(prev)) ?
-        prev->prevInResult : prev;
-    }
-  }
-
-  /* Check if the line segment belongs to the Boolean operation */
-  bool isInResult = inResult(event, operation);
-  if (isInResult)
-    event->resultTransition = determineResultTransition(event, operation);
-  else
-    event->resultTransition = 0;
-  return;
 }
 
 /**
@@ -613,10 +675,19 @@ segment_intersection(POINT2D *a1, POINT2D *a2, POINT2D *b1, POINT2D *b2,
 }
 
 /**
- * @brief Return the number of intersections between the segments associated to
- * the events
+ * @brief Divide the events of the two segments if they intersect
+ * @details The function divides segments that cross or overlap and thus,
+ * - replaces the 4 events of two segments a--x--b and c--x--d that intersect
+ *   at a point x in the middle by 8 events a--x,  x--b, a--x, and x--b
+ * - replaces the 2 events of a segment a--x--b that intersect at an endpoint
+ *   of one segment c--d (say x = c) by a--c and c--b
+ * - replaces the 4 events of two segments a--b and c--d that overlap as
+ *   follows a--c==b--d by a--c, c--b, and b--d
+ * - replaces the 4 events of two segments a--b and c--d that overlap as
+ *   follows a/c====b--d by a--b, c--b, and b--d
  * @param e1,e2 Sweepline events
  * @param queue
+ * @result Number of intersections of the segments associated to the events
  */
 int
 possibleIntersection(SweepEvent *e1, SweepEvent *e2, PQueue *queue)
@@ -628,7 +699,8 @@ possibleIntersection(SweepEvent *e1, SweepEvent *e2, PQueue *queue)
   int nintersections = segment_intersection(&e1->point, &e1->otherEvent->point,
     &e2->point, &e2->otherEvent->point, false, &p1, &p2);
 
-  if (nintersections == 0) return 0; /* no intersection */
+  if (nintersections == 0)
+    return 0; /* no intersection */
 
   /* The line segments intersect at an endpoint of both line segments */
   if ((nintersections == 1) &&
@@ -731,50 +803,166 @@ possibleIntersection(SweepEvent *e1, SweepEvent *e2, PQueue *queue)
  *****************************************************************************/
 
 /**
- * @brief Subdivide the segments of the event queue
+ * @brief Return true if the event is in the result of the operation
+ */
+bool
+inResult(SweepEvent *event, ClipOper oper)
+{
+  switch (event->type)
+  {
+    case EDGE_NORMAL:
+      switch (oper)
+      {
+        case CL_INTERSECTION:
+          return ! event->otherInOut;
+        case CL_UNION:
+          return event->otherInOut;
+        case CL_DIFFERENCE:
+          // return (event->isSubject && !event->otherInOut) ||
+          //         (!event->isSubject && event->otherInOut);
+          return (event->isSubject && event->otherInOut) ||
+                  (! event->isSubject && ! event->otherInOut);
+        case CL_XOR:
+          return true;
+      }
+      break;
+    case EDGE_SAME_TRANSITION:
+      return oper == CL_INTERSECTION || oper == CL_UNION;
+    case EDGE_DIFFERENT_TRANSITION:
+      return oper == CL_DIFFERENCE;
+    case EDGE_NON_CONTRIBUTING:
+      return false;
+  }
+  return false;
+}
+
+/**
+ * @brief
+ */
+int
+determineResultTransition(SweepEvent *event, ClipOper oper)
+{
+  bool thisIn = ! event->inOut;
+  bool thatIn = ! event->otherInOut;
+  bool isIn = false; /* make compiler quiet */
+  switch (oper)
+  {
+    case CL_INTERSECTION:
+      isIn = thisIn && thatIn;
+      break;
+    case CL_UNION:
+      isIn = thisIn || thatIn;
+      break;
+    case CL_XOR:
+      isIn = thisIn ^ thatIn;
+      break;
+    case CL_DIFFERENCE:
+      if (event->isSubject)
+        isIn = thisIn && ! thatIn;
+      else
+        isIn = thatIn && ! thisIn;
+      break;
+  }
+  return isIn ? +1 : -1;
+}
+
+/**
+ * @brief Compute the internal fields of the events preparing for the second
+ * phase of the algorithm, that is, connecting the segments into contours
+ * @param event,prev Sweepline events
+ * @param oper Clipping operation
+ */
+void
+computeFields(SweepEvent *event, SweepEvent *prev, ClipOper oper)
+{
+  /* compute inOut and otherInOut fields */
+  if (prev == NULL)
+  {
+    event->inOut      = false;
+    event->otherInOut = true;
+  }
+  else
+  {
+    /* Previous line segment in sweepline belongs to the same polygon */
+    if (event->isSubject == prev->isSubject)
+    {
+      event->inOut      = !prev->inOut;
+      event->otherInOut = prev->otherInOut;
+    }
+    else
+    {
+      /* Previous line segment in sweepline belongs to the clipping polygon */
+      event->inOut      = ! prev->otherInOut;
+      event->otherInOut = swev_isVertical(prev) ? ! prev->inOut : prev->inOut;
+    }
+
+    /* Compute prevInResult field */
+    if (prev)
+    {
+      event->prevInResult =
+        (! inResult(prev, oper) || swev_isVertical(prev)) ?
+        prev->prevInResult : prev;
+    }
+  }
+
+  /* Check if the line segment belongs to the Boolean operation */
+  bool isInResult = inResult(event, oper);
+  if (isInResult)
+    event->resultTransition = determineResultTransition(event, oper);
+  else
+    event->resultTransition = 0;
+  return;
+}
+
+/**
+ * @brief Subdivide the segments of the event queue precomputing internal
+ * fields needed for the second phase of the computation
  */
 Vector *
-subdivideSegments(PQueue *eventQueue, GBOX *sbbox, GBOX *clbox,
-  ClipOper operation)
+subdivideSegments(PQueue *eventQueue, GBOX *sbbox, GBOX *clbox, ClipOper oper)
 {
   SplayTree sweepLine = splay_new(&compareSegments);
   Vector *sortedEvents = vector_byref_make();
   double rightbound = fmin(sbbox->xmax, clbox->xmax);
-  SweepEvent *event, *prev, *next, *begin = NULL, *prevEvent,
-    *prevprevEvent;
+  SweepEvent *event, *prev, *next, *begin = NULL, *prevEvent, *prevprevEvent;
   /* loop for every event in the queue */
   while (eventQueue->length != 0)
   {
     /* Remove the event from the queue and insert it into the sweepline */
     event = pqueue_dequeue(eventQueue);
-    vector_append(sortedEvents, PointerGetDatum(event));
 
-    /* optimization by bboxes for intersection and difference */
-    if ((operation == CL_INTERSECTION && event->point.x > rightbound) ||
-        (operation == CL_DIFFERENCE   && event->point.x > sbbox->xmax))
+    /* Optimization by bounding boxes for intersection and difference */
+    if ((oper == CL_INTERSECTION && event->point.x > rightbound) ||
+        (oper == CL_DIFFERENCE   && event->point.x > sbbox->xmax))
+    {
+      // TODO pfree(event);
       break;
+    }
+
+    /* Insert the event into the sweepline */
+    vector_append(sortedEvents, PointerGetDatum(event));
 
     if (event->left)
     {
       next = prev = event;
-      splay_insert_value(sweepLine, event);
-      begin = splay_tree_minimum(sweepLine);
+      splay_insert(sweepLine, event);
+      begin = splay_min(sweepLine);
 
       if (prev != begin)
-        prev = splay_predecessor_of_value(sweepLine, prev);
+        prev = splay_prev(sweepLine, prev);
       else
         prev = NULL;
 
-      next = splay_successor_of_value(sweepLine, next);
+      next = splay_next(sweepLine, next);
 
       prevEvent = prev ? prev : NULL;
-      computeFields(event, prevEvent, operation);
+      computeFields(event, prevEvent, oper);
       if (next)
       {
         if (possibleIntersection(event, next, eventQueue) == 2)
         {
-          computeFields(event, prevEvent, operation);
-          computeFields(next, event, operation);
+          computeFields(event, prevEvent, oper);
+          computeFields(next, event, oper);
         }
       }
 
@@ -784,13 +972,13 @@ subdivideSegments(PQueue *eventQueue, GBOX *sbbox, GBOX *clbox,
         {
           SweepEvent *prevprev = prev;
           if (prevprev != begin)
-            prevprev = splay_predecessor_of_value(sweepLine, prevprev);
+            prevprev = splay_prev(sweepLine, prevprev);
           else
             prevprev = NULL;
 
           prevprevEvent = prevprev ? prevprev : NULL;
-          computeFields(prevEvent, prevprevEvent, operation);
-          computeFields(event,     prevEvent,     operation);
+          computeFields(prevEvent, prevprevEvent, oper);
+          computeFields(event,     prevEvent,     oper);
         }
       }
     }
@@ -802,98 +990,25 @@ subdivideSegments(PQueue *eventQueue, GBOX *sbbox, GBOX *clbox,
       if (prev && next)
       {
         if (prev != begin)
-          prev = splay_predecessor_of_value(sweepLine, prev);
+          prev = splay_prev(sweepLine, prev);
         else
           prev = NULL;
 
-        next = splay_successor_of_value(sweepLine, next);
-        splay_delete_value(sweepLine, event);
+        next = splay_next(sweepLine, next);
+        splay_delete(sweepLine, event);
 
         if (next && prev)
           possibleIntersection(prev, next, eventQueue);
       }
     }
   }
-  /* Free the sweepline */
+  /* Free the sweepline
+   * We arrive may here on a break after the bounding box test and thus before
+   * all events of the sweepline have been shifted to sortedEvents.
+   * We do not free events in the sweepline since they are freed either in
+   * the eventQueue or in sortedEvents */
   splay_free(sweepLine);
   return sortedEvents;
-}
-
-/**
- * @brief Insert the points of a linear ring into the priority queue
- */
-void
-processRing(POINTARRAY *contourOrHole, int depth, bool isSubject,
-  bool isExteriorRing, PQueue *eventQueue)
-{
-  POINT2D *s1, *s2;
-  SweepEvent *e1, *e2;
-  for (uint32_t i = 0; i < contourOrHole->npoints - 1; i++)
-  {
-    s1 = (POINT2D *) getPoint_internal(contourOrHole, i);
-    s2 = (POINT2D *) getPoint_internal(contourOrHole, i + 1);
-    e1 = swev_make(s1, false, NULL, isSubject, EDGE_NORMAL);
-    e2 = swev_make(s2, false, e1,   isSubject, EDGE_NORMAL);
-    e1->otherEvent = e2;
-
-    if (s1->x == s2->x && s1->y == s2->y)
-      continue; /* skip collapsed edges, or it breaks */
-
-    e1->contourId = e2->contourId = depth;
-    if (! isExteriorRing)
-    {
-      e1->isExteriorRing = false;
-      e2->isExteriorRing = false;
-    }
-    if (swev_compare(e1, e2) > 0)
-      e2->left = true;
-    else
-      e1->left = true;
-
-    /* Pushing it so the queue is sorted from left to right,
-     * with object on the left having the highest priority. */
-    pqueue_enqueue(eventQueue, e1);
-    pqueue_enqueue(eventQueue, e2);
-  }
-}
-
-/**
- * @brief Insert the points of a (multi)polygon into the priority queue
- */
-void
-fill_queue(LWGEOM *geom, bool isSubject, PQueue *eventQueue)
-{
-  uint32_t type = lwgeom_get_type(geom);
-  int npoly;
-  LWPOLY *poly = NULL; /* make compiler quiet */
-  LWMPOLY *multi = NULL; /* make compiler quiet */
-  if (type == POLYGONTYPE)
-  {
-    npoly = 1;
-    poly = lwgeom_as_lwpoly(geom);
-  }
-  else /* lwgeom_get_type(geom) == MULTIPOLYGONTYPE */
-  {
-    multi = lwgeom_as_lwmpoly(geom);
-    npoly = multi->ngeoms;
-  }
-  /* Loop for every polygon */
-  for (int i = 0; i < npoly; i++)
-  {
-    /* Find the i-th polygon if argument is a multipolygon */
-    if (npoly > 1)
-      poly = multi->geoms[i];
-    int contourId = 0;
-    /* Loop for every ring */
-    for (uint32_t j = 0; j < poly->nrings; j++)
-    {
-      bool isExteriorRing = (j == 0);
-      if (isExteriorRing) contourId++;
-      processRing(poly->rings[j], contourId, isSubject, isExteriorRing,
-        eventQueue);
-    }
-  }
-  return;
 }
 
 /*****************************************************************************
@@ -1136,19 +1251,18 @@ ptvec_to_ptarray(Vector *points)
  * @brief Clip the two polygons using the operation
  */
 GSERIALIZED *
-clip_poly_poly(const GSERIALIZED *subj, const GSERIALIZED *clip,
-  ClipOper operation)
+clip_poly_poly(const GSERIALIZED *subj, const GSERIALIZED *clip, ClipOper oper)
 {
   /* Trivial operation if at least one geometry is empty */
   bool empty_subj = gserialized_is_empty(subj);
   bool empty_clip = gserialized_is_empty(clip);
   if (empty_subj || empty_clip)
   {
-    if (operation == CL_INTERSECTION)
+    if (oper == CL_INTERSECTION)
       return NULL;
-    else if (operation == CL_DIFFERENCE)
+    else if (oper == CL_DIFFERENCE)
       return gserialized_copy(subj);
-    else if (operation == CL_UNION || operation == CL_XOR)
+    else if (oper == CL_UNION || oper == CL_XOR)
       return empty_subj ? gserialized_copy(clip) : gserialized_copy(subj);
   }
 
@@ -1160,11 +1274,11 @@ clip_poly_poly(const GSERIALIZED *subj, const GSERIALIZED *clip,
       gserialized_get_gbox_p(clip, &clbox) &&
       gbox_overlaps_2d(&sbbox, &clbox) == LW_FALSE)
   {
-    if (operation == CL_INTERSECTION)
+    if (oper == CL_INTERSECTION)
       return NULL;
-    else if (operation == CL_DIFFERENCE)
+    else if (oper == CL_DIFFERENCE)
       return gserialized_copy(subj);
-    else if (operation == CL_UNION || operation == CL_XOR)
+    else if (oper == CL_UNION || oper == CL_XOR)
       return gserialized_copy(clip);
   }
 
@@ -1176,14 +1290,15 @@ clip_poly_poly(const GSERIALIZED *subj, const GSERIALIZED *clip,
   fill_queue(clipping, false, eventQueue);
 
   /* Subdivide edges */
-  Vector *sortedEvents = subdivideSegments(eventQueue, &sbbox, &clbox,
-    operation);
+  Vector *sortedEvents = subdivideSegments(eventQueue, &sbbox, &clbox, oper);
   /* Free the priority queue */
+  // TODO pfree(event) inside pqueue_free;
   pqueue_free(eventQueue);
 
   /* Select the result events */
   Vector *resultEvents = orderEvents(sortedEvents);
   /* Free the sorted events */
+  // TODO pfree(event) inside vector_free;
   vector_free(sortedEvents);
 
   /* Connect vertices */

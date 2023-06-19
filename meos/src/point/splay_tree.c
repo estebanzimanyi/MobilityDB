@@ -62,22 +62,22 @@ struct splay_tree
  * Private functions
  *****************************************************************************/
 
-void private_splay_deallocate_all_tree_nodes(Node *n);
-Node *private_splay_insert_value(Node *root, Node *new_node,
+void private_splay_free_all_nodes(Node *n);
+Node *private_splay_insert(Node *root, Node *new_node,
   void *comparison_func(void *val1, void *val2));
 Node *splay_construct_node(void *value);
-Node *private_splay_find_in_tree(SplayTree tree, void *value,
+Node *private_splay_find(SplayTree tree, void *value,
   void *comparison_func(void *val1, void *val2));
 void private_splay_transplant(SplayTree tree, Node *u, Node *v);
-Node *private_splay_minimum(Node *x);
-Node *private_splay_maximum(Node *x);
-Node *private_splay_successor_of_value(SplayTree tree, void *value,
+Node *private_splay_min(Node *x);
+Node *private_splay_max(Node *x);
+Node *private_splay_next(SplayTree tree, void *value,
   void *comparison_func(void *val1, void *val2));
-Node *private_splay_predecessor_of_value(SplayTree tree, void *value,
+Node *private_splay_prev(SplayTree tree, void *value,
   void *comparison_func(void *val1, void *val2));
 
-void splay_helper_rotate_left(SplayTree tree, Node *n);
-void splay_helper_rotate_right(SplayTree tree, Node *n);
+void splay_rotate_left(SplayTree tree, Node *n);
+void splay_rotate_right(SplayTree tree, Node *n);
 void splay_to_root(SplayTree tree, Node *n);
 void single_rotate(SplayTree tree, Node *n);
 void double_rotate(SplayTree tree, Node *n);
@@ -134,7 +134,7 @@ SplayTree splay_new(void *comparison_func)
 void splay_free(SplayTree tree)
 {
   assert(tree != NULL);
-  private_splay_deallocate_all_tree_nodes(tree->root);
+  private_splay_free_all_nodes(tree->root);
   pfree(tree);
   tree = NULL;
   return;
@@ -158,7 +158,7 @@ bool splay_is_empty(SplayTree tree)
  * @return Value at the root of the tree
  * @pre tree is not NULL
  */
-void *splay_get_value_at_root(SplayTree tree)
+void *splay_get_root(SplayTree tree)
 {
   assert(tree != NULL);
   if (tree->root != NULL)
@@ -176,11 +176,11 @@ void *splay_get_value_at_root(SplayTree tree)
  * @exception Attempting to pass in a value which cannot be compared with your
  * comparison function
  */
-void splay_insert_value(SplayTree tree, void *value)
+void splay_insert(SplayTree tree, void *value)
 {
   assert(tree != NULL && value != NULL);
   Node *new_node = splay_construct_node(value);
-  tree->root = private_splay_insert_value(tree->root, new_node, tree->comparison_func);
+  tree->root = private_splay_insert(tree->root, new_node, tree->comparison_func);
   splay_to_root(tree, new_node);
   return;
 }
@@ -197,7 +197,7 @@ void splay_insert_value(SplayTree tree, void *value)
 void *splay_search(SplayTree tree, void *value)
 {
   assert(tree != NULL && value != NULL);
-  Node *result = private_splay_find_in_tree(tree, value, tree->comparison_func);
+  Node *result = private_splay_find(tree, value, tree->comparison_func);
   if (result != NULL)
   {
     splay_to_root(tree, result);
@@ -213,10 +213,10 @@ void *splay_search(SplayTree tree, void *value)
  * @param value Pointer to the value to be deleted
  * @pre tree is not NULL and value is not NULL
  */
-void splay_delete_value(SplayTree tree, void *value)
+void splay_delete(SplayTree tree, void *value)
 {
   assert(tree != NULL && value != NULL);
-  Node *z = private_splay_find_in_tree(tree, value, tree->comparison_func);
+  Node *z = private_splay_find(tree, value, tree->comparison_func);
   if (z == NULL)
     return;
 
@@ -227,7 +227,7 @@ void splay_delete_value(SplayTree tree, void *value)
     private_splay_transplant(tree, z, z->left);
   else
   {
-    Node *y = private_splay_minimum(z->right);
+    Node *y = private_splay_min(z->right);
     if (y->parent != z)
     {
       private_splay_transplant(tree, y, y->right);
@@ -248,10 +248,10 @@ void splay_delete_value(SplayTree tree, void *value)
  * @return Pointer to minimum value
  * @pre tree is not NULL
  */
-void *splay_tree_minimum(SplayTree tree)
+void *splay_min(SplayTree tree)
 {
   assert(tree != NULL);
-  Node *n = private_splay_minimum(tree->root);
+  Node *n = private_splay_min(tree->root);
   if (n == NULL)
     return NULL;
 
@@ -268,7 +268,7 @@ void *splay_tree_minimum(SplayTree tree)
 void *splay_tree_maximum(SplayTree tree)
 {
   assert(tree != NULL);
-  Node *n = private_splay_maximum(tree->root);
+  Node *n = private_splay_max(tree->root);
   if (n == NULL)
     return NULL;
 
@@ -285,10 +285,10 @@ void *splay_tree_maximum(SplayTree tree)
  * @return Value of the successor
  * @pre tree is not NULL and value is not NULL
  */
-void *splay_successor_of_value(SplayTree tree, void *value)
+void *splay_next(SplayTree tree, void *value)
 {
   assert(tree != NULL && value != NULL);
-  Node *n = private_splay_successor_of_value(tree, value, tree->comparison_func);
+  Node *n = private_splay_next(tree, value, tree->comparison_func);
   if (n == NULL)
     return NULL;
 
@@ -305,10 +305,10 @@ void *splay_successor_of_value(SplayTree tree, void *value)
  * @return Value of the predecessor
  * @pre tree is not NULL and value is not NULL
  */
-void *splay_predecessor_of_value(SplayTree tree, void *value)
+void *splay_prev(SplayTree tree, void *value)
 {
   assert(tree != NULL && value != NULL);
-  Node *n = private_splay_predecessor_of_value(tree, value, tree->comparison_func);
+  Node *n = private_splay_prev(tree, value, tree->comparison_func);
   if (n == NULL)
     return NULL;
 
@@ -392,7 +392,7 @@ void splay_map_postorder(SplayTree tree,
  * @param tree Tree in which rotation is occuring
  * @param n Pointer to the node to be rotated
  */
-void splay_helper_rotate_left(SplayTree tree, Node *n)
+void splay_rotate_left(SplayTree tree, Node *n)
 {
   Node *right_child = n->right;
   n->right = right_child->left;
@@ -425,7 +425,7 @@ void splay_helper_rotate_left(SplayTree tree, Node *n)
  * @param tree Tree in which rotation is occuring
  * @param n Pointer to the node to be rotated
  */
-void splay_helper_rotate_right(SplayTree tree, Node *n)
+void splay_rotate_right(SplayTree tree, Node *n)
 {
   Node *left_child = n->left;
   n->left = left_child->right;
@@ -521,7 +521,7 @@ void double_rotate(SplayTree tree, Node *n)
  */
 void zig_left(SplayTree tree, Node *n)
 {
-  splay_helper_rotate_right(tree, n->parent);
+  splay_rotate_right(tree, n->parent);
   return;
 }
 
@@ -530,7 +530,7 @@ void zig_left(SplayTree tree, Node *n)
  */
 void zig_right(SplayTree tree, Node *n)
 {
-  splay_helper_rotate_left(tree, n->parent);
+  splay_rotate_left(tree, n->parent);
   return;
 }
 
@@ -542,8 +542,8 @@ void zig_zig_left(SplayTree tree, Node *n)
   Node *g = n->parent->parent;
   Node *p = n->parent;
 
-  splay_helper_rotate_right(tree, g);
-  splay_helper_rotate_right(tree, p);
+  splay_rotate_right(tree, g);
+  splay_rotate_right(tree, p);
   return;
 }
 
@@ -555,8 +555,8 @@ void zig_zag_left(SplayTree tree, Node *n)
   Node *g = n->parent->parent;
   Node *p = n->parent;
 
-  splay_helper_rotate_right(tree, p);
-  splay_helper_rotate_left(tree, g);
+  splay_rotate_right(tree, p);
+  splay_rotate_left(tree, g);
   return;
 }
 
@@ -568,8 +568,8 @@ void zig_zig_right(SplayTree tree, Node *n)
   Node *g = n->parent->parent;
   Node *p = n->parent;
 
-  splay_helper_rotate_left(tree, g);
-  splay_helper_rotate_left(tree, p);
+  splay_rotate_left(tree, g);
+  splay_rotate_left(tree, p);
   return;
 }
 
@@ -581,23 +581,23 @@ void zig_zag_right(SplayTree tree, Node *n)
   Node *g = n->parent->parent;
   Node *p = n->parent;
 
-  splay_helper_rotate_left(tree, p);
-  splay_helper_rotate_right(tree, g);
+  splay_rotate_left(tree, p);
+  splay_rotate_right(tree, g);
   return;
 }
 
 /**
  * @brief
  */
-void private_splay_deallocate_all_tree_nodes(Node *n)
+void private_splay_free_all_nodes(Node *n)
 {
   if (n == NULL)
     return;
 
   if (n->left != NULL)
-    private_splay_deallocate_all_tree_nodes(n->left);
+    private_splay_free_all_nodes(n->left);
   if (n->right != NULL)
-    private_splay_deallocate_all_tree_nodes(n->right);
+    private_splay_free_all_nodes(n->right);
 
   pfree(n);
   return;
@@ -619,7 +619,7 @@ Node *splay_construct_node(void *value)
 /**
  * @brief
  */
-Node *private_splay_insert_value(Node *root, Node *new_node,
+Node *private_splay_insert(Node *root, Node *new_node,
   void *comparison_func(void *val1, void *val2))
 {
   if (root == NULL)
@@ -627,12 +627,12 @@ Node *private_splay_insert_value(Node *root, Node *new_node,
 
   if ((int)(intptr_t) comparison_func(new_node->value, root->value) < 0)
   {
-    root->left = private_splay_insert_value(root->left, new_node, comparison_func);
+    root->left = private_splay_insert(root->left, new_node, comparison_func);
     root->left->parent = root;
   }
   else
   {
-    root->right = private_splay_insert_value(root->right, new_node, comparison_func);
+    root->right = private_splay_insert(root->right, new_node, comparison_func);
     root->right->parent = root;
   }
   return root;
@@ -641,7 +641,7 @@ Node *private_splay_insert_value(Node *root, Node *new_node,
 /**
  * @brief
  */
-Node *private_splay_find_in_tree(SplayTree tree, void *value,
+Node *private_splay_find(SplayTree tree, void *value,
   void *comparison_func(void *val1, void *val2))
 {
   bool found = false;
@@ -679,7 +679,7 @@ void private_splay_transplant(SplayTree tree, Node *u, Node *v)
 /**
  * @brief
  */
-Node *private_splay_minimum(Node *x)
+Node *private_splay_min(Node *x)
 {
   while (x->left != NULL)
     x = x->left;
@@ -689,7 +689,7 @@ Node *private_splay_minimum(Node *x)
 /**
  * @brief
  */
-Node *private_splay_maximum(Node *x)
+Node *private_splay_max(Node *x)
 {
   while (x->right != NULL)
     x = x->right;
@@ -699,7 +699,7 @@ Node *private_splay_maximum(Node *x)
 /**
  * @brief
  */
-Node *private_splay_successor_of_value(SplayTree tree, void *value,
+Node *private_splay_next(SplayTree tree, void *value,
   void *comparison_func(void *val1, void *val2))
 {
   Node *curr_node = tree->root;
@@ -721,7 +721,7 @@ Node *private_splay_successor_of_value(SplayTree tree, void *value,
 /**
  * @brief
  */
-Node *private_splay_predecessor_of_value(SplayTree tree, void *value,
+Node *private_splay_prev(SplayTree tree, void *value,
   void *comparison_func(void *val1, void *val2))
 {
   Node *curr_node = tree->root;
