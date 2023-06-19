@@ -158,11 +158,12 @@ swev_make(POINT2D *point, bool left, SweepEvent *otherEvent, bool isSubject,
   result->inOut = false;
   result->otherInOut = false;
   result->prevInResult = NULL;
+  /* Type of result transition (0 = not in result, +1 = out-in, -1, in-out) */
   result->resultTransition = 0;
   /* connection step */
   result->otherPos = -1;
   result->outputContourId = -1;
-  result->isExteriorRing = true;
+  result->isExteriorRing = true; // TODO: Looks unused, remove?
   return result;
 }
 
@@ -446,24 +447,10 @@ fill_queue(LWGEOM *geom, bool isSubject, PQueue *eventQueue)
  * In our example polygons above there are no intersections and no events are
  * subdivided.
  * In addition to this, this step computes internal fields of the event that
- * are necessary for selecting only the events that will be in the result and
- * that are passed to the second step of the algorithm to construct the rings.
- * In our example above, for intersection the outer ring should be removed
- * leading to the following vector of events
- * @code
- *  [0]   [1]   [2]   [3]   [4]   [5]   [6]   [7]   [8]   [9]   [10]  [11] ...
- * (0,0) (0,0) (0,6) (0,6) (1,1) (1,1) (5,5) (1,5) (2,3) (1,5) (3,4) (2,3) ...
- *   |     |     |     |     |     |     |     |     |     |     |     |   ...
- *   v     v     v     v     v     v     v     v     v     v     v     v   ...
- * (6,0) (0,6) (6,6) (0,0) (1,5) (5,1) (1,5) (1,1) (3,2) (5,5) (4,3) (3,4) ...
- *
- *  [12]  [13]  [14]  [15]  [16]  [17]  [18]  [19]  [20]  [21]  [22]  [23]
- * (6,6) (6,0) (6,0) (5,1) (5,5) (3,2) (3,2) (4,3) (5,1) (4,3) (6,6) (3,4)
- *   |     |     |     |     |     |     |     |     |     |     |     |
- *   v     v     v     v     v     v     v     v     v     v     v     v
- * (6,0) (6,6) (0,0) (1,1) (5,1) (2,3) (4,3) (3,2) (5,5) (3,4) (0,6) (2,3)
- * @endcode
- *
+ * are necessary for the second step of the algorithm to construct the rings.
+ * In our example above, four events are removed because they going beyond
+ * the rightbound of the intersection of the bounding boxes leavind the
+ * following events
  * @code
  [0]   [1]   [2]   [3]   [4]   [5]   [6]   [7]   [8]   [9]   [10]
 (0,0) (0,0) (0,6) (0,6) (1,1) (1,1) (1,5) (1,5) (2,3) (2,3) (3,2)
@@ -471,11 +458,11 @@ fill_queue(LWGEOM *geom, bool isSubject, PQueue *eventQueue)
   v     v     v     v     v     v     v     v     v     v     v
 (6,0) (0,6) (0,0) (6,6) (5,1) (1,5) (1,1) (5,5) (3,2) (3,4) (2,3)
 
- [11]  [12]  [13]  [14]  [15]  [16]  [17]  [18]  [19]  [20]
-(3,2) (3,4) (3,4) (4,3) (4,3) (5,1) (5,1) (5,5) (5,5) (6,0)
-  |     |     |     |     |     |     |     |     |     |
-  v     v     v     v     v     v     v     v     v     v
-(4,3) (2,3) (4,3) (3,2) (3,4) (1,1) (5,5) (5,1) (1,5) (0,0)
+ [11]  [12]  [13]  [14]  [15]  [16]  [17]  [18]  [19]
+(3,2) (3,4) (3,4) (4,3) (4,3) (5,1) (5,1) (5,5) (5,5)
+  |     |     |     |     |     |     |     |     |
+  v     v     v     v     v     v     v     v     v
+(4,3) (2,3) (4,3) (3,2) (3,4) (1,1) (5,5) (5,1) (1,5)
  * @endcode
  *****************************************************************************/
 
