@@ -92,8 +92,8 @@ Contour *
 cntr_make(void)
 {
   Contour *result = palloc0(sizeof(Contour));
-  result->points = vector_byref_make();
-  result->holeIds = vector_byvalue_make();
+  result->points = vector_make(TYPE_BY_REF);
+  result->holeIds = vector_make(TYPE_BY_VALUE);
   result->holeOf = -1;
   result->depth = -1;
   return result;
@@ -122,7 +122,7 @@ Polygon *
 poly_make(void)
 {
   Polygon *result = palloc0(sizeof(Polygon));
-  result->contours = vector_byref_make();
+  result->contours = vector_make(TYPE_BY_REF);
   return result;
 }
 
@@ -448,21 +448,20 @@ fill_queue(LWGEOM *geom, bool isSubject, PQueue *eventQueue)
  * subdivided.
  * In addition to this, this step computes internal fields of the event that
  * are necessary for the second step of the algorithm to construct the rings.
- * In our example above, four events are removed because they going beyond
- * the rightbound of the intersection of the bounding boxes leavind the
- * following events
+ * In our example above, eigth events are removed by the leftbound and
+ * rightbound bounding box tests leaving the following events
  * @code
  [0]   [1]   [2]   [3]   [4]   [5]   [6]   [7]   [8]   [9]   [10]
-(0,0) (0,0) (0,6) (0,6) (1,1) (1,1) (1,5) (1,5) (2,3) (2,3) (3,2)
-  |     |     |     |     |     |     |     |     |     |     |
-  v     v     v     v     v     v     v     v     v     v     v
-(6,0) (0,6) (0,0) (6,6) (5,1) (1,5) (1,1) (5,5) (3,2) (3,4) (2,3)
+NULL  NULL  (0,6) (0,6) (1,1) (1,1) (1,5) (1,5) (2,3) (2,3) (3,2)
+              |     |     |     |     |     |     |     |     |
+              v     v     v     v     v     v     v     v     v
+            (0,0) (6,6) (5,1) (1,5) (1,1) (5,5) (3,2) (3,4) (2,3)
 
- [11]  [12]  [13]  [14]  [15]  [16]  [17]  [18]  [19]
-(3,2) (3,4) (3,4) (4,3) (4,3) (5,1) (5,1) (5,5) (5,5)
-  |     |     |     |     |     |     |     |     |
-  v     v     v     v     v     v     v     v     v
-(4,3) (2,3) (4,3) (3,2) (3,4) (1,1) (5,5) (5,1) (1,5)
+ [11]  [12]  [13]  [14]  [15]  [16]  [17]
+(3,2) (3,4) (3,4) (4,3) (4,3) (5,1) (5,1)
+  |     |     |     |     |     |     |
+  v     v     v     v     v     v     v
+(4,3) (2,3) (4,3) (3,2) (3,4) (1,1) (5,5)
  * @endcode
  *****************************************************************************/
 
@@ -473,8 +472,10 @@ fill_queue(LWGEOM *geom, bool isSubject, PQueue *eventQueue)
 PQueue *
 divideSegment(SweepEvent *e, POINT2D *p, PQueue *queue)
 {
+  /* Replicate the edge type when it was marked as before the leftbound of the
+   * result bounding box */
+  SweepEvent *l = swev_make(p, true,  e->otherEvent, e->isSubject, e->type);
   SweepEvent *r = swev_make(p, false, e, e->isSubject, EDGE_NORMAL);
-  SweepEvent *l = swev_make(p, true,  e->otherEvent, e->isSubject, EDGE_NORMAL);
 
   if (point2d_eq(&e->point, &e->otherEvent->point))
     elog(ERROR, "A collapsed segment cannot be in the result");
@@ -909,7 +910,8 @@ Vector *
 subdivideSegments(PQueue *eventQueue, GBOX *sbbox, GBOX *clbox, ClipOper oper)
 {
   SplayTree sweepLine = splay_new(&compareSegments);
-  Vector *sortedEvents = vector_byref_make();
+  Vector *sortedEvents = vector_make(TYPE_BY_REF);
+  double leftbound = fmax(sbbox->xmin, clbox->xmin);
   double rightbound = fmin(sbbox->xmax, clbox->xmax);
   SweepEvent *event, *prev, *next, *begin = NULL, *prevEvent, *prevprevEvent;
   /* loop for every event in the queue */
@@ -918,20 +920,70 @@ subdivideSegments(PQueue *eventQueue, GBOX *sbbox, GBOX *clbox, ClipOper oper)
     /* Remove the event from the queue and insert it into the sweepline */
     event = pqueue_dequeue(eventQueue);
 
-    /* Optimization by bounding boxes for intersection and difference */
+    /* Filter by leftbound of bounding boxes for intersection and difference */
+    if ((oper == CL_INTERSECTION && event->point.x < leftbound) ||
+        (oper == CL_DIFFERENCE   && event->point.x < sbbox->xmin))
+    {
+      if (event->left)
+      {
+        SweepEvent *other = event->otherEvent;
+        if ((oper == CL_INTERSECTION && other->point.x < leftbound) ||
+            (oper == CL_DIFFERENCE   && other->point.x < sbbox->xmin))
+        {
+          /* Mark the right event to do not add it in sortedEvents */
+          other->type = EDGE_NON_CONTRIBUTING;
+          pfree(event);
+          continue;
+        }
+      }
+      else
+      {
+        /* If the event was marked when processing its left event */
+        if (event->type == EDGE_NON_CONTRIBUTING)
+        {
+          pfree(event);
+          continue;
+        }
+      }
+    }
+
+    /* Filter by rightbound of bounding boxes for intersection and difference */
     if ((oper == CL_INTERSECTION && event->point.x > rightbound) ||
         (oper == CL_DIFFERENCE   && event->point.x > sbbox->xmax))
     {
-      // TODO pfree(event);
+      if (! event->left && event->otherPos != - 1)
+      {
+        /* Remove the other event from sortedEvents */
+        vector_delete(sortedEvents, event->otherPos);
+        SweepEvent *other = event->otherEvent;
+        pfree(other);
+      }
+      pfree(event);
+      /* Remove the remaining points in the sweepline */
+      while (eventQueue->length > 0)
+      {
+        event = pqueue_dequeue(eventQueue);
+        if (! event->left && event->otherPos != - 1)
+        {
+          /* Remove the other event from sortedEvents */
+          vector_delete(sortedEvents, event->otherPos);
+          SweepEvent *other = event->otherEvent;
+          pfree(other);
+        }
+        pfree(event);
+      }
       break;
     }
 
-    /* Insert the event into the sweepline */
-    vector_append(sortedEvents, PointerGetDatum(event));
+    /* Insert the event into the output events */
+    int pos = vector_append(sortedEvents, PointerGetDatum(event));
+    /* Mark the position where this event is stored in the other event */
+    event->otherEvent->otherPos = pos;
 
     if (event->left)
     {
       next = prev = event;
+      /* Insert the event into the sweepline */
       splay_insert(sweepLine, event);
       begin = splay_min(sweepLine);
 
@@ -1010,12 +1062,15 @@ subdivideSegments(PQueue *eventQueue, GBOX *sbbox, GBOX *clbox, ClipOper oper)
 Vector *
 orderEvents(Vector *sortedEvents)
 {
-  Vector *resultEvents = vector_byref_make();
+  Vector *resultEvents = vector_make(TYPE_BY_REF);
   SweepEvent *event, *next;
   int i;
   for (i = 0; i < sortedEvents->length; i++)
   {
     event = DatumGetSweepEventP(vector_at(sortedEvents, i));
+    /* N.B. The event may have been deleted due to the bounding box test */
+    if (! event)
+      continue;
     /* N.B. event->resultTransition != 0 is the definition of event.inResult */
     if ((event->left && event->resultTransition != 0) ||
         (! event->left && event->otherEvent->resultTransition != 0))
@@ -1180,11 +1235,11 @@ Vector *
 connectEdges(Vector *resultEvents)
 {
   /* "false"-filled vector */
-  Vector *processed = vector_byvalue_make();
+  Vector *processed = vector_make(TYPE_BY_VALUE);
   for (int i = 0; i < resultEvents->length; i++)
     vector_append(processed, BoolGetDatum(false));
 
-  Vector *contours = vector_byref_make();
+  Vector *contours = vector_make(TYPE_BY_REF);
   for (int i = 0; i < resultEvents->length; i++)
   {
     if (DatumGetBool(vector_at(processed, i)))
@@ -1293,7 +1348,7 @@ clip_poly_poly(const GSERIALIZED *subj, const GSERIALIZED *clip, ClipOper oper)
   int len = contours->length;
 
   /* Convert contours to polygons */
-  Vector *polygons = vector_byref_make();
+  Vector *polygons = vector_make(TYPE_BY_REF);
   for (int i = 0; i < len; i++)
   {
     Contour *contour = DatumGetContourP(vector_at(contours, i));

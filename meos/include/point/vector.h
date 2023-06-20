@@ -40,6 +40,10 @@
 
 /*****************************************************************************/
 
+/** Symbolic constants for vectors */
+#define TYPE_BY_VALUE   true
+#define TYPE_BY_REF     false
+
 /**
  * Vector data structure
  */
@@ -54,11 +58,13 @@ typedef struct
 
 /*****************************************************************************/
 
+extern Vector *vector_make(bool typbyval);
 extern Vector *vector_byref_make(void);
 extern Vector *vector_byvalue_make(void);
-extern void vector_append(Vector *vector, Datum elem);
+extern int vector_append(Vector *vector, Datum elem);
 extern Datum vector_at(Vector *vector, int pos);
 extern void vector_set(Vector *vector, int pos, Datum elem);
+extern void vector_delete(Vector *vector, int pos);
 extern void vector_free(Vector *vector);
 
 /*****************************************************************************/

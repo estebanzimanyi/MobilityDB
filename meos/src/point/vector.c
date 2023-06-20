@@ -52,10 +52,6 @@
  * Vector data structure
  *****************************************************************************/
 
-/** Symbolic constants for vectors */
-#define TYPE_BY_VALUE   true
-#define TYPE_BY_REF     false
-
 /* Constants defining the behaviour of expandable vectors */
 #define VECTOR_INITIAL_CAPACITY 1024
 #define VECTOR_GROW 1       /**< double the capacity to expand the vector */
@@ -102,6 +98,7 @@ Vector *vector_make(bool typbyval)
   return result;
 }
 
+#if MEOS
 /**
  * @brief Wrapper function for creating a vector of values passed by
  * reference
@@ -119,17 +116,19 @@ vector_byvalue_make(void)
 {
   return vector_make(TYPE_BY_VALUE);
 }
+#endif /* MEOS */
 
 /**
  * @brief Append an element to a vector
+ * @result Return the position of the vector where the element was stored
  * @pre vector is not NULL
  */
-void vector_append(Vector *vector, Datum elem)
+int vector_append(Vector *vector, Datum elem)
 {
   assert(vector != NULL);
   int pos = vector_alloc(vector);
   vector->elems[pos] = elem;
-  return;
+  return pos;
 }
 
 /**
@@ -156,6 +155,22 @@ vector_set(Vector *vector, int pos, Datum elem)
   assert(vector != NULL);
   assert(pos >= 0 && pos < vector->length);
   vector->elems[pos] = elem;
+  return;
+}
+
+/**
+ * @brief Set to NULL the pointer the element of a vector at a position
+ * @note The value itself is NOT FREED, it is the responsibility of the calling
+ * function to do it.
+ * @pre vector is not NULL
+ * @pre pos belongs to [0, vector->length - 1]
+ */
+void
+vector_delete(Vector *vector, int pos)
+{
+  assert(vector != NULL);
+  assert(pos >= 0 && pos < vector->length);
+  vector->elems[pos] = (Datum) NULL;
   return;
 }
 
