@@ -313,29 +313,30 @@ compareSegments(SweepEvent *e1, SweepEvent *e2)
  * To explain the various steps of the algorith we use the following example
  * polygons P and Q
  *
- *                         3-----------------4
- *    3-----------8        |                 |
- *    |           |        |                 |
- *    |  6-----7  |        |                 |
- *    |  |     |  |        |                 |
- *    |  |     |  |        |                 |
- *    |  4-----5  |        |                 |
- *    |           |        |                 |
- *    1-----------2        |                 |
- *                         1-----------------2
- *         P                       Q
+ *                     12------------11
+ *    4---------3       |            |
+ *    | 6-----7 |       |            |
+ *    | |     | |       |            |
+ *    | |     | |       |            |
+ *    | 5-----8 |       |            |
+ *    1---------2       |            |
+ *                      9------------10
+ *         P                    Q
  *
- *  3*****************4      3-----------------4
- *  *  3-----------8  *      |  3***********8  |
- *  *  |           |  *      |  *           *  |
- *  *  |  6*****7  |  *      |  *  6*****7  *  |
- *  *  |  *     *  |  *      |  *  |     |  *  |
- *  *  |  *     *  |  *      |  *  |     |  *  |
- *  *  |  4*****5  |  *      |  *  4*****5  *  |
- *  *  |           |  *      |  *           *  |
- *  *  1-----------2  *      |  1***********2  |
- *  1*****************2      1-----------------2
- *       Union               Intersection
+ * where the vertices are as follows
+ *   p1 = (1,1)  p2  = (5,1)  p3  = (5,5)  p4  = (1,5)
+ *   p5 = (2,2)  p6  = (2,4)  p7  = (4,4)  p8  = (4,2)
+ *   p9 = (0,0)  p10 = (6,0)  p11 = (6,6)  p12 = (0,6)
+ * and the result (marked with '*') is as follows
+ *
+ * 12************11    12------------11
+ *  * 4--------3 *      | 4********3 |
+ *  * | 6****7 | *      | * 6****7 * |
+ *  * | *    * | *      | * *    * * |
+ *  * | 5****8 | *      | * 5****8 * |
+ *  * 1--------2 *      | 1********2 |
+ *  9************10     9------------10
+ *       Union           Intersection
  *
  * The first step of the algorithm create sweepline events for the left and
  * right point of each segment and introduces these events into a priority
@@ -441,28 +442,28 @@ fill_queue(LWGEOM *geom, bool isSubject, PQueue *eventQueue)
 }
 
 /*****************************************************************************
- * Divide segments
- * ---------------
- * The second step of the algorithm divides segments that cross or overlap.
- * In our example polygons above there are no intersections and no events are
- * subdivided.
- * In addition to this, this step computes internal fields of the event that
- * are necessary for the second step of the algorithm to construct the rings.
- * In our example above, eigth events are removed by the leftbound and
- * rightbound bounding box tests leaving the following events
- * @code
- [0]   [1]   [2]   [3]   [4]   [5]   [6]   [7]   [8]   [9]   [10]
-NULL  NULL  (0,6) (0,6) (1,1) (1,1) (1,5) (1,5) (2,3) (2,3) (3,2)
-              |     |     |     |     |     |     |     |     |
-              v     v     v     v     v     v     v     v     v
-            (0,0) (6,6) (5,1) (1,5) (1,1) (5,5) (3,2) (3,4) (2,3)
-
- [11]  [12]  [13]  [14]  [15]  [16]  [17]
-(3,2) (3,4) (3,4) (4,3) (4,3) (5,1) (5,1)
-  |     |     |     |     |     |     |
-  v     v     v     v     v     v     v
-(4,3) (2,3) (4,3) (3,2) (3,4) (1,1) (5,5)
- * @endcode
+ * SweepLine
+ * ---------
+ * This step of the algorithm uses a sweepline and
+ * - Filters events that are outside the bounding box of the result. In our
+ *   example above, eigth events are removed leaving the following events
+ *   @code
+ *    [0]   [1]   [2]   [3]   [4]   [5]   [6]   [7]   [8]   [9]   [10]
+ *   NULL  NULL  (0,6) (0,6) (1,1) (1,1) (1,5) (1,5) (2,3) (2,3) (3,2)
+ *                 |     |     |     |     |     |     |     |     |
+ *                 v     v     v     v     v     v     v     v     v
+ *               (0,0) (6,6) (5,1) (1,5) (1,1) (5,5) (3,2) (3,4) (2,3)
+ *
+ *    [11]  [12]  [13]  [14]  [15]  [16]  [17]
+ *   (3,2) (3,4) (3,4) (4,3) (4,3) (5,1) (5,1)
+ *     |     |     |     |     |     |     |
+ *     v     v     v     v     v     v     v
+ *   (4,3) (2,3) (4,3) (3,2) (3,4) (1,1) (5,5)
+ *   @endcode
+ * - Divides segments that intersect or overlap. In our example above there are
+ *   no intersections no events are subdivided.
+ * - Computes internal fields of the event that are neede for the second step
+ *   of the algorithm to construct the rings.
  *****************************************************************************/
 
 /**
@@ -786,10 +787,6 @@ possibleIntersection(SweepEvent *e1, SweepEvent *e2, PQueue *queue)
   return 3;
 }
 
-/*****************************************************************************
- * SweepLine
- *****************************************************************************/
-
 /**
  * @brief Return true if the event is in the result of the operation
  */
@@ -874,7 +871,7 @@ computeFields(SweepEvent *event, SweepEvent *prev, ClipOper oper)
     /* Previous line segment in sweepline belongs to the same polygon */
     if (event->isSubject == prev->isSubject)
     {
-      event->inOut      = !prev->inOut;
+      event->inOut      = ! prev->inOut;
       event->otherInOut = prev->otherInOut;
     }
     else
