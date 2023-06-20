@@ -97,7 +97,8 @@ struct SweepEvent
   bool left;    /**< Is left endpoint? */
   SweepEvent *otherEvent; /**< Event associated to the other endpoint of the segment */
   bool isSubject;  /**< Belongs to source or clipping polygon */
-  EdgeType type;  /**< Edge contribution type */
+  bool deleted;    /**< Marked as deleted when processing its left event */
+  EdgeType type;   /**< Edge contribution type */
   /* Internal fields */
   /** In-out transition for the sweepline crossing polygon */
   bool inOut;

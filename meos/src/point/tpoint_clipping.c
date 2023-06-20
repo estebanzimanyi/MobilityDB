@@ -209,31 +209,6 @@ swev_inResult(const SweepEvent *e)
 }
 
 /**
- * @brief
- */
-int
-specialCases(const SweepEvent *e1, const SweepEvent *e2, const POINT2D *p1,
-  const POINT2D *p2 __attribute__((unused)))
-{
-  /* Same coordinates, but one is a left endpoint and the other is
-   * a right endpoint. The right endpoint is processed first */
-  if (e1->left != e2->left)
-    return e1->left ? 1 : -1;
-
-  // const p2 = e1->otherEvent.point, p3 = e2->otherEvent.point;
-  // const sa = (p1->x - p3->x) * (p2->y - p3->y) - (p2->x - p3->x) * (p1->y - p3->y)
-  /* Same coordinates, both events are left endpoints or right endpoints.
-   * not collinear */
-  if (signedArea(p1, &e1->otherEvent->point, &e2->otherEvent->point) != 0)
-  {
-    /* the event associate to the bottom segment is processed first */
-    return (! swev_isBelow(e1, &e2->otherEvent->point)) ? 1 : -1;
-  }
-
-  return (! e1->isSubject && e2->isSubject) ? 1 : -1;
-}
-
-/**
  * @brief Comparison of sweepline events
  */
 int
@@ -250,7 +225,22 @@ swev_compare(const SweepEvent *e1, const SweepEvent *e2)
    * Event with lower y-coordinate is processed first */
   if (p1->y != p2->y) return p1->y > p2->y ? 1 : -1;
 
-  return specialCases(e1, e2, p1, p2);
+  /* Same coordinates, but one is a left endpoint and the other is
+   * a right endpoint. The right endpoint is processed first */
+  if (e1->left != e2->left)
+    return e1->left ? 1 : -1;
+
+  // const p2 = e1->otherEvent.point, p3 = e2->otherEvent.point;
+  // const sa = (p1->x - p3->x) * (p2->y - p3->y) - (p2->x - p3->x) * (p1->y - p3->y)
+  /* Same coordinates, both events are left endpoints or right endpoints.
+   * not collinear */
+  if (signedArea(p1, &e1->otherEvent->point, &e2->otherEvent->point) != 0)
+  {
+    /* the event associate to the bottom segment is processed first */
+    return (! swev_isBelow(e1, &e2->otherEvent->point)) ? 1 : -1;
+  }
+
+  return (! e1->isSubject && e2->isSubject) ? 1 : -1;
 }
 
 /**
@@ -473,24 +463,27 @@ fill_queue(LWGEOM *geom, bool isSubject, PQueue *eventQueue)
 PQueue *
 divideSegment(SweepEvent *e, POINT2D *p, PQueue *queue)
 {
-  /* Replicate the edge type when it was marked as before the leftbound of the
-   * result bounding box */
-  SweepEvent *l = swev_make(p, true,  e->otherEvent, e->isSubject, e->type);
-  SweepEvent *r = swev_make(p, false, e, e->isSubject, EDGE_NORMAL);
+  assert(e->left);
 
   if (point2d_eq(&e->point, &e->otherEvent->point))
     elog(ERROR, "A collapsed segment cannot be in the result");
 
+  /* Create e's right event */
+  SweepEvent *r = swev_make(p, false, e, e->isSubject, e->type);
+  /* Create e->otherEvent's left event */
+  SweepEvent *l = swev_make(p, true,  e->otherEvent, e->isSubject,
+    e->otherEvent->type);
+  /* The new events belong to e's countour */
   r->contourId = l->contourId = e->contourId;
 
-  /* Avoid a rounding error: left event would be processed after the right event */
+  /* Left event would be processed after the right event */
   if (swev_compare(l, e->otherEvent) > 0)
   {
     e->otherEvent->left = true;
-    l->left = false;
+      l->left = false;
   }
 
-  /* Avoid a rounding error: left event would be processed after the right event */
+  /* Left event would be processed after the right event */
   // if (swev_compare(e, r) > 0) {}
 
   e->otherEvent->otherEvent = l;
@@ -709,11 +702,13 @@ possibleIntersection(SweepEvent *e1, SweepEvent *e2, PQueue *queue)
   if (nintersections == 1)
   {
     /* If the intersection point is not an endpoint of e1 */
-    if (! point2d_eq(&e1->point, &p1) && !point2d_eq(&e1->otherEvent->point, &p1))
+    if (! point2d_eq(&e1->point, &p1) &&
+        ! point2d_eq(&e1->otherEvent->point, &p1))
       divideSegment(e1, &p1, queue);
 
     /* If the intersection point is not an endpoint of e2 */
-    if (!point2d_eq(&e2->point, &p1) && !point2d_eq(&e2->otherEvent->point, &p1))
+    if (! point2d_eq(&e2->point, &p1) &&
+        ! point2d_eq(&e2->otherEvent->point, &p1))
       divideSegment(e2, &p1, queue);
     return 1;
   }
@@ -927,16 +922,16 @@ subdivideSegments(PQueue *eventQueue, GBOX *sbbox, GBOX *clbox, ClipOper oper)
         if ((oper == CL_INTERSECTION && other->point.x < leftbound) ||
             (oper == CL_DIFFERENCE   && other->point.x < sbbox->xmin))
         {
-          /* Mark the right event to do not add it in sortedEvents */
-          other->type = EDGE_NON_CONTRIBUTING;
+          /* Mark the right event as deleted to do not add it to sortedEvents */
+          other->deleted = true;
           pfree(event);
           continue;
         }
       }
       else
       {
-        /* If the event was marked when processing its left event */
-        if (event->type == EDGE_NON_CONTRIBUTING)
+        /* If the event was marked as deleted when processing its left event */
+        if (event->deleted == true)
         {
           pfree(event);
           continue;
