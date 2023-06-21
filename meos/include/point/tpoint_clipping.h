@@ -72,7 +72,7 @@ typedef enum
 typedef struct
 {
   /** Set of points conforming the external contour */
-  Vector *points;
+  POINTARRAY *points;
   /** Holes of the contour. They are stored as the indexes of the holes in a polygon */
   Vector *holeIds;
   int holeOf;
@@ -81,11 +81,6 @@ typedef struct
   bool precomputedCC;
   bool CC;
 } Contour;
-
-typedef struct
-{
-  Vector *contours;
-} Polygon;
 
 /*****************************************************************************/
 
@@ -100,16 +95,16 @@ struct SweepEvent
   bool deleted;    /**< Marked as deleted when processing its left event */
   EdgeType type;   /**< Edge contribution type */
   /* Internal fields */
-  /** In-out transition for the sweepline crossing polygon */
-  bool inOut;
+  bool inOut;      /** Segment is an inside-outside transition into polygon */
   bool otherInOut;
-  SweepEvent *prevInResult; /**< Previous event in result? */
+  SweepEvent *prevInResult; /**< Previous event in result */
   /** Type of result transition (0 = not in result, +1 = out-in, -1, in-out) */
   int resultTransition;
-  int otherPos;
-  int contourId; /**< Contour id */
+  int otherPos;        /**< Position of the other event in the vector */
+  int contourId;       /**< Contour id */
   int outputContourId; /**< Output contour id */
-  bool isExteriorRing; /**< Is the exterior ring ? */
+  bool isExteriorRing; /**< Does the event belongs to the exterior ring? */
+  bool processed;      /**< Does the event has been processed? */
 };
 
 extern GSERIALIZED *clip_poly_poly(const GSERIALIZED *subj,
@@ -122,7 +117,7 @@ extern GSERIALIZED *clip_poly_poly(const GSERIALIZED *subj,
 
 #define DatumGetPoint2DP(X)    ((POINT2D *) DatumGetPointer(X))
 #define DatumGetContourP(X)    ((Contour *) DatumGetPointer(X))
-#define DatumGetPolygonP(X)    ((Polygon *) DatumGetPointer(X))
+#define DatumGetLWPolygonP(X)  ((LWPOLY *) DatumGetPointer(X))
 #define DatumGetSweepEventP(X) ((SweepEvent *) DatumGetPointer(X))
 
 /*****************************************************************************/
