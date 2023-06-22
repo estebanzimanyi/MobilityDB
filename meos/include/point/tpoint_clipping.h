@@ -71,15 +71,12 @@ typedef enum
 
 typedef struct
 {
-  /** Set of points conforming the external contour */
-  POINTARRAY *points;
-  /** Holes of the contour. They are stored as the indexes of the holes in a polygon */
+  POINTARRAY *points;  /**< Points conforming the contour */
+  /** Holes of the contour, stored as indexes of a vector of contours */
   Vector *holeIds;
   int holeOf;
-  int depth;
-  bool external; // is the contour an external contour? (i.e., is it not a hole?)
-  bool precomputedCC;
-  bool CC;
+  int depth;     /**< Depth, i.e., number of enclosing contours */
+  bool external; /**< is the contour an external contour (i.e., not a hole)? */
 } Contour;
 
 /*****************************************************************************/
@@ -88,37 +85,33 @@ typedef struct SweepEvent SweepEvent;
 
 struct SweepEvent
 {
-  POINT2D point;  /**< Point associated with the event */
-  bool left;    /**< Is left endpoint? */
-  SweepEvent *otherEvent; /**< Event associated to the other endpoint of the segment */
-  bool isSubject;  /**< Belongs to source or clipping polygon */
-  bool deleted;    /**< Marked as deleted when processing its left event */
+  POINT2D point;   /**< Point of the event */
+  bool left;       /**< Is the event a left event? */
+  SweepEvent *otherEvent; /**< Event of the other point of the segment */
+  bool isSubject;  /**< Does the event belong to the subject polygon? */
+  bool deleted;    /**< Has the event been deleted? */
   EdgeType type;   /**< Edge contribution type */
-  /* Internal fields */
-  bool inOut;      /** Segment is an inside-outside transition into polygon */
-  bool otherInOut;
+  bool inOut;  /** Is the segment an inside-outside transition into polygon? */
+  bool otherInOut; /** Is the closest edge downwards in the sweepline that
+                  belongs to the other polygon an inside-outside transition? */
   SweepEvent *prevInResult; /**< Previous event in result */
-  /** Type of result transition (0 = not in result, +1 = out-in, -1, in-out) */
-  int resultTransition;
+  int resultTransition; /**< Type of result transition (0 = not in result,
+                             +1 = out-in, -1 = in-out) */
   int otherPos;        /**< Position of the other event in the vector */
   int contourId;       /**< Contour id */
   int outputContourId; /**< Output contour id */
   bool isExteriorRing; /**< Does the event belongs to the exterior ring? */
-  bool processed;      /**< Does the event has been processed? */
 };
-
-extern GSERIALIZED *clip_poly_poly(const GSERIALIZED *subj,
-  const GSERIALIZED *clip, ClipOper operation);
 
 /*****************************************************************************/
 
 /* Vector store Datums in order to differentiate elements passed by value and
  * by reference */
-
-#define DatumGetPoint2DP(X)    ((POINT2D *) DatumGetPointer(X))
 #define DatumGetContourP(X)    ((Contour *) DatumGetPointer(X))
-#define DatumGetLWPolygonP(X)  ((LWPOLY *) DatumGetPointer(X))
 #define DatumGetSweepEventP(X) ((SweepEvent *) DatumGetPointer(X))
+
+extern GSERIALIZED *clip_poly_poly(const GSERIALIZED *subj,
+  const GSERIALIZED *clip, ClipOper operation);
 
 /*****************************************************************************/
 

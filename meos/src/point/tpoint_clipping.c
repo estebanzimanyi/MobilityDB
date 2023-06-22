@@ -872,7 +872,7 @@ subdivide_segments(PQueue *eventQueue, GBOX *sbbox, GBOX *clbox, ClipOper oper)
   Vector *sortedEvents = vector_make(TYPE_BY_REF);
   double leftbound = fmax(sbbox->xmin, clbox->xmin);
   double rightbound = fmin(sbbox->xmax, clbox->xmax);
-  SweepEvent *event, *prev, *next, *begin = NULL, *prevEvent, *prevprevEvent;
+  SweepEvent *event, *prev, *next, *begin = NULL;
   /* loop for every event in the queue */
   while (eventQueue->length != 0)
   {
@@ -953,13 +953,12 @@ subdivide_segments(PQueue *eventQueue, GBOX *sbbox, GBOX *clbox, ClipOper oper)
 
       next = splay_next(sweepLine, next);
 
-      prevEvent = prev ? prev : NULL;
-      compute_fields(event, prevEvent, oper);
+      compute_fields(event, prev, oper);
       if (next)
       {
         if (possible_intersection(event, next, eventQueue) == 2)
         {
-          compute_fields(event, prevEvent, oper);
+          compute_fields(event, prev, oper);
           compute_fields(next, event, oper);
         }
       }
@@ -974,9 +973,8 @@ subdivide_segments(PQueue *eventQueue, GBOX *sbbox, GBOX *clbox, ClipOper oper)
           else
             prevprev = NULL;
 
-          prevprevEvent = prevprev ? prevprev : NULL;
-          compute_fields(prevEvent, prevprevEvent, oper);
-          compute_fields(event,     prevEvent,     oper);
+          compute_fields(prev,  prevprev, oper);
+          compute_fields(event, prev,     oper);
         }
       }
     }
@@ -1102,7 +1100,7 @@ next_position(SweepEvent **resultEvents, int count, bool *processed, int pos,
 
   while (newPos < count && point2d_eq(p1, p))
   {
-    if (! DatumGetBool(vector_at(processed, newPos)))
+    if (! processed[newPos])
       return newPos;
     else
       newPos++;
@@ -1114,7 +1112,7 @@ next_position(SweepEvent **resultEvents, int count, bool *processed, int pos,
   }
 
   newPos = pos - 1;
-  while (DatumGetBool(vector_at(processed, newPos)) && newPos > origPos)
+  while (processed[newPos] && newPos > origPos)
     newPos--;
   return newPos;
 }
@@ -1187,15 +1185,15 @@ initialize_contour(SweepEvent *event, Vector *contours, int contourId)
 static Vector *
 connect_edges(SweepEvent **resultEvents, int count)
 {
-  /* "false"-filled vector */
-  Vector *processed = vector_make(TYPE_BY_VALUE);
+  /* false-filled vector */
+  bool *processed = palloc(sizeof(bool) * count);
   for (int i = 0; i < count; i++)
-    vector_append(processed, BoolGetDatum(false));
+    processed[i] = false;
 
   Vector *contours = vector_make(TYPE_BY_REF);
   for (int i = 0; i < count; i++)
   {
-    if (DatumGetBool(vector_at(processed, i)))
+    if (processed[i])
       continue;
 
     int contourId = contours->length;
@@ -1210,13 +1208,13 @@ connect_edges(SweepEvent **resultEvents, int count)
     while (true)
     {
       /* Mark the event as processed */
-      vector_set(processed, pos, BoolGetDatum(true));
+      processed[pos] = true;
       SweepEvent *event = resultEvents[pos];
       if (pos < count && event)
         event->outputContourId = contourId;
       /* Mark the other event as processed */
       pos = event->otherPos;
-      vector_set(processed, pos, BoolGetDatum(true));
+      processed[pos] = true;
       event = resultEvents[pos];
       if (pos < count && event)
         event->outputContourId = contourId;
@@ -1229,6 +1227,7 @@ connect_edges(SweepEvent **resultEvents, int count)
     }
     vector_append(contours, PointerGetDatum(contour));
   }
+  pfree(processed);
   return contours;
 }
 
