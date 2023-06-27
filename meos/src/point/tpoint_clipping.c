@@ -292,12 +292,12 @@ segment_cmp(SweepEvent *e1, SweepEvent *e2)
  *  9************10     9------------10
  *       Union           Intersection
  *
- * The first step of the algorithm create sweepline events for the left and
- * right point of each segment and introduces these events into a priority
- * queue using a lexicographic order, i.e., based on the order of x and
- * then y, and for edges sharing the same initial point, a vertical segment is
- * after the other segments. Each left/rigth event is connected to the other
- * event of the segment.
+ * The first step of the algorithm create events for the left and right point
+ * of each segment and introduces these events into a priority queue using
+ * a lexicographic order, i.e., based on the order of x and then y, and for
+ * edges sharing the same point, a vertical segment is after the other
+ * segments. Each left/rigth event is connected to the other event of the
+ * segment.
  *
  * The resulting queue after inserting the three contours is as follows, where
  * the number between brackets is the position on the queue, the top point is
