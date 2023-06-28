@@ -205,7 +205,7 @@ swevent_cmp(const SweepEvent *e1, const SweepEvent *e2)
    * not collinear */
   if (SIGNED_AREA(p1, &e1->otherEvent->point, &e2->otherEvent->point) != 0)
     /* the event associate to the bottom segment is processed first */
-    return (! SWEVENT_IS_BELOW(e1, &e2->otherEvent->point)) ? 1 : -1;
+    return (SWEVENT_IS_ABOVE(e1, &e2->otherEvent->point)) ? 1 : -1;
 
   return (! e1->isSubject && e2->isSubject) ? 1 : -1;
 }
@@ -285,9 +285,9 @@ segment_cmp(SweepEvent *e1, SweepEvent *e2)
  *
  * 12************11    12------------11
  *  * 4--------3 *      | 4********3 |
- *  * | 6****7 | *      | * 6****7 * |
- *  * | *    * | *      | * *    * * |
- *  * | 5****8 | *      | * 5****8 * |
+ *  * | 6----7 | *      | * 6****7 * |
+ *  * | |    | | *      | * *    * * |
+ *  * | 5----8 | *      | * 5****8 * |
  *  * 1--------2 *      | 1********2 |
  *  9************10     9------------10
  *       Union           Intersection
@@ -300,22 +300,36 @@ segment_cmp(SweepEvent *e1, SweepEvent *e2)
  * segment.
  *
  * The resulting queue after inserting the three contours is as follows, where
- * the number between brackets is the position on the queue, the top point is
- * the one of the event, and the bottom point is the one of the other event of
+ * the for an event ei, i is the position on the queue, the first point is
+ * the one of the event, and the second point is the one of the other event of
  * the segment
  * @code
- *  [0]   [1]   [2]   [3]   [4]   [5]   [6]   [7]   [8]   [9]   [10]  [11] ...
- * (0,0) (0,0) (0,6) (0,6) (1,1) (1,1) (5,5) (1,5) (2,3) (1,5) (3,4) (2,3) ...
- *   |     |     |     |     |     |     |     |     |     |     |     |   ...
- *   v     v     v     v     v     v     v     v     v     v     v     v   ...
- * (6,0) (0,6) (6,6) (0,0) (1,5) (5,1) (1,5) (1,1) (3,2) (5,5) (4,3) (3,4) ...
- *
- *  [12]  [13]  [14]  [15]  [16]  [17]  [18]  [19]  [20]  [21]  [22]  [23]
- * (6,6) (6,0) (6,0) (5,1) (5,5) (3,2) (3,2) (4,3) (5,1) (4,3) (6,6) (3,4)
- *   |     |     |     |     |     |     |     |     |     |     |     |
- *   v     v     v     v     v     v     v     v     v     v     v     v
- * (6,0) (6,6) (0,0) (1,1) (5,1) (2,3) (4,3) (3,2) (5,5) (3,4) (0,6) (2,3)
+ * e1 = (0,0) -> (6,0)
+ * e2 = (0,0) -> (0,6)
+ * e3 = (0,6) -> (0,0)
+ * e4 = (0,6) -> (6,6)
+ * e5 = (1,1) -> (5,1)
+ * e6 = (1,1) -> (1,5)
+ * e7 = (1,5) -> (1,1)
+ * e8 = (1,5) -> (5,5)
+ * e9 = (2,2) -> (4,2)
+ * e10 = (2,2) -> (2,4)
+ * e11 = (2,4) -> (2,2)
+ * e12 = (2,4) -> (4,4)
+ * e13 = (4,2) -> (2,2)
+ * e14 = (4,2) -> (4,4)
+ * e15 = (4,4) -> (4,2)
+ * e16 = (4,4) -> (2,4)
+ * e17 = (5,1) -> (1,1)
+ * e18 = (5,1) -> (5,5)
+ * e19 = (5,5) -> (5,1)
+ * e20 = (5,5) -> (1,5)
+ * e21 = (6,0) -> (0,0)
+ * e22 = (6,0) -> (6,6)
+ * e23 = (6,6) -> (6,0)
+ * e24 = (6,6) -> (0,6)
  * @endcode
+ *
  *****************************************************************************/
 
 /**
