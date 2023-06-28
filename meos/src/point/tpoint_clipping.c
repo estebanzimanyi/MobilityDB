@@ -56,6 +56,16 @@
 #include "point/tpoint.h"
 #include "point/tpoint_spatialfuncs.h"
 
+/*****************************************************************************/
+
+const char* namesEventTypes[] =
+{
+  "Normal",
+  "Non contributing",
+  "Same Transition",
+  "Different Transition"
+};
+
 /*****************************************************************************
  * Points
  *****************************************************************************/
@@ -125,14 +135,14 @@ contour_free(Contour *c)
  * @brief Create a new sweepline event
  */
 static SweepEvent *
-swevent_make(POINT2D *point, bool left, SweepEvent *otherEvent, bool isSubject,
+swevent_make(POINT2D *point, bool left, SweepEvent *otherEvent, bool subject,
   EdgeType edgeType)
 {
   SweepEvent *result = palloc0(sizeof(SweepEvent));
   result->left = left;
   result->point = *point;
   result->otherEvent = otherEvent;
-  result->isSubject = isSubject;
+  result->subject = subject;
   result->type = edgeType;
   /* Internal fields */
   result->inOut = false;
@@ -207,8 +217,25 @@ swevent_cmp(const SweepEvent *e1, const SweepEvent *e2)
     /* the event associate to the bottom segment is processed first */
     return (SWEVENT_IS_ABOVE(e1, &e2->otherEvent->point)) ? 1 : -1;
 
-  return (! e1->isSubject && e2->isSubject) ? 1 : -1;
+  return (! e1->subject && e2->subject) ? 1 : -1;
 }
+
+#if DEBUG_BUILD
+/**
+ * @brief Print sweepline events for debugging purpose
+ */
+static void
+swevent_print(const SweepEvent *e)
+{
+  elog(WARNING, "Point: (%lg,%lg), Other point: (%lg,%lg), "
+    "%s, %s, %s, %s, %s", // left, inside, inOut, type, subject
+    e->point.x, e->point.y, e->otherEvent->point.x, e->otherEvent->point.y,
+    e->left ? "Left" : "Right", e->inside ? "Inside" : "Outside",
+    e->inOut ? "In-Out" : "Out-In", namesEventTypes[e->type],
+    e->subject ? "Subject" : "Clipping");
+  return;
+}
+#endif
 
 /**
  * @brief Comparison of segments associated to two sweepline events
@@ -241,7 +268,7 @@ segment_cmp(SweepEvent *e1, SweepEvent *e2)
     return SWEVENT_IS_BELOW(e1, &e2->point) ? -1 : 1;
   }
 
-  if (e1->isSubject == e2->isSubject)
+  if (e1->subject == e2->subject)
   {
     /* same polygon */
     if (point2d_eq(&e1->point, &e2->point))
@@ -255,7 +282,7 @@ segment_cmp(SweepEvent *e1, SweepEvent *e2)
   else
   {
     /* Segments are collinear, but belong to separate polygons */
-    return e1->isSubject ? -1 : 1;
+    return e1->subject ? -1 : 1;
   }
 
   return swevent_cmp(e1, e2) == 1 ? 1 : -1;
@@ -337,7 +364,7 @@ segment_cmp(SweepEvent *e1, SweepEvent *e2)
  * priority queue
  */
 static void
-process_ring(POINTARRAY *contourOrHole, int depth, bool isSubject,
+process_ring(POINTARRAY *contourOrHole, int depth, bool subject,
   bool isExteriorRing, PQueue *eventQueue)
 {
   POINT2D *s1, *s2;
@@ -346,8 +373,8 @@ process_ring(POINTARRAY *contourOrHole, int depth, bool isSubject,
   {
     s1 = (POINT2D *) getPoint_internal(contourOrHole, i);
     s2 = (POINT2D *) getPoint_internal(contourOrHole, i + 1);
-    e1 = swevent_make(s1, false, NULL, isSubject, EDGE_NORMAL);
-    e2 = swevent_make(s2, false, e1,   isSubject, EDGE_NORMAL);
+    e1 = swevent_make(s1, false, NULL, subject, EDGE_NORMAL);
+    e2 = swevent_make(s2, false, e1,   subject, EDGE_NORMAL);
     e1->otherEvent = e2;
 
     if (s1->x == s2->x && s1->y == s2->y)
@@ -376,7 +403,7 @@ process_ring(POINTARRAY *contourOrHole, int depth, bool isSubject,
  * the priority queue
  */
 static void
-fill_queue(LWGEOM *geom, bool isSubject, PQueue *eventQueue)
+fill_queue(LWGEOM *geom, bool subject, PQueue *eventQueue)
 {
   uint32_t type = lwgeom_get_type(geom);
   int npoly;
@@ -404,7 +431,7 @@ fill_queue(LWGEOM *geom, bool isSubject, PQueue *eventQueue)
     {
       bool isExteriorRing = (j == 0);
       if (isExteriorRing) contourId++;
-      process_ring(poly->rings[j], contourId, isSubject, isExteriorRing,
+      process_ring(poly->rings[j], contourId, subject, isExteriorRing,
         eventQueue);
     }
   }
@@ -449,9 +476,9 @@ divide_segment(SweepEvent *e, POINT2D *p, PQueue *queue)
     elog(ERROR, "A collapsed segment cannot be in the result");
 
   /* Create e's right event */
-  SweepEvent *r = swevent_make(p, false, e, e->isSubject, e->type);
+  SweepEvent *r = swevent_make(p, false, e, e->subject, e->type);
   /* Create e->otherEvent's left event */
-  SweepEvent *l = swevent_make(p, true,  e->otherEvent, e->isSubject,
+  SweepEvent *l = swevent_make(p, true,  e->otherEvent, e->subject,
     e->otherEvent->type);
   /* The new events belong to e's countour */
   r->contourId = l->contourId = e->contourId;
@@ -657,7 +684,7 @@ possible_intersection(SweepEvent *e1, SweepEvent *e2, PQueue *queue)
 {
   // The following disallows self-intersecting polygons,
   // did cost us half a day, so I'll leave it out of respect
-  // if (e1->isSubject == e2->isSubject) return;
+  // if (e1->subject == e2->subject) return;
   POINT2D p1, p2;
   int nintersections = segment_intersection(&e1->point, &e1->otherEvent->point,
     &e2->point, &e2->otherEvent->point, false, &p1, &p2);
@@ -671,7 +698,7 @@ possible_intersection(SweepEvent *e1, SweepEvent *e2, PQueue *queue)
        point2d_eq(&e1->otherEvent->point, &e2->otherEvent->point)))
     return 0;
 
-  if (nintersections == 2 && e1->isSubject == e2->isSubject)
+  if (nintersections == 2 && e1->subject == e2->subject)
   {
     // if(e1->contourId == e2->contourId)
     //   elog(WARNING, 'Edges of the same polygon overlap',
@@ -779,10 +806,10 @@ in_result(SweepEvent *event, ClipOper oper)
         case CL_UNION:
           return event->otherInOut;
         case CL_DIFFERENCE:
-          // return (event->isSubject && !event->otherInOut) ||
-          //         (!event->isSubject && event->otherInOut);
-          return (event->isSubject && event->otherInOut) ||
-                  (! event->isSubject && ! event->otherInOut);
+          // return (event->subject && !event->otherInOut) ||
+          //         (!event->subject && event->otherInOut);
+          return (event->subject && event->otherInOut) ||
+                  (! event->subject && ! event->otherInOut);
         case CL_XOR:
           return true;
       }
@@ -805,26 +832,26 @@ get_result_transition(SweepEvent *event, ClipOper oper)
 {
   bool thisIn = ! event->inOut;
   bool thatIn = ! event->otherInOut;
-  bool isIn = false; /* make compiler quiet */
+  bool inside = false; /* make compiler quiet */
   switch (oper)
   {
     case CL_INTERSECTION:
-      isIn = thisIn && thatIn;
+      inside = thisIn && thatIn;
       break;
     case CL_UNION:
-      isIn = thisIn || thatIn;
+      inside = thisIn || thatIn;
       break;
     case CL_XOR:
-      isIn = thisIn ^ thatIn;
+      inside = thisIn ^ thatIn;
       break;
     case CL_DIFFERENCE:
-      if (event->isSubject)
-        isIn = thisIn && ! thatIn;
+      if (event->subject)
+        inside = thisIn && ! thatIn;
       else
-        isIn = thatIn && ! thisIn;
+        inside = thatIn && ! thisIn;
       break;
   }
-  return isIn ? +1 : -1;
+  return inside ? +1 : -1;
 }
 
 /**
@@ -845,7 +872,7 @@ compute_fields(SweepEvent *event, SweepEvent *prev, ClipOper oper)
   else
   {
     /* Previous line segment in sweepline belongs to the same polygon */
-    if (event->isSubject == prev->isSubject)
+    if (event->subject == prev->subject)
     {
       event->inOut      = ! prev->inOut;
       event->otherInOut = prev->otherInOut;
@@ -867,8 +894,8 @@ compute_fields(SweepEvent *event, SweepEvent *prev, ClipOper oper)
   }
 
   /* Check if the line segment belongs to the Boolean operation */
-  bool isInResult = in_result(event, oper);
-  if (isInResult)
+  bool inResult = in_result(event, oper);
+  if (inResult)
     event->resultTransition = get_result_transition(event, oper);
   else
     event->resultTransition = 0;
@@ -892,6 +919,10 @@ subdivide_segments(PQueue *eventQueue, GBOX *sbbox, GBOX *clbox, ClipOper oper)
   {
     /* Remove the event from the queue and insert it into the sweepline */
     event = pqueue_dequeue(eventQueue);
+#if DEBUG_BUILD
+    elog(WARNING, "Event:");
+    swevent_print(event);
+#endif
 
     /* Filter by leftbound of bounding boxes for intersection and difference */
     if ((oper == CL_INTERSECTION && event->point.x < leftbound) ||
@@ -906,6 +937,9 @@ subdivide_segments(PQueue *eventQueue, GBOX *sbbox, GBOX *clbox, ClipOper oper)
           /* Mark the right event as deleted to do not add it to sortedEvents */
           other->deleted = true;
           pfree(event);
+#if DEBUG_BUILD
+          elog(WARNING, "Event deleted due to left bounding box test");
+#endif
           continue;
         }
       }
@@ -915,6 +949,9 @@ subdivide_segments(PQueue *eventQueue, GBOX *sbbox, GBOX *clbox, ClipOper oper)
         if (event->deleted == true)
         {
           pfree(event);
+#if DEBUG_BUILD
+          elog(WARNING, "Right event deleted since its left event was previously deleted");
+#endif
           continue;
         }
       }
@@ -930,8 +967,15 @@ subdivide_segments(PQueue *eventQueue, GBOX *sbbox, GBOX *clbox, ClipOper oper)
         vector_delete(sortedEvents, event->otherPos);
         SweepEvent *other = event->otherEvent;
         pfree(other);
+#if DEBUG_BUILD
+          elog(WARNING, "Other event of current event deleted due to right bounding box test");
+#endif
       }
       pfree(event);
+#if DEBUG_BUILD
+          elog(WARNING, "Event deleted due to right bounding box test");
+          elog(WARNING, "Removing remaining events in the status line due to right bounding box test");
+#endif
       /* Remove the remaining points in the sweepline */
       while (eventQueue->length > 0)
       {
@@ -966,8 +1010,18 @@ subdivide_segments(PQueue *eventQueue, GBOX *sbbox, GBOX *clbox, ClipOper oper)
         prev = NULL;
 
       next = splay_next(sweepLine, next);
-
       compute_fields(event, prev, oper);
+
+      #if DEBUG_BUILD
+      elog(WARNING, "Status line after insertion:");
+      SweepEvent *e = splay_root(sweepLine);
+      while (e)
+      {
+        swevent_print(e);
+        e = splay_next(sweepLine, e);
+      }
+      #endif
+
       if (next)
       {
         if (possible_intersection(event, next, eventQueue) == 2)

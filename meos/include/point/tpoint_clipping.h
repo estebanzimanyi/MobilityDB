@@ -88,7 +88,8 @@ struct SweepEvent
   POINT2D point;   /**< Point of the event */
   bool left;       /**< Is the event a left event? */
   SweepEvent *otherEvent; /**< Event of the other point of the segment */
-  bool isSubject;  /**< Does the event belong to the subject polygon? */
+  bool subject;  /**< Does the event belong to the subject polygon? */
+  bool inside;   /**< Is the segment inside the polygon? */
   bool deleted;    /**< Has the event been deleted? */
   EdgeType type;   /**< Edge contribution type */
   bool inOut;  /** Is the segment an inside-outside transition into polygon? */

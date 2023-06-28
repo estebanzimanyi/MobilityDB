@@ -158,7 +158,7 @@ bool splay_is_empty(SplayTree tree)
  * @return Value at the root of the tree
  * @pre tree is not NULL
  */
-void *splay_get_root(SplayTree tree)
+void *splay_root(SplayTree tree)
 {
   assert(tree != NULL);
   if (tree->root != NULL)
