@@ -779,8 +779,8 @@ TSEQUENCE_OFFSETS_PTR(const TSequence *seq)
 const TInstant *
 TSEQUENCE_INST_N(const TSequence *seq, int index)
 {
-  return (TInstant *)(
-    ((char *) &seq->period) + seq->bboxsize +
+  return (const TInstant *)(
+    ((char *) &(seq->period)) + seq->bboxsize +
     sizeof(size_t) * seq->maxcount + (TSEQUENCE_OFFSETS_PTR(seq))[index] );
 }
 #endif /* DEBUG_BUILD */
@@ -836,7 +836,7 @@ tsequence_make_exp1(const TInstant **instants, int count, int maxcount,
     insts_size = DOUBLE_PAD((size_t) ((double) insts_size * maxcount / count));
   else
     maxcount = newcount;
-  /* Total size of the struct */
+  /* Total size */
   size_t memsize = DOUBLE_PAD(sizeof(TSequence)) + bboxsize_extra +
     sizeof(size_t) * maxcount + insts_size;
 
@@ -1545,7 +1545,7 @@ tsequence_append_tinstant(TSequence *seq, const TInstant *inst, double maxdist,
     {
       maxcount *= 2;
 #if DEBUG_EXPAND
-      printf(" Sequence -> %d ", maxcount);
+      meos_error(WARNING, 0, " Sequence -> %d ", maxcount);
 #endif /* DEBUG_EXPAND */
     }
   }
@@ -1858,6 +1858,9 @@ tsequence_compact(const TSequence *seq)
   /* Copy the instants */
   memcpy(((char *) result) + seqsize, (char *) TSEQUENCE_INST_N(seq, 0),
     insts_size);
+#if DEBUG_EXPAND
+      meos_error(WARNING, 0, " Sequence -> %d ", seq->count);
+#endif
   return result;
 }
 

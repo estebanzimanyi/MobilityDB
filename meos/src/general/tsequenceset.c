@@ -216,7 +216,7 @@ TSEQUENCESET_OFFSETS_PTR(const TSequenceSet *ss)
 const TSequence *
 TSEQUENCESET_SEQ_N(const TSequenceSet *ss, int index)
 {
-  return (TSequence *)(
+  return (const TSequence *)(
     ((char *) &ss->period) + ss->bboxsize +
     (sizeof(size_t) * ss->maxcount) + (TSEQUENCESET_OFFSETS_PTR(ss))[index] );
 }
@@ -262,7 +262,7 @@ tsequenceset_make_exp(const TSequence **sequences, int count, int maxcount,
     normseqs = tseqarr_normalize(sequences, count, &newcount);
 
   /* Get the bounding box size */
-  size_t bboxsize = DOUBLE_PAD(temporal_bbox_size(sequences[0]->temptype));
+  size_t bboxsize = DOUBLE_PAD(temporal_bbox_size(normseqs[0]->temptype));
   /* The period component of the bbox is already declared in the struct */
   size_t bboxsize_extra = bboxsize - sizeof(Span);
 
@@ -283,7 +283,7 @@ tsequenceset_make_exp(const TSequence **sequences, int count, int maxcount,
     seqs_size = DOUBLE_PAD((size_t) ((double) seqs_size * maxcount / count));
   else
     maxcount = newcount;
-  /* Size of the struct and the offset array */
+  /* Total size */
   size_t memsize = DOUBLE_PAD(sizeof(TSequenceSet)) + bboxsize_extra +
     sizeof(size_t) * maxcount + seqs_size;
 
@@ -293,20 +293,20 @@ tsequenceset_make_exp(const TSequence **sequences, int count, int maxcount,
   result->count = newcount;
   result->maxcount = maxcount;
   result->totalcount = totalcount;
-  result->temptype = sequences[0]->temptype;
+  result->temptype = normseqs[0]->temptype;
   result->subtype = TSEQUENCESET;
   result->bboxsize = (int16) bboxsize;
   MEOS_FLAGS_SET_CONTINUOUS(result->flags,
-    MEOS_FLAGS_GET_CONTINUOUS(sequences[0]->flags));
+    MEOS_FLAGS_GET_CONTINUOUS(normseqs[0]->flags));
   MEOS_FLAGS_SET_INTERP(result->flags,
-    MEOS_FLAGS_GET_INTERP(sequences[0]->flags));
+    MEOS_FLAGS_GET_INTERP(normseqs[0]->flags));
   MEOS_FLAGS_SET_X(result->flags, true);
   MEOS_FLAGS_SET_T(result->flags, true);
-  if (tgeo_type(sequences[0]->temptype))
+  if (tgeo_type(normseqs[0]->temptype))
   {
-    MEOS_FLAGS_SET_Z(result->flags, MEOS_FLAGS_GET_Z(sequences[0]->flags));
+    MEOS_FLAGS_SET_Z(result->flags, MEOS_FLAGS_GET_Z(normseqs[0]->flags));
     MEOS_FLAGS_SET_GEODETIC(result->flags,
-      MEOS_FLAGS_GET_GEODETIC(sequences[0]->flags));
+      MEOS_FLAGS_GET_GEODETIC(normseqs[0]->flags));
   }
   /* Initialization of the variable-length part */
   /* Compute the bounding box */
@@ -2501,7 +2501,7 @@ tsequenceset_append_tsequence(TSequenceSet *ss, const TSequence *seq,
     {
       maxcount *= 2;
 #if DEBUG_EXPAND
-      printf(" Sequence set -> %d ", maxcount);
+      meos_error(WARNING, 0, " Sequence set -> %d ", maxcount);
 #endif
     }
   }

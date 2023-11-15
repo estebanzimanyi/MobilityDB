@@ -36,7 +36,6 @@ if(DEBUG_EXPAND)
   message(STATUS "Showing debug messages for expandable data structures")
 endif()
 
-
 #-----------------------------------------
 # Set default PostgreSQL Version for MEOS
 #-----------------------------------------

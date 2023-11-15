@@ -756,7 +756,6 @@ span_sel_hist(VariableStatData *vardata, const Span *constval, meosOper oper,
   if (oper == CONTAINS_OP || oper == CONTAINED_OP)
     free_attstatsslot(&lslot);
 
-  // elog(WARNING, "Selectivity: %lf", selec);
   return selec;
 }
 
@@ -920,6 +919,10 @@ span_sel(PlannerInfo *root, Oid operid, List *args, int varRelid)
 
   ReleaseVariableStats(vardata);
   CLAMP_PROBABILITY(selec);
+#if DEBUG_SELECTIVITY
+  elog(WARNING, "Selectivity: %lf, Operator: %s, Left: %s, Right: %s\n",
+    selec, meosoper_name(oper), meostype_name(ltype), meostype_name(rtype));
+#endif
   return selec;
 }
 
@@ -1402,8 +1405,6 @@ span_joinsel_hist(VariableStatData *vardata1, VariableStatData *vardata2,
   if (oper == CONTAINS_OP || oper == CONTAINED_OP)
     free_attstatsslot(&lslot);
 
-  // elog(WARNING, "Join selectivity: %lf", selec);
-
   return selec;
 }
 
@@ -1481,6 +1482,10 @@ Span_joinsel(PG_FUNCTION_ARGS)
 
   float8 selec = span_joinsel(root, value, oper, args, jointype, sjinfo);
 
+#if DEBUG_SELECTIVITY
+  elog(WARNING, "Join selectivity: %lf, Operator: %s, Left: %s, Right: %s\n",
+    selec, meosoper_name(oper), meostype_name(ltype), meostype_name(rtype));
+#endif
   PG_RETURN_FLOAT8(selec);
 }
 

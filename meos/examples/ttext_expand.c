@@ -74,10 +74,6 @@
 #define NO_INSTANTS_BATCH 50000
 /* Maximum length in characters of the text values in the instants */
 #define MAX_LENGTH_TEXT 10
-/* State whether a message is shown every time a sequence is expanded */
-#define EXPAND_SEQ true
-/* State whether a message is shown every time a sequence set is expanded */
-#define EXPAND_SEQSET true
 
 /* Main program */
 int main(void)
@@ -122,22 +118,14 @@ int main(void)
       /* Create an expandable temporal sequence that can store 64 instants
        * and store the first instant. Notice that we do not use 
        * MAX_INSTANTS_SEQ to illustrate the #tsequence_compact function */
-      seq = tsequence_make_exp((const TInstant **) &inst, 1, 64,
-        true, true, STEP, false);
+      seq = tsequence_make_exp((const TInstant **) &inst, 1, 64, true, true,
+        STEP, false);
     else
     {
-      int maxcount;
       if (seq->count < MAX_INSTANTS_SEQ)
       {
-        maxcount = seq->maxcount;
         /* We are sure that the result is a temporal sequence */
         seq = (TSequence *) tsequence_append_tinstant(seq, inst, 0.0, NULL, true);
-        /* Print a marker when the sequence has been expanded */
-        if (EXPAND_SEQ && maxcount != seq->maxcount)
-        {
-          printf(" Seq -> %d ", seq->maxcount);
-          fflush(stdout);
-        }
       }
       else
       {
@@ -147,14 +135,7 @@ int main(void)
           ss = tsequenceset_make_exp((const TSequence **) &seq1, 1, 64, false);
         else
         {
-          maxcount = ss->maxcount;
           ss = tsequenceset_append_tsequence(ss, seq1, true);
-          /* Print a marker when the sequence has been expanded */
-          if (EXPAND_SEQSET && maxcount != ss->maxcount)
-          {
-            printf(" SeqSet -> %d ", ss->maxcount);
-            fflush(stdout);
-          }
         }
         free(seq); free(seq1);
         /* Create a new sequence containing the last instant generated */

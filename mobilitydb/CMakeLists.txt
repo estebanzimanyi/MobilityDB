@@ -25,6 +25,19 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
   add_definitions(-DDEBUG_BUILD)
 endif()
 
+# Option to show debug messages for analyzing the selectivity estimation
+option(DEBUG_SELECTIVITY
+  "Set DEBUG_SELECTIVITY (default=OFF) to show debug messages for analyzing the
+  selectivity estimation
+  "
+  OFF
+)
+
+if(DEBUG_SELECTIVITY)
+  add_definitions(-DDEBUG_SELECTIVITY=1)
+  message(STATUS "Showing debug messages for selectivity estimation")
+endif()
+
 #-------------------------------------
 # Get PostgreSQL Version
 #-------------------------------------

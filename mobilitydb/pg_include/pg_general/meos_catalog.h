@@ -45,7 +45,7 @@
 /* MobilityDB functions */
 
 extern Oid type_oid(meosType t);
-extern const char *oper_name(meosOper oper);
+extern const char *meosoper_name(meosOper oper);
 extern meosOper name_oper(const char *name);
 extern Oid oper_oid(meosOper op, meosType lt, meosType rt);
 extern meosType oid_type(Oid typid);

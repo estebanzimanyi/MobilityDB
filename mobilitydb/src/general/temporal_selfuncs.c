@@ -755,6 +755,10 @@ temporal_sel(PlannerInfo *root, Oid operid, List *args, int varRelid,
 
   ReleaseVariableStats(vardata);
   CLAMP_PROBABILITY(selec);
+#if DEBUG_SELECTIVITY
+  elog(WARNING, "Selectivity: %lf, Operator: %s, Left: %s, Right: %s\n",
+    selec, meosoper_name(oper), meostype_name(ltype), meostype_name(rtype));
+#endif
   return selec;
 }
 
@@ -1034,6 +1038,10 @@ temporal_joinsel(PlannerInfo *root, Oid operid, List *args, JoinType jointype,
   }
 
   CLAMP_PROBABILITY(selec);
+#if DEBUG_SELECTIVITY
+  elog(WARNING, "Join selectivity: %lf, Operator: %s, Left: %s, Right: %s\n",
+    selec, meosoper_name(oper), meostype_name(ltype), meostype_name(rtype));
+#endif
   return (float8) selec;
 }
 
