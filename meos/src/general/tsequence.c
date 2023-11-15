@@ -1831,13 +1831,15 @@ tsequence_merge_array(const TSequence **sequences, int count)
 /**
  * @ingroup libmeos_internal_temporal_transf
  * @brief Return a copy of a temporal sequence with no additional free space.
- * @note We cannot simply test whether seq->count == seq->maxcount since there
- * could be extra space allocated for the (variable-length) instants
  */
 TSequence *
 tsequence_compact(const TSequence *seq)
 {
   assert(seq);
+  /* Return a copy of a temporal sequence if there is no free space */
+  if (seq->count == seq->maxcount)
+    return tsequence_copy(seq);
+
   /* Compute the new total size of the sequence and allocate memory for it */
   size_t bboxsize_extra = seq->bboxsize - sizeof(Span);
   /* Size of composing instants */
@@ -1850,11 +1852,12 @@ tsequence_compact(const TSequence *seq)
 
   /* Copy until the last used element of the offsets array */
   memcpy(result, seq, seqsize);
-  /* Set the maxcount */
-  result->maxcount = result->count;
+  /* Set the size and maxcount of the compacted sequence */
+  SET_VARSIZE(result, seqsize + insts_size);
+  result->maxcount = seq->count;
   /* Copy the instants */
-  memcpy((char *) TSEQUENCE_INST_N(result, 0),
-    (char *) TSEQUENCE_INST_N(seq, 0), insts_size);
+  memcpy(((char *) result) + seqsize, (char *) TSEQUENCE_INST_N(seq, 0),
+    insts_size);
   return result;
 }
 
