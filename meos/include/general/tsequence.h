@@ -110,6 +110,8 @@ extern bool ensure_valid_tinstarr(const TInstant **instants, int count,
 
 /* Transformation functions */
 
+extern void tsequence_compact_iter(const TSequence *seq, size_t seqsize,
+  size_t insts_size, TSequence *result);
 extern void tnumberseq_shift_scale_value_iter(TSequence *seq, Datum origin,
   Datum delta, bool hasdelta, double scale);
 extern void tsequence_shift_scale_time_iter(TSequence *seq, TimestampTz delta,

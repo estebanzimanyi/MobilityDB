@@ -1291,13 +1291,65 @@ TSequenceSet *
 tsequenceset_compact(const TSequenceSet *ss)
 {
   assert(ss);
-  TSequence **sequences = palloc0(sizeof(TSequence *) * ss->count);
+  /* Extra size needed for the bounding box of each sequence */
+  size_t bboxsize_extra = ss->bboxsize - sizeof(Span);
+  /* Size of the fixed-length part of a sequence (set) */
+  size_t seqheader = DOUBLE_PAD(sizeof(TSequence)) + bboxsize_extra;
+  size_t ssheader = DOUBLE_PAD(sizeof(TSequenceSet)) + bboxsize_extra;
+  /* Total size of the composing sequences */
+  size_t seqs_size = 0;
+  /* Array keeping the total size of the instants of each composing sequence */
+  size_t *insts_size = palloc0(sizeof(size_t) * ss->count);
+  const TSequence *seq;
   for (int i = 0; i < ss->count; i++)
   {
-    const TSequence *seq = TSEQUENCESET_SEQ_N(ss, i);
-    sequences[i] = tsequence_compact(seq);
+    seq = TSEQUENCESET_SEQ_N(ss, i);
+    for (int j = 0; j < seq->count; j++)
+      insts_size[i] += DOUBLE_PAD(VARSIZE(TSEQUENCE_INST_N(seq, j)));
+    seqs_size += seqheader + sizeof(size_t) * seq->count + insts_size[i];
   }
-  return tsequenceset_make_free(sequences, ss->count, NORMALIZE_NO);
+  /* Compute the total size of the sequence set */
+  size_t ss_size = ssheader + sizeof(size_t) * ss->count + seqs_size;
+
+  /* Create the sequence set */
+  TSequenceSet *result = palloc0(ss_size);  
+  /* Copy the fix part of the sequence set */
+  memcpy(result, ss, ssheader);
+  /* Update the size and the maxcount */
+  SET_VARSIZE(result, ss_size);
+  result->maxcount = ss->count;
+  /* Copy the composing sequences */
+  size_t pdata_ss = ssheader + sizeof(size_t) * ss->count;
+  size_t pos = 0;
+  for (int i = 0; i < ss->count; i++)
+  {
+    seq = TSEQUENCESET_SEQ_N(ss, i);
+    size_t pdata_seq = seqheader + sizeof(size_t) * seq->count;
+    /* Copy the entire sequence if it has no extra space */
+    if (seq->count == seq->maxcount)
+      memcpy(((char *) result) + pdata_ss + pos, seq, VARSIZE(seq));
+    else
+    {
+      /* Copy until the last used element of the offsets array */
+      memcpy(((char *) result) + pdata_ss + pos, seq, pdata_seq);
+      /* Set the size and maxcount of the compacted sequence */
+      TSequence *resultseq = (TSequence *) ((char *) result + pdata_ss + pos);
+      SET_VARSIZE(resultseq, pdata_seq + insts_size[i]);
+      resultseq->maxcount = seq->count;
+      /* Copy the instants */
+      memcpy(((char *) result) + pdata_ss + pos + pdata_seq,
+        ((char *) seq) + seqheader + sizeof(size_t) * seq->maxcount,
+        insts_size[i]);
+#if DEBUG_EXPAND
+      meos_error(WARNING, 0, " Sequence -> %d ", seq->count);
+#endif
+    }
+    /* Set the offset */
+    (TSEQUENCESET_OFFSETS_PTR(result))[i] = pos;
+    pos += pdata_seq + insts_size[i];
+  }
+  pfree(insts_size);
+  return result;
 }
 
 #if MEOS

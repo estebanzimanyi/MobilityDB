@@ -196,7 +196,7 @@ temptype_basetype(meosType temptype)
   }
   /* We only arrive here on error */
   meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
-    "type %s is not a temporal type", meostype_name(temptype));
+    "type %d is not a temporal type", temptype);
   return T_UNKNOWN;
 }
 

@@ -1473,7 +1473,9 @@ tsequence_append_tinstant(TSequence *seq, const TInstant *inst, double maxdist,
     if (split)
     {
       TSequence *sequences[2];
-      sequences[0] = (TSequence *) seq;
+      TSequence *seq1 = (seq->count < seq->maxcount) ?
+        tsequence_compact((TSequence *) seq) : seq;
+      sequences[0] = (TSequence *) seq1;
       /* Arbitrary initialization to 64 elements if in expandable mode */
       sequences[1] = tsequence_make_exp((const TInstant **) &inst, 1,
         expand ? 64 : 1, true, true, interp, NORMALIZE_NO);
@@ -1848,18 +1850,17 @@ tsequence_compact(const TSequence *seq)
     insts_size += DOUBLE_PAD(VARSIZE(TSEQUENCE_INST_N(seq, i)));
   size_t seqsize = DOUBLE_PAD(sizeof(TSequence)) + bboxsize_extra +
     sizeof(size_t) * seq->count;
+  /* Create the sequence */
   TSequence *result = palloc0(seqsize + insts_size);
-
   /* Copy until the last used element of the offsets array */
   memcpy(result, seq, seqsize);
   /* Set the size and maxcount of the compacted sequence */
   SET_VARSIZE(result, seqsize + insts_size);
   result->maxcount = seq->count;
   /* Copy the instants */
-  memcpy(((char *) result) + seqsize, (char *) TSEQUENCE_INST_N(seq, 0),
-    insts_size);
+  memcpy(((char *) result) + seqsize, TSEQUENCE_INST_N(seq, 0), insts_size);
 #if DEBUG_EXPAND
-      meos_error(WARNING, 0, " Sequence -> %d ", seq->count);
+  meos_error(WARNING, 0, " Sequence -> %d ", seq->count);
 #endif
   return result;
 }

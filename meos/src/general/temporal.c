@@ -1902,7 +1902,7 @@ temporal_scale_time(const Temporal *temp, const Interval *duration)
 
 #define MEOS_INTERP_STR_MAXLEN 9
 
-#if MEOS
+#if MEOS || DEBUG_BUILD
 /**
  * @ingroup libmeos_internal_temporal_accessor
  * @brief Return the size in bytes of a temporal value
@@ -1914,7 +1914,7 @@ temporal_mem_size(const Temporal *temp)
   assert(temp);
   return VARSIZE(temp);
 }
-#endif /* MEOS */
+#endif /* MEOS || DEBUG_BUILD */
 
 /**
  * @ingroup libmeos_temporal_accessor
