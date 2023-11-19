@@ -954,24 +954,24 @@ PG_FUNCTION_INFO_V1(_mobdb_span_sel);
 Datum
 _mobdb_span_sel(PG_FUNCTION_ARGS)
 {
-  Oid table_oid = PG_GETARG_OID(0);
+  Oid relid = PG_GETARG_OID(0);
   text *att_text = PG_GETARG_TEXT_P(1);
   Oid operid = PG_GETARG_OID(2);
   Span *s = PG_GETARG_SPAN_P(3);
   float8 selec = 0.0;
 
   /* Test input parameters */
-  char *table_name = get_rel_name(table_oid);
-  if (table_name == NULL)
+  char *relname = get_rel_name(relid);
+  if (relname == NULL)
     ereport(ERROR, (errcode(ERRCODE_UNDEFINED_TABLE),
-      errmsg("Oid %u does not refer to a table", table_oid)));
+      errmsg("Oid %u does not refer to a table", relid)));
   const char *att_name = text_to_cstring(att_text);
   AttrNumber att_num;
   /* We know the name? Look up the num */
   if (att_text)
   {
     /* Get the attribute number */
-    att_num = get_attnum(table_oid, att_name);
+    att_num = get_attnum(relid, att_name);
     if (! att_num)
       elog(ERROR, "attribute \"%s\" does not exist", att_name);
   }
@@ -993,11 +993,11 @@ _mobdb_span_sel(PG_FUNCTION_ARGS)
   HeapTuple stats_tuple = NULL;
   AttStatsSlot hslot, lslot;
 
-  stats_tuple = SearchSysCache3(STATRELATTINH, ObjectIdGetDatum(table_oid),
+  stats_tuple = SearchSysCache3(STATRELATTINH, ObjectIdGetDatum(relid),
     Int16GetDatum(att_num), BoolGetDatum(false));
   if (! stats_tuple)
-    elog(ERROR, "stats for \"%s\" do not exist", get_rel_name(table_oid) ?
-      get_rel_name(table_oid) : "NULL");
+    elog(ERROR, "stats for \"%s\" do not exist", get_rel_name(relid) ?
+      get_rel_name(relid) : "NULL");
 
   int stats_kind = value ?
     STATISTIC_KIND_VALUE_BOUNDS_HISTOGRAM :
