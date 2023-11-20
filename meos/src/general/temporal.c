@@ -291,6 +291,21 @@ ensure_same_continuous_interpolation(int16 flags1, int16 flags2)
 }
 
 /**
+ * @brief Ensure that a temporal value has step interpolation
+ */
+bool
+ensure_step_interp(int16 flags)
+{
+  if (! MEOS_FLAGS_STEP_INTERP(flags))
+  {
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      "The temporal value must have step interpolation");
+    return false;
+  }
+  return true;
+}
+
+/**
  * @brief Ensure that a temporal value does not have linear interpolation
  */
 bool
@@ -1090,7 +1105,7 @@ tpoint_from_base_temp(const GSERIALIZED *gs, const Temporal *temp)
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
       ! ensure_not_empty(gs) || ! ensure_point_type(gs))
     return NULL;
-  meosType geotype = FLAGS_GET_GEODETIC(gs->gflags) ? T_TGEOGPOINT : 
+  meosType geotype = FLAGS_GET_GEODETIC(gs->gflags) ? T_TGEOGPOINT :
     T_TGEOMPOINT;
   return temporal_from_base_temp(PointerGetDatum(gs), geotype, temp);
 }
@@ -1641,7 +1656,7 @@ temporal_to_tsequence(const Temporal *temp, interpType interp)
   else if (temp->subtype == TSEQUENCE)
   {
     interpType interp1 = MEOS_FLAGS_GET_INTERP(temp->flags);
-    if (interp1 == DISCRETE && interp != DISCRETE && 
+    if (interp1 == DISCRETE && interp != DISCRETE &&
       ((TSequence *) temp)->count > 1)
     {
       meos_error(ERROR, MEOS_ERR_INVALID_ARG_TYPE,
@@ -4462,6 +4477,133 @@ tnumber_twavg(const Temporal *temp)
 }
 
 /*****************************************************************************
+ * Local aggregate functions for sequences and sequence sets
+ *****************************************************************************/
+
+/**
+ * @ingroup libmeos_internal_temporal_agg
+ * @brief Return a temporal sequence (set) whose value is the aggregation of
+ * the values of the temporal sequence(s)
+ * @return On error return NULL
+ */
+Temporal *
+tnumber_span_agg(const Temporal *temp, datum_func2 func, Datum init_value)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) temp) || ! ensure_step_interp(temp->flags) ||
+      ! ensure_tnumber_type(temp->temptype))
+    return NULL;
+
+  Temporal *result;
+  assert(temptype_subtype(temp->subtype));
+  if (temp->subtype == TSEQUENCE)
+    result = (Temporal *) tnumberseq_span_agg((TSequence *) temp, func,
+      init_value);
+  else /* temp->subtype == TSEQUENCESET */
+    result = (Temporal *) tnumberseqset_span_agg((TSequenceSet *) temp, func,
+      init_value);
+  return result;
+}
+
+#if MEOS
+/**
+ * @ingroup libmeos_temporal_agg
+ * @brief Return a temporal sequence (set) whose value is the minimum of the
+ * values of the temporal sequence(s)
+ * @return On error return NULL
+ * @sqlfunc span_min
+ */
+Temporal *
+tint_span_min(const Temporal *temp)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_temporal_has_type(temp, T_TINT))
+    return NULL;
+  return tnumber_span_agg(temp, &datum_min_int32, Int32GetDatum(INT_MAX));
+}
+
+/**
+ * @ingroup libmeos_temporal_agg
+ * @brief Return a temporal sequence (set) whose value is the minimum of the
+ * values of the temporal sequence(s)
+ * @return On error return NULL
+ * @sqlfunc span_min
+ */
+Temporal *
+tfloat_span_min(const Temporal *temp)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_temporal_has_type(temp, T_TFLOAT))
+    return NULL;
+  return tnumber_span_agg(temp, &datum_min_float8, Float8GetDatum(DBL_MAX));
+}
+
+/**
+ * @ingroup libmeos_temporal_agg
+ * @brief Return a temporal sequence (set) whose value is the maximum of the
+ * values of the temporal sequence(s)
+ * @return On error return NULL
+ * @sqlfunc span_max
+ */
+Temporal *
+tint_span_max(const Temporal *temp)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_temporal_has_type(temp, T_TINT))
+    return NULL;
+  return tnumber_span_agg(temp, &datum_max_int32, Int32GetDatum(INT_MIN));
+}
+
+/**
+ * @ingroup libmeos_temporal_agg
+ * @brief Return a temporal sequence (set) whose value is the maximum of the
+ * values of the temporal sequence(s)
+ * @return On error return NULL
+ * @sqlfunc span_max
+ */
+Temporal *
+tfloat_span_max(const Temporal *temp)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_temporal_has_type(temp, T_TFLOAT))
+    return NULL;
+  return tnumber_span_agg(temp, &datum_max_float8, Float8GetDatum(DBL_MIN));
+}
+
+/**
+ * @ingroup libmeos_temporal_agg
+ * @brief Return a temporal sequence (set) whose value is the sum of the values
+ * of the temporal sequence(s)
+ * @return On error return NULL
+ * @sqlfunc span_sum
+ */
+Temporal *
+tint_span_sum(const Temporal *temp)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_temporal_has_type(temp, T_TINT))
+    return NULL;
+  return tnumber_span_agg(temp, &datum_sum_int32, Int32GetDatum(0));
+}
+
+/**
+ * @ingroup libmeos_temporal_agg
+ * @brief Return a temporal sequence (set) whose value is the sum of the values
+ * of the temporal sequence(s)
+ * @return On error return NULL
+ * @sqlfunc span_sum
+ */
+Temporal *
+tfloat_span_sum(const Temporal *temp)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_temporal_has_type(temp, T_TFLOAT))
+    return NULL;
+  return tnumber_span_agg(temp, &datum_sum_float8, Float8GetDatum(0));
+}
+#endif /* MEOS */
+
+/*****************************************************************************
  * Compact function for final append aggregate
  *****************************************************************************/
 
@@ -4485,13 +4627,13 @@ temporal_compact(const Temporal *temp)
 }
 
 /*****************************************************************************
- * Functions for defining B-tree index
+ * Comparison functions
  *****************************************************************************/
 
 /**
  * @ingroup libmeos_temporal_comp_trad
  * @brief Return true if the temporal values are equal.
- * @note The internal B-tree comparator is not used to increase efficiency
+ * @note The function #temporal_cmp is not used to increase efficiency
  * @sqlop @p =
  */
 bool

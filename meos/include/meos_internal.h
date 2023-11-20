@@ -40,6 +40,7 @@
 /* MEOS */
 #include <meos.h>
 #include "general/meos_catalog.h" /* For meosType */
+#include "general/temporal.h" /* For datum_func2 */
 
 /*****************************************************************************
  * Direct access to a single point in the GSERIALIZED struct
@@ -868,9 +869,12 @@ extern TSequenceSet *tsequenceset_delete_tstzspanset(const TSequenceSet *ss, con
 
 /* Local aggregate functions for temporal types */
 
+extern Temporal *tnumber_span_agg(const Temporal *temp, datum_func2 func, Datum init_value);
 extern double tnumberseq_integral(const TSequence *seq);
+extern TSequence *tnumberseq_span_agg(const TSequence *seq, datum_func2 func, Datum init_value);
 extern double tnumberseq_twavg(const TSequence *seq);
 extern double tnumberseqset_integral(const TSequenceSet *ss);
+extern TSequenceSet *tnumberseqset_span_agg(const TSequenceSet *ss, datum_func2 func, Datum init_value);
 extern double tnumberseqset_twavg(const TSequenceSet *ss);
 extern GSERIALIZED *tpointseq_twcentroid(const TSequence *seq);
 extern GSERIALIZED *tpointseqset_twcentroid(const TSequenceSet *ss);

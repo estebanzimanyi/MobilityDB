@@ -1312,7 +1312,7 @@ tsequenceset_compact(const TSequenceSet *ss)
   size_t ss_size = ssheader + sizeof(size_t) * ss->count + seqs_size;
 
   /* Create the sequence set */
-  TSequenceSet *result = palloc0(ss_size);  
+  TSequenceSet *result = palloc0(ss_size);
   /* Copy the fix part of the sequence set */
   memcpy(result, ss, ssheader);
   /* Update the size and the maxcount */
@@ -3413,6 +3413,26 @@ tnumberseqset_twavg(const TSequenceSet *ss)
   return result;
 }
 
+/*****************************************************************************/
+
+/**
+ * @ingroup libmeos_internal_temporal_agg
+ * @brief Return a temporal sequence whose value is the sum of all the values
+ * of an input sequence and the same time span.
+ */
+TSequenceSet *
+tnumberseqset_span_agg(const TSequenceSet *ss, datum_func2 func,
+  Datum init_value)
+{
+  assert(ss);
+  assert(tnumber_type(ss->temptype));
+  TSequence **sequences = palloc(sizeof(TSequence *) * ss->count);
+  for (int i = 0; i < ss->count; i++)
+    sequences[i] = tnumberseq_span_agg(TSEQUENCESET_SEQ_N(ss, i), func,
+      init_value);
+  return tsequenceset_make_free(sequences, ss->count, NORMALIZE_NO);
+}
+
 /*****************************************************************************
  * Comparison functions
  *****************************************************************************/
@@ -3421,7 +3441,7 @@ tnumberseqset_twavg(const TSequenceSet *ss)
  * @ingroup libmeos_internal_temporal_comp_trad
  * @brief Return true if two temporal sequence sets are equal.
  * @pre The arguments are of the same base type
- * @note The internal B-tree comparator is not used to increase efficiency
+ * @note The function #tsequenceset_cmp is not used to increase efficiency
  * @sqlop @p =
  */
 bool

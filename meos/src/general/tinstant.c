@@ -284,8 +284,8 @@ tinstant_out(const TInstant *inst, int maxdd)
  * the end of the struct upon creation.
  *
  * @param value Base value
+ * @param temptype Temporal type of the result
  * @param t Timestamp
- * @param temptype Base type
  * @sqlfunc tbool_inst(), tint_inst(), tfloat_inst(), ttext_inst(), etc.
  */
 TInstant *
@@ -985,7 +985,7 @@ intersection_tinstant_tinstant(const TInstant *inst1, const TInstant *inst2,
  * @brief Return true if two temporal instants are equal.
  *
  * @pre The arguments are of the same base type
- * @note The internal B-tree comparator is not used to increase efficiency.
+ * @note The function #tinstant_cmp is not used to increase efficiency.
  * @note This function supposes for optimization purposes that the flags of
  * two temporal instants of the same base type are equal.
  * This hypothesis may change in the future and the function must be

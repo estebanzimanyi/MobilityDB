@@ -572,7 +572,7 @@ temporal_tagg_transfn(SkipList *state, const Temporal *temp, datum_func2 func,
   assert(temptype_subtype(temp->subtype));
   SkipList *result;
   if (temp->subtype == TINSTANT)
-    result =  tinstant_tagg_transfn(state, (TInstant *) temp, func);
+    result = tinstant_tagg_transfn(state, (TInstant *) temp, func);
   else if (temp->subtype == TSEQUENCE)
     result = MEOS_FLAGS_DISCRETE_INTERP(temp->flags) ?
       tdiscseq_tagg_transfn(state, (TSequence *) temp, func) :

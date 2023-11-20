@@ -5931,8 +5931,36 @@ tnumberseq_twavg(const TSequence *seq)
   return result;
 }
 
+/*****************************************************************************/
+
+/**
+ * @ingroup libmeos_internal_temporal_agg
+ * @brief Return a temporal sequence whose value is the aggregation of all the
+ * values of an input sequence and the same time span.
+ */
+TSequence *
+tnumberseq_span_agg(const TSequence *seq, datum_func2 func, Datum init_value)
+{
+  assert(seq);
+  assert(tnumber_type(seq->temptype));
+  Datum agg = init_value;
+  for (int i = 0; i < seq->count; i++)
+  {
+    const TInstant *inst = TSEQUENCE_INST_N(seq, i);
+    agg = func(agg, tinstant_value(inst));
+  }
+  TInstant *instants[2];
+  instants[0] = tinstant_make(agg, seq->temptype, seq->period.lower);
+  instants[1] = tinstant_make(agg, seq->temptype, seq->period.upper);
+  TSequence *result = tsequence_make_exp1((const TInstant **) instants, 2, 2,
+    seq->period.lower_inc, seq->period.upper_inc,
+    MEOS_FLAGS_GET_INTERP(seq->flags), NORMALIZE_NO, NULL);
+  pfree(instants[0]); pfree(instants[1]);
+  return result;
+}
+
 /*****************************************************************************
- * Functions for defining B-tree indexes
+ * Comparison functions
  *****************************************************************************/
 
 /**
@@ -5940,7 +5968,7 @@ tnumberseq_twavg(const TSequence *seq)
  * @brief Return true if two temporal sequences are equal.
  *
  * @pre The arguments are of the same base type
- * @note The internal B-tree comparator is not used to increase efficiency
+ * @note The function #tsequence_cmp is not used to increase efficiency
  * @sqlop @p =
  */
 bool

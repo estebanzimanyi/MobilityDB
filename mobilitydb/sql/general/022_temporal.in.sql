@@ -2107,6 +2107,37 @@ CREATE FUNCTION twAvg(tfloat)
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************
+ * Local aggregate functions for sequences and sequence sets
+ *****************************************************************************/
+
+CREATE FUNCTION span_min(tint)
+  RETURNS tint
+  AS 'MODULE_PATHNAME', 'Tint_span_min'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION span_min(tfloat)
+  RETURNS tfloat
+  AS 'MODULE_PATHNAME', 'Tfloat_span_min'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION span_max(tint)
+  RETURNS tint
+  AS 'MODULE_PATHNAME', 'Tint_span_max'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION span_max(tfloat)
+  RETURNS tfloat
+  AS 'MODULE_PATHNAME', 'Tfloat_span_max'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION span_sum(tint)
+  RETURNS tint
+  AS 'MODULE_PATHNAME', 'Tint_span_sum'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION span_sum(tfloat)
+  RETURNS tfloat
+  AS 'MODULE_PATHNAME', 'Tfloat_span_sum'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/*****************************************************************************
  * Selectivity functions for operators
  *****************************************************************************/
 

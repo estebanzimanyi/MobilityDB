@@ -36,6 +36,7 @@
 
 /* C */
 #include <assert.h>
+#include <float.h>
 /* PostgreSQL */
 #if POSTGRESQL_VERSION_NUMBER >= 130000
   #include <access/heaptoast.h>
@@ -50,6 +51,7 @@
 #include <meos_internal.h>
 #include "general/pg_types.h"
 #include "general/temporaltypes.h"
+#include "general/temporal_aggfuncs.h"
 #include "general/temporal_boxops.h"
 #include "general/type_out.h"
 #include "general/type_util.h"
@@ -2706,7 +2708,119 @@ Tnumber_twavg(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************
- * Functions for defining B-tree index
+ * Local aggregate functions for sequences and sequence sets
+ *****************************************************************************/
+
+/**
+ * @brief Generic local aggregate function for temporal numbers
+ * @param[in] fcinfo Catalog information about the external function
+ * @param[in] func Aggregate function
+ * @param[in] crossings True if turning points are added in the segments
+ */
+static Datum
+Tnumber_span_agg(FunctionCallInfo fcinfo, datum_func2 func,
+  Datum init_val)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  Temporal *result = tnumber_span_agg(temp, func, init_val);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_POINTER(result);
+}
+
+/*****************************************************************************/
+
+PGDLLEXPORT Datum Tint_span_min(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tint_span_min);
+/**
+ * @ingroup libmeos_temporal_agg
+ * @brief Return a temporal sequence (set) whose value is the minimum of the
+ * values of the temporal sequence(s)
+ * @return On error return NULL
+ * @sqlfunc span_min()
+ */
+Datum
+Tint_span_min(PG_FUNCTION_ARGS)
+{
+  return Tnumber_span_agg(fcinfo, &datum_min_int32, Int32GetDatum(INT_MAX));
+}
+
+PGDLLEXPORT Datum Tfloat_span_min(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tfloat_span_min);
+/**
+ * @ingroup libmeos_temporal_agg
+ * @brief Return a temporal sequence (set) whose value is the minimum of the
+ * values of the temporal sequence(s)
+ * @return On error return NULL
+ * @sqlfunc span_min()
+ */
+Datum
+Tfloat_span_min(PG_FUNCTION_ARGS)
+{
+  return Tnumber_span_agg(fcinfo, &datum_min_float8, Float8GetDatum(DBL_MAX));
+}
+
+PGDLLEXPORT Datum Tint_span_max(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tint_span_max);
+/**
+ * @ingroup libmeos_temporal_agg
+ * @brief Return a temporal sequence (set) whose value is the maximum of the
+ * values of the temporal sequence(s)
+ * @return On error return NULL
+ * @sqlfunc span_max()
+ */
+Datum
+Tint_span_max(PG_FUNCTION_ARGS)
+{
+  return Tnumber_span_agg(fcinfo, &datum_max_int32, Int32GetDatum(INT_MIN));
+}
+
+PGDLLEXPORT Datum Tfloat_span_max(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tfloat_span_max);
+/**
+ * @ingroup libmeos_temporal_agg
+ * @brief Return a temporal sequence (set) whose value is the maximum of the
+ * values of the temporal sequence(s)
+ * @return On error return NULL
+ * @sqlfunc span_max()
+ */
+Datum
+Tfloat_span_max(PG_FUNCTION_ARGS)
+{
+  return Tnumber_span_agg(fcinfo, &datum_max_float8, Float8GetDatum(DBL_MIN));
+}
+
+PGDLLEXPORT Datum Tint_span_sum(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tint_span_sum);
+/**
+ * @ingroup libmeos_temporal_agg
+ * @brief Return a temporal sequence (set) whose value is the sum of the values
+ * of the temporal sequence(s)
+ * @return On error return NULL
+ * @sqlfunc span_sum()
+ */
+Datum
+Tint_span_sum(PG_FUNCTION_ARGS)
+{
+  return Tnumber_span_agg(fcinfo, &datum_sum_int32, Int32GetDatum(0));
+}
+
+PGDLLEXPORT Datum Tfloat_span_sum(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tfloat_span_sum);
+/**
+ * @ingroup libmeos_temporal_agg
+ * @brief Return a temporal sequence (set) whose value is the sum of the values
+ * of the temporal sequence(s)
+ * @return On error return NULL
+ * @sqlfunc span_sum()
+ */
+Datum
+Tfloat_span_sum(PG_FUNCTION_ARGS)
+{
+  return Tnumber_span_agg(fcinfo, &datum_sum_float8, Float8GetDatum(0));
+}
+
+/*****************************************************************************
+ * Comparison functions
  *****************************************************************************/
 
 PGDLLEXPORT Datum Temporal_eq(PG_FUNCTION_ARGS);
