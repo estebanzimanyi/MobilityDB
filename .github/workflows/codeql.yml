@@ -1,23 +1,15 @@
-# For most projects, this workflow file will not need changing; you simply need
-# to commit it to your repository.
-#
-# You may wish to alter this file to override the set of languages analyzed,
-# or to provide custom queries or build logic.
-#
-# ******** NOTE ********
-# We have attempted to detect the languages in your repository. Please check
-# the `language` matrix defined below to confirm you have the correct set of
-# supported CodeQL languages.
-#
 name: "CodeQL"
 
 on:
   push:
-    branches: [ "master", "selec" ]
   pull_request:
-    branches: [ "master", "selec" ]
-  schedule:
-    - cron: '32 13 * * 6'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   analyze:
@@ -27,15 +19,12 @@ jobs:
     #   - https://gh.io/supported-runners-and-hardware-resources
     #   - https://gh.io/using-larger-runners
     # Consider using larger runners for possible analysis time improvements.
-    runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
-    timeout-minutes: ${{ (matrix.language == 'swift' && 120) || 360 }}
+    runs-on: ${{ 'ubuntu-latest' || 'macos-latest' }}
+    timeout-minutes: ${{ 360 }}
     permissions:
-      # required for all workflows
-      security-events: write
-
-      # only required for workflows in private repositories
       actions: read
       contents: read
+      security-events: write
 
     strategy:
       fail-fast: false
@@ -50,7 +39,6 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
       with:
@@ -62,21 +50,32 @@ jobs:
         # For more details on CodeQL's query packs, refer to: https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
         # queries: security-extended,security-and-quality
 
+    - name: Add PostgreSQL APT repository
+      run: |
+        sudo apt-get install curl ca-certificates gnupg
+        curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+        sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ \
+          $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
 
-    # Autobuild attempts to build any compiled languages (C/C++, C#, Go, Java, or Swift).
-    # If this step fails, then you should remove it and run the build manually (see below)
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@v3
+    - name: Install dependencies
+      run: | 
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgeos++-dev \
+            libproj-dev \
+            libjson-c-dev \
+            libgsl-dev \
+            postgresql-16 \
+            postgresql-16-postgis-3 \
+            postgresql-server-dev-16
 
-    # ℹ️ Command-line programs to run using the OS shell.
-    # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
-
-    #   If the Autobuild fails above, remove it and uncomment the following three lines.
-    #   modify them (or add more) to build your code if your project, please refer to the EXAMPLE below for guidance.
-
-    # - run: |
-    #     echo "Run, Build Application using script"
-    #     ./location_of_script_within_repo/buildscript.sh
+    - name: Configure for gcc
+      run: |
+        export PATH=/usr/lib/postgresql/16/bin:$PATH
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Release ..
+        make -j$(nproc)
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
