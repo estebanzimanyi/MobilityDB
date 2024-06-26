@@ -1964,6 +1964,7 @@ geopointlinearr_make_trajectory(GSERIALIZED **points, int npoints,
  * @note Since the sequence has been already validated there is no verification
  * of the input in this function, in particular for geographies it is supposed
  * that the composing points are geodetic
+ * @note The function does NOT remove repeated points
  * @csqlfn #Tpoint_trajectory()
  */
 GSERIALIZED *
@@ -1983,8 +1984,16 @@ tpointseq_trajectory(const TSequence *seq)
   {
     GSERIALIZED *gs =
       DatumGetGserializedP(tinstant_val(TSEQUENCE_INST_N(seq, i)));
-    /* If linear interpolation, remove two consecutive equal points */
-    if (interp == DISCRETE ||
+    /* If linear interpolation, remove two consecutive equal points to solve a
+     * problem in PostGIS/GEOS
+     *   select st_astext(st_intersection(geometry 'Linestring(3 3,3 3)', 
+     *     geometry 'Linestring(0 0,3 3)'));
+     *   -- LINESTRING EMPTY
+     *  select st_astext(st_intersection(geometry 'Point(3 3)', 
+     *     geometry 'Linestring(0 0,3 3)'));
+     *  -- POINT(3 3)
+     */
+    if (interp == DISCRETE || interp == STEP ||
         (npoints == 0 || ! geopoint_same(gs, points[npoints - 1])))
       points[npoints++] = gs;
   }
@@ -5309,82 +5318,115 @@ tpointseq_linear_find_splits(const TSequence *seq, int *count)
  *****************************************************************************/
 
 /**
- * @brief Return true if a temporal point does not self-intersect
+ * @brief Return true if there are stationary segments in the linear trajectory
+ * @note The function works only on 2D even if the input points are in 3D
  * @param[in] seq Temporal point
- * @pre The temporal point sequence has discrete or step interpolation
  */
 static bool
-tpointseq_discstep_is_simple(const TSequence *seq)
+tpointseq_linear_has_stationary_segms(const TSequence *seq)
 {
-  assert(seq->count > 1);
-  Datum *points = palloc(sizeof(Datum) * seq->count);
-  for (int i = 0; i < seq->count; i++)
-    points[i] = tinstant_val(TSEQUENCE_INST_N(seq, i));
-  datumarr_sort(points, seq->count, temptype_basetype(seq->temptype));
-  bool found = false;
+  assert(seq); assert(tgeo_type(seq->temptype));
+  assert(MEOS_FLAGS_LINEAR_INTERP(seq->flags));
+  const POINT2D *p1 = DATUM_POINT2D_P(tinstant_val(TSEQUENCE_INST_N(seq, 0)));
   for (int i = 1; i < seq->count; i++)
   {
-    if (datum_point_eq(points[i - 1], points[i]))
-    {
-      found = true;
-      break;
-    }
+    const POINT2D *p2 = DATUM_POINT2D_P(tinstant_val(TSEQUENCE_INST_N(seq, i)));
+    /* If stationary segment */
+    if (p1->x == p2->x && p1->y == p2->y)
+      return true;
+    p1 = p2;
   }
-  pfree(points);
-  return ! found;
+  return false;
 }
 
 /**
  * @ingroup meos_internal_temporal_spatial_accessor
  * @brief Return true if a temporal point does not self-intersect
  * @param[in] seq Temporal point
+ * @param[out] result Result
+ * @return On error return false, otherwise return true
  * @csqlfn #Tpoint_is_simple()
  */
 bool
-tpointseq_is_simple(const TSequence *seq)
+tpointseq_is_simple(const TSequence *seq, bool *result)
 {
-  assert(seq); assert(tgeo_type(seq->temptype));
+  assert(seq); assert(result); assert(tgeo_type(seq->temptype));
   /* Instantaneous sequence */
   if (seq->count == 1)
+  {
+    *result = true;
     return true;
+  }
 
-  if (! MEOS_FLAGS_LINEAR_INTERP(seq->flags))
-    return tpointseq_discstep_is_simple(seq);
-
-  int numsplits;
-  bool *splits = tpointseq_linear_find_splits(seq, &numsplits);
-  pfree(splits);
-  return (numsplits == 0);
+  /* Call GEOS to verify whether the trajectory is simple */
+  GSERIALIZED *traj = tpointseq_trajectory(seq);
+  LWGEOM *lwgeom = lwgeom_from_gserialized(traj);
+  int issimple = lwgeom_is_simple(lwgeom);
+  pfree(traj); lwgeom_free(lwgeom);
+  if (issimple == -1)
+  {
+    /* Error */
+    meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+      "Error while making the temporal point simple");
+    return false;
+  }
+  else if (issimple == LW_FALSE)
+    *result = false;
+  else if (issimple == LW_TRUE)
+  {
+    if (MEOS_FLAGS_GET_INTERP(seq->flags) == LINEAR)
+    {
+      /* If the first point is equal to the last one or there are stationary
+       * segments it is not simple */
+      if (! datum_point_eq(tinstant_val(TSEQUENCE_INST_N(seq, 0)),
+              tinstant_val(TSEQUENCE_INST_N(seq, (seq->count - 1)))) &&
+          ! tpointseq_linear_has_stationary_segms(seq))
+        *result = true;
+      else
+        *result = false;
+    }
+    else
+      *result = true;
+  }
+  return true;
 }
 
 /**
  * @ingroup meos_internal_temporal_spatial_accessor
  * @brief Return true if a temporal point does not self-intersect
  * @param[in] ss Temporal sequence set
+ * @param[out] result Result
+ * @return On error return false, otherwise return true
  * @csqlfn #Tpoint_is_simple()
  */
 bool
-tpointseqset_is_simple(const TSequenceSet *ss)
+tpointseqset_is_simple(const TSequenceSet *ss, bool *result)
 {
   assert(ss); assert(tgeo_type(ss->temptype));
-  bool result = true;
+  bool resultseq;
+  *result = true;
   for (int i = 0; i < ss->count; i++)
   {
-    result &= tpointseq_is_simple(TSEQUENCESET_SEQ_N(ss, i));
+    bool err = tpointseq_is_simple(TSEQUENCESET_SEQ_N(ss, i), &resultseq);
+    if (err)
+      return false;
+    *result &= resultseq;
     if (! result)
       break;
   }
-  return result;
+  return true;
 }
 
 /**
  * @ingroup meos_temporal_spatial_accessor
  * @brief Return true if a temporal point does not self-intersect
  * @param[in] temp Temporal point
+ * @param[out] result Result
+ * @return On error return false, otherwise return true
  * @csqlfn #Tpoint_is_simple()
  */
 bool
-tpoint_is_simple(const Temporal *temp)
+tpoint_is_simple(const Temporal *temp, bool *result)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_tgeo_type(temp->temptype))
@@ -5394,11 +5436,12 @@ tpoint_is_simple(const Temporal *temp)
   switch (temp->subtype)
   {
     case TINSTANT:
+      *result = true;
       return true;
     case TSEQUENCE:
-      return tpointseq_is_simple((TSequence *) temp);
+      return tpointseq_is_simple((TSequence *) temp, result);
     default: /* TSEQUENCESET */
-      return tpointseqset_is_simple((TSequenceSet *) temp);
+      return tpointseqset_is_simple((TSequenceSet *) temp, result);
   }
 }
 
@@ -5504,6 +5547,7 @@ tpointcontseq_split(const TSequence *seq, bool *splits, int count)
  * self-intersecting fragments
  * @param[in] seq Temporal sequence point
  * @param[out] count Number of elements in the resulting array
+ * @return On error return NULL
  * @note This function is called for each sequence of a sequence set
  * @csqlfn #Tpoint_make_simple()
  */
@@ -5523,7 +5567,19 @@ tpointseq_make_simple(const TSequence *seq, int *count)
     return result;
   }
 
-  int numsplits;
+  bool issimple;
+  if (! tpointseq_is_simple(seq, &issimple))
+    /* If error */
+    return NULL;
+  if (issimple)
+  {
+    result = palloc(sizeof(TSequence *));
+    result[0] = tsequence_copy(seq);
+    *count = 1;
+    return result;
+  }
+
+  int numsplits;  
   bool *splits = (interp == LINEAR) ?
     tpointseq_linear_find_splits(seq, &numsplits) :
     tpointseq_discstep_find_splits(seq, &numsplits);
