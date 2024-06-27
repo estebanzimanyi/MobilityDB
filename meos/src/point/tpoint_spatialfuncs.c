@@ -1779,10 +1779,10 @@ geopointarr_make_trajectory(GSERIALIZED **points, int count, const STBox *box,
 }
 
 /**
- * @brief Write in the buffer a GBOX from a spatiotemporal box
- * @param[in] box Array of points
- * @param[in] count Number of elements in the input array
+ * @brief Write in the last argument the GBOX representation of a
+ * spatiotemporal box
  * @param[in] box Spatiotemporal bounding box of the input points
+ * @param[out] buf Writing buffer
  * @result Number of bytes written into the buffer
  * @note Implements the logic of PostGIS function gserialized2_from_gbox
  */
@@ -1816,7 +1816,6 @@ gbox_from_stbox(const STBox *box, uint8_t *buf)
  * @param[in] lines Array of lines
  * @param[in] nlines Number of elements in the lines array
  * @param[in] box Spatiotemporal bounding box of the input points
- * @param[in] interp Interpolation
  * @note This function creates directly the GSERIALIZED result WITHOUT passing
  * through the createtion of the LWPOINT to speed up the process
  * @note The function does not remove duplicate points, that is, repeated
@@ -5341,7 +5340,8 @@ tpointseq_linear_has_stationary_segms(const TSequence *seq)
 
 /**
  * @ingroup meos_internal_temporal_spatial_accessor
- * @brief Return true if a temporal point does not self-intersect
+ * @brief Set the last argument to true if a temporal point does not
+ * self-intersect
  * @param[in] seq Temporal point
  * @param[out] result Result
  * @return On error return false, otherwise return true
@@ -5393,7 +5393,8 @@ tpointseq_is_simple(const TSequence *seq, bool *result)
 
 /**
  * @ingroup meos_internal_temporal_spatial_accessor
- * @brief Return true if a temporal point does not self-intersect
+ * @brief Set the last argument to true if a temporal point does not
+ * self-intersect
  * @param[in] ss Temporal sequence set
  * @param[out] result Result
  * @return On error return false, otherwise return true
@@ -5407,8 +5408,8 @@ tpointseqset_is_simple(const TSequenceSet *ss, bool *result)
   *result = true;
   for (int i = 0; i < ss->count; i++)
   {
-    bool err = tpointseq_is_simple(TSEQUENCESET_SEQ_N(ss, i), &resultseq);
-    if (err)
+    bool ok = tpointseq_is_simple(TSEQUENCESET_SEQ_N(ss, i), &resultseq);
+    if (! ok)
       return false;
     *result &= resultseq;
     if (! result)
@@ -5419,7 +5420,8 @@ tpointseqset_is_simple(const TSequenceSet *ss, bool *result)
 
 /**
  * @ingroup meos_temporal_spatial_accessor
- * @brief Return true if a temporal point does not self-intersect
+ * @brief Set the last argument to true if a temporal point does not
+ * self-intersect
  * @param[in] temp Temporal point
  * @param[out] result Result
  * @return On error return false, otherwise return true
