@@ -1,4 +1,6 @@
 add_library(general OBJECT
+  boxarray.c
+  # bboxes.c
   doublen.c
   error.c
   lifting.c

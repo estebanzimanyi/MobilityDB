@@ -149,7 +149,7 @@ set_append_value(Set *set, Datum value)
   int maxcount = (set->count < set->maxcount) ?
     set->maxcount : set->maxcount * 2;
 #ifdef DEBUG_EXPAND
-  meos_error(WARNING, " Set -> %d\n", maxcount);
+  meos_error(WARNING, 0, " Set -> %d\n", maxcount);
 #endif /* DEBUG_EXPAND */
 
   Set *result = set_make_exp(values, set->count + 1, maxcount, set->basetype,

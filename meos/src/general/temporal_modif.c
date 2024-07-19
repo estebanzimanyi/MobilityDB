@@ -2006,7 +2006,7 @@ tsequenceset_append_tsequence(TSequenceSet *ss, const TSequence *seq,
     {
       maxcount *= 2;
 #if DEBUG_EXPAND
-      meos_error(WARNING, " Sequence set -> %d ", maxcount);
+      meos_error(WARNING, 0, " Sequence set -> %d ", maxcount);
 #endif
     }
   }

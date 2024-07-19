@@ -48,6 +48,31 @@
 #include <meos.h>
 #include "general/meos_catalog.h" /* For meosType */
 
+/*****************************************************************************/
+
+/* Constants defining the behaviour of the box arrays */
+
+#define BOXARRAY_INITIAL_CAPACITY 64
+#define BOXARRAY_GROW 1       /**< double the capacity to expand the array */
+
+/**
+ * Structure to represent box arrays for generating multiple bounding boxes
+ * of various types
+ */
+typedef struct
+{
+  int count;
+  int maxcount;
+  meosType boxtype;
+  size_t boxsize;
+  void *elems;
+} BoxArray;
+
+extern BoxArray *boxarray_make(meosType boxtype, int count);
+extern void boxarray_free(BoxArray *array);
+extern bool boxarray_add(BoxArray *array, const void *box);
+extern void boxarray_n(const BoxArray *array, int n, void *result);
+
 /*****************************************************************************
  * Internal function accessing the Gnu Scientic Library (GSL)
  *****************************************************************************/
