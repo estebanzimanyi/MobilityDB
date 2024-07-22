@@ -1054,8 +1054,7 @@ tpoint_space_time_split_init(Temporal *temp, float xsize, float ysize,
 #if MEOS
 /**
  * @ingroup meos_temporal_analytics_tile
- * @brief Return the fragments a temporal point split according to a space and
- * possibly a time grid
+ * @brief Return the fragments a temporal point split according to a space grid
  * @param[in] temp Temporal point
  * @param[in] xsize,ysize,zsize Size of the corresponding dimension
  * @param[in] sorigin Origin for the space dimension
@@ -1160,5 +1159,98 @@ tpoint_space_time_split(Temporal *temp, float xsize, float ysize, float zsize,
   return result;
 }
 #endif /* MEOS */
+
+/**
+ * @ingroup meos_temporal_analytics_tile
+ * @brief Return the tiles covered by a temporal point in a space and possibly
+ * a time grid
+ * @param[in] temp Temporal point
+ * @param[in] xsize,ysize,zsize Size of the corresponding dimension
+ * @param[in] duration Duration
+ * @param[in] sorigin Origin for the space dimension
+ * @param[in] torigin Origin for the time dimension
+ * @param[in] bitmatrix True when using a bitmatrix to speed up the computation
+ * @param[in] border_inc True when the box contains the upper border, otherwise
+ * the upper border is assumed as outside of the box.
+ * @param[out] count Number of elements in the output arrays
+ * @note This function in MEOS corresponds to the MobilityDB function 
+ * #Tpoint_space_time_tiles_ext
+ */
+STBox *
+tpoint_space_time_tiles(Temporal *temp, float xsize, float ysize, float zsize,
+  Interval *duration, GSERIALIZED *sorigin, TimestampTz torigin,
+  bool bitmatrix, bool border_inc, int *count)
+{
+  /* Initialize state */
+  int ntiles;
+  STboxGridState *state = tpoint_space_time_split_init(temp, xsize, ysize,
+    zsize, duration, sorigin, torigin, bitmatrix, border_inc, &ntiles);
+  if (! state)
+    return NULL;
+
+  STBox *result = palloc(sizeof(STBox) * ntiles);
+  int i = 0;
+  /* We need to loop since atStbox may be NULL */
+  while (true)
+  {
+    /* Stop when we have used up all the grid tiles */
+    if (state->done)
+    {
+      if (state->bm)
+        pfree(state->bm);
+      pfree(state);
+      break;
+    }
+
+    /* Get current tile (if any) and advance state
+     * It is necessary to test if we found a tile since the previous tile
+     * may be the last one set in the associated bit matrix */
+    STBox box;
+    bool found = stbox_tile_state_get(state, &box);
+    if (! found)
+    {
+      if (state->bm)
+        pfree(state->bm);
+      pfree(state);
+      break;
+    }
+    stbox_tile_state_next(state);
+
+    /* Restrict the temporal point to the box and compute its bounding box */
+    Temporal *atstbox = tpoint_restrict_stbox(state->temp, &box, BORDER_EXC,
+      REST_AT);
+    if (atstbox == NULL)
+      continue;
+    tspatial_set_stbox(atstbox, &box);
+    /* If only space tiles */
+    if (! duration)
+      MEOS_FLAGS_SET_T(box.flags, false);
+    pfree(atstbox);
+
+    /* Copy the box to the result */
+    memcpy(&result[i++], &box, sizeof(STBox));
+  }
+  *count = i;
+  return result;
+}
+
+/**
+ * @ingroup meos_temporal_analytics_tile
+ * @brief Return the tiles covered by a temporal point in a space grid
+ * @param[in] temp Temporal point
+ * @param[in] xsize,ysize,zsize Size of the corresponding dimension
+ * @param[in] sorigin Origin for the space dimension
+ * @param[in] bitmatrix True when using a bitmatrix to speed up the computation
+ * @param[in] border_inc True when the box contains the upper border, otherwise
+ * the upper border is assumed as outside of the box.
+ * @param[out] count Number of elements in the output arrays
+ */
+STBox *
+tpoint_space_tiles(Temporal *temp, float xsize, float ysize, float zsize,
+  GSERIALIZED *sorigin, bool bitmatrix, bool border_inc, int *count)
+{
+  return tpoint_space_time_tiles(temp, xsize, ysize, zsize, NULL, sorigin, 0,
+    bitmatrix, border_inc, count);
+}
 
 /*****************************************************************************/

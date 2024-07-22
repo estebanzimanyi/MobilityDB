@@ -2097,6 +2097,9 @@ extern Temporal **tpoint_space_split(Temporal *temp, float xsize, float ysize, f
 extern Temporal **tpoint_space_time_split(Temporal *temp, float xsize, float ysize, float zsize, Interval *duration, GSERIALIZED *sorigin, TimestampTz torigin, bool bitmatrix, bool border_inc, GSERIALIZED ***space_buckets, TimestampTz **time_buckets, int *count);
 extern Span *tstzspan_bucket_list(const Span *bounds, const Interval *duration, TimestampTz origin, int *count);
 
+extern STBox *tpoint_space_tiles(Temporal *temp, float xsize, float ysize, float zsize, GSERIALIZED *sorigin, bool bitmatrix, bool border_inc, int *count);
+extern STBox *tpoint_space_time_tiles(Temporal *temp, float xsize, float ysize, float zsize, Interval *duration, GSERIALIZED *sorigin, TimestampTz torigin, bool bitmatrix, bool border_inc, int *count);
+
 /*****************************************************************************/
 
 #endif

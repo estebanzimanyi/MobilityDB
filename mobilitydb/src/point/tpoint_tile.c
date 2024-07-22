@@ -37,6 +37,7 @@
 /* PostgreSQL */
 #include <postgres.h>
 #include <funcapi.h>
+#include <utils/array.h>
 #include <utils/timestamp.h>
 /* PostGIS */
 #include <liblwgeom.h>
@@ -44,10 +45,12 @@
 #include <meos.h>
 #include <meos_internal.h>
 #include "general/temporal_tile.h"
+#include "general/type_util.h"
 #include "point/stbox.h"
 #include "point/tpoint_spatialfuncs.h"
 #include "point/tpoint_tile.h"
 /* MobilityDB */
+#include "pg_general/type_util.h"
 #include "pg_point/postgis.h"
 
 /*****************************************************************************/
@@ -367,6 +370,173 @@ Datum
 Tpoint_space_time_split(PG_FUNCTION_ARGS)
 {
   return Tpoint_space_time_split_ext(fcinfo, true);
+}
+
+/*****************************************************************************
+ * Tiles functions
+ *****************************************************************************/
+
+/**
+ * @brief Split a temporal point with respect to a spatial and possibly a
+ * temporal grid
+ */
+Datum
+Tpoint_space_time_tiles_ext(FunctionCallInfo fcinfo, bool timesplit)
+{
+  FuncCallContext *funcctx;
+  STboxGridState *state;
+  bool isnull[2] = {0, 0}; /* needed to say no value is null */
+  Datum tuple_arr[2]; /* used to construct the return value */
+  HeapTuple tuple;
+  Datum result; /* the actual composite return value */
+
+  /* If the function is being called for the first time */
+  if (SRF_IS_FIRSTCALL())
+  {
+    /* Initialize the FuncCallContext */
+    funcctx = SRF_FIRSTCALL_INIT();
+    /* Switch to memory context appropriate for multiple function calls */
+    MemoryContext oldcontext =
+      MemoryContextSwitchTo(funcctx->multi_call_memory_ctx);
+
+    /* Get input parameters */
+    Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+    double xsize = PG_GETARG_FLOAT8(1);
+    double ysize = PG_GETARG_FLOAT8(2);
+    double zsize = PG_GETARG_FLOAT8(3);
+    Interval *duration = NULL;
+    TimestampTz torigin = 0;
+    int i = 4;
+    if (timesplit)
+      duration = PG_GETARG_INTERVAL_P(i++);
+    GSERIALIZED *sorigin = PG_GETARG_GSERIALIZED_P(i++);
+    if (timesplit)
+      torigin = PG_GETARG_TIMESTAMPTZ(i++);
+    bool bitmatrix = PG_GETARG_BOOL(i++);
+    if (temporal_num_instants(temp) == 1)
+      bitmatrix = false;
+    bool border_inc = PG_GETARG_BOOL(i++);
+
+    /* Initialize state and verify parameter validity */
+    int ntiles;
+    STboxGridState *state = tpoint_space_time_split_init(temp, xsize, ysize,
+      zsize, duration, sorigin, torigin, bitmatrix, border_inc, &ntiles);
+
+    /* Create function state */
+    funcctx->user_fctx = state;
+
+    /* Build a tuple description for a multidimensional grid tuple */
+    get_call_result_type(fcinfo, 0, &funcctx->tuple_desc);
+    BlessTupleDesc(funcctx->tuple_desc);
+    MemoryContextSwitchTo(oldcontext);
+  }
+
+  /* Stuff done on every call of the function */
+  funcctx = SRF_PERCALL_SETUP();
+  /* Get state */
+  state = funcctx->user_fctx;
+  /* We need to loop since atStbox may be NULL */
+  while (true)
+  {
+    /* Stop when we have used up all the grid tiles */
+    if (state->done)
+    {
+      /* Switch to memory context appropriate for multiple function calls */
+      MemoryContext oldcontext =
+        MemoryContextSwitchTo(funcctx->multi_call_memory_ctx);
+      if (state->bm)
+         pfree(state->bm);
+      pfree(state);
+      MemoryContextSwitchTo(oldcontext);
+      SRF_RETURN_DONE(funcctx);
+    }
+
+    /* Get current tile (if any) and advance state
+     * It is necessary to test if we found a tile since the previous tile
+     * may be the last one set in the associated bit matrix */
+    STBox *box = palloc(sizeof(STBox));
+    bool found = stbox_tile_state_get(state, box);
+    if (! found)
+    {
+      /* Switch to memory context appropriate for multiple function calls */
+      MemoryContext oldcontext =
+        MemoryContextSwitchTo(funcctx->multi_call_memory_ctx);
+      if (state->bm)
+        pfree(state->bm);
+      pfree(state);
+      MemoryContextSwitchTo(oldcontext);
+      SRF_RETURN_DONE(funcctx);
+    }
+    stbox_tile_state_next(state);
+
+    /* Form tuple and return */
+    tuple_arr[0] = state->i;
+    tuple_arr[1] = PointerGetDatum(box);
+    tuple = heap_form_tuple(funcctx->tuple_desc, tuple_arr, isnull);
+    result = HeapTupleGetDatum(tuple);
+    SRF_RETURN_NEXT(funcctx, result);
+  }
+}
+
+
+
+
+Datum
+Tpoint_space_time_tiles_ext1(FunctionCallInfo fcinfo, bool timetile)
+{
+  /* Get input parameters */
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  double xsize = PG_GETARG_FLOAT8(1);
+  double ysize = PG_GETARG_FLOAT8(2);
+  double zsize = PG_GETARG_FLOAT8(3);
+  Interval *duration = NULL;
+  TimestampTz torigin = 0;
+  int i = 4;
+  if (timetile)
+    duration = PG_GETARG_INTERVAL_P(i++);
+  GSERIALIZED *sorigin = PG_GETARG_GSERIALIZED_P(i++);
+  if (timetile)
+    torigin = PG_GETARG_TIMESTAMPTZ(i++);
+  bool bitmatrix = PG_GETARG_BOOL(i++);
+  if (temporal_num_instants(temp) == 1)
+    bitmatrix = false;
+  bool border_inc = PG_GETARG_BOOL(i++);
+
+  /* Get the tiles */
+  int count;
+  STBox *boxes = tpoint_space_time_tiles(temp, xsize, ysize, zsize,
+      timetile ? duration : NULL, sorigin, torigin, bitmatrix, border_inc,
+      &count);
+  ArrayType *result = stboxarr_to_array(boxes, count);
+  pfree(boxes);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_ARRAYTYPE_P(result);
+}
+
+PGDLLEXPORT Datum Tpoint_space_tiles(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tpoint_space_tiles);
+/**
+ * @ingroup mobilitydb_temporal_analytics_tile
+ * @brief Return a temporal point split with respect to a spatial grid
+ * @sqlfn spaceSplit()
+ */
+Datum
+Tpoint_space_tiles(PG_FUNCTION_ARGS)
+{
+  return Tpoint_space_time_tiles_ext1(fcinfo, false);
+}
+
+PGDLLEXPORT Datum Tpoint_space_time_tiles(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tpoint_space_time_tiles);
+/**
+ * @ingroup mobilitydb_temporal_analytics_tile
+ * @brief Return a temporal point split with respect to a spatiotemporal grid
+ * @sqlfn spaceTimeSplit()
+ */
+Datum
+Tpoint_space_time_tiles(PG_FUNCTION_ARGS)
+{
+  return Tpoint_space_time_tiles_ext1(fcinfo, true);
 }
 
 /*****************************************************************************/

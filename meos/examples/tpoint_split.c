@@ -28,12 +28,12 @@
  *****************************************************************************/
 
 /**
- * @brief A simple program that applies multidimensional tiling to a temporal
- * point according to value and/or time buckets.
+ * @brief A simple program that splits a temporal point applying 
+ * multidimensional tiling according to value and/or time buckets.
  *
  * The program can be build as follows
  * @code
- * gcc -Wall -g -I/usr/local/include -o tpoint_tile tpoint_tile.c -L/usr/local/lib -lmeos
+ * gcc -Wall -g -I/usr/local/include -o tpoint_split tpoint_split.c -L/usr/local/lib -lmeos
  * @endcode
  */
 
@@ -58,40 +58,54 @@ int main(void)
   GSERIALIZED *sorigin = pgis_geometry_in("Point(0 0 0)", -1);
   TimestampTz torigin = pg_timestamptz_in("2020-03-01", -1);
 
-  bool timetile = true; /* Set this parameter to enable/disable time tile */
+  bool spacesplit = true; /* Set this parameter to enable/disable space split */
+  bool timesplit = true; /* Set this parameter to enable/disable time split */
   bool bitmatrix = true; /* Set this parameter to enable/disable the bit matrix */
   bool border_inc = true; /* Set this parameter to include/exclude the upper
                              border of the extent */
 
+  GSERIALIZED **space_buckets = NULL;
+  TimestampTz *time_buckets = NULL;
+  Temporal **result;
   int count;
-  STBox *result = tpoint_space_time_tiles(tpoint, 2.0, 2.0, 2.0,
-      timetile ? interv : NULL, sorigin, torigin, bitmatrix, border_inc,
+  if (spacesplit)
+    result = tpoint_space_time_split(tpoint, 2.0, 2.0, 2.0,
+      timesplit ? interv : NULL, sorigin, torigin, bitmatrix, border_inc,
+      &space_buckets, &time_buckets, &count);
+  else
+    result = temporal_time_split(tpoint, interv, torigin, &time_buckets,
       &count);
 
-  /* Print the input value to tile */
+  /* Print the input value to split */
   char *tpoint_str = tpoint_as_ewkt(tpoint, 3);
   printf("------------------\n");
-  printf("| Value to tile |\n");
+  printf("| Value to split |\n");
   printf("------------------\n\n");
   printf("%s\n\n", tpoint_str);
   free(tpoint_str);
 
-  /* Output the resulting tiles */
-  printf("---------\n");
-  printf("| Tiles |\n");
-  printf("---------\n");
+  /* Output the resulting fragments */
+  printf("-------------\n");
+  printf("| Fragments |\n");
+  printf("-------------\n\n");
   for (int i = 0; i < count; i++)
   {
-    char *tile_str = stbox_out(&result[i], 3);
-    sprintf(output_buffer, "%s\n", tile_str);
+    char *space_str = spacesplit ?
+      geo_as_ewkt(space_buckets[i], 3) : "";
+    char *time_str = timesplit ? pg_timestamptz_out(time_buckets[i]) : "";
+    char *temp_str = tpoint_as_ewkt(result[i], 3);
+    sprintf(output_buffer, "%s%s%s%s%s\n", space_str, spacesplit ? ", " : "",
+      time_str, timesplit ? ", " : "", temp_str);
     printf("%s", output_buffer);
-    free(tile_str);
+    if (spacesplit) free(space_str);
+    if (timesplit) free(time_str);
+    free(temp_str);
   }
 
   /* Print information about the result */
-  printf("\nNumber of tiles: %d\n", count);
+  printf("\nNumber of fragments: %d\n", count);
   if (bitmatrix)
-    printf("Using a bitmatrix for the tiling\n");
+    printf("Using a bitmatrix for the fragmentation\n");
 
   /* Finalize MEOS */
   meos_finalize();
