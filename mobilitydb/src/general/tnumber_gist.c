@@ -50,6 +50,7 @@
 #include "general/tbox.h"
 #include "general/temporal_boxops.h"
 #include "general/type_util.h"
+#include "point/stbox.h"
 /* MobilityDB */
 #include "pg_general/meos_catalog.h"
 #include "pg_general/temporal.h"

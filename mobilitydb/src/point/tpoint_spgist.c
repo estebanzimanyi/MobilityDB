@@ -755,6 +755,8 @@ Stbox_quadtree_choose(PG_FUNCTION_ARGS)
   spgChooseOut *out = (spgChooseOut *) PG_GETARG_POINTER(1);
   STBox *centroid = DatumGetSTboxP(in->prefixDatum),
     *box = DatumGetSTboxP(in->leafDatum);
+  /* Currently, the indexes for stbox assume there is time dimension */
+  ensure_has_T_stbox(centroid);
 
   out->resultType = spgMatchNode;
   out->result.matchNode.restDatum = PointerGetDatum(box);
@@ -938,6 +940,8 @@ Stbox_kdtree_choose(PG_FUNCTION_ARGS)
   STBox *query = DatumGetSTboxP(in->leafDatum), *centroid;
   assert(in->hasPrefix);
   centroid = DatumGetSTboxP(in->prefixDatum);
+  /* Currently, the indexes for stbox assume there is time dimension */
+  ensure_has_T_stbox(centroid);
   assert(in->nNodes == 2);
   out->resultType = spgMatchNode;
   out->result.matchNode.nodeN =

@@ -508,6 +508,9 @@ Stbox_gist_penalty(PG_FUNCTION_ARGS)
   float *result = (float *) PG_GETARG_POINTER(2);
   void *origstbox = (STBox *) DatumGetPointer(origentry->key);
   void *newbox = (STBox *) DatumGetPointer(newentry->key);
+  /* Currently, the indexes for stbox assume there is time dimension */
+  ensure_has_T_stbox(origstbox);
+  ensure_has_T_stbox(newbox);
   *result = (float) stbox_penalty(origstbox, newbox);
   PG_RETURN_POINTER(result);
 }
@@ -555,10 +558,9 @@ PGDLLEXPORT Datum Stbox_gist_same(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Stbox_gist_same);
 /**
  * @brief GiST same method for temporal points
- *
- * Return true only when boxes are exactly the same.  We can't use fuzzy
- * comparisons here without breaking index consistency; therefore, this isn't
- * equivalent to stbox_same().
+ * @return Return true only when boxes are exactly the same.  We can't use
+ * fuzzy comparisons here without breaking index consistency; therefore, this
+ * isn't equivalent to stbox_same().
  */
 Datum
 Stbox_gist_same(PG_FUNCTION_ARGS)
