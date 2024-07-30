@@ -420,10 +420,11 @@ stbox_tile_state_make(const Temporal *temp, const STBox *box, double xsize,
   assert(zsize <= 0 || MEOS_FLAGS_GET_Z(box->flags));
   /* When tunits is greater than 0, the box must have T dimension */
   assert(tunits <= 0 || MEOS_FLAGS_GET_T(box->flags));
-  /* The temporal point and the box must both be either planar or geodetic */
-  assert(MEOS_FLAGS_GET_X(temp->flags) && MEOS_FLAGS_GET_X(box->flags) &&
-    MEOS_FLAGS_GET_GEODETIC(temp->flags) == 
-    MEOS_FLAGS_GET_GEODETIC(box->flags));
+  /* The temporal point (if any) and the box must both have the same
+   * geodetic flag */
+  assert(! temp || ( MEOS_FLAGS_GET_X(temp->flags) && 
+    MEOS_FLAGS_GET_X(box->flags) && MEOS_FLAGS_GET_GEODETIC(temp->flags) == 
+    MEOS_FLAGS_GET_GEODETIC(box->flags)));
 
   /* palloc0 to initialize the missing dimensions to 0 */
   STboxGridState *state = palloc0(sizeof(STboxGridState));
@@ -489,7 +490,8 @@ stbox_tile_state_make(const Temporal *temp, const STBox *box, double xsize,
     else
       MEOS_FLAGS_SET_T(state->box.flags, false);
   }
-  state->geodetic = MEOS_FLAGS_GET_GEODETIC(temp->flags);
+  if (temp)
+    state->geodetic = MEOS_FLAGS_GET_GEODETIC(temp->flags);
   state->temp = temp;
   return state;
 }
