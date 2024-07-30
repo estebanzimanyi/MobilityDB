@@ -60,6 +60,7 @@ typedef struct STboxGridState
   bool done;               /**< True when all tiles have been processed */
   bool hasz;               /**< True when tiles have Z dimension */
   bool hast;               /**< True when tiles have T dimension */
+  bool geodetic;           /**< True when tiles are geodetic */
   int i;                   /**< Number of current tile */
   double xsize;            /**< Size of the x dimension */
   double ysize;            /**< Size of the y dimension */
@@ -87,7 +88,7 @@ extern Temporal *tpoint_at_tile(const Temporal *temp, const STBox *box);
 
 extern void stbox_tile_set(double x, double y, double z, TimestampTz t,
   double xsize, double ysize, double zsize, int64 tunits, bool hasz, bool hast,
-  int32 srid, STBox *result);
+  bool geodetic, int32 srid, STBox *result);
 extern STboxGridState *stbox_tile_state_make(const Temporal *temp,
   const STBox *box, double xsize, double ysize, double zsize, int64 tunits,
   POINT3DZ sorigin, TimestampTz torigin, bool border_inc);
@@ -96,7 +97,7 @@ extern bool stbox_tile_state_get(STboxGridState *state, STBox *box);
 
 extern STboxGridState *tpoint_space_time_split_init(const Temporal *temp,
   float xsize, float ysize, float zsize, const Interval *duration,
-  const GSERIALIZED *sorigin, TimestampTz torigin, bool bitmatrix, 
+  GSERIALIZED *sorigin, TimestampTz torigin, bool bitmatrix, 
   bool border_inc, int *ntiles);
 
 /*****************************************************************************/

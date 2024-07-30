@@ -370,6 +370,23 @@ ensure_same_geodetic(int16 flags1, int16 flags2)
 }
 
 /**
+ * @brief Ensure that the first spatiotemporal argument and the second geometry 
+ * argument have the same type of coordinates, either planar or geodetic
+ */
+bool
+ensure_same_geodetic_geo(int16 flags1, int16 flags2)
+{
+  if (MEOS_FLAGS_GET_X(flags1) &&
+    MEOS_FLAGS_GET_GEODETIC(flags1) != FLAGS_GET_GEODETIC(flags2))
+  {
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      "Operation on mixed planar and geodetic coordinates");
+    return false;
+  }
+  return true;
+}
+
+/**
  * @brief Ensure that the two spatial "objects" have the same SRID
  */
 bool
@@ -421,7 +438,7 @@ ensure_same_srid_stbox(const STBox *box1, const STBox *box2)
  * SRID
  */
 bool
-ensure_same_srid_stbox_gs(const STBox *box, const GSERIALIZED *gs)
+ensure_same_srid_stbox_geo(const STBox *box, const GSERIALIZED *gs)
 {
   if (box->srid != gserialized_get_srid(gs))
   {
@@ -690,7 +707,7 @@ ensure_valid_stbox_geo(const STBox *box, const GSERIALIZED *gs)
 {
   if (! ensure_not_null((void *) box) || ! ensure_not_null((void *) gs) ||
       gserialized_is_empty(gs) || ! ensure_has_X_stbox(box) ||
-      ! ensure_same_srid_stbox_gs(box, gs))
+      ! ensure_same_srid_stbox_geo(box, gs))
     return false;
   return true;
 }

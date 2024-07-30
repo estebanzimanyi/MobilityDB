@@ -360,15 +360,16 @@ fastvoxel_bm(int *coords1, double *eps1, int *coords2, double *eps2,
  * units of the SRID
  * @param[in] tunits Tile size for the temporal dimension in PostgreSQL time
  * units
- * @param[in] hasz Whether the tile has Z dimension
- * @param[in] hast Whether the tile has T dimension
+ * @param[in] hasz True when the tile has Z dimension
+ * @param[in] hast True when the tile has T dimension
+ * @param[in] geodetic True when the tile is geodetic
  * @param[in] srid SRID of the spatial coordinates
  * @param[out] result Box representing the tile
  */
 void
 stbox_tile_set(double x, double y, double z, TimestampTz t, double xsize,
-  double ysize, double zsize, int64 tunits, bool hasz, bool hast, int32 srid,
-  STBox *result)
+  double ysize, double zsize, int64 tunits, bool hasz, bool hast, 
+  bool geodetic, int32 srid, STBox *result)
 {
   double xmin = x;
   double xmax = xmin + xsize;
@@ -386,7 +387,7 @@ stbox_tile_set(double x, double y, double z, TimestampTz t, double xsize,
     span_set(TimestampTzGetDatum(t), TimestampTzGetDatum(t + tunits), true,
       false, T_TIMESTAMPTZ, T_TSTZSPAN, &p);
   }
-  stbox_set(true, hasz, false, srid, xmin, xmax, ymin, ymax, zmin, zmax,
+  stbox_set(true, hasz, geodetic, srid, xmin, xmax, ymin, ymax, zmin, zmax,
     hast ? &p : NULL, result);
   return;
 }
@@ -413,11 +414,17 @@ stbox_tile_state_make(const Temporal *temp, const STBox *box, double xsize,
   double ysize, double zsize, int64 tunits, POINT3DZ sorigin,
   TimestampTz torigin, bool border_inc)
 {
+  /* The box must have X(Y) dimension and their sizes are greater than 0 */
   assert(MEOS_FLAGS_GET_X(box->flags) && xsize > 0 && ysize > 0);
-  /* When zsize is greater than 0, verify that the box has Z dimension */
+  /* When zsize is greater than 0, the box must have Z dimension */
   assert(zsize <= 0 || MEOS_FLAGS_GET_Z(box->flags));
-  /* When tunits is greater than 0, verify that the box has T dimension */
+  /* When tunits is greater than 0, the box must have T dimension */
   assert(tunits <= 0 || MEOS_FLAGS_GET_T(box->flags));
+  /* The temporal point and the box must both be either planar or geodetic */
+  assert(MEOS_FLAGS_GET_X(temp->flags) && MEOS_FLAGS_GET_X(box->flags) &&
+    MEOS_FLAGS_GET_GEODETIC(temp->flags) == 
+    MEOS_FLAGS_GET_GEODETIC(box->flags));
+
   /* palloc0 to initialize the missing dimensions to 0 */
   STboxGridState *state = palloc0(sizeof(STboxGridState));
   /* Fill in state */
@@ -482,6 +489,7 @@ stbox_tile_state_make(const Temporal *temp, const STBox *box, double xsize,
     else
       MEOS_FLAGS_SET_T(state->box.flags, false);
   }
+  state->geodetic = MEOS_FLAGS_GET_GEODETIC(temp->flags);
   state->temp = temp;
   return state;
 }
@@ -592,7 +600,7 @@ stbox_tile_state_get(STboxGridState *state, STBox *box)
   }
   stbox_tile_set(state->x, state->y, state->z, state->t, state->xsize,
     state->ysize, state->zsize, state->tunits, state->hasz, state->hast,
-    state->box.srid, box);
+    state->geodetic, state->box.srid, box);
   return true;
 }
 
@@ -686,8 +694,8 @@ stbox_tile_list(const STBox *bounds, double xsize, double ysize, double zsize,
   for (int i = 0; i < count1; i++)
   {
     stbox_tile_set(state->x, state->y, state->z, state->t, state->xsize,
-      state->ysize, state->zsize, state->tunits, hasz, hast, state->box.srid,
-      &result[i]);
+      state->ysize, state->zsize, state->tunits, hasz, hast, state->geodetic,
+      state->box.srid, &result[i]);
     stbox_tile_state_next(state);
   }
   *count = count1;
@@ -734,6 +742,7 @@ stbox_tile(GSERIALIZED *point, TimestampTz t, double xsize, double ysize,
   memset(&pt, 0, sizeof(POINT3DZ));
   memset(&ptorig, 0, sizeof(POINT3DZ));
   bool hasz = (bool) FLAGS_GET_Z(point->gflags);
+  bool geodetic = (bool) FLAGS_GET_GEODETIC(point->gflags);
   if (hasz)
   {
     ensure_has_Z_gs(sorigin);
@@ -763,7 +772,7 @@ stbox_tile(GSERIALIZED *point, TimestampTz t, double xsize, double ysize,
     tmin = timestamptz_bucket1(t, tunits, torigin);
   STBox *result = palloc0(sizeof(STBox));
   stbox_tile_set(xmin, ymin, zmin, tmin, xsize, ysize, zsize, tunits, hasz,
-    hast, srid, result);
+    hast, geodetic, srid, result);
   return result;
 }
 
@@ -973,7 +982,8 @@ tpoint_set_tiles(const Temporal *temp, const STboxGridState *state,
  * @param[in] temp Temporal point
  * @param[in] xsize,ysize,zsize Size of the corresponding dimension
  * @param[in] duration Duration
- * @param[in] sorigin Origin for the space dimension
+ * @param[in] sorigin Origin for the space dimension. It is not read-only 
+ * since we force its geodetic flag to be the same as the temporal point
  * @param[in] torigin Origin for the time dimension
  * @param[in] bitmatrix True when using a bitmatrix to speed up the computation
  * @param[in] border_inc True when the box contains the upper border, otherwise
@@ -982,7 +992,7 @@ tpoint_set_tiles(const Temporal *temp, const STboxGridState *state,
  */
 STboxGridState *
 tpoint_space_time_split_init(const Temporal *temp, float xsize, float ysize,
-  float zsize, const Interval *duration, const GSERIALIZED *sorigin,
+  float zsize, const Interval *duration, GSERIALIZED *sorigin,
   TimestampTz torigin, bool bitmatrix, bool border_inc, int *ntiles)
 {
   /* Disable the usage of bitmatrix for instantaneous temporal values */
@@ -991,13 +1001,15 @@ tpoint_space_time_split_init(const Temporal *temp, float xsize, float ysize,
   /* Set bounding box */
   STBox bounds;
   temporal_set_bbox(temp, &bounds);
+  /* Force sorigin to have the same geodetic flag as the temporal point */
+  if (MEOS_FLAGS_GET_GEODETIC(temp->flags))
+    FLAGS_SET_GEODETIC(sorigin->gflags, true);
 
   /* Ensure parameter validity */
   if (! ensure_positive_datum(Float8GetDatum(xsize), T_FLOAT8) ||
       ! ensure_positive_datum(Float8GetDatum(ysize), T_FLOAT8) ||
       ! ensure_positive_datum(Float8GetDatum(zsize), T_FLOAT8) ||
-      ! ensure_not_empty(sorigin) || ! ensure_point_type(sorigin) ||
-      ! ensure_same_geodetic(temp->flags, sorigin->gflags))
+      ! ensure_not_empty(sorigin) || ! ensure_point_type(sorigin))
     return NULL;
   int32 srid = bounds.srid;
   int32 gs_srid = gserialized_get_srid(sorigin);
