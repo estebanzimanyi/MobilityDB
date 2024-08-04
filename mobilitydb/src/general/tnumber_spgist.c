@@ -108,7 +108,9 @@
 #include <meos.h>
 #include <meos_internal.h>
 #include "general/span.h"
+#include "general/stratnum.h"
 #include "general/tbox.h"
+#include "general/tnumber_gist.h"
 #include "general/type_util.h"
 /* MobilityDB */
 #include "pg_general/meos_catalog.h"
@@ -1082,7 +1084,7 @@ Tbox_spgist_leaf_consistent(PG_FUNCTION_ARGS)
     StrategyNumber strategy = in->scankeys[i].sk_strategy;
     /* Convert the query to a box and perform the test */
     if (tnumber_spgist_get_tbox(&in->scankeys[i], &box))
-      result = tbox_index_consistent_leaf(key, &box, strategy);
+      result = tbox_index_leaf_consistent(key, &box, strategy);
     else
       result = false;
     /* If any check is failed, we have found our answer. */

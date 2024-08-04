@@ -28,57 +28,26 @@
  *****************************************************************************/
 
 /**
- * @brief R-tree GiST index for temporal integers and temporal floats
+ * @brief R-tree GiST index for temporal points.
  */
 
-#ifndef __PG_TNUMBER_GIST_H__
-#define __PG_TNUMBER_GIST_H__
+#ifndef __TPOINT_GIST_H__
+#define __TPOINT_GIST_H__
 
 /* PostgreSQL */
 #include <postgres.h>
-#include <fmgr.h>
-#include <access/gist.h>
 #include <access/stratnum.h>
 /* MEOS */
 #include <meos.h>
-#include "general/temporal.h"
 
 /*****************************************************************************/
 
-/**
- * Structure keeping context for the function stbox_gist_consider_split.
- *
- * Contains information about currently selected split and some general
- * information.
- */
-typedef struct
-{
-  int  entriesCount;  /**< total number of entries being split */
-  bboxunion boundingBox;  /**< minimum bounding box across all entries */
-  /** Information about currently selected split follows */
-  bool first;        /**< true if no split was selected yet */
-  double leftUpper;  /**< upper bound of left interval */
-  double rightLower; /**< lower bound of right interval */
-  float4 ratio;
-  float4 overlap;
-  int  dim;          /**< axis of this split */
-  double range;      /**< width of general MBR projection to the selected axis */
-} ConsiderSplitContext;
+extern bool stbox_index_leaf_consistent(const STBox *key, const STBox *query,
+  StrategyNumber strategy);
+extern bool stbox_gist_inner_consistent(const STBox *key, const STBox *query,
+  StrategyNumber strategy);
+extern bool tpoint_index_recheck(StrategyNumber strategy);
 
 /*****************************************************************************/
 
-/* The following functions are also called by tpoint_gist.c */
-extern void bbox_gist_fallback_split(GistEntryVector *entryvec,
-  GIST_SPLITVEC *v, meosType bboxtype, void (*bbox_adjust)(void *, void *));
-extern int interval_cmp_lower(const void *i1, const void *i2);
-extern int interval_cmp_upper(const void *i1, const void *i2);
-extern float non_negative(float val);
-extern void bbox_gist_consider_split(ConsiderSplitContext *context, int dimNum,
-  meosType bboxtype, double rightLower, int minLeftCount, double leftUpper,
-  int maxLeftCount);
-extern Datum bbox_gist_picksplit(FunctionCallInfo fcinfo, meosType bboxtype,
-  void (*bbox_adjust)(void *, void *), double (*bbox_penalty)(void *, void *));
-
-/*****************************************************************************/
-
-#endif /* __PG_TNUMBER_GIST_H__ */
+#endif

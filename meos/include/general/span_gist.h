@@ -28,25 +28,27 @@
  *****************************************************************************/
 
 /**
- * @brief R-tree GiST index for temporal points.
+ * @brief Functions common for MEOS and MobilityDB GiST indexes for span types
  */
 
-#ifndef __TPOINT_GIST_H__
-#define __TPOINT_GIST_H__
+#ifndef __SPAN_GIST_H__
+#define __SPAN_GIST_H__
 
 /* PostgreSQL */
 #include <postgres.h>
-#include <access/stratnum.h>
 /* MEOS */
 #include <meos.h>
+#include "general/stratnum.h"
+#include "general/meos_catalog.h"
 
 /*****************************************************************************/
 
-/* The following functions are also called by tpoint_spgist.c */
-extern bool tpoint_index_recheck(StrategyNumber strategy);
-extern bool stbox_index_consistent_leaf(const STBox *key, const STBox *query,
+extern bool span_index_consistent_leaf(const Span *key, const Span *query,
   StrategyNumber strategy);
+extern bool span_gist_consistent(const Span *key, const Span *query,
+  StrategyNumber strategy);
+extern bool span_index_recheck(StrategyNumber strategy);
 
 /*****************************************************************************/
 
-#endif
+#endif /* __SPAN_GIST_H__ */

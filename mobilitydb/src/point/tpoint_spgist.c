@@ -106,14 +106,15 @@
 #include <meos.h>
 #include <meos_internal.h>
 #include "general/span.h"
+#include "general/stratnum.h"
 #include "general/temporal.h"
 #include "general/type_util.h"
 #include "point/stbox.h"
+#include "point/tpoint_gist.h"
 /* MobilityDB */
 #include "pg_general/meos_catalog.h"
 #include "pg_general/temporal.h"
 #include "pg_general/tnumber_spgist.h"
-#include "pg_point/tpoint_gist.h"
 
 /*****************************************************************************
  * Data structures
@@ -1402,7 +1403,7 @@ Stbox_spgist_leaf_consistent(PG_FUNCTION_ARGS)
     out->recheck |= tpoint_index_recheck(strategy);
 
     if (tpoint_spgist_get_stbox(&in->scankeys[i], &box))
-      result = stbox_index_consistent_leaf(key, &box, strategy);
+      result = stbox_index_leaf_consistent(key, &box, strategy);
     else
       result = false;
     /* If any check is failed, we have found our answer. */

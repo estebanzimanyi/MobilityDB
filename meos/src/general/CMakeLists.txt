@@ -10,6 +10,7 @@ add_library(general OBJECT
   set_ops.c
   span.c
   span_aggfuncs.c
+  span_gist.c
   span_ops.c
   spanset.c
   spanset_ops.c
@@ -26,6 +27,7 @@ add_library(general OBJECT
   temporal_waggfuncs.c
   tinstant.c
   tnumber_distance.c
+  tnumber_gist.c
   tnumber_mathfuncs.c
   tsequence.c
   tsequenceset.c

@@ -48,6 +48,7 @@
 #include <meos_internal.h>
 #include "general/set.h"
 #include "general/span.h"
+#include "general/stratnum.h"
 /* MobilityDB */
 #include "pg_general/meos_catalog.h"
 #include "pg_general/spanset.h"

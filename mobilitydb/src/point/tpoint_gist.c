@@ -32,7 +32,6 @@
  * @brief R-tree GiST index for temporal points
  */
 
-#include "pg_point/tpoint_gist.h"
 
 /* C */
 #include <float.h>
@@ -44,9 +43,11 @@
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
+#include "general/stratnum.h"
 #include "general/span.h"
 #include "general/type_util.h"
 #include "point/stbox.h"
+#include "point/tpoint_gist.h"
 /* MobilityDB */
 #include "pg_general/meos_catalog.h"
 #include "pg_general/temporal.h"
@@ -55,217 +56,6 @@
 /*****************************************************************************
  * GiST consistent methods
  *****************************************************************************/
-
-/**
- * @brief Leaf-level consistency for temporal points
- *
- * Since spatiotemporal boxes do not distinguish between inclusive and
- * exclusive bounds it is necessary to generalize the tests, e.g.,
- * - before : (box1->tmax < box2->tmin) => (box1->tmax <= box2->tmin)
- *   e.g., to take into account before([a,b],(b,c])
- * - after : (box1->tmin > box2->tmax) => (box1->tmin >= box2->tmax)
- *   e.g., to take into account after((b,c],[a,b])
- *
- * @param[in] key Element in the index
- * @param[in] query Value being looked up in the index
- * @param[in] strategy Operator of the operator class being applied
- * @note This function is used for both GiST and SP-GiST indexes
- */
-bool
-stbox_index_consistent_leaf(const STBox *key, const STBox *query,
-  StrategyNumber strategy)
-{
-  bool retval;
-
-  switch (strategy)
-  {
-    case RTOverlapStrategyNumber:
-      retval = overlaps_stbox_stbox(key, query);
-      break;
-    case RTContainsStrategyNumber:
-      retval = contains_stbox_stbox(key, query);
-      break;
-    case RTContainedByStrategyNumber:
-      retval = contained_stbox_stbox(key, query);
-      break;
-    case RTSameStrategyNumber:
-      retval = same_stbox_stbox(key, query);
-      break;
-    case RTAdjacentStrategyNumber:
-      retval = adjacent_stbox_stbox(key, query);
-      break;
-    case RTLeftStrategyNumber:
-      retval = left_stbox_stbox(key, query);
-      break;
-    case RTOverLeftStrategyNumber:
-      retval = overleft_stbox_stbox(key, query);
-      break;
-    case RTRightStrategyNumber:
-      retval = right_stbox_stbox(key, query);
-      break;
-    case RTOverRightStrategyNumber:
-      retval = overright_stbox_stbox(key, query);
-      break;
-    case RTBelowStrategyNumber:
-      retval = below_stbox_stbox(key, query);
-      break;
-    case RTOverBelowStrategyNumber:
-      retval = overbelow_stbox_stbox(key, query);
-      break;
-    case RTAboveStrategyNumber:
-      retval = above_stbox_stbox(key, query);
-      break;
-    case RTOverAboveStrategyNumber:
-      retval = overabove_stbox_stbox(key, query);
-      break;
-    case RTFrontStrategyNumber:
-      retval = front_stbox_stbox(key, query);
-      break;
-    case RTOverFrontStrategyNumber:
-      retval = overfront_stbox_stbox(key, query);
-      break;
-    case RTBackStrategyNumber:
-      retval = back_stbox_stbox(key, query);
-      break;
-    case RTOverBackStrategyNumber:
-      retval = overback_stbox_stbox(key, query);
-      break;
-    case RTBeforeStrategyNumber:
-      retval = before_stbox_stbox(key, query);
-      break;
-    case RTOverBeforeStrategyNumber:
-      retval = overbefore_stbox_stbox(key, query);
-      break;
-    case RTAfterStrategyNumber:
-      retval = after_stbox_stbox(key, query);
-      break;
-    case RTOverAfterStrategyNumber:
-      retval = overafter_stbox_stbox(key, query);
-      break;
-    default:
-      elog(ERROR, "unrecognized strategy number: %d", strategy);
-      retval = false;    /* keep compiler quiet */
-      break;
-  }
-  return retval;
-}
-
-/**
- * @brief Internal-page consistent method for temporal points
- *
- * Return false if for all data items x below entry, the predicate
- * x op query must be false, where op is the oper corresponding to strategy
- * in the pg_amop table.
- *
- * @param[in] key Element in the index
- * @param[in] query Value being looked up in the index
- * @param[in] strategy Operator of the operator class being applied
- */
-static bool
-stbox_gist_consistent(const STBox *key, const STBox *query,
-  StrategyNumber strategy)
-{
-  bool retval;
-
-  switch (strategy)
-  {
-    case RTOverlapStrategyNumber:
-    case RTContainedByStrategyNumber:
-      retval = overlaps_stbox_stbox(key, query);
-      break;
-    case RTContainsStrategyNumber:
-    case RTSameStrategyNumber:
-      retval = contains_stbox_stbox(key, query);
-      break;
-    case RTAdjacentStrategyNumber:
-      if (adjacent_stbox_stbox(key, query))
-        return true;
-      return overlaps_stbox_stbox(key, query);
-    case RTLeftStrategyNumber:
-      retval = !overright_stbox_stbox(key, query);
-      break;
-    case RTOverLeftStrategyNumber:
-      retval = !right_stbox_stbox(key, query);
-      break;
-    case RTRightStrategyNumber:
-      retval = !overleft_stbox_stbox(key, query);
-      break;
-    case RTOverRightStrategyNumber:
-      retval = !left_stbox_stbox(key, query);
-      break;
-    case RTBelowStrategyNumber:
-      retval = !overabove_stbox_stbox(key, query);
-      break;
-    case RTOverBelowStrategyNumber:
-      retval = !above_stbox_stbox(key, query);
-      break;
-    case RTAboveStrategyNumber:
-      retval = !overbelow_stbox_stbox(key, query);
-      break;
-    case RTOverAboveStrategyNumber:
-      retval = !below_stbox_stbox(key, query);
-      break;
-    case RTFrontStrategyNumber:
-      retval = !overback_stbox_stbox(key, query);
-      break;
-    case RTOverFrontStrategyNumber:
-      retval = !back_stbox_stbox(key, query);
-      break;
-    case RTBackStrategyNumber:
-      retval = !overfront_stbox_stbox(key, query);
-      break;
-    case RTOverBackStrategyNumber:
-      retval = !front_stbox_stbox(key, query);
-      break;
-    case RTBeforeStrategyNumber:
-      retval = !overafter_stbox_stbox(key, query);
-      break;
-    case RTOverBeforeStrategyNumber:
-      retval = !after_stbox_stbox(key, query);
-      break;
-    case RTAfterStrategyNumber:
-      retval = !overbefore_stbox_stbox(key, query);
-      break;
-    case RTOverAfterStrategyNumber:
-      retval = !before_stbox_stbox(key, query);
-      break;
-    default:
-      elog(ERROR, "unrecognized strategy number: %d", strategy);
-      retval = false;    /* keep compiler quiet */
-      break;
-  }
-  return retval;
-}
-
-/**
- * @brief Determine whether a recheck is necessary depending on the strategy
- * @param[in] strategy Operator of the operator class being applied
- */
-bool
-tpoint_index_recheck(StrategyNumber strategy)
-{
-  /* These operators are based on bounding boxes and do not consider
-   * inclusive or exclusive bounds */
-  switch (strategy)
-  {
-    case RTAdjacentStrategyNumber:
-    case RTLeftStrategyNumber:
-    case RTOverLeftStrategyNumber:
-    case RTRightStrategyNumber:
-    case RTOverRightStrategyNumber:
-    case RTBelowStrategyNumber:
-    case RTOverBelowStrategyNumber:
-    case RTAboveStrategyNumber:
-    case RTOverAboveStrategyNumber:
-    case RTFrontStrategyNumber:
-    case RTOverFrontStrategyNumber:
-    case RTBackStrategyNumber:
-    case RTOverBackStrategyNumber:
-      return false;
-    default:
-      return true;
-  }
-}
 
 /**
  * @brief Transform the query argument into a box initializing the dimensions
@@ -324,9 +114,9 @@ Stbox_gist_consistent(PG_FUNCTION_ARGS)
     PG_RETURN_BOOL(false);
 
   if (GIST_LEAF(entry))
-    result = stbox_index_consistent_leaf(key, &query, strategy);
+    result = stbox_index_leaf_consistent(key, &query, strategy);
   else
-    result = stbox_gist_consistent(key, &query, strategy);
+    result = stbox_gist_inner_consistent(key, &query, strategy);
 
   PG_RETURN_BOOL(result);
 }

@@ -34,6 +34,7 @@
  * These functions are based on those in the file `rangetypes_gist.c`.
  */
 
+#include "general/span_gist.h"
 #include "pg_general/span_gist.h"
 
 /* C */
@@ -57,109 +58,6 @@
 /*****************************************************************************
  * GiST consistent methods
  *****************************************************************************/
-
-/**
- * @brief Leaf-level consistency for span types
- *
- * @param[in] key Element in the index
- * @param[in] query Value being looked up in the index
- * @param[in] strategy Operator of the operator class being applied
- * @note This function is used for both GiST and SP-GiST indexes
- */
-bool
-span_index_consistent_leaf(const Span *key, const Span *query,
-  StrategyNumber strategy)
-{
-  switch (strategy)
-  {
-    case RTOverlapStrategyNumber:
-      return over_span_span(key, query);
-    case RTContainsStrategyNumber:
-      return cont_span_span(key, query);
-    case RTContainedByStrategyNumber:
-      return cont_span_span(query, key);
-    case RTEqualStrategyNumber:
-    case RTSameStrategyNumber:
-      return span_eq(key, query);
-    case RTAdjacentStrategyNumber:
-      return adj_span_span(key, query);
-    case RTLeftStrategyNumber:
-    case RTBeforeStrategyNumber:
-      return lf_span_span(key, query);
-    case RTOverLeftStrategyNumber:
-    case RTOverBeforeStrategyNumber:
-      return ovlf_span_span(key, query);
-    case RTRightStrategyNumber:
-    case RTAfterStrategyNumber:
-      return ri_span_span(key, query);
-    case RTOverRightStrategyNumber:
-    case RTOverAfterStrategyNumber:
-      return ovri_span_span(key, query);
-    default:
-      elog(ERROR, "unrecognized span strategy: %d", strategy);
-      return false;    /* keep compiler quiet */
-  }
-}
-
-/**
- * @brief GiST internal-page consistency for span types
- *
- * @param[in] key Element in the index
- * @param[in] query Value being looked up in the index
- * @param[in] strategy Operator of the operator class being applied
- */
-bool
-span_gist_consistent(const Span *key, const Span *query,
-  StrategyNumber strategy)
-{
-  switch (strategy)
-  {
-    case RTOverlapStrategyNumber:
-    case RTContainedByStrategyNumber:
-      return over_span_span(key, query);
-    case RTContainsStrategyNumber:
-    case RTEqualStrategyNumber:
-    case RTSameStrategyNumber:
-      return cont_span_span(key, query);
-    case RTAdjacentStrategyNumber:
-      return adj_span_span(key, query) || overlaps_span_span(key, query);
-    case RTLeftStrategyNumber:
-    case RTBeforeStrategyNumber:
-      return ! ovri_span_span(key, query);
-    case RTOverLeftStrategyNumber:
-    case RTOverBeforeStrategyNumber:
-      return ! ri_span_span(key, query);
-    case RTRightStrategyNumber:
-    case RTAfterStrategyNumber:
-      return ! ovlf_span_span(key, query);
-    case RTOverRightStrategyNumber:
-    case RTOverAfterStrategyNumber:
-      return ! lf_span_span(key, query);
-    default:
-      elog(ERROR, "unrecognized span strategy: %d", strategy);
-      return false;    /* keep compiler quiet */
-  }
-}
-
-/**
- * @brief Return true if a recheck is necessary depending on the strategy
- */
-bool
-span_index_recheck(StrategyNumber strategy)
-{
-  /* These operators are based on bounding boxes */
-  if (strategy == RTLeftStrategyNumber ||
-      strategy == RTBeforeStrategyNumber ||
-      strategy == RTOverLeftStrategyNumber ||
-      strategy == RTOverBeforeStrategyNumber ||
-      strategy == RTRightStrategyNumber ||
-      strategy == RTAfterStrategyNumber ||
-      strategy == RTOverRightStrategyNumber ||
-      strategy == RTOverAfterStrategyNumber ||
-      strategy == RTKNNSearchStrategyNumber)
-    return false;
-  return true;
-}
 
 /**
  * @brief Transform the query argument into a span
