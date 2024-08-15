@@ -394,7 +394,7 @@ stbox_tile_set(double x, double y, double z, TimestampTz t, double xsize,
 /**
  * @brief Create the initial state that persists across multiple calls of the
  * function
- * @param[in] temp Optional temporal point to split
+ * @param[in] temp Temporal point to split, may be @p NULL
  * @param[in] box Bounds for generating the multidimensional grid
  * @param[in] xsize,ysize,zsize Tile sizes for the spatial dimensions in the
  * units of the SRID
@@ -466,9 +466,9 @@ stbox_tile_state_make(const Temporal *temp, const STBox *box, double xsize,
     {
       state->hast = true;
       state->tunits = interval_units(duration);
-      state->box.period.lower = TimestampTzGetDatum(timestamptz_get_bin1(
+      state->box.period.lower = TimestampTzGetDatum(timestamptz_get_bin_int(
         DatumGetTimestampTz(box->period.lower), state->tunits, torigin));
-      state->box.period.upper = TimestampTzGetDatum(timestamptz_get_bin1(
+      state->box.period.upper = TimestampTzGetDatum(timestamptz_get_bin_int(
         DatumGetTimestampTz(box->period.upper), state->tunits, torigin));
       state->max_coords[dim] =
         ceil((state->box.period.upper - state->box.period.lower) / 
@@ -495,7 +495,7 @@ stbox_tile_state_next(STboxGridState *state)
 {
   if (! state || state->done)
     return;
-  /* Move to the next cell. We need to take into account whether hasz and/or
+  /* Move to the next tile. We need to take into account whether hasz and/or
    * hast and thus there are 4 possible cases.
    * Notice that the dimensions are "compacted", that is, for both XYZ and XYT
    * the last dimension Z or T are in coords[2] */
@@ -771,7 +771,7 @@ stbox_space_time_tile_common(const GSERIALIZED *point, TimestampTz t,
   double zmin = float_get_bin(pt.z, zsize, ptorig.z);
   TimestampTz tmin = 0; /* make compiler quiet */
   if (hast)
-    tmin = timestamptz_get_bin1(t, tunits, torigin);
+    tmin = timestamptz_get_bin_int(t, tunits, torigin);
   STBox *result = palloc0(sizeof(STBox));
   stbox_tile_set(xmin, ymin, zmin, tmin, xsize, ysize, zsize, tunits, hasz,
     hast, srid, result);
@@ -996,7 +996,7 @@ tpointinst_get_coords_fpos(const TInstant *inst, bool hasz, bool hast,
   if (hasz)
     z = float_get_bin(p.z, state->zsize, state->box.zmin);
   if (hast)
-    t = timestamptz_get_bin1(inst->t, state->tunits,
+    t = timestamptz_get_bin_int(inst->t, state->tunits,
       DatumGetTimestampTz(state->box.period.lower));
   /* Transform the minimum values of the tile into matrix coordinates */
   tile_get_coords(x, y, z, t, state, coords);
@@ -1045,20 +1045,23 @@ static int
 tpointseq_cont_set_tiles(const TSequence *seq, bool hasz, bool hast,
   const STboxGridState *state, BitMatrix *bm)
 {
+  assert(seq); assert(state);
+  assert(MEOS_FLAGS_GET_INTERP(seq->flags) != DISCRETE);
+
   int ndims = 2 + (hasz ? 1 : 0) + (hast ? 1 : 0);
   int coords1[MAXDIMS], coords2[MAXDIMS], result = 0;
-  double eps1[MAXDIMS], eps2[MAXDIMS];
+  double fpos1[MAXDIMS], fpos2[MAXDIMS];
   memset(coords1, 0, sizeof(coords1));
   memset(coords2, 0, sizeof(coords2));
   tpointinst_get_coords_fpos(TSEQUENCE_INST_N(seq, 0), hasz, hast, state,
-    coords1, eps1);
+    coords1, fpos1);
   for (int i = 1; i < seq->count; i++)
   {
     tpointinst_get_coords_fpos(TSEQUENCE_INST_N(seq, i), hasz, hast, state,
-      coords2, eps2);
-    result += fastvoxel_bm(coords1, eps1, coords2, eps2, ndims, bm);
+      coords2, fpos2);
+    result += fastvoxel_bm(coords1, fpos1, coords2, fpos2, ndims, bm);
     memcpy(coords1, coords2, sizeof(coords1));
-    memcpy(eps1, eps2, sizeof(eps1));
+    memcpy(fpos1, fpos2, sizeof(fpos1));
   }
   return result;
 }
@@ -1153,7 +1156,7 @@ tpoint_space_time_tile_init(const Temporal *temp, double xsize, double ysize,
 
   /* Set bounding box */
   STBox bounds;
-  temporal_set_bbox(temp, &bounds);
+  tspatial_set_stbox(temp, &bounds);
   int32 srid = bounds.srid;
   int32 gs_srid = gserialized_get_srid(sorigin);
   if (gs_srid != SRID_UNKNOWN && ! ensure_same_srid(srid, gs_srid))
