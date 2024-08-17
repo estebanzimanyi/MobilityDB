@@ -36,47 +36,7 @@
 
 /* MEOS */
 #include <meos.h>
-
-#define MAXDIMS 4
-
-/*****************************************************************************/
-
-/**
- * Structure for storing a bit matrix
- */
-typedef struct
-{
-  int ndims;             /**< Number of dimensions */
-  int count[MAXDIMS];    /**< Number of elements in each dimension */
-  uint8_t byte[1];       /**< beginning of variable-length data */
-} BitMatrix;
-
-/**
- * Struct for storing the state that persists across multiple calls generating
- * a multidimensional grid
- */
-typedef struct STboxGridState
-{
-  bool done;               /**< True when all tiles have been processed */
-  bool hasz;               /**< True when tiles have Z dimension */
-  bool hast;               /**< True when tiles have T dimension */
-  int i;                   /**< Number of current tile */
-  double xsize;            /**< Size of the x dimension */
-  double ysize;            /**< Size of the y dimension */
-  double zsize;            /**< Size of the z dimension, 0 for 2D */
-  int64 tunits;            /**< Size of the time dimension, 0 for spatial only */
-  STBox box;               /**< Bounding box of the grid */
-  const Temporal *temp;    /**< Optional temporal point to be split */
-  BitMatrix *bm;           /**< Optional bit matrix for speeding up the
-                              computation of the split functions */
-  double x;                /**< Minimum x value of the current tile */
-  double y;                /**< Minimum y value of the current tile */
-  double z;                /**< Minimum z value of the current tile, if any */
-  TimestampTz t;           /**< Minimum t value of the current tile, if any */
-  int ntiles;              /**< Total number of tiles */
-  int max_coords[MAXDIMS]; /**< Maximum coordinates of the tiles */
-  int coords[MAXDIMS];     /**< Coordinates of the current tile */
-} STboxGridState;
+#include "general/temporal.h"
 
 /*****************************************************************************/
 

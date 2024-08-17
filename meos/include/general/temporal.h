@@ -234,6 +234,95 @@ typedef union bboxunion
   STBox g;     /**< Spatiotemporal box */
 } bboxunion;
 
+/*****************************************************************************/
+
+/**
+ * Struct for storing the state that persists across multiple calls generating
+ * the bin list
+ */
+typedef struct SpanBinState
+{
+  bool done;            /**< True when the state is consumed */
+  uint8 basetype;       /**< span basetype */
+  int i;                /**< Current tile number */
+  Datum size;           /**< Size of the values */ 
+  Datum origin;         /**< Origin of the values */
+  Datum minvalue;       /**< Maximum value */
+  Datum maxvalue;       /**< Maximum value */
+  Span span;            /**< Bounding span */
+  const Temporal *temp; /**< NULL when generating bins, used for splitting */
+  Datum value;          /**< Current value */
+  int nbins;            /**< Total number of bins */
+} SpanBinState;
+
+/**
+ * @brief Struct for storing the state for tiling operations
+ */
+typedef struct TboxGridState
+{
+  bool done;            /**< True when the state is consumed */
+  int i;                /**< Current tile number */
+  Datum vsize;          /**< Value size */
+  int64 tunits;         /**< Time size */
+  TBox box;             /**< Bounding box */
+  const Temporal *temp; /**< Optional temporal number to be split */
+  Datum value;          /**< Current value */
+  TimestampTz t;        /**< Current time */
+  int ntiles;           /**< Total number of tiles */
+  int max_coords[2];    /**< Maximum coordinates of the tiles */
+  int coords[2];        /**< Coordinates of the current tile */
+} TboxGridState;
+
+#define MAXDIMS 4
+
+/**
+ * Structure for storing a bit matrix
+ */
+typedef struct
+{
+  int ndims;             /**< Number of dimensions */
+  int count[MAXDIMS];    /**< Number of elements in each dimension */
+  uint8_t byte[1];       /**< beginning of variable-length data */
+} BitMatrix;
+
+/**
+ * Struct for storing the state that persists across multiple calls generating
+ * a multidimensional grid
+ */
+typedef struct STboxGridState
+{
+  bool done;               /**< True when all tiles have been processed */
+  bool hasz;               /**< True when tiles have Z dimension */
+  bool hast;               /**< True when tiles have T dimension */
+  int i;                   /**< Number of current tile */
+  double xsize;            /**< Size of the x dimension */
+  double ysize;            /**< Size of the y dimension */
+  double zsize;            /**< Size of the z dimension, 0 for 2D */
+  int64 tunits;            /**< Size of the time dimension, 0 for spatial only */
+  STBox box;               /**< Bounding box of the grid */
+  const Temporal *temp;    /**< Optional temporal point to be split */
+  BitMatrix *bm;           /**< Optional bit matrix for speeding up the
+                              computation of the split functions */
+  double x;                /**< Minimum x value of the current tile */
+  double y;                /**< Minimum y value of the current tile */
+  double z;                /**< Minimum z value of the current tile, if any */
+  TimestampTz t;           /**< Minimum t value of the current tile, if any */
+  int ntiles;              /**< Total number of tiles */
+  int max_coords[MAXDIMS]; /**< Maximum coordinates of the tiles */
+  int coords[MAXDIMS];     /**< Coordinates of the current tile */
+} STboxGridState;
+
+/**
+ * Structure to represent all types of states for bounding boxes
+ */
+typedef union BboxGridState
+{
+  SpanBinState span_state;     /**< Span */
+  TboxGridState tbox_state;    /**< Temporal box */
+  STboxGridState stbox_state;  /**< Spatiotemporal box */
+  
+} BboxGridState;
+
 /*****************************************************************************
  * Miscellaneous
  *****************************************************************************/

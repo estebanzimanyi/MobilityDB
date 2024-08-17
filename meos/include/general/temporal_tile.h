@@ -33,47 +33,7 @@
 /* MEOS */
 #include <meos.h>
 #include "general/meos_catalog.h"
-
-#define MAXDIMS 4
-
-/*****************************************************************************/
-
-/**
- * Struct for storing the state that persists across multiple calls generating
- * the bin list
- */
-typedef struct SpanBinState
-{
-  bool done;            /**< True when the state is consumed */
-  uint8 basetype;       /**< span basetype */
-  int i;                /**< Current tile number */
-  Datum size;           /**< Size of the values */ 
-  Datum origin;         /**< Origin of the values */
-  Datum minvalue;       /**< Maximum value */
-  Datum maxvalue;       /**< Maximum value */
-  Span span;            /**< Bounding span */
-  const Temporal *temp; /**< NULL when generating bins, used for splitting */
-  Datum value;          /**< Current value */
-  int nbins;            /**< Total number of bins */
-} SpanBinState;
-
-/**
- * @brief Struct for storing the state for tiling operations
- */
-typedef struct TboxGridState
-{
-  bool done;            /**< True when the state is consumed */
-  int i;                /**< Current tile number */
-  Datum vsize;          /**< Value size */
-  int64 tunits;         /**< Time size */
-  TBox box;             /**< Bounding box */
-  const Temporal *temp; /**< Optional temporal number to be split */
-  Datum value;          /**< Current value */
-  TimestampTz t;        /**< Current time */
-  int ntiles;           /**< Total number of tiles */
-  int max_coords[2];    /**< Maximum coordinates of the tiles */
-  int coords[2];        /**< Coordinates of the current tile */
-} TboxGridState;
+#include "general/temporal.h"
 
 /*****************************************************************************/
 
