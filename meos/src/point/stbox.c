@@ -443,12 +443,13 @@ stbox_set_gbox(const STBox *box, GBOX *gbox)
   gbox->xmax = box->xmax;
   gbox->ymin = box->ymin;
   gbox->ymax = box->ymax;
-  if (MEOS_FLAGS_GET_Z(box->flags))
+  bool hasz = MEOS_FLAGS_GET_Z(box->flags);
+  if (hasz)
   {
     gbox->zmin = box->zmin;
     gbox->zmax = box->zmax;
   }
-  FLAGS_SET_Z(gbox->flags, MEOS_FLAGS_GET_Z(box->flags));
+  FLAGS_SET_Z(gbox->flags, hasz);
   FLAGS_SET_M(gbox->flags, false);
   FLAGS_SET_GEODETIC(gbox->flags, MEOS_FLAGS_GET_GEODETIC(box->flags));
   return;
