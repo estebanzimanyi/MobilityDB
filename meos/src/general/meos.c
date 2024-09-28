@@ -50,7 +50,7 @@
  * Functions for the Gnu Scientific Library (GSL)
  ***************************************************************************/
 
-/* Global variables */
+/* Global variables for GSL */
 
 static bool MEOS_GSL_INITIALIZED = false;
 static gsl_rng *MEOS_GENERATION_RNG = NULL;
@@ -266,7 +266,7 @@ split_to_stringlist(const char *s, const char *delim, _stringlist **listhead)
 /**
  * @brief Global constant array containing the datestyle strings
  */
-static const char * _DATESTYLE_STRINGS[] =
+static const char * MEOS_DATESTYLE_STRINGS[] =
 {
   [USE_POSTGRES_DATES] = "Postgres",
   [USE_ISO_DATES] = "ISO",
@@ -278,7 +278,7 @@ static const char * _DATESTYLE_STRINGS[] =
 /**
  * @brief Global constant array containing the dateorder strings
  */
-static const char * _DATEORDER_STRINGS[] =
+static const char * MEOS_DATEORDER_STRINGS[] =
 {
   [DATEORDER_YMD] = "YMD",
   [DATEORDER_DMY] = "DMY",
@@ -288,7 +288,7 @@ static const char * _DATEORDER_STRINGS[] =
 /**
  * @brief Global constant array containing the intervalstyle string
  */
-static const char * _INTERVALSTYLE_STRINGS[] =
+static const char * MEOS_INTERVALSTYLE_STRINGS[] =
 {
   [INTSTYLE_POSTGRES] = "postgres",
   [INTSTYLE_POSTGRES_VERBOSE] = "postgres_verbose",
@@ -302,7 +302,7 @@ static const char * _INTERVALSTYLE_STRINGS[] =
 const char *
 datestyle_string(int datestyle)
 {
-  return _DATESTYLE_STRINGS[datestyle];
+  return MEOS_DATESTYLE_STRINGS[datestyle];
 }
 
 /**
@@ -311,7 +311,7 @@ datestyle_string(int datestyle)
 const char *
 dateorder_string(int dateorder)
 {
-  return _DATEORDER_STRINGS[dateorder];
+  return MEOS_DATEORDER_STRINGS[dateorder];
 }
 
 /**
@@ -320,7 +320,7 @@ dateorder_string(int dateorder)
 const char *
 intervalstyle_string(int intervalstyle)
 {
-  return _INTERVALSTYLE_STRINGS[intervalstyle];
+  return MEOS_INTERVALSTYLE_STRINGS[intervalstyle];
 }
 
 /***************************************************************************/

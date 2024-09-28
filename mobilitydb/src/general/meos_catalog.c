@@ -173,7 +173,6 @@ RelnameNspGetRelid(const char *relname, Oid nsp_oid)
 }
 
 #if POSTGRESQL_VERSION_NUMBER < 160000
-
 /*
  * get_extension_schema - given an extension OID, fetch its extnamespace
  *
@@ -212,7 +211,6 @@ get_extension_schema(Oid ext_oid)
 
   return result;
 }
-
 #endif
 
 /**
