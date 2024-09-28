@@ -50,11 +50,11 @@
  * Functions for the Gnu Scientific Library (GSL)
  ***************************************************************************/
 
-/* Global variables for GSL */
+/* Global variables for GSL defined in file globals.c */
 
-static bool MEOS_GSL_INITIALIZED = false;
-static gsl_rng *MEOS_GENERATION_RNG = NULL;
-static gsl_rng *MEOS_AGGREGATION_RNG = NULL;
+extern bool MEOS_GSL_INITIALIZED;
+extern gsl_rng *MEOS_GENERATION_RNG;
+extern gsl_rng *MEOS_AGGREGATION_RNG;
 
 /**
  * @brief Initialize the Gnu Scientific Library
@@ -112,9 +112,9 @@ gsl_get_aggregation_rng(void)
  * Functions for the PROJ library
  ***************************************************************************/
 
-/* Global variables keeping Proj context */
+/* Global variables keeping Proj context defined in file globals.c */
 
-PJ_CONTEXT *MEOS_PJ_CONTEXT = NULL;
+extern PJ_CONTEXT *MEOS_PJ_CONTEXT;
 
 /**
  * @brief Initialize the PROJ library
@@ -156,37 +156,11 @@ proj_get_context(void)
 #if MEOS
 /*****************************************************************************/
 
-/* Definitions taken from miscadmin.h */
+/* Global variables defined from globals.c */
 
-/* valid DateStyle values */
-#define USE_POSTGRES_DATES 0
-#define USE_ISO_DATES      1
-#define USE_SQL_DATES      2
-#define USE_GERMAN_DATES   3
-#define USE_XSD_DATES      4
-
-/* valid DateOrder values taken */
-#define DATEORDER_YMD      0
-#define DATEORDER_DMY      1
-#define DATEORDER_MDY      2
-
-/*
- * IntervalStyles
- *   INTSTYLE_POSTGRES           Like Postgres < 8.4 when DateStyle = 'iso'
- *   INTSTYLE_POSTGRES_VERBOSE   Like Postgres < 8.4 when DateStyle != 'iso'
- *   INTSTYLE_SQL_STANDARD       SQL standard interval literals
- *   INTSTYLE_ISO_8601           ISO-8601-basic formatted intervals
- */
-#define INTSTYLE_POSTGRES          0
-#define INTSTYLE_POSTGRES_VERBOSE  1
-#define INTSTYLE_SQL_STANDARD      2
-#define INTSTYLE_ISO_8601          3
-
-/* Global variables with default definitions taken from globals.c */
-
-int DateStyle = USE_ISO_DATES;
-int DateOrder = DATEORDER_MDY;
-int IntervalStyle = INTSTYLE_POSTGRES;
+extern int DateStyle;
+extern int DateOrder;
+extern int IntervalStyle;
 
 /***************************************************************************
  * Definitions taken from pg_regress.h/c

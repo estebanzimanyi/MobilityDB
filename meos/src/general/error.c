@@ -134,7 +134,7 @@ int meos_errno_reset(void)
 /**
  * @brief Global variable that keeps the error handler function
  */
-void (*MEOS_ERROR_HANDLER)(int, int, const char *) = NULL;
+extern void (*MEOS_ERROR_HANDLER)(int, int, const char *);
 
 #if MEOS
 /**

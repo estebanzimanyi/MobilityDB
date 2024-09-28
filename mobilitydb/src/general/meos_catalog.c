@@ -106,25 +106,25 @@ typedef struct
 #include "lib/simplehash.h"
 
 /*****************************************************************************
- * Global variables
+ * Global variables defined in the file globals.c
  *****************************************************************************/
 
 /**
  * @brief Global variable that states whether the type and operator Oid caches
  * have been initialized
  */
-static bool MOBDB_TYPEOID_CACHE_READY = false;
-static bool MOBDB_OPEROID_CACHE_READY = false;
+extern bool MOBDB_TYPEOID_CACHE_READY;
+extern bool MOBDB_OPEROID_CACHE_READY;
 
 /**
  * @brief Global variable array that keeps the type Oids used in MobilityDB
  */
-static Oid MOBDB_TYPE_OID[NO_MEOS_TYPES];
+extern Oid MOBDB_TYPE_OID[NO_MEOS_TYPES];
 
 /**
  * @brief Global hash table that keeps the operator Oids used in MobilityDB
  */
-struct opertable_hash *MOBDB_OPER_OID = NULL;
+extern struct opertable_hash *MOBDB_OPER_OID;
 
 /**
  * @brief Global variable 3-dimensional array that keeps the operator Oids used
@@ -135,7 +135,7 @@ struct opertable_hash *MOBDB_OPER_OID = NULL;
  * arguments of the operator. A value 0 is stored in the cell of the array if
  * the operator class is not defined for the left and right types.
  */
-static Oid MOBDB_OPER_OID_ARGS[NO_MEOS_TYPES][NO_MEOS_TYPES][NO_MEOS_TYPES];
+extern Oid MOBDB_OPER_OID_ARGS[NO_MEOS_TYPES][NO_MEOS_TYPES][NO_MEOS_TYPES];
 
 /*****************************************************************************
  * Catalog functions

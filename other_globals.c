@@ -61,10 +61,6 @@ get_timezone_offset(struct tm *tm)
 
 /* File /meos/postgres/timezone/localtime.c */
 
-static const char wildabbr[] = WILDABBR;
-
-static const char gmt[] = "GMT";
-
 /*
  * Section 4.12.3 of X3.159-1989 requires that
  *	Except for the strftime function, these functions [asctime,
@@ -74,15 +70,6 @@ static const char gmt[] = "GMT";
  */
 
 static struct pg_tm tm;
-
-static const int mon_lengths[2][MONSPERYEAR] = {
-	{31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
-	{31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
-};
-
-static const int year_lengths[2] = {
-	DAYSPERNYEAR, DAYSPERLYEAR
-};
 
 /*****************************************************************************/
 
@@ -179,7 +166,6 @@ PROJSRSCache;
 * Global that holds the final output geometry for the WKT parser.
 */
 extern LWGEOM_PARSER_RESULT global_parser_result;
-extern const char *parser_error_messages[];
 
 /*****************************************************************************/
 
@@ -244,21 +230,6 @@ struct geomtype_struct
 
 struct geomtype_struct geomtype_struct_array[] = {...}
 
-/*
-* We use a very simple upper case mapper here, because the system toupper() function
-* is locale dependent and may have trouble mapping lower case strings to the upper
-* case ones we expect (see, the "Turkisk I", http://www.i18nguy.com/unicode/turkish-i18n.html)
-* We could also count on PgSQL sending us *lower* case inputs, as it seems to do that
-* regardless of the case the user provides for the type arguments.
-*/
-const char dumb_upper_map[128] = "...";
-
-/*****************************************************************************/
-
-/* File /postgis/liblwgeom/lwin_wkt_lex.c */
-
-static int yy_init_globals ( void );
-
 /*****************************************************************************/
 
 /* File /postgis/libpgcommon/lwgeom_pg.h */
@@ -296,188 +267,6 @@ extern postgisConstants *POSTGIS_CONSTANTS;
 
 /* Global to hold the Proj object cache */
 PROJSRSCache *PROJ_CACHE = NULL;
-
-/*****************************************************************************
- * MEOS Globals 
- *****************************************************************************/
-
-/* File /meos/src/general/error.c */
-
-/**
- * @brief Global variable that keeps the last error number
- */
-static int MEOS_ERR_NO = 0;
-
-/**
- * @brief Global variable that keeps the error handler function
- */
-void (*MEOS_ERROR_HANDLER)(int, int, const char *) = NULL;
-
-/*****************************************************************************/
-
-/* File /meos/general/meos_catalog.c */
-
-/**
- * @brief Global constant array containing the type names corresponding to the
- * enumeration meosType defined in file `meos_catalog.h`
- */
-static const char *MEOS_TYPE_NAMES[] = {...}
-
-/**
- * @brief Global constant array containing the operator names corresponding to
- * the enumeration meosOper defined in file `meos_catalog.h`
- */
-static const char *MEOS_OPER_NAMES[] = {...}
-
-/**
- * @brief Global constant array storing the string representation of the
- * concrete subtypes of temporal types
- */
-static const char *MEOS_TEMPSUBTYPE_NAMES[] = {...}
-
-/**
- * @brief Global constant array containing the interpolation names
- * corresponding to the enumeration interpType defined in file `meos_catalog.h`
- * @note The names are in lowercase since they are used in error messages
- */
-static const char * MEOS_INTERPTYPE_NAMES[] = {...}
-
-/**
- * @brief Global constant array that keeps type information for the defined set
- * types
- */
-static const settype_catalog_struct MEOS_SETTYPE_CATALOG[] = {...}
-
-/**
- * @brief Global constant array that keeps type information for the defined
- * span types
- */
-static const spantype_catalog_struct MEOS_SPANTYPE_CATALOG[] = {...}
-
-/**
- * @brief Global constant array that keeps type information for the defined
- * span set types
- */
-static const spansettype_catalog_struct MEOS_SPANSETTYPE_CATALOG[] = {...}
-
-/**
- * @brief Global constant array that keeps type information for the defined
- * temporal types
- */
-static const temptype_catalog_struct MEOS_TEMPTYPE_CATALOG[] = {...}
-
-/*****************************************************************************/
-
-/* File /meos/src/general/meos.c */
-
-/* Global variables for GSL */
-
-static bool MEOS_GSL_INITIALIZED = false;
-static gsl_rng *MEOS_GENERATION_RNG = NULL;
-static gsl_rng *MEOS_AGGREGATION_RNG = NULL;
-
-/* Global variables keeping Proj context */
-
-PJ_CONTEXT *MEOS_PJ_CONTEXT = NULL;
-
-/* Global variables with default definitions taken from globals.c */
-
-int DateStyle = USE_ISO_DATES;
-int DateOrder = DATEORDER_MDY;
-int IntervalStyle = INTSTYLE_POSTGRES;
-
-/**
- * @brief Global constant array containing the datestyle strings
- */
-static const char * MEOS_DATESTYLE_STRINGS[] =
-{
-  [USE_POSTGRES_DATES] = "Postgres",
-  [USE_ISO_DATES] = "ISO",
-  [USE_SQL_DATES] = "SQL",
-  [USE_GERMAN_DATES] = "German",
-  [USE_XSD_DATES] = "XSD"
-};
-
-/**
- * @brief Global constant array containing the dateorder strings
- */
-static const char * MEOS_DATEORDER_STRINGS[] =
-{
-  [DATEORDER_YMD] = "YMD",
-  [DATEORDER_DMY] = "DMY",
-  [DATEORDER_MDY] = "MDY",
-};
-
-/**
- * @brief Global constant array containing the intervalstyle string
- */
-static const char * MEOS_INTERVALSTYLE_STRINGS[] =
-{
-  [INTSTYLE_POSTGRES] = "postgres",
-  [INTSTYLE_POSTGRES_VERBOSE] = "postgres_verbose",
-  [INTSTYLE_SQL_STANDARD] = "sql_standard",
-  [INTSTYLE_ISO_8601] = "iso_8601"
-};
-
-/*****************************************************************************
- * MobilityDB Globals 
- *****************************************************************************/
-
-/* File /mobilitydb/src/general/meos_catalog.c */
-
-/**
- * @brief Global variable that states whether the type and operator Oid caches
- * have been initialized
- */
-static bool MOBDB_TYPEOID_CACHE_READY = false;
-static bool MOBDB_OPEROID_CACHE_READY = false;
-
-/**
- * @brief Global variable array that keeps the type Oids used in MobilityDB
- */
-static Oid MOBDB_TYPE_OID[NO_MEOS_TYPES];
-
-/**
- * @brief Global hash table that keeps the operator Oids used in MobilityDB
- */
-struct opertable_hash *MOBDB_OPER_OID = NULL;
-
-/**
- * @brief Global variable 3-dimensional array that keeps the operator Oids used
- * in MobilityDB
- *
- * The first dimension corresponds to the operator class (e.g., <=), the second
- * and third dimensions correspond, respectively, to the left and right
- * arguments of the operator. A value 0 is stored in the cell of the array if
- * the operator class is not defined for the left and right types.
- */
-static Oid MOBDB_OPER_OID_ARGS[NO_MEOS_TYPES][NO_MEOS_TYPES][NO_MEOS_TYPES];
-
-/*****************************************************************************/
-
-/* File /mobilitydb/src/general/temporal.c */
-
-/**
- * @brief Global variable that saves the PostgreSQL fcinfo
- *
- * This is needed when we need to change the PostgreSQL context, for example,
- * in PostGIS functions such as #transform, #geography_distance, or
- * #geography_azimuth that need to access the proj cache
- */
-static FunctionCallInfo MOBDB_PG_FCINFO;
-
-/*****************************************************************************/
-
-/* File /mobilitydb/src/general/temporal_analyze.c */
-
-/*
- * Global variable for extra data for the compute_stats function.
- * While statistic functions are running, we keep a pointer to the extra data
- * here for use by assorted subroutines.  The functions doesn't currently need
- * to be re-entrant, so avoiding this is not worth the extra notational cruft
- * that would be needed.
- */
-TemporalAnalyzeExtraData *temporal_extra_data;
 
 /*****************************************************************************/
 

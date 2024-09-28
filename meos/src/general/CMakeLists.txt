@@ -1,6 +1,7 @@
 add_library(general OBJECT
   doublen.c
   error.c
+  globals.c
   lifting.c
   meos.c
   meos_catalog.c

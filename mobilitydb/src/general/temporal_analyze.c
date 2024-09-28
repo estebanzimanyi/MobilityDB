@@ -94,9 +94,9 @@
  * While statistic functions are running, we keep a pointer to the extra data
  * here for use by assorted subroutines.  The functions doesn't currently need
  * to be re-entrant, so avoiding this is not worth the extra notational cruft
- * that would be needed.
+ * that would be needed. The variable is defined in file globals.c
  */
-TemporalAnalyzeExtraData *temporal_extra_data;
+extern TemporalAnalyzeExtraData *temporal_extra_data;
 
 /*****************************************************************************
  * Generic statistics functions for alphanumeric temporal types.
