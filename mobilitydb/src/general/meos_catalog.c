@@ -112,30 +112,27 @@ typedef struct
 /**
  * @brief Global variable that states whether the type and operator Oid caches
  * have been initialized
+ * @details
+ * - Global variable array that keeps the type Oids used in MobilityDB
+ * - Global hash table that keeps the operator Oids used in MobilityDB
+ * - Global variable 3-dimensional array that keeps the operator Oids used
+ *   in MobilityDB.
+ *   The first dimension corresponds to the operator class (e.g., <=), the 
+ *   second and third dimensions correspond, respectively, to the left and
+ *   right arguments of the operator. A value 0 is stored in the cell of the 
+ *   array ifthe operator class is not defined for the left and right types.
  */
-extern bool MOBDB_TYPEOID_CACHE_READY;
-extern bool MOBDB_OPEROID_CACHE_READY;
 
-/**
- * @brief Global variable array that keeps the type Oids used in MobilityDB
- */
-extern Oid MOBDB_TYPE_OID[NO_MEOS_TYPES];
+typedef struct
+{
+  Oid type_oid[NO_MEOS_TYPES];
+  struct opertable_hash *oper_oid;
+  Oid oper_oid_args[NO_MEOS_TYPES][NO_MEOS_TYPES][NO_MEOS_TYPES];
+} mobilitydb_constants;
 
-/**
- * @brief Global hash table that keeps the operator Oids used in MobilityDB
- */
-extern struct opertable_hash *MOBDB_OPER_OID;
+/* Global to hold all the run-time constants */
 
-/**
- * @brief Global variable 3-dimensional array that keeps the operator Oids used
- * in MobilityDB
- *
- * The first dimension corresponds to the operator class (e.g., <=), the second
- * and third dimensions correspond, respectively, to the left and right
- * arguments of the operator. A value 0 is stored in the cell of the array if
- * the operator class is not defined for the left and right types.
- */
-extern Oid MOBDB_OPER_OID_ARGS[NO_MEOS_TYPES][NO_MEOS_TYPES][NO_MEOS_TYPES];
+mobilitydb_constants *MOBILITYDB_CONSTANTS = NULL;
 
 /*****************************************************************************
  * Catalog functions
@@ -181,8 +178,8 @@ RelnameNspGetRelid(const char *relname, Oid nsp_oid)
 static Oid
 get_extension_schema(Oid ext_oid)
 {
-  Oid     result;
-  Relation  rel;
+  Oid result;
+  Relation rel;
   SysScanDesc scandesc;
   HeapTuple tuple;
   ScanKeyData entry[1];
@@ -232,13 +229,19 @@ mobilitydb_nsp_oid()
   return nsp_oid;
 }
 
-/**
- * @brief Populate the type Oid cache
- */
-static void
-populate_typeoid_cache()
+/* Cache type lookups in per-session location */
+static mobilitydb_constants *
+get_mobilitydb_constants()
 {
-  /* Fill the cache */
+	/* Put constants cache in a child of the CacheContext */
+	MemoryContext context = AllocSetContextCreate(CacheMemoryContext,
+    "MobilityDB Constants Context", ALLOCSET_DEFAULT_SIZES);
+
+	/* Allocate in the CacheContext so it is kept at the end of the statement */
+	mobilitydb_constants* constants = 
+    MemoryContextAlloc(context, sizeof(mobilitydb_constants));
+
+  /* Populate the type Oid cache */
   Oid nsp_oid = mobilitydb_nsp_oid();
   for (int i = 0; i < NO_MEOS_TYPES; i++)
   {
@@ -248,34 +251,21 @@ populate_typeoid_cache()
     if (name && ! internal_type(name))
     {
       /* Search for type oid in extension namespace */
-      MOBDB_TYPE_OID[i] = TypenameNspGetTypid(name, nsp_oid);
+      constants->type_oid[i] = 
+        TypenameNspGetTypid(name, nsp_oid);
       /* If not found, search default namespace */
-      if (MOBDB_TYPE_OID[i] == InvalidOid)
-        MOBDB_TYPE_OID[i] = TypenameGetTypid(name);
+      if (constants->type_oid[i] == InvalidOid)
+        constants->type_oid[i] = TypenameGetTypid(name);
     }
   }
-  /* Mark that the cache has been initialized */
-  MOBDB_TYPEOID_CACHE_READY = true;
-}
 
-/**
- * @brief Populate the operator Oid cache from the precomputed operator cache
- * stored in table `mobilitydb_opcache`
- *
- * This table is filled by function #fill_oid_cache when the extension is created.
- * @note Due to some memory context issues, the MOBDB_OPER_OID_ARGS array should be
- * filled again even if it is already filled during the extension creation.
- */
-static void
-populate_operoid_cache()
-{
-  /* Create the operator hash table */
-  MOBDB_OPER_OID = opertable_create(CacheMemoryContext, 2048, NULL);
-
+  /* Create the operator hash table and populate the operator Oid cache */
+  constants->oper_oid =
+    opertable_create(CacheMemoryContext, 2048, NULL);
   /* Initialize the operator array */
-  memset(MOBDB_OPER_OID_ARGS, 0, sizeof(MOBDB_OPER_OID_ARGS));
+  memset(constants->oper_oid_args, 0, 
+    sizeof(constants->oper_oid_args));
   /* Fetch the rows of the table containing the MobilityDB operator cache */
-  Oid nsp_oid = mobilitydb_nsp_oid();
   Oid catalog = RelnameNspGetRelid("mobilitydb_opcache", nsp_oid);
   Relation rel = table_open(catalog, AccessShareLock);
   TupleDesc tupDesc = rel->rd_att;
@@ -291,7 +281,8 @@ populate_operoid_cache()
     Oid oproid = DatumGetObjectId(heap_getattr(tuple, 4, tupDesc, &isnull));
     /* Fill the struct to be added to the hash table */
     bool found;
-    oid_oper_entry *entry = opertable_insert(MOBDB_OPER_OID, oproid, &found);
+    oid_oper_entry *entry =
+      opertable_insert(constants->oper_oid, oproid, &found);
     if (! found)
     {
       entry->oproid = oproid;
@@ -300,14 +291,25 @@ populate_operoid_cache()
       entry->rtype = k;
     }
     /* Fill the operator Oid array */
-    MOBDB_OPER_OID_ARGS[i][j][k] = oproid;
+    constants->oper_oid_args[i][j][k] = oproid;
     /* Read next tuple from table */
     tuple = heap_getnext(scan, ForwardScanDirection);
   }
   heap_endscan(scan);
   table_close(rel, AccessShareLock);
-  /* Mark that the cache has been initialized */
-  MOBDB_OPEROID_CACHE_READY = true;
+
+  return constants;
+}
+
+/**
+ * @brief Initialize Oid cache
+ */
+void
+mobilitydb_initialize_cache()
+{
+	/* Cache the info if we don't already have it */
+	if (! MOBILITYDB_CONSTANTS)
+		MOBILITYDB_CONSTANTS = get_mobilitydb_constants();
 }
 
 /*****************************************************************************/
@@ -319,9 +321,9 @@ populate_operoid_cache()
 Oid
 type_oid(meosType type)
 {
-  if (! MOBDB_TYPEOID_CACHE_READY)
-    populate_typeoid_cache();
-  Oid result = MOBDB_TYPE_OID[type];
+	mobilitydb_initialize_cache();
+
+  Oid result = MOBILITYDB_CONSTANTS->type_oid[type];
   if (! result)
     ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
       errmsg("Unknown MEOS type; %s", meostype_name(type))));
@@ -338,11 +340,11 @@ type_oid(meosType type)
 meosType
 oid_type(Oid typid)
 {
-  if (! MOBDB_TYPEOID_CACHE_READY)
-    populate_typeoid_cache();
+	mobilitydb_initialize_cache();
+
   for (int i = 0; i < NO_MEOS_TYPES; i++)
   {
-    if (MOBDB_TYPE_OID[i] == typid)
+    if (MOBILITYDB_CONSTANTS->type_oid[i] == typid)
       return i;
   }
   return T_UNKNOWN;
@@ -359,16 +361,16 @@ oid_type(Oid typid)
 Oid
 oper_oid(meosOper oper, meosType lt, meosType rt)
 {
-  if (! MOBDB_OPEROID_CACHE_READY)
-    populate_operoid_cache();
-  Oid result = MOBDB_OPER_OID_ARGS[oper][lt][rt];
+	mobilitydb_initialize_cache();
+
+  Oid result = MOBILITYDB_CONSTANTS->oper_oid_args[oper][lt][rt];
   if (! result)
   {
     ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
       errmsg("Unknown MEOS operator: %s, ltype; %s, rtype; %s",
         meosoper_name(oper), meostype_name(lt), meostype_name(rt))));
   }
-  return MOBDB_OPER_OID_ARGS[oper][lt][rt];
+  return MOBILITYDB_CONSTANTS->oper_oid_args[oper][lt][rt];
 }
 
 /**
@@ -379,9 +381,10 @@ oper_oid(meosOper oper, meosType lt, meosType rt)
 meosOper
 oid_oper(Oid oproid, meosType *ltype, meosType *rtype)
 {
-  if (! MOBDB_OPEROID_CACHE_READY)
-    populate_operoid_cache();
-  oid_oper_entry *entry = opertable_lookup(MOBDB_OPER_OID, oproid);
+	mobilitydb_initialize_cache();
+
+  oid_oper_entry *entry = opertable_lookup(
+    MOBILITYDB_CONSTANTS->oper_oid, oproid);
   if (! entry)
   {
     ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
@@ -410,9 +413,6 @@ PG_FUNCTION_INFO_V1(fill_oid_cache);
 Datum
 fill_oid_cache(PG_FUNCTION_ARGS __attribute__((unused)))
 {
-  /* Fill the Oid type cache */
-  populate_typeoid_cache();
-
   /* Get the Oid of the mobilitydb_opcache table */
   Oid cat_mob = RelnameGetRelid("mobilitydb_opcache");
   Relation rel_mob = table_open(cat_mob, AccessExclusiveLock);
