@@ -90,8 +90,8 @@ temporal_const_to_tstzspan(Node *other, Span *s)
 bool
 tnumber_const_to_span_tstzspan(const Node *other, Span **s, Span **p)
 {
-  Oid consttypid = ((Const *) other)->consttype;
-  meosType type = oid_type(consttypid);
+  Oid consttypoid = ((Const *) other)->consttype;
+  meosType type = oid_type(consttypoid);
   Span *span;
   if (numspan_type(type))
   {
@@ -288,7 +288,7 @@ tpoint_sel_default(meosOper oper)
  * we don't have statistics or cannot use them for some reason
  */
 float8
-temporal_joinsel_default(Oid operid __attribute__((unused)))
+temporal_joinsel_default(Oid oproid __attribute__((unused)))
 {
   // TODO take care of the operator
   return 0.001;
@@ -372,7 +372,7 @@ temporal_oper_sel(meosOper oper __attribute__((unused)), meosType ltype,
  * @brief Return the enum value associated to the operator
  */
 bool
-tnumber_oper_sel(Oid operid __attribute__((unused)), meosType ltype,
+tnumber_oper_sel(Oid oproid __attribute__((unused)), meosType ltype,
   meosType rtype)
 {
   if ((timespan_basetype(ltype) || timeset_type(ltype) ||
@@ -389,7 +389,7 @@ tnumber_oper_sel(Oid operid __attribute__((unused)), meosType ltype,
  * @brief Get the enum value associated to the operator
  */
 static bool
-tpoint_oper_sel(Oid operid __attribute__((unused)), meosType ltype,
+tpoint_oper_sel(Oid oproid __attribute__((unused)), meosType ltype,
   meosType rtype)
 {
   if ((timespan_basetype(ltype) || timeset_type(ltype) ||
@@ -406,7 +406,7 @@ tpoint_oper_sel(Oid operid __attribute__((unused)), meosType ltype,
  * @brief Get the enum value associated to the operator
  */
 bool
-tnpoint_oper_sel(Oid operid __attribute__((unused)), meosType ltype,
+tnpoint_oper_sel(Oid oproid __attribute__((unused)), meosType ltype,
   meosType rtype)
 {
   if ((timespan_basetype(ltype) || timeset_type(ltype) ||
@@ -468,8 +468,8 @@ temporal_sel_tstzspan(VariableStatData *vardata, Span *s, meosOper oper)
    */
   if (oper == SAME_OP)
   {
-    Oid operid = oper_oid(EQ_OP, T_TSTZSPAN, T_TSTZSPAN);
-    selec = var_eq_const(vardata, operid, DEFAULT_COLLATION_OID,
+    Oid oproid = oper_oid(EQ_OP, T_TSTZSPAN, T_TSTZSPAN);
+    selec = var_eq_const(vardata, oproid, DEFAULT_COLLATION_OID,
       SpanPGetDatum(s), false, false, false);
   }
   else if (oper == OVERLAPS_OP || oper == CONTAINS_OP ||
@@ -578,7 +578,7 @@ tnumber_sel_span_tstzspan(VariableStatData *vardata, Span *span, Span *period,
  * whose bounding box is a timestamptz span, that is, tbool and ttext
  */
 Selectivity
-temporal_sel(PlannerInfo *root, Oid operid, List *args, int varRelid,
+temporal_sel(PlannerInfo *root, Oid oproid, List *args, int varRelid,
   TemporalFamily tempfamily)
 {
   VariableStatData vardata;
@@ -588,7 +588,7 @@ temporal_sel(PlannerInfo *root, Oid operid, List *args, int varRelid,
 
   /* Determine whether we can estimate selectivity for the operator */
   meosType ltype, rtype;
-  meosOper oper = oid_oper(operid, &ltype, &rtype);
+  meosOper oper = oid_oper(oproid, &ltype, &rtype);
   if (! temporal_oper_sel_family(oper, ltype, rtype, tempfamily))
     /* In the case of unknown operator */
     return DEFAULT_TEMP_SEL;
@@ -641,8 +641,8 @@ temporal_sel(PlannerInfo *root, Oid operid, List *args, int varRelid,
   if (! varonleft)
   {
     /* we have other Op var, commute to make var Op other */
-    operid = get_commutator(operid);
-    if (! operid)
+    oproid = get_commutator(oproid);
+    if (! oproid)
     {
       /* Use default selectivity (should we raise an error instead?) */
       ReleaseVariableStats(vardata);
@@ -739,13 +739,13 @@ Selectivity
 temporal_sel_family(FunctionCallInfo fcinfo, TemporalFamily tempfamily)
 {
   PlannerInfo *root = (PlannerInfo *) PG_GETARG_POINTER(0);
-  Oid operid = PG_GETARG_OID(1);
+  Oid oproid = PG_GETARG_OID(1);
   List *args = (List *) PG_GETARG_POINTER(2);
   int varRelid = PG_GETARG_INT32(3);
 
   assert(tempfamily == TEMPORALTYPE || tempfamily == TNUMBERTYPE ||
          tempfamily == TPOINTTYPE || tempfamily == TNPOINTTYPE);
-  Selectivity selec = temporal_sel(root, operid, args, varRelid, tempfamily);
+  Selectivity selec = temporal_sel(root, oproid, args, varRelid, tempfamily);
   return selec;
 }
 
@@ -901,7 +901,7 @@ tpoint_joinsel_components(meosOper oper, meosType oprleft,
  * = and <> are eqsel and neqsel, respectively.
  */
 Selectivity
-temporal_joinsel(PlannerInfo *root, Oid operid, List *args, JoinType jointype,
+temporal_joinsel(PlannerInfo *root, Oid oproid, List *args, JoinType jointype,
   SpecialJoinInfo *sjinfo, TemporalFamily tempfamily)
 {
   assert(tempfamily == TEMPORALTYPE || tempfamily == TNUMBERTYPE ||
@@ -919,7 +919,7 @@ temporal_joinsel(PlannerInfo *root, Oid operid, List *args, JoinType jointype,
 
   /* Determine whether we can estimate selectivity for the operator */
   meosType ltype, rtype;
-  meosOper oper = oid_oper(operid, &ltype, &rtype);
+  meosOper oper = oid_oper(oproid, &ltype, &rtype);
   if (! temporal_oper_sel_family(oper, ltype, rtype, tempfamily))
     /* In the case of unknown operator */
     return DEFAULT_TEMP_SEL;
@@ -1022,7 +1022,7 @@ Selectivity
 temporal_joinsel_family(FunctionCallInfo fcinfo, TemporalFamily tempfamily)
 {
   PlannerInfo *root = (PlannerInfo *) PG_GETARG_POINTER(0);
-  Oid operid = PG_GETARG_OID(1);
+  Oid oproid = PG_GETARG_OID(1);
   List *args = (List *) PG_GETARG_POINTER(2);
   JoinType jointype = (JoinType) PG_GETARG_INT16(3);
   SpecialJoinInfo *sjinfo = (SpecialJoinInfo *) PG_GETARG_POINTER(4);
@@ -1035,7 +1035,7 @@ temporal_joinsel_family(FunctionCallInfo fcinfo, TemporalFamily tempfamily)
   if (jointype != JOIN_INNER)
     return DEFAULT_TEMP_JOINSEL;
 
-  Selectivity selec = temporal_joinsel(root, operid, args, jointype, sjinfo,
+  Selectivity selec = temporal_joinsel(root, oproid, args, jointype, sjinfo,
       tempfamily);
   return selec;
 }

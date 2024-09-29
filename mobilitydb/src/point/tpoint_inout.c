@@ -66,11 +66,11 @@ Datum
 Tpoint_from_ewkt(PG_FUNCTION_ARGS)
 {
   text *wkt_text = PG_GETARG_TEXT_P(0);
-  Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);
+  Oid typoid = get_fn_expr_rettype(fcinfo->flinfo);
   char *wkt = text2cstring(wkt_text);
   /* Copy the pointer since it will be advanced during parsing */
   const char *wkt_ptr = wkt;
-  Temporal *result = tpoint_parse(&wkt_ptr, oid_type(temptypid));
+  Temporal *result = tpoint_parse(&wkt_ptr, oid_type(typoid));
   pfree(wkt);
   PG_FREE_IF_COPY(wkt_text, 0);
   PG_RETURN_TEMPORAL_P(result);

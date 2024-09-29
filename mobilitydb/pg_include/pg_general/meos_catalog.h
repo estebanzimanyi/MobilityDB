@@ -46,8 +46,8 @@
 
 extern Oid type_oid(meosType t);
 extern Oid oper_oid(meosOper op, meosType lt, meosType rt);
-extern meosType oid_type(Oid typid);
-extern meosOper oid_oper(Oid operOid, meosType *ltype, meosType *rtype);
+extern meosType oid_type(Oid typoid);
+extern meosOper oid_oper(Oid oproid, meosType *ltype, meosType *rtype);
 
 extern bool range_basetype(meosType type);
 extern bool ensure_range_basetype(meosType type);

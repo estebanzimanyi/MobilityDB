@@ -65,9 +65,9 @@
  * that must not be taken into account by the operators to infinity
  */
 static bool
-tnumber_gist_get_tbox(FunctionCallInfo fcinfo, TBox *result, Oid typid)
+tnumber_gist_get_tbox(FunctionCallInfo fcinfo, TBox *result, Oid typoid)
 {
-  meosType type = oid_type(typid);
+  meosType type = oid_type(typoid);
   Span *s;
   if (tnumber_spantype(type))
   {
@@ -111,7 +111,7 @@ Tnumber_gist_consistent(PG_FUNCTION_ARGS)
 {
   GISTENTRY *entry = (GISTENTRY *) PG_GETARG_POINTER(0);
   StrategyNumber strategy = (StrategyNumber) PG_GETARG_UINT16(2);
-  Oid typid = PG_GETARG_OID(3);
+  Oid typoid = PG_GETARG_OID(3);
   bool *recheck = (bool *) PG_GETARG_POINTER(4), result;
   const TBox *key = DatumGetTboxP(entry->key);
   TBox query;
@@ -126,7 +126,7 @@ Tnumber_gist_consistent(PG_FUNCTION_ARGS)
     PG_RETURN_BOOL(false);
 
   /* Transform the query into a box */
-  if (! tnumber_gist_get_tbox(fcinfo, &query, typid))
+  if (! tnumber_gist_get_tbox(fcinfo, &query, typoid))
     PG_RETURN_BOOL(false);
 
   if (GIST_LEAF(entry))
@@ -1008,7 +1008,7 @@ Datum
 Tbox_gist_distance(PG_FUNCTION_ARGS)
 {
   GISTENTRY *entry = (GISTENTRY *) PG_GETARG_POINTER(0);
-  Oid typid = PG_GETARG_OID(3);
+  Oid typoid = PG_GETARG_OID(3);
   bool *recheck = (bool *) PG_GETARG_POINTER(4);
   TBox *key = (TBox *) DatumGetPointer(entry->key);
   TBox query;
@@ -1022,7 +1022,7 @@ Tbox_gist_distance(PG_FUNCTION_ARGS)
     PG_RETURN_FLOAT8(DBL_MAX);
 
   /* Transform the query into a box */
-  if (! tnumber_gist_get_tbox(fcinfo, &query, typid))
+  if (! tnumber_gist_get_tbox(fcinfo, &query, typoid))
     PG_RETURN_FLOAT8(DBL_MAX);
 
   /* Since we only have boxes we'll return the minimum possible distance,

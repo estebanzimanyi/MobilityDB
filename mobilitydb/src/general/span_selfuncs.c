@@ -82,7 +82,7 @@ span_joinsel_default(meosOper oper __attribute__((unused)))
  * @brief Determine whether we can estimate selectivity for the operator
  */
 static bool
-value_oper_sel(Oid operid __attribute__((unused)), meosType ltype,
+value_oper_sel(Oid oproid __attribute__((unused)), meosType ltype,
   meosType rtype)
 {
   if ((numset_type(ltype) || numspan_basetype(ltype) || numspan_type(ltype) ||
@@ -805,7 +805,7 @@ span_const_to_span(Node *other, Span *span)
  * @brief Restriction selectivity for span operators
  */
 Selectivity
-span_sel(PlannerInfo *root, Oid operid, List *args, int varRelid)
+span_sel(PlannerInfo *root, Oid oproid, List *args, int varRelid)
 {
   VariableStatData vardata;
   Node *other;
@@ -819,7 +819,7 @@ span_sel(PlannerInfo *root, Oid operid, List *args, int varRelid)
    */
   if (! get_restriction_variable(root, args, varRelid, &vardata, &other,
       &varonleft))
-    return span_sel_default(operid);
+    return span_sel_default(oproid);
 
   /*
    * Can't do anything useful if the something is not a constant, either.
@@ -827,7 +827,7 @@ span_sel(PlannerInfo *root, Oid operid, List *args, int varRelid)
   if (! IsA(other, Const))
   {
     ReleaseVariableStats(vardata);
-    return span_sel_default(operid);
+    return span_sel_default(oproid);
   }
 
   /*
@@ -847,13 +847,13 @@ span_sel(PlannerInfo *root, Oid operid, List *args, int varRelid)
   if (! varonleft)
   {
     /* we have other Op var, commute to make var Op other */
-    operid = get_commutator(operid);
-    if (! operid)
+    oproid = get_commutator(oproid);
+    if (! oproid)
     {
       /* TODO: check whether there might still be a way to estimate.
        * Use default selectivity (should we raise an error instead?) */
       ReleaseVariableStats(vardata);
-      return span_sel_default(operid);
+      return span_sel_default(oproid);
     }
   }
 
@@ -864,7 +864,7 @@ span_sel(PlannerInfo *root, Oid operid, List *args, int varRelid)
   span_const_to_span(other, &span);
   /* Determine whether we can estimate selectivity for the operator */
   meosType ltype, rtype;
-  meosOper oper = oid_oper(operid, &ltype, &rtype);
+  meosOper oper = oid_oper(oproid, &ltype, &rtype);
   bool value = value_oper_sel(oper, ltype, rtype);
   if (! value)
   {
@@ -873,7 +873,7 @@ span_sel(PlannerInfo *root, Oid operid, List *args, int varRelid)
     {
       /* Unknown operator */
       ReleaseVariableStats(vardata);
-      return span_sel_default(operid);
+      return span_sel_default(oproid);
     }
   }
 
@@ -909,7 +909,7 @@ span_sel(PlannerInfo *root, Oid operid, List *args, int varRelid)
    */
   float8 hist_selec = span_sel_hist(&vardata, &span, oper, value);
   if (hist_selec < 0.0)
-    hist_selec = span_sel_default(operid);
+    hist_selec = span_sel_default(oproid);
 
   selec = hist_selec;
 
@@ -934,10 +934,10 @@ Datum
 Span_sel(PG_FUNCTION_ARGS)
 {
   PlannerInfo *root = (PlannerInfo *) PG_GETARG_POINTER(0);
-  Oid operid = PG_GETARG_OID(1);
+  Oid oproid = PG_GETARG_OID(1);
   List *args = (List *) PG_GETARG_POINTER(2);
   int varRelid = PG_GETARG_INT32(3);
-  Selectivity selec = span_sel(root, operid, args, varRelid);
+  Selectivity selec = span_sel(root, oproid, args, varRelid);
   PG_RETURN_FLOAT8((float8) selec);
 }
 
@@ -955,7 +955,7 @@ _mobdb_span_sel(PG_FUNCTION_ARGS)
 {
   Oid relid = PG_GETARG_OID(0);
   text *att_text = PG_GETARG_TEXT_P(1);
-  Oid operid = PG_GETARG_OID(2);
+  Oid oproid = PG_GETARG_OID(2);
   Span *s = PG_GETARG_SPAN_P(3);
 
   /* Test input parameters */
@@ -980,12 +980,12 @@ _mobdb_span_sel(PG_FUNCTION_ARGS)
   bool value = (s->basetype != T_TIMESTAMPTZ);
   /* Determine whether we can estimate selectivity for the operator */
   meosType ltype, rtype;
-  meosOper oper = oid_oper(operid, &ltype, &rtype);
+  meosOper oper = oid_oper(oproid, &ltype, &rtype);
   bool found = value ?
     value_oper_sel(oper, ltype, rtype) : time_oper_sel(oper, ltype, rtype);
   if (! found)
     /* In case of unknown operator */
-    elog(ERROR, "Unknown span operator %d", operid);
+    elog(ERROR, "Unknown span operator %d", oproid);
 
   /* Retrieve the stats object */
   HeapTuple stats_tuple = NULL;
@@ -1443,18 +1443,18 @@ Datum
 Span_joinsel(PG_FUNCTION_ARGS)
 {
   PlannerInfo *root = (PlannerInfo *) PG_GETARG_POINTER(0);
-  Oid operid = PG_GETARG_OID(1);
+  Oid oproid = PG_GETARG_OID(1);
   List *args = (List *) PG_GETARG_POINTER(2);
   JoinType jointype = (JoinType) PG_GETARG_INT16(3);
   SpecialJoinInfo *sjinfo = (SpecialJoinInfo *) PG_GETARG_POINTER(4);
 
   /* Check length of args and punt on > 2 */
   if (list_length(args) != 2)
-    PG_RETURN_FLOAT8(span_joinsel_default(operid));
+    PG_RETURN_FLOAT8(span_joinsel_default(oproid));
 
   /* Only respond to an inner join/unknown context join */
   if (jointype != JOIN_INNER)
-    PG_RETURN_FLOAT8(span_joinsel_default(operid));
+    PG_RETURN_FLOAT8(span_joinsel_default(oproid));
 
   Node *arg1 = (Node *) linitial(args);
   Node *arg2 = (Node *) lsecond(args);
@@ -1462,18 +1462,18 @@ Span_joinsel(PG_FUNCTION_ARGS)
   /* We only do column joins right now, no functional joins */
   /* TODO: handle t1 <op> expandX(t2) */
   if (!IsA(arg1, Var) || !IsA(arg2, Var))
-    PG_RETURN_FLOAT8(span_joinsel_default(operid));
+    PG_RETURN_FLOAT8(span_joinsel_default(oproid));
 
   /* Determine whether we can estimate selectivity for the operator */
   meosType ltype, rtype;
-  meosOper oper = oid_oper(operid, &ltype, &rtype);
+  meosOper oper = oid_oper(oproid, &ltype, &rtype);
   bool value = value_oper_sel(oper, ltype, rtype);
   if (! value)
   {
     bool time = time_oper_sel(oper, ltype, rtype);
     if (! time)
       /* Return default selectivity */
-      PG_RETURN_FLOAT8(span_joinsel_default(operid));
+      PG_RETURN_FLOAT8(span_joinsel_default(oproid));
   }
 
   Selectivity selec = span_joinsel(root, value, oper, args, jointype, sjinfo);
@@ -1498,7 +1498,7 @@ _mobdb_span_joinsel(PG_FUNCTION_ARGS)
   text *att1_text = PG_GETARG_TEXT_P(1);
   Oid table2_oid = PG_GETARG_OID(2);
   text *att2_text = PG_GETARG_TEXT_P(3);
-  Oid operid = PG_GETARG_OID(4);
+  Oid oproid = PG_GETARG_OID(4);
 
   /* Test input parameters */
   char *table1_name = get_rel_name(table1_oid);
@@ -1529,14 +1529,14 @@ _mobdb_span_joinsel(PG_FUNCTION_ARGS)
 
   /* Determine whether we can estimate selectivity for the operator */
   meosType ltype, rtype;
-  meosOper oper = oid_oper(operid, &ltype, &rtype);
+  meosOper oper = oid_oper(oproid, &ltype, &rtype);
   bool value = value_oper_sel(oper, ltype, rtype);
   if (! value)
   {
     bool time = time_oper_sel(oper, ltype, rtype);
     if (! time)
       /* In case of unknown operator */
-      elog(ERROR, "Unknown span operator %d", operid);
+      elog(ERROR, "Unknown span operator %d", oproid);
   }
 
   /* Retrieve the stats objects */

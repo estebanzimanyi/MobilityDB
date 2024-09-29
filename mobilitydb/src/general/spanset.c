@@ -69,8 +69,8 @@ Datum
 Spanset_in(PG_FUNCTION_ARGS)
 {
   const char *input = PG_GETARG_CSTRING(0);
-  Oid sstypid = PG_GETARG_OID(1);
-  SpanSet *result = spanset_in(input, oid_type(sstypid));
+  Oid typoid = PG_GETARG_OID(1);
+  SpanSet *result = spanset_in(input, oid_type(typoid));
   PG_RETURN_SPANSET_P(result);
 }
 

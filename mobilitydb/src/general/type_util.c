@@ -73,16 +73,16 @@ call_recv(meosType type, StringInfo buf)
   if (type == T_DOUBLE4)
     return PointerGetDatum(double4_recv(buf));
 
-  Oid typid = type_oid(type);
-  if (typid == 0)
+  Oid typoid = type_oid(type);
+  if (typoid == 0)
     elog(ERROR, "Unknown type when calling receive function: %s",
       meostype_name(type));
   Oid recvfunc;
-  Oid basetypid;
+  Oid basetypoid;
   FmgrInfo recvfuncinfo;
-  getTypeBinaryInputInfo(typid, &recvfunc, &basetypid);
+  getTypeBinaryInputInfo(typoid, &recvfunc, &basetypoid);
   fmgr_info(recvfunc, &recvfuncinfo);
-  return ReceiveFunctionCall(&recvfuncinfo, buf, basetypid, -1);
+  return ReceiveFunctionCall(&recvfuncinfo, buf, basetypoid, -1);
 }
 
 /**
@@ -98,14 +98,14 @@ call_send(meosType type, Datum value)
   if (type == T_DOUBLE4)
     return double4_send(DatumGetDouble4P(value));
 
-  Oid typid = type_oid(type);
-  if (typid == 0)
+  Oid typoid = type_oid(type);
+  if (typoid == 0)
     elog(ERROR, "Unknown type when calling send function: %s",
       meostype_name(type));
   Oid sendfunc;
   bool isvarlena;
   FmgrInfo sendfuncinfo;
-  getTypeBinaryOutputInfo(typid, &sendfunc, &isvarlena);
+  getTypeBinaryOutputInfo(typoid, &sendfunc, &isvarlena);
   fmgr_info(sendfunc, &sendfuncinfo);
   return SendFunctionCall(&sendfuncinfo, value);
 }
@@ -256,9 +256,9 @@ datumarr_to_array(Datum *values, int count, meosType type)
   bool elmbyval;
   char elmalign;
   assert(count > 0);
-  Oid typid = type_oid(type);
-  get_typlenbyvalalign(typid, &elmlen, &elmbyval, &elmalign);
-  return construct_array(values, count, typid, elmlen, elmbyval, elmalign);
+  Oid typoid = type_oid(type);
+  get_typlenbyvalalign(typoid, &elmlen, &elmbyval, &elmalign);
+  return construct_array(values, count, typoid, elmlen, elmbyval, elmalign);
 }
 
 /**
@@ -361,8 +361,8 @@ ArrayType *
 temparr_to_array(Temporal **temparr, int count, bool free_all)
 {
   assert(count > 0);
-  Oid temptypid = type_oid(temparr[0]->temptype);
-  ArrayType *result = construct_array((Datum *) temparr, count, temptypid, -1,
+  Oid typoid = type_oid(temparr[0]->temptype);
+  ArrayType *result = construct_array((Datum *) temparr, count, typoid, -1,
     false, 'd');
   if (free_all)
   {
@@ -384,19 +384,19 @@ RangeType *
 range_make(Datum from, Datum to, bool lower_inc, bool upper_inc,
   meosType basetype)
 {
-  Oid rangetypid = 0;
+  Oid rangetypoid = 0;
   assert(basetype == T_INT4 || basetype == T_INT8 || basetype == T_DATE ||
     basetype == T_TIMESTAMPTZ);
   if (basetype == T_INT4)
-    rangetypid = type_oid(T_INT4RANGE);
+    rangetypoid = type_oid(T_INT4RANGE);
   else if (basetype == T_INT8)
-    rangetypid = type_oid(T_INT8RANGE);
+    rangetypoid = type_oid(T_INT8RANGE);
   else if (basetype == T_DATE)
-    rangetypid = type_oid(T_DATERANGE);
+    rangetypoid = type_oid(T_DATERANGE);
   else /* basetype == T_TIMESTAMPTZ */
-    rangetypid = type_oid(T_TSTZRANGE);
+    rangetypoid = type_oid(T_TSTZRANGE);
 
-  TypeCacheEntry* typcache = lookup_type_cache(rangetypid,
+  TypeCacheEntry* typcache = lookup_type_cache(rangetypoid,
     TYPECACHE_RANGE_INFO);
   RangeBound lower;
   RangeBound upper;
@@ -423,9 +423,9 @@ MultirangeType *
 multirange_make(const SpanSet *ss)
 {
   RangeType **ranges = palloc(sizeof(RangeType *) * ss->count);
-  Oid rangetypid = basetype_rangetype(ss->basetype);
-  Oid mrangetypid = basetype_multirangetype(ss->basetype);
-  TypeCacheEntry *typcache = lookup_type_cache(rangetypid,
+  Oid rangetypoid = basetype_rangetype(ss->basetype);
+  Oid mrangetypoid = basetype_multirangetype(ss->basetype);
+  TypeCacheEntry *typcache = lookup_type_cache(rangetypoid,
     TYPECACHE_RANGE_INFO);
   for (int i = 0; i < ss->count; i++)
   {
@@ -446,7 +446,7 @@ multirange_make(const SpanSet *ss)
     ranges[i] = make_range(typcache, &lower, &upper, false);
 #endif /* POSTGRESQL_VERSION_NUMBER >= 160000 */
   }
-  MultirangeType *result = make_multirange(mrangetypid, typcache, ss->count,
+  MultirangeType *result = make_multirange(mrangetypoid, typcache, ss->count,
     ranges);
   pfree_array((void **) ranges, ss->count);
   return result;

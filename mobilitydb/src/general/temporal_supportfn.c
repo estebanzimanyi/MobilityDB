@@ -366,7 +366,7 @@ Temporal_supportfn(FunctionCallInfo fcinfo, TemporalFamily tempfamily)
 {
   Node *rawreq = (Node *) PG_GETARG_POINTER(0);
   Node *ret = NULL;
-  Oid leftoid, rightoid, operid;
+  Oid leftoid, rightoid, oproid;
 
   /* Return estimated selectivity */
   assert (tempfamily == TEMPORALTYPE || tempfamily == TNUMBERTYPE ||
@@ -385,12 +385,12 @@ Temporal_supportfn(FunctionCallInfo fcinfo, TemporalFamily tempfamily)
     /* Convert base type to bbox type */
     meosType ltype1 = type_to_bbox(ltype);
     meosType rtype1 = type_to_bbox(rtype);
-    operid = oper_oid(OVERLAPS_OP, ltype1, rtype1);
+    oproid = oper_oid(OVERLAPS_OP, ltype1, rtype1);
     if (req->is_join)
-      req->selectivity = temporal_joinsel(req->root, operid, req->args,
+      req->selectivity = temporal_joinsel(req->root, oproid, req->args,
         req->jointype, req->sjinfo, tempfamily);
     else
-      req->selectivity = temporal_sel(req->root, operid, req->args,
+      req->selectivity = temporal_sel(req->root, oproid, req->args,
         req->varRelid, tempfamily);
     PG_RETURN_POINTER(req);
   }
@@ -409,13 +409,13 @@ Temporal_supportfn(FunctionCallInfo fcinfo, TemporalFamily tempfamily)
        * calling operator */
       Oid funcoid;
       /* Oid of the operator of the index support expression */
-      Oid idxoperid;
+      Oid idxoproid;
       /* Oid of the right argument of the index support expression */
       Oid exproid;
       List *args;
       Node *leftarg, *rightarg;
 
-      operid = InvalidOid;
+      oproid = InvalidOid;
       if (isfunc)
       {
         FuncExpr *funcexpr = (FuncExpr *) req->node;
@@ -425,7 +425,7 @@ Temporal_supportfn(FunctionCallInfo fcinfo, TemporalFamily tempfamily)
       else
       {
         OpExpr *opexpr = (OpExpr *) req->node;
-        operid = opexpr->opno;
+        oproid = opexpr->opno;
         funcoid = opexpr->opfuncid;
         args = opexpr->args;
       }
@@ -457,7 +457,7 @@ Temporal_supportfn(FunctionCallInfo fcinfo, TemporalFamily tempfamily)
             funcoid);
         else
           elog(WARNING, "support function called from unsupported operator %d",
-            operid);
+            oproid);
       }
 
       /*
@@ -536,8 +536,8 @@ Temporal_supportfn(FunctionCallInfo fcinfo, TemporalFamily tempfamily)
       else
         PG_RETURN_POINTER((Node *) NULL);
 
-      idxoperid = get_opfamily_member(opfamilyoid, leftoid, exproid, strategy);
-      if (idxoperid == InvalidOid)
+      idxoproid = get_opfamily_member(opfamilyoid, leftoid, exproid, strategy);
+      if (idxoproid == InvalidOid)
         elog(ERROR, "no operator found for '%s': opfamily %u type %d",
           idxfn.fn_name, opfamilyoid, leftoid);
 
@@ -568,7 +568,7 @@ Temporal_supportfn(FunctionCallInfo fcinfo, TemporalFamily tempfamily)
           PG_RETURN_POINTER((Node *) NULL);
 
         /* OK, we can make an index expression */
-        expr = make_opclause(idxoperid, BOOLOID, false, (Expr *) leftarg,
+        expr = make_opclause(idxoproid, BOOLOID, false, (Expr *) leftarg,
           (Expr *) expandexpr, InvalidOid, InvalidOid);
 
         ret = (Node *)(list_make1(expr));
@@ -600,7 +600,7 @@ Temporal_supportfn(FunctionCallInfo fcinfo, TemporalFamily tempfamily)
 #endif
           PG_RETURN_POINTER((Node *) NULL);
 
-        expr = make_opclause(idxoperid, BOOLOID, false, (Expr *) leftarg,
+        expr = make_opclause(idxoproid, BOOLOID, false, (Expr *) leftarg,
           (Expr *) bboxexpr, InvalidOid, InvalidOid);
 
         ret = (Node *)(list_make1(expr));

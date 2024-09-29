@@ -44,7 +44,6 @@
 #include <liblwgeom_internal.h>
 #include <lwgeodetic.h>
 #include <lwgeom_geos.h>
-#include <lwgeom_pg.h>
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
@@ -68,6 +67,10 @@
  * select date_part('epoch', timestamp '2000-01-01' - timestamp '1970-01-01')
  * which results in 946684800 */
 #define DELTA_UNIX_POSTGRES_EPOCH 946684800
+
+/* Definitions in lwgeom_pg.h */
+extern GSERIALIZED *geometry_serialize(LWGEOM *lwgeom);
+extern GSERIALIZED *geography_serialize(LWGEOM *lwgeom);
 
 /*****************************************************************************
  * Utility functions
@@ -4379,7 +4382,7 @@ get_bearing_fn(int16 flags)
  * segment and a point are at the minimum bearing
  * @param[in] start,end Instants defining the segment
  * @param[in] point Geometric/geography point
- * @param[in] basetypid Base type
+ * @param[in] basetype Base type
  * @param[out] value Value
  * @param[out] t Timestamp
  * @pre The segment is not constant and has linear interpolation
@@ -4387,7 +4390,7 @@ get_bearing_fn(int16 flags)
  */
 static bool
 tpoint_geo_min_bearing_at_timestamptz(const TInstant *start,
-  const TInstant *end, Datum point, meosType basetypid __attribute__((unused)),
+  const TInstant *end, Datum point, meosType basetype __attribute__((unused)),
   Datum *value, TimestampTz *t)
 {
   Datum dstart = tinstant_val(start);

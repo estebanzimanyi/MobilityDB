@@ -50,8 +50,8 @@
 
 /* PostgreSQL call helpers */
 
-extern Datum call_input(Oid typid, char *str, bool end);
-extern char *call_output(Oid typid, Datum value);
+extern Datum call_input(Oid typoid, char *str, bool end);
+extern char *call_output(Oid typoid, Datum value);
 extern Datum call_recv(meosType type, StringInfo buf);
 extern bytea *call_send(meosType type, Datum value);
 

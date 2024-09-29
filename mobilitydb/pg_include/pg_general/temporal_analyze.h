@@ -48,7 +48,7 @@
 typedef struct
 {
   /* Information about array element type */
-  Oid typid;           /**< element type's OID */
+  Oid typoid;          /**< element type's OID */
   Oid eq_opr;          /**< default equality operator's OID */
   Oid lt_opr;          /**< default less than operator's OID */
   bool typbyval;       /**< physical properties of element type */
@@ -56,7 +56,7 @@ typedef struct
   char typalign;
 
   /* Information about the value part of array element */
-  Oid value_typid;     /**< element type's OID */
+  Oid value_typoid;    /**< element type's OID */
   Oid value_eq_opr;    /**< default equality operator's OID */
   Oid value_lt_opr;    /**< default less than operator's OID */
   bool value_typbyval; /**< physical properties of element type */
@@ -64,7 +64,7 @@ typedef struct
   char value_typalign;
 
   /* Information about the temporal part of array element */
-  Oid time_typid;      /**< element type's OID */
+  Oid time_typoid;     /**< element type's OID */
   Oid time_eq_opr;     /**< default equality operator's OID */
   Oid time_lt_opr;     /**< default less than operator's OID */
   bool time_typbyval;  /**< physical properties of element type */

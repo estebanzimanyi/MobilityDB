@@ -35,6 +35,6 @@ extern TimestampTz pg_to_timestamp(text *date_txt, text *fmt);
 extern DateADT pg_to_date(text *date_txt, text *fmt);
 
 // extern Datum parse_datetime(text *date_txt, text *fmt, Oid collid, bool strict,
-// 							Oid *typid, int32 *typmod, int *tz, bool *have_error);
+// 							Oid *typoid, int32 *typmod, int *tz, bool *have_error);
 
 #endif

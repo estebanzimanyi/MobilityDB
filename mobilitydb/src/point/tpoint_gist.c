@@ -99,7 +99,7 @@ Stbox_gist_consistent(PG_FUNCTION_ARGS)
 {
   GISTENTRY *entry = (GISTENTRY *) PG_GETARG_POINTER(0);
   StrategyNumber strategy = (StrategyNumber) PG_GETARG_UINT16(2);
-  Oid typid = PG_GETARG_OID(3);
+  Oid typoid = PG_GETARG_OID(3);
   bool *recheck = (bool *) PG_GETARG_POINTER(4), result;
   STBox *key = DatumGetSTboxP(entry->key), query;
 
@@ -110,7 +110,7 @@ Stbox_gist_consistent(PG_FUNCTION_ARGS)
     PG_RETURN_BOOL(false);
 
   /* Transform the query into a box */
-  if (! tpoint_gist_get_stbox(fcinfo, &query, oid_type(typid)))
+  if (! tpoint_gist_get_stbox(fcinfo, &query, oid_type(typoid)))
     PG_RETURN_BOOL(false);
 
   if (GIST_LEAF(entry))
@@ -382,7 +382,7 @@ Datum
 Stbox_gist_distance(PG_FUNCTION_ARGS)
 {
   GISTENTRY *entry = (GISTENTRY *) PG_GETARG_POINTER(0);
-  Oid typid = PG_GETARG_OID(3);
+  Oid typoid = PG_GETARG_OID(3);
   bool *recheck = (bool *) PG_GETARG_POINTER(4);
   STBox *key = (STBox *) DatumGetPointer(entry->key);
   STBox query;
@@ -396,7 +396,7 @@ Stbox_gist_distance(PG_FUNCTION_ARGS)
     PG_RETURN_FLOAT8(DBL_MAX);
 
   /* Transform the query into a box */
-  if (! tpoint_gist_get_stbox(fcinfo, &query, oid_type(typid)))
+  if (! tpoint_gist_get_stbox(fcinfo, &query, oid_type(typoid)))
     PG_RETURN_FLOAT8(DBL_MAX);
 
   /* Since we only have boxes we'll return the minimum possible distance,

@@ -62,9 +62,9 @@
  * @brief Transform the query argument into a span
  */
 bool
-span_gist_get_span(FunctionCallInfo fcinfo, Span *result, Oid typid)
+span_gist_get_span(FunctionCallInfo fcinfo, Span *result, Oid typoid)
 {
-  meosType type = oid_type(typid);
+  meosType type = oid_type(typoid);
   if (span_basetype(type))
   {
     /* Since function span_gist_inner_consistent is strict, value is not NULL */
@@ -111,7 +111,7 @@ Span_gist_consistent(PG_FUNCTION_ARGS)
 {
   GISTENTRY *entry = (GISTENTRY *) PG_GETARG_POINTER(0);
   StrategyNumber strategy = (StrategyNumber) PG_GETARG_UINT16(2);
-  Oid typid = PG_GETARG_OID(3);
+  Oid typoid = PG_GETARG_OID(3);
   bool *recheck = (bool *) PG_GETARG_POINTER(4);
   bool result;
   const Span *key = DatumGetSpanP(entry->key);
@@ -124,7 +124,7 @@ Span_gist_consistent(PG_FUNCTION_ARGS)
     PG_RETURN_BOOL(false);
 
   /* Transform the query into a box */
-  if (! span_gist_get_span(fcinfo, &query, typid))
+  if (! span_gist_get_span(fcinfo, &query, typoid))
     PG_RETURN_BOOL(false);
 
   if (GIST_LEAF(entry))
@@ -784,7 +784,7 @@ Datum
 Span_gist_distance(PG_FUNCTION_ARGS)
 {
   GISTENTRY *entry = (GISTENTRY *) PG_GETARG_POINTER(0);
-  Oid typid = PG_GETARG_OID(3);
+  Oid typoid = PG_GETARG_OID(3);
   bool *recheck = (bool *) PG_GETARG_POINTER(4);
   Span *key = (Span *) DatumGetPointer(entry->key);
   Span query;
@@ -798,7 +798,7 @@ Span_gist_distance(PG_FUNCTION_ARGS)
     PG_RETURN_DATUM((Datum) -1);
 
   /* Transform the query into a span */
-  if (! span_gist_get_span(fcinfo, &query, typid))
+  if (! span_gist_get_span(fcinfo, &query, typoid))
     PG_RETURN_DATUM((Datum) -1);
 
   distance = dist_span_span(key, &query);

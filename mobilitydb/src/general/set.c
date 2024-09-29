@@ -68,8 +68,8 @@ Datum
 Set_in(PG_FUNCTION_ARGS)
 {
   const char *input = PG_GETARG_CSTRING(0);
-  Oid typid = PG_GETARG_OID(1);
-  PG_RETURN_SET_P(set_in(input, oid_type(typid)));
+  Oid typoid = PG_GETARG_OID(1);
+  PG_RETURN_SET_P(set_in(input, oid_type(typoid)));
 }
 
 PGDLLEXPORT Datum Set_out(PG_FUNCTION_ARGS);

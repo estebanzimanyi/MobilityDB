@@ -69,8 +69,8 @@ Datum
 Span_in(PG_FUNCTION_ARGS)
 {
   const char *str = PG_GETARG_CSTRING(0);
-  Oid spantypid = PG_GETARG_OID(1);
-  PG_RETURN_SPAN_P(span_in(str, oid_type(spantypid)));
+  Oid typoid = PG_GETARG_OID(1);
+  PG_RETURN_SPAN_P(span_in(str, oid_type(typoid)));
 }
 
 PGDLLEXPORT Datum Span_out(PG_FUNCTION_ARGS);

@@ -165,10 +165,10 @@ temporal_compute_stats(VacAttrStats *stats, AnalyzeAttrFetchFunc fetchfunc,
       value_lowers[non_null_cnt] = span_lower;
       value_uppers[non_null_cnt] = span_upper;
 
-      if (temporal_extra_data->value_typid == INT4OID)
+      if (temporal_extra_data->value_typoid == INT4OID)
         value_lengths[non_null_cnt] = (float8) (DatumGetInt32(span_upper.val) -
           DatumGetInt32(span_lower.val));
-      else if (temporal_extra_data->value_typid == FLOAT8OID)
+      else if (temporal_extra_data->value_typoid == FLOAT8OID)
         value_lengths[non_null_cnt] = DatumGetFloat8(span_upper.val) -
           DatumGetFloat8(span_lower.val);
     }
@@ -250,7 +250,7 @@ temporal_extra_info(VacAttrStats *stats)
   typentry = lookup_type_cache(stats->attrtypid,
     TYPECACHE_EQ_OPR | TYPECACHE_LT_OPR | TYPECACHE_CMP_PROC_FINFO |
     TYPECACHE_HASH_PROC_FINFO);
-  extra_data->typid = typentry->type_id;
+  extra_data->typoid = typentry->type_id;
   extra_data->eq_opr = typentry->eq_opr;
   extra_data->lt_opr = typentry->lt_opr;
   extra_data->typbyval = typentry->typbyval;
@@ -264,7 +264,7 @@ temporal_extra_info(VacAttrStats *stats)
   typentry = lookup_type_cache(type_oid(basetype),
     TYPECACHE_EQ_OPR | TYPECACHE_LT_OPR | TYPECACHE_CMP_PROC_FINFO |
     TYPECACHE_HASH_PROC_FINFO);
-  extra_data->value_typid = typentry->type_id;
+  extra_data->value_typoid = typentry->type_id;
   extra_data->value_eq_opr = typentry->eq_opr;
   extra_data->value_lt_opr = typentry->lt_opr;
   extra_data->value_typbyval = typentry->typbyval;
@@ -274,11 +274,11 @@ temporal_extra_info(VacAttrStats *stats)
   extra_data->value_hash = &typentry->hash_proc_finfo;
 
   /* Gather information about the time type */
-  Oid per_typid = type_oid(T_TSTZSPAN);
-  typentry = lookup_type_cache(per_typid,
+  Oid per_typoid = type_oid(T_TSTZSPAN);
+  typentry = lookup_type_cache(per_typoid,
     TYPECACHE_EQ_OPR | TYPECACHE_LT_OPR | TYPECACHE_CMP_PROC_FINFO |
     TYPECACHE_HASH_PROC_FINFO);
-  extra_data->time_typid = per_typid;
+  extra_data->time_typoid = per_typoid;
   extra_data->time_eq_opr = typentry->eq_opr;
   extra_data->time_lt_opr = typentry->lt_opr;
   extra_data->time_typbyval = false;

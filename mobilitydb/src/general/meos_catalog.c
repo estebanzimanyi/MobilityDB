@@ -79,22 +79,47 @@ extern int namestrcmp(Name name, const char *str);
 /*****************************************************************************/
 
 /**
+ * @brief Structure to represent the type cache hash table
+ */
+typedef struct
+{
+  Oid typoid;        /**< Oid of the type (hashtable key) */
+  meosType type;     /**< Type enum */
+  char status;       /* hash status */
+} oid_type_entry;
+
+/**
+ * @brief Define a hashtable mapping type Oids to a structure containing
+ * operator and type enums
+ */
+#define SH_PREFIX oid_type
+#define SH_ELEMENT_TYPE oid_type_entry
+#define SH_KEY_TYPE Oid
+#define SH_KEY typoid
+#define SH_HASH_KEY(tb, key) hash_bytes_uint32(key)
+#define SH_EQUAL(tb, a, b) a == b
+#define SH_SCOPE static inline
+#define SH_DEFINE
+#define SH_DECLARE
+#include "lib/simplehash.h"
+
+/**
  * @brief Structure to represent the operator cache hash table
  */
 typedef struct
 {
   Oid oproid;        /**< Oid of the operator (hashtable key) */
-  meosOper oper;     /**< Operator type number */
-  meosType ltype;    /**< Type number of the left argument */
-  meosType rtype;    /**< Type number of the right argument */
+  meosOper oper;     /**< Operator type enum */
+  meosType ltype;    /**< Type enum of the left argument */
+  meosType rtype;    /**< Type enum of the right argument */
   char status;       /* hash status */
 } oid_oper_entry;
 
 /**
  * @brief Define a hashtable mapping operator Oids to a structure containing
- * operator and type numbers
+ * operator and type enums
  */
-#define SH_PREFIX opertable
+#define SH_PREFIX oid_oper
 #define SH_ELEMENT_TYPE oid_oper_entry
 #define SH_KEY_TYPE Oid
 #define SH_KEY oproid
@@ -126,8 +151,9 @@ typedef struct
 typedef struct
 {
   Oid type_oid[NO_MEOS_TYPES];
-  struct opertable_hash *oper_oid;
-  Oid oper_oid_args[NO_MEOS_TYPES][NO_MEOS_TYPES][NO_MEOS_TYPES];
+  struct oid_type_hash *oid_type;
+  struct oid_oper_hash *oid_oper;
+  Oid oper_args_oid[NO_MEOS_TYPES][NO_MEOS_TYPES][NO_MEOS_TYPES];
 } mobilitydb_constants;
 
 /* Global to hold all the run-time constants */
@@ -233,13 +259,17 @@ mobilitydb_nsp_oid()
 static mobilitydb_constants *
 get_mobilitydb_constants()
 {
-	/* Put constants cache in a child of the CacheContext */
-	MemoryContext context = AllocSetContextCreate(CacheMemoryContext,
+  /* Put constants cache in a child of the CacheContext */
+  MemoryContext context = AllocSetContextCreate(CacheMemoryContext,
     "MobilityDB Constants Context", ALLOCSET_DEFAULT_SIZES);
 
-	/* Allocate in the CacheContext so it is kept at the end of the statement */
-	mobilitydb_constants* constants = 
+  /* Allocate in the CacheContext so it is kept at the end of the statement */
+  mobilitydb_constants* constants = 
     MemoryContextAlloc(context, sizeof(mobilitydb_constants));
+
+  /* Create the type hash table and populate the type Oid cache */
+  constants->oid_type =
+    oid_type_create(CacheMemoryContext, 2048, NULL);
 
   /* Populate the type Oid cache */
   Oid nsp_oid = mobilitydb_nsp_oid();
@@ -251,20 +281,29 @@ get_mobilitydb_constants()
     if (name && ! internal_type(name))
     {
       /* Search for type oid in extension namespace */
-      constants->type_oid[i] = 
-        TypenameNspGetTypid(name, nsp_oid);
+      constants->type_oid[i] = TypenameNspGetTypid(name, nsp_oid);
       /* If not found, search default namespace */
       if (constants->type_oid[i] == InvalidOid)
         constants->type_oid[i] = TypenameGetTypid(name);
+      /* Add entry to the oid_type_hash table */
+      /* Fill the struct to be added to the hash table */
+      bool found;
+      oid_type_entry *entry =
+        oid_type_insert(constants->oid_type, constants->type_oid[i], &found);
+      if (! found)
+      {
+        entry->typoid = constants->type_oid[i];
+        entry->type = i;
+      }
     }
   }
 
   /* Create the operator hash table and populate the operator Oid cache */
-  constants->oper_oid =
-    opertable_create(CacheMemoryContext, 2048, NULL);
+  constants->oid_oper =
+    oid_oper_create(CacheMemoryContext, 2048, NULL);
   /* Initialize the operator array */
-  memset(constants->oper_oid_args, 0, 
-    sizeof(constants->oper_oid_args));
+  memset(constants->oper_args_oid, 0, 
+    sizeof(constants->oper_args_oid));
   /* Fetch the rows of the table containing the MobilityDB operator cache */
   Oid catalog = RelnameNspGetRelid("mobilitydb_opcache", nsp_oid);
   Relation rel = table_open(catalog, AccessShareLock);
@@ -282,7 +321,7 @@ get_mobilitydb_constants()
     /* Fill the struct to be added to the hash table */
     bool found;
     oid_oper_entry *entry =
-      opertable_insert(constants->oper_oid, oproid, &found);
+      oid_oper_insert(constants->oid_oper, oproid, &found);
     if (! found)
     {
       entry->oproid = oproid;
@@ -291,7 +330,7 @@ get_mobilitydb_constants()
       entry->rtype = k;
     }
     /* Fill the operator Oid array */
-    constants->oper_oid_args[i][j][k] = oproid;
+    constants->oper_args_oid[i][j][k] = oproid;
     /* Read next tuple from table */
     tuple = heap_getnext(scan, ForwardScanDirection);
   }
@@ -299,17 +338,6 @@ get_mobilitydb_constants()
   table_close(rel, AccessShareLock);
 
   return constants;
-}
-
-/**
- * @brief Initialize Oid cache
- */
-void
-mobilitydb_initialize_cache()
-{
-	/* Cache the info if we don't already have it */
-	if (! MOBILITYDB_CONSTANTS)
-		MOBILITYDB_CONSTANTS = get_mobilitydb_constants();
 }
 
 /*****************************************************************************/
@@ -321,7 +349,9 @@ mobilitydb_initialize_cache()
 Oid
 type_oid(meosType type)
 {
-	mobilitydb_initialize_cache();
+  /* Cache the info if we don't already have it */
+  if (! MOBILITYDB_CONSTANTS)
+    MOBILITYDB_CONSTANTS = get_mobilitydb_constants();
 
   Oid result = MOBILITYDB_CONSTANTS->type_oid[type];
   if (! result)
@@ -338,16 +368,19 @@ type_oid(meosType type)
  * extension is created
  */
 meosType
-oid_type(Oid typid)
+oid_type(Oid typoid)
 {
-	mobilitydb_initialize_cache();
+  /* Cache the info if we don't already have it */
+  if (! MOBILITYDB_CONSTANTS)
+    MOBILITYDB_CONSTANTS = get_mobilitydb_constants();
 
-  for (int i = 0; i < NO_MEOS_TYPES; i++)
-  {
-    if (MOBILITYDB_CONSTANTS->type_oid[i] == typid)
-      return i;
-  }
-  return T_UNKNOWN;
+  oid_type_entry *entry = oid_type_lookup(MOBILITYDB_CONSTANTS->oid_type,
+    typoid);
+  if (! entry)
+    /* We cannot throw an error as in function #oid_oper since this function 
+     * is called from function #fill_oid_cache */
+    return T_UNKNOWN;
+  return entry->type;
 }
 
 /*****************************************************************************/
@@ -361,16 +394,18 @@ oid_type(Oid typid)
 Oid
 oper_oid(meosOper oper, meosType lt, meosType rt)
 {
-	mobilitydb_initialize_cache();
+  /* Cache the info if we don't already have it */
+  if (! MOBILITYDB_CONSTANTS)
+    MOBILITYDB_CONSTANTS = get_mobilitydb_constants();
 
-  Oid result = MOBILITYDB_CONSTANTS->oper_oid_args[oper][lt][rt];
+  Oid result = MOBILITYDB_CONSTANTS->oper_args_oid[oper][lt][rt];
   if (! result)
   {
     ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
       errmsg("Unknown MEOS operator: %s, ltype; %s, rtype; %s",
         meosoper_name(oper), meostype_name(lt), meostype_name(rt))));
   }
-  return MOBILITYDB_CONSTANTS->oper_oid_args[oper][lt][rt];
+  return MOBILITYDB_CONSTANTS->oper_args_oid[oper][lt][rt];
 }
 
 /**
@@ -381,24 +416,23 @@ oper_oid(meosOper oper, meosType lt, meosType rt)
 meosOper
 oid_oper(Oid oproid, meosType *ltype, meosType *rtype)
 {
-	mobilitydb_initialize_cache();
+  /* Cache the info if we don't already have it */
+  if (! MOBILITYDB_CONSTANTS)
+    MOBILITYDB_CONSTANTS = get_mobilitydb_constants();
 
-  oid_oper_entry *entry = opertable_lookup(
-    MOBILITYDB_CONSTANTS->oper_oid, oproid);
+  oid_oper_entry *entry = oid_oper_lookup(MOBILITYDB_CONSTANTS->oid_oper,
+    oproid);
   if (! entry)
   {
     ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
       errmsg("Unknown operator Oid %d", oproid)));
     return UNKNOWN_OP; /* make compiler quiet */
   }
-  else
-  {
-    if (ltype)
-      *ltype = entry->ltype;
-    if (rtype)
-      *rtype = entry->rtype;
-    return entry->oper;
-  }
+  if (ltype)
+    *ltype = entry->ltype;
+  if (rtype)
+    *rtype = entry->rtype;
+  return entry->oper;
 }
 
 /*****************************************************************************/
@@ -408,7 +442,6 @@ PG_FUNCTION_INFO_V1(fill_oid_cache);
 /**
  * @brief Function executed during the `CREATE EXTENSION` to precompute the
  * operator cache and store it in table `mobilitydb_opcache`
- * @see #populate_operoid_cache
  */
 Datum
 fill_oid_cache(PG_FUNCTION_ARGS __attribute__((unused)))

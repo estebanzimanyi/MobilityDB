@@ -51,7 +51,7 @@
 
 /* Miscellaneous functions */
 
-extern Datum datum_copy(Datum value, meosType typid);
+extern Datum datum_copy(Datum value, meosType type);
 extern double datum_double(Datum d, meosType type);
 extern Datum double_datum(double d, meosType type);
 extern bytea *bstring2bytea(const uint8_t *wkb, size_t size);
