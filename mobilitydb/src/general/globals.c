@@ -38,39 +38,16 @@
 /* MobilityDB */
 #include "general/meos_catalog.h"
 /* MobilityDB */
+#include "pg_general/meos_catalog.h"
 #include "pg_general/temporal_analyze.h"
 
 /*****************************************************************************/
 
 /* File /mobilitydb/src/general/meos_catalog.c */
 
-/**
- * @brief Global variable that states whether the type and operator Oid caches
- * have been initialized
- */
-bool MOBDB_TYPEOID_CACHE_READY = false;
-bool MOBDB_OPEROID_CACHE_READY = false;
+/* Global to hold all the run-time constants */
 
-/**
- * @brief Global variable array that keeps the type Oids used in MobilityDB
- */
-Oid MOBDB_TYPE_OID[NO_MEOS_TYPES];
-
-/**
- * @brief Global hash table that keeps the operator Oids used in MobilityDB
- */
-struct opertable_hash *MOBDB_OPER_OID = NULL;
-
-/**
- * @brief Global variable 3-dimensional array that keeps the operator Oids used
- * in MobilityDB
- *
- * The first dimension corresponds to the operator class (e.g., <=), the second
- * and third dimensions correspond, respectively, to the left and right
- * arguments of the operator. A value 0 is stored in the cell of the array if
- * the operator class is not defined for the left and right types.
- */
-Oid MOBDB_OPER_OID_ARGS[NO_MEOS_TYPES][NO_MEOS_TYPES][NO_MEOS_TYPES];
+mobilitydb_constants *MOBILITYDB_CONSTANTS = NULL;
 
 /*****************************************************************************/
 
