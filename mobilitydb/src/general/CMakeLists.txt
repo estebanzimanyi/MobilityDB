@@ -1,8 +1,8 @@
 add_library(pg_general OBJECT
   doublen.c
   geo_constructors.c
-  globals.c
   meos_catalog.c
+  mobilitydb_globals.c
   set.c
   set_gin.c
   set_aggfuncs.c

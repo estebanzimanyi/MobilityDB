@@ -1,10 +1,10 @@
 add_library(general OBJECT
   doublen.c
   error.c
-  globals.c
   lifting.c
   meos.c
   meos_catalog.c
+  meos_globals.c
   pg_types.c
   skiplist.c
   set.c

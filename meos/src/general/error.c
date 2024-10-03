@@ -49,7 +49,7 @@
 /**
  * @brief Global variable that keeps the last error number
  */
-static int MEOS_ERR_NO = 0;
+extern int MEOS_ERR_NO;
 
 /**
  * @brief Read an error number
