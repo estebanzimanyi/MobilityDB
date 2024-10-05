@@ -41,13 +41,14 @@
  *
  * The program can be build as follows
  * @code
- * gcc -Wall -g -I/usr/local/include -o route_length route_length.c -L/usr/local/lib -lmeos
+ * gcc -Wall -g -I/usr/local/include -o geom_npoint geom_npoint.c -L/usr/local/lib -lmeos
  * @endcode
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <float.h>
 #include <meos.h>
 
 /* Number of ways in a batch for printing a marker */
@@ -56,8 +57,6 @@
 #define MAX_LENGTH_HEADER 1024
 /* Maximum length in characters of a geometry in the input data */
 #define MAX_LENGTH_GEOM 100001
-/* Route to be found */
-#define ROUTE 20
 
 typedef struct
 {
@@ -76,10 +75,10 @@ int main(void)
   clock_t t;
   t = clock();
 
-  /* The route to find */
-  long int route = ROUTE;
-  /* Whether the route was found */
-  bool found = false;
+  /* Distances */
+  double dist, min_dist = DBL_MAX;
+  /* Position in the geometry with the shortest distance */
+  double pos;
   /* Return value */
   int return_value = 0;
 
@@ -98,7 +97,9 @@ int main(void)
   int no_nulls = 0;
   char header_buffer[MAX_LENGTH_HEADER];
   char geo_buffer[MAX_LENGTH_GEOM];
-
+  const char *geo_str = "SRID=5676;POINT(72.94967061684646 25.156720715884354)";
+  GSERIALIZED *point = geom_in(geo_str, -1);
+  
   /* Read the first line of the file with the headers */
   fscanf(file, "%1023s\n", header_buffer);
 
@@ -118,35 +119,46 @@ int main(void)
       goto cleanup;
     }
 
-    if (read == 3)
-    {
-      no_records++;
-      if (no_records % NO_WAYS_BATCH == 0)
-      {
-        printf("*");
-        fflush(stdout);
-      }
-      if (rec.gid == route)
-      {
-        /* Transform the string representing the geometry into a geometry value */
-        rec.the_geom = geom_in(geo_buffer, -1);
-        if (geo_is_empty(rec.the_geom))
-        {
-          printf("The geometry is empty");
-          return_value = 1;
-          goto cleanup;
-        }
-        found = true;
-        break;
-      }
-    }
-
     if (read != 3 && ! feof(file))
     {
       printf("Record with missing values ignored\n");
       no_nulls++;
+      continue;
     }
-  } while (!feof(file));
+
+    no_records++;
+    if (no_records % NO_WAYS_BATCH == 0)
+    {
+      printf("*");
+      fflush(stdout);
+    }
+
+    /* Transform the string representing the geometry into a geometry value */
+    rec.the_geom = geom_in(geo_buffer, -1);
+    if (geo_is_empty(rec.the_geom))
+    {
+      printf("The geometry is empty");
+      return_value = 1;
+      goto cleanup;
+    }
+
+    /* We need to implement the following SQL query for a given geo
+     *   SELECT npoint(gid, ST_LineLocatePoint(the_geom, geo))
+     *   FROM public.ways WHERE ST_DWithin(the_geom, geo, DIST_EPSILON)
+     *   ORDER BY ST_Distance(the_geom, geo) LIMIT 1;
+     */
+    
+    pos = line_locate_point(rec.the_geom, point);
+    if (pos < 0)
+    {
+      free(rec.the_geom);
+      continue;
+    }
+
+    dist = geom_distance2d(rec.the_geom, point);
+    if (dist < min_dist)
+      min_dist = dist;
+  } while (! feof(file));
 
   /* Close the input file */
   fclose(file);
@@ -154,12 +166,19 @@ int main(void)
   printf("\n%d records read.\n%d incomplete records ignored.\n",
     no_records, no_nulls);
 
-  /* Construct the trips */
-  if (found)
-    printf("Route length: %7.3f\n", line_length(rec.the_geom));
-  else
-    printf("Route NOT FOUND: %ld\n", route);
-
+  /* If the point was not found */
+  if (! point)
+  {
+    printf("The geometry point cannot be transformed into a network point");
+    return_value = 1;
+    goto cleanup;
+  }
+  
+  Npoint *np = npoint_make(rec.gid, pos);
+  char *np_str = npoint_out(np, 3);
+  printf("Network point: %s\n", np_str);
+  free(np); free(np_str);
+  
   /* Calculate the elapsed time */
   t = clock() - t;
   double time_taken = ((double) t) / CLOCKS_PER_SEC;
@@ -168,8 +187,8 @@ int main(void)
 /* Clean up */
 cleanup:
 
- /* Free memory */
-  free(rec.the_geom);
+  /* Free memory */
+  free(point);
 
   /* Finalize MEOS */
   meos_finalize();

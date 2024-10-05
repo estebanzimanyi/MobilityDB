@@ -111,6 +111,13 @@ int main(void)
     int read = fscanf(file, "%ld,%100000[^,],%lf\n",
       &rec.gid, geo_buffer, &rec.length);
 
+    if (ferror(file))
+    {
+      printf("Error reading input file");
+      return_value = 1;
+      goto cleanup;
+    }
+
     if (read == 3)
     {
       no_records++;
@@ -122,7 +129,7 @@ int main(void)
       if (rec.gid == route)
       {
         /* Transform the string representing the geometry into a geometry value */
-        rec.the_geom = pgis_geometry_in(geo_buffer, -1);
+        rec.the_geom = geom_in(geo_buffer, -1);
         if (geo_is_empty(rec.the_geom))
         {
           printf("The geometry is empty");
@@ -138,13 +145,6 @@ int main(void)
     {
       printf("Record with missing values ignored\n");
       no_nulls++;
-    }
-
-    if (ferror(file))
-    {
-      printf("Error reading input file");
-      return_value = 1;
-      goto cleanup;
     }
   } while (!feof(file));
 

@@ -334,7 +334,7 @@ box3d_to_lwgeom(BOX3D *box)
  * @note PostGIS function: @p LWGEOM_length_linestring(PG_FUNCTION_ARGS)
  */
 double
-geo_length_linestring(const GSERIALIZED *geom)
+line_length(const GSERIALIZED *geom)
 {
   LWGEOM *lwgeom = lwgeom_from_gserialized(geom);
   double dist = lwgeom_length(lwgeom);
@@ -797,6 +797,53 @@ geom_spatialrel(const GSERIALIZED *gs1, const GSERIALIZED *gs2, spatialRel rel)
       return false;
   }
 }
+
+#if MEOS
+/**
+ * @brief Return true if two geometries intersects
+ * @param[in] gs1,gs2 Geometries
+ * @note PostGIS functions: @p ST_Intersects(PG_FUNCTION_ARGS)
+ */
+bool
+geom_intersects2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
+{
+  return geom_spatialrel(gs1, gs2, INTERSECTS);
+}
+
+/**
+ * @brief Return true if the first geometry contains the second one
+ * @param[in] gs1,gs2 Geometries
+ * @note PostGIS functions: @p contains(PG_FUNCTION_ARGS)
+ */
+bool
+geom_contains(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
+{
+  return geom_spatialrel(gs1, gs2, CONTAINS);
+}
+
+/**
+ * @brief Return true if the first geometry covers the second one
+ * @param[in] gs1,gs2 Geometries
+ * @note PostGIS functions: @p contains(PG_FUNCTION_ARGS)
+ */
+bool
+geom_covers(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
+{
+  return geom_spatialrel(gs1, gs2, COVERS);
+}
+
+/**
+ * @brief Return true if two geometries intersects
+ * @param[in] gs1,gs2 Geometries
+ * @note PostGIS functions: @p ST_Intersects(PG_FUNCTION_ARGS),
+ * @p contains(PG_FUNCTION_ARGS), @p touches(PG_FUNCTION_ARGS)
+ */
+bool
+geom_touches(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
+{
+  return geom_spatialrel(gs1, gs2, TOUCHES);
+}
+#endif /* MEOS */
 
 /**
  * @brief Return true if two geometries intersects
@@ -1706,13 +1753,14 @@ postgis_valid_typmod(GSERIALIZED *gs, int32_t typmod)
  * @note PostGIS function: @p LWGEOM_in(PG_FUNCTION_ARGS)
  */
 GSERIALIZED *
-geom_in(char *str, int32 typmod)
+geom_in(const char *str, int32 typmod)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) str))
     return NULL;
 
-  char *str1 = str;
+  char *str1 = (char *) str;
+  char *str2 = (char *) str;
   LWGEOM_PARSER_RESULT lwg_parser_result;
   LWGEOM *lwgeom;
   GSERIALIZED *result;
@@ -1742,7 +1790,7 @@ geom_in(char *str, int32 typmod)
       /* Set str1 to the start of the real WKB */
       str1 = tmp + 1;
       /* Move tmp to the start of the numeric part */
-      tmp = str + 5;
+      tmp = str2 + 5;
       /* Parse out the SRID number */
       srid = atoi(tmp);
     }
@@ -1833,7 +1881,7 @@ geo_out(const GSERIALIZED *gs)
  * @param[in] geography True if it is a geometry
  */
 GSERIALIZED *
-geo_from_text(char *wkt, int srid)
+geo_from_text(const char *wkt, int srid)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) wkt))
@@ -1843,7 +1891,8 @@ geo_from_text(char *wkt, int srid)
   GSERIALIZED *geo_result = NULL;
   LWGEOM *lwgeom;
 
-  if (lwgeom_parse_wkt(&lwg_parser_result, wkt, LW_PARSER_CHECK_ALL) == LW_FAILURE )
+  char *wkt1 = (char *) wkt;
+  if (lwgeom_parse_wkt(&lwg_parser_result, wkt1, LW_PARSER_CHECK_ALL) == LW_FAILURE )
     PG_PARSER_ERROR(lwg_parser_result);
 
   lwgeom = lwg_parser_result.geom;
@@ -1863,7 +1912,6 @@ geo_from_text(char *wkt, int srid)
   /* Clean up */
   lwgeom_free(lwg_parser_result.geom);
   lwgeom_parser_result_free(&lwg_parser_result);
-  pfree(wkt);
 
   return geo_result;
 }
@@ -1926,7 +1974,7 @@ geo_as_ewkt(const GSERIALIZED *gs, int precision)
 GSERIALIZED *
 geom_from_hexewkb(const char *wkt)
 {
-  return geom_in((char *) wkt, -1);
+  return geom_in(wkt, -1);
 }
 
 /**
@@ -1941,7 +1989,7 @@ geom_from_hexewkb(const char *wkt)
 GSERIALIZED *
 geog_from_hexewkb(const char *wkt)
 {
-  return geog_in((char *) wkt, -1);
+  return geog_in(wkt, -1);
 }
 
 /**
@@ -2190,8 +2238,8 @@ geography_valid_type(uint8_t type)
 
 /**
  * @brief Return a geography from a LWGEOM
- * @note Function derived from 
- *   GSERIALIZED* gserialized_geography_from_lwgeom(LWGEOM *lwgeom, 
+ * @note Function derived from
+ *   GSERIALIZED* gserialized_geography_from_lwgeom(LWGEOM *lwgeom,
  *   int32 geog_typmod)
  */
 GSERIALIZED *
@@ -2240,7 +2288,7 @@ geog_from_lwgeom(LWGEOM *lwgeom, int32 typmod)
  * @note PostGIS function: @p geography_in(PG_FUNCTION_ARGS)
  */
 GSERIALIZED *
-geog_in(char *str, int32 typmod)
+geog_in(const char *str, int32 typmod)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) str))
@@ -2275,7 +2323,8 @@ geog_in(char *str, int32 typmod)
   /* WKT then. */
   else
   {
-    if ( lwgeom_parse_wkt(&lwg_parser_result, str, LW_PARSER_CHECK_ALL) == LW_FAILURE )
+    char *str1 = (char *) str;
+    if ( lwgeom_parse_wkt(&lwg_parser_result, str1, LW_PARSER_CHECK_ALL) == LW_FAILURE )
       PG_PARSER_ERROR(lwg_parser_result);
 
     lwgeom = lwg_parser_result.geom;
@@ -2532,7 +2581,7 @@ line_substring(GSERIALIZED *geom, double from, double to)
  * @return On error return -1.0
  */
 double
-linestring_locate_point(GSERIALIZED *gs1, GSERIALIZED *gs2)
+line_locate_point(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 {
   LWLINE *lwline;
   LWPOINT *lwpoint;

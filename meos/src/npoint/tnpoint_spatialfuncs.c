@@ -563,7 +563,7 @@ tnpointsegm_azimuth_iter(const TInstant *inst1, const TInstant *inst2,
   for (int i = 0; i < countVertices - 1; i++)
   {
     GSERIALIZED *vertex2 = linestring_point_n(traj, i + 2); /* 1-based */
-    double fraction = linestring_locate_point(traj, vertex2);
+    double fraction = line_locate_point(traj, vertex2);
     assert(! datum_point_eq(PointerGetDatum(vertex1),
       PointerGetDatum(vertex2)));
     geom_azimuth(vertex1, vertex2, &azimuth);

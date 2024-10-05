@@ -77,6 +77,7 @@ extern bool geom_dwithin3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
   double tolerance);
 extern bool geom_relate_pattern(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
   char *patt);
+
 extern GSERIALIZED *geo_reverse(const GSERIALIZED *geom);
 extern bool geom_azimuth(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
   double *result);
@@ -125,8 +126,6 @@ extern GSERIALIZED *line_substring(GSERIALIZED *gs, double from, double to);
 
 extern LWGEOM *lwgeom_line_interpolate_point(LWGEOM *geom, double fraction,
   int32_t srid, char repeat);
-extern double linestring_locate_point(GSERIALIZED *gs1,
-  GSERIALIZED *gs2);
 
 /* Functions adapted from lwgeom_ogc.c */
 

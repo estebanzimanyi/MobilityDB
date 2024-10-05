@@ -28,7 +28,7 @@
  *****************************************************************************/
 
 /**
- * @brief A simple program that get the SRID of the geometries stored in the 
+ * @brief A simple program that get the SRID of the geometries stored in the
  * file `ways.csv` that has the content of the PostgreSQL table ways defined
  * as follows
  * @code
@@ -104,26 +104,27 @@ int main(void)
   {
     int read = fscanf(file, "%ld,%100000[^,],%lf\n",
       &rec.gid, geo_buffer, &rec.length);
-    /* Transform the string representing the geometry into a geometry value */
-    rec.the_geom = pgis_geometry_in(geo_buffer, -1);
-
-    if (read == 3)
-    {
-      /* Find the SRID */
-      srid = geo_srid(rec.the_geom);
-      break;
-    }
-
-    if (read != 3 && ! feof(file))
-    {
-      printf("Record with missing values ignored\n");
-    }
 
     if (ferror(file))
     {
       printf("Error reading input file");
       return_value = 1;
       goto cleanup;
+    }
+
+    if (read == 3)
+    {
+      /* Transform the string representing the geometry into a geometry value */
+      rec.the_geom = geom_in(geo_buffer, -1);
+
+      /* Find the SRID */
+      srid = gserialized_get_srid(rec.the_geom);
+      break;
+    }
+
+    if (read != 3 && ! feof(file))
+    {
+      printf("Record with missing values ignored\n");
     }
   } while (!feof(file));
 

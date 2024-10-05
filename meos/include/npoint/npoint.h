@@ -31,8 +31,8 @@
  * @brief Network-based static point/segments
  */
 
-#ifndef __TNPOINT_STATIC_H__
-#define __TNPOINT_STATIC_H__
+#ifndef __NPOINT_H__
+#define __NPOINT_H__
 
 /* PostgreSQL */
 #include <postgres.h>

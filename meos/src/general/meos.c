@@ -329,7 +329,7 @@ intervalstyle_string(int intervalstyle)
  * @brief Check a datestyle string
  */
 static bool
-check_datestyle(char **newval, void **extra)
+check_datestyle(const char **newval, void **extra)
 {
   int newDateStyle = DateStyle;
   int newDateOrder = DateOrder;
@@ -475,7 +475,7 @@ check_datestyle(char **newval, void **extra)
  * @brief Set the DateStyle
  */
 bool
-meos_set_datestyle(char *newval, void *extra)
+meos_set_datestyle(const char *newval, void *extra)
 {
   if (! check_datestyle(&newval, &extra))
     return false;
@@ -506,7 +506,7 @@ meos_get_datestyle(void)
  * @brief Check an IntervalStyle string
  */
 static bool
-check_intervalstyle(char *newval, int *extra)
+check_intervalstyle(const char *newval, int *extra)
 {
   int newIntervalStyle = IntervalStyle;
 
@@ -534,7 +534,7 @@ check_intervalstyle(char *newval, int *extra)
  * @brief Set the IntervalStyle
  */
 bool
-meos_set_intervalstyle(char *newval, int extra)
+meos_set_intervalstyle(const char *newval, int extra)
 {
   if (! check_intervalstyle(newval, &extra))
     return false;
@@ -552,7 +552,7 @@ meos_get_intervalstyle(void)
   char *result = palloc(INTERVALSTYLE_STR_MAXLEN);
   if (! result)
     return NULL;
-  snprintf(result, INTERVALSTYLE_STR_MAXLEN, "%s", 
+  snprintf(result, INTERVALSTYLE_STR_MAXLEN, "%s",
     intervalstyle_string(IntervalStyle));
   return result;
 }

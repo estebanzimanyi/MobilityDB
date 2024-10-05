@@ -39,6 +39,7 @@
 
 /* C */
 #include <assert.h>
+#include <float.h>
 /* PostgreSQL */
 #include <postgres.h>
 #if ! MEOS
@@ -64,6 +65,26 @@
 #define NSEGMENT_MAXLEN    128
 
 /*****************************************************************************
+ * Definitions for reading the ways.csv file
+ *****************************************************************************/
+
+#if MEOS
+/* Maximum length in characters of a header record in the input CSV file */
+#define MAX_LENGTH_HEADER 1024
+/* Maximum length in characters of a geometry in the input data */
+#define MAX_LENGTH_GEOM 100001
+/* Location of the ways.csv file */
+#define WAYS_CSV "/home/esteban/src/MobilityDB/meos/examples/data/ways.csv"
+
+typedef struct
+{
+  long int gid;
+  GSERIALIZED *the_geom;
+  double length;
+} ways_record;
+#endif /* MEOS */
+
+/*****************************************************************************
  * General functions
  *****************************************************************************/
 
@@ -76,9 +97,61 @@
 int32_t
 get_srid_ways()
 {
-  meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
-    "Function not yet implemented");
-  return SRID_INVALID;
+  /* Substitute the full file path in the first argument of fopen */
+  FILE *file = fopen(WAYS_CSV, "r");
+
+  if (! file)
+  {
+    meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
+      "Cannot open the ways.csv file");
+    return SRID_INVALID;
+  }
+
+  bool found = false;
+  ways_record rec;
+  char header_buffer[MAX_LENGTH_HEADER];
+  char geo_buffer[MAX_LENGTH_GEOM];
+
+  /* Read the first line of the file with the headers */
+  fscanf(file, "%1023s\n", header_buffer);
+
+  /* Continue reading the file */
+  do
+  {
+    int read = fscanf(file, "%ld,%100000[^,],%lf\n",
+      &rec.gid, geo_buffer, &rec.length);
+
+    if (ferror(file))
+    {
+      meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
+        "Error reading the ways.csv file");
+      return SRID_INVALID;
+    }
+
+    /* Ignore the records with NULL values */
+    if (read == 3)
+    {
+      /* Transform the string representing the geometry into a geometry value */
+      rec.the_geom = geom_in(geo_buffer, -1);
+      if (geo_is_empty(rec.the_geom))
+      {
+        free(rec.the_geom);
+        continue;
+      }
+      found = true;
+      break;
+    }
+  } while (!feof(file));
+
+  /* Close the input file */
+  fclose(file);
+  
+  if (! found)
+    return SRID_INVALID;
+  
+  int32_t result = gserialized_get_srid(rec.the_geom);
+  free(rec.the_geom);
+  return result;  
 }
 #else
 int32_t
@@ -481,11 +554,61 @@ nsegment_end_position(const Nsegment *ns)
  */
 #if MEOS
 bool
-route_exists(int64 rid __attribute__((unused)))
+route_exists(int64 rid)
 {
-  meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
-    "Function not yet implemented");
-  return false;
+  /* Substitute the full file path in the first argument of fopen */
+  FILE *file = fopen(WAYS_CSV, "r");
+
+  if (! file)
+  {
+    meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
+      "Cannot open the ways.csv file");
+    return false;
+  }
+
+  bool result = false;
+  ways_record rec;
+  char header_buffer[MAX_LENGTH_HEADER];
+  char geo_buffer[MAX_LENGTH_GEOM];
+
+  /* Read the first line of the file with the headers */
+  fscanf(file, "%1023s\n", header_buffer);
+
+  /* Continue reading the file */
+  do
+  {
+    int read = fscanf(file, "%ld,%100000[^,],%lf\n",
+      &rec.gid, geo_buffer, &rec.length);
+
+    if (ferror(file))
+    {
+      meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
+        "Error reading the ways.csv file");
+      return false;
+    }
+
+    /* Ignore the records with NULL values */
+    if (read == 3)
+    {
+      /* Transform the string representing the geometry into a geometry value */
+      rec.the_geom = geom_in(geo_buffer, -1);
+      if (geo_is_empty(rec.the_geom))
+      {
+        free(rec.the_geom);
+        continue;
+      }
+      if (rec.gid == rid)
+      {
+        result = true;
+        break;
+      }
+    }
+  } while (!feof(file));
+
+  /* Close the input file */
+  fclose(file);
+  
+  return result; 
 }
 #else
 bool
@@ -515,15 +638,70 @@ route_exists(int64 rid)
  * @brief Access the edge table to return the route length from the
  * corresponding route identifier
  * @param[in] rid Route identifier
- * @return On error return -1
+ * @return On error return -1.0
  */
 #if MEOS
 double
-route_length(int64 rid __attribute__((unused)))
+route_length(int64 rid)
 {
-  meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
-    "Function not yet implemented");
-  return -1.0;
+  /* Substitute the full file path in the first argument of fopen */
+  FILE *file = fopen(WAYS_CSV, "r");
+
+  if (! file)
+  {
+    meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
+      "Cannot open the ways.csv file");
+    return -1.0;
+  }
+
+  bool found = false;
+  ways_record rec;
+  char header_buffer[MAX_LENGTH_HEADER];
+  char geo_buffer[MAX_LENGTH_GEOM];
+
+  /* Read the first line of the file with the headers */
+  fscanf(file, "%1023s\n", header_buffer);
+
+  /* Continue reading the file */
+  do
+  {
+    int read = fscanf(file, "%ld,%100000[^,],%lf\n",
+      &rec.gid, geo_buffer, &rec.length);
+
+    if (ferror(file))
+    {
+      meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
+        "Error reading the ways.csv file");
+      return -1.0;
+    }
+
+    /* Ignore the records with NULL values */
+    if (read == 3)
+    {
+      /* Transform the string representing the geometry into a geometry value */
+      rec.the_geom = geom_in(geo_buffer, -1);
+      if (geo_is_empty(rec.the_geom))
+      {
+        free(rec.the_geom);
+        continue;
+      }
+      if (rec.gid == rid)
+      {
+        found = true;
+        break;
+      }
+    }
+  } while (!feof(file));
+
+  /* Close the input file */
+  fclose(file);
+  
+  if (! found)
+    return -1.0;
+  
+  double result = line_length(rec.the_geom);
+  free(rec.the_geom);
+  return result; 
 }
 #else
 double
@@ -564,11 +742,66 @@ route_length(int64 rid)
  */
 #if MEOS
 GSERIALIZED *
-route_geom(int64 rid __attribute__((unused)))
+route_geom(int64 rid)
 {
-  meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
-    "Function not yet implemented");
-  return NULL;
+  /* Substitute the full file path in the first argument of fopen */
+  FILE *file = fopen(WAYS_CSV, "r");
+
+  if (! file)
+  {
+    meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
+      "Cannot open the ways.csv file");
+    return NULL;
+  }
+
+  bool found = false;
+  ways_record rec;
+  char header_buffer[MAX_LENGTH_HEADER];
+  char geo_buffer[MAX_LENGTH_GEOM];
+
+  /* Read the first line of the file with the headers */
+  fscanf(file, "%1023s\n", header_buffer);
+
+  /* Continue reading the file */
+  do
+  {
+    int read = fscanf(file, "%ld,%100000[^,],%lf\n",
+      &rec.gid, geo_buffer, &rec.length);
+
+    if (ferror(file))
+    {
+      meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
+        "Error reading the ways.csv file");
+      return NULL;
+    }
+
+    /* Ignore the records with NULL values */
+    if (read == 3)
+    {
+      /* Transform the string representing the geometry into a geometry value */
+      rec.the_geom = geom_in(geo_buffer, -1);
+      if (geo_is_empty(rec.the_geom))
+      {
+        free(rec.the_geom);
+        continue;
+      }
+      if (rec.gid == rid)
+      {
+        found = true;
+        break;
+      }
+    }
+  } while (!feof(file));
+
+  /* Close the input file */
+  fclose(file);
+  
+  if (! found)
+    return NULL;
+  
+  GSERIALIZED *result = geo_copy(rec.the_geom);
+  free(rec.the_geom);
+  return result; 
 }
 #else
 GSERIALIZED *
@@ -638,11 +871,94 @@ npoint_geom(const Npoint *np)
  */
 #if MEOS
 Npoint *
-geom_npoint(const GSERIALIZED *gs __attribute__((unused)))
+geom_npoint(const GSERIALIZED *gs)
 {
-  meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
-    "Function not yet implemented");
-  return NULL;
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) gs) || ! ensure_not_empty(gs) ||
+      ! ensure_point_type(gs))
+    return NULL;
+  int32_t srid_geom = gserialized_get_srid(gs);
+  int32_t srid_ways = get_srid_ways();
+  if (srid_ways == SRID_INVALID || ! ensure_same_srid(srid_geom, srid_ways))
+    return NULL;
+
+  /* Substitute the full file path in the first argument of fopen */
+  FILE *file = fopen(WAYS_CSV, "r");
+
+  if (! file)
+  {
+    meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
+      "Cannot open the ways.csv file");
+    return NULL;
+  }
+
+  /* Record holding one line of the file */
+  ways_record rec;
+  /* Buffers for reading one line of the file */
+  char header_buffer[MAX_LENGTH_HEADER];
+  char geo_buffer[MAX_LENGTH_GEOM];
+  /* Distances */
+  double dist, min_dist = DBL_MAX;
+  /* Position in the geometry with the shortest distance */
+  double pos;
+
+  /* Read the first line of the file with the headers */
+  fscanf(file, "%1023s\n", header_buffer);
+
+  /* Continue reading the file */
+  do
+  {
+    int read = fscanf(file, "%ld,%100000[^,],%lf\n",
+      &rec.gid, geo_buffer, &rec.length);
+
+    if (ferror(file))
+    {
+      meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
+        "Error reading the ways.csv file");
+      return NULL;
+    }
+
+    /* Ignore the records with NULL values */
+    if (read == 3)
+    {
+      /* Transform the string representing the geometry into a geometry value */
+      rec.the_geom = geom_in(geo_buffer, -1);
+      if (geo_is_empty(rec.the_geom))
+      {
+        free(rec.the_geom);
+        continue;
+      }
+
+      /* We need to implement the following SQL query for a given geo
+       *   SELECT npoint(gid, ST_LineLocatePoint(the_geom, geo))
+       *   FROM public.ways WHERE ST_DWithin(the_geom, geo, DIST_EPSILON)
+       *   ORDER BY ST_Distance(the_geom, geo) LIMIT 1;
+       */
+      
+      pos = line_locate_point(rec.the_geom, gs);
+      if (pos < 0)
+      {
+        free(rec.the_geom);
+        continue;
+      }
+
+      dist = geom_distance2d(rec.the_geom, gs);
+      if (dist < min_dist)
+        min_dist = dist;
+
+    }    
+  } while (!feof(file));
+
+  /* Close the input file */
+  fclose(file);
+  
+  /* If the point was not found */
+  if (! gs)
+    return NULL;
+  
+  Npoint *result = npoint_make(rec.gid, pos);
+  free(rec.the_geom);
+  return result; 
 }
 #else
 Npoint *

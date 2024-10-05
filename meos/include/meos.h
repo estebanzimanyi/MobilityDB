@@ -374,8 +374,8 @@ extern void meos_initialize_timezone(const char *name);
 extern void meos_initialize_error_handler(error_handler_fn err_handler);
 extern void meos_finalize_timezone(void);
 
-extern bool meos_set_datestyle(char *newval, void *extra);
-extern bool meos_set_intervalstyle(char *newval, int extra);
+extern bool meos_set_datestyle(const char *newval, void *extra);
+extern bool meos_set_intervalstyle(const char *newval, int extra);
 extern char *meos_get_datestyle(void);
 extern char *meos_get_intervalstyle(void);
 
@@ -469,19 +469,42 @@ extern char *geo_as_ewkt(const GSERIALIZED *gs, int precision);
 extern char *geo_as_geojson(const GSERIALIZED *gs, int option, int precision, const char *srs);
 extern char *geo_as_hexewkb(const GSERIALIZED *gs, const char *endian);
 extern char *geo_as_text(const GSERIALIZED *gs, int precision);
-extern GSERIALIZED *geo_from_text(char *wkt, int srid);
+extern GSERIALIZED *geo_from_text(const char *wkt, int srid);
 extern GSERIALIZED *geo_from_ewkb(const uint8_t *wkb, size_t wkb_size, int32 srid);
 extern GSERIALIZED *geo_from_geojson(const char *geojson);
 extern bool geo_is_empty(const GSERIALIZED *g);
-extern double geo_length_linestring(const GSERIALIZED *gs);
 extern char *geo_out(const GSERIALIZED *gs);
-extern double geo_perimeter(const GSERIALIZED *gs);
 extern bool geo_same(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
-extern GSERIALIZED *geog_from_hexewkb(const char *wkt);
-extern GSERIALIZED *geog_in(char *str, int32 typmod);
-extern GSERIALIZED *geom_from_hexewkb(const char *wkt);
-extern GSERIALIZED *geom_in(char *str, int32 typmod);
 
+extern double geog_area(const GSERIALIZED *g, bool use_spheroid);
+extern double geog_distance(const GSERIALIZED *g1, const GSERIALIZED *g2);
+extern bool geog_dwithin(const GSERIALIZED *g1, const GSERIALIZED *g2, double tolerance, bool use_spheroid);
+extern GSERIALIZED *geog_from_hexewkb(const char *wkt);
+extern GSERIALIZED *geog_from_text(const char *wkt, int srid);
+extern GSERIALIZED *geog_in(const char *str, int32 typmod);
+extern bool geog_intersects(const GSERIALIZED *gs1, const GSERIALIZED *gs2, bool use_spheroid);
+extern double geog_length(const GSERIALIZED *g, bool use_spheroid);
+extern double geog_perimeter(const GSERIALIZED *g, bool use_spheroid);
+
+extern GSERIALIZED *geom_boundary(const GSERIALIZED *gs);
+extern bool geom_contains(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
+extern bool geom_covers(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
+extern double geom_distance2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
+extern double geom_distance3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
+extern bool geom_dwithin2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2, double tolerance);
+extern bool geom_dwithin3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2, double tolerance);
+extern GSERIALIZED *geom_from_hexewkb(const char *wkt);
+extern GSERIALIZED *geom_from_text(const char *wkt, int srid);
+extern GSERIALIZED *geom_in(const char *str, int32 typmod);
+extern bool geom_intersects2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
+extern bool geom_intersects3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
+extern double geom_perimeter(const GSERIALIZED *gs);
+extern bool geom_relate_pattern(const GSERIALIZED *gs1, const GSERIALIZED *gs2, char *patt);
+extern GSERIALIZED *geom_shortestline2d(const GSERIALIZED *gs1, const GSERIALIZED *s2);
+extern GSERIALIZED *geom_shortestline3d(const GSERIALIZED *gs1, const GSERIALIZED *s2);
+
+extern double line_length(const GSERIALIZED *gs);
+extern double line_locate_point(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
 
 /*===========================================================================*
  * Functions for set and span types
