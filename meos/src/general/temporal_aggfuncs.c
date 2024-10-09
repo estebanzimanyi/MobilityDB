@@ -205,7 +205,7 @@ tinstant_tagg(const TInstant **instants1, int count1, const TInstant **instants2
           result[count++] = tinstant_copy(inst1);
         else
         {
-          char *t1 = pg_timestamptz_out(inst1->t);
+          char *t1 = tstz_out(inst1->t);
           meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
             "The temporal values have different value at their common timestamp %s",
             t1);
@@ -341,7 +341,7 @@ tsequence_tagg_iter(const TSequence *seq1, const TSequence *seq2,
         instants[i] = tinstant_copy(inst1);
       else
       {
-        char *t1 = pg_timestamptz_out(inst1->t);
+        char *t1 = tstz_out(inst1->t);
         meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
           "The temporal values have different value at their common timestamp %s",
           t1);

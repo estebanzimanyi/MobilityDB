@@ -3216,7 +3216,7 @@ pg_timestamp_to_char(Timestamp dt, text *fmt)
  * @brief Output a timestamptz as text.
  */
 text *
-pg_timestamptz_to_char(TimestampTz dt, text *fmt)
+tstz_to_char(TimestampTz dt, text *fmt)
 {
   text *res;
   TmToChar  tmtc;
@@ -3255,7 +3255,7 @@ pg_timestamptz_to_char(TimestampTz dt, text *fmt)
  * @brief Output an interval as text.
  */
 text *
-pg_interval_to_char(Interval *it, text *fmt)
+interv_to_char(Interval *it, text *fmt)
 {
   text *res;
   TmToChar tmtc;

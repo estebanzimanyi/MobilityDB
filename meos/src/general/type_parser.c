@@ -417,7 +417,7 @@ timestamp_parse(const char **str)
   strncpy(str1, *str, delim);
   str1[delim] = '\0';
   /* The last argument is for an unused typmod */
-  TimestampTz result = pg_timestamptz_in(str1, -1);
+  TimestampTz result = tstz_in(str1, -1);
   pfree(str1);
   *str += delim;
   return result;

@@ -62,7 +62,7 @@ extern float8 pg_datan2(float8 arg1, float8 arg2);
 
 /* Functions adadpted from timestamp.c */
 
-extern Interval *pg_interval_justify_hours(const Interval *span);
+extern Interval *interv_justify_hours(const Interval *span);
 
 /* Functions adapted from hashfn.h and hashfn.c */
 

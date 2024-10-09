@@ -243,8 +243,8 @@ ensure_valid_tseqarr(const TSequence **sequences, int count)
            ( upper1 == lower2 && sequences[i - 1]->period.upper_inc &&
              sequences[i]->period.lower_inc ) )
       {
-        char *t1 = pg_timestamptz_out(upper1);
-        char *t2 = pg_timestamptz_out(lower2);
+        char *t1 = tstz_out(upper1);
+        char *t2 = tstz_out(lower2);
         meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
           "Timestamps for temporal value must be increasing: %s, %s", t1, t2);
         return false;
@@ -484,7 +484,7 @@ ensure_valid_tinstarr_gaps(const TInstant **instants, int count, bool merge,
     {
       Interval *duration = minus_timestamptz_timestamptz(instants[i]->t,
         instants[i - 1]->t);
-      if (pg_interval_cmp(duration, maxt) > 0)
+      if (interv_cmp(duration, maxt) > 0)
         split = true;
       pfree(duration);
     }

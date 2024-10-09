@@ -1857,7 +1857,7 @@ span_cmp_size(const Span *s1, const Span *s2)
       datespan_duration(s1) : tstzspan_duration(s1);
     Interval *dur2 = (s2->spantype == T_DATESPAN) ?
       datespan_duration(s2) : tstzspan_duration(s2);
-    result = pg_interval_cmp(dur1, dur2);
+    result = interv_cmp(dur1, dur2);
     pfree(dur1); pfree(dur2);
   }
   return result;

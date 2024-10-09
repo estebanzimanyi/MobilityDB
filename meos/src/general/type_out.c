@@ -177,7 +177,7 @@ coordinates_as_mfjson_sb(stringbuffer_t *sb, const TInstant *inst, int precision
 static void
 datetimes_as_mfjson_sb(stringbuffer_t *sb, TimestampTz t)
 {
-  char *tstr = pg_timestamptz_out(t);
+  char *tstr = tstz_out(t);
   /* Replace ' ' by 'T' as separator between date and time parts */
   tstr[10] = 'T';
   stringbuffer_aprintf(sb, "\"%s\"", tstr);

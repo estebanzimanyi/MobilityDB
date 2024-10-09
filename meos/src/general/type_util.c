@@ -837,7 +837,7 @@ basetype_in(const char *str, meosType type,
   {
     case T_TIMESTAMPTZ:
     {
-      TimestampTz t = pg_timestamptz_in(str, -1);
+      TimestampTz t = tstz_in(str, -1);
       if (t == DT_NOEND)
         return false;
       *result = TimestampTzGetDatum(t);
@@ -964,7 +964,7 @@ basetype_out(Datum value, meosType type, int maxdd)
   switch (type)
   {
     case T_TIMESTAMPTZ:
-      return pg_timestamptz_out(DatumGetTimestampTz(value));
+      return tstz_out(DatumGetTimestampTz(value));
     case T_DATE:
       return pg_date_out(DatumGetTimestampTz(value));
     case T_BOOL:

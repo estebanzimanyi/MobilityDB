@@ -433,7 +433,7 @@ ensure_not_month_duration(const Interval *duration)
 {
   if (! duration->month)
     return true;
-  char *str = pg_interval_out(duration);
+  char *str = interv_out(duration);
   meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
     "Cannot have month intervals: %s", str);
   pfree(str);
@@ -455,7 +455,7 @@ ensure_valid_day_duration(const Interval *duration)
   int64 tunits = interval_units(duration);
   if (tunits < day)
   {
-    str = pg_interval_out(duration);
+    str = interv_out(duration);
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "The interval must not have sub-day precision: %s", str);
     pfree(str);
@@ -463,7 +463,7 @@ ensure_valid_day_duration(const Interval *duration)
   }
   if (tunits % day != 0)
   {
-    str = pg_interval_out(duration);
+    str = interv_out(duration);
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "The interval must be a multiple of a day: %s", str);
     pfree(str);
@@ -471,7 +471,7 @@ ensure_valid_day_duration(const Interval *duration)
   }
   if (tunits < 0)
   {
-    str = pg_interval_out(duration);
+    str = interv_out(duration);
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "The interval must be positive: %s", str);
     pfree(str);
@@ -490,7 +490,7 @@ valid_duration(const Interval *duration)
     return false;
   Interval intervalzero;
   memset(&intervalzero, 0, sizeof(Interval));
-  if (pg_interval_cmp(duration, &intervalzero) <= 0)
+  if (interv_cmp(duration, &intervalzero) <= 0)
     return false;
   return true;
 }
@@ -507,7 +507,7 @@ ensure_valid_duration(const Interval *duration)
   if (! ensure_not_month_duration(duration))
     return false;
 
-  char *str = pg_interval_out(duration);
+  char *str = interv_out(duration);
   meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
     "The interval must be positive: %s", str);
   pfree(str);
@@ -3543,7 +3543,7 @@ temporal_stops(const Temporal *temp, double maxdist,
   /* We cannot call #ensure_valid_duration since the duration may be zero */
   Interval intervalzero;
   memset(&intervalzero, 0, sizeof(Interval));
-  int cmp = pg_interval_cmp(minduration, &intervalzero);
+  int cmp = interv_cmp(minduration, &intervalzero);
   if (cmp < 0)
   {
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,

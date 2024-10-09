@@ -1274,7 +1274,7 @@ tsequence_simplify_min_tdelta(const TSequence *seq, const Interval *mint)
   {
     const TInstant *inst2 = TSEQUENCE_INST_N(seq, i);
     Interval *duration = minus_timestamptz_timestamptz(inst2->t, inst1->t);
-    if (pg_interval_cmp(duration, mint) > 0)
+    if (interv_cmp(duration, mint) > 0)
     {
       /* Add instant to output sequence */
       instants[ninsts++] = inst2;
