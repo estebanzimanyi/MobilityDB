@@ -78,7 +78,7 @@ BEGIN
   END IF;
   xmin = random_float(lowx, highx - maxdelta);
   ymin = random_float(lowy, highy - maxdelta);
-  tmin = random_timestamptz(lowtime, hightime - interval '1 minute' * maxminutes);
+  tmin = random_tstz(lowtime, hightime - interval '1 minute' * maxminutes);
   RETURN stboxXT(xmin, xmin + random_float(1, maxdelta), ymin,
     ymin + random_float(1, maxdelta),
     span(tmin, tmin + random_minutes(1, maxminutes)), srid);
@@ -138,7 +138,7 @@ BEGIN
   xmin = random_float(lowx, highx - maxdelta);
   ymin = random_float(lowy, highy - maxdelta);
   zmin = random_float(lowz, highz - maxdelta);
-  tmin = random_timestamptz(lowtime, hightime - interval '1 minute' * maxminutes);
+  tmin = random_tstz(lowtime, hightime - interval '1 minute' * maxminutes);
   IF geodetic THEN
     IF geodZ THEN
       RETURN geodstboxZT(xmin, xmin + random_float(1, maxdelta), ymin,
@@ -1487,7 +1487,7 @@ BEGIN
       lowtime, hightime;
   END IF;
   RETURN tgeompoint(random_geom_point(lowx, highx, lowy, highy, srid),
-    random_timestamptz(lowtime, hightime));
+    random_tstz(lowtime, hightime));
 END;
 $$ LANGUAGE PLPGSQL STRICT;
 
@@ -1520,7 +1520,7 @@ BEGIN
       lowtime, hightime;
   END IF;
   RETURN tgeompoint(random_geom_point3D(lowx, highx, lowy, highy, lowz,
-    highz, srid), random_timestamptz(lowtime, hightime));
+    highz, srid), random_tstz(lowtime, hightime));
 END;
 $$ LANGUAGE PLPGSQL STRICT;
 
@@ -1551,7 +1551,7 @@ BEGIN
       lowtime, hightime;
   END IF;
   RETURN tgeogpoint(random_geog_point(lowx, highx, lowy, highy, srid),
-    random_timestamptz(lowtime, hightime));
+    random_tstz(lowtime, hightime));
 END;
 $$ LANGUAGE PLPGSQL STRICT;
 
@@ -1584,7 +1584,7 @@ BEGIN
       lowtime, hightime;
   END IF;
   RETURN tgeogpoint(random_geog_point3D(lowx, highx, lowy, highy, lowz,
-    highz, srid), random_timestamptz(lowtime, hightime));
+    highz, srid), random_tstz(lowtime, hightime));
 END;
 $$ LANGUAGE PLPGSQL STRICT;
 
@@ -1625,7 +1625,7 @@ BEGIN
     maxcard, srid)
   INTO pointarr;
   card = array_length(pointarr, 1);
-  SELECT random_timestamptz_array(lowtime, hightime, maxminutes, card, card)
+  SELECT random_tstz_array(lowtime, hightime, maxminutes, card, card)
   INTO tsarr;
   FOR i IN 1..card
   LOOP
@@ -1675,7 +1675,7 @@ BEGIN
     maxdelta, mincard, maxcard, srid)
   INTO pointarr;
   card = array_length(pointarr, 1);
-  SELECT random_timestamptz_array(lowtime, hightime, maxminutes, card, card)
+  SELECT random_tstz_array(lowtime, hightime, maxminutes, card, card)
   INTO tsarr;
   FOR i IN 1..card
   LOOP
@@ -1723,7 +1723,7 @@ BEGIN
     maxcard, srid)
   INTO pointarr;
   card = array_length(pointarr, 1);
-  SELECT random_timestamptz_array(lowtime, hightime, maxminutes, card, card)
+  SELECT random_tstz_array(lowtime, hightime, maxminutes, card, card)
   INTO tsarr;
   FOR i IN 1..card
   LOOP
@@ -1773,7 +1773,7 @@ BEGIN
     maxdelta, mincard, maxcard, srid)
   INTO pointarr;
   card = array_length(pointarr, 1);
-  SELECT random_timestamptz_array(lowtime, hightime, maxminutes, card, card)
+  SELECT random_tstz_array(lowtime, hightime, maxminutes, card, card)
   INTO tsarr;
   FOR i IN 1..card
   LOOP
@@ -1830,7 +1830,7 @@ BEGIN
     maxcard, srid)
   INTO pointarr;
   card = array_length(pointarr, 1);
-  SELECT random_timestamptz_array(lowtime, hightime, maxminutes, card, card,
+  SELECT random_tstz_array(lowtime, hightime, maxminutes, card, card,
     fixstart) INTO tsarr;
   IF card = 1 THEN
     lower_inc = true;
@@ -1909,7 +1909,7 @@ BEGIN
     maxdelta, mincard, maxcard, srid)
   INTO pointarr;
   card = array_length(pointarr, 1);
-  SELECT random_timestamptz_array(lowtime, hightime, maxminutes, card, card,
+  SELECT random_tstz_array(lowtime, hightime, maxminutes, card, card,
     fixstart) INTO tsarr;
   IF card = 1 THEN
     lower_inc = true;
@@ -1987,7 +1987,7 @@ BEGIN
     maxcard, srid)
   INTO pointarr;
   card = array_length(pointarr, 1);
-  SELECT random_timestamptz_array(lowtime, hightime, maxminutes, card, card,
+  SELECT random_tstz_array(lowtime, hightime, maxminutes, card, card,
     fixstart) INTO tsarr;
   IF card = 1 THEN
     lower_inc = true;
@@ -2066,7 +2066,7 @@ BEGIN
   SELECT random_geog_point3D_array(lowx, highx, lowy, highy, lowz, highz,
     maxdelta, mincard, maxcard, srid) INTO pointarr;
   card = array_length(pointarr, 1);
-  SELECT random_timestamptz_array(lowtime, hightime, maxminutes, card, card,
+  SELECT random_tstz_array(lowtime, hightime, maxminutes, card, card,
     fixstart) INTO tsarr;
   IF card = 1 THEN
     lower_inc = true;

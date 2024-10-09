@@ -147,7 +147,7 @@ contains_spanset_date(const SpanSet *ss, DateADT d)
  * @csqlfn #Contains_spanset_value()
  */
 bool
-contains_spanset_timestamptz(const SpanSet *ss, TimestampTz t)
+contains_spanset_tstz(const SpanSet *ss, TimestampTz t)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) ss) ||
@@ -344,7 +344,7 @@ contained_date_spanset(DateADT d, const SpanSet *ss)
  * @csqlfn #Contained_value_spanset()
  */
 bool
-contained_timestamptz_spanset(TimestampTz t, const SpanSet *ss)
+contained_tstz_spanset(TimestampTz t, const SpanSet *ss)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) ss) ||
@@ -603,7 +603,7 @@ adjacent_spanset_date(const SpanSet *ss, DateADT d)
  * @csqlfn #Adjacent_spanset_value()
  */
 bool
-adjacent_spanset_timestamptz(const SpanSet *ss, TimestampTz t)
+adjacent_spanset_tstz(const SpanSet *ss, TimestampTz t)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) ss) ||
@@ -781,7 +781,7 @@ before_date_spanset(DateADT d, const SpanSet *ss)
  * @csqlfn #Left_value_spanset()
  */
 bool
-before_timestamptz_spanset(TimestampTz t, const SpanSet *ss)
+before_tstz_spanset(TimestampTz t, const SpanSet *ss)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) ss) ||
@@ -898,7 +898,7 @@ before_spanset_date(const SpanSet *ss, DateADT d)
  * @csqlfn #Left_spanset_value()
  */
 bool
-before_spanset_timestamptz(const SpanSet *ss, TimestampTz t)
+before_spanset_tstz(const SpanSet *ss, TimestampTz t)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) ss) ||
@@ -1018,9 +1018,9 @@ after_date_spanset(DateADT d, const SpanSet *ss)
  * @csqlfn #Right_value_spanset()
  */
 bool
-after_timestamptz_spanset(TimestampTz t, const SpanSet *ss)
+after_tstz_spanset(TimestampTz t, const SpanSet *ss)
 {
-  return before_spanset_timestamptz(ss, t);
+  return before_spanset_tstz(ss, t);
 }
 #endif /* MEOS */
 
@@ -1110,9 +1110,9 @@ after_spanset_date(const SpanSet *ss, DateADT d)
  * @csqlfn #Right_spanset_value()
  */
 bool
-after_spanset_timestamptz(const SpanSet *ss, TimestampTz t)
+after_spanset_tstz(const SpanSet *ss, TimestampTz t)
 {
-  return before_timestamptz_spanset(t, ss);
+  return before_tstz_spanset(t, ss);
 }
 #endif /* MEOS */
 
@@ -1236,7 +1236,7 @@ overbefore_spanset_date(const SpanSet *ss, DateADT d)
  * @csqlfn #Overleft_spanset_value()
  */
 bool
-overbefore_spanset_timestamptz(const SpanSet *ss, TimestampTz t)
+overbefore_spanset_tstz(const SpanSet *ss, TimestampTz t)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) ss) ||
@@ -1337,7 +1337,7 @@ overbefore_date_spanset(DateADT d, const SpanSet *ss)
  * @csqlfn #Overleft_value_spanset()
  */
 bool
-overbefore_timestamptz_spanset(TimestampTz t, const SpanSet *ss)
+overbefore_tstz_spanset(TimestampTz t, const SpanSet *ss)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) ss) ||
@@ -1493,7 +1493,7 @@ overafter_date_spanset(DateADT d, const SpanSet *ss)
  * @csqlfn #Overright_value_spanset()
  */
 bool
-overafter_timestamptz_spanset(TimestampTz t, const SpanSet *ss)
+overafter_tstz_spanset(TimestampTz t, const SpanSet *ss)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) ss) ||
@@ -1609,7 +1609,7 @@ overafter_spanset_date(const SpanSet *ss, DateADT d)
  * @csqlfn #Overright_spanset_value()
  */
 bool
-overafter_spanset_timestamptz(const SpanSet *ss, TimestampTz t)
+overafter_spanset_tstz(const SpanSet *ss, TimestampTz t)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) ss) ||
@@ -1761,7 +1761,7 @@ union_date_spanset(DateADT d, SpanSet *ss)
  * @csqlfn #Union_spanset_value()
  */
 SpanSet *
-union_timestamptz_spanset(TimestampTz t, SpanSet *ss)
+union_tstz_spanset(TimestampTz t, SpanSet *ss)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) ss) ||
@@ -1846,7 +1846,7 @@ union_spanset_date(const SpanSet *ss, DateADT d)
  * @csqlfn #Union_spanset_value()
  */
 SpanSet *
-union_spanset_timestamptz(const SpanSet *ss, TimestampTz t)
+union_spanset_tstz(const SpanSet *ss, TimestampTz t)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) ss) ||
@@ -2141,7 +2141,7 @@ intersection_spanset_date(const SpanSet *ss, DateADT d)
  * @csqlfn #Intersection_spanset_value()
  */
 SpanSet *
-intersection_spanset_timestamptz(const SpanSet *ss, TimestampTz t)
+intersection_spanset_tstz(const SpanSet *ss, TimestampTz t)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) ss) ||
@@ -2360,7 +2360,7 @@ minus_date_spanset(DateADT d, const SpanSet *ss)
  * @csqlfn #Minus_value_spanset()
  */
 SpanSet *
-minus_timestamptz_spanset(TimestampTz t, const SpanSet *ss)
+minus_tstz_spanset(TimestampTz t, const SpanSet *ss)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) ss) ||
@@ -2539,7 +2539,7 @@ minus_spanset_date(const SpanSet *ss, DateADT d)
  * @csqlfn #Minus_spanset_value()
  */
 SpanSet *
-minus_spanset_timestamptz(const SpanSet *ss, TimestampTz t)
+minus_spanset_tstz(const SpanSet *ss, TimestampTz t)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) ss) ||
@@ -2747,7 +2747,7 @@ distance_spanset_date(const SpanSet *ss, DateADT d)
  * @csqlfn #Distance_spanset_value()
  */
 double
-distance_spanset_timestamptz(const SpanSet *ss, TimestampTz t)
+distance_spanset_tstz(const SpanSet *ss, TimestampTz t)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) ss) ||

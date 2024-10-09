@@ -368,11 +368,11 @@ CREATE FUNCTION getValue(tgeogpoint)
 
 CREATE FUNCTION getTimestamp(tgeompoint)
   RETURNS timestamptz
-  AS 'MODULE_PATHNAME', 'Tinstant_timestamptz'
+  AS 'MODULE_PATHNAME', 'Tinstant_tstz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION getTimestamp(tgeogpoint)
   RETURNS timestamptz
-  AS 'MODULE_PATHNAME', 'Tinstant_timestamptz'
+  AS 'MODULE_PATHNAME', 'Tinstant_tstz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION valueSet(tgeompoint)
@@ -504,29 +504,29 @@ CREATE FUNCTION numTimestamps(tgeogpoint)
 
 CREATE FUNCTION startTimestamp(tgeompoint)
   RETURNS timestamptz
-  AS 'MODULE_PATHNAME', 'Temporal_start_timestamptz'
+  AS 'MODULE_PATHNAME', 'Temporal_start_tstz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION startTimestamp(tgeogpoint)
   RETURNS timestamptz
-  AS 'MODULE_PATHNAME', 'Temporal_start_timestamptz'
+  AS 'MODULE_PATHNAME', 'Temporal_start_tstz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION endTimestamp(tgeompoint)
   RETURNS timestamptz
-  AS 'MODULE_PATHNAME', 'Temporal_end_timestamptz'
+  AS 'MODULE_PATHNAME', 'Temporal_end_tstz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION endTimestamp(tgeogpoint)
   RETURNS timestamptz
-  AS 'MODULE_PATHNAME', 'Temporal_end_timestamptz'
+  AS 'MODULE_PATHNAME', 'Temporal_end_tstz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION timestampN(tgeompoint, integer)
   RETURNS timestamptz
-  AS 'MODULE_PATHNAME', 'Temporal_timestamptz_n'
+  AS 'MODULE_PATHNAME', 'Temporal_tstz_n'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION timestampN(tgeogpoint, integer)
   RETURNS timestamptz
-  AS 'MODULE_PATHNAME', 'Temporal_timestamptz_n'
+  AS 'MODULE_PATHNAME', 'Temporal_tstz_n'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION timestamps(tgeompoint)
@@ -709,29 +709,29 @@ CREATE FUNCTION minusValues(tgeogpoint, geogset)
 
 CREATE FUNCTION atTime(tgeompoint, timestamptz)
   RETURNS tgeompoint
-  AS 'MODULE_PATHNAME', 'Temporal_at_timestamptz'
+  AS 'MODULE_PATHNAME', 'Temporal_at_tstz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION atTime(tgeogpoint, timestamptz)
   RETURNS tgeogpoint
-  AS 'MODULE_PATHNAME', 'Temporal_at_timestamptz'
+  AS 'MODULE_PATHNAME', 'Temporal_at_tstz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION minusTime(tgeompoint, timestamptz)
   RETURNS tgeompoint
-  AS 'MODULE_PATHNAME', 'Temporal_minus_timestamptz'
+  AS 'MODULE_PATHNAME', 'Temporal_minus_tstz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION minusTime(tgeogpoint, timestamptz)
   RETURNS tgeogpoint
-  AS 'MODULE_PATHNAME', 'Temporal_minus_timestamptz'
+  AS 'MODULE_PATHNAME', 'Temporal_minus_tstz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION valueAtTimestamp(tgeompoint, timestamptz)
   RETURNS geometry(Point)
-  AS 'MODULE_PATHNAME', 'Temporal_value_at_timestamptz'
+  AS 'MODULE_PATHNAME', 'Temporal_value_at_tstz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION valueAtTimestamp(tgeogpoint, timestamptz)
   RETURNS geography(Point)
-  AS 'MODULE_PATHNAME', 'Temporal_value_at_timestamptz'
+  AS 'MODULE_PATHNAME', 'Temporal_value_at_tstz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION atTime(tgeompoint, tstzset)
@@ -812,11 +812,11 @@ CREATE FUNCTION update(tgeogpoint, tgeogpoint, connect boolean DEFAULT TRUE)
 
 CREATE FUNCTION deleteTime(tgeompoint, timestamptz, connect boolean DEFAULT TRUE)
   RETURNS tgeompoint
-  AS 'MODULE_PATHNAME', 'Temporal_delete_timestamptz'
+  AS 'MODULE_PATHNAME', 'Temporal_delete_tstz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION deleteTime(tgeogpoint, timestamptz, connect boolean DEFAULT TRUE)
   RETURNS tgeogpoint
-  AS 'MODULE_PATHNAME', 'Temporal_delete_timestamptz'
+  AS 'MODULE_PATHNAME', 'Temporal_delete_tstz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION deleteTime(tgeompoint, tstzset, connect boolean DEFAULT TRUE)

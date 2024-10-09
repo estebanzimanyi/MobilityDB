@@ -760,7 +760,7 @@ tpointseq_linear_at_stbox_xyz(const TSequence *seq, const STBox *box,
           }
           else if (t1 != inst2->t)
           {
-            inter1 = tsegment_value_at_timestamptz(inst1, inst2, LINEAR, t1);
+            inter1 = tsegment_value_at_tstz(inst1, inst2, LINEAR, t1);
             free1 = true;
             instants[ninsts] = tinstant_make(inter1, inst1->temptype, t1);
             tofree[nfree++] = instants[ninsts++];
@@ -797,7 +797,7 @@ tpointseq_linear_at_stbox_xyz(const TSequence *seq, const STBox *box,
         {
           if (t2 != inst2->t)
           {
-            inter2 = tsegment_value_at_timestamptz(inst1, inst2, LINEAR, t2);
+            inter2 = tsegment_value_at_tstz(inst1, inst2, LINEAR, t2);
             free2 = true;
             /* Add the instant only if it is different from the previous one
              * Otherwise, assume that t1 == t2 and skip t2 */

@@ -95,12 +95,12 @@ SELECT COUNT(*) FROM tbl_tstzset WHERE tstzsetFromHexWKB(asHexWKB(t)) <> t;
 -------------------------------------------------------------------------------
 -- Constructor
 
-SELECT numValues(set(array_agg(DISTINCT t ORDER BY t))) FROM tbl_timestamptz WHERE t IS NOT NULL;
+SELECT numValues(set(array_agg(DISTINCT t ORDER BY t))) FROM tbl_tstz WHERE t IS NOT NULL;
 
 -------------------------------------------------------------------------------
 -- Conversion
 
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t::tstzset IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tstz WHERE t::tstzset IS NOT NULL;
 
 SELECT MAX(startValue(i::floatset)) FROM tbl_intset ORDER BY 1;
 SELECT MAX(startValue(f::intset)) FROM tbl_floatset ORDER BY 1;
@@ -153,7 +153,7 @@ SELECT numValues(setUnion(i)) FROM tbl_int;
 SELECT numValues(setUnion(b)) FROM tbl_bigint;
 SELECT numValues(setUnion(f)) FROM tbl_float;
 SELECT numValues(setUnion(d)) FROM tbl_date;
-SELECT numValues(setUnion(t)) FROM tbl_timestamptz;
+SELECT numValues(setUnion(t)) FROM tbl_tstz;
 SELECT numValues(setUnion(t)) FROM tbl_text;
 
 WITH test1(k, i) AS (

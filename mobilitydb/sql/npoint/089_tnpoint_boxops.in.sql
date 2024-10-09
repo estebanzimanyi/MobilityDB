@@ -60,7 +60,7 @@ CREATE FUNCTION stbox(nsegment)
 
 CREATE FUNCTION stbox(npoint, timestamptz)
   RETURNS stbox
-  AS 'MODULE_PATHNAME', 'Npoint_timestamptz_to_stbox'
+  AS 'MODULE_PATHNAME', 'Npoint_tstz_to_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION stbox(npoint, tstzspan)

@@ -135,7 +135,7 @@ date_extent_transfn(Span *state, DateADT d)
  * @param[in] t Value to aggregate
  */
 Span *
-timestamptz_extent_transfn(Span *state, TimestampTz t)
+tstz_extent_transfn(Span *state, TimestampTz t)
 {
   /* Ensure validity of the arguments */
   if (state && ! ensure_span_isof_type(state, T_TSTZSPAN))

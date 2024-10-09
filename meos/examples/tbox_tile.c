@@ -69,7 +69,7 @@ int main(void)
     tbox_in("TBOXINT XT([1,10],[2020-03-01, 2020-03-10])") :
     tbox_in("TBOXFLOAT XT([1,10],[2020-03-01, 2020-03-10])");
   Interval *interv = pg_interval_in("5 days", -1);
-  TimestampTz torigin = pg_timestamptz_in("2020-03-01", -1);
+  TimestampTz torigin = tstz_in("2020-03-01", -1);
 
   /* Perform tiling */
   TBox *boxes;

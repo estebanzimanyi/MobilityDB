@@ -99,14 +99,14 @@ tnumber_arithop_tp_at_timestamp1(const TInstant *start1, const TInstant *end1,
  * @note This function is called only when both sequences are linear.
  */
 static bool
-tnumber_arithop_tp_at_timestamptz(const TInstant *start1, const TInstant *end1,
+tnumber_arithop_tp_at_tstz(const TInstant *start1, const TInstant *end1,
   const TInstant *start2, const TInstant *end2, char op, Datum *value,
   TimestampTz *t)
 {
   if (! tnumber_arithop_tp_at_timestamp1(start1, end1, start2, end2, t))
     return false;
-  Datum value1 = tsegment_value_at_timestamptz(start1, end1, LINEAR, *t);
-  Datum value2 = tsegment_value_at_timestamptz(start2, end2, LINEAR, *t);
+  Datum value1 = tsegment_value_at_tstz(start1, end1, LINEAR, *t);
+  Datum value2 = tsegment_value_at_tstz(start2, end2, LINEAR, *t);
   assert (op == '*' || op == '/');
   assert (start1->temptype == start2->temptype);
   meosType basetype = temptype_basetype(start1->temptype);
@@ -122,10 +122,10 @@ tnumber_arithop_tp_at_timestamptz(const TInstant *start1, const TInstant *end1,
  * @note This function is called only when both sequences are linear.
  */
 bool
-tnumber_mult_tp_at_timestamptz(const TInstant *start1, const TInstant *end1,
+tnumber_mult_tp_at_tstz(const TInstant *start1, const TInstant *end1,
   const TInstant *start2, const TInstant *end2, Datum *value, TimestampTz *t)
 {
-  return tnumber_arithop_tp_at_timestamptz(start1, end1, start2, end2, '*',
+  return tnumber_arithop_tp_at_tstz(start1, end1, start2, end2, '*',
     value, t);
 }
 
@@ -135,10 +135,10 @@ tnumber_mult_tp_at_timestamptz(const TInstant *start1, const TInstant *end1,
  * @note This function is called only when both sequences are linear.
  */
 bool
-tnumber_div_tp_at_timestamptz(const TInstant *start1, const TInstant *end1,
+tnumber_div_tp_at_tstz(const TInstant *start1, const TInstant *end1,
   const TInstant *start2, const TInstant *end2, Datum *value, TimestampTz *t)
 {
-  return tnumber_arithop_tp_at_timestamptz(start1, end1, start2, end2, '/',
+  return tnumber_arithop_tp_at_tstz(start1, end1, start2, end2, '/',
     value, t);
 }
 

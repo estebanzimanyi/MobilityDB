@@ -113,7 +113,7 @@ CREATE FUNCTION bins(tstzspan, interval, timestamptz DEFAULT '2000-01-03')
 
 CREATE FUNCTION getBin(timestamptz, interval, timestamptz DEFAULT '2000-01-03')
   RETURNS tstzspan
-  AS 'MODULE_PATHNAME', 'Timestamptz_bin'
+  AS 'MODULE_PATHNAME', 'Tstz_bin'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************

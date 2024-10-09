@@ -318,8 +318,8 @@ Geodstbox_constructor_zt(PG_FUNCTION_ARGS)
 
 /*****************************************************************************/
 
-PGDLLEXPORT Datum Geo_timestamptz_to_stbox(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Geo_timestamptz_to_stbox);
+PGDLLEXPORT Datum Geo_tstz_to_stbox(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Geo_tstz_to_stbox);
 /**
  * @ingroup mobilitydb_box_constructor
  * @brief Return a spatiotemporal box constructed from a geometry/geography and
@@ -328,11 +328,11 @@ PG_FUNCTION_INFO_V1(Geo_timestamptz_to_stbox);
  * @sqlop @p ::
  */
 Datum
-Geo_timestamptz_to_stbox(PG_FUNCTION_ARGS)
+Geo_tstz_to_stbox(PG_FUNCTION_ARGS)
 {
   GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
   TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
-  STBox *result = geo_timestamptz_to_stbox(gs, t);
+  STBox *result = geo_tstz_to_stbox(gs, t);
   PG_FREE_IF_COPY(gs, 0);
   if (! result)
     PG_RETURN_NULL();
@@ -497,8 +497,8 @@ Geoset_to_stbox(PG_FUNCTION_ARGS)
   PG_RETURN_STBOX_P(result);
 }
 
-PGDLLEXPORT Datum Timestamptz_to_stbox(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Timestamptz_to_stbox);
+PGDLLEXPORT Datum Tstz_to_stbox(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tstz_to_stbox);
 /**
  * @ingroup mobilitydb_box_conversion
  * @brief Return a timestamptz converted to a spatiotemporal box
@@ -506,10 +506,10 @@ PG_FUNCTION_INFO_V1(Timestamptz_to_stbox);
  * @sqlop @p ::
  */
 Datum
-Timestamptz_to_stbox(PG_FUNCTION_ARGS)
+Tstz_to_stbox(PG_FUNCTION_ARGS)
 {
   TimestampTz t = PG_GETARG_TIMESTAMPTZ(0);
-  PG_RETURN_STBOX_P(timestamptz_to_stbox(t));
+  PG_RETURN_STBOX_P(tstz_to_stbox(t));
 }
 
 PGDLLEXPORT Datum Tstzset_to_stbox(PG_FUNCTION_ARGS);

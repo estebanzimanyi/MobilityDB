@@ -1025,15 +1025,15 @@ Temporal_max_instant(PG_FUNCTION_ARGS)
   PG_RETURN_TINSTANT_P(result);
 }
 
-PGDLLEXPORT Datum Tinstant_timestamptz(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tinstant_timestamptz);
+PGDLLEXPORT Datum Tinstant_tstz(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tinstant_tstz);
 /**
  * @ingroup mobilitydb_temporal_accessor
  * @brief Return the timestamptz of a temporal instant
  * @sqlfn getTimestamp()
  */
 Datum
-Tinstant_timestamptz(PG_FUNCTION_ARGS)
+Tinstant_tstz(PG_FUNCTION_ARGS)
 {
   TInstant *inst = PG_GETARG_TINSTANT_P(0);
   /* Ensure validity of arguments */
@@ -1314,52 +1314,52 @@ Temporal_num_timestamps(PG_FUNCTION_ARGS)
   PG_RETURN_INT32(result);
 }
 
-PGDLLEXPORT Datum Temporal_start_timestamptz(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Temporal_start_timestamptz);
+PGDLLEXPORT Datum Temporal_start_tstz(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Temporal_start_tstz);
 /**
  * @ingroup mobilitydb_temporal_accessor
  * @brief Return the start timestamptz of a temporal value
  * @sqlfn startTimestamp()
  */
 Datum
-Temporal_start_timestamptz(PG_FUNCTION_ARGS)
+Temporal_start_tstz(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  TimestampTz result = temporal_start_timestamptz(temp);
+  TimestampTz result = temporal_start_tstz(temp);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_TIMESTAMPTZ(result);
 }
 
-PGDLLEXPORT Datum Temporal_end_timestamptz(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Temporal_end_timestamptz);
+PGDLLEXPORT Datum Temporal_end_tstz(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Temporal_end_tstz);
 /**
  * @ingroup mobilitydb_temporal_accessor
  * @brief Return the end timestamptz of a temporal value
  * @sqlfn endTimestamp()
  */
 Datum
-Temporal_end_timestamptz(PG_FUNCTION_ARGS)
+Temporal_end_tstz(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  TimestampTz result = temporal_end_timestamptz(temp);
+  TimestampTz result = temporal_end_tstz(temp);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_TIMESTAMPTZ(result);
 }
 
-PGDLLEXPORT Datum Temporal_timestamptz_n(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Temporal_timestamptz_n);
+PGDLLEXPORT Datum Temporal_tstz_n(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Temporal_tstz_n);
 /**
  * @ingroup mobilitydb_temporal_accessor
  * @brief Return the n-th distinct timestamptz of a temporal value
  * @sqlfn timestampN()
  */
 Datum
-Temporal_timestamptz_n(PG_FUNCTION_ARGS)
+Temporal_tstz_n(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   int n = PG_GETARG_INT32(1); /* Assume 1-based */
   TimestampTz result;
-  bool found = temporal_timestamptz_n(temp, n, &result);
+  bool found = temporal_tstz_n(temp, n, &result);
   if (! found)
     PG_RETURN_NULL();
   PG_RETURN_TIMESTAMPTZ(result);
@@ -1410,20 +1410,20 @@ Temporal_stops(PG_FUNCTION_ARGS)
 
 /*****************************************************************************/
 
-PGDLLEXPORT Datum Temporal_value_at_timestamptz(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Temporal_value_at_timestamptz);
+PGDLLEXPORT Datum Temporal_value_at_tstz(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Temporal_value_at_tstz);
 /**
  * @ingroup mobilitydb_temporal_accessor
  * @brief Return the base value of a temporal value at a timestamptz
  * @sqlfn valueAtTimestamp()
  */
 Datum
-Temporal_value_at_timestamptz(PG_FUNCTION_ARGS)
+Temporal_value_at_tstz(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
   Datum result;
-  bool found = temporal_value_at_timestamptz(temp, t, true, &result);
+  bool found = temporal_value_at_tstz(temp, t, true, &result);
   PG_FREE_IF_COPY(temp, 0);
   if (! found)
     PG_RETURN_NULL();
@@ -2177,41 +2177,41 @@ Tnumber_minus_tbox(PG_FUNCTION_ARGS)
  * timestamptz
  */
 static Datum
-Temporal_restrict_timestamptz(FunctionCallInfo fcinfo, bool atfunc)
+Temporal_restrict_tstz(FunctionCallInfo fcinfo, bool atfunc)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
-  Temporal *result = temporal_restrict_timestamptz(temp, t, atfunc);
+  Temporal *result = temporal_restrict_tstz(temp, t, atfunc);
   PG_FREE_IF_COPY(temp, 0);
   if (! result)
     PG_RETURN_NULL();
   PG_RETURN_TEMPORAL_P(result);
 }
 
-PGDLLEXPORT Datum Temporal_at_timestamptz(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Temporal_at_timestamptz);
+PGDLLEXPORT Datum Temporal_at_tstz(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Temporal_at_tstz);
 /**
  * @ingroup mobilitydb_temporal_restrict
  * @brief Return a temporal value restricted to a timestamptz
  * @sqlfn atTime()
  */
 Datum
-Temporal_at_timestamptz(PG_FUNCTION_ARGS)
+Temporal_at_tstz(PG_FUNCTION_ARGS)
 {
-  return Temporal_restrict_timestamptz(fcinfo, REST_AT);
+  return Temporal_restrict_tstz(fcinfo, REST_AT);
 }
 
-PGDLLEXPORT Datum Temporal_minus_timestamptz(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Temporal_minus_timestamptz);
+PGDLLEXPORT Datum Temporal_minus_tstz(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Temporal_minus_tstz);
 /**
  * @ingroup mobilitydb_temporal_restrict
  * @brief Return a temporal value restricted to the complement of a timestamptz
  * @sqlfn minusTime()
  */
 Datum
-Temporal_minus_timestamptz(PG_FUNCTION_ARGS)
+Temporal_minus_tstz(PG_FUNCTION_ARGS)
 {
-  return Temporal_restrict_timestamptz(fcinfo, REST_MINUS);
+  return Temporal_restrict_tstz(fcinfo, REST_MINUS);
 }
 
 /*****************************************************************************/
@@ -2392,20 +2392,20 @@ Temporal_update(PG_FUNCTION_ARGS)
   PG_RETURN_TEMPORAL_P(result);
 }
 
-PGDLLEXPORT Datum Temporal_delete_timestamptz(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Temporal_delete_timestamptz);
+PGDLLEXPORT Datum Temporal_delete_tstz(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Temporal_delete_tstz);
 /**
  * @ingroup mobilitydb_temporal_modif
  * @brief Delete a timestamptz from a temporal value
  * @sqlfn deleteTime()
  */
 Datum
-Temporal_delete_timestamptz(PG_FUNCTION_ARGS)
+Temporal_delete_tstz(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
   bool connect = PG_GETARG_BOOL(2);
-  Temporal *result = temporal_delete_timestamptz(temp, t, connect);
+  Temporal *result = temporal_delete_tstz(temp, t, connect);
   PG_FREE_IF_COPY(temp, 0);
   if (! result)
     PG_RETURN_NULL();

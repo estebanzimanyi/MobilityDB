@@ -337,7 +337,7 @@ parse_mfjson_datetimes(json_object *mfjson, int *count)
       /* Replace 'T' by ' ' before converting to timestamptz */
       datetime[10] = ' ';
       /* The last argument is for an unused typmod */
-      times[i] = pg_timestamptz_in(datetime, -1);
+      times[i] = tstz_in(datetime, -1);
     }
   }
   *count = ndates;

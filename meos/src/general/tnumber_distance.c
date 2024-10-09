@@ -127,7 +127,7 @@ distance_tfloat_float(const Temporal *temp, double d)
  * the temporal distance
  */
 static bool
-tnumber_min_dist_at_timestamptz(const TInstant *start1, const TInstant *end1,
+tnumber_min_dist_at_tstz(const TInstant *start1, const TInstant *end1,
   const TInstant *start2, const TInstant *end2, Datum *value, TimestampTz *t)
 {
   if (! tsegment_intersection(start1, end1, LINEAR, start2, end2, LINEAR,
@@ -165,7 +165,7 @@ distance_tnumber_tnumber(const Temporal *temp1, const Temporal *temp2)
     MEOS_FLAGS_LINEAR_INTERP(temp2->flags);
   lfinfo.invert = INVERT_NO;
   lfinfo.discont = CONTINUOUS;
-  lfinfo.tpfunc = lfinfo.reslinear ? &tnumber_min_dist_at_timestamptz : NULL;
+  lfinfo.tpfunc = lfinfo.reslinear ? &tnumber_min_dist_at_tstz : NULL;
   return tfunc_temporal_temporal(temp1, temp2, &lfinfo);
 }
 

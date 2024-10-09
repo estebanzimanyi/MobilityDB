@@ -53,8 +53,8 @@
  * Time precision functions for time types
  *****************************************************************************/
 
-PGDLLEXPORT Datum Timestamptz_tprecision(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Timestamptz_tprecision);
+PGDLLEXPORT Datum Tstz_tprecision(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tstz_tprecision);
 /**
  * @ingroup mobilitydb_temporal_analytics_reduction
  * @brief Return the initial timestamptz of the bin in which a timestamptz
@@ -62,12 +62,12 @@ PG_FUNCTION_INFO_V1(Timestamptz_tprecision);
  * @sqlfn tPrecision()
  */
 Datum
-Timestamptz_tprecision(PG_FUNCTION_ARGS)
+Tstz_tprecision(PG_FUNCTION_ARGS)
 {
   TimestampTz t = PG_GETARG_TIMESTAMPTZ(0);
   Interval *duration = PG_GETARG_INTERVAL_P(1);
   TimestampTz origin = PG_GETARG_TIMESTAMPTZ(2);
-  PG_RETURN_TIMESTAMPTZ(timestamptz_tprecision(t, duration, origin));
+  PG_RETURN_TIMESTAMPTZ(tstz_tprecision(t, duration, origin));
 }
 
 PGDLLEXPORT Datum Tstzset_tprecision(PG_FUNCTION_ARGS);

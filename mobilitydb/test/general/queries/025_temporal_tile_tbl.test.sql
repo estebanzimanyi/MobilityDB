@@ -48,8 +48,8 @@ SELECT getBin(i, 2, 1), COUNT(*) FROM tbl_int GROUP BY 1 ORDER BY 2 DESC, 1 LIMI
 SELECT getBin(f, 2.5), COUNT(*) FROM tbl_float GROUP BY 1 ORDER BY 2 DESC, 1 LIMIT 3;
 SELECT getBin(f, 2.5, 1.5), COUNT(*) FROM tbl_float GROUP BY 1 ORDER BY 2 DESC, 1 LIMIT 3;
 
-SELECT getBin(t, interval '2 days'), COUNT(*) FROM tbl_timestamptz GROUP BY 1 ORDER BY 2 DESC, 1 LIMIT 3;
-SELECT getBin(t, interval '2 days', timestamptz '2001-06-01'), COUNT(*) FROM tbl_timestamptz GROUP BY 1 ORDER BY 2 DESC, 1 LIMIT 3;
+SELECT getBin(t, interval '2 days'), COUNT(*) FROM tbl_tstz GROUP BY 1 ORDER BY 2 DESC, 1 LIMIT 3;
+SELECT getBin(t, interval '2 days', timestamptz '2001-06-01'), COUNT(*) FROM tbl_tstz GROUP BY 1 ORDER BY 2 DESC, 1 LIMIT 3;
 
 -------------------------------------------------------------------------------
 
@@ -59,16 +59,16 @@ SELECT valueTimeTiles(b, 2.5, '1 week', 1.5, '2001-06-01'), COUNT(*) FROM tbl_tb
 
 -- Time
 SELECT extent(getTboxTimeTile(t2.t, '1 week')) FROM
-(SELECT * FROM tbl_timestamptz WHERE t IS NOT NULL LIMIT 10) t2;
+(SELECT * FROM tbl_tstz WHERE t IS NOT NULL LIMIT 10) t2;
 SELECT extent(getTboxTimeTile(t2.t, '1 week', '2001-01-15')) FROM
-(SELECT * FROM tbl_timestamptz WHERE t IS NOT NULL LIMIT 10) t2;
+(SELECT * FROM tbl_tstz WHERE t IS NOT NULL LIMIT 10) t2;
 -- 2D
 SELECT extent(getValueTimeTile(t1.f, t2.t, 2.5, '1 week')) FROM
 (SELECT * FROM tbl_float WHERE f IS NOT NULL LIMIT 10) t1,
-(SELECT * FROM tbl_timestamptz WHERE t IS NOT NULL LIMIT 10) t2;
+(SELECT * FROM tbl_tstz WHERE t IS NOT NULL LIMIT 10) t2;
 SELECT extent(getValueTimeTile(t1.f, t2.t, 2.5, '1 week', 3.5, '2001-01-15')) FROM
 (SELECT * FROM tbl_float WHERE f IS NOT NULL LIMIT 10) t1,
-(SELECT * FROM tbl_timestamptz WHERE t IS NOT NULL LIMIT 10) t2;
+(SELECT * FROM tbl_tstz WHERE t IS NOT NULL LIMIT 10) t2;
 
 -------------------------------------------------------------------------------
 -- valueTimeBoxes

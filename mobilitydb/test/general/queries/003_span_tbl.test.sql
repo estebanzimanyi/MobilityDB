@@ -104,7 +104,7 @@ SELECT MAX(lower(d::datespan)) FROM tbl_daterange ORDER BY 1;
 SELECT MAX(lower(d::datespan)) FROM tbl_date ORDER BY 1;
 
 SELECT MAX(lower(t::tstzspan)) FROM tbl_tstzrange ORDER BY 1;
-SELECT MAX(lower(t::tstzspan)) FROM tbl_timestamptz ORDER BY 1;
+SELECT MAX(lower(t::tstzspan)) FROM tbl_tstz ORDER BY 1;
 
 SELECT COUNT(*) FROM tbl_intspan WHERE i <> (i::int4range)::intspan;
 SELECT COUNT(*) FROM tbl_bigintspan WHERE b <> (b::int8range)::bigintspan;
@@ -137,11 +137,11 @@ SELECT round(SUM(width(f))::numeric, 6) FROM tbl_floatspan;
 SELECT MAX(duration(d)) FROM tbl_datespan;
 SELECT MAX(duration(t)) FROM tbl_tstzspan;
 
-SELECT MAX(duration(span(t, t + i))) FROM tbl_timestamptz, tbl_interval;
-SELECT MAX(duration(span(t, t + i, true, true))) FROM tbl_timestamptz, tbl_interval;
-SELECT MAX(duration(span(t, t + i, true, false))) FROM tbl_timestamptz, tbl_interval;
-SELECT MAX(duration(span(t, t + i, false, true))) FROM tbl_timestamptz, tbl_interval;
-SELECT MAX(duration(span(t, t + i, false, false))) FROM tbl_timestamptz, tbl_interval;
+SELECT MAX(duration(span(t, t + i))) FROM tbl_tstz, tbl_interval;
+SELECT MAX(duration(span(t, t + i, true, true))) FROM tbl_tstz, tbl_interval;
+SELECT MAX(duration(span(t, t + i, true, false))) FROM tbl_tstz, tbl_interval;
+SELECT MAX(duration(span(t, t + i, false, true))) FROM tbl_tstz, tbl_interval;
+SELECT MAX(duration(span(t, t + i, false, false))) FROM tbl_tstz, tbl_interval;
 
 -------------------------------------------------------------------------------
 -- Transformation functions

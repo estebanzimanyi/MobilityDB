@@ -75,10 +75,10 @@ int main(void)
   /* Seed the random number generator with the current time in seconds. */
   srandom (time (0));
 
-  TimestampTz t = pg_timestamptz_in("1999-12-31", -1);
+  TimestampTz t = tstz_in("1999-12-31", -1);
   for (i = 0; i < MAX_INSTANTS; i++)
   {
-    t = add_timestamptz_interval(t, oneday);
+    t = add_tstz_interval(t, oneday);
     instants[i] = tfloatinst_make(i % 2 + 1, t);
   }
 

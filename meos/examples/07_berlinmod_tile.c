@@ -104,7 +104,7 @@ int main(void)
   /* Compute the (value and time) tiles for speed of trips */
   TBox *speed_extent = tbox_in("TBox XT([0, 35),[2020-06-01, 2020-06-05))");
   Interval *duration = pg_interval_in("1 day", -1);
-  TimestampTz torigin = pg_timestamptz_in("2020-06-01", -1);
+  TimestampTz torigin = tstz_in("2020-06-01", -1);
   TBox *speed_tiles = tfloatbox_value_time_tiles(speed_extent, 10.0, duration,
     0.0, torigin, &no_speed_tiles);
   /* Variables for tiling the trips and their speeds */

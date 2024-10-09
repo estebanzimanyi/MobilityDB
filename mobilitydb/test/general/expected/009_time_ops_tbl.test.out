@@ -1,4 +1,4 @@
-SELECT MAX(tprecision(t, '15 minutes')) FROM tbl_timestamptz;
+SELECT MAX(tprecision(t, '15 minutes')) FROM tbl_tstz;
              max              
 ------------------------------
  Tue Dec 25 23:00:00 2001 PST

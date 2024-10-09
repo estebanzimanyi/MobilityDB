@@ -197,7 +197,7 @@ CREATE FUNCTION random_tnpoint_inst(lown integer, highn integer,
   RETURNS tnpoint AS $$
 BEGIN
   RETURN tnpoint(random_npoint(lown, highn),
-    random_timestamptz(lowtime, hightime));
+    random_tstz(lowtime, hightime));
 END;
 $$ LANGUAGE PLPGSQL STRICT;
 
@@ -227,7 +227,7 @@ DECLARE
   t timestamptz;
 BEGIN
   card = random_int(1, maxcard);
-  t = random_timestamptz(lowtime, hightime);
+  t = random_tstz(lowtime, hightime);
   FOR i IN 1..card
   LOOP
     result[i] = tnpoint(random_npoint(lown, highn), t);
@@ -270,7 +270,7 @@ DECLARE
   lower_inc boolean;
   upper_inc boolean;
 BEGIN
-  SELECT random_timestamptz_array(lowtime, hightime, maxminutes, mincard,
+  SELECT random_tstz_array(lowtime, hightime, maxminutes, mincard,
     maxcard, fixstart) INTO tsarr;
   card = array_length(tsarr, 1);
   IF card = 1 THEN

@@ -379,7 +379,7 @@ stbox_copy(const STBox *box)
  * @csqlfn #Stbox_constructor()
  */
 STBox *
-geo_timestamptz_to_stbox(const GSERIALIZED *gs, TimestampTz t)
+geo_tstz_to_stbox(const GSERIALIZED *gs, TimestampTz t)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) gs))
@@ -842,7 +842,7 @@ geoarr_set_stbox(const Datum *values, int count, STBox *box)
  * @param[out] box Spatiotemporal box
  */
 void
-timestamptz_set_stbox(TimestampTz t, STBox *box)
+tstz_set_stbox(TimestampTz t, STBox *box)
 {
   assert(box);
   /* Note: zero-fill is required here, just as in heap tuples */
@@ -857,13 +857,13 @@ timestamptz_set_stbox(TimestampTz t, STBox *box)
  * @ingroup meos_box_conversion
  * @brief return a timestamptz converted to a spatiotemporal box
  * @param[in] t Timestamp
- * @csqlfn #Timestamptz_to_stbox()
+ * @csqlfn #Tstz_to_stbox()
  */
 STBox *
-timestamptz_to_stbox(TimestampTz t)
+tstz_to_stbox(TimestampTz t)
 {
   STBox *result = palloc(sizeof(STBox));
-  timestamptz_set_stbox(t, result);
+  tstz_set_stbox(t, result);
   return result;
 }
 
@@ -1422,9 +1422,9 @@ stbox_expand_time(const STBox *box, const Interval *interv)
     return NULL;
 
   STBox *result = stbox_cp(box);
-  TimestampTz tmin = minus_timestamptz_interval(DatumGetTimestampTz(
+  TimestampTz tmin = minus_tstz_interval(DatumGetTimestampTz(
     box->period.lower), interv);
-  TimestampTz tmax = add_timestamptz_interval(DatumGetTimestampTz(
+  TimestampTz tmax = add_tstz_interval(DatumGetTimestampTz(
     box->period.upper), interv);
   result->period.lower = TimestampTzGetDatum(tmin);
   result->period.upper = TimestampTzGetDatum(tmax);

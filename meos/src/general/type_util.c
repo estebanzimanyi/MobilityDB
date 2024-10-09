@@ -74,7 +74,7 @@ datum_cmp(Datum l, Datum r, meosType type)
   switch (type)
   {
     case T_TIMESTAMPTZ:
-      return timestamptz_cmp_internal(DatumGetTimestampTz(l),
+      return tstz_cmp(DatumGetTimestampTz(l),
         DatumGetTimestampTz(r));
     case T_DATE:
       return (DatumGetDateADT(l) < DatumGetDateADT(r)) ? -1 :
@@ -553,7 +553,7 @@ timestamp_sort_cmp(const TimestampTz *l, const TimestampTz *r)
 {
   TimestampTz x = *l;
   TimestampTz y = *r;
-  return timestamptz_cmp_internal(x, y);
+  return tstz_cmp(x, y);
 }
 
 /**
@@ -562,7 +562,7 @@ timestamp_sort_cmp(const TimestampTz *l, const TimestampTz *r)
 static int
 tinstarr_sort_cmp(const TInstant **l, const TInstant **r)
 {
-  return timestamptz_cmp_internal((*l)->t, (*r)->t);
+  return tstz_cmp((*l)->t, (*r)->t);
 }
 
 /**
@@ -837,7 +837,7 @@ basetype_in(const char *str, meosType type,
   {
     case T_TIMESTAMPTZ:
     {
-      TimestampTz t = pg_timestamptz_in(str, -1);
+      TimestampTz t = tstz_in(str, -1);
       if (t == DT_NOEND)
         return false;
       *result = TimestampTzGetDatum(t);
@@ -964,7 +964,7 @@ basetype_out(Datum value, meosType type, int maxdd)
   switch (type)
   {
     case T_TIMESTAMPTZ:
-      return pg_timestamptz_out(DatumGetTimestampTz(value));
+      return tstz_out(DatumGetTimestampTz(value));
     case T_DATE:
       return pg_date_out(DatumGetTimestampTz(value));
     case T_BOOL:

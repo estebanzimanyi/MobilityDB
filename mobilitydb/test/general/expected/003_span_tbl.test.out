@@ -215,7 +215,7 @@ SELECT MAX(lower(t::tstzspan)) FROM tbl_tstzrange ORDER BY 1;
  Tue Dec 25 01:23:00 2001 PST
 (1 row)
 
-SELECT MAX(lower(t::tstzspan)) FROM tbl_timestamptz ORDER BY 1;
+SELECT MAX(lower(t::tstzspan)) FROM tbl_tstz ORDER BY 1;
              max              
 ------------------------------
  Tue Dec 25 23:12:00 2001 PST
@@ -349,31 +349,31 @@ SELECT MAX(duration(t)) FROM tbl_tstzspan;
  00:09:00
 (1 row)
 
-SELECT MAX(duration(span(t, t + i))) FROM tbl_timestamptz, tbl_interval;
+SELECT MAX(duration(span(t, t + i))) FROM tbl_tstz, tbl_interval;
    max    
 ----------
  01:39:00
 (1 row)
 
-SELECT MAX(duration(span(t, t + i, true, true))) FROM tbl_timestamptz, tbl_interval;
+SELECT MAX(duration(span(t, t + i, true, true))) FROM tbl_tstz, tbl_interval;
    max    
 ----------
  01:39:00
 (1 row)
 
-SELECT MAX(duration(span(t, t + i, true, false))) FROM tbl_timestamptz, tbl_interval;
+SELECT MAX(duration(span(t, t + i, true, false))) FROM tbl_tstz, tbl_interval;
    max    
 ----------
  01:39:00
 (1 row)
 
-SELECT MAX(duration(span(t, t + i, false, true))) FROM tbl_timestamptz, tbl_interval;
+SELECT MAX(duration(span(t, t + i, false, true))) FROM tbl_tstz, tbl_interval;
    max    
 ----------
  01:39:00
 (1 row)
 
-SELECT MAX(duration(span(t, t + i, false, false))) FROM tbl_timestamptz, tbl_interval;
+SELECT MAX(duration(span(t, t + i, false, false))) FROM tbl_tstz, tbl_interval;
    max    
 ----------
  01:39:00

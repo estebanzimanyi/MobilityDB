@@ -35,7 +35,7 @@
 CREATE FUNCTION tprecision(timestamptz, duration interval,
     origin timestamptz DEFAULT '2000-01-03')
   RETURNS timestamptz
-  AS 'MODULE_PATHNAME', 'Timestamptz_tprecision'
+  AS 'MODULE_PATHNAME', 'Tstz_tprecision'
   LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
 CREATE FUNCTION tprecision(tstzset, duration interval,
     origin timestamptz DEFAULT '2000-01-03')

@@ -34,7 +34,7 @@ SELECT COUNT(*) FROM tbl_floatspan WHERE f::tbox IS NOT NULL;
     99
 (1 row)
 
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t::tbox IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tstz WHERE t::tbox IS NOT NULL;
  count 
 -------
     99
@@ -70,25 +70,25 @@ SELECT COUNT(*) FROM tbl_tfloat WHERE temp::tbox IS NOT NULL;
     96
 (1 row)
 
-SELECT COUNT(*) FROM tbl_int, tbl_timestamptz WHERE tbox(i, t) IS NOT NULL;
+SELECT COUNT(*) FROM tbl_int, tbl_tstz WHERE tbox(i, t) IS NOT NULL;
  count 
 -------
   9801
 (1 row)
 
-SELECT COUNT(*) FROM tbl_intspan, tbl_timestamptz WHERE tbox(i, t) IS NOT NULL;
+SELECT COUNT(*) FROM tbl_intspan, tbl_tstz WHERE tbox(i, t) IS NOT NULL;
  count 
 -------
   9801
 (1 row)
 
-SELECT COUNT(*) FROM tbl_float, tbl_timestamptz WHERE tbox(f, t) IS NOT NULL;
+SELECT COUNT(*) FROM tbl_float, tbl_tstz WHERE tbox(f, t) IS NOT NULL;
  count 
 -------
   9801
 (1 row)
 
-SELECT COUNT(*) FROM tbl_floatspan, tbl_timestamptz WHERE tbox(f, t) IS NOT NULL;
+SELECT COUNT(*) FROM tbl_floatspan, tbl_tstz WHERE tbox(f, t) IS NOT NULL;
  count 
 -------
   9801

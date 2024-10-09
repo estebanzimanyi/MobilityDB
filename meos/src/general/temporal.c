@@ -3264,10 +3264,10 @@ temporal_num_timestamps(const Temporal *temp)
  * @brief Return the start timestamp of a temporal value
  * @param[in] temp Temporal value
  * @return On error return DT_NOEND
- * @csqlfn #Temporal_start_timestamptz()
+ * @csqlfn #Temporal_start_tstz()
  */
 TimestampTz
-temporal_start_timestamptz(const Temporal *temp)
+temporal_start_tstz(const Temporal *temp)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp))
@@ -3279,9 +3279,9 @@ temporal_start_timestamptz(const Temporal *temp)
     case TINSTANT:
       return ((TInstant *) temp)->t;
     case TSEQUENCE:
-      return tsequence_start_timestamptz((TSequence *) temp);
+      return tsequence_start_tstz((TSequence *) temp);
     default: /* TSEQUENCESET */
-      return tsequenceset_start_timestamptz((TSequenceSet *) temp);
+      return tsequenceset_start_tstz((TSequenceSet *) temp);
   }
 }
 
@@ -3290,10 +3290,10 @@ temporal_start_timestamptz(const Temporal *temp)
  * @brief Return the end timestamptz of a temporal value
  * @param[in] temp Temporal value
  * @return On error return DT_NOEND
- * @csqlfn #Temporal_end_timestamptz()
+ * @csqlfn #Temporal_end_tstz()
  */
 TimestampTz
-temporal_end_timestamptz(const Temporal *temp)
+temporal_end_tstz(const Temporal *temp)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp))
@@ -3305,9 +3305,9 @@ temporal_end_timestamptz(const Temporal *temp)
     case TINSTANT:
       return ((TInstant *) temp)->t;
     case TSEQUENCE:
-      return tsequence_end_timestamptz((TSequence *) temp);
+      return tsequence_end_tstz((TSequence *) temp);
     default: /* TSEQUENCESET */
-      return tsequenceset_end_timestamptz((TSequenceSet *) temp);
+      return tsequenceset_end_tstz((TSequenceSet *) temp);
   }
 }
 
@@ -3320,10 +3320,10 @@ temporal_end_timestamptz(const Temporal *temp)
  * @param[out] result Resulting timestamp
  * @return On error return false
  * @note n is assumed 1-based
- * @csqlfn #Temporal_timestamptz_n()
+ * @csqlfn #Temporal_tstz_n()
  */
 bool
-temporal_timestamptz_n(const Temporal *temp, int n, TimestampTz *result)
+temporal_tstz_n(const Temporal *temp, int n, TimestampTz *result)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) result))
@@ -3351,7 +3351,7 @@ temporal_timestamptz_n(const Temporal *temp, int n, TimestampTz *result)
       return false;
     }
     default: /* TSEQUENCESET */
-      return tsequenceset_timestamptz_n((TSequenceSet *) temp, n, result);
+      return tsequenceset_tstz_n((TSequenceSet *) temp, n, result);
   }
 }
 

@@ -15,7 +15,7 @@ SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_tnpoint_tmp t2 WHERE t1.k = t2.k AND t1
 
 DROP TABLE tbl_tnpoint_tmp;
 DROP TABLE
-SELECT MAX(getPosition(startValue(tnpoint(t1.np, t2.t)))) FROM tbl_npoint t1, tbl_timestamptz t2;
+SELECT MAX(getPosition(startValue(tnpoint(t1.np, t2.t)))) FROM tbl_npoint t1, tbl_tstz t2;
    max    
 ----------
  0.999506
@@ -414,21 +414,21 @@ WHERE minusValues(temp, s) IS NOT NULL;
    100
 (1 row)
 
-SELECT COUNT(*) FROM tbl_tnpoint, tbl_timestamptz
+SELECT COUNT(*) FROM tbl_tnpoint, tbl_tstz
 WHERE atTime(temp, t) IS NOT NULL;
  count 
 -------
      0
 (1 row)
 
-SELECT COUNT(*) FROM tbl_tnpoint, tbl_timestamptz
+SELECT COUNT(*) FROM tbl_tnpoint, tbl_tstz
 WHERE minusTime(temp, t) IS NOT NULL;
  count 
 -------
   9900
 (1 row)
 
-SELECT COUNT(*) FROM tbl_tnpoint, tbl_timestamptz
+SELECT COUNT(*) FROM tbl_tnpoint, tbl_tstz
 WHERE valueAtTimestamp(temp, t) IS NOT NULL;
  count 
 -------

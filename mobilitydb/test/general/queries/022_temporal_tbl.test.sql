@@ -502,10 +502,10 @@ SELECT MAX(numInstants(stops(seq, 50.0, '-10 minutes'))) FROM tbl_tfloat_seq;
 -- Restriction functions
 -------------------------------------------------------------------------------
 
-SELECT COUNT(*) FROM tbl_tbool, tbl_timestamptz WHERE valueAtTimestamp(temp, t) IS NOT NULL;
-SELECT COUNT(*) FROM tbl_tint, tbl_timestamptz WHERE valueAtTimestamp(temp, t) IS NOT NULL;
-SELECT COUNT(*) FROM tbl_tfloat, tbl_timestamptz WHERE valueAtTimestamp(temp, t) IS NOT NULL;
-SELECT COUNT(*) FROM tbl_ttext, tbl_timestamptz WHERE valueAtTimestamp(temp, t) IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tbool, tbl_tstz WHERE valueAtTimestamp(temp, t) IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tint, tbl_tstz WHERE valueAtTimestamp(temp, t) IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tfloat, tbl_tstz WHERE valueAtTimestamp(temp, t) IS NOT NULL;
+SELECT COUNT(*) FROM tbl_ttext, tbl_tstz WHERE valueAtTimestamp(temp, t) IS NOT NULL;
 
 SELECT COUNT(*) FROM tbl_tbool WHERE temp != merge(atValues(temp, true), minusValues(temp, true));
 SELECT COUNT(*) FROM tbl_tint, tbl_int WHERE temp != merge(atValues(temp, i), minusValues(temp, i));
@@ -535,10 +535,10 @@ SELECT COUNT(*) FROM tbl_tint WHERE temp != merge(atMax(temp), minusMax(temp));
 SELECT COUNT(*) FROM tbl_tfloat WHERE temp != merge(atMax(temp), minusMax(temp));
 SELECT COUNT(*) FROM tbl_ttext WHERE temp != merge(atMax(temp), minusMax(temp));
 
-SELECT COUNT(*) FROM tbl_tbool, tbl_timestamptz WHERE merge(atTime(temp, t), minusTime(temp, t)) != temp;
-SELECT COUNT(*) FROM tbl_tint, tbl_timestamptz WHERE merge(atTime(temp, t), minusTime(temp, t)) != temp;
-SELECT COUNT(*) FROM tbl_tfloat, tbl_timestamptz WHERE merge(atTime(temp, t), minusTime(temp, t)) != temp;
-SELECT COUNT(*) FROM tbl_ttext, tbl_timestamptz WHERE merge(atTime(temp, t), minusTime(temp, t)) != temp;
+SELECT COUNT(*) FROM tbl_tbool, tbl_tstz WHERE merge(atTime(temp, t), minusTime(temp, t)) != temp;
+SELECT COUNT(*) FROM tbl_tint, tbl_tstz WHERE merge(atTime(temp, t), minusTime(temp, t)) != temp;
+SELECT COUNT(*) FROM tbl_tfloat, tbl_tstz WHERE merge(atTime(temp, t), minusTime(temp, t)) != temp;
+SELECT COUNT(*) FROM tbl_ttext, tbl_tstz WHERE merge(atTime(temp, t), minusTime(temp, t)) != temp;
 
 SELECT COUNT(*) FROM tbl_tbool, tbl_tstzset WHERE merge(atTime(temp, t), minusTime(temp, t)) != temp;
 SELECT COUNT(*) FROM tbl_tint, tbl_tstzset WHERE merge(atTime(temp, t), minusTime(temp, t)) != temp;
@@ -562,15 +562,15 @@ SELECT COUNT(*) FROM tbl_tfloat, tbl_tboxfloat WHERE temp != merge(atTbox(temp, 
 -- Modification functions
 -------------------------------------------------------------------------------
 
-SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_tbool t1, tbl_timestamptz t2;
-SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_tint t1, tbl_timestamptz t2;
-SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_tfloat t1, tbl_timestamptz t2;
-SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_ttext t1, tbl_timestamptz t2;
+SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_tbool t1, tbl_tstz t2;
+SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_tint t1, tbl_tstz t2;
+SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_tfloat t1, tbl_tstz t2;
+SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_ttext t1, tbl_tstz t2;
 
-SELECT SUM(numInstants(deleteTime(t1.temp, t2.t, false))) FROM tbl_tbool t1, tbl_timestamptz t2;
-SELECT SUM(numInstants(deleteTime(t1.temp, t2.t, false))) FROM tbl_tint t1, tbl_timestamptz t2;
-SELECT SUM(numInstants(deleteTime(t1.temp, t2.t, false))) FROM tbl_tfloat t1, tbl_timestamptz t2;
-SELECT SUM(numInstants(deleteTime(t1.temp, t2.t, false))) FROM tbl_ttext t1, tbl_timestamptz t2;
+SELECT SUM(numInstants(deleteTime(t1.temp, t2.t, false))) FROM tbl_tbool t1, tbl_tstz t2;
+SELECT SUM(numInstants(deleteTime(t1.temp, t2.t, false))) FROM tbl_tint t1, tbl_tstz t2;
+SELECT SUM(numInstants(deleteTime(t1.temp, t2.t, false))) FROM tbl_tfloat t1, tbl_tstz t2;
+SELECT SUM(numInstants(deleteTime(t1.temp, t2.t, false))) FROM tbl_ttext t1, tbl_tstz t2;
 
 SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_tbool t1, tbl_tstzset t2;
 SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_tint t1, tbl_tstzset t2;

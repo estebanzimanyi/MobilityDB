@@ -49,8 +49,8 @@ SELECT COUNT(*) FROM tbl_date t1, tbl_datespan t2 WHERE t1.d + t2.d IS NOT NULL;
 SELECT COUNT(*) FROM tbl_datespan t1, tbl_date t2 WHERE t1.d + t2.d IS NOT NULL;
 SELECT COUNT(*) FROM tbl_datespan t1, tbl_datespan t2 WHERE t1.d + t2.d IS NOT NULL;
 
-SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspan t2 WHERE t1.t + t2.t IS NOT NULL;
-SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_timestamptz t2 WHERE t1.t + t2.t IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzspan t2 WHERE t1.t + t2.t IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstz t2 WHERE t1.t + t2.t IS NOT NULL;
 SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspan t2 WHERE t1.t + t2.t IS NOT NULL;
 
 -------------------------------------------------------------------------------
@@ -71,8 +71,8 @@ SELECT COUNT(*) FROM tbl_date t1, tbl_datespan t2 WHERE t1.d - t2.d IS NOT NULL;
 SELECT COUNT(*) FROM tbl_datespan t1, tbl_date t2 WHERE t1.d - t2.d IS NOT NULL;
 SELECT COUNT(*) FROM tbl_datespan t1, tbl_datespan t2 WHERE t1.d - t2.d IS NOT NULL;
 
-SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspan t2 WHERE t1.t - t2.t IS NOT NULL;
-SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_timestamptz t2 WHERE t1.t - t2.t IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzspan t2 WHERE t1.t - t2.t IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstz t2 WHERE t1.t - t2.t IS NOT NULL;
 SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspan t2 WHERE t1.t - t2.t IS NOT NULL;
 
 -------------------------------------------------------------------------------
@@ -93,8 +93,8 @@ SELECT COUNT(*) FROM tbl_date t1, tbl_datespan t2 WHERE t1.d * t2.d IS NOT NULL;
 SELECT COUNT(*) FROM tbl_datespan t1, tbl_date t2 WHERE t1.d * t2.d IS NOT NULL;
 SELECT COUNT(*) FROM tbl_datespan t1, tbl_datespan t2 WHERE t1.d * t2.d IS NOT NULL;
 
-SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspan t2 WHERE t1.t * t2.t IS NOT NULL;
-SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_timestamptz t2 WHERE t1.t * t2.t IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzspan t2 WHERE t1.t * t2.t IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstz t2 WHERE t1.t * t2.t IS NOT NULL;
 SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspan t2 WHERE t1.t * t2.t IS NOT NULL;
 
 -------------------------------------------------------------------------------
@@ -115,8 +115,8 @@ SELECT MIN(t1.d <-> t2.d) FROM tbl_date t1, tbl_datespan t2;
 SELECT MIN(t1.d <-> t2.d) FROM tbl_datespan t1, tbl_date t2;
 SELECT MIN(t1.d <-> t2.d) FROM tbl_datespan t1, tbl_datespan t2;
 
-SELECT MIN(t1.t <-> t2.t) FROM tbl_timestamptz t1, tbl_tstzspan t2;
-SELECT MIN(t1.t <-> t2.t) FROM tbl_tstzspan t1, tbl_timestamptz t2;
+SELECT MIN(t1.t <-> t2.t) FROM tbl_tstz t1, tbl_tstzspan t2;
+SELECT MIN(t1.t <-> t2.t) FROM tbl_tstzspan t1, tbl_tstz t2;
 SELECT MIN(t1.t <-> t2.t) FROM tbl_tstzspan t1, tbl_tstzspan t2;
 
 -------------------------------------------------------------------------------

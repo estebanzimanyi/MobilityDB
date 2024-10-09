@@ -48,7 +48,7 @@ SELECT extent(temp) FROM (VALUES
 SELECT extent(temp) FROM (VALUES
 ('{[2000-01-01, 2000-01-02]}'::tstzspanset),(NULL::tstzspanset)) t(temp);
 
-SELECT extent(t) FROM tbl_timestamptz;
+SELECT extent(t) FROM tbl_tstz;
 SELECT extent(t) FROM tbl_tstzset;
 SELECT extent(t) FROM tbl_tstzspan;
 SELECT extent(t) FROM tbl_tstzspanset;
@@ -103,7 +103,7 @@ SELECT tcount(temp) FROM (VALUES
 SELECT tcount(temp) FROM (VALUES
 ('{[2000-01-01, 2000-01-02]}'::tstzspanset),(NULL::tstzspanset)) t(temp);
 
-SELECT numInstants(tcount(t)) FROM tbl_timestamptz;
+SELECT numInstants(tcount(t)) FROM tbl_tstz;
 SELECT numInstants(tcount(t)) FROM tbl_tstzset;
 SELECT numInstants(tcount(t)) FROM tbl_tstzspan;
 SELECT numInstants(tcount(t)) FROM tbl_tstzspanset;
@@ -162,7 +162,7 @@ SELECT startValue(setUnion(t)) FROM Temp;
 
 -------------------------------------------------------------------------------
 
-SELECT numValues(setUnion(t)) FROM tbl_timestamptz;
+SELECT numValues(setUnion(t)) FROM tbl_tstz;
 SELECT numValues(setUnion(t)) FROM tbl_tstzset;
 SELECT numSpans(spanUnion(t)) FROM tbl_tstzspan;
 SELECT numSpans(spanUnion(t)) FROM tbl_tstzspanset;

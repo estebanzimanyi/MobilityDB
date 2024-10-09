@@ -400,15 +400,15 @@ SELECT COUNT(*) FROM tbl_tgeogpoint3D, (
   SELECT set(array_agg(g)) AS s FROM tbl_geog_point3D WHERE g IS NOT NULL AND NOT ST_IsEmpty(g::geometry)) tmp
 WHERE temp != merge(atValues(temp, s), minusValues(temp, s));
 
-SELECT COUNT(*) FROM tbl_tgeompoint, tbl_timestamptz WHERE valueAtTimestamp(temp, t) IS NOT NULL;
-SELECT COUNT(*) FROM tbl_tgeogpoint, tbl_timestamptz WHERE valueAtTimestamp(temp, t) IS NOT NULL;
-SELECT COUNT(*) FROM tbl_tgeompoint3D, tbl_timestamptz WHERE valueAtTimestamp(temp, t) IS NOT NULL;
-SELECT COUNT(*) FROM tbl_tgeogpoint3D, tbl_timestamptz WHERE valueAtTimestamp(temp, t) IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tgeompoint, tbl_tstz WHERE valueAtTimestamp(temp, t) IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tgeogpoint, tbl_tstz WHERE valueAtTimestamp(temp, t) IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tgeompoint3D, tbl_tstz WHERE valueAtTimestamp(temp, t) IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tgeogpoint3D, tbl_tstz WHERE valueAtTimestamp(temp, t) IS NOT NULL;
 
-SELECT COUNT(*) FROM tbl_tgeompoint, tbl_timestamptz WHERE temp != merge(atTime(temp, t), minusTime(temp, t));
-SELECT COUNT(*) FROM tbl_tgeogpoint, tbl_timestamptz WHERE temp != merge(atTime(temp, t), minusTime(temp, t));
-SELECT COUNT(*) FROM tbl_tgeompoint3D, tbl_timestamptz WHERE temp != merge(atTime(temp, t), minusTime(temp, t));
-SELECT COUNT(*) FROM tbl_tgeogpoint3D, tbl_timestamptz WHERE temp != merge(atTime(temp, t), minusTime(temp, t));
+SELECT COUNT(*) FROM tbl_tgeompoint, tbl_tstz WHERE temp != merge(atTime(temp, t), minusTime(temp, t));
+SELECT COUNT(*) FROM tbl_tgeogpoint, tbl_tstz WHERE temp != merge(atTime(temp, t), minusTime(temp, t));
+SELECT COUNT(*) FROM tbl_tgeompoint3D, tbl_tstz WHERE temp != merge(atTime(temp, t), minusTime(temp, t));
+SELECT COUNT(*) FROM tbl_tgeogpoint3D, tbl_tstz WHERE temp != merge(atTime(temp, t), minusTime(temp, t));
 
 SELECT COUNT(*) FROM tbl_tgeompoint, tbl_tstzset WHERE temp != merge(atTime(temp, t), minusTime(temp, t));
 SELECT COUNT(*) FROM tbl_tgeogpoint, tbl_tstzset WHERE temp != merge(atTime(temp, t), minusTime(temp, t));

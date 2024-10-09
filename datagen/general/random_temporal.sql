@@ -206,8 +206,8 @@ FROM generate_series(1, 15) AS k;
  * @brief Generate a random timestamptz in a period
  * @param[in] lowtime, hightime Inclusive bounds of the period
  */
-DROP FUNCTION IF EXISTS random_timestamptz;
-CREATE FUNCTION random_timestamptz(lowtime timestamptz, hightime timestamptz)
+DROP FUNCTION IF EXISTS random_tstz;
+CREATE FUNCTION random_tstz(lowtime timestamptz, hightime timestamptz)
   RETURNS timestamptz AS $$
 BEGIN
   IF lowtime > hightime THEN
@@ -220,7 +220,7 @@ END;
 $$ LANGUAGE PLPGSQL STRICT;
 
 /*
-SELECT k, random_timestamptz('2001-01-01', '2002-01-01') AS t
+SELECT k, random_tstz('2001-01-01', '2002-01-01') AS t
 FROM generate_series(1, 15) AS k;
 */
 
@@ -421,8 +421,8 @@ FROM generate_series(1, 15) AS k;
  * @param[in] fixstart True when this function is called for generating a
  * sequence set value and in this case the start timestamp is already fixed
  */
-DROP FUNCTION IF EXISTS random_timestamptz_array;
-CREATE FUNCTION random_timestamptz_array(lowtime timestamptz,
+DROP FUNCTION IF EXISTS random_tstz_array;
+CREATE FUNCTION random_tstz_array(lowtime timestamptz,
   hightime timestamptz, maxminutes int, mincard int, maxcard int,
   fixstart bool DEFAULT false)
   RETURNS timestamptz[] AS $$
@@ -446,7 +446,7 @@ BEGIN
   if fixstart THEN
     t = lowtime;
   ELSE
-    t = random_timestamptz(lowtime, hightime - interval '1 minute' *
+    t = random_tstz(lowtime, hightime - interval '1 minute' *
       maxminutes * card);
   END IF;
   FOR i IN 1..card
@@ -459,7 +459,7 @@ END;
 $$ LANGUAGE PLPGSQL STRICT;
 
 /*
-SELECT k, random_timestamptz_array('2001-01-01', '2002-01-01', 10, 5, 10) AS tarr
+SELECT k, random_tstz_array('2001-01-01', '2002-01-01', 10, 5, 10) AS tarr
 FROM generate_series(1, 15) AS k;
 */
 
@@ -660,7 +660,7 @@ CREATE FUNCTION random_tstzset(lowtime timestamptz, hightime timestamptz,
   maxminutes int, mincard int, maxcard int)
   RETURNS tstzset AS $$
 BEGIN
-  RETURN set(random_timestamptz_array(lowtime, hightime, maxminutes,
+  RETURN set(random_tstz_array(lowtime, hightime, maxminutes,
     mincard, maxcard));
 END;
 $$ LANGUAGE PLPGSQL STRICT;
@@ -820,7 +820,7 @@ BEGIN
   if fixstart THEN
     t = lowtime;
   ELSE
-    t = random_timestamptz(lowtime, hightime - interval '1 minute' * maxminutes);
+    t = random_tstz(lowtime, hightime - interval '1 minute' * maxminutes);
   END IF;
   /* Generate instantaneous periods with 0.1 probability */
   IF random() < 0.1 THEN
@@ -1295,7 +1295,7 @@ BEGIN
       lowtime, hightime, maxminutes;
   END IF;
   xmin = random_int(lowvalue, highvalue - maxdelta);
-  tmin = random_timestamptz(lowtime, hightime - interval '1 minute' * maxminutes);
+  tmin = random_tstz(lowtime, hightime - interval '1 minute' * maxminutes);
   RETURN tbox(span(xmin, xmin + random_int(1, maxdelta)),
     span(tmin, tmin + random_minutes(1, maxminutes)));
 END;
@@ -1332,7 +1332,7 @@ BEGIN
       lowtime, hightime, maxminutes;
   END IF;
   xmin = random_float(lowvalue, highvalue - maxdelta);
-  tmin = random_timestamptz(lowtime, hightime - interval '1 minute' * maxminutes);
+  tmin = random_tstz(lowtime, hightime - interval '1 minute' * maxminutes);
   RETURN tbox(span(xmin, xmin + random_float(1, maxdelta)),
     span(tmin, tmin + random_minutes(1, maxminutes)));
 END;
@@ -1359,7 +1359,7 @@ BEGIN
     RAISE EXCEPTION 'lowtime must be less than or equal to hightime: %, %',
       lowtime, hightime;
   END IF;
-  RETURN tbool(random_bool(), random_timestamptz(lowtime, hightime));
+  RETURN tbool(random_bool(), random_tstz(lowtime, hightime));
 END;
 $$ LANGUAGE PLPGSQL STRICT;
 
@@ -1389,7 +1389,7 @@ BEGIN
       lowtime, hightime;
   END IF;
   RETURN tint(random_int(lowvalue, highvalue),
-    random_timestamptz(lowtime, hightime));
+    random_tstz(lowtime, hightime));
 END;
 $$ LANGUAGE PLPGSQL STRICT;
 
@@ -1419,7 +1419,7 @@ BEGIN
       lowtime, hightime;
   END IF;
   RETURN tfloat(random_float(lowvalue, highvalue),
-    random_timestamptz(lowtime, hightime));
+    random_tstz(lowtime, hightime));
 END;
 $$ LANGUAGE PLPGSQL STRICT;
 
@@ -1444,7 +1444,7 @@ BEGIN
     RAISE EXCEPTION 'lowtime must be less than or equal to hightime: %, %',
       lowtime, hightime;
   END IF;
-  RETURN ttext(random_text(maxlength), random_timestamptz(lowtime, hightime));
+  RETURN ttext(random_text(maxlength), random_tstz(lowtime, hightime));
 END;
 $$ LANGUAGE PLPGSQL STRICT;
 
@@ -1472,7 +1472,7 @@ DECLARE
   result tbool[];
   card int;
 BEGIN
-  SELECT random_timestamptz_array(lowtime, hightime, maxminutes, mincard, maxcard)
+  SELECT random_tstz_array(lowtime, hightime, maxminutes, mincard, maxcard)
   INTO tsarr;
   card = array_length(tsarr, 1);
   FOR i IN 1..card
@@ -1510,7 +1510,7 @@ DECLARE
 BEGIN
   SELECT random_int_array(lowvalue, highvalue, maxdelta, mincard, maxcard) INTO intarr;
   card = array_length(intarr, 1);
-  SELECT random_timestamptz_array(lowtime, hightime, maxminutes, card, card)
+  SELECT random_tstz_array(lowtime, hightime, maxminutes, card, card)
   INTO tsarr;
   FOR i IN 1..card
   LOOP
@@ -1549,7 +1549,7 @@ BEGIN
   SELECT random_float_array(lowvalue, highvalue, maxdelta, mincard, maxcard)
   INTO floatarr;
   card = array_length(floatarr, 1);
-  SELECT random_timestamptz_array(lowtime, hightime, maxminutes, card, card)
+  SELECT random_tstz_array(lowtime, hightime, maxminutes, card, card)
   INTO tsarr;
   FOR i IN 1..card
   LOOP
@@ -1582,7 +1582,7 @@ DECLARE
   result ttext[];
   card int;
 BEGIN
-  SELECT random_timestamptz_array(lowtime, hightime, maxminutes, mincard, maxcard)
+  SELECT random_tstz_array(lowtime, hightime, maxminutes, mincard, maxcard)
   INTO tsarr;
   card = array_length(tsarr, 1);
   FOR i IN 1..card
@@ -1623,7 +1623,7 @@ DECLARE
   lower_inc boolean;
   upper_inc boolean;
 BEGIN
-  SELECT random_timestamptz_array(lowtime, hightime, maxminutes, mincard,
+  SELECT random_tstz_array(lowtime, hightime, maxminutes, mincard,
     maxcard, fixstart) INTO tsarr;
   card = array_length(tsarr, 1);
   IF card = 1 THEN
@@ -1682,7 +1682,7 @@ BEGIN
   SELECT random_int_array(lowvalue, highvalue, maxdelta, mincard, maxcard)
   INTO intarr;
   card = array_length(intarr, 1);
-  SELECT random_timestamptz_array(lowtime, hightime, maxminutes, card, card,
+  SELECT random_tstz_array(lowtime, hightime, maxminutes, card, card,
     fixstart) INTO tsarr;
   IF card = 1 THEN
     lower_inc = true;
@@ -1741,7 +1741,7 @@ BEGIN
   SELECT random_float_array(lowvalue, highvalue, maxdelta, mincard, maxcard)
   INTO floatarr;
   card = array_length(floatarr, 1);
-  SELECT random_timestamptz_array(lowtime, hightime, maxminutes, card, card,
+  SELECT random_tstz_array(lowtime, hightime, maxminutes, card, card,
     fixstart) INTO tsarr;
   IF card = 1 THEN
     lower_inc = true;
@@ -1803,7 +1803,7 @@ DECLARE
   lower_inc boolean;
   upper_inc boolean;
 BEGIN
-  SELECT random_timestamptz_array(lowtime, hightime, maxminutes, mincard,
+  SELECT random_tstz_array(lowtime, hightime, maxminutes, mincard,
     maxcard, fixstart) INTO tsarr;
   card = array_length(tsarr, 1);
   IF card = 1 THEN

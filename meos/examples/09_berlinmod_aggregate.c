@@ -100,7 +100,7 @@ int main(void)
   SkipList *state = NULL;
   STBox *extent = NULL;
   Interval *interval = pg_interval_in("1 hour", -1);
-  TimestampTz origin = pg_timestamptz_in("2020-06-01", -1);
+  TimestampTz origin = tstz_in("2020-06-01", -1);
 
   /* Continue reading the file */
   do

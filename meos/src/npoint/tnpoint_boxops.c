@@ -270,7 +270,7 @@ nsegment_to_stbox(const Nsegment *ns)
  * @param[out] box Spatiotemporal box
  */
 bool
-npoint_timestamptz_set_stbox(const Npoint *np, TimestampTz t, STBox *box)
+npoint_tstz_set_stbox(const Npoint *np, TimestampTz t, STBox *box)
 {
   npoint_set_stbox(np, box);
   span_set(TimestampTzGetDatum(t), TimestampTzGetDatum(t), true, true,
@@ -285,15 +285,15 @@ npoint_timestamptz_set_stbox(const Npoint *np, TimestampTz t, STBox *box)
  * timestamptz
  * @param[in] np Network point
  * @param[in] t Timestamp
- * @csqlfn #Npoint_timestamptz_to_stbox()
+ * @csqlfn #Npoint_tstz_to_stbox()
  */
 STBox *
-npoint_timestamptz_to_stbox(const Npoint *np, TimestampTz t)
+npoint_tstz_to_stbox(const Npoint *np, TimestampTz t)
 {
   if (! ensure_not_null((void *) np))
     return NULL;
   STBox box;
-  if (! npoint_timestamptz_set_stbox(np, t, &box))
+  if (! npoint_tstz_set_stbox(np, t, &box))
     return NULL;
   return stbox_cp(&box);
 }

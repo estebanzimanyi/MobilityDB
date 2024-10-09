@@ -164,7 +164,7 @@ spanset_find_value(const SpanSet *ss, Datum v, int *loc)
 
 #if MEOS
 bool
-tstzspanset_find_timestamptz(const SpanSet *ss, TimestampTz t, int *loc)
+tstzspanset_find_tstz(const SpanSet *ss, TimestampTz t, int *loc)
 {
   return spanset_find_value(ss, TimestampTzGetDatum(t), loc);
 }
@@ -616,7 +616,7 @@ date_to_spanset(DateADT d)
  * @csqlfn #Value_to_spanset()
  */
 SpanSet *
-timestamptz_to_spanset(TimestampTz t)
+tstz_to_spanset(TimestampTz t)
 {
   return value_to_spanset(t, T_TIMESTAMPTZ);
 }
@@ -1195,14 +1195,14 @@ tstzspanset_duration(const SpanSet *ss, bool boundspan)
     return NULL;
 
   if (boundspan)
-    return minus_timestamptz_timestamptz(ss->span.upper, ss->span.lower);
+    return minus_tstz_tstz(ss->span.upper, ss->span.lower);
 
   const Span *s = SPANSET_SP_N(ss, 0);
-  Interval *result = minus_timestamptz_timestamptz(s->upper, s->lower);
+  Interval *result = minus_tstz_tstz(s->upper, s->lower);
   for (int i = 1; i < ss->count; i++)
   {
     s = SPANSET_SP_N(ss, i);
-    Interval *interv1 = minus_timestamptz_timestamptz(s->upper, s->lower);
+    Interval *interv1 = minus_tstz_tstz(s->upper, s->lower);
     Interval *interv2 = add_interval_interval(result, interv1);
     pfree(result); pfree(interv1);
     result = interv2;
@@ -1366,10 +1366,10 @@ tstzspanset_num_timestamps(const SpanSet *ss)
  * @brief Return the start timestamptz of a span set
  * @param[in] ss Span set
  * @return On error return DT_NOEND
- * @csqlfn #Tstzspanset_start_timestamptz()
+ * @csqlfn #Tstzspanset_start_tstz()
  */
 TimestampTz
-tstzspanset_start_timestamptz(const SpanSet *ss)
+tstzspanset_start_tstz(const SpanSet *ss)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) ss) ||
@@ -1385,10 +1385,10 @@ tstzspanset_start_timestamptz(const SpanSet *ss)
  * @brief Return the end timestamptz of a span set
  * @param[in] ss Span set
  * @return On error return DT_NOEND
- * @csqlfn #Tstzspanset_end_timestamptz()
+ * @csqlfn #Tstzspanset_end_tstz()
  */
 TimestampTz
-tstzspanset_end_timestamptz(const SpanSet *ss)
+tstzspanset_end_tstz(const SpanSet *ss)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) ss) ||
@@ -1408,10 +1408,10 @@ tstzspanset_end_timestamptz(const SpanSet *ss)
  * @param[out] result Timestamptz
  * @return Return true if the timestamptz is found
  * @note It is assumed that n is 1-based
- * @csqlfn #Tstzspanset_timestamptz_n()
+ * @csqlfn #Tstzspanset_tstz_n()
  */
 bool
-tstzspanset_timestamptz_n(const SpanSet *ss, int n, TimestampTz *result)
+tstzspanset_tstz_n(const SpanSet *ss, int n, TimestampTz *result)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) ss) || ! ensure_not_null((void *) result) ||

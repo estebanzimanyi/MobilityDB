@@ -34,7 +34,7 @@
 -------------------------------------------------------------------------------
 -- Granularity modification with tprecision
 
-SELECT MAX(tprecision(t, '15 minutes')) FROM tbl_timestamptz;
+SELECT MAX(tprecision(t, '15 minutes')) FROM tbl_tstz;
 SELECT MAX(startValue(tprecision(t, '15 minutes'))) FROM tbl_tstzset;
 SELECT MAX(lower(tprecision(t, '15 minutes'))) FROM tbl_tstzspan;
 SELECT MAX(lower(tprecision(t, '15 minutes'))) FROM tbl_tstzspanset;

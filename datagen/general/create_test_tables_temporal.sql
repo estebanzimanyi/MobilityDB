@@ -98,12 +98,12 @@ FROM generate_series(1, perc) AS k UNION
 SELECT k, random_date('2001-01-01', '2001-12-31')
 FROM generate_series(perc+1, size) AS k;
 
-DROP TABLE IF EXISTS tbl_timestamptz;
-CREATE TABLE tbl_timestamptz(k, t) AS
+DROP TABLE IF EXISTS tbl_tstz;
+CREATE TABLE tbl_tstz(k, t) AS
 /* Add perc NULL values */
 SELECT k, NULL
 FROM generate_series(1, perc) AS k UNION
-SELECT k, random_timestamptz('2001-01-01', '2001-12-31')
+SELECT k, random_tstz('2001-01-01', '2001-12-31')
 FROM generate_series(perc+1, size) AS k;
 
 DROP TABLE IF EXISTS tbl_interval;

@@ -154,13 +154,13 @@ SELECT COUNT(*) FROM tbl_dateset t1, tbl_dateset t2 WHERE t1.d + t2.d IS NOT NUL
   9801
 (1 row)
 
-SELECT COUNT(*) FROM tbl_tstzset t1, tbl_timestamptz t2 WHERE t1.t + t2.t IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tstzset t1, tbl_tstz t2 WHERE t1.t + t2.t IS NOT NULL;
  count 
 -------
   9801
 (1 row)
 
-SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzset t2 WHERE t1.t + t2.t IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzset t2 WHERE t1.t + t2.t IS NOT NULL;
  count 
 -------
   9801
@@ -244,13 +244,13 @@ SELECT COUNT(*) FROM tbl_dateset t1, tbl_dateset t2 WHERE t1.d - t2.d IS NOT NUL
   9702
 (1 row)
 
-SELECT COUNT(*) FROM tbl_tstzset t1, tbl_timestamptz t2 WHERE t1.t - t2.t IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tstzset t1, tbl_tstz t2 WHERE t1.t - t2.t IS NOT NULL;
  count 
 -------
   9801
 (1 row)
 
-SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzset t2 WHERE t1.t - t2.t IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzset t2 WHERE t1.t - t2.t IS NOT NULL;
  count 
 -------
   9799
@@ -334,13 +334,13 @@ SELECT COUNT(*) FROM tbl_dateset t1, tbl_dateset t2 WHERE t1.d * t2.d IS NOT NUL
   1425
 (1 row)
 
-SELECT COUNT(*) FROM tbl_tstzset t1, tbl_timestamptz t2 WHERE t1.t * t2.t IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tstzset t1, tbl_tstz t2 WHERE t1.t * t2.t IS NOT NULL;
  count 
 -------
      2
 (1 row)
 
-SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzset t2 WHERE t1.t * t2.t IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzset t2 WHERE t1.t * t2.t IS NOT NULL;
  count 
 -------
      2
@@ -424,13 +424,13 @@ SELECT MIN(t1.d <-> t2.d) FROM tbl_dateset t1, tbl_dateset t2;
    0
 (1 row)
 
-SELECT MIN(t1.t <-> t2.t) FROM tbl_timestamptz t1, tbl_tstzset t2;
+SELECT MIN(t1.t <-> t2.t) FROM tbl_tstz t1, tbl_tstzset t2;
  min 
 -----
    0
 (1 row)
 
-SELECT MIN(t1.t <-> t2.t) FROM tbl_tstzset t1, tbl_timestamptz t2;
+SELECT MIN(t1.t <-> t2.t) FROM tbl_tstzset t1, tbl_tstz t2;
  min 
 -----
    0

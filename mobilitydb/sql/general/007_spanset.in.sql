@@ -738,17 +738,17 @@ CREATE FUNCTION numTimestamps(tstzspanset)
 
 CREATE FUNCTION startTimestamp(tstzspanset)
   RETURNS timestamptz
-  AS 'MODULE_PATHNAME', 'Tstzspanset_start_timestamptz'
+  AS 'MODULE_PATHNAME', 'Tstzspanset_start_tstz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION endTimestamp(tstzspanset)
   RETURNS timestamptz
-  AS 'MODULE_PATHNAME', 'Tstzspanset_end_timestamptz'
+  AS 'MODULE_PATHNAME', 'Tstzspanset_end_tstz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION timestampN(tstzspanset, integer)
   RETURNS timestamptz
-  AS 'MODULE_PATHNAME', 'Tstzspanset_timestamptz_n'
+  AS 'MODULE_PATHNAME', 'Tstzspanset_tstz_n'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION timestamps(tstzspanset)

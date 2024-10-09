@@ -103,7 +103,7 @@ SELECT '@>', 'datespanset', 'datespanset', COUNT(*) FROM tbl_datespanset t1, tbl
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
 SELECT '@>', 'tstzspan', 'tstzspanset', COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t @> t2.t;
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
-SELECT '@>', 'tstzspanset', 'timestamptz', COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t @> t2.t;
+SELECT '@>', 'tstzspanset', 'tstz', COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t @> t2.t;
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
 SELECT '@>', 'tstzspanset', 'tstzspan', COUNT(*) FROM tbl_tstzspanset t1, tbl_tstzspan t2 WHERE t1.t @> t2.t;
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
@@ -148,7 +148,7 @@ INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
 SELECT '<@', 'datespanset', 'datespanset', COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2 WHERE t1.d <@ t2.d;
 
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
-SELECT '<@', 'timestamptz', 'tstzspanset', COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t <@ t2.t;
+SELECT '<@', 'tstz', 'tstzspanset', COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t <@ t2.t;
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
 SELECT '<@', 'tstzspan', 'tstzspanset', COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t <@ t2.t;
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
@@ -240,11 +240,11 @@ INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
 SELECT '-|-', 'datespanset', 'datespanset', COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2 WHERE t1.d -|- t2.d;
 
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
-SELECT '-|-', 'timestamptz', 'tstzspanset', COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t -|- t2.t;
+SELECT '-|-', 'tstz', 'tstzspanset', COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t -|- t2.t;
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
 SELECT '-|-', 'tstzspan', 'tstzspanset', COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t -|- t2.t;
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
-SELECT '-|-', 'tstzspanset', 'timestamptz', COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t -|- t2.t;
+SELECT '-|-', 'tstzspanset', 'tstz', COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t -|- t2.t;
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
 SELECT '-|-', 'tstzspanset', 'tstzspan', COUNT(*) FROM tbl_tstzspanset t1, tbl_tstzspan t2 WHERE t1.t -|- t2.t;
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
@@ -297,11 +297,11 @@ INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
 SELECT '<<#', 'datespanset', 'datespanset', COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2 WHERE t1.d <<# t2.d;
 
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
-SELECT '<<#', 'timestamptz', 'tstzspanset', COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t <<# t2.t;
+SELECT '<<#', 'tstz', 'tstzspanset', COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t <<# t2.t;
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
 SELECT '<<#', 'tstzspan', 'tstzspanset', COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t <<# t2.t;
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
-SELECT '<<#', 'tstzspanset', 'timestamptz', COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t <<# t2.t;
+SELECT '<<#', 'tstzspanset', 'tstz', COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t <<# t2.t;
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
 SELECT '<<#', 'tstzspanset', 'tstzspan', COUNT(*) FROM tbl_tstzspanset t1, tbl_tstzspan t2 WHERE t1.t <<# t2.t;
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
@@ -354,11 +354,11 @@ INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
 SELECT '&<#', 'datespanset', 'datespanset', COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2 WHERE t1.d &<# t2.d;
 
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
-SELECT '&<#', 'timestamptz', 'tstzspanset', COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t &<# t2.t;
+SELECT '&<#', 'tstz', 'tstzspanset', COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t &<# t2.t;
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
 SELECT '&<#', 'tstzspan', 'tstzspanset', COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t &<# t2.t;
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
-SELECT '&<#', 'tstzspanset', 'timestamptz', COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t &<# t2.t;
+SELECT '&<#', 'tstzspanset', 'tstz', COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t &<# t2.t;
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
 SELECT '&<#', 'tstzspanset', 'tstzspan', COUNT(*) FROM tbl_tstzspanset t1, tbl_tstzspan t2 WHERE t1.t &<# t2.t;
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
@@ -411,11 +411,11 @@ INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
 SELECT '#>>', 'datespanset', 'datespanset', COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2 WHERE t1.d #>> t2.d;
 
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
-SELECT '#>>', 'timestamptz', 'tstzspanset', COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t #>> t2.t;
+SELECT '#>>', 'tstz', 'tstzspanset', COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t #>> t2.t;
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
 SELECT '#>>', 'tstzspan', 'tstzspanset', COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t #>> t2.t;
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
-SELECT '#>>', 'tstzspanset', 'timestamptz', COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t #>> t2.t;
+SELECT '#>>', 'tstzspanset', 'tstz', COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t #>> t2.t;
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
 SELECT '#>>', 'tstzspanset', 'tstzspan', COUNT(*) FROM tbl_tstzspanset t1, tbl_tstzspan t2 WHERE t1.t #>> t2.t;
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
@@ -468,11 +468,11 @@ INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
 SELECT '#&>', 'datespanset', 'datespanset', COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2 WHERE t1.d #&> t2.d;
 
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
-SELECT '#&>', 'timestamptz', 'tstzspanset', COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t #&> t2.t;
+SELECT '#&>', 'tstz', 'tstzspanset', COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t #&> t2.t;
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
 SELECT '#&>', 'tstzspan', 'tstzspanset', COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t #&> t2.t;
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
-SELECT '#&>', 'tstzspanset', 'timestamptz', COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t #&> t2.t;
+SELECT '#&>', 'tstzspanset', 'tstz', COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t #&> t2.t;
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
 SELECT '#&>', 'tstzspanset', 'tstzspan', COUNT(*) FROM tbl_tstzspanset t1, tbl_tstzspan t2 WHERE t1.t #&> t2.t;
 INSERT INTO test_spansetops(op, leftarg, rightarg, no_idx)
@@ -551,8 +551,8 @@ UPDATE test_spansetops
 SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t @> t2.t )
 WHERE op = '@>' AND leftarg = 'tstzspan' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
-SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t @> t2.t )
-WHERE op = '@>' AND leftarg = 'tstzspanset' AND rightarg = 'timestamptz';
+SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t @> t2.t )
+WHERE op = '@>' AND leftarg = 'tstzspanset' AND rightarg = 'tstz';
 UPDATE test_spansetops
 SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstzspan t2 WHERE t1.t @> t2.t )
 WHERE op = '@>' AND leftarg = 'tstzspanset' AND rightarg = 'tstzspan';
@@ -615,8 +615,8 @@ SET rtree_idx = ( SELECT COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2 WH
 WHERE op = '<@' AND leftarg = 'datespanset' AND rightarg = 'datespanset';
 
 UPDATE test_spansetops
-SET rtree_idx = ( SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t <@ t2.t )
-WHERE op = '<@' AND leftarg = 'timestamptz' AND rightarg = 'tstzspanset';
+SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t <@ t2.t )
+WHERE op = '<@' AND leftarg = 'tstz' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
 SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t <@ t2.t )
 WHERE op = '<@' AND leftarg = 'tstzspan' AND rightarg = 'tstzspanset';
@@ -746,14 +746,14 @@ SET rtree_idx = ( SELECT COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2 WH
 WHERE op = '-|-' AND leftarg = 'datespanset' AND rightarg = 'datespanset';
 
 UPDATE test_spansetops
-SET rtree_idx = ( SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t -|- t2.t )
-WHERE op = '-|-' AND leftarg = 'timestamptz' AND rightarg = 'tstzspanset';
+SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t -|- t2.t )
+WHERE op = '-|-' AND leftarg = 'tstz' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
 SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t -|- t2.t )
 WHERE op = '-|-' AND leftarg = 'tstzspan' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
-SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t -|- t2.t )
-WHERE op = '-|-' AND leftarg = 'tstzspanset' AND rightarg = 'timestamptz';
+SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t -|- t2.t )
+WHERE op = '-|-' AND leftarg = 'tstzspanset' AND rightarg = 'tstz';
 UPDATE test_spansetops
 SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstzspan t2 WHERE t1.t -|- t2.t )
 WHERE op = '-|-' AND leftarg = 'tstzspanset' AND rightarg = 'tstzspan';
@@ -828,14 +828,14 @@ SET rtree_idx = ( SELECT COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2 WH
 WHERE op = '<<#' AND leftarg = 'datespanset' AND rightarg = 'datespanset';
 
 UPDATE test_spansetops
-SET rtree_idx = ( SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t <<# t2.t )
-WHERE op = '<<#' AND leftarg = 'timestamptz' AND rightarg = 'tstzspanset';
+SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t <<# t2.t )
+WHERE op = '<<#' AND leftarg = 'tstz' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
 SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t <<# t2.t )
 WHERE op = '<<#' AND leftarg = 'tstzspan' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
-SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t <<# t2.t )
-WHERE op = '<<#' AND leftarg = 'tstzspanset' AND rightarg = 'timestamptz';
+SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t <<# t2.t )
+WHERE op = '<<#' AND leftarg = 'tstzspanset' AND rightarg = 'tstz';
 UPDATE test_spansetops
 SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstzspan t2 WHERE t1.t <<# t2.t )
 WHERE op = '<<#' AND leftarg = 'tstzspanset' AND rightarg = 'tstzspan';
@@ -910,14 +910,14 @@ SET rtree_idx = ( SELECT COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2 WH
 WHERE op = '&<#' AND leftarg = 'datespanset' AND rightarg = 'datespanset';
 
 UPDATE test_spansetops
-SET rtree_idx = ( SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t &<# t2.t )
-WHERE op = '&<#' AND leftarg = 'timestamptz' AND rightarg = 'tstzspanset';
+SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t &<# t2.t )
+WHERE op = '&<#' AND leftarg = 'tstz' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
 SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t &<# t2.t )
 WHERE op = '&<#' AND leftarg = 'tstzspan' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
-SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t &<# t2.t )
-WHERE op = '&<#' AND leftarg = 'tstzspanset' AND rightarg = 'timestamptz';
+SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t &<# t2.t )
+WHERE op = '&<#' AND leftarg = 'tstzspanset' AND rightarg = 'tstz';
 UPDATE test_spansetops
 SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstzspan t2 WHERE t1.t &<# t2.t )
 WHERE op = '&<#' AND leftarg = 'tstzspanset' AND rightarg = 'tstzspan';
@@ -992,14 +992,14 @@ SET rtree_idx = ( SELECT COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2 WH
 WHERE op = '#>>' AND leftarg = 'datespanset' AND rightarg = 'datespanset';
 
 UPDATE test_spansetops
-SET rtree_idx = ( SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t #>> t2.t )
-WHERE op = '#>>' AND leftarg = 'timestamptz' AND rightarg = 'tstzspanset';
+SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t #>> t2.t )
+WHERE op = '#>>' AND leftarg = 'tstz' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
 SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t #>> t2.t )
 WHERE op = '#>>' AND leftarg = 'tstzspan' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
-SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t #>> t2.t )
-WHERE op = '#>>' AND leftarg = 'tstzspanset' AND rightarg = 'timestamptz';
+SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t #>> t2.t )
+WHERE op = '#>>' AND leftarg = 'tstzspanset' AND rightarg = 'tstz';
 UPDATE test_spansetops
 SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstzspan t2 WHERE t1.t #>> t2.t )
 WHERE op = '#>>' AND leftarg = 'tstzspanset' AND rightarg = 'tstzspan';
@@ -1074,14 +1074,14 @@ SET rtree_idx = ( SELECT COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2 WH
 WHERE op = '#&>' AND leftarg = 'datespanset' AND rightarg = 'datespanset';
 
 UPDATE test_spansetops
-SET rtree_idx = ( SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t #&> t2.t )
-WHERE op = '#&>' AND leftarg = 'timestamptz' AND rightarg = 'tstzspanset';
+SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t #&> t2.t )
+WHERE op = '#&>' AND leftarg = 'tstz' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
 SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t #&> t2.t )
 WHERE op = '#&>' AND leftarg = 'tstzspan' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
-SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t #&> t2.t )
-WHERE op = '#&>' AND leftarg = 'tstzspanset' AND rightarg = 'timestamptz';
+SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t #&> t2.t )
+WHERE op = '#&>' AND leftarg = 'tstzspanset' AND rightarg = 'tstz';
 UPDATE test_spansetops
 SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstzspan t2 WHERE t1.t #&> t2.t )
 WHERE op = '#&>' AND leftarg = 'tstzspanset' AND rightarg = 'tstzspan';
@@ -1172,8 +1172,8 @@ UPDATE test_spansetops
 SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t @> t2.t )
 WHERE op = '@>' AND leftarg = 'tstzspan' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
-SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t @> t2.t )
-WHERE op = '@>' AND leftarg = 'tstzspanset' AND rightarg = 'timestamptz';
+SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t @> t2.t )
+WHERE op = '@>' AND leftarg = 'tstzspanset' AND rightarg = 'tstz';
 UPDATE test_spansetops
 SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstzspan t2 WHERE t1.t @> t2.t )
 WHERE op = '@>' AND leftarg = 'tstzspanset' AND rightarg = 'tstzspan';
@@ -1236,8 +1236,8 @@ SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2
 WHERE op = '<@' AND leftarg = 'datespanset' AND rightarg = 'datespanset';
 
 UPDATE test_spansetops
-SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t <@ t2.t )
-WHERE op = '<@' AND leftarg = 'timestamptz' AND rightarg = 'tstzspanset';
+SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t <@ t2.t )
+WHERE op = '<@' AND leftarg = 'tstz' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
 SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t <@ t2.t )
 WHERE op = '<@' AND leftarg = 'tstzspan' AND rightarg = 'tstzspanset';
@@ -1367,14 +1367,14 @@ SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2
 WHERE op = '-|-' AND leftarg = 'datespanset' AND rightarg = 'datespanset';
 
 UPDATE test_spansetops
-SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t -|- t2.t )
-WHERE op = '-|-' AND leftarg = 'timestamptz' AND rightarg = 'tstzspanset';
+SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t -|- t2.t )
+WHERE op = '-|-' AND leftarg = 'tstz' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
 SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t -|- t2.t )
 WHERE op = '-|-' AND leftarg = 'tstzspan' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
-SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t -|- t2.t )
-WHERE op = '-|-' AND leftarg = 'tstzspanset' AND rightarg = 'timestamptz';
+SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t -|- t2.t )
+WHERE op = '-|-' AND leftarg = 'tstzspanset' AND rightarg = 'tstz';
 UPDATE test_spansetops
 SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstzspan t2 WHERE t1.t -|- t2.t )
 WHERE op = '-|-' AND leftarg = 'tstzspanset' AND rightarg = 'tstzspan';
@@ -1449,14 +1449,14 @@ SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2
 WHERE op = '<<#' AND leftarg = 'datespanset' AND rightarg = 'datespanset';
 
 UPDATE test_spansetops
-SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t <<# t2.t )
-WHERE op = '<<#' AND leftarg = 'timestamptz' AND rightarg = 'tstzspanset';
+SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t <<# t2.t )
+WHERE op = '<<#' AND leftarg = 'tstz' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
 SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t <<# t2.t )
 WHERE op = '<<#' AND leftarg = 'tstzspan' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
-SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t <<# t2.t )
-WHERE op = '<<#' AND leftarg = 'tstzspanset' AND rightarg = 'timestamptz';
+SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t <<# t2.t )
+WHERE op = '<<#' AND leftarg = 'tstzspanset' AND rightarg = 'tstz';
 UPDATE test_spansetops
 SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstzspan t2 WHERE t1.t <<# t2.t )
 WHERE op = '<<#' AND leftarg = 'tstzspanset' AND rightarg = 'tstzspan';
@@ -1531,14 +1531,14 @@ SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2
 WHERE op = '&<#' AND leftarg = 'datespanset' AND rightarg = 'datespanset';
 
 UPDATE test_spansetops
-SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t &<# t2.t )
-WHERE op = '&<#' AND leftarg = 'timestamptz' AND rightarg = 'tstzspanset';
+SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t &<# t2.t )
+WHERE op = '&<#' AND leftarg = 'tstz' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
 SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t &<# t2.t )
 WHERE op = '&<#' AND leftarg = 'tstzspan' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
-SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t &<# t2.t )
-WHERE op = '&<#' AND leftarg = 'tstzspanset' AND rightarg = 'timestamptz';
+SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t &<# t2.t )
+WHERE op = '&<#' AND leftarg = 'tstzspanset' AND rightarg = 'tstz';
 UPDATE test_spansetops
 SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstzspan t2 WHERE t1.t &<# t2.t )
 WHERE op = '&<#' AND leftarg = 'tstzspanset' AND rightarg = 'tstzspan';
@@ -1613,14 +1613,14 @@ SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2
 WHERE op = '#>>' AND leftarg = 'datespanset' AND rightarg = 'datespanset';
 
 UPDATE test_spansetops
-SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t #>> t2.t )
-WHERE op = '#>>' AND leftarg = 'timestamptz' AND rightarg = 'tstzspanset';
+SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t #>> t2.t )
+WHERE op = '#>>' AND leftarg = 'tstz' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
 SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t #>> t2.t )
 WHERE op = '#>>' AND leftarg = 'tstzspan' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
-SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t #>> t2.t )
-WHERE op = '#>>' AND leftarg = 'tstzspanset' AND rightarg = 'timestamptz';
+SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t #>> t2.t )
+WHERE op = '#>>' AND leftarg = 'tstzspanset' AND rightarg = 'tstz';
 UPDATE test_spansetops
 SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstzspan t2 WHERE t1.t #>> t2.t )
 WHERE op = '#>>' AND leftarg = 'tstzspanset' AND rightarg = 'tstzspan';
@@ -1695,14 +1695,14 @@ SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2
 WHERE op = '#&>' AND leftarg = 'datespanset' AND rightarg = 'datespanset';
 
 UPDATE test_spansetops
-SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t #&> t2.t )
-WHERE op = '#&>' AND leftarg = 'timestamptz' AND rightarg = 'tstzspanset';
+SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t #&> t2.t )
+WHERE op = '#&>' AND leftarg = 'tstz' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
 SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t #&> t2.t )
 WHERE op = '#&>' AND leftarg = 'tstzspan' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
-SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t #&> t2.t )
-WHERE op = '#&>' AND leftarg = 'tstzspanset' AND rightarg = 'timestamptz';
+SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t #&> t2.t )
+WHERE op = '#&>' AND leftarg = 'tstzspanset' AND rightarg = 'tstz';
 UPDATE test_spansetops
 SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstzspan t2 WHERE t1.t #&> t2.t )
 WHERE op = '#&>' AND leftarg = 'tstzspanset' AND rightarg = 'tstzspan';
@@ -1793,8 +1793,8 @@ UPDATE test_spansetops
 SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t @> t2.t )
 WHERE op = '@>' AND leftarg = 'tstzspan' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
-SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t @> t2.t )
-WHERE op = '@>' AND leftarg = 'tstzspanset' AND rightarg = 'timestamptz';
+SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t @> t2.t )
+WHERE op = '@>' AND leftarg = 'tstzspanset' AND rightarg = 'tstz';
 UPDATE test_spansetops
 SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstzspan t2 WHERE t1.t @> t2.t )
 WHERE op = '@>' AND leftarg = 'tstzspanset' AND rightarg = 'tstzspan';
@@ -1857,8 +1857,8 @@ SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2 W
 WHERE op = '<@' AND leftarg = 'datespanset' AND rightarg = 'datespanset';
 
 UPDATE test_spansetops
-SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t <@ t2.t )
-WHERE op = '<@' AND leftarg = 'timestamptz' AND rightarg = 'tstzspanset';
+SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t <@ t2.t )
+WHERE op = '<@' AND leftarg = 'tstz' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
 SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t <@ t2.t )
 WHERE op = '<@' AND leftarg = 'tstzspan' AND rightarg = 'tstzspanset';
@@ -1988,14 +1988,14 @@ SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2 W
 WHERE op = '-|-' AND leftarg = 'datespanset' AND rightarg = 'datespanset';
 
 UPDATE test_spansetops
-SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t -|- t2.t )
-WHERE op = '-|-' AND leftarg = 'timestamptz' AND rightarg = 'tstzspanset';
+SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t -|- t2.t )
+WHERE op = '-|-' AND leftarg = 'tstz' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
 SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t -|- t2.t )
 WHERE op = '-|-' AND leftarg = 'tstzspan' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
-SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t -|- t2.t )
-WHERE op = '-|-' AND leftarg = 'tstzspanset' AND rightarg = 'timestamptz';
+SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t -|- t2.t )
+WHERE op = '-|-' AND leftarg = 'tstzspanset' AND rightarg = 'tstz';
 UPDATE test_spansetops
 SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstzspan t2 WHERE t1.t -|- t2.t )
 WHERE op = '-|-' AND leftarg = 'tstzspanset' AND rightarg = 'tstzspan';
@@ -2070,14 +2070,14 @@ SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2 W
 WHERE op = '<<#' AND leftarg = 'datespanset' AND rightarg = 'datespanset';
 
 UPDATE test_spansetops
-SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t <<# t2.t )
-WHERE op = '<<#' AND leftarg = 'timestamptz' AND rightarg = 'tstzspanset';
+SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t <<# t2.t )
+WHERE op = '<<#' AND leftarg = 'tstz' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
 SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t <<# t2.t )
 WHERE op = '<<#' AND leftarg = 'tstzspan' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
-SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t <<# t2.t )
-WHERE op = '<<#' AND leftarg = 'tstzspanset' AND rightarg = 'timestamptz';
+SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t <<# t2.t )
+WHERE op = '<<#' AND leftarg = 'tstzspanset' AND rightarg = 'tstz';
 UPDATE test_spansetops
 SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstzspan t2 WHERE t1.t <<# t2.t )
 WHERE op = '<<#' AND leftarg = 'tstzspanset' AND rightarg = 'tstzspan';
@@ -2152,14 +2152,14 @@ SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2 W
 WHERE op = '&<#' AND leftarg = 'datespanset' AND rightarg = 'datespanset';
 
 UPDATE test_spansetops
-SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t &<# t2.t )
-WHERE op = '&<#' AND leftarg = 'timestamptz' AND rightarg = 'tstzspanset';
+SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t &<# t2.t )
+WHERE op = '&<#' AND leftarg = 'tstz' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
 SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t &<# t2.t )
 WHERE op = '&<#' AND leftarg = 'tstzspan' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
-SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t &<# t2.t )
-WHERE op = '&<#' AND leftarg = 'tstzspanset' AND rightarg = 'timestamptz';
+SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t &<# t2.t )
+WHERE op = '&<#' AND leftarg = 'tstzspanset' AND rightarg = 'tstz';
 UPDATE test_spansetops
 SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstzspan t2 WHERE t1.t &<# t2.t )
 WHERE op = '&<#' AND leftarg = 'tstzspanset' AND rightarg = 'tstzspan';
@@ -2234,14 +2234,14 @@ SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2 W
 WHERE op = '#>>' AND leftarg = 'datespanset' AND rightarg = 'datespanset';
 
 UPDATE test_spansetops
-SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t #>> t2.t )
-WHERE op = '#>>' AND leftarg = 'timestamptz' AND rightarg = 'tstzspanset';
+SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t #>> t2.t )
+WHERE op = '#>>' AND leftarg = 'tstz' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
 SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t #>> t2.t )
 WHERE op = '#>>' AND leftarg = 'tstzspan' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
-SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t #>> t2.t )
-WHERE op = '#>>' AND leftarg = 'tstzspanset' AND rightarg = 'timestamptz';
+SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t #>> t2.t )
+WHERE op = '#>>' AND leftarg = 'tstzspanset' AND rightarg = 'tstz';
 UPDATE test_spansetops
 SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstzspan t2 WHERE t1.t #>> t2.t )
 WHERE op = '#>>' AND leftarg = 'tstzspanset' AND rightarg = 'tstzspan';
@@ -2316,14 +2316,14 @@ SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2 W
 WHERE op = '#&>' AND leftarg = 'datespanset' AND rightarg = 'datespanset';
 
 UPDATE test_spansetops
-SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t #&> t2.t )
-WHERE op = '#&>' AND leftarg = 'timestamptz' AND rightarg = 'tstzspanset';
+SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t #&> t2.t )
+WHERE op = '#&>' AND leftarg = 'tstz' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
 SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t #&> t2.t )
 WHERE op = '#&>' AND leftarg = 'tstzspan' AND rightarg = 'tstzspanset';
 UPDATE test_spansetops
-SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t #&> t2.t )
-WHERE op = '#&>' AND leftarg = 'tstzspanset' AND rightarg = 'timestamptz';
+SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t #&> t2.t )
+WHERE op = '#&>' AND leftarg = 'tstzspanset' AND rightarg = 'tstz';
 UPDATE test_spansetops
 SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstzspan t2 WHERE t1.t #&> t2.t )
 WHERE op = '#&>' AND leftarg = 'tstzspanset' AND rightarg = 'tstzspan';

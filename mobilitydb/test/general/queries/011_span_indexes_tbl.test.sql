@@ -169,17 +169,17 @@ SELECT d <-> date '2000-06-01' FROM tbl_datespan_big ORDER BY 1 LIMIT 3;
 SELECT d <-> datespan '[2000-06-01,2000-07-01]' FROM tbl_datespan_big ORDER BY 1 LIMIT 3;
 
 INSERT INTO test_idxops(op, leftarg, rightarg, no_idx)
-SELECT '@>', 'tstzspan', 'timestamptz', COUNT(*) FROM tbl_tstzspan_big WHERE t @> timestamptz '2001-06-01';
+SELECT '@>', 'tstzspan', 'tstz', COUNT(*) FROM tbl_tstzspan_big WHERE t @> timestamptz '2001-06-01';
 INSERT INTO test_idxops(op, leftarg, rightarg, no_idx)
-SELECT '-|-', 'tstzspan', 'timestamptz', COUNT(*) FROM tbl_tstzspan_big WHERE t -|- timestamptz '2001-06-01';
+SELECT '-|-', 'tstzspan', 'tstz', COUNT(*) FROM tbl_tstzspan_big WHERE t -|- timestamptz '2001-06-01';
 INSERT INTO test_idxops(op, leftarg, rightarg, no_idx)
-SELECT '<<#', 'tstzspan', 'timestamptz', COUNT(*) FROM tbl_tstzspan_big WHERE t <<# timestamptz '2001-02-01';
+SELECT '<<#', 'tstzspan', 'tstz', COUNT(*) FROM tbl_tstzspan_big WHERE t <<# timestamptz '2001-02-01';
 INSERT INTO test_idxops(op, leftarg, rightarg, no_idx)
-SELECT '&<#', 'tstzspan', 'timestamptz', COUNT(*) FROM tbl_tstzspan_big WHERE t &<# timestamptz '2001-02-01';
+SELECT '&<#', 'tstzspan', 'tstz', COUNT(*) FROM tbl_tstzspan_big WHERE t &<# timestamptz '2001-02-01';
 INSERT INTO test_idxops(op, leftarg, rightarg, no_idx)
-SELECT '#>>', 'tstzspan', 'timestamptz', COUNT(*) FROM tbl_tstzspan_big WHERE t #>> timestamptz '2001-11-01';
+SELECT '#>>', 'tstzspan', 'tstz', COUNT(*) FROM tbl_tstzspan_big WHERE t #>> timestamptz '2001-11-01';
 INSERT INTO test_idxops(op, leftarg, rightarg, no_idx)
-SELECT '#&>', 'tstzspan', 'timestamptz', COUNT(*) FROM tbl_tstzspan_big WHERE t #&> timestamptz '2001-11-01';
+SELECT '#&>', 'tstzspan', 'tstz', COUNT(*) FROM tbl_tstzspan_big WHERE t #&> timestamptz '2001-11-01';
 
 INSERT INTO test_idxops(op, leftarg, rightarg, no_idx)
 SELECT '&&', 'tstzspan', 'tstzspan', COUNT(*) FROM tbl_tstzspan_big WHERE t && tstzspan '[2001-06-01, 2001-07-01)';
@@ -353,22 +353,22 @@ SELECT d <-> datespan '[2000-06-01,2000-07-01]' FROM tbl_datespan_big ORDER BY 1
 
 UPDATE test_idxops
 SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan_big WHERE t @> timestamptz '2001-06-01' )
-WHERE op = '@>' AND leftarg = 'tstzspan' AND rightarg = 'timestamptz';
+WHERE op = '@>' AND leftarg = 'tstzspan' AND rightarg = 'tstz';
 UPDATE test_idxops
 SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan_big WHERE t -|- timestamptz '2001-06-01' )
-WHERE op = '-|-' AND leftarg = 'tstzspan' AND rightarg = 'timestamptz';
+WHERE op = '-|-' AND leftarg = 'tstzspan' AND rightarg = 'tstz';
 UPDATE test_idxops
 SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan_big WHERE t <<# timestamptz '2001-02-01' )
-WHERE op = '<<#' AND leftarg = 'tstzspan' AND rightarg = 'timestamptz';
+WHERE op = '<<#' AND leftarg = 'tstzspan' AND rightarg = 'tstz';
 UPDATE test_idxops
 SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan_big WHERE t &<# timestamptz '2001-02-01' )
-WHERE op = '&<#' AND leftarg = 'tstzspan' AND rightarg = 'timestamptz';
+WHERE op = '&<#' AND leftarg = 'tstzspan' AND rightarg = 'tstz';
 UPDATE test_idxops
 SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan_big WHERE t #>> timestamptz '2001-11-01' )
-WHERE op = '#>>' AND leftarg = 'tstzspan' AND rightarg = 'timestamptz';
+WHERE op = '#>>' AND leftarg = 'tstzspan' AND rightarg = 'tstz';
 UPDATE test_idxops
 SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan_big WHERE t #&> timestamptz '2001-11-01' )
-WHERE op = '#&>' AND leftarg = 'tstzspan' AND rightarg = 'timestamptz';
+WHERE op = '#&>' AND leftarg = 'tstzspan' AND rightarg = 'tstz';
 
 UPDATE test_idxops
 SET rtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan_big WHERE t && tstzspan '[2001-06-01, 2001-07-01)' )
@@ -555,22 +555,22 @@ SELECT d <-> datespan '[2000-06-01,2000-07-01]' FROM tbl_datespan_big ORDER BY 1
 
 UPDATE test_idxops
 SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan_big WHERE t @> timestamptz '2001-06-01' )
-WHERE op = '@>' AND leftarg = 'tstzspan' AND rightarg = 'timestamptz';
+WHERE op = '@>' AND leftarg = 'tstzspan' AND rightarg = 'tstz';
 UPDATE test_idxops
 SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan_big WHERE t -|- timestamptz '2001-06-01' )
-WHERE op = '-|-' AND leftarg = 'tstzspan' AND rightarg = 'timestamptz';
+WHERE op = '-|-' AND leftarg = 'tstzspan' AND rightarg = 'tstz';
 UPDATE test_idxops
 SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan_big WHERE t <<# timestamptz '2001-02-01' )
-WHERE op = '<<#' AND leftarg = 'tstzspan' AND rightarg = 'timestamptz';
+WHERE op = '<<#' AND leftarg = 'tstzspan' AND rightarg = 'tstz';
 UPDATE test_idxops
 SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan_big WHERE t &<# timestamptz '2001-02-01' )
-WHERE op = '&<#' AND leftarg = 'tstzspan' AND rightarg = 'timestamptz';
+WHERE op = '&<#' AND leftarg = 'tstzspan' AND rightarg = 'tstz';
 UPDATE test_idxops
 SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan_big WHERE t #>> timestamptz '2001-11-01' )
-WHERE op = '#>>' AND leftarg = 'tstzspan' AND rightarg = 'timestamptz';
+WHERE op = '#>>' AND leftarg = 'tstzspan' AND rightarg = 'tstz';
 UPDATE test_idxops
 SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan_big WHERE t #&> timestamptz '2001-11-01' )
-WHERE op = '#&>' AND leftarg = 'tstzspan' AND rightarg = 'timestamptz';
+WHERE op = '#&>' AND leftarg = 'tstzspan' AND rightarg = 'tstz';
 
 UPDATE test_idxops
 SET quadtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan_big WHERE t && tstzspan '[2001-06-01, 2001-07-01)' )
@@ -757,22 +757,22 @@ SELECT d <-> datespan '[2000-06-01,2000-07-01]' FROM tbl_datespan_big ORDER BY 1
 
 UPDATE test_idxops
 SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan_big WHERE t @> timestamptz '2001-06-01' )
-WHERE op = '@>' AND leftarg = 'tstzspan' AND rightarg = 'timestamptz';
+WHERE op = '@>' AND leftarg = 'tstzspan' AND rightarg = 'tstz';
 UPDATE test_idxops
 SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan_big WHERE t -|- timestamptz '2001-06-01' )
-WHERE op = '-|-' AND leftarg = 'tstzspan' AND rightarg = 'timestamptz';
+WHERE op = '-|-' AND leftarg = 'tstzspan' AND rightarg = 'tstz';
 UPDATE test_idxops
 SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan_big WHERE t <<# timestamptz '2001-02-01' )
-WHERE op = '<<#' AND leftarg = 'tstzspan' AND rightarg = 'timestamptz';
+WHERE op = '<<#' AND leftarg = 'tstzspan' AND rightarg = 'tstz';
 UPDATE test_idxops
 SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan_big WHERE t &<# timestamptz '2001-02-01' )
-WHERE op = '&<#' AND leftarg = 'tstzspan' AND rightarg = 'timestamptz';
+WHERE op = '&<#' AND leftarg = 'tstzspan' AND rightarg = 'tstz';
 UPDATE test_idxops
 SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan_big WHERE t #>> timestamptz '2001-11-01' )
-WHERE op = '#>>' AND leftarg = 'tstzspan' AND rightarg = 'timestamptz';
+WHERE op = '#>>' AND leftarg = 'tstzspan' AND rightarg = 'tstz';
 UPDATE test_idxops
 SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan_big WHERE t #&> timestamptz '2001-11-01' )
-WHERE op = '#&>' AND leftarg = 'tstzspan' AND rightarg = 'timestamptz';
+WHERE op = '#&>' AND leftarg = 'tstzspan' AND rightarg = 'tstz';
 
 UPDATE test_idxops
 SET kdtree_idx = ( SELECT COUNT(*) FROM tbl_tstzspan_big WHERE t && tstzspan '[2001-06-01, 2001-07-01)' )

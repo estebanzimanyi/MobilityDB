@@ -3216,7 +3216,7 @@ pg_timestamp_to_char(Timestamp dt, text *fmt)
  * @brief Output a timestamptz as text.
  */
 text *
-pg_timestamptz_to_char(TimestampTz dt, text *fmt)
+tstz_to_char(TimestampTz dt, text *fmt)
 {
   text *res;
   TmToChar  tmtc;

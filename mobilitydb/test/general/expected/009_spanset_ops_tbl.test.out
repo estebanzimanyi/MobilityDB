@@ -118,7 +118,7 @@ SELECT COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2 WHERE t1.d + t2.d IS
   9801
 (1 row)
 
-SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t + t2.t IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t + t2.t IS NOT NULL;
  count 
 -------
   9801
@@ -130,7 +130,7 @@ SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t + t2.t IS NO
   9801
 (1 row)
 
-SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t + t2.t IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t + t2.t IS NOT NULL;
  count 
 -------
   9801
@@ -268,7 +268,7 @@ SELECT COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2 WHERE t1.d - t2.d IS
   9702
 (1 row)
 
-SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t - t2.t IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t - t2.t IS NOT NULL;
  count 
 -------
   9801
@@ -280,7 +280,7 @@ SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t - t2.t IS NO
   9801
 (1 row)
 
-SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t - t2.t IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t - t2.t IS NOT NULL;
  count 
 -------
   9801
@@ -418,7 +418,7 @@ SELECT COUNT(*) FROM tbl_datespanset t1, tbl_datespanset t2 WHERE t1.d * t2.d IS
   4903
 (1 row)
 
-SELECT COUNT(*) FROM tbl_timestamptz t1, tbl_tstzspanset t2 WHERE t1.t * t2.t IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tstz t1, tbl_tstzspanset t2 WHERE t1.t * t2.t IS NOT NULL;
  count 
 -------
      0
@@ -430,7 +430,7 @@ SELECT COUNT(*) FROM tbl_tstzspan t1, tbl_tstzspanset t2 WHERE t1.t * t2.t IS NO
      0
 (1 row)
 
-SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_timestamptz t2 WHERE t1.t * t2.t IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tstzspanset t1, tbl_tstz t2 WHERE t1.t * t2.t IS NOT NULL;
  count 
 -------
      0
@@ -568,7 +568,7 @@ SELECT MIN(t1.d <-> t2.d) FROM tbl_datespanset t1, tbl_datespanset t2;
    0
 (1 row)
 
-SELECT MIN(t1.t <-> t2.t) FROM tbl_timestamptz t1, tbl_tstzspanset t2;
+SELECT MIN(t1.t <-> t2.t) FROM tbl_tstz t1, tbl_tstzspanset t2;
  min 
 -----
    0
@@ -580,7 +580,7 @@ SELECT MIN(t1.t <-> t2.t) FROM tbl_tstzspan t1, tbl_tstzspanset t2;
  2100
 (1 row)
 
-SELECT MIN(t1.t <-> t2.t) FROM tbl_tstzspanset t1, tbl_timestamptz t2;
+SELECT MIN(t1.t <-> t2.t) FROM tbl_tstzspanset t1, tbl_tstz t2;
  min 
 -----
    0

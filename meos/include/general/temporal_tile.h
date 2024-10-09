@@ -96,7 +96,7 @@ extern void tbox_tile_state_set(Datum value, TimestampTz t, Datum vsize,
 /*****************************************************************************/
 
 extern int64 interval_units(const Interval *interval);
-extern TimestampTz timestamptz_get_bin_int(TimestampTz timestamp, int64 tunits,
+extern TimestampTz tstz_get_bin_int(TimestampTz timestamp, int64 tunits,
   TimestampTz torigin);
 extern Datum datum_bin(Datum value, Datum size, Datum offset,
   meosType basetype);

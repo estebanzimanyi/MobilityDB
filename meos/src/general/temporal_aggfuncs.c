@@ -192,7 +192,7 @@ tinstant_tagg(const TInstant **instants1, int count1, const TInstant **instants2
   {
     const TInstant *inst1 = instants1[i];
     const TInstant *inst2 = instants2[j];
-    int cmp = timestamptz_cmp_internal(inst1->t, inst2->t);
+    int cmp = tstz_cmp(inst1->t, inst2->t);
     if (cmp == 0)
     {
       if (func != NULL)
@@ -205,7 +205,7 @@ tinstant_tagg(const TInstant **instants1, int count1, const TInstant **instants2
           result[count++] = tinstant_copy(inst1);
         else
         {
-          char *t1 = pg_timestamptz_out(inst1->t);
+          char *t1 = tstz_out(inst1->t);
           meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
             "The temporal values have different value at their common timestamp %s",
             t1);
@@ -306,8 +306,8 @@ tsequence_tagg_iter(const TSequence *seq1, const TSequence *seq2,
 
   /* Compute the aggregation on the period before the intersection of the
    * intervals */
-  int cmp1 = timestamptz_cmp_internal(lower1, lower);
-  int cmp2 = timestamptz_cmp_internal(lower2, lower);
+  int cmp1 = tstz_cmp(lower1, lower);
+  int cmp2 = tstz_cmp(lower2, lower);
   if (cmp1 < 0 || (lower1_inc && !lower_inc && cmp1 == 0))
   {
     span_set(TimestampTzGetDatum(lower1), TimestampTzGetDatum(lower),
@@ -341,7 +341,7 @@ tsequence_tagg_iter(const TSequence *seq1, const TSequence *seq2,
         instants[i] = tinstant_copy(inst1);
       else
       {
-        char *t1 = pg_timestamptz_out(inst1->t);
+        char *t1 = tstz_out(inst1->t);
         meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
           "The temporal values have different value at their common timestamp %s",
           t1);
@@ -355,8 +355,8 @@ tsequence_tagg_iter(const TSequence *seq1, const TSequence *seq2,
 
   /* Compute the aggregation on the period after the intersection of the
    * intervals */
-  cmp1 = timestamptz_cmp_internal(upper, upper1);
-  cmp2 = timestamptz_cmp_internal(upper, upper2);
+  cmp1 = tstz_cmp(upper, upper1);
+  cmp2 = tstz_cmp(upper, upper2);
   if (cmp1 < 0 || (!upper_inc && upper1_inc && cmp1 == 0))
   {
     span_set(TimestampTzGetDatum(upper), TimestampTzGetDatum(upper1),
@@ -421,7 +421,7 @@ tsequence_tagg(const TSequence **sequences1, int count1, const TSequence **seque
 
     /* Need to get all info from seq1 and seq2
      * since we might free one of them right after */
-    int cmp = timestamptz_cmp_internal(seq1->period.upper, seq2->period.upper);
+    int cmp = tstz_cmp(seq1->period.upper, seq2->period.upper);
     bool upper1_inc = seq1->period.upper_inc,
          upper2_inc = seq2->period.upper_inc;
 
@@ -1200,10 +1200,10 @@ temporal_transform_tcount(const Temporal *temp, int *count)
  * @brief Transition function for temporal count aggregate of timestamps
  * @param[in,out] state Current aggregate state
  * @param[in] t Timestamp to aggregate
- * @csqlfn #Timestamptz_tcount_transfn()
+ * @csqlfn #Tstz_tcount_transfn()
  */
 SkipList *
-timestamptz_tcount_transfn(SkipList *state, TimestampTz t)
+tstz_tcount_transfn(SkipList *state, TimestampTz t)
 {
   TInstant **instants = timestamp_transform_tcount(t);
   if (! state)

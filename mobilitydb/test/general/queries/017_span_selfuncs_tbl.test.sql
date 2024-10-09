@@ -61,9 +61,9 @@ SELECT COUNT(*) FROM tbl_tstzspanset WHERE t @> timestamptz '2001-06-01';
 SELECT COUNT(*) FROM tbl_tstzspanset WHERE t @> tstzspan '[2001-06-01, 2001-07-01]';
 SELECT COUNT(*) FROM tbl_tstzspanset WHERE t @> tstzspanset '{[2001-06-01, 2001-07-01]}';
 
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t <@ tstzset '{2001-06-01, 2001-07-07}';
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t <@ tstzspan '[2001-06-01, 2001-07-01]';
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t <@ tstzspanset '{[2001-06-01, 2001-07-01]}';
+SELECT COUNT(*) FROM tbl_tstz WHERE t <@ tstzset '{2001-06-01, 2001-07-07}';
+SELECT COUNT(*) FROM tbl_tstz WHERE t <@ tstzspan '[2001-06-01, 2001-07-01]';
+SELECT COUNT(*) FROM tbl_tstz WHERE t <@ tstzspanset '{[2001-06-01, 2001-07-01]}';
 SELECT COUNT(*) FROM tbl_tstzset WHERE t <@ tstzset '{2001-06-01, 2001-07-07}';
 SELECT COUNT(*) FROM tbl_tstzspan WHERE t <@ tstzspan '[2001-06-01, 2001-07-01]';
 SELECT COUNT(*) FROM tbl_tstzspan WHERE t <@ tstzspanset '{[2001-06-01, 2001-07-01]}';
@@ -76,9 +76,9 @@ SELECT COUNT(*) FROM tbl_tstzspan WHERE t && tstzspanset '{[2001-06-01, 2001-07-
 SELECT COUNT(*) FROM tbl_tstzspanset WHERE t && tstzspan '[2001-06-01, 2001-07-01]';
 SELECT COUNT(*) FROM tbl_tstzspanset WHERE t && tstzspanset '{[2001-06-01, 2001-07-01]}';
 
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t <<# tstzset '{2001-06-01, 2001-07-07}';
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t <<# tstzspan '[2001-06-01, 2001-07-01]';
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t <<# tstzspanset '{[2001-06-01, 2001-07-01]}';
+SELECT COUNT(*) FROM tbl_tstz WHERE t <<# tstzset '{2001-06-01, 2001-07-07}';
+SELECT COUNT(*) FROM tbl_tstz WHERE t <<# tstzspan '[2001-06-01, 2001-07-01]';
+SELECT COUNT(*) FROM tbl_tstz WHERE t <<# tstzspanset '{[2001-06-01, 2001-07-01]}';
 SELECT COUNT(*) FROM tbl_tstzset WHERE t <<# timestamptz '2001-06-01';
 SELECT COUNT(*) FROM tbl_tstzset WHERE t <<# tstzset '{2001-06-01, 2001-07-07}';
 SELECT COUNT(*) FROM tbl_tstzspan WHERE t <<# timestamptz '2001-06-01';
@@ -88,9 +88,9 @@ SELECT COUNT(*) FROM tbl_tstzspanset WHERE t <<# timestamptz '2001-06-01';
 SELECT COUNT(*) FROM tbl_tstzspanset WHERE t <<# tstzspan '[2001-06-01, 2001-07-01]';
 SELECT COUNT(*) FROM tbl_tstzspanset WHERE t <<# tstzspanset '{[2001-06-01, 2001-07-01]}';
 
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t #>> tstzset '{2001-06-01, 2001-07-07}';
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t #>> tstzspan '[2001-06-01, 2001-07-01]';
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t #>> tstzspanset '{[2001-06-01, 2001-07-01]}';
+SELECT COUNT(*) FROM tbl_tstz WHERE t #>> tstzset '{2001-06-01, 2001-07-07}';
+SELECT COUNT(*) FROM tbl_tstz WHERE t #>> tstzspan '[2001-06-01, 2001-07-01]';
+SELECT COUNT(*) FROM tbl_tstz WHERE t #>> tstzspanset '{[2001-06-01, 2001-07-01]}';
 SELECT COUNT(*) FROM tbl_tstzset WHERE t #>> timestamptz '2001-06-01';
 SELECT COUNT(*) FROM tbl_tstzset WHERE t #>> tstzset '{2001-06-01, 2001-07-07}';
 SELECT COUNT(*) FROM tbl_tstzspan WHERE t #>> timestamptz '2001-06-01';
@@ -100,9 +100,9 @@ SELECT COUNT(*) FROM tbl_tstzspanset WHERE t #>> timestamptz '2001-06-01';
 SELECT COUNT(*) FROM tbl_tstzspanset WHERE t #>> tstzspan '[2001-06-01, 2001-07-01]';
 SELECT COUNT(*) FROM tbl_tstzspanset WHERE t #>> tstzspanset '{[2001-06-01, 2001-07-01]}';
 
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t &<# tstzset '{2001-06-01, 2001-07-07}';
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t &<# tstzspan '[2001-06-01, 2001-07-01]';
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t &<# tstzspanset '{[2001-06-01, 2001-07-01]}';
+SELECT COUNT(*) FROM tbl_tstz WHERE t &<# tstzset '{2001-06-01, 2001-07-07}';
+SELECT COUNT(*) FROM tbl_tstz WHERE t &<# tstzspan '[2001-06-01, 2001-07-01]';
+SELECT COUNT(*) FROM tbl_tstz WHERE t &<# tstzspanset '{[2001-06-01, 2001-07-01]}';
 SELECT COUNT(*) FROM tbl_tstzset WHERE t &<# timestamptz '2001-06-01';
 SELECT COUNT(*) FROM tbl_tstzset WHERE t &<# tstzset '{2001-06-01, 2001-07-07}';
 SELECT COUNT(*) FROM tbl_tstzspan WHERE t &<# timestamptz '2001-06-01';
@@ -112,9 +112,9 @@ SELECT COUNT(*) FROM tbl_tstzspanset WHERE t &<# timestamptz '2001-06-01';
 SELECT COUNT(*) FROM tbl_tstzspanset WHERE t &<# tstzspan '[2001-06-01, 2001-07-01]';
 SELECT COUNT(*) FROM tbl_tstzspanset WHERE t &<# tstzspanset '{[2001-06-01, 2001-07-01]}';
 
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t #&> tstzset '{2001-06-01, 2001-07-07}';
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t #&> tstzspan '[2001-06-01, 2001-07-01]';
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t #&> tstzspanset '{[2001-06-01, 2001-07-01]}';
+SELECT COUNT(*) FROM tbl_tstz WHERE t #&> tstzset '{2001-06-01, 2001-07-07}';
+SELECT COUNT(*) FROM tbl_tstz WHERE t #&> tstzspan '[2001-06-01, 2001-07-01]';
+SELECT COUNT(*) FROM tbl_tstz WHERE t #&> tstzspanset '{[2001-06-01, 2001-07-01]}';
 SELECT COUNT(*) FROM tbl_tstzset WHERE t #&> timestamptz '2001-06-01';
 SELECT COUNT(*) FROM tbl_tstzset WHERE t #&> tstzset '{2001-06-01, 2001-07-07}';
 SELECT COUNT(*) FROM tbl_tstzspan WHERE t #&> timestamptz '2001-06-01';
@@ -124,8 +124,8 @@ SELECT COUNT(*) FROM tbl_tstzspanset WHERE t #&> timestamptz '2001-06-01';
 SELECT COUNT(*) FROM tbl_tstzspanset WHERE t #&> tstzspan '[2001-06-01, 2001-07-01]';
 SELECT COUNT(*) FROM tbl_tstzspanset WHERE t #&> tstzspanset '{[2001-06-01, 2001-07-01]}';
 
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t -|- tstzspan '[2001-06-01, 2001-07-01]';
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t -|- tstzspanset '{[2001-06-01, 2001-07-01]}';
+SELECT COUNT(*) FROM tbl_tstz WHERE t -|- tstzspan '[2001-06-01, 2001-07-01]';
+SELECT COUNT(*) FROM tbl_tstz WHERE t -|- tstzspanset '{[2001-06-01, 2001-07-01]}';
 SELECT COUNT(*) FROM tbl_tstzspan WHERE t -|- timestamptz '2001-06-01';
 SELECT COUNT(*) FROM tbl_tstzspan WHERE t -|- tstzspan '[2001-06-01, 2001-07-01]';
 SELECT COUNT(*) FROM tbl_tstzspan WHERE t -|- tstzspanset '{[2001-06-01, 2001-07-01]}';
@@ -177,9 +177,9 @@ SELECT COUNT(*) FROM tbl_tstzspanset WHERE t @> timestamptz '2001-06-01';
 SELECT COUNT(*) FROM tbl_tstzspanset WHERE t @> tstzspan '[2001-06-01, 2001-07-01]';
 SELECT COUNT(*) FROM tbl_tstzspanset WHERE t @> tstzspanset '{[2001-06-01, 2001-07-01]}';
 
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t <@ tstzset '{2001-06-01, 2001-07-07}';
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t <@ tstzspan '[2001-06-01, 2001-07-01]';
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t <@ tstzspanset '{[2001-06-01, 2001-07-01]}';
+SELECT COUNT(*) FROM tbl_tstz WHERE t <@ tstzset '{2001-06-01, 2001-07-07}';
+SELECT COUNT(*) FROM tbl_tstz WHERE t <@ tstzspan '[2001-06-01, 2001-07-01]';
+SELECT COUNT(*) FROM tbl_tstz WHERE t <@ tstzspanset '{[2001-06-01, 2001-07-01]}';
 SELECT COUNT(*) FROM tbl_tstzset WHERE t <@ tstzset '{2001-06-01, 2001-07-07}';
 SELECT COUNT(*) FROM tbl_tstzspan WHERE t <@ tstzspan '[2001-06-01, 2001-07-01]';
 SELECT COUNT(*) FROM tbl_tstzspan WHERE t <@ tstzspanset '{[2001-06-01, 2001-07-01]}';
@@ -192,9 +192,9 @@ SELECT COUNT(*) FROM tbl_tstzspan WHERE t && tstzspanset '{[2001-06-01, 2001-07-
 SELECT COUNT(*) FROM tbl_tstzspanset WHERE t && tstzspan '[2001-06-01, 2001-07-01]';
 SELECT COUNT(*) FROM tbl_tstzspanset WHERE t && tstzspanset '{[2001-06-01, 2001-07-01]}';
 
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t <<# tstzset '{2001-06-01, 2001-07-07}';
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t <<# tstzspan '[2001-06-01, 2001-07-01]';
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t <<# tstzspanset '{[2001-06-01, 2001-07-01]}';
+SELECT COUNT(*) FROM tbl_tstz WHERE t <<# tstzset '{2001-06-01, 2001-07-07}';
+SELECT COUNT(*) FROM tbl_tstz WHERE t <<# tstzspan '[2001-06-01, 2001-07-01]';
+SELECT COUNT(*) FROM tbl_tstz WHERE t <<# tstzspanset '{[2001-06-01, 2001-07-01]}';
 SELECT COUNT(*) FROM tbl_tstzset WHERE t <<# timestamptz '2001-06-01';
 SELECT COUNT(*) FROM tbl_tstzset WHERE t <<# tstzset '{2001-06-01, 2001-07-07}';
 SELECT COUNT(*) FROM tbl_tstzspan WHERE t <<# timestamptz '2001-06-01';
@@ -204,9 +204,9 @@ SELECT COUNT(*) FROM tbl_tstzspanset WHERE t <<# timestamptz '2001-06-01';
 SELECT COUNT(*) FROM tbl_tstzspanset WHERE t <<# tstzspan '[2001-06-01, 2001-07-01]';
 SELECT COUNT(*) FROM tbl_tstzspanset WHERE t <<# tstzspanset '{[2001-06-01, 2001-07-01]}';
 
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t #>> tstzset '{2001-06-01, 2001-07-07}';
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t #>> tstzspan '[2001-06-01, 2001-07-01]';
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t #>> tstzspanset '{[2001-06-01, 2001-07-01]}';
+SELECT COUNT(*) FROM tbl_tstz WHERE t #>> tstzset '{2001-06-01, 2001-07-07}';
+SELECT COUNT(*) FROM tbl_tstz WHERE t #>> tstzspan '[2001-06-01, 2001-07-01]';
+SELECT COUNT(*) FROM tbl_tstz WHERE t #>> tstzspanset '{[2001-06-01, 2001-07-01]}';
 SELECT COUNT(*) FROM tbl_tstzset WHERE t #>> timestamptz '2001-06-01';
 SELECT COUNT(*) FROM tbl_tstzset WHERE t #>> tstzset '{2001-06-01, 2001-07-07}';
 SELECT COUNT(*) FROM tbl_tstzspan WHERE t #>> timestamptz '2001-06-01';
@@ -216,9 +216,9 @@ SELECT COUNT(*) FROM tbl_tstzspanset WHERE t #>> timestamptz '2001-06-01';
 SELECT COUNT(*) FROM tbl_tstzspanset WHERE t #>> tstzspan '[2001-06-01, 2001-07-01]';
 SELECT COUNT(*) FROM tbl_tstzspanset WHERE t #>> tstzspanset '{[2001-06-01, 2001-07-01]}';
 
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t &<# tstzset '{2001-06-01, 2001-07-07}';
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t &<# tstzspan '[2001-06-01, 2001-07-01]';
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t &<# tstzspanset '{[2001-06-01, 2001-07-01]}';
+SELECT COUNT(*) FROM tbl_tstz WHERE t &<# tstzset '{2001-06-01, 2001-07-07}';
+SELECT COUNT(*) FROM tbl_tstz WHERE t &<# tstzspan '[2001-06-01, 2001-07-01]';
+SELECT COUNT(*) FROM tbl_tstz WHERE t &<# tstzspanset '{[2001-06-01, 2001-07-01]}';
 SELECT COUNT(*) FROM tbl_tstzset WHERE t &<# timestamptz '2001-06-01';
 SELECT COUNT(*) FROM tbl_tstzset WHERE t &<# tstzset '{2001-06-01, 2001-07-07}';
 SELECT COUNT(*) FROM tbl_tstzspan WHERE t &<# timestamptz '2001-06-01';
@@ -228,9 +228,9 @@ SELECT COUNT(*) FROM tbl_tstzspanset WHERE t &<# timestamptz '2001-06-01';
 SELECT COUNT(*) FROM tbl_tstzspanset WHERE t &<# tstzspan '[2001-06-01, 2001-07-01]';
 SELECT COUNT(*) FROM tbl_tstzspanset WHERE t &<# tstzspanset '{[2001-06-01, 2001-07-01]}';
 
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t #&> tstzset '{2001-06-01, 2001-07-07}';
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t #&> tstzspan '[2001-06-01, 2001-07-01]';
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t #&> tstzspanset '{[2001-06-01, 2001-07-01]}';
+SELECT COUNT(*) FROM tbl_tstz WHERE t #&> tstzset '{2001-06-01, 2001-07-07}';
+SELECT COUNT(*) FROM tbl_tstz WHERE t #&> tstzspan '[2001-06-01, 2001-07-01]';
+SELECT COUNT(*) FROM tbl_tstz WHERE t #&> tstzspanset '{[2001-06-01, 2001-07-01]}';
 SELECT COUNT(*) FROM tbl_tstzset WHERE t #&> timestamptz '2001-06-01';
 SELECT COUNT(*) FROM tbl_tstzset WHERE t #&> tstzset '{2001-06-01, 2001-07-07}';
 SELECT COUNT(*) FROM tbl_tstzspan WHERE t #&> timestamptz '2001-06-01';
@@ -240,8 +240,8 @@ SELECT COUNT(*) FROM tbl_tstzspanset WHERE t #&> timestamptz '2001-06-01';
 SELECT COUNT(*) FROM tbl_tstzspanset WHERE t #&> tstzspan '[2001-06-01, 2001-07-01]';
 SELECT COUNT(*) FROM tbl_tstzspanset WHERE t #&> tstzspanset '{[2001-06-01, 2001-07-01]}';
 
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t -|- tstzspan '[2001-06-01, 2001-07-01]';
-SELECT COUNT(*) FROM tbl_timestamptz WHERE t -|- tstzspanset '{[2001-06-01, 2001-07-01]}';
+SELECT COUNT(*) FROM tbl_tstz WHERE t -|- tstzspan '[2001-06-01, 2001-07-01]';
+SELECT COUNT(*) FROM tbl_tstz WHERE t -|- tstzspanset '{[2001-06-01, 2001-07-01]}';
 SELECT COUNT(*) FROM tbl_tstzspan WHERE t -|- timestamptz '2001-06-01';
 SELECT COUNT(*) FROM tbl_tstzspan WHERE t -|- tstzspan '[2001-06-01, 2001-07-01]';
 SELECT COUNT(*) FROM tbl_tstzspan WHERE t -|- tstzspanset '{[2001-06-01, 2001-07-01]}';
@@ -299,7 +299,7 @@ k:= 0;
 
 k:= k+1;
 FOR i IN 1..100 LOOP
-  RandTimeStamp:= random_timestamptz('2000-10-01', '2002-1-31');
+  RandTimeStamp:= random_tstz('2000-10-01', '2002-1-31');
   EXPLAIN (ANALYZE, FORMAT JSON)
   SELECT *
   FROM tbl_tstzspan
@@ -415,7 +415,7 @@ END LOOP;
 
 k:= k+1;
 FOR i IN 1..100 LOOP
-  RandTimeStamp:= random_timestamptz('2000-10-01', '2002-1-31');
+  RandTimeStamp:= random_tstz('2000-10-01', '2002-1-31');
   EXPLAIN (ANALYZE, FORMAT JSON)
   SELECT *
   FROM tbl_tstzset
@@ -455,7 +455,7 @@ END LOOP;
 
 k:= k+1;
 FOR i IN 1..100 LOOP
-  RandTimeStamp:= random_timestamptz('2000-10-01', '2002-1-31');
+  RandTimeStamp:= random_tstz('2000-10-01', '2002-1-31');
   EXPLAIN (ANALYZE, FORMAT JSON)
   SELECT *
   FROM tbl_tstzspanset
@@ -574,7 +574,7 @@ END LOOP;
 
 k:= k+1;
 FOR i IN 1..100 LOOP
-  RandTimeStamp:= random_timestamptz('2000-10-01', '2002-1-31');
+  RandTimeStamp:= random_tstz('2000-10-01', '2002-1-31');
   EXPLAIN (ANALYZE, FORMAT JSON)
   SELECT *
   FROM tbl_tstzset
@@ -593,7 +593,7 @@ END LOOP;
 
 k:= k+1;
 FOR i IN 1..100 LOOP
-  RandTimeStamp:= random_timestamptz('2000-10-01', '2002-1-31');
+  RandTimeStamp:= random_tstz('2000-10-01', '2002-1-31');
   EXPLAIN (ANALYZE, FORMAT JSON)
   SELECT *
   FROM tbl_tstzspan
@@ -924,7 +924,7 @@ END LOOP;
 
 k:= k+1;
 FOR i IN 1..100 LOOP
-  RandTimestamp:= random_timestamptz('2000-10-01', '2002-1-31');
+  RandTimestamp:= random_tstz('2000-10-01', '2002-1-31');
   EXPLAIN (ANALYZE, FORMAT JSON)
   SELECT *
   FROM tbl_tstzspan
@@ -943,7 +943,7 @@ END LOOP;
 
 k:= k+1;
 FOR i IN 1..100 LOOP
-  RandTimestamp:= random_timestamptz('2000-10-01', '2002-1-31');
+  RandTimestamp:= random_tstz('2000-10-01', '2002-1-31');
   EXPLAIN (ANALYZE, FORMAT JSON)
   SELECT *
   FROM tbl_tstzset
@@ -962,7 +962,7 @@ END LOOP;
 
 k:= k+1;
 FOR i IN 1..100 LOOP
-  RandTimestamp:= random_timestamptz('2000-10-01', '2002-1-31');
+  RandTimestamp:= random_tstz('2000-10-01', '2002-1-31');
   EXPLAIN (ANALYZE, FORMAT JSON)
   SELECT *
   FROM tbl_tstzspanset
@@ -981,7 +981,7 @@ END LOOP;
 
 k:= k+1;
 FOR i IN 1..100 LOOP
-  RandTimestamp:= random_timestamptz('2000-10-01', '2002-1-31');
+  RandTimestamp:= random_tstz('2000-10-01', '2002-1-31');
   EXPLAIN (ANALYZE, FORMAT JSON)
   SELECT *
   FROM tbl_tstzset
@@ -1057,7 +1057,7 @@ END LOOP;
 
 k:= k+1;
 FOR i IN 1..100 LOOP
-  RandTimestamp:= random_timestamptz('2000-10-01', '2002-1-31');
+  RandTimestamp:= random_tstz('2000-10-01', '2002-1-31');
   EXPLAIN (ANALYZE, FORMAT JSON)
   SELECT *
   FROM tbl_tstzspan
@@ -1133,7 +1133,7 @@ END LOOP;
 
 k:= k+1;
 FOR i IN 1..100 LOOP
-  RandTimestamp:= random_timestamptz('2000-10-01', '2002-1-31');
+  RandTimestamp:= random_tstz('2000-10-01', '2002-1-31');
   EXPLAIN (ANALYZE, FORMAT JSON)
   SELECT *
   FROM tbl_tstzspanset
@@ -1213,7 +1213,7 @@ END LOOP;
 
 k:= k+1;
 FOR i IN 1..100 LOOP
-  RandTimestamp:= random_timestamptz('2000-10-01', '2002-1-31');
+  RandTimestamp:= random_tstz('2000-10-01', '2002-1-31');
   EXPLAIN (ANALYZE, FORMAT JSON)
   SELECT *
   FROM tbl_tstzset
@@ -1289,7 +1289,7 @@ END LOOP;
 
 k:= k+1;
 FOR i IN 1..100 LOOP
-  RandTimestamp:= random_timestamptz('2000-10-01', '2002-1-31');
+  RandTimestamp:= random_tstz('2000-10-01', '2002-1-31');
   EXPLAIN (ANALYZE, FORMAT JSON)
   SELECT *
   FROM tbl_tstzspan
@@ -1365,7 +1365,7 @@ END LOOP;
 
 k:= k+1;
 FOR i IN 1..100 LOOP
-  RandTimestamp:= random_timestamptz('2000-10-01', '2002-1-31');
+  RandTimestamp:= random_tstz('2000-10-01', '2002-1-31');
   EXPLAIN (ANALYZE, FORMAT JSON)
   SELECT *
   FROM tbl_tstzspanset
@@ -1445,7 +1445,7 @@ END LOOP;
 
 k:= k+1;
 FOR i IN 1..100 LOOP
-  RandTimestamp:= random_timestamptz('2000-10-01', '2002-1-31');
+  RandTimestamp:= random_tstz('2000-10-01', '2002-1-31');
   EXPLAIN (ANALYZE, FORMAT JSON)
   SELECT *
   FROM tbl_tstzset
@@ -1521,7 +1521,7 @@ END LOOP;
 
 k:= k+1;
 FOR i IN 1..100 LOOP
-  RandTimestamp:= random_timestamptz('2000-10-01', '2002-1-31');
+  RandTimestamp:= random_tstz('2000-10-01', '2002-1-31');
   EXPLAIN (ANALYZE, FORMAT JSON)
   SELECT *
   FROM tbl_tstzspan
@@ -1597,7 +1597,7 @@ END LOOP;
 
 k:= k+1;
 FOR i IN 1..100 LOOP
-  RandTimestamp:= random_timestamptz('2000-10-01', '2002-1-31');
+  RandTimestamp:= random_tstz('2000-10-01', '2002-1-31');
   EXPLAIN (ANALYZE, FORMAT JSON)
   SELECT *
   FROM tbl_tstzspanset
@@ -1696,7 +1696,7 @@ END LOOP;
 
 k:= k+1;
 FOR i IN 1..100 LOOP
-  RandTimestamp:= random_timestamptz('2000-10-01', '2002-1-31');
+  RandTimestamp:= random_tstz('2000-10-01', '2002-1-31');
   EXPLAIN (ANALYZE, FORMAT JSON)
   SELECT *
   FROM tbl_tstzspan
@@ -1715,7 +1715,7 @@ END LOOP;
 
 k:= k+1;
 FOR i IN 1..100 LOOP
-  RandTimestamp:= random_timestamptz('2000-10-01', '2002-1-31');
+  RandTimestamp:= random_tstz('2000-10-01', '2002-1-31');
   EXPLAIN (ANALYZE, FORMAT JSON)
   SELECT *
   FROM tbl_tstzset
@@ -1829,7 +1829,7 @@ END LOOP;
 
 k:= k+1;
 FOR i IN 1..100 LOOP
-  RandTimestamp:= random_timestamptz('2000-10-01', '2002-1-31');
+  RandTimestamp:= random_tstz('2000-10-01', '2002-1-31');
   EXPLAIN (ANALYZE, FORMAT JSON)
   SELECT *
   FROM tbl_tstzspanset
@@ -1947,7 +1947,7 @@ END LOOP;
 
 k:= k+1;
 FOR i IN 1..100 LOOP
-  RandTimestamp:= random_timestamptz('2000-10-01', '2002-1-31');
+  RandTimestamp:= random_tstz('2000-10-01', '2002-1-31');
   EXPLAIN (ANALYZE, FORMAT JSON)
   SELECT *
   FROM tbl_tstzspan
@@ -2023,7 +2023,7 @@ END LOOP;
 
 k:= k+1;
 FOR i IN 1..100 LOOP
-  Randtimestamp:= random_timestamptz('2000-10-01', '2002-1-31');
+  Randtimestamp:= random_tstz('2000-10-01', '2002-1-31');
   EXPLAIN (ANALYZE, FORMAT JSON)
   SELECT *
   FROM tbl_tstzspanset

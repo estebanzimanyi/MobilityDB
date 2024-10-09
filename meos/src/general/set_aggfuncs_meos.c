@@ -251,7 +251,7 @@ date_union_transfn(Set *state, DateADT d)
  * @param[in] t Value
  */
 Set *
-timestamptz_union_transfn(Set *state, TimestampTz t)
+tstz_union_transfn(Set *state, TimestampTz t)
 {
   /* Ensure validity of the arguments */
   if (state && ! ensure_set_isof_type(state, T_TSTZSET))

@@ -1828,25 +1828,25 @@ SELECT MAX(numInstants(stops(seq, -50.0))) FROM tbl_tfloat_seq;
 ERROR:  The value cannot be negative: -50.000000
 SELECT MAX(numInstants(stops(seq, 50.0, '-10 minutes'))) FROM tbl_tfloat_seq;
 ERROR:  The duration must be positive
-SELECT COUNT(*) FROM tbl_tbool, tbl_timestamptz WHERE valueAtTimestamp(temp, t) IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tbool, tbl_tstz WHERE valueAtTimestamp(temp, t) IS NOT NULL;
  count 
 -------
      0
 (1 row)
 
-SELECT COUNT(*) FROM tbl_tint, tbl_timestamptz WHERE valueAtTimestamp(temp, t) IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tint, tbl_tstz WHERE valueAtTimestamp(temp, t) IS NOT NULL;
  count 
 -------
      0
 (1 row)
 
-SELECT COUNT(*) FROM tbl_tfloat, tbl_timestamptz WHERE valueAtTimestamp(temp, t) IS NOT NULL;
+SELECT COUNT(*) FROM tbl_tfloat, tbl_tstz WHERE valueAtTimestamp(temp, t) IS NOT NULL;
  count 
 -------
      0
 (1 row)
 
-SELECT COUNT(*) FROM tbl_ttext, tbl_timestamptz WHERE valueAtTimestamp(temp, t) IS NOT NULL;
+SELECT COUNT(*) FROM tbl_ttext, tbl_tstz WHERE valueAtTimestamp(temp, t) IS NOT NULL;
  count 
 -------
      0
@@ -1959,25 +1959,25 @@ SELECT COUNT(*) FROM tbl_ttext WHERE temp != merge(atMax(temp), minusMax(temp));
      0
 (1 row)
 
-SELECT COUNT(*) FROM tbl_tbool, tbl_timestamptz WHERE merge(atTime(temp, t), minusTime(temp, t)) != temp;
+SELECT COUNT(*) FROM tbl_tbool, tbl_tstz WHERE merge(atTime(temp, t), minusTime(temp, t)) != temp;
  count 
 -------
      0
 (1 row)
 
-SELECT COUNT(*) FROM tbl_tint, tbl_timestamptz WHERE merge(atTime(temp, t), minusTime(temp, t)) != temp;
+SELECT COUNT(*) FROM tbl_tint, tbl_tstz WHERE merge(atTime(temp, t), minusTime(temp, t)) != temp;
  count 
 -------
      0
 (1 row)
 
-SELECT COUNT(*) FROM tbl_tfloat, tbl_timestamptz WHERE merge(atTime(temp, t), minusTime(temp, t)) != temp;
+SELECT COUNT(*) FROM tbl_tfloat, tbl_tstz WHERE merge(atTime(temp, t), minusTime(temp, t)) != temp;
  count 
 -------
      0
 (1 row)
 
-SELECT COUNT(*) FROM tbl_ttext, tbl_timestamptz WHERE merge(atTime(temp, t), minusTime(temp, t)) != temp;
+SELECT COUNT(*) FROM tbl_ttext, tbl_tstz WHERE merge(atTime(temp, t), minusTime(temp, t)) != temp;
  count 
 -------
      0
@@ -2067,49 +2067,49 @@ SELECT COUNT(*) FROM tbl_tfloat, tbl_tboxfloat WHERE temp != merge(atTbox(temp, 
      0
 (1 row)
 
-SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_tbool t1, tbl_timestamptz t2;
+SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_tbool t1, tbl_tstz t2;
   sum  
 -------
  85635
 (1 row)
 
-SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_tint t1, tbl_timestamptz t2;
+SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_tint t1, tbl_tstz t2;
   sum  
 -------
  78309
 (1 row)
 
-SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_tfloat t1, tbl_timestamptz t2;
+SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_tfloat t1, tbl_tstz t2;
   sum  
 -------
  94941
 (1 row)
 
-SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_ttext t1, tbl_timestamptz t2;
+SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_ttext t1, tbl_tstz t2;
   sum  
 -------
  94941
 (1 row)
 
-SELECT SUM(numInstants(deleteTime(t1.temp, t2.t, false))) FROM tbl_tbool t1, tbl_timestamptz t2;
+SELECT SUM(numInstants(deleteTime(t1.temp, t2.t, false))) FROM tbl_tbool t1, tbl_tstz t2;
   sum  
 -------
  85635
 (1 row)
 
-SELECT SUM(numInstants(deleteTime(t1.temp, t2.t, false))) FROM tbl_tint t1, tbl_timestamptz t2;
+SELECT SUM(numInstants(deleteTime(t1.temp, t2.t, false))) FROM tbl_tint t1, tbl_tstz t2;
   sum  
 -------
  78309
 (1 row)
 
-SELECT SUM(numInstants(deleteTime(t1.temp, t2.t, false))) FROM tbl_tfloat t1, tbl_timestamptz t2;
+SELECT SUM(numInstants(deleteTime(t1.temp, t2.t, false))) FROM tbl_tfloat t1, tbl_tstz t2;
   sum  
 -------
  94941
 (1 row)
 
-SELECT SUM(numInstants(deleteTime(t1.temp, t2.t, false))) FROM tbl_ttext t1, tbl_timestamptz t2;
+SELECT SUM(numInstants(deleteTime(t1.temp, t2.t, false))) FROM tbl_ttext t1, tbl_tstz t2;
   sum  
 -------
  94941

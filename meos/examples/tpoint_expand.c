@@ -91,7 +91,7 @@ int main(void)
   printf("Reading the instants (one '*' marker every %d instants)\n",
     NO_INSTANTS_BATCH);
 
-  TimestampTz t = pg_timestamptz_in("1999-12-31", -1);
+  TimestampTz t = tstz_in("1999-12-31", -1);
   for (i = 0; i < MAX_INSTANTS; i++)
   {
     if (i % NO_INSTANTS_BATCH == 0)
@@ -99,8 +99,8 @@ int main(void)
       printf("*");
       fflush(stdout);
     }
-    t = add_timestamptz_interval(t, oneday);
-    char *time_str = pg_timestamptz_out(t);
+    t = add_tstz_interval(t, oneday);
+    char *time_str = tstz_out(t);
     int value = i % 2 + 1;
 #if GEODETIC == true
     sprintf(inst_buffer, "SRID=4326;Point(%d %d)@%s", value, value, time_str);

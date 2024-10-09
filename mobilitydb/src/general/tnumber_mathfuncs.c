@@ -244,7 +244,7 @@ Datum
 Mult_tnumber_tnumber(PG_FUNCTION_ARGS)
 {
   return Arithop_tnumber_tnumber(fcinfo, MULT, &datum_mult,
-    &tnumber_mult_tp_at_timestamptz);
+    &tnumber_mult_tp_at_tstz);
 }
 
 /*****************************************************************************
@@ -291,7 +291,7 @@ Datum
 Div_tnumber_tnumber(PG_FUNCTION_ARGS)
 {
   return Arithop_tnumber_tnumber(fcinfo, DIV, &datum_div,
-    &tnumber_div_tp_at_timestamptz);
+    &tnumber_div_tp_at_tstz);
 }
 
 /*****************************************************************************

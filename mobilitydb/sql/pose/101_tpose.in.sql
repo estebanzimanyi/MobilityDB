@@ -196,7 +196,7 @@ CREATE FUNCTION getValue(tpose)
 
 CREATE FUNCTION getTimestamp(tpose)
   RETURNS timestamptz
-  AS 'MODULE_PATHNAME', 'Tinstant_timestamptz'
+  AS 'MODULE_PATHNAME', 'Tinstant_tstz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 -- CREATE FUNCTION valueSet(tpose)
@@ -267,17 +267,17 @@ CREATE FUNCTION numTimestamps(tpose)
 
 CREATE FUNCTION startTimestamp(tpose)
   RETURNS timestamptz
-  AS 'MODULE_PATHNAME', 'Temporal_start_timestamptz'
+  AS 'MODULE_PATHNAME', 'Temporal_start_tstz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION endTimestamp(tpose)
   RETURNS timestamptz
-  AS 'MODULE_PATHNAME', 'Temporal_end_timestamptz'
+  AS 'MODULE_PATHNAME', 'Temporal_end_tstz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION timestampN(tpose, integer)
   RETURNS timestamptz
-  AS 'MODULE_PATHNAME', 'Temporal_timestamptz_n'
+  AS 'MODULE_PATHNAME', 'Temporal_tstz_n'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION timestamps(tpose)

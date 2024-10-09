@@ -792,7 +792,7 @@ pg_date_out(DateADT d)
  * of the overflow, and return the appropriate timestamptz infinity.
  */
 TimestampTz
-date2timestamptz_opt_overflow(DateADT dateVal, int *overflow)
+date2tstz_opt_overflow(DateADT dateVal, int *overflow)
 {
   TimestampTz result;
   struct pg_tm tt, *tm = &tt;
@@ -874,9 +874,9 @@ date2timestamptz_opt_overflow(DateADT dateVal, int *overflow)
  * @note PostgreSQL function: @p date_timestamptz(PG_FUNCTION_ARGS)
  */
 TimestampTz
-date_to_timestamptz(DateADT d)
+date_to_tstz(DateADT d)
 {
-  return date2timestamptz_opt_overflow(d, NULL);
+  return date2timestamp_opt_overflow(d, NULL);
 }
 
 /**
@@ -1184,7 +1184,7 @@ pg_time_out(TimeADT t)
  * @note PostgreSQL function: @p timestamptz_in(PG_FUNCTION_ARGS)
  */
 TimestampTz
-pg_timestamptz_in(const char *str, int32 prec)
+tstz_in(const char *str, int32 prec)
 {
   Datum arg1 = CStringGetDatum(str);
   Datum arg3 = Int32GetDatum(prec);
@@ -1376,7 +1376,7 @@ pg_timestamp_in(const char *str, int32 prec)
  * @note PostgreSQL function: @p timestamptz_in(PG_FUNCTION_ARGS)
  */
 TimestampTz
-pg_timestamptz_in(const char *str, int32 prec)
+tstz_in(const char *str, int32 prec)
 {
   return timestamp_in_common(str, prec, true);
 }
@@ -1391,7 +1391,7 @@ pg_timestamptz_in(const char *str, int32 prec)
  * @note PostgreSQL function: @p timestamptz_out(PG_FUNCTION_ARGS)
  */
 char *
-pg_timestamptz_out(TimestampTz t)
+tstz_out(TimestampTz t)
 {
   Datum d = TimestampTzGetDatum(t);
   return DatumGetCString(call_function1(timestamptz_out, d));
@@ -1444,7 +1444,7 @@ pg_timestamp_out(Timestamp t)
  * @note PostgreSQL function: @p timestamptz_out(PG_FUNCTION_ARGS)
  */
 char *
-pg_timestamptz_out(TimestampTz t)
+tstz_out(TimestampTz t)
 {
   return timestamp_out_common(t, true);
 }
@@ -1457,7 +1457,7 @@ pg_timestamptz_out(TimestampTz t)
  * @note PostgreSQL function @p timestamptz_date(PG_FUNCTION_ARGS)
  */
 DateADT
-timestamptz_to_date(TimestampTz t)
+tstz_to_date(TimestampTz t)
 {
   DateADT result;
   struct pg_tm tt, *tm = &tt;
@@ -1987,7 +1987,7 @@ add_interval_interval(const Interval *interv1, const Interval *interv2)
  * @note PostgreSQL function: @p timestamp_pl_interval(PG_FUNCTION_ARGS)
  */
 TimestampTz
-add_timestamptz_interval(TimestampTz t, const Interval *interv)
+add_tstz_interval(TimestampTz t, const Interval *interv)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) interv))
@@ -2085,7 +2085,7 @@ add_timestamptz_interval(TimestampTz t, const Interval *interv)
  * @note PostgreSQL function: @p timestamp_mi_interval(PG_FUNCTION_ARGS)
  */
 TimestampTz
-minus_timestamptz_interval(TimestampTz t, const Interval *interv)
+minus_tstz_interval(TimestampTz t, const Interval *interv)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) interv))
@@ -2095,7 +2095,7 @@ minus_timestamptz_interval(TimestampTz t, const Interval *interv)
   tinterv.month = -interv->month;
   tinterv.day = -interv->day;
   tinterv.time = -interv->time;
-  return add_timestamptz_interval(t, &tinterv);
+  return add_tstz_interval(t, &tinterv);
 }
 
 /**
@@ -2139,7 +2139,7 @@ pg_interval_justify_hours(const Interval *interv)
  * the original code from PostgreSQL has @p Timestamp as arguments
  */
 Interval *
-minus_timestamptz_timestamptz(TimestampTz t1, TimestampTz t2)
+minus_tstz_tstz(TimestampTz t1, TimestampTz t2)
 {
   /* Ensure validity of the arguments */
   if (TIMESTAMP_NOT_FINITE(t1) || TIMESTAMP_NOT_FINITE(t2))

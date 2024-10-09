@@ -61,7 +61,7 @@ SELECT extent(temp) FROM (VALUES
  [Sat Jan 01 00:00:00 2000 PST, Sun Jan 02 00:00:00 2000 PST]
 (1 row)
 
-SELECT extent(t) FROM tbl_timestamptz;
+SELECT extent(t) FROM tbl_tstz;
                             extent                            
 --------------------------------------------------------------
  [Sun Dec 31 18:36:00 2000 PST, Tue Dec 25 23:12:00 2001 PST]
@@ -262,7 +262,7 @@ SELECT tcount(temp) FROM (VALUES
  {[1@Sat Jan 01 00:00:00 2000 PST, 1@Sun Jan 02 00:00:00 2000 PST]}
 (1 row)
 
-SELECT numInstants(tcount(t)) FROM tbl_timestamptz;
+SELECT numInstants(tcount(t)) FROM tbl_tstz;
  numinstants 
 -------------
           99
@@ -396,7 +396,7 @@ SELECT startValue(setUnion(t)) FROM Temp;
  Sat Jan 01 00:00:00 2000 PST
 (1 row)
 
-SELECT numValues(setUnion(t)) FROM tbl_timestamptz;
+SELECT numValues(setUnion(t)) FROM tbl_tstz;
  numvalues 
 -----------
         99

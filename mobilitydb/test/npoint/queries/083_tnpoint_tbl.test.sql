@@ -42,7 +42,7 @@ DROP TABLE tbl_tnpoint_tmp;
 --  Constructors
 -------------------------------------------------------------------------------
 
-SELECT MAX(getPosition(startValue(tnpoint(t1.np, t2.t)))) FROM tbl_npoint t1, tbl_timestamptz t2;
+SELECT MAX(getPosition(startValue(tnpoint(t1.np, t2.t)))) FROM tbl_npoint t1, tbl_tstz t2;
 
 WITH test(temp) AS (
 SELECT tnpointSeq(array_agg(t.inst ORDER BY getTimestamp(t.inst)), 'discrete') FROM tbl_tnpoint_inst t GROUP BY k%10 )
@@ -208,13 +208,13 @@ SELECT COUNT(*) FROM tbl_tnpoint,
 ( SELECT setUnion(np) AS s FROM tbl_npoint) tmp
 WHERE minusValues(temp, s) IS NOT NULL;
 
-SELECT COUNT(*) FROM tbl_tnpoint, tbl_timestamptz
+SELECT COUNT(*) FROM tbl_tnpoint, tbl_tstz
 WHERE atTime(temp, t) IS NOT NULL;
 
-SELECT COUNT(*) FROM tbl_tnpoint, tbl_timestamptz
+SELECT COUNT(*) FROM tbl_tnpoint, tbl_tstz
 WHERE minusTime(temp, t) IS NOT NULL;
 
-SELECT COUNT(*) FROM tbl_tnpoint, tbl_timestamptz
+SELECT COUNT(*) FROM tbl_tnpoint, tbl_tstz
 WHERE valueAtTimestamp(temp, t) IS NOT NULL;
 
 SELECT COUNT(*) FROM tbl_tnpoint, tbl_tstzset
