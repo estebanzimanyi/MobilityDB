@@ -102,7 +102,7 @@ int main(void)
   TSequence *seq = NULL, *seq1 = NULL;
   TSequenceSet *ss = NULL;
   /* Interval to add */
-  Interval *onehour = pg_interval_in("1 hour", -1);
+  Interval *onehour = interv_in("1 hour", -1);
   /* Iterator variables */
   int i;
   /* Seed the random number generator with the current time in seconds. */
@@ -123,7 +123,7 @@ int main(void)
     memset(value, i % 2 == 0 ? 'A' : 'B', len);
     value[len] = '\0';
     text *txt = cstring2text(value);
-    t = add_tstz_interval(t, onehour);
+    t = add_tstz_interv(t, onehour);
     TInstant *inst = ttextinst_make(txt, t);
     free(value); free(txt);
     /* Test whether it is the first instant read */

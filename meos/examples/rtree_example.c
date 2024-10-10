@@ -50,7 +50,7 @@ bool actual[NO_STBOX];
 STBox * stboxes;
 
 void print_stbox(const STBox * stbox, char * prefix) {
-  printf("\n%s\nXmin = %f, Xmax = %f\nymin: %f ymax: %f\ndate_min: %s date_max: %s\n", prefix, stbox -> xmin, stbox -> xmax, stbox -> ymin, stbox -> ymax, pg_timestamp_out(stbox -> period.lower), pg_timestamp_out(stbox -> period.upper));
+  printf("\n%s\nXmin = %f, Xmax = %f\nymin: %f ymax: %f\ndate_min: %s date_max: %s\n", prefix, stbox -> xmin, stbox -> xmax, stbox -> ymin, stbox -> ymax, ts_out(stbox -> period.lower), ts_out(stbox -> period.upper));
 }
 
 int get_random_number(int min, int max) {

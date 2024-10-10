@@ -69,7 +69,7 @@ int main(void)
   /* Sequence constructed from the input instants */
   Temporal *seq = NULL;
   /* Interval to add */
-  Interval *oneday = pg_interval_in("1 day", -1);
+  Interval *oneday = interv_in("1 day", -1);
   /* Iterator variable */
   int i;
   /* Seed the random number generator with the current time in seconds. */
@@ -78,7 +78,7 @@ int main(void)
   TimestampTz t = tstz_in("1999-12-31", -1);
   for (i = 0; i < MAX_INSTANTS; i++)
   {
-    t = add_tstz_interval(t, oneday);
+    t = add_tstz_interv(t, oneday);
     instants[i] = tfloatinst_make(i % 2 + 1, t);
   }
 

@@ -70,7 +70,7 @@ int main(void)
   /* Sequence constructed from the input instants */
   Temporal *seq = NULL;
   /* Interval to add */
-  Interval *oneday = pg_interval_in("1 day", -1);
+  Interval *oneday = interv_in("1 day", -1);
   /* Iterator variable */
   int i;
   /* Seed the random number generator with the current time in seconds. */
@@ -94,7 +94,7 @@ int main(void)
     memset(value, i % 2 == 0 ? 'A' : 'B', len);
     value[len] = '\0';
     text *txt = cstring2text(value);
-    t = add_tstz_interval(t, oneday);
+    t = add_tstz_interv(t, oneday);
     instants[i] = ttextinst_make(txt, t);
     free(value); free(txt);
   }

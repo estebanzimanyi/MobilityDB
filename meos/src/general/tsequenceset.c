@@ -484,7 +484,7 @@ ensure_valid_tinstarr_gaps(const TInstant **instants, int count, bool merge,
     {
       Interval *duration = minus_tstz_tstz(instants[i]->t,
         instants[i - 1]->t);
-      if (pg_interval_cmp(duration, maxt) > 0)
+      if (interv_cmp(duration, maxt) > 0)
         split = true;
       pfree(duration);
     }
@@ -1052,7 +1052,7 @@ tsequenceset_duration(const TSequenceSet *ss, bool boundspan)
     Interval *interv1 = minus_tstz_tstz(
       DatumGetTimestampTz(seq->period.upper),
       DatumGetTimestampTz(seq->period.lower));
-    Interval *inter2 = add_interval_interval(result, interv1);
+    Interval *inter2 = add_interv_interv(result, interv1);
     pfree(result); pfree(interv1);
     result = inter2;
   }
@@ -2237,7 +2237,7 @@ tnumberseqset_integral(const TSequenceSet *ss)
  * @brief Return the duration of a temporal sequence set as a double
  */
 static double
-tsequenceset_interval_double(const TSequenceSet *ss)
+tsequenceset_interv_double(const TSequenceSet *ss)
 {
   assert(ss);
   assert(tnumber_type(ss->temptype));
@@ -2262,7 +2262,7 @@ tnumberseqset_twavg(const TSequenceSet *ss)
 {
   assert(ss);
   assert(tnumber_type(ss->temptype));
-  double duration = tsequenceset_interval_double(ss);
+  double duration = tsequenceset_interv_double(ss);
   double result;
   if (duration == 0.0)
   {

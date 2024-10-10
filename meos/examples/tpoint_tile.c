@@ -54,7 +54,7 @@ int main(void)
   meos_initialize();
 
   Temporal *tpoint = tgeompoint_in("[Point(1 1)@2020-03-01, Point(10 10)@2020-03-10]");
-  Interval *interv = pg_interval_in("2 days", -1);
+  Interval *interv = interv_in("2 days", -1);
   GSERIALIZED *sorigin = geom_in("Point(0 0 0)", -1);
   TimestampTz torigin = tstz_in("2020-03-01", -1);
 

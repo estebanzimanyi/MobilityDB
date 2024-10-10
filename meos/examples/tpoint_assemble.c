@@ -76,7 +76,7 @@ int main(void)
   /* Sequence constructed from the input instants */
   Temporal *seq = NULL;
   /* Interval to add */
-  Interval *oneday = pg_interval_in("1 day", -1);
+  Interval *oneday = interv_in("1 day", -1);
   /* Iterator variable */
   int i;
 
@@ -91,7 +91,7 @@ int main(void)
       printf("*");
       fflush(stdout);
     }
-    t = add_tstz_interval(t, oneday);
+    t = add_tstz_interv(t, oneday);
     char *time_str = tstz_out(t);
     int value = i % 2 + 1;
 #if GEODETIC == true

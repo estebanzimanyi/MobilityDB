@@ -103,7 +103,7 @@ int main(void)
     true, &no_trip_tiles);
   /* Compute the (value and time) tiles for speed of trips */
   TBox *speed_extent = tbox_in("TBox XT([0, 35),[2020-06-01, 2020-06-05))");
-  Interval *duration = pg_interval_in("1 day", -1);
+  Interval *duration = interv_in("1 day", -1);
   TimestampTz torigin = tstz_in("2020-06-01", -1);
   TBox *speed_tiles = tfloatbox_value_time_tiles(speed_extent, 10.0, duration,
     0.0, torigin, &no_speed_tiles);
@@ -181,7 +181,7 @@ int main(void)
         trip_splits[k].count++;
         trip_splits[k].distance += tpoint_length(split) / 1e3;
         dur1 = temporal_duration(split, false);
-        dur2 = add_interval_interval(dur1, &trip_splits[k].duration);
+        dur2 = add_interv_interv(dur1, &trip_splits[k].duration);
         memcpy(&trip_splits[k].duration, dur2, sizeof(Interval));
         free(split); free(dur1); free(dur2);
       }
@@ -197,7 +197,7 @@ int main(void)
       {
         speed_splits[k].count++;
         dur1 = temporal_duration(split, false);
-        dur2 = add_interval_interval(dur1, &speed_splits[k].duration);
+        dur2 = add_interv_interv(dur1, &speed_splits[k].duration);
         memcpy(&speed_splits[k].duration, dur2, sizeof(Interval));
         free(split); free(dur1); free(dur2);
       }
@@ -221,10 +221,10 @@ int main(void)
   memset(&intervalzero, 0, sizeof(Interval));
   for (i = 0; i < no_trip_tiles; i++)
   {
-    if (pg_interval_cmp(&trip_splits[k].duration, &intervalzero) != 0)
+    if (interv_cmp(&trip_splits[k].duration, &intervalzero) != 0)
     {
       char *stbox_str = stbox_out(&trip_tiles[k], 0);
-      char *interval_str = pg_interval_out(&trip_splits[k].duration);
+      char *interval_str = interv_out(&trip_splits[k].duration);
       printf("Tile: %d, Box: %s, Count: %d, Duration: %s, Distance: %f\n",
         i, stbox_str, trip_splits[k].count, interval_str,
         trip_splits[k].distance);
@@ -244,7 +244,7 @@ int main(void)
   {
     char *span_str = floatspan_out(&speed_tiles[k].span, 0);
     char *tstzspan_str = tstzspan_out(&speed_tiles[k].period);
-    char *interval_str = pg_interval_out(&speed_splits[k].duration);
+    char *interval_str = interv_out(&speed_splits[k].duration);
     printf("Tile: %d, Span: %s, Period: %s, Count: %d, Duration: %s\n",
       i, span_str, tstzspan_str, speed_splits[k].count, interval_str);
     free(span_str); free(tstzspan_str); free(interval_str);

@@ -1234,9 +1234,9 @@ tbox_expand_time(const TBox *box, const Interval *interv)
     return NULL;
 
   TBox *result = tbox_cp(box);
-  TimestampTz tmin = minus_tstz_interval(DatumGetTimestampTz(
+  TimestampTz tmin = minus_tstz_interv(DatumGetTimestampTz(
     box->period.lower), interv);
-  TimestampTz tmax = add_tstz_interval(DatumGetTimestampTz(
+  TimestampTz tmax = add_tstz_interv(DatumGetTimestampTz(
     box->period.upper), interv);
   result->period.lower = TimestampTzGetDatum(tmin);
   result->period.upper = TimestampTzGetDatum(tmax);

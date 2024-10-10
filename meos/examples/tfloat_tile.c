@@ -54,7 +54,7 @@ int main(void)
   meos_initialize();
 
   Temporal *tfloat = tfloat_in("[1@2020-03-01, 10@2020-03-10]");
-  Interval *interv = pg_interval_in("2 days", -1);
+  Interval *interv = interv_in("2 days", -1);
   double vorigin = 0.0;
   TimestampTz torigin = tstz_in("2020-03-01", -1);
 

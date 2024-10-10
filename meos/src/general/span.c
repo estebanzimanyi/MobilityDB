@@ -1550,14 +1550,14 @@ lower_upper_shift_scale_time(const Interval *shift, const Interval *duration,
   bool instant = (*lower == *upper);
   if (shift)
   {
-    *lower = add_tstz_interval(*lower, shift);
+    *lower = add_tstz_interv(*lower, shift);
     if (instant)
       *upper = *lower;
     else
-      *upper = add_tstz_interval(*upper, shift);
+      *upper = add_tstz_interv(*upper, shift);
   }
   if (duration && ! instant)
-    *upper = add_tstz_interval(*lower, duration);
+    *upper = add_tstz_interv(*lower, duration);
   return;
 }
 

@@ -1598,7 +1598,7 @@ tsequence_append_tinstant(TSequence *seq, const TInstant *inst, double maxdist,
     if (maxt != NULL && ! split)
     {
       Interval *duration = minus_tstz_tstz(inst->t, last->t);
-      if (pg_interval_cmp(duration, maxt) > 0)
+      if (interv_cmp(duration, maxt) > 0)
         split = true;
       pfree(duration);
     }

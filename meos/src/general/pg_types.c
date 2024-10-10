@@ -1360,7 +1360,7 @@ timestamp_in_common(const char *str, int32 typmod, bool withtz)
  * @note PostgreSQL function: @p timestamp_in(PG_FUNCTION_ARGS)
  */
 Timestamp
-pg_timestamp_in(const char *str, int32 prec)
+ts_in(const char *str, int32 prec)
 {
   return (Timestamp) timestamp_in_common(str, prec, false);
 }
@@ -1432,7 +1432,7 @@ timestamp_out_common(TimestampTz t, bool withtz)
  * @note PostgreSQL function: @p timestamp_out(PG_FUNCTION_ARGS)
  */
 char *
-pg_timestamp_out(Timestamp t)
+ts_out(Timestamp t)
 {
   return timestamp_out_common((TimestampTz) t, false);
 }
@@ -1489,7 +1489,7 @@ tstz_to_date(TimestampTz t)
  * @note PostgreSQL function: @p interval_out(PG_FUNCTION_ARGS)
  */
 char *
-pg_interval_out(const Interval *interv)
+interv_out(const Interval *interv)
 {
   Datum d = PointerGetDatum(interv);
   return DatumGetCString(call_function1(interval_out, d));
@@ -1681,7 +1681,7 @@ AdjustIntervalForTypmod(Interval *interval, int32 typmod)
  * for a detailed account of the input syntax and the precision
  */
 Interval *
-pg_interval_in(const char *str, int32 prec)
+interv_in(const char *str, int32 prec)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) str))
@@ -1772,7 +1772,7 @@ pg_interval_in(const char *str, int32 prec)
  * @note PostgreSQL function: @p make_interval(PG_FUNCTION_ARGS)
  */
 Interval *
-pg_interval_make(int32 years, int32 months, int32 weeks, int32 days, int32 hours,
+interv_make(int32 years, int32 months, int32 weeks, int32 days, int32 hours,
   int32 mins, double secs)
 {
   Interval *result;
@@ -1810,7 +1810,7 @@ pg_interval_make(int32 years, int32 months, int32 weeks, int32 days, int32 hours
  * default)
  */
 char *
-pg_interval_out(const Interval *interv)
+interv_out(const Interval *interv)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) interv))
@@ -1840,7 +1840,7 @@ pg_interval_out(const Interval *interv)
  * @note PostgreSQL function: @p interval_mul(PG_FUNCTION_ARGS)
  */
 Interval *
-mult_interval_double(const Interval *interv, double factor)
+mult_interv_double(const Interval *interv, double factor)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) interv))
@@ -1931,7 +1931,7 @@ mult_interval_double(const Interval *interv, double factor)
  * @note PostgreSQL function: @p interval_pl(PG_FUNCTION_ARGS)
  */
 Interval *
-add_interval_interval(const Interval *interv1, const Interval *interv2)
+add_interv_interv(const Interval *interv1, const Interval *interv2)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) interv1) ||
@@ -1987,7 +1987,7 @@ add_interval_interval(const Interval *interv1, const Interval *interv2)
  * @note PostgreSQL function: @p timestamp_pl_interval(PG_FUNCTION_ARGS)
  */
 TimestampTz
-add_tstz_interval(TimestampTz t, const Interval *interv)
+add_tstz_interv(TimestampTz t, const Interval *interv)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) interv))
@@ -2085,7 +2085,7 @@ add_tstz_interval(TimestampTz t, const Interval *interv)
  * @note PostgreSQL function: @p timestamp_mi_interval(PG_FUNCTION_ARGS)
  */
 TimestampTz
-minus_tstz_interval(TimestampTz t, const Interval *interv)
+minus_tstz_interv(TimestampTz t, const Interval *interv)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) interv))
@@ -2095,7 +2095,7 @@ minus_tstz_interval(TimestampTz t, const Interval *interv)
   tinterv.month = -interv->month;
   tinterv.day = -interv->day;
   tinterv.time = -interv->time;
-  return add_tstz_interval(t, &tinterv);
+  return add_tstz_interv(t, &tinterv);
 }
 
 /**
@@ -2106,7 +2106,7 @@ minus_tstz_interval(TimestampTz t, const Interval *interv)
  * @note PostgreSQL function: @p interval_justify_hours(PG_FUNCTION_ARGS)
  */
 Interval *
-pg_interval_justify_hours(const Interval *interv)
+interv_justify_hours(const Interval *interv)
 {
   Interval *result = palloc(sizeof(Interval));
   result->month = interv->month;
@@ -2153,7 +2153,7 @@ minus_tstz_tstz(TimestampTz t1, TimestampTz t2)
   interv.time = t1 - t2;
   interv.month = 0;
   interv.day = 0;
-  return pg_interval_justify_hours(&interv);
+  return interv_justify_hours(&interv);
 }
 
 /*
@@ -2195,7 +2195,7 @@ interval_cmp_value(const Interval *interval)
  * @note PostgreSQL function: @p interval_cmp(PG_FUNCTION_ARGS)
  */
 int
-pg_interval_cmp(const Interval *interv1, const Interval *interv2)
+interv_cmp(const Interval *interv1, const Interval *interv2)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) interv1) ||

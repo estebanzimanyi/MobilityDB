@@ -1203,7 +1203,7 @@ tstzspanset_duration(const SpanSet *ss, bool boundspan)
   {
     s = SPANSET_SP_N(ss, i);
     Interval *interv1 = minus_tstz_tstz(s->upper, s->lower);
-    Interval *interv2 = add_interval_interval(result, interv1);
+    Interval *interv2 = add_interv_interv(result, interv1);
     pfree(result); pfree(interv1);
     result = interv2;
   }
@@ -1857,7 +1857,7 @@ span_cmp_size(const Span *s1, const Span *s2)
       datespan_duration(s1) : tstzspan_duration(s1);
     Interval *dur2 = (s2->spantype == T_DATESPAN) ?
       datespan_duration(s2) : tstzspan_duration(s2);
-    result = pg_interval_cmp(dur1, dur2);
+    result = interv_cmp(dur1, dur2);
     pfree(dur1); pfree(dur2);
   }
   return result;
