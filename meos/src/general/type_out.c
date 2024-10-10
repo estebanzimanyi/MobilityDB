@@ -177,7 +177,7 @@ coordinates_as_mfjson_sb(stringbuffer_t *sb, const TInstant *inst, int precision
 static void
 datetimes_as_mfjson_sb(stringbuffer_t *sb, TimestampTz t)
 {
-  char *tstr = pg_timestamptz_out(t);
+  char *tstr = tstz_out(t);
   /* Replace ' ' by 'T' as separator between date and time parts */
   tstr[10] = 'T';
   stringbuffer_aprintf(sb, "\"%s\"", tstr);
@@ -1357,7 +1357,7 @@ date_to_wkb_buf(const DateADT d, uint8_t *buf, uint8_t variant)
  * Binary (WKB) representation
  */
 uint8_t *
-timestamptz_to_wkb_buf(const TimestampTz t, uint8_t *buf, uint8_t variant)
+tstz_to_wkb_buf(const TimestampTz t, uint8_t *buf, uint8_t variant)
 {
   if (sizeof(TimestampTz) != MEOS_WKB_TIMESTAMP_SIZE)
   {
@@ -1455,7 +1455,7 @@ basevalue_to_wkb_buf(Datum value, meosType basetype, int16 flags, uint8_t *buf,
       buf = date_to_wkb_buf(DatumGetDateADT(value), buf, variant);
       break;
     case T_TIMESTAMPTZ:
-      buf = timestamptz_to_wkb_buf(DatumGetTimestampTz(value), buf, variant);
+      buf = tstz_to_wkb_buf(DatumGetTimestampTz(value), buf, variant);
       break;
     case T_TEXT:
       buf = text_to_wkb_buf(DatumGetTextP(value), buf, variant);
@@ -1595,8 +1595,8 @@ lower_upper_to_wkb_buf(const Span *s, uint8_t *buf, uint8_t variant)
       buf = date_to_wkb_buf(DatumGetDateADT(s->upper), buf, variant);
       break;
     case T_TIMESTAMPTZ:
-      buf = timestamptz_to_wkb_buf(DatumGetTimestampTz(s->lower), buf, variant);
-      buf = timestamptz_to_wkb_buf(DatumGetTimestampTz(s->upper), buf, variant);
+      buf = tstz_to_wkb_buf(DatumGetTimestampTz(s->lower), buf, variant);
+      buf = tstz_to_wkb_buf(DatumGetTimestampTz(s->upper), buf, variant);
       break;
     default: /* Error! */
       meos_error(ERROR, MEOS_ERR_WKB_OUTPUT,
@@ -1865,7 +1865,7 @@ tinstant_basevalue_time_to_wkb_buf(const TInstant *inst, uint8_t *buf,
   meosType basetype = temptype_basetype(inst->temptype);
   assert(temporal_basetype(basetype));
   buf = basevalue_to_wkb_buf(value, basetype, inst->flags, buf, variant);
-  buf = timestamptz_to_wkb_buf(inst->t, buf, variant);
+  buf = tstz_to_wkb_buf(inst->t, buf, variant);
   return buf;
 }
 

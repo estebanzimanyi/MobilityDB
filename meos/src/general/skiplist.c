@@ -385,7 +385,7 @@ skiplist_make(void **values, int count)
  * @brief Determine the relative position of a span and a timestamptz
  */
 static RelativeTimePos
-pos_span_timestamptz(const Span *s, TimestampTz t)
+pos_span_tstz(const Span *s, TimestampTz t)
 {
   if (left_span_value(s, TimestampTzGetDatum(t)))
     return BEFORE;
@@ -420,7 +420,7 @@ skiplist_elempos(const SkipList *list, Span *s, int cur)
 
   Temporal *temp = (Temporal *) list->elems[cur].value;
   if (temp->subtype == TINSTANT)
-    return pos_span_timestamptz(s, ((TInstant *) temp)->t);
+    return pos_span_tstz(s, ((TInstant *) temp)->t);
   else /* temp->subtype == TSEQUENCE */
     return pos_span_span(s, &((TSequence *) temp)->period);
 }

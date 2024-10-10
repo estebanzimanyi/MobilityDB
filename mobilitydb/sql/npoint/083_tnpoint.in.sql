@@ -286,7 +286,7 @@ CREATE FUNCTION getTime(tnpoint)
 -- timestamp is a reserved word in SQL
 CREATE FUNCTION getTimestamp(tnpoint)
   RETURNS timestamptz
-  AS 'MODULE_PATHNAME', 'Tinstant_timestamptz'
+  AS 'MODULE_PATHNAME', 'Tinstant_tstz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION startValue(tnpoint)
@@ -351,17 +351,17 @@ CREATE FUNCTION numTimestamps(tnpoint)
 
 CREATE FUNCTION startTimestamp(tnpoint)
   RETURNS timestamptz
-  AS 'MODULE_PATHNAME', 'Temporal_start_timestamptz'
+  AS 'MODULE_PATHNAME', 'Temporal_start_tstz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION endTimestamp(tnpoint)
   RETURNS timestamptz
-  AS 'MODULE_PATHNAME', 'Temporal_end_timestamptz'
+  AS 'MODULE_PATHNAME', 'Temporal_end_tstz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION timestampN(tnpoint, integer)
   RETURNS timestamptz
-  AS 'MODULE_PATHNAME', 'Temporal_timestamptz_n'
+  AS 'MODULE_PATHNAME', 'Temporal_tstz_n'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION timestamps(tnpoint)
@@ -519,17 +519,17 @@ CREATE FUNCTION minusValues(tnpoint, npointset)
 
 CREATE FUNCTION atTime(tnpoint, timestamptz)
   RETURNS tnpoint
-  AS 'MODULE_PATHNAME', 'Temporal_at_timestamptz'
+  AS 'MODULE_PATHNAME', 'Temporal_at_tstz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION minusTime(tnpoint, timestamptz)
   RETURNS tnpoint
-  AS 'MODULE_PATHNAME', 'Temporal_minus_timestamptz'
+  AS 'MODULE_PATHNAME', 'Temporal_minus_tstz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION valueAtTimestamp(tnpoint, timestamptz)
   RETURNS npoint
-  AS 'MODULE_PATHNAME', 'Temporal_value_at_timestamptz'
+  AS 'MODULE_PATHNAME', 'Temporal_value_at_tstz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION atTime(tnpoint, tstzset)
@@ -588,7 +588,7 @@ CREATE FUNCTION update(tnpoint, tnpoint, connect boolean DEFAULT TRUE)
 
 CREATE FUNCTION deleteTime(tnpoint, timestamptz, connect boolean DEFAULT TRUE)
   RETURNS tnpoint
-  AS 'MODULE_PATHNAME', 'Temporal_delete_timestamptz'
+  AS 'MODULE_PATHNAME', 'Temporal_delete_tstz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION deleteTime(tnpoint, tstzset, connect boolean DEFAULT TRUE)
   RETURNS tnpoint

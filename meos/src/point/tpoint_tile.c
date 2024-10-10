@@ -438,9 +438,9 @@ stbox_tile_state_make(const Temporal *temp, const STBox *box, double xsize,
     {
       state->hast = true;
       state->tunits = interval_units(duration);
-      state->box.period.lower = TimestampTzGetDatum(timestamptz_get_bin_int(
+      state->box.period.lower = TimestampTzGetDatum(tstz_get_bin_int(
         DatumGetTimestampTz(box->period.lower), state->tunits, torigin));
-      state->box.period.upper = TimestampTzGetDatum(timestamptz_get_bin_int(
+      state->box.period.upper = TimestampTzGetDatum(tstz_get_bin_int(
         DatumGetTimestampTz(box->period.upper), state->tunits, torigin));
       state->max_coords[dim] =
         ceil((state->box.period.upper - state->box.period.lower) / 
@@ -818,7 +818,7 @@ stbox_space_time_tile_common(const GSERIALIZED *point, TimestampTz t,
     ymin = float_get_bin(pt.y, ysize, ptorig.y);
     zmin = float_get_bin(pt.z, zsize, ptorig.z);
   }
-  TimestampTz tmin = hast ? timestamptz_get_bin_int(t, tunits, torigin) : 0;
+  TimestampTz tmin = hast ? tstz_get_bin_int(t, tunits, torigin) : 0;
   STBox *result = palloc0(sizeof(STBox));
   stbox_tile_state_set(xmin, ymin, zmin, tmin, xsize, ysize, zsize, tunits, 
     hasx, hasz, hast, srid, result);
@@ -1058,7 +1058,7 @@ tpointinst_get_coords_fpos(const TInstant *inst, bool hasz, bool hast,
   if (hasz)
     z = float_get_bin(p.z, state->zsize, state->box.zmin);
   if (hast)
-    t = timestamptz_get_bin_int(inst->t, state->tunits,
+    t = tstz_get_bin_int(inst->t, state->tunits,
       DatumGetTimestampTz(state->box.period.lower));
   /* Transform the minimum values of the tile into matrix coordinates */
   tile_get_coords(x, y, z, t, state, coords);

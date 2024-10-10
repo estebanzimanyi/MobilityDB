@@ -187,20 +187,20 @@ Date_bin(PG_FUNCTION_ARGS)
   PG_RETURN_SPAN_P(result);
 }
 
-PGDLLEXPORT Datum Timestamptz_bin(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Timestamptz_bin);
+PGDLLEXPORT Datum Tstz_bin(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tstz_bin);
 /**
  * @ingroup mobilitydb_temporal_analytics_tile
  * @brief Return a span bin in a bin list for timestamptz spans
  * @sqlfn getTimeBin()
  */
 Datum
-Timestamptz_bin(PG_FUNCTION_ARGS)
+Tstz_bin(PG_FUNCTION_ARGS)
 {
   TimestampTz t = PG_GETARG_TIMESTAMPTZ(0);
   Interval *duration = PG_GETARG_INTERVAL_P(1);
   TimestampTz origin = PG_GETARG_TIMESTAMPTZ(2);
-  TimestampTz time_bin = timestamptz_get_bin(t, duration, origin);
+  TimestampTz time_bin = tstz_get_bin(t, duration, origin);
   int64 tunits = interval_units(duration);
   Span *result = palloc(sizeof(Span));
   span_bin_state_set(TimestampTzGetDatum(time_bin), Int64GetDatum(tunits),

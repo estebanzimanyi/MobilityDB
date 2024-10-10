@@ -44,7 +44,7 @@
 
 /* General functions */
 
-extern bool tsequenceset_find_timestamptz(const TSequenceSet *ss,
+extern bool tsequenceset_find_tstz(const TSequenceSet *ss,
   TimestampTz t, int *loc);
 extern TSequence **tseqarr_normalize(const TSequence **sequences, int count,
   int *newcount);

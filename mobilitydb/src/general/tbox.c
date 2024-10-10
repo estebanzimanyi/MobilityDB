@@ -156,20 +156,20 @@ Tbox_as_text(PG_FUNCTION_ARGS)
  * Constructor functions
  *****************************************************************************/
 
-PGDLLEXPORT Datum Number_timestamptz_to_tbox(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Number_timestamptz_to_tbox);
+PGDLLEXPORT Datum Number_tstz_to_tbox(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Number_tstz_to_tbox);
 /**
  * @ingroup mobilitydb_box_constructor
  * @brief Return a temporal box constructed from a number and a timestamptz
  * @sqlfn tbox()
  */
 Datum
-Number_timestamptz_to_tbox(PG_FUNCTION_ARGS)
+Number_tstz_to_tbox(PG_FUNCTION_ARGS)
 {
   Datum value = PG_GETARG_DATUM(0);
   TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
   meosType basetype = oid_type(get_fn_expr_argtype(fcinfo->flinfo, 0));
-  PG_RETURN_TBOX_P(number_timestamptz_to_tbox(value, basetype, t));
+  PG_RETURN_TBOX_P(number_tstz_to_tbox(value, basetype, t));
 }
 
 PGDLLEXPORT Datum Number_tstzspan_to_tbox(PG_FUNCTION_ARGS);
@@ -188,19 +188,19 @@ Number_tstzspan_to_tbox(PG_FUNCTION_ARGS)
   PG_RETURN_TBOX_P(number_tstzspan_to_tbox(value, basetype, s));
 }
 
-PGDLLEXPORT Datum Numspan_timestamptz_to_tbox(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Numspan_timestamptz_to_tbox);
+PGDLLEXPORT Datum Numspan_tstz_to_tbox(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Numspan_tstz_to_tbox);
 /**
  * @ingroup mobilitydb_box_constructor
  * @brief Return a temporal box constructed from a number span and a timestamptz
  * @sqlfn tbox()
  */
 Datum
-Numspan_timestamptz_to_tbox(PG_FUNCTION_ARGS)
+Numspan_tstz_to_tbox(PG_FUNCTION_ARGS)
 {
   Span *span = PG_GETARG_SPAN_P(0);
   TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
-  PG_RETURN_TBOX_P(numspan_timestamptz_to_tbox(span, t));
+  PG_RETURN_TBOX_P(numspan_tstz_to_tbox(span, t));
 }
 
 PGDLLEXPORT Datum Numspan_tstzspan_to_tbox(PG_FUNCTION_ARGS);
@@ -253,18 +253,18 @@ Numeric_to_tbox(PG_FUNCTION_ARGS)
   PG_RETURN_TBOX_P(number_to_tbox(d, T_FLOAT8));
 }
 
-PGDLLEXPORT Datum Timestamptz_to_tbox(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Timestamptz_to_tbox);
+PGDLLEXPORT Datum Tstz_to_tbox(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tstz_to_tbox);
 /**
  * @ingroup mobilitydb_box_conversion
  * @brief Conver a timestamptz to a temporal box
  * @sqlfn tbox()
  */
 Datum
-Timestamptz_to_tbox(PG_FUNCTION_ARGS)
+Tstz_to_tbox(PG_FUNCTION_ARGS)
 {
   TimestampTz t = PG_GETARG_TIMESTAMPTZ(0);
-  PG_RETURN_TBOX_P(timestamptz_to_tbox(t));
+  PG_RETURN_TBOX_P(tstz_to_tbox(t));
 }
 
 PGDLLEXPORT Datum Set_to_tbox(PG_FUNCTION_ARGS);

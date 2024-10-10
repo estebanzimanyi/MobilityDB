@@ -76,7 +76,7 @@ extern bool TimestampDifferenceExceeds(TimestampTz start_time,
 									   TimestampTz stop_time,
 									   int msec);
 
-extern TimestampTz time_t_to_timestamptz(pg_time_t tm);
+extern TimestampTz time_t_to_tstz(pg_time_t tm);
 extern pg_time_t timestamptz_to_time_t(TimestampTz t);
 
 extern const char *timestamptz_to_str(TimestampTz t);
@@ -99,7 +99,7 @@ extern int	timestamp_cmp_internal(Timestamp dt1, Timestamp dt2);
 
 extern TimestampTz timestamp2timestamptz_opt_overflow(Timestamp timestamp,
 													  int *overflow);
-extern int32 timestamp_cmp_timestamptz_internal(Timestamp timestampVal,
+extern int32 timestamp_cmp_tstz_internal(Timestamp timestampVal,
 												TimestampTz dt2);
 
 extern int	isoweek2j(int year, int week);

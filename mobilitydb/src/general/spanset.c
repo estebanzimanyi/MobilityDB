@@ -588,52 +588,52 @@ Tstzspanset_num_timestamps(PG_FUNCTION_ARGS)
   PG_RETURN_INT32(result);
 }
 
-PGDLLEXPORT Datum Tstzspanset_start_timestamptz(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tstzspanset_start_timestamptz);
+PGDLLEXPORT Datum Tstzspanset_start_tstz(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tstzspanset_start_tstz);
 /**
  * @ingroup mobilitydb_setspan_accessor
  * @brief Return the start timestamptz of a span set
  * @sqlfn startTimestamp()
  */
 Datum
-Tstzspanset_start_timestamptz(PG_FUNCTION_ARGS)
+Tstzspanset_start_tstz(PG_FUNCTION_ARGS)
 {
   SpanSet *ss = PG_GETARG_SPANSET_P(0);
-  TimestampTz result = tstzspanset_start_timestamptz(ss);
+  TimestampTz result = tstzspanset_start_tstz(ss);
   PG_FREE_IF_COPY(ss, 0);
   PG_RETURN_TIMESTAMPTZ(result);
 }
 
-PGDLLEXPORT Datum Tstzspanset_end_timestamptz(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tstzspanset_end_timestamptz);
+PGDLLEXPORT Datum Tstzspanset_end_tstz(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tstzspanset_end_tstz);
 /**
  * @ingroup mobilitydb_setspan_accessor
  * @brief Return the end timestamptz of a span set
  * @sqlfn endTimestamp()
  */
 Datum
-Tstzspanset_end_timestamptz(PG_FUNCTION_ARGS)
+Tstzspanset_end_tstz(PG_FUNCTION_ARGS)
 {
   SpanSet *ss = PG_GETARG_SPANSET_P(0);
-  TimestampTz result = tstzspanset_end_timestamptz(ss);
+  TimestampTz result = tstzspanset_end_tstz(ss);
   PG_FREE_IF_COPY(ss, 0);
   PG_RETURN_TIMESTAMPTZ(result);
 }
 
-PGDLLEXPORT Datum Tstzspanset_timestamptz_n(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tstzspanset_timestamptz_n);
+PGDLLEXPORT Datum Tstzspanset_tstz_n(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tstzspanset_tstz_n);
 /**
  * @ingroup mobilitydb_setspan_accessor
  * @brief Return the n-th timestamptz of a span set
  * @sqlfn timestampN()
  */
 Datum
-Tstzspanset_timestamptz_n(PG_FUNCTION_ARGS)
+Tstzspanset_tstz_n(PG_FUNCTION_ARGS)
 {
   SpanSet *ss = PG_GETARG_SPANSET_P(0);
   int n = PG_GETARG_INT32(1); /* Assume 1-based */
   TimestampTz result;
-  bool found = tstzspanset_timestamptz_n(ss, n, &result);
+  bool found = tstzspanset_tstz_n(ss, n, &result);
   PG_FREE_IF_COPY(ss, 0);
   if (! found)
     PG_RETURN_NULL();

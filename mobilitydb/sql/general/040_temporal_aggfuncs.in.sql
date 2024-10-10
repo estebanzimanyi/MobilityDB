@@ -107,7 +107,7 @@ CREATE FUNCTION taggstate_deserialize(bytea, internal)
 
 CREATE FUNCTION tcount_transfn(internal, timestamptz)
   RETURNS internal
-  AS 'MODULE_PATHNAME', 'Timestamptz_tcount_transfn'
+  AS 'MODULE_PATHNAME', 'Tstz_tcount_transfn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 CREATE FUNCTION tcount_transfn(internal, tstzset)
   RETURNS internal

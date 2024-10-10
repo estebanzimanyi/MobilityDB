@@ -239,7 +239,7 @@ tinstant_to_string(const TInstant *inst, int maxdd, outfunc value_out)
 {
   assert(inst); assert(maxdd >= 0);
 
-  char *t = pg_timestamptz_out(inst->t);
+  char *t = tstz_out(inst->t);
   meosType basetype = temptype_basetype(inst->temptype);
   char *value = value_out(tinstant_val(inst), basetype, maxdd);
   size_t size = strlen(value) + strlen(t) + 2;
@@ -486,7 +486,7 @@ SpanSet *
 tinstant_time(const TInstant *inst)
 {
   assert(inst);
-  return timestamptz_to_spanset(inst->t);
+  return tstz_to_spanset(inst->t);
 }
 
 /**
@@ -550,10 +550,10 @@ tinstant_insts(const TInstant *inst, int *count)
  * @param[out] result Result
  * @note Since the corresponding function for temporal sequences need to
  * interpolate the value, it is necessary to return a copy of the value
- * @csqlfn #Temporal_value_at_timestamptz()
+ * @csqlfn #Temporal_value_at_tstz()
  */
 bool
-tinstant_value_at_timestamptz(const TInstant *inst, TimestampTz t,
+tinstant_value_at_tstz(const TInstant *inst, TimestampTz t,
   Datum *result)
 {
   assert(inst); assert(result);
@@ -636,7 +636,7 @@ tinstant_shift_time(const TInstant *inst, const Interval *interv)
 {
   assert(inst); assert(interv);
   TInstant *result = tinstant_copy(inst);
-  result->t = add_timestamptz_interval(inst->t, interv);
+  result->t = add_tstz_interval(inst->t, interv);
   return result;
 }
 
@@ -709,7 +709,7 @@ tinstant_cmp(const TInstant *inst1, const TInstant *inst2)
 {
   assert(inst1); assert(inst2); assert(inst1->temptype == inst2->temptype);
   /* Compare timestamps */
-  int cmp = timestamptz_cmp_internal(inst1->t, inst2->t);
+  int cmp = tstz_cmp(inst1->t, inst2->t);
   if (cmp < 0)
     return -1;
   if (cmp > 0)

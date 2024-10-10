@@ -137,21 +137,21 @@ Temporal_tagg_transform_transfn(FunctionCallInfo fcinfo, datum_func2 func,
  * Temporal count
  *****************************************************************************/
 
-PGDLLEXPORT Datum Timestamptz_tcount_transfn(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Timestamptz_tcount_transfn);
+PGDLLEXPORT Datum Tstz_tcount_transfn(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tstz_tcount_transfn);
 /**
  * @ingroup mobilitydb_temporal_agg
  * @brief Transition function for temporal count aggregate of timestamptz values
  * @sqlfn tCount()
  */
 Datum
-Timestamptz_tcount_transfn(PG_FUNCTION_ARGS)
+Tstz_tcount_transfn(PG_FUNCTION_ARGS)
 {
   SkipList *state;
   INPUT_AGG_TRANS_STATE(fcinfo, state);
   TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
   store_fcinfo(fcinfo);
-  PG_RETURN_SKIPLIST_P(timestamptz_tcount_transfn(state, t));
+  PG_RETURN_SKIPLIST_P(tstz_tcount_transfn(state, t));
 }
 
 PGDLLEXPORT Datum Tstzset_tcount_transfn(PG_FUNCTION_ARGS);

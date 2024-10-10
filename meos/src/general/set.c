@@ -1081,7 +1081,7 @@ date_to_set(DateADT d)
  * @csqlfn #Value_to_set()
  */
 Set *
-timestamptz_to_set(TimestampTz t)
+tstz_to_set(TimestampTz t)
 {
   Datum v = TimestampTzGetDatum(t);
   return set_make_exp(&v, 1, 1, T_TIMESTAMPTZ, ORDER_NO);
@@ -1196,7 +1196,7 @@ dateset_tstzset(const Set *s)
     return NULL;
   Datum *values = palloc(sizeof(Datum) * s->count);
   for (int i = 0; i < s->count; i++)
-    values[i] = TimestampTzGetDatum(date_to_timestamptz(DatumGetDateADT(
+    values[i] = TimestampTzGetDatum(date_to_tstz(DatumGetDateADT(
       SET_VAL_N(s, i))));
   /* All distinct dates will yield distinct timestamptz */
   return set_make_free(values, s->count, T_TIMESTAMPTZ, ORDER_NO);
@@ -1234,7 +1234,7 @@ tstzset_dateset(const Set *s)
     return NULL;
   Datum *values = palloc(sizeof(Datum) * s->count);
   for (int i = 0; i < s->count; i++)
-    values[i] = DateADTGetDatum(timestamptz_to_date(DatumGetTimestampTz(
+    values[i] = DateADTGetDatum(tstz_to_date(DatumGetTimestampTz(
       SET_VAL_N(s, i))));
   /* Two distinct timestamptz can yield the same date */
   return set_make_free(values, s->count, T_DATE, ORDER);

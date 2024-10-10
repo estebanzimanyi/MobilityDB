@@ -263,10 +263,10 @@ tbox_copy(const TBox *box)
  * @param[in] value Value
  * @param[in] basetype Type of the value
  * @param[in] t Timestamp
- * @csqlfn #Number_timestamptz_to_tbox()
+ * @csqlfn #Number_tstz_to_tbox()
  */
 TBox *
-number_timestamptz_to_tbox(Datum value, meosType basetype, TimestampTz t)
+number_tstz_to_tbox(Datum value, meosType basetype, TimestampTz t)
 {
   Span s, p;
   meosType spantype = basetype_spantype(basetype);
@@ -282,12 +282,12 @@ number_timestamptz_to_tbox(Datum value, meosType basetype, TimestampTz t)
  * @brief Return a temporal box from an integer and a timestamptz
  * @param[in] i Value
  * @param[in] t Timestamp
- * @csqlfn #Number_timestamptz_to_tbox()
+ * @csqlfn #Number_tstz_to_tbox()
  */
 TBox *
-int_timestamptz_to_tbox(int i, TimestampTz t)
+int_tstz_to_tbox(int i, TimestampTz t)
 {
-  return number_timestamptz_to_tbox(Int32GetDatum(i), T_INT4, t);
+  return number_tstz_to_tbox(Int32GetDatum(i), T_INT4, t);
 }
 
 /**
@@ -295,12 +295,12 @@ int_timestamptz_to_tbox(int i, TimestampTz t)
  * @brief Return a temporal box from a float and a timestamptz
  * @param[in] d Value
  * @param[in] t Timestamp
- * @csqlfn #Number_timestamptz_to_tbox()
+ * @csqlfn #Number_tstz_to_tbox()
  */
 TBox *
-float_timestamptz_to_tbox(double d, TimestampTz t)
+float_tstz_to_tbox(double d, TimestampTz t)
 {
-  return number_timestamptz_to_tbox(Float8GetDatum(d), T_FLOAT8, t);
+  return number_tstz_to_tbox(Float8GetDatum(d), T_FLOAT8, t);
 }
 #endif /* MEOS */
 
@@ -361,10 +361,10 @@ float_tstzspan_to_tbox(double d, const Span *s)
  * @brief Return a temporal box from a number span and a timestamptz
  * @param[in] s Value span
  * @param[in] t Timestamp
- * @csqlfn #Numspan_timestamptz_to_tbox()
+ * @csqlfn #Numspan_tstz_to_tbox()
  */
 TBox *
-numspan_timestamptz_to_tbox(const Span *s, TimestampTz t)
+numspan_tstz_to_tbox(const Span *s, TimestampTz t)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) s) || ! ensure_numspan_type(s->spantype))
@@ -381,7 +381,7 @@ numspan_timestamptz_to_tbox(const Span *s, TimestampTz t)
  * @brief Return a temporal box from a number span and a timestamptz span
  * @param[in] s Value span
  * @param[in] p Time span
- * @csqlfn #Numspan_timestamptz_to_tbox()
+ * @csqlfn #Numspan_tstz_to_tbox()
  */
 TBox *
 numspan_tstzspan_to_tbox(const Span *s, const Span *p)
@@ -503,7 +503,7 @@ float_to_tbox(double d)
  * @param[out] box Result
  */
 void
-timestamptz_set_tbox(TimestampTz t, TBox *box)
+tstz_set_tbox(TimestampTz t, TBox *box)
 {
   assert(box);
   Span p;
@@ -517,13 +517,13 @@ timestamptz_set_tbox(TimestampTz t, TBox *box)
  * @ingroup meos_box_conversion
  * @brief Return a timestamptz converted to a temporal box
  * @param[in] t Timestamp
- * @csqlfn #Timestamptz_to_tbox()
+ * @csqlfn #Tstz_to_tbox()
  */
 TBox *
-timestamptz_to_tbox(TimestampTz t)
+tstz_to_tbox(TimestampTz t)
 {
   TBox *result = palloc(sizeof(TBox));
-  timestamptz_set_tbox(t, result);
+  tstz_set_tbox(t, result);
   return result;
 }
 
@@ -1234,9 +1234,9 @@ tbox_expand_time(const TBox *box, const Interval *interv)
     return NULL;
 
   TBox *result = tbox_cp(box);
-  TimestampTz tmin = minus_timestamptz_interval(DatumGetTimestampTz(
+  TimestampTz tmin = minus_tstz_interval(DatumGetTimestampTz(
     box->period.lower), interv);
-  TimestampTz tmax = add_timestamptz_interval(DatumGetTimestampTz(
+  TimestampTz tmax = add_tstz_interval(DatumGetTimestampTz(
     box->period.upper), interv);
   result->period.lower = TimestampTzGetDatum(tmin);
   result->period.upper = TimestampTzGetDatum(tmax);

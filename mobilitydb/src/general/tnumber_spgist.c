@@ -700,7 +700,7 @@ compareTimestampTz(const void *a, const void *b)
 {
   TimestampTz x = *(TimestampTz *) a;
   TimestampTz y = *(TimestampTz *) b;
-  return timestamptz_cmp_internal(x,y);
+  return tstz_cmp(x,y);
 }
 
 PGDLLEXPORT Datum Tbox_quadtree_picksplit(PG_FUNCTION_ARGS);

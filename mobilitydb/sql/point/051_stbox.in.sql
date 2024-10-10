@@ -172,11 +172,11 @@ CREATE FUNCTION geodstboxZT(float, float, float, float, float, float,
 
 CREATE FUNCTION stbox(geometry, timestamptz)
   RETURNS stbox
-  AS 'MODULE_PATHNAME', 'Geo_timestamptz_to_stbox'
+  AS 'MODULE_PATHNAME', 'Geo_tstz_to_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION stbox(geography, timestamptz)
   RETURNS stbox
-  AS 'MODULE_PATHNAME', 'Geo_timestamptz_to_stbox'
+  AS 'MODULE_PATHNAME', 'Geo_tstz_to_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION stbox(geometry, tstzspan)
   RETURNS stbox
@@ -217,7 +217,7 @@ CREATE FUNCTION stbox(geogset)
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION stbox(timestamptz)
   RETURNS stbox
-  AS 'MODULE_PATHNAME', 'Timestamptz_to_stbox'
+  AS 'MODULE_PATHNAME', 'Tstz_to_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION stbox(tstzset)
   RETURNS stbox

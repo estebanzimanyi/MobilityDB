@@ -252,7 +252,7 @@ date_get_bin(DateADT d, const Interval *duration, DateADT origin)
  * @return On error return DT_NOEND
  */
 TimestampTz
-timestamptz_get_bin_int(TimestampTz t, int64 size, TimestampTz origin)
+tstz_get_bin_int(TimestampTz t, int64 size, TimestampTz origin)
 {
   if (TIMESTAMP_NOT_FINITE(t))
   {
@@ -304,7 +304,7 @@ timestamptz_get_bin_int(TimestampTz t, int64 size, TimestampTz origin)
  * @param[in] origin Origin of the bins
  */
 TimestampTz
-timestamptz_get_bin(TimestampTz t, const Interval *duration,
+tstz_get_bin(TimestampTz t, const Interval *duration,
   TimestampTz origin)
 {
   /* Ensure validity of the arguments */
@@ -312,7 +312,7 @@ timestamptz_get_bin(TimestampTz t, const Interval *duration,
       ! ensure_valid_duration(duration))
     return DT_NOEND;
   int64 size = interval_units(duration);
-  return timestamptz_get_bin_int(t, size, origin);
+  return tstz_get_bin_int(t, size, origin);
 }
 
 /*****************************************************************************
@@ -352,7 +352,7 @@ datum_bin(Datum value, Datum size, Datum origin, meosType type)
       return DateADTGetDatum(date_get_bin_int(DatumGetDateADT(value),
           DatumGetInt32(size), DatumGetDateADT(origin)));
     case T_TIMESTAMPTZ:
-      return TimestampTzGetDatum(timestamptz_get_bin_int(
+      return TimestampTzGetDatum(tstz_get_bin_int(
         DatumGetTimestampTz(value), DatumGetInt64(size),
         DatumGetTimestampTz(origin)));
     default: /* Error! */
@@ -1363,7 +1363,7 @@ tbox_get_value_time_tile(Datum value, TimestampTz t, Datum vsize,
   if (duration)
   {
     tunits = interval_units(duration);
-    time_bin = timestamptz_get_bin(t, duration, torigin);
+    time_bin = tstz_get_bin(t, duration, torigin);
   }
   TBox *result = palloc(sizeof(TBox));
   tbox_tile_state_set(value_bin, time_bin, vsize, tunits, basetype, spantype,
@@ -1702,7 +1702,7 @@ tinstant_time_split(const TInstant *inst, int64 tunits, TimestampTz torigin,
   TInstant **result = palloc(sizeof(TInstant *));
   TimestampTz *times = palloc(sizeof(TimestampTz));
   result[0] = tinstant_copy(inst);
-  times[0] = timestamptz_get_bin_int(inst->t, tunits, torigin);
+  times[0] = tstz_get_bin_int(inst->t, tunits, torigin);
   *bins = times;
   *count = 1;
   return result;
@@ -1828,7 +1828,7 @@ tcontseq_time_split_iter(const TSequence *seq, TimestampTz start,
       if (instants[ninsts - 1]->t < upper)
       {
         if (interp == LINEAR)
-          tofree[nfree] = tsegment_at_timestamptz(instants[ninsts - 1], inst,
+          tofree[nfree] = tsegment_at_tstz(instants[ninsts - 1], inst,
             interp, upper);
         else
         {
@@ -1852,7 +1852,7 @@ tcontseq_time_split_iter(const TSequence *seq, TimestampTz start,
       upper += tunits;
       /* The second condition is needed for filtering unnecesary time bins
        * that are in the gaps between sequences composing a sequence set */
-      if (lower >= end || ! contains_span_timestamptz(&seq->period, lower))
+      if (lower >= end || ! contains_span_tstz(&seq->period, lower))
         break;
       /* The end value of the previous bin is the start of the new bin */
       if (lower < inst->t)

@@ -181,8 +181,8 @@ tsequence_merge_array1(const TSequence **sequences, int count,
     if (inst1->t > inst2->t)
     {
       char *str2;
-      str1 = pg_timestamptz_out(inst1->t);
-      str2 = pg_timestamptz_out(inst2->t);
+      str1 = tstz_out(inst1->t);
+      str2 = tstz_out(inst2->t);
       meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
         "The temporal values cannot overlap on time: %s, %s", str1, str2);
       pfree(str1); pfree(str2);
@@ -193,7 +193,7 @@ tsequence_merge_array1(const TSequence **sequences, int count,
     {
       if (! datum_eq(tinstant_val(inst1), tinstant_val(inst2), basetype))
       {
-        str1 = pg_timestamptz_out(inst1->t);
+        str1 = tstz_out(inst1->t);
         meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
           "The temporal values have different value at their common timestamp %s",
           str1);
@@ -540,7 +540,7 @@ tcontseq_insert(const TSequence *seq1, const TSequence *seq2)
   const TInstant *instants[2] = {0};
   instants[0] = TSEQUENCE_INST_N(seq1, seq1->count - 1);
   instants[1] = TSEQUENCE_INST_N(seq2, 0);
-  if (timestamptz_cmp_internal(instants[0]->t, instants[1]->t) > 0)
+  if (tstz_cmp(instants[0]->t, instants[1]->t) > 0)
   {
     seq = seq1; seq1 = seq2; seq2 = seq;
     instants[0] = TSEQUENCE_INST_N(seq1, seq1->count - 1);
@@ -559,7 +559,7 @@ tcontseq_insert(const TSequence *seq1, const TSequence *seq2)
     {
       /* We put true so that it works with step interpolation */
       int count =
-        (timestamptz_cmp_internal(instants[0]->t, instants[1]->t) == 0) ? 1 : 2;
+        (tstz_cmp(instants[0]->t, instants[1]->t) == 0) ? 1 : 2;
       tofree = tsequence_make(instants, count, true, true, interp,
         NORMALIZE_NO);
       sequences[nseqs++] = (const TSequence *) tofree;
@@ -571,7 +571,7 @@ tcontseq_insert(const TSequence *seq1, const TSequence *seq2)
     if (! datum_eq(tinstant_val(instants[0]), tinstant_val(instants[1]),
       basetype))
     {
-      char *str = pg_timestamptz_out(instants[0]->t);
+      char *str = tstz_out(instants[0]->t);
       meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
         "The temporal values have different value at their common timestamp %s",
         str);
@@ -628,11 +628,11 @@ tsequence_insert(const TSequence *seq1, const TSequence *seq2, bool connect)
  * @param[in] t Timestamp
  */
 TSequence *
-tcontseq_delete_timestamptz(const TSequence *seq, TimestampTz t)
+tcontseq_delete_tstz(const TSequence *seq, TimestampTz t)
 {
   assert(seq);
   /* Bounding box test */
-  if (! contains_span_timestamptz(&seq->period, t))
+  if (! contains_span_tstz(&seq->period, t))
     return tsequence_copy(seq);
 
   /* Instantaneous sequence */
@@ -647,7 +647,7 @@ tcontseq_delete_timestamptz(const TSequence *seq, TimestampTz t)
   for (int i = 0; i < seq->count; i++)
   {
     const TInstant *inst = TSEQUENCE_INST_N(seq, i);
-    if (timestamptz_cmp_internal(inst->t, t) != 0)
+    if (tstz_cmp(inst->t, t) != 0)
       instants[ninsts++] = (TInstant *) inst;
     else /* inst->t == t */
     {
@@ -675,18 +675,18 @@ tcontseq_delete_timestamptz(const TSequence *seq, TimestampTz t)
  * @param[in] t Timestamp
  * @param[in] connect True when the instants before and after the timestamp,
  * if any, are connected in the result
- * @csqlfn #Temporal_delete_timestamptz()
+ * @csqlfn #Temporal_delete_tstz()
  */
 Temporal *
-tsequence_delete_timestamptz(const TSequence *seq, TimestampTz t, bool connect)
+tsequence_delete_tstz(const TSequence *seq, TimestampTz t, bool connect)
 {
   assert(seq);
   if (MEOS_FLAGS_DISCRETE_INTERP(seq->flags))
-    return (Temporal *) tdiscseq_minus_timestamptz(seq, t);
+    return (Temporal *) tdiscseq_minus_tstz(seq, t);
   else
     return connect ?
-      (Temporal *) tcontseq_minus_timestamptz(seq, t) :
-      (Temporal *) tcontseq_delete_timestamptz(seq, t);
+      (Temporal *) tcontseq_minus_tstz(seq, t) :
+      (Temporal *) tcontseq_delete_tstz(seq, t);
 }
 
 /**
@@ -706,7 +706,7 @@ tcontseq_delete_tstzset(const TSequence *seq, const Set *s)
   assert(seq); assert(s);
   /* Singleton timestamp set */
   if (s->count == 1)
-    return tcontseq_delete_timestamptz(seq,
+    return tcontseq_delete_tstz(seq,
       DatumGetTimestampTz(SET_VAL_N(s, 0)));
 
   /* Bounding box test */
@@ -822,7 +822,7 @@ tcontseq_delete_tstzspan(const TSequence *seq, const Span *s)
   for (int i = 0; i < seq->count; i++)
   {
     const TInstant *inst = TSEQUENCE_INST_N(seq, i);
-    if (! contains_span_timestamptz(s, inst->t))
+    if (! contains_span_tstz(s, inst->t))
       instants[ninsts++] = (TInstant *) inst;
     else /* instant is inside the period */
     {
@@ -880,7 +880,7 @@ tcontseq_delete_tstzspanset(const TSequence *seq, const SpanSet *ss)
   /* Instantaneous sequence */
   if (seq->count == 1)
   {
-    if (contains_spanset_timestamptz(ss, TSEQUENCE_INST_N(seq, 0)->t))
+    if (contains_spanset_tstz(ss, TSEQUENCE_INST_N(seq, 0)->t))
       return NULL;
     return tsequence_copy(seq);
   }
@@ -897,7 +897,7 @@ tcontseq_delete_tstzspanset(const TSequence *seq, const SpanSet *ss)
   for (int i = 0; i < seq->count; i++)
   {
     const TInstant *inst = TSEQUENCE_INST_N(seq, i);
-    if (! contains_spanset_timestamptz(ss, inst->t))
+    if (! contains_spanset_tstz(ss, inst->t))
       instants[ninsts++] = (TInstant *) inst;
     else /* instant is inside the span set */
     {
@@ -985,7 +985,7 @@ tsequenceset_insert(const TSequenceSet *ss1, const TSequenceSet *ss2)
       seq2 = TSEQUENCESET_SEQ_N(ss2, 0);
       instants[0] = TSEQUENCE_INST_N(seq1, seq1->count - 1);
       instants[1] = TSEQUENCE_INST_N(seq2, 0);
-      count = (timestamptz_cmp_internal(instants[0]->t, instants[1]->t) == 0) ?
+      count = (tstz_cmp(instants[0]->t, instants[1]->t) == 0) ?
         1 : 2;
       TSequence *seq = tsequence_make(instants, count, true, true, interp,
         NORMALIZE_NO);
@@ -1021,10 +1021,10 @@ tsequenceset_insert(const TSequenceSet *ss1, const TSequenceSet *ss2)
   {
     seq1 = TSEQUENCESET_SEQ_N(ss1, i);
     seq2 = TSEQUENCESET_SEQ_N(ss2, j);
-    int cmp1 = timestamptz_cmp_internal(
+    int cmp1 = tstz_cmp(
       DatumGetTimestampTz(sequences[nseqs - 1]->period.upper),
       DatumGetTimestampTz(seq2->period.lower));
-    int cmp2 = timestamptz_cmp_internal(DatumGetTimestampTz(seq2->period.upper),
+    int cmp2 = tstz_cmp(DatumGetTimestampTz(seq2->period.upper),
       DatumGetTimestampTz(seq1->period.lower));
     /* If seq2 is between the last sequence added and seq1 */
     if (cmp1 <= 0 && cmp2 <= 0)
@@ -1040,7 +1040,7 @@ tsequenceset_insert(const TSequenceSet *ss1, const TSequenceSet *ss2)
         inst2 = TSEQUENCE_INST_N(seq2, 0);
         if (! datum_eq(tinstant_val(inst1), tinstant_val(inst2), basetype))
         {
-          str = pg_timestamptz_out(inst1->t);
+          str = tstz_out(inst1->t);
           meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
             "The temporal values have different value at their common timestamp %s",
             str);
@@ -1054,7 +1054,7 @@ tsequenceset_insert(const TSequenceSet *ss1, const TSequenceSet *ss2)
         inst2 = TSEQUENCE_INST_N(seq1, 0);
         if (! datum_eq(tinstant_val(inst1), tinstant_val(inst2), basetype))
         {
-          str = pg_timestamptz_out(inst1->t);
+          str = tstz_out(inst1->t);
           meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
             "The temporal values have different value at their common timestamp %s",
             str);
@@ -1068,7 +1068,7 @@ tsequenceset_insert(const TSequenceSet *ss1, const TSequenceSet *ss2)
         instants[0] = TSEQUENCE_INST_N(sequences[nseqs - 1],
           sequences[nseqs - 1]->count - 1);
         instants[1] = TSEQUENCE_INST_N(seq2, 0);
-        count = (timestamptz_cmp_internal(instants[0]->t, instants[1]->t) == 0) ?
+        count = (tstz_cmp(instants[0]->t, instants[1]->t) == 0) ?
           1 : 2;
         /* We put true so that it works with step interpolation */
         tofree[nfree] = tsequence_make(instants, count, true, true, interp,
@@ -1082,7 +1082,7 @@ tsequenceset_insert(const TSequenceSet *ss1, const TSequenceSet *ss2)
       {
         instants[0] = TSEQUENCE_INST_N(seq2, seq2->count - 1);
         instants[1] = TSEQUENCE_INST_N(seq1, 0);
-        count = (timestamptz_cmp_internal(instants[0]->t, instants[1]->t) == 0) ?
+        count = (tstz_cmp(instants[0]->t, instants[1]->t) == 0) ?
           1 : 2;
         /* We put true so that it works with step interpolation */
         tofree[nfree] = tsequence_make(instants, count, true, true, interp,
@@ -1116,14 +1116,14 @@ tsequenceset_insert(const TSequenceSet *ss1, const TSequenceSet *ss2)
  * @brief Delete a timestamptz from a temporal sequence set
  * @param[in] ss Temporal sequence set
  * @param[in] t Timestamp
- * @csqlfn #Temporal_minus_timestamptz(), #Temporal_delete_timestamptz()
+ * @csqlfn #Temporal_minus_tstz(), #Temporal_delete_tstz()
  */
 TSequenceSet *
-tsequenceset_delete_timestamptz(const TSequenceSet *ss, TimestampTz t)
+tsequenceset_delete_tstz(const TSequenceSet *ss, TimestampTz t)
 {
   assert(ss);
   /* Bounding box test */
-  if (! contains_span_timestamptz(&ss->period, t))
+  if (! contains_span_tstz(&ss->period, t))
     return tsequenceset_copy(ss);
 
   TSequence *seq;
@@ -1131,7 +1131,7 @@ tsequenceset_delete_timestamptz(const TSequenceSet *ss, TimestampTz t)
   /* Singleton sequence set */
   if (ss->count == 1)
   {
-    seq = tcontseq_delete_timestamptz(TSEQUENCESET_SEQ_N(ss, 0), t);
+    seq = tcontseq_delete_tstz(TSEQUENCESET_SEQ_N(ss, 0), t);
     if (seq)
       return tsequence_to_tsequenceset_free(seq);
     return NULL;
@@ -1142,7 +1142,7 @@ tsequenceset_delete_timestamptz(const TSequenceSet *ss, TimestampTz t)
   int nseqs = 0;
   for (int i = 0; i < ss->count; i++)
   {
-    seq = tcontseq_delete_timestamptz(TSEQUENCESET_SEQ_N(ss, i), t);
+    seq = tcontseq_delete_tstz(TSEQUENCESET_SEQ_N(ss, i), t);
     if (seq)
       sequences[nseqs++] = seq;
   }
@@ -1163,7 +1163,7 @@ tsequenceset_delete_tstzset(const TSequenceSet *ss, const Set *s)
   assert(ss); assert(s);
   /* Singleton timestamp set */
   if (s->count == 1)
-    return tsequenceset_delete_timestamptz(ss,
+    return tsequenceset_delete_tstz(ss,
       DatumGetTimestampTz(SET_VAL_N(s, 0)));
 
   /* Bounding box test */
@@ -1256,7 +1256,7 @@ tsequenceset_delete_tstzspanset(const TSequenceSet *ss, const SpanSet *ps)
   /* Skip all composing periods that are before or adjacent to seq */
   while (j < ps->count)
   {
-    if (timestamptz_cmp_internal(DatumGetTimestampTz(s->upper),
+    if (tstz_cmp(DatumGetTimestampTz(s->upper),
           DatumGetTimestampTz(seq->period.lower)) > 0)
       break;
     s = SPANSET_SP_N(ps, j++);
@@ -1264,13 +1264,13 @@ tsequenceset_delete_tstzspanset(const TSequenceSet *ss, const SpanSet *ps)
   seq = (TSequence *) TSEQUENCESET_SEQ_N(minus, 1);
   while (i < ss->count && j < ps->count)
   {
-    if (timestamptz_cmp_internal(DatumGetTimestampTz(s->upper),
+    if (tstz_cmp(DatumGetTimestampTz(s->upper),
           DatumGetTimestampTz(seq->period.lower) <= 0))
     {
       instants[0] = TSEQUENCE_INST_N(sequences[nseqs - 1],
         sequences[nseqs - 1]->count - 1);
       instants[1] = TSEQUENCE_INST_N(seq, 0);
-      int count = (timestamptz_cmp_internal(instants[0]->t,
+      int count = (tstz_cmp(instants[0]->t,
         instants[1]->t) == 0) ? 1 : 2;
       /* We put true so that it works with step interpolation */
       tofree[nfree] = tsequence_make(instants, count, true, true, interp,
@@ -1377,10 +1377,10 @@ temporal_update(const Temporal *temp1, const Temporal *temp2, bool connect)
  * @param[in] t Timestamp
  * @param[in] connect True when the instants before and after the timestamp,
  * if any, are connected in the result
- * @csqlfn #Temporal_delete_timestamptz()
+ * @csqlfn #Temporal_delete_tstz()
  */
 Temporal *
-temporal_delete_timestamptz(const Temporal *temp, TimestampTz t, bool connect)
+temporal_delete_tstz(const Temporal *temp, TimestampTz t, bool connect)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp))
@@ -1390,16 +1390,16 @@ temporal_delete_timestamptz(const Temporal *temp, TimestampTz t, bool connect)
   switch (temp->subtype)
   {
     case TINSTANT:
-      return (Temporal *) tinstant_restrict_timestamptz((TInstant *) temp, t,
+      return (Temporal *) tinstant_restrict_tstz((TInstant *) temp, t,
         REST_MINUS);
     case TSEQUENCE:
-      return (Temporal *) tsequence_delete_timestamptz((TSequence *) temp, t,
+      return (Temporal *) tsequence_delete_tstz((TSequence *) temp, t,
         connect);
     default: /* TSEQUENCESET */
       return connect ?
-        (Temporal *) tsequenceset_restrict_timestamptz((TSequenceSet *) temp, t,
+        (Temporal *) tsequenceset_restrict_tstz((TSequenceSet *) temp, t,
           REST_MINUS) :
-        (Temporal *) tsequenceset_delete_timestamptz((TSequenceSet *) temp, t);
+        (Temporal *) tsequenceset_delete_tstz((TSequenceSet *) temp, t);
   }
 }
 
@@ -1544,8 +1544,8 @@ tsequence_append_tinstant(TSequence *seq, const TInstant *inst, double maxdist,
    * account inclusive/exclusive bounds */
   if (last->t > inst->t)
   {
-    str1 = pg_timestamptz_out(last->t);
-    char *str2 = pg_timestamptz_out(inst->t);
+    str1 = tstz_out(last->t);
+    char *str2 = tstz_out(inst->t);
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "Timestamps for temporal value must be increasing: %s, %s", str1, str2);
     pfree(str1); pfree(str2);
@@ -1561,7 +1561,7 @@ tsequence_append_tinstant(TSequence *seq, const TInstant *inst, double maxdist,
     {
       if (! eqv1v)
       {
-        str1 = pg_timestamptz_out(last->t);
+        str1 = tstz_out(last->t);
         meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
           "The temporal values have different value at their common timestamp %s",
           str1);
@@ -1597,7 +1597,7 @@ tsequence_append_tinstant(TSequence *seq, const TInstant *inst, double maxdist,
     /* If there is not already a split by distance */
     if (maxt != NULL && ! split)
     {
-      Interval *duration = minus_timestamptz_timestamptz(inst->t, last->t);
+      Interval *duration = minus_tstz_tstz(inst->t, last->t);
       if (pg_interval_cmp(duration, maxt) > 0)
         split = true;
       pfree(duration);
@@ -1725,8 +1725,8 @@ tsequence_append_tsequence(const TSequence *seq1, const TSequence *seq2,
   char *str1;
   if (inst1->t > inst2->t)
   {
-    str1 = pg_timestamptz_out(inst1->t);
-    char *str2 = pg_timestamptz_out(inst2->t);
+    str1 = tstz_out(inst1->t);
+    char *str2 = tstz_out(inst2->t);
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "Timestamps for temporal value must be increasing: %s, %s", str1, str2);
     pfree(str1); pfree(str2);
@@ -1740,7 +1740,7 @@ tsequence_append_tsequence(const TSequence *seq1, const TSequence *seq2,
     Datum value2 = tinstant_val(inst2);
     if (! datum_eq(value1, value2, basetype))
     {
-      str1 = pg_timestamptz_out(inst1->t);
+      str1 = tstz_out(inst1->t);
       meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
         "The temporal values have different value at their common timestamp %s",
         str1);
@@ -1912,8 +1912,8 @@ tsequenceset_append_tsequence(TSequenceSet *ss, const TSequence *seq,
   char *str1;
   if (inst1->t > inst2->t)
   {
-    str1 = pg_timestamptz_out(inst1->t);
-    char *str2 = pg_timestamptz_out(inst2->t);
+    str1 = tstz_out(inst1->t);
+    char *str2 = tstz_out(inst2->t);
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "Timestamps for temporal value must be increasing: %s, %s", str1, str2);
     pfree(str1); pfree(str2);
@@ -1927,7 +1927,7 @@ tsequenceset_append_tsequence(TSequenceSet *ss, const TSequence *seq,
     Datum value2 = tinstant_val(inst2);
     if (! datum_eq(value1, value2, basetype))
     {
-      str1 = pg_timestamptz_out(inst1->t);
+      str1 = tstz_out(inst1->t);
       meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
         "The temporal values have different value at their common timestamp %s",
         str1);

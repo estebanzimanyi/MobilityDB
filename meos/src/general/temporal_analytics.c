@@ -67,14 +67,14 @@
  * @param[in] torigin Time origin of the bins
  */
 TimestampTz
-timestamptz_tprecision(TimestampTz t, const Interval *duration,
+tstz_tprecision(TimestampTz t, const Interval *duration,
   TimestampTz torigin)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) duration) ||
       ! ensure_valid_duration(duration))
     return DT_NOEND;
-  return timestamptz_get_bin(t, duration, torigin);
+  return tstz_get_bin(t, duration, torigin);
 }
 
 /**
@@ -96,7 +96,7 @@ tstzset_tprecision(const Set *s, const Interval *duration, TimestampTz torigin)
   Datum *values = palloc(sizeof(Datum) * s->count);
   /* Loop for each value */
   for (int i = 0; i < s->count; i++)
-    values[i] = timestamptz_get_bin(SET_VAL_N(s, i), duration, torigin);
+    values[i] = tstz_get_bin(SET_VAL_N(s, i), duration, torigin);
   return set_make_free(values, s->count, T_TIMESTAMPTZ, ORDER);
 }
 
@@ -120,9 +120,9 @@ tstzspan_tprecision(const Span *s, const Interval *duration,
   int64 tunits = interval_units(duration);
   TimestampTz lower = DatumGetTimestampTz(s->lower);
   TimestampTz upper = DatumGetTimestampTz(s->upper);
-  TimestampTz lower_bin = timestamptz_get_bin(lower, duration, torigin);
+  TimestampTz lower_bin = tstz_get_bin(lower, duration, torigin);
   /* We need to add tunits to obtain the end timestamptz of the last bin */
-  TimestampTz upper_bin = timestamptz_get_bin(upper, duration, torigin) +
+  TimestampTz upper_bin = tstz_get_bin(upper, duration, torigin) +
     tunits;
   return span_make(TimestampTzGetDatum(lower_bin),
     TimestampTzGetDatum(upper_bin), true, false, T_TIMESTAMPTZ);
@@ -148,9 +148,9 @@ tstzspanset_tprecision(const SpanSet *ss, const Interval *duration,
   int64 tunits = interval_units(duration);
   TimestampTz lower = DatumGetTimestampTz(ss->span.lower);
   TimestampTz upper = DatumGetTimestampTz(ss->span.upper);
-  TimestampTz lower_bin = timestamptz_get_bin(lower, duration, torigin);
+  TimestampTz lower_bin = tstz_get_bin(lower, duration, torigin);
   /* We need to add tunits to obtain the end timestamptz of the last bin */
-  TimestampTz upper_bin = timestamptz_get_bin(upper, duration, torigin) +
+  TimestampTz upper_bin = tstz_get_bin(upper, duration, torigin) +
     tunits;
   /* Number of bins */
   int count = (int) (((int64) upper_bin - (int64) lower_bin) / tunits);
@@ -187,7 +187,7 @@ tinstant_tprecision(const TInstant *inst, const Interval *duration,
   TimestampTz torigin)
 {
   assert(inst); assert(duration); assert(valid_duration(duration));
-  TimestampTz lower = timestamptz_get_bin(inst->t, duration, torigin);
+  TimestampTz lower = tstz_get_bin(inst->t, duration, torigin);
   Datum value = tinstant_val(inst);
   return tinstant_make(value, inst->temptype, lower);
 }
@@ -209,9 +209,9 @@ tsequence_tprecision(const TSequence *seq, const Interval *duration,
   int64 tunits = interval_units(duration);
   TimestampTz lower = DatumGetTimestampTz(seq->period.lower);
   TimestampTz upper = DatumGetTimestampTz(seq->period.upper);
-  TimestampTz lower_bin = timestamptz_get_bin(lower, duration, torigin);
+  TimestampTz lower_bin = tstz_get_bin(lower, duration, torigin);
   /* We need to add tunits to obtain the end timestamp of the last bin */
-  TimestampTz upper_bin = timestamptz_get_bin(upper, duration, torigin) +
+  TimestampTz upper_bin = tstz_get_bin(upper, duration, torigin) +
     tunits;
   /* Number of bins */
   int count = (int) (((int64) upper_bin - (int64) lower_bin) / tunits);
@@ -236,7 +236,7 @@ tsequence_tprecision(const TSequence *seq, const Interval *duration,
   {
     /* Get the next instant */
     TInstant *inst = (TInstant *) TSEQUENCE_INST_N(seq, i);
-    int cmp = timestamptz_cmp_internal(inst->t, upper);
+    int cmp = tstz_cmp(inst->t, upper);
     /* If the instant is in the current bin consume it */
     if (cmp <= 0)
     {
@@ -249,9 +249,9 @@ tsequence_tprecision(const TSequence *seq, const Interval *duration,
       assert(k > 0);
       /* Compute the value at the end of the bin if we do not have it */
       if (interp != DISCRETE &&
-          timestamptz_cmp_internal(ininsts[k - 1]->t, upper) < 0)
+          tstz_cmp(ininsts[k - 1]->t, upper) < 0)
       {
-        tsequence_value_at_timestamptz(seq, upper, false, &value);
+        tsequence_value_at_tstz(seq, upper, false, &value);
         ininsts[k++] = end = tinstant_make_free(value, seq->temptype, upper);
       }
       seq1 = tsequence_make((const TInstant **) ininsts, k, true, true, interp,
@@ -327,9 +327,9 @@ tsequenceset_tprecision(const TSequenceSet *ss, const Interval *duration,
   int64 tunits = interval_units(duration);
   TimestampTz lower = DatumGetTimestampTz(ss->period.lower);
   TimestampTz upper = DatumGetTimestampTz(ss->period.upper);
-  TimestampTz lower_bin = timestamptz_get_bin(lower, duration, torigin);
+  TimestampTz lower_bin = tstz_get_bin(lower, duration, torigin);
   /* We need to add tunits to obtain the end timestamp of the last bin */
-  TimestampTz upper_bin = timestamptz_get_bin(upper, duration, torigin) +
+  TimestampTz upper_bin = tstz_get_bin(upper, duration, torigin) +
     tunits;
   /* Number of bins */
   int count = (int) (((int64) upper_bin - (int64) lower_bin) / tunits);
@@ -436,7 +436,7 @@ tinstant_tsample(const TInstant *inst, const Interval *duration,
   TimestampTz torigin)
 {
   assert(inst); assert(duration); assert(valid_duration(duration));
-  TimestampTz lower = timestamptz_get_bin(inst->t, duration, torigin);
+  TimestampTz lower = tstz_get_bin(inst->t, duration, torigin);
   if (timestamp_cmp_internal(lower, inst->t) == 0)
     return tinstant_copy(inst);
   return NULL;
@@ -466,7 +466,7 @@ tsequence_tsample_iter(const TSequence *seq, TimestampTz lower_bin,
     i = 0; /* Current instant of the sequence */
     while (i < seq->count && lower < upper_bin)
     {
-      cmp1 = timestamptz_cmp_internal(start->t, lower);
+      cmp1 = tstz_cmp(start->t, lower);
       /* If the instant is equal to the lower bound of the bin */
       if (cmp1 == 0)
       {
@@ -499,13 +499,13 @@ tsequence_tsample_iter(const TSequence *seq, TimestampTz lower_bin,
     while (i < seq->count && lower < upper_bin)
     {
       bool upper_inc = (i == seq->count - 1) ? seq->period.upper_inc : false;
-      cmp1 = timestamptz_cmp_internal(start->t, lower);
-      int cmp2 = timestamptz_cmp_internal(lower, end->t);
+      cmp1 = tstz_cmp(start->t, lower);
+      int cmp2 = tstz_cmp(lower, end->t);
       /* If the segment contains the lower bound of the bin */
       if ((cmp1 < 0 || (cmp1 == 0 && lower_inc)) &&
           (cmp2 < 0 || (cmp2 == 0 && upper_inc)))
       {
-        Datum value = tsegment_value_at_timestamptz(start, end, interp, lower);
+        Datum value = tsegment_value_at_tstz(start, end, interp, lower);
         result[ninsts++] = tinstant_make(value, seq->temptype, lower);
         /* Advance the bin */
         lower += tunits;
@@ -543,9 +543,9 @@ tsequence_tsample(const TSequence *seq, const Interval *duration,
   int64 tunits = interval_units(duration);
   TimestampTz lower = DatumGetTimestampTz(seq->period.lower);
   TimestampTz upper = DatumGetTimestampTz(seq->period.upper);
-  TimestampTz lower_bin = timestamptz_get_bin(lower, duration, torigin);
+  TimestampTz lower_bin = tstz_get_bin(lower, duration, torigin);
   /* We need to add tunits to obtain the end timestamp of the last bin */
-  TimestampTz upper_bin = timestamptz_get_bin(upper, duration, torigin) +
+  TimestampTz upper_bin = tstz_get_bin(upper, duration, torigin) +
     tunits;
   /* Number of bins */
   int count = (int) (((int64) upper_bin - (int64) lower_bin) / tunits) + 1;
@@ -568,11 +568,11 @@ tsequenceset_disc_tsample(const TSequenceSet *ss, const Interval *duration,
   assert(ss); assert(duration); assert(valid_duration(duration));
 
   int64 tunits = interval_units(duration);
-  TimestampTz lower = tsequenceset_start_timestamptz(ss);
-  TimestampTz upper = tsequenceset_end_timestamptz(ss);
-  TimestampTz lower_bin = timestamptz_get_bin(lower, duration, torigin);
+  TimestampTz lower = tsequenceset_start_tstz(ss);
+  TimestampTz upper = tsequenceset_end_tstz(ss);
+  TimestampTz lower_bin = tstz_get_bin(lower, duration, torigin);
   /* We need to add tunits to obtain the end timestamp of the last bin */
-  TimestampTz upper_bin = timestamptz_get_bin(upper, duration, torigin) +
+  TimestampTz upper_bin = tstz_get_bin(upper, duration, torigin) +
     tunits;
   /* Number of bins */
   int count = (int) (((int64) upper_bin - (int64) lower_bin) / tunits) + 1;
@@ -1273,7 +1273,7 @@ tsequence_simplify_min_tdelta(const TSequence *seq, const Interval *mint)
   for (int i = 1; i < seq->count; i++)
   {
     const TInstant *inst2 = TSEQUENCE_INST_N(seq, i);
-    Interval *duration = minus_timestamptz_timestamptz(inst2->t, inst1->t);
+    Interval *duration = minus_tstz_tstz(inst2->t, inst1->t);
     if (pg_interval_cmp(duration, mint) > 0)
     {
       /* Add instant to output sequence */
@@ -1379,7 +1379,7 @@ tfloatseq_findsplit(const TSequence *seq, int i1, int i2, int *split,
     double value = DatumGetFloat8(tinstant_val(inst));
     /*
      * The following is equivalent to
-     * #tsegment_value_at_timestamptz(start, end, LINEAR, inst->t);
+     * #tsegment_value_at_tstz(start, end, LINEAR, inst->t);
      */
     double duration1 = (double) (inst->t - start->t);
     double ratio = duration1 / duration2;
@@ -1536,7 +1536,7 @@ tpointseq_findsplit(const TSequence *seq, int i1, int i2, bool syncdist,
       p3k = (POINT3DZ *) DATUM_POINT3DZ_P(tinstant_val(inst));
       if (syncdist)
       {
-        value = tsegment_value_at_timestamptz(start, end, interp, inst->t);
+        value = tsegment_value_at_tstz(start, end, interp, inst->t);
         p3_sync = (POINT3DZ *) DATUM_POINT3DZ_P(value);
         d_tmp = dist3d_pt_pt(p3k, p3_sync);
         pfree(DatumGetPointer(value));
@@ -1549,7 +1549,7 @@ tpointseq_findsplit(const TSequence *seq, int i1, int i2, bool syncdist,
       p2k = (POINT2D *) DATUM_POINT2D_P(tinstant_val(inst));
       if (syncdist)
       {
-        value = tsegment_value_at_timestamptz(start, end, interp, inst->t);
+        value = tsegment_value_at_tstz(start, end, interp, inst->t);
         p2_sync = (POINT2D *) DATUM_POINT2D_P(value);
         d_tmp = dist2d_pt_pt(p2k, p2_sync);
         pfree(DatumGetPointer(value));

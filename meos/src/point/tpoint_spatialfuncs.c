@@ -1338,7 +1338,7 @@ tgeogpointsegm_intersection(const TInstant *start1, const TInstant *end1,
   const TInstant *start2, const TInstant *end2, TimestampTz *t)
 {
   Datum mindist;
-  bool found = tgeogpoint_min_dist_at_timestamptz(start1, end1, start2, end2,
+  bool found = tgeogpoint_min_dist_at_tstz(start1, end1, start2, end2,
     &mindist, t);
   if (! found || DatumGetFloat8(mindist) > MEOS_EPSILON)
     return false;
@@ -4384,7 +4384,7 @@ get_bearing_fn(int16 flags)
  * @note The parameter @p basetype is not needed for temporal points
  */
 static bool
-tpoint_geo_min_bearing_at_timestamptz(const TInstant *start,
+tpoint_geo_min_bearing_at_tstz(const TInstant *start,
   const TInstant *end, Datum point, meosType basetypid __attribute__((unused)),
   Datum *value, TimestampTz *t)
 {
@@ -4430,7 +4430,7 @@ tpoint_geo_min_bearing_at_timestamptz(const TInstant *start,
   *value = (Datum) 0;
   /* Compute the projected value only for geometries */
   if (! geodetic)
-    proj = tsegment_value_at_timestamptz(start, end, LINEAR, *t);
+    proj = tsegment_value_at_tstz(start, end, LINEAR, *t);
   q = DATUM_POINT2D_P(proj);
   /* We add a turning point only if p is to the North of q */
   bool result = MEOS_FP_GE(p->y, q->y) ? true : false;
@@ -4450,7 +4450,7 @@ tpoint_geo_min_bearing_at_timestamptz(const TInstant *start,
  * points
  */
 static bool
-tpointsegm_min_bearing_at_timestamptz(const TInstant *start1,
+tpointsegm_min_bearing_at_tstz(const TInstant *start1,
   const TInstant *end1, const TInstant *start2,
   const TInstant *end2, Datum *value, TimestampTz *t)
 {
@@ -4491,8 +4491,8 @@ tpointsegm_min_bearing_at_timestamptz(const TInstant *start1,
   *t = start1->t + (TimestampTz) (duration * fraction);
   /* We need to verify that at timestamp t the first segment is to the
    * North of the second */
-  Datum value1 = tsegment_value_at_timestamptz(start1, end1, LINEAR, *t);
-  Datum value2 = tsegment_value_at_timestamptz(start2, end2, LINEAR, *t);
+  Datum value1 = tsegment_value_at_tstz(start1, end1, LINEAR, *t);
+  Datum value2 = tsegment_value_at_tstz(start2, end2, LINEAR, *t);
   sp1 = DATUM_POINT2D_P(value1);
   sp2 = DATUM_POINT2D_P(value2);
   if (sp1->y > sp2->y) // TODO Use MEOS_EPSILON
@@ -4560,7 +4560,7 @@ bearing_tpoint_point(const Temporal *temp, const GSERIALIZED *gs, bool invert)
   lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   lfinfo.invert = invert;
   lfinfo.discont = CONTINUOUS;
-  lfinfo.tpfunc_base = &tpoint_geo_min_bearing_at_timestamptz;
+  lfinfo.tpfunc_base = &tpoint_geo_min_bearing_at_tstz;
   lfinfo.tpfunc = NULL;
   return tfunc_temporal_base(temp, PointerGetDatum(gs), &lfinfo);
 }
@@ -4593,7 +4593,7 @@ bearing_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
   lfinfo.discont = CONTINUOUS;
   lfinfo.tpfunc_base = NULL;
   lfinfo.tpfunc = lfinfo.reslinear ?
-    &tpointsegm_min_bearing_at_timestamptz : NULL;
+    &tpointsegm_min_bearing_at_tstz : NULL;
   return tfunc_temporal_temporal(temp1, temp2, &lfinfo);
 }
 

@@ -450,7 +450,7 @@ tsequence_join(const TSequence *seq1, const TSequence *seq2,
  * @return Return -1 if the timestamp is not contained in a temporal sequence
  */
 int
-tcontseq_find_timestamptz(const TSequence *seq, TimestampTz t)
+tcontseq_find_tstz(const TSequence *seq, TimestampTz t)
 {
   assert(seq);
   int first = 0;
@@ -498,7 +498,7 @@ tcontseq_find_timestamptz(const TSequence *seq, TimestampTz t)
  * @return Return true if the timestamp is contained in the discrete sequence
  */
 int
-tdiscseq_find_timestamptz(const TSequence *seq, TimestampTz t)
+tdiscseq_find_tstz(const TSequence *seq, TimestampTz t)
 {
   assert(seq);
   int first = 0;
@@ -506,7 +506,7 @@ tdiscseq_find_timestamptz(const TSequence *seq, TimestampTz t)
   while (first <= last)
   {
     int middle = (first + last) / 2;
-    int cmp = timestamptz_cmp_internal(TSEQUENCE_INST_N(seq, middle)->t, t);
+    int cmp = tstz_cmp(TSEQUENCE_INST_N(seq, middle)->t, t);
     if (cmp == 0)
       return middle;
     if (cmp > 0)
@@ -887,8 +887,8 @@ ensure_increasing_timestamps(const TInstant *inst1, const TInstant *inst2,
 {
   if ((merge && inst1->t > inst2->t) || (! merge && inst1->t >= inst2->t))
   {
-    char *t1 = pg_timestamptz_out(inst1->t);
-    char *t2 = pg_timestamptz_out(inst2->t);
+    char *t1 = tstz_out(inst1->t);
+    char *t2 = tstz_out(inst2->t);
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "Timestamps for temporal value must be increasing: %s, %s", t1, t2);
     return false;
@@ -897,7 +897,7 @@ ensure_increasing_timestamps(const TInstant *inst1, const TInstant *inst2,
     ! datum_eq(tinstant_val(inst1), tinstant_val(inst2),
         temptype_basetype(inst1->temptype)))
   {
-    char *t1 = pg_timestamptz_out(inst1->t);
+    char *t1 = tstz_out(inst1->t);
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "The temporal values have different value at their overlapping instant %s",
       t1);
@@ -2191,10 +2191,10 @@ tsequence_insts(const TSequence *seq)
  * @ingroup meos_internal_temporal_accessor
  * @brief Return the start timestamptz of a temporal sequence
  * @param[in] seq Temporal sequence
- * @csqlfn #Temporal_start_timestamptz()
+ * @csqlfn #Temporal_start_tstz()
  */
 TimestampTz
-tsequence_start_timestamptz(const TSequence *seq)
+tsequence_start_tstz(const TSequence *seq)
 {
   assert(seq);
   return TSEQUENCE_INST_N(seq, 0)->t;
@@ -2204,10 +2204,10 @@ tsequence_start_timestamptz(const TSequence *seq)
  * @ingroup meos_internal_temporal_accessor
  * @brief Return the end timestamptz of a temporal sequence
  * @param[in] seq Temporal sequence
- * @csqlfn #Temporal_end_timestamptz()
+ * @csqlfn #Temporal_end_tstz()
  */
 TimestampTz
-tsequence_end_timestamptz(const TSequence *seq)
+tsequence_end_tstz(const TSequence *seq)
 {
   assert(seq);
   return TSEQUENCE_INST_N(seq, seq->count - 1)->t;
@@ -2258,7 +2258,7 @@ tsequence_timestamps(const TSequence *seq, int *count)
  * @note The function creates a new value that must be freed
  */
 Datum
-tsegment_value_at_timestamptz(const TInstant *inst1, const TInstant *inst2,
+tsegment_value_at_tstz(const TInstant *inst1, const TInstant *inst2,
   interpType interp, TimestampTz t)
 {
   Datum value1 = tinstant_val(inst1);
@@ -2354,10 +2354,10 @@ tsegment_value_at_timestamptz(const TInstant *inst1, const TInstant *inst2,
  * @param[in] strict True if inclusive/exclusive bounds are taken into account
  * @param[out] result Result
  * @return Return true if the timestamp is contained in the temporal sequence
- * @csqlfn #Temporal_value_at_timestamptz()
+ * @csqlfn #Temporal_value_at_tstz()
  */
 bool
-tsequence_value_at_timestamptz(const TSequence *seq, TimestampTz t, bool strict,
+tsequence_value_at_tstz(const TSequence *seq, TimestampTz t, bool strict,
   Datum *result)
 {
   assert(seq); assert(result);
@@ -2380,7 +2380,7 @@ tsequence_value_at_timestamptz(const TSequence *seq, TimestampTz t, bool strict,
   }
 
   /* Bounding box test */
-  if (! contains_span_timestamptz(&seq->period, t))
+  if (! contains_span_tstz(&seq->period, t))
     return false;
 
   /* Instantaneous sequence */
@@ -2391,14 +2391,14 @@ tsequence_value_at_timestamptz(const TSequence *seq, TimestampTz t, bool strict,
   }
 
   /* General case */
-  int n = tcontseq_find_timestamptz(seq, t);
+  int n = tcontseq_find_tstz(seq, t);
   const TInstant *inst1 = TSEQUENCE_INST_N(seq, n);
   if (t == inst1->t)
     *result = tinstant_value(inst1);
   else
   {
     interpType interp = MEOS_FLAGS_GET_INTERP(seq->flags);
-    *result = tsegment_value_at_timestamptz(inst1,
+    *result = tsegment_value_at_tstz(inst1,
       TSEQUENCE_INST_N(seq, n + 1), interp, t);
   }
   return true;
@@ -2439,8 +2439,8 @@ synchronize_tsequence_tsequence(const TSequence *seq1, const TSequence *seq2,
   /* If the two sequences intersect at an instant */
   if (inter.lower == inter.upper)
   {
-    inst1 = tsequence_at_timestamptz(seq1, inter.lower);
-    inst2 = tsequence_at_timestamptz(seq2, inter.lower);
+    inst1 = tsequence_at_tstz(seq1, inter.lower);
+    inst2 = tsequence_at_tstz(seq2, inter.lower);
     *sync1 = tinstant_to_tsequence(inst1, interp1);
     *sync2 = tinstant_to_tsequence(inst2, interp2);
     pfree(inst1); pfree(inst2);
@@ -2461,12 +2461,12 @@ synchronize_tsequence_tsequence(const TSequence *seq1, const TSequence *seq2,
   int i = 0, j = 0, ninsts = 0, nfree = 0;
   if (inst1->t < DatumGetTimestampTz(inter.lower))
   {
-    i = tcontseq_find_timestamptz(seq1, inter.lower) + 1;
+    i = tcontseq_find_tstz(seq1, inter.lower) + 1;
     inst1 = (TInstant *) TSEQUENCE_INST_N(seq1, i);
   }
   else if (inst2->t < DatumGetTimestampTz(inter.lower))
   {
-    j = tcontseq_find_timestamptz(seq2, inter.lower) + 1;
+    j = tcontseq_find_tstz(seq2, inter.lower) + 1;
     inst2 = (TInstant *) TSEQUENCE_INST_N(seq2, j);
   }
   int count = (seq1->count - i + seq2->count - j) * 2;
@@ -2479,7 +2479,7 @@ synchronize_tsequence_tsequence(const TSequence *seq1, const TSequence *seq2,
     (inst1->t <= DatumGetTimestampTz(inter.upper) ||
      inst2->t <= DatumGetTimestampTz(inter.upper)))
   {
-    int cmp = timestamptz_cmp_internal(inst1->t, inst2->t);
+    int cmp = tstz_cmp(inst1->t, inst2->t);
     if (cmp == 0)
     {
       i++; j++;
@@ -2487,13 +2487,13 @@ synchronize_tsequence_tsequence(const TSequence *seq1, const TSequence *seq2,
     else if (cmp < 0)
     {
       i++;
-      inst2 = tsequence_at_timestamptz(seq2, inst1->t);
+      inst2 = tsequence_at_tstz(seq2, inst1->t);
       tofree[nfree++] = inst2;
     }
     else
     {
       j++;
-      inst1 = tsequence_at_timestamptz(seq1, inst2->t);
+      inst1 = tsequence_at_tstz(seq1, inst2->t);
       tofree[nfree++] = inst1;
     }
     /* If not the first instant add potential crossing before adding the new
@@ -2576,7 +2576,7 @@ intersection_tdiscseq_tdiscseq(const TSequence *seq1, const TSequence *seq2,
   const TInstant *inst2 = TSEQUENCE_INST_N(seq2, j);
   while (i < seq1->count && j < seq2->count)
   {
-    int cmp = timestamptz_cmp_internal(inst1->t, inst2->t);
+    int cmp = tstz_cmp(inst1->t, inst2->t);
     if (cmp == 0)
     {
       instants1[ninsts] = inst1;
@@ -2624,9 +2624,9 @@ intersection_tcontseq_tdiscseq(const TSequence *seq1, const TSequence *seq2,
   for (int i = 0; i < seq2->count; i++)
   {
     const TInstant *inst = TSEQUENCE_INST_N(seq2, i);
-    if (contains_span_timestamptz(&seq1->period, inst->t))
+    if (contains_span_tstz(&seq1->period, inst->t))
     {
-      instants1[ninsts] = tsequence_at_timestamptz(seq1, inst->t);
+      instants1[ninsts] = tsequence_at_tstz(seq1, inst->t);
       instants2[ninsts++] = inst;
     }
     if (DatumGetTimestampTz(seq1->period.upper) < inst->t)
@@ -2760,7 +2760,7 @@ tlinearsegm_intersection_value(const TInstant *inst1, const TInstant *inst2,
 
   if (result && inter != NULL)
     /* We are sure it is linear interpolation */
-    *inter = tsegment_value_at_timestamptz(inst1, inst2, LINEAR, *t);
+    *inter = tsegment_value_at_tstz(inst1, inst2, LINEAR, *t);
   return result;
 }
 
@@ -2900,9 +2900,9 @@ tsegment_intersection(const TInstant *start1, const TInstant *end1,
       result = tgeogpointsegm_intersection(start1, end1, start2, end2, t);
     /* We are sure it is linear interpolation */
     if (result && inter1 != NULL)
-      *inter1 = tsegment_value_at_timestamptz(start1, end1, LINEAR, *t);
+      *inter1 = tsegment_value_at_tstz(start1, end1, LINEAR, *t);
     if (result && inter2 != NULL)
-      *inter2 = tsegment_value_at_timestamptz(start2, end2, LINEAR, *t);
+      *inter2 = tsegment_value_at_tstz(start2, end2, LINEAR, *t);
   }
   return result;
 }
@@ -2919,7 +2919,7 @@ intersection_tsequence_tinstant(const TSequence *seq, const TInstant *inst,
 {
   assert(seq); assert(inst);
   assert(inter1); assert(inter2);
-  TInstant *inst1 = tsequence_at_timestamptz(seq, inst->t);
+  TInstant *inst1 = tsequence_at_tstz(seq, inst->t);
   if (inst1 == NULL)
     return false;
 

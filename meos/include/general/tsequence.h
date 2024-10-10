@@ -55,8 +55,8 @@ extern TSequence *tsequence_join(const TSequence *seq1, const TSequence *seq2,
 
 /* General functions */
 
-extern int tcontseq_find_timestamptz(const TSequence *seq, TimestampTz t);
-extern int tdiscseq_find_timestamptz(const TSequence *seq, TimestampTz t);
+extern int tcontseq_find_tstz(const TSequence *seq, TimestampTz t);
+extern int tdiscseq_find_tstz(const TSequence *seq, TimestampTz t);
 extern TSequence **tseqarr2_to_tseqarr(TSequence ***sequences, int *countseqs,
   int count, int totalseqs);
 
@@ -125,7 +125,7 @@ extern TSequenceSet *tstepseq_to_linear(const TSequence *seq);
 extern int tfloatseq_spans(const TSequence *seq, Span *result);
 extern int tsequence_segments_iter(const TSequence *seq, TSequence **result);
 extern int tsequence_timestamps_iter(const TSequence *seq, TimestampTz *result);
-extern Datum tsegment_value_at_timestamptz(const TInstant *inst1,
+extern Datum tsegment_value_at_tstz(const TInstant *inst1,
   const TInstant *inst2, interpType interp, TimestampTz t);
 
 /* Local Aggregate Functions */

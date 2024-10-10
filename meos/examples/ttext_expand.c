@@ -113,7 +113,7 @@ int main(void)
   printf("Generating the instants (one '*' marker every %d instants)\n",
     NO_INSTANTS_BATCH);
 
-  TimestampTz t = pg_timestamptz_in("2000-01-01", -1);
+  TimestampTz t = tstz_in("2000-01-01", -1);
   for (i = 0; i < MAX_INSTANTS; i++)
   {
     /* Generate the instant */
@@ -123,7 +123,7 @@ int main(void)
     memset(value, i % 2 == 0 ? 'A' : 'B', len);
     value[len] = '\0';
     text *txt = cstring2text(value);
-    t = add_timestamptz_interval(t, onehour);
+    t = add_tstz_interval(t, onehour);
     TInstant *inst = ttextinst_make(txt, t);
     free(value); free(txt);
     /* Test whether it is the first instant read */

@@ -97,19 +97,19 @@ CREATE FUNCTION asHexWKB(tbox, endianenconding text DEFAULT '')
 
 CREATE FUNCTION tbox(integer, timestamptz)
   RETURNS tbox
-  AS 'MODULE_PATHNAME', 'Number_timestamptz_to_tbox'
+  AS 'MODULE_PATHNAME', 'Number_tstz_to_tbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tbox(intspan, timestamptz)
   RETURNS tbox
-  AS 'MODULE_PATHNAME', 'Numspan_timestamptz_to_tbox'
+  AS 'MODULE_PATHNAME', 'Numspan_tstz_to_tbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tbox(float, timestamptz)
   RETURNS tbox
-  AS 'MODULE_PATHNAME', 'Number_timestamptz_to_tbox'
+  AS 'MODULE_PATHNAME', 'Number_tstz_to_tbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tbox(floatspan, timestamptz)
   RETURNS tbox
-  AS 'MODULE_PATHNAME', 'Numspan_timestamptz_to_tbox'
+  AS 'MODULE_PATHNAME', 'Numspan_tstz_to_tbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tbox(integer, tstzspan)
   RETURNS tbox
@@ -146,7 +146,7 @@ CREATE FUNCTION tbox(numeric)
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tbox(timestamptz)
   RETURNS tbox
-  AS 'MODULE_PATHNAME', 'Timestamptz_to_tbox'
+  AS 'MODULE_PATHNAME', 'Tstz_to_tbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION tbox(intset)

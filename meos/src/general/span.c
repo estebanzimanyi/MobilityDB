@@ -860,7 +860,7 @@ date_to_span(DateADT d)
  * @csqlfn #Value_to_span()
  */
 Span *
-timestamptz_to_span(TimestampTz t)
+tstz_to_span(TimestampTz t)
 {
   Span *result = palloc(sizeof(Span));
   span_set(TimestampTzGetDatum(t), TimestampTzGetDatum(t), true, true,
@@ -1030,9 +1030,9 @@ datespan_set_tstzspan(const Span *s1, Span *s2)
 {
   assert(s1); assert(s2); assert(s1->spantype == T_DATESPAN);
   Datum lower =
-    TimestampTzGetDatum(date_to_timestamptz(DatumGetDateADT(s1->lower)));
+    TimestampTzGetDatum(date_to_tstz(DatumGetDateADT(s1->lower)));
   Datum upper =
-    TimestampTzGetDatum(date_to_timestamptz(DatumGetDateADT(s1->upper)));
+    TimestampTzGetDatum(date_to_tstz(DatumGetDateADT(s1->upper)));
   /* Date spans are always canonicalized */
   span_set(lower, upper, true, false, T_TIMESTAMPTZ, T_TSTZSPAN, s2);
   return;
@@ -1079,8 +1079,8 @@ void
 tstzspan_set_datespan(const Span *s1, Span *s2)
 {
   assert(s1); assert(s2); assert(s1->spantype == T_TSTZSPAN);
-  DateADT lower = timestamptz_to_date(DatumGetTimestampTz(s1->lower));
-  DateADT upper = timestamptz_to_date(DatumGetTimestampTz(s1->upper));
+  DateADT lower = tstz_to_date(DatumGetTimestampTz(s1->lower));
+  DateADT upper = tstz_to_date(DatumGetTimestampTz(s1->upper));
   bool lower_inc = s1->lower_inc;
   bool upper_inc = s1->upper_inc;
   /* Both bounds are set to true when the resulting dates are equal, e.g.,
@@ -1414,7 +1414,7 @@ tstzspan_duration(const Span *s)
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) s) || ! ensure_span_isof_type(s, T_TSTZSPAN))
     return NULL;
-  return minus_timestamptz_timestamptz(s->upper, s->lower);
+  return minus_tstz_tstz(s->upper, s->lower);
 }
 
 /*****************************************************************************
@@ -1550,14 +1550,14 @@ lower_upper_shift_scale_time(const Interval *shift, const Interval *duration,
   bool instant = (*lower == *upper);
   if (shift)
   {
-    *lower = add_timestamptz_interval(*lower, shift);
+    *lower = add_tstz_interval(*lower, shift);
     if (instant)
       *upper = *lower;
     else
-      *upper = add_timestamptz_interval(*upper, shift);
+      *upper = add_tstz_interval(*upper, shift);
   }
   if (duration && ! instant)
-    *upper = add_timestamptz_interval(*lower, duration);
+    *upper = add_tstz_interval(*lower, duration);
   return;
 }
 

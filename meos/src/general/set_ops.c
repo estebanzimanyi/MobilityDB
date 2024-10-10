@@ -281,7 +281,7 @@ contains_set_date(const Set *s, DateADT d)
  * @csqlfn #Contains_set_value()
  */
 bool
-contains_set_timestamptz(const Set *s, TimestampTz t)
+contains_set_tstz(const Set *s, TimestampTz t)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) s) ||
@@ -449,7 +449,7 @@ contained_date_set(DateADT d, const Set *s)
  * @csqlfn #Contained_value_set()
  */
 bool
-contained_timestamptz_set(TimestampTz t, const Set *s)
+contained_tstz_set(TimestampTz t, const Set *s)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) s) ||
@@ -632,7 +632,7 @@ before_date_set(DateADT d, const Set *s)
  * @csqlfn #Left_value_set()
  */
 bool
-before_timestamptz_set(TimestampTz t, const Set *s)
+before_tstz_set(TimestampTz t, const Set *s)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) s) ||
@@ -745,7 +745,7 @@ before_set_date(const Set *s, DateADT d)
  * @csqlfn #Left_set_value()
  */
 bool
-before_set_timestamptz(const Set *s, TimestampTz t)
+before_set_tstz(const Set *s, TimestampTz t)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) s) ||
@@ -877,7 +877,7 @@ after_date_set(DateADT d, const Set *s)
  * @csqlfn #Right_value_set()
  */
 bool
-after_timestamptz_set(TimestampTz t, const Set *s)
+after_tstz_set(TimestampTz t, const Set *s)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) s) ||
@@ -989,7 +989,7 @@ after_set_date(const Set *s, DateADT d)
  * @csqlfn #Right_set_value()
  */
 bool
-after_set_timestamptz(const Set *s, TimestampTz t)
+after_set_tstz(const Set *s, TimestampTz t)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) s) ||
@@ -1118,7 +1118,7 @@ overbefore_date_set(DateADT d, const Set *s)
  * @param[in] s Set
  */
 bool
-overbefore_timestamptz_set(TimestampTz t, const Set *s)
+overbefore_tstz_set(TimestampTz t, const Set *s)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) s) ||
@@ -1231,7 +1231,7 @@ overbefore_set_date(const Set *s, DateADT d)
  * @csqlfn #Overleft_set_value()
  */
 bool
-overbefore_set_timestamptz(const Set *s, TimestampTz t)
+overbefore_set_tstz(const Set *s, TimestampTz t)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) s) ||
@@ -1366,7 +1366,7 @@ overafter_date_set(DateADT d, const Set *s)
  * @csqlfn #Overright_value_set()
  */
 bool
-overafter_timestamptz_set(TimestampTz t, const Set *s)
+overafter_tstz_set(TimestampTz t, const Set *s)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) s) ||
@@ -1479,7 +1479,7 @@ overafter_set_date(const Set *s, DateADT d)
  * @csqlfn #Overright_set_value()
  */
 bool
-overafter_set_timestamptz(const Set *s, TimestampTz t)
+overafter_set_tstz(const Set *s, TimestampTz t)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) s) ||
@@ -1646,7 +1646,7 @@ union_set_date(const Set *s, const DateADT d)
  * @csqlfn #Union_set_value()
  */
 Set *
-union_set_timestamptz(const Set *s, const TimestampTz t)
+union_set_tstz(const Set *s, const TimestampTz t)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) s) ||
@@ -1762,7 +1762,7 @@ union_date_set(const DateADT d, const Set *s)
  * @csqlfn #Union_set_value()
  */
 Set *
-union_timestamptz_set(const TimestampTz t, const Set *s)
+union_tstz_set(const TimestampTz t, const Set *s)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) s) ||
@@ -1929,7 +1929,7 @@ intersection_set_date(const Set *s, DateADT d)
  * @csqlfn #Intersection_set_value()
  */
 Set *
-intersection_set_timestamptz(const Set *s, TimestampTz t)
+intersection_set_tstz(const Set *s, TimestampTz t)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) s) ||
@@ -2048,7 +2048,7 @@ intersection_date_set(const DateADT d, const Set *s)
  * @csqlfn #Union_set_value()
  */
 Set *
-intersection_timestamptz_set(const TimestampTz t, const Set *s)
+intersection_tstz_set(const TimestampTz t, const Set *s)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) s) ||
@@ -2202,7 +2202,7 @@ minus_date_set(DateADT d, const Set *s)
  * @csqlfn #Minus_value_set()
  */
 Set *
-minus_timestamptz_set(TimestampTz t, const Set *s)
+minus_tstz_set(TimestampTz t, const Set *s)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) s) ||
@@ -2345,7 +2345,7 @@ minus_set_date(const Set *s, DateADT d)
  * @csqlfn #Minus_set_value()
  */
 Set *
-minus_set_timestamptz(const Set *s, TimestampTz t)
+minus_set_tstz(const Set *s, TimestampTz t)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) s) ||
@@ -2490,7 +2490,7 @@ distance_set_date(const Set *s, DateADT d)
  * @csqlfn #Distance_set_value()
  */
 double
-distance_set_timestamptz(const Set *s, TimestampTz t)
+distance_set_tstz(const Set *s, TimestampTz t)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) s) ||

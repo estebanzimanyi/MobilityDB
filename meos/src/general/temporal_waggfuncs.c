@@ -58,7 +58,7 @@ tinstant_extend(const TInstant *inst, const Interval *interv,
   TSequence **result)
 {
   TInstant *instants[2];
-  TimestampTz upper = add_timestamptz_interval(inst->t, interv);
+  TimestampTz upper = add_tstz_interval(inst->t, interv);
   instants[0] = (TInstant *) inst;
   instants[1] = tinstant_make(tinstant_val(inst), inst->temptype, upper);
   result[0] = tsequence_make((const TInstant **) instants, 2, true, true,
@@ -118,7 +118,7 @@ tcontseq_extend(const TSequence *seq, const Interval *interv, bool min,
     /* Step interpolation or constant segment */
     if (interp != LINEAR || datum_eq(value1, value2, basetype))
     {
-      TimestampTz upper = add_timestamptz_interval(inst2->t, interv);
+      TimestampTz upper = add_tstz_interval(inst2->t, interv);
       instants[0] = (TInstant *) inst1;
       instants[1] = tinstant_make(value1, inst1->temptype, upper);
       result[i] = tsequence_make((const TInstant **) instants, 2,
@@ -133,8 +133,8 @@ tcontseq_extend(const TSequence *seq, const Interval *interv, bool min,
         (datum_gt(value1, value2, basetype) && ! min))
       {
         /* Extend a start value for the duration of the window */
-        TimestampTz lower = add_timestamptz_interval(inst1->t, interv);
-        TimestampTz upper = add_timestamptz_interval(inst2->t, interv);
+        TimestampTz lower = add_tstz_interval(inst1->t, interv);
+        TimestampTz upper = add_tstz_interval(inst2->t, interv);
         instants[0] = inst1;
         instants[1] = tinstant_make(value1, inst1->temptype, lower);
         instants[2] = tinstant_make(value2, inst1->temptype, upper);
@@ -145,7 +145,7 @@ tcontseq_extend(const TSequence *seq, const Interval *interv, bool min,
       else
       {
         /* Extend a end value for the duration of the window */
-        TimestampTz upper = add_timestamptz_interval(seq->period.upper,
+        TimestampTz upper = add_tstz_interval(seq->period.upper,
           interv);
         instants[0] = inst1;
         instants[1] = inst2;
@@ -236,7 +236,7 @@ tinstant_transform_wcount_iter(TimestampTz lower, TimestampTz upper,
   bool lower_inc, bool upper_inc, const Interval *interv)
 {
   TInstant *instants[2];
-  TimestampTz upper1 = add_timestamptz_interval(upper, interv);
+  TimestampTz upper1 = add_tstz_interval(upper, interv);
   instants[0] = tinstant_make(Int32GetDatum(1), T_TINT, lower);
   instants[1] = tinstant_make(Int32GetDatum(1), T_TINT, upper1);
   TSequence *result = tsequence_make((const TInstant **) instants, 2,
@@ -388,7 +388,7 @@ tnumberinst_transform_wavg(const TInstant *inst, const Interval *interv,
     value = DatumGetFloat8(tinstant_val(inst));
   double2 dvalue;
   double2_set(value, 1, &dvalue);
-  TimestampTz upper = add_timestamptz_interval(inst->t, interv);
+  TimestampTz upper = add_tstz_interval(inst->t, interv);
   TInstant *instants[2];
   instants[0] = tinstant_make(PointerGetDatum(&dvalue), T_TDOUBLE2, inst->t);
   instants[1] = tinstant_make(PointerGetDatum(&dvalue), T_TDOUBLE2, upper);
@@ -449,7 +449,7 @@ tintseq_transform_wavg(const TSequence *seq, const Interval *interv,
     double value = DatumGetInt32(tinstant_val(inst1));
     double2 dvalue;
     double2_set(value, 1, &dvalue);
-    TimestampTz upper = add_timestamptz_interval(inst2->t, interv);
+    TimestampTz upper = add_tstz_interval(inst2->t, interv);
     instants[0] = tinstant_make(PointerGetDatum(&dvalue), T_TDOUBLE2, inst1->t);
     instants[1] = tinstant_make(PointerGetDatum(&dvalue), T_TDOUBLE2, upper);
     result[i] = tsequence_make((const TInstant **) instants, 2, lower_inc,
