@@ -343,7 +343,7 @@ nad_tfloat_tbox(const Temporal *temp, const TBox *box)
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) box) ||
       ! ensure_tnumber_type(temp->temptype) ||
       ! ensure_valid_tnumber_span(temp, &box->span))
-    return -1;
+    return -1.0;
   return DatumGetFloat8(nad_tnumber_tbox(temp, box));
 }
 
@@ -376,7 +376,7 @@ nad_tboxfloat_tboxfloat(const TBox *box1, const TBox *box2)
 {
   if (! ensure_span_isof_basetype(&box1->span, T_FLOAT8) ||
       ! ensure_span_isof_basetype(&box2->span, T_FLOAT8))
-    return -1;
+    return -1.0;
 
   return DatumGetFloat8(nad_tbox_tbox(box1, box2));
 }

@@ -186,7 +186,7 @@ datum_distance(Datum value1, Datum value2, meosType type, int16 flags)
 #endif
   meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
     "Unknown types for distance between values: %s", meostype_name(type));
-  return -1;
+  return -1.0;
 }
 
 /*****************************************************************************
@@ -2267,7 +2267,7 @@ tnumberseqset_twavg(const TSequenceSet *ss)
   double result;
   if (duration == 0.0)
   {
-    result = 0;
+    result = 0.0;
     for (int i = 0; i < ss->count; i++)
       result += tnumberseq_cont_twavg(TSEQUENCESET_SEQ_N(ss, i));
     return result / ss->count;

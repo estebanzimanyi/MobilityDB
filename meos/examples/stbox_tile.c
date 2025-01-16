@@ -55,7 +55,7 @@ int main(void)
   char output_buffer[MAX_LINE_LENGTH];
 
   /* Set this parameter to enable/disable space split */
-  bool spacesplit = false;
+  bool spacesplit = true;
   /* Set this parameter to enable/disable time split */
   bool timesplit = true;
 

@@ -303,7 +303,7 @@ tnpointseq_length(const TSequence *seq)
 {
   /* Instantaneous sequence */
   if (seq->count == 1)
-    return 0;
+    return 0.0;
 
   const TInstant *inst = TSEQUENCE_INST_N(seq, 0);
   const Npoint *np1 = DatumGetNpointP(tinstant_val(inst));

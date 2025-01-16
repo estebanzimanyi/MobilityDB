@@ -205,7 +205,7 @@ double
 nad_tnpoint_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   if (gserialized_is_empty(gs))
-    return -1;
+    return -1.0;
   GSERIALIZED *traj = tnpoint_trajectory(temp);
   double result = geom_distance2d(traj, gs);
   pfree(traj);
@@ -241,7 +241,7 @@ nad_tnpoint_tnpoint(const Temporal *temp1, const Temporal *temp2)
 {
   Temporal *dist = distance_tnpoint_tnpoint(temp1, temp2);
   if (dist == NULL)
-    return -1;
+    return -1.0;
   return DatumGetFloat8(temporal_min_value(dist));
 }
 

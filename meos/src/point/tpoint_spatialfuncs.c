@@ -3612,7 +3612,7 @@ tpointseq_length(const TSequence *seq)
   assert(seq); assert(tgeo_type(seq->temptype));
   assert(MEOS_FLAGS_LINEAR_INTERP(seq->flags));
   if (seq->count == 1)
-    return 0;
+    return 0.0;
 
   if (! MEOS_FLAGS_GET_GEODETIC(seq->flags))
   {
@@ -3640,7 +3640,7 @@ tpointseqset_length(const TSequenceSet *ss)
 {
   assert(ss); assert(tgeo_type(ss->temptype));
   assert(MEOS_FLAGS_LINEAR_INTERP(ss->flags));
-  double result = 0;
+  double result = 0.0;
   for (int i = 0; i < ss->count; i++)
     result += tpointseq_length(TSEQUENCESET_SEQ_N(ss, i));
   return result;

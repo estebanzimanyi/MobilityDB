@@ -49,15 +49,18 @@ bool index_result[NO_STBOX];
 bool actual[NO_STBOX];
 STBox * stboxes;
 
-void print_stbox(const STBox * stbox, char * prefix) {
-  printf("\n%s\nXmin = %f, Xmax = %f\nymin: %f ymax: %f\ndate_min: %s date_max: %s\n", prefix, stbox -> xmin, stbox -> xmax, stbox -> ymin, stbox -> ymax, pg_timestamp_out(stbox -> period.lower), pg_timestamp_out(stbox -> period.upper));
+void print_stbox(const STBox * stbox, char * prefix)
+{
+  printf("\n%s\nXmin = %f, Xmax = %f\nymin: %f ymax: %f\ndate_min: %s date_max: %s\n", prefix, stbox -> xmin, stbox -> xmax, stbox -> ymin, stbox -> ymax, timestamp_out(stbox -> period.lower), timestamp_out(stbox -> period.upper));
 }
 
-int get_random_number(int min, int max) {
+int get_random_number(int min, int max)
+{
   return rand() % (max - min + 1) + min;
 }
 
-int main() {
+int main()
+{
   stboxes = malloc(sizeof(STBox) * NO_STBOX);
   // This can be srand(time(NULL)) for random.
   srand(1);
@@ -66,7 +69,8 @@ int main() {
   RTree * rtree;
   rtree = rtree_create_stbox();
 
-  for (int i = 0; i < NO_STBOX; ++i) {
+  for (int i = 0; i < NO_STBOX; ++i)
+  {
     int xmin = get_random_number(1, 1000);
     int xmax = xmin + get_random_number(1, 10);
     int ymin = get_random_number(1, 1000);
@@ -74,7 +78,8 @@ int main() {
     int time_min = get_random_number(1, 29);
     int time_max = time_min + get_random_number(1, 29);
     char trip_str[100];
-    sprintf(trip_str, "SRID=25832;[POINT(%d %d)@2023-01-01 00:00:%02d+00,POINT(%d %d)@2023-01-01 00:00:%02d+00]", xmin, ymin, time_min, xmax, ymax, time_max);
+    sprintf(trip_str, "SRID=25832;[POINT(%d %d)@2023-01-01 00:00:%02d+00,POINT(%d %d)@2023-01-01 00:00:%02d+00]",
+      xmin, ymin, time_min, xmax, ymax, time_max);
     Temporal * trip = tgeompoint_in(trip_str);
     tspatial_set_stbox(trip, & stboxes[i]);
     rtree_insert(rtree, & stboxes[i], i);
@@ -95,8 +100,10 @@ int main() {
   printf("Index lookup took %f seconds to execute \n", time_taken);
 
   t = clock();
-  for (int i = 0; i < NO_STBOX; ++i) {
-    if (overlaps_stbox_stbox( & stboxes[i], stbox)) {
+  for (int i = 0; i < NO_STBOX; ++i)
+  {
+    if (overlaps_stbox_stbox( & stboxes[i], stbox))
+    {
       real_count++;
       actual[i] = true;
     }
@@ -105,19 +112,19 @@ int main() {
   time_taken = ((double) t) / CLOCKS_PER_SEC; // in seconds 
   printf("Brute foce took %f seconds to execute \n", time_taken);
 
-  for (int i = 0; i < count; ++i) {
+  for (int i = 0; i < count; ++i)
     index_result[ids[i]] = true;
-  }
 
-  for (int i = 0; i < NO_STBOX; ++i) {
+  for (int i = 0; i < NO_STBOX; ++i)
+  {
     /**
      * Print if there is an error, if everything is ok, nothing
      * should be printed.
      */
-    if (index_result[i] != actual[i]) {
+    if (index_result[i] != actual[i])
+    {
       printf("\n========\n%d) actual: %d index: %d\n", i, actual[i], index_result[i]);
       print_stbox( & stboxes[i], "-------------");
-
     }
   }
 

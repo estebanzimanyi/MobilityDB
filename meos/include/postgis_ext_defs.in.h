@@ -393,10 +393,6 @@ typedef struct
 }
 LWTIN;
 
-/* Functions */
-
-extern int32 geo_get_srid(const GSERIALIZED *g);
-
 /* PROJ */
 
 struct PJconsts;
@@ -415,6 +411,5 @@ typedef struct LWPROJ
     double source_semi_major_metre;
     double source_semi_minor_metre;
 } LWPROJ;
-
 
 #endif              /* _LIBLWGEOM_H */

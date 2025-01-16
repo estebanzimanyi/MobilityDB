@@ -50,7 +50,6 @@
 #include <liblwgeom.h>
 /* MEOS */
 #include <meos.h>
-#include <meos_geo.h>
 #include <meos_npoint.h>
 #include <meos_internal.h>
 #include "general/pg_types.h"

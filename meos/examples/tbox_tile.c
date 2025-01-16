@@ -98,8 +98,8 @@ int main(void)
   printf("--------\n\n");
   for (int i = 0; i < count; i++)
   {
-    char *tile_str = valuesplit ?
-      tbox_out(&boxes[i], 3) : floatspan_out(&spans[i], 3);
+    char *tile_str = valuesplit ? 
+      tbox_out(&boxes[i], 3) : tstzspan_out(&spans[i]);
     sprintf(output_buffer, "%d: %s\n", i + 1, tile_str);
     printf("%s", output_buffer);
     free(tile_str);

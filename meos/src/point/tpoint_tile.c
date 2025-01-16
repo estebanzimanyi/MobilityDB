@@ -671,7 +671,7 @@ stbox_space_time_tiles(const STBox *bounds, double xsize, double ysize,
 
   POINT3DZ pt;
   memset(&pt, 0, sizeof(POINT3DZ));
-  if (FLAGS_GET_Z(sorigin->gflags))
+  if (MEOS_FLAGS_GET_Z(bounds->flags))
   {
     const POINT3DZ *p3d = GSERIALIZED_POINT3DZ_P(sorigin);
     pt.x = p3d->x;

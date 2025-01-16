@@ -1272,7 +1272,7 @@ stbox_area(const STBox *box, bool spheroid)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) box) || ! ensure_has_X_stbox(box))
-    return false;
+    return DBL_MAX;
 
   if (! MEOS_FLAGS_GET_GEODETIC(box->flags))
     return (box->xmax - box->xmin) * (box->ymax - box->ymin);
@@ -1295,7 +1295,7 @@ stbox_volume(const STBox *box)
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) box) || ! ensure_has_X_stbox(box) || 
       ! ensure_has_Z_stbox(box) || ! ensure_not_geodetic(box->flags))
-    return false;
+    return DBL_MAX;
 
   return (box->xmax - box->xmin) * (box->ymax - box->ymin) * 
     (box->zmax - box->zmin);
@@ -1314,7 +1314,7 @@ stbox_perimeter(const STBox *box, bool spheroid)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) box) || ! ensure_has_X_stbox(box))
-    return false;
+    return DBL_MAX;
 
   GSERIALIZED *geo = stbox_to_geo(box);
   double result = MEOS_FLAGS_GET_GEODETIC(box->flags) ?

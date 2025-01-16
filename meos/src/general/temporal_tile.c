@@ -499,69 +499,6 @@ span_bin_state_next(SpanBinState *state)
   return;
 }
 
-/*****************************************************************************/
-
-/**
- * @brief Set the state with a spanset and a time bin for splitting
- * or obtaining a set of spans
- * @param[in] ss SpanSet value
- * @param[in] duration Size of the time dimension as an interval
- * @param[in] torigin Origin for the time dimension, may be a Date or a
- * TimestampTz
- * @param[out] nbins Number of bins
- */
-SpanBinState *
-spanset_time_bin_init(const SpanSet *ss, const Interval *duration,
-  Datum torigin, int *nbins)
-{
-  /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) ss) || ! ensure_not_null((void *) nbins) ||
-      ! ensure_not_null((void *) duration) ||
-      (ss->basetype != T_DATE && ! ensure_valid_duration(duration)) ||
-      (ss->basetype == T_DATE && ! ensure_valid_day_duration(duration)))
-    return NULL;
-
-  /* Create function state */
-  SpanBinState *state;
-  if (ss->basetype == T_DATE)
-  {
-    int32 days = (int32) (interval_units(duration) / USECS_PER_DAY);
-    state = span_bin_state_make((const void *) ss, &ss->span,
-      Int32GetDatum(days), torigin);
-  }
-  else
-  {
-    int64 tunits = interval_units(duration);
-    state = span_bin_state_make((const void *) ss, &ss->span,
-      Int64GetDatum(tunits), torigin);
-  }
-  *nbins = state->nbins;
-  return state;
-}
-
-/**
- * @brief Set the state with a spanset and a time bin for splitting
- * or obtaining a set of spans
- * @param[in] ss SpanSet value
- * @param[in] vsize Size of the value dimension
- * @param[in] vorigin Origin for the value dimension
- * @param[out] nbins Number of bins
- */
-SpanBinState *
-spanset_value_bin_init(const SpanSet *ss, Datum vsize, Datum vorigin,
-  int *nbins)
-{
-  /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) ss) || ! ensure_not_null((void *) nbins) ||
-      ! ensure_positive_datum(vsize, ss->basetype))
-    return NULL;
-
-  /* Create function state */
-  SpanBinState *state = span_bin_state_make((const void *) ss, &ss->span,
-    vsize, vorigin);
-  *nbins = state->nbins;
-  return state;
-}
 
 /*****************************************************************************/
 
@@ -668,6 +605,20 @@ intspan_bins(const Span *s, int size, int origin, int *count)
 
 /**
  * @ingroup meos_temporal_analytics_tile
+ * @brief Return the bins of a big integer span
+ * @param[in] s Input span to split
+ * @param[in] size Size of the bins
+ * @param[in] origin Origin of the bins
+ * @param[out] count Number of elements in the output array
+ */
+Span *
+bigintspan_bins(const Span *s, int64 size, int64 origin, int *count)
+{
+  return span_bins(s, Int64GetDatum(size), Int64GetDatum(origin), count);
+}
+
+/**
+ * @ingroup meos_temporal_analytics_tile
  * @brief Return the bins of a float span
  * @param[in] s Input span to split
  * @param[in] size Size of the bins
@@ -725,186 +676,6 @@ tstzspan_bins(const Span *s, const Interval *duration, TimestampTz origin,
   int64 tunits = interval_units(duration);
   return span_bins(s, Int64GetDatum(tunits), TimestampTzGetDatum(origin),
     count);
-}
-#endif /* MEOS */
-
-/*****************************************************************************
- * Spans functions
- *****************************************************************************/
-
-/**
- * @brief Function with common functionality for functions
- * #spanset_value_spans and #spanset_time_spans
- * @param[in] ss Input span to split
- * @param[in] state State
- * @param[out] count Number of elements in the output array
- */
-static Span *
-spanset_spans_common(const SpanSet *ss, SpanBinState *state, int *count)
-{
-  assert(ss); assert(state); assert(count);
-
-  Span *result = palloc(sizeof(Span) * state->nbins);
-  /* We need to loop since atSpan may be NULL */
-  int i = 0;
-  while (true)
-  {
-    /* Stop when we have used up all the grid bins */
-    if (state->done)
-    {
-      pfree(state);
-      break;
-    }
-
-    /* Get current bin (if any) and advance state */
-    Span span;
-    if (! span_bin_state_get(state, &span))
-    {
-      pfree(state);
-      break;
-    }
-    span_bin_state_next(state);
-
-    /* Restrict the temporal number to the span and compute its bounding span */
-    SpanSet *atspan = intersection_spanset_span(ss, &span);
-    if (atspan == NULL)
-      continue;
-    memcpy(&span, &atspan->span, sizeof(Span));
-    pfree(atspan);
-
-    /* Copy the span to the result */
-    memcpy(&result[i++], &span, sizeof(Span));
-  }
-  *count = i;
-  return result;
-}
-
-/**
- * @ingroup meos_internal_temporal_analytics_tile
- * @brief Return the time bins of a span set
- * @param[in] ss Input span to split
- * @param[in] duration Interval defining the size of the bins
- * @param[in] torigin Origin of the bins
- * @param[out] count Number of elements in the output array
- * @note The tests for the validity of the arguments is done in function
- * #spanset_time_bin_init
- */
-Span *
-spanset_time_spans(const SpanSet *ss, const Interval *duration,
-  Datum torigin, int *count)
-{
-  /* Initialize state */
-  int nbins;
-  SpanBinState *state = spanset_time_bin_init(ss, duration, torigin,
-    &nbins);
-  if (! state)
-    return NULL;
-  return spanset_spans_common(ss, state, count);
-}
-
-#if MEOS
-/**
- * @ingroup meos_temporal_analytics_tile
- * @brief Return the time bins of a span set
- * @param[in] ss Input span to split
- * @param[in] duration Interval defining the size of the bins
- * @param[in] torigin Origin of the bins
- * @param[out] count Number of elements in the output array
- * @note The tests for the validity of the arguments is done in function
- * #spanset_time_bin_init
- */
-Span *
-datespanset_time_spans(const SpanSet *ss, const Interval *duration,
-  DateADT torigin, int *count)
-{
-  return spanset_time_spans(ss, duration, DateADTGetDatum(torigin), count);
-}
-
-/**
- * @ingroup meos_temporal_analytics_tile
- * @brief Return the time bins of a span set
- * @param[in] ss Input span to split
- * @param[in] duration Interval defining the size of the bins
- * @param[in] torigin Origin of the bins
- * @param[out] count Number of elements in the output array
- * @note The tests for the validity of the arguments is done in function
- * #spanset_time_bin_init
- */
-Span *
-tstzspanset_time_spans(const SpanSet *ss, const Interval *duration,
-  TimestampTz torigin, int *count)
-{
-  return spanset_time_spans(ss, duration, TimestampTzGetDatum(torigin), count);
-}
-#endif /* MEOS */
-
-/**
- * @ingroup meos_internal_temporal_analytics_tile
- * @brief Return the bins of a temporal number
- * @param[in] ss Input span to split
- * @param[in] vsize Size of the bins
- * @param[in] vorigin Origin of the bins
- * @param[out] count Number of elements in the output array
- * @note The tests for the validity of the arguments is done in function
- * #spanset_value_bin_init
- */
-Span *
-spanset_value_spans(const SpanSet *ss, Datum vsize, Datum vorigin, int *count)
-{
-  /* Initialize state */
-  int nbins;
-  SpanBinState *state = spanset_value_bin_init(ss, vsize, vorigin, &nbins);
-  if (! state)
-    return NULL;
-  return spanset_spans_common(ss, state, count);
-}
-
-#if MEOS
-/**
- * @ingroup meos_temporal_analytics_tile
- * @brief Return the bins of an integer span set
- * @param[in] ss SpanSet number
- * @param[in] vsize Size of the bins
- * @param[in] vorigin Origin of the bins
- * @param[out] count Number of elements in the output array
- */
-Span *
-intspanset_value_spans(const SpanSet *ss, int vsize, int vorigin, int *count)
-{
-  return spanset_value_spans(ss, Int32GetDatum(vsize), Int32GetDatum(vorigin),
-    count);
-}
-
-/**
- * @ingroup meos_temporal_analytics_tile
- * @brief Return the bins of a bigint span set
- * @param[in] ss SpanSet number
- * @param[in] vsize Size of the bins
- * @param[in] vorigin Origin of the bins
- * @param[out] count Number of elements in the output array
- */
-Span *
-bigintspanset_value_spans(const SpanSet *ss, int64 vsize, int64 vorigin,
-  int *count)
-{
-  return spanset_value_spans(ss, Int64GetDatum(vsize), Int64GetDatum(vorigin),
-    count);
-}
-
-/**
- * @ingroup meos_temporal_analytics_tile
- * @brief Return the bins of a float span set
- * @param[in] ss SpanSet number
- * @param[in] vsize Size of the bins
- * @param[in] vorigin Origin of the bins
- * @param[out] count Number of elements in the output array
- */
-Span *
-floatspanset_value_spans(const SpanSet *ss, double vsize, double vorigin,
-  int *count)
-{
-  return spanset_value_spans(ss, Float8GetDatum(vsize),
-    Float8GetDatum(vorigin), count);
 }
 #endif /* MEOS */
 
@@ -1251,10 +1022,11 @@ TBox *
 tbox_value_time_tiles(const TBox *box, Datum vsize, const Interval *duration,
   Datum vorigin, TimestampTz torigin, int *count)
 {
-  assert(box); assert(count); assert(duration);
+  assert(box); assert(count); 
   assert(positive_datum(vsize, box->span.basetype));
-  assert(valid_duration(duration));
-
+  if (duration && ! ensure_valid_duration(duration))
+    return NULL;
+  
   TboxGridState *state = tbox_tile_state_make(NULL, box, vsize, duration,
     vorigin, torigin);
   int nrows = 1, ncols = 1;
@@ -1307,6 +1079,26 @@ tintbox_value_time_tiles(const TBox *box, int vsize, const Interval *duration,
 
 /**
  * @ingroup meos_temporal_analytics_tile
+ * @brief Return the tile list of a temporal integer box
+ * @param[in] box Input box to split
+ * @param[in] vsize Value size of the tiles
+ * @param[in] vorigin Value origin of the tiles
+ * @param[out] count Number of elements in the output array
+ * @csqlfn #Tbox_value_tiles()
+ */
+TBox *
+tintbox_value_tiles(const TBox *box, int vsize, int vorigin, 
+  int *count)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) box) || ! ensure_not_null((void *) count))
+    return NULL;
+  return tbox_value_time_tiles(box, Int32GetDatum(vsize), NULL,
+    Int32GetDatum(vorigin), 0, count);
+}
+
+/**
+ * @ingroup meos_temporal_analytics_tile
  * @brief Return the tile list of a temporal float box
  * @param[in] box Input box to split
  * @param[in] vsize Value size of the tiles
@@ -1325,6 +1117,26 @@ tfloatbox_value_time_tiles(const TBox *box, double vsize,
     return NULL;
   return tbox_value_time_tiles(box, Float8GetDatum(vsize), duration,
     Float8GetDatum(vorigin), torigin, count);
+}
+
+/**
+ * @ingroup meos_temporal_analytics_tile
+ * @brief Return the tile list of a temporal float box
+ * @param[in] box Input box to split
+ * @param[in] vsize Value size of the tiles
+ * @param[in] vorigin Value origin of the tiles
+ * @param[out] count Number of elements in the output array
+ * @csqlfn #Tbox_value_tiles()
+ */
+TBox *
+tfloatbox_value_tiles(const TBox *box, double vsize, double vorigin,
+  int *count)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) box) || ! ensure_not_null((void *) count))
+    return NULL;
+  return tbox_value_time_tiles(box, Float8GetDatum(vsize), NULL,
+    Float8GetDatum(vorigin), 0, count);
 }
 #endif /* MEOS */
 

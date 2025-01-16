@@ -210,56 +210,6 @@ Timestamptz_bin(PG_FUNCTION_ARGS)
 
 /*****************************************************************************/
 
-PGDLLEXPORT Datum Spanset_time_spans(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Spanset_time_spans);
-/**
- * @ingroup mobilitydb_temporal_analytics_tile
- * @brief Return an array of spans obtained by splitting a spanset with respect
- * to time bins
- * @sqlfn timeSpans()
- */
-Datum
-Spanset_time_spans(PG_FUNCTION_ARGS)
-{
-  SpanSet *ss = PG_GETARG_SPANSET_P(0);
-  Interval *duration = PG_GETARG_INTERVAL_P(1);
-  Datum torigin = PG_GETARG_DATUM(2);
-  /* Get the spans */
-  int count;
-  Span *spans = spanset_time_spans(ss, duration, torigin, &count);
-  ArrayType *result = spanarr_to_array(spans, count);
-  /* Clean up and return */
-  pfree(spans);
-  PG_FREE_IF_COPY(ss, 0);
-  PG_RETURN_ARRAYTYPE_P(result);
-}
-
-PGDLLEXPORT Datum Spanset_value_spans(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Spanset_value_spans);
-/**
- * @ingroup mobilitydb_temporal_analytics_tile
- * @brief Return an array of spans obtained by splitting a spanset with respect
- * to value bins
- * @sqlfn valueSpans()
- */
-Datum
-Spanset_value_spans(PG_FUNCTION_ARGS)
-{
-  SpanSet *ss = PG_GETARG_SPANSET_P(0);
-  Datum vsize = PG_GETARG_DATUM(1);
-  Datum vorigin = PG_GETARG_DATUM(2);
-  /* Get the spans */
-  int count;
-  Span *spans = spanset_value_spans(ss, vsize, vorigin, &count);
-  ArrayType *result = spanarr_to_array(spans, count);
-  /* Clean up and return */
-  pfree(spans);
-  PG_FREE_IF_COPY(ss, 0);
-  PG_RETURN_ARRAYTYPE_P(result);
-}
-
-/*****************************************************************************/
-
 PGDLLEXPORT Datum Temporal_time_spans(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Temporal_time_spans);
 /**
@@ -801,20 +751,6 @@ Datum
 Tnumber_value_split(PG_FUNCTION_ARGS)
 {
   return Tnumber_value_time_split_ext(fcinfo, true, false);
-}
-
-PGDLLEXPORT Datum Tnumber_time_split(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tnumber_time_split);
-/**
- * @ingroup mobilitydb_temporal_analytics_tile
- * @brief Return the fragments of a temporal number split according to value
- * bins
- * @sqlfn valueSplit()
- */
-Datum
-Tnumber_time_split(PG_FUNCTION_ARGS)
-{
-  return Tnumber_value_time_split_ext(fcinfo, false, true);
 }
 
 PGDLLEXPORT Datum Tnumber_value_time_split(PG_FUNCTION_ARGS);

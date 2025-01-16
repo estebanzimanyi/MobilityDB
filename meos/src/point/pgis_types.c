@@ -460,7 +460,7 @@ geom_distance2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
    * and makes us return NULL */
   if (mindist < FLT_MAX)
     return mindist;
-  return -1;
+  return -1.0;
 }
 
 /**
@@ -481,7 +481,7 @@ geom_distance3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
    * and makes us return NULL */
   if (mindist < FLT_MAX)
     return mindist;
-  return -1;
+  return -1.0;
 }
 
 /**
@@ -1563,7 +1563,7 @@ geog_distance(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 
   /* Return NULL on empty arguments. */
   if (gserialized_is_empty(gs1) || gserialized_is_empty(gs2) )
-    return -1;
+    return -1.0;
 
   double tolerance = PGIS_FP_TOLERANCE;
   bool use_spheroid = true;
@@ -1597,7 +1597,7 @@ geog_distance(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "geography_distance returned distance < 0.0");
-    return -1;
+    return -1.0;
   }
 
   return distance;

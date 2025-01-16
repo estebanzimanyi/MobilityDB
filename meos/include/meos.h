@@ -391,6 +391,65 @@ extern text *textcat_text_text(const text *txt1, const text *txt2);
 extern DateADT timestamp_to_date(Timestamp t);
 extern DateADT timestamptz_to_date(TimestampTz t);
 
+/******************************************************************************
+ * Functions for PostGIS types
+ ******************************************************************************/
+
+extern uint8_t *geo_as_ewkb(const GSERIALIZED *gs, const char *endian, size_t *size);
+extern char *geo_as_ewkt(const GSERIALIZED *gs, int precision);
+extern char *geo_as_geojson(const GSERIALIZED *gs, int option, int precision, const char *srs);
+extern char *geo_as_hexewkb(const GSERIALIZED *gs, const char *endian);
+extern char *geo_as_text(const GSERIALIZED *gs, int precision);
+extern GSERIALIZED *geo_from_text(const char *wkt, int srid);
+extern GSERIALIZED *geo_from_ewkb(const uint8_t *wkb, size_t wkb_size, int32 srid);
+extern GSERIALIZED *geo_from_geojson(const char *geojson);
+extern bool geo_is_empty(const GSERIALIZED *g);
+extern char *geo_out(const GSERIALIZED *gs);
+extern bool geo_same(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
+extern int32_t geo_srid(const GSERIALIZED *gs);
+
+extern double geog_area(const GSERIALIZED *g, bool use_spheroid);
+extern double geog_distance(const GSERIALIZED *g1, const GSERIALIZED *g2);
+extern bool geog_dwithin(const GSERIALIZED *g1, const GSERIALIZED *g2, double tolerance, bool use_spheroid);
+extern GSERIALIZED *geog_from_geom(GSERIALIZED *geom);
+extern GSERIALIZED *geog_from_hexewkb(const char *wkt);
+extern GSERIALIZED *geog_from_text(const char *wkt, int srid);
+extern GSERIALIZED *geog_in(const char *str, int32 typmod);
+extern bool geog_intersects(const GSERIALIZED *gs1, const GSERIALIZED *gs2, bool use_spheroid);
+extern double geog_length(const GSERIALIZED *g, bool use_spheroid);
+extern double geog_perimeter(const GSERIALIZED *g, bool use_spheroid);
+
+extern GSERIALIZED *geom_array_union(GSERIALIZED **gsarr, int nelems);
+extern bool geom_azimuth(const GSERIALIZED *gs1, const GSERIALIZED *gs2, double *result);
+extern GSERIALIZED *geom_boundary(const GSERIALIZED *gs);
+extern GSERIALIZED *geom_buffer(const GSERIALIZED *gs, double size, char *params);
+extern bool geom_contains(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
+extern GSERIALIZED *geom_convex_hull(const GSERIALIZED *gs);
+extern bool geom_covers(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
+extern double geom_distance2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
+extern double geom_distance3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
+extern bool geom_dwithin2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2, double tolerance);
+extern bool geom_dwithin3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2, double tolerance);
+extern GSERIALIZED *geom_from_geog(GSERIALIZED *geog);
+extern GSERIALIZED *geom_from_hexewkb(const char *wkt);
+extern GSERIALIZED *geom_from_text(const char *wkt, int srid);
+extern GSERIALIZED *geom_in(const char *str, int32 typmod);
+extern GSERIALIZED *geom_intersection2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
+extern bool geom_intersects2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
+extern bool geom_intersects3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
+extern double geom_perimeter(const GSERIALIZED *gs);
+extern bool geom_relate_pattern(const GSERIALIZED *gs1, const GSERIALIZED *gs2, char *patt);
+extern GSERIALIZED *geom_shortestline2d(const GSERIALIZED *gs1, const GSERIALIZED *s2);
+extern GSERIALIZED *geom_shortestline3d(const GSERIALIZED *gs1, const GSERIALIZED *s2);
+extern bool geom_touches(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
+
+extern GSERIALIZED *line_interpolate_point(GSERIALIZED *gs, double distance_fraction, char repeat);
+extern double line_length(const GSERIALIZED *gs);
+extern int line_numpoints(const GSERIALIZED *gs);
+extern double line_locate_point(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
+extern GSERIALIZED *line_point_n(const GSERIALIZED *geom, int n);
+extern GSERIALIZED *line_substring(const GSERIALIZED *gs, double from, double to);
+
 /*===========================================================================*
  * Functions for set and span types
  *===========================================================================*/
@@ -2087,25 +2146,14 @@ extern double temporal_hausdorff_distance(const Temporal *temp1, const Temporal 
 
 extern int64 bigint_get_bin(int64 value, int64 vsize, int64 vorigin);
 extern Span *bigintspan_bins(const Span *s, int64 vsize, int64 vorigin, int *count);
-extern Span *bigintspanset_bins(const SpanSet *ss, int64 vsize, int64 vorigin, int *count);
-extern Span *bigintspanset_value_spans(const SpanSet *ss, int64 vsize, int64 vorigin, int *count);
 extern DateADT date_get_bin(DateADT d, const Interval *duration, DateADT torigin);
 extern Span *datespan_bins(const Span *s, const Interval *duration, DateADT torigin, int *count);
-extern Span *datespanset_bins(const SpanSet *ss, const Interval *duration, DateADT torigin, int *count);
-extern Span *datespanset_time_spans(const SpanSet *ss, const Interval *duration, DateADT torigin, int *count);
 extern double float_get_bin(double value, double vsize, double vorigin);
 extern Span *floatspan_bins(const Span *s, double vsize, double vorigin, int *count);
-extern Span *floatspanset_bins(const SpanSet *ss, double vsize, double vorigin,
-  int *count);
-extern Span *floatspanset_value_spans(const SpanSet *ss, double vsize, double vorigin, int *count);
 extern int int_get_bin(int value, int vsize, int vorigin);
 extern Span *intspan_bins(const Span *s, int vsize, int vorigin, int *count);
-extern Span *intspanset_bins(const SpanSet *ss, int vsize, int vorigin, int *count);
-extern Span *intspanset_value_spans(const SpanSet *ss, int vsize, int vorigin, int *count);
 extern TimestampTz timestamptz_get_bin(TimestampTz t, const Interval *duration, TimestampTz torigin);
 extern Span *tstzspan_bins(const Span *s, const Interval *duration, TimestampTz origin, int *count);
-extern Span *tstzspanset_bins(const SpanSet *ss, const Interval *duration, TimestampTz torigin, int *count);
-extern Span *tstzspanset_time_spans(const SpanSet *ss, const Interval *duration, TimestampTz torigin, int *count);
 
 /* Tile functions for temporal types */
 

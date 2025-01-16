@@ -73,22 +73,6 @@ SELECT getBin('2020-01-01', '1 month', timestamptz '2001-06-01');
 
 -------------------------------------------------------------------------------
 
-SELECT valueSpans(intspanset '{[1, 10]}', 2) LIMIT 3;
-SELECT valueSpans(intspanset '{[1, 10]}', 2, 1) LIMIT 3;
-
-SELECT valueSpans(floatspanset '{(1, 10)}', 2.5) LIMIT 3;
-SELECT valueSpans(floatspanset '{(1, 10)}', 2.5, 1.5) LIMIT 3;
-
--------------------------------------------------------------------------------
-
-SELECT timeSpans(datespanset '{[2000-01-01, 2000-01-10]}', '1 week') LIMIT 3;
-SELECT timeSpans(datespanset '{[2000-01-01, 2000-01-10]}', '1 week', '2020-06-15') LIMIT 3;
-
-SELECT timeSpans(tstzspanset '{[2000-01-01, 2000-01-10]}', '1 week') LIMIT 3;
-SELECT timeSpans(tstzspanset '{[2000-01-01, 2000-01-10]}', '1 week', '2020-06-15') LIMIT 3;
-
--------------------------------------------------------------------------------
-
 SELECT valueSpans(tint '[15@2000-01-15, 25@2000-01-25]', 2);
 SELECT valueSpans(tint '[15@2000-01-15, 25@2000-01-25]', 2, 15);
 
