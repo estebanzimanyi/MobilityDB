@@ -64,16 +64,6 @@
  *****************************************************************************/
 
 /**
- * @brief Return a Datum true if the first geometry contains the second one
- */
-Datum
-datum_geom_contains(Datum geom1, Datum geom2)
-{
-  return BoolGetDatum(geom_spatialrel(DatumGetGserializedP(geom1),
-    DatumGetGserializedP(geom2), CONTAINS));
-}
-
-/**
  * @brief Return a Datum true if the first geometry covers the second one
  */
 Datum

@@ -308,16 +308,6 @@ datum_pt_distance3d(Datum geom1, Datum geom2)
   return Float8GetDatum(distance3d_pt_pt((POINT3D *) p1, (POINT3D *) p2));
 }
 
-/**
- * @brief Return the 2D intersection between the two geometries
- */
-Datum
-datum_geom_intersection2d(Datum geom1, Datum geom2)
-{
-  return PointerGetDatum(geom_intersection2d(DatumGetGserializedP(geom1),
-    DatumGetGserializedP(geom2)));
-}
-
 /*****************************************************************************
  * Parameter tests
  *****************************************************************************/
