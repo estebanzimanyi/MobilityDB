@@ -3,6 +3,12 @@ SET(LOCAL_FILES
   general/random_temporal.sql
   point/random_tpoint.sql
   )
+if(CBUFFER)
+  SET(LOCAL_FILES
+    ${LOCAL_FILES}
+    cbuffer/random_tcbuffer.sql
+    )
+endif()
 if(NPOINT)
   SET(LOCAL_FILES
     ${LOCAL_FILES}

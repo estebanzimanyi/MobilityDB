@@ -28,11 +28,11 @@
  *****************************************************************************/
 
 /**
- * @brief Temporal distance for temporal network points.
+ * @brief Temporal distance for temporal circular buffers.
  */
 
-#ifndef __TNPOINT_DISTANCE_H__
-#define __TNPOINT_DISTANCE_H__
+#ifndef __Tnpoint_DISTANCE_H__
+#define __Tnpoint_DISTANCE_H__
 
 /* PostgreSQL */
 #include <postgres.h>
@@ -70,4 +70,4 @@ extern GSERIALIZED *shortestline_tnpoint_tnpoint(const Temporal *temp1,
 
 /*****************************************************************************/
 
-#endif /* __TNPOINT_DISTANCE_H__ */
+#endif /* __Tnpoint_DISTANCE_H__ */

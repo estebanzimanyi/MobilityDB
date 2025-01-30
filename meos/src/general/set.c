@@ -55,6 +55,9 @@
 #include "general/type_util.h"
 #include "point/tpoint_out.h"
 #include "point/tpoint_spatialfuncs.h"
+#if CBUFFER
+  #include "cbuffer/tcbuffer_boxops.h"
+#endif
 #if NPOINT
   #include "npoint/tnpoint_boxops.h"
 #endif
@@ -547,6 +550,10 @@ valuearr_compute_bbox(const Datum *values, meosType basetype, int count,
   assert(set_basetype(basetype)); assert(! alphanum_basetype(basetype));
   if (geo_basetype(basetype))
     geoarr_set_stbox(values, count, (STBox *) box);
+#if CBUFFER
+  else if (basetype == T_CBUFFER)
+    cbufferarr_set_stbox(values, count, (STBox *) box);
+#endif
 #if NPOINT
   else if (basetype == T_NPOINT)
     npointarr_set_stbox(values, count, (STBox *) box);

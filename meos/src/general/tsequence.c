@@ -59,6 +59,9 @@
 #include "general/type_parser.h"
 #include "point/tpoint_parser.h"
 #include "point/tpoint_spatialfuncs.h"
+#if CBUFFER
+  #include "cbuffer/tcbuffer.h"
+#endif
 #if NPOINT
   #include "npoint/tnpoint_spatialfuncs.h"
 #endif
@@ -145,6 +148,26 @@ double4_collinear(const double4 *x1, const double4 *x2, const double4 *x3,
     fabs(x2->d - x.d) <= MEOS_EPSILON);
 }
 
+#if CBUFFER
+/**
+ * @brief Return true if the three values are collinear
+ * @param[in] np1,np2,np3 Input values
+ * @param[in] ratio Value in [0,1] representing the duration of the
+ * timestamps associated to `cbuf1` and `cbuf2` divided by the duration
+ * of the timestamps associated to `cbuf1` and `cbuf3`
+ */
+static bool
+cbuffer_collinear(Cbuffer *cbuf1, Cbuffer *cbuf2, Cbuffer *cbuf3, double ratio)
+{
+  Datum value1 = PointerGetDatum(&cbuf1->point);
+  Datum value2 = PointerGetDatum(&cbuf2->point);
+  Datum value3 = PointerGetDatum(&cbuf3->point);
+  if (! geopoint_collinear(value1, value2, value3, ratio, false, false))
+    return false;
+  return float_collinear(cbuf1->radius, cbuf2->radius, cbuf3->radius, ratio);
+}
+#endif
+
 #if NPOINT
 /**
  * @brief Return true if the three values are collinear
@@ -192,6 +215,11 @@ datum_collinear(Datum value1, Datum value2, Datum value3, meosType basetype,
   if (basetype == T_DOUBLE4)
     return double4_collinear(DatumGetDouble4P(value1), DatumGetDouble4P(value2),
       DatumGetDouble4P(value3), ratio);
+#if CBUFFER
+  if (basetype == T_CBUFFER)
+    return cbuffer_collinear(DatumGetCbufferP(value1), DatumGetCbufferP(value2),
+      DatumGetCbufferP(value3), ratio);
+#endif
 #if NPOINT
   if (basetype == T_NPOINT)
     return npoint_collinear(DatumGetNpointP(value1), DatumGetNpointP(value2),
