@@ -144,6 +144,12 @@ extern bool ensure_valid_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal
 extern Temporal *tcbuffer_constructor(const Temporal *tpoint, const Temporal *tfloat);
 
 /*****************************************************************************
+ * Transformation functions for temporal types
+ *****************************************************************************/
+
+extern Temporal *tcbuffer_set_srid(const Temporal *temp, int32_t srid);
+
+/*****************************************************************************
  * Restriction functions for temporal types
  *****************************************************************************/
 
