@@ -818,7 +818,7 @@ tdwithin_tpointsegm_tpointsegm(Datum sv1, Datum ev1, Datum sv2, Datum ev2,
  * the solutions of the quadratic equation found previously
  * @return Number of sequences of the result
  */
-static int
+int
 tdwithin_add_solutions(int solutions, TimestampTz lower, TimestampTz upper,
   bool lower_inc, bool upper_inc, bool upper_inc1, TimestampTz t1,
   TimestampTz t2, TInstant **instants, TSequence **result)

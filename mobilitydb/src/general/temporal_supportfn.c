@@ -184,6 +184,24 @@ static const IndexableFunction TPointIndexableFunctions[] = {
   {NULL, 0, 0, 0}
 };
 
+#if CBUFFER
+static const IndexableFunction TCbufferIndexableFunctions[] = {
+  /* Ever spatial relationships */
+  {"econtains", ECONTAINS_IDX, 2, 0},
+  {"edisjoint", EDISJOINT_IDX, 2, 0},
+  {"eintersects", EINTERSECTS_IDX, 2, 0},
+  {"etouches", ETOUCHES_IDX, 2, 0},
+  {"edwithin", EDWITHIN_IDX, 3, 3},
+  /* Always spatial relationships */
+  {"acontains", ECONTAINS_IDX, 2, 0},
+  {"adisjoint", EDISJOINT_IDX, 2, 0},
+  {"aintersects", EINTERSECTS_IDX, 2, 0},
+  {"atouches", ETOUCHES_IDX, 2, 0},
+  {"adwithin", EDWITHIN_IDX, 3, 3},
+  {NULL, 0, 0, 0}
+};
+#endif /* CBUFFER */
+
 #if NPOINT
 static const IndexableFunction TNPointIndexableFunctions[] = {
   /* Ever spatial relationships */
@@ -294,6 +312,9 @@ makeExpandExpr(Node *arg, Node *radiusarg, Oid argoid, Oid retoid,
   meosType argtype = oid_type(argoid);
   if (argtype == T_GEOMETRY || argtype == T_GEOGRAPHY || argtype == T_STBOX ||
       argtype == T_TGEOMPOINT || argtype == T_TGEOGPOINT
+#if CBUFFER
+      || argtype == T_TCBUFFER
+#endif /* CBUFFER */
 #if NPOINT
       || argtype == T_TNPOINT
 #endif /* NPOINT */
@@ -335,6 +356,9 @@ makeBboxExpr(Node *arg, Oid argoid, Oid retoid, Oid callingfunc)
     funcname = "tbox";
   else if (argtype == T_GEOMETRY || argtype == T_GEOGRAPHY ||
       argtype == T_TGEOMPOINT || argtype == T_TGEOGPOINT
+#if CBUFFER
+      || argtype == T_CBUFFER || argtype == T_TCBUFFER
+#endif /* CBUFFER */
 #if NPOINT
       || argtype == T_NPOINT || argtype == T_TNPOINT
 #endif /* NPOINT */
@@ -393,6 +417,9 @@ Temporal_supportfn(FunctionCallInfo fcinfo, TemporalFamily tempfamily)
   /* Return estimated selectivity */
   assert (tempfamily == TEMPORALTYPE || tempfamily == TNUMBERTYPE ||
     tempfamily == TPOINTTYPE
+#if CBUFFER
+    || tempfamily == TCBUFFERTYPE
+#endif /* CBUFFER */
 #if NPOINT
     || tempfamily == TNPOINTTYPE
 #endif /* NPOINT */
@@ -461,6 +488,10 @@ Temporal_supportfn(FunctionCallInfo fcinfo, TemporalFamily tempfamily)
         funcarr = TNumberIndexableFunctions;
       else if (tempfamily == TPOINTTYPE)
         funcarr = TPointIndexableFunctions;
+#if CBUFFER
+      else if (tempfamily == TCBUFFERTYPE)
+        funcarr = TCbufferIndexableFunctions;
+#endif /* CBUFFER */
 #if NPOINT
       else if (tempfamily == TNPOINTTYPE)
         funcarr = TNPointIndexableFunctions;
@@ -550,6 +581,9 @@ Temporal_supportfn(FunctionCallInfo fcinfo, TemporalFamily tempfamily)
       else if (righttype == T_GEOMETRY || righttype == T_GEOGRAPHY ||
           righttype == T_TGEOMPOINT || righttype == T_TGEOGPOINT ||
           righttype == T_STBOX
+#if CBUFFER
+          || righttype == T_CBUFFER || righttype == T_TCBUFFER
+#endif /* CBUFFER */
 #if NPOINT
           || righttype == T_NPOINT || righttype == T_TNPOINT
 #endif /* NPOINT */
@@ -663,6 +697,19 @@ Tpoint_supportfn(PG_FUNCTION_ARGS)
 {
   return Temporal_supportfn(fcinfo, TPOINTTYPE);
 }
+
+#if CBUFFER
+PGDLLEXPORT Datum Tcbuffer_supportfn(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tcbuffer_supportfn);
+/**
+ * @brief Support function for temporal number types
+ */
+Datum
+Tcbuffer_supportfn(PG_FUNCTION_ARGS)
+{
+  return Temporal_supportfn(fcinfo, TCBUFFERTYPE);
+}
+#endif /* CBUFFER */
 
 #if NPOINT
 PGDLLEXPORT Datum Tnpoint_supportfn(PG_FUNCTION_ARGS);

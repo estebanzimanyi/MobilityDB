@@ -35,7 +35,7 @@
  * They are kept if needed in the future.
  */
 
-#include "npoint/npoint.h"
+#include "npoint/tnpoint.h"
 
 /* PostgreSQL */
 #include <libpq/pqformat.h>

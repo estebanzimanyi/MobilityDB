@@ -52,7 +52,7 @@
  * the subtype. Please refer to file temporal_analyze.c for more information.
  */
 
-#include "pg_point/tpoint_analyze.h"
+#include "pg_point/tspatial_analyze.h"
 
 /* C */
 #include <assert.h>
@@ -1042,7 +1042,7 @@ spatialset_compute_stats(VacAttrStats *stats, AnalyzeAttrFetchFunc fetchfunc,
  * @brief Compute the statistics for temporal point columns (callback function)
  */
 void
-tpoint_compute_stats(VacAttrStats *stats, AnalyzeAttrFetchFunc fetchfunc,
+tspatial_compute_stats(VacAttrStats *stats, AnalyzeAttrFetchFunc fetchfunc,
   int sample_rows, double total_rows)
 {
   int notnull_cnt = 0;      /* # not null rows in the sample */
@@ -1163,15 +1163,15 @@ Spatialset_analyze(PG_FUNCTION_ARGS)
   PG_RETURN_BOOL(true);
 }
 
-PGDLLEXPORT Datum Tpoint_analyze(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tpoint_analyze);
+PGDLLEXPORT Datum Tspatial_analyze(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tspatial_analyze);
 /**
  * @brief Compute the statistics for temporal point columns
  */
 Datum
-Tpoint_analyze(PG_FUNCTION_ARGS)
+Tspatial_analyze(PG_FUNCTION_ARGS)
 {
-  return temporal_analyze(fcinfo, &tpoint_compute_stats);
+  return temporal_analyze(fcinfo, &tspatial_compute_stats);
 }
 
 /*****************************************************************************/

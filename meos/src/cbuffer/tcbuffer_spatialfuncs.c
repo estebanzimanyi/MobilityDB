@@ -70,6 +70,19 @@ cbuffersegm_interpolate(Datum start, Datum end, long double ratio)
 }
 
 /**
+ * @brief Ensure the validity of a temporal circular buffer and a circular buffer
+ */
+bool
+ensure_valid_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cbuf)
+{
+  if (ensure_not_null((void *) temp) && ensure_not_null((void *) cbuf) &&
+      ensure_temporal_isof_type(temp, T_TCBUFFER) &&
+      ensure_same_srid(tspatial_srid(temp), cbuffer_srid(cbuf)))
+    return true;
+  return false;
+}
+
+/**
  * @brief Ensure the validity of two temporal circular buffers
  */
 bool

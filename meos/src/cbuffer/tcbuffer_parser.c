@@ -63,7 +63,7 @@ cbuffer_parse(const char **str, bool end)
   if (pg_strncasecmp(*str, "CBUFFER", 7) != 0)
   {
     meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
-      "Could not parse circular buffer");
+      "Could not parse circular buffer: Missing prefix 'Cbuffer'");
     return NULL;
   }
 

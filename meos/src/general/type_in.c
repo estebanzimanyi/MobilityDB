@@ -50,7 +50,7 @@
   #include "cbuffer/tcbuffer.h"
 #endif
 #if NPOINT
-  #include "npoint/npoint.h"
+  #include "npoint/tnpoint.h"
 #endif
 
 /*****************************************************************************/
@@ -1252,11 +1252,15 @@ Cbuffer *
 cbuffer_from_wkb_state(wkb_parse_state *s)
 {
   /* Does the data we want to read exist? */
-  wkb_parse_state_check(s, MEOS_WKB_DOUBLE_SIZE * 2 + MEOS_WKB_DOUBLE_SIZE);
+  wkb_parse_state_check(s, MEOS_WKB_INT4_SIZE + MEOS_WKB_DOUBLE_SIZE * 3);
   /* Get the data */
-  GSERIALIZED *gs = DatumGetGserializedP(point_from_wkb_state(s));
+  int32_t srid = int32_from_wkb_state(s);
+  double x = double_from_wkb_state(s);
+  double y = double_from_wkb_state(s);
   double radius = double_from_wkb_state(s);
+  GSERIALIZED *gs = geopoint_make(x, y, 0.0, false, false, srid);
   Cbuffer *result = cbuffer_make(gs, radius);
+  pfree(gs);
   return result;
 }
 #endif /* CBUFFER */
@@ -1798,6 +1802,10 @@ datum_from_wkb(const uint8_t *wkb, size_t size, meosType type)
     return PointerGetDatum(tbox_from_wkb_state(&s));
   if (type == T_STBOX)
     return PointerGetDatum(stbox_from_wkb_state(&s));
+#if CBUFFER
+  if (type == T_CBUFFER)
+    return PointerGetDatum(cbuffer_from_wkb_state(&s));
+#endif /* CBUFFER */
   if (temporal_type(type))
     return PointerGetDatum(temporal_from_wkb_state(&s));
   /* Error! */
@@ -1997,6 +2005,46 @@ stbox_from_hexwkb(const char *hexwkb)
   size_t size = strlen(hexwkb);
   return DatumGetSTboxP(datum_from_hexwkb(hexwkb, size, T_STBOX));
 }
+
+/*****************************************************************************
+ * WKB and HexWKB input functions for circular buffers
+ *****************************************************************************/
+
+#if CBUFFER
+/**
+ * @ingroup meos_cbuffer_inout
+ * @brief Return a circular buffer from its Well-Known Binary (WKB) 
+ * representation
+ * @param[in] wkb WKB string
+ * @param[in] size Size of the string
+ * @csqlfn #Cbuffer_recv(), #Cbuffer_from_wkb()
+ */
+Cbuffer *
+cbuffer_from_wkb(const uint8_t *wkb, size_t size)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) wkb))
+    return NULL;
+  return DatumGetCbufferP(datum_from_wkb(wkb, size, T_CBUFFER));
+}
+
+/**
+ * @ingroup meos_setcbuffer_inout
+ * @brief Return a circular buffer from its hex-encoded ASCII Well-Known Binary
+ * (WKB) representation
+ * @param[in] hexwkb HexWKB string
+ * @csqlfn #Cbuffer_from_hexwkb()
+ */
+Cbuffer *
+cbuffer_from_hexwkb(const char *hexwkb)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) hexwkb))
+    return NULL;
+  size_t size = strlen(hexwkb);
+  return DatumGetCbufferP(datum_from_hexwkb(hexwkb, size, T_CBUFFER));
+}
+#endif /* CBUFFER */
 
 /*****************************************************************************
  * WKB and HexWKB input functions for temporal types

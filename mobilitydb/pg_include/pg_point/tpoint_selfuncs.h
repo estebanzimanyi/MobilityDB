@@ -41,7 +41,7 @@
 /* MEOS */
 #include "general/meos_catalog.h"
 /* MobilityDB */
-#include "pg_point/tpoint_analyze.h"
+#include "pg_point/tspatial_analyze.h"
 
 /**
 * The maximum number of dimensions our code can handle.

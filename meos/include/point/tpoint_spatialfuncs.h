@@ -108,6 +108,7 @@ extern bool ensure_has_Z_gs(const GSERIALIZED *gs);
 extern bool ensure_has_not_Z_gs(const GSERIALIZED *gs);
 extern bool ensure_has_M_gs(const GSERIALIZED *gs);
 extern bool ensure_has_not_M_gs(const GSERIALIZED *gs);
+extern bool ensure_not_geodetic_gs(const GSERIALIZED *gs);
 extern bool ensure_point_type(const GSERIALIZED *gs);
 extern bool ensure_circle_type(const GSERIALIZED *gs);
 extern bool ensure_not_empty(const GSERIALIZED *gs);

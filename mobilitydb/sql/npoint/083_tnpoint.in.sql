@@ -55,11 +55,6 @@ CREATE FUNCTION temporal_send(tnpoint)
   AS 'MODULE_PATHNAME', 'Temporal_send'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tnpoint_analyze(internal)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Tnpoint_analyze'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
 CREATE TYPE tnpoint (
   internallength = variable,
   input = tnpoint_in,
@@ -70,7 +65,7 @@ CREATE TYPE tnpoint (
   typmod_out = temporal_typmod_out,
   storage = extended,
   alignment = double,
-  analyze = tnpoint_analyze
+  analyze = tspatial_analyze
 );
 
 -- Special cast for enforcing the typmod restrictions

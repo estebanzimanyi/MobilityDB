@@ -67,7 +67,7 @@ Tnpoint_trajectory(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************
- * Geographical equality for network points
+ * Approximate equality for network points
  *****************************************************************************/
 
 PGDLLEXPORT Datum Npoint_same(PG_FUNCTION_ARGS);

@@ -51,7 +51,6 @@
   #include "cbuffer/tcbuffer.h"
 #endif
 #if NPOINT
-  #include "npoint/npoint.h"
   #include "npoint/tnpoint.h"
 #endif
 #if POSE

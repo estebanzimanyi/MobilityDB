@@ -449,13 +449,9 @@ temporal_oper_sel_family(meosOper oper __attribute__((unused)), meosType ltype,
   meosType rtype, TemporalFamily tempfamily)
 {
   /* Get enumeration value associated to the operator */
-#if NPOINT
   assert(tempfamily == TEMPORALTYPE || tempfamily == TNUMBERTYPE ||
-    tempfamily == TPOINTTYPE || tempfamily == TNPOINTTYPE);
-#else
-  assert(tempfamily == TEMPORALTYPE || tempfamily == TNUMBERTYPE ||
-    tempfamily == TPOINTTYPE);
-#endif /* NPOINT */
+    tempfamily == TPOINTTYPE || tempfamily == TNPOINTTYPE || 
+    tempfamily == TCBUFFERTYPE);
 
   if (tempfamily == TEMPORALTYPE)
     return temporal_oper_sel(oper, ltype, rtype);
@@ -771,7 +767,8 @@ temporal_sel_family(FunctionCallInfo fcinfo, TemporalFamily tempfamily)
   int varRelid = PG_GETARG_INT32(3);
 
   assert(tempfamily == TEMPORALTYPE || tempfamily == TNUMBERTYPE ||
-         tempfamily == TPOINTTYPE || tempfamily == TNPOINTTYPE);
+         tempfamily == TPOINTTYPE || tempfamily == TNPOINTTYPE || 
+         tempfamily == TCBUFFERTYPE);
   Selectivity selec = temporal_sel(root, operid, args, varRelid, tempfamily);
   return selec;
 }
@@ -948,7 +945,8 @@ temporal_joinsel(PlannerInfo *root, Oid operid, List *args, JoinType jointype,
   SpecialJoinInfo *sjinfo, TemporalFamily tempfamily)
 {
   assert(tempfamily == TEMPORALTYPE || tempfamily == TNUMBERTYPE ||
-         tempfamily == TPOINTTYPE || tempfamily == TNPOINTTYPE);
+         tempfamily == TPOINTTYPE || tempfamily == TNPOINTTYPE || 
+         tempfamily == TCBUFFERTYPE);
 
   Node *arg1 = (Node *) linitial(args);
   Node *arg2 = (Node *) lsecond(args);

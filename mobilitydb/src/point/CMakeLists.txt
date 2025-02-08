@@ -4,7 +4,6 @@ add_library(pg_point OBJECT
   tpoint.c
   tpoint_aggfuncs.c
   tpoint_analytics.c
-  tpoint_analyze.c
   tpoint_boxops.c
   tpoint_compops.c
   tpoint_datagen.c
@@ -18,5 +17,6 @@ add_library(pg_point OBJECT
   tpoint_spgist.c
   tpoint_tempspatialrels.c
   tpoint_tile.c
+  tspatial_analyze.c
   type_srid.c
   )

@@ -116,7 +116,9 @@ Cbuffer *
 cbuffer_make(const GSERIALIZED *point, double radius)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) point) || 
+  if (! ensure_not_null((void *) point) || ! ensure_point_type(point) ||
+      ! ensure_not_empty(point) || ! ensure_has_not_Z_gs(point) || 
+      ! ensure_has_not_M_gs(point) || ! ensure_not_geodetic_gs(point) ||
       ! ensure_not_negative_datum(Float8GetDatum(radius), T_FLOAT8))
     return NULL;
 
@@ -317,6 +319,26 @@ cbuffer_set_srid(Cbuffer *cbuf, int32_t srid)
   GSERIALIZED *gs = DatumGetGserializedP(PointerGetDatum(&cbuf->point));
   gserialized_set_srid(gs, srid);
   return;
+}
+
+/*****************************************************************************
+ * Approximate equality for circular buffers
+ *****************************************************************************/
+
+/**
+ * @brief Return true if two circular buffers are approximately equal with
+ * respect to an epsilon value
+ */
+bool
+cbuffer_same(const Cbuffer *cbuf1, const Cbuffer *cbuf2)
+{
+  /* Same radius */
+  if (fabs(cbuf1->radius - cbuf2->radius) > MEOS_EPSILON)
+    return false;
+  /* Same points */
+  Datum point1 = PointerGetDatum(&cbuf1->point);
+  Datum point2 = PointerGetDatum(&cbuf2->point);
+  return datum_point_same(point1, point2);
 }
 
 /*****************************************************************************

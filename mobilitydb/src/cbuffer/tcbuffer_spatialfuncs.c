@@ -68,25 +68,6 @@ Tcbuffer_traversed_area(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************
- * Geographical equality for circular buffers
- *****************************************************************************/
-
-// PGDLLEXPORT Datum Cbuffer_same(PG_FUNCTION_ARGS);
-// PG_FUNCTION_INFO_V1(Cbuffer_same);
-// /**
- // * @ingroup mobilitydb_temporal_spatial_accessor
- // * @brief Return true if two circular buffers are spatially equal
- // * @sqlfn same()
- // */
-// Datum
-// Cbuffer_same(PG_FUNCTION_ARGS)
-// {
-  // Cbuffer *cbuf1 = PG_GETARG_CBUFFER_P(0);
-  // Cbuffer *cbuf2 = PG_GETARG_CBUFFER_P(1);
-  // PG_RETURN_BOOL(cbuffer_same(cbuf1, cbuf2));
-// }
-
-/*****************************************************************************
  * Length functions
  *****************************************************************************/
 

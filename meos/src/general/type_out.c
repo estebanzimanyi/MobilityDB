@@ -51,10 +51,10 @@
 #if CBUFFER
   #include <meos_cbuffer.h>
   #include "cbuffer/tcbuffer.h"
-#endif /* CBUFFER */
+#endif
 #if NPOINT
   #include "npoint/tnpoint.h"
-#endif /* NPOINT */
+#endif
 
 #define MEOS_WKT_BOOL_SIZE sizeof("false")
 #define MEOS_WKT_INT4_SIZE sizeof("+2147483647")
@@ -826,8 +826,8 @@ basetype_to_wkb_size(Datum value, meosType basetype, int16 flags)
       return MEOS_WKB_DOUBLE_SIZE * ( MEOS_FLAGS_GET_Z(flags) ? 3 : 2 );
 #if CBUFFER
     case T_CBUFFER:
-      /* The size of the geometry (see above) and the size of the radius */
-      return MEOS_WKB_DOUBLE_SIZE * 2 + MEOS_WKB_DOUBLE_SIZE;
+      /* SRID + geometry (2D point = 2 doubles, see above) + radius */
+      return MEOS_WKB_INT4_SIZE + MEOS_WKB_DOUBLE_SIZE * 3;
 #endif /* CBUFFER */
 #if NPOINT
     case T_NPOINT:
@@ -970,7 +970,7 @@ tbox_to_wkb_size(const TBox *box)
 /*****************************************************************************/
 
 /**
- * @brief Return true if the spatiotemporal box needs to output the SRID
+ * @brief Return true if a spatiotemporal box needs to output the SRID
  */
 static bool
 stbox_wkb_needs_srid(const STBox *box, uint8_t variant)
@@ -1006,6 +1006,23 @@ stbox_to_wkb_size(const STBox *box, uint8_t variant)
   }
   return size;
 }
+
+/*****************************************************************************/
+
+#if CBUFFER
+/**
+ * @brief Return the size in bytes of a circular buffer in the Well-Known
+ * Binary (WKB) representation
+ */
+static size_t
+cbuffer_to_wkb_size()
+{
+  /* Endian flag + SRID + one 2D coordinates + radius */
+  size_t size = MEOS_WKB_BYTE_SIZE + MEOS_WKB_INT4_SIZE +
+    MEOS_WKB_DOUBLE_SIZE * 3;
+  return size;
+}
+#endif /* CBUFFER */
 
 /*****************************************************************************/
 
@@ -1156,6 +1173,10 @@ datum_to_wkb_size(Datum value, meosType type, uint8_t variant)
     return tbox_to_wkb_size((TBox *) DatumGetPointer(value));
   if (type == T_STBOX)
     return stbox_to_wkb_size((STBox *) DatumGetPointer(value), variant);
+#if CBUFFER
+  if (type == T_CBUFFER)
+    return cbuffer_to_wkb_size();
+#endif /* CBUFFER */
   if (temporal_type(type))
     return temporal_to_wkb_size((Temporal *) DatumGetPointer(value), variant);
   /* Error! */
@@ -1424,15 +1445,20 @@ coords_to_wkb_buf(Datum value, int16 flags, uint8_t *buf, uint8_t variant)
 
 #if CBUFFER
 /**
- * @brief Write into the buffer a network point in the Well-Known Binary (WKB)
- * representation
+ * @brief Write into the buffer a component circular buffer in the Well-Known 
+ * Binary (WKB) representation
+ * @details SRID (int32), coordinates of a 2D point and radius (3 doubles)
  */
 uint8_t *
-cbuffer_to_wkb_buf(const Cbuffer *cbuf, int16 flags, uint8_t *buf,
+cbuffer_to_wkb_buf_int(const Cbuffer *cbuf, uint8_t *buf,
   uint8_t variant)
 {
   Datum d = PointerGetDatum(&cbuf->point);
-  buf = coords_to_wkb_buf(d, flags, buf, variant);
+  int32_t srid = gserialized_get_srid(DatumGetGserializedP(d));
+  buf = int32_to_wkb_buf(srid, buf, variant);
+  const POINT2D *point = DATUM_POINT2D_P(d);
+  buf = double_to_wkb_buf(point->x, buf, variant);
+  buf = double_to_wkb_buf(point->y, buf, variant);
   buf = double_to_wkb_buf(cbuf->radius, buf, variant);
   return buf;
 }
@@ -1492,7 +1518,7 @@ basevalue_to_wkb_buf(Datum value, meosType basetype, int16 flags, uint8_t *buf,
       break;
 #if CBUFFER
     case T_CBUFFER:
-      buf = cbuffer_to_wkb_buf(DatumGetCbufferP(value), flags, buf, variant);
+      buf = cbuffer_to_wkb_buf_int(DatumGetCbufferP(value), buf, variant);
       break;
 #endif /* NPOINT */
 #if NPOINT
@@ -1850,6 +1876,30 @@ stbox_to_wkb_buf(const STBox *box, uint8_t *buf, uint8_t variant)
 
 /*****************************************************************************/
 
+#if CBUFFER
+/**
+ * @brief Write into the buffer a circular buffer in the Well-Known Binary
+ * (WKB) representation
+ */
+static uint8_t *
+cbuffer_to_wkb_buf(const Cbuffer *cbuf, uint8_t *buf, uint8_t variant)
+{
+  /* Write the endian flag */
+  buf = endian_to_wkb_buf(buf, variant);
+  /* Write the circular buffer, copied from #cbuffer_to_wkb_buf_int */
+  Datum d = PointerGetDatum(&cbuf->point);
+  int32_t srid = gserialized_get_srid(DatumGetGserializedP(d));
+  buf = int32_to_wkb_buf(srid, buf, variant);
+  const POINT2D *point = DATUM_POINT2D_P(d);
+  buf = double_to_wkb_buf(point->x, buf, variant);
+  buf = double_to_wkb_buf(point->y, buf, variant);
+  buf = double_to_wkb_buf(cbuf->radius, buf, variant);
+  return buf;
+}
+#endif /* CBUFFER */
+
+/*****************************************************************************/
+
 /**
  * @brief Write into the buffer the flag containing the temporal type and
  * other characteristics in the Well-Known Binary (WKB) representation
@@ -2046,6 +2096,10 @@ datum_to_wkb_buf(Datum value, meosType type, uint8_t *buf, uint8_t variant)
     buf = tbox_to_wkb_buf((TBox *) DatumGetPointer(value), buf, variant);
   else if (type == T_STBOX)
     buf = stbox_to_wkb_buf((STBox *) DatumGetPointer(value), buf, variant);
+#if CBUFFER
+  else if (type == T_CBUFFER)
+    buf = cbuffer_to_wkb_buf((Cbuffer *) DatumGetPointer(value), buf, variant);
+#endif /* CBUFFER */
   else if (temporal_type(type))
     buf = temporal_to_wkb_buf((Temporal *) DatumGetPointer(value), buf,
       variant);
@@ -2359,6 +2413,50 @@ stbox_as_hexwkb(const STBox *box, uint8_t variant, size_t *size_out)
     variant | (uint8_t) WKB_HEX, size_out);
 }
 #endif /* MEOS */
+
+/*****************************************************************************
+ * WKB and HexWKB output functions for circular buffers
+ *****************************************************************************/
+
+#if CBUFFER
+/**
+ * @ingroup meos_cbuffer_inout
+ * @brief Return the Well-Known Binary (WKB) representation of a circular
+ * buffer
+ * @param[in] cbuf Circular buffer
+ * @param[in] variant Output variant
+ * @param[out] size_out Size of the output
+ * @csqlfn #Cbuffer_recv(), #Cbuffer_as_wkb()
+ */
+uint8_t *
+cbuffer_as_wkb(const Cbuffer *cbuf, uint8_t variant, size_t *size_out)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) cbuf) || ! ensure_not_null((void *) size_out))
+    return NULL;
+  return datum_as_wkb(PointerGetDatum(cbuf), T_CBUFFER, variant,
+    size_out);
+}
+
+/**
+ * @ingroup meos_cbuffer_inout
+ * @brief Return the hex-encoded ASCII Well-Known Binary (HexWKB)
+ * representation of a circular buffer
+ * @param[in] cbuf Circular buffer
+ * @param[in] variant Output variant
+ * @param[out] size_out Size of the output
+ * @csqlfn #Cbuffer_as_hexwkb()
+ */
+char *
+cbuffer_as_hexwkb(const Cbuffer *cbuf, uint8_t variant, size_t *size_out)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) cbuf) || ! ensure_not_null((void *) size_out))
+    return NULL;
+  return (char *) datum_as_wkb(PointerGetDatum(cbuf), T_CBUFFER,
+    variant | (uint8_t) WKB_HEX, size_out);
+}
+#endif /* CBUFFER */
 
 /*****************************************************************************
  * WKB and HexWKB output functions for temporal types

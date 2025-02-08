@@ -106,6 +106,7 @@ extern GSERIALIZED *line_interpolate_point(GSERIALIZED *gs, double distance_frac
 extern double line_length(const GSERIALIZED *gs);
 extern int line_numpoints(const GSERIALIZED *gs);
 extern double line_locate_point(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
+extern const char *geo_typename(int type);
 extern GSERIALIZED *line_point_n(const GSERIALIZED *geom, int n);
 extern GSERIALIZED *line_substring(const GSERIALIZED *gs, double from, double to);
 

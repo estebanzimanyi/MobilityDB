@@ -31,8 +31,8 @@
  * @brief Functions for gathering statistics from temporal point columns
  */
 
-#ifndef __TPOINT_ANALYZE_H__
-#define __TPOINT_ANALYZE_H__
+#ifndef __TSPATIAL_ANALYZE_H__
+#define __TSPATIAL_ANALYZE_H__
 
 /* PostgreSQL */
 #include <postgres.h>
@@ -117,9 +117,9 @@ extern double nd_box_ratio_overlaps(const ND_BOX *b1, const ND_BOX *b2, int ndim
 extern int nd_increment(ND_IBOX *ibox, int ndims, int *counter);
 extern int nd_stats_value_index(const ND_STATS *stats, const int *indexes);
 
-extern void tpoint_compute_stats(VacAttrStats *stats,
+extern void tspatial_compute_stats(VacAttrStats *stats,
   AnalyzeAttrFetchFunc fetchfunc, int sample_rows, double total_rows);
 
 /*****************************************************************************/
 
-#endif
+#endif /* __TSPATIAL_ANALYZE_H__ */

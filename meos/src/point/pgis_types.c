@@ -349,6 +349,7 @@ box3d_to_lwgeom(BOX3D *box)
  * Functions adapted from lwgeom_functions_basic.c
  *****************************************************************************/
 
+#if NPOINT
 /**
  * @brief find the "length of a geometry"
  *    length(point) = 0
@@ -365,6 +366,7 @@ line_length(const GSERIALIZED *geom)
   lwgeom_free(lwgeom);
   return dist;
 }
+#endif /* NPOINT */
 
 /**
  * @brief find the "perimeter of a geometry"
@@ -616,6 +618,7 @@ geom_azimuth(const GSERIALIZED *gs1, const GSERIALIZED *gs2, double *result)
   return true;
 }
 
+#if CBUFFER
 /**
  * @brief Collect the array of geometries into a geometry collection
  * @note PostGIS function: @p LWGEOM_collect_garray(PG_FUNCTION_ARGS)
@@ -684,6 +687,7 @@ geom_collect_garray(GSERIALIZED **gsarr, int nelems)
   result = geom_serialize(outlwg);
   return result;
 }
+#endif /* CBUFFER */
 
 /*****************************************************************************
  * Functions adapted from lwgeom_geos.c
@@ -2648,6 +2652,41 @@ line_locate_point(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 /*****************************************************************************
  * Functions adapted from lwgeom_ogc.c
  *****************************************************************************/
+
+/**
+ * @brief Global constant array containing the geometry type strings
+ */
+static const char * _GEO_TYPENAME[] =
+{
+  "Unknown",
+  "Point",
+  "LineString",
+  "Polygon",
+  "MultiPoint",
+  "MultiLineString",
+  "MultiPolygon",
+  "GeometryCollection",
+  "CircularString",
+  "CompoundCurve",
+  "CurvePolygon",
+  "MultiCurve",
+  "MultiSurface",
+  "PolyhedralSurface",
+  "Triangle",
+  "Tin",
+};
+         
+/**
+ * @brief Returns a string representation of a geometry's type
+ */
+const char *
+geo_typename(int type)
+{
+  /* NUMTYPES is defined in liblwgeom.h */
+  if (type < 0 || type >= NUMTYPES)
+    return "";
+	return _GEO_TYPENAME[type];
+}
 
 /**
  * PointN(GEOMETRY,INTEGER) -- find the first linestring in GEOMETRY,

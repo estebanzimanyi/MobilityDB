@@ -99,6 +99,7 @@ datum_point4d(Datum value, POINT4D *p)
 
 /*****************************************************************************/
 
+#if CBUFFER
 /**
  * @brief Return -1, 0, or 1 depending on whether the first point is less than,
  * equal to, or greater than the second one
@@ -129,6 +130,7 @@ geopoint_cmp(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
     return 0;
   }
 }
+#endif /* CBUFFER */
 
 /**
  * @brief Return true if the points are equal
@@ -642,6 +644,21 @@ ensure_has_not_M_gs(const GSERIALIZED *gs)
   return false;
 }
 
+#if CBUFFER
+/**
+ * @brief Ensure that the geometry has planar coordinates
+ */
+bool
+ensure_not_geodetic_gs(const GSERIALIZED *gs)
+{
+  if (! FLAGS_GET_GEODETIC(gs->gflags))
+    return true;
+  meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+    "Only planar coordinates supported");
+  return false;
+}
+#endif /* CBUFFER */
+
 /**
  * @brief Ensure that the geometry/geography is a point
  */
@@ -655,6 +672,7 @@ ensure_point_type(const GSERIALIZED *gs)
   return false;
 }
 
+#if CBUFFER
 /**
  * @brief Ensure that the geometry/geography is a circle
  */
@@ -690,6 +708,7 @@ ensure_circle_type(const GSERIALIZED *gs)
   }
   return true;
 }
+#endif /* CBUFFER */
 
 /**
  * @brief Ensure that the geometry/geography is not empty

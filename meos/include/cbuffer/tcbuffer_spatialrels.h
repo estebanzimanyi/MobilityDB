@@ -28,29 +28,37 @@
  *****************************************************************************/
 
 /**
- * @file
- * @brief Functions for gathering statistics from temporal network point
- * columns.
+ * @brief Spatial relationships for temporal points.
  */
+
+#ifndef __TPOINT_SPATIALRELS_H__
+#define __TPOINT_SPATIALRELS_H__
 
 /* PostgreSQL */
 #include <postgres.h>
-/* MobilityDB */
-#include "pg_general/temporal_analyze.h"
-#include "pg_point/tpoint_analyze.h"
+/* MEOS */
+#include <meos.h>
+#include "general/temporal.h"
+  
+/*****************************************************************************/
+
+extern Datum ea_disjoint_tcbuffer_geo(const Temporal *temp,
+  const GSERIALIZED *gs, bool ever);
+extern int ea_spatialrel_tcbuffer_tcbuffer(const Temporal *temp1,
+  const Temporal *temp2, datum_func2 func, bool ever);
+
+extern int ea_dwithin_tcbuffer_tcbuffer_sync(const Temporal *sync1,
+  const Temporal *sync2, double dist, bool ever);
 
 /*****************************************************************************/
 
-PGDLLEXPORT Datum Tnpoint_analyze(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tnpoint_analyze);
-/**
- * @brief Compute the statistics for temporal network point columns
- */
-Datum
-Tnpoint_analyze(PG_FUNCTION_ARGS)
-{
-  return temporal_analyze(fcinfo, &tpoint_compute_stats);
-}
-
+extern int econtains_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp);
+extern int acontains_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp);
+extern int edwithin_tcbuffer_tcbuffer(const Temporal *temp1,
+  const Temporal *temp2, double dist);
+extern int adwithin_tcbuffer_tcbuffer(const Temporal *temp1, 
+  const Temporal *temp2, double dist);
 
 /*****************************************************************************/
+
+#endif

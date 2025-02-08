@@ -40,6 +40,8 @@
 #include <meos.h>
 #include "general/temporal.h"
 
+#define INVERT_RESULT(result) (result < 0 ? -1 : (result > 0) ? 0 : 1)
+
 /*****************************************************************************/
 
 extern Datum datum_geom_contains(Datum geom1, Datum geom2);
@@ -59,6 +61,10 @@ extern datum_func2 get_disjoint_fn_gs(int16 flags1, uint8_t flags2);
 extern datum_func2 get_intersects_fn_gs(int16 flags1, uint8_t flags2);
 extern datum_func3 get_dwithin_fn(int16 flags1, int16 flags2);
 
+extern int tdwithin_add_solutions(int solutions, TimestampTz lower, 
+  TimestampTz upper, bool lower_inc, bool upper_inc, bool upper_inc1, 
+  TimestampTz t1, TimestampTz t2, TInstant **instants, TSequence **result);
+  
 /*****************************************************************************/
 
 extern Datum ea_disjoint_tpoint_geo(const Temporal *temp,

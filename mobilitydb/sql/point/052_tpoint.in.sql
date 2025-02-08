@@ -69,9 +69,9 @@ CREATE FUNCTION tpoint_typmod_out(integer)
   AS 'MODULE_PATHNAME', 'Tpoint_typmod_out'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tpoint_analyze(internal)
+CREATE FUNCTION tspatial_analyze(internal)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Tpoint_analyze'
+  AS 'MODULE_PATHNAME', 'Tspatial_analyze'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE TYPE tgeompoint (
@@ -84,7 +84,7 @@ CREATE TYPE tgeompoint (
   typmod_out = tpoint_typmod_out,
   storage = extended,
   alignment = double,
-  analyze = tpoint_analyze
+  analyze = tspatial_analyze
 );
 
 CREATE FUNCTION tgeogpoint_in(cstring, oid, integer)
@@ -114,7 +114,7 @@ CREATE TYPE tgeogpoint (
   typmod_out = tpoint_typmod_out,
   storage = extended,
   alignment = double,
-    analyze = tpoint_analyze
+  analyze = tspatial_analyze
 );
 
 -- Special cast for enforcing the typmod restrictions

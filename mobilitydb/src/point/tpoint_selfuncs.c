@@ -45,11 +45,11 @@
 #include <meos_internal.h>
 #include "general/meos_catalog.h"
 /* MobilityDB */
-#include "pg_point/tpoint_analyze.h"
+#include "pg_point/tspatial_analyze.h"
 
 /*****************************************************************************
  * Boolean functions for the operators
- * PostGIS provides nd_box_intersects which is copied in tpoint_analyze.c
+ * PostGIS provides nd_box_intersects which is copied in tspatial_analyze.c
  *****************************************************************************/
 
 /**
@@ -177,7 +177,7 @@ nd_box_overback(const ND_BOX *a, const ND_BOX *b)
 
 /*****************************************************************************
  * Proportion functions for the operators
- * Function nd_box_ratio_overlaps is defined in tpoint_analyze.c and is
+ * Function nd_box_ratio_overlaps is defined in tspatial_analyze.c and is
  * copied from PostGIS function nd_box_ratio
  *****************************************************************************/
 

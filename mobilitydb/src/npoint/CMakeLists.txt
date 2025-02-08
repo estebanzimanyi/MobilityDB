@@ -2,7 +2,6 @@ add_library(pg_npoint OBJECT
   npoint.c
   tnpoint.c
   tnpoint_aggfuncs.c
-  tnpoint_analyze.c
   tnpoint_boxops.c
   tnpoint_distance.c
   tnpoint_gin.c
