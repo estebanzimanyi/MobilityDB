@@ -32,18 +32,6 @@
  * Bounding box operators for temporal circular buffers.
  */
 
-/*****************************************************************************/
-
-CREATE FUNCTION tcbuffer_sel(internal, oid, internal, integer)
-  RETURNS float
-  AS 'MODULE_PATHNAME', 'Tcbuffer_sel'
-  LANGUAGE C IMMUTABLE STRICT;
-
-CREATE FUNCTION tcbuffer_joinsel(internal, oid, internal, smallint, internal)
-  RETURNS float
-  AS 'MODULE_PATHNAME', 'Tcbuffer_joinsel'
-  LANGUAGE C IMMUTABLE STRICT;
-
 /*****************************************************************************
  * Temporal cbuffer to stbox
  *****************************************************************************/
@@ -115,7 +103,7 @@ CREATE OPERATOR @> (
   PROCEDURE = temporal_contains,
   LEFTARG = stbox, RIGHTARG = tcbuffer,
   COMMUTATOR = <@,
-  RESTRICT = tcbuffer_sel, JOIN = tcbuffer_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 CREATE FUNCTION temporal_contains(tcbuffer, stbox)
@@ -131,13 +119,13 @@ CREATE OPERATOR @> (
   PROCEDURE = temporal_contains,
   LEFTARG = tcbuffer, RIGHTARG = stbox,
   COMMUTATOR = <@,
-  RESTRICT = tcbuffer_sel, JOIN = tcbuffer_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR @> (
   PROCEDURE = temporal_contains,
   LEFTARG = tcbuffer, RIGHTARG = tcbuffer,
   COMMUTATOR = <@,
-  RESTRICT = tcbuffer_sel, JOIN = tcbuffer_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 /*****************************************************************************
@@ -177,7 +165,7 @@ CREATE OPERATOR <@ (
   PROCEDURE = temporal_contained,
   LEFTARG = stbox, RIGHTARG = tcbuffer,
   COMMUTATOR = @>,
-  RESTRICT = tcbuffer_sel, JOIN = tcbuffer_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 CREATE FUNCTION temporal_contained(tcbuffer, stbox)
@@ -193,13 +181,13 @@ CREATE OPERATOR <@ (
   PROCEDURE = temporal_contained,
   LEFTARG = tcbuffer, RIGHTARG = stbox,
   COMMUTATOR = @>,
-  RESTRICT = tcbuffer_sel, JOIN = tcbuffer_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR <@ (
   PROCEDURE = temporal_contained,
   LEFTARG = tcbuffer, RIGHTARG = tcbuffer,
   COMMUTATOR = @>,
-  RESTRICT = tcbuffer_sel, JOIN = tcbuffer_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 /*****************************************************************************
@@ -239,7 +227,7 @@ CREATE OPERATOR && (
   PROCEDURE = temporal_overlaps,
   LEFTARG = stbox, RIGHTARG = tcbuffer,
   COMMUTATOR = &&,
-  RESTRICT = tcbuffer_sel, JOIN = tcbuffer_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 CREATE FUNCTION temporal_overlaps(tcbuffer, stbox)
@@ -255,13 +243,13 @@ CREATE OPERATOR && (
   PROCEDURE = temporal_overlaps,
   LEFTARG = tcbuffer, RIGHTARG = stbox,
   COMMUTATOR = &&,
-  RESTRICT = tcbuffer_sel, JOIN = tcbuffer_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR && (
   PROCEDURE = temporal_overlaps,
   LEFTARG = tcbuffer, RIGHTARG = tcbuffer,
   COMMUTATOR = &&,
-  RESTRICT = tcbuffer_sel, JOIN = tcbuffer_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 /*****************************************************************************
@@ -301,7 +289,7 @@ CREATE OPERATOR ~= (
   PROCEDURE = temporal_same,
   LEFTARG = stbox, RIGHTARG = tcbuffer,
   COMMUTATOR = ~=,
-  RESTRICT = tcbuffer_sel, JOIN = tcbuffer_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 CREATE FUNCTION temporal_same(tcbuffer, stbox)
@@ -317,13 +305,13 @@ CREATE OPERATOR ~= (
   PROCEDURE = temporal_same,
   LEFTARG = tcbuffer, RIGHTARG = stbox,
   COMMUTATOR = ~=,
-  RESTRICT = tcbuffer_sel, JOIN = tcbuffer_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR ~= (
   PROCEDURE = temporal_same,
   LEFTARG = tcbuffer, RIGHTARG = tcbuffer,
   COMMUTATOR = ~=,
-  RESTRICT = tcbuffer_sel, JOIN = tcbuffer_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 /*****************************************************************************
@@ -363,7 +351,7 @@ CREATE OPERATOR -|- (
   PROCEDURE = temporal_adjacent,
   LEFTARG = stbox, RIGHTARG = tcbuffer,
   COMMUTATOR = -|-,
-  RESTRICT = tcbuffer_sel, JOIN = tcbuffer_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 CREATE FUNCTION temporal_adjacent(tcbuffer, stbox)
@@ -379,13 +367,13 @@ CREATE OPERATOR -|- (
   PROCEDURE = temporal_adjacent,
   LEFTARG = tcbuffer, RIGHTARG = stbox,
   COMMUTATOR = -|-,
-  RESTRICT = tcbuffer_sel, JOIN = tcbuffer_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR -|- (
   PROCEDURE = temporal_adjacent,
   LEFTARG = tcbuffer, RIGHTARG = tcbuffer,
   COMMUTATOR = -|-,
-  RESTRICT = tcbuffer_sel, JOIN = tcbuffer_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 /*****************************************************************************/

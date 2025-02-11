@@ -40,20 +40,20 @@
 CREATE FUNCTION eContains(geometry, tgeompoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Econtains_geo_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION aContains(geometry, tgeompoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Acontains_geo_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************
  * eDisjoint, aDisjoint
  *****************************************************************************/
 
--- TODO implement the index support in the tpoint_supportfn
+-- TODO implement the index support in the tspatial_supportfn
 
 CREATE FUNCTION _edisjoint(geometry, tgeompoint)
   RETURNS boolean
@@ -85,38 +85,38 @@ CREATE FUNCTION edisjoint(tgeompoint, tgeompoint)
 -- CREATE FUNCTION eDisjoint(geometry, tgeompoint)
   -- RETURNS boolean
   -- AS 'MODULE_PATHNAME', 'Edisjoint_geo_tpoint'
-  -- SUPPORT tpoint_supportfn
+  -- SUPPORT tspatial_supportfn
   -- LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 -- CREATE FUNCTION eDisjoint(tgeompoint, geometry)
   -- RETURNS boolean
   -- AS 'MODULE_PATHNAME', 'Edisjoint_tpoint_geo'
-  -- SUPPORT tpoint_supportfn
+  -- SUPPORT tspatial_supportfn
   -- LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 -- CREATE FUNCTION eDisjoint(tgeompoint, tgeompoint)
   -- RETURNS boolean
   -- AS 'MODULE_PATHNAME', 'Edisjoint_tpoint_tpoint'
-  -- SUPPORT tpoint_supportfn
+  -- SUPPORT tspatial_supportfn
   -- LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION aDisjoint(geometry, tgeompoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Adisjoint_geo_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION aDisjoint(tgeompoint, geometry)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Adisjoint_tpoint_geo'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION aDisjoint(tgeompoint, tgeompoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Adisjoint_tpoint_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************/
 
--- TODO implement the index support in the tpoint_supportfn
+-- TODO implement the index support in the tspatial_supportfn
 
 CREATE FUNCTION _edisjoint(geography, tgeogpoint)
   RETURNS boolean
@@ -148,7 +148,7 @@ CREATE FUNCTION eDisjoint(tgeogpoint, tgeogpoint)
 -- CREATE FUNCTION eDisjoint(geography, tgeogpoint)
   -- RETURNS boolean
   -- AS 'MODULE_PATHNAME', 'Edisjoint_geo_tpoint'
-  -- SUPPORT tpoint_supportfn
+  -- SUPPORT tspatial_supportfn
   -- LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 -- CREATE FUNCTION eDisjoint(tgeogpoint, geography)
   -- RETURNS boolean
@@ -157,13 +157,13 @@ CREATE FUNCTION eDisjoint(tgeogpoint, tgeogpoint)
 -- CREATE FUNCTION eDisjoint(tgeogpoint, tgeogpoint)
   -- RETURNS boolean
   -- AS 'MODULE_PATHNAME', 'Edisjoint_tpoint_tpoint'
-  -- SUPPORT tpoint_supportfn
+  -- SUPPORT tspatial_supportfn
   -- LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION aDisjoint(geography, tgeogpoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Adisjoint_geo_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION aDisjoint(tgeogpoint, geography)
   RETURNS boolean
@@ -172,7 +172,7 @@ CREATE FUNCTION aDisjoint(tgeogpoint, geography)
 CREATE FUNCTION aDisjoint(tgeogpoint, tgeogpoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Adisjoint_tpoint_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************
@@ -182,33 +182,33 @@ CREATE FUNCTION aDisjoint(tgeogpoint, tgeogpoint)
 CREATE FUNCTION eIntersects(geometry, tgeompoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Eintersects_geo_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION eIntersects(tgeompoint, geometry)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Eintersects_tpoint_geo'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION eIntersects(tgeompoint, tgeompoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Eintersects_tpoint_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION aIntersects(geometry, tgeompoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Aintersects_geo_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION aIntersects(tgeompoint, geometry)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Aintersects_tpoint_geo'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION aIntersects(tgeompoint, tgeompoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Aintersects_tpoint_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************/
@@ -216,33 +216,33 @@ CREATE FUNCTION aIntersects(tgeompoint, tgeompoint)
 CREATE FUNCTION eIntersects(geography, tgeogpoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Eintersects_geo_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION eIntersects(tgeogpoint, geography)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Eintersects_tpoint_geo'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION eIntersects(tgeogpoint, tgeogpoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Eintersects_tpoint_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION aIntersects(geography, tgeogpoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Aintersects_geo_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION aIntersects(tgeogpoint, geography)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Aintersects_tpoint_geo'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION aIntersects(tgeogpoint, tgeogpoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Aintersects_tpoint_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************
@@ -252,66 +252,66 @@ CREATE FUNCTION aIntersects(tgeogpoint, tgeogpoint)
 CREATE FUNCTION eTouches(geometry, tgeompoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Etouches_geo_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION eTouches(tgeompoint, geometry)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Etouches_tpoint_geo'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION aTouches(geometry, tgeompoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Atouches_geo_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION aTouches(tgeompoint, geometry)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Atouches_tpoint_geo'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************
  * eDwithin, aDwithin
  *****************************************************************************/
 
--- TODO implement the index support in the tpoint_supportfn
+-- TODO implement the index support in the tspatial_supportfn
 
 CREATE FUNCTION eDwithin(geometry, tgeompoint, dist float)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Edwithin_geo_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION eDwithin(tgeompoint, geometry, dist float)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Edwithin_tpoint_geo'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION eDwithin(tgeompoint, tgeompoint, dist float)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Edwithin_tpoint_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION aDwithin(geometry, tgeompoint, dist float)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Adwithin_geo_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION aDwithin(tgeompoint, geometry, dist float)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Adwithin_tpoint_geo'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION aDwithin(tgeompoint, tgeompoint, dist float)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Adwithin_tpoint_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************/
 
--- TODO implement the index support in the tpoint_supportfn
+-- TODO implement the index support in the tspatial_supportfn
 
 -- NOTE: aDWithin for geograhies is not provided since it is based on the
 -- PostGIS ST_Buffer() function which is performed by GEOS
@@ -319,23 +319,23 @@ CREATE FUNCTION aDwithin(tgeompoint, tgeompoint, dist float)
 CREATE FUNCTION eDwithin(geography, tgeogpoint, dist float)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Edwithin_geo_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION eDwithin(tgeogpoint, geography, dist float)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Edwithin_tpoint_geo'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION eDwithin(tgeogpoint, tgeogpoint, dist float)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Edwithin_tpoint_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION aDwithin(tgeogpoint, tgeogpoint, dist float)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Adwithin_tpoint_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************/

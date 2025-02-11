@@ -473,15 +473,6 @@ CREATE FUNCTION unnest(tcbuffer)
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************
- * Index Support Functions
- *****************************************************************************/
-
-CREATE FUNCTION tcbuffer_supportfn(internal)
-  RETURNS internal
-  AS 'MODULE_PATHNAME', 'Tcbuffer_supportfn'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-/*****************************************************************************
  * Ever/Always Comparison Functions
  *****************************************************************************/
 
@@ -494,7 +485,7 @@ CREATE OPERATOR ?= (
   LEFTARG = tcbuffer, RIGHTARG = cbuffer,
   PROCEDURE = ever_eq,
   NEGATOR = %<>,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 CREATE FUNCTION always_eq(tcbuffer, cbuffer)
@@ -506,7 +497,7 @@ CREATE OPERATOR %= (
   LEFTARG = tcbuffer, RIGHTARG = cbuffer,
   PROCEDURE = always_eq,
   NEGATOR = ?<>,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 CREATE FUNCTION ever_ne(tcbuffer, cbuffer)
@@ -518,7 +509,7 @@ CREATE OPERATOR ?<> (
   LEFTARG = tcbuffer, RIGHTARG = cbuffer,
   PROCEDURE = ever_ne,
   NEGATOR = %=,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 CREATE FUNCTION always_ne(tcbuffer, cbuffer)
@@ -530,7 +521,7 @@ CREATE OPERATOR %<> (
   LEFTARG = tcbuffer, RIGHTARG = cbuffer,
   PROCEDURE = always_ne,
   NEGATOR = ?=,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 /******************************************************************************

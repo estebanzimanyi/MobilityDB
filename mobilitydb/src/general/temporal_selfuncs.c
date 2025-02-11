@@ -134,7 +134,7 @@ tnumber_const_to_span_tstzspan(const Node *other, Span **s, Span **p)
  * @note This function is also used for temporal network points
  */
 static bool
-tpoint_const_to_stbox(Node *other, STBox *box)
+tspatial_const_to_stbox(Node *other, STBox *box)
 {
   Oid consttype = ((Const *) other)->consttype;
   Datum constvalue = ((Const *) other)->constvalue;
@@ -242,7 +242,7 @@ tnumber_sel_default(meosOper operator)
  * operator, when we don't have statistics or cannot use them for some reason
  */
 static float8
-tpoint_sel_default(meosOper oper)
+tspatial_sel_default(meosOper oper)
 {
   switch (oper)
   {
@@ -310,7 +310,7 @@ tnumber_joinsel_default(meosOper oper __attribute__((unused)))
  * when we don't have statistics or cannot use them for some reason
  */
 static float8
-tpoint_joinsel_default(meosOper oper)
+tspatial_joinsel_default(meosOper oper)
 {
   switch (oper)
   {
@@ -389,7 +389,7 @@ tnumber_oper_sel(Oid operid __attribute__((unused)), meosType ltype,
  * @brief Get the enum value associated to the operator
  */
 static bool
-tpoint_oper_sel(Oid operid __attribute__((unused)), meosType ltype,
+tspatial_oper_sel(Oid operid __attribute__((unused)), meosType ltype,
   meosType rtype)
 {
   if ((timespan_basetype(ltype) || timeset_type(ltype) ||
@@ -402,44 +402,6 @@ tpoint_oper_sel(Oid operid __attribute__((unused)), meosType ltype,
   return false;
 }
 
-#if CBUFFER
-/**
- * @brief Get the enum value associated to the operator
- */
-bool
-tcbuffer_oper_sel(Oid operid __attribute__((unused)), meosType ltype,
-  meosType rtype)
-{
-  if ((timespan_basetype(ltype) || timeset_type(ltype) ||
-        timespan_type(ltype) || timespanset_type(ltype) ||
-        spatial_basetype(ltype) || ltype == T_STBOX || tspatial_type(ltype)) &&
-      (timespan_basetype(rtype) || timeset_type(rtype) ||
-        timespan_type(rtype) || timespanset_type(rtype) ||
-        spatial_basetype(rtype) || rtype == T_STBOX || tspatial_type(rtype)))
-    return true;
-  return false;
-}
-#endif /* CBUFFER */
-
-#if NPOINT
-/**
- * @brief Get the enum value associated to the operator
- */
-bool
-tnpoint_oper_sel(Oid operid __attribute__((unused)), meosType ltype,
-  meosType rtype)
-{
-  if ((timespan_basetype(ltype) || timeset_type(ltype) ||
-        timespan_type(ltype) || timespanset_type(ltype) ||
-        spatial_basetype(ltype) || ltype == T_STBOX || tspatial_type(ltype)) &&
-      (timespan_basetype(rtype) || timeset_type(rtype) ||
-        timespan_type(rtype) || timespanset_type(rtype) ||
-        spatial_basetype(rtype) || rtype == T_STBOX || tspatial_type(rtype)))
-    return true;
-  return false;
-}
-#endif /* NPOINT */
-
 /**
  * @brief Get enumeration value associated to the operator according to the
  * family
@@ -450,23 +412,14 @@ temporal_oper_sel_family(meosOper oper __attribute__((unused)), meosType ltype,
 {
   /* Get enumeration value associated to the operator */
   assert(tempfamily == TEMPORALTYPE || tempfamily == TNUMBERTYPE ||
-    tempfamily == TPOINTTYPE || tempfamily == TNPOINTTYPE || 
-    tempfamily == TCBUFFERTYPE);
+    tempfamily == TSPATIALTYPE);
 
   if (tempfamily == TEMPORALTYPE)
     return temporal_oper_sel(oper, ltype, rtype);
   else if (tempfamily == TNUMBERTYPE)
     return tnumber_oper_sel(oper, ltype, rtype);
-  else if (tempfamily == TPOINTTYPE)
-    return tpoint_oper_sel(oper, ltype, rtype);
-#if CBUFFER
-  else if (tempfamily == TCBUFFERTYPE)
-    return tcbuffer_oper_sel(oper, ltype, rtype);
-#endif /* CBUFFER */
-#if NPOINT
-  else /* tempfamily == TNPOINTTYPE */
-    return tnpoint_oper_sel(oper, ltype, rtype);
-#endif /* NPOINT */
+  else /* tempfamily == TSPATIALTYPE */
+    return tspatial_oper_sel(oper, ltype, rtype);
 }
 
 /*****************************************************************************/
@@ -627,10 +580,8 @@ temporal_sel(PlannerInfo *root, Oid operid, List *args, int varRelid,
       return temporal_sel_default(oper);
     else if (tempfamily == TNUMBERTYPE)
       return tnumber_sel_default(oper);
-    else if (tempfamily == TPOINTTYPE)
-      return tpoint_sel_default(oper);
-    else /* tempfamily == TNPOINTTYPE || tempfamily == TCBUFFERTYPE */
-      return tpoint_sel_default(oper);
+    else if (tempfamily == TSPATIALTYPE)
+      return tspatial_sel_default(oper);
   }
 
   /*
@@ -644,7 +595,7 @@ temporal_sel(PlannerInfo *root, Oid operid, List *args, int varRelid,
     else if(tempfamily == TNUMBERTYPE)
       return tnumber_sel_default(oper);
     else /* tempfamily == TPOINTYPE || tempfamily == TCBUFFERTYPE */
-      return tpoint_sel_default(oper);
+      return tspatial_sel_default(oper);
   }
 
   /*
@@ -673,8 +624,8 @@ temporal_sel(PlannerInfo *root, Oid operid, List *args, int varRelid,
         return temporal_sel_default(oper);
       else if (tempfamily == TNUMBERTYPE)
         return tnumber_sel_default(oper);
-      else /* tempfamily == TPOINTTYPE || tempfamily == TCBUFFERTYPE */
-        return tpoint_sel_default(oper);
+      else /* tempfamily == TSPATIALTYPE || tempfamily == TCBUFFERTYPE */
+        return tspatial_sel_default(oper);
     }
   }
 
@@ -703,15 +654,15 @@ temporal_sel(PlannerInfo *root, Oid operid, List *args, int varRelid,
     if (s) pfree(s);
     if (p) pfree(p);
   }
-  else /* tempfamily == TPOINTTYPE */
+  else /* tempfamily == TSPATIALTYPE */
   {
     /*
      * Transform the constant into an STBox
      */
     STBox box;
-    if (! tpoint_const_to_stbox(other, &box))
+    if (! tspatial_const_to_stbox(other, &box))
       /* In the case of unknown constant */
-      return tpoint_sel_default(oper);
+      return tspatial_sel_default(oper);
 
     assert(MEOS_FLAGS_GET_X(box.flags) || MEOS_FLAGS_GET_T(box.flags));
 
@@ -727,7 +678,7 @@ temporal_sel(PlannerInfo *root, Oid operid, List *args, int varRelid,
       /* PostGIS does not provide selectivity for the traditional
        * comparisons <, <=, >, >= */
       if (oper == LT_OP || oper == LE_OP || oper == GT_OP || oper == GE_OP)
-        selec *= tpoint_sel_default(oper);
+        selec *= tspatial_sel_default(oper);
       else
         selec *= geo_sel(&vardata, &box, oper);
     }
@@ -767,8 +718,7 @@ temporal_sel_family(FunctionCallInfo fcinfo, TemporalFamily tempfamily)
   int varRelid = PG_GETARG_INT32(3);
 
   assert(tempfamily == TEMPORALTYPE || tempfamily == TNUMBERTYPE ||
-         tempfamily == TPOINTTYPE || tempfamily == TNPOINTTYPE || 
-         tempfamily == TCBUFFERTYPE);
+         tempfamily == TSPATIALTYPE);
   Selectivity selec = temporal_sel(root, operid, args, varRelid, tempfamily);
   return selec;
 }
@@ -796,45 +746,17 @@ Tnumber_sel(PG_FUNCTION_ARGS)
   return Float8GetDatum(temporal_sel_family(fcinfo, TNUMBERTYPE));
 }
 
-PGDLLEXPORT Datum Tpoint_sel(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tpoint_sel);
+PGDLLEXPORT Datum Tspatial_sel(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tspatial_sel);
 /**
  * @brief Estimate the restriction selectivity of the operators for temporal
  * points
  */
 Datum
-Tpoint_sel(PG_FUNCTION_ARGS)
+Tspatial_sel(PG_FUNCTION_ARGS)
 {
-  return Float8GetDatum(temporal_sel_family(fcinfo, TPOINTTYPE));
+  return Float8GetDatum(temporal_sel_family(fcinfo, TSPATIALTYPE));
 }
-
-#if CBUFFER
-PGDLLEXPORT Datum Tcbuffer_sel(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tcbuffer_sel);
-/**
- * @brief Estimate the restriction selectivity of the operators for temporal
- * network points
- */
-Datum
-Tcbuffer_sel(PG_FUNCTION_ARGS)
-{
-  return Float8GetDatum(temporal_sel_family(fcinfo, TCBUFFERTYPE));
-}
-#endif /* CBUFFER */
-
-#if NPOINT
-PGDLLEXPORT Datum Tnpoint_sel(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tnpoint_sel);
-/**
- * @brief Estimate the restriction selectivity of the operators for temporal
- * network points
- */
-Datum
-Tnpoint_sel(PG_FUNCTION_ARGS)
-{
-  return Float8GetDatum(temporal_sel_family(fcinfo, TNPOINTTYPE));
-}
-#endif /* NPOINT */
 
 /*****************************************************************************
  * Estimate the join selectivity
@@ -889,7 +811,7 @@ tnumber_joinsel_components(meosOper oper, meosType oprleft,
  * join selectivity
  */
 static bool
-tpoint_joinsel_components(meosOper oper, meosType oprleft,
+tspatial_joinsel_components(meosOper oper, meosType oprleft,
   meosType oprright, bool *space, bool *time)
 {
   /* Get the argument which may not be a temporal point */
@@ -945,8 +867,7 @@ temporal_joinsel(PlannerInfo *root, Oid operid, List *args, JoinType jointype,
   SpecialJoinInfo *sjinfo, TemporalFamily tempfamily)
 {
   assert(tempfamily == TEMPORALTYPE || tempfamily == TNUMBERTYPE ||
-         tempfamily == TPOINTTYPE || tempfamily == TNPOINTTYPE || 
-         tempfamily == TCBUFFERTYPE);
+         tempfamily == TSPATIALTYPE);
 
   Node *arg1 = (Node *) linitial(args);
   Node *arg2 = (Node *) lsecond(args);
@@ -983,13 +904,13 @@ temporal_joinsel(PlannerInfo *root, Oid operid, List *args, JoinType jointype,
       /* In the case of unknown arguments */
       return tnumber_joinsel_default(oper);
   }
-  else /* tempfamily == TPOINTTYPE */
+  else /* tempfamily == TSPATIALTYPE */
   {
     meosType oprleft = oid_type(var1->vartype);
     meosType oprright = oid_type(var2->vartype);
-    if (! tpoint_joinsel_components(oper, oprleft, oprright, &space, &time))
+    if (! tspatial_joinsel_components(oper, oprleft, oprright, &space, &time))
       /* In the case of unknown arguments */
-      return tpoint_joinsel_default(oper);
+      return tspatial_joinsel_default(oper);
   }
   /*
    * Multiply the components of the join selectivity estimation
@@ -1021,7 +942,7 @@ temporal_joinsel(PlannerInfo *root, Oid operid, List *args, JoinType jointype,
 
     /* If we can't get stats, we have to stop here! */
     if (! stats1 || ! stats2)
-      selec *= tpoint_joinsel_default(oper);
+      selec *= tspatial_joinsel_default(oper);
     else
       selec *= geo_joinsel(stats1, stats2);
     if (stats1)
@@ -1105,44 +1026,16 @@ Tnumber_joinsel(PG_FUNCTION_ARGS)
   return Float8GetDatum((float8) temporal_joinsel_family(fcinfo, TNUMBERTYPE));
 }
 
-PGDLLEXPORT Datum Tpoint_joinsel(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tpoint_joinsel);
+PGDLLEXPORT Datum Tspatial_joinsel(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tspatial_joinsel);
 /**
  * @brief Estimate the join selectivity value of the operators for temporal
  * points
  */
 Datum
-Tpoint_joinsel(PG_FUNCTION_ARGS)
+Tspatial_joinsel(PG_FUNCTION_ARGS)
 {
-  return Float8GetDatum((float8) temporal_joinsel_family(fcinfo, TPOINTTYPE));
+  return Float8GetDatum((float8) temporal_joinsel_family(fcinfo, TSPATIALTYPE));
 }
-
-#if CBUFFER
-PGDLLEXPORT Datum Tcbuffer_joinsel(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tcbuffer_joinsel);
-/**
- * @brief Estimate the join selectivity of the operators for temporal circular
- * buffers
- */
-Datum
-Tcbuffer_joinsel(PG_FUNCTION_ARGS)
-{
-  return Float8GetDatum((float8) temporal_joinsel_family(fcinfo, TCBUFFERTYPE));
-}
-#endif /* CBUFFER */
-
-#if NPOINT
-PGDLLEXPORT Datum Tnpoint_joinsel(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tnpoint_joinsel);
-/**
- * @brief Estimate the join selectivity of the operators for temporal network
- * points
- */
-Datum
-Tnpoint_joinsel(PG_FUNCTION_ARGS)
-{
-  return Float8GetDatum((float8) temporal_joinsel_family(fcinfo, TNPOINTTYPE));
-}
-#endif /* NPOINT */
 
 /*****************************************************************************/

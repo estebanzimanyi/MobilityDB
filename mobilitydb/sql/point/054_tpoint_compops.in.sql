@@ -37,9 +37,9 @@
  * Index Support Function
  *****************************************************************************/
 
-CREATE FUNCTION tpoint_supportfn(internal)
+CREATE FUNCTION tspatial_supportfn(internal)
   RETURNS internal
-  AS 'MODULE_PATHNAME', 'Tpoint_supportfn'
+  AS 'MODULE_PATHNAME', 'Tspatial_supportfn'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************
@@ -49,49 +49,49 @@ CREATE FUNCTION tpoint_supportfn(internal)
 CREATE FUNCTION ever_eq(geometry(Point), tgeompoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_eq_point_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION ever_eq(geography(Point), tgeogpoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_eq_point_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ?= (
   LEFTARG = geometry(Point), RIGHTARG = tgeompoint,
   PROCEDURE = ever_eq,
   NEGATOR = %<>,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR ?= (
   LEFTARG = geography(Point), RIGHTARG = tgeogpoint,
   PROCEDURE = ever_eq,
   NEGATOR = %<>,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 CREATE FUNCTION always_eq(geometry(Point), tgeompoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_eq_point_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION always_eq(geography(Point), tgeogpoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_eq_point_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR %= (
   LEFTARG = geography(Point), RIGHTARG = tgeogpoint,
   PROCEDURE = always_eq,
   NEGATOR = ?<>,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %= (
   LEFTARG = geometry(Point), RIGHTARG = tgeompoint,
   PROCEDURE = always_eq,
   NEGATOR = ?<>,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 CREATE FUNCTION ever_ne(geometry(Point), tgeompoint)
@@ -107,13 +107,13 @@ CREATE OPERATOR ?<> (
   LEFTARG = geometry(Point), RIGHTARG = tgeompoint,
   PROCEDURE = ever_ne,
   NEGATOR = %=,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR ?<> (
   LEFTARG = geography(Point), RIGHTARG = tgeogpoint,
   PROCEDURE = ever_ne,
   NEGATOR = %=,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 CREATE FUNCTION always_ne(geometry(Point), tgeompoint)
@@ -129,13 +129,13 @@ CREATE OPERATOR %<> (
   LEFTARG = geometry(Point), RIGHTARG = tgeompoint,
   PROCEDURE = always_ne,
   NEGATOR = ?=,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %<> (
   LEFTARG = geography(Point), RIGHTARG = tgeogpoint,
   PROCEDURE = always_ne,
   NEGATOR = ?=,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 /*****************************************************************************/
@@ -143,49 +143,49 @@ CREATE OPERATOR %<> (
 CREATE FUNCTION ever_eq(tgeompoint, geometry(Point))
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_eq_tpoint_point'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION ever_eq(tgeogpoint, geography(Point))
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_eq_tpoint_point'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ?= (
   LEFTARG = tgeompoint, RIGHTARG = geometry(Point),
   PROCEDURE = ever_eq,
   NEGATOR = %<>,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR ?= (
   LEFTARG = tgeogpoint, RIGHTARG = geography(Point),
   PROCEDURE = ever_eq,
   NEGATOR = %<>,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 CREATE FUNCTION always_eq(tgeompoint, geometry(Point))
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_eq_tpoint_point'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION always_eq(tgeogpoint, geography(Point))
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_eq_tpoint_point'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR %= (
   LEFTARG = tgeogpoint, RIGHTARG = geography(Point),
   PROCEDURE = always_eq,
   NEGATOR = ?<>,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %= (
   LEFTARG = tgeompoint, RIGHTARG = geometry(Point),
   PROCEDURE = always_eq,
   NEGATOR = ?<>,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 CREATE FUNCTION ever_ne(tgeompoint, geometry(Point))
@@ -201,13 +201,13 @@ CREATE OPERATOR ?<> (
   LEFTARG = tgeompoint, RIGHTARG = geometry(Point),
   PROCEDURE = ever_ne,
   NEGATOR = %=,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR ?<> (
   LEFTARG = tgeogpoint, RIGHTARG = geography(Point),
   PROCEDURE = ever_ne,
   NEGATOR = %=,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 CREATE FUNCTION always_ne(tgeompoint, geometry(Point))
@@ -223,13 +223,13 @@ CREATE OPERATOR %<> (
   LEFTARG = tgeompoint, RIGHTARG = geometry(Point),
   PROCEDURE = always_ne,
   NEGATOR = ?=,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %<> (
   LEFTARG = tgeogpoint, RIGHTARG = geography(Point),
   PROCEDURE = always_ne,
   NEGATOR = ?=,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 /*****************************************************************************/
@@ -237,49 +237,49 @@ CREATE OPERATOR %<> (
 CREATE FUNCTION ever_eq(tgeompoint, tgeompoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_eq_tpoint_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION ever_eq(tgeogpoint, tgeogpoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_eq_tpoint_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ?= (
   LEFTARG = tgeompoint, RIGHTARG = tgeompoint,
   PROCEDURE = ever_eq,
   NEGATOR = %<>,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR ?= (
   LEFTARG = tgeogpoint, RIGHTARG = tgeogpoint,
   PROCEDURE = ever_eq,
   NEGATOR = %<>,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 CREATE FUNCTION always_eq(tgeompoint, tgeompoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_eq_tpoint_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION always_eq(tgeogpoint, tgeogpoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_eq_tpoint_tpoint'
-  SUPPORT tpoint_supportfn
+  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR %= (
   LEFTARG = tgeogpoint, RIGHTARG = tgeogpoint,
   PROCEDURE = always_eq,
   NEGATOR = ?<>,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %= (
   LEFTARG = tgeompoint, RIGHTARG = tgeompoint,
   PROCEDURE = always_eq,
   NEGATOR = ?<>,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 CREATE FUNCTION ever_ne(tgeompoint, tgeompoint)
@@ -295,13 +295,13 @@ CREATE OPERATOR ?<> (
   LEFTARG = tgeompoint, RIGHTARG = tgeompoint,
   PROCEDURE = ever_ne,
   NEGATOR = %=,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR ?<> (
   LEFTARG = tgeogpoint, RIGHTARG = tgeogpoint,
   PROCEDURE = ever_ne,
   NEGATOR = %=,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 CREATE FUNCTION always_ne(tgeompoint, tgeompoint)
@@ -317,13 +317,13 @@ CREATE OPERATOR %<> (
   LEFTARG = tgeompoint, RIGHTARG = tgeompoint,
   PROCEDURE = always_ne,
   NEGATOR = ?=,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %<> (
   LEFTARG = tgeogpoint, RIGHTARG = tgeogpoint,
   PROCEDURE = always_ne,
   NEGATOR = ?=,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 /*****************************************************************************

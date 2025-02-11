@@ -923,37 +923,37 @@ CREATE OPERATOR < (
   LEFTARG = tgeompoint, RIGHTARG = tgeompoint,
   PROCEDURE = temporal_lt,
   COMMUTATOR = >, NEGATOR = >=,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR <= (
   LEFTARG = tgeompoint, RIGHTARG = tgeompoint,
   PROCEDURE = temporal_le,
   COMMUTATOR = >=, NEGATOR = >,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR = (
   LEFTARG = tgeompoint, RIGHTARG = tgeompoint,
   PROCEDURE = temporal_eq,
   COMMUTATOR = =, NEGATOR = <>,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR <> (
   LEFTARG = tgeompoint, RIGHTARG = tgeompoint,
   PROCEDURE = temporal_ne,
   COMMUTATOR = <>, NEGATOR = =,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR >= (
   LEFTARG = tgeompoint, RIGHTARG = tgeompoint,
   PROCEDURE = temporal_ge,
   COMMUTATOR = <=, NEGATOR = <,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR > (
   LEFTARG = tgeompoint, RIGHTARG = tgeompoint,
   PROCEDURE = temporal_gt,
   COMMUTATOR = <, NEGATOR = <=,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 CREATE OPERATOR CLASS tgeompoint_btree_ops
@@ -1000,37 +1000,37 @@ CREATE OPERATOR < (
   LEFTARG = tgeogpoint, RIGHTARG = tgeogpoint,
   PROCEDURE = temporal_lt,
   COMMUTATOR = >,  NEGATOR = >=,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR <= (
   LEFTARG = tgeogpoint, RIGHTARG = tgeogpoint,
   PROCEDURE = temporal_le,
   COMMUTATOR = >=, NEGATOR = >,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR = (
   LEFTARG = tgeogpoint, RIGHTARG = tgeogpoint,
   PROCEDURE = temporal_eq,
   COMMUTATOR = =, NEGATOR = <>,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR <> (
   LEFTARG = tgeogpoint, RIGHTARG = tgeogpoint,
   PROCEDURE = temporal_ne,
   COMMUTATOR = <>, NEGATOR = =,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR >= (
   LEFTARG = tgeogpoint, RIGHTARG = tgeogpoint,
   PROCEDURE = temporal_ge,
   COMMUTATOR = <=, NEGATOR = <,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR > (
   LEFTARG = tgeogpoint, RIGHTARG = tgeogpoint,
   PROCEDURE = temporal_gt,
   COMMUTATOR = <, NEGATOR = <=,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 CREATE OPERATOR CLASS tgeogpoint_btree_ops

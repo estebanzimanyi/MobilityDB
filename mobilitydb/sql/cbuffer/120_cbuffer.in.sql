@@ -171,7 +171,7 @@ CREATE OPERATOR ~= (
   PROCEDURE = cbuffer_same,
   LEFTARG = cbuffer, RIGHTARG = cbuffer,
   COMMUTATOR = ~=,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 /******************************************************************************

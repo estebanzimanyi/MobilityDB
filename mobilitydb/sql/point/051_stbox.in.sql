@@ -385,14 +385,14 @@ CREATE FUNCTION expandTime(stbox, interval)
  * Selectively functions for operators
  *****************************************************************************/
 
-CREATE FUNCTION tpoint_sel(internal, oid, internal, integer)
+CREATE FUNCTION tspatial_sel(internal, oid, internal, integer)
   RETURNS float
-AS 'MODULE_PATHNAME', 'Tpoint_sel'
+AS 'MODULE_PATHNAME', 'Tspatial_sel'
   LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION tpoint_joinsel(internal, oid, internal, smallint, internal)
+CREATE FUNCTION tspatial_joinsel(internal, oid, internal, smallint, internal)
   RETURNS float
-AS 'MODULE_PATHNAME', 'Tpoint_joinsel'
+AS 'MODULE_PATHNAME', 'Tspatial_joinsel'
   LANGUAGE C IMMUTABLE STRICT;
 
 /*****************************************************************************
@@ -424,31 +424,31 @@ CREATE OPERATOR @> (
   PROCEDURE = stbox_contains,
   LEFTARG = stbox, RIGHTARG = stbox,
   COMMUTATOR = <@,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR <@ (
   PROCEDURE = stbox_contained,
   LEFTARG = stbox, RIGHTARG = stbox,
   COMMUTATOR = @>,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR && (
   PROCEDURE = stbox_overlaps,
   LEFTARG = stbox, RIGHTARG = stbox,
   COMMUTATOR = &&,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR ~= (
   PROCEDURE = stbox_same,
   LEFTARG = stbox, RIGHTARG = stbox,
   COMMUTATOR = ~=,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR -|- (
   PROCEDURE = stbox_adjacent,
   LEFTARG = stbox, RIGHTARG = stbox,
   COMMUTATOR = -|-,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 /*****************************************************************************
@@ -524,89 +524,89 @@ CREATE OPERATOR << (
   PROCEDURE = stbox_left,
   LEFTARG = stbox, RIGHTARG = stbox,
   COMMUTATOR = >>,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR &< (
   PROCEDURE = stbox_overleft,
   LEFTARG = stbox, RIGHTARG = stbox,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR >> (
   LEFTARG = stbox, RIGHTARG = stbox,
   PROCEDURE = stbox_right,
   COMMUTATOR = <<,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR &> (
   PROCEDURE = stbox_overright,
   LEFTARG = stbox, RIGHTARG = stbox,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR <<| (
   PROCEDURE = stbox_below,
   LEFTARG = stbox, RIGHTARG = stbox,
   COMMUTATOR = |>>,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR &<| (
   PROCEDURE = stbox_overbelow,
   LEFTARG = stbox, RIGHTARG = stbox,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR |>> (
   PROCEDURE = stbox_above,
   LEFTARG = stbox, RIGHTARG = stbox,
   COMMUTATOR = <<|,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR |&> (
   PROCEDURE = stbox_overabove,
   LEFTARG = stbox, RIGHTARG = stbox,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR <</ (
   LEFTARG = stbox, RIGHTARG = stbox,
   PROCEDURE = stbox_front,
   COMMUTATOR = />>,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR &</ (
   LEFTARG = stbox, RIGHTARG = stbox,
   PROCEDURE = stbox_overfront,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR />> (
   LEFTARG = stbox, RIGHTARG = stbox,
   PROCEDURE = stbox_back,
   COMMUTATOR = <</,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR /&> (
   LEFTARG = stbox, RIGHTARG = stbox,
   PROCEDURE = stbox_overback,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR <<# (
   PROCEDURE = stbox_before,
   LEFTARG = stbox, RIGHTARG = stbox,
   COMMUTATOR = #>>,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR &<# (
   PROCEDURE = stbox_overbefore,
   LEFTARG = stbox, RIGHTARG = stbox,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR #>> (
   PROCEDURE = stbox_after,
   LEFTARG = stbox, RIGHTARG = stbox,
   COMMUTATOR = <<#,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR #&> (
   PROCEDURE = stbox_overafter,
   LEFTARG = stbox, RIGHTARG = stbox,
-  RESTRICT = tpoint_sel, JOIN = tpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 /*****************************************************************************

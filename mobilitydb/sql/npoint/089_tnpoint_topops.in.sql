@@ -32,18 +32,6 @@
  * Bounding box operators for temporal network points.
  */
 
-/*****************************************************************************/
-
-CREATE FUNCTION tnpoint_sel(internal, oid, internal, integer)
-  RETURNS float
-  AS 'MODULE_PATHNAME', 'Tnpoint_sel'
-  LANGUAGE C IMMUTABLE STRICT;
-
-CREATE FUNCTION tnpoint_joinsel(internal, oid, internal, smallint, internal)
-  RETURNS float
-  AS 'MODULE_PATHNAME', 'Tnpoint_joinsel'
-  LANGUAGE C IMMUTABLE STRICT;
-
 /*****************************************************************************
  * Temporal npoint to stbox
  *****************************************************************************/
@@ -121,7 +109,7 @@ CREATE OPERATOR @> (
   PROCEDURE = temporal_contains,
   LEFTARG = stbox, RIGHTARG = tnpoint,
   COMMUTATOR = <@,
-  RESTRICT = tnpoint_sel, JOIN = tnpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 CREATE FUNCTION temporal_contains(tnpoint, stbox)
@@ -137,13 +125,13 @@ CREATE OPERATOR @> (
   PROCEDURE = temporal_contains,
   LEFTARG = tnpoint, RIGHTARG = stbox,
   COMMUTATOR = <@,
-  RESTRICT = tnpoint_sel, JOIN = tnpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR @> (
   PROCEDURE = temporal_contains,
   LEFTARG = tnpoint, RIGHTARG = tnpoint,
   COMMUTATOR = <@,
-  RESTRICT = tnpoint_sel, JOIN = tnpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 /*****************************************************************************
@@ -183,7 +171,7 @@ CREATE OPERATOR <@ (
   PROCEDURE = temporal_contained,
   LEFTARG = stbox, RIGHTARG = tnpoint,
   COMMUTATOR = @>,
-  RESTRICT = tnpoint_sel, JOIN = tnpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 CREATE FUNCTION temporal_contained(tnpoint, stbox)
@@ -199,13 +187,13 @@ CREATE OPERATOR <@ (
   PROCEDURE = temporal_contained,
   LEFTARG = tnpoint, RIGHTARG = stbox,
   COMMUTATOR = @>,
-  RESTRICT = tnpoint_sel, JOIN = tnpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR <@ (
   PROCEDURE = temporal_contained,
   LEFTARG = tnpoint, RIGHTARG = tnpoint,
   COMMUTATOR = @>,
-  RESTRICT = tnpoint_sel, JOIN = tnpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 /*****************************************************************************
@@ -245,7 +233,7 @@ CREATE OPERATOR && (
   PROCEDURE = temporal_overlaps,
   LEFTARG = stbox, RIGHTARG = tnpoint,
   COMMUTATOR = &&,
-  RESTRICT = tnpoint_sel, JOIN = tnpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 CREATE FUNCTION temporal_overlaps(tnpoint, stbox)
@@ -261,13 +249,13 @@ CREATE OPERATOR && (
   PROCEDURE = temporal_overlaps,
   LEFTARG = tnpoint, RIGHTARG = stbox,
   COMMUTATOR = &&,
-  RESTRICT = tnpoint_sel, JOIN = tnpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR && (
   PROCEDURE = temporal_overlaps,
   LEFTARG = tnpoint, RIGHTARG = tnpoint,
   COMMUTATOR = &&,
-  RESTRICT = tnpoint_sel, JOIN = tnpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 /*****************************************************************************
@@ -307,7 +295,7 @@ CREATE OPERATOR ~= (
   PROCEDURE = temporal_same,
   LEFTARG = stbox, RIGHTARG = tnpoint,
   COMMUTATOR = ~=,
-  RESTRICT = tnpoint_sel, JOIN = tnpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 CREATE FUNCTION temporal_same(tnpoint, stbox)
@@ -323,13 +311,13 @@ CREATE OPERATOR ~= (
   PROCEDURE = temporal_same,
   LEFTARG = tnpoint, RIGHTARG = stbox,
   COMMUTATOR = ~=,
-  RESTRICT = tnpoint_sel, JOIN = tnpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR ~= (
   PROCEDURE = temporal_same,
   LEFTARG = tnpoint, RIGHTARG = tnpoint,
   COMMUTATOR = ~=,
-  RESTRICT = tnpoint_sel, JOIN = tnpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 /*****************************************************************************
@@ -369,7 +357,7 @@ CREATE OPERATOR -|- (
   PROCEDURE = temporal_adjacent,
   LEFTARG = stbox, RIGHTARG = tnpoint,
   COMMUTATOR = -|-,
-  RESTRICT = tnpoint_sel, JOIN = tnpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 CREATE FUNCTION temporal_adjacent(tnpoint, stbox)
@@ -385,13 +373,13 @@ CREATE OPERATOR -|- (
   PROCEDURE = temporal_adjacent,
   LEFTARG = tnpoint, RIGHTARG = stbox,
   COMMUTATOR = -|-,
-  RESTRICT = tnpoint_sel, JOIN = tnpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR -|- (
   PROCEDURE = temporal_adjacent,
   LEFTARG = tnpoint, RIGHTARG = tnpoint,
   COMMUTATOR = -|-,
-  RESTRICT = tnpoint_sel, JOIN = tnpoint_joinsel
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 /*****************************************************************************/
