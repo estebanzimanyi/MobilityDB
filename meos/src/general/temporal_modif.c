@@ -476,7 +476,7 @@ temporal_merge_array(const Temporal **temparr, int count)
   uint8 subtype, origsubtype;
   subtype = origsubtype = temparr[0]->subtype;
   interpType interp = MEOS_FLAGS_GET_INTERP(temparr[0]->flags);
-  bool spatial = tgeo_type(temparr[0]->temptype);
+  bool spatial = tpoint_type(temparr[0]->temptype);
   bool convert = false;
   for (int i = 1; i < count; i++)
   {

@@ -88,7 +88,7 @@ tspatial_set_stbox(const Temporal *temp, STBox *box)
   switch (temp->subtype)
   {
     case TINSTANT:
-      if (tgeo_type(temp->temptype))
+      if (tpoint_type(temp->temptype))
         tpointinst_set_stbox((TInstant *) temp, box);
 #if CBUFFER
       else if (temp->temptype == T_TCBUFFER)

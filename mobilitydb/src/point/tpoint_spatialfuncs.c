@@ -154,34 +154,34 @@ Geoset_round(PG_FUNCTION_ARGS)
   PG_RETURN_SET_P(result);
 }
 
-PGDLLEXPORT Datum Tpoint_round(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tpoint_round);
+PGDLLEXPORT Datum Tgeo_round(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tgeo_round);
 /**
  * @ingroup mobilitydb_temporal_transf
- * @brief Return a temporal point with the precision of the coordinates set to
- * a number of decimal places
- * @sqlfn round()
- */
-Datum
-Tpoint_round(PG_FUNCTION_ARGS)
-{
-  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  Datum size = PG_GETARG_DATUM(1);
-  Temporal *result = tpoint_round(temp, size);
-  PG_FREE_IF_COPY(temp, 0);
-  PG_RETURN_TEMPORAL_P(result);
-}
-
-PGDLLEXPORT Datum Tpointarr_round(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tpointarr_round);
-/**
- * @ingroup mobilitydb_temporal_transf
- * @brief Return an array of temporal points with the precision of the
+ * @brief Return a temporal geometry/geography with the precision of the
  * coordinates set to a number of decimal places
  * @sqlfn round()
  */
 Datum
-Tpointarr_round(PG_FUNCTION_ARGS)
+Tgeo_round(PG_FUNCTION_ARGS)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  Datum size = PG_GETARG_DATUM(1);
+  Temporal *result = tgeo_round(temp, size);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_TEMPORAL_P(result);
+}
+
+PGDLLEXPORT Datum Tgeoarr_round(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tgeoarr_round);
+/**
+ * @ingroup mobilitydb_temporal_transf
+ * @brief Return an array of temporal geometries/geographies with the precision
+ * of the coordinates set to a number of decimal places
+ * @sqlfn round()
+ */
+Datum
+Tgeoarr_round(PG_FUNCTION_ARGS)
 {
   ArrayType *array = PG_GETARG_ARRAYTYPE_P(0);
   /* Return NULL on empty array */
@@ -194,8 +194,7 @@ Tpointarr_round(PG_FUNCTION_ARGS)
   int maxdd = PG_GETARG_INT32(1);
 
   Temporal **temparr = temparr_extract(array, &count);
-  Temporal **resarr = tpointarr_round((const Temporal **) temparr, count,
-      maxdd);
+  Temporal **resarr = tgeoarr_round((const Temporal **) temparr, count, maxdd);
   ArrayType *result = temparr_to_array(resarr, count, FREE_ALL);
   pfree(temparr);
   PG_FREE_IF_COPY(array, 0);

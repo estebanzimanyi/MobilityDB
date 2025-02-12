@@ -146,6 +146,8 @@ extern void interpolate_point4d_spheroid(const POINT4D *p1, const POINT4D *p2,
 
 extern GSERIALIZED *geopoint_make(double x, double y, double z, bool hasz,
   bool geodetic, int32 srid);
+extern GSERIALIZED *geocircle_make(double x, double y, double radius,
+  int32_t srid);
 extern Datum geosegm_interpolate_point(Datum start, Datum end,
   long double ratio);
 extern long double geosegm_locate_point(Datum start, Datum end, Datum point,

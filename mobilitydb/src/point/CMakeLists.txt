@@ -10,13 +10,13 @@ add_library(pg_point OBJECT
   tpoint_distance.c
   tpoint_gist.c
   tpoint_inout.c
-  tpoint_posops.c
   tpoint_selfuncs.c
   tpoint_spatialfuncs.c
   tpoint_spatialrels.c
   tpoint_spgist.c
   tpoint_tempspatialrels.c
   tpoint_tile.c
+  tspatial_posops.c
   tspatial_analyze.c
   type_srid.c
   )

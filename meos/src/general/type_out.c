@@ -742,7 +742,7 @@ temporal_as_mfjson(const Temporal *temp, bool with_bbox, int flags,
     temporal_set_bbox(temp, &tmp);
     bbox = &tmp;
   }
-  bool isgeo = tgeo_type(temp->temptype);
+  bool isgeo = tpoint_type(temp->temptype);
   bool hasz = MEOS_FLAGS_GET_Z(temp->flags);
 
   /* Create the string buffer */
@@ -1081,7 +1081,7 @@ tinstant_to_wkb_size(const TInstant *inst, uint8_t variant)
   /* Endian flag + temporal type + temporal flag */
   size_t size = MEOS_WKB_BYTE_SIZE * 2 + MEOS_WKB_INT2_SIZE;
   /* Extended WKB needs space for optional SRID integer */
-  if (tgeo_type(inst->temptype) &&
+  if (tpoint_type(inst->temptype) &&
       tpoint_wkb_needs_srid((Temporal *) inst, variant))
     size += MEOS_WKB_INT4_SIZE;
   /* TInstant */
@@ -1099,7 +1099,7 @@ tsequence_to_wkb_size(const TSequence *seq, uint8_t variant)
   /* Endian flag + temporal type + temporal flag */
   size_t size = MEOS_WKB_BYTE_SIZE * 2 + MEOS_WKB_INT2_SIZE;
   /* Extended WKB needs space for optional SRID integer */
-  if (tgeo_type(seq->temptype) &&
+  if (tpoint_type(seq->temptype) &&
       tpoint_wkb_needs_srid((Temporal *) seq, variant))
     size += MEOS_WKB_INT4_SIZE;
   /* Include the number of instants and the period bounds flag */
@@ -1121,7 +1121,7 @@ tsequenceset_to_wkb_size(const TSequenceSet *ss, uint8_t variant)
   /* Endian flag + temporal type + temporal flag */
   size_t size = MEOS_WKB_BYTE_SIZE * 2 + MEOS_WKB_INT2_SIZE;
   /* Extended WKB needs space for optional SRID integer */
-  if (tgeo_type(ss->temptype) &&
+  if (tpoint_type(ss->temptype) &&
       tpoint_wkb_needs_srid((Temporal *) ss, variant))
     size += MEOS_WKB_INT4_SIZE;
   /* Include the number of sequences */
@@ -1918,7 +1918,7 @@ temporal_flags_to_wkb_buf(const Temporal *temp, uint8_t *buf, uint8_t variant)
   uint8_t wkb_flags = (uint8_t) temp->subtype;
   MEOS_WKB_SET_INTERP(wkb_flags, MEOS_FLAGS_GET_INTERP(temp->flags));
   /* Set the flags */
-  if (tgeo_type(temp->temptype))
+  if (tpoint_type(temp->temptype))
   {
     if (MEOS_FLAGS_GET_Z(temp->flags))
       wkb_flags |= MEOS_WKB_ZFLAG;
@@ -1970,7 +1970,7 @@ tinstant_to_wkb_buf(const TInstant *inst, uint8_t *buf, uint8_t variant)
   /* Write the temporal flags */
   buf = temporal_flags_to_wkb_buf((Temporal *) inst, buf, variant);
   /* Write the optional SRID for extended variant */
-  if (tgeo_type(inst->temptype) &&
+  if (tpoint_type(inst->temptype) &&
       tpoint_wkb_needs_srid((Temporal *) inst, variant))
     buf = int32_to_wkb_buf(tspatialinst_srid(inst), buf, variant);
   return tinstant_basevalue_time_to_wkb_buf(inst, buf, variant);
@@ -1997,7 +1997,7 @@ tsequence_to_wkb_buf(const TSequence *seq, uint8_t *buf, uint8_t variant)
   /* Write the temporal flags and interpolation */
   buf = temporal_flags_to_wkb_buf((Temporal *) seq, buf, variant);
   /* Write the optional SRID for extended variant */
-  if (tgeo_type(seq->temptype) &&
+  if (tpoint_type(seq->temptype) &&
       tpoint_wkb_needs_srid((Temporal *) seq, variant))
     buf = int32_to_wkb_buf(tspatial_srid((Temporal *) seq), buf, variant);
   /* Write the count */
@@ -2035,7 +2035,7 @@ tsequenceset_to_wkb_buf(const TSequenceSet *ss, uint8_t *buf, uint8_t variant)
   /* Write the temporal and interpolation flags */
   buf = temporal_flags_to_wkb_buf((Temporal *) ss, buf, variant);
   /* Write the optional SRID for extended variant */
-  if (tgeo_type(ss->temptype) &&
+  if (tpoint_type(ss->temptype) &&
       tpoint_wkb_needs_srid((Temporal *) ss, variant))
     buf = int32_to_wkb_buf(tspatial_srid((Temporal *) ss), buf, variant);
   /* Write the count */

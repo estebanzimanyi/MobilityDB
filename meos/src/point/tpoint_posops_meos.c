@@ -47,7 +47,7 @@
 /* MEOS */
 #include <meos.h>
 #include "general/temporal.h"
-#include "point/tpoint_boxops.h"
+#include "point/tspatial_boxops.h"
 
 /*****************************************************************************/
 /* stbox op Temporal */
@@ -57,13 +57,13 @@
  * @brief Return true if a spatiotemporal box is to the left of a temporal
  * point
  * @param[in] box Spatiotemporal box
- * @param[in] temp Temporal point
- * @csqlfn #Left_stbox_tpoint()
+ * @param[in] temp Temporal spatial
+ * @csqlfn #Left_stbox_tspatial()
  */
 bool
-left_stbox_tpoint(const STBox *box, const Temporal *temp)
+left_stbox_tspatial(const STBox *box, const Temporal *temp)
 {
-  return boxop_tpoint_stbox(temp, box, &left_stbox_stbox, INVERT);
+  return boxop_tspatial_stbox(temp, box, &left_stbox_stbox, INVERT);
 }
 
 /**
@@ -71,13 +71,13 @@ left_stbox_tpoint(const STBox *box, const Temporal *temp)
  * @brief Return true if a spatiotemporal box does not extend to the right of a
  * temporal point
  * @param[in] box Spatiotemporal box
- * @param[in] temp Temporal point
- * @csqlfn #Overleft_stbox_tpoint()
+ * @param[in] temp Temporal spatial
+ * @csqlfn #Overleft_stbox_tspatial()
  */
 bool
-overleft_stbox_tpoint(const STBox *box, const Temporal *temp)
+overleft_stbox_tspatial(const STBox *box, const Temporal *temp)
 {
-  return boxop_tpoint_stbox(temp, box, &overleft_stbox_stbox, INVERT);
+  return boxop_tspatial_stbox(temp, box, &overleft_stbox_stbox, INVERT);
 }
 
 /**
@@ -85,13 +85,13 @@ overleft_stbox_tpoint(const STBox *box, const Temporal *temp)
  * @brief Return true if a spatiotemporal box is to the right of a temporal
  * point
  * @param[in] box Spatiotemporal box
- * @param[in] temp Temporal point
- * @csqlfn #Right_stbox_tpoint()
+ * @param[in] temp Temporal spatial
+ * @csqlfn #Right_stbox_tspatial()
  */
 bool
-right_stbox_tpoint(const STBox *box, const Temporal *temp)
+right_stbox_tspatial(const STBox *box, const Temporal *temp)
 {
-  return boxop_tpoint_stbox(temp, box, &right_stbox_stbox, INVERT);
+  return boxop_tspatial_stbox(temp, box, &right_stbox_stbox, INVERT);
 }
 
 /**
@@ -99,26 +99,26 @@ right_stbox_tpoint(const STBox *box, const Temporal *temp)
  * @brief Return true if a spatiotemporal box does not extend to the left of a
  * temporal point
  * @param[in] box Spatiotemporal box
- * @param[in] temp Temporal point
- * @csqlfn #Overright_stbox_tpoint()
+ * @param[in] temp Temporal spatial
+ * @csqlfn #Overright_stbox_tspatial()
  */
 bool
-overright_stbox_tpoint(const STBox *box, const Temporal *temp)
+overright_stbox_tspatial(const STBox *box, const Temporal *temp)
 {
-  return boxop_tpoint_stbox(temp, box, &overright_stbox_stbox, INVERT);
+  return boxop_tspatial_stbox(temp, box, &overright_stbox_stbox, INVERT);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a spatiotemporal box is below a temporal point
  * @param[in] box Spatiotemporal box
- * @param[in] temp Temporal point
- * @csqlfn #Below_stbox_tpoint()
+ * @param[in] temp Temporal spatial
+ * @csqlfn #Below_stbox_tspatial()
  */
 bool
-below_stbox_tpoint(const STBox *box, const Temporal *temp)
+below_stbox_tspatial(const STBox *box, const Temporal *temp)
 {
-  return boxop_tpoint_stbox(temp, box, &below_stbox_stbox, INVERT);
+  return boxop_tspatial_stbox(temp, box, &below_stbox_stbox, INVERT);
 }
 
 /**
@@ -126,26 +126,26 @@ below_stbox_tpoint(const STBox *box, const Temporal *temp)
  * @brief Return true if a spatiotemporal box does not extend above a temporal
  * point
  * @param[in] box Spatiotemporal box
- * @param[in] temp Temporal point
- * @csqlfn #Overbelow_stbox_tpoint()
+ * @param[in] temp Temporal spatial
+ * @csqlfn #Overbelow_stbox_tspatial()
  */
 bool
-overbelow_stbox_tpoint(const STBox *box, const Temporal *temp)
+overbelow_stbox_tspatial(const STBox *box, const Temporal *temp)
 {
-  return boxop_tpoint_stbox(temp, box, &overbelow_stbox_stbox, INVERT);
+  return boxop_tspatial_stbox(temp, box, &overbelow_stbox_stbox, INVERT);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a spatiotemporal box is above a temporal point
  * @param[in] box Spatiotemporal box
- * @param[in] temp Temporal point
- * @csqlfn #Above_stbox_tpoint()
+ * @param[in] temp Temporal spatial
+ * @csqlfn #Above_stbox_tspatial()
  */
 bool
-above_stbox_tpoint(const STBox *box, const Temporal *temp)
+above_stbox_tspatial(const STBox *box, const Temporal *temp)
 {
-  return boxop_tpoint_stbox(temp, box, &above_stbox_stbox, INVERT);
+  return boxop_tspatial_stbox(temp, box, &above_stbox_stbox, INVERT);
 }
 
 /**
@@ -153,26 +153,26 @@ above_stbox_tpoint(const STBox *box, const Temporal *temp)
  * @brief Return true if a spatiotemporal box does not extend below a temporal
  * point
  * @param[in] box Spatiotemporal box
- * @param[in] temp Temporal point
- * @csqlfn #Overabove_stbox_tpoint()
+ * @param[in] temp Temporal spatial
+ * @csqlfn #Overabove_stbox_tspatial()
  */
 bool
-overabove_stbox_tpoint(const STBox *box, const Temporal *temp)
+overabove_stbox_tspatial(const STBox *box, const Temporal *temp)
 {
-  return boxop_tpoint_stbox(temp, box, &overabove_stbox_stbox, INVERT);
+  return boxop_tspatial_stbox(temp, box, &overabove_stbox_stbox, INVERT);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a spatiotemporal box is in front of a temporal point
  * @param[in] box Spatiotemporal box
- * @param[in] temp Temporal point
- * @csqlfn #Front_stbox_tpoint()
+ * @param[in] temp Temporal spatial
+ * @csqlfn #Front_stbox_tspatial()
  */
 bool
-front_stbox_tpoint(const STBox *box, const Temporal *temp)
+front_stbox_tspatial(const STBox *box, const Temporal *temp)
 {
-  return boxop_tpoint_stbox(temp, box, &front_stbox_stbox, INVERT);
+  return boxop_tspatial_stbox(temp, box, &front_stbox_stbox, INVERT);
 }
 
 /**
@@ -180,13 +180,13 @@ front_stbox_tpoint(const STBox *box, const Temporal *temp)
  * @brief Return true if a spatiotemporal box does not extend to the back of a
  * temporal point
  * @param[in] box Spatiotemporal box
- * @param[in] temp Temporal point
- * @csqlfn #Overfront_stbox_tpoint()
+ * @param[in] temp Temporal spatial
+ * @csqlfn #Overfront_stbox_tspatial()
  */
 bool
-overfront_stbox_tpoint(const STBox *box, const Temporal *temp)
+overfront_stbox_tspatial(const STBox *box, const Temporal *temp)
 {
-  return boxop_tpoint_stbox(temp, box, &overfront_stbox_stbox, INVERT);
+  return boxop_tspatial_stbox(temp, box, &overfront_stbox_stbox, INVERT);
 }
 
 /**
@@ -194,13 +194,13 @@ overfront_stbox_tpoint(const STBox *box, const Temporal *temp)
  * @brief Return true if a spatiotemporal box is at the back of a temporal
  * point
  * @param[in] box Spatiotemporal box
- * @param[in] temp Temporal point
- * @csqlfn #Back_stbox_tpoint()
+ * @param[in] temp Temporal spatial
+ * @csqlfn #Back_stbox_tspatial()
  */
 bool
-back_stbox_tpoint(const STBox *box, const Temporal *temp)
+back_stbox_tspatial(const STBox *box, const Temporal *temp)
 {
-  return boxop_tpoint_stbox(temp, box, &back_stbox_stbox, INVERT);
+  return boxop_tspatial_stbox(temp, box, &back_stbox_stbox, INVERT);
 }
 
 /**
@@ -208,65 +208,65 @@ back_stbox_tpoint(const STBox *box, const Temporal *temp)
  * @brief Return true if a spatiotemporal box does not extend to the front of a
  * temporal point
  * @param[in] box Spatiotemporal box
- * @param[in] temp Temporal point
- * @csqlfn #Overback_stbox_tpoint()
+ * @param[in] temp Temporal spatial
+ * @csqlfn #Overback_stbox_tspatial()
  */
 bool
-overback_stbox_tpoint(const STBox *box, const Temporal *temp)
+overback_stbox_tspatial(const STBox *box, const Temporal *temp)
 {
-  return boxop_tpoint_stbox(temp, box, &overback_stbox_stbox, INVERT);
+  return boxop_tspatial_stbox(temp, box, &overback_stbox_stbox, INVERT);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a spatiotemporal box is before a temporal point
  * @param[in] box Spatiotemporal box
- * @param[in] temp Temporal point
- * @csqlfn #Before_stbox_tpoint()
+ * @param[in] temp Temporal spatial
+ * @csqlfn #Before_stbox_tspatial()
  */
 bool
-before_stbox_tpoint(const STBox *box, const Temporal *temp)
+before_stbox_tspatial(const STBox *box, const Temporal *temp)
 {
-  return boxop_tpoint_stbox(temp, box, &before_stbox_stbox, INVERT);
+  return boxop_tspatial_stbox(temp, box, &before_stbox_stbox, INVERT);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a spatiotemporal box is not after a temporal point
  * @param[in] box Spatiotemporal box
- * @param[in] temp Temporal point
- * @csqlfn #Overbefore_stbox_tpoint()
+ * @param[in] temp Temporal spatial
+ * @csqlfn #Overbefore_stbox_tspatial()
  */
 bool
-overbefore_stbox_tpoint(const STBox *box, const Temporal *temp)
+overbefore_stbox_tspatial(const STBox *box, const Temporal *temp)
 {
-  return boxop_tpoint_stbox(temp, box, &overbefore_stbox_stbox, INVERT);
+  return boxop_tspatial_stbox(temp, box, &overbefore_stbox_stbox, INVERT);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a spatiotemporal box is after a temporal point
  * @param[in] box Spatiotemporal box
- * @param[in] temp Temporal point
- * @csqlfn #After_stbox_tpoint()
+ * @param[in] temp Temporal spatial
+ * @csqlfn #After_stbox_tspatial()
  */
 bool
-after_stbox_tpoint(const STBox *box, const Temporal *temp)
+after_stbox_tspatial(const STBox *box, const Temporal *temp)
 {
-  return boxop_tpoint_stbox(temp, box, &after_stbox_stbox, INVERT);
+  return boxop_tspatial_stbox(temp, box, &after_stbox_stbox, INVERT);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a spatiotemporal box is not before a temporal point
  * @param[in] box Spatiotemporal box
- * @param[in] temp Temporal point
- * @csqlfn #Overafter_stbox_tpoint()
+ * @param[in] temp Temporal spatial
+ * @csqlfn #Overafter_stbox_tspatial()
  */
 bool
-overafter_stbox_tpoint(const STBox *box, const Temporal *temp)
+overafter_stbox_tspatial(const STBox *box, const Temporal *temp)
 {
-  return boxop_tpoint_stbox(temp, box, &overafter_stbox_stbox, INVERT);
+  return boxop_tspatial_stbox(temp, box, &overafter_stbox_stbox, INVERT);
 }
 
 /*****************************************************************************/
@@ -276,216 +276,216 @@ overafter_stbox_tpoint(const STBox *box, const Temporal *temp)
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a temporal point is to the left of a spatiotemporal
  * box
- * @param[in] temp Temporal point
+ * @param[in] temp Temporal spatial
  * @param[in] box Spatiotemporal box
-box * @csqlfn #Left_tpoint_stbox()
+box * @csqlfn #Left_tspatial_stbox()
  */
 bool
-left_tpoint_stbox(const Temporal *temp, const STBox *box)
+left_tspatial_stbox(const Temporal *temp, const STBox *box)
 {
-  return boxop_tpoint_stbox(temp, box, &left_stbox_stbox, INVERT_NO);
+  return boxop_tspatial_stbox(temp, box, &left_stbox_stbox, INVERT_NO);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a temporal point does not extend to the right of a
  * spatiotemporal box
- * @param[in] temp Temporal point
+ * @param[in] temp Temporal spatial
  * @param[in] box Spatiotemporal box
- * @csqlfn #Overleft_tpoint_stbox()
+ * @csqlfn #Overleft_tspatial_stbox()
  */
 bool
-overleft_tpoint_stbox(const Temporal *temp, const STBox *box)
+overleft_tspatial_stbox(const Temporal *temp, const STBox *box)
 {
-  return boxop_tpoint_stbox(temp, box, &overleft_stbox_stbox, INVERT_NO);
+  return boxop_tspatial_stbox(temp, box, &overleft_stbox_stbox, INVERT_NO);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a temporal point is to the right of a spatiotemporal
  * box
- * @param[in] temp Temporal point
+ * @param[in] temp Temporal spatial
  * @param[in] box Spatiotemporal box
- * @csqlfn #Right_tpoint_stbox()
+ * @csqlfn #Right_tspatial_stbox()
  */
 bool
-right_tpoint_stbox(const Temporal *temp, const STBox *box)
+right_tspatial_stbox(const Temporal *temp, const STBox *box)
 {
-  return boxop_tpoint_stbox(temp, box, &right_stbox_stbox, INVERT_NO);
+  return boxop_tspatial_stbox(temp, box, &right_stbox_stbox, INVERT_NO);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a temporal point does not extend to the left of a
  * spatiotemporal box
- * @param[in] temp Temporal point
+ * @param[in] temp Temporal spatial
  * @param[in] box Spatiotemporal box
- * @csqlfn #Overright_tpoint_stbox()
+ * @csqlfn #Overright_tspatial_stbox()
  */
 bool
-overright_tpoint_stbox(const Temporal *temp, const STBox *box)
+overright_tspatial_stbox(const Temporal *temp, const STBox *box)
 {
-  return boxop_tpoint_stbox(temp, box, &overright_stbox_stbox, INVERT_NO);
+  return boxop_tspatial_stbox(temp, box, &overright_stbox_stbox, INVERT_NO);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a temporal point is below a spatiotemporal box
- * @param[in] temp Temporal point
+ * @param[in] temp Temporal spatial
  * @param[in] box Spatiotemporal box
- * @csqlfn #Below_tpoint_stbox()
+ * @csqlfn #Below_tspatial_stbox()
  */
 bool
-below_tpoint_stbox(const Temporal *temp, const STBox *box)
+below_tspatial_stbox(const Temporal *temp, const STBox *box)
 {
-  return boxop_tpoint_stbox(temp, box, &below_stbox_stbox, INVERT_NO);
+  return boxop_tspatial_stbox(temp, box, &below_stbox_stbox, INVERT_NO);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a temporal point does not extend above a
  * spatiotemporal box
- * @param[in] temp Temporal point
+ * @param[in] temp Temporal spatial
  * @param[in] box Spatiotemporal box
- * @csqlfn #Overbelow_tpoint_stbox()
+ * @csqlfn #Overbelow_tspatial_stbox()
  */
 bool
-overbelow_tpoint_stbox(const Temporal *temp, const STBox *box)
+overbelow_tspatial_stbox(const Temporal *temp, const STBox *box)
 {
-  return boxop_tpoint_stbox(temp, box, &overbelow_stbox_stbox, INVERT_NO);
+  return boxop_tspatial_stbox(temp, box, &overbelow_stbox_stbox, INVERT_NO);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a temporal point is above a spatiotemporal box
- * @param[in] temp Temporal point
+ * @param[in] temp Temporal spatial
  * @param[in] box Spatiotemporal box
- * @csqlfn #Above_tpoint_stbox()
+ * @csqlfn #Above_tspatial_stbox()
  */
 bool
-above_tpoint_stbox(const Temporal *temp, const STBox *box)
+above_tspatial_stbox(const Temporal *temp, const STBox *box)
 {
-  return boxop_tpoint_stbox(temp, box, &above_stbox_stbox, INVERT_NO);
+  return boxop_tspatial_stbox(temp, box, &above_stbox_stbox, INVERT_NO);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a temporal point does not extend below a
  * spatiotemporal box
- * @param[in] temp Temporal point
+ * @param[in] temp Temporal spatial
  * @param[in] box Spatiotemporal box
- * @csqlfn #Overabove_tpoint_stbox()
+ * @csqlfn #Overabove_tspatial_stbox()
  */
 bool
-overabove_tpoint_stbox(const Temporal *temp, const STBox *box)
+overabove_tspatial_stbox(const Temporal *temp, const STBox *box)
 {
-  return boxop_tpoint_stbox(temp, box, &overabove_stbox_stbox, INVERT_NO);
+  return boxop_tspatial_stbox(temp, box, &overabove_stbox_stbox, INVERT_NO);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a temporal point is in front of a spatiotemporal box
- * @param[in] temp Temporal point
+ * @param[in] temp Temporal spatial
  * @param[in] box Spatiotemporal box
- * @csqlfn #Front_tpoint_stbox()
+ * @csqlfn #Front_tspatial_stbox()
  */
 bool
-front_tpoint_stbox(const Temporal *temp, const STBox *box)
+front_tspatial_stbox(const Temporal *temp, const STBox *box)
 {
-  return boxop_tpoint_stbox(temp, box, &front_stbox_stbox, INVERT_NO);
+  return boxop_tspatial_stbox(temp, box, &front_stbox_stbox, INVERT_NO);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a temporal point does not extend to the back of a
  * spatiotemporal box
- * @param[in] temp Temporal point
+ * @param[in] temp Temporal spatial
  * @param[in] box Spatiotemporal box
- * @csqlfn #Overfront_tpoint_stbox()
+ * @csqlfn #Overfront_tspatial_stbox()
  */
 bool
-overfront_tpoint_stbox(const Temporal *temp, const STBox *box)
+overfront_tspatial_stbox(const Temporal *temp, const STBox *box)
 {
-  return boxop_tpoint_stbox(temp, box, &overfront_stbox_stbox, INVERT_NO);
+  return boxop_tspatial_stbox(temp, box, &overfront_stbox_stbox, INVERT_NO);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a temporal point is at the back of a spatiotemporal box
- * @param[in] temp Temporal point
+ * @param[in] temp Temporal spatial
  * @param[in] box Spatiotemporal box
- * @csqlfn #Back_tpoint_stbox()
+ * @csqlfn #Back_tspatial_stbox()
  */
 bool
-back_tpoint_stbox(const Temporal *temp, const STBox *box)
+back_tspatial_stbox(const Temporal *temp, const STBox *box)
 {
-  return boxop_tpoint_stbox(temp, box, &back_stbox_stbox, INVERT_NO);
+  return boxop_tspatial_stbox(temp, box, &back_stbox_stbox, INVERT_NO);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a temporal point does not extend to the front of a
  * spatiotemporal box
- * @param[in] temp Temporal point
+ * @param[in] temp Temporal spatial
  * @param[in] box Spatiotemporal box
- * @csqlfn #Overback_tpoint_stbox()
+ * @csqlfn #Overback_tspatial_stbox()
  */
 bool
-overback_tpoint_stbox(const Temporal *temp, const STBox *box)
+overback_tspatial_stbox(const Temporal *temp, const STBox *box)
 {
-  return boxop_tpoint_stbox(temp, box, &overback_stbox_stbox, INVERT_NO);
+  return boxop_tspatial_stbox(temp, box, &overback_stbox_stbox, INVERT_NO);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a temporal point is before a spatiotemporal box
- * @param[in] temp Temporal point
+ * @param[in] temp Temporal spatial
  * @param[in] box Spatiotemporal box
- * @csqlfn #Before_tpoint_stbox()
+ * @csqlfn #Before_tspatial_stbox()
  */
 bool
-before_tpoint_stbox(const Temporal *temp, const STBox *box)
+before_tspatial_stbox(const Temporal *temp, const STBox *box)
 {
-  return boxop_tpoint_stbox(temp, box, &before_stbox_stbox, INVERT_NO);
+  return boxop_tspatial_stbox(temp, box, &before_stbox_stbox, INVERT_NO);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a temporal point is not after a spatiotemporal box
- * @param[in] temp Temporal point
+ * @param[in] temp Temporal spatial
  * @param[in] box Spatiotemporal box
- * @csqlfn #Overbefore_tpoint_stbox()
+ * @csqlfn #Overbefore_tspatial_stbox()
  */
 bool
-overbefore_tpoint_stbox(const Temporal *temp, const STBox *box)
+overbefore_tspatial_stbox(const Temporal *temp, const STBox *box)
 {
-  return boxop_tpoint_stbox(temp, box, &overbefore_stbox_stbox, INVERT_NO);
+  return boxop_tspatial_stbox(temp, box, &overbefore_stbox_stbox, INVERT_NO);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a temporal point is after a spatiotemporal box
- * @param[in] temp Temporal point
+ * @param[in] temp Temporal spatial
  * @param[in] box Spatiotemporal box
- * @csqlfn #After_tpoint_stbox()
+ * @csqlfn #After_tspatial_stbox()
  */
 bool
-after_tpoint_stbox(const Temporal *temp, const STBox *box)
+after_tspatial_stbox(const Temporal *temp, const STBox *box)
 {
-  return boxop_tpoint_stbox(temp, box, &after_stbox_stbox, INVERT_NO);
+  return boxop_tspatial_stbox(temp, box, &after_stbox_stbox, INVERT_NO);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a temporal point is not before a spatiotemporal box
- * @param[in] temp Temporal point
+ * @param[in] temp Temporal spatial
  * @param[in] box Spatiotemporal box
- * @csqlfn #Overafter_tpoint_stbox()
+ * @csqlfn #Overafter_tspatial_stbox()
  */
 bool
-overafter_tpoint_stbox(const Temporal *temp, const STBox *box)
+overafter_tspatial_stbox(const Temporal *temp, const STBox *box)
 {
-  return boxop_tpoint_stbox(temp, box, &overafter_stbox_stbox, INVERT_NO);
+  return boxop_tspatial_stbox(temp, box, &overafter_stbox_stbox, INVERT_NO);
 }
 
 /*****************************************************************************/
@@ -495,201 +495,201 @@ overafter_tpoint_stbox(const Temporal *temp, const STBox *box)
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if the first temporal point is to the left of the second
  * one
- * @param[in] temp1,temp2 Temporal points
- * @csqlfn #Left_tpoint_tpoint()
+ * @param[in] temp1,temp2 Temporal spatials
+ * @csqlfn #Left_tspatial_tspatial()
  */
 bool
-left_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
+left_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 {
-  return boxop_tpoint_tpoint(temp1, temp2, &left_stbox_stbox);
+  return boxop_tspatial_tspatial(temp1, temp2, &left_stbox_stbox);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if the first temporal point does not extend to the right
  * of the second one
- * @param[in] temp1,temp2 Temporal points
- * @csqlfn #Overleft_tpoint_tpoint()
+ * @param[in] temp1,temp2 Temporal spatials
+ * @csqlfn #Overleft_tspatial_tspatial()
  */
 bool
-overleft_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
+overleft_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 {
-  return boxop_tpoint_tpoint(temp1, temp2, &overleft_stbox_stbox);
+  return boxop_tspatial_tspatial(temp1, temp2, &overleft_stbox_stbox);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if the first temporal point is to the right of the second
  * one
- * @param[in] temp1,temp2 Temporal points
- * @csqlfn #Right_tpoint_tpoint()
+ * @param[in] temp1,temp2 Temporal spatials
+ * @csqlfn #Right_tspatial_tspatial()
  */
 bool
-right_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
+right_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 {
-  return boxop_tpoint_tpoint(temp1, temp2, &right_stbox_stbox);
+  return boxop_tspatial_tspatial(temp1, temp2, &right_stbox_stbox);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if the first temporal point does not extend to the left
  * of the second one
- * @param[in] temp1,temp2 Temporal points
- * @csqlfn #Overright_tpoint_tpoint()
+ * @param[in] temp1,temp2 Temporal spatials
+ * @csqlfn #Overright_tspatial_tspatial()
  */
 bool
-overright_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
+overright_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 {
-  return boxop_tpoint_tpoint(temp1, temp2, &overright_stbox_stbox);
+  return boxop_tspatial_tspatial(temp1, temp2, &overright_stbox_stbox);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if the first temporal point is below the second one
- * @param[in] temp1,temp2 Temporal points
- * @csqlfn #Below_tpoint_tpoint()
+ * @param[in] temp1,temp2 Temporal spatials
+ * @csqlfn #Below_tspatial_tspatial()
  */
 bool
-below_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
+below_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 {
-  return boxop_tpoint_tpoint(temp1, temp2, &below_stbox_stbox);
+  return boxop_tspatial_tspatial(temp1, temp2, &below_stbox_stbox);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if the first temporal point does not extend above the
  * second one
- * @param[in] temp1,temp2 Temporal points
- * @csqlfn #Overbelow_tpoint_tpoint()
+ * @param[in] temp1,temp2 Temporal spatials
+ * @csqlfn #Overbelow_tspatial_tspatial()
  */
 bool
-overbelow_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
+overbelow_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 {
-  return boxop_tpoint_tpoint(temp1, temp2, &overbelow_stbox_stbox);
+  return boxop_tspatial_tspatial(temp1, temp2, &overbelow_stbox_stbox);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if the first temporal point is above the second one
- * @param[in] temp1,temp2 Temporal points
- * @csqlfn #Above_tpoint_tpoint()
+ * @param[in] temp1,temp2 Temporal spatials
+ * @csqlfn #Above_tspatial_tspatial()
  */
 bool
-above_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
+above_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 {
-  return boxop_tpoint_tpoint(temp1, temp2, &above_stbox_stbox);
+  return boxop_tspatial_tspatial(temp1, temp2, &above_stbox_stbox);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if the first temporal point does not extend below the
  * second one
- * @param[in] temp1,temp2 Temporal points
- * @csqlfn #Overabove_tpoint_tpoint()
+ * @param[in] temp1,temp2 Temporal spatials
+ * @csqlfn #Overabove_tspatial_tspatial()
  */
 bool
-overabove_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
+overabove_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 {
-  return boxop_tpoint_tpoint(temp1, temp2, &overabove_stbox_stbox);
+  return boxop_tspatial_tspatial(temp1, temp2, &overabove_stbox_stbox);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if the first temporal point is in front of the second one
- * @param[in] temp1,temp2 Temporal points
- * @csqlfn #Front_tpoint_tpoint()
+ * @param[in] temp1,temp2 Temporal spatials
+ * @csqlfn #Front_tspatial_tspatial()
  */
 bool
-front_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
+front_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 {
-  return boxop_tpoint_tpoint(temp1, temp2, &front_stbox_stbox);
+  return boxop_tspatial_tspatial(temp1, temp2, &front_stbox_stbox);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if the first temporal point does not extend to the back
  * of the second one
- * @param[in] temp1,temp2 Temporal points
- * @csqlfn #Overfront_tpoint_tpoint()
+ * @param[in] temp1,temp2 Temporal spatials
+ * @csqlfn #Overfront_tspatial_tspatial()
  */
 bool
-overfront_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
+overfront_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 {
-  return boxop_tpoint_tpoint(temp1, temp2, &overfront_stbox_stbox);
+  return boxop_tspatial_tspatial(temp1, temp2, &overfront_stbox_stbox);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if the first temporal point is at the back of the second
  * one
- * @param[in] temp1,temp2 Temporal points
- * @csqlfn #Back_tpoint_tpoint()
+ * @param[in] temp1,temp2 Temporal spatials
+ * @csqlfn #Back_tspatial_tspatial()
  */
 bool
-back_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
+back_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 {
-  return boxop_tpoint_tpoint(temp1, temp2, &back_stbox_stbox);
+  return boxop_tspatial_tspatial(temp1, temp2, &back_stbox_stbox);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if the first temporal point does not extend to the front
  * of the second one
- * @param[in] temp1,temp2 Temporal points
- * @csqlfn #Overback_tpoint_tpoint()
+ * @param[in] temp1,temp2 Temporal spatials
+ * @csqlfn #Overback_tspatial_tspatial()
  */
 bool
-overback_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
+overback_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 {
-  return boxop_tpoint_tpoint(temp1, temp2, &overback_stbox_stbox);
+  return boxop_tspatial_tspatial(temp1, temp2, &overback_stbox_stbox);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if the first temporal point is before the second one
- * @param[in] temp1,temp2 Temporal points
- * @csqlfn #Before_tpoint_tpoint()
+ * @param[in] temp1,temp2 Temporal spatials
+ * @csqlfn #Before_tspatial_tspatial()
  */
 bool
-before_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
+before_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 {
-  return boxop_tpoint_tpoint(temp1, temp2, &before_stbox_stbox);
+  return boxop_tspatial_tspatial(temp1, temp2, &before_stbox_stbox);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if the first temporal point is not after the second one
- * @param[in] temp1,temp2 Temporal points
- * @csqlfn #Overbefore_tpoint_tpoint()
+ * @param[in] temp1,temp2 Temporal spatials
+ * @csqlfn #Overbefore_tspatial_tspatial()
  */
 bool
-overbefore_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
+overbefore_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 {
-  return boxop_tpoint_tpoint(temp1, temp2, &overbefore_stbox_stbox);
+  return boxop_tspatial_tspatial(temp1, temp2, &overbefore_stbox_stbox);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if the first temporal point is after the second one
- * @param[in] temp1,temp2 Temporal points
- * @csqlfn #After_tpoint_tpoint()
+ * @param[in] temp1,temp2 Temporal spatials
+ * @csqlfn #After_tspatial_tspatial()
  */
 bool
-after_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
+after_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 {
-  return boxop_tpoint_tpoint(temp1, temp2, &after_stbox_stbox);
+  return boxop_tspatial_tspatial(temp1, temp2, &after_stbox_stbox);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if the first temporal point is not before the second one
- * @param[in] temp1,temp2 Temporal points
- * @csqlfn #Overafter_tpoint_tpoint()
+ * @param[in] temp1,temp2 Temporal spatials
+ * @csqlfn #Overafter_tspatial_tspatial()
  */
 bool
-overafter_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
+overafter_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 {
-  return boxop_tpoint_tpoint(temp1, temp2, &overafter_stbox_stbox);
+  return boxop_tspatial_tspatial(temp1, temp2, &overafter_stbox_stbox);
 }
 
 /*****************************************************************************/

@@ -42,7 +42,7 @@
  * the space and the time dimensions.
  */
 
-#include "point/tpoint_boxops.h"
+#include "point/tspatial_boxops.h"
 
 /* C */
 #include <assert.h>
@@ -205,7 +205,7 @@ tpointseqarr_set_stbox(const TSequence **sequences, int count, STBox *box)
 STBox *
 tpointinst_stboxes(const TInstant *inst)
 {
-  assert(inst); assert(tgeo_type(inst->temptype));
+  assert(inst); assert(tpoint_type(inst->temptype));
   /* One bounding box per instant */
   STBox *result = palloc(sizeof(STBox));
   tpointinst_set_stbox(inst, &result[0]);
@@ -220,7 +220,7 @@ tpointinst_stboxes(const TInstant *inst)
 static STBox *
 tpointseq_disc_stboxes(const TSequence *seq)
 {
-  assert(seq); assert(tgeo_type(seq->temptype));
+  assert(seq); assert(tpoint_type(seq->temptype));
   assert(MEOS_FLAGS_GET_INTERP(seq->flags) == DISCRETE);
   /* One bounding box per instant */
   STBox *result = palloc(sizeof(STBox) * seq->count);
@@ -239,7 +239,7 @@ tpointseq_disc_stboxes(const TSequence *seq)
 static int
 tpointseq_cont_stboxes_iter(const TSequence *seq, STBox *result)
 {
-  assert(seq); assert(result); assert(tgeo_type(seq->temptype));
+  assert(seq); assert(result); assert(tpoint_type(seq->temptype));
   assert(MEOS_FLAGS_GET_INTERP(seq->flags) != DISCRETE);
 
   /* Instantaneous sequence */
@@ -274,7 +274,7 @@ tpointseq_cont_stboxes_iter(const TSequence *seq, STBox *result)
 STBox *
 tpointseq_stboxes(const TSequence *seq, int *count)
 {
-  assert(seq); assert(count); assert(tgeo_type(seq->temptype));
+  assert(seq); assert(count); assert(tpoint_type(seq->temptype));
 
   /* Discrete case */
   if (MEOS_FLAGS_GET_INTERP(seq->flags) == DISCRETE)
@@ -300,7 +300,7 @@ tpointseq_stboxes(const TSequence *seq, int *count)
 STBox *
 tpointseqset_stboxes(const TSequenceSet *ss, int *count)
 {
-  assert(ss); assert(count); assert(tgeo_type(ss->temptype));
+  assert(ss); assert(count); assert(tpoint_type(ss->temptype));
   assert(MEOS_FLAGS_LINEAR_INTERP(ss->flags));
 
   /* One bounding box per segment */
@@ -329,7 +329,7 @@ tpoint_stboxes(const Temporal *temp, int *count)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) count) ||
-      ! ensure_tgeo_type(temp->temptype))
+      ! ensure_tpoint_type(temp->temptype))
     return NULL;
 
   assert(temptype_subtype(temp->subtype));
@@ -357,7 +357,7 @@ tpoint_stboxes(const Temporal *temp, int *count)
 static STBox *
 tpointseq_disc_split_n_stboxes(const TSequence *seq, int box_count, int *count)
 {
-  assert(seq); assert(count); assert(tgeo_type(seq->temptype));
+  assert(seq); assert(count); assert(tpoint_type(seq->temptype));
   assert(MEOS_FLAGS_GET_INTERP(seq->flags) == DISCRETE);
   assert(box_count > 0);
 
@@ -405,7 +405,7 @@ static int
 tpointseq_cont_split_n_stboxes_iter(const TSequence *seq, int box_count,
   STBox *result)
 {
-  assert(seq); assert(result); assert(tgeo_type(seq->temptype));
+  assert(seq); assert(result); assert(tpoint_type(seq->temptype));
   assert(MEOS_FLAGS_GET_INTERP(seq->flags) != DISCRETE);
   assert(box_count > 0);
 
@@ -462,7 +462,7 @@ tpointseq_cont_split_n_stboxes_iter(const TSequence *seq, int box_count,
 STBox *
 tpointseq_split_n_stboxes(const TSequence *seq, int box_count, int *count)
 {
-  assert(seq); assert(count); assert(tgeo_type(seq->temptype));
+  assert(seq); assert(count); assert(tpoint_type(seq->temptype));
   assert(box_count > 0);
 
   /* Discrete case */
@@ -491,7 +491,7 @@ tpointseq_split_n_stboxes(const TSequence *seq, int box_count, int *count)
 STBox *
 tpointseqset_split_n_stboxes(const TSequenceSet *ss, int box_count, int *count)
 {
-  assert(ss); assert(count); assert(tgeo_type(ss->temptype));
+  assert(ss); assert(count); assert(tpoint_type(ss->temptype));
   assert(box_count > 0);
 
   /* One bounding box per segment */
@@ -570,7 +570,7 @@ tpoint_split_n_stboxes(const Temporal *temp, int box_count, int *count)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) count) ||
-      ! ensure_tgeo_type(temp->temptype) || ! ensure_positive(box_count))
+      ! ensure_tpoint_type(temp->temptype) || ! ensure_positive(box_count))
     return NULL;
 
   assert(temptype_subtype(temp->subtype));
@@ -603,7 +603,7 @@ static STBox *
 tpointseq_disc_split_each_n_stboxes(const TSequence *seq, int elems_per_box,
   int *count)
 {
-  assert(seq); assert(count); assert(tgeo_type(seq->temptype));
+  assert(seq); assert(count); assert(tpoint_type(seq->temptype));
   assert(MEOS_FLAGS_GET_INTERP(seq->flags) == DISCRETE);
   assert(elems_per_box > 0);
 
@@ -639,7 +639,7 @@ static int
 tpointseq_cont_split_each_n_stboxes_iter(const TSequence *seq,
   int elems_per_box, STBox *result)
 {
-  assert(seq); assert(result); assert(tgeo_type(seq->temptype));
+  assert(seq); assert(result); assert(tpoint_type(seq->temptype));
   assert(MEOS_FLAGS_GET_INTERP(seq->flags) != DISCRETE);
   assert(elems_per_box > 0);
 
@@ -680,7 +680,7 @@ static STBox *
 tpointseq_split_each_n_stboxes(const TSequence *seq, int elems_per_box,
   int *count)
 {
-  assert(seq); assert(count); assert(tgeo_type(seq->temptype));
+  assert(seq); assert(count); assert(tpoint_type(seq->temptype));
   assert(elems_per_box > 0);
 
   if (MEOS_FLAGS_GET_INTERP(seq->flags) == DISCRETE)
@@ -707,7 +707,7 @@ static STBox *
 tpointseqset_split_each_n_stboxes(const TSequenceSet *ss, int elems_per_box,
   int *count)
 {
-  assert(ss); assert(count); assert(tgeo_type(ss->temptype));
+  assert(ss); assert(count); assert(tpoint_type(ss->temptype));
   assert(elems_per_box > 0);
 
   /* Singleton sequence set */
@@ -744,7 +744,7 @@ tpoint_split_each_n_stboxes(const Temporal *temp, int elems_per_box,
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) count) ||
-      ! ensure_tgeo_type(temp->temptype) || ! ensure_positive(elems_per_box))
+      ! ensure_tpoint_type(temp->temptype) || ! ensure_positive(elems_per_box))
     return NULL;
 
   assert(temptype_subtype(temp->subtype));
@@ -1354,11 +1354,11 @@ geo_split_each_n_gboxes(const GSERIALIZED *gs, int elems_per_box, int *count)
  *****************************************************************************/
 
 /**
- * @brief Generic bounding box function for a temporal point and a
+ * @brief Generic bounding box function for a temporal spatial value and a
  * spatiotemporal box
  */
 bool
-boxop_tpoint_stbox(const Temporal *temp, const STBox *box,
+boxop_tspatial_stbox(const Temporal *temp, const STBox *box,
   bool (*func)(const STBox *, const STBox *), bool inverted)
 {
   STBox box1;
@@ -1367,10 +1367,10 @@ boxop_tpoint_stbox(const Temporal *temp, const STBox *box,
 }
 
 /**
- * @brief Generic topological function for two temporal points
+ * @brief Generic topological function for two temporal spatial values
  */
 bool
-boxop_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2,
+boxop_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2,
   bool (*func)(const STBox *, const STBox *))
 {
   STBox box1, box2;

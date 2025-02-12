@@ -284,9 +284,11 @@ extern bool spatial_type(meosType type);
 extern bool tspatial_type(meosType type);
 extern bool ensure_tspatial_type(meosType type);
 extern bool tspatial_basetype(meosType type);
+extern bool tpoint_type(meosType type);
+extern bool ensure_tpoint_type(meosType type);
 extern bool tgeo_type(meosType type);
 extern bool ensure_tgeo_type(meosType type);
-extern bool ensure_tnumber_tgeo_type(meosType type);
+extern bool ensure_tnumber_tpoint_type(meosType type);
 
 /*****************************************************************************/
 

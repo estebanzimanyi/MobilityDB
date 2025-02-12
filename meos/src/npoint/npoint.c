@@ -618,7 +618,7 @@ geom_npoint(const GSERIALIZED *gs)
   if (srid_ways == SRID_INVALID || ! ensure_same_srid(srid_geom, srid_ways))
     return NULL;
 
-  char *geomstr = ewkt_out(PointerGetDatum(gs), 0, OUT_DEFAULT_DECIMAL_DIGITS);
+  char *geomstr = geo_ewkt_out(PointerGetDatum(gs), 0, OUT_DEFAULT_DECIMAL_DIGITS);
   char sql[SQL_MAXLEN];
   snprintf(sql, sizeof(sql),
     "SELECT npoint(gid, ST_LineLocatePoint(the_geom, '%s')) "

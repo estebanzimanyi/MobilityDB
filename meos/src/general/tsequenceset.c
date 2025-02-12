@@ -365,7 +365,7 @@ tsequenceset_make_exp(const TSequence **sequences, int count, int maxcount,
     MEOS_FLAGS_GET_INTERP(normseqs[0]->flags));
   MEOS_FLAGS_SET_X(result->flags, true);
   MEOS_FLAGS_SET_T(result->flags, true);
-  if (tgeo_type(normseqs[0]->temptype))
+  if (tpoint_type(normseqs[0]->temptype))
   {
     MEOS_FLAGS_SET_Z(result->flags, MEOS_FLAGS_GET_Z(normseqs[0]->flags));
     MEOS_FLAGS_SET_GEODETIC(result->flags,

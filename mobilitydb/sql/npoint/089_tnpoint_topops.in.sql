@@ -102,7 +102,7 @@ CREATE OPERATOR @> (
 
 CREATE FUNCTION temporal_contains(stbox, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contains_stbox_tnpoint'
+  AS 'MODULE_PATHNAME', 'Contains_stbox_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR @> (
@@ -114,11 +114,11 @@ CREATE OPERATOR @> (
 
 CREATE FUNCTION temporal_contains(tnpoint, stbox)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contains_tnpoint_stbox'
+  AS 'MODULE_PATHNAME', 'Contains_tspatial_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_contains(tnpoint, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contains_tnpoint_tnpoint'
+  AS 'MODULE_PATHNAME', 'Contains_tspatial_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR @> (
@@ -164,7 +164,7 @@ CREATE OPERATOR <@ (
 
 CREATE FUNCTION temporal_contained(stbox, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contained_stbox_tnpoint'
+  AS 'MODULE_PATHNAME', 'Contained_stbox_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR <@ (
@@ -176,11 +176,11 @@ CREATE OPERATOR <@ (
 
 CREATE FUNCTION temporal_contained(tnpoint, stbox)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contained_tnpoint_stbox'
+  AS 'MODULE_PATHNAME', 'Contained_tspatial_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_contained(tnpoint, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contained_tnpoint_tnpoint'
+  AS 'MODULE_PATHNAME', 'Contained_tspatial_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR <@ (
@@ -226,7 +226,7 @@ CREATE OPERATOR && (
 
 CREATE FUNCTION temporal_overlaps(stbox, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overlaps_stbox_tnpoint'
+  AS 'MODULE_PATHNAME', 'Overlaps_stbox_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR && (
@@ -238,11 +238,11 @@ CREATE OPERATOR && (
 
 CREATE FUNCTION temporal_overlaps(tnpoint, stbox)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overlaps_tnpoint_stbox'
+  AS 'MODULE_PATHNAME', 'Overlaps_tspatial_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_overlaps(tnpoint, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overlaps_tnpoint_tnpoint'
+  AS 'MODULE_PATHNAME', 'Overlaps_tspatial_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR && (
@@ -288,7 +288,7 @@ CREATE OPERATOR ~= (
 
 CREATE FUNCTION temporal_same(stbox, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_stbox_tnpoint'
+  AS 'MODULE_PATHNAME', 'Same_stbox_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ~= (
@@ -300,11 +300,11 @@ CREATE OPERATOR ~= (
 
 CREATE FUNCTION temporal_same(tnpoint, stbox)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tnpoint_stbox'
+  AS 'MODULE_PATHNAME', 'Same_tspatial_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_same(tnpoint, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tnpoint_tnpoint'
+  AS 'MODULE_PATHNAME', 'Same_tspatial_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ~= (
@@ -350,7 +350,7 @@ CREATE OPERATOR -|- (
 
 CREATE FUNCTION temporal_adjacent(stbox, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Adjacent_stbox_tnpoint'
+  AS 'MODULE_PATHNAME', 'Adjacent_stbox_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR -|- (
@@ -362,11 +362,11 @@ CREATE OPERATOR -|- (
 
 CREATE FUNCTION temporal_adjacent(tnpoint, stbox)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Adjacent_tnpoint_stbox'
+  AS 'MODULE_PATHNAME', 'Adjacent_tspatial_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_adjacent(tnpoint, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Adjacent_tnpoint_tnpoint'
+  AS 'MODULE_PATHNAME', 'Adjacent_tspatial_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR -|- (

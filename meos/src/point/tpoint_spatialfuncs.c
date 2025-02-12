@@ -352,7 +352,7 @@ datum_pt_distance3d(Datum geom1, Datum geom2)
 bool
 ensure_spatial_validity(const Temporal *temp1, const Temporal *temp2)
 {
-  if (tgeo_type(temp1->temptype) &&
+  if (tpoint_type(temp1->temptype) &&
       (! ensure_same_srid(tspatial_srid(temp1), tspatial_srid(temp2)) ||
        ! ensure_same_dimensionality(temp1->flags, temp2->flags)))
     return false;
@@ -749,7 +749,7 @@ ensure_valid_tpoint_geo(const Temporal *temp, const GSERIALIZED *gs)
   meosType tgeotype =
     FLAGS_GET_GEODETIC(gs->gflags) ? T_TGEOGPOINT : T_TGEOMPOINT;
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_tgeo_type(temp->temptype) ||
+      ! ensure_tpoint_type(temp->temptype) ||
       ! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)) ||
       ! ensure_temporal_isof_type(temp, tgeotype))
     return false;
@@ -777,7 +777,7 @@ bool
 ensure_valid_tpoint_box(const Temporal *temp, const STBox *box)
 {
   if (ensure_not_null((void *) temp) && ensure_not_null((void *) box) &&
-      ensure_tgeo_type(temp->temptype) && ensure_has_X_stbox(box) &&
+      ensure_tpoint_type(temp->temptype) && ensure_has_X_stbox(box) &&
       ensure_same_geodetic(temp->flags, box->flags) &&
       ensure_same_srid(tspatial_srid(temp), stbox_srid(box)))
     return true;
@@ -791,7 +791,7 @@ bool
 ensure_valid_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
 {
   if (ensure_not_null((void *) temp1) && ensure_not_null((void *) temp2) &&
-      ensure_tgeo_type(temp1->temptype) &&
+      ensure_tpoint_type(temp1->temptype) &&
       ensure_same_temporal_type(temp1, temp2) &&
       ensure_same_srid(tspatial_srid(temp1), tspatial_srid(temp2)))
     return true;
@@ -874,7 +874,7 @@ tpoint_get_coord(const Temporal *temp, int coord)
 Temporal *
 tpoint_get_x(const Temporal *temp)
 {
-  if (! ensure_not_null((void *) temp) || ! ensure_tgeo_type(temp->temptype))
+  if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype))
      return NULL;
   return tpoint_get_coord(temp, 0);
 }
@@ -888,7 +888,7 @@ tpoint_get_x(const Temporal *temp)
 Temporal *
 tpoint_get_y(const Temporal *temp)
 {
-  if (! ensure_not_null((void *) temp) || ! ensure_tgeo_type(temp->temptype))
+  if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype))
      return NULL;
   return tpoint_get_coord(temp, 1);
 }
@@ -902,7 +902,7 @@ tpoint_get_y(const Temporal *temp)
 Temporal *
 tpoint_get_z(const Temporal *temp)
 {
-  if (! ensure_not_null((void *) temp) || ! ensure_tgeo_type(temp->temptype))
+  if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype))
      return NULL;
   return tpoint_get_coord(temp, 2);
 }
@@ -1126,6 +1126,33 @@ geopoint_make(double x, double y, double z, bool hasz, bool geodetic,
   lwpoint_free(point);
   return result;
 }
+
+#if CBUFFER
+
+extern LWCIRCSTRING *lwcircstring_from_lwpointarray(int32_t srid, uint32_t npoints, LWPOINT **points);
+
+/**
+ * @brief Return a circle created from a central point and a radius
+ */
+GSERIALIZED *
+geocircle_make(double x, double y, double radius, int32_t srid)
+{
+  LWPOINT *points[3];
+  /* Shift the X coordinate of the point by +- radius */
+  points[0] = points[2] = lwpoint_make2d(srid, x - radius, y);
+  points[1] = lwpoint_make2d(srid, x + radius, y);
+  /* Construct the circle */
+  LWGEOM *ring = lwcircstring_as_lwgeom(
+    lwcircstring_from_lwpointarray(srid, 3, points));
+  LWCURVEPOLY *poly = lwcurvepoly_construct_empty(srid, 0, 0);
+  lwcurvepoly_add_ring(poly, ring);
+  GSERIALIZED *result = geom_serialize((LWGEOM *) poly);
+  /* Clean up and return */
+  lwpoint_free(points[0]); lwpoint_free(points[1]); lwgeom_free(ring);
+  return result;
+}
+#endif /* CBUFFER */
+
 
 /**
  * @brief Return a point interpolated from the geometry/geography segment with
@@ -1914,7 +1941,7 @@ geopointlinearr_make_trajectory(GSERIALIZED **points, int npoints,
 GSERIALIZED *
 tpointseq_trajectory(const TSequence *seq)
 {
-  assert(seq); assert(tgeo_type(seq->temptype));
+  assert(seq); assert(tpoint_type(seq->temptype));
   /* Instantaneous sequence */
   if (seq->count == 1)
     return geo_copy(DatumGetGserializedP(
@@ -1950,7 +1977,7 @@ tpointseq_trajectory(const TSequence *seq)
 GSERIALIZED *
 tpointseqset_step_trajectory(const TSequenceSet *ss)
 {
-  assert(ss); assert(tgeo_type(ss->temptype));
+  assert(ss); assert(tpoint_type(ss->temptype));
   assert(ss->count > 1); assert(! MEOS_FLAGS_LINEAR_INTERP(ss->flags));
   GSERIALIZED **points = palloc(sizeof(GSERIALIZED *) * ss->totalcount);
   int npoints = 0;
@@ -1989,7 +2016,7 @@ tpointseqset_step_trajectory(const TSequenceSet *ss)
 GSERIALIZED *
 tpointseqset_trajectory(const TSequenceSet *ss)
 {
-  assert(ss); assert(tgeo_type(ss->temptype));
+  assert(ss); assert(tpoint_type(ss->temptype));
   /* Singleton sequence set */
   if (ss->count == 1)
     return tpointseq_trajectory(TSEQUENCESET_SEQ_N(ss, 0));
@@ -2038,7 +2065,7 @@ GSERIALIZED *
 tpoint_trajectory(const Temporal *temp)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_tgeo_type(temp->temptype))
+  if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype))
     return NULL;
 
   assert(temptype_subtype(temp->subtype));
@@ -2091,7 +2118,7 @@ pt_force_geodetic(LWPOINT *point)
 TInstant *
 tgeompointinst_tgeogpointinst(const TInstant *inst, bool oper)
 {
-  assert(inst); assert(tgeo_type(inst->temptype));
+  assert(inst); assert(tpoint_type(inst->temptype));
   int32_t srid = tspatialinst_srid(inst);
   GSERIALIZED *gs = DatumGetGserializedP(tinstant_val(inst));
   LWGEOM *geom = lwgeom_from_gserialized(gs);
@@ -2129,7 +2156,7 @@ tgeompointinst_tgeogpointinst(const TInstant *inst, bool oper)
 TSequence *
 tgeompointseq_tgeogpointseq(const TSequence *seq, bool oper)
 {
-  assert(seq); assert(tgeo_type(seq->temptype));
+  assert(seq); assert(tpoint_type(seq->temptype));
   TInstant **instants = palloc(sizeof(TInstant *) * seq->count);
   for (int i = 0; i < seq->count; i++)
     instants[i] = tgeompointinst_tgeogpointinst(TSEQUENCE_INST_N(seq, i), oper);
@@ -2149,7 +2176,7 @@ tgeompointseq_tgeogpointseq(const TSequence *seq, bool oper)
 TSequenceSet *
 tgeompointseqset_tgeogpointseqset(const TSequenceSet *ss, bool oper)
 {
-  assert(ss); assert(tgeo_type(ss->temptype));
+  assert(ss); assert(tpoint_type(ss->temptype));
   TSequence **sequences = palloc(sizeof(TSequence *) * ss->count);
   for (int i = 0; i < ss->count; i++)
     sequences[i] = tgeompointseq_tgeogpointseq(TSEQUENCESET_SEQ_N(ss, i),
@@ -2173,7 +2200,7 @@ tgeompointseqset_tgeogpointseqset(const TSequenceSet *ss, bool oper)
 Temporal *
 tgeompoint_tgeogpoint(const Temporal *temp, bool oper)
 {
-  assert(temp); assert(tgeo_type(temp->temptype));
+  assert(temp); assert(tpoint_type(temp->temptype));
   assert(temptype_subtype(temp->subtype));
   switch (temp->subtype)
   {
@@ -2664,7 +2691,7 @@ tpoint_tfloat_to_geomeas(const Temporal *tpoint, const Temporal *meas,
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) tpoint) ||
       ! ensure_not_null((void *) result) ||
-      ! ensure_tgeo_type(tpoint->temptype) ||
+      ! ensure_tpoint_type(tpoint->temptype) ||
       (meas && ! ensure_tnumber_type(meas->temptype)))
     return false;
 
@@ -3727,7 +3754,7 @@ tpoint_AsMVTGeom(const Temporal *temp, const STBox *bounds, int32_t extent,
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) bounds) ||
       ! ensure_not_null((void *) gsarr) ||
       ! ensure_not_null((void *) timesarr) ||
-      ! ensure_not_null((void *) count) || ! ensure_tgeo_type(temp->temptype))
+      ! ensure_not_null((void *) count) || ! ensure_tpoint_type(temp->temptype))
     return false;
 
   if (bounds->xmax - bounds->xmin <= 0 || bounds->ymax - bounds->ymin <= 0)
@@ -3830,7 +3857,7 @@ tpointseq_length_3d(const TSequence *seq)
 double
 tpointseq_length(const TSequence *seq)
 {
-  assert(seq); assert(tgeo_type(seq->temptype));
+  assert(seq); assert(tpoint_type(seq->temptype));
   assert(MEOS_FLAGS_LINEAR_INTERP(seq->flags));
   if (seq->count == 1)
     return 0;
@@ -3859,7 +3886,7 @@ tpointseq_length(const TSequence *seq)
 double
 tpointseqset_length(const TSequenceSet *ss)
 {
-  assert(ss); assert(tgeo_type(ss->temptype));
+  assert(ss); assert(tpoint_type(ss->temptype));
   assert(MEOS_FLAGS_LINEAR_INTERP(ss->flags));
   double result = 0;
   for (int i = 0; i < ss->count; i++)
@@ -3878,7 +3905,7 @@ double
 tpoint_length(const Temporal *temp)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_tgeo_type(temp->temptype))
+  if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype))
     return -1.0;
 
   assert(temptype_subtype(temp->subtype));
@@ -3903,7 +3930,7 @@ tpoint_length(const Temporal *temp)
 TSequence *
 tpointseq_cumulative_length(const TSequence *seq, double prevlength)
 {
-  assert(seq); assert(tgeo_type(seq->temptype));
+  assert(seq); assert(tpoint_type(seq->temptype));
   assert(MEOS_FLAGS_LINEAR_INTERP(seq->flags));
 
   /* Instantaneous sequence */
@@ -3944,7 +3971,7 @@ tpointseq_cumulative_length(const TSequence *seq, double prevlength)
 TSequenceSet *
 tpointseqset_cumulative_length(const TSequenceSet *ss)
 {
-  assert(ss); assert(tgeo_type(ss->temptype));
+  assert(ss); assert(tpoint_type(ss->temptype));
   assert(MEOS_FLAGS_LINEAR_INTERP(ss->flags));
   TSequence **sequences = palloc(sizeof(TSequence *) * ss->count);
   double length = 0;
@@ -3971,7 +3998,7 @@ Temporal *
 tpoint_cumulative_length(const Temporal *temp)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_tgeo_type(temp->temptype))
+  if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype))
     return NULL;
 
   assert(temptype_subtype(temp->subtype));
@@ -3996,7 +4023,7 @@ GSERIALIZED *
 tpoint_convex_hull(const Temporal *temp)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_tgeo_type(temp->temptype))
+  if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype))
     return NULL;
 
   GSERIALIZED *traj = tpoint_trajectory(temp);
@@ -4019,7 +4046,7 @@ tpoint_convex_hull(const Temporal *temp)
 TSequence *
 tpointseq_speed(const TSequence *seq)
 {
-  assert(seq); assert(tgeo_type(seq->temptype));
+  assert(seq); assert(tpoint_type(seq->temptype));
   assert(MEOS_FLAGS_LINEAR_INTERP(seq->flags));
 
   /* Instantaneous sequence */
@@ -4061,7 +4088,7 @@ tpointseq_speed(const TSequence *seq)
 TSequenceSet *
 tpointseqset_speed(const TSequenceSet *ss)
 {
-  assert(ss); assert(tgeo_type(ss->temptype));
+  assert(ss); assert(tpoint_type(ss->temptype));
   assert(MEOS_FLAGS_LINEAR_INTERP(ss->flags));
   TSequence **sequences = palloc(sizeof(TSequence *) * ss->count);
   int nseqs = 0;
@@ -4086,7 +4113,7 @@ Temporal *
 tpoint_speed(const Temporal *temp)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_tgeo_type(temp->temptype) ||
+  if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype) ||
       ! ensure_linear_interp(temp->flags))
     return NULL;
 
@@ -4149,7 +4176,7 @@ tpointseq_twcentroid_iter(const TSequence *seq, bool hasz, interpType interp,
 GSERIALIZED *
 tpointseq_twcentroid(const TSequence *seq)
 {
-  assert(seq); assert(tgeo_type(seq->temptype));
+  assert(seq); assert(tpoint_type(seq->temptype));
   int32_t srid = tspatial_srid((Temporal *) seq);
   bool hasz = MEOS_FLAGS_GET_Z(seq->flags);
   interpType interp = MEOS_FLAGS_GET_INTERP(seq->flags);
@@ -4175,7 +4202,7 @@ tpointseq_twcentroid(const TSequence *seq)
 GSERIALIZED *
 tpointseqset_twcentroid(const TSequenceSet *ss)
 {
-  assert(ss); assert(tgeo_type(ss->temptype));
+  assert(ss); assert(tpoint_type(ss->temptype));
   int32_t srid = tspatial_srid((Temporal *) ss);
   bool hasz = MEOS_FLAGS_GET_Z(ss->flags);
   interpType interp = MEOS_FLAGS_GET_INTERP(ss->flags);
@@ -4212,7 +4239,7 @@ GSERIALIZED *
 tpoint_twcentroid(const Temporal *temp)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_tgeo_type(temp->temptype))
+  if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype))
     return NULL;
 
   assert(temptype_subtype(temp->subtype));
@@ -4272,7 +4299,7 @@ datum_geog_azimuth(Datum geog1, Datum geog2)
 bool
 tpointseq_direction(const TSequence *seq, double *result)
 {
-  assert(seq); assert(result); assert(tgeo_type(seq->temptype));
+  assert(seq); assert(result); assert(tpoint_type(seq->temptype));
   /* Instantaneous sequence */
   if (seq->count == 1)
     return false;
@@ -4303,7 +4330,7 @@ tpointseq_direction(const TSequence *seq, double *result)
 bool
 tpointseqset_direction(const TSequenceSet *ss, double *result)
 {
-  assert(ss); assert(result); assert(tgeo_type(ss->temptype));
+  assert(ss); assert(result); assert(tpoint_type(ss->temptype));
   /* Singleton sequence set */
   if (ss->count == 1)
     return tpointseq_direction(TSEQUENCESET_SEQ_N(ss, 0), result);
@@ -4336,7 +4363,7 @@ tpoint_direction(const Temporal *temp, double *result)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) result) ||
-      ! ensure_tgeo_type(temp->temptype))
+      ! ensure_tpoint_type(temp->temptype))
     return false;
 
   assert(temptype_subtype(temp->subtype));
@@ -4430,7 +4457,7 @@ tpointseq_azimuth_iter(const TSequence *seq, TSequence **result)
 TSequenceSet *
 tpointseq_azimuth(const TSequence *seq)
 {
-  assert(seq); assert(tgeo_type(seq->temptype));
+  assert(seq); assert(tpoint_type(seq->temptype));
   TSequence **sequences = palloc(sizeof(TSequence *) * seq->count);
   int count = tpointseq_azimuth_iter(seq, sequences);
   /* Resulting sequence set has step interpolation */
@@ -4446,7 +4473,7 @@ tpointseq_azimuth(const TSequence *seq)
 TSequenceSet *
 tpointseqset_azimuth(const TSequenceSet *ss)
 {
-  assert(ss); assert(tgeo_type(ss->temptype));
+  assert(ss); assert(tpoint_type(ss->temptype));
   /* Singleton sequence set */
   if (ss->count == 1)
     return tpointseq_azimuth(TSEQUENCESET_SEQ_N(ss, 0));
@@ -4471,7 +4498,7 @@ Temporal *
 tpoint_azimuth(const Temporal *temp)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_tgeo_type(temp->temptype))
+  if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype))
     return NULL;
 
   assert(temptype_subtype(temp->subtype));
@@ -4493,7 +4520,7 @@ Temporal *
 tpoint_angular_difference(const Temporal *temp)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_tgeo_type(temp->temptype))
+  if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype))
     return NULL;
 
   Temporal *tazimuth = tpoint_azimuth(temp);
@@ -4930,7 +4957,7 @@ multipoint_make(const TSequence *seq, int start, int end)
   GEOSGeometry **geoms = palloc(sizeof(GEOSGeometry *) * (end - start + 1));
   for (int i = 0; i < end - start + 1; ++i)
   {
-    if (tgeo_type(seq->temptype))
+    if (tpoint_type(seq->temptype))
       gs = DatumGetGserializedP(
         tinstant_val(TSEQUENCE_INST_N(seq, start + i)));
 #if NPOINT
@@ -4960,7 +4987,7 @@ static GEOSGeometry *
 multipoint_add_inst_free(GEOSGeometry *geom, const TInstant *inst)
 {
   GSERIALIZED *gs = NULL; /* make compiler quiet */
-  if (tgeo_type(inst->temptype))
+  if (tpoint_type(inst->temptype))
     gs = DatumGetGserializedP(tinstant_val(inst));
 #if NPOINT
   else if (inst->temptype == T_TNPOINT)
@@ -4994,7 +5021,7 @@ tpointseq_stops_iter(const TSequence *seq, double maxdist, int64 mintunits,
   TSequence **result)
 {
   assert(seq); assert(seq->count > 1);
-  assert(tgeo_type(seq->temptype) || seq->temptype == T_TNPOINT);
+  assert(tpoint_type(seq->temptype) || seq->temptype == T_TNPOINT);
 
   /* Use GEOS only for non-scalar input */
   bool geodetic = MEOS_FLAGS_GET_GEODETIC(seq->flags);
@@ -5486,7 +5513,7 @@ tpointseq_discstep_is_simple(const TSequence *seq)
 bool
 tpointseq_is_simple(const TSequence *seq)
 {
-  assert(seq); assert(tgeo_type(seq->temptype));
+  assert(seq); assert(tpoint_type(seq->temptype));
   /* Instantaneous sequence */
   if (seq->count == 1)
     return true;
@@ -5509,7 +5536,7 @@ tpointseq_is_simple(const TSequence *seq)
 bool
 tpointseqset_is_simple(const TSequenceSet *ss)
 {
-  assert(ss); assert(tgeo_type(ss->temptype));
+  assert(ss); assert(tpoint_type(ss->temptype));
   bool result = true;
   for (int i = 0; i < ss->count; i++)
   {
@@ -5530,7 +5557,7 @@ bool
 tpoint_is_simple(const Temporal *temp)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_tgeo_type(temp->temptype))
+  if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype))
     return false;
 
   assert(temptype_subtype(temp->subtype));
@@ -5657,7 +5684,7 @@ tpointseq_cont_split(const TSequence *seq, bool *splits, int count)
 TSequence **
 tpointseq_make_simple(const TSequence *seq, int *count)
 {
-  assert(seq); assert(count); assert(tgeo_type(seq->temptype));
+  assert(seq); assert(count); assert(tpoint_type(seq->temptype));
   interpType interp = MEOS_FLAGS_GET_INTERP(seq->flags);
   TSequence **result;
   /* Special cases when the input sequence has 1 or 2 instants */
@@ -5702,7 +5729,7 @@ tpointseq_make_simple(const TSequence *seq, int *count)
 TSequence **
 tpointseqset_make_simple(const TSequenceSet *ss, int *count)
 {
-  assert(ss); assert(count); assert(tgeo_type(ss->temptype));
+  assert(ss); assert(count); assert(tpoint_type(ss->temptype));
   /* Singleton sequence set */
   if (ss->count == 1)
     return tpointseq_make_simple(TSEQUENCESET_SEQ_N(ss, 0), count);
@@ -5736,7 +5763,7 @@ tpoint_make_simple(const Temporal *temp, int *count)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) count) ||
-      ! ensure_tgeo_type(temp->temptype))
+      ! ensure_tpoint_type(temp->temptype))
     return NULL;
 
   assert(temptype_subtype(temp->subtype));

@@ -42,8 +42,8 @@
 
 /*****************************************************************************/
 
-extern char *wkt_out(Datum value, meosType type, int maxdd);
-extern char *ewkt_out(Datum value, meosType type, int maxdd);
+extern char *geo_wkt_out(Datum value, meosType type, int maxdd);
+extern char *geo_ewkt_out(Datum value, meosType type, int maxdd);
 extern bool tpoint_wkb_needs_srid(const Temporal *temp, uint8_t variant);
 extern uint8_t *coords_to_wkb_buf(const TInstant *inst, uint8_t *buf,
   uint8_t variant);

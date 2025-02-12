@@ -28,11 +28,11 @@
  *****************************************************************************/
 
 /**
- * @brief Bounding box operators for temporal points.
+ * @brief Bounding box operators for temporal spatial values
  */
 
-#ifndef __PG_TPOINT_BOXOPS_H__
-#define __PG_TPOINT_BOXOPS_H__
+#ifndef __PG_TSPATIAL_BOXOPS_H__
+#define __PG_TSPATIAL_BOXOPS_H__
 
 /* PostgreSQL */
 #include <postgres.h>
@@ -46,13 +46,13 @@
 
 /*****************************************************************************/
 
-extern Datum Boxop_stbox_tpoint(FunctionCallInfo fcinfo,
+extern Datum Boxop_stbox_tspatial(FunctionCallInfo fcinfo,
   bool (*func)(const STBox *, const STBox *));
-extern Datum Boxop_tpoint_stbox(FunctionCallInfo fcinfo,
+extern Datum Boxop_tspatial_stbox(FunctionCallInfo fcinfo,
   bool (*func)(const STBox *, const STBox *));
-extern Datum Boxop_tpoint_tpoint(FunctionCallInfo fcinfo,
+extern Datum Boxop_tspatial_tspatial(FunctionCallInfo fcinfo,
   bool (*func)(const STBox *, const STBox *));
 
 /*****************************************************************************/
 
-#endif /* __PG_TPOINT_BOXOPS_H__ */
+#endif /* __PG_TSPATIAL_BOXOPS_H__ */

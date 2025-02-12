@@ -48,11 +48,12 @@
  *****************************************************************************/
 
 /**
- * @brief Output a geometry in the Well-Known Text (WKT) representation
- * @note The parameter @p type is not needed for temporal points
+ * @brief Output a geometry/geography in the Well-Known Text (WKT)
+ * representation
+ * @note The parameter @p type is not needed for temporal geometries/geographies
  */
 char *
-wkt_out(Datum value, meosType type __attribute__((unused)), int maxdd)
+geo_wkt_out(Datum value, meosType type __attribute__((unused)), int maxdd)
 {
   GSERIALIZED *gs = DatumGetGserializedP(value);
   LWGEOM *geom = lwgeom_from_gserialized(gs);
@@ -65,12 +66,12 @@ wkt_out(Datum value, meosType type __attribute__((unused)), int maxdd)
 }
 
 /**
- * @brief Output a geometry in the Extended Well-Known Text (EWKT)
+ * @brief Output a geometry/geography in the Extended Well-Known Text (EWKT)
  * representation, that is, in WKT representation prefixed with the SRID
- * @note The parameter @p type is not needed for temporal points
+ * @note The parameter @p type is not needed for temporal geometries/geographies
  */
 char *
-ewkt_out(Datum value, meosType type __attribute__((unused)), int maxdd)
+geo_ewkt_out(Datum value, meosType type __attribute__((unused)), int maxdd)
 {
   GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(value);
   LWGEOM *geom = lwgeom_from_gserialized(gs);
@@ -84,16 +85,17 @@ ewkt_out(Datum value, meosType type __attribute__((unused)), int maxdd)
 
 /**
  * @ingroup meos_temporal_inout
- * @brief Return the Well-Known Text (WKT) representation of a temporal point
- * @param[in] temp Temporal point
+ * @brief Return the Well-Known Text (WKT) representation of a temporal geometry
+ * @param[in] temp Temporal geometry
  * @param[in] maxdd Maximum number of decimal digits
- * @csqlfn #Tpoint_as_text()
+ * @csqlfn #Tgeo_as_text()
  */
 char *
-tpoint_as_text(const Temporal *temp, int maxdd)
+tgeo_as_text(const Temporal *temp, int maxdd)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_tgeo_type(temp->temptype) ||
+  if (! ensure_not_null((void *) temp) || 
+      ! ensure_tpoint_type(temp->temptype) ||
       ! ensure_not_negative(maxdd))
     return NULL;
 
@@ -101,27 +103,27 @@ tpoint_as_text(const Temporal *temp, int maxdd)
   switch (temp->subtype)
   {
     case TINSTANT:
-      return tinstant_to_string((TInstant *) temp, maxdd, &wkt_out);
+      return tinstant_to_string((TInstant *) temp, maxdd, &geo_wkt_out);
     case TSEQUENCE:
-      return tsequence_to_string((TSequence *) temp, maxdd, false, &wkt_out);
+      return tsequence_to_string((TSequence *) temp, maxdd, false, &geo_wkt_out);
     default: /* TSEQUENCESET */
-      return tsequenceset_to_string((TSequenceSet *) temp, maxdd, &wkt_out);
+      return tsequenceset_to_string((TSequenceSet *) temp, maxdd, &geo_wkt_out);
   }
 }
 
 /**
  * @ingroup meos_temporal_inout
  * @brief Return the Extended Well-Known Text (EWKT) representation of a
- * temporal point
- * @param[in] temp Temporal point
+ * temporal geometry
+ * @param[in] temp Temporal geometry
  * @param[in] maxdd Maximum number of decimal digits
- * @csqlfn #Tpoint_as_ewkt()
+ * @csqlfn #Tgeo_as_ewkt()
  */
 char *
-tpoint_as_ewkt(const Temporal *temp, int maxdd)
+tgeo_as_ewkt(const Temporal *temp, int maxdd)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_tgeo_type(temp->temptype) ||
+  if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype) ||
       ! ensure_not_negative(maxdd))
     return NULL;
 
@@ -133,7 +135,7 @@ tpoint_as_ewkt(const Temporal *temp, int maxdd)
       (MEOS_FLAGS_GET_INTERP(temp->flags) == STEP) ? ',' : ';');
   else
     str1[0] = '\0';
-  char *str2 = tpoint_as_text(temp, maxdd);
+  char *str2 = tgeo_as_text(temp, maxdd);
   char *result = palloc(strlen(str1) + strlen(str2) + 1);
   strcpy(result, str1);
   strcat(result, str2);
@@ -163,24 +165,24 @@ geoarr_as_text(const Datum *geoarr, int count, int maxdd, bool extended)
 
   char **result = palloc(sizeof(char *) * count);
   for (int i = 0; i < count; i++)
-    /* The wkt_out and ewkt_out functions do not use the second argument */
+    /* The geo_wkt_out and geo_ewkt_out functions do not use the second argument */
     result[i] = extended ?
-      ewkt_out(geoarr[i], 0, maxdd) : wkt_out(geoarr[i], 0, maxdd);
+      geo_ewkt_out(geoarr[i], 0, maxdd) : geo_wkt_out(geoarr[i], 0, maxdd);
   return result;
 }
 
 /**
  * @ingroup meos_internal_temporal_inout
  * @brief Return the (Extended) Well-Known Text (WKT or EWKT) representation
- * of an array of temporal points
+ * of an array of temporal geometries/geographies
  * @param[in] temparr Array of temporal points
  * @param[in] count Number of elements in the input array
  * @param[in] maxdd Maximum number of decimal digits to output
  * @param[in] extended True if the output is in EWKT
- * @csqlfn #Tpointarr_as_text(), #Tpointarr_as_ewkt()
+ * @csqlfn #Tgeoarr_as_text(), #Tgeoarr_as_ewkt()
  */
 char **
-tpointarr_as_text(const Temporal **temparr, int count, int maxdd,
+tgeoarr_as_text(const Temporal **temparr, int count, int maxdd,
   bool extended)
 {
   /* Ensure validity of the arguments */
@@ -190,8 +192,8 @@ tpointarr_as_text(const Temporal **temparr, int count, int maxdd,
 
   char **result = palloc(sizeof(text *) * count);
   for (int i = 0; i < count; i++)
-    result[i] = extended ? tpoint_as_ewkt(temparr[i], maxdd) :
-      tpoint_as_text(temparr[i], maxdd);
+    result[i] = extended ? tgeo_as_ewkt(temparr[i], maxdd) :
+      tgeo_as_text(temparr[i], maxdd);
   return result;
 }
 

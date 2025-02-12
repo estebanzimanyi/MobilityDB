@@ -84,51 +84,51 @@ CREATE OPERATOR #&> (
 
 CREATE FUNCTION temporal_left(stbox, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Left_stbox_tnpoint'
+  AS 'MODULE_PATHNAME', 'Left_stbox_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_overleft(stbox, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overleft_stbox_tnpoint'
+  AS 'MODULE_PATHNAME', 'Overleft_stbox_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_right(stbox, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Right_stbox_tnpoint'
+  AS 'MODULE_PATHNAME', 'Right_stbox_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_overright(stbox, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overright_stbox_tnpoint'
+  AS 'MODULE_PATHNAME', 'Overright_stbox_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_below(stbox, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Below_stbox_tnpoint'
+  AS 'MODULE_PATHNAME', 'Below_stbox_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_overbelow(stbox, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overbelow_stbox_tnpoint'
+  AS 'MODULE_PATHNAME', 'Overbelow_stbox_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_above(stbox, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Above_stbox_tnpoint'
+  AS 'MODULE_PATHNAME', 'Above_stbox_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_overabove(stbox, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overabove_stbox_tnpoint'
+  AS 'MODULE_PATHNAME', 'Overabove_stbox_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_before(stbox, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Before_stbox_tnpoint'
+  AS 'MODULE_PATHNAME', 'Before_stbox_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_overbefore(stbox, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overbefore_stbox_tnpoint'
+  AS 'MODULE_PATHNAME', 'Overbefore_stbox_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_after(stbox, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'After_stbox_tnpoint'
+  AS 'MODULE_PATHNAME', 'After_stbox_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_overafter(stbox, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overafter_stbox_tnpoint'
+  AS 'MODULE_PATHNAME', 'Overafter_stbox_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR << (
@@ -250,51 +250,51 @@ CREATE OPERATOR #&> (
 
 CREATE FUNCTION temporal_left(tnpoint, stbox)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Left_tnpoint_stbox'
+  AS 'MODULE_PATHNAME', 'Left_tspatial_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_overleft(tnpoint, stbox)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overleft_tnpoint_stbox'
+  AS 'MODULE_PATHNAME', 'Overleft_tspatial_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_right(tnpoint, stbox)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Right_tnpoint_stbox'
+  AS 'MODULE_PATHNAME', 'Right_tspatial_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_overright(tnpoint, stbox)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overright_tnpoint_stbox'
+  AS 'MODULE_PATHNAME', 'Overright_tspatial_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_below(tnpoint, stbox)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Below_tnpoint_stbox'
+  AS 'MODULE_PATHNAME', 'Below_tspatial_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_overbelow(tnpoint, stbox)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overbelow_tnpoint_stbox'
+  AS 'MODULE_PATHNAME', 'Overbelow_tspatial_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_above(tnpoint, stbox)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Above_tnpoint_stbox'
+  AS 'MODULE_PATHNAME', 'Above_tspatial_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_overabove(tnpoint, stbox)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overabove_tnpoint_stbox'
+  AS 'MODULE_PATHNAME', 'Overabove_tspatial_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_before(tnpoint, stbox)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Before_tnpoint_stbox'
+  AS 'MODULE_PATHNAME', 'Before_tspatial_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_overbefore(tnpoint, stbox)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overbefore_tnpoint_stbox'
+  AS 'MODULE_PATHNAME', 'Overbefore_tspatial_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_after(tnpoint, stbox)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'After_tnpoint_stbox'
+  AS 'MODULE_PATHNAME', 'After_tspatial_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_overafter(tnpoint, stbox)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overafter_tnpoint_stbox'
+  AS 'MODULE_PATHNAME', 'Overafter_tspatial_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR << (
@@ -370,51 +370,51 @@ CREATE OPERATOR #&> (
 
 CREATE FUNCTION temporal_left(tnpoint, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Left_tnpoint_tnpoint'
+  AS 'MODULE_PATHNAME', 'Left_tspatial_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_overleft(tnpoint, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overleft_tnpoint_tnpoint'
+  AS 'MODULE_PATHNAME', 'Overleft_tspatial_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_right(tnpoint, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Right_tnpoint_tnpoint'
+  AS 'MODULE_PATHNAME', 'Right_tspatial_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_overright(tnpoint, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overright_tnpoint_tnpoint'
+  AS 'MODULE_PATHNAME', 'Overright_tspatial_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_below(tnpoint, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Below_tnpoint_tnpoint'
+  AS 'MODULE_PATHNAME', 'Below_tspatial_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_overbelow(tnpoint, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overbelow_tnpoint_tnpoint'
+  AS 'MODULE_PATHNAME', 'Overbelow_tspatial_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_above(tnpoint, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Above_tnpoint_tnpoint'
+  AS 'MODULE_PATHNAME', 'Above_tspatial_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_overabove(tnpoint, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overabove_tnpoint_tnpoint'
+  AS 'MODULE_PATHNAME', 'Overabove_tspatial_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_before(tnpoint, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Before_tnpoint_tnpoint'
+  AS 'MODULE_PATHNAME', 'Before_tspatial_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_overbefore(tnpoint, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overbefore_tnpoint_tnpoint'
+  AS 'MODULE_PATHNAME', 'Overbefore_tspatial_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_after(tnpoint, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'After_tnpoint_tnpoint'
+  AS 'MODULE_PATHNAME', 'After_tspatial_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION temporal_overafter(tnpoint, tnpoint)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overafter_tnpoint_tnpoint'
+  AS 'MODULE_PATHNAME', 'Overafter_tspatial_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR << (

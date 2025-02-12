@@ -93,29 +93,29 @@ Tpoint_as_text_ext(FunctionCallInfo fcinfo, bool extended)
   if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
     dbl_dig_for_wkt = PG_GETARG_INT32(1);
   char *str = extended ?
-    tpoint_as_ewkt(temp, dbl_dig_for_wkt) :
-    tpoint_as_text(temp, dbl_dig_for_wkt);
+    tgeo_as_ewkt(temp, dbl_dig_for_wkt) :
+    tgeo_as_text(temp, dbl_dig_for_wkt);
   text *result = cstring2text(str);
   pfree(str);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_TEXT_P(result);
 }
 
-PGDLLEXPORT Datum Tpoint_as_text(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tpoint_as_text);
+PGDLLEXPORT Datum Tgeo_as_text(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tgeo_as_text);
 /**
  * @ingroup mobilitydb_temporal_inout
  * @brief Return the Well-Known Text (WKT) representation of a temporal point
  * @sqlfn asText()
  */
 Datum
-Tpoint_as_text(PG_FUNCTION_ARGS)
+Tgeo_as_text(PG_FUNCTION_ARGS)
 {
   return Tpoint_as_text_ext(fcinfo, false);
 }
 
-PGDLLEXPORT Datum Tpoint_as_ewkt(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tpoint_as_ewkt);
+PGDLLEXPORT Datum Tgeo_as_ewkt(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tgeo_as_ewkt);
 /**
  * @ingroup mobilitydb_temporal_inout
  * @brief Return the Extended Well-Known Text (EWKT) representation of a
@@ -124,7 +124,7 @@ PG_FUNCTION_INFO_V1(Tpoint_as_ewkt);
  * @sqlfn asEWKT()
  */
 Datum
-Tpoint_as_ewkt(PG_FUNCTION_ARGS)
+Tgeo_as_ewkt(PG_FUNCTION_ARGS)
 {
   return Tpoint_as_text_ext(fcinfo, true);
 }
@@ -154,7 +154,7 @@ Geoarr_as_text_ext(FunctionCallInfo fcinfo, bool temporal, bool extended)
   if (temporal)
   {
     Temporal **temparr = temparr_extract(array, &count);
-    strarr = tpointarr_as_text((const Temporal **) temparr, count,
+    strarr = tgeoarr_as_text((const Temporal **) temparr, count,
       dbl_dig_for_wkt, extended);
     /* We cannot use pfree_array */
     pfree(temparr);
@@ -200,8 +200,8 @@ Geoarr_as_ewkt(PG_FUNCTION_ARGS)
   return Geoarr_as_text_ext(fcinfo, false, true);
 }
 
-PGDLLEXPORT Datum Tpointarr_as_text(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tpointarr_as_text);
+PGDLLEXPORT Datum Tgeoarr_as_text(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tgeoarr_as_text);
 /**
  * @ingroup mobilitydb_temporal_inout
  * @brief Return the Well-Known Text (WKT) representation of a
@@ -209,13 +209,13 @@ PG_FUNCTION_INFO_V1(Tpointarr_as_text);
  * @sqlfn asText()
  */
 Datum
-Tpointarr_as_text(PG_FUNCTION_ARGS)
+Tgeoarr_as_text(PG_FUNCTION_ARGS)
 {
   return Geoarr_as_text_ext(fcinfo, true, false);
 }
 
-PGDLLEXPORT Datum Tpointarr_as_ewkt(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tpointarr_as_ewkt);
+PGDLLEXPORT Datum Tgeoarr_as_ewkt(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tgeoarr_as_ewkt);
 /**
  * @ingroup mobilitydb_temporal_inout
  * @brief Return the Extended Well-Known Text (EWKT) representation an array of
@@ -224,7 +224,7 @@ PG_FUNCTION_INFO_V1(Tpointarr_as_ewkt);
  * @sqlfn asEWKT()
  */
 Datum
-Tpointarr_as_ewkt(PG_FUNCTION_ARGS)
+Tgeoarr_as_ewkt(PG_FUNCTION_ARGS)
 {
   return Geoarr_as_text_ext(fcinfo, true, true);
 }

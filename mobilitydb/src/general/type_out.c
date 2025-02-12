@@ -287,7 +287,7 @@ Temporal_as_mfjson(PG_FUNCTION_ARGS)
 
   /* Get the temporal value */
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  bool isgeo = tgeo_type(temp->temptype);
+  bool isgeo = tpoint_type(temp->temptype);
 
   /* Retrieve output option
    * 0 = without option (default)

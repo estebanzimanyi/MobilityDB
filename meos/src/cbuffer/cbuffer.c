@@ -184,8 +184,6 @@ cbuffer_radius(const Cbuffer *cbuf)
  * Conversions between circular point and geometry
  *****************************************************************************/
 
-extern LWCIRCSTRING *lwcircstring_from_lwpointarray(int32_t srid, uint32_t npoints, LWPOINT **points);
-
 /**
  * @ingroup meos_cbuffer_types
  * @brief Transform a circular buffer into a geometry
@@ -199,24 +197,10 @@ cbuffer_geom(const Cbuffer *cbuf)
   if (! ensure_not_null((void *) cbuf))
     return NULL;
 
-  Datum d = PointerGetDatum(&cbuf->point);
-  GSERIALIZED *gs = DatumGetGserializedP(d);
-  int32_t srid = gserialized_get_srid(gs);
-  LWPOINT *points[3];
-  points[1] = (LWPOINT *) lwgeom_from_gserialized(gs);
-  /* Shift the X coordinate of cbuf->point by +- cbuf->radius */
+  GSERIALIZED *gs = DatumGetGserializedP(PointerGetDatum(&cbuf->point));
   POINT2D *p = (POINT2D *) GS_POINT_PTR(gs);
-  points[0] = points[2] = lwpoint_make2d(srid, p->x - cbuf->radius, p->y);
-  points[1] = lwpoint_make2d(srid, p->x + cbuf->radius, p->y);
-  /* Construct the circle */
-  LWGEOM *ring = lwcircstring_as_lwgeom(
-    lwcircstring_from_lwpointarray(srid, 3, points));
-  LWCURVEPOLY *poly = lwcurvepoly_construct_empty(srid, 0, 0);
-  lwcurvepoly_add_ring(poly, ring);
-  GSERIALIZED *result = geom_serialize((LWGEOM *) poly);
-  /* Clean up and return */
-  lwpoint_free(points[0]); lwpoint_free(points[1]); lwgeom_free(ring);
-  return result;
+  int32_t srid = gserialized_get_srid(gs);
+  return geocircle_make(p->x, p->y, cbuf->radius, srid);
 }
 
 /**

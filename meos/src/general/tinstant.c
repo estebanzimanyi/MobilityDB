@@ -321,7 +321,7 @@ tinstant_make(Datum value, meosType temptype, TimestampTz t)
   MEOS_FLAGS_SET_CONTINUOUS(result->flags, temptype_continuous(temptype));
   MEOS_FLAGS_SET_X(result->flags, true);
   MEOS_FLAGS_SET_T(result->flags, true);
-  if (tgeo_type(temptype))
+  if (tpoint_type(temptype))
   {
     GSERIALIZED *gs = DatumGetGserializedP(value);
     MEOS_FLAGS_SET_Z(result->flags, FLAGS_GET_Z(gs->gflags));

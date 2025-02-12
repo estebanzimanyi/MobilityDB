@@ -845,8 +845,7 @@ char *
 tpoint_out(const Temporal *temp, int maxdd)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) ||
-      ! ensure_tgeo_type(temp->temptype))
+  if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype))
     return NULL;
   return temporal_out(temp, maxdd);
 }
@@ -2160,7 +2159,7 @@ tpoint_values(const Temporal *temp, int *count)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) count) ||
-      ! ensure_tgeo_type(temp->temptype))
+      ! ensure_tpoint_type(temp->temptype))
     return NULL;
 
   Datum *datumarr = temporal_vals(temp, count);
@@ -2326,8 +2325,7 @@ GSERIALIZED *
 tpoint_start_value(const Temporal *temp)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) ||
-      ! ensure_tgeo_type(temp->temptype))
+  if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype))
     return NULL;
   return DatumGetGserializedP(temporal_start_value(temp));
 }
@@ -2437,8 +2435,7 @@ GSERIALIZED *
 tpoint_end_value(const Temporal *temp)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) ||
-      ! ensure_tgeo_type(temp->temptype))
+  if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype))
     return NULL;
   return DatumGetGserializedP(temporal_end_value(temp));
 }
@@ -2750,8 +2747,7 @@ bool
 tpoint_value_n(const Temporal *temp, int n, GSERIALIZED **result)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) ||
-      ! ensure_tgeo_type(temp->temptype))
+  if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype))
     return false;
   Datum dresult;
   if (! temporal_value_n(temp, n, &dresult))

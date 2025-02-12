@@ -214,7 +214,7 @@ tpoint_tcentroid_transfn(SkipList *state, Temporal *temp)
     return state;
   bool hasz = MEOS_FLAGS_GET_Z(temp->flags);
   /* Ensure validity of the arguments */
-  if (! ensure_tgeo_type(temp->temptype) ||
+  if (! ensure_tpoint_type(temp->temptype) ||
       ! ensure_geoaggstate(state, tspatial_srid(temp), hasz))
     return NULL;
 

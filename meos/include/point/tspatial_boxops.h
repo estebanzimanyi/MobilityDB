@@ -28,11 +28,11 @@
  *****************************************************************************/
 
 /**
- * @brief Bounding box operators for temporal points.
+ * @brief Bounding box operators for temporal spatial values
  */
 
-#ifndef __TPOINT_BOXOPS_H__
-#define __TPOINT_BOXOPS_H__
+#ifndef __TSPATIAL_BOXOPS_H__
+#define __TSPATIAL_BOXOPS_H__
 
 /* PostgreSQL */
 #include <postgres.h>
@@ -54,16 +54,11 @@ extern void tpointseqarr_set_stbox(const TSequence **sequences, int count,
 
 /* Generic box functions */
 
-extern bool boxop_tpoint_stbox(const Temporal *temp, const STBox *box,
+extern bool boxop_tspatial_stbox(const Temporal *temp, const STBox *box,
   bool (*func)(const STBox *, const STBox *), bool invert);
-extern bool boxop_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2,
-  bool (*func)(const STBox *, const STBox *));
-
-extern bool boxop_tpoint_stbox(const Temporal *temp, const STBox *box,
-  bool (*func)(const STBox *, const STBox *), bool invert);
-extern bool boxop_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2,
+extern bool boxop_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2,
   bool (*func)(const STBox *, const STBox *));
   
 /*****************************************************************************/
 
-#endif /* __TPOINT_BOXOPS_H__ */
+#endif /* __TSPATIAL_BOXOPS_H__ */

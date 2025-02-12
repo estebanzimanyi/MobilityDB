@@ -299,7 +299,7 @@ static TSequence **
 tinterrel_tpointseq_cont_geom_iter(const TSequence *seq, const GSERIALIZED *gs,
   const STBox *box, bool tinter, datum_func2 func, int *count)
 {
-  assert(seq); assert(box); assert(count); assert(tgeo_type(seq->temptype));
+  assert(seq); assert(box); assert(count); assert(tpoint_type(seq->temptype));
   assert(MEOS_FLAGS_GET_INTERP(seq->flags) != DISCRETE);
 
   /* Instantaneous sequence */
@@ -346,7 +346,7 @@ TSequenceSet *
 tinterrel_tpointseq_cont_geom(const TSequence *seq, const GSERIALIZED *gs,
   const STBox *box, bool tinter, datum_func2 func)
 {
-  assert(seq); assert(box); assert(tgeo_type(seq->temptype));
+  assert(seq); assert(box); assert(tpoint_type(seq->temptype));
   assert(MEOS_FLAGS_GET_INTERP(seq->flags) != DISCRETE);
 
   /* Split the temporal point in an array of non self-intersecting

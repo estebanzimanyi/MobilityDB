@@ -870,7 +870,7 @@ temporal_from_mfjson(const char *mfjson, meosType temptype)
     return NULL;
   }
 
-  bool isgeo = tgeo_type(temptype);
+  bool isgeo = tpoint_type(temptype);
   if (isgeo)
   {
     /* Parse crs and set SRID of temporal point */
@@ -1606,7 +1606,7 @@ temporal_flags_from_wkb_state(wkb_parse_state *s, uint8_t wkb_flags)
   /* Get the interpolation */
   s->interp = MEOS_WKB_GET_INTERP(wkb_flags);
   /* Get the flags */
-  if (tgeo_type(s->temptype))
+  if (tpoint_type(s->temptype))
   {
     if (wkb_flags & MEOS_WKB_ZFLAG)
       s->hasz = true;

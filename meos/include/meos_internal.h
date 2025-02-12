@@ -591,7 +591,7 @@ extern TSequence *tintseq_in(const char *str, interpType interp);
 extern char *tintseqset_as_mfjson(const TSequenceSet *ss, bool with_bbox);
 extern TSequenceSet *tintseqset_from_mfjson(json_object *mfjson);
 extern TSequenceSet *tintseqset_in(const char *str);
-extern char **tpointarr_as_text(const Temporal **temparr, int count, int maxdd, bool extended);
+extern char **tgeoarr_as_text(const Temporal **temparr, int count, int maxdd, bool extended);
 extern char *tpointinst_as_mfjson(const TInstant *inst, bool with_bbox, int precision, char *srs);
 extern char *tpointseq_as_mfjson(const TSequence *seq, bool with_bbox, int precision, char *srs);
 extern char *tpointseqset_as_mfjson(const TSequenceSet *ss, bool with_bbox, int precision, char *srs);

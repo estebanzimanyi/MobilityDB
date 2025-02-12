@@ -79,7 +79,7 @@ static Temporal *
 tpoint_force2d(const Temporal *temp)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_tgeo_type(temp->temptype) ||
+  if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype) ||
       ! ensure_has_Z(temp->flags))
     return NULL;
 
@@ -475,7 +475,7 @@ TInstant *
 tpointinst_restrict_stbox(const TInstant *inst, const STBox *box,
   bool border_inc, bool atfunc)
 {
-  assert(inst); assert(box); assert(tgeo_type(inst->temptype));
+  assert(inst); assert(box); assert(tpoint_type(inst->temptype));
   if (tpointinst_restrict_stbox_iter(inst, box, border_inc, atfunc))
     return tinstant_copy(inst);
   return NULL;
@@ -494,7 +494,7 @@ TSequence *
 tpointseq_disc_restrict_stbox(const TSequence *seq, const STBox *box,
   bool border_inc, bool atfunc)
 {
-  assert(seq); assert(box); assert(tgeo_type(seq->temptype));
+  assert(seq); assert(box); assert(tpoint_type(seq->temptype));
   assert(MEOS_FLAGS_GET_INTERP(seq->flags) == DISCRETE);
   assert (seq->count > 1);
 
@@ -531,8 +531,7 @@ TSequenceSet *
 tpointseq_step_restrict_stbox(const TSequence *seq, const STBox *box,
   bool border_inc, bool atfunc)
 {
-  assert(seq); assert(box);
-  assert(tgeo_type(seq->temptype));
+  assert(seq); assert(box); assert(tpoint_type(seq->temptype));
   assert(MEOS_FLAGS_GET_INTERP(seq->flags) == STEP);
   assert(seq->count > 1);
 
@@ -876,7 +875,7 @@ tpointseq_linear_restrict_stbox(const TSequence *seq, const STBox *box,
   bool border_inc, bool atfunc)
 {
   assert(seq); assert(box);
-  assert(tgeo_type(seq->temptype));
+  assert(tpoint_type(seq->temptype));
   assert(MEOS_FLAGS_LINEAR_INTERP(seq->flags));
   assert(seq->count > 1);
 
@@ -924,7 +923,7 @@ Temporal *
 tpointseq_restrict_stbox(const TSequence *seq, const STBox *box, bool border_inc,
   bool atfunc)
 {
-  assert(seq); assert(box); assert(tgeo_type(seq->temptype));
+  assert(seq); assert(box); assert(tpoint_type(seq->temptype));
   interpType interp = MEOS_FLAGS_GET_INTERP(seq->flags);
 
   /* Instantaneous sequence */
@@ -965,7 +964,7 @@ TSequenceSet *
 tpointseqset_restrict_stbox(const TSequenceSet *ss, const STBox *box,
   bool border_inc, bool atfunc)
 {
-  assert(ss); assert(box); assert(tgeo_type(ss->temptype));
+  assert(ss); assert(box); assert(tpoint_type(ss->temptype));
   const TSequence *seq;
   TSequenceSet *result = NULL;
 
@@ -1022,7 +1021,7 @@ Temporal *
 tpoint_restrict_stbox(const Temporal *temp, const STBox *box, bool border_inc,
   bool atfunc)
 {
-  assert(temp); assert(box); assert(tgeo_type(temp->temptype));
+  assert(temp); assert(box); assert(tpoint_type(temp->temptype));
   /* At least one of MEOS_FLAGS_GET_X and MEOS_FLAGS_GET_T is true */
   bool hasx = MEOS_FLAGS_GET_X(box->flags);
   bool hast = MEOS_FLAGS_GET_T(box->flags);
@@ -1204,7 +1203,7 @@ static TSequenceSet *
 tpointseqset_at_stbox_segm(const TSequenceSet *ss, const STBox *box,
   bool border_inc)
 {
-  assert(ss); assert(box); assert(tgeo_type(ss->temptype));
+  assert(ss); assert(box); assert(tpoint_type(ss->temptype));
   TSequenceSet *result = NULL;
 
   /* Singleton sequence set */
@@ -1258,7 +1257,7 @@ tpointseqset_at_stbox_segm(const TSequenceSet *ss, const STBox *box,
 static Temporal *
 tpoint_at_stbox_segm(const Temporal *temp, const STBox *box, bool border_inc)
 {
-  assert(temp); assert(box); assert(tgeo_type(temp->temptype));
+  assert(temp); assert(box); assert(tpoint_type(temp->temptype));
   /* The following implies that temp->subtype != TINSTANT */
   assert(MEOS_FLAGS_GET_INTERP(temp->flags) == LINEAR);
   /* The stbox has ONLY spatial dimension */
@@ -1337,7 +1336,7 @@ TInstant *
 tpointinst_restrict_geom(const TInstant *inst, const GSERIALIZED *gs,
   const Span *zspan, bool atfunc)
 {
-  assert(inst); assert(gs); assert(tgeo_type(inst->temptype));
+  assert(inst); assert(gs); assert(tpoint_type(inst->temptype));
   if (tpointinst_restrict_geom_iter(inst, gs, zspan, atfunc))
     return tinstant_copy(inst);
   return NULL;
@@ -1356,7 +1355,7 @@ TSequence *
 tpointseq_disc_restrict_geom(const TSequence *seq, const GSERIALIZED *gs,
   const Span *zspan, bool atfunc)
 {
-  assert(seq); assert(gs); assert(tgeo_type(seq->temptype));
+  assert(seq); assert(gs); assert(tpoint_type(seq->temptype));
   assert(MEOS_FLAGS_GET_INTERP(seq->flags) == DISCRETE);
   assert(seq->count > 1);
 
@@ -1393,7 +1392,7 @@ tpointseq_step_restrict_geom(const TSequence *seq, const GSERIALIZED *gs,
    const Span *zspan, bool atfunc)
 {
   assert(seq); ensure_not_null((void *) gs);
-  assert(tgeo_type(seq->temptype));
+  assert(tpoint_type(seq->temptype));
   assert(MEOS_FLAGS_GET_INTERP(seq->flags) == STEP);
   assert(seq->count > 1);
 
@@ -1741,7 +1740,7 @@ tpointseq_linear_restrict_geom(const TSequence *seq, const GSERIALIZED *gs,
   const Span *zspan, bool atfunc)
 {
   assert(seq); ensure_not_null((void *) gs);
-  assert(tgeo_type(seq->temptype));
+  assert(tpoint_type(seq->temptype));
   assert(MEOS_FLAGS_LINEAR_INTERP(seq->flags));
   assert(seq->count > 1);
 
@@ -1808,7 +1807,7 @@ Temporal *
 tpointseq_restrict_geom(const TSequence *seq, const GSERIALIZED *gs,
   const Span *zspan, bool atfunc)
 {
-  assert(seq); assert(gs); assert(tgeo_type(seq->temptype));
+  assert(seq); assert(gs); assert(tpoint_type(seq->temptype));
   interpType interp = MEOS_FLAGS_GET_INTERP(seq->flags);
 
   /* Instantaneous sequence */
@@ -1846,7 +1845,7 @@ TSequenceSet *
 tpointseqset_restrict_geom(const TSequenceSet *ss, const GSERIALIZED *gs,
   const Span *zspan, bool atfunc)
 {
-  assert(ss); assert(gs); assert(tgeo_type(ss->temptype));
+  assert(ss); assert(gs); assert(tpoint_type(ss->temptype));
   const TSequence *seq;
   TSequenceSet *result = NULL;
 
@@ -1903,7 +1902,7 @@ Temporal *
 tpoint_restrict_geom(const Temporal *temp, const GSERIALIZED *gs,
   const Span *zspan, bool atfunc)
 {
-  assert(temp); assert(gs); assert(tgeo_type(temp->temptype));
+  assert(temp); assert(gs); assert(tpoint_type(temp->temptype));
   if (gserialized_is_empty(gs))
     return atfunc ? NULL : temporal_cp(temp);
   /* Ensure validity of the arguments */

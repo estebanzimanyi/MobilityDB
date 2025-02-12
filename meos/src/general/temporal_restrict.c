@@ -82,7 +82,7 @@ temporal_bbox_restrict_value(const Temporal *temp, Datum value)
     value_set_span(value, temptype_basetype(temp->temptype), &span2);
     return cont_span_span(&span1, &span2);
   }
-  if (tgeo_type(temp->temptype))
+  if (tpoint_type(temp->temptype))
   {
     /* Test that the geometry is not empty */
     GSERIALIZED *gs = DatumGetGserializedP(value);
@@ -138,7 +138,7 @@ temporal_restrict_value(const Temporal *temp, Datum value, bool atfunc)
 {
   assert(temp);
   /* Ensure validity of the arguments */
-  if (tgeo_type(temp->temptype))
+  if (tpoint_type(temp->temptype))
   {
     GSERIALIZED *gs = DatumGetGserializedP(value);
     if (! ensure_point_type(gs) ||
@@ -197,7 +197,7 @@ temporal_bbox_restrict_set(const Temporal *temp, const Set *s)
     set_set_span(s, &span2);
     return over_span_span(&span1, &span2);
   }
-  if (tgeo_type(temp->temptype) && temp->subtype != TINSTANT)
+  if (tpoint_type(temp->temptype) && temp->subtype != TINSTANT)
   {
     STBox box;
     tspatial_set_stbox(temp, &box);
@@ -219,7 +219,7 @@ Temporal *
 temporal_restrict_values(const Temporal *temp, const Set *s, bool atfunc)
 {
   assert(temp); assert(s);
-  if (tgeo_type(temp->temptype))
+  if (tpoint_type(temp->temptype))
   {
     assert(tspatial_srid(temp) == spatialset_srid(s));
     assert(same_spatial_dimensionality(temp->flags, s->flags));

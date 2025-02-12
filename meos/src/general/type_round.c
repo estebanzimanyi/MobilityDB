@@ -993,19 +993,19 @@ datum_round_geo(Datum value, Datum size)
 }
 
 /*****************************************************************************
- * Temporal Point
+ * Temporal geo
  *****************************************************************************/
 
 /**
  * @ingroup meos_temporal_transf
- * @brief Return a temporal point with the precision of the coordinates set to
- * a number of decimal places
- * @param[in] temp Temporal point
+ * @brief Return a temporal geometry/geography with the precision of the 
+ * coordinates set to a number of decimal places
+ * @param[in] temp Temporal geometry
  * @param[in] maxdd Maximum number of decimal digits
- * @csqlfn #Tpoint_round()
+ * @csqlfn #Tgeo_round()
  */
 Temporal *
-tpoint_round(const Temporal *temp, int maxdd)
+tgeo_round(const Temporal *temp, int maxdd)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_tgeo_type(temp->temptype) ||
@@ -1027,15 +1027,15 @@ tpoint_round(const Temporal *temp, int maxdd)
 
 /**
  * @ingroup meos_temporal_transf
- * @brief Return an array of temporal points with the precision of the
- * coordinates set to a number of decimal places
- * @param[in] temparr Array of temporal points
+ * @brief Return an array of temporal geometries/geographies with the precision
+ * of the coordinates set to a number of decimal places
+ * @param[in] temparr Array of temporal geometries/geographies
  * @param[in] count Number of elements in the array
  * @param[in] maxdd Maximum number of decimal digits
- * @csqlfn #Tpointarr_round()
+ * @csqlfn #Tgeoarr_round()
  */
 Temporal **
-tpointarr_round(const Temporal **temparr, int count, int maxdd)
+tgeoarr_round(const Temporal **temparr, int count, int maxdd)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temparr) ||
@@ -1046,7 +1046,7 @@ tpointarr_round(const Temporal **temparr, int count, int maxdd)
 
   Temporal **result = palloc(sizeof(Temporal *) * count);
   for (int i = 0; i < count; i++)
-    result[i] = tpoint_round(temparr[i], maxdd);
+    result[i] = tgeo_round(temparr[i], maxdd);
   return result;
 }
 

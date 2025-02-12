@@ -394,10 +394,10 @@ tspatial_oper_sel(Oid operid __attribute__((unused)), meosType ltype,
 {
   if ((timespan_basetype(ltype) || timeset_type(ltype) ||
         timespan_type(ltype) || timespanset_type(ltype) ||
-        geo_basetype(ltype) || ltype == T_STBOX || tgeo_type(ltype)) &&
+        geo_basetype(ltype) || ltype == T_STBOX || tpoint_type(ltype)) &&
       (timespan_basetype(rtype) || timeset_type(rtype) ||
         timespan_type(rtype) || timespanset_type(rtype) ||
-        geo_basetype(rtype) || rtype == T_STBOX || tgeo_type(rtype)))
+        geo_basetype(rtype) || rtype == T_STBOX || tpoint_type(rtype)))
     return true;
   return false;
 }
