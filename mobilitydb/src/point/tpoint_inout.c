@@ -82,11 +82,11 @@ Tpoint_from_ewkt(PG_FUNCTION_ARGS)
 
 /**
  * @brief Return the (Extended) Well-Known Text (WKT or EWKT) representation of
- * a temporal point
+ * a temporal geometry
  * @sqlfn asText()
  */
 static Datum
-Tpoint_as_text_ext(FunctionCallInfo fcinfo, bool extended)
+Tgeo_as_text_ext(FunctionCallInfo fcinfo, bool extended)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   int dbl_dig_for_wkt = OUT_DEFAULT_DECIMAL_DIGITS;
@@ -111,7 +111,7 @@ PG_FUNCTION_INFO_V1(Tgeo_as_text);
 Datum
 Tgeo_as_text(PG_FUNCTION_ARGS)
 {
-  return Tpoint_as_text_ext(fcinfo, false);
+  return Tgeo_as_text_ext(fcinfo, false);
 }
 
 PGDLLEXPORT Datum Tgeo_as_ewkt(PG_FUNCTION_ARGS);
@@ -126,7 +126,7 @@ PG_FUNCTION_INFO_V1(Tgeo_as_ewkt);
 Datum
 Tgeo_as_ewkt(PG_FUNCTION_ARGS)
 {
-  return Tpoint_as_text_ext(fcinfo, true);
+  return Tgeo_as_text_ext(fcinfo, true);
 }
 
 /*****************************************************************************/
@@ -136,7 +136,7 @@ Tgeo_as_ewkt(PG_FUNCTION_ARGS)
  * geometry/geography
  */
 static Datum
-Geoarr_as_text_ext(FunctionCallInfo fcinfo, bool temporal, bool extended)
+Tgeoarr_as_text_ext(FunctionCallInfo fcinfo, bool temporal, bool extended)
 {
   ArrayType *array = PG_GETARG_ARRAYTYPE_P(0);
   /* Return NULL on empty array */
@@ -182,7 +182,7 @@ PG_FUNCTION_INFO_V1(Geoarr_as_text);
 Datum
 Geoarr_as_text(PG_FUNCTION_ARGS)
 {
-  return Geoarr_as_text_ext(fcinfo, false, false);
+  return Tgeoarr_as_text_ext(fcinfo, false, false);
 }
 
 PGDLLEXPORT Datum Geoarr_as_ewkt(PG_FUNCTION_ARGS);
@@ -197,7 +197,7 @@ PG_FUNCTION_INFO_V1(Geoarr_as_ewkt);
 Datum
 Geoarr_as_ewkt(PG_FUNCTION_ARGS)
 {
-  return Geoarr_as_text_ext(fcinfo, false, true);
+  return Tgeoarr_as_text_ext(fcinfo, false, true);
 }
 
 PGDLLEXPORT Datum Tgeoarr_as_text(PG_FUNCTION_ARGS);
@@ -211,7 +211,7 @@ PG_FUNCTION_INFO_V1(Tgeoarr_as_text);
 Datum
 Tgeoarr_as_text(PG_FUNCTION_ARGS)
 {
-  return Geoarr_as_text_ext(fcinfo, true, false);
+  return Tgeoarr_as_text_ext(fcinfo, true, false);
 }
 
 PGDLLEXPORT Datum Tgeoarr_as_ewkt(PG_FUNCTION_ARGS);
@@ -226,7 +226,7 @@ PG_FUNCTION_INFO_V1(Tgeoarr_as_ewkt);
 Datum
 Tgeoarr_as_ewkt(PG_FUNCTION_ARGS)
 {
-  return Geoarr_as_text_ext(fcinfo, true, true);
+  return Tgeoarr_as_text_ext(fcinfo, true, true);
 }
 
 /*****************************************************************************/

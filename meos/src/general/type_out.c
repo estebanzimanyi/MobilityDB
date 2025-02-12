@@ -2096,10 +2096,6 @@ datum_to_wkb_buf(Datum value, meosType type, uint8_t *buf, uint8_t variant)
     buf = tbox_to_wkb_buf((TBox *) DatumGetPointer(value), buf, variant);
   else if (type == T_STBOX)
     buf = stbox_to_wkb_buf((STBox *) DatumGetPointer(value), buf, variant);
-#if CBUFFER
-  else if (type == T_CBUFFER)
-    buf = cbuffer_to_wkb_buf((Cbuffer *) DatumGetPointer(value), buf, variant);
-#endif /* CBUFFER */
   else if (temporal_type(type))
     buf = temporal_to_wkb_buf((Temporal *) DatumGetPointer(value), buf,
       variant);

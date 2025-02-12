@@ -290,7 +290,7 @@ tspatial_sel_default(meosOper oper)
 float8
 temporal_joinsel_default(Oid operid __attribute__((unused)))
 {
-  // TODO take care of the operator
+  // TODO take care of the operators
   return 0.001;
 }
 
@@ -457,8 +457,7 @@ temporal_sel_tstzspan(VariableStatData *vardata, Span *s, meosOper oper)
      * For selectivity estimation we approximate by taking into account
      * only the bounding boxes. In the case here the bounding box is a
      * period and thus we can use the period selectivity estimation */
-    oper == LT_OP || oper == LE_OP ||
-    oper == GT_OP || oper == GE_OP)
+    oper == LT_OP || oper == LE_OP || oper == GT_OP || oper == GE_OP)
   {
     /* Convert the period as a span to call the span selectivity functions */
     selec = span_sel_hist(vardata, s, oper, TIME_SEL);

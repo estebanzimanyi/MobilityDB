@@ -153,7 +153,7 @@ temporal_get_strategy_by_type(meosType temptype, uint16_t index)
 {
   if (tnumber_type(temptype))
     return TNumberStrategies[index];
-  if (tpoint_type(temptype))
+  if (tspatial_type(temptype))
     return TSpatialStrategies[index];
   return InvalidStrategy;
 }

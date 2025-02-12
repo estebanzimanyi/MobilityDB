@@ -741,7 +741,7 @@ set_basetype(meosType type)
       type == T_INT8 || type == T_FLOAT8 || type == T_TEXT ||
       type == T_GEOMETRY || type == T_GEOGRAPHY
 #if CBUFFER
-	    || type == T_CBUFFER
+      || type == T_CBUFFER
 #endif
 #if NPOINT
       || type == T_NPOINT
@@ -762,7 +762,7 @@ set_type(meosType type)
       type == T_BIGINTSET || type == T_FLOATSET || type == T_TEXTSET ||
       type == T_GEOMSET || type == T_GEOGSET
 #if CBUFFER
-	    || type == T_CBUFFERSET
+      || type == T_CBUFFERSET
 #endif
 #if NPOINT
       || type == T_NPOINTSET
@@ -1334,7 +1334,7 @@ ensure_tpoint_type(meosType type)
 }
 
 /**
- * @brief Return true if the type is a temporal geometry/geography type
+ * @brief Return true if the type is a temporal point type
  */
 bool
 tgeo_type(meosType type)
@@ -1346,7 +1346,7 @@ tgeo_type(meosType type)
 }
 
 /**
- * @brief Ensure that a temporal value is a temporal geometry/tgeography type
+ * @brief Ensure that a temporal value is a temporal geometry/geography type
  */
 bool
 ensure_tgeo_type(meosType type)
@@ -1357,21 +1357,6 @@ ensure_tgeo_type(meosType type)
     "The temporal value must be a temporal geometry/geography type");
   return false;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /**
  * @brief Ensure that a temporal value is a temporal number or a temporal point
