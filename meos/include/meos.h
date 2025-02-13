@@ -1137,7 +1137,7 @@ extern STBox *tstzset_to_stbox(const Set *s);
 extern STBox *tstzspan_to_stbox(const Span *s);
 extern STBox *tstzspanset_to_stbox(const SpanSet *ss);
 extern TBox *tnumber_to_tbox(const Temporal *temp);
-extern STBox *tpoint_to_stbox(const Temporal *temp);
+extern STBox *tspatial_to_stbox(const Temporal *temp);
 
 /*****************************************************************************
  * Accessor functions for box types
@@ -1980,7 +1980,7 @@ extern Temporal *tgeogpoint_to_tgeompoint(const Temporal *temp);
 extern Temporal *tgeompoint_to_tgeogpoint(const Temporal *temp);
 extern Temporal *tpoint_affine(const Temporal *temp, const AFFINE *a);
 extern bool tpoint_AsMVTGeom(const Temporal *temp, const STBox *bounds, int32_t extent, int32_t buffer, bool clip_geom, GSERIALIZED **gsarr, int64 **timesarr, int *count);
-extern STBox *tpoint_expand_space(const Temporal *temp, double d);
+extern STBox *tspatial_expand_space(const Temporal *temp, double d);
 extern Temporal **tpoint_make_simple(const Temporal *temp, int *count);
 extern Temporal *tpoint_scale(const Temporal *temp, const GSERIALIZED *scale, const GSERIALIZED *sorigin);
 extern Temporal *tspatial_set_srid(const Temporal *temp, int32_t srid);

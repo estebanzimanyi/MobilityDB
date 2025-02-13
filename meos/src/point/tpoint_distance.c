@@ -52,47 +52,21 @@
 double circ_tree_distance_tree_internal(const CIRC_NODE* n1, const CIRC_NODE* n2, double threshold, double* min_dist, double* max_dist, GEOGRAPHIC_POINT* closest1, GEOGRAPHIC_POINT* closest2);
 
 /*****************************************************************************
- * Compute the distance between two instants depending on their type
+ * Compute the distance between two tgeo instants
  *****************************************************************************/
 
 /**
  * @brief Return the distance between two temporal instants
  * @param[in] inst1,inst2 Temporal instants
- */
-double
-tnumberinst_distance(const TInstant *inst1, const TInstant *inst2)
-{
-  return fabs(tnumberinst_double(inst1) - tnumberinst_double(inst2));
-}
-
-/**
- * @brief Return the distance between two temporal instants
- * @param[in] inst1,inst2 Temporal instants
  * @param[in] func Distance function
  */
 double
-tpointinst_distance(const TInstant *inst1, const TInstant *inst2,
+tgeoinst_distance(const TInstant *inst1, const TInstant *inst2,
   datum_func2 func)
 {
   Datum value1 = tinstant_val(inst1);
   Datum value2 = tinstant_val(inst2);
   return DatumGetFloat8(func(value1, value2));
-}
-
-/**
- * @brief Return the distance between two temporal instants
- * @param[in] inst1,inst2 Temporal instants
- * @param[in] func Distance function
- */
-double
-tinstant_distance(const TInstant *inst1, const TInstant *inst2,
-  datum_func2 func)
-{
-  assert(tnumber_type(inst1->temptype) || tpoint_type(inst1->temptype));
-  if (tnumber_type(inst1->temptype))
-    return tnumberinst_distance(inst1, inst2);
-  else /* tpoint_type(inst1->temptype) */
-    return tpointinst_distance(inst1, inst2, func);
 }
 
 /*****************************************************************************/
@@ -433,9 +407,10 @@ Temporal *
 distance_tpoint_point(const Temporal *temp, const GSERIALIZED *gs)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs) ||
+  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
+      ! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs) ||
       ! ensure_point_type(gs) ||
-      ! ensure_same_dimensionality_tpoint_gs(temp, gs))
+      ! ensure_same_dimensionality_tspatial_gs(temp, gs))
     return NULL;
 
   LiftedFunctionInfo lfinfo;
@@ -464,7 +439,8 @@ Temporal *
 distance_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tpoint_tpoint(temp1, temp2) ||
+  if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2) ||
+      ! ensure_valid_tpoint_tpoint(temp1, temp2) ||
       ! ensure_same_dimensionality(temp1->flags, temp2->flags))
     return NULL;
 
@@ -506,8 +482,7 @@ nai_tpointseq_discstep_geo_iter(const TSequence *seq, const LWGEOM *geo,
   for (int i = 0; i < seq->count; i++)
   {
     const TInstant *inst = TSEQUENCE_INST_N(seq, i);
-    Datum value = tinstant_val(inst);
-    GSERIALIZED *gs = DatumGetGserializedP(value);
+    GSERIALIZED *gs = DatumGetGserializedP(tinstant_val(inst));
     LWGEOM *point = lwgeom_from_gserialized(gs);
     double dist = lw_distance_fraction(point, geo, DIST_MIN, NULL);
     if (dist < mindist)
@@ -707,8 +682,9 @@ TInstant *
 nai_tpoint_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs) ||
-      ! ensure_same_dimensionality_tpoint_gs(temp, gs))
+  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
+      ! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs) ||
+      ! ensure_same_dimensionality_tspatial_gs(temp, gs))
     return NULL;
 
   LWGEOM *geo = lwgeom_from_gserialized(gs);
@@ -743,7 +719,8 @@ TInstant *
 nai_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tpoint_tpoint(temp1, temp2) ||
+  if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2) ||
+      ! ensure_valid_tpoint_tpoint(temp1, temp2) ||
       ! ensure_same_dimensionality(temp1->flags, temp2->flags))
     return NULL;
 
@@ -777,8 +754,9 @@ double
 nad_tpoint_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs) ||
-      ! ensure_same_dimensionality_tpoint_gs(temp, gs))
+  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
+      ! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs) ||
+      ! ensure_same_dimensionality_tspatial_gs(temp, gs))
     return -1.0;
 
   datum_func2 func = distance_fn(temp->flags);
@@ -902,7 +880,8 @@ double
 nad_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tpoint_tpoint(temp1, temp2) ||
+  if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2) ||
+      ! ensure_valid_tpoint_tpoint(temp1, temp2) ||
       ! ensure_same_dimensionality(temp1->flags, temp2->flags))
     return -1.0;
 
@@ -966,8 +945,9 @@ GSERIALIZED *
 shortestline_tpoint_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs) ||
-      ! ensure_same_dimensionality_tpoint_gs(temp, gs))
+  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
+      ! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs) ||
+      ! ensure_same_dimensionality_tspatial_gs(temp, gs))
     return NULL;
   bool geodetic = MEOS_FLAGS_GET_GEODETIC(temp->flags);
   if (geodetic && ! ensure_has_not_Z_gs(gs))
@@ -998,7 +978,8 @@ GSERIALIZED *
 shortestline_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tpoint_tpoint(temp1, temp2) ||
+  if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2) ||
+      ! ensure_valid_tpoint_tpoint(temp1, temp2) ||
       ! ensure_same_dimensionality(temp1->flags, temp2->flags))
     return NULL;
 

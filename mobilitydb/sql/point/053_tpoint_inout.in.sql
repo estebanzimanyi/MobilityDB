@@ -170,11 +170,11 @@ CREATE FUNCTION asBinary(tgeogpoint, endianenconding text DEFAULT '')
 
 CREATE FUNCTION asEWKB(tgeompoint, endianenconding text DEFAULT '')
   RETURNS bytea
-  AS 'MODULE_PATHNAME', 'Tpoint_as_ewkb'
+  AS 'MODULE_PATHNAME', 'Tspatial_as_ewkb'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION asEWKB(tgeogpoint, endianenconding text DEFAULT '')
   RETURNS bytea
-  AS 'MODULE_PATHNAME', 'Tpoint_as_ewkb'
+  AS 'MODULE_PATHNAME', 'Tspatial_as_ewkb'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION asHexEWKB(tgeompoint, endianenconding text DEFAULT '')

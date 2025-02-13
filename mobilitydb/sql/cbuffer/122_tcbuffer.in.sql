@@ -140,7 +140,7 @@ CREATE FUNCTION asBinary(tcbuffer, endianenconding text DEFAULT '')
 
 CREATE FUNCTION asEWKB(tcbuffer, endianenconding text DEFAULT '')
   RETURNS bytea
-  AS 'MODULE_PATHNAME', 'Tpoint_as_ewkb'
+  AS 'MODULE_PATHNAME', 'Tspatial_as_ewkb'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION asHexEWKB(tcbuffer, endianenconding text DEFAULT '')

@@ -618,13 +618,13 @@ geom_azimuth(const GSERIALIZED *gs1, const GSERIALIZED *gs2, double *result)
   return true;
 }
 
-#if CBUFFER
+#if CBUFFER || GEO
 /**
- * @brief Collect the array of geometries into a geometry collection
+ * @brief Collect the array of geometries/geographies into a geo collection
  * @note PostGIS function: @p LWGEOM_collect_garray(PG_FUNCTION_ARGS)
  */
 GSERIALIZED *
-geom_collect_garray(GSERIALIZED **gsarr, int nelems)
+geo_collect_garray(GSERIALIZED **gsarr, int nelems)
 {
   assert(nelems > 0);
 
@@ -682,12 +682,12 @@ geom_collect_garray(GSERIALIZED **gsarr, int nelems)
 
   assert(! outtype);
   GSERIALIZED *result = NULL;
-  LWGEOM *outlwg = (LWGEOM *)lwcollection_construct(outtype, srid, box, count,
+  LWGEOM *outlwg = (LWGEOM *) lwcollection_construct(outtype, srid, box, count,
     lwgeoms);
   result = geom_serialize(outlwg);
   return result;
 }
-#endif /* CBUFFER */
+#endif /* CBUFFER || GEO */
 
 /*****************************************************************************
  * Functions adapted from lwgeom_geos.c
@@ -1366,6 +1366,80 @@ geom_buffer(const GSERIALIZED *gs, double size, char *params)
   }
   return result;
 }
+
+/*****************************************************************************
+ * Functions adapted from lwgeom_geos_predicates.c
+ *****************************************************************************/
+
+#if GEO
+/**
+ * @brief Return true if the geometries are equal, false otherwise
+ * @param[in] gs1,gs2 Geometries/geographies
+ * @note PostGIS function: @p ST_Equals(PG_FUNCTION_ARGS)
+ */
+
+int
+geo_equals(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
+{
+  assert(gs1); assert(gs2); 
+  assert(gserialized_get_srid(gs1) == gserialized_get_srid(gs2));
+
+  /* Empty == Empty */
+  if ( gserialized_is_empty(gs1) && gserialized_is_empty(gs2) )
+    return 1;
+
+  /*
+   * Short-circuit: If gs1 and gs2 do not have the same bounding box
+   * we can return FALSE.
+   */
+  GBOX box1, box2;
+  if ( gserialized_get_gbox_p(gs1, &box1) &&
+       gserialized_get_gbox_p(gs2, &box2) )
+  {
+    if ( gbox_same_2d_float(&box1, &box2) == LW_FALSE )
+      return 0;
+  }
+
+  /*
+   * Short-circuit: if gs1 and gs2 are binary-equivalent, we can return
+   * TRUE.  This is much faster than doing the comparison using GEOS.
+   */
+  if (VARSIZE(gs1) == VARSIZE(gs2) && ! memcmp(gs1, gs2, VARSIZE(gs1)))
+      return 1;
+
+  initGEOS(lwpgnotice, lwgeom_geos_error);
+
+  GEOSGeometry *geos1 = POSTGIS2GEOS(gs1);
+  if (! geos1)
+  {
+    meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
+      "First argument geometry could not be converted to GEOS");
+    return -1;
+  }
+
+  GEOSGeometry *geos2 = POSTGIS2GEOS(gs2);
+  if (! geos2)
+  {
+    meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
+      "First argument geometry could not be converted to GEOS");
+    GEOSGeom_destroy(geos1);
+    return -1;
+  }
+
+  int result = GEOSEquals(geos1, geos2);
+  GEOSGeom_destroy(geos1);
+  GEOSGeom_destroy(geos2);
+
+  if (result == 2)
+  {
+    meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
+      "GEOS equals() threw an error !");
+    return -1;
+  }
+
+  return result;
+}
+#endif /* GEO */
 
 /*****************************************************************************
  * Functions adapted from geography_measurement.c
@@ -2685,7 +2759,7 @@ geo_typename(int type)
   /* NUMTYPES is defined in liblwgeom.h */
   if (type < 0 || type >= NUMTYPES)
     return "";
-	return _GEO_TYPENAME[type];
+  return _GEO_TYPENAME[type];
 }
 
 /**

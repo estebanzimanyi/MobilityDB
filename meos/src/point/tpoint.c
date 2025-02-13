@@ -113,12 +113,12 @@ tspatial_set_stbox(const Temporal *temp, STBox *box)
 
 /**
  * @ingroup meos_box_conversion
- * @brief Return a temporal point converted to a spatiotemporal box
- * @param[in] temp Temporal point
- * @csqlfn #Tpoint_to_stbox()
+ * @brief Return a temporal spatial value converted to a spatiotemporal box
+ * @param[in] temp Temporal spatial value
+ * @csqlfn #Tspatial_to_stbox()
  */
 STBox *
-tpoint_to_stbox(const Temporal *temp)
+tspatial_to_stbox(const Temporal *temp)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) ||
@@ -155,15 +155,15 @@ geo_expand_space(const GSERIALIZED *gs, double d)
 
 /**
  * @ingroup meos_temporal_spatial_transf
- * @brief Return the bounding box of a temporal point expanded on the spatial
- * dimension
- * @param[in] temp Temporal point
+ * @brief Return the bounding box of a temporal spatial value expanded on the
+ * spatial dimension
+ * @param[in] temp Temporal spatial value
  * @param[in] d Value
  * @return On error return @p NULL
- * @csqlfn #Tpoint_expand_space()
+ * @csqlfn #Tspatial_expand_space()
  */
 STBox *
-tpoint_expand_space(const Temporal *temp, double d)
+tspatial_expand_space(const Temporal *temp, double d)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) ||

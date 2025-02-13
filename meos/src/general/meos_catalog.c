@@ -120,6 +120,8 @@ static const char *MEOS_TYPE_NAMES[] =
   [T_CBUFFER] = "cbuffer",
   [T_CBUFFERSET] = "cbufferset",
   [T_TCBUFFER] = "tcbuffer",
+  [T_TGEOMETRY] = "tgeometry",
+  [T_TGEOGRAPHY] = "tgeography",
 };
 
 /**

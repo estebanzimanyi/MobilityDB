@@ -53,7 +53,7 @@ CREATE FUNCTION stbox(cbuffer, tstzspan)
 
 CREATE FUNCTION stbox(tcbuffer)
   RETURNS stbox
-  AS 'MODULE_PATHNAME', 'Tcbuffer_to_stbox'
+  AS 'MODULE_PATHNAME', 'Tspatial_to_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE CAST (cbuffer AS stbox) WITH FUNCTION stbox(cbuffer);
@@ -63,7 +63,7 @@ CREATE CAST (tcbuffer AS stbox) WITH FUNCTION stbox(tcbuffer);
 
 CREATE FUNCTION expandSpace(tcbuffer, float)
   RETURNS stbox
-  AS 'MODULE_PATHNAME', 'Tpoint_expand_space'
+  AS 'MODULE_PATHNAME', 'Tspatial_expand_space'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************

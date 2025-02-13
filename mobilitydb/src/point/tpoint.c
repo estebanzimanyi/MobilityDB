@@ -433,16 +433,16 @@ Tpointinst_constructor(PG_FUNCTION_ARGS)
  * Conversion functions
  *****************************************************************************/
 
-PGDLLEXPORT Datum Tpoint_to_stbox(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tpoint_to_stbox);
+PGDLLEXPORT Datum Tspatial_to_stbox(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tspatial_to_stbox);
 /**
  * @ingroup mobilitydb_temporal_conversion
- * @brief Return a temporal point converted to a spatiotemporal box
+ * @brief Return a temporal spatial value converted to a spatiotemporal box
  * @sqlfn stbox()
  * @sqlop @p ::
  */
 Datum
-Tpoint_to_stbox(PG_FUNCTION_ARGS)
+Tspatial_to_stbox(PG_FUNCTION_ARGS)
 {
   Datum tempdatum = PG_GETARG_DATUM(0);
   Temporal *temp = temporal_slice(tempdatum);
@@ -475,20 +475,20 @@ Geo_expand_space(PG_FUNCTION_ARGS)
   PG_RETURN_STBOX_P(result);
 }
 
-PGDLLEXPORT Datum Tpoint_expand_space(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tpoint_expand_space);
+PGDLLEXPORT Datum Tspatial_expand_space(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tspatial_expand_space);
 /**
  * @ingroup mobilitydb_temporal_transf
- * @brief Return the bounding box of a temporal point expanded on the
+ * @brief Return the bounding box of a temporal spatial value expanded on the
  * spatial dimension by a value
  * @sqlfn expandSpace()
  */
 Datum
-Tpoint_expand_space(PG_FUNCTION_ARGS)
+Tspatial_expand_space(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   double d = PG_GETARG_FLOAT8(1);
-  STBox *result = tpoint_expand_space(temp, d);
+  STBox *result = tspatial_expand_space(temp, d);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_STBOX_P(result);
 }

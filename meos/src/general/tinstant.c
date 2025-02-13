@@ -422,6 +422,26 @@ tpointinst_make(const GSERIALIZED *gs, TimestampTz t)
   return tinstant_make(PointerGetDatum(gs), temptype, t);
 }
 
+#if GEO
+/**
+ * @ingroup meos_temporal_constructor
+ * @brief Return a temporal instant geo from a geometry and a timestamptz
+ * @param[in] gs Value
+ * @param[in] t Timestamp
+ * @csqlfn #Tinstant_constructor()
+ */
+TInstant *
+tgeoinst_make(const GSERIALIZED *gs, TimestampTz t)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) gs) || ! ensure_not_empty(gs))
+    return NULL;
+  meosType temptype = FLAGS_GET_GEODETIC(gs->gflags) ?
+    T_TGEOGRAPHY : T_TGEOMETRY;
+  return tinstant_make(PointerGetDatum(gs), temptype, t);
+}
+#endif /* GEO */
+
 /**
  * @ingroup meos_internal_temporal_constructor
  * @brief Return a copy of a temporal instant

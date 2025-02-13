@@ -1,4 +1,4 @@
-add_library(pg_buffer OBJECT
+add_library(pg_cbuffer OBJECT
   cbuffer.c
   tcbuffer.c
   tcbuffer_inout.c

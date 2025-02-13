@@ -60,6 +60,7 @@ extern Datum datum_geog_dwithin(Datum geog1, Datum geog2, Datum dist);
 extern datum_func2 get_disjoint_fn_gs(int16 flags1, uint8_t flags2);
 extern datum_func2 get_intersects_fn_gs(int16 flags1, uint8_t flags2);
 extern datum_func3 get_dwithin_fn(int16 flags1, int16 flags2);
+extern datum_func3 get_dwithin_fn_gs(int16 flags1, uint8_t flags2);
 
 extern int tdwithin_add_solutions(int solutions, TimestampTz lower, 
   TimestampTz upper, bool lower_inc, bool upper_inc, bool upper_inc1, 

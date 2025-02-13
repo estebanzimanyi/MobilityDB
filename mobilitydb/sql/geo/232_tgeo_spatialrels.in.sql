@@ -1,0 +1,189 @@
+/*****************************************************************************
+ *
+ * This MobilityDB code is provided under The PostgreSQL License.
+ * Copyright (c) 2016-2024, Université libre de Bruxelles and MobilityDB
+ * contributors
+ *
+ * MobilityDB includes portions of PostGIS version 3 source code released
+ * under the GNU General Public License (GPLv2 or later).
+ * Copyright (c) 2001-2024, PostGIS contributors
+ *
+ * Permission to use, copy, modify, and distribute this software and its
+ * documentation for any purpose, without fee, and without a written
+ * agreement is hereby granted, provided that the above copyright notice and
+ * this paragraph and the following two paragraphs appear in all copies.
+ *
+ * IN NO EVENT SHALL UNIVERSITE LIBRE DE BRUXELLES BE LIABLE TO ANY PARTY FOR
+ * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING
+ * LOST PROFITS, ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION,
+ * EVEN IF UNIVERSITE LIBRE DE BRUXELLES HAS BEEN ADVISED OF THE POSSIBILITY
+ * OF SUCH DAMAGE.
+ *
+ * UNIVERSITE LIBRE DE BRUXELLES SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS ON
+ * AN "AS IS" BASIS, AND UNIVERSITE LIBRE DE BRUXELLES HAS NO OBLIGATIONS TO
+ * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+ *
+ *****************************************************************************/
+
+/**
+ * @file 
+ * @brief Spatial relationships for temporal circular buffers
+ *
+ * These relationships are generalized to the temporal dimension with the
+ * "at any instant" semantics, that is, the traditional operator is applied to
+ * the union of all values taken by the temporal geometry and returns a Boolean.
+ * The following relationships are supported:
+ *    eContains, aContains, eDisjoint, aDisjoint, eIntersects, aIntersects,
+ *    eTouches, aTouches, eDwithin, and aDwithin
+ * All these relationships, excepted eDisjoint, will automatically
+ * include a bounding box comparison that will make use of any spatial,
+ * temporal, or spatiotemporal indexes that are available.
+ */
+
+/*****************************************************************************
+ * eContains, aContains
+ *****************************************************************************/
+
+CREATE FUNCTION eContains(geometry, tgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Econtains_geo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION aContains(geometry, tgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Acontains_geo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/*****************************************************************************
+ * eDisjoint, aDisjoint
+ *****************************************************************************/
+
+CREATE FUNCTION eDisjoint(geometry, tgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Edisjoint_geo_tgeo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION eDisjoint(tgeometry, geometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Edisjoint_tgeo_geo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION eDisjoint(tgeometry, tgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Edisjoint_tgeo_tgeo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION aDisjoint(geometry, tgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Adisjoint_geo_tgeo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION aDisjoint(tgeometry, geometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Adisjoint_tgeo_geo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION aDisjoint(tgeometry, tgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Adisjoint_tgeo_tgeo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/*****************************************************************************
+ * eIntersects, aIntersects
+ *****************************************************************************/
+
+CREATE FUNCTION eIntersects(geometry, tgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Eintersects_geo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION eIntersects(tgeometry, geometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Eintersects_tgeo_geo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION eIntersects(tgeometry, tgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Eintersects_tgeo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION aIntersects(geometry, tgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Aintersects_geo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION aIntersects(tgeometry, geometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Aintersects_tgeo_geo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION aIntersects(tgeometry, tgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Aintersects_tgeo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/*****************************************************************************
+ * eTouches, aTouches
+ *****************************************************************************/
+
+CREATE FUNCTION eTouches(geometry, tgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Etouches_geo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION eTouches(tgeometry, geometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Etouches_tgeo_geo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION aTouches(geometry, tgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Atouches_geo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION aTouches(tgeometry, geometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Atouches_tgeo_geo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/*****************************************************************************
+ * eDwithin, aDwithin
+ *****************************************************************************/
+
+CREATE FUNCTION eDwithin(geometry, tgeometry, dist float)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Edwithin_geo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION eDwithin(tgeometry, geometry, dist float)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Edwithin_tgeo_geo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION eDwithin(tgeometry, tgeometry, dist float)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Edwithin_tgeo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION aDwithin(geometry, tgeometry, dist float)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Adwithin_geo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION aDwithin(tgeometry, geometry, dist float)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Adwithin_tgeo_geo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION aDwithin(tgeometry, tgeometry, dist float)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Adwithin_tgeo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/*****************************************************************************/

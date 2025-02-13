@@ -64,7 +64,7 @@ eacomp_tpoint_point(const Temporal *temp, const GSERIALIZED *gs,
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
       ! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs) ||
       ! ensure_point_type(gs) ||
-      ! ensure_same_dimensionality_tpoint_gs(temp, gs))
+      ! ensure_same_dimensionality_tspatial_gs(temp, gs))
     return -1;
   return eacomp_temporal_base(temp, PointerGetDatum(gs), func, ever);
 }
@@ -262,7 +262,7 @@ tcomp_point_tpoint(const GSERIALIZED *gs, const Temporal *temp,
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
       ! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs) ||
       ! ensure_point_type(gs) ||
-      ! ensure_same_dimensionality_tpoint_gs(temp, gs))
+      ! ensure_same_dimensionality_tspatial_gs(temp, gs))
     return NULL;
   return tcomp_base_temporal(PointerGetDatum(gs), temp, func);
 }
@@ -281,7 +281,7 @@ tcomp_tpoint_point(const Temporal *temp, const GSERIALIZED *gs,
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
       ! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs) ||
       ! ensure_point_type(gs) ||
-      ! ensure_same_dimensionality_tpoint_gs(temp, gs))
+      ! ensure_same_dimensionality_tspatial_gs(temp, gs))
     return NULL;
   return tcomp_temporal_base(temp, PointerGetDatum(gs), func);
 }

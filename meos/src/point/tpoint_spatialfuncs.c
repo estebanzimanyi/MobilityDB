@@ -390,6 +390,23 @@ ensure_same_geodetic(int16 flags1, int16 flags2)
 }
 
 /**
+ * @brief Ensure that the spatiotemporal argument and the geometry/geography
+ * have the same type of coordinates, either planar or geodetic
+ */
+bool
+ensure_same_geodetic_gs(const Temporal *temp, const GSERIALIZED *gs)
+{
+  if (MEOS_FLAGS_GET_X(temp->flags) && 
+      MEOS_FLAGS_GET_GEODETIC(temp->flags) != FLAGS_GET_GEODETIC(gs->gflags))
+  {
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      "Operation on mixed planar and geodetic coordinates");
+    return false;
+  }
+  return true;
+}
+
+/**
  * @brief Ensure that the two spatial "objects" have the same SRID
  */
 bool
@@ -522,11 +539,11 @@ ensure_same_dimensionality_gs(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 }
 
 /**
- * @brief Return true if a temporal point and a geometry/geography have the
- * same dimensionality
+ * @brief Return true if a temporal spatial value and a geometry/geography have
+ * thesame dimensionality
  */
 bool
-same_dimensionality_tpoint_gs(const Temporal *temp, const GSERIALIZED *gs)
+same_dimensionality_tspatial_gs(const Temporal *temp, const GSERIALIZED *gs)
 {
   if (MEOS_FLAGS_GET_Z(temp->flags) != FLAGS_GET_Z(gs->gflags))
     return false;
@@ -534,13 +551,14 @@ same_dimensionality_tpoint_gs(const Temporal *temp, const GSERIALIZED *gs)
 }
 
 /**
- * @brief Ensure that a temporal point and a geometry/geography have the same
- * dimensionality
+ * @brief Ensure that a temporal spatial value and a geometry/geography have 
+ * the same dimensionality
  */
 bool
-ensure_same_dimensionality_tpoint_gs(const Temporal *temp, const GSERIALIZED *gs)
+ensure_same_dimensionality_tspatial_gs(const Temporal *temp,
+  const GSERIALIZED *gs)
 {
-  if (same_dimensionality_tpoint_gs(temp, gs))
+  if (same_dimensionality_tspatial_gs(temp, gs))
     return true;
   meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
     "Operation on mixed 2D/3D dimensions");
@@ -552,7 +570,8 @@ ensure_same_dimensionality_tpoint_gs(const Temporal *temp, const GSERIALIZED *gs
  * dimensionality
  */
 bool
-ensure_same_spatial_dimensionality_stbox_gs(const STBox *box, const GSERIALIZED *gs)
+ensure_same_spatial_dimensionality_stbox_gs(const STBox *box,
+  const GSERIALIZED *gs)
 {
   if (! MEOS_FLAGS_GET_X(box->flags) ||
       /* Geodetic boxes are always in 3D */
@@ -1678,7 +1697,7 @@ lwcoll_from_points_lines(LWGEOM **points, LWGEOM **lines, int npoints,
  * @param[in] box Spatiotemporal bounding box of the input points
  * @param[in] interp Interpolation
  * @note This function creates directly the GSERIALIZED result WITHOUT passing
- * through the createtion of the LWPOINT to speed up the process
+ * through the creation of the LWPOINT to speed up the process
  * @note The function does not remove duplicate points, that is, repeated
  * points in a multipoint or consecutive equal points in a line string
  */
@@ -4795,7 +4814,7 @@ bearing_tpoint_point(const Temporal *temp, const GSERIALIZED *gs, bool invert)
   /* Ensure validity of the arguments */
   if (! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs) ||
       ! ensure_point_type(gs) ||
-      ! ensure_same_dimensionality_tpoint_gs(temp, gs))
+      ! ensure_same_dimensionality_tspatial_gs(temp, gs))
     return NULL;
 
   LiftedFunctionInfo lfinfo;

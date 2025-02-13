@@ -143,7 +143,7 @@ temporal_restrict_value(const Temporal *temp, Datum value, bool atfunc)
     GSERIALIZED *gs = DatumGetGserializedP(value);
     if (! ensure_point_type(gs) ||
         ! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)) ||
-        ! ensure_same_dimensionality_tpoint_gs(temp, gs))
+        ! ensure_same_dimensionality_tspatial_gs(temp, gs))
     return NULL;
   }
 

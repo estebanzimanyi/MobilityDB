@@ -752,7 +752,7 @@ tpoint_split_each_n_stboxes(const Temporal *temp, int elems_per_box,
   {
     case TINSTANT:
       *count = 1;
-      return tpoint_to_stbox(temp);
+      return tspatial_to_stbox(temp);
     case TSEQUENCE:
       return tpointseq_split_each_n_stboxes((TSequence *) temp, elems_per_box,
         count);

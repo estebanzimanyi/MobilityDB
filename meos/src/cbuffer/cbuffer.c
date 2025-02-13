@@ -264,7 +264,7 @@ cbufferarr_geom(Cbuffer **cbufarr, int nelems)
     }
     geoms[i] = cbuffer_geom(cbufarr[i]);
   }
-  GSERIALIZED *result = geom_collect_garray(geoms, nelems);
+  GSERIALIZED *result = geo_collect_garray(geoms, nelems);
   pfree_array((void **) geoms, nelems);
   return result;
 }

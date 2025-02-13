@@ -169,7 +169,7 @@ get_dwithin_fn(int16 flags1, int16 flags2)
  * @brief Select the appropriate dwithin function
  * @note We need two parameters to cope with mixed 2D/3D arguments
  */
-static datum_func3
+datum_func3
 get_dwithin_fn_gs(int16 flags1, uint8_t flags2)
 {
   if (MEOS_FLAGS_GET_GEODETIC(flags1))
