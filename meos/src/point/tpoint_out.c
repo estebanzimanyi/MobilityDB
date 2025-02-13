@@ -94,8 +94,7 @@ char *
 tgeo_as_text(const Temporal *temp, int maxdd)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || 
-      ! ensure_tpoint_type(temp->temptype) ||
+  if (! ensure_not_null((void *) temp) || ! ensure_tgeo_type(temp->temptype) ||
       ! ensure_not_negative(maxdd))
     return NULL;
 
@@ -123,7 +122,7 @@ char *
 tgeo_as_ewkt(const Temporal *temp, int maxdd)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype) ||
+  if (! ensure_not_null((void *) temp) || ! ensure_tgeo_type(temp->temptype) ||
       ! ensure_not_negative(maxdd))
     return NULL;
 

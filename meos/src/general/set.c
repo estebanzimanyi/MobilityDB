@@ -701,8 +701,7 @@ set_make_exp(const Datum *values, int count, int maxcount, meosType basetype,
     {
       /* Test that the geometry is not empty */
       GSERIALIZED *gs2 = DatumGetGserializedP(values[i]);
-      if (! ensure_point_type(gs2) ||
-          ! ensure_same_srid(srid, gserialized_get_srid(gs2)) ||
+      if (! ensure_same_srid(srid, gserialized_get_srid(gs2)) ||
           ! ensure_same_dimensionality_gs(gs1, gs2) ||
           ! ensure_not_empty(gs2))
         return NULL;

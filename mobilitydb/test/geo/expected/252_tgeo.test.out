@@ -1,0 +1,2109 @@
+SELECT asText(tgeometry 'Point(1 1)@2000-01-01');
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}');
+                                                                astext                                                                
+--------------------------------------------------------------------------------------------------------------------------------------
+ {POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, LINESTRING(1 1,2 2)@Sun Jan 02 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]');
+                                       astext                                       
+------------------------------------------------------------------------------------
+ [POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]
+(1 row)
+
+SELECT asText(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}');
+                                                                                  astext                                                                                  
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST], [POINT(2 2)@Tue Jan 04 00:00:00 2000 PST, POINT(2 2)@Wed Jan 05 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(tgeometry '  Point(1 1)  @  2000-01-01  ');
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(tgeometry '  {   Point(1 1)  @ 2000-01-01  , Linestring(1 1,2 2)@2000-01-02, Point(1 1) @  2000-01-03   }   ');
+                                                                astext                                                                
+--------------------------------------------------------------------------------------------------------------------------------------
+ {POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, LINESTRING(1 1,2 2)@Sun Jan 02 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(tgeometry '  [  Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]');
+                                       astext                                       
+------------------------------------------------------------------------------------
+ [POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]
+(1 row)
+
+SELECT asText(tgeometry '  {  [  Point(1 1)@2000-01-01 ,    Point(1 1)  @2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}');
+                                                                                  astext                                                                                  
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST], [POINT(2 2)@Tue Jan 04 00:00:00 2000 PST, POINT(2 2)@Wed Jan 05 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]');
+                                       astext                                       
+------------------------------------------------------------------------------------
+ [POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]
+(1 row)
+
+SELECT asText(tgeometry'{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05, Point(2 2)@2000-01-06]}');
+                                                                                  astext                                                                                  
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST], [POINT(2 2)@Tue Jan 04 00:00:00 2000 PST, POINT(2 2)@Thu Jan 06 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(tgeometry 'Point(1 1.123456789)@2000-01-01', 6);
+                     astext                     
+------------------------------------------------
+ POINT(1 1.123457)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(tgeometry '{Point(1 1.123456789)@2000-01-01, Linestring(1 1.523456789,2 2)@2000-01-02, Point(1 1.123456789)@2000-01-03}', 6);
+                                                                          astext                                                                           
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+ {POINT(1 1.123457)@Sat Jan 01 00:00:00 2000 PST, LINESTRING(1 1.523457,2 2)@Sun Jan 02 00:00:00 2000 PST, POINT(1 1.123457)@Mon Jan 03 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(tgeometry '[Point(1 1.123456789)@2000-01-01, Linestring(1 1.523456789,2 2)@2000-01-02, Point(1 1.123456789)@2000-01-03]', 6);
+                                                                          astext                                                                           
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+ [POINT(1 1.123457)@Sat Jan 01 00:00:00 2000 PST, LINESTRING(1 1.523457,2 2)@Sun Jan 02 00:00:00 2000 PST, POINT(1 1.123457)@Mon Jan 03 00:00:00 2000 PST]
+(1 row)
+
+SELECT asText(tgeometry '{[Point(1 1.123456789)@2000-01-01, Linestring(1 1.523456789,2 2)@2000-01-02, Point(1 1.123456789)@2000-01-03],[Point(2 2.723456789)@2000-01-04, Point(2 2.723456789)@2000-01-05]}', 6);
+                                                                                                                            astext                                                                                                                             
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[POINT(1 1.123457)@Sat Jan 01 00:00:00 2000 PST, LINESTRING(1 1.523457,2 2)@Sun Jan 02 00:00:00 2000 PST, POINT(1 1.123457)@Mon Jan 03 00:00:00 2000 PST], [POINT(2 2.723457)@Tue Jan 04 00:00:00 2000 PST, POINT(2 2.723457)@Wed Jan 05 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(tgeometryFromBinary(asBinary(tgeometry 'Point(1 1)@2000-01-01')));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(tgeometryFromBinary(asBinary(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}')));
+                                                           astext                                                            
+-----------------------------------------------------------------------------------------------------------------------------
+ {POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Sun Jan 02 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(tgeometryFromBinary(asBinary(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]')));
+                                       astext                                       
+------------------------------------------------------------------------------------
+ [POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]
+(1 row)
+
+SELECT asText(tgeometryFromBinary(asBinary(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}')));
+                                                                                  astext                                                                                  
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST], [POINT(2 2)@Tue Jan 04 00:00:00 2000 PST, POINT(2 2)@Wed Jan 05 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(tgeometryFromBinary(asBinary(tgeometry 'Point(1 1)@2000-01-01', 'NDR')));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(tgeometryFromBinary(asBinary(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', 'NDR')));
+                                                           astext                                                            
+-----------------------------------------------------------------------------------------------------------------------------
+ {POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Sun Jan 02 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(tgeometryFromBinary(asBinary(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', 'NDR')));
+                                       astext                                       
+------------------------------------------------------------------------------------
+ [POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]
+(1 row)
+
+SELECT asText(tgeometryFromBinary(asBinary(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', 'NDR')));
+                                                                                  astext                                                                                  
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST], [POINT(2 2)@Tue Jan 04 00:00:00 2000 PST, POINT(2 2)@Wed Jan 05 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(tgeometryFromBinary(asBinary(tgeometry 'Point(1 1)@2000-01-01', 'XDR')));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(tgeometryFromBinary(asBinary(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', 'XDR')));
+                                                           astext                                                            
+-----------------------------------------------------------------------------------------------------------------------------
+ {POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Sun Jan 02 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(tgeometryFromBinary(asBinary(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', 'XDR')));
+                                       astext                                       
+------------------------------------------------------------------------------------
+ [POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]
+(1 row)
+
+SELECT asText(tgeometryFromBinary(asBinary(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', 'XDR')));
+                                                                                  astext                                                                                  
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST], [POINT(2 2)@Tue Jan 04 00:00:00 2000 PST, POINT(2 2)@Wed Jan 05 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(tgeometryFromHexEWKB(asHexEWKB(tgeometry 'Point(1 1)@2000-01-01')));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(tgeometryFromHexEWKB(asHexEWKB(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}')));
+                                                           astext                                                            
+-----------------------------------------------------------------------------------------------------------------------------
+ {POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Sun Jan 02 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(tgeometryFromHexEWKB(asHexEWKB(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]')));
+                                       astext                                       
+------------------------------------------------------------------------------------
+ [POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]
+(1 row)
+
+SELECT asText(tgeometryFromHexEWKB(asHexEWKB(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}')));
+                                                                                  astext                                                                                  
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST], [POINT(2 2)@Tue Jan 04 00:00:00 2000 PST, POINT(2 2)@Wed Jan 05 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(tgeometryFromHexEWKB(asHexEWKB(tgeometry 'Point(1 1)@2000-01-01', 'NDR')));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(tgeometryFromHexEWKB(asHexEWKB(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', 'NDR')));
+                                                           astext                                                            
+-----------------------------------------------------------------------------------------------------------------------------
+ {POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Sun Jan 02 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(tgeometryFromHexEWKB(asHexEWKB(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', 'NDR')));
+                                       astext                                       
+------------------------------------------------------------------------------------
+ [POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]
+(1 row)
+
+SELECT asText(tgeometryFromHexEWKB(asHexEWKB(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', 'NDR')));
+                                                                                  astext                                                                                  
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST], [POINT(2 2)@Tue Jan 04 00:00:00 2000 PST, POINT(2 2)@Wed Jan 05 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(tgeometryFromHexEWKB(asHexEWKB(tgeometry 'Point(1 1)@2000-01-01', 'XDR')));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(tgeometryFromHexEWKB(asHexEWKB(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', 'XDR')));
+                                                           astext                                                            
+-----------------------------------------------------------------------------------------------------------------------------
+ {POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Sun Jan 02 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(tgeometryFromHexEWKB(asHexEWKB(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', 'XDR')));
+                                       astext                                       
+------------------------------------------------------------------------------------
+ [POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]
+(1 row)
+
+SELECT asText(tgeometryFromHexEWKB(asHexEWKB(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', 'XDR')));
+                                                                                  astext                                                                                  
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST], [POINT(2 2)@Tue Jan 04 00:00:00 2000 PST, POINT(2 2)@Wed Jan 05 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(tgeometry('Point(1 1)'::geometry, '2000-01-01'::timestamp));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(tgeometrySeq(ARRAY['Point(1 1)@2000-01-01'::tgeometry, 'Linestring(1 1,2 2)@2000-01-02'::tgeometry], 'discrete'));
+                                           astext                                            
+---------------------------------------------------------------------------------------------
+ {POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, LINESTRING(1 1,2 2)@Sun Jan 02 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(tgeometrySeqSet(ARRAY[tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02]', '[Point(2 2)@2000-03-01, Point(2 2)@2000-04-01]']));
+                                                                                      astext                                                                                       
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, LINESTRING(1 1,2 2)@Sun Jan 02 00:00:00 2000 PST], [POINT(2 2)@Wed Mar 01 00:00:00 2000 PST, POINT(2 2)@Sat Apr 01 00:00:00 2000 PST]}
+(1 row)
+
+/* Errors */
+SELECT asText(tgeometrySeq(ARRAY['Point(1 1)@2000-01-01'::tgeometry, 'Linestring(1 1,2 2)@2000-01-02'::tgeometry], 'linear', true, false));
+ERROR:  The temporal type cannot have linear interpolation
+SELECT asText(tgeometryInst(tgeometry 'Point(1 1)@2000-01-01'));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(setInterp(tgeometry 'Point(1 1)@2000-01-01', 'discrete'));
+                  astext                   
+-------------------------------------------
+ {POINT(1 1)@Sat Jan 01 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(tgeometrySeq(tgeometry 'Point(1 1)@2000-01-01'));
+                  astext                   
+-------------------------------------------
+ [POINT(1 1)@Sat Jan 01 00:00:00 2000 PST]
+(1 row)
+
+SELECT asText(tgeometrySeqSet(tgeometry 'Point(1 1)@2000-01-01'));
+                   astext                    
+---------------------------------------------
+ {[POINT(1 1)@Sat Jan 01 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(tgeometryInst(tgeometry '{Point(1 1)@2000-01-01}'));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(setInterp(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', 'discrete'));
+                                                                astext                                                                
+--------------------------------------------------------------------------------------------------------------------------------------
+ {POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, LINESTRING(1 1,2 2)@Sun Jan 02 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(tgeometrySeq(tgeometry '{Point(1 1)@2000-01-01}'));
+                  astext                   
+-------------------------------------------
+ {POINT(1 1)@Sat Jan 01 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(tgeometrySeqSet(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}'));
+                                                                   astext                                                                   
+--------------------------------------------------------------------------------------------------------------------------------------------
+ {[POINT(1 1)@Sat Jan 01 00:00:00 2000 PST], [LINESTRING(1 1,2 2)@Sun Jan 02 00:00:00 2000 PST], [POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(tgeometryInst(tgeometry '[Point(1 1)@2000-01-01]'));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(setInterp(tgeometry '[Point(1 1)@2000-01-01]', 'discrete'));
+                  astext                   
+-------------------------------------------
+ {POINT(1 1)@Sat Jan 01 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(tgeometrySeq(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]'));
+                                       astext                                       
+------------------------------------------------------------------------------------
+ [POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]
+(1 row)
+
+SELECT asText(tgeometrySeqSet(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]'));
+                                        astext                                        
+--------------------------------------------------------------------------------------
+ {[POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(tgeometryInst(tgeometry '{[Point(1 1)@2000-01-01]}'));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(setInterp(tgeometry '{[Point(1 1)@2000-01-01], [Point(2 2)@2000-01-04]}', 'discrete'));
+                                       astext                                       
+------------------------------------------------------------------------------------
+ {POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(2 2)@Tue Jan 04 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(tgeometrySeq(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]}'));
+                                       astext                                       
+------------------------------------------------------------------------------------
+ [POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]
+(1 row)
+
+SELECT asText(tgeometrySeqSet(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}'));
+                                                                                  astext                                                                                  
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST], [POINT(2 2)@Tue Jan 04 00:00:00 2000 PST, POINT(2 2)@Wed Jan 05 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(round(tgeometry '{[Point(1 1.123456789)@2000-01-01, Linestring(1 1,2 2)@2000-01-02]}', 6));
+                                                astext                                                
+------------------------------------------------------------------------------------------------------
+ {[POINT(1 1.123457)@Sat Jan 01 00:00:00 2000 PST, LINESTRING(1 1,2 2)@Sun Jan 02 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(appendInstant(tgeometry 'Point(1 1)@2000-01-01', tgeometry 'Linestring(1 1,2 2)@2000-01-02'));
+                                           astext                                            
+---------------------------------------------------------------------------------------------
+ [POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, LINESTRING(1 1,2 2)@Sun Jan 02 00:00:00 2000 PST]
+(1 row)
+
+SELECT asText(appendInstant(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', tgeometry 'Point(1 1)@2000-01-04'));
+                                                                                    astext                                                                                     
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, LINESTRING(1 1,2 2)@Sun Jan 02 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST, POINT(1 1)@Tue Jan 04 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(appendInstant(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', tgeometry 'Point(1 1)@2000-01-04'));
+                                       astext                                       
+------------------------------------------------------------------------------------
+ [POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Tue Jan 04 00:00:00 2000 PST]
+(1 row)
+
+SELECT asText(appendInstant(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05] }', tgeometry 'Point(2 2)@2000-01-06'));
+                                                                                  astext                                                                                  
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST], [POINT(2 2)@Tue Jan 04 00:00:00 2000 PST, POINT(2 2)@Thu Jan 06 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(appendSequence(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02}', tgeometry '{Point(3 3)@2000-01-03}'));
+                                                                astext                                                                
+--------------------------------------------------------------------------------------------------------------------------------------
+ {POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, LINESTRING(1 1,2 2)@Sun Jan 02 00:00:00 2000 PST, POINT(3 3)@Mon Jan 03 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(appendSequence(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02]', tgeometry '[Point(1 1)@2000-01-03]'));
+                                                                  astext                                                                  
+------------------------------------------------------------------------------------------------------------------------------------------
+ {[POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, LINESTRING(1 1,2 2)@Sun Jan 02 00:00:00 2000 PST], [POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]}
+(1 row)
+
+SELECT tempSubtype(tgeometry 'Point(1 1)@2000-01-01');
+ tempsubtype 
+-------------
+ Instant
+(1 row)
+
+SELECT tempSubtype(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}');
+ tempsubtype 
+-------------
+ Sequence
+(1 row)
+
+SELECT tempSubtype(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]');
+ tempsubtype 
+-------------
+ Sequence
+(1 row)
+
+SELECT tempSubtype(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}');
+ tempsubtype 
+-------------
+ SequenceSet
+(1 row)
+
+SELECT memSize(tgeometry 'Point(1 1)@2000-01-01');
+ memsize 
+---------
+      48
+(1 row)
+
+SELECT memSize(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}');
+ memsize 
+---------
+     288
+(1 row)
+
+SELECT memSize(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]');
+ memsize 
+---------
+     216
+(1 row)
+
+SELECT memSize(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}');
+ memsize 
+---------
+     552
+(1 row)
+
+SELECT ST_AsText(getValue(tgeometry 'Point(1 1)@2000-01-01'));
+ st_astext  
+------------
+ POINT(1 1)
+(1 row)
+
+SELECT asText(getValues(tgeometry 'Point(1 1)@2000-01-01'));
+     astext     
+----------------
+ {"POINT(1 1)"}
+(1 row)
+
+SELECT asText(getValues(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}'));
+     astext     
+----------------
+ {"POINT(1 1)"}
+(1 row)
+
+SELECT asText(getValues(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]'));
+     astext     
+----------------
+ {"POINT(1 1)"}
+(1 row)
+
+SELECT asText(getValues(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}'));
+            astext            
+------------------------------
+ {"POINT(1 1)", "POINT(2 2)"}
+(1 row)
+
+SELECT getTime(tgeometry 'Point(1 1)@2000-01-01');
+                            gettime                             
+----------------------------------------------------------------
+ {[Sat Jan 01 00:00:00 2000 PST, Sat Jan 01 00:00:00 2000 PST]}
+(1 row)
+
+SELECT getTime(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}');
+                                                                                          gettime                                                                                           
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[Sat Jan 01 00:00:00 2000 PST, Sat Jan 01 00:00:00 2000 PST], [Sun Jan 02 00:00:00 2000 PST, Sun Jan 02 00:00:00 2000 PST], [Mon Jan 03 00:00:00 2000 PST, Mon Jan 03 00:00:00 2000 PST]}
+(1 row)
+
+SELECT getTime(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]');
+                            gettime                             
+----------------------------------------------------------------
+ {[Sat Jan 01 00:00:00 2000 PST, Mon Jan 03 00:00:00 2000 PST]}
+(1 row)
+
+SELECT getTime(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}');
+                                                           gettime                                                            
+------------------------------------------------------------------------------------------------------------------------------
+ {[Sat Jan 01 00:00:00 2000 PST, Mon Jan 03 00:00:00 2000 PST], [Tue Jan 04 00:00:00 2000 PST, Wed Jan 05 00:00:00 2000 PST]}
+(1 row)
+
+SELECT timeSpan(tgeometry 'Point(1 1)@2000-01-01');
+                           timespan                           
+--------------------------------------------------------------
+ [Sat Jan 01 00:00:00 2000 PST, Sat Jan 01 00:00:00 2000 PST]
+(1 row)
+
+SELECT timeSpan(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}');
+                           timespan                           
+--------------------------------------------------------------
+ [Sat Jan 01 00:00:00 2000 PST, Mon Jan 03 00:00:00 2000 PST]
+(1 row)
+
+SELECT timeSpan(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]');
+                           timespan                           
+--------------------------------------------------------------
+ [Sat Jan 01 00:00:00 2000 PST, Mon Jan 03 00:00:00 2000 PST]
+(1 row)
+
+SELECT timeSpan(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}');
+                           timespan                           
+--------------------------------------------------------------
+ [Sat Jan 01 00:00:00 2000 PST, Wed Jan 05 00:00:00 2000 PST]
+(1 row)
+
+SELECT duration(tgeometry 'Point(1 1)@2000-01-01', true);
+ duration 
+----------
+ 00:00:00
+(1 row)
+
+SELECT duration(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', true);
+ duration 
+----------
+ 2 days
+(1 row)
+
+SELECT duration(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', true);
+ duration 
+----------
+ 2 days
+(1 row)
+
+SELECT duration(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', true);
+ duration 
+----------
+ 4 days
+(1 row)
+
+SELECT duration(tgeometry 'Point(1 1)@2000-01-01');
+ duration 
+----------
+ 00:00:00
+(1 row)
+
+SELECT duration(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}');
+ duration 
+----------
+ 00:00:00
+(1 row)
+
+SELECT duration(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]');
+ duration 
+----------
+ 2 days
+(1 row)
+
+SELECT duration(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}');
+ duration 
+----------
+ 3 days
+(1 row)
+
+SELECT getTimestamp(tgeometry 'Point(1 1)@2000-01-01');
+         gettimestamp         
+------------------------------
+ Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(shiftTime(tgeometry 'Point(1 1)@2000-01-01', '5 min'));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:05:00 2000 PST
+(1 row)
+
+SELECT asText(shiftTime(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', '5 min'));
+                                                                astext                                                                
+--------------------------------------------------------------------------------------------------------------------------------------
+ {POINT(1 1)@Sat Jan 01 00:05:00 2000 PST, LINESTRING(1 1,2 2)@Sun Jan 02 00:05:00 2000 PST, POINT(1 1)@Mon Jan 03 00:05:00 2000 PST}
+(1 row)
+
+SELECT asText(shiftTime(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', '5 min'));
+                                       astext                                       
+------------------------------------------------------------------------------------
+ [POINT(1 1)@Sat Jan 01 00:05:00 2000 PST, POINT(1 1)@Mon Jan 03 00:05:00 2000 PST]
+(1 row)
+
+SELECT asText(shiftTime(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', '5 min'));
+                                                                                  astext                                                                                  
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[POINT(1 1)@Sat Jan 01 00:05:00 2000 PST, POINT(1 1)@Mon Jan 03 00:05:00 2000 PST], [POINT(2 2)@Tue Jan 04 00:05:00 2000 PST, POINT(2 2)@Wed Jan 05 00:05:00 2000 PST]}
+(1 row)
+
+SELECT asText(scaleTime(tgeometry 'Point(1 1)@2000-01-01', '1 day'));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(scaleTime(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', '1 day'));
+                                                                astext                                                                
+--------------------------------------------------------------------------------------------------------------------------------------
+ {POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, LINESTRING(1 1,2 2)@Sat Jan 01 12:00:00 2000 PST, POINT(1 1)@Sun Jan 02 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(scaleTime(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', '1 day'));
+                                       astext                                       
+------------------------------------------------------------------------------------
+ [POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Sun Jan 02 00:00:00 2000 PST]
+(1 row)
+
+SELECT asText(scaleTime(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', '1 day'));
+                                                                                  astext                                                                                  
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Sat Jan 01 12:00:00 2000 PST], [POINT(2 2)@Sat Jan 01 18:00:00 2000 PST, POINT(2 2)@Sun Jan 02 00:00:00 2000 PST]}
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' ?= 'Point(1 1)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' ?= 'Point(1 1)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' ?= 'Point(1 1)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}' ?= 'Point(1 1)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' %= 'Point(1 1)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' %= 'Point(1 1)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' %= 'Point(1 1)';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}' %= 'Point(1 1)';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT asText(shiftTime(tgeometry 'Point(1 1)@2000-01-01', '1 year'::interval));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Mon Jan 01 00:00:00 2001 PST
+(1 row)
+
+SELECT asText(shiftTime(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', '1 year'::interval));
+                                                                astext                                                                
+--------------------------------------------------------------------------------------------------------------------------------------
+ {POINT(1 1)@Mon Jan 01 00:00:00 2001 PST, LINESTRING(1 1,2 2)@Tue Jan 02 00:00:00 2001 PST, POINT(1 1)@Wed Jan 03 00:00:00 2001 PST}
+(1 row)
+
+SELECT asText(shiftTime(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', '1 year'::interval));
+                                       astext                                       
+------------------------------------------------------------------------------------
+ [POINT(1 1)@Mon Jan 01 00:00:00 2001 PST, POINT(1 1)@Wed Jan 03 00:00:00 2001 PST]
+(1 row)
+
+SELECT asText(shiftTime(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', '1 year'::interval));
+                                                                                  astext                                                                                  
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[POINT(1 1)@Mon Jan 01 00:00:00 2001 PST, POINT(1 1)@Wed Jan 03 00:00:00 2001 PST], [POINT(2 2)@Thu Jan 04 00:00:00 2001 PST, POINT(2 2)@Fri Jan 05 00:00:00 2001 PST]}
+(1 row)
+
+SELECT ST_AsText(startValue(tgeometry 'Point(1 1)@2000-01-01'));
+ st_astext  
+------------
+ POINT(1 1)
+(1 row)
+
+SELECT ST_AsText(startValue(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}'));
+ st_astext  
+------------
+ POINT(1 1)
+(1 row)
+
+SELECT ST_AsText(startValue(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]'));
+ st_astext  
+------------
+ POINT(1 1)
+(1 row)
+
+SELECT ST_AsText(startValue(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}'));
+ st_astext  
+------------
+ POINT(1 1)
+(1 row)
+
+SELECT ST_AsText(endValue(tgeometry 'Point(1 1)@2000-01-01'));
+ st_astext  
+------------
+ POINT(1 1)
+(1 row)
+
+SELECT ST_AsText(endValue(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}'));
+ st_astext  
+------------
+ POINT(1 1)
+(1 row)
+
+SELECT ST_AsText(endValue(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]'));
+ st_astext  
+------------
+ POINT(1 1)
+(1 row)
+
+SELECT ST_AsText(endValue(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}'));
+ st_astext  
+------------
+ POINT(2 2)
+(1 row)
+
+SELECT ST_AsText(valueN(tgeometry 'Point(1 1)@2000-01-01', 1));
+ st_astext  
+------------
+ POINT(1 1)
+(1 row)
+
+SELECT ST_AsText(valueN(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', 1));
+ st_astext  
+------------
+ POINT(1 1)
+(1 row)
+
+SELECT ST_AsText(valueN(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', 1));
+ st_astext  
+------------
+ POINT(1 1)
+(1 row)
+
+SELECT ST_AsText(valueN(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', 1));
+ st_astext  
+------------
+ POINT(1 1)
+(1 row)
+
+SELECT numInstants(tgeometry 'Point(1 1)@2000-01-01');
+ numinstants 
+-------------
+           1
+(1 row)
+
+SELECT numInstants(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}');
+ numinstants 
+-------------
+           3
+(1 row)
+
+SELECT numInstants(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]');
+ numinstants 
+-------------
+           2
+(1 row)
+
+SELECT numInstants(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}');
+ numinstants 
+-------------
+           4
+(1 row)
+
+SELECT asText(startInstant(tgeometry 'Point(1 1)@2000-01-01'));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(startInstant(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}'));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(startInstant(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]'));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(startInstant(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}'));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(endInstant(tgeometry 'Point(1 1)@2000-01-01'));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(endInstant(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}'));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Mon Jan 03 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(endInstant(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]'));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Mon Jan 03 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(endInstant(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}'));
+                 astext                  
+-----------------------------------------
+ POINT(2 2)@Wed Jan 05 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(instantN(tgeometry 'Point(1 1)@2000-01-01', 1));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(instantN(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', 1));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(instantN(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', 1));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(instantN(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', 1));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(instants(tgeometry 'Point(1 1)@2000-01-01'));
+                   astext                    
+---------------------------------------------
+ {"POINT(1 1)@Sat Jan 01 00:00:00 2000 PST"}
+(1 row)
+
+SELECT asText(instants(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}'));
+                                                                  astext                                                                  
+------------------------------------------------------------------------------------------------------------------------------------------
+ {"POINT(1 1)@Sat Jan 01 00:00:00 2000 PST","LINESTRING(1 1,2 2)@Sun Jan 02 00:00:00 2000 PST","POINT(1 1)@Mon Jan 03 00:00:00 2000 PST"}
+(1 row)
+
+SELECT asText(instants(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]'));
+                                        astext                                         
+---------------------------------------------------------------------------------------
+ {"POINT(1 1)@Sat Jan 01 00:00:00 2000 PST","POINT(1 1)@Mon Jan 03 00:00:00 2000 PST"}
+(1 row)
+
+SELECT asText(instants(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}'));
+                                                                                  astext                                                                                   
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {"POINT(1 1)@Sat Jan 01 00:00:00 2000 PST","POINT(1 1)@Mon Jan 03 00:00:00 2000 PST","POINT(2 2)@Tue Jan 04 00:00:00 2000 PST","POINT(2 2)@Wed Jan 05 00:00:00 2000 PST"}
+(1 row)
+
+SELECT numTimestamps(tgeometry 'Point(1 1)@2000-01-01');
+ numtimestamps 
+---------------
+             1
+(1 row)
+
+SELECT numTimestamps(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}');
+ numtimestamps 
+---------------
+             3
+(1 row)
+
+SELECT numTimestamps(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]');
+ numtimestamps 
+---------------
+             2
+(1 row)
+
+SELECT numTimestamps(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}');
+ numtimestamps 
+---------------
+             4
+(1 row)
+
+SELECT startTimestamp(tgeometry 'Point(1 1)@2000-01-01');
+        starttimestamp        
+------------------------------
+ Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT startTimestamp(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}');
+        starttimestamp        
+------------------------------
+ Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT startTimestamp(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]');
+        starttimestamp        
+------------------------------
+ Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT startTimestamp(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}');
+        starttimestamp        
+------------------------------
+ Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT endTimestamp(tgeometry 'Point(1 1)@2000-01-01');
+         endtimestamp         
+------------------------------
+ Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT endTimestamp(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}');
+         endtimestamp         
+------------------------------
+ Mon Jan 03 00:00:00 2000 PST
+(1 row)
+
+SELECT endTimestamp(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]');
+         endtimestamp         
+------------------------------
+ Mon Jan 03 00:00:00 2000 PST
+(1 row)
+
+SELECT endTimestamp(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}');
+         endtimestamp         
+------------------------------
+ Wed Jan 05 00:00:00 2000 PST
+(1 row)
+
+SELECT timestampN(tgeometry 'Point(1 1)@2000-01-01', 1);
+          timestampn          
+------------------------------
+ Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT timestampN(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', 1);
+          timestampn          
+------------------------------
+ Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT timestampN(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', 1);
+          timestampn          
+------------------------------
+ Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT timestampN(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', 1);
+          timestampn          
+------------------------------
+ Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT timestamps(tgeometry 'Point(1 1)@2000-01-01');
+            timestamps            
+----------------------------------
+ {"Sat Jan 01 00:00:00 2000 PST"}
+(1 row)
+
+SELECT timestamps(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}');
+                                           timestamps                                           
+------------------------------------------------------------------------------------------------
+ {"Sat Jan 01 00:00:00 2000 PST","Sun Jan 02 00:00:00 2000 PST","Mon Jan 03 00:00:00 2000 PST"}
+(1 row)
+
+SELECT timestamps(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]');
+                           timestamps                            
+-----------------------------------------------------------------
+ {"Sat Jan 01 00:00:00 2000 PST","Mon Jan 03 00:00:00 2000 PST"}
+(1 row)
+
+SELECT timestamps(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}');
+                                                          timestamps                                                           
+-------------------------------------------------------------------------------------------------------------------------------
+ {"Sat Jan 01 00:00:00 2000 PST","Mon Jan 03 00:00:00 2000 PST","Tue Jan 04 00:00:00 2000 PST","Wed Jan 05 00:00:00 2000 PST"}
+(1 row)
+
+SELECT numSequences(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}');
+ numsequences 
+--------------
+            2
+(1 row)
+
+SELECT asText(startSequence(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}'));
+                                       astext                                       
+------------------------------------------------------------------------------------
+ [POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]
+(1 row)
+
+SELECT asText(endSequence(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}'));
+                                       astext                                       
+------------------------------------------------------------------------------------
+ [POINT(2 2)@Tue Jan 04 00:00:00 2000 PST, POINT(2 2)@Wed Jan 05 00:00:00 2000 PST]
+(1 row)
+
+SELECT asText(sequenceN(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', 1));
+                                       astext                                       
+------------------------------------------------------------------------------------
+ [POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]
+(1 row)
+
+SELECT asText(sequences(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}'));
+                                                                                   astext                                                                                    
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {"[POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]","[POINT(2 2)@Tue Jan 04 00:00:00 2000 PST, POINT(2 2)@Wed Jan 05 00:00:00 2000 PST]"}
+(1 row)
+
+SELECT startTimestamp(tgeometry 'Point(1 1)@2000-01-01');
+        starttimestamp        
+------------------------------
+ Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT startTimestamp(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}');
+        starttimestamp        
+------------------------------
+ Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT startTimestamp(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]');
+        starttimestamp        
+------------------------------
+ Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT startTimestamp(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}');
+        starttimestamp        
+------------------------------
+ Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT endTimestamp(tgeometry 'Point(1 1)@2000-01-01');
+         endtimestamp         
+------------------------------
+ Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT endTimestamp(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}');
+         endtimestamp         
+------------------------------
+ Mon Jan 03 00:00:00 2000 PST
+(1 row)
+
+SELECT endTimestamp(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]');
+         endtimestamp         
+------------------------------
+ Mon Jan 03 00:00:00 2000 PST
+(1 row)
+
+SELECT endTimestamp(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}');
+         endtimestamp         
+------------------------------
+ Wed Jan 05 00:00:00 2000 PST
+(1 row)
+
+SELECT timestampN(tgeometry 'Point(1 1)@2000-01-01', 1);
+          timestampn          
+------------------------------
+ Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT timestampN(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', 1);
+          timestampn          
+------------------------------
+ Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT timestampN(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', 1);
+          timestampn          
+------------------------------
+ Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT timestampN(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', 1);
+          timestampn          
+------------------------------
+ Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT timestamps(tgeometry 'Point(1 1)@2000-01-01');
+            timestamps            
+----------------------------------
+ {"Sat Jan 01 00:00:00 2000 PST"}
+(1 row)
+
+SELECT timestamps(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}');
+                                           timestamps                                           
+------------------------------------------------------------------------------------------------
+ {"Sat Jan 01 00:00:00 2000 PST","Sun Jan 02 00:00:00 2000 PST","Mon Jan 03 00:00:00 2000 PST"}
+(1 row)
+
+SELECT timestamps(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]');
+                           timestamps                            
+-----------------------------------------------------------------
+ {"Sat Jan 01 00:00:00 2000 PST","Mon Jan 03 00:00:00 2000 PST"}
+(1 row)
+
+SELECT timestamps(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}');
+                                                          timestamps                                                           
+-------------------------------------------------------------------------------------------------------------------------------
+ {"Sat Jan 01 00:00:00 2000 PST","Mon Jan 03 00:00:00 2000 PST","Tue Jan 04 00:00:00 2000 PST","Wed Jan 05 00:00:00 2000 PST"}
+(1 row)
+
+SELECT asText(atValues(tgeometry 'Point(1 1)@2000-01-01', geometry 'Point(1 1)'));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(atValues(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', geometry 'Point(1 1)'));
+                                                                astext                                                                
+--------------------------------------------------------------------------------------------------------------------------------------
+ {POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, LINESTRING(1 1,2 2)@Sun Jan 02 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(atValues(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', geometry 'Point(1 1)'));
+                                        astext                                        
+--------------------------------------------------------------------------------------
+ {[POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(atValues(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', geometry 'Point(1 1)'));
+                                        astext                                        
+--------------------------------------------------------------------------------------
+ {[POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(minusValues(tgeometry 'Point(1 1)@2000-01-01', geometry 'Point(1 1)'));
+ astext 
+--------
+ 
+(1 row)
+
+SELECT asText(minusValues(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', geometry 'Point(1 1)'));
+ astext 
+--------
+ 
+(1 row)
+
+SELECT asText(minusValues(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', geometry 'Point(1 1)'));
+ astext 
+--------
+ 
+(1 row)
+
+SELECT asText(minusValues(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', geometry 'Point(1 1)'));
+                                        astext                                        
+--------------------------------------------------------------------------------------
+ {[POINT(2 2)@Tue Jan 04 00:00:00 2000 PST, POINT(2 2)@Wed Jan 05 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(atValues(tgeometry 'Point(1 1)@2000-01-01', geomset '{"Point(1 1)"}'));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(atValues(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', geomset '{"Point(1 1)"}'));
+                                                                astext                                                                
+--------------------------------------------------------------------------------------------------------------------------------------
+ {POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, LINESTRING(1 1,2 2)@Sun Jan 02 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(atValues(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', geomset '{"Point(1 1)"}'));
+                                        astext                                        
+--------------------------------------------------------------------------------------
+ {[POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(atValues(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', geomset '{"Point(1 1)"}'));
+                                        astext                                        
+--------------------------------------------------------------------------------------
+ {[POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(minusValues(tgeometry 'Point(1 1)@2000-01-01', geomset '{"Point(1 1)"}'));
+ astext 
+--------
+ 
+(1 row)
+
+SELECT asText(minusValues(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', geomset '{"Point(1 1)"}'));
+ astext 
+--------
+ 
+(1 row)
+
+SELECT asText(minusValues(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', geomset '{"Point(1 1)"}'));
+ astext 
+--------
+ 
+(1 row)
+
+SELECT asText(minusValues(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', geomset '{"Point(1 1)"}'));
+                                        astext                                        
+--------------------------------------------------------------------------------------
+ {[POINT(2 2)@Tue Jan 04 00:00:00 2000 PST, POINT(2 2)@Wed Jan 05 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(atTime(tgeometry 'Point(1 1)@2000-01-01', timestamptz '2000-01-01'));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(atTime(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', timestamptz '2000-01-01'));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(atTime(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', timestamptz '2000-01-01'));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(atTime(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', timestamptz '2000-01-01'));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT ST_AsText(valueAtTimestamp(tgeometry 'Point(1 1)@2000-01-01', '2000-01-01'));
+ st_astext  
+------------
+ POINT(1 1)
+(1 row)
+
+SELECT ST_AsText(valueAtTimestamp(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', '2000-01-01'));
+ st_astext  
+------------
+ POINT(1 1)
+(1 row)
+
+SELECT ST_AsText(valueAtTimestamp(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', '2000-01-01'));
+ st_astext  
+------------
+ POINT(1 1)
+(1 row)
+
+SELECT ST_AsText(valueAtTimestamp(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', '2000-01-01'));
+ st_astext  
+------------
+ POINT(1 1)
+(1 row)
+
+SELECT asText(minusTime(tgeometry 'Point(1 1)@2000-01-01', timestamptz '2000-01-01'));
+ astext 
+--------
+ 
+(1 row)
+
+SELECT asText(minusTime(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', timestamptz '2000-01-01'));
+                                           astext                                            
+---------------------------------------------------------------------------------------------
+ {LINESTRING(1 1,2 2)@Sun Jan 02 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(minusTime(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', timestamptz '2000-01-01'));
+                                        astext                                        
+--------------------------------------------------------------------------------------
+ {(POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(minusTime(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', timestamptz '2000-01-01'));
+                                                                                  astext                                                                                  
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {(POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST], [POINT(2 2)@Tue Jan 04 00:00:00 2000 PST, POINT(2 2)@Wed Jan 05 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(atTime(tgeometry 'Point(1 1)@2000-01-01', tstzset '{2000-01-01}'));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(atTime(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', tstzset '{2000-01-01}'));
+                  astext                   
+-------------------------------------------
+ {POINT(1 1)@Sat Jan 01 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(atTime(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', tstzset '{2000-01-01}'));
+                  astext                   
+-------------------------------------------
+ {POINT(1 1)@Sat Jan 01 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(atTime(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', tstzset '{2000-01-01}'));
+                  astext                   
+-------------------------------------------
+ {POINT(1 1)@Sat Jan 01 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(minusTime(tgeometry 'Point(1 1)@2000-01-01', tstzset '{2000-01-01}'));
+ astext 
+--------
+ 
+(1 row)
+
+SELECT asText(minusTime(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', tstzset '{2000-01-01}'));
+                                           astext                                            
+---------------------------------------------------------------------------------------------
+ {LINESTRING(1 1,2 2)@Sun Jan 02 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(minusTime(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', tstzset '{2000-01-01}'));
+                                        astext                                        
+--------------------------------------------------------------------------------------
+ {(POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(minusTime(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', tstzset '{2000-01-01}'));
+                                                                                  astext                                                                                  
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {(POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST], [POINT(2 2)@Tue Jan 04 00:00:00 2000 PST, POINT(2 2)@Wed Jan 05 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(atTime(tgeometry 'Point(1 1)@2000-01-01', tstzspan '[2000-01-01, 2000-01-02]'));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(atTime(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', tstzspan '[2000-01-01, 2000-01-02]'));
+                                           astext                                            
+---------------------------------------------------------------------------------------------
+ {POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, LINESTRING(1 1,2 2)@Sun Jan 02 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(atTime(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', tstzspan '[2000-01-01, 2000-01-02]'));
+                                       astext                                       
+------------------------------------------------------------------------------------
+ [POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Sun Jan 02 00:00:00 2000 PST]
+(1 row)
+
+SELECT asText(atTime(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', tstzspan '[2000-01-01, 2000-01-02]'));
+                                        astext                                        
+--------------------------------------------------------------------------------------
+ {[POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Sun Jan 02 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(minusTime(tgeometry 'Point(1 1)@2000-01-01', tstzspan '[2000-01-01, 2000-01-02]'));
+ astext 
+--------
+ 
+(1 row)
+
+SELECT asText(minusTime(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', tstzspan '[2000-01-01, 2000-01-02]'));
+                  astext                   
+-------------------------------------------
+ {POINT(1 1)@Mon Jan 03 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(minusTime(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', tstzspan '[2000-01-01, 2000-01-02]'));
+                                        astext                                        
+--------------------------------------------------------------------------------------
+ {(POINT(1 1)@Sun Jan 02 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(minusTime(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', tstzspan '[2000-01-01, 2000-01-02]'));
+                                                                                  astext                                                                                  
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {(POINT(1 1)@Sun Jan 02 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST], [POINT(2 2)@Tue Jan 04 00:00:00 2000 PST, POINT(2 2)@Wed Jan 05 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(atTime(tgeometry 'Point(1 1)@2000-01-01', tstzspanset '{[2000-01-01, 2000-01-02]}'));
+                 astext                  
+-----------------------------------------
+ POINT(1 1)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asText(atTime(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', tstzspanset '{[2000-01-01, 2000-01-02]}'));
+                                           astext                                            
+---------------------------------------------------------------------------------------------
+ {POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, LINESTRING(1 1,2 2)@Sun Jan 02 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(atTime(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', tstzspanset '{[2000-01-01, 2000-01-02]}'));
+                                        astext                                        
+--------------------------------------------------------------------------------------
+ {[POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Sun Jan 02 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(atTime(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', tstzspanset '{[2000-01-01, 2000-01-02]}'));
+                                        astext                                        
+--------------------------------------------------------------------------------------
+ {[POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Sun Jan 02 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(minusTime(tgeometry 'Point(1 1)@2000-01-01', tstzspanset '{[2000-01-01, 2000-01-02]}'));
+ astext 
+--------
+ 
+(1 row)
+
+SELECT asText(minusTime(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', tstzspanset '{[2000-01-01, 2000-01-02]}'));
+                  astext                   
+-------------------------------------------
+ {POINT(1 1)@Mon Jan 03 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(minusTime(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', tstzspanset '{[2000-01-01, 2000-01-02]}'));
+                                        astext                                        
+--------------------------------------------------------------------------------------
+ {(POINT(1 1)@Sun Jan 02 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(minusTime(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', tstzspanset '{[2000-01-01, 2000-01-02]}'));
+                                                                                  astext                                                                                  
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {(POINT(1 1)@Sun Jan 02 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST], [POINT(2 2)@Tue Jan 04 00:00:00 2000 PST, POINT(2 2)@Wed Jan 05 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(deleteTime(tgeometry 'Point(1 1)@2000-01-01', timestamptz '2000-01-01'));
+ astext 
+--------
+ 
+(1 row)
+
+SELECT asText(deleteTime(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', timestamptz '2000-01-01'));
+                                           astext                                            
+---------------------------------------------------------------------------------------------
+ {LINESTRING(1 1,2 2)@Sun Jan 02 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(deleteTime(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', timestamptz '2000-01-01'));
+                                        astext                                        
+--------------------------------------------------------------------------------------
+ {(POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(deleteTime(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', timestamptz '2000-01-01'));
+                                                                                  astext                                                                                  
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {(POINT(1 1)@Sat Jan 01 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST], [POINT(2 2)@Tue Jan 04 00:00:00 2000 PST, POINT(2 2)@Wed Jan 05 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(deleteTime(tgeometry 'Point(1 1)@2000-01-01', tstzset '{2000-01-01}'));
+ astext 
+--------
+ 
+(1 row)
+
+SELECT asText(deleteTime(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', tstzset '{2000-01-01}'));
+                                           astext                                            
+---------------------------------------------------------------------------------------------
+ {LINESTRING(1 1,2 2)@Sun Jan 02 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(deleteTime(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', tstzset '{2000-01-01}'));
+                  astext                   
+-------------------------------------------
+ [POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]
+(1 row)
+
+SELECT asText(deleteTime(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', tstzset '{2000-01-01}'));
+                                                             astext                                                              
+---------------------------------------------------------------------------------------------------------------------------------
+ {[POINT(1 1)@Mon Jan 03 00:00:00 2000 PST], [POINT(2 2)@Tue Jan 04 00:00:00 2000 PST, POINT(2 2)@Wed Jan 05 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(deleteTime(tgeometry 'Point(1 1)@2000-01-01', tstzspan '[2000-01-01, 2000-01-02]'));
+ astext 
+--------
+ 
+(1 row)
+
+SELECT asText(deleteTime(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', tstzspan '[2000-01-01, 2000-01-02]'));
+                  astext                   
+-------------------------------------------
+ {POINT(1 1)@Mon Jan 03 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(deleteTime(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', tstzspan '[2000-01-01, 2000-01-02]'));
+                  astext                   
+-------------------------------------------
+ [POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]
+(1 row)
+
+SELECT asText(deleteTime(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', tstzspan '[2000-01-01, 2000-01-02]'));
+                                                                                  astext                                                                                  
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {(POINT(1 1)@Sun Jan 02 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST], [POINT(2 2)@Tue Jan 04 00:00:00 2000 PST, POINT(2 2)@Wed Jan 05 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asText(deleteTime(tgeometry 'Point(1 1)@2000-01-01', tstzspanset '{[2000-01-01, 2000-01-02]}'));
+ astext 
+--------
+ 
+(1 row)
+
+SELECT asText(deleteTime(tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}', tstzspanset '{[2000-01-01, 2000-01-02]}'));
+                  astext                   
+-------------------------------------------
+ {POINT(1 1)@Mon Jan 03 00:00:00 2000 PST}
+(1 row)
+
+SELECT asText(deleteTime(tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]', tstzspanset '{[2000-01-01, 2000-01-02]}'));
+                  astext                   
+-------------------------------------------
+ [POINT(1 1)@Mon Jan 03 00:00:00 2000 PST]
+(1 row)
+
+SELECT asText(deleteTime(tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}', tstzspanset '{[2000-01-01, 2000-01-02]}'));
+                                                                                  astext                                                                                  
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {(POINT(1 1)@Sun Jan 02 00:00:00 2000 PST, POINT(1 1)@Mon Jan 03 00:00:00 2000 PST], [POINT(2 2)@Tue Jan 04 00:00:00 2000 PST, POINT(2 2)@Wed Jan 05 00:00:00 2000 PST]}
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' = tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' = tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' = tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' = tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' = tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' = tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' = tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' = tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' = tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' = tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' = tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' = tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}' = tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}' = tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}' = tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}' = tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' != tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' != tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' != tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' != tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' != tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' != tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' != tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' != tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' != tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' != tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' != tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' != tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}' != tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}' != tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}' != tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}' != tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' < tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' < tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' < tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' < tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' < tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' < tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' < tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' < tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' < tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' < tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' < tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' < tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}' < tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}' < tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}' < tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}' < tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' <= tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' <= tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' <= tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' <= tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' <= tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' <= tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' <= tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' <= tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' <= tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' <= tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' <= tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' <= tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}' <= tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}' <= tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}' <= tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}' <= tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' > tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' > tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' > tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' > tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' > tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' > tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' > tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' > tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' > tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' > tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' > tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' > tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}' > tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}' > tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}' > tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}' > tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' >= tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' >= tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' >= tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' >= tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' >= tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' >= tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' >= tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' >= tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' >= tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' >= tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' >= tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' >= tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}' >= tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}' >= tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}' >= tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}' >= tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03], [Point(2 2)@2000-01-04, Point(2 2)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+

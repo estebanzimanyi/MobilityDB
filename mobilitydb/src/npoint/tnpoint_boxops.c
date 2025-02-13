@@ -142,22 +142,3 @@ Npoint_tstzspan_to_stbox(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************/
-
-PGDLLEXPORT Datum Tnpoint_to_stbox(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tnpoint_to_stbox);
-/**
- * @ingroup mobilitydb_temporal_conversion
- * @brief Return a temporal network point converted to a spatiotemporal box
- * @sqlfn stbox()
- * @sqlop @p ::
- */
-Datum
-Tnpoint_to_stbox(PG_FUNCTION_ARGS)
-{
-  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  STBox *result = tpoint_to_stbox(temp);
-  PG_FREE_IF_COPY(temp, 0);
-  PG_RETURN_STBOX_P(result);
-}
-
-/*****************************************************************************/

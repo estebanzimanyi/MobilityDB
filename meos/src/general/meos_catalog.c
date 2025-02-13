@@ -120,6 +120,8 @@ static const char *MEOS_TYPE_NAMES[] =
   [T_CBUFFER] = "cbuffer",
   [T_CBUFFERSET] = "cbufferset",
   [T_TCBUFFER] = "tcbuffer",
+  [T_TGEOMETRY] = "tgeometry",
+  [T_TGEOGRAPHY] = "tgeography",
 };
 
 /**
@@ -270,6 +272,8 @@ static const temptype_catalog_struct MEOS_TEMPTYPE_CATALOG[] =
   {T_TNPOINT,    T_NPOINT},
   {T_TPOSE,      T_POSE},
   {T_TCBUFFER,   T_CBUFFER},
+  {T_TGEOMETRY,  T_GEOMETRY},
+  {T_TGEOGRAPHY, T_GEOGRAPHY},
 };
 
 /*****************************************************************************/
@@ -1066,6 +1070,9 @@ temporal_type(meosType type)
 #if CBUFFER
     || type == T_TCBUFFER
 #endif
+#if GEO
+    || type == T_TGEOMETRY || type == T_TGEOGRAPHY
+#endif
 #if NPOINT
     || type == T_TNPOINT
 #endif
@@ -1260,6 +1267,9 @@ tspatial_type(meosType type)
   if (type == T_TGEOMPOINT || type == T_TGEOGPOINT
 #if CBUFFER
       || type == T_TCBUFFER
+#endif
+#if GEO
+      || type == T_TGEOMETRY || type == T_TGEOGRAPHY
 #endif
 #if NPOINT
       || type == T_TNPOINT

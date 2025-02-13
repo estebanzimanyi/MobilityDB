@@ -67,15 +67,15 @@ extern int edge_calculate_gbox(const POINT3D *A1, const POINT3D *A2, GBOX *gbox)
 /**
  * @ingroup meos_internal_temporal_accessor
  * @brief Return the last argument initialized with the spatiotemporal box from
- * a temporal point instant
+ * a temporal geo instant
  * @param[in] inst Temporal instant
  * @param[in] box Spatiotemporal box
  */
 void
-tpointinst_set_stbox(const TInstant *inst, STBox *box)
+tgeoinst_set_stbox(const TInstant *inst, STBox *box)
 {
-  GSERIALIZED *point = DatumGetGserializedP(tinstant_val(inst));
-  geo_set_stbox(point, box);
+  GSERIALIZED *gs = DatumGetGserializedP(tinstant_val(inst));
+  geo_set_stbox(gs, box);
   span_set(TimestampTzGetDatum(inst->t), TimestampTzGetDatum(inst->t),
     true, true, T_TIMESTAMPTZ, T_TSTZSPAN, &box->period);
   MEOS_FLAGS_SET_T(box->flags, true);
@@ -118,33 +118,33 @@ tspatialseqset_set_stbox(const TSequenceSet *ss, STBox *box)
 
 /**
  * @brief Return the last argument initialized with the spatiotemporal box of
- * an array of temporal point instants
+ * an array of temporal geo instants
  * @param[in] instants Temporal instant values
  * @param[in] count Number of elements in the output array
  * @param[out] box Spatiotemporal box
  * @note Temporal instant values do not have a precomputed bounding box
  */
 void
-tpointinstarr_set_stbox(const TInstant **instants, int count, STBox *box)
+tgeoinstarr_set_stbox(const TInstant **instants, int count, STBox *box)
 {
   /* Initialize the bounding box with the first instant */
-  tpointinst_set_stbox(instants[0], box);
+  tgeoinst_set_stbox(instants[0], box);
   /* Prepare for the iteration */
   bool hasz = MEOS_FLAGS_GET_Z(instants[0]->flags);
   bool geodetic = MEOS_FLAGS_GET_GEODETIC(instants[0]->flags);
   for (int i = 1; i < count; i++)
   {
-    GSERIALIZED *point = DatumGetGserializedP(tinstant_val(instants[i]));
-    double x, y, z;
-    point_get_coords(point, hasz, &x, &y, &z);
-    box->xmin = Min(box->xmin, x);
-    box->xmax = Max(box->xmax, x);
-    box->ymin = Min(box->ymin, y);
-    box->ymax = Max(box->ymax, y);
+    STBox box1;
+    GSERIALIZED *gs = DatumGetGserializedP(tinstant_val(instants[i]));
+    geo_set_stbox(gs, &box1);
+    box->xmin = Min(box->xmin, box1.xmin);
+    box->xmax = Max(box->xmax, box1.xmax);
+    box->ymin = Min(box->ymin, box1.ymin);
+    box->ymax = Max(box->ymax, box1.ymax);
     if (hasz)
     {
-      box->zmin = Min(box->zmin, z);
-      box->zmax = Max(box->zmax, z);
+      box->zmin = Min(box->zmin, box1.zmin);
+      box->zmax = Max(box->zmax, box1.zmax);
     }
     box->period.lower = TimestampTzGetDatum(
       Min(DatumGetTimestampTz(box->period.lower), instants[i]->t));
@@ -162,23 +162,23 @@ tpointinstarr_set_stbox(const TInstant **instants, int count, STBox *box)
  * @param[in] inst Temporal instant
  */
 void
-tpointseq_expand_stbox(TSequence *seq, const TInstant *inst)
+tgeoseq_expand_stbox(TSequence *seq, const TInstant *inst)
 {
   STBox box;
-  tpointinst_set_stbox(inst, &box);
+  tgeoinst_set_stbox(inst, &box);
   stbox_expand(&box, (STBox *) TSEQUENCE_BBOX_PTR(seq));
   return;
 }
 
 /**
  * @brief Return the last argument initialized with the the spatiotemporal box
- * from an array of temporal point sequences
+ * from an array of temporal geo sequences
  * @param[in] sequences Temporal instant values
  * @param[in] count Number of elements in the output array
  * @param[out] box Spatiotemporal box
  */
 void
-tpointseqarr_set_stbox(const TSequence **sequences, int count, STBox *box)
+tgeoseqarr_set_stbox(const TSequence **sequences, int count, STBox *box)
 {
   memcpy(box, TSEQUENCE_BBOX_PTR(sequences[0]), sizeof(STBox));
   for (int i = 1; i < count; i++)
@@ -208,7 +208,7 @@ tpointinst_stboxes(const TInstant *inst)
   assert(inst); assert(tpoint_type(inst->temptype));
   /* One bounding box per instant */
   STBox *result = palloc(sizeof(STBox));
-  tpointinst_set_stbox(inst, &result[0]);
+  tgeoinst_set_stbox(inst, &result[0]);
   return result;
 }
 
@@ -225,7 +225,7 @@ tpointseq_disc_stboxes(const TSequence *seq)
   /* One bounding box per instant */
   STBox *result = palloc(sizeof(STBox) * seq->count);
   for (int i = 0; i < seq->count; i++)
-    tpointinst_set_stbox(TSEQUENCE_INST_N(seq, i), &result[i]);
+    tgeoinst_set_stbox(TSEQUENCE_INST_N(seq, i), &result[i]);
   return result;
 }
 
@@ -245,7 +245,7 @@ tpointseq_cont_stboxes_iter(const TSequence *seq, STBox *result)
   /* Instantaneous sequence */
   if (seq->count == 1)
   {
-    tpointinst_set_stbox(TSEQUENCE_INST_N(seq, 0), &result[0]);
+    tgeoinst_set_stbox(TSEQUENCE_INST_N(seq, 0), &result[0]);
     return 1;
   }
 
@@ -253,10 +253,10 @@ tpointseq_cont_stboxes_iter(const TSequence *seq, STBox *result)
   const TInstant *inst = TSEQUENCE_INST_N(seq, 0);
   for (int i = 0; i < seq->count - 1; i++)
   {
-    tpointinst_set_stbox(inst, &result[i]);
+    tgeoinst_set_stbox(inst, &result[i]);
     inst = TSEQUENCE_INST_N(seq, i + 1);
     STBox box;
-    tpointinst_set_stbox(inst, &box);
+    tgeoinst_set_stbox(inst, &box);
     stbox_expand(&box, &result[i]);
   }
   return seq->count - 1;
@@ -380,11 +380,11 @@ tpointseq_disc_split_n_stboxes(const TSequence *seq, int box_count, int *count)
     int j = i + size;
     if (k < remainder)
       j++;
-    tpointinst_set_stbox(TSEQUENCE_INST_N(seq, i), &result[k]);
+    tgeoinst_set_stbox(TSEQUENCE_INST_N(seq, i), &result[k]);
     for (int l = i + 1; l < j; l++)
     {
       STBox box;
-      tpointinst_set_stbox(TSEQUENCE_INST_N(seq, l), &box);
+      tgeoinst_set_stbox(TSEQUENCE_INST_N(seq, l), &box);
       stbox_expand(&box, &result[k]);
     }
     i = j;
@@ -412,7 +412,7 @@ tpointseq_cont_split_n_stboxes_iter(const TSequence *seq, int box_count,
   /* Instantaneous sequence */
   if (seq->count == 1)
   {
-    tpointinst_set_stbox(TSEQUENCE_INST_N(seq, 0), &result[0]);
+    tgeoinst_set_stbox(TSEQUENCE_INST_N(seq, 0), &result[0]);
     return 1;
   }
 
@@ -432,11 +432,11 @@ tpointseq_cont_split_n_stboxes_iter(const TSequence *seq, int box_count,
     int j = i + size;
     if (k < remainder)
       j++;
-    tpointinst_set_stbox(TSEQUENCE_INST_N(seq, i), &result[k]);
+    tgeoinst_set_stbox(TSEQUENCE_INST_N(seq, i), &result[k]);
     for (int l = i + 1; l <= j; l++)
     {
       STBox box;
-      tpointinst_set_stbox(TSEQUENCE_INST_N(seq, l), &box);
+      tgeoinst_set_stbox(TSEQUENCE_INST_N(seq, l), &box);
       stbox_expand(&box, &result[k]);
     }
     i = j;
@@ -613,11 +613,11 @@ tpointseq_disc_split_each_n_stboxes(const TSequence *seq, int elems_per_box,
   for (int i = 0; i < seq->count; ++i)
   {
     if (i % elems_per_box == 0)
-      tpointinst_set_stbox(TSEQUENCE_INST_N(seq, i), &result[k++]);
+      tgeoinst_set_stbox(TSEQUENCE_INST_N(seq, i), &result[k++]);
     else
     {
       STBox box;
-      tpointinst_set_stbox(TSEQUENCE_INST_N(seq, i), &box);
+      tgeoinst_set_stbox(TSEQUENCE_INST_N(seq, i), &box);
       stbox_expand(&box, &result[k - 1]);
     }
   }
@@ -652,11 +652,11 @@ tpointseq_cont_split_each_n_stboxes_iter(const TSequence *seq,
 
   /* General case */
   int k = 0;
-  tpointinst_set_stbox(TSEQUENCE_INST_N(seq, 0), &result[k]);
+  tgeoinst_set_stbox(TSEQUENCE_INST_N(seq, 0), &result[k]);
   for (int i = 1; i < seq->count; ++i)
   {
     STBox box;
-    tpointinst_set_stbox(TSEQUENCE_INST_N(seq, i), &box);
+    tgeoinst_set_stbox(TSEQUENCE_INST_N(seq, i), &box);
     stbox_expand(&box, &result[k]);
     if ((i % elems_per_box == 0) && (i < seq->count - 1))
       result[++k] = box;
@@ -752,7 +752,7 @@ tpoint_split_each_n_stboxes(const Temporal *temp, int elems_per_box,
   {
     case TINSTANT:
       *count = 1;
-      return tpoint_to_stbox(temp);
+      return tspatial_to_stbox(temp);
     case TSEQUENCE:
       return tpointseq_split_each_n_stboxes((TSequence *) temp, elems_per_box,
         count);

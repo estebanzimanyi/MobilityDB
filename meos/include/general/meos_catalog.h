@@ -112,9 +112,11 @@ typedef enum
   T_CBUFFER        = 56,  /**< buffer type */
   T_CBUFFERSET     = 57,  /**< buffer set type */
   T_TCBUFFER       = 58,  /**< temporal buffer type */
+  T_TGEOMETRY      = 59,  /**< temporal geometry type */
+  T_TGEOGRAPHY     = 60,  /**< temporal geography type */
 } meosType;
 
-#define NO_MEOS_TYPES 59
+#define NO_MEOS_TYPES 61
 
 /**
  * Enumeration that defines the classes of Boolean operators used in

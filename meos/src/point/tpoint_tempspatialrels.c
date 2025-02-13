@@ -145,7 +145,7 @@ tinterrel_tpointinst_geom(const TInstant *inst, const GSERIALIZED *gs,
   /* Result depends on whether we are computing tintersects or tdisjoint */
   bool result = DatumGetBool(func(tinstant_val(inst),
     GserializedPGetDatum(gs)));
-  /* For disjoint we need to invert the result */
+  /* Invert the result for disjoint */
   if (! tinter)
     result = ! result;
   return tinstant_make(BoolGetDatum(result), T_TBOOL, inst->t);
@@ -170,7 +170,7 @@ tinterrel_tpointseq_discstep_geom(const TSequence *seq,
     const TInstant *inst = TSEQUENCE_INST_N(seq, i);
     bool result = DatumGetBool(func(tinstant_val(inst),
       GserializedPGetDatum(gs)));
-    /* For disjoint we need to invert the result */
+    /* Invert the result for disjoint */
     if (! tinter)
       result = ! result;
     instants[i] = tinstant_make(BoolGetDatum(result), T_TBOOL, inst->t);
@@ -416,7 +416,7 @@ tinterrel_tpoint_geo(const Temporal *temp, const GSERIALIZED *gs, bool tinter,
   bool restr, bool atvalue)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs))
+  if (! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs))
     return NULL;
 
   /* Bounding box test */
@@ -520,7 +520,7 @@ tinterrel_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2,
   bool tinter, bool restr, bool atvalue)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tpoint_tpoint(temp1, temp2))
+  if (! ensure_valid_tgeo_tgeo(temp1, temp2))
     return NULL;
 
   Temporal *result = tinter ?
@@ -1148,7 +1148,7 @@ tcontains_geo_tpoint(const GSERIALIZED *gs, const Temporal *temp, bool restr,
   bool atvalue)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs) ||
+  if (! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs) ||
       ! ensure_has_not_Z_gs(gs) || ! ensure_has_not_Z(temp->flags))
     return NULL;
 
@@ -1198,7 +1198,7 @@ ttouches_tpoint_geo(const Temporal *temp, const GSERIALIZED *gs, bool restr,
   bool atvalue)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs) ||
+  if (! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs) ||
       ! ensure_has_not_Z(temp->flags) || ! ensure_has_not_Z_gs(gs))
     return NULL;
 
@@ -1242,7 +1242,7 @@ tdwithin_tpoint_geo(const Temporal *temp, const GSERIALIZED *gs, double dist,
   bool restr, bool atvalue)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs) ||
+  if (! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs) ||
       ! ensure_point_type(gs) ||
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return NULL;
@@ -1394,7 +1394,7 @@ tdwithin_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2,
   double dist, bool restr, bool atvalue)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tpoint_tpoint(temp1, temp2) ||
+  if (! ensure_valid_tgeo_tgeo(temp1, temp2) ||
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return NULL;
 

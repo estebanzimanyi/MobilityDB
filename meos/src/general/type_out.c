@@ -1449,7 +1449,7 @@ coords_to_wkb_buf(Datum value, int16 flags, uint8_t *buf, uint8_t variant)
  * Binary (WKB) representation
  * @details SRID (int32), coordinates of a 2D point and radius (3 doubles)
  */
-uint8_t *
+static uint8_t *
 cbuffer_to_wkb_buf_int(const Cbuffer *cbuf, uint8_t *buf,
   uint8_t variant)
 {
@@ -1469,8 +1469,8 @@ cbuffer_to_wkb_buf_int(const Cbuffer *cbuf, uint8_t *buf,
  * @brief Write into the buffer a network point in the Well-Known Binary (WKB)
  * representation
  */
-uint8_t *
-npoint_to_wkb_buf(const Npoint *np, uint8_t *buf, uint8_t variant)
+static uint8_t *
+npoint_to_wkb_buf_int(const Npoint *np, uint8_t *buf, uint8_t variant)
 {
   buf = int64_to_wkb_buf(np->rid, buf, variant);
   buf = double_to_wkb_buf(np->pos, buf, variant);
@@ -1523,7 +1523,7 @@ basevalue_to_wkb_buf(Datum value, meosType basetype, int16 flags, uint8_t *buf,
 #endif /* NPOINT */
 #if NPOINT
     case T_NPOINT:
-      buf = npoint_to_wkb_buf(DatumGetNpointP(value), buf, variant);
+      buf = npoint_to_wkb_buf_int(DatumGetNpointP(value), buf, variant);
       break;
 #endif /* NPOINT */
     default: /* Error! */
@@ -1900,6 +1900,25 @@ cbuffer_to_wkb_buf(const Cbuffer *cbuf, uint8_t *buf, uint8_t variant)
 
 /*****************************************************************************/
 
+#if NPOINT
+/**
+ * @brief Write into the buffer a network point in the Well-Known Binary
+ * (WKB) representation
+ */
+static uint8_t *
+npoint_to_wkb_buf(const Npoint *np, uint8_t *buf, uint8_t variant)
+{
+  /* Write the endian flag */
+  buf = endian_to_wkb_buf(buf, variant);
+  /* Write the network point, copied from #npoint_to_wkb_buf_int */
+  buf = int64_to_wkb_buf(np->rid, buf, variant);
+  buf = double_to_wkb_buf(np->pos, buf, variant);
+  return buf;
+}
+#endif /* NPOINT */
+
+/*****************************************************************************/
+
 /**
  * @brief Write into the buffer the flag containing the temporal type and
  * other characteristics in the Well-Known Binary (WKB) representation
@@ -2094,8 +2113,18 @@ datum_to_wkb_buf(Datum value, meosType type, uint8_t *buf, uint8_t variant)
     buf = spanset_to_wkb_buf((SpanSet *) DatumGetPointer(value), buf, variant);
   else if (type == T_TBOX)
     buf = tbox_to_wkb_buf((TBox *) DatumGetPointer(value), buf, variant);
+  else if (type == T_TBOX)
+    buf = tbox_to_wkb_buf((TBox *) DatumGetPointer(value), buf, variant);
   else if (type == T_STBOX)
     buf = stbox_to_wkb_buf((STBox *) DatumGetPointer(value), buf, variant);
+#if CBUFFER
+  else if (type == T_CBUFFER)
+    buf = cbuffer_to_wkb_buf((Cbuffer *) DatumGetPointer(value), buf, variant);
+#endif /* CBUFFER */
+#if NPOINT
+  else if (type == T_NPOINT)
+    buf = npoint_to_wkb_buf((Npoint *) DatumGetPointer(value), buf, variant);
+#endif /* NPOINT */
   else if (temporal_type(type))
     buf = temporal_to_wkb_buf((Temporal *) DatumGetPointer(value), buf,
       variant);

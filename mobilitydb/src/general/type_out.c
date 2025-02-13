@@ -614,17 +614,17 @@ Temporal_as_wkb(PG_FUNCTION_ARGS)
   PG_RETURN_BYTEA_P(result);
 }
 
-PGDLLEXPORT Datum Tpoint_as_ewkb(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tpoint_as_ewkb);
+PGDLLEXPORT Datum Tspatial_as_ewkb(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tspatial_as_ewkb);
 /**
  * @ingroup mobilitydb_temporal_inout
  * @brief Return the Extended Well-Known Binary (WKB) representation of a
- * temporal point
- * @note This will have 'SRID=#;' for temporal points
+ * temporal spatial value
+ * @note This will have 'SRID=#;' for temporal spatial values
  * @sqlfn asEWKB()
  */
 Datum
-Tpoint_as_ewkb(PG_FUNCTION_ARGS)
+Tspatial_as_ewkb(PG_FUNCTION_ARGS)
 {
   /* Ensure that the value is detoasted if necessary */
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);

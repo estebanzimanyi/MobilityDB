@@ -1,0 +1,1972 @@
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' << tgeometry 'SRID=5676;Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' << tgeometry 'SRID=5676;{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' << tgeometry 'SRID=5676;[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' << tgeometry 'SRID=5676;{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;Point(1 1)@2000-01-01' << stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' << stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' << stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' << stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' << tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' << tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' << tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' << tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' << tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' << tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' << tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' << tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' << tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' << tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' << tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' << tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' << tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' << tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' << tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' << tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+/* Errors */
+SELECT tgeometry 'Point(1 1)@2000-01-01' << stbox 'SRID=4326;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ERROR:  Operation on mixed SRID
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' >> tgeometry 'SRID=5676;Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' >> tgeometry 'SRID=5676;{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' >> tgeometry 'SRID=5676;[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' >> tgeometry 'SRID=5676;{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;Point(1 1)@2000-01-01' >> stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' >> stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' >> stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' >> stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' >> tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' >> tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' >> tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' >> tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' >> tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' >> tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' >> tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' >> tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' >> tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' >> tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' >> tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' >> tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' >> tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' >> tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' >> tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' >> tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' &< tgeometry 'SRID=5676;Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' &< tgeometry 'SRID=5676;{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' &< tgeometry 'SRID=5676;[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' &< tgeometry 'SRID=5676;{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'SRID=5676;Point(1 1)@2000-01-01' &< stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'SRID=5676;{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' &< stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'SRID=5676;[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' &< stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'SRID=5676;{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' &< stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' &< tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' &< tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' &< tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' &< tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' &< tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' &< tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' &< tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' &< tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' &< tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' &< tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' &< tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' &< tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' &< tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' &< tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' &< tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' &< tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' &> tgeometry 'SRID=5676;Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' &> tgeometry 'SRID=5676;{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' &> tgeometry 'SRID=5676;[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' &> tgeometry 'SRID=5676;{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'SRID=5676;Point(1 1)@2000-01-01' &> stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'SRID=5676;{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' &> stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'SRID=5676;[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' &> stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'SRID=5676;{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' &> stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' &> tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' &> tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' &> tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' &> tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' &> tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' &> tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' &> tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' &> tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' &> tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' &> tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' &> tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' &> tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' &> tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' &> tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' &> tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' &> tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' <<| tgeometry 'SRID=5676;Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' <<| tgeometry 'SRID=5676;{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' <<| tgeometry 'SRID=5676;[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' <<| tgeometry 'SRID=5676;{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;Point(1 1)@2000-01-01' <<| stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' <<| stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' <<| stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' <<| stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' <<| tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' <<| tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' <<| tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' <<| tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' <<| tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' <<| tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' <<| tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' <<| tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' <<| tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' <<| tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' <<| tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' <<| tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' <<| tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' <<| tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' <<| tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' <<| tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' |>> tgeometry 'SRID=5676;Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' |>> tgeometry 'SRID=5676;{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' |>> tgeometry 'SRID=5676;[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' |>> tgeometry 'SRID=5676;{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;Point(1 1)@2000-01-01' |>> stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' |>> stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' |>> stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' |>> stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' |>> tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' |>> tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' |>> tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' |>> tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' |>> tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' |>> tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' |>> tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' |>> tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' |>> tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' |>> tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' |>> tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' |>> tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' |>> tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' |>> tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' |>> tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' |>> tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' &<| tgeometry 'SRID=5676;Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' &<| tgeometry 'SRID=5676;{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' &<| tgeometry 'SRID=5676;[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' &<| tgeometry 'SRID=5676;{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'SRID=5676;Point(1 1)@2000-01-01' &<| stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'SRID=5676;{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' &<| stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'SRID=5676;[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' &<| stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'SRID=5676;{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' &<| stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' &<| tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' &<| tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' &<| tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' &<| tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' &<| tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' &<| tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' &<| tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' &<| tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' &<| tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' &<| tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' &<| tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' &<| tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' &<| tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' &<| tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' &<| tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' &<| tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' |&> tgeometry 'SRID=5676;Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' |&> tgeometry 'SRID=5676;{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' |&> tgeometry 'SRID=5676;[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' |&> tgeometry 'SRID=5676;{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'SRID=5676;Point(1 1)@2000-01-01' |&> stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'SRID=5676;{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' |&> stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'SRID=5676;[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' |&> stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'SRID=5676;{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' |&> stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' |&> tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' |&> tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' |&> tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' |&> tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' |&> tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' |&> tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' |&> tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' |&> tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' |&> tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' |&> tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' |&> tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' |&> tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' |&> tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' |&> tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' |&> tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' |&> tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tstzspan '[2000-01-01,2000-01-02]' <<# tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tstzspan '[2000-01-01,2000-01-02]' <<# tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tstzspan '[2000-01-01,2000-01-02]' <<# tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tstzspan '[2000-01-01,2000-01-02]' <<# tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' <<# tgeometry 'SRID=5676;Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' <<# tgeometry 'SRID=5676;{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' <<# tgeometry 'SRID=5676;[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' <<# tgeometry 'SRID=5676;{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' <<# tstzspan '[2000-01-01,2000-01-02]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' <<# tstzspan '[2000-01-01,2000-01-02]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' <<# tstzspan '[2000-01-01,2000-01-02]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' <<# tstzspan '[2000-01-01,2000-01-02]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;Point(1 1)@2000-01-01' <<# stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' <<# stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' <<# stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' <<# stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' <<# tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' <<# tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' <<# tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' <<# tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' <<# tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' <<# tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' <<# tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' <<# tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' <<# tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' <<# tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' <<# tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' <<# tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' <<# tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' <<# tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' <<# tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' <<# tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tstzspan '[2000-01-01,2000-01-02]' #>> tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tstzspan '[2000-01-01,2000-01-02]' #>> tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tstzspan '[2000-01-01,2000-01-02]' #>> tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tstzspan '[2000-01-01,2000-01-02]' #>> tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' #>> tgeometry 'SRID=5676;Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' #>> tgeometry 'SRID=5676;{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' #>> tgeometry 'SRID=5676;[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' #>> tgeometry 'SRID=5676;{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' #>> tstzspan '[2000-01-01,2000-01-02]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' #>> tstzspan '[2000-01-01,2000-01-02]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' #>> tstzspan '[2000-01-01,2000-01-02]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' #>> tstzspan '[2000-01-01,2000-01-02]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;Point(1 1)@2000-01-01' #>> stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' #>> stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' #>> stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' #>> stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' #>> tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' #>> tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' #>> tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' #>> tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' #>> tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' #>> tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' #>> tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' #>> tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' #>> tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' #>> tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' #>> tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' #>> tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' #>> tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' #>> tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' #>> tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' #>> tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tstzspan '[2000-01-01,2000-01-02]' &<# tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tstzspan '[2000-01-01,2000-01-02]' &<# tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tstzspan '[2000-01-01,2000-01-02]' &<# tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tstzspan '[2000-01-01,2000-01-02]' &<# tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' &<# tgeometry 'SRID=5676;Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' &<# tgeometry 'SRID=5676;{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' &<# tgeometry 'SRID=5676;[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' &<# tgeometry 'SRID=5676;{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' &<# tstzspan '[2000-01-01,2000-01-02]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' &<# tstzspan '[2000-01-01,2000-01-02]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' &<# tstzspan '[2000-01-01,2000-01-02]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' &<# tstzspan '[2000-01-01,2000-01-02]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;Point(1 1)@2000-01-01' &<# stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'SRID=5676;{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' &<# stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' &<# stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'SRID=5676;{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' &<# stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' &<# tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' &<# tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' &<# tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' &<# tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' &<# tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' &<# tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' &<# tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' &<# tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' &<# tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' &<# tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' &<# tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' &<# tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' &<# tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' &<# tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' &<# tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' &<# tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tstzspan '[2000-01-01,2000-01-02]' #&> tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tstzspan '[2000-01-01,2000-01-02]' #&> tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tstzspan '[2000-01-01,2000-01-02]' #&> tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tstzspan '[2000-01-01,2000-01-02]' #&> tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' #&> tgeometry 'SRID=5676;Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' #&> tgeometry 'SRID=5676;{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' #&> tgeometry 'SRID=5676;[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])' #&> tgeometry 'SRID=5676;{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' #&> tstzspan '[2000-01-01,2000-01-02]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' #&> tstzspan '[2000-01-01,2000-01-02]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' #&> tstzspan '[2000-01-01,2000-01-02]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' #&> tstzspan '[2000-01-01,2000-01-02]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'SRID=5676;Point(1 1)@2000-01-01' #&> stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'SRID=5676;{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' #&> stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'SRID=5676;[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' #&> stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'SRID=5676;{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' #&> stbox 'SRID=5676;STBOX XT(((1.0,1.0),(2.0,2.0)),[2000-01-01,2000-01-02])';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' #&> tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' #&> tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' #&> tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' #&> tgeometry 'Point(1 1)@2000-01-01';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' #&> tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' #&> tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' #&> tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' #&> tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' #&> tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' #&> tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' #&> tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' #&> tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry 'Point(1 1)@2000-01-01' #&> tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03}' #&> tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03]' #&> tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}' #&> tgeometry '{[Point(1 1)@2000-01-01, Linestring(1 1,2 2)@2000-01-02, Point(1 1)@2000-01-03],[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}';
+ ?column? 
+----------
+ t
+(1 row)
+
+/* Errors */
+SELECT stbox 'STBOX T([2000-01-01,2000-01-02])' << tgeometry 'Point(1 1)@2000-01-01';
+ERROR:  The box must have space dimension
+SELECT stbox 'STBOX T([2000-01-01,2000-01-02])' &< tgeometry 'Point(1 1)@2000-01-01';
+ERROR:  The box must have space dimension
+SELECT stbox 'STBOX T([2000-01-01,2000-01-02])' >> tgeometry 'Point(1 1)@2000-01-01';
+ERROR:  The box must have space dimension
+SELECT stbox 'STBOX T([2000-01-01,2000-01-02])' &> tgeometry 'Point(1 1)@2000-01-01';
+ERROR:  The box must have space dimension
+SELECT stbox 'STBOX T([2000-01-01,2000-01-02])' <<| tgeometry 'Point(1 1)@2000-01-01';
+ERROR:  The box must have space dimension
+SELECT stbox 'STBOX T([2000-01-01,2000-01-02])' &<| tgeometry 'Point(1 1)@2000-01-01';
+ERROR:  The box must have space dimension
+SELECT stbox 'STBOX T([2000-01-01,2000-01-02])' |>> tgeometry 'Point(1 1)@2000-01-01';
+ERROR:  The box must have space dimension
+SELECT stbox 'STBOX T([2000-01-01,2000-01-02])' |&> tgeometry 'Point(1 1)@2000-01-01';
+ERROR:  The box must have space dimension
+SELECT stbox 'STBOX X((1.0,1.0),(2.0,2.0))' <<# tgeometry 'Point(1 1)@2000-01-01';
+ERROR:  The box must have time dimension
+SELECT stbox 'STBOX X((1.0,1.0),(2.0,2.0))' &<# tgeometry 'Point(1 1)@2000-01-01';
+ERROR:  The box must have time dimension
+SELECT stbox 'STBOX X((1.0,1.0),(2.0,2.0))' #>> tgeometry 'Point(1 1)@2000-01-01';
+ERROR:  The box must have time dimension
+SELECT stbox 'STBOX X((1.0,1.0),(2.0,2.0))' #&> tgeometry 'Point(1 1)@2000-01-01';
+ERROR:  The box must have time dimension
+SELECT tgeometry 'Point(1 1)@2000-01-01' << stbox 'STBOX T([2000-01-01,2000-01-02])';
+ERROR:  The box must have space dimension
+SELECT tgeometry 'Point(1 1)@2000-01-01' &< stbox 'STBOX T([2000-01-01,2000-01-02])';
+ERROR:  The box must have space dimension
+SELECT tgeometry 'Point(1 1)@2000-01-01' >>  stbox 'STBOX T([2000-01-01,2000-01-02])' ;
+ERROR:  The box must have space dimension
+SELECT tgeometry 'Point(1 1)@2000-01-01' &>  stbox 'STBOX T([2000-01-01,2000-01-02])';
+ERROR:  The box must have space dimension
+SELECT tgeometry 'Point(1 1)@2000-01-01' <<| stbox 'STBOX T([2000-01-01,2000-01-02])';
+ERROR:  The box must have space dimension
+SELECT tgeometry 'Point(1 1)@2000-01-01' &<| stbox 'STBOX T([2000-01-01,2000-01-02])';
+ERROR:  The box must have space dimension
+SELECT tgeometry 'Point(1 1)@2000-01-01'|>>  stbox 'STBOX T([2000-01-01,2000-01-02])' ;
+ERROR:  The box must have space dimension
+SELECT tgeometry 'Point(1 1)@2000-01-01' |&>  stbox 'STBOX T([2000-01-01,2000-01-02])';
+ERROR:  The box must have space dimension
+SELECT tgeometry 'Point(1 1)@2000-01-01' <<# stbox 'STBOX X((1.0,1.0),(2.0,2.0))';
+ERROR:  The box must have time dimension
+SELECT tgeometry 'Point(1 1)@2000-01-01' &<# stbox 'STBOX X((1.0,1.0),(2.0,2.0))';
+ERROR:  The box must have time dimension
+SELECT tgeometry 'Point(1 1)@2000-01-01' #>> stbox 'STBOX X((1.0,1.0),(2.0,2.0))';
+ERROR:  The box must have time dimension
+SELECT tgeometry 'Point(1 1)@2000-01-01' #&> stbox 'STBOX X((1.0,1.0),(2.0,2.0))';
+ERROR:  The box must have time dimension
