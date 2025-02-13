@@ -757,20 +757,19 @@ ensure_valid_stbox_geo(const STBox *box, const GSERIALIZED *gs)
   return true;
 }
 
+
 /**
- * @brief Ensure the validity of a temporal point and a geometry
+ * @brief Ensure the validity of a temporal geo and a geometry/geography
  * @note The geometry can be empty since some functions such atGeometry or
  * minusGeometry return different result on empty geometries.
  */
 bool
-ensure_valid_tpoint_geo(const Temporal *temp, const GSERIALIZED *gs)
+ensure_valid_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
-  meosType tgeotype =
-    FLAGS_GET_GEODETIC(gs->gflags) ? T_TGEOGPOINT : T_TGEOMPOINT;
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_tpoint_type(temp->temptype) ||
+      ! ensure_tgeo_type(temp->temptype) ||
       ! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)) ||
-      ! ensure_temporal_isof_type(temp, tgeotype))
+      ! ensure_same_geodetic_gs(temp, gs))
     return false;
   return true;
 }
@@ -790,13 +789,13 @@ ensure_valid_spatial_stbox_stbox(const STBox *box1, const STBox *box2)
 }
 
 /**
- * @brief Ensure the validity of a temporal point and a spatial box
+ * @brief Ensure the validity of a temporal geo and a spatiotemporal box
  */
 bool
-ensure_valid_tpoint_box(const Temporal *temp, const STBox *box)
+ensure_valid_tgeo_box(const Temporal *temp, const STBox *box)
 {
   if (ensure_not_null((void *) temp) && ensure_not_null((void *) box) &&
-      ensure_tpoint_type(temp->temptype) && ensure_has_X_stbox(box) &&
+      ensure_tgeo_type(temp->temptype) && ensure_has_X_stbox(box) &&
       ensure_same_geodetic(temp->flags, box->flags) &&
       ensure_same_srid(tspatial_srid(temp), stbox_srid(box)))
     return true;
@@ -807,7 +806,7 @@ ensure_valid_tpoint_box(const Temporal *temp, const STBox *box)
  * @brief Ensure the validity of two temporal points
  */
 bool
-ensure_valid_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
+ensure_valid_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
 {
   if (ensure_not_null((void *) temp1) && ensure_not_null((void *) temp2) &&
       ensure_tpoint_type(temp1->temptype) &&
@@ -4812,7 +4811,7 @@ Temporal *
 bearing_tpoint_point(const Temporal *temp, const GSERIALIZED *gs, bool invert)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs) ||
+  if (! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs) ||
       ! ensure_point_type(gs) ||
       ! ensure_same_dimensionality_tspatial_gs(temp, gs))
     return NULL;
@@ -4843,7 +4842,7 @@ Temporal *
 bearing_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tpoint_tpoint(temp1, temp2) ||
+  if (! ensure_valid_tgeo_tgeo(temp1, temp2) ||
       ! ensure_same_dimensionality(temp1->flags, temp2->flags) )
     return NULL;
 

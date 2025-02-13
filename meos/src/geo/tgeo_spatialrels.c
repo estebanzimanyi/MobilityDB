@@ -560,10 +560,9 @@ ea_dwithin_tgeoinst_tgeoinst(const TInstant *inst1, const TInstant *inst2,
   double dist, datum_func3 func)
 {
   assert(inst1); assert(inst2);
-  Datum value1 = tinstant_val(inst1);
-  Datum value2 = tinstant_val(inst2);
   /* Result is the same for both EVER and ALWAYS */
-  return DatumGetBool(func(value1, value2, Float8GetDatum(dist)));
+  return DatumGetBool(func(tinstant_val(inst1), tinstant_val(inst2), 
+    Float8GetDatum(dist)));
 }
 
 /**
@@ -606,10 +605,8 @@ ea_dwithin_tgeoseqset_tgeoseqset(const TSequenceSet *ss1,
   bool ret_loop = ever ? true : false;
   for (int i = 0; i < ss1->count; i++)
   {
-    const TSequence *seq1 = TSEQUENCESET_SEQ_N(ss1, i);
-    const TSequence *seq2 = TSEQUENCESET_SEQ_N(ss2, i);
-    bool res = 
-      ea_dwithin_tgeoseq_tgeoseq(seq1, seq2, dist, func, ever);
+    bool res = ea_dwithin_tgeoseq_tgeoseq(TSEQUENCESET_SEQ_N(ss1, i), 
+        TSEQUENCESET_SEQ_N(ss2, i), dist, func, ever);
     if ((ever && res) || (! ever && ! res))
       return ret_loop;
   }

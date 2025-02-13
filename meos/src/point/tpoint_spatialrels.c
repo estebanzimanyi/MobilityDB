@@ -201,7 +201,7 @@ spatialrel_tpoint_traj_geo(const Temporal *temp, const GSERIALIZED *gs,
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs))
+      ! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs))
     return -1;
 
   assert(numparam == 2 || numparam == 3);
@@ -237,7 +237,7 @@ ea_spatialrel_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2,
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2) ||
-      ! ensure_valid_tpoint_tpoint(temp1, temp2) ||
+      ! ensure_valid_tgeo_tgeo(temp1, temp2) ||
       ! ensure_same_dimensionality(temp1->flags, temp2->flags))
     return -1;
 
@@ -280,7 +280,7 @@ int
 econtains_geo_tpoint(const GSERIALIZED *gs, const Temporal *temp)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs) ||
+  if (! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs) ||
       ! ensure_has_not_Z_gs(gs) || ! ensure_has_not_Z(temp->flags))
     return -1;
   GSERIALIZED *traj = tpoint_trajectory(temp);
@@ -304,7 +304,7 @@ int
 acontains_geo_tpoint(const GSERIALIZED *gs, const Temporal *temp)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs) ||
+  if (! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs) ||
       ! ensure_has_not_Z_gs(gs) || ! ensure_has_not_Z(temp->flags))
     return -1;
   GSERIALIZED *traj = tpoint_trajectory(temp);
@@ -478,7 +478,7 @@ etouches_tpoint_geo(const Temporal *temp, const GSERIALIZED *gs)
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
       ! ensure_not_geodetic(temp->flags) || gserialized_is_empty(gs) ||
-      ! ensure_valid_tpoint_geo(temp, gs))
+      ! ensure_valid_tgeo_geo(temp, gs))
     return -1;
 
   /* There is no need to do a bounding box test since this is done in
@@ -517,7 +517,7 @@ atouches_tpoint_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs))
+      ! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs))
     return -1;
 
   /* There is no need to do a bounding box test since this is done in
@@ -601,10 +601,9 @@ ea_dwithin_tpointinst_tpointinst(const TInstant *inst1, const TInstant *inst2,
   double dist, datum_func3 func)
 {
   assert(inst1); assert(inst2);
-  Datum value1 = tinstant_val(inst1);
-  Datum value2 = tinstant_val(inst2);
   /* Result is the same for both EVER and ALWAYS */
-  return DatumGetBool(func(value1, value2, Float8GetDatum(dist)));
+  return DatumGetBool(func(tinstant_val(inst1), tinstant_val(inst2), 
+    Float8GetDatum(dist)));
 }
 
 /**
@@ -645,16 +644,14 @@ ea_dwithin_tpointseq_tpointseq_cont(const TSequence *seq1,
 {
   assert(seq1); assert(seq2);
 
-  const TInstant *start1, *start2;
   if (seq1->count == 1)
   {
-    start1 = TSEQUENCE_INST_N(seq1, 0);
-    start2 = TSEQUENCE_INST_N(seq2, 0);
-    return ea_dwithin_tpointinst_tpointinst(start1, start2, dist, func);
+    return ea_dwithin_tpointinst_tpointinst(TSEQUENCE_INST_N(seq1, 0), 
+      TSEQUENCE_INST_N(seq2, 0), dist, func);
   }
 
-  start1 = TSEQUENCE_INST_N(seq1, 0);
-  start2 = TSEQUENCE_INST_N(seq2, 0);
+  const TInstant *start1 = TSEQUENCE_INST_N(seq1, 0);
+  const TInstant *start2 = TSEQUENCE_INST_N(seq2, 0);
   Datum sv1 = tinstant_val(start1);
   Datum sv2 = tinstant_val(start2);
 
@@ -721,11 +718,11 @@ ea_dwithin_tpointseqset_tpointseqset(const TSequenceSet *ss1,
   bool ret_loop = ever ? true : false;
   for (int i = 0; i < ss1->count; i++)
   {
-    const TSequence *seq1 = TSEQUENCESET_SEQ_N(ss1, i);
-    const TSequence *seq2 = TSEQUENCESET_SEQ_N(ss2, i);
     bool res = linear ?
-      ea_dwithin_tpointseq_tpointseq_cont(seq1, seq2, dist, func, ever) :
-      ea_dwithin_tpointseq_tpointseq_discstep(seq1, seq2, dist, func, ever);
+      ea_dwithin_tpointseq_tpointseq_cont(TSEQUENCESET_SEQ_N(ss1, i), 
+        TSEQUENCESET_SEQ_N(ss2, i), dist, func, ever) :
+      ea_dwithin_tpointseq_tpointseq_discstep(TSEQUENCESET_SEQ_N(ss1, i), 
+        TSEQUENCESET_SEQ_N(ss2, i), dist, func, ever);
     if ((ever && res) || (! ever && ! res))
       return ret_loop;
   }
@@ -777,7 +774,7 @@ ea_dwithin_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2,
   double dist, bool ever)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tpoint_tpoint(temp1, temp2) ||
+  if (! ensure_valid_tgeo_tgeo(temp1, temp2) ||
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return -1;
 

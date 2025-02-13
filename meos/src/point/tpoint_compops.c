@@ -62,7 +62,7 @@ eacomp_tpoint_point(const Temporal *temp, const GSERIALIZED *gs,
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs) ||
+      ! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs) ||
       ! ensure_point_type(gs) ||
       ! ensure_same_dimensionality_tspatial_gs(temp, gs))
     return -1;
@@ -260,7 +260,7 @@ tcomp_point_tpoint(const GSERIALIZED *gs, const Temporal *temp,
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs) ||
+      ! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs) ||
       ! ensure_point_type(gs) ||
       ! ensure_same_dimensionality_tspatial_gs(temp, gs))
     return NULL;
@@ -279,7 +279,7 @@ tcomp_tpoint_point(const Temporal *temp, const GSERIALIZED *gs,
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs) ||
+      ! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs) ||
       ! ensure_point_type(gs) ||
       ! ensure_same_dimensionality_tspatial_gs(temp, gs))
     return NULL;

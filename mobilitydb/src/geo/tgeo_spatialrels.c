@@ -273,8 +273,8 @@ EAintersects_geo_tgeo(FunctionCallInfo fcinfo, bool ever)
 {
   GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
   Temporal *temp = PG_GETARG_TEMPORAL_P(1);
-  int result = ever ?
-    eintersects_tgeo_geo(temp, gs) : aintersects_tgeo_geo(temp, gs);
+  int result = ever ? eintersects_tgeo_geo(temp, gs) : 
+    aintersects_tgeo_geo(temp, gs);
   PG_FREE_IF_COPY(gs, 0);
   PG_FREE_IF_COPY(temp, 1);
   if (result < 0)
@@ -320,8 +320,8 @@ EAintersects_tgeo_geo(FunctionCallInfo fcinfo, bool ever)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
-  int result = ever ?
-    eintersects_tgeo_geo(temp, gs) : aintersects_tgeo_geo(temp, gs);
+  int result = ever ? eintersects_tgeo_geo(temp, gs) : 
+    aintersects_tgeo_geo(temp, gs);
   PG_FREE_IF_COPY(temp, 0);
   PG_FREE_IF_COPY(gs, 1);
   if (result < 0)
@@ -501,8 +501,8 @@ EAdwithin_geo_tgeo(FunctionCallInfo fcinfo, bool ever)
   GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
   Temporal *temp = PG_GETARG_TEMPORAL_P(1);
   double dist = PG_GETARG_FLOAT8(2);
-  int result = ever ?
-    edwithin_tgeo_geo(temp, gs, dist) : adwithin_tgeo_geo(temp, gs, dist);
+  int result = ever ? edwithin_tgeo_geo(temp, gs, dist) : 
+    adwithin_tgeo_geo(temp, gs, dist);
   PG_FREE_IF_COPY(gs, 0);
   PG_FREE_IF_COPY(temp, 1);
   if (result < 0)

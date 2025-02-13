@@ -135,14 +135,12 @@ distance_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
  */
 static double
 nai_tgeoseq_geo_iter(const TSequence *seq, const GSERIALIZED *geo,
-  double mindist, const TInstant **result)
+  datum_func2 func, double mindist, const TInstant **result)
 {
   for (int i = 0; i < seq->count; i++)
   {
     const TInstant *inst = TSEQUENCE_INST_N(seq, i);
-    GSERIALIZED *gs = DatumGetGserializedP(tinstant_val(inst));
-    datum_func2 func = distance_fn(seq->flags);
-    double dist = func(PointerGetDatum(gs), PointerGetDatum(geo));
+    double dist = func(tinstant_val(inst), PointerGetDatum(geo));
     if (dist < mindist)
     {
       mindist = dist;
@@ -162,7 +160,8 @@ static TInstant *
 nai_tgeoseq_geo(const TSequence *seq, const GSERIALIZED *geo)
 {
   const TInstant *inst = NULL; /* make compiler quiet */
-  nai_tgeoseq_geo_iter(seq, geo, DBL_MAX, &inst);
+  datum_func2 func = distance_fn(seq->flags);
+  nai_tgeoseq_geo_iter(seq, geo, func, DBL_MAX, &inst);
   return tinstant_copy(inst);
 }
 
@@ -177,9 +176,10 @@ nai_tgeoseqset_step_geo(const TSequenceSet *ss, const GSERIALIZED *geo)
 {
   const TInstant *inst = NULL; /* make compiler quiet */
   double mindist = DBL_MAX;
+  datum_func2 func = distance_fn(ss->flags);
   for (int i = 0; i < ss->count; i++)
     mindist = nai_tgeoseq_geo_iter(TSEQUENCESET_SEQ_N(ss, i), geo,
-      mindist, &inst);
+      func, mindist, &inst);
   assert(inst != NULL);
   return tinstant_copy(inst);
 }
@@ -270,9 +270,10 @@ nad_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
     return -1.0;
 
   datum_func2 func = distance_fn(temp->flags);
-  Datum traj = PointerGetDatum(tgeo_traversed_area(temp));
-  double result = DatumGetFloat8(func(traj, PointerGetDatum(gs)));
-  pfree(DatumGetPointer(traj));
+  GSERIALIZED *trav = tgeo_traversed_area(temp);
+  double result = DatumGetFloat8(
+    func(PointerGetDatum(trav), PointerGetDatum(gs)));
+  pfree(trav);
   return result;
 }
 
@@ -289,7 +290,7 @@ double
 nad_tgeo_stbox(const Temporal *temp, const STBox *box)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tpoint_box(temp, box) ||
+  if (! ensure_valid_tgeo_box(temp, box) ||
       ! ensure_same_spatial_dimensionality_temp_box(temp->flags, box->flags))
     return -1.0;
 
@@ -311,16 +312,15 @@ nad_tgeo_stbox(const Temporal *temp, const STBox *box)
     temporal_restrict_tstzspan(temp, &inter, REST_AT) :
     (Temporal *) temp;
   /* Compute the result */
-  Datum traj = PointerGetDatum(tpoint_trajectory(temp1));
-  double result = DatumGetFloat8(func(traj, geo));
+  Datum trav = PointerGetDatum(tpoint_trajectory(temp1));
+  double result = DatumGetFloat8(func(trav, geo));
 
-  pfree(DatumGetPointer(traj));
+  pfree(DatumGetPointer(trav));
   pfree(DatumGetPointer(geo));
   if (hast)
     pfree(temp1);
   return result;
 }
-
 
 /**
  * @ingroup meos_temporal_dist
@@ -371,17 +371,17 @@ shortestline_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
   if (geodetic && ! ensure_has_not_Z_gs(gs))
     return NULL;
 
-  GSERIALIZED *traj = tpoint_trajectory(temp);
+  GSERIALIZED *trav = tpoint_trajectory(temp);
   GSERIALIZED *result;
   if (geodetic)
     /* Notice that geography_shortestline_internal is a MobilityDB function */
-    result = geography_shortestline_internal(traj, gs, true);
+    result = geography_shortestline_internal(trav, gs, true);
   else
   {
     result = MEOS_FLAGS_GET_Z(temp->flags) ?
-      geom_shortestline3d(traj, gs) : geom_shortestline2d(traj, gs);
+      geom_shortestline3d(trav, gs) : geom_shortestline2d(trav, gs);
   }
-  pfree(traj);
+  pfree(trav);
   return result;
 }
 

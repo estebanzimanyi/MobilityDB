@@ -64,9 +64,7 @@ double
 tgeoinst_distance(const TInstant *inst1, const TInstant *inst2,
   datum_func2 func)
 {
-  Datum value1 = tinstant_val(inst1);
-  Datum value2 = tinstant_val(inst2);
-  return DatumGetFloat8(func(value1, value2));
+  return DatumGetFloat8(func(tinstant_val(inst1), tinstant_val(inst2)));
 }
 
 /*****************************************************************************/
@@ -408,7 +406,7 @@ distance_tpoint_point(const Temporal *temp, const GSERIALIZED *gs)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs) ||
+      ! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs) ||
       ! ensure_point_type(gs) ||
       ! ensure_same_dimensionality_tspatial_gs(temp, gs))
     return NULL;
@@ -440,7 +438,7 @@ distance_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2) ||
-      ! ensure_valid_tpoint_tpoint(temp1, temp2) ||
+      ! ensure_valid_tgeo_tgeo(temp1, temp2) ||
       ! ensure_same_dimensionality(temp1->flags, temp2->flags))
     return NULL;
 
@@ -683,7 +681,7 @@ nai_tpoint_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs) ||
+      ! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs) ||
       ! ensure_same_dimensionality_tspatial_gs(temp, gs))
     return NULL;
 
@@ -720,7 +718,7 @@ nai_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2) ||
-      ! ensure_valid_tpoint_tpoint(temp1, temp2) ||
+      ! ensure_valid_tgeo_tgeo(temp1, temp2) ||
       ! ensure_same_dimensionality(temp1->flags, temp2->flags))
     return NULL;
 
@@ -755,7 +753,7 @@ nad_tpoint_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs) ||
+      ! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs) ||
       ! ensure_same_dimensionality_tspatial_gs(temp, gs))
     return -1.0;
 
@@ -838,7 +836,7 @@ double
 nad_tpoint_stbox(const Temporal *temp, const STBox *box)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tpoint_box(temp, box) ||
+  if (! ensure_valid_tgeo_box(temp, box) ||
       ! ensure_same_spatial_dimensionality_temp_box(temp->flags, box->flags))
     return -1.0;
 
@@ -881,7 +879,7 @@ nad_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2) ||
-      ! ensure_valid_tpoint_tpoint(temp1, temp2) ||
+      ! ensure_valid_tgeo_tgeo(temp1, temp2) ||
       ! ensure_same_dimensionality(temp1->flags, temp2->flags))
     return -1.0;
 
@@ -946,7 +944,7 @@ shortestline_tpoint_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs) ||
+      ! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs) ||
       ! ensure_same_dimensionality_tspatial_gs(temp, gs))
     return NULL;
   bool geodetic = MEOS_FLAGS_GET_GEODETIC(temp->flags);
@@ -979,7 +977,7 @@ shortestline_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2) ||
-      ! ensure_valid_tpoint_tpoint(temp1, temp2) ||
+      ! ensure_valid_tgeo_tgeo(temp1, temp2) ||
       ! ensure_same_dimensionality(temp1->flags, temp2->flags))
     return NULL;
 

@@ -1076,7 +1076,7 @@ Temporal *
 tpoint_at_stbox(const Temporal *temp, const STBox *box, bool border_inc)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tpoint_box(temp, box))
+  if (! ensure_valid_tgeo_box(temp, box))
     return NULL;
   return tpoint_restrict_stbox(temp, box, border_inc, REST_AT);
 }
@@ -1094,7 +1094,7 @@ Temporal *
 tpoint_minus_stbox(const Temporal *temp, const STBox *box, bool border_inc)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tpoint_box(temp, box))
+  if (! ensure_valid_tgeo_box(temp, box))
     return NULL;
   return tpoint_restrict_stbox(temp, box, border_inc, REST_MINUS);
 }
@@ -1974,7 +1974,7 @@ tpoint_at_geom(const Temporal *temp, const GSERIALIZED *gs,
   const Span *zspan)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tpoint_geo(temp, gs))
+  if (! ensure_valid_tgeo_geo(temp, gs))
     return NULL;
   return tpoint_restrict_geom(temp, gs, zspan, REST_AT);
 }
@@ -1992,7 +1992,7 @@ tpoint_minus_geom(const Temporal *temp, const GSERIALIZED *gs,
   const Span *zspan)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tpoint_geo(temp, gs))
+  if (! ensure_valid_tgeo_geo(temp, gs))
     return NULL;
   return tpoint_restrict_geom(temp, gs, zspan, REST_MINUS);
 }

@@ -60,55 +60,7 @@
 #include "point/tpoint_spatialfuncs.h"
 
 /*****************************************************************************
- * Parameter tests
- *****************************************************************************/
-
-/**
- * @brief Ensure the validity of a temporal geo and a geometry/geography
- * @note The geometry can be empty since some functions such atGeometry or
- * minusGeometry return different result on empty geometries.
- */
-bool
-ensure_valid_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
-{
-  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_tgeo_type(temp->temptype) ||
-      ! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)) ||
-      ! ensure_same_geodetic_gs(temp, gs))
-    return false;
-  return true;
-}
-
-/**
- * @brief Ensure the validity of a temporal geo and a spatiotemporal box
- */
-bool
-ensure_valid_tgeo_box(const Temporal *temp, const STBox *box)
-{
-  if (ensure_not_null((void *) temp) && ensure_not_null((void *) box) &&
-      ensure_tgeo_type(temp->temptype) && ensure_has_X_stbox(box) &&
-      ensure_same_geodetic(temp->flags, box->flags) &&
-      ensure_same_srid(tspatial_srid(temp), stbox_srid(box)))
-    return true;
-  return false;
-}
-
-/**
- * @brief Ensure the validity of two temporal geos
- */
-bool
-ensure_valid_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
-{
-  if (ensure_not_null((void *) temp1) && ensure_not_null((void *) temp2) &&
-      ensure_tgeo_type(temp1->temptype) &&
-      ensure_same_temporal_type(temp1, temp2) &&
-      ensure_same_srid(tspatial_srid(temp1), tspatial_srid(temp2)))
-    return true;
-  return false;
-}
-
-/*****************************************************************************
- * Trajectory functions
+ * Traversed area functions
  *****************************************************************************/
 
 /**

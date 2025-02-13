@@ -651,14 +651,17 @@ extern void tsequenceset_set_tstzspan(const TSequenceSet *ss, Span *s);
 
 /* Accessor functions for temporal types */
 
+extern const TInstant *temporal_end_inst(const Temporal *temp);
 extern Datum temporal_end_value(const Temporal *temp);
+extern const TInstant *temporal_inst_n(const Temporal *temp, int n);
 extern const TInstant **temporal_insts(const Temporal *temp, int *count);
 extern Datum temporal_max_value(const Temporal *temp);
 extern size_t temporal_mem_size(const Temporal *temp);
 extern Datum temporal_min_value(const Temporal *temp);
 extern const TSequence **temporal_seqs(const Temporal *temp, int *count);
 extern void temporal_set_bbox(const Temporal *temp, void *box);
-extern Datum temporal_start_value (const Temporal *temp);
+extern const TInstant *temporal_start_inst(const Temporal *temp);
+extern Datum temporal_start_value(const Temporal *temp);
 extern Datum *temporal_vals(const Temporal *temp, int *count);
 extern bool temporal_value_n(const Temporal *temp, int n, Datum *result);
 extern Datum *temporal_values(const Temporal *temp, int *count);

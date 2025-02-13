@@ -309,21 +309,21 @@ geo_parse(const char **str, meosType basetype, char sep, int *srid,
 /*****************************************************************************/
 
 /**
- * @brief Parse a temporal instant point from the buffer
+ * @brief Parse a temporal instant geo from the buffer
  * @param[in] str Input string
  * @param[in] temptype Temporal type
  * @param[in] end Set to true when reading a single instant to ensure there is
  * no moreinput after the sequence
- * @param[in,out] tpoint_srid SRID of the temporal point
+ * @param[in,out] tgeo_srid SRID of the temporal geo
  * @param[out] result New instant, may be NULL
  */
 bool 
-tpointinst_parse(const char **str, meosType temptype, bool end, 
-  int *tpoint_srid, TInstant **result)
+tgeoinst_parse(const char **str, meosType temptype, bool end, 
+  int *tgeo_srid, TInstant **result)
 {
   meosType basetype = temptype_basetype(temptype);
   GSERIALIZED *gs;
-  if (! geo_parse(str, basetype, '@', tpoint_srid, &gs))
+  if (! geo_parse(str, basetype, '@', tgeo_srid, &gs))
     return false;
 
   p_sepchar(str, '@');
@@ -331,7 +331,7 @@ tpointinst_parse(const char **str, meosType temptype, bool end,
   TimestampTz t = timestamp_parse(str);
   if (t == DT_NOEND ||
     /* Ensure there is no more input */
-    (end && ! ensure_end_input(str, "temporal point")))
+    (end && ! ensure_end_input(str, "temporal geo")))
   {
     pfree(gs);
     return false;
@@ -344,29 +344,29 @@ tpointinst_parse(const char **str, meosType temptype, bool end,
 }
 
 /**
- * @brief Parse a temporal discrete sequence point from the buffer
+ * @brief Parse a temporal discrete sequence geo from the buffer
  * @param[in] str Input string
  * @param[in] temptype Temporal type
- * @param[in,out] tpoint_srid SRID of the temporal point
+ * @param[in,out] tgeo_srid SRID of the temporal geo
  */
 TSequence *
-tpointseq_disc_parse(const char **str, meosType temptype, int *tpoint_srid)
+tgeoseq_disc_parse(const char **str, meosType temptype, int *tgeo_srid)
 {
-  const char *type_str = "temporal point";
+  const char *type_str = "temporal geo";
   p_whitespace(str);
   /* We are sure to find an opening brace because that was the condition
-   * to call this function in the dispatch function #tpoint_parse */
+   * to call this function in the dispatch function #tgeo_parse */
   p_obrace(str);
 
   /* First parsing */
   const char *bak = *str;
-  if (! tpointinst_parse(str, temptype, false, tpoint_srid, NULL))
+  if (! tgeoinst_parse(str, temptype, false, tgeo_srid, NULL))
     return NULL;
   int count = 1;
   while (p_comma(str))
   {
     count++;
-    if (! tpointinst_parse(str, temptype, false, tpoint_srid, NULL))
+    if (! tgeoinst_parse(str, temptype, false, tgeo_srid, NULL))
       return NULL;
   }
   if (! ensure_cbrace(str, type_str) || ! ensure_end_input(str, type_str))
@@ -378,7 +378,7 @@ tpointseq_disc_parse(const char **str, meosType temptype, int *tpoint_srid)
   for (int i = 0; i < count; i++)
   {
     p_comma(str);
-    tpointinst_parse(str, temptype, false, tpoint_srid, &instants[i]);
+    tgeoinst_parse(str, temptype, false, tgeo_srid, &instants[i]);
   }
   p_cbrace(str);
   return tsequence_make_free(instants, count, true, true, DISCRETE,
@@ -386,23 +386,23 @@ tpointseq_disc_parse(const char **str, meosType temptype, int *tpoint_srid)
 }
 
 /**
- * @brief Parse a temporal sequence point from the buffer
+ * @brief Parse a temporal sequence geo from the buffer
  * @param[in] str Input string
  * @param[in] temptype Temporal type
  * @param[in] interp Interpolation
  * @param[in] end Set to true when reading a single instant to ensure there is
  * no moreinput after the sequence
- * @param[in,out] tpoint_srid SRID of the temporal point
+ * @param[in,out] tgeo_srid SRID of the temporal geo
  * @param[out] result New sequence, may be NULL
  */
 bool
-tpointseq_cont_parse(const char **str, meosType temptype, interpType interp,
-  bool end, int *tpoint_srid, TSequence **result)
+tgeoseq_cont_parse(const char **str, meosType temptype, interpType interp,
+  bool end, int *tgeo_srid, TSequence **result)
 {
   p_whitespace(str);
   bool lower_inc = false, upper_inc = false;
   /* We are sure to find an opening bracket or parenthesis because that was the
-   * condition to call this function in the dispatch function tpoint_parse */
+   * condition to call this function in the dispatch function tgeo_parse */
   if (p_obracket(str))
     lower_inc = true;
   else if (p_oparen(str))
@@ -410,13 +410,13 @@ tpointseq_cont_parse(const char **str, meosType temptype, interpType interp,
 
   /* First parsing */
   const char *bak = *str;
-  if (! tpointinst_parse(str, temptype, false, tpoint_srid, NULL))
+  if (! tgeoinst_parse(str, temptype, false, tgeo_srid, NULL))
     return false;
   int count = 1;
   while (p_comma(str))
   {
     count++;
-    if (! tpointinst_parse(str, temptype, false, tpoint_srid, NULL))
+    if (! tgeoinst_parse(str, temptype, false, tgeo_srid, NULL))
       return false;
   }
   if (p_cbracket(str))
@@ -426,11 +426,11 @@ tpointseq_cont_parse(const char **str, meosType temptype, interpType interp,
   else
   {
     meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
-      "Could not parse temporal point value: Missing closing bracket/parenthesis");
+      "Could not parse temporal geo value: Missing closing bracket/parenthesis");
     return false;
   }
   /* Ensure there is no more input */
-  if (end && ! ensure_end_input(str, "temporal point"))
+  if (end && ! ensure_end_input(str, "temporal geo"))
     return false;
 
   /* Second parsing */
@@ -439,7 +439,7 @@ tpointseq_cont_parse(const char **str, meosType temptype, interpType interp,
   for (int i = 0; i < count; i++)
   {
     p_comma(str);
-    tpointinst_parse(str, temptype, false, tpoint_srid, &instants[i]);
+    tgeoinst_parse(str, temptype, false, tgeo_srid, &instants[i]);
   }
   p_cbracket(str);
   p_cparen(str);
@@ -451,31 +451,31 @@ tpointseq_cont_parse(const char **str, meosType temptype, interpType interp,
 }
 
 /**
- * @brief Parse a temporal sequence set point from the buffer
+ * @brief Parse a temporal sequence set geo from the buffer
  * @param[in] str Input string
  * @param[in] temptype Temporal type
  * @param[in] interp Interpolation
- * @param[in,out] tpoint_srid SRID of the temporal point
+ * @param[in,out] tgeo_srid SRID of the temporal geo
  */
 TSequenceSet *
-tpointseqset_parse(const char **str, meosType temptype, interpType interp,
-  int *tpoint_srid)
+tgeoseqset_parse(const char **str, meosType temptype, interpType interp,
+  int *tgeo_srid)
 {
-  const char *type_str = "temporal point";
+  const char *type_str = "temporal geo";
   p_whitespace(str);
   /* We are sure to find an opening brace because that was the condition
-   * to call this function in the dispatch function tpoint_parse */
+   * to call this function in the dispatch function tgeo_parse */
   p_obrace(str);
 
   /* First parsing */
   const char *bak = *str;
-  if (! tpointseq_cont_parse(str, temptype, interp, false, tpoint_srid, NULL))
+  if (! tgeoseq_cont_parse(str, temptype, interp, false, tgeo_srid, NULL))
     return NULL;
   int count = 1;
   while (p_comma(str))
   {
     count++;
-    if (! tpointseq_cont_parse(str, temptype, interp, false, tpoint_srid, NULL))
+    if (! tgeoseq_cont_parse(str, temptype, interp, false, tgeo_srid, NULL))
       return NULL;
   }
   if (! ensure_cbrace(str, type_str) || ! ensure_end_input(str, type_str))
@@ -487,7 +487,7 @@ tpointseqset_parse(const char **str, meosType temptype, interpType interp,
   for (int i = 0; i < count; i++)
   {
     p_comma(str);
-    tpointseq_cont_parse(str, temptype, interp, false, tpoint_srid,
+    tgeoseq_cont_parse(str, temptype, interp, false, tgeo_srid,
       &sequences[i]);
   }
   p_cbrace(str);
@@ -495,23 +495,23 @@ tpointseqset_parse(const char **str, meosType temptype, interpType interp,
 }
 
 /**
- * @brief Parse a temporal point value from the buffer
+ * @brief Parse a temporal geo value from the buffer
  * @param[in] str Input string
  * @param[in] temptype Temporal type
  */
 Temporal *
-tpoint_parse(const char **str, meosType temptype)
+tgeo_parse(const char **str, meosType temptype)
 {
   const char *bak = *str;
   p_whitespace(str);
 
   /* Determine whether there is an SRID */
-  int tpoint_srid;
-  srid_parse(str, &tpoint_srid);
+  int tgeo_srid;
+  srid_parse(str, &tgeo_srid);
 
   /* Ensure that the SRID is geodetic for geography */
-  if (temptype == T_TGEOGPOINT && tpoint_srid != SRID_UNKNOWN && 
-      ! meos_srid_is_latlong(tpoint_srid))
+  if (temptype == T_TGEOGRAPHY && tgeo_srid != SRID_UNKNOWN && 
+      ! meos_srid_is_latlong(tgeo_srid))
   {
     meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
       "Only lon/lat coordinate systems are supported in geography.");
@@ -531,20 +531,20 @@ tpoint_parse(const char **str, meosType temptype)
   p_whitespace(str);
 
   Temporal *result = NULL; /* keep compiler quiet */
-  /* Determine the type of the temporal point */
+  /* Determine the type of the temporal geo */
   if (**str != '{' && **str != '[' && **str != '(')
   {
     /* Pass the SRID specification */
     *str = bak;
     TInstant *inst;
-    if (! tpointinst_parse(str, temptype, true, &tpoint_srid, &inst))
+    if (! tgeoinst_parse(str, temptype, true, &tgeo_srid, &inst))
       return NULL;
     result = (Temporal *) inst;
   }
   else if (**str == '[' || **str == '(')
   {
     TSequence *seq;
-    if (! tpointseq_cont_parse(str, temptype, interp, true, &tpoint_srid, &seq))
+    if (! tgeoseq_cont_parse(str, temptype, interp, true, &tgeo_srid, &seq))
       return NULL;
     result = (Temporal *) seq;
   }
@@ -556,17 +556,38 @@ tpoint_parse(const char **str, meosType temptype)
     if (**str == '[' || **str == '(')
     {
       *str = bak;
-      result = (Temporal *) tpointseqset_parse(str, temptype, interp,
-        &tpoint_srid);
+      result = (Temporal *) tgeoseqset_parse(str, temptype, interp,
+        &tgeo_srid);
     }
     else
     {
       *str = bak;
-      result = (Temporal *) tpointseq_disc_parse(str, temptype, &tpoint_srid);
+      result = (Temporal *) tgeoseq_disc_parse(str, temptype, &tgeo_srid);
     }
   }
   return result;
 }
+
+/**
+ * @brief Parse a temporal point value from the buffer
+ * @param[in] str Input string
+ * @param[in] temptype Temporal type
+ */
+Temporal *
+tpoint_parse(const char **str, meosType temptype)
+{
+  Temporal *result = tgeo_parse(str, temptype);
+  const TInstant *inst = temporal_start_inst(result);
+  GSERIALIZED *gs = DatumGetGserializedP(tinstant_val(inst));
+  if (! ensure_point_type(gs))
+  {
+    pfree(result);
+    return NULL;
+  }
+  return result;
+}
+
+/*****************************************************************************/
 
 #if MEOS
 /**
@@ -596,6 +617,35 @@ tgeogpoint_in(const char *str)
   if (! ensure_not_null((void *) str))
     return NULL;
   return tpoint_parse(&str, T_TGEOGPOINT);
+}
+
+/**
+ * @ingroup meos_temporal_inout
+ * @brief Return a temporal geometry from its Well-Known Text (WKT)
+ * representation
+ * @param[in] str String
+ */
+Temporal *
+tgeometry_in(const char *str)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) str))
+    return NULL;
+  return tgeo_parse(&str, T_TGEOMETRY);
+}
+/**
+ * @ingroup meos_temporal_inout
+ * @brief Return a temporal geography from its Well-Known Text (WKT)
+ * representation
+ * @param[in] str String
+ */
+Temporal *
+tgeography_in(const char *str)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) str))
+    return NULL;
+  return tgeo_parse(&str, T_TGEOGRAPHY);
 }
 #endif /* MEOS */
 
