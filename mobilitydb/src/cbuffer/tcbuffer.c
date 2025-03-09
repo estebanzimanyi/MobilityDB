@@ -379,7 +379,7 @@ Tcbuffer_round(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbufferset_round(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbufferset_round);
 /**
- * @ingroup mobilitydb_temporal_transf
+ * @ingroup mobilitydb_spanset_transf
  * @brief Return a buffer set with the precision of the positions
  * set to a number of decimal places
  * @sqlfn round()

@@ -112,7 +112,7 @@ typedef struct
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_base_accessor
  * @brief Return the SRID of the routes in the ways table
  * @return On error return SRID_INVALID
  */
@@ -225,7 +225,7 @@ get_srid_ways()
 #define SQL_ROUTE_MAXLEN 64
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_base_accessor
  * @brief Return true if the edge table contains a route with the route
  * identifier
  * @param[in] rid Route identifier
@@ -312,7 +312,7 @@ route_exists(int64 rid)
 #endif /* MEOS */
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_base_accessor
  * @brief Access the edge table to return the route length from the
  * corresponding route identifier
  * @param[in] rid Route identifier
@@ -413,7 +413,7 @@ route_length(int64 rid)
 #endif /* MEOS */
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_base_accessor
  * @brief Access the edge table to get the route geometry from corresponding
  * route identifier
  * @param[in] rid Route identifier
@@ -528,7 +528,7 @@ route_geom(int64 rid)
 #define SQL_MAXLEN 1024
 
 /**
- * @ingroup meos_temporal_conversion
+ * @ingroup meos_base_conversion
  * @brief Transform a geometry into a network point
  * @param[in] gs Geometry
  * @csqlfn #Geom_to_npoint()
@@ -791,7 +791,7 @@ nsegmentarr_normalize(Nsegment **segments, int *nelems)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_inout
+ * @ingroup meos_base_inout
  * @brief Return a network point from its string representation
  * @param[in] str String
  * @csqlfn #Npoint_in()
@@ -803,7 +803,7 @@ npoint_in(const char *str)
 }
 
 /**
- * @ingroup meos_temporal_inout
+ * @ingroup meos_base_inout
  * @brief Return the string representation of a network point
  * @param[in] np Network point
  * @param[in] maxdd Maximum number of decimal digits
@@ -827,7 +827,7 @@ npoint_out(const Npoint *np, int maxdd)
 /*****************************************************************************/
 
 /**
- * @ingroup meos_temporal_inout
+ * @ingroup meos_base_inout
  * @brief Return a network point from its string representation
  * @param[in] str String
  * @csqlfn #Nsegment_in()
@@ -839,7 +839,7 @@ nsegment_in(const char *str)
 }
 
 /**
- * @ingroup meos_temporal_inout
+ * @ingroup meos_base_inout
  * @brief Return the string representation of a network segment
  * @param[in] ns Network segment
  * @param[in] maxdd Maximum number of decimal digits
@@ -866,7 +866,7 @@ nsegment_out(const Nsegment *ns, int maxdd)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_constructor
+ * @ingroup meos_base_constructor
  * @brief Return a network point from a route identifier and a position
  * @param[in] rid Route identifier
  * @param[in] pos Position
@@ -909,7 +909,7 @@ npoint_set(int64 rid, double pos, Npoint *np)
 }
 
 /**
- * @ingroup meos_temporal_constructor
+ * @ingroup meos_base_constructor
  * @brief Return a network segment from a route identifier and two positions
  * @param[in] rid Route identifier
  * @param[in] pos1, pos2 Positions
@@ -954,7 +954,7 @@ nsegment_set(int64 rid, double pos1, double pos2, Nsegment *ns)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_conversion
+ * @ingroup meos_base_conversion
  * @brief Return a network point converted to a network segment
  * @param[in] np Network point
  * @csqlfn #Npoint_to_nsegment()
@@ -966,75 +966,11 @@ npoint_nsegment(const Npoint *np)
 }
 
 /*****************************************************************************
- * Accessor functions
- *****************************************************************************/
-
-/**
- * @ingroup meos_temporal_accessor
- * @brief Return the route of a network point
- * @param[in] np Network point
- * @csqlfn #Npoint_route()
- */
-int64
-npoint_route(const Npoint *np)
-{
-  return np->rid;
-}
-
-/**
- * @ingroup meos_temporal_accessor
- * @brief Return the position of a network point
- * @param[in] np Network point
- * @csqlfn #Npoint_position()
- */
-double
-npoint_position(const Npoint *np)
-{
-  return np->pos;
-}
-
-/**
- * @ingroup meos_temporal_accessor
- * @brief Return the route of a network segment
- * @param[in] ns Network segment
- * @csqlfn #Nsegment_route()
- */
-int64
-nsegment_route(const Nsegment *ns)
-{
-  return ns->rid;
-}
-
-/**
- * @ingroup meos_temporal_accessor
- * @brief Return the start position of a network segment
- * @param[in] ns Network segment
- * @csqlfn #Nsegment_start_position()
- */
-double
-nsegment_start_position(const Nsegment *ns)
-{
-  return ns->pos1;
-}
-
-/**
- * @ingroup meos_temporal_accessor
- * @brief Return the end position of a network segment
- * @param[in] ns Network segment
- * @csqlfn #Nsegment_end_position()
- */
-double
-nsegment_end_position(const Nsegment *ns)
-{
-  return ns->pos2;
-}
-
-/*****************************************************************************
  * Conversions between network and Euclidean space
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_conversion
+ * @ingroup meos_base_conversion
  * @brief Transform a network point into a geometry
  * @param[in] np Network point
  * @csqlfn #Npoint_to_geom()
@@ -1049,7 +985,7 @@ npoint_geom(const Npoint *np)
 }
 
 /**
- * @ingroup meos_temporal_conversion
+ * @ingroup meos_base_conversion
  * @brief Transform a network segment into a geometry
  * @param[in] ns Network segment
  * @csqlfn #Nsegment_to_geom()
@@ -1068,7 +1004,7 @@ nsegment_geom(const Nsegment *ns)
 }
 
 /**
- * @ingroup meos_temporal_conversion
+ * @ingroup meos_base_conversion
  * @brief Transform a geometry into a network segment
  * @return On error return @p NULL
  * @param[in] gs Geometry
@@ -1137,11 +1073,75 @@ geom_nsegment(const GSERIALIZED *gs)
 }
 
 /*****************************************************************************
+ * Accessor functions
+ *****************************************************************************/
+
+/**
+ * @ingroup meos_base_accessor
+ * @brief Return the route of a network point
+ * @param[in] np Network point
+ * @csqlfn #Npoint_route()
+ */
+int64
+npoint_route(const Npoint *np)
+{
+  return np->rid;
+}
+
+/**
+ * @ingroup meos_base_accessor
+ * @brief Return the position of a network point
+ * @param[in] np Network point
+ * @csqlfn #Npoint_position()
+ */
+double
+npoint_position(const Npoint *np)
+{
+  return np->pos;
+}
+
+/**
+ * @ingroup meos_base_accessor
+ * @brief Return the route of a network segment
+ * @param[in] ns Network segment
+ * @csqlfn #Nsegment_route()
+ */
+int64
+nsegment_route(const Nsegment *ns)
+{
+  return ns->rid;
+}
+
+/**
+ * @ingroup meos_base_accessor
+ * @brief Return the start position of a network segment
+ * @param[in] ns Network segment
+ * @csqlfn #Nsegment_start_position()
+ */
+double
+nsegment_start_position(const Nsegment *ns)
+{
+  return ns->pos1;
+}
+
+/**
+ * @ingroup meos_base_accessor
+ * @brief Return the end position of a network segment
+ * @param[in] ns Network segment
+ * @csqlfn #Nsegment_end_position()
+ */
+double
+nsegment_end_position(const Nsegment *ns)
+{
+  return ns->pos2;
+}
+
+/*****************************************************************************
  * SRID functions
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_base_spatial
  * @brief Return the SRID of a network point
  * @param[in] np Network point
  * @csqlfn #Npoint_srid()
@@ -1156,7 +1156,7 @@ npoint_srid(const Npoint *np __attribute__((unused)))
 }
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_base_spatial
  * @brief Return the SRID of a network segment
  * @param[in] ns Network segment
  * @csqlfn #Nsegment_srid()
@@ -1175,7 +1175,7 @@ nsegment_srid(const Nsegment *ns __attribute__((unused)))
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_comp_trad
+ * @ingroup meos_base_comp
  * @brief Return true if the first network point is equal to the second one
  * @param[in] np1,np2 Network points
  * @csqlfn #Npoint_eq()
@@ -1187,7 +1187,7 @@ npoint_eq(const Npoint *np1, const Npoint *np2)
 }
 
 /**
- * @ingroup meos_temporal_comp_trad
+ * @ingroup meos_base_comp
  * @brief Return true if the first network point is not equal to the second one
  * @param[in] np1,np2 Network points
  * @csqlfn #Npoint_ne()
@@ -1199,7 +1199,7 @@ npoint_ne(const Npoint *np1, const Npoint *np2)
 }
 
 /**
- * @ingroup meos_temporal_comp_trad
+ * @ingroup meos_base_comp
  * @brief Return -1, 0, or 1 depending on whether the first network point
  * is less than, equal to, or greater than the second one
  * @param[in] np1,np2 Network points
@@ -1221,7 +1221,7 @@ npoint_cmp(const Npoint *np1, const Npoint *np2)
 }
 
 /**
- * @ingroup meos_temporal_comp_trad
+ * @ingroup meos_base_comp
  * @brief Return true if the first network point is less than the second one
  * @param[in] np1,np2 Network points
  * @csqlfn #Npoint_lt()
@@ -1234,7 +1234,7 @@ npoint_lt(const Npoint *np1, const Npoint *np2)
 }
 
 /**
- * @ingroup meos_temporal_comp_trad
+ * @ingroup meos_base_comp
  * @brief Return true if the first network point is less than or equal to the
  * second one
  * @param[in] np1,np2 Network points
@@ -1248,7 +1248,7 @@ npoint_le(const Npoint *np1, const Npoint *np2)
 }
 
 /**
- * @ingroup meos_temporal_comp_trad
+ * @ingroup meos_base_comp
  * @brief Return true if the first network point is greater than the second one
  * @param[in] np1,np2 Network points
  * @csqlfn #Npoint_gt()
@@ -1261,7 +1261,7 @@ npoint_gt(const Npoint *np1, const Npoint *np2)
 }
 
 /**
- * @ingroup meos_temporal_comp_trad
+ * @ingroup meos_base_comp
  * @brief Return true if the first network point is greater than or equal to
  * the second one
  * @param[in] np1,np2 Network points
@@ -1277,7 +1277,7 @@ npoint_ge(const Npoint *np1, const Npoint *np2)
 /*****************************************************************************/
 
 /**
- * @ingroup meos_temporal_comp_trad
+ * @ingroup meos_base_comp
  * @brief Return true if the first network segment is equal to the second one
  * @param[in] ns1,ns2 Network segments
  * @csqlfn #Nsegment_eq()
@@ -1290,7 +1290,7 @@ nsegment_eq(const Nsegment *ns1, const Nsegment *ns2)
 }
 
 /**
- * @ingroup meos_temporal_comp_trad
+ * @ingroup meos_base_comp
  * @brief Return true if the first network segment is not equal to the second
  * one
  * @param[in] ns1,ns2 Network segments
@@ -1303,7 +1303,7 @@ nsegment_ne(const Nsegment *ns1, const Nsegment *ns2)
 }
 
 /**
- * @ingroup meos_temporal_comp_trad
+ * @ingroup meos_base_comp
  * @brief Return -1, 0, or 1 depending on whether the first network segment
  * is less than, equal to, or greater than the second one
  * @param[in] ns1,ns2 Network segments
@@ -1330,7 +1330,7 @@ nsegment_cmp(const Nsegment *ns1, const Nsegment *ns2)
 }
 
 /**
- * @ingroup meos_temporal_comp_trad
+ * @ingroup meos_base_comp
  * @brief Return true if the first network segment is less than the second one
  * @param[in] ns1,ns2 Network segments
  * @csqlfn #Nsegment_lt()
@@ -1343,7 +1343,7 @@ nsegment_lt(const Nsegment *ns1, const Nsegment *ns2)
 }
 
 /**
- * @ingroup meos_temporal_comp_trad
+ * @ingroup meos_base_comp
  * @brief Return true if the first network segment is less than or equal to the
  * second one
  * @param[in] ns1,ns2 Network segments
@@ -1357,7 +1357,7 @@ nsegment_le(const Nsegment *ns1, const Nsegment *ns2)
 }
 
 /**
- * @ingroup meos_temporal_comp_trad
+ * @ingroup meos_base_comp
  * @brief Return true if the first network segment is greater than the second
  * one
  * @param[in] ns1,ns2 Network segments
@@ -1371,7 +1371,7 @@ nsegment_gt(const Nsegment *ns1, const Nsegment *ns2)
 }
 
 /**
- * @ingroup meos_temporal_comp_trad
+ * @ingroup meos_base_comp
  * @brief Return true if the first network segment is greater than or equal to
  * the second one
  * @param[in] ns1,ns2 Network segments
@@ -1391,7 +1391,7 @@ nsegment_ge(const Nsegment *ns1, const Nsegment *ns2)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_base_accessor
  * @brief Return the 32-bit hash value of a network point
  * @param[in] np Network point
  */
@@ -1410,7 +1410,7 @@ npoint_hash(const Npoint *np)
 }
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_base_accessor
  * @brief Return the 32-bit hash value of a network point
  * @param[in] np Network point
  * @param[in] seed Seed

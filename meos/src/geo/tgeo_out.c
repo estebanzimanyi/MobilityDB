@@ -147,7 +147,8 @@ char *
 tgeo_as_text(const Temporal *temp, int maxdd)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_tgeo_type_all(temp->temptype) ||
+  if (! ensure_not_null((void *) temp) || 
+      ! ensure_tgeo_type_all(temp->temptype) ||
       ! ensure_not_negative(maxdd))
     return NULL;
 

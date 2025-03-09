@@ -573,7 +573,7 @@ cbuffer_transf_pj(const Cbuffer *cbuf, int32_t srid_to, const LWPROJ *pj)
 }
 
 /**
- * @ingroup meos_temporal_spatial_srid
+ * @ingroup meos_base_spatial
  * @brief Return a circular buffer transformed to another SRID
  * @param[in] cbuf Circular buffer
  * @param[in] srid_to Target SRID
@@ -605,7 +605,7 @@ cbuffer_transform(const Cbuffer *cbuf, int32_t srid_to)
 }
 
 /**
- * @ingroup meos_temporal_spatial_srid
+ * @ingroup meos_base_spatial
  * @brief Return a circular buffer transformed to another SRID using a
  * pipeline
  * @param[in] cbuf Circular buffer

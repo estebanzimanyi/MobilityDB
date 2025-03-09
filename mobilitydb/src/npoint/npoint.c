@@ -119,7 +119,7 @@ nsegment_send(const Nsegment *ns)
 PGDLLEXPORT Datum Npoint_in(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Npoint_in);
 /**
- * @ingroup mobilitydb_temporal_inout
+ * @ingroup mobilitydb_base_inout
  * @brief Return a network point from its Well-Known Text (WKT) representation
  *
  * Example of input:
@@ -138,7 +138,7 @@ Npoint_in(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Npoint_out(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Npoint_out);
 /**
- * @ingroup mobilitydb_temporal_inout
+ * @ingroup mobilitydb_base_inout
  * @brief Return the Well-Known Text (WKT) representation of a a network point
  * @sqlfn npoint_out()
  */
@@ -152,7 +152,7 @@ Npoint_out(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Npoint_recv(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Npoint_recv);
 /**
- * @ingroup mobilitydb_temporal_inout
+ * @ingroup mobilitydb_base_inout
  * @brief Return a network point from its Well-Known Binary (WKB)
  * representation
  * @sqlfn npoint_recv()
@@ -167,7 +167,7 @@ Npoint_recv(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Npoint_send(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Npoint_send);
 /**
- * @ingroup mobilitydb_temporal_inout
+ * @ingroup mobilitydb_base_inout
  * @brief Return the Well-Known Binary (WKB) representation of a a network
  * point
  * @sqlfn npoint_send()
@@ -186,7 +186,7 @@ Npoint_send(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Nsegment_in(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Nsegment_in);
 /**
- * @ingroup mobilitydb_temporal_inout
+ * @ingroup mobilitydb_base_inout
  * @brief Return a network segment from its Well-Known Text (WKT)
  * representation
  *
@@ -206,7 +206,7 @@ Nsegment_in(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Nsegment_out(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Nsegment_out);
 /**
- * @ingroup mobilitydb_temporal_inout
+ * @ingroup mobilitydb_base_inout
  * @brief Return the Well-Known Text (WKT) representation of a network segment
  * @sqlfn nsegment_out()
  */
@@ -220,7 +220,7 @@ Nsegment_out(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Nsegment_recv(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Nsegment_recv);
 /**
- * @ingroup mobilitydb_temporal_inout
+ * @ingroup mobilitydb_base_inout
  * @brief Return a network segment from its Well-Known Binary (WKB)
  * representation
  * @sqlfn nsegment_recv()
@@ -235,7 +235,7 @@ Nsegment_recv(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Nsegment_send(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Nsegment_send);
 /**
- * @ingroup mobilitydb_temporal_inout
+ * @ingroup mobilitydb_base_inout
  * @brief Return the Well-Known Binary (WKB) representation of a network
  * segment
  * @sqlfn nsegment_send()
@@ -254,7 +254,7 @@ Nsegment_send(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Npoint_constructor(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Npoint_constructor);
 /**
- * @ingroup mobilitydb_temporal_constructor
+ * @ingroup mobilitydb_base_constructor
  * @brief Return a network segment from a route identifier and a position
  * @sqlfn npoint()
  */
@@ -269,7 +269,7 @@ Npoint_constructor(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Nsegment_constructor(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Nsegment_constructor);
 /**
- * @ingroup mobilitydb_temporal_constructor
+ * @ingroup mobilitydb_base_constructor
  * @brief Return a network segment from a route identifier and two positions
  * @sqlfn nsegment()
  */
@@ -289,7 +289,7 @@ Nsegment_constructor(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Npoint_to_nsegment(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Npoint_to_nsegment);
 /**
- * @ingroup mobilitydb_temporal_conversion
+ * @ingroup mobilitydb_base_conversion
  * @brief Return a network point converted to a network segment
  * @sqlfn nsegment()
  * @sqlop @p ::
@@ -308,7 +308,7 @@ Npoint_to_nsegment(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Npoint_route(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Npoint_route);
 /**
- * @ingroup mobilitydb_temporal_accessor
+ * @ingroup mobilitydb_base_accessor
  * @brief Return the route of a network point
  * @sqlfn route()
  */
@@ -322,7 +322,7 @@ Npoint_route(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Npoint_position(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Npoint_position);
 /**
- * @ingroup mobilitydb_temporal_accessor
+ * @ingroup mobilitydb_base_accessor
  * @brief Return the position of a network point
  * @sqlfn position()
  */
@@ -336,7 +336,7 @@ Npoint_position(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Nsegment_route(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Nsegment_route);
 /**
- * @ingroup mobilitydb_temporal_accessor
+ * @ingroup mobilitydb_base_accessor
  * @brief Return the route of a network segment
  * @sqlfn route()
  */
@@ -350,7 +350,7 @@ Nsegment_route(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Nsegment_start_position(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Nsegment_start_position);
 /**
- * @ingroup mobilitydb_temporal_accessor
+ * @ingroup mobilitydb_base_accessor
  * @brief Return the start position of a network segment
  * @sqlfn startPosition()
  */
@@ -364,7 +364,7 @@ Nsegment_start_position(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Nsegment_end_position(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Nsegment_end_position);
 /**
- * @ingroup mobilitydb_temporal_accessor
+ * @ingroup mobilitydb_base_accessor
  * @brief Return the end position of a network segment
  * @sqlfn endPosition()
  */
@@ -382,7 +382,7 @@ Nsegment_end_position(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Npoint_round(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Npoint_round);
 /**
- * @ingroup mobilitydb_temporal_transf
+ * @ingroup mobilitydb_base_transf
  * @brief Return a network point with the precision of the position set to a
  * number of decimal places
  * @sqlfn round()
@@ -398,7 +398,7 @@ Npoint_round(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Nsegment_round(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Nsegment_round);
 /**
- * @ingroup mobilitydb_temporal_transf
+ * @ingroup mobilitydb_base_transf
  * @brief Return a network segment with the precision of the positions set to a
  * number of decimal places
  * @sqlfn round()
@@ -418,7 +418,7 @@ Nsegment_round(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Npoint_to_geom(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Npoint_to_geom);
 /**
- * @ingroup mobilitydb_temporal_conversion
+ * @ingroup mobilitydb_base_conversion
  * @brief Return a network point converted to a geometry
  * @sqlfn geometry()
  * @sqlop @p ::
@@ -433,7 +433,7 @@ Npoint_to_geom(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Geom_to_npoint(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Geom_to_npoint);
 /**
- * @ingroup mobilitydb_temporal_conversion
+ * @ingroup mobilitydb_base_conversion
  * @brief Return a geometry converted to a network point
  * @sqlfn npoint()
  * @sqlop @p ::
@@ -451,7 +451,7 @@ Geom_to_npoint(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Nsegment_to_geom(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Nsegment_to_geom);
 /**
- * @ingroup mobilitydb_temporal_conversion
+ * @ingroup mobilitydb_base_conversion
  * @brief Return a network segment converted to a geometry
  * @sqlfn geometry()
  * @sqlop @p ::
@@ -466,7 +466,7 @@ Nsegment_to_geom(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Geom_to_nsegment(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Geom_to_nsegment);
 /**
- * @ingroup mobilitydb_temporal_conversion
+ * @ingroup mobilitydb_base_conversion
  * @brief Return a geometry converted to a network segment
  * @sqlfn nsegment()
  * @sqlop @p ::
@@ -488,7 +488,7 @@ Geom_to_nsegment(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Npoint_srid(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Npoint_srid);
 /**
- * @ingroup mobilitydb_temporal_spatial_accessor
+ * @ingroup mobilitydb_base_spatial
  * @brief Return the SRID of a network point
  * @sqlfn SRID()
  */
@@ -503,7 +503,7 @@ Npoint_srid(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Nsegment_srid(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Nsegment_srid);
 /**
- * @ingroup mobilitydb_temporal_spatial_accessor
+ * @ingroup mobilitydb_base_spatial
  * @brief Return the SRID of a network segment
  * @sqlfn SRID()
  */
@@ -522,7 +522,7 @@ Nsegment_srid(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Npoint_eq(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Npoint_eq);
 /**
- * @ingroup mobilitydb_temporal_comp_trad
+ * @ingroup mobilitydb_base_comp
  * @brief Return true if the first network point is equal to the second one
  * @sqlfn npoint_eq()
  * @sqlop @p =
@@ -538,7 +538,7 @@ Npoint_eq(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Npoint_ne(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Npoint_ne);
 /**
- * @ingroup mobilitydb_temporal_comp_trad
+ * @ingroup mobilitydb_base_comp
  * @brief Return true if the first network point is not equal to the second one
  * @sqlfn npoint_ne()
  * @sqlop @p <>
@@ -554,7 +554,7 @@ Npoint_ne(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Npoint_cmp(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Npoint_cmp);
 /**
- * @ingroup mobilitydb_temporal_comp_trad
+ * @ingroup mobilitydb_base_comp
  * @brief Return -1, 0, or 1 depending on whether the first network point
  * is less than, equal to, or greater than the second one
  * @note Function used for B-tree comparison
@@ -571,7 +571,7 @@ Npoint_cmp(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Npoint_lt(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Npoint_lt);
 /**
- * @ingroup mobilitydb_temporal_comp_trad
+ * @ingroup mobilitydb_base_comp
  * @brief Return true if the first network point is less than the second one
  * @sqlfn npoint_lt()
  * @sqlop @p <
@@ -587,7 +587,7 @@ Npoint_lt(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Npoint_le(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Npoint_le);
 /**
- * @ingroup mobilitydb_temporal_comp_trad
+ * @ingroup mobilitydb_base_comp
  * @brief Return true if the first network point is less than or equal to the
  * second one
  * @sqlfn npoint_le()
@@ -604,7 +604,7 @@ Npoint_le(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Npoint_ge(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Npoint_ge);
 /**
- * @ingroup mobilitydb_temporal_comp_trad
+ * @ingroup mobilitydb_base_comp
  * @brief Return true if the first network point is greater than or equal to the
  * second one
  * @sqlfn npoint_ge()
@@ -621,7 +621,7 @@ Npoint_ge(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Npoint_gt(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Npoint_gt);
 /**
- * @ingroup mobilitydb_temporal_comp_trad
+ * @ingroup mobilitydb_base_comp
  * @brief Return true if the first network point is greater than the second one
  * @sqlfn npoint_gt()
  * @sqlop @p >
@@ -639,7 +639,7 @@ Npoint_gt(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Nsegment_eq(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Nsegment_eq);
 /**
- * @ingroup mobilitydb_temporal_comp_trad
+ * @ingroup mobilitydb_base_comp
  * @brief Return true if the first network segment is equal to the second one
  * @sqlfn nsegment_eq()
  * @sqlop @p =
@@ -655,7 +655,7 @@ Nsegment_eq(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Nsegment_ne(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Nsegment_ne);
 /**
- * @ingroup mobilitydb_temporal_comp_trad
+ * @ingroup mobilitydb_base_comp
  * @brief Return true if the first network segment is not equal to the second one
  * @sqlfn nsegment_ne()
  * @sqlop @p <>
@@ -671,7 +671,7 @@ Nsegment_ne(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Nsegment_cmp(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Nsegment_cmp);
 /**
- * @ingroup mobilitydb_temporal_comp_trad
+ * @ingroup mobilitydb_base_comp
  * @brief Return -1, 0, or 1 depending on whether the first network segment
  * is less than, equal to, or greater than the second one
  * @sqlfn nsegment_cmp()
@@ -689,7 +689,7 @@ Nsegment_cmp(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Nsegment_lt(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Nsegment_lt);
 /**
- * @ingroup mobilitydb_temporal_comp_trad
+ * @ingroup mobilitydb_base_comp
  * @brief Return true if the first network segment is less than the second one
  * @sqlfn nsegment_lt()
  * @sqlop @p <
@@ -705,7 +705,7 @@ Nsegment_lt(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Nsegment_le(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Nsegment_le);
 /**
- * @ingroup mobilitydb_temporal_comp_trad
+ * @ingroup mobilitydb_base_comp
  * @brief Return true if the first network segment is less than or equal to the
  * second one
  * @sqlfn nsegment_le()
@@ -722,7 +722,7 @@ Nsegment_le(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Nsegment_ge(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Nsegment_ge);
 /**
- * @ingroup mobilitydb_temporal_comp_trad
+ * @ingroup mobilitydb_base_comp
  * @brief Return true if the first network segment is greater than or equal to the
  * second one
  * @sqlfn nsegment_ge()
@@ -739,7 +739,7 @@ Nsegment_ge(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Nsegment_gt(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Nsegment_gt);
 /**
- * @ingroup mobilitydb_temporal_comp_trad
+ * @ingroup mobilitydb_base_comp
  * @brief Return true if the first network segment is greater than the second one
  * @sqlfn nsegment_gt()
  * @sqlop @p >

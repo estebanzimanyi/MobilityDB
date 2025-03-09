@@ -51,13 +51,14 @@
  *****************************************************************************/
 
 /**
+ * @ingroup meos_temporal_constructor
  * @brief Return a temporal circular buffer from a temporal point and a 
  * temporal float
  * @note This function is called after synchronization done in function 
  * #tcbuffer_constructor
  */
 TInstant *
-tcbufferinst_constructor(const TInstant *inst1, const TInstant *inst2)
+tcbufferinst_make(const TInstant *inst1, const TInstant *inst2)
 {
   assert(inst1); assert(inst1->temptype == T_TGEOMPOINT);
   assert(inst2); assert(inst2->temptype == T_TFLOAT);
@@ -74,14 +75,14 @@ tcbufferinst_constructor(const TInstant *inst1, const TInstant *inst2)
  * #tcbuffer_constructor
  */
 TSequence *
-tcbufferseq_constructor(const TSequence *seq1, const TSequence *seq2)
+tcbufferseq_make(const TSequence *seq1, const TSequence *seq2)
 {
   assert(seq1); assert(seq1->temptype == T_TGEOMPOINT);
   assert(seq2); assert(seq2->temptype == T_TFLOAT);
   assert(seq1->count == seq2->count);
   TInstant **instants = palloc(sizeof(TInstant *) * seq1->count);
   for (int i = 0; i < seq1->count; i++)
-    instants[i] = tcbufferinst_constructor(TSEQUENCE_INST_N(seq1, i),
+    instants[i] = tcbufferinst_make(TSEQUENCE_INST_N(seq1, i),
       TSEQUENCE_INST_N(seq2, i));
   return tsequence_make_free(instants, seq1->count, seq1->period.lower_inc, 
     seq1->period.upper_inc, MEOS_FLAGS_GET_INTERP(seq1->flags), NORMALIZE_NO);
@@ -94,14 +95,14 @@ tcbufferseq_constructor(const TSequence *seq1, const TSequence *seq2)
  * #tcbuffer_constructor
  */
 TSequenceSet *
-tcbufferseqset_constructor(const TSequenceSet *ss1, const TSequenceSet *ss2)
+tcbufferseqset_make(const TSequenceSet *ss1, const TSequenceSet *ss2)
 {
   assert(ss1); assert(ss1->temptype == T_TGEOMPOINT);
   assert(ss2); assert(ss2->temptype == T_TFLOAT);
   assert(ss1->count == ss2->count);
   TSequence **sequences = palloc(sizeof(TSequence *) * ss1->count);
   for (int i = 0; i < ss1->count; i++)
-    sequences[i] = tcbufferseq_constructor(TSEQUENCESET_SEQ_N(ss1, i),
+    sequences[i] = tcbufferseq_make(TSEQUENCESET_SEQ_N(ss1, i),
       TSEQUENCESET_SEQ_N(ss2, i));
   return tsequenceset_make_free(sequences, ss1->count, NORMALIZE_NO);
 }
@@ -113,7 +114,7 @@ tcbufferseqset_constructor(const TSequenceSet *ss1, const TSequenceSet *ss2)
  * @csqlfn #Tcbuffer_constructor()
  */
 Temporal *
-tcbuffer_constructor(const Temporal *tpoint, const Temporal *tfloat)
+tcbuffer_make(const Temporal *tpoint, const Temporal *tfloat)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) tpoint) || 
@@ -133,13 +134,13 @@ tcbuffer_constructor(const Temporal *tpoint, const Temporal *tfloat)
   switch (sync1->subtype)
   {
     case TINSTANT:
-      return (Temporal *) tcbufferinst_constructor((TInstant *) sync1, 
+      return (Temporal *) tcbufferinst_make((TInstant *) sync1, 
         (TInstant *) sync2);
     case TSEQUENCE:
-      return (Temporal *) tcbufferseq_constructor((TSequence *) sync1,
+      return (Temporal *) tcbufferseq_make((TSequence *) sync1,
         (TSequence *) sync2);
     default: /* TSEQUENCESET */
-      return (Temporal *) tcbufferseqset_constructor((TSequenceSet *) sync1, 
+      return (Temporal *) tcbufferseqset_make((TSequenceSet *) sync1, 
         (TSequenceSet *) sync2);
   }
 }
@@ -555,11 +556,35 @@ tcbuffer_points(const Temporal *temp)
   }
 }
 
+/**
+ * @ingroup meos_temporal_accessor
+ * @brief Return the value of a temporal circular buffer at a timestamptz
+ * @param[in] temp Temporal value
+ * @param[in] t Timestamp
+ * @param[in] strict True if the timestamp must belong to the temporal value,
+ * false when it may be at an exclusive bound
+ * @param[out] value Resulting value
+ * @csqlfn #Temporal_value_at_timestamptz()
+ */
+bool
+tcbuffer_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict,
+  Cbuffer **value)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) value) ||
+      ! ensure_temporal_isof_type(temp, T_TCBUFFER))
+    return false;
+
+  Datum res;
+  bool result = temporal_value_at_timestamptz(temp, t, strict, &res);
+  *value = DatumGetCbufferP(res);
+  return result;
+}
+
 /*****************************************************************************
  * Restriction functions
  *****************************************************************************/
 
-#if MEOS
 /**
  * @ingroup meos_temporal_restrict
  * @brief Return a temporal circular buffer restricted to a circular buffer
@@ -595,31 +620,6 @@ tcbuffer_minus_value(const Temporal *temp, Cbuffer *cbuf)
   return temporal_restrict_value(temp, PointerGetDatum(cbuf), REST_MINUS);
 }
 
-/**
- * @ingroup meos_temporal_accessor
- * @brief Return the value of a temporal circular buffer at a timestamptz
- * @param[in] temp Temporal value
- * @param[in] t Timestamp
- * @param[in] strict True if the timestamp must belong to the temporal value,
- * false when it may be at an exclusive bound
- * @param[out] value Resulting value
- * @csqlfn #Temporal_value_at_timestamptz()
- */
-bool
-tcbuffer_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict,
-  Cbuffer **value)
-{
-  /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) value) ||
-      ! ensure_temporal_isof_type(temp, T_TCBUFFER))
-    return false;
-
-  Datum res;
-  bool result = temporal_value_at_timestamptz(temp, t, strict, &res);
-  *value = DatumGetCbufferP(res);
-  return result;
-}
-#endif /* MEOS */
 
 /*****************************************************************************/
 

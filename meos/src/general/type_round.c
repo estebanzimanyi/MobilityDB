@@ -64,6 +64,7 @@
  *****************************************************************************/
 
 /**
+ * @ingroup meos_base_transf
  * @brief Return a float number rounded to a given number of decimal places
  */
 double
@@ -161,6 +162,7 @@ geoset_round(const Set *s, int maxdd)
 
 #if CBUFFER
 /**
+ * @ingroup meos_setspan_transf
  * @brief Return a circular buffer set with the precision of the geometries and
  * of the radius set to a number of decimal places
  * @csqlfn #CBufferset_round()
@@ -178,6 +180,7 @@ cbufferset_round(const Set *s, int maxdd)
 
 #if NPOINT
 /**
+ * @ingroup meos_setspan_transf
  * @brief Return a network point set with the precision of the positions set
  * to a number of decimal places
  * @csqlfn #Npointset_round()
@@ -373,7 +376,7 @@ stbox_round(const STBox *box, int maxdd)
 }
 
 /**
- * @ingroup meos_temporal_transf
+ * @ingroup meos_box_transf
  * @brief Return an array of spatiotemporal boxes with the precision of the
  * coordinates set to a number of decimal places
  * @param[in] boxarr Array of spatiotemporal boxes
@@ -1033,6 +1036,7 @@ tgeoarr_round(const Temporal **temparr, int count, int maxdd)
 
 #if CBUFFER
 /**
+ * @ingroup meos_base_transf
  * @brief Return a circular buffer with the precision of the values set to a
  * number of decimal places
  */
@@ -1067,6 +1071,7 @@ datum_cbuffer_round(Datum cbuffer, Datum size)
 
 #if CBUFFER
 /**
+ * @ingroup meos_temporal_transf
  * @brief Return a temporal circular buffer with the precision of values
  * set to a number of decimal places
  */
@@ -1093,6 +1098,7 @@ tcbuffer_round(const Temporal *temp, int maxdd)
 
 #if NPOINT
 /**
+ * @ingroup meos_base_transf
  * @brief Return a network point with the precision of the position set to a
  * number of decimal places
  */
@@ -1118,6 +1124,7 @@ datum_npoint_round(Datum npoint, Datum size)
 }
 
 /**
+ * @ingroup meos_base_transf
  * @brief Return a network segment with the precision of the positions set to a
  * number of decimal places
  */
@@ -1137,6 +1144,7 @@ nsegment_round(const Nsegment *ns, int maxdd)
 
 #if NPOINT
 /**
+ * @ingroup meos_temporal_transf
  * @brief Return a temporal network point with the precision of the fractions
  * set to a number of decimal places
  */

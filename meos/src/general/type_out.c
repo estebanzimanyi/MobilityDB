@@ -2282,7 +2282,7 @@ stbox_as_hexwkb(const STBox *box, uint8_t variant, size_t *size_out)
 
 #if CBUFFER
 /**
- * @ingroup meos_cbuffer_inout
+ * @ingroup meos_base_inout
  * @brief Return the Well-Known Binary (WKB) representation of a circular
  * buffer
  * @param[in] cbuf Circular buffer
@@ -2296,12 +2296,11 @@ cbuffer_as_wkb(const Cbuffer *cbuf, uint8_t variant, size_t *size_out)
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) cbuf) || ! ensure_not_null((void *) size_out))
     return NULL;
-  return datum_as_wkb(PointerGetDatum(cbuf), T_CBUFFER, variant,
-    size_out);
+  return datum_as_wkb(PointerGetDatum(cbuf), T_CBUFFER, variant, size_out);
 }
 
 /**
- * @ingroup meos_cbuffer_inout
+ * @ingroup meos_base_inout
  * @brief Return the hex-encoded ASCII Well-Known Binary (HexWKB)
  * representation of a circular buffer
  * @param[in] cbuf Circular buffer
@@ -2319,6 +2318,49 @@ cbuffer_as_hexwkb(const Cbuffer *cbuf, uint8_t variant, size_t *size_out)
     variant | (uint8_t) WKB_HEX, size_out);
 }
 #endif /* CBUFFER */
+
+/*****************************************************************************
+ * WKB and HexWKB output functions for network points
+ *****************************************************************************/
+
+#if NPOINT
+/**
+ * @ingroup meos_base_inout
+ * @brief Return the Well-Known Binary (WKB) representation of a circular
+ * buffer
+ * @param[in] np Network point
+ * @param[in] variant Output variant
+ * @param[out] size_out Size of the output
+ * @csqlfn #Npoint_recv(), #Npoint_as_wkb()
+ */
+uint8_t *
+npoint_as_wkb(const Npoint *np, uint8_t variant, size_t *size_out)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) np) || ! ensure_not_null((void *) size_out))
+    return NULL;
+  return datum_as_wkb(PointerGetDatum(np), T_NPOINT, variant, size_out);
+}
+
+/**
+ * @ingroup meos_base_inout
+ * @brief Return the hex-encoded ASCII Well-Known Binary (HexWKB)
+ * representation of a network point
+ * @param[in] np Network point
+ * @param[in] variant Output variant
+ * @param[out] size_out Size of the output
+ * @csqlfn #Npoint_as_hexwkb()
+ */
+char *
+npoint_as_hexwkb(const Npoint *np, uint8_t variant, size_t *size_out)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) np) || ! ensure_not_null((void *) size_out))
+    return NULL;
+  return (char *) datum_as_wkb(PointerGetDatum(np), T_NPOINT,
+    variant | (uint8_t) WKB_HEX, size_out);
+}
+#endif /* NPOINT */
 
 /*****************************************************************************
  * WKB and HexWKB output functions for temporal types

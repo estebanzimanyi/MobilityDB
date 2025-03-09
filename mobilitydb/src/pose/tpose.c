@@ -50,7 +50,8 @@
 PGDLLEXPORT Datum Tpose_in(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpose_in);
 /**
- * Generic input function for temporal pose objects
+ * @ingroup mobilitydb_temporal_inout
+ * @brief Generic input function for temporal pose objects
  *
  * @note Examples of input for the various temporal types:
  * - Instant

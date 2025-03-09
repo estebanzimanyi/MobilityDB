@@ -1,5 +1,5 @@
 SET(LOCAL_FILES
-  100_tpose_static
+  100_pose
   101_tpose
   102_tpose_inout
   104_tpose_spatialfuncs

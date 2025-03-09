@@ -46,6 +46,27 @@
 #include "cbuffer/tcbuffer.h"
 
 /*****************************************************************************
+ * Input in WKT and EWKT format
+ *****************************************************************************/
+
+#if MEOS
+/**
+ * @ingroup meos_temporal_inout
+ * @brief Return a temporal circular buffer from its Well-Known Text (WKT)
+ * representation
+ * @param[in] str String
+ */
+Temporal *
+tcbuffer_in(const char *str)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) str))
+    return NULL;
+  return tpoint_parse(&str, T_TCBUFFER);
+}
+#endif /* MEOS */
+
+/*****************************************************************************
  * Output in WKT and EWKT format
  *****************************************************************************/
 
@@ -95,7 +116,7 @@ cbuffer_ewkt_out(Datum value, meosType type __attribute__((unused)), int maxdd)
 /*****************************************************************************/
 
 /**
- * @ingroup meos_temporal_inout
+ * @ingroup meos_base_inout
  * @brief Return the Well-Known Text (WKT) representation of a circular buffer
  * @param[in] cbuf Circular buffer
  * @param[in] maxdd Maximum number of decimal digits
@@ -112,7 +133,7 @@ cbuffer_as_text(const Cbuffer *cbuf, int maxdd)
 }
 
 /**
- * @ingroup meos_temporal_inout
+ * @ingroup meos_base_inout
  * @brief Return the Extended Well-Known Text (EWKT) representation of a
  * circular buffer
  * @param[in] cbuf Circular buffer
@@ -142,6 +163,25 @@ cbuffer_as_ewkt(const Cbuffer *cbuf, int maxdd)
 }
 
 /*****************************************************************************/
+
+#if MEOS
+/**
+ * @ingroup meos_temporal_inout
+ * @brief Return the Well-Known Text (WKT) representation of a temporal
+ * circular buffer
+ * @param[in] temp Temporal circular buffer
+ * @param[in] maxdd Maximum number of decimal digits
+ */
+char *
+tcbuffer_out(const Temporal *temp, int maxdd)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) temp) || 
+      ! ensure_temporal_isof_type(temp, T_TCBUFFER))
+    return NULL;
+  return temporal_out(temp, maxdd);
+}
+#endif /* MEOS */
 
 /**
  * @ingroup meos_temporal_inout
@@ -208,7 +248,7 @@ tcbuffer_as_ewkt(const Temporal *temp, int maxdd)
 /*****************************************************************************/
 
 /**
- * @ingroup meos_internal_temporal_inout
+ * @ingroup meos_internal_base_inout
  * @brief Return the (Extended) Well-Known Text (WKT or EWKT) representation
  * of a circular buffer array
  * @param[in] cbufarr Array of cbuffer

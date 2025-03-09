@@ -48,7 +48,7 @@
 PGDLLEXPORT Datum Pose_srid(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_srid);
 /**
- * @ingroup mobilitydb_temporal_spatial_accessor
+ * @ingroup mobilitydb_temporal_spatial_srid
  * @brief Return the SRID of a temporal pose
  * @sqlfn SRID()
  */
@@ -64,7 +64,7 @@ Pose_srid(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_set_srid(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_set_srid);
 /**
- * @ingroup mobilitydb_temporal_spatial_accessor
+ * @ingroup mobilitydb_temporal_spatial_srid
  * @brief Return the SRID of a temporal pose
  * @sqlfn SRID()
  */

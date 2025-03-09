@@ -58,6 +58,7 @@
  *****************************************************************************/
 
 /**
+ * @ingroup meos_base_inout
  * @brief Return a pose from its string representation.
  */
 Pose *
@@ -67,6 +68,7 @@ pose_in(const char *str, bool end)
 }
 
 /**
+ * @ingroup meos_base_inout
  * @brief Return the string representation of a pose
  */
 char *
@@ -103,7 +105,8 @@ pose_out(const Pose *pose, int maxdd)
  *****************************************************************************/
 
 /**
- * Construct a 2d pose value from the arguments
+ * @ingroup meos_base_constructor
+ * @brief Construct a 2d pose value from the arguments
  */
 Pose *
 pose_make_2d(double x, double y, double theta)
@@ -128,7 +131,8 @@ pose_make_2d(double x, double y, double theta)
 }
 
 /**
- * Construct a 3d pose value from the arguments
+ * @ingroup meos_base_constructor
+ * @brief Construct a 3d pose value from the arguments
  */
 Pose *
 pose_make_3d(double x, double y, double z,
@@ -163,6 +167,10 @@ pose_make_3d(double x, double y, double z,
   return result;
 }
 
+/**
+ * @ingroup meos_base_constructor
+ * @brief Copy a pose value
+ */
 Pose *
 pose_copy(Pose *pose)
 {
@@ -178,6 +186,10 @@ pose_copy(Pose *pose)
  * SRID functions
  *****************************************************************************/
 
+/**
+ * @ingroup meos_base_spatial
+ * @brief Return the SRID
+ */
 int32
 pose_srid(const Pose *pose)
 {
@@ -196,6 +208,10 @@ pose_srid(const Pose *pose)
     return srid;
 }
 
+/**
+ * @ingroup meos_base_spatial
+ * @brief Set the SRID
+ */
 void
 pose_set_srid(Pose *pose, int32 srid)
 {
@@ -212,10 +228,11 @@ pose_set_srid(Pose *pose, int32 srid)
 }
 
 /*****************************************************************************
- * Cast functions
+ * Conversion functions
  *****************************************************************************/
 
 /**
+ * @ingroup meos_base_conversion
  * @brief Transforms the pose into a geometry point
  */
 GSERIALIZED *
@@ -247,6 +264,7 @@ datum_pose_geom(Datum pose)
  *****************************************************************************/
 
 /**
+ * @ingroup meos_base_spatial
  * @brief Return the distance between the two poses
  */
 Datum
@@ -261,6 +279,9 @@ pose_distance(Datum pose1, Datum pose2)
  * Interpolation function
  *****************************************************************************/
 
+/**
+ * @brief Return the pose value interpolated from the two poses and a ratio
+ */
 Pose *
 pose_interpolate(const Pose *pose1, const Pose *pose2, double ratio)
 {
@@ -356,6 +377,7 @@ pose_collinear(const Pose *p1, const Pose *p2, const Pose *p3, double ratio)
  *****************************************************************************/
 
 /**
+ * @ingroup meos_base_comp
  * @brief Return true if the first pose is equal to the second one
  */
 bool
@@ -380,6 +402,7 @@ pose_eq(const Pose *pose1, const Pose *pose2)
 }
 
 /**
+ * @ingroup meos_base_comp
  * @brief Return true if the first pose is not equal to the second one
  */
 bool
@@ -389,6 +412,7 @@ pose_ne(const Pose *pose1, const Pose *pose2)
 }
 
 /**
+ * @ingroup meos_base_comp
  * @brief Return true if the first pose is equal to the second one
  */
 bool
@@ -413,15 +437,17 @@ pose_same(const Pose *pose1, const Pose *pose2)
 }
 
 /**
+ * @ingroup meos_base_comp
  * @brief Return true if the first pose is not equal to the second one
  */
 bool
 pose_nsame(const Pose *pose1, const Pose *pose2)
 {
-  return (!pose_same(pose1, pose2));
+  return (! pose_same(pose1, pose2));
 }
 
 /**
+ * @ingroup meos_base_comp
  * @brief Return -1, 0, or 1 depending on whether the first pose
  * is less than, equal to, or greater than the second one
  */
@@ -450,6 +476,7 @@ pose_cmp(const Pose *pose1, const Pose *pose2)
 }
 
 /**
+ * @ingroup meos_base_comp
  * @brief Return true if the first pose is less than the second one
  */
 bool
@@ -460,6 +487,7 @@ pose_lt(const Pose *pose1, const Pose *pose2)
 }
 
 /**
+ * @ingroup meos_base_comp
  * @brief Return true if the first pose is less than or equal to the
  * second one
  */
@@ -471,6 +499,7 @@ pose_le(const Pose *pose1, const Pose *pose2)
 }
 
 /**
+ * @ingroup meos_base_comp
  * @brief Return true if the first pose is greater than the second one
  */
 bool
@@ -481,8 +510,9 @@ pose_gt(const Pose *pose1, const Pose *pose2)
 }
 
 /**
- * @brief Return true if the first pose is greater than or equal to
- * the second one
+ * @ingroup meos_base_comp
+ * @brief Return true if the first pose is greater than or equal to the second
+ * one
  */
 bool
 pose_ge(const Pose *pose1, const Pose *pose2)
@@ -505,6 +535,7 @@ pose_ge(const Pose *pose1, const Pose *pose2)
 void hashlittle2(const void *key, size_t length, uint32_t *pc, uint32_t *pb);
 
 /**
+ * @ingroup meos_base_accessor
  * @brief Return the 32-bit hash value of a pose
  */
 uint32
@@ -535,7 +566,8 @@ pose_hash(const Pose *pose)
 }
 
 /**
- * @brief Return the 32-bit hash value of a network point
+ * @ingroup meos_base_accessor
+ * @brief Return the 64-bit hash value of a point using a seed
  */
 uint64
 pose_hash_extended(const Pose *pose, uint64 seed)

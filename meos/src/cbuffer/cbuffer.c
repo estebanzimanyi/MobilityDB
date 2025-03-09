@@ -90,7 +90,7 @@ cbuffer_collinear(Cbuffer *cbuf1, Cbuffer *cbuf2, Cbuffer *cbuf3, double ratio)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_inout
+ * @ingroup meos_base_inout
  * @brief Return a circular buffer from its string representation
  * @param[in] str String
  * @csqlfn #Cbuffer_in()
@@ -102,7 +102,7 @@ cbuffer_in(const char *str)
 }
 
 /**
- * @ingroup meos_temporal_inout
+ * @ingroup meos_base_inout
  * @brief Return the string representation of a circular buffer
  * @param[in] cbuf Circular buffer
  * @param[in] maxdd Maximum number of decimal digits
@@ -130,7 +130,7 @@ cbuffer_out(const Cbuffer *cbuf, int maxdd)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_constructor
+ * @ingroup meos_base_constructor
  * @brief Return a circular buffer from a point and a radius
  * @param[in] point Point
  * @param[in] radius Radius
@@ -162,7 +162,7 @@ cbuffer_make(const GSERIALIZED *point, double radius)
 }
 
 /**
- * @ingroup meos_temporal_constructor
+ * @ingroup meos_base_constructor
  * @brief Return a copy of a circular buffer
  * @param[in] cbuf Circular buffer
  */
@@ -187,7 +187,7 @@ cbuffer_copy(const Cbuffer *cbuf)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_base_accessor
  * @brief Return the point of a circular buffer
  * @param[in] cbuf Circular buffer
  * @csqlfn #Cbuffer_point()
@@ -200,7 +200,7 @@ cbuffer_point(const Cbuffer *cbuf)
 }
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_base_accessor
  * @brief Return the radius of a circular buffer
  * @param[in] cbuf Circular buffer
  * @csqlfn #Cbuffer_radius()
@@ -216,7 +216,7 @@ cbuffer_radius(const Cbuffer *cbuf)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_conversion
+ * @ingroup meos_base_conversion
  * @brief Transform a circular buffer into a geometry
  * @param[in] cbuf Circular buffer
  * @csqlfn #Cbuffer_to_geom()
@@ -239,7 +239,7 @@ cbuffer_geom(const Cbuffer *cbuf)
 }
 
 /**
- * @ingroup meos_temporal_conversion
+ * @ingroup meos_base_conversion
  * @brief Transform a geometry into a circular buffer
  * @param[in] gs Geometry
  * @csqlfn #Geom_to_cbuffer()
@@ -313,7 +313,7 @@ cbufferarr_geom(Cbuffer **cbufarr, int nelems)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_spatial_srid
+ * @ingroup meos_base_spatial
  * @brief Return the SRID of a circular buffer
  * @param[in] cbuf Circular buffer
  * @csqlfn #Cbuffer_srid()
@@ -329,7 +329,7 @@ cbuffer_srid(const Cbuffer *cbuf)
 }
 
 /**
- * @ingroup meos_temporal_spatial_srid
+ * @ingroup meos_base_spatial
  * @brief Set the coordinates of the circular buffer to an SRID
  * @param[in] cbuf Circular buffer
  * @param[in] srid SRID
@@ -349,7 +349,7 @@ cbuffer_set_srid(Cbuffer *cbuf, int32_t srid)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_comp_trad
+ * @ingroup meos_base_comp
  * @brief Return true if two circular buffers are approximately equal with
  * respect to an epsilon value
  */
@@ -370,7 +370,7 @@ cbuffer_same(const Cbuffer *cbuf1, const Cbuffer *cbuf2)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_comp_trad
+ * @ingroup meos_base_comp
  * @brief Return true if the first buffer is equal to the second one
  * @param[in] cbuf1,cbuf2 Buffers
  * @csqlfn #Cbuffer_eq()
@@ -385,7 +385,7 @@ cbuffer_eq(const Cbuffer *cbuf1, const Cbuffer *cbuf2)
 }
 
 /**
- * @ingroup meos_temporal_comp_trad
+ * @ingroup meos_base_comp
  * @brief Return true if the first buffer is not equal to the second one
  * @param[in] cbuf1,cbuf2 Buffers
  * @csqlfn #Cbuffer_ne()
@@ -397,7 +397,7 @@ cbuffer_ne(const Cbuffer *cbuf1, const Cbuffer *cbuf2)
 }
 
 /**
- * @ingroup meos_temporal_comp_trad
+ * @ingroup meos_base_comp
  * @brief Return -1, 0, or 1 depending on whether the first buffer
  * is less than, equal to, or greater than the second one
  * @param[in] cbuf1,cbuf2 Buffers
@@ -420,7 +420,7 @@ cbuffer_cmp(const Cbuffer *cbuf1, const Cbuffer *cbuf2)
 }
 
 /**
- * @ingroup meos_temporal_comp_trad
+ * @ingroup meos_base_comp
  * @brief Return true if the first buffer is less than the second one
  * @param[in] cbuf1,cbuf2 Buffers
  * @csqlfn #Cbuffer_lt()
@@ -433,7 +433,7 @@ cbuffer_lt(const Cbuffer *cbuf1, const Cbuffer *cbuf2)
 }
 
 /**
- * @ingroup meos_temporal_comp_trad
+ * @ingroup meos_base_comp
  * @brief Return true if the first buffer is less than or equal to the
  * second one
  * @param[in] cbuf1,cbuf2 Buffers
@@ -447,7 +447,7 @@ cbuffer_le(const Cbuffer *cbuf1, const Cbuffer *cbuf2)
 }
 
 /**
- * @ingroup meos_temporal_comp_trad
+ * @ingroup meos_base_comp
  * @brief Return true if the first buffer is greater than the second one
  * @param[in] cbuf1,cbuf2 Buffers
  * @csqlfn #Cbuffer_gt()
@@ -460,7 +460,7 @@ cbuffer_gt(const Cbuffer *cbuf1, const Cbuffer *cbuf2)
 }
 
 /**
- * @ingroup meos_temporal_comp_trad
+ * @ingroup meos_base_comp
  * @brief Return true if the first buffer is greater than or equal to
  * the second one
  * @param[in] cbuf1,cbuf2 Buffers
