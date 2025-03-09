@@ -38,12 +38,12 @@
 #include <meos.h>
 #include <meos_cbuffer.h>
 #include <meos_internal.h>
+#include <meos_cbuffer.h>
 #include "general/type_parser.h"
 #include "general/type_util.h"
 #include "geo/tgeo_parser.h"
 #include "geo/tgeo_spatialfuncs.h"
-#include "cbuffer/tcbuffer.h"
-#include "cbuffer/tcbuffer_parser.h"
+#include "cbuffer/cbuffer.h"
 
 /*****************************************************************************/
 

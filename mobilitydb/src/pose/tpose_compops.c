@@ -29,7 +29,7 @@
 
 /**
  * @file
- * @brief Ever/always and temporal comparisons for temporal circular buffers
+ * @brief Ever/always and temporal comparisons for temporal poses
  */
 
 /* C */
@@ -41,9 +41,9 @@
 #include <liblwgeom.h>
 /* MEOS */
 #include <meos.h>
-#include <meos_cbuffer.h>
+#include <meos_pose.h>
 #include "general/temporal.h"
-#include "cbuffer/cbuffer.h"
+#include "pose/tpose.h"
 /* MobilityDB */
 #include "pg_geo/postgis.h"
 
@@ -57,13 +57,13 @@
  * @param[in] func Specific function for the ever/always comparison
  */
 static Datum
-EAcomp_cbuffer_tcbuffer(FunctionCallInfo fcinfo,
-  int (*func)(const Cbuffer *, const Temporal *))
+EAcomp_pose_tpose(FunctionCallInfo fcinfo,
+  int (*func)(const Pose *, const Temporal *))
 {
-  Cbuffer *cbuf = PG_GETARG_CBUFFER_P(0);
+  Pose *pose = PG_GETARG_POSE_P(0);
   Temporal *temp = PG_GETARG_TEMPORAL_P(1);
-  int result = func(cbuf, temp);
-  PG_FREE_IF_COPY(cbuf, 0);
+  int result = func(pose, temp);
+  PG_FREE_IF_COPY(pose, 0);
   PG_FREE_IF_COPY(temp, 1);
   if (result < 0)
     PG_RETURN_NULL();
@@ -76,14 +76,14 @@ EAcomp_cbuffer_tcbuffer(FunctionCallInfo fcinfo,
  * @param[in] func Specific function for the ever/always comparison
  */
 static Datum
-EAcomp_tcbuffer_cbuffer(FunctionCallInfo fcinfo,
-  int (*func)(const Temporal *, const Cbuffer *))
+EAcomp_tpose_pose(FunctionCallInfo fcinfo,
+  int (*func)(const Temporal *, const Pose *))
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  Cbuffer *cbuf = PG_GETARG_CBUFFER_P(1);
-  int result = func(temp, cbuf);
+  Pose *pose = PG_GETARG_POSE_P(1);
+  int result = func(temp, pose);
   PG_FREE_IF_COPY(temp, 0);
-  PG_FREE_IF_COPY(cbuf, 1);
+  PG_FREE_IF_COPY(pose, 1);
   if (result < 0)
     PG_RETURN_NULL();
   PG_RETURN_BOOL(result);
@@ -95,7 +95,7 @@ EAcomp_tcbuffer_cbuffer(FunctionCallInfo fcinfo,
  * @param[in] func Specific function for the ever/always comparison
  */
 static Datum
-EAcomp_tcbuffer_tcbuffer(FunctionCallInfo fcinfo,
+EAcomp_tpose_tpose(FunctionCallInfo fcinfo,
   int (*func)(const Temporal *, const Temporal *))
 {
   Temporal *temp1 = PG_GETARG_TEMPORAL_P(0);
@@ -110,184 +110,182 @@ EAcomp_tcbuffer_tcbuffer(FunctionCallInfo fcinfo,
 
 /*****************************************************************************/
 
-PGDLLEXPORT Datum Ever_eq_cbuffer_tcbuffer(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Ever_eq_cbuffer_tcbuffer);
+PGDLLEXPORT Datum Ever_eq_pose_tpose(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Ever_eq_pose_tpose);
 /**
  * @ingroup mobilitydb_temporal_comp_ever
- * @brief Return true if a temporal circular buffer is ever equal to a circular
- * buffer
+ * @brief Return true if a temporal pose is ever equal to a pose
  * @sqlfn ever_eq()
  * @sqlop @p ?=
  */
 Datum
-Ever_eq_cbuffer_tcbuffer(PG_FUNCTION_ARGS)
+Ever_eq_pose_tpose(PG_FUNCTION_ARGS)
 {
-  return EAcomp_cbuffer_tcbuffer(fcinfo, &ever_eq_cbuffer_tcbuffer);
+  return EAcomp_pose_tpose(fcinfo, &ever_eq_pose_tpose);
 }
 
-PGDLLEXPORT Datum Always_eq_cbuffer_tcbuffer(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Always_eq_cbuffer_tcbuffer);
+PGDLLEXPORT Datum Always_eq_pose_tpose(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Always_eq_pose_tpose);
 /**
  * @ingroup mobilitydb_temporal_comp_ever
- * @brief Return true if a temporal circular buffer is always equal to a
- * circular buffer
+ * @brief Return true if a temporal pose is always equal to a
+ * pose
  * @sqlfn always_eq()
  * @sqlop @p %=
  */
 Datum
-Always_eq_cbuffer_tcbuffer(PG_FUNCTION_ARGS)
+Always_eq_pose_tpose(PG_FUNCTION_ARGS)
 {
-  return EAcomp_cbuffer_tcbuffer(fcinfo, &always_eq_cbuffer_tcbuffer);
+  return EAcomp_pose_tpose(fcinfo, &always_eq_pose_tpose);
 }
 
-PGDLLEXPORT Datum Ever_ne_cbuffer_tcbuffer(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Ever_ne_cbuffer_tcbuffer);
+PGDLLEXPORT Datum Ever_ne_pose_tpose(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Ever_ne_pose_tpose);
 /**
  * @ingroup mobilitydb_temporal_comp_ever
- * @brief Return true if a temporal circular buffer is ever different from a
- * circular buffer
+ * @brief Return true if a temporal pose is ever different from a
+ * pose
  * @sqlfn ever_ne()
  * @sqlop @p ?<>
  */
 Datum
-Ever_ne_cbuffer_tcbuffer(PG_FUNCTION_ARGS)
+Ever_ne_pose_tpose(PG_FUNCTION_ARGS)
 {
-  return EAcomp_cbuffer_tcbuffer(fcinfo, &ever_ne_cbuffer_tcbuffer);
+  return EAcomp_pose_tpose(fcinfo, &ever_ne_pose_tpose);
 }
 
-PGDLLEXPORT Datum Always_ne_cbuffer_tcbuffer(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Always_ne_cbuffer_tcbuffer);
+PGDLLEXPORT Datum Always_ne_pose_tpose(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Always_ne_pose_tpose);
 /**
  * @ingroup mobilitydb_temporal_comp_ever
- * @brief Return true if a temporal circular buffer is always different from a
- * circular buffer
+ * @brief Return true if a temporal pose is always different from a
+ * pose
  * @sqlfn always_ne()
  * @sqlop @p %<>
  */
 Datum
-Always_ne_cbuffer_tcbuffer(PG_FUNCTION_ARGS)
+Always_ne_pose_tpose(PG_FUNCTION_ARGS)
 {
-  return EAcomp_cbuffer_tcbuffer(fcinfo, &always_ne_cbuffer_tcbuffer);
+  return EAcomp_pose_tpose(fcinfo, &always_ne_pose_tpose);
 }
 
 /*****************************************************************************/
 
-PGDLLEXPORT Datum Ever_eq_tcbuffer_cbuffer(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Ever_eq_tcbuffer_cbuffer);
+PGDLLEXPORT Datum Ever_eq_tpose_pose(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Ever_eq_tpose_pose);
 /**
  * @ingroup mobilitydb_temporal_comp_ever
- * @brief Return true if a temporal circular buffer is ever equal to a circular
- * buffer
+ * @brief Return true if a temporal pose is ever equal to a pose
  * @sqlfn ever_eq()
  * @sqlop @p ?=
  */
 Datum
-Ever_eq_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
+Ever_eq_tpose_pose(PG_FUNCTION_ARGS)
 {
-  return EAcomp_tcbuffer_cbuffer(fcinfo, &ever_eq_tcbuffer_cbuffer);
+  return EAcomp_tpose_pose(fcinfo, &ever_eq_tpose_pose);
 }
 
-PGDLLEXPORT Datum Always_eq_tcbuffer_cbuffer(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Always_eq_tcbuffer_cbuffer);
+PGDLLEXPORT Datum Always_eq_tpose_pose(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Always_eq_tpose_pose);
 /**
  * @ingroup mobilitydb_temporal_comp_ever
- * @brief Return true if a temporal circular buffer is always equal to a
- * circular buffer
+ * @brief Return true if a temporal pose is always equal to a
+ * pose
  * @sqlfn always_eq()
  * @sqlop @p %=
  */
 Datum
-Always_eq_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
+Always_eq_tpose_pose(PG_FUNCTION_ARGS)
 {
-  return EAcomp_tcbuffer_cbuffer(fcinfo, &always_eq_tcbuffer_cbuffer);
+  return EAcomp_tpose_pose(fcinfo, &always_eq_tpose_pose);
 }
 
-PGDLLEXPORT Datum Ever_ne_tcbuffer_cbuffer(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Ever_ne_tcbuffer_cbuffer);
+PGDLLEXPORT Datum Ever_ne_tpose_pose(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Ever_ne_tpose_pose);
 /**
  * @ingroup mobilitydb_temporal_comp_ever
- * @brief Return true if a temporal circular buffer is ever different from a
- * circular buffer
+ * @brief Return true if a temporal pose is ever different from a
+ * pose
  * @sqlfn ever_ne()
  * @sqlop @p ?<>
  */
 Datum
-Ever_ne_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
+Ever_ne_tpose_pose(PG_FUNCTION_ARGS)
 {
-  return EAcomp_tcbuffer_cbuffer(fcinfo, &ever_ne_tcbuffer_cbuffer);
+  return EAcomp_tpose_pose(fcinfo, &ever_ne_tpose_pose);
 }
 
-PGDLLEXPORT Datum Always_ne_tcbuffer_cbuffer(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Always_ne_tcbuffer_cbuffer);
+PGDLLEXPORT Datum Always_ne_tpose_pose(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Always_ne_tpose_pose);
 /**
  * @ingroup mobilitydb_temporal_comp_ever
- * @brief Return true if a temporal circular buffer is always different from a
- * circular buffer
+ * @brief Return true if a temporal pose is always different from a
+ * pose
  * @sqlfn always_ne()
  * @sqlop @p %<>
  */
 Datum
-Always_ne_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
+Always_ne_tpose_pose(PG_FUNCTION_ARGS)
 {
-  return EAcomp_tcbuffer_cbuffer(fcinfo, &always_ne_tcbuffer_cbuffer);
+  return EAcomp_tpose_pose(fcinfo, &always_ne_tpose_pose);
 }
 
 /*****************************************************************************/
 
-PGDLLEXPORT Datum Ever_eq_tcbuffer_tcbuffer(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Ever_eq_tcbuffer_tcbuffer);
+PGDLLEXPORT Datum Ever_eq_tpose_tpose(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Ever_eq_tpose_tpose);
 /**
  * @ingroup mobilitydb_temporal_comp_ever
- * @brief Return true if two temporal circular buffers are ever equal
+ * @brief Return true if two temporal poses are ever equal
  * @sqlfn ever_eq()
  * @sqlop @p ?=
  */
 Datum
-Ever_eq_tcbuffer_tcbuffer(PG_FUNCTION_ARGS)
+Ever_eq_tpose_tpose(PG_FUNCTION_ARGS)
 {
-  return EAcomp_tcbuffer_tcbuffer(fcinfo, &ever_eq_tcbuffer_tcbuffer);
+  return EAcomp_tpose_tpose(fcinfo, &ever_eq_tpose_tpose);
 }
 
-PGDLLEXPORT Datum Always_eq_tcbuffer_tcbuffer(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Always_eq_tcbuffer_tcbuffer);
+PGDLLEXPORT Datum Always_eq_tpose_tpose(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Always_eq_tpose_tpose);
 /**
  * @ingroup mobilitydb_temporal_comp_ever
- * @brief Return true if two temporal circular buffers are always equal
+ * @brief Return true if two temporal poses are always equal
  * @sqlfn always_eq()
  * @sqlop @p %=
  */
 Datum
-Always_eq_tcbuffer_tcbuffer(PG_FUNCTION_ARGS)
+Always_eq_tpose_tpose(PG_FUNCTION_ARGS)
 {
-  return EAcomp_tcbuffer_tcbuffer(fcinfo, &always_eq_tcbuffer_tcbuffer);
+  return EAcomp_tpose_tpose(fcinfo, &always_eq_tpose_tpose);
 }
 
-PGDLLEXPORT Datum Ever_ne_tcbuffer_tcbuffer(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Ever_ne_tcbuffer_tcbuffer);
+PGDLLEXPORT Datum Ever_ne_tpose_tpose(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Ever_ne_tpose_tpose);
 /**
  * @ingroup mobilitydb_temporal_comp_ever
- * @brief Return true if two temporal circular buffers are ever different
+ * @brief Return true if two temporal poses are ever different
  * @sqlfn ever_ne()
  * @sqlop @p ?<>
  */
 Datum
-Ever_ne_tcbuffer_tcbuffer(PG_FUNCTION_ARGS)
+Ever_ne_tpose_tpose(PG_FUNCTION_ARGS)
 {
-  return EAcomp_tcbuffer_tcbuffer(fcinfo, &ever_ne_tcbuffer_tcbuffer);
+  return EAcomp_tpose_tpose(fcinfo, &ever_ne_tpose_tpose);
 }
 
-PGDLLEXPORT Datum Always_ne_tcbuffer_tcbuffer(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Always_ne_tcbuffer_tcbuffer);
+PGDLLEXPORT Datum Always_ne_tpose_tpose(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Always_ne_tpose_tpose);
 /**
  * @ingroup mobilitydb_temporal_comp_ever
- * @brief Return true if two temporal circular buffers are always different
+ * @brief Return true if two temporal poses are always different
  * @sqlfn always_ne()
  * @sqlop @p %<>
  */
 Datum
-Always_ne_tcbuffer_tcbuffer(PG_FUNCTION_ARGS)
+Always_ne_tpose_tpose(PG_FUNCTION_ARGS)
 {
-  return EAcomp_tcbuffer_tcbuffer(fcinfo, &always_ne_tcbuffer_tcbuffer);
+  return EAcomp_tpose_tpose(fcinfo, &always_ne_tpose_tpose);
 }
 
 /*****************************************************************************
@@ -300,13 +298,13 @@ Always_ne_tcbuffer_tcbuffer(PG_FUNCTION_ARGS)
  * @param[in] func Specific function for the ever/always comparison
  */
 static Datum
-Tcomp_cbuffer_tcbuffer(FunctionCallInfo fcinfo,
-  Temporal * (*func)(const Cbuffer *, const Temporal *))
+Tcomp_pose_tpose(FunctionCallInfo fcinfo,
+  Temporal * (*func)(const Pose *, const Temporal *))
 {
-  Cbuffer *cbuf = PG_GETARG_CBUFFER_P(0);
+  Pose *pose = PG_GETARG_POSE_P(0);
   Temporal *temp = PG_GETARG_TEMPORAL_P(1);
-  Temporal *result = func(cbuf, temp);
-  PG_FREE_IF_COPY(cbuf, 0);
+  Temporal *result = func(pose, temp);
+  PG_FREE_IF_COPY(pose, 0);
   PG_FREE_IF_COPY(temp, 1);
   if (! result)
     PG_RETURN_NULL();
@@ -319,14 +317,14 @@ Tcomp_cbuffer_tcbuffer(FunctionCallInfo fcinfo,
  * @param[in] func Specific function for the ever/always comparison
  */
 static Datum
-Tcomp_tcbuffer_cbuffer(FunctionCallInfo fcinfo,
-  Temporal * (*func)(const Temporal *, const Cbuffer *))
+Tcomp_tpose_pose(FunctionCallInfo fcinfo,
+  Temporal * (*func)(const Temporal *, const Pose *))
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  Cbuffer *cbuf = PG_GETARG_CBUFFER_P(1);
-  Temporal *result = func(temp, cbuf);
+  Pose *pose = PG_GETARG_POSE_P(1);
+  Temporal *result = func(temp, pose);
   PG_FREE_IF_COPY(temp, 0);
-  PG_FREE_IF_COPY(cbuf, 1);
+  PG_FREE_IF_COPY(pose, 1);
   if (! result)
     PG_RETURN_NULL();
   PG_RETURN_TEMPORAL_P(result);
@@ -338,7 +336,7 @@ Tcomp_tcbuffer_cbuffer(FunctionCallInfo fcinfo,
  * @param[in] func Specific function for the ever/always comparison
  */
 static Datum
-Tcomp_tcbuffer_tcbuffer(FunctionCallInfo fcinfo,
+Tcomp_tpose_tpose(FunctionCallInfo fcinfo,
   Temporal * (*func)(const Temporal *, const Temporal *))
 {
   Temporal *temp1 = PG_GETARG_TEMPORAL_P(0);
@@ -353,96 +351,94 @@ Tcomp_tcbuffer_tcbuffer(FunctionCallInfo fcinfo,
 
 /*****************************************************************************/
 
-PGDLLEXPORT Datum Teq_cbuffer_tcbuffer(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Teq_cbuffer_tcbuffer);
+PGDLLEXPORT Datum Teq_pose_tpose(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Teq_pose_tpose);
 /**
  * @ingroup mobilitydb_temporal_comp_temp
- * @brief Return true if a temporal circular buffer is ever equal to a circular
- * buffer
+ * @brief Return true if a temporal pose is ever equal to a pose
  * @sqlfn temporal_teq()
  * @sqlop @p #=
  */
 Datum
-Teq_cbuffer_tcbuffer(PG_FUNCTION_ARGS)
+Teq_pose_tpose(PG_FUNCTION_ARGS)
 {
-  return Tcomp_cbuffer_tcbuffer(fcinfo, &teq_cbuffer_tcbuffer);
+  return Tcomp_pose_tpose(fcinfo, &teq_pose_tpose);
 }
 
-PGDLLEXPORT Datum Tne_cbuffer_tcbuffer(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tne_cbuffer_tcbuffer);
+PGDLLEXPORT Datum Tne_pose_tpose(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tne_pose_tpose);
 /**
  * @ingroup mobilitydb_temporal_comp_temp
- * @brief Return true if a temporal circular buffer is ever different from a
- * circular buffer
+ * @brief Return true if a temporal pose is ever different from a
+ * pose
  * @sqlfn temporal_tne()
  * @sqlop @p #<>
  */
 Datum
-Tne_cbuffer_tcbuffer(PG_FUNCTION_ARGS)
+Tne_pose_tpose(PG_FUNCTION_ARGS)
 {
-  return Tcomp_cbuffer_tcbuffer(fcinfo, &tne_cbuffer_tcbuffer);
+  return Tcomp_pose_tpose(fcinfo, &tne_pose_tpose);
 }
 
 /*****************************************************************************/
 
-PGDLLEXPORT Datum Teq_tcbuffer_cbuffer(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Teq_tcbuffer_cbuffer);
+PGDLLEXPORT Datum Teq_tpose_pose(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Teq_tpose_pose);
 /**
  * @ingroup mobilitydb_temporal_comp_temp
- * @brief Return true if a temporal circular buffer is ever equal to a circular
- * buffer
+ * @brief Return true if a temporal pose is ever equal to a pose
  * @sqlfn temporal_teq()
  * @sqlop @p #=
  */
 Datum
-Teq_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
+Teq_tpose_pose(PG_FUNCTION_ARGS)
 {
-  return Tcomp_tcbuffer_cbuffer(fcinfo, &teq_tcbuffer_cbuffer);
+  return Tcomp_tpose_pose(fcinfo, &teq_tpose_pose);
 }
 
-PGDLLEXPORT Datum Tne_tcbuffer_cbuffer(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tne_tcbuffer_cbuffer);
+PGDLLEXPORT Datum Tne_tpose_pose(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tne_tpose_pose);
 /**
  * @ingroup mobilitydb_temporal_comp_temp
- * @brief Return true if a temporal circular buffer is ever different from a
- * circular buffer
+ * @brief Return true if a temporal pose is ever different from a
+ * pose
  * @sqlfn temporal_tne()
  * @sqlop @p #<>
  */
 Datum
-Tne_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
+Tne_tpose_pose(PG_FUNCTION_ARGS)
 {
-  return Tcomp_tcbuffer_cbuffer(fcinfo, &tne_tcbuffer_cbuffer);
+  return Tcomp_tpose_pose(fcinfo, &tne_tpose_pose);
 }
 
 /*****************************************************************************/
 
-PGDLLEXPORT Datum Teq_tcbuffer_tcbuffer(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Teq_tcbuffer_tcbuffer);
+PGDLLEXPORT Datum Teq_tpose_tpose(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Teq_tpose_tpose);
 /**
  * @ingroup mobilitydb_temporal_comp_temp
- * @brief Return true if two temporal circular buffers are ever equal
+ * @brief Return true if two temporal poses are ever equal
  * @sqlfn temporal_teq()
  * @sqlop @p #=
  */
 Datum
-Teq_tcbuffer_tcbuffer(PG_FUNCTION_ARGS)
+Teq_tpose_tpose(PG_FUNCTION_ARGS)
 {
-  return Tcomp_tcbuffer_tcbuffer(fcinfo, &teq_temporal_temporal);
+  return Tcomp_tpose_tpose(fcinfo, &teq_temporal_temporal);
 }
 
-PGDLLEXPORT Datum Tne_tcbuffer_tcbuffer(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tne_tcbuffer_tcbuffer);
+PGDLLEXPORT Datum Tne_tpose_tpose(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tne_tpose_tpose);
 /**
  * @ingroup mobilitydb_temporal_comp_temp
- * @brief Return true if two temporal circular buffers are ever different
+ * @brief Return true if two temporal poses are ever different
  * @sqlfn temporal_tne()
  * @sqlop @p #<>
  */
 Datum
-Tne_tcbuffer_tcbuffer(PG_FUNCTION_ARGS)
+Tne_tpose_tpose(PG_FUNCTION_ARGS)
 {
-  return Tcomp_tcbuffer_tcbuffer(fcinfo, &tne_temporal_temporal);
+  return Tcomp_tpose_tpose(fcinfo, &tne_temporal_temporal);
 }
 
 /*****************************************************************************/

@@ -28,42 +28,58 @@
  *****************************************************************************/
 
 /**
- * tpose_boxops.sql
- * Bounding box operators for temporal poses.
+ * @brief Functions for temporal buffers.
  */
 
+#ifndef __CBUFFER_H__
+#define __CBUFFER_H__
+
+/* PostgreSQL */
+#include <postgres.h>
+/* MEOS */
+#include <meos.h>
+#include <meos_cbuffer.h>
+
 /*****************************************************************************
- * Temporal pose to stbox
+ * Type definitions
  *****************************************************************************/
 
-CREATE FUNCTION stbox(pose)
-  RETURNS stbox
-  AS 'MODULE_PATHNAME', 'Pose_to_stbox'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+/* Structure to represent circular buffers */
 
-CREATE FUNCTION stbox(pose, timestamptz)
-  RETURNS stbox
-  AS 'MODULE_PATHNAME', 'Pose_timestamp_to_stbox'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+struct Cbuffer
+{
+  int32 vl_len_;        /**< Varlena header (do not touch directly!) */
+  double radius;        /**< radius */
+  Datum point;          /**< First 8 bytes of the point which is passed by 
+                             reference. The extra bytes needed are added upon 
+                             creation. */
+  /* variable-length data follows */
+};
 
-CREATE FUNCTION stbox(pose, tstzspan)
-  RETURNS stbox
-  AS 'MODULE_PATHNAME', 'Pose_period_to_stbox'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+/*****************************************************************************
+ * fmgr macros
+ *****************************************************************************/
 
-CREATE FUNCTION stbox(tpose)
-  RETURNS stbox
-  AS 'MODULE_PATHNAME', 'Tspatial_to_stbox'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+/* Cbuffer */
+#define DatumGetCbufferP(X)         ((Cbuffer *) DatumGetPointer(X))
+#define CbufferPGetDatum(X)         PointerGetDatum(X)
+#define PG_GETARG_CBUFFER_P(X)      DatumGetCbufferP(PG_GETARG_DATUM(X))
+#define PG_RETURN_CBUFFER_P(X)      PG_RETURN_POINTER(X)
 
-CREATE CAST (pose AS stbox) WITH FUNCTION stbox(pose);
-CREATE CAST (tpose AS stbox) WITH FUNCTION stbox(tpose);
+/*****************************************************************************/
+
+/* Collinear functions */
+
+extern bool cbuffer_collinear(Cbuffer *cbuf1, Cbuffer *cbuf2, Cbuffer *cbuf3,
+  double ratio);
+
+/* Input/output functions */
+
+extern char *cbuffer_wkt_out(Datum value, meosType type, int maxdd);
+extern char *cbuffer_ewkt_out(Datum value, meosType type, int maxdd);
+extern char **cbufferarr_as_text(const Datum *cbufarr, int count, int maxdd,
+  bool extended);
 
 /*****************************************************************************/
 
-CREATE FUNCTION expandSpace(tpose, float)
-  RETURNS stbox
-  AS 'MODULE_PATHNAME', 'Tspatial_expand_space'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-/*****************************************************************************/
+#endif /* __CBUFFER_H__ */

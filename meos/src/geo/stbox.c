@@ -55,6 +55,7 @@
 #include "geo/tgeo_parser.h"
 #include "geo/tgeo_spatialfuncs.h"
 #if CBUFFER
+  #include "cbuffer/cbuffer.h"
   #include "cbuffer/tcbuffer_boxops.h"
 #endif
 #if NPOINT

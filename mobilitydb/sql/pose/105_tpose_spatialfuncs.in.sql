@@ -27,36 +27,53 @@
  *
  *****************************************************************************/
 
-/**
- * @brief Functions for temporal buffers.
+/*
+ * tpose_spatialfuncs.sql
+ * Spatial functions for temporal poses.
  */
 
-#ifndef __TCBUFFER_H__
-#define __TCBUFFER_H__
+CREATE FUNCTION SRID(pose)
+  RETURNS integer
+  AS 'MODULE_PATHNAME', 'Pose_srid'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-/* PostgreSQL */
-#include <postgres.h>
-/* MEOS */
-#include <meos.h>
-#include <meos_cbuffer.h>
+CREATE FUNCTION setSRID(pose, integer)
+  RETURNS pose
+  AS 'MODULE_PATHNAME', 'Pose_set_srid'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION SRID(tpose)
+  RETURNS integer
+  AS 'MODULE_PATHNAME', 'Tspatial_srid'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION setSRID(tpose, integer)
+  RETURNS tpose
+  AS 'MODULE_PATHNAME', 'Tspatial_set_srid'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************
- * fmgr macros
+ * AtGeometry and MinusGeometry
  *****************************************************************************/
 
-/* Cbuffer */
-#define DatumGetCbufferP(X)         ((Cbuffer *) DatumGetPointer(X))
-#define CbufferPGetDatum(X)         PointerGetDatum(X)
-#define PG_GETARG_CBUFFER_P(X)      DatumGetCbufferP(PG_GETARG_DATUM(X))
-#define PG_RETURN_CBUFFER_P(X)      PG_RETURN_POINTER(X)
+CREATE FUNCTION atGeometry(tpose, geometry)
+  RETURNS tpose
+  AS 'MODULE_PATHNAME', 'Tpose_at_geom'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION minusGeometry(tpose, geometry)
+  RETURNS tpose
+  AS 'MODULE_PATHNAME', 'Tpose_minus_geom'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION atStbox(tpose, stbox, bool DEFAULT TRUE)
+  RETURNS tpose
+  AS 'MODULE_PATHNAME', 'Tpose_at_stbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION minusStbox(tpose, stbox, bool DEFAULT TRUE)
+  RETURNS tpose
+  AS 'MODULE_PATHNAME', 'Tpose_minus_stbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************/
-
-/* Collinear functions */
-
-extern bool cbuffer_collinear(Cbuffer *cbuf1, Cbuffer *cbuf2, Cbuffer *cbuf3,
-  double ratio);
-
-/*****************************************************************************/
-
-#endif /* __TCBUFFER_H__ */

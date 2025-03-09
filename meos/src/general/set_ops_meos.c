@@ -44,7 +44,7 @@
 #include "general/type_util.h"
 #include "geo/tgeo_spatialfuncs.h"
 #if CBUFFER
-  #include "cbuffer/tcbuffer.h"
+  #include <meos_cbuffer.h>
 #endif
 
 /*****************************************************************************

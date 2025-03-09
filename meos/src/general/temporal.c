@@ -732,7 +732,13 @@ mobilitydb_full_version(void)
 Temporal *
 temporal_in(const char *str, meosType temptype)
 {
+  /* Ensure validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) str))
+    return NULL;
+#else
   assert(str);
+#endif /* MEOS */
   return temporal_parse(&str, temptype);
 }
 
@@ -745,7 +751,13 @@ temporal_in(const char *str, meosType temptype)
 char *
 temporal_out(const Temporal *temp, int maxdd)
 {
+  /* Ensure validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) temp))
+    return NULL;
+#else
   assert(temp);
+#endif /* MEOS */
   if (! ensure_not_negative(maxdd))
     return NULL;
 
@@ -1938,7 +1950,13 @@ bool
 temporal_value_n(const Temporal *temp, int n, Datum *result)
 {
   /* Ensure validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) result))
+    return false;
+#else
+  assert(temp); assert(result);
+#endif /* MEOS */
+  if (! ensure_positive(n))
     return false;
 
   assert(temptype_subtype(temp->subtype));

@@ -48,22 +48,22 @@ CREATE FUNCTION pose_out(pose)
   AS 'MODULE_PATHNAME', 'Pose_out'
   LANGUAGE C IMMUTABLE STRICT;
 
-/*CREATE FUNCTION pose_recv(internal)
+CREATE FUNCTION pose_recv(internal)
   RETURNS pose
   AS 'MODULE_PATHNAME', 'Pose_recv'
-  LANGUAGE C IMMUTABLE STRICT;*/
+  LANGUAGE C IMMUTABLE STRICT;
 
-/*CREATE FUNCTION pose_send(pose)
+CREATE FUNCTION pose_send(pose)
   RETURNS bytea
   AS 'MODULE_PATHNAME', 'Pose_send'
-  LANGUAGE C IMMUTABLE STRICT;*/
+  LANGUAGE C IMMUTABLE STRICT;
 
 CREATE TYPE pose (
   internallength = variable,
   input = pose_in,
   output = pose_out,
---receive = pose_recv,
---send = pose_send,
+  receive = pose_recv,
+  send = pose_send,
   storage = plain,
   alignment = double
 );
@@ -84,7 +84,7 @@ CREATE FUNCTION pose(double precision, double precision, double precision,
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************
- * Cast functions
+ * Conversions
  *****************************************************************************/
 
 CREATE FUNCTION geometry(pose)
@@ -93,5 +93,89 @@ CREATE FUNCTION geometry(pose)
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE CAST (pose AS geometry) WITH FUNCTION geometry(pose);
+
+/*****************************************************************************
+ * Accessor functions
+ *****************************************************************************/
+
+
+/******************************************************************************
+ * Comparisons
+ ******************************************************************************/
+
+CREATE FUNCTION pose_eq(pose, pose)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Pose_eq'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION pose_ne(pose, pose)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Pose_ne'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION pose_lt(pose, pose)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Pose_lt'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION pose_le(pose, pose)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Pose_le'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION pose_ge(pose, pose)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Pose_ge'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION pose_gt(pose, pose)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Pose_gt'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION pose_cmp(pose, pose)
+  RETURNS int4
+  AS 'MODULE_PATHNAME', 'Pose_cmp'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE OPERATOR = (
+  PROCEDURE = pose_eq,
+  LEFTARG = pose, RIGHTARG = pose,
+  COMMUTATOR = =, NEGATOR = <>,
+  RESTRICT = eqsel, JOIN = eqjoinsel
+);
+CREATE OPERATOR <> (
+  PROCEDURE = pose_ne,
+  LEFTARG = pose, RIGHTARG = pose,
+  COMMUTATOR = <>, NEGATOR = =,
+  RESTRICT = neqsel, JOIN = neqjoinsel
+);
+CREATE OPERATOR < (
+  PROCEDURE = pose_lt,
+  LEFTARG = pose, RIGHTARG = pose,
+  COMMUTATOR = >, NEGATOR = >=,
+  RESTRICT = scalarltsel, JOIN = scalarltjoinsel
+);
+CREATE OPERATOR <= (
+  PROCEDURE = pose_le,
+  LEFTARG = pose, RIGHTARG = pose,
+  COMMUTATOR = >=, NEGATOR = >,
+  RESTRICT = scalarlesel, JOIN = scalarlejoinsel
+);
+CREATE OPERATOR >= (
+  PROCEDURE = pose_ge,
+  LEFTARG = pose, RIGHTARG = pose,
+  COMMUTATOR = <=, NEGATOR = <,
+  RESTRICT = scalargesel, JOIN = scalargejoinsel
+);
+CREATE OPERATOR > (
+  PROCEDURE = pose_gt,
+  LEFTARG = pose, RIGHTARG = pose,
+  COMMUTATOR = <, NEGATOR = <=,
+  RESTRICT = scalargtsel, JOIN = scalargtjoinsel
+);
+
+CREATE OPERATOR CLASS pose_btree_ops
+  DEFAULT FOR TYPE pose USING btree AS
+  OPERATOR  1 < ,
+  OPERATOR  2 <= ,
+  OPERATOR  3 = ,
+  OPERATOR  4 >= ,
+  OPERATOR  5 > ,
+  FUNCTION  1 pose_cmp(pose, pose);
 
 /******************************************************************************/

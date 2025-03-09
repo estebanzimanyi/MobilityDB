@@ -38,53 +38,40 @@
 #include <postgres.h>
 /* MEOS */
 #include <meos.h>
+#include <meos_pose.h>
 
 /*****************************************************************************
  * Struct definitions
  *****************************************************************************/
 
 /**
- * Structure to represent a pose values
+ * Structure to represent pose values
  *
  * flags (8 bits, x = unused): xxZXxxxx
  * data: 2D: [x, y, theta]
  *       3D: [x, y, z, W, X, Z, Y]
  *
  */
-typedef struct
+struct Pose
 {
   int32         vl_len_;       /**< varlena header (do not touch directly!) */
   int8          flags;         /**< flags */
   uint8_t       srid[3];       /**< srid */
   double        data[];        /**< position and orientation values */
-} Pose;
+};
 
 /*****************************************************************************
- * fmgr macros
+ * pose.c
  *****************************************************************************/
 
-#define DatumGetPoseP(X)         ((Pose *) DatumGetPointer(X))
-#define PosePGetDatum(X)         PointerGetDatum(X)
-#define PG_GETARG_POSE_P(X)      DatumGetPoseP(PG_GETARG_DATUM(X))
-#define PG_RETURN_POSE_P(X)      PG_RETURN_POINTER(X)
-
-/*****************************************************************************
- * tpose_static.c
- *****************************************************************************/
-
-extern Pose *pose_in(const char *str, bool end);
+extern Pose *pose_in(const char *str);
 extern char *pose_out(const Pose *pose, int maxdd);
 
 extern Pose *pose_make_2d(double x, double y, double theta);
-extern Pose *pose_make_3d(double x, double y, double z,
-  double W, double X, double Y, double Z);
-extern Pose *pose_copy(Pose *pose);
+extern Pose *pose_make_3d(double x, double y, double z, double W, double X, double Y, double Z);
 
-extern int32_t pose_srid(const Pose *pose);
-extern void pose_set_srid(Pose *pose, int32_t srid);
-
-extern GSERIALIZED *pose_geom(const Pose *pose);
-extern Datum datum_pose_geom(Datum pose);
+extern GSERIALIZED *pose_point(const Pose *pose);
+extern Datum datum_pose_point(Datum pose);
 
 /* Distance */
 

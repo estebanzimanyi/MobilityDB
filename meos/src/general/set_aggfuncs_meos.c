@@ -47,7 +47,8 @@
 #include "general/temporal.h"
 #include "general/type_util.h"
 #if CBUFFER
-  #include "cbuffer/tcbuffer.h"
+  #include <meos_cbuffer.h>
+  #include "cbuffer/cbuffer.h"
   #include "cbuffer/tcbuffer_boxops.h"
 #endif
 #if NPOINT

@@ -32,15 +32,13 @@
  * @brief Basic functions for temporal network points.
  */
 
-#include "cbuffer/tcbuffer.h"
-
 /* PostgreSQL */
 #include <postgres.h>
 #include <utils/array.h>
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
-#include <meos_internal.h>
+#include <meos_cbuffer.h>
 #include "general/lifting.h"
 #include "general/set.h"
 #include "general/temporal.h"
@@ -48,7 +46,6 @@
 #include "general/type_round.h"
 #include "general/type_util.h"
 #include "geo/tgeo_parser.h"
-#include "cbuffer/tcbuffer.h"
 #include "cbuffer/tcbuffer_parser.h"
 /* MobilityDB */
 #include "pg_general/meos_catalog.h"
@@ -288,7 +285,7 @@ Tcbuffer_constructor(PG_FUNCTION_ARGS)
 {
   Temporal *point = PG_GETARG_TEMPORAL_P(0);
   Temporal *radius = PG_GETARG_TEMPORAL_P(1);
-  Temporal *result = tcbuffer_constructor(point, radius);
+  Temporal *result = tcbuffer_make(point, radius);
   PG_FREE_IF_COPY(point, 0);
   PG_FREE_IF_COPY(radius, 1);
   if (! result)
@@ -379,7 +376,7 @@ Tcbuffer_round(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbufferset_round(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbufferset_round);
 /**
- * @ingroup mobilitydb_temporal_transf
+ * @ingroup mobilitydb_spanset_transf
  * @brief Return a buffer set with the precision of the positions
  * set to a number of decimal places
  * @sqlfn round()

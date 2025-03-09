@@ -109,7 +109,6 @@ CREATE FUNCTION tgeogpoint(tgeogpoint, integer)
   AS 'MODULE_PATHNAME', 'Tgeo_enforce_typmod'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
--- Casting CANNOT be implicit to avoid ambiguity
 CREATE CAST (tgeompoint AS tgeompoint) WITH FUNCTION tgeompoint(tgeompoint, integer) AS IMPLICIT;
 CREATE CAST (tgeogpoint AS tgeogpoint) WITH FUNCTION tgeogpoint(tgeogpoint, integer) AS IMPLICIT;
 
@@ -188,7 +187,7 @@ CREATE FUNCTION tgeogpointSeqSetGaps(tgeogpoint[], maxt interval DEFAULT NULL,
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
 /******************************************************************************
- * Casting
+ * Conversions
  ******************************************************************************/
 
 CREATE FUNCTION timeSpan(tgeompoint)

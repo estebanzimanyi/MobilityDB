@@ -406,11 +406,11 @@ Temporal_in(PG_FUNCTION_ARGS)
   const char *input = PG_GETARG_CSTRING(0);
   Oid temptypid = PG_GETARG_OID(1);
   Temporal *result = temporal_in(input, oid_type(temptypid));
-  int32 temp_typmod = -1;
+  int32 typmod = -1;
   if (PG_NARGS() > 2 && !PG_ARGISNULL(2))
-    temp_typmod = PG_GETARG_INT32(2);
-  if (temp_typmod >= 0)
-    result = temporal_valid_typmod(result, temp_typmod);
+    typmod = PG_GETARG_INT32(2);
+  if (typmod >= 0)
+    result = temporal_valid_typmod(result, typmod);
   PG_RETURN_TEMPORAL_P(result);
 }
 

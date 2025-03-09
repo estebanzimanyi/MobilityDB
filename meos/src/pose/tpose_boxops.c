@@ -46,6 +46,7 @@
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
+#include <meos_pose.h>
 #include "pose/pose.h"
 
 /*****************************************************************************
@@ -60,10 +61,31 @@
 bool
 pose_set_stbox(const Pose *pose, STBox *box)
 {
-  GSERIALIZED *geom = pose_geom(pose);
+  GSERIALIZED *geom = pose_point(pose);
   bool result = geo_set_stbox(geom, box);
   pfree(geom);
   return result;
+}
+
+/**
+ * @ingroup meos_internal_box_constructor
+ * @brief Return in the last argument a spatiotemporal box contructed from
+ * an array of poses
+ * @param[in] values Poses
+ * @param[in] count Number of elements in the array
+ * @param[out] box Spatiotemporal box
+ */
+void
+posearr_set_stbox(const Datum *values, int count, STBox *box)
+{
+  pose_set_stbox(DatumGetPoseP(values[0]), box);
+  for (int i = 1; i < count; i++)
+  {
+    STBox box1;
+    pose_set_stbox(DatumGetPoseP(values[i]), &box1);
+    stbox_expand(&box1, box);
+  }
+  return;
 }
 
 /**
@@ -156,6 +178,92 @@ tposeseq_expand_stbox(TSequence *seq, const TInstant *inst)
   tposeinst_set_stbox(inst, &box);
   stbox_expand(&box, (STBox *) TSEQUENCE_BBOX_PTR(seq));
   return;
+}
+
+/*****************************************************************************/
+
+/**
+ * @ingroup meos_internal_box_constructor
+ * @brief Return in the last argument a spatiotemporal box constructed from a
+ * pose and a timestamptz
+ * @param[in] pose Pose
+ * @param[in] t Timestamp
+ * @param[out] box Spatiotemporal box
+ */
+bool
+pose_timestamptz_set_stbox(const Pose *pose, TimestampTz t, STBox *box)
+{
+  pose_set_stbox(pose, box);
+  span_set(TimestampTzGetDatum(t), TimestampTzGetDatum(t), true, true,
+    T_TIMESTAMPTZ, T_TSTZSPAN, &box->period);
+  MEOS_FLAGS_SET_T(box->flags, true);
+  return true;
+}
+
+/**
+ * @ingroup meos_box_constructor
+ * @brief Return a spatiotemporal box constructed from a pose and a
+ * timestamptz
+ * @param[in] pose Pose
+ * @param[in] t Timestamp
+ * @csqlfn #Cbuffer_timestamptz_to_stbox()
+ */
+STBox *
+pose_timestamptz_to_stbox(const Pose *pose, TimestampTz t)
+{
+  /* Ensure validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) pose))
+    return NULL;
+#else
+  assert(pose);
+#endif /* MEOS */
+
+  STBox box;
+  if (! pose_timestamptz_set_stbox(pose, t, &box))
+    return NULL;
+  return stbox_copy(&box);
+}
+
+/**
+ * @ingroup meos_internal_box_constructor
+ * @brief Return in the last argument a spatiotemporal box constructed from a
+ * pose and a timestamptz span
+ * @param[in] pose Pose
+ * @param[in] s Timestamptz span
+ * @param[out] box Spatiotemporal box
+ */
+bool
+pose_tstzspan_set_stbox(const Pose *pose, const Span *s, STBox *box)
+{
+  pose_set_stbox(pose, box);
+  memcpy(&box->period, s, sizeof(Span));
+  MEOS_FLAGS_SET_T(box->flags, true);
+  return true;
+}
+
+/**
+ * @ingroup meos_box_constructor
+ * @brief Return a spatiotemporal box constructed from a pose and a
+ * timestamptz
+ * @param[in] pose Pose
+ * @param[in] s Timestamptz span
+ * @csqlfn #Cbuffer_tstzspan_to_stbox()
+ */
+STBox *
+pose_tstzspan_to_stbox(const Pose *pose, const Span *s)
+{
+  /* Ensure validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) pose) || ! ensure_not_null((void *) s))
+    return NULL;
+#else
+  assert(pose); assert(s);
+#endif /* MEOS */
+  STBox box;
+  if (! pose_tstzspan_set_stbox(pose, s, &box))
+    return NULL;
+  return stbox_copy(&box);
 }
 
 /*****************************************************************************/

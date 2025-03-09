@@ -107,10 +107,10 @@ tgeo_valid_typmod(Temporal *temp, int32_t typmod)
   /* If there is no geometry type */
   if (typmod == 0)
     typmod = -1;
-  int32 tpoint_z = MEOS_FLAGS_GET_Z(temp->flags);
+  int32 hasz = MEOS_FLAGS_GET_Z(temp->flags);
   int32 typmod_srid = TYPMOD_GET_SRID(typmod);
   int32 typmod_type = TYPMOD_GET_TYPE(typmod);
-  int32 typmod_z = TYPMOD_GET_Z(typmod);
+  int32 typmod_hasz = TYPMOD_GET_Z(typmod);
 
   /* No typmod (-1) */
   if (typmod < 0 && typmod_subtype == ANYTEMPSUBTYPE)
@@ -121,17 +121,16 @@ tgeo_valid_typmod(Temporal *temp, int32_t typmod)
       errmsg("Temporal geometry SRID (%d) does not match column SRID (%d)",
         srid, typmod_srid) ));
   /* Typmod has a preference for temporal subtype */
-  if (typmod_type > 0 && typmod_subtype != ANYTEMPSUBTYPE && 
-      typmod_subtype != subtype)
+  if (typmod_subtype != ANYTEMPSUBTYPE && typmod_subtype != subtype)
     ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
       errmsg("Temporal subtype (%s) does not match column type (%s)",
         tempsubtype_name(subtype), tempsubtype_name(typmod_subtype)) ));
   /* Mismatched Z dimensionality.  */
-  if (typmod_z && ! tpoint_z)
+  if (typmod_hasz && ! hasz)
     ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
       errmsg("Column has Z dimension but temporal geometry does not" )));
   /* Mismatched Z dimensionality (other way) */
-  if (typmod_type > 0 && tpoint_z && ! typmod_z)
+  if (typmod_type > 0 && hasz && ! typmod_hasz)
     ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
       errmsg("Temporal geometry has Z dimension but column does not" )));
 
@@ -184,6 +183,11 @@ Tgeo_in(PG_FUNCTION_ARGS)
   const char *input = PG_GETARG_CSTRING(0);
   Oid temptypid = PG_GETARG_OID(1);
   Temporal *result = tgeo_parse(&input, oid_type(temptypid));
+  int32 typmod = -1;
+  if (PG_NARGS() > 2 && !PG_ARGISNULL(2))
+    typmod = PG_GETARG_INT32(2);
+  if (typmod >= 0)
+    result = tgeo_valid_typmod(result, typmod);
   PG_RETURN_TEMPORAL_P(result);
 }
 

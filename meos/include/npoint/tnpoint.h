@@ -41,6 +41,27 @@
 #include <meos_npoint.h>
 
 /*****************************************************************************
+ * Type definitions
+ *****************************************************************************/
+
+/* Structure to represent network-based points */
+
+struct Npoint
+{
+  int64 rid;        /**< route identifier */
+  double pos;       /**< position */
+};
+
+/* Structure to represent network-based segments */
+
+struct Nsegment
+{
+  int64 rid;       /**< route identifier */
+  double pos1;     /**< position1 */
+  double pos2;     /**< position2 */
+};
+
+/*****************************************************************************
  * fmgr macros
  *****************************************************************************/
 
@@ -57,7 +78,7 @@
 #define PG_RETURN_NSEGMENT_P(X)    PG_RETURN_POINTER(X)
 
 /*****************************************************************************
- * Cbuffer functions
+ * Npoint functions
  *****************************************************************************/
 
 /* General functions */
@@ -69,19 +90,13 @@ extern Nsegment **nsegmentarr_normalize(Nsegment **segments, int *nelems);
 
 /* Input/output functions */
 
-extern Npoint *npoint_in(const char *str);
-extern char *npoint_out(const Npoint *np, int maxdd);
-
-extern Nsegment *nsegment_in(const char *str);
-extern char *nsegment_out(const Nsegment *ns, int maxdd);
-
 /* Constructor functions */
 
 extern void npoint_set(int64 rid, double pos, Npoint *np);
 extern void nsegment_set(int64 rid, double pos1, double pos2, Nsegment *ns);
 
 /*****************************************************************************
- * Tcbuffer functions
+ * Temporal network point functions
  *****************************************************************************/
 
 /* Input/output functions */
@@ -113,6 +128,9 @@ extern Set *tnpointseq_cont_routes(const TSequence *seq);
 extern Set *tnpointseqset_routes(const TSequenceSet *ss);
 
 extern Nsegment *tnpointseq_linear_positions(const TSequence *seq);
+
+extern Temporal *tnpoint_restrict_geom(const Temporal *temp, const GSERIALIZED *gs, const Span *zspan, bool atfunc);
+extern Temporal *tnpoint_restrict_stbox(const Temporal *temp, const STBox *box, bool border_inc, bool atfunc);
 
 /*****************************************************************************/
 

@@ -60,6 +60,10 @@
 #if NPOINT
   #include "npoint/tnpoint_spatialfuncs.h"
 #endif
+#if POSE
+  #include <meos_pose.h>
+  #include "pose/pose.h"
+#endif
 
 /*****************************************************************************
  * Utility functions
@@ -1436,10 +1440,15 @@ GSERIALIZED *
 tgeo_traversed_area(const Temporal *temp)
 {
   /* Ensure validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp) || 
       ! ensure_tgeo_type_all(temp->temptype) ||
       ! ensure_nonlinear_interp(temp->flags))
     return NULL;
+#else
+  assert(temp); assert(tgeo_type_all(temp->temptype));
+  assert(! MEOS_FLAGS_LINEAR_INTERP(temp->flags));
+#endif /* MEOS */
 
   /* Get the array of pointers to the component values */
   int count;

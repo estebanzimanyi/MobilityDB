@@ -37,24 +37,32 @@
 #include <assert.h>
 /* Postgres */
 #include <postgres.h>
+#include <common/hashfn.h>
 #include <utils/timestamp.h>
 /* MEOS */
 #include <meos.h>
+#include <meos_pose.h>
 #include <meos_internal.h>
 #include "general/lifting.h"
 #include "pose/pose.h"
 
 /*****************************************************************************
- * Cast functions
+ * Conversion functions
  *****************************************************************************/
 
+/**
+ * @ingroup meos_base_conversion
+ * @brief Return a geometry point from a temporal pose
+ * @param[in] pose Pose
+ * @param[in] seed Seed
+ */
 Temporal *
-tpose_to_tgeompoint(const Temporal *temp)
+tpose_tgeompoint(const Temporal *temp)
 {
   /* We only need to fill these parameters for tfunc_temporal */
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
-  lfinfo.func = (varfunc) &datum_pose_geom;
+  lfinfo.func = (varfunc) &datum_pose_point;
   lfinfo.numparam = 0;
   lfinfo.argtype[0] = temptype_basetype(temp->temptype);
   lfinfo.restype = T_TGEOMPOINT;

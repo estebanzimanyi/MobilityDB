@@ -34,20 +34,37 @@
 #ifndef __TPOSE_SPATIALFUNCS_H__
 #define __TPOSE_SPATIALFUNCS_H__
 
+#include <meos.h>
+#include <meos_pose.h>
 #include "general/temporal.h"
-#include "pose/pose.h"
 
 /*****************************************************************************/
+
+/* Validity functions */
+
+extern bool ensure_valid_tpose_pose(const Temporal *temp, const Pose *pose);
+extern bool ensure_valid_tpose_tpose(const Temporal *temp1, const Temporal *temp2);
+extern bool ensure_valid_stbox_pose(const STBox *box, const Pose *pose);
+extern bool ensure_valid_tpose_geo(const Temporal *temp, const GSERIALIZED *gs);
+
+/* Input/output functions */
+
+extern char *pose_wkt_out(Datum value, meosType type, int maxdd);
+extern char *pose_ewkt_out(Datum value, meosType type, int maxdd);
+extern char **posearr_as_text(const Datum *posearr, int count, int maxdd, 
+  bool extended);
+extern char **tposearr_as_text(const Temporal **temparr, int count, int maxdd,
+  bool extended);
 
 /* Interpolation functions */
 
 extern bool tposesegm_intersection_value(const TInstant *inst1,
   const TInstant *inst2, Datum value, TimestampTz *t);
 
-/* Ever / always functions */
+/* Restriction functions */
 
-extern bool tpose_always_eq(const Temporal *temp, const Pose *pose);
-extern bool tpose_ever_eq(const Temporal *temp, const Pose *pose);
+extern Temporal *tpose_restrict_geom(const Temporal *temp, const GSERIALIZED *gs, const Span *zspan, bool atfunc);
+extern Temporal *tpose_restrict_stbox(const Temporal *temp, const STBox *box, bool border_inc, bool atfunc);
 
 /*****************************************************************************/
 

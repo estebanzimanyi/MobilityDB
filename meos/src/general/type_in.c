@@ -41,6 +41,9 @@
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
+#if POSE
+  #include <meos_pose.h>
+#endif
 #include "general/pg_types.h"
 #include "general/set.h"
 #include "general/span.h"
@@ -53,7 +56,8 @@
   #include "npoint/tnpoint_parser.h"
 #endif
 #if CBUFFER
-  #include "cbuffer/tcbuffer.h"
+  #include <meos_cbuffer.h>
+  #include "cbuffer/cbuffer.h"
   #include "cbuffer/tcbuffer_parser.h"
 #endif
 #if NPOINT
@@ -1665,6 +1669,65 @@ npoint_from_wkb_state(meos_wkb_parse_state *s)
 }
 #endif /* NPOINT */
 
+#if POSE
+
+/**
+ * @brief Return the state flags initialized with a byte flag read from the
+ * buffer
+ */
+static void
+pose_flags_from_wkb_state(meos_wkb_parse_state *s, uint8_t wkb_flags)
+{
+  assert(wkb_flags & MEOS_WKB_XFLAG);
+  s->hasx = true;
+  s->hasz = false;
+  s->hast = false;
+  s->geodetic = false;
+  s->has_srid = false;
+  if (wkb_flags & MEOS_WKB_ZFLAG)
+    s->hasz = true;
+  if (wkb_flags & MEOS_WKB_SRIDFLAG)
+    s->has_srid = true;
+  return;
+}
+
+/**
+ * @brief Read a pose and advance the parse state forward
+ */
+Pose *
+pose_from_wkb_state(meos_wkb_parse_state *s)
+{
+  /* Does the data we want to read exist? */
+  // wkb_parse_state_check(s, MEOS_WKB_INT8_SIZE + MEOS_WKB_DOUBLE_SIZE);
+  /* Read the flags */
+  uint8_t wkb_flags = (uint8_t) byte_from_wkb_state(s);
+  pose_flags_from_wkb_state(s, wkb_flags);
+  /* Read the SRID, if necessary */
+  int32_t srid = s->has_srid ? int32_from_wkb_state(s) : SRID_UNKNOWN;
+  Pose *result;
+  if (s->hasz)
+  {
+    double x = double_from_wkb_state(s);
+    double y = double_from_wkb_state(s);
+    double z = double_from_wkb_state(s);
+    double W = double_from_wkb_state(s);
+    double X = double_from_wkb_state(s);
+    double Y = double_from_wkb_state(s);
+    double Z = double_from_wkb_state(s);
+    result = pose_make_3d(x, y, z, W, X, Y, Z);
+  }
+  else
+  {
+    double x = double_from_wkb_state(s);
+    double y = double_from_wkb_state(s);
+    double theta = double_from_wkb_state(s);
+    result = pose_make_2d(x, y, theta);
+  }
+  pose_set_srid(result, srid);
+  return result;
+}
+#endif /* POSE */
+
 /*****************************************************************************/
 
 /**
@@ -1702,6 +1765,10 @@ base_from_wkb_state(meos_wkb_parse_state *s)
     case T_NPOINT:
       return PointerGetDatum(npoint_from_wkb_state(s));
 #endif /* NPOINT */
+#if POSE
+    case T_POSE:
+      return PointerGetDatum(pose_from_wkb_state(s));
+#endif /* POSE */
     default: /* Error! */
       meos_error(ERROR, MEOS_ERR_WKB_INPUT,
         "Unknown base type in WKB string: %s", meostype_name(s->basetype));
@@ -1849,7 +1916,7 @@ set_from_wkb_state(meos_wkb_parse_state *s)
   /* For template classes it is necessary to store the specific type */
   s->type = (uint8_t) wkb_settype;
   s->basetype = settype_basetype(s->type);
-  /* Read the set flags */
+  /* Read the flags */
   uint8_t wkb_flags = (uint8_t) byte_from_wkb_state(s);
   set_flags_from_wkb_state(s, wkb_flags);
   /* Read the SRID, if necessary */
@@ -2192,6 +2259,10 @@ datum_from_wkb(const uint8_t *wkb, size_t size, meosType type)
   if (type == T_NPOINT)
     return PointerGetDatum(npoint_from_wkb_state(&s));
 #endif /* NPOINT */
+#if POSE
+  if (type == T_POSE)
+    return PointerGetDatum(pose_from_wkb_state(&s));
+#endif /* POSE */
   if (temporal_type(type))
     return PointerGetDatum(temporal_from_wkb_state(&s));
   /* Error! */
@@ -2431,6 +2502,45 @@ cbuffer_from_hexwkb(const char *hexwkb)
   return DatumGetCbufferP(datum_from_hexwkb(hexwkb, size, T_CBUFFER));
 }
 #endif /* CBUFFER */
+
+/*****************************************************************************
+ * WKB and HexWKB input functions for circular buffers
+ *****************************************************************************/
+
+#if POSE
+/**
+ * @ingroup meos_temporal_inout
+ * @brief Return a pose from its Well-Known Binary (WKB) representation
+ * @param[in] wkb WKB string
+ * @param[in] size Size of the string
+ * @csqlfn #Pose_recv(), #Pose_from_wkb()
+ */
+Pose *
+pose_from_wkb(const uint8_t *wkb, size_t size)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) wkb))
+    return NULL;
+  return DatumGetPoseP(datum_from_wkb(wkb, size, T_POSE));
+}
+
+/**
+ * @ingroup meos_temporal_inout
+ * @brief Return a pose from its hex-encoded ASCII Well-Known Binary (WKB)
+ * representation
+ * @param[in] hexwkb HexWKB string
+ * @csqlfn #Pose_from_hexwkb()
+ */
+Pose *
+pose_from_hexwkb(const char *hexwkb)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) hexwkb))
+    return NULL;
+  size_t size = strlen(hexwkb);
+  return DatumGetPoseP(datum_from_hexwkb(hexwkb, size, T_POSE));
+}
+#endif /* POSE */
 
 /*****************************************************************************
  * WKB and HexWKB input functions for temporal types

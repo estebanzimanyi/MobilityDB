@@ -48,7 +48,7 @@
   #include "npoint/tnpoint.h"
 #endif
 #if CBUFFER
-  #include "cbuffer/tcbuffer.h"
+  #include <meos_cbuffer.h>
 #endif
 
 /*****************************************************************************

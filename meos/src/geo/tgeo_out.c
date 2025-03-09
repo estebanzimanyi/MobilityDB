@@ -50,20 +50,32 @@
 
 /**
  * @brief Output a geometry/geography in the Well-Known Text (WKT)
+ * representation (internal function)
+ * @note The parameter @p type is not needed for geometries/geographies
+ */
+char *
+geo_wkt_out_int(Datum value, bool extended, int maxdd)
+{
+  GSERIALIZED *gs = DatumGetGserializedP(value);
+  LWGEOM *geom = lwgeom_from_gserialized(gs);
+  size_t len;
+  char *wkt = lwgeom_to_wkt(geom, extended ? WKT_EXTENDED : WKT_ISO, maxdd, 
+    &len);
+  char *result = palloc(len);
+  strcpy(result, wkt);
+  lwgeom_free(geom); pfree(wkt);
+  return result;
+}
+
+/**
+ * @brief Output a geometry/geography in the Well-Known Text (WKT)
  * representation
  * @note The parameter @p type is not needed for geometries/geographies
  */
 char *
 geo_wkt_out(Datum value, meosType type __attribute__((unused)), int maxdd)
 {
-  GSERIALIZED *gs = DatumGetGserializedP(value);
-  LWGEOM *geom = lwgeom_from_gserialized(gs);
-  size_t len;
-  char *wkt = lwgeom_to_wkt(geom, WKT_ISO, maxdd, &len);
-  char *result = palloc(len);
-  strcpy(result, wkt);
-  lwgeom_free(geom); pfree(wkt);
-  return result;
+  return geo_wkt_out_int(value, false, maxdd);
 }
 
 /**
@@ -74,14 +86,7 @@ geo_wkt_out(Datum value, meosType type __attribute__((unused)), int maxdd)
 char *
 geo_ewkt_out(Datum value, meosType type __attribute__((unused)), int maxdd)
 {
-  GSERIALIZED *gs = (GSERIALIZED *) DatumGetPointer(value);
-  LWGEOM *geom = lwgeom_from_gserialized(gs);
-  size_t len;
-  char *wkt = lwgeom_to_wkt(geom, WKT_EXTENDED, maxdd, &len);
-  char *result = palloc(len);
-  strcpy(result, wkt);
-  lwgeom_free(geom); pfree(wkt);
-  return result;
+  return geo_wkt_out_int(value, true, maxdd);
 }
 
 /*****************************************************************************/
@@ -146,11 +151,18 @@ tgeo_out(const Temporal *temp, int maxdd)
 char *
 tgeo_as_text(const Temporal *temp, int maxdd)
 {
+#if MEOS
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_tgeo_type_all(temp->temptype) ||
-      ! ensure_not_negative(maxdd))
+  if (! ensure_not_null((void *) temp) || 
+      ! ensure_tgeo_type_all(temp->temptype))
     return NULL;
+#else
+  assert(temp); assert(tgeo_type_all(temp->temptype));
+#endif /* MEOS */
 
+  /* Ensure validity of the arguments */
+  if (! ensure_not_negative(maxdd))
+    return NULL;
   assert(temptype_subtype(temp->subtype));
   switch (temp->subtype)
   {

@@ -39,11 +39,34 @@
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
+#include <meos_cbuffer.h>
 #include "general/pg_types.h"
 #include "general/tinstant.h"
 #include "general/tsequence.h"
 #include "general/tsequenceset.h"
-#include "cbuffer/tcbuffer.h"
+#include "cbuffer/cbuffer.h"
+#include "cbuffer/tcbuffer_parser.h"
+
+/*****************************************************************************
+ * Input in WKT and EWKT format
+ *****************************************************************************/
+
+#if MEOS
+/**
+ * @ingroup meos_temporal_inout
+ * @brief Return a temporal circular buffer from its Well-Known Text (WKT)
+ * representation
+ * @param[in] str String
+ */
+Temporal *
+tcbuffer_in(const char *str)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) str))
+    return NULL;
+  return tcbuffer_parse(&str);
+}
+#endif /* MEOS */
 
 /*****************************************************************************
  * Output in WKT and EWKT format
@@ -51,51 +74,51 @@
 
 /**
  * @brief Output a circular buffer in the Well-Known Text (WKT) representation
- * @note The parameter @p type is not needed for temporal points
+ * (internal function)
  */
 char *
-cbuffer_wkt_out(Datum value, meosType type __attribute__((unused)), int maxdd)
+cbuffer_wkt_out_int(Datum value, bool extended, int maxdd)
 {
   Cbuffer *cbuf = DatumGetCbufferP(value);
   Datum d = PointerGetDatum(&cbuf->point);
   GSERIALIZED *gs = DatumGetGserializedP(d);
   LWGEOM *geom = lwgeom_from_gserialized(gs);
   size_t len;
-  char *wkt = lwgeom_to_wkt(geom, WKT_ISO, maxdd, &len);
+  char *wkt = lwgeom_to_wkt(geom, extended ? WKT_EXTENDED : WKT_ISO, maxdd, 
+    &len);
   char *radius = float8_out(cbuf->radius, maxdd);
   len += strlen(radius) + 11; // Cbuffer(,) + end NULL
   char *result = palloc(len);
   snprintf(result, len, "Cbuffer(%s,%s)", wkt, radius);
   lwgeom_free(geom); pfree(wkt); pfree(radius);
   return result;
+}
+
+/**
+ * @brief Output a circular buffer in the Well-Known Text (WKT) representation
+ * @note The parameter @p type is not needed for circular buffers
+ */
+char *
+cbuffer_wkt_out(Datum value, meosType type __attribute__((unused)), int maxdd)
+{
+  return cbuffer_wkt_out_int(value, false, maxdd);
 }
 
 /**
  * @brief Output a circular buffer in the Extended Well-Known Text (EWKT)
  * representation, that is, in WKT representation prefixed with the SRID
- * @note The parameter @p type is not needed for temporal points
+ * @note The parameter @p type is not needed for circular buffers
  */
 char *
 cbuffer_ewkt_out(Datum value, meosType type __attribute__((unused)), int maxdd)
 {
-  Cbuffer *cbuf = DatumGetCbufferP(value);
-  Datum d = PointerGetDatum(&cbuf->point);
-  GSERIALIZED *gs = DatumGetGserializedP(d);
-  LWGEOM *geom = lwgeom_from_gserialized(gs);
-  size_t len;
-  char *wkt = lwgeom_to_wkt(geom, WKT_EXTENDED, maxdd, &len);
-  char *radius = float8_out(cbuf->radius, maxdd);
-  len += strlen(radius) + 11; // Cbuffer(,) + end NULL
-  char *result = palloc(len);
-  snprintf(result, len, "Cbuffer(%s,%s)", wkt, radius);
-  lwgeom_free(geom); pfree(wkt); pfree(radius);
-  return result;
+  return cbuffer_wkt_out_int(value, true, maxdd);
 }
 
 /*****************************************************************************/
 
 /**
- * @ingroup meos_temporal_inout
+ * @ingroup meos_base_inout
  * @brief Return the Well-Known Text (WKT) representation of a circular buffer
  * @param[in] cbuf Circular buffer
  * @param[in] maxdd Maximum number of decimal digits
@@ -112,7 +135,7 @@ cbuffer_as_text(const Cbuffer *cbuf, int maxdd)
 }
 
 /**
- * @ingroup meos_temporal_inout
+ * @ingroup meos_base_inout
  * @brief Return the Extended Well-Known Text (EWKT) representation of a
  * circular buffer
  * @param[in] cbuf Circular buffer
@@ -142,6 +165,25 @@ cbuffer_as_ewkt(const Cbuffer *cbuf, int maxdd)
 }
 
 /*****************************************************************************/
+
+#if MEOS
+/**
+ * @ingroup meos_temporal_inout
+ * @brief Return the Well-Known Text (WKT) representation of a temporal
+ * circular buffer
+ * @param[in] temp Temporal circular buffer
+ * @param[in] maxdd Maximum number of decimal digits
+ */
+char *
+tcbuffer_out(const Temporal *temp, int maxdd)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) temp) || 
+      ! ensure_temporal_isof_type(temp, T_TCBUFFER))
+    return NULL;
+  return temporal_out(temp, maxdd);
+}
+#endif /* MEOS */
 
 /**
  * @ingroup meos_temporal_inout
@@ -208,7 +250,7 @@ tcbuffer_as_ewkt(const Temporal *temp, int maxdd)
 /*****************************************************************************/
 
 /**
- * @ingroup meos_internal_temporal_inout
+ * @ingroup meos_internal_base_inout
  * @brief Return the (Extended) Well-Known Text (WKT or EWKT) representation
  * of a circular buffer array
  * @param[in] cbufarr Array of cbuffer

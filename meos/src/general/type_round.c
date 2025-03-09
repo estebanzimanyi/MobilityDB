@@ -53,10 +53,12 @@
 #include "geo/tgeo.h"
 #include "geo/tgeo_spatialfuncs.h"
 #if CBUFFER
-  #include "cbuffer/tcbuffer.h"
+  #include <meos_cbuffer.h>
+  #include "cbuffer/cbuffer.h"
 #endif
-#if NPOINT
-  #include "npoint/tnpoint.h"
+#if POSE
+  #include <meos_pose.h>
+  #include "pose/pose.h"
 #endif
 
 /*****************************************************************************
@@ -64,6 +66,7 @@
  *****************************************************************************/
 
 /**
+ * @ingroup meos_base_transf
  * @brief Return a float number rounded to a given number of decimal places
  */
 double
@@ -161,6 +164,7 @@ geoset_round(const Set *s, int maxdd)
 
 #if CBUFFER
 /**
+ * @ingroup meos_setspan_transf
  * @brief Return a circular buffer set with the precision of the geometries and
  * of the radius set to a number of decimal places
  * @csqlfn #CBufferset_round()
@@ -178,6 +182,7 @@ cbufferset_round(const Set *s, int maxdd)
 
 #if NPOINT
 /**
+ * @ingroup meos_setspan_transf
  * @brief Return a network point set with the precision of the positions set
  * to a number of decimal places
  * @csqlfn #Npointset_round()
@@ -192,6 +197,24 @@ npointset_round(const Set *s, int maxdd)
   return set_round(s, maxdd, &datum_npoint_round);
 }
 #endif /* NPOINT */
+
+#if POSE
+/**
+ * @ingroup meos_setspan_transf
+ * @brief Return a pose set with the precision of the values set to a number of
+ * decimal places
+ * @csqlfn #Poseset_round()
+ */
+Set *
+poseset_round(const Set *s, int maxdd)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) s) || ! ensure_not_negative(maxdd) ||
+      ! ensure_set_isof_type(s, T_POSESET))
+    return NULL;
+  return set_round(s, maxdd, &datum_pose_round);
+}
+#endif /* POSE */
 
 /*****************************************************************************
  * Span
@@ -373,7 +396,7 @@ stbox_round(const STBox *box, int maxdd)
 }
 
 /**
- * @ingroup meos_temporal_transf
+ * @ingroup meos_box_transf
  * @brief Return an array of spatiotemporal boxes with the precision of the
  * coordinates set to a number of decimal places
  * @param[in] boxarr Array of spatiotemporal boxes
@@ -1033,6 +1056,7 @@ tgeoarr_round(const Temporal **temparr, int count, int maxdd)
 
 #if CBUFFER
 /**
+ * @ingroup meos_base_transf
  * @brief Return a circular buffer with the precision of the values set to a
  * number of decimal places
  */
@@ -1067,6 +1091,7 @@ datum_cbuffer_round(Datum cbuffer, Datum size)
 
 #if CBUFFER
 /**
+ * @ingroup meos_temporal_transf
  * @brief Return a temporal circular buffer with the precision of values
  * set to a number of decimal places
  */
@@ -1093,6 +1118,7 @@ tcbuffer_round(const Temporal *temp, int maxdd)
 
 #if NPOINT
 /**
+ * @ingroup meos_base_transf
  * @brief Return a network point with the precision of the position set to a
  * number of decimal places
  */
@@ -1118,6 +1144,7 @@ datum_npoint_round(Datum npoint, Datum size)
 }
 
 /**
+ * @ingroup meos_base_transf
  * @brief Return a network segment with the precision of the positions set to a
  * number of decimal places
  */
@@ -1137,6 +1164,7 @@ nsegment_round(const Nsegment *ns, int maxdd)
 
 #if NPOINT
 /**
+ * @ingroup meos_temporal_transf
  * @brief Return a temporal network point with the precision of the fractions
  * set to a number of decimal places
  */
@@ -1156,5 +1184,82 @@ tnpoint_round(const Temporal *temp, Datum size)
   return tfunc_temporal(temp, &lfinfo);
 }
 #endif /* NPOINT */
+
+/*****************************************************************************
+ * Pose
+ *****************************************************************************/
+
+#if POSE
+/**
+ * @ingroup meos_base_transf
+ * @brief Return a pose with the precision of the values set to a number of
+ * decimal places
+ */
+Pose *
+pose_round(const Pose *pose, int maxdd)
+{
+  /* Set precision of the values */
+
+  Pose *result;
+  if (MEOS_FLAGS_GET_Z(pose->flags))
+  {
+    double x = float_round(pose->data[0], maxdd);
+    double y = float_round(pose->data[1], maxdd);
+    double z = float_round(pose->data[2], maxdd);
+    double W = float_round(pose->data[3], maxdd);
+    double X = float_round(pose->data[4], maxdd);
+    double Y = float_round(pose->data[5], maxdd);
+    double Z = float_round(pose->data[6], maxdd);
+    result = pose_make_3d(x, y, z, W, X, Y, Z);
+  }
+  else
+  {
+    double x = float_round(pose->data[0], maxdd);
+    double y = float_round(pose->data[1], maxdd);
+    double theta = float_round(pose->data[2], maxdd);
+    result = pose_make_2d(x, y, theta);
+  }
+  return result;
+}
+
+/**
+ * @brief Return a pose with the precision of the values set to a number of
+ * decimal places
+ * @note Funcion used by the lifting infrastructure
+ */
+Datum
+datum_pose_round(Datum pose, Datum size)
+{
+  /* Set precision of the values */
+  return PointerGetDatum(pose_round(DatumGetPoseP(pose), DatumGetInt32(size)));
+}
+#endif /* POSE */
+
+/*****************************************************************************
+ * Temporal Network Point
+ *****************************************************************************/
+
+#if POSE
+/**
+ * @ingroup meos_temporal_transf
+ * @brief Return a temporal pose with the precision of the values set to a
+ * number of decimal places
+ */
+Temporal *
+tpose_round(const Temporal *temp, Datum size)
+{
+  /* We only need to fill these parameters for tfunc_temporal */
+  LiftedFunctionInfo lfinfo;
+  memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
+  lfinfo.func = (varfunc) &datum_pose_round;
+  lfinfo.numparam = 1;
+  lfinfo.param[0] = size;
+  lfinfo.argtype[0]= temp->temptype;
+  lfinfo.restype = temp->temptype;
+  lfinfo.tpfunc_base = NULL;
+  lfinfo.tpfunc = NULL;
+  return tfunc_temporal(temp, &lfinfo);
+}
+#endif /* POSE */
 
 /*****************************************************************************/

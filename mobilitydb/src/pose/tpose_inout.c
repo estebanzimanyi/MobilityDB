@@ -29,7 +29,7 @@
 
 /**
  * @file
- * @brief Input and output of temporal circular buffers in WKT and EWKT
+ * @brief Input and output of temporal poses in WKT and EWKT
  */
 
 /* PostgreSQL */
@@ -41,12 +41,12 @@
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
-#include <meos_cbuffer.h>
 #include "general/set.h"
 #include "general/temporal.h"
 #include "geo/tgeo_parser.h"
-#include "cbuffer/cbuffer.h"
-#include "cbuffer/tcbuffer_parser.h"
+#include "pose/tpose.h"
+#include "pose/tpose_parser.h"
+#include "pose/tpose_spatialfuncs.h"
 /* MobilityDB */
 #include "pg_general/meos_catalog.h" /* For oid_type */
 #include "pg_general/type_util.h"
@@ -55,24 +55,24 @@
  * Input in EWKT format
  *****************************************************************************/
 
-PGDLLEXPORT Datum Tcbuffer_from_ewkt(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tcbuffer_from_ewkt);
+PGDLLEXPORT Datum Tpose_from_ewkt(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tpose_from_ewkt);
 /**
  * @ingroup mobilitydb_temporal_inout
- * @brief Return a temporal circular buffer from its Extended Well-Known Text
- * (EWKT) representation
+ * @brief Return a temporal pose from its Extended Well-Known Text (EWKT)
+ * representation
  * @note This just does the same thing as the _in function, except it has to handle
  * a 'text' input. First, unwrap the text into a cstring, then do as tpoint_in
- * @sqlfn tcbufferFromText(), tgeompointFromEWKT(), tcbufferFromEWKT()
+ * @sqlfn tposeFromText(), tgeompointFromEWKT(), tposeFromEWKT()
  */
 Datum
-Tcbuffer_from_ewkt(PG_FUNCTION_ARGS)
+Tpose_from_ewkt(PG_FUNCTION_ARGS)
 {
   text *wkt_text = PG_GETARG_TEXT_P(0);
   char *wkt = text2cstring(wkt_text);
   /* Copy the pointer since it will be advanced during parsing */
   const char *wkt_ptr = wkt;
-  Temporal *result = tcbuffer_parse(&wkt_ptr);
+  Temporal *result = tpose_parse(&wkt_ptr);
   pfree(wkt);
   PG_FREE_IF_COPY(wkt_text, 0);
   PG_RETURN_TEMPORAL_P(result);
@@ -84,56 +84,56 @@ Tcbuffer_from_ewkt(PG_FUNCTION_ARGS)
 
 /**
  * @brief Return the (Extended) Well-Known Text (WKT or EWKT) representation of
- * a circular buffer
+ * a pose
  * @sqlfn asText()
  */
 static Datum
-Cbuffer_as_text_ext(FunctionCallInfo fcinfo, bool extended)
+Pose_as_text_ext(FunctionCallInfo fcinfo, bool extended)
 {
-  Cbuffer *cbuf = PG_GETARG_CBUFFER_P(0);
+  Pose *pose = PG_GETARG_POSE_P(0);
   int dbl_dig_for_wkt = OUT_DEFAULT_DECIMAL_DIGITS;
   if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
     dbl_dig_for_wkt = PG_GETARG_INT32(1);
-  char *str = extended ? cbuffer_as_ewkt(cbuf, dbl_dig_for_wkt) : 
-    cbuffer_as_text(cbuf, dbl_dig_for_wkt);
+  char *str = extended ? pose_as_ewkt(pose, dbl_dig_for_wkt) : 
+    pose_as_text(pose, dbl_dig_for_wkt);
   text *result = cstring2text(str);
   pfree(str);
-  PG_FREE_IF_COPY(cbuf, 0);
+  PG_FREE_IF_COPY(pose, 0);
   PG_RETURN_TEXT_P(result);
 }
 
-PGDLLEXPORT Datum Cbuffer_as_text(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Cbuffer_as_text);
+PGDLLEXPORT Datum Pose_as_text(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Pose_as_text);
 /**
  * @ingroup mobilitydb_temporal_inout
- * @brief Return the Well-Known Text (WKT) representation of a circular buffer
+ * @brief Return the Well-Known Text (WKT) representation of a pose
  * @sqlfn asText()
  */
 Datum
-Cbuffer_as_text(PG_FUNCTION_ARGS)
+Pose_as_text(PG_FUNCTION_ARGS)
 {
-  return Cbuffer_as_text_ext(fcinfo, false);
+  return Pose_as_text_ext(fcinfo, false);
 }
 
-PGDLLEXPORT Datum Cbuffer_as_ewkt(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Cbuffer_as_ewkt);
+PGDLLEXPORT Datum Pose_as_ewkt(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Pose_as_ewkt);
 /**
  * @ingroup mobilitydb_temporal_inout
  * @brief Return the Extended Well-Known Text (EWKT) representation of a
- * circular buffer
+ * pose
  * @note It is the WKT representation prefixed with the SRID
  * @sqlfn asEWKT()
  */
 Datum
-Cbuffer_as_ewkt(PG_FUNCTION_ARGS)
+Pose_as_ewkt(PG_FUNCTION_ARGS)
 {
-  return Cbuffer_as_text_ext(fcinfo, true);
+  return Pose_as_text_ext(fcinfo, true);
 }
 
 /*****************************************************************************/
 
-PGDLLEXPORT Datum Cbufferset_as_text(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Cbufferset_as_text);
+PGDLLEXPORT Datum Poseset_as_text(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Poseset_as_text);
 /**
  * @ingroup mobilitydb_setspan_inout
  * @brief Return the Well-Known Text (WKT) representation of a circular 
@@ -141,35 +141,35 @@ PG_FUNCTION_INFO_V1(Cbufferset_as_text);
  * @sqlfn asText()
  */
 Datum
-Cbufferset_as_text(PG_FUNCTION_ARGS)
+Poseset_as_text(PG_FUNCTION_ARGS)
 {
   Set *s = PG_GETARG_SET_P(0);
   int dbl_dig_for_wkt = OUT_DEFAULT_DECIMAL_DIGITS;
   if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
     dbl_dig_for_wkt = PG_GETARG_INT32(1);
-  char *str = cbufferset_as_text(s, dbl_dig_for_wkt);
+  char *str = poseset_as_text(s, dbl_dig_for_wkt);
   text *result = cstring2text(str);
   pfree(str);
   PG_FREE_IF_COPY(s, 0);
   PG_RETURN_TEXT_P(result);
 }
 
-PGDLLEXPORT Datum Cbufferset_as_ewkt(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Cbufferset_as_ewkt);
+PGDLLEXPORT Datum Poseset_as_ewkt(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Poseset_as_ewkt);
 /**
  * @ingroup mobilitydb_setspan_inout
  * @brief Return the Extended Well-Known Text (EWKT) representation of a
- * circular buffer set
+ * pose set
  * @sqlfn asEWKT()
  */
 Datum
-Cbufferset_as_ewkt(PG_FUNCTION_ARGS)
+Poseset_as_ewkt(PG_FUNCTION_ARGS)
 {
   Set *s = PG_GETARG_SET_P(0);
   int dbl_dig_for_wkt = OUT_DEFAULT_DECIMAL_DIGITS;
   if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
     dbl_dig_for_wkt = PG_GETARG_INT32(1);
-  char *str = cbufferset_as_ewkt(s, dbl_dig_for_wkt);
+  char *str = poseset_as_ewkt(s, dbl_dig_for_wkt);
   text *result = cstring2text(str);
   pfree(str);
   PG_FREE_IF_COPY(s, 0);
@@ -180,50 +180,50 @@ Cbufferset_as_ewkt(PG_FUNCTION_ARGS)
 
 /**
  * @brief Return the (Extended) Well-Known Text (WKT or EWKT) representation of
- * a temporal circular buffer
+ * a temporal pose
  * @sqlfn asText()
  */
 static Datum
-Tcbuffer_as_text_ext(FunctionCallInfo fcinfo, bool extended)
+Tpose_as_text_ext(FunctionCallInfo fcinfo, bool extended)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   int dbl_dig_for_wkt = OUT_DEFAULT_DECIMAL_DIGITS;
   if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
     dbl_dig_for_wkt = PG_GETARG_INT32(1);
-  char *str = extended ? tcbuffer_as_ewkt(temp, dbl_dig_for_wkt) :
-    tcbuffer_as_text(temp, dbl_dig_for_wkt);
+  char *str = extended ? tpose_as_ewkt(temp, dbl_dig_for_wkt) :
+    tpose_as_text(temp, dbl_dig_for_wkt);
   text *result = cstring2text(str);
   pfree(str);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_TEXT_P(result);
 }
 
-PGDLLEXPORT Datum Tcbuffer_as_text(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tcbuffer_as_text);
+PGDLLEXPORT Datum Tpose_as_text(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tpose_as_text);
 /**
  * @ingroup mobilitydb_temporal_inout
- * @brief Return the Well-Known Text (WKT) representation of a temporal circular buffer
+ * @brief Return the Well-Known Text (WKT) representation of a temporal pose
  * @sqlfn asText()
  */
 Datum
-Tcbuffer_as_text(PG_FUNCTION_ARGS)
+Tpose_as_text(PG_FUNCTION_ARGS)
 {
-  return Tcbuffer_as_text_ext(fcinfo, false);
+  return Tpose_as_text_ext(fcinfo, false);
 }
 
-PGDLLEXPORT Datum Tcbuffer_as_ewkt(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tcbuffer_as_ewkt);
+PGDLLEXPORT Datum Tpose_as_ewkt(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tpose_as_ewkt);
 /**
  * @ingroup mobilitydb_temporal_inout
  * @brief Return the Extended Well-Known Text (EWKT) representation of a
- * temporal circular buffer
+ * temporal pose
  * @note It is the WKT representation prefixed with the SRID
  * @sqlfn asEWKT()
  */
 Datum
-Tcbuffer_as_ewkt(PG_FUNCTION_ARGS)
+Tpose_as_ewkt(PG_FUNCTION_ARGS)
 {
-  return Tcbuffer_as_text_ext(fcinfo, true);
+  return Tpose_as_text_ext(fcinfo, true);
 }
 
 /*****************************************************************************/
@@ -233,7 +233,7 @@ Tcbuffer_as_ewkt(PG_FUNCTION_ARGS)
  * geometry/geography
  */
 static Datum
-Tcbufferarr_as_text_ext(FunctionCallInfo fcinfo, bool temporal, bool extended)
+Tposearr_as_text_ext(FunctionCallInfo fcinfo, bool temporal, bool extended)
 {
   ArrayType *array = PG_GETARG_ARRAYTYPE_P(0);
   /* Return NULL on empty array */
@@ -251,7 +251,7 @@ Tcbufferarr_as_text_ext(FunctionCallInfo fcinfo, bool temporal, bool extended)
   if (temporal)
   {
     Temporal **temparr = temparr_extract(array, &count);
-    strarr = tcbufferarr_as_text((const Temporal **) temparr, count,
+    strarr = tposearr_as_text((const Temporal **) temparr, count,
       dbl_dig_for_wkt, extended);
     /* We cannot use pfree_array */
     pfree(temparr);
@@ -259,7 +259,7 @@ Tcbufferarr_as_text_ext(FunctionCallInfo fcinfo, bool temporal, bool extended)
   else
   {
     Datum *cbufarr = datumarr_extract(array, &count);
-    strarr = cbufferarr_as_text(cbufarr, count, dbl_dig_for_wkt, extended);
+    strarr = posearr_as_text(cbufarr, count, dbl_dig_for_wkt, extended);
     /* We cannot use pfree_array */
     pfree(cbufarr);
   }
@@ -268,8 +268,8 @@ Tcbufferarr_as_text_ext(FunctionCallInfo fcinfo, bool temporal, bool extended)
   PG_RETURN_ARRAYTYPE_P(result);
 }
 
-PGDLLEXPORT Datum Cbufferarr_as_text(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Cbufferarr_as_text);
+PGDLLEXPORT Datum Posearr_as_text(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Posearr_as_text);
 /**
  * @ingroup mobilitydb_temporal_inout
  * @brief Return the Well-Known Text (WKT) representation of an array of
@@ -277,13 +277,13 @@ PG_FUNCTION_INFO_V1(Cbufferarr_as_text);
  * @sqlfn asText()
  */
 Datum
-Cbufferarr_as_text(PG_FUNCTION_ARGS)
+Posearr_as_text(PG_FUNCTION_ARGS)
 {
-  return Tcbufferarr_as_text_ext(fcinfo, false, false);
+  return Tposearr_as_text_ext(fcinfo, false, false);
 }
 
-PGDLLEXPORT Datum Cbufferarr_as_ewkt(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Cbufferarr_as_ewkt);
+PGDLLEXPORT Datum Posearr_as_ewkt(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Posearr_as_ewkt);
 /**
  * @ingroup mobilitydb_temporal_inout
  * @brief Return the Extended Well-Known Text (EWKT) representation
@@ -292,13 +292,13 @@ PG_FUNCTION_INFO_V1(Cbufferarr_as_ewkt);
  * @sqlfn asEWKT()
  */
 Datum
-Cbufferarr_as_ewkt(PG_FUNCTION_ARGS)
+Posearr_as_ewkt(PG_FUNCTION_ARGS)
 {
-  return Tcbufferarr_as_text_ext(fcinfo, false, true);
+  return Tposearr_as_text_ext(fcinfo, false, true);
 }
 
-PGDLLEXPORT Datum Tcbufferarr_as_text(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tcbufferarr_as_text);
+PGDLLEXPORT Datum Tposearr_as_text(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tposearr_as_text);
 /**
  * @ingroup mobilitydb_temporal_inout
  * @brief Return the Well-Known Text (WKT) representation of a
@@ -306,24 +306,24 @@ PG_FUNCTION_INFO_V1(Tcbufferarr_as_text);
  * @sqlfn asText()
  */
 Datum
-Tcbufferarr_as_text(PG_FUNCTION_ARGS)
+Tposearr_as_text(PG_FUNCTION_ARGS)
 {
-  return Tcbufferarr_as_text_ext(fcinfo, true, false);
+  return Tposearr_as_text_ext(fcinfo, true, false);
 }
 
-PGDLLEXPORT Datum Tcbufferarr_as_ewkt(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tcbufferarr_as_ewkt);
+PGDLLEXPORT Datum Tposearr_as_ewkt(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tposearr_as_ewkt);
 /**
  * @ingroup mobilitydb_temporal_inout
  * @brief Return the Extended Well-Known Text (EWKT) representation an array of
- * temporal circular buffers
+ * temporal poses
  * @note The output is the WKT representation prefixed with the SRID
  * @sqlfn asEWKT()
  */
 Datum
-Tcbufferarr_as_ewkt(PG_FUNCTION_ARGS)
+Tposearr_as_ewkt(PG_FUNCTION_ARGS)
 {
-  return Tcbufferarr_as_text_ext(fcinfo, true, true);
+  return Tposearr_as_text_ext(fcinfo, true, true);
 }
 
 /*****************************************************************************/

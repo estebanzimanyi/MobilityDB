@@ -32,6 +32,8 @@
  * @brief Static buffer type
  */
 
+#include "pose/tpose.h"
+
 /* C */
 #include <assert.h>
 #include <float.h>
@@ -45,8 +47,8 @@
 /* MEOS */
 #include <meos.h>
 #include <meos_geo.h>
-#include <meos_cbuffer.h>
 #include <meos_internal.h>
+#include <meos_pose.h>
 #include "general/pg_types.h"
 #include "general/set.h"
 #include "general/tsequence.h"
@@ -58,8 +60,8 @@
 #include "geo/tgeo_spatialfuncs.h"
 #include "general/type_parser.h"
 #include "geo/tgeo_parser.h"
-#include "cbuffer/cbuffer.h"
-#include "cbuffer/tcbuffer_parser.h"
+#include "pose/tpose_parser.h"
+#include "pose/tpose_spatialfuncs.h"
 
 /*****************************************************************************
  * Input/output functions
@@ -72,7 +74,7 @@
  * @csqlfn #Set_in()
  */
 Set *
-cbufferset_in(const char *str)
+poseset_in(const char *str)
 {
   /* Ensure validity of the arguments */
 #if MEOS
@@ -81,25 +83,25 @@ cbufferset_in(const char *str)
 #else
   assert(str);
 #endif /* MEOS */
-  return set_parse(&str, T_CBUFFERSET);
+  return set_parse(&str, T_POSESET);
 }
 
 /**
  * @ingroup meos_setspan_inout
- * @brief Return the string representation of a circular buffer set
+ * @brief Return the string representation of a pose set
  * @param[in] s Set
  * @param[in] maxdd Maximum number of decimal digits
  * @csqlfn #Set_out()
  */
 char *
-cbufferset_out(const Set *s, int maxdd)
+poseset_out(const Set *s, int maxdd)
 {
   /* Ensure validity of the arguments */
 #if MEOS
-  if (! ensure_not_null((void *) s) || ! ensure_set_isof_type(s, T_CBUFFERSET))
+  if (! ensure_not_null((void *) s) || ! ensure_set_isof_type(s, T_POSESET))
     return NULL;
 #else
-  assert(s); assert(s->settype == T_CBUFFERSET);
+  assert(s); assert(s->settype == T_POSESET);
 #endif /* MEOS */
   return set_out(s, maxdd);
 }
@@ -108,38 +110,38 @@ cbufferset_out(const Set *s, int maxdd)
  * @ingroup meos_setspan_inout
  * @brief Return the Well-Known Text (WKT) representation of a circular
  * buffer set
- * @csqlfn #Cbufferset_as_text()
+ * @csqlfn #Poseset_as_text()
  */
 char *
-cbufferset_as_text(const Set *s, int maxdd)
+poseset_as_text(const Set *s, int maxdd)
 {
   /* Ensure validity of the arguments */
 #if MEOS
-  if (! ensure_not_null((void *) s) || ! ensure_set_isof_type(s, T_CBUFFERSET))
+  if (! ensure_not_null((void *) s) || ! ensure_set_isof_type(s, T_POSESET))
     return NULL;
 #else
-  assert(s); assert(s->settype == T_CBUFFERSET);
+  assert(s); assert(s->settype == T_POSESET);
 #endif /* MEOS */
-  return set_out_fn(s, maxdd, &cbuffer_wkt_out);
+  return set_out_fn(s, maxdd, &pose_wkt_out);
 }
 
 /**
  * @ingroup meos_setspan_inout
  * @brief Return the Extended Well-Known Text (EWKT) representation of a 
- * circular buffer set
+ * pose set
  * @param[in] s Set
  * @param[in] maxdd Maximum number of decimal digits
- * @csqlfn #Cbufferset_as_ewkt()
+ * @csqlfn #Poseset_as_ewkt()
  */
 char *
-cbufferset_as_ewkt(const Set *s, int maxdd)
+poseset_as_ewkt(const Set *s, int maxdd)
 {
   /* Ensure validity of the arguments */
 #if MEOS
-  if (! ensure_not_null((void *) s) || ! ensure_set_isof_type(s, T_CBUFFERSET))
+  if (! ensure_not_null((void *) s) || ! ensure_set_isof_type(s, T_POSESET))
     return NULL;
 #else
-  assert(s); assert(s->settype == T_CBUFFERSET);
+  assert(s); assert(s->settype == T_POSESET);
 #endif /* MEOS */
   if (! ensure_not_negative(maxdd))
     return NULL;
@@ -151,7 +153,7 @@ cbufferset_as_ewkt(const Set *s, int maxdd)
     snprintf(str1, sizeof(str1), "SRID=%d;", srid);
   else
     str1[0] = '\0';
-  char *str2 = set_out_fn(s, maxdd, &cbuffer_wkt_out);
+  char *str2 = set_out_fn(s, maxdd, &pose_wkt_out);
   char *result = palloc(strlen(str1) + strlen(str2) + 1);
   strcpy(result, str1);
   strcat(result, str2);
@@ -165,13 +167,13 @@ cbufferset_as_ewkt(const Set *s, int maxdd)
 
 /**
  * @ingroup meos_setspan_constructor
- * @brief Return a circular buffer set from an array of values
+ * @brief Return a pose set from an array of values
  * @param[in] values Array of values
  * @param[in] count Number of elements of the array
  * @csqlfn #Set_constructor()
  */
 Set *
-cbufferset_make(const Cbuffer **values, int count)
+poseset_make(const Pose **values, int count)
 {
   /* Ensure validity of the arguments */
 #if MEOS
@@ -186,7 +188,7 @@ cbufferset_make(const Cbuffer **values, int count)
   Datum *datums = palloc(sizeof(Datum) * count);
   for (int i = 0; i < count; ++i)
     datums[i] = PointerGetDatum(values[i]);
-  return set_make_free(datums, count, T_CBUFFER, ORDER);
+  return set_make_free(datums, count, T_POSE, ORDER);
 }
 
 /*****************************************************************************
@@ -195,44 +197,44 @@ cbufferset_make(const Cbuffer **values, int count)
 
 /**
  * @ingroup meos_setspan_accessor
- * @brief Return a copy of the start value of a circular buffer set
+ * @brief Return a copy of the start value of a pose set
  * @param[in] s Set
  * @return On error return @p NULL
  * @csqlfn #Set_start_value()
  */
-Cbuffer *
-cbufferset_start_value(const Set *s)
+Pose *
+poseset_start_value(const Set *s)
 {
   /* Ensure validity of the arguments */
 #if MEOS
-  if (! ensure_not_null((void *) s) || ! ensure_set_isof_type(s, T_CBUFFERSET))
+  if (! ensure_not_null((void *) s) || ! ensure_set_isof_type(s, T_POSESET))
     return NULL;
 #else
-  assert(s); assert(s->settype == T_CBUFFERSET);
+  assert(s); assert(s->settype == T_POSESET);
 #endif /* MEOS */
 
-  return DatumGetCbufferP(datum_copy(SET_VAL_N(s, 0), s->basetype));
+  return DatumGetPoseP(datum_copy(SET_VAL_N(s, 0), s->basetype));
 }
 
 /**
  * @ingroup meos_setspan_accessor
- * @brief Return a copy of the end value of a circular buffer set
+ * @brief Return a copy of the end value of a pose set
  * @param[in] s Set
  * @return On error return @p NULL
  * @csqlfn #Set_end_value()
  */
-Cbuffer *
-cbufferset_end_value(const Set *s)
+Pose *
+poseset_end_value(const Set *s)
 {
   /* Ensure validity of the arguments */
 #if MEOS
-  if (! ensure_not_null((void *) s) || ! ensure_set_isof_type(s, T_CBUFFERSET))
+  if (! ensure_not_null((void *) s) || ! ensure_set_isof_type(s, T_POSESET))
     return NULL;
 #else
-  assert(s); assert(s->settype == T_CBUFFERSET);
+  assert(s); assert(s->settype == T_POSESET);
 #endif /* MEOS */
 
-  return DatumGetCbufferP(datum_copy(SET_VAL_N(s, s->count - 1),
+  return DatumGetPoseP(datum_copy(SET_VAL_N(s, s->count - 1),
     s->basetype));
 }
 
@@ -247,44 +249,44 @@ cbufferset_end_value(const Set *s)
  * @csqlfn #Set_value_n()
  */
 bool
-cbufferset_value_n(const Set *s, int n, Cbuffer **result)
+poseset_value_n(const Set *s, int n, Pose **result)
 {
   /* Ensure validity of the arguments */
 #if MEOS
   if (! ensure_not_null((void *) s) || ! ensure_not_null((void *) result) ||
-      ! ensure_set_isof_type(s, T_CBUFFERSET))
+      ! ensure_set_isof_type(s, T_POSESET))
     return false;
 #else
-  assert(s); assert(result); assert(s->settype == T_CBUFFERSET);
+  assert(s); assert(result); assert(s->settype == T_POSESET);
 #endif /* MEOS */
 
   if (n < 1 || n > s->count)
     return false;
-  *result = DatumGetCbufferP(datum_copy(SET_VAL_N(s, n - 1), s->basetype));
+  *result = DatumGetPoseP(datum_copy(SET_VAL_N(s, n - 1), s->basetype));
   return true;
 }
 
 /**
  * @ingroup meos_setspan_accessor
- * @brief Return the array of copies of the values of a circular buffer set
+ * @brief Return the array of copies of the values of a pose set
  * @param[in] s Set
  * @return On error return @p NULL
  * @csqlfn #Set_values()
  */
-Cbuffer **
-cbufferset_values(const Set *s)
+Pose **
+poseset_values(const Set *s)
 {
   /* Ensure validity of the arguments */
 #if MEOS
-  if (! ensure_not_null((void *) s) || ! ensure_set_isof_type(s, T_CBUFFERSET))
+  if (! ensure_not_null((void *) s) || ! ensure_set_isof_type(s, T_POSESET))
     return NULL;
 #else
-  assert(s); assert(s->settype == T_CBUFFERSET);
+  assert(s); assert(s->settype == T_POSESET);
 #endif /* MEOS */
 
-  Cbuffer **result = palloc(sizeof(Cbuffer *) * s->count);
+  Pose **result = palloc(sizeof(Pose *) * s->count);
   for (int i = 0; i < s->count; i++)
-    result[i] = DatumGetCbufferP(datum_copy(SET_VAL_N(s, i), s->basetype));
+    result[i] = DatumGetPoseP(datum_copy(SET_VAL_N(s, i), s->basetype));
   return result;
 }
 
@@ -294,23 +296,23 @@ cbufferset_values(const Set *s)
 
 /**
  * @ingroup meos_setspan_conversion
- * @brief Return a circular buffer converted to a circular buffer set
- * @param[in] cbuf Value
+ * @brief Return a pose converted to a pose set
+ * @param[in] pose Value
  * @csqlfn #Value_to_set()
  */
 Set *
-cbuffer_to_set(const Cbuffer *cbuf)
+pose_to_set(const Pose *pose)
 {
 #if MEOS
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) cbuf))
+  if (! ensure_not_null((void *) pose))
     return NULL;
 #else
-  assert(cbuf);
+  assert(pose);
 #endif /* MEOS */
 
-  Datum v = PointerGetDatum(cbuf);
-  return set_make_exp(&v, 1, 1, T_CBUFFER, ORDER_NO);
+  Datum v = PointerGetDatum(pose);
+  return set_make_exp(&v, 1, 1, T_POSE, ORDER_NO);
 }
 
 /*****************************************************************************/

@@ -47,6 +47,10 @@
 #endif
 /* MEOS */
 #include <meos.h>
+#if POSE
+  #include <meos_pose.h>
+  #include "pose/pose.h"
+#endif
 #include <meos_internal.h>
 #include "general/doublen.h"
 #include "general/pg_types.h"
@@ -60,13 +64,13 @@
 #include "geo/tgeo_parser.h"
 #include "geo/tgeo_spatialfuncs.h"
 #if CBUFFER
+  #include "cbuffer/cbuffer.h"
   #include "cbuffer/tcbuffer_spatialfuncs.h"
 #endif
 #if NPOINT
   #include "npoint/tnpoint_spatialfuncs.h"
 #endif
 #if POSE
-  #include "pose/pose.h"
   #include "pose/tpose_spatialfuncs.h"
 #endif
 

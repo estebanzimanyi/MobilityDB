@@ -38,11 +38,14 @@
 #include <postgres.h>
 /* MEOS */
 #include <meos.h>
+#if CBUFFER
+  #include <meos_cbuffer.h>
+#endif
 #if NPOINT
   #include "npoint/tnpoint.h"
 #endif
-#if CBUFFER
-  #include "cbuffer/tcbuffer.h"
+#if POSE
+  #include "pose/tpose.h"
 #endif
 
 /*****************************************************************************/
@@ -63,6 +66,12 @@ extern Nsegment *nsegment_round(const Nsegment *ns, int maxdd);
 extern Set *npointset_round(const Set *s, int maxdd);
 extern Temporal *tnpoint_round(const Temporal *temp, Datum size);
 #endif /* NPOINT */
+#if POSE
+extern Datum datum_pose_round(Datum pose, Datum size);
+extern Pose *pose_round(const Pose *pose, int maxdd);
+extern Set *poseset_round(const Set *s, int maxdd);
+extern Temporal *tpose_round(const Temporal *temp, Datum size);
+#endif /* POSE */
 
 /*****************************************************************************/
 
