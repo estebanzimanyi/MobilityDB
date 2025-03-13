@@ -374,8 +374,8 @@ nad_tfloat_tbox(const Temporal *temp, const TBox *box)
 int
 nad_tboxint_tboxint(const TBox *box1, const TBox *box2)
 {
-  if (! ensure_span_isof_basetype(&box1->span, T_INT4) ||
-      ! ensure_span_isof_basetype(&box2->span, T_INT4))
+  if (! ensure_span_isof_type(&box1->span, T_INTSPAN) ||
+      ! ensure_span_isof_type(&box2->span, T_INTSPAN))
     return -1;
 
   return DatumGetInt32(nad_tbox_tbox(box1, box2));
@@ -391,8 +391,8 @@ nad_tboxint_tboxint(const TBox *box1, const TBox *box2)
 double
 nad_tboxfloat_tboxfloat(const TBox *box1, const TBox *box2)
 {
-  if (! ensure_span_isof_basetype(&box1->span, T_FLOAT8) ||
-      ! ensure_span_isof_basetype(&box2->span, T_FLOAT8))
+  if (! ensure_span_isof_type(&box1->span, T_FLOATSPAN) ||
+      ! ensure_span_isof_type(&box2->span, T_FLOATSPAN))
     return -1;
 
   return DatumGetFloat8(nad_tbox_tbox(box1, box2));

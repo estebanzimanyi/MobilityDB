@@ -47,6 +47,7 @@
 #include <meos.h>
 #include <meos_internal.h>
 #include <meos_pose.h>
+#include "general/span.h"
 #include "pose/pose.h"
 
 /*****************************************************************************
@@ -265,7 +266,7 @@ pose_tstzspan_to_stbox(const Pose *pose, const Span *s)
   /* Ensure validity of the arguments */
 #if MEOS
   if (! ensure_not_null((void *) pose) || ! ensure_not_null((void *) s) || 
-      ! ensure_span_isof_type(s, T_TSTZSPAN);
+      ! ensure_span_isof_type(s, T_TSTZSPAN))
     return NULL;
 #else
   assert(pose); assert(s); assert(s->spantype == T_TSTZSPAN);

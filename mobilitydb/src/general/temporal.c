@@ -58,7 +58,7 @@
 #include "pg_general/doxygen_mobilitydb_api.h"
 #include "pg_general/meos_catalog.h"
 #include "pg_general/type_util.h"
-#include "pg_geo/tpoint_spatialfuncs.h"
+#include "pg_geo/tspatial_spatialfuncs.h"
 
 /* To avoid including fmgrprotos.h */
 extern PGDLLEXPORT Datum timestamp_mi(PG_FUNCTION_ARGS);

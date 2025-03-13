@@ -8,7 +8,6 @@ set(GEO_SRCS
   tgeo_compops.c
   tgeo_distance.c
   tgeo_out.c
-  tgeo_parser.c
   tgeo_restrict.c
   tgeo_spatialfuncs.c
   tgeo_spatialrels.c
@@ -17,6 +16,7 @@ set(GEO_SRCS
   tpoint_datagen.c
   tpoint_spatialfuncs.c
   tspatial.c
+  tspatial_parser.c
   tspatial_srid.c
 )
 

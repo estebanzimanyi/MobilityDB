@@ -29,7 +29,7 @@
 
 /**
  * @file
- * @brief Static buffer type
+ * @brief Sets of circular buffer type
  */
 
 /* C */
@@ -51,13 +51,13 @@
 #include "general/set.h"
 #include "general/tsequence.h"
 #include "general/type_out.h"
+#include "general/type_parser.h"
 #include "general/type_util.h"
 #include "geo/pgis_types.h"
 #include "geo/tgeo.h"
 #include "geo/tgeo_out.h"
 #include "geo/tgeo_spatialfuncs.h"
-#include "general/type_parser.h"
-#include "geo/tgeo_parser.h"
+#include "geo/tspatial_parser.h"
 #include "cbuffer/cbuffer.h"
 #include "cbuffer/tcbuffer_parser.h"
 

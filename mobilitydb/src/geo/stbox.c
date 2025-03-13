@@ -930,7 +930,8 @@ PGDLLEXPORT Datum Stbox_expand_space(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Stbox_expand_space);
 /**
  * @ingroup mobilitydb_box_transf
- * @brief Return a spatiotemporal box with the space bounds expanded by a double
+ * @brief Return a spatiotemporal box with the space bounds expanded/shrinked
+ * by a double
  * @sqlfn expandSpace()
  */
 Datum
@@ -938,14 +939,18 @@ Stbox_expand_space(PG_FUNCTION_ARGS)
 {
   STBox *box = PG_GETARG_STBOX_P(0);
   double d = PG_GETARG_FLOAT8(1);
-  PG_RETURN_STBOX_P(stbox_expand_space(box, d));
+  STBox *result = stbox_expand_space(box, d);
+  if (! result)
+    PG_RETURN_NULL();
+  PG_RETURN_STBOX_P(result);
 }
 
 PGDLLEXPORT Datum Stbox_expand_time(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Stbox_expand_time);
 /**
  * @ingroup mobilitydb_box_transf
- * @brief Return a spatiotemporal box with the time span expanded by an interval
+ * @brief Return a spatiotemporal box with the time span expanded/shrinked by
+ * an interval
  * @sqlfn Stbox_expand_time()
  */
 Datum
@@ -953,7 +958,10 @@ Stbox_expand_time(PG_FUNCTION_ARGS)
 {
   STBox *box = PG_GETARG_STBOX_P(0);
   Interval *interval = PG_GETARG_INTERVAL_P(1);
-  PG_RETURN_STBOX_P(stbox_expand_time(box, interval));
+  STBox *result = stbox_expand_time(box, interval);
+  if (! result)
+    PG_RETURN_NULL();
+  PG_RETURN_STBOX_P(result);
 }
 
 PGDLLEXPORT Datum Stbox_round(PG_FUNCTION_ARGS);

@@ -53,8 +53,7 @@
 /**
  * @ingroup meos_base_conversion
  * @brief Return a geometry point from a temporal pose
- * @param[in] pose Pose
- * @param[in] seed Seed
+ * @param[in] temp Temporal pose
  */
 Temporal *
 tpose_tgeompoint(const Temporal *temp)

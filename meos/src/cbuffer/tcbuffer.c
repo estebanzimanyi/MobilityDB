@@ -110,20 +110,20 @@ tcbufferseqset_make(const TSequenceSet *ss1, const TSequenceSet *ss2)
  * @ingroup meos_temporal_constructor
  * @brief Return a temporal circular buffer from a temporal point and a 
  * temporal float
- * @csqlfn #Tcbuffer_make()
+ * @csqlfn #Tcbuffer_constructor()
  */
 Temporal *
 tcbuffer_make(const Temporal *tpoint, const Temporal *tfloat)
 {
   /* Ensure validity of the arguments */
 #if MEOS
-  if (! ensure_not_null((void *) tpoint) || 
+  if (! ensure_not_null((void *) tpoint) ||
+      ! ensure_not_null((void *) tfloat) ||
       ! ensure_temporal_isof_type(tpoint, T_TGEOMPOINT) ||
-      ! ensure_not_null((void *) tfloat) || 
       ! ensure_temporal_isof_type(tfloat, T_TFLOAT))
     return NULL;
 #else
-  assert(tpoint); assert(tfloat); assert(tpoint->temptype == T_TGEOMPOINT); 
+  assert(tpoint); assert(tfloat); assert(tpoint->temptype == T_TGEOMPOINT);
   assert(tfloat->temptype == T_TFLOAT);
 #endif /* MEOS */
 

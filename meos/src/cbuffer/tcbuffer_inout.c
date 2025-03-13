@@ -44,6 +44,7 @@
 #include "general/tinstant.h"
 #include "general/tsequence.h"
 #include "general/tsequenceset.h"
+#include "geo/tspatial_parser.h"
 #include "cbuffer/cbuffer.h"
 #include "cbuffer/tcbuffer_parser.h"
 
@@ -64,7 +65,7 @@ tcbuffer_in(const char *str)
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) str))
     return NULL;
-  return tcbuffer_parse(&str);
+  return tspatial_parse(&str, T_TCBUFFER);
 }
 #endif /* MEOS */
 

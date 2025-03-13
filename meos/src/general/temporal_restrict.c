@@ -58,8 +58,8 @@
 #include "general/tsequenceset.h"
 #include "general/type_util.h"
 #include "general/type_parser.h"
-#include "geo/tgeo_parser.h"
 #include "geo/tgeo_spatialfuncs.h"
+#include "geo/tspatial_parser.h"
 
 /*****************************************************************************
  * Bounding box tests for the restriction functions

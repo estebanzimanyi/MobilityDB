@@ -889,6 +889,41 @@ Floatspanset_round(PG_FUNCTION_ARGS)
   PG_RETURN_SPANSET_P(result);
 }
 
+PGDLLEXPORT Datum Floatspanset_degrees(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Floatspanset_degrees);
+/**
+ * @ingroup mobilitydb_setspan_transf
+ * @brief Return a float span set with the values converted to degrees
+ * @sqlfn degrees()
+ */
+Datum
+Floatspanset_degrees(PG_FUNCTION_ARGS)
+{
+  SpanSet *ss = PG_GETARG_SPANSET_P(0);
+  bool normalize = false;
+  if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
+    normalize = PG_GETARG_BOOL(1);
+  SpanSet *result = floatspanset_degrees(ss, normalize);
+  PG_FREE_IF_COPY(ss, 0);
+  PG_RETURN_SPANSET_P(result);
+}
+
+PGDLLEXPORT Datum Floatspanset_radians(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Floatspanset_radians);
+/**
+ * @ingroup mobilitydb_setspan_transf
+ * @brief Return a float set with the values converted to radians
+ * @sqlfn radians()
+ */
+Datum
+Floatspanset_radians(PG_FUNCTION_ARGS)
+{
+  SpanSet *ss = PG_GETARG_SPANSET_P(0);
+  SpanSet *result = floatspanset_radians(ss);
+  PG_FREE_IF_COPY(ss, 0);
+  PG_RETURN_SPANSET_P(result);
+}
+
 PGDLLEXPORT Datum Spanset_spans(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Spanset_spans);
 /**

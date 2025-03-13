@@ -47,12 +47,14 @@
 #include "general/temporal.h"
 #include "general/type_util.h"
 #if CBUFFER
-  #include <meos_cbuffer.h>
   #include "cbuffer/cbuffer.h"
   #include "cbuffer/tcbuffer_boxops.h"
 #endif
 #if NPOINT
   #include "npoint/tnpoint_boxops.h"
+#endif
+#if POSE
+  #include "pose/pose.h"
 #endif
 
 /*****************************************************************************
@@ -340,6 +342,25 @@ npoint_union_transfn(Set *state, const Npoint *np)
   return value_union_transfn(state, PointerGetDatum(np), T_NPOINT);
 }
 #endif /* NPOINT */
+
+#if POSE
+/**
+ * @ingroup meos_setspan_agg
+ * @brief Transition function for set union aggregate of poses
+ * @param[in,out] state Current aggregate state
+ * @param[in] pose Value
+ */
+Set *
+pose_union_transfn(Set *state, const Pose *pose)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) pose) ||
+      (state && ! ensure_set_isof_type(state, T_POSESET)))
+    return NULL;
+  return value_union_transfn(state, PointerGetDatum(pose), T_POSE);
+}
+#endif /* POSE */
+
 
 /**
  * @ingroup meos_setspan_agg

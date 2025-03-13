@@ -668,7 +668,8 @@ PGDLLEXPORT Datum Tbox_expand_float(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tbox_expand_float);
 /**
  * @ingroup mobilitydb_box_transf
- * @brief Return a temporal box with the value span expanded by a double
+ * @brief Return a temporal box with the value span expanded/shrinked by a
+ * double
  * @sqlfn expandValue()
  */
 Datum
@@ -676,14 +677,18 @@ Tbox_expand_float(PG_FUNCTION_ARGS)
 {
   TBox *box = PG_GETARG_TBOX_P(0);
   double d = PG_GETARG_FLOAT8(1);
-  PG_RETURN_TBOX_P(tbox_expand_float(box, d));
+  TBox *result = tbox_expand_float(box, d);
+  if (! result)
+    PG_RETURN_NULL();
+  PG_RETURN_STBOX_P(result);
 }
 
 PGDLLEXPORT Datum Tbox_expand_time(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tbox_expand_time);
 /**
  * @ingroup mobilitydb_box_transf
- * @brief Return a temporal box with the the time span expanded by an interval
+ * @brief Return a temporal box with the the time span expanded/shrinked by an
+ * interval
  * @sqlfn expandTime()
  */
 Datum
@@ -691,7 +696,10 @@ Tbox_expand_time(PG_FUNCTION_ARGS)
 {
   TBox *box = PG_GETARG_TBOX_P(0);
   Interval *interval = PG_GETARG_INTERVAL_P(1);
-  PG_RETURN_TBOX_P(tbox_expand_time(box, interval));
+  TBox *result = tbox_expand_time(box, interval);
+  if (! result)
+    PG_RETURN_NULL();
+  PG_RETURN_STBOX_P(result);
 }
 
 PGDLLEXPORT Datum Tbox_round(PG_FUNCTION_ARGS);

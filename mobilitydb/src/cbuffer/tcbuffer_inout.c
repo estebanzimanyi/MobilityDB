@@ -44,7 +44,7 @@
 #include <meos_cbuffer.h>
 #include "general/set.h"
 #include "general/temporal.h"
-#include "geo/tgeo_parser.h"
+#include "geo/tspatial_parser.h"
 #include "cbuffer/cbuffer.h"
 #include "cbuffer/tcbuffer_parser.h"
 /* MobilityDB */
@@ -72,7 +72,7 @@ Tcbuffer_from_ewkt(PG_FUNCTION_ARGS)
   char *wkt = text2cstring(wkt_text);
   /* Copy the pointer since it will be advanced during parsing */
   const char *wkt_ptr = wkt;
-  Temporal *result = tcbuffer_parse(&wkt_ptr);
+  Temporal *result = tspatial_parse(&wkt_ptr, T_TCBUFFER);
   pfree(wkt);
   PG_FREE_IF_COPY(wkt_text, 0);
   PG_RETURN_TEMPORAL_P(result);

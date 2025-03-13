@@ -50,7 +50,7 @@
 /**
  * @brief Return true if the bounding box of two sets overlap
  */
-bool
+static bool
 over_set_set(const Set *s1, const Set *s2)
 {
   assert(s1); assert(s2); assert(s1->settype == s2->settype);

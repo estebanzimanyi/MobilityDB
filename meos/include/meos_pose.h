@@ -137,7 +137,8 @@ extern STBox *pose_stbox(const Pose *pose);
 extern char *tpose_as_ewkt(const Temporal *temp, int maxdd);
 extern char *tpose_as_text(const Temporal *temp, int maxdd);
 extern char *tpose_out(const Temporal *temp, int maxdd);
-// extern char **tposearr_as_text(const Temporal **temparr, int count, int maxdd, bool extended);
+extern char **tposearr_as_text(const Temporal **temparr, int count, int maxdd);
+extern char **tposearr_as_ewkt(const Temporal **temparr, int count, int maxdd);
 
 /*****************************************************************************
  * Constructor functions for temporal types

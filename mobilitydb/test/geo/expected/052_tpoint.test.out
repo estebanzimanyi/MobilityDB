@@ -42,11 +42,11 @@ ERROR:  Only non-empty geometries accepted
 LINE 1: SELECT tgeogpoint 'Point empty@2012-01-01 08:00:00';
                           ^
 SELECT tgeompoint 'Point(1 1)@2000-01-01 00:00:00+01 ,';
-ERROR:  Could not parse temporal geo value: Extraneous characters at the end
+ERROR:  Could not parse tgeompoint value: Extraneous characters at the end
 LINE 1: SELECT tgeompoint 'Point(1 1)@2000-01-01 00:00:00+01 ,';
                           ^
 SELECT tgeogpoint 'Point(1 1)@2000-01-01 00:00:00+01 ,';
-ERROR:  Could not parse temporal geo value: Extraneous characters at the end
+ERROR:  Could not parse tgeogpoint value: Extraneous characters at the end
 LINE 1: SELECT tgeogpoint 'Point(1 1)@2000-01-01 00:00:00+01 ,';
                           ^
 SELECT tgeogpoint 'Point M(1 1 1)@2000-01-01 00:00:00+01';
@@ -95,19 +95,19 @@ ERROR:  The arguments must be of the same dimensionality
 LINE 1: SELECT tgeogpoint '{Point(1 1)@2001-01-01 08:00:00,Point(2 2...
                           ^
 SELECT tgeompoint '{Point(1 1)@2001-01-01 08:00:00,Point(2 2)@2001-01-01 08:05:00,Point(3 3)@2001-01-01 08:06:00]';
-ERROR:  Could not parse temporal geo value: Missing closing brace
+ERROR:  Could not parse tgeompoint value: Missing closing brace
 LINE 1: SELECT tgeompoint '{Point(1 1)@2001-01-01 08:00:00,Point(2 2...
                           ^
 SELECT tgeogpoint '{Point(1 1)@2001-01-01 08:00:00,Point(2 2)@2001-01-01 08:05:00,Point(3 3)@2001-01-01 08:06:00]';
-ERROR:  Could not parse temporal geo value: Missing closing brace
+ERROR:  Could not parse tgeogpoint value: Missing closing brace
 LINE 1: SELECT tgeogpoint '{Point(1 1)@2001-01-01 08:00:00,Point(2 2...
                           ^
 SELECT tgeogpoint '{Point(1 1)@2001-01-01 08:00:00,Point(2 2)@2001-01-01 08:05:00,Point(3 3)@2001-01-01 08:06:00} xxx';
-ERROR:  Could not parse temporal geo value: Extraneous characters at the end
+ERROR:  Could not parse tgeogpoint value: Extraneous characters at the end
 LINE 1: SELECT tgeogpoint '{Point(1 1)@2001-01-01 08:00:00,Point(2 2...
                           ^
 SELECT tgeogpoint '{Point(1 1)@2001-01-01 08:00:00,Point(2 2)@2001-01-01 08:05:00,Point(3 3)@2001-01-01 08:06:00} xxx';
-ERROR:  Could not parse temporal geo value: Extraneous characters at the end
+ERROR:  Could not parse tgeogpoint value: Extraneous characters at the end
 LINE 1: SELECT tgeogpoint '{Point(1 1)@2001-01-01 08:00:00,Point(2 2...
                           ^
 SELECT asText(tgeompoint ' [ Point(1 1)@2001-01-01 08:00:00 , Point(2 2)@2001-01-01 08:05:00 , Point(3 3)@2001-01-01 08:06:00 ] ');
@@ -158,19 +158,19 @@ ERROR:  The arguments must be of the same dimensionality
 LINE 1: SELECT tgeogpoint '[Point(1 1)@2001-01-01 08:00:00,Point(2 2...
                           ^
 SELECT tgeompoint '[Point(1 1)@2001-01-01 08:00:00,Point(2 2)@2001-01-01 08:05:00,Point(3 3)@2001-01-01 08:06:00}';
-ERROR:  Could not parse temporal geo value: Missing closing bracket/parenthesis
+ERROR:  Could not parse tgeompoint value: Missing closing bracket/parenthesis
 LINE 1: SELECT tgeompoint '[Point(1 1)@2001-01-01 08:00:00,Point(2 2...
                           ^
 SELECT tgeogpoint '[Point(1 1)@2001-01-01 08:00:00,Point(2 2)@2001-01-01 08:05:00,Point(3 3)@2001-01-01 08:06:00}';
-ERROR:  Could not parse temporal geo value: Missing closing bracket/parenthesis
+ERROR:  Could not parse tgeogpoint value: Missing closing bracket/parenthesis
 LINE 1: SELECT tgeogpoint '[Point(1 1)@2001-01-01 08:00:00,Point(2 2...
                           ^
 SELECT tgeompoint '[Point(1 1)@2001-01-01 08:00:00,Point(2 2)@2001-01-01 08:05:00,Point(3 3)@2001-01-01 08:06:00] xxx';
-ERROR:  Could not parse temporal geo value: Extraneous characters at the end
+ERROR:  Could not parse tgeompoint value: Extraneous characters at the end
 LINE 1: SELECT tgeompoint '[Point(1 1)@2001-01-01 08:00:00,Point(2 2...
                           ^
 SELECT tgeogpoint '[Point(1 1)@2001-01-01 08:00:00,Point(2 2)@2001-01-01 08:05:00,Point(3 3)@2001-01-01 08:06:00] xxx';
-ERROR:  Could not parse temporal geo value: Extraneous characters at the end
+ERROR:  Could not parse tgeogpoint value: Extraneous characters at the end
 LINE 1: SELECT tgeogpoint '[Point(1 1)@2001-01-01 08:00:00,Point(2 2...
                           ^
 SELECT asText(tgeompoint '  { [ Point(1 1)@2001-01-01 08:00:00 , Point(2 2)@2001-01-01 08:05:00 , Point(3 3)@2001-01-01 08:06:00 ],
@@ -221,19 +221,19 @@ ERROR:  The arguments must be of the same dimensionality
 LINE 1: SELECT tgeogpoint '{[Point(1 1)@2001-01-01 08:00:00],[Point(...
                           ^
 SELECT tgeompoint '{[Point(1 1)@2001-01-01 08:00:00],[Point(2 2)@2001-01-01 08:05:00,Point(3 3)@2001-01-01 08:06:00]';
-ERROR:  Could not parse temporal geo value: Missing closing brace
+ERROR:  Could not parse tgeompoint value: Missing closing brace
 LINE 1: SELECT tgeompoint '{[Point(1 1)@2001-01-01 08:00:00],[Point(...
                           ^
 SELECT tgeogpoint '{[Point(1 1)@2001-01-01 08:00:00],[Point(2 2)@2001-01-01 08:05:00,Point(3 3)@2001-01-01 08:06:00]';
-ERROR:  Could not parse temporal geo value: Missing closing brace
+ERROR:  Could not parse tgeogpoint value: Missing closing brace
 LINE 1: SELECT tgeogpoint '{[Point(1 1)@2001-01-01 08:00:00],[Point(...
                           ^
 SELECT tgeompoint '{[Point(1 1)@2001-01-01 08:00:00],[Point(2 2)@2001-01-01 08:05:00,Point(3 3)@2001-01-01 08:06:00]} xxx';
-ERROR:  Could not parse temporal geo value: Extraneous characters at the end
+ERROR:  Could not parse tgeompoint value: Extraneous characters at the end
 LINE 1: SELECT tgeompoint '{[Point(1 1)@2001-01-01 08:00:00],[Point(...
                           ^
 SELECT tgeogpoint '{[Point(1 1)@2001-01-01 08:00:00],[Point(2 2)@2001-01-01 08:05:00,Point(3 3)@2001-01-01 08:06:00]} xxx';
-ERROR:  Could not parse temporal geo value: Extraneous characters at the end
+ERROR:  Could not parse tgeogpoint value: Extraneous characters at the end
 LINE 1: SELECT tgeogpoint '{[Point(1 1)@2001-01-01 08:00:00],[Point(...
                           ^
 SELECT asEWKT(tgeompoint 'SRID=4326;[Point(0 1)@2000-01-01, Point(0 1)@2000-01-02]');
@@ -274,39 +274,39 @@ SELECT asEWKT(tgeompoint '{[SRID=4326;Point(0 1)@2000-01-01], [SRID=4326;Point(0
 
 /* Errors */
 SELECT tgeompoint '{SRID=5676;Point(0 1)@2000-01-01, SRID=3812;Point(0 1)@2000-01-02}';
-ERROR:  Geometry SRID (3812) does not match temporal type SRID (5676)
+ERROR:  The SRID of the geometry (3812) does not match the SRID of the tgeompoint (5676)
 LINE 2: SELECT tgeompoint '{SRID=5676;Point(0 1)@2000-01-01, SRID=38...
                           ^
 SELECT tgeompoint 'SRID=5676;{Point(0 1)@2000-01-01, SRID=3812;Point(0 1)@2000-01-02}';
-ERROR:  Geometry SRID (3812) does not match temporal type SRID (5676)
+ERROR:  The SRID of the geometry (3812) does not match the SRID of the tgeompoint (5676)
 LINE 1: SELECT tgeompoint 'SRID=5676;{Point(0 1)@2000-01-01, SRID=38...
                           ^
 SELECT tgeompoint '[SRID=5676;Point(0 1)@2000-01-01, SRID=3812;Point(0 1)@2000-01-02]';
-ERROR:  Geometry SRID (3812) does not match temporal type SRID (5676)
+ERROR:  The SRID of the geometry (3812) does not match the SRID of the tgeompoint (5676)
 LINE 1: SELECT tgeompoint '[SRID=5676;Point(0 1)@2000-01-01, SRID=38...
                           ^
 SELECT tgeompoint 'SRID=5676;[Point(0 1)@2000-01-01, SRID=3812;Point(0 1)@2000-01-02]';
-ERROR:  Geometry SRID (3812) does not match temporal type SRID (5676)
+ERROR:  The SRID of the geometry (3812) does not match the SRID of the tgeompoint (5676)
 LINE 1: SELECT tgeompoint 'SRID=5676;[Point(0 1)@2000-01-01, SRID=38...
                           ^
 SELECT tgeompoint '{[SRID=5676;Point(0 1)@2000-01-01], [SRID=3812;Point(0 1)@2000-01-02]';
-ERROR:  Geometry SRID (3812) does not match temporal type SRID (5676)
+ERROR:  The SRID of the geometry (3812) does not match the SRID of the tgeompoint (5676)
 LINE 1: SELECT tgeompoint '{[SRID=5676;Point(0 1)@2000-01-01], [SRID...
                           ^
 SELECT tgeompoint 'SRID=5676;{[Point(0 1)@2000-01-01], [SRID=3812;Point(0 1)@2000-01-02]}';
-ERROR:  Geometry SRID (3812) does not match temporal type SRID (5676)
+ERROR:  The SRID of the geometry (3812) does not match the SRID of the tgeompoint (5676)
 LINE 1: SELECT tgeompoint 'SRID=5676;{[Point(0 1)@2000-01-01], [SRID...
                           ^
 SELECT tgeompoint 'SRID=5676;{Point(1 1)@2001-01-01 08:00:00,SRID=3812;Point(2 2)@2001-01-01 08:05:00,Point(3 3)@2001-01-01 08:06:00}';
-ERROR:  Geometry SRID (3812) does not match temporal type SRID (5676)
+ERROR:  The SRID of the geometry (3812) does not match the SRID of the tgeompoint (5676)
 LINE 1: SELECT tgeompoint 'SRID=5676;{Point(1 1)@2001-01-01 08:00:00...
                           ^
 SELECT tgeompoint 'SRID=5676;[Point(1 1)@2001-01-01 08:00:00,SRID=3812;Point(2 2)@2001-01-01 08:05:00,Point(3 3)@2001-01-01 08:06:00]';
-ERROR:  Geometry SRID (3812) does not match temporal type SRID (5676)
+ERROR:  The SRID of the geometry (3812) does not match the SRID of the tgeompoint (5676)
 LINE 1: SELECT tgeompoint 'SRID=5676;[Point(1 1)@2001-01-01 08:00:00...
                           ^
 SELECT tgeompoint 'SRID=5676;{[Point(1 1)@2001-01-01 08:00:00],[SRID=3812;Point(2 2)@2001-01-01 08:05:00,Point(3 3)@2001-01-01 08:06:00]';
-ERROR:  Geometry SRID (3812) does not match temporal type SRID (5676)
+ERROR:  The SRID of the geometry (3812) does not match the SRID of the tgeompoint (5676)
 LINE 1: SELECT tgeompoint 'SRID=5676;{[Point(1 1)@2001-01-01 08:00:0...
                           ^
 SELECT tgeogpoint 'SRID=5676;Point(1 1)@2001-01-01';
@@ -314,19 +314,19 @@ ERROR:  Only lon/lat coordinate systems are supported in geography.
 LINE 1: SELECT tgeogpoint 'SRID=5676;Point(1 1)@2001-01-01';
                           ^
 SELECT tgeogpoint '[SRID=7844;Point(0 1)@2000-01-01, SRID=4269;Point(0 1)@2000-01-02]';
-ERROR:  Geometry SRID (4269) does not match temporal type SRID (7844)
+ERROR:  The SRID of the geography (4269) does not match the SRID of the tgeogpoint (7844)
 LINE 1: SELECT tgeogpoint '[SRID=7844;Point(0 1)@2000-01-01, SRID=42...
                           ^
 SELECT tgeogpoint 'SRID=7844;{Point(1 1)@2001-01-01 08:00:00,SRID=4269;Point(2 2)@2001-01-01 08:05:00,Point(3 3)@2001-01-01 08:06:00}';
-ERROR:  Geometry SRID (4269) does not match temporal type SRID (7844)
+ERROR:  The SRID of the geography (4269) does not match the SRID of the tgeogpoint (7844)
 LINE 1: SELECT tgeogpoint 'SRID=7844;{Point(1 1)@2001-01-01 08:00:00...
                           ^
 SELECT tgeogpoint 'SRID=7844;[Point(1 1)@2001-01-01 08:00:00,SRID=4269;Point(2 2)@2001-01-01 08:05:00,Point(3 3)@2001-01-01 08:06:00]';
-ERROR:  Geometry SRID (4269) does not match temporal type SRID (7844)
+ERROR:  The SRID of the geography (4269) does not match the SRID of the tgeogpoint (7844)
 LINE 1: SELECT tgeogpoint 'SRID=7844;[Point(1 1)@2001-01-01 08:00:00...
                           ^
 SELECT tgeogpoint 'SRID=7844;{[Point(1 1)@2001-01-01 08:00:00],[SRID=4269;Point(2 2)@2001-01-01 08:05:00,Point(3 3)@2001-01-01 08:06:00]';
-ERROR:  Geometry SRID (4269) does not match temporal type SRID (7844)
+ERROR:  The SRID of the geography (4269) does not match the SRID of the tgeogpoint (7844)
 LINE 1: SELECT tgeogpoint 'SRID=7844;{[Point(1 1)@2001-01-01 08:00:0...
                           ^
 SELECT format_type(oid, -1) FROM (SELECT oid FROM pg_type WHERE typname = 'tgeompoint') t;

@@ -52,8 +52,8 @@
 #include "general/temporal_boxops.h"
 #include "general/type_parser.h"
 #include "general/type_util.h"
-#include "geo/tgeo_parser.h"
 #include "geo/tgeo_spatialfuncs.h"
+#include "geo/tspatial_parser.h"
 #if CBUFFER
   #include <meos_cbuffer.h>
   #include "cbuffer/tcbuffer_parser.h"
@@ -309,7 +309,7 @@ tgeometryseqset_in(const char *str)
 {
   assert(str);
   /* Call the superclass function to read the SRID at the beginning (if any) */
-  Temporal *temp = tgeo_parse(&str, T_TGEOMETRY);
+  Temporal *temp = tspatial_parse(&str, T_TGEOMETRY);
   assert(temp->subtype == TSEQUENCESET);
   return (TSequenceSet *) temp;
 }
@@ -342,7 +342,7 @@ tcbufferseqset_in(const char *str)
 {
   assert(str);
   /* Call the superclass function to read the SRID at the beginning (if any) */
-  Temporal *temp = tcbuffer_parse(&str);
+  Temporal *temp = tspatial_parse(&str, T_TCBUFFER);
   assert(temp->subtype == TSEQUENCESET);
   return (TSequenceSet *) temp;
 }

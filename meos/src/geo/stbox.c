@@ -52,8 +52,8 @@
 #include "general/tnumber_mathfuncs.h"
 #include "general/type_util.h"
 #include "geo/pgis_types.h"
-#include "geo/tgeo_parser.h"
 #include "geo/tgeo_spatialfuncs.h"
+#include "geo/tspatial_parser.h"
 #if CBUFFER
   #include "cbuffer/cbuffer.h"
   #include "cbuffer/tcbuffer_boxops.h"
@@ -1398,8 +1398,8 @@ stbox_get_space(const STBox *box)
 
 /**
  * @ingroup meos_box_transf
- * @brief Return a spatiotemporal box with the space bounds expanded by a
- * double
+ * @brief Return a spatiotemporal box with the space bounds expanded/decreased
+ * by a double
  * @param[in] box Spatiotemporal box
  * @param[in] d Value for expanding
  * @csqlfn #Stbox_expand_space()
@@ -1408,15 +1408,34 @@ STBox *
 stbox_expand_space(const STBox *box, double d)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) box) || ! ensure_has_X(T_STBOX, box->flags))
+#if MEOS
+  if (! ensure_not_null((void *) box))
     return NULL;
+#else
+  assert(box);
+#endif /* MEOS */
+  if (! ensure_has_X(T_STBOX, box->flags))
+    return NULL;
+  /* When the value is negative, ensure that its absolute value is less than
+   * the size of all spatial dimensions */ 
+  bool hasz = MEOS_FLAGS_GET_Z(box->flags) ||
+    MEOS_FLAGS_GET_GEODETIC(box->flags);
+  if (d < 0 && (
+       fabs(d) >= (box->xmax - box->xmin) || 
+       fabs(d) >= (box->ymax - box->ymin) || 
+       (hasz && (fabs(d) >= (box->zmax - box->zmin)))))
+  {
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      "The value to decrease must be smaller than the size of the stbox: %d", d);
+    return NULL;
+  }
 
   STBox *result = stbox_copy(box);
   result->xmin -= d;
   result->ymin -= d;
   result->xmax += d;
   result->ymax += d;
-  if (MEOS_FLAGS_GET_Z(box->flags) || MEOS_FLAGS_GET_GEODETIC(box->flags))
+  if (hasz)
   {
     result->zmin -= d;
     result->zmax += d;
@@ -1426,8 +1445,8 @@ stbox_expand_space(const STBox *box, double d)
 
 /**
  * @ingroup meos_box_transf
- * @brief Return a spatiotemporal box with the time span expanded by an
- * interval
+ * @brief Return a spatiotemporal box with the time span expanded/decreased by
+ * an interval
  * @param[in] box Spatiotemporal box
  * @param[in] interv Interval for expanding
  * @csqlfn #Stbox_expand_time()
@@ -1439,6 +1458,23 @@ stbox_expand_time(const STBox *box, const Interval *interv)
   if (! ensure_not_null((void *) box) || ! ensure_not_null((void *) interv) ||
       ! ensure_has_T(T_STBOX, box->flags))
     return NULL;
+  /* When the interval is negative, ensure that its absolute value is less than
+   * the duration of the spatiotemporal box */ 
+  Interval intervalzero;
+  memset(&intervalzero, 0, sizeof(Interval));
+  bool negative = pg_interval_cmp(interv, &intervalzero) <= 0;
+  Interval *duration = tstzspan_duration(&box->period);
+  bool smaller = pg_interval_cmp(interv, duration) < 0;
+  pfree(duration);
+  if (negative && ! smaller)
+  {
+    char *str = pg_interval_out(interv);
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      "The interval to decrease must be smaller than the time span of the stbox: %s",
+      str);
+    pfree(str);
+    return NULL;
+  }
 
   STBox *result = stbox_copy(box);
   TimestampTz tmin = minus_timestamptz_interval(DatumGetTimestampTz(

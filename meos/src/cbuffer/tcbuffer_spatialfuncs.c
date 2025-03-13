@@ -80,7 +80,7 @@ circle_type(const GSERIALIZED *gs)
 bool
 ensure_circle_type(const GSERIALIZED *gs)
 {
-  if (circle_type(gs))
+  if (! circle_type(gs))
   {
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "Only circle polygons accepted");

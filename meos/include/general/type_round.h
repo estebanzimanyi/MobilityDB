@@ -55,7 +55,8 @@ extern Datum datum_round_float(Datum value, Datum size);
 extern Datum datum_round_geo(Datum value, Datum size);
 #if CBUFFER
 extern Datum datum_cbuffer_round(Datum buffer, Datum size);
-extern Cbuffer *cbuffer_round(const Cbuffer *buffer, int maxdd);
+extern Cbuffer *cbuffer_round(const Cbuffer *cbuf, int maxdd);
+extern Cbuffer **cbufferarr_round(const Cbuffer **cbufarr, int count, int maxdd);
 extern Set *cbufferset_round(const Set *s, int maxdd);
 extern Temporal *tcbuffer_round(const Temporal *temp, int maxdd);
 #endif /* CBUFFER */

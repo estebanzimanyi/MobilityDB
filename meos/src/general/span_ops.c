@@ -144,10 +144,10 @@ contains_span_timestamptz(const Span *s, TimestampTz t)
 #if MEOS
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) s) ||
-      ! ensure_span_isof_basetype(s, T_TIMESTAMPTZ))
+      ! ensure_span_isof_type(s, T_TSTZSPAN))
     return false;
 #else
-  assert(s); assert(s->basetype == T_TIMESTAMPTZ);
+  assert(s); assert(s->spantype == T_TSTZSPAN);
 #endif /* MEOS */
 
   return contains_span_value(s, TimestampTzGetDatum(t));

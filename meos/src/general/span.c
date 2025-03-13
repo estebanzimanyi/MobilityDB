@@ -770,8 +770,12 @@ Interval *
 datespan_duration(const Span *s)
 {
   /* Ensure validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) s) || ! ensure_span_isof_type(s, T_DATESPAN))
     return NULL;
+#else
+  assert(s); assert(s->spantype == T_DATESPAN);
+#endif /* MEOS */
   Interval *result = palloc0(sizeof(Interval));
   result->day = DateADTGetDatum(s->upper) - DateADTGetDatum(s->lower);
   return result;
@@ -787,8 +791,12 @@ Interval *
 tstzspan_duration(const Span *s)
 {
   /* Ensure validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) s) || ! ensure_span_isof_type(s, T_TSTZSPAN))
     return NULL;
+#else
+  assert(s); assert(s->spantype == T_TSTZSPAN);
+#endif /* MEOS */
   return minus_timestamptz_timestamptz(s->upper, s->lower);
 }
 
@@ -846,6 +854,53 @@ floatspan_ceil(const Span *s)
 
   Span *result = span_copy(s);
   floatspan_floor_ceil_iter(result, &datum_ceil);
+  return result;
+}
+
+/**
+ * @ingroup meos_setspan_transf
+ * @brief Return a float span with the values converted to degrees
+ * @param[in] s Span
+ * @param[in] normalize True when the result must be normalized
+ * @csqlfn #Floatspan_degrees()
+ */
+Span *
+floatspan_degrees(const Span *s, bool normalize)
+{
+  /* Ensure validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) s) || ! ensure_span_isof_type(s, T_FLOATSPAN))
+    return NULL;
+#else
+  assert(s); assert(s->spantype == T_FLOATSPAN);
+#endif /* MEOS */
+
+  Span *result = span_copy(s);
+  result->lower = datum_degrees(s->lower, normalize);
+  result->upper = datum_degrees(s->upper, normalize);
+  return result;
+}
+
+/**
+ * @ingroup meos_setspan_transf
+ * @brief Return a float span with the values converted to radians
+ * @param[in] s Span
+ * @csqlfn #Floatspan_radians()
+ */
+Span *
+floatspan_radians(const Span *s)
+{
+  /* Ensure validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) s) || ! ensure_span_isof_type(s, T_FLOATSPAN))
+    return NULL;
+#else
+  assert(s); assert(s->spantype == T_FLOATSPAN);
+#endif /* MEOS */
+
+  Span *result = span_copy(s);
+  result->lower = datum_radians(s->lower);
+  result->upper = datum_radians(s->upper);
   return result;
 }
 

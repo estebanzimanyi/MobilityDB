@@ -43,7 +43,7 @@
 #include <meos_internal.h>
 #include "general/set.h"
 #include "general/temporal.h"
-#include "geo/tgeo_parser.h"
+#include "geo/tspatial_parser.h"
 #include "pose/tpose.h"
 #include "pose/tpose_parser.h"
 #include "pose/tpose_spatialfuncs.h"
@@ -72,7 +72,7 @@ Tpose_from_ewkt(PG_FUNCTION_ARGS)
   char *wkt = text2cstring(wkt_text);
   /* Copy the pointer since it will be advanced during parsing */
   const char *wkt_ptr = wkt;
-  Temporal *result = tpose_parse(&wkt_ptr);
+  Temporal *result = tspatial_parse(&wkt_ptr, T_TPOSE);
   pfree(wkt);
   PG_FREE_IF_COPY(wkt_text, 0);
   PG_RETURN_TEMPORAL_P(result);
@@ -251,17 +251,17 @@ Tposearr_as_text_ext(FunctionCallInfo fcinfo, bool temporal, bool extended)
   if (temporal)
   {
     Temporal **temparr = temparr_extract(array, &count);
-    strarr = tposearr_as_text((const Temporal **) temparr, count,
+    strarr = tposearr_as_text_int((const Temporal **) temparr, count,
       dbl_dig_for_wkt, extended);
     /* We cannot use pfree_array */
     pfree(temparr);
   }
   else
   {
-    Datum *cbufarr = datumarr_extract(array, &count);
-    strarr = posearr_as_text(cbufarr, count, dbl_dig_for_wkt, extended);
+    Datum *posearr = datumarr_extract(array, &count);
+    strarr = posearr_as_text_int(posearr, count, dbl_dig_for_wkt, extended);
     /* We cannot use pfree_array */
-    pfree(cbufarr);
+    pfree(posearr);
   }
   ArrayType *result = strarr_to_textarray(strarr, count);
   PG_FREE_IF_COPY(array, 0);

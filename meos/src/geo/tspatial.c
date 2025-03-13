@@ -56,7 +56,7 @@
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_spatial_transf
+ * @ingroup meos_internal_temporal_spatial_transf
  * @brief Return in the last argument the spatiotemporal box of a temporal
  * spatial value
  * @param[in] temp Temporal spatial value
@@ -132,7 +132,13 @@ STBox *
 geo_expand_space(const GSERIALIZED *gs, double d)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) gs) || gserialized_is_empty(gs))
+#if MEOS
+  if (! ensure_not_null((void *) gs))
+    return NULL;
+#else
+  assert(gs);
+#endif /* MEOS */
+  if (gserialized_is_empty(gs))
     return NULL;
 
   STBox box;
@@ -153,9 +159,14 @@ STBox *
 tspatial_expand_space(const Temporal *temp, double d)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) ||
-      /* This function is also called for tnpoint */
-      ! ensure_tspatial_type(temp->temptype))
+#if MEOS
+  if (! ensure_not_null((void *) temp))
+    return NULL;
+#else
+  assert(temp);
+#endif /* MEOS */
+  /* This function is also called for tnpoint */
+  if (! ensure_tspatial_type(temp->temptype))
     return NULL;
 
   STBox box;

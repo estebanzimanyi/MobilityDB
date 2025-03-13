@@ -43,6 +43,7 @@
 #include <meos_cbuffer.h>
 #include "general/temporal.h"
 #include "general/tnumber_mathfuncs.h"
+#include "general/set.h"
 #include "general/type_out.h"
 #include "general/type_round.h"
 #include "general/type_util.h"
@@ -184,7 +185,7 @@ Cbuffer_radius(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_srid(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_srid);
 /**
- * @ingroup mobilitydb_base_spatial_accessor
+ * @ingroup mobilitydb_base_spatial
  * @brief Return the SRID of a circular buffer
  * @sqlfn SRID()
  */
@@ -199,7 +200,7 @@ Cbuffer_srid(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_set_srid(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_set_srid);
 /**
- * @ingroup mobilitydb_base_spatial_accessor
+ * @ingroup mobilitydb_base_spatial
  * @brief Return a circular buffer with the coordinates of the point set to 
  * an SRID
  * @sqlfn setSRID()
@@ -222,7 +223,7 @@ PGDLLEXPORT Datum Cbuffer_round(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_round);
 /**
  * @ingroup mobilitydb_base_transf
- * @brief Return a circular buffer with the precision of the radius set to a
+ * @brief Return a circular buffer with the precision of the values set to a
  * number of decimal places
  * @sqlfn round()
  */
@@ -232,6 +233,53 @@ Cbuffer_round(PG_FUNCTION_ARGS)
   Cbuffer *cbuf = PG_GETARG_CBUFFER_P(0);
   Datum size = PG_GETARG_DATUM(1);
   PG_RETURN_CBUFFER_P(cbuffer_round(cbuf, size));
+}
+
+PGDLLEXPORT Datum Cbufferarr_round(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Cbufferarr_round);
+/**
+ * @ingroup mobilitydb_temporal_transf
+ * @brief Return an array of circular buffers with the precision of the
+ * values set to a number of decimal places
+ * @sqlfn round()
+ */
+Datum
+Cbufferarr_round(PG_FUNCTION_ARGS)
+{
+  ArrayType *array = PG_GETARG_ARRAYTYPE_P(0);
+  /* Return NULL on empty array */
+  int count = ArrayGetNItems(ARR_NDIM(array), ARR_DIMS(array));
+  if (count == 0)
+  {
+    PG_FREE_IF_COPY(array, 0);
+    PG_RETURN_NULL();
+  }
+  int maxdd = PG_GETARG_INT32(1);
+
+  Cbuffer **cbufarr = cbufferarr_extract(array, &count);
+  Cbuffer **resarr = cbufferarr_round((const Cbuffer **) cbufarr, count, maxdd);
+  ArrayType *result = cbufferarr_to_array((const Cbuffer **) resarr, count);
+  pfree(cbufarr);
+  PG_FREE_IF_COPY(array, 0);
+  PG_RETURN_ARRAYTYPE_P(result);
+}
+
+PGDLLEXPORT Datum Cbufferset_round(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Cbufferset_round);
+/**
+ * @ingroup mobilitydb_box_transf
+ * @brief Return an array of circular buffers with the precision of the values
+ * set to a number of decimal values
+ * @sqlfn round()
+ */
+Datum
+Cbufferset_round(PG_FUNCTION_ARGS)
+{
+  Set *s = PG_GETARG_SET_P(0);
+  int maxdd = PG_GETARG_INT32(1);
+  Set *result = cbufferset_round(s, maxdd);
+  PG_FREE_IF_COPY(s, 0);
+  PG_RETURN_SET_P(result);
 }
 
 /*****************************************************************************

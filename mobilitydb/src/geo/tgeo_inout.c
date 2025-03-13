@@ -42,7 +42,7 @@
 #include <meos.h>
 #include <meos_internal.h>
 #include "general/temporal.h"
-#include "geo/tgeo_parser.h"
+#include "geo/tspatial_parser.h"
 /* MobilityDB */
 #include "pg_general/meos_catalog.h" /* For oid_type */
 #include "pg_general/type_util.h"
@@ -82,10 +82,10 @@ PG_FUNCTION_INFO_V1(Tgeo_from_ewkt);
  * @ingroup mobilitydb_temporal_inout
  * @brief Return a temporal geo from its Extended Well-Known Text (EWKT)
  * representation
- * @note This just does the same thing as the tgeo_in function, except it has 
+ * @note This just does the same thing as the #tgeo_in function, except it has 
  * to handle a 'text' input. First, unwrap the text into a cstring, then do as
- * tgeo_in
- * @sqlfn tgeometryFromEWKT(), tgeomgraphyFromEWKT()
+ * #tgeo_in
+ * @sqlfn tgeometryFromEWKT(), tgeographyFromEWKT()
  */
 Datum
 Tgeo_from_ewkt(PG_FUNCTION_ARGS)
@@ -95,7 +95,7 @@ Tgeo_from_ewkt(PG_FUNCTION_ARGS)
   /* Copy the pointer since it will be advanced during parsing */
   const char *wkt_ptr = wkt;
   Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);
-  Temporal *result = tgeo_parse(&wkt_ptr, oid_type(temptypid));
+  Temporal *result = tspatial_parse(&wkt_ptr, oid_type(temptypid));
   pfree(wkt);
   PG_FREE_IF_COPY(wkt_text, 0);
   PG_RETURN_TEMPORAL_P(result);
@@ -118,7 +118,7 @@ Tgeo_as_text_ext(FunctionCallInfo fcinfo, bool extended)
   if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
     dbl_dig_for_wkt = PG_GETARG_INT32(1);
   char *str = extended ?
-    tgeo_as_ewkt(temp, dbl_dig_for_wkt) :
+    tgeo_as_ewkt(temp, dbl_dig_for_wkt) : 
     tgeo_as_text(temp, dbl_dig_for_wkt);
   text *result = cstring2text(str);
   pfree(str);

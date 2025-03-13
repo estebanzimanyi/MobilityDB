@@ -100,8 +100,12 @@ char *
 geoset_as_text(const Set *s, int maxdd)
 {
   /* Ensure validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) s) || ! ensure_geoset_type(s->settype))
     return NULL;
+#else
+  assert(s); assert(geoset_type(s->settype));
+#endif /* MEOS */
   return set_out_fn(s, maxdd, &geo_wkt_out);
 }
 
@@ -116,8 +120,12 @@ char *
 geoset_as_ewkt(const Set *s, int maxdd)
 {
   /* Ensure validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) s) || ! ensure_geoset_type(s->settype))
     return NULL;
+#else
+  assert(s); assert(geoset_type(s->settype));
+#endif /* MEOS */
   return set_out_fn(s, maxdd, &geo_ewkt_out);
 }
 
@@ -189,8 +197,15 @@ char *
 tgeo_as_ewkt(const Temporal *temp, int maxdd)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_tgeo_type_all(temp->temptype) ||
-      ! ensure_not_negative(maxdd))
+#if MEOS
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) temp) || 
+      ! ensure_tgeo_type_all(temp->temptype))
+    return NULL;
+#else
+  assert(temp); assert(tgeo_type_all(temp->temptype));
+#endif /* MEOS */
+  if (! ensure_not_negative(maxdd))
     return NULL;
 
   int32_t srid = tspatial_srid(temp);

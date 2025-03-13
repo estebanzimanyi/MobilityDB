@@ -167,7 +167,7 @@ geoset_round(const Set *s, int maxdd)
  * @ingroup meos_setspan_transf
  * @brief Return a circular buffer set with the precision of the geometries and
  * of the radius set to a number of decimal places
- * @csqlfn #CBufferset_round()
+ * @csqlfn #Cbufferset_round()
  */
 Set *
 cbufferset_round(const Set *s, int maxdd)
@@ -331,7 +331,7 @@ tbox_round(const TBox *box, int maxdd)
 
   /* Ensure validity of the arguments */
   if (! ensure_has_X(T_TBOX, box->flags) || ! ensure_not_negative(maxdd) ||
-      ! ensure_span_isof_basetype(&box->span, T_FLOAT8))
+      ! ensure_span_isof_type(&box->span, T_FLOATSPAN))
     return NULL;
   TBox *result = tbox_copy(box);
   floatspan_round_set(&box->span, maxdd, &result->span);
@@ -379,17 +379,16 @@ stbox_round_set(const STBox *box, int maxdd, STBox *result)
 STBox *
 stbox_round(const STBox *box, int maxdd)
 {
-#if MEOS
   /* Ensure validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) box))
     return NULL;
 #else
   assert(box);
 #endif /* MEOS */
-
-  /* Ensure validity of the arguments */
   if (! ensure_has_X(T_STBOX, box->flags) || ! ensure_not_negative(maxdd))
     return NULL;
+
   STBox *result = stbox_copy(box);
   stbox_round_set(box, maxdd, result);
   return result;
@@ -1082,6 +1081,29 @@ datum_cbuffer_round(Datum cbuffer, Datum size)
   /* Set precision of radius */
   return PointerGetDatum(cbuffer_round(DatumGetCbufferP(cbuffer),
     DatumGetInt32(size)));
+}
+
+/**
+ * @ingroup meos_box_transf
+ * @brief Return an array of circular buffers with the precision of the
+ * vales set to a number of decimal places
+ * @param[in] cbufarr Array of circular buffers
+ * @param[in] count Number of elements in the array
+ * @param[in] maxdd Maximum number of decimal digits
+ * @csqlfn #Cbufferarr_round()
+ */
+Cbuffer **
+cbufferarr_round(const Cbuffer **cbufarr, int count, int maxdd)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) cbufarr) ||
+      ! ensure_positive(count) || ! ensure_not_negative(maxdd))
+    return NULL;
+
+  Cbuffer **result = palloc(sizeof(Cbuffer *) * count);
+  for (int i = 0; i < count; i++)
+    result[i] = cbuffer_round(cbufarr[i], maxdd);
+  return result;
 }
 #endif /* CBUFFER */
 

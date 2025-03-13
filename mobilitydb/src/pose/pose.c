@@ -37,13 +37,16 @@
 #include <math.h>
 /* PostgreSQL */
 #include <postgres.h>
+#include <access/heaptoast.h>
 #include <lib/stringinfo.h>
 /* PostGIS */
 #include <liblwgeom.h>
 /* MEOS */
 #include <meos_pose.h>
 #include "general/pg_types.h"
+#include "general/set.h"
 #include "general/type_out.h"
+#include "general/type_round.h"
 #include "general/type_util.h"
 
 /*****************************************************************************
@@ -125,7 +128,7 @@ PG_FUNCTION_INFO_V1(Pose_constructor);
 /**
  * @ingroup mobilitydb_base_constructor
  * @brief Construct a pose value from the arguments
- * @sqlfn #pose()
+ * @sqlfn pose()
  */
 Datum
 Pose_constructor(PG_FUNCTION_ARGS)
@@ -168,6 +171,46 @@ Pose_to_geom(PG_FUNCTION_ARGS)
   Pose *pose = PG_GETARG_POSE_P(0);
   GSERIALIZED *result = pose_point(pose);
   PG_RETURN_POINTER(result);
+}
+
+/*****************************************************************************
+ * Transformation functions
+ *****************************************************************************/
+
+PGDLLEXPORT Datum Pose_round(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Pose_round);
+/**
+ * @ingroup mobilitydb_base_transf
+ * @brief Return a pose with the precision of the values set to a number of
+ * decimal places
+ * @sqlfn round()
+ */
+Datum
+Pose_round(PG_FUNCTION_ARGS)
+{
+  Pose *pose = PG_GETARG_POSE_P(0);
+  Datum size = PG_GETARG_DATUM(1);
+  Pose *result = pose_round(pose, size);
+  PG_FREE_IF_COPY(pose, 0);
+  PG_RETURN_TEMPORAL_P(result);
+}
+
+PGDLLEXPORT Datum Poseset_round(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Poseset_round);
+/**
+ * @ingroup mobilitydb_setspan_transf
+ * @brief Return an array of poses with the precision of the values set to a
+ * number of decimal values
+ * @sqlfn round()
+ */
+Datum
+Poseset_round(PG_FUNCTION_ARGS)
+{
+  Set *s = PG_GETARG_SET_P(0);
+  int maxdd = PG_GETARG_INT32(1);
+  Set *result = poseset_round(s, maxdd);
+  PG_FREE_IF_COPY(s, 0);
+  PG_RETURN_SET_P(result);
 }
 
 /*****************************************************************************

@@ -51,8 +51,8 @@
 #include "general/tsequence.h"
 #include "general/type_parser.h"
 #include "general/type_util.h"
-#include "geo/tgeo_parser.h"
 #include "geo/tgeo_spatialfuncs.h"
+#include "geo/tspatial_parser.h"
 
 /*****************************************************************************
  * General functions
@@ -290,8 +290,14 @@ TInstant *
 tpointinst_make(const GSERIALIZED *gs, TimestampTz t)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) gs) || ! ensure_not_empty(gs) ||
-      ! ensure_point_type(gs) || ! ensure_has_not_M_geo(gs))
+#if MEOS
+  if (! ensure_not_null((void *) gs))
+    return NULL;
+#else
+  assert(gs);
+#endif /* MEOS */
+  if (! ensure_not_empty(gs) || ! ensure_point_type(gs) || 
+      ! ensure_has_not_M_geo(gs))
     return NULL;
   meosType temptype = FLAGS_GET_GEODETIC(gs->gflags) ?
     T_TGEOGPOINT : T_TGEOMPOINT;
@@ -309,7 +315,13 @@ TInstant *
 tgeoinst_make(const GSERIALIZED *gs, TimestampTz t)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) gs) || ! ensure_not_empty(gs))
+#if MEOS
+  if (! ensure_not_null((void *) gs))
+    return NULL;
+#else
+  assert(gs);
+#endif /* MEOS */
+  if (! ensure_not_empty(gs))
     return NULL;
   meosType temptype = FLAGS_GET_GEODETIC(gs->gflags) ?
     T_TGEOGRAPHY : T_TGEOMETRY;

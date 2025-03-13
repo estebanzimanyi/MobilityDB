@@ -44,7 +44,10 @@
 #include "general/type_util.h"
 #include "geo/tgeo_spatialfuncs.h"
 #if CBUFFER
-  #include <meos_cbuffer.h>
+  #include "cbuffer/cbuffer.h"
+#endif
+#if CBUFFER
+  #include "pose/pose.h"
 #endif
 
 /*****************************************************************************
@@ -59,7 +62,7 @@ bool
 ensure_valid_set_int(const Set *s)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) s) || ! ensure_set_isof_basetype(s, T_INT4))
+  if (! ensure_not_null((void *) s) || ! ensure_set_isof_type(s, T_INTSET))
     return false;
   return true;
 }
@@ -72,7 +75,7 @@ bool
 ensure_valid_set_bigint(const Set *s)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) s) || ! ensure_set_isof_basetype(s, T_INT8))
+  if (! ensure_not_null((void *) s) || ! ensure_set_isof_type(s, T_BIGINTSET))
     return false;
   return true;
 }
@@ -85,7 +88,7 @@ bool
 ensure_valid_set_float(const Set *s)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) s) || ! ensure_set_isof_basetype(s, T_FLOAT8))
+  if (! ensure_not_null((void *) s) || ! ensure_set_isof_type(s, T_FLOATSET))
     return false;
   return true;
 }
@@ -100,7 +103,7 @@ ensure_valid_set_text(const Set *s, const text *txt)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) s) || ! ensure_not_null((void *) txt) ||
-       ! ensure_set_isof_basetype(s, T_TEXT))
+       ! ensure_set_isof_type(s, T_TEXTSET))
     return false;
   return true;
 }
@@ -113,7 +116,7 @@ bool
 ensure_valid_set_date(const Set *s)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) s) || ! ensure_set_isof_basetype(s, T_DATE))
+  if (! ensure_not_null((void *) s) || ! ensure_set_isof_type(s, T_DATESET))
     return false;
   return true;
 }
@@ -125,8 +128,7 @@ bool
 ensure_valid_set_timestamptz(const Set *s)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) s) ||
-      ! ensure_set_isof_basetype(s, T_TIMESTAMPTZ))
+  if (! ensure_not_null((void *) s) || ! ensure_set_isof_type(s, T_TSTZSET))
     return false;
   return true;
 }
@@ -141,10 +143,9 @@ ensure_valid_set_geo(const Set *s, const GSERIALIZED *gs)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) s) || ! ensure_not_null((void *) gs) ||
-       ! ensure_geoset_type(s->settype) || ! ensure_not_empty(gs))
+      ! ensure_geoset_type(s->settype) || ! ensure_not_empty(gs))
     return false;
-  meosType geotype = FLAGS_GET_GEODETIC(gs->gflags) ? T_GEOGRAPHY : T_GEOMETRY;
-  if (! ensure_set_isof_basetype(s, geotype))
+  if (! ensure_geoset_type(s->settype))
     return false;
   return true;
 }
@@ -161,11 +162,29 @@ ensure_valid_set_cbuffer(const Set *s, const Cbuffer *cbuf)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) s) || ! ensure_not_null((void *) cbuf) ||
-       ! ensure_set_isof_type(s, T_CBUFFERSET))
+      ! ensure_set_isof_type(s, T_CBUFFERSET))
     return false;
   return true;
 }
 #endif /* CBUFFER */
+
+#if POSE
+/**
+ * @brief Return true if a set and a circular buffer are valid for set
+ * operations
+ * @param[in] s Set
+ * @param[in] pose Value
+ */
+bool
+ensure_valid_set_pose(const Set *s, const Pose *pose)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) s) || ! ensure_not_null((void *) pose) ||
+      ! ensure_set_isof_type(s, T_POSESET))
+    return false;
+  return true;
+}
+#endif /* POSE */
 
 /*****************************************************************************
  * Contains
@@ -2079,7 +2098,7 @@ int
 distance_intset_intset(const Set *s1, const Set *s2)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_set_set(s1, s2) || ! ensure_set_isof_basetype(s1, T_INT4))
+  if (! ensure_valid_set_set(s1, s2) || ! ensure_set_isof_type(s1, T_INTSET))
     return -1;
   return DatumGetInt32(distance_set_set(s1, s2));
 }
@@ -2095,7 +2114,7 @@ int64
 distance_bigintset_bigintset(const Set *s1, const Set *s2)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_set_set(s1, s2) || ! ensure_set_isof_basetype(s1, T_INT8))
+  if (! ensure_valid_set_set(s1, s2) || ! ensure_set_isof_type(s1, T_INTSET))
     return -1;
   return DatumGetInt64(distance_set_set(s1, s2));
 }
@@ -2111,7 +2130,7 @@ double
 distance_floatset_floatset(const Set *s1, const Set *s2)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_set_set(s1, s2) || ! ensure_set_isof_basetype(s1, T_FLOAT8))
+  if (! ensure_valid_set_set(s1, s2) || ! ensure_set_isof_type(s1, T_FLOATSET))
     return -1.0;
   return DatumGetFloat8(distance_set_set(s1, s2));
 }
@@ -2127,7 +2146,7 @@ int
 distance_dateset_dateset(const Set *s1, const Set *s2)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_set_set(s1, s2) || ! ensure_set_isof_basetype(s1, T_DATE))
+  if (! ensure_valid_set_set(s1, s2) || ! ensure_set_isof_type(s1, T_DATESET))
     return -1;
   return DatumGetInt32(distance_set_set(s1, s2));
 }
@@ -2143,7 +2162,7 @@ double
 distance_tstzset_tstzset(const Set *s1, const Set *s2)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_set_set(s1, s2) || ! ensure_set_isof_basetype(s1, T_TIMESTAMPTZ))
+  if (! ensure_valid_set_set(s1, s2) || ! ensure_set_isof_type(s1, T_TSTZSET))
     return -1.0;
   return DatumGetFloat8(distance_set_set(s1, s2));
 }

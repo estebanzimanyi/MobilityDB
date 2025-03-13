@@ -52,10 +52,10 @@ extern bool ensure_valid_tpose_geo(const Temporal *temp, const GSERIALIZED *gs);
 extern char *pose_wkt_out_int(Datum value, bool extended, int maxdd);
 extern char *pose_wkt_out(Datum value, meosType type, int maxdd);
 extern char *pose_ewkt_out(Datum value, meosType type, int maxdd);
-extern char **posearr_as_text(const Datum *posearr, int count, int maxdd, 
+extern char **posearr_as_text_int(const Datum *posearr, int count, int maxdd, 
   bool extended);
-extern char **tposearr_as_text(const Temporal **temparr, int count, int maxdd,
-  bool extended);
+extern char **tposearr_as_text_int(const Temporal **temparr, int count,
+  int maxdd, bool extended);
 
 /* Interpolation functions */
 

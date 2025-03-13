@@ -31,11 +31,12 @@
  * @brief Spatial functions for temporal points.
  */
 
-#ifndef __PG_TPOINT_SPATIALFUNCS_H__
-#define __PG_TPOINT_SPATIALFUNCS_H__
+#ifndef __PG_TSPATIAL_SPATIALFUNCS_H__
+#define __PG_TSPATIAL_SPATIALFUNCS_H__
 
 /* PostgreSQL */
 #include <postgres.h>
+#include <utils/array.h>
 #include <fmgr.h>
 
 
@@ -45,6 +46,9 @@
 extern FunctionCallInfo fetch_fcinfo(void);
 extern void store_fcinfo(FunctionCallInfo fcinfo);
 
+extern Temporal *tspatial_valid_typmod(Temporal *temp, int32_t typmod);
+extern uint32 tspatial_typmod_in(ArrayType *arr, int is_point, int is_geodetic);
+
 /*****************************************************************************/
 
-#endif /* __PG_TPOINT_SPATIALFUNCS_H__ */
+#endif /* __PG_TSPATIAL_SPATIALFUNCS_H__ */

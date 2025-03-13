@@ -41,6 +41,7 @@
 #include "general/pg_types.h"
 #include "general/set.h"
 #include "general/type_round.h"
+#include "geo/tspatial_parser.h"
 #include "pose/tpose_parser.h"
 /* MobilityDB */
 #include "pg_general/meos_catalog.h"
@@ -78,7 +79,7 @@ Datum
 Tpose_in(PG_FUNCTION_ARGS)
 {
   const char *input = PG_GETARG_CSTRING(0);
-  Temporal *result = tpose_parse(&input);
+  Temporal *result = tspatial_parse(&input, T_TPOSE);
   PG_RETURN_POINTER(result);
 }
 
@@ -123,24 +124,6 @@ Tpose_round(PG_FUNCTION_ARGS)
   Temporal *result = tpose_round(temp, size);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_TEMPORAL_P(result);
-}
-
-PGDLLEXPORT Datum Poseset_round(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Poseset_round);
-/**
- * @ingroup mobilitydb_spanset_transf
- * @brief Return a pose set with the precision of the values set to a number of
- * decimal places
- * @sqlfn round()
- */
-Datum
-Poseset_round(PG_FUNCTION_ARGS)
-{
-  Set *s = PG_GETARG_SET_P(0);
-  Datum size = PG_GETARG_DATUM(1);
-  Set *result = poseset_round(s, size);
-  PG_FREE_IF_COPY(s, 0);
-  PG_RETURN_SET_P(result);
 }
 
 /*****************************************************************************/

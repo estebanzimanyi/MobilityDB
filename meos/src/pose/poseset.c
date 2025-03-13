@@ -59,7 +59,7 @@
 #include "geo/tgeo_out.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "general/type_parser.h"
-#include "geo/tgeo_parser.h"
+#include "geo/tspatial_parser.h"
 #include "pose/tpose_parser.h"
 #include "pose/tpose_spatialfuncs.h"
 

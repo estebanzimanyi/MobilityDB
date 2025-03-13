@@ -51,8 +51,8 @@
 #include "general/tsequence.h"
 #include "general/type_parser.h"
 #include "general/type_util.h"
-#include "geo/tgeo_parser.h"
 #include "geo/tgeo_spatialfuncs.h"
+#include "geo/tspatial_parser.h"
 #if CBUFFER
   #include "cbuffer/tcbuffer_parser.h"
 #endif
@@ -152,7 +152,7 @@ tgeometryinst_in(const char *str)
 {
   assert(str);
   /* Call the superclass function to read the SRID at the beginning (if any) */
-  Temporal *temp = tgeo_parse(&str, T_TGEOMETRY);
+  Temporal *temp = tspatial_parse(&str, T_TGEOMETRY);
   assert(temp->subtype == TINSTANT);
   return (TInstant *) temp;
 }
@@ -168,7 +168,7 @@ tgeographyinst_in(const char *str)
 {
   assert(str);
   /* Call the superclass function to read the SRID at the beginning (if any) */
-  Temporal *temp = tgeo_parse(&str, T_TGEOGRAPHY);
+  Temporal *temp = tspatial_parse(&str, T_TGEOGRAPHY);
   assert(temp->subtype == TINSTANT);
   return (TInstant *) temp;
 }
@@ -185,7 +185,7 @@ tcbufferinst_in(const char *str)
 {
   assert(str);
   /* Call the superclass function to read the SRID at the beginning (if any) */
-  Temporal *temp = tcbuffer_parse(&str);
+  Temporal *temp = tspatial_parse(&str, T_TCBUFFER);
   assert(temp->subtype == TINSTANT);
   return (TInstant *) temp;
 }

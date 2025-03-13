@@ -81,7 +81,7 @@ contains_spanset_timestamptz(const SpanSet *ss, TimestampTz t)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) ss) ||
-      ! ensure_spanset_isof_basetype(ss, T_TIMESTAMPTZ))
+      ! ensure_spanset_isof_type(ss, T_TSTZSPANSET))
     return false;
   return contains_spanset_value(ss, TimestampTzGetDatum(t));
 }

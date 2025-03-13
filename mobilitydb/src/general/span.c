@@ -641,6 +641,37 @@ Floatspan_round(PG_FUNCTION_ARGS)
   PG_RETURN_SPAN_P(floatspan_round(s, maxdd));
 }
 
+PGDLLEXPORT Datum Floatspan_degrees(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Floatspan_degrees);
+/**
+ * @ingroup mobilitydb_setspan_transf
+ * @brief Return a float span with the values converted to degrees
+ * @sqlfn degrees()
+ */
+Datum
+Floatspan_degrees(PG_FUNCTION_ARGS)
+{
+  Span *s = PG_GETARG_SPAN_P(0);
+  bool normalize = false;
+  if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
+    normalize = PG_GETARG_BOOL(1);
+  PG_RETURN_SPAN_P(floatspan_degrees(s, normalize));
+}
+
+PGDLLEXPORT Datum Floatspan_radians(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Floatspan_radians);
+/**
+ * @ingroup mobilitydb_setspan_transf
+ * @brief Return a float set with the values converted to radians
+ * @sqlfn radians()
+ */
+Datum
+Floatspan_radians(PG_FUNCTION_ARGS)
+{
+  Span *s = PG_GETARG_SPAN_P(0);
+  PG_RETURN_SPAN_P(floatspan_radians(s));
+}
+
 /*****************************************************************************
  * Comparison functions for defining B-tree indexes
  *****************************************************************************/

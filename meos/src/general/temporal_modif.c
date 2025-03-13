@@ -53,8 +53,8 @@
 #include "general/tsequenceset.h"
 #include "general/type_parser.h"
 #include "general/type_util.h"
-#include "geo/tgeo_parser.h"
 #include "geo/tgeo_spatialfuncs.h"
+#include "geo/tspatial_parser.h"
 #if NPOINT
   #include "npoint/tnpoint_distance.h"
   #include "npoint/tnpoint_spatialfuncs.h"

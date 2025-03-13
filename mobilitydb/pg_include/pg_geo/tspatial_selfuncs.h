@@ -31,8 +31,8 @@
  * @brief Selectivity functions for temporal points.
  */
 
-#ifndef __TPOINT_SELFUNCS_H__
-#define __TPOINT_SELFUNCS_H__
+#ifndef __TSPATIAL_SELFUNCS_H__
+#define __TSPATIAL_SELFUNCS_H__
 
 /* PostgreSQL */
 #include <postgres.h>

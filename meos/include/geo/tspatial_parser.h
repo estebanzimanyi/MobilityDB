@@ -31,8 +31,8 @@
  * @brief Functions for parsing temporal points.
  */
 
-#ifndef __TPOINT_PARSER_H__
-#define __TPOINT_PARSER_H__
+#ifndef __TSPATIAL_PARSER_H__
+#define __TSPATIAL_PARSER_H__
 
 /* PostgreSQL */
 #include <postgres.h>
@@ -43,14 +43,14 @@
 /*****************************************************************************/
 
 extern bool srid_parse(const char **str, int *srid);
-extern bool geo_parse(const char **str, meosType basetype, char sep, int *srid,
-  GSERIALIZED **result);
+extern bool geo_parse(const char **str, meosType basetype, char delim, 
+  int *srid, GSERIALIZED **result);
 extern STBox *stbox_parse(const char **str);
 extern TSequence *tpointseq_parse(const char **str, meosType temptype,
   interpType interp, bool end, bool make, int *tpoint_srid);
 extern Temporal *tpoint_parse(const char **str, meosType temptype);
-extern Temporal *tgeo_parse(const char **str, meosType temptype);
+extern Temporal *tspatial_parse(const char **str, meosType temptype);
 
 /*****************************************************************************/
 
-#endif
+#endif /* __TSPATIAL_PARSER_H__ */

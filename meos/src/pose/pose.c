@@ -33,6 +33,7 @@
 
 /* C */
 #include <math.h>
+#include <limits.h>
 /* Postgres */
 #include <postgres.h>
 #if POSTGRESQL_VERSION_NUMBER >= 160000
@@ -46,8 +47,9 @@
 #include <meos_pose.h>
 #include "general/pg_types.h"
 #include "geo/tgeo_spatialfuncs.h"
+#include "general/type_parser.h"
+#include "geo/tspatial_parser.h"
 #include "pose/pose.h"
-#include "pose/tpose_parser.h"
 
 /** Buffer size for input and output of pose values */
 #define MAXPOSELEN    128
@@ -158,6 +160,95 @@ pose_collinear(const Pose *p1, const Pose *p2, const Pose *p3, double ratio)
 /*****************************************************************************
  * Input/output functions
  *****************************************************************************/
+
+/**
+ * @brief Parse a pose value from the buffer
+ */
+Pose *
+pose_parse(const char **str, bool end)
+{
+  Pose *result;
+  bool hasZ = false;
+  const char *type_str = meostype_name(T_POSE);
+
+  /* Determine whether the box has an SRID */
+  int32_t srid;
+  srid_parse(str, &srid);
+
+  if (strncasecmp(*str,"POSE",4) == 0)
+  {
+    *str += 4;
+    p_whitespace(str);
+  }
+  else
+  {
+    meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
+      "Could not parse pose value");
+    return NULL;
+  }
+
+  /* Determine whether the pose is 3D */
+  if (strncasecmp(*str,"Z",1) == 0)
+  {
+    hasZ = true;
+    *str += 1;
+    p_whitespace(str);
+  }
+
+  /* Parse opening parenthesis */
+  if (! ensure_oparen(str, type_str))
+    return NULL;
+
+  /* Parse first 3 values: (x, y, theta) in 2D or (x, y, z, ...) in 3D */
+  double x, y, z;
+  p_whitespace(str);
+  if (! double_parse(str, &x)) return NULL;
+  p_whitespace(str); p_comma(str); p_whitespace(str);
+  if (! double_parse(str, &y)) return NULL;
+  p_whitespace(str); p_comma(str); p_whitespace(str);
+  if (! double_parse(str, &z)) return NULL;
+
+  if (!hasZ)
+  {
+    /* use z as theta in 2D */
+    if (z < -M_PI || z > M_PI)
+    {
+      meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
+        "Could not parse 2D pose: Rotation angle must be in ]-pi, pi]. Recieved: %f", z);
+      return NULL;
+    }
+    result = pose_make_2d(x, y, z);
+  }
+  else
+  {
+    double W, X, Y, Z;
+    p_whitespace(str); p_comma(str); p_whitespace(str);
+    if (! double_parse(str, &W)) return NULL;
+    p_whitespace(str); p_comma(str); p_whitespace(str);
+    if (! double_parse(str, &X)) return NULL;
+    p_whitespace(str); p_comma(str); p_whitespace(str);
+    if (! double_parse(str, &Y)) return NULL;
+    p_whitespace(str); p_comma(str); p_whitespace(str);
+    if (! double_parse(str, &Z)) return NULL;
+    if (fabs(sqrt(W*W + X*X + Y*Y + Z*Z) - 1)  > MEOS_EPSILON)
+    {
+      meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
+        "Could not parse 3D pose: Rotation quaternion must be of unit norm. Recieved: %f",
+        sqrt(W*W + X*X + Y*Y + Z*Z));
+      return NULL;
+    }
+    result = pose_make_3d(x, y, z, W, X, Y, Z);
+  }
+
+  /* Parse closing parenthesis */
+  p_whitespace(str);
+  if (! ensure_cparen(str, type_str) ||
+        (end && ! ensure_end_input(str, type_str)))
+    return NULL;
+
+  pose_set_srid(result, srid);
+  return result;
+}
 
 /**
  * @ingroup meos_base_inout
@@ -326,7 +417,7 @@ pose_srid(const Pose *pose)
   /* Ensure validity of the arguments */
 #if MEOS
   if (! ensure_not_null((void *) pose))
-    return NULL;
+    return SRID_INVALID;
 #else
   assert(pose);
 #endif /* MEOS */
@@ -358,7 +449,9 @@ pose_set_srid(Pose *pose, int32 srid)
   /* Ensure validity of the arguments */
 #if MEOS
   if (! ensure_not_null((void *) pose))
-    return NULL;
+  {
+    ;
+  }
 #else
   assert(pose);
 #endif /* MEOS */
@@ -537,7 +630,7 @@ pose_cmp(const Pose *pose1, const Pose *pose2)
   /* Ensure validity of the arguments */
 #if MEOS
   if (! ensure_not_null((void *) pose1) || ! ensure_not_null((void *) pose2))
-    return NULL;
+    return INT_MAX;
 #else
   assert(pose1); assert(pose2);
 #endif /* MEOS */
@@ -635,7 +728,7 @@ pose_hash(const Pose *pose)
   /* Ensure validity of the arguments */
 #if MEOS
   if (! ensure_not_null((void *) pose))
-    return NULL;
+    return INT_MAX;
 #else
   assert(pose);
 #endif /* MEOS */

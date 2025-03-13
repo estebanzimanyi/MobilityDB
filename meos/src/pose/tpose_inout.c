@@ -43,6 +43,7 @@
 #include "general/tinstant.h"
 #include "general/tsequence.h"
 #include "general/tsequenceset.h"
+#include "geo/tspatial_parser.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "pose/pose.h"
 #include "pose/tpose_parser.h"
@@ -64,7 +65,7 @@ tpose_in(const char *str)
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) str))
     return NULL;
-  return tpose_parse(&str);
+  return tspatial_parse(&str, T_TPOSE);
 }
 #endif /* MEOS */
 

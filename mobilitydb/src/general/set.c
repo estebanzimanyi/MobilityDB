@@ -540,7 +540,7 @@ PGDLLEXPORT Datum Textset_lower(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Textset_lower);
 /**
  * @ingroup mobilitydb_setspan_transf
- * @brief Return a text set with with the values transformed to lowercase
+ * @brief Return a text set with the values transformed to lowercase
  * @sqlfn lower()
  */
 Datum
@@ -556,7 +556,7 @@ PGDLLEXPORT Datum Textset_upper(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Textset_upper);
 /**
  * @ingroup mobilitydb_setspan_transf
- * @brief Return a text set with with the values transformed to uppercase
+ * @brief Return a text set with the values transformed to uppercase
  * @sqlfn upper()
  */
 Datum
@@ -572,7 +572,7 @@ PGDLLEXPORT Datum Textset_initcap(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Textset_initcap);
 /**
  * @ingroup mobilitydb_setspan_transf
- * @brief Return a text set with with the values transformed to initcap
+ * @brief Return a text set with the values transformed to initcap
  * @sqlfn initcap()
  */
 Datum
@@ -588,8 +588,8 @@ PGDLLEXPORT Datum Textcat_text_textset(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Textcat_text_textset);
 /**
  * @ingroup mobilitydb_setspan_transf
- * @brief Return a text set with with the values transformed to initcap
- * @sqlfn initcap()
+ * @brief Return a text value concatenated with a text set
+ * @sqlfn textset_cat()
  */
 Datum
 Textcat_text_textset(PG_FUNCTION_ARGS)
@@ -606,8 +606,8 @@ PGDLLEXPORT Datum Textcat_textset_text(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Textcat_textset_text);
 /**
  * @ingroup mobilitydb_setspan_transf
- * @brief Return a text set with with the values transformed to initcap
- * @sqlfn initcap()
+ * @brief Return a text set concatenated with a text value
+ * @sqlfn textset_cat()
  */
 Datum
 Textcat_textset_text(PG_FUNCTION_ARGS)

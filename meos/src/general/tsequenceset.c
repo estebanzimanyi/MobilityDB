@@ -52,8 +52,8 @@
 #include "general/temporal_boxops.h"
 #include "general/type_parser.h"
 #include "general/type_util.h"
-#include "geo/tgeo_parser.h"
 #include "geo/tgeo_spatialfuncs.h"
+#include "geo/tspatial_parser.h"
 #if NPOINT
   #include "npoint/tnpoint_spatialfuncs.h"
   #include "npoint/tnpoint_distance.h"
@@ -405,7 +405,13 @@ TSequenceSet *
 tsequenceset_make(const TSequence **sequences, int count, bool normalize)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) sequences) || ! ensure_positive(count))
+#if MEOS
+  if (! ensure_not_null((void *) sequences))
+    return NULL;
+#else
+  assert(sequences);
+#endif /* MEOS */
+  if (! ensure_positive(count))
     return NULL;
   return tsequenceset_make_exp(sequences, count, count, normalize);
 }
@@ -532,7 +538,13 @@ tsequenceset_make_gaps(const TInstant **instants, int count, interpType interp,
   const Interval *maxt, double maxdist)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) instants) || ! ensure_positive(count))
+#if MEOS
+  if (! ensure_not_null((void *) instants))
+    return NULL;
+#else
+  assert(instants);
+#endif /* MEOS */
+  if (! ensure_positive(count))
     return NULL;
 
   TSequence *seq;

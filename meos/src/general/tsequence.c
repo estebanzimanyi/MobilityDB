@@ -61,8 +61,8 @@
 #include "general/temporal_boxops.h"
 #include "general/type_util.h"
 #include "general/type_parser.h"
-#include "geo/tgeo_parser.h"
 #include "geo/tgeo_spatialfuncs.h"
+#include "geo/tspatial_parser.h"
 #if CBUFFER
   #include "cbuffer/cbuffer.h"
   #include "cbuffer/tcbuffer_spatialfuncs.h"
@@ -965,7 +965,13 @@ tsequence_make(const TInstant **instants, int count, bool lower_inc,
   bool upper_inc, interpType interp, bool normalize)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) instants) || ! ensure_positive(count))
+#if MEOS
+  if (! ensure_not_null((void *) instants))
+    return NULL;
+#else
+  assert(instants);
+#endif /* MEOS */
+  if (! ensure_positive(count))
     return NULL;
   return tsequence_make_exp(instants, count, count, lower_inc, upper_inc,
     interp, normalize);

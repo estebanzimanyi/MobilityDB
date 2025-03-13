@@ -264,8 +264,8 @@ timestamptz_get_bin_int(TimestampTz t, int64 size, TimestampTz origin)
     /*
      * We need to ensure that the timestamp is in span _after_ the origin is
      * applied: when the origin is positive we need to make sure the resultant
-     * time is at least the minimum time value value (DT_NOBEGIN) and when
-     * negative that it is less than the maximum time value (DT_NOEND)
+     * time is at least the minimum time value (DT_NOBEGIN) and when negative,
+     * that it is less than the maximum time value (DT_NOEND)
      */
     if ((origin > 0 && t < DT_NOBEGIN + origin) ||
         (origin < 0 && t > DT_NOEND + origin))

@@ -59,7 +59,7 @@
 #include "geo/tgeo.h"
 #include "geo/tgeo_out.h"
 #include "geo/tgeo_spatialfuncs.h"
-#include "geo/tgeo_parser.h"
+#include "geo/tspatial_parser.h"
 #include "cbuffer/tcbuffer_parser.h"
 
 /*****************************************************************************
@@ -87,6 +87,73 @@ cbuffer_collinear(Cbuffer *cbuf1, Cbuffer *cbuf2, Cbuffer *cbuf3, double ratio)
 /*****************************************************************************
  * Input/output functions
  *****************************************************************************/
+
+/**
+ * @brief Parse a spatial value from its string representation
+ */
+Cbuffer *
+cbuffer_parse(const char **str, bool end)
+{
+  const char *type_str = meostype_name(T_CBUFFER);
+  p_whitespace(str);
+
+  /* Determine whether there is an SRID */
+  int32_t srid;
+  srid_parse(str, &srid);
+
+  if (pg_strncasecmp(*str, "CBUFFER", 7) != 0)
+  {
+    meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
+      "Could not parse %s value: Missing prefix 'Cbuffer'",
+      meostype_name(T_CBUFFER));
+    return NULL;
+  }
+
+  *str += 7;
+  p_whitespace(str);
+
+  /* Parse opening parenthesis */
+  if (! ensure_oparen(str, type_str))
+    return NULL;
+
+  /* Parse geo */
+  p_whitespace(str);
+  GSERIALIZED *gs;
+  /* The following call consumes also the separator passed as parameter */
+  if (! geo_parse(str, T_GEOMETRY, ',', &srid, &gs))
+    return NULL;
+  if (! ensure_point_type(gs) || ! ensure_not_empty(gs) ||
+      ! ensure_has_not_M_geo(gs))
+  {
+    pfree(gs);
+    return NULL;
+  }
+
+  p_comma(str);
+ 
+  /* Parse radius */
+  p_whitespace(str);
+  Datum d;
+  if (! basetype_parse(str, T_FLOAT8, ')', &d))
+    return NULL;
+  double radius = DatumGetFloat8(d);
+  if (radius < 0)
+  {
+    meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
+      "The radius must be a real number greater than or equal to 0");
+    return NULL;
+  }
+
+  /* Parse closing parenthesis */
+  p_whitespace(str);
+  if (! ensure_cparen(str, type_str) ||
+        (end && ! ensure_end_input(str, type_str)))
+    return NULL;
+
+  Cbuffer *result = cbuffer_make(gs, radius);
+  pfree(gs);
+  return result;
+}
 
 /**
  * @ingroup meos_base_inout
@@ -236,7 +303,7 @@ cbuffer_radius(const Cbuffer *cbuf)
   /* Ensure validity of the arguments */
 #if MEOS
   if (! ensure_not_null((void *) cbuf))
-    return NULL;
+    return DBL_MAX;
 #else
   assert(cbuf);
 #endif /* MEOS */
@@ -380,7 +447,9 @@ cbuffer_set_srid(Cbuffer *cbuf, int32_t srid)
   /* Ensure validity of the arguments */
 #if MEOS
   if (! ensure_not_null((void *) cbuf))
+  {
     ;
+  }
 #else
   assert(cbuf);
 #endif /* MEOS */

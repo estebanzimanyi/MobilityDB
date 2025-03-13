@@ -1026,7 +1026,7 @@ geom_nsegment(const GSERIALIZED *gs)
 #else
   assert(gs);
 #endif /* MEOS */
-  if (ensure_not_empty(gs))
+  if (! ensure_not_empty(gs))
     return NULL;
   int geomtype = gserialized_get_type(gs);
   if (geomtype != POINTTYPE && geomtype != LINETYPE)
