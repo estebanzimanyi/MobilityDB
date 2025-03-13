@@ -58,10 +58,15 @@
 
 /**
  * @brief Return the pose value interpolated from the two poses and a ratio
+ * @param[in] pose1,pose2 Poses
+ * @param[in] ratio Value in [0,1] representing the duration of the
+ * timestamps associated to `p1` and `p2` divided by the duration
+ * of the timestamps associated to `p1` and `p3`
  */
 Pose *
 pose_interpolate(const Pose *pose1, const Pose *pose2, double ratio)
 {
+  assert(pose1); assert(pose2);
   Pose *result;
   if (!MEOS_FLAGS_GET_Z(pose1->flags))
   {
@@ -135,7 +140,7 @@ pose_interpolate(const Pose *pose1, const Pose *pose2, double ratio)
 
 /**
  * @brief Return true if the three values are collinear
- * @param[in] p1,p2,p3 Input values
+ * @param[in] p1,p2,p3 Poses
  * @param[in] ratio Value in [0,1] representing the duration of the
  * timestamps associated to `p1` and `p2` divided by the duration
  * of the timestamps associated to `p1` and `p3`
@@ -143,6 +148,7 @@ pose_interpolate(const Pose *pose1, const Pose *pose2, double ratio)
 bool
 pose_collinear(const Pose *p1, const Pose *p2, const Pose *p3, double ratio)
 {
+  assert(p1); assert(p2); assert(p3); 
   Pose *p2_interpolated = pose_interpolate(p1, p3, ratio);
   bool result = pose_same(p2, p2_interpolated);
   pfree(p2_interpolated);
@@ -294,8 +300,12 @@ Pose *
 pose_copy(const Pose *pose)
 {
   /* Ensure validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) pose))
     return NULL;
+#else
+  assert(pose);
+#endif /* MEOS */
   Pose *result = palloc(VARSIZE(pose));
   memcpy(result, pose, VARSIZE(pose));
   return result;
@@ -313,6 +323,14 @@ pose_copy(const Pose *pose)
 int32
 pose_srid(const Pose *pose)
 {
+  /* Ensure validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) pose))
+    return NULL;
+#else
+  assert(pose);
+#endif /* MEOS */
+
   int32 srid = 0;
   srid = srid | (pose->srid[0] << 16);
   srid = srid | (pose->srid[1] << 8);
@@ -337,6 +355,14 @@ pose_srid(const Pose *pose)
 void
 pose_set_srid(Pose *pose, int32 srid)
 {
+  /* Ensure validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) pose))
+    return NULL;
+#else
+  assert(pose);
+#endif /* MEOS */
+
   srid = clamp_srid(srid);
 
   /* 0 is our internal unknown value.
@@ -361,6 +387,14 @@ pose_set_srid(Pose *pose, int32 srid)
 GSERIALIZED *
 pose_point(const Pose *pose)
 {
+  /* Ensure validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) pose))
+    return NULL;
+#else
+  assert(pose);
+#endif /* MEOS */
+
   LWPOINT *point;
   if (MEOS_FLAGS_GET_Z(pose->flags))
     point = lwpoint_make3dz(pose_srid(pose),
@@ -409,6 +443,14 @@ pose_distance(Datum pose1, Datum pose2)
 bool
 pose_eq(const Pose *pose1, const Pose *pose2)
 {
+  /* Ensure validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) pose1) || ! ensure_not_null((void *) pose2))
+    return NULL;
+#else
+  assert(pose1); assert(pose2);
+#endif /* MEOS */
+
   if (MEOS_FLAGS_GET_Z(pose1->flags) != MEOS_FLAGS_GET_Z(pose2->flags) ||
       pose_srid(pose1) != pose_srid(pose2))
     return false;
@@ -446,6 +488,14 @@ pose_ne(const Pose *pose1, const Pose *pose2)
 bool
 pose_same(const Pose *pose1, const Pose *pose2)
 {
+  /* Ensure validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) pose1) || ! ensure_not_null((void *) pose2))
+    return NULL;
+#else
+  assert(pose1); assert(pose2);
+#endif /* MEOS */
+
   if (MEOS_FLAGS_GET_Z(pose1->flags) != MEOS_FLAGS_GET_Z(pose2->flags) ||
       pose_srid(pose1) != pose_srid(pose2))
     return false;
@@ -484,9 +534,16 @@ pose_nsame(const Pose *pose1, const Pose *pose2)
 int
 pose_cmp(const Pose *pose1, const Pose *pose2)
 {
+  /* Ensure validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) pose1) || ! ensure_not_null((void *) pose2))
+    return NULL;
+#else
+  assert(pose1); assert(pose2);
+#endif /* MEOS */
+
   /* Compare first the dimension, then the SRID,
      then the position, then the orientation */
-
   bool hasz1 = MEOS_FLAGS_GET_Z(pose1->flags),
        hasz2 = MEOS_FLAGS_GET_Z(pose2->flags);
   if (hasz1 != hasz2)
@@ -575,6 +632,14 @@ void hashlittle2(const void *key, size_t length, uint32_t *pc, uint32_t *pb);
 uint32
 pose_hash(const Pose *pose)
 {
+  /* Ensure validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) pose))
+    return NULL;
+#else
+  assert(pose);
+#endif /* MEOS */
+
   /* Use same code as gserialized2_hash */
   int32_t hval;
   int32_t pb = 0, pc = 0;

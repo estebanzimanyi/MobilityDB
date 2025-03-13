@@ -117,10 +117,9 @@ Datum
 Cbuffer_send(PG_FUNCTION_ARGS)
 {
   Cbuffer *cbuf = PG_GETARG_CBUFFER_P(0);
-  /* A circular buffer always outputs the SRID */
-  uint8_t variant = WKB_EXTENDED;
   size_t wkb_size = VARSIZE_ANY_EXHDR(cbuf);
-  uint8_t *wkb = cbuffer_as_wkb(cbuf, variant, &wkb_size);
+  /* A circular buffer always outputs the SRID */
+  uint8_t *wkb = cbuffer_as_wkb(cbuf, WKB_EXTENDED, &wkb_size);
   bytea *result = bstring2bytea(wkb, wkb_size);
   pfree(wkb);
   PG_RETURN_BYTEA_P(result);

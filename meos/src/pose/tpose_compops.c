@@ -64,12 +64,14 @@ eacomp_tpose_pose(const Temporal *temp, const Pose *pose,
 {
   /* Ensure validity of the arguments */
 #if MEOS
-  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) pose))
+  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) pose) ||
+      ! ensure_not_null((void *) func) ||
+      ! ensure_temporal_isof_type(temp, T_TPOSE))
     return -1;
 #else
-  assert(temp); assert(pose);
+  assert(temp); assert(pose); assert(func); assert(temp->temptype == T_TPOSE);
 #endif /* MEOS */
-  if (! ensure_valid_tpose_pose(temp, pose))
+  if (! ensure_same_srid(tspatial_srid(temp), pose_srid(pose)))
     return -1;
   return eacomp_temporal_base(temp, PointerGetDatum(pose), func, ever);
 }
@@ -87,13 +89,16 @@ eacomp_tpose_tpose(const Temporal *temp1, const Temporal *temp2,
 {
   /* Ensure validity of the arguments */
 #if MEOS
-  if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2))
+  if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2) || 
+      ! ensure_not_null((void *) func) ||
+      ! ensure_temporal_isof_type(temp1, T_TPOSE) ||
+      ! ensure_temporal_isof_type(temp2, T_TPOSE))
     return -1;
 #else
-  assert(temp1); assert(temp2);
+  assert(temp1); assert(temp2); assert(func); 
+  assert(temp1->temptype == T_TPOSE); assert(temp2->temptype == T_TPOSE);
 #endif /* MEOS */
-  if (! ensure_same_temporal_type(temp1, temp2) ||
-      ! ensure_same_srid(tspatial_srid(temp1), tspatial_srid(temp2)))
+  if (! ensure_same_srid(tspatial_srid(temp1), tspatial_srid(temp2)))
     return -1;
   return eacomp_temporal_temporal(temp1, temp2, func, ever);
 }
@@ -275,12 +280,14 @@ tcomp_pose_tpose(const Pose *pose, const Temporal *temp,
 {
   /* Ensure validity of the arguments */
 #if MEOS
-  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) pose))
+  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) pose) || 
+      ! ensure_not_null((void *) func) ||
+      ! ensure_temporal_isof_type(temp, T_TPOSE))
     return NULL;
 #else
-  assert(temp); assert(pose);
+  assert(temp); assert(pose); assert(func); assert(temp->temptype == T_TPOSE);
 #endif /* MEOS */
-  if (! ensure_valid_tpose_pose(temp, pose))
+  if (! ensure_same_srid(tspatial_srid(temp), pose_srid(pose)))
     return NULL;
   return tcomp_base_temporal(PointerGetDatum(pose), temp, func);
 }
@@ -298,12 +305,14 @@ tcomp_tpose_pose(const Temporal *temp, const Pose *pose,
 {
   /* Ensure validity of the arguments */
 #if MEOS
-  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) pose))
+  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) pose) || 
+      ! ensure_not_null((void *) func) ||
+      ! ensure_temporal_isof_type(temp, T_TPOSE))
     return NULL;
 #else
-  assert(temp); assert(pose);
+  assert(temp); assert(pose); assert(func); assert(temp->temptype == T_TPOSE);
 #endif /* MEOS */
-  if (! ensure_valid_tpose_pose(temp, pose))
+  if (! ensure_same_srid(tspatial_srid(temp), pose_srid(pose)))
     return NULL;
   return tcomp_temporal_base(temp, PointerGetDatum(pose), func);
 }

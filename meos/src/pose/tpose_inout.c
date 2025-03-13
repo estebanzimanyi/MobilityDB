@@ -29,7 +29,7 @@
 
 /**
  * @file
- * @brief Output of temporal poses in WKT, EWKT, and MF-JSON format
+ * @brief Output of temporal poses in WKT and EWKT format
  */
 
 // #include "pose/tpose_out.h"
@@ -46,6 +46,7 @@
 #include "geo/tgeo_spatialfuncs.h"
 #include "pose/pose.h"
 #include "pose/tpose_parser.h"
+#include "pose/tpose_spatialfuncs.h"
 
 /*****************************************************************************
  * Input in WKT and EWKT format
@@ -73,7 +74,7 @@ tpose_in(const char *str)
 
 /**
  * @brief Output a pose in the Well-Known Text (WKT) representation (internal
- * function.
+ * function)
  */
 char *
 pose_wkt_out_int(Datum value, bool extended, int maxdd)
@@ -120,8 +121,7 @@ pose_wkt_out_int(Datum value, bool extended, int maxdd)
 }
 
 /**
- * @brief Output a pose in the Well-Known Text (WKT)
- * representation
+ * @brief Output a pose in the Well-Known Text (WKT) representation
  * @note The parameter @p type is not needed for poses
  */
 char *
@@ -131,8 +131,8 @@ pose_wkt_out(Datum value, meosType type __attribute__((unused)), int maxdd)
 }
 
 /**
- * @brief Output a pose in the Extended Well-Known Text (EWKT)
- * representation, that is, in WKT representation prefixed with the SRID
+ * @brief Output a pose in the Extended Well-Known Text (EWKT) representation,
+ * that is, in WKT representation prefixed with the SRID
  * @note The parameter @p type is not needed for temporal points
  */
 char *
@@ -154,10 +154,16 @@ char *
 pose_as_text(const Pose *pose, int maxdd)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) pose) || ! ensure_not_negative(maxdd))
+#if MEOS
+  if (! ensure_not_null((void *) pose))
     return NULL;
-
-  return pose_wkt_out(PointerGetDatum(pose), 0, maxdd);
+#else
+  assert(pose);
+#endif /* MEOS */
+  /* Ensure validity of the arguments */
+  if (! ensure_not_negative(maxdd))
+    return NULL;
+  return pose_wkt_out_int(PointerGetDatum(pose), false, maxdd);
 }
 
 /**
@@ -172,7 +178,14 @@ char *
 pose_as_ewkt(const Pose *pose, int maxdd)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) pose) || ! ensure_not_negative(maxdd))
+#if MEOS
+  if (! ensure_not_null((void *) pose))
+    return NULL;
+#else
+  assert(pose);
+#endif /* MEOS */
+  /* Ensure validity of the arguments */
+  if (! ensure_not_negative(maxdd))
     return NULL;
 
   int32_t srid = pose_srid(pose);
@@ -203,7 +216,7 @@ char *
 tpose_out(const Temporal *temp, int maxdd)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || 
+  if (! ensure_not_null((void *) temp) || ! ensure_not_negative(maxdd) ||
       ! ensure_temporal_isof_type(temp, T_TPOSE))
     return NULL;
   return temporal_out(temp, maxdd);
@@ -221,9 +234,14 @@ char *
 tpose_as_text(const Temporal *temp, int maxdd)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || 
-      ! ensure_temporal_isof_type(temp, T_TPOSE) ||
-      ! ensure_not_negative(maxdd))
+#if MEOS
+  if (! ensure_not_null((void *) temp) ||
+      ! ensure_temporal_isof_type(temp, T_TPOSE))
+    return NULL;
+#else
+  assert(temp); assert(temp->temptype == T_TPOSE);
+#endif /* MEOS */
+  if (! ensure_not_negative(maxdd))
     return NULL;
 
   assert(temptype_subtype(temp->subtype));
@@ -250,9 +268,14 @@ char *
 tpose_as_ewkt(const Temporal *temp, int maxdd)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || 
-      ! ensure_temporal_isof_type(temp, T_TPOSE) ||
-      ! ensure_not_negative(maxdd))
+#if MEOS
+  if (! ensure_not_null((void *) temp) ||
+      ! ensure_temporal_isof_type(temp, T_TPOSE))
+    return NULL;
+#else
+  assert(temp); assert(temp->temptype == T_TPOSE);
+#endif /* MEOS */
+  if (! ensure_not_negative(maxdd))
     return NULL;
 
   int32_t srid = tspatial_srid(temp);
@@ -284,21 +307,56 @@ tpose_as_ewkt(const Temporal *temp, int maxdd)
  * @csqlfn #Posearr_as_text()
  */
 char **
-posearr_as_text(const Datum *posearr, int count, int maxdd, bool extended)
+posearr_as_text_int(const Datum *posearr, int count, int maxdd, bool extended)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) posearr) || ! ensure_positive(count) ||
-      ! ensure_not_negative(maxdd))
+  if (! ensure_positive(count) || ! ensure_not_negative(maxdd))
     return NULL;
 
   char **result = palloc(sizeof(char *) * count);
   for (int i = 0; i < count; i++)
-    /* The pose_wkt_out and pose_ewkt_out functions do not use the second
-     * argument */
-    result[i] = extended ? pose_ewkt_out(posearr[i], 0, maxdd) : 
-      pose_wkt_out(posearr[i], 0, maxdd);
+    result[i] = pose_wkt_out_int(posearr[i], extended, maxdd);
   return result;
 }
+
+#if MEOS
+/**
+ * @ingroup meos_base_inout
+ * @brief Return the Well-Known Text (WKT) representation of a pose array
+ * @param[in] posearr Array of poses
+ * @param[in] count Number of elements in the input array
+ * @param[in] maxdd Maximum number of decimal digits to output
+ * @csqlfn #Posearr_as_text()
+ */
+char **
+posearr_as_text(const Datum *posearr, int count, int maxdd)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) posearr))
+    return NULL;
+  return posearr_as_text_int(posearr, count, maxdd, false);
+}
+
+/**
+ * @ingroup meos_base_inout
+ * @brief Return the Extended Well-Known Text (EWKT) representation of a pose
+ * array
+ * @param[in] posearr Array of poses
+ * @param[in] count Number of elements in the input array
+ * @param[in] maxdd Maximum number of decimal digits to output
+ * @csqlfn #Posearr_as_text()
+ */
+char **
+posearr_as_ewkt(const Datum *posearr, int count, int maxdd)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) posearr))
+    return NULL;
+  return posearr_as_text_int(posearr, count, maxdd, true);
+}
+#endif /* MEOS */
+
+/*****************************************************************************/
 
 /**
  * @ingroup meos_internal_temporal_inout
@@ -311,7 +369,7 @@ posearr_as_text(const Datum *posearr, int count, int maxdd, bool extended)
  * @csqlfn #Tposearr_as_text(), #Tposearr_as_ewkt()
  */
 char **
-tposearr_as_text(const Temporal **temparr, int count, int maxdd,
+tposearr_as_text_int(const Temporal **temparr, int count, int maxdd,
   bool extended)
 {
   /* Ensure validity of the arguments */
@@ -325,5 +383,43 @@ tposearr_as_text(const Temporal **temparr, int count, int maxdd,
       tpose_as_text(temparr[i], maxdd);
   return result;
 }
+
+#if MEOS
+/**
+ * @ingroup meos_temporal_inout
+ * @brief Return the Well-Known Text (WKT) representation of an array of
+ * temporal poses
+ * @param[in] temparr Array of temporal poses
+ * @param[in] count Number of elements in the input array
+ * @param[in] maxdd Maximum number of decimal digits to output
+ * @csqlfn #Tposearr_as_text()
+ */
+char **
+tposearr_as_text(const Temporal **temparr, int count, int maxdd)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) temparr))
+    return NULL;
+  return tposearr_as_text_int(temparr, count, maxdd, false);
+}
+
+/**
+ * @ingroup meos_temporal_inout
+ * @brief Return the Extended Well-Known Text (EWKT) representation of an array
+ * of temporal poses
+ * @param[in] temparr Array of temporal poses
+ * @param[in] count Number of elements in the input array
+ * @param[in] maxdd Maximum number of decimal digits to output
+ * @csqlfn #Tposearr_as_ewkt()
+ */
+char **
+tposearr_as_ewkt(const Temporal **temparr, int count, int maxdd)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) temparr))
+    return NULL;
+  return tposearr_as_text_int(temparr, count, maxdd, true);
+}
+#endif /* MEOS */
 
 /*****************************************************************************/

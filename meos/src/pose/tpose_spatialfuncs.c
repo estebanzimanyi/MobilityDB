@@ -56,7 +56,7 @@ bool
 ensure_valid_tpose_pose(const Temporal *temp, const Pose *pose)
 {
   if (ensure_not_null((void *) temp) && ensure_not_null((void *) pose) &&
-      ensure_temporal_isof_type(temp, T_TCBUFFER) &&
+      ensure_temporal_isof_type(temp, T_TPOSE) &&
       ensure_same_srid(tspatial_srid(temp), pose_srid(pose)))
     return true;
   return false;
@@ -69,8 +69,8 @@ bool
 ensure_valid_tpose_tpose(const Temporal *temp1, const Temporal *temp2)
 {
   if (ensure_not_null((void *) temp1) && ensure_not_null((void *) temp2) &&
-      ensure_temporal_isof_type(temp1, T_TCBUFFER) &&
-      ensure_temporal_isof_type(temp2, T_TCBUFFER) &&
+      ensure_temporal_isof_type(temp1, T_TPOSE) &&
+      ensure_temporal_isof_type(temp2, T_TPOSE) &&
       ensure_same_srid(tspatial_srid(temp1), tspatial_srid(temp2)))
     return true;
   return false;
@@ -98,7 +98,7 @@ bool
 ensure_valid_tpose_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_temporal_isof_type(temp, T_TCBUFFER) ||
+      ! ensure_temporal_isof_type(temp, T_TPOSE) ||
       ! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)))
     return false;
   return true;
@@ -114,12 +114,13 @@ ensure_valid_tpose_geo(const Temporal *temp, const GSERIALIZED *gs)
  * a base value at the timestamp
  * @param[in] inst1,inst2 Temporal instants defining the segment
  * @param[in] value Base value
- * @param[out] t Timestamp
+ * @param[out] t Timestamp, may be @p NULL
  */
 bool
 tposesegm_intersection_value(const TInstant *inst1, const TInstant *inst2,
   Datum value, TimestampTz *t)
 {
+  assert(inst1); assert(inst2);
   /* We are sure that the trajectory is a line */
   Datum start = tinstant_value(inst1);
   Datum end = tinstant_value(inst2);
@@ -168,8 +169,7 @@ tpose_restrict_geom(const Temporal *temp, const GSERIALIZED *gs,
   const Span *zspan, bool atfunc)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)) ||
+  if (! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)) ||
       ! ensure_has_not_Z_geo(gs))
     return NULL;
 
@@ -207,7 +207,9 @@ tpose_at_geom(const Temporal *temp, const GSERIALIZED *gs,
   const Span *zspan)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tgeo_geo(temp, gs))
+  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
+      ! ensure_not_null((void *) zspan) ||
+      ! ensure_temporal_isof_type(temp, T_TPOSE))
     return NULL;
   return tpose_restrict_geom(temp, gs, zspan, REST_AT);
 }
@@ -225,7 +227,9 @@ tpose_minus_geom(const Temporal *temp, const GSERIALIZED *gs,
   const Span *zspan)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tgeo_geo(temp, gs))
+  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
+      ! ensure_not_null((void *) zspan) ||
+      ! ensure_temporal_isof_type(temp, T_TPOSE))
     return NULL;
   return tpose_restrict_geom(temp, gs, zspan, REST_MINUS);
 }
@@ -246,6 +250,7 @@ Temporal *
 tpose_restrict_stbox(const Temporal *temp, const STBox *box, bool border_inc,
   bool atfunc)
 {
+  assert(temp); assert(box);
   Temporal *tgeom = tpose_tgeompoint(temp);
   Temporal *tgeomres = tgeo_restrict_stbox(tgeom, box, border_inc, atfunc);
   Temporal *result = NULL;
@@ -274,6 +279,10 @@ tpose_restrict_stbox(const Temporal *temp, const STBox *box, bool border_inc,
 Temporal *
 tpose_at_stbox(const Temporal *temp, const STBox *box, bool border_inc)
 {
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) box) ||
+      ! ensure_temporal_isof_type(temp, T_TPOSE))
+    return NULL;
   return tpose_restrict_stbox(temp, box, border_inc, REST_AT);
 }
 
@@ -288,6 +297,10 @@ tpose_at_stbox(const Temporal *temp, const STBox *box, bool border_inc)
 Temporal *
 tpose_minus_stbox(const Temporal *temp, const STBox *box, bool border_inc)
 {
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) box) ||
+      ! ensure_temporal_isof_type(temp, T_TPOSE))
+    return NULL;
   return tpose_restrict_stbox(temp, box, border_inc, REST_MINUS);
 }
 #endif /* MEOS */

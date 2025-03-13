@@ -49,6 +49,7 @@ extern bool ensure_valid_tpose_geo(const Temporal *temp, const GSERIALIZED *gs);
 
 /* Input/output functions */
 
+extern char *pose_wkt_out_int(Datum value, bool extended, int maxdd);
 extern char *pose_wkt_out(Datum value, meosType type, int maxdd);
 extern char *pose_ewkt_out(Datum value, meosType type, int maxdd);
 extern char **posearr_as_text(const Datum *posearr, int count, int maxdd, 

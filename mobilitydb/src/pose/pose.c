@@ -107,11 +107,10 @@ PG_FUNCTION_INFO_V1(Pose_send);
 Datum
 Pose_send(PG_FUNCTION_ARGS)
 {
-  Pose *cbuf = PG_GETARG_POSE_P(0);
+  Pose *pose = PG_GETARG_POSE_P(0);
+  size_t wkb_size = VARSIZE_ANY_EXHDR(pose);
   /* A pose always outputs the SRID */
-  uint8_t variant = WKB_EXTENDED;
-  size_t wkb_size = VARSIZE_ANY_EXHDR(cbuf);
-  uint8_t *wkb = pose_as_wkb(cbuf, variant, &wkb_size);
+  uint8_t *wkb = pose_as_wkb(pose, WKB_EXTENDED, &wkb_size);
   bytea *result = bstring2bytea(wkb, wkb_size);
   pfree(wkb);
   PG_RETURN_BYTEA_P(result);
@@ -160,7 +159,7 @@ PGDLLEXPORT Datum Pose_to_geom(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_to_geom);
 /**
  * @ingroup mobilitydb_base_conversion
- * @brief Transforms the pose into a geometry point
+ * @brief Transforms a pose into a geometry point
  * @sqlfn geometry()
  */
 Datum

@@ -59,6 +59,15 @@
 Temporal *
 tpose_tgeompoint(const Temporal *temp)
 {
+  /* Ensure validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) temp) || 
+      ! ensure_temporal_isof_type(temp, T_TPOSE))
+    return NULL;
+#else
+  assert(temp); assert(temp->temptype == T_TPOSE);
+#endif /* MEOS */
+
   /* We only need to fill these parameters for tfunc_temporal */
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
