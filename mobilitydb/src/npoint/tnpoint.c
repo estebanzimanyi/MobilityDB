@@ -141,27 +141,9 @@ Tnpoint_round(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   Datum size = PG_GETARG_DATUM(1);
-  Temporal *result = tnpoint_round(temp, size);
+  Temporal *result = temporal_round(temp, size, &datum_npoint_round);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_TEMPORAL_P(result);
-}
-
-PGDLLEXPORT Datum Npointset_round(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Npointset_round);
-/**
- * @ingroup mobilitydb_temporal_transf
- * @brief Return a network point set with the precision of the positions
- * set to a number of decimal places
- * @sqlfn round()
- */
-Datum
-Npointset_round(PG_FUNCTION_ARGS)
-{
-  Set *s = PG_GETARG_SET_P(0);
-  Datum size = PG_GETARG_DATUM(1);
-  Set *result = npointset_round(s, size);
-  PG_FREE_IF_COPY(s, 0);
-  PG_RETURN_SET_P(result);
 }
 
 /*****************************************************************************

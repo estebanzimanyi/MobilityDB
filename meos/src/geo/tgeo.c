@@ -40,6 +40,7 @@
 #include <meos.h>
 #include <meos_internal.h>
 #include "general/doublen.h"
+#include "general/lifting.h"
 #include "general/set.h"
 #include "general/skiplist.h"
 #include "general/span.h"
@@ -452,14 +453,16 @@ tgeoseqset_from_base_tstzspanset(const GSERIALIZED *gs, const SpanSet *ss,
 /*****************************************************************************/
 
 /**
- * @ingroup meos_temporal_constructor
- * @brief Return a temporal point from a point and the time frame of another
- * temporal value
+ * @ingroup meos_internal_temporal_constructor
+ * @brief Return a temporal geometry/point from a geometry and the time frame
+ * of another temporal value
  * @param[in] gs Value
  * @param[in] temp Temporal value
+ * @param[in] ispoint True for temporal points, false for temporal geos
  */
 Temporal *
-tpoint_from_base_temp(const GSERIALIZED *gs, const Temporal *temp)
+tgeo_from_base_temp_int(const GSERIALIZED *gs, const Temporal *temp, 
+  bool ispoint)
 {
   /* Ensure validity of the arguments */
 #if MEOS
@@ -471,9 +474,25 @@ tpoint_from_base_temp(const GSERIALIZED *gs, const Temporal *temp)
 #endif /* MEOS */
   if (! ensure_not_empty(gs))
     return NULL;
-  meosType geotype = FLAGS_GET_GEODETIC(gs->gflags) ? T_TGEOGPOINT :
-    T_TGEOMPOINT;
-  return temporal_from_base_temp(PointerGetDatum(gs), geotype, temp);
+  meosType tgeotype;
+  if (ispoint)
+    tgeotype = FLAGS_GET_GEODETIC(gs->gflags) ? T_TGEOGPOINT : T_TGEOMPOINT;
+  else
+    tgeotype = FLAGS_GET_GEODETIC(gs->gflags) ? T_TGEOGRAPHY : T_TGEOMETRY;
+  return temporal_from_base_temp(PointerGetDatum(gs), tgeotype, temp);
+}
+
+/**
+ * @ingroup meos_temporal_constructor
+ * @brief Return a temporal point from a point and the time frame of another
+ * temporal value
+ * @param[in] gs Value
+ * @param[in] temp Temporal value
+ */
+Temporal *
+tpoint_from_base_temp(const GSERIALIZED *gs, const Temporal *temp)
+{
+  return tgeo_from_base_temp_int(gs, temp, true);
 }
 
 /**
@@ -486,19 +505,7 @@ tpoint_from_base_temp(const GSERIALIZED *gs, const Temporal *temp)
 Temporal *
 tgeo_from_base_temp(const GSERIALIZED *gs, const Temporal *temp)
 {
-  /* Ensure validity of the arguments */
-#if MEOS
-  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_tgeo_type_all(temp->temptype))
-    return NULL;
-#else
-  assert(temp); assert(gs); assert(tgeo_type_all(temp->temptype));
-#endif /* MEOS */
-  if (! ensure_not_empty(gs))
-    return NULL;
-  meosType tgeotype = FLAGS_GET_GEODETIC(gs->gflags) ? 
-    T_TGEOGRAPHY : T_TGEOMETRY;
-  return temporal_from_base_temp(PointerGetDatum(gs), tgeotype, temp);
+  return tgeo_from_base_temp_int(gs, temp, false);
 }
 
 /*****************************************************************************
@@ -600,5 +607,28 @@ tgeo_values(const Temporal *temp, int *count)
   pfree(datumarr);
   return result;
 }
+
+/*****************************************************************************
+ * Transformation functions
+ *****************************************************************************/
+
+#if MEOS
+/**
+ * @ingroup meos_temporal_transf
+ * @brief Return a temporal geo with the precision of the coordinates set to a
+ * number of decimal places
+ * @param[in] temp Temporal value
+ * @param[in] maxdd Maximum number of decimal digits to output
+ */
+Temporal *
+tgeo_round(const Temporal *temp, int maxdd)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) temp) || ! ensure_not_negative(maxdd) ||
+      ! ensure_tgeo_type_all(temp->temptype))
+    return NULL;
+  return temporal_round(temp, maxdd, datum_geo_round);
+}
+#endif /* MEOS */
 
 /*****************************************************************************/

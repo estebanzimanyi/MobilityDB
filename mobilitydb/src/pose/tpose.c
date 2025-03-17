@@ -40,7 +40,9 @@
 #include <meos_internal.h>
 #include "general/pg_types.h"
 #include "general/set.h"
+#include "geo/tspatial.h"
 #include "geo/tspatial_parser.h"
+#include "pose/pose.h"
 #include "pose/tpose_parser.h"
 /* MobilityDB */
 #include "pg_general/meos_catalog.h"
@@ -120,7 +122,7 @@ Tpose_round(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   Datum size = PG_GETARG_DATUM(1);
-  Temporal *result = tpose_round(temp, size);
+  Temporal *result = temporal_round(temp, size, datum_pose_round);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_TEMPORAL_P(result);
 }

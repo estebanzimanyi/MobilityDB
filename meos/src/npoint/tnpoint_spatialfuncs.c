@@ -774,7 +774,7 @@ tnpoint_at_geom(const Temporal *temp, const GSERIALIZED *gs,
   const Span *zspan)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tgeo_geo(temp, gs))
+  if (! ensure_valid_tspatial_geo(temp, gs))
     return NULL;
   return tnpoint_restrict_geom(temp, gs, zspan, REST_AT);
 }
@@ -792,7 +792,7 @@ tnpoint_minus_geom(const Temporal *temp, const GSERIALIZED *gs,
   const Span *zspan)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tgeo_geo(temp, gs))
+  if (! ensure_valid_tspatial_geo(temp, gs))
     return NULL;
   return tnpoint_restrict_geom(temp, gs, zspan, REST_MINUS);
 }

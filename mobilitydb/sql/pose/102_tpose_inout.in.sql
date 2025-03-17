@@ -36,6 +36,31 @@
  * Input
  *****************************************************************************/
 
+CREATE FUNCTION tposeFromText(text)
+  RETURNS tpose
+  AS 'MODULE_PATHNAME', 'Tspatial_from_ewkt'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tposeFromEWKT(text)
+  RETURNS tpose
+  AS 'MODULE_PATHNAME', 'Tspatial_from_ewkt'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tposeFromBinary(bytea)
+  RETURNS tpose
+  AS 'MODULE_PATHNAME', 'Temporal_from_wkb'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tposeFromEWKB(bytea)
+  RETURNS tpose
+  AS 'MODULE_PATHNAME', 'Temporal_from_wkb'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tposeFromHexEWKB(text)
+  RETURNS tpose
+  AS 'MODULE_PATHNAME', 'Temporal_from_hexwkb'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 /*****************************************************************************
  * Output
  *****************************************************************************/
@@ -46,7 +71,7 @@ CREATE FUNCTION asText(tpose, maxdecimaldigits int4 DEFAULT 15)
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION asText(tpose[], maxdecimaldigits int4 DEFAULT 15)
   RETURNS text[]
-  AS 'MODULE_PATHNAME', 'Tspatialarr_as_text'
+  AS 'MODULE_PATHNAME', 'Spatialarr_as_text'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION asEWKT(tpose, maxdecimaldigits int4 DEFAULT 15)
@@ -55,7 +80,7 @@ CREATE FUNCTION asEWKT(tpose, maxdecimaldigits int4 DEFAULT 15)
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION asEWKT(tpose[], maxdecimaldigits int4 DEFAULT 15)
   RETURNS text[]
-  AS 'MODULE_PATHNAME', 'Tspatialarr_as_ewkt'
+  AS 'MODULE_PATHNAME', 'Spatialarr_as_ewkt'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION asBinary(tpose, endianenconding text DEFAULT '')
@@ -65,7 +90,7 @@ CREATE FUNCTION asBinary(tpose, endianenconding text DEFAULT '')
 
 CREATE FUNCTION asEWKB(tpose, endianenconding text DEFAULT '')
   RETURNS bytea
-  AS 'MODULE_PATHNAME', 'Temporal_as_ewkb'
+  AS 'MODULE_PATHNAME', 'Tspatial_as_ewkb'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION asHexEWKB(tpose, endianenconding text DEFAULT '')

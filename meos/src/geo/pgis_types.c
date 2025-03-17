@@ -719,17 +719,17 @@ geo_collect_garray(GSERIALIZED **gsarr, int nelems)
  * @brief Return a line from an array of geometries/geographies
  * @details Array elements that are not points are discarded.
  * @param[in] gsarr Array of geometries/geographies
- * @param[in] nelems Number of elements in the array
+ * @param[in] count Number of elements in the array
  * @note PostGIS function: @p LWGEOM_makeline_garray(PG_FUNCTION_ARGS)
  */
 GSERIALIZED *
-geo_makeline_garray(GSERIALIZED **gsarr, int nelems)
+geo_makeline_garray(GSERIALIZED **gsarr, int count)
 {
-  assert(nelems > 0);
-  LWGEOM **geoms = palloc(sizeof(LWGEOM *) * nelems);
+  assert(count > 0);
+  LWGEOM **geoms = palloc(sizeof(LWGEOM *) * count);
   int ngeoms = 0;
   int32_t srid = SRID_UNKNOWN;
-  for (int i = 0; i < nelems; i++)
+  for (int i = 0; i < count; i++)
   {
     if (gserialized_get_type(gsarr[i]) != POINTTYPE && 
         gserialized_get_type(gsarr[i]) != LINETYPE &&
@@ -1144,16 +1144,16 @@ geom_difference2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
  * GEOS-converted versions of them and return PGIS-converted version back.
  * Changing the combination order *might* speed up performance.
  * @param[in] gsarr Array of geometries
- * @param[in] nelems Number of elements in the array
+ * @param[in] count Number of elements in the array
  * @note PostGIS function: @p pgis_union_geometry_array(PG_FUNCTION_ARGS)
  */
 GSERIALIZED *
-geom_array_union(GSERIALIZED **gsarr, int nelems)
+geom_array_union(GSERIALIZED **gsarr, int count)
 {
-  assert(nelems > 0);
+  assert(count > 0);
 
   /* One geom geom? Return it */
-  if (nelems == 1)
+  if (count == 1)
     return gsarr[0];
 
   bool is3d = false, gotsrid = false;
@@ -1167,13 +1167,13 @@ geom_array_union(GSERIALIZED **gsarr, int nelems)
   initGEOS(lwnotice, lwgeom_geos_error);
 
   /* Collect the non-empty inputs and stuff them into a GEOS collection */
-  GEOSGeometry **geoms = palloc(sizeof(GEOSGeometry *) * nelems);
+  GEOSGeometry **geoms = palloc(sizeof(GEOSGeometry *) * count);
 
   /*
   ** We need to convert the array of GSERIALIZED into a GEOS collection.
   ** First make an array of GEOS geometries.
   */
-  for (int i = 0; i < nelems; i++)
+  for (int i = 0; i < count; i++)
   {
     /* Check for SRID mismatch in array elements */
     if (gotsrid)
@@ -2359,6 +2359,7 @@ geo_from_text(const char *wkt, int32_t srid)
  * a geometry/geography
  * @param[in] gs Geometry/geography
  * @param[in] precision Maximum number of decimal digits
+ * @param[in] extended True for the EWKT representation, false for the WKT one
  * @note This is a a stricter version of #geom_in, where we refuse to
  * accept (HEX)WKB or EWKT.
  * @note PostGIS function: @p LWGEOM_asText(PG_FUNCTION_ARGS)

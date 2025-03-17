@@ -66,9 +66,9 @@ struct Pose
 
 /* Input/output functions */
 
-extern char *pose_wkt_out_int(Datum value, bool extended, int maxdd);
-extern char *pose_wkt_out(Datum value, meosType type, int maxdd);
-extern char *pose_ewkt_out(Datum value, meosType type, int maxdd);
+extern char *pose_wkt_out(Datum value, bool extended, int maxdd);
+
+extern Pose *pose_parse(const char **str, bool end);
 
 extern Pose *pose_in(const char *str);
 extern char *pose_out(const Pose *pose, int maxdd);
@@ -83,8 +83,9 @@ extern Datum datum_pose_point(Datum pose);
 
 extern Datum datum_pose_round(Datum pose, Datum size);
 extern Pose *pose_round(const Pose *pose, int maxdd);
+extern Pose **posearr_round(const Pose **posearr, int count, int maxdd);
 extern Set *poseset_round(const Set *s, int maxdd);
-extern Temporal *tpose_round(const Temporal *temp, Datum size);
+extern Temporal *tpose_round(const Temporal *temp, int maxdd);
 
 /* Distance */
 

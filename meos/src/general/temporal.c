@@ -1157,6 +1157,67 @@ tnumber_tbox(const Temporal *temp)
  *****************************************************************************/
 
 /**
+ * @ingroup meos_internal_temporal_transf
+ * @brief Return a temporal value rounded to a given number of decimal places
+ * @param[in] temp Temporal value
+ * @param[in] maxdd Maximum number of decimal digits to output
+ * @param[in] func Function that is applied to the base values for rounding
+ */
+Temporal *
+temporal_round(const Temporal *temp, int maxdd, datum_func2 func)
+{
+  /* Ensure validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) temp))
+    return NULL;
+#else
+  assert(temp);
+#endif /* MEOS */
+
+  /* We only need to fill these parameters for tfunc_temporal */
+  LiftedFunctionInfo lfinfo;
+  memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
+  lfinfo.func = (varfunc) func;
+  lfinfo.numparam = 1;
+  lfinfo.param[0] = Int32GetDatum(maxdd);
+  lfinfo.argtype[0] = temp->temptype;
+  lfinfo.restype = temp->temptype;
+  lfinfo.tpfunc_base = NULL;
+  lfinfo.tpfunc = NULL;
+  return tfunc_temporal(temp, &lfinfo);
+}
+
+/**
+ * @ingroup meos_internal_temporal_transf
+ * @brief Return an array of temporal floats with the precision of the
+ * coordinates set to a number of decimal places
+ * @param[in] temparr Array of temporal values
+ * @param[in] count Number of values in the input array
+ * @param[in] maxdd Maximum number of decimal digits
+ * @param[in] func Function that is applied to the base values for rounding
+ */
+Temporal **
+temparr_round(const Temporal **temparr, int count, int maxdd, datum_func2 func)
+{
+  /* Ensure validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) temparr))
+    return NULL;
+#else
+  assert(temparr);
+#endif /* MEOS */
+  if (! ensure_positive(count) || ! ensure_not_negative(maxdd))
+    return NULL;
+
+  Temporal **result = palloc(sizeof(Temporal *) * count);
+  for (int i = 0; i < count; i++)
+    result[i] = temporal_round(temparr[i], maxdd, func);
+  return result;
+}
+
+/*****************************************************************************/
+
+/**
  * @ingroup meos_base_transf
  * @brief Return a float number rounded to a given number of decimal places
  */
@@ -1183,7 +1244,7 @@ float_round(double d, int maxdd)
  * @brief Return a float number rounded to a given number of decimal places
  */
 Datum
-datum_round_float(Datum value, Datum size)
+datum_float_round(Datum value, Datum size)
 {
   return Float8GetDatum(float_round(DatumGetFloat8(value),
     DatumGetInt32(size)));
@@ -1193,31 +1254,13 @@ datum_round_float(Datum value, Datum size)
  * @ingroup meos_temporal_transf
  * @brief Return a temporal float rounded a given number of decimal places
  * @param[in] temp Temporal value
+ * @param[in] maxdd Maximum number of decimal digits to output
  * @csqlfn #Tfloat_round()
  */
 Temporal *
 tfloat_round(const Temporal *temp, int maxdd)
 {
-  /* Ensure validity of the arguments */
-#if MEOS
-  if (! ensure_not_null((void *) temp) ||
-      ! ensure_temporal_isof_type(temp, T_TFLOAT))
-    return NULL;
-#else
-  assert(temp); assert(temp->temptype == T_TFLOAT);
-#endif /* MEOS */
-
-  /* We only need to fill these parameters for tfunc_temporal */
-  LiftedFunctionInfo lfinfo;
-  memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
-  lfinfo.func = (varfunc) &datum_round_float;
-  lfinfo.numparam = 1;
-  lfinfo.param[0] = Int32GetDatum(maxdd);
-  lfinfo.argtype[0] = T_TFLOAT;
-  lfinfo.restype = T_TFLOAT;
-  lfinfo.tpfunc_base = NULL;
-  lfinfo.tpfunc = NULL;
-  return tfunc_temporal(temp, &lfinfo);
+  return temporal_round(temp, maxdd, datum_float_round);
 }
 
 /**
@@ -1232,17 +1275,7 @@ tfloat_round(const Temporal *temp, int maxdd)
 Temporal **
 tfloatarr_round(const Temporal **temparr, int count, int maxdd)
 {
-  /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temparr) ||
-      /* Ensure that the FIRST element is a temporal float */
-      ! ensure_temporal_isof_type(temparr[0], T_TFLOAT) ||
-      ! ensure_positive(count) || ! ensure_not_negative(maxdd))
-    return NULL;
-
-  Temporal **result = palloc(sizeof(Temporal *) * count);
-  for (int i = 0; i < count; i++)
-    result[i] = tfloat_round(temparr[i], maxdd);
-  return result;
+  return temparr_round(temparr, count, maxdd, datum_float_round);
 }
 
 /*****************************************************************************/

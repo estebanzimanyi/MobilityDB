@@ -153,28 +153,6 @@ geo_to_set(const GSERIALIZED *gs)
 }
 
 /*****************************************************************************
- * Transformation functions
- *****************************************************************************/
-
-/**
- * @ingroup meos_setspan_transf
- * @brief Return a geo set with the precision of the coordinates set to a
- * number of decimal places
- * @param[in] s Set
- * @param[in] maxdd Maximum number of decimal digits
- * @csqlfn #Geoset_round()
- */
-Set *
-geoset_round(const Set *s, int maxdd)
-{
-  /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) s) || ! ensure_not_negative(maxdd) ||
-      ! ensure_geoset_type(s->settype))
-    return NULL;
-  return set_round(s, maxdd, &datum_round_geo);
-}
-
-/*****************************************************************************
  * Accessor functions
  *****************************************************************************/
 

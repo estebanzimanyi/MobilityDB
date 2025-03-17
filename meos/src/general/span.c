@@ -40,8 +40,9 @@
 #include <float.h>
 #include <limits.h>
 /* PostgreSQL */
-#include <utils/timestamp.h>
 #include <common/hashfn.h>
+#include <utils/float.h>
+#include <utils/timestamp.h>
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
@@ -803,6 +804,64 @@ tstzspan_duration(const Span *s)
 /*****************************************************************************
  * Transformation functions
  *****************************************************************************/
+
+/**
+ * @ingroup meos_internal_setspan_transf
+ * @brief Return in the last argument a float span with the precision set to a
+ * number of decimal places
+ * @param[in] s Span
+ * @param[in] maxdd Maximum number of decimal digits
+ * @param[out] result Result span
+ */
+void
+floatspan_round_set(const Span *s, int maxdd, Span *result)
+{
+  assert(s); assert(s->spantype == T_FLOATSPAN); assert(result);
+  /* Set precision of bounds */
+  double lower = float_round(DatumGetFloat8(s->lower), maxdd);
+  double upper = float_round(DatumGetFloat8(s->upper), maxdd);
+  /* Fix the bounds */
+  bool lower_inc, upper_inc;
+  if (float8_eq(lower, upper))
+  {
+    lower_inc = upper_inc = true;
+  }
+  else
+  {
+    lower_inc = s->lower_inc; upper_inc = s->upper_inc;
+  }
+  /* Set resulting span */
+  span_set(Float8GetDatum(lower), Float8GetDatum(upper), lower_inc, upper_inc,
+    s->basetype, s->spantype, result);
+  return;
+}
+
+/**
+ * @ingroup meos_setspan_transf
+ * @brief Return a float span with the precision of the bounds set to a
+ * number of decimal places
+ * @param[in] s Span
+ * @param[in] maxdd Maximum number of decimal digits
+ * @return On error return @p NULL
+ */
+Span *
+floatspan_round(const Span *s, int maxdd)
+{
+#if MEOS
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) s) || ! ensure_not_negative(maxdd) ||
+      ! ensure_span_isof_type(s, T_FLOATSPAN))
+    return NULL;
+#else
+  assert(s); assert(maxdd >=0); assert(s->spantype == T_FLOATSPAN);
+#endif /* MEOS */
+
+  Span *result = palloc(sizeof(Span));
+  floatspan_round_set(s, maxdd, result);
+  return result;
+}
+
+/*****************************************************************************/
 
 /**
  * @brief Round down a span to the nearest integer

@@ -117,13 +117,14 @@ extern bool circle_type(const GSERIALIZED *gs);
 extern bool ensure_circle_type(const GSERIALIZED *gs);
 extern bool ensure_not_empty(const GSERIALIZED *gs);
 extern bool ensure_valid_stbox_geo(const STBox *box, const GSERIALIZED *gs);
-extern bool ensure_valid_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs);
+extern bool ensure_valid_tspatial_geo(const Temporal *temp,
+  const GSERIALIZED *gs);
 extern bool ensure_valid_spatial_stbox_stbox(const STBox *box1,
   const STBox *box2);
 extern bool ensure_valid_tgeo_stbox(const Temporal *temp, const STBox *box);
-extern bool ensure_valid_tgeo_tgeo(const Temporal *temp1,
+extern bool ensure_valid_tspatial_tspatial(const Temporal *temp1,
   const Temporal *temp2);
-
+  
 /* Functions for extracting coordinates */
 
 extern Temporal *tpoint_get_coord(const Temporal *temp, int coord);

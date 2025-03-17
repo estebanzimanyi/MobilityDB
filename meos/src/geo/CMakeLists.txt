@@ -1,4 +1,5 @@
 set(GEO_SRCS
+  geo_round.c
   geoset.c
   pgis_types.c
   stbox.c

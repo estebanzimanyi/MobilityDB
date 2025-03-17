@@ -44,7 +44,9 @@
 #include <meos_internal.h>
 #include "general/set.h"
 #include "general/span.h"
+#include "general/temporal.h"
 #include "general/type_util.h"
+#include "geo/tspatial.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/stbox.h"
 #include "geo/tpoint_restrfuncs.h"
@@ -180,7 +182,7 @@ Geo_round(PG_FUNCTION_ARGS)
 {
   GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
   Datum size = PG_GETARG_DATUM(1);
-  Datum result = datum_round_geo(PointerGetDatum(gs), size);
+  Datum result = datum_geo_round(PointerGetDatum(gs), size);
   PG_FREE_IF_COPY(gs, 0);
   PG_RETURN_DATUM(result);
 }
@@ -198,7 +200,7 @@ Geoset_round(PG_FUNCTION_ARGS)
 {
   Set *s = PG_GETARG_SET_P(0);
   int maxdd = PG_GETARG_INT32(1);
-  Set *result = geoset_round(s, maxdd);
+  Set *result = set_round(s, maxdd, &datum_geo_round);
   PG_FREE_IF_COPY(s, 0);
   PG_RETURN_SET_P(result);
 }
@@ -216,7 +218,7 @@ Tgeo_round(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   Datum size = PG_GETARG_DATUM(1);
-  Temporal *result = tgeo_round(temp, size);
+  Temporal *result = temporal_round(temp, size, &datum_geo_round);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_TEMPORAL_P(result);
 }
@@ -243,7 +245,8 @@ Tgeoarr_round(PG_FUNCTION_ARGS)
   int maxdd = PG_GETARG_INT32(1);
 
   Temporal **temparr = temparr_extract(array, &count);
-  Temporal **resarr = tgeoarr_round((const Temporal **) temparr, count, maxdd);
+  Temporal **resarr = temparr_round((const Temporal **) temparr, count, maxdd,
+    &datum_geo_round);
   ArrayType *result = temparr_to_array(resarr, count, FREE_ALL);
   pfree(temparr);
   PG_FREE_IF_COPY(array, 0);

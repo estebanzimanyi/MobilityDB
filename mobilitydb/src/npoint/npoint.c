@@ -580,6 +580,24 @@ Nsegment_round(PG_FUNCTION_ARGS)
   PG_RETURN_NSEGMENT_P(nsegment_round(ns, size));
 }
 
+PGDLLEXPORT Datum Npointset_round(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Npointset_round);
+/**
+ * @ingroup mobilitydb_temporal_transf
+ * @brief Return a network point set with the precision of the positions
+ * set to a number of decimal places
+ * @sqlfn round()
+ */
+Datum
+Npointset_round(PG_FUNCTION_ARGS)
+{
+  Set *s = PG_GETARG_SET_P(0);
+  Datum size = PG_GETARG_DATUM(1);
+  Set *result = set_round(s, size, &datum_npoint_round);
+  PG_FREE_IF_COPY(s, 0);
+  PG_RETURN_SET_P(result);
+}
+
 /*****************************************************************************
  * Conversion functions between network and Euclidean space
  *****************************************************************************/

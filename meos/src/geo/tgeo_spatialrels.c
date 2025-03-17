@@ -56,8 +56,6 @@
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/tgeo_tempspatialrels.h"
 
-#define INVERT_RESULT(result) (result < 0 ? -1 : (result > 0) ? 0 : 1)
-
 /*****************************************************************************
  * Spatial relationship functions
  * disjoint and intersects are inverse to each other
@@ -226,12 +224,12 @@ get_dwithin_fn_geo(int16 flags1, uint8_t flags2)
  * @return On error return -1
  */
 static int
-spatialrel_tgeo_traj_geo(const Temporal *temp, const GSERIALIZED *gs,
+spatialrel_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs,
   Datum param, varfunc func, int numparam, bool invert)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs))
+      ! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs))
     return -1;
 
   assert(numparam == 2 || numparam == 3);
@@ -263,13 +261,13 @@ spatialrel_tgeo_traj_geo(const Temporal *temp, const GSERIALIZED *gs,
  * @param[in] func Spatial relationship
  * @param[in] ever True for the ever semantics, false for the always semantics
  */
-static int
-ea_spatialrel_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
+int
+ea_spatialrel_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2,
   datum_func2 func, bool ever)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2) ||
-      ! ensure_valid_tgeo_tgeo(temp1, temp2) ||
+      ! ensure_valid_tspatial_tspatial(temp1, temp2) ||
       ! ensure_same_dimensionality(temp1->flags, temp2->flags))
     return -1;
 
@@ -312,8 +310,9 @@ int
 econtains_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs) ||
-      ! ensure_has_not_Z_geo(gs) || ! ensure_has_not_Z(temp->temptype, temp->flags))
+  if (! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs) ||
+      ! ensure_has_not_Z_geo(gs) || 
+      ! ensure_has_not_Z(temp->temptype, temp->flags))
     return -1;
   GSERIALIZED *traj = tpoint_type(temp->temptype) ? 
     tpoint_trajectory(temp) : tgeo_traversed_area(temp);
@@ -337,8 +336,9 @@ int
 acontains_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs) ||
-      ! ensure_has_not_Z_geo(gs) || ! ensure_has_not_Z(temp->temptype, temp->flags))
+  if (! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs) ||
+      ! ensure_has_not_Z_geo(gs) || 
+      ! ensure_has_not_Z(temp->temptype, temp->flags))
     return -1;
   GSERIALIZED *traj = tpoint_type(temp->temptype) ? 
     tpoint_trajectory(temp) : tgeo_traversed_area(temp);
@@ -369,8 +369,8 @@ edisjoint_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
   if (! ensure_not_geodetic(temp->flags))
     return -1;
   datum_func2 func = &datum_geom_covers;
-  int result = spatialrel_tgeo_traj_geo(temp, gs, (Datum) NULL,
-    (varfunc) func, 2, INVERT);
+  int result = spatialrel_tgeo_geo(temp, gs, (Datum) NULL, (varfunc) func, 2,
+    INVERT);
   return INVERT_RESULT(result);
 }
 
@@ -407,7 +407,7 @@ ea_disjoint_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2, bool ever)
   else 
     func = MEOS_FLAGS_GET_Z(temp1->flags) && MEOS_FLAGS_GET_Z(temp2->flags) ?
       &datum_geom_disjoint3d : &datum_geom_disjoint2d;
-  return ea_spatialrel_tgeo_tgeo(temp1, temp2, func, ever);
+  return ea_spatialrel_tspatial_tspatial(temp1, temp2, func, ever);
 }
 
 #if MEOS
@@ -454,7 +454,7 @@ int
 eintersects_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   datum_func2 func = get_intersects_fn_geo(temp->flags, gs->gflags);
-  return spatialrel_tgeo_traj_geo(temp, gs, (Datum) NULL, (varfunc) func, 2,
+  return spatialrel_tgeo_geo(temp, gs, (Datum) NULL, (varfunc) func, 2,
     INVERT_NO);
 }
 
@@ -485,15 +485,11 @@ aintersects_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
  * @csqlfn #Eintersects_tgeo_tgeo(), #Aintersects_tgeo_tgeo()
  */
 int
-ea_intersects_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2, bool ever)
+ea_intersects_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
+  bool ever)
 {
-  datum_func2 func;
-  if (MEOS_FLAGS_GET_GEODETIC(temp1->flags))
-    func = &datum_geog_intersects;
-  else 
-    func = MEOS_FLAGS_GET_Z(temp1->flags) && MEOS_FLAGS_GET_Z(temp2->flags) ?
-      &datum_geom_intersects3d : &datum_geom_intersects2d;
-  return ea_spatialrel_tgeo_tgeo(temp1, temp2, func, ever);
+  datum_func2 func = get_intersects_fn_geo(temp1->flags, temp1->flags);
+  return ea_spatialrel_tspatial_tspatial(temp1, temp2, func, ever);
 }
 
 #if MEOS
@@ -544,7 +540,7 @@ etouches_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
       ! ensure_not_geodetic(temp->flags) || gserialized_is_empty(gs) ||
-      ! ensure_valid_tgeo_geo(temp, gs))
+      ! ensure_valid_tspatial_geo(temp, gs))
     return -1;
 
   /* There is no need to do a bounding box test since this is done in
@@ -584,7 +580,7 @@ atouches_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs))
+      ! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs))
     return -1;
 
   /* There is no need to do a bounding box test since this is done in
@@ -623,7 +619,7 @@ edwithin_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, double dist)
   if (! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return -1;
   datum_func3 func = get_dwithin_fn_geo(temp->flags, gs->gflags);
-  return spatialrel_tgeo_traj_geo(temp, gs, Float8GetDatum(dist),
+  return spatialrel_tgeo_geo(temp, gs, Float8GetDatum(dist),
     (varfunc) func, 3, INVERT_NO);
 }
 
@@ -642,13 +638,14 @@ int
 adwithin_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, double dist)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_geodetic(temp->flags) || ! ensure_has_not_Z(temp->temptype, temp->flags) ||
+  if (! ensure_not_geodetic(temp->flags) || 
+      ! ensure_has_not_Z(temp->temptype, temp->flags) ||
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return -1;
 
   GSERIALIZED *buffer = geom_buffer(gs, dist, "");
   datum_func2 func = &datum_geom_covers;
-  int result = spatialrel_tgeo_traj_geo(temp, buffer, (Datum) NULL,
+  int result = spatialrel_tgeo_geo(temp, buffer, (Datum) NULL,
     (varfunc) func, 2, INVERT);
   pfree(buffer);
   return result;
@@ -841,7 +838,7 @@ ea_dwithin_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
   double dist, bool ever)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tgeo_tgeo(temp1, temp2) ||
+  if (! ensure_valid_tspatial_tspatial(temp1, temp2) ||
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return -1;
 

@@ -53,7 +53,7 @@
 #include "pg_geo/postgis.h"
 
 /*****************************************************************************
- * Input/Output functions for circular buffers
+ * Input/Output functions
  *****************************************************************************/
 
 PGDLLEXPORT Datum Cbuffer_in(PG_FUNCTION_ARGS);
@@ -180,52 +180,6 @@ Cbuffer_as_ewkt(PG_FUNCTION_ARGS)
 
 /*****************************************************************************/
 
-PGDLLEXPORT Datum Cbufferset_as_text(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Cbufferset_as_text);
-/**
- * @ingroup mobilitydb_setspan_inout
- * @brief Return the Well-Known Text (WKT) representation of a circular 
- * buffer set
- * @sqlfn asText()
- */
-Datum
-Cbufferset_as_text(PG_FUNCTION_ARGS)
-{
-  Set *s = PG_GETARG_SET_P(0);
-  int dbl_dig_for_wkt = OUT_DEFAULT_DECIMAL_DIGITS;
-  if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
-    dbl_dig_for_wkt = PG_GETARG_INT32(1);
-  char *str = spatialset_as_text(s, dbl_dig_for_wkt);
-  text *result = cstring2text(str);
-  pfree(str);
-  PG_FREE_IF_COPY(s, 0);
-  PG_RETURN_TEXT_P(result);
-}
-
-PGDLLEXPORT Datum Cbufferset_as_ewkt(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Cbufferset_as_ewkt);
-/**
- * @ingroup mobilitydb_setspan_inout
- * @brief Return the Extended Well-Known Text (EWKT) representation of a
- * circular buffer set
- * @sqlfn asEWKT()
- */
-Datum
-Cbufferset_as_ewkt(PG_FUNCTION_ARGS)
-{
-  Set *s = PG_GETARG_SET_P(0);
-  int dbl_dig_for_wkt = OUT_DEFAULT_DECIMAL_DIGITS;
-  if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
-    dbl_dig_for_wkt = PG_GETARG_INT32(1);
-  char *str = spatialset_as_ewkt(s, dbl_dig_for_wkt);
-  text *result = cstring2text(str);
-  pfree(str);
-  PG_FREE_IF_COPY(s, 0);
-  PG_RETURN_TEXT_P(result);
-}
-
-/*****************************************************************************/
-
 PGDLLEXPORT Datum Cbuffer_from_wkb(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_from_wkb);
 /**
@@ -315,6 +269,43 @@ Cbuffer_constructor(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************
+ * Conversion functions
+ *****************************************************************************/
+
+PGDLLEXPORT Datum Cbuffer_to_geom(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Cbuffer_to_geom);
+/**
+ * @ingroup mobilitydb_base_conversion
+ * @brief Return a circular buffer converted to a geometry
+ * @sqlfn geometry()
+ * @sqlop @p ::
+ */
+Datum
+Cbuffer_to_geom(PG_FUNCTION_ARGS)
+{
+  Cbuffer *cbuf = PG_GETARG_CBUFFER_P(0);
+  PG_RETURN_GSERIALIZED_P(cbuffer_geom(cbuf));
+}
+
+PGDLLEXPORT Datum Geom_to_cbuffer(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Geom_to_cbuffer);
+/**
+ * @ingroup mobilitydb_base_conversion
+ * @brief Return a geometry converted to a circular buffer
+ * @sqlfn cbuffer()
+ * @sqlop @p ::
+ */
+Datum
+Geom_to_cbuffer(PG_FUNCTION_ARGS)
+{
+  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
+  Cbuffer *result = geom_cbuffer(gs);
+  if (! result)
+    PG_RETURN_NULL();
+  PG_RETURN_CBUFFER_P(result);
+}
+
+/*****************************************************************************
  * Accessor functions
  *****************************************************************************/
 
@@ -345,43 +336,6 @@ Cbuffer_radius(PG_FUNCTION_ARGS)
 {
   Cbuffer *cbuf = PG_GETARG_CBUFFER_P(0);
   PG_RETURN_FLOAT8(cbuffer_radius(cbuf));
-}
-
-/*****************************************************************************
- * SRID functions
- *****************************************************************************/
-
-PGDLLEXPORT Datum Cbuffer_srid(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Cbuffer_srid);
-/**
- * @ingroup mobilitydb_base_spatial
- * @brief Return the SRID of a circular buffer
- * @sqlfn SRID()
- */
-Datum
-Cbuffer_srid(PG_FUNCTION_ARGS)
-{
-  Cbuffer *cbuf = PG_GETARG_CBUFFER_P(0);
-  int result = cbuffer_srid(cbuf);
-  PG_RETURN_INT32(result);
-}
-
-PGDLLEXPORT Datum Cbuffer_set_srid(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Cbuffer_set_srid);
-/**
- * @ingroup mobilitydb_base_spatial
- * @brief Return a circular buffer with the coordinates of the point set to 
- * an SRID
- * @sqlfn setSRID()
- */
-Datum
-Cbuffer_set_srid(PG_FUNCTION_ARGS)
-{
-  Cbuffer *cbuf = PG_GETARG_CBUFFER_P(0);
-  int32_t srid = PG_GETARG_INT32(1);
-  Cbuffer *result = cbuffer_copy(cbuf);
-  cbuffer_set_srid(result, srid);
-  PG_RETURN_CBUFFER_P(result);
 }
 
 /*****************************************************************************
@@ -446,45 +400,88 @@ Cbufferset_round(PG_FUNCTION_ARGS)
 {
   Set *s = PG_GETARG_SET_P(0);
   int maxdd = PG_GETARG_INT32(1);
-  Set *result = cbufferset_round(s, maxdd);
+  Set *result = set_round(s, maxdd, &datum_cbuffer_round);
   PG_FREE_IF_COPY(s, 0);
   PG_RETURN_SET_P(result);
 }
 
 /*****************************************************************************
- * Conversion functions between circular buffer and geometry
+ * SRID functions
  *****************************************************************************/
 
-PGDLLEXPORT Datum Cbuffer_to_geom(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Cbuffer_to_geom);
+PGDLLEXPORT Datum Cbuffer_srid(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Cbuffer_srid);
 /**
- * @ingroup mobilitydb_base_conversion
- * @brief Return a circular buffer converted to a geometry
- * @sqlfn geometry()
- * @sqlop @p ::
+ * @ingroup mobilitydb_base_spatial
+ * @brief Return the SRID of a circular buffer
+ * @sqlfn SRID()
  */
 Datum
-Cbuffer_to_geom(PG_FUNCTION_ARGS)
+Cbuffer_srid(PG_FUNCTION_ARGS)
 {
   Cbuffer *cbuf = PG_GETARG_CBUFFER_P(0);
-  PG_RETURN_GSERIALIZED_P(cbuffer_geom(cbuf));
+  int result = cbuffer_srid(cbuf);
+  PG_RETURN_INT32(result);
 }
 
-PGDLLEXPORT Datum Geom_to_cbuffer(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Geom_to_cbuffer);
+PGDLLEXPORT Datum Cbuffer_set_srid(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Cbuffer_set_srid);
 /**
- * @ingroup mobilitydb_base_conversion
- * @brief Return a geometry converted to a circular buffer
- * @sqlfn cbuffer()
- * @sqlop @p ::
+ * @ingroup mobilitydb_base_spatial
+ * @brief Return a circular buffer with the coordinates of the point set to 
+ * an SRID
+ * @sqlfn setSRID()
  */
 Datum
-Geom_to_cbuffer(PG_FUNCTION_ARGS)
+Cbuffer_set_srid(PG_FUNCTION_ARGS)
 {
-  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
-  Cbuffer *result = geom_cbuffer(gs);
-  if (! result)
-    PG_RETURN_NULL();
+  Cbuffer *cbuf = PG_GETARG_CBUFFER_P(0);
+  int32_t srid = PG_GETARG_INT32(1);
+  Cbuffer *result = cbuffer_copy(cbuf);
+  cbuffer_set_srid(result, srid);
+  PG_RETURN_CBUFFER_P(result);
+}
+
+/*****************************************************************************/
+
+PGDLLEXPORT Datum Cbuffer_transform(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Cbuffer_transform);
+/**
+ * @ingroup mobilitydb_temporal_spatial_srid
+ * @brief Return a circular buffer transformed to an SRID
+ * @sqlfn transform()
+ */
+Datum
+Cbuffer_transform(PG_FUNCTION_ARGS)
+{
+  Cbuffer *cbuf = PG_GETARG_CBUFFER_P(0);
+  int32_t srid = PG_GETARG_INT32(1);
+  Cbuffer *result = cbuffer_transform(cbuf, srid);
+  PG_FREE_IF_COPY(cbuf, 0);
+  PG_RETURN_CBUFFER_P(result);
+}
+
+PGDLLEXPORT Datum Cbuffer_transform_pipeline(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Cbuffer_transform_pipeline);
+/**
+ * @ingroup mobilitydb_temporal_spatial_srid
+ * @brief Return a circular buffer transformed to an SRID using a
+ * transformation pipeline
+ * @sqlfn transformPipeline()
+ */
+Datum
+Cbuffer_transform_pipeline(PG_FUNCTION_ARGS)
+{
+  Cbuffer *cbuf = PG_GETARG_CBUFFER_P(0);
+  text *pipelinetxt = PG_GETARG_TEXT_P(1);
+  int32_t srid = PG_GETARG_INT32(2);
+  bool is_forward = PG_GETARG_BOOL(3);
+  char *pipelinestr = text2cstring(pipelinetxt);
+  Cbuffer *result = cbuffer_transform_pipeline(cbuf, pipelinestr, srid,
+    is_forward);
+  pfree(pipelinestr);
+  PG_FREE_IF_COPY(cbuf, 0);
+  PG_FREE_IF_COPY(pipelinetxt, 1);
   PG_RETURN_CBUFFER_P(result);
 }
 
@@ -625,6 +622,43 @@ Cbuffer_gt(PG_FUNCTION_ARGS)
   Cbuffer *cbuf1 = PG_GETARG_CBUFFER_P(0);
   Cbuffer *cbuf2 = PG_GETARG_CBUFFER_P(1);
   PG_RETURN_BOOL(cbuffer_gt(cbuf1, cbuf2));
+}
+
+/*****************************************************************************
+ * Functions for defining hash indexes
+ *****************************************************************************/
+
+PGDLLEXPORT Datum Cbuffer_hash(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Cbuffer_hash);
+/**
+ * @ingroup mobilitydb_base_accessor
+ * @brief Return the 32-bit hash value of a circular buffer
+ * @sqlfn hash()
+ */
+Datum
+Cbuffer_hash(PG_FUNCTION_ARGS)
+{
+  Cbuffer *cbuf = PG_GETARG_CBUFFER_P(0);
+  uint32 result = cbuffer_hash(cbuf);
+  PG_FREE_IF_COPY(cbuf, 0);
+  PG_RETURN_UINT32(result);
+}
+
+PGDLLEXPORT Datum Cbuffer_hash_extended(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Cbuffer_hash_extended);
+/**
+ * @ingroup mobilitydb_base_accessor
+ * @brief Return the 64-bit hash value of a circular buffer using a seed
+ * @sqlfn hash_extended()
+ */
+Datum
+Cbuffer_hash_extended(PG_FUNCTION_ARGS)
+{
+  Cbuffer *cbuf = PG_GETARG_CBUFFER_P(0);
+  uint64 seed = PG_GETARG_INT64(1);
+  uint64 result = cbuffer_hash_extended(cbuf, seed);
+  PG_FREE_IF_COPY(cbuf, 0);
+  PG_RETURN_UINT64(result);
 }
 
 /*****************************************************************************/

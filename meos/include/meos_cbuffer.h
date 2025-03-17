@@ -69,6 +69,7 @@ extern bool cbuffer_ge(const Cbuffer *cbuf1, const Cbuffer *cbuf2);
 extern GSERIALIZED *cbuffer_geom(const Cbuffer *cbuf);
 extern bool cbuffer_gt(const Cbuffer *cbuf1, const Cbuffer *cbuf2);
 extern uint32 cbuffer_hash(const Cbuffer *cbuf);
+extern uint64 cbuffer_hash_extended(const Cbuffer *cbuf, uint64 seed);
 extern Cbuffer *cbuffer_in(const char *str);
 extern bool cbuffer_le(const Cbuffer *cbuf1, const Cbuffer *cbuf2);
 extern bool cbuffer_lt(const Cbuffer *cbuf1, const Cbuffer *cbuf2);
@@ -113,8 +114,6 @@ extern STBox *cbuffer_stbox(const Cbuffer *cbuf);
  * Input/output functions for temporal types
  *****************************************************************************/
 
-extern char *tcbuffer_as_ewkt(const Temporal *temp, int maxdd);
-extern char *tcbuffer_as_text(const Temporal *temp, int maxdd);
 extern char *tcbuffer_out(const Temporal *temp, int maxdd);
 extern char **tcbufferarr_as_text(const Temporal **temparr, int count, int maxdd);
 

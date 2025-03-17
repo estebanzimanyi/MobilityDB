@@ -191,8 +191,8 @@ extern Datum datum_radians(Datum d);
 extern uint32 datum_hash(Datum d, meosType basetype);
 extern uint64 datum_hash_extended(Datum d, meosType basetype, uint64 seed);
 
-extern Datum datum_round_float(Datum value, Datum size);
-extern Datum datum_round_geo(Datum value, Datum size);
+extern Datum datum_float_round(Datum value, Datum size);
+extern Datum datum_geo_round(Datum value, Datum size);
 extern Datum round_point(GSERIALIZED *gs, int maxdd);
 extern void floatspan_round_set(const Span *s, int maxdd, Span *result);
 

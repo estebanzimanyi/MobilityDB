@@ -88,7 +88,7 @@ Pose_timestamp_to_stbox(PG_FUNCTION_ARGS)
   Pose *pose = PG_GETARG_POSE_P(0);
   TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
   STBox *result = palloc0(sizeof(STBox));
-  pose_timestamp_set_stbox(pose, t, result);
+  pose_timestamptz_set_stbox(pose, t, result);
   PG_RETURN_POINTER(result);
 }
 
@@ -106,7 +106,7 @@ Pose_period_to_stbox(PG_FUNCTION_ARGS)
   Pose *pose = PG_GETARG_POSE_P(0);
   Span *p = PG_GETARG_SPAN_P(1);
   STBox *result = palloc0(sizeof(STBox));
-  pose_period_set_stbox(pose, p, result);
+  pose_tstzspan_set_stbox(pose, p, result);
   PG_RETURN_POINTER(result);
 }
 

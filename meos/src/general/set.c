@@ -787,7 +787,7 @@ floatset_round(const Set *s, int maxdd)
   assert(s); assert(maxdd >= 0); assert(s->settype == T_FLOATSET);
 #endif /* MEOS */
 
-  return set_round(s, maxdd, &datum_round_float);
+  return set_round(s, maxdd, &datum_float_round);
 }
 
 /*****************************************************************************/

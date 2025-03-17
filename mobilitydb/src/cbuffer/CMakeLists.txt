@@ -1,7 +1,6 @@
 add_library(pg_cbuffer OBJECT
   cbuffer.c
   tcbuffer.c
-  tcbuffer_inout.c
   # tcbuffer_aggfuncs.c
   tcbuffer_boxops.c
   tcbuffer_compops.c

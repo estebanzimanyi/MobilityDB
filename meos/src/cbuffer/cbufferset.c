@@ -59,7 +59,6 @@
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/tspatial_parser.h"
 #include "cbuffer/cbuffer.h"
-#include "cbuffer/tcbuffer_parser.h"
 
 /*****************************************************************************
  * Input/output functions
@@ -135,23 +134,28 @@ cbufferset_make(const Cbuffer **values, int count)
 }
 
 /*****************************************************************************
- * Transformation functions
+ * Conversion functions
  *****************************************************************************/
 
 /**
- * @ingroup meos_setspan_transf
- * @brief Return a circular buffer set with the precision of the geometries and
- * of the radius set to a number of decimal places
- * @csqlfn #Cbufferset_round()
+ * @ingroup meos_setspan_conversion
+ * @brief Return a circular buffer converted to a circular buffer set
+ * @param[in] cbuf Value
+ * @csqlfn #Value_to_set()
  */
 Set *
-cbufferset_round(const Set *s, int maxdd)
+cbuffer_to_set(const Cbuffer *cbuf)
 {
+#if MEOS
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) s) || ! ensure_not_negative(maxdd) ||
-      ! ensure_set_isof_type(s, T_CBUFFERSET))
+  if (! ensure_not_null((void *) cbuf))
     return NULL;
-  return set_round(s, maxdd, &datum_cbuffer_round);
+#else
+  assert(cbuf);
+#endif /* MEOS */
+
+  Datum v = PointerGetDatum(cbuf);
+  return set_make_exp(&v, 1, 1, T_CBUFFER, ORDER_NO);
 }
 
 /*****************************************************************************
@@ -254,29 +258,26 @@ cbufferset_values(const Set *s)
 }
 
 /*****************************************************************************
- * Conversion functions
+ * Transformation functions
  *****************************************************************************/
 
+#if MEOS
 /**
- * @ingroup meos_setspan_conversion
- * @brief Return a circular buffer converted to a circular buffer set
- * @param[in] cbuf Value
- * @csqlfn #Value_to_set()
+ * @ingroup meos_setspan_transf
+ * @brief Return a circular buffer set with the precision of the values set to
+ * a number of decimal places
+ * @csqlfn #Cbufferset_round()
  */
 Set *
-cbuffer_to_set(const Cbuffer *cbuf)
+cbufferset_round(const Set *s, int maxdd)
 {
-#if MEOS
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) cbuf))
+  if (! ensure_not_null((void *) s) || ! ensure_not_negative(maxdd) ||
+      ! ensure_set_isof_type(s, T_CBUFFERSET))
     return NULL;
-#else
-  assert(cbuf);
-#endif /* MEOS */
-
-  Datum v = PointerGetDatum(cbuf);
-  return set_make_exp(&v, 1, 1, T_CBUFFER, ORDER_NO);
+  return set_round(s, maxdd, &datum_cbuffer_round);
 }
+#endif /* MEOS */
 
 /*****************************************************************************
  * Operators

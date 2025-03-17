@@ -74,6 +74,27 @@ cbuffer_set_stbox(const Cbuffer *cbuf, STBox *box)
 }
 
 /**
+ * @ingroup meos_internal_box_constructor
+ * @brief Return in the last argument a spatiotemporal box contructed from
+ * an array of circular buffers
+ * @param[in] values Circular buffers
+ * @param[in] count Number of elements in the array
+ * @param[out] box Spatiotemporal box
+ */
+void
+cbufferarr_set_stbox(const Datum *values, int count, STBox *box)
+{
+  cbuffer_set_stbox(DatumGetCbufferP(values[0]), box);
+  for (int i = 1; i < count; i++)
+  {
+    STBox box1;
+    cbuffer_set_stbox(DatumGetCbufferP(values[i]), &box1);
+    stbox_expand(&box1, box);
+  }
+  return;
+}
+
+/**
  * @ingroup meos_box_conversion
  * @brief Return a circular buffer converted to a spatiotemporal box
  * @param[in] cbuf Circular buffer
@@ -95,26 +116,7 @@ cbuffer_stbox(const Cbuffer *cbuf)
   return stbox_copy(&box);
 }
 
-/**
- * @ingroup meos_internal_box_constructor
- * @brief Return in the last argument a spatiotemporal box contructed from
- * an array of circular buffers
- * @param[in] values Circular buffers
- * @param[in] count Number of elements in the array
- * @param[out] box Spatiotemporal box
- */
-void
-cbufferarr_set_stbox(const Datum *values, int count, STBox *box)
-{
-  cbuffer_set_stbox(DatumGetCbufferP(values[0]), box);
-  for (int i = 1; i < count; i++)
-  {
-    STBox box1;
-    cbuffer_set_stbox(DatumGetCbufferP(values[i]), &box1);
-    stbox_expand(&box1, box);
-  }
-  return;
-}
+/*****************************************************************************/
 
 /**
  * @brief Return in the last argument the spatiotemporal box of a temporal
@@ -168,6 +170,8 @@ tcbufferseq_expand_stbox(const TSequence *seq, const TInstant *inst)
   stbox_expand(&box, (STBox *) TSEQUENCE_BBOX_PTR(seq));
   return;
 }
+
+/*****************************************************************************/
 
 /**
  * @ingroup meos_internal_box_constructor

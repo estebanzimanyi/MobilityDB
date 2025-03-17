@@ -28,8 +28,8 @@
  *****************************************************************************/
 
 /*
- * set.sql
- * Functions for set of ordered values.
+ * @file
+ * @brief Functions for set of poses
  */
 
 /******************************************************************************
@@ -91,12 +91,12 @@ CREATE FUNCTION asHexWKB(cbufferset, endianenconding text DEFAULT '')
 
 CREATE FUNCTION asText(cbufferset, maxdecimaldigits int4 DEFAULT 15)
   RETURNS text
-  AS 'MODULE_PATHNAME', 'Cbufferset_as_text'
+  AS 'MODULE_PATHNAME', 'Spatialset_as_text'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION asEWKT(cbufferset, maxdecimaldigits int4 DEFAULT 15)
   RETURNS text
-  AS 'MODULE_PATHNAME', 'Cbufferset_as_ewkt'
+  AS 'MODULE_PATHNAME', 'Spatialset_as_ewkt'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************

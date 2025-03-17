@@ -1156,6 +1156,34 @@ spanset_spanarr(const SpanSet *ss)
  * Transformation functions
  *****************************************************************************/
 
+/**
+ * @ingroup meos_setspan_transf
+ * @brief Return a float span set with the precision of the spans set to a
+ * number of decimal places
+ * @param[in] ss Span set
+ * @param[in] maxdd Maximum number of decimal digits
+ * @csqlfn #Floatspanset_round()
+ */
+SpanSet *
+floatspanset_round(const SpanSet *ss, int maxdd)
+{
+#if MEOS
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) ss) || ! ensure_not_negative(maxdd) ||
+      ! ensure_spanset_isof_type(ss, T_FLOATSPANSET))
+    return NULL;
+#else
+  assert(ss); assert(ss->spansettype == T_FLOATSPANSET); assert(maxdd >= 0);
+#endif /* MEOS */
+
+  Span *spans = palloc(sizeof(Span) * ss->count);
+  for (int i = 0; i < ss->count; i++)
+    floatspan_round_set(SPANSET_SP_N(ss, i), maxdd, &spans[i]);
+  return spanset_make_free(spans, ss->count, NORMALIZE, ORDER_NO);
+}
+
+/*****************************************************************************/
+
 #if MEOS
 /**
  * @ingroup meos_internal_setspan_transf

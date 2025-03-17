@@ -28,6 +28,8 @@ SELECT cbuffer 'Cbuffer(Point(1 1), 10.0)';
 		<programlisting language="sql" xml:space="preserve">
 -- incorrect point value
 SELECT cbuffer 'Cbuffer(Linestring(1 1,2 2), 1.0)';
+-- incorrect 3D point
+SELECT cbuffer 'Cbuffer(Point Z(1 1 1), 1.0)';
 -- incorrect radius value
 SELECT cbuffer 'Cbuffer(Point(1 1), -2.0)';
 </programlisting>

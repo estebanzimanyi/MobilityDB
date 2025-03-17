@@ -36,7 +36,6 @@ add_library(general OBJECT
   type_in.c
   type_out.c
   type_parser.c
-  type_round.c
   type_util.c
 )
 

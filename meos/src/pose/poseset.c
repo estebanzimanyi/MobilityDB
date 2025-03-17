@@ -138,23 +138,28 @@ poseset_make(const Pose **values, int count)
 }
 
 /*****************************************************************************
- * Transformation functions
+ * Conversion functions
  *****************************************************************************/
 
 /**
- * @ingroup meos_setspan_transf
- * @brief Return a pose set with the precision of the values set to a number of
- * decimal places
- * @csqlfn #Poseset_round()
+ * @ingroup meos_setspan_conversion
+ * @brief Return a pose converted to a pose set
+ * @param[in] pose Value
+ * @csqlfn #Value_to_set()
  */
 Set *
-poseset_round(const Set *s, int maxdd)
+pose_to_set(const Pose *pose)
 {
+#if MEOS
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) s) || ! ensure_not_negative(maxdd) ||
-      ! ensure_set_isof_type(s, T_POSESET))
+  if (! ensure_not_null((void *) pose))
     return NULL;
-  return set_round(s, maxdd, &datum_pose_round);
+#else
+  assert(pose);
+#endif /* MEOS */
+
+  Datum v = PointerGetDatum(pose);
+  return set_make_exp(&v, 1, 1, T_POSE, ORDER_NO);
 }
 
 /*****************************************************************************
@@ -256,29 +261,26 @@ poseset_values(const Set *s)
 }
 
 /*****************************************************************************
- * Conversion functions
+ * Transformation functions
  *****************************************************************************/
 
+#if MEOS
 /**
- * @ingroup meos_setspan_conversion
- * @brief Return a pose converted to a pose set
- * @param[in] pose Value
- * @csqlfn #Value_to_set()
+ * @ingroup meos_setspan_transf
+ * @brief Return a pose set with the precision of the values set to a number of
+ * decimal places
+ * @csqlfn #Poseset_round()
  */
 Set *
-pose_to_set(const Pose *pose)
+poseset_round(const Set *s, int maxdd)
 {
-#if MEOS
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) pose))
+  if (! ensure_not_null((void *) s) || ! ensure_not_negative(maxdd) ||
+      ! ensure_set_isof_type(s, T_POSESET))
     return NULL;
-#else
-  assert(pose);
-#endif /* MEOS */
-
-  Datum v = PointerGetDatum(pose);
-  return set_make_exp(&v, 1, 1, T_POSE, ORDER_NO);
+  return set_round(s, maxdd, &datum_pose_round);
 }
+#endif /* MEOS */
 
 /*****************************************************************************
  * Operators

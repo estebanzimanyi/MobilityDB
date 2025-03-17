@@ -45,44 +45,6 @@
 #include "pg_geo/postgis.h"
 
 /*****************************************************************************
- * Functions for spatial reference systems
- *****************************************************************************/
-
-PGDLLEXPORT Datum Pose_srid(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Pose_srid);
-/**
- * @ingroup mobilitydb_temporal_spatial_srid
- * @brief Return the SRID of a temporal pose
- * @sqlfn SRID()
- */
-Datum
-Pose_srid(PG_FUNCTION_ARGS)
-{
-  Pose *pose = PG_GETARG_POSE_P(0);
-  int32_t result = pose_srid(pose);
-  PG_FREE_IF_COPY(pose, 0);
-  PG_RETURN_INT32(result);
-}
-
-PGDLLEXPORT Datum Pose_set_srid(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Pose_set_srid);
-/**
- * @ingroup mobilitydb_temporal_spatial_srid
- * @brief Return the SRID of a temporal pose
- * @sqlfn SRID()
- */
-Datum
-Pose_set_srid(PG_FUNCTION_ARGS)
-{
-  Pose *pose = PG_GETARG_POSE_P(0);
-  int32_t srid = PG_GETARG_INT32(1);
-  Pose *result = pose_copy(pose);
-  pose_set_srid(result, srid);
-  PG_FREE_IF_COPY(pose, 0);
-  PG_RETURN_POSE_P(result);
-}
-
-/*****************************************************************************
  * Restriction functions
  *****************************************************************************/
 

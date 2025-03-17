@@ -395,6 +395,13 @@ const Temporal *temp2, SyncMode mode, Temporal **inter1, Temporal **inter2);
 extern char *mobilitydb_version(void);
 extern char *mobilitydb_full_version(void);
 
+/* Transformations */
+
+extern Temporal *temporal_round(const Temporal *temp, int maxdd,
+  datum_func2 func);
+extern Temporal **temparr_round(const Temporal **temparr, int count,
+  int maxdd, datum_func2 func);
+
 /* Ever/always equal operators */
 
 extern bool ea_eq_bbox_temp_base(const Temporal *temp, Datum value, bool ever);

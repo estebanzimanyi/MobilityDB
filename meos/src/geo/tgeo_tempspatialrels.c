@@ -434,7 +434,7 @@ tinterrel_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool tinter,
   bool restr, bool atvalue)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs))
+  if (! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs))
     return NULL;
 
   /* Bounding box test */
@@ -538,7 +538,7 @@ tinterrel_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
   bool tinter, bool restr, bool atvalue)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tgeo_tgeo(temp1, temp2))
+  if (! ensure_valid_tspatial_tspatial(temp1, temp2))
     return NULL;
 
   Temporal *result = tinter ?
@@ -608,7 +608,7 @@ tcontains_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, bool restr,
   bool atvalue)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs) ||
+  if (! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs) ||
       ! ensure_has_not_Z_geo(gs) || 
       ! ensure_has_not_Z(temp->temptype, temp->flags))
     return NULL;
@@ -658,7 +658,7 @@ ttouches_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool restr,
   bool atvalue)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs) ||
+  if (! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs) ||
       ! ensure_has_not_Z(temp->temptype, temp->flags) || ! ensure_has_not_Z_geo(gs))
     return NULL;
 
@@ -1262,7 +1262,7 @@ tdwithin_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, double dist,
   bool restr, bool atvalue)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs) ||
+  if (! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs) ||
       (tpoint_type(temp->temptype) && ! ensure_point_type(gs)) ||
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return NULL;
@@ -1414,7 +1414,7 @@ tdwithin_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2, double dist,
   bool restr, bool atvalue)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tgeo_tgeo(temp1, temp2) ||
+  if (! ensure_valid_tspatial_tspatial(temp1, temp2) ||
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return NULL;
 

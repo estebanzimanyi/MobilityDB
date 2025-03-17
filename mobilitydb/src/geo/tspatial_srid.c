@@ -42,9 +42,6 @@
 #include <liblwgeom.h>
 /* MEOS */
 #include <meos.h>
-#if POSE
-  #include <meos_pose.h>
-#endif /* POSE */
 #include <meos_internal.h>
 #include "general/set.h"
 #include "general/span.h"
@@ -52,10 +49,6 @@
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/stbox.h"
 #include "geo/tpoint_restrfuncs.h"
-#if CBUFFER
-  #include <meos_cbuffer.h>
-  #include "cbuffer/cbuffer.h"
-#endif
 /* MobilityDB */
 #include "pg_general/temporal.h"
 #include "pg_general/type_util.h"
@@ -253,95 +246,6 @@ Stbox_transform_pipeline(PG_FUNCTION_ARGS)
   PG_FREE_IF_COPY(pipelinetxt, 1);
   PG_RETURN_STBOX_P(result);
 }
-
-/*****************************************************************************/
-
-#if CBUFFER
-PGDLLEXPORT Datum Cbuffer_transform(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Cbuffer_transform);
-/**
- * @ingroup mobilitydb_temporal_spatial_srid
- * @brief Return a circular buffer transformed to an SRID
- * @sqlfn transform()
- */
-Datum
-Cbuffer_transform(PG_FUNCTION_ARGS)
-{
-  Cbuffer *cbuf = PG_GETARG_CBUFFER_P(0);
-  int32_t srid = PG_GETARG_INT32(1);
-  Cbuffer *result = cbuffer_transform(cbuf, srid);
-  PG_FREE_IF_COPY(cbuf, 0);
-  PG_RETURN_CBUFFER_P(result);
-}
-
-PGDLLEXPORT Datum Cbuffer_transform_pipeline(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Cbuffer_transform_pipeline);
-/**
- * @ingroup mobilitydb_temporal_spatial_srid
- * @brief Return a circular buffer transformed to an SRID using a
- * transformation pipeline
- * @sqlfn transformPipeline()
- */
-Datum
-Cbuffer_transform_pipeline(PG_FUNCTION_ARGS)
-{
-  Cbuffer *cbuf = PG_GETARG_CBUFFER_P(0);
-  text *pipelinetxt = PG_GETARG_TEXT_P(1);
-  int32_t srid = PG_GETARG_INT32(2);
-  bool is_forward = PG_GETARG_BOOL(3);
-  char *pipelinestr = text2cstring(pipelinetxt);
-  Cbuffer *result = cbuffer_transform_pipeline(cbuf, pipelinestr, srid,
-    is_forward);
-  pfree(pipelinestr);
-  PG_FREE_IF_COPY(cbuf, 0);
-  PG_FREE_IF_COPY(pipelinetxt, 1);
-  PG_RETURN_CBUFFER_P(result);
-}
-#endif /* CBUFFER */
-
-/*****************************************************************************/
-
-#if POSE
-PGDLLEXPORT Datum Pose_transform(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Pose_transform);
-/**
- * @ingroup mobilitydb_temporal_spatial_srid
- * @brief Return a pose transformed to an SRID
- * @sqlfn transform()
- */
-Datum
-Pose_transform(PG_FUNCTION_ARGS)
-{
-  Pose *cbuf = PG_GETARG_POSE_P(0);
-  int32_t srid = PG_GETARG_INT32(1);
-  Pose *result = pose_transform(cbuf, srid);
-  PG_FREE_IF_COPY(cbuf, 0);
-  PG_RETURN_POSE_P(result);
-}
-
-PGDLLEXPORT Datum Pose_transform_pipeline(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Pose_transform_pipeline);
-/**
- * @ingroup mobilitydb_temporal_spatial_srid
- * @brief Return a pose transformed to an SRID using a transformation pipeline
- * @sqlfn transformPipeline()
- */
-Datum
-Pose_transform_pipeline(PG_FUNCTION_ARGS)
-{
-  Pose *cbuf = PG_GETARG_POSE_P(0);
-  text *pipelinetxt = PG_GETARG_TEXT_P(1);
-  int32_t srid = PG_GETARG_INT32(2);
-  bool is_forward = PG_GETARG_BOOL(3);
-  char *pipelinestr = text2cstring(pipelinetxt);
-  Pose *result = pose_transform_pipeline(cbuf, pipelinestr, srid,
-    is_forward);
-  pfree(pipelinestr);
-  PG_FREE_IF_COPY(cbuf, 0);
-  PG_FREE_IF_COPY(pipelinetxt, 1);
-  PG_RETURN_POSE_P(result);
-}
-#endif /* POSE */
 
 /*****************************************************************************/
 

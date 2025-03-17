@@ -53,6 +53,7 @@
 #include "general/pg_types.h"
 #include "general/tsequence.h"
 #include "general/type_inout.h"
+#include "general/type_parser.h"
 #include "general/type_util.h"
 #include "geo/pgis_types.h"
 #include "geo/tgeo.h"
@@ -378,7 +379,6 @@ route_length(int64 rid)
   free(rec.the_geom);
   return result; 
 }
-
 #else
 double
 route_length(int64 rid)
@@ -718,9 +718,9 @@ nsegment_sort_cmp(Nsegment **l, Nsegment **r)
  * @brief Sort function for network segments
  */
 static void
-nsegmentarr_sort(Nsegment **segments, int nelems)
+nsegmentarr_sort(Nsegment **segments, int count)
 {
-  qsort(segments, (size_t) nelems, sizeof(Nsegment *),
+  qsort(segments, (size_t) count, sizeof(Nsegment *),
       (qsort_comparator) &nsegment_sort_cmp);
   return;
 }
@@ -729,14 +729,14 @@ nsegmentarr_sort(Nsegment **segments, int nelems)
  * @brief Normalize an array of temporal segments
  */
 Nsegment **
-nsegmentarr_normalize(Nsegment **segments, int *nelems)
+nsegmentarr_normalize(Nsegment **segments, int *count)
 {
-  assert(*nelems != 0);
-  nsegmentarr_sort(segments, *nelems);
+  assert(*count != 0);
+  nsegmentarr_sort(segments, *count);
   int newcount = 0;
-  Nsegment **result = palloc(sizeof(Nsegment *) * *nelems);
+  Nsegment **result = palloc(sizeof(Nsegment *) * *count);
   Nsegment *current = segments[0];
-  for (int i = 1; i < *nelems; i++)
+  for (int i = 1; i < *count; i++)
   {
     Nsegment *seg = segments[i];
     if (current->rid == seg->rid)
@@ -752,13 +752,65 @@ nsegmentarr_normalize(Nsegment **segments, int *nelems)
     }
   }
   result[newcount++] = current;
-  *nelems = newcount;
+  *count = newcount;
   return result;
 }
 
 /*****************************************************************************
  * Input/output functions
  *****************************************************************************/
+
+/**
+ * @brief Parse a network point from its string representation
+ */
+Npoint *
+npoint_parse(const char **str, bool end)
+{
+  const char *type_str = meostype_name(T_NPOINT);
+  p_whitespace(str);
+  if (pg_strncasecmp(*str, "NPOINT", 6) != 0)
+  {
+    meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
+      "Could not parse %s value: Missing prefix 'NPoint'", type_str);
+    return NULL;
+  }
+
+  *str += 6;
+  p_whitespace(str);
+
+  /* Parse opening parenthesis */
+  if (! ensure_oparen(str, type_str))
+    return NULL;
+
+  /* Parse rid */
+  p_whitespace(str);
+  Datum d;
+  if (! basetype_parse(str, T_INT8, ',', &d)) 
+    return NULL;
+  int64 rid = DatumGetInt64(d);
+
+  p_comma(str);
+
+  /* Parse pos */
+  p_whitespace(str);
+  if (! basetype_parse(str, T_FLOAT8, ')', &d))
+    return NULL;
+  double pos = DatumGetFloat8(d);
+  if (pos < 0 || pos > 1)
+  {
+    meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
+      "The relative position must be a real number between 0 and 1");
+    return NULL;
+  }
+
+  /* Parse closing parenthesis */
+  p_whitespace(str);
+  if (! ensure_cparen(str, type_str) ||
+        (end && ! ensure_end_input(str, type_str)))
+    return NULL;
+
+  return npoint_make(rid, pos);
+}
 
 /**
  * @ingroup meos_base_inout
@@ -807,6 +859,71 @@ npoint_out(const Npoint *np, int maxdd)
 }
 
 /*****************************************************************************/
+
+/**
+ * @brief Parse a network segment from its string representation
+ */
+Nsegment *
+nsegment_parse(const char **str)
+{
+  const char *type_str = meostype_name(T_NSEGMENT);
+  p_whitespace(str);
+
+  if (pg_strncasecmp(*str, "NSEGMENT", 8) != 0)
+  {
+    meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
+      "Could not parse %s value: Missing prefix 'NSegment'", type_str);
+    return NULL;
+  }
+
+  *str += 8;
+  p_whitespace(str);
+
+  /* Parse opening parenthesis */
+  if (! ensure_oparen(str, type_str))
+    return NULL;
+
+  /* Parse rid */
+  p_whitespace(str);
+  Datum d;
+  if (! basetype_parse(str, T_INT8, ',', &d))
+    return NULL;
+  int64 rid = DatumGetInt64(d);
+
+  p_comma(str);
+
+  /* Parse pos1 */
+  p_whitespace(str);
+  if (! basetype_parse(str, T_FLOAT8, ',', &d))
+    return NULL;
+  double pos1 = DatumGetFloat8(d);
+  if (pos1 < 0 || pos1 > 1)
+  {
+    meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
+      "The relative position must be a real number between 0 and 1");
+    return NULL;
+  }
+  p_comma(str);
+
+  /* Parse pos2 */
+  p_whitespace(str);
+  if (! basetype_parse(str, T_FLOAT8, ')', &d))
+    return NULL;
+  double pos2 = DatumGetFloat8(d);
+  if (pos2 < 0 || pos2 > 1)
+  {
+    meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
+      "The relative position must be a real number between 0 and 1");
+    return NULL;
+  }
+
+  /* Parse closing parenthesis */
+  p_whitespace(str);
+  if (! ensure_cparen(str, type_str) || ! ensure_end_input(str, type_str))
+    return NULL;
+
+  return nsegment_make(rid, pos1, pos2);
+}
 
 /**
  * @ingroup meos_base_inout
@@ -1235,16 +1352,16 @@ geom_nsegment(const GSERIALIZED *gs)
  * @ingroup meos_internal_base_conversion
  * @brief Return an array of network points converted into a geometry
  * @param[in] points Array of network points
- * @param[in] nelems Number of elements in the input array
- * @pre The argument @p nelems is greater than 1, all points have the same SRID
+ * @param[in] count Number of elements in the input array
+ * @pre The argument @p count is greater than 1, all points have the same SRID
  */
 GSERIALIZED *
-npointarr_geom(Npoint **points, int nelems)
+npointarr_geom(Npoint **points, int count)
 {
-  assert(nelems > 1);
-  LWGEOM **geoms = palloc(sizeof(LWGEOM *) * nelems);
+  assert(count > 1);
+  LWGEOM **geoms = palloc(sizeof(LWGEOM *) * count);
   int32_t srid = npoint_srid(points[0]);
-  for (int i = 0; i < nelems; i++)
+  for (int i = 0; i < count; i++)
   {
     GSERIALIZED *gsline = route_geom(points[i]->rid);
     assert(gserialized_get_srid(gsline) == srid);
@@ -1253,11 +1370,11 @@ npointarr_geom(Npoint **points, int nelems)
     pfree(gsline); pfree(line);
   }
   int newcount;
-  LWGEOM **newgeoms = lwpointarr_remove_duplicates(geoms, nelems, &newcount);
+  LWGEOM **newgeoms = lwpointarr_remove_duplicates(geoms, count, &newcount);
   LWGEOM *geom = lwpointarr_make_trajectory(newgeoms, newcount, STEP);
   GSERIALIZED *result = geo_serialize(geom);
   pfree(newgeoms); pfree(geom);
-  pfree_array((void **) geoms, nelems);
+  pfree_array((void **) geoms, count);
   return result;
 }
 
@@ -1265,15 +1382,15 @@ npointarr_geom(Npoint **points, int nelems)
  * @ingroup meos_internal_base_conversion
  * @brief Return an array of network segments converted into a geometry
  * @param[in] segments Array of network segments
- * @param[in] nelems Number of elements in the input array
- * @pre The argument @p nelems is greater than 1
+ * @param[in] count Number of elements in the input array
+ * @pre The argument @p count is greater than 1
  */
 GSERIALIZED *
-nsegmentarr_geom(Nsegment **segments, int nelems)
+nsegmentarr_geom(Nsegment **segments, int count)
 {
-  assert(nelems > 1);
-  GSERIALIZED **geoms = palloc(sizeof(GSERIALIZED *) * nelems);
-  for (int i = 0; i < nelems; i++)
+  assert(count > 1);
+  GSERIALIZED **geoms = palloc(sizeof(GSERIALIZED *) * count);
+  for (int i = 0; i < count; i++)
   {
     GSERIALIZED *line = route_geom(segments[i]->rid);
     if (segments[i]->pos1 == 0 && segments[i]->pos2 == 1)
@@ -1284,8 +1401,8 @@ nsegmentarr_geom(Nsegment **segments, int nelems)
       geoms[i] = line_substring(line, segments[i]->pos1, segments[i]->pos2);
     pfree(line);
   }
-  GSERIALIZED *result = geom_array_union(geoms, nelems);
-  pfree_array((void **) geoms, nelems);
+  GSERIALIZED *result = geom_array_union(geoms, count);
+  pfree_array((void **) geoms, count);
   return result;
 }
 

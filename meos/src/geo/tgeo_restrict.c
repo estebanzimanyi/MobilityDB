@@ -2058,7 +2058,7 @@ Temporal *
 tpoint_at_geom(const Temporal *temp, const GSERIALIZED *gs, const Span *zspan)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tgeo_geo(temp, gs))
+  if (! ensure_valid_tspatial_geo(temp, gs))
     return NULL;
   return tgeo_restrict_geom(temp, gs, zspan, REST_AT);
 }
@@ -2074,7 +2074,7 @@ Temporal *
 tgeo_at_geom(const Temporal *temp, const GSERIALIZED *gs)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tgeo_geo(temp, gs))
+  if (! ensure_valid_tspatial_geo(temp, gs))
     return NULL;
   return tgeo_restrict_geom(temp, gs, NULL, REST_AT);
 }
@@ -2092,7 +2092,7 @@ tpoint_minus_geom(const Temporal *temp, const GSERIALIZED *gs,
   const Span *zspan)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tgeo_geo(temp, gs))
+  if (! ensure_valid_tspatial_geo(temp, gs))
     return NULL;
   return tgeo_restrict_geom(temp, gs, zspan, REST_MINUS);
 }
@@ -2108,7 +2108,7 @@ Temporal *
 tgeo_minus_geom(const Temporal *temp, const GSERIALIZED *gs)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tgeo_geo(temp, gs))
+  if (! ensure_valid_tspatial_geo(temp, gs))
     return NULL;
   return tgeo_restrict_geom(temp, gs, NULL, REST_MINUS);
 }

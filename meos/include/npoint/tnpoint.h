@@ -85,9 +85,10 @@ struct Nsegment
 /* General functions */
 
 extern int32_t get_srid_ways(void);
-extern GSERIALIZED *npointarr_geom(Npoint **points, int nelems);
-extern GSERIALIZED *nsegmentarr_geom(Nsegment **segments, int nelems);
-extern Nsegment **nsegmentarr_normalize(Nsegment **segments, int *nelems);
+extern Npoint *npoint_parse(const char **str, bool end);
+extern GSERIALIZED *npointarr_geom(Npoint **points, int count);
+extern GSERIALIZED *nsegmentarr_geom(Nsegment **segments, int count);
+extern Nsegment **nsegmentarr_normalize(Nsegment **segments, int *count);
 
 /* Input/output functions */
 
@@ -117,7 +118,6 @@ extern Datum datum_npoint_round(Datum npoint, Datum size);
 extern Npoint *npoint_round(const Npoint *np, int maxdd);
 extern Nsegment *nsegment_round(const Nsegment *ns, int maxdd);
 extern Set *npointset_round(const Set *s, int maxdd);
-extern Temporal *tnpoint_round(const Temporal *temp, Datum size);
 
 /*****************************************************************************
  * Temporal network point functions

@@ -507,6 +507,7 @@ bool
 tpointsegm_intersection_value(const TInstant *inst1, const TInstant *inst2,
   Datum value, TimestampTz *t)
 {
+  assert(inst1); assert(inst2);
   assert(! gserialized_is_empty(DatumGetGserializedP(value)));
 
   /* We are sure that the trajectory is a line */
@@ -3347,7 +3348,7 @@ Temporal *
 bearing_tpoint_point(const Temporal *temp, const GSERIALIZED *gs, bool invert)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs) ||
+  if (! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs) ||
       ! ensure_point_type(gs) ||
       ! ensure_same_dimensionality_tspatial_geo(temp, gs))
     return NULL;
@@ -3378,7 +3379,7 @@ Temporal *
 bearing_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_valid_tgeo_tgeo(temp1, temp2) ||
+  if (! ensure_valid_tspatial_tspatial(temp1, temp2) ||
       ! ensure_same_dimensionality(temp1->flags, temp2->flags) )
     return NULL;
 

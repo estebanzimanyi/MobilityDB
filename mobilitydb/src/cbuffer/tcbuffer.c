@@ -46,7 +46,6 @@
 #include "general/type_util.h"
 #include "geo/tspatial_parser.h"
 #include "cbuffer/cbuffer.h"
-#include "cbuffer/tcbuffer_parser.h"
 /* MobilityDB */
 #include "pg_general/meos_catalog.h"
 #include "pg_general/temporal.h"
@@ -209,7 +208,7 @@ PGDLLEXPORT Datum Tcbuffer_round(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tcbuffer_round);
 /**
  * @ingroup mobilitydb_temporal_transf
- * @brief Return a temporal circular buffer with the precision of the positions
+ * @brief Return a temporal circular buffer with the precision of the values
  * set to a number of decimal places
  * @sqlfn round()
  */
@@ -218,7 +217,7 @@ Tcbuffer_round(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   Datum size = PG_GETARG_DATUM(1);
-  Temporal *result = tcbuffer_round(temp, size);
+  Temporal *result = temporal_round(temp, size, &datum_cbuffer_round);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_TEMPORAL_P(result);
 }

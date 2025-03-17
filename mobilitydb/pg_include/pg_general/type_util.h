@@ -92,6 +92,7 @@ extern ArrayType *cbufferarr_to_array(const Cbuffer **cbufarr, int count);
 #endif
 #if POSE
 extern Pose **posearr_extract(ArrayType *array, int *count);
+extern ArrayType *posearr_to_array(const Pose **posearr, int count);
 #endif
 extern Span *spanarr_extract(ArrayType *array, int *count);
 extern STBox *stboxarr_extract(ArrayType *array, int *count);

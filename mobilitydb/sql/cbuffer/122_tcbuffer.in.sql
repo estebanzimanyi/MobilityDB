@@ -89,12 +89,12 @@ CREATE CAST (tcbuffer AS tcbuffer) WITH FUNCTION tcbuffer(tcbuffer, integer) AS 
 
 CREATE FUNCTION tcbufferFromText(text)
   RETURNS tcbuffer
-  AS 'MODULE_PATHNAME', 'Tcbuffer_from_ewkt'
+  AS 'MODULE_PATHNAME', 'Tspatial_from_ewkt'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION tcbufferFromEWKT(text)
   RETURNS tcbuffer
-  AS 'MODULE_PATHNAME', 'Tcbuffer_from_ewkt'
+  AS 'MODULE_PATHNAME', 'Tspatial_from_ewkt'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION tcbufferFromBinary(bytea)
@@ -116,7 +116,7 @@ CREATE FUNCTION tcbufferFromHexEWKB(text)
 
 CREATE FUNCTION asText(tcbuffer, maxdecimaldigits int4 DEFAULT 15)
   RETURNS text
-  AS 'MODULE_PATHNAME', 'Tcbuffer_as_text'
+  AS 'MODULE_PATHNAME', 'Tspatial_as_text'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION asText(tcbuffer[], maxdecimaldigits int4 DEFAULT 15)
   RETURNS text[]
@@ -125,7 +125,7 @@ CREATE FUNCTION asText(tcbuffer[], maxdecimaldigits int4 DEFAULT 15)
 
 CREATE FUNCTION asEWKT(tcbuffer, maxdecimaldigits int4 DEFAULT 15)
   RETURNS text
-  AS 'MODULE_PATHNAME', 'Tcbuffer_as_ewkt'
+  AS 'MODULE_PATHNAME', 'Tspatial_as_ewkt'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION asEWKT(tcbuffer[], maxdecimaldigits int4 DEFAULT 15)
   RETURNS text[]

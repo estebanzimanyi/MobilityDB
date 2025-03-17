@@ -61,7 +61,6 @@
   #include "npoint/tnpoint_spatialfuncs.h"
 #endif
 #if POSE
-  #include <meos_pose.h>
   #include "pose/pose.h"
 #endif
 
@@ -370,6 +369,20 @@ npoint_flags(void)
 }
 #endif /* NPOINT */ 
 
+#if POSE
+/**
+ * @brief Get the MEOS flags from a pose
+ */
+static int16
+pose_flags(Pose *pose)
+{
+  int16 result = 0; /* Set all flags to false */
+  MEOS_FLAGS_SET_X(result, true);
+  MEOS_FLAGS_SET_X(result, MEOS_FLAGS_GET_Z(pose->flags));
+  return result;
+}
+#endif /* NPOINT */ 
+
 /**
  * @brief Get the MEOS flags from a spatial value
  */
@@ -392,7 +405,7 @@ spatial_flags(Datum d, meosType basetype)
 #endif
 #if POSE
     case T_POSE:
-      return (int16) DatumGetPoseP(d)->flags;
+      return pose_flags(DatumGetPoseP(d));
 #endif
     default: /* Error! */
       meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
@@ -702,12 +715,13 @@ ensure_valid_stbox_geo(const STBox *box, const GSERIALIZED *gs)
 
 
 /**
- * @brief Ensure the validity of a temporal geo and a geometry/geography
+ * @brief Ensure the validity of a temporal spatial value and a 
+ * geometry/geography
  * @note The geometry can be empty since some functions such atGeometry or
  * minusGeometry return different result on empty geometries.
  */
 bool
-ensure_valid_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
+ensure_valid_tspatial_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
       ! ensure_tgeo_type_all(temp->temptype) ||
@@ -751,10 +765,10 @@ ensure_valid_tgeo_stbox(const Temporal *temp, const STBox *box)
  * @brief Ensure the validity of two temporal points
  */
 bool
-ensure_valid_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
+ensure_valid_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 {
   if (ensure_not_null((void *) temp1) && ensure_not_null((void *) temp2) &&
-      ensure_tgeo_type_all(temp1->temptype) &&
+      ensure_tspatial_type(temp1->temptype) &&
       ensure_same_temporal_type(temp1, temp2) &&
       ensure_same_srid(tspatial_srid(temp1), tspatial_srid(temp2)))
     return true;

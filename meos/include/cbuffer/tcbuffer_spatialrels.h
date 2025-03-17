@@ -42,22 +42,24 @@
   
 /*****************************************************************************/
 
-extern Datum ea_disjoint_tcbuffer_geo(const Temporal *temp,
+extern int ea_disjoint_tcbuffer_geo(const Temporal *temp,
   const GSERIALIZED *gs, bool ever);
-extern int ea_spatialrel_tcbuffer_tcbuffer(const Temporal *temp1,
-  const Temporal *temp2, datum_func2 func, bool ever);
 
 extern int ea_dwithin_tcbuffer_tcbuffer_sync(const Temporal *sync1,
   const Temporal *sync2, double dist, bool ever);
 
 /*****************************************************************************/
 
-extern int econtains_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp);
-extern int acontains_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp);
+extern int ea_contains_geo_tcbuffer(const GSERIALIZED *gs, 
+  const Temporal *temp, bool ever);
+extern int ea_disjoint_tcbuffer_geo(const Temporal *temp,
+  const GSERIALIZED *gs, bool ever);
+
 extern int edwithin_tcbuffer_tcbuffer(const Temporal *temp1,
   const Temporal *temp2, double dist);
 extern int adwithin_tcbuffer_tcbuffer(const Temporal *temp1, 
   const Temporal *temp2, double dist);
+
 
 /*****************************************************************************/
 

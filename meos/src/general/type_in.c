@@ -51,20 +51,14 @@
 #include "geo/pgis_types.h"
 #include "geo/stbox.h"
 #include "geo/tgeo_spatialfuncs.h"
-#if NPOINT
-  #include "npoint/tnpoint.h"
-  #include "npoint/tnpoint_parser.h"
-#endif
 #if CBUFFER
-  #include <meos_cbuffer.h>
   #include "cbuffer/cbuffer.h"
-  #include "cbuffer/tcbuffer_parser.h"
 #endif
 #if NPOINT
   #include "npoint/tnpoint.h"
 #endif
 #if POSE
-  #include "pose/tpose_parser.h"
+  #include "pose/pose.h"
 #endif
 
 /*****************************************************************************/

@@ -61,7 +61,6 @@
 #include "geo/tgeo_out.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/tspatial_parser.h"
-#include "npoint/tnpoint_parser.h"
 #include "npoint/tnpoint.h"
 
 /*****************************************************************************
@@ -115,26 +114,6 @@ npointset_make(const Npoint **values, int count)
   for (int i = 0; i < count; ++i)
     datums[i] = PointerGetDatum(values[i]);
   return set_make_free(datums, count, T_NPOINT, ORDER);
-}
-
-/*****************************************************************************
- * Transformation functions
- *****************************************************************************/
-
-/**
- * @ingroup meos_setspan_transf
- * @brief Return a network point set with the precision of the positions set
- * to a number of decimal places
- * @csqlfn #Npointset_round()
- */
-Set *
-npointset_round(const Set *s, int maxdd)
-{
-  /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) s) || ! ensure_not_negative(maxdd) ||
-      ! ensure_set_isof_type(s, T_NPOINTSET))
-    return NULL;
-  return set_round(s, maxdd, &datum_npoint_round);
 }
 
 /*****************************************************************************

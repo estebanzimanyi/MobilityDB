@@ -75,7 +75,7 @@ spatialrel_tcbuffer_trav_geo(const Temporal *temp, const GSERIALIZED *gs,
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_valid_tcbuffer_geo(temp, gs) || gserialized_is_empty(gs))
+      ! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs))
     return -1;
 
   assert(numparam == 2 || numparam == 3);
@@ -110,7 +110,7 @@ spatialrel_tcbuffer_trav_geo(const Temporal *temp, const GSERIALIZED *gs,
  * @return On error return -1
  */
 static int
-spatialrel_tcbuffer_trav_cbuffer(const Temporal *temp, const Cbuffer *cbuf,
+spatialrel_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cbuf,
   Datum param, varfunc func, int numparam, bool invert)
 {
   /* Ensure validity of the arguments */
@@ -137,49 +137,13 @@ spatialrel_tcbuffer_trav_cbuffer(const Temporal *temp, const Cbuffer *cbuf,
   return result ? 1 : 0;
 }
 
-/*****************************************************************************/
-
-/**
- * @brief Return true if two temporal circular buffers ever/always satisfy a
- * spatial relationship
- * @param[in] temp1,temp2 Temporal circular buffers
- * @param[in] func Spatial relationship
- * @param[in] ever True for the ever semantics, false for the always semantics
- */
-int
-ea_spatialrel_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
-  datum_func2 func, bool ever)
-{
-  /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2) ||
-      ! ensure_valid_tcbuffer_tcbuffer(temp1, temp2))
-    return -1;
-
-  /* Fill the lifted structure */
-  LiftedFunctionInfo lfinfo;
-  memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
-  lfinfo.func = (varfunc) func;
-  lfinfo.numparam = 0;
-  lfinfo.argtype[0] = lfinfo.argtype[1] = temp1->temptype;
-  lfinfo.restype = T_TBOOL;
-  lfinfo.reslinear = false;
-  lfinfo.invert = INVERT_NO;
-  lfinfo.discont = MEOS_FLAGS_LINEAR_INTERP(temp1->flags) ||
-    MEOS_FLAGS_LINEAR_INTERP(temp2->flags);
-  lfinfo.ever = ever;
-  lfinfo.tpfunc_base = NULL;
-  lfinfo.tpfunc = NULL;
-  return eafunc_temporal_temporal(temp1, temp2, &lfinfo);
-}
-
 /*****************************************************************************
  * Ever/always contains
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
- * @brief Return 1 if a geometry ever contains a temporal circular buffer, 0 if not, and
- * -1 on error or if the geometry is empty
+ * @brief Return 1 if a geometry ever contains a temporal circular buffer, 0 if 
+ * not, and -1 on error or if the geometry is empty
  * @param[in] gs Geometry
  * @param[in] temp Temporal circular buffer
  * @note The function tests whether the traversed area intersects the interior
@@ -187,19 +151,39 @@ ea_spatialrel_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
  * ST_Relate functions
  * https://postgis.net/docs/ST_Relate.html
  * https://postgis.net/docs/ST_Contains.html
- * @csqlfn #Econtains_geo_tcbuffer()
+ * @csqlfn #Econtains_geo_tcbuffer(), #Acontains_geo_tcbuffer()
+ */
+int
+ea_contains_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp,
+  bool ever)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
+      ! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs))
+    return -1;
+  GSERIALIZED *trav = tcbuffer_traversed_area(temp);
+  bool result = ever ? geom_relate_pattern(gs, trav, "T********") :
+    geom_contains(gs, trav);
+  pfree(trav);
+  return result ? 1 : 0;
+}
+
+/**
+ * @ingroup meos_temporal_spatial_rel_ever
+ * @brief Return 1 if a geometry ever contains a temporal circular buffer,
+ * 0 if not, and -1 on error or if the geometry is empty
+ * @param[in] gs Geometry
+ * @param[in] temp Temporal circular buffer
+ * @note The function tests whether the traversed area is contained in the 
+ * geometry
+ * https://postgis.net/docs/ST_Relate.html
+ * https://postgis.net/docs/ST_Contains.html
+ * @csqlfn #Acontains_geo_tcbuffer()
  */
 int
 econtains_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp)
 {
-  /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_valid_tcbuffer_geo(temp, gs) || gserialized_is_empty(gs))
-    return -1;
-  GSERIALIZED *trav = tcbuffer_traversed_area(temp);
-  bool result = geom_relate_pattern(gs, trav, "T********");
-  pfree(trav);
-  return result ? 1 : 0;
+  return ea_contains_geo_tcbuffer(gs, temp, EVER);
 }
 
 /**
@@ -217,14 +201,7 @@ econtains_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp)
 int
 acontains_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp)
 {
-  /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_valid_tcbuffer_geo(temp, gs) || gserialized_is_empty(gs))
-    return -1;
-  GSERIALIZED *trav = tcbuffer_traversed_area(temp);
-  bool result = geom_contains(gs, trav);
-  pfree(trav);
-  return result ? 1 : 0;
+  return ea_contains_geo_tcbuffer(gs, temp, ALWAYS);
 }
 
 /*****************************************************************************
@@ -233,8 +210,30 @@ acontains_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp)
 
 /**
  * @ingroup meos_temporal_spatial_rel_ever
- * @brief Return 1 if a temporal circular buffer and a geometry are ever disjoint,
- * 0 if not, and -1 on error or if the geometry is empty
+ * @brief Return 1 if a temporal circular buffer and a geometry are ever
+ * disjoint,0 if not, and -1 on error or if the geometry is empty
+ * @param[in] temp Temporal circular buffer
+ * @param[in] gs Geometry
+ * @csqlfn #Edisjoint_tcbuffer_geo()
+ */
+int
+ea_disjoint_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs,
+  bool ever)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
+      ! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs))
+    return -1;
+  int result = ever ?
+    spatialrel_tcbuffer_trav_geo(temp, gs, (Datum) NULL,
+      (varfunc) &datum_geom_covers, 2, INVERT) :
+    eintersects_tcbuffer_geo(temp, gs);
+  return INVERT_RESULT(result);
+}
+/**
+ * @ingroup meos_temporal_spatial_rel_ever
+ * @brief Return 1 if a temporal circular buffer and a geometry are ever 
+ * disjoint, 0 if not, and -1 on error or if the geometry is empty
  * @param[in] temp Temporal circular buffer
  * @param[in] gs Geometry
  * @csqlfn #Edisjoint_tcbuffer_geo()
@@ -242,20 +241,13 @@ acontains_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp)
 int
 edisjoint_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
-  /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_valid_tcbuffer_geo(temp, gs) || gserialized_is_empty(gs))
-    return -1;
-  datum_func2 func = &datum_geom_covers;
-  int result = spatialrel_tcbuffer_trav_geo(temp, gs, (Datum) NULL,
-    (varfunc) func, 2, INVERT);
-  return INVERT_RESULT(result);
+  return ea_disjoint_tcbuffer_geo(temp, gs, EVER);
 }
 
 /**
  * @ingroup meos_temporal_spatial_rel_ever
- * @brief Return 1 if a temporal circular buffer and a geometry are always disjoint,
- * 0 if not, and -1 on error or if the geometry is empty
+ * @brief Return 1 if a temporal circular buffer and a geometry are always 
+ * disjoint,0 if not, and -1 on error or if the geometry is empty
  * @param[in] temp Temporal circular buffer
  * @param[in] gs Geometry
  * @note aDisjoint(a, b) is equivalent to NOT eIntersects(a, b)
@@ -264,8 +256,7 @@ edisjoint_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 int
 adisjoint_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
-  int result = eintersects_tcbuffer_geo(temp, gs);
-  return INVERT_RESULT(result);
+  return ea_disjoint_tcbuffer_geo(temp, gs, ALWAYS);
 }
 
 /**
@@ -284,15 +275,15 @@ edisjoint_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cbuf)
       ! ensure_valid_tcbuffer_cbuffer(temp, cbuf))
     return -1;
   datum_func2 func = &datum_geom_covers;
-  int result = spatialrel_tcbuffer_trav_cbuffer(temp, cbuf, (Datum) NULL,
+  int result = spatialrel_tcbuffer_cbuffer(temp, cbuf, (Datum) NULL,
     (varfunc) func, 2, INVERT);
   return INVERT_RESULT(result);
 }
 
 /**
  * @ingroup meos_temporal_spatial_rel_ever
- * @brief Return 1 if a temporal circular buffer and a geometry are always disjoint,
- * 0 if not, and -1 on error
+ * @brief Return 1 if a temporal circular buffer and a geometry are always 
+ * disjoint, 0 if not, and -1 on error
  * @param[in] temp Temporal circular buffer
  * @param[in] cbuf Circular buffer
  * @note aDisjoint(a, b) is equivalent to NOT eIntersects(a, b)
@@ -316,24 +307,22 @@ adisjoint_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cbuf)
 int
 edisjoint_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
 {
-  return MEOS_FLAGS_GET_GEODETIC(temp1->flags) ?
-    ea_spatialrel_tcbuffer_tcbuffer(temp1, temp2, &datum2_point_nsame, EVER) :
-    ea_spatialrel_tcbuffer_tcbuffer(temp1, temp2, &datum2_point_ne, EVER);
+  return ea_spatialrel_tspatial_tspatial(temp1, temp2, &datum2_point_ne, EVER);
 }
 
 /**
  * @ingroup meos_temporal_spatial_rel_ever
- * @brief Return 1 if the temporal circular buffers are always disjoint, 0 if not, and
- * -1 on error or if the temporal circular buffers do not intersect in time
+ * @brief Return 1 if the temporal circular buffers are always disjoint, 0 if
+ * not, and -1 on error or if the temporal circular buffers do not intersect
+ * in time
  * @param[in] temp1,temp2 Temporal circular buffers
  * @csqlfn #Adisjoint_tcbuffer_tcbuffer()
  */
 int
 adisjoint_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
 {
-  return MEOS_FLAGS_GET_GEODETIC(temp1->flags) ?
-    ea_spatialrel_tcbuffer_tcbuffer(temp1, temp2, &datum2_point_nsame, ALWAYS) :
-    ea_spatialrel_tcbuffer_tcbuffer(temp1, temp2, &datum2_point_ne, ALWAYS);
+  return ea_spatialrel_tspatial_tspatial(temp1, temp2, &datum2_point_ne,
+    ALWAYS);
 }
 #endif /* MEOS */
 
@@ -352,15 +341,14 @@ adisjoint_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
 int
 eintersects_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
-  datum_func2 func = get_intersects_fn_geo(temp->flags, gs->gflags);
-  return spatialrel_tcbuffer_trav_geo(temp, gs, (Datum) NULL, (varfunc) func, 2,
-    INVERT_NO);
+  return spatialrel_tcbuffer_trav_geo(temp, gs, (Datum) NULL, 
+    (varfunc) &datum_geom_intersects2d, 2, INVERT_NO);
 }
 
 /**
  * @ingroup meos_temporal_spatial_rel_ever
- * @brief Return 1 if a geometry and a temporal circular buffer always intersect,
- * 0 if not, and -1 on error or if the geometry is empty
+ * @brief Return 1 if a geometry and a temporal circular buffer always 
+ * intersect, 0 if not, and -1 on error or if the geometry is empty
  * @param[in] temp Temporal circular buffer
  * @param[in] gs Geometry
  * @note aIntersects(tcbuffer, geo) is equivalent to NOT eDisjoint(tcbuffer, geo)
@@ -384,7 +372,7 @@ aintersects_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 int
 eintersects_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cbuf)
 {
-  return spatialrel_tcbuffer_trav_cbuffer(temp, cbuf, (Datum) NULL, 
+  return spatialrel_tcbuffer_cbuffer(temp, cbuf, (Datum) NULL, 
     (varfunc) datum_geom_intersects2d, 2,  INVERT_NO);
 }
 
@@ -408,8 +396,8 @@ aintersects_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cbuf)
 #if MEOS
 /**
  * @ingroup meos_temporal_spatial_rel_ever
- * @brief Return 1 if the temporal circular buffers ever intersect, 0 if not, and
- * -1 on error or if the temporal circular buffers do not intersect in time
+ * @brief Return 1 if the temporal circular buffers ever intersect, 0 if not,
+ * and -1 on error or if the temporal circular buffers do not intersect in time
  * @param[in] temp1,temp2 Temporal circular buffers
  * @csqlfn #Eintersects_tcbuffer_tcbuffer()
  */
@@ -417,14 +405,14 @@ int
 eintersects_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
 {
   return MEOS_FLAGS_GET_GEODETIC(temp1->flags) ?
-    ea_spatialrel_tcbuffer_tcbuffer(temp1, temp2, &datum2_point_same, EVER) :
-    ea_spatialrel_tcbuffer_tcbuffer(temp1, temp2, &datum2_point_eq, EVER);
+    ea_spatialrel_tspatial_tspatial(temp1, temp2, &datum2_point_same, EVER) :
+    ea_spatialrel_tspatial_tspatial(temp1, temp2, &datum2_point_eq, EVER);
 }
 
 /**
  * @ingroup meos_temporal_spatial_rel_ever
- * @brief Return 1 if the temporal circular buffers always intersect, 0 if not, and
- * -1 on error or if the temporal circular buffers do not intersect in time
+ * @brief Return 1 if the temporal circular buffers always intersect, 0 if not,
+ * and -1 on error or if the temporal circular buffers do not intersect in time
  * @param[in] temp1,temp2 Temporal circular buffers
  * @csqlfn #Aintersects_tcbuffer_tcbuffer()
  */
@@ -432,8 +420,8 @@ int
 aintersects_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
 {
   return MEOS_FLAGS_GET_GEODETIC(temp1->flags) ?
-    ea_spatialrel_tcbuffer_tcbuffer(temp1, temp2, &datum2_point_same, ALWAYS) :
-    ea_spatialrel_tcbuffer_tcbuffer(temp1, temp2, &datum2_point_eq, ALWAYS);
+    ea_spatialrel_tspatial_tspatial(temp1, temp2, &datum2_point_same, ALWAYS) :
+    ea_spatialrel_tspatial_tspatial(temp1, temp2, &datum2_point_eq, ALWAYS);
 }
 #endif /* MEOS */
 
@@ -443,8 +431,8 @@ aintersects_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
 
 /**
  * @ingroup meos_temporal_spatial_rel_ever
- * @brief Return 1 if a temporal circular buffer and a geometry ever touch, 0 if not, and
- * -1 on error or if the geometry is empty
+ * @brief Return 1 if a temporal circular buffer and a geometry ever touch, 0 
+ * if not, and -1 on error or if the geometry is empty
  * @param[in] temp Temporal circular buffer
  * @param[in] gs Geometry
  * @csqlfn #Etouches_tcbuffer_geo()
@@ -454,7 +442,7 @@ etouches_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_valid_tcbuffer_geo(temp, gs) || gserialized_is_empty(gs))
+      ! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs))
     return -1;
 
   /* There is no need to do a bounding box test since this is done in
@@ -482,8 +470,8 @@ etouches_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 
 /**
  * @ingroup meos_temporal_spatial_rel_ever
- * @brief Return 1 if a temporal circular buffer and a geometry always touch, 0 if not,
- * and -1 on error or if the geometry is empty
+ * @brief Return 1 if a temporal circular buffer and a geometry always touch, 
+ * 0 if not, and -1 on error or if the geometry is empty
  * @param[in] temp Temporal circular buffer
  * @param[in] gs Geometry
  * @csqlfn #Atouches_tcbuffer_geo()
@@ -493,7 +481,7 @@ atouches_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_valid_tcbuffer_geo(temp, gs) || gserialized_is_empty(gs))
+      ! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs))
     return -1;
 
   /* There is no need to do a bounding box test since this is done in
@@ -554,8 +542,8 @@ etouches_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cbuf)
 
 /**
  * @ingroup meos_temporal_spatial_rel_ever
- * @brief Return 1 if a temporal circular buffer and a geometry always touch, 0 if not,
- * and -1 on error or if the geometry is empty
+ * @brief Return 1 if a temporal circular buffer and a geometry always touch, 
+ * 0 if not, and -1 on error or if the geometry is empty
  * @param[in] temp Temporal circular buffer
  * @param[in] cbuf Circular buffer
  * @csqlfn #Atouches_tcbuffer_cbuffer()
@@ -591,8 +579,8 @@ atouches_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cbuf)
 
 /**
  * @ingroup meos_temporal_spatial_rel_ever
- * @brief Return 1 if a geometry and a temporal circular buffer are ever within the
- * given distance, 0 if not, -1 on error or if the geometry is empty
+ * @brief Return 1 if a geometry and a temporal circular buffer are ever within
+ * the given distance, 0 if not, -1 on error or if the geometry is empty
  * @param[in] temp Temporal circular buffer
  * @param[in] gs Geometry
  * @param[in] dist Distance
@@ -603,7 +591,7 @@ edwithin_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs, double dist)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_valid_tcbuffer_geo(temp, gs) || gserialized_is_empty(gs) ||
+      ! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs) ||
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return -1;
   return spatialrel_tcbuffer_trav_geo(temp, gs, Float8GetDatum(dist),
@@ -612,8 +600,8 @@ edwithin_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs, double dist)
 
 /**
  * @ingroup meos_temporal_spatial_rel_ever
- * @brief Return 1 if a geometry and a temporal circular buffer are always within a
- * distance, 0 if not, -1 on error or if the geometry is empty
+ * @brief Return 1 if a geometry and a temporal circular buffer are always 
+ * within a distance, 0 if not, -1 on error or if the geometry is empty
  * @param[in] temp Temporal circular buffer
  * @param[in] gs Geometry
  * @param[in] dist Distance
@@ -624,7 +612,7 @@ adwithin_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs, double dist)
 {
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_valid_tcbuffer_geo(temp, gs) || gserialized_is_empty(gs) ||
+      ! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs) ||
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return -1;
 
@@ -656,7 +644,7 @@ edwithin_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cbuf,
       ! ensure_valid_tcbuffer_cbuffer(temp, cbuf) ||
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return -1;
-  return spatialrel_tcbuffer_trav_cbuffer(temp, cbuf, Float8GetDatum(dist),
+  return spatialrel_tcbuffer_cbuffer(temp, cbuf, Float8GetDatum(dist),
     (varfunc) &datum_geom_dwithin2d, 3, INVERT_NO);
 }
 
@@ -691,7 +679,8 @@ adwithin_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cbuf,
 /*****************************************************************************/
 
 /**
- * @brief Return true if the temporal circular buffers are ever within a distance
+ * @brief Return true if the temporal circular buffers are ever within a
+ * distance
  * @param[in] inst1,inst2 Temporal circular buffers
  * @param[in] dist Distance
  * @pre The temporal circular buffers are synchronized
@@ -707,7 +696,8 @@ ea_dwithin_tcbufferinst_tcbufferinst(const TInstant *inst1,
 }
 
 /**
- * @brief Return true if two temporal circular buffers are ever within a distance
+ * @brief Return true if two temporal circular buffers are ever within a
+ * distance
  * @param[in] seq1,seq2 Temporal circular buffers
  * @param[in] dist Distance
  * @param[in] ever True for the ever semantics, false for the always semantics
@@ -755,7 +745,8 @@ tdwithin_tcbuffersegm_tcbuffersegm(Datum sv1 __attribute__((unused)),
 }
 
 /**
- * @brief Return true if two temporal circular buffers are ever within a distance
+ * @brief Return true if two temporal circular buffers are ever within a
+ * distance
  * @param[in] seq1,seq2 Temporal circular buffers
  * @param[in] dist Distance
  * @param[in] ever True for the ever semantics, false for the always semantics
@@ -826,7 +817,8 @@ ea_dwithin_tcbufferseq_tcbufferseq_cont(const TSequence *seq1,
 }
 
 /**
- * @brief Return true if two temporal circular buffers are ever within a distance
+ * @brief Return true if two temporal circular buffers are ever within a
+ * distance
  * @param[in] ss1,ss2 Temporal circular buffers
  * @param[in] dist Distance
  * @param[in] ever True for the ever semantics, false for the always semantics
@@ -886,7 +878,8 @@ ea_dwithin_tcbuffer_tcbuffer_sync(const Temporal *sync1, const Temporal *sync2,
 /**
  * @ingroup meos_internal_temporal_spatial_rel_ever
  * @brief Return 1 if two temporal circular buffers are ever within a distance,
- * 0 if not, -1 on error or if the temporal circular buffers do not intersect on time
+ * 0 if not, -1 on error or if the temporal circular buffers do not intersect
+ * on time
  * @param[in] temp1,temp2 Temporal circular buffers
  * @param[in] dist Distance
  * @param[in] ever True for the ever semantics, false for the always semantics
@@ -917,7 +910,8 @@ ea_dwithin_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
 /**
  * @ingroup meos_temporal_spatial_rel_ever
  * @brief Return 1 if two temporal circular buffers are ever within a distance,
- * 0 if not, -1 on error or if the temporal circular buffers do not intersect on time
+ * 0 if not, -1 on error or if the temporal circular buffers do not intersect
+ * on time
  * @param[in] temp1,temp2 Temporal circular buffers
  * @param[in] dist Distance
  * @csqlfn #Edwithin_tcbuffer_tcbuffer()
@@ -935,8 +929,9 @@ edwithin_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
 
 /**
  * @ingroup meos_temporal_spatial_rel_ever
- * @brief Return 1 if two temporal circular buffers are always within a distance,
- * 0 if not, -1 on error or if the temporal circular buffers do not intersect on time
+ * @brief Return 1 if two temporal circular buffers are always within a 
+ * distance, 0 if not, -1 on error or if the temporal circular buffers do not
+ * intersect on time
  * @param[in] temp1,temp2 Temporal circular buffers
  * @param[in] dist Distance
  * @csqlfn #Adwithin_tcbuffer_tcbuffer()

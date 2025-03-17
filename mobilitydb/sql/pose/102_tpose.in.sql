@@ -67,33 +67,6 @@ CREATE TYPE tpose (
   alignment = double
 );
 
--- Input/output in WKT, WKB and HexWKB format
-
-CREATE FUNCTION tposeFromText(text)
-  RETURNS tpose
-  AS 'MODULE_PATHNAME', 'Tpose_from_ewkt'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION tposeFromEWKT(text)
-  RETURNS tpose
-  AS 'MODULE_PATHNAME', 'Tpose_from_ewkt'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION tposeFromBinary(bytea)
-  RETURNS tpose
-  AS 'MODULE_PATHNAME', 'Temporal_from_wkb'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION tposeFromEWKB(bytea)
-  RETURNS tpose
-  AS 'MODULE_PATHNAME', 'Temporal_from_wkb'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION tposeFromHexEWKB(text)
-  RETURNS tpose
-  AS 'MODULE_PATHNAME', 'Temporal_from_hexwkb'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
 /******************************************************************************
  * Constructors
  ******************************************************************************/

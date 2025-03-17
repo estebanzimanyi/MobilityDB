@@ -44,6 +44,7 @@
 #include <meos.h>
 #include <meos_internal.h>
 #include "general/set.h"
+#include "general/lifting.h"
 #include "general/temporal.h"
 #include "general/tinstant.h"
 #include "general/tsequence.h"
@@ -56,7 +57,7 @@
   #include "npoint/tnpoint_boxops.h"
 #endif 
 #if POSE
-  #include "pose/pose_boxops.h"
+  #include "pose/pose.h"
 #endif 
 
 /*****************************************************************************
@@ -104,31 +105,26 @@ spatialbase_as_text(Datum value, meosType type, int maxdd)
 char *
 spatialbase_as_ewkt(Datum value, meosType type, int maxdd)
 {
-  assert(spatial_basetype(type)); assert(maxdd >= 0);
+  /* Ensure validity of the arguments */
+  if (! ensure_not_negative(maxdd))
+    return NULL;
 
-  switch (type)
-  {
-    case T_GEOMETRY:
-    case T_GEOGRAPHY:
-      return geo_as_ewkt(DatumGetGserializedP(value), maxdd);
-#if CBUFFER
-    case T_CBUFFER:
-      return cbuffer_as_ewkt(DatumGetCbufferP(value), maxdd);
-#endif
-#if NPOINT
-    case T_NPOINT:
-      return npoint_as_ewkt(DatumGetNpointP(value), maxdd);
-#endif
-#if POSE
-    case T_POSE:
-      return pose_as_ewkt(DatumGetPoseP(value), maxdd);
-#endif
-    default: /* Error! */
-      meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
-        "Unknown output function in WKT format for type: %s",
-        meostype_name(type));
-      return NULL;
-  }
+  /* Get the text representation of the value */
+  char *base_str = spatialbase_as_text(value, type, maxdd);
+  /* Get the SRID */
+  char srid_str[18];
+  srid_str[0] = '\0';
+  int32 srid = spatial_srid(value, type);
+  if (srid <= 0)
+    return base_str;
+
+  /* SRID_MAXIMUM is defined by PostGIS as 999999 */
+  snprintf(srid_str, sizeof(srid_str), "SRID=%d;", srid);
+  char *result = palloc(strlen(srid_str) + strlen(base_str) + 1);
+  strcpy(result, srid_str);
+  strcat(result, base_str);
+  pfree(base_str);
+  return result;
 }
 
 /*****************************************************************************/
@@ -335,11 +331,10 @@ tspatial_as_ewkt(const Temporal *temp, int maxdd)
  * @brief Return the (Extended) Well-Known Text (WKT or EWKT) representation
  * of an array of spatial values
  * @param[in] spatialarr Array of spatial values
+ * @param[in] elemtype Type of the elements in the input array
  * @param[in] count Number of elements in the input array
  * @param[in] maxdd Maximum number of decimal digits to output
  * @param[in] extended True if the output is in EWKT
- * @param[in] temporal True if the array has temporal values, false when the 
- * array has base values
  * @csqlfn #Spatialarr_as_text(), #Spatialarr_as_ewkt()
  */
 char **
@@ -371,6 +366,7 @@ spatialarr_wkt_out(const Datum *spatialarr, meosType elemtype, int count,
  * @brief Return the Well-Known Text (WKT) representation of an array of
  * spatial values
  * @param[in] spatialarr Array of spatial values
+ * @param[in] elemtype Type of the elements in the input array
  * @param[in] count Number of elements in the input array
  * @param[in] maxdd Maximum number of decimal digits to output
  * @csqlfn #Spatialarr_as_text(), #Spatialarr_as_text()
@@ -387,6 +383,7 @@ spatialarr_as_text(const Datum *spatialarr, meosType elemtype, int count,
  * @brief Return the Extended Well-Known Text (EWKT) representation of an array
  * of spatial values
  * @param[in] spatialarr Array of spatial values
+ * @param[in] elemtype Type of the elements in the input array
  * @param[in] count Number of elements in the input array
  * @param[in] maxdd Maximum number of decimal digits to output
  * @csqlfn #Spatialarr_as_ewkt(), #Spatialarr_as_ewkt()
@@ -408,7 +405,7 @@ spatialarr_as_ewkt(const Datum *spatialarr, meosType elemtype, int count,
  * @param[in] count Number of elements in the input array
  * @param[in] maxdd Maximum number of decimal digits to output
  * @param[in] extended True if the output is in EWKT
- * @csqlfn #Tspatialarr_as_text(), #Tspatialarr_as_ewkt()
+ * @csqlfn #Spatialarr_as_text(), #Spatialarr_as_ewkt()
  */
 char **
 tspatialarr_wkt_out(const Temporal **temparr, int count, int maxdd,
@@ -433,7 +430,7 @@ tspatialarr_wkt_out(const Temporal **temparr, int count, int maxdd,
  * @param[in] temparr Array of temporal spatial values
  * @param[in] count Number of elements in the input array
  * @param[in] maxdd Maximum number of decimal digits to output
- * @csqlfn #Tgeoarr_as_text(), #Tcbufferarr_as_ewkt()
+ * @csqlfn #Spatialarr_as_text()
  */
 char **
 tspatialarr_as_text(const Temporal **temparr, int count, int maxdd)
@@ -448,7 +445,7 @@ tspatialarr_as_text(const Temporal **temparr, int count, int maxdd)
  * @param[in] temparr Array of temporal spatial values
  * @param[in] count Number of elements in the input array
  * @param[in] maxdd Maximum number of decimal digits to output
- * @csqlfn #Tgeoarr_as_ewkt(), #Tcbufferarr_as_ewkt()
+ * @csqlfn #Spatialarr_as_ewkt()
  */
 char **
 tspatialarr_as_ewkt(const Temporal **temparr, int count, int maxdd)

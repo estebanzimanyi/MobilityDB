@@ -63,43 +63,7 @@
  * intersect
  */
 static Datum
-EAspatialrel_geo_tnpoint(FunctionCallInfo fcinfo,
-  int (*func)(const Temporal *, const GSERIALIZED *, bool), bool ever)
-{
-  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
-  Temporal *temp = PG_GETARG_TEMPORAL_P(1);
-  int result = func(temp, gs, ever);
-  PG_FREE_IF_COPY(gs, 0);
-  PG_FREE_IF_COPY(temp, 1);
-  if (result < 0)
-    PG_RETURN_NULL();
-  PG_RETURN_INT32(result);
-}
-
-/**
- * @brief Return true if a geometry and a temporal network point ever/always
- * intersect
- */
-static Datum
-EAspatialrel_tnpoint_geo(FunctionCallInfo fcinfo,
-  int (*func)(const Temporal *, const GSERIALIZED *, bool), bool ever)
-{
-  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
-  int result = func(temp, gs, ever);
-  PG_FREE_IF_COPY(temp, 0);
-  PG_FREE_IF_COPY(gs, 1);
-  if (result < 0)
-    PG_RETURN_NULL();
-  PG_RETURN_INT32(result);
-}
-
-/**
- * @brief Return true if a geometry and a temporal network point ever/always
- * intersect
- */
-static Datum
-EAspatialrel_npoint_tnpoint(FunctionCallInfo fcinfo,
+EA_spatialrel_npoint_tnpoint(FunctionCallInfo fcinfo,
   int (*func)(const Temporal *, const Npoint *, bool), bool ever)
 {
   Npoint *np = PG_GETARG_NPOINT_P(0);
@@ -116,7 +80,7 @@ EAspatialrel_npoint_tnpoint(FunctionCallInfo fcinfo,
  * intersect
  */
 static Datum
-EAspatialrel_tnpoint_npoint(FunctionCallInfo fcinfo,
+EA_spatialrel_tnpoint_npoint(FunctionCallInfo fcinfo,
   int (*func)(const Temporal *, const Npoint *, bool), bool ever)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
@@ -128,49 +92,9 @@ EAspatialrel_tnpoint_npoint(FunctionCallInfo fcinfo,
   PG_RETURN_INT32(result);
 }
 
-/*****************************************************************************/
-
-/**
- * @brief Return true if the temporal network points ever/always satisfy the
- * spatial relationship
- * @param[in] fcinfo Catalog information about the external function
- * @param[in] func Spatial relationship
- * @param[in] ever True to compute the ever semantics, false for always
- */
-static Datum
-EAspatialrel_tnpoint_tnpoint(FunctionCallInfo fcinfo,
-  datum_func2 func, bool ever)
-{
-  Temporal *temp1 = PG_GETARG_TEMPORAL_P(0);
-  Temporal *temp2 = PG_GETARG_TEMPORAL_P(1);
-  int result = ea_spatialrel_tnpoint_tnpoint(temp1, temp2, func, ever);
-  PG_FREE_IF_COPY(temp1, 0);
-  PG_FREE_IF_COPY(temp2, 1);
-  if (result < 0)
-    PG_RETURN_NULL();
-  PG_RETURN_BOOL(result == 1 ? true : false);
-}
-
 /*****************************************************************************
  * Ever/always contains
  *****************************************************************************/
-
-/**
- * @brief Return true if a geometry ever/always contains a temporal network
- * point
- */
-static Datum
-EAcontains_geo_tnpoint(FunctionCallInfo fcinfo, bool ever)
-{
-  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
-  Temporal *temp = PG_GETARG_TEMPORAL_P(1);
-  int result = ea_contains_geo_tnpoint(gs, temp, ever);
-  PG_FREE_IF_COPY(gs, 0);
-  PG_FREE_IF_COPY(temp, 1);
-  if (result < 0)
-    PG_RETURN_NULL();
-  PG_RETURN_INT32(result);
-}
 
 PGDLLEXPORT Datum Econtains_geo_tnpoint(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Econtains_geo_tnpoint);
@@ -182,7 +106,7 @@ PG_FUNCTION_INFO_V1(Econtains_geo_tnpoint);
 Datum
 Econtains_geo_tnpoint(PG_FUNCTION_ARGS)
 {
-  return EAcontains_geo_tnpoint(fcinfo, EVER);
+  return EA_spatialrel_geo_tspatial(fcinfo, &ea_contains_geo_tnpoint, EVER);
 }
 
 PGDLLEXPORT Datum Acontains_geo_tnpoint(PG_FUNCTION_ARGS);
@@ -195,7 +119,7 @@ PG_FUNCTION_INFO_V1(Acontains_geo_tnpoint);
 Datum
 Acontains_geo_tnpoint(PG_FUNCTION_ARGS)
 {
-  return EAcontains_geo_tnpoint(fcinfo, ALWAYS);
+  return EA_spatialrel_geo_tspatial(fcinfo, &ea_contains_geo_tnpoint, ALWAYS);
 }
 
 /*****************************************************************************
@@ -213,7 +137,7 @@ PG_FUNCTION_INFO_V1(Edisjoint_geo_tnpoint);
 Datum
 Edisjoint_geo_tnpoint(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_geo_tnpoint(fcinfo, &ea_disjoint_tnpoint_geo, EVER);
+  return EA_spatialrel_geo_tspatial(fcinfo, &ea_disjoint_geo_tnpoint, EVER);
 }
 
 PGDLLEXPORT Datum Adisjoint_geo_tnpoint(PG_FUNCTION_ARGS);
@@ -227,7 +151,7 @@ PG_FUNCTION_INFO_V1(Adisjoint_geo_tnpoint);
 Datum
 Adisjoint_geo_tnpoint(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_geo_tnpoint(fcinfo, &ea_disjoint_tnpoint_geo, ALWAYS);
+  return EA_spatialrel_geo_tspatial(fcinfo, &ea_disjoint_geo_tnpoint, ALWAYS);
 }
 
 PGDLLEXPORT Datum Edisjoint_npoint_tnpoint(PG_FUNCTION_ARGS);
@@ -241,7 +165,8 @@ PG_FUNCTION_INFO_V1(Edisjoint_npoint_tnpoint);
 Datum
 Edisjoint_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_npoint_tnpoint(fcinfo, &ea_disjoint_tnpoint_npoint, EVER);
+  return EA_spatialrel_npoint_tnpoint(fcinfo, &ea_disjoint_tnpoint_npoint,
+    EVER);
 }
 
 PGDLLEXPORT Datum Adisjoint_npoint_tnpoint(PG_FUNCTION_ARGS);
@@ -255,7 +180,8 @@ PG_FUNCTION_INFO_V1(Adisjoint_npoint_tnpoint);
 Datum
 Adisjoint_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_npoint_tnpoint(fcinfo, &ea_disjoint_tnpoint_npoint, ALWAYS);
+  return EA_spatialrel_npoint_tnpoint(fcinfo, &ea_disjoint_tnpoint_npoint,
+    ALWAYS);
 }
 
 PGDLLEXPORT Datum Edisjoint_tnpoint_geo(PG_FUNCTION_ARGS);
@@ -269,7 +195,7 @@ PG_FUNCTION_INFO_V1(Edisjoint_tnpoint_geo);
 Datum
 Edisjoint_tnpoint_geo(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_tnpoint_geo(fcinfo, &ea_disjoint_tnpoint_geo, EVER);
+  return EA_spatialrel_tspatial_geo(fcinfo, &ea_disjoint_tnpoint_geo, EVER);
 }
 
 PGDLLEXPORT Datum Adisjoint_tnpoint_geo(PG_FUNCTION_ARGS);
@@ -283,7 +209,7 @@ PG_FUNCTION_INFO_V1(Adisjoint_tnpoint_geo);
 Datum
 Adisjoint_tnpoint_geo(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_tnpoint_geo(fcinfo, &ea_disjoint_tnpoint_geo, ALWAYS);
+  return EA_spatialrel_tspatial_geo(fcinfo, &ea_disjoint_tnpoint_geo, ALWAYS);
 }
 
 PGDLLEXPORT Datum Edisjoint_tnpoint_npoint(PG_FUNCTION_ARGS);
@@ -297,7 +223,7 @@ PG_FUNCTION_INFO_V1(Edisjoint_tnpoint_npoint);
 Datum
 Edisjoint_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_tnpoint_npoint(fcinfo, &ea_disjoint_tnpoint_npoint, EVER);
+  return EA_spatialrel_tnpoint_npoint(fcinfo, &ea_disjoint_tnpoint_npoint, EVER);
 }
 
 PGDLLEXPORT Datum Adisjoint_tnpoint_npoint(PG_FUNCTION_ARGS);
@@ -311,7 +237,7 @@ PG_FUNCTION_INFO_V1(Adisjoint_tnpoint_npoint);
 Datum
 Adisjoint_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_tnpoint_npoint(fcinfo, &ea_disjoint_tnpoint_npoint, ALWAYS);
+  return EA_spatialrel_tnpoint_npoint(fcinfo, &ea_disjoint_tnpoint_npoint, ALWAYS);
 }
 
 /*****************************************************************************/
@@ -326,7 +252,8 @@ PG_FUNCTION_INFO_V1(Edisjoint_tnpoint_tnpoint);
 Datum
 Edisjoint_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_tnpoint_tnpoint(fcinfo, &datum2_point_ne, EVER);
+  return EA_spatialrel_tspatial_tspatial(fcinfo, &datum2_point_ne, NULL,
+    EVER);
 }
 
 PGDLLEXPORT Datum Adisjoint_tnpoint_tnpoint(PG_FUNCTION_ARGS);
@@ -339,7 +266,8 @@ PG_FUNCTION_INFO_V1(Adisjoint_tnpoint_tnpoint);
 Datum
 Adisjoint_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_tnpoint_tnpoint(fcinfo, &datum2_point_ne, ALWAYS);
+  return EA_spatialrel_tspatial_tspatial(fcinfo, &datum2_point_ne, NULL, 
+    ALWAYS);
 }
 
 /*****************************************************************************
@@ -357,7 +285,7 @@ PG_FUNCTION_INFO_V1(Eintersects_geo_tnpoint);
 Datum
 Eintersects_geo_tnpoint(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_geo_tnpoint(fcinfo, &ea_intersects_tnpoint_geo, EVER);
+  return EA_spatialrel_geo_tspatial(fcinfo, &ea_intersects_geo_tnpoint, EVER);
 }
 
 PGDLLEXPORT Datum Aintersects_geo_tnpoint(PG_FUNCTION_ARGS);
@@ -371,7 +299,7 @@ PG_FUNCTION_INFO_V1(Aintersects_geo_tnpoint);
 Datum
 Aintersects_geo_tnpoint(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_geo_tnpoint(fcinfo, &ea_intersects_tnpoint_geo, ALWAYS);
+  return EA_spatialrel_geo_tspatial(fcinfo, &ea_intersects_geo_tnpoint, ALWAYS);
 }
 
 PGDLLEXPORT Datum Eintersects_npoint_tnpoint(PG_FUNCTION_ARGS);
@@ -385,7 +313,7 @@ PG_FUNCTION_INFO_V1(Eintersects_npoint_tnpoint);
 Datum
 Eintersects_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_npoint_tnpoint(fcinfo, &ea_intersects_tnpoint_npoint, EVER);
+  return EA_spatialrel_npoint_tnpoint(fcinfo, &ea_intersects_tnpoint_npoint, EVER);
 }
 
 PGDLLEXPORT Datum Aintersects_npoint_tnpoint(PG_FUNCTION_ARGS);
@@ -399,7 +327,7 @@ PG_FUNCTION_INFO_V1(Aintersects_npoint_tnpoint);
 Datum
 Aintersects_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_npoint_tnpoint(fcinfo, &ea_intersects_tnpoint_npoint, ALWAYS);
+  return EA_spatialrel_npoint_tnpoint(fcinfo, &ea_intersects_tnpoint_npoint, ALWAYS);
 }
 
 PGDLLEXPORT Datum Eintersects_tnpoint_geo(PG_FUNCTION_ARGS);
@@ -413,7 +341,7 @@ PG_FUNCTION_INFO_V1(Eintersects_tnpoint_geo);
 Datum
 Eintersects_tnpoint_geo(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_tnpoint_geo(fcinfo, &ea_intersects_tnpoint_geo, EVER);
+  return EA_spatialrel_tspatial_geo(fcinfo, &ea_intersects_tnpoint_geo, EVER);
 }
 
 PGDLLEXPORT Datum Aintersects_tnpoint_geo(PG_FUNCTION_ARGS);
@@ -427,7 +355,7 @@ PG_FUNCTION_INFO_V1(Aintersects_tnpoint_geo);
 Datum
 Aintersects_tnpoint_geo(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_tnpoint_geo(fcinfo, &ea_intersects_tnpoint_geo, ALWAYS);
+  return EA_spatialrel_tspatial_geo(fcinfo, &ea_intersects_tnpoint_geo, ALWAYS);
 }
 
 PGDLLEXPORT Datum Eintersects_tnpoint_npoint(PG_FUNCTION_ARGS);
@@ -441,7 +369,8 @@ PG_FUNCTION_INFO_V1(Eintersects_tnpoint_npoint);
 Datum
 Eintersects_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_tnpoint_npoint(fcinfo, &ea_intersects_tnpoint_npoint, EVER);
+  return EA_spatialrel_tnpoint_npoint(fcinfo, &ea_intersects_tnpoint_npoint,
+    EVER);
 }
 
 PGDLLEXPORT Datum Aintersects_tnpoint_npoint(PG_FUNCTION_ARGS);
@@ -455,7 +384,8 @@ PG_FUNCTION_INFO_V1(Aintersects_tnpoint_npoint);
 Datum
 Aintersects_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_tnpoint_npoint(fcinfo, &ea_intersects_tnpoint_npoint, ALWAYS);
+  return EA_spatialrel_tnpoint_npoint(fcinfo, &ea_intersects_tnpoint_npoint,
+    ALWAYS);
 }
 
 /*****************************************************************************/
@@ -470,7 +400,7 @@ PG_FUNCTION_INFO_V1(Eintersects_tnpoint_tnpoint);
 Datum
 Eintersects_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_tnpoint_tnpoint(fcinfo, &datum2_point_eq, EVER);
+  return EA_spatialrel_tspatial_tspatial(fcinfo, &datum2_point_eq, NULL, EVER);
 }
 
 PGDLLEXPORT Datum Aintersects_tnpoint_tnpoint(PG_FUNCTION_ARGS);
@@ -483,7 +413,8 @@ PG_FUNCTION_INFO_V1(Aintersects_tnpoint_tnpoint);
 Datum
 Aintersects_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_tnpoint_tnpoint(fcinfo, &datum2_point_eq, ALWAYS);
+  return EA_spatialrel_tspatial_tspatial(fcinfo, &datum2_point_eq, NULL, 
+    ALWAYS);
 }
 
 /*****************************************************************************
@@ -491,31 +422,12 @@ Aintersects_tnpoint_tnpoint(PG_FUNCTION_ARGS)
  *****************************************************************************/
 
 /**
- * @brief Return true if a geometry and a temporal network  point are
- * ever/always within a distance
- * @sqlfn eDwithin(), aDwithin()
- */
-static Datum
-EAdwithin_geo_tnpoint(FunctionCallInfo fcinfo, bool ever)
-{
-  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
-  Temporal *temp = PG_GETARG_TEMPORAL_P(1);
-  double dist = PG_GETARG_FLOAT8(2);
-  int result = ea_dwithin_tnpoint_geom(temp, gs, dist, ever);
-  PG_FREE_IF_COPY(gs, 0);
-  PG_FREE_IF_COPY(temp, 1);
-  if (result < 0)
-    PG_RETURN_NULL();
-  PG_RETURN_INT32(result);
-}
-
-/**
  * @brief Return true if a network point and a temporal network point are
  * ever/always within a distance
  * @sqlfn eDwithin(), aDwithin()
  */
 static Datum
-EAdwithin_npoint_tnpoint(FunctionCallInfo fcinfo, bool ever)
+EA_dwithin_npoint_tnpoint(FunctionCallInfo fcinfo, bool ever)
 {
   Npoint *np = PG_GETARG_NPOINT_P(0);
   Temporal *temp = PG_GETARG_TEMPORAL_P(1);
@@ -526,31 +438,12 @@ EAdwithin_npoint_tnpoint(FunctionCallInfo fcinfo, bool ever)
 }
 
 /**
- * @brief Return true if a temporal network point and a geometry are
- * ever/always within a distance
- * @sqlfn eDwithin(), aDwithin()
- */
-static Datum
-EAdwithin_tnpoint_geo(FunctionCallInfo fcinfo, bool ever)
-{
-  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
-  double dist = PG_GETARG_FLOAT8(2);
-  int result = DatumGetInt32(ea_dwithin_tnpoint_geom(temp, gs, dist, ever));
-  PG_FREE_IF_COPY(temp, 0);
-  PG_FREE_IF_COPY(gs, 1);
-  if (result < 0)
-    PG_RETURN_NULL();
-  PG_RETURN_INT32(result);
-}
-
-/**
  * @brief Return true if a temporal network point and a network point are
  * ever/always within a distance
  * @sqlfn eDwithin(), aDwithin()
  */
 static Datum
-EAdwithin_tnpoint_npoint(FunctionCallInfo fcinfo, bool ever)
+EA_dwithin_tnpoint_npoint(FunctionCallInfo fcinfo, bool ever)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   Npoint *np = PG_GETARG_NPOINT_P(1);
@@ -566,7 +459,7 @@ EAdwithin_tnpoint_npoint(FunctionCallInfo fcinfo, bool ever)
  * @sqlfn eDwithin(), aDwithin()
  */
 static Datum
-EAdwithin_tnpoint_tnpoint(FunctionCallInfo fcinfo, bool ever)
+EA_dwithin_tnpoint_tnpoint(FunctionCallInfo fcinfo, bool ever)
 {
   Temporal *temp1 = PG_GETARG_TEMPORAL_P(0);
   Temporal *temp2 = PG_GETARG_TEMPORAL_P(1);
@@ -592,7 +485,7 @@ PG_FUNCTION_INFO_V1(Edwithin_geo_tnpoint);
 Datum
 Edwithin_geo_tnpoint(PG_FUNCTION_ARGS)
 {
-  return EAdwithin_geo_tnpoint(fcinfo, EVER);
+  return EA_dwithin_geo_tspatial(fcinfo, &ea_dwithin_geom_tnpoint, EVER);
 }
 
 PGDLLEXPORT Datum Adwithin_geo_tnpoint(PG_FUNCTION_ARGS);
@@ -606,35 +499,7 @@ PG_FUNCTION_INFO_V1(Adwithin_geo_tnpoint);
 Datum
 Adwithin_geo_tnpoint(PG_FUNCTION_ARGS)
 {
-  return EAdwithin_geo_tnpoint(fcinfo, ALWAYS);
-}
-
-PGDLLEXPORT Datum Edwithin_npoint_tnpoint(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Edwithin_npoint_tnpoint);
-/**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
- * @brief Return true if a network point and a temporal network point are ever
- * within a distance
- * @sqlfn eDwithin()
- */
-Datum
-Edwithin_npoint_tnpoint(PG_FUNCTION_ARGS)
-{
-  return EAdwithin_npoint_tnpoint(fcinfo, EVER);
-}
-
-PGDLLEXPORT Datum Adwithin_npoint_tnpoint(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Adwithin_npoint_tnpoint);
-/**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
- * @brief Return true if a network point and a temporal network point are
- * always within a distance
- * @sqlfn aDwithin()
- */
-Datum
-Adwithin_npoint_tnpoint(PG_FUNCTION_ARGS)
-{
-  return EAdwithin_npoint_tnpoint(fcinfo, ALWAYS);
+  return EA_dwithin_geo_tspatial(fcinfo, &ea_dwithin_geom_tnpoint, ALWAYS);
 }
 
 PGDLLEXPORT Datum Edwithin_tnpoint_geo(PG_FUNCTION_ARGS);
@@ -648,7 +513,7 @@ PG_FUNCTION_INFO_V1(Edwithin_tnpoint_geo);
 Datum
 Edwithin_tnpoint_geo(PG_FUNCTION_ARGS)
 {
-  return EAdwithin_tnpoint_geo(fcinfo, EVER);
+  return EA_dwithin_tspatial_geo(fcinfo, &ea_dwithin_tnpoint_geom, EVER);
 }
 
 PGDLLEXPORT Datum Adwithin_tnpoint_geo(PG_FUNCTION_ARGS);
@@ -662,7 +527,37 @@ PG_FUNCTION_INFO_V1(Adwithin_tnpoint_geo);
 Datum
 Adwithin_tnpoint_geo(PG_FUNCTION_ARGS)
 {
-  return EAdwithin_tnpoint_geo(fcinfo, ALWAYS);
+  return EA_dwithin_tspatial_geo(fcinfo, &ea_dwithin_tnpoint_geom, ALWAYS);
+}
+
+/*****************************************************************************/
+
+PGDLLEXPORT Datum Edwithin_npoint_tnpoint(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Edwithin_npoint_tnpoint);
+/**
+ * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @brief Return true if a network point and a temporal network point are ever
+ * within a distance
+ * @sqlfn eDwithin()
+ */
+Datum
+Edwithin_npoint_tnpoint(PG_FUNCTION_ARGS)
+{
+  return EA_dwithin_npoint_tnpoint(fcinfo, EVER);
+}
+
+PGDLLEXPORT Datum Adwithin_npoint_tnpoint(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Adwithin_npoint_tnpoint);
+/**
+ * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @brief Return true if a network point and a temporal network point are
+ * always within a distance
+ * @sqlfn aDwithin()
+ */
+Datum
+Adwithin_npoint_tnpoint(PG_FUNCTION_ARGS)
+{
+  return EA_dwithin_npoint_tnpoint(fcinfo, ALWAYS);
 }
 
 PGDLLEXPORT Datum Edwithin_tnpoint_npoint(PG_FUNCTION_ARGS);
@@ -676,7 +571,7 @@ PG_FUNCTION_INFO_V1(Edwithin_tnpoint_npoint);
 Datum
 Edwithin_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
-  return EAdwithin_tnpoint_npoint(fcinfo, EVER);
+  return EA_dwithin_tnpoint_npoint(fcinfo, EVER);
 }
 
 PGDLLEXPORT Datum Adwithin_tnpoint_npoint(PG_FUNCTION_ARGS);
@@ -690,7 +585,7 @@ PG_FUNCTION_INFO_V1(Adwithin_tnpoint_npoint);
 Datum
 Adwithin_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
-  return EAdwithin_tnpoint_npoint(fcinfo, ALWAYS);
+  return EA_dwithin_tnpoint_npoint(fcinfo, ALWAYS);
 }
 
 PGDLLEXPORT Datum Edwithin_tnpoint_tnpoint(PG_FUNCTION_ARGS);
@@ -703,7 +598,7 @@ PG_FUNCTION_INFO_V1(Edwithin_tnpoint_tnpoint);
 Datum
 Edwithin_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 {
-  return EAdwithin_tnpoint_tnpoint(fcinfo, EVER);
+  return EA_dwithin_tnpoint_tnpoint(fcinfo, EVER);
 }
 
 PGDLLEXPORT Datum Adwithin_tnpoint_tnpoint(PG_FUNCTION_ARGS);
@@ -717,7 +612,7 @@ PG_FUNCTION_INFO_V1(Adwithin_tnpoint_tnpoint);
 Datum
 Adwithin_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 {
-  return EAdwithin_tnpoint_tnpoint(fcinfo, ALWAYS);
+  return EA_dwithin_tnpoint_tnpoint(fcinfo, ALWAYS);
 }
 
 /*****************************************************************************
@@ -735,7 +630,7 @@ PG_FUNCTION_INFO_V1(Etouches_geo_tnpoint);
 Datum
 Etouches_geo_tnpoint(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_geo_tnpoint(fcinfo, &ea_touches_tnpoint_geo, EVER);
+  return EA_spatialrel_geo_tspatial(fcinfo, &ea_touches_geo_tnpoint, EVER);
 }
 
 PGDLLEXPORT Datum Atouches_geo_tnpoint(PG_FUNCTION_ARGS);
@@ -749,7 +644,7 @@ PG_FUNCTION_INFO_V1(Atouches_geo_tnpoint);
 Datum
 Atouches_geo_tnpoint(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_geo_tnpoint(fcinfo, &ea_touches_tnpoint_geo, ALWAYS);
+  return EA_spatialrel_geo_tspatial(fcinfo, &ea_touches_geo_tnpoint, ALWAYS);
 }
 
 PGDLLEXPORT Datum Etouches_npoint_tnpoint(PG_FUNCTION_ARGS);
@@ -763,7 +658,7 @@ PG_FUNCTION_INFO_V1(Etouches_npoint_tnpoint);
 Datum
 Etouches_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_npoint_tnpoint(fcinfo, &ea_touches_tnpoint_npoint, EVER);
+  return EA_spatialrel_npoint_tnpoint(fcinfo, &ea_touches_tnpoint_npoint, EVER);
 }
 
 PGDLLEXPORT Datum Atouches_npoint_tnpoint(PG_FUNCTION_ARGS);
@@ -777,7 +672,7 @@ PG_FUNCTION_INFO_V1(Atouches_npoint_tnpoint);
 Datum
 Atouches_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_npoint_tnpoint(fcinfo, &ea_touches_tnpoint_npoint, ALWAYS);
+  return EA_spatialrel_npoint_tnpoint(fcinfo, &ea_touches_tnpoint_npoint, ALWAYS);
 }
 
 PGDLLEXPORT Datum Etouches_tnpoint_geo(PG_FUNCTION_ARGS);
@@ -791,7 +686,7 @@ PG_FUNCTION_INFO_V1(Etouches_tnpoint_geo);
 Datum
 Etouches_tnpoint_geo(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_tnpoint_geo(fcinfo, &ea_touches_tnpoint_geo, EVER);
+  return EA_spatialrel_tspatial_geo(fcinfo, &ea_touches_tnpoint_geo, EVER);
 }
 
 PGDLLEXPORT Datum Atouches_tnpoint_geo(PG_FUNCTION_ARGS);
@@ -805,7 +700,7 @@ PG_FUNCTION_INFO_V1(Atouches_tnpoint_geo);
 Datum
 Atouches_tnpoint_geo(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_tnpoint_geo(fcinfo, &ea_touches_tnpoint_geo, ALWAYS);
+  return EA_spatialrel_tspatial_geo(fcinfo, &ea_touches_tnpoint_geo, ALWAYS);
 }
 
 PGDLLEXPORT Datum Etouches_tnpoint_npoint(PG_FUNCTION_ARGS);
@@ -819,7 +714,7 @@ PG_FUNCTION_INFO_V1(Etouches_tnpoint_npoint);
 Datum
 Etouches_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_tnpoint_npoint(fcinfo, &ea_touches_tnpoint_npoint, EVER);
+  return EA_spatialrel_tnpoint_npoint(fcinfo, &ea_touches_tnpoint_npoint, EVER);
 }
 
 PGDLLEXPORT Datum Atouches_tnpoint_npoint(PG_FUNCTION_ARGS);
@@ -833,7 +728,7 @@ PG_FUNCTION_INFO_V1(Atouches_tnpoint_npoint);
 Datum
 Atouches_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
-  return EAspatialrel_tnpoint_npoint(fcinfo, &ea_touches_tnpoint_npoint,
+  return EA_spatialrel_tnpoint_npoint(fcinfo, &ea_touches_tnpoint_npoint,
     ALWAYS);
 }
 

@@ -42,13 +42,16 @@
 /* PostGIS */
 #include <liblwgeom.h>
 /* MEOS */
+#include <meos.h>
 #include <meos_pose.h>
 #include "general/pg_types.h"
 #include "general/set.h"
 #include "general/type_inout.h"
 #include "general/type_util.h"
+#include "pose/pose.h"
 /* MobilityDB */
 #include "pg_general/temporal.h"
+#include "pg_general/type_util.h"
 
 /*****************************************************************************
  * Input/Output functions
@@ -242,7 +245,7 @@ Pose_as_hexwkb(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************
- * Constructors
+ * Constructor functions
  *****************************************************************************/
 
 PGDLLEXPORT Datum Pose_constructor(PG_FUNCTION_ARGS);
@@ -280,20 +283,24 @@ Pose_constructor(PG_FUNCTION_ARGS)
  * Conversion functions
  *****************************************************************************/
 
-PGDLLEXPORT Datum Pose_to_geom(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Pose_to_geom);
+PGDLLEXPORT Datum Pose_to_point(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Pose_to_point);
 /**
  * @ingroup mobilitydb_base_conversion
  * @brief Transforms a pose into a geometry point
  * @sqlfn geometry()
  */
 Datum
-Pose_to_geom(PG_FUNCTION_ARGS)
+Pose_to_point(PG_FUNCTION_ARGS)
 {
   Pose *pose = PG_GETARG_POSE_P(0);
   GSERIALIZED *result = pose_point(pose);
   PG_RETURN_POINTER(result);
 }
+
+/*****************************************************************************
+ * Accessor functions
+ *****************************************************************************/
 
 /*****************************************************************************
  * Transformation functions
@@ -317,6 +324,35 @@ Pose_round(PG_FUNCTION_ARGS)
   PG_RETURN_TEMPORAL_P(result);
 }
 
+PGDLLEXPORT Datum Posearr_round(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Posearr_round);
+/**
+ * @ingroup mobilitydb_temporal_transf
+ * @brief Return an array of poses with the precision of the
+ * values set to a number of decimal places
+ * @sqlfn round()
+ */
+Datum
+Posearr_round(PG_FUNCTION_ARGS)
+{
+  ArrayType *array = PG_GETARG_ARRAYTYPE_P(0);
+  /* Return NULL on empty array */
+  int count = ArrayGetNItems(ARR_NDIM(array), ARR_DIMS(array));
+  if (count == 0)
+  {
+    PG_FREE_IF_COPY(array, 0);
+    PG_RETURN_NULL();
+  }
+  int maxdd = PG_GETARG_INT32(1);
+
+  Pose **posearr = posearr_extract(array, &count);
+  Pose **resarr = posearr_round((const Pose **) posearr, count, maxdd);
+  ArrayType *result = posearr_to_array((const Pose **) resarr, count);
+  pfree(posearr);
+  PG_FREE_IF_COPY(array, 0);
+  PG_RETURN_ARRAYTYPE_P(result);
+}
+
 PGDLLEXPORT Datum Poseset_round(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Poseset_round);
 /**
@@ -330,9 +366,87 @@ Poseset_round(PG_FUNCTION_ARGS)
 {
   Set *s = PG_GETARG_SET_P(0);
   int maxdd = PG_GETARG_INT32(1);
-  Set *result = poseset_round(s, maxdd);
+  Set *result = set_round(s, maxdd, &datum_pose_round);
   PG_FREE_IF_COPY(s, 0);
   PG_RETURN_SET_P(result);
+}
+
+/*****************************************************************************
+ * SRID functions
+ *****************************************************************************/
+
+PGDLLEXPORT Datum Pose_srid(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Pose_srid);
+/**
+ * @ingroup mobilitydb_base_spatial
+ * @brief Return the SRID of a pose
+ * @sqlfn SRID()
+ */
+Datum
+Pose_srid(PG_FUNCTION_ARGS)
+{
+  Pose *pose = PG_GETARG_POSE_P(0);
+  int result = pose_srid(pose);
+  PG_RETURN_INT32(result);
+}
+
+PGDLLEXPORT Datum Pose_set_srid(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Pose_set_srid);
+/**
+ * @ingroup mobilitydb_base_spatial
+ * @brief Return a pose with the coordinates of the point set to an SRID
+ * @sqlfn setSRID()
+ */
+Datum
+Pose_set_srid(PG_FUNCTION_ARGS)
+{
+  Pose *pose = PG_GETARG_POSE_P(0);
+  int32_t srid = PG_GETARG_INT32(1);
+  Pose *result = pose_copy(pose);
+  pose_set_srid(result, srid);
+  PG_RETURN_POSE_P(result);
+}
+
+/*****************************************************************************/
+
+PGDLLEXPORT Datum Pose_transform(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Pose_transform);
+/**
+ * @ingroup mobilitydb_temporal_spatial_srid
+ * @brief Return a pose transformed to an SRID
+ * @sqlfn transform()
+ */
+Datum
+Pose_transform(PG_FUNCTION_ARGS)
+{
+  Pose *cbuf = PG_GETARG_POSE_P(0);
+  int32_t srid = PG_GETARG_INT32(1);
+  Pose *result = pose_transform(cbuf, srid);
+  PG_FREE_IF_COPY(cbuf, 0);
+  PG_RETURN_POSE_P(result);
+}
+
+PGDLLEXPORT Datum Pose_transform_pipeline(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Pose_transform_pipeline);
+/**
+ * @ingroup mobilitydb_temporal_spatial_srid
+ * @brief Return a pose transformed to an SRID using a transformation pipeline
+ * @sqlfn transformPipeline()
+ */
+Datum
+Pose_transform_pipeline(PG_FUNCTION_ARGS)
+{
+  Pose *cbuf = PG_GETARG_POSE_P(0);
+  text *pipelinetxt = PG_GETARG_TEXT_P(1);
+  int32_t srid = PG_GETARG_INT32(2);
+  bool is_forward = PG_GETARG_BOOL(3);
+  char *pipelinestr = text2cstring(pipelinetxt);
+  Pose *result = pose_transform_pipeline(cbuf, pipelinestr, srid,
+    is_forward);
+  pfree(pipelinestr);
+  PG_FREE_IF_COPY(cbuf, 0);
+  PG_FREE_IF_COPY(pipelinetxt, 1);
+  PG_RETURN_POSE_P(result);
 }
 
 /*****************************************************************************
@@ -509,6 +623,5 @@ Pose_hash_extended(PG_FUNCTION_ARGS)
   PG_FREE_IF_COPY(pose, 0);
   PG_RETURN_UINT64(result);
 }
-
 
 /*****************************************************************************/

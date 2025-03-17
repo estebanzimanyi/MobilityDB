@@ -447,7 +447,7 @@ lwproj_get(int32_t srid_from, int32_t srid_to)
  * @param[in] pipeline Pipeline string
  * @param[in] is_forward True when the transformation is forward
  */
-static LWPROJ *
+LWPROJ *
 lwproj_get_pipeline(const char *pipeline, bool is_forward)
 {
   assert(pipeline);
@@ -510,7 +510,7 @@ ensure_srid_is_latlong(int32_t srid)
  * @note Derived from PostGIS version 3.4.0 function ptarray_transform(),
  * file `lwgeom_transform.c`
  */
-static bool
+bool
 point_transf_pj(GSERIALIZED *gs, int32_t srid_to, const LWPROJ *pj)
 {
   assert(gs); assert(pj);
@@ -548,200 +548,6 @@ point_transf_pj(GSERIALIZED *gs, int32_t srid_to, const LWPROJ *pj)
   gserialized_set_srid(gs, srid_to);
   return true;
 }
-
-/*****************************************************************************/
-
-#if CBUFFER
-/**
- * @brief Return a circular buffer transformed to another SRID using a
- * pipeline
- * @param[in] cbuf Circular buffer
- * @param[in] srid_to Target SRID, may be @p SRID_UNKNOWN for pipeline
- * transformation
- * @param[in] pj Information about the transformation
- */
-static Cbuffer *
-cbuffer_transf_pj(const Cbuffer *cbuf, int32_t srid_to, const LWPROJ *pj)
-{
-  assert(cbuf); assert(pj);
-  /* Copy the circular buffer to transform its point in place */
-  Cbuffer *result = cbuffer_copy(cbuf);
-  GSERIALIZED *gs = DatumGetGserializedP(PointerGetDatum(&result->point));
-  if (! point_transf_pj(gs, srid_to, pj))
-  {
-    pfree(result);
-    return NULL;
-  }
-  return result;
-}
-
-/**
- * @ingroup meos_base_spatial
- * @brief Return a circular buffer transformed to another SRID
- * @param[in] cbuf Circular buffer
- * @param[in] srid_to Target SRID
- */
-Cbuffer *
-cbuffer_transform(const Cbuffer *cbuf, int32_t srid_to)
-{
-  int32_t srid_from;
-  /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) cbuf) || ! ensure_srid_known(srid_to) ||
-      ! ensure_srid_known(srid_from = cbuffer_srid(cbuf)))
-    return NULL;
-    
-  /* Input and output SRIDs are equal, noop */
-  if (srid_from == srid_to)
-    return cbuffer_copy(cbuf);
-
-  /* Get the structure with information about the projection */
-  LWPROJ *pj = lwproj_get(srid_from, srid_to);
-  if (! pj)
-    return NULL;
-
-  /* Transform the circular buffer */
-  Cbuffer *result = cbuffer_transf_pj(cbuf, srid_to, pj);
-
-  /* Clean up and return */
-  proj_destroy(pj->pj); pfree(pj);
-  return result;
-}
-
-/**
- * @ingroup meos_base_spatial
- * @brief Return a circular buffer transformed to another SRID using a
- * pipeline
- * @param[in] cbuf Circular buffer
- * @param[in] pipeline Pipeline string
- * @param[in] srid_to Target SRID, may be @p SRID_UNKNOWN
- * @param[in] is_forward True when the transformation is forward
- */
-Cbuffer *
-cbuffer_transform_pipeline(const Cbuffer *cbuf, const char *pipeline,
-  int32_t srid_to, bool is_forward)
-{
-  /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) cbuf) || ! ensure_not_null((void *) pipeline))
-    return NULL;
-
-  /* There is NO test verifying whether the input and output SRIDs are equal */
-
-  /* Get the structure with information about the projection */
-  LWPROJ *pj = lwproj_get_pipeline(pipeline, is_forward);
-  if (! pj)
-    return NULL;
-
-  /* Transform the circular buffer */
-  Cbuffer *result = cbuffer_transf_pj(cbuf, srid_to, pj);
-
-  /* Transform the circular buffer */
-  proj_destroy(pj->pj); pfree(pj);
-  return result;
-}
-#endif /* CBUFFER */
-
-/*****************************************************************************/
-
-#if POSE
-/**
- * @brief Return a pose transformed to another SRID using a pipeline
- * @param[in] pose Pose
- * @param[in] srid_to Target SRID, may be @p SRID_UNKNOWN for pipeline
- * transformation
- * @param[in] pj Information about the transformation
- */
-static Pose *
-pose_transf_pj(const Pose *pose, int32_t srid_to, const LWPROJ *pj)
-{
-  assert(pose); assert(pj);
-  /* Copy the pose to transform its point in place */
-  Pose *result = pose_copy(pose);
-  GSERIALIZED *gs = pose_point(pose);
-  if (! point_transf_pj(gs, srid_to, pj))
-  {
-    pfree(result);
-    return NULL;
-  }
-  double *pa_double = (double *) (GS_POINT_PTR(gs));
-  if (MEOS_FLAGS_GET_Z(pose->flags))
-  {
-    result->data[0] = pa_double[0];
-    result->data[1] = pa_double[1];
-    result->data[2] = pa_double[2];
-  }
-  else
-  {
-    result->data[0] = pa_double[0];
-    result->data[1] = pa_double[1];
-  }
-  pose_set_srid(result, srid_to);
-  return result;
-}
-
-/**
- * @ingroup meos_base_spatial
- * @brief Return a pose transformed to another SRID
- * @param[in] pose Pose
- * @param[in] srid_to Target SRID
- */
-Pose *
-pose_transform(const Pose *pose, int32_t srid_to)
-{
-  int32_t srid_from;
-  /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) pose) || ! ensure_srid_known(srid_to) ||
-      ! ensure_srid_known(srid_from = pose_srid(pose)))
-    return NULL;
-    
-  /* Input and output SRIDs are equal, noop */
-  if (srid_from == srid_to)
-    return pose_copy(pose);
-
-  /* Get the structure with information about the projection */
-  LWPROJ *pj = lwproj_get(srid_from, srid_to);
-  if (! pj)
-    return NULL;
-
-  /* Transform the pose */
-  Pose *result = pose_transf_pj(pose, srid_to, pj);
-
-  /* Clean up and return */
-  proj_destroy(pj->pj); pfree(pj);
-  return result;
-}
-
-/**
- * @ingroup meos_base_spatial
- * @brief Return a pose transformed to another SRID using a
- * pipeline
- * @param[in] pose Pose
- * @param[in] pipeline Pipeline string
- * @param[in] srid_to Target SRID, may be @p SRID_UNKNOWN
- * @param[in] is_forward True when the transformation is forward
- */
-Pose *
-pose_transform_pipeline(const Pose *pose, const char *pipeline,
-  int32_t srid_to, bool is_forward)
-{
-  /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) pose) || ! ensure_not_null((void *) pipeline))
-    return NULL;
-
-  /* There is NO test verifying whether the input and output SRIDs are equal */
-
-  /* Get the structure with information about the projection */
-  LWPROJ *pj = lwproj_get_pipeline(pipeline, is_forward);
-  if (! pj)
-    return NULL;
-
-  /* Transform the pose */
-  Pose *result = pose_transf_pj(pose, srid_to, pj);
-
-  /* Transform the pose */
-  proj_destroy(pj->pj); pfree(pj);
-  return result;
-}
-#endif /* POSE */
 
 /*****************************************************************************
  * Generic functions

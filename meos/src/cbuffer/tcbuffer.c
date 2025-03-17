@@ -53,6 +53,7 @@
  * Input/output
  *****************************************************************************/
 
+#if MEOS
 /**
  * @ingroup meos_internal_temporal_inout
  * @brief Return a temporal circular buffer instant from its Well-Known Text
@@ -103,6 +104,43 @@ tcbufferseqset_in(const char *str)
   assert(temp->subtype == TSEQUENCESET);
   return (TSequenceSet *) temp;
 }
+#endif /* MEOS */
+
+/*****************************************************************************/
+
+#if MEOS
+/**
+ * @ingroup meos_temporal_inout
+ * @brief Return a temporal circular buffer from its Well-Known Text (WKT)
+ * representation
+ * @param[in] str String
+ */
+Temporal *
+tcbuffer_in(const char *str)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) str))
+    return NULL;
+  return tspatial_parse(&str, T_TCBUFFER);
+}
+
+/**
+ * @ingroup meos_temporal_inout
+ * @brief Return the Well-Known Text (WKT) representation of a temporal
+ * circular buffer
+ * @param[in] temp Temporal circular buffer
+ * @param[in] maxdd Maximum number of decimal digits
+ */
+char *
+tcbuffer_out(const Temporal *temp, int maxdd)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) temp) || 
+      ! ensure_temporal_isof_type(temp, T_TCBUFFER))
+    return NULL;
+  return temporal_out(temp, maxdd);
+}
+#endif /* MEOS */
 
 /*****************************************************************************
  * Constructor functions
@@ -206,81 +244,6 @@ tcbuffer_make(const Temporal *tpoint, const Temporal *tfloat)
       return (Temporal *) tcbufferseqset_make((TSequenceSet *) sync1, 
         (TSequenceSet *) sync2);
   }
-}
-
-/*****************************************************************************/
-
-#if MEOS
-/**
- * @ingroup meos_temporal_constructor
- * @brief Return a temporal circular buffer from a circular buffer and the time
- * frame of another temporal value
- * @param[in] cbuf Value
- * @param[in] temp Temporal value
- */
-Temporal *
-tcbuffer_from_base_temp(const Cbuffer *cbuf, const Temporal *temp)
-{
-  /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) cbuf))
-    return NULL;
-  return temporal_from_base_temp(PointerGetDatum(cbuf), T_TCBUFFER, temp);
-}
-#endif /* MEOS */
-
-/**
- * @ingroup meos_temporal_constructor
- * @brief Return a temporal circular buffer discrete sequence from a circular
- * buffer and a timestamptz set
- * @param[in] cbuf Value
- * @param[in] s Set
- */
-TSequence *
-tcbufferseq_from_base_tstzset(const Cbuffer *cbuf, const Set *s)
-{
-  /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) cbuf) || ! ensure_not_null((void *) s) || 
-      ! ensure_set_isof_type(s, T_TSTZSET))
-    return NULL;
-  return tsequence_from_base_tstzset(PointerGetDatum(cbuf), T_TCBUFFER, s);
-}
-
-/**
- * @ingroup meos_temporal_constructor
- * @brief Return a temporal circular buffer sequence from a circular buffer and
- * a timestamptz span
- * @param[in] cbuf Value
- * @param[in] s Span
- * @param[in] interp Interpolation
- */
-TSequence *
-tcbufferseq_from_base_tstzspan(const Cbuffer *cbuf, const Span *s,
-  interpType interp)
-{
-  /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) cbuf) || ! ensure_not_null((void *) s) ||
-      ! ensure_span_isof_type(s, T_TSTZSPAN))
-    return NULL;
-  return tsequence_from_base_tstzspan(PointerGetDatum(cbuf), T_TCBUFFER, s,
-    interp);
-}
-
-/**
- * @ingroup meos_temporal_constructor
- * @brief Return a temporal circular buffer sequence set from a circular buffer
- * and a timestamptz span set
- * @param[in] cbuf Value
- * @param[in] ss Span set
- */
-TSequenceSet *
-tcbufferseqset_from_base_tstzspanset(const Cbuffer *cbuf, const SpanSet *ss)
-{
-  /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) cbuf) || ! ensure_not_null((void *) ss) ||
-      ! ensure_spanset_isof_type(ss, T_TSTZSPANSET))
-    return NULL;
-  return tsequenceset_from_base_tstzspanset(PointerGetDatum(cbuf), T_TCBUFFER, 
-    ss, STEP);
 }
 
 /*****************************************************************************
@@ -523,40 +486,6 @@ tgeompoint_tcbuffer(const Temporal *temp)
     default: /* TSEQUENCESET */
       return (Temporal *) tgeompointseqset_tcbufferseqset((TSequenceSet *) temp);
   }
-}
-
-/*****************************************************************************
- * Transformation functions
- *****************************************************************************/
-
-/**
- * @ingroup meos_temporal_transf
- * @brief Return a temporal circular buffer with the precision of values
- * set to a number of decimal places
- */
-Temporal *
-tcbuffer_round(const Temporal *temp, int maxdd)
-{
-  /* Ensure validity of the arguments */
-#if MEOS
-  if (! ensure_not_null((void *) temp) ||
-      ! ensure_temporal_isof_type(temp, T_TCBUFFER))
-    return NULL;
-#else
-  assert(temp); assert(temp->temptype == T_TCBUFFER);
-#endif /* MEOS */
-
-  /* We only need to fill these parameters for tfunc_temporal */
-  LiftedFunctionInfo lfinfo;
-  memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
-  lfinfo.func = (varfunc) &datum_cbuffer_round;
-  lfinfo.numparam = 1;
-  lfinfo.param[0] = Int32GetDatum(maxdd);
-  lfinfo.argtype[0]= temp->temptype;
-  lfinfo.restype = temp->temptype;
-  lfinfo.tpfunc_base = NULL;
-  lfinfo.tpfunc = NULL;
-  return tfunc_temporal(temp, &lfinfo);
 }
 
 /*****************************************************************************

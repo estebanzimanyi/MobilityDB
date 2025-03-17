@@ -75,7 +75,7 @@
  *
  * @defgroup meos_internal Internal API
  * @ingroup meos
- * @brief Internal API of Mobility Engine Open Source (MEOS) library
+ * @brief Internal API of the Mobility Engine Open Source (MEOS) library
  */
 
 /**

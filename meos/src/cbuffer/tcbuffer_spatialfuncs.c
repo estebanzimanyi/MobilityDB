@@ -129,21 +129,6 @@ ensure_valid_stbox_cbuffer(const STBox *box, const Cbuffer *cbuf)
   return true;
 }
 
-/**
- * @brief Ensure the validity of a temporal circular buffer and a geometry
- * @note The geometry can be empty since some functions such atGeometry or
- * minusGeometry return different result on empty geometries.
- */
-bool
-ensure_valid_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
-{
-  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_temporal_isof_type(temp, T_TCBUFFER) ||
-      ! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)))
-    return false;
-  return true;
-}
-
 extern LWCIRCSTRING *lwcircstring_from_lwpointarray(int32_t srid, uint32_t npoints, LWPOINT **points);
 
 /**

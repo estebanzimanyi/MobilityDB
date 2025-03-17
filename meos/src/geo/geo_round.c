@@ -29,7 +29,7 @@
 
 /**
  * @file
- * @brief Functions for rounding the float components of types
+ * @brief Functions for rounding the float coordinates of geometries
  */
 
 /* C */
@@ -50,108 +50,6 @@
 #include "geo/stbox.h"
 #include "geo/tgeo.h"
 #include "geo/tgeo_spatialfuncs.h"
-
-
-/*****************************************************************************
- * Span
- *****************************************************************************/
-
-/**
- * @ingroup meos_internal_setspan_transf
- * @brief Return in the last argument a float span with the precision set to a
- * number of decimal places
- * @param[in] s Span
- * @param[in] maxdd Maximum number of decimal digits
- * @param[out] result Result span
- */
-void
-floatspan_round_set(const Span *s, int maxdd, Span *result)
-{
-  assert(s); assert(s->spantype == T_FLOATSPAN); assert(result);
-  /* Set precision of bounds */
-  double lower = float_round(DatumGetFloat8(s->lower), maxdd);
-  double upper = float_round(DatumGetFloat8(s->upper), maxdd);
-  /* Fix the bounds */
-  bool lower_inc, upper_inc;
-  if (float8_eq(lower, upper))
-  {
-    lower_inc = upper_inc = true;
-  }
-  else
-  {
-    lower_inc = s->lower_inc; upper_inc = s->upper_inc;
-  }
-  /* Set resulting span */
-  span_set(Float8GetDatum(lower), Float8GetDatum(upper), lower_inc, upper_inc,
-    s->basetype, s->spantype, result);
-  return;
-}
-
-/**
- * @ingroup meos_setspan_transf
- * @brief Return a float span with the precision of the bounds set to a
- * number of decimal places
- * @param[in] s Span
- * @param[in] maxdd Maximum number of decimal digits
- * @return On error return @p NULL
- */
-Span *
-floatspan_round(const Span *s, int maxdd)
-{
-#if MEOS
-  /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) s) || ! ensure_not_negative(maxdd) ||
-      ! ensure_span_isof_type(s, T_FLOATSPAN))
-    return NULL;
-#else
-  assert(s); assert(maxdd >=0); assert(s->spantype == T_FLOATSPAN);
-#endif /* MEOS */
-
-  Span *result = palloc(sizeof(Span));
-  floatspan_round_set(s, maxdd, result);
-  return result;
-}
-
-/*****************************************************************************
- * SpanSet
- *****************************************************************************/
-
-/**
- * @ingroup meos_setspan_transf
- * @brief Return a float span set with the precision of the spans set to a
- * number of decimal places
- * @param[in] ss Span set
- * @param[in] maxdd Maximum number of decimal digits
- * @csqlfn #Floatspanset_round()
- */
-SpanSet *
-floatspanset_round(const SpanSet *ss, int maxdd)
-{
-#if MEOS
-  /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) ss) || ! ensure_not_negative(maxdd) ||
-      ! ensure_spanset_isof_type(ss, T_FLOATSPANSET))
-    return NULL;
-#else
-  assert(ss); assert(ss->spansettype == T_FLOATSPANSET); assert(maxdd >= 0);
-#endif /* MEOS */
-
-  Span *spans = palloc(sizeof(Span) * ss->count);
-  for (int i = 0; i < ss->count; i++)
-    floatspan_round_set(SPANSET_SP_N(ss, i), maxdd, &spans[i]);
-  return spanset_make_free(spans, ss->count, NORMALIZE, ORDER_NO);
-}
-
-/*****************************************************************************
- * Tbox
- *****************************************************************************/
-
-
-/*****************************************************************************
- * STbox
- *****************************************************************************/
-
-
 
 /*****************************************************************************
  * Geometry/Geography
@@ -630,7 +528,7 @@ round_geometrycollection(GSERIALIZED *gs, int maxdd)
  * @note Currently not all geometry types are allowed
  */
 Datum
-datum_round_geo(Datum value, Datum size)
+datum_geo_round(Datum value, Datum size)
 {
   GSERIALIZED *gs = DatumGetGserializedP(value);
   int maxdd = DatumGetInt32(size);
@@ -665,64 +563,6 @@ datum_round_geo(Datum value, Datum size)
   meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
     "Unsupported geometry type in round function: %s", geo_typename(type));
   return PointerGetDatum(NULL);
-}
-
-/*****************************************************************************
- * Temporal geo
- *****************************************************************************/
-
-/**
- * @ingroup meos_temporal_transf
- * @brief Return a temporal geo with the precision of the coordinates set to a
- * number of decimal places
- * @param[in] temp Temporal geometry
- * @param[in] maxdd Maximum number of decimal digits
- * @csqlfn #Tgeo_round()
- */
-Temporal *
-tgeo_round(const Temporal *temp, int maxdd)
-{
-  /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || 
-      ! ensure_tgeo_type_all(temp->temptype) || ! ensure_not_negative(maxdd))
-    return NULL;
-
-  /* We only need to fill these parameters for tfunc_temporal */
-  LiftedFunctionInfo lfinfo;
-  memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
-  lfinfo.func = (varfunc) &datum_round_geo;
-  lfinfo.numparam = 1;
-  lfinfo.param[0] = Int32GetDatum(maxdd);
-  lfinfo.argtype[0]= temp->temptype;
-  lfinfo.restype = temp->temptype;
-  lfinfo.tpfunc_base = NULL;
-  lfinfo.tpfunc = NULL;
-  return tfunc_temporal(temp, &lfinfo);
-}
-
-/**
- * @ingroup meos_temporal_transf
- * @brief Return an array of temporal geos with the precision of the
- * coordinates set to a number of decimal places
- * @param[in] temparr Array of temporal geometries/geographies
- * @param[in] count Number of elements in the array
- * @param[in] maxdd Maximum number of decimal digits
- * @csqlfn #Tgeoarr_round()
- */
-Temporal **
-tgeoarr_round(const Temporal **temparr, int count, int maxdd)
-{
-  /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temparr) ||
-      /* Ensure that the FIRST element is a temporal point */
-      ! ensure_tgeo_type_all(temparr[0]->temptype) ||
-      ! ensure_positive(count) || ! ensure_not_negative(maxdd))
-    return NULL;
-
-  Temporal **result = palloc(sizeof(Temporal *) * count);
-  for (int i = 0; i < count; i++)
-    result[i] = tgeo_round(temparr[i], maxdd);
-  return result;
 }
 
 /*****************************************************************************/

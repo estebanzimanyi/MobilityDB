@@ -73,6 +73,8 @@ struct Cbuffer
 extern bool cbuffer_collinear(Cbuffer *cbuf1, Cbuffer *cbuf2, Cbuffer *cbuf3,
   double ratio);
 
+extern Cbuffer *cbuffer_parse(const char **str, bool end);
+
 /* Input/output functions */
 
 extern char *cbuffer_wkt_out(Datum value, int maxdd, bool extended);
@@ -81,7 +83,10 @@ extern Datum datum_cbuffer_round(Datum buffer, Datum size);
 extern Cbuffer *cbuffer_round(const Cbuffer *cbuf, int maxdd);
 extern Cbuffer **cbufferarr_round(const Cbuffer **cbufarr, int count, int maxdd);
 extern Set *cbufferset_round(const Set *s, int maxdd);
-extern Temporal *tcbuffer_round(const Temporal *temp, int maxdd);
+
+/* Transformation functions */
+
+extern Cbuffer *cbuffer_transf_pj(const Cbuffer *cbuf, int32_t srid_to, const LWPROJ *pj);
   
 /*****************************************************************************/
 

@@ -205,13 +205,13 @@ SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_npoint t2 WHERE aDwithin(t1.temp, t2.np
 SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE eDisjoint(t1.temp, t2.temp) AND t1.k%4 = 0 AND t2.k%4 = 0;
  count 
 -------
-     0
+    10
 (1 row)
 
 SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE eIntersects(t1.temp, t2.temp) AND t1.k%4 = 0 AND t2.k%4 = 0;
  count 
 -------
-    25
+    19
 (1 row)
 
 SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE eDwithin(t1.temp, t2.temp, 0.01) AND t1.k%4 = 0 AND t2.k%4 = 0 AND tempSubtype(t1.temp) != 'SequenceSet';
@@ -223,13 +223,13 @@ SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE eDwithin(t1.temp, t2.t
 SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE aDisjoint(t1.temp, t2.temp) AND t1.k%4 = 0 AND t2.k%4 = 0;
  count 
 -------
-     0
+     6
 (1 row)
 
 SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE aIntersects(t1.temp, t2.temp) AND t1.k%4 = 0 AND t2.k%4 = 0;
  count 
 -------
-    25
+    16
 (1 row)
 
 SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE aDwithin(t1.temp, t2.temp, 0.01) AND t1.k%4 = 0 AND t2.k%4 = 0 AND tempSubtype(t1.temp) != 'SequenceSet';

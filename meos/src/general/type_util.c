@@ -48,9 +48,7 @@
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
-#if NPOINT
-  #include <meos_pose.h>
-#endif
+
 #include "general/pg_types.h"
 #include "general/span.h"
 #if CBUFFER
@@ -58,7 +56,11 @@
   #include "cbuffer/cbuffer.h"
 #endif
 #if NPOINT
+  #include <meos_pose.h>
   #include "npoint/tnpoint.h"
+#endif
+#if POSE
+  #include "pose/tpose.h"
 #endif
 
 /*****************************************************************************

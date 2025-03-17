@@ -37,20 +37,20 @@
 
 CREATE FUNCTION tgeometryFromText(text)
   RETURNS tgeometry
-  AS 'MODULE_PATHNAME', 'Tgeo_from_ewkt'
+  AS 'MODULE_PATHNAME', 'Tspatial_from_ewkt'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tgeographyFromText(text)
   RETURNS tgeography
-  AS 'MODULE_PATHNAME', 'Tgeo_from_ewkt'
+  AS 'MODULE_PATHNAME', 'Tspatial_from_ewkt'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION tgeometryFromEWKT(text)
   RETURNS tgeometry
-  AS 'MODULE_PATHNAME', 'Tgeo_from_ewkt'
+  AS 'MODULE_PATHNAME', 'Tspatial_from_ewkt'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tgeographyFromEWKT(text)
   RETURNS tgeography
-  AS 'MODULE_PATHNAME', 'Tgeo_from_ewkt'
+  AS 'MODULE_PATHNAME', 'Tspatial_from_ewkt'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION tgeometryFromMFJSON(text)

@@ -352,14 +352,31 @@ cbufferarr_to_array(Cbuffer **cbufarr, int count, bool free_all)
   ArrayType *result = construct_array((Datum *) cbufarr, count, cbuftypid, -1,
     false, 'd');
   if (free_all)
-  {
     for (int i = 0; i < count; i++)
       pfree(cbufarr[i]);
-  }
   pfree(cbufarr);
   return result;
 }
 #endif /* CBUFFER */
+
+#if POSE
+/**
+ * @brief Return a C array of spans converted into a PostgreSQL array
+ */
+ArrayType *
+posearr_to_array(Pose **posearr, int count, bool free_all)
+{
+  assert(count > 0);
+  Oid cbuftypid = type_oid(T_CBUFFER);
+  ArrayType *result = construct_array((Datum *) posearr, count, cbuftypid, -1,
+    false, 'd');
+  if (free_all)
+    for (int i = 0; i < count; i++)
+      pfree(posearr[i]);
+  pfree(posearr);
+  return result;
+}
+#endif /* POSE */
 
 /**
  * @brief Return a C array of spans converted into a PostgreSQL array

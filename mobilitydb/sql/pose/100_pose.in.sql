@@ -68,6 +68,26 @@ CREATE TYPE pose (
   alignment = double
 );
 
+-- Input/output in WKT, WKB and HexWKB format
+
+CREATE FUNCTION asText(pose, maxdecimaldigits int4 DEFAULT 15)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Pose_as_text'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION asText(pose[], maxdecimaldigits int4 DEFAULT 15)
+  RETURNS text[]
+  AS 'MODULE_PATHNAME', 'Spatialarr_as_text'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION asEWKT(pose, maxdecimaldigits int4 DEFAULT 15)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Pose_as_ewkt'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION asEWKT(pose[], maxdecimaldigits int4 DEFAULT 15)
+  RETURNS text[]
+  AS 'MODULE_PATHNAME', 'Spatialarr_as_ewkt'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 /******************************************************************************
  * Constructors
  ******************************************************************************/
@@ -89,7 +109,7 @@ CREATE FUNCTION pose(double precision, double precision, double precision,
 
 CREATE FUNCTION geometry(pose)
   RETURNS geometry
-  AS 'MODULE_PATHNAME', 'Pose_to_geom'
+  AS 'MODULE_PATHNAME', 'Pose_to_point'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE CAST (pose AS geometry) WITH FUNCTION geometry(pose);
@@ -98,6 +118,31 @@ CREATE CAST (pose AS geometry) WITH FUNCTION geometry(pose);
  * Accessor functions
  *****************************************************************************/
 
+
+/*****************************************************************************
+ * Modification functions
+ *****************************************************************************/
+
+CREATE FUNCTION round(pose, integer DEFAULT 0)
+  RETURNS pose
+  AS 'MODULE_PATHNAME', 'Pose_round'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+  
+/*****************************************************************************
+ * Same
+ *****************************************************************************/
+
+CREATE FUNCTION pose_same(pose, pose)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Pose_same'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE OPERATOR ~= (
+  PROCEDURE = pose_same,
+  LEFTARG = pose, RIGHTARG = pose,
+  COMMUTATOR = ~=,
+  RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
+);
 
 /******************************************************************************
  * Comparisons
@@ -177,5 +222,22 @@ CREATE OPERATOR CLASS pose_btree_ops
   OPERATOR  4 >= ,
   OPERATOR  5 > ,
   FUNCTION  1 pose_cmp(pose, pose);
+
+/******************************************************************************/
+
+CREATE FUNCTION pose_hash(pose)
+  RETURNS integer
+  AS 'MODULE_PATHNAME', 'Pose_hash'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION pose_hash_extended(pose, bigint)
+  RETURNS bigint
+  AS 'MODULE_PATHNAME', 'Pose_hash_extended'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE OPERATOR CLASS pose_hash_ops
+  DEFAULT FOR TYPE pose USING hash AS
+    OPERATOR    1   = ,
+    FUNCTION    1   pose_hash(pose),
+    FUNCTION    2   pose_hash_extended(pose, bigint);
 
 /******************************************************************************/

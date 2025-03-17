@@ -100,6 +100,23 @@ CREATE FUNCTION cbuffer(geometry, double precision)
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************
+ * Conversion functions
+ *****************************************************************************/
+
+CREATE FUNCTION geometry(cbuffer)
+  RETURNS geometry
+  AS 'MODULE_PATHNAME', 'Cbuffer_to_geom'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION cbuffer(geometry)
+  RETURNS cbuffer
+  AS 'MODULE_PATHNAME', 'Geom_to_cbuffer'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE CAST (cbuffer AS geometry) WITH FUNCTION geometry(cbuffer);
+CREATE CAST (geometry AS cbuffer) WITH FUNCTION cbuffer(geometry);
+
+/*****************************************************************************
  * Accessor functions
  *****************************************************************************/
 
@@ -144,24 +161,7 @@ CREATE FUNCTION round(cbuffer, integer DEFAULT 0)
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
   
 /*****************************************************************************
- * Cast functions
- *****************************************************************************/
-
-CREATE FUNCTION geometry(cbuffer)
-  RETURNS geometry
-  AS 'MODULE_PATHNAME', 'Cbuffer_to_geom'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION cbuffer(geometry)
-  RETURNS cbuffer
-  AS 'MODULE_PATHNAME', 'Geom_to_cbuffer'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE CAST (cbuffer AS geometry) WITH FUNCTION geometry(cbuffer);
-CREATE CAST (geometry AS cbuffer) WITH FUNCTION cbuffer(geometry);
-
-/*****************************************************************************
- * Equals
+ * Same
  *****************************************************************************/
 
 CREATE FUNCTION cbuffer_same(cbuffer, cbuffer)
@@ -177,7 +177,7 @@ CREATE OPERATOR ~= (
 );
 
 /******************************************************************************
- * Operators
+ * Comparisons
  ******************************************************************************/
 
 CREATE FUNCTION cbuffer_eq(cbuffer, cbuffer)
@@ -254,5 +254,22 @@ CREATE OPERATOR CLASS cbuffer_btree_ops
   OPERATOR  4 >= ,
   OPERATOR  5 > ,
   FUNCTION  1 cbuffer_cmp(cbuffer, cbuffer);
+
+/******************************************************************************/
+
+CREATE FUNCTION cbuffer_hash(cbuffer)
+  RETURNS integer
+  AS 'MODULE_PATHNAME', 'Cbuffer_hash'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION cbuffer_hash_extended(cbuffer, bigint)
+  RETURNS bigint
+  AS 'MODULE_PATHNAME', 'Cbuffer_hash_extended'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE OPERATOR CLASS cbuffer_hash_ops
+  DEFAULT FOR TYPE cbuffer USING hash AS
+    OPERATOR    1   = ,
+    FUNCTION    1   cbuffer_hash(cbuffer),
+    FUNCTION    2   cbuffer_hash_extended(cbuffer, bigint);
 
 /******************************************************************************/

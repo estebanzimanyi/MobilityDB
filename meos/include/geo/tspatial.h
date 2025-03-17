@@ -31,8 +31,8 @@
  * @brief Bounding box operators for temporal spatial values
  */
 
-#ifndef __TSPATIAL_BOXOPS_H__
-#define __TSPATIAL_BOXOPS_H__
+#ifndef __TSPATIAL_H__
+#define __TSPATIAL_H__
 
 /* PostgreSQL */
 #include <postgres.h>
@@ -40,6 +40,7 @@
 #include <liblwgeom.h>
 /* MEOS */
 #include <meos.h>
+#include "general/temporal.h"
 #include "general/meos_catalog.h"
 
 /*****************************************************************************/
@@ -47,6 +48,12 @@
 extern char **spatialarr_wkt_out(const Datum *spatialarr, meosType basetype,
   int count, int maxdd, bool extended);
 
+extern char *spatialbase_as_text(Datum value, meosType type, int maxdd);
+extern char *spatialbase_as_ewkt(Datum value, meosType type, int maxdd);
+
+extern LWPROJ *lwproj_get_pipeline(const char *pipeline, bool is_forward);
+extern bool point_transf_pj(GSERIALIZED *gs, int32_t srid_to, const LWPROJ *pj);
+
 /*****************************************************************************/
 
-#endif /* __TSPATIAL_BOXOPS_H__ */
+#endif /* __TSPATIAL_H__ */

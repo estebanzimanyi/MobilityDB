@@ -92,30 +92,25 @@ posearr_set_stbox(const Datum *values, int count, STBox *box)
 }
 
 /**
- * @brief Transform a pose and a timestamp to a spatiotemporal box
+ * @ingroup meos_box_conversion
+ * @brief Return a pose converted to a spatiotemporal box
+ * @param[in] pose Pose
+ * @csqlfn #Pose_to_stbox()
  */
-bool
-pose_timestamp_set_stbox(const Pose *pose, TimestampTz t, STBox *box)
+STBox *
+pose_stbox(const Pose *pose)
 {
-  assert(pose); assert(box);
-  pose_set_stbox(pose, box);
-  span_set(TimestampTzGetDatum(t), TimestampTzGetDatum(t), true, true,
-    T_TIMESTAMPTZ, T_TSTZSPAN, &box->period);
-  MEOS_FLAGS_SET_T(box->flags, true);
-  return true;
-}
-
-/**
- * @brief Transform a pose and a period to a spatiotemporal box
- */
-bool
-pose_period_set_stbox(const Pose *pose, const Span *s, STBox *box)
-{
-  assert(pose); assert(s); assert(box);
-  pose_set_stbox(pose, box);
-  memcpy(&box->period, s, sizeof(Span));
-  MEOS_FLAGS_SET_T(box->flags, true);
-  return true;
+  /* Ensure validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) pose))
+    return NULL;
+#else
+  assert(pose);
+#endif /* MEOS */
+  STBox box;
+  if (! pose_set_stbox(pose, &box))
+    return NULL;
+  return stbox_copy(&box);
 }
 
 /*****************************************************************************/

@@ -36,7 +36,6 @@
 
 /* PostgreSQL */
 #include <stdio.h>
-// #include <utils/palloc.h>
 #include <utils/timestamp.h>
 /* MEOS */
 #include <meos.h>
@@ -85,21 +84,6 @@ ensure_valid_stbox_pose(const STBox *box, const Pose *pose)
   if (! ensure_not_null((void *) box) || ! ensure_not_null((void *) pose) ||
       ! ensure_has_X(T_STBOX, box->flags) || 
       ! ensure_same_srid(box->srid, pose_srid(pose)))
-    return false;
-  return true;
-}
-
-/**
- * @brief Ensure the validity of a temporal pose and a geometry
- * @note The geometry can be empty since some functions such atGeometry or
- * minusGeometry return different result on empty geometries.
- */
-bool
-ensure_valid_tpose_geo(const Temporal *temp, const GSERIALIZED *gs)
-{
-  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_temporal_isof_type(temp, T_TPOSE) ||
-      ! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)))
     return false;
   return true;
 }

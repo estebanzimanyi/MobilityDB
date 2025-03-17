@@ -71,22 +71,8 @@ ea_spatialrel_tnpoint_tnpoint(const Temporal *temp1, const Temporal *temp2,
   /* Transform the temporal network points */
   Temporal *tpoint1 = tnpoint_tgeompoint(temp1);
   Temporal *tpoint2 = tnpoint_tgeompoint(temp2);
-  /* Fill the lifted structure */
-  LiftedFunctionInfo lfinfo;
-  memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
-  lfinfo.func = (varfunc) func;
-  lfinfo.numparam = 0;
-  lfinfo.argtype[0] = lfinfo.argtype[1] = tpoint1->temptype;
-  lfinfo.restype = T_TBOOL;
-  lfinfo.reslinear = false;
-  lfinfo.invert = INVERT_NO;
-  lfinfo.discont = MEOS_FLAGS_LINEAR_INTERP(tpoint1->flags) ||
-    MEOS_FLAGS_LINEAR_INTERP(tpoint2->flags);
-  lfinfo.ever = ever;
-  lfinfo.tpfunc_base = NULL;
-  lfinfo.tpfunc = NULL;
-  int result = eafunc_temporal_temporal(tpoint1, tpoint2, &lfinfo);
-  /* Clean up and return */
+  /* Call the function for temporal points */
+  int result = ea_spatialrel_tspatial_tspatial(tpoint1, tpoint2, func, ever);
   pfree(tpoint1); pfree(tpoint2);
   return result;
 }
@@ -217,6 +203,20 @@ ea_disjoint_tnpoint_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever)
     adisjoint_tgeo_geo(tempgeom, gs);
   pfree(tempgeom);
   return result;
+}
+
+/**
+ * @ingroup meos_internal_temporal_spatial_rel_ever
+ * @brief Return true if a geometry and a temporal network point are
+ * ever/always disjoint
+ * @param[in] temp Temporal network point
+ * @param[in] gs Geometry
+ * @param[in] ever True to compute the ever semantics, false for always
+ */
+int
+ea_disjoint_geo_tnpoint(const GSERIALIZED *gs, const Temporal *temp, bool ever)
+{
+  return ea_disjoint_tnpoint_geo(temp, gs, ever);
 }
 
 #if MEOS
@@ -351,6 +351,21 @@ ea_intersects_tnpoint_geo(const Temporal *temp, const GSERIALIZED *gs,
   return result;
 }
 
+/**
+ * @ingroup meos_internal_temporal_spatial_rel_ever
+ * @brief Return true if a geometry and a temporal network point ever/always
+ * intersect
+ * @param[in] temp Temporal network point
+ * @param[in] gs Geometry
+ * @param[in] ever True to compute the ever semantics, false for always
+ */
+int
+ea_intersects_geo_tnpoint(const GSERIALIZED *gs, const Temporal *temp, 
+  bool ever)
+{
+  return ea_intersects_tnpoint_geo(temp, gs, ever);
+}
+
 #if MEOS
 /**
  * @ingroup meos_temporal_spatial_rel_ever
@@ -454,6 +469,20 @@ ea_touches_tnpoint_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever)
     atouches_tgeo_geo(tempgeom, gs);
   pfree(tempgeom);
   return result;
+}
+
+/**
+ * @ingroup meos_internal_temporal_spatial_rel_ever
+ * @brief Return true if a geometry and a temporal network point ever/always
+ * touch
+ * @param[in] temp Temporal network point
+ * @param[in] gs Geometry
+ * @param[in] ever True to compute the ever semantics, false for always
+ */
+int
+ea_touches_geo_tnpoint(const GSERIALIZED *gs, const Temporal *temp, bool ever)
+{
+  return ea_touches_tnpoint_geo(temp, gs, ever);
 }
 
 #if MEOS
@@ -561,6 +590,22 @@ ea_dwithin_tnpoint_geom(const Temporal *temp, const GSERIALIZED *gs,
     adwithin_tgeo_geo(tempgeom, gs, dist);
   pfree(tempgeom);
   return result;
+}
+
+/**
+ * @ingroup meos_internal_temporal_spatial_rel_ever
+ * @brief Generic spatial relationships for a temporal network point and a
+ * geometry
+ * @param[in] temp Temporal network point
+ * @param[in] gs Geometry
+ * @param[in] dist Distance
+ * @param[in] ever True to compute the ever semantics, false for always
+ */
+int
+ea_dwithin_geom_tnpoint(const GSERIALIZED *gs, const Temporal *temp,
+  double dist, bool ever)
+{
+  return ea_dwithin_tnpoint_geom(temp, gs, dist, ever);
 }
 
 #if MEOS

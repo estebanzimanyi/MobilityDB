@@ -79,8 +79,8 @@ Tpoint_from_ewkt(PG_FUNCTION_ARGS)
   PG_RETURN_TEMPORAL_P(result);
 }
 
-PGDLLEXPORT Datum Tgeo_from_ewkt(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tgeo_from_ewkt);
+PGDLLEXPORT Datum Tspatial_from_ewkt(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tspatial_from_ewkt);
 /**
  * @ingroup mobilitydb_temporal_inout
  * @brief Return a temporal geo from its Extended Well-Known Text (EWKT)
@@ -91,7 +91,7 @@ PG_FUNCTION_INFO_V1(Tgeo_from_ewkt);
  * @sqlfn tgeometryFromEWKT(), tgeographyFromEWKT()
  */
 Datum
-Tgeo_from_ewkt(PG_FUNCTION_ARGS)
+Tspatial_from_ewkt(PG_FUNCTION_ARGS)
 {
   text *wkt_text = PG_GETARG_TEXT_P(0);
   char *wkt = text2cstring(wkt_text);

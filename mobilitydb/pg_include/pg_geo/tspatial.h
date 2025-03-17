@@ -39,7 +39,6 @@
 #include <utils/array.h>
 #include <fmgr.h>
 
-
 /*****************************************************************************/
 
 /* Fetch from and store in the cache the fcinfo of the external function */
@@ -49,6 +48,20 @@ extern void store_fcinfo(FunctionCallInfo fcinfo);
 extern Temporal *tspatial_valid_typmod(Temporal *temp, int32_t typmod);
 extern uint32 tspatial_typmod_in(ArrayType *arr, int is_point, int is_geodetic);
 extern Datum Spatialarr_as_text_ext(FunctionCallInfo fcinfo, bool extended);
+
+extern Datum EA_spatialrel_geo_tspatial(FunctionCallInfo fcinfo,
+  int (*func)(const GSERIALIZED *, const Temporal *, bool), bool ever);
+extern Datum EA_spatialrel_tspatial_geo(FunctionCallInfo fcinfo,
+  int (*func)(const Temporal *, const GSERIALIZED *, bool), bool ever);
+extern Datum EA_spatialrel_tspatial_tspatial(FunctionCallInfo fcinfo,
+  datum_func2 func1, datum_func2 func2, bool ever);
+
+extern Datum EA_dwithin_tspatial_geo(FunctionCallInfo fcinfo,
+  int (*func)(const Temporal *, const GSERIALIZED *, double dist, bool),
+  bool ever);
+extern Datum EA_dwithin_geo_tspatial(FunctionCallInfo fcinfo,
+  int (*func)(const GSERIALIZED *, const Temporal *, double dist, bool),
+  bool ever);
 
 /*****************************************************************************/
 

@@ -75,6 +75,9 @@ extern int ea_intersects_tgeo_tgeo(const Temporal *temp1,
 extern int ea_disjoint_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
   bool ever);
 
+extern int ea_spatialrel_tspatial_tspatial(const Temporal *temp1,
+  const Temporal *temp2, datum_func2 func, bool ever);
+  
 /*****************************************************************************/
 
 #endif 
