@@ -57,7 +57,7 @@
 PGDLLEXPORT Datum Tpoint_from_ewkt(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpoint_from_ewkt);
 /**
- * @ingroup mobilitydb_temporal_inout
+ * @ingroup mobilitydb_geo_inout
  * @brief Return a temporal point from its Extended Well-Known Text (EWKT)
  * representation
  * @note This just does the same thing as the _in function, except it has to handle
@@ -82,7 +82,7 @@ Tpoint_from_ewkt(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tspatial_from_ewkt(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tspatial_from_ewkt);
 /**
- * @ingroup mobilitydb_temporal_inout
+ * @ingroup mobilitydb_geo_inout
  * @brief Return a temporal geo from its Extended Well-Known Text (EWKT)
  * representation
  * @note This just does the same thing as the SQL function tgeo_in, except it
@@ -131,7 +131,7 @@ Tspatial_as_text_ext(FunctionCallInfo fcinfo, bool extended)
 PGDLLEXPORT Datum Tspatial_as_text(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tspatial_as_text);
 /**
- * @ingroup mobilitydb_temporal_inout
+ * @ingroup mobilitydb_geo_inout
  * @brief Return the Well-Known Text (WKT) representation of a temporal point
  * @sqlfn asText()
  */
@@ -144,7 +144,7 @@ Tspatial_as_text(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tspatial_as_ewkt(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tspatial_as_ewkt);
 /**
- * @ingroup mobilitydb_temporal_inout
+ * @ingroup mobilitydb_geo_inout
  * @brief Return the Extended Well-Known Text (EWKT) representation of a
  * temporal point
  * @note It is the WKT representation prefixed with the SRID
@@ -163,7 +163,7 @@ Tspatial_as_ewkt(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Spatialset_as_text(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Spatialset_as_text);
 /**
- * @ingroup mobilitydb_setspan_inout
+ * @ingroup mobilitydb_geo_set_inout
  * @brief Return the Well-Known Text (WKT) representation of a spatial set
  * @sqlfn asText()
  */
@@ -184,7 +184,7 @@ Spatialset_as_text(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Spatialset_as_ewkt(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Spatialset_as_ewkt);
 /**
- * @ingroup mobilitydb_setspan_inout
+ * @ingroup mobilitydb_geo_set_inout
  * @brief Return the Extended Well-Known Text (EWKT) representation of a
  * spatial set
  * @sqlfn asEWKT()
@@ -238,7 +238,7 @@ Spatialarr_as_text_ext(FunctionCallInfo fcinfo, bool extended)
 PGDLLEXPORT Datum Spatialarr_as_text(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Spatialarr_as_text);
 /**
- * @ingroup mobilitydb_temporal_inout
+ * @ingroup mobilitydb_geo_inout
  * @brief Return the Well-Known Text (WKT) representation of an array of
  * spatial values
  * @sqlfn asText()
@@ -252,7 +252,7 @@ Spatialarr_as_text(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Spatialarr_as_ewkt(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Spatialarr_as_ewkt);
 /**
- * @ingroup mobilitydb_temporal_inout
+ * @ingroup mobilitydb_geo_inout
  * @brief Return the Extended Well-Known Text (EWKT) representation
  * of an array of spatial values
  * @note It is the WKT representation prefixed with the SRID
@@ -269,7 +269,7 @@ Spatialarr_as_ewkt(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tspatial_as_ewkb(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tspatial_as_ewkb);
 /**
- * @ingroup mobilitydb_temporal_inout
+ * @ingroup mobilitydb_geo_inout
  * @brief Return the Extended Well-Known Binary (WKB) representation of a
  * temporal spatial value
  * @note This will have 'SRID=#;' for temporal spatial values

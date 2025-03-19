@@ -199,7 +199,7 @@ tpoint_transform_tcentroid(const Temporal *temp, int *count)
 /*****************************************************************************/
 
 /**
- * @ingroup meos_temporal_agg
+ * @ingroup meos_geo_agg
  * @brief Transition function for temporal centroid aggregation of temporal
  * points
  * @param[in] state Current aggregate value
@@ -244,7 +244,7 @@ tpoint_tcentroid_transfn(SkipList *state, Temporal *temp)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_agg
+ * @ingroup meos_geo_agg
  * @brief Transition function for temporal extent aggregation of temporal
  * spatial values
  * @param[in] box Current aggregate value
@@ -369,7 +369,7 @@ tpointseq_tcentroid_finalfn(TSequence **sequences, int count, int32_t srid)
 /*****************************************************************************/
 
 /**
- * @ingroup meos_temporal_agg
+ * @ingroup meos_geo_agg
  * @brief Final function for temporal centroid aggregation of temporal points
  * @param[in] state Current aggregate value
  * @csqlfn #Tpoint_tcentroid_finalfn()

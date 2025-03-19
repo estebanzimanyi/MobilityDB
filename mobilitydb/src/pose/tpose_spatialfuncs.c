@@ -68,7 +68,7 @@ Tpose_restrict_geom(FunctionCallInfo fcinfo, bool atfunc)
 PGDLLEXPORT Datum Tpose_at_geom(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpose_at_geom);
 /**
- * @ingroup mobilitydb_temporal_restrict
+ * @ingroup mobilitydb_pose_restrict
  * @brief Return a temporal pose restricted to a geometry
  * @sqlfn atGeometry()
  */
@@ -81,7 +81,7 @@ Tpose_at_geom(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tpose_minus_geom(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpose_minus_geom);
 /**
- * @ingroup mobilitydb_temporal_restrict
+ * @ingroup mobilitydb_pose_restrict
  * @brief Return a temporal pose restricted to the complement of a geometry
  * @sqlfn minusGeometry()
  */
@@ -96,7 +96,7 @@ Tpose_minus_geom(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tpose_at_stbox(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpose_at_stbox);
 /**
- * @ingroup mobilitydb_temporal_restrict
+ * @ingroup mobilitydb_pose_restrict
  * @brief Return a temporal pose restricted to a spatiotemporal box
  * @sqlfn atStbox()
  */
@@ -116,7 +116,7 @@ Tpose_at_stbox(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tpose_minus_stbox(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpose_minus_stbox);
 /**
- * @ingroup mobilitydb_temporal_restrict
+ * @ingroup mobilitydb_pose_restrict
  * @brief Return a temporal pose restricted to the complement of a
  * spatiotemporal box
  * @sqlfn minusStbox()

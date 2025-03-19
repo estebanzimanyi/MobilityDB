@@ -70,21 +70,12 @@ extern char *pose_wkt_out(Datum value, bool extended, int maxdd);
 
 extern Pose *pose_parse(const char **str, bool end);
 
-extern Pose *pose_in(const char *str);
-extern char *pose_out(const Pose *pose, int maxdd);
-
-extern Pose *pose_make_2d(double x, double y, double theta);
-extern Pose *pose_make_3d(double x, double y, double z, double W, double X, double Y, double Z);
-
-extern GSERIALIZED *pose_point(const Pose *pose);
 extern Datum datum_pose_point(Datum pose);
 
 /* Transformation functions */
 
 extern Datum datum_pose_round(Datum pose, Datum size);
-extern Pose *pose_round(const Pose *pose, int maxdd);
 extern Pose **posearr_round(const Pose **posearr, int count, int maxdd);
-extern Set *poseset_round(const Set *s, int maxdd);
 extern Temporal *tpose_round(const Temporal *temp, int maxdd);
 
 /* Distance */

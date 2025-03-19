@@ -193,7 +193,7 @@ extern uint64 datum_hash_extended(Datum d, meosType basetype, uint64 seed);
 
 extern Datum datum_float_round(Datum value, Datum size);
 extern Datum datum_geo_round(Datum value, Datum size);
-extern Datum round_point(GSERIALIZED *gs, int maxdd);
+extern GSERIALIZED *point_round(const GSERIALIZED *gs, int maxdd);
 extern void floatspan_round_set(const Span *s, int maxdd, Span *result);
 
 /*****************************************************************************

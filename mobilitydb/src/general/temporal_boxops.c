@@ -64,7 +64,7 @@
 PGDLLEXPORT Datum Temporal_spans(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Temporal_spans);
 /**
- * @ingroup mobilitydb_temporal_bbox
+ * @ingroup mobilitydb_temporal_bbox_split
  * @brief Return an array of spans from a temporal value
  * @sqlfn spans()
  */
@@ -83,7 +83,7 @@ Temporal_spans(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tnumber_tboxes(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tnumber_tboxes);
 /**
- * @ingroup mobilitydb_temporal_bbox
+ * @ingroup mobilitydb_temporal_bbox_split
  * @brief Return an array of temporal boxes from a temporal number
  * @sqlfn tboxes()
  */
@@ -104,7 +104,7 @@ Tnumber_tboxes(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Temporal_split_n_spans(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Temporal_split_n_spans);
 /**
- * @ingroup mobilitydb_temporal_bbox
+ * @ingroup mobilitydb_temporal_bbox_split
  * @brief Return an array of N spans from the instants or segments of a
  * temporal value, where the choice between instants or segments depends,
  * respectively, on whether the interpolation is discrete or continuous
@@ -128,7 +128,7 @@ Temporal_split_n_spans(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tnumber_split_n_tboxes(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tnumber_split_n_tboxes);
 /**
- * @ingroup mobilitydb_temporal_bbox
+ * @ingroup mobilitydb_temporal_bbox_split
  * @brief Return an array of N temporal boxes from the instants or segments of
  * a temporal number, where the choice between instants or segments depends,
  * respectively, on whether the interpolation is discrete or continuous
@@ -154,7 +154,7 @@ Tnumber_split_n_tboxes(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Temporal_split_each_n_spans(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Temporal_split_each_n_spans);
 /**
- * @ingroup mobilitydb_temporal_bbox
+ * @ingroup mobilitydb_temporal_bbox_split
  * @brief Return an array of spans from the instants or segments of a
  * temporal value, where the choice between instants or segments depends,
  * respectively, on whether the interpolation is discrete or continuous
@@ -178,7 +178,7 @@ Temporal_split_each_n_spans(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tnumber_split_each_n_tboxes(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tnumber_split_each_n_tboxes);
 /**
- * @ingroup mobilitydb_temporal_bbox
+ * @ingroup mobilitydb_temporal_bbox_split
  * @brief Return an array of temporal boxes from the instants or segments of a
  * temporal number, where the choice between instants or segments depends,
  * respectively, on whether the interpolation is discrete or continuous

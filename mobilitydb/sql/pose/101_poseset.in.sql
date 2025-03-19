@@ -121,7 +121,7 @@ CREATE CAST (pose AS poseset) WITH FUNCTION set(pose);
 
 CREATE FUNCTION stbox(poseset)
   RETURNS stbox
-  AS 'MODULE_PATHNAME', 'Poseset_to_stbox'
+  AS 'MODULE_PATHNAME', 'Spatialset_to_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE CAST (poseset AS stbox) WITH FUNCTION stbox(poseset);
@@ -132,7 +132,7 @@ CREATE CAST (poseset AS stbox) WITH FUNCTION stbox(poseset);
 
 CREATE FUNCTION round(poseset, integer DEFAULT 0)
   RETURNS poseset
-  AS 'MODULE_PATHNAME', 'Poseset_round'
+  AS 'MODULE_PATHNAME', 'Set_round'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************

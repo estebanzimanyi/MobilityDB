@@ -585,20 +585,20 @@ Floatset_ceil(PG_FUNCTION_ARGS)
   PG_RETURN_SET_P(result);
 }
 
-PGDLLEXPORT Datum Floatset_round(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Floatset_round);
+PGDLLEXPORT Datum Set_round(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Set_round);
 /**
  * @ingroup mobilitydb_setspan_transf
- * @brief Return a float set with the precision of the values set to a number
+ * @brief Return a set with the precision of the values set to a number
  * of decimal places
  * @sqlfn round()
  */
 Datum
-Floatset_round(PG_FUNCTION_ARGS)
+Set_round(PG_FUNCTION_ARGS)
 {
   Set *s = PG_GETARG_SET_P(0);
   int maxdd = PG_GETARG_INT32(1);
-  Set *result = floatset_round(s, maxdd);
+  Set *result = set_round(s, maxdd);
   PG_FREE_IF_COPY(s, 0);
   PG_RETURN_SET_P(result);
 }

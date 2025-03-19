@@ -37,6 +37,7 @@
 #include <math.h>
 /* PostgreSQL */
 #include <postgres.h>
+#include <funcapi.h>
 #include <access/heaptoast.h>
 #include <lib/stringinfo.h>
 /* PostGIS */
@@ -52,6 +53,7 @@
 /* MobilityDB */
 #include "pg_general/temporal.h"
 #include "pg_general/type_util.h"
+#include "pg_geo/postgis.h"
 
 /*****************************************************************************
  * Input/Output functions
@@ -60,7 +62,7 @@
 PGDLLEXPORT Datum Pose_in(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_in);
 /**
- * @ingroup mobilitydb_base_inout
+ * @ingroup mobilitydb_pose_base_inout
  * @brief Input function for pose values
  * @details Example of input:
  *    (1, 0.5)
@@ -76,7 +78,7 @@ Pose_in(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_out(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_out);
 /**
- * @ingroup mobilitydb_base_inout
+ * @ingroup mobilitydb_pose_base_inout
  * @brief Output function for pose values
  * @sqlfn pose_out()
  */
@@ -90,7 +92,7 @@ Pose_out(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_recv(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_recv);
 /**
- * @ingroup mobilitydb_base_inout
+ * @ingroup mobilitydb_pose_base_inout
  * @brief Return a pose from its Well-Known Binary (WKB) representation
  * @sqlfn pose_recv()
  */
@@ -107,7 +109,7 @@ Pose_recv(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_send(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_send);
 /**
- * @ingroup mobilitydb_base_inout
+ * @ingroup mobilitydb_pose_base_inout
  * @brief Return the Well-Known Binary (WKB) representation of a pose
  * @sqlfn pose_send()
  */
@@ -150,7 +152,7 @@ Pose_as_text_ext(FunctionCallInfo fcinfo, bool extended)
 PGDLLEXPORT Datum Pose_as_text(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_as_text);
 /**
- * @ingroup mobilitydb_temporal_inout
+ * @ingroup mobilitydb_pose_inout
  * @brief Return the Well-Known Text (WKT) representation of a pose
  * @sqlfn asText()
  */
@@ -163,7 +165,7 @@ Pose_as_text(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_as_ewkt(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_as_ewkt);
 /**
- * @ingroup mobilitydb_temporal_inout
+ * @ingroup mobilitydb_pose_inout
  * @brief Return the Extended Well-Known Text (EWKT) representation of a pose
  * @note It is the WKT representation prefixed with the SRID
  * @sqlfn asEWKT()
@@ -179,7 +181,7 @@ Pose_as_ewkt(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_from_wkb(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_from_wkb);
 /**
- * @ingroup mobilitydb_base_inout
+ * @ingroup mobilitydb_pose_base_inout
  * @brief Return a pose from its Well-Known Binary (WKB) representation
  * @sqlfn poseFromBinary()
  */
@@ -196,7 +198,7 @@ Pose_from_wkb(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_from_hexwkb(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_from_hexwkb);
 /**
- * @ingroup mobilitydb_base_inout
+ * @ingroup mobilitydb_pose_base_inout
  * @brief Return a pose from its hex-encoded ASCII Well-Known Binary
  * (HexWKB) representation
  * @sqlfn poseFromHexWKB()
@@ -217,7 +219,7 @@ Pose_from_hexwkb(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_as_wkb(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_as_wkb);
 /**
- * @ingroup mobilitydb_base_inout
+ * @ingroup mobilitydb_pose_base_inout
  * @brief Return the Well-Known Binary (WKB) representation of a pose
  * @sqlfn asBinary()
  */
@@ -232,7 +234,7 @@ Pose_as_wkb(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_as_hexwkb(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_as_hexwkb);
 /**
- * @ingroup mobilitydb_base_inout
+ * @ingroup mobilitydb_pose_base_inout
  * @brief Return the hex-encoded ASCII Well-Known Binary (HexWKB)
  * representation of a pose
  * @sqlfn asHexWKB()
@@ -251,7 +253,7 @@ Pose_as_hexwkb(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_constructor(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_constructor);
 /**
- * @ingroup mobilitydb_base_constructor
+ * @ingroup mobilitydb_pose_base_constructor
  * @brief Construct a pose value from the arguments
  * @sqlfn pose()
  */
@@ -275,7 +277,36 @@ Pose_constructor(PG_FUNCTION_ARGS)
     double Z = PG_GETARG_FLOAT8(6);
     result = pose_make_3d(x, y, z, W, X, Y, Z);
   }
+  PG_RETURN_POINTER(result);
+}
 
+PGDLLEXPORT Datum Pose_constructor_point(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Pose_constructor_point);
+/**
+ * @ingroup mobilitydb_pose_base_constructor
+ * @brief Construct a pose value from a point and other arguments for the
+ * orientation
+ * @sqlfn pose()
+ */
+Datum
+Pose_constructor_point(PG_FUNCTION_ARGS)
+{
+  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
+  assert(PG_NARGS() == 2 || PG_NARGS() == 5);
+  Pose *result;
+  if (PG_NARGS() == 2)
+  {
+    double theta = PG_GETARG_FLOAT8(1);
+    result = pose_make_point2d(gs, theta);
+  }
+  else /* PG_NARGS() == 5 */
+  {
+    double W = PG_GETARG_FLOAT8(1);
+    double X = PG_GETARG_FLOAT8(2);
+    double Y = PG_GETARG_FLOAT8(3);
+    double Z = PG_GETARG_FLOAT8(4);
+    result = pose_make_point3d(gs, W, X, Y, Z);
+  }
   PG_RETURN_POINTER(result);
 }
 
@@ -286,7 +317,7 @@ Pose_constructor(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_to_point(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_to_point);
 /**
- * @ingroup mobilitydb_base_conversion
+ * @ingroup mobilitydb_pose_base_conversion
  * @brief Transforms a pose into a geometry point
  * @sqlfn geometry()
  */
@@ -302,6 +333,72 @@ Pose_to_point(PG_FUNCTION_ARGS)
  * Accessor functions
  *****************************************************************************/
 
+PGDLLEXPORT Datum Pose_point(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Pose_point);
+/**
+ * @ingroup mobilitydb_pose_base_accessor
+ * @brief Return the point of a pose
+ * @sqlfn point()
+ */
+Datum
+Pose_point(PG_FUNCTION_ARGS)
+{
+  Pose *pose = PG_GETARG_POSE_P(0);
+  Datum d = PointerGetDatum(pose_point(pose));
+  PG_RETURN_DATUM(datum_copy(d, T_GEOMETRY));
+}
+
+PGDLLEXPORT Datum Pose_rotation(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Pose_rotation);
+/**
+ * @ingroup mobilitydb_pose_base_accessor
+ * @brief Return the rotation of a 2D pose
+ * @sqlfn rotation()
+ */
+Datum
+Pose_rotation(PG_FUNCTION_ARGS)
+{
+  Pose *pose = PG_GETARG_POSE_P(0);
+  PG_RETURN_FLOAT8(pose_rotation(pose));
+}
+
+PGDLLEXPORT Datum Pose_orientation(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Pose_orientation);
+/**
+ * @ingroup mobilitydb_pose_base_accessor
+ * @brief Return the orientation of a 3D pose
+ * @sqlfn orientation()
+ */
+Datum
+Pose_orientation(PG_FUNCTION_ARGS)
+{
+  /* Define the return type properties */
+  TupleDesc tupdesc;
+  HeapTuple tuple;
+  Datum values[4];
+  bool nulls[4] = { false, false, false, false }; // Assume no nulls
+  /* Define the structure of the returned tuple */
+  tupdesc = CreateTemplateTupleDesc(4);
+  TupleDescInitEntry(tupdesc, (AttrNumber) 1, "W", FLOAT8OID, -1, 0);
+  TupleDescInitEntry(tupdesc, (AttrNumber) 2, "X", FLOAT8OID, -1, 0);
+  TupleDescInitEntry(tupdesc, (AttrNumber) 3, "Y", FLOAT8OID, -1, 0);
+  TupleDescInitEntry(tupdesc, (AttrNumber) 4, "Z", FLOAT8OID, -1, 0);
+  BlessTupleDesc(tupdesc);
+  /* Get input pose */
+  Pose *pose = PG_GETARG_POSE_P(0);
+  /* Get the array of doubles representing the orientation */
+  double *quaternion = pose_orientation(pose);
+  /* Create values for the tuple */
+  values[0] = Float8GetDatum(quaternion[0]);
+  values[1] = Float8GetDatum(quaternion[1]);
+  values[2] = Float8GetDatum(quaternion[2]);
+  values[3] = Float8GetDatum(quaternion[3]);
+  /* Create a new tuple */
+  tuple = heap_form_tuple(tupdesc, values, nulls);
+  /* Return the tuple */
+  PG_RETURN_DATUM(HeapTupleGetDatum(tuple));
+}
+
 /*****************************************************************************
  * Transformation functions
  *****************************************************************************/
@@ -309,7 +406,7 @@ Pose_to_point(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_round(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_round);
 /**
- * @ingroup mobilitydb_base_transf
+ * @ingroup mobilitydb_pose_base_transf
  * @brief Return a pose with the precision of the values set to a number of
  * decimal places
  * @sqlfn round()
@@ -327,7 +424,7 @@ Pose_round(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Posearr_round(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Posearr_round);
 /**
- * @ingroup mobilitydb_temporal_transf
+ * @ingroup mobilitydb_pose_base_transf
  * @brief Return an array of poses with the precision of the
  * values set to a number of decimal places
  * @sqlfn round()
@@ -353,24 +450,6 @@ Posearr_round(PG_FUNCTION_ARGS)
   PG_RETURN_ARRAYTYPE_P(result);
 }
 
-PGDLLEXPORT Datum Poseset_round(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Poseset_round);
-/**
- * @ingroup mobilitydb_setspan_transf
- * @brief Return an array of poses with the precision of the values set to a
- * number of decimal values
- * @sqlfn round()
- */
-Datum
-Poseset_round(PG_FUNCTION_ARGS)
-{
-  Set *s = PG_GETARG_SET_P(0);
-  int maxdd = PG_GETARG_INT32(1);
-  Set *result = set_round(s, maxdd, &datum_pose_round);
-  PG_FREE_IF_COPY(s, 0);
-  PG_RETURN_SET_P(result);
-}
-
 /*****************************************************************************
  * SRID functions
  *****************************************************************************/
@@ -378,7 +457,7 @@ Poseset_round(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_srid(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_srid);
 /**
- * @ingroup mobilitydb_base_spatial
+ * @ingroup mobilitydb_pose_base_srid
  * @brief Return the SRID of a pose
  * @sqlfn SRID()
  */
@@ -393,7 +472,7 @@ Pose_srid(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_set_srid(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_set_srid);
 /**
- * @ingroup mobilitydb_base_spatial
+ * @ingroup mobilitydb_pose_base_srid
  * @brief Return a pose with the coordinates of the point set to an SRID
  * @sqlfn setSRID()
  */
@@ -412,7 +491,7 @@ Pose_set_srid(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_transform(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_transform);
 /**
- * @ingroup mobilitydb_temporal_spatial_srid
+ * @ingroup mobilitydb_pose_base_srid
  * @brief Return a pose transformed to an SRID
  * @sqlfn transform()
  */
@@ -429,7 +508,7 @@ Pose_transform(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_transform_pipeline(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_transform_pipeline);
 /**
- * @ingroup mobilitydb_temporal_spatial_srid
+ * @ingroup mobilitydb_pose_base_srid
  * @brief Return a pose transformed to an SRID using a transformation pipeline
  * @sqlfn transformPipeline()
  */
@@ -456,7 +535,7 @@ Pose_transform_pipeline(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_same(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_same);
 /**
- * @ingroup mobilitydb_base_spatial
+ * @ingroup mobilitydb_pose_base_comp
  * @brief Return true if two poses are approximately equal with respect to an
  * epsilon value
  * @sqlfn same()
@@ -476,7 +555,7 @@ Pose_same(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_eq(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_eq);
 /**
- * @ingroup mobilitydb_base_comp
+ * @ingroup mobilitydb_pose_base_comp
  * @brief Return true if the first pose is equal to the second one
  * @sqlfn pose_eq()
  * @sqlop @p =
@@ -492,7 +571,7 @@ Pose_eq(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_ne(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_ne);
 /**
- * @ingroup mobilitydb_base_comp
+ * @ingroup mobilitydb_pose_base_comp
  * @brief Return true if the first pose is not equal to the second one
  * @sqlfn pose_ne()
  * @sqlop @p <>
@@ -508,7 +587,7 @@ Pose_ne(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_cmp(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_cmp);
 /**
- * @ingroup mobilitydb_base_comp
+ * @ingroup mobilitydb_pose_base_comp
  * @brief Return -1, 0, or 1 depending on whether the first pose is less than,
  * equal to, or greater than the second one
  * @note Function used for B-tree comparison
@@ -525,7 +604,7 @@ Pose_cmp(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_lt(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_lt);
 /**
- * @ingroup mobilitydb_base_comp
+ * @ingroup mobilitydb_pose_base_comp
  * @brief Return true if the first pose is less than the second one
  * @sqlfn pose_lt()
  * @sqlop @p <
@@ -541,7 +620,7 @@ Pose_lt(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_le(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_le);
 /**
- * @ingroup mobilitydb_base_comp
+ * @ingroup mobilitydb_pose_base_comp
  * @brief Return true if the first pose is less than or equal to the second one
  * @sqlfn pose_le()
  * @sqlop @p <=
@@ -557,7 +636,7 @@ Pose_le(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_ge(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_ge);
 /**
- * @ingroup mobilitydb_base_comp
+ * @ingroup mobilitydb_pose_base_comp
  * @brief Return true if the first pose is greater than or equal to the second
  * one
  * @sqlfn pose_ge()
@@ -574,7 +653,7 @@ Pose_ge(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_gt(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_gt);
 /**
- * @ingroup mobilitydb_base_comp
+ * @ingroup mobilitydb_pose_base_comp
  * @brief Return true if the first pose is greater than the second one
  * @sqlfn pose_gt()
  * @sqlop @p >
@@ -594,7 +673,7 @@ Pose_gt(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_hash(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_hash);
 /**
- * @ingroup mobilitydb_base_accessor
+ * @ingroup mobilitydb_pose_base_accessor
  * @brief Return the 32-bit hash value of a pose
  * @sqlfn hash()
  */
@@ -610,7 +689,7 @@ Pose_hash(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_hash_extended(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_hash_extended);
 /**
- * @ingroup mobilitydb_base_accessor
+ * @ingroup mobilitydb_pose_base_accessor
  * @brief Return the 64-bit hash value of a pose using a seed
  * @sqlfn hash_extended()
  */

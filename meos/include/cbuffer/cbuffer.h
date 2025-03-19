@@ -79,10 +79,13 @@ extern Cbuffer *cbuffer_parse(const char **str, bool end);
 
 extern char *cbuffer_wkt_out(Datum value, int maxdd, bool extended);
 
+/* Accessor functions */
+
+extern const GSERIALIZED *cbuffer_point_p(const Cbuffer *cbuf);
+
 extern Datum datum_cbuffer_round(Datum buffer, Datum size);
 extern Cbuffer *cbuffer_round(const Cbuffer *cbuf, int maxdd);
 extern Cbuffer **cbufferarr_round(const Cbuffer **cbufarr, int count, int maxdd);
-extern Set *cbufferset_round(const Set *s, int maxdd);
 
 /* Transformation functions */
 

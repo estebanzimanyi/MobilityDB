@@ -227,7 +227,7 @@ tgeographyseqset_from_mfjson(json_object *mfjson, int srid, interpType interp)
 /*****************************************************************************/
 
 /**
- * @ingroup meos_temporal_inout
+ * @ingroup meos_geo_inout
  * @brief Return a temporal geometry point from its MF-JSON representation
  * @param[in] mfjson MFJSON string
  * @return On error return @p NULL
@@ -240,7 +240,7 @@ tgeompoint_from_mfjson(const char *mfjson)
 }
 
 /**
- * @ingroup meos_temporal_inout
+ * @ingroup meos_geo_inout
  * @brief Return a temporal geography point from its MF-JSON representation
  * @param[in] mfjson MFJSON string
  * @return On error return @p NULL
@@ -252,7 +252,7 @@ tgeogpoint_from_mfjson(const char *mfjson)
   return temporal_from_mfjson(mfjson, T_TGEOGPOINT);
 }
 /**
- * @ingroup meos_temporal_inout
+ * @ingroup meos_geo_inout
  * @brief Return a temporal geometry from its MF-JSON representation
  * @param[in] mfjson MFJSON string
  * @return On error return @p NULL
@@ -265,7 +265,7 @@ tgeometry_from_mfjson(const char *mfjson)
 }
 
 /**
- * @ingroup meos_temporal_inout
+ * @ingroup meos_geo_inout
  * @brief Return a temporal geography from its MF-JSON representation
  * @param[in] mfjson MFJSON string
  * @return On error return @p NULL
@@ -301,7 +301,7 @@ geo_wkt_out(Datum value, int maxdd, bool extended)
 
 #if MEOS
 /**
- * @ingroup meos_temporal_inout
+ * @ingroup meos_geo_inout
  * @brief Return the Well-Known Text (WKT) representation of a temporal geo
  * @param[in] temp Temporal geo
  * @param[in] maxdd Maximum number of decimal digits

@@ -107,7 +107,7 @@ CREATE FUNCTION set(npoint)
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION stbox(npointset)
   RETURNS stbox
-  AS 'MODULE_PATHNAME', 'Npointset_to_stbox'
+  AS 'MODULE_PATHNAME', 'Spatialset_to_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE CAST (npoint AS npointset) WITH FUNCTION set(npoint);
@@ -119,7 +119,7 @@ CREATE CAST (npointset AS stbox) WITH FUNCTION stbox(npointset);
 
 CREATE FUNCTION round(npointset, integer DEFAULT 0)
   RETURNS npointset
-  AS 'MODULE_PATHNAME', 'Npointset_round'
+  AS 'MODULE_PATHNAME', 'Set_round'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************

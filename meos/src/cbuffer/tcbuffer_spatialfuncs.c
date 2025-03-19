@@ -226,8 +226,8 @@ tcbuffersegm_intersection_value(const TInstant *inst1, const TInstant *inst2,
   Cbuffer *cbuf = DatumGetCbufferP(value);
   Cbuffer *cbuf1 = DatumGetCbufferP(value1);
   Cbuffer *cbuf2 = DatumGetCbufferP(value2);
-  const GSERIALIZED *gs1 = cbuffer_point(cbuf1);
-  const GSERIALIZED *gs2 = cbuffer_point(cbuf2);
+  const GSERIALIZED *gs1 = cbuffer_point_p(cbuf1);
+  const GSERIALIZED *gs2 = cbuffer_point_p(cbuf2);
   TimestampTz t1, t2;
   bool result1, result2;
   if (! datum_point_eq(PointerGetDatum(gs1), PointerGetDatum(gs2)))
@@ -278,7 +278,7 @@ tcbuffersegm_intersection_value(const TInstant *inst1, const TInstant *inst2,
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_spatial_accessor
+ * @ingroup meos_cbuffer_spatial_accessor
  * @brief Return the traversed area of a temporal circular buffer
  * @param[in] temp Temporal circular buffer
  * @csqlfn #Tcbuffer_traversed_area()

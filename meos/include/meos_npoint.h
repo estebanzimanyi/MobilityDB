@@ -68,7 +68,7 @@ typedef struct Nsegment Nsegment;
 extern void meos_initialize_npoint(const char *file_name);
 
 /******************************************************************************
- * Functions for network point types
+ * Functions for network points
  ******************************************************************************/
 
 extern Npoint *geom_npoint(const GSERIALIZED *gs);
@@ -109,6 +109,28 @@ extern int32_t nsegment_srid(const Nsegment *ns);
 extern bool route_exists(int64 rid);
 extern GSERIALIZED *route_geom(int64 rid);
 extern double route_length(int64 rid);
+
+/******************************************************************************
+ * Functions for network point sets
+ ******************************************************************************/
+
+extern bool contained_npoint_set(const Npoint *np, const Set *s);
+extern bool contains_set_npoint(const Set *s, Npoint *np);
+extern Set *intersection_npoint_set(const Npoint *np, const Set *s);
+extern Set *intersection_set_npoint(const Set *s, const Npoint *np);
+extern Set *minus_npoint_set(const Npoint *np, const Set *s);
+extern Set *minus_set_npoint(const Set *s, const Npoint *np);
+extern Set *npoint_to_set(const Npoint *np);
+extern Set *npoint_union_transfn(Set *state, const Npoint *np);
+extern Npoint *npointset_end_value(const Set *s);
+extern Set *npointset_in(const char *str);
+extern Set *npointset_make(const Npoint **values, int count);
+extern char *npointset_out(const Set *s, int maxdd);
+extern Npoint *npointset_start_value(const Set *s);
+extern bool npointset_value_n(const Set *s, int n, Npoint **result);
+extern Npoint **npointset_values(const Set *s);
+extern Set *union_npoint_set(const Npoint *np, const Set *s);
+extern Set *union_set_npoint(const Set *s, const Npoint *np);
 
 /*===========================================================================*
  * Functions for box types

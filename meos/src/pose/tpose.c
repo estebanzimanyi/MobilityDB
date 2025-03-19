@@ -112,7 +112,7 @@ tposeseqset_in(const char *str)
 
 #if MEOS
 /**
- * @ingroup meos_temporal_inout
+ * @ingroup meos_pose_inout
  * @brief Return a temporal pose from its Well-Known Text (WKT) representation
  * @param[in] str String
  */
@@ -126,7 +126,7 @@ tpose_in(const char *str)
 }
 
 /**
- * @ingroup meos_temporal_inout
+ * @ingroup meos_pose_inout
  * @brief Return the Well-Known Text (WKT) representation of a temporal pose
  * @param[in] temp Temporal pose
  * @param[in] maxdd Maximum number of decimal digits
@@ -147,7 +147,7 @@ tpose_out(const Temporal *temp, int maxdd)
  *****************************************************************************/
 
 /**
- * @ingroup meos_base_conversion
+ * @ingroup meos_pose_conversion
  * @brief Return a geometry point from a temporal pose
  * @param[in] temp Temporal pose
  */
@@ -181,7 +181,7 @@ tpose_tgeompoint(const Temporal *temp)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_pose_accessor
  * @brief Return a copy of the start value of a temporal pose
  * @param[in] temp Temporal value
  * @return On error return @p NULL
@@ -202,7 +202,7 @@ tpose_start_value(const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_pose_accessor
  * @brief Return a copy of the end value of a temporal pose
  * @param[in] temp Temporal value
  * @return On error return @p NULL
@@ -223,7 +223,7 @@ tpose_end_value(const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_pose_accessor
  * @brief Return a copy of the n-th value of a temporal pose
  * @param[in] temp Temporal value
  * @param[in] n Number
@@ -249,7 +249,7 @@ tpose_value_n(const Temporal *temp, int n, Pose **result)
 }
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_pose_accessor
  * @brief Return the array of copies of base values of a temporal pose
  * @param[in] temp Temporal value
  * @param[out] count Number of values in the output array
@@ -329,7 +329,7 @@ tposeseqset_points(const TSequenceSet *ss)
 }
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_pose_accessor
  * @brief Return the array of points of a temporal pose
  * @csqlfn #Tpose_points()
  */
@@ -358,7 +358,7 @@ tpose_points(const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_pose_accessor
  * @brief Return the value of a temporal pose at a timestamptz
  * @param[in] temp Temporal value
  * @param[in] t Timestamp
@@ -391,7 +391,7 @@ tpose_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict,
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_restrict
+ * @ingroup meos_pose_restrict
  * @brief Return a temporal pose restricted to a pose
  * @param[in] temp Temporal value
  * @param[in] pose Value
@@ -412,7 +412,7 @@ tpose_at_value(const Temporal *temp, Pose *pose)
 }
 
 /**
- * @ingroup meos_temporal_restrict
+ * @ingroup meos_pose_restrict
  * @brief Return a temporal pose restricted to the complement of a 
  * pose
  * @param[in] temp Temporal value

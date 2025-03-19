@@ -53,7 +53,7 @@
 /* stbox op Temporal */
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a spatiotemporal box is to the left of a temporal
  * point
  * @param[in] box Spatiotemporal box
@@ -67,7 +67,7 @@ left_stbox_tspatial(const STBox *box, const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a spatiotemporal box does not extend to the right of a
  * temporal spatial value
  * @param[in] box Spatiotemporal box
@@ -81,7 +81,7 @@ overleft_stbox_tspatial(const STBox *box, const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a spatiotemporal box is to the right of a temporal
  * point
  * @param[in] box Spatiotemporal box
@@ -95,7 +95,7 @@ right_stbox_tspatial(const STBox *box, const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a spatiotemporal box does not extend to the left of a
  * temporal spatial value
  * @param[in] box Spatiotemporal box
@@ -109,7 +109,7 @@ overright_stbox_tspatial(const STBox *box, const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a spatiotemporal box is below a temporal spatial value
  * @param[in] box Spatiotemporal box
  * @param[in] temp Temporal spatial value
@@ -122,7 +122,7 @@ below_stbox_tspatial(const STBox *box, const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a spatiotemporal box does not extend above a temporal
  * point
  * @param[in] box Spatiotemporal box
@@ -136,7 +136,7 @@ overbelow_stbox_tspatial(const STBox *box, const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a spatiotemporal box is above a temporal spatial value
  * @param[in] box Spatiotemporal box
  * @param[in] temp Temporal spatial value
@@ -149,7 +149,7 @@ above_stbox_tspatial(const STBox *box, const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a spatiotemporal box does not extend below a temporal
  * point
  * @param[in] box Spatiotemporal box
@@ -163,7 +163,7 @@ overabove_stbox_tspatial(const STBox *box, const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a spatiotemporal box is in front of a temporal spatial
  * value
  * @param[in] box Spatiotemporal box
@@ -177,7 +177,7 @@ front_stbox_tspatial(const STBox *box, const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a spatiotemporal box does not extend to the back of a
  * temporal spatial value
  * @param[in] box Spatiotemporal box
@@ -191,7 +191,7 @@ overfront_stbox_tspatial(const STBox *box, const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a spatiotemporal box is at the back of a temporal
  * point
  * @param[in] box Spatiotemporal box
@@ -205,7 +205,7 @@ back_stbox_tspatial(const STBox *box, const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a spatiotemporal box does not extend to the front of a
  * temporal spatial value
  * @param[in] box Spatiotemporal box
@@ -219,7 +219,7 @@ overback_stbox_tspatial(const STBox *box, const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a spatiotemporal box is before a temporal spatial
  * value
  * @param[in] box Spatiotemporal box
@@ -233,7 +233,7 @@ before_stbox_tspatial(const STBox *box, const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a spatiotemporal box is not after a temporal spatial
  * value
  * @param[in] box Spatiotemporal box
@@ -247,7 +247,7 @@ overbefore_stbox_tspatial(const STBox *box, const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a spatiotemporal box is after a temporal spatial value
  * @param[in] box Spatiotemporal box
  * @param[in] temp Temporal spatial value
@@ -260,7 +260,7 @@ after_stbox_tspatial(const STBox *box, const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a spatiotemporal box is not before a temporal spatial
  * value
  * @param[in] box Spatiotemporal box
@@ -277,7 +277,7 @@ overafter_stbox_tspatial(const STBox *box, const Temporal *temp)
 /* Temporal op stbox */
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a temporal spatial value is to the left of a
  * spatiotemporal
  * box
@@ -292,7 +292,7 @@ left_tspatial_stbox(const Temporal *temp, const STBox *box)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a temporal spatial value does not extend to the right
  * of a spatiotemporal box
  * @param[in] temp Temporal spatial value
@@ -306,7 +306,7 @@ overleft_tspatial_stbox(const Temporal *temp, const STBox *box)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a temporal spatial value is to the right of a
  * spatiotemporal box
  * @param[in] temp Temporal spatial value
@@ -320,7 +320,7 @@ right_tspatial_stbox(const Temporal *temp, const STBox *box)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a temporal spatial value does not extend to the left
  * of a spatiotemporal box
  * @param[in] temp Temporal spatial value
@@ -334,7 +334,7 @@ overright_tspatial_stbox(const Temporal *temp, const STBox *box)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a temporal spatial value is below a spatiotemporal box
  * @param[in] temp Temporal spatial value
  * @param[in] box Spatiotemporal box
@@ -347,7 +347,7 @@ below_tspatial_stbox(const Temporal *temp, const STBox *box)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a temporal spatial value does not extend above a
  * spatiotemporal box
  * @param[in] temp Temporal spatial value
@@ -361,7 +361,7 @@ overbelow_tspatial_stbox(const Temporal *temp, const STBox *box)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a temporal spatial value is above a spatiotemporal box
  * @param[in] temp Temporal spatial value
  * @param[in] box Spatiotemporal box
@@ -374,7 +374,7 @@ above_tspatial_stbox(const Temporal *temp, const STBox *box)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a temporal spatial value does not extend below a
  * spatiotemporal box
  * @param[in] temp Temporal spatial value
@@ -388,7 +388,7 @@ overabove_tspatial_stbox(const Temporal *temp, const STBox *box)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a temporal spatial value is in front of a
  * spatiotemporal box
  * @param[in] temp Temporal spatial value
@@ -402,7 +402,7 @@ front_tspatial_stbox(const Temporal *temp, const STBox *box)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a temporal spatial value does not extend to the back
  * of a spatiotemporal box
  * @param[in] temp Temporal spatial value
@@ -416,7 +416,7 @@ overfront_tspatial_stbox(const Temporal *temp, const STBox *box)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a temporal spatial value is at the back of a
  * spatiotemporal box
  * @param[in] temp Temporal spatial value
@@ -430,7 +430,7 @@ back_tspatial_stbox(const Temporal *temp, const STBox *box)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a temporal spatial value does not extend to the front
  * of a spatiotemporal box
  * @param[in] temp Temporal spatial value
@@ -444,7 +444,7 @@ overback_tspatial_stbox(const Temporal *temp, const STBox *box)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a temporal spatial value is before a spatiotemporal
  * box
  * @param[in] temp Temporal spatial value
@@ -458,7 +458,7 @@ before_tspatial_stbox(const Temporal *temp, const STBox *box)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a temporal spatial value is not after a spatiotemporal
  * box
  * @param[in] temp Temporal spatial value
@@ -472,7 +472,7 @@ overbefore_tspatial_stbox(const Temporal *temp, const STBox *box)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a temporal spatial value is after a spatiotemporal box
  * @param[in] temp Temporal spatial value
  * @param[in] box Spatiotemporal box
@@ -485,7 +485,7 @@ after_tspatial_stbox(const Temporal *temp, const STBox *box)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if a temporal spatial value is not before a
  * spatiotemporal box
  * @param[in] temp Temporal spatial value
@@ -502,7 +502,7 @@ overafter_tspatial_stbox(const Temporal *temp, const STBox *box)
 /* Temporal op Temporal */
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if the first temporal spatial value is to the left of the
  * second one
  * @param[in] temp1,temp2 Temporal spatial values
@@ -515,7 +515,7 @@ left_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if the first temporal spatial value does not extend to
  * the right of the second one
  * @param[in] temp1,temp2 Temporal spatial values
@@ -528,7 +528,7 @@ overleft_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if the first temporal spatial value is to the right of
  * the second one
  * @param[in] temp1,temp2 Temporal spatial values
@@ -541,7 +541,7 @@ right_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if the first temporal spatial value does not extend to
  * the left of the second one
  * @param[in] temp1,temp2 Temporal spatial values
@@ -554,7 +554,7 @@ overright_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if the first temporal spatial value is below the second
  * one
  * @param[in] temp1,temp2 Temporal spatial values
@@ -567,7 +567,7 @@ below_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if the first temporal spatial value does not extend above
  * the second one
  * @param[in] temp1,temp2 Temporal spatial values
@@ -580,7 +580,7 @@ overbelow_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if the first temporal spatial value is above the second
  * one
  * @param[in] temp1,temp2 Temporal spatial values
@@ -593,7 +593,7 @@ above_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if the first temporal spatial value does not extend below
  * the
  * second one
@@ -607,7 +607,7 @@ overabove_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if the first temporal spatial value is in front of the
  * second one
  * @param[in] temp1,temp2 Temporal spatial values
@@ -620,7 +620,7 @@ front_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if the first temporal spatial value does not extend to
  * the back of the second one
  * @param[in] temp1,temp2 Temporal spatial values
@@ -633,7 +633,7 @@ overfront_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if the first temporal spatial value is at the back of the
  * second one
  * @param[in] temp1,temp2 Temporal spatial values
@@ -646,7 +646,7 @@ back_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if the first temporal spatial value does not extend to
  * the front of the second one
  * @param[in] temp1,temp2 Temporal spatial values
@@ -659,7 +659,7 @@ overback_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if the first temporal spatial value is before the second
  * one
  * @param[in] temp1,temp2 Temporal spatial values
@@ -672,7 +672,7 @@ before_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if the first temporal spatial value is not after the
  * second one
  * @param[in] temp1,temp2 Temporal spatial values
@@ -685,7 +685,7 @@ overbefore_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if the first temporal spatial value is after the second
  * one
  * @param[in] temp1,temp2 Temporal spatial values
@@ -698,7 +698,7 @@ after_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 }
 
 /**
- * @ingroup meos_temporal_bbox_pos
+ * @ingroup meos_geo_bbox_pos
  * @brief Return true if the first temporal spatial value is not before the
  * second one
  * @param[in] temp1,temp2 Temporal spatial values

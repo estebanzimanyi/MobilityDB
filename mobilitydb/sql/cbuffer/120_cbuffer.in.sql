@@ -130,6 +130,19 @@ CREATE FUNCTION radius(cbuffer)
   AS 'MODULE_PATHNAME', 'Cbuffer_radius'
   LANGUAGE C IMMUTABLE STRICT;
 
+/*****************************************************************************
+ * Transformation functions
+ *****************************************************************************/
+
+CREATE FUNCTION round(cbuffer, integer DEFAULT 0)
+  RETURNS cbuffer
+  AS 'MODULE_PATHNAME', 'Cbuffer_round'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/*****************************************************************************
+ * SRID functions
+ *****************************************************************************/
+
 CREATE FUNCTION SRID(cbuffer)
   RETURNS integer
   AS 'MODULE_PATHNAME', 'Cbuffer_srid'
@@ -151,15 +164,6 @@ CREATE FUNCTION transformPipeline(cbuffer, text, srid integer DEFAULT 0,
   AS 'MODULE_PATHNAME', 'Cbuffer_transform_pipeline'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-/*****************************************************************************
- * Modification functions
- *****************************************************************************/
-
-CREATE FUNCTION round(cbuffer, integer DEFAULT 0)
-  RETURNS cbuffer
-  AS 'MODULE_PATHNAME', 'Cbuffer_round'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-  
 /*****************************************************************************
  * Same
  *****************************************************************************/

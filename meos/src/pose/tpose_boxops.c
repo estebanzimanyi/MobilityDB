@@ -205,7 +205,7 @@ pose_timestamptz_set_stbox(const Pose *pose, TimestampTz t, STBox *box)
 }
 
 /**
- * @ingroup meos_box_constructor
+ * @ingroup meos_pose_box
  * @brief Return a spatiotemporal box constructed from a pose and a
  * timestamptz
  * @param[in] pose Pose
@@ -248,7 +248,7 @@ pose_tstzspan_set_stbox(const Pose *pose, const Span *s, STBox *box)
 }
 
 /**
- * @ingroup meos_box_constructor
+ * @ingroup meos_pose_box
  * @brief Return a spatiotemporal box constructed from a pose and a
  * timestamptz
  * @param[in] pose Pose

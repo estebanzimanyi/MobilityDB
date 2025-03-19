@@ -103,6 +103,17 @@ CREATE FUNCTION pose(double precision, double precision, double precision,
   AS 'MODULE_PATHNAME', 'Pose_constructor'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION pose(geometry, double precision)
+  RETURNS pose
+  AS 'MODULE_PATHNAME', 'Pose_constructor_point'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION pose(geometry, double precision, double precision, 
+    double precision, double precision)
+  RETURNS pose
+  AS 'MODULE_PATHNAME', 'Pose_constructor_point'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 /*****************************************************************************
  * Conversions
  *****************************************************************************/
@@ -118,6 +129,27 @@ CREATE CAST (pose AS geometry) WITH FUNCTION geometry(pose);
  * Accessor functions
  *****************************************************************************/
 
+CREATE FUNCTION point(pose)
+  RETURNS geometry
+  AS 'MODULE_PATHNAME', 'Pose_point'
+  LANGUAGE C IMMUTABLE STRICT;
+
+CREATE FUNCTION rotation(pose)
+  RETURNS float
+  AS 'MODULE_PATHNAME', 'Pose_rotation'
+  LANGUAGE C IMMUTABLE STRICT;
+
+CREATE TYPE quaternion AS (
+  W float,
+  X float,
+  Y float,
+  Z float
+);
+
+CREATE FUNCTION orientation(pose)
+  RETURNS quaternion
+  AS 'MODULE_PATHNAME', 'Pose_orientation'
+  LANGUAGE C IMMUTABLE STRICT;
 
 /*****************************************************************************
  * Modification functions

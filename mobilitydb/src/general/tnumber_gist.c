@@ -338,10 +338,7 @@ interval_cmp_upper(const void *i1, const void *i2)
 inline float
 non_negative(float val)
 {
-  if (val >= 0.0f)
-    return val;
-  else
-    return 0.0f;
+  return (val >= 0.0f) ? val : 0.0f;
 }
 
 /**

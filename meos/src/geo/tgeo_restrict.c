@@ -1091,7 +1091,7 @@ tgeo_restrict_stbox(const Temporal *temp, const STBox *box, bool border_inc,
 
 #if MEOS
 /**
- * @ingroup meos_temporal_restrict
+ * @ingroup meos_geo_restrict
  * @brief Return a temporal geo restricted to a spatiotemporal box
  * @param[in] temp Temporal geo
  * @param[in] box Spatiotemporal box
@@ -1108,7 +1108,7 @@ tgeo_at_stbox(const Temporal *temp, const STBox *box, bool border_inc)
 }
 
 /**
- * @ingroup meos_temporal_restrict
+ * @ingroup meos_geo_restrict
  * @brief Return a temporal geo restricted to the complement of a
  * spatiotemporal box
  * @param[in] temp Temporal geo
@@ -2047,7 +2047,7 @@ tgeo_restrict_geom(const Temporal *temp, const GSERIALIZED *gs,
 
 #if MEOS
 /**
- * @ingroup meos_temporal_restrict
+ * @ingroup meos_geo_restrict
  * @brief Return a temporal point restricted to a geometry
  * @param[in] temp Temporal point
  * @param[in] gs Geometry
@@ -2064,7 +2064,7 @@ tpoint_at_geom(const Temporal *temp, const GSERIALIZED *gs, const Span *zspan)
 }
 
 /**
- * @ingroup meos_temporal_restrict
+ * @ingroup meos_geo_restrict
  * @brief Return a temporal geo restricted to a geometry
  * @param[in] temp Temporal geo
  * @param[in] gs Geometry
@@ -2080,7 +2080,7 @@ tgeo_at_geom(const Temporal *temp, const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_temporal_restrict
+ * @ingroup meos_geo_restrict
  * @brief Return a temporal point restricted to the complement of a geometry
  * @param[in] temp Temporal point
  * @param[in] gs Geometry
@@ -2098,7 +2098,7 @@ tpoint_minus_geom(const Temporal *temp, const GSERIALIZED *gs,
 }
 
 /**
- * @ingroup meos_temporal_restrict
+ * @ingroup meos_geo_restrict
  * @brief Return a temporal geo restricted to the complement of a geometry
  * @param[in] temp Temporal geo
  * @param[in] gs Geometry

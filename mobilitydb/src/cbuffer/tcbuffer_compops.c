@@ -113,7 +113,7 @@ EAcomp_tcbuffer_tcbuffer(FunctionCallInfo fcinfo,
 PGDLLEXPORT Datum Ever_eq_cbuffer_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Ever_eq_cbuffer_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_comp_ever
+ * @ingroup mobilitydb_cbuffer_comp_ever
  * @brief Return true if a temporal circular buffer is ever equal to a circular
  * buffer
  * @sqlfn ever_eq()
@@ -128,7 +128,7 @@ Ever_eq_cbuffer_tcbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Always_eq_cbuffer_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Always_eq_cbuffer_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_comp_ever
+ * @ingroup mobilitydb_cbuffer_comp_ever
  * @brief Return true if a temporal circular buffer is always equal to a
  * circular buffer
  * @sqlfn always_eq()
@@ -143,7 +143,7 @@ Always_eq_cbuffer_tcbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Ever_ne_cbuffer_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Ever_ne_cbuffer_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_comp_ever
+ * @ingroup mobilitydb_cbuffer_comp_ever
  * @brief Return true if a temporal circular buffer is ever different from a
  * circular buffer
  * @sqlfn ever_ne()
@@ -158,7 +158,7 @@ Ever_ne_cbuffer_tcbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Always_ne_cbuffer_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Always_ne_cbuffer_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_comp_ever
+ * @ingroup mobilitydb_cbuffer_comp_ever
  * @brief Return true if a temporal circular buffer is always different from a
  * circular buffer
  * @sqlfn always_ne()
@@ -175,7 +175,7 @@ Always_ne_cbuffer_tcbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Ever_eq_tcbuffer_cbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Ever_eq_tcbuffer_cbuffer);
 /**
- * @ingroup mobilitydb_temporal_comp_ever
+ * @ingroup mobilitydb_cbuffer_comp_ever
  * @brief Return true if a temporal circular buffer is ever equal to a circular
  * buffer
  * @sqlfn ever_eq()
@@ -190,7 +190,7 @@ Ever_eq_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Always_eq_tcbuffer_cbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Always_eq_tcbuffer_cbuffer);
 /**
- * @ingroup mobilitydb_temporal_comp_ever
+ * @ingroup mobilitydb_cbuffer_comp_ever
  * @brief Return true if a temporal circular buffer is always equal to a
  * circular buffer
  * @sqlfn always_eq()
@@ -205,7 +205,7 @@ Always_eq_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Ever_ne_tcbuffer_cbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Ever_ne_tcbuffer_cbuffer);
 /**
- * @ingroup mobilitydb_temporal_comp_ever
+ * @ingroup mobilitydb_cbuffer_comp_ever
  * @brief Return true if a temporal circular buffer is ever different from a
  * circular buffer
  * @sqlfn ever_ne()
@@ -220,7 +220,7 @@ Ever_ne_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Always_ne_tcbuffer_cbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Always_ne_tcbuffer_cbuffer);
 /**
- * @ingroup mobilitydb_temporal_comp_ever
+ * @ingroup mobilitydb_cbuffer_comp_ever
  * @brief Return true if a temporal circular buffer is always different from a
  * circular buffer
  * @sqlfn always_ne()
@@ -237,7 +237,7 @@ Always_ne_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Ever_eq_tcbuffer_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Ever_eq_tcbuffer_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_comp_ever
+ * @ingroup mobilitydb_cbuffer_comp_ever
  * @brief Return true if two temporal circular buffers are ever equal
  * @sqlfn ever_eq()
  * @sqlop @p ?=
@@ -251,7 +251,7 @@ Ever_eq_tcbuffer_tcbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Always_eq_tcbuffer_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Always_eq_tcbuffer_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_comp_ever
+ * @ingroup mobilitydb_cbuffer_comp_ever
  * @brief Return true if two temporal circular buffers are always equal
  * @sqlfn always_eq()
  * @sqlop @p %=
@@ -265,7 +265,7 @@ Always_eq_tcbuffer_tcbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Ever_ne_tcbuffer_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Ever_ne_tcbuffer_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_comp_ever
+ * @ingroup mobilitydb_cbuffer_comp_ever
  * @brief Return true if two temporal circular buffers are ever different
  * @sqlfn ever_ne()
  * @sqlop @p ?<>
@@ -279,7 +279,7 @@ Ever_ne_tcbuffer_tcbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Always_ne_tcbuffer_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Always_ne_tcbuffer_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_comp_ever
+ * @ingroup mobilitydb_cbuffer_comp_ever
  * @brief Return true if two temporal circular buffers are always different
  * @sqlfn always_ne()
  * @sqlop @p %<>
@@ -356,7 +356,7 @@ Tcomp_tcbuffer_tcbuffer(FunctionCallInfo fcinfo,
 PGDLLEXPORT Datum Teq_cbuffer_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Teq_cbuffer_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_comp_temp
+ * @ingroup mobilitydb_cbuffer_comp_temp
  * @brief Return true if a temporal circular buffer is ever equal to a circular
  * buffer
  * @sqlfn temporal_teq()
@@ -371,7 +371,7 @@ Teq_cbuffer_tcbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tne_cbuffer_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tne_cbuffer_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_comp_temp
+ * @ingroup mobilitydb_cbuffer_comp_temp
  * @brief Return true if a temporal circular buffer is ever different from a
  * circular buffer
  * @sqlfn temporal_tne()
@@ -388,7 +388,7 @@ Tne_cbuffer_tcbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Teq_tcbuffer_cbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Teq_tcbuffer_cbuffer);
 /**
- * @ingroup mobilitydb_temporal_comp_temp
+ * @ingroup mobilitydb_cbuffer_comp_temp
  * @brief Return true if a temporal circular buffer is ever equal to a circular
  * buffer
  * @sqlfn temporal_teq()
@@ -403,7 +403,7 @@ Teq_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tne_tcbuffer_cbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tne_tcbuffer_cbuffer);
 /**
- * @ingroup mobilitydb_temporal_comp_temp
+ * @ingroup mobilitydb_cbuffer_comp_temp
  * @brief Return true if a temporal circular buffer is ever different from a
  * circular buffer
  * @sqlfn temporal_tne()
@@ -420,7 +420,7 @@ Tne_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Teq_tcbuffer_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Teq_tcbuffer_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_comp_temp
+ * @ingroup mobilitydb_cbuffer_comp_temp
  * @brief Return true if two temporal circular buffers are ever equal
  * @sqlfn temporal_teq()
  * @sqlop @p #=
@@ -434,7 +434,7 @@ Teq_tcbuffer_tcbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tne_tcbuffer_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tne_tcbuffer_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_comp_temp
+ * @ingroup mobilitydb_cbuffer_comp_temp
  * @brief Return true if two temporal circular buffers are ever different
  * @sqlfn temporal_tne()
  * @sqlop @p #<>

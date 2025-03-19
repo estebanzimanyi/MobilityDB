@@ -84,10 +84,15 @@ extern bool pose_le(const Pose *pose1, const Pose *pose2);
 extern bool pose_lt(const Pose *pose1, const Pose *pose2);
 extern Pose *pose_make_2d(double x, double y, double theta);
 extern Pose *pose_make_3d(double x, double y, double z, double W, double X, double Y, double Z);
+extern Pose *pose_make_point2d(const GSERIALIZED *gs, double theta);
+extern Pose *pose_make_point3d(const GSERIALIZED *gs, double W, double X, double Y, double Z);
 extern bool pose_ne(const Pose *pose1, const Pose *pose2);
 extern bool pose_nsame(const Pose *pose1, const Pose *pose2);
 extern char *pose_out(const Pose *pose, int maxdd);
 extern GSERIALIZED *pose_point(const Pose *pose);
+extern double pose_rotation(const Pose *pose);
+extern double *pose_orientation(const Pose *pose);
+extern Pose *pose_round(const Pose *pose, int maxdd);
 extern bool pose_same(const Pose *pose1, const Pose *pose2);
 extern int32_t pose_srid(const Pose *pose);
 extern void pose_set_srid(Pose *pose, int32_t srid);
@@ -99,6 +104,23 @@ extern Pose *geom_pose(const GSERIALIZED *gs);
  * Functions for pose sets
  ******************************************************************************/
 
+extern bool contained_pose_set(const Pose *pose, const Set *s);
+extern bool contains_set_pose(const Set *s, Pose *pose);
+extern Set *intersection_pose_set(const Pose *pose, const Set *s);
+extern Set *intersection_set_pose(const Set *s, const Pose *pose);
+extern Set *minus_pose_set(const Pose *pose, const Set *s);
+extern Set *minus_set_pose(const Set *s, const Pose *pose);
+extern Pose *poseset_end_value(const Set *s);
+extern Set *poseset_in(const char *str);
+extern Set *poseset_make(const Pose **values, int count);
+extern char *poseset_out(const Set *s, int maxdd);
+extern Set *pose_to_set(const Pose *pose);
+extern Pose *poseset_start_value(const Set *s);
+extern Set *pose_union_transfn(Set *state, const Pose *pose);
+extern bool poseset_value_n(const Set *s, int n, Pose **result);
+extern Pose **poseset_values(const Set *s);
+extern Set *union_pose_set(const Pose *pose, const Set *s);
+extern Set *union_set_pose(const Set *s, const Pose *pose);
 
 /*===========================================================================*
  * Functions for box types
@@ -173,7 +195,7 @@ extern char *tpose_out(const Temporal *temp, int maxdd);
 
 /* Spatial accessor functions for temporal points */
 
-// extern Set *tpose_points(const Temporal *temp);
+extern Set *tpose_points(const Temporal *temp);
 // extern GSERIALIZED *tpose_traversed_area(const Temporal *temp);
 
 /*****************************************************************************/

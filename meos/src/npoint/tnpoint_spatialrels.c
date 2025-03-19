@@ -104,7 +104,7 @@ ea_contains_geo_tnpoint(const GSERIALIZED *gs, const Temporal *temp, bool ever)
 
 #if MEOS
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_npoint_spatial_rel_ever
  * @brief Return true if the temporal network points ever satisfy the spatial
  * relationship
  * @param[in] temp Temporal network point
@@ -118,7 +118,7 @@ econtains_geo_tnpoint(const GSERIALIZED *gs, const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_npoint_spatial_rel_ever
  * @brief Return true if the temporal network points always satisfy the spatial
  * relationship
  * @param[in] temp Temporal network point
@@ -154,7 +154,7 @@ ea_contains_tnpoint_npoint(const Temporal *temp, const Npoint *np, bool ever)
 
 #if MEOS
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_npoint_spatial_rel_ever
  * @brief Return true if the temporal network points ever satisfy the spatial
  * relationship
  * @param[in] temp Temporal network point
@@ -167,7 +167,7 @@ econtains_tnpoint_npoint(const Temporal *temp, const Npoint *np)
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_npoint_spatial_rel_ever
  * @brief Return true if the temporal network points always satisfy the spatial
  * relationship
  * @param[in] temp Temporal network point
@@ -221,7 +221,7 @@ ea_disjoint_geo_tnpoint(const GSERIALIZED *gs, const Temporal *temp, bool ever)
 
 #if MEOS
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_npoint_spatial_rel_ever
  * @brief Return true if the temporal network points ever satisfy the spatial
  * relationship
  * @param[in] temp Temporal network point
@@ -235,7 +235,7 @@ edisjoint_tnpoint_geo(const Temporal *temp, const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_npoint_spatial_rel_ever
  * @brief Return true if the temporal network points always satisfy the spatial
  * relationship
  * @param[in] temp Temporal network point
@@ -271,7 +271,7 @@ ea_disjoint_tnpoint_npoint(const Temporal *temp, const Npoint *np, bool ever)
 
 #if MEOS
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_npoint_spatial_rel_ever
  * @brief Return true if the temporal network points ever satisfy the spatial
  * relationship
  * @param[in] temp Temporal network point
@@ -285,7 +285,7 @@ edisjoint_tnpoint_npoint(const Temporal *temp, const Npoint *np)
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_npoint_spatial_rel_ever
  * @brief Return true if the temporal network points always satisfy the spatial
  * relationship
  * @param[in] temp Temporal network point
@@ -299,7 +299,7 @@ adisjoint_tnpoint_npoint(const Temporal *temp, const Npoint *np)
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_npoint_spatial_rel_ever
  * @brief Return 1 if the temporal network points are ever disjoint, 0 if not,
  * and -1 on error or if the temporal points do not intersect in time
  * @param[in] temp1,temp2 Temporal network points
@@ -312,7 +312,7 @@ edisjoint_tnpoint_tnpoint(const Temporal *temp1, const Temporal *temp2)
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_npoint_spatial_rel_ever
  * @brief Return 1 if the temporal network points are always disjoint, 0 if 
  * not, and -1 on error or if the temporal points do not intersect in time
  * @param[in] temp1,temp2 Temporal network points
@@ -368,7 +368,7 @@ ea_intersects_geo_tnpoint(const GSERIALIZED *gs, const Temporal *temp,
 
 #if MEOS
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_npoint_spatial_rel_ever
  * @brief Return true if the temporal network points ever satisfy the spatial
  * relationship
  * @param[in] temp Temporal network point
@@ -382,7 +382,7 @@ eintersects_tnpoint_geo(const Temporal *temp, const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_npoint_spatial_rel_ever
  * @brief Return true if the temporal network points always satisfy the spatial
  * relationship
  * @param[in] temp Temporal network point
@@ -418,7 +418,7 @@ ea_intersects_tnpoint_npoint(const Temporal *temp, const Npoint *np, bool ever)
 
 #if MEOS
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_npoint_spatial_rel_ever
  * @brief Return true if the temporal network points ever satisfy the spatial
  * relationship
  * @param[in] temp Temporal network point
@@ -432,7 +432,7 @@ eintersects_tnpoint_npoint(const Temporal *temp, const Npoint *np)
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_npoint_spatial_rel_ever
  * @brief Return true if the temporal network points always satisfy the spatial
  * relationship
  * @param[in] temp Temporal network point
@@ -487,7 +487,7 @@ ea_touches_geo_tnpoint(const GSERIALIZED *gs, const Temporal *temp, bool ever)
 
 #if MEOS
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_npoint_spatial_rel_ever
  * @brief Return true if the temporal network points ever satisfy the spatial
  * relationship
  * @param[in] temp Temporal network point
@@ -501,7 +501,7 @@ etouches_tnpoint_geo(const Temporal *temp, const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_npoint_spatial_rel_ever
  * @brief Return true if the temporal network points always satisfy the spatial
  * relationship
  * @param[in] temp Temporal network point
@@ -537,7 +537,7 @@ ea_touches_tnpoint_npoint(const Temporal *temp, const Npoint *np, bool ever)
 
 #if MEOS
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_npoint_spatial_rel_ever
  * @brief Return true if the temporal network points ever satisfy the spatial
  * relationship
  * @param[in] temp Temporal network point
@@ -551,7 +551,7 @@ etouches_tnpoint_npoint(const Temporal *temp, const Npoint *np)
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_npoint_spatial_rel_ever
  * @brief Return true if the temporal network points always satisfy the spatial
  * relationship
  * @param[in] temp Temporal network point
@@ -610,7 +610,7 @@ ea_dwithin_geom_tnpoint(const GSERIALIZED *gs, const Temporal *temp,
 
 #if MEOS
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_npoint_spatial_rel_ever
  * @brief Return true if the temporal network points ever satisfy the spatial
  * relationship
  * @param[in] temp Temporal network point
@@ -625,7 +625,7 @@ edwithin_tnpoint_geom(const Temporal *temp, const GSERIALIZED *gs, double dist)
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_npoint_spatial_rel_ever
  * @brief Return true if the temporal network points always satisfy the spatial
  * relationship
  * @param[in] temp Temporal network point
@@ -664,7 +664,7 @@ ea_dwithin_tnpoint_npoint(const Temporal *temp, const Npoint *np, double dist,
 
 #if MEOS
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_npoint_spatial_rel_ever
  * @brief Return true if the temporal network points ever satisfy the spatial
  * relationship
  * @param[in] temp Temporal network point
@@ -679,7 +679,7 @@ edwithin_tnpoint_npoint(const Temporal *temp, const Npoint *np, double dist)
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_npoint_spatial_rel_ever
  * @brief Return true if the temporal network points always satisfy the spatial
  * relationship
  * @param[in] temp Temporal network point
@@ -730,7 +730,7 @@ ea_dwithin_tnpoint_tnpoint(const Temporal *temp1, const Temporal *temp2,
 
 #if MEOS
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_npoint_spatial_rel_ever
  * @brief Return true if the temporal network points ever satisfy the spatial
  * relationship
  * @param[in] temp1,temp2 Temporal network points
@@ -745,7 +745,7 @@ edwithin_tnpoint_tnpoint(const Temporal *temp1, const Temporal *temp2,
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_npoint_spatial_rel_ever
  * @brief Return true if the temporal network points always satisfy the spatial
  * relationship
  * @param[in] temp1,temp2 Temporal network points

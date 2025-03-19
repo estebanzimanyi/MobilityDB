@@ -45,6 +45,8 @@
 #if POSTGRESQL_VERSION_NUMBER >= 160000
   #include "varatt.h"
 #endif
+/* PostGIS */
+#include <liblwgeom.h>
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
@@ -55,6 +57,15 @@
 #include "geo/tgeo_out.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/tspatial_boxops.h"
+#if CBUFFER
+  #include "cbuffer/cbuffer.h"
+#endif
+#if NPOINT
+  #include "npoint/tnpoint.h"
+#endif
+#if POSE
+  #include "pose/pose.h"
+#endif
 
 /*****************************************************************************
  * Parameter tests
@@ -440,7 +451,7 @@ set_make_exp(const Datum *values, int count, int maxcount, meosType basetype,
 
   /* Compute the bounding box */
   if (bboxsize != 0)
-    spatialvalarr_set_bbox(newvalues, basetype, newcount, SET_BBOX_PTR(result));
+    spatialarr_set_bbox(newvalues, basetype, newcount, SET_BBOX_PTR(result));
 
   if (order && count > 1)
     pfree(newvalues);
@@ -748,46 +759,60 @@ set_values(const Set *s)
  * Transformation functions
  *****************************************************************************/
 
+/*****************************************************************************
+ * Generic functions
+ *****************************************************************************/
+
+/**
+ * @brief Return the SRID of a spatial value
+ */
+datum_func2
+round_fn(meosType basetype)
+{
+  assert(meos_basetype(basetype));
+  switch (basetype)
+  {
+    case T_FLOAT8:
+      return &datum_float_round;
+    case T_GEOMETRY:
+    case T_GEOGRAPHY:
+      return &datum_geo_round;
+#if CBUFFER
+    case T_CBUFFER:
+      return &datum_cbuffer_round;
+#endif
+#if NPOINT
+    case T_NPOINT:
+      return &datum_npoint_round;
+#endif
+#if POSE
+    case T_POSE:
+      return &datum_pose_round;
+#endif
+    default: /* Error! */
+      meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
+        "Unknown round function for type: %s", meostype_name(basetype));
+    return NULL;
+  }
+}
+
 /**
  * @ingroup meos_setspan_transf
  * @brief Return a set with the precision of the values set to a number of
  * decimal places
  * @param[in] s Set
  * @param[in] maxdd Maximum number of decimal digits
- * @param[in] func Function applied for rounding the elements of the set
  */
 Set *
-set_round(const Set *s, int maxdd, datum_func2 func)
+set_round(const Set *s, int maxdd)
 {
   assert(s); assert(maxdd >= 0);
   Datum *values = palloc(sizeof(Datum) * s->count);
   Datum size = Int32GetDatum(maxdd);
+  datum_func2 func = round_fn(s->basetype);
   for (int i = 0; i < s->count; i++)
     values[i] = func(SET_VAL_N(s, i), size);
   return set_make_free(values, s->count, s->basetype, ORDER);
-}
-
-/**
- * @ingroup meos_setspan_transf
- * @brief Return a float set with the precision of the values set to a number
- * of decimal places
- * @param[in] s Set
- * @param[in] maxdd Maximum number of decimal digits
- * @csqlfn #Floatset_round()
- */
-Set *
-floatset_round(const Set *s, int maxdd)
-{
-#if MEOS
-  /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) s) || ! ensure_not_negative(maxdd) ||
-      ! ensure_set_isof_type(s, T_FLOATSET))
-    return NULL;
-#else
-  assert(s); assert(maxdd >= 0); assert(s->settype == T_FLOATSET);
-#endif /* MEOS */
-
-  return set_round(s, maxdd, &datum_float_round);
 }
 
 /*****************************************************************************/

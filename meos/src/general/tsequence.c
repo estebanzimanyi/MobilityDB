@@ -57,6 +57,7 @@
 #include "general/set.h"
 #include "general/span.h"
 #include "general/spanset.h"
+#include "general/temporal.h"
 #include "general/tinstant.h"
 #include "general/temporal_boxops.h"
 #include "general/type_util.h"

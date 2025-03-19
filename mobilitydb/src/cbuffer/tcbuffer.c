@@ -89,7 +89,7 @@ tcbuffer_valid_typmod(Temporal *temp, int32_t typmod)
 PGDLLEXPORT Datum Tcbuffer_in(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tcbuffer_in);
 /**
- * @ingroup mobilitydb_temporal_inout
+ * @ingroup mobilitydb_cbuffer_inout
  * @brief Return a circular buffer from its Well-Known Text (WKT) representation
  * @sqlfn tcbuffer_in()
  */
@@ -125,7 +125,7 @@ Tcbuffer_enforce_typmod(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tcbuffer_constructor(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tcbuffer_constructor);
 /**
- * @ingroup mobilitydb_temporal_inout
+ * @ingroup mobilitydb_cbuffer_inout
  * @brief Return a circular buffer from a temporal point and a temporal float
  * @sqlfn tcbuffer_constructor()
  */
@@ -149,7 +149,7 @@ Tcbuffer_constructor(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tcbuffer_to_tgeompoint(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tcbuffer_to_tgeompoint);
 /**
- * @ingroup mobilitydb_temporal_conversion
+ * @ingroup mobilitydb_cbuffer_conversion
  * @brief Return a temporal geometry point constructed from the points of a 
  * temporal circular buffer
  * @sqlfn tgeompoint()
@@ -167,7 +167,7 @@ Tcbuffer_to_tgeompoint(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tcbuffer_to_tfloat(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tcbuffer_to_tfloat);
 /**
- * @ingroup mobilitydb_temporal_conversion
+ * @ingroup mobilitydb_cbuffer_conversion
  * @brief Return a temporal float constructed from the radius of a temporal
  * circular buffer
  * @sqlfn tgeompoint()
@@ -185,7 +185,7 @@ Tcbuffer_to_tfloat(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tgeompoint_to_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tgeompoint_to_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_conversion
+ * @ingroup mobilitydb_cbuffer_conversion
  * @brief Return a temporal geometry point converted to a temporal circular
  * buffer with a zero radius
  * @sqlfn tgeompoint()
@@ -207,7 +207,7 @@ Tgeompoint_to_tcbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tcbuffer_round(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tcbuffer_round);
 /**
- * @ingroup mobilitydb_temporal_transf
+ * @ingroup mobilitydb_cbuffer_transf
  * @brief Return a temporal circular buffer with the precision of the values
  * set to a number of decimal places
  * @sqlfn round()
@@ -229,7 +229,7 @@ Tcbuffer_round(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tcbuffer_points(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tcbuffer_points);
 /**
- * @ingroup mobilitydb_temporal_accessor
+ * @ingroup mobilitydb_cbuffer_accessor
  * @brief Return the array of points of a temporal circular buffer
  * @sqlfn points()
  */
@@ -245,7 +245,7 @@ Tcbuffer_points(PG_FUNCTION_ARGS)
 // PGDLLEXPORT Datum Tcbuffer_line(PG_FUNCTION_ARGS);
 // PG_FUNCTION_INFO_V1(Tcbuffer_line);
 // /**
- // * @ingroup mobilitydb_temporal_accessor
+ // * @ingroup mobilitydb_cbuffer_accessor
  // * @brief Return the central line of a temporal circular buffer
  // * @sqlfn point()
  // */

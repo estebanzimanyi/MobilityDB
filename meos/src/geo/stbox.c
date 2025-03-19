@@ -54,6 +54,7 @@
 #include "general/type_util.h"
 #include "geo/pgis_types.h"
 #include "geo/tgeo_spatialfuncs.h"
+#include "geo/tspatial.h"
 #include "geo/tspatial_parser.h"
 #if CBUFFER
   #include "cbuffer/cbuffer.h"
@@ -661,49 +662,6 @@ stbox_tstzspan(const STBox *box)
 /*****************************************************************************
  * Conversion functions
  *****************************************************************************/
-
-/**
- * @ingroup meos_internal_box_conversion
- * @brief Return in the last argument the bounding box of a spatial set
- * @param[in] s Set
- * @param[out] box Spatiotemporal box
- */
-void
-spatialset_set_stbox(const Set *s, STBox *box)
-{
-  assert(s); assert(box); assert(spatialset_type(s->settype));
-  memset(box, 0, sizeof(STBox));
-  memcpy(box, SET_BBOX_PTR(s), sizeof(STBox));
-  return;
-}
-
-/**
- * @ingroup meos_box_conversion
- * @brief Return a spatial set converted to a spatiotemporal box
- * @param[in] s Set
- * @csqlfn #Geoset_to_stbox(), #Npointset_to_stbox()
- */
-STBox *
-spatialset_stbox(const Set *s)
-{
-#if MEOS
-  /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) s))
-    return NULL;
-#else
-  assert(s);
-#endif /* MEOS */
-
-  /* Ensure validity of the arguments */
-  if (! ensure_spatialset_type(s->settype))
-    return NULL;
-
-  STBox *result = palloc(sizeof(STBox));
-  spatialset_set_stbox(s, result);
-  return result;
-}
-
-/*****************************************************************************/
 
 /**
  * @ingroup meos_internal_box_conversion
@@ -1645,7 +1603,166 @@ stbox_expand_time(const STBox *box, const Interval *interv)
 }
 
 /*****************************************************************************
- * Topological operators
+ * SRID functions
+ *****************************************************************************/
+
+/**
+ * @ingroup meos_geo_box_srid
+ * @brief Return the SRID of a spatiotemporal box
+ * @param[in] box Spatiotemporal box
+ * @csqlfn #Stbox_srid()
+ */
+int32_t
+stbox_srid(const STBox *box)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) box) || ! ensure_has_X(T_STBOX, box->flags))
+    return SRID_INVALID;
+  return box->srid;
+}
+
+/**
+ * @ingroup meos_geo_box_srid
+ * @brief Return a spatiotemporal box with the coordinates set to an SRID
+ * @param[in] box Spatiotemporal box
+ * @param[in] srid SRID
+ * @csqlfn #Stbox_set_srid()
+ */
+STBox *
+stbox_set_srid(const STBox *box, int32_t srid)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) box) || ! ensure_has_X(T_STBOX, box->flags))
+    return NULL;
+  STBox *result = stbox_copy(box);
+  result->srid = srid;
+  return result;
+}
+
+/**
+ * @brief Return a spatiotemporal box transformed to another SRID using a
+ * pipeline
+ * @param[in] box Spatiotemporal box
+ * @param[in] srid_to Target SRID, may be @p SRID_UNKNOWN for pipeline
+ * transformation
+ * @param[in] pj Information about the transformation
+ */
+static STBox *
+stbox_transf_pj(const STBox *box, int32_t srid_to, const LWPROJ *pj)
+{
+  assert(box); assert(pj);
+  /* Create the points corresponding to the bounds */
+  bool hasz = MEOS_FLAGS_GET_Z(box->flags);
+  bool geodetic = MEOS_FLAGS_GET_GEODETIC(box->flags);
+  GSERIALIZED *min = geopoint_make(box->xmin, box->ymin, box->zmin,
+    hasz, geodetic, box->srid);
+  GSERIALIZED *max = geopoint_make(box->xmax, box->ymax, box->zmax,
+    hasz, geodetic, box->srid);
+
+  /* Transform the points */
+  if (! point_transf_pj(min, srid_to, pj) ||
+      ! point_transf_pj(max, srid_to, pj))
+  {
+    pfree(min); pfree(max);
+    return NULL;
+  }
+
+  STBox *result = stbox_copy(box);
+  /* Set the bounds of the box from the transformed points */
+  result->srid = srid_to;
+  if (hasz)
+  {
+    const POINT3DZ *ptmin = GSERIALIZED_POINT3DZ_P(min);
+    const POINT3DZ *ptmax = GSERIALIZED_POINT3DZ_P(max);
+    result->xmin = ptmin->x;
+    result->ymin = ptmin->y;
+    result->zmin = ptmin->z;
+    result->xmax = ptmax->x;
+    result->ymax = ptmax->y;
+    result->zmax = ptmax->z;
+  }
+  else
+  {
+    const POINT2D *ptmin = GSERIALIZED_POINT2D_P(min);
+    const POINT2D *ptmax = GSERIALIZED_POINT2D_P(max);
+    result->xmin = ptmin->x;
+    result->ymin = ptmin->y;
+    result->xmax = ptmax->x;
+    result->ymax = ptmax->y;
+  }
+
+  /* Clean up and return */
+  pfree(min); pfree(max);
+  return result;
+}
+
+/**
+ * @ingroup meos_geo_box_srid
+ * @brief Return a spatiotemporal box transformed to another SRID
+ * @param[in] box Spatiotemporal box
+ * @param[in] srid_to Target SRID
+ */
+STBox *
+stbox_transform(const STBox *box, int32_t srid_to)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) box) || ! ensure_srid_known(box->srid) ||
+      ! ensure_srid_known(srid_to))
+    return NULL;
+
+  /* Input and output SRIDs are equal, noop */
+  if (box->srid == srid_to)
+    return stbox_copy(box);
+
+  /* Get the structure with information about the projection */
+  LWPROJ *pj = lwproj_get(box->srid, srid_to);
+  if (! pj)
+    return NULL;
+
+  /* Transform the temporal point */
+  STBox *result = stbox_copy(box);
+  if (! stbox_transf_pj(stbox_copy(box), srid_to, pj))
+  {
+    pfree(result); return NULL;
+  }
+  return result;
+}
+
+/**
+ * @ingroup meos_geo_box_srid
+ * @brief Return a spatiotemporal box transformed to another SRID using a
+ * pipeline
+ * @param[in] box Spatiotemporal box
+ * @param[in] pipeline Pipeline string
+ * @param[in] srid_to Target SRID, may be @p SRID_UNKNOWN
+ * @param[in] is_forward True when the transformation is forward
+ */
+STBox *
+stbox_transform_pipeline(const STBox *box, const char *pipeline,
+  int32_t srid_to, bool is_forward)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) box) || ! ensure_not_null((void *) pipeline) ||
+      ! ensure_srid_known(box->srid))
+    return NULL;
+
+  /* There is NO test verifying whether the input and output SRIDs are equal */
+
+  /* Get the structure with information about the projection */
+  LWPROJ *pj = lwproj_get_pipeline(pipeline, is_forward);
+  if (! pj)
+    return NULL;
+
+  /* Transform the spatiotemporal box */
+  STBox *result = stbox_transf_pj(box, srid_to, pj);
+
+  /* Clean up and return */
+  proj_destroy(pj->pj); pfree(pj);
+  return result;
+}
+
+/*****************************************************************************
+ * Topological functions
  *****************************************************************************/
 
 /**

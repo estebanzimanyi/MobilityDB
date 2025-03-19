@@ -47,7 +47,7 @@
 /*****************************************************************************/
 
 /**
- * @ingroup meos_temporal_agg
+ * @ingroup meos_npoint_agg
  * @brief Transition function for temporal centroid aggregation of temporal
  * network points
  * @param[in] state Current aggregate value

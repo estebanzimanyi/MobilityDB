@@ -121,7 +121,7 @@ CREATE CAST (cbuffer AS cbufferset) WITH FUNCTION set(cbuffer);
 
 CREATE FUNCTION stbox(cbufferset)
   RETURNS stbox
-  AS 'MODULE_PATHNAME', 'Cbufferset_to_stbox'
+  AS 'MODULE_PATHNAME', 'Spatialset_to_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE CAST (cbufferset AS stbox) WITH FUNCTION stbox(cbufferset);
@@ -132,7 +132,7 @@ CREATE CAST (cbufferset AS stbox) WITH FUNCTION stbox(cbufferset);
 
 CREATE FUNCTION round(cbufferset, integer DEFAULT 0)
   RETURNS cbufferset
-  AS 'MODULE_PATHNAME', 'Cbufferset_round'
+  AS 'MODULE_PATHNAME', 'Set_round'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************

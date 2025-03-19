@@ -632,7 +632,7 @@ stbox_tile_state_get(STboxGridState *state, STBox *box)
 
 #if MEOS
 /**
- * @ingroup meos_temporal_analytics_tile
+ * @ingroup meos_geo_analytics_tile
  * @brief Return the spatiotemporal grid of a spatiotemporal box
  * @param[in] bounds Bounds
  * @param[in] xsize,ysize,zsize Size of the corresponding dimension
@@ -729,7 +729,7 @@ stbox_space_time_tiles(const STBox *bounds, double xsize, double ysize,
 }
 
 /**
- * @ingroup meos_temporal_analytics_tile
+ * @ingroup meos_geo_analytics_tile
  * @brief Return the spatial grid of a spatiotemporal box
  * @param[in] bounds Bounds
  * @param[in] xsize,ysize,zsize Size of the corresponding dimension
@@ -829,7 +829,7 @@ stbox_space_time_tile_common(const GSERIALIZED *point, TimestampTz t,
 
 #if MEOS
 /**
- * @ingroup meos_temporal_analytics_tile
+ * @ingroup meos_geo_analytics_tile
  * @brief Return a tile in the spatiotemporal grid of a spatiotemporal box
  * @param[in] point Point
  * @param[in] t Timestamp
@@ -849,7 +849,7 @@ stbox_get_space_time_tile(const GSERIALIZED *point, TimestampTz t,
 }
 
 /**
- * @ingroup meos_temporal_analytics_tile
+ * @ingroup meos_geo_analytics_tile
  * @brief Return a tile in the spatial grid of a spatiotemporal box
  * @param[in] point Point
  * @param[in] xsize,ysize,zsize Size of the corresponding dimension
@@ -865,7 +865,7 @@ stbox_get_space_tile(const GSERIALIZED *point, double xsize, double ysize,
 }
 
 /**
- * @ingroup meos_temporal_analytics_tile
+ * @ingroup meos_geo_analytics_tile
  * @brief Return a tile in the temporal grid of a spatiotemporal box
  * @param[in] t Timestamp
  * @param[in] duration Size of the time dimension as an interval
@@ -972,7 +972,7 @@ tgeo_space_time_boxes(const Temporal *temp, double xsize, double ysize,
 
 #if MEOS
 /**
- * @ingroup meos_temporal_analytics_tile
+ * @ingroup meos_geo_analytics_tile
  * @brief Return the spatiotemporal boxes of a temporal geo split with
  * respect to a space grid
  * @param[in] temp Temporal geo
@@ -1294,7 +1294,7 @@ tgeo_space_time_tile_init(const Temporal *temp, double xsize, double ysize,
 
 #if MEOS
 /**
- * @ingroup meos_temporal_analytics_tile
+ * @ingroup meos_geo_analytics_tile
  * @brief Return the fragments a temporal geo split according to a space and
  * possibly a time grid
  * @param[in] temp Temporal geo
@@ -1316,7 +1316,7 @@ tgeo_space_split(const Temporal *temp, double xsize, double ysize,
 }
 
 /**
- * @ingroup meos_temporal_analytics_tile
+ * @ingroup meos_geo_analytics_tile
  * @brief Return the fragments a temporal geo split according to a space and
  * possibly a time grid
  * @param[in] temp Temporal geo

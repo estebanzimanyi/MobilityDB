@@ -665,7 +665,7 @@ CREATE FUNCTION ceil(floatset)
 
 CREATE FUNCTION round(floatset, integer DEFAULT 0)
   RETURNS floatset
-  AS 'MODULE_PATHNAME', 'Floatset_round'
+  AS 'MODULE_PATHNAME', 'Set_round'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION degrees(floatset, bool DEFAULT FALSE)
   RETURNS floatset

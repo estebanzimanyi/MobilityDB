@@ -631,7 +631,7 @@ tpoint_parse(const char **str, meosType temptype)
 
 #if MEOS
 /**
- * @ingroup meos_temporal_inout
+ * @ingroup meos_geo_inout
  * @brief Return a temporal geometry point from its Well-Known Text (WKT)
  * representation
  * @param[in] str String
@@ -646,7 +646,7 @@ tgeompoint_in(const char *str)
 }
 
 /**
- * @ingroup meos_temporal_inout
+ * @ingroup meos_geo_inout
  * @brief Return a temporal geography point from its Well-Known Text (WKT)
  * representation
  * @param[in] str String
@@ -661,7 +661,7 @@ tgeogpoint_in(const char *str)
 }
 
 /**
- * @ingroup meos_temporal_inout
+ * @ingroup meos_geo_inout
  * @brief Return a temporal geometry from its Well-Known Text (WKT)
  * representation
  * @param[in] str String
@@ -675,7 +675,7 @@ tgeometry_in(const char *str)
   return tspatial_parse(&str, T_TGEOMETRY);
 }
 /**
- * @ingroup meos_temporal_inout
+ * @ingroup meos_geo_inout
  * @brief Return a temporal geography from its Well-Known Text (WKT)
  * representation
  * @param[in] str String

@@ -293,7 +293,7 @@ ea_spatialrel_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2,
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_geo_rel_ever
  * @brief Return 1 if a geometry ever contains a temporal geo, 0 if not, and
  * -1 on error or if the geometry is empty
  * @param[in] gs Geometry
@@ -322,7 +322,7 @@ econtains_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_geo_rel_ever
  * @brief Return 1 if a geometry always contains a temporal geo,
  * 0 if not, and -1 on error or if the geometry is empty
  * @param[in] gs Geometry
@@ -352,7 +352,7 @@ acontains_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_geo_rel_ever
  * @brief Return 1 if a temporal geo and a geometry are ever disjoint,
  * 0 if not, and -1 on error or if the geometry is empty
  * @param[in] temp Temporal geo
@@ -375,7 +375,7 @@ edisjoint_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_geo_rel_ever
  * @brief Return 1 if a temporal geo and a geometry are always disjoint,
  * 0 if not, and -1 on error or if the geometry is empty
  * @param[in] temp Temporal geo
@@ -391,7 +391,7 @@ adisjoint_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_internal_temporal_spatial_rel_ever
+ * @ingroup meos_internal_geo_rel_ever
  * @brief Return 1 if the temporal geos ever/always intersect, 0 if not, and
  * -1 on error or if the temporal geos do not intersect in time
  * @param[in] temp1,temp2 Temporal geos
@@ -412,7 +412,7 @@ ea_disjoint_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2, bool ever)
 
 #if MEOS
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_geo_rel_ever
  * @brief Return 1 if the temporal geos are ever disjoint, 0 if not, and
  * -1 on error or if the temporal geos do not intersect in time
  * @param[in] temp1,temp2 Temporal geos
@@ -425,7 +425,7 @@ edisjoint_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_geo_rel_ever
  * @brief Return 1 if the temporal geos are always disjoint, 0 if not, and
  * -1 on error or if the temporal geos do not intersect in time
  * @param[in] temp1,temp2 Temporal geos
@@ -443,7 +443,7 @@ adisjoint_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_geo_rel_ever
  * @brief Return 1 if a geometry and a temporal geo ever intersect,
  * 0 if not, and -1 on error or if the geometry is empty
  * @param[in] temp Temporal geo
@@ -459,7 +459,7 @@ eintersects_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_geo_rel_ever
  * @brief Return 1 if a geometry and a temporal geo always intersect,
  * 0 if not, and -1 on error or if the geometry is empty
  * @param[in] temp Temporal geo
@@ -477,7 +477,7 @@ aintersects_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_internal_temporal_spatial_rel_ever
+ * @ingroup meos_internal_geo_rel_ever
  * @brief Return 1 if the temporal geos ever/always intersect, 0 if not, and
  * -1 on error or if the temporal geos do not intersect in time
  * @param[in] temp1,temp2 Temporal geos
@@ -494,7 +494,7 @@ ea_intersects_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
 
 #if MEOS
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_geo_rel_ever
  * @brief Return 1 if the temporal geos ever intersect, 0 if not, and
  * -1 on error or if the temporal geos do not intersect in time
  * @param[in] temp1,temp2 Temporal geos
@@ -507,7 +507,7 @@ eintersects_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_geo_rel_ever
  * @brief Return 1 if the temporal geos always intersect, 0 if not, and
  * -1 on error or if the temporal geos do not intersect in time
  * @param[in] temp1,temp2 Temporal geos
@@ -527,7 +527,7 @@ aintersects_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_geo_rel_ever
  * @brief Return 1 if a temporal geo and a geometry ever touch, 0 if not, and
  * -1 on error or if the geometry is empty
  * @param[in] temp Temporal geo
@@ -568,7 +568,7 @@ etouches_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_geo_rel_ever
  * @brief Return 1 if a temporal geo and a geometry always touch, 0 if not,
  * and -1 on error or if the geometry is empty
  * @param[in] temp Temporal geo
@@ -604,7 +604,7 @@ atouches_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_geo_rel_ever
  * @brief Return 1 if a geometry and a temporal geo are ever within the
  * given distance, 0 if not, -1 on error or if the geometry is empty
  * @param[in] temp Temporal geo
@@ -624,7 +624,7 @@ edwithin_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, double dist)
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_geo_rel_ever
  * @brief Return 1 if a geometry and a temporal geo are always within a
  * distance, 0 if not, -1 on error or if the geometry is empty
  * @param[in] temp Temporal geo
@@ -825,7 +825,7 @@ ea_dwithin_tgeo_tgeo_sync(const Temporal *sync1, const Temporal *sync2,
 }
 
 /**
- * @ingroup meos_internal_temporal_spatial_rel_ever
+ * @ingroup meos_internal_geo_rel_ever
  * @brief Return 1 if two temporal geos are ever within a distance,
  * 0 if not, -1 on error or if the temporal geos do not intersect on time
  * @param[in] temp1,temp2 Temporal geos
@@ -855,7 +855,7 @@ ea_dwithin_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_geo_rel_ever
  * @brief Return 1 if two temporal geos are ever within a distance,
  * 0 if not, -1 on error or if the temporal geos do not intersect on time
  * @param[in] temp1,temp2 Temporal geos
@@ -873,7 +873,7 @@ edwithin_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_geo_rel_ever
  * @brief Return 1 if two temporal geos are always within a distance,
  * 0 if not, -1 on error or if the temporal geos do not intersect on time
  * @param[in] temp1,temp2 Temporal geos

@@ -77,6 +77,7 @@ extern bool geo_is_empty(const GSERIALIZED *g);
 extern GSERIALIZED *geo_makeline_garray(GSERIALIZED **gsarr, int count);
 extern char *geo_out(const GSERIALIZED *gs);
 extern GSERIALIZED *geo_reverse(const GSERIALIZED *gs);
+extern GSERIALIZED *geo_round(const GSERIALIZED *gs, int maxdd);
 extern bool geo_same(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
 extern int32_t geo_srid(const GSERIALIZED *gs);
 extern GSERIALIZED *geo_transform(GSERIALIZED *geom, int32_t srid_to);
@@ -128,32 +129,25 @@ extern GSERIALIZED *line_point_n(const GSERIALIZED *geom, int n);
 extern GSERIALIZED *line_substring(const GSERIALIZED *gs, double from, double to);
 
 /*****************************************************************************
- * Functions for set and span types
+ * Functions for geo and spatial sets
  *****************************************************************************/
-
-/* Constructors */
-
-extern Set *geo_set(const GSERIALIZED *gs);
-extern GSERIALIZED *geoset_end_value(const Set *s);
-extern Set *geoset_make(const GSERIALIZED **values, int count);
-
-/* Accessors */
-
-extern GSERIALIZED *geoset_start_value(const Set *s);
-extern bool geoset_value_n(const Set *s, int n, GSERIALIZED **result);
-extern GSERIALIZED **geoset_values(const Set *s);
-extern int32_t spatialset_srid(const Set *s);
-
-extern Set *spatialset_set_srid(const Set *s, int32_t srid);
-extern Set *spatialset_transform(const Set *s, int32_t srid);
-extern Set *spatialset_transform_pipeline(const Set *s, const char *pipelinestr, int32_t srid, bool is_forward);
 
 extern bool contained_geo_set(const GSERIALIZED *gs, const Set *s);
 extern bool contains_set_geo(const Set *s, GSERIALIZED *gs);
+extern Set *geo_set(const GSERIALIZED *gs);
+extern GSERIALIZED *geoset_end_value(const Set *s);
+extern Set *geoset_make(const GSERIALIZED **values, int count);
+extern GSERIALIZED *geoset_start_value(const Set *s);
+extern bool geoset_value_n(const Set *s, int n, GSERIALIZED **result);
+extern GSERIALIZED **geoset_values(const Set *s);
 extern Set *intersection_geo_set(const GSERIALIZED *gs, const Set *s);
 extern Set *intersection_set_geo(const Set *s, const GSERIALIZED *gs);
 extern Set *minus_geo_set(const GSERIALIZED *gs, const Set *s);
 extern Set *minus_set_geo(const Set *s, const GSERIALIZED *gs);
+extern int32_t spatialset_srid(const Set *s);
+extern Set *spatialset_set_srid(const Set *s, int32_t srid);
+extern Set *spatialset_transform(const Set *s, int32_t srid);
+extern Set *spatialset_transform_pipeline(const Set *s, const char *pipelinestr, int32_t srid, bool is_forward);
 extern Set *union_geo_set(const GSERIALIZED *gs, const Set *s);
 extern Set *union_set_geo(const Set *s, const GSERIALIZED *gs);
 

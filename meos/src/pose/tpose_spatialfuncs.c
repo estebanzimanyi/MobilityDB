@@ -179,7 +179,7 @@ tpose_restrict_geom(const Temporal *temp, const GSERIALIZED *gs,
 
 #if MEOS
 /**
- * @ingroup meos_temporal_restrict
+ * @ingroup meos_pose_restrict
  * @brief Return a temporal pose restricted to a geometry
  * @param[in] temp Temporal point
  * @param[in] gs Geometry
@@ -199,7 +199,7 @@ tpose_at_geom(const Temporal *temp, const GSERIALIZED *gs,
 }
 
 /**
- * @ingroup meos_temporal_restrict
+ * @ingroup meos_pose_restrict
  * @brief Return a temporal point restricted to (the complement of) a geometry
  * @param[in] temp Temporal point
  * @param[in] gs Geometry
@@ -253,7 +253,7 @@ tpose_restrict_stbox(const Temporal *temp, const STBox *box, bool border_inc,
 
 #if MEOS
 /**
- * @ingroup meos_temporal_restrict
+ * @ingroup meos_pose_restrict
  * @brief Return a temporal pose restricted to a geometry
  * @param[in] temp Temporal pose
  * @param[in] box Spatiotemporal box
@@ -271,7 +271,7 @@ tpose_at_stbox(const Temporal *temp, const STBox *box, bool border_inc)
 }
 
 /**
- * @ingroup meos_temporal_restrict
+ * @ingroup meos_pose_restrict
  * @brief Return a temporal point restricted to (the complement of) a geometry
  * @param[in] temp Temporal pose
  * @param[in] box Spatiotemporal box

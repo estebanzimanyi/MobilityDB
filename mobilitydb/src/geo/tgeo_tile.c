@@ -189,7 +189,7 @@ Stbox_space_time_tiles_ext(FunctionCallInfo fcinfo, bool spacetiles,
 PGDLLEXPORT Datum Stbox_space_tiles(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Stbox_space_tiles);
 /**
- * @brief @ingroup mobilitydb_temporal_analytics_tile
+ * @brief @ingroup mobilitydb_geo_analytics_tile
  * @brief Return the spatial grid of a spatiotemporal box
  * @sqlfn spaceTiles()
  */
@@ -202,7 +202,7 @@ Stbox_space_tiles(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Stbox_time_tiles(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Stbox_time_tiles);
 /**
- * @brief @ingroup mobilitydb_temporal_analytics_tile
+ * @brief @ingroup mobilitydb_geo_analytics_tile
  * @brief Return the temporal grid of a spatiotemporal box
  * @sqlfn timeTiles()
  */
@@ -215,7 +215,7 @@ Stbox_time_tiles(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Stbox_space_time_tiles(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Stbox_space_time_tiles);
 /**
- * @brief @ingroup mobilitydb_temporal_analytics_tile
+ * @brief @ingroup mobilitydb_geo_analytics_tile
  * @brief Return the spatiotemporal grid of a spatiotemporal box
  * @sqlfn spaceTimeTiles()
  */
@@ -281,7 +281,7 @@ Stbox_get_space_time_tile_ext(FunctionCallInfo fcinfo, bool spacetile,
 PGDLLEXPORT Datum Stbox_get_space_tile(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Stbox_get_space_tile);
 /**
- * @ingroup mobilitydb_temporal_analytics_tile
+ * @ingroup mobilitydb_geo_analytics_tile
  * @brief Return a tile in the spatial grid of a spatiotemporal box
  * @sqlfn getSpaceTile()
  */
@@ -294,7 +294,7 @@ Stbox_get_space_tile(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Stbox_get_time_tile(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Stbox_get_time_tile);
 /**
- * @brief @ingroup mobilitydb_temporal_analytics_tile
+ * @brief @ingroup mobilitydb_geo_analytics_tile
  * @brief Return a tile in the temporal grid of a spatiotemporal box
  * @sqlfn getTimeTile()
  */
@@ -307,7 +307,7 @@ Stbox_get_time_tile(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Stbox_get_space_time_tile(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Stbox_get_space_time_tile);
 /**
- * @ingroup mobilitydb_temporal_analytics_tile
+ * @ingroup mobilitydb_geo_analytics_tile
  * @brief Return a tile in the spatiotemporal grid of a spatiotemporal box
  * @sqlfn getSpaceTimeTile()
  */
@@ -360,7 +360,7 @@ Tgeo_space_time_boxes_ext(FunctionCallInfo fcinfo, bool spacetiles,
 PGDLLEXPORT Datum Tgeo_space_boxes(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tgeo_space_boxes);
 /**
- * @ingroup mobilitydb_temporal_analytics_tile
+ * @ingroup mobilitydb_geo_analytics_tile
  * @brief Return the spatiotemporal boxes of a temporal geo split with respect
  * to a spatial grid
  * @sqlfn spaceBoxes()
@@ -374,7 +374,7 @@ Tgeo_space_boxes(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tgeo_time_boxes(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tgeo_time_boxes);
 /**
- * @ingroup mobilitydb_temporal_analytics_tile
+ * @ingroup mobilitydb_geo_analytics_tile
  * @brief Return the spatiotemporal boxes of a temporal geo split with respect
  * to time bins
  * @sqlfn timeBoxes()
@@ -388,7 +388,7 @@ Tgeo_time_boxes(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tgeo_space_time_boxes(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tgeo_space_time_boxes);
 /**
- * @ingroup mobilitydb_temporal_analytics_tile
+ * @ingroup mobilitydb_geo_analytics_tile
  * @brief Return the spatiotemporal boxes of a temporal geo split with
  * respect to a spatiotemporal grid
  * @sqlfn spaceTimeBoxes()
@@ -511,7 +511,7 @@ Tgeo_space_time_split_ext(FunctionCallInfo fcinfo, bool timesplit)
 PGDLLEXPORT Datum Tgeo_space_split(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tgeo_space_split);
 /**
- * @ingroup mobilitydb_temporal_analytics_tile
+ * @ingroup mobilitydb_geo_analytics_tile
  * @brief Return a temporal geo split with respect to a spatial grid
  * @sqlfn spaceSplit()
  */
@@ -524,7 +524,7 @@ Tgeo_space_split(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tgeo_space_time_split(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tgeo_space_time_split);
 /**
- * @ingroup mobilitydb_temporal_analytics_tile
+ * @ingroup mobilitydb_geo_analytics_tile
  * @brief Return a temporal geo split with respect to a spatiotemporal grid
  * @sqlfn spaceTimeSplit()
  */

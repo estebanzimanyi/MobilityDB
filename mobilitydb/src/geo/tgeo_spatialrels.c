@@ -188,7 +188,7 @@ EAcontains_geo_tgeo(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Econtains_geo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Econtains_geo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if a geometry ever contains a temporal geo
  * @sqlfn eContains()
  */
@@ -201,7 +201,7 @@ Econtains_geo_tgeo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Acontains_geo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Acontains_geo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if a geometry always contains a temporal geo
  * @sqlfn aContains()
  */
@@ -237,7 +237,7 @@ EA_disjoint_geo_tgeo(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Edisjoint_geo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Edisjoint_geo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if a geometry/geography and a temporal geo are ever
  * disjoint
  * @sqlfn eDisjoint()
@@ -251,7 +251,7 @@ Edisjoint_geo_tgeo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Adisjoint_geo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Adisjoint_geo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if a geometry/geography and a temporal geo are always
  * disjoint
  * @sqlfn aDisjoint()
@@ -284,7 +284,7 @@ EA_disjoint_tgeo_geo(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Edisjoint_tgeo_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Edisjoint_tgeo_geo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if a temporal geo and a geometry/geography are ever
  * disjoint
  * @sqlfn eDisjoint()
@@ -298,7 +298,7 @@ Edisjoint_tgeo_geo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Adisjoint_tgeo_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Adisjoint_tgeo_geo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if a temporal geo and a geometry/geography are always
  * disjoint
  * @sqlfn aDisjoint()
@@ -330,7 +330,7 @@ EA_disjoint_tgeo_tgeo(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Edisjoint_tgeo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Edisjoint_tgeo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if two temporal geos are ever disjoint
  * @sqlfn eDisjoint()
  */
@@ -343,7 +343,7 @@ Edisjoint_tgeo_tgeo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Adisjoint_tgeo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Adisjoint_tgeo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if two temporal geos are ever disjoint
  * @sqlfn aDisjoint()
  */
@@ -379,7 +379,7 @@ EA_intersects_geo_tgeo(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Eintersects_geo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Eintersects_geo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if a geometry/geography and a temporal geo ever
  * intersect
  * @sqlfn eIntersects()
@@ -393,7 +393,7 @@ Eintersects_geo_tgeo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Aintersects_geo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Aintersects_geo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if a geometry/geography and a temporal geo ever
  * intersect
  * @sqlfn aIntersects()
@@ -426,7 +426,7 @@ EA_intersects_tgeo_geo(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Eintersects_tgeo_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Eintersects_tgeo_geo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if a temporal geo and a geometry/geography ever
  * intersect
  * @sqlfn eIntersects()
@@ -440,7 +440,7 @@ Eintersects_tgeo_geo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Aintersects_tgeo_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Aintersects_tgeo_geo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if a temporal geo and a geometry/geography always
  * intersect
  * @sqlfn aIntersects()
@@ -472,7 +472,7 @@ EA_intersects_tgeo_tgeo(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Eintersects_tgeo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Eintersects_tgeo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if two temporal geos ever intersect
  * @sqlfn eIntersects()
  */
@@ -485,7 +485,7 @@ Eintersects_tgeo_tgeo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Aintersects_tgeo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Aintersects_tgeo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if two temporal geos ever intersect
  * @sqlfn aIntersects()
  */
@@ -522,7 +522,7 @@ EA_touches_geo_tgeo(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Etouches_geo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Etouches_geo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if a geometry and a temporal geo ever touch
  * @sqlfn eTouches()
  */
@@ -535,7 +535,7 @@ Etouches_geo_tgeo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Atouches_geo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Atouches_geo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if a geometry and a temporal geo ever touch
  * @sqlfn aTouches()
  */
@@ -566,7 +566,7 @@ EA_touches_tgeo_geo(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Etouches_tgeo_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Etouches_tgeo_geo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if a temporal geo and a geometry ever touch
  * @sqlfn eTouches()
  */
@@ -579,7 +579,7 @@ Etouches_tgeo_geo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Atouches_tgeo_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Atouches_tgeo_geo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if a temporal geo and a geometry always touch
  * @sqlfn aTouches()
  */
@@ -617,7 +617,7 @@ EA_dwithin_geo_tgeo(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Edwithin_geo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Edwithin_geo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if a geometry/geography and a temporal geo are ever
  * within a distance
  * @sqlfn eDwithin()
@@ -631,7 +631,7 @@ Edwithin_geo_tgeo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Adwithin_geo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Adwithin_geo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if a geometry/geography and a temporal geo are always
  * within a distance
  * @sqlfn aDwithin()
@@ -665,7 +665,7 @@ EA_dwithin_tgeo_geo(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Edwithin_tgeo_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Edwithin_tgeo_geo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if a temporal geo and a geometry/geography are ever
  * within a distance
  * @sqlfn eDwithin()
@@ -679,7 +679,7 @@ Edwithin_tgeo_geo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Adwithin_tgeo_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Adwithin_tgeo_geo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if a temporal geo and a geometry/geography are ever
  * within a distance
  * @sqlfn aDwithin()
@@ -712,7 +712,7 @@ EA_dwithin_tgeo_tgeo(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Edwithin_tgeo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Edwithin_tgeo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel
+ * @ingroup mobilitydb_geo_rel
  * @brief Return true if two temporal geos are ever within a distance
  * @sqlfn eDwithin()
  */
@@ -725,7 +725,7 @@ Edwithin_tgeo_tgeo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Adwithin_tgeo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Adwithin_tgeo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel
+ * @ingroup mobilitydb_geo_rel
  * @brief Return true if two temporal geos are always within a distance
  * @sqlfn aDwithin()
  */

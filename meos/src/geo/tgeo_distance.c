@@ -394,7 +394,7 @@ tpoint_min_dist_at_timestamptz(const TInstant *start1, const TInstant *end1,
 /*****************************************************************************/
 
 /**
- * @ingroup meos_temporal_dist
+ * @ingroup meos_geo_dist
  * @brief Return the temporal distance between a temporal geo and a
  * geometry/geography
  * @param[in] temp Temporal geo
@@ -428,7 +428,7 @@ distance_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_temporal_dist
+ * @ingroup meos_geo_dist
  * @brief Return the temporal distance between two temporal geos
  * @param[in] temp1,temp2 Temporal geos
  * @csqlfn #Distance_tgeo_tgeo()
@@ -669,7 +669,7 @@ nai_tpointseqset_linear_geo(const TSequenceSet *ss, const LWGEOM *geo)
 /*****************************************************************************/
 
 /**
- * @ingroup meos_temporal_dist
+ * @ingroup meos_geo_dist
  * @brief Return the nearest approach instant between a temporal geo and
  * a geometry/geography
  * @param[in] temp Temporal geo
@@ -708,7 +708,7 @@ nai_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_temporal_dist
+ * @ingroup meos_geo_dist
  * @brief Return the nearest approach instant between two temporal geos
  * @param[in] temp1,temp2 Temporal geos
  * @csqlfn #NAI_tgeo_tgeo()
@@ -741,7 +741,7 @@ nai_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_dist
+ * @ingroup meos_geo_dist
  * @brief Return the nearest approach distance between a temporal geo
  * and a geometry/geography
  * @param[in] temp Temporal geo
@@ -767,7 +767,7 @@ nad_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_temporal_dist
+ * @ingroup meos_geo_dist
  * @brief Return the nearest approach distance between a spatiotemporal box
  * and a geometry/geography
  * @param[in] box Spatiotemporal box/geography
@@ -790,7 +790,7 @@ nad_stbox_geo(const STBox *box, const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_temporal_dist
+ * @ingroup meos_geo_dist
  * @brief Return the nearest approach distance between two spatiotemporal
  * boxes
  * @param[in] box1,box2 Spatiotemporal boxes
@@ -826,7 +826,7 @@ nad_stbox_stbox(const STBox *box1, const STBox *box2)
 }
 
 /**
- * @ingroup meos_temporal_dist
+ * @ingroup meos_geo_dist
  * @brief Return the nearest approach distance between a temporal geo
  * and a spatiotemporal box
  * @param[in] temp Temporal geo
@@ -873,7 +873,7 @@ nad_tgeo_stbox(const Temporal *temp, const STBox *box)
 }
 
 /**
- * @ingroup meos_temporal_dist
+ * @ingroup meos_geo_dist
  * @brief Return the nearest approach distance between two temporal geos
  * @param[in] temp1,temp2 Temporal geos
  * @csqlfn #NAD_tgeo_tgeo()
@@ -936,7 +936,7 @@ geography_shortestline_internal(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
 /*****************************************************************************/
 
 /**
- * @ingroup meos_temporal_dist
+ * @ingroup meos_geo_dist
  * @brief Return the line connecting the nearest approach point between a
  * temporal geo and a geometry/geography
  * @param[in] temp Temporal value
@@ -970,7 +970,7 @@ shortestline_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_temporal_dist
+ * @ingroup meos_geo_dist
  * @brief Return the line connecting the nearest approach point between two
  * temporal geos
  * @param[in] temp1,temp2 Temporal values

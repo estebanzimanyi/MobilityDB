@@ -61,7 +61,7 @@
 PGDLLEXPORT Datum Cbuffer_to_stbox(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_to_stbox);
 /**
- * @ingroup mobilitydb_temporal_conversion
+ * @ingroup mobilitydb_cbuffer_base_conversion
  * @brief Return a circular buffer converted to a spatiotemporal box
  * @sqlfn stbox()
  * @sqlop @p ::
@@ -75,29 +75,10 @@ Cbuffer_to_stbox(PG_FUNCTION_ARGS)
 
 /*****************************************************************************/
 
-PGDLLEXPORT Datum Cbufferset_to_stbox(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Cbufferset_to_stbox);
-/**
- * @ingroup mobilitydb_setspan_conversion
- * @brief Return a circular buffer set converted to a spatiotemporal box
- * @sqlfn stbox()
- * @sqlop @p ::
- */
-Datum
-Cbufferset_to_stbox(PG_FUNCTION_ARGS)
-{
-  Set *set = PG_GETARG_SET_P(0);
-  STBox *result = spatialset_stbox(set);
-  PG_FREE_IF_COPY(set, 0);
-  PG_RETURN_STBOX_P(result);
-}
-
-/*****************************************************************************/
-
 PGDLLEXPORT Datum Cbuffer_timestamptz_to_stbox(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_timestamptz_to_stbox);
 /**
- * @ingroup mobilitydb_temporal_constructor
+ * @ingroup mobilitydb_cbuffer_box
  * @brief Return a circular buffer and a timestamptz to a spatiotemporal box
  * @sqlfn stbox()
  * @sqlop @p
@@ -113,7 +94,7 @@ Cbuffer_timestamptz_to_stbox(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_tstzspan_to_stbox(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_tstzspan_to_stbox);
 /**
- * @ingroup mobilitydb_temporal_constructor
+ * @ingroup mobilitydb_cbuffer_box
  * @brief Return a circular buffer and a timestamptz span to a spatiotemporal
  * box
  * @sqlfn stbox()

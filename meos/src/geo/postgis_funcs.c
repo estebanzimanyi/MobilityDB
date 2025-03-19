@@ -75,7 +75,7 @@ void srid_check_latlong(int32_t srid);
  *****************************************************************************/
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_constructor
  * @brief Return a copy of a geometry
  * @note The @p gserialized_copy function is not available anymore in
  * PostGIS 3
@@ -95,7 +95,7 @@ geo_copy(const GSERIALIZED *g)
 
 #if MEOS
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_srid
  * @brief Get the SRID of a geometry/geography.
  * @param[in] gs Geometry
  */
@@ -105,7 +105,7 @@ int32_t geo_srid(const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_accessor
  * @brief Get the SRID of a geometry/geography.
  * @param[in] gs Geometry
  */
@@ -341,7 +341,7 @@ box3d_to_lwgeom(BOX3D *box)
 
 #if NPOINT
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_accessor
  * @brief Return the length of a geometry
  * @details Defined by
  *   - length(point) = 0
@@ -363,7 +363,7 @@ geom_length(const GSERIALIZED *gs)
 #endif /* NPOINT */
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_accessor
  * @brief Return the perimeter of a geometry
  * @details Defined by
  *   - perimeter(point) = 0
@@ -383,7 +383,7 @@ geom_perimeter(const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_accessor
  * @brief Return the boundary of a geometry
  * @param[in] gs Geometry
  * @note PostGIS function: @p boundary(PG_FUNCTION_ARGS)
@@ -406,7 +406,7 @@ geom_boundary(const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_processing
  * @brief Return the shortest 2D line between two geometries
  * @param[in] gs1,gs2 Geometries
  * @note PostGIS function: @p LWGEOM_shortestline2d(PG_FUNCTION_ARGS)
@@ -427,7 +427,7 @@ geom_shortestline2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_processing
  * @brief Return the shortest line between two 3D geometries
  * @param[in] gs1,gs2 Geometries
  * @note PostGIS function: @p LWGEOM_shortestline3d(PG_FUNCTION_ARGS)
@@ -449,7 +449,7 @@ geom_shortestline3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_distance
  * @brief Return the distance between two geometries
  * @param[in] gs1,gs2 Geometries
  * @note PostGIS function: @p ST_Distance(PG_FUNCTION_ARGS)
@@ -472,7 +472,7 @@ geom_distance2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_distance
  * @brief Return the 3D distance between two geometries
  * @param[in] gs1,gs2 Geometries
  * @note PostGIS function: @p ST_3DDistance(PG_FUNCTION_ARGS)
@@ -495,7 +495,7 @@ geom_distance3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_processing
  * @brief Return true if the 3D geometries intersect
  * @param[in] gs1,gs2 Geometries
  * @note PostGIS function: @p ST_3DIntersects(PG_FUNCTION_ARGS)
@@ -514,7 +514,7 @@ geom_intersects3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_rel
  * @brief Return true if two geometries are within a distance
  * @param[in] gs1,gs2 Geometries
  * @param[in] tolerance Tolerance
@@ -538,7 +538,7 @@ geom_dwithin2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_rel
  * @brief Return true if two geometries are within a distance
  * @param[in] gs1,gs2 Geometries
  * @param[in] tolerance Tolerance
@@ -561,7 +561,7 @@ geom_dwithin3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_transf
  * @brief Reverse vertex order of geometry/geography
  * @param[in] gs Geometry/geography
  * @note PostGIS function: @p LWGEOM_reverse(PG_FUNCTION_ARGS)
@@ -575,7 +575,7 @@ geo_reverse(const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_accessor
  * @brief Return in the last argument the azimuth of a segment defined by two
  * points
  * @param[in] gs1,gs2 Geometries
@@ -640,7 +640,7 @@ geom_azimuth(const GSERIALIZED *gs1, const GSERIALIZED *gs2, double *result)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_processing
  * @brief Collect the array of geometries/geographies into a geo collection
  * @param[in] gsarr Array of geometries/geographies
  * @param[in] nelems Number of elements in the array
@@ -715,7 +715,7 @@ geo_collect_garray(GSERIALIZED **gsarr, int nelems)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_processing
  * @brief Return a line from an array of geometries/geographies
  * @details Array elements that are not points are discarded.
  * @param[in] gsarr Array of geometries/geographies
@@ -987,7 +987,7 @@ geom_spatialrel(const GSERIALIZED *gs1, const GSERIALIZED *gs2, spatialRel rel)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_rel
  * @brief Return true if two geometries intersects
  * @param[in] gs1,gs2 Geometries
  * @note PostGIS functions: @p ST_Intersects(PG_FUNCTION_ARGS)
@@ -999,7 +999,7 @@ geom_intersects2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_rel
  * @brief Return true if the first geometry contains the second one
  * @param[in] gs1,gs2 Geometries
  * @note PostGIS functions: @p contains(PG_FUNCTION_ARGS)
@@ -1012,7 +1012,7 @@ geom_contains(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 
 #if MEOS
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_rel
  * @brief Return true if the two geometries intersect on a border
  * @param[in] gs1,gs2 Geometries
  * @note PostGIS function: @p ST_Covers(PG_FUNCTION_ARGS)
@@ -1024,7 +1024,7 @@ geom_touches(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_rel
  * @brief Return true if the first geometry covers the second one
  * @param[in] gs1,gs2 Geometries
  * @note PostGIS function: @p ST_Covers(PG_FUNCTION_ARGS)
@@ -1036,7 +1036,7 @@ geom_covers(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_rel
  * @brief Return true if two geometries are disjoint in 2D
  * @param[in] gs1,gs2 Geometries
  * @note PostGIS function: @p ST_Disjoint(PG_FUNCTION_ARGS)
@@ -1049,7 +1049,7 @@ geom_disjoint2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 #endif /* MEOS */
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_rel
  * @brief Return true if two geometries satisfy a spatial relationship given
  * by a pattern
  * @param[in] gs1,gs2 Geometries
@@ -1102,7 +1102,7 @@ geom_relate_pattern(const GSERIALIZED *gs1, const GSERIALIZED *gs2, char *patt)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_processing
  * @brief Return the intersection of two geometries
  * @param[in] gs1,gs2 Geometries
  * @note PostGIS function: @p ST_Intersection(PG_FUNCTION_ARGS). With respect
@@ -1120,7 +1120,7 @@ geom_intersection2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_processing
  * @brief Return the difference of two geometries
  * @param[in] gs1,gs2 Geometries
  * @note PostGIS function: @p ST_Difference(PG_FUNCTION_ARGS). With respect
@@ -1138,7 +1138,7 @@ geom_difference2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_processing
  * @brief Return the union of an array of geometries
  * @details The function will iteratively call @p GEOSUnion on the
  * GEOS-converted versions of them and return PGIS-converted version back.
@@ -1254,7 +1254,7 @@ geom_array_union(GSERIALIZED **gsarr, int count)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_processing
  * @brief Return the unary union of a geometry
  * @param[in] gs Geometry
  * @param[in] prec Precision
@@ -1271,7 +1271,7 @@ geom_unary_union(GSERIALIZED *gs, double prec)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_accessor
  * @brief Return the convex hull of the geometry
  * @param[in] gs Geometry
  * @note PostGIS function: @p ST_ConvexHull(PG_FUNCTION_ARGS). With respect to
@@ -1339,7 +1339,7 @@ geom_convex_hull(const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_accessor
  * @brief Return a @p POLYGON or a @p MULTIPOLYGON that represents all points
  * whose distance from a geometry/geography is less than or equal to a given
  * distance
@@ -1545,7 +1545,7 @@ geom_buffer(const GSERIALIZED *gs, double size, char *params)
  *****************************************************************************/
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_comp
  * @brief Return true if the geometries/geographies are equal, false otherwise
  * @param[in] gs1,gs2 Geometries/geographies
  * @note PostGIS function: @p ST_Equals(PG_FUNCTION_ARGS)
@@ -1664,7 +1664,7 @@ geo_serialize(const LWGEOM *geom)
  *****************************************************************************/
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_srid
  * @brief Returns the geometry/geography transformed to an SRID
  * @return On error return @p NULL
  * @param[in] gs Geometry/geography
@@ -1719,7 +1719,7 @@ geo_transform(GSERIALIZED *gs, int32_t srid_to)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_srid
  * @brief Return a geometry/geography transformed to another SRID using a pipeline
  * @param[in] gs Geometry/geography
  * @param[in] pipeline Pipeline string
@@ -1757,7 +1757,7 @@ geo_transform_pipeline(const GSERIALIZED *gs, char *pipeline, int32_t srid_to,
  *****************************************************************************/
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_accessor
  * @brief Returns the area of a geography in square meters
  * @param[in] gs Geography
  * @param[in] use_spheroid True when using a spheroid
@@ -1829,7 +1829,7 @@ geog_area(const GSERIALIZED *gs, bool use_spheroid)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_accessor
  * @brief Returns the perimeter of a geography in meters
  * @param[in] gs Geography
  * @param[in] use_spheroid True when using a spheroid
@@ -1887,7 +1887,7 @@ geog_perimeter(const GSERIALIZED *gs, bool use_spheroid)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_accessor
  * @brief Return double length in meters
  * @param[in] gs Geography
  * @param[in] use_spheroid True when using a spheroid
@@ -1935,7 +1935,7 @@ geog_length(const GSERIALIZED *gs, bool use_spheroid)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_rel
  * @brief Return true if two geographies are within a distance
  * @param[in] gs1,gs2 Geographies
  * @param[in] tolerance Tolerance
@@ -1984,7 +1984,7 @@ geog_dwithin(const GSERIALIZED *gs1, const GSERIALIZED *gs2, double tolerance,
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_rel
  * @brief Return true if the geographies intersect
  * @param[in] gs1,gs2 Geographies
  * @param[in] use_spheroid True when using a spheroid
@@ -2001,7 +2001,7 @@ geog_intersects(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
 #define PGIS_FP_TOLERANCE 1e-12
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_distance
  * @brief Return the distance between two geographies
  * @param[in] gs1,gs2 Geographies
  * @note PostGIS function: @p geography_distance_uncached(PG_FUNCTION_ARGS).
@@ -2166,7 +2166,7 @@ postgis_valid_typmod(GSERIALIZED *gs, int32_t typmod)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_input
  * @brief Return a geometry from its Well-Known Text (WKT), Well-Known Binary
  * (WKB) or GeoJSON representation
  * @details The format is @p '[SRID=#;]wkt|wkb'. Examples of input are as
@@ -2287,7 +2287,7 @@ geom_in(const char *str, int32 typmod)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_input
  * @brief Return the hex-encoded ASCII Well-Known Binary (HexWKB)
  * representation of a geometry/geography
  * @details The output is `'SRID=#;{wkb in hex form}'`,
@@ -2311,7 +2311,7 @@ geo_out(const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_inout
  * @brief Return a geometry/geography from its WKT representation (and
  * optionally a SRID)
  * @param[in] wkt WKT string
@@ -2354,7 +2354,7 @@ geo_from_text(const char *wkt, int32_t srid)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_inout
  * @brief Return the (Extended) Well-Known Text (EWKT or WKT) representation of
  * a geometry/geography
  * @param[in] gs Geometry/geography
@@ -2383,7 +2383,7 @@ geo_as_wkt(const GSERIALIZED *gs, int precision, bool extended)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_inout
  * @brief Return the Well-Known Text (WKT) representation of a
  * geometry/geography
  * @param[in] gs Geometry/geography
@@ -2399,7 +2399,7 @@ geo_as_text(const GSERIALIZED *gs, int precision)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_inout
  * @brief Return the Extended Well-Known Text (EWKT) representation of a
  * geometry/geography
  * @param[in] gs Geometry/geography
@@ -2415,7 +2415,7 @@ geo_as_ewkt(const GSERIALIZED *gs, int precision)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_inout
  * @brief Return a geometry from its hex-encoded ASCII Well-Known Binary
  * (HexEWKB) representation
  * @param[in] wkt WKT string
@@ -2430,7 +2430,7 @@ geom_from_hexewkb(const char *wkt)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_inout
  * @brief Return a geography from its hex-encoded ASCII Well-Known Binary
  * (HexEWKB) representation
  * @param[in] wkt WKT string
@@ -2445,7 +2445,7 @@ geog_from_hexewkb(const char *wkt)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_inout
  * @brief Return the hex-encoded ASCII Well-Known Binary (HexWKB)
  * representation of a geometry/geography
  * @param[in] gs Geometry/geography
@@ -2476,7 +2476,7 @@ geo_as_hexewkb(const GSERIALIZED *gs, const char *endian)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_inout
  * @brief Return a geometry/geography from its EWKB representation
  * @details This function parses EWKB (extended form) which also contains SRID
  * info.
@@ -2513,7 +2513,7 @@ geo_from_ewkb(const uint8_t *wkb, size_t wkb_size, int32 srid)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_inout
  * @brief Return the Extended Well-Known Binary (EWKB) representation of a
  * geometry/geography
  * @param[in] gs Geometry/geography
@@ -2552,7 +2552,7 @@ geo_as_ewkb(const GSERIALIZED *gs, const char *endian, size_t *size)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_inout
  * @brief Return a geometry/geography from its GeoJSON representation
  * @param[in] geojson GeoJSON string
  * @note PostGIS function: @p geom_from_geojson(PG_FUNCTION_ARGS)
@@ -2589,7 +2589,7 @@ geo_from_geojson(const char *geojson)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_inout
  * @brief Return the GeoJSON representation of a geometry/geography
  * @param[in] gs Geometry/geography
  * @param[in] option Option
@@ -2649,7 +2649,7 @@ geo_as_geojson(const GSERIALIZED *gs, int option, int precision,
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_comp
  * @brief Return true if the geometries/geographies are the same
  * @param[in] gs1,gs2 Geometries/geographies
  */
@@ -2729,7 +2729,7 @@ geog_from_lwgeom(LWGEOM *lwgeom, int32 typmod)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_inout
  * @brief Return a geography from its Well-Known Text or Binary (WKT or Binary)
  * representation
  * @param[in] str String
@@ -2798,7 +2798,7 @@ geog_in(const char *str, int32 typmod)
 
 #if MEOS
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_inout
  * @brief Return a geography from its binary representation
  * @param[in] wkb_bytea Byte striing
  * geography_from_binary(*char) returns *GSERIALIZED
@@ -2831,7 +2831,7 @@ geog_from_binary(const char *wkb_bytea)
 #endif /* MEOS */
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_conversion
  * @brief Return a geography from a geometry
  * @param[in] gs Geometry
  * @note PostGIS function: @p geography_from_geometry(PG_FUNCTION_ARGS)
@@ -2867,7 +2867,7 @@ geog_from_geom(GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_conversion
  * @brief Return a geometry from a geography
  * @param[in] gs Geography
  * @note PostGIS function: @p geometry_from_geography(PG_FUNCTION_ARGS)
@@ -2916,7 +2916,7 @@ lwgeom_line_interpolate_point(LWGEOM *lwgeom, double fraction, int32_t srid,
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_processing
  * @brief Interpolate one or several points from a line
  * @param[in] gs Geometry
  * @param[in] fraction Value in [0,1] representing the distance where the point
@@ -2958,7 +2958,7 @@ line_interpolate_point(GSERIALIZED *gs, double fraction, bool repeat)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_processing
  * @param[in] gs Geometry
  * @param[in] from,to Values in [0,1] representing the fractional locations 
  * where the subline starts and ends
@@ -3099,7 +3099,7 @@ line_substring(const GSERIALIZED *gs, double from, double to)
  *****************************************************************************/
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_processing
  * @brief Locate a point into a line
  * @param[in] gs1 Line
  * @param[in] gs2 Point
@@ -3168,7 +3168,7 @@ static const char * _GEO_TYPENAME[] =
 };
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_accessor
  * @brief Return a string representation of a geometry's type
  */
 const char *
@@ -3181,7 +3181,7 @@ geo_typename(int type)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_accessor
  * @brief Return the n-th point of a line
  * @param[in] gs Geometry
  * @param[in] n Number (1-based)
@@ -3230,7 +3230,7 @@ line_point_n(const GSERIALIZED *gs, int n)
 }
 
 /**
- * @ingroup meos_pgis_types
+ * @ingroup meos_geo_base_accessor
  * @brief Return the number of points of a line
  * @param[in] gs Geometry 
  * @return On error return -1.0

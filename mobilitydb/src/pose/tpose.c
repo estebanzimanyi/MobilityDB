@@ -38,6 +38,7 @@
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
+#include <meos_pose.h>
 #include "general/pg_types.h"
 #include "general/set.h"
 #include "geo/tspatial.h"
@@ -54,7 +55,7 @@
 PGDLLEXPORT Datum Tpose_in(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpose_in);
 /**
- * @ingroup mobilitydb_temporal_inout
+ * @ingroup mobilitydb_pose_inout
  * @brief Generic input function for temporal pose objects
  *
  * @note Examples of input for the various temporal types:
@@ -91,7 +92,7 @@ Tpose_in(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tpose_to_tgeompoint(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpose_to_tgeompoint);
 /**
- * @ingroup mobilitydb_temporal_conversion
+ * @ingroup mobilitydb_pose_conversion
  * @brief Return a temporal pose converted to a temporal geometry point
  * @sqlfn tgeompoint()
  * @sqlop @p ::
@@ -106,13 +107,33 @@ Tpose_to_tgeompoint(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************
+ * Accessor functions
+ *****************************************************************************/
+
+PGDLLEXPORT Datum Tpose_points(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tpose_points);
+/**
+ * @ingroup mobilitydb_pose_accessor
+ * @brief Return the array of points of a temporal pose
+ * @sqlfn points()
+ */
+Datum
+Tpose_points(PG_FUNCTION_ARGS)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  Set *result = tpose_points(temp);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_SET_P(result);
+}
+
+/*****************************************************************************
  * Transformation functions
  *****************************************************************************/
 
 PGDLLEXPORT Datum Tpose_round(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpose_round);
 /**
- * @ingroup mobilitydb_temporal_transf
+ * @ingroup mobilitydb_pose_transf
  * @brief Return a temporal pose with the precision of the values set to a
  * number of decimal places
  * @sqlfn round()

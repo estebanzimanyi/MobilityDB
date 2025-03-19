@@ -110,7 +110,7 @@ tcbufferseqset_in(const char *str)
 
 #if MEOS
 /**
- * @ingroup meos_temporal_inout
+ * @ingroup meos_cbuffer_inout
  * @brief Return a temporal circular buffer from its Well-Known Text (WKT)
  * representation
  * @param[in] str String
@@ -125,7 +125,7 @@ tcbuffer_in(const char *str)
 }
 
 /**
- * @ingroup meos_temporal_inout
+ * @ingroup meos_cbuffer_inout
  * @brief Return the Well-Known Text (WKT) representation of a temporal
  * circular buffer
  * @param[in] temp Temporal circular buffer
@@ -147,7 +147,7 @@ tcbuffer_out(const Temporal *temp, int maxdd)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_constructor
+ * @ingroup meos_cbuffer_constructor
  * @brief Return a temporal circular buffer from a temporal point and a 
  * temporal float
  * @note This function is called after synchronization done in function 
@@ -204,7 +204,7 @@ tcbufferseqset_make(const TSequenceSet *ss1, const TSequenceSet *ss2)
 }
 
 /**
- * @ingroup meos_temporal_constructor
+ * @ingroup meos_cbuffer_constructor
  * @brief Return a temporal circular buffer from a temporal point and a 
  * temporal float
  * @csqlfn #Tcbuffer_constructor()
@@ -258,7 +258,7 @@ TInstant *
 tcbufferinst_tgeompointinst(const TInstant *inst)
 {
   assert(inst); assert(inst->temptype == T_TCBUFFER);
-  const GSERIALIZED *point = cbuffer_point(
+  const GSERIALIZED *point = cbuffer_point_p(
     DatumGetCbufferP(tinstant_val(inst)));
   return tinstant_make(PointerGetDatum(point), T_TGEOMPOINT, inst->t);
 }
@@ -293,7 +293,7 @@ tcbufferseqset_tgeompointseqset(const TSequenceSet *ss)
 }
 
 /**
- * @ingroup meos_temporal_conversion
+ * @ingroup meos_cbuffer_conversion
  * @brief Return a temporal geometry point constructed from the points of a 
  * temporal circular buffer
  * @param[in] temp Temporal point
@@ -367,7 +367,7 @@ tcbufferseqset_tfloatseqset(const TSequenceSet *ss)
 }
 
 /**
- * @ingroup meos_temporal_conversion
+ * @ingroup meos_cbuffer_conversion
  * @brief Return a temporal float constructed from the radius of a temporal
  * circular buffer
  * @param[in] temp Temporal point
@@ -458,7 +458,7 @@ tgeompointseqset_tcbufferseqset(const TSequenceSet *ss)
 }
 
 /**
- * @ingroup meos_temporal_conversion
+ * @ingroup meos_cbuffer_conversion
  * @brief Return a temporal geometry point transformed to a temporal circular
  * buffer with a zero radius
  * @param[in] temp Temporal point
@@ -493,7 +493,7 @@ tgeompoint_tcbuffer(const Temporal *temp)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_cbuffer_accessor
  * @brief Return a copy of the start value of a temporal circular buffer
  * @param[in] temp Temporal value
  * @return On error return @p NULL
@@ -514,7 +514,7 @@ tcbuffer_start_value(const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_cbuffer_accessor
  * @brief Return a copy of the end value of a temporal circular buffer
  * @param[in] temp Temporal value
  * @return On error return @p NULL
@@ -535,7 +535,7 @@ tcbuffer_end_value(const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_cbuffer_accessor
  * @brief Return a copy of the n-th value of a temporal circular buffer
  * @param[in] temp Temporal value
  * @param[in] n Number
@@ -561,7 +561,7 @@ tcbuffer_value_n(const Temporal *temp, int n, Cbuffer **result)
 }
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_cbuffer_accessor
  * @brief Return the array of copies of base values of a temporal circular buffer
  * @param[in] temp Temporal value
  * @param[out] count Number of values in the output array
@@ -636,7 +636,7 @@ tcbufferseqset_points(const TSequenceSet *ss)
 }
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_cbuffer_accessor
  * @brief Return the array of points of a temporal circular buffer
  * @csqlfn #Tcbuffer_points()
  */
@@ -665,7 +665,7 @@ tcbuffer_points(const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_cbuffer_accessor
  * @brief Return the value of a temporal circular buffer at a timestamptz
  * @param[in] temp Temporal value
  * @param[in] t Timestamp
@@ -698,7 +698,7 @@ tcbuffer_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict,
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_restrict
+ * @ingroup meos_cbuffer_restrict
  * @brief Return a temporal circular buffer restricted to a circular buffer
  * @param[in] temp Temporal value
  * @param[in] cbuf Value
@@ -719,7 +719,7 @@ tcbuffer_at_value(const Temporal *temp, Cbuffer *cbuf)
 }
 
 /**
- * @ingroup meos_temporal_restrict
+ * @ingroup meos_cbuffer_restrict
  * @brief Return a temporal circular buffer restricted to the complement of a 
  * circular buffer
  * @param[in] temp Temporal value

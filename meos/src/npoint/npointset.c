@@ -68,7 +68,7 @@
  *****************************************************************************/
 
 /**
- * @ingroup meos_setspan_inout
+ * @ingroup meos_npoint_set_inout
  * @brief Return a set from its Well-Known Text (WKT) representation
  * @param[in] str String
  * @csqlfn #Set_in()
@@ -86,12 +86,32 @@ npointset_in(const char *str)
   return set_parse(&str, T_NPOINTSET);
 }
 
+/**
+ * @ingroup meos_npoint_set_inout
+ * @brief Return the string representation of a network point set
+ * @param[in] s Set
+ * @param[in] maxdd Maximum number of decimal digits
+ * @csqlfn #Set_out()
+ */
+char *
+npointset_out(const Set *s, int maxdd)
+{
+  /* Ensure validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) s) || ! ensure_set_isof_type(s, T_NPOINTSET))
+    return NULL;
+#else
+  assert(s); assert(s->settype == T_NPOINTSET);
+#endif /* MEOS */
+  return set_out(s, maxdd);
+}
+
 /*****************************************************************************
  * Constructor functions
  *****************************************************************************/
 
 /**
- * @ingroup meos_setspan_constructor
+ * @ingroup meos_npoint_set_constructor
  * @brief Return a network point set from an array of values
  * @param[in] values Array of values
  * @param[in] count Number of elements of the array
@@ -117,11 +137,36 @@ npointset_make(const Npoint **values, int count)
 }
 
 /*****************************************************************************
+ * Conversion functions
+ *****************************************************************************/
+
+/**
+ * @ingroup meos_npoint_set_conversion
+ * @brief Return a network point converted to a network point set
+ * @param[in] np Value
+ * @csqlfn #Value_to_set()
+ */
+Set *
+npoint_to_set(const Npoint *np)
+{
+#if MEOS
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) np))
+    return NULL;
+#else
+  assert(np);
+#endif /* MEOS */
+
+  Datum v = PointerGetDatum(np);
+  return set_make_exp(&v, 1, 1, T_NPOINT, ORDER_NO);
+}
+
+/*****************************************************************************
  * Accessor functions
  *****************************************************************************/
 
 /**
- * @ingroup meos_setspan_accessor
+ * @ingroup meos_npoint_set_accessor
  * @brief Return a copy of the start value of a network point set
  * @param[in] s Set
  * @return On error return @p NULL
@@ -142,7 +187,7 @@ npointset_start_value(const Set *s)
 }
 
 /**
- * @ingroup meos_setspan_accessor
+ * @ingroup meos_npoint_set_accessor
  * @brief Return a copy of the end value of a network point set
  * @param[in] s Set
  * @return On error return @p NULL
@@ -163,7 +208,7 @@ npointset_end_value(const Set *s)
 }
 
 /**
- * @ingroup meos_setspan_accessor
+ * @ingroup meos_npoint_set_accessor
  * @brief Return in the last argument a copy of the n-th value of a circular
  * buffer set
  * @param[in] s Set
@@ -191,7 +236,7 @@ npointset_value_n(const Set *s, int n, Npoint **result)
 }
 
 /**
- * @ingroup meos_setspan_accessor
+ * @ingroup meos_npoint_set_accessor
  * @brief Return the array of copies of the values of a network point set
  * @param[in] s Set
  * @return On error return @p NULL
@@ -212,31 +257,6 @@ npointset_values(const Set *s)
   for (int i = 0; i < s->count; i++)
     result[i] = DatumGetNpointP(datum_copy(SET_VAL_N(s, i), s->basetype));
   return result;
-}
-
-/*****************************************************************************
- * Conversion functions
- *****************************************************************************/
-
-/**
- * @ingroup meos_setspan_conversion
- * @brief Return a network point converted to a network point set
- * @param[in] np Value
- * @csqlfn #Value_to_set()
- */
-Set *
-npoint_to_set(const Npoint *np)
-{
-#if MEOS
-  /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) np))
-    return NULL;
-#else
-  assert(np);
-#endif /* MEOS */
-
-  Datum v = PointerGetDatum(np);
-  return set_make_exp(&v, 1, 1, T_NPOINT, ORDER_NO);
 }
 
 /*****************************************************************************
@@ -261,7 +281,7 @@ ensure_valid_set_npoint(const Set *s, const Npoint *np)
 }
 
 /**
- * @ingroup meos_setspan_topo
+ * @ingroup meos_npoint_set_setops
  * @brief Return true if a set contains a network point
  * @param[in] s Set
  * @param[in] np Value
@@ -277,7 +297,7 @@ contains_set_npoint(const Set *s, Npoint *np)
 }
 
 /**
- * @ingroup meos_setspan_topo
+ * @ingroup meos_npoint_set_setops
  * @brief Return true if a network point is contained in a set
  * @param[in] np Value
  * @param[in] s Set
@@ -293,7 +313,7 @@ contained_npoint_set(const Npoint *np, const Set *s)
 }
 
 /**
- * @ingroup meos_setspan_set
+ * @ingroup meos_npoint_set_setops
  * @brief Return the union of a set and a network point
  * @param[in] s Set
  * @param[in] np Value
@@ -309,7 +329,7 @@ union_set_npoint(const Set *s, const Npoint *np)
 }
 
 /**
- * @ingroup meos_setspan_set
+ * @ingroup meos_npoint_set_setops
  * @brief Return the union of a network point and a set
  * @param[in] s Set
  * @param[in] np Value
@@ -322,7 +342,7 @@ union_npoint_set(const Npoint *np, const Set *s)
 }
 
 /**
- * @ingroup meos_setspan_set
+ * @ingroup meos_npoint_set_setops
  * @brief Return the intersection of a set and a network point
  * @param[in] s Set
  * @param[in] np Value
@@ -338,7 +358,7 @@ intersection_set_npoint(const Set *s, const Npoint *np)
 }
 
 /**
- * @ingroup meos_setspan_set
+ * @ingroup meos_npoint_set_setops
  * @brief Return the intersection of a network point and a set
  * @param[in] s Set
  * @param[in] np Value
@@ -351,7 +371,7 @@ intersection_npoint_set(const Npoint *np, const Set *s)
 }
 
 /**
- * @ingroup meos_setspan_set
+ * @ingroup meos_npoint_set_setops
  * @brief Return the difference of a network point and a set
  * @param[in] np Value
  * @param[in] s Set
@@ -367,7 +387,7 @@ minus_npoint_set(const Npoint *np, const Set *s)
 }
 
 /**
- * @ingroup meos_setspan_set
+ * @ingroup meos_npoint_set_setops
  * @brief Return the difference of a set and a network point
  * @param[in] s Set
  * @param[in] np Value
@@ -388,7 +408,7 @@ minus_set_npoint(const Set *s, const Npoint *np)
  *****************************************************************************/
 
 /**
- * @ingroup meos_setspan_agg
+ * @ingroup meos_npoint_set_setops
  * @brief Transition function for set union aggregate of network points
  * @param[in,out] state Current aggregate state
  * @param[in] np Value

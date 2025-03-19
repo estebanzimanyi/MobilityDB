@@ -96,7 +96,7 @@ tinterrel_tnpoint_geo(const Temporal *temp, const GSERIALIZED *gs, bool tinter,
 /*****************************************************************************/
 
 /**
- * @ingroup meos_temporal_spatial_rel_temp
+ * @ingroup meos_npoint_spatial_rel_temp
  * @brief Return the temporal contains relationship between a geometry and
  * a temporal network point
  * @param[in] gs Geometry
@@ -121,7 +121,7 @@ tcontains_geo_tnpoint(const GSERIALIZED *gs, const Temporal *temp, bool restr,
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_temp
+ * @ingroup meos_npoint_spatial_rel_temp
  * @brief Return the temporal touches relationship between a temporal network
  * point and a geometry
  * @param[in] temp Temporal network point
@@ -147,7 +147,7 @@ ttouches_tnpoint_geo(const Temporal *temp, const GSERIALIZED *gs, bool restr,
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_temp
+ * @ingroup meos_npoint_spatial_rel_temp
  * @brief Return the temporal touches relationship between a temporal network
  * point and a network point
  * @param[in] temp Temporal network point
@@ -173,7 +173,7 @@ ttouches_tnpoint_npoint(const Temporal *temp, const Npoint *np, bool restr,
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_temp
+ * @ingroup meos_npoint_spatial_rel_temp
  * @brief Return a temporal Boolean that states whether a geometry and a
  * temporal network point are within a distance
  * @param[in] temp Temporal network point
@@ -199,7 +199,7 @@ tdwithin_tnpoint_geo(const Temporal *temp, const GSERIALIZED *gs, double dist,
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_temp
+ * @ingroup meos_npoint_spatial_rel_temp
  * @brief Return a temporal Boolean that states whether a network point and
  * a temporal network point are within a distance
  * @param[in] temp Temporal network point
@@ -221,7 +221,7 @@ tdwithin_tnpoint_npoint(const Temporal *temp, const Npoint *np, double dist,
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_temp
+ * @ingroup meos_npoint_spatial_rel_temp
  * @brief Return a temporal Boolean that states whether two temporal network
  * points are within a distance
  * @param[in] temp1,temp2 Temporal network points

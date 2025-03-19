@@ -240,7 +240,7 @@ tnpointseqset_trajectory(const TSequenceSet *ss)
 }
 
 /**
- * @ingroup meos_temporal_spatial_transf
+ * @ingroup meos_npoint_spatial_transf
  * @brief Return the geometry covered by a temporal network point
  * @param[in] temp Temporal network point
  * @csqlfn #Tnpoint_trajectory()
@@ -351,7 +351,7 @@ tnpointseqset_length(const TSequenceSet *ss)
 }
 
 /**
- * @ingroup meos_temporal_spatial_accessor
+ * @ingroup meos_npoint_spatial_accessor
  * @brief Length traversed by a temporal network point
  * @param[in] temp Temporal point
  * @csqlfn #Tnpoint_length()
@@ -425,7 +425,7 @@ tnpointseqset_cumulative_length(const TSequenceSet *ss)
 }
 
 /**
- * @ingroup meos_temporal_spatial_accessor
+ * @ingroup meos_npoint_spatial_accessor
  * @brief Cumulative length traversed by a temporal network point
  * @param[in] temp Temporal point
  * @csqlfn #Tnpoint_cumulative_length()
@@ -505,7 +505,7 @@ tnpointseqset_speed(const TSequenceSet *ss)
 }
 
 /**
- * @ingroup meos_temporal_spatial_accessor
+ * @ingroup meos_npoint_spatial_accessor
  * @brief Speed of a temporal network point
  * @param[in] temp Temporal point
  * @csqlfn #Tnpoint_speed()
@@ -536,7 +536,7 @@ tnpoint_speed(const Temporal *temp)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_spatial_accessor
+ * @ingroup meos_npoint_spatial_accessor
  * @brief Return the time-weighed centroid of a temporal network point
  * @param[in] temp Temporal point
  * @csqlfn #Tnpoint_twcentroid()
@@ -704,7 +704,7 @@ tnpointseqset_azimuth(const TSequenceSet *ss)
 }
 
 /**
- * @ingroup meos_temporal_spatial_accessor
+ * @ingroup meos_npoint_spatial_accessor
  * @brief Temporal azimuth of a temporal network point
  * @param[in] temp Temporal point
  * @csqlfn #Tnpoint_azimuth()
@@ -762,7 +762,7 @@ tnpoint_restrict_geom(const Temporal *temp, const GSERIALIZED *gs,
 
 #if MEOS
 /**
- * @ingroup meos_temporal_restrict
+ * @ingroup meos_npoint_restrict
  * @brief Return a temporal network point restricted to a geometry
  * @param[in] temp Temporal point
  * @param[in] gs Geometry
@@ -780,7 +780,7 @@ tnpoint_at_geom(const Temporal *temp, const GSERIALIZED *gs,
 }
 
 /**
- * @ingroup meos_temporal_restrict
+ * @ingroup meos_npoint_restrict
  * @brief Return a temporal point restricted to (the complement of) a geometry
  * @param[in] temp Temporal point
  * @param[in] gs Geometry
@@ -826,7 +826,7 @@ tnpoint_restrict_stbox(const Temporal *temp, const STBox *box, bool border_inc,
 
 #if MEOS
 /**
- * @ingroup meos_temporal_restrict
+ * @ingroup meos_npoint_restrict
  * @brief Return a temporal network point restricted to a geometry
  * @param[in] temp Temporal network point
  * @param[in] box Spatiotemporal box
@@ -840,7 +840,7 @@ tnpoint_at_stbox(const Temporal *temp, const STBox *box, bool border_inc)
 }
 
 /**
- * @ingroup meos_temporal_restrict
+ * @ingroup meos_npoint_restrict
  * @brief Return a temporal point restricted to (the complement of) a geometry
  * @param[in] temp Temporal network point
  * @param[in] box Spatiotemporal box

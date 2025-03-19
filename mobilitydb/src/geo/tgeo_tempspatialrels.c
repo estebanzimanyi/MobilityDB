@@ -145,7 +145,7 @@ Tinterrel_tgeo_tgeo(FunctionCallInfo fcinfo, bool tinter)
 PGDLLEXPORT Datum Tcontains_geo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tcontains_geo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_temp
+ * @ingroup mobilitydb_geo_rel_temp
  * @brief Return a temporal boolean that states whether a geometry contains a
  * temporal geo
  * @sqlfn tContains()
@@ -179,7 +179,7 @@ Tcontains_geo_tgeo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tdisjoint_geo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tdisjoint_geo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_temp
+ * @ingroup mobilitydb_geo_rel_temp
  * @brief Return a temporal boolean that states whether a temporal geo
  * is disjoint from a geometry
  * @sqlfn tDisjoint()
@@ -193,7 +193,7 @@ Tdisjoint_geo_tgeo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tdisjoint_tgeo_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tdisjoint_tgeo_geo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_temp
+ * @ingroup mobilitydb_geo_rel_temp
  * @brief Return a temporal boolean that states whether a temporal geo
  * is disjoint from a geometry
  * @sqlfn tDisjoint()
@@ -207,7 +207,7 @@ Tdisjoint_tgeo_geo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tdisjoint_tgeo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tdisjoint_tgeo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_temp
+ * @ingroup mobilitydb_geo_rel_temp
  * @brief Return a temporal boolean that states whether two temporal geos
  * are disjoint
  * @sqlfn tDisjoint()
@@ -226,7 +226,7 @@ Tdisjoint_tgeo_tgeo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tintersects_geo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tintersects_geo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_temp
+ * @ingroup mobilitydb_geo_rel_temp
  * @brief Return a temporal boolean that states whether a temporal geo
  * intersects a geometry
  * @sqlfn tIntersects()
@@ -240,7 +240,7 @@ Tintersects_geo_tgeo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tintersects_tgeo_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tintersects_tgeo_geo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_temp
+ * @ingroup mobilitydb_geo_rel_temp
  * @brief Return a temporal boolean that states whether a temporal geo
  * intersects a geometry
  * @sqlfn tIntersects()
@@ -254,7 +254,7 @@ Tintersects_tgeo_geo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tintersects_tgeo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tintersects_tgeo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_temp
+ * @ingroup mobilitydb_geo_rel_temp
  * @brief Return a temporal boolean that states whether two temporal geos
  * are disjoint
  * @sqlfn tIntersects()
@@ -272,7 +272,7 @@ Tintersects_tgeo_tgeo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Ttouches_geo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Ttouches_geo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_temp
+ * @ingroup mobilitydb_geo_rel_temp
  * @brief Return a temporal boolean that states whether a geometry touches a
  * temporal geo
  * @sqlfn tTouches()
@@ -302,7 +302,7 @@ Ttouches_geo_tgeo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Ttouches_tgeo_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Ttouches_tgeo_geo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_temp
+ * @ingroup mobilitydb_geo_rel_temp
  * @brief Return a temporal boolean that states whether a temporal geo
  * touches a geometry
  * @sqlfn tTouches()
@@ -337,7 +337,7 @@ Ttouches_tgeo_geo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tdwithin_geo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tdwithin_geo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_temp
+ * @ingroup mobilitydb_geo_rel_temp
  * @brief Return a temporal boolean that states whether a geometry and a
  * temporal geo are within a given distance
  * @sqlfn tDwithin()
@@ -368,7 +368,7 @@ Tdwithin_geo_tgeo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tdwithin_tgeo_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tdwithin_tgeo_geo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_temp
+ * @ingroup mobilitydb_geo_rel_temp
  * @brief Return a temporal boolean that states whether a temporal geo and
  * a geometry are within a given distance
  * @sqlfn tDwithin()
@@ -401,7 +401,7 @@ Tdwithin_tgeo_geo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tdwithin_tgeo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tdwithin_tgeo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_temp
+ * @ingroup mobilitydb_geo_rel_temp
  * @brief Return a temporal boolean that states whether two temporal geos
  * are within a given distance
  * @sqlfn tDwithin()

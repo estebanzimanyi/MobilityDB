@@ -54,7 +54,7 @@
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_bbox_topo
+ * @ingroup meos_geo_bbox_topo
  * @brief Return true if a spatiotemporal box and the spatiotemporal box of a
  * temporal spatial value overlap
  * @param[in] box Spatiotemporal box
@@ -68,7 +68,7 @@ overlaps_stbox_tspatial(const STBox *box, const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_bbox_topo
+ * @ingroup meos_geo_bbox_topo
  * @brief Return true if the spatiotemporal box of a temporal spatial value and
  * a spatiotemporal box overlap
  * @param[in] temp Temporal spatial value
@@ -82,7 +82,7 @@ overlaps_tspatial_stbox(const Temporal *temp, const STBox *box)
 }
 
 /**
- * @ingroup meos_temporal_bbox_topo
+ * @ingroup meos_geo_bbox_topo
  * @brief Return true if the spatiotemporal boxes of two temporal spatial
  * values overlap
  * @param[in] temp1,temp2 Temporal spatial values
@@ -99,7 +99,7 @@ overlaps_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_bbox_topo
+ * @ingroup meos_geo_bbox_topo
  * @brief Return true if a spatiotemporal box contains the one of a temporal
  * point
  * @param[in] box Spatiotemporal box
@@ -113,7 +113,7 @@ contains_stbox_tspatial(const STBox *box, const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_bbox_topo
+ * @ingroup meos_geo_bbox_topo
  * @brief Return true if the spatiotemporal box of a temporal spatial value
  * contains a spatiotemporal box
  * @param[in] temp Temporal spatial value
@@ -127,7 +127,7 @@ contains_tspatial_stbox(const Temporal *temp, const STBox *box)
 }
 
 /**
- * @ingroup meos_temporal_bbox_topo
+ * @ingroup meos_geo_bbox_topo
  * @brief Return true if the spatiotemporal box of the first temporal spatial
  * value contains the one of the second temporal spatial value
  * @param[in] temp1,temp2 Temporal spatial values
@@ -144,7 +144,7 @@ contains_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_bbox_topo
+ * @ingroup meos_geo_bbox_topo
  * @brief Return true if a spatiotemporal box is contained in the
  * spatiotemporal box of a temporal spatial value
  * @param[in] box Spatiotemporal box
@@ -158,7 +158,7 @@ contained_stbox_tspatial(const STBox *box, const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_bbox_topo
+ * @ingroup meos_geo_bbox_topo
  * @brief Return true if the spatiotemporal box of a temporal spatial value is
  * contained in the spatiotemporal box
  * @param[in] temp Temporal spatial value
@@ -172,7 +172,7 @@ contained_tspatial_stbox(const Temporal *temp, const STBox *box)
 }
 
 /**
- * @ingroup meos_temporal_bbox_topo
+ * @ingroup meos_geo_bbox_topo
  * @brief Return true if the spatiotemporal box of the first temporal spatial
  * value is contained in the one of the second temporal spatial value
  * @param[in] temp1,temp2 Temporal spatial values
@@ -189,7 +189,7 @@ contained_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_bbox_topo
+ * @ingroup meos_geo_bbox_topo
  * @brief Return true if a spatiotemporal box and the spatiotemporal box of a
  * temporal spatial value are equal in the common dimensions
  * @param[in] box Spatiotemporal box
@@ -203,7 +203,7 @@ same_stbox_tspatial(const STBox *box, const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_bbox_topo
+ * @ingroup meos_geo_bbox_topo
  * @brief Return true if the spatiotemporal box of a temporal spatial value and
  * a spatiotemporal box are equal in the common dimensions
  * @param[in] temp Temporal spatial value
@@ -217,7 +217,7 @@ same_tspatial_stbox(const Temporal *temp, const STBox *box)
 }
 
 /**
- * @ingroup meos_temporal_bbox_topo
+ * @ingroup meos_geo_bbox_topo
  * @brief Return true if the spatiotemporal boxes of two temporal spatial
  * values are equal in the common dimensions
  * @param[in] temp1,temp2 Temporal spatial values
@@ -234,7 +234,7 @@ same_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_bbox_topo
+ * @ingroup meos_geo_bbox_topo
  * @brief Return true if a spatiotemporal box and the spatiotemporal box of a
  * temporal spatial value are adjacent
  * @param[in] box Spatiotemporal box
@@ -248,7 +248,7 @@ adjacent_stbox_tspatial(const STBox *box, const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_bbox_topo
+ * @ingroup meos_geo_bbox_topo
  * @brief Return true if the spatiotemporal box of a temporal spatial value
  * and a spatiotemporal box are adjacent
  * @param[in] temp Temporal spatial value
@@ -262,7 +262,7 @@ adjacent_tspatial_stbox(const Temporal *temp, const STBox *box)
 }
 
 /**
- * @ingroup meos_temporal_bbox_topo
+ * @ingroup meos_geo_bbox_topo
  * @brief Return true if the spatiotemporal boxes of two temporal spatial
  * values are
  * adjacent

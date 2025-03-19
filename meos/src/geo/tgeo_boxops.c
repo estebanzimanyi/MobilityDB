@@ -319,7 +319,7 @@ tspatialseqarr_set_stbox(const TSequence **sequences, int count, STBox *box)
  * @note Currently, only spatial set types have bounding box
  */
 void
-spatialvalarr_set_bbox(const Datum *values, meosType basetype, int count,
+spatialarr_set_bbox(const Datum *values, meosType basetype, int count,
   void *box)
 {
   assert(spatial_basetype(basetype));
@@ -469,7 +469,7 @@ tgeoseqset_stboxes(const TSequenceSet *ss, int *count)
 }
 
 /**
- * @ingroup meos_temporal_bbox
+ * @ingroup meos_geo_base_bbox
  * @brief Return an array of spatiotemporal boxes from the instants or segments
  * of a temporal geo, where the choice between instants or segments depends,
  * respectively, on whether the interpolation is discrete or continuous
@@ -708,7 +708,7 @@ tgeoseqset_split_n_stboxes(const TSequenceSet *ss, int box_count, int *count)
 }
 
 /**
- * @ingroup meos_temporal_bbox
+ * @ingroup meos_geo_base_bbox
  * @brief Return an array of N spatiotemporal boxes obtained by merging
  * consecutive instants or segments of a temporal geo, where the choice
  * between instants or segments depends, respectively, on whether the
@@ -880,7 +880,7 @@ tgeoseqset_split_each_n_stboxes(const TSequenceSet *ss, int elems_per_box,
 }
 
 /**
- * @ingroup meos_temporal_bbox
+ * @ingroup meos_geo_base_bbox
  * @brief Return an array of spatiotemporal boxes obtained by merging
  * consecutive instants or segments of a temporal geo, where the choice
  * between instants or segments depends, respectively, on whether the
@@ -1087,7 +1087,7 @@ multiline_gboxes(const GSERIALIZED *gs, int *count)
 }
 
 /**
- * @ingroup meos_temporal_bbox
+ * @ingroup meos_geo_base_bbox
  * @brief Return an array of N spatial boxes obtained by merging consecutive
  * segments of a (multi)line
  * @param[in] gs (Multi)line
@@ -1315,7 +1315,7 @@ multiline_split_n_gboxes(const GSERIALIZED *gs, int box_count, int *count)
 }
 
 /**
- * @ingroup meos_temporal_bbox
+ * @ingroup meos_geo_base_bbox
  * @brief Return an array of N spatial boxes obtained by merging consecutive
  * segments of a (multi)line
  * @param[in] gs (Multi)line
@@ -1477,7 +1477,7 @@ multiline_split_each_n_gboxes(const GSERIALIZED *gs, int elems_per_box,
 }
 
 /**
- * @ingroup meos_temporal_bbox
+ * @ingroup meos_geo_base_bbox
  * @brief Return an array of spatial boxes obtained by merging consecutive
  * segments of a (multi)line
  * @param[in] gs (Multi)line

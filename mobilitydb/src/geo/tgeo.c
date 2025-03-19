@@ -142,7 +142,7 @@ tspatial_valid_typmod(Temporal *temp, int32_t typmod)
 PGDLLEXPORT Datum Tpoint_in(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpoint_in);
 /**
- * @ingroup mobilitydb_temporal_inout
+ * @ingroup mobilitydb_geo_inout
  * @brief Return a temporal point from its Well-Known Text (WKT) representation
  * @details Input examples for the various temporal subtypes are as follows:
  * @code
@@ -180,7 +180,7 @@ Tpoint_in(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tgeo_in(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tgeo_in);
 /**
- * @ingroup mobilitydb_temporal_inout
+ * @ingroup mobilitydb_geo_inout
  * @brief Return a temporal geo from its Well-Known Text (WKT)
  * representation
  * @sqlfn tgeo_in()
@@ -469,7 +469,7 @@ Tgeo_enforce_typmod(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tpointinst_constructor(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpointinst_constructor);
 /**
- * @ingroup mobilitydb_temporal_constructor
+ * @ingroup mobilitydb_geo_constructor
  * @brief Return a temporal point instant from a point and a timestamptz
  * @sqlfn tgeompoint(), tgeogpoint()
  */
@@ -486,7 +486,7 @@ Tpointinst_constructor(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tgeoinst_constructor(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tgeoinst_constructor);
 /**
- * @ingroup mobilitydb_temporal_constructor
+ * @ingroup mobilitydb_geo_constructor
  * @brief Return a temporal geo instant from a geometry/geography and a 
  * timestamptz
  * @sqlfn tgeometry(), tgeography()
@@ -502,35 +502,13 @@ Tgeoinst_constructor(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************
- * Conversion functions
- *****************************************************************************/
-
-PGDLLEXPORT Datum Tspatial_to_stbox(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tspatial_to_stbox);
-/**
- * @ingroup mobilitydb_temporal_conversion
- * @brief Return a temporal spatial value converted to a spatiotemporal box
- * @sqlfn stbox()
- * @sqlop @p ::
- */
-Datum
-Tspatial_to_stbox(PG_FUNCTION_ARGS)
-{
-  Datum tempdatum = PG_GETARG_DATUM(0);
-  Temporal *temp = temporal_slice(tempdatum);
-  STBox *result = palloc(sizeof(STBox));
-  tspatial_set_stbox(temp, result);
-  PG_RETURN_STBOX_P(result);
-}
-
-/*****************************************************************************
  * Expand functions
  *****************************************************************************/
 
 PGDLLEXPORT Datum Geo_expand_space(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Geo_expand_space);
 /**
- * @ingroup mobilitydb_temporal_transf
+ * @ingroup mobilitydb_geo_transf
  * @brief Return the bounding box of a geometry/geography expanded on the
  * spatial dimension by a value
  * @sqlfn expandSpace()
@@ -542,26 +520,6 @@ Geo_expand_space(PG_FUNCTION_ARGS)
   double d = PG_GETARG_FLOAT8(1);
   STBox *result = geo_expand_space(gs, d);
   PG_FREE_IF_COPY(gs, 0);
-  if (! result)
-    PG_RETURN_NULL();
-  PG_RETURN_STBOX_P(result);
-}
-
-PGDLLEXPORT Datum Tspatial_expand_space(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tspatial_expand_space);
-/**
- * @ingroup mobilitydb_temporal_transf
- * @brief Return the bounding box of a temporal spatial value expanded on the
- * spatial dimension by a value
- * @sqlfn expandSpace()
- */
-Datum
-Tspatial_expand_space(PG_FUNCTION_ARGS)
-{
-  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  double d = PG_GETARG_FLOAT8(1);
-  STBox *result = tspatial_expand_space(temp, d);
-  PG_FREE_IF_COPY(temp, 0);
   if (! result)
     PG_RETURN_NULL();
   PG_RETURN_STBOX_P(result);

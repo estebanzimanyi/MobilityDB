@@ -59,7 +59,7 @@
 PGDLLEXPORT Datum Cbuffer_in(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_in);
 /**
- * @ingroup mobilitydb_base_inout
+ * @ingroup mobilitydb_cbuffer_base_inout
  * @brief Return a circular buffer from its Well-Known Text (WKT) representation
  * @details Example of input:
  * @code
@@ -77,7 +77,7 @@ Cbuffer_in(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_out(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_out);
 /**
- * @ingroup mobilitydb_base_inout
+ * @ingroup mobilitydb_cbuffer_base_inout
  * @brief Return the Well-Known Text (WKT) representation of a circular buffer
  * @sqlfn cbuffer_out()
  */
@@ -91,7 +91,7 @@ Cbuffer_out(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_recv(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_recv);
 /**
- * @ingroup mobilitydb_base_inout
+ * @ingroup mobilitydb_cbuffer_base_inout
  * @brief Return a circular buffer from its Well-Known Binary (WKB)
  * representation
  * @sqlfn cbuffer_recv()
@@ -109,7 +109,7 @@ Cbuffer_recv(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_send(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_send);
 /**
- * @ingroup mobilitydb_base_inout
+ * @ingroup mobilitydb_cbuffer_base_inout
  * @brief Return the Well-Known Binary (WKB) representation of a circular
  * buffer
  * @sqlfn cbuffer_send()
@@ -153,7 +153,7 @@ Cbuffer_as_text_ext(FunctionCallInfo fcinfo, bool extended)
 PGDLLEXPORT Datum Cbuffer_as_text(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_as_text);
 /**
- * @ingroup mobilitydb_temporal_inout
+ * @ingroup mobilitydb_cbuffer_inout
  * @brief Return the Well-Known Text (WKT) representation of a circular buffer
  * @sqlfn asText()
  */
@@ -166,7 +166,7 @@ Cbuffer_as_text(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_as_ewkt(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_as_ewkt);
 /**
- * @ingroup mobilitydb_temporal_inout
+ * @ingroup mobilitydb_cbuffer_inout
  * @brief Return the Extended Well-Known Text (EWKT) representation of a
  * circular buffer
  * @note It is the WKT representation prefixed with the SRID
@@ -183,7 +183,7 @@ Cbuffer_as_ewkt(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_from_wkb(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_from_wkb);
 /**
- * @ingroup mobilitydb_cbuffer_inout
+ * @ingroup mobilitydb_cbuffer_base_inout
  * @brief Return a circular buffer from its Well-Known Binary (WKB)
  * representation
  * @sqlfn cbufferFromBinary()
@@ -201,7 +201,7 @@ Cbuffer_from_wkb(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_from_hexwkb(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_from_hexwkb);
 /**
- * @ingroup mobilitydb_cbuffer_inout
+ * @ingroup mobilitydb_cbuffer_base_inout
  * @brief Return a circular buffer from its hex-encoded ASCII Well-Known Binary
  * (HexWKB) representation
  * @sqlfn cbufferFromHexWKB()
@@ -222,7 +222,7 @@ Cbuffer_from_hexwkb(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_as_wkb(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_as_wkb);
 /**
- * @ingroup mobilitydb_cbuffer_inout
+ * @ingroup mobilitydb_cbuffer_base_inout
  * @brief Return the Well-Known Binary (WKB) representation of a circular buffer
  * @sqlfn asBinary()
  */
@@ -237,7 +237,7 @@ Cbuffer_as_wkb(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_as_hexwkb(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_as_hexwkb);
 /**
- * @ingroup mobilitydb_cbuffer_inout
+ * @ingroup mobilitydb_cbuffer_base_inout
  * @brief Return the hex-encoded ASCII Well-Known Binary (HexWKB)
  * representation of a circular buffer
  * @sqlfn asHexWKB()
@@ -256,7 +256,7 @@ Cbuffer_as_hexwkb(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_constructor(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_constructor);
 /**
- * @ingroup mobilitydb_base_constructor
+ * @ingroup mobilitydb_cbuffer_base_constructor
  * @brief Return a circular buffer from a point and a radius
  * @sqlfn cbuffer()
  */
@@ -275,7 +275,7 @@ Cbuffer_constructor(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_to_geom(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_to_geom);
 /**
- * @ingroup mobilitydb_base_conversion
+ * @ingroup mobilitydb_cbuffer_base_conversion
  * @brief Return a circular buffer converted to a geometry
  * @sqlfn geometry()
  * @sqlop @p ::
@@ -290,7 +290,7 @@ Cbuffer_to_geom(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Geom_to_cbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Geom_to_cbuffer);
 /**
- * @ingroup mobilitydb_base_conversion
+ * @ingroup mobilitydb_cbuffer_base_conversion
  * @brief Return a geometry converted to a circular buffer
  * @sqlfn cbuffer()
  * @sqlop @p ::
@@ -312,7 +312,7 @@ Geom_to_cbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_point(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_point);
 /**
- * @ingroup mobilitydb_base_accessor
+ * @ingroup mobilitydb_cbuffer_base_accessor
  * @brief Return the point of a circular buffer
  * @sqlfn point()
  */
@@ -327,7 +327,7 @@ Cbuffer_point(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_radius(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_radius);
 /**
- * @ingroup mobilitydb_base_accessor
+ * @ingroup mobilitydb_cbuffer_base_accessor
  * @brief Return the radius of a circular buffer
  * @sqlfn radius()
  */
@@ -345,7 +345,7 @@ Cbuffer_radius(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_round(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_round);
 /**
- * @ingroup mobilitydb_base_transf
+ * @ingroup mobilitydb_cbuffer_base_transf
  * @brief Return a circular buffer with the precision of the values set to a
  * number of decimal places
  * @sqlfn round()
@@ -361,7 +361,7 @@ Cbuffer_round(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbufferarr_round(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbufferarr_round);
 /**
- * @ingroup mobilitydb_temporal_transf
+ * @ingroup mobilitydb_cbuffer_base_transf
  * @brief Return an array of circular buffers with the precision of the
  * values set to a number of decimal places
  * @sqlfn round()
@@ -387,24 +387,6 @@ Cbufferarr_round(PG_FUNCTION_ARGS)
   PG_RETURN_ARRAYTYPE_P(result);
 }
 
-PGDLLEXPORT Datum Cbufferset_round(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Cbufferset_round);
-/**
- * @ingroup mobilitydb_box_transf
- * @brief Return an array of circular buffers with the precision of the values
- * set to a number of decimal values
- * @sqlfn round()
- */
-Datum
-Cbufferset_round(PG_FUNCTION_ARGS)
-{
-  Set *s = PG_GETARG_SET_P(0);
-  int maxdd = PG_GETARG_INT32(1);
-  Set *result = set_round(s, maxdd, &datum_cbuffer_round);
-  PG_FREE_IF_COPY(s, 0);
-  PG_RETURN_SET_P(result);
-}
-
 /*****************************************************************************
  * SRID functions
  *****************************************************************************/
@@ -412,7 +394,7 @@ Cbufferset_round(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_srid(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_srid);
 /**
- * @ingroup mobilitydb_base_spatial
+ * @ingroup mobilitydb_cbuffer_base_srid
  * @brief Return the SRID of a circular buffer
  * @sqlfn SRID()
  */
@@ -427,7 +409,7 @@ Cbuffer_srid(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_set_srid(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_set_srid);
 /**
- * @ingroup mobilitydb_base_spatial
+ * @ingroup mobilitydb_cbuffer_base_srid
  * @brief Return a circular buffer with the coordinates of the point set to 
  * an SRID
  * @sqlfn setSRID()
@@ -442,12 +424,10 @@ Cbuffer_set_srid(PG_FUNCTION_ARGS)
   PG_RETURN_CBUFFER_P(result);
 }
 
-/*****************************************************************************/
-
 PGDLLEXPORT Datum Cbuffer_transform(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_transform);
 /**
- * @ingroup mobilitydb_temporal_spatial_srid
+ * @ingroup mobilitydb_cbuffer_base_srid
  * @brief Return a circular buffer transformed to an SRID
  * @sqlfn transform()
  */
@@ -464,7 +444,7 @@ Cbuffer_transform(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_transform_pipeline(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_transform_pipeline);
 /**
- * @ingroup mobilitydb_temporal_spatial_srid
+ * @ingroup mobilitydb_cbuffer_base_srid
  * @brief Return a circular buffer transformed to an SRID using a
  * transformation pipeline
  * @sqlfn transformPipeline()
@@ -492,7 +472,7 @@ Cbuffer_transform_pipeline(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_same(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_same);
 /**
- * @ingroup mobilitydb_base_spatial
+ * @ingroup mobilitydb_cbuffer_base_comp
  * @brief Return true if two circular buffers are approximately equal with 
  * respect to an epsilon value
  * @sqlfn same()
@@ -512,7 +492,7 @@ Cbuffer_same(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_eq(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_eq);
 /**
- * @ingroup mobilitydb_base_comp
+ * @ingroup mobilitydb_cbuffer_base_comp
  * @brief Return true if the first circular buffer is equal to the second one
  * @sqlfn cbuffer_eq()
  * @sqlop @p =
@@ -528,7 +508,7 @@ Cbuffer_eq(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_ne(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_ne);
 /**
- * @ingroup mobilitydb_base_comp
+ * @ingroup mobilitydb_cbuffer_base_comp
  * @brief Return true if the first circular buffer is not equal to the second one
  * @sqlfn cbuffer_ne()
  * @sqlop @p <>
@@ -544,7 +524,7 @@ Cbuffer_ne(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_cmp(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_cmp);
 /**
- * @ingroup mobilitydb_base_comp
+ * @ingroup mobilitydb_cbuffer_base_comp
  * @brief Return -1, 0, or 1 depending on whether the first circular buffer
  * is less than, equal to, or greater than the second one
  * @note Function used for B-tree comparison
@@ -561,7 +541,7 @@ Cbuffer_cmp(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_lt(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_lt);
 /**
- * @ingroup mobilitydb_base_comp
+ * @ingroup mobilitydb_cbuffer_base_comp
  * @brief Return true if the first circular buffer is less than the second one
  * @sqlfn cbuffer_lt()
  * @sqlop @p <
@@ -577,7 +557,7 @@ Cbuffer_lt(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_le(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_le);
 /**
- * @ingroup mobilitydb_base_comp
+ * @ingroup mobilitydb_cbuffer_base_comp
  * @brief Return true if the first circular buffer is less than or equal to the
  * second one
  * @sqlfn cbuffer_le()
@@ -594,7 +574,7 @@ Cbuffer_le(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_ge(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_ge);
 /**
- * @ingroup mobilitydb_base_comp
+ * @ingroup mobilitydb_cbuffer_base_comp
  * @brief Return true if the first circular buffer is greater than or equal to
  * the second one
  * @sqlfn cbuffer_ge()
@@ -611,7 +591,7 @@ Cbuffer_ge(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_gt(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_gt);
 /**
- * @ingroup mobilitydb_base_comp
+ * @ingroup mobilitydb_cbuffer_base_comp
  * @brief Return true if the first circular buffer is greater than the second one
  * @sqlfn cbuffer_gt()
  * @sqlop @p >
@@ -631,7 +611,7 @@ Cbuffer_gt(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_hash(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_hash);
 /**
- * @ingroup mobilitydb_base_accessor
+ * @ingroup mobilitydb_cbuffer_base_accessor
  * @brief Return the 32-bit hash value of a circular buffer
  * @sqlfn hash()
  */
@@ -647,7 +627,7 @@ Cbuffer_hash(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Cbuffer_hash_extended(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_hash_extended);
 /**
- * @ingroup mobilitydb_base_accessor
+ * @ingroup mobilitydb_cbuffer_base_accessor
  * @brief Return the 64-bit hash value of a circular buffer using a seed
  * @sqlfn hash_extended()
  */

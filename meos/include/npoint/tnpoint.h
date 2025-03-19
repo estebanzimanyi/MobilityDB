@@ -117,7 +117,6 @@ extern void nsegment_set(int64 rid, double pos1, double pos2, Nsegment *ns);
 extern Datum datum_npoint_round(Datum npoint, Datum size);
 extern Npoint *npoint_round(const Npoint *np, int maxdd);
 extern Nsegment *nsegment_round(const Nsegment *ns, int maxdd);
-extern Set *npointset_round(const Set *s, int maxdd);
 
 /*****************************************************************************
  * Temporal network point functions

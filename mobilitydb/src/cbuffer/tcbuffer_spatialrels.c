@@ -60,7 +60,7 @@
 PGDLLEXPORT Datum Econtains_geo_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Econtains_geo_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a geometry ever contains a temporal circular buffer
  * @sqlfn eContains()
  */
@@ -73,7 +73,7 @@ Econtains_geo_tcbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Acontains_geo_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Acontains_geo_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a geometry always contains a temporal circular buffer
  * @sqlfn aContains()
  */
@@ -90,7 +90,7 @@ Acontains_geo_tcbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Edisjoint_geo_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Edisjoint_geo_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a geometry and a temporal circular buffer are ever
  * disjoint
  * @sqlfn eDisjoint()
@@ -104,7 +104,7 @@ Edisjoint_geo_tcbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Adisjoint_geo_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Adisjoint_geo_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a geometry and a temporal circular buffer are always
  * disjoint
  * @sqlfn aDisjoint()
@@ -137,7 +137,7 @@ EA_disjoint_tcbuffer_geo(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Edisjoint_tcbuffer_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Edisjoint_tcbuffer_geo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a temporal circular buffer and a geometry are ever
  * disjoint
  * @sqlfn eDisjoint()
@@ -151,7 +151,7 @@ Edisjoint_tcbuffer_geo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Adisjoint_tcbuffer_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Adisjoint_tcbuffer_geo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a temporal circular buffer and a geometry are always
  * disjoint
  * @sqlfn aDisjoint()
@@ -186,7 +186,7 @@ EA_disjoint_cbuffer_tcbuffer(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Edisjoint_cbuffer_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Edisjoint_cbuffer_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a circular buffer and a temporal circular buffer are ever
  * disjoint
  * @sqlfn eDisjoint()
@@ -200,7 +200,7 @@ Edisjoint_cbuffer_tcbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Adisjoint_cbuffer_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Adisjoint_cbuffer_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a circular buffer and a temporal circular buffer are
  * always disjoint
  * @sqlfn aDisjoint()
@@ -233,7 +233,7 @@ EA_disjoint_tcbuffer_cbuffer(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Edisjoint_tcbuffer_cbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Edisjoint_tcbuffer_cbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a temporal circular buffer and a circular buffer are
  * ever disjoint
  * @sqlfn eDisjoint()
@@ -247,7 +247,7 @@ Edisjoint_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Adisjoint_tcbuffer_cbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Adisjoint_tcbuffer_cbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a temporal circular buffer and a circular buffer are
  * always disjoint
  * @sqlfn aDisjoint()
@@ -263,7 +263,7 @@ Adisjoint_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Edisjoint_tcbuffer_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Edisjoint_tcbuffer_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if two temporal circular buffers are ever disjoint
  * @sqlfn eDisjoint()
  */
@@ -277,7 +277,7 @@ Edisjoint_tcbuffer_tcbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Adisjoint_tcbuffer_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Adisjoint_tcbuffer_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if two temporal circular buffers are ever disjoint
  * @sqlfn aDisjoint()
  */
@@ -314,7 +314,7 @@ EA_intersects_geo_tcbuffer(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Eintersects_geo_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Eintersects_geo_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a geometry and a temporal circular buffer ever
  * intersect
  * @sqlfn eIntersects()
@@ -328,7 +328,7 @@ Eintersects_geo_tcbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Aintersects_geo_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Aintersects_geo_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a geometry and a temporal circular buffer ever
  * intersect
  * @sqlfn aIntersects()
@@ -361,7 +361,7 @@ EA_intersects_tcbuffer_geo(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Eintersects_tcbuffer_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Eintersects_tcbuffer_geo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a temporal circular buffer and a geometry ever
  * intersect
  * @sqlfn eIntersects()
@@ -375,7 +375,7 @@ Eintersects_tcbuffer_geo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Aintersects_tcbuffer_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Aintersects_tcbuffer_geo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a temporal circular buffer and a geometry always
  * intersect
  * @sqlfn aIntersects()
@@ -408,7 +408,7 @@ EA_intersects_cbuffer_tcbuffer(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Eintersects_cbuffer_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Eintersects_cbuffer_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a circular buffer and a temporal
  * circular buffer ever intersect
  * @sqlfn eIntersects()
@@ -422,7 +422,7 @@ Eintersects_cbuffer_tcbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Aintersects_cbuffer_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Aintersects_cbuffer_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a circular buffer and a temporal
  * circular buffer always intersect
  * @sqlfn aIntersects()
@@ -455,7 +455,7 @@ EA_intersects_tcbuffer_cbuffer(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Eintersects_tcbuffer_cbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Eintersects_tcbuffer_cbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a temporal circular buffer and a circular buffer 
  * ever intersect
  * @sqlfn eIntersects()
@@ -469,7 +469,7 @@ Eintersects_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Aintersects_tcbuffer_cbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Aintersects_tcbuffer_cbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a temporal circular buffer and a circular buffer 
  * always intersect
  * @sqlfn aIntersects()
@@ -485,7 +485,7 @@ Aintersects_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Eintersects_tcbuffer_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Eintersects_tcbuffer_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if two temporal circular buffers ever intersect
  * @sqlfn eIntersects()
  */
@@ -499,7 +499,7 @@ Eintersects_tcbuffer_tcbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Aintersects_tcbuffer_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Aintersects_tcbuffer_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if two temporal circular buffers ever intersect
  * @sqlfn aIntersects()
  */
@@ -535,7 +535,7 @@ EA_touches_geo_tcbuffer(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Etouches_geo_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Etouches_geo_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a geometry and a temporal circular buffer ever touch
  * @sqlfn eTouches()
  */
@@ -548,7 +548,7 @@ Etouches_geo_tcbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Atouches_geo_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Atouches_geo_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a geometry and a temporal circular buffer ever touch
  * @sqlfn aTouches()
  */
@@ -579,7 +579,7 @@ EA_touches_tcbuffer_geo(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Etouches_tcbuffer_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Etouches_tcbuffer_geo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a temporal circular buffer and a geometry ever touch
  * @sqlfn eTouches()
  */
@@ -592,7 +592,7 @@ Etouches_tcbuffer_geo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Atouches_tcbuffer_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Atouches_tcbuffer_geo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a temporal circular buffer and a geometry always touch
  * @sqlfn aTouches()
  */
@@ -626,7 +626,7 @@ EA_touches_cbuffer_tcbuffer(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Etouches_cbuffer_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Etouches_cbuffer_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a circular buffer and a temporal
  * circular buffer ever touch
  * @sqlfn eTouches()
@@ -640,7 +640,7 @@ Etouches_cbuffer_tcbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Atouches_cbuffer_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Atouches_cbuffer_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a circular buffer and a temporal
  * circular buffer always touch
  * @sqlfn aTouches()
@@ -673,7 +673,7 @@ EA_touches_tcbuffer_cbuffer(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Etouches_tcbuffer_cbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Etouches_tcbuffer_cbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a temporal circular buffer and a circular buffer 
  * ever touch
  * @sqlfn eTouches()
@@ -687,7 +687,7 @@ Etouches_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Atouches_tcbuffer_cbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Atouches_tcbuffer_cbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a temporal circular buffer and a circular buffer 
  * always touch
  * @sqlfn aTouches()
@@ -727,7 +727,7 @@ EA_dwithin_geo_tcbuffer(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Edwithin_geo_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Edwithin_geo_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a geometry and a temporal circular buffer are ever
  * within a distance
  * @sqlfn eDwithin()
@@ -741,7 +741,7 @@ Edwithin_geo_tcbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Adwithin_geo_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Adwithin_geo_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a geometry and a temporal circular buffer are always
  * within a distance
  * @sqlfn aDwithin()
@@ -775,7 +775,7 @@ EA_dwithin_tcbuffer_geo(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Edwithin_tcbuffer_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Edwithin_tcbuffer_geo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a temporal circular buffer and a geometry are ever
  * within a distance
  * @sqlfn eDwithin()
@@ -789,7 +789,7 @@ Edwithin_tcbuffer_geo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Adwithin_tcbuffer_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Adwithin_tcbuffer_geo);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a temporal circular buffer and a geometry are always
  * within a distance
  * @sqlfn aDwithin()
@@ -846,7 +846,7 @@ EA_dwithin_cbuffer_tcbuffer(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Edwithin_cbuffer_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Edwithin_cbuffer_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a circular buffer and a temporal circular buffer are
  * ever within a distance
  * @sqlfn eDwithin()
@@ -860,7 +860,7 @@ Edwithin_cbuffer_tcbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Adwithin_cbuffer_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Adwithin_cbuffer_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a circular buffer and a temporal circular buffer are
  * always within a distance
  * @sqlfn aDwithin()
@@ -894,7 +894,7 @@ EA_dwithin_tcbuffer_cbuffer(FunctionCallInfo fcinfo, bool ever)
 PGDLLEXPORT Datum Edwithin_tcbuffer_cbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Edwithin_tcbuffer_cbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a temporal circular buffer and a circular buffer are
  * ever within a distance
  * @sqlfn eDwithin()
@@ -908,7 +908,7 @@ Edwithin_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Adwithin_tcbuffer_cbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Adwithin_tcbuffer_cbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if a temporal circular buffer and a circular buffer are
  * always within a distance
  * @sqlfn aDwithin()
@@ -924,7 +924,7 @@ Adwithin_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Edwithin_tcbuffer_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Edwithin_tcbuffer_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if two temporal circular buffers are ever within a distance
  * @sqlfn eDwithin()
  */
@@ -937,7 +937,7 @@ Edwithin_tcbuffer_tcbuffer(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Adwithin_tcbuffer_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Adwithin_tcbuffer_tcbuffer);
 /**
- * @ingroup mobilitydb_temporal_spatial_rel_ever
+ * @ingroup mobilitydb_cbuffer_rel_ever
  * @brief Return true if two temporal circular buffers are always within a distance
  * @sqlfn aDwithin()
  */

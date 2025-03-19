@@ -165,10 +165,6 @@ LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************/
 
-CREATE FUNCTION minDistSimplify(tfloat, float)
-RETURNS tfloat
-AS 'MODULE_PATHNAME', 'Temporal_simplify_min_dist'
-LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION minDistSimplify(tgeompoint, float)
 RETURNS tgeompoint
 AS 'MODULE_PATHNAME', 'Temporal_simplify_min_dist'
@@ -178,10 +174,6 @@ RETURNS tgeompoint
 AS 'MODULE_PATHNAME', 'Temporal_simplify_min_dist'
 LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION minTimeDeltaSimplify(tfloat, interval)
-RETURNS tfloat
-AS 'MODULE_PATHNAME', 'Temporal_simplify_min_tdelta'
-LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION minTimeDeltaSimplify(tgeompoint, interval)
 RETURNS tgeompoint
 AS 'MODULE_PATHNAME', 'Temporal_simplify_min_tdelta'
@@ -191,19 +183,11 @@ RETURNS tgeompoint
 AS 'MODULE_PATHNAME', 'Temporal_simplify_min_tdelta'
 LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION maxDistSimplify(tfloat, float, boolean DEFAULT TRUE)
-RETURNS tfloat
-AS 'MODULE_PATHNAME', 'Temporal_simplify_max_dist'
-LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION maxDistSimplify(tgeompoint, float, boolean DEFAULT TRUE)
 RETURNS tgeompoint
 AS 'MODULE_PATHNAME', 'Temporal_simplify_max_dist'
 LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION douglasPeuckerSimplify(tfloat, float, boolean DEFAULT TRUE)
-RETURNS tfloat
-AS 'MODULE_PATHNAME', 'Temporal_simplify_dp'
-LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION douglasPeuckerSimplify(tgeompoint, float, boolean DEFAULT TRUE)
 RETURNS tgeompoint
 AS 'MODULE_PATHNAME', 'Temporal_simplify_dp'

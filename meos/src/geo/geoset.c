@@ -63,7 +63,7 @@
 
 #if MEOS
 /**
- * @ingroup meos_setspan_inout
+ * @ingroup meos_geo_set_inout
  * @brief Return a set from its Well-Known Text (WKT) representation
  * @param[in] str String
  * @csqlfn #Set_in()
@@ -78,7 +78,7 @@ geomset_in(const char *str)
 }
 
 /**
- * @ingroup meos_setspan_inout
+ * @ingroup meos_geo_set_inout
  * @brief Return a set from its Well-Known Text (WKT) representation
  * @param[in] str String
  * @csqlfn #Set_in()
@@ -98,7 +98,7 @@ geogset_in(const char *str)
  *****************************************************************************/
 
 /**
- * @ingroup meos_setspan_constructor
+ * @ingroup meos_geo_set_constructor
  * @brief Return a geo set from an array of values
  * @param[in] values Array of values
  * @param[in] count Number of elements of the array
@@ -130,7 +130,7 @@ geoset_make(const GSERIALIZED **values, int count)
  *****************************************************************************/
 
 /**
- * @ingroup meos_setspan_conversion
+ * @ingroup meos_geo_set_conversion
  * @brief Return a geometry/geography converted to a geo set
  * @param[in] gs Value
  * @csqlfn #Value_to_set()
@@ -157,7 +157,7 @@ geo_to_set(const GSERIALIZED *gs)
  *****************************************************************************/
 
 /**
- * @ingroup meos_setspan_accessor
+ * @ingroup meos_geo_set_accessor
  * @brief Return a copy of the start value of a geo set
  * @param[in] s Set
  * @return On error return @p NULL
@@ -177,7 +177,7 @@ geoset_start_value(const Set *s)
 }
 
 /**
- * @ingroup meos_setspan_accessor
+ * @ingroup meos_geo_set_accessor
  * @brief Return a copy of the end value of a geo set
  * @param[in] s Set
  * @return On error return @p NULL
@@ -198,7 +198,7 @@ geoset_end_value(const Set *s)
 }
 
 /**
- * @ingroup meos_setspan_accessor
+ * @ingroup meos_geo_set_accessor
  * @brief Return in the last argument a copy of the n-th value of a geo set
  * @param[in] s Set
  * @param[in] n Number (1-based)
@@ -224,7 +224,7 @@ geoset_value_n(const Set *s, int n, GSERIALIZED **result)
 }
 
 /**
- * @ingroup meos_setspan_accessor
+ * @ingroup meos_geo_set_accessor
  * @brief Return an array of copies of the values of a geo set
  * @param[in] s Set
  * @return On error return @p NULL
@@ -271,7 +271,7 @@ ensure_valid_set_geo(const Set *s, const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_setspan_topo
+ * @ingroup meos_geo_set_setops
  * @brief Return true if a set contains a geometry/geography
  * @param[in] s Set
  * @param[in] gs Value
@@ -287,7 +287,7 @@ contains_set_geo(const Set *s, GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_setspan_topo
+ * @ingroup meos_geo_set_setops
  * @brief Return true if a geometry/geography is contained in a set
  * @param[in] gs Value
  * @param[in] s Set
@@ -303,7 +303,7 @@ contained_geo_set(const GSERIALIZED *gs, const Set *s)
 }
 
 /**
- * @ingroup meos_setspan_set
+ * @ingroup meos_geo_set_setops
  * @brief Return the union of a set and a geometry/geography
  * @param[in] s Set
  * @param[in] gs Value
@@ -319,7 +319,7 @@ union_set_geo(const Set *s, const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_setspan_set
+ * @ingroup meos_geo_set_setops
  * @brief Return the union of a geometry/geography and a set
  * @param[in] s Set
  * @param[in] gs Value
@@ -332,7 +332,7 @@ union_geo_set(const GSERIALIZED *gs, const Set *s)
 }
 
 /**
- * @ingroup meos_setspan_set
+ * @ingroup meos_geo_set_setops
  * @brief Return the intersection of a set and a geometry/geography
  * @param[in] s Set
  * @param[in] gs Value
@@ -348,7 +348,7 @@ intersection_set_geo(const Set *s, const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_setspan_set
+ * @ingroup meos_geo_set_setops
  * @brief Return the intersection of a geometry/geography and a set
  * @param[in] s Set
  * @param[in] gs Value
@@ -361,7 +361,7 @@ intersection_geo_set(const GSERIALIZED *gs, const Set *s)
 }
 
 /**
- * @ingroup meos_setspan_set
+ * @ingroup meos_geo_set_setops
  * @brief Return the difference of a geometry/geography and a set
  * @param[in] gs Value
  * @param[in] s Set
@@ -377,7 +377,7 @@ minus_geo_set(const GSERIALIZED *gs, const Set *s)
 }
 
 /**
- * @ingroup meos_setspan_set
+ * @ingroup meos_geo_set_setops
  * @brief Return the difference of a set and a geometry/geography
  * @param[in] s Set
  * @param[in] gs Value
@@ -398,7 +398,7 @@ minus_set_geo(const Set *s, const GSERIALIZED *gs)
  *****************************************************************************/
 
 /**
- * @ingroup meos_setspan_agg
+ * @ingroup meos_geo_set_setops
  * @brief Transition function for set union aggregate of geometries/geographies
  * @param[in,out] state Current aggregate state
  * @param[in] gs Value

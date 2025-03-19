@@ -111,7 +111,7 @@ EAcomp_tgeo_tgeo(FunctionCallInfo fcinfo,
 PGDLLEXPORT Datum Ever_eq_geo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Ever_eq_geo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_comp_ever
+ * @ingroup mobilitydb_geo_comp_ever
  * @brief Return true if a temporal geo is ever equal to a geometry/geography
  * @sqlfn ever_eq()
  * @sqlop @p ?=
@@ -125,7 +125,7 @@ Ever_eq_geo_tgeo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Always_eq_geo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Always_eq_geo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_comp_ever
+ * @ingroup mobilitydb_geo_comp_ever
  * @brief Return true if a temporal geo is always equal to a geometry/geography
  * @sqlfn always_eq()
  * @sqlop @p %=
@@ -139,7 +139,7 @@ Always_eq_geo_tgeo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Ever_ne_geo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Ever_ne_geo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_comp_ever
+ * @ingroup mobilitydb_geo_comp_ever
  * @brief Return true if a temporal geo is ever different from a
  * geometry/geography
  * @sqlfn ever_ne()
@@ -154,7 +154,7 @@ Ever_ne_geo_tgeo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Always_ne_geo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Always_ne_geo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_comp_ever
+ * @ingroup mobilitydb_geo_comp_ever
  * @brief Return true if a temporal geo is always different from a
  * geometry/geography
  * @sqlfn always_ne()
@@ -171,7 +171,7 @@ Always_ne_geo_tgeo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Ever_eq_tgeo_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Ever_eq_tgeo_geo);
 /**
- * @ingroup mobilitydb_temporal_comp_ever
+ * @ingroup mobilitydb_geo_comp_ever
  * @brief Return true if a temporal geo is ever equal to a geometry/geography
  * @sqlfn ever_eq()
  * @sqlop @p ?=
@@ -185,7 +185,7 @@ Ever_eq_tgeo_geo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Always_eq_tgeo_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Always_eq_tgeo_geo);
 /**
- * @ingroup mobilitydb_temporal_comp_ever
+ * @ingroup mobilitydb_geo_comp_ever
  * @brief Return true if a temporal geo is always equal to a geometry/geography
  * @sqlfn always_eq()
  * @sqlop @p %=
@@ -199,7 +199,7 @@ Always_eq_tgeo_geo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Ever_ne_tgeo_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Ever_ne_tgeo_geo);
 /**
- * @ingroup mobilitydb_temporal_comp_ever
+ * @ingroup mobilitydb_geo_comp_ever
  * @brief Return true if a temporal geo is ever different from a
  * geometry/geography
  * @sqlfn ever_ne()
@@ -214,7 +214,7 @@ Ever_ne_tgeo_geo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Always_ne_tgeo_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Always_ne_tgeo_geo);
 /**
- * @ingroup mobilitydb_temporal_comp_ever
+ * @ingroup mobilitydb_geo_comp_ever
  * @brief Return true if a temporal geo is always different from a
  * geometry/geography
  * @sqlfn always_ne()
@@ -231,7 +231,7 @@ Always_ne_tgeo_geo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Ever_eq_tgeo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Ever_eq_tgeo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_comp_ever
+ * @ingroup mobilitydb_geo_comp_ever
  * @brief Return true if two temporal geos are ever equal
  * @sqlfn ever_eq()
  * @sqlop @p ?=
@@ -245,7 +245,7 @@ Ever_eq_tgeo_tgeo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Always_eq_tgeo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Always_eq_tgeo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_comp_ever
+ * @ingroup mobilitydb_geo_comp_ever
  * @brief Return true if two temporal geos are always equal
  * @sqlfn always_eq()
  * @sqlop @p %=
@@ -259,7 +259,7 @@ Always_eq_tgeo_tgeo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Ever_ne_tgeo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Ever_ne_tgeo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_comp_ever
+ * @ingroup mobilitydb_geo_comp_ever
  * @brief Return true if two temporal geos are ever different
  * @sqlfn ever_ne()
  * @sqlop @p ?<>
@@ -273,7 +273,7 @@ Ever_ne_tgeo_tgeo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Always_ne_tgeo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Always_ne_tgeo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_comp_ever
+ * @ingroup mobilitydb_geo_comp_ever
  * @brief Return true if two temporal geos are always different
  * @sqlfn always_ne()
  * @sqlop @p %<>
@@ -350,7 +350,7 @@ Tcomp_tgeo_tgeo(FunctionCallInfo fcinfo,
 PGDLLEXPORT Datum Teq_geo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Teq_geo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_comp_temp
+ * @ingroup mobilitydb_geo_comp_temp
  * @brief Return true if a temporal geo is ever equal to a geometry/geography
  * @sqlfn temporal_teq()
  * @sqlop @p #=
@@ -364,7 +364,7 @@ Teq_geo_tgeo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tne_geo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tne_geo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_comp_temp
+ * @ingroup mobilitydb_geo_comp_temp
  * @brief Return true if a temporal geo is ever different from a
  * geometry/geography
  * @sqlfn temporal_tne()
@@ -381,7 +381,7 @@ Tne_geo_tgeo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Teq_tgeo_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Teq_tgeo_geo);
 /**
- * @ingroup mobilitydb_temporal_comp_temp
+ * @ingroup mobilitydb_geo_comp_temp
  * @brief Return true if a temporal geo is ever equal to a geometry/geography
  * @sqlfn temporal_teq()
  * @sqlop @p #=
@@ -395,7 +395,7 @@ Teq_tgeo_geo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tne_tgeo_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tne_tgeo_geo);
 /**
- * @ingroup mobilitydb_temporal_comp_temp
+ * @ingroup mobilitydb_geo_comp_temp
  * @brief Return true if a temporal geo is ever different from a
  * geometry/geography
  * @sqlfn temporal_tne()
@@ -412,7 +412,7 @@ Tne_tgeo_geo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Teq_tgeo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Teq_tgeo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_comp_temp
+ * @ingroup mobilitydb_geo_comp_temp
  * @brief Return true if two temporal geos are ever equal
  * @sqlfn temporal_teq()
  * @sqlop @p #=
@@ -426,7 +426,7 @@ Teq_tgeo_tgeo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tne_tgeo_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tne_tgeo_tgeo);
 /**
- * @ingroup mobilitydb_temporal_comp_temp
+ * @ingroup mobilitydb_geo_comp_temp
  * @brief Return true if two temporal geos are ever different
  * @sqlfn temporal_tne()
  * @sqlop @p #<>

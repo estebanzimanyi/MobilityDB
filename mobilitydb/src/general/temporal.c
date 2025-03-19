@@ -55,7 +55,7 @@
 #include "general/type_util.h"
 #include "geo/tgeo.h"
 /* MobilityDB */
-#include "pg_general/doxygen_mobilitydb_api.h"
+#include "pg_general/doxygen_mobilitydb.h"
 #include "pg_general/meos_catalog.h"
 #include "pg_general/type_util.h"
 #include "pg_geo/tspatial.h"

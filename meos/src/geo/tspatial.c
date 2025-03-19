@@ -173,19 +173,18 @@ spatialset_out_fn(const Set *s, int maxdd, outfunc wkt_out, bool extended)
 /*****************************************************************************/
 
 /**
- * @ingroup meos_setspan_inout
+ * @ingroup meos_geo_set_inout
  * @brief Return the Well-Known Text (WKT) representation of a spatial set
  * @csqlfn #Spatialset_as_text()
  */
 char *
 spatialset_as_text(const Set *s, int maxdd)
 {
-
   return spatialset_out_fn(s, maxdd, &spatialbase_as_text, false);
 }
 
 /**
- * @ingroup meos_setspan_inout
+ * @ingroup meos_geo_set_inout
  * @brief Return the Extended Well-Known Text (EWKT) representation of a geo set
  * @param[in] s Set
  * @param[in] maxdd Maximum number of decimal digits
@@ -249,7 +248,7 @@ tspatialseqset_as_text(const TSequenceSet *ss, int maxdd)
 }
 
 /**
- * @ingroup meos_internal_temporal_inout
+ * @ingroup meos_geo_temporal_inout
  * @brief Return the Well-Known Text (WKT) representation of a temporal
  * spatial value
  * @param[in] temp Temporal spatial value
@@ -285,7 +284,7 @@ tspatial_as_text(const Temporal *temp, int maxdd)
 /*****************************************************************************/
 
 /**
- * @ingroup meos_internal_temporal_inout
+ * @ingroup meos_geo_temporal_inout
  * @brief Return the Extended Well-Known Text (EWKT) representation of a
  * temporal spatial value
  * @param[in] temp Temporal spatial value
@@ -335,7 +334,6 @@ tspatial_as_ewkt(const Temporal *temp, int maxdd)
  * @param[in] count Number of elements in the input array
  * @param[in] maxdd Maximum number of decimal digits to output
  * @param[in] extended True if the output is in EWKT
- * @csqlfn #Spatialarr_as_text(), #Spatialarr_as_ewkt()
  */
 char **
 spatialarr_wkt_out(const Datum *spatialarr, meosType elemtype, int count,
@@ -369,7 +367,6 @@ spatialarr_wkt_out(const Datum *spatialarr, meosType elemtype, int count,
  * @param[in] elemtype Type of the elements in the input array
  * @param[in] count Number of elements in the input array
  * @param[in] maxdd Maximum number of decimal digits to output
- * @csqlfn #Spatialarr_as_text(), #Spatialarr_as_text()
  */
 char **
 spatialarr_as_text(const Datum *spatialarr, meosType elemtype, int count, 
@@ -386,7 +383,6 @@ spatialarr_as_text(const Datum *spatialarr, meosType elemtype, int count,
  * @param[in] elemtype Type of the elements in the input array
  * @param[in] count Number of elements in the input array
  * @param[in] maxdd Maximum number of decimal digits to output
- * @csqlfn #Spatialarr_as_ewkt(), #Spatialarr_as_ewkt()
  */
 char **
 spatialarr_as_ewkt(const Datum *spatialarr, meosType elemtype, int count, 
@@ -405,7 +401,6 @@ spatialarr_as_ewkt(const Datum *spatialarr, meosType elemtype, int count,
  * @param[in] count Number of elements in the input array
  * @param[in] maxdd Maximum number of decimal digits to output
  * @param[in] extended True if the output is in EWKT
- * @csqlfn #Spatialarr_as_text(), #Spatialarr_as_ewkt()
  */
 char **
 tspatialarr_wkt_out(const Temporal **temparr, int count, int maxdd,
@@ -454,11 +449,49 @@ tspatialarr_as_ewkt(const Temporal **temparr, int count, int maxdd)
 }
 
 /*****************************************************************************
- * Conversion functions
+ * Box functions
  *****************************************************************************/
 
 /**
- * @ingroup meos_internal_temporal_spatial_transf
+ * @ingroup meos_internal_box_conversion
+ * @brief Return in the last argument the bounding box of a spatial set
+ * @param[in] s Set
+ * @param[out] box Spatiotemporal box
+ */
+void
+spatialset_set_stbox(const Set *s, STBox *box)
+{
+  assert(s); assert(box); assert(spatialset_type(s->settype));
+  memset(box, 0, sizeof(STBox));
+  memcpy(box, SET_BBOX_PTR(s), sizeof(STBox));
+  return;
+}
+
+/**
+ * @ingroup meos_geo_set_box
+ * @brief Return a temporal spatial set converted to a spatiotemporal box
+ * @param[in] s Set
+ * @csqlfn #Spatialset_to_stbox()
+ */
+STBox *
+spatialset_stbox(const Set *s)
+{
+  /* Ensure validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) s) || ! ensure_spatialset_type(s->settype))
+    return NULL;
+#else
+  assert(s); assert(spatialset_type(s->settype));
+#endif /* MEOS */
+  STBox *result = palloc(sizeof(STBox));
+  spatialset_set_stbox(s, result);
+  return result;
+}
+
+/*****************************************************************************/
+
+/**
+ * @ingroup meos_internal_geo_box
  * @brief Return in the last argument the spatiotemporal box of a temporal
  * spatial value
  * @param[in] temp Temporal spatial value
@@ -496,7 +529,7 @@ tspatial_set_stbox(const Temporal *temp, STBox *box)
 }
 
 /**
- * @ingroup meos_temporal_spatial_transf
+ * @ingroup meos_geo_box
  * @brief Return a temporal spatial value converted to a spatiotemporal box
  * @param[in] temp Temporal spatial value
  * @csqlfn #Tspatial_to_stbox()
@@ -523,7 +556,7 @@ tspatial_stbox(const Temporal *temp)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_spatial_transf
+ * @ingroup meos_geo_base_box
  * @brief Return the bounding box of a geometry/geography expanded on the
  * spatial dimension
  * @param[in] gs Geometry/geography
@@ -549,7 +582,7 @@ geo_expand_space(const GSERIALIZED *gs, double d)
 }
 
 /**
- * @ingroup meos_temporal_spatial_transf
+ * @ingroup meos_geo_box
  * @brief Return the bounding box of a temporal spatial value expanded on the
  * spatial dimension
  * @param[in] temp Temporal spatial value

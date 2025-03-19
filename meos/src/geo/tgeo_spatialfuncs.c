@@ -49,6 +49,7 @@
 #include <meos_internal.h>
 #include "general/pg_types.h"
 #include "general/lifting.h"
+#include "general/temporal.h"
 #include "general/temporal_compops.h"
 #include "general/tnumber_mathfuncs.h"
 #include "general/tsequence.h"
@@ -885,7 +886,7 @@ tgeom_tgeog(const Temporal *temp, bool oper)
 
 #if MEOS
 /**
- * @ingroup meos_temporal_conversion
+ * @ingroup meos_geo_conversion
  * @brief Return a temporal geography from a temporal geometry
  * @param[in] temp Temporal geo
  * @csqlfn #Tgeometry_to_tgeography()
@@ -900,7 +901,7 @@ tgeometry_tgeography(const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_conversion
+ * @ingroup meos_geo_conversion
  * @brief Return a temporal geometry from to a temporal geography
  * @param[in] temp Temporal point
  * @csqlfn #Tgeography_to_tgeometry()
@@ -1092,7 +1093,7 @@ tgeo_tpoint(const Temporal *temp, bool oper)
 
 #if MEOS
 /**
- * @ingroup meos_temporal_conversion
+ * @ingroup meos_geo_conversion
  * @brief Return a temporal geometry point from a temporal geometry
  * @param[in] temp Temporal geometry
  * @csqlfn #Tgeo_to_tpoint()
@@ -1107,7 +1108,7 @@ tgeometry_tgeompoint(const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_conversion
+ * @ingroup meos_geo_conversion
  * @brief Return a temporal geography point from a temporal geography
  * @param[in] temp Temporal geography
  * @csqlfn #Tgeo_to_tpoint()
@@ -1123,7 +1124,7 @@ tgeography_tgeogpoint(const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_conversion
+ * @ingroup meos_geo_conversion
  * @brief Return a temporal geometry from a temporal geometry point
  * @param[in] temp Temporal geometry point
  * @csqlfn #Tpoint_to_tgeo()
@@ -1138,7 +1139,7 @@ tgeompoint_tgeometry(const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_conversion
+ * @ingroup meos_geo_conversion
  * @brief Return a temporal geography from a temporal geography point
  * @param[in] temp Temporal geography point
  * @csqlfn #Tpoint_to_tgeo()
@@ -1179,7 +1180,7 @@ tgeoinst_affine_iter(const TInstant *inst, const AFFINE *a, TInstant **result)
 }
 
 /**
- * @ingroup meos_internal_temporal_spatial_transf
+ * @ingroup meos_internal_geo_transf
  * @brief Return the affine transformation of a temporal geo instant
  * @param[in] inst Temporal geo
  * @param[in] a Affine transformation
@@ -1194,7 +1195,7 @@ tgeoinst_affine(TInstant *inst, const AFFINE *a)
 }
 
 /**
- * @ingroup meos_internal_temporal_spatial_transf
+ * @ingroup meos_internal_geo_transf
  * @brief Return the affine transform a temporal geo sequence
  * @param[in] seq Temporal geo
  * @param[in] a Affine transformation
@@ -1212,7 +1213,7 @@ tgeoseq_affine(const TSequence *seq, const AFFINE *a)
 }
 
 /**
- * @ingroup meos_internal_temporal_spatial_transf
+ * @ingroup meos_internal_geo_transf
  * @brief Return the affine transformation of a temporal geo sequence set
  * @param[in] ss Temporal geo
  * @param[in] a Affine transformation
@@ -1228,7 +1229,7 @@ tgeoseqset_affine(const TSequenceSet *ss, const AFFINE *a)
 }
 
 /**
- * @ingroup meos_temporal_spatial_transf
+ * @ingroup meos_geo_transf
  * @brief Return the 3D affine transform of a temporal geo to do things like
  * translate, rotate, scale in one step
  * @param[in] temp Temporal geo
@@ -1278,7 +1279,7 @@ tgeoinst_scale_iter(const TInstant *inst, const POINT4D *factors,
 }
 
 /**
- * @ingroup meos_internal_temporal_spatial_transf
+ * @ingroup meos_internal_geo_transf
  * @brief Return a temporal geo instant scaled by given factors
  * @param[in] inst Temporal geo
  * @param[in] factors Scale factors
@@ -1292,7 +1293,7 @@ tgeoinst_scale(const TInstant *inst, const POINT4D *factors)
 }
 
 /**
- * @ingroup meos_internal_temporal_spatial_transf
+ * @ingroup meos_internal_geo_transf
  * @brief Return a temporal geo sequence scaled by given factors
  * @param[in] seq Temporal geo
  * @param[in] factors Scale factors
@@ -1309,7 +1310,7 @@ tgeoseq_scale(const TSequence *seq, const POINT4D *factors)
 }
 
 /**
- * @ingroup meos_internal_temporal_spatial_transf
+ * @ingroup meos_internal_geo_transf
  * @brief Return a temporal geo sequence scaled by given factors
  * @param[in] ss Temporal geo
  * @param[in] factors Scale factors
@@ -1324,7 +1325,7 @@ tgeoseqset_scale(const TSequenceSet *ss, const POINT4D *factors)
 }
 
 /**
- * @ingroup meos_temporal_spatial_transf
+ * @ingroup meos_geo_transf
  * @brief Scale a temporal geo by given factors
  * @param[in] temp Temporal geo
  * @param[in] scale Geometry for the scale factors
@@ -1419,7 +1420,7 @@ tgeo_scale(const Temporal *temp, const GSERIALIZED *scale,
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_spatial_accessor
+ * @ingroup meos_geo_accessor
  * @brief Return the convex hull of a temporal geo
  * @param[in] temp Temporal geo
  * @return On error return @p NULL
@@ -1444,7 +1445,7 @@ tgeo_convex_hull(const Temporal *temp)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_spatial_accessor
+ * @ingroup meos_geo_accessor
  * @brief Return the traversed area of a temporal geo or the trajectory for
  * a temporal point with discrete or step interpolation
  * @param[in] temp Temporal geo

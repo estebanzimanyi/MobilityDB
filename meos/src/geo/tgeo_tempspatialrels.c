@@ -489,7 +489,7 @@ tinterrel_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool tinter,
 
 #if MEOS
 /**
- * @ingroup meos_temporal_spatial_rel_temp
+ * @ingroup meos_geo_rel_temp
  * @brief Return a temporal Boolean that states whether a temporal geo and a
  * geometry are disjoint
  * @param[in] temp Temporal geo
@@ -506,7 +506,7 @@ tdisjoint_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs,
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_temp
+ * @ingroup meos_geo_rel_temp
  * @brief Return a temporal Boolean that states whether a temporal geo and a
  * geometry intersect
  * @param[in] temp Temporal geo
@@ -557,7 +557,7 @@ tinterrel_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
 
 #if MEOS
 /**
- * @ingroup meos_temporal_spatial_rel_temp
+ * @ingroup meos_geo_rel_temp
  * @brief Return a temporal Boolean that states whether two temporal geos are 
  * disjoint
  * @param[in] temp1,temp2 Temporal geos
@@ -573,7 +573,7 @@ tdisjoint_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_temp
+ * @ingroup meos_geo_rel_temp
  * @brief Return a temporal Boolean that states whether two temporal geos 
  * intersect
  * @param[in] temp1,temp2 Temporal geos
@@ -594,7 +594,7 @@ tintersects_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_spatial_rel_temp
+ * @ingroup meos_geo_rel_temp
  * @brief Return a temporal Boolean that states whether a geometry contains a 
  * temporal geometry
  * @param[in] gs Geometry
@@ -644,7 +644,7 @@ tcontains_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, bool restr,
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_spatial_rel_temp
+ * @ingroup meos_geo_rel_temp
  * @brief Return a temporal Boolean that states whether a temporal geo and a
  * geometry touch each other 
  * @param[in] temp Temporal geo
@@ -1247,7 +1247,7 @@ tdwithin_tpointseqset_point(const TSequenceSet *ss, Datum point, Datum dist,
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_spatial_rel_temp
+ * @ingroup meos_geo_rel_temp
  * @brief Return a temporal Boolean that states whether a temporal geo and
  * a geometry are within a distance
  * @param[in] temp Temporal geo
@@ -1400,7 +1400,7 @@ tdwithin_tgeo_tgeo_sync(const Temporal *sync1, const Temporal *sync2,
 }
 
 /**
- * @ingroup meos_temporal_spatial_rel_temp
+ * @ingroup meos_geo_rel_temp
  * @brief Return a temporal Boolean that states whether two temporal geos
  * are within a distance
  * @param[in] temp1,temp2 Temporal geos

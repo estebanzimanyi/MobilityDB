@@ -54,7 +54,7 @@
 PGDLLEXPORT Datum Tcbuffer_traversed_area(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tcbuffer_traversed_area);
 /**
- * @ingroup mobilitydb_temporal_spatial_accessor
+ * @ingroup mobilitydb_cbuffer_accessor
  * @brief Return the geometry covered by a temporal circular buffer
  * @sqlfn traversedArea()
  */

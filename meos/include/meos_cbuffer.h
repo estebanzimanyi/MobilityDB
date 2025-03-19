@@ -75,8 +75,9 @@ extern bool cbuffer_le(const Cbuffer *cbuf1, const Cbuffer *cbuf2);
 extern bool cbuffer_lt(const Cbuffer *cbuf1, const Cbuffer *cbuf2);
 extern Cbuffer *cbuffer_make(const GSERIALIZED *point, double radius);
 extern bool cbuffer_ne(const Cbuffer *cbuf1, const Cbuffer *cbuf2);
+extern bool cbuffer_nsame(const Cbuffer *cbuf1, const Cbuffer *cbuf2);
 extern char *cbuffer_out(const Cbuffer *cbuf, int maxdd);
-extern const GSERIALIZED *cbuffer_point(const Cbuffer *cbuf);
+extern GSERIALIZED *cbuffer_point(const Cbuffer *cbuf);
 extern double cbuffer_radius(const Cbuffer *cbuf);
 extern bool cbuffer_same(const Cbuffer *cbuf1, const Cbuffer *cbuf2);
 extern int32_t cbuffer_srid(const Cbuffer *cbuf);
@@ -88,6 +89,24 @@ extern Cbuffer *geom_cbuffer(const GSERIALIZED *gs);
 /******************************************************************************
  * Functions for circular buffer sets
  ******************************************************************************/
+
+extern Set *cbuffer_to_set(const Cbuffer *cbuf);
+extern Set *cbuffer_union_transfn(Set *state, const Cbuffer *cbuf);
+extern Cbuffer *cbufferset_end_value(const Set *s);
+extern Set *cbufferset_in(const char *str);
+extern Set *cbufferset_make(const Cbuffer **values, int count);
+extern char *cbufferset_out(const Set *s, int maxdd);
+extern Cbuffer *cbufferset_start_value(const Set *s);
+extern bool cbufferset_value_n(const Set *s, int n, Cbuffer **result);
+extern Cbuffer **cbufferset_values(const Set *s);
+extern bool contained_cbuffer_set(const Cbuffer *cbuf, const Set *s);
+extern bool contains_set_cbuffer(const Set *s, Cbuffer *cbuf);
+extern Set *minus_cbuffer_set(const Cbuffer *cbuf, const Set *s);
+extern Set *minus_set_cbuffer(const Set *s, const Cbuffer *cbuf);
+extern Set *intersection_cbuffer_set(const Cbuffer *cbuf, const Set *s);
+extern Set *intersection_set_cbuffer(const Set *s, const Cbuffer *cbuf);
+extern Set *union_cbuffer_set(const Cbuffer *cbuf, const Set *s);
+extern Set *union_set_cbuffer(const Set *s, const Cbuffer *cbuf);
 
 /*===========================================================================*
  * Functions for box types

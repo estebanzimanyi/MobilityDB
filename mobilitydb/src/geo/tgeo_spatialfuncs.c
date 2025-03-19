@@ -62,7 +62,7 @@
 PGDLLEXPORT Datum Tpoint_trajectory(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpoint_trajectory);
 /**
- * @ingroup mobilitydb_temporal_spatial_accessor
+ * @ingroup mobilitydb_geo_accessor
  * @brief Return the trajectory of a temporal point
  * @sqlfn trajectory()
  */
@@ -78,7 +78,7 @@ Tpoint_trajectory(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tgeo_traversed_area(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tgeo_traversed_area);
 /**
- * @ingroup mobilitydb_temporal_spatial_accessor
+ * @ingroup mobilitydb_geo_accessor
  * @brief Return the area traversed by a temporal geo
  * @sqlfn traversedArea()
  */
@@ -98,7 +98,7 @@ Tgeo_traversed_area(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tgeometry_to_tgeography(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tgeometry_to_tgeography);
 /**
- * @ingroup mobilitydb_temporal_conversion
+ * @ingroup mobilitydb_geo_conversion
  * @brief Return a temporal geometry converted to a temporal geography
  * @sqlfn tgeography()
  * @sqlop @p ::
@@ -115,7 +115,7 @@ Tgeometry_to_tgeography(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tgeography_to_tgeometry(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tgeography_to_tgeometry);
 /**
- * @ingroup mobilitydb_temporal_conversion
+ * @ingroup mobilitydb_geo_conversion
  * @brief Return a temporal geography converted to a temporal geometry
  * @sqlfn tgeometry()
  * @sqlop @p ::
@@ -134,7 +134,7 @@ Tgeography_to_tgeometry(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tgeo_to_tpoint(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tgeo_to_tpoint);
 /**
- * @ingroup mobilitydb_temporal_conversion
+ * @ingroup mobilitydb_geo_conversion
  * @brief Return a temporal geo converted to a temporal point
  * @sqlfn tgeompoint(), tgeogpoint()
  * @sqlop @p ::
@@ -151,7 +151,7 @@ Tgeo_to_tpoint(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tpoint_to_tgeo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpoint_to_tgeo);
 /**
- * @ingroup mobilitydb_temporal_conversion
+ * @ingroup mobilitydb_geo_conversion
  * @brief Return a temporal point converted to a temporal geo
  * @sqlfn tgeometry(), tgeography()
  * @sqlop @p ::
@@ -172,7 +172,7 @@ Tpoint_to_tgeo(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Geo_round(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Geo_round);
 /**
- * @ingroup mobilitydb_temporal_transf
+ * @ingroup mobilitydb_geo_transf
  * @brief Return a geometry/geography with the precision of the coordinates set
  * to a number of decimal places
  * @sqlfn round()
@@ -181,34 +181,16 @@ Datum
 Geo_round(PG_FUNCTION_ARGS)
 {
   GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
-  Datum size = PG_GETARG_DATUM(1);
-  Datum result = datum_geo_round(PointerGetDatum(gs), size);
+  int size = PG_GETARG_DATUM(1);
+  GSERIALIZED *result = geo_round(gs, size);
   PG_FREE_IF_COPY(gs, 0);
-  PG_RETURN_DATUM(result);
-}
-
-PGDLLEXPORT Datum Geoset_round(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Geoset_round);
-/**
- * @ingroup mobilitydb_setspan_transf
- * @brief Return a geo set with the precision of the coordinates set to a
- * number of decimals places
- * @sqlfn round()
- */
-Datum
-Geoset_round(PG_FUNCTION_ARGS)
-{
-  Set *s = PG_GETARG_SET_P(0);
-  int maxdd = PG_GETARG_INT32(1);
-  Set *result = set_round(s, maxdd, &datum_geo_round);
-  PG_FREE_IF_COPY(s, 0);
-  PG_RETURN_SET_P(result);
+  PG_RETURN_GSERIALIZED_P(result);
 }
 
 PGDLLEXPORT Datum Tgeo_round(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tgeo_round);
 /**
- * @ingroup mobilitydb_temporal_transf
+ * @ingroup mobilitydb_geo_transf
  * @brief Return a temporal geo with the precision of the coordinates set to a
  * number of decimal places
  * @sqlfn round()
@@ -226,7 +208,7 @@ Tgeo_round(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tgeoarr_round(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tgeoarr_round);
 /**
- * @ingroup mobilitydb_temporal_transf
+ * @ingroup mobilitydb_geo_transf
  * @brief Return an array of temporal geos with the precision of the
  * coordinates set to a number of decimal places
  * @sqlfn round()
@@ -258,7 +240,7 @@ Tgeoarr_round(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tpoint_to_geomeas(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpoint_to_geomeas);
 /**
- * @ingroup mobilitydb_temporal_conversion
+ * @ingroup mobilitydb_geo_conversion
  * @brief Return a temporal point converted to a geometry/geography with M
  * measure
  * @sqlfn geometry(), geography()
@@ -278,7 +260,7 @@ Tpoint_to_geomeas(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Geomeas_to_tpoint(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Geomeas_to_tpoint);
 /**
- * @ingroup mobilitydb_temporal_conversion
+ * @ingroup mobilitydb_geo_conversion
  * @brief Return a geometry/geography with M measure converted to a temporal
  * point
  * @sqlfn tgeompoint(), tgeogpoint()
@@ -296,7 +278,7 @@ Geomeas_to_tpoint(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tpoint_tfloat_to_geomeas(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpoint_tfloat_to_geomeas);
 /**
- * @ingroup mobilitydb_temporal_conversion
+ * @ingroup mobilitydb_geo_conversion
  * @brief Return a geometry/geography with M measure converted from a temporal
  * point and a temporal float
  * @sqlfn geoMeasure()
@@ -323,7 +305,7 @@ Tpoint_tfloat_to_geomeas(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tgeo_affine(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tgeo_affine);
 /**
- * @ingroup mobilitydb_temporal_spatial_transf
+ * @ingroup mobilitydb_geo_transf
  * @brief Return the 3D affine transform of a temporal point to do things like
  * translate, rotate, scale in one step
  * @sqlfn affine()
@@ -353,7 +335,7 @@ Tgeo_affine(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tgeo_scale(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tgeo_scale);
 /**
- * @ingroup mobilitydb_temporal_spatial_transf
+ * @ingroup mobilitydb_geo_transf
  * @brief Return the temporal geo rotated counter-clockwise around the origin
  * point
  * @sqlfn scale()
@@ -381,7 +363,7 @@ Tgeo_scale(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tpoint_AsMVTGeom(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpoint_AsMVTGeom);
 /**
- * @ingroup mobilitydb_temporal_spatial_transf
+ * @ingroup mobilitydb_geo_transf
  * @brief Return a temporal point transformed to the Mapbox Vector Tile
  * representation
  * @sqlfn asMVTGeom()
@@ -434,7 +416,7 @@ Tpoint_AsMVTGeom(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tpoint_get_x(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpoint_get_x);
 /**
- * @ingroup mobilitydb_temporal_spatial_accessor
+ * @ingroup mobilitydb_geo_accessor
  * @brief Return the X coordinates of a temporal point as a temporal float
  * @sqlfn getX()
  */
@@ -450,7 +432,7 @@ Tpoint_get_x(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tpoint_get_y(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpoint_get_y);
 /**
- * @ingroup mobilitydb_temporal_spatial_accessor
+ * @ingroup mobilitydb_geo_accessor
  * @brief Return the Y coordinates of a temporal point as a temporal float
  * @sqlfn getY()
  */
@@ -466,7 +448,7 @@ Tpoint_get_y(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tpoint_get_z(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpoint_get_z);
 /**
- * @ingroup mobilitydb_temporal_spatial_accessor
+ * @ingroup mobilitydb_geo_accessor
  * @brief Return the Z coordinates of a temporal point as a temporal float
  * @sqlfn getZ()
  */
@@ -486,7 +468,7 @@ Tpoint_get_z(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tpoint_length(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpoint_length);
 /**
- * @ingroup mobilitydb_temporal_spatial_accessor
+ * @ingroup mobilitydb_geo_accessor
  * @brief Return the length traversed by a temporal sequence (set) point
  * @sqlfn length()
  */
@@ -502,7 +484,7 @@ Tpoint_length(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tpoint_cumulative_length(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpoint_cumulative_length);
 /**
- * @ingroup mobilitydb_temporal_spatial_accessor
+ * @ingroup mobilitydb_geo_accessor
  * @brief Return the cumulative length traversed by a temporal sequence (set)
  * point
  * @sqlfn cumulativeLength()
@@ -519,7 +501,7 @@ Tpoint_cumulative_length(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tgeo_convex_hull(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tgeo_convex_hull);
 /**
- * @ingroup mobilitydb_temporal_spatial_accessor
+ * @ingroup mobilitydb_geo_accessor
  * @brief Return the convex hull of a temporal geo
  * @sqlfn convexHull()
  */
@@ -539,7 +521,7 @@ Tgeo_convex_hull(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tpoint_speed(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpoint_speed);
 /**
- * @ingroup mobilitydb_temporal_spatial_accessor
+ * @ingroup mobilitydb_geo_accessor
  * @brief Return the speed of a temporal point
  * @sqlfn speed()
  */
@@ -561,7 +543,7 @@ Tpoint_speed(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tpoint_direction(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpoint_direction);
 /**
- * @ingroup mobilitydb_temporal_spatial_accessor
+ * @ingroup mobilitydb_geo_accessor
  * @brief Return the azimuth between the first and the last points a temporal
  * point
  * @sqlfn direction()
@@ -585,7 +567,7 @@ Tpoint_direction(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tpoint_twcentroid(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpoint_twcentroid);
 /**
- * @ingroup mobilitydb_temporal_agg
+ * @ingroup mobilitydb_geo_agg
  * @brief Return the time-weighed centroid of a temporal geometry point
  * @sqlfn twCentroid()
  */
@@ -605,7 +587,7 @@ Tpoint_twcentroid(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tpoint_azimuth(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpoint_azimuth);
 /**
- * @ingroup mobilitydb_temporal_spatial_accessor
+ * @ingroup mobilitydb_geo_accessor
  * @brief Return the temporal azimuth of a temporal geometry point
  * @sqlfn azimuth()
  */
@@ -627,7 +609,7 @@ Tpoint_azimuth(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tpoint_angular_difference(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpoint_angular_difference);
 /**
- * @ingroup mobilitydb_temporal_spatial_accessor
+ * @ingroup mobilitydb_geo_accessor
  * @brief Return the temporal angular difference of a temporal geometry point
  * @sqlfn angularDifference()
  */
@@ -649,7 +631,7 @@ Tpoint_angular_difference(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Bearing_point_point(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Bearing_point_point);
 /**
- * @ingroup mobilitydb_temporal_spatial_accessor
+ * @ingroup mobilitydb_geo_accessor
  * @brief Return the temporal bearing between two geometry/geography points
  * @note The following function is meant to be included in PostGIS one day
  * @sqlfn bearing()
@@ -671,7 +653,7 @@ Bearing_point_point(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Bearing_point_tpoint(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Bearing_point_tpoint);
 /**
- * @ingroup mobilitydb_temporal_spatial_accessor
+ * @ingroup mobilitydb_geo_accessor
  * @brief Return the temporal bearing between a geometry/geography point
  * and a temporal point
  * @sqlfn bearing()
@@ -692,7 +674,7 @@ Bearing_point_tpoint(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Bearing_tpoint_point(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Bearing_tpoint_point);
 /**
- * @ingroup mobilitydb_temporal_spatial_accessor
+ * @ingroup mobilitydb_geo_accessor
  * @brief Return the temporal bearing between a temporal point and a
  * geometry/geography point
  * @sqlfn bearing()
@@ -713,7 +695,7 @@ Bearing_tpoint_point(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Bearing_tpoint_tpoint(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Bearing_tpoint_tpoint);
 /**
- * @ingroup mobilitydb_temporal_spatial_accessor
+ * @ingroup mobilitydb_geo_accessor
  * @brief Return the temporal bearing between two temporal points
  * @sqlfn bearing()
  */
@@ -737,7 +719,7 @@ Bearing_tpoint_tpoint(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tpoint_is_simple(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpoint_is_simple);
 /**
- * @ingroup mobilitydb_temporal_spatial_accessor
+ * @ingroup mobilitydb_geo_accessor
  * @brief Return true if a temporal point does not self-intersect
  * @sqlfn isSimple()
  */
@@ -753,7 +735,7 @@ Tpoint_is_simple(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tpoint_make_simple(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpoint_make_simple);
 /**
- * @ingroup mobilitydb_temporal_spatial_transf
+ * @ingroup mobilitydb_geo_transf
  * @brief Return the array of non self-intersecting fragments of a temporal point
  * @sqlfn makeSimple()
  */
@@ -800,7 +782,7 @@ Tgeo_restrict_geom(FunctionCallInfo fcinfo, bool atfunc)
 PGDLLEXPORT Datum Tgeo_at_geom(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tgeo_at_geom);
 /**
- * @ingroup mobilitydb_temporal_restrict
+ * @ingroup mobilitydb_geo_restrict
  * @brief Return a temporal geo restricted to a geometry
  * @sqlfn atGeometry()
  */
@@ -813,7 +795,7 @@ Tgeo_at_geom(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tgeo_minus_geom(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tgeo_minus_geom);
 /**
- * @ingroup mobilitydb_temporal_restrict
+ * @ingroup mobilitydb_geo_restrict
  * @brief Return a temporal geo restricted to the complement of a geometry
  * @sqlfn minusGeometry()
  */
@@ -828,7 +810,7 @@ Tgeo_minus_geom(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tgeo_at_stbox(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tgeo_at_stbox);
 /**
- * @ingroup mobilitydb_temporal_restrict
+ * @ingroup mobilitydb_geo_restrict
  * @brief Return a temporal geo restricted to a spatiotemporal box
  * @sqlfn atStbox()
  */
@@ -848,7 +830,7 @@ Tgeo_at_stbox(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tgeo_minus_stbox(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tgeo_minus_stbox);
 /**
- * @ingroup mobilitydb_temporal_restrict
+ * @ingroup mobilitydb_geo_restrict
  * @brief Return a temporal geo restricted to the complement of a
  * spatiotemporal box
  * @sqlfn minusStbox()

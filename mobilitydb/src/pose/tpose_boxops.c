@@ -60,8 +60,8 @@
 PGDLLEXPORT Datum Pose_to_stbox(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_to_stbox);
 /**
- * @ingroup mobilitydb_temporal_conversion
- * @brief Return the bounding box of the network point value
+ * @ingroup mobilitydb_pose_base_box
+ * @brief Return the bounding box of a pose
  * @sqlfn stbox()
  * @sqlop @p ::
  */
@@ -74,67 +74,12 @@ Pose_to_stbox(PG_FUNCTION_ARGS)
   PG_RETURN_POINTER(result);
 }
 
-PGDLLEXPORT Datum Pose_timestamp_to_stbox(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Pose_timestamp_to_stbox);
-/**
- * @ingroup mobilitydb_temporal_conversion
- * @brief Transform a network point and a timestamp to a spatiotemporal box
- * @sqlfn stbox()
- * @sqlop @p
- */
-Datum
-Pose_timestamp_to_stbox(PG_FUNCTION_ARGS)
-{
-  Pose *pose = PG_GETARG_POSE_P(0);
-  TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
-  STBox *result = palloc0(sizeof(STBox));
-  pose_timestamptz_set_stbox(pose, t, result);
-  PG_RETURN_POINTER(result);
-}
-
-PGDLLEXPORT Datum Pose_period_to_stbox(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Pose_period_to_stbox);
-/**
- * @ingroup mobilitydb_temporal_conversion
- * @brief Transform a network point and a period to a spatiotemporal box
- * @sqlfn stbox()
- * @sqlop @p
- */
-Datum
-Pose_period_to_stbox(PG_FUNCTION_ARGS)
-{
-  Pose *pose = PG_GETARG_POSE_P(0);
-  Span *p = PG_GETARG_SPAN_P(1);
-  STBox *result = palloc0(sizeof(STBox));
-  pose_tstzspan_set_stbox(pose, p, result);
-  PG_RETURN_POINTER(result);
-}
-
-/*****************************************************************************/
-
-PGDLLEXPORT Datum Poseset_to_stbox(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Poseset_to_stbox);
-/**
- * @ingroup mobilitydb_setspan_conversion
- * @brief Return a pose set converted to a spatiotemporal box
- * @sqlfn stbox()
- * @sqlop @p ::
- */
-Datum
-Poseset_to_stbox(PG_FUNCTION_ARGS)
-{
-  Set *set = PG_GETARG_SET_P(0);
-  STBox *result = spatialset_stbox(set);
-  PG_FREE_IF_COPY(set, 0);
-  PG_RETURN_STBOX_P(result);
-}
-
 /*****************************************************************************/
 
 PGDLLEXPORT Datum Pose_timestamptz_to_stbox(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_timestamptz_to_stbox);
 /**
- * @ingroup mobilitydb_temporal_constructor
+ * @ingroup mobilitydb_pose_base_box
  * @brief Return a pose and a timestamptz to a spatiotemporal box
  * @sqlfn stbox()
  * @sqlop @p
@@ -150,7 +95,7 @@ Pose_timestamptz_to_stbox(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pose_tstzspan_to_stbox(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pose_tstzspan_to_stbox);
 /**
- * @ingroup mobilitydb_temporal_constructor
+ * @ingroup mobilitydb_pose_base_box
  * @brief Return a pose and a timestamptz span to a spatiotemporal
  * box
  * @sqlfn stbox()

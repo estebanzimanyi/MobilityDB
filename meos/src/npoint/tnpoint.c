@@ -121,7 +121,7 @@ tnpointseqset_tgeompointseqset(const TSequenceSet *ss)
 }
 
 /**
- * @ingroup meos_temporal_conversion
+ * @ingroup meos_npoint_conversion
  * @brief Return a temporal network point transformed to a temporal geometry
  * point
  * @param[in] temp Temporal point
@@ -211,7 +211,7 @@ tgeompointseqset_tnpointseqset(const TSequenceSet *ss)
 }
 
 /**
- * @ingroup meos_temporal_conversion
+ * @ingroup meos_npoint_conversion
  * @brief Return a temporal geometry point transformed to a temporal network
  * point
  * @param[in] temp Temporal point
@@ -365,7 +365,7 @@ tnpointseqset_positions(const TSequenceSet *ss, int *count)
 }
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_npoint_accessor
  * @brief Return the network segments covered by the temporal network point
  * @csqlfn #Tnpoint_positions()
  */
@@ -398,7 +398,7 @@ tnpointinst_route(const TInstant *inst)
 }
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_npoint_accessor
  * @brief Return the single route of a temporal network point
  * @return On error return @p INT_MAX
  * @csqlfn #Tnpoint_route()
@@ -477,7 +477,7 @@ tnpointseqset_routes(const TSequenceSet *ss)
 }
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_npoint_accessor
  * @brief Return the array of routes of a temporal network point
  * @csqlfn #Tnpoint_routes()
  */

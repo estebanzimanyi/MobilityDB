@@ -1,7 +1,7 @@
 set(GEO_SRCS
   geo_round.c
   geoset.c
-  pgis_types.c
+  postgis_funcs.c
   stbox.c
   stbox_index.c
   tgeo.c

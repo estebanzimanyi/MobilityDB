@@ -267,7 +267,7 @@ tgeographyseqset_in(const char *str)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_constructor
+ * @ingroup meos_geo_constructor
  * @brief Return a temporal point instant from a point and a timestamptz
  * @param[in] gs Value
  * @param[in] t Timestamp
@@ -292,7 +292,7 @@ tpointinst_make(const GSERIALIZED *gs, TimestampTz t)
 }
 
 /**
- * @ingroup meos_temporal_constructor
+ * @ingroup meos_geo_constructor
  * @brief Return a temporal instant geo from a geometry and a timestamptz
  * @param[in] gs Value
  * @param[in] t Timestamp
@@ -318,7 +318,7 @@ tgeoinst_make(const GSERIALIZED *gs, TimestampTz t)
 /*****************************************************************************/
 
 /**
- * @ingroup meos_temporal_constructor
+ * @ingroup meos_geo_constructor
  * @brief Return a temporal geometry point discrete sequence from a point
  * and a timestamptz set
  * @param[in] gs Value
@@ -338,7 +338,7 @@ tpointseq_from_base_tstzset(const GSERIALIZED *gs, const Set *s)
 }
 
 /**
- * @ingroup meos_temporal_constructor
+ * @ingroup meos_geo_constructor
  * @brief Return a temporal geo discrete sequence from a geometry/geography
  * and a timestamptz set
  * @param[in] gs Value
@@ -359,7 +359,7 @@ tgeoseq_from_base_tstzset(const GSERIALIZED *gs, const Set *s)
 /*****************************************************************************/
 
 /**
- * @ingroup meos_temporal_constructor
+ * @ingroup meos_geo_constructor
  * @brief Return a temporal point sequence from a point and a timestamptz span
  * @param[in] gs Value
  * @param[in] s Span
@@ -380,7 +380,7 @@ tpointseq_from_base_tstzspan(const GSERIALIZED *gs, const Span *s,
 }
 
 /**
- * @ingroup meos_temporal_constructor
+ * @ingroup meos_geo_constructor
  * @brief Return a temporal geo sequence from a geometry/geography and a
  * timestamptz span
  * @param[in] gs Value
@@ -404,7 +404,7 @@ tgeoseq_from_base_tstzspan(const GSERIALIZED *gs, const Span *s,
 /*****************************************************************************/
 
 /**
- * @ingroup meos_temporal_constructor
+ * @ingroup meos_geo_constructor
  * @brief Return a temporal point sequence set from a point and a timestamptz
  * span set
  * @param[in] gs Value
@@ -427,7 +427,7 @@ tpointseqset_from_base_tstzspanset(const GSERIALIZED *gs, const SpanSet *ss,
 }
 
 /**
- * @ingroup meos_temporal_constructor
+ * @ingroup meos_geo_constructor
  * @brief Return a temporal geo sequence set from a point and a timestamptz
  * span set
  * @param[in] gs Value
@@ -483,7 +483,7 @@ tgeo_from_base_temp_int(const GSERIALIZED *gs, const Temporal *temp,
 }
 
 /**
- * @ingroup meos_temporal_constructor
+ * @ingroup meos_geo_constructor
  * @brief Return a temporal point from a point and the time frame of another
  * temporal value
  * @param[in] gs Value
@@ -496,7 +496,7 @@ tpoint_from_base_temp(const GSERIALIZED *gs, const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_constructor
+ * @ingroup meos_geo_constructor
  * @brief Return a temporal geo from a geometry/geography and the time frame of
  * another temporal value
  * @param[in] gs Value
@@ -513,7 +513,7 @@ tgeo_from_base_temp(const GSERIALIZED *gs, const Temporal *temp)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_geo_accessor
  * @brief Return a copy of the start value of a temporal geo
  * @param[in] temp Temporal value
  * @return On error return @p NULL
@@ -534,7 +534,7 @@ tgeo_start_value(const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_geo_accessor
  * @brief Return a copy of the end value of a temporal geo
  * @param[in] temp Temporal value
  * @return On error return @p NULL
@@ -555,7 +555,7 @@ tgeo_end_value(const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_geo_accessor
  * @brief Return a copy of the n-th value of a temporal geo
  * @param[in] temp Temporal value
  * @param[in] n Number
@@ -582,7 +582,7 @@ tgeo_value_n(const Temporal *temp, int n, GSERIALIZED **result)
 }
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_geo_accessor
  * @brief Return the array of copies of base values of a temporal geo
  * @param[in] temp Temporal value
  * @param[out] count Number of values in the output array
@@ -614,7 +614,7 @@ tgeo_values(const Temporal *temp, int *count)
 
 #if MEOS
 /**
- * @ingroup meos_temporal_transf
+ * @ingroup meos_geo_transf
  * @brief Return a temporal geo with the precision of the coordinates set to a
  * number of decimal places
  * @param[in] temp Temporal value
