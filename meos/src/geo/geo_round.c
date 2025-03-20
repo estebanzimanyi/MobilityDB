@@ -46,7 +46,7 @@
 #include "general/span.h"
 #include "general/spanset.h"
 #include "general/tbox.h"
-#include "geo/pgis_types.h"
+#include "geo/postgis_funcs.h"
 #include "geo/stbox.h"
 #include "geo/tgeo.h"
 #include "geo/tgeo_spatialfuncs.h"

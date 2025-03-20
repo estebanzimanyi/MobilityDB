@@ -47,6 +47,10 @@
  *   @ingroup mobilitydb_geo_set
  *   @brief Input/output functions for geometry sets
  *
+ *   @defgroup mobilitydb_geo_set_conversion Conversion functions
+ *   @ingroup mobilitydb_geo_set
+ *   @brief Conversion functions for geometry sets
+ *
  *   @defgroup mobilitydb_geo_set_transf Transformation functions
  *   @ingroup mobilitydb_geo_set
  *   @brief Transformation functions for geometry sets
@@ -135,25 +139,9 @@
  * @ingroup mobilitydb_geo
  * @brief Aggregate functions for temporal geometries
  *
- * @defgroup mobilitydb_geo_analytics Analytics functions
+ * @defgroup mobilitydb_geo_tile Tile functions
  * @ingroup mobilitydb_geo
- * @brief Analytics functions for temporal geometries
- *
- *   @defgroup mobilitydb_geo_analytics_simplify Simplification functions
- *   @ingroup mobilitydb_geo_analytics
- *   @brief Simplification functions for temporal geometries
- *
- *   @defgroup mobilitydb_geo_analytics_reduction Reduction functions
- *   @ingroup mobilitydb_geo_analytics
- *   @brief Reduction functions for temporal geometries
- *
- *   @defgroup mobilitydb_geo_analytics_similarity Similarity functions
- *   @ingroup mobilitydb_geo_analytics
- *   @brief Similarity functions for temporal geometries
- *
- *   @defgroup mobilitydb_geo_analytics_tile Tile functions
- *   @ingroup mobilitydb_geo_analytics
- *   @brief Tile functions for temporal geometries
+ * @brief Tile functions for temporal geometries
  */
 
 /*****************************************************************************/

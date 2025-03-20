@@ -62,6 +62,7 @@
   #include "npoint/tnpoint_boxops.h"
 #endif
 #if POSE
+  #include "pose/pose.h"
   #include "pose/tpose_boxops.h"
 #endif
 

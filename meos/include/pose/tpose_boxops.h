@@ -39,12 +39,6 @@
 
 /*****************************************************************************/
 
-extern bool pose_set_stbox(const Pose *pose, STBox *box);
-extern void posearr_set_stbox(const Datum *values, int count, STBox *box);
-extern bool pose_timestamptz_set_stbox(const Pose *pose, TimestampTz t,
-  STBox *box);
-extern bool pose_tstzspan_set_stbox(const Pose *pose, const Span *p,
-  STBox *box);
 /* Functions computing the bounding box at the creation of a temporal pose */
 
 extern void tposeinst_set_stbox(const TInstant *inst, STBox *box);

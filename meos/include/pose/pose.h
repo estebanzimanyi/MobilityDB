@@ -87,6 +87,15 @@ extern Datum pose_distance(Datum pose1, Datum pose2);
 extern Pose *pose_interpolate(const Pose *pose1, const Pose *pose2, double ratio);
 extern bool pose_collinear(const Pose *pose1, const Pose *pose2, const Pose *pose3, double ratio);
 
+/* Interpolation */
+
+extern bool pose_set_stbox(const Pose *pose, STBox *box);
+extern void posearr_set_stbox(const Datum *values, int count, STBox *box);
+extern bool pose_timestamptz_set_stbox(const Pose *pose, TimestampTz t,
+  STBox *box);
+extern bool pose_tstzspan_set_stbox(const Pose *pose, const Span *p,
+  STBox *box);
+
 /* Comparison functions */
 
 extern bool pose_eq(const Pose *pose1, const Pose *pose2);

@@ -119,7 +119,7 @@ PG_FUNCTION_INFO_V1(Ever_eq_cbuffer_tcbuffer);
  * @sqlfn ever_eq()
  * @sqlop @p ?=
  */
-Datum
+inline Datum
 Ever_eq_cbuffer_tcbuffer(PG_FUNCTION_ARGS)
 {
   return EAcomp_cbuffer_tcbuffer(fcinfo, &ever_eq_cbuffer_tcbuffer);
@@ -134,7 +134,7 @@ PG_FUNCTION_INFO_V1(Always_eq_cbuffer_tcbuffer);
  * @sqlfn always_eq()
  * @sqlop @p %=
  */
-Datum
+inline Datum
 Always_eq_cbuffer_tcbuffer(PG_FUNCTION_ARGS)
 {
   return EAcomp_cbuffer_tcbuffer(fcinfo, &always_eq_cbuffer_tcbuffer);
@@ -149,7 +149,7 @@ PG_FUNCTION_INFO_V1(Ever_ne_cbuffer_tcbuffer);
  * @sqlfn ever_ne()
  * @sqlop @p ?<>
  */
-Datum
+inline Datum
 Ever_ne_cbuffer_tcbuffer(PG_FUNCTION_ARGS)
 {
   return EAcomp_cbuffer_tcbuffer(fcinfo, &ever_ne_cbuffer_tcbuffer);
@@ -164,7 +164,7 @@ PG_FUNCTION_INFO_V1(Always_ne_cbuffer_tcbuffer);
  * @sqlfn always_ne()
  * @sqlop @p %<>
  */
-Datum
+inline Datum
 Always_ne_cbuffer_tcbuffer(PG_FUNCTION_ARGS)
 {
   return EAcomp_cbuffer_tcbuffer(fcinfo, &always_ne_cbuffer_tcbuffer);
@@ -181,7 +181,7 @@ PG_FUNCTION_INFO_V1(Ever_eq_tcbuffer_cbuffer);
  * @sqlfn ever_eq()
  * @sqlop @p ?=
  */
-Datum
+inline Datum
 Ever_eq_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
 {
   return EAcomp_tcbuffer_cbuffer(fcinfo, &ever_eq_tcbuffer_cbuffer);
@@ -196,7 +196,7 @@ PG_FUNCTION_INFO_V1(Always_eq_tcbuffer_cbuffer);
  * @sqlfn always_eq()
  * @sqlop @p %=
  */
-Datum
+inline Datum
 Always_eq_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
 {
   return EAcomp_tcbuffer_cbuffer(fcinfo, &always_eq_tcbuffer_cbuffer);
@@ -211,7 +211,7 @@ PG_FUNCTION_INFO_V1(Ever_ne_tcbuffer_cbuffer);
  * @sqlfn ever_ne()
  * @sqlop @p ?<>
  */
-Datum
+inline Datum
 Ever_ne_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
 {
   return EAcomp_tcbuffer_cbuffer(fcinfo, &ever_ne_tcbuffer_cbuffer);
@@ -226,7 +226,7 @@ PG_FUNCTION_INFO_V1(Always_ne_tcbuffer_cbuffer);
  * @sqlfn always_ne()
  * @sqlop @p %<>
  */
-Datum
+inline Datum
 Always_ne_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
 {
   return EAcomp_tcbuffer_cbuffer(fcinfo, &always_ne_tcbuffer_cbuffer);
@@ -242,7 +242,7 @@ PG_FUNCTION_INFO_V1(Ever_eq_tcbuffer_tcbuffer);
  * @sqlfn ever_eq()
  * @sqlop @p ?=
  */
-Datum
+inline Datum
 Ever_eq_tcbuffer_tcbuffer(PG_FUNCTION_ARGS)
 {
   return EAcomp_tcbuffer_tcbuffer(fcinfo, &ever_eq_tcbuffer_tcbuffer);
@@ -256,7 +256,7 @@ PG_FUNCTION_INFO_V1(Always_eq_tcbuffer_tcbuffer);
  * @sqlfn always_eq()
  * @sqlop @p %=
  */
-Datum
+inline Datum
 Always_eq_tcbuffer_tcbuffer(PG_FUNCTION_ARGS)
 {
   return EAcomp_tcbuffer_tcbuffer(fcinfo, &always_eq_tcbuffer_tcbuffer);
@@ -270,7 +270,7 @@ PG_FUNCTION_INFO_V1(Ever_ne_tcbuffer_tcbuffer);
  * @sqlfn ever_ne()
  * @sqlop @p ?<>
  */
-Datum
+inline Datum
 Ever_ne_tcbuffer_tcbuffer(PG_FUNCTION_ARGS)
 {
   return EAcomp_tcbuffer_tcbuffer(fcinfo, &ever_ne_tcbuffer_tcbuffer);
@@ -284,7 +284,7 @@ PG_FUNCTION_INFO_V1(Always_ne_tcbuffer_tcbuffer);
  * @sqlfn always_ne()
  * @sqlop @p %<>
  */
-Datum
+inline Datum
 Always_ne_tcbuffer_tcbuffer(PG_FUNCTION_ARGS)
 {
   return EAcomp_tcbuffer_tcbuffer(fcinfo, &always_ne_tcbuffer_tcbuffer);
@@ -362,7 +362,7 @@ PG_FUNCTION_INFO_V1(Teq_cbuffer_tcbuffer);
  * @sqlfn temporal_teq()
  * @sqlop @p #=
  */
-Datum
+inline Datum
 Teq_cbuffer_tcbuffer(PG_FUNCTION_ARGS)
 {
   return Tcomp_cbuffer_tcbuffer(fcinfo, &teq_cbuffer_tcbuffer);
@@ -377,7 +377,7 @@ PG_FUNCTION_INFO_V1(Tne_cbuffer_tcbuffer);
  * @sqlfn temporal_tne()
  * @sqlop @p #<>
  */
-Datum
+inline Datum
 Tne_cbuffer_tcbuffer(PG_FUNCTION_ARGS)
 {
   return Tcomp_cbuffer_tcbuffer(fcinfo, &tne_cbuffer_tcbuffer);
@@ -394,7 +394,7 @@ PG_FUNCTION_INFO_V1(Teq_tcbuffer_cbuffer);
  * @sqlfn temporal_teq()
  * @sqlop @p #=
  */
-Datum
+inline Datum
 Teq_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
 {
   return Tcomp_tcbuffer_cbuffer(fcinfo, &teq_tcbuffer_cbuffer);
@@ -409,7 +409,7 @@ PG_FUNCTION_INFO_V1(Tne_tcbuffer_cbuffer);
  * @sqlfn temporal_tne()
  * @sqlop @p #<>
  */
-Datum
+inline Datum
 Tne_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
 {
   return Tcomp_tcbuffer_cbuffer(fcinfo, &tne_tcbuffer_cbuffer);
@@ -425,7 +425,7 @@ PG_FUNCTION_INFO_V1(Teq_tcbuffer_tcbuffer);
  * @sqlfn temporal_teq()
  * @sqlop @p #=
  */
-Datum
+inline Datum
 Teq_tcbuffer_tcbuffer(PG_FUNCTION_ARGS)
 {
   return Tcomp_tcbuffer_tcbuffer(fcinfo, &teq_temporal_temporal);
@@ -439,7 +439,7 @@ PG_FUNCTION_INFO_V1(Tne_tcbuffer_tcbuffer);
  * @sqlfn temporal_tne()
  * @sqlop @p #<>
  */
-Datum
+inline Datum
 Tne_tcbuffer_tcbuffer(PG_FUNCTION_ARGS)
 {
   return Tcomp_tcbuffer_tcbuffer(fcinfo, &tne_temporal_temporal);

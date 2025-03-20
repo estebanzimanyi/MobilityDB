@@ -184,7 +184,7 @@ PG_FUNCTION_INFO_V1(Tdisjoint_geo_tgeo);
  * is disjoint from a geometry
  * @sqlfn tDisjoint()
  */
-Datum
+inline Datum
 Tdisjoint_geo_tgeo(PG_FUNCTION_ARGS)
 {
   return Tinterrel_geo_tgeo(fcinfo, TDISJOINT);
@@ -198,7 +198,7 @@ PG_FUNCTION_INFO_V1(Tdisjoint_tgeo_geo);
  * is disjoint from a geometry
  * @sqlfn tDisjoint()
  */
-Datum
+inline Datum
 Tdisjoint_tgeo_geo(PG_FUNCTION_ARGS)
 {
   return Tinterrel_tgeo_geo(fcinfo, TDISJOINT);
@@ -212,7 +212,7 @@ PG_FUNCTION_INFO_V1(Tdisjoint_tgeo_tgeo);
  * are disjoint
  * @sqlfn tDisjoint()
  */
-Datum
+inline Datum
 Tdisjoint_tgeo_tgeo(PG_FUNCTION_ARGS)
 {
   return Tinterrel_tgeo_tgeo(fcinfo, TDISJOINT);
@@ -231,7 +231,7 @@ PG_FUNCTION_INFO_V1(Tintersects_geo_tgeo);
  * intersects a geometry
  * @sqlfn tIntersects()
  */
-Datum
+inline Datum
 Tintersects_geo_tgeo(PG_FUNCTION_ARGS)
 {
   return Tinterrel_geo_tgeo(fcinfo, TINTERSECTS);
@@ -245,7 +245,7 @@ PG_FUNCTION_INFO_V1(Tintersects_tgeo_geo);
  * intersects a geometry
  * @sqlfn tIntersects()
  */
-Datum
+inline Datum
 Tintersects_tgeo_geo(PG_FUNCTION_ARGS)
 {
   return Tinterrel_tgeo_geo(fcinfo, TINTERSECTS);
@@ -259,7 +259,7 @@ PG_FUNCTION_INFO_V1(Tintersects_tgeo_tgeo);
  * are disjoint
  * @sqlfn tIntersects()
  */
-Datum
+inline Datum
 Tintersects_tgeo_tgeo(PG_FUNCTION_ARGS)
 {
   return Tinterrel_tgeo_tgeo(fcinfo, TINTERSECTS);

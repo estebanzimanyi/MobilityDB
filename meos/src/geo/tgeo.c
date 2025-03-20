@@ -489,7 +489,7 @@ tgeo_from_base_temp_int(const GSERIALIZED *gs, const Temporal *temp,
  * @param[in] gs Value
  * @param[in] temp Temporal value
  */
-Temporal *
+inline Temporal *
 tpoint_from_base_temp(const GSERIALIZED *gs, const Temporal *temp)
 {
   return tgeo_from_base_temp_int(gs, temp, true);
@@ -502,7 +502,7 @@ tpoint_from_base_temp(const GSERIALIZED *gs, const Temporal *temp)
  * @param[in] gs Value
  * @param[in] temp Temporal value
  */
-Temporal *
+inline Temporal *
 tgeo_from_base_temp(const GSERIALIZED *gs, const Temporal *temp)
 {
   return tgeo_from_base_temp_int(gs, temp, false);
@@ -607,28 +607,5 @@ tgeo_values(const Temporal *temp, int *count)
   pfree(datumarr);
   return result;
 }
-
-/*****************************************************************************
- * Transformation functions
- *****************************************************************************/
-
-#if MEOS
-/**
- * @ingroup meos_geo_transf
- * @brief Return a temporal geo with the precision of the coordinates set to a
- * number of decimal places
- * @param[in] temp Temporal value
- * @param[in] maxdd Maximum number of decimal digits to output
- */
-Temporal *
-tgeo_round(const Temporal *temp, int maxdd)
-{
-  /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_not_negative(maxdd) ||
-      ! ensure_tgeo_type_all(temp->temptype))
-    return NULL;
-  return temporal_round(temp, maxdd, datum_geo_round);
-}
-#endif /* MEOS */
 
 /*****************************************************************************/

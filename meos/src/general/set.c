@@ -57,15 +57,6 @@
 #include "geo/tgeo_out.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/tspatial_boxops.h"
-#if CBUFFER
-  #include "cbuffer/cbuffer.h"
-#endif
-#if NPOINT
-  #include "npoint/tnpoint.h"
-#endif
-#if POSE
-  #include "pose/pose.h"
-#endif
 
 /*****************************************************************************
  * Parameter tests
@@ -547,8 +538,8 @@ value_set(Datum value, meosType basetype)
 Set *
 intset_floatset(const Set *s)
 {
-#if MEOS
   /* Ensure validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) s) || ! ensure_set_isof_type(s, T_INTSET))
     return NULL;
 #else
@@ -763,38 +754,6 @@ set_values(const Set *s)
  * Generic functions
  *****************************************************************************/
 
-/**
- * @brief Return the SRID of a spatial value
- */
-datum_func2
-round_fn(meosType basetype)
-{
-  assert(meos_basetype(basetype));
-  switch (basetype)
-  {
-    case T_FLOAT8:
-      return &datum_float_round;
-    case T_GEOMETRY:
-    case T_GEOGRAPHY:
-      return &datum_geo_round;
-#if CBUFFER
-    case T_CBUFFER:
-      return &datum_cbuffer_round;
-#endif
-#if NPOINT
-    case T_NPOINT:
-      return &datum_npoint_round;
-#endif
-#if POSE
-    case T_POSE:
-      return &datum_pose_round;
-#endif
-    default: /* Error! */
-      meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
-        "Unknown round function for type: %s", meostype_name(basetype));
-    return NULL;
-  }
-}
 
 /**
  * @ingroup meos_setspan_transf
@@ -806,7 +765,15 @@ round_fn(meosType basetype)
 Set *
 set_round(const Set *s, int maxdd)
 {
-  assert(s); assert(maxdd >= 0);
+#if MEOS
+  if (! ensure_not_null((void *) s))
+    return NULL;
+#else
+  assert(s);
+#endif
+  if (! ensure_not_negative(maxdd))
+    return NULL;
+
   Datum *values = palloc(sizeof(Datum) * s->count);
   Datum size = Int32GetDatum(maxdd);
   datum_func2 func = round_fn(s->basetype);
@@ -1203,7 +1170,7 @@ set_eq(const Set *s1, const Set *s2)
  * @param[in] s1,s2 Sets
  * @csqlfn #Set_ne()
  */
-bool
+inline bool
 set_ne(const Set *s1, const Set *s2)
 {
   return ! set_eq(s1, s2);
@@ -1257,7 +1224,7 @@ set_cmp(const Set *s1, const Set *s2)
  * @param[in] s1,s2 Sets
  * @csqlfn #Set_lt()
  */
-bool
+inline bool
 set_lt(const Set *s1, const Set *s2)
 {
   return set_cmp(s1, s2) < 0;
@@ -1269,7 +1236,7 @@ set_lt(const Set *s1, const Set *s2)
  * @param[in] s1,s2 Sets
  * @csqlfn #Set_le()
  */
-bool
+inline bool
 set_le(const Set *s1, const Set *s2)
 {
   return set_cmp(s1, s2) <= 0;
@@ -1281,7 +1248,7 @@ set_le(const Set *s1, const Set *s2)
  * @param[in] s1,s2 Sets
  * @csqlfn #Set_gt()
  */
-bool
+inline bool
 set_gt(const Set *s1, const Set *s2)
 {
   return set_cmp(s1, s2) > 0;
@@ -1293,7 +1260,7 @@ set_gt(const Set *s1, const Set *s2)
  * @param[in] s1,s2 Sets
  * @csqlfn #Set_ge()
  */
-bool
+inline bool
 set_ge(const Set *s1, const Set *s2)
 {
   return set_cmp(s1, s2) >= 0;

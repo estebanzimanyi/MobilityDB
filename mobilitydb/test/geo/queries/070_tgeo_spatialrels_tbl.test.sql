@@ -61,20 +61,20 @@ SELECT COUNT(*) FROM tbl_tgeography3D t1, tbl_tgeography3D t2 WHERE eDisjoint(t1
 
 -------------------------------------------------------------------------------
 -- Modulo used to reduce time needed for the tests
-SELECT COUNT(*) FROM tbl_geometry t1, tbl_tgeometry t2 WHERE t1.k % 2 = 0 AND aDisjoint(g, temp);
-SELECT COUNT(*) FROM tbl_tgeometry t1, tbl_geometry t2 WHERE t1.k % 2 = 0 AND aDisjoint(temp, g);
+SELECT COUNT(*) FROM tbl_geometry t1, tbl_tgeometry t2 WHERE t1.k % 3 = 0 AND aDisjoint(g, temp);
+SELECT COUNT(*) FROM tbl_tgeometry t1, tbl_geometry t2 WHERE t1.k % 3 = 0 AND aDisjoint(temp, g);
 SELECT COUNT(*) FROM tbl_tgeometry t1, tbl_tgeometry t2 WHERE aDisjoint(t1.temp, t2.temp);
 -- 3D
-SELECT COUNT(*) FROM tbl_geometry3D t1, tbl_tgeometry3D t2 WHERE t1.k % 2 = 0 AND aDisjoint(g, temp);
-SELECT COUNT(*) FROM tbl_tgeometry3D t1, tbl_geometry3D t2 WHERE t1.k % 2 = 0 AND aDisjoint(temp, g);
+SELECT COUNT(*) FROM tbl_geometry3D t1, tbl_tgeometry3D t2 WHERE t1.k % 3 = 0 AND aDisjoint(g, temp);
+SELECT COUNT(*) FROM tbl_tgeometry3D t1, tbl_geometry3D t2 WHERE t1.k % 3 = 0 AND aDisjoint(temp, g);
 SELECT COUNT(*) FROM tbl_tgeometry3D t1, tbl_tgeometry3D t2 WHERE aDisjoint(t1.temp, t2.temp);
 -- Geography
-SELECT COUNT(*) FROM tbl_geography t1, tbl_tgeography t2 WHERE t1.k % 2 = 0 AND aDisjoint(g, temp);
-SELECT COUNT(*) FROM tbl_tgeography t1, tbl_geography t2 WHERE t1.k % 2 = 0 AND aDisjoint(temp, g);
+SELECT COUNT(*) FROM tbl_geography t1, tbl_tgeography t2 WHERE t1.k % 3 = 0 AND aDisjoint(g, temp);
+SELECT COUNT(*) FROM tbl_tgeography t1, tbl_geography t2 WHERE t1.k % 3 = 0 AND aDisjoint(temp, g);
 SELECT COUNT(*) FROM tbl_tgeography t1, tbl_tgeography t2 WHERE aDisjoint(t1.temp, t2.temp);
 -- 3D
-SELECT COUNT(*) FROM tbl_geography3D t1, tbl_tgeography3D t2 WHERE t1.k % 2 = 0 AND aDisjoint(g, temp);
-SELECT COUNT(*) FROM tbl_tgeography3D t1, tbl_geography3D t2 WHERE t1.k % 2 = 0 AND aDisjoint(temp, g);
+SELECT COUNT(*) FROM tbl_geography3D t1, tbl_tgeography3D t2 WHERE t1.k % 3 = 0 AND aDisjoint(g, temp);
+SELECT COUNT(*) FROM tbl_tgeography3D t1, tbl_geography3D t2 WHERE t1.k % 3 = 0 AND aDisjoint(temp, g);
 SELECT COUNT(*) FROM tbl_tgeography3D t1, tbl_tgeography3D t2 WHERE aDisjoint(t1.temp, t2.temp);
 
 -------------------------------------------------------------------------------
@@ -160,12 +160,12 @@ SELECT COUNT(*) FROM tbl_tgeography3D t1, tbl_tgeography3D t2 WHERE eDwithin(t1.
 -- NOTE: aDWithin for 3D or geograhies is not provided since it is based on the
 -- PostGIS ST_Buffer() function which is performed by GEOS
 
-SELECT COUNT(*) FROM tbl_geometry t1, tbl_tgeometry t2 WHERE t1.k % 2 = 0 AND t2.k % 2 = 0 AND aDwithin(g, temp, 10);
-SELECT COUNT(*) FROM tbl_tgeometry t1, tbl_geometry t2 WHERE t1.k % 2 = 0 AND t2.k % 2 = 0 AND aDwithin(temp, g, 10);
+SELECT COUNT(*) FROM tbl_geometry t1, tbl_tgeometry t2 WHERE t1.k % 3 = 0 AND t2.k % 3 = 0 AND aDwithin(g, temp, 10);
+SELECT COUNT(*) FROM tbl_tgeometry t1, tbl_geometry t2 WHERE t1.k % 3 = 0 AND t2.k % 3 = 0 AND aDwithin(temp, g, 10);
 SELECT COUNT(*) FROM tbl_tgeometry t1, tbl_tgeometry t2 WHERE aDwithin(t1.temp, t2.temp, 10);
 -- Step interpolation
-SELECT COUNT(*) FROM tbl_geometry t1, tbl_tgeometry_seq t2 WHERE t1.k % 2 = 0 AND t2.k % 2 = 0 AND aDwithin(g, seq, 10);
-SELECT COUNT(*) FROM tbl_geometry t1, tbl_tgeometry_seqset t2 WHERE t1.k % 2 = 0 AND t1.k % 2 = 0 AND aDwithin(g, ss, 10);
+SELECT COUNT(*) FROM tbl_geometry t1, tbl_tgeometry_seq t2 WHERE t1.k % 3 = 0 AND t2.k % 3 = 0 AND aDwithin(g, seq, 10);
+SELECT COUNT(*) FROM tbl_geometry t1, tbl_tgeometry_seqset t2 WHERE t1.k % 3 = 0 AND t1.k % 3 = 0 AND aDwithin(g, ss, 10);
 SELECT COUNT(*) FROM tbl_tgeometry_seq t1, tbl_tgeometry t2 WHERE aDwithin(t1.seq, t2.temp, 10);
 -- 3D
 SELECT COUNT(*) FROM tbl_tgeometry3D t1, tbl_tgeometry3D t2 WHERE aDwithin(t1.temp, t2.temp, 10);

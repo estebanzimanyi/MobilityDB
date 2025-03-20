@@ -1421,7 +1421,7 @@ span_eq(const Span *s1, const Span *s2)
  * @param[in] s1,s2 Sets
  * @csqlfn #Span_ne()
  */
-bool
+inline bool
 span_ne(const Span *s1, const Span *s2)
 {
   return (! span_eq(s1, s2));
@@ -1468,7 +1468,7 @@ span_cmp(const Span *s1, const Span *s2)
  * @param[in] s1,s2 Sets
  * @csqlfn #Span_lt()
  */
-bool
+inline bool
 span_lt(const Span *s1, const Span *s2)
 {
   return span_cmp(s1, s2) < 0;
@@ -1480,7 +1480,7 @@ span_lt(const Span *s1, const Span *s2)
  * @param[in] s1,s2 Sets
  * @csqlfn #Span_le()
  */
-bool
+inline bool
 span_le(const Span *s1, const Span *s2)
 {
   return span_cmp(s1, s2) <= 0;
@@ -1493,7 +1493,7 @@ span_le(const Span *s1, const Span *s2)
  * @param[in] s1,s2 Sets
  * @csqlfn #Span_gt()
  */
-bool
+inline bool
 span_ge(const Span *s1, const Span *s2)
 {
   return span_cmp(s1, s2) >= 0;
@@ -1505,7 +1505,7 @@ span_ge(const Span *s1, const Span *s2)
  * @param[in] s1,s2 Sets
  * @csqlfn #Span_ge()
  */
-bool
+inline bool
 span_gt(const Span *s1, const Span *s2)
 {
   return span_cmp(s1, s2) > 0;

@@ -229,7 +229,7 @@ SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE aDisjoint(t1.temp, t2.
 SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE aIntersects(t1.temp, t2.temp) AND t1.k%4 = 0 AND t2.k%4 = 0;
  count 
 -------
-    16
+    15
 (1 row)
 
 SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE aDwithin(t1.temp, t2.temp, 0.01) AND t1.k%4 = 0 AND t2.k%4 = 0 AND tempSubtype(t1.temp) != 'SequenceSet';

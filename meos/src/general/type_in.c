@@ -48,7 +48,7 @@
 #include "general/set.h"
 #include "general/span.h"
 #include "general/tbox.h"
-#include "geo/pgis_types.h"
+#include "geo/postgis_funcs.h"
 #include "geo/stbox.h"
 #include "geo/tgeo_spatialfuncs.h"
 #if CBUFFER
@@ -1277,16 +1277,15 @@ pose_from_wkb_state(meos_wkb_parse_state *s)
     double X = double_from_wkb_state(s);
     double Y = double_from_wkb_state(s);
     double Z = double_from_wkb_state(s);
-    result = pose_make_3d(x, y, z, W, X, Y, Z);
+    result = pose_make_3d(x, y, z, W, X, Y, Z, srid);
   }
   else
   {
     double x = double_from_wkb_state(s);
     double y = double_from_wkb_state(s);
     double theta = double_from_wkb_state(s);
-    result = pose_make_2d(x, y, theta);
+    result = pose_make_2d(x, y, theta, srid);
   }
-  pose_set_srid(result, srid);
   return result;
 }
 #endif /* POSE */

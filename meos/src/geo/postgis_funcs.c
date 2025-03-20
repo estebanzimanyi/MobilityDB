@@ -33,7 +33,7 @@
  * PostGIS functions in order to bypass the function manager in @p fmgr.c
  */
 
-#include "geo/pgis_types.h"
+#include "geo/postgis_funcs.h"
 
 /* C */
 #include <assert.h>
@@ -96,20 +96,36 @@ geo_copy(const GSERIALIZED *g)
 #if MEOS
 /**
  * @ingroup meos_geo_base_srid
- * @brief Get the SRID of a geometry/geography.
+ * @brief Get the SRID of a geometry/geography
  * @param[in] gs Geometry
  */
-int32_t geo_srid(const GSERIALIZED *gs)
+int32_t
+geo_srid(const GSERIALIZED *gs)
 {
   return gserialized_get_srid(gs);
 }
 
 /**
+ * @ingroup meos_geo_base_srid
+ * @brief Set the SRID of a geometry/geography
+ * @param[in] gs Geometry
+ * @param[in] srid SRID
+ */
+GSERIALIZED *
+geo_set_srid(const GSERIALIZED *gs, int32_t srid)
+{
+  GSERIALIZED *result = geo_copy(gs);
+  gserialized_set_srid(result, srid);
+  return result;
+}
+
+/**
  * @ingroup meos_geo_base_accessor
- * @brief Get the SRID of a geometry/geography.
+ * @brief Get the SRID of a geometry/geography
  * @param[in] gs Geometry
  */
-bool geo_is_empty(const GSERIALIZED *gs)
+bool
+geo_is_empty(const GSERIALIZED *gs)
 {
   return gserialized_is_empty(gs);
 }
@@ -383,7 +399,7 @@ geom_perimeter(const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_geo_base_accessor
+ * @ingroup meos_geo_base_spatial
  * @brief Return the boundary of a geometry
  * @param[in] gs Geometry
  * @note PostGIS function: @p boundary(PG_FUNCTION_ARGS)
@@ -406,7 +422,7 @@ geom_boundary(const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_geo_base_processing
+ * @ingroup meos_geo_base_spatial
  * @brief Return the shortest 2D line between two geometries
  * @param[in] gs1,gs2 Geometries
  * @note PostGIS function: @p LWGEOM_shortestline2d(PG_FUNCTION_ARGS)
@@ -427,7 +443,7 @@ geom_shortestline2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 }
 
 /**
- * @ingroup meos_geo_base_processing
+ * @ingroup meos_geo_base_spatial
  * @brief Return the shortest line between two 3D geometries
  * @param[in] gs1,gs2 Geometries
  * @note PostGIS function: @p LWGEOM_shortestline3d(PG_FUNCTION_ARGS)
@@ -495,7 +511,7 @@ geom_distance3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 }
 
 /**
- * @ingroup meos_geo_base_processing
+ * @ingroup meos_geo_base_spatial
  * @brief Return true if the 3D geometries intersect
  * @param[in] gs1,gs2 Geometries
  * @note PostGIS function: @p ST_3DIntersects(PG_FUNCTION_ARGS)
@@ -640,7 +656,7 @@ geom_azimuth(const GSERIALIZED *gs1, const GSERIALIZED *gs2, double *result)
 }
 
 /**
- * @ingroup meos_geo_base_processing
+ * @ingroup meos_geo_base_spatial
  * @brief Collect the array of geometries/geographies into a geo collection
  * @param[in] gsarr Array of geometries/geographies
  * @param[in] nelems Number of elements in the array
@@ -715,7 +731,7 @@ geo_collect_garray(GSERIALIZED **gsarr, int nelems)
 }
 
 /**
- * @ingroup meos_geo_base_processing
+ * @ingroup meos_geo_base_spatial
  * @brief Return a line from an array of geometries/geographies
  * @details Array elements that are not points are discarded.
  * @param[in] gsarr Array of geometries/geographies
@@ -1102,7 +1118,7 @@ geom_relate_pattern(const GSERIALIZED *gs1, const GSERIALIZED *gs2, char *patt)
 }
 
 /**
- * @ingroup meos_geo_base_processing
+ * @ingroup meos_geo_base_spatial
  * @brief Return the intersection of two geometries
  * @param[in] gs1,gs2 Geometries
  * @note PostGIS function: @p ST_Intersection(PG_FUNCTION_ARGS). With respect
@@ -1120,7 +1136,7 @@ geom_intersection2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 }
 
 /**
- * @ingroup meos_geo_base_processing
+ * @ingroup meos_geo_base_spatial
  * @brief Return the difference of two geometries
  * @param[in] gs1,gs2 Geometries
  * @note PostGIS function: @p ST_Difference(PG_FUNCTION_ARGS). With respect
@@ -1138,7 +1154,7 @@ geom_difference2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 }
 
 /**
- * @ingroup meos_geo_base_processing
+ * @ingroup meos_geo_base_spatial
  * @brief Return the union of an array of geometries
  * @details The function will iteratively call @p GEOSUnion on the
  * GEOS-converted versions of them and return PGIS-converted version back.
@@ -1254,7 +1270,7 @@ geom_array_union(GSERIALIZED **gsarr, int count)
 }
 
 /**
- * @ingroup meos_geo_base_processing
+ * @ingroup meos_geo_base_spatial
  * @brief Return the unary union of a geometry
  * @param[in] gs Geometry
  * @param[in] prec Precision
@@ -1271,7 +1287,7 @@ geom_unary_union(GSERIALIZED *gs, double prec)
 }
 
 /**
- * @ingroup meos_geo_base_accessor
+ * @ingroup meos_geo_base_spatial
  * @brief Return the convex hull of the geometry
  * @param[in] gs Geometry
  * @note PostGIS function: @p ST_ConvexHull(PG_FUNCTION_ARGS). With respect to
@@ -1339,7 +1355,7 @@ geom_convex_hull(const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_geo_base_accessor
+ * @ingroup meos_geo_base_spatial
  * @brief Return a @p POLYGON or a @p MULTIPOLYGON that represents all points
  * whose distance from a geometry/geography is less than or equal to a given
  * distance
@@ -2916,7 +2932,7 @@ lwgeom_line_interpolate_point(LWGEOM *lwgeom, double fraction, int32_t srid,
 }
 
 /**
- * @ingroup meos_geo_base_processing
+ * @ingroup meos_geo_base_spatial
  * @brief Interpolate one or several points from a line
  * @param[in] gs Geometry
  * @param[in] fraction Value in [0,1] representing the distance where the point
@@ -2958,7 +2974,7 @@ line_interpolate_point(GSERIALIZED *gs, double fraction, bool repeat)
 }
 
 /**
- * @ingroup meos_geo_base_processing
+ * @ingroup meos_geo_base_spatial
  * @param[in] gs Geometry
  * @param[in] from,to Values in [0,1] representing the fractional locations 
  * where the subline starts and ends
@@ -3099,7 +3115,7 @@ line_substring(const GSERIALIZED *gs, double from, double to)
  *****************************************************************************/
 
 /**
- * @ingroup meos_geo_base_processing
+ * @ingroup meos_geo_base_spatial
  * @brief Locate a point into a line
  * @param[in] gs1 Line
  * @param[in] gs2 Point

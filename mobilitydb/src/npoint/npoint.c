@@ -46,10 +46,12 @@
 #include <meos_internal.h>
 #include "general/pg_types.h"
 #include "general/set.h"
+#include "general/span.h"
 #include "general/temporal.h"
 #include "general/tnumber_mathfuncs.h"
 #include "general/type_inout.h"
 #include "general/type_util.h"
+#include "geo/stbox.h"
 #include "npoint/tnpoint.h"
 /* MobilityDB */
 #include "pg_general/temporal.h"
@@ -153,7 +155,7 @@ Npoint_out(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Npoint_recv(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Npoint_recv);
 /**
- * @ingroup mobilitydb_npoint_inout
+ * @ingroup mobilitydb_npoint_base_inout
  * @brief Return a network point from its Well-Known Binary (WKB)
  * representation
  * @sqlfn npoint_recv()
@@ -168,7 +170,7 @@ Npoint_recv(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Npoint_send(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Npoint_send);
 /**
- * @ingroup mobilitydb_npoint_inout
+ * @ingroup mobilitydb_npoint_base_inout
  * @brief Return the Well-Known Binary (WKB) representation of a a network
  * point
  * @sqlfn npoint_send()
@@ -206,7 +208,7 @@ Npoint_as_text_ext(FunctionCallInfo fcinfo, bool extended)
 PGDLLEXPORT Datum Npoint_as_text(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Npoint_as_text);
 /**
- * @ingroup mobilitydb_npoint_inout
+ * @ingroup mobilitydb_npoint_base_inout
  * @brief Return the Well-Known Text (WKT) representation of a network point
  * @sqlfn asText()
  */
@@ -219,7 +221,7 @@ Npoint_as_text(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Npoint_as_ewkt(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Npoint_as_ewkt);
 /**
- * @ingroup mobilitydb_npoint_inout
+ * @ingroup mobilitydb_npoint_base_inout
  * @brief Return the Extended Well-Known Text (EWKT) representation of a
  * network point
  * @note It is the WKT representation prefixed with the SRID
@@ -424,6 +426,74 @@ Npoint_to_nsegment(PG_FUNCTION_ARGS)
   PG_RETURN_NSEGMENT_P(npoint_nsegment(np));
 }
 
+/*****************************************************************************/
+
+PGDLLEXPORT Datum Npoint_to_geom(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Npoint_to_geom);
+/**
+ * @ingroup mobilitydb_npoint_base_conversion
+ * @brief Return a network point converted to a geometry
+ * @sqlfn geometry()
+ * @sqlop @p ::
+ */
+Datum
+Npoint_to_geom(PG_FUNCTION_ARGS)
+{
+  Npoint *np = PG_GETARG_NPOINT_P(0);
+  PG_RETURN_GSERIALIZED_P(npoint_geom(np));
+}
+
+PGDLLEXPORT Datum Geom_to_npoint(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Geom_to_npoint);
+/**
+ * @ingroup mobilitydb_npoint_base_conversion
+ * @brief Return a geometry converted to a network point
+ * @sqlfn npoint()
+ * @sqlop @p ::
+ */
+Datum
+Geom_to_npoint(PG_FUNCTION_ARGS)
+{
+  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
+  Npoint *result = geom_npoint(gs);
+  if (! result)
+    PG_RETURN_NULL();
+  PG_RETURN_NPOINT_P(result);
+}
+
+PGDLLEXPORT Datum Nsegment_to_geom(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Nsegment_to_geom);
+/**
+ * @ingroup mobilitydb_npoint_base_conversion
+ * @brief Return a network segment converted to a geometry
+ * @sqlfn geometry()
+ * @sqlop @p ::
+ */
+Datum
+Nsegment_to_geom(PG_FUNCTION_ARGS)
+{
+  Nsegment *ns = PG_GETARG_NSEGMENT_P(0);
+  PG_RETURN_GSERIALIZED_P(nsegment_geom(ns));
+}
+
+PGDLLEXPORT Datum Geom_to_nsegment(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Geom_to_nsegment);
+/**
+ * @ingroup mobilitydb_npoint_base_conversion
+ * @brief Return a geometry converted to a network segment
+ * @sqlfn nsegment()
+ * @sqlop @p ::
+ */
+Datum
+Geom_to_nsegment(PG_FUNCTION_ARGS)
+{
+  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
+  Nsegment *result = geom_nsegment(gs);
+  if (! result)
+    PG_RETURN_NULL();
+  PG_RETURN_NSEGMENT_P(result);
+}
+
 /*****************************************************************************
  * Accessor functions
  *****************************************************************************/
@@ -535,83 +605,13 @@ Nsegment_round(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************
- * Conversion functions between network and Euclidean space
- *****************************************************************************/
-
-PGDLLEXPORT Datum Npoint_to_geom(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Npoint_to_geom);
-/**
- * @ingroup mobilitydb_npoint_base_conversion
- * @brief Return a network point converted to a geometry
- * @sqlfn geometry()
- * @sqlop @p ::
- */
-Datum
-Npoint_to_geom(PG_FUNCTION_ARGS)
-{
-  Npoint *np = PG_GETARG_NPOINT_P(0);
-  PG_RETURN_GSERIALIZED_P(npoint_geom(np));
-}
-
-PGDLLEXPORT Datum Geom_to_npoint(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Geom_to_npoint);
-/**
- * @ingroup mobilitydb_npoint_base_conversion
- * @brief Return a geometry converted to a network point
- * @sqlfn npoint()
- * @sqlop @p ::
- */
-Datum
-Geom_to_npoint(PG_FUNCTION_ARGS)
-{
-  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
-  Npoint *result = geom_npoint(gs);
-  if (! result)
-    PG_RETURN_NULL();
-  PG_RETURN_NPOINT_P(result);
-}
-
-PGDLLEXPORT Datum Nsegment_to_geom(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Nsegment_to_geom);
-/**
- * @ingroup mobilitydb_npoint_base_conversion
- * @brief Return a network segment converted to a geometry
- * @sqlfn geometry()
- * @sqlop @p ::
- */
-Datum
-Nsegment_to_geom(PG_FUNCTION_ARGS)
-{
-  Nsegment *ns = PG_GETARG_NSEGMENT_P(0);
-  PG_RETURN_GSERIALIZED_P(nsegment_geom(ns));
-}
-
-PGDLLEXPORT Datum Geom_to_nsegment(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Geom_to_nsegment);
-/**
- * @ingroup mobilitydb_npoint_base_conversion
- * @brief Return a geometry converted to a network segment
- * @sqlfn nsegment()
- * @sqlop @p ::
- */
-Datum
-Geom_to_nsegment(PG_FUNCTION_ARGS)
-{
-  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
-  Nsegment *result = geom_nsegment(gs);
-  if (! result)
-    PG_RETURN_NULL();
-  PG_RETURN_NSEGMENT_P(result);
-}
-
-/*****************************************************************************
  * SRID functions
  *****************************************************************************/
 
 PGDLLEXPORT Datum Npoint_srid(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Npoint_srid);
 /**
- * @ingroup mobilitydb_npoint_base_spatial
+ * @ingroup mobilitydb_npoint_base_srid
  * @brief Return the SRID of a network point
  * @sqlfn SRID()
  */
@@ -626,7 +626,7 @@ Npoint_srid(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Nsegment_srid(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Nsegment_srid);
 /**
- * @ingroup mobilitydb_npoint_base_spatial
+ * @ingroup mobilitydb_npoint_base_srid
  * @brief Return the SRID of a network segment
  * @sqlfn SRID()
  */
@@ -636,6 +636,94 @@ Nsegment_srid(PG_FUNCTION_ARGS)
   Nsegment *ns = PG_GETARG_NSEGMENT_P(0);
   int result = nsegment_srid(ns);
   PG_RETURN_INT32(result);
+}
+
+/*****************************************************************************
+ * Bounding box functions
+ *****************************************************************************/
+
+PGDLLEXPORT Datum Npoint_to_stbox(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Npoint_to_stbox);
+/**
+ * @ingroup mobilitydb_npoint_base_conversion
+ * @brief Return a network point converted to a spatiotemporal box
+ * @sqlfn stbox()
+ * @sqlop @p ::
+ */
+Datum
+Npoint_to_stbox(PG_FUNCTION_ARGS)
+{
+  Npoint *np = PG_GETARG_NPOINT_P(0);
+  PG_RETURN_STBOX_P(npoint_stbox(np));
+}
+
+PGDLLEXPORT Datum Nsegment_to_stbox(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Nsegment_to_stbox);
+/**
+ * @ingroup mobilitydb_npoint_base_conversion
+ * @brief Return a network segment converted to a spatiotemporal box
+ * @sqlfn stbox()
+ * @sqlop @p ::
+ */
+Datum
+Nsegment_to_stbox(PG_FUNCTION_ARGS)
+{
+  Nsegment *ns = PG_GETARG_NSEGMENT_P(0);
+  PG_RETURN_STBOX_P(nsegment_stbox(ns));
+}
+
+/*****************************************************************************/
+
+PGDLLEXPORT Datum Npoint_timestamptz_to_stbox(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Npoint_timestamptz_to_stbox);
+/**
+ * @ingroup mobilitydb_npoint_base_conversion
+ * @brief Return a network point and a timestamptz to a spatiotemporal box
+ * @sqlfn stbox()
+ * @sqlop @p
+ */
+Datum
+Npoint_timestamptz_to_stbox(PG_FUNCTION_ARGS)
+{
+  Npoint *np = PG_GETARG_NPOINT_P(0);
+  TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
+  PG_RETURN_STBOX_P(npoint_timestamptz_to_stbox(np, t));
+}
+
+PGDLLEXPORT Datum Npoint_tstzspan_to_stbox(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Npoint_tstzspan_to_stbox);
+/**
+ * @ingroup mobilitydb_npoint_base_conversion
+ * @brief Return a network point and a timestamptz span to a spatiotemporal
+ * box
+ * @sqlfn stbox()
+ * @sqlop @p
+ */
+Datum
+Npoint_tstzspan_to_stbox(PG_FUNCTION_ARGS)
+{
+  Npoint *np = PG_GETARG_NPOINT_P(0);
+  Span *s = PG_GETARG_SPAN_P(1);
+  PG_RETURN_STBOX_P(npoint_tstzspan_to_stbox(np, s));
+}
+
+/*****************************************************************************
+ * Approximate equality for network points
+ *****************************************************************************/
+
+PGDLLEXPORT Datum Npoint_same(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Npoint_same);
+/**
+ * @ingroup mobilitydb_npoint_comp
+ * @brief Return true if two network points are spatially equal
+ * @sqlfn same()
+ */
+Datum
+Npoint_same(PG_FUNCTION_ARGS)
+{
+  Npoint *np1 = PG_GETARG_NPOINT_P(0);
+  Npoint *np2 = PG_GETARG_NPOINT_P(1);
+  PG_RETURN_BOOL(npoint_same(np1, np2));
 }
 
 /*****************************************************************************

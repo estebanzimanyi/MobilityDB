@@ -1892,7 +1892,7 @@ tbox_eq(const TBox *box1, const TBox *box2)
  * @param[in] box1,box2 Temporal boxes
  * @csqlfn #Tbox_ne()
  */
-bool
+inline bool
 tbox_ne(const TBox *box1, const TBox *box2)
 {
   return ! tbox_eq(box1, box2);
@@ -1949,11 +1949,10 @@ tbox_cmp(const TBox *box1, const TBox *box2)
  * @param[in] box1,box2 Temporal boxes
  * @csqlfn #Tbox_lt()
  */
-bool
+inline bool
 tbox_lt(const TBox *box1, const TBox *box2)
 {
-  int cmp = tbox_cmp(box1, box2);
-  return cmp < 0;
+  return tbox_cmp(box1, box2) < 0;
 }
 
 /**
@@ -1963,11 +1962,10 @@ tbox_lt(const TBox *box1, const TBox *box2)
  * @param[in] box1,box2 Temporal boxes
  * @csqlfn #Tbox_le()
  */
-bool
+inline bool
 tbox_le(const TBox *box1, const TBox *box2)
 {
-  int cmp = tbox_cmp(box1, box2);
-  return cmp <= 0;
+  return tbox_cmp(box1, box2) <= 0;
 }
 
 /**
@@ -1977,7 +1975,7 @@ tbox_le(const TBox *box1, const TBox *box2)
  * @param[in] box1,box2 Temporal boxes
  * @csqlfn #Tbox_ge()
  */
-bool
+inline bool
 tbox_ge(const TBox *box1, const TBox *box2)
 {
   int cmp = tbox_cmp(box1, box2);
@@ -1990,11 +1988,10 @@ tbox_ge(const TBox *box1, const TBox *box2)
  * @param[in] box1,box2 Temporal boxes
  * @csqlfn #Tbox_gt()
  */
-bool
+inline bool
 tbox_gt(const TBox *box1, const TBox *box2)
 {
-  int cmp = tbox_cmp(box1, box2);
-  return cmp > 0;
+  return tbox_cmp(box1, box2) > 0;
 }
 
 /*****************************************************************************/

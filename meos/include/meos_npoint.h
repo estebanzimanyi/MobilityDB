@@ -89,6 +89,7 @@ extern bool npoint_ne(const Npoint *np1, const Npoint *np2);
 extern char *npoint_out(const Npoint *np, int maxdd);
 extern double npoint_position(const Npoint *np);
 extern int64 npoint_route(const Npoint *np);
+extern bool npoint_same(const Npoint *np1, const Npoint *np2);
 extern int32_t npoint_srid(const Npoint *np);
 extern Nsegment *npoint_nsegment(const Npoint *np);
 extern int nsegment_cmp(const Nsegment *ns1, const Nsegment *ns2);

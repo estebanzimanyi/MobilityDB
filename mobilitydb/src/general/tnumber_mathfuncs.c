@@ -120,7 +120,7 @@ PG_FUNCTION_INFO_V1(Add_number_tnumber);
  * @sqlfn tnumber_add()
  * @sqlop @p +
  */
-Datum
+inline Datum
 Add_number_tnumber(PG_FUNCTION_ARGS)
 {
   return Arithop_number_tnumber(fcinfo, ADD, &datum_add);
@@ -134,7 +134,7 @@ PG_FUNCTION_INFO_V1(Add_tnumber_number);
  * @sqlfn tnumber_add()
  * @sqlop @p +
  */
-Datum
+inline Datum
 Add_tnumber_number(PG_FUNCTION_ARGS)
 {
   return Arithop_tnumber_number(fcinfo, ADD, &datum_add);
@@ -148,7 +148,7 @@ PG_FUNCTION_INFO_V1(Add_tnumber_tnumber);
  * @sqlfn tnumber_add()
  * @sqlop @p +
  */
-Datum
+inline Datum
 Add_tnumber_tnumber(PG_FUNCTION_ARGS)
 {
   return Arithop_tnumber_tnumber(fcinfo, ADD, &datum_add, NULL);
@@ -166,7 +166,7 @@ PG_FUNCTION_INFO_V1(Sub_number_tnumber);
  * @sqlfn tnumber_sub()
  * @sqlop @p -
  */
-Datum
+inline Datum
 Sub_number_tnumber(PG_FUNCTION_ARGS)
 {
   return Arithop_number_tnumber(fcinfo, SUB, &datum_sub);
@@ -180,7 +180,7 @@ PG_FUNCTION_INFO_V1(Sub_tnumber_number);
  * @sqlfn tnumber_sub()
  * @sqlop @p -
  */
-Datum
+inline Datum
 Sub_tnumber_number(PG_FUNCTION_ARGS)
 {
   return Arithop_tnumber_number(fcinfo, SUB, &datum_sub);
@@ -194,7 +194,7 @@ PG_FUNCTION_INFO_V1(Sub_tnumber_tnumber);
  * @sqlfn tnumber_sub()
  * @sqlop @p -
  */
-Datum
+inline Datum
 Sub_tnumber_tnumber(PG_FUNCTION_ARGS)
 {
   return Arithop_tnumber_tnumber(fcinfo, SUB, &datum_sub, NULL);
@@ -212,7 +212,7 @@ PG_FUNCTION_INFO_V1(Mult_number_tnumber);
  * @sqlfn tnumber_mult()
  * @sqlop @p *
  */
-Datum
+inline Datum
 Mult_number_tnumber(PG_FUNCTION_ARGS)
 {
   return Arithop_number_tnumber(fcinfo, MULT, &datum_mult);
@@ -226,7 +226,7 @@ PG_FUNCTION_INFO_V1(Mult_tnumber_number);
  * @sqlfn tnumber_mult()
  * @sqlop @p *
  */
-Datum
+inline Datum
 Mult_tnumber_number(PG_FUNCTION_ARGS)
 {
   return Arithop_tnumber_number(fcinfo, MULT, &datum_mult);
@@ -240,7 +240,7 @@ PG_FUNCTION_INFO_V1(Mult_tnumber_tnumber);
  * @sqlfn tnumber_mult()
  * @sqlop @p *
  */
-Datum
+inline Datum
 Mult_tnumber_tnumber(PG_FUNCTION_ARGS)
 {
   return Arithop_tnumber_tnumber(fcinfo, MULT, &datum_mult,
@@ -259,7 +259,7 @@ PG_FUNCTION_INFO_V1(Div_number_tnumber);
  * @sqlfn tnumber_div()
  * @sqlop @p /
  */
-Datum
+inline Datum
 Div_number_tnumber(PG_FUNCTION_ARGS)
 {
   return Arithop_number_tnumber(fcinfo, DIV, &datum_div);
@@ -273,7 +273,7 @@ PG_FUNCTION_INFO_V1(Div_tnumber_number);
  * @sqlfn tnumber_div()
  * @sqlop @p /
  */
-Datum
+inline Datum
 Div_tnumber_number(PG_FUNCTION_ARGS)
 {
   return Arithop_tnumber_number(fcinfo, DIV, &datum_div);
@@ -287,7 +287,7 @@ PG_FUNCTION_INFO_V1(Div_tnumber_tnumber);
  * @sqlfn tnumber_div()
  * @sqlop @p /
  */
-Datum
+inline Datum
 Div_tnumber_tnumber(PG_FUNCTION_ARGS)
 {
   return Arithop_tnumber_tnumber(fcinfo, DIV, &datum_div,

@@ -36,6 +36,10 @@
  * @ingroup meos_geo
  * @brief Functions for geometry sets
  *
+ * @defgroup meos_geo_box Functions for spatiotemporal boxes
+ * @ingroup meos_geo
+ * @brief Functions for spatiotemporal boxes
+ *
  * @defgroup meos_geo_inout Input and output functions
  * @ingroup meos_geo
  * @brief Input and output functions for temporal geometries
@@ -64,25 +68,25 @@
  * @ingroup meos_geo
  * @brief Comparison functions for temporal geometries
  *
- * @defgroup meos_geo_comp_ever Ever and always comparison functions
- * @ingroup meos_geo_comp
- * @brief Ever and always comparison functions for temporal geometries
+ *   @defgroup meos_geo_comp_ever Ever and always comparison functions
+ *   @ingroup meos_geo_comp
+ *   @brief Ever and always comparison functions for temporal geometries
  *
- * @defgroup meos_geo_comp_temp Temporal comparison functions
- * @ingroup meos_geo_comp
- * @brief Temporal comparison functions for temporal geometries
+ *   @defgroup meos_geo_comp_temp Temporal comparison functions
+ *   @ingroup meos_geo_comp
+ *   @brief Temporal comparison functions for temporal geometries
  *
  * @defgroup meos_geo_bbox Bounding box functions
  * @ingroup meos_geo
  * @brief Bounding box functions for temporal geometries
  *
- * @defgroup meos_geo_bbox_topo Topological functions
- * @ingroup meos_geo_bbox
- * @brief Topological functions for temporal geometries
+ *   @defgroup meos_geo_bbox_topo Topological functions
+ *   @ingroup meos_geo_bbox
+ *   @brief Topological functions for temporal geometries
  *
- * @defgroup meos_geo_bbox_pos Position functions
- * @ingroup meos_geo_bbox
- * @brief Position functions for temporal geometries
+ *   @defgroup meos_geo_bbox_pos Position functions
+ *   @ingroup meos_geo_bbox
+ *   @brief Position functions for temporal geometries
  *
  * @defgroup meos_geo_dist Distance functions
  * @ingroup meos_geo
@@ -100,24 +104,8 @@
  * @ingroup meos_geo
  * @brief Aggregate functions for temporal geometries
  *
- * @defgroup meos_geo_analytics Analytics functions
+ * @defgroup meos_geo_tile Tile functions
  * @ingroup meos_geo
- * @brief Analytics functions for temporal geometries
- *
- * @defgroup meos_geo_analytics_simplify Simplification functions
- * @ingroup meos_geo_analytics
- * @brief Simplification functions for temporal geometries
- *
- * @defgroup meos_geo_analytics_reduction Reduction functions
- * @ingroup meos_geo_analytics
- * @brief Reduction functions for temporal geometries
- *
- * @defgroup meos_geo_analytics_similarity Similarity functions
- * @ingroup meos_geo_analytics
- * @brief Similarity functions for temporal geometries
- *
- * @defgroup meos_geo_analytics_tile Tile functions
- * @ingroup meos_geo_analytics
  * @brief Tile functions for temporal geometries
  */
 
@@ -148,9 +136,9 @@
  * @ingroup meos_geo_base
  * @brief Spatial reference system functions for temporal geos
  *
- * @defgroup meos_geo_base_processing Processing functions
+ * @defgroup meos_geo_base_spatial Spatial processing functions
  * @ingroup meos_geo_base
- * @brief Processing functions for static geometries
+ * @brief Spatial processing functions for static geometries
  *
  * @defgroup meos_geo_base_rel Spatial relationship functions
  * @ingroup meos_geo_base
@@ -184,13 +172,57 @@
  * @ingroup meos_geo_set
  * @brief Accessor functions for geometry sets
  *
- * @defgroup meos_geo_set_transf Transformation functions
- * @ingroup meos_geo_set
- * @brief Transformation functions for geometry sets
- *
  * @defgroup meos_geo_set_setops Set operations
  * @ingroup meos_geo_set
  * @brief Set operations for geometry sets
+ */
+
+/*****************************************************************************/
+
+/**
+ * @defgroup meos_geo_box_inout Input and output functions
+ * @ingroup meos_geo_box
+ * @brief Input and output functions for spatiotemporal boxes
+ *
+ * @defgroup meos_geo_box_constructor Constructor functions
+ * @ingroup meos_geo_box
+ * @brief Constructor functions for spatiotemporal boxes
+ *
+ * @defgroup meos_geo_box_conversion Conversion functions
+ * @ingroup meos_geo_box
+ * @brief Conversion functions for spatiotemporal boxes
+ *
+ * @defgroup meos_geo_box_accessor Accessor functions
+ * @ingroup meos_geo_box
+ * @brief Accessor functions for spatiotemporal boxes
+ *
+ * @defgroup meos_geo_box_transf Transformation functions
+ * @ingroup meos_geo_box
+ * @brief Transformation functions for spatiotemporal boxes
+ *
+ * @defgroup meos_geo_box_srid Spatial reference system functions
+ * @ingroup meos_geo_box
+ * @brief Spatial reference system functions for spatiotemporal boxes
+ *
+ * @defgroup meos_geo_box_bbox Bounding box functions
+ * @ingroup meos_geo_box
+ * @brief Bounding box functions for spatiotemporal boxes
+ *
+ * @defgroup meos_geo_box_topo Topological functions
+ * @ingroup meos_geo_box_bbox
+ * @brief Topological functions for spatiotemporal boxes
+ *
+ * @defgroup meos_geo_box_pos Position functions
+ * @ingroup meos_geo_box_bbox
+ * @brief Position functions for spatiotemporal boxes
+ *
+ * @defgroup meos_geo_box_set Set functions
+ * @ingroup meos_geo_box
+ * @brief Set functions for spatiotemporal boxes
+ *
+ * @defgroup meos_geo_box_comp Comparison functions
+ * @ingroup meos_geo_box
+ * @brief Comparison functions for spatiotemporal boxes
  */
 
 /*****************************************************************************/

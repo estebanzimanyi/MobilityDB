@@ -367,3 +367,83 @@ Temporal_dyntimewarp_path(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************/
+
+PGDLLEXPORT Datum Temporal_simplify_min_dist(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Temporal_simplify_min_dist);
+/**
+ * @ingroup mobilitydb_temporal_analytics_simplify
+ * @brief Return a temporal sequence (set) float or point simplified ensuring
+ * that consecutive values are at least a given distance apart
+ * @sqlfn minDistSimplify()
+ */
+Datum
+Temporal_simplify_min_dist(PG_FUNCTION_ARGS)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  double dist = PG_GETARG_FLOAT8(1);
+  Temporal *result = temporal_simplify_min_dist(temp, dist);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_TEMPORAL_P(result);
+}
+
+PGDLLEXPORT Datum Temporal_simplify_min_tdelta(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Temporal_simplify_min_tdelta);
+/**
+ * @ingroup mobilitydb_temporal_analytics_simplify
+ * @brief Return a temporal sequence (set) float or point simplified ensuring
+ * that consecutive values are at least a given distance apart
+ * @sqlfn minTimeDeltaSimplify()
+ */
+Datum
+Temporal_simplify_min_tdelta(PG_FUNCTION_ARGS)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  Interval *mint = PG_GETARG_INTERVAL_P(1);
+  Temporal *result = temporal_simplify_min_tdelta(temp, mint);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_TEMPORAL_P(result);
+}
+
+PGDLLEXPORT Datum Temporal_simplify_max_dist(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Temporal_simplify_max_dist);
+/**
+ * @ingroup mobilitydb_temporal_analytics_simplify
+ * @brief Return a temporal sequence (set) float or point simplified using a
+ * single-pass Douglas-Peucker line simplification algorithm
+ * @sqlfn maxDistSimplify
+ */
+Datum
+Temporal_simplify_max_dist(PG_FUNCTION_ARGS)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  double dist = PG_GETARG_FLOAT8(1);
+  bool syncdist = true;
+  if (PG_NARGS() > 2 && ! PG_ARGISNULL(2))
+    syncdist = PG_GETARG_BOOL(2);
+  Temporal *result = temporal_simplify_max_dist(temp, dist, syncdist);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_TEMPORAL_P(result);
+}
+
+PGDLLEXPORT Datum Temporal_simplify_dp(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Temporal_simplify_dp);
+/**
+ * @ingroup mobilitydb_temporal_analytics_simplify
+ * @brief Return a temporal sequence (set) float or point simplified using a
+ * Douglas-Peucker line simplification algorithm
+ * @sqlfn douglasPeuckerSimplify()
+ */
+Datum
+Temporal_simplify_dp(PG_FUNCTION_ARGS)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  double dist = PG_GETARG_FLOAT8(1);
+  bool syncdist = true;
+  if (PG_NARGS() > 2 && ! PG_ARGISNULL(2))
+    syncdist = PG_GETARG_BOOL(2);
+  Temporal *result = temporal_simplify_dp(temp, dist, syncdist);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_TEMPORAL_P(result);
+}
+
+/*****************************************************************************/

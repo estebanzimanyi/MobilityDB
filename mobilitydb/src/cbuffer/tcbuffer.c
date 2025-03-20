@@ -125,7 +125,7 @@ Tcbuffer_enforce_typmod(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tcbuffer_constructor(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tcbuffer_constructor);
 /**
- * @ingroup mobilitydb_cbuffer_inout
+ * @ingroup mobilitydb_cbuffer_constructor
  * @brief Return a circular buffer from a temporal point and a temporal float
  * @sqlfn tcbuffer_constructor()
  */
@@ -201,28 +201,6 @@ Tgeompoint_to_tcbuffer(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************
- * Transformation functions
- *****************************************************************************/
-
-PGDLLEXPORT Datum Tcbuffer_round(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tcbuffer_round);
-/**
- * @ingroup mobilitydb_cbuffer_transf
- * @brief Return a temporal circular buffer with the precision of the values
- * set to a number of decimal places
- * @sqlfn round()
- */
-Datum
-Tcbuffer_round(PG_FUNCTION_ARGS)
-{
-  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  Datum size = PG_GETARG_DATUM(1);
-  Temporal *result = temporal_round(temp, size, &datum_cbuffer_round);
-  PG_FREE_IF_COPY(temp, 0);
-  PG_RETURN_TEMPORAL_P(result);
-}
-
-/*****************************************************************************
  * Accessor functions
  *****************************************************************************/
 
@@ -242,20 +220,25 @@ Tcbuffer_points(PG_FUNCTION_ARGS)
   PG_RETURN_SET_P(result);
 }
 
-// PGDLLEXPORT Datum Tcbuffer_line(PG_FUNCTION_ARGS);
-// PG_FUNCTION_INFO_V1(Tcbuffer_line);
-// /**
- // * @ingroup mobilitydb_cbuffer_accessor
- // * @brief Return the central line of a temporal circular buffer
- // * @sqlfn point()
- // */
-// Datum
-// Tcbuffer_line(PG_FUNCTION_ARGS)
-// {
-  // Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  // GSERIALIZED *result = tcbuffer_line(temp);
-  // PG_FREE_IF_COPY(temp, 0);
-  // PG_RETURN_GSERIALIZED_P(result);
-// }
+/*****************************************************************************
+ * Geometric positions (Trajectory) functions
+ * Return the geometric positions covered by a temporal circular buffer
+ *****************************************************************************/
+
+PGDLLEXPORT Datum Tcbuffer_traversed_area(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tcbuffer_traversed_area);
+/**
+ * @ingroup mobilitydb_cbuffer_accessor
+ * @brief Return the geometry covered by a temporal circular buffer
+ * @sqlfn traversedArea()
+ */
+Datum
+Tcbuffer_traversed_area(PG_FUNCTION_ARGS)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  GSERIALIZED *result = tcbuffer_traversed_area(temp);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_TEMPORAL_P(result);
+}
 
 /*****************************************************************************/

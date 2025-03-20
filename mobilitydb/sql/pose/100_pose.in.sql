@@ -92,13 +92,15 @@ CREATE FUNCTION asEWKT(pose[], maxdecimaldigits int4 DEFAULT 15)
  * Constructors
  ******************************************************************************/
 
-CREATE FUNCTION pose(double precision, double precision, double precision)
+CREATE FUNCTION pose(double precision, double precision, double precision,
+    srid integer DEFAULT 0)
   RETURNS pose
   AS 'MODULE_PATHNAME', 'Pose_constructor'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION pose(double precision, double precision, double precision,
-  double precision, double precision, double precision, double precision)
+  double precision, double precision, double precision, double precision,
+    srid integer DEFAULT 0)
   RETURNS pose
   AS 'MODULE_PATHNAME', 'Pose_constructor'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;

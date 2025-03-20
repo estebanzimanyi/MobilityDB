@@ -365,11 +365,11 @@ CREATE FUNCTION ceil(tfloat)
 
 CREATE FUNCTION round(tfloat, integer DEFAULT 0)
   RETURNS tfloat
-  AS 'MODULE_PATHNAME', 'Tfloat_round'
+  AS 'MODULE_PATHNAME', 'Temporal_round'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION round(tfloat[], integer DEFAULT 0)
   RETURNS tfloat[]
-  AS 'MODULE_PATHNAME', 'Tfloatarr_round'
+  AS 'MODULE_PATHNAME', 'Temporalarr_round'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION degrees(float, bool DEFAULT FALSE)

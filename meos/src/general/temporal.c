@@ -59,6 +59,15 @@
 #include "general/type_util.h"
 #include "geo/tgeo.h"
 #include "geo/tgeo_spatialfuncs.h"
+#if CBUFFER
+  #include "cbuffer/cbuffer.h"
+#endif
+#if NPOINT
+  #include "npoint/tnpoint.h"
+#endif
+#if POSE
+  #include "pose/pose.h"
+#endif
 
 /*****************************************************************************
  * Parameter tests
@@ -1157,14 +1166,46 @@ tnumber_tbox(const Temporal *temp)
  *****************************************************************************/
 
 /**
+ * @brief Return the function for rounding a base type
+ */
+datum_func2
+round_fn(meosType basetype)
+{
+  assert(meos_basetype(basetype));
+  switch (basetype)
+  {
+    case T_FLOAT8:
+      return &datum_float_round;
+    case T_GEOMETRY:
+    case T_GEOGRAPHY:
+      return &datum_geo_round;
+#if CBUFFER
+    case T_CBUFFER:
+      return &datum_cbuffer_round;
+#endif
+#if NPOINT
+    case T_NPOINT:
+      return &datum_npoint_round;
+#endif
+#if POSE
+    case T_POSE:
+      return &datum_pose_round;
+#endif
+    default: /* Error! */
+      meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
+        "Unknown round function for type: %s", meostype_name(basetype));
+    return NULL;
+  }
+}
+
+/**
  * @ingroup meos_internal_temporal_transf
  * @brief Return a temporal value rounded to a given number of decimal places
  * @param[in] temp Temporal value
  * @param[in] maxdd Maximum number of decimal digits to output
- * @param[in] func Function that is applied to the base values for rounding
  */
 Temporal *
-temporal_round(const Temporal *temp, int maxdd, datum_func2 func)
+temporal_round(const Temporal *temp, int maxdd)
 {
   /* Ensure validity of the arguments */
 #if MEOS
@@ -1174,6 +1215,9 @@ temporal_round(const Temporal *temp, int maxdd, datum_func2 func)
   assert(temp);
 #endif /* MEOS */
 
+  /* Get the function for rounding the base type */
+  datum_func2 func = round_fn(temptype_basetype(temp->temptype));
+  
   /* We only need to fill these parameters for tfunc_temporal */
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
@@ -1194,10 +1238,9 @@ temporal_round(const Temporal *temp, int maxdd, datum_func2 func)
  * @param[in] temparr Array of temporal values
  * @param[in] count Number of values in the input array
  * @param[in] maxdd Maximum number of decimal digits
- * @param[in] func Function that is applied to the base values for rounding
  */
 Temporal **
-temparr_round(const Temporal **temparr, int count, int maxdd, datum_func2 func)
+temparr_round(const Temporal **temparr, int count, int maxdd)
 {
   /* Ensure validity of the arguments */
 #if MEOS
@@ -1211,7 +1254,7 @@ temparr_round(const Temporal **temparr, int count, int maxdd, datum_func2 func)
 
   Temporal **result = palloc(sizeof(Temporal *) * count);
   for (int i = 0; i < count; i++)
-    result[i] = temporal_round(temparr[i], maxdd, func);
+    result[i] = temporal_round(temparr[i], maxdd);
   return result;
 }
 
@@ -1248,34 +1291,6 @@ datum_float_round(Datum value, Datum size)
 {
   return Float8GetDatum(float_round(DatumGetFloat8(value),
     DatumGetInt32(size)));
-}
-
-/**
- * @ingroup meos_temporal_transf
- * @brief Return a temporal float rounded a given number of decimal places
- * @param[in] temp Temporal value
- * @param[in] maxdd Maximum number of decimal digits to output
- * @csqlfn #Tfloat_round()
- */
-Temporal *
-tfloat_round(const Temporal *temp, int maxdd)
-{
-  return temporal_round(temp, maxdd, datum_float_round);
-}
-
-/**
- * @ingroup meos_temporal_transf
- * @brief Return an array of temporal floats with the precision of the
- * coordinates set to a number of decimal places
- * @param[in] temparr Array of temporal values
- * @param[in] count Number of values in the input array
- * @param[in] maxdd Maximum number of decimal digits
- * @csqlfn #Tfloatarr_round()
- */
-Temporal **
-tfloatarr_round(const Temporal **temparr, int count, int maxdd)
-{
-  return temparr_round(temparr, count, maxdd, datum_float_round);
 }
 
 /*****************************************************************************/
@@ -3338,7 +3353,7 @@ temporal_eq(const Temporal *temp1, const Temporal *temp2)
  * @param[in] temp1,temp2 Temporal values
  * @csqlfn #Temporal_ne()
  */
-bool
+inline bool
 temporal_ne(const Temporal *temp1, const Temporal *temp2)
 {
   return ! temporal_eq(temp1, temp2);
@@ -3433,11 +3448,10 @@ temporal_cmp(const Temporal *temp1, const Temporal *temp2)
  * @param[in] temp1,temp2 Temporal values
  * @csqlfn #Temporal_lt()
  */
-bool
+inline bool
 temporal_lt(const Temporal *temp1, const Temporal *temp2)
 {
-  int cmp = temporal_cmp(temp1, temp2);
-  return cmp < 0;
+  return temporal_cmp(temp1, temp2) < 0;
 }
 
 /**
@@ -3447,11 +3461,10 @@ temporal_lt(const Temporal *temp1, const Temporal *temp2)
  * @param[in] temp1,temp2 Temporal values
  * @csqlfn #Temporal_le()
  */
-bool
+inline bool
 temporal_le(const Temporal *temp1, const Temporal *temp2)
 {
-  int cmp = temporal_cmp(temp1, temp2);
-  return cmp <= 0;
+  return temporal_cmp(temp1, temp2) <= 0;
 }
 
 /**
@@ -3461,11 +3474,10 @@ temporal_le(const Temporal *temp1, const Temporal *temp2)
  * @param[in] temp1,temp2 Temporal values
  * @csqlfn #Temporal_gt()
  */
-bool
+inline bool
 temporal_ge(const Temporal *temp1, const Temporal *temp2)
 {
-  int cmp = temporal_cmp(temp1, temp2);
-  return cmp >= 0;
+  return temporal_cmp(temp1, temp2) >= 0;
 }
 
 /**
@@ -3474,11 +3486,10 @@ temporal_ge(const Temporal *temp1, const Temporal *temp2)
  * @param[in] temp1,temp2 Temporal values
  * @csqlfn #Temporal_ge()
  */
-bool
+inline bool
 temporal_gt(const Temporal *temp1, const Temporal *temp2)
 {
-  int cmp = temporal_cmp(temp1, temp2);
-  return cmp > 0;
+  return temporal_cmp(temp1, temp2) > 0;
 }
 
 /*****************************************************************************

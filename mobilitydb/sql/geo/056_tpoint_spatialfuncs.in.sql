@@ -160,20 +160,20 @@ CREATE FUNCTION getZ(tgeogpoint)
 
 CREATE FUNCTION round(tgeompoint, integer DEFAULT 0)
   RETURNS tgeompoint
-  AS 'MODULE_PATHNAME', 'Tgeo_round'
+  AS 'MODULE_PATHNAME', 'Temporal_round'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION round(tgeogpoint, integer DEFAULT 0)
   RETURNS tgeogpoint
-  AS 'MODULE_PATHNAME', 'Tgeo_round'
+  AS 'MODULE_PATHNAME', 'Temporal_round'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION round(tgeompoint[], integer DEFAULT 0)
   RETURNS tgeompoint[]
-  AS 'MODULE_PATHNAME', 'Tgeoarr_round'
+  AS 'MODULE_PATHNAME', 'Temporalarr_round'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION round(tgeogpoint[], integer DEFAULT 0)
   RETURNS tgeogpoint[]
-  AS 'MODULE_PATHNAME', 'Tgeoarr_round'
+  AS 'MODULE_PATHNAME', 'Temporalarr_round'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION trajectory(tgeompoint)

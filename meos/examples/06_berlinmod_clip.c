@@ -356,8 +356,7 @@ int main(void)
     /* Loop for each commune */
     for (i = 0; i < NO_COMMUNES; i ++)
     {
-      Temporal *atgeom = tpoint_at_geom(trip_rec.trip,
-        communes[i].geom, NULL);
+      Temporal *atgeom = tgeo_at_geom(trip_rec.trip, communes[i].geom);
       if (atgeom)
       {
         /* Compute the length of the trip projected to the commune */

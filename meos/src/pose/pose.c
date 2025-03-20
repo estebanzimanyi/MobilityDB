@@ -72,7 +72,7 @@
 Pose *
 pose_interpolate(const Pose *pose1, const Pose *pose2, double ratio)
 {
-  assert(pose1); assert(pose2);
+  assert(pose1); assert(pose2); assert(pose_srid(pose1) == pose_srid(pose2));
   Pose *result;
   if (!MEOS_FLAGS_GET_Z(pose1->flags))
   {
@@ -82,18 +82,18 @@ pose_interpolate(const Pose *pose1, const Pose *pose2, double ratio)
     double theta_delta = pose2->data[2] - pose1->data[2];
     /* If fabs(theta_delta) == M_PI: Always turn counter-clockwise */
     if (fabs(theta_delta) < MEOS_EPSILON)
-        theta = pose1->data[2];
+      theta = pose1->data[2];
     else if (theta_delta > 0 && fabs(theta_delta) <= M_PI)
-        theta = pose1->data[2] + theta_delta*ratio;
+      theta = pose1->data[2] + theta_delta * ratio;
     else if (theta_delta > 0 && fabs(theta_delta) > M_PI)
-        theta = pose2->data[2] + (2*M_PI - theta_delta)*(1 - ratio);
+      theta = pose2->data[2] + (2 * M_PI - theta_delta) * (1 - ratio);
     else if (theta_delta < 0 && fabs(theta_delta) < M_PI)
-        theta = pose1->data[2] + theta_delta*ratio;
+      theta = pose1->data[2] + theta_delta * ratio;
     else /* (theta_delta < 0 && fabs(theta_delta) >= M_PI) */
-        theta = pose1->data[2] + (2*M_PI + theta_delta)*ratio;
+      theta = pose1->data[2] + (2 * M_PI + theta_delta) * ratio;
     if (theta > M_PI)
-        theta = theta - 2*M_PI;
-    result = pose_make_2d(x, y, theta);
+      theta = theta - 2 * M_PI;
+    result = pose_make_2d(x, y, theta, pose_srid(pose1));
   }
   else
   {
@@ -104,7 +104,7 @@ pose_interpolate(const Pose *pose1, const Pose *pose2, double ratio)
     double X, X1 = pose1->data[4], X2 = pose2->data[4];
     double Y, Y1 = pose1->data[5], Y2 = pose2->data[5];
     double Z, Z1 = pose1->data[6], Z2 = pose2->data[6];
-    double dot =  W1*W2 + X1*X2 + Y1*Y2 + Z1*Z2;
+    double dot =  W1 * W2 + X1 * X2 + Y1 * Y2 + Z1 * Z2;
     if (dot < 0.0f)
     {
       W2 = -W2;
@@ -116,30 +116,30 @@ pose_interpolate(const Pose *pose1, const Pose *pose2, double ratio)
     const double DOT_THRESHOLD = 0.9995;
     if (dot > DOT_THRESHOLD)
     {
-      W = W1 + (W2 - W1)*ratio;
-      X = X1 + (X2 - X1)*ratio;
-      Y = Y1 + (Y2 - Y1)*ratio;
-      Z = Z1 + (Z2 - Z1)*ratio;
+      W = W1 + (W2 - W1) * ratio;
+      X = X1 + (X2 - X1) * ratio;
+      Y = Y1 + (Y2 - Y1) * ratio;
+      Z = Z1 + (Z2 - Z1) * ratio;
     }
     else
     {
       double theta_0 = acos(dot);
-      double theta = theta_0*ratio;
+      double theta = theta_0 * ratio;
       double sin_theta = sin(theta);
       double sin_theta_0 = sin(theta_0);
       double s1 = cos(theta) - dot * sin_theta / sin_theta_0;
       double s2 = sin_theta / sin_theta_0;
-      W = W1*s1 + W2*s2;
-      X = X1*s1 + X2*s2;
-      Y = Y1*s1 + Y2*s2;
-      Z = Z1*s1 + Z2*s2;
+      W = W1 * s1 + W2 * s2;
+      X = X1 * s1 + X2 * s2;
+      Y = Y1 * s1 + Y2 * s2;
+      Z = Z1 * s1 + Z2 * s2;
     }
-    double norm = W*W + X*X + Y*Y + Z*Z;
+    double norm = W * W + X * X + Y * Y + Z * Z;
     W /= norm;
     X /= norm;
     Y /= norm;
     Z /= norm;
-    result = pose_make_3d(x, y, z, W, X, Y, Z);
+    result = pose_make_3d(x, y, z, W, X, Y, Z, pose_srid(pose1));
   }
   return result;
 }
@@ -256,7 +256,7 @@ pose_parse(const char **str, bool end)
     /* use z as theta in 2D */
     if (! ensure_valid_rotation(z))
       return NULL;
-    result = pose_make_2d(x, y, z);
+    result = pose_make_2d(x, y, z, srid);
   }
   else
   {
@@ -275,7 +275,7 @@ pose_parse(const char **str, bool end)
       return NULL;
     if (! ensure_unit_norm(W, X, Y, Z))
       return NULL;
-    result = pose_make_3d(x, y, z, W, X, Y, Z);
+    result = pose_make_3d(x, y, z, W, X, Y, Z, srid);
   }
 
   /* Parse closing parenthesis */
@@ -284,7 +284,6 @@ pose_parse(const char **str, bool end)
         (end && ! ensure_end_input(str, type_str)))
     return NULL;
 
-  pose_set_srid(result, srid);
   return result;
 }
 
@@ -377,14 +376,14 @@ pose_wkt_out(Datum value, bool extended, int maxdd)
     X = float8_out(pose->data[4], maxdd);
     Y = float8_out(pose->data[5], maxdd);
     Z = float8_out(pose->data[6], maxdd);
-    len += strlen(W) + strlen(X) + strlen(Y) + strlen(Z);
+    len += strlen(W) + strlen(X) + strlen(Y) + strlen(Z) + 3; // Three ','
   }
   else
   {
     theta = float8_out(pose->data[2], maxdd);
-    len += strlen(theta);
+    len += strlen(theta) + 1; // One ','
   }
-  len += 8; // Pose(,) + end NULL
+  len += 7; // Pose() + end NULL
   char *result = palloc(len);
   if (hasz)
   {
@@ -442,7 +441,7 @@ pose_as_ewkt(const Pose *pose, int maxdd)
  *****************************************************************************/
 
 /**
- * @ingroup meos_pose_inout
+ * @ingroup meos_pose_base_inout
  * @brief Return a pose from its Well-Known Binary (WKB) representation
  * @param[in] wkb WKB string
  * @param[in] size Size of the string
@@ -458,7 +457,7 @@ pose_from_wkb(const uint8_t *wkb, size_t size)
 }
 
 /**
- * @ingroup meos_pose_inout
+ * @ingroup meos_pose_base_inout
  * @brief Return a pose from its hex-encoded ASCII Well-Known Binary (WKB)
  * representation
  * @param[in] hexwkb HexWKB string
@@ -531,7 +530,7 @@ pose_as_hexwkb(const Pose *pose, uint8_t variant, size_t *size_out)
  * @param[in] theta Orientation
  */
 Pose *
-pose_make_2d(double x, double y, double theta)
+pose_make_2d(double x, double y, double theta, int32_t srid)
 {
   if (! ensure_valid_rotation(theta))
     return NULL;
@@ -545,6 +544,7 @@ pose_make_2d(double x, double y, double theta)
   SET_VARSIZE(result, memsize);
   MEOS_FLAGS_SET_X(result->flags, true);
   MEOS_FLAGS_SET_Z(result->flags, false);
+  pose_set_srid(result, srid);
   result->data[0] = x;
   result->data[1] = y;
   result->data[2] = theta;
@@ -582,6 +582,7 @@ pose_make_point2d(const GSERIALIZED *gs, double theta)
   SET_VARSIZE(result, memsize);
   MEOS_FLAGS_SET_X(result->flags, true);
   MEOS_FLAGS_SET_Z(result->flags, false);
+  pose_set_srid(result, gserialized_get_srid(gs));
   result->data[0] = coordarr[0];
   result->data[1] = coordarr[1];
   result->data[2] = theta;
@@ -595,8 +596,8 @@ pose_make_point2d(const GSERIALIZED *gs, double theta)
  * @param[in] W,X,Y,Z Orientation
  */
 Pose *
-pose_make_3d(double x, double y, double z,
-  double W, double X, double Y, double Z)
+pose_make_3d(double x, double y, double z, double W, double X, double Y,
+  double Z, int32_t srid)
 {
   if (! ensure_unit_norm(W, X, Y, Z))
       return NULL;
@@ -615,6 +616,7 @@ pose_make_3d(double x, double y, double z,
   SET_VARSIZE(result, memsize);
   MEOS_FLAGS_SET_X(result->flags, true);
   MEOS_FLAGS_SET_Z(result->flags, true);
+  pose_set_srid(result, srid);
   result->data[0] = x;
   result->data[1] = y;
   result->data[2] = z;
@@ -662,6 +664,7 @@ pose_make_point3d(const GSERIALIZED *gs, double W, double X, double Y,
   SET_VARSIZE(result, memsize);
   MEOS_FLAGS_SET_X(result->flags, true);
   MEOS_FLAGS_SET_Z(result->flags, true);
+  pose_set_srid(result, gserialized_get_srid(gs));
   result->data[0] = coordarr[0];
   result->data[1] = coordarr[1];
   result->data[2] = coordarr[2];
@@ -842,14 +845,14 @@ pose_round(const Pose *pose, int maxdd)
     double X = float_round(pose->data[4], maxdd);
     double Y = float_round(pose->data[5], maxdd);
     double Z = float_round(pose->data[6], maxdd);
-    result = pose_make_3d(x, y, z, W, X, Y, Z);
+    result = pose_make_3d(x, y, z, W, X, Y, Z, pose_srid(pose));
   }
   else
   {
     double x = float_round(pose->data[0], maxdd);
     double y = float_round(pose->data[1], maxdd);
     double theta = float_round(pose->data[2], maxdd);
-    result = pose_make_2d(x, y, theta);
+    result = pose_make_2d(x, y, theta, pose_srid(pose));
   }
   return result;
 }
@@ -903,7 +906,7 @@ posearr_round(const Pose **posearr, int count, int maxdd)
  * @brief Return the SRID
  * @param[in] pose Pose
  */
-int32
+int32_t
 pose_srid(const Pose *pose)
 {
   /* Ensure validity of the arguments */
@@ -936,7 +939,7 @@ pose_srid(const Pose *pose)
  * @param[in] srid SRID
  */
 void
-pose_set_srid(Pose *pose, int32 srid)
+pose_set_srid(Pose *pose, int32_t srid)
 {
   /* Ensure validity of the arguments */
 #if MEOS
@@ -1121,10 +1124,10 @@ pose_eq(const Pose *pose1, const Pose *pose2)
  * @brief Return true if the first pose is not equal to the second one
  * @param[in] pose1,pose2 Poses
  */
-bool
+inline bool
 pose_ne(const Pose *pose1, const Pose *pose2)
 {
-  return (! pose_eq(pose1, pose2));
+  return ! pose_eq(pose1, pose2);
 }
 
 /**
@@ -1166,10 +1169,10 @@ pose_same(const Pose *pose1, const Pose *pose2)
  * @brief Return true if the first pose is not equal to the second one
  * @param[in] pose1,pose2 Poses
  */
-bool
+inline bool
 pose_nsame(const Pose *pose1, const Pose *pose2)
 {
-  return (! pose_same(pose1, pose2));
+  return ! pose_same(pose1, pose2);
 }
 
 /**
@@ -1214,11 +1217,10 @@ pose_cmp(const Pose *pose1, const Pose *pose2)
  * @brief Return true if the first pose is less than the second one
  * @param[in] pose1,pose2 Poses
  */
-bool
+inline bool
 pose_lt(const Pose *pose1, const Pose *pose2)
 {
-  int cmp = pose_cmp(pose1, pose2);
-  return (cmp < 0);
+  return pose_cmp(pose1, pose2) < 0;
 }
 
 /**
@@ -1226,11 +1228,10 @@ pose_lt(const Pose *pose1, const Pose *pose2)
  * @brief Return true if the first pose is less than or equal to the second one
  * @param[in] pose1,pose2 Poses
  */
-bool
+inline bool
 pose_le(const Pose *pose1, const Pose *pose2)
 {
-  int cmp = pose_cmp(pose1, pose2);
-  return (cmp <= 0);
+  return pose_cmp(pose1, pose2) <= 0;
 }
 
 /**
@@ -1238,11 +1239,10 @@ pose_le(const Pose *pose1, const Pose *pose2)
  * @brief Return true if the first pose is greater than the second one
  * @param[in] pose1,pose2 Poses
  */
-bool
+inline bool
 pose_gt(const Pose *pose1, const Pose *pose2)
 {
-  int cmp = pose_cmp(pose1, pose2);
-  return (cmp > 0);
+  return pose_cmp(pose1, pose2) > 0;
 }
 
 /**
@@ -1251,11 +1251,10 @@ pose_gt(const Pose *pose1, const Pose *pose2)
  * one
  * @param[in] pose1,pose2 Poses
  */
-bool
+inline bool
 pose_ge(const Pose *pose1, const Pose *pose2)
 {
-  int cmp = pose_cmp(pose1, pose2);
-  return (cmp >= 0);
+  return pose_cmp(pose1, pose2) >= 0;
 }
 
 /*****************************************************************************

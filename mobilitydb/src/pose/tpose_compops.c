@@ -118,7 +118,7 @@ PG_FUNCTION_INFO_V1(Ever_eq_pose_tpose);
  * @sqlfn ever_eq()
  * @sqlop @p ?=
  */
-Datum
+inline Datum
 Ever_eq_pose_tpose(PG_FUNCTION_ARGS)
 {
   return EAcomp_pose_tpose(fcinfo, &ever_eq_pose_tpose);
@@ -133,7 +133,7 @@ PG_FUNCTION_INFO_V1(Always_eq_pose_tpose);
  * @sqlfn always_eq()
  * @sqlop @p %=
  */
-Datum
+inline Datum
 Always_eq_pose_tpose(PG_FUNCTION_ARGS)
 {
   return EAcomp_pose_tpose(fcinfo, &always_eq_pose_tpose);
@@ -148,7 +148,7 @@ PG_FUNCTION_INFO_V1(Ever_ne_pose_tpose);
  * @sqlfn ever_ne()
  * @sqlop @p ?<>
  */
-Datum
+inline Datum
 Ever_ne_pose_tpose(PG_FUNCTION_ARGS)
 {
   return EAcomp_pose_tpose(fcinfo, &ever_ne_pose_tpose);
@@ -163,7 +163,7 @@ PG_FUNCTION_INFO_V1(Always_ne_pose_tpose);
  * @sqlfn always_ne()
  * @sqlop @p %<>
  */
-Datum
+inline Datum
 Always_ne_pose_tpose(PG_FUNCTION_ARGS)
 {
   return EAcomp_pose_tpose(fcinfo, &always_ne_pose_tpose);
@@ -179,7 +179,7 @@ PG_FUNCTION_INFO_V1(Ever_eq_tpose_pose);
  * @sqlfn ever_eq()
  * @sqlop @p ?=
  */
-Datum
+inline Datum
 Ever_eq_tpose_pose(PG_FUNCTION_ARGS)
 {
   return EAcomp_tpose_pose(fcinfo, &ever_eq_tpose_pose);
@@ -194,7 +194,7 @@ PG_FUNCTION_INFO_V1(Always_eq_tpose_pose);
  * @sqlfn always_eq()
  * @sqlop @p %=
  */
-Datum
+inline Datum
 Always_eq_tpose_pose(PG_FUNCTION_ARGS)
 {
   return EAcomp_tpose_pose(fcinfo, &always_eq_tpose_pose);
@@ -209,7 +209,7 @@ PG_FUNCTION_INFO_V1(Ever_ne_tpose_pose);
  * @sqlfn ever_ne()
  * @sqlop @p ?<>
  */
-Datum
+inline Datum
 Ever_ne_tpose_pose(PG_FUNCTION_ARGS)
 {
   return EAcomp_tpose_pose(fcinfo, &ever_ne_tpose_pose);
@@ -224,7 +224,7 @@ PG_FUNCTION_INFO_V1(Always_ne_tpose_pose);
  * @sqlfn always_ne()
  * @sqlop @p %<>
  */
-Datum
+inline Datum
 Always_ne_tpose_pose(PG_FUNCTION_ARGS)
 {
   return EAcomp_tpose_pose(fcinfo, &always_ne_tpose_pose);
@@ -240,7 +240,7 @@ PG_FUNCTION_INFO_V1(Ever_eq_tpose_tpose);
  * @sqlfn ever_eq()
  * @sqlop @p ?=
  */
-Datum
+inline Datum
 Ever_eq_tpose_tpose(PG_FUNCTION_ARGS)
 {
   return EAcomp_tpose_tpose(fcinfo, &ever_eq_tpose_tpose);
@@ -254,7 +254,7 @@ PG_FUNCTION_INFO_V1(Always_eq_tpose_tpose);
  * @sqlfn always_eq()
  * @sqlop @p %=
  */
-Datum
+inline Datum
 Always_eq_tpose_tpose(PG_FUNCTION_ARGS)
 {
   return EAcomp_tpose_tpose(fcinfo, &always_eq_tpose_tpose);
@@ -268,7 +268,7 @@ PG_FUNCTION_INFO_V1(Ever_ne_tpose_tpose);
  * @sqlfn ever_ne()
  * @sqlop @p ?<>
  */
-Datum
+inline Datum
 Ever_ne_tpose_tpose(PG_FUNCTION_ARGS)
 {
   return EAcomp_tpose_tpose(fcinfo, &ever_ne_tpose_tpose);
@@ -282,7 +282,7 @@ PG_FUNCTION_INFO_V1(Always_ne_tpose_tpose);
  * @sqlfn always_ne()
  * @sqlop @p %<>
  */
-Datum
+inline Datum
 Always_ne_tpose_tpose(PG_FUNCTION_ARGS)
 {
   return EAcomp_tpose_tpose(fcinfo, &always_ne_tpose_tpose);
@@ -359,7 +359,7 @@ PG_FUNCTION_INFO_V1(Teq_pose_tpose);
  * @sqlfn temporal_teq()
  * @sqlop @p #=
  */
-Datum
+inline Datum
 Teq_pose_tpose(PG_FUNCTION_ARGS)
 {
   return Tcomp_pose_tpose(fcinfo, &teq_pose_tpose);
@@ -374,7 +374,7 @@ PG_FUNCTION_INFO_V1(Tne_pose_tpose);
  * @sqlfn temporal_tne()
  * @sqlop @p #<>
  */
-Datum
+inline Datum
 Tne_pose_tpose(PG_FUNCTION_ARGS)
 {
   return Tcomp_pose_tpose(fcinfo, &tne_pose_tpose);
@@ -390,7 +390,7 @@ PG_FUNCTION_INFO_V1(Teq_tpose_pose);
  * @sqlfn temporal_teq()
  * @sqlop @p #=
  */
-Datum
+inline Datum
 Teq_tpose_pose(PG_FUNCTION_ARGS)
 {
   return Tcomp_tpose_pose(fcinfo, &teq_tpose_pose);
@@ -405,7 +405,7 @@ PG_FUNCTION_INFO_V1(Tne_tpose_pose);
  * @sqlfn temporal_tne()
  * @sqlop @p #<>
  */
-Datum
+inline Datum
 Tne_tpose_pose(PG_FUNCTION_ARGS)
 {
   return Tcomp_tpose_pose(fcinfo, &tne_tpose_pose);
@@ -421,7 +421,7 @@ PG_FUNCTION_INFO_V1(Teq_tpose_tpose);
  * @sqlfn temporal_teq()
  * @sqlop @p #=
  */
-Datum
+inline Datum
 Teq_tpose_tpose(PG_FUNCTION_ARGS)
 {
   return Tcomp_tpose_tpose(fcinfo, &teq_temporal_temporal);
@@ -435,7 +435,7 @@ PG_FUNCTION_INFO_V1(Tne_tpose_tpose);
  * @sqlfn temporal_tne()
  * @sqlop @p #<>
  */
-Datum
+inline Datum
 Tne_tpose_tpose(PG_FUNCTION_ARGS)
 {
   return Tcomp_tpose_tpose(fcinfo, &tne_temporal_temporal);

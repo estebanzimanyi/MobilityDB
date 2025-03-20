@@ -256,7 +256,11 @@ CREATE FUNCTION setInterp(tcbuffer, text)
 
 CREATE FUNCTION round(tcbuffer, integer DEFAULT 0)
   RETURNS tcbuffer
-  AS 'MODULE_PATHNAME', 'Tcbuffer_round'
+  AS 'MODULE_PATHNAME', 'Temporal_round'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION round(tcbuffer[], integer DEFAULT 0)
+  RETURNS tcbuffer
+  AS 'MODULE_PATHNAME', 'Temporalarr_round'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************

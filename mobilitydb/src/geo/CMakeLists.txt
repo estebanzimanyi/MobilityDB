@@ -7,13 +7,11 @@ add_library(pg_geo OBJECT
   tgeo_boxops.c
   tgeo_compops.c
   tgeo_distance.c
-  tgeo_inout.c
   tgeo_spatialfuncs.c
   tgeo_spatialrels.c
   tgeo_tempspatialrels.c
   tgeo_tile.c
   tspatial.c
-  tpoint_analytics.c
   tpoint_datagen.c
   tspatial_analyze.c
   tspatial_gist.c

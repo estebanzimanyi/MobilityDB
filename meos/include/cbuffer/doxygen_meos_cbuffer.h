@@ -52,14 +52,6 @@
  * @ingroup meos_cbuffer
  * @brief Accessor functions for temporal circular buffers
  *
- * @defgroup meos_cbuffer_transf Transformation functions
- * @ingroup meos_cbuffer
- * @brief Transformation functions for temporal circular buffers
- *
- * @defgroup meos_cbuffer_modif Modification functions
- * @ingroup meos_cbuffer
- * @brief Modification functions for temporal circular buffers
- *
  * @defgroup meos_cbuffer_restrict Restriction functions
  * @ingroup meos_cbuffer
  * @brief Restriction functions for temporal circular buffers
@@ -68,53 +60,17 @@
  * @ingroup meos_cbuffer
  * @brief Comparison functions for temporal circular buffers
  *
- * @defgroup meos_cbuffer_comp_ever Ever and always comparison functions
- * @ingroup meos_cbuffer_comp
- * @brief Ever and always comparison functions for temporal circular buffers
+ *   @defgroup meos_cbuffer_comp_ever Ever and always comparison functions
+ *   @ingroup meos_cbuffer_comp
+ *   @brief Ever and always comparison functions for temporal circular buffers
  *
- * @defgroup meos_cbuffer_comp_temp Temporal comparison functions
- * @ingroup meos_cbuffer_comp
- * @brief Temporal comparison functions for temporal circular buffers
- *
- * @defgroup meos_cbuffer_bbox Bounding box functions
- * @ingroup meos_cbuffer
- * @brief Bounding box functions for temporal circular buffers
- *
- * @defgroup meos_cbuffer_bbox_topo Topological functions
- * @ingroup meos_cbuffer_bbox
- * @brief Topological functions for temporal circular buffers
- *
- * @defgroup meos_cbuffer_bbox_pos Position functions
- * @ingroup meos_cbuffer_bbox
- * @brief Position functions for temporal circular buffers
+ *   @defgroup meos_cbuffer_comp_temp Temporal comparison functions
+ *   @ingroup meos_cbuffer_comp
+ *   @brief Temporal comparison functions for temporal circular buffers
  *
  * @defgroup meos_cbuffer_dist Distance functions
  * @ingroup meos_cbuffer
  * @brief Distance functions for temporal circular buffers
- *
- * @defgroup meos_cbuffer_agg Aggregate functions
- * @ingroup meos_cbuffer
- * @brief Aggregate functions for temporal circular buffers
- *
- * @defgroup meos_cbuffer_analytics Analytics functions
- * @ingroup meos_cbuffer
- * @brief Analytics functions for temporal circular buffers
- *
- * @defgroup meos_cbuffer_analytics_simplify Simplification functions
- * @ingroup meos_cbuffer_analytics
- * @brief Simplification functions for temporal circular buffers
- *
- * @defgroup meos_cbuffer_analytics_reduction Reduction functions
- * @ingroup meos_cbuffer_analytics
- * @brief Reduction functions for temporal circular buffers
- *
- * @defgroup meos_cbuffer_analytics_similarity Similarity functions
- * @ingroup meos_cbuffer_analytics
- * @brief Similarity functions for temporal circular buffers
- *
- * @defgroup meos_cbuffer_analytics_tile Tile functions
- * @ingroup meos_cbuffer_analytics
- * @brief Tile functions for temporal circular buffers
  */
 
 /*****************************************************************************/
@@ -167,10 +123,6 @@
  * @defgroup meos_cbuffer_set_accessor Accessor functions
  * @ingroup meos_cbuffer_set
  * @brief Accessor functions for circular buffer sets
- *
- * @defgroup meos_cbuffer_set_transf Transformation functions
- * @ingroup meos_cbuffer_set
- * @brief Transformation functions for circular buffer sets
  *
  * @defgroup meos_cbuffer_set_setops Set operations
  * @ingroup meos_cbuffer_set

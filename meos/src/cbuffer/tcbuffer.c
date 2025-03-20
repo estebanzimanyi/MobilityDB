@@ -55,8 +55,8 @@
 
 #if MEOS
 /**
- * @ingroup meos_internal_temporal_inout
- * @brief Return a temporal circular buffer instant from its Well-Known Text
+ * @ingroup meos_internal_cbuffer_inout
+ * @brief Return a temporal circular buffer instant from its Well-Known Text 
  * (WKT) representation
  * @param[in] str String
  */
@@ -71,7 +71,7 @@ tcbufferinst_in(const char *str)
 }
 
 /**
- * @ingroup meos_internal_temporal_inout
+ * @ingroup meos_internal_cbuffer_inout
  * @brief Return a temporal circular buffer sequence from its Well-Known Text 
  * (WKT) representation
  * @param[in] str String
@@ -90,7 +90,7 @@ tcbufferseq_in(const char *str, interpType interp __attribute__((unused)))
 }
 
 /**
- * @ingroup meos_internal_temporal_inout
+ * @ingroup meos_internal_cbuffer_inout
  * @brief Return a temporal circular buffer sequence set from its Well-Known
  * Text (WKT) representation
  * @param[in] str String
@@ -147,7 +147,7 @@ tcbuffer_out(const Temporal *temp, int maxdd)
  *****************************************************************************/
 
 /**
- * @ingroup meos_cbuffer_constructor
+ * @ingroup meos_internal_cbuffer_constructor
  * @brief Return a temporal circular buffer from a temporal point and a 
  * temporal float
  * @note This function is called after synchronization done in function 

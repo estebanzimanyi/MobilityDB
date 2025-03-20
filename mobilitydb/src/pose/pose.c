@@ -47,6 +47,7 @@
 #include <meos_pose.h>
 #include "general/pg_types.h"
 #include "general/set.h"
+#include "general/span.h"
 #include "general/type_inout.h"
 #include "general/type_util.h"
 #include "pose/pose.h"
@@ -264,18 +265,23 @@ Pose_constructor(PG_FUNCTION_ARGS)
   double y = PG_GETARG_FLOAT8(1);
   double z = PG_GETARG_FLOAT8(2);
   double theta = z;
+  int32_t srid;
 
-  assert(PG_NARGS() == 3 || PG_NARGS() == 7);
+  assert(PG_NARGS() == 4 || PG_NARGS() == 8);
   Pose *result;
-  if (PG_NARGS() == 3)
-    result = pose_make_2d(x, y, theta);
-  else /* PG_NARGS() == 7 */
+  if (PG_NARGS() == 4)
+  {
+    srid = PG_GETARG_INT32(3);
+    result = pose_make_2d(x, y, theta, srid);
+  }
+  else /* PG_NARGS() == 8 */
   {
     double W = PG_GETARG_FLOAT8(3);
     double X = PG_GETARG_FLOAT8(4);
     double Y = PG_GETARG_FLOAT8(5);
     double Z = PG_GETARG_FLOAT8(6);
-    result = pose_make_3d(x, y, z, W, X, Y, Z);
+    srid = PG_GETARG_INT32(7);
+    result = pose_make_3d(x, y, z, W, X, Y, Z, srid);
   }
   PG_RETURN_POINTER(result);
 }
@@ -327,6 +333,62 @@ Pose_to_point(PG_FUNCTION_ARGS)
   Pose *pose = PG_GETARG_POSE_P(0);
   GSERIALIZED *result = pose_point(pose);
   PG_RETURN_POINTER(result);
+}
+
+/*****************************************************************************
+ * Transform a temporal pose to a STBox
+ *****************************************************************************/
+
+PGDLLEXPORT Datum Pose_to_stbox(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Pose_to_stbox);
+/**
+ * @ingroup mobilitydb_pose_base_box
+ * @brief Return the bounding box of a pose
+ * @sqlfn stbox()
+ * @sqlop @p ::
+ */
+Datum
+Pose_to_stbox(PG_FUNCTION_ARGS)
+{
+  Pose *pose = PG_GETARG_POSE_P(0);
+  STBox *result = palloc0(sizeof(STBox));
+  pose_set_stbox(pose, result);
+  PG_RETURN_POINTER(result);
+}
+
+/*****************************************************************************/
+
+PGDLLEXPORT Datum Pose_timestamptz_to_stbox(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Pose_timestamptz_to_stbox);
+/**
+ * @ingroup mobilitydb_pose_base_box
+ * @brief Return a pose and a timestamptz to a spatiotemporal box
+ * @sqlfn stbox()
+ * @sqlop @p
+ */
+Datum
+Pose_timestamptz_to_stbox(PG_FUNCTION_ARGS)
+{
+  Pose *pose = PG_GETARG_POSE_P(0);
+  TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
+  PG_RETURN_STBOX_P(pose_timestamptz_to_stbox(pose, t));
+}
+
+PGDLLEXPORT Datum Pose_tstzspan_to_stbox(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Pose_tstzspan_to_stbox);
+/**
+ * @ingroup mobilitydb_pose_base_box
+ * @brief Return a pose and a timestamptz span to a spatiotemporal
+ * box
+ * @sqlfn stbox()
+ * @sqlop @p
+ */
+Datum
+Pose_tstzspan_to_stbox(PG_FUNCTION_ARGS)
+{
+  Pose *pose = PG_GETARG_POSE_P(0);
+  Span *s = PG_GETARG_SPAN_P(1);
+  PG_RETURN_STBOX_P(pose_tstzspan_to_stbox(pose, s));
 }
 
 /*****************************************************************************

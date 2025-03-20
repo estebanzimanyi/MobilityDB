@@ -52,7 +52,7 @@
 #include <meos.h>
 #include <meos_internal.h>
 #include "general/lifting.h"
-#include "geo/pgis_types.h"
+#include "geo/postgis_funcs.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/tgeo_tempspatialrels.h"
 
@@ -401,6 +401,7 @@ adisjoint_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 int
 ea_disjoint_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2, bool ever)
 {
+  assert(temp1); assert(temp2);
   datum_func2 func;
   if (MEOS_FLAGS_GET_GEODETIC(temp1->flags))
     func = &datum_geog_disjoint;
@@ -421,6 +422,9 @@ ea_disjoint_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2, bool ever)
 int
 edisjoint_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
 {
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2))
+    return -1;
   return ea_disjoint_tgeo_tgeo(temp1, temp2, EVER);
 }
 
@@ -434,6 +438,9 @@ edisjoint_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
 int
 adisjoint_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
 {
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2))
+    return -1;
   return ea_disjoint_tgeo_tgeo(temp1, temp2, ALWAYS);
 }
 #endif /* MEOS */
@@ -723,7 +730,6 @@ ea_dwithin_tpointseq_tpointseq_cont(const TSequence *seq1,
   bool linear2 = MEOS_FLAGS_LINEAR_INTERP(seq2->flags);
   bool hasz = MEOS_FLAGS_GET_Z(seq1->flags);
   TimestampTz lower = start1->t;
-  bool lower_inc = seq1->period.lower_inc;
   bool ret_loop = ever ? true : false;
   for (int i = 1; i < seq1->count; i++)
   {
@@ -732,7 +738,6 @@ ea_dwithin_tpointseq_tpointseq_cont(const TSequence *seq1,
     Datum ev1 = tinstant_val(end1);
     Datum ev2 = tinstant_val(end2);
     TimestampTz upper = end1->t;
-    bool upper_inc = (i == seq1->count - 1) ? seq1->period.upper_inc : false;
 
     /* Both segments are constant */
     if (datum_point_eq(sv1, ev1) && datum_point_eq(sv2, ev2))
@@ -750,16 +755,19 @@ ea_dwithin_tpointseq_tpointseq_cont(const TSequence *seq1,
      * is true */
     int solutions = tdwithin_tpointsegm_tpointsegm(sv1, sev1, sv2, sev2,
       lower, upper, dist, hasz, func, &t1, &t2);
-    bool res = (solutions == 2 ||
-      (solutions == 1 && ((t1 != lower || lower_inc) &&
-        (t1 != upper || upper_inc))));
+    /* Determine whether the segment is always/ever within the distance */
+    bool res;
+    if (ever)
+      res = solutions > 0;
+    else
+      res = (solutions == 2 && t1 == lower && t2 == upper) ||
+        (solutions == 1 && t1 == lower && t1 == upper);
     if ((ever && res) || (! ever && ! res))
       return ret_loop;
 
     sv1 = ev1;
     sv2 = ev2;
     lower = upper;
-    lower_inc = true;
   }
   return ! ret_loop;
 }
@@ -854,6 +862,7 @@ ea_dwithin_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
   return result ? 1 : 0;
 }
 
+#if MEOS
 /**
  * @ingroup meos_geo_rel_ever
  * @brief Return 1 if two temporal geos are ever within a distance,
@@ -889,5 +898,6 @@ adwithin_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
     return -1;
   return ea_dwithin_tgeo_tgeo(temp1, temp2, dist, ALWAYS);
 }
+#endif /* MEOS */
 
 /*****************************************************************************/

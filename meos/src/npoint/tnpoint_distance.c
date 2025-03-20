@@ -38,7 +38,7 @@
 #include <meos.h>
 #include <meos_npoint.h>
 #include <meos_internal.h>
-#include "geo/pgis_types.h"
+#include "geo/postgis_funcs.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "npoint/tnpoint.h"
 #include "npoint/tnpoint_spatialfuncs.h"

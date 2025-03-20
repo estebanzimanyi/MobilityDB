@@ -70,12 +70,12 @@ SELECT COUNT(*) FROM tbl_geom3D, tbl_tgeompoint3D WHERE aDisjoint(g, temp);
 SELECT COUNT(*) FROM tbl_tgeompoint3D, tbl_geom3D WHERE aDisjoint(temp, g);
 SELECT COUNT(*) FROM tbl_tgeompoint3D t1, tbl_tgeompoint3D t2 WHERE aDisjoint(t1.temp, t2.temp);
 -- Geography
-SELECT COUNT(*) FROM tbl_geog t1, tbl_tgeogpoint t2 WHERE t1.k % 2 = 0 AND aDisjoint(g, temp);
-SELECT COUNT(*) FROM tbl_tgeogpoint t1, tbl_geog t2 WHERE t2.k % 2 = 0 AND aDisjoint(temp, g);
+SELECT COUNT(*) FROM tbl_geog t1, tbl_tgeogpoint t2 WHERE t1.k % 3 = 0 AND aDisjoint(g, temp);
+SELECT COUNT(*) FROM tbl_tgeogpoint t1, tbl_geog t2 WHERE t2.k % 3 = 0 AND aDisjoint(temp, g);
 SELECT COUNT(*) FROM tbl_tgeogpoint t1, tbl_tgeogpoint t2 WHERE aDisjoint(t1.temp, t2.temp);
 -- 3D
-SELECT COUNT(*) FROM tbl_geog3D t1, tbl_tgeogpoint3D t2 WHERE t1.k % 2 = 0 AND t2.k % 2 = 0 AND aDisjoint(g, temp);
-SELECT COUNT(*) FROM tbl_tgeogpoint3D t1, tbl_geog3D t2 WHERE t1.k % 2 = 0 AND t2.k % 2 = 0 AND aDisjoint(temp, g);
+SELECT COUNT(*) FROM tbl_geog3D t1, tbl_tgeogpoint3D t2 WHERE t1.k % 3 = 0 AND t2.k % 3 = 0 AND aDisjoint(g, temp);
+SELECT COUNT(*) FROM tbl_tgeogpoint3D t1, tbl_geog3D t2 WHERE t1.k % 3 = 0 AND t2.k % 3 = 0 AND aDisjoint(temp, g);
 SELECT COUNT(*) FROM tbl_tgeogpoint3D t1, tbl_tgeogpoint3D t2 WHERE aDisjoint(t1.temp, t2.temp);
 
 -------------------------------------------------------------------------------
@@ -98,8 +98,8 @@ SELECT COUNT(*) FROM tbl_tgeompoint3D t1, tbl_tgeompoint3D t2 WHERE eIntersects(
 -- SELECT COUNT(*) FROM tbl_tgeogpoint, tbl_geog WHERE eIntersects(temp, g);
 SELECT COUNT(*) FROM tbl_tgeogpoint t1, tbl_tgeogpoint t2 WHERE eIntersects(t1.temp, t2.temp);
 -- 3D
-SELECT COUNT(*) FROM tbl_geog3D t1, tbl_tgeogpoint3D t2 WHERE t1.k % 2 = 0 AND t2.k % 2 = 0 AND eIntersects(g, temp);
-SELECT COUNT(*) FROM tbl_tgeogpoint3D t1, tbl_geog3D t2 WHERE t1.k % 2 = 0 AND t2.k % 2 = 0 AND eIntersects(temp, g);
+SELECT COUNT(*) FROM tbl_geog3D t1, tbl_tgeogpoint3D t2 WHERE t1.k % 3 = 0 AND t2.k % 3 = 0 AND eIntersects(g, temp);
+SELECT COUNT(*) FROM tbl_tgeogpoint3D t1, tbl_geog3D t2 WHERE t1.k % 3 = 0 AND t2.k % 3 = 0 AND eIntersects(temp, g);
 SELECT COUNT(*) FROM tbl_tgeogpoint3D t1, tbl_tgeogpoint3D t2 WHERE eIntersects(t1.temp, t2.temp);
 
 -------------------------------------------------------------------------------

@@ -40,10 +40,6 @@
  * @ingroup meos_pose
  * @brief Input and output functions for temporal poses
  *
- * @defgroup meos_pose_constructor Constructor functions
- * @ingroup meos_pose
- * @brief Constructor functions for temporal poses
- *
  * @defgroup meos_pose_conversion Conversion functions
  * @ingroup meos_pose
  * @brief Conversion functions for temporal poses
@@ -51,14 +47,6 @@
  * @defgroup meos_pose_accessor Accessor functions
  * @ingroup meos_pose
  * @brief Accessor functions for temporal poses
- *
- * @defgroup meos_pose_transf Transformation functions
- * @ingroup meos_pose
- * @brief Transformation functions for temporal poses
- *
- * @defgroup meos_pose_modif Modification functions
- * @ingroup meos_pose
- * @brief Modification functions for temporal poses
  *
  * @defgroup meos_pose_restrict Restriction functions
  * @ingroup meos_pose
@@ -68,53 +56,13 @@
  * @ingroup meos_pose
  * @brief Comparison functions for temporal poses
  *
- * @defgroup meos_pose_comp_ever Ever and always comparison functions
- * @ingroup meos_pose_comp
- * @brief Ever and always comparison functions for temporal poses
+ *   @defgroup meos_pose_comp_ever Ever and always comparison functions
+ *   @ingroup meos_pose_comp
+ *   @brief Ever and always comparison functions for temporal poses
  *
- * @defgroup meos_pose_comp_temp Temporal comparison functions
- * @ingroup meos_pose_comp
- * @brief Temporal comparison functions for temporal poses
- *
- * @defgroup meos_pose_bbox Bounding box functions
- * @ingroup meos_pose
- * @brief Bounding box functions for temporal poses
- *
- * @defgroup meos_pose_bbox_topo Topological functions
- * @ingroup meos_pose_bbox
- * @brief Topological functions for temporal poses
- *
- * @defgroup meos_pose_bbox_pos Position functions
- * @ingroup meos_pose_bbox
- * @brief Position functions for temporal poses
- *
- * @defgroup meos_pose_dist Distance functions
- * @ingroup meos_pose
- * @brief Distance functions for temporal poses
- *
- * @defgroup meos_pose_agg Aggregate functions
- * @ingroup meos_pose
- * @brief Aggregate functions for temporal poses
- *
- * @defgroup meos_pose_analytics Analytics functions
- * @ingroup meos_pose
- * @brief Analytics functions for temporal poses
- *
- * @defgroup meos_pose_analytics_simplify Simplification functions
- * @ingroup meos_pose_analytics
- * @brief Simplification functions for temporal poses
- *
- * @defgroup meos_pose_analytics_reduction Reduction functions
- * @ingroup meos_pose_analytics
- * @brief Reduction functions for temporal poses
- *
- * @defgroup meos_pose_analytics_similarity Similarity functions
- * @ingroup meos_pose_analytics
- * @brief Similarity functions for temporal poses
- *
- * @defgroup meos_pose_analytics_tile Tile functions
- * @ingroup meos_pose_analytics
- * @brief Tile functions for temporal poses
+ *   @defgroup meos_pose_comp_temp Temporal comparison functions
+ *   @ingroup meos_pose_comp
+ *   @brief Temporal comparison functions for temporal poses
  */
 
 /*****************************************************************************/
@@ -167,10 +115,6 @@
  * @defgroup meos_pose_set_accessor Accessor functions
  * @ingroup meos_pose_set
  * @brief Accessor functions for pose sets
- *
- * @defgroup meos_pose_set_transf Transformation functions
- * @ingroup meos_pose_set
- * @brief Transformation functions for pose sets
  *
  * @defgroup meos_pose_set_setops Set operations
  * @ingroup meos_pose_set

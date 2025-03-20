@@ -192,7 +192,7 @@ PG_FUNCTION_INFO_V1(Econtains_geo_tgeo);
  * @brief Return true if a geometry ever contains a temporal geo
  * @sqlfn eContains()
  */
-Datum
+inline Datum
 Econtains_geo_tgeo(PG_FUNCTION_ARGS)
 {
   return EAcontains_geo_tgeo(fcinfo, EVER);
@@ -205,7 +205,7 @@ PG_FUNCTION_INFO_V1(Acontains_geo_tgeo);
  * @brief Return true if a geometry always contains a temporal geo
  * @sqlfn aContains()
  */
-Datum
+inline Datum
 Acontains_geo_tgeo(PG_FUNCTION_ARGS)
 {
   return EAcontains_geo_tgeo(fcinfo, ALWAYS);
@@ -242,7 +242,7 @@ PG_FUNCTION_INFO_V1(Edisjoint_geo_tgeo);
  * disjoint
  * @sqlfn eDisjoint()
  */
-Datum
+inline Datum
 Edisjoint_geo_tgeo(PG_FUNCTION_ARGS)
 {
   return EA_disjoint_geo_tgeo(fcinfo, EVER);
@@ -256,7 +256,7 @@ PG_FUNCTION_INFO_V1(Adisjoint_geo_tgeo);
  * disjoint
  * @sqlfn aDisjoint()
  */
-Datum
+inline Datum
 Adisjoint_geo_tgeo(PG_FUNCTION_ARGS)
 {
   return EA_disjoint_geo_tgeo(fcinfo, ALWAYS);
@@ -289,7 +289,7 @@ PG_FUNCTION_INFO_V1(Edisjoint_tgeo_geo);
  * disjoint
  * @sqlfn eDisjoint()
  */
-Datum
+inline Datum
 Edisjoint_tgeo_geo(PG_FUNCTION_ARGS)
 {
   return EA_disjoint_tgeo_geo(fcinfo, EVER);
@@ -303,7 +303,7 @@ PG_FUNCTION_INFO_V1(Adisjoint_tgeo_geo);
  * disjoint
  * @sqlfn aDisjoint()
  */
-Datum
+inline Datum
 Adisjoint_tgeo_geo(PG_FUNCTION_ARGS)
 {
   return EA_disjoint_tgeo_geo(fcinfo, ALWAYS);
@@ -334,7 +334,7 @@ PG_FUNCTION_INFO_V1(Edisjoint_tgeo_tgeo);
  * @brief Return true if two temporal geos are ever disjoint
  * @sqlfn eDisjoint()
  */
-Datum
+inline Datum
 Edisjoint_tgeo_tgeo(PG_FUNCTION_ARGS)
 {
   return EA_disjoint_tgeo_tgeo(fcinfo, EVER);
@@ -347,7 +347,7 @@ PG_FUNCTION_INFO_V1(Adisjoint_tgeo_tgeo);
  * @brief Return true if two temporal geos are ever disjoint
  * @sqlfn aDisjoint()
  */
-Datum
+inline Datum
 Adisjoint_tgeo_tgeo(PG_FUNCTION_ARGS)
 {
   return EA_disjoint_tgeo_tgeo(fcinfo, ALWAYS);
@@ -384,7 +384,7 @@ PG_FUNCTION_INFO_V1(Eintersects_geo_tgeo);
  * intersect
  * @sqlfn eIntersects()
  */
-Datum
+inline Datum
 Eintersects_geo_tgeo(PG_FUNCTION_ARGS)
 {
   return EA_intersects_geo_tgeo(fcinfo, EVER);
@@ -398,7 +398,7 @@ PG_FUNCTION_INFO_V1(Aintersects_geo_tgeo);
  * intersect
  * @sqlfn aIntersects()
  */
-Datum
+inline Datum
 Aintersects_geo_tgeo(PG_FUNCTION_ARGS)
 {
   return EA_intersects_geo_tgeo(fcinfo, ALWAYS);
@@ -431,7 +431,7 @@ PG_FUNCTION_INFO_V1(Eintersects_tgeo_geo);
  * intersect
  * @sqlfn eIntersects()
  */
-Datum
+inline Datum
 Eintersects_tgeo_geo(PG_FUNCTION_ARGS)
 {
   return EA_intersects_tgeo_geo(fcinfo, EVER);
@@ -445,7 +445,7 @@ PG_FUNCTION_INFO_V1(Aintersects_tgeo_geo);
  * intersect
  * @sqlfn aIntersects()
  */
-Datum
+inline Datum
 Aintersects_tgeo_geo(PG_FUNCTION_ARGS)
 {
   return EA_intersects_tgeo_geo(fcinfo, ALWAYS);
@@ -476,7 +476,7 @@ PG_FUNCTION_INFO_V1(Eintersects_tgeo_tgeo);
  * @brief Return true if two temporal geos ever intersect
  * @sqlfn eIntersects()
  */
-Datum
+inline Datum
 Eintersects_tgeo_tgeo(PG_FUNCTION_ARGS)
 {
   return EA_intersects_tgeo_tgeo(fcinfo, EVER);
@@ -489,7 +489,7 @@ PG_FUNCTION_INFO_V1(Aintersects_tgeo_tgeo);
  * @brief Return true if two temporal geos ever intersect
  * @sqlfn aIntersects()
  */
-Datum
+inline Datum
 Aintersects_tgeo_tgeo(PG_FUNCTION_ARGS)
 {
   return EA_intersects_tgeo_tgeo(fcinfo, ALWAYS);
@@ -526,7 +526,7 @@ PG_FUNCTION_INFO_V1(Etouches_geo_tgeo);
  * @brief Return true if a geometry and a temporal geo ever touch
  * @sqlfn eTouches()
  */
-Datum
+inline Datum
 Etouches_geo_tgeo(PG_FUNCTION_ARGS)
 {
   return EA_touches_geo_tgeo(fcinfo, EVER);
@@ -539,7 +539,7 @@ PG_FUNCTION_INFO_V1(Atouches_geo_tgeo);
  * @brief Return true if a geometry and a temporal geo ever touch
  * @sqlfn aTouches()
  */
-Datum
+inline Datum
 Atouches_geo_tgeo(PG_FUNCTION_ARGS)
 {
   return EA_touches_geo_tgeo(fcinfo, ALWAYS);
@@ -570,7 +570,7 @@ PG_FUNCTION_INFO_V1(Etouches_tgeo_geo);
  * @brief Return true if a temporal geo and a geometry ever touch
  * @sqlfn eTouches()
  */
-Datum
+inline Datum
 Etouches_tgeo_geo(PG_FUNCTION_ARGS)
 {
   return EA_touches_tgeo_geo(fcinfo, EVER);
@@ -583,7 +583,7 @@ PG_FUNCTION_INFO_V1(Atouches_tgeo_geo);
  * @brief Return true if a temporal geo and a geometry always touch
  * @sqlfn aTouches()
  */
-Datum
+inline Datum
 Atouches_tgeo_geo(PG_FUNCTION_ARGS)
 {
   return EA_touches_tgeo_geo(fcinfo, ALWAYS);
@@ -622,7 +622,7 @@ PG_FUNCTION_INFO_V1(Edwithin_geo_tgeo);
  * within a distance
  * @sqlfn eDwithin()
  */
-Datum
+inline Datum
 Edwithin_geo_tgeo(PG_FUNCTION_ARGS)
 {
   return EA_dwithin_geo_tgeo(fcinfo, EVER);
@@ -636,7 +636,7 @@ PG_FUNCTION_INFO_V1(Adwithin_geo_tgeo);
  * within a distance
  * @sqlfn aDwithin()
  */
-Datum
+inline Datum
 Adwithin_geo_tgeo(PG_FUNCTION_ARGS)
 {
   return EA_dwithin_geo_tgeo(fcinfo, ALWAYS);
@@ -670,7 +670,7 @@ PG_FUNCTION_INFO_V1(Edwithin_tgeo_geo);
  * within a distance
  * @sqlfn eDwithin()
  */
-Datum
+inline Datum
 Edwithin_tgeo_geo(PG_FUNCTION_ARGS)
 {
   return EA_dwithin_tgeo_geo(fcinfo, EVER);
@@ -684,7 +684,7 @@ PG_FUNCTION_INFO_V1(Adwithin_tgeo_geo);
  * within a distance
  * @sqlfn aDwithin()
  */
-Datum
+inline Datum
 Adwithin_tgeo_geo(PG_FUNCTION_ARGS)
 {
   return EA_dwithin_tgeo_geo(fcinfo, ALWAYS);
@@ -700,8 +700,7 @@ EA_dwithin_tgeo_tgeo(FunctionCallInfo fcinfo, bool ever)
   Temporal *temp1 = PG_GETARG_TEMPORAL_P(0);
   Temporal *temp2 = PG_GETARG_TEMPORAL_P(1);
   double dist = PG_GETARG_FLOAT8(2);
-  int result = ever ? edwithin_tgeo_tgeo(temp1, temp2, dist) :
-    adwithin_tgeo_tgeo(temp1, temp2, dist);
+  int result = ea_dwithin_tgeo_tgeo(temp1, temp2, dist, ever);
   PG_FREE_IF_COPY(temp1, 0);
   PG_FREE_IF_COPY(temp2, 1);
   if (result < 0)
@@ -716,7 +715,7 @@ PG_FUNCTION_INFO_V1(Edwithin_tgeo_tgeo);
  * @brief Return true if two temporal geos are ever within a distance
  * @sqlfn eDwithin()
  */
-Datum
+inline Datum
 Edwithin_tgeo_tgeo(PG_FUNCTION_ARGS)
 {
   return EA_dwithin_tgeo_tgeo(fcinfo, EVER);
@@ -729,7 +728,7 @@ PG_FUNCTION_INFO_V1(Adwithin_tgeo_tgeo);
  * @brief Return true if two temporal geos are always within a distance
  * @sqlfn aDwithin()
  */
-Datum
+inline Datum
 Adwithin_tgeo_tgeo(PG_FUNCTION_ARGS)
 {
   return EA_dwithin_tgeo_tgeo(fcinfo, ALWAYS);

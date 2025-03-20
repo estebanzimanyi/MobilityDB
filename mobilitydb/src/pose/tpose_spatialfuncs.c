@@ -72,7 +72,7 @@ PG_FUNCTION_INFO_V1(Tpose_at_geom);
  * @brief Return a temporal pose restricted to a geometry
  * @sqlfn atGeometry()
  */
-Datum
+inline Datum
 Tpose_at_geom(PG_FUNCTION_ARGS)
 {
   return Tpose_restrict_geom(fcinfo, REST_AT);
@@ -85,13 +85,30 @@ PG_FUNCTION_INFO_V1(Tpose_minus_geom);
  * @brief Return a temporal pose restricted to the complement of a geometry
  * @sqlfn minusGeometry()
  */
-Datum
+inline Datum
 Tpose_minus_geom(PG_FUNCTION_ARGS)
 {
   return Tpose_restrict_geom(fcinfo, REST_MINUS);
 }
 
 /*****************************************************************************/
+
+/**
+ * @brief Return a temporal pose restricted to a spatiotemporal box
+ */
+static Datum
+Tpose_restrict_stbox(FunctionCallInfo fcinfo, bool atfunc)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  STBox *box = PG_GETARG_STBOX_P(1);
+  bool border_inc = PG_GETARG_BOOL(2);
+  Temporal *result = tpose_restrict_stbox(temp, box, border_inc, atfunc);
+  PG_FREE_IF_COPY(temp, 0);
+  if (! result)
+    PG_RETURN_NULL();
+  PG_RETURN_TEMPORAL_P(result);
+}
+
 
 PGDLLEXPORT Datum Tpose_at_stbox(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpose_at_stbox);
@@ -100,17 +117,10 @@ PG_FUNCTION_INFO_V1(Tpose_at_stbox);
  * @brief Return a temporal pose restricted to a spatiotemporal box
  * @sqlfn atStbox()
  */
-Datum
+inline Datum
 Tpose_at_stbox(PG_FUNCTION_ARGS)
 {
-  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  STBox *box = PG_GETARG_STBOX_P(1);
-  bool border_inc = PG_GETARG_BOOL(2);
-  Temporal *result = tpose_restrict_stbox(temp, box, border_inc, REST_AT);
-  PG_FREE_IF_COPY(temp, 0);
-  if (! result)
-    PG_RETURN_NULL();
-  PG_RETURN_TEMPORAL_P(result);
+  return Tpose_restrict_stbox(fcinfo, REST_AT);
 }
 
 PGDLLEXPORT Datum Tpose_minus_stbox(PG_FUNCTION_ARGS);
@@ -121,17 +131,10 @@ PG_FUNCTION_INFO_V1(Tpose_minus_stbox);
  * spatiotemporal box
  * @sqlfn minusStbox()
  */
-Datum
+inline Datum
 Tpose_minus_stbox(PG_FUNCTION_ARGS)
 {
-  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  STBox *box = PG_GETARG_STBOX_P(1);
-  bool border_inc = PG_GETARG_BOOL(2);
-  Temporal *result = tpose_restrict_stbox(temp, box, border_inc, REST_MINUS);
-  PG_FREE_IF_COPY(temp, 0);
-  if (! result)
-    PG_RETURN_NULL();
-  PG_RETURN_TEMPORAL_P(result);
+  return Tpose_restrict_stbox(fcinfo, REST_MINUS);
 }
 
 /*****************************************************************************/

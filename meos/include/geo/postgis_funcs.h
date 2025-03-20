@@ -29,26 +29,53 @@
 
 /**
  * @file
- * @brief Input and output of temporal poses in WKT and EWKT
+ * @brief Functions for geometry types corresponding to external
+ * PostGIS functions in order to bypass the function manager @p fmgr.c.
  */
 
-/* PostgreSQL */
-#include <postgres.h>
-#include <fmgr.h>
-#include <utils/array.h>
-/* PostGIS */
-#include <liblwgeom_internal.h>
-/* MEOS */
-#include <meos.h>
-#include <meos_internal.h>
-#include "general/set.h"
-#include "general/temporal.h"
-#include "geo/tspatial_parser.h"
-#include "pose/tpose.h"
-#include "pose/tpose_parser.h"
-#include "pose/tpose_spatialfuncs.h"
-/* MobilityDB */
-#include "pg_general/meos_catalog.h" /* For oid_type */
-#include "pg_general/type_util.h"
+#ifndef __POSTGIS_FUNCS_H__
+#define __POSTGIS_FUNCS_H__
 
 /*****************************************************************************/
+
+/* GEOS */
+#include <geos_c.h>
+/* PostgreSQL */
+#include <postgres.h>
+/* PostGIS */
+#include <liblwgeom.h>
+/* MEOS */
+#include <meos.h>
+#include <meos_geo.h>
+
+/* Functions borrowed from lwgeom_pg.c */
+
+extern GSERIALIZED* geom_serialize(LWGEOM *lwgeom);
+extern GSERIALIZED* geog_serialize(LWGEOM *lwgeom);
+
+/* Functions adapted from lwgeom_box.c */
+
+extern LWGEOM *box2d_to_lwgeom(GBOX *box, int32_t srid);
+
+/* Functions adapted from lwgeom_box3d.c */
+
+extern LWGEOM *box3d_to_lwgeom(BOX3D *box);
+
+/* Functions adapted from lwgeom_geos.c */
+
+extern GEOSGeometry *POSTGIS2GEOS(const GSERIALIZED *pglwgeom);
+extern GSERIALIZED *GEOS2POSTGIS(GEOSGeom geom, char want3d);
+
+extern bool geom_spatialrel(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
+  spatialRel rel);
+
+/* Functions adapted from lwgeom_lrs.c */
+
+extern LWGEOM *lwgeom_line_interpolate_point(LWGEOM *geom, double fraction,
+  int32_t srid, char repeat);
+
+extern const char *geo_typename(int type);
+
+/*****************************************************************************/
+
+#endif /* __POSTGIS_FUNCS_H__ */

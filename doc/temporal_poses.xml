@@ -11,18 +11,59 @@
 <chapter id="temporal_poses">
 	<title>Temporal Poses</title>
 
-	<para>A static pose <varname>pose</varname> represents a 2D/3D point and an orientation. For 2D poses the orientation is composed of a .</para>
+	<para>The <varname>pose</varname> type is used to represent the <emphasis>location</emphasis> and <emphasis>orientation</emphasis> of geometric objects within coordinate systems anchored to the earth's surface or within other astronomical coordinate systems. The location is represented by a 2D or 3D point. For 2D poses, the orientation is defined by a rotation angle in (-&pi;, &pi;]. For 3D poses, the orientation is defined by four float values <varname>W</varname>, <varname>X</varname>, <varname>Y</varname>, <varname>Z</varname>, representing a unit <ulink url="https://en.wikipedia.org/wiki/Quaternion">quaternion</ulink>
+		<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+		<mrow>
+			<mi>Q</mi>
+			<mo>=</mo>
+			<mo>&#x2329;</mo>
+			<mi>W</mi>
+			<mo>,</mo>
+			<mi>X</mi>
+			<mo>,</mo>
+			<mi>Y</mi>
+			<mo>,</mo>
+			<mi>Z</mi>
+			<mo>&#x232A;</mo>
+		</mrow>
+		</math>
+	where
+		<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline">
+		<mrow>
+			<mo>&spar;</mo>
+			<msup><mi>Q</mi><mi>2</mi></msup>
+			<mo>&spar;</mo>
+			<mo>=</mo>
+			<msqrt>
+				<msup><mi>W</mi><mi>2</mi></msup>
+				<mo>+</mo>
+				<msup><mi>X</mi><mi>2</mi></msup>
+				<mo>+</mo>
+				<msup><mi>Y</mi><mi>2</mi></msup>
+				<mo>+</mo>
+				<msup><mi>Z</mi><mi>2</mi></msup>
+			</msqrt>
+			<mo>=</mo>
+			<mi>1</mi>
+		</mrow>
+		</math>.
+	</para>
 
-	<para>The <varname>pose</varname> type serves as base type for defining the temporal pose type <varname>tpose</varname>. The <varname>tpose</varname> type has similar functionality as the temporal point type <varname>tgeompoint</varname> with the exception that it only considers two dimensions. Thus, most functions and operators described before for the <varname>tgeompoint</varname> type are also applicable for the <varname>tpose</varname> type. In addition, there are specific functions defined for the <varname>tpose</varname> type.</para>
+	<para>
+		The <ulink url="https://www.ogc.org/publications/standard/geopose/">GeoPose Standards Working Group</ulink> (SWG), working under the auspices of the <ulink url="https://www.ogc.org/">Open Geospatial Consortium</ulink>, has defined a standard for exchanging pose information across different users, devices, and platforms. More information about the standard can be found in the <ulink url="https://github.com/opengeospatial/GeoPose">GitHub repository</ulink> of the GeoPose SWG.
+	</para>
+ 
+	<para>The <varname>pose</varname> type serves as base type for defining the temporal pose type <varname>tpose</varname>. The <varname>tpose</varname> type has similar functionality as the temporal point type <varname>tgeompoint</varname>. Thus, most functions and operators described before for the <varname>tgeompoint</varname> type are also applicable for the <varname>tpose</varname> type. In addition, there are specific functions defined for the <varname>tpose</varname> type.</para>
 
 	<sect1 id="static_poses">
 		<title>Static Poses</title>
 
-		<para>A <varname>pose</varname> value is a couple of the form <varname>(point,radius)</varname> where <varname>point</varname> is a geometric point and <varname>radius</varname> is a <varname>float</varname> value greater than or equal to zero representing a radius around the point expressed using the units of the SRID of the point. Examples of input of pose values are as follows:</para>
+		<para>A 2D <varname>pose</varname> is a couple of the form <varname>(point2D,radius)</varname> where <varname>point2D</varname> is a 2D geometric point and <varname>radius</varname> is a <varname>float</varname> value greater than or equal to zero representing a radius around the point expressed using the units of the SRID of the point. A 3D <varname>pose</varname> is a tuple of the form <varname>(point3D,W,Y,X,Z)</varname> where <varname>point3D</varname> is a 3D geometric point, and <varname>W</varname>, and <varname>X</varname>, <varname>Y</varname>, and <varname>Z</varname> are four <varname>floats</varname> representing a <emphasis>unit</emphasis> quaternion.  Examples of input of pose values are as follows:</para>
 		<programlisting language="sql" xml:space="preserve">
-SELECT pose 'Pose(Point(1 1), 0.3)';
-SELECT pose 'Pose(Point(1 1), 10.0)';
+SELECT pose 'Pose(Point(1 1), 45)';
+SELECT pose 'Pose Z(Point Z(1 1 1), 0, 1, 0, 0)';
 </programlisting>
+		<para>In the examples of the remainder of this chapter, for brevity, we will use unit quaternions composed of one &lsquo;1&rsquo; and three &lsquo;0&rsquo;, as shown in the example above.</para>
 
 		<para>Values of the pose type must satisfy several constraints so that they are well defined. Examples of incorrect pose type values are as follows.</para>
 		<programlisting language="sql" xml:space="preserve">
@@ -42,12 +83,12 @@ SELECT pose 'Pose(Point(1 1), -2.0)';
 					<indexterm><primary><varname>pose</varname></primary></indexterm>
 					<para>Constructor for poses</para>
 					<para><varname>pose(geompoint2D,float) → pose</varname></para>
-					<para><varname>pose(geompoint3D,float,float,float,float,float) → pose</varname></para>
+					<para><varname>pose(geompoint3D,float,float,float,float) → pose</varname></para>
 					<programlisting language="sql" xml:space="preserve">
-SELECT asText(pose(ST_Point(1,1), 50));
--- Pose(POINT(1 1),0.3)
-SELECT asText(pose(ST_Point(1,1,1), 1, 0, 0, 0));
--- Pose(POINT(1 1),0.3)
+SELECT asText(pose(ST_Point(1,1), radians(45)), 6);
+-- Pose(POINT(1 1),0.785398)
+SELECT asText(pose(ST_PointZ(1,1,1), 1, 0, 0, 0));
+-- Pose(POINT Z (1 1 1),1,0,0,0)
 </programlisting>
 				</listitem>
 			</itemizedlist>
@@ -61,14 +102,11 @@ SELECT asText(pose(ST_Point(1,1,1), 1, 0, 0, 0));
 					<indexterm><primary><varname>::</varname></primary></indexterm>
 					<para>Convert between a pose and a geometry point</para>
 					<para><varname>pose::geompoint</varname></para>
-					<para><varname>geompoint::pose</varname></para>
 					<programlisting language="sql" xml:space="preserve">
-SELECT ST_AsText(pose(ST_Point(1,1), 1)::geometry);
--- CURVEPOLYGON(CIRCULARSTRING(0 0,2 2,0 0))
-SELECT asText(geometry 'SRID=5676;CURVEPOLYGON(CIRCULARSTRING(0 0,2 2,0 0))'::pose);
--- Pose(POINT(1 1),1)
-SELECT asText(geometry 'SRID=5676;CIRCULARSTRING(0 0,2 2,0 0)'::pose);
--- Only circle geometries accepted
+SELECT ST_AsText(pose(ST_Point(1, 1), 1)::geometry);
+-- Point(1 1)
+SELECT ST_AsEWKT(pose(ST_PointZ(1, 1, 1, 5676), 1, 0, 0, 0)::geometry);
+-- SRID=5676;POINT(1 1 1)
 </programlisting>
 				</listitem>
 			</itemizedlist>

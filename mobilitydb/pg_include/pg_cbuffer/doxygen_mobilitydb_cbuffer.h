@@ -47,10 +47,6 @@
  * @ingroup mobilitydb_cbuffer
  * @brief Functions for circular buffer sets
  *
- * @defgroup mobilitydb_cbuffer_box Bounding box functions
- * @ingroup mobilitydb_cbuffer
- * @brief Bounding box functions for circular buffers
- *
  * @defgroup mobilitydb_cbuffer_inout Input and output functions
  * @ingroup mobilitydb_cbuffer
  * @brief Input and output functions for temporal circular buffers
@@ -74,22 +70,6 @@
  * @defgroup mobilitydb_cbuffer_restrict Restriction functions
  * @ingroup mobilitydb_cbuffer
  * @brief Restriction functions for temporal circular buffers
- *
- * @defgroup mobilitydb_cbuffer_modif Modification functions
- * @ingroup mobilitydb_cbuffer
- * @brief Modification functions for temporal circular buffers
- *
- * @defgroup mobilitydb_cbuffer_bbox Bounding box functions
- * @ingroup mobilitydb_cbuffer
- * @brief Bounding box functions for temporal circular buffers
- *
- *   @defgroup mobilitydb_cbuffer_bbox_topo Topological functions
- *   @ingroup mobilitydb_cbuffer_bbox
- *   @brief Topological functions for temporal circular buffers
- *
- *   @defgroup mobilitydb_cbuffer_bbox_pos Position functions
- *   @ingroup mobilitydb_cbuffer_bbox
- *   @brief Position functions for temporal circular buffers
  *
  * @defgroup mobilitydb_cbuffer_dist Distance functions
  * @ingroup mobilitydb_cbuffer
@@ -126,26 +106,6 @@
  * @defgroup mobilitydb_cbuffer_agg Aggregate functions
  * @ingroup mobilitydb_cbuffer
  * @brief Aggregate functions for temporal circular buffers
- *
- * @defgroup mobilitydb_cbuffer_analytics Analytics functions
- * @ingroup mobilitydb_cbuffer
- * @brief Analytics functions for temporal circular buffers
- *
- *   @defgroup mobilitydb_cbuffer_analytics_simplify Simplification functions
- *   @ingroup mobilitydb_cbuffer_analytics
- *   @brief Simplification functions for temporal circular buffers
- *
- *   @defgroup mobilitydb_cbuffer_analytics_reduction Reduction functions
- *   @ingroup mobilitydb_cbuffer_analytics
- *   @brief Reduction functions for temporal circular buffers
- *
- *   @defgroup mobilitydb_cbuffer_analytics_similarity Similarity functions
- *   @ingroup mobilitydb_cbuffer_analytics
- *   @brief Similarity functions for temporal circular buffers
- *
- *   @defgroup mobilitydb_cbuffer_analytics_tile Tile functions
- *   @ingroup mobilitydb_cbuffer_analytics
- *   @brief Tile functions for temporal circular buffers
  */
 
 /*****************************************************************************/

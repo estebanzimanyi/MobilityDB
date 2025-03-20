@@ -45,7 +45,101 @@
 #include "general/temporal.h"
 #include "general/type_util.h"
 #include "geo/tgeo_spatialfuncs.h"
+#include "geo/tspatial_parser.h"
 #include "npoint/tnpoint.h"
+
+/*****************************************************************************
+ * Input/output functions
+ *****************************************************************************/
+
+
+#if MEOS
+/**
+ * @ingroup meos_internal_npoint_inout
+ * @brief Return a temporal circular buffer instant from its Well-Known Text 
+ * (WKT) representation
+ * @param[in] str String
+ */
+TInstant *
+tnpointinst_in(const char *str)
+{
+  assert(str);
+  /* Call the superclass function to read the SRID at the beginning (if any) */
+  Temporal *temp = tspatial_parse(&str, T_TNPOINT);
+  assert(temp->subtype == TINSTANT);
+  return (TInstant *) temp;
+}
+
+/**
+ * @ingroup meos_internal_npoint_inout
+ * @brief Return a temporal circular buffer sequence from its Well-Known Text 
+ * (WKT) representation
+ * @param[in] str String
+ * @param[in] interp Interpolation
+ */
+TSequence *
+tnpointseq_in(const char *str, interpType interp __attribute__((unused)))
+{
+  assert(str);
+  /* Call the superclass function to read the SRID at the beginning (if any) */
+  Temporal *temp = tspatial_parse(&str, T_TNPOINT);
+  if (! temp)
+    return NULL;
+  assert (temp->subtype == TSEQUENCE);
+  return (TSequence *) temp;
+}
+
+/**
+ * @ingroup meos_internal_npoint_inout
+ * @brief Return a temporal circular buffer sequence set from its Well-Known
+ * Text (WKT) representation
+ * @param[in] str String
+ */
+TSequenceSet *
+tnpointseqset_in(const char *str)
+{
+  assert(str);
+  /* Call the superclass function to read the SRID at the beginning (if any) */
+  Temporal *temp = tspatial_parse(&str, T_TNPOINT);
+  assert(temp->subtype == TSEQUENCESET);
+  return (TSequenceSet *) temp;
+}
+#endif /* MEOS */
+
+/*****************************************************************************/
+#if MEOS
+/**
+ * @ingroup meos_npoint_inout
+ * @brief Return a temporal network point from its Well-Known Text (WKT)
+ * representation
+ * @param[in] str String
+ */
+Temporal *
+tnpoint_in(const char *str)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) str))
+    return NULL;
+  return tspatial_parse(&str, T_TNPOINT);
+}
+
+/**
+ * @ingroup meos_npoint_inout
+ * @brief Return the Well-Known Text (WKT) representation of a temporal
+ * network point
+ * @param[in] temp Temporal network point
+ * @param[in] maxdd Maximum number of decimal digits
+ */
+char *
+tnpoint_out(const Temporal *temp, int maxdd)
+{
+  /* Ensure validity of the arguments */
+  if (! ensure_not_null((void *) temp) || 
+      ! ensure_temporal_isof_type(temp, T_TNPOINT))
+    return NULL;
+  return temporal_out(temp, maxdd);
+}
+#endif /* MEOS */
 
 /*****************************************************************************
  * Conversion functions

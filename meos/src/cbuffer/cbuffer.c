@@ -56,7 +56,7 @@
 #include "general/type_inout.h"
 #include "general/type_parser.h"
 #include "general/type_util.h"
-#include "geo/pgis_types.h"
+#include "geo/postgis_funcs.h"
 #include "geo/tspatial.h"
 #include "geo/tgeo.h"
 #include "geo/tgeo_out.h"
@@ -275,7 +275,7 @@ cbuffer_as_ewkt(const Cbuffer *cbuf, int maxdd)
  *****************************************************************************/
 
 /**
- * @ingroup meos_cbuffer_inout
+ * @ingroup meos_cbuffer_base_inout
  * @brief Return a circular buffer from its Well-Known Binary (WKB) 
  * representation
  * @param[in] wkb WKB string
@@ -292,7 +292,7 @@ cbuffer_from_wkb(const uint8_t *wkb, size_t size)
 }
 
 /**
- * @ingroup meos_cbuffer_inout
+ * @ingroup meos_cbuffer_base_inout
  * @brief Return a circular buffer from its hex-encoded ASCII Well-Known Binary
  * (WKB) representation
  * @param[in] hexwkb HexWKB string
@@ -515,6 +515,95 @@ cbufferarr_geom(Cbuffer **cbufarr, int count)
   GSERIALIZED *result = geo_collect_garray(geoms, count);
   pfree_array((void **) geoms, count);
   return result;
+}
+
+/*****************************************************************************
+ * Transform a temporal circular buffer to a STBox
+ *****************************************************************************/
+
+/**
+ * @ingroup meos_internal_box_conversion
+ * @brief Return in the last argument the spatiotemporal box of a circular
+ * buffer
+ * @param[in] cbuf Circular buffer
+ * @param[out] box Spatiotemporal box
+ */
+bool
+cbuffer_set_stbox(const Cbuffer *cbuf, STBox *box)
+{
+  assert(cbuf); assert(box);
+  const GSERIALIZED *point = cbuffer_point_p(cbuf);
+  bool result = geo_set_stbox(point, box);
+  /* Expand spatial coordinates with respect to radius */
+  box->xmin -= cbuf->radius;
+  box->ymin -= cbuf->radius;
+  box->xmax += cbuf->radius;
+  box->ymax += cbuf->radius;
+  return result;
+}
+
+/**
+ * @ingroup meos_internal_box_conversion
+ * @brief Return in the last argument a spatiotemporal box contructed from
+ * an array of circular buffers
+ * @param[in] values Circular buffers
+ * @param[in] count Number of elements in the array
+ * @param[out] box Spatiotemporal box
+ */
+void
+cbufferarr_set_stbox(const Datum *values, int count, STBox *box)
+{
+  cbuffer_set_stbox(DatumGetCbufferP(values[0]), box);
+  for (int i = 1; i < count; i++)
+  {
+    STBox box1;
+    cbuffer_set_stbox(DatumGetCbufferP(values[i]), &box1);
+    stbox_expand(&box1, box);
+  }
+  return;
+}
+
+/**
+ * @ingroup meos_internal_box_conversion
+ * @brief Return in the last argument a spatiotemporal box contructed from
+ * an array of circular buffers
+ * @param[in] values Circular buffers
+ * @param[in] count Number of elements in the array
+ * @param[out] box Spatiotemporal box
+ */
+void
+cbufferset_stbox(const Datum *values, int count, STBox *box)
+{
+  cbuffer_set_stbox(DatumGetCbufferP(values[0]), box);
+  for (int i = 1; i < count; i++)
+  {
+    STBox box1;
+    cbuffer_set_stbox(DatumGetCbufferP(values[i]), &box1);
+    stbox_expand(&box1, box);
+  }
+  return;
+}
+
+/**
+ * @ingroup meos_cbuffer_base_conversion
+ * @brief Return a circular buffer converted to a spatiotemporal box
+ * @param[in] cbuf Circular buffer
+ * @csqlfn #Cbuffer_to_stbox()
+ */
+STBox *
+cbuffer_stbox(const Cbuffer *cbuf)
+{
+  /* Ensure validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) cbuf))
+    return NULL;
+#else
+  assert(cbuf);
+#endif /* MEOS */
+  STBox box;
+  if (! cbuffer_set_stbox(cbuf, &box))
+    return NULL;
+  return stbox_copy(&box);
 }
 
 /*****************************************************************************
@@ -825,7 +914,7 @@ cbuffer_eq(const Cbuffer *cbuf1, const Cbuffer *cbuf2)
  * @param[in] cbuf1,cbuf2 Buffers
  * @csqlfn #Cbuffer_ne()
  */
-bool
+inline bool
 cbuffer_ne(const Cbuffer *cbuf1, const Cbuffer *cbuf2)
 {
   return (! cbuffer_eq(cbuf1, cbuf2));
@@ -860,7 +949,7 @@ cbuffer_same(const Cbuffer *cbuf1, const Cbuffer *cbuf2)
  * @brief Return true if two circular buffers are approximately equal with
  * respect to an epsilon value
  */
-bool
+inline bool
 cbuffer_nsame(const Cbuffer *cbuf1, const Cbuffer *cbuf2)
 {
   return ! cbuffer_same(cbuf1, cbuf2);
@@ -903,11 +992,10 @@ cbuffer_cmp(const Cbuffer *cbuf1, const Cbuffer *cbuf2)
  * @param[in] cbuf1,cbuf2 Buffers
  * @csqlfn #Cbuffer_lt()
  */
-bool
+inline bool
 cbuffer_lt(const Cbuffer *cbuf1, const Cbuffer *cbuf2)
 {
-  int cmp = cbuffer_cmp(cbuf1, cbuf2);
-  return (cmp < 0);
+  return cbuffer_cmp(cbuf1, cbuf2) < 0;
 }
 
 /**
@@ -917,11 +1005,10 @@ cbuffer_lt(const Cbuffer *cbuf1, const Cbuffer *cbuf2)
  * @param[in] cbuf1,cbuf2 Buffers
  * @csqlfn #Cbuffer_le()
  */
-bool
+inline bool
 cbuffer_le(const Cbuffer *cbuf1, const Cbuffer *cbuf2)
 {
-  int cmp = cbuffer_cmp(cbuf1, cbuf2);
-  return (cmp <= 0);
+  return cbuffer_cmp(cbuf1, cbuf2) <= 0;
 }
 
 /**
@@ -930,11 +1017,10 @@ cbuffer_le(const Cbuffer *cbuf1, const Cbuffer *cbuf2)
  * @param[in] cbuf1,cbuf2 Buffers
  * @csqlfn #Cbuffer_gt()
  */
-bool
+inline bool
 cbuffer_gt(const Cbuffer *cbuf1, const Cbuffer *cbuf2)
 {
-  int cmp = cbuffer_cmp(cbuf1, cbuf2);
-  return (cmp > 0);
+  return cbuffer_cmp(cbuf1, cbuf2) > 0;
 }
 
 /**
@@ -944,11 +1030,10 @@ cbuffer_gt(const Cbuffer *cbuf1, const Cbuffer *cbuf2)
  * @param[in] cbuf1,cbuf2 Buffers
  * @csqlfn #Cbuffer_ge()
  */
-bool
+inline bool
 cbuffer_ge(const Cbuffer *cbuf1, const Cbuffer *cbuf2)
 {
-  int cmp = cbuffer_cmp(cbuf1, cbuf2);
-  return (cmp >= 0);
+  return cbuffer_cmp(cbuf1, cbuf2) >= 0;
 }
 
 /*****************************************************************************

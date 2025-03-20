@@ -44,7 +44,7 @@
 #include "general/lifting.h"
 #include "general/tinstant.h"
 #include "general/tsequence.h"
-#include "geo/pgis_types.h"
+#include "geo/postgis_funcs.h"
 #include "geo/geography_funcs.h"
 #include "geo/tgeo_spatialfuncs.h"
 

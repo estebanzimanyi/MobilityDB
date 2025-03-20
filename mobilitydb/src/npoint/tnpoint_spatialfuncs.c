@@ -67,25 +67,6 @@ Tnpoint_trajectory(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************
- * Approximate equality for network points
- *****************************************************************************/
-
-PGDLLEXPORT Datum Npoint_same(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Npoint_same);
-/**
- * @ingroup mobilitydb_npoint_comp
- * @brief Return true if two network points are spatially equal
- * @sqlfn same()
- */
-Datum
-Npoint_same(PG_FUNCTION_ARGS)
-{
-  Npoint *np1 = PG_GETARG_NPOINT_P(0);
-  Npoint *np2 = PG_GETARG_NPOINT_P(1);
-  PG_RETURN_BOOL(npoint_same(np1, np2));
-}
-
-/*****************************************************************************
  * Length functions
  *****************************************************************************/
 
@@ -213,7 +194,7 @@ PG_FUNCTION_INFO_V1(Tnpoint_at_geom);
  * @brief Return a temporal network point restricted to a geometry
  * @sqlfn atGeometry()
  */
-Datum
+inline Datum
 Tnpoint_at_geom(PG_FUNCTION_ARGS)
 {
   return Tnpoint_restrict_geom(fcinfo, REST_AT);
@@ -227,13 +208,31 @@ PG_FUNCTION_INFO_V1(Tnpoint_minus_geom);
  * geometry
  * @sqlfn minusGeometry()
  */
-Datum
+inline Datum
 Tnpoint_minus_geom(PG_FUNCTION_ARGS)
 {
   return Tnpoint_restrict_geom(fcinfo, REST_MINUS);
 }
 
 /*****************************************************************************/
+
+/**
+ * @ingroup mobilitydb_npoint_restrict
+ * @brief Return a temporal network point restricted to a spatiotemporal box
+ * @sqlfn atStbox()
+ */
+static Datum
+Tnpoint_restrict_stbox(FunctionCallInfo fcinfo, bool atfunc)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  STBox *box = PG_GETARG_STBOX_P(1);
+  bool border_inc = PG_GETARG_BOOL(2);
+  Temporal *result = tnpoint_restrict_stbox(temp, box, border_inc, atfunc);
+  PG_FREE_IF_COPY(temp, 0);
+  if (! result)
+    PG_RETURN_NULL();
+  PG_RETURN_TEMPORAL_P(result);
+}
 
 PGDLLEXPORT Datum Tnpoint_at_stbox(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tnpoint_at_stbox);
@@ -242,17 +241,10 @@ PG_FUNCTION_INFO_V1(Tnpoint_at_stbox);
  * @brief Return a temporal network point restricted to a spatiotemporal box
  * @sqlfn atStbox()
  */
-Datum
+inline Datum
 Tnpoint_at_stbox(PG_FUNCTION_ARGS)
 {
-  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  STBox *box = PG_GETARG_STBOX_P(1);
-  bool border_inc = PG_GETARG_BOOL(2);
-  Temporal *result = tnpoint_restrict_stbox(temp, box, border_inc, REST_AT);
-  PG_FREE_IF_COPY(temp, 0);
-  if (! result)
-    PG_RETURN_NULL();
-  PG_RETURN_TEMPORAL_P(result);
+  return Tnpoint_restrict_stbox(fcinfo, REST_AT);
 }
 
 PGDLLEXPORT Datum Tnpoint_minus_stbox(PG_FUNCTION_ARGS);
@@ -263,17 +255,10 @@ PG_FUNCTION_INFO_V1(Tnpoint_minus_stbox);
  * spatiotemporal box
  * @sqlfn minusStbox()
  */
-Datum
+inline Datum
 Tnpoint_minus_stbox(PG_FUNCTION_ARGS)
 {
-  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  STBox *box = PG_GETARG_STBOX_P(1);
-  bool border_inc = PG_GETARG_BOOL(2);
-  Temporal *result = tnpoint_restrict_stbox(temp, box, border_inc, REST_MINUS);
-  PG_FREE_IF_COPY(temp, 0);
-  if (! result)
-    PG_RETURN_NULL();
-  PG_RETURN_TEMPORAL_P(result);
+  return Tnpoint_restrict_stbox(fcinfo, REST_MINUS);
 }
 
 /*****************************************************************************/

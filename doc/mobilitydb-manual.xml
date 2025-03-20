@@ -63,7 +63,7 @@
 ">
 
 ]>
-<book lang="en">
+<book lang="en" xmlns:mml="http://www.w3.org/1998/Math/MathML">
 	<bookinfo>
 		<title>MobilityDB &last_release_version; User's Manual</title>
 		<author>

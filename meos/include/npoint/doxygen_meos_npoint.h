@@ -40,10 +40,6 @@
  * @ingroup meos_npoint
  * @brief Input and output functions for temporal network points
  *
- * @defgroup meos_npoint_constructor Constructor functions
- * @ingroup meos_npoint
- * @brief Constructor functions for temporal network points
- *
  * @defgroup meos_npoint_conversion Conversion functions
  * @ingroup meos_npoint
  * @brief Conversion functions for temporal network points
@@ -52,41 +48,9 @@
  * @ingroup meos_npoint
  * @brief Accessor functions for temporal network points
  *
- * @defgroup meos_npoint_transf Transformation functions
- * @ingroup meos_npoint
- * @brief Transformation functions for temporal network points
- *
- * @defgroup meos_npoint_modif Modification functions
- * @ingroup meos_npoint
- * @brief Modification functions for temporal network points
- *
  * @defgroup meos_npoint_restrict Restriction functions
  * @ingroup meos_npoint
  * @brief Restriction functions for temporal network points
- *
- * @defgroup meos_npoint_comp Comparison functions
- * @ingroup meos_npoint
- * @brief Comparison functions for temporal network points
- *
- * @defgroup meos_npoint_comp_ever Ever and always comparison functions
- * @ingroup meos_npoint_comp
- * @brief Ever and always comparison functions for temporal network points
- *
- * @defgroup meos_npoint_comp_temp Temporal comparison functions
- * @ingroup meos_npoint_comp
- * @brief Temporal comparison functions for temporal network points
- *
- * @defgroup meos_npoint_bbox Bounding box functions
- * @ingroup meos_npoint
- * @brief Bounding box functions for temporal network points
- *
- * @defgroup meos_npoint_bbox_topo Topological functions
- * @ingroup meos_npoint_bbox
- * @brief Topological functions for temporal network points
- *
- * @defgroup meos_npoint_bbox_pos Position functions
- * @ingroup meos_npoint_bbox
- * @brief Position functions for temporal network points
  *
  * @defgroup meos_npoint_dist Distance functions
  * @ingroup meos_npoint
@@ -95,26 +59,6 @@
  * @defgroup meos_npoint_agg Aggregate functions
  * @ingroup meos_npoint
  * @brief Aggregate functions for temporal network points
- *
- * @defgroup meos_npoint_analytics Analytics functions
- * @ingroup meos_npoint
- * @brief Analytics functions for temporal network points
- *
- * @defgroup meos_npoint_analytics_simplify Simplification functions
- * @ingroup meos_npoint_analytics
- * @brief Simplification functions for temporal network points
- *
- * @defgroup meos_npoint_analytics_reduction Reduction functions
- * @ingroup meos_npoint_analytics
- * @brief Reduction functions for temporal network points
- *
- * @defgroup meos_npoint_analytics_similarity Similarity functions
- * @ingroup meos_npoint_analytics
- * @brief Similarity functions for temporal network points
- *
- * @defgroup meos_npoint_analytics_tile Tile functions
- * @ingroup meos_npoint_analytics
- * @brief Tile functions for temporal network points
  */
 
 /*****************************************************************************/
@@ -140,10 +84,6 @@
  * @ingroup meos_npoint_base
  * @brief Transformation functions for static network points
  *
- * @defgroup meos_npoint_base_srid Spatial reference system functions
- * @ingroup meos_npoint_base
- * @brief Spatial reference system functions for static network points
- *
  * @defgroup meos_npoint_base_comp Comparison functions
  * @ingroup meos_npoint_base
  * @brief Comparison functions for static network points
@@ -167,10 +107,6 @@
  * @defgroup meos_npoint_set_accessor Accessor functions
  * @ingroup meos_npoint_set
  * @brief Accessor functions for network point sets
- *
- * @defgroup meos_npoint_set_transf Transformation functions
- * @ingroup meos_npoint_set
- * @brief Transformation functions for network point sets
  *
  * @defgroup meos_npoint_set_setops Set operations
  * @ingroup meos_npoint_set

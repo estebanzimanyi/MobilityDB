@@ -202,7 +202,11 @@ CREATE FUNCTION setInterp(tnpoint, text)
 
 CREATE FUNCTION round(tnpoint, integer DEFAULT 0)
   RETURNS tnpoint
-  AS 'MODULE_PATHNAME', 'Tnpoint_round'
+  AS 'MODULE_PATHNAME', 'Temporal_round'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION round(tnpoint[], integer DEFAULT 0)
+  RETURNS tnpoint
+  AS 'MODULE_PATHNAME', 'Temporalarr_round'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************

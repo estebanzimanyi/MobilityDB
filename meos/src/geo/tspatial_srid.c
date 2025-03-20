@@ -207,7 +207,7 @@ tspatialinst_srid(const TInstant *inst)
  * @param[in] temp Temporal spatial value
  * @csqlfn #Tspatial_srid()
  */
-int
+int32_t
 tspatial_srid(const Temporal *temp)
 {
   /* Ensure validity of the arguments */

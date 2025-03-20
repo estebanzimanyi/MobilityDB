@@ -198,7 +198,7 @@ PG_FUNCTION_INFO_V1(Tdisjoint_geo_tnpoint);
  * from a temporal network point
  * @sqlfn tDisjoint()
  */
-Datum
+inline Datum
 Tdisjoint_geo_tnpoint(PG_FUNCTION_ARGS)
 {
   return Tinterrel_geo_tnpoint(fcinfo, TDISJOINT);
@@ -212,7 +212,7 @@ PG_FUNCTION_INFO_V1(Tdisjoint_npoint_tnpoint);
  * disjoint from a temporal network point
  * @sqlfn tDisjoint()
  */
-Datum
+inline Datum
 Tdisjoint_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
   return Tinterrel_npoint_tnpoint(fcinfo, TDISJOINT);
@@ -226,7 +226,7 @@ PG_FUNCTION_INFO_V1(Tdisjoint_tnpoint_geo);
  * point is disjoint from a geometry
  * @sqlfn tDisjoint()
  */
-Datum
+inline Datum
 Tdisjoint_tnpoint_geo(PG_FUNCTION_ARGS)
 {
   return Tinterrel_tnpoint_geo(fcinfo, TDISJOINT);
@@ -240,7 +240,7 @@ PG_FUNCTION_INFO_V1(Tdisjoint_tnpoint_npoint);
  * point is disjoint from a network point
  * @sqlfn tDisjoint()
  */
-Datum
+inline Datum
 Tdisjoint_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
   return Tinterrel_tnpoint_npoint(fcinfo, TDISJOINT);
@@ -258,7 +258,7 @@ PG_FUNCTION_INFO_V1(Tintersects_geo_tnpoint);
  * temporal network point
  * @sqlfn tIntersects()
  */
-Datum
+inline Datum
 Tintersects_geo_tnpoint(PG_FUNCTION_ARGS)
 {
   return Tinterrel_geo_tnpoint(fcinfo, TINTERSECTS);
@@ -272,7 +272,7 @@ PG_FUNCTION_INFO_V1(Tintersects_npoint_tnpoint);
  * intersects a temporal network point
  * @sqlfn tIntersects()
  */
-Datum
+inline Datum
 Tintersects_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
   return Tinterrel_npoint_tnpoint(fcinfo, TINTERSECTS);
@@ -286,7 +286,7 @@ PG_FUNCTION_INFO_V1(Tintersects_tnpoint_geo);
  * point intersects a geometry
  * @sqlfn tIntersects()
  */
-Datum
+inline Datum
 Tintersects_tnpoint_geo(PG_FUNCTION_ARGS)
 {
   return Tinterrel_tnpoint_geo(fcinfo, TINTERSECTS);
@@ -300,7 +300,7 @@ PG_FUNCTION_INFO_V1(Tintersects_tnpoint_npoint);
  * point intersects a network point
  * @sqlfn tIntersects()
  */
-Datum
+inline Datum
 Tintersects_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
   return Tinterrel_tnpoint_npoint(fcinfo, TINTERSECTS);

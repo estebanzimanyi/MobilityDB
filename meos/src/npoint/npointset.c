@@ -56,7 +56,7 @@
 #include "general/type_inout.h"
 #include "general/type_parser.h"
 #include "general/type_util.h"
-#include "geo/pgis_types.h"
+#include "geo/postgis_funcs.h"
 #include "geo/tgeo.h"
 #include "geo/tgeo_out.h"
 #include "geo/tgeo_spatialfuncs.h"

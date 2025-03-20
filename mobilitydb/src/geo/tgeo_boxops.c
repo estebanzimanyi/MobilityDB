@@ -282,7 +282,7 @@ PG_FUNCTION_INFO_V1(Overlaps_stbox_tspatial);
  * @sqlfn overlaps_bbox()
  * @sqlop @p &&
  */
-Datum
+inline Datum
 Overlaps_stbox_tspatial(PG_FUNCTION_ARGS)
 {
   return Boxop_stbox_tspatial(fcinfo, &overlaps_stbox_stbox);
@@ -297,7 +297,7 @@ PG_FUNCTION_INFO_V1(Overlaps_tspatial_stbox);
  * @sqlfn overlaps_bbox()
  * @sqlop @p &&
  */
-Datum
+inline Datum
 Overlaps_tspatial_stbox(PG_FUNCTION_ARGS)
 {
   return Boxop_tspatial_stbox(fcinfo, &overlaps_stbox_stbox);
@@ -312,7 +312,7 @@ PG_FUNCTION_INFO_V1(Overlaps_tspatial_tspatial);
  * @sqlfn overlaps_bbox()
  * @sqlop @p &&
  */
-Datum
+inline Datum
 Overlaps_tspatial_tspatial(PG_FUNCTION_ARGS)
 {
   return Boxop_tspatial_tspatial(fcinfo, &overlaps_stbox_stbox);
@@ -331,7 +331,7 @@ PG_FUNCTION_INFO_V1(Contains_stbox_tspatial);
  * @sqlfn contains_bbox()
  * @sqlop @p <@
  */
-Datum
+inline Datum
 Contains_stbox_tspatial(PG_FUNCTION_ARGS)
 {
   return Boxop_stbox_tspatial(fcinfo, &contains_stbox_stbox);
@@ -346,7 +346,7 @@ PG_FUNCTION_INFO_V1(Contains_tspatial_stbox);
  * @sqlfn contains_bbox()
  * @sqlop @p <@
  */
-Datum
+inline Datum
 Contains_tspatial_stbox(PG_FUNCTION_ARGS)
 {
   return Boxop_tspatial_stbox(fcinfo, &contains_stbox_stbox);
@@ -361,7 +361,7 @@ PG_FUNCTION_INFO_V1(Contains_tspatial_tspatial);
  * @sqlfn contains_bbox()
  * @sqlop @p <@
  */
-Datum
+inline Datum
 Contains_tspatial_tspatial(PG_FUNCTION_ARGS)
 {
   return Boxop_tspatial_tspatial(fcinfo, &contains_stbox_stbox);
@@ -380,7 +380,7 @@ PG_FUNCTION_INFO_V1(Contained_stbox_tspatial);
  * @sqlfn contained_bbox()
  * @sqlop @p \@>
  */
-Datum
+inline Datum
 Contained_stbox_tspatial(PG_FUNCTION_ARGS)
 {
   return Boxop_stbox_tspatial(fcinfo, &contained_stbox_stbox);
@@ -395,7 +395,7 @@ PG_FUNCTION_INFO_V1(Contained_tspatial_stbox);
  * @sqlfn contained_bbox()
  * @sqlop @p \@>
  */
-Datum
+inline Datum
 Contained_tspatial_stbox(PG_FUNCTION_ARGS)
 {
   return Boxop_tspatial_stbox(fcinfo, &contained_stbox_stbox);
@@ -410,7 +410,7 @@ PG_FUNCTION_INFO_V1(Contained_tspatial_tspatial);
  * @sqlfn contained_bbox()
  * @sqlop @p \@>
  */
-Datum
+inline Datum
 Contained_tspatial_tspatial(PG_FUNCTION_ARGS)
 {
   return Boxop_tspatial_tspatial(fcinfo, &contained_stbox_stbox);
@@ -429,7 +429,7 @@ PG_FUNCTION_INFO_V1(Same_stbox_tspatial);
  * @sqlfn same_bbox()
  * @sqlop @p ~=
  */
-Datum
+inline Datum
 Same_stbox_tspatial(PG_FUNCTION_ARGS)
 {
   return Boxop_stbox_tspatial(fcinfo, &same_stbox_stbox);
@@ -444,7 +444,7 @@ PG_FUNCTION_INFO_V1(Same_tspatial_stbox);
  * @sqlfn same_bbox()
  * @sqlop @p ~=
  */
-Datum
+inline Datum
 Same_tspatial_stbox(PG_FUNCTION_ARGS)
 {
   return Boxop_tspatial_stbox(fcinfo, &same_stbox_stbox);
@@ -459,7 +459,7 @@ PG_FUNCTION_INFO_V1(Same_tspatial_tspatial);
  * @sqlfn same_bbox()
  * @sqlop @p ~=
  */
-Datum
+inline Datum
 Same_tspatial_tspatial(PG_FUNCTION_ARGS)
 {
   return Boxop_tspatial_tspatial(fcinfo, &same_stbox_stbox);
@@ -478,7 +478,7 @@ PG_FUNCTION_INFO_V1(Adjacent_stbox_tspatial);
  * @sqlfn adjacent_bbox()
  * @sqlop @p -|-
  */
-Datum
+inline Datum
 Adjacent_stbox_tspatial(PG_FUNCTION_ARGS)
 {
   return Boxop_stbox_tspatial(fcinfo, &adjacent_stbox_stbox);
@@ -493,7 +493,7 @@ PG_FUNCTION_INFO_V1(Adjacent_tspatial_stbox);
  * @sqlfn adjacent_bbox()
  * @sqlop @p -|-
  */
-Datum
+inline Datum
 Adjacent_tspatial_stbox(PG_FUNCTION_ARGS)
 {
   return Boxop_tspatial_stbox(fcinfo, &adjacent_stbox_stbox);
@@ -508,7 +508,7 @@ PG_FUNCTION_INFO_V1(Adjacent_tspatial_tspatial);
  * @sqlfn adjacent_bbox()
  * @sqlop @p -|-
  */
-Datum
+inline Datum
 Adjacent_tspatial_tspatial(PG_FUNCTION_ARGS)
 {
   return Boxop_tspatial_tspatial(fcinfo, &adjacent_stbox_stbox);

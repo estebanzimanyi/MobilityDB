@@ -90,6 +90,17 @@ extern GSERIALIZED *npointarr_geom(Npoint **points, int count);
 extern GSERIALIZED *nsegmentarr_geom(Nsegment **segments, int count);
 extern Nsegment **nsegmentarr_normalize(Nsegment **segments, int *count);
 
+/* Collinear functions */
+
+extern bool npoint_collinear(const Npoint *np1, const Npoint *np2, 
+  const Npoint *np3, double ratio);
+
+/* Interpolation functions */
+
+extern Datum npointsegm_interpolate(Datum start, Datum end, long double ratio);
+extern bool tnpointsegm_intersection_value(const TInstant *inst1,
+  const TInstant *inst2, Datum value, TimestampTz *t);
+
 /* Input/output functions */
 
 extern char *npoint_wkt_out(Datum value, int maxdd);

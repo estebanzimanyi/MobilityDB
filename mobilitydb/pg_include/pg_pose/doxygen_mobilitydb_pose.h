@@ -67,23 +67,6 @@
  * @ingroup mobilitydb_pose
  * @brief Restriction functions for temporal poses
  *
- * @defgroup mobilitydb_pose_modif Modification functions
- * @ingroup mobilitydb_pose
- * @brief Modification functions for temporal poses
- *
- * @defgroup mobilitydb_pose_bbox Bounding box functions
- * @ingroup mobilitydb_pose
- * @brief Bounding box functions for temporal poses
- *
- *   @defgroup mobilitydb_pose_bbox_topo Topological functions
- *   @ingroup mobilitydb_pose_bbox
- *   @brief Topological functions for temporal poses
- *
- *   @defgroup mobilitydb_pose_bbox_pos Position functions
- *   @ingroup mobilitydb_pose_bbox
- *   @brief Position functions for temporal poses
- *
- * @defgroup mobilitydb_pose_dist Distance functions
  * @ingroup mobilitydb_pose
  * @brief Distance functions for temporal poses
  *
@@ -118,26 +101,6 @@
  * @defgroup mobilitydb_pose_agg Aggregate functions
  * @ingroup mobilitydb_pose
  * @brief Aggregate functions for temporal poses
- *
- * @defgroup mobilitydb_pose_analytics Analytics functions
- * @ingroup mobilitydb_pose
- * @brief Analytics functions for temporal poses
- *
- *   @defgroup mobilitydb_pose_analytics_simplify Simplification functions
- *   @ingroup mobilitydb_pose_analytics
- *   @brief Simplification functions for temporal poses
- *
- *   @defgroup mobilitydb_pose_analytics_reduction Reduction functions
- *   @ingroup mobilitydb_pose_analytics
- *   @brief Reduction functions for temporal poses
- *
- *   @defgroup mobilitydb_pose_analytics_similarity Similarity functions
- *   @ingroup mobilitydb_pose_analytics
- *   @brief Similarity functions for temporal poses
- *
- *   @defgroup mobilitydb_pose_analytics_tile Tile functions
- *   @ingroup mobilitydb_pose_analytics
- *   @brief Tile functions for temporal poses
  */
 
 /*****************************************************************************/

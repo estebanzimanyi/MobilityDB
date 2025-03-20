@@ -126,26 +126,4 @@ Tpose_points(PG_FUNCTION_ARGS)
   PG_RETURN_SET_P(result);
 }
 
-/*****************************************************************************
- * Transformation functions
- *****************************************************************************/
-
-PGDLLEXPORT Datum Tpose_round(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tpose_round);
-/**
- * @ingroup mobilitydb_pose_transf
- * @brief Return a temporal pose with the precision of the values set to a
- * number of decimal places
- * @sqlfn round()
- */
-Datum
-Tpose_round(PG_FUNCTION_ARGS)
-{
-  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  Datum size = PG_GETARG_DATUM(1);
-  Temporal *result = temporal_round(temp, size, datum_pose_round);
-  PG_FREE_IF_COPY(temp, 0);
-  PG_RETURN_TEMPORAL_P(result);
-}
-
 /*****************************************************************************/

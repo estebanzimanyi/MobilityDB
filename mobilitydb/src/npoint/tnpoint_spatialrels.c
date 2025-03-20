@@ -103,7 +103,7 @@ PG_FUNCTION_INFO_V1(Econtains_geo_tnpoint);
  * @brief Return true if a geometry ever contains a temporal network point
  * @sqlfn eContains()
  */
-Datum
+inline Datum
 Econtains_geo_tnpoint(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_geo_tspatial(fcinfo, &ea_contains_geo_tnpoint, EVER);
@@ -116,7 +116,7 @@ PG_FUNCTION_INFO_V1(Acontains_geo_tnpoint);
  * @brief Return true if a geometry always contains a temporal network point
  * @sqlfn aContains()
  */
-Datum
+inline Datum
 Acontains_geo_tnpoint(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_geo_tspatial(fcinfo, &ea_contains_geo_tnpoint, ALWAYS);
@@ -134,7 +134,7 @@ PG_FUNCTION_INFO_V1(Edisjoint_geo_tnpoint);
  * disjoint
  * @sqlfn eDisjoint()
  */
-Datum
+inline Datum
 Edisjoint_geo_tnpoint(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_geo_tspatial(fcinfo, &ea_disjoint_geo_tnpoint, EVER);
@@ -148,7 +148,7 @@ PG_FUNCTION_INFO_V1(Adisjoint_geo_tnpoint);
  * disjoint
  * @sqlfn aDisjoint()
  */
-Datum
+inline Datum
 Adisjoint_geo_tnpoint(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_geo_tspatial(fcinfo, &ea_disjoint_geo_tnpoint, ALWAYS);
@@ -162,7 +162,7 @@ PG_FUNCTION_INFO_V1(Edisjoint_npoint_tnpoint);
  * disjoint
  * @sqlfn eDisjoint()
  */
-Datum
+inline Datum
 Edisjoint_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_npoint_tnpoint(fcinfo, &ea_disjoint_tnpoint_npoint,
@@ -177,7 +177,7 @@ PG_FUNCTION_INFO_V1(Adisjoint_npoint_tnpoint);
  * always disjoint
  * @sqlfn aDisjoint()
  */
-Datum
+inline Datum
 Adisjoint_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_npoint_tnpoint(fcinfo, &ea_disjoint_tnpoint_npoint,
@@ -192,7 +192,7 @@ PG_FUNCTION_INFO_V1(Edisjoint_tnpoint_geo);
  * disjoint
  * @sqlfn eDisjoint()
  */
-Datum
+inline Datum
 Edisjoint_tnpoint_geo(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_tspatial_geo(fcinfo, &ea_disjoint_tnpoint_geo, EVER);
@@ -206,7 +206,7 @@ PG_FUNCTION_INFO_V1(Adisjoint_tnpoint_geo);
  * disjoint
  * @sqlfn aDisjoint()
  */
-Datum
+inline Datum
 Adisjoint_tnpoint_geo(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_tspatial_geo(fcinfo, &ea_disjoint_tnpoint_geo, ALWAYS);
@@ -220,7 +220,7 @@ PG_FUNCTION_INFO_V1(Edisjoint_tnpoint_npoint);
  * disjoint
  * @sqlfn eDisjoint()
  */
-Datum
+inline Datum
 Edisjoint_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_tnpoint_npoint(fcinfo, &ea_disjoint_tnpoint_npoint, EVER);
@@ -234,7 +234,7 @@ PG_FUNCTION_INFO_V1(Adisjoint_tnpoint_npoint);
  * always disjoint
  * @sqlfn aDisjoint()
  */
-Datum
+inline Datum
 Adisjoint_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_tnpoint_npoint(fcinfo, &ea_disjoint_tnpoint_npoint, ALWAYS);
@@ -249,7 +249,7 @@ PG_FUNCTION_INFO_V1(Edisjoint_tnpoint_tnpoint);
  * @brief Return true if two temporal network points are ever disjoint
  * @sqlfn eDisjoint()
  */
-Datum
+inline Datum
 Edisjoint_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_tspatial_tspatial(fcinfo, &datum2_point_ne, NULL,
@@ -263,7 +263,7 @@ PG_FUNCTION_INFO_V1(Adisjoint_tnpoint_tnpoint);
  * @brief Return true if two temporal network points are always disjoint
  * @sqlfn aDisjoint()
  */
-Datum
+inline Datum
 Adisjoint_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_tspatial_tspatial(fcinfo, &datum2_point_ne, NULL, 
@@ -282,7 +282,7 @@ PG_FUNCTION_INFO_V1(Eintersects_geo_tnpoint);
  * point ever intersect
  * @sqlfn eIntersects()
  */
-Datum
+inline Datum
 Eintersects_geo_tnpoint(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_geo_tspatial(fcinfo, &ea_intersects_geo_tnpoint, EVER);
@@ -296,7 +296,7 @@ PG_FUNCTION_INFO_V1(Aintersects_geo_tnpoint);
  * point always intersect
  * @sqlfn aIntersects()
  */
-Datum
+inline Datum
 Aintersects_geo_tnpoint(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_geo_tspatial(fcinfo, &ea_intersects_geo_tnpoint, ALWAYS);
@@ -310,7 +310,7 @@ PG_FUNCTION_INFO_V1(Eintersects_npoint_tnpoint);
  * network point ever intersect
  * @sqlfn eIntersects()
  */
-Datum
+inline Datum
 Eintersects_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_npoint_tnpoint(fcinfo, &ea_intersects_tnpoint_npoint, EVER);
@@ -324,7 +324,7 @@ PG_FUNCTION_INFO_V1(Aintersects_npoint_tnpoint);
  * network point always intersect
  * @sqlfn aIntersects()
  */
-Datum
+inline Datum
 Aintersects_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_npoint_tnpoint(fcinfo, &ea_intersects_tnpoint_npoint, ALWAYS);
@@ -338,7 +338,7 @@ PG_FUNCTION_INFO_V1(Eintersects_tnpoint_geo);
  * geometry ever intersect
  * @sqlfn eIntersects()
  */
-Datum
+inline Datum
 Eintersects_tnpoint_geo(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_tspatial_geo(fcinfo, &ea_intersects_tnpoint_geo, EVER);
@@ -352,7 +352,7 @@ PG_FUNCTION_INFO_V1(Aintersects_tnpoint_geo);
  * geometry always intersect
  * @sqlfn aIntersects()
  */
-Datum
+inline Datum
 Aintersects_tnpoint_geo(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_tspatial_geo(fcinfo, &ea_intersects_tnpoint_geo, ALWAYS);
@@ -366,7 +366,7 @@ PG_FUNCTION_INFO_V1(Eintersects_tnpoint_npoint);
  * network point ever intersect
  * @sqlfn eIntersects()
  */
-Datum
+inline Datum
 Eintersects_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_tnpoint_npoint(fcinfo, &ea_intersects_tnpoint_npoint,
@@ -381,7 +381,7 @@ PG_FUNCTION_INFO_V1(Aintersects_tnpoint_npoint);
  * network point always intersect
  * @sqlfn aIntersects()
  */
-Datum
+inline Datum
 Aintersects_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_tnpoint_npoint(fcinfo, &ea_intersects_tnpoint_npoint,
@@ -397,7 +397,7 @@ PG_FUNCTION_INFO_V1(Eintersects_tnpoint_tnpoint);
  * @brief Return true if two temporal network points ever intersect
  * @sqlfn eIntersects()
  */
-Datum
+inline Datum
 Eintersects_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_tspatial_tspatial(fcinfo, &datum2_point_eq, NULL, EVER);
@@ -410,7 +410,7 @@ PG_FUNCTION_INFO_V1(Aintersects_tnpoint_tnpoint);
  * @brief Return true if two temporal network points always intersect
  * @sqlfn aIntersects()
  */
-Datum
+inline Datum
 Aintersects_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_tspatial_tspatial(fcinfo, &datum2_point_eq, NULL, 
@@ -482,7 +482,7 @@ PG_FUNCTION_INFO_V1(Edwithin_geo_tnpoint);
  * within a distance
  * @sqlfn eDwithin()
  */
-Datum
+inline Datum
 Edwithin_geo_tnpoint(PG_FUNCTION_ARGS)
 {
   return EA_dwithin_geo_tspatial(fcinfo, &ea_dwithin_geom_tnpoint, EVER);
@@ -496,7 +496,7 @@ PG_FUNCTION_INFO_V1(Adwithin_geo_tnpoint);
  * within a distance
  * @sqlfn aDwithin()
  */
-Datum
+inline Datum
 Adwithin_geo_tnpoint(PG_FUNCTION_ARGS)
 {
   return EA_dwithin_geo_tspatial(fcinfo, &ea_dwithin_geom_tnpoint, ALWAYS);
@@ -510,7 +510,7 @@ PG_FUNCTION_INFO_V1(Edwithin_tnpoint_geo);
  * within a distance
  * @sqlfn eDwithin()
  */
-Datum
+inline Datum
 Edwithin_tnpoint_geo(PG_FUNCTION_ARGS)
 {
   return EA_dwithin_tspatial_geo(fcinfo, &ea_dwithin_tnpoint_geom, EVER);
@@ -524,7 +524,7 @@ PG_FUNCTION_INFO_V1(Adwithin_tnpoint_geo);
  * within a distance
  * @sqlfn aDwithin()
  */
-Datum
+inline Datum
 Adwithin_tnpoint_geo(PG_FUNCTION_ARGS)
 {
   return EA_dwithin_tspatial_geo(fcinfo, &ea_dwithin_tnpoint_geom, ALWAYS);
@@ -540,7 +540,7 @@ PG_FUNCTION_INFO_V1(Edwithin_npoint_tnpoint);
  * within a distance
  * @sqlfn eDwithin()
  */
-Datum
+inline Datum
 Edwithin_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
   return EA_dwithin_npoint_tnpoint(fcinfo, EVER);
@@ -554,7 +554,7 @@ PG_FUNCTION_INFO_V1(Adwithin_npoint_tnpoint);
  * always within a distance
  * @sqlfn aDwithin()
  */
-Datum
+inline Datum
 Adwithin_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
   return EA_dwithin_npoint_tnpoint(fcinfo, ALWAYS);
@@ -568,7 +568,7 @@ PG_FUNCTION_INFO_V1(Edwithin_tnpoint_npoint);
  * within a distance
  * @sqlfn eDwithin()
  */
-Datum
+inline Datum
 Edwithin_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
   return EA_dwithin_tnpoint_npoint(fcinfo, EVER);
@@ -582,7 +582,7 @@ PG_FUNCTION_INFO_V1(Adwithin_tnpoint_npoint);
  * network point are always within a distance
  * @sqlfn aDwithin()
  */
-Datum
+inline Datum
 Adwithin_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
   return EA_dwithin_tnpoint_npoint(fcinfo, ALWAYS);
@@ -595,7 +595,7 @@ PG_FUNCTION_INFO_V1(Edwithin_tnpoint_tnpoint);
  * @brief Return true if two temporal network points are ever within a distance
  * @sqlfn eDwithin()
  */
-Datum
+inline Datum
 Edwithin_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 {
   return EA_dwithin_tnpoint_tnpoint(fcinfo, EVER);
@@ -609,7 +609,7 @@ PG_FUNCTION_INFO_V1(Adwithin_tnpoint_tnpoint);
  * distance
  * @sqlfn aDwithin()
  */
-Datum
+inline Datum
 Adwithin_tnpoint_tnpoint(PG_FUNCTION_ARGS)
 {
   return EA_dwithin_tnpoint_tnpoint(fcinfo, ALWAYS);
@@ -627,7 +627,7 @@ PG_FUNCTION_INFO_V1(Etouches_geo_tnpoint);
  * point ever intersect
  * @sqlfn eTouches()
  */
-Datum
+inline Datum
 Etouches_geo_tnpoint(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_geo_tspatial(fcinfo, &ea_touches_geo_tnpoint, EVER);
@@ -641,7 +641,7 @@ PG_FUNCTION_INFO_V1(Atouches_geo_tnpoint);
  * point always intersect
  * @sqlfn aTouches()
  */
-Datum
+inline Datum
 Atouches_geo_tnpoint(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_geo_tspatial(fcinfo, &ea_touches_geo_tnpoint, ALWAYS);
@@ -655,7 +655,7 @@ PG_FUNCTION_INFO_V1(Etouches_npoint_tnpoint);
  * network point ever intersect
  * @sqlfn eTouches()
  */
-Datum
+inline Datum
 Etouches_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_npoint_tnpoint(fcinfo, &ea_touches_tnpoint_npoint, EVER);
@@ -669,7 +669,7 @@ PG_FUNCTION_INFO_V1(Atouches_npoint_tnpoint);
  * network point always intersect
  * @sqlfn aTouches()
  */
-Datum
+inline Datum
 Atouches_npoint_tnpoint(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_npoint_tnpoint(fcinfo, &ea_touches_tnpoint_npoint, ALWAYS);
@@ -683,7 +683,7 @@ PG_FUNCTION_INFO_V1(Etouches_tnpoint_geo);
  * geometry ever intersect
  * @sqlfn eTouches()
  */
-Datum
+inline Datum
 Etouches_tnpoint_geo(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_tspatial_geo(fcinfo, &ea_touches_tnpoint_geo, EVER);
@@ -697,7 +697,7 @@ PG_FUNCTION_INFO_V1(Atouches_tnpoint_geo);
  * geometry always intersect
  * @sqlfn aTouches()
  */
-Datum
+inline Datum
 Atouches_tnpoint_geo(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_tspatial_geo(fcinfo, &ea_touches_tnpoint_geo, ALWAYS);
@@ -711,7 +711,7 @@ PG_FUNCTION_INFO_V1(Etouches_tnpoint_npoint);
  * network point ever intersect
  * @sqlfn eTouches()
  */
-Datum
+inline Datum
 Etouches_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_tnpoint_npoint(fcinfo, &ea_touches_tnpoint_npoint, EVER);
@@ -725,7 +725,7 @@ PG_FUNCTION_INFO_V1(Atouches_tnpoint_npoint);
  * network point always intersect
  * @sqlfn aTouches()
  */
-Datum
+inline Datum
 Atouches_tnpoint_npoint(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_tnpoint_npoint(fcinfo, &ea_touches_tnpoint_npoint,

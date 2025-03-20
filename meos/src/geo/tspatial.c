@@ -529,7 +529,7 @@ tspatial_set_stbox(const Temporal *temp, STBox *box)
 }
 
 /**
- * @ingroup meos_geo_box
+ * @ingroup meos_geo_conversion
  * @brief Return a temporal spatial value converted to a spatiotemporal box
  * @param[in] temp Temporal spatial value
  * @csqlfn #Tspatial_to_stbox()

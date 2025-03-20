@@ -51,17 +51,6 @@ extern bool ensure_same_srid_tnpoint_stbox(const Temporal *temp,
 extern bool ensure_same_rid_tnpointinst(const TInstant *inst1,
   const TInstant *inst2);
 
-/* Collineqr functions */
-
-extern bool npoint_collinear(Npoint *np1, Npoint *np2, Npoint *np3,
-  double ratio);
-
-/* Interpolation functions */
-
-extern Datum npointsegm_interpolate(Datum start, Datum end, long double ratio);
-extern bool tnpointsegm_intersection_value(const TInstant *inst1,
-  const TInstant *inst2, Datum value, TimestampTz *t);
-
 /* Functions for spatial reference systems */
 
 extern int tnpointinst_srid(const TInstant *inst);

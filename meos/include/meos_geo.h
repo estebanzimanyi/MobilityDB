@@ -79,6 +79,7 @@ extern char *geo_out(const GSERIALIZED *gs);
 extern GSERIALIZED *geo_reverse(const GSERIALIZED *gs);
 extern GSERIALIZED *geo_round(const GSERIALIZED *gs, int maxdd);
 extern bool geo_same(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
+extern GSERIALIZED * geo_set_srid(const GSERIALIZED *gs, int32_t srid);
 extern int32_t geo_srid(const GSERIALIZED *gs);
 extern GSERIALIZED *geo_transform(GSERIALIZED *geom, int32_t srid_to);
 extern GSERIALIZED *geo_transform_pipeline(const GSERIALIZED *gs, char *pipeline, int32_t srid_to, bool is_forward);
@@ -312,8 +313,8 @@ extern GSERIALIZED *tgeo_traversed_area(const Temporal *temp);
 
 /* Transformations */
 
-extern Temporal *tgeo_round(const Temporal *temp, int maxdd);
-extern Temporal **tgeoarr_round(const Temporal **temp, int count, int maxdd);
+int32_t tspatial_srid(const Temporal *temp);
+extern Temporal *tspatial_set_srid(const Temporal *temp, int32_t srid);
 extern Temporal *tspatial_transform(const Temporal *temp, int32 srid);
 extern Temporal *tspatial_transform_pipeline(const Temporal *temp, const char *pipelinestr, int32 srid, bool is_forward);
 

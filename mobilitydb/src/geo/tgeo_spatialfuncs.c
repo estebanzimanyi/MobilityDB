@@ -187,54 +187,6 @@ Geo_round(PG_FUNCTION_ARGS)
   PG_RETURN_GSERIALIZED_P(result);
 }
 
-PGDLLEXPORT Datum Tgeo_round(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tgeo_round);
-/**
- * @ingroup mobilitydb_geo_transf
- * @brief Return a temporal geo with the precision of the coordinates set to a
- * number of decimal places
- * @sqlfn round()
- */
-Datum
-Tgeo_round(PG_FUNCTION_ARGS)
-{
-  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  Datum size = PG_GETARG_DATUM(1);
-  Temporal *result = temporal_round(temp, size, &datum_geo_round);
-  PG_FREE_IF_COPY(temp, 0);
-  PG_RETURN_TEMPORAL_P(result);
-}
-
-PGDLLEXPORT Datum Tgeoarr_round(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tgeoarr_round);
-/**
- * @ingroup mobilitydb_geo_transf
- * @brief Return an array of temporal geos with the precision of the
- * coordinates set to a number of decimal places
- * @sqlfn round()
- */
-Datum
-Tgeoarr_round(PG_FUNCTION_ARGS)
-{
-  ArrayType *array = PG_GETARG_ARRAYTYPE_P(0);
-  /* Return NULL on empty array */
-  int count = ArrayGetNItems(ARR_NDIM(array), ARR_DIMS(array));
-  if (count == 0)
-  {
-    PG_FREE_IF_COPY(array, 0);
-    PG_RETURN_NULL();
-  }
-  int maxdd = PG_GETARG_INT32(1);
-
-  Temporal **temparr = temparr_extract(array, &count);
-  Temporal **resarr = temparr_round((const Temporal **) temparr, count, maxdd,
-    &datum_geo_round);
-  ArrayType *result = temparr_to_array(resarr, count, FREE_ALL);
-  pfree(temparr);
-  PG_FREE_IF_COPY(array, 0);
-  PG_RETURN_ARRAYTYPE_P(result);
-}
-
 /*****************************************************************************/
 
 PGDLLEXPORT Datum Tpoint_to_geomeas(PG_FUNCTION_ARGS);
@@ -786,7 +738,7 @@ PG_FUNCTION_INFO_V1(Tgeo_at_geom);
  * @brief Return a temporal geo restricted to a geometry
  * @sqlfn atGeometry()
  */
-Datum
+inline Datum
 Tgeo_at_geom(PG_FUNCTION_ARGS)
 {
   return Tgeo_restrict_geom(fcinfo, REST_AT);
@@ -799,13 +751,32 @@ PG_FUNCTION_INFO_V1(Tgeo_minus_geom);
  * @brief Return a temporal geo restricted to the complement of a geometry
  * @sqlfn minusGeometry()
  */
-Datum
+inline Datum
 Tgeo_minus_geom(PG_FUNCTION_ARGS)
 {
   return Tgeo_restrict_geom(fcinfo, REST_MINUS);
 }
 
 /*****************************************************************************/
+
+/**
+ * @ingroup mobilitydb_geo_restrict
+ * @brief Return a temporal geo restricted to a spatiotemporal box
+ * @sqlfn atStbox()
+ */
+static Datum
+Tgeo_restrict_stbox(FunctionCallInfo fcinfo, bool atfunc)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  STBox *box = PG_GETARG_STBOX_P(1);
+  bool border_inc = PG_GETARG_BOOL(2);
+  Temporal *result = tgeo_restrict_stbox(temp, box, border_inc, atfunc);
+  PG_FREE_IF_COPY(temp, 0);
+  if (! result)
+    PG_RETURN_NULL();
+  PG_RETURN_TEMPORAL_P(result);
+}
+
 
 PGDLLEXPORT Datum Tgeo_at_stbox(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tgeo_at_stbox);
@@ -814,17 +785,10 @@ PG_FUNCTION_INFO_V1(Tgeo_at_stbox);
  * @brief Return a temporal geo restricted to a spatiotemporal box
  * @sqlfn atStbox()
  */
-Datum
+inline Datum
 Tgeo_at_stbox(PG_FUNCTION_ARGS)
 {
-  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  STBox *box = PG_GETARG_STBOX_P(1);
-  bool border_inc = PG_GETARG_BOOL(2);
-  Temporal *result = tgeo_restrict_stbox(temp, box, border_inc, REST_AT);
-  PG_FREE_IF_COPY(temp, 0);
-  if (! result)
-    PG_RETURN_NULL();
-  PG_RETURN_TEMPORAL_P(result);
+  return Tgeo_restrict_stbox(fcinfo, REST_AT);
 }
 
 PGDLLEXPORT Datum Tgeo_minus_stbox(PG_FUNCTION_ARGS);
@@ -835,17 +799,10 @@ PG_FUNCTION_INFO_V1(Tgeo_minus_stbox);
  * spatiotemporal box
  * @sqlfn minusStbox()
  */
-Datum
+inline Datum
 Tgeo_minus_stbox(PG_FUNCTION_ARGS)
 {
-  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  STBox *box = PG_GETARG_STBOX_P(1);
-  bool border_inc = PG_GETARG_BOOL(2);
-  Temporal *result = tgeo_restrict_stbox(temp, box, border_inc, REST_MINUS);
-  PG_FREE_IF_COPY(temp, 0);
-  if (! result)
-    PG_RETURN_NULL();
-  PG_RETURN_TEMPORAL_P(result);
+  return Tgeo_restrict_stbox(fcinfo, REST_MINUS);
 }
 
 /*****************************************************************************/

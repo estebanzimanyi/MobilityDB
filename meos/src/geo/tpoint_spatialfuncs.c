@@ -53,7 +53,7 @@
 #include "general/tnumber_mathfuncs.h"
 #include "general/tsequence.h"
 #include "general/type_util.h"
-#include "geo/pgis_types.h"
+#include "geo/postgis_funcs.h"
 #include "geo/stbox.h"
 #include "geo/tgeo.h"
 #include "geo/tgeo_distance.h"
@@ -1503,7 +1503,7 @@ tpointseqset_to_geomeas_segm(const TSequenceSet *ss, const TSequenceSet *meas)
 /*****************************************************************************/
 
 /**
- * @ingroup meos_geo_transf
+ * @ingroup meos_geo_conversion
  * @brief Return a geometry/geography with M measure from a temporal point
  * point and optionally a temporal float
  * @details If a temporal float is given the M coordinates of the result encode
@@ -1800,7 +1800,7 @@ geomeas_tpointseqset(const LWGEOM *geom, bool hasz, bool geodetic)
 }
 
 /**
- * @ingroup meos_geo_transf
+ * @ingroup meos_geo_conversion
  * @brief Return a geometry/geography with M measure encoding timestamps
  * transformed to a temporal point
  * @param[in] gs Geometry
@@ -2308,7 +2308,7 @@ tpoint_decouple(const Temporal *temp, int64 **timesarr, int *count)
 /*****************************************************************************/
 
 /**
- * @ingroup meos_geo_transf
+ * @ingroup meos_geo_conversion
  * @brief Return a temporal point transformed to Mapbox Vector Tile format
  * @param[in] temp Temporal point
  * @param[in] bounds Bounds

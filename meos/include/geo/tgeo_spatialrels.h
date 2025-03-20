@@ -70,6 +70,8 @@ extern int tdwithin_add_solutions(int solutions, TimestampTz lower,
 
 extern int ea_dwithin_tgeo_tgeo_sync(const Temporal *sync1,
   const Temporal *sync2, double dist, bool ever);
+extern int ea_dwithin_tgeo_tgeo(const Temporal *temp1,
+  const Temporal *temp2, double dist, bool ever);
 extern int ea_intersects_tgeo_tgeo(const Temporal *temp1,
   const Temporal *temp2, bool ever);
 extern int ea_disjoint_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,

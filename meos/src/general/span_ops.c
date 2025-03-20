@@ -188,7 +188,7 @@ contains_span_span(const Span *s1, const Span *s2)
  * @param[in] value Value
  * @param[in] s Span
  */
-bool
+inline bool
 contained_value_span(Datum value, const Span *s)
 {
   return contains_span_value(s, value);
@@ -200,7 +200,7 @@ contained_value_span(Datum value, const Span *s)
  * @param[in] s1,s2 Spans
  * @csqlfn #Contained_value_span()
  */
-bool
+inline bool
 contained_span_span(const Span *s1, const Span *s2)
 {
   return contains_span_span(s2, s1);
@@ -391,7 +391,7 @@ lfnadj_span_span(const Span *s1, const Span *s2)
  * @param[in] value Value
  * @param[in] s Span
  */
-bool
+inline bool
 right_value_span(Datum value, const Span *s)
 {
   return left_span_value(s, value);
@@ -403,7 +403,7 @@ right_value_span(Datum value, const Span *s)
  * @param[in] s Span
  * @param[in] value Value
  */
-bool
+inline bool
 right_span_value(const Span *s, Datum value)
 {
   return left_value_span(value, s);
@@ -415,7 +415,7 @@ right_span_value(const Span *s, Datum value)
  * @param[in] s1,s2 Spans
  * @csqlfn #Right_span_span()
  */
-bool
+inline bool
 right_span_span(const Span *s1, const Span *s2)
 {
   return left_span_span(s2, s1);

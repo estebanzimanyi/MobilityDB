@@ -143,12 +143,8 @@ Set *
 text_union_transfn(Set *state, const text *txt)
 {
   /* Ensure validity of the arguments */
-#if MEOS
   if (! ensure_not_null((void *) txt))
     return NULL;
-#else
-  assert(txt);
-#endif /* MEOS */
   if (state && ! ensure_set_isof_type(state, T_TEXTSET))
     return NULL;
   return value_union_transfn(state, PointerGetDatum(txt), T_TEXT);

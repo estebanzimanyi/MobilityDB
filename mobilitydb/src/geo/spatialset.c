@@ -40,6 +40,7 @@
 #include <funcapi.h>
 /* PostGIS */
 #include <liblwgeom.h>
+#include <liblwgeom_internal.h>
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
@@ -49,10 +50,120 @@
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/stbox.h"
 #include "geo/tpoint_restrfuncs.h"
+#include "geo/tspatial.h"
 /* MobilityDB */
+#include "pg_general/meos_catalog.h" /* For oid_type */
 #include "pg_general/temporal.h"
 #include "pg_general/type_util.h"
 #include "pg_geo/postgis.h"
+
+/*****************************************************************************
+ * Output in WKT and EWKT format
+ *****************************************************************************/
+
+PGDLLEXPORT Datum Spatialset_as_text(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Spatialset_as_text);
+/**
+ * @ingroup mobilitydb_geo_set_inout
+ * @brief Return the Well-Known Text (WKT) representation of a spatial set
+ * @sqlfn asText()
+ */
+Datum
+Spatialset_as_text(PG_FUNCTION_ARGS)
+{
+  Set *s = PG_GETARG_SET_P(0);
+  int dbl_dig_for_wkt = OUT_DEFAULT_DECIMAL_DIGITS;
+  if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
+    dbl_dig_for_wkt = PG_GETARG_INT32(1);
+  char *str = spatialset_as_text(s, dbl_dig_for_wkt);
+  text *result = cstring2text(str);
+  pfree(str);
+  PG_FREE_IF_COPY(s, 0);
+  PG_RETURN_TEXT_P(result);
+}
+
+PGDLLEXPORT Datum Spatialset_as_ewkt(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Spatialset_as_ewkt);
+/**
+ * @ingroup mobilitydb_geo_set_inout
+ * @brief Return the Extended Well-Known Text (EWKT) representation of a
+ * spatial set
+ * @sqlfn asEWKT()
+ */
+Datum
+Spatialset_as_ewkt(PG_FUNCTION_ARGS)
+{
+  Set *s = PG_GETARG_SET_P(0);
+  int dbl_dig_for_wkt = OUT_DEFAULT_DECIMAL_DIGITS;
+  if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
+    dbl_dig_for_wkt = PG_GETARG_INT32(1);
+  char *str = spatialset_as_ewkt(s, dbl_dig_for_wkt);
+  text *result = cstring2text(str);
+  pfree(str);
+  PG_FREE_IF_COPY(s, 0);
+  PG_RETURN_TEXT_P(result);
+}
+
+/*****************************************************************************/
+
+/**
+ * @brief Return the (Extended) Well-Known Text (WKT or EWKT) representation of
+ * an array of spatial values (external function)
+ */
+Datum
+Spatialarr_as_text_ext(FunctionCallInfo fcinfo, bool extended)
+{
+  ArrayType *array = PG_GETARG_ARRAYTYPE_P(0);
+  /* Return NULL on empty array */
+  int count = ArrayGetNItems(ARR_NDIM(array), ARR_DIMS(array));
+  if (count == 0)
+  {
+    PG_FREE_IF_COPY(array, 0);
+    PG_RETURN_NULL();
+  }
+  int dbl_dig_for_wkt = OUT_DEFAULT_DECIMAL_DIGITS;
+  if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
+    dbl_dig_for_wkt = PG_GETARG_INT32(1);
+
+  Datum *datumarr = datumarr_extract(array, &count);
+  meosType basetype = oid_type(array->elemtype);
+  char **strarr = spatialarr_wkt_out(datumarr, basetype, count, 
+    dbl_dig_for_wkt, extended);
+  /* We cannot use pfree_array */
+  pfree(datumarr);
+  ArrayType *result = strarr_to_textarray(strarr, count);
+  PG_FREE_IF_COPY(array, 0);
+  PG_RETURN_ARRAYTYPE_P(result);
+}
+
+PGDLLEXPORT Datum Spatialarr_as_text(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Spatialarr_as_text);
+/**
+ * @ingroup mobilitydb_geo_inout
+ * @brief Return the Well-Known Text (WKT) representation of an array of
+ * spatial values
+ * @sqlfn asText()
+ */
+Datum
+Spatialarr_as_text(PG_FUNCTION_ARGS)
+{
+  return Spatialarr_as_text_ext(fcinfo, false);
+}
+
+PGDLLEXPORT Datum Spatialarr_as_ewkt(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Spatialarr_as_ewkt);
+/**
+ * @ingroup mobilitydb_geo_inout
+ * @brief Return the Extended Well-Known Text (EWKT) representation
+ * of an array of spatial values
+ * @note It is the WKT representation prefixed with the SRID
+ * @sqlfn asEWKT()
+ */
+Datum
+Spatialarr_as_ewkt(PG_FUNCTION_ARGS)
+{
+  return Spatialarr_as_text_ext(fcinfo, true);
+}
 
 /*****************************************************************************
  * Conversion functions
@@ -61,7 +172,7 @@
 PGDLLEXPORT Datum Spatialset_to_stbox(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Spatialset_to_stbox);
 /**
- * @ingroup mobilitydb_geo_set
+ * @ingroup mobilitydb_geo_set_conversion
  * @brief Return a spatial set converted to a spatiotemporal box
  * @sqlfn stbox()
  * @sqlop @p ::

@@ -54,7 +54,7 @@
 #include "general/tnumber_mathfuncs.h"
 #include "general/tsequence.h"
 #include "general/type_util.h"
-#include "geo/pgis_types.h"
+#include "geo/postgis_funcs.h"
 #include "geo/stbox.h"
 #include "geo/tgeo.h"
 #include "geo/tgeo_distance.h"

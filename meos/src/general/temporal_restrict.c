@@ -611,6 +611,7 @@ tnumber_at_tbox(const Temporal *temp, const TBox *box)
 Temporal *
 tnumber_minus_tbox(const Temporal *temp, const TBox *box)
 {
+  /* Ensure validity of the arguments */
 #if MEOS
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) box) ||
       ! ensure_tnumber_type(temp->temptype))
@@ -618,7 +619,6 @@ tnumber_minus_tbox(const Temporal *temp, const TBox *box)
 #else
   assert(temp); assert(box); assert(tnumber_type(temp->temptype));
 #endif /* MEOS */
-  /* Ensure validity of the arguments */
   if (! ensure_valid_tnumber_tbox(temp, box))
     return NULL;
 

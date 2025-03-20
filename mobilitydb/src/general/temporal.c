@@ -1449,26 +1449,26 @@ Temporal_value_at_timestamptz(PG_FUNCTION_ARGS)
  * Transformation functions
  *****************************************************************************/
 
-PGDLLEXPORT Datum Tfloat_round(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tfloat_round);
+PGDLLEXPORT Datum Temporal_round(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Temporal_round);
 /**
  * @ingroup mobilitydb_temporal_transf
- * @brief Return a temporal float with the values set to a number of decimal
- * places
+ * @brief Return a temporal value with the component values set to a number of
+ * decimal places
  * @sqlfn round()
  */
 Datum
-Tfloat_round(PG_FUNCTION_ARGS)
+Temporal_round(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   int size = PG_GETARG_INT32(1);
-  Temporal *result = tfloat_round(temp, size);
+  Temporal *result = temporal_round(temp, size);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_TEMPORAL_P(result);
 }
 
-PGDLLEXPORT Datum Tfloatarr_round(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tfloatarr_round);
+PGDLLEXPORT Datum Temporalarr_round(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Temporalarr_round);
 /**
  * @ingroup mobilitydb_temporal_transf
  * @brief Return an array of temporal floats with the precision of the values
@@ -1476,7 +1476,7 @@ PG_FUNCTION_INFO_V1(Tfloatarr_round);
  * @sqlfn asText()
  */
 Datum
-Tfloatarr_round(PG_FUNCTION_ARGS)
+Temporalarr_round(PG_FUNCTION_ARGS)
 {
   ArrayType *array = PG_GETARG_ARRAYTYPE_P(0);
   /* Return NULL on empty array */
@@ -1489,8 +1489,7 @@ Tfloatarr_round(PG_FUNCTION_ARGS)
   int maxdd = PG_GETARG_INT32(1);
 
   Temporal **temparr = temparr_extract(array, &count);
-  Temporal **resarr = tfloatarr_round((const Temporal **) temparr, count,
-    maxdd);
+  Temporal **resarr = temparr_round((const Temporal **) temparr, count, maxdd);
   ArrayType *result = temparr_to_array(resarr, count, FREE_ALL);
   pfree(temparr);
   PG_FREE_IF_COPY(array, 0);

@@ -125,28 +125,6 @@ Tgeompoint_to_tnpoint(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************
- * Transformation functions
- *****************************************************************************/
-
-PGDLLEXPORT Datum Tnpoint_round(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tnpoint_round);
-/**
- * @ingroup mobilitydb_npoint_transf
- * @brief Return a temporal network point with the precision of the positions
- * set to a number of decimal places
- * @sqlfn round()
- */
-Datum
-Tnpoint_round(PG_FUNCTION_ARGS)
-{
-  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  Datum size = PG_GETARG_DATUM(1);
-  Temporal *result = temporal_round(temp, size, &datum_npoint_round);
-  PG_FREE_IF_COPY(temp, 0);
-  PG_RETURN_TEMPORAL_P(result);
-}
-
-/*****************************************************************************
  * Accessor functions
  *****************************************************************************/
 

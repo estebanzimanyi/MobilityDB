@@ -40,6 +40,7 @@
 #include <funcapi.h>
 /* PostGIS */
 #include <liblwgeom.h>
+#include <liblwgeom_internal.h>
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
@@ -49,10 +50,142 @@
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/stbox.h"
 #include "geo/tpoint_restrfuncs.h"
+#include "geo/tspatial_parser.h"
 /* MobilityDB */
+#include "pg_general/meos_catalog.h" /* For oid_type */
 #include "pg_general/temporal.h"
 #include "pg_general/type_util.h"
 #include "pg_geo/postgis.h"
+
+/*****************************************************************************
+ * Input in EWKT format
+ *****************************************************************************/
+
+PGDLLEXPORT Datum Tpoint_from_ewkt(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tpoint_from_ewkt);
+/**
+ * @ingroup mobilitydb_geo_inout
+ * @brief Return a temporal point from its Extended Well-Known Text (EWKT)
+ * representation
+ * @note This just does the same thing as the _in function, except it has to handle
+ * a 'text' input. First, unwrap the text into a cstring, then do as tpoint_in
+ * @sqlfn tgeompointFromText(), tgeogpointFromText(), tgeompointFromEWKT(),
+ * tgeogpointFromEWKT()
+ */
+Datum
+Tpoint_from_ewkt(PG_FUNCTION_ARGS)
+{
+  text *wkt_text = PG_GETARG_TEXT_P(0);
+  Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);
+  char *wkt = text2cstring(wkt_text);
+  /* Copy the pointer since it will be advanced during parsing */
+  const char *wkt_ptr = wkt;
+  Temporal *result = tpoint_parse(&wkt_ptr, oid_type(temptypid));
+  pfree(wkt);
+  PG_FREE_IF_COPY(wkt_text, 0);
+  PG_RETURN_TEMPORAL_P(result);
+}
+
+PGDLLEXPORT Datum Tspatial_from_ewkt(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tspatial_from_ewkt);
+/**
+ * @ingroup mobilitydb_geo_inout
+ * @brief Return a temporal geo from its Extended Well-Known Text (EWKT)
+ * representation
+ * @note This just does the same thing as the SQL function tgeo_in, except it
+ * has to handle a 'text' input. First, unwrap the text into a cstring, then
+ * do as tgeo_in
+ * @sqlfn tgeometryFromEWKT(), tgeographyFromEWKT()
+ */
+Datum
+Tspatial_from_ewkt(PG_FUNCTION_ARGS)
+{
+  text *wkt_text = PG_GETARG_TEXT_P(0);
+  char *wkt = text2cstring(wkt_text);
+  /* Copy the pointer since it will be advanced during parsing */
+  const char *wkt_ptr = wkt;
+  Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);
+  Temporal *result = tspatial_parse(&wkt_ptr, oid_type(temptypid));
+  pfree(wkt);
+  PG_FREE_IF_COPY(wkt_text, 0);
+  PG_RETURN_TEMPORAL_P(result);
+}
+
+/*****************************************************************************
+ * Output in WKT and EWKT representation
+ *****************************************************************************/
+
+/**
+ * @brief Return the (Extended) Well-Known Text (WKT or EWKT) representation of
+ * a temporal geometry
+ * @sqlfn asText()
+ */
+static Datum
+Tspatial_as_text_ext(FunctionCallInfo fcinfo, bool extended)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  int dbl_dig_for_wkt = OUT_DEFAULT_DECIMAL_DIGITS;
+  if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
+    dbl_dig_for_wkt = PG_GETARG_INT32(1);
+  char *str = extended ? tspatial_as_ewkt(temp, dbl_dig_for_wkt) : 
+    tspatial_as_text(temp, dbl_dig_for_wkt);
+  text *result = cstring2text(str);
+  pfree(str);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_TEXT_P(result);
+}
+
+PGDLLEXPORT Datum Tspatial_as_text(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tspatial_as_text);
+/**
+ * @ingroup mobilitydb_geo_inout
+ * @brief Return the Well-Known Text (WKT) representation of a temporal point
+ * @sqlfn asText()
+ */
+Datum
+Tspatial_as_text(PG_FUNCTION_ARGS)
+{
+  return Tspatial_as_text_ext(fcinfo, false);
+}
+
+PGDLLEXPORT Datum Tspatial_as_ewkt(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tspatial_as_ewkt);
+/**
+ * @ingroup mobilitydb_geo_inout
+ * @brief Return the Extended Well-Known Text (EWKT) representation of a
+ * temporal point
+ * @note It is the WKT representation prefixed with the SRID
+ * @sqlfn asEWKT()
+ */
+Datum
+Tspatial_as_ewkt(PG_FUNCTION_ARGS)
+{
+  return Tspatial_as_text_ext(fcinfo, true);
+}
+
+/*****************************************************************************
+ * Output in WKT and EWKT format
+ *****************************************************************************/
+
+PGDLLEXPORT Datum Tspatial_as_ewkb(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tspatial_as_ewkb);
+/**
+ * @ingroup mobilitydb_geo_inout
+ * @brief Return the Extended Well-Known Binary (WKB) representation of a
+ * temporal spatial value
+ * @note This will have 'SRID=#;' for temporal spatial values
+ * @sqlfn asEWKB()
+ */
+Datum
+Tspatial_as_ewkb(PG_FUNCTION_ARGS)
+{
+  /* Ensure that the value is detoasted if necessary */
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  bytea *result = Datum_as_wkb(fcinfo, PointerGetDatum(temp), temp->temptype,
+    true);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_BYTEA_P(result);
+}
 
 /*****************************************************************************
  * Conversion functions
@@ -79,6 +212,26 @@ Tspatial_to_stbox(PG_FUNCTION_ARGS)
 /*****************************************************************************
  * Transformation functions
  *****************************************************************************/
+
+PGDLLEXPORT Datum Geo_expand_space(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Geo_expand_space);
+/**
+ * @ingroup mobilitydb_temporal_transf
+ * @brief Return the bounding box of a geometry/geography expanded on the
+ * spatial dimension by a value
+ * @sqlfn expandSpace()
+ */
+Datum
+Geo_expand_space(PG_FUNCTION_ARGS)
+{
+  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
+  double d = PG_GETARG_FLOAT8(1);
+  STBox *result = geo_expand_space(gs, d);
+  PG_FREE_IF_COPY(gs, 0);
+  if (! result)
+    PG_RETURN_NULL();
+  PG_RETURN_STBOX_P(result);
+}
 
 PGDLLEXPORT Datum Tspatial_expand_space(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tspatial_expand_space);

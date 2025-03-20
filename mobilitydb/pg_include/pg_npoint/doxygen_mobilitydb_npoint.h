@@ -55,17 +55,9 @@
  *   @ingroup mobilitydb_npoint_set
  *   @brief Transformation functions for set and span types
  *
- * @defgroup mobilitydb_npoint_box Bounding box functions
- * @ingroup mobilitydb_npoint
- * @brief Bounding box functions for network points
- *
  * @defgroup mobilitydb_npoint_inout Input and output functions
  * @ingroup mobilitydb_npoint
  * @brief Input and output functions for temporal network points
- *
- * @defgroup mobilitydb_npoint_constructor Constructor functions
- * @ingroup mobilitydb_npoint
- * @brief Constructor functions for temporal network points
  *
  * @defgroup mobilitydb_npoint_conversion Conversion functions
  * @ingroup mobilitydb_npoint
@@ -75,29 +67,9 @@
  * @ingroup mobilitydb_npoint
  * @brief Accessor functions for temporal network points
  *
- * @defgroup mobilitydb_npoint_transf Transformation functions
- * @ingroup mobilitydb_npoint
- * @brief Transformation functions for temporal network points
- *
  * @defgroup mobilitydb_npoint_restrict Restriction functions
  * @ingroup mobilitydb_npoint
  * @brief Restriction functions for temporal network points
- *
- * @defgroup mobilitydb_npoint_modif Modification functions
- * @ingroup mobilitydb_npoint
- * @brief Modification functions for temporal network points
- *
- * @defgroup mobilitydb_npoint_bbox Bounding box functions
- * @ingroup mobilitydb_npoint
- * @brief Bounding box functions for temporal network points
- *
- *   @defgroup mobilitydb_npoint_bbox_topo Topological functions
- *   @ingroup mobilitydb_npoint_bbox
- *   @brief Topological functions for temporal network points
- *
- *   @defgroup mobilitydb_npoint_bbox_pos Position functions
- *   @ingroup mobilitydb_npoint_bbox
- *   @brief Position functions for temporal network points
  *
  * @defgroup mobilitydb_npoint_dist Distance functions
  * @ingroup mobilitydb_npoint
@@ -107,10 +79,6 @@
  * @ingroup mobilitydb_npoint
  * @brief Comparison functions for temporal network points
  *
- *   @defgroup mobilitydb_npoint_comp_trad Traditional comparison functions
- *   @ingroup mobilitydb_npoint_comp
- *   @brief Traditional comparison functions for temporal network points
- *
  *   @defgroup mobilitydb_npoint_comp_ever Ever and always comparison functions
  *   @ingroup mobilitydb_npoint_comp
  *   @brief Ever and always comparison functions for temporal network points
@@ -118,10 +86,6 @@
  *   @defgroup mobilitydb_npoint_comp_temp Temporal comparison functions
  *   @ingroup mobilitydb_npoint_comp
  *   @brief Comparison functions for temporal network points
- *
- * @defgroup mobilitydb_npoint_spatial Spatial functions
- * @ingroup mobilitydb_npoint
- * @brief Spatial functions for temporal network points
  *
  * @defgroup mobilitydb_npoint_srid Spatial reference system functions
  * @ingroup mobilitydb_npoint
@@ -146,26 +110,6 @@
  * @defgroup mobilitydb_npoint_agg Aggregate functions
  * @ingroup mobilitydb_npoint
  * @brief Aggregate functions for temporal network points
- *
- * @defgroup mobilitydb_npoint_analytics Analytics functions
- * @ingroup mobilitydb_npoint
- * @brief Analytics functions for temporal network points
- *
- *   @defgroup mobilitydb_npoint_analytics_simplify Simplification functions
- *   @ingroup mobilitydb_npoint_analytics
- *   @brief Simplification functions for temporal network points
- *
- *   @defgroup mobilitydb_npoint_analytics_reduction Reduction functions
- *   @ingroup mobilitydb_npoint_analytics
- *   @brief Reduction functions for temporal network points
- *
- *   @defgroup mobilitydb_npoint_analytics_similarity Similarity functions
- *   @ingroup mobilitydb_npoint_analytics
- *   @brief Similarity functions for temporal network points
- *
- *   @defgroup mobilitydb_npoint_analytics_tile Tile functions
- *   @ingroup mobilitydb_npoint_analytics
- *   @brief Tile functions for temporal network points
  */
 
 /*****************************************************************************/
@@ -190,9 +134,9 @@
  * @ingroup mobilitydb_npoint_base
  * @brief Transformation functions for static network points
  *
- * @defgroup mobilitydb_npoint_base_spatial Spatial functions
+ * @defgroup mobilitydb_npoint_base_srid SRID functions
  * @ingroup mobilitydb_npoint_base
- * @brief Spatial functions for static network points
+ * @brief SRID functions for static network points
  *
  * @defgroup mobilitydb_npoint_base_comp Comparison functions
  * @ingroup mobilitydb_npoint_base

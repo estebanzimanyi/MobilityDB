@@ -85,7 +85,7 @@
 #include "general/tinstant.h"
 #include "general/tsequence.h"
 #include "general/type_util.h"
-#include "geo/pgis_types.h"
+#include "geo/postgis_funcs.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/tpoint_restrfuncs.h"
 #include "geo/tgeo_spatialrels.h"
@@ -866,7 +866,7 @@ tdwithin_tpointsegm_tpointsegm(Datum sv1, Datum ev1, Datum sv2, Datum ev2,
   /* They are parallel, moving in the same direction at the same speed */
   if (a == 0)
   {
-    if (!func(sv1, sv2, Float8GetDatum(dist)))
+    if (! func(sv1, sv2, Float8GetDatum(dist)))
       return 0;
     *t1 = lower;
     *t2 = upper;

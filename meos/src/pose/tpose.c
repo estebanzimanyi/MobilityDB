@@ -57,7 +57,7 @@
 
 #if MEOS
 /**
- * @ingroup meos_internal_temporal_inout
+ * @ingroup meos_internal_pose_inout
  * @brief Return a temporal pose instant from its Well-Known Text (WKT)
  * representation
  * @param[in] str String
@@ -73,7 +73,7 @@ tposeinst_in(const char *str)
 }
 
 /**
- * @ingroup meos_internal_temporal_inout
+ * @ingroup meos_internal_pose_inout
  * @brief Return a temporal pose sequence from its Well-Known Text (WKT)
  * representation
  * @param[in] str String
@@ -92,7 +92,7 @@ tposeseq_in(const char *str, interpType interp __attribute__((unused)))
 }
 
 /**
- * @ingroup meos_internal_temporal_inout
+ * @ingroup meos_internal_pose_inout
  * @brief Return a temporal pose sequence set from its Well-Known
  * Text (WKT) representation
  * @param[in] str String

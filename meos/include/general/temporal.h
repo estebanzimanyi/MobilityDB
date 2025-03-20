@@ -397,10 +397,7 @@ extern char *mobilitydb_full_version(void);
 
 /* Transformations */
 
-extern Temporal *temporal_round(const Temporal *temp, int maxdd,
-  datum_func2 func);
-extern Temporal **temparr_round(const Temporal **temparr, int count,
-  int maxdd, datum_func2 func);
+extern datum_func2 round_fn(meosType basetype);
 
 /* Ever/always equal operators */
 

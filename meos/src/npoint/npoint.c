@@ -55,7 +55,7 @@
 #include "general/type_inout.h"
 #include "general/type_parser.h"
 #include "general/type_util.h"
-#include "geo/pgis_types.h"
+#include "geo/postgis_funcs.h"
 #include "geo/tgeo.h"
 #include "geo/tgeo_out.h"
 #include "geo/tgeo_spatialfuncs.h"
@@ -81,7 +81,8 @@ static int32_t SRID_WAYS = SRID_INVALID;
  * of the timestamps associated to `np1` and `np3`
  */
 bool
-npoint_collinear(Npoint *np1, Npoint *np2, Npoint *np3, double ratio)
+npoint_collinear(const Npoint *np1, const Npoint *np2, const Npoint *np3, 
+  double ratio)
 {
   return float_collinear(np1->pos, np2->pos, np3->pos, ratio);
 }
@@ -1047,7 +1048,7 @@ npoint_as_ewkt(const Npoint *np, int maxdd)
  *****************************************************************************/
 
 /**
- * @ingroup meos_npoint_inout
+ * @ingroup meos_npoint_base_inout
  * @brief Return a network point from its Well-Known Binary (WKB) 
  * representation
  * @param[in] wkb WKB string
@@ -1064,7 +1065,7 @@ npoint_from_wkb(const uint8_t *wkb, size_t size)
 }
 
 /**
- * @ingroup meos_npoint_inout
+ * @ingroup meos_npoint_base_inout
  * @brief Return a network point from its hex-encoded ASCII Well-Known Binary
  * (WKB) representation
  * @param[in] hexwkb HexWKB string
@@ -1217,6 +1218,166 @@ npoint_nsegment(const Npoint *np)
   assert(np);
 #endif /* MEOS */
   return nsegment_make(np->rid, np->pos, np->pos);
+}
+
+/*****************************************************************************
+ * Transform a temporal network point to a STBox
+ *****************************************************************************/
+
+/**
+ * @ingroup meos_internal_box_constructor
+ * @brief Return in the last argument the spatiotemporal box of a network point
+ * @param[in] np Network point
+ * @param[out] box Spatiotemporal box
+ */
+bool
+npoint_set_stbox(const Npoint *np, STBox *box)
+{
+  GSERIALIZED *geom = npoint_geom(np);
+  bool result = geo_set_stbox(geom, box);
+  pfree(geom);
+  return result;
+}
+
+/**
+ * @ingroup meos_npoint_base_conversion
+ * @brief Return a network point converted to a spatiotemporal box
+ * @param[in] np Network point
+ * @csqlfn #Npoint_to_stbox()
+ */
+STBox *
+npoint_stbox(const Npoint *np)
+{
+  STBox box;
+  if (! npoint_set_stbox(np, &box))
+    return NULL;
+  return stbox_copy(&box);
+}
+
+/**
+ * @ingroup meos_internal_box_constructor
+ * @brief Return in the last argument a spatiotemporal box constructed from
+ * an array of network points
+ * @param[in] values Network points
+ * @param[in] count Number of elements in the array
+ * @param[out] box Spatiotemporal box
+ */
+void
+npointarr_set_stbox(const Datum *values, int count, STBox *box)
+{
+  npoint_set_stbox(DatumGetNpointP(values[0]), box);
+  for (int i = 1; i < count; i++)
+  {
+    STBox box1;
+    npoint_set_stbox(DatumGetNpointP(values[i]), &box1);
+    stbox_expand(&box1, box);
+  }
+  return;
+}
+
+/**
+ * @ingroup meos_internal_temporal_accessor
+ * @brief Return the bounding box of the network segment value
+ * @param[in] ns Network segment
+ * @param[out] box Spatiotemporal box
+ */
+bool
+nsegment_set_stbox(const Nsegment *ns, STBox *box)
+{
+  GSERIALIZED *geom = nsegment_geom(ns);
+  bool result = geo_set_stbox(geom, box);
+  pfree(geom);
+  return result;
+}
+
+/**
+ * @ingroup meos_npoint_base_conversion
+ * @brief Return a network segment converted to a spatiotemporal box
+ * @param[in] ns Network segment
+ * @csqlfn #Nsegment_to_stbox()
+ */
+STBox *
+nsegment_stbox(const Nsegment *ns)
+{
+  STBox box;
+  if (! nsegment_set_stbox(ns, &box))
+    return NULL;
+  return stbox_copy(&box);
+}
+
+/*****************************************************************************/
+
+/**
+ * @ingroup meos_internal_box_constructor
+ * @brief Return in the last argument a spatiotemporal box constructed from a
+ * network point and a timestamptz
+ * @param[in] np Network point
+ * @param[in] t Timestamp
+ * @param[out] box Spatiotemporal box
+ */
+bool
+npoint_timestamptz_set_stbox(const Npoint *np, TimestampTz t, STBox *box)
+{
+  npoint_set_stbox(np, box);
+  span_set(TimestampTzGetDatum(t), TimestampTzGetDatum(t), true, true,
+    T_TIMESTAMPTZ, T_TSTZSPAN, &box->period);
+  MEOS_FLAGS_SET_T(box->flags, true);
+  return true;
+}
+
+/**
+ * @ingroup meos_box_constructor
+ * @brief Return a spatiotemporal box constructed from a network point and a
+ * timestamptz
+ * @param[in] np Network point
+ * @param[in] t Timestamp
+ * @csqlfn #Npoint_timestamptz_to_stbox()
+ */
+STBox *
+npoint_timestamptz_to_stbox(const Npoint *np, TimestampTz t)
+{
+  if (! ensure_not_null((void *) np))
+    return NULL;
+  STBox box;
+  if (! npoint_timestamptz_set_stbox(np, t, &box))
+    return NULL;
+  return stbox_copy(&box);
+}
+
+/**
+ * @ingroup meos_internal_box_constructor
+ * @brief Return in the last argument a spatiotemporal box constructed from a
+ * network point and a timestamptz span
+ * @param[in] np Network point
+ * @param[in] s Timestamptz span
+ * @param[out] box Spatiotemporal box
+ */
+bool
+npoint_tstzspan_set_stbox(const Npoint *np, const Span *s, STBox *box)
+{
+  npoint_set_stbox(np, box);
+  memcpy(&box->period, s, sizeof(Span));
+  MEOS_FLAGS_SET_T(box->flags, true);
+  return true;
+}
+
+/**
+ * @ingroup meos_box_constructor
+ * @brief Return a spatiotemporal box constructed from a network point and a
+ * timestamptz
+ * @param[in] np Network point
+ * @param[in] s Timestamptz span
+ * @csqlfn #Npoint_tstzspan_to_stbox()
+ */
+STBox *
+npoint_tstzspan_to_stbox(const Npoint *np, const Span *s)
+{
+  if (! ensure_not_null((void *) np) || ! ensure_not_null((void *) s))
+    return NULL;
+  STBox box;
+  if (! npoint_tstzspan_set_stbox(np, s, &box))
+    return NULL;
+  return stbox_copy(&box);
 }
 
 /*****************************************************************************
@@ -1563,7 +1724,7 @@ nsegment_end_position(const Nsegment *ns)
  * is the one from the @p ways table, for performance reasons we simply get
  * the SRID of the table
  */
-int32_t
+inline int32_t
 npoint_srid(const Npoint *np __attribute__((unused)))
 {
   return get_srid_ways();
@@ -1578,7 +1739,7 @@ npoint_srid(const Npoint *np __attribute__((unused)))
  * is the one from the @p ways table, for performance reasons we simply get
  * the SRID of the table
  */
-int32_t
+inline int32_t
 nsegment_srid(const Nsegment *ns __attribute__((unused)))
 {
   return get_srid_ways();
@@ -1614,10 +1775,10 @@ npoint_eq(const Npoint *np1, const Npoint *np2)
  * @param[in] np1,np2 Network points
  * @csqlfn #Npoint_ne()
  */
-bool
+inline bool
 npoint_ne(const Npoint *np1, const Npoint *np2)
 {
-  return (! npoint_eq(np1, np2));
+  return ! npoint_eq(np1, np2);
 }
 
 /**
@@ -1656,11 +1817,10 @@ npoint_cmp(const Npoint *np1, const Npoint *np2)
  * @param[in] np1,np2 Network points
  * @csqlfn #Npoint_lt()
  */
-bool
+inline bool
 npoint_lt(const Npoint *np1, const Npoint *np2)
 {
-  int cmp = npoint_cmp(np1, np2);
-  return (cmp < 0);
+  return npoint_cmp(np1, np2) < 0;
 }
 
 /**
@@ -1670,11 +1830,10 @@ npoint_lt(const Npoint *np1, const Npoint *np2)
  * @param[in] np1,np2 Network points
  * @csqlfn #Npoint_le()
  */
-bool
+inline bool
 npoint_le(const Npoint *np1, const Npoint *np2)
 {
-  int cmp = npoint_cmp(np1, np2);
-  return (cmp <= 0);
+  return npoint_cmp(np1, np2) <= 0;
 }
 
 /**
@@ -1683,11 +1842,10 @@ npoint_le(const Npoint *np1, const Npoint *np2)
  * @param[in] np1,np2 Network points
  * @csqlfn #Npoint_gt()
  */
-bool
+inline bool
 npoint_gt(const Npoint *np1, const Npoint *np2)
 {
-  int cmp = npoint_cmp(np1, np2);
-  return (cmp > 0);
+  return npoint_cmp(np1, np2) > 0;
 }
 
 /**
@@ -1697,11 +1855,10 @@ npoint_gt(const Npoint *np1, const Npoint *np2)
  * @param[in] np1,np2 Network points
  * @csqlfn #Npoint_ge()
  */
-bool
+inline bool
 npoint_ge(const Npoint *np1, const Npoint *np2)
 {
-  int cmp = npoint_cmp(np1, np2);
-  return (cmp >= 0);
+  return npoint_cmp(np1, np2) >= 0;
 }
 
 /*****************************************************************************/
@@ -1734,10 +1891,10 @@ nsegment_eq(const Nsegment *ns1, const Nsegment *ns2)
  * @param[in] ns1,ns2 Network segments
  * @csqlfn #Nsegment_ne()
  */
-bool
+inline bool
 nsegment_ne(const Nsegment *ns1, const Nsegment *ns2)
 {
-  return (! nsegment_eq(ns1, ns2));
+  return ! nsegment_eq(ns1, ns2);
 }
 
 /**
@@ -1781,11 +1938,10 @@ nsegment_cmp(const Nsegment *ns1, const Nsegment *ns2)
  * @param[in] ns1,ns2 Network segments
  * @csqlfn #Nsegment_lt()
  */
-bool
+inline bool
 nsegment_lt(const Nsegment *ns1, const Nsegment *ns2)
 {
-  int cmp = nsegment_cmp(ns1, ns2);
-  return (cmp < 0);
+  return nsegment_cmp(ns1, ns2) < 0;
 }
 
 /**
@@ -1795,11 +1951,10 @@ nsegment_lt(const Nsegment *ns1, const Nsegment *ns2)
  * @param[in] ns1,ns2 Network segments
  * @csqlfn #Nsegment_le()
  */
-bool
+inline bool
 nsegment_le(const Nsegment *ns1, const Nsegment *ns2)
 {
-  int cmp = nsegment_cmp(ns1, ns2);
-  return (cmp <= 0);
+  return nsegment_cmp(ns1, ns2) <= 0;
 }
 
 /**
@@ -1809,11 +1964,10 @@ nsegment_le(const Nsegment *ns1, const Nsegment *ns2)
  * @param[in] ns1,ns2 Network segments
  * @csqlfn #Nsegment_gt()
  */
-bool
+inline bool
 nsegment_gt(const Nsegment *ns1, const Nsegment *ns2)
 {
-  int cmp = nsegment_cmp(ns1, ns2);
-  return (cmp > 0);
+  return nsegment_cmp(ns1, ns2) > 0;
 }
 
 /**
@@ -1823,11 +1977,10 @@ nsegment_gt(const Nsegment *ns1, const Nsegment *ns2)
  * @param[in] ns1,ns2 Network segments
  * @csqlfn #Nsegment_ge()
  */
-bool
+inline bool
 nsegment_ge(const Nsegment *ns1, const Nsegment *ns2)
 {
-  int cmp = nsegment_cmp(ns1, ns2);
-  return (cmp >= 0);
+  return nsegment_cmp(ns1, ns2) >= 0;
 }
 
 /*****************************************************************************

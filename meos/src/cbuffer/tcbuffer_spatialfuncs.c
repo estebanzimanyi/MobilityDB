@@ -42,7 +42,7 @@
 #include <meos_internal.h>
 #include <meos_cbuffer.h>
 #include "general/tsequence.h"
-#include "geo/pgis_types.h"
+#include "geo/postgis_funcs.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "cbuffer/cbuffer.h"
 

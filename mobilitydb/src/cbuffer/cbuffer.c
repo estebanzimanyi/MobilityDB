@@ -44,6 +44,7 @@
 #include "general/temporal.h"
 #include "general/tnumber_mathfuncs.h"
 #include "general/set.h"
+#include "general/span.h"
 #include "general/type_inout.h"
 #include "general/type_util.h"
 #include "cbuffer/cbuffer.h"
@@ -303,6 +304,56 @@ Geom_to_cbuffer(PG_FUNCTION_ARGS)
   if (! result)
     PG_RETURN_NULL();
   PG_RETURN_CBUFFER_P(result);
+}
+
+/*****************************************************************************/
+
+PGDLLEXPORT Datum Cbuffer_to_stbox(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Cbuffer_to_stbox);
+/**
+ * @ingroup mobilitydb_cbuffer_base_conversion
+ * @brief Return a circular buffer converted to a spatiotemporal box
+ * @sqlfn stbox()
+ * @sqlop @p ::
+ */
+Datum
+Cbuffer_to_stbox(PG_FUNCTION_ARGS)
+{
+  Cbuffer *cbuf = PG_GETARG_CBUFFER_P(0);
+  PG_RETURN_STBOX_P(cbuffer_stbox(cbuf));
+}
+
+PGDLLEXPORT Datum Cbuffer_timestamptz_to_stbox(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Cbuffer_timestamptz_to_stbox);
+/**
+ * @ingroup mobilitydb_cbuffer_base_conversion
+ * @brief Return a circular buffer and a timestamptz to a spatiotemporal box
+ * @sqlfn stbox()
+ * @sqlop @p
+ */
+Datum
+Cbuffer_timestamptz_to_stbox(PG_FUNCTION_ARGS)
+{
+  Cbuffer *cbuf = PG_GETARG_CBUFFER_P(0);
+  TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
+  PG_RETURN_STBOX_P(cbuffer_timestamptz_to_stbox(cbuf, t));
+}
+
+PGDLLEXPORT Datum Cbuffer_tstzspan_to_stbox(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Cbuffer_tstzspan_to_stbox);
+/**
+ * @ingroup mobilitydb_cbuffer_base_conversion
+ * @brief Return a circular buffer and a timestamptz span to a spatiotemporal
+ * box
+ * @sqlfn stbox()
+ * @sqlop @p
+ */
+Datum
+Cbuffer_tstzspan_to_stbox(PG_FUNCTION_ARGS)
+{
+  Cbuffer *cbuf = PG_GETARG_CBUFFER_P(0);
+  Span *s = PG_GETARG_SPAN_P(1);
+  PG_RETURN_STBOX_P(cbuffer_tstzspan_to_stbox(cbuf, s));
 }
 
 /*****************************************************************************
