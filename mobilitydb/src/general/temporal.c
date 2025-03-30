@@ -343,7 +343,7 @@ tinstant_write(const TInstant *inst, StringInfo buf)
 {
   meosType basetype = temptype_basetype(inst->temptype);
   bytea *bt = call_send(T_TIMESTAMPTZ, TimestampTzGetDatum(inst->t));
-  bytea *bv = call_send(basetype, tinstant_val(inst));
+  bytea *bv = call_send(basetype, tinstant_value_p(inst));
   pq_sendbytes(buf, VARDATA(bt), VARSIZE(bt) - VARHDRSZ);
   pq_sendint32(buf, VARSIZE(bv) - VARHDRSZ);
   pq_sendbytes(buf, VARDATA(bv), VARSIZE(bv) - VARHDRSZ);

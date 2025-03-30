@@ -57,6 +57,10 @@
   #include "pose/pose.h"
   #include "pose/tpose_boxops.h"
 #endif
+#if RGEO
+  #include "rgeo/trgeometry.h"
+  #include "rgeo/trgeometry_boxops.h"
+#endif
 
 /*****************************************************************************
  * Aggregate functions for sets
@@ -87,7 +91,7 @@ set_expand_bbox(Datum value, meosType basetype, void *box)
     cbuffer_set_stbox(DatumGetCbufferP(value), &box1);
     stbox_expand(&box1, (STBox *) box);
   }
-#endif
+#endif /* CBUFFER */
 #if NPOINT
   else if (basetype == T_NPOINT)
   {
@@ -95,15 +99,15 @@ set_expand_bbox(Datum value, meosType basetype, void *box)
     npoint_set_stbox(DatumGetNpointP(value), &box1);
     stbox_expand(&box1, (STBox *) box);
   }
-#endif
-#if POSE
+#endif /* NPOINT */
+#if POSE || RGEO
   else if (basetype == T_POSE)
   {
     STBox box1;
     pose_set_stbox(DatumGetPoseP(value), &box1);
     stbox_expand(&box1, (STBox *) box);
   }
-#endif
+#endif /* POSE */
   else
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,

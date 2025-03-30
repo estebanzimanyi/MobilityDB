@@ -190,7 +190,7 @@ tnumberinst_set_tbox(const TInstant *inst, TBox *box)
   assert(tnumber_type(inst->temptype));
   meosType basetype = temptype_basetype(inst->temptype);
   meosType spantype = basetype_spantype(basetype);
-  Datum value = tinstant_val(inst);
+  Datum value = tinstant_value_p(inst);
   Datum time = TimestampTzGetDatum(inst->t);
   TBox *tbox = (TBox *) box;
   memset(tbox, 0, sizeof(TBox));
@@ -337,12 +337,12 @@ tnumberinstarr_set_tbox(const TInstant **instants, int count, bool lower_inc,
     lower_inc1 = upper_inc1 = true;
   }
   /* Compute the value span */
-  Datum min = tinstant_val(instants[0]);
+  Datum min = tinstant_value_p(instants[0]);
   Datum max = min;
   bool min_inc = lower_inc1, max_inc = lower_inc1;
   for (int i = 1; i < count; i++)
   {
-    Datum value = tinstant_val(instants[i]);
+    Datum value = tinstant_value_p(instants[i]);
     int min_cmp = datum_cmp(value, min, basetype);
     int max_cmp = datum_cmp(value, max, basetype);
     if (min_cmp <= 0)

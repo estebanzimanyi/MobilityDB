@@ -693,8 +693,8 @@ ea_dwithin_tcbufferinst_tcbufferinst(const TInstant *inst1,
 {
   assert(inst1); assert(inst2);
   /* Result is the same for both EVER and ALWAYS */
-  return DatumGetBool(datum_geom_dwithin2d(tinstant_val(inst1),
-    tinstant_val(inst2), Float8GetDatum(dist)));
+  return DatumGetBool(datum_geom_dwithin2d(tinstant_value_p(inst1),
+    tinstant_value_p(inst2), Float8GetDatum(dist)));
 }
 
 /**
@@ -770,8 +770,8 @@ ea_dwithin_tcbufferseq_tcbufferseq_cont(const TSequence *seq1,
 
   start1 = TSEQUENCE_INST_N(seq1, 0);
   start2 = TSEQUENCE_INST_N(seq2, 0);
-  Datum sv1 = tinstant_val(start1);
-  Datum sv2 = tinstant_val(start2);
+  Datum sv1 = tinstant_value_p(start1);
+  Datum sv2 = tinstant_value_p(start2);
 
   bool linear1 = MEOS_FLAGS_LINEAR_INTERP(seq1->flags);
   bool linear2 = MEOS_FLAGS_LINEAR_INTERP(seq2->flags);
@@ -782,8 +782,8 @@ ea_dwithin_tcbufferseq_tcbufferseq_cont(const TSequence *seq1,
   {
     const TInstant *end1 = TSEQUENCE_INST_N(seq1, i);
     const TInstant *end2 = TSEQUENCE_INST_N(seq2, i);
-    Datum ev1 = tinstant_val(end1);
-    Datum ev2 = tinstant_val(end2);
+    Datum ev1 = tinstant_value_p(end1);
+    Datum ev2 = tinstant_value_p(end2);
     TimestampTz upper = end1->t;
     bool upper_inc = (i == seq1->count - 1) ? seq1->period.upper_inc : false;
 

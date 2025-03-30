@@ -58,6 +58,10 @@
   #include <meos_pose.h>
   #include "pose/pose.h"
 #endif
+#if RGEO
+  // #include <meos_rgeo.h>
+  #include "rgeo/trgeometry.h"
+#endif
 
 /*
  * Maximum length of an ESPG string to lookup
@@ -89,7 +93,7 @@ spatial_srid(Datum d, meosType basetype)
     case T_NPOINT:
       return npoint_srid(DatumGetNpointP(d));
 #endif
-#if POSE
+#if POSE || RGEO
     case T_POSE:
       return pose_srid(DatumGetPoseP(d));
 #endif
@@ -119,7 +123,7 @@ spatial_set_srid(Datum d, meosType basetype, int32_t srid)
       cbuffer_set_srid(DatumGetCbufferP(d), srid);
       return true;
 #endif
-#if POSE
+#if POSE || RGEO
     case T_POSE:
       pose_set_srid(DatumGetPoseP(d), srid);
       return true;
@@ -197,7 +201,7 @@ tspatialinst_srid(const TInstant *inst)
 {
   assert(inst); assert(tspatial_type(inst->temptype));
   meosType basetype = temptype_basetype(inst->temptype);
-  return spatial_srid(tinstant_val(inst), basetype);
+  return spatial_srid(tinstant_value_p(inst), basetype);
 }
 
 /**
@@ -215,15 +219,18 @@ tspatial_srid(const Temporal *temp)
       ! ensure_tspatial_type(temp->temptype))
     return SRID_INVALID;
 
+  const STBox *box;
   assert(temptype_subtype(temp->subtype));
   switch (temp->subtype)
   {
     case TINSTANT:
       return tspatialinst_srid((TInstant *) temp);
     case TSEQUENCE:
-      return ((STBox *) TSEQUENCE_BBOX_PTR((TSequence *) temp))->srid;
+      box = ((STBox *) TSEQUENCE_BBOX_PTR((TSequence *) temp));
+      return box->srid;
     default: /* TSEQUENCESET */
-      return ((STBox *) TSEQUENCESET_BBOX_PTR((TSequenceSet *) temp))->srid;
+      box = ((STBox *) TSEQUENCESET_BBOX_PTR((TSequenceSet *) temp));
+      return box->srid;
   }
 }
 
@@ -240,7 +247,7 @@ tspatialinst_set_srid(TInstant *inst, int32_t srid)
 {
   assert(inst); assert(tspatial_type(inst->temptype));
   meosType basetype = temptype_basetype(inst->temptype);
-  spatial_set_srid(tinstant_val(inst), basetype, srid);
+  spatial_set_srid(tinstant_value_p(inst), basetype, srid);
   return;
 }
 
@@ -689,7 +696,7 @@ tspatialinst_transf_pj(const TInstant *inst, int32_t srid_to, const LWPROJ *pj)
   assert(inst); assert(pj); assert(tspatial_type(inst->temptype));
   meosType basetype = temptype_basetype(inst->temptype);
   /* The SRID of the geometry is set in the following function */
-  Datum d = datum_transf_pj(tinstant_val(inst), basetype, srid_to, pj);
+  Datum d = datum_transf_pj(tinstant_value_p(inst), basetype, srid_to, pj);
   if (! DatumGetPointer(d))
     return NULL;
   return tinstant_make_free(d, inst->temptype, inst->t);

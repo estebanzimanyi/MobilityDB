@@ -209,7 +209,7 @@ tinstant_tprecision(const TInstant *inst, const Interval *duration,
 {
   assert(inst); assert(duration); assert(valid_duration(duration));
   TimestampTz lower = timestamptz_get_bin(inst->t, duration, torigin);
-  return tinstant_make(tinstant_val(inst), inst->temptype, lower);
+  return tinstant_make(tinstant_value_p(inst), inst->temptype, lower);
 }
 
 /**
@@ -1465,14 +1465,14 @@ tfloatseq_findsplit(const TSequence *seq, int i1, int i2, int *split,
 
   const TInstant *start = TSEQUENCE_INST_N(seq, i1);
   const TInstant *end = TSEQUENCE_INST_N(seq, i2);
-  double startval = DatumGetFloat8(tinstant_val(start));
-  double endval = DatumGetFloat8(tinstant_val(end));
+  double startval = DatumGetFloat8(tinstant_value_p(start));
+  double endval = DatumGetFloat8(tinstant_value_p(end));
   double duration2 = (double) (end->t - start->t);
   /* Loop for every instant between i1 and i2 */
   for (int idx = i1 + 1; idx < i2; idx++)
   {
     const TInstant *inst = TSEQUENCE_INST_N(seq, idx);
-    double value = DatumGetFloat8(tinstant_val(inst));
+    double value = DatumGetFloat8(tinstant_value_p(inst));
     /*
      * The following is equivalent to
      * #tsegment_value_at_timestamptz(start, end, LINEAR, inst->t);
@@ -1613,13 +1613,13 @@ tpointseq_findsplit(const TSequence *seq, int i1, int i2, bool syncdist,
   const TInstant *end = TSEQUENCE_INST_N(seq, i2);
   if (hasz)
   {
-    p3a = (POINT3DZ *) DATUM_POINT3DZ_P(tinstant_val(start));
-    p3b = (POINT3DZ *) DATUM_POINT3DZ_P(tinstant_val(end));
+    p3a = (POINT3DZ *) DATUM_POINT3DZ_P(tinstant_value_p(start));
+    p3b = (POINT3DZ *) DATUM_POINT3DZ_P(tinstant_value_p(end));
   }
   else
   {
-    p2a = (POINT2D *) DATUM_POINT2D_P(tinstant_val(start));
-    p2b = (POINT2D *) DATUM_POINT2D_P(tinstant_val(end));
+    p2a = (POINT2D *) DATUM_POINT2D_P(tinstant_value_p(start));
+    p2b = (POINT2D *) DATUM_POINT2D_P(tinstant_value_p(end));
   }
 
   /* Loop for every instant between i1 and i2 */
@@ -1629,7 +1629,7 @@ tpointseq_findsplit(const TSequence *seq, int i1, int i2, bool syncdist,
     const TInstant *inst = TSEQUENCE_INST_N(seq, idx);
     if (hasz)
     {
-      p3k = (POINT3DZ *) DATUM_POINT3DZ_P(tinstant_val(inst));
+      p3k = (POINT3DZ *) DATUM_POINT3DZ_P(tinstant_value_p(inst));
       if (syncdist)
       {
         value = tsegment_value_at_timestamptz(start, end, interp, inst->t);
@@ -1642,7 +1642,7 @@ tpointseq_findsplit(const TSequence *seq, int i1, int i2, bool syncdist,
     }
     else
     {
-      p2k = (POINT2D *) DATUM_POINT2D_P(tinstant_val(inst));
+      p2k = (POINT2D *) DATUM_POINT2D_P(tinstant_value_p(inst));
       if (syncdist)
       {
         value = tsegment_value_at_timestamptz(start, end, interp, inst->t);

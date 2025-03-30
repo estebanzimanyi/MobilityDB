@@ -181,7 +181,6 @@ tpoint_force2d(const Temporal *temp)
       ! ensure_has_Z(temp->temptype, temp->flags))
     return NULL;
 
-  /* We only need to fill these parameters for tfunc_temporal */
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) &point_force2d;
@@ -213,8 +212,8 @@ static bool
 tpointsegm_timestamp_at_value1_iter(const TInstant *inst1,
   const TInstant *inst2, Datum value, TimestampTz *t)
 {
-  Datum value1 = tinstant_val(inst1);
-  Datum value2 = tinstant_val(inst2);
+  Datum value1 = tinstant_value_p(inst1);
+  Datum value2 = tinstant_value_p(inst2);
   /* Is the lower bound the answer? */
   bool result = true;
   if (datum_point_eq(value1, value))
@@ -526,7 +525,7 @@ tpointinst_restrict_stbox_iter(const TInstant *inst, const STBox *box,
   bool hasz = MEOS_FLAGS_GET_Z(inst->flags) && MEOS_FLAGS_GET_Z(box->flags);
 
   /* Restrict to the XY(Z) dimension */
-  Datum value = tinstant_val(inst);
+  Datum value = tinstant_value_p(inst);
   /* Get the input point */
   double x, y, z = 0.0;
   if (hasz)
@@ -576,7 +575,7 @@ tgeoinst_restrict_stbox_iter(const TInstant *inst, const STBox *box,
     return tpointinst_restrict_stbox_iter(inst, box, border_inc, atfunc);
 
   /* Get the geometry of the instant and convert the box to a geometry */
-  const GSERIALIZED *gs1 = DatumGetGserializedP(tinstant_val(inst));
+  const GSERIALIZED *gs1 = DatumGetGserializedP(tinstant_value_p(inst));
   GSERIALIZED *gs2 = stbox_geo(box);
   /* Restrict to the spatial dimension */
   GSERIALIZED *res = atfunc ? 
@@ -697,7 +696,7 @@ tgeoseq_step_restrict_stbox(const TSequence *seq, const STBox *box,
       {
         /* Continue the last instant of the sequence until the time of inst2
          * projected to the time dimension (if any) */
-        Datum value = tinstant_val(instants[ninsts - 1]);
+        Datum value = tinstant_value_p(instants[ninsts - 1]);
         bool tofree = false;
         bool upper_inc = false;
         /* Continue the last instant of the sequence until the time of inst2 */
@@ -774,7 +773,7 @@ tpointseq_linear_at_stbox_xyz(const TSequence *seq, const STBox *box,
   TInstant **instants = palloc(sizeof(TInstant *) * seq->count);
   TInstant **tofree = palloc(sizeof(TInstant *) * seq->count * 2);
   const TInstant *inst1 = TSEQUENCE_INST_N(seq, 0);
-  const GSERIALIZED *p1 = DatumGetGserializedP(tinstant_val(inst1));
+  const GSERIALIZED *p1 = DatumGetGserializedP(tinstant_value_p(inst1));
   bool lower_inc = seq->period.lower_inc;
   bool upper_inc;
   int ninsts = 0, nseqs = 0, nfree = 0;
@@ -782,7 +781,7 @@ tpointseq_linear_at_stbox_xyz(const TSequence *seq, const STBox *box,
   {
     const TInstant *inst2 = TSEQUENCE_INST_N(seq, i);
     upper_inc = (i == seq->count - 1) ? seq->period.upper_inc : false;
-    const GSERIALIZED *p2 = DatumGetGserializedP(tinstant_val(inst2));
+    const GSERIALIZED *p2 = DatumGetGserializedP(tinstant_value_p(inst2));
     GSERIALIZED *p3, *p4;
     bool makeseq = false;
     if (geopoint_eq(p1, p2))
@@ -822,8 +821,8 @@ tpointseq_linear_at_stbox_xyz(const TSequence *seq, const STBox *box,
           /* Force the computation at 2D */
           inst1_2d = (TInstant *) tpoint_force2d((Temporal *) inst1);
           inst2_2d = (TInstant *) tpoint_force2d((Temporal *) inst2);
-          p1 = DatumGetGserializedP(tinstant_val(inst1_2d));
-          p2 = DatumGetGserializedP(tinstant_val(inst2_2d));
+          p1 = DatumGetGserializedP(tinstant_value_p(inst1_2d));
+          p2 = DatumGetGserializedP(tinstant_value_p(inst2_2d));
         }
         /* Compute timestamp t1 of point p3 */
         if (geopoint_eq(p1, p3))
@@ -946,7 +945,7 @@ tpointseq_linear_at_stbox_xyz(const TSequence *seq, const STBox *box,
       lower_inc = true;
     }
     inst1 = inst2;
-    p1 = DatumGetGserializedP(tinstant_val(inst2));
+    p1 = DatumGetGserializedP(tinstant_value_p(inst2));
   }
   /* See above for explanation of condition */
   if (ninsts > 0 && (ninsts > 1 || lower_inc || upper_inc))
@@ -1264,7 +1263,7 @@ tpointseq_at_stbox_segm(const TSequence *seq, const STBox *box,
   TSequence **sequences = palloc(sizeof(TSequence *) * (seq->count - 1));
   const TInstant **instants = palloc(sizeof(TInstant *) * seq->count);
   const TInstant *inst1 = TSEQUENCE_INST_N(seq, 0);
-  GSERIALIZED *p1 = DatumGetGserializedP(tinstant_val(inst1));
+  const GSERIALIZED *p1 = DatumGetGserializedP(tinstant_value_p(inst1));
   bool lower_inc = seq->period.lower_inc;
   bool lower_inc_seq = lower_inc, upper_inc;
   int nseqs = 0, ninsts = 0;
@@ -1272,7 +1271,7 @@ tpointseq_at_stbox_segm(const TSequence *seq, const STBox *box,
   {
     const TInstant *inst2 = TSEQUENCE_INST_N(seq, i);
     upper_inc = (i == seq->count - 1) ? seq->period.upper_inc : false;
-    GSERIALIZED *p2 = DatumGetGserializedP(tinstant_val(inst2));
+    const GSERIALIZED *p2 = DatumGetGserializedP(tinstant_value_p(inst2));
     /* Keep the segment if intersects the bounding box */
     bool inter = false;
     if (geopoint_eq(p1, p2))
@@ -1431,7 +1430,7 @@ tpointinst_restrict_geom_iter(const TInstant *inst, const GSERIALIZED *gs,
   const Span *zspan, bool atfunc)
 {
   /* Restrict to the Z dimension */
-  Datum value = tinstant_val(inst);
+  Datum value = tinstant_value_p(inst);
   if (zspan)
   {
     const POINT3DZ *p = DATUM_POINT3DZ_P(value);
@@ -1472,7 +1471,7 @@ tgeoinst_restrict_geom_iter(const TInstant *inst, const GSERIALIZED *gs,
   /* Z span is not allowed for general geometries */
   assert(! zspan);
   /* Get the geometry of the instant */
-  GSERIALIZED *gs1 = DatumGetGserializedP(tinstant_val(inst));
+  const GSERIALIZED *gs1 = DatumGetGserializedP(tinstant_value_p(inst));
   /* Restrict to the spatial dimension */
   GSERIALIZED *res = atfunc ? 
     geom_intersection2d(gs1, gs) : geom_difference2d(gs1, gs);
@@ -1582,7 +1581,7 @@ tgeoseq_step_restrict_geom(const TSequence *seq, const GSERIALIZED *gs,
       if (ninsts > 0)
       {
         /* Continue the last instant of the sequence until the time of inst2 */
-        Datum value = tinstant_val(instants[ninsts - 1]);
+        Datum value = tinstant_value_p(instants[ninsts - 1]);
         bool tofree = false;
         bool upper_inc = false;
         instants[ninsts++] = tinstant_make(value, seq->temptype, inst->t);
@@ -1659,7 +1658,7 @@ tpointseq_interperiods(const TSequence *seq, const GSERIALIZED *gsinter,
   /* If the sequence is stationary the whole sequence intersects with the
    * geometry since gsinter is not empty */
   if (seq->count == 2 &&
-    datum_point_eq(tinstant_val(start), tinstant_val(end)))
+    datum_point_eq(tinstant_value_p(start), tinstant_value_p(end)))
   {
     result = palloc(sizeof(Span));
     result[0] = seq->period;

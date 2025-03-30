@@ -563,27 +563,6 @@ cbufferarr_set_stbox(const Datum *values, int count, STBox *box)
 }
 
 /**
- * @ingroup meos_internal_box_conversion
- * @brief Return in the last argument a spatiotemporal box contructed from
- * an array of circular buffers
- * @param[in] values Circular buffers
- * @param[in] count Number of elements in the array
- * @param[out] box Spatiotemporal box
- */
-void
-cbufferset_stbox(const Datum *values, int count, STBox *box)
-{
-  cbuffer_set_stbox(DatumGetCbufferP(values[0]), box);
-  for (int i = 1; i < count; i++)
-  {
-    STBox box1;
-    cbuffer_set_stbox(DatumGetCbufferP(values[i]), &box1);
-    stbox_expand(&box1, box);
-  }
-  return;
-}
-
-/**
  * @ingroup meos_cbuffer_base_conversion
  * @brief Return a circular buffer converted to a spatiotemporal box
  * @param[in] cbuf Circular buffer

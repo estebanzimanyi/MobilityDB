@@ -65,7 +65,7 @@
  * @csqlfn #Tinstant_value()
  */
 Datum
-tinstant_val(const TInstant *inst)
+tinstant_value_p(const TInstant *inst)
 {
   assert(inst);
   /* For base types passed by value */
@@ -118,7 +118,7 @@ tnumberinst_double(const TInstant *inst)
 {
   assert(inst);
   assert(tnumber_type(inst->temptype));
-  Datum value = tinstant_val(inst);
+  Datum value = tinstant_value_p(inst);
   if (inst->temptype == T_TINT)
     return (double)(DatumGetInt32(value));
   else /* inst->temptype == T_TFLOAT */
@@ -162,7 +162,7 @@ tinstant_to_string(const TInstant *inst, int maxdd, outfunc value_out)
 
   char *t = pg_timestamptz_out(inst->t);
   meosType basetype = temptype_basetype(inst->temptype);
-  char *value = value_out(tinstant_val(inst), basetype, maxdd);
+  char *value = value_out(tinstant_value_p(inst), basetype, maxdd);
   size_t size = strlen(value) + strlen(t) + 2;
   char *result = palloc(size);
   snprintf(result, size, "%s@%s", value, t);
@@ -315,7 +315,7 @@ tinstant_values_p(const TInstant *inst, int *count)
 {
   assert(inst); assert(count);
   Datum *result = palloc(sizeof(Datum));
-  result[0] = tinstant_val(inst);
+  result[0] = tinstant_value_p(inst);
   *count = 1;
   return result;
 }
@@ -330,7 +330,7 @@ SpanSet *
 tnumberinst_valuespans(const TInstant *inst)
 {
   assert(inst);
-  Datum value = tinstant_val(inst);
+  Datum value = tinstant_value_p(inst);
   meosType basetype = temptype_basetype(inst->temptype);
   meosType spantype = basetype_spantype(basetype);
   Span s;
@@ -478,7 +478,7 @@ tnumberinst_shift_value(const TInstant *inst, Datum shift)
 {
   assert(inst);
   TInstant *result = tinstant_copy(inst);
-  Datum value = tinstant_val(result);
+  Datum value = tinstant_value_p(result);
   meosType basetype = temptype_basetype(result->temptype);
   value = datum_add(value, shift, basetype);
   tinstant_set(result, value, result->t);
@@ -546,8 +546,8 @@ tinstant_eq(const TInstant *inst1, const TInstant *inst2)
 {
   assert(inst1); assert(inst2); assert(inst1->temptype == inst2->temptype);
   /* Compare values and timestamps */
-  Datum value1 = tinstant_val(inst1);
-  Datum value2 = tinstant_val(inst2);
+  Datum value1 = tinstant_value_p(inst1);
+  Datum value2 = tinstant_value_p(inst2);
   return inst1->t == inst2->t && datum_eq(value1, value2,
     temptype_basetype(inst1->temptype));
 }
@@ -576,10 +576,10 @@ tinstant_cmp(const TInstant *inst1, const TInstant *inst2)
   if (cmp > 0)
     return 1;
   /* Compare values */
-  if (datum_lt(tinstant_val(inst1), tinstant_val(inst2),
+  if (datum_lt(tinstant_value_p(inst1), tinstant_value_p(inst2),
       temptype_basetype(inst1->temptype)))
     return -1;
-  if (datum_gt(tinstant_val(inst1), tinstant_val(inst2),
+  if (datum_gt(tinstant_value_p(inst1), tinstant_value_p(inst2),
       temptype_basetype(inst1->temptype)))
     return 1;
   /* The two values are equal */
@@ -604,7 +604,7 @@ tinstant_hash(const TInstant *inst)
   assert(inst);
   meosType basetype = temptype_basetype(inst->temptype);
   /* Apply the hash function to the base type */
-  uint32 value_hash = datum_hash(tinstant_val(inst), basetype);
+  uint32 value_hash = datum_hash(tinstant_value_p(inst), basetype);
   /* Apply the hash function to the timestamp */
   uint32 time_hash = pg_hashint8(inst->t);
   /* Merge hashes of value and timestamp */

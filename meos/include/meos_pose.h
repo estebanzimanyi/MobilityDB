@@ -90,6 +90,7 @@ extern bool pose_ne(const Pose *pose1, const Pose *pose2);
 extern bool pose_nsame(const Pose *pose1, const Pose *pose2);
 extern char *pose_out(const Pose *pose, int maxdd);
 extern GSERIALIZED *pose_point(const Pose *pose);
+extern GSERIALIZED *pose_geom(const Pose *pose);
 extern double pose_rotation(const Pose *pose);
 extern double *pose_orientation(const Pose *pose);
 extern Pose *pose_round(const Pose *pose, int maxdd);
@@ -144,7 +145,7 @@ extern STBox *pose_stbox(const Pose *pose);
  *===========================================================================*/
 
 /*****************************************************************************
- * Input/output functions for temporal poses
+ * Input/output functions
  *****************************************************************************/
 
 extern char *tpose_as_ewkt(const Temporal *temp, int maxdd);
@@ -152,13 +153,13 @@ extern char *tpose_as_text(const Temporal *temp, int maxdd);
 extern char *tpose_out(const Temporal *temp, int maxdd);
 
 /*****************************************************************************
- * Constructor functions for temporal poses
+ * Constructor functions
  *****************************************************************************/
 
 extern Temporal *tpoint_tfloat_to_tpose(const Temporal *tpoint, const Temporal *tradius);
 
 /*****************************************************************************
- * Restriction functions for temporal poses
+ * Restriction functions
  *****************************************************************************/
 
 // extern Temporal *tpose_at_geom(const Temporal *temp, const GSERIALIZED *gs, const Span *zspan);
@@ -169,7 +170,7 @@ extern Temporal *tpoint_tfloat_to_tpose(const Temporal *tpoint, const Temporal *
 // extern Temporal *tpose_minus_stbox(const Temporal *temp, const STBox *box, bool border_inc);
 
 /*****************************************************************************
- * Distance functions for temporal poses
+ * Distance functions
  *****************************************************************************/
 
 extern double distance_pose_geo(const Pose *pose, const GSERIALIZED *gs);
@@ -191,25 +192,24 @@ extern GSERIALIZED *shortestline_tpose_pose(const Temporal *temp, const Pose *po
 extern GSERIALIZED *shortestline_tpose_tpose(const Temporal *temp1, const Temporal *temp2);
 
 /*****************************************************************************
- * Spatial functions for temporal points
+ * Spatial functions
  *****************************************************************************/
-
-/* Spatial accessor functions for temporal points */
 
 extern Set *tpose_points(const Temporal *temp);
 extern Temporal *tpose_rotation(const Temporal *temp);
-// extern GSERIALIZED *tpose_traversed_area(const Temporal *temp);
+// extern Temporal *tpose_orientation(const Temporal *temp);
+// extern GSERIALIZED *tpose_trajectory(const Temporal *temp);
 
 /*****************************************************************************/
 
 /* Spatial transformation functions for temporal points */
 
-extern Temporal *tpose_tgeompoint(const Temporal *temp);
+extern Temporal *tpose_tpoint(const Temporal *temp);
 // extern TInstant *tposeinst_tgeompointinst(const TInstant *inst);
 
 /*****************************************************************************/
 
-/* Ever/always and temporal comparison functions for temporal poses */
+/* Ever/always and temporal comparison functions */
 
 extern int ever_eq_pose_tpose(const Pose *pose, const Temporal *temp);
 extern int ever_eq_tpose_pose(const Temporal *temp, const Pose *pose);
@@ -231,12 +231,12 @@ extern Temporal *tne_tpose_pose(const Temporal *temp, const Pose *pose);
 
 /*****************************************************************************/
 
-/* Ever and always spatial relationship functions for temporal poses */
+/* Ever and always spatial relationship functions */
 
 
 /*****************************************************************************/
 
-/* Temporal spatial relationship functions for temporal points */
+/* Temporal spatial relationship functions */
 
 
 /*****************************************************************************/

@@ -66,6 +66,9 @@
 #if POSE
   #include "pose/tpose_boxops.h"
 #endif
+#if RGEO
+  #include "rgeo/trgeometry_boxops.h"
+#endif
 
 /* Buffer size for input and output of STBox */
 #define MAXGBOXLEN     256
@@ -995,6 +998,7 @@ tstzspanset_set_stbox(const SpanSet *ss, STBox *box)
   return;
 }
 
+#if MEOS
 /**
  * @ingroup meos_geo_box_conversion
  * @brief Return a timestamptz span set converted to a spatiotemporal box
@@ -1004,19 +1008,16 @@ tstzspanset_set_stbox(const SpanSet *ss, STBox *box)
 STBox *
 tstzspanset_stbox(const SpanSet *ss)
 {
-#if MEOS
   /* Ensure validity of the arguments */
   if (! ensure_not_null((void *) ss) ||
       ! ensure_spanset_isof_type(ss, T_TSTZSPANSET))
     return NULL;
-#else
-  assert(ss); assert(ss->spansettype == T_TSTZSPANSET);
-#endif /* MEOS */
 
   STBox *result = palloc(sizeof(STBox));
   tstzspanset_set_stbox(ss, result);
   return result;
 }
+#endif /* MEOS */
 
 /*****************************************************************************
  * Generic function
@@ -1047,7 +1048,7 @@ spatial_set_stbox(Datum d, meosType basetype, STBox *box)
     case T_NPOINT:
       return npoint_set_stbox(DatumGetNpointP(d), box);
 #endif
-#if POSE
+#if POSE || RGEO
     case T_POSE:
       return pose_set_stbox(DatumGetPoseP(d), box);
 #endif

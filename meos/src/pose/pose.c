@@ -213,9 +213,18 @@ pose_parse(const char **str, bool end)
   Pose *result;
   const char *type_str = meostype_name(T_POSE);
 
-  /* Determine whether the box has an SRID */
+  /* Determine whether the pose has an SRID */
   int32_t srid;
   srid_parse(str, &srid);
+
+  /* Determine whether the pose has a gemetry */
+  int32_t srid_geo;
+  GSERIALIZED *geo = NULL;
+  if (strncasecmp(*str,"POSE",4) != 0)
+  {
+    if (! geo_parse(str, T_GEOMETRY, ';', &srid_geo, &geo))
+      return NULL;
+  }
 
   if (strncasecmp(*str,"POSE",4) == 0)
   {
@@ -226,7 +235,7 @@ pose_parse(const char **str, bool end)
   {
     meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
       "Could not parse %s value: Missing prefix 'Pose'",
-      meostype_name(T_CBUFFER));
+      meostype_name(T_POSE));
     return NULL;
   }
 
@@ -236,18 +245,17 @@ pose_parse(const char **str, bool end)
 
   /* Parse geo */
   p_whitespace(str);
-  GSERIALIZED *gs;
-  /* The following call consumes also the separator passed as parameter */
-  if (! geo_parse(str, T_GEOMETRY, ',', &srid, &gs))
+  GSERIALIZED *point;
+  if (! geo_parse(str, T_GEOMETRY, ',', &srid, &point))
     return NULL;
-  if (! ensure_point_type(gs) || ! ensure_not_empty(gs) ||
-      ! ensure_has_not_M_geo(gs))
+  if (! ensure_point_type(point) || ! ensure_not_empty(point) ||
+      ! ensure_has_not_M_geo(point))
   {
-    pfree(gs);
+    pfree(point);
     return NULL;
   }
 
-  bool hasZ = FLAGS_GET_Z(gs->gflags);
+  bool hasZ = FLAGS_GET_Z(point->gflags);
 
   if (! hasZ)
   {
@@ -255,7 +263,7 @@ pose_parse(const char **str, bool end)
     p_whitespace(str); p_comma(str); p_whitespace(str);
     if (! double_parse(str, &theta) || ! ensure_valid_rotation(theta))
       return NULL;
-    POINT4D *p = (POINT4D *) GS_POINT_PTR(gs);
+    POINT4D *p = (POINT4D *) GS_POINT_PTR(point);
     result = pose_make_2d(p->x, p->y, theta, srid);
   }
   else
@@ -275,9 +283,10 @@ pose_parse(const char **str, bool end)
       return NULL;
     if (! ensure_unit_norm(W, X, Y, Z))
       return NULL;
-    POINT4D *p = (POINT4D *) GS_POINT_PTR(gs);
+    POINT4D *p = (POINT4D *) GS_POINT_PTR(point);
     result = pose_make_3d(p->x, p->y, p->z, W, X, Y, Z, srid);
   }
+  pfree(point);
 
   /* Parse closing parenthesis */
   p_whitespace(str);
@@ -361,6 +370,8 @@ char *
 pose_wkt_out(Datum value, bool extended, int maxdd)
 {
   Pose *pose = DatumGetPoseP(value);
+
+  /* Write the pose */
   bool hasz = MEOS_FLAGS_GET_Z(pose->flags);
   int32_t srid = pose_srid(pose);
   GSERIALIZED *gs = hasz ?
@@ -369,8 +380,8 @@ pose_wkt_out(Datum value, bool extended, int maxdd)
     geopoint_make(pose->data[0], pose->data[1], 0.0, false, false, srid);
   LWGEOM *geom = lwgeom_from_gserialized(gs);
   size_t len;
-  char *wkt = lwgeom_to_wkt(geom, extended ? WKT_EXTENDED : WKT_ISO, maxdd, 
-    &len);
+  char *wkt_pose = lwgeom_to_wkt(geom, extended ? WKT_EXTENDED : WKT_ISO,
+    maxdd, &len);
   char *W, *X, *Y, *Z, *theta;
   if (hasz)
   {
@@ -389,15 +400,15 @@ pose_wkt_out(Datum value, bool extended, int maxdd)
   char *result = palloc(len);
   if (hasz)
   {
-    snprintf(result, len, "Pose(%s,%s,%s,%s,%s)", wkt, W, X, Y, Z);
+    snprintf(result, len, "Pose(%s,%s,%s,%s,%s)", wkt_pose, W, X, Y, Z);
     pfree(W); pfree(X); pfree(Y); pfree(Z); 
   }
   else
   {
-    snprintf(result, len, "Pose(%s,%s)", wkt, theta);
+    snprintf(result, len, "Pose(%s,%s)", wkt_pose, theta);
     pfree(theta);
   }
-  lwgeom_free(geom); pfree(wkt);
+  lwgeom_free(geom); pfree(wkt_pose);
   return result;
 }
 
@@ -721,12 +732,11 @@ pose_point(const Pose *pose)
 
   LWPOINT *point;
   if (MEOS_FLAGS_GET_Z(pose->flags))
-    point = lwpoint_make3dz(pose_srid(pose),
-      pose->data[0], pose->data[1], pose->data[2]);
+    point = lwpoint_make3dz(pose_srid(pose), pose->data[0], pose->data[1],
+      pose->data[2]);
   else
-    point = lwpoint_make2d(pose_srid(pose),
-      pose->data[0], pose->data[1]);
-  GSERIALIZED *gs = geo_serialize((LWGEOM *)point);
+    point = lwpoint_make2d(pose_srid(pose), pose->data[0], pose->data[1]);
+  GSERIALIZED *gs = geo_serialize((LWGEOM *) point);
   lwpoint_free(point);
   return gs;
 }
@@ -738,6 +748,27 @@ Datum
 datum_pose_point(Datum pose)
 {
   return GserializedPGetDatum(pose_point(DatumGetPoseP(pose)));
+}
+
+/*****************************************************************************/
+
+/**
+ * @ingroup meos_pose_base_conversion
+ * @brief Convert a pose into a reference geometry
+ * @param[in] pose Pose
+ */
+GSERIALIZED *
+pose_geom(const Pose *pose)
+{
+  /* Ensure validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) pose) || ! ensure_has_geom(int16 flags))
+    return NULL;
+#else
+  assert(pose); assert(MEOS_FLAGS_GET_GEOM(pose->flags));
+#endif /* MEOS */
+
+  return geo_copy(POSE_GEOM_PTR(pose));
 }
 
 /*****************************************************************************/
@@ -889,7 +920,7 @@ datum_pose_round(Datum pose, Datum size)
  * @param[in] posearr Array of poses
  * @param[in] count Number of elements in the array
  * @param[in] maxdd Maximum number of decimal digits
- * @csqlfn #Cbufferarr_round()
+ * @csqlfn #Posearr_round()
  */
 Pose **
 posearr_round(const Pose **posearr, int count, int maxdd)

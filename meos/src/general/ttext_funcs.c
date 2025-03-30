@@ -57,7 +57,6 @@ textfunc_ttext(const Temporal *temp, datum_func1 func)
   assert(temp); assert(func);
   assert(temp->temptype == T_TTEXT);
 
-  /* We only need to fill these parameters for tfunc_temporal */
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) func;

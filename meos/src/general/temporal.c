@@ -68,6 +68,9 @@
 #if POSE
   #include "pose/pose.h"
 #endif
+#if RGEO
+  #include "rgeo/trgeometry.h"
+#endif
 
 /*****************************************************************************
  * Parameter tests
@@ -266,6 +269,7 @@ ensure_common_dimension(int16 flags1, int16 flags2)
   return false;
 }
 
+#if MEOS
 /**
  * @brief Ensure that a temporal value has a given base type
  * @param[in] temp Temporal value
@@ -281,6 +285,7 @@ ensure_temporal_isof_basetype(const Temporal *temp, meosType basetype)
     meostype_name(temp->temptype), meostype_name(basetype));
   return false;
 }
+#endif /* MEOS */
 
 /**
  * @brief Ensure that a temporal value is of a temporal type
@@ -1104,7 +1109,7 @@ tnumber_set_span(const Temporal *temp, Span *s)
   meosType spantype = basetype_spantype(basetype);
   if (temp->subtype == TINSTANT)
   {
-    Datum value = tinstant_val((TInstant *) temp);
+    Datum value = tinstant_value_p((TInstant *) temp);
     span_set(value, value, true, true, basetype, spantype, s);
   }
   else
@@ -1187,7 +1192,7 @@ round_fn(meosType basetype)
     case T_NPOINT:
       return &datum_npoint_round;
 #endif
-#if POSE
+#if POSE || RGEO
     case T_POSE:
       return &datum_pose_round;
 #endif
@@ -1215,13 +1220,9 @@ temporal_round(const Temporal *temp, int maxdd)
   assert(temp);
 #endif /* MEOS */
 
-  /* Get the function for rounding the base type */
-  datum_func2 func = round_fn(temptype_basetype(temp->temptype));
-  
-  /* We only need to fill these parameters for tfunc_temporal */
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
-  lfinfo.func = (varfunc) func;
+  lfinfo.func = (varfunc) round_fn(temptype_basetype(temp->temptype));
   lfinfo.numparam = 1;
   lfinfo.param[0] = Int32GetDatum(maxdd);
   lfinfo.argtype[0] = temp->temptype;
@@ -1331,7 +1332,6 @@ tfloat_floor(const Temporal *temp)
   assert(temp);
 #endif /* MEOS */
 
-  /* We only need to fill these parameters for tfunc_temporal */
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) &datum_floor;
@@ -1361,7 +1361,6 @@ tfloat_ceil(const Temporal *temp)
   assert(temp);
 #endif /* MEOS */
 
-  /* We only need to fill these parameters for tfunc_temporal */
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) &datum_ceil;
@@ -1434,7 +1433,6 @@ tfloat_degrees(const Temporal *temp, bool normalize)
   assert(temp);
 #endif /* MEOS */
 
-  /* We only need to fill these parameters for tfunc_temporal */
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) &datum_degrees;
@@ -1465,7 +1463,6 @@ tfloat_radians(const Temporal *temp)
   assert(temp);
 #endif /* MEOS */
 
-  /* We only need to fill these parameters for tfunc_temporal */
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) &datum_radians;
@@ -2109,7 +2106,7 @@ temporal_min_value(const Temporal *temp)
   switch (temp->subtype)
   {
     case TINSTANT:
-      result = tinstant_val((TInstant *) temp);
+      result = tinstant_value_p((TInstant *) temp);
       break;
     case TSEQUENCE:
       result = tsequence_min_val((TSequence *) temp);
@@ -2137,7 +2134,7 @@ temporal_max_value(const Temporal *temp)
   switch (temp->subtype)
   {
     case TINSTANT:
-      result = tinstant_val((TInstant *) temp);
+      result = tinstant_value_p((TInstant *) temp);
       break;
     case TSEQUENCE:
       result = tsequence_max_val((TSequence *) temp);
@@ -2461,7 +2458,7 @@ temporal_seqs(const Temporal *temp, int *count)
   else /* temp->subtype == TSEQUENCE */
   {
     *count = ((TSequenceSet *) temp)->count;
-    return tsequenceset_seqs((TSequenceSet *) temp);
+    return tsequenceset_sequences_p((TSequenceSet *) temp);
   }
 }
 
@@ -2647,10 +2644,8 @@ temporal_start_instant(const Temporal *temp)
   assert(temp);
 #endif /* MEOS */
 
-  const TInstant *result = temporal_start_inst(temp);
   /* A temporal value always has a start instant */
-  assert(result);
-  return tinstant_copy(result);
+  return tinstant_copy(temporal_start_inst(temp));
 }
 
 /**
@@ -2700,10 +2695,8 @@ temporal_end_instant(const Temporal *temp)
   assert(temp);
 #endif /* MEOS */
 
-  const TInstant *result = temporal_end_inst(temp);
   /* A temporal value always has an end instant */
-  assert(result);
-  return tinstant_copy(result);
+  return tinstant_copy(temporal_end_inst(temp));
 }
 
 /**
@@ -2789,7 +2782,7 @@ temporal_insts(const Temporal *temp, int *count)
       return tinstant_insts((TInstant *) temp, count);
     case TSEQUENCE:
       *count = ((TSequence *) temp)->count;
-      return tsequence_insts((TSequence *) temp);
+      return tsequence_instants_p((TSequence *) temp);
     default: /* TSEQUENCESET */
     {
       const TInstant **result = tsequenceset_insts((TSequenceSet *) temp);
@@ -3002,11 +2995,11 @@ mrr_distance_scalar(const TSequence *seq, int start, int end)
   assert(seq);
   assert(seq->temptype == T_TFLOAT);
   double min_value, max_value;
-  min_value = DatumGetFloat8(tinstant_val(TSEQUENCE_INST_N(seq, start)));
+  min_value = DatumGetFloat8(tinstant_value_p(TSEQUENCE_INST_N(seq, start)));
   max_value = min_value;
   for (int i = start + 1; i < end + 1; ++i)
   {
-    double curr_value = DatumGetFloat8(tinstant_val(TSEQUENCE_INST_N(seq, i)));
+    double curr_value = DatumGetFloat8(tinstant_value_p(TSEQUENCE_INST_N(seq, i)));
     min_value = fmin(min_value, curr_value);
     max_value = fmax(max_value, curr_value);
   }

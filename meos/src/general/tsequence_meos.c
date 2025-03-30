@@ -51,6 +51,9 @@
 #if POSE
   #include <meos_pose.h>
 #endif
+#if RGEO
+  // #include <meos_rgeo.h>
+#endif
 #include "general/doublen.h"
 #include "general/pg_types.h"
 #include "general/set.h"

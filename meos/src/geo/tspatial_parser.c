@@ -90,7 +90,7 @@ stbox_parse(const char **str)
   bool hasx = false, hasz = false, hast = false, geodetic = false;
   const char *type_str = meostype_name(T_STBOX);
 
-  /* Determine whether there is an SRID */
+  /* Get the SRID if it is given */
   int32_t srid;
   bool hassrid = srid_parse(str, &srid);
 
@@ -553,8 +553,7 @@ tspatial_parse(const char **str, meosType temptype)
   const char *bak = *str;
   p_whitespace(str);
 
-  /* Determine whether there is an SRID. If there is one we decode it and
-   * advance the bak pointer after the SRID to do not parse in the */
+  /* Get the SRID if it is given */
   int temp_srid = SRID_UNKNOWN;
   srid_parse(str, &temp_srid);
 
@@ -620,7 +619,7 @@ tpoint_parse(const char **str, meosType temptype)
 {
   Temporal *result = tspatial_parse(str, temptype);
   const TInstant *inst = temporal_start_inst(result);
-  const GSERIALIZED *gs = DatumGetGserializedP(tinstant_val(inst));
+  const GSERIALIZED *gs = DatumGetGserializedP(tinstant_value_p(inst));
   if (! ensure_point_type(gs) || ! ensure_has_not_M_geo(gs))
   {
     pfree(result);

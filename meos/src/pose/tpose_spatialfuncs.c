@@ -43,6 +43,7 @@
 #include <meos_pose.h>
 #include "pose/pose.h"
 #include "geo/tgeo_spatialfuncs.h"
+#include "rgeo/trgeometry_utils.h"
 
 /*****************************************************************************
  * Utility functions
@@ -124,9 +125,28 @@ tposesegm_intersection_value(const TInstant *inst1, const TInstant *inst2,
    * well */
   Pose *pose1 = DatumGetPoseP(start);
   Pose *pose2 = DatumGetPoseP(end);
-  Pose *pose = DatumGetPoseP(value);
   Pose *pose_interp = pose_interpolate(pose1, pose2, fraction);
-  bool same = pose_same(pose, pose_interp);
+  /* Temporal rigid geometries have poses as base values but are restricted
+   * to geometries */
+  bool same;
+  if (inst1->temptype == T_TRGEOMETRY)
+  {
+    const GSERIALIZED *gs1 = DatumGetGserializedP(start);
+    const GSERIALIZED *gs2 = DatumGetGserializedP(value);
+    LWGEOM *geom1 = lwgeom_from_gserialized(gs1);
+    LWGEOM *geom2 = lwgeom_from_gserialized(gs2);
+    LWGEOM *geom_interp = lwgeom_clone_deep(geom2);
+    lwgeom_apply_pose(geom_interp, pose_interp);
+    if (geom_interp->bbox)
+      lwgeom_refresh_bbox(geom_interp);
+    same = lwgeom_same(geom1, geom_interp);
+    lwgeom_free(geom1); lwgeom_free(geom2); lwgeom_free(geom_interp);
+  }
+  else
+  {
+    Pose *pose = DatumGetPoseP(value);
+    same = pose_same(pose, pose_interp);
+  }
   pfree(pose_interp);
   if (! same)
     return false;
@@ -161,7 +181,7 @@ tpose_trajectory(const Temporal *temp)
 #else
   assert(temp); assert(temp->temptype == T_TPOSE);
 #endif /* MEOS */
-  Temporal *tpoint = tpose_tgeompoint(temp);
+  Temporal *tpoint = tpose_tpoint(temp);
   GSERIALIZED *result = tpoint_trajectory(tpoint);
   pfree(tpoint);
   return result;
@@ -188,7 +208,7 @@ tpose_restrict_geom(const Temporal *temp, const GSERIALIZED *gs,
   if (gserialized_is_empty(gs))
     return atfunc ? NULL : temporal_copy(temp);
 
-  Temporal *tgeom = tpose_tgeompoint(temp);
+  Temporal *tgeom = tpose_tpoint(temp);
   Temporal *tgeomres = tgeo_restrict_geom(tgeom, gs, zspan, atfunc);
   Temporal *result = NULL;
   if (tgeomres)
@@ -262,7 +282,7 @@ tpose_restrict_stbox(const Temporal *temp, const STBox *box, bool border_inc,
   bool atfunc)
 {
   assert(temp); assert(box);
-  Temporal *tgeom = tpose_tgeompoint(temp);
+  Temporal *tgeom = tpose_tpoint(temp);
   Temporal *tgeomres = tgeo_restrict_stbox(tgeom, box, border_inc, atfunc);
   Temporal *result = NULL;
   if (tgeomres)

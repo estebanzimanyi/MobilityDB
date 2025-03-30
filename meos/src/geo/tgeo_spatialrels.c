@@ -673,7 +673,7 @@ ea_dwithin_tgeoinst_tgeoinst(const TInstant *inst1, const TInstant *inst2,
 {
   assert(inst1); assert(inst2);
   /* Result is the same for both EVER and ALWAYS */
-  return DatumGetBool(func(tinstant_val(inst1), tinstant_val(inst2), 
+  return DatumGetBool(func(tinstant_value_p(inst1), tinstant_value_p(inst2), 
     Float8GetDatum(dist)));
 }
 
@@ -723,8 +723,8 @@ ea_dwithin_tpointseq_tpointseq_cont(const TSequence *seq1,
 
   const TInstant *start1 = TSEQUENCE_INST_N(seq1, 0);
   const TInstant *start2 = TSEQUENCE_INST_N(seq2, 0);
-  Datum sv1 = tinstant_val(start1);
-  Datum sv2 = tinstant_val(start2);
+  Datum sv1 = tinstant_value_p(start1);
+  Datum sv2 = tinstant_value_p(start2);
 
   bool linear1 = MEOS_FLAGS_LINEAR_INTERP(seq1->flags);
   bool linear2 = MEOS_FLAGS_LINEAR_INTERP(seq2->flags);
@@ -735,8 +735,8 @@ ea_dwithin_tpointseq_tpointseq_cont(const TSequence *seq1,
   {
     const TInstant *end1 = TSEQUENCE_INST_N(seq1, i);
     const TInstant *end2 = TSEQUENCE_INST_N(seq2, i);
-    Datum ev1 = tinstant_val(end1);
-    Datum ev2 = tinstant_val(end2);
+    Datum ev1 = tinstant_value_p(end1);
+    Datum ev2 = tinstant_value_p(end2);
     TimestampTz upper = end1->t;
 
     /* Both segments are constant */

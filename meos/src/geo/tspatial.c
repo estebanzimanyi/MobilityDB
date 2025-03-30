@@ -60,6 +60,11 @@
   #include "pose/pose.h"
   #include "pose/tpose_boxops.h"
 #endif 
+#if RGEO
+  #include "pose/pose.h"
+  #include "rgeo/trgeometry.h"
+  #include "rgeo/trgeometry_boxops.h"
+#endif 
 
 /*****************************************************************************
  * Input/output functions
@@ -90,6 +95,25 @@ spatialbase_as_text(Datum value, meosType type, int maxdd)
 #if POSE
     case T_POSE:
       return pose_as_text(DatumGetPoseP(value), maxdd);
+#endif
+#if RGEO
+    case T_TRGEOMETRY:
+    {
+      /* Write the geometry */
+      const Pose *pose = DatumGetPoseP(value);
+      const GSERIALIZED *gs = pose_geom(pose);
+      LWGEOM *geom = lwgeom_from_gserialized(gs);
+      size_t len_geom;
+      char *wkt_geom = lwgeom_to_wkt(geom, WKT_ISO, maxdd, &len_geom);
+      lwgeom_free(geom);
+      /* Write the pose */
+      char *wkt_pose = pose_wkt_out(value, false, maxdd);
+      /* Combine both representation with the ';' delimiter */
+      size_t len = strlen(wkt_geom) + strlen(wkt_pose) + 1;
+      char *wkt = palloc(len);
+      snprintf(wkt, len, "%s;%s", wkt_pose, wkt_geom);
+      return wkt;
+    }
 #endif
     default: /* Error! */
       meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
@@ -465,6 +489,10 @@ tspatial_set_stbox(const Temporal *temp, STBox *box)
       else if (temp->temptype == T_TPOSE)
         tposeinst_set_stbox((TInstant *) temp, box);
 #endif
+#if RGEO
+      else if (temp->temptype == T_TRGEOMETRY)
+        tposeinst_set_stbox((TInstant *) temp, box);
+#endif
       else
         meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
           "Unknown temporal spatial type: %s", meostype_name(temp->temptype));
@@ -545,14 +573,12 @@ tspatial_expand_space(const Temporal *temp, double d)
 {
   /* Ensure validity of the arguments */
 #if MEOS
-  if (! ensure_not_null((void *) temp))
+  if (! ensure_not_null((void *) temp) || 
+      ! ensure_tspatial_type(temp->temptype))
     return NULL;
 #else
   assert(temp);
 #endif /* MEOS */
-  /* This function is also called for tnpoint */
-  if (! ensure_tspatial_type(temp->temptype))
-    return NULL;
 
   STBox box;
   tspatial_set_stbox(temp, &box);

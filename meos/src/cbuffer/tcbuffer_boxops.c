@@ -61,7 +61,7 @@
 void
 tcbufferinst_set_stbox(const TInstant *inst, STBox *box)
 {
-  cbuffer_set_stbox(DatumGetCbufferP(tinstant_val(inst)), box);
+  cbuffer_set_stbox(DatumGetCbufferP(tinstant_value_p(inst)), box);
   span_set(TimestampTzGetDatum(inst->t), TimestampTzGetDatum(inst->t),
     true, true, T_TIMESTAMPTZ, T_TSTZSPAN, &box->period);
   MEOS_FLAGS_SET_T(box->flags, true);

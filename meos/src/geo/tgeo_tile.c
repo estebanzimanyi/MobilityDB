@@ -1057,7 +1057,7 @@ tpointinst_get_coords_fpos(const TInstant *inst, bool hasz, bool hast,
 {
   /* Read the point and compute the minimum values of the tile */
   POINT4D p;
-  datum_point4d(tinstant_val(inst), &p);
+  datum_point4d(tinstant_value_p(inst), &p);
   double x = float_get_bin(p.x, state->xsize, state->box.xmin);
   double y = float_get_bin(p.y, state->ysize, state->box.ymin);
   double z = 0;

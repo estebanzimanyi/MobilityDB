@@ -249,8 +249,6 @@ Tspatial_expand_space(PG_FUNCTION_ARGS)
   double d = PG_GETARG_FLOAT8(1);
   STBox *result = tspatial_expand_space(temp, d);
   PG_FREE_IF_COPY(temp, 0);
-  if (! result)
-    PG_RETURN_NULL();
   PG_RETURN_STBOX_P(result);
 }
 

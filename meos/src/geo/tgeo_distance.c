@@ -64,7 +64,7 @@ double
 tgeoinst_distance(const TInstant *inst1, const TInstant *inst2,
   datum_func2 func)
 {
-  return DatumGetFloat8(func(tinstant_val(inst1), tinstant_val(inst2)));
+  return DatumGetFloat8(func(tinstant_value_p(inst1), tinstant_value_p(inst2)));
 }
 
 /*****************************************************************************/
@@ -176,8 +176,8 @@ tpoint_geo_min_dist_at_timestamptz(const TInstant *start, const TInstant *end,
   TimestampTz *t)
 {
   long double duration = (long double) (end->t - start->t);
-  Datum value1 = tinstant_val(start);
-  Datum value2 = tinstant_val(end);
+  Datum value1 = tinstant_value_p(start);
+  Datum value2 = tinstant_value_p(end);
   double dist;
   double fraction = pointsegm_locate_point(value1, value2, point, &dist);
   if (fraction <= MEOS_EPSILON || fraction >= (1.0 - MEOS_EPSILON))
@@ -276,20 +276,20 @@ tgeompoint_min_dist_at_timestamptz(const TInstant *start1, const TInstant *end1,
   bool hasz = MEOS_FLAGS_GET_Z(start1->flags);
   if (hasz) /* 3D */
   {
-    const POINT3DZ *p1 = DATUM_POINT3DZ_P(tinstant_val(start1));
-    const POINT3DZ *p2 = DATUM_POINT3DZ_P(tinstant_val(end1));
-    const POINT3DZ *p3 = DATUM_POINT3DZ_P(tinstant_val(start2));
-    const POINT3DZ *p4 = DATUM_POINT3DZ_P(tinstant_val(end2));
+    const POINT3DZ *p1 = DATUM_POINT3DZ_P(tinstant_value_p(start1));
+    const POINT3DZ *p2 = DATUM_POINT3DZ_P(tinstant_value_p(end1));
+    const POINT3DZ *p3 = DATUM_POINT3DZ_P(tinstant_value_p(start2));
+    const POINT3DZ *p4 = DATUM_POINT3DZ_P(tinstant_value_p(end2));
     bool found = point3d_min_dist(p1, p2, p3, p4, &fraction);
     if (!found)
       return false;
   }
   else /* 2D */
   {
-    const POINT2D *p1 = DATUM_POINT2D_P(tinstant_val(start1));
-    const POINT2D *p2 = DATUM_POINT2D_P(tinstant_val(end1));
-    const POINT2D *p3 = DATUM_POINT2D_P(tinstant_val(start2));
-    const POINT2D *p4 = DATUM_POINT2D_P(tinstant_val(end2));
+    const POINT2D *p1 = DATUM_POINT2D_P(tinstant_value_p(start1));
+    const POINT2D *p2 = DATUM_POINT2D_P(tinstant_value_p(end1));
+    const POINT2D *p3 = DATUM_POINT2D_P(tinstant_value_p(start2));
+    const POINT2D *p4 = DATUM_POINT2D_P(tinstant_value_p(end2));
     bool found = point2d_min_dist(p1, p2, p3, p4, &fraction);
     if (!found)
       return false;
@@ -319,10 +319,10 @@ bool
 tgeogpoint_min_dist_at_timestamptz(const TInstant *start1, const TInstant *end1,
   const TInstant *start2, const TInstant *end2, Datum *mindist, TimestampTz *t)
 {
-  const POINT2D *p1 = DATUM_POINT2D_P(tinstant_val(start1));
-  const POINT2D *p2 = DATUM_POINT2D_P(tinstant_val(end1));
-  const POINT2D *q1 = DATUM_POINT2D_P(tinstant_val(start2));
-  const POINT2D *q2 = DATUM_POINT2D_P(tinstant_val(end2));
+  const POINT2D *p1 = DATUM_POINT2D_P(tinstant_value_p(start1));
+  const POINT2D *p2 = DATUM_POINT2D_P(tinstant_value_p(end1));
+  const POINT2D *q1 = DATUM_POINT2D_P(tinstant_value_p(start2));
+  const POINT2D *q2 = DATUM_POINT2D_P(tinstant_value_p(end2));
   GEOGRAPHIC_EDGE e1, e2;
   GEOGRAPHIC_POINT close1, close2;
   POINT3D A1, A2, B1, B2;
@@ -480,7 +480,7 @@ nai_tgeoseq_discstep_geo_iter(const TSequence *seq, const LWGEOM *geo,
   for (int i = 0; i < seq->count; i++)
   {
     const TInstant *inst = TSEQUENCE_INST_N(seq, i);
-    const GSERIALIZED *gs = DatumGetGserializedP(tinstant_val(inst));
+    const GSERIALIZED *gs = DatumGetGserializedP(tinstant_value_p(inst));
     LWGEOM *point = lwgeom_from_gserialized(gs);
     double dist = lw_distance_fraction(point, geo, DIST_MIN, NULL);
     if (dist < mindist)
@@ -539,8 +539,8 @@ static double
 nai_tpointsegm_linear_geo1(const TInstant *inst1, const TInstant *inst2,
   const LWGEOM *geo, TimestampTz *t)
 {
-  Datum value1 = tinstant_val(inst1);
-  Datum value2 = tinstant_val(inst2);
+  Datum value1 = tinstant_value_p(inst1);
+  Datum value2 = tinstant_value_p(inst2);
   double dist;
   double fraction;
 
@@ -591,7 +591,7 @@ nai_tpointseq_linear_geo_iter(const TSequence *seq, const LWGEOM *geo,
   if (seq->count == 1)
   {
     /* Instantaneous sequence */
-    Datum value1 = tinstant_val(inst1);
+    Datum value1 = tinstant_value_p(inst1);
     GSERIALIZED *gs = DatumGetGserializedP(value1);
     LWGEOM *point = lwgeom_from_gserialized(gs);
     dist = lw_distance_fraction(point, geo, DIST_MIN, NULL);
@@ -882,8 +882,13 @@ double
 nad_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2) ||
-      ! ensure_valid_tspatial_tspatial(temp1, temp2) ||
+#if MEOS
+  if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2))
+    return -1.0;
+#else
+  assert(temp1); assert(temp2);
+#endif /* MEOS */
+  if (! ensure_valid_tspatial_tspatial(temp1, temp2) ||
       ! ensure_same_dimensionality(temp1->flags, temp2->flags))
     return -1.0;
 

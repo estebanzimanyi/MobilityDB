@@ -222,8 +222,8 @@ tcbuffersegm_intersection_value(const TInstant *inst1, const TInstant *inst2,
   Datum value, TimestampTz *t)
 {
   Cbuffer *cbuf = DatumGetCbufferP(value);
-  Cbuffer *cbuf1 = DatumGetCbufferP(tinstant_val(inst1));
-  Cbuffer *cbuf2 = DatumGetCbufferP(tinstant_val(inst2));
+  Cbuffer *cbuf1 = DatumGetCbufferP(tinstant_value_p(inst1));
+  Cbuffer *cbuf2 = DatumGetCbufferP(tinstant_value_p(inst2));
   const GSERIALIZED *gs1 = cbuffer_point_p(cbuf1);
   const GSERIALIZED *gs2 = cbuffer_point_p(cbuf2);
   TimestampTz t1, t2;
