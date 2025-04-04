@@ -29,11 +29,11 @@
 
 /**
  * @file
- * @brief Functions for parsing temporal rigid geometries
+ * @brief Output of temporal rigid geometries in WKT and EWKT format
  */
 
-#ifndef __TRGEOMETRY_PARSER_H__
-#define __TRGEOMETRY_PARSER_H__
+#ifndef __TRGEO_OUT_H__
+#define __TRGEO_OUT_H__
 
 /* PostgreSQL */
 #include <postgres.h>
@@ -42,8 +42,7 @@
 
 /*****************************************************************************/
 
-extern Temporal *trgeo_parse(const char **str, meosType temptype);
 
 /*****************************************************************************/
 
-#endif /* __TRGEOMETRY_PARSER_H__ */
+#endif /* __TRGEO_OUT_H__ */

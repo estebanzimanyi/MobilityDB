@@ -31,7 +31,7 @@
 -- Temporal equal
 -------------------------------------------------------------------------------
 
-SELECT COUNT(*) FROM tbl_geometry t1, tbl_trgeometry2d t2 WHERE t1.pose #= t2.temp IS NOT NULL;
+SELECT COUNT(*) FROM tbl_geometry t1, tbl_trgeometry2d t2 WHERE t1.g #= t2.temp IS NOT NULL;
 SELECT COUNT(*) FROM tbl_trgeometry2d t1, tbl_geometry t2 WHERE t1.temp #= t2.pose IS NOT NULL;
 SELECT COUNT(*) FROM tbl_trgeometry2d t1, tbl_trgeometry2d t2 WHERE t1.temp #= t2.temp IS NOT NULL;
 

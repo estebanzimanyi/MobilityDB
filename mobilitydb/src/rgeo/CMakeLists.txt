@@ -1,7 +1,7 @@
 add_library(pg_rgeo OBJECT
-  trgeometry.c
-  trgeometry_compops.c
-  trgeometry_distance.c
-  trgeometry_in.c
-  trgeometry_vclip.c
+  trgeo.c
+  trgeo_compops.c
+  trgeo_distance.c
+  trgeo_in.c
+  trgeo_vclip.c
   )

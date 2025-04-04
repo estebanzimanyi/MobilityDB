@@ -28,55 +28,44 @@
  *****************************************************************************/
 
 /**
- * @file
- * @brief Functions for temporal rigid geometries with sequence set subtype
+ * @brief Input of temporal rigid geometries in WKT and EWKT format.
  */
-
-#ifndef __TRGEOMETRY_SEQSET_H__
-#define __TRGEOMETRY_SEQSET_H__
 
 /* PostgreSQL */
 #include <postgres.h>
-#include <catalog/pg_type.h>
+#include <fmgr.h>
 /* MEOS */
-#include "general/temporal.h"
+#include "general/type_util.h"
+#include "rgeo/trgeo_parser.h"
+/* MobilityDB */
+#include "pg_general/meos_catalog.h"
 
 /*****************************************************************************
- * General functions
+ * Input in EWKT format
  *****************************************************************************/
 
-extern Datum trgeoseqset_geom(const TSequenceSet *ts);
-extern TSequenceSet *trgeoseqset_tposeseqset(const TSequenceSet *ss);
-
-/* Constructor functions */
-
-extern TSequenceSet *trgeoseqset_make1_exp(const Datum geom,
-  const TSequence **sequences, int count, int maxcount, bool normalize);
-extern TSequenceSet *trgeoseqset_make_exp(const Datum geom,
-  const TSequence **sequences, int count, int maxcount, bool normalize);
-extern TSequenceSet *trgeoseqset_make(const Datum geom,
-  const TSequence **sequences, int count, bool normalize);
-extern TSequenceSet *trgeoseqset_make_free(const Datum geom,
-  TSequence **sequences, int count, bool normalize);
-extern TSequenceSet *trgeoseqset_make_gaps(const Datum geom,
-  const TInstant **instants, int count, interpType interp,
-  Interval *maxt, double maxdist);
-
-
-/* Transformation functions */
-
-extern TSequenceSet *trgeoinst_to_seqset(const TInstant *inst,
-  interpType interp);
-extern TSequenceSet *trgeo_discseq_to_seqset(const TSequence *seq,
-  interpType interp);
-extern TSequence *trgeoseqset_to_discseq(const TSequenceSet *ss);
-extern TSequenceSet *trgeoseq_to_seqset(const TSequence *seq);
-
-/* Accessor functions */
-
-extern TSequence **trgeoseqset_sequences(const TSequenceSet *ss, int *count);
-extern TSequence **trgeoseqset_segments(const TSequenceSet *ss, int *count);
+PG_FUNCTION_INFO_V1(Trgeo_from_ewkt);
+/**
+ * @ingroup mobilitydb_rgeo_inout
+ * @brief Input a temporal rigid geometry from its Extended Well-Known Text (EWKT)
+ * representation.
+ * @note This just does the same thing as the _in function, except it has to handle
+ * a 'text' input. First, unwrap the text into a cstring, then do as tgeometry_in
+ * @sqlfn tgeometryFromText(), tgeogpointFromText(), tgeometryFromEWKT(),
+ * tgeogpointFromEWKT()
+ */
+PGDLLEXPORT Datum
+Trgeo_from_ewkt(PG_FUNCTION_ARGS)
+{
+  text *wkt_text = PG_GETARG_TEXT_P(0);
+  Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);
+  char *wkt = text2cstring(wkt_text);
+  /* Copy the pointer since it will be advanced during parsing */
+  const char *wkt_ptr = wkt;
+  Temporal *result = trgeo_parse(&wkt_ptr, oid_type(temptypid));
+  pfree(wkt);
+  PG_FREE_IF_COPY(wkt_text, 0);
+  PG_RETURN_POINTER(result);
+}
 
 /*****************************************************************************/
-
-#endif /* __TRGEOMETRY_SEQSET_H__ */

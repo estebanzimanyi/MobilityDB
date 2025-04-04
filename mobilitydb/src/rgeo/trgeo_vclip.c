@@ -31,7 +31,7 @@
  * @brief Distance functions for temporal rigid geometries.
  */
 
-#include "rgeo/trgeometry_vclip.h"
+#include "rgeo/trgeo_vclip.h"
 
 /* C */
 #include <assert.h>
@@ -44,16 +44,16 @@
 #include <liblwgeom.h>
 /* MEOS */
 #include "general/temporal.h"
-#include "rgeo/trgeometry.h"
 #include "meos.h"
 #include "meos_internal.h"
 #include "general/temporal.h"
 #include "general/type_util.h"
 #include "general/meos_catalog.h"
 #include "geo/tgeo_spatialfuncs.h"
+#include "pose/pose.h"
+#include "rgeo/trgeo.h"
 /* MobilityDB */
 #include "pg_geo/postgis.h"
-#include "pose/pose.h"
 
 /*****************************************************************************
  * V-clip

@@ -50,6 +50,15 @@ extern STBox *stbox_parse(const char **str);
 extern TSequence *tpointseq_parse(const char **str, meosType temptype,
   interpType interp, bool end, bool make, int *tpoint_srid);
 extern Temporal *tpoint_parse(const char **str, meosType temptype);
+
+extern bool tspatialinst_parse(const char **str, meosType temptype, bool end,
+  int *temp_srid, TInstant **result);
+extern TSequence *tspatialseq_disc_parse(const char **str, meosType temptype,
+  int *temp_srid);
+extern bool tspatialseq_cont_parse(const char **str, meosType temptype,
+  interpType interp, bool end, int *temp_srid, TSequence **result);
+extern TSequenceSet *tspatialseqset_parse(const char **str, meosType temptype,
+  interpType interp, int *temp_srid);
 extern Temporal *tspatial_parse(const char **str, meosType temptype);
 
 /*****************************************************************************/

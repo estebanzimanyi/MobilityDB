@@ -31,7 +31,7 @@
  * @brief Functions for temporal rigid geometries of sequence set subtype
  */
 
-#include "rgeo/trgeometry_seqset.h"
+#include "rgeo/trgeo_seqset.h"
 
 /* C */
 #include <assert.h>
@@ -44,10 +44,10 @@
 #include "general/temporal.h"
 #include "general/type_util.h"
 #include "general/temporal_boxops.h"
-#include "rgeo/trgeometry_temporaltypes.h"
-#include "rgeo/trgeometry_boxops.h"
-#include "rgeo/trgeometry_seq.h"
-#include "rgeo/trgeometry_utils.h"
+#include "rgeo/trgeo_temporaltypes.h"
+#include "rgeo/trgeo_boxops.h"
+#include "rgeo/trgeo_seq.h"
+#include "rgeo/trgeo_utils.h"
 
 /*****************************************************************************
  * General functions

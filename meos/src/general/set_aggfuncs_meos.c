@@ -58,8 +58,8 @@
   #include "pose/tpose_boxops.h"
 #endif
 #if RGEO
-  #include "rgeo/trgeometry.h"
-  #include "rgeo/trgeometry_boxops.h"
+  #include "rgeo/trgeo.h"
+  #include "rgeo/trgeo_boxops.h"
 #endif
 
 /*****************************************************************************

@@ -65,7 +65,7 @@
   #include "pose/pose.h"
 #endif
 #if RGEO
-  #include "rgeo/trgeometry.h"
+  #include "rgeo/trgeo.h"
 #endif
 
 #define MEOS_WKT_BOOL_SIZE sizeof("false")

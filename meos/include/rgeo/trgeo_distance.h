@@ -32,8 +32,8 @@
  * @brief Distance functions for temporal rigid geometries
  */
 
-#ifndef __TRGEOMETRY_DISTANCE_H__
-#define __TRGEOMETRY_DISTANCE_H__
+#ifndef __TRGEO_DISTANCE_H__
+#define __TRGEO_DISTANCE_H__
 
 #include <postgres.h>
 #include <liblwgeom.h>
@@ -132,4 +132,4 @@ extern bool shortestline_trgeo_trgeo(const Temporal *temp1, const Temporal *temp
 
 /*****************************************************************************/
 
-#endif
+#endif /* __TRGEO_DISTANCE_H__ */

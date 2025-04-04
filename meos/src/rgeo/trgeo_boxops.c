@@ -32,7 +32,7 @@
  * @brief Bounding box operators for temporal rigid geometries
  */
 
-#include "rgeo/trgeometry_boxops.h"
+#include "rgeo/trgeo_boxops.h"
 
 /* C */
 #include <assert.h>
@@ -45,8 +45,8 @@
 #include "meos_internal.h"
 #include "geo/stbox.h"
 #include "pose/pose.h"
-#include "rgeo/trgeometry_inst.h"
-#include "rgeo/trgeometry_utils.h"
+#include "rgeo/trgeo_inst.h"
+#include "rgeo/trgeo_utils.h"
 
 /*****************************************************************************
  * Transform a temporal geometry to a STBox
@@ -59,7 +59,7 @@
  * @param[out] box Spatiotemporal box
  */
 void
-trgeoinst_make_stbox(const Datum geom, const TInstant *inst, STBox *box)
+trgeoinst_set_stbox(const Datum geom, const TInstant *inst, STBox *box)
 {
   Pose *pose = DatumGetPoseP(tinstant_value(inst));
   GSERIALIZED *gs = DatumGetGserializedP(geom);
@@ -109,12 +109,12 @@ void
 trgeoinstarr_static_stbox(const Datum geom, const TInstant **instants,
   int count, STBox *box)
 {
-  trgeoinst_make_stbox(geom, instants[0], box);
+  trgeoinst_set_stbox(geom, instants[0], box);
   for (int i = 1; i < count; i++)
   {
     STBox box1;
     memset(&box1, 0, sizeof(STBox));
-    trgeoinst_make_stbox(geom, instants[i], &box1);
+    trgeoinst_set_stbox(geom, instants[i], &box1);
     stbox_expand(&box1, box);
   }
 }

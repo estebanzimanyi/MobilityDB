@@ -32,15 +32,36 @@
  * @brief General functions for temporal rigid geometries
  */
 
-#ifndef __TGEOMETRY_TEMPORALTYPES_H__
-#define __TGEOMETRY_TEMPORALTYPES_H__
+#ifndef __TRGEO_H__
+#define __TRGEO_H__
 
+/* PostgreSQL */
+#include <postgres.h>
+#include <catalog/pg_type.h>
 /* MEOS */
-#include "trgeometry.h"
-#include "trgeometry_inst.h"
-#include "trgeometry_seq.h"
-#include "trgeometry_seqset.h"
+#include "general/temporal.h"
 
+/** Symbolic constants for the temporal instant geometry constuctor */
+#define WITH_GEOM       true
+#define NO_GEOM         false
+
+/*****************************************************************************
+ * Miscellaneous functions defined in trgeometry.c
+ *****************************************************************************/
+
+extern bool ensure_has_geom(int16 flags);
+extern Datum trgeo_geom(const Temporal *temp);
+
+/* Input/output functions */
+
+/* Conversion functions */
+
+
+/* Accessor functions */
+
+extern bool trgeo_value_at_timestamptz(const Temporal *temp, TimestampTz t,
+  bool strict, Datum *result);
+  
 /*****************************************************************************/
 
-#endif
+#endif /* __TRGEO_H__ */

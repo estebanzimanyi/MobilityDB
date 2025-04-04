@@ -29,41 +29,25 @@
 
 /**
  * @file
- * @brief Distance functions for temporal rigid geometries.
+ * @brief Utility functions for temporal rigid geometries
  */
 
-#ifndef __TRGEOMETRY_VCLIP_H__
-#define __TRGEOMETRY_VCLIP_H__
+#ifndef __TRGEO_UTILS_H__
+#define __TRGEO_UTILS_H__
 
-#include <c.h>
+/* Postgres */
 #include <postgres.h>
-#include <liblwgeom.h>
 #include <catalog/pg_type.h>
+/* MEOS */
 #include "general/temporal.h"
 #include "pose/pose.h"
 
-/*****************************************************************************
- * Struct definitions
- *****************************************************************************/
+/*****************************************************************************/
 
-/** Max iterations to avoid infinite loops */
-#define MEOS_MAX_ITERS      1000
-
-/** Symbolic constants for v-clip */
-#define MEOS_CONTINUE       0
-#define MEOS_DISJOINT       1
-#define MEOS_INTERSECT     -1
+extern void ensure_same_geom(Datum geom_datum1, Datum geom_datum2);
+extern void lwgeom_apply_pose(LWGEOM *geom, Pose *pose);
+extern double geom_radius(Datum geom_datum);
 
 /*****************************************************************************/
 
-/* V-clip functions */
-
-extern int v_clip_tpoly_point(const LWPOLY *poly, const LWPOINT *point,
-  const Pose *pose, uint32_t *poly_feature, double *dist);
-extern int v_clip_tpoly_tpoly(const LWPOLY *poly1, const LWPOLY *poly2,
-  const Pose *pose1, const Pose *pose2, uint32_t *poly1_feature, 
-  uint32_t *poly2_feature, double *dist);
-
-/*****************************************************************************/
-
-#endif
+#endif /* __TRGEO_UTILS_H__ */

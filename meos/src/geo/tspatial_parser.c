@@ -40,6 +40,9 @@
 #include "general/type_parser.h"
 #include "general/type_util.h"
 #include "geo/tgeo_spatialfuncs.h"
+#if RGEO
+  #include "rgeo/trgeo_parser.h"
+#endif /* RGEO */
 
 /*****************************************************************************/
 
@@ -569,11 +572,18 @@ tspatial_parse(const char **str, meosType temptype)
   /* Allow spaces after the SRID and/or Interpolation */
   p_whitespace(str);
 
+// #if RGEO
+  // Datum geom;
+  // if (temptype == T_TRGEOMETRY)
+    // if (! trgeo_parse_geom(str, temp_srid, &geom))
+      // return NULL;
+// #endif /* RGEO */
+
   Temporal *result = NULL; /* keep compiler quiet */
-  /* Determine the subtype of the temporal spatial value */
+  /* Determine the subtype of the temporal spatial value and call the
+   * function corresponding to the subtype passing the SRID */
   if (**str != '{' && **str != '[' && **str != '(')
   {
-    /* Pass the SRID specification */
     *str = bak;
     TInstant *inst;
     if (! tspatialinst_parse(str, temptype, true, &temp_srid, &inst))

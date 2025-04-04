@@ -62,8 +62,9 @@
 #endif 
 #if RGEO
   #include "pose/pose.h"
-  #include "rgeo/trgeometry.h"
-  #include "rgeo/trgeometry_boxops.h"
+  #include "rgeo/trgeo.h"
+  #include "rgeo/trgeo_inst.h"
+  #include "rgeo/trgeo_boxops.h"
 #endif 
 
 /*****************************************************************************
@@ -491,7 +492,8 @@ tspatial_set_stbox(const Temporal *temp, STBox *box)
 #endif
 #if RGEO
       else if (temp->temptype == T_TRGEOMETRY)
-        tposeinst_set_stbox((TInstant *) temp, box);
+        trgeoinst_set_stbox(trgeoinst_geom((TInstant *) temp),
+          (TInstant *) temp, box);
 #endif
       else
         meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,

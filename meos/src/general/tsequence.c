@@ -74,7 +74,7 @@
 #endif
 #if RGEO
   // #include <meos_rgeo.h>
-  #include "rgeo/trgeometry.h"
+  #include "rgeo/trgeo.h"
 #endif
 
 /*****************************************************************************

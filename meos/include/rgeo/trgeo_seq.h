@@ -32,8 +32,8 @@
  * @brief Functions for temporal rigid geometries with sequence subtype
  */
 
-#ifndef __TRGEOMETRY_SEQ_H__
-#define __TRGEOMETRY_SEQ_H__
+#ifndef __TRGEO_SEQ_H__
+#define __TRGEO_SEQ_H__
 
 /* PostgreSQL */
 #include <postgres.h>
@@ -84,4 +84,4 @@ extern TSequence **trgeoseq_segments(const TSequence *seq, int *count);
 
 /*****************************************************************************/
 
-#endif /* __TRGEOMETRY_SEQ_H__ */
+#endif /* __TRGEO_SEQ_H__ */

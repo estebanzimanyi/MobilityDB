@@ -43,7 +43,7 @@
 #include <meos_pose.h>
 #include "pose/pose.h"
 #include "geo/tgeo_spatialfuncs.h"
-#include "rgeo/trgeometry_utils.h"
+#include "rgeo/trgeo_utils.h"
 
 /*****************************************************************************
  * Utility functions

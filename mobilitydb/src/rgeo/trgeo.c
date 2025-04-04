@@ -33,8 +33,10 @@
  */
 
 
-#include "rgeo/trgeometry.h"
+#include "rgeo/trgeo.h"
 
+/* C */
+#include <stdio.h>
 /* PostgreSQL */
 #include <postgres.h>
 #include "utils/array.h"
@@ -42,13 +44,12 @@
 /* MEOS */
 #include <meos.h>
 #include <meos_rgeo.h>
-#include <stdio.h>
 #include "general/type_inout.h"
 #include "general/type_util.h"
-#include "rgeo/trgeometry_parser.h"
-#include "rgeo/trgeometry_temporaltypes.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "pose/pose.h"
+#include "rgeo/trgeo_parser.h"
+#include "rgeo/trgeo_temporaltypes.h"
 /* MobilityDB */
 #include "pg_general/meos_catalog.h"
 #include "pg_general/temporal.h"

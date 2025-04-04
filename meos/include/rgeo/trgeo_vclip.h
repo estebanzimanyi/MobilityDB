@@ -28,44 +28,42 @@
  *****************************************************************************/
 
 /**
- * @brief Input of temporal rigid geometries in WKT and EWKT format.
+ * @file
+ * @brief Distance functions for temporal rigid geometries.
  */
 
-/* PostgreSQL */
+#ifndef __TRGEO_VCLIP_H__
+#define __TRGEO_VCLIP_H__
+
+#include <c.h>
 #include <postgres.h>
-#include <fmgr.h>
-/* MEOS */
-#include "general/type_util.h"
-#include "rgeo/trgeometry_parser.h"
-/* MobilityDB */
-#include "pg_general/meos_catalog.h"
+#include <liblwgeom.h>
+#include <catalog/pg_type.h>
+#include "general/temporal.h"
+#include "pose/pose.h"
 
 /*****************************************************************************
- * Input in EWKT format
+ * Struct definitions
  *****************************************************************************/
 
-PG_FUNCTION_INFO_V1(Trgeo_from_ewkt);
-/**
- * @ingroup mobilitydb_rgeo_inout
- * @brief Input a temporal rigid geometry from its Extended Well-Known Text (EWKT)
- * representation.
- * @note This just does the same thing as the _in function, except it has to handle
- * a 'text' input. First, unwrap the text into a cstring, then do as tgeometry_in
- * @sqlfn tgeometryFromText(), tgeogpointFromText(), tgeometryFromEWKT(),
- * tgeogpointFromEWKT()
- */
-PGDLLEXPORT Datum
-Trgeo_from_ewkt(PG_FUNCTION_ARGS)
-{
-  text *wkt_text = PG_GETARG_TEXT_P(0);
-  Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);
-  char *wkt = text2cstring(wkt_text);
-  /* Copy the pointer since it will be advanced during parsing */
-  const char *wkt_ptr = wkt;
-  Temporal *result = trgeo_parse(&wkt_ptr, oid_type(temptypid));
-  pfree(wkt);
-  PG_FREE_IF_COPY(wkt_text, 0);
-  PG_RETURN_POINTER(result);
-}
+/** Max iterations to avoid infinite loops */
+#define MEOS_MAX_ITERS      1000
+
+/** Symbolic constants for v-clip */
+#define MEOS_CONTINUE       0
+#define MEOS_DISJOINT       1
+#define MEOS_INTERSECT     -1
 
 /*****************************************************************************/
+
+/* V-clip functions */
+
+extern int v_clip_tpoly_point(const LWPOLY *poly, const LWPOINT *point,
+  const Pose *pose, uint32_t *poly_feature, double *dist);
+extern int v_clip_tpoly_tpoly(const LWPOLY *poly1, const LWPOLY *poly2,
+  const Pose *pose1, const Pose *pose2, uint32_t *poly1_feature, 
+  uint32_t *poly2_feature, double *dist);
+
+/*****************************************************************************/
+
+#endif

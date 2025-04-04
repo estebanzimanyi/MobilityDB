@@ -289,7 +289,8 @@ tcomp_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp,
   assert(temp); assert(gs); assert(func);
   assert(temp->temptype == T_TRGEOMETRY);
 #endif /* MEOS */
-  if (! ensure_not_empty(gs) ||
+  /* Empty geometries accepted, i.e., there is no associated error message */
+  if (gserialized_is_empty(gs) ||
       ! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)))
     return NULL;
   return tcomp_base_temporal(PointerGetDatum(gs), temp, func);

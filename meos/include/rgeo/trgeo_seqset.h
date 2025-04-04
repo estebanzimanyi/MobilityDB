@@ -29,20 +29,54 @@
 
 /**
  * @file
- * @brief Output of temporal rigid geometries in WKT and EWKT format
+ * @brief Functions for temporal rigid geometries with sequence set subtype
  */
 
-#ifndef __TRGEOMETRY_OUT_H__
-#define __TRGEOMETRY_OUT_H__
+#ifndef __TRGEO_SEQSET_H__
+#define __TRGEO_SEQSET_H__
 
 /* PostgreSQL */
 #include <postgres.h>
+#include <catalog/pg_type.h>
 /* MEOS */
 #include "general/temporal.h"
 
+/*****************************************************************************
+ * General functions
+ *****************************************************************************/
+
+extern Datum trgeoseqset_geom(const TSequenceSet *ts);
+extern TSequenceSet *trgeoseqset_tposeseqset(const TSequenceSet *ss);
+
+/* Constructor functions */
+
+extern TSequenceSet *trgeoseqset_make1_exp(const Datum geom,
+  const TSequence **sequences, int count, int maxcount, bool normalize);
+extern TSequenceSet *trgeoseqset_make_exp(const Datum geom,
+  const TSequence **sequences, int count, int maxcount, bool normalize);
+extern TSequenceSet *trgeoseqset_make(const Datum geom,
+  const TSequence **sequences, int count, bool normalize);
+extern TSequenceSet *trgeoseqset_make_free(const Datum geom,
+  TSequence **sequences, int count, bool normalize);
+extern TSequenceSet *trgeoseqset_make_gaps(const Datum geom,
+  const TInstant **instants, int count, interpType interp,
+  Interval *maxt, double maxdist);
+
+
+/* Transformation functions */
+
+extern TSequenceSet *trgeoinst_to_seqset(const TInstant *inst,
+  interpType interp);
+extern TSequenceSet *trgeo_discseq_to_seqset(const TSequence *seq,
+  interpType interp);
+extern TSequence *trgeoseqset_to_discseq(const TSequenceSet *ss);
+extern TSequenceSet *trgeoseq_to_seqset(const TSequence *seq);
+
+/* Accessor functions */
+
+extern TSequence **trgeoseqset_sequences(const TSequenceSet *ss, int *count);
+extern TSequence **trgeoseqset_segments(const TSequenceSet *ss, int *count);
+
 /*****************************************************************************/
 
-
-/*****************************************************************************/
-
-#endif /* __TRGEOMETRY_OUT_H__ */
+#endif /* __TRGEO_SEQSET_H__ */

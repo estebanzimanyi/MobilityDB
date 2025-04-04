@@ -48,25 +48,25 @@ BEGIN
 DROP TABLE IF EXISTS tbl_trgeometry2d_inst;
 CREATE TABLE tbl_trgeometry2d_inst AS
 SELECT k, random_trgeom2d_inst(-100, 100, -100, 100, radians(-pi()),
-  radians(pi()), 10, 5, 10, '2001-01-01', '2001-12-31', 5676) AS inst
+  radians(pi()), 10, 5, 10, '2001-01-01', '2001-12-31', 3812) AS inst
 FROM generate_series(1, size) k;
 
 DROP TABLE IF EXISTS tbl_trgeometry2d_discseq;
 CREATE TABLE tbl_trgeometry2d_discseq AS
 SELECT k, random_trgeom2d_discseq(-100, 100, -100, 100, radians(-pi()),
-  radians(pi()), 10, 5, 10, '2001-01-01', '2001-12-31', 10, 1, 10, 5676) AS seq
+  radians(pi()), 10, 5, 10, '2001-01-01', '2001-12-31', 10, 1, 10, 3812) AS seq
 FROM generate_series(1, size) k;
 
 DROP TABLE IF EXISTS tbl_trgeometry2d_seq;
 CREATE TABLE tbl_trgeometry2d_seq AS
 SELECT k, random_trgeom2d_contseq(-100, 100, -100, 100, radians(-pi()),
-  radians(pi()), 10, 5, 10, '2001-01-01', '2001-12-31', 10, 1, 10, 5676) AS seq
+  radians(pi()), 10, 5, 10, '2001-01-01', '2001-12-31', 10, 1, 10, 3812) AS seq
 FROM generate_series(1, size) k;
 
 DROP TABLE IF EXISTS tbl_trgeometry2d_seqset;
 CREATE TABLE tbl_trgeometry2d_seqset AS
 SELECT k, random_trgeom2d_seqset(-100, 100, -100, 100, radians(-pi()),
-  radians(pi()), 10, 5, 10, '2001-01-01', '2001-12-31', 10, 1, 10, 1, 10, 5676) AS ss
+  radians(pi()), 10, 5, 10, '2001-01-01', '2001-12-31', 10, 1, 10, 1, 10, 3812) AS ss
 FROM generate_series(1, size) AS k;
 
 DROP TABLE IF EXISTS tbl_trgeometry2d;
@@ -81,25 +81,25 @@ CREATE TABLE tbl_trgeometry2d(k, temp) AS
 DROP TABLE IF EXISTS tbl_trgeometry3d_inst;
 CREATE TABLE tbl_trgeometry3d_inst AS
 SELECT k, random_trgeom3d_inst(-100, 100, -100, 100, -100, 100, 0, 1, 0, 1, 
-  0, 1, 0, 1, 10, 5, 10, '2001-01-01', '2001-12-31', 5676) AS inst
+  0, 1, 0, 1, 10, 5, 10, '2001-01-01', '2001-12-31', 3812) AS inst
 FROM generate_series(1, size) k;
 
 DROP TABLE IF EXISTS tbl_trgeometry3d_discseq;
 CREATE TABLE tbl_trgeometry3d_discseq AS
 SELECT k, random_trgeom3d_discseq(-100, 100, -100, 100, -100, 100, 0, 1, 0, 1, 
-  0, 1, 0, 1, 10, 5, 10, '2001-01-01', '2001-12-31', 10, 1, 10, 5676) AS seq
+  0, 1, 0, 1, 10, 5, 10, '2001-01-01', '2001-12-31', 10, 1, 10, 3812) AS seq
 FROM generate_series(1, size) k;
 
 DROP TABLE IF EXISTS tbl_trgeometry3d_seq;
 CREATE TABLE tbl_trgeometry3d_seq AS
 SELECT k, random_trgeom3d_contseq(-100, 100, -100, 100, -100, 100, 0, 1, 0, 1, 
-  0, 1, 0, 1, 10, 5, 10, '2001-01-01', '2001-12-31', 10, 1, 10, 5676) AS seq
+  0, 1, 0, 1, 10, 5, 10, '2001-01-01', '2001-12-31', 10, 1, 10, 3812) AS seq
 FROM generate_series(1, size) k;
 
 DROP TABLE IF EXISTS tbl_trgeometry3d_seqset;
 CREATE TABLE tbl_trgeometry3d_seqset AS
 SELECT k, random_trgeom3d_seqset(-100, 100, -100, 100, -100, 100, 0, 1, 0, 1, 
-  0, 1, 0, 1, 10, 5, 10, '2001-01-01', '2001-12-31', 10, 1, 10, 1, 10, 5676) AS ss
+  0, 1, 0, 1, 10, 5, 10, '2001-01-01', '2001-12-31', 10, 1, 10, 1, 10, 3812) AS ss
 FROM generate_series(1, size) AS k;
 
 DROP TABLE IF EXISTS tbl_trgeometry3d;

@@ -32,7 +32,7 @@
  * @brief General functions for temporal rigid geometries
  */
 
-#include "rgeo/trgeometry.h"
+#include "rgeo/trgeo.h"
 
 /* C */
 #include <assert.h>
@@ -46,9 +46,9 @@
 #include "general/temporal.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "pose/pose.h"
-#include "rgeo/trgeometry_temporaltypes.h"
-#include "rgeo/trgeometry_out.h"
-#include "rgeo/trgeometry_utils.h"
+#include "rgeo/trgeo_temporaltypes.h"
+#include "rgeo/trgeo_out.h"
+#include "rgeo/trgeo_utils.h"
 
 /*****************************************************************************
  * Parameter tests

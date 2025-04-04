@@ -60,7 +60,7 @@
 #endif
 #if RGEO
   // #include <meos_rgeo.h>
-  #include "rgeo/trgeometry.h"
+  #include "rgeo/trgeo.h"
 #endif
 
 /*
@@ -93,7 +93,7 @@ spatial_srid(Datum d, meosType basetype)
     case T_NPOINT:
       return npoint_srid(DatumGetNpointP(d));
 #endif
-#if POSE || RGEO
+#if POSE
     case T_POSE:
       return pose_srid(DatumGetPoseP(d));
 #endif
@@ -196,10 +196,15 @@ spatialset_set_srid(const Set *s, int32_t srid)
  * @return On error return @p SRID_INVALID
  * @param[in] inst Temporal spatial instant
  */
-int
+int32_t
 tspatialinst_srid(const TInstant *inst)
 {
   assert(inst); assert(tspatial_type(inst->temptype));
+// #if RGEO
+  // if (inst->temptype == T_TRGEOMETRY)
+    // return gserialized_get_srid(DatumGetGserializedP(
+      // trgeo_geom((Temporal *) inst)));
+// #endif /* RGEO */
   meosType basetype = temptype_basetype(inst->temptype);
   return spatial_srid(tinstant_value_p(inst), basetype);
 }
@@ -215,7 +220,7 @@ int32_t
 tspatial_srid(const Temporal *temp)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || 
+  if (! ensure_not_null((void *) temp) ||
       ! ensure_tspatial_type(temp->temptype))
     return SRID_INVALID;
 
@@ -307,7 +312,7 @@ Temporal *
 tspatial_set_srid(const Temporal *temp, int32_t srid)
 {
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || 
+  if (! ensure_not_null((void *) temp) ||
       ! ensure_tspatial_type(temp->temptype))
     return NULL;
 
@@ -330,9 +335,9 @@ tspatial_set_srid(const Temporal *temp, int32_t srid)
 /*****************************************************************************
  * Defitions taken from file lwgeom_transform.c
  *****************************************************************************/
- 
+
 /**
- * @brief Convert decimal degress to radians 
+ * @brief Convert decimal degress to radians
  */
 static void
 to_rad(POINT4D *pt)
@@ -448,8 +453,8 @@ lwproj_get_pipeline(const char *pipeline, bool is_forward)
  * @brief Return the spheroid in the last argument initialized from an SRID
  * @param[in] srid SRID
  * @param[in] s Spheroid
- * @note Based on the PostGIS function of the same name in directory 
- * /libpgcommon 
+ * @note Based on the PostGIS function of the same name in directory
+ * /libpgcommon
  */
 int
 spheroid_init_from_srid(int32_t srid, SPHEROID *s)
@@ -556,7 +561,7 @@ Datum
 #if CBUFFER
   datum_transf_pj(Datum d, meosType basetype, int32_t srid_to, const LWPROJ *pj)
 #else
-  datum_transf_pj(Datum d, meosType basetype, 
+  datum_transf_pj(Datum d, meosType basetype,
     int32_t srid_to __attribute__((unused)), const LWPROJ *pj)
 #endif /* CBUFFER */
 {
@@ -580,7 +585,7 @@ Datum
 #endif
     default: /* Error! */
       meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
-        "Unknown transformation function for type: %s", 
+        "Unknown transformation function for type: %s",
         meostype_name(basetype));
     return false;
   }
@@ -722,7 +727,7 @@ tspatialseq_transf_pj(const TSequence *seq, int32_t srid_to, const LWPROJ *pj)
       return NULL;
     }
   }
-  return tsequence_make_free(instants, seq->count, seq->period.lower_inc, 
+  return tsequence_make_free(instants, seq->count, seq->period.lower_inc,
     seq->period.upper_inc, MEOS_FLAGS_GET_INTERP(seq->flags), NORMALIZE_NO);
 }
 
@@ -752,7 +757,7 @@ tspatialseqset_transf_pj(const TSequenceSet *ss, int32_t srid_to,
 }
 
 /**
- * @brief Return a temporal spatial type transformed to another SRID
+ * @brief Return a temporal spatial value transformed to another SRID
  * @param[in] temp Temporal spatial
  * @param[in] srid_to Target SRID, may be @p SRID_UNKNOWN for pipeline
  * transformation
@@ -762,18 +767,18 @@ Temporal *
 tspatial_transf_pj(const Temporal *temp, int32_t srid_to, const LWPROJ *pj)
 {
   assert(temp); assert(pj);
-  /* Copy the temporal spatial type to transform its composing points in place */
+  /* Copy the temporal spatial value to transform its points in place */
   Temporal *result = temporal_copy(temp);
   assert(temptype_subtype(temp->subtype));
   switch (temp->subtype)
   {
     case TINSTANT:
-      return (Temporal *) tspatialinst_transf_pj((TInstant *) result, 
-        srid_to, pj);
+      return (Temporal *) tspatialinst_transf_pj((TInstant *) result, srid_to,
+        pj);
       break;
     case TSEQUENCE:
-      return (Temporal *) tspatialseq_transf_pj((TSequence *) result,
-        srid_to, pj);
+      return (Temporal *) tspatialseq_transf_pj((TSequence *) result, srid_to,
+        pj);
       break;
     default: /* TSEQUENCESET */
       return (Temporal *) tspatialseqset_transf_pj((TSequenceSet *) result,
@@ -792,7 +797,7 @@ tspatial_transform(const Temporal *temp, int32_t srid_to)
 {
   int32_t srid_from = tspatial_srid(temp);
   /* Ensure validity of the arguments */
-  if (! ensure_not_null((void *) temp) || 
+  if (! ensure_not_null((void *) temp) ||
       ! ensure_tspatial_type(temp->temptype) ||
       ! ensure_srid_known(srid_from) || ! ensure_srid_known(srid_to))
     return NULL;

@@ -29,25 +29,33 @@
 
 /**
  * @file
- * @brief Utility functions for temporal rigid geometries
+ * @brief Bounding box operators for temporal rigid geometries
  */
 
-#ifndef __TRGEOMETRY_UTILS_H__
-#define __TRGEOMETRY_UTILS_H__
+#ifndef __TRGEO_BOXOPS_H__
+#define __TRGEO_BOXOPS_H__
 
 /* Postgres */
 #include <postgres.h>
 #include <catalog/pg_type.h>
 /* MEOS */
 #include "general/temporal.h"
-#include "pose/pose.h"
+#include "geo/stbox.h"
 
 /*****************************************************************************/
 
-extern void ensure_same_geom(Datum geom_datum1, Datum geom_datum2);
-extern void lwgeom_apply_pose(LWGEOM *geom, Pose *pose);
-extern double geom_radius(Datum geom_datum);
+/* Functions computing the bounding box at the creation of the temporal rigid 
+ * geometry */
+
+extern void trgeoinst_set_stbox(const Datum geom, const TInstant *inst,
+  STBox *box);
+extern void trgeoinstarr_static_stbox(const Datum geom, 
+  const TInstant **instants, int count, STBox *box);
+extern void trgeoinstarr_rotating_stbox(const Datum geom,
+  const TInstant **instants, int count, STBox *box);
+extern void trgeoinstarr_compute_bbox(const Datum geom,
+  const TInstant **instants, int count, interpType interp, void *box);
 
 /*****************************************************************************/
 
-#endif /* __TRGEOMETRY_UTILS_H__ */
+#endif /* __TRGEO_BOXOPS_H__ */

@@ -28,33 +28,44 @@
  *****************************************************************************/
 
 /**
- * @file
- * @brief Bounding box operators for temporal rigid geometries
+ * @brief Functions for temporal rigid instant geometries.
  */
 
-#ifndef __TRGEOMETRY_BOXOPS_H__
-#define __TGEOMETRY_BOXOPS_H__
+#ifndef __TRGEO_INST_H__
+#define __TRGEO_INST_H__
 
-/* Postgres */
+/* PostgreSQL */
 #include <postgres.h>
 #include <catalog/pg_type.h>
 /* MEOS */
 #include "general/temporal.h"
-#include "geo/stbox.h"
+
+/*****************************************************************************
+ * General functions
+ *****************************************************************************/
+
+extern Datum trgeoinst_geom(const TInstant *inst);
+
+extern size_t trgeoinst_pose_varsize(const TInstant *inst);
+extern void trgeoinst_set_pose(TInstant *inst);
+extern TInstant *trgeoinst_tposeinst(const TInstant *inst);
+
+/* Constructor functions */
+
+extern TInstant *trgeoinst_make1(Datum geom, Datum value, meosType temptype,
+  TimestampTz t);
+extern TInstant *trgeoinst_make(Datum geom, Datum value, meosType temptype,
+  TimestampTz t);
+
+/* Transformation functions */
+
+extern TInstant *trgeoseq_to_inst(const TSequence *seq);
+extern TInstant *trgeoseqset_to_inst(const TSequenceSet *ts);
+
+/* Accessor functions */
+
+extern TSequence **trgeoinst_sequences(const TInstant *inst, int *count);
 
 /*****************************************************************************/
 
-/* Functions computing the bounding box at the creation of the temporal rigid geometry */
-
-extern void trgeoinst_make_stbox(const Datum geom, const TInstant *inst,
-  STBox *box);
-extern void trgeoinstarr_static_stbox(const Datum geom, const TInstant **instants,
-  int count, STBox *box);
-extern void trgeoinstarr_rotating_stbox(const Datum geom, const TInstant **instants,
-  int count, STBox *box);
-extern void trgeoinstarr_compute_bbox(const Datum geom, const TInstant **instants,
-  int count, interpType interp, void *box);
-
-/*****************************************************************************/
-
-#endif /* __TRGEOMETRY_BOXOPS_H__ */
+#endif /* __TRGEO_INST_H__ */

@@ -32,7 +32,7 @@
  * @brief Bounding box operators for temporal rigid geometries
  */
 
-#include "rgeo/trgeometry_boxops.h"
+#include "rgeo/trgeo_boxops.h"
 
 /* C */
 #include <assert.h>
@@ -45,7 +45,7 @@
 #include "meos_internal.h"
 #include "geo/stbox.h"
 #include "pose/pose.h"
-#include "rgeo/trgeometry_inst.h"
+#include "rgeo/trgeo_inst.h"
 
 /*****************************************************************************/
 

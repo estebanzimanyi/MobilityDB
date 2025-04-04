@@ -69,7 +69,7 @@
   #include "pose/pose.h"
 #endif
 #if RGEO
-  #include "rgeo/trgeometry.h"
+  #include "rgeo/trgeo.h"
 #endif
 
 /*****************************************************************************

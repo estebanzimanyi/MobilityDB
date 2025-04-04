@@ -67,7 +67,7 @@
   #include "pose/tpose_boxops.h"
 #endif
 #if RGEO
-  #include "rgeo/trgeometry_boxops.h"
+  #include "rgeo/trgeo_boxops.h"
 #endif
 
 /* Buffer size for input and output of STBox */

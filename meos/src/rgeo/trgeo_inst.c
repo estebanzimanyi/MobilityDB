@@ -32,7 +32,7 @@
  * @brief Functions for temporal rigid geometries of instant subtype
  */
 
-#include "rgeo/trgeometry_inst.h"
+#include "rgeo/trgeo_inst.h"
 
 /* MEOS */
 #include "meos_internal.h"
@@ -41,7 +41,7 @@
 #include "general/tinstant.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "pose/pose.h"
-#include "rgeo/trgeometry_temporaltypes.h"
+#include "rgeo/trgeo_temporaltypes.h"
 
 /*****************************************************************************
  * General functions
@@ -116,12 +116,19 @@ trgeoinst_make_valid(Datum geom, Datum value)
   ensure_has_not_M_geo(gs);
   int geomtype = gserialized_get_type(gs);
   bool hasZ = MEOS_FLAGS_GET_Z(pose->flags);
+  int32_t srid_geom = gserialized_get_srid(gs);
+  int32_t srid_pose = pose_srid(pose);
   if (geomtype != POLYGONTYPE && geomtype != POLYHEDRALSURFACETYPE)
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "Only polygon or polyhedral surface geometries accepted");
   if (hasZ != (bool) FLAGS_GET_Z(gs->gflags))
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "Dimension of geometry and pose must correspond.");
+      "Dimension of geometry and pose must correspond");
+  if (srid_pose != SRID_UNKNOWN && srid_pose != SRID_UNKNOWN &&
+      srid_geom != srid_pose)
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      "SRID of geometry (%d) and pose (%d) must correspond", srid_geom,
+        srid_pose);
   return;
 }
 
