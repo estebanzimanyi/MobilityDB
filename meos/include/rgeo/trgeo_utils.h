@@ -44,8 +44,8 @@
 
 /*****************************************************************************/
 
-extern void ensure_same_geom(Datum geom_datum1, Datum geom_datum2);
-extern void lwgeom_apply_pose(LWGEOM *geom, Pose *pose);
+extern bool ensure_same_geom(Datum geom_datum1, Datum geom_datum2);
+extern void lwgeom_apply_pose(const Pose *pose, LWGEOM *geom);
 extern double geom_radius(Datum geom_datum);
 
 /*****************************************************************************/

@@ -57,7 +57,7 @@
  * @brief Returns the reference geometry of the temporal value
  */
 Datum
-trgeoseqset_geom(const TSequenceSet *ss)
+trgeoseqset_geom_p(const TSequenceSet *ss)
 {
   assert(ss->temptype == T_TRGEOMETRY);
   return PointerGetDatum(
@@ -115,10 +115,15 @@ trgeoseqset_make1_exp(const Datum geom, const TSequence **sequences,
 
   /* Test the validity of the sequences */
   assert(count > 0);
-  ensure_valid_tseqarr(sequences, count);
+  if (! ensure_valid_tseqarr(sequences, count))
+    return NULL;
   for (int i = 0; i < count; ++i)
     if (MEOS_FLAGS_GET_GEOM(sequences[i]->flags))
-      ensure_same_geom(geom, trgeoseq_geom(sequences[i]));
+    {
+      if (! ensure_same_geom(geom, trgeoseq_geom_p(sequences[i])))
+        return NULL;
+      // TODO free
+    }
 
   /* Normalize the array of sequences */
   TSequence **normseqs = (TSequence **) sequences;
@@ -215,7 +220,8 @@ TSequenceSet *
 trgeoseqset_make_exp(const Datum geom, const TSequence **sequences, int count,
   int maxcount, bool normalize)
 {
-  ensure_valid_tseqarr(sequences, count);
+  if (! ensure_valid_tseqarr(sequences, count))
+    return NULL;
   return trgeoseqset_make1_exp(geom, sequences, count, maxcount, normalize);
 }
 
@@ -359,6 +365,71 @@ trgeoseqset_make_gaps(const Datum geom, const TInstant **instants, int count,
  * Transformation functions
  *****************************************************************************/
 
+/**
+ * @ingroup meos_internal_temporal_transf
+ * @brief Return a temporal instant transformed into a temporal sequence set
+ * @param[in] inst Temporal instant
+ * @param[out] interp Interpolation
+ * @csqlfn #Temporal_to_tsequenceset()
+ */
+TSequenceSet *
+trgeoinst_to_tsequenceset(const TInstant *inst, interpType interp)
+{
+  assert(inst); assert(inst->temptype == T_TRGEOMETRY);
+  assert(interp == STEP || interp == LINEAR);
+  return tsequence_to_tsequenceset_free(tinstant_to_tsequence(inst, interp));
+}
+
+/**
+ * @brief Return a temporal discrete sequence transformed into a temporal
+ * sequence set
+ */
+TSequenceSet *
+trgeodiscseq_to_tsequenceset(const TSequence *seq, interpType interp)
+{
+  assert(seq); assert(seq->temptype == T_TRGEOMETRY);
+  assert(interp == STEP || interp == LINEAR);
+  TSequence **sequences = palloc(sizeof(TSequence *) * seq->count);
+  for (int i = 0; i < seq->count; i++)
+    sequences[i] = trgeoinst_to_tsequence(TSEQUENCE_INST_N(seq, i), interp);
+  return trgeoseqset_make_free(trgeoseq_geom_p(seq), sequences, seq->count,
+    NORMALIZE_NO);
+}
+
+/**
+ * @ingroup meos_internal_temporal_transf
+ * @brief Return a temporal sequence transformed into a temporal sequence set
+ * @param[in] seq Temporal sequence
+ * @csqlfn #Temporal_to_tsequenceset()
+ */
+TSequenceSet *
+trgeoseq_to_tsequenceset(const TSequence *seq)
+{
+  assert(seq); assert(seq->temptype == T_TRGEOMETRY);
+  /* For discrete sequences, each composing instant will be transformed in
+   * an instantaneous sequence in the resulting sequence set */
+  if (MEOS_FLAGS_DISCRETE_INTERP(seq->flags))
+  {
+    interpType interp = MEOS_FLAGS_GET_CONTINUOUS(seq->flags) ? LINEAR : STEP;
+    return trgeodiscseq_to_tsequenceset(seq, interp);
+  }
+  return trgeoseqset_make(trgeoseq_geom_p(seq), &seq, 1, NORMALIZE_NO);
+}
+
+/**
+ * @ingroup meos_internal_temporal_transf
+ * @brief Return a temporal sequence transformed into a temporal sequence set
+ * @param[in] seq Temporal sequence
+ * @csqlfn #Temporal_to_tsequenceset()
+ */
+TSequenceSet *
+trgeoseq_to_tsequenceset_free(TSequence *seq)
+{
+  assert(seq); assert(seq->temptype == T_TRGEOMETRY);
+  TSequenceSet *result = trgeoseq_to_tsequenceset((const TSequence *) seq);
+  pfree(seq);
+  return result;
+}
 
 /*****************************************************************************
  * Accessor functions

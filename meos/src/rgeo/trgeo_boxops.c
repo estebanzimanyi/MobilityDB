@@ -61,7 +61,7 @@
 void
 trgeoinst_set_stbox(const Datum geom, const TInstant *inst, STBox *box)
 {
-  Pose *pose = DatumGetPoseP(tinstant_value(inst));
+  const Pose *pose = DatumGetPoseP(tinstant_value(inst));
   GSERIALIZED *gs = DatumGetGserializedP(geom);
 
   /* Note: zero-fill is required here, just as in heap tuples */
@@ -79,7 +79,7 @@ trgeoinst_set_stbox(const Datum geom, const TInstant *inst, STBox *box)
 
   LWGEOM *lwgeom = lwgeom_from_gserialized(gs);
   LWGEOM *lwgeom_copy = lwgeom_clone_deep(lwgeom);
-  lwgeom_apply_pose(lwgeom_copy, pose);
+  lwgeom_apply_pose(pose, lwgeom_copy);
 
   GBOX gbox;
   lwgeom_calculate_gbox(lwgeom_copy, &gbox);

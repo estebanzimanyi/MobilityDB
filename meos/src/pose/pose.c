@@ -380,8 +380,10 @@ pose_wkt_out(Datum value, bool extended, int maxdd)
     geopoint_make(pose->data[0], pose->data[1], 0.0, false, false, srid);
   LWGEOM *geom = lwgeom_from_gserialized(gs);
   size_t len;
-  char *wkt_pose = lwgeom_to_wkt(geom, extended ? WKT_EXTENDED : WKT_ISO,
+  char *wkt_point = lwgeom_to_wkt(geom, extended ? WKT_EXTENDED : WKT_ISO,
     maxdd, &len);
+  /* Previous call added 1 (i.e., '\0') to len */
+  len--;
   char *W, *X, *Y, *Z, *theta;
   if (hasz)
   {
@@ -396,19 +398,19 @@ pose_wkt_out(Datum value, bool extended, int maxdd)
     theta = float8_out(pose->data[2], maxdd);
     len += strlen(theta) + 1; // One ','
   }
-  len += 7; // Pose() + end NULL
+  len += 7; // Pose() + '\0' at the end
   char *result = palloc(len);
   if (hasz)
   {
-    snprintf(result, len, "Pose(%s,%s,%s,%s,%s)", wkt_pose, W, X, Y, Z);
+    snprintf(result, len, "Pose(%s,%s,%s,%s,%s)", wkt_point, W, X, Y, Z);
     pfree(W); pfree(X); pfree(Y); pfree(Z); 
   }
   else
   {
-    snprintf(result, len, "Pose(%s,%s)", wkt_pose, theta);
+    snprintf(result, len, "Pose(%s,%s)", wkt_point, theta);
     pfree(theta);
   }
-  lwgeom_free(geom); pfree(wkt_pose);
+  lwgeom_free(geom); pfree(wkt_point);
   return result;
 }
 

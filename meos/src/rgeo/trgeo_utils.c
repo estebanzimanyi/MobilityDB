@@ -111,34 +111,38 @@ same_lwgeom(const LWGEOM *geom1, const LWGEOM *geom2)
  * @brief Ensure that the temporal rigid geometry instants have the same
  * reference geometry
  */
-void
+bool
 ensure_same_geom(Datum geom_datum1, Datum geom_datum2)
 {
   if (geom_datum1 == geom_datum2)
-    return;
+    return true;
 
   GSERIALIZED *gs1 = (GSERIALIZED *) DatumGetPointer(geom_datum1);
   GSERIALIZED *gs2 = (GSERIALIZED *) DatumGetPointer(geom_datum2);
-
   if (gserialized_get_type(gs1) != gserialized_get_type(gs2))
+  {
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE, 
       "Operation on different reference geometries");
+    return false;
+  }
 
   LWGEOM *geom1 = lwgeom_from_gserialized(gs1);
   LWGEOM *geom2 = lwgeom_from_gserialized(gs2);
-
   if (gserialized_get_type(gs1) == POLYGONTYPE)
     ensure_same_rings_lwpoly((LWPOLY *) geom1, (LWPOLY *) geom2);
   else
     ensure_same_geoms_lwpsurface((LWPSURFACE *) geom1, (LWPSURFACE *) geom2);
 
-  if (!same_lwgeom(geom1, geom2))
+  if (! same_lwgeom(geom1, geom2))
+  {
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE, 
       "Operation on different reference geometries");
+    return false;
+  }
 
   lwgeom_free(geom1);
   lwgeom_free(geom2);
-  return;
+  return true;
 }
 
 /*****************************************************************************/
@@ -174,7 +178,7 @@ lwgeom_affine_transform(LWGEOM *geom,
  * @brief 
  */
 void
-lwgeom_apply_pose(LWGEOM *geom, Pose *pose)
+lwgeom_apply_pose(const Pose *pose, LWGEOM *geom)
 {
   if (! MEOS_FLAGS_GET_Z(pose->flags))
   {

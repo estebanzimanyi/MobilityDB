@@ -1259,8 +1259,8 @@ tsequenceset_timestamps(const TSequenceSet *ss, int *count)
 
 /**
  * @ingroup meos_internal_temporal_accessor
- * @brief Return in the last argument the value of a temporal sequence set at a
- * timestamptz
+ * @brief Return in the last argument a copy of the value of a temporal
+ * sequence set at a timestamptz
  * @param[in] ss Temporal sequence set
  * @param[in] t Timestamp
  * @param[in] strict True if exclusive bounds are taken into account

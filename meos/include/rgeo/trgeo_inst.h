@@ -44,7 +44,7 @@
  * General functions
  *****************************************************************************/
 
-extern Datum trgeoinst_geom(const TInstant *inst);
+extern Datum trgeoinst_geom_p(const TInstant *inst);
 
 extern size_t trgeoinst_pose_varsize(const TInstant *inst);
 extern void trgeoinst_set_pose(TInstant *inst);
@@ -59,8 +59,8 @@ extern TInstant *trgeoinst_make(Datum geom, Datum value, meosType temptype,
 
 /* Transformation functions */
 
-extern TInstant *trgeoseq_to_inst(const TSequence *seq);
-extern TInstant *trgeoseqset_to_inst(const TSequenceSet *ts);
+extern TInstant *trgeoseq_to_tinstant(const TSequence *seq);
+extern TInstant *trgeoseqset_to_tinstant(const TSequenceSet *ts);
 
 /* Accessor functions */
 

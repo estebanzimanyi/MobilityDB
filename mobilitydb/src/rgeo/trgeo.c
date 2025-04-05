@@ -48,6 +48,7 @@
 #include "general/type_util.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "pose/pose.h"
+#include "rgeo/trgeo.h"
 #include "rgeo/trgeo_parser.h"
 #include "rgeo/trgeo_temporaltypes.h"
 /* MobilityDB */
@@ -198,7 +199,7 @@ Trgeometry_seq_constructor(PG_FUNCTION_ARGS)
   ensure_not_empty_array(array);
   int count;
   TInstant **instants = (TInstant **) temparr_extract(array, &count);
-  Temporal *result = (Temporal *) trgeoseq_make(trgeoinst_geom(instants[0]),
+  Temporal *result = (Temporal *) trgeoseq_make(trgeoinst_geom_p(instants[0]),
     (const TInstant **) instants, count, lower_inc, upper_inc, interp,
     NORMALIZE);
   pfree(instants);
@@ -220,7 +221,7 @@ Trgeometry_seqset_constructor(PG_FUNCTION_ARGS)
   int count;
   TSequence **sequences = (TSequence **) temparr_extract(array, &count);
   Temporal *result = (Temporal *) trgeoseqset_make(
-    trgeoseq_geom(sequences[0]), (const TSequence **) sequences, count,
+    trgeoseq_geom_p(sequences[0]), (const TSequence **) sequences, count,
     NORMALIZE);
   pfree(sequences);
   PG_FREE_IF_COPY(array, 0);
@@ -265,7 +266,7 @@ Trgeometry_seqset_constructor_gaps(PG_FUNCTION_ARGS)
   /* Extract the array of instants */
   int count;
   TInstant **instants = (TInstant **) temparr_extract(array, &count);
-  TSequenceSet *result = trgeoseqset_make_gaps(trgeoinst_geom(instants[0]),
+  TSequenceSet *result = trgeoseqset_make_gaps(trgeoinst_geom_p(instants[0]),
     (const TInstant **) instants, count, interp, maxt, maxdist);
   pfree(instants);
   PG_FREE_IF_COPY(array, 0);
@@ -298,8 +299,8 @@ Trgeometry_constructor(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Trgeometry_to_tpose(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Trgeometry_to_tpose);
 /**
- * @ingroup mobilitydb_rgeo_accessor
- * @brief Return the end instant of a temporal value
+ * @ingroup mobilitydb_rgeo_conversion
+ * @brief Return a temporal rigid geometry converted into a temporal pose
  * @sqlfn endInstant()
  */
 Datum
@@ -314,8 +315,8 @@ Trgeometry_to_tpose(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Trgeometry_to_tpoint(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Trgeometry_to_tpoint);
 /**
- * @ingroup mobilitydb_rgeo_accessor
- * @brief Return the end instant of a temporal value
+ * @ingroup mobilitydb_rgeo_conversion
+ * @brief Return a temporal rigid geometry converted into a temporal point
  * @sqlfn endInstant()
  */
 Datum
@@ -331,6 +332,167 @@ Trgeometry_to_tpoint(PG_FUNCTION_ARGS)
  * Accessor functions
  *****************************************************************************/
 
+PGDLLEXPORT Datum Trgeometry_to_geom(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Trgeometry_to_geom);
+/**
+ * @ingroup mobilitydb_rgeo_accessor
+ * @brief Return the geometry of a temporal rigid geometry
+ * @sqlfn startValue()
+ */
+Datum
+Trgeometry_to_geom(PG_FUNCTION_ARGS)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  Datum result = trgeo_geom(temp);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_DATUM(result);
+}
+
+PGDLLEXPORT Datum Trgeometry_start_value(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Trgeometry_start_value);
+/**
+ * @ingroup mobilitydb_rgeo_accessor
+ * @brief Return the start value of a temporal rigid geometry
+ * @sqlfn startValue()
+ */
+Datum
+Trgeometry_start_value(PG_FUNCTION_ARGS)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  Datum result = trgeo_start_value(temp);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_DATUM(result);
+}
+
+PGDLLEXPORT Datum Trgeometry_end_value(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Trgeometry_end_value);
+/**
+ * @ingroup mobilitydb_rgeo_accessor
+ * @brief Return the end value of a temporal rigid geometry
+ * @sqlfn endValue()
+ */
+Datum
+Trgeometry_end_value(PG_FUNCTION_ARGS)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  Datum result = trgeo_end_value(temp);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_DATUM(result);
+}
+
+PGDLLEXPORT Datum Trgeometry_value_n(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Trgeometry_value_n);
+/**
+ * @ingroup mobilitydb_rgeo_accessor
+ * @brief Return the n-th value of a temporal rigid geometry
+ * @sqlfn valueN()
+ */
+Datum
+Trgeometry_value_n(PG_FUNCTION_ARGS)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  int n = PG_GETARG_INT32(1); /* Assume 1-based */
+  Datum result;
+  bool found = trgeo_value_n(temp, n, &result);
+  PG_FREE_IF_COPY(temp, 0);
+  if (! found)
+    PG_RETURN_NULL();
+  PG_RETURN_DATUM(result);
+}
+
+/*****************************************************************************/
+
+PGDLLEXPORT Datum Trgeometry_value_at_timestamptz(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Trgeometry_value_at_timestamptz);
+/**
+ * @ingroup mobilitydb_rgeo_accessor
+ * @brief Return the value of a temporal rigid geometry at a timestamptz
+ * @sqlfn valueAtTimestamp()
+ */
+Datum
+Trgeometry_value_at_timestamptz(PG_FUNCTION_ARGS)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
+  Datum result;
+  bool found = trgeo_value_at_timestamptz(temp, t, true, &result);
+  PG_FREE_IF_COPY(temp, 0);
+  if (! found)
+    PG_RETURN_NULL();
+  PG_RETURN_DATUM(result);
+}
+
+/*****************************************************************************
+ * Transformation Functions
+ *****************************************************************************/
+
+PGDLLEXPORT Datum Trgeometry_to_tinstant(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Trgeometry_to_tinstant);
+/**
+ * @ingroup mobilitydb_rgeo_transf
+ * @brief Return a temporal value transformed to a temporal instant
+ * @sqlfn  trgeometryInst()
+ */
+Datum
+Trgeometry_to_tinstant(PG_FUNCTION_ARGS)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  TInstant *result = trgeo_to_tinstant(temp);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_TINSTANT_P(result);
+}
+
+PGDLLEXPORT Datum Trgeometry_to_tsequence(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Trgeometry_to_tsequence);
+/**
+ * @ingroup mobilitydb_rgeo_transf
+ * @brief Return a temporal value transformed to a temporal sequence
+ * @note The SQL function is not strict
+ * @sqlfn trgeometrySeq()
+ */
+Datum
+Trgeometry_to_tsequence(PG_FUNCTION_ARGS)
+{
+  if (PG_ARGISNULL(0))
+    PG_RETURN_NULL();
+
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  char *interp_str = NULL;
+  if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
+  {
+    text *interp_txt = PG_GETARG_TEXT_P(1);
+    interp_str = text2cstring(interp_txt);
+  }
+  TSequence *result = trgeo_to_tsequence(temp, interp_str);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_TSEQUENCE_P(result);
+}
+
+PGDLLEXPORT Datum Trgeometry_to_tsequenceset(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Trgeometry_to_tsequenceset);
+/**
+ * @ingroup mobilitydb_rgeo_transf
+ * @brief Return a temporal value transformed to a temporal sequence set
+ * @note The SQL function is not strict
+ * @sqlfn trgeoSeqSet()
+ */
+Datum
+Trgeometry_to_tsequenceset(PG_FUNCTION_ARGS)
+{
+  if (PG_ARGISNULL(0))
+    PG_RETURN_NULL();
+
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  char *interp_str = NULL;
+  if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
+  {
+    text *interp_txt = PG_GETARG_TEXT_P(1);
+    interp_str = text2cstring(interp_txt);
+  }
+  TSequenceSet *result = trgeo_to_tsequenceset(temp, interp_str);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_TSEQUENCESET_P(result);
+}
 
 /*****************************************************************************
  * Restriction Functions

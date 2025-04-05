@@ -84,12 +84,7 @@ Datum
 tinstant_value(const TInstant *inst)
 {
   assert(inst);
-  /* For base types passed by value */
-  if (MEOS_FLAGS_GET_BYVAL(inst->flags))
-    return inst->value;
-  /* For base types passed by reference */
-  meosType basetype = temptype_basetype(inst->temptype);
-  return datum_copy(PointerGetDatum(&inst->value), basetype);
+  return datum_copy(tinstant_value_p(inst), temptype_basetype(inst->temptype));
 }
 
 /**
@@ -404,8 +399,8 @@ tinstant_insts(const TInstant *inst, int *count)
 
 /**
  * @ingroup meos_internal_temporal_accessor
- * @brief Return in the last argument the value of a temporal instant at a
- * timestamptz
+ * @brief Return in the last argument a copy of the the value of a temporal
+ * instant at a timestamptz
  * @param[in] inst Temporal instant
  * @param[in] t Timestamp
  * @param[out] result Result

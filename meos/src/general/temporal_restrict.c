@@ -441,8 +441,8 @@ temporal_restrict_timestamptz(const Temporal *temp, TimestampTz t, bool atfunc)
 
 /**
  * @ingroup meos_internal_temporal_restrict
- * @brief Return in the last argument the base value of a temporal value at a
- * timestamptz
+ * @brief Return in the last argument a copy of the value of a temporal value
+ * at a timestamptz
  * @param[in] temp Temporal value
  * @param[in] t Timestamp
  * @param[in] strict True if the timestamp must belong to the temporal value,

@@ -136,7 +136,7 @@ tposesegm_intersection_value(const TInstant *inst1, const TInstant *inst2,
     LWGEOM *geom1 = lwgeom_from_gserialized(gs1);
     LWGEOM *geom2 = lwgeom_from_gserialized(gs2);
     LWGEOM *geom_interp = lwgeom_clone_deep(geom2);
-    lwgeom_apply_pose(geom_interp, pose_interp);
+    lwgeom_apply_pose(pose_interp, geom_interp);
     if (geom_interp->bbox)
       lwgeom_refresh_bbox(geom_interp);
     same = lwgeom_same(geom1, geom_interp);

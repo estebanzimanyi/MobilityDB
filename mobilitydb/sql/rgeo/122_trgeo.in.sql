@@ -74,12 +74,12 @@ CREATE TYPE trgeometry (
 
 CREATE FUNCTION trgeometryFromText(text)
   RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Tspatial_from_ewkt'
+  AS 'MODULE_PATHNAME', 'Trgeo_from_ewkt'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION trgeometryFromEWKT(text)
   RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Tspatial_from_ewkt'
+  AS 'MODULE_PATHNAME', 'Trgeo_from_ewkt'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION trgeometryFromBinary(bytea)
@@ -196,10 +196,16 @@ CREATE FUNCTION stbox(trgeometry)
 
 CREATE CAST (trgeometry AS stbox) WITH FUNCTION stbox(trgeometry);
 
+CREATE FUNCTION geometry(trgeometry)
+  RETURNS geometry
+  AS 'MODULE_PATHNAME', 'Trgeometry_to_geom'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE CAST (trgeometry AS geometry) WITH FUNCTION geometry(trgeometry);
+
 /******************************************************************************
  * Accessor Functions
  ******************************************************************************/
-
 
 /******************************************************************************/
 
@@ -244,22 +250,22 @@ CREATE FUNCTION getTime(trgeometry)
 
 CREATE FUNCTION startValue(trgeometry)
   RETURNS geometry
-  AS 'MODULE_PATHNAME', 'Temporal_start_value'
+  AS 'MODULE_PATHNAME', 'Trgeometry_start_value'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION endValue(trgeometry)
   RETURNS geometry
-  AS 'MODULE_PATHNAME', 'Temporal_end_value'
+  AS 'MODULE_PATHNAME', 'Trgeometry_end_value'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION valueN(trgeometry, int)
   RETURNS geometry
-  AS 'MODULE_PATHNAME', 'Temporal_value_n'
+  AS 'MODULE_PATHNAME', 'Trgeometry_value_n'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION valueAtTimestamp(trgeometry, timestamptz)
   RETURNS geometry
-  AS 'MODULE_PATHNAME', 'Temporal_value_at_timestamptz'
+  AS 'MODULE_PATHNAME', 'Trgeometry_value_at_timestamptz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION duration(trgeometry, boundspan boolean DEFAULT FALSE)
@@ -363,17 +369,17 @@ CREATE FUNCTION segments(trgeometry)
 
 CREATE FUNCTION trgeometryInst(trgeometry)
   RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Temporal_to_tinstant'
+  AS 'MODULE_PATHNAME', 'Trgeometry_to_tinstant'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 -- The function is not strict
 CREATE FUNCTION trgeometrySeq(trgeometry, text DEFAULT NULL)
   RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Temporal_to_tsequence'
+  AS 'MODULE_PATHNAME', 'Trgeometry_to_tsequence'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 -- The function is not strict
 CREATE FUNCTION trgeometrySeqSet(trgeometry, text DEFAULT NULL)
   RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Temporal_to_tsequenceset'
+  AS 'MODULE_PATHNAME', 'Trgeometry_to_tsequenceset'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
 CREATE FUNCTION setInterp(trgeometry, text)

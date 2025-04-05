@@ -45,7 +45,7 @@
  * General functions
  *****************************************************************************/
 
-extern Datum trgeoseqset_geom(const TSequenceSet *ts);
+extern Datum trgeoseqset_geom_p(const TSequenceSet *ts);
 extern TSequenceSet *trgeoseqset_tposeseqset(const TSequenceSet *ss);
 
 /* Constructor functions */
@@ -64,6 +64,12 @@ extern TSequenceSet *trgeoseqset_make_gaps(const Datum geom,
 
 
 /* Transformation functions */
+
+extern TSequence *trgeoseqset_to_tsequence(const TSequenceSet *ss);
+extern TSequence *trgeo_to_tsequence(const Temporal *temp,
+  const char *interp_str);
+extern TSequenceSet *trgeo_to_tsequenceset(const Temporal *temp,
+  const char *interp_str);
 
 extern TSequenceSet *trgeoinst_to_seqset(const TInstant *inst,
   interpType interp);

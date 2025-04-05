@@ -118,8 +118,9 @@ trgeoseq_disc_parse(const char **str, meosType temptype, int *temp_srid,
     trgeoinst_parse(str, temptype, false, temp_srid, geom, &instants[i]);
   }
   p_cbrace(str);
-  return tsequence_make_free(instants, count, true, true, DISCRETE,
-    NORMALIZE_NO);
+  TSequence *result = trgeoseq_make_free(geom, instants, count, true, true,
+    DISCRETE, NORMALIZE_NO);
+  return result;
 }
 
 /**
@@ -183,10 +184,10 @@ trgeoseq_cont_parse(const char **str, meosType temptype, interpType interp,
   p_cbracket(str);
   p_cparen(str);
   if (result)
-    *result = tsequence_make((const TInstant **) instants, count,
-      lower_inc, upper_inc, interp, NORMALIZE);
-  pfree_array((void **) instants, count);
+    *result = trgeoseq_make_free(geom, instants, count, lower_inc, upper_inc,
+      interp, NORMALIZE);
   return true;
+
 }
 
 /**
@@ -232,7 +233,7 @@ trgeoseqset_parse(const char **str, meosType temptype, interpType interp,
       &sequences[i]);
   }
   p_cbrace(str);
-  return tsequenceset_make_free(sequences, count, NORMALIZE);
+  return trgeoseqset_make_free(geom, sequences, count, NORMALIZE);
 }
 
 /*****************************************************************************/

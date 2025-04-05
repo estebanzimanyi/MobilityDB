@@ -51,7 +51,7 @@
  * @brief Returns the reference geometry of the temporal value
  */
 Datum
-trgeoinst_geom(const TInstant *inst)
+trgeoinst_geom_p(const TInstant *inst)
 {
   if (! ensure_has_geom(inst->flags))
     return PointerGetDatum(NULL);
@@ -69,7 +69,7 @@ trgeoinst_pose_varsize(const TInstant *inst)
 {
   size_t size = VARSIZE(inst);
   if (MEOS_FLAGS_GET_GEOM(inst->flags))
-    size -= DOUBLE_PAD(VARSIZE(trgeoinst_geom(inst)));
+    size -= DOUBLE_PAD(VARSIZE(trgeoinst_geom_p(inst)));
   return size;
 }
 
@@ -107,7 +107,7 @@ trgeoinst_tposeinst(const TInstant *inst)
 /**
  * @brief Ensure the validity of the arguments when creating a temporal value
  */
-static void
+static bool
 trgeoinst_make_valid(Datum geom, Datum value)
 {
   const GSERIALIZED *gs = DatumGetGserializedP(geom);
@@ -119,17 +119,26 @@ trgeoinst_make_valid(Datum geom, Datum value)
   int32_t srid_geom = gserialized_get_srid(gs);
   int32_t srid_pose = pose_srid(pose);
   if (geomtype != POLYGONTYPE && geomtype != POLYHEDRALSURFACETYPE)
+  {
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "Only polygon or polyhedral surface geometries accepted");
+    return false;
+  }
   if (hasZ != (bool) FLAGS_GET_Z(gs->gflags))
+  {
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "Dimension of geometry and pose must correspond");
+    return false;
+  }
   if (srid_pose != SRID_UNKNOWN && srid_pose != SRID_UNKNOWN &&
-      srid_geom != srid_pose)
+    srid_geom != srid_pose)
+  {
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "SRID of geometry (%d) and pose (%d) must correspond", srid_geom,
         srid_pose);
-  return;
+    return false;
+  }
+  return true;
 }
 
 /**
@@ -189,7 +198,8 @@ trgeoinst_make1(Datum geom, Datum value, meosType temptype, TimestampTz t)
 TInstant *
 trgeoinst_make(Datum geom, Datum value, meosType temptype, TimestampTz t)
 {
-  trgeoinst_make_valid(geom, value);
+  if (! trgeoinst_make_valid(geom, value))
+    return NULL;
   return trgeoinst_make1(geom, value, temptype, t);
 }
 
@@ -197,6 +207,48 @@ trgeoinst_make(Datum geom, Datum value, meosType temptype, TimestampTz t)
  * Transformation functions
  *****************************************************************************/
 
+/**
+ * @ingroup meos_internal_rgeo_transf
+ * @brief Return a temporal sequence transformed into a temporal instant
+ * @param[in] seq Temporal sequence
+ * @csqlfn #Trgeoseq_to_tinstant()
+ */
+TInstant *
+trgeoseq_to_tinstant(const TSequence *seq)
+{
+  assert(seq);
+  if (seq->count != 1)
+  {
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      "Cannot transform input value to a temporal instant");
+    return NULL;
+  }
+  const TInstant *inst = TSEQUENCE_INST_N(seq, 0);
+  return trgeoinst_make(trgeoseq_geom_p(seq), tinstant_value_p(inst),
+    T_TRGEOMETRY, inst->t);
+}
+
+/**
+ * @ingroup meos_internal_rgeo_transf
+ * @brief Return a temporal sequence set transformed into a temporal instant
+ * @param[in] ss Temporal sequence set
+ * @csqlfn #Trgeoseqseq_to_tinstant()
+ */
+TInstant *
+trgeoseqset_to_tinstant(const TSequenceSet *ss)
+{
+  assert(ss);
+  if (ss->totalcount != 1)
+  {
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      "Cannot transform input value to a temporal instant");
+    return NULL;
+  }
+  const TSequence *seq = TSEQUENCESET_SEQ_N(ss, 0);
+  const TInstant *inst = TSEQUENCE_INST_N(seq, 0);
+  return trgeoinst_make(trgeoseqset_geom_p(ss), tinstant_value_p(inst),
+    T_TRGEOMETRY, inst->t);
+}
 
 /*****************************************************************************
  * Accessor functions

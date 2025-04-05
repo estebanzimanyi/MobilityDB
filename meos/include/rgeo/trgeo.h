@@ -50,6 +50,7 @@
  *****************************************************************************/
 
 extern bool ensure_has_geom(int16 flags);
+extern Datum trgeo_geom_p(const Temporal *temp);
 extern Datum trgeo_geom(const Temporal *temp);
 
 /* Input/output functions */
@@ -59,9 +60,16 @@ extern Datum trgeo_geom(const Temporal *temp);
 
 /* Accessor functions */
 
+extern Datum trgeo_start_value(const Temporal *temp);
+extern Datum trgeo_end_value(const Temporal *temp);
+extern bool trgeo_value_n(const Temporal *temp, int n, Datum *result);
 extern bool trgeo_value_at_timestamptz(const Temporal *temp, TimestampTz t,
   bool strict, Datum *result);
-  
+
+/* Transformation functions */
+
+extern TInstant *trgeo_to_tinstant(const Temporal *temp);
+
 /*****************************************************************************/
 
 #endif /* __TRGEO_H__ */

@@ -668,7 +668,7 @@ set_num_values(const Set *s)
 
 /**
  * @ingroup meos_internal_setspan_accessor
- * @brief Return (a copy of) the start value of a set
+ * @brief Return a copy of the start value of a set
  * @param[in] s Set
  */
 Datum
@@ -681,7 +681,7 @@ set_start_value(const Set *s)
 
 /**
  * @ingroup meos_internal_setspan_accessor
- * @brief Return (a copy of) the end value of a set
+ * @brief Return a copy of the end value of a set
  * @param[in] s Set
  */
 Datum

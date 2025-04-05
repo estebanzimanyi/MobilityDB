@@ -43,6 +43,7 @@
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
+#include "general/pg_types.h"
 #include "general/set.h"
 #include "general/lifting.h"
 #include "general/temporal.h"
@@ -97,25 +98,6 @@ spatialbase_as_text(Datum value, meosType type, int maxdd)
     case T_POSE:
       return pose_as_text(DatumGetPoseP(value), maxdd);
 #endif
-// #if RGEO
-    // case T_TRGEOMETRY:
-    // {
-      // /* Write the geometry */
-      // const Pose *pose = DatumGetPoseP(value);
-      // const GSERIALIZED *gs = pose_geom(pose);
-      // LWGEOM *geom = lwgeom_from_gserialized(gs);
-      // size_t len_geom;
-      // char *wkt_geom = lwgeom_to_wkt(geom, WKT_ISO, maxdd, &len_geom);
-      // lwgeom_free(geom);
-      // /* Write the pose */
-      // char *wkt_pose = pose_wkt_out(value, false, maxdd);
-      // /* Combine both representation with the ';' delimiter */
-      // size_t len = strlen(wkt_geom) + strlen(wkt_pose) + 1;
-      // char *wkt = palloc(len);
-      // snprintf(wkt, len, "%s;%s", wkt_pose, wkt_geom);
-      // return wkt;
-    // }
-// #endif
     default: /* Error! */
       meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
         "Unknown output function in WKT format for type: %s",
@@ -246,17 +228,19 @@ trgeoinst_as_text(const TInstant *inst, int maxdd)
 {
   assert(inst->temptype == T_TRGEOMETRY);
   /* Write the geometry */
-  const GSERIALIZED *gs = DatumGetGserializedP(trgeoinst_geom(inst));
+  const GSERIALIZED *gs = DatumGetGserializedP(trgeoinst_geom_p(inst));
   LWGEOM *geom = lwgeom_from_gserialized(gs);
   size_t len_geom;
   char *wkt_geom = lwgeom_to_wkt(geom, WKT_ISO, maxdd, &len_geom);
   lwgeom_free(geom);
   /* Write the pose */
   char *wkt_pose = pose_wkt_out(tinstant_value_p(inst), false, maxdd);
-  /* Combine both representation with the ';' delimiter */
-  size_t len = strlen(wkt_geom) + strlen(wkt_pose) + 1;
+  /* Write the timestamp */
+  char *wkt_t = pg_timestamptz_out(inst->t);
+  /* Write representations with the ';' and '@' delimiters and the end '\0' */
+  size_t len = strlen(wkt_geom) + strlen(wkt_pose) + strlen(wkt_t) + 3;
   char *wkt = palloc(len);
-  snprintf(wkt, len, "%s;%s", wkt_pose, wkt_geom);
+  snprintf(wkt, len, "%s;%s@%s", wkt_geom, wkt_pose, wkt_t);
   return wkt;
 }
 #endif /* RGEO */
@@ -525,7 +509,7 @@ tspatial_set_stbox(const Temporal *temp, STBox *box)
 #endif
 #if RGEO
       else if (temp->temptype == T_TRGEOMETRY)
-        trgeoinst_set_stbox(trgeoinst_geom((TInstant *) temp),
+        trgeoinst_set_stbox(trgeoinst_geom_p((TInstant *) temp),
           (TInstant *) temp, box);
 #endif
       else

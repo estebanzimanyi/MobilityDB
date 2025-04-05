@@ -56,7 +56,7 @@
  * @brief Returns the reference geometry of the temporal value
  */
 Datum
-trgeoseq_geom(const TSequence *seq)
+trgeoseq_geom_p(const TSequence *seq)
 {
   if (! ensure_has_geom(seq->flags))
     return PointerGetDatum(NULL);
@@ -78,7 +78,7 @@ trgeoseq_geom(const TSequence *seq)
 size_t
 trgeoseq_pose_varsize(const TSequence *seq)
 {
-  Datum geom = trgeoseq_geom(seq);
+  Datum geom = trgeoseq_geom_p(seq);
   return VARSIZE(seq) - DOUBLE_PAD(VARSIZE(geom));
 }
 
@@ -114,18 +114,27 @@ trgeoseq_tposeseq(const TSequence *seq)
 /**
  * @brief Ensure the validity of the arguments when creating a temporal value
  */
-void
+bool
 trgeoseq_make_valid(const Datum geom, const TInstant **instants,
   int count, bool lower_inc, bool upper_inc, bool linear)
 {
   if (! tsequence_make_valid(instants, count, lower_inc, upper_inc, linear))
+  {
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE, 
       "TODO FIX THIS PROBLEM");
-  ensure_valid_tinstarr(instants, count, MERGE_NO, linear ? LINEAR : STEP);
+    return false;
+  }
+  if (! ensure_valid_tinstarr(instants, count, MERGE_NO, 
+      linear ? LINEAR : STEP))
+    return false;
   for (int i = 0; i < count; ++i)
     if (MEOS_FLAGS_GET_GEOM(instants[i]->flags))
-      ensure_same_geom(geom, trgeoinst_geom(instants[i]));
-  return;
+    {
+      if (! ensure_same_geom(geom, trgeoinst_geom_p(instants[i])))
+        return false;
+      // TODO pfree
+    }
+  return true;
 }
 
 /**
@@ -253,11 +262,14 @@ trgeoseq_make1(const Datum geom, const TInstant **instants, int count,
  */
 TSequence *
 trgeoseq_make_exp(const Datum geom, const TInstant **instants, int count,
-  int maxcount, bool lower_inc, bool upper_inc, interpType interp, bool normalize)
+  int maxcount, bool lower_inc, bool upper_inc, interpType interp,
+  bool normalize)
 {
-  trgeoseq_make_valid(geom, instants, count, lower_inc, upper_inc, interp);
-  return trgeoseq_make1_exp(geom, instants, count, maxcount,
-    lower_inc, upper_inc, interp, normalize);
+  if (! trgeoseq_make_valid(geom, instants, count, lower_inc, upper_inc,
+      interp))
+    return NULL;
+  return trgeoseq_make1_exp(geom, instants, count, maxcount, lower_inc,
+    upper_inc, interp, normalize);
 }
 
 /**
@@ -332,7 +344,39 @@ trgeoseq_make_free(const Datum geom, TInstant **instants, int count,
  * Transformation functions
  *****************************************************************************/
 
+/**
+ * @ingroup meos_internal_rgeo_transf
+ * @brief Return a temporal instant transformed into a temporal sequence
+ * @param[in] inst Temporal instant
+ * @param[in] interp Interpolation
+ * @csqlfn #Trgeo_to_tsequence()
+ */
+TSequence *
+trgeoinst_to_tsequence(const TInstant *inst, interpType interp)
+{
+  assert(inst);
+  return trgeoseq_make(trgeoinst_geom_p(inst), &inst, 1, true, true, interp,
+    NORMALIZE_NO);
+}
 
+/**
+ * @ingroup meos_internal_rgeo_transf
+ * @brief Return a temporal sequence set transformed into a temporal sequence
+ * @param[in] ss Temporal sequence set
+ * @csqlfn #Trgeoseqseq_to_tsequence()
+ */
+TSequence *
+trgeoseqset_to_tsequence(const TSequenceSet *ss)
+{
+  assert(ss);
+  if (ss->totalcount != 1)
+  {
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      "Cannot transform input value to a temporal instant");
+    return NULL;
+  }
+  return tsequence_copy(TSEQUENCESET_SEQ_N(ss, 0));
+}
 
 /*****************************************************************************
  * Accessor functions

@@ -2046,7 +2046,7 @@ temporal_time(const Temporal *temp)
 
 /**
  * @ingroup meos_internal_temporal_accessor
- * @brief Return (a copy of) the start base value of a temporal value
+ * @brief Return a copy of the start base value of a temporal value
  * @param[in] temp Temporal value
  * @csqlfn #Temporal_start_value()
  */
@@ -2068,7 +2068,7 @@ temporal_start_value(const Temporal *temp)
 
 /**
  * @ingroup meos_internal_temporal_accessor
- * @brief Return (a copy of) the end base value of a temporal value
+ * @brief Return a copy of the end base value of a temporal value
  * @param[in] temp Temporal value
  */
 Datum
@@ -2093,7 +2093,7 @@ temporal_end_value(const Temporal *temp)
 
 /**
  * @ingroup meos_internal_temporal_accessor
- * @brief Return (a copy of) the minimum base value of a temporal value
+ * @brief Return a copy of the minimum base value of a temporal value
  * @param[in] temp Temporal value
  */
 Datum
@@ -2120,7 +2120,7 @@ temporal_min_value(const Temporal *temp)
 
 /**
  * @ingroup meos_internal_temporal_accessor
- * @brief Return (a copy of) the maximum base value of a temporal value
+ * @brief Return a copy of the maximum base value of a temporal value
  * @param[in] temp Temporal value
  * @csqlfn #Temporal_max_value()
  */

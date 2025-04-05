@@ -131,15 +131,14 @@ VClip_tpoly_point(PG_FUNCTION_ARGS)
     PG_FREE_IF_COPY(gs_point, 1);
     PG_RETURN_NULL();
   }
-  GSERIALIZED *gs_poly = DatumGetGserializedP(trgeo_geom(temp));
+  const GSERIALIZED *gs_poly = DatumGetGserializedP(trgeo_geom_p(temp));
   LWPOLY *poly = lwgeom_as_lwpoly(lwgeom_from_gserialized(gs_poly));
   LWPOINT *point = lwgeom_as_lwpoint(lwgeom_from_gserialized(gs_point));
   Pose *pose = DatumGetPoseP(value);
   uint32_t poly_feature = 0;
   double distance;
   v_clip_tpoly_point(poly, point, pose, &poly_feature, &distance);
-  lwpoly_free(poly);
-  lwpoint_free(point);
+  lwpoly_free(poly); lwpoint_free(point);
   PG_FREE_IF_COPY(temp, 0);
   PG_FREE_IF_COPY(gs_point, 1);
   PG_RETURN_FLOAT8(distance);
@@ -167,7 +166,7 @@ VClip_tpoly_poly(PG_FUNCTION_ARGS)
     PG_FREE_IF_COPY(gs_poly2, 1);
     PG_RETURN_NULL();
   }
-  GSERIALIZED *gs_poly1 = DatumGetGserializedP(trgeo_geom(temp));
+  GSERIALIZED *gs_poly1 = DatumGetGserializedP(trgeo_geom_p(temp));
   LWPOLY *poly1 = lwgeom_as_lwpoly(lwgeom_from_gserialized(gs_poly1));
   LWPOLY *poly2 = lwgeom_as_lwpoly(lwgeom_from_gserialized(gs_poly2));
   Pose *pose1 = DatumGetPoseP(value);
@@ -203,7 +202,7 @@ VClip_tpoly_tpoint(PG_FUNCTION_ARGS)
     PG_FREE_IF_COPY(temp2, 1);
     PG_RETURN_NULL();
   }
-  GSERIALIZED *gs_poly = DatumGetGserializedP(trgeo_geom(temp1));
+  GSERIALIZED *gs_poly = DatumGetGserializedP(trgeo_geom_p(temp1));
   LWPOLY *poly = lwgeom_as_lwpoly(lwgeom_from_gserialized(gs_poly));
   Pose *pose = DatumGetPoseP(value1);
   GSERIALIZED *gs_point = DatumGetGserializedP(value2);
@@ -239,10 +238,10 @@ VClip_tpoly_tpoly(PG_FUNCTION_ARGS)
     PG_FREE_IF_COPY(temp2, 1);
     PG_RETURN_NULL();
   }
-  GSERIALIZED *gs_poly1 = DatumGetGserializedP(trgeo_geom(temp1));
+  GSERIALIZED *gs_poly1 = DatumGetGserializedP(trgeo_geom_p(temp1));
   LWPOLY *poly1 = lwgeom_as_lwpoly(lwgeom_from_gserialized(gs_poly1));
   Pose *pose1 = DatumGetPoseP(value1);
-  GSERIALIZED *gs_poly2 = DatumGetGserializedP(trgeo_geom(temp2));
+  GSERIALIZED *gs_poly2 = DatumGetGserializedP(trgeo_geom_p(temp2));
   LWPOLY *poly2 = lwgeom_as_lwpoly(lwgeom_from_gserialized(gs_poly2));
   Pose *pose2 = DatumGetPoseP(value2);
   uint32_t poly1_feature = 0, poly2_feature = 0;

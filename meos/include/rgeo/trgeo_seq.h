@@ -45,7 +45,7 @@
  * General functions
  *****************************************************************************/
 
-extern Datum trgeoseq_geom(const TSequence *seq);
+extern Datum trgeoseq_geom_p(const TSequence *seq);
 
 extern size_t trgeoseq_pose_varsize(const TSequence *seq);
 extern void trgeoseq_set_pose(TSequence *seq);
@@ -53,7 +53,7 @@ extern TSequence *trgeoseq_tposeseq(const TSequence *seq);
 
 /* Constructor functions */
 
-extern void trgeoseq_make_valid(const Datum geom, const TInstant **instants,
+extern bool trgeoseq_make_valid(const Datum geom, const TInstant **instants,
   int count, bool lower_inc, bool upper_inc, bool linear);
 extern TSequence *trgeoseq_make1_exp(const Datum geom, const TInstant **instants,
   int count, int maxcount, bool lower_inc, bool upper_inc, interpType interp, bool normalize);
@@ -70,7 +70,9 @@ extern TSequence *trgeoseq_make_free(const Datum geom, TInstant **instants,
 
 /* Transformation functions */
 
-extern TSequence *trgeoinst_to_seq(const TInstant *inst, interpType interp);
+extern TSequence *trgeoinst_to_tsequence(const TInstant *inst, interpType interp);
+extern TInstant *trgeoseq_to_tinstant(const TSequence *seq);
+
 extern TSequence *trgeoseq_to_discseq(const TSequence *seq);
 extern TSequence *trgeoseq_to_contseq(const TSequence *seq);
 extern TSequence *trgeoseqset_to_seq(const TSequenceSet *ss);
