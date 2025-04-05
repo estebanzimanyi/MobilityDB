@@ -90,7 +90,6 @@ extern bool pose_ne(const Pose *pose1, const Pose *pose2);
 extern bool pose_nsame(const Pose *pose1, const Pose *pose2);
 extern char *pose_out(const Pose *pose, int maxdd);
 extern GSERIALIZED *pose_point(const Pose *pose);
-extern GSERIALIZED *pose_geom(const Pose *pose);
 extern double pose_rotation(const Pose *pose);
 extern double *pose_orientation(const Pose *pose);
 extern Pose *pose_round(const Pose *pose, int maxdd);

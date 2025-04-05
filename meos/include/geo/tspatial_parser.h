@@ -44,6 +44,8 @@
 /*****************************************************************************/
 
 extern bool srid_parse(const char **str, int *srid);
+extern bool spatial_parse_elem(const char **str, meosType temptype, char delim,
+  int *temp_srid, Datum *result);
 extern bool geo_parse(const char **str, meosType basetype, char delim, 
   int *srid, GSERIALIZED **result);
 extern STBox *stbox_parse(const char **str);

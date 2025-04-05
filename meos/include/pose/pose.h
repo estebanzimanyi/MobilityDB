@@ -60,15 +60,6 @@ struct Pose
   double        data[];        /**< position and orientation values */
 };
 
-/**
- * @brief Return the reference geometry value of a pose
- * @pre The pose has the flag MEOS_FLAGS_GET_GEOM a true and the geometry
- * is located after the last double representing the orientation
- */
-
-#define POSE_GEOM_PTR(p) ( (GSERIALIZED *) ( ((char *) ((p)->data)) + \
-  (sizeof(double) * ( MEOS_FLAGS_GET_Z((p)->flags) ? 7 : 2 ) ) ) ) \
-
 /*****************************************************************************
  * pose.c
  *****************************************************************************/

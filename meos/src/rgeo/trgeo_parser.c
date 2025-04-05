@@ -46,7 +46,199 @@
 /*****************************************************************************/
 
 /**
- * @brief Parse the reference geometry of a temporal rigid geometry value
+ * @brief Parse a temporal rigid geometry instant from the input buffer
+ * @param[in] str Input string
+ * @param[in] temptype Temporal type
+ * @param[in] end Set to true when reading a single instant to ensure there is
+ * no more input after the sequence
+ * @param[in,out] temp_srid SRID of the temporal rigid geometry
+ * @param[out] result New instant, may be NULL
+ */
+bool 
+trgeoinst_parse(const char **str, meosType temptype, bool end,
+  int *temp_srid, Datum geom, TInstant **result)
+{
+  Datum base;
+  if (! spatial_parse_elem(str, temptype, '@', temp_srid, &base))
+    return false;
+
+  p_delimchar(str, '@');
+
+  TimestampTz t = timestamp_parse(str);
+  if (t == DT_NOEND ||
+    /* Ensure there is no more input */
+    (end && ! ensure_end_input(str, meostype_name(temptype))))
+  {
+    pfree(DatumGetPointer(base));
+    return false;
+  }
+
+  if (result)
+    *result = trgeoinst_make(geom, base, temptype, t);
+  pfree(DatumGetPointer(base));
+  return true;
+}
+
+/**
+ * @brief Parse a temporal discrete sequence spatial value from the buffer
+ * @param[in] str Input string
+ * @param[in] temptype Temporal type
+ * @param[in,out] temp_srid SRID of the temporal rigid geometry
+ */
+TSequence *
+trgeoseq_disc_parse(const char **str, meosType temptype, int *temp_srid,
+  Datum geom)
+{
+  const char *type_str = meostype_name(temptype);
+  p_whitespace(str);
+  /* We are sure to find an opening brace because that was the condition
+   * to call this function in the dispatch function #tspatial_parse */
+  p_obrace(str);
+
+  /* First parsing */
+  const char *bak = *str;
+  if (! trgeoinst_parse(str, temptype, false, temp_srid, geom, NULL))
+    return NULL;
+  int count = 1;
+  while (p_comma(str))
+  {
+    count++;
+    if (! trgeoinst_parse(str, temptype, false, temp_srid, geom, NULL))
+      return NULL;
+  }
+  if (! ensure_cbrace(str, type_str) || ! ensure_end_input(str, type_str))
+    return NULL;
+
+  /* Second parsing */
+  *str = bak;
+  TInstant **instants = palloc(sizeof(TInstant *) * count);
+  for (int i = 0; i < count; i++)
+  {
+    p_comma(str);
+    trgeoinst_parse(str, temptype, false, temp_srid, geom, &instants[i]);
+  }
+  p_cbrace(str);
+  return tsequence_make_free(instants, count, true, true, DISCRETE,
+    NORMALIZE_NO);
+}
+
+/**
+ * @brief Parse a temporal sequence spatial value from the input buffer
+ * @param[in] str Input string
+ * @param[in] temptype Temporal type
+ * @param[in] interp Interpolation
+ * @param[in] end Set to true when reading a single instant to ensure there is
+ * no moreinput after the sequence
+ * @param[in,out] temp_srid SRID of the temporal rigid geometry
+ * @param[out] result New sequence, may be NULL
+ */
+bool
+trgeoseq_cont_parse(const char **str, meosType temptype, interpType interp, 
+  bool end, int *temp_srid, Datum geom, TSequence **result)
+{
+  const char *type_str = meostype_name(temptype);
+  p_whitespace(str);
+  bool lower_inc = false, upper_inc = false;
+  /* We are sure to find an opening bracket or parenthesis because that was the
+   * condition to call this function in the dispatch function tspatial_parse */
+  if (p_obracket(str))
+    lower_inc = true;
+  else if (p_oparen(str))
+    lower_inc = false;
+
+  /* First parsing */
+  const char *bak = *str;
+  if (! trgeoinst_parse(str, temptype, false, temp_srid, geom, NULL))
+    return false;
+  int count = 1;
+  while (p_comma(str))
+  {
+    count++;
+    if (! trgeoinst_parse(str, temptype, false, temp_srid, geom, NULL))
+      return false;
+  }
+  if (p_cbracket(str))
+    upper_inc = true;
+  else if (p_cparen(str))
+    upper_inc = false;
+  else
+  {
+    meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
+      "Could not parse %s value: Missing closing bracket/parenthesis", 
+      type_str);
+    return false;
+  }
+  /* Ensure there is no more input */
+  if (end && ! ensure_end_input(str, type_str))
+    return false;
+
+  /* Second parsing */
+  *str = bak;
+  TInstant **instants = palloc(sizeof(TInstant *) * count);
+  for (int i = 0; i < count; i++)
+  {
+    p_comma(str);
+    trgeoinst_parse(str, temptype, false, temp_srid, geom, &instants[i]);
+  }
+  p_cbracket(str);
+  p_cparen(str);
+  if (result)
+    *result = tsequence_make((const TInstant **) instants, count,
+      lower_inc, upper_inc, interp, NORMALIZE);
+  pfree_array((void **) instants, count);
+  return true;
+}
+
+/**
+ * @brief Parse a temporal sequence set spatial value from the input buffer
+ * @param[in] str Input string
+ * @param[in] temptype Temporal type
+ * @param[in] interp Interpolation
+ * @param[in,out] temp_srid SRID of the temporal rigid geometry
+ */
+TSequenceSet *
+trgeoseqset_parse(const char **str, meosType temptype, interpType interp,
+  int *temp_srid, Datum geom)
+{
+  const char *type_str = meostype_name(temptype);
+  p_whitespace(str);
+  /* We are sure to find an opening brace because that was the condition
+   * to call this function in the dispatch function tspatial_parse */
+  p_obrace(str);
+
+  /* First parsing */
+  const char *bak = *str;
+  if (! trgeoseq_cont_parse(str, temptype, interp, false, temp_srid, geom,
+      NULL))
+    return NULL;
+  int count = 1;
+  while (p_comma(str))
+  {
+    count++;
+    if (! trgeoseq_cont_parse(str, temptype, interp, false, temp_srid, geom,
+        NULL))
+      return NULL;
+  }
+  if (! ensure_cbrace(str, type_str) || ! ensure_end_input(str, type_str))
+    return NULL;
+
+  /* Second parsing */
+  *str = bak;
+  TSequence **sequences = palloc(sizeof(TSequence *) * count);
+  for (int i = 0; i < count; i++)
+  {
+    p_comma(str);
+    trgeoseq_cont_parse(str, temptype, interp, false, temp_srid, geom, 
+      &sequences[i]);
+  }
+  p_cbrace(str);
+  return tsequenceset_make_free(sequences, count, NORMALIZE);
+}
+
+/*****************************************************************************/
+
+/**
+ * @brief Parse the reference geometry of a temporal rigid geometry
  * @param[in] str Input string
  * @param[in] temptype Temporal type
  */
@@ -99,7 +291,7 @@ trgeo_parse_geom(const char **str, int32_t temp_srid, Datum *result)
 }
 
 /**
- * @brief Parse a temporal rigid geometry value from the buffer.
+ * @brief Parse a temporal rigid geometry from the buffer.
  * @param[in] str Input string
  * @param[in] temptype Temporal type
  */
@@ -131,19 +323,20 @@ trgeo_parse(const char **str, meosType temptype)
 
   const char *bak = *str;
   Temporal *result = NULL; /* keep compiler quiet */
-  /* Determine the subtype of the temporal spatial value and call the
+  /* Determine the subtype of the temporal rigid geometry and call the
    * function corresponding to the subtype passing the SRID */
   if (**str != '{' && **str != '[' && **str != '(')
   {
     TInstant *inst;
-    if (! tspatialinst_parse(str, temptype, true, &temp_srid, &inst))
+    if (! trgeoinst_parse(str, temptype, true, &temp_srid, geom, &inst))
       return NULL;
     result = (Temporal *) inst;
   }
   else if (**str == '[' || **str == '(')
   {
     TSequence *seq;
-    if (! tspatialseq_cont_parse(str, temptype, interp, true, &temp_srid, &seq))
+    if (! trgeoseq_cont_parse(str, temptype, interp, true, &temp_srid, geom, 
+        &seq))
       return NULL;
     result = (Temporal *) seq;
   }
@@ -155,13 +348,14 @@ trgeo_parse(const char **str, meosType temptype)
     if (**str == '[' || **str == '(')
     {
       *str = bak;
-      result = (Temporal *) tspatialseqset_parse(str, temptype, interp,
-        &temp_srid);
+      result = (Temporal *) trgeoseqset_parse(str, temptype, interp,
+        &temp_srid, geom);
     }
     else
     {
       *str = bak;
-      result = (Temporal *) tspatialseq_disc_parse(str, temptype, &temp_srid);
+      result = (Temporal *) trgeoseq_disc_parse(str, temptype, &temp_srid,
+        geom);
     }
   }
   return result;

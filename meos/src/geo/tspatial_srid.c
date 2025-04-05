@@ -200,11 +200,6 @@ int32_t
 tspatialinst_srid(const TInstant *inst)
 {
   assert(inst); assert(tspatial_type(inst->temptype));
-// #if RGEO
-  // if (inst->temptype == T_TRGEOMETRY)
-    // return gserialized_get_srid(DatumGetGserializedP(
-      // trgeo_geom((Temporal *) inst)));
-// #endif /* RGEO */
   meosType basetype = temptype_basetype(inst->temptype);
   return spatial_srid(tinstant_value_p(inst), basetype);
 }

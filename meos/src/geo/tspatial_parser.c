@@ -319,7 +319,7 @@ geo_parse(const char **str, meosType basetype, char delim, int *srid,
  * take the value from the base value if it is not SRID_UNKNOWN.
  * @param[out] result New spatial base value, may be NULL
  */
-static bool 
+bool 
 spatial_parse_elem(const char **str, meosType temptype, char delim, 
   int *temp_srid, Datum *result)
 {
@@ -571,13 +571,6 @@ tspatial_parse(const char **str, meosType temptype)
 
   /* Allow spaces after the SRID and/or Interpolation */
   p_whitespace(str);
-
-// #if RGEO
-  // Datum geom;
-  // if (temptype == T_TRGEOMETRY)
-    // if (! trgeo_parse_geom(str, temp_srid, &geom))
-      // return NULL;
-// #endif /* RGEO */
 
   Temporal *result = NULL; /* keep compiler quiet */
   /* Determine the subtype of the temporal spatial value and call the

@@ -59,6 +59,7 @@
 Datum
 trgeoseqset_geom(const TSequenceSet *ss)
 {
+  assert(ss->temptype == T_TRGEOMETRY);
   return PointerGetDatum(
     /* start of data */
     ((char *)ss) + DOUBLE_PAD(sizeof(TSequenceSet)) +
@@ -75,7 +76,7 @@ trgeoseqset_geom(const TSequenceSet *ss)
 TSequenceSet *
 trgeoseqset_tposeseqset(const TSequenceSet *ss)
 {
-  assert(MEOS_FLAGS_GET_GEOM(ss->flags));
+  assert(ss->temptype == T_TRGEOMETRY);
   const TSequence **sequences = palloc(sizeof(TSequence *) * ss->count);
   for (int i = 0; i < ss->count; i++)
     sequences[i] = TSEQUENCESET_SEQ_N(ss, i);

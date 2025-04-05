@@ -97,25 +97,25 @@ spatialbase_as_text(Datum value, meosType type, int maxdd)
     case T_POSE:
       return pose_as_text(DatumGetPoseP(value), maxdd);
 #endif
-#if RGEO
-    case T_TRGEOMETRY:
-    {
-      /* Write the geometry */
-      const Pose *pose = DatumGetPoseP(value);
-      const GSERIALIZED *gs = pose_geom(pose);
-      LWGEOM *geom = lwgeom_from_gserialized(gs);
-      size_t len_geom;
-      char *wkt_geom = lwgeom_to_wkt(geom, WKT_ISO, maxdd, &len_geom);
-      lwgeom_free(geom);
-      /* Write the pose */
-      char *wkt_pose = pose_wkt_out(value, false, maxdd);
-      /* Combine both representation with the ';' delimiter */
-      size_t len = strlen(wkt_geom) + strlen(wkt_pose) + 1;
-      char *wkt = palloc(len);
-      snprintf(wkt, len, "%s;%s", wkt_pose, wkt_geom);
-      return wkt;
-    }
-#endif
+// #if RGEO
+    // case T_TRGEOMETRY:
+    // {
+      // /* Write the geometry */
+      // const Pose *pose = DatumGetPoseP(value);
+      // const GSERIALIZED *gs = pose_geom(pose);
+      // LWGEOM *geom = lwgeom_from_gserialized(gs);
+      // size_t len_geom;
+      // char *wkt_geom = lwgeom_to_wkt(geom, WKT_ISO, maxdd, &len_geom);
+      // lwgeom_free(geom);
+      // /* Write the pose */
+      // char *wkt_pose = pose_wkt_out(value, false, maxdd);
+      // /* Combine both representation with the ';' delimiter */
+      // size_t len = strlen(wkt_geom) + strlen(wkt_pose) + 1;
+      // char *wkt = palloc(len);
+      // snprintf(wkt, len, "%s;%s", wkt_pose, wkt_geom);
+      // return wkt;
+    // }
+// #endif
     default: /* Error! */
       meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
         "Unknown output function in WKT format for type: %s",
@@ -232,6 +232,35 @@ spatialset_as_ewkt(const Set *s, int maxdd)
 
 /*****************************************************************************/
 
+
+#if RGEO
+/**
+ * @ingroup meos_internal_temporal_inout
+ * @brief Return the Well-Known Text (WKT) representation of a temporal spatial
+ * instant
+ * @param[in] inst Temporal instant
+ * @param[in] maxdd Maximum number of decimal digits
+ */
+char *
+trgeoinst_as_text(const TInstant *inst, int maxdd)
+{
+  assert(inst->temptype == T_TRGEOMETRY);
+  /* Write the geometry */
+  const GSERIALIZED *gs = DatumGetGserializedP(trgeoinst_geom(inst));
+  LWGEOM *geom = lwgeom_from_gserialized(gs);
+  size_t len_geom;
+  char *wkt_geom = lwgeom_to_wkt(geom, WKT_ISO, maxdd, &len_geom);
+  lwgeom_free(geom);
+  /* Write the pose */
+  char *wkt_pose = pose_wkt_out(tinstant_value_p(inst), false, maxdd);
+  /* Combine both representation with the ';' delimiter */
+  size_t len = strlen(wkt_geom) + strlen(wkt_pose) + 1;
+  char *wkt = palloc(len);
+  snprintf(wkt, len, "%s;%s", wkt_pose, wkt_geom);
+  return wkt;
+}
+#endif /* RGEO */
+
 /**
  * @ingroup meos_internal_temporal_inout
  * @brief Return the Well-Known Text (WKT) representation of a temporal spatial
@@ -242,6 +271,10 @@ spatialset_as_ewkt(const Set *s, int maxdd)
 char *
 tspatialinst_as_text(const TInstant *inst, int maxdd)
 {
+#if RGEO
+  if (inst->temptype == T_TRGEOMETRY)
+    return trgeoinst_as_text(inst, maxdd);
+#endif /* RGEO */
   return tinstant_to_string(inst, maxdd, &spatialbase_as_text);
 }
 

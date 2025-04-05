@@ -63,7 +63,7 @@ ensure_has_geom(int16 flags)
   if (MEOS_FLAGS_GET_GEOM(flags))
     return true;
   meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-    "Cannot access geometry from rigid geometry");
+    "Cannot access geometry from temporal rigid geometry");
   return false;
 }
 

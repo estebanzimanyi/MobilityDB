@@ -58,9 +58,9 @@
 Datum
 trgeoseq_geom(const TSequence *seq)
 {
-  if (! MEOS_FLAGS_GET_GEOM(seq->flags))
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE, 
-      "Cannot access geometry from trgeometry sequence");
+  if (! ensure_has_geom(seq->flags))
+    return PointerGetDatum(NULL);
+
   return PointerGetDatum(
     /* start of data */
     ((char *) seq) + DOUBLE_PAD(sizeof(TSequence)) +
@@ -100,7 +100,7 @@ trgeoseq_set_pose(TSequence *seq)
 TSequence *
 trgeoseq_tposeseq(const TSequence *seq)
 {
-  assert(MEOS_FLAGS_GET_GEOM(seq->flags));
+  assert(seq->temptype == T_TRGEOMETRY);
   const TInstant **instants = palloc(sizeof(TInstant *) * seq->count);
   for (int i = 0; i < seq->count; i++)
     instants[i] = TSEQUENCE_INST_N(seq, i);

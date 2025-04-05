@@ -217,7 +217,7 @@ pose_parse(const char **str, bool end)
   int32_t srid;
   srid_parse(str, &srid);
 
-  /* Determine whether the pose has a gemetry */
+  /* Determine whether the pose has a geometry */
   int32_t srid_geo;
   GSERIALIZED *geo = NULL;
   if (strncasecmp(*str,"POSE",4) != 0)
@@ -443,7 +443,7 @@ pose_as_text(const Pose *pose, int maxdd)
  * @param[in] maxdd Maximum number of decimal digits
  * @csqlfn #Pose_as_ewkt()
  */
-char *
+inline char *
 pose_as_ewkt(const Pose *pose, int maxdd)
 {
   return spatialbase_as_ewkt(PointerGetDatum(pose), T_POSE, maxdd);
@@ -748,27 +748,6 @@ Datum
 datum_pose_point(Datum pose)
 {
   return GserializedPGetDatum(pose_point(DatumGetPoseP(pose)));
-}
-
-/*****************************************************************************/
-
-/**
- * @ingroup meos_pose_base_conversion
- * @brief Convert a pose into a reference geometry
- * @param[in] pose Pose
- */
-GSERIALIZED *
-pose_geom(const Pose *pose)
-{
-  /* Ensure validity of the arguments */
-#if MEOS
-  if (! ensure_not_null((void *) pose) || ! ensure_has_geom(int16 flags))
-    return NULL;
-#else
-  assert(pose); assert(MEOS_FLAGS_GET_GEOM(pose->flags));
-#endif /* MEOS */
-
-  return geo_copy(POSE_GEOM_PTR(pose));
 }
 
 /*****************************************************************************/
