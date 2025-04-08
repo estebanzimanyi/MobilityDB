@@ -79,7 +79,11 @@ extern void meos_initialize_npoint(const char *file_name);
   #define VALIDATE_NPOINTSET(set, ret) \
     do { \
           if (! ensure_not_null((void *) (set)) || \
+<<<<<<< HEAD
               ! ensure_set_isof_type((set), T_NPOINTSET) ) \
+=======
+            ensure_set_isof_type((set), T_NPOINTSET) ) \
+>>>>>>> 5b78c5423 (* Improve interpolation functions)
            return (ret); \
     } while (0)
 #else
@@ -100,7 +104,11 @@ extern void meos_initialize_npoint(const char *file_name);
   #define VALIDATE_TNPOINT(temp, ret) \
     do { \
           if (! ensure_not_null((void *) (temp)) || \
+<<<<<<< HEAD
               ! ensure_temporal_isof_type((Temporal *) (temp), T_TNPOINT) ) \
+=======
+            ensure_temporal_isof_type((Temporal *) (temp), T_TNPOINT) ) \
+>>>>>>> 5b78c5423 (* Improve interpolation functions)
            return (ret); \
     } while (0)
 #else

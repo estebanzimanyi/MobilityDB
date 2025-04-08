@@ -159,7 +159,6 @@ geocircle_make(double x, double y, double radius, int32_t srid)
   return result;
 }
 
-
 /**
  * @brief Return a trapezoid created from two circular buffers
  * @details Given two circular buffers, c1 and c2, defined by their centres 
