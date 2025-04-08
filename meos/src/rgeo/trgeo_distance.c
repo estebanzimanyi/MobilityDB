@@ -2101,7 +2101,7 @@ shortestline_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   /* Ensure the validity of the arguments */
 #if MEOS
-  if (! ensure_is_not_null((void *) temp) || ! ensure_is_not_null((void *) gs))
+  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs))
     return NULL;
 #else
   assert(temp); assert(gs);
@@ -2133,8 +2133,7 @@ shortestline_trgeo_tpoint(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure the validity of the arguments */
 #if MEOS
-  if (! ensure_is_not_null((void *) temp1) ||
-      ! ensure_is_not_null((void *) temp2) ||
+  if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2) ||
       ! ensure_temporal_isof_type(temp1, T_TRGEOMETRY) ||
       ! ensure_temporal_isof_type(temp2, T_TPOSE))
     return NULL;
@@ -2171,8 +2170,8 @@ shortestline_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure the validity of the arguments */
 #if MEOS
-  if (! ensure_is_not_null((void *) temp1) ||
-      ! ensure_is_not_null((void *) temp2) ||
+  if (! ensure_not_null((void *) temp1) ||
+      ! ensure_not_null((void *) temp2) ||
       ! ensure_temporal_isof_type(temp1, T_TRGEOMETRY) ||
       ! ensure_temporal_isof_type(temp2, T_TRGEOMETRY))
     return NULL;

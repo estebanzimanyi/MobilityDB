@@ -240,12 +240,20 @@ temporal_bbox_restrict_set(const Temporal *temp, const Set *s)
 Temporal *
 temporal_restrict_values(const Temporal *temp, const Set *s, bool atfunc)
 {
+  /* Ensure the validity of the arguments */
+#if MEOS
+  meosType basetype = temptype_basetype(temp->temptype);
+  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) s) ||
+      ! ensure_temporal_isof_basetype(temp->temptype, s->basetype))
+    return NULL;
+#else
   assert(temp); assert(s);
-  if (tspatial_type(temp->temptype))
-  {
-    assert(tspatial_srid(temp) == spatialset_srid(s));
-    assert(same_spatial_dimensionality(temp->flags, s->flags));
-  }
+  assert(temptype_basetype(temp->temptype) == s->basetype);
+#endif /* MEOS */
+  if (tspatial_type(temp->temptype) && 
+      (! ensure_same_srid(tspatial_srid(temp), spatialset_srid(s)) ||
+       ! ensure_same_spatial_dimensionality(temp->flags, s->flags)))
+    return NULL;
 
   /* Singleton set */
   if (s->count == 1)

@@ -432,8 +432,8 @@ NAD_tpoint_trgeo(PG_FUNCTION_ARGS)
 PG_FUNCTION_INFO_V1(NAD_trgeo_trgeo);
 /**
  * @ingroup mobilitydb_rgeo_dist
- * @brief Return the nearest approach distance between two
- * temporal rigid geometries
+ * @brief Return the nearest approach distance between two temporal rigid
+ * geometries
  * @sqlfn nearestApproachDistance()
  * @sqlop @p |=|
  */
@@ -460,7 +460,7 @@ PG_FUNCTION_INFO_V1(Shortestline_trgeo_geo);
 /**
  * @ingroup mobilitydb_rgeo_dist
  * @brief Return the line connecting the nearest approach point between a
- * temporal rigid geometry and a geometry/geography
+ * temporal rigid geometry and a geometry
  * @sqlfn shortestLine()
  */
 PGDLLEXPORT Datum

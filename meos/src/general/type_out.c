@@ -288,7 +288,7 @@ static bool
 temporal_base_as_mfjson_sb(stringbuffer_t *sb, Datum value, meosType temptype,
   int precision)
 {
-  assert(alphanum_basetype(temptype));
+  assert(alphanum_temptype(temptype));
   switch (temptype)
   {
     case T_TBOOL:

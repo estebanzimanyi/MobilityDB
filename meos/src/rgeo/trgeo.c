@@ -48,6 +48,7 @@
 #include "general/temporal.h"
 #include "general/type_util.h"
 #include "geo/tgeo_spatialfuncs.h"
+#include "geo/tspatial_parser.h"
 #include "pose/pose.h"
 #include "rgeo/trgeo_all.h"
 #include "rgeo/trgeo_utils.h"
@@ -57,7 +58,7 @@
  *****************************************************************************/
 
 /**
- * @brief Ensure that a trgeometry has a reference geometry
+ * @brief Ensure that a temporal rigid geometry has a reference geometry
  */
 bool
 ensure_has_geom(int16 flags)
@@ -80,12 +81,9 @@ ensure_has_geom(int16 flags)
  * representation
  * @param[in] str String
  */
-Temporal *
+inline Temporal *
 trgeo_in(const char *str)
 {
-  /* Ensure the validity of the arguments */
-  if (! ensure_not_null((void *) str))
-    return NULL;
   return tspatial_parse(&str, T_TRGEOMETRY);
 }
 
@@ -131,6 +129,7 @@ trgeo_out(const Temporal *temp)
 }
 
 /**
+ * @ingroup meos_internal_rgeo_inout
  * @brief Return the (Extended) Well-Known Text (WKT or EWKT) representation of
  * a temporal rigid geometry
  * @param[in] temp Temporal rigid geometry
@@ -403,6 +402,7 @@ geo_tpose_to_trgeo(const GSERIALIZED *gs, const Temporal *temp)
  *****************************************************************************/
 
 /**
+ * @ingroup meos_internal_rgeo_transf
  * @brief Return a geometry obtained by appling a pose to a geometry
  * @param[in] pose Pose
  * @param[inout] gs Geometry
@@ -962,14 +962,14 @@ trgeo_set_interp(const Temporal *temp, interpType interp)
 
 /**
  * @ingroup meos_internal_rgeo_restrict
- * @brief Restrict a temporal rigid geometry to (the complement of) a base value
+ * @brief Restrict a temporal rigid geometry to (the complement of) a geometry
  * @param[in] temp Temporal rigid geometry
  * @param[in] value Value
  * @param[in] atfunc True if the restriction is at, false for minus
  * @note This function does a bounding box test for the temporal types
  * different from instant. The singleton tests are done in the functions for
  * the specific temporal types.
- * @csqlfn #Temporal_at_value(), #Temporal_minus_value()
+ * @csqlfn #Temporal_restrict_value()
  */
 Temporal *
 trgeo_restrict_value(const Temporal *temp, Datum value, bool atfunc)
@@ -992,13 +992,41 @@ trgeo_restrict_value(const Temporal *temp, Datum value, bool atfunc)
 }
 
 /**
- * @ingroup meos_internal_rgeo_restrict
- * @brief Restrict a temporal rigid geometry to (the complement of) an array of
- * base values
+ * @ingroup meos_rgeo_restrict
+ * @brief Restrict a temporal rigid geometry to a geometry
  * @param[in] temp Temporal rigid geometry
- * @param[in] s Set
+ * @param[in] value Value
+ * @csqlfn #Temporal_at_value()
+ */
+inline Temporal *
+trgeo_at_value(const Temporal *temp, Datum value)
+{
+  return trgeo_restrict_value(temp, value, REST_AT);
+}
+
+/**
+ * @ingroup meos_rgeo_restrict
+ * @brief Restrict a temporal rigid geometry to the complement of a geometry
+ * @param[in] temp Temporal rigid geometry
+ * @param[in] value Value
+ * @csqlfn #Temporal_minus_value()
+ */
+inline Temporal *
+trgeo_minus_value(const Temporal *temp, Datum value)
+{
+  return trgeo_restrict_value(temp, value, REST_MINUS);
+}
+
+/*****************************************************************************/
+
+/**
+ * @ingroup meos_internal_rgeo_restrict
+ * @brief Restrict a temporal rigid geometry to (the complement of) a set of
+ * geometries
+ * @param[in] temp Temporal rigid geometry
+ * @param[in] s Set of values
  * @param[in] atfunc True if the restriction is at, false for minus
- * @csqlfn #Temporal_at_values(), #Temporal_minus_values()
+ * @csqlfn #Temporal_restrict_values()
  */
 Temporal *
 trgeo_restrict_values(const Temporal *temp, const Set *s, bool atfunc)
@@ -1019,6 +1047,35 @@ trgeo_restrict_values(const Temporal *temp, const Set *s, bool atfunc)
   pfree(res);
   return result;
 }
+
+/**
+ * @ingroup meos_rgeo_restrict
+ * @brief Restrict a temporal rigid geometry to a set of geometries
+ * @param[in] temp Temporal rigid geometry
+ * @param[in] s Set of values
+ * @csqlfn #Temporal_at_values()
+ */
+inline Temporal *
+trgeo_at_values(const Temporal *temp, const Set *s)
+{
+  return trgeo_restrict_values(temp, s, REST_AT);
+}
+
+/**
+ * @ingroup meos_rgeo_restrict
+ * @brief Restrict a temporal rigid geometry to the complement of a set of
+ * geometries
+ * @param[in] temp Temporal rigid geometry
+ * @csqlfn #Temporal_minus_values()
+ * @param[in] s Set of values
+ */
+inline Temporal *
+trgeo_minus_values(const Temporal *temp, const Set *s)
+{
+  return trgeo_restrict_values(temp, s, REST_MINUS);
+}
+
+/*****************************************************************************/
 
 /**
  * @ingroup meos_internal_rgeo_restrict
@@ -1164,7 +1221,6 @@ trgeo_restrict_tstzspan(const Temporal *temp, const Span *s, bool atfunc)
   pfree(res);
   return result;
 }
-
 
 /**
  * @ingroup meos_rgeo_restrict

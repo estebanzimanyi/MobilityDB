@@ -29,7 +29,7 @@
 
 /**
  * @file
- * @brief Spatial functons for temporal circular buffers
+ * @brief Spatial functions for temporal circular buffers
  */
 
 /* PostgreSQL */
@@ -183,7 +183,7 @@ geocircle_make(double x, double y, double radius, int32_t srid)
 
 /*****************************************************************************
  * Interpolation functions defining functionality required by tsequence.c
- * that must be implemented by each temporal type
+ * that must be implemented by each base type
  *****************************************************************************/
 
 /**
@@ -201,7 +201,7 @@ cbuffersegm_interpolate(Datum start, Datum end, long double ratio)
   Datum d1 = PointerGetDatum(&cbuf1->point);
   Datum d2 = PointerGetDatum(&cbuf2->point);
   GSERIALIZED *point = 
-    DatumGetGserializedP(pointsegm_interpolate_point(d1, d2, ratio));
+    DatumGetGserializedP(pointsegm_interpolate(d1, d2, ratio));
   double radius = cbuf1->radius + 
     (double) ((long double)(cbuf2->radius - cbuf1->radius) * ratio);
   Cbuffer *result = cbuffer_make(point, radius);

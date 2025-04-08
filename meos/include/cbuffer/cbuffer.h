@@ -70,8 +70,15 @@ struct Cbuffer
 
 /* Collinear functions */
 
-extern bool cbuffer_collinear(Cbuffer *cbuf1, Cbuffer *cbuf2, Cbuffer *cbuf3,
-  double ratio);
+extern bool cbuffer_collinear(const Cbuffer *cbuf1, const Cbuffer *cbuf2,
+  const Cbuffer *cbuf3, double ratio);
+
+/* Interpolation functions */
+
+extern long double cbuffersegm_locate(const Cbuffer *start, const Cbuffer *end,
+  const Cbuffer *value);
+extern Cbuffer *cbuffersegm_interpolate(const Cbuffer *start,
+  const Cbuffer *end, long double ratio);
 
 extern Cbuffer *cbuffer_parse(const char **str, bool end);
 

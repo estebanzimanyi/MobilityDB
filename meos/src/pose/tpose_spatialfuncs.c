@@ -114,7 +114,7 @@ tposesegm_intersection_value(const TInstant *inst1, const TInstant *inst2,
   Datum geom = datum_pose_point(value);
   double dist;
   /* Compute the value taking into account position only */
-  double fraction = (double) pointsegm_locate_point(geom_start, geom_end, geom,
+  double fraction = (double) pointsegm_locate(geom_start, geom_end, geom,
     &dist);
   pfree(DatumGetPointer(geom_start));
   pfree(DatumGetPointer(geom_end));

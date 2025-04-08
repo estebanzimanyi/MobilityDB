@@ -389,7 +389,7 @@ interpolate_point4d_spheroid(const POINT4D *p1, const POINT4D *p2,
  * total length of the segment where the point must be located
  */
 Datum
-pointsegm_interpolate_point(Datum start, Datum end, long double ratio)
+pointsegm_interpolate(Datum start, Datum end, long double ratio)
 {
   GSERIALIZED *gs = DatumGetGserializedP(start);
   int32_t srid = gserialized_get_srid(gs);
@@ -421,24 +421,26 @@ pointsegm_interpolate_point(Datum start, Datum end, long double ratio)
  * @brief Return a float between 0 and 1 representing the location of the
  * closest point on the geometry segment to the given point, as a fraction of
  * total segment length
- *@param[in] start,end Points defining the segment
- *@param[in] point Reference point
- *@param[out] dist Distance
+ * @param[in] start,end Points defining the segment
+ * @param[in] point Reference point
+ * @param[out] dist Distance
  */
 long double
-pointsegm_locate_point(Datum start, Datum end, Datum point, double *dist)
+pointsegm_locate(Datum start, Datum end, Datum point, double *dist)
 {
   GSERIALIZED *gs = DatumGetGserializedP(start);
   long double result;
+  double dist1;
   if (FLAGS_GET_GEODETIC(gs->gflags))
   {
     POINT4D p1, p2, p, closest;
     datum_point4d(start, &p1);
     datum_point4d(end, &p2);
     datum_point4d(point, &p);
-    double d;
     /* Get the closest point and the distance */
-    result = closest_point_on_segment_sphere(&p, &p1, &p2, &closest, &d);
+    result = closest_point_on_segment_sphere(&p, &p1, &p2, &closest, &dist1);
+    if (fabs(dist1) >= MEOS_EPSILON)
+      return -1.0;
     /* For robustness, force 0/1 when closest point == start/endpoint */
     if (p4d_same(&p1, &closest))
       result = 0.0;
@@ -447,11 +449,11 @@ pointsegm_locate_point(Datum start, Datum end, Datum point, double *dist)
     /* Return the distance between the closest point and the point if requested */
     if (dist)
     {
-      d = WGS84_RADIUS * d;
+      dist1 = WGS84_RADIUS * dist1;
       /* Add to the distance the vertical displacement if we're in 3D */
       if (FLAGS_GET_Z(gs->gflags))
-        d = sqrt( (closest.z - p.z) * (closest.z - p.z) + d*d );
-      *dist = d;
+        dist1 = sqrt( (closest.z - p.z) * (closest.z - p.z) + dist1 * dist1 );
+      *dist = dist1;
     }
   }
   else
@@ -463,6 +465,9 @@ pointsegm_locate_point(Datum start, Datum end, Datum point, double *dist)
       const POINT3DZ *p = DATUM_POINT3DZ_P(point);
       POINT3DZ proj;
       result = closest_point3dz_on_segment_ratio(p, p1, p2, &proj);
+      dist1 = distance3d_pt_pt((POINT3D *) p, (POINT3D *) &proj);
+      if (fabs(dist1) >= MEOS_EPSILON)
+        return -1.0;
       /* For robustness, force 0/1 when closest point == start/endpoint */
       if (p3d_same((POINT3D *) p1, (POINT3D *) &proj))
         result = 0.0;
@@ -478,12 +483,15 @@ pointsegm_locate_point(Datum start, Datum end, Datum point, double *dist)
       const POINT2D *p = DATUM_POINT2D_P(point);
       POINT2D proj;
       result = closest_point2d_on_segment_ratio(p, p1, p2, &proj);
+      dist1 = distance2d_pt_pt((POINT2D *) p, &proj);
+      if (fabs(dist1) >= MEOS_EPSILON)
+        return -1.0;
       if (p2d_same(p1, &proj))
         result = 0.0;
       else if (p2d_same(p2, &proj))
         result = 1.0;
       if (dist)
-        *dist = distance2d_pt_pt((POINT2D *) p, &proj);
+        *dist = dist1;
     }
   }
   return result;
@@ -513,7 +521,7 @@ tpointsegm_intersection_value(const TInstant *inst1, const TInstant *inst2,
   Datum start = tinstant_value_p(inst1);
   Datum end = tinstant_value_p(inst2);
   double dist;
-  double fraction = (double) pointsegm_locate_point(start, end, value, &dist);
+  double fraction = (double) pointsegm_locate(start, end, value, &dist);
   if (fabs(dist) >= MEOS_EPSILON)
     return false;
   if (t)
@@ -769,7 +777,7 @@ lwpointarr_sort(LWPOINT **points, int count)
 LWGEOM **
 lwpointarr_remove_duplicates(LWGEOM **points, int count, int *newcount)
 {
-  assert (count > 0);
+  assert(count > 0);
   LWGEOM **newpoints = palloc(sizeof(LWGEOM *) * count);
   memcpy(newpoints, points, sizeof(LWGEOM *) * count);
   lwpointarr_sort((LWPOINT **) newpoints, count);
@@ -3214,7 +3222,7 @@ tpoint_geo_min_bearing_at_timestamptz(const TInstant *start,
     edge_intersection(&e, &e1, &inter);
     proj = PointerGetDatum(geopoint_make(rad2deg(inter.lon),
       rad2deg(inter.lat), 0, false, true, tspatialinst_srid(start)));
-    fraction = pointsegm_locate_point(dstart, dend, proj, NULL);
+    fraction = pointsegm_locate(dstart, dend, proj, NULL);
   }
   else
   {

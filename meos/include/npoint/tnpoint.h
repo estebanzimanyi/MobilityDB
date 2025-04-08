@@ -82,14 +82,6 @@ struct Nsegment
  * Npoint functions
  *****************************************************************************/
 
-/* General functions */
-
-extern int32_t get_srid_ways(void);
-extern Npoint *npoint_parse(const char **str, bool end);
-extern GSERIALIZED *npointarr_geom(Npoint **points, int count);
-extern GSERIALIZED *nsegmentarr_geom(Nsegment **segments, int count);
-extern Nsegment **nsegmentarr_normalize(Nsegment **segments, int *count);
-
 /* Collinear functions */
 
 extern bool npoint_collinear(const Npoint *np1, const Npoint *np2, 
@@ -97,9 +89,18 @@ extern bool npoint_collinear(const Npoint *np1, const Npoint *np2,
 
 /* Interpolation functions */
 
-extern Datum npointsegm_interpolate(Datum start, Datum end, long double ratio);
-extern bool tnpointsegm_intersection_value(const TInstant *inst1,
-  const TInstant *inst2, Datum value, TimestampTz *t);
+extern Npoint *npointsegm_interpolate(const Npoint *start, const Npoint *end,
+  long double ratio);
+extern long double npointsegm_locate(const Npoint *start, const Npoint *end,
+  const Npoint *value);
+
+/* General functions */
+
+extern int32_t get_srid_ways(void);
+extern Npoint *npoint_parse(const char **str, bool end);
+extern GSERIALIZED *npointarr_geom(Npoint **points, int count);
+extern GSERIALIZED *nsegmentarr_geom(Nsegment **segments, int count);
+extern Nsegment **nsegmentarr_normalize(Nsegment **segments, int *count);
 
 /* Input/output functions */
 

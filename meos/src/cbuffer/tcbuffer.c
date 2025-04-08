@@ -115,30 +115,10 @@ tcbufferseqset_in(const char *str)
  * representation
  * @param[in] str String
  */
-Temporal *
+inline Temporal *
 tcbuffer_in(const char *str)
 {
-  /* Ensure the validity of the arguments */
-  if (! ensure_not_null((void *) str))
-    return NULL;
   return tspatial_parse(&str, T_TCBUFFER);
-}
-
-/**
- * @ingroup meos_cbuffer_inout
- * @brief Return the Well-Known Text (WKT) representation of a temporal
- * circular buffer
- * @param[in] temp Temporal circular buffer
- * @param[in] maxdd Maximum number of decimal digits
- */
-char *
-tcbuffer_out(const Temporal *temp, int maxdd)
-{
-  /* Ensure the validity of the arguments */
-  if (! ensure_not_null((void *) temp) || 
-      ! ensure_temporal_isof_type(temp, T_TCBUFFER))
-    return NULL;
-  return temporal_out(temp, maxdd);
 }
 #endif /* MEOS */
 

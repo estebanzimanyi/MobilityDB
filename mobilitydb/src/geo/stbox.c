@@ -1135,8 +1135,7 @@ PGDLLEXPORT Datum Stbox_transform_pipeline(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Stbox_transform_pipeline);
 /**
  * @ingroup mobilitydb_geo_box_srid
- * @brief Return a spatiotemporal box transformed to an SRID using a
- * transformation pipeline
+ * @brief Return a spatiotemporal box transformed to an SRID using a pipeline
  * @sqlfn transformPipeline()
  */
 Datum

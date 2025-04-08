@@ -86,6 +86,7 @@ extern TSequence **trgeo_segments(const Temporal *temp, int *count);
 extern TSequence *trgeo_sequence_n(const Temporal *temp, int i);
 extern TSequence **trgeo_sequences(const Temporal *temp, int *count);
 extern bool trgeo_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict, Datum *result);
+extern GSERIALIZED *trgeo_traversed_area(const Temporal *temp);
 
 /*****************************************************************************
  * Transformation functions
@@ -122,17 +123,18 @@ extern Temporal *trgeo_restrict_tstzspanset(const Temporal *temp, const SpanSet 
  *****************************************************************************/
 
 extern Temporal *distance_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs);
+extern Temporal *distance_trgeo_tpoint(const Temporal *temp1, const Temporal *temp2);
 extern Temporal *distance_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2);
 extern double nad_stbox_trgeo(const STBox *box, const Temporal *temp);
 extern double nad_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs);
-extern double nad_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs);
 extern double nad_trgeo_stbox(const Temporal *temp, const STBox *box);
+extern double nad_trgeo_tpoint(const Temporal *temp1, const Temporal *temp2);
 extern double nad_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2);
 extern TInstant *nai_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs);
-extern TInstant *nai_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs);
+extern TInstant *nai_trgeo_tpoint(const Temporal *temp1, const Temporal *temp2);
 extern TInstant *nai_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2);
 extern GSERIALIZED *shortestline_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs);
-extern GSERIALIZED *shortestline_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs);
+extern GSERIALIZED *shortestline_trgeo_tpoint(const Temporal *temp1, const Temporal *temp2);
 extern GSERIALIZED *shortestline_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2);
 
 /*****************************************************************************

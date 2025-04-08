@@ -318,9 +318,7 @@ parse_mfjson_coord(json_object *poObj, int srid, bool geodetic)
 }
 
 /**
- * @brief Return an array of points from its MF-JSON coordinates
- * @details In this case the coordinate array is an array of arrays of
- * cordinates such as `"values":[1.5,2.5]`.
+ * @brief Return an array of values from its MF-JSON representation
  */
 static Datum *
 parse_mfjson_values(json_object *mfjson, meosType temptype, int *count)
@@ -438,6 +436,10 @@ parse_mfjson_points(json_object *mfjson, int srid, bool geodetic, int *count)
   return values;
 }
 
+/**
+ * @brief Return an array of geometries/geographies from their MF-JSON
+ * representation
+ */
 static Datum *
 parse_mfjson_geos(json_object *mfjson, int srid, bool geodetic, int *count)
 {
@@ -493,6 +495,10 @@ parse_mfjson_geos(json_object *mfjson, int srid, bool geodetic, int *count)
 }
 
 #if RGEO
+/**
+ * @brief Return a reference geometry of a temporal rigid geometry from its
+ * MF-JSON representation
+ */
 static GSERIALIZED *
 parse_mfjson_ref_geo(json_object *mfjson, int srid, bool geodetic)
 {
@@ -527,7 +533,9 @@ parse_mfjson_ref_geo(json_object *mfjson, int srid, bool geodetic)
 /*****************************************************************************/
 
 #if POSE || RGEO
-Pose *
+/**
+ * @brief Return a pose from its GeoJSON representation
+ */Pose *
 parse_mfjson_pose(json_object *mfjson, int srid)
 {
   assert(mfjson);
@@ -637,7 +645,7 @@ parse_mfjson_pose(json_object *mfjson, int srid)
 }
 
 /**
- * @brief Return an array of poses from its MF-JSON pose values
+ * @brief Return an array of poses from its GeoJSON pose values
  */
 static Datum *
 parse_mfjson_poses(json_object *mfjson, int srid, int *count)
@@ -680,7 +688,7 @@ parse_mfjson_poses(json_object *mfjson, int srid, int *count)
 /*****************************************************************************/
 
 /**
- * @brief Return an array of timestamps from its MF-JSON datetimes values
+ * @brief Return an array of timestamps from their MF-JSON datetimes values
  */
 static TimestampTz *
 parse_mfjson_datetimes(json_object *mfjson, int *count)

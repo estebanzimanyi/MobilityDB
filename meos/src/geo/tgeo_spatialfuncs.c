@@ -117,12 +117,16 @@ geopoint_make(double x, double y, double z, bool hasz, bool geodetic,
 /**
  * @brief Return true if the points are equal
  * @note This function is called in the iterations over sequences where we
- * are sure that their SRID, Z, and GEODETIC are equal
+ * are sure that their SRID and GEODETIC are equal. The function accepts
+ * mixed 2D/3D arguments
  */
 bool
 geopoint_eq(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 {
-  if (FLAGS_GET_Z(gs1->gflags))
+  // TODO: Currently, activating these lines break tests
+  // assert(gserialized_get_srid(gs1) == gserialized_get_srid(gs2));
+  // assert(FLAGS_GET_GEODETIC(gs1->gflags) == FLAGS_GET_GEODETIC(gs2->gflags));
+  if (FLAGS_GET_Z(gs1->gflags) && FLAGS_GET_Z(gs2->gflags) )
   {
     const POINT3DZ *point1 = GSERIALIZED_POINT3DZ_P(gs1);
     const POINT3DZ *point2 = GSERIALIZED_POINT3DZ_P(gs2);
@@ -134,31 +138,6 @@ geopoint_eq(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
     const POINT2D *point1 = GSERIALIZED_POINT2D_P(gs1);
     const POINT2D *point2 = GSERIALIZED_POINT2D_P(gs2);
     return float8_eq(point1->x, point2->x) && float8_eq(point1->y, point2->y);
-  }
-}
-
-/**
- * @brief Return true if the points are equal taking into account floating
- * point imprecision
- * @note This function is called in the iterations over sequences where we
- * are sure that their SRID, Z, and GEODETIC are equal
- */
-bool
-geopoint_same(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
-{
-  if (FLAGS_GET_Z(gs1->gflags))
-  {
-    const POINT3DZ *point1 = GSERIALIZED_POINT3DZ_P(gs1);
-    const POINT3DZ *point2 = GSERIALIZED_POINT3DZ_P(gs2);
-    return MEOS_FP_EQ(point1->x, point2->x) &&
-      MEOS_FP_EQ(point1->y, point2->y) && MEOS_FP_EQ(point1->z, point2->z);
-  }
-  else
-  {
-    const POINT2D *point1 = GSERIALIZED_POINT2D_P(gs1);
-    const POINT2D *point2 = GSERIALIZED_POINT2D_P(gs2);
-    return MEOS_FP_EQ(point1->x, point2->x) &&
-      MEOS_FP_EQ(point1->y, point2->y);
   }
 }
 
@@ -176,6 +155,35 @@ datum_point_eq(Datum point1, Datum point2)
     return false;
   return geopoint_eq(gs1, gs2);
 }
+
+/**
+ * @brief Return true if the points are equal taking into account floating
+ * point imprecision
+ * @note This function is called in the iterations over sequences where we
+ * are sure that their SRID, Z, and GEODETIC are equal
+ */
+bool
+geopoint_same(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
+{
+  assert(gserialized_get_srid(gs1) == gserialized_get_srid(gs2));
+  assert(FLAGS_GET_Z(gs1->gflags) == FLAGS_GET_Z(gs2->gflags));
+  assert(FLAGS_GET_GEODETIC(gs1->gflags) == FLAGS_GET_GEODETIC(gs2->gflags));
+  if (FLAGS_GET_Z(gs1->gflags))
+  {
+    const POINT3DZ *point1 = GSERIALIZED_POINT3DZ_P(gs1);
+    const POINT3DZ *point2 = GSERIALIZED_POINT3DZ_P(gs2);
+    return MEOS_FP_EQ(point1->x, point2->x) &&
+      MEOS_FP_EQ(point1->y, point2->y) && MEOS_FP_EQ(point1->z, point2->z);
+  }
+  else
+  {
+    const POINT2D *point1 = GSERIALIZED_POINT2D_P(gs1);
+    const POINT2D *point2 = GSERIALIZED_POINT2D_P(gs2);
+    return MEOS_FP_EQ(point1->x, point2->x) &&
+      MEOS_FP_EQ(point1->y, point2->y);
+  }
+}
+
 
 /**
  * @brief Return true if the points are equal taking into account floating 

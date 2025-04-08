@@ -224,7 +224,7 @@ tpointsegm_timestamp_at_value1_iter(const TInstant *inst1,
   else
   {
     double dist;
-    double fraction = (double) pointsegm_locate_point(value1, value2, value, &dist);
+    double fraction = (double) pointsegm_locate(value1, value2, value, &dist);
     if (fabs(dist) >= MEOS_EPSILON)
       result = false;
     else

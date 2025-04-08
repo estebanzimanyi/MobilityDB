@@ -34,6 +34,8 @@
 
 #include "geo/tgeo_distance.h"
 
+/* C */
+#include <assert.h>
 /* PostGIS */
 #include <lwgeodetic_tree.h>
 #include <measures.h>
@@ -49,7 +51,9 @@
 #include "geo/tgeo_spatialfuncs.h"
 
 /* Functions not exported by PostGIS */
-extern double circ_tree_distance_tree_internal(const CIRC_NODE* n1, const CIRC_NODE* n2, double threshold, double* min_dist, double* max_dist, GEOGRAPHIC_POINT* closest1, GEOGRAPHIC_POINT* closest2);
+extern double circ_tree_distance_tree_internal(const CIRC_NODE* n1,
+  const CIRC_NODE* n2, double threshold, double* min_dist, double* max_dist,
+  GEOGRAPHIC_POINT* closest1, GEOGRAPHIC_POINT* closest2);
 
 /*****************************************************************************
  * Compute the distance between two temporal geo instants
@@ -179,7 +183,7 @@ tpoint_geo_min_dist_at_timestamptz(const TInstant *start, const TInstant *end,
   Datum value1 = tinstant_value_p(start);
   Datum value2 = tinstant_value_p(end);
   double dist;
-  double fraction = pointsegm_locate_point(value1, value2, point, &dist);
+  double fraction = pointsegm_locate(value1, value2, point, &dist);
   if (fraction <= MEOS_EPSILON || fraction >= (1.0 - MEOS_EPSILON))
     return false;
   *value = Float8GetDatum(dist);
@@ -386,9 +390,11 @@ tpoint_min_dist_at_timestamptz(const TInstant *start1, const TInstant *end1,
   const TInstant *start2, const TInstant *end2, Datum *value, TimestampTz *t)
 {
   if (MEOS_FLAGS_GET_GEODETIC(start1->flags))
-    return tgeogpoint_min_dist_at_timestamptz(start1, end1, start2, end2, value, t);
+    return tgeogpoint_min_dist_at_timestamptz(start1, end1, start2, end2,
+      value, t);
   else
-    return tgeompoint_min_dist_at_timestamptz(start1, end1, start2, end2, value, t);
+    return tgeompoint_min_dist_at_timestamptz(start1, end1, start2, end2,
+      value, t);
 }
 
 /*****************************************************************************/

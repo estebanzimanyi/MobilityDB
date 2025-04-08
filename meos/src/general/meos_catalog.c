@@ -686,6 +686,18 @@ alphanum_basetype(meosType type)
     return true;
   return false;
 }
+
+/**
+ * @brief Return true if the type is an alphanumeric base type
+ * @note This function is only used in the asserts
+ */
+bool
+alphanum_temptype(meosType type)
+{
+  if (type == T_TBOOL || type == T_TINT || type == T_TFLOAT || type == T_TTEXT)
+    return true;
+  return false;
+}
 #endif
 
 /**

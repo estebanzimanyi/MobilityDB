@@ -117,29 +117,10 @@ tposeseqset_in(const char *str)
  * @brief Return a temporal pose from its Well-Known Text (WKT) representation
  * @param[in] str String
  */
-Temporal *
+inline Temporal *
 tpose_in(const char *str)
 {
-  /* Ensure the validity of the arguments */
-  if (! ensure_not_null((void *) str))
-    return NULL;
   return tspatial_parse(&str, T_TPOSE);
-}
-
-/**
- * @ingroup meos_pose_inout
- * @brief Return the Well-Known Text (WKT) representation of a temporal pose
- * @param[in] temp Temporal pose
- * @param[in] maxdd Maximum number of decimal digits
- */
-char *
-tpose_out(const Temporal *temp, int maxdd)
-{
-  /* Ensure the validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_not_negative(maxdd) ||
-      ! ensure_temporal_isof_type(temp, T_TPOSE))
-    return NULL;
-  return temporal_out(temp, maxdd);
 }
 
 /**

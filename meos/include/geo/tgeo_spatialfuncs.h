@@ -154,9 +154,9 @@ extern GSERIALIZED *geopoint_make(double x, double y, double z, bool hasz,
   bool geodetic, int32 srid);
 extern GSERIALIZED *geocircle_make(double x, double y, double radius,
   int32_t srid);
-extern Datum pointsegm_interpolate_point(Datum start, Datum end,
+extern Datum pointsegm_interpolate(Datum start, Datum end,
   long double ratio);
-extern long double pointsegm_locate_point(Datum start, Datum end, Datum point,
+extern long double pointsegm_locate(Datum start, Datum end, Datum point,
   double *dist);
 
 /* Intersection functions */

@@ -76,7 +76,8 @@
  * of the timestamps associated to `cbuf1` and `cbuf3`
  */
 bool
-cbuffer_collinear(Cbuffer *cbuf1, Cbuffer *cbuf2, Cbuffer *cbuf3, double ratio)
+cbuffer_collinear(const Cbuffer *cbuf1, const Cbuffer *cbuf2,
+  const Cbuffer *cbuf3, double ratio)
 {
   Datum value1 = PointerGetDatum(&cbuf1->point);
   Datum value2 = PointerGetDatum(&cbuf2->point);
@@ -84,6 +85,77 @@ cbuffer_collinear(Cbuffer *cbuf1, Cbuffer *cbuf2, Cbuffer *cbuf3, double ratio)
   if (! geopoint_collinear(value1, value2, value3, ratio, false, false))
     return false;
   return float_collinear(cbuf1->radius, cbuf2->radius, cbuf3->radius, ratio);
+}
+
+/*****************************************************************************
+ * Interpolation functions
+ *****************************************************************************/
+
+/**
+ * @brief Return a float between 0 and 1 representing the location of the
+ * closest location on the circular buffer segment to the given circular
+ * buffer, as a fraction of the segment length
+ *@param[in] start,end Circular buffers defining the segment
+ *@param[in] value Circular buffer to locate
+ *@param[out] dist Distance
+ */
+long double
+cbuffersegm_locate(const Cbuffer *start, const Cbuffer *end,
+  const Cbuffer *value)
+{
+  const GSERIALIZED *gs1 = cbuffer_point_p(start);
+  const GSERIALIZED *gs2 = cbuffer_point_p(end);
+  const GSERIALIZED *gs = cbuffer_point_p(value);
+  long double result1 = -1.0;
+  long double result2 = -1.0;
+  if (! geopoint_eq(gs1, gs2))
+  {
+    result1 = pointsegm_locate(PointerGetDatum(gs1), PointerGetDatum(gs2),
+      PointerGetDatum(gs), NULL);
+    if (result1 < 0.0)
+      return -1.0;
+  }
+  else
+  {
+    /* If constant segment and the point of the value is different */
+    if (! geopoint_eq(gs1, gs))
+      return -1.0;
+  }
+  if (start->radius != end->radius)
+  {
+    result2 = floatsegm_locate(start->radius, end->radius, value->radius);
+    if (result2 < 0.0)
+      return -1.0;
+  }
+  long double result;
+  if (result1 >= 0.0 && result2 >= 0.0)
+    result =  fabsl(result1 - result2) <= MEOS_EPSILON ? result1 : -1.0;
+  else if (result1 < 0.0 && result2 >= 0)
+    result = result2;
+  else if(result1 >= 0 && result2 <= 0)
+    result = result1;
+  else /* The three values are equal */
+    result = -1.0;
+  return result;
+}
+
+/**
+ * @brief Return a circular buffer interpolated from a circular buffer segment
+ * with respect to a fraction of its total length
+ * @param[in] start,end Circular buffers defining the segment
+ * @param[in] ratio Float between 0 and 1 representing the fraction of the
+ * total length of the segment where the interpolated buffer must be located
+ */
+Cbuffer *
+cbuffersegm_interpolate(const Cbuffer *start, const Cbuffer *end,
+  long double ratio)
+{
+  assert(ratio >= 0.0 && ratio <= 1.0);
+  Datum value1 = PointerGetDatum(&start->point);
+  Datum value2 = PointerGetDatum(&end->point);
+  Datum value = pointsegm_interpolate(value1, value2, ratio);
+  double radius = pointsegm_interpolate(start->radius, end->radius, ratio);
+  return cbuffer_make(DatumGetGserializedP(value), radius);
 }
 
 /*****************************************************************************

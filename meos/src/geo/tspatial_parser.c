@@ -553,6 +553,10 @@ tspatialseqset_parse(const char **str, meosType temptype, interpType interp,
 Temporal *
 tspatial_parse(const char **str, meosType temptype)
 {
+  /* Ensure the validity of the arguments */
+  if (! ensure_not_null((void *) str))
+    return NULL;
+
   const char *bak = *str;
   p_whitespace(str);
 

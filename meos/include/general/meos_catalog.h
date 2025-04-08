@@ -232,9 +232,9 @@ extern meosType basetype_settype(meosType type);
 /* Catalog functions */
 
 extern bool meos_basetype(meosType type);
-extern bool alpha_basetype(meosType type);
 extern bool tnumber_basetype(meosType type);
 extern bool alphanum_basetype(meosType type);
+extern bool alphanum_temptype(meosType type);
 extern bool geo_basetype(meosType type);
 extern bool spatial_basetype(meosType type);
 
