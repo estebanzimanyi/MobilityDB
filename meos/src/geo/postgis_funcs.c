@@ -84,11 +84,16 @@ extern int spheroid_init_from_srid(int32_t srid, SPHEROID *s);
  * PostGIS 3
  */
 GSERIALIZED *
-geo_copy(const GSERIALIZED *g)
+geo_copy(const GSERIALIZED *gs)
 {
-  assert(g);
-  GSERIALIZED *result = palloc(VARSIZE(g));
-  memcpy(result, g, VARSIZE(g));
+#if MEOS
+  if (! ensure_not_null((void *) gs))
+    return NULL;
+#else
+  assert(gs);
+#endif /* MEOS */
+  GSERIALIZED *result = palloc(VARSIZE(gs));
+  memcpy(result, gs, VARSIZE(gs));
   return result;
 }
 
@@ -105,6 +110,7 @@ geo_copy(const GSERIALIZED *g)
 inline int32_t
 geo_srid(const GSERIALIZED *gs)
 {
+  assert(gs);
   return gserialized_get_srid(gs);
 }
 
@@ -117,6 +123,7 @@ geo_srid(const GSERIALIZED *gs)
 GSERIALIZED *
 geo_set_srid(const GSERIALIZED *gs, int32_t srid)
 {
+  assert(gs);
   GSERIALIZED *result = geo_copy(gs);
   gserialized_set_srid(result, srid);
   return result;
@@ -130,6 +137,7 @@ geo_set_srid(const GSERIALIZED *gs, int32_t srid)
 inline bool
 geo_is_empty(const GSERIALIZED *gs)
 {
+  assert(gs);
   return gserialized_is_empty(gs);
 }
 #endif /* MEOS */
@@ -374,6 +382,7 @@ box3d_to_lwgeom(BOX3D *box)
 double
 geom_length(const GSERIALIZED *gs)
 {
+  assert(gs);
   LWGEOM *lwgeom = lwgeom_from_gserialized(gs);
   double dist = lwgeom_length(lwgeom);
   lwgeom_free(lwgeom);
@@ -396,6 +405,7 @@ geom_length(const GSERIALIZED *gs)
 double
 geom_perimeter(const GSERIALIZED *gs)
 {
+  assert(gs);
   LWGEOM *lwgeom = lwgeom_from_gserialized(gs);
   double perimeter = lwgeom_perimeter_2d(lwgeom);
   return perimeter;
@@ -410,6 +420,7 @@ geom_perimeter(const GSERIALIZED *gs)
 GSERIALIZED *
 geom_boundary(const GSERIALIZED *gs)
 {
+  assert(gs);
   /* Empty.Boundary() == Empty, but of other dimension, so can't shortcut */
   LWGEOM *geom = lwgeom_from_gserialized(gs);
   LWGEOM *lwresult = lwgeom_boundary(geom);
@@ -433,6 +444,7 @@ geom_boundary(const GSERIALIZED *gs)
 GSERIALIZED *
 geom_shortestline2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 {
+  assert(gs1); assert(gs2);
   assert(gserialized_get_srid(gs1) == gserialized_get_srid(gs2));
   LWGEOM *geom1 = lwgeom_from_gserialized(gs1);
   LWGEOM *geom2 = lwgeom_from_gserialized(gs2);
@@ -454,6 +466,7 @@ geom_shortestline2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 GSERIALIZED *
 geom_shortestline3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 {
+  assert(gs1); assert(gs2);
   assert(gserialized_get_srid(gs1) == gserialized_get_srid(gs2));
 
   LWGEOM *geom1 = lwgeom_from_gserialized(gs1);
@@ -476,6 +489,7 @@ geom_shortestline3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 double
 geom_distance2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 {
+  assert(gs1); assert(gs2);
   assert(gserialized_get_srid(gs1) == gserialized_get_srid(gs2));
 
   LWGEOM *geom1 = lwgeom_from_gserialized(gs1);
@@ -499,6 +513,7 @@ geom_distance2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 double
 geom_distance3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 {
+  assert(gs1); assert(gs2);
   assert(gserialized_get_srid(gs1) == gserialized_get_srid(gs2));
 
   LWGEOM *geom1 = lwgeom_from_gserialized(gs1);
@@ -522,6 +537,7 @@ geom_distance3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 bool
 geom_intersects3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 {
+  assert(gs1); assert(gs2);
   assert(gserialized_get_srid(gs1) == gserialized_get_srid(gs2));
 
   LWGEOM *geom1 = lwgeom_from_gserialized(gs1);
@@ -543,6 +559,7 @@ bool
 geom_dwithin2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
   double tolerance)
 {
+  assert(gs1); assert(gs2);
   if (! ensure_not_negative_datum(Float8GetDatum(tolerance), T_FLOAT8) ||
       ! ensure_same_srid(gserialized_get_srid(gs1), gserialized_get_srid(gs2)) ||
       gserialized_is_empty(gs1) || gserialized_is_empty(gs2))
@@ -567,6 +584,7 @@ bool
 geom_dwithin3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
   double tolerance)
 {
+  assert(gs1); assert(gs2);
   if (! ensure_positive_datum(Float8GetDatum(tolerance), T_FLOAT8) ||
       ! ensure_same_srid(gserialized_get_srid(gs1), gserialized_get_srid(gs2)))
     return false;
@@ -588,6 +606,7 @@ geom_dwithin3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
 GSERIALIZED *
 geo_reverse(const GSERIALIZED *gs)
 {
+  assert(gs);
   LWGEOM *geom = lwgeom_from_gserialized(gs);
   lwgeom_reverse_in_place(geom);
   return geo_serialize(geom);
@@ -604,6 +623,7 @@ geo_reverse(const GSERIALIZED *gs)
 bool
 geom_azimuth(const GSERIALIZED *gs1, const GSERIALIZED *gs2, double *result)
 {
+  assert(gs1); assert(gs2);
   assert(gserialized_get_type(gs1) == POINTTYPE);
   assert(gserialized_get_type(gs2) == POINTTYPE);
   assert(! gserialized_is_empty(gs1)); assert(! gserialized_is_empty(gs2));
@@ -668,7 +688,7 @@ geom_azimuth(const GSERIALIZED *gs1, const GSERIALIZED *gs2, double *result)
 GSERIALIZED *
 geo_collect_garray(GSERIALIZED **gsarr, int nelems)
 {
-  assert(nelems > 0);
+  assert(gsarr); assert(nelems > 0);
 
   /* Singleton array */
   if (nelems == 1)
@@ -744,7 +764,8 @@ geo_collect_garray(GSERIALIZED **gsarr, int nelems)
 GSERIALIZED *
 geo_makeline_garray(GSERIALIZED **gsarr, int count)
 {
-  assert(count > 0);
+  assert(gsarr); assert(count > 0);
+
   LWGEOM **geoms = palloc(sizeof(LWGEOM *) * count);
   int ngeoms = 0;
   int32_t srid = SRID_UNKNOWN;
@@ -797,9 +818,10 @@ geo_makeline_garray(GSERIALIZED **gsarr, int count)
  * @note PostGIS function: @p centroid(PG_FUNCTION_ARGS). 
  */
 GSERIALIZED *
-geom_centroid(const GSERIALIZED *geom)
+geom_centroid(const GSERIALIZED *gs)
 {
-  LWGEOM *lwgeom = lwgeom_from_gserialized(geom);
+  assert(gs);
+  LWGEOM *lwgeom = lwgeom_from_gserialized(gs);
   LWGEOM *lwresult = lwgeom_centroid(lwgeom);
   lwgeom_free(lwgeom);
   if (! lwresult)
@@ -972,6 +994,7 @@ meos_call_geos2(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
 bool
 geom_spatialrel(const GSERIALIZED *gs1, const GSERIALIZED *gs2, spatialRel rel)
 {
+  assert(gs1); assert(gs2);
   assert(gserialized_get_srid(gs1) == gserialized_get_srid(gs2));
 
   /* A.Intersects(Empty) == FALSE */
@@ -1096,6 +1119,7 @@ geom_disjoint2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 bool
 geom_relate_pattern(const GSERIALIZED *gs1, const GSERIALIZED *gs2, char *patt)
 {
+  assert(gs1); assert(gs2); assert(patt);
   assert(gserialized_get_srid(gs1) == gserialized_get_srid(gs2));
 
   /* TODO handle empty */
@@ -1148,6 +1172,7 @@ geom_relate_pattern(const GSERIALIZED *gs1, const GSERIALIZED *gs2, char *patt)
 GSERIALIZED *
 geom_intersection2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 {
+  assert(gs1); assert(gs2);
   LWGEOM *geom1 = lwgeom_from_gserialized(gs1);
   LWGEOM *geom2 = lwgeom_from_gserialized(gs2);
   LWGEOM *lwresult = lwgeom_intersection_prec(geom1, geom2, -1);
@@ -1166,6 +1191,7 @@ geom_intersection2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 GSERIALIZED *
 geom_difference2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 {
+  assert(gs1); assert(gs2);
   LWGEOM *geom1 = lwgeom_from_gserialized(gs1);
   LWGEOM *geom2 = lwgeom_from_gserialized(gs2);
   LWGEOM *lwresult = lwgeom_difference_prec(geom1, geom2, -1);
@@ -1187,7 +1213,7 @@ geom_difference2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 GSERIALIZED *
 geom_array_union(GSERIALIZED **gsarr, int count)
 {
-  assert(count > 0);
+  assert(gsarr); assert(count > 0);
 
   /* One geom geom? Return it */
   if (count == 1)
@@ -1300,6 +1326,7 @@ geom_array_union(GSERIALIZED **gsarr, int count)
 GSERIALIZED *
 geom_unary_union(GSERIALIZED *gs, double prec)
 {
+  assert(gs);
   LWGEOM *lwgeom = lwgeom_from_gserialized(gs) ;
   LWGEOM *lwresult = lwgeom_unaryunion_prec(lwgeom, prec);
   GSERIALIZED *result = geo_serialize(lwresult);
@@ -1317,6 +1344,7 @@ geom_unary_union(GSERIALIZED *gs, double prec)
 GSERIALIZED *
 geom_convex_hull(const GSERIALIZED *gs)
 {
+  assert(gs);
   /* Empty.ConvexHull() == Empty */
   if ( gserialized_is_empty(gs) )
     return geo_copy(gs);

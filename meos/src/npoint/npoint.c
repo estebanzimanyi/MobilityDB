@@ -819,6 +819,7 @@ npoint_parse(const char **str, bool end)
   return npoint_make(rid, pos);
 }
 
+#if MEOS
 /**
  * @ingroup meos_npoint_base_inout
  * @brief Return a network point from its string representation
@@ -828,14 +829,11 @@ npoint_parse(const char **str, bool end)
 Npoint *
 npoint_in(const char *str)
 {
-#if MEOS
   if (! ensure_not_null((void *) str))
     return NULL;
-#else
-  assert(str);
-#endif /* MEOS */
   return npoint_parse(&str, true);
 }
+#endif /* MEOS */
 
 /**
  * @ingroup meos_npoint_base_inout

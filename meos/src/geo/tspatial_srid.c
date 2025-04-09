@@ -148,9 +148,12 @@ int32_t
 spatialset_srid(const Set *s)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) s) || ! ensure_spatialset_type(s->settype))
     return SRID_INVALID;
-
+#else
+  assert(s); assert(spatialset_type(s->settype));
+#endif /* MEOS */
   return spatial_srid(SET_VAL_N(s, 0), s->basetype);
 }
 
@@ -166,7 +169,13 @@ Set *
 spatialset_set_srid(const Set *s, int32_t srid)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) s) || ! ensure_spatialset_type(s->settype))
+    return NULL;
+#else
+  assert(s); assert(spatialset_type(s->settype));
+#endif /* MEOS */
+  if (! ensure_srid_known(srid))
     return NULL;
 
   Set *result = set_copy(s);
@@ -214,9 +223,13 @@ int32_t
 tspatial_srid(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp) ||
       ! ensure_tspatial_type(temp->temptype))
     return SRID_INVALID;
+#else
+  assert(temp); assert(tspatial_type(temp->temptype));
+#endif /* MEOS */
 
   const STBox *box;
   assert(temptype_subtype(temp->subtype));
@@ -306,8 +319,14 @@ Temporal *
 tspatial_set_srid(const Temporal *temp, int32_t srid)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp) ||
       ! ensure_tspatial_type(temp->temptype))
+    return NULL;
+#else
+  assert(temp); assert(tspatial_type(temp->temptype));
+#endif /* MEOS */
+  if (! ensure_srid_known(srid))
     return NULL;
 
   Temporal *result = temporal_copy(temp);
@@ -623,11 +642,15 @@ spatialset_transf_pj(const Set *s, int32_t srid_to, const LWPROJ *pj)
 Set *
 spatialset_transform(const Set *s, int32_t srid_to)
 {
-  int32_t srid_from;
+  int32_t srid_from = spatialset_srid(s);
   /* Ensure the validity of the arguments */
-  if (! ensure_not_null((void *) s) || ! ensure_spatialset_type(s->settype) ||
-      ! ensure_srid_known(srid_from = spatialset_srid(s)) ||
-      ! ensure_srid_known(srid_to))
+#if MEOS
+  if (! ensure_not_null((void *) s) || ! ensure_spatialset_type(s->settype))
+    return NULL;
+#else
+  assert(s); assert(spatialset_type(s->settype));
+#endif /* MEOS */
+  if (! ensure_srid_known(srid_from) || ! ensure_srid_known(srid_to))
     return NULL;
 
   /* Input and output SRIDs are equal, noop */
@@ -661,11 +684,16 @@ Set *
 spatialset_transform_pipeline(const Set *s, const char *pipeline,
   int32_t srid_to, bool is_forward)
 {
-  int32_t srid_from;
+  int32_t srid_from = spatialset_srid(s);
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) s) || ! ensure_not_null((void *) pipeline) ||
-      ! ensure_spatialset_type(s->settype) ||
-      ! ensure_srid_known(srid_from = spatialset_srid(s)))
+      ! ensure_spatialset_type(s->settype))
+    return NULL;
+#else
+  assert(s); assert(pipeline); assert(spatialset_type(s->settype));
+#endif /* MEOS */
+  if (! ensure_srid_known(srid_from) || ! ensure_srid_known(srid_to))
     return NULL;
 
   /* There is NO test verifying whether the input and output SRIDs are equal */
@@ -791,9 +819,14 @@ tspatial_transform(const Temporal *temp, int32_t srid_to)
 {
   int32_t srid_from = tspatial_srid(temp);
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp) ||
-      ! ensure_tspatial_type(temp->temptype) ||
-      ! ensure_srid_known(srid_from) || ! ensure_srid_known(srid_to))
+      ! ensure_tspatial_type(temp->temptype))
+    return NULL;
+#else
+  assert(temp); assert(tspatial_type(temp->temptype));
+#endif /* MEOS */
+  if (! ensure_srid_known(srid_from) || ! ensure_srid_known(srid_to))
     return NULL;
 
   /* Input and output SRIDs are equal, noop */
@@ -831,10 +864,17 @@ tspatial_transform_pipeline(const Temporal *temp, const char *pipeline,
   int32_t srid_to, bool is_forward)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp) ||
       ! ensure_not_null((void *) pipeline) ||
       ! ensure_tspatial_type(temp->temptype))
     return NULL;
+#else
+  assert(temp); assert(pipeline); assert(tspatial_type(temp->temptype));
+#endif /* MEOS */
+  // TODO The following currently break the tests, this should be fixed
+  // if (! ensure_srid_known(srid_to))
+    // return NULL;
 
   /* There is NO test verifying whether the input and output SRIDs are equal */
 

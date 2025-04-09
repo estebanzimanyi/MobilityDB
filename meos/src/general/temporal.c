@@ -1709,7 +1709,7 @@ temporal_to_tsequenceset(const Temporal *temp, const char *interp_str)
  * @csqlfn #Temporal_set_interp()
  */
 Temporal *
-temporal_set_interp(const Temporal *temp, interpType interp)
+temporal_set_interp(const Temporal *temp, const char *interp_str)
 {
   /* Ensure the validity of the arguments */
 #if MEOS
@@ -1718,6 +1718,7 @@ temporal_set_interp(const Temporal *temp, interpType interp)
 #else
   assert(temp);
 #endif /* MEOS */
+  interpType interp = interptype_from_string(interp_str);
   if (! ensure_valid_interp(temp->temptype, interp))
     return NULL;
 

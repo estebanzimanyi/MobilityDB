@@ -75,7 +75,7 @@ Datum
 Pose_in(PG_FUNCTION_ARGS)
 {
   const char *str = PG_GETARG_CSTRING(0);
-  PG_RETURN_POINTER(pose_in(str));
+  PG_RETURN_POINTER(pose_parse(&str, true));
 }
 
 PGDLLEXPORT Datum Pose_out(PG_FUNCTION_ARGS);

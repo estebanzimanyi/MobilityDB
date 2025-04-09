@@ -58,6 +58,19 @@
 
 #if MEOS
 /**
+ * @ingroup meos_pose_inout
+ * @brief Return a temporal pose from its Well-Known Text (WKT) representation
+ * @param[in] str String
+ */
+inline Temporal *
+tpose_in(const char *str)
+{
+  if (! ENSURE_NOT_NULL(str))
+    return NULL;
+  return tspatial_parse(&str, T_TPOSE);
+}
+
+/**
  * @ingroup meos_internal_pose_inout
  * @brief Return a temporal pose instant from its Well-Known Text (WKT)
  * representation
@@ -66,9 +79,8 @@
 TInstant *
 tposeinst_in(const char *str)
 {
-  assert(str);
-  /* Call the superclass function to read the SRID at the beginning (if any) */
-  Temporal *temp = tspatial_parse(&str, T_TPOSE);
+  /* Call the superclass function */
+  Temporal *temp = tpose_in(str);
   assert(temp->subtype == TINSTANT);
   return (TInstant *) temp;
 }
@@ -83,11 +95,8 @@ tposeinst_in(const char *str)
 TSequence *
 tposeseq_in(const char *str, interpType interp __attribute__((unused)))
 {
-  assert(str);
-  /* Call the superclass function to read the SRID at the beginning (if any) */
-  Temporal *temp = tspatial_parse(&str, T_TPOSE);
-  if (! temp)
-    return NULL;
+  /* Call the superclass function */
+  Temporal *temp = tpose_in(str);
   assert (temp->subtype == TSEQUENCE);
   return (TSequence *) temp;
 }
@@ -101,26 +110,10 @@ tposeseq_in(const char *str, interpType interp __attribute__((unused)))
 TSequenceSet *
 tposeseqset_in(const char *str)
 {
-  assert(str);
-  /* Call the superclass function to read the SRID at the beginning (if any) */
-  Temporal *temp = tspatial_parse(&str, T_TPOSE);
+  /* Call the superclass function */
+  Temporal *temp = tpose_in(str);
   assert(temp->subtype == TSEQUENCESET);
   return (TSequenceSet *) temp;
-}
-#endif /* MEOS */
-
-/*****************************************************************************/
-
-#if MEOS
-/**
- * @ingroup meos_pose_inout
- * @brief Return a temporal pose from its Well-Known Text (WKT) representation
- * @param[in] str String
- */
-inline Temporal *
-tpose_in(const char *str)
-{
-  return tspatial_parse(&str, T_TPOSE);
 }
 
 /**
@@ -133,6 +126,8 @@ tpose_in(const char *str)
 inline Temporal *
 tpose_from_mfjson(const char *mfjson)
 {
+  if (! ENSURE_NOT_NULL(mfjson))
+    return NULL;
   return temporal_from_mfjson(mfjson, T_TPOSE);
 }
 #endif /* MEOS */
@@ -252,12 +247,14 @@ Temporal *
 tpoint_tfloat_to_tpose(const Temporal *tpoint, const Temporal *tradius)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_not_null((void *) tpoint) || 
-      ! ensure_not_null((void *) tradius) ||
-      ! ensure_tpoint_type(tpoint->temptype) ||
-      ! ensure_has_not_Z(tpoint->temptype, tpoint->flags) ||
-      ! ensure_not_geodetic(tpoint->flags) ||
-      ! ensure_tnumber_type(tradius->temptype))
+#if MEOS
+  if (! ENSURE_TGEOMPOINT(tpoint) || ! ENSURE_TFLOAT(tradius))
+    return NULL;
+#else
+  ENSURE_TGEOMPOINT(tpoint); ENSURE_TFLOAT(tradius);
+#endif /* MEOS */
+  if (! ensure_has_not_Z(tpoint->temptype, tpoint->flags) ||
+      ! ensure_not_geodetic(tpoint->flags))
     return NULL;
 
   Temporal *sync1, *sync2;
@@ -301,11 +298,10 @@ tpose_tpoint(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
 #if MEOS
-  if (! ensure_not_null((void *) temp) || 
-      ! ensure_temporal_isof_type(temp, T_TPOSE))
+  if (! ENSURE_TPOSE(temp))
     return NULL;
 #else
-  assert(temp); assert(temp->temptype == T_TPOSE);
+  ENSURE_TPOSE(temp);
 #endif /* MEOS */
 
   LiftedFunctionInfo lfinfo;
@@ -334,11 +330,10 @@ tpose_rotation(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
 #if MEOS
-  if (! ensure_not_null((void *) temp) || 
-      ! ensure_temporal_isof_type(temp, T_TPOSE))
+  if (! ENSURE_TPOSE(temp))
     return NULL;
 #else
-  assert(temp); assert(temp->temptype == T_TPOSE);
+  ENSURE_TPOSE(temp);
 #endif /* MEOS */
   if (! ensure_has_not_Z(temp->temptype, temp->flags))
     return NULL;
@@ -357,6 +352,7 @@ tpose_rotation(const Temporal *temp)
 
 /*****************************************************************************/
 
+#if MEOS
 /**
  * @ingroup meos_pose_accessor
  * @brief Return a copy of the start value of a temporal pose
@@ -368,13 +364,8 @@ Pose *
 tpose_start_value(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
-#if MEOS
-  if (! ensure_not_null((void *) temp) || 
-      ! ensure_temporal_isof_type(temp, T_TPOSE))
+  if (! ENSURE_TPOSE(temp))
     return NULL;
-#else
-  assert(temp); assert(temp->temptype == T_TPOSE);
-#endif /* MEOS */
   return DatumGetPoseP(temporal_start_value(temp));
 }
 
@@ -389,13 +380,8 @@ Pose *
 tpose_end_value(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
-#if MEOS
-  if (! ensure_not_null((void *) temp) || 
-      ! ensure_temporal_isof_type(temp, T_TPOSE))
+  if (! ENSURE_TPOSE(temp))
     return NULL;
-#else
-  assert(temp); assert(temp->temptype == T_TPOSE);
-#endif /* MEOS */
   return DatumGetPoseP(temporal_end_value(temp));
 }
 
@@ -411,13 +397,8 @@ bool
 tpose_value_n(const Temporal *temp, int n, Pose **result)
 {
   /* Ensure the validity of the arguments */
-#if MEOS
-  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) result) ||
-      ! ensure_temporal_isof_type(temp, T_TPOSE))
+  if (! ENSURE_TPOSE(temp) || ENSURE_NOT_NULL(result))
     return false;
-#else
-  assert(temp); assert(result); assert(temp->temptype == T_TPOSE);
-#endif /* MEOS */
   Datum dresult;
   if (! temporal_value_n(temp, n, &dresult))
     return false;
@@ -436,13 +417,9 @@ Pose **
 tpose_values(const Temporal *temp, int *count)
 {
   /* Ensure the validity of the arguments */
-#if MEOS
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) count) ||
       ! ensure_temporal_isof_type(temp, T_TPOSE))
     return NULL;
-#else
-  assert(temp); assert(count); assert(temp->temptype == T_TPOSE);
-#endif /* MEOS */
 
   Datum *datumarr = temporal_values_p(temp, count);
   Pose **result = palloc(sizeof(Pose *) * *count);
@@ -451,6 +428,7 @@ tpose_values(const Temporal *temp, int *count)
   pfree(datumarr);
   return result;
 }
+#endif /* MEOS */
 
 /*****************************************************************************/
 
@@ -515,11 +493,10 @@ tpose_points(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
 #if MEOS
-  if (! ensure_not_null((void *) temp) ||
-      ! ensure_temporal_isof_type(temp, T_TPOSE))
+  if (! ENSURE_TPOSE(temp))
     return NULL;
 #else
-  assert(temp); assert(temp->temptype == T_TPOSE);
+  ENSURE_TPOSE(temp);
 #endif /* MEOS */
 
   assert(temptype_subtype(temp->subtype));
@@ -534,6 +511,7 @@ tpose_points(const Temporal *temp)
   }
 }
 
+#if MEOS
 /**
  * @ingroup meos_pose_accessor
  * @brief Return the value of a temporal pose at a timestamptz
@@ -549,24 +527,21 @@ tpose_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict,
   Pose **value)
 {
   /* Ensure the validity of the arguments */
-#if MEOS
-  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) value) ||
-      ! ensure_temporal_isof_type(temp, T_TPOSE))
+  if (! ENSURE_TPOSE(temp) || ! ENSURE_NOT_NULL(value))
     return false;
-#else
-  assert(temp); assert(value); assert(temp->temptype == T_TPOSE);
-#endif /* MEOS */
 
   Datum res;
   bool result = temporal_value_at_timestamptz(temp, t, strict, &res);
   *value = DatumGetPoseP(res);
   return result;
 }
+#endif /* MEOS */
 
 /*****************************************************************************
  * Restriction functions
  *****************************************************************************/
 
+#if MEOS
 /**
  * @ingroup meos_pose_restrict
  * @brief Return a temporal pose restricted to a pose
@@ -578,13 +553,8 @@ Temporal *
 tpose_at_value(const Temporal *temp, Pose *pose)
 {
   /* Ensure the validity of the arguments */
-#if MEOS
-  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) pose) ||
-      ! ensure_temporal_isof_type(temp, T_TPOSE))
+  if (! ENSURE_TPOSE(temp) || ! ENSURE_NOT_NULL(pose))
     return NULL;
-#else
-  assert(temp); assert(pose); assert(temp->temptype == T_TPOSE);
-#endif /* MEOS */
   return temporal_restrict_value(temp, PointerGetDatum(pose), REST_AT);
 }
 
@@ -599,14 +569,10 @@ tpose_at_value(const Temporal *temp, Pose *pose)
 Temporal *
 tpose_minus_value(const Temporal *temp, Pose *pose)
 {
-#if MEOS
-  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) pose) ||
-      ! ensure_temporal_isof_type(temp, T_TPOSE))
+  if (! ENSURE_TPOSE(temp) || ! ENSURE_NOT_NULL(pose))
     return NULL;
-#else
-  assert(temp); assert(pose); assert(temp->temptype == T_TPOSE);
-#endif /* MEOS */
   return temporal_restrict_value(temp, PointerGetDatum(pose), REST_MINUS);
 }
+#endif /* MEOS */
 
 /*****************************************************************************/

@@ -45,6 +45,7 @@
 #include <meos.h>
 #include <meos_internal.h>
 #include <meos_cbuffer.h>
+#include "general/span.h"
 #include "geo/postgis_funcs.h"
 #include "cbuffer/cbuffer.h"
 
@@ -138,12 +139,11 @@ cbuffer_timestamptz_to_stbox(const Cbuffer *cbuf, TimestampTz t)
 {
   /* Ensure the validity of the arguments */
 #if MEOS
-  if (! ensure_not_null((void *) cbuf))
+  if (! ENSURE_NOT_NULL(cbuf))
     return NULL;
 #else
-  assert(cbuf);
+  ENSURE_NOT_NULL(cbuf);
 #endif /* MEOS */
-
   STBox box;
   if (! cbuffer_timestamptz_set_stbox(cbuf, t, &box))
     return NULL;
@@ -180,10 +180,10 @@ cbuffer_tstzspan_to_stbox(const Cbuffer *cbuf, const Span *s)
 {
   /* Ensure the validity of the arguments */
 #if MEOS
-  if (! ensure_not_null((void *) cbuf) || ! ensure_not_null((void *) s))
+  if (! ENSURE_NOT_NULL(cbuf) || ! ENSURE_TSTZSPAN(s))
     return NULL;
 #else
-  assert(cbuf); assert(s);
+  ENSURE_NOT_NULL(cbuf); ENSURE_TSTZSPAN(s);
 #endif /* MEOS */
   STBox box;
   if (! cbuffer_tstzspan_set_stbox(cbuf, s, &box))

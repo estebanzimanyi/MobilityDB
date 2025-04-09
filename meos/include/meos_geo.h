@@ -58,6 +58,70 @@ typedef enum
   COVERS =         3,
 } spatialRel;
 
+/*****************************************************************************
+ * Validity macros
+ *****************************************************************************/
+
+/**
+ * @brief Macro for ensuring that the temporal value passed as argument is a
+ * temporal geometry
+ * @note The macro works for the Temporal type and its subtypes TInstant,
+ * TSequence, and TSequenceSet
+ */
+#if MEOS
+  #define ENSURE_TGEOMETRY(temp) ( \
+    ensure_not_null((void **) temp) && \
+    ensure_temporal_isof_type((Temporal *) temp, T_TGEOMETRY) )
+#else
+  #define ENSURE_TGEOMETRY(temp) \
+    assert(temp); assert((temp)->temptype == T_TGEOMETRY);
+#endif /* MEOS */
+
+/**
+ * @brief Macro for ensuring that the temporal value passed as argument is a
+ * temporal geography
+ * @note The macro works for the Temporal type and its subtypes TInstant,
+ * TSequence, and TSequenceSet
+ */
+#if MEOS
+  #define ENSURE_TGEOGRAPHY(temp) ( \
+    ensure_not_null((void **) temp) && \
+    ensure_temporal_isof_type((Temporal *) temp, T_TGEOGRAPHY) )
+#else
+  #define ENSURE_TGEOGRAPHY(temp) \
+    assert(temp); assert((temp)->temptype == T_TGEOGRAPHY);
+#endif /* MEOS */
+
+/**
+ * @brief Macro for ensuring that the temporal value passed as argument is a
+ * temporal geometry point
+ * @note The macro works for the Temporal type and its subtypes TInstant,
+ * TSequence, and TSequenceSet
+ */
+#if MEOS
+  #define ENSURE_TGEOMPOINT(temp) ( \
+    ensure_not_null((void **) temp) && \
+    ensure_temporal_isof_type((Temporal *) temp, T_TGEOMPOINT) )
+#else
+  #define ENSURE_TGEOMPOINT(temp) \
+    assert(temp); assert((temp)->temptype == T_TGEOMPOINT);
+#endif /* MEOS */
+
+/**
+ * @brief Macro for ensuring that the temporal value passed as argument is a
+ * temporal geography point
+ * @note The macro works for the Temporal type and its subtypes TInstant,
+ * TSequence, and TSequenceSet
+ */
+#if MEOS
+  #define ENSURE_TGEOGPOINT(temp) ( \
+    ensure_not_null((void **) temp) && \
+    ensure_temporal_isof_type((Temporal *) temp, T_TGEOGPOINT) )
+#else
+  #define ENSURE_TGEOGPOINT(temp) \
+    assert(temp); assert((temp)->temptype == T_TGEOGPOINT);
+#endif /* MEOS */
+
 /*===========================================================================*
  * Functions for PostGIS types
  *===========================================================================*/

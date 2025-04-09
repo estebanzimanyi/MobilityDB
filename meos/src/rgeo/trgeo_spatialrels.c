@@ -50,7 +50,7 @@
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/tgeo_spatialrels.h"
 #include "rgeo/trgeo.h"
-// #include "rgeo/trgeo_spatialfuncs.h"
+#include "rgeo/trgeo_spatialfuncs.h"
 
 /*****************************************************************************
  * Generic ever/always spatial relationship functions
@@ -60,7 +60,7 @@
  * @brief Generic spatial relationship for the traversed area of a temporal
  * rigid geometry and a geometry
  * @param[in] temp Temporal rigid geometry
- * @param[in] geo Geometry
+ * @param[in] gs Geometry
  * @param[in] param Parameter
  * @param[in] func PostGIS function to be called
  * @param[in] numparam Number of parameters of the functions
@@ -68,32 +68,26 @@
  * @return On error return -1
  */
 int
-spatialrel_trgeo_trav_geo(const Temporal *temp, const GSERIALIZED *geo,
+spatialrel_trgeo_trav_geo(const Temporal *temp, const GSERIALIZED *gs,
   Datum param, varfunc func, int numparam, bool invert)
 {
   /* Ensure the validity of the arguments */
-#if MEOS
-  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) geo))
-    return -1;
-#else
-  assert(temp); assert(geo);
-#endif /* MEOS */
-  if (! ensure_valid_tspatial_geo(temp, geo) || gserialized_is_empty(geo))
+  if (! ensure_valid_trgeo_geo(temp, gs) || gserialized_is_empty(gs))
     return -1;
 
   assert(numparam == 2 || numparam == 3);
-  Datum dgeo = PointerGetDatum(geo);
+  Datum geo = PointerGetDatum(gs);
   Datum trav = PointerGetDatum(trgeo_traversed_area(temp));
   Datum result;
   if (numparam == 2)
   {
     datum_func2 func2 = (datum_func2) func;
-    result = invert ? func2(dgeo, trav) : func2(trav, dgeo);
+    result = invert ? func2(geo, trav) : func2(trav, geo);
   }
   else /* numparam == 3 */
   {
     datum_func3 func3 = (datum_func3) func;
-    result = invert ? func3(dgeo, trav, param) : func3(trav, dgeo, param);
+    result = invert ? func3(geo, trav, param) : func3(trav, geo, param);
   }
   pfree(DatumGetPointer(trav));
   return result ? 1 : 0;
@@ -117,8 +111,7 @@ spatialrel_trgeo_geo(const Temporal *temp, const GSERIALIZED *geo,
   Datum param, varfunc func, int numparam, bool invert)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) geo) ||
-      ! ensure_valid_trgeo_geo(temp, geo))
+  if (! ensure_valid_trgeo_geo(temp, geo) || gserialized_is_empty(geo))
     return -1;
 
   assert(numparam == 2 || numparam == 3);
@@ -157,12 +150,10 @@ spatialrel_trgeo_geo(const Temporal *temp, const GSERIALIZED *geo,
  * @csqlfn #Econtains_geo_trgeo(), #Acontains_geo_trgeo()
  */
 int
-ea_contains_geo_trgeo(const GSERIALIZED *geo, const Temporal *temp,
-  bool ever)
+ea_contains_geo_trgeo(const GSERIALIZED *geo, const Temporal *temp, bool ever)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) geo) ||
-      ! ensure_valid_tspatial_geo(temp, geo) || gserialized_is_empty(geo))
+  if (! ensure_valid_trgeo_geo(temp, geo) || gserialized_is_empty(geo))
     return -1;
   GSERIALIZED *trav = trgeo_traversed_area(temp);
   bool result = ever ? geom_relate_pattern(geo, trav, "T********") :
@@ -221,12 +212,10 @@ acontains_geo_trgeo(const GSERIALIZED *geo, const Temporal *temp)
  * @csqlfn #Edisjoint_trgeo_geo()
  */
 int
-ea_disjoint_trgeo_geo(const Temporal *temp, const GSERIALIZED *geo,
-  bool ever)
+ea_disjoint_trgeo_geo(const Temporal *temp, const GSERIALIZED *geo, bool ever)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) geo) ||
-      ! ensure_valid_tspatial_geo(temp, geo) || gserialized_is_empty(geo))
+  if (! ensure_valid_trgeo_geo(temp, geo) || gserialized_is_empty(geo))
     return -1;
   int result = ever ?
     spatialrel_trgeo_trav_geo(temp, geo, (Datum) NULL,
@@ -372,8 +361,7 @@ int
 etouches_trgeo_geo(const Temporal *temp, const GSERIALIZED *geo)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) geo) ||
-      ! ensure_valid_tspatial_geo(temp, geo) || gserialized_is_empty(geo))
+  if (! ensure_valid_trgeo_geo(temp, geo) || gserialized_is_empty(geo))
     return -1;
 
   /* There is no need to do a bounding box test since this is done in
@@ -411,8 +399,7 @@ int
 atouches_trgeo_geo(const Temporal *temp, const GSERIALIZED *geo)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) geo) ||
-      ! ensure_valid_tspatial_geo(temp, geo) || gserialized_is_empty(geo))
+  if (! ensure_valid_trgeo_geo(temp, geo) || gserialized_is_empty(geo))
     return -1;
 
   /* There is no need to do a bounding box test since this is done in
@@ -421,7 +408,8 @@ atouches_trgeo_geo(const Temporal *temp, const GSERIALIZED *geo)
   bool result = false;
   if (geobound && ! gserialized_is_empty(geobound))
   {
-    Temporal *temp1 = (Temporal *) temp; // TODO trgeo_minus_geom(temp, geobound, NULL);
+    // TODO trgeo_minus_geom(temp, geobound, NULL);
+    Temporal *temp1 = (Temporal *) temp;
     result = (temp1 == NULL);
     if (temp1)
       pfree(temp1);
@@ -447,8 +435,7 @@ int
 edwithin_trgeo_geo(const Temporal *temp, const GSERIALIZED *geo, double dist)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) geo) ||
-      ! ensure_valid_tspatial_geo(temp, geo) || gserialized_is_empty(geo) ||
+  if (! ensure_valid_trgeo_geo(temp, geo) || gserialized_is_empty(geo) ||
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return -1;
   return spatialrel_trgeo_trav_geo(temp, geo, Float8GetDatum(dist),
@@ -468,8 +455,7 @@ int
 adwithin_trgeo_geo(const Temporal *temp, const GSERIALIZED *geo, double dist)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) geo) ||
-      ! ensure_valid_tspatial_geo(temp, geo) || gserialized_is_empty(geo) ||
+  if (! ensure_valid_trgeo_geo(temp, geo) || gserialized_is_empty(geo) ||
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return -1;
 
@@ -491,8 +477,8 @@ adwithin_trgeo_geo(const Temporal *temp, const GSERIALIZED *geo, double dist)
  * @pre The temporal rigid geometries are synchronized
  */
 static bool
-ea_dwithin_trgeoinst_trgeoinst(const TInstant *inst1, 
-  const TInstant *inst2, double dist)
+ea_dwithin_trgeoinst_trgeoinst(const TInstant *inst1, const TInstant *inst2,
+  double dist)
 {
   assert(inst1); assert(inst2);
   /* Result is the same for both EVER and ALWAYS */
@@ -558,8 +544,8 @@ tdwithin_trgeosegm_trgeosegm(Datum sv1 __attribute__((unused)),
  * @pre The temporal rigid geometries are synchronized
  */
 static bool
-ea_dwithin_trgeoseq_trgeoseq_cont(const TSequence *seq1,
-  const TSequence *seq2, double dist, bool ever)
+ea_dwithin_trgeoseq_trgeoseq_cont(const TSequence *seq1, const TSequence *seq2,
+  double dist, bool ever)
 {
   assert(seq1); assert(seq2);
 
@@ -695,8 +681,7 @@ ea_dwithin_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2,
   double dist, bool ever)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2) ||
-      ! ensure_valid_trgeo_trgeo(temp1, temp2) ||
+  if (! ensure_valid_trgeo_trgeo(temp1, temp2) ||
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return -1;
 
@@ -722,8 +707,7 @@ ea_dwithin_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2,
  * @csqlfn #Edwithin_trgeo_trgeo()
  */
 inline int
-edwithin_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2,
-  double dist)
+edwithin_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2, double dist)
 {
   return ea_dwithin_trgeo_trgeo(temp1, temp2, dist, EVER);
 }
@@ -738,8 +722,7 @@ edwithin_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2,
  * @csqlfn #Adwithin_trgeo_trgeo()
  */
 inline int
-adwithin_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2,
-  double dist)
+adwithin_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2, double dist)
 {
   return ea_dwithin_trgeo_trgeo(temp1, temp2, dist, ALWAYS);
 }

@@ -135,7 +135,7 @@ Datum
 Npoint_in(PG_FUNCTION_ARGS)
 {
   const char *str = PG_GETARG_CSTRING(0);
-  PG_RETURN_NPOINT_P(npoint_in(str));
+  PG_RETURN_NPOINT_P(npoint_parse(&str, true));
 }
 
 PGDLLEXPORT Datum Npoint_out(PG_FUNCTION_ARGS);
@@ -192,9 +192,9 @@ PG_FUNCTION_INFO_V1(Npoint_from_ewkt);
  * @ingroup mobilitydb_geo_inout
  * @brief Return a network point from its Extended Well-Known Text (EWKT)
  * representation
- * @note This just does the same thing as the SQL function pose_in, except it
+ * @note This just does the same thing as the SQL function npoint_in, except it
  * has to handle a 'text' input. First, unwrap the text into a cstring, then
- * do as pose_in
+ * do as npoint_in
  * @sqlfn poseFromEWKT(), poseFromEWKT()
  */
 Datum

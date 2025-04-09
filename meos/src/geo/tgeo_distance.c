@@ -411,10 +411,18 @@ Temporal *
 distance_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs) ||
+      ! ensure_tgeo_type_all(temp->temptype))
+    return NULL;
+#else
+  assert(temp); assert(gs); assert(tgeo_type_all(temp->temptype));
+#endif /* MEOS */
+  if (! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)) ||
+      ! ensure_same_dimensionality_tspatial_geo(temp, gs) ||
+      ! ensure_same_geodetic_tspatial_geo(temp, gs) ||
       (tpoint_type(temp->temptype) && ! ensure_point_type(gs)) ||
-      ! ensure_same_dimensionality_tspatial_geo(temp, gs))
+      gserialized_is_empty(gs))
     return NULL;
 
   LiftedFunctionInfo lfinfo;
@@ -443,9 +451,18 @@ Temporal *
 distance_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2) ||
-      ! ensure_valid_tspatial_tspatial(temp1, temp2) ||
-      ! ensure_same_dimensionality(temp1->flags, temp2->flags))
+      ! ensure_tgeo_type_all(temp1->temptype) ||
+      ! ensure_tgeo_type_all(temp2->temptype))
+    return NULL;
+#else
+  assert(temp1); assert(temp2); assert(tgeo_type_all(temp1->temptype));
+  assert(tgeo_type_all(temp2->temptype));
+#endif /* MEOS */
+  if (! ensure_same_srid(tspatial_srid(temp1), tspatial_srid(temp2)) ||
+      ! ensure_same_dimensionality(temp1->flags, temp2->flags) ||
+      ! ensure_same_geodetic(temp1->flags, temp2->flags))
     return NULL;
 
   LiftedFunctionInfo lfinfo;
@@ -686,9 +703,17 @@ TInstant *
 nai_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs) ||
-      ! ensure_same_dimensionality_tspatial_geo(temp, gs))
+      ! ensure_tgeo_type_all(temp->temptype))
+    return NULL;
+#else
+  assert(temp); assert(gs); assert(tgeo_type_all(temp->temptype));
+#endif /* MEOS */
+  if (! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)) ||
+      ! ensure_same_dimensionality_tspatial_geo(temp, gs) ||
+      ! ensure_same_geodetic_tspatial_geo(temp, gs) ||
+      gserialized_is_empty(gs))
     return NULL;
 
   LWGEOM *geo = lwgeom_from_gserialized(gs);
@@ -723,9 +748,18 @@ TInstant *
 nai_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2) ||
-      ! ensure_valid_tspatial_tspatial(temp1, temp2) ||
-      ! ensure_same_dimensionality(temp1->flags, temp2->flags))
+      ! ensure_tgeo_type_all(temp1->temptype) ||
+      ! ensure_tgeo_type_all(temp2->temptype))
+    return NULL;
+#else
+  assert(temp1); assert(temp2); assert(tgeo_type_all(temp1->temptype));
+  assert(tgeo_type_all(temp2->temptype));
+#endif /* MEOS */
+  if (! ensure_same_srid(tspatial_srid(temp1), tspatial_srid(temp2)) ||
+      ! ensure_same_dimensionality(temp1->flags, temp2->flags) ||
+      ! ensure_same_geodetic(temp1->flags, temp2->flags))
     return NULL;
 
   /* Compute the temporal distance, it may be NULL if the points do not
@@ -758,9 +792,17 @@ double
 nad_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs) ||
-      ! ensure_same_dimensionality_tspatial_geo(temp, gs))
+      ! ensure_tgeo_type_all(temp->temptype))
+    return -1.0;
+#else
+  assert(temp); assert(gs); assert(tgeo_type_all(temp->temptype));
+#endif /* MEOS */
+  if (! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)) ||
+      ! ensure_same_dimensionality_tspatial_geo(temp, gs) ||
+      ! ensure_same_geodetic_tspatial_geo(temp, gs) ||
+      gserialized_is_empty(gs))
     return -1.0;
 
   datum_func2 func = distance_fn(temp->flags);
@@ -784,6 +826,12 @@ double
 nad_stbox_geo(const STBox *box, const GSERIALIZED *gs)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) box) || ! ensure_not_null((void *) gs))
+    return -1.0;
+#else
+  assert(box); assert(gs);
+#endif /* MEOS */
   if (! ensure_valid_stbox_geo(box, gs) ||
       ! ensure_same_spatial_dimensionality_stbox_geo(box, gs))
     return -1.0;
@@ -807,6 +855,12 @@ double
 nad_stbox_stbox(const STBox *box1, const STBox *box2)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) box1) || ! ensure_not_null((void *) box2))
+    return -1.0;
+#else
+  assert(box1); assert(box2);
+#endif /* MEOS */
   if (! ensure_valid_spatial_stbox_stbox(box1, box2) ||
       ! ensure_same_spatial_dimensionality(box1->flags, box2->flags))
     return -1.0;
@@ -844,6 +898,13 @@ double
 nad_tgeo_stbox(const Temporal *temp, const STBox *box)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) box) ||
+      ! ensure_tgeo_type_all(temp->temptype))
+    return -1.0;
+#else
+  assert(temp); assert(box); assert(tgeo_type_all(temp->temptype));
+#endif /* MEOS */
   if (! ensure_valid_tgeo_stbox(temp, box) ||
       ! ensure_same_spatial_dimensionality(temp->flags, box->flags))
     return -1.0;
@@ -889,12 +950,16 @@ nad_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure the validity of the arguments */
 #if MEOS
-  if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2))
+  if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2) ||
+      ! ensure_tgeo_type_all(temp1->temptype) ||
+      ! ensure_tgeo_type_all(temp2->temptype))
     return -1.0;
 #else
-  assert(temp1); assert(temp2);
+  assert(temp1); assert(temp2); assert(tgeo_type_all(temp1->temptype));
+  assert(tgeo_type_all(temp2->temptype));
 #endif /* MEOS */
-  if (! ensure_valid_tspatial_tspatial(temp1, temp2) ||
+  if (! ensure_same_srid(tspatial_srid(temp1), tspatial_srid(temp2)) ||
+      ! ensure_same_geodetic(temp1->flags, temp2->flags) ||
       ! ensure_same_dimensionality(temp1->flags, temp2->flags))
     return -1.0;
 
@@ -955,9 +1020,17 @@ GSERIALIZED *
 shortestline_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs) ||
-      ! ensure_same_dimensionality_tspatial_geo(temp, gs))
+      ! ensure_tgeo_type_all(temp->temptype))
+    return NULL;
+#else
+  assert(temp); assert(gs); assert(tgeo_type_all(temp->temptype));
+#endif /* MEOS */
+  if (! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)) ||
+      ! ensure_same_dimensionality_tspatial_geo(temp, gs) ||
+      ! ensure_same_geodetic_tspatial_geo(temp, gs) ||
+      gserialized_is_empty(gs))
     return NULL;
   bool geodetic = MEOS_FLAGS_GET_GEODETIC(temp->flags);
   if (geodetic && ! ensure_has_not_Z_geo(gs))
@@ -988,9 +1061,18 @@ GSERIALIZED *
 shortestline_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2) ||
-      ! ensure_valid_tspatial_tspatial(temp1, temp2) ||
-      ! ensure_same_dimensionality(temp1->flags, temp2->flags))
+      ! ensure_tgeo_type_all(temp1->temptype) ||
+      ! ensure_tgeo_type_all(temp2->temptype))
+    return NULL;
+#else
+  assert(temp1); assert(temp2); assert(tgeo_type_all(temp1->temptype));
+  assert(tgeo_type_all(temp2->temptype));
+#endif /* MEOS */
+  if (! ensure_same_srid(tspatial_srid(temp1), tspatial_srid(temp2)) ||
+      ! ensure_same_dimensionality(temp1->flags, temp2->flags) ||
+      ! ensure_same_geodetic(temp1->flags, temp2->flags))
     return NULL;
 
   Temporal *dist = distance_tgeo_tgeo(temp1, temp2);

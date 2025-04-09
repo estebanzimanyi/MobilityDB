@@ -198,16 +198,9 @@ spatialset_as_text(const Set *s, int maxdd)
  * @param[in] maxdd Maximum number of decimal digits
  * @csqlfn #Spatialset_as_ewkt()
  */
-char *
+inline char *
 spatialset_as_ewkt(const Set *s, int maxdd)
 {
-  /* Ensure the validity of the arguments */
-#if MEOS
-  if (! ensure_not_null((void *) s) || ! ensure_spatialset_type(s->settype))
-    return NULL;
-#else
-  assert(s); assert(spatialset_type(s->settype));
-#endif /* MEOS */
   /* The SRID will be output as prefix, the elements will output the SRID*/
   return spatialset_out_fn(s, maxdd, &spatialbase_as_text, true);
 }

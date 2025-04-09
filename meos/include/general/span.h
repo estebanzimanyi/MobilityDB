@@ -74,6 +74,23 @@ typedef struct
 #define PG_GETARG_SPANSET_P(X)     ((SpanSet *) PG_GETARG_VARLENA_P(X))
 #define PG_RETURN_SPANSET_P(X)     PG_RETURN_POINTER(X)
 
+/*****************************************************************************
+ * Validity macros
+ *****************************************************************************/
+
+/**
+ * @brief Macro for ensuring that the span passed as argument is a
+ * timestamptz span
+ */
+#if MEOS
+  #define ENSURE_TSTZSPAN(span) ( \
+    ensure_not_null((void **) span) && \
+    ensure_span_isof_type(span, T_TSTZSPAN) )
+#else
+  #define ENSURE_TSTZSPAN(span) \
+    assert(span); assert((span)->spantype == T_TSTZSPAN);
+#endif /* MEOS */
+
 /*****************************************************************************/
 
 /* General functions */

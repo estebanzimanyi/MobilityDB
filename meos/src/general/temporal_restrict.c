@@ -150,8 +150,13 @@ tnumber_bbox_restrict_span(const Temporal *temp, const Span *s)
 Temporal *
 temporal_restrict_value(const Temporal *temp, Datum value, bool atfunc)
 {
-  assert(temp);
   /* Ensure the validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) temp))
+    return NULL;
+#else
+  assert(temp);
+#endif /* MEOS */
   if (tspatial_type(temp->temptype))
   {
 #if RGEO
@@ -242,9 +247,8 @@ temporal_restrict_values(const Temporal *temp, const Set *s, bool atfunc)
 {
   /* Ensure the validity of the arguments */
 #if MEOS
-  meosType basetype = temptype_basetype(temp->temptype);
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) s) ||
-      ! ensure_temporal_isof_basetype(temp->temptype, s->basetype))
+      ! ensure_temporal_isof_basetype(temp, s->basetype))
     return NULL;
 #else
   assert(temp); assert(s);

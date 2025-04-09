@@ -209,7 +209,7 @@ trgeoseqset_make1_exp(const GSERIALIZED *geom, const TSequence **sequences,
 }
 
 /**
- * @ingroup meos_interanl_internal_rgeo_constructor
+ * @ingroup meos_internal_rgeo_constructor
  * @brief Construct a temporal sequence set from an array of temporal sequences.
  * @param[in] geom Reference geometry
  * @param[in] sequences Array of sequences
@@ -223,7 +223,15 @@ TSequenceSet *
 trgeoseqset_make_exp(const GSERIALIZED *geom, const TSequence **sequences,
   int count, int maxcount, bool normalize)
 {
-  if (! ensure_valid_tseqarr(sequences, count))
+  /* Ensure the validity of the arguments */
+#if MEOS
+  if (! ENSURE_NOT_NULL(geom) || ! ENSURE_NOT_NULL(sequences))
+    return NULL;
+#else
+  ENSURE_NOT_NULL(geom); ENSURE_NOT_NULL(sequences);
+#endif /* MEOS */
+  if (! ensure_positive(count) ||
+      ! ensure_valid_tseqarr((const TSequence **) sequences, count))
     return NULL;
   return trgeoseqset_make1_exp(geom, sequences, count, maxcount, normalize);
 }
@@ -261,6 +269,17 @@ TSequenceSet *
 trgeoseqset_make_free(const GSERIALIZED *geom, TSequence **sequences,
   int count, bool normalize)
 {
+  /* Ensure the validity of the arguments */
+#if MEOS
+  if (! ENSURE_NOT_NULL(geom) || ! ENSURE_NOT_NULL(sequences))
+    return NULL;
+#else
+  ENSURE_NOT_NULL(geom); ENSURE_NOT_NULL(sequences);
+#endif /* MEOS */
+  if (! ensure_positive(count) ||
+      ! ensure_valid_tseqarr((const TSequence **) sequences, count))
+    return NULL;
+
   if (count == 0)
   {
     pfree(sequences);
@@ -307,6 +326,16 @@ TSequenceSet *
 trgeoseqset_make_gaps(const GSERIALIZED *geom, const TInstant **instants,
   int count, interpType interp, Interval *maxt, double maxdist)
 {
+  /* Ensure the validity of the arguments */
+#if MEOS
+  if (! ENSURE_NOT_NULL(geom) || ! ENSURE_NOT_NULL(instants))
+    return NULL;
+#else
+  ENSURE_NOT_NULL(geom); ENSURE_NOT_NULL(instants);
+#endif /* MEOS */
+  if (! ensure_positive(count))
+    return NULL;
+
   TSequence *seq;
   TSequenceSet *result;
 
@@ -326,17 +355,18 @@ trgeoseqset_make_gaps(const GSERIALIZED *geom, const TInstant **instants,
     count, true, true, interp, maxdist, maxt, &countsplits);
   if (countsplits == 0)
   {
-    /* There are no gaps  */
+    /* There are no gaps */
     pfree(splits);
     seq = trgeoseq_make1(geom, (const TInstant **) instants, count, true, true,
       interp, NORMALIZE);
-    result = trgeoseqset_make(geom, (const TSequence **) &seq, 1, NORMALIZE_NO);
+    result = trgeoseqset_make(geom, (const TSequence **) &seq, 1,
+      NORMALIZE_NO);
     pfree(seq);
   }
   else
   {
     int newcount = 0;
-    /* Split according to gaps  */
+    /* Split according to gaps */
     const TInstant **newinsts = palloc(sizeof(TInstant *) * count);
     TSequence **sequences = palloc(sizeof(TSequence *) * (countsplits + 1));
     int j = 0, k = 0;
@@ -355,7 +385,7 @@ trgeoseqset_make_gaps(const GSERIALIZED *geom, const TInstant **instants,
     }
     /* Construct last sequence */
     if (k > 0)
-      sequences[newcount++] = trgeoseq_make1(geom, 
+      sequences[newcount++] = trgeoseq_make1(geom,
         (const TInstant **) newinsts, k, true, true, interp, NORMALIZE);
     result = trgeoseqset_make(geom, (const TSequence **) sequences, newcount,
       NORMALIZE);

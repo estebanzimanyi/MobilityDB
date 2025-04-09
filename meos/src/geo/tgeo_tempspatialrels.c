@@ -30,9 +30,8 @@
 /**
  * @file
  * @brief Temporal spatial relationships for temporal geos
- *
- * These relationships are applied at each instant and result in a temporal
- * Boolean.
+ * @details These relationships are applied at each instant and result in a
+ * temporal Boolean.
  *
  * The following relationships are supported for a temporal geometry point
  * and a geometry: tcontains, tdisjoint, tintersects, ttouches, and
@@ -434,7 +433,16 @@ tinterrel_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool tinter,
   bool restr, bool atvalue)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs))
+#if MEOS
+  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
+      ! ensure_tgeo_type_all(temp->temptype))
+    return NULL;
+#else
+  assert(temp); assert(gs); assert(tgeo_type_all(temp->temptype));
+#endif /* MEOS */
+  if (! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)) ||
+      ! ensure_has_not_Z(temp->temptype, temp->flags) ||
+      ! ensure_has_not_Z_geo(gs) || gserialized_is_empty(gs))
     return NULL;
 
   /* Bounding box test */
@@ -536,7 +544,18 @@ tinterrel_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
   bool tinter, bool restr, bool atvalue)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tspatial_tspatial(temp1, temp2))
+#if MEOS
+  if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2) ||
+      ! ensure_tgeo_type_all(temp1->temptype) ||
+      ! ensure_tgeo_type_all(temp2->temptype))
+    return NULL;
+#else
+  assert(temp1); assert(temp2); assert(tgeo_type_all(temp1->temptype));
+  assert(tgeo_type_all(temp2->temptype));
+#endif /* MEOS */
+  if (! ensure_same_srid(tspatial_srid(temp1), tspatial_srid(temp2)) ||
+      ! ensure_same_geodetic(temp1->flags, temp2->flags) ||
+      ! ensure_same_dimensionality(temp1->flags, temp2->flags))
     return NULL;
 
   Temporal *result = tinter ?
@@ -604,8 +623,15 @@ tcontains_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, bool restr,
   bool atvalue)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs) ||
-      ! ensure_has_not_Z_geo(gs) || 
+#if MEOS
+  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
+      ! ensure_tgeo_type_all(temp->temptype))
+    return NULL;
+#else
+  assert(temp); assert(gs); assert(tgeo_type_all(temp->temptype));
+#endif /* MEOS */
+  if (! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)) ||
+      gserialized_is_empty(gs) || ! ensure_has_not_Z_geo(gs) || 
       ! ensure_has_not_Z(temp->temptype, temp->flags))
     return NULL;
 
@@ -654,8 +680,16 @@ ttouches_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool restr,
   bool atvalue)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs) ||
-      ! ensure_has_not_Z(temp->temptype, temp->flags) || ! ensure_has_not_Z_geo(gs))
+#if MEOS
+  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
+      ! ensure_tgeo_type_all(temp->temptype))
+    return NULL;
+#else
+  assert(temp); assert(gs); assert(tgeo_type_all(temp->temptype));
+#endif /* MEOS */
+  if (! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)) ||
+      ! ensure_has_not_Z(temp->temptype, temp->flags) ||
+      ! ensure_has_not_Z_geo(gs) || gserialized_is_empty(gs))
     return NULL;
 
   GSERIALIZED *gsbound = geom_boundary(gs);
@@ -1258,9 +1292,17 @@ tdwithin_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, double dist,
   bool restr, bool atvalue)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs) ||
+#if MEOS
+  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
+      ! ensure_tgeo_type_all(temp->temptype))
+    return NULL;
+#else
+  assert(temp); assert(gs); assert(tgeo_type_all(temp->temptype));
+#endif /* MEOS */
+  if (! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)) ||
       (tpoint_type(temp->temptype) && ! ensure_point_type(gs)) ||
-      ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
+      ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8) ||
+      gserialized_is_empty(gs))
     return NULL;
 
   datum_func3 func =
@@ -1410,7 +1452,18 @@ tdwithin_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2, double dist,
   bool restr, bool atvalue)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tspatial_tspatial(temp1, temp2) ||
+#if MEOS
+  if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2) ||
+      ! ensure_tgeo_type_all(temp1->temptype) ||
+      ! ensure_tgeo_type_all(temp2->temptype))
+    return NULL;
+#else
+  assert(temp1); assert(temp2); assert(tgeo_type_all(temp1->temptype));
+  assert(tgeo_type_all(temp2->temptype));
+#endif /* MEOS */
+  if (! ensure_same_srid(tspatial_srid(temp1), tspatial_srid(temp2)) ||
+      ! ensure_same_geodetic(temp1->flags, temp2->flags) ||
+      ! ensure_same_dimensionality(temp1->flags, temp2->flags) ||
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return NULL;
 

@@ -28,7 +28,8 @@
  *****************************************************************************/
 
 /**
- * @brief API of the Mobility Engine Open Source (MEOS) library.
+ * @file
+ * @brief External API of the Mobility Engine Open Source (MEOS) library
  */
 
 #ifndef __MEOS_H__
@@ -332,6 +333,82 @@ extern int meos_errno(void);
 extern int meos_errno_set(int err);
 extern int meos_errno_restore(int err);
 extern int meos_errno_reset(void);
+
+/*****************************************************************************
+ * Validity macros
+ *****************************************************************************/
+
+/**
+ * @brief Macro for ensuring that the pointer passed as argument is not null
+ */
+#if MEOS
+  #define ENSURE_NOT_NULL(temp)  \
+    ensure_not_null((void *) (temp))
+#else
+  #define ENSURE_NOT_NULL(temp)  \
+    assert(temp);
+#endif /* MEOS */
+
+/**
+ * @brief Macro for ensuring that the temporal value passed as argument is a
+ * temporal Boolean
+ * @note The macro works for the Temporal type and its subtypes TInstant,
+ * TSequence, and TSequenceSet
+ */
+#if MEOS
+  #define ENSURE_TBOOL(temp) ( \
+    ensure_not_null((void *) temp) && \
+    ensure_temporal_isof_type((Temporal *) temp, T_TBOOL) )
+#else
+  #define ENSURE_TBOOL(temp) \
+    assert(temp); assert((temp)->temptype == T_TBOOL);
+#endif /* MEOS */
+
+/**
+ * @brief Macro for ensuring that the temporal value passed as argument is a
+ * temporal integer
+ * @note The macro works for the Temporal type and its subtypes TInstant,
+ * TSequence, and TSequenceSet
+ */
+#if MEOS
+  #define ENSURE_TINT(temp) ( \
+    ensure_not_null((void *) temp) && \
+    ensure_temporal_isof_type((Temporal *) temp, T_TINT) )
+#else
+  #define ENSURE_TINT(temp) \
+    assert(temp); assert((temp)->temptype == T_TINT);
+#endif /* MEOS */
+
+/**
+ * @brief Macro for ensuring that the temporal value passed as argument is a
+ * temporal float
+ * @note The macro works for the Temporal type and its subtypes TInstant,
+ * TSequence, and TSequenceSet
+ */
+#if MEOS
+  #define ENSURE_TFLOAT(temp) ( \
+    ensure_not_null((void *) temp) && \
+    ensure_temporal_isof_type((Temporal *) temp, T_TFLOAT) )
+#else
+  #define ENSURE_TFLOAT(temp) \
+    assert(temp); assert((temp)->temptype == T_TFLOAT);
+#endif /* MEOS */
+
+/**
+ * @brief Macro for ensuring that the temporal value passed as argument is a
+ * temporal text
+ * @note The macro works for the Temporal type and its subtypes TInstant,
+ * TSequence, and TSequenceSet
+ */
+#if MEOS
+  #define ENSURE_TTEXT(temp) ( \
+    ensure_not_null((void *) temp) && \
+    ensure_temporal_isof_type((Temporal *) temp, T_TTEXT) )
+#else
+  #define ENSURE_TTEXT(temp) \
+    assert(temp); assert((temp)->temptype == T_TTEXT);
+#endif /* MEOS */
+
 
 /*****************************************************************************
  * Initialization of the MEOS library
@@ -1300,7 +1377,7 @@ extern bool srid_is_latlong(int32_t srid);
 extern Temporal **temparr_round(const Temporal **temp, int count, int maxdd);
 extern Temporal *temporal_round(const Temporal *temp, int maxdd);
 extern Temporal *temporal_scale_time(const Temporal *temp, const Interval *duration);
-extern Temporal *temporal_set_interp(const Temporal *temp, interpType interp);
+extern Temporal *temporal_set_interp(const Temporal *temp, const char *interp_str);
 extern Temporal *temporal_shift_scale_time(const Temporal *temp, const Interval *shift, const Interval *duration);
 extern Temporal *temporal_shift_time(const Temporal *temp, const Interval *shift);
 extern TInstant *temporal_to_tinstant(const Temporal *temp);

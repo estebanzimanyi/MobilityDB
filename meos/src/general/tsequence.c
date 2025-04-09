@@ -1121,7 +1121,8 @@ bool
 tsequence_make_valid(const TInstant **instants, int count, bool lower_inc,
   bool upper_inc, interpType interp)
 {
-  if (! ensure_valid_tinstarr_common(instants, count, lower_inc, upper_inc, interp) ||
+  if (! ensure_valid_tinstarr_common(instants, count, lower_inc,
+        upper_inc, interp) ||
       ! ensure_valid_tinstarr(instants, count, MERGE_NO, interp))
     return false;
   return true;

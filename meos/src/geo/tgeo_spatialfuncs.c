@@ -480,7 +480,7 @@ ensure_same_geodetic(int16 flags1, int16 flags2)
  * have the same type of coordinates, either planar or geodetic
  */
 bool
-ensure_same_geodetic_geo(const Temporal *temp, const GSERIALIZED *gs)
+ensure_same_geodetic_tspatial_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   if (MEOS_FLAGS_GET_GEODETIC(temp->flags) != FLAGS_GET_GEODETIC(gs->gflags))
   {
@@ -744,8 +744,8 @@ ensure_not_empty(const GSERIALIZED *gs)
 bool
 ensure_valid_stbox_geo(const STBox *box, const GSERIALIZED *gs)
 {
-  if (! ensure_not_null((void *) box) || ! ensure_not_null((void *) gs) ||
-      gserialized_is_empty(gs) || ! ensure_has_X(T_STBOX, box->flags) ||
+  assert(box); assert(gs);
+  if (gserialized_is_empty(gs) || ! ensure_has_X(T_STBOX, box->flags) ||
       ! ensure_same_srid(box->srid, gserialized_get_srid(gs)))
     return false;
   return true;
@@ -761,10 +761,9 @@ ensure_valid_stbox_geo(const STBox *box, const GSERIALIZED *gs)
 bool
 ensure_valid_tspatial_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
-  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_tgeo_type_all(temp->temptype) ||
-      ! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)) ||
-      ! ensure_same_geodetic_geo(temp, gs))
+  assert(temp); assert(gs); assert(tspatial_type(temp->temptype));
+  if (! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)) ||
+      ! ensure_same_geodetic_tspatial_geo(temp, gs))
     return false;
   return true;
 }
@@ -775,8 +774,8 @@ ensure_valid_tspatial_geo(const Temporal *temp, const GSERIALIZED *gs)
 bool
 ensure_valid_spatial_stbox_stbox(const STBox *box1, const STBox *box2)
 {
-  if (! ensure_not_null((void *) box1) || ! ensure_not_null((void *) box2) ||
-      ! ensure_has_X(T_STBOX, box1->flags) || 
+  assert(box1); assert(box2);
+  if (! ensure_has_X(T_STBOX, box1->flags) || 
       ! ensure_has_X(T_STBOX, box2->flags) ||
       ! ensure_same_geodetic(box1->flags, box2->flags) ||
       ! ensure_same_srid(stbox_srid(box1), stbox_srid(box2)))
@@ -790,25 +789,10 @@ ensure_valid_spatial_stbox_stbox(const STBox *box1, const STBox *box2)
 bool
 ensure_valid_tgeo_stbox(const Temporal *temp, const STBox *box)
 {
-  if (ensure_not_null((void *) temp) && ensure_not_null((void *) box) &&
-      ensure_tgeo_type_all(temp->temptype) && 
-      ensure_has_X(T_STBOX, box->flags) &&
+  assert(temp); assert(box); assert(tgeo_type_all(temp->temptype));
+  if (ensure_has_X(T_STBOX, box->flags) &&
       ensure_same_geodetic(temp->flags, box->flags) &&
       ensure_same_srid(tspatial_srid(temp), stbox_srid(box)))
-    return true;
-  return false;
-}
-
-/**
- * @brief Ensure the validity of two temporal points
- */
-bool
-ensure_valid_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
-{
-  if (ensure_not_null((void *) temp1) && ensure_not_null((void *) temp2) &&
-      ensure_tspatial_type(temp1->temptype) &&
-      ensure_same_temporal_type(temp1, temp2) &&
-      ensure_same_srid(tspatial_srid(temp1), tspatial_srid(temp2)))
     return true;
   return false;
 }
@@ -1110,10 +1094,9 @@ Temporal *
 tgeo_tpoint(const Temporal *temp, bool oper)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_not_null((void *) temp) ||
-      (((oper == TGEO_TO_TPOINT && (! ensure_tgeo_type_all(temp->temptype) ||
+  if ((oper == TGEO_TO_TPOINT && (! ensure_tgeo_type_all(temp->temptype) ||
          ! ensure_tgeo_point_type(temp))) ||
-        (oper == TPOINT_TO_TGEO && ! ensure_tpoint_type(temp->temptype)))))
+      (oper == TPOINT_TO_TGEO && ! ensure_tpoint_type(temp->temptype)))
     return NULL;
 
   assert(temptype_subtype(temp->subtype));
@@ -1277,9 +1260,13 @@ Temporal *
 tgeo_affine(const Temporal *temp, const AFFINE *a)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) a) ||
       ! ensure_tgeo_type_all(temp->temptype))
     return NULL;
+#else
+  assert(temp); assert(a); assert(tgeo_type_all(temp->temptype));
+#endif /* MEOS */
 
   assert(temptype_subtype(temp->subtype));
   switch (temp->subtype)
@@ -1374,8 +1361,14 @@ tgeo_scale(const Temporal *temp, const GSERIALIZED *scale,
   const GSERIALIZED *sorigin)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) scale) ||
-      gserialized_is_empty(scale) || ! ensure_point_type(scale) || 
+      ! ensure_tgeo_type_all(temp->temptype))
+    return NULL;
+#else
+  assert(temp); assert(scale); assert(tgeo_type_all(temp->temptype));
+#endif /* MEOS */
+  if (! ensure_point_type(scale) || gserialized_is_empty(scale) ||
       (sorigin && 
         (gserialized_is_empty(sorigin) || ! ensure_point_type(sorigin))))
     return NULL;
@@ -1467,8 +1460,13 @@ GSERIALIZED *
 tgeo_convex_hull(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_tgeo_type_all(temp->temptype))
+#if MEOS
+  if (! ensure_not_null((void *) temp) ||
+      ! ensure_tgeo_type_all(temp->temptype))
     return NULL;
+#else
+  assert(temp); assert(tgeo_type_all(temp->temptype));
+#endif /* MEOS */
 
   GSERIALIZED *traj = tpoint_type(temp->temptype) ?
     tpoint_trajectory(temp) : tgeo_traversed_area(temp);
@@ -1494,13 +1492,13 @@ tgeo_traversed_area(const Temporal *temp)
   /* Ensure the validity of the arguments */
 #if MEOS
   if (! ensure_not_null((void *) temp) || 
-      ! ensure_tgeo_type_all(temp->temptype) ||
-      ! ensure_nonlinear_interp(temp->flags))
+      ! ensure_tgeo_type_all(temp->temptype))
     return NULL;
 #else
   assert(temp); assert(tgeo_type_all(temp->temptype));
-  assert(! MEOS_FLAGS_LINEAR_INTERP(temp->flags));
 #endif /* MEOS */
+  if (! ensure_nonlinear_interp(temp->flags))
+    return NULL;
 
   /* Get the array of pointers to the component values */
   int count;

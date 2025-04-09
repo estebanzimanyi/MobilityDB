@@ -62,7 +62,7 @@
 bool
 pose_set_stbox(const Pose *pose, STBox *box)
 {
-  assert(pose); assert(box);
+  ENSURE_NOT_NULL(pose); assert(box);
   GSERIALIZED *geom = pose_point(pose);
   bool result = geo_set_stbox(geom, box);
   pfree(geom);
@@ -102,10 +102,10 @@ pose_stbox(const Pose *pose)
 {
   /* Ensure the validity of the arguments */
 #if MEOS
-  if (! ensure_not_null((void *) pose))
+  if (! ENSURE_NOT_NULL(pose))
     return NULL;
 #else
-  assert(pose);
+  ENSURE_NOT_NULL(pose);
 #endif /* MEOS */
   STBox box;
   if (! pose_set_stbox(pose, &box))
@@ -196,7 +196,7 @@ tposeseq_expand_stbox(TSequence *seq, const TInstant *inst)
 bool
 pose_timestamptz_set_stbox(const Pose *pose, TimestampTz t, STBox *box)
 {
-  assert(pose); assert(box);
+  ENSURE_NOT_NULL(pose); assert(box);
   pose_set_stbox(pose, box);
   span_set(TimestampTzGetDatum(t), TimestampTzGetDatum(t), true, true,
     T_TIMESTAMPTZ, T_TSTZSPAN, &box->period);
@@ -210,19 +210,18 @@ pose_timestamptz_set_stbox(const Pose *pose, TimestampTz t, STBox *box)
  * timestamptz
  * @param[in] pose Pose
  * @param[in] t Timestamp
- * @csqlfn #Cbuffer_timestamptz_to_stbox()
+ * @csqlfn #Pose_timestamptz_to_stbox()
  */
 STBox *
 pose_timestamptz_to_stbox(const Pose *pose, TimestampTz t)
 {
   /* Ensure the validity of the arguments */
 #if MEOS
-  if (! ensure_not_null((void *) pose))
+  if (! ENSURE_NOT_NULL(pose))
     return NULL;
 #else
-  assert(pose);
+  ENSURE_NOT_NULL(pose);
 #endif /* MEOS */
-
   STBox box;
   if (! pose_timestamptz_set_stbox(pose, t, &box))
     return NULL;
@@ -240,7 +239,7 @@ pose_timestamptz_to_stbox(const Pose *pose, TimestampTz t)
 bool
 pose_tstzspan_set_stbox(const Pose *pose, const Span *s, STBox *box)
 {
-  assert(pose); assert(s); assert(box);
+  ENSURE_NOT_NULL(pose); assert(s); assert(box);
   pose_set_stbox(pose, box);
   memcpy(&box->period, s, sizeof(Span));
   MEOS_FLAGS_SET_T(box->flags, true);
@@ -253,18 +252,17 @@ pose_tstzspan_set_stbox(const Pose *pose, const Span *s, STBox *box)
  * timestamptz
  * @param[in] pose Pose
  * @param[in] s Timestamptz span
- * @csqlfn #Cbuffer_tstzspan_to_stbox()
+ * @csqlfn #Pose_tstzspan_to_stbox()
  */
 STBox *
 pose_tstzspan_to_stbox(const Pose *pose, const Span *s)
 {
   /* Ensure the validity of the arguments */
 #if MEOS
-  if (! ensure_not_null((void *) pose) || ! ensure_not_null((void *) s) || 
-      ! ensure_span_isof_type(s, T_TSTZSPAN))
+  if (! ENSURE_NOT_NULL(pose) || ! ENSURE_TSTZSPAN(s))
     return NULL;
 #else
-  assert(pose); assert(s); assert(s->spantype == T_TSTZSPAN);
+  ENSURE_NOT_NULL(pose); ENSURE_TSTZSPAN(s);
 #endif /* MEOS */
   STBox box;
   if (! pose_tstzspan_set_stbox(pose, s, &box))

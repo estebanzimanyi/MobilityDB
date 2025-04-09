@@ -47,8 +47,9 @@
 #include <measures.h>
 #include <measures3d.h>
 /* MEOS */
-#include "meos.h"
-#include "meos_internal.h"
+#include <meos.h>
+#include <meos_rgeo.h>
+#include <meos_internal.h>
 #include "general/temporal.h"
 #include "general/type_util.h"
 #include "general/meos_catalog.h"

@@ -60,6 +60,36 @@
 #define MAXIDX count - 1
 
 /*****************************************************************************
+ * Validity macros
+ *****************************************************************************/
+
+/**
+ * @brief Macro for ensuring that the set passed as argument is a timestamptz
+ * set
+ */
+#if MEOS
+  #define ENSURE_TSTZSET(set) ( \
+    ensure_not_null((void **) set) && \
+    ensure_set_isof_type(set, T_TSTZSET) )
+#else
+  #define ENSURE_TSTZSET(set) \
+    assert(set); assert((set)->settype == T_TSTZSET);
+#endif /* MEOS */
+
+/**
+ * @brief Macro for ensuring that the set passed as argument is a
+ * geometry/geography set
+ */
+#if MEOS
+  #define ENSURE_GEOMSET(set) ( \
+    ensure_not_null((void **) set) && \
+    ensure_set_isof_type(set, T_GEOMSET) )
+#else
+  #define ENSURE_GEOMSET(set) \
+    assert(set); assert((set)->settype == T_GEOMSET);
+#endif /* MEOS */
+
+/*****************************************************************************
  * Struct definition for the unnest operation
  *****************************************************************************/
 

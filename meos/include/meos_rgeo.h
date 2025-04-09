@@ -45,6 +45,25 @@
 #include <meos_internal.h>
 #include "geo/stbox.h"
 
+/*****************************************************************************
+ * Validity macros
+ *****************************************************************************/
+
+/**
+ * @brief Macro for ensuring that the temporal value passed as argument is a
+ * temporal rigid geometry
+ * @note The macro works for the Temporal type and its subtypes TInstant,
+ * TSequence, and TSequenceSet
+ */
+#if MEOS
+  #define ENSURE_TRGEOMETRY(temp) ( \
+    ensure_not_null((void **) temp) && \
+    ensure_temporal_isof_type((Temporal *) temp, T_TRGEOMETRY) )
+#else
+  #define ENSURE_TRGEOMETRY(temp) \
+    assert(temp); assert((temp)->temptype == T_TRGEOMETRY);
+#endif /* MEOS */
+
 /*===========================================================================*
  * Functions for temporal rigid geometries
  *===========================================================================*/
@@ -73,19 +92,19 @@ extern Temporal *trgeo_tpoint(const Temporal *temp);
  * Accessor functions
  *****************************************************************************/
 
-extern GSERIALIZED *trgeo_start_value(const Temporal *temp);
-extern GSERIALIZED *trgeo_end_value(const Temporal *temp);
-extern bool trgeo_value_n(const Temporal *temp, int n, GSERIALIZED **result);
-extern TInstant *trgeo_start_instant(const Temporal *temp);
-extern TSequence *trgeo_start_sequence(const Temporal *temp);
 extern TInstant *trgeo_end_instant(const Temporal *temp);
 extern TSequence *trgeo_end_sequence(const Temporal *temp);
+extern GSERIALIZED *trgeo_end_value(const Temporal *temp);
+extern GSERIALIZED *trgeo_geom(const Temporal *temp);
 extern TInstant *trgeo_instant_n(const Temporal *temp, int n);
 extern TInstant **trgeo_instants(const Temporal *temp, int *count);
 extern TSequence **trgeo_segments(const Temporal *temp, int *count);
 extern TSequence *trgeo_sequence_n(const Temporal *temp, int i);
 extern TSequence **trgeo_sequences(const Temporal *temp, int *count);
-extern bool trgeo_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict, Datum *result);
+extern TInstant *trgeo_start_instant(const Temporal *temp);
+extern TSequence *trgeo_start_sequence(const Temporal *temp);
+extern GSERIALIZED *trgeo_start_value(const Temporal *temp);
+extern bool trgeo_value_n(const Temporal *temp, int n, GSERIALIZED **result);
 extern GSERIALIZED *trgeo_traversed_area(const Temporal *temp);
 
 /*****************************************************************************
@@ -98,6 +117,9 @@ extern Temporal *trgeo_delete_timestamptz(const Temporal *temp, TimestampTz t, b
 extern Temporal *trgeo_delete_tstzset(const Temporal *temp, const Set *s, bool connect);
 extern Temporal *trgeo_delete_tstzspan(const Temporal *temp, const Span *s, bool connect);
 extern Temporal *trgeo_delete_tstzspanset(const Temporal *temp, const SpanSet *ss, bool connect);
+extern Temporal *trgeo_round(const Temporal *temp, int maxdd);
+extern Temporal *trgeo_set_interp(const Temporal *temp, const char *interp_str);
+extern TInstant *trgeo_to_tinstant(const Temporal *temp);
 
 /*****************************************************************************
  * Restriction functions

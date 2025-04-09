@@ -34,6 +34,8 @@
 
 #include "geo/tgeo_spatialfuncs.h"
 
+/* C */
+#include <assert.h>
 /* PostgreSQL */
 #include <utils/float.h>
 #if POSTGRESQL_VERSION_NUMBER >= 160000
@@ -1073,8 +1075,12 @@ GSERIALIZED *
 tpoint_trajectory(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype))
     return NULL;
+#else
+  assert(temp); assert(tpoint_type(temp->temptype));
+#endif /* MEOS */
 
   /* Call the traversed area function for discrete or step interpolation */
   if (! MEOS_FLAGS_LINEAR_INTERP(temp->flags))
@@ -1530,11 +1536,16 @@ tpoint_tfloat_to_geomeas(const Temporal *tpoint, const Temporal *meas,
   bool segmentize, GSERIALIZED **result)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) tpoint) ||
       ! ensure_not_null((void *) result) ||
       ! ensure_tpoint_type(tpoint->temptype) ||
       (meas && ! ensure_tnumber_type(meas->temptype)))
     return false;
+#else
+  assert(tpoint); assert(result); assert(tpoint_type(tpoint->temptype));
+  assert(! meas || tpoint_type(tnumber_type(meas->temptype)));
+#endif /* MEOS */
 
   Temporal *sync1, *sync2;
   if (meas)
@@ -1817,8 +1828,13 @@ Temporal *
 geomeas_tpoint(const GSERIALIZED *gs)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_not_null((void *) gs) || ! ensure_not_empty(gs) ||
-      ! ensure_has_M_geo(gs))
+#if MEOS
+  if (! ensure_not_null((void *) gs))
+    return NULL;
+#else
+  assert(gs);
+#endif /* MEOS */
+  if (! ensure_not_empty(gs) || ! ensure_has_M_geo(gs))
     return NULL;
 
   bool hasz = (bool) FLAGS_GET_Z(gs->gflags);
@@ -2333,11 +2349,16 @@ tpoint_AsMVTGeom(const Temporal *temp, const STBox *bounds, int32_t extent,
   int *count)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) bounds) ||
       ! ensure_not_null((void *) gsarr) ||
       ! ensure_not_null((void *) timesarr) ||
       ! ensure_not_null((void *) count) || ! ensure_tpoint_type(temp->temptype))
     return false;
+#else
+  assert(temp); assert(bounds); assert(gsarr); assert(timesarr); assert(count);
+  assert(tpoint_type(temp->temptype));
+#endif /* MEOS */
 
   if (bounds->xmax - bounds->xmin <= 0 || bounds->ymax - bounds->ymin <= 0)
   {
@@ -2489,8 +2510,12 @@ double
 tpoint_length(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype))
     return -1.0;
+#else
+  assert(temp); assert(tpoint_type(temp->temptype));
+#endif /* MEOS */
 
   assert(temptype_subtype(temp->subtype));
   if (! MEOS_FLAGS_LINEAR_INTERP(temp->flags))
@@ -2582,8 +2607,12 @@ Temporal *
 tpoint_cumulative_length(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype))
     return NULL;
+#else
+  assert(temp); assert(tpoint_type(temp->temptype));
+#endif /* MEOS */
 
   assert(temptype_subtype(temp->subtype));
   if (! MEOS_FLAGS_LINEAR_INTERP(temp->flags))
@@ -2675,8 +2704,14 @@ Temporal *
 tpoint_speed(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype) ||
-      ! ensure_linear_interp(temp->flags))
+#if MEOS
+  if (! ensure_not_null((void *) temp) || 
+      ! ensure_tpoint_type(temp->temptype))
+    return NULL;
+#else
+  assert(temp); assert(tpoint_type(temp->temptype));
+#endif /* MEOS */
+  if (! ensure_linear_interp(temp->flags))
     return NULL;
 
   assert(temptype_subtype(temp->subtype));
@@ -2801,8 +2836,12 @@ GSERIALIZED *
 tpoint_twcentroid(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype))
     return NULL;
+#else
+  assert(temp); assert(tpoint_type(temp->temptype));
+#endif /* MEOS */
 
   assert(temptype_subtype(temp->subtype));
   switch (temp->subtype)
@@ -2924,9 +2963,13 @@ bool
 tpoint_direction(const Temporal *temp, double *result)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) result) ||
       ! ensure_tpoint_type(temp->temptype))
     return false;
+#else
+  assert(temp); assert(result); assert(tpoint_type(temp->temptype));
+#endif /* MEOS */
 
   assert(temptype_subtype(temp->subtype));
   switch (temp->subtype)
@@ -3060,8 +3103,12 @@ Temporal *
 tpoint_azimuth(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype))
     return NULL;
+#else
+  assert(temp); assert(tpoint_type(temp->temptype));
+#endif /* MEOS */
 
   assert(temptype_subtype(temp->subtype));
   if (! MEOS_FLAGS_LINEAR_INTERP(temp->flags))
@@ -3082,8 +3129,12 @@ Temporal *
 tpoint_angular_difference(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype))
     return NULL;
+#else
+  assert(temp); assert(tpoint_type(temp->temptype));
+#endif /* MEOS */
 
   Temporal *tazimuth = tpoint_azimuth(temp);
   Temporal *result = NULL;
@@ -3328,9 +3379,15 @@ bearing_point_point(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
   double *result)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_not_null((void *) gs1) || ! ensure_not_null((void *) gs2) ||
-      ! ensure_point_type(gs1) || ! ensure_point_type(gs2) ||
-      ! ensure_same_srid(gserialized_get_srid(gs1), gserialized_get_srid(gs2)) ||
+#if MEOS
+  if (! ensure_not_null((void *) gs1) || ! ensure_not_null((void *) gs2))
+    return false;
+#else
+  assert(gs1); assert(gs2);
+#endif /* MEOS */
+  if (! ensure_point_type(gs1) || ! ensure_point_type(gs2) ||
+      ! ensure_same_srid(gserialized_get_srid(gs1),
+        gserialized_get_srid(gs2)) ||
       ! ensure_same_dimensionality_geo(gs1, gs2))
     return false;
 
@@ -3355,9 +3412,17 @@ Temporal *
 bearing_tpoint_point(const Temporal *temp, const GSERIALIZED *gs, bool invert)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs) ||
-      ! ensure_point_type(gs) ||
-      ! ensure_same_dimensionality_tspatial_geo(temp, gs))
+#if MEOS
+  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
+      ! ensure_tpoint_type(temp->temptype))
+    return NULL;
+#else
+  assert(temp); assert(gs); assert(tpoint_type(temp->temptype));
+#endif /* MEOS */
+  if (! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)) ||
+      ! ensure_same_dimensionality_tspatial_geo(temp, gs) ||
+      ! ensure_same_geodetic_tspatial_geo(temp, gs) ||
+      ! ensure_point_type(gs) || gserialized_is_empty(gs))
     return NULL;
 
   LiftedFunctionInfo lfinfo;
@@ -3386,8 +3451,18 @@ Temporal *
 bearing_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tspatial_tspatial(temp1, temp2) ||
-      ! ensure_same_dimensionality(temp1->flags, temp2->flags) )
+#if MEOS
+  if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2) ||
+      ! ensure_tpoint_type(temp1->temptype) || 
+      ! ensure_tpoint_type(temp2->temptype))
+    return NULL;
+#else
+  assert(temp1); assert(temp2); assert(tpoint_type(temp1->temptype));
+  assert(tpoint_type(temp2->temptype));
+#endif /* MEOS */
+  if (! ensure_same_srid(tspatial_srid(temp1), tspatial_srid(temp2)) ||
+      ! ensure_same_dimensionality(temp1->flags, temp2->flags) ||
+      ! ensure_same_geodetic(temp1->flags, temp2->flags))
     return NULL;
 
   /* Fill the lifted structure */
@@ -4122,8 +4197,12 @@ bool
 tpoint_is_simple(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp) || ! ensure_tpoint_type(temp->temptype))
     return false;
+#else
+  assert(temp); assert(tpoint_type(temp->temptype));
+#endif /* MEOS */
 
   assert(temptype_subtype(temp->subtype));
   switch (temp->subtype)
@@ -4327,9 +4406,13 @@ Temporal **
 tpoint_make_simple(const Temporal *temp, int *count)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) count) ||
       ! ensure_tpoint_type(temp->temptype))
     return NULL;
+#else
+  assert(temp); assert(count); assert(tpoint_type(temp->temptype));
+#endif /* MEOS */
 
   assert(temptype_subtype(temp->subtype));
   switch (temp->subtype)

@@ -1625,14 +1625,13 @@ Temporal_set_interp(PG_FUNCTION_ARGS)
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   text *interp_txt = PG_GETARG_TEXT_P(1);
   char *interp_str = text2cstring(interp_txt);
-  interpType interp = interptype_from_string(interp_str);
-  pfree(interp_str);
 #if RGEO
   Temporal *result = (temp->temptype == T_TRGEOMETRY) ?
-    trgeo_set_interp(temp, interp) : temporal_set_interp(temp, interp);
+    trgeo_set_interp(temp, interp_str) : temporal_set_interp(temp, interp_str);
 #else
-  Temporal *result = temporal_set_interp(temp, interp);
+  Temporal *result = temporal_set_interp(temp, interp_str);
 #endif /* RGEO */
+  pfree(interp_str);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_TEMPORAL_P(result);
 }

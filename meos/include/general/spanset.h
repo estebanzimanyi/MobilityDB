@@ -40,6 +40,23 @@
 #include <meos.h>
 #include "general/meos_catalog.h"
 
+/*****************************************************************************
+ * Validity macros
+ *****************************************************************************/
+
+/**
+ * @brief Macro for ensuring that the span set passed as argument is a
+ * timestamptz span set
+ */
+#if MEOS
+  #define ENSURE_TSTZSPANSET(ss) ( \
+    ensure_not_null((void **) ss) && \
+    ensure_spanset_isof_type(ss, T_TSTZSPANSET) )
+#else
+  #define ENSURE_TSTZSPANSET(ss) \
+    assert(ss); assert((ss)->spansettype == T_TSTZSPANSET);
+#endif /* MEOS */
+
 /*****************************************************************************/
 
 /* General functions */

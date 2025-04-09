@@ -62,6 +62,37 @@ typedef struct Pose Pose;
 #define PG_GETARG_POSE_P(X)      DatumGetPoseP(PG_GETARG_DATUM(X))
 #define PG_RETURN_POSE_P(X)      PG_RETURN_POINTER(X)
 
+/*****************************************************************************
+ * Validity macros
+ *****************************************************************************/
+
+/**
+ * @brief Macro for ensuring that the set passed as argument is a pose set
+ */
+#if MEOS
+  #define ENSURE_POSESET(set) ( \
+    ensure_not_null((void *) set) && \
+    ensure_set_isof_type(set, T_POSESET) )
+#else
+  #define ENSURE_POSESET(set) \
+    assert(set); assert((set)->settype == T_POSESET);
+#endif /* MEOS */
+
+/**
+ * @brief Macro for ensuring that the temporal value passed as argument is a
+ * temporal pose
+ * @note The macro works for the Temporal type and its subtypes TInstant,
+ * TSequence, and TSequenceSet
+ */
+#if MEOS
+  #define ENSURE_TPOSE(temp) ( \
+    ensure_not_null((void *) temp) && \
+    ensure_temporal_isof_type((Temporal *) temp, T_TPOSE) )
+#else
+  #define ENSURE_TPOSE(temp) \
+    assert(temp); assert((temp)->temptype == T_TPOSE);
+#endif /* MEOS */
+
 /******************************************************************************
  * Functions for poses
  ******************************************************************************/

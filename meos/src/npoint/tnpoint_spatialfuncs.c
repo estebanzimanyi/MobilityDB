@@ -242,6 +242,15 @@ tnpointseqset_trajectory(const TSequenceSet *ss)
 GSERIALIZED *
 tnpoint_trajectory(const Temporal *temp)
 {
+  /* Ensure the validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) temp) ||
+      ! ensure_temporal_isof_type(temp, T_TNPOINT))
+    return NULL;
+#else
+  assert(temp); assert(temp->temptype == T_TNPOINT);
+#endif /* MEOS */
+
   assert(temptype_subtype(temp->subtype));
   switch (temp->subtype)
   {
@@ -259,6 +268,7 @@ tnpoint_trajectory(const Temporal *temp)
  *****************************************************************************/
 
 /**
+ * @ingroup meos_npoint_comp
  * @brief Return true if two network points are approximately equal with
  * respect to an epsilon value
  * @details Two network points may be have different route identifier but
@@ -268,6 +278,14 @@ tnpoint_trajectory(const Temporal *temp)
 bool
 npoint_same(const Npoint *np1, const Npoint *np2)
 {
+  /* Ensure the validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) np1) || ! ensure_not_null((void *) np2))
+    return false;
+#else
+    assert(np1); assert(np2);
+#endif /* MEOS */
+
   /* Equal route identifier and same position */
   if (np1->rid == np2->rid && fabs(np1->pos - np2->pos) > MEOS_EPSILON)
     return false;
@@ -328,6 +346,15 @@ tnpointseqset_length(const TSequenceSet *ss)
 double
 tnpoint_length(const Temporal *temp)
 {
+  /* Ensure the validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) temp) ||
+      ! ensure_temporal_isof_type(temp, T_TNPOINT))
+    return -1.0;
+#else
+  assert(temp); assert(temp->temptype == T_TNPOINT);
+#endif /* MEOS */
+
   assert(temptype_subtype(temp->subtype));
   if (! MEOS_FLAGS_LINEAR_INTERP(temp->flags))
     return 0.0;
@@ -402,6 +429,15 @@ tnpointseqset_cumulative_length(const TSequenceSet *ss)
 Temporal *
 tnpoint_cumulative_length(const Temporal *temp)
 {
+  /* Ensure the validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) temp) ||
+      ! ensure_temporal_isof_type(temp, T_TNPOINT))
+    return NULL;
+#else
+  assert(temp); assert(temp->temptype == T_TNPOINT);
+#endif /* MEOS */
+
   assert(temptype_subtype(temp->subtype));
   if (! MEOS_FLAGS_LINEAR_INTERP(temp->flags))
     return temporal_from_base_temp(Float8GetDatum(0.0), T_TFLOAT, temp);
@@ -483,9 +519,14 @@ Temporal *
 tnpoint_speed(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp) ||
-      ! ensure_tspatial_type(temp->temptype) ||
-      ! ensure_linear_interp(temp->flags))
+      ! ensure_temporal_isof_type(temp, T_TNPOINT))
+    return NULL;
+#else
+  assert(temp); assert(temp->temptype == T_TNPOINT);
+#endif /* MEOS */
+  if (! ensure_linear_interp(temp->flags))
     return NULL;
 
   assert(temptype_subtype(temp->subtype));
@@ -513,9 +554,18 @@ tnpoint_speed(const Temporal *temp)
 GSERIALIZED *
 tnpoint_twcentroid(const Temporal *temp)
 {
-  Temporal *tgeom = tnpoint_tgeompoint(temp);
-  GSERIALIZED *result = tpoint_twcentroid(tgeom);
-  pfree(tgeom);
+  /* Ensure the validity of the arguments */
+#if MEOS
+  if (! ensure_not_null((void *) temp) ||
+      ! ensure_tgeo_type_all(temp->temptype))
+    return NULL;
+#else
+  assert(temp); assert(tgeo_type_all(temp->temptype));
+#endif /* MEOS */
+
+  Temporal *tpoint = tnpoint_tgeompoint(temp);
+  GSERIALIZED *result = tpoint_twcentroid(tpoint);
+  pfree(tpoint);
   return result;
 }
 
@@ -533,8 +583,14 @@ tnpoint_restrict_geom(const Temporal *temp, const GSERIALIZED *gs,
   const Span *zspan, bool atfunc)
 {
   /* Ensure the validity of the arguments */
+#if MEOS
   if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) gs) ||
-      ! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)) ||
+      ! ensure_temporal_isof_type(temp, T_TNPOINT))
+    return NULL;
+#else
+  assert(temp); assert(gs); assert(temp->temptype == T_TNPOINT);
+#endif /* MEOS */
+  if (! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)) ||
       ! ensure_has_not_Z_geo(gs))
     return NULL;
 
@@ -542,19 +598,19 @@ tnpoint_restrict_geom(const Temporal *temp, const GSERIALIZED *gs,
   if (gserialized_is_empty(gs))
     return atfunc ? NULL : temporal_copy(temp);
 
-  Temporal *tempgeom = tnpoint_tgeompoint(temp);
-  Temporal *resgeom = tgeo_restrict_geom(tempgeom, gs, zspan, atfunc);
+  Temporal *tpoint = tnpoint_tgeompoint(temp);
+  Temporal *res = tgeo_restrict_geom(tpoint, gs, zspan, atfunc);
   Temporal *result = NULL;
-  if (resgeom)
+  if (res)
   {
     /* We do not call the function tgeompoint_tnpoint to avoid
      * roundoff errors */
-    SpanSet *ss = temporal_time(resgeom);
+    SpanSet *ss = temporal_time(res);
     result = temporal_restrict_tstzspanset(temp, ss, REST_AT);
-    pfree(resgeom);
+    pfree(res);
     pfree(ss);
   }
-  pfree(tempgeom);
+  pfree(tpoint);
   return result;
 }
 
@@ -567,13 +623,10 @@ tnpoint_restrict_geom(const Temporal *temp, const GSERIALIZED *gs,
  * @param[in] zspan Span of values to restrict the Z dimension
  * @csqlfn #Tnpoint_at_geom()
  */
-Temporal *
+inline Temporal *
 tnpoint_at_geom(const Temporal *temp, const GSERIALIZED *gs,
   const Span *zspan)
 {
-  /* Ensure the validity of the arguments */
-  if (! ensure_valid_tspatial_geo(temp, gs))
-    return NULL;
   return tnpoint_restrict_geom(temp, gs, zspan, REST_AT);
 }
 
@@ -585,13 +638,10 @@ tnpoint_at_geom(const Temporal *temp, const GSERIALIZED *gs,
  * @param[in] zspan Span of values to restrict the Z dimension
  * @csqlfn #Tnpoint_minus_geom()
  */
-Temporal *
+inline Temporal *
 tnpoint_minus_geom(const Temporal *temp, const GSERIALIZED *gs,
   const Span *zspan)
 {
-  /* Ensure the validity of the arguments */
-  if (! ensure_valid_tspatial_geo(temp, gs))
-    return NULL;
   return tnpoint_restrict_geom(temp, gs, zspan, REST_MINUS);
 }
 #endif /* MEOS */
@@ -611,13 +661,21 @@ Temporal *
 tnpoint_restrict_stbox(const Temporal *temp, const STBox *box, bool border_inc,
   bool atfunc)
 {
-  Temporal *tgeom = tnpoint_tgeompoint(temp);
-  Temporal *tgeomres = tgeo_restrict_stbox(tgeom, box, border_inc, atfunc);
+#if MEOS
+  if (! ensure_not_null((void *) temp) || ! ensure_not_null((void *) box) ||
+      ! ensure_temporal_isof_type(temp, T_TNPOINT))
+    return NULL;
+#else
+  assert(temp); assert(box); assert(temp->temptype == T_TNPOINT);
+#endif /* MEOS */
+
+  Temporal *tpoint = tnpoint_tgeompoint(temp);
+  Temporal *res = tgeo_restrict_stbox(tpoint, box, border_inc, atfunc);
   Temporal *result = NULL;
-  if (tgeomres)
+  if (res)
   {
-    result = tgeompoint_tnpoint(tgeomres);
-    pfree(tgeomres);
+    result = tgeompoint_tnpoint(res);
+    pfree(res);
   }
   return result;
 }
@@ -631,7 +689,7 @@ tnpoint_restrict_stbox(const Temporal *temp, const STBox *box, bool border_inc,
  * @param[in] border_inc True when the box contains the upper border
  * @sqlfn #Tnpoint_at_stbox()
  */
-Temporal *
+inline Temporal *
 tnpoint_at_stbox(const Temporal *temp, const STBox *box, bool border_inc)
 {
   return tnpoint_restrict_stbox(temp, box, border_inc, REST_AT);
@@ -645,7 +703,7 @@ tnpoint_at_stbox(const Temporal *temp, const STBox *box, bool border_inc)
  * @param[in] border_inc True when the box contains the upper border
  * @sqlfn #Tnpoint_minus_stbox()
  */
-Temporal *
+inline Temporal *
 tnpoint_minus_stbox(const Temporal *temp, const STBox *box, bool border_inc)
 {
   return tnpoint_restrict_stbox(temp, box, border_inc, REST_MINUS);

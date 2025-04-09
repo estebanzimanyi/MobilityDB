@@ -48,6 +48,7 @@
 #include "general/type_inout.h"
 #include "general/type_util.h"
 #include "geo/tgeo_spatialfuncs.h"
+#include "geo/tspatial_parser.h"
 /* MobilityDB */
 #include "pg_general/meos_catalog.h"
 #include "pg_general/temporal.h"
@@ -69,8 +70,8 @@ PG_FUNCTION_INFO_V1(Stbox_in);
 Datum
 Stbox_in(PG_FUNCTION_ARGS)
 {
-  const char *input = PG_GETARG_CSTRING(0);
-  PG_RETURN_STBOX_P(stbox_in(input));
+  const char *str = PG_GETARG_CSTRING(0);
+  PG_RETURN_STBOX_P(stbox_parse(&str));
 }
 
 PGDLLEXPORT Datum Stbox_out(PG_FUNCTION_ARGS);

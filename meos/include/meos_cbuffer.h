@@ -52,6 +52,40 @@
 
 typedef struct Cbuffer Cbuffer;
 
+/*****************************************************************************
+ * Validity macros and functions
+ *****************************************************************************/
+
+/**
+ * @brief Macro for ensuring that the set passed as argument is a circular
+ * buffer set
+ * @note The macro works for the Temporal type and its subtypes TInstant,
+ * TSequence, and TSequenceSet
+ */
+#if MEOS
+  #define ENSURE_CBUFFERSET(set) ( \
+    ensure_not_null((void **) set) && \
+    ensure_set_isof_type(set, T_CBUFFERSET) )
+#else
+  #define ENSURE_CBUFFERSET(set) \
+    assert(set); assert((set)->settype == T_CBUFFERSET);
+#endif /* MEOS */
+
+/**
+ * @brief Macro for ensuring that the temporal value passed as argument is a
+ * temporal rigid geometry
+ * @note The macro works for the Temporal type and its subtypes TInstant,
+ * TSequence, and TSequenceSet
+ */
+#if MEOS
+  #define ENSURE_TCBUFFER(temp) ( \
+    ensure_not_null((void **) temp) && \
+    ensure_temporal_isof_type((Temporal *) temp, T_TCBUFFER) )
+#else
+  #define ENSURE_TCBUFFER(temp) \
+    assert(temp); assert((temp)->temptype == T_TCBUFFER);
+#endif /* MEOS */
+
 /******************************************************************************
  * Functions for circular buffers
  ******************************************************************************/
@@ -140,8 +174,6 @@ extern char **tcbufferarr_as_text(const Temporal **temparr, int count, int maxdd
  * Constructor functions for temporal types
  *****************************************************************************/
 
-extern bool ensure_valid_stbox_cbuffer(const STBox *box, const Cbuffer *cbuf);
-extern bool ensure_valid_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2);
 extern Temporal *tcbuffer_make(const Temporal *tpoint, const Temporal *tfloat);
 
 /*****************************************************************************
