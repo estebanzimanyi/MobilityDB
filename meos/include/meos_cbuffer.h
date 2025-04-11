@@ -59,8 +59,6 @@ typedef struct Cbuffer Cbuffer;
 /**
  * @brief Macro for ensuring that the set passed as argument is a circular
  * buffer set
- * @note The macro works for the Temporal type and its subtypes TInstant,
- * TSequence, and TSequenceSet
  */
 #if MEOS
   #define ENSURE_CBUFFERSET(set) ( \
@@ -73,7 +71,7 @@ typedef struct Cbuffer Cbuffer;
 
 /**
  * @brief Macro for ensuring that the temporal value passed as argument is a
- * temporal rigid geometry
+ * temporal circular buffer
  * @note The macro works for the Temporal type and its subtypes TInstant,
  * TSequence, and TSequenceSet
  */

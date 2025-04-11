@@ -54,7 +54,7 @@
  *****************************************************************************/
 
 /**
- * @brief Return true if a temporal circular buffer  and a circular buffer are
+ * @brief Return true if a temporal circular buffer and a circular buffer are
  * valid for operations
  * @param[in] temp Temporal value
  * @param[in] cbuf Value
@@ -76,6 +76,8 @@ ensure_valid_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cbuf)
 
 /**
  * @brief Ensure the validity of a temporal circular buffer and a geometry
+ * @param[in] temp Temporal value
+ * @param[in] gs Geometry
  */
 bool
 ensure_valid_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
@@ -94,6 +96,8 @@ ensure_valid_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 /**
  * @brief Ensure the validity of a temporal circular buffer and a
  * spatiotemporal box
+ * @param[in] temp Temporal value
+ * @param[in] box Spatiotemporal box
  */
 bool
 ensure_valid_tcbuffer_stbox(const Temporal *temp, const STBox *box)
@@ -111,10 +115,9 @@ ensure_valid_tcbuffer_stbox(const Temporal *temp, const STBox *box)
 }
 
 /**
- * @brief Return true if a temporal circular buffer  and a circular buffer are
+ * @brief Return true if a temporal circular buffer and a circular buffer are
  * valid for operations
- * @param[in] temp Temporal value
- * @param[in] cbuf Value
+ * @param[in] temp1,temp2 Temporal value
  */
 bool
 ensure_valid_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)

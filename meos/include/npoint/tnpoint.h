@@ -82,6 +82,16 @@ struct Nsegment
  * Npoint functions
  *****************************************************************************/
 
+/* Validity functions */
+
+extern bool ensure_valid_tnpoint_npoint(const Temporal *temp,
+  const Npoint *np);
+extern bool ensure_valid_tnpoint_geo(const Temporal *temp,
+  const GSERIALIZED *gs);
+extern bool ensure_valid_tnpoint_stbox(const Temporal *temp, const STBox *box);
+extern bool ensure_valid_tnpoint_tnpoint(const Temporal *temp1,
+  const Temporal *temp2);
+
 /* Collinear functions */
 
 extern bool npoint_collinear(const Npoint *np1, const Npoint *np2, 

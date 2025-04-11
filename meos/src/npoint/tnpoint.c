@@ -49,64 +49,91 @@
 #include "npoint/tnpoint.h"
 
 /*****************************************************************************
+ * Validity functions
+ *****************************************************************************/
+
+/**
+ * @brief Return true if a temporal network point and a network point are
+ * valid for operations
+ * @param[in] temp Temporal value
+ * @param[in] np Value
+ */
+bool
+ensure_valid_tnpoint_npoint(const Temporal *temp, const Npoint *np)
+{
+  /* Ensure the validity of the arguments */
+#if MEOS
+  if (! ENSURE_TNPOINT(temp) || ! ENSURE_NOT_NULL(np))
+    return false;
+#else
+  ENSURE_TNPOINT(temp); ENSURE_NOT_NULL(np);
+#endif /* MEOS */
+  if (! ensure_same_srid(tspatial_srid(temp), npoint_srid(np)))
+    return false;
+  return true;
+}
+
+/**
+ * @brief Ensure the validity of a temporal network point and a geometry
+ */
+bool
+ensure_valid_tnpoint_geo(const Temporal *temp, const GSERIALIZED *gs)
+{
+#if MEOS
+  if (! ENSURE_TNPOINT(temp) || ! ENSURE_NOT_NULL(gs))
+    return false;
+#else
+  ENSURE_TNPOINT(temp); ENSURE_NOT_NULL(gs);
+#endif /* MEOS */
+  if (! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)))
+    return false;
+  return true;
+}
+
+/**
+ * @brief Ensure the validity of a temporal network point and a
+ * spatiotemporal box
+ */
+bool
+ensure_valid_tnpoint_stbox(const Temporal *temp, const STBox *box)
+{
+#if MEOS
+  if (! ENSURE_TNPOINT(temp) || ! ENSURE_NOT_NULL(box))
+    return false;
+#else
+  ENSURE_TNPOINT(temp); ENSURE_NOT_NULL(box);
+#endif /* MEOS */
+  if (! ensure_has_X(T_STBOX, box->flags) || 
+      ! ensure_same_srid(tspatial_srid(temp), box->srid))
+    return false;
+  return true;
+}
+
+/**
+ * @brief Return true if a temporal network point and a network point are
+ * valid for operations
+ * @param[in] temp Temporal value
+ * @param[in] np Value
+ */
+bool
+ensure_valid_tnpoint_tnpoint(const Temporal *temp1, const Temporal *temp2)
+{
+  /* Ensure the validity of the arguments */
+#if MEOS
+  if (! ENSURE_TNPOINT(temp1) || ! ENSURE_TNPOINT(temp2))
+    return false;
+#else
+  ENSURE_TNPOINT(temp1); ENSURE_TNPOINT(temp2);
+#endif /* MEOS */
+  if (! ensure_same_srid(tspatial_srid(temp1), tspatial_srid(temp2)))
+    return false;
+  return true;
+}
+
+/*****************************************************************************
  * Input/output functions
  *****************************************************************************/
 
-
-#if MEOS
-/**
- * @ingroup meos_internal_npoint_inout
- * @brief Return a temporal circular buffer instant from its Well-Known Text 
- * (WKT) representation
- * @param[in] str String
- */
-TInstant *
-tnpointinst_in(const char *str)
-{
-  assert(str);
-  /* Call the superclass function to read the SRID at the beginning (if any) */
-  Temporal *temp = tspatial_parse(&str, T_TNPOINT);
-  assert(temp->subtype == TINSTANT);
-  return (TInstant *) temp;
-}
-
-/**
- * @ingroup meos_internal_npoint_inout
- * @brief Return a temporal circular buffer sequence from its Well-Known Text 
- * (WKT) representation
- * @param[in] str String
- * @param[in] interp Interpolation
- */
-TSequence *
-tnpointseq_in(const char *str, interpType interp __attribute__((unused)))
-{
-  assert(str);
-  /* Call the superclass function to read the SRID at the beginning (if any) */
-  Temporal *temp = tspatial_parse(&str, T_TNPOINT);
-  if (! temp)
-    return NULL;
-  assert (temp->subtype == TSEQUENCE);
-  return (TSequence *) temp;
-}
-
-/**
- * @ingroup meos_internal_npoint_inout
- * @brief Return a temporal circular buffer sequence set from its Well-Known
- * Text (WKT) representation
- * @param[in] str String
- */
-TSequenceSet *
-tnpointseqset_in(const char *str)
-{
-  assert(str);
-  /* Call the superclass function to read the SRID at the beginning (if any) */
-  Temporal *temp = tspatial_parse(&str, T_TNPOINT);
-  assert(temp->subtype == TSEQUENCESET);
-  return (TSequenceSet *) temp;
-}
-#endif /* MEOS */
-
-/*****************************************************************************/
 #if MEOS
 /**
  * @ingroup meos_npoint_inout
@@ -118,7 +145,7 @@ Temporal *
 tnpoint_in(const char *str)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_not_null((void *) str))
+  if (! ENSURE_NOT_NULL(str))
     return NULL;
   return tspatial_parse(&str, T_TNPOINT);
 }
@@ -134,10 +161,55 @@ char *
 tnpoint_out(const Temporal *temp, int maxdd)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_not_null((void *) temp) || 
-      ! ensure_temporal_isof_type(temp, T_TNPOINT))
+  if (! ENSURE_TNPOINT(temp))
     return NULL;
   return temporal_out(temp, maxdd);
+}
+
+/**
+ * @ingroup meos_internal_npoint_inout
+ * @brief Return a temporal network point instant from its Well-Known Text 
+ * (WKT) representation
+ * @param[in] str String
+ */
+TInstant *
+tnpointinst_in(const char *str)
+{
+  /* Call the superclass function */
+  Temporal *temp = tnpoint_in(str);
+  assert(temp->subtype == TINSTANT);
+  return (TInstant *) temp;
+}
+
+/**
+ * @ingroup meos_internal_npoint_inout
+ * @brief Return a temporal network point sequence from its Well-Known Text 
+ * (WKT) representation
+ * @param[in] str String
+ * @param[in] interp Interpolation
+ */
+TSequence *
+tnpointseq_in(const char *str, interpType interp __attribute__((unused)))
+{
+  /* Call the superclass function */
+  Temporal *temp = tnpoint_in(str);
+  assert (temp->subtype == TSEQUENCE);
+  return (TSequence *) temp;
+}
+
+/**
+ * @ingroup meos_internal_npoint_inout
+ * @brief Return a temporal network point sequence set from its Well-Known
+ * Text (WKT) representation
+ * @param[in] str String
+ */
+TSequenceSet *
+tnpointseqset_in(const char *str)
+{
+  /* Call the superclass function */
+  Temporal *temp = tnpoint_in(str);
+  assert(temp->subtype == TSEQUENCESET);
+  return (TSequenceSet *) temp;
 }
 #endif /* MEOS */
 
@@ -146,7 +218,7 @@ tnpoint_out(const Temporal *temp, int maxdd)
  *****************************************************************************/
 
 /**
- * @brief Return a temporal network point converted to a temporal geometry point
+ * @brief Convert a temporal network point into a temporal geometry point
  */
 TInstant *
 tnpointinst_tgeompointinst(const TInstant *inst)
@@ -157,7 +229,7 @@ tnpointinst_tgeompointinst(const TInstant *inst)
 }
 
 /**
- * @brief Return a temporal network point converted to a temporal geometry point
+ * @brief Convert a temporal network point into a temporal geometry point
  */
 TSequence *
 tnpointseq_tgeompointseq_disc(const TSequence *seq)
@@ -171,7 +243,7 @@ tnpointseq_tgeompointseq_disc(const TSequence *seq)
 }
 
 /**
- * @brief Return a temporal network point converted to a temporal geometry point
+ * @brief Convert a temporal network point into a temporal geometry point
  */
 TSequence *
 tnpointseq_tgeompointseq_cont(const TSequence *seq)
@@ -202,7 +274,7 @@ tnpointseq_tgeompointseq_cont(const TSequence *seq)
 }
 
 /**
- * @brief Return a temporal network point converted to a temporal geometry point
+ * @brief Convert a temporal network point into a temporal geometry point
  */
 TSequenceSet *
 tnpointseqset_tgeompointseqset(const TSequenceSet *ss)
@@ -216,8 +288,7 @@ tnpointseqset_tgeompointseqset(const TSequenceSet *ss)
 
 /**
  * @ingroup meos_npoint_conversion
- * @brief Return a temporal network point transformed to a temporal geometry
- * point
+ * @brief Convert a temporal network point into a temporal geometry point
  * @param[in] temp Temporal point
  * @csqlfn #Tnpoint_to_tgeompoint()
  */
@@ -226,11 +297,10 @@ tnpoint_tgeompoint(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
 #if MEOS
-  if (! ensure_not_null((void *) temp) ||
-      ! ensure_temporal_isof_type(temp, T_TNPOINT))
+  if (! ENSURE_TNPOINT(temp))
     return NULL;
 #else
-  assert(temp); assert(temp->temptype == T_TNPOINT);
+  ENSURE_TNPOINT(temp);
 #endif /* MEOS */
 
   assert(temptype_subtype(temp->subtype));
@@ -250,7 +320,7 @@ tnpoint_tgeompoint(const Temporal *temp)
 /*****************************************************************************/
 
 /**
- * @brief Return a temporal geometry point converted to a temporal network point
+ * @brief Convert a temporal geometry point into a temporal network point
  */
 TInstant *
 tgeompointinst_tnpointinst(const TInstant *inst)
@@ -263,7 +333,7 @@ tgeompointinst_tnpointinst(const TInstant *inst)
 }
 
 /**
- * @brief Return a temporal geometry point converted to a temporal network point
+ * @brief Convert a temporal geometry point into a temporal network point
  */
 TSequence *
 tgeompointseq_tnpointseq(const TSequence *seq)
@@ -285,7 +355,7 @@ tgeompointseq_tnpointseq(const TSequence *seq)
 }
 
 /**
- * @brief Return a temporal geometry point converted to a temporal network point
+ * @brief Convert a temporal geometry point into a temporal network point
  */
 TSequenceSet *
 tgeompointseqset_tnpointseqset(const TSequenceSet *ss)
@@ -307,20 +377,19 @@ tgeompointseqset_tnpointseqset(const TSequenceSet *ss)
 
 /**
  * @ingroup meos_npoint_conversion
- * @brief Return a temporal geometry point transformed to a temporal network
- * point
+ * @brief Convert a temporal geometry point into a temporal network point
  * @param[in] temp Temporal point
  * @csqlfn #Tgeompoint_to_tnpoint()
  */
 Temporal *
 tgeompoint_tnpoint(const Temporal *temp)
 {
+  /* Ensure the validity of the arguments */
 #if MEOS
-  if (! ensure_not_null((void *) temp) ||
-      ! ensure_temporal_isof_type(temp, T_TNPOINT))
+  if (! ENSURE_TGEOMPOINT(temp))
     return NULL;
 #else
-  assert(temp); assert(temp->temptype == T_TGEOMPOINT);
+  ENSURE_TGEOMPOINT(temp);
 #endif /* MEOS */
 
   int32_t srid_tpoint = tspatial_srid(temp);
@@ -467,6 +536,14 @@ tnpointseqset_positions(const TSequenceSet *ss, int *count)
 Nsegment **
 tnpoint_positions(const Temporal *temp, int *count)
 {
+  /* Ensure the validity of the arguments */
+#if MEOS
+  if (! ENSURE_TNPOINT(temp) || ! ENSURE_NOT_NULL(count))
+    return NULL;
+#else
+  ENSURE_TNPOINT(temp);  ENSURE_NOT_NULL(count);
+#endif /* MEOS */
+
   assert(temptype_subtype(temp->subtype));
   switch (temp->subtype)
   {
@@ -579,6 +656,14 @@ tnpointseqset_routes(const TSequenceSet *ss)
 Set *
 tnpoint_routes(const Temporal *temp)
 {
+  /* Ensure the validity of the arguments */
+#if MEOS
+  if (! ENSURE_TNPOINT(temp))
+    return NULL;
+#else
+  ENSURE_TNPOINT(temp);
+#endif /* MEOS */
+
   assert(temptype_subtype(temp->subtype));
   switch (temp->subtype)
   {
