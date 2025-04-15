@@ -875,7 +875,7 @@ geo_to_wkb_size(const GSERIALIZED *gs, uint8_t variant)
  * Binary (WKB) representation
  */
 static size_t
-cbuffer_to_wkb_size(const Cbuffer *cbuf, uint8_t variant, bool component)
+cbuffer_to_wkb_size(const Cbuffer *cb, uint8_t variant, bool component)
 {
   size_t size = 0;
   if (! component)
@@ -883,7 +883,7 @@ cbuffer_to_wkb_size(const Cbuffer *cbuf, uint8_t variant, bool component)
     size += MEOS_WKB_BYTE_SIZE;
   /* One 2D coordinates + radius */
   size +=  MEOS_WKB_DOUBLE_SIZE * 3;
-  if (spatial_wkb_needs_srid(cbuffer_srid(cbuf), variant))
+  if (spatial_wkb_needs_srid(cbuffer_srid(cb), variant))
     size += MEOS_WKB_INT4_SIZE;
   return size;
 }
@@ -1483,13 +1483,13 @@ geo_to_wkb_buf(const GSERIALIZED *gs, uint8_t *buf, uint8_t variant)
  * @details SRID (int32), coordinates of a 2D point and radius (3 doubles)
  */
 static uint8_t *
-cbuffer_to_wkb_buf(const Cbuffer *cbuf, uint8_t *buf, uint8_t variant,
+cbuffer_to_wkb_buf(const Cbuffer *cb, uint8_t *buf, uint8_t variant,
   bool component)
 {
   if (! component)
     /* Write the endian flag (byte) */
     buf = endian_to_wkb_buf(buf, variant);
-  Datum d = PointerGetDatum(&cbuf->point);
+  Datum d = PointerGetDatum(&cb->point);
   /* Write the SRID */
   int32_t srid = gserialized_get_srid(DatumGetGserializedP(d));
   if (spatial_wkb_needs_srid(srid, variant))
@@ -1498,7 +1498,7 @@ cbuffer_to_wkb_buf(const Cbuffer *cbuf, uint8_t *buf, uint8_t variant,
   const POINT2D *point = DATUM_POINT2D_P(d);
   buf = double_to_wkb_buf(point->x, buf, variant);
   buf = double_to_wkb_buf(point->y, buf, variant);
-  buf = double_to_wkb_buf(cbuf->radius, buf, variant);
+  buf = double_to_wkb_buf(cb->radius, buf, variant);
   return buf;
 }
 #endif /* CBUFFER */

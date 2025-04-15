@@ -28,6 +28,7 @@
  *****************************************************************************/
 
 /**
+ * @file
  * @brief A simple program that reads AIS data from a CSV file, converts them
  * into temporal values, and stores them in MobilityDB.
  *

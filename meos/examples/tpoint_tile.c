@@ -28,6 +28,7 @@
  *****************************************************************************/
 
 /**
+ * @file
  * @brief A simple program that applies multidimensional tiling to a temporal
  * point according to value and/or time bins.
  *
@@ -41,6 +42,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <meos.h>
+#include <meos_geo.h>
 
 /* Maximum length in characters of a line in the output data */
 #define MAX_LINE_LENGTH 1024

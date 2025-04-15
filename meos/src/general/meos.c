@@ -133,7 +133,7 @@ proj_initialize(void)
 static void
 proj_finalize(void)
 {
-  proj_context_destroy(MEOS_PJ_CONTEXT);
+  // proj_context_destroy(MEOS_PJ_CONTEXT);
   proj_cleanup();
   MEOS_PJ_CONTEXT = NULL;
   return;

@@ -1309,7 +1309,7 @@ stbox_area(const STBox *box, bool spheroid)
  * @ingroup meos_geo_box_accessor
  * @brief Return the volume of a 3D spatiotemporal box
  * @param[in] box Spatiotemporal box
- * @result On error return -1.0
+ * @return On error return -1.0
  * @csqlfn #Stbox_volume()
  */
 double
@@ -1330,7 +1330,7 @@ stbox_volume(const STBox *box)
  * @param[in] box Spatiotemporal box
  * @param[in] spheroid When true, the calculation uses the WGS 84 spheroid,
  * otherwise it uses a faster spherical calculation
- * @result On error return -1.0
+ * @return On error return -1.0
  * @csqlfn #Stbox_perimeter()
  */
 double

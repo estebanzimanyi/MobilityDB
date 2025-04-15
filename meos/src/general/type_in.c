@@ -186,10 +186,10 @@ basetype_in(const char *str, meosType type,
 #if CBUFFER
     case T_CBUFFER:
     {
-      Cbuffer *cbuf = cbuffer_parse(&str, end);
-      if (! cbuf)
+      Cbuffer *cb = cbuffer_parse(&str, end);
+      if (! cb)
         return false;
-      *result = PointerGetDatum(cbuf);
+      *result = PointerGetDatum(cb);
       return true;
     }
 #endif

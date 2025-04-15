@@ -28,6 +28,7 @@
  *****************************************************************************/
 
 /**
+ * @file
  * @brief A simple program that reads AIS data from a CSV file, accumulates the
  * observations in main memory and send the temporal values to an output file
  * when they reach a given number of instants in order to free the memory and
@@ -35,7 +36,7 @@
  *
  * This program is similar to `04_ais_stream_db` but illustrates the use of
  * an output file. In this setting, the expandable data structures accumulate
- * the observations that have been received so far and appends to the file.
+ * the observations that have been received so far and append them to the file.
  * Depending on application requirements and the available memory, the
  * accumulated temporal values must be sent regularly to the file.
  *

@@ -28,6 +28,7 @@
  *****************************************************************************/
 
 /**
+ * @file
  * @brief A simple program that generates a given number of ttext instants,
  * appends the instant into a sequence set where each sequence of the sequence
  * set has a fixed number of instants defined by a compiler constant.

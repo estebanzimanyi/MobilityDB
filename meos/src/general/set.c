@@ -632,7 +632,7 @@ tstzset_dateset(const Set *s)
 int
 set_mem_size(const Set *s)
 {
-  VALIDATE_NOT_NULL(s, NULL);
+  VALIDATE_NOT_NULL(s, -1);
   return (int) VARSIZE(DatumGetPointer(s));
 }
 #endif /* MEOS */

@@ -38,16 +38,10 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-/* PostgreSQL */
-#if MEOS
-#include "postgres_int_defs.h"
-#else
-#include <postgres.h>
-#include <utils/date.h>
-#include <utils/timestamp.h>
-#endif
-/* PostGIS */
-#include <liblwgeom.h>
+/* MEOS */
+#include <meos.h>
+#include <meos_geo.h>
+#include <meos_internal.h>
 
 /*****************************************************************************
  * Type definitions
@@ -79,11 +73,7 @@ extern void meos_initialize_npoint(const char *file_name);
   #define VALIDATE_NPOINTSET(set, ret) \
     do { \
           if (! ensure_not_null((void *) (set)) || \
-<<<<<<< HEAD
               ! ensure_set_isof_type((set), T_NPOINTSET) ) \
-=======
-            ensure_set_isof_type((set), T_NPOINTSET) ) \
->>>>>>> 5b78c5423 (* Improve interpolation functions)
            return (ret); \
     } while (0)
 #else
@@ -104,11 +94,7 @@ extern void meos_initialize_npoint(const char *file_name);
   #define VALIDATE_TNPOINT(temp, ret) \
     do { \
           if (! ensure_not_null((void *) (temp)) || \
-<<<<<<< HEAD
               ! ensure_temporal_isof_type((Temporal *) (temp), T_TNPOINT) ) \
-=======
-            ensure_temporal_isof_type((Temporal *) (temp), T_TNPOINT) ) \
->>>>>>> 5b78c5423 (* Improve interpolation functions)
            return (ret); \
     } while (0)
 #else
@@ -257,48 +243,6 @@ extern GSERIALIZED *tnpoint_twcentroid(const Temporal *temp);
 /* Spatial transformation functions for temporal points */
 
 extern Temporal *tnpoint_to_tgeompoint(const Temporal *temp);
-
-/*****************************************************************************/
-
-/* Ever and always spatial relationship functions for temporal points */
-
-extern int acontains_geo_tnpoint(const GSERIALIZED *gs, const Temporal *temp);
-extern int acontains_geo_tpoint(const GSERIALIZED *gs, const Temporal *temp);
-extern int adisjoint_tnpoint_geo(const Temporal *temp, const GSERIALIZED *gs);
-extern int adisjoint_tnpoint_npoint(const Temporal *temp, const Npoint *np);
-extern int adisjoint_tnpoint_tnpoint(const Temporal *temp1, const Temporal *temp2);
-extern int adwithin_tnpoint_geo(const Temporal *temp, const GSERIALIZED *gs, double dist);
-extern int adwithin_tnpoint_npoint(const Temporal *temp, const Npoint *np, double dist);
-extern int adwithin_tnpoint_tnpoint(const Temporal *temp1, const Temporal *temp2, double dist);
-extern int aintersects_tnpoint_geo(const Temporal *temp, const GSERIALIZED *gs);
-extern int aintersects_tnpoint_npoint(const Temporal *temp, const Npoint *np);
-extern int aintersects_tnpoint_tnpoint(const Temporal *temp1, const Temporal *temp2);
-extern int atouches_tnpoint_geo(const Temporal *temp, const GSERIALIZED *gs);
-extern int atouches_tnpoint_npoint(const Temporal *temp, const Npoint *np);
-extern int atouches_tnpoint_tnpoint(const Temporal *temp1, const Temporal *temp2);
-extern int econtains_geo_tnpoint(const GSERIALIZED *gs, const Temporal *temp);
-extern int edisjoint_tnpoint_geo(const Temporal *temp, const GSERIALIZED *gs);
-extern int edisjoint_tnpoint_npoint(const Temporal *temp, const Npoint *np);
-extern int edisjoint_tnpoint_tpoint(const Temporal *temp1, const Temporal *temp2);
-extern int edwithin_tnpoint_geo(const Temporal *temp, const GSERIALIZED *gs, double dist);
-extern int edwithin_tnpoint_npoint(const Temporal *temp, const Npoint *np, double dist);
-extern int edwithin_tnpoint_tnpoint(const Temporal *temp1, const Temporal *temp2, double dist);
-extern int eintersects_tnpoint_geo(const Temporal *temp, const GSERIALIZED *gs);
-extern int eintersects_tnpoint_npoint(const Temporal *temp, const Npoint *np);
-extern int eintersects_tnpoint_tnpoint(const Temporal *temp1, const Temporal *temp2);
-extern int etouches_tnpoint_geo(const Temporal *temp, const GSERIALIZED *gs);
-extern int etouches_tnpoint_npoint(const Temporal *temp, const Npoint *np);
-
-/*****************************************************************************/
-
-/* Temporal spatial relationship functions for temporal points */
-
-extern Temporal *tcontains_geo_tnpoint(const GSERIALIZED *gs, const Temporal *temp, bool restr, bool atvalue);
-extern Temporal *tdwithin_tnpoint_geo(const Temporal *temp, const GSERIALIZED *gs, double dist, bool restr, bool atvalue);
-extern Temporal *tdwithin_tnpoint_npoint(const Temporal *temp, const Npoint *np, double dist, bool restr, bool atvalue);
-extern Temporal *tdwithin_tnpoint_tnpoint(const Temporal *temp1, const Temporal *temp2, double dist, bool restr, bool atvalue);
-extern Temporal *ttouches_tnpoint_geo(const Temporal *temp, const GSERIALIZED *gs, bool restr, bool atvalue);
-extern Temporal *ttouches_tnpoint_npoint(const Temporal *temp, const Npoint *np, bool restr, bool atvalue);
 
 /*****************************************************************************
  * Aggregate functions for temporal network points

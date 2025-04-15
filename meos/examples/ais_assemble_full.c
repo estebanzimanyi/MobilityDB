@@ -28,6 +28,7 @@
  *****************************************************************************/
 
 /**
+ * @file
  * @brief A simple program that reads AIS data from a CSV file containing one
  * full day of observations provided by the Danish Maritime Authority in
  * https://web.ais.dk/aisdata/, constructs for each ship temporal values for
@@ -113,7 +114,7 @@ int main(void)
   char point_buffer[MAX_LENGTH_POINT];
   /* Allocate space to build the trips */
   trip_record trips[MAX_SHIPS] = {0};
-  /* Record storing one line read from of the CSV file*/
+  /* Record storing one line read from the CSV file*/
   AIS_record rec;
   /* Number of records read */
   int no_records = 0;
@@ -172,7 +173,7 @@ int main(void)
       printf("*");
       fflush(stdout);
     }
-    /* Break if maximum number of records read */
+    /* Break if maximum number of records have been read */
     if (no_records == MAX_NO_RECORDS)
       break;
 
@@ -294,10 +295,10 @@ int main(void)
       {
         /* Uncomment the next lines to display debug messages showing how the
          * the data structures are expanded */
-        // printf("MMSI: %ld ", trips[j].MMSI);
-        // printf("Trip %d -> %d ", trips[j].no_trip_instants,
-          // trips[j].no_trip_instants * 2);
-        // fflush(stdout);
+        printf("MMSI: %ld ", trips[j].MMSI);
+        printf("Trip %d -> %d ", trips[j].no_trip_instants,
+          trips[j].no_trip_instants * 2);
+        fflush(stdout);
         new_instants = realloc(trips[j].trip_instants,
           sizeof(TInstant *) * trips[j].no_trip_instants * 2);
         if (new_instants == NULL)

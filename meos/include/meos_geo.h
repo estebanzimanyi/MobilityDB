@@ -145,7 +145,7 @@ typedef enum
   #define VALIDATE_TGEOMETRY(temp, ret) \
     do { \
           if (! ensure_not_null((void *) (temp)) || \
-            ! ensure_temporal_isof_type((Temporal *) (temp), T_TGEOMETRY) ) \
+              ! ensure_temporal_isof_type((Temporal *) (temp), T_TGEOMETRY) ) \
            return (ret); \
     } while (0)
 #else
@@ -165,7 +165,7 @@ typedef enum
   #define VALIDATE_TGEOGRAPHY(temp, ret) \
     do { \
           if (! ensure_not_null((void *) (temp)) || \
-            ! ensure_temporal_isof_type((Temporal *) (temp), T_TGEOGRAPHY) ) \
+              ! ensure_temporal_isof_type((Temporal *) (temp), T_TGEOGRAPHY) ) \
            return (ret); \
     } while (0)
 #else
@@ -185,7 +185,7 @@ typedef enum
   #define VALIDATE_TGEOMPOINT(temp, ret) \
     do { \
           if (! ensure_not_null((void *) (temp)) || \
-            ! ensure_temporal_isof_type((Temporal *) (temp), T_TGEOMPOINT) ) \
+              ! ensure_temporal_isof_type((Temporal *) (temp), T_TGEOMPOINT) ) \
            return (ret); \
     } while (0)
 #else
@@ -205,7 +205,7 @@ typedef enum
   #define VALIDATE_TGEOGPOINT(temp, ret) \
     do { \
           if (! ensure_not_null((void *) (temp)) || \
-            ! ensure_temporal_isof_type((Temporal *) (temp), T_TGEOGPOINT) ) \
+              ! ensure_temporal_isof_type((Temporal *) (temp), T_TGEOGPOINT) ) \
            return (ret); \
     } while (0)
 #else
@@ -226,7 +226,7 @@ typedef enum
   #define VALIDATE_TGEO(temp, ret) \
     do { \
           if (! ensure_not_null((void *) (temp)) || \
-            ! ensure_tgeo_type_all(((Temporal *) (temp))->temptype) ) \
+              ! ensure_tgeo_type_all(((Temporal *) (temp))->temptype) ) \
            return (ret); \
     } while (0)
 #else
@@ -246,7 +246,7 @@ typedef enum
   #define VALIDATE_TGEOM(temp, ret) \
     do { \
           if (! ensure_not_null((void *) (temp)) || \
-            ! ensure_tgeometry_type(((Temporal *) (temp))->temptype) ) \
+              ! ensure_tgeometry_type(((Temporal *) (temp))->temptype) ) \
            return (ret); \
     } while (0)
 #else
@@ -266,7 +266,7 @@ typedef enum
   #define VALIDATE_TGEOG(temp, ret) \
     do { \
           if (! ensure_not_null((void *) (temp)) || \
-            ! ensure_tgeodetic_type(((Temporal *) (temp))->temptype) ) \
+              ! ensure_tgeodetic_type(((Temporal *) (temp))->temptype) ) \
            return (ret); \
     } while (0)
 #else
@@ -287,7 +287,7 @@ typedef enum
   #define VALIDATE_TPOINT(temp, ret) \
     do { \
           if (! ensure_not_null((void *) (temp)) || \
-            ! ensure_tpoint_type(((Temporal *) (temp))->temptype) ) \
+              ! ensure_tpoint_type(((Temporal *) (temp))->temptype) ) \
            return (ret); \
     } while (0)
 #else
@@ -307,7 +307,7 @@ typedef enum
   #define VALIDATE_TSPATIAL(temp, ret) \
     do { \
           if (! ensure_not_null((void *) (temp)) || \
-            ! ensure_tspatial_type(((Temporal *) (temp))->temptype) ) \
+              ! ensure_tspatial_type(((Temporal *) (temp))->temptype) ) \
            return (ret); \
     } while (0)
 #else

@@ -28,6 +28,7 @@
  *****************************************************************************/
 
 /**
+ * @file
  * @brief A simple program that generates a given number of tpoint instants,
  * appends the instant into a sequence at each generation, and outputs the
  * number of instants and the distance travelled at the end.
@@ -61,7 +62,7 @@
  * - false => use geometric points
  * - true => use geodetic points
  */
-#define GEODETIC true
+#define GEODETIC false
 /* Maximum number of instants */
 #define MAX_INSTANTS 1000000
 /* Number of instants in a batch for printing a marker */
@@ -113,7 +114,8 @@ int main(void)
       seq = (Temporal *) tsequence_make_exp((const TInstant **) &inst, 1,
         EXPAND ? 2 : 1, true, true, LINEAR, false);
     else
-      seq = temporal_append_tinstant((Temporal *) seq, inst, 0.0, NULL, EXPAND);
+      seq = temporal_append_tinstant((Temporal *) seq, inst, LINEAR, 0.0, 
+        NULL, EXPAND);
     free(inst); free(time_str);
   }
 

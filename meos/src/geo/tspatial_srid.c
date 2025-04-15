@@ -64,7 +64,7 @@
 
 /*
  * Maximum length of an ESPG string to lookup
- * Notice that SRID_MAXIMUM is defined by PostGIS as 999999
+ * SRID_MAXIMUM is defined by PostGIS as 999999
  */
 #define MAX_AUTH_SRID_STR 12 /* EPSG:999999 */
 
@@ -375,7 +375,7 @@ lwproj_get(int32_t srid_from, int32_t srid_to)
     {
       /* Error */
       meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-        "Transform: Could not form projection from 'srid=%d'", srid_from);
+        "Transform: Could not form projection from 'SRID=%d'", srid_from);
       return NULL;
     }
   }
@@ -391,7 +391,7 @@ lwproj_get(int32_t srid_from, int32_t srid_to)
     {
       /* Error */
       meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-        "Transform: Could not form projection to 'srid=%d'", srid_to);
+        "Transform: Could not form projection to 'SRID=%d'", srid_to);
       return NULL;
     }
   }
@@ -401,7 +401,7 @@ lwproj_get(int32_t srid_from, int32_t srid_to)
     return result;
   /* Error */
   meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-    "Transform: Could not form projection from 'srid=%d' to 'srid=%d'",
+    "Transform: Could not form projection from 'SRID=%d' to 'SRID=%d'",
     srid_from, srid_to);
   return NULL;
 }
@@ -458,7 +458,7 @@ spheroid_init_from_srid(int32_t srid, SPHEROID *s)
   if (! pj->source_is_latlong)
     return LW_FAILURE;
   spheroid_init(s, pj->source_semi_major_metre, pj->source_semi_minor_metre);
-
+  pfree(pj);
   return LW_SUCCESS;
 }
 #endif /* MEOS */

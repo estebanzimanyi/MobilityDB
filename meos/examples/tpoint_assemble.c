@@ -28,6 +28,7 @@
  *****************************************************************************/
 
 /**
+ * @file
  * @brief A simple program that generates a given number of tgeompoint instants,
  * assembles the instants into a sequence at the end of the generation process,
  * and outputs the number of instants and the distance travelled.
@@ -45,13 +46,14 @@
 #include <stdlib.h>
 #include <time.h>
 #include <meos.h>
+#include <meos_geo.h>
 
 /*
  * Define whether geometric or geodetic points are used. Possible values are
  * - false => use geometric points
  * - true => use geodetic points
  */
-#define GEODETIC true
+#define GEODETIC false
 /* Maximum number of instants */
 #define MAX_INSTANTS 1000000
 /* Number of instants in a batch for printing a marker */
