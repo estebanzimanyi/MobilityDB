@@ -69,15 +69,11 @@ typedef struct Pose Pose;
 /**
  * @brief Macro for ensuring that the set passed as argument is a pose set
  */
-#ifdef MEOS
+#if MEOS
   #define VALIDATE_POSESET(set, ret) \
     do { \
           if (! ensure_not_null((void *) set) || \
-<<<<<<< HEAD
               ! ensure_set_isof_type((set), T_POSESET) ) \
-=======
-            ensure_set_isof_type((set), T_POSESET) ) \
->>>>>>> 5b78c5423 (* Improve interpolation functions)
            return (ret); \
     } while (0)
 #else
@@ -94,22 +90,18 @@ typedef struct Pose Pose;
  * @note The macro works for the Temporal type and its subtypes TInstant,
  * TSequence, and TSequenceSet
  */
-#ifdef MEOS
+#if MEOS
   #define VALIDATE_TPOSE(temp, ret) \
     do { \
           if (! ensure_not_null((void *) (temp)) || \
-<<<<<<< HEAD
               ! ensure_temporal_isof_type((Temporal *) (temp), T_TPOSE) ) \
-=======
-            ensure_temporal_isof_type((Temporal *) (temp), T_TPOSE) ) \
->>>>>>> 5b78c5423 (* Improve interpolation functions)
            return (ret); \
     } while (0)
 #else
   #define VALIDATE_TPOSE(temp, ret) \
     do { \
       assert(temp); \
-      assert(temporal_isof_type((Temporal *) (temp), T_TPOSE)); \
+      assert(((Temporal *) (temp))->temptype == T_TPOSE); \
     } while (0)
 #endif
 

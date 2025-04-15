@@ -341,7 +341,7 @@ extern int meos_errno_reset(void);
 /**
  * @brief Macro for ensuring that a pointer is not null
  */
-#ifdef MEOS
+#if MEOS
   #define VALIDATE_NOT_NULL(ptr, ret) \
     do { if (! ensure_not_null((void *) (ptr))) return (ret); } while (0)
 #else
@@ -462,7 +462,7 @@ extern int meos_errno_reset(void);
 /**
  * @brief Macro for ensuring that the span is a number span
  */
-#ifdef MEOS
+#if MEOS
   #define VALIDATE_NUMSET(set, ret) \
     do { \
           if (! ensure_not_null((void *) (set)) || \
@@ -555,7 +555,7 @@ extern int meos_errno_reset(void);
 /**
  * @brief Macro for ensuring that the span is a timestamptz span
  */
-#ifdef MEOS
+#if MEOS
   #define VALIDATE_TSTZSPAN(span, ret) \
     do { \
           if (! ensure_not_null((void *) (span)) || \
@@ -573,7 +573,7 @@ extern int meos_errno_reset(void);
 /**
  * @brief Macro for ensuring that the span is a number span
  */
-#ifdef MEOS
+#if MEOS
   #define VALIDATE_NUMSPAN(span, ret) \
     do { \
           if (! ensure_not_null((void *) (span)) || \
@@ -665,7 +665,7 @@ extern int meos_errno_reset(void);
 /**
  * @brief Macro for ensuring that the span set is a timestamptz span set
  */
-#ifdef MEOS
+#if MEOS
   #define VALIDATE_TSTZSPANSET(ss, ret) \
     do { \
           if (! ensure_not_null((void *) (ss)) || \
@@ -683,7 +683,7 @@ extern int meos_errno_reset(void);
 /**
  * @brief Macro for ensuring that the span set is a number span set
  */
-#ifdef MEOS
+#if MEOS
   #define VALIDATE_NUMSPANSET(ss, ret) \
     do { \
           if (! ensure_not_null((void *) (ss)) || \
@@ -810,6 +810,7 @@ typedef void (*error_handler_fn)(int, int, const char *);
 extern void meos_initialize_timezone(const char *name);
 extern void meos_initialize_error_handler(error_handler_fn err_handler);
 extern void meos_finalize_timezone(void);
+extern void meos_finalize_projsrs(void);
 
 extern bool meos_set_datestyle(const char *newval, void *extra);
 extern bool meos_set_intervalstyle(const char *newval, int extra);
@@ -1763,7 +1764,6 @@ extern text **ttext_values(const Temporal *temp, int *count);
 extern int spheroid_init_from_srid(int32_t srid, SPHEROID *s);
 extern bool ensure_srid_is_latlong(int32_t srid);
 extern double float_degrees(double value, bool normalize);
-extern bool srid_is_latlong(int32_t srid);
 extern Temporal **temparr_round(const Temporal **temp, int count, int maxdd);
 extern Temporal *temporal_round(const Temporal *temp, int maxdd);
 extern Temporal *temporal_scale_time(const Temporal *temp, const Interval *duration);

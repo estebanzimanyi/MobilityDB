@@ -55,22 +55,18 @@
  * @note The macro works for the Temporal type and its subtypes TInstant,
  * TSequence, and TSequenceSet
  */
-#ifdef MEOS
+#if MEOS
   #define VALIDATE_TRGEOMETRY(temp, ret) \
     do { \
           if (! ensure_not_null((void *) (temp)) || \
-<<<<<<< HEAD
               ! ensure_temporal_isof_type((Temporal *) (temp), T_TRGEOMETRY) ) \
-=======
-            ensure_temporal_isof_type((Temporal *) (temp), T_TRGEOMETRY) ) \
->>>>>>> 5b78c5423 (* Improve interpolation functions)
            return (ret); \
     } while (0)
 #else
   #define VALIDATE_TRGEOMETRY(temp, ret) \
     do { \
       assert(temp); \
-      assert(temporal_isof_type((Temporal *) (temp), T_TRGEOMETRY)); \
+      assert(((Temporal *) (temp))->temptype == T_TRGEOMETRY); \
     } while (0)
 #endif
 

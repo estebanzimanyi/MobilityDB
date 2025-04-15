@@ -363,7 +363,7 @@ cbufferarr_circles(const TInstant **instants, int count, int32_t srid)
 /**
  * @ingroup meos_cbuffer_spatial_accessor
  * @brief Return the traversed area of a temporal circular buffer instant
- * @param[in] int Temporal circular buffer
+ * @param[in] inst Temporal circular buffer
  * @param[in] srid SRID
  * @csqlfn #Tcbuffer_traversed_area()
  */
@@ -391,7 +391,7 @@ tcbufferseq_discstep_trav_area(const TSequence *seq, int32_t srid)
 {
   assert(seq); assert(seq->count > 1);
   assert(MEOS_FLAGS_GET_INTERP(seq->flags) != LINEAR);
-  const TInstant **instants = tsequence_instants_p(seq);
+  const TInstant **instants = tsequence_insts_p(seq);
   return cbufferarr_circles(instants, seq->count, srid);
 }
 
@@ -401,17 +401,30 @@ tcbufferseq_discstep_trav_area(const TSequence *seq, int32_t srid)
  * linear interpolation (iterator function)
  * @param[in] seq Temporal circular buffer
  * @param[in] srid SRID
+ * @param[out] result Array of output geometries
  * @csqlfn #Tcbuffer_traversed_area()
  */
 int
 tcbufferseq_linear_trav_area_iter(const TSequence *seq, int32_t srid,
   LWGEOM **result)
 {
-  assert(seq); assert(seq->count > 1);
+  assert(seq); assert(result);
   assert(MEOS_FLAGS_GET_INTERP(seq->flags) == LINEAR);
 
   const TInstant *inst1 = TSEQUENCE_INST_N(seq, 0);
   const Cbuffer *cb1 = DatumGetCbufferP(tinstant_value_p(inst1));
+
+  /* Instantaneous sequence */
+  if (seq->count == 1)
+  {
+    const GSERIALIZED *gs = DatumGetGserializedP(PointerGetDatum(&cb1->point));
+    const POINT2D *p = (POINT2D *) GS_POINT_PTR(gs);
+    int32_t srid = gserialized_get_srid(gs);
+    result[0] = lwcircle_make(p->x, p->y, cb1->radius, srid);
+    return 1;
+  }
+
+  /* General case */
   for (int i = 1; i < seq->count; i++)
   {
     const TInstant *inst2 = TSEQUENCE_INST_N(seq, i);
@@ -517,7 +530,7 @@ tcbufferseqset_step_trav_area(const TSequenceSet *ss, int32_t srid)
 {
   assert(ss); assert(ss->count > 1);
   assert(MEOS_FLAGS_GET_INTERP(ss->flags) == STEP);
-  const TInstant **instants = tsequenceset_insts(ss);
+  const TInstant **instants = tsequenceset_insts_p(ss);
   return cbufferarr_circles(instants, ss->count, srid);
 }
 
@@ -537,14 +550,12 @@ tcbufferseqset_linear_trav_area(const TSequenceSet *ss, int32_t srid)
   LWGEOM **geoms = palloc(sizeof(LWGEOM *) * ss->totalcount);
   int ngeoms = 0;
   for (int i = 0; i < ss->count; i++)
-  {
     /* Get the traversed area of the sequence */
-    const TSequence *seq = TSEQUENCESET_SEQ_N(ss, i);
-    ngeoms += tcbufferseq_linear_trav_area_iter(seq, srid, &geoms[ngeoms]);
-  }
+    ngeoms += tcbufferseq_linear_trav_area_iter(TSEQUENCESET_SEQ_N(ss, i),
+      srid, &geoms[ngeoms]);
   // TODO add the bounding box instead of ask PostGIS to compute it again
-  LWGEOM *res = (LWGEOM *) lwcollection_construct(COLLECTIONTYPE, srid,
-    NULL, (uint32_t) ngeoms, geoms);
+  LWGEOM *res = (LWGEOM *) lwcollection_construct(COLLECTIONTYPE, srid, NULL,
+    (uint32_t) ngeoms, geoms);
   /* We cannot pfree(geoms); */
   return geo_serialize(res);
 }
@@ -575,7 +586,6 @@ tcbufferseqset_trav_area(const TSequenceSet *ss, int32_t srid)
  * @ingroup meos_cbuffer_spatial_accessor
  * @brief Return the traversed area of a temporal circular buffer
  * @param[in] temp Temporal circular buffer
- * @param[in] srid SRID
  * @csqlfn #Tcbuffer_traversed_area()
  */
 GSERIALIZED *
