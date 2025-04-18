@@ -73,7 +73,7 @@ typedef struct Pose Pose;
   #define VALIDATE_POSESET(set, ret) \
     do { \
           if (! ensure_not_null((void *) set) || \
-            ensure_set_isof_type((set), T_POSESET) ) \
+              ! ensure_set_isof_type((set), T_POSESET) ) \
            return (ret); \
     } while (0)
 #else
@@ -94,7 +94,7 @@ typedef struct Pose Pose;
   #define VALIDATE_TPOSE(temp, ret) \
     do { \
           if (! ensure_not_null((void *) (temp)) || \
-            ensure_temporal_isof_type((Temporal *) (temp), T_TPOSE) ) \
+              ! ensure_temporal_isof_type((Temporal *) (temp), T_TPOSE) ) \
            return (ret); \
     } while (0)
 #else

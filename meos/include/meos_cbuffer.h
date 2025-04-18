@@ -64,7 +64,7 @@ typedef struct Cbuffer Cbuffer;
   #define VALIDATE_CBUFFERSET(set, ret) \
     do { \
           if (! ensure_not_null((void *) (set)) || \
-            ensure_set_isof_type((set), T_CBUFFERSET) ) \
+              ! ensure_set_isof_type((set), T_CBUFFERSET) ) \
            return (ret); \
     } while (0)
 #else
@@ -85,7 +85,7 @@ typedef struct Cbuffer Cbuffer;
   #define VALIDATE_TCBUFFER(temp, ret) \
     do { \
           if (! ensure_not_null((void *) (temp)) || \
-            ensure_temporal_isof_type((Temporal *) (temp), T_TCBUFFER) ) \
+              ! ensure_temporal_isof_type((Temporal *) (temp), T_TCBUFFER) ) \
            return (ret); \
     } while (0)
 #else

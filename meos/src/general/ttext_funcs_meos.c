@@ -36,6 +36,7 @@
 
 /* MEOS */
 #include <meos.h>
+#include <meos_internal.h>
 
 /*****************************************************************************
  * Text concatenation

@@ -127,16 +127,21 @@ cbuffersegm_locate(const Cbuffer *start, const Cbuffer *end,
     if (result2 < 0.0)
       return -1.0;
   }
-  long double result;
+  else
+  {
+    /* If the radii are equal return result1 where
+     * - result1 = -1.0 if gs1 == gs2 == gs, or
+     * - result1 in [0,1] if gs1 != gs2 */
+    return result1;
+  }
   if (result1 >= 0.0 && result2 >= 0.0)
-    result =  fabsl(result1 - result2) <= MEOS_EPSILON ? result1 : -1.0;
-  else if (result1 < 0.0 && result2 >= 0)
-    result = result2;
+    return (fabsl(result1 - result2) <= MEOS_EPSILON) ? result1 : -1.0;
+  if (result1 < 0.0 && result2 >= 0)
+    return result2;
   else if(result1 >= 0 && result2 <= 0)
-    result = result1;
+    return result1;
   else /* The three values are equal */
-    result = -1.0;
-  return result;
+    return -1.0;
 }
 
 /**

@@ -50,6 +50,7 @@
 #include <utils/timestamp.h>
 /* MEOS */
 #include <meos.h>
+#include <meos_internal.h>
 #include "general/span.h"
 #include "general/temporal.h"
 

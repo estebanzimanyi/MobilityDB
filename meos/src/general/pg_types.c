@@ -49,13 +49,11 @@
 #if POSTGRESQL_VERSION_NUMBER >= 160000
   #include "varatt.h"
 #endif
-
-
 /* PostGIS */
 #include <liblwgeom_internal.h> /* for OUT_DOUBLE_BUFFER_SIZE */
-
 /* MEOS */
 #include <meos.h>
+#include <meos_internal.h>
 #include "general/temporal.h"
 
 #if ! MEOS
