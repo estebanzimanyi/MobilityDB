@@ -456,7 +456,16 @@ tcbufferseq_linear_trav_area_iter(const TSequence *seq, int32_t srid,
       }
     }
     else
-      result[i - 1] = trapezoid_make(cb1, cb2);
+    {
+      const Cbuffer *cb_min = cb1;
+      const Cbuffer *cb_max = cb2;
+      if (cbuffer_cmp(cb1,cb2)>0) 
+      {
+        cb_min = cb2;
+        cb_max = cb1;
+      }
+      result[i - 1] = trapezoid_make(cb_min, cb_max);
+    }
 
     /* Prepare for next iteration */
     inst2 = inst1;
