@@ -979,7 +979,8 @@ tfunc_tcontseq_tcontseq_single(const TSequence *seq1, const TSequence *seq2,
         instants[ninsts++] = tinstant_make_free(value, lfinfo->restype, tptime);
     }
     /* Compute the function on the synchronized instants */
-    value = tfunc_base_base(tinstant_value_p(inst1), tinstant_value_p(inst2), lfinfo);
+    value = tfunc_base_base(tinstant_value_p(inst1), tinstant_value_p(inst2),
+      lfinfo);
     instants[ninsts++] = tinstant_make_free(value, lfinfo->restype, inst1->t);
     if (i == seq1->count || j == seq2->count)
       break;

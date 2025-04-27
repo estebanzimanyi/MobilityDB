@@ -36,7 +36,7 @@
  * relationship.
  *
  * The following relationships are supported for geometries: `contains`,
- * `disjoint`, `intersects`, `touches`, and `dwithin`.
+ * `covers`, `disjoint`, `intersects`, `touches`, and `dwithin`.
  *
  * The following relationships are supported for geographies: `disjoint`,
  * `intersects`, `dwithin`.
@@ -181,7 +181,48 @@ datum_geom_relate_pattern(Datum geom1, Datum geom2, Datum p)
     DatumGetGserializedP(geom2), (char *) DatumGetPointer(p)));
 }
 
+/**
+ * @brief Return a Datum true if the first geometry covers the second one
+ */
+Datum
+datum_geom_touches(Datum geom1, Datum geom2)
+{
+  return BoolGetDatum(geom_touches(DatumGetGserializedP(geom1),
+    DatumGetGserializedP(geom2)));
+}
+
+
 /*****************************************************************************/
+
+/**
+ * @brief Select the appropriate disjoint function
+ * @note We need two parameters to cope with mixed 2D/3D arguments
+ */
+datum_func2
+get_disjoint_fn(int16 flags1, int16 flags2)
+{
+  if (MEOS_FLAGS_GET_GEODETIC(flags1))
+    return &datum_geog_disjoint;
+  else
+    /* 3D only if both arguments are 3D */
+    return MEOS_FLAGS_GET_Z(flags1) && MEOS_FLAGS_GET_Z(flags2) ?
+      &datum_geom_disjoint3d : &datum_geom_disjoint2d;
+}
+
+/**
+ * @brief Select the appropriate disjoint function
+ * @note We need two parameters to cope with mixed 2D/3D arguments
+ */
+datum_func2
+get_disjoint_fn_geo(int16 flags1, uint8_t flags2)
+{
+  if (MEOS_FLAGS_GET_GEODETIC(flags1))
+    return &datum_geog_disjoint;
+  else
+    /* 3D only if both arguments are 3D */
+    return MEOS_FLAGS_GET_Z(flags1) && FLAGS_GET_Z(flags2) ?
+      &datum_geom_disjoint3d : &datum_geom_disjoint2d;
+}
 
 /**
  * @brief Select the appropriate dwithin function
@@ -250,6 +291,8 @@ get_dwithin_fn_geo(int16 flags1, uint8_t flags2)
 /**
  * @brief Generic spatial relationship for the trajectory or traversed area
  * of a temporal geo and a geometry
+ * @details The function computes the function passed as parameter with the
+ * trajectory or the traversed area of the temporal geometry and the geometry
  * @param[in] temp Temporal geo
  * @param[in] gs Geometry
  * @param[in] param Parameter
@@ -257,6 +300,9 @@ get_dwithin_fn_geo(int16 flags1, uint8_t flags2)
  * @param[in] numparam Number of parameters of the function
  * @param[in] invert True if the arguments should be inverted
  * @return On error return -1
+ * @note Some GEOS versions do not support geometry collections and thus,
+ * the function iterates for each geometry of the collection and returns when
+ * the function is true for one of them.
  */
 static int
 spatialrel_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs,
@@ -271,10 +317,10 @@ spatialrel_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs,
 
   assert(numparam == 2 || numparam == 3);
   Datum geo = PointerGetDatum(gs);
-  GSERIALIZED *trav = tpoint_type(temp->temptype) ? 
+  GSERIALIZED *trav = tpoint_type(temp->temptype) ?
     tpoint_trajectory(temp) : tgeo_traversed_area(temp);
   Datum dtrav, result;
-  
+
   /* Call the GEOS function if the traversed area is not a collection */
   if (gserialized_get_type(trav) != COLLECTIONTYPE)
   {
@@ -293,9 +339,9 @@ spatialrel_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs,
     return result ? 1 : 0;
   }
 
-  /* Call the GEOS function for each trapezoid in the collection */
+  /* Call the GEOS function for each element in the collection */
   LWCOLLECTION *coll = lwgeom_as_lwcollection(lwgeom_from_gserialized(trav));
-  for (int i = 0; i < coll->ngeoms; i++)
+  for (uint32_t i = 0; i < coll->ngeoms; i++)
   {
     const LWGEOM *elem = lwcollection_getsubgeom((LWCOLLECTION *) coll, i);
     dtrav = PointerGetDatum(geo_serialize(elem));
@@ -320,29 +366,31 @@ spatialrel_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs,
 /*****************************************************************************/
 
 /**
- * @brief Generic spatial relationship for the trajectory of a temporal geo
- * and a geometry
+ * @brief Generic spatial relationship for the trajectory or traversed area
+ * of two temporal geometries
  * @param[in] temp1,temp2 Temporal geos
  * @param[in] param Parameter
  * @param[in] func PostGIS function to be called
  * @param[in] numparam Number of parameters of the function
  * @return On error return -1
+ * @note Some GEOS versions do not support geometry collections and thus,
+ * the function iterates for each geometry of the collection and returns when
+ * the function is true for one of them.
  */
-static int
+int
 spatialrel_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
   Datum param, varfunc func, int numparam)
 {
   /* Ensure the validity of the arguments */
   assert(temp1); assert(temp2); assert(tgeo_type_all(temp1->temptype));
   assert(tgeo_type_all(temp2->temptype));
-  if (! ensure_same_srid(tspatial_srid(temp1), tspatial_srid(temp2)) ||
-      ! ensure_same_geodetic(temp1->flags, temp2->flags))
+  if (! ensure_valid_tspatial_tspatial(temp1, temp2))
     return -1;
 
   assert(numparam == 2 || numparam == 3);
-  GSERIALIZED *trav1 = tpoint_type(temp1->temptype) ? 
+  GSERIALIZED *trav1 = tpoint_type(temp1->temptype) ?
     tpoint_trajectory(temp1) : tgeo_traversed_area(temp1);
-  GSERIALIZED *trav2 = tpoint_type(temp2->temptype) ? 
+  GSERIALIZED *trav2 = tpoint_type(temp2->temptype) ?
     tpoint_trajectory(temp2) : tgeo_traversed_area(temp2);
   Datum dtrav1 = PointerGetDatum(trav1);
   Datum dtrav2 = PointerGetDatum(trav2);
@@ -368,7 +416,7 @@ spatialrel_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
 
   /* Call the GEOS function for each trapezoid in the collection */
   LWCOLLECTION *coll = lwgeom_as_lwcollection(lwgeom_from_gserialized(trav1));
-  for (int i = 0; i < coll->ngeoms; i++)
+  for (uint32_t i = 0; i < coll->ngeoms; i++)
   {
     const LWGEOM *elem = lwcollection_getsubgeom((LWCOLLECTION *) coll, i);
     dtrav1 = PointerGetDatum(geo_serialize(elem));
@@ -388,6 +436,46 @@ spatialrel_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
   }
   pfree(trav1); pfree(trav2);
   return result ? 1 : 0;
+}
+
+/*****************************************************************************/
+
+/**
+ * @brief Return true if two temporal geos ever/always satisfy a spatial
+ * relationship
+ * @param[in] temp1,temp2 Temporal geos
+ * @param[in] func Spatial relationship
+ * @param[in] ever True for the ever semantics, false for the always semantics
+ * @note Mixed 2D/3D allowed
+ */
+int
+ea_spatialrel_tspatial_geo(const Temporal *temp, const GSERIALIZED *gs,
+  datum_func2 func, bool ever)
+{
+  /* Ensure the validity of the arguments */
+  if (! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs))
+    return -1;
+
+  int count;
+  Datum *datumarr = temporal_values_p(temp, &count);
+  int result = 0;
+  for (int i = 0; i < count; i++)
+  {
+    if (func(datumarr[i], PointerGetDatum(gs)))
+    {
+      result = 1;
+      if (ever)
+        break;
+    }
+    else
+    {
+      result = 0;
+      if (! ever)
+        break;
+    }
+  }
+  pfree(datumarr);
+  return result;
 }
 
 /*****************************************************************************/
@@ -430,64 +518,82 @@ ea_spatialrel_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2,
  *****************************************************************************/
 
 /**
- * @ingroup meos_internal_geo_rel_ever
- * @brief Return 1 if a geometry ever/always contains a temporal geo, 0 if not,
+ * @brief Return 1 if a temporal geometry ever/always contains a geo, 0 if not,
  * and -1 on error or if the geometry is empty
  * @details
- * - A geometry ever contains a temporal geo if the traversed area of the 
- *   temporal geo and the geometry intersect only in their interior
- * - A geometry always contains a temporal geo if the traversed area of the 
- *   temporal geo contains the geometry
+ * - A temporal geometry *ever* contains a geometry if the traversed area of
+ *   the temporal geometry and the geometry intersect only in their interior,
+ *   that is, they satisfy the relate pattern `"T********"`
+ * - A temporal geometry *always* contains a geometry if the traversed area of
+ *   the temporal geometry contains the geometry
  * @param[in] gs Geometry
  * @param[in] temp Temporal geo
  * @param[in] ever True for the ever semantics, false for the always semantics
  * @param[in] invert True if the arguments should be inverted
- * @note The function does not accept 3D or geography since it is based on the
- * PostGIS ST_Relate function. The function tests whether the trajectory
- * intersects the interior of the geometry. Please refer to the documentation
- * of the ST_Contains and ST_Relate functions
- * https://postgis.net/docs/ST_Relate.html
+ * @note The function only accepts 2D geometries, as the PostGIS function
+ * `ST_Contains`. Please refer to the documentation
+ * of the `ST_Contains` and `ST_Covers` functions
  * https://postgis.net/docs/ST_Contains.html
+ * https://postgis.net/docs/ST_Convers.html
+ * for detailed explanations about the difference between both functions.
  */
 int
-ea_contains_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever,
+ea_contains_tgeo_geo1(const Temporal *temp, const GSERIALIZED *gs, bool ever,
   bool invert)
 {
+  VALIDATE_TGEO(temp, -1); VALIDATE_NOT_NULL(gs, -1);
   /* Ensure the validity of the arguments */
   if (! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs) ||
-      ! ensure_has_not_Z_geo(gs) || 
+      ! ensure_not_geodetic_geo(gs) || ! ensure_has_not_Z_geo(gs) ||
       ! ensure_has_not_Z(temp->temptype, temp->flags))
     return -1;
-  GSERIALIZED *traj = tpoint_type(temp->temptype) ? 
+  GSERIALIZED *traj = tpoint_type(temp->temptype) ?
     tpoint_trajectory(temp) : tgeo_traversed_area(temp);
   char p[10] = "T********";
-  int result = ever ? 
+  int result = ever ?
     spatialrel_tgeo_geo(temp, gs, PointerGetDatum(&p),
       (varfunc) &datum_geom_relate_pattern, 3, invert) :
-    spatialrel_tgeo_geo(temp, gs, (Datum) NULL, 
+    spatialrel_tgeo_geo(temp, gs, (Datum) NULL,
       (varfunc) &datum_geom_contains, 2, invert);
   pfree(traj);
   return result ? 1 : 0;
 }
 
 /**
+ * @ingroup meos_internal_geo_rel_ever
+ * @brief Return 1 if a temporal geometry ever/always contains a geo, 0 if not,
+ * and -1 on error or if the geometry is empty
+ */
+inline int
+ea_contains_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, bool ever)
+{
+  return ea_contains_tgeo_geo1(temp, gs, ever, INVERT);
+}
+
+/**
+ * @ingroup meos_internal_geo_rel_ever
+ * @brief Return 1 if a temporal geometry ever/always contains a geo, 0 if not,
+ * and -1 on error or if the geometry is empty
+ */
+inline int
+ea_contains_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever)
+{
+  return ea_contains_tgeo_geo1(temp, gs, ever, INVERT_NO);
+}
+
+#if MEOS
+/**
  * @ingroup meos_geo_rel_ever
  * @brief Return 1 if a geometry ever contains a temporal geo, 0 if not, and
  * -1 on error or if the geometry is empty
  * @param[in] gs Geometry
  * @param[in] temp Temporal geo
- * @note The function does not accept 3D or geography since it is based on the
- * PostGIS ST_Relate function. The function tests whether the trajectory
- * intersects the interior of the geometry. Please refer to the documentation
- * of the ST_Contains and ST_Relate functions
- * https://postgis.net/docs/ST_Relate.html
- * https://postgis.net/docs/ST_Contains.html
  * @csqlfn #Econtains_geo_tgeo()
  */
 int
 econtains_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp)
 {
-  return ea_contains_tgeo_geo(temp, gs, EVER, INVERT);
+  return ea_contains_tgeo_geo1(temp, gs, EVER, INVERT);
 }
 
 /**
@@ -496,15 +602,12 @@ econtains_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp)
  * 0 if not, and -1 on error or if the geometry is empty
  * @param[in] gs Geometry
  * @param[in] temp Temporal geo
- * @note The function tests whether the trajectory is contained in the geometry.
- * https://postgis.net/docs/ST_Relate.html
- * https://postgis.net/docs/ST_Contains.html
  * @csqlfn #Acontains_geo_tgeo()
  */
 int
 acontains_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp)
 {
-  return ea_contains_tgeo_geo(temp, gs, ALWAYS, INVERT);
+  return ea_contains_tgeo_geo1(temp, gs, ALWAYS, INVERT);
 }
 
 /**
@@ -513,155 +616,387 @@ acontains_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp)
  * -1 on error or if the geometry is empty
  * @param[in] temp Temporal geo
  * @param[in] gs Geometry
- * @note The function does not accept 3D or geography since it is based on the
- * PostGIS ST_Relate function. The function tests whether the trajectory
- * intersects the interior of the geometry. Please refer to the documentation
- * of the ST_Contains and ST_Relate functions
- * https://postgis.net/docs/ST_Relate.html
- * https://postgis.net/docs/ST_Contains.html
  * @csqlfn #Econtains_tgeo_geo()
  */
 int
 econtains_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
-  return ea_contains_tgeo_geo(temp, gs, EVER, INVERT_NO);
+  return ea_contains_tgeo_geo1(temp, gs, EVER, INVERT_NO);
 }
 
 /**
  * @ingroup meos_geo_rel_ever
  * @brief Return 1 if a geometry always contains a temporal geo,
  * 0 if not, and -1 on error or if the geometry is empty
- * @param[in] gs Geometry
  * @param[in] temp Temporal geo
- * @note The function tests whether the trajectory is contained in the geometry.
- * https://postgis.net/docs/ST_Relate.html
- * https://postgis.net/docs/ST_Contains.html
+ * @param[in] gs Geometry
  * @csqlfn #Acontains_tgeo_geo()
  */
 int
 acontains_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
-  return ea_contains_tgeo_geo(temp, gs, ALWAYS, INVERT_NO);
+  return ea_contains_tgeo_geo1(temp, gs, ALWAYS, INVERT_NO);
 }
+#endif /* MEOS */
 
 /*****************************************************************************/
 
 /**
  * @ingroup meos_internal_geo_rel_ever
- * @brief Return 1 if a temporal geo ever contains another temporal geo, 0 if
- * not, and -1 on error or if the geometry is empty
- * @param[in] temp1,temp2 Temporal geos
- * @param[in] ever True for the ever semantics, false for the always semantics
- * @note The function does not accept 3D or geography since it is based on the
- * PostGIS ST_Relate function. The function tests whether the trajectory
- * intersects the interior of the geometry. Please refer to the documentation
- * of the ST_Contains and ST_Relate functions
- * https://postgis.net/docs/ST_Relate.html
+ * @brief Return 1 if a temporal geometry ever contains another temporal
+ * geometry, 0 if not, and -1 on error
+ * @details
+ * - A temporal geometry *ever* contains another one if there is an
+ *   instant in which the two temporal geometries satisfy the relationship.
+ * - A temporal geometry *always* contains another one if the traversed
+ *   area of the first temporal geometry contains the traversed area of the
+ *   second one
+ * @param[in] temp1,temp2 Temporal geometries
+ * @note The function only accepts 2D geometries, as the PostGIS function
+ * `ST_Contains`. Please refer to the documentation
+ * of the `ST_Contains` and `ST_Covers` functions
  * https://postgis.net/docs/ST_Contains.html
+ * https://postgis.net/docs/ST_Convers.html
+ * for detailed explanations about the difference between both functions.
  */
 int
 ea_contains_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2, bool ever)
 {
   /* Ensure the validity of the arguments */
   if (! ensure_valid_tgeo_tgeo(temp1, temp2) ||
+      ! ensure_not_geodetic(temp1->flags) ||
       ! ensure_has_not_Z(temp1->temptype, temp1->flags) ||
       ! ensure_has_not_Z(temp2->temptype, temp2->flags))
     return -1;
-  GSERIALIZED *traj1 = tpoint_type(temp1->temptype) ? 
+  if (ever)
+    return ea_spatialrel_tspatial_tspatial(temp1, temp2, &datum_geom_contains,
+      EVER);
+  /* Always */
+  GSERIALIZED *traj1 = tpoint_type(temp1->temptype) ?
     tpoint_trajectory(temp1) : tgeo_traversed_area(temp1);
-  GSERIALIZED *traj2 = tpoint_type(temp2->temptype) ? 
+  GSERIALIZED *traj2 = tpoint_type(temp2->temptype) ?
     tpoint_trajectory(temp2) : tgeo_traversed_area(temp2);
+  int result = spatialrel_tgeo_tgeo(temp1, temp2, (Datum) NULL,
+    (varfunc) &datum_geom_contains, 2);
+  pfree(traj1); pfree(traj2);
+  return result ? 1 : 0;
+}
+
+/*****************************************************************************
+ * Ever/always covers
+ *****************************************************************************/
+
+/**
+ * @brief Return 1 if a geometry ever covers a temporal geometry, 0 if not,
+ * and -1 on error or if the geometry is empty
+ * @param[in] gs Geometry
+ * @param[in] temp Temporal geometry
+ * @param[in] ever True for the ever semantics, false for the always semantics
+ * @csqlfn #EA_covers_geo_tgeo()
+ * @note Please refer to the documentation of the `ST_Contains` and the
+ * `ST_Covers` functions
+ * https://postgis.net/docs/ST_Contains.html
+ * https://postgis.net/docs/ST_Covers.html
+ * for detailed explanations about the difference between the two functions
+ */
+int
+ea_covers_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, bool ever)
+{
+  /* Ensure the validity of the arguments */
+  if (! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs))
+    return -1;
+  GSERIALIZED *trav = tgeo_traversed_area(temp);
+  bool result = ever ? geom_relate_pattern(gs, trav, "T********") :
+    geom_covers(gs, trav);
+  pfree(trav);
+  return result ? 1 : 0;
+}
+
+/**
+ * @ingroup meos_rgeo_rel_ever
+ * @brief Return 1 if a geometry ever covers a temporal geometry,
+ * 0 if not, and -1 on error or if the geometry is empty
+ * @param[in] gs Geometry
+ * @param[in] temp Temporal geometry
+ * @csqlfn #Acovers_geo_tgeo()
+ * @note Please refer to the documentation of the `ST_Contains` and the
+ * `ST_Covers` functions
+ * https://postgis.net/docs/ST_Contains.html
+ * https://postgis.net/docs/ST_Covers.html
+ * for detailed explanations about the difference between the two functions
+ */
+inline int
+ecovers_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp)
+{
+  return ea_covers_geo_tgeo(gs, temp, EVER);
+}
+
+/**
+ * @ingroup meos_rgeo_rel_ever
+ * @brief Return 1 if a geometry always covers a temporal geometry,
+ * 0 if not, and -1 on error or if the geometry is empty
+ * @param[in] gs Geometry
+ * @param[in] temp Temporal geometry
+ * @csqlfn #Acovers_geo_tgeo()
+ * @note Please refer to the documentation of the `ST_Contains` and the
+ * `ST_Covers` functions
+ * https://postgis.net/docs/ST_Contains.html
+ * https://postgis.net/docs/ST_Covers.html
+ * for detailed explanations about the difference between the two functions
+ */
+inline int
+acovers_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp)
+{
+  return ea_covers_geo_tgeo(gs, temp, ALWAYS);
+}
+
+/*****************************************************************************/
+
+/**
+ * @brief Return 1 if a geometry ever covers a temporal geometry, 0 if not,
+ * and -1 on error or if the geometry is empty
+ * @param[in] temp Temporal geometry
+ * @param[in] gs Geometry
+ * @param[in] ever True for the ever semantics, false for the always semantics
+ * @csqlfn #EA_covers_tgeo_geo()
+ * @note Please refer to the documentation of the `ST_Contains` and the
+ * `ST_Covers` functions
+ * https://postgis.net/docs/ST_Contains.html
+ * https://postgis.net/docs/ST_Covers.html
+ * for detailed explanations about the difference between the two functions
+ */
+int
+ea_covers_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever)
+{
+  /* Ensure the validity of the arguments */
+  if (! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs))
+    return -1;
+  GSERIALIZED *trav = tgeo_traversed_area(temp);
+  bool result = ever ? geom_relate_pattern(gs, trav, "T********") :
+    geom_covers(gs, trav);
+  pfree(trav);
+  return result ? 1 : 0;
+}
+
+/**
+ * @ingroup meos_rgeo_rel_ever
+ * @brief Return 1 if a geometry ever covers a temporal geometry, 0 if not,
+ * and -1 on error or if the geometry is empty
+ * @param[in] temp Temporal geometry
+ * @param[in] gs Geometry
+ * @csqlfn #Acovers_tgeo_geo()
+ * @note Please refer to the documentation of the `ST_Contains` and the
+ * `ST_Covers` functions
+ * https://postgis.net/docs/ST_Contains.html
+ * https://postgis.net/docs/ST_Covers.html
+ * for detailed explanations about the difference between the two functions
+ */
+inline int
+ecovers_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
+{
+  return ea_covers_tgeo_geo(temp, gs, EVER);
+}
+
+/**
+ * @ingroup meos_rgeo_rel_ever
+ * @brief Return 1 if a temporal geometry always covers a geometry, 0 if not,
+ * and -1 on error or if the geometry is empty
+ * @param[in] temp Temporal geometry
+ * @param[in] gs Geometry
+ * @csqlfn #Acovers_tgeo_geo()
+ * @note Please refer to the documentation of the `ST_Contains` and the
+ * `ST_Covers` functions
+ * https://postgis.net/docs/ST_Contains.html
+ * https://postgis.net/docs/ST_Covers.html
+ * for detailed explanations about the difference between the two functions
+ */
+inline int
+acovers_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
+{
+  return ea_covers_tgeo_geo(temp, gs, ALWAYS);
+}
+
+/*****************************************************************************/
+
+/**
+ * @ingroup meos_internal_geo_rel_ever
+ * @brief Return 1 if a temporal geometry ever/always covers another one,
+ * 0 if not, and -1 on error
+ * @details
+ * - A temporal geometry *ever* covers another one if the traversed area of
+ *   the temporal geometries only in their interior,
+ *   that is, they satisfy the relate pattern `"T********"`
+ * - A geometry *always* covers a temporal geometry if the traversed area of
+ *   the temporal geometry covers the geometry
+ * @param[in] gs Geometry
+ * @param[in] temp Temporal geo
+ * @param[in] ever True for the ever semantics, false for the always semantics
+ * @param[in] invert True if the arguments should be inverted
+ * @note The function only accepts 2D geometries, as the PostGIS function
+ * `ST_Contains`. Please refer to the documentation
+ * of the `ST_Contains` and `ST_Covers` functions
+ * https://postgis.net/docs/ST_Contains.html
+ * https://postgis.net/docs/ST_Convers.html
+ * for detailed explanations about the difference between both functions.
+ */
+int
+ea_covers_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2, bool ever)
+{
+  VALIDATE_TGEO(temp1, -1); VALIDATE_TGEO(temp2, -1);
+  /* Ensure the validity of the arguments */
+  if (! ensure_valid_tgeo_tgeo(temp1, temp2) ||
+      ! ensure_not_geodetic(temp1->flags) ||
+      ! ensure_has_not_Z(temp1->temptype, temp1->flags) ||
+      ! ensure_has_not_Z(temp2->temptype, temp2->flags))
+    return -1;
+
   char p[10] = "T********";
-  int result = ever ? 
+  int result = ever ?
     spatialrel_tgeo_tgeo(temp1, temp2, PointerGetDatum(&p),
       (varfunc) &datum_geom_relate_pattern, 3) :
-    spatialrel_tgeo_tgeo(temp1, temp2, (Datum) NULL, 
-      (varfunc) &datum_geom_contains, 2);
-  pfree(traj1); pfree(traj2);
+    spatialrel_tgeo_tgeo(temp1, temp2, (Datum) NULL,
+      (varfunc) &datum_geom_covers, 2);
   return result ? 1 : 0;
 }
 
 /**
  * @ingroup meos_geo_rel_ever
- * @brief Return 1 if a temporal geo ever contains another temporal geo,
- * 0 if not, and -1 on error
- * @param[in] temp1,temp2 Temporal geos
- * @note The function does not accept 3D or geography since it is based on the
- * PostGIS ST_Relate function. The function tests whether the trajectory
- * intersects the interior of the geometry. Please refer to the documentation
- * of the ST_Contains and ST_Relate functions
- * https://postgis.net/docs/ST_Relate.html
- * https://postgis.net/docs/ST_Contains.html
- * @csqlfn #Econtains_geo_tgeo()
+ * @brief Return 1 if a temporal geometry ever covers another one, 0 if not,
+ * and -1 on error
+ * @param[in] temp1, temp2 Temporal geometries
+ * @csqlfn #Ecovers_tgeo_tgeo()
  */
 int
-econtains_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
+ecovers_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
 {
-  return ea_contains_tgeo_tgeo(temp1, temp2, EVER);
+  return ea_covers_tgeo_tgeo(temp1, temp2, EVER);
 }
 
 /**
  * @ingroup meos_geo_rel_ever
- * @brief Return 1 if a temporal geo always contains another temporal geo,
+ * @brief Return 1 if a temporal geometry always covers another one,
  * 0 if not, and -1 on error
- * @param[in] temp1,temp2 Temporal geos
- * @note The function tests whether the trajectory is contained in the geometry.
- * https://postgis.net/docs/ST_Relate.html
- * https://postgis.net/docs/ST_Contains.html
- * @csqlfn #Acontains_geo_tgeo()
+ * @param[in] temp1, temp2 Temporal geometries
+ * @csqlfn #Acovers_tgeo_tgeo()
  */
 int
-acontains_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
+acovers_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
 {
-  return ea_contains_tgeo_tgeo(temp1, temp2, ALWAYS);
+  return ea_covers_tgeo_tgeo(temp1, temp2, ALWAYS);
 }
 
 /*****************************************************************************
- * Ever/always disjoint (only always works for both geometry and geography)
+ * Ever/always disjoint (work for both geometry and geography)
  *****************************************************************************/
 
 /**
  * @ingroup meos_geo_rel_ever
- * @brief Return 1 if a temporal geo and a geometry are ever disjoint,
+ * @brief Return 1 if a temporal geometry and a geometry are ever disjoint,
  * 0 if not, and -1 on error or if the geometry is empty
- * @param[in] temp Temporal geo
+ * @details
+ * - A temporal point is *ever* disjoint with a geometry if the trajectory
+ *   of the temporal point is NOT covered by the geometry
+ * - A temporal geometry is *ever* disjoint with a geometry if one of its
+ *   component geometries is disjoint with the geometry
+ * - A temporal geometry and a geometry are *always* disjoint if the traversed
+ *   area of the temporal geometry DO NOT ever intersects the geometry,
+ *   that is, aDisjoint(a, b) is equivalent to NOT eIntersects(a, b)
+ * @param[in] temp Temporal geometry
  * @param[in] gs Geometry
- * @note eDisjoint(tpoint, geo) is equivalent to NOT covers(geo, traj(tpoint))
  * @note The function does not accept geography since it is based on the
- * PostGIS ST_Covers function provided by GEOS
+ * PostGIS `ST_Covers` function provided by GEOS
  * @csqlfn #Edisjoint_tgeo_geo()
  */
 int
-edisjoint_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
+ea_disjoint_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever)
 {
+  VALIDATE_TGEO(temp, -1); VALIDATE_NOT_NULL(gs, -1);
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tgeo_geo(temp, gs) || ! ensure_not_geodetic(temp->flags))
+  if (! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs))
     return -1;
-  datum_func2 func = &datum_geom_covers;
-  int result = spatialrel_tgeo_geo(temp, gs, (Datum) NULL, (varfunc) func, 2,
-    INVERT);
-  return INVERT_RESULT(result);
+  int result;
+
+  /* ALWAYS */
+  if (! ever)
+  {
+    return INVERT_RESULT(ea_intersects_tgeo_geo(temp, gs, EVER));
+  }
+
+  /* EVER */
+
+  /* Temporal point case */
+  if (tpoint_type(temp->flags))
+  {
+    datum_func2 func = &datum_geom_covers;
+    result = spatialrel_tgeo_geo(temp, gs, (Datum) NULL, (varfunc) func, 2,
+      INVERT);
+    return INVERT_RESULT(result);
+  }
+
+  /* Temporal geometry case */
+  int count;
+  Datum *datumarr = temporal_values_p(temp, &count);
+  datum_func2 func = get_disjoint_fn_geo(temp->flags, gs->gflags);
+  result = 0;
+  for (int i = 0; i < count; i++)
+  {
+    if (func(datumarr[i], PointerGetDatum(gs)))
+    {
+      result = 1;
+      break;
+    }
+  }
+  pfree(datumarr);
+  return result;
 }
 
 /**
  * @ingroup meos_geo_rel_ever
- * @brief Return 1 if a temporal geo and a geometry are always disjoint,
+ * @brief Return 1 if a temporal geometry and a geometry are ever disjoint,
+ * 0 if not, and -1 on error or if the geometry is empty
+ */
+inline int
+ea_disjoint_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, bool ever)
+{
+  return ea_disjoint_tgeo_geo(temp, gs, ever);
+}
+
+#if MEOS
+/**
+ * @ingroup meos_geo_rel_ever
+ * @brief Return 1 if a temporal geometry and a geometry are ever disjoint,
  * 0 if not, and -1 on error or if the geometry is empty
  * @param[in] temp Temporal geo
  * @param[in] gs Geometry
- * @note aDisjoint(a, b) is equivalent to NOT eIntersects(a, b)
+ * @csqlfn #Edisjoint_tgeo_geo()
+ */
+inline int
+edisjoint_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
+{
+  return ea_disjoint_tgeo_geo(temp, gs, EVER);
+}
+
+/**
+ * @ingroup meos_geo_rel_ever
+ * @brief Return 1 if a temporal geometry and a geometry are always disjoint,
+ * 0 if not, and -1 on error or if the geometry is empty
+ * @param[in] temp Temporal geo
+ * @param[in] gs Geometry
  * @csqlfn #Adisjoint_tgeo_geo()
  */
 inline int
 adisjoint_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
-  return INVERT_RESULT(eintersects_tgeo_geo(temp, gs));
+  return ea_disjoint_tgeo_geo(temp, gs, ALWAYS);
 }
+#endif /* MEOS */
 
 /**
  * @ingroup meos_internal_geo_rel_ever
  * @brief Return 1 if the temporal geos ever/always intersect, 0 if not, and
  * -1 on error or if the temporal geos do not intersect in time
+ * @details Two temporal geometries are ever/always disjoint if there is an
+ * instant in which the two geometries satisfy the relationship
  * @param[in] temp1,temp2 Temporal geos
  * @param[in] ever True for the ever semantics, false for the always semantics
  * @csqlfn #Eintersects_tgeo_tgeo(), #Aintersects_tgeo_tgeo()
@@ -669,14 +1004,10 @@ adisjoint_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 int
 ea_disjoint_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2, bool ever)
 {
+  VALIDATE_TGEO(temp1, -1); VALIDATE_TGEO(temp2, -1);
   if (! ensure_valid_tgeo_tgeo(temp1, temp2))
     return -1;
-  datum_func2 func;
-  if (MEOS_FLAGS_GET_GEODETIC(temp1->flags))
-    func = &datum_geog_disjoint;
-  else 
-    func = MEOS_FLAGS_GET_Z(temp1->flags) && MEOS_FLAGS_GET_Z(temp2->flags) ?
-      &datum_geom_disjoint3d : &datum_geom_disjoint2d;
+  datum_func2 func = get_disjoint_fn(temp1->flags, temp2->flags);
   return ea_spatialrel_tspatial_tspatial(temp1, temp2, func, ever);
 }
 
@@ -714,18 +1045,31 @@ adisjoint_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
 
 /**
  * @ingroup meos_geo_rel_ever
- * @brief Return 1 if a geometry and a temporal geo ever intersect,
+ * @brief Return 1 if a temporal geometry ever/always intersects a geometry,
  * 0 if not, and -1 on error or if the geometry is empty
+ * @details
+ * - A temporal geometry *ever* intersects a geometry if the traversed area or
+ *   the trajectory of the temporal geometry and the geometry intersect
+ * - A temporal geometry *always* intersects a geometry if the traversed area
+ *   or the trajectory of the temporal geometry and the geometry are NOT ever
+ *   disjoint
  * @param[in] temp Temporal geo
  * @param[in] gs Geometry
  * @csqlfn #Eintersects_tgeo_geo()
  */
 int
-eintersects_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
+ea_intersects_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever)
 {
+  VALIDATE_TGEO(temp, -1); VALIDATE_NOT_NULL(gs, -1);
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tgeo_geo(temp, gs))
+  if (! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs))
     return -1;
+
+  /* ALWAYS */
+  if (! ever)
+    return INVERT_RESULT(ea_disjoint_tgeo_geo(temp, gs, EVER));
+
+  /* EVER */
   datum_func2 func = get_intersects_fn_geo(temp->flags, gs->gflags);
   return spatialrel_tgeo_geo(temp, gs, (Datum) NULL, (varfunc) func, 2,
     INVERT_NO);
@@ -733,25 +1077,52 @@ eintersects_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 
 /**
  * @ingroup meos_geo_rel_ever
- * @brief Return 1 if a geometry and a temporal geo always intersect,
- * 0 if not, and -1 on error or if the geometry is empty
+ * @brief Return 1 if a geometry intersects a temporal geometry, 0 if not,
+ * and -1 on error or if the geometry is empty
+ */
+inline int
+ea_intersects_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, bool ever)
+{
+  return ea_intersects_tgeo_geo(temp, gs, ever);
+}
+
+
+#if MEOS
+/**
+ * @ingroup meos_geo_rel_ever
+ * @brief Return 1 if a temporal geometry ever intersects a temporal
+ * geometry, 0 if not, and -1 on error or if the geometry is empty
  * @param[in] temp Temporal geo
  * @param[in] gs Geometry
- * @note aIntersects(tpoint, geo) is equivalent to NOT eDisjoint(tpoint, geo)
- * @note The function does not accept geography since the eDisjoint function
- * is based on the PostGIS ST_Covers function provided by GEOS
+ * @csqlfn #Aintersects_tgeo_geo()
+ */
+inline int
+eintersects_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
+{
+  return ea_intersects_tgeo_geo(temp, gs, EVER);
+}
+
+/**
+ * @ingroup meos_geo_rel_ever
+ * @brief Return 1 if a temporal geometry always intersects a temporal
+ * geometry, 0 if not, and -1 on error or if the geometry is empty
+ * @param[in] temp Temporal geo
+ * @param[in] gs Geometry
  * @csqlfn #Aintersects_tgeo_geo()
  */
 inline int
 aintersects_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
-  return INVERT_RESULT(edisjoint_tgeo_geo(temp, gs));
+  return ea_intersects_tgeo_geo(temp, gs, ALWAYS);
 }
+#endif /* MEOS */
 
 /**
  * @ingroup meos_internal_geo_rel_ever
  * @brief Return 1 if the temporal geos ever/always intersect, 0 if not, and
  * -1 on error or if the temporal geos do not intersect in time
+ * @details Two temporal geometries ever/always intersect if there is an
+ * instant in which the two geometries satisfy the relationship
  * @param[in] temp1,temp2 Temporal geos
  * @param[in] ever True for the ever semantics, false for the always semantics
  * @csqlfn #Eintersects_tgeo_tgeo(), #Aintersects_tgeo_tgeo()
@@ -760,9 +1131,10 @@ int
 ea_intersects_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
   bool ever)
 {
+  VALIDATE_TGEO(temp1, -1); VALIDATE_TGEO(temp2, -1);
   if (! ensure_valid_tgeo_tgeo(temp1, temp2))
     return -1;
-  datum_func2 func = get_intersects_fn_geo(temp1->flags, temp1->flags);
+  datum_func2 func = get_intersects_fn(temp1->flags, temp2->flags);
   return ea_spatialrel_tspatial_tspatial(temp1, temp2, func, ever);
 }
 
@@ -796,25 +1168,37 @@ aintersects_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
 
 /*****************************************************************************
  * Ever/always touches
- * The function does not accept geography since it is based on the PostGIS
- * ST_Boundary function
  *****************************************************************************/
 
 /**
- * @ingroup meos_geo_rel_ever
- * @brief Return 1 if a temporal geo and a geometry ever touch, 0 if not, and
- * -1 on error or if the geometry is empty
- * @param[in] temp Temporal geo
+ * @ingroup meos_temporal_spatial_rel_ever
+ * @brief Return 1 if a temporal point ever/always touches a geometry,
+ * 0 if not, and -1 on error or if the geometry is empty
+ * @details
+ * - A temporal point *ever* touches a geometry if (a) the trajectory of the
+ *   temporal point intersects the boundary of the geometry when the latter
+ *   is not empty, or (b) the boundary of the trajectory of the temporal point
+ *   intersects the geometry when the former is not empty
+ * - A temporal point *always* touches a geometry if the restriction of the
+ *   temporal point to the complement of the boundary of the geometry (that is,
+ *   MINUS) is empty.
+ * Note that when the two boundaries are empty, the trajectory of the point and
+ * the geometry are both (multi)points and the result is false.
+ * @param[in] temp Temporal point
  * @param[in] gs Geometry
- * @csqlfn #Etouches_tgeo_geo()
+ * @csqlfn #Etouches_tpoint_geo()
+ * @note The function does not support 3D or geographies since the PostGIS
+ * function `ST_Touches` only supports 2D geometries
  */
 int
-etouches_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
+ea_touches_tpoint_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever)
 {
-  /* Ensure the validity of the arguments */
-  if (! ensure_valid_tgeo_geo(temp, gs) ||
-      ! ensure_not_geodetic(temp->flags) || gserialized_is_empty(gs) ||
-      ! ensure_valid_tspatial_geo(temp, gs))
+  VALIDATE_TGEO(temp, -1); VALIDATE_NOT_NULL(gs, -1);
+  /* Ensure validity of the arguments */
+  if (! ensure_valid_tpoint_geo(temp, gs) || gserialized_is_empty(gs) ||
+      /* The validity function ensures that both have the same geodetic flag */
+      ! ensure_not_geodetic(temp->flags) || ! ensure_has_not_Z_geo(gs) ||
+      ! ensure_has_not_Z(temp->temptype, temp->flags))
     return -1;
 
   /* Bounding box test */
@@ -822,50 +1206,31 @@ etouches_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
   STBox *box2 = geo_stbox(gs);
   if (! overlaps_stbox_stbox(box1, box2))
     return 0;
-  
-  datum_func2 func = get_intersects_fn_geo(temp->flags, gs->gflags);
-  GSERIALIZED *traj = tpoint_type(temp->temptype) ? 
-    tpoint_trajectory(temp) : tgeo_traversed_area(temp);
-  GSERIALIZED *gsbound = geom_boundary(gs);
-  bool result = false;
-  if (gsbound && ! gserialized_is_empty(gsbound))
-    result = func(GserializedPGetDatum(gsbound), GserializedPGetDatum(traj));
-  else if (MEOS_FLAGS_LINEAR_INTERP(temp->flags))
+
+  /* EVER */
+  if (ever)
   {
-    /* The temporal type is a tgeompoint not a tgeo.
-     * The geometry is a point or a multipoint -> the boundary is empty */
-    GSERIALIZED *tempbound = geom_boundary(traj);
-    if (tempbound)
+    datum_func2 func = get_intersects_fn_geo(temp->flags, gs->gflags);
+    GSERIALIZED *traj = tpoint_trajectory(temp);
+    GSERIALIZED *gsbound = geom_boundary(gs);
+    bool result = false;
+    if (gsbound && ! gserialized_is_empty(gsbound))
+      result = func(GserializedPGetDatum(gsbound), GserializedPGetDatum(traj));
+    else if (MEOS_FLAGS_LINEAR_INTERP(temp->flags))
     {
-      result = func(GserializedPGetDatum(tempbound), GserializedPGetDatum(gs));
-      pfree(tempbound);
+      /* The geometry is a point or a multipoint -> the boundary is empty */
+      GSERIALIZED *tempbound = geom_boundary(traj);
+      if (tempbound)
+      {
+        result = func(GserializedPGetDatum(tempbound), GserializedPGetDatum(gs));
+        pfree(tempbound);
+      }
     }
+    pfree(traj); pfree(gsbound);
+    return result ? 1 : 0;
   }
-  pfree(traj); pfree(gsbound);
-  return result ? 1 : 0;
-}
 
-/**
- * @ingroup meos_geo_rel_ever
- * @brief Return 1 if a temporal geo and a geometry always touch, 0 if not,
- * and -1 on error or if the geometry is empty
- * @param[in] temp Temporal geo
- * @param[in] gs Geometry
- * @csqlfn #Atouches_tgeo_geo()
- */
-int
-atouches_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
-{
-  /* Ensure the validity of the arguments */
-  if (! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs))
-    return -1;
-
-  /* Bounding box test */
-  STBox *box1 = tspatial_stbox(temp);
-  STBox *box2 = geo_stbox(gs);
-  if (! overlaps_stbox_stbox(box1, box2))
-    return 0;
-
+  /* ALWAYS */
   GSERIALIZED *gsbound = geom_boundary(gs);
   bool result = false;
   if (gsbound && ! gserialized_is_empty(gsbound))
@@ -879,112 +1244,168 @@ atouches_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
   return result ? 1 : 0;
 }
 
+#if MEOS
+/**
+ * @ingroup meos_temporal_spatial_rel_ever
+ * @brief Return 1 if a temporal point ever touches a geometry, 0 if not,
+ * and -1 on error or if the geometry is empty
+ * @param[in] temp Temporal point
+ * @param[in] gs Geometry
+ * @csqlfn #Atouches_tpoint_geo()
+ */
+int
+etouches_tpoint_geo(const Temporal *temp, const GSERIALIZED *gs)
+{
+  return ea_touches_tpoint_geo(temp, gs, EVER);
+}
+
+/**
+ * @ingroup meos_temporal_spatial_rel_ever
+ * @brief Return 1 if a temporal point always touches a geometry, 0 if not,
+ * and -1 on error or if the geometry is empty
+ * @param[in] temp Temporal point
+ * @param[in] gs Geometry
+ * @csqlfn #Atouches_tpoint_geo()
+ */
+int
+atouches_tpoint_geo(const Temporal *temp, const GSERIALIZED *gs)
+{
+  return ea_touches_tpoint_geo(temp, gs, ALWAYS);
+}
+#endif /* MEOS */
+
 /*****************************************************************************/
 
 /**
  * @ingroup meos_geo_rel_ever
- * @brief Return 1 if two temporal geos ever touch each other, 0 if not, and
- * -1 on error
+ * @brief Return 1 if a temporal geometry ever/always touches a geometry,
+ * 0 if not, and -1 on error or if the geometry is empty
+ * @details
+ * - A temporal geometry *ever* touches a geometry if the there is an instant
+ *   in which they satisfy the relationship
+ * - A temporal geometry *always* touches  a geometry if they satisfy the
+ *   relationship in every instant
+ * @param[in] temp Temporal geo
+ * @param[in] gs Geometry
+ * @csqlfn #Etouches_tgeo_geo()
+ * @note The function does not support 3D or geographies since the PostGIS
+ * function `ST_Touches` only supports 2D geometries
+ */
+int
+ea_touches_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever)
+{
+  VALIDATE_TGEO(temp, -1); VALIDATE_NOT_NULL(gs, -1);
+  /* Ensure the validity of the arguments */
+  if (! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs) ||
+      /* The validity function ensures that both have the same geodetic flag */
+      ! ensure_not_geodetic(temp->flags) || ! ensure_has_not_Z_geo(gs) ||
+      ! ensure_has_not_Z(temp->temptype, temp->flags))
+    return -1;
+
+  /* Bounding box test */
+  STBox *box1 = tspatial_stbox(temp);
+  STBox *box2 = geo_stbox(gs);
+  if (! overlaps_stbox_stbox(box1, box2))
+    return 0;
+
+  return ea_spatialrel_tspatial_geo(temp, gs,  &datum_geom_touches, ever);
+}
+
+#if MEOS
+/**
+ * @ingroup meos_geo_rel_ever
+ * @brief Return 1 if a temporal geometry ever touches a geometry, 0 if not,
+ * and -1 on error or if the geometry is empty
+ * @param[in] temp Temporal geo
+ * @param[in] gs Geometry
+ * @csqlfn #Etouches_tgeo_geo()
+ */
+int
+etouches_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
+{
+  return ea_spatialrel_tspatial_geo(temp, gs, &datum_geom_touches, EVER);
+}
+
+/**
+ * @ingroup meos_geo_rel_ever
+ * @brief Return 1 if a temporal geometry always touches a geometry, 0 if not,
+ * and -1 on error or if the geometry is empty
+ * @param[in] temp Temporal geo
+ * @param[in] gs Geometry
+ * @csqlfn #Atouches_tgeo_geo()
+ */
+int
+atouches_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
+{
+  return ea_spatialrel_tspatial_geo(temp, gs, &datum_geom_touches, ALWAYS);
+}
+#endif /* MEOS */
+
+/*****************************************************************************/
+
+/**
+ * @ingroup meos_internal_geo_rel_ever
+ * @brief Return 1 if a temporal geometry ever/alwaus touches another one,
+ * 0 if not, and -1 on error
+ * @details
+ * - A temporal geometry *ever* touches another one if there is an instant
+ *  in which they satisfy the relationship.
+ * - A temporal geometry *always* touches another one if there is an instant
+ *   in which the boundary of one of the two geometries intersects the
+ *   trajectory or traversed area of the other.
+ * @param[in] temp1,temp2 Temporal geos
+ * @csqlfn #Etouches_tgeo_tgeo()
+
+ */
+int
+ea_touches_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2, bool ever)
+{
+  VALIDATE_TGEO(temp1, -1); VALIDATE_TGEO(temp2, -1);
+  /* Ensure the validity of the arguments */
+  if (! ensure_valid_tgeo_tgeo(temp1, temp2) ||
+      /* The validity function ensures that both have the same geodetic flag */
+      ! ensure_not_geodetic(temp1->temptype) ||
+      ! ensure_has_not_Z(temp1->temptype, temp1->flags) ||
+      ! ensure_has_not_Z(temp1->temptype, temp2->flags))
+    return -1;
+
+  /* Bounding box test */
+  STBox *box1 = tspatial_stbox(temp1);
+  STBox *box2 = tspatial_stbox(temp2);
+  if (! overlaps_stbox_stbox(box1, box2))
+    return 0;
+
+  return ea_spatialrel_tspatial_tspatial(temp1, temp2, &datum_geom_touches,
+    ever);
+}
+
+
+/**
+ * @ingroup meos_geo_rel_ever
+ * @brief Return 1 if a temporal geometry ever touches another one, 0 if not,
+ * and -1 on error
  * @param[in] temp1,temp2 Temporal geos
  * @csqlfn #Etouches_tgeo_tgeo()
  */
 int
 etouches_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
 {
-  /* Ensure the validity of the arguments */
-  if (! ensure_valid_tgeo_tgeo(temp1, temp2) ||
-      ! ensure_not_geodetic(temp1->flags) ||
-      ! ensure_not_geodetic(temp2->flags) ||
-      ! ensure_valid_tgeo_tgeo(temp1, temp2))
-    return -1;
-
-  /* Bounding box test */
-  STBox *box1 = tspatial_stbox(temp1);
-  STBox *box2 = tspatial_stbox(temp2);
-  if (! overlaps_stbox_stbox(box1, box2))
-    return 0;
-  
-  datum_func2 func = get_intersects_fn(temp1->flags, temp2->flags);
-  GSERIALIZED *traj1 = tpoint_type(temp1->temptype) ? 
-    tpoint_trajectory(temp1) : tgeo_traversed_area(temp1);
-  GSERIALIZED *traj2 = tpoint_type(temp2->temptype) ? 
-    tpoint_trajectory(temp2) : tgeo_traversed_area(temp2);
-  GSERIALIZED *t1bound = geom_boundary(traj2);
-  bool result = false;
-  if (t1bound)
-  {
-    if (! gserialized_is_empty(t1bound))
-      result = func(PointerGetDatum(t1bound), PointerGetDatum(traj2));
-    pfree(t1bound);
-  }
-  else
-  {
-    /* traj1 is a point or a multipoint -> the boundary is empty */
-    GSERIALIZED *t2bound = geom_boundary(traj2);
-    if (t2bound)
-    {
-      if (! gserialized_is_empty(t2bound))
-        result = func(PointerGetDatum(t2bound), PointerGetDatum(traj2));
-      pfree(t2bound);
-    }
-  }
-  pfree(traj1); pfree(traj2);
-  return result ? 1 : 0;
+  return ea_touches_tgeo_tgeo(temp1, temp1, EVER);
 }
 
 
 /**
  * @ingroup meos_geo_rel_ever
- * @brief Return 1 if two temporal geos always touch each other, 0 if not, and
- * -1 on error
+ * @brief Return 1 if a temporal geometry always touches another one, 0 if not,
+ * and -1 on error
  * @param[in] temp1,temp2 Temporal geos
- * @csqlfn #Etouches_tgeo_tgeo()
+ * @csqlfn #Atouches_tgeo_tgeo()
  */
 int
 atouches_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
 {
-  /* Ensure the validity of the arguments */
-  if (! ensure_valid_tgeo_tgeo(temp1, temp2) ||
-      ! ensure_not_geodetic(temp1->flags) ||
-      ! ensure_not_geodetic(temp2->flags) ||
-      ! ensure_valid_tgeo_tgeo(temp1, temp2))
-    return -1;
-
-  /* Bounding box test */
-  STBox *box1 = tspatial_stbox(temp1);
-  STBox *box2 = tspatial_stbox(temp2);
-  if (! overlaps_stbox_stbox(box1, box2))
-    return 0;
-  
-  datum_func2 func = get_intersects_fn(temp1->flags, temp2->flags);
-  GSERIALIZED *traj1 = tpoint_type(temp1->temptype) ? 
-    tpoint_trajectory(temp1) : tgeo_traversed_area(temp1);
-  GSERIALIZED *traj2 = tpoint_type(temp2->temptype) ? 
-    tpoint_trajectory(temp2) : tgeo_traversed_area(temp2);
-  // TODO
-  // GSERIALIZED *t1bound = geom_boundary(traj2);
-  bool result = false;
-  // if (t1bound)
-  // {
-    // if (! gserialized_is_empty(t1bound))
-      // result = func(PointerGetDatum(t1bound), PointerGetDatum(traj2));
-    // pfree(t1bound);
-  // }
-  // else
-  // {
-    // /* traj1 is a point or a multipoint -> the boundary is empty */
-    // GSERIALIZED *t2bound = geom_boundary(traj2);
-    // if (t2bound)
-    // {
-      // if (! gserialized_is_empty(t2bound))
-        // result = func(PointerGetDatum(t2bound), PointerGetDatum(traj2));
-      // pfree(t2bound);
-    // }
-  // }
-  // pfree(traj1); pfree(traj2);
-  return result ? 1 : 0;
+  return ea_touches_tgeo_tgeo(temp1, temp1, EVER);
 }
-
 
 /*****************************************************************************
  * Ever/always dwithin (for both geometry and geography)
@@ -1001,15 +1422,45 @@ atouches_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
  * @csqlfn #Edwithin_tgeo_geo()
  */
 int
-edwithin_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, double dist)
+ea_dwithin_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, double dist,
+  bool ever)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tgeo_geo(temp, gs) || 
+  if (! ensure_valid_tgeo_geo(temp, gs) ||
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return -1;
-  datum_func3 func = get_dwithin_fn_geo(temp->flags, gs->gflags);
-  return spatialrel_tgeo_geo(temp, gs, Float8GetDatum(dist),
-    (varfunc) func, 3, INVERT_NO);
+
+  /* EVER */
+  if (ever)
+  {
+    datum_func3 func = get_dwithin_fn_geo(temp->flags, gs->gflags);
+    return spatialrel_tgeo_geo(temp, gs, Float8GetDatum(dist),
+      (varfunc) func, 3, INVERT_NO);
+  }
+
+  /* ALWAYS */
+  GSERIALIZED *buffer = geom_buffer(gs, dist, "");
+  datum_func2 func = &datum_geom_covers;
+  int result = spatialrel_tgeo_geo(temp, buffer, (Datum) NULL,
+    (varfunc) func, 2, INVERT);
+  pfree(buffer);
+  return result;
+}
+
+#if MEOS
+/**
+ * @ingroup meos_geo_rel_ever
+ * @brief Return 1 if a geometry and a temporal geo are ever within the
+ * given distance, 0 if not, -1 on error or if the geometry is empty
+ * @param[in] temp Temporal geo
+ * @param[in] gs Geometry
+ * @param[in] dist Distance
+ * @csqlfn #Edwithin_tgeo_geo()
+ */
+int
+edwithin_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, double dist)
+{
+  return ea_dwithin_tgeo_geo(temp, gs, dist, EVER);
 }
 
 /**
@@ -1019,27 +1470,14 @@ edwithin_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, double dist)
  * @param[in] temp Temporal geo
  * @param[in] gs Geometry
  * @param[in] dist Distance
- * @note The function is not available for 3D or geograhies since it is based
- * on thePostGIS ST_Buffer() function which is performed by GEOS
  * @csqlfn #Adwithin_tgeo_geo()
  */
 int
 adwithin_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, double dist)
 {
-  /* Ensure the validity of the arguments */
-  if (! ensure_valid_tgeo_geo(temp, gs) || 
-      ! ensure_not_geodetic(temp->flags) || 
-      ! ensure_has_not_Z(temp->temptype, temp->flags) ||
-      ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
-    return -1;
-
-  GSERIALIZED *buffer = geom_buffer(gs, dist, "");
-  datum_func2 func = &datum_geom_covers;
-  int result = spatialrel_tgeo_geo(temp, buffer, (Datum) NULL,
-    (varfunc) func, 2, INVERT);
-  pfree(buffer);
-  return result;
+  return ea_dwithin_tgeo_geo(temp, gs, dist, ALWAYS);
 }
+#endif /* MEOS */
 
 /*****************************************************************************/
 
@@ -1056,7 +1494,7 @@ ea_dwithin_tgeoinst_tgeoinst(const TInstant *inst1, const TInstant *inst2,
 {
   assert(inst1); assert(inst2);
   /* Result is the same for both EVER and ALWAYS */
-  return DatumGetBool(func(tinstant_value_p(inst1), tinstant_value_p(inst2), 
+  return DatumGetBool(func(tinstant_value_p(inst1), tinstant_value_p(inst2),
     Float8GetDatum(dist)));
 }
 
@@ -1100,7 +1538,7 @@ ea_dwithin_tpointseq_tpointseq_cont(const TSequence *seq1,
 
   if (seq1->count == 1)
   {
-    return ea_dwithin_tgeoinst_tgeoinst(TSEQUENCE_INST_N(seq1, 0), 
+    return ea_dwithin_tgeoinst_tgeoinst(TSEQUENCE_INST_N(seq1, 0),
       TSEQUENCE_INST_N(seq2, 0), dist, func);
   }
 
@@ -1174,9 +1612,9 @@ ea_dwithin_tgeoseqset_tgeoseqset(const TSequenceSet *ss1,
   for (int i = 0; i < ss1->count; i++)
   {
     bool res = linear ?
-      ea_dwithin_tpointseq_tpointseq_cont(TSEQUENCESET_SEQ_N(ss1, i), 
+      ea_dwithin_tpointseq_tpointseq_cont(TSEQUENCESET_SEQ_N(ss1, i),
         TSEQUENCESET_SEQ_N(ss2, i), dist, func, ever) :
-      ea_dwithin_tgeoseq_tgeoseq_discstep(TSEQUENCESET_SEQ_N(ss1, i), 
+      ea_dwithin_tgeoseq_tgeoseq_discstep(TSEQUENCESET_SEQ_N(ss1, i),
         TSEQUENCESET_SEQ_N(ss2, i), dist, func, ever);
     if ((ever && res) || (! ever && ! res))
       return ret_loop;

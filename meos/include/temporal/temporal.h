@@ -104,6 +104,10 @@
 #define EVER            true
 #define ALWAYS          false
 
+/** Symbolic constants for the temporal point/geo functions */
+#define TPOINT          true
+#define TGEO            false
+
 /** Symbolic constants for the restriction and the aggregation functions */
 #define GET_MIN          true
 #define GET_MAX          false
@@ -276,7 +280,8 @@ typedef int (*qsort_comparator) (const void *a, const void *b);
 /* Definition of a variadic function type for temporal lifting */
 typedef Datum (*varfunc) (Datum, ...);
 
-/* Definition of a binary function with two or three Datum arguments */
+/* Definition of a function with one to three Datum arguments and returning 
+ * a Datum */
 typedef Datum (*datum_func1) (Datum);
 typedef Datum (*datum_func2) (Datum, Datum);
 typedef Datum (*datum_func3) (Datum, Datum, Datum);

@@ -326,7 +326,7 @@ trapezoid_make(const Cbuffer *c1, const Cbuffer *c2)
 
 /**
  * @brief Comparator function for point arrays
- * @note Function inspired from #ptarray_same2d
+ * @note Function inspired from PostGIS function ptarray_same2d
  */
 int
 ptarray_cmp2d(const POINTARRAY *pa1, const POINTARRAY *pa2)
@@ -354,7 +354,7 @@ ptarray_cmp2d(const POINTARRAY *pa1, const POINTARRAY *pa2)
 
 /**
  * @brief Comparator function for trapezoids
- * @note Function inspired from #gserialized_cmp
+ * @note Function inspired from PostGIS function gserialized_cmp
  */
 static int
 trapezoid_sort_cmp(const LWGEOM **l, const LWGEOM **r)
@@ -367,7 +367,7 @@ trapezoid_sort_cmp(const LWGEOM **l, const LWGEOM **r)
   LWCOMPOUND *comp1 = lwgeom_as_lwcompound(cp1->rings[0]);
   LWCOMPOUND *comp2 = lwgeom_as_lwcompound(cp2->rings[0]);
   assert(comp1->ngeoms == comp2->ngeoms);
-  for (int i = 0; i < comp1->ngeoms; i++)
+  for (uint32_t i = 0; i < comp1->ngeoms; i++)
   {
     int type1 = comp1->geoms[i]->type;
     int type2 = comp2->geoms[i]->type;
@@ -406,7 +406,8 @@ trapezoidarr_sort(LWGEOM **geoms, int count)
 /**
  * @brief Remove duplicates from an array of trapezoids
  * @pre The array has been sorted before
- * @note Since there is no function lwgeom_eq we use function lwgeom_same
+ * @note Since PostGIS does not provide function `lwgeom_eq`, we use the
+ * function `lwgeom_same`
  */
 static int
 trapezoidarr_remove_duplicates(LWGEOM **geoms, int count)

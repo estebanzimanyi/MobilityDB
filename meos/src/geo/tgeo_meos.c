@@ -767,7 +767,11 @@ tgeo_values(const Temporal *temp, int *count)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_TGEO(temp, NULL); VALIDATE_NOT_NULL(count, NULL);
-  Datum *datumarr = temporal_values_p(temp, count);
+  int count1;
+  Datum *datumarr = temporal_values_p(temp, &count1);
+  meosType basetype = temptype_basetype(temp->temptype);
+  datumarr_sort(datumarr, count1, basetype);
+  *count = datumarr_remove_duplicates(datumarr, count1, basetype);
   GSERIALIZED **result = palloc(sizeof(GSERIALIZED *) * *count);
   for (int i = 0; i < *count; i++)
     result[i] = geo_copy(DatumGetGserializedP(datumarr[i]));

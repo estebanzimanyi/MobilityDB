@@ -67,6 +67,7 @@ static bool
 tnumber_arithop_tp_at_timestamp1(const TInstant *start1, const TInstant *end1,
   const TInstant *start2, const TInstant *end2, TimestampTz *t)
 {
+  assert(start1->t == start2->t); assert(end1->t == end2->t);
   double x1 = tnumberinst_double(start1);
   double x2 = tnumberinst_double(end1);
   double x3 = tnumberinst_double(start2);
@@ -103,6 +104,7 @@ tnumber_arithop_tp_at_timestamptz(const TInstant *start1, const TInstant *end1,
   const TInstant *start2, const TInstant *end2, TArithmetic op, Datum *value,
   TimestampTz *t)
 {
+  assert(start1->t == start2->t); assert(end1->t == end2->t);
   if (! tnumber_arithop_tp_at_timestamp1(start1, end1, start2, end2, t))
     return false;
   Datum value1 = tsegment_value_at_timestamptz(start1, end1, LINEAR, *t);

@@ -1447,7 +1447,7 @@ TInstant *
 tgeoinst_restrict_geom_iter(const TInstant *inst, const GSERIALIZED *gs,
   const Span *zspan, bool atfunc)
 {
-  VALIDATE_TGEO(inst, NULL); VALIDATE_NOT_NULL(gs, NULL); 
+  assert(inst); assert(gs); assert(tgeo_type_all(inst->temptype));
   assert(! gserialized_is_empty(gs));
   /* Execute the specialized function for temporal points */
   if (tpoint_type(inst->temptype))
@@ -1484,7 +1484,7 @@ TInstant *
 tgeoinst_restrict_geom(const TInstant *inst, const GSERIALIZED *gs,
   const Span *zspan, bool atfunc)
 {
-  VALIDATE_TGEO(inst, NULL); VALIDATE_NOT_NULL(gs, NULL); 
+  assert(inst); assert(gs); assert(tgeo_type_all(inst->temptype));
   TInstant *res = tgeoinst_restrict_geom_iter(inst, gs, zspan, atfunc);
   if (! res)
     return NULL;
@@ -1504,7 +1504,7 @@ TSequence *
 tgeoseq_disc_restrict_geom(const TSequence *seq, const GSERIALIZED *gs,
   const Span *zspan, bool atfunc)
 {
-  VALIDATE_TGEO(seq, NULL); VALIDATE_NOT_NULL(gs, NULL); 
+  assert(seq); assert(gs); assert(tgeo_type_all(seq->temptype));
   assert(MEOS_FLAGS_GET_INTERP(seq->flags) == DISCRETE);
   assert(seq->count > 1);
 
@@ -1545,7 +1545,7 @@ TSequenceSet *
 tgeoseq_step_restrict_geom(const TSequence *seq, const GSERIALIZED *gs,
    const Span *zspan, bool atfunc)
 {
-  VALIDATE_TGEO(seq, NULL); VALIDATE_NOT_NULL(gs, NULL); 
+  assert(seq); assert(gs); assert(tgeo_type_all(seq->temptype));
   assert(MEOS_FLAGS_GET_INTERP(seq->flags) == STEP);
   assert(seq->count > 1);
 
@@ -1963,7 +1963,7 @@ Temporal *
 tgeoseq_restrict_geom(const TSequence *seq, const GSERIALIZED *gs,
   const Span *zspan, bool atfunc)
 {
-  VALIDATE_TGEO(seq, NULL); VALIDATE_NOT_NULL(gs, NULL); 
+  assert(seq); assert(gs); assert(tgeo_type_all(seq->temptype));
   interpType interp = MEOS_FLAGS_GET_INTERP(seq->flags);
 
   /* Instantaneous sequence */
@@ -2010,7 +2010,7 @@ TSequenceSet *
 tgeoseqset_restrict_geom(const TSequenceSet *ss, const GSERIALIZED *gs,
   const Span *zspan, bool atfunc)
 {
-  VALIDATE_TGEO(ss, NULL); VALIDATE_NOT_NULL(gs, NULL); 
+  assert(ss); assert(gs); assert(tgeo_type_all(ss->temptype));
 
   /* Singleton sequence set */
   if (ss->count == 1)

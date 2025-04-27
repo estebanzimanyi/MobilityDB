@@ -172,6 +172,66 @@ Tcontains_geo_tgeo(PG_FUNCTION_ARGS)
   PG_RETURN_TEMPORAL_P(result);
 }
 
+PGDLLEXPORT Datum Tcontains_tgeo_geo(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tcontains_tgeo_geo);
+/**
+ * @ingroup mobilitydb_geo_rel_temp
+ * @brief Return a temporal boolean that states whether a temporal geometry
+ * contains a geometry
+ * @sqlfn tContains()
+ */
+Datum
+Tcontains_tgeo_geo(PG_FUNCTION_ARGS)
+{
+  if (PG_ARGISNULL(0) || PG_ARGISNULL(1))
+    PG_RETURN_NULL();
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+  bool restr = false;
+  bool atvalue = false;
+  if (PG_NARGS() > 2 && ! PG_ARGISNULL(2))
+  {
+    atvalue = PG_GETARG_BOOL(2);
+    restr = true;
+  }
+  Temporal *result = tcontains_tgeo_geo(temp, gs, restr, atvalue);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_FREE_IF_COPY(gs, 1);
+  if (! result)
+    PG_RETURN_NULL();
+  PG_RETURN_TEMPORAL_P(result);
+}
+
+PGDLLEXPORT Datum Tcontains_tgeo_tgeo(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tcontains_tgeo_tgeo);
+/**
+ * @ingroup mobilitydb_geo_rel_temp
+ * @brief Return a temporal boolean that states whether a temporal geometry
+ * contains another temporal geometry
+ * @sqlfn tContains()
+ */
+Datum
+Tcontains_tgeo_tgeo(PG_FUNCTION_ARGS)
+{
+  if (PG_ARGISNULL(0) || PG_ARGISNULL(1))
+    PG_RETURN_NULL();
+  Temporal *temp1 = PG_GETARG_TEMPORAL_P(0);
+  Temporal *temp2 = PG_GETARG_TEMPORAL_P(1);
+  bool restr = false;
+  bool atvalue = false;
+  if (PG_NARGS() > 2 && ! PG_ARGISNULL(2))
+  {
+    atvalue = PG_GETARG_BOOL(2);
+    restr = true;
+  }
+  Temporal *result = tcontains_tgeo_tgeo(temp1, temp2, restr, atvalue);
+  PG_FREE_IF_COPY(temp1, 0);
+  PG_FREE_IF_COPY(temp2, 1);
+  if (! result)
+    PG_RETURN_NULL();
+  PG_RETURN_TEMPORAL_P(result);
+}
+
 /*****************************************************************************
  * Temporal disjoint
  *****************************************************************************/
@@ -312,8 +372,8 @@ Ttouches_tgeo_geo(PG_FUNCTION_ARGS)
 {
   if (PG_ARGISNULL(0) || PG_ARGISNULL(1))
     PG_RETURN_NULL();
-  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
   bool restr = false;
   bool atvalue = false;
   if (PG_NARGS() > 2 && ! PG_ARGISNULL(2))
@@ -324,6 +384,36 @@ Ttouches_tgeo_geo(PG_FUNCTION_ARGS)
   Temporal *result = ttouches_tgeo_geo(temp, gs, restr, atvalue);
   PG_FREE_IF_COPY(temp, 0);
   PG_FREE_IF_COPY(gs, 1);
+  if (! result)
+    PG_RETURN_NULL();
+  PG_RETURN_TEMPORAL_P(result);
+}
+
+PGDLLEXPORT Datum Ttouches_tgeo_tgeo(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Ttouches_tgeo_tgeo);
+/**
+ * @ingroup mobilitydb_geo_rel_temp
+ * @brief Return a temporal boolean that states whether a temporal geometry
+ * touches another temporal geometry
+ * @sqlfn tTouches()
+ */
+Datum
+Ttouches_tgeo_tgeo(PG_FUNCTION_ARGS)
+{
+  if (PG_ARGISNULL(0) || PG_ARGISNULL(1))
+    PG_RETURN_NULL();
+  Temporal *temp1 = PG_GETARG_TEMPORAL_P(0);
+  Temporal *temp2 = PG_GETARG_TEMPORAL_P(1);
+  bool restr = false;
+  bool atvalue = false;
+  if (PG_NARGS() > 2 && ! PG_ARGISNULL(2))
+  {
+    atvalue = PG_GETARG_BOOL(2);
+    restr = true;
+  }
+  Temporal *result = ttouches_tgeo_tgeo(temp1, temp2, restr, atvalue);
+  PG_FREE_IF_COPY(temp1, 0);
+  PG_FREE_IF_COPY(temp2, 1);
   if (! result)
     PG_RETURN_NULL();
   PG_RETURN_TEMPORAL_P(result);

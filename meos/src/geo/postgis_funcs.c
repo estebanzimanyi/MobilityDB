@@ -1119,12 +1119,11 @@ geom_contains(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   return geom_spatialrel(gs1, gs2, CONTAINS);
 }
 
-#if MEOS
 /**
  * @ingroup meos_geo_base_rel
  * @brief Return true if the two geometries intersect on a border
  * @param[in] gs1,gs2 Geometries
- * @note PostGIS function: @p ST_Covers(PG_FUNCTION_ARGS)
+ * @note PostGIS function: @p touches(PG_FUNCTION_ARGS)
  */
 inline bool
 geom_touches(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
@@ -1144,6 +1143,7 @@ geom_covers(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   return geom_spatialrel(gs1, gs2, COVERS);
 }
 
+#if MEOS
 /**
  * @ingroup meos_geo_base_rel
  * @brief Return true if two geometries are disjoint in 2D

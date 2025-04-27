@@ -700,7 +700,6 @@ ensure_has_not_M_geo(const GSERIALIZED *gs)
   return false;
 }
 
-#if CBUFFER
 /**
  * @brief Ensure that the geometry has planar coordinates
  */
@@ -713,7 +712,6 @@ ensure_not_geodetic_geo(const GSERIALIZED *gs)
     "Only planar coordinates supported");
   return false;
 }
-#endif /* CBUFFER */
 
 /**
  * @brief Ensure that the geometry/geography is a point
@@ -774,11 +772,10 @@ ensure_not_empty(const GSERIALIZED *gs)
 bool
 ensure_valid_stbox_geo(const STBox *box, const GSERIALIZED *gs)
 {
-  VALIDATE_NOT_NULL(box, false); VALIDATE_NOT_NULL(gs, false);
-  if (! ensure_has_X(T_STBOX, box->flags) ||
+  assert(box); assert(gs);
+  if (! ensure_has_X(T_STBOX, box->flags) || gserialized_is_empty(gs) ||
       ! ensure_same_srid(box->srid, gserialized_get_srid(gs)) ||
-      ! ensure_same_geodetic_stbox_geo(box, gs) ||
-      gserialized_is_empty(gs))
+      ! ensure_same_geodetic_stbox_geo(box, gs))
     return false;
   return true;
 }
@@ -792,7 +789,7 @@ ensure_valid_stbox_geo(const STBox *box, const GSERIALIZED *gs)
 bool
 ensure_valid_tspatial_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
-  VALIDATE_TSPATIAL(temp, false); VALIDATE_NOT_NULL(gs, false);
+  assert(temp); assert(gs); assert(tspatial_type(temp->temptype));
   if (! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)) ||
       ! ensure_same_geodetic_tspatial_geo(temp, gs))
     return false;
@@ -805,8 +802,8 @@ ensure_valid_tspatial_geo(const Temporal *temp, const GSERIALIZED *gs)
 bool
 ensure_valid_spatial_stbox_stbox(const STBox *box1, const STBox *box2)
 {
-  VALIDATE_NOT_NULL(box1, false); VALIDATE_NOT_NULL(box2, false);
-  if (! ensure_has_X(T_STBOX, box1->flags) || 
+  assert(box1); assert(box2);
+  if (! ensure_has_X(T_STBOX, box1->flags) ||
       ! ensure_has_X(T_STBOX, box2->flags) ||
       ! ensure_same_srid(stbox_srid(box1), stbox_srid(box2)) ||
       ! ensure_same_geodetic(box1->flags, box2->flags))
@@ -820,7 +817,7 @@ ensure_valid_spatial_stbox_stbox(const STBox *box1, const STBox *box2)
 bool
 ensure_valid_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
-  VALIDATE_TGEO(temp, false); VALIDATE_NOT_NULL(gs, false);
+  assert(temp); assert(gs); assert(tgeo_type_all(temp->temptype));
   if (! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)) ||
       ! ensure_same_geodetic_tspatial_geo(temp, gs))
     return false;
@@ -833,7 +830,7 @@ ensure_valid_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 bool
 ensure_valid_tgeo_stbox(const Temporal *temp, const STBox *box)
 {
-  VALIDATE_TGEO(temp, NULL); VALIDATE_NOT_NULL(box, NULL);
+  assert(temp); assert(box); assert(tgeo_type_all(temp->temptype));
   if (! ensure_has_X(T_STBOX, box->flags) ||
       ! ensure_same_srid(tspatial_srid(temp), stbox_srid(box)) ||
       ! ensure_same_geodetic(temp->flags, box->flags))
@@ -847,7 +844,8 @@ ensure_valid_tgeo_stbox(const Temporal *temp, const STBox *box)
 bool
 ensure_valid_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
 {
-  VALIDATE_TGEO(temp1, NULL); VALIDATE_TGEO(temp2, NULL);
+  assert(temp1); assert(temp2); assert(tgeo_type_all(temp1->temptype));
+  assert(tgeo_type_all(temp2->temptype));
   if (! ensure_same_srid(tspatial_srid(temp1), tspatial_srid(temp2)) &&
       ! ensure_same_geodetic(temp1->flags, temp2->flags))
     return false;

@@ -276,6 +276,7 @@ bool
 tgeompoint_min_dist_at_timestamptz(const TInstant *start1, const TInstant *end1,
   const TInstant *start2, const TInstant *end2, Datum *mindist, TimestampTz *t)
 {
+  assert(start1->t == start2->t); assert(end1->t == end2->t);
   double fraction;
   bool hasz = MEOS_FLAGS_GET_Z(start1->flags);
   if (hasz) /* 3D */
@@ -295,7 +296,7 @@ tgeompoint_min_dist_at_timestamptz(const TInstant *start1, const TInstant *end1,
     const POINT2D *p3 = DATUM_POINT2D_P(tinstant_value_p(start2));
     const POINT2D *p4 = DATUM_POINT2D_P(tinstant_value_p(end2));
     bool found = point2d_min_dist(p1, p2, p3, p4, &fraction);
-    if (!found)
+    if (! found)
       return false;
   }
 
