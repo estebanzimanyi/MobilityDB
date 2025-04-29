@@ -169,26 +169,30 @@ lw_distance_fraction(const LWGEOM *geom1, const LWGEOM *geom2, int mode,
  * @param[in] start,end Instants defining the first segment
  * @param[in] point Point
  * @param[in] basetype Type of the point
- * @param[out] value Minimum distance at turning point
- * @param[out] t Timestamp at turning point
+ * @param[out] value,value2 Minimum distance at turning point
+ * @param[out] t,t2 Timestamp at turning point
  * @pre The segment is not constant.
+ * @post As there is a single turning point, `value2` and `t2` are set to
+ * `value` and `t`, respectively
  * @note The parameter basetype is not needed for temporal geos
+ * @post As there is a single turning point, `value2` and `t2` are set to
+ * `mindist` and `t`, respectively
  */
-static bool
+static int
 tpoint_geo_min_dist_at_timestamptz(const TInstant *start, const TInstant *end,
   Datum point, meosType basetype __attribute__((unused)), Datum *value,
-  TimestampTz *t)
+  Datum *value2, TimestampTz *t, TimestampTz *t2)
 {
   long double duration = (long double) (end->t - start->t);
-  Datum value1 = tinstant_value_p(start);
-  Datum value2 = tinstant_value_p(end);
+  Datum dstart = tinstant_value_p(start);
+  Datum dend = tinstant_value_p(end);
   double dist;
-  double fraction = (double) pointsegm_locate(value1, value2, point, &dist);
+  double fraction = (double) pointsegm_locate(dstart, dend, point, &dist);
   if (fraction < 0.0)
-    return false;
-  *value = Float8GetDatum(dist);
-  *t = start->t + (TimestampTz) (duration * fraction);
-  return true;
+    return 0;
+  *value = *value2 = Float8GetDatum(dist);
+  *t = *t2 = start->t + (TimestampTz) (duration * fraction);
+  return 1;
 }
 
 /**
@@ -264,17 +268,20 @@ point3d_min_dist(const POINT3DZ *p1, const POINT3DZ *p2, const POINT3DZ *p3,
  * @param[in] start1,end1 Instants defining the first segment
  * @param[in] start2,end2 Instants defining the second segment
  * @param[out] mindist Mininum distance
- * @param[out] t Timestamp
+ * @param[out] t,t2 Timestamps
  * @note The PostGIS functions @p lw_dist2d_seg_seg and @p lw_dist3d_seg_seg
  * cannot be used since they do not take time into consideration and would
  * return, e.g., that the minimum distance between the two following segments
  * `[Point(2 2)@t1, Point(1 1)@t2]` and `[Point(3 1)@t1, Point(1 1)@t2]`
  * is at `Point(2 2)@t2` instead of `Point(1.5 1.5)@(t1 + (t2 - t1)/2)`.
  * @pre The segments are not both constants.
+ * @post As there is a single turning point, `mindist2` and `t2` are set to
+ * `mindist` and `t`, respectively
  */
-bool
+int
 tgeompoint_min_dist_at_timestamptz(const TInstant *start1, const TInstant *end1,
-  const TInstant *start2, const TInstant *end2, Datum *mindist, TimestampTz *t)
+  const TInstant *start2, const TInstant *end2, Datum *mindist, TimestampTz *t,
+  TimestampTz *t2)
 {
   assert(start1->t == start2->t); assert(end1->t == end2->t);
   double fraction;
@@ -287,7 +294,7 @@ tgeompoint_min_dist_at_timestamptz(const TInstant *start1, const TInstant *end1,
     const POINT3DZ *p4 = DATUM_POINT3DZ_P(tinstant_value_p(end2));
     bool found = point3d_min_dist(p1, p2, p3, p4, &fraction);
     if (!found)
-      return false;
+      return 0;
   }
   else /* 2D */
   {
@@ -297,17 +304,17 @@ tgeompoint_min_dist_at_timestamptz(const TInstant *start1, const TInstant *end1,
     const POINT2D *p4 = DATUM_POINT2D_P(tinstant_value_p(end2));
     bool found = point2d_min_dist(p1, p2, p3, p4, &fraction);
     if (! found)
-      return false;
+      return 0;
   }
 
   double duration = end1->t - start1->t;
-  *t = start1->t + (TimestampTz) (duration * fraction);
+  *t = *t2 = start1->t + (TimestampTz) (duration * fraction);
   /* We know that this function is called only for linear segments */
   Datum value1 = tsegment_value_at_timestamptz(start1, end1, LINEAR, *t);
   Datum value2 = tsegment_value_at_timestamptz(start2, end2, LINEAR, *t);
   *mindist = hasz ? datum_geom_distance3d(value1, value2) :
     datum_geom_distance2d(value1, value2);
-  return true;
+  return 1;
 }
 
 /**
@@ -317,12 +324,15 @@ tgeompoint_min_dist_at_timestamptz(const TInstant *start1, const TInstant *end1,
  * @param[in] start1,end1 Instants defining the first segment
  * @param[in] start2,end2 Instants defining the second segment
  * @param[out] mindist Minimum distance
- * @param[out] t Timestamp
+ * @param[out] t,t2 Timestamps
  * @pre The segments are not both constants.
+ * @post As there is a single turning point, `mindist2` and `t2` are set to
+ * `mindist` and `t`, respectively
  */
-bool
+int
 tgeogpoint_min_dist_at_timestamptz(const TInstant *start1, const TInstant *end1,
-  const TInstant *start2, const TInstant *end2, Datum *mindist, TimestampTz *t)
+  const TInstant *start2, const TInstant *end2, Datum *mindist, TimestampTz *t,
+  TimestampTz *t2)
 {
   const POINT2D *p1 = DATUM_POINT2D_P(tinstant_value_p(start1));
   const POINT2D *p2 = DATUM_POINT2D_P(tinstant_value_p(end1));
@@ -346,7 +356,7 @@ tgeogpoint_min_dist_at_timestamptz(const TInstant *start1, const TInstant *end1,
   bool found = point3d_min_dist((const POINT3DZ *) &A1, (const POINT3DZ *) &A2,
     (const POINT3DZ *) &B1, (const POINT3DZ *) &B2, &fraction);
   if (! found)
-    return false;
+    return 0;
 
   if (mindist)
   {
@@ -358,10 +368,10 @@ tgeogpoint_min_dist_at_timestamptz(const TInstant *start1, const TInstant *end1,
     /* Compute minimum distance */
     int res = sphere_project(&(e1.start), dist1 * fraction, dir1, &close1);
     if (res == LW_FAILURE)
-      return false;
+      return 0;
     res = sphere_project(&(e2.start), dist2 * fraction, dir2, &close2);
     if (res == LW_FAILURE)
-      return false;
+      return 0;
     double dist = sphere_distance(&close1, &close2);
     /* Ensure robustness */
     if (fabs(dist) < FP_TOLERANCE)
@@ -371,10 +381,10 @@ tgeogpoint_min_dist_at_timestamptz(const TInstant *start1, const TInstant *end1,
 
   /* Compute the timestamp of intersection */
   if (fraction <= MEOS_EPSILON || fraction >= (1.0 - MEOS_EPSILON))
-    return false;
+    return 0;
   double duration = (double) (end1->t - start1->t);
-  *t = start1->t + (TimestampTz) (duration * fraction);
-  return true;
+  *t = *t2 = start1->t + (TimestampTz) (duration * fraction);
+  return 1;
 }
 
 /**
@@ -383,19 +393,20 @@ tgeogpoint_min_dist_at_timestamptz(const TInstant *start1, const TInstant *end1,
  * @param[in] start1,end1 Instants defining the first segment
  * @param[in] start2,end2 Instants defining the second segment
  * @param[out] value Value
- * @param[out] t Timestamp
+ * @param[out] t,t2 Timestamps
  * @pre The segments are not both constants.
  */
-bool
+int
 tpoint_min_dist_at_timestamptz(const TInstant *start1, const TInstant *end1,
-  const TInstant *start2, const TInstant *end2, Datum *value, TimestampTz *t)
+  const TInstant *start2, const TInstant *end2, Datum *value, TimestampTz *t,
+  TimestampTz *t2)
 {
   if (MEOS_FLAGS_GET_GEODETIC(start1->flags))
     return tgeogpoint_min_dist_at_timestamptz(start1, end1, start2, end2,
-      value, t);
+      value, t, t2);
   else
     return tgeompoint_min_dist_at_timestamptz(start1, end1, start2, end2,
-      value, t);
+      value, t, t2);
 }
 
 /*****************************************************************************/
@@ -420,12 +431,13 @@ distance_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
       gserialized_is_empty(gs))
     return NULL;
 
+  meosType basetype = temptype_basetype(temp->temptype);
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
-  lfinfo.func = (varfunc) distance_fn(temp->flags);
+  lfinfo.func = (varfunc) geo_distance_fn(temp->flags);
   lfinfo.numparam = 0;
   lfinfo.argtype[0] = temp->temptype;
-  lfinfo.argtype[1] = temptype_basetype(temp->temptype);
+  lfinfo.argtype[1] = basetype;
   lfinfo.restype = T_TFLOAT;
   lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   lfinfo.invert = INVERT_NO;
@@ -454,7 +466,7 @@ distance_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
 
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
-  lfinfo.func = (varfunc) pt_distance_fn(temp1->flags);
+  lfinfo.func = (varfunc) geo_distance_fn(temp1->flags);
   lfinfo.numparam = 0;
   lfinfo.argtype[0] = lfinfo.argtype[1] = temp1->temptype;
   lfinfo.restype = T_TFLOAT;
@@ -772,7 +784,7 @@ nad_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
       gserialized_is_empty(gs))
     return -1.0;
 
-  datum_func2 func = distance_fn(temp->flags);
+  datum_func2 func = geo_distance_fn(temp->flags);
   GSERIALIZED *traj = tpoint_type(temp->temptype) ? 
     tpoint_trajectory(temp) : tgeo_traversed_area(temp);
   double result = DatumGetFloat8(
@@ -798,7 +810,7 @@ nad_stbox_geo(const STBox *box, const GSERIALIZED *gs)
       ! ensure_same_spatial_dimensionality_stbox_geo(box, gs))
     return -1.0;
 
-  datum_func2 func = distance_fn(box->flags);
+  datum_func2 func = geo_distance_fn(box->flags);
   Datum geo = PointerGetDatum(stbox_geo(box));
   double result = DatumGetFloat8(func(geo, PointerGetDatum(gs)));
   pfree(DatumGetPointer(geo));
@@ -832,7 +844,7 @@ nad_stbox_stbox(const STBox *box1, const STBox *box2)
     return 0.0;
 
   /* Select the distance function to be applied */
-  datum_func2 func = distance_fn(box1->flags);
+  datum_func2 func = geo_distance_fn(box1->flags);
   /* Convert the boxes to geometries */
   Datum geo1 = PointerGetDatum(stbox_geo(box1));
   Datum geo2 = PointerGetDatum(stbox_geo(box2));
@@ -871,7 +883,7 @@ nad_tgeo_stbox(const Temporal *temp, const STBox *box)
   }
 
   /* Select the distance function to be applied */
-  datum_func2 func = distance_fn(box->flags);
+  datum_func2 func = geo_distance_fn(box->flags);
   /* Convert the stbox to a geometry */
   Datum geo = PointerGetDatum(stbox_geo(box));
   Temporal *temp1 = hast ?

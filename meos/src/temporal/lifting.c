@@ -348,7 +348,7 @@ tfunc_tlinearseq_base_turnpt(const TSequence *seq, Datum value,
   LiftedFunctionInfo *lfinfo, TSequence **result)
 {
   int ninsts = 0;
-  TInstant **instants = palloc(sizeof(TInstant *) * seq->count * 2);
+  TInstant **instants = palloc(sizeof(TInstant *) * seq->count * 3);
   const TInstant *inst1 = TSEQUENCE_INST_N(seq, 0);
   Datum value1 = tinstant_value_p(inst1);
   interpType interp = MEOS_FLAGS_GET_INTERP(seq->flags);
@@ -360,15 +360,19 @@ tfunc_tlinearseq_base_turnpt(const TSequence *seq, Datum value,
     instants[ninsts++] = tfunc_tinstant_base(inst1, value, lfinfo);
     /* If not constant segment and linear compute the function on the potential
        intermediate turning point before adding the new instant */
-    Datum intervalue;
-    TimestampTz intertime;
+    Datum intervalue, intervalue2;
+    TimestampTz intertime, intertime2;
     if (lfinfo->tpfunc_base && interp == LINEAR &&
       ! datum_eq(value1, value2, temptype_basetype(seq->temptype)) &&
       lfinfo->tpfunc_base(inst1, inst2, value, lfinfo->argtype[1],
-        &intervalue, &intertime))
+        &intervalue, &intervalue2, &intertime, &intertime2))
     {
       instants[ninsts++] = tinstant_make_free(intervalue, lfinfo->restype,
         intertime);
+      /* Account for the second turning point if any */
+      if (intertime != intertime2)
+        instants[ninsts++] = tinstant_make_free(intervalue, lfinfo->restype,
+          intertime2);
     }
     inst1 = inst2;
     value1 = value2;
@@ -423,9 +427,9 @@ tfunc_tlinearseq_base_discfn(const TSequence *seq, Datum value,
     const TInstant *end = TSEQUENCE_INST_N(seq, i);
     Datum endvalue = tinstant_value_p(end);
     Datum endresult = tfunc_base_base(endvalue, value, lfinfo);
-    Datum intvalue, intresult;
+    Datum intvalue, intvalue2, intresult;
     bool lower_eq;
-    TimestampTz inttime;
+    TimestampTz inttime, inttime2;
 
     /* If the segment is constant continue the current sequence */
     if (datum_eq(startvalue, endvalue, basetype))
@@ -472,7 +476,7 @@ tfunc_tlinearseq_base_discfn(const TSequence *seq, Datum value,
       /* Determine whether there is a crossing and compute the value at the
        * crossing if there is one */
       bool hascross = tlinearsegm_intersection_value(start, end, value,
-        lfinfo->argtype[1], &intvalue, &inttime);
+        lfinfo->argtype[1], &intvalue, &intvalue2, &inttime, &inttime2);
       if (! hascross)
       {
         /* Continue the current sequence */
@@ -943,7 +947,7 @@ tfunc_tcontseq_tcontseq_single(const TSequence *seq1, const TSequence *seq2,
     j = tcontseq_find_timestamptz(seq2, inter->lower) + 1;
     inst2 = (TInstant *) TSEQUENCE_INST_N(seq2, j);
   }
-  int count = (seq1->count - i + seq2->count - j) * 2;
+  int count = (seq1->count - i + seq2->count - j) * 3;
   TInstant **instants = palloc(sizeof(TInstant *) * count);
   TInstant **tofree = palloc(sizeof(TInstant *) * count);
   Datum value;
@@ -972,11 +976,15 @@ tfunc_tcontseq_tcontseq_single(const TSequence *seq1, const TSequence *seq2,
        turning point before adding the new instants */
     if (lfinfo->tpfunc && ninsts > 0)
     {
-      TimestampTz tptime;
-      bool found = lfinfo->tpfunc(prev1, inst1, prev2, inst2, &value, &tptime);
+      TimestampTz tptime, tptime2;
+      bool found = lfinfo->tpfunc(prev1, inst1, prev2, inst2, &value, &tptime,
+        &tptime2);
       /* Avoid adding a turning point at the same timestamp added next */
       if (found && tptime != prev1->t)
         instants[ninsts++] = tinstant_make_free(value, lfinfo->restype, tptime);
+      /* Account for the second turning point if any */
+      if (found && tptime != tptime2)
+        instants[ninsts++] = tinstant_make_free(value, lfinfo->restype, tptime2);
     }
     /* Compute the function on the synchronized instants */
     value = tfunc_base_base(tinstant_value_p(inst1), tinstant_value_p(inst2),
@@ -1087,7 +1095,7 @@ tfunc_tcontseq_tcontseq_discfn(const TSequence *seq1, const TSequence *seq2,
     Datum endvalue2 = (interp2 == LINEAR) ? tinstant_value_p(end2) : startvalue2;
     Datum endresult = tfunc_base_base(endvalue1, endvalue2, lfinfo);
     Datum intvalue1, intvalue2, intresult;
-    TimestampTz inttime = 0; /* make compiler quiet */
+    TimestampTz inttime = 0, inttime2 = 0; /* make compiler quiet */
     bool lower_eq;
 
     /* If both segments are constant compute the function at the start and
@@ -1134,7 +1142,7 @@ tfunc_tcontseq_tcontseq_discfn(const TSequence *seq1, const TSequence *seq2,
       /* Determine whether there is a crossing and compute the value at the
        * crossing if there is one */
       bool hascross = tsegment_intersection(start1, end1, interp1,
-        start2, end2, interp2, &intvalue1, &intvalue2, &inttime);
+        start2, end2, interp2, &intvalue1, &intvalue2, &inttime, &inttime2);
       if (! hascross)
       {
         instants[ninsts++] = tinstant_make(startresult, restype, start1->t);
@@ -1692,8 +1700,8 @@ eafunc_tlinearseq_base(const TSequence *seq, Datum value,
     /* Continue if the segment is constant */
     if (datum_eq(startvalue, endvalue, basetype))
       continue;
-    Datum intvalue;
-    TimestampTz inttime;
+    Datum intvalue, intvalue2;
+    TimestampTz inttime, inttime2;
     /* To avoid floating point imprecission, if the lifted function to
      * apply is datum2_eq or datum_point_eq, the equality test is computed in
      * hascross */
@@ -1702,7 +1710,8 @@ eafunc_tlinearseq_base(const TSequence *seq, Datum value,
     /* Determine whether there is a crossing and if there is one compute the
      * value at the crossing */
     if (tlinearsegm_intersection_value(start, end, value,
-      basetype, eqfn ? NULL : &intvalue, eqfn ? NULL : &inttime))
+      basetype, eqfn ? NULL : &intvalue, eqfn ? NULL : &intvalue2,
+      eqfn ? NULL : &inttime, eqfn ? NULL : &inttime2))
     {
       if (eqfn)
         res = true;
@@ -2151,9 +2160,9 @@ eafunc_tcontseq_tcontseq_discfn(const TSequence *seq1,
         datum_eq(endvalue1, endvalue2, basetype))
     {
       Datum intvalue1, intvalue2;
-      TimestampTz inttime;
+      TimestampTz inttime, inttime2;
       bool hascross = tsegment_intersection(start1, end1, interp1,
-        start2, end2, interp2, &intvalue1, &intvalue2, &inttime);
+        start2, end2, interp2, &intvalue1, &intvalue2, &inttime, &inttime2);
       if (hascross)
       {
         res = DatumGetBool(tfunc_base_base(intvalue1, intvalue2, lfinfo));

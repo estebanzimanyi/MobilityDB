@@ -29,7 +29,7 @@
 
 /**
  * @file
- * @brief Static circular buffer type
+ * @brief Functions for the static circular buffer type
  */
 
 #include "cbuffer/cbuffer.h"
@@ -72,21 +72,21 @@
 
 /**
  * @brief Return true if the three values are collinear
- * @param[in] cb1,cb2,cbuf3 Input values
+ * @param[in] cb1,cb2,cb3 Input values
  * @param[in] ratio Value in [0,1] representing the duration of the
  * timestamps associated to `cb1` and `cb2` divided by the duration
- * of the timestamps associated to `cb1` and `cbuf3`
+ * of the timestamps associated to `cb1` and `cb3`
  */
 bool
 cbuffer_collinear(const Cbuffer *cb1, const Cbuffer *cb2,
-  const Cbuffer *cbuf3, double ratio)
+  const Cbuffer *cb3, double ratio)
 {
   Datum value1 = PointerGetDatum(&cb1->point);
   Datum value2 = PointerGetDatum(&cb2->point);
-  Datum value3 = PointerGetDatum(&cbuf3->point);
+  Datum value3 = PointerGetDatum(&cb3->point);
   if (! geopoint_collinear(value1, value2, value3, ratio, false, false))
     return false;
-  return float_collinear(cb1->radius, cb2->radius, cbuf3->radius, ratio);
+  return float_collinear(cb1->radius, cb2->radius, cb3->radius, ratio);
 }
 
 /*****************************************************************************
@@ -94,9 +94,9 @@ cbuffer_collinear(const Cbuffer *cb1, const Cbuffer *cb2,
  *****************************************************************************/
 
 /**
- * @brief Return a float between 0 and 1 representing the location of the
- * closest location on the circular buffer segment to the given circular
- * buffer, as a fraction of the segment length
+ * @brief Return a float in [0,1] representing the location of the closest
+ * location on the circular buffer segment to the given circular buffer,
+ * as a fraction of the segment length
  * @param[in] start,end Circular buffers defining the segment
  * @param[in] value Circular buffer to locate
  */
@@ -149,8 +149,8 @@ cbuffersegm_locate(const Cbuffer *start, const Cbuffer *end,
  * @brief Return a circular buffer interpolated from a circular buffer segment
  * with respect to a fraction of its total length
  * @param[in] start,end Circular buffers defining the segment
- * @param[in] ratio Float between 0 and 1 representing the fraction of the
- * total length of the segment where the interpolated buffer must be located
+ * @param[in] ratio Float in [0,1] representing the fraction of the total
+ * length of the segment for locating the interpolated circular buffer
  */
 Cbuffer *
 cbuffersegm_interpolate(const Cbuffer *start, const Cbuffer *end,
@@ -174,7 +174,7 @@ cbuffersegm_interpolate(const Cbuffer *start, const Cbuffer *end,
 bool
 ensure_valid_cbuffer_geo(const Cbuffer *cb, const GSERIALIZED *gs)
 {
-  VALIDATE_NOT_NULL(cb, false); VALIDATE_NOT_NULL(gs, false); 
+  VALIDATE_NOT_NULL(cb, false); VALIDATE_NOT_NULL(gs, false);
   if (! ensure_same_srid(cbuffer_srid(cb), gserialized_get_srid(gs)))
     return false;
   return true;
@@ -186,8 +186,8 @@ ensure_valid_cbuffer_geo(const Cbuffer *cb, const GSERIALIZED *gs)
 bool
 ensure_valid_cbuffer_stbox(const Cbuffer *cb, const STBox *box)
 {
-  VALIDATE_NOT_NULL(cb, false); VALIDATE_NOT_NULL(box, false); 
-  if (! ensure_has_X(T_STBOX, box->flags) || 
+  VALIDATE_NOT_NULL(cb, false); VALIDATE_NOT_NULL(box, false);
+  if (! ensure_has_X(T_STBOX, box->flags) ||
       ! ensure_same_srid(cbuffer_srid(cb), box->srid))
     return false;
   return true;
@@ -199,7 +199,7 @@ ensure_valid_cbuffer_stbox(const Cbuffer *cb, const STBox *box)
 bool
 ensure_valid_cbuffer_cbuffer(const Cbuffer *cb1, const Cbuffer *cb2)
 {
-  VALIDATE_NOT_NULL(cb1, false); VALIDATE_NOT_NULL(cb2, false); 
+  VALIDATE_NOT_NULL(cb1, false); VALIDATE_NOT_NULL(cb2, false);
   if (! ensure_same_srid(cbuffer_srid(cb1), cbuffer_srid(cb2)))
     return false;
   return true;
@@ -226,7 +226,7 @@ ensure_valid_cbufferset_cbuffer(const Set *s, const Cbuffer *cb)
  *****************************************************************************/
 
 /**
- * @brief Parse a spatial value from its string representation
+ * @brief Parse a circular buffer from its string representation
  */
 Cbuffer *
 cbuffer_parse(const char **str, bool end)
@@ -267,7 +267,7 @@ cbuffer_parse(const char **str, bool end)
   }
 
   p_comma(str);
- 
+
   /* Parse radius */
   p_whitespace(str);
   Datum d;
@@ -322,7 +322,7 @@ cbuffer_out(const Cbuffer *cb, int maxdd)
   VALIDATE_NOT_NULL(cb, NULL);
   if (! ensure_not_negative(maxdd))
     return NULL;
-  
+
   Datum d = PointerGetDatum(&cb->point);
   char *point = basetype_out(d, T_GEOMETRY, maxdd);
   char *radius = float8_out(cb->radius, maxdd);
@@ -330,7 +330,7 @@ cbuffer_out(const Cbuffer *cb, int maxdd)
   char *result = palloc(size);
   snprintf(result, size, "Cbuffer(%s,%s)", point, radius);
   pfree(point); pfree(radius);
-  return result; 
+  return result;
 }
 
 /*****************************************************************************
@@ -338,7 +338,7 @@ cbuffer_out(const Cbuffer *cb, int maxdd)
  *****************************************************************************/
 
 /**
- * @brief Output a circular buffer in the Well-Known Text (WKT) representation
+ * @brief Return the Well-Known Text (WKT) representation of a circular buffer
  */
 char *
 cbuffer_wkt_out(Datum value, int maxdd, bool extended)
@@ -348,7 +348,7 @@ cbuffer_wkt_out(Datum value, int maxdd, bool extended)
   GSERIALIZED *gs = DatumGetGserializedP(d);
   LWGEOM *geom = lwgeom_from_gserialized(gs);
   size_t len;
-  char *wkt = lwgeom_to_wkt(geom, extended ? WKT_EXTENDED : WKT_ISO, maxdd, 
+  char *wkt = lwgeom_to_wkt(geom, extended ? WKT_EXTENDED : WKT_ISO, maxdd,
     &len);
   char *radius = float8_out(cb->radius, maxdd);
   len += strlen(radius) + 11; // Cbuffer(,) + end NULL
@@ -399,7 +399,7 @@ cbuffer_as_ewkt(const Cbuffer *cb, int maxdd)
 
 /**
  * @ingroup meos_cbuffer_base_inout
- * @brief Return a circular buffer from its Well-Known Binary (WKB) 
+ * @brief Return a circular buffer from its Well-Known Binary (WKB)
  * representation
  * @param[in] wkb WKB string
  * @param[in] size Size of the string
@@ -550,9 +550,19 @@ geom_cbuffer(const GSERIALIZED *gs)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(gs, NULL);
-  if (! ensure_circle_type(gs))
+  uint32_t type = gserialized_get_type(gs);
+  if (type != POINTTYPE && type != CURVEPOLYTYPE )
+  {
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      "Only points or circle polygons accepted");
     return NULL;
+  }
 
+  /* POINTTYPE */
+  if (type == POINTTYPE)
+    return cbuffer_make(gs, 0.0);
+
+  /* CURVEPOLYTYPE */
   int32_t srid = gserialized_get_srid(gs);
   LWCURVEPOLY *poly = (LWCURVEPOLY *) lwgeom_from_gserialized(gs);
   LWLINE *ring = (LWLINE *) poly->rings[0];
@@ -606,7 +616,7 @@ cbufferarr_geom(Cbuffer **cbufarr, int count)
 }
 
 /*****************************************************************************
- * Transform a temporal circular buffer to a STBox
+ * Transformation functions
  *****************************************************************************/
 
 /**
@@ -849,7 +859,7 @@ cbuffer_transform(const Cbuffer *cb, int32_t srid_to)
   int32_t srid_from = cbuffer_srid(cb);
   if (! ensure_srid_known(srid_from) || ! ensure_srid_known(srid_to))
     return NULL;
-    
+
   /* Input and output SRIDs are equal, noop */
   if (srid_from == srid_to)
     return cbuffer_copy(cb);
@@ -899,15 +909,238 @@ cbuffer_transform_pipeline(const Cbuffer *cb, const char *pipeline,
  *****************************************************************************/
 
 /**
- * @brief Return the distance between the two circular buffers
- * @note The validity of the arguments should be done in the calling function
+ * @ingroup meos_cbuffer_base_dist
+ * @brief Return the distance between two circular buffers
+ * @param[in] cb1,cb2 Circular buffers
+ * @note The function assumes that all validity tests have been previously done
+ * @csqlfn #Cbuffer_distance()
+ */
+double
+cbuffer_distance(const Cbuffer *cb1, const Cbuffer *cb2)
+{
+  VALIDATE_NOT_NULL(cb1, DBL_MAX); VALIDATE_NOT_NULL(cb1, DBL_MAX);
+  const GSERIALIZED *gs1 = cbuffer_point(cb1);
+  const GSERIALIZED *gs2 = cbuffer_point(cb2);
+  double result =
+    Max(geom_distance2d(gs1, gs2) - cb1->radius - cb2->radius, 0);
+  return result;
+}
+
+/**
+ * @ingroup meos_internal_cbuffer_dist
+ * @brief Return the distance between two circular buffers
+ * @param[in] cb1,cb2 Circular buffers
+ * @note The function assumes that all validity tests have been previously done
  */
 Datum
-cbuffer_distance(Datum cb1, Datum cb2)
+datum_cbuffer_distance(Datum cb1, Datum cb2)
 {
-  Datum geom1 = CbufferPGetDatum(cbuffer_geom(DatumGetCbufferP(cb1)));
-  Datum geom2 = CbufferPGetDatum(cbuffer_geom(DatumGetCbufferP(cb2)));
-  return datum_geom_distance2d(geom1, geom2);
+  return Float8GetDatum(cbuffer_distance(DatumGetCbufferP(cb1), DatumGetCbufferP(cb2)));
+}
+
+/*****************************************************************************
+ * Spatial relationship functions
+ * disjoint and intersects are inverse to each other
+ *****************************************************************************/
+
+/**
+ * @ingroup meos_cbuffer_base_rel
+ * @brief Return true if the first circular buffer contains the second one
+ * @param[in] cb1,cb2 Circular buffers
+ * @csqlfn #Cbuffer_contains()
+ */
+int
+cbuffer_contains(const Cbuffer *cb1, const Cbuffer *cb2)
+{
+  VALIDATE_NOT_NULL(cb1, -1); VALIDATE_NOT_NULL(cb1, -1);
+  if (! ensure_valid_cbuffer_cbuffer(cb1, cb2))
+    return -1;
+  GSERIALIZED *geom1 = cbuffer_geom(cb1);
+  const GSERIALIZED *point2 = cbuffer_point(cb2);
+  const POINT2D *pt2 = (POINT2D *) GS_POINT_PTR(point2);
+  LWGEOM *points[4];
+  int32_t srid = cbuffer_srid(cb1);
+  points[0] = (LWGEOM *) lwpoint_make2d(srid, pt2->x - cb2->radius, pt2->y);
+  points[1] = (LWGEOM *) lwpoint_make2d(srid, pt2->x + cb2->radius, pt2->y);
+  points[2] = (LWGEOM *) lwpoint_make2d(srid, pt2->x, pt2->y - cb2->radius);
+  points[3] = (LWGEOM *) lwpoint_make2d(srid, pt2->x, pt2->y + cb2->radius);
+  LWGEOM *coll = (LWGEOM *) lwcollection_construct(COLLECTIONTYPE, srid, NULL,
+    (uint32_t) 4, points);
+  GSERIALIZED *corners = geo_serialize(coll);
+  bool result = geom_contains(geom1, corners);
+  pfree(geom1); pfree(corners);
+  return result ? 1 : 0;
+
+}
+
+/**
+ * @ingroup meos_cbuffer_base_rel
+ * @brief Return true if the first circular buffer covers the second one
+ * @param[in] cb1,cb2 Circular buffers
+ * @csqlfn #Cbuffer_covers()
+ */
+int
+cbuffer_covers(const Cbuffer *cb1, const Cbuffer *cb2)
+{
+  VALIDATE_NOT_NULL(cb1, -1); VALIDATE_NOT_NULL(cb1, -1);
+  if (! ensure_valid_cbuffer_cbuffer(cb1, cb2))
+    return -1;
+  GSERIALIZED *geom1 = cbuffer_geom(cb1);
+  const GSERIALIZED *point2 = cbuffer_point(cb2);
+  const POINT2D *pt2 = (POINT2D *) GS_POINT_PTR(point2);
+  LWGEOM *points[4];
+  int32_t srid = cbuffer_srid(cb1);
+  points[0] = (LWGEOM *) lwpoint_make2d(srid, pt2->x - cb2->radius, pt2->y);
+  points[1] = (LWGEOM *) lwpoint_make2d(srid, pt2->x + cb2->radius, pt2->y);
+  points[2] = (LWGEOM *) lwpoint_make2d(srid, pt2->x, pt2->y - cb2->radius);
+  points[3] = (LWGEOM *) lwpoint_make2d(srid, pt2->x, pt2->y + cb2->radius);
+  LWGEOM *coll = (LWGEOM *) lwcollection_construct(COLLECTIONTYPE, srid, NULL,
+    (uint32_t) 4, points);
+  GSERIALIZED *corners = geo_serialize(coll);
+  bool result = geom_covers(geom1, corners);
+  pfree(geom1); pfree(corners);
+  return result ? 1 : 0;
+}
+
+/**
+ * @ingroup meos_cbuffer_base_rel
+ * @brief Return true if two circular buffers are disjoint in 2D
+ * @param[in] cb1,cb2 Circular buffers
+ * @csqlfn #Cbuffer_disjoint()
+ */
+int
+cbuffer_disjoint(const Cbuffer *cb1, const Cbuffer *cb2)
+{
+  return ! cbuffer_intersects(cb1, cb2);
+}
+
+/**
+ * @ingroup meos_cbuffer_base_rel
+ * @brief Return true if two circular buffers intersect in 2D
+ * @param[in] cb1,cb2 Circular buffers
+ * @csqlfn #Cbuffer_intersects()
+ */
+int
+cbuffer_intersects(const Cbuffer *cb1, const Cbuffer *cb2)
+{
+  VALIDATE_NOT_NULL(cb1, -1); VALIDATE_NOT_NULL(cb1, -1);
+  if (! ensure_valid_cbuffer_cbuffer(cb1, cb2))
+    return -1;
+  double dist = cbuffer_distance(cb1, cb2);
+  return (dist == 0) ? 1 : 0;
+}
+
+/**
+ * @ingroup meos_cbuffer_base_rel
+ * @brief Return true if the first circular buffer touches the second one
+ * @param[in] cb1,cb2 Circular buffers
+ * @csqlfn #Cbuffer_touches()
+ */
+int
+cbuffer_touches(const Cbuffer *cb1, const Cbuffer *cb2)
+{
+  VALIDATE_NOT_NULL(cb1, -1); VALIDATE_NOT_NULL(cb1, -1);
+  if (! ensure_valid_cbuffer_cbuffer(cb1, cb2))
+    return -1;
+  Datum d1 = PointerGetDatum(&cb1->point);
+  Datum d2 = PointerGetDatum(&cb2->point);
+  double dist1 = DatumGetFloat8(datum_pt_distance2d(d1, d2));
+  return (dist1 == cb1->radius + cb2->radius) ? 1 : 0;
+}
+
+/**
+ * @ingroup meos_cbuffer_base_rel
+ * @brief Return true if two 2D circular buffers are within a distance
+ * @param[in] cb1,cb2 Circular buffers
+ * @param[in] dist Distance
+ * @csqlfn #Cbuffer_dwithin()
+ */
+int
+cbuffer_dwithin(const Cbuffer *cb1, const Cbuffer *cb2, double dist)
+{
+  VALIDATE_NOT_NULL(cb1, -1); VALIDATE_NOT_NULL(cb1, -1);
+  if (! ensure_valid_cbuffer_cbuffer(cb1, cb2))
+    return -1;
+  double dist1 = cbuffer_distance(cb1, cb2);
+  return (dist1 <= dist) ? 1 : 0;
+}
+
+/*****************************************************************************/
+
+/**
+ * @ingroup meos_internal_cbuffer_base_rel
+ * @brief Return a Datum true if the first circular buffer contains the second
+ * one
+ * @param[in] cb1,cb2 Circular buffers
+ */
+Datum
+datum_cbuffer_contains(Datum cb1, Datum cb2)
+{
+  return BoolGetDatum(cbuffer_contains(DatumGetCbufferP(cb1),
+    DatumGetCbufferP(cb2)));
+}
+
+/**
+ * @ingroup meos_internal_cbuffer_base_rel
+ * @brief Return a Datum true if the first circular buffer covers the second
+ * one
+ * @param[in] cb1,cb2 Circular buffers
+ */
+Datum
+datum_cbuffer_covers(Datum cb1, Datum cb2)
+{
+  return BoolGetDatum(cbuffer_covers(DatumGetCbufferP(cb1),
+    DatumGetCbufferP(cb2)));
+}
+
+/**
+ * @ingroup meos_internal_cbuffer_base_rel
+ * @brief Return a Datum true if two circular buffers are disjoint in 2D
+ * @param[in] cb1,cb2 Circular buffers
+ */
+Datum
+datum_cbuffer_disjoint(Datum cb1, Datum cb2)
+{
+  return BoolGetDatum(! cbuffer_intersects(DatumGetCbufferP(cb1),
+    DatumGetCbufferP(cb2)));
+}
+
+/**
+ * @ingroup meos_internal_cbuffer_base_rel
+ * @brief Return a Datum true if two circular buffers intersect in 2D
+ * @param[in] cb1,cb2 Circular buffers
+ */
+Datum
+datum_cbuffer_intersects(Datum cb1, Datum cb2)
+{
+  return BoolGetDatum(cbuffer_intersects(DatumGetCbufferP(cb1),
+    DatumGetCbufferP(cb2)));
+}
+
+/**
+ * @ingroup meos_internal_cbuffer_base_rel
+ * @brief Return a Datum true if the first circular buffer touches the second
+ * one
+ * @param[in] cb1,cb2 Circular buffers
+ */
+Datum
+datum_cbuffer_touches(Datum cb1, Datum cb2)
+{
+  return BoolGetDatum(cbuffer_touches(DatumGetCbufferP(cb1),
+    DatumGetCbufferP(cb2)));
+}
+
+/**
+ * @ingroup meos_internal_cbuffer_base_rel
+ * @brief Return a Datum true if two 2D circular buffers are within a distance
+ * @param[in] cb1,cb2 Circular buffers
+ * @param[in] dist Distance
+ */
+Datum
+datum_cbuffer_dwithin(Datum cb1, Datum cb2, Datum dist)
+{
+  return BoolGetDatum(cbuffer_dwithin(DatumGetCbufferP(cb1),
+    DatumGetCbufferP(cb2), DatumGetFloat8(dist)));
 }
 
 /*****************************************************************************
@@ -927,7 +1160,7 @@ cbuffer_eq(const Cbuffer *cb1, const Cbuffer *cb2)
   VALIDATE_NOT_NULL(cb1, false); VALIDATE_NOT_NULL(cb2, false);
   Datum d1 = PointerGetDatum(&cb1->point);
   Datum d2 = PointerGetDatum(&cb2->point);
-  return datum_point_eq(d1, d2) && 
+  return datum_point_eq(d1, d2) &&
     fabs(cb1->radius - cb2->radius) < MEOS_EPSILON;
 }
 

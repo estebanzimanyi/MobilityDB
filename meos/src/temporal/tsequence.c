@@ -2386,10 +2386,11 @@ synchronize_tsequence_tsequence(const TSequence *seq1, const TSequence *seq2,
        instants */
     if (crossings && (interp1 == LINEAR || interp2 == LINEAR) && ninsts > 0)
     {
-      TimestampTz crosstime;
+      TimestampTz crosstime, crosstime2;
       Datum inter1, inter2;
       if (tsegment_intersection(instants1[ninsts - 1], inst1, interp1,
-        instants2[ninsts - 1], inst2, interp2, &inter1, &inter2, &crosstime))
+        instants2[ninsts - 1], inst2, interp2, &inter1, &inter2, &crosstime,
+        &crosstime2))
       {
         instants1[ninsts] = tofree[nfree++] = tinstant_make_free(inter1,
           seq1->temptype, crosstime);
@@ -2564,7 +2565,7 @@ intersection_tdiscseq_tcontseq(const TSequence *seq1, const TSequence *seq2,
  * @param[in] basetype Type of the value
  * @param[out] t Timestamp
  */
-bool
+int
 tfloatsegm_intersection_value(const TInstant *inst1, const TInstant *inst2,
   Datum value, meosType basetype, TimestampTz *t)
 {
@@ -2575,7 +2576,7 @@ tfloatsegm_intersection_value(const TInstant *inst1, const TInstant *inst2,
   double dvalue = datum_double(value, basetype);
   double fraction = floatsegm_locate(value1, value2, dvalue);
   if (fraction < 0.0)
-    return false;
+    return 0;
   if (t)
   {
     double duration = (double) (inst2->t - inst1->t);
@@ -2583,7 +2584,7 @@ tfloatsegm_intersection_value(const TInstant *inst1, const TInstant *inst2,
      * resulting timestamp t may be equal to inst1->t or to inst2->t */
     *t = inst1->t + (TimestampTz) (duration * fraction);
   }
-  return true;
+  return 1;
 }
 
 /**
@@ -2592,18 +2593,19 @@ tfloatsegm_intersection_value(const TInstant *inst1, const TInstant *inst2,
  * @param[in] inst1,inst2 Temporal instants defining the segment
  * @param[in] value Base value
  * @param[in] basetype Type of the value
- * @param[out] inter Base value taken by the segment at the timestamp.
- * This value is equal to the input base value up to the floating
- * point precision.
- * @param[out] t Timestamp, may be @p NULL
+ * @param[out] inter,inter2 Base values taken by the segment at the timestamps.
+ * `t1` and `t2`These values are equal to the input base value up to the
+ * floating point precision.
+ * @param[out] t,t2 Timestamps, may be @p NULL
  * @note Return false if the value is equal to the first or the last instant.
  * The reason is that the function is used in the lifting infrastructure for
  * determining the crossings after testing whether the bounds of the segments
  * are equal to the given value.
  */
-bool
+int
 tlinearsegm_intersection_value(const TInstant *inst1, const TInstant *inst2,
-  Datum value, meosType basetype, Datum *inter, TimestampTz *t)
+  Datum value, meosType basetype, Datum *inter, Datum *inter2, TimestampTz *t,
+  TimestampTz *t2)
 {
   assert(temptype_basetype(inst1->temptype) == basetype);
   assert(temptype_basetype(inst2->temptype) == basetype);
@@ -2611,23 +2613,28 @@ tlinearsegm_intersection_value(const TInstant *inst1, const TInstant *inst2,
   Datum value2 = tinstant_value_p(inst2);
   if (datum_eq(value, value1, basetype) ||
       datum_eq(value, value2, basetype))
-    return false;
+    return 0;
 
   assert(temptype_continuous(inst1->temptype));
   double fraction = datumsegm_locate(value1, value2, value, basetype);
   if (fraction < 0.0)
-    return false;
+    return 0;
   if (t)
   {
     double duration = (double) (inst2->t - inst1->t);
     /* Note that due to roundoff errors it may be the case that the
      * resulting timestamp t may be equal to inst1->t or to inst2->t */
     *t = inst1->t + (TimestampTz) (duration * fraction);
+    if (t2)
+      *t2 = *t;
   }
   if (inter)
+  {
     /* We are sure it is linear interpolation */
     *inter = tsegment_value_at_timestamptz(inst1, inst2, LINEAR, *t);
-  return true;
+    *inter2 = *inter;
+  }
+  return 1;
 }
 
 /*****************************************************************************/
@@ -2725,17 +2732,18 @@ tnumbersegm_intersection(const TInstant *start1, const TInstant *end1,
  * @param[in] interp2 Interpolation of the second segment
  * @param[out] inter1, inter2 (Copy of the) base values taken by the two
  * segments at the timestamp
- * @param[out] t Timestamp
+ * @param[out] t,t2 Timestamps
  * @pre The instants are synchronized, i.e., `start1->t = start2->t` and
  * `end1->t = end2->t`
  */
 bool
 tsegment_intersection(const TInstant *start1, const TInstant *end1,
   interpType interp1, const TInstant *start2, const TInstant *end2,
-  interpType interp2, Datum *inter1, Datum *inter2, TimestampTz *t)
+  interpType interp2, Datum *inter1, Datum *inter2, TimestampTz *t,
+  TimestampTz *t2 __attribute__((unused)))
 {
   bool result = false; /* Make compiler quiet */
-  Datum value;
+  Datum value, inter;  /* inter is currently unused */
   meosType basetype1 = temptype_basetype(start1->temptype);
   meosType basetype2 = temptype_basetype(start2->temptype);
   if (interp1 != LINEAR)
@@ -2744,7 +2752,7 @@ tsegment_intersection(const TInstant *start1, const TInstant *end1,
     if (inter1)
       *inter1 = value;
     result = tlinearsegm_intersection_value(start2, end2, value, basetype1,
-      inter2, t);
+      inter2, &inter, t, t2);
   }
   else if (interp2 != LINEAR)
   {
@@ -2752,7 +2760,7 @@ tsegment_intersection(const TInstant *start1, const TInstant *end1,
     if (inter2)
       *inter2 = value;
     result = tlinearsegm_intersection_value(start1, end1, value, basetype2,
-      inter1, t);
+      inter1, &inter, t, t2);
   }
   else
   {

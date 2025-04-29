@@ -798,7 +798,7 @@ tgeogpointsegm_intersection(const TInstant *start1, const TInstant *end1,
 {
   Datum mindist;
   bool found = tgeogpoint_min_dist_at_timestamptz(start1, end1, start2, end2,
-    &mindist, t);
+    &mindist, t, NULL);
   if (! found || DatumGetFloat8(mindist) > MEOS_EPSILON)
     return false;
   return true;
@@ -3296,15 +3296,17 @@ get_bearing_fn(int16 flags)
  * @param[in] start,end Instants defining the segment
  * @param[in] point Geometric/geography point
  * @param[in] basetypid Base type
- * @param[out] value Value
- * @param[out] t Timestamp
+ * @param[out] value,value2 Value
+ * @param[out] t,t2 Timestamps
  * @pre The segment is not constant and has linear interpolation
+ * @post As there is a single turning point, `value2` and `t2` are set to
+ * `value` and `t`, respectively
  * @note The parameter @p basetype is not needed for temporal points
  */
-static bool
+static int
 tpoint_geo_min_bearing_at_timestamptz(const TInstant *start,
   const TInstant *end, Datum point, meosType basetypid __attribute__((unused)),
-  Datum *value, TimestampTz *t)
+  Datum *value, Datum *value2, TimestampTz *t, TimestampTz *t2)
 {
   Datum dstart = tinstant_value_p(start);
   Datum dend = tinstant_value_p(end);
@@ -3323,7 +3325,7 @@ tpoint_geo_min_bearing_at_timestamptz(const TInstant *start,
     geographic_point_init(p1->x, p1->y, &(e.start));
     geographic_point_init(p2->x, p2->y, &(e.end));
     if (! edge_contains_coplanar_point(&e, &gp))
-      return false;
+      return 0;
     /* Create an edge in the same meridian as p */
     geographic_point_init(p->x, 89.999999, &(e1.start));
     geographic_point_init(p->x, -89.999999, &(e1.end));
@@ -3332,7 +3334,7 @@ tpoint_geo_min_bearing_at_timestamptz(const TInstant *start,
       rad2deg(inter.lat), 0, false, true, tspatialinst_srid(start)));
     fraction = pointsegm_locate(dstart, dend, proj, NULL);
     if (fraction < 0.0)
-      return false;
+      return 0;
   }
   else
   {
@@ -3340,20 +3342,20 @@ tpoint_geo_min_bearing_at_timestamptz(const TInstant *start,
     bool de = (p2->x - p->x) > 0;
     /* If there is not a North passage */
     if (ds == de)
-      return false;
+      return 0;
     fraction = (long double)(p->x - p1->x) / (long double)(p2->x - p1->x);
     if (fraction <= MEOS_EPSILON || fraction >= (1.0 - MEOS_EPSILON))
-      return false;
+      return 0;
   }
   long double duration = (long double) (end->t - start->t);
-  *t = start->t + (TimestampTz) (duration * fraction);
-  *value = (Datum) 0;
+  *t = *t2 = start->t + (TimestampTz) (duration * fraction);
+  *value = *value2 = (Datum) 0;
   /* Compute the projected value only for geometries */
   if (! geodetic)
     proj = tsegment_value_at_timestamptz(start, end, LINEAR, *t);
   q = DATUM_POINT2D_P(proj);
   /* We add a turning point only if p is to the North of q */
-  bool result = MEOS_FP_GE(p->y, q->y) ? true : false;
+  int result = MEOS_FP_GE(p->y, q->y) ? 1 : 0;
   pfree(DatumGetPointer(proj));
   return result;
 }
@@ -3364,15 +3366,15 @@ tpoint_geo_min_bearing_at_timestamptz(const TInstant *start,
  * @param[in] start1,end1 Instants defining the first segment
  * @param[in] start2,end2 Instants defining the second segment
  * @param[out] value Value
- * @param[out] t Timestamp
+ * @param[out] t,t2 Timestamp
  * @pre The segments are not both constants and are both linear
  * @note This function is currently not available for two temporal geographic
  * points
  */
-static bool
+static int
 tpointsegm_min_bearing_at_timestamptz(const TInstant *start1,
-  const TInstant *end1, const TInstant *start2,
-  const TInstant *end2, Datum *value, TimestampTz *t)
+  const TInstant *end1, const TInstant *start2, const TInstant *end2,
+  Datum *value, TimestampTz *t, TimestampTz *t2)
 {
   assert(! MEOS_FLAGS_GET_GEODETIC(start1->flags));
   const POINT2D *sp1 = DATUM_POINT2D_P(tinstant_value_p(start1));
@@ -3384,7 +3386,7 @@ tpointsegm_min_bearing_at_timestamptz(const TInstant *start1,
   bool ds = (sp1->x - sp2->x) > 0;
   bool de = (ep1->x - ep2->x) > 0;
   if (ds == de)
-    return false;
+    return 0;
 
   /*
    * Compute the instants t1 and t2 at which the linear functions of the two
@@ -3396,7 +3398,7 @@ tpointsegm_min_bearing_at_timestamptz(const TInstant *start1,
    * #tnumber_arithop_tp_at_timestamp1 in file tnumber_mathfuncs.c
    */
   if ((ep1->x - sp1->x) == 0.0 || (ep2->x - sp2->x) == 0.0)
-    return false;
+    return 0;
 
   long double d1 = (-1 * sp1->x) / (ep1->x - sp1->x);
   long double d2 = (-1 * sp2->x) / (ep2->x - sp2->x);
@@ -3406,7 +3408,7 @@ tpointsegm_min_bearing_at_timestamptz(const TInstant *start1,
   long double duration = (long double) (end1->t - start1->t);
   if (fraction <= MEOS_EPSILON || fraction >= (1.0 - MEOS_EPSILON))
     /* Minimum/maximum occurs out of the period */
-    return false;
+    return 0;
 
   *t = start1->t + (TimestampTz) (duration * fraction);
   /* We need to verify that at timestamp t the first segment is to the
@@ -3416,11 +3418,12 @@ tpointsegm_min_bearing_at_timestamptz(const TInstant *start1,
   sp1 = DATUM_POINT2D_P(value1);
   sp2 = DATUM_POINT2D_P(value2);
   if (sp1->y > sp2->y) // TODO Use MEOS_EPSILON
-    return false;
+    return 0;
  /* We know that the bearing is 0 */
   if (value)
     *value = Float8GetDatum(0.0);
-  return true;
+  *t2 = *t;
+  return 1;
 }
 
 /*****************************************************************************/

@@ -99,19 +99,20 @@ distance_tnumber_number(const Temporal *temp, Datum value)
  * @param[in] start1,end1 Temporal instants defining the first segment
  * @param[in] start2,end2 Temporal instants defining the second segment
  * @param[out] value Value
- * @param[out] t Timestamp
+ * @param[out] t,t2 Timestamps
  * @note This function is passed to the lifting infrastructure when computing
  * the temporal distance
  */
-static bool
+static int
 tnumber_min_dist_at_timestamptz(const TInstant *start1, const TInstant *end1,
-  const TInstant *start2, const TInstant *end2, Datum *value, TimestampTz *t)
+  const TInstant *start2, const TInstant *end2, Datum *value, TimestampTz *t,
+  TimestampTz *t2 __attribute__((unused)))
 {
   if (! tsegment_intersection(start1, end1, LINEAR, start2, end2, LINEAR,
-      NULL, NULL, t))
-    return false;
+      NULL, NULL, t, t2))
+    return 0;
   *value = (Datum) 0;
-  return true;
+  return 1;
 }
 
 /**

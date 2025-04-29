@@ -46,6 +46,7 @@
 #include <lwgeom_geos.h>
 /* MEOS */
 #include <meos.h>
+#include <meos_geo.h>
 #include <meos_internal.h>
 #include "temporal/pg_types.h"
 #include "temporal/lifting.h"
@@ -266,7 +267,7 @@ datum2_geog_centroid(Datum geo)
  * @brief Select the appropriate distance function
  */
 datum_func2
-distance_fn(int16 flags)
+geo_distance_fn(int16 flags)
 {
   if (MEOS_FLAGS_GET_GEODETIC(flags))
     return &datum_geog_distance;
@@ -859,7 +860,8 @@ ensure_valid_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
 bool
 ensure_valid_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
 {
-  VALIDATE_TSPATIAL(temp1, false); VALIDATE_TSPATIAL(temp2, false);
+  assert(temp1); assert(temp1); assert(tgeo_type_all(temp1->temptype));
+  assert(tgeo_type_all(temp2->temptype));
   if (! ensure_same_srid(tspatial_srid(temp1), tspatial_srid(temp2)) ||
       ! ensure_same_geodetic(temp1->flags, temp2->flags))
     return false;

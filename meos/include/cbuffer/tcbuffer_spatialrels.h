@@ -40,11 +40,12 @@
 #include <meos.h>
 #include <meos_cbuffer.h>
 #include "temporal/temporal.h"
-  
+
 /*****************************************************************************/
 
-extern int ea_disjoint_tcbuffer_geo(const Temporal *temp,
-  const GSERIALIZED *gs, bool ever);
+extern int tdwithin_tcbuffersegm_tcbuffersegm(Datum sv1, Datum ev1, Datum sv2,
+  Datum ev2, TimestampTz lower, TimestampTz upper, double dist,
+  TimestampTz *t1, TimestampTz *t2);
 
 extern int ea_dwithin_tcbuffer_tcbuffer_sync(const Temporal *sync1,
   const Temporal *sync2, double dist, bool ever);

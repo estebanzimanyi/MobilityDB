@@ -233,6 +233,100 @@ Tcontains_tgeo_tgeo(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************
+ * Temporal covers
+ *****************************************************************************/
+
+PGDLLEXPORT Datum Tcovers_geo_tgeo(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tcovers_geo_tgeo);
+/**
+ * @ingroup mobilitydb_geo_rel_temp
+ * @brief Return a temporal boolean that states whether a geometry covers a
+ * temporal geo
+ * @sqlfn tCovers()
+ */
+Datum
+Tcovers_geo_tgeo(PG_FUNCTION_ARGS)
+{
+  if (PG_ARGISNULL(0) || PG_ARGISNULL(1))
+    PG_RETURN_NULL();
+  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
+  Temporal *temp = PG_GETARG_TEMPORAL_P(1);
+  bool restr = false;
+  bool atvalue = false;
+  if (PG_NARGS() > 2 && ! PG_ARGISNULL(2))
+  {
+    atvalue = PG_GETARG_BOOL(2);
+    restr = true;
+  }
+  Temporal *result = tcovers_geo_tgeo(gs, temp, restr, atvalue);
+  PG_FREE_IF_COPY(gs, 0);
+  PG_FREE_IF_COPY(temp, 1);
+  if (! result)
+    PG_RETURN_NULL();
+  PG_RETURN_TEMPORAL_P(result);
+}
+
+PGDLLEXPORT Datum Tcovers_tgeo_geo(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tcovers_tgeo_geo);
+/**
+ * @ingroup mobilitydb_geo_rel_temp
+ * @brief Return a temporal boolean that states whether a temporal geometry
+ * covers a geometry
+ * @sqlfn tCovers()
+ */
+Datum
+Tcovers_tgeo_geo(PG_FUNCTION_ARGS)
+{
+  if (PG_ARGISNULL(0) || PG_ARGISNULL(1))
+    PG_RETURN_NULL();
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+  bool restr = false;
+  bool atvalue = false;
+  if (PG_NARGS() > 2 && ! PG_ARGISNULL(2))
+  {
+    atvalue = PG_GETARG_BOOL(2);
+    restr = true;
+  }
+  Temporal *result = tcovers_tgeo_geo(temp, gs, restr, atvalue);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_FREE_IF_COPY(gs, 1);
+  if (! result)
+    PG_RETURN_NULL();
+  PG_RETURN_TEMPORAL_P(result);
+}
+
+PGDLLEXPORT Datum Tcovers_tgeo_tgeo(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tcovers_tgeo_tgeo);
+/**
+ * @ingroup mobilitydb_geo_rel_temp
+ * @brief Return a temporal boolean that states whether a temporal geometry
+ * covers another temporal geometry
+ * @sqlfn tCovers()
+ */
+Datum
+Tcovers_tgeo_tgeo(PG_FUNCTION_ARGS)
+{
+  if (PG_ARGISNULL(0) || PG_ARGISNULL(1))
+    PG_RETURN_NULL();
+  Temporal *temp1 = PG_GETARG_TEMPORAL_P(0);
+  Temporal *temp2 = PG_GETARG_TEMPORAL_P(1);
+  bool restr = false;
+  bool atvalue = false;
+  if (PG_NARGS() > 2 && ! PG_ARGISNULL(2))
+  {
+    atvalue = PG_GETARG_BOOL(2);
+    restr = true;
+  }
+  Temporal *result = tcovers_tgeo_tgeo(temp1, temp2, restr, atvalue);
+  PG_FREE_IF_COPY(temp1, 0);
+  PG_FREE_IF_COPY(temp2, 1);
+  if (! result)
+    PG_RETURN_NULL();
+  PG_RETURN_TEMPORAL_P(result);
+}
+
+/*****************************************************************************
  * Temporal disjoint
  *****************************************************************************/
 

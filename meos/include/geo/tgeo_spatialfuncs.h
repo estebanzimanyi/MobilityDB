@@ -71,7 +71,7 @@ extern bool datum_point_eq(Datum point1, Datum point2);
 extern bool datum_point_same(Datum point1, Datum point2);
 extern Datum datum2_point_eq(Datum point1, Datum point2);
 extern Datum datum2_point_ne(Datum point1, Datum point2);
-extern Datum datum2_point_same(Datum point1, Datum oint2);
+extern Datum datum2_point_same(Datum point1, Datum point2);
 extern Datum datum2_point_nsame(Datum point1, Datum point2);
 extern Datum datum2_geom_centroid(Datum geo);
 extern Datum datum2_geog_centroid(Datum geo);
@@ -80,7 +80,7 @@ extern LWPROJ *lwproj_get(int32 srid_from, int32 srid_to);
 
 /* Generic functions */
 
-extern datum_func2 distance_fn(int16 flags);
+extern datum_func2 geo_distance_fn(int16 flags);
 extern datum_func2 pt_distance_fn(int16 flags);
 extern Datum datum_geom_distance2d(Datum geom1, Datum geom2);
 extern Datum datum_geom_distance3d(Datum geom1, Datum geom2);

@@ -44,18 +44,18 @@
 
 /*****************************************************************************/
 
-extern bool tgeompoint_min_dist_at_timestamptz(const TInstant *start1, 
+extern int tgeompoint_min_dist_at_timestamptz(const TInstant *start1, 
   const TInstant *end1, const TInstant *start2, const TInstant *end2, 
-  Datum *mindist, TimestampTz *t);
+  Datum *mindist, TimestampTz *t, TimestampTz *t2);
   
 extern double tnumberinst_distance(const TInstant *inst1, const TInstant *inst2);
 extern double tgeoinst_distance(const TInstant *inst1, const TInstant *inst2,
   datum_func2 func);
 extern double tinstant_distance(const TInstant *inst1, const TInstant *inst2,
   datum_func2 func);
-extern bool tgeogpoint_min_dist_at_timestamptz(const TInstant *start1,
+extern int tgeogpoint_min_dist_at_timestamptz(const TInstant *start1,
   const TInstant *end1, const TInstant *start2, const TInstant *end2,
-  Datum *mindist, TimestampTz *t);
+  Datum *mindist, TimestampTz *t, TimestampTz *t2);
 
 /*****************************************************************************/
 

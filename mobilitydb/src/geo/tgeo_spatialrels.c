@@ -77,7 +77,7 @@ EA_spatialrel_geo_tspatial(FunctionCallInfo fcinfo,
   PG_FREE_IF_COPY(temp, 1);
   if (result < 0)
     PG_RETURN_NULL();
-  PG_RETURN_INT32(result);
+  PG_RETURN_BOOL(result ? true : false);
 }
 
 /**
@@ -95,14 +95,14 @@ EA_spatialrel_tspatial_geo(FunctionCallInfo fcinfo,
   PG_FREE_IF_COPY(gs, 1);
   if (result < 0)
     PG_RETURN_NULL();
-  PG_RETURN_INT32(result);
+  PG_RETURN_BOOL(result ? true : false);
 }
 
 /**
  * @brief Return true if two temporal spatial values ever/always satisfy the
  * spatial relationship
  * @param[in] fcinfo Catalog information about the external function
- * @param[in] func1,func2 Spatial relationship for temporal geometry/geography
+ * @param[in] func Spatial relationship for temporal geometry/geography
  * @param[in] ever True to compute the ever semantics, false for always
  */
 Datum

@@ -95,8 +95,8 @@ Arithop_tnumber_number(FunctionCallInfo fcinfo, TArithmetic oper,
 static Datum
 Arithop_tnumber_tnumber(FunctionCallInfo fcinfo, TArithmetic oper,
   Datum (*func)(Datum, Datum, meosType),
-  bool (*tpfunc)(const TInstant *, const TInstant *, const TInstant *,
-    const TInstant *, Datum *, TimestampTz *))
+  int (*tpfunc)(const TInstant *, const TInstant *, const TInstant *,
+    const TInstant *, Datum *, TimestampTz *, TimestampTz *))
 {
   Temporal *temp1 = PG_GETARG_TEMPORAL_P(0);
   Temporal *temp2 = PG_GETARG_TEMPORAL_P(1);

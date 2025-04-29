@@ -102,7 +102,7 @@ tnumber_arithop_tp_at_timestamp1(const TInstant *start1, const TInstant *end1,
 static bool
 tnumber_arithop_tp_at_timestamptz(const TInstant *start1, const TInstant *end1,
   const TInstant *start2, const TInstant *end2, TArithmetic op, Datum *value,
-  TimestampTz *t)
+  TimestampTz *t, TimestampTz *t2)
 {
   assert(start1->t == start2->t); assert(end1->t == end2->t);
   if (! tnumber_arithop_tp_at_timestamp1(start1, end1, start2, end2, t))
@@ -115,6 +115,7 @@ tnumber_arithop_tp_at_timestamptz(const TInstant *start1, const TInstant *end1,
   *value = (op == '*') ?
     datum_mult(value1, value2, basetype) :
     datum_div(value1, value2, basetype);
+  *t2 = *t;
   return true;
 }
 
@@ -123,12 +124,13 @@ tnumber_arithop_tp_at_timestamptz(const TInstant *start1, const TInstant *end1,
  * temporal number segments is at a local minimum/maximum
  * @note This function is called only when both sequences are linear.
  */
-bool
+int
 tnumber_mult_tp_at_timestamptz(const TInstant *start1, const TInstant *end1,
-  const TInstant *start2, const TInstant *end2, Datum *value, TimestampTz *t)
+  const TInstant *start2, const TInstant *end2, Datum *value, TimestampTz *t,
+  TimestampTz *t2 __attribute__((unused)))
 {
   return tnumber_arithop_tp_at_timestamptz(start1, end1, start2, end2, MULT,
-    value, t);
+    value, t, t2);
 }
 
 /**
@@ -136,12 +138,13 @@ tnumber_mult_tp_at_timestamptz(const TInstant *start1, const TInstant *end1,
  * number segments is at a local minimum/maximum
  * @note This function is called only when both sequences are linear.
  */
-bool
+int
 tnumber_div_tp_at_timestamptz(const TInstant *start1, const TInstant *end1,
-  const TInstant *start2, const TInstant *end2, Datum *value, TimestampTz *t)
+  const TInstant *start2, const TInstant *end2, Datum *value, TimestampTz *t,
+  TimestampTz *t2 __attribute__((unused)))
 {
   return tnumber_arithop_tp_at_timestamptz(start1, end1, start2, end2, DIV,
-    value, t);
+    value, t, t2);
 }
 
 /*****************************************************************************
@@ -212,8 +215,8 @@ arithop_tnumber_number(const Temporal *temp, Datum value, TArithmetic oper,
 Temporal *
 arithop_tnumber_tnumber(const Temporal *temp1, const Temporal *temp2,
   TArithmetic oper, Datum (*func)(Datum, Datum, meosType),
-  bool (*tpfunc)(const TInstant *, const TInstant *, const TInstant *,
-    const TInstant *, Datum *, TimestampTz *))
+  int (*tpfunc)(const TInstant *, const TInstant *, const TInstant *,
+    const TInstant *, Datum *, TimestampTz *, TimestampTz *))
 {
   assert(tnumber_type(temp1->temptype));
   assert(temp1->temptype == temp2->temptype);

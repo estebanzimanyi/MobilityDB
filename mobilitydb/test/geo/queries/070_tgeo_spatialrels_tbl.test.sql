@@ -45,6 +45,19 @@ SELECT COUNT(*) FROM tbl_tgeometry t1, tbl_tgeometry t2 WHERE eContains(t1.temp,
 SELECT COUNT(*) FROM tbl_tgeometry t1, tbl_tgeometry t2 WHERE aContains(t1.temp, t2.temp);
 
 -------------------------------------------------------------------------------
+-- eCovers, aCovers
+-------------------------------------------------------------------------------
+
+SELECT COUNT(*) FROM tbl_geometry, tbl_tgeometry WHERE eCovers(g, temp);
+SELECT COUNT(*) FROM tbl_geometry, tbl_tgeometry WHERE aCovers(g, temp);
+
+SELECT COUNT(*) FROM tbl_tgeometry, tbl_geometry WHERE eCovers(temp, g);
+SELECT COUNT(*) FROM tbl_tgeometry, tbl_geometry WHERE aCovers(temp, g);
+
+SELECT COUNT(*) FROM tbl_tgeometry t1, tbl_tgeometry t2 WHERE eCovers(t1.temp, t2.temp);
+SELECT COUNT(*) FROM tbl_tgeometry t1, tbl_tgeometry t2 WHERE aCovers(t1.temp, t2.temp);
+
+-------------------------------------------------------------------------------
 -- eDisjoint, aDisjoint
 -- They support geography
 -------------------------------------------------------------------------------

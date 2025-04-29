@@ -28,48 +28,30 @@
  *****************************************************************************/
 
 /**
- * @brief Temporal distance for temporal network points.
+ * @brief Temporal spatial relationships for temporal points.
  */
 
-#ifndef __TCBUFFER_DISTANCE_H__
-#define __TCBUFFER_DISTANCE_H__
+#ifndef __TCBUFFER_TEMPSPATIALRELS_H__
+#define __TCBUFFER_TEMPSPATIALRELS_H__
 
 /* PostgreSQL */
 #include <postgres.h>
 /* MEOS */
+#include <meos.h>
 #include "temporal/temporal.h"
-#include <meos_cbuffer.h>
 
 /*****************************************************************************/
 
-extern double cbuffer_distance(const Cbuffer *cb1, const Cbuffer *cb2);
-extern Datum datum_cbuffer_distance(Datum cb1, Datum cb2);
-extern Temporal *distance_tcbuffer_geo(const Temporal *temp,
-  const GSERIALIZED *gs);
-extern Temporal *distance_tcbuffer_cbuffer(const Temporal *temp,
-  const Cbuffer *cb);
-extern Temporal *distance_tcbuffer_tcbuffer(const Temporal *temp1,
-  const Temporal *temp2);
+extern Temporal *tinterrel_tcbuffer_cbuffer(const Temporal *temp,
+  const Cbuffer *cb, bool tinter, bool restr, bool atvalue);
+extern Temporal *tinterrel_tcbuffer_geo(const Temporal *temp,
+  const GSERIALIZED *gs, bool tinter, bool restr, bool atvalue);
+extern Temporal *tinterrel_tcbuffer_tcbuffer(const Temporal *temp1,
+  const Temporal *temp2, bool tinter, bool restr, bool atvalue);
 
-extern TInstant *nai_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs);
-extern TInstant *nai_tcbuffer_cbuffer(const Temporal *temp, 
-  const Cbuffer *cb);
-extern TInstant *nai_tcbuffer_tcbuffer(const Temporal *temp,
-  const Temporal *temp2);
-
-extern double nad_cbuffer_stbox(const Cbuffer *cb, const STBox *box);
-extern double nad_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs);
-extern double nad_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb);
-extern double nad_tcbuffer_tcbuffer(const Temporal *temp1,
-  const Temporal *temp2);
-
-extern GSERIALIZED *shortestline_tcbuffer_geo(const Temporal *temp,
-  const GSERIALIZED *geo);
-extern GSERIALIZED *shortestline_tcbuffer_cbuffer(const Temporal *temp,
-  const Cbuffer *cb);
-extern GSERIALIZED *shortestline_tcbuffer_tcbuffer(const Temporal *temp1,
-  const Temporal *temp2);
+extern Temporal *tdwithin_tcbuffer_tcbuffer_sync(const Temporal *sync1,
+  const Temporal *sync2, double dist, bool restr, bool atvalue);
 
 /*****************************************************************************/
 
-#endif /* __TCBUFFER_DISTANCE_H__ */
+#endif /* __TCBUFFER_TEMPSPATIALRELS_H__ */
