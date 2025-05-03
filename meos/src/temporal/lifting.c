@@ -364,14 +364,14 @@ tfunc_tlinearseq_base_turnpt(const TSequence *seq, Datum value,
     TimestampTz intertime, intertime2;
     if (lfinfo->tpfunc_base && interp == LINEAR &&
       ! datum_eq(value1, value2, temptype_basetype(seq->temptype)) &&
-      lfinfo->tpfunc_base(inst1, inst2, value, lfinfo->argtype[1],
-        &intervalue, &intervalue2, &intertime, &intertime2))
+      lfinfo->tpfunc_base(inst1, inst2, value, &intervalue, &intervalue2,
+        &intertime, &intertime2))
     {
       instants[ninsts++] = tinstant_make_free(intervalue, lfinfo->restype,
         intertime);
       /* Account for the second turning point if any */
       if (intertime != intertime2)
-        instants[ninsts++] = tinstant_make_free(intervalue, lfinfo->restype,
+        instants[ninsts++] = tinstant_make_free(intervalue2, lfinfo->restype,
           intertime2);
     }
     inst1 = inst2;
@@ -476,7 +476,7 @@ tfunc_tlinearseq_base_discfn(const TSequence *seq, Datum value,
       /* Determine whether there is a crossing and compute the value at the
        * crossing if there is one */
       bool hascross = tlinearsegm_intersection_value(start, end, value,
-        lfinfo->argtype[1], &intvalue, &intvalue2, &inttime, &inttime2);
+        &intvalue, &intvalue2, &inttime, &inttime2);
       if (! hascross)
       {
         /* Continue the current sequence */
@@ -1710,7 +1710,7 @@ eafunc_tlinearseq_base(const TSequence *seq, Datum value,
     /* Determine whether there is a crossing and if there is one compute the
      * value at the crossing */
     if (tlinearsegm_intersection_value(start, end, value,
-      basetype, eqfn ? NULL : &intvalue, eqfn ? NULL : &intvalue2,
+      eqfn ? NULL : &intvalue, eqfn ? NULL : &intvalue2,
       eqfn ? NULL : &inttime, eqfn ? NULL : &inttime2))
     {
       if (eqfn)

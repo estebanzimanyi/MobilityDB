@@ -472,7 +472,7 @@ cbuffer_as_hexwkb(const Cbuffer *cb, uint8_t variant, size_t *size_out)
 
 /**
  * @ingroup meos_cbuffer_base_constructor
- * @brief Return a circular buffer from a point and a radius
+ * @brief Construct a circular buffer from a point and a radius
  * @param[in] point Point
  * @param[in] radius Radius
  * @csqlfn #Cbuffer_constructor()
@@ -524,7 +524,7 @@ cbuffer_copy(const Cbuffer *cb)
 
 /**
  * @ingroup meos_cbuffer_base_conversion
- * @brief Transform a circular buffer into a geometry
+ * @brief Convert a circular buffer into a geometry
  * @param[in] cb Circular buffer
  * @csqlfn #Cbuffer_to_geom()
  */
@@ -541,7 +541,7 @@ cbuffer_geom(const Cbuffer *cb)
 
 /**
  * @ingroup meos_cbuffer_base_conversion
- * @brief Transform a geometry into a circular buffer
+ * @brief Convert a geometry into a circular buffer
  * @param[in] gs Geometry
  * @csqlfn #Geom_to_cbuffer()
  */
@@ -763,8 +763,8 @@ datum_cbuffer_round(Datum cbuffer, Datum size)
 
 /**
  * @ingroup meos_cbuffer_base_transf
- * @brief Return an array of circular buffers with the precision of the
- * vales set to a number of decimal places
+ * @brief Return an array of circular buffers with the precision of the values
+ * set to a number of decimal places
  * @param[in] cbufarr Array of circular buffers
  * @param[in] count Number of elements in the array
  * @param[in] maxdd Maximum number of decimal digits
@@ -805,7 +805,7 @@ cbuffer_srid(const Cbuffer *cb)
 
 /**
  * @ingroup meos_cbuffer_base_srid
- * @brief Set the coordinates of the circular buffer to an SRID
+ * @brief Set the coordinates of a circular buffer to an SRID
  * @param[in] cb Circular buffer
  * @param[in] srid SRID
  * @csqlfn #Cbuffer_set_srid()
@@ -918,7 +918,6 @@ cbuffer_transform_pipeline(const Cbuffer *cb, const char *pipeline,
 double
 cbuffer_distance(const Cbuffer *cb1, const Cbuffer *cb2)
 {
-  VALIDATE_NOT_NULL(cb1, DBL_MAX); VALIDATE_NOT_NULL(cb1, DBL_MAX);
   const GSERIALIZED *gs1 = cbuffer_point(cb1);
   const GSERIALIZED *gs2 = cbuffer_point(cb2);
   double result =
@@ -948,13 +947,11 @@ datum_cbuffer_distance(Datum cb1, Datum cb2)
  * @brief Return true if the first circular buffer contains the second one
  * @param[in] cb1,cb2 Circular buffers
  * @csqlfn #Cbuffer_contains()
+ * @note The function assumes that all validity tests have been previously done
  */
 int
 cbuffer_contains(const Cbuffer *cb1, const Cbuffer *cb2)
 {
-  VALIDATE_NOT_NULL(cb1, -1); VALIDATE_NOT_NULL(cb1, -1);
-  if (! ensure_valid_cbuffer_cbuffer(cb1, cb2))
-    return -1;
   GSERIALIZED *geom1 = cbuffer_geom(cb1);
   const GSERIALIZED *point2 = cbuffer_point(cb2);
   const POINT2D *pt2 = (POINT2D *) GS_POINT_PTR(point2);
@@ -970,7 +967,6 @@ cbuffer_contains(const Cbuffer *cb1, const Cbuffer *cb2)
   bool result = geom_contains(geom1, corners);
   pfree(geom1); pfree(corners);
   return result ? 1 : 0;
-
 }
 
 /**
@@ -978,13 +974,11 @@ cbuffer_contains(const Cbuffer *cb1, const Cbuffer *cb2)
  * @brief Return true if the first circular buffer covers the second one
  * @param[in] cb1,cb2 Circular buffers
  * @csqlfn #Cbuffer_covers()
+ * @note The function assumes that all validity tests have been previously done
  */
 int
 cbuffer_covers(const Cbuffer *cb1, const Cbuffer *cb2)
 {
-  VALIDATE_NOT_NULL(cb1, -1); VALIDATE_NOT_NULL(cb1, -1);
-  if (! ensure_valid_cbuffer_cbuffer(cb1, cb2))
-    return -1;
   GSERIALIZED *geom1 = cbuffer_geom(cb1);
   const GSERIALIZED *point2 = cbuffer_point(cb2);
   const POINT2D *pt2 = (POINT2D *) GS_POINT_PTR(point2);
@@ -1007,6 +1001,7 @@ cbuffer_covers(const Cbuffer *cb1, const Cbuffer *cb2)
  * @brief Return true if two circular buffers are disjoint in 2D
  * @param[in] cb1,cb2 Circular buffers
  * @csqlfn #Cbuffer_disjoint()
+ * @note The function assumes that all validity tests have been previously done
  */
 int
 cbuffer_disjoint(const Cbuffer *cb1, const Cbuffer *cb2)
@@ -1019,13 +1014,11 @@ cbuffer_disjoint(const Cbuffer *cb1, const Cbuffer *cb2)
  * @brief Return true if two circular buffers intersect in 2D
  * @param[in] cb1,cb2 Circular buffers
  * @csqlfn #Cbuffer_intersects()
+ * @note The function assumes that all validity tests have been previously done
  */
 int
 cbuffer_intersects(const Cbuffer *cb1, const Cbuffer *cb2)
 {
-  VALIDATE_NOT_NULL(cb1, -1); VALIDATE_NOT_NULL(cb1, -1);
-  if (! ensure_valid_cbuffer_cbuffer(cb1, cb2))
-    return -1;
   double dist = cbuffer_distance(cb1, cb2);
   return (dist == 0) ? 1 : 0;
 }
@@ -1035,17 +1028,106 @@ cbuffer_intersects(const Cbuffer *cb1, const Cbuffer *cb2)
  * @brief Return true if the first circular buffer touches the second one
  * @param[in] cb1,cb2 Circular buffers
  * @csqlfn #Cbuffer_touches()
+ * @note The function assumes that all validity tests have been previously done
  */
 int
 cbuffer_touches(const Cbuffer *cb1, const Cbuffer *cb2)
 {
-  VALIDATE_NOT_NULL(cb1, -1); VALIDATE_NOT_NULL(cb1, -1);
-  if (! ensure_valid_cbuffer_cbuffer(cb1, cb2))
-    return -1;
   Datum d1 = PointerGetDatum(&cb1->point);
   Datum d2 = PointerGetDatum(&cb2->point);
   double dist1 = DatumGetFloat8(datum_pt_distance2d(d1, d2));
   return (dist1 == cb1->radius + cb2->radius) ? 1 : 0;
+}
+
+/**
+ * @ingroup meos_internal_cbuffer_base_rel
+ * @brief Return true if two 2D circular buffers are within a distance
+ * @param[in] cb1,cb2 Circular buffers
+ * @param[in] dist Distance
+ * @note The function assumes that all validity tests have been previously done
+ */
+int
+cbuffer_dwithin(const Cbuffer *cb1, const Cbuffer *cb2, double dist)
+{
+  double dist1 = cbuffer_distance(cb1, cb2);
+  return (dist1 <= dist) ? 1 : 0;
+}
+
+/*****************************************************************************/
+
+/**
+ * @ingroup meos_cbuffer_base_rel
+ * @brief Return true if the first circular buffer contains the second one
+ * @param[in] cb1,cb2 Circular buffers
+ * @csqlfn #Cbuffer_contains()
+ */
+int
+contains_cbuffer_cbuffer(const Cbuffer *cb1, const Cbuffer *cb2)
+{
+  VALIDATE_NOT_NULL(cb1, -1); VALIDATE_NOT_NULL(cb2, -1);
+  if (! ensure_valid_cbuffer_cbuffer(cb1, cb2))
+    return -1;
+  return cbuffer_contains(cb1, cb2);
+}
+
+/**
+ * @ingroup meos_cbuffer_base_rel
+ * @brief Return true if the first circular buffer covers the second one
+ * @param[in] cb1,cb2 Circular buffers
+ * @csqlfn #Cbuffer_covers()
+ */
+int
+covers_cbuffer_cbuffer(const Cbuffer *cb1, const Cbuffer *cb2)
+{
+  VALIDATE_NOT_NULL(cb1, -1); VALIDATE_NOT_NULL(cb2, -1);
+  if (! ensure_valid_cbuffer_cbuffer(cb1, cb2))
+    return -1;
+  return cbuffer_covers(cb1, cb2);
+}
+
+/**
+ * @ingroup meos_cbuffer_base_rel
+ * @brief Return true if two circular buffers are disjoint in 2D
+ * @param[in] cb1,cb2 Circular buffers
+ * @csqlfn #Cbuffer_intersects()
+ */
+int
+disjoint_cbuffer_cbuffer(const Cbuffer *cb1, const Cbuffer *cb2)
+{
+  VALIDATE_NOT_NULL(cb1, -1); VALIDATE_NOT_NULL(cb2, -1);
+  if (! ensure_valid_cbuffer_cbuffer(cb1, cb2))
+    return -1;
+  return cbuffer_disjoint(cb1, cb2);
+}
+
+/**
+ * @ingroup meos_cbuffer_base_rel
+ * @brief Return true if two circular buffers intersect in 2D
+ * @param[in] cb1,cb2 Circular buffers
+ * @csqlfn #Cbuffer_intersects()
+ */
+int
+intersects_cbuffer_cbuffer(const Cbuffer *cb1, const Cbuffer *cb2)
+{
+  VALIDATE_NOT_NULL(cb1, -1); VALIDATE_NOT_NULL(cb2, -1);
+  if (! ensure_valid_cbuffer_cbuffer(cb1, cb2))
+    return -1;
+  return cbuffer_intersects(cb1, cb2);
+}
+
+/**
+ * @ingroup meos_cbuffer_base_rel
+ * @brief Return true if the first circular buffer touches the second one
+ * @param[in] cb1,cb2 Circular buffers
+ * @csqlfn #Cbuffer_touches()
+ */
+int
+touches_cbuffer_cbuffer(const Cbuffer *cb1, const Cbuffer *cb2)
+{
+  VALIDATE_NOT_NULL(cb1, -1); VALIDATE_NOT_NULL(cb2, -1);
+  if (! ensure_valid_cbuffer_cbuffer(cb1, cb2))
+    return -1;
+  return cbuffer_touches(cb1, cb2);
 }
 
 /**
@@ -1056,13 +1138,12 @@ cbuffer_touches(const Cbuffer *cb1, const Cbuffer *cb2)
  * @csqlfn #Cbuffer_dwithin()
  */
 int
-cbuffer_dwithin(const Cbuffer *cb1, const Cbuffer *cb2, double dist)
+dwithin_cbuffer_cbuffer(const Cbuffer *cb1, const Cbuffer *cb2, double dist)
 {
-  VALIDATE_NOT_NULL(cb1, -1); VALIDATE_NOT_NULL(cb1, -1);
+  VALIDATE_NOT_NULL(cb1, -1); VALIDATE_NOT_NULL(cb2, -1);
   if (! ensure_valid_cbuffer_cbuffer(cb1, cb2))
     return -1;
-  double dist1 = cbuffer_distance(cb1, cb2);
-  return (dist1 <= dist) ? 1 : 0;
+  return cbuffer_dwithin(cb1, cb2, dist);
 }
 
 /*****************************************************************************/

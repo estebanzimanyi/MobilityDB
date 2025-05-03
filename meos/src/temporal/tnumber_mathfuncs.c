@@ -127,7 +127,7 @@ tnumber_arithop_tp_at_timestamptz(const TInstant *start1, const TInstant *end1,
 int
 tnumber_mult_tp_at_timestamptz(const TInstant *start1, const TInstant *end1,
   const TInstant *start2, const TInstant *end2, Datum *value, TimestampTz *t,
-  TimestampTz *t2 __attribute__((unused)))
+  TimestampTz *t2)
 {
   return tnumber_arithop_tp_at_timestamptz(start1, end1, start2, end2, MULT,
     value, t, t2);
@@ -141,7 +141,7 @@ tnumber_mult_tp_at_timestamptz(const TInstant *start1, const TInstant *end1,
 int
 tnumber_div_tp_at_timestamptz(const TInstant *start1, const TInstant *end1,
   const TInstant *start2, const TInstant *end2, Datum *value, TimestampTz *t,
-  TimestampTz *t2 __attribute__((unused)))
+  TimestampTz *t2)
 {
   return tnumber_arithop_tp_at_timestamptz(start1, end1, start2, end2, DIV,
     value, t, t2);

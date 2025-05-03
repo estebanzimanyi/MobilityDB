@@ -2604,15 +2604,12 @@ tfloatsegm_intersection_value(const TInstant *inst1, const TInstant *inst2,
  */
 int
 tlinearsegm_intersection_value(const TInstant *inst1, const TInstant *inst2,
-  Datum value, meosType basetype, Datum *inter, Datum *inter2, TimestampTz *t,
-  TimestampTz *t2)
+  Datum value, Datum *inter, Datum *inter2, TimestampTz *t, TimestampTz *t2)
 {
-  assert(temptype_basetype(inst1->temptype) == basetype);
-  assert(temptype_basetype(inst2->temptype) == basetype);
+  meosType basetype = temptype_basetype(inst1->temptype);
   Datum value1 = tinstant_value_p(inst1);
   Datum value2 = tinstant_value_p(inst2);
-  if (datum_eq(value, value1, basetype) ||
-      datum_eq(value, value2, basetype))
+  if (datum_eq(value, value1, basetype) || datum_eq(value, value2, basetype))
     return 0;
 
   assert(temptype_continuous(inst1->temptype));
@@ -2669,7 +2666,7 @@ tlinearsegm_intersection_value(const TInstant *inst1, const TInstant *inst2,
  * `end1->t = end2->t`
  * @note Only the intersection inside the segments is considered
  */
-static bool
+bool
 tnumbersegm_intersection(const TInstant *start1, const TInstant *end1,
   const TInstant *start2, const TInstant *end2, TimestampTz *t)
 {
@@ -2740,7 +2737,7 @@ bool
 tsegment_intersection(const TInstant *start1, const TInstant *end1,
   interpType interp1, const TInstant *start2, const TInstant *end2,
   interpType interp2, Datum *inter1, Datum *inter2, TimestampTz *t,
-  TimestampTz *t2 __attribute__((unused)))
+  TimestampTz *t2)
 {
   bool result = false; /* Make compiler quiet */
   Datum value, inter;  /* inter is currently unused */
@@ -2751,16 +2748,16 @@ tsegment_intersection(const TInstant *start1, const TInstant *end1,
     value = tinstant_value_p(start1);
     if (inter1)
       *inter1 = value;
-    result = tlinearsegm_intersection_value(start2, end2, value, basetype1,
-      inter2, &inter, t, t2);
+    result = tlinearsegm_intersection_value(start2, end2, value, inter2,
+      &inter, t, t2);
   }
   else if (interp2 != LINEAR)
   {
     value = tinstant_value_p(start2);
     if (inter2)
       *inter2 = value;
-    result = tlinearsegm_intersection_value(start1, end1, value, basetype2,
-      inter1, &inter, t, t2);
+    result = tlinearsegm_intersection_value(start1, end1, value, inter1,
+      &inter, t, t2);
   }
   else
   {

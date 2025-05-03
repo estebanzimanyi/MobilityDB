@@ -102,15 +102,17 @@ distance_tnumber_number(const Temporal *temp, Datum value)
  * @param[out] t,t2 Timestamps
  * @note This function is passed to the lifting infrastructure when computing
  * the temporal distance
+ * @post As there is a single turning point, `value2` and `t2` are set to
+ * `mindist` and `t`, respectively
  */
-static int
+int
 tnumber_min_dist_at_timestamptz(const TInstant *start1, const TInstant *end1,
   const TInstant *start2, const TInstant *end2, Datum *value, TimestampTz *t,
-  TimestampTz *t2 __attribute__((unused)))
+  TimestampTz *t2)
 {
-  if (! tsegment_intersection(start1, end1, LINEAR, start2, end2, LINEAR,
-      NULL, NULL, t, t2))
+  if (! tnumbersegm_intersection(start1, end1, start2, end2, t))
     return 0;
+  *t2 = *t;
   *value = (Datum) 0;
   return 1;
 }

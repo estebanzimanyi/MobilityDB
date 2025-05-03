@@ -3305,8 +3305,8 @@ get_bearing_fn(int16 flags)
  */
 static int
 tpoint_geo_min_bearing_at_timestamptz(const TInstant *start,
-  const TInstant *end, Datum point, meosType basetypid __attribute__((unused)),
-  Datum *value, Datum *value2, TimestampTz *t, TimestampTz *t2)
+  const TInstant *end, Datum point, Datum *value, Datum *value2,
+  TimestampTz *t, TimestampTz *t2)
 {
   Datum dstart = tinstant_value_p(start);
   Datum dend = tinstant_value_p(end);

@@ -180,8 +180,7 @@ lw_distance_fraction(const LWGEOM *geom1, const LWGEOM *geom2, int mode,
  */
 static int
 tpoint_geo_min_dist_at_timestamptz(const TInstant *start, const TInstant *end,
-  Datum point, meosType basetype __attribute__((unused)), Datum *value,
-  Datum *value2, TimestampTz *t, TimestampTz *t2)
+  Datum point, Datum *value, Datum *value2, TimestampTz *t, TimestampTz *t2)
 {
   long double duration = (long double) (end->t - start->t);
   Datum dstart = tinstant_value_p(start);
@@ -268,7 +267,7 @@ point3d_min_dist(const POINT3DZ *p1, const POINT3DZ *p2, const POINT3DZ *p3,
  * @param[in] start1,end1 Instants defining the first segment
  * @param[in] start2,end2 Instants defining the second segment
  * @param[out] mindist Mininum distance
- * @param[out] t,t2 Timestamps
+ * @param[out] t,t2 Timestamps, `t2` may be `NULL`
  * @note The PostGIS functions @p lw_dist2d_seg_seg and @p lw_dist3d_seg_seg
  * cannot be used since they do not take time into consideration and would
  * return, e.g., that the minimum distance between the two following segments
@@ -308,7 +307,9 @@ tgeompoint_min_dist_at_timestamptz(const TInstant *start1, const TInstant *end1,
   }
 
   double duration = end1->t - start1->t;
-  *t = *t2 = start1->t + (TimestampTz) (duration * fraction);
+  *t = start1->t + (TimestampTz) (duration * fraction);
+  if (t2)
+    *t2 = *t;
   /* We know that this function is called only for linear segments */
   Datum value1 = tsegment_value_at_timestamptz(start1, end1, LINEAR, *t);
   Datum value2 = tsegment_value_at_timestamptz(start2, end2, LINEAR, *t);
@@ -324,7 +325,7 @@ tgeompoint_min_dist_at_timestamptz(const TInstant *start1, const TInstant *end1,
  * @param[in] start1,end1 Instants defining the first segment
  * @param[in] start2,end2 Instants defining the second segment
  * @param[out] mindist Minimum distance
- * @param[out] t,t2 Timestamps
+ * @param[out] t,t2 Timestamps, `t2` may be `NULL`
  * @pre The segments are not both constants.
  * @post As there is a single turning point, `mindist2` and `t2` are set to
  * `mindist` and `t`, respectively
@@ -383,7 +384,9 @@ tgeogpoint_min_dist_at_timestamptz(const TInstant *start1, const TInstant *end1,
   if (fraction <= MEOS_EPSILON || fraction >= (1.0 - MEOS_EPSILON))
     return 0;
   double duration = (double) (end1->t - start1->t);
-  *t = *t2 = start1->t + (TimestampTz) (duration * fraction);
+  *t = start1->t + (TimestampTz) (duration * fraction);
+  if (t2)
+    *t2 = *t;
   return 1;
 }
 

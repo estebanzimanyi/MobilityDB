@@ -54,6 +54,10 @@ extern double floatsegm_interpolate(double value1, double value2,
 extern long double floatsegm_locate(double value1, double value2,
   double value);
 
+extern bool tnumbersegm_intersection(const TInstant *start1,
+  const TInstant *end1, const TInstant *start2, const TInstant *end2,
+  TimestampTz *t);
+
 /* Normalization functions */
 
 extern bool tsequence_norm_test(Datum value1, Datum value2, Datum value3,
@@ -90,8 +94,8 @@ extern bool synchronize_tsequence_tsequence(const TSequence *seq1,
 extern int tfloatsegm_intersection_value(const TInstant *inst1,
   const TInstant *inst2, Datum value, meosType basetype, TimestampTz *t);
 extern int tlinearsegm_intersection_value(const TInstant *inst1,
-  const TInstant *inst2, Datum value, meosType basetype, Datum *inter,
-  Datum *inter2, TimestampTz *t, TimestampTz *t2);
+  const TInstant *inst2, Datum value, Datum *inter, Datum *inter2,
+  TimestampTz *t, TimestampTz *t2);
 extern bool tsegment_intersection(const TInstant *start1,
   const TInstant *end1, interpType interp1, const TInstant *start2,
   const TInstant *end2, interpType interp2, Datum *inter1, Datum *inter2,

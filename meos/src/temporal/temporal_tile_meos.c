@@ -862,8 +862,8 @@ tnumberseq_linear_value_split(const TSequence *seq, Datum start_bin,
       {
         TimestampTz t, t2;
         Datum projvalue, projvalue2;
-        tlinearsegm_intersection_value(inst1, inst2, bin_upper, basetype,
-          &projvalue, &projvalue2, &t, &t2);
+        tlinearsegm_intersection_value(inst1, inst2, bin_upper, &projvalue,
+          &projvalue2, &t, &t2);
         /* To reduce the roundoff errors we take the value projected to the
          * timestamp instead of the bound value */
         tofree[nfree++] = bounds[last] =

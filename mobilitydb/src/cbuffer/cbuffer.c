@@ -538,7 +538,7 @@ Cbuffer_contains(PG_FUNCTION_ARGS)
 {
   Cbuffer *cb1 = PG_GETARG_CBUFFER_P(0);
   Cbuffer *cb2 = PG_GETARG_CBUFFER_P(1);
-  int result = cbuffer_contains(cb1, cb2);
+  int result = contains_cbuffer_cbuffer(cb1, cb2);
   if (result < 0)
     PG_RETURN_NULL();
   PG_RETURN_BOOL(result ? true : false);
@@ -556,7 +556,7 @@ Cbuffer_covers(PG_FUNCTION_ARGS)
 {
   Cbuffer *cb1 = PG_GETARG_CBUFFER_P(0);
   Cbuffer *cb2 = PG_GETARG_CBUFFER_P(1);
-  int result = cbuffer_covers(cb1, cb2);
+  int result = covers_cbuffer_cbuffer(cb1, cb2);
   if (result < 0)
     PG_RETURN_NULL();
   PG_RETURN_BOOL(result ? true : false);
@@ -574,7 +574,7 @@ Cbuffer_disjoint(PG_FUNCTION_ARGS)
 {
   Cbuffer *cb1 = PG_GETARG_CBUFFER_P(0);
   Cbuffer *cb2 = PG_GETARG_CBUFFER_P(1);
-  int result = cbuffer_disjoint(cb1, cb2);
+  int result = disjoint_cbuffer_cbuffer(cb1, cb2);
   if (result < 0)
     PG_RETURN_NULL();
   PG_RETURN_BOOL(result ? true : false);
@@ -592,7 +592,7 @@ Cbuffer_intersects(PG_FUNCTION_ARGS)
 {
   Cbuffer *cb1 = PG_GETARG_CBUFFER_P(0);
   Cbuffer *cb2 = PG_GETARG_CBUFFER_P(1);
-  int result = cbuffer_intersects(cb1, cb2);
+  int result = intersects_cbuffer_cbuffer(cb1, cb2);
   if (result < 0)
     PG_RETURN_NULL();
   PG_RETURN_BOOL(result ? true : false);
@@ -610,7 +610,7 @@ Cbuffer_touches(PG_FUNCTION_ARGS)
 {
   Cbuffer *cb1 = PG_GETARG_CBUFFER_P(0);
   Cbuffer *cb2 = PG_GETARG_CBUFFER_P(1);
-  int result = cbuffer_touches(cb1, cb2);
+  int result = touches_cbuffer_cbuffer(cb1, cb2);
   if (result < 0)
     PG_RETURN_NULL();
   PG_RETURN_BOOL(result ? true : false);
@@ -629,7 +629,7 @@ Cbuffer_dwithin(PG_FUNCTION_ARGS)
   Cbuffer *cb1 = PG_GETARG_CBUFFER_P(0);
   Cbuffer *cb2 = PG_GETARG_CBUFFER_P(1);
   double dist = PG_GETARG_FLOAT8(2);
-  int result = cbuffer_dwithin(cb1, cb2, dist);
+  int result = dwithin_cbuffer_cbuffer(cb1, cb2, dist);
   if (result < 0)
     PG_RETURN_NULL();
   PG_RETURN_BOOL(result ? true : false);
