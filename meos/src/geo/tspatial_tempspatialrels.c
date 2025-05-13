@@ -199,6 +199,7 @@ tinterrel_tpointseq_simple_geo(const TSequence *seq, const GSERIALIZED *gs,
 
   GSERIALIZED *traj = tpointseq_linear_trajectory(seq, UNARY_UNION);
   GSERIALIZED *inter = geom_intersection2d(traj, gs);
+  pfree(traj);
   if (gserialized_is_empty(inter))
   {
     result = palloc(sizeof(TSequence *));
@@ -227,13 +228,13 @@ tinterrel_tpointseq_simple_geo(const TSequence *seq, const GSERIALIZED *gs,
   /* Get the periods at which the temporal point intersects the geometry */
   int npers;
   Span *periods = tpointseq_interperiods(seq, inter, &npers);
+  pfree(inter);
   if (npers == 0)
   {
     result = palloc(sizeof(TSequence *));
     result[0] = tsequence_from_base_tstzspan(datum_no, T_TBOOL, &seq->period,
       STEP);
     *count = 1;
-    pfree(inter);
     return result;
   }
   SpanSet *ss;
@@ -310,7 +311,9 @@ tinterrel_tpointseq_linear_geo_iter(const TSequence *seq, const GSERIALIZED *gs,
     sequences[i] = tinterrel_tpointseq_simple_geo(simpleseqs[i], gs, box,
       tinter, &countseqs[i]);
     totalcount += countseqs[i];
+    pfree(simpleseqs[i]);
   }
+  pfree(simpleseqs);
   *count = totalcount;
   return tseqarr2_to_tseqarr(sequences, countseqs, nsimple, totalcount);
 }

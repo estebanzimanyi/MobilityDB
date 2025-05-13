@@ -141,7 +141,7 @@ tnumber_bbox_restrict_span(const Temporal *temp, const Span *s)
  * @brief Restrict a temporal value to (the complement of) a base value
  * @param[in] temp Temporal value
  * @param[in] value Value
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @note This function does a bounding box test for the temporal types
  * different from instant. The singleton tests are done in the functions for
  * the specific temporal types.
@@ -234,7 +234,7 @@ temporal_bbox_restrict_set(const Temporal *temp, const Set *s)
  * values
  * @param[in] temp Temporal value
  * @param[in] s Set
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @csqlfn #Temporal_at_values(), #Temporal_minus_values()
  */
 Temporal *
@@ -286,7 +286,7 @@ temporal_restrict_values(const Temporal *temp, const Set *s, bool atfunc)
  * values
  * @param[in] temp Temporal value
  * @param[in] s Span
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @csqlfn #Tnumber_at_span(), #Tnumber_minus_span()
  */
 Temporal *
@@ -331,7 +331,7 @@ tnumber_restrict_span(const Temporal *temp, const Span *s, bool atfunc)
  * @brief Restrict a temporal value to (the complement of) a span set
  * @param[in] temp Temporal value
  * @param[in] ss Span set
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @csqlfn #Tnumber_at_spanset(), #Tnumber_minus_spanset()
  */
 Temporal *
@@ -381,7 +381,7 @@ tnumber_restrict_spanset(const Temporal *temp, const SpanSet *ss, bool atfunc)
  * @brief Restrict a temporal value to (the complement of) a minimum base value
  * @param[in] temp Temporal value
  * @param[in] min True if the restriction is wrt min, false for max
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @csqlfn #Temporal_at_min(), #Temporal_at_max(), #Temporal_minus_min(),
  *   #Temporal_minus_max()
  */
@@ -411,7 +411,7 @@ temporal_restrict_minmax(const Temporal *temp, bool min, bool atfunc)
  * @brief Restrict a temporal value to a timestamp
  * @param[in] temp Temporal value
  * @param[in] t Timestamp
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @csqlfn #Temporal_at_timestamptz(), Temporal_minus_timestamptz()
  */
 Temporal *
@@ -481,7 +481,7 @@ temporal_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict,
  * @brief Restrict a temporal value to (the complement of) a timestamp set
  * @param[in] temp Temporal value
  * @param[in] s Set
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @csqlfn #Temporal_at_tstzset(), #Temporal_minus_tstzset()
  */
 Temporal *
@@ -517,7 +517,7 @@ temporal_restrict_tstzset(const Temporal *temp, const Set *s, bool atfunc)
  * @brief Restrict a temporal value to (the complement of) a timestamptz span
  * @param[in] temp Temporal value
  * @param[in] s Span
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @csqlfn #Temporal_at_tstzspan(), #Temporal_minus_tstzspan()
  */
 Temporal *
@@ -545,7 +545,7 @@ temporal_restrict_tstzspan(const Temporal *temp, const Span *s, bool atfunc)
  * @brief Restrict a temporal value to (the complement of) a span set
  * @param[in] temp Temporal value
  * @param[in] ss Span set
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  */
 Temporal *
 temporal_restrict_tstzspanset(const Temporal *temp, const SpanSet *ss,
@@ -656,7 +656,7 @@ tnumber_minus_tbox(const Temporal *temp, const TBox *box)
  * @brief Restrict a temporal instant to (the complement of) a base value
  * @param[in] inst Temporal instant
  * @param[in] value Value
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @csqlfn #Temporal_at_value(), #Temporal_minus_value()
  */
 TInstant *
@@ -700,7 +700,7 @@ tinstant_restrict_values_test(const TInstant *inst, const Set *s, bool atfunc)
  * @brief Restrict a temporal instant to a set of base values
  * @param[in] inst Temporal instant
  * @param[in] s Set
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @csqlfn #Temporal_at_values(), #Temporal_minus_values()
  */
 TInstant *
@@ -717,7 +717,7 @@ tinstant_restrict_values(const TInstant *inst, const Set *s, bool atfunc)
  * (the complement of) a span of base values
  * @param[in] inst Temporal number
  * @param[in] s Span of base values
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @return Resulting temporal number
  * @note This function is called for each composing instant in a temporal
  * discrete sequence.
@@ -736,7 +736,7 @@ tnumberinst_restrict_span_test(const TInstant *inst, const Span *s,
  * base values
  * @param[in] inst Temporal number
  * @param[in] s Span of base values
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @csqlfn #Tnumber_at_span(), #Tnumber_minus_span()
  */
 TInstant *
@@ -772,7 +772,7 @@ tnumberinst_restrict_spanset_test(const TInstant *inst, const SpanSet *ss,
  * @brief Restrict a temporal number instant to (the complement of) a span set
  * @param[in] inst Temporal instant
  * @param[in] ss Span set
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @csqlfn #Tnumber_at_spanset(), #Tnumber_minus_spanset()
  */
 TInstant *
@@ -790,7 +790,7 @@ tnumberinst_restrict_spanset(const TInstant *inst, const SpanSet *ss,
  * @brief Restrict a temporal instant to (the complement of) a timestamptz
  * @param[in] inst Temporal instant
  * @param[in] t Timestamp
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @note Since the corresponding function for temporal sequences need to
  * interpolate the value, it is necessary to return a copy of the value
  * @csqlfn #Temporal_at_timestamptz(), #Temporal_minus_timestamptz()
@@ -825,7 +825,7 @@ tinstant_restrict_tstzset_test(const TInstant *inst, const Set *s,
  * @brief Restrict a temporal instant to (the complement of) a timestamptz set
  * @param[in] inst Temporal instant
  * @param[in] s Set
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @csqlfn #Temporal_at_tstzset(), #Temporal_minus_tstzset()
  */
 TInstant *
@@ -842,7 +842,7 @@ tinstant_restrict_tstzset(const TInstant *inst, const Set *s, bool atfunc)
  * @brief Restrict a temporal instant to (the complement of) a timestamptz span
  * @param[in] inst Temporal instant
  * @param[in] s Span
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @csqlfn #Temporal_at_tstzspan(), #Temporal_minus_tstzspan()
  */
 TInstant *
@@ -876,7 +876,7 @@ tinstant_restrict_tstzspanset_test(const TInstant *inst, const SpanSet *ss,
  * @brief Restrict a temporal instant to (the complement of) a span set
  * @param[in] inst Temporal instant
  * @param[in] ss Span set
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @csqlfn #Temporal_at_tstzspanset(), #Temporal_minus_tstzspanset()
  */
 TInstant *
@@ -898,7 +898,7 @@ tinstant_restrict_tstzspanset(const TInstant *inst,const  SpanSet *ss,
  * value
  * @param[in] seq Temporal sequence
  * @param[in] value Base values
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @note There is no bounding box test in this function, it is done in the
  * dispatch function for all temporal types.
  */
@@ -946,7 +946,7 @@ tdiscseq_restrict_value(const TSequence *seq, Datum value, bool atfunc)
  * of base values
  * @param[in] seq Temporal sequence
  * @param[in] s Set of base values
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @pre There are no duplicates values in the array
  */
 TSequence *
@@ -987,7 +987,7 @@ tdiscseq_restrict_values(const TSequence *seq, const Set *s, bool atfunc)
  * @param[in] interp Interpolation
  * @param[in] lower_inc,upper_inc Upper and lower bounds of the segment
  * @param[in] value Base value
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @param[out] result Array on which the pointers of the newly constructed
  * sequence is stored
  * @return Number of resulting sequences returned
@@ -1129,7 +1129,7 @@ tsegment_restrict_value(const TInstant *inst1, const TInstant *inst2,
  * (iterator function)
  * @param[in] seq Temporal sequence
  * @param[in] value Base value
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @param[out] result Array on which the pointers of the newly constructed
  * sequences are stored
  * @return Number of resulting sequences returned
@@ -1189,7 +1189,7 @@ tcontseq_restrict_value_iter(const TSequence *seq, Datum value, bool atfunc,
  * @brief Restrict a temporal sequence to (the complement of) a base value
  * @param[in] seq Temporal sequence
  * @param[in] value Base values
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @note There is no bounding box or instantaneous test in this function,
  * they are done in the @p atValue and @p minusValue functions since the latter
  * are called for each sequence in a sequence set or for each element in the
@@ -1271,7 +1271,7 @@ tsequence_at_values_iter(const TSequence *seq, const Set *set,
  * values
  * @param[in] seq Temporal sequence
  * @param[in] s Set of base values
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @note A bounding box test and an instantaneous sequence test are done in
  * the function #tsequence_at_values_iter since the latter is called
  * for each composing sequence of a temporal sequence set number.
@@ -1316,7 +1316,7 @@ tcontseq_restrict_values(const TSequence *seq, const Set *s, bool atfunc)
  * span of base values
  * @param[in] seq Temporal number
  * @param[in] s Span of base values
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @note A bounding box test has been done in the dispatch function.
  */
 TSequence *
@@ -1348,7 +1348,7 @@ tnumberseq_disc_restrict_span(const TSequence *seq, const Span *s, bool atfunc)
  * array of spans of base values
  * @param[in] seq Temporal number
  * @param[in] ss Span set
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @note A bounding box test has been done in the dispatch function.
  */
 TSequence *
@@ -1391,7 +1391,7 @@ tnumberseq_disc_restrict_spanset(const TSequence *seq, const SpanSet *ss,
  * @param[in] lower_inc,upper_inc Upper and lower bounds of the segment
  * @param[in] interp Interpolation of the segment
  * @param[in] s Span of base values
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @param[out] result Array on which the pointers of the newly constructed
  * sequence is stored
  */
@@ -1531,9 +1531,8 @@ tnumbersegm_restrict_span(const TInstant *inst1, const TInstant *inst2,
   }
 
   /* Compute the instants of the intersection */
-  TInstant *inter1, *inter2;
+  TInstant *inter1, *inter2, *tofree1 = NULL, *tofree2 = NULL;
   Datum lower, upper;
-  bool tofree1 = false, tofree2 = false;
   if (increasing)
   {
     lower = inter.lower; upper = inter.upper;
@@ -1560,8 +1559,8 @@ tnumbersegm_restrict_span(const TInstant *inst1, const TInstant *inst2,
   {
     /* To reduce the roundoff errors we project the temporal number to the
      * timestamp instead of taking the bound value */
-    inter1 = tsegment_at_timestamptz(inst1, inst2, interp, t1);
-    tofree1 = true; j++;
+    inter1 = tofree1 = tsegment_at_timestamptz(inst1, inst2, interp, t1);
+    j++;
   }
   if (! datum_eq(lower, upper, basetype))
   {
@@ -1585,13 +1584,11 @@ tnumbersegm_restrict_span(const TInstant *inst1, const TInstant *inst2,
        * timestamp instead of taking the bound value */
       if (j == 0)
       {
-        inter1 = tsegment_at_timestamptz(inst1, inst2, interp, t2);
-        tofree1 = true;
+        inter1 = tofree2 = tsegment_at_timestamptz(inst1, inst2, interp, t2);
       }
       else
       {
-        inter2 = tsegment_at_timestamptz(inst1, inst2, interp, t2);
-        tofree2 = true;
+        inter2 = tofree2 = tsegment_at_timestamptz(inst1, inst2, interp, t2);
       }
       j++;
     }
@@ -1605,19 +1602,26 @@ tnumbersegm_restrict_span(const TInstant *inst1, const TInstant *inst2,
     instants[0] = inter1;
     if (j == 1)
     {
+      int res;
       if ((inter1->t == inst1->t && lower_inc) ||
           (inter1->t == inst2->t && upper_inc))
       {
         result[0] = tsequence_make((const TInstant **) instants, 1, true, true,
           interp, NORMALIZE_NO);
-        return 1;
+        res = 1;
       }
-      return 0;
+      else
+        res = 0;
+      if (tofree1) pfree(tofree1);
+      if (tofree2) pfree(tofree2);
+      return res;
     }
     /* j > 1 */
     instants[1] = inter2;
     result[nseqs++] = tsequence_make((const TInstant **) instants, j,
       lower_inc1, upper_inc1, interp, NORMALIZE_NO);
+    if (tofree1) pfree(tofree1);
+    if (tofree2) pfree(tofree2);
     return 1;
   }
   else
@@ -1659,10 +1663,8 @@ tnumbersegm_restrict_span(const TInstant *inst1, const TInstant *inst2,
       }
     }
   }
-  if (tofree1)
-    pfree(inter1);
-  if (j > 1 && tofree2)
-    pfree(inter2);
+  if (tofree1) pfree(tofree1);
+  if (tofree2) pfree(tofree2);
   return nseqs;
 }
 
@@ -1671,7 +1673,7 @@ tnumbersegm_restrict_span(const TInstant *inst1, const TInstant *inst2,
  * function)
  * @param[in] seq temporal number
  * @param[in] s Span of base values
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @param[out] result Array on which the pointers of the newly constructed
  * sequences are stored
  * @return Number of resulting sequences returned
@@ -1733,7 +1735,7 @@ tnumberseq_cont_restrict_span_iter(const TSequence *seq, const Span *s,
  * @brief Restrict a temporal sequence number to (the complement of) a span
  * @param[in] seq Temporal number
  * @param[in] s Span of base values
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @note It is supposed that a bounding box test has been done in the dispatch
  * function.
  */
@@ -1760,7 +1762,7 @@ tnumberseq_cont_restrict_span(const TSequence *seq, const Span *s, bool atfunc)
  * of base values (iterator function)
  * @param[in] seq Temporal number
  * @param[in] ss Span set
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @param[out] result Array on which the pointers of the newly constructed
  * sequences are stored
  * @return Number of resulting sequences returned
@@ -1843,7 +1845,7 @@ tnumberseq_cont_restrict_spanset_iter(const TSequence *seq, const SpanSet *ss,
  * @brief Restrict a temporal number to (the complement of) an array of spans
  * @param[in] seq Temporal number
  * @param[in] ss Span set
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  */
 TSequenceSet *
 tnumberseq_cont_restrict_spanset(const TSequence *seq, const SpanSet *ss,
@@ -1871,7 +1873,7 @@ tnumberseq_cont_restrict_spanset(const TSequence *seq, const SpanSet *ss,
  * @param[in] seq Temporal sequence
  * @param[in] min True if restricted to the minumum value, false for the
  * maximum value
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @csqlfn #Temporal_at_min(), #Temporal_at_max(), #Temporal_minus_min(),
  * #Temporal_minus_max()
  */
@@ -1890,7 +1892,7 @@ tdiscseq_restrict_minmax(const TSequence *seq, bool min, bool atfunc)
  * @param[in] seq Temporal sequence
  * @param[in] min True if restricted to the minumum value, false for the
  * maximum value
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @csqlfn #Temporal_at_min(), #Temporal_at_max(), #Temporal_minus_min(),
  * #Temporal_minus_max()
  */
@@ -2673,7 +2675,7 @@ tcontseq_minus_tstzspan(const TSequence *seq, const Span *s)
  * @brief Restrict a temporal value to (the complement of) a timestamptz span
  * @param[in] seq Temporal sequence
  * @param[in] s Span
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @csqlfn #Temporal_at_tstzspan(), #Temporal_minus_tstzspan()
  */
 Temporal *
@@ -2788,7 +2790,7 @@ tcontseq_minus_tstzspanset_iter(const TSequence *seq, const SpanSet *ss,
  * span set
  * @param[in] seq Temporal sequence
  * @param[in] ss Span set
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  */
 TSequenceSet *
 tcontseq_restrict_tstzspanset(const TSequence *seq, const SpanSet *ss,
@@ -2823,7 +2825,7 @@ tcontseq_restrict_tstzspanset(const TSequence *seq, const SpanSet *ss,
  * span set
  * @param[in] seq Temporal sequence
  * @param[in] ss Span set
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  */
 Temporal *
 tsequence_restrict_tstzspanset(const TSequence *seq, const SpanSet *ss,
@@ -2843,7 +2845,7 @@ tsequence_restrict_tstzspanset(const TSequence *seq, const SpanSet *ss,
  * @brief Restrict a temporal sequence set to (the complement of) a base value
  * @param[in] ss Temporal sequence set
  * @param[in] value Value
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @note There is no bounding box test in this function, it is done in the
  * dispatch function for all temporal types.
  * @csqlfn #Temporal_at_value(), #Temporal_minus_value()
@@ -2875,7 +2877,7 @@ tsequenceset_restrict_value(const TSequenceSet *ss, Datum value, bool atfunc)
  * base values
  * @param[in] ss Temporal sequence set
  * @param[in] s Set of base values
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @pre There are no duplicates values in the array
  * @csqlfn #Temporal_at_values(), #Temporal_minus_values()
  */
@@ -2925,7 +2927,7 @@ tsequenceset_restrict_values(const TSequenceSet *ss, const Set *s,
  * @brief Restrict a temporal number to a span of base values
  * @param[in] ss Temporal sequence set
  * @param[in] s Span
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @note It is supposed that a bounding box test has been done in the dispatch
  * function.
  * @csqlfn #Tnumber_at_span(), #Tnumber_minus_span()
@@ -2958,7 +2960,7 @@ tnumberseqset_restrict_span(const TSequenceSet *ss, const Span *s,
  * spans of base values
  * @param[in] ss Temporal sequence set
  * @param[in] sps Span set
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @return Resulting temporal number value
  * @csqlfn #Tnumber_at_spanset(), #Tnumber_minus_spanset()
  */
@@ -2992,7 +2994,7 @@ tnumberseqset_restrict_spanset(const TSequenceSet *ss, const SpanSet *sps,
  * @param[in] ss Temporal sequence set
  * @param[in] min True if restricted to the minumum value, false for the
  * maximum value
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @csqlfn #Temporal_at_min(), #Temporal_at_max(), #Temporal_minus_min(),
  * #Temporal_minus_max()
  */
@@ -3009,7 +3011,7 @@ tsequenceset_restrict_minmax(const TSequenceSet *ss, bool min, bool atfunc)
  * @brief Restrict a temporal sequence set to (the complement of) a timestamptz
  * @param[in] ss Temporal sequence set
  * @param[in] t Timestamp
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @csqlfn #Temporal_at_timestamptz(), #Temporal_minus_timestamptz()
  */
 Temporal *
@@ -3068,7 +3070,7 @@ tsequenceset_restrict_timestamptz(const TSequenceSet *ss, TimestampTz t,
  * set
  * @param[in] ss Temporal sequence set
  * @param[in] s Set
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @csqlfn #Temporal_at_tstzset(), #Temporal_minus_tstzset()
  */
 Temporal *
@@ -3153,7 +3155,7 @@ tsequenceset_restrict_tstzset(const TSequenceSet *ss, const Set *s,
  * span
  * @param[in] ss Temporal sequence set
  * @param[in] s Span
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @csqlfn #Temporal_at_tstzspan(), #Temporal_minus_tstzspan()
  */
 TSequenceSet *
@@ -3242,7 +3244,7 @@ tsequenceset_restrict_tstzspan(const TSequenceSet *ss, const Span *s,
  * span set
  * @param[in] ss Temporal sequence set
  * @param[in] ps Span set
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @csqlfn #Temporal_at_tstzspanset(), #Temporal_minus_tstzspanset()
  */
 TSequenceSet *

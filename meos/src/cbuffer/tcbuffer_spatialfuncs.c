@@ -37,10 +37,7 @@
 #include <utils/float.h>
 /* MEOS */
 #include <meos.h>
-#include <meos_internal.h>
-#include <meos_cbuffer.h>
-#include "temporal/tsequence.h"
-#include "geo/postgis_funcs.h"
+#include <meos_geo.h>
 #include "geo/tgeo_spatialfuncs.h"
 #include "cbuffer/cbuffer.h"
 
@@ -112,7 +109,7 @@ lwcircle_make(double x, double y, double radius, int32_t srid)
   LWCURVEPOLY *result = lwcurvepoly_construct_empty(srid, 0, 0);
   lwcurvepoly_add_ring(result, ring);
   /* Clean up and return */
-  lwpoint_free(points[0]); lwpoint_free(points[1]); 
+  lwpoint_free(points[0]); lwpoint_free(points[1]);
   /* We cannot lwgeom_free(ring); */
   return lwcurvepoly_as_lwgeom(result);
 }
@@ -289,8 +286,10 @@ trapezoid_make(const Cbuffer *c1, const Cbuffer *c2)
   lwcurvepoly_add_ring(result, (LWGEOM *) ring);
 
   /* Clean up and return */
-  // for (int i = 0; i < 10; i ++)
-    // lwpoint_free(points[i]);
+  lwpoint_free(points1[0]); lwpoint_free(points1[1]); lwpoint_free(points1[2]);
+  lwpoint_free(points2[0]); lwpoint_free(points2[1]); lwpoint_free(points3[0]);
+  lwpoint_free(points3[1]); lwpoint_free(points3[2]); lwpoint_free(points4[0]);
+  lwpoint_free(points4[1]);
   return lwcurvepoly_as_lwgeom(result);
 }
 
@@ -371,6 +370,8 @@ cbuffer_trav_area(const Cbuffer *cb)
   lwcurvepoly_add_ring(poly, ring);
   lwgeom = lwcurvepoly_as_lwgeom(poly);
   result = geo_serialize(lwgeom);
+  lwgeom_free(lwgeom);
+  lwpoint_free(points[0]); lwpoint_free(points[1]);
   return result;
 }
 
@@ -422,7 +423,9 @@ tcbufferseq_discstep_trav_area(const TSequence *seq, GSERIALIZED **result)
   assert(seq); assert(seq->count > 1);
   assert(MEOS_FLAGS_GET_INTERP(seq->flags) != LINEAR);
   const TInstant **instants = tsequence_insts_p(seq);
-  return cbufferarr_circles(instants, seq->count, result);
+  int res = cbufferarr_circles(instants, seq->count, result);
+  pfree(instants);
+  return res;
 }
 
 /**
@@ -521,7 +524,6 @@ tcbufferseq_linear_trav_area(const TSequence *seq, GSERIALIZED **result)
   {
     const TInstant *inst2 = TSEQUENCE_INST_N(seq, i);
     result[i - 1] = tcbuffersegm_trav_area(inst1, inst2);
-    /* Prepare for next iteration */
     inst1 = inst2;
   }
   return (seq->count > 2) ? seq->count - 1 : 1;
@@ -560,7 +562,7 @@ tcbufferseq_trav_area(const TSequence *seq)
   geoarr_sort(geoms, count);
   int newcount = geoarr_remove_duplicates(geoms, count);
   result = geo_collect_garray(geoms, newcount);
-  /* We cannot pfree(geoms); */
+  pfree(geoms);
   return result;
 }
 
@@ -637,7 +639,7 @@ tcbufferseqset_trav_area(const TSequenceSet *ss)
   geoarr_sort(geoms, count);
   int newcount = geoarr_remove_duplicates(geoms, count);
   result = geo_collect_garray(geoms, newcount);
-  /* We cannot pfree(geoms); */
+  pfree(geoms);
   return result;
 }
 

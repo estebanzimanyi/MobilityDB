@@ -34,11 +34,9 @@
 #ifndef __TPOSE_DISTANCE_H__
 #define __TPOSE_DISTANCE_H__
 
-/* PostgreSQL */
-#include <postgres.h>
 /* MEOS */
 #include "temporal/temporal.h"
-#include "pose/tpose.h"
+#include "pose/pose.h"
 
 /*****************************************************************************/
 

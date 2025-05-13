@@ -55,7 +55,7 @@
 #include "temporal/type_util.h"
 
 /*****************************************************************************
- * Multidimensional tile list functions
+ * Multidimensional tile functions
  *****************************************************************************/
 
 /**
@@ -83,11 +83,11 @@ tbox_value_time_tiles(const TBox *box, Datum vsize, const Interval *duration,
   Datum start_bin, end_bin;
   /* Determine the number of value bins */
   if (datum_double(vsize, box->span.basetype))
-    nrows = span_no_bins(&box->span, vsize, vorigin, &start_bin, &end_bin);
+    nrows = span_num_bins(&box->span, vsize, vorigin, &start_bin, &end_bin);
   /* Determine the number of time bins */
   int64 tunits = duration ? interval_units(duration) : 0;
   if (tunits)
-    ncols = span_no_bins(&box->period, Int64GetDatum(tunits),
+    ncols = span_num_bins(&box->period, Int64GetDatum(tunits),
       TimestampTzGetDatum(torigin), &start_bin, &end_bin);
   /* Total number of tiles */
   int count1 = nrows * ncols;
@@ -198,7 +198,7 @@ tinstant_time_split(const TInstant *inst, int64 tunits, TimestampTz torigin,
   TInstant **result = palloc(sizeof(TInstant *));
   TimestampTz *times = palloc(sizeof(TimestampTz));
   result[0] = tinstant_copy(inst);
-  times[0] = timestamptz_get_bin_int(inst->t, tunits, torigin);
+  times[0] = timestamptz_bin_start(inst->t, tunits, torigin);
   *bins = times;
   *count = 1;
   return result;
@@ -505,9 +505,9 @@ tsequenceset_time_split(const TSequenceSet *ss, TimestampTz start,
  * @param[out] newcount Number of values in the output array
  */
 static Temporal **
-temporal_time_split_int(const Temporal *temp, TimestampTz start, TimestampTz end,
-  int64 tunits, TimestampTz torigin, int count, TimestampTz **bins,
-  int *newcount)
+temporal_time_split_int(const Temporal *temp, TimestampTz start,
+  TimestampTz end, int64 tunits, TimestampTz torigin, int count,
+  TimestampTz **bins, int *newcount)
 {
   assert(temp); assert(bins); assert(newcount); assert(start < end);
   assert(count > 0);
@@ -555,7 +555,7 @@ temporal_time_split(const Temporal *temp, const Interval *duration,
   temporal_set_tstzspan(temp, &s);
   Datum start_bin, end_bin;
   int64 tunits = interval_units(duration);
-  int nbins = span_no_bins(&s, Int64GetDatum(tunits),
+  int nbins = span_num_bins(&s, Int64GetDatum(tunits),
     TimestampTzGetDatum(torigin), &start_bin, &end_bin);
   return temporal_time_split_int(temp, DatumGetTimestampTz(start_bin),
     DatumGetTimestampTz(end_bin), tunits, torigin, nbins, bins, count);
@@ -1080,7 +1080,7 @@ tnumber_value_split(const Temporal *temp, Datum size, Datum vorigin,
   Span s;
   tnumber_set_span(temp, &s);
   Datum start_bin, end_bin;
-  int nbins = span_no_bins(&s, size, vorigin, &start_bin, &end_bin);
+  int nbins = span_num_bins(&s, size, vorigin, &start_bin, &end_bin);
 
   /* Split the temporal value */
   assert(temptype_subtype(temp->subtype));
@@ -1120,12 +1120,12 @@ tnumber_value_time_split(const Temporal *temp, Datum size,
   /* Compute the value bounds */
   Span s;
   tnumber_set_span(temp, &s);
-  int value_count = span_no_bins(&s, size, vorigin, &start_bin,
+  int value_count = span_num_bins(&s, size, vorigin, &start_bin,
     &end_bin);
   /* Compute the time bounds */
   temporal_set_tstzspan(temp, &s);
   int64 tunits = interval_units(duration);
-  int time_count = span_no_bins(&s, Int64GetDatum(tunits),
+  int time_count = span_num_bins(&s, Int64GetDatum(tunits),
     TimestampTzGetDatum(torigin), &start_time_bin, &end_time_bin);
   TimestampTz start_time = DatumGetTimestampTz(start_time_bin);
   TimestampTz end_time = DatumGetTimestampTz(end_time_bin);

@@ -34,9 +34,8 @@
 #ifndef __TPOSE_SPATIALFUNCS_H__
 #define __TPOSE_SPATIALFUNCS_H__
 
-#include <meos.h>
-#include <meos_pose.h>
 #include "temporal/temporal.h"
+#include "pose/pose.h"
 
 /*****************************************************************************/
 

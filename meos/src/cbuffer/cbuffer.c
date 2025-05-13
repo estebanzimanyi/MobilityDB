@@ -48,9 +48,6 @@
 #include <liblwgeom.h>
 /* MEOS */
 #include <meos.h>
-#include <meos_geo.h>
-#include <meos_internal.h>
-#include <meos_cbuffer.h>
 #include "temporal/pg_types.h"
 #include "temporal/set.h"
 #include "temporal/tsequence.h"
@@ -60,8 +57,6 @@
 #include "geo/meos_transform.h"
 #include "geo/postgis_funcs.h"
 #include "geo/tspatial.h"
-#include "geo/tgeo.h"
-#include "geo/tgeo_out.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/tspatial_parser.h"
 #include "cbuffer/cbuffer.h"
@@ -161,7 +156,9 @@ cbuffersegm_interpolate(const Cbuffer *start, const Cbuffer *end,
   Datum value2 = PointerGetDatum(&end->point);
   Datum value = pointsegm_interpolate(value1, value2, ratio);
   double radius = floatsegm_interpolate(start->radius, end->radius, ratio);
-  return cbuffer_make(DatumGetGserializedP(value), radius);
+  Cbuffer *result = cbuffer_make(DatumGetGserializedP(value), radius);
+  pfree(DatumGetPointer(value));
+  return result;
 }
 
 /*****************************************************************************
@@ -932,8 +929,8 @@ cbuffer_transform_pipeline(const Cbuffer *cb, const char *pipeline,
 double
 cbuffer_distance(const Cbuffer *cb1, const Cbuffer *cb2)
 {
-  const GSERIALIZED *gs1 = cbuffer_point(cb1);
-  const GSERIALIZED *gs2 = cbuffer_point(cb2);
+  const GSERIALIZED *gs1 = cbuffer_point_p(cb1);
+  const GSERIALIZED *gs2 = cbuffer_point_p(cb2);
   double result = Max(geom_distance2d(gs1, gs2) - cb1->radius - cb2->radius, 0);
   return result;
 }

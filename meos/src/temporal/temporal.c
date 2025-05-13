@@ -911,7 +911,7 @@ tsequence_from_base_temp(Datum value, meosType temptype, const TSequence *seq)
  * @note The interpolation of the result is step or linear depending on whether
  * the base type is continous or not.
  */
-static TSequenceSet *
+TSequenceSet *
 tsequenceset_from_base_temp(Datum value, meosType temptype,
   const TSequenceSet *ss)
 {

@@ -36,14 +36,9 @@
 
 /* MEOS */
 #include <meos.h>
-#include <meos_cbuffer.h>
-#include <meos_internal.h>
-#include <meos_cbuffer.h>
 #include "temporal/lifting.h"
-#include "geo/postgis_funcs.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "cbuffer/cbuffer.h"
-#include "cbuffer/tcbuffer_spatialfuncs.h"
 
 /*****************************************************************************
  * Turning point functions
@@ -227,10 +222,10 @@ cbuffersegm_distance_turnpt(const Cbuffer *start1, const Cbuffer *end1,
   assert(t1); assert(t2); assert(lower < upper);
 
   /* Extract the point values for the circular buffers */
-  const POINT2D *spt1 = GSERIALIZED_POINT2D_P(cbuffer_point(start1));
-  const POINT2D *ept1 = GSERIALIZED_POINT2D_P(cbuffer_point(end1));
-  const POINT2D *spt2 = GSERIALIZED_POINT2D_P(cbuffer_point(start2));
-  const POINT2D *ept2 = GSERIALIZED_POINT2D_P(cbuffer_point(end2));
+  const POINT2D *spt1 = GSERIALIZED_POINT2D_P(cbuffer_point_p(start1));
+  const POINT2D *ept1 = GSERIALIZED_POINT2D_P(cbuffer_point_p(end1));
+  const POINT2D *spt2 = GSERIALIZED_POINT2D_P(cbuffer_point_p(start2));
+  const POINT2D *ept2 = GSERIALIZED_POINT2D_P(cbuffer_point_p(end2));
 
   /* Compute the duration */
   double duration = (double) (upper - lower);

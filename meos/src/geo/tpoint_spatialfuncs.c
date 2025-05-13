@@ -2199,7 +2199,8 @@ tpointseq_grid(const TSequence *seq, const gridspec *grid, bool filter_pts)
       lwpoint_make3dz(srid, p.x, p.y, p.z) : lwpoint_make2d(srid, p.x, p.y);
     GSERIALIZED *gs = geo_serialize((LWGEOM *) lwpoint);
     lwpoint_free(lwpoint);
-    instants[ninsts++] = tinstant_make_free(PointerGetDatum(gs), T_TGEOMPOINT, inst->t);
+    instants[ninsts++] = tinstant_make_free(PointerGetDatum(gs), T_TGEOMPOINT,
+      inst->t);
     memcpy(&prev_p, &p, sizeof(POINT4D));
   }
   /* We are sure that ninsts > 0 */
@@ -3458,6 +3459,7 @@ tpointsegm_bearing_turnpt(Datum start1, Datum end1, Datum start2,
     lower, upper, *t2);
   sp1 = DATUM_POINT2D_P(v1);
   sp2 = DATUM_POINT2D_P(v2);
+  pfree(DatumGetPointer(v1)); pfree(DatumGetPointer(v2));
   if (sp1->y > sp2->y) // TODO Use MEOS_EPSILON
     return 0;
   return 1;

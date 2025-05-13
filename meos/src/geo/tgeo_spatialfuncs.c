@@ -216,7 +216,6 @@ geopoint_same(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   }
 }
 
-
 /**
  * @brief Return true if the points are equal taking into account floating 
  * point imprecision

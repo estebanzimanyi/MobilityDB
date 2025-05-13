@@ -548,7 +548,7 @@ tpointinst_restrict_stbox_iter(const TInstant *inst, const STBox *box,
  * @param[in] inst Temporal geo instant
  * @param[in] box Spatiotemporal box
  * @param[in] border_inc True when the box contains the upper border
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @pre The box has only X dimension and the arguments have the same SRID.
  * @note This function restricts only to the spatial dimension, the restriction
  * to the time dimension is made in function #tgeo_restrict_stbox
@@ -587,7 +587,7 @@ tgeoinst_restrict_stbox_iter(const TInstant *inst, const STBox *box,
  * @param[in] inst temporal geo instant
  * @param[in] box Spatiotemporal box
  * @param[in] border_inc True when the box contains the upper border
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @pre The box has only X dimension and the arguments have the same SRID.
  * @note This function restricts only to the spatial dimension, the restriction
  * to the time dimension is made in function #tgeo_restrict_stbox
@@ -611,7 +611,7 @@ tgeoinst_restrict_stbox(const TInstant *inst, const STBox *box,
  * @param[in] seq Temporal point discrete sequence
  * @param[in] box Spatiotemporal box
  * @param[in] border_inc True when the box contains the upper border
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @pre The box has only X dimension, the arguments have the same SRID, and
  * the sequence is not instantaneous.
  * @note The function only restricts to the spatial dimension, the restriction
@@ -652,7 +652,7 @@ tgeoseq_disc_restrict_stbox(const TSequence *seq, const STBox *box,
  * @param[in] seq Temporal point
  * @param[in] box Spatiotemporal box
  * @param[in] border_inc True when the box contains the upper border
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @pre The box has only X dimension, the arguments have the same SRID, and
  * the sequence is not instantaneous.
  * @note This function restricts only to the spatial dimension, the restriction
@@ -964,7 +964,7 @@ tpointseq_linear_at_stbox_xyz(const TSequence *seq, const STBox *box,
  * @param[in] seq temporal point sequence
  * @param[in] box Spatiotemporal box
  * @param[in] border_inc True when the box contains the upper border
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @pre The box has only X dimension, the arguments have the same SRID, and
  * the sequence is not instantaneous.
  * @note The function only restricts to the spatial dimension, the restriction
@@ -1002,7 +1002,7 @@ tpointseq_linear_restrict_stbox(const TSequence *seq, const STBox *box,
  * @param[in] seq temporal geo sequence
  * @param[in] box Spatiotemporal box
  * @param[in] border_inc True when the box contains the upper border
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @pre The box has only X dimension and the arguments have the same SRID.
  * @note The function only restricts to the spatial dimension, the restriction
  * to the time dimension is made in function #tgeo_restrict_stbox.
@@ -1054,7 +1054,7 @@ tgeoseq_restrict_stbox(const TSequence *seq, const STBox *box,
  * @param[in] ss Temporal geo sequence set
  * @param[in] box Spatiotemporal box
  * @param[in] border_inc True when the box contains the upper border
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @pre The box has only X dimension and the arguments have the same SRID.
  * @note The function only restricts to the spatial dimension, the restriction
  * to the time dimension is made in function #tgeo_restrict_stbox.
@@ -1110,7 +1110,7 @@ tgeoseqset_restrict_stbox(const TSequenceSet *ss, const STBox *box,
  * @param[in] temp Temporal geo
  * @param[in] box Spatiotemporal box
  * @param[in] border_inc True when the box contains the upper border
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @note It is possible to mix 2D/3D geometries, the Z dimension is only
  * considered if both the temporal geo and the box have Z dimension
  */
@@ -1439,7 +1439,7 @@ tpointinst_restrict_geom_iter(const TInstant *inst, const GSERIALIZED *gs,
  * @param[in] inst Temporal geo instant
  * @param[in] gs Geometry
  * @param[in] zspan Span of values to restrict the Z dimension
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @pre The arguments have the same SRID. This is verified in
  * #tgeo_restrict_geom
  */
@@ -1478,7 +1478,7 @@ tgeoinst_restrict_geom_iter(const TInstant *inst, const GSERIALIZED *gs,
  * @param[in] inst Temporal geo
  * @param[in] gs Geometry
  * @param[in] zspan Span of values to restrict the Z dimension
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  */
 TInstant *
 tgeoinst_restrict_geom(const TInstant *inst, const GSERIALIZED *gs,
@@ -1497,7 +1497,7 @@ tgeoinst_restrict_geom(const TInstant *inst, const GSERIALIZED *gs,
  * @param[in] seq Temporal geo
  * @param[in] gs Geometry
  * @param[in] zspan Span of values to restrict the Z dimension
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @pre Instantaneous sequences have been managed in the calling function
  */
 TSequence *
@@ -1535,7 +1535,7 @@ tgeoseq_disc_restrict_geom(const TSequence *seq, const GSERIALIZED *gs,
  * @param[in] seq Temporal geo
  * @param[in] gs Geometry
  * @param[in] zspan Span of values to restrict the Z dimension
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @pre Instantaneous sequences have been managed in the calling function
  * @note The function computes the "at" restriction on all dimensions. Then,
  * for the "minus" restriction, it computes the complement of the "at"
@@ -1886,7 +1886,7 @@ tpointseq_linear_at_geom(const TSequence *seq, const GSERIALIZED *gs)
  * @param[in] seq Temporal point
  * @param[in] gs Geometry
  * @param[in] zspan Span of values to restrict the Z dimension
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @note The function computes the "at" restriction on all dimensions. Then,
  * for the "minus" restriction, it computes the complement of the "at"
  * restriction with respect to the time dimension.
@@ -1957,7 +1957,7 @@ tpointseq_linear_restrict_geom(const TSequence *seq, const GSERIALIZED *gs,
  * @param[in] seq Temporal geo
  * @param[in] gs Geometry
  * @param[in] zspan Span of values to restrict the Z dimension
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  */
 Temporal *
 tgeoseq_restrict_geom(const TSequence *seq, const GSERIALIZED *gs,
@@ -2004,7 +2004,7 @@ tgeoseq_restrict_geom(const TSequence *seq, const GSERIALIZED *gs,
  * @param[in] ss Temporal geo
  * @param[in] gs Geometry
  * @param[in] zspan Span of values to restrict the Z dimension
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  */
 TSequenceSet *
 tgeoseqset_restrict_geom(const TSequenceSet *ss, const GSERIALIZED *gs,
@@ -2058,7 +2058,7 @@ tgeoseqset_restrict_geom(const TSequenceSet *ss, const GSERIALIZED *gs,
  * @param[in] temp Temporal geo
  * @param[in] gs Geometry
  * @param[in] zspan Span of values to restrict the Z dimension, may be `NULL`
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  */
 Temporal *
 tgeo_restrict_geom(const Temporal *temp, const GSERIALIZED *gs,

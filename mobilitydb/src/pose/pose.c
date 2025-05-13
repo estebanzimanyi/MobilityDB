@@ -50,6 +50,7 @@
 #include "temporal/span.h"
 #include "temporal/type_inout.h"
 #include "temporal/type_util.h"
+#include "geo/stbox.h"
 #include "pose/pose.h"
 /* MobilityDB */
 #include "pg_temporal/temporal.h"

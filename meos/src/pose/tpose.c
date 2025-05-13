@@ -31,8 +31,6 @@
  * @brief General functions for temporal pose objects.
  */
 
-#include "pose/tpose.h"
-
 /* C */
 #include <assert.h>
 /* Postgres */
@@ -308,7 +306,7 @@ tpose_tpoint(const Temporal *temp)
 
 /**
  * @ingroup meos_pose_conversion
- * @brief Return a geometry point from a temporal pose
+ * @brief Return a the rotation of a temporal pose as a temporal float
  * @param[in] temp Temporal pose
  */
 Temporal *

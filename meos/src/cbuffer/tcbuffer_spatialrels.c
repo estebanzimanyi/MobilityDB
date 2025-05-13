@@ -46,13 +46,11 @@
 #include <assert.h>
 /* MEOS */
 #include <meos.h>
-#include <meos_internal.h>
 #include "temporal/lifting.h"
-#include "geo/postgis_funcs.h"
+#include "temporal/type_util.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/tgeo_spatialrels.h"
 #include "cbuffer/cbuffer.h"
-#include "cbuffer/tcbuffer_distance.h"
 #include "cbuffer/tcbuffer_spatialfuncs.h"
 
 /*****************************************************************************
@@ -149,8 +147,7 @@ static int
 spatialrel_geo_geo_simple(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
   Datum param, varfunc func, int numparam, bool invert)
 {  /* Call the GEOS function when the geometries are not collections */
-  assert(gserialized_get_type(gs1) != COLLECTIONTYPE);
-  assert(gserialized_get_type(gs2) != COLLECTIONTYPE);
+  assert(geo_is_unitary(gs1)); assert(geo_is_unitary(gs2));
   Datum geo1 = PointerGetDatum(gs1);
   Datum geo2 = PointerGetDatum(gs2);
   bool res;
@@ -182,59 +179,33 @@ int
 spatialrel_geo_geo(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
   Datum param, varfunc func, int numparam, bool invert)
 {
-  LWCOLLECTION *coll1 = NULL, *coll2 = NULL;
+  /* Extract the elements of the arguments, if they are collections */
   int count1, count2;
-  /* Number of elements in a collection or 1 if it is not a collection */
-  if (gserialized_get_type(gs1) != COLLECTIONTYPE)
-    count1 = 1;
-  else 
-  {
-    coll1 = lwgeom_as_lwcollection(lwgeom_from_gserialized(gs1));
-    count1 = coll1->ngeoms;
-  }
-  if (gserialized_get_type(gs2) != COLLECTIONTYPE)
-    count2 = 1;
-  else 
-  {
-    coll2 = lwgeom_as_lwcollection(lwgeom_from_gserialized(gs2));
-    count2 = coll2->ngeoms;
-  }
+  GSERIALIZED **elems1 = geo_extract_elements(gs1, &count1);
+  GSERIALIZED **elems2 = geo_extract_elements(gs2, &count2);
   /* Perform the iterations for the elements in the collections if any */
   int result = 0;
   for (int i = 0; i < count1; i++)
   {
-    GSERIALIZED *elem1;
-    const LWGEOM *geom1 = NULL;
-    if (coll1)
-    {
-      geom1 = lwcollection_getsubgeom((LWCOLLECTION *) coll1, i);
-      elem1 = geo_serialize(geom1);
-    }
-    else
-      elem1 = (GSERIALIZED *) gs1;
     for (int j = 0; j < count2; j++)
     {
-      GSERIALIZED *elem2;
-      const LWGEOM *geom2 = NULL;
-      if (coll2)
-      {
-        geom2 = lwcollection_getsubgeom((LWCOLLECTION *) coll2, j);
-        elem2 = geo_serialize(geom2);
-      }
-      else
-        elem2 = (GSERIALIZED *) gs2;
-      result = spatialrel_geo_geo_simple(elem1, elem2, param, func, numparam,
-        invert);
-      if (coll2)
-        pfree(elem2);
+      result = spatialrel_geo_geo_simple(elems1[i], elems2[j], param, func,
+        numparam, invert);
       if (result)
         break;
     }
-    if (coll1)
-      pfree(elem1);
     if (result)
       break;
   }
+  /* Clean up and return */
+  if (count1 == 1)
+    pfree(elems1);
+  else
+    pfree_array((void *) elems1, count1);
+  if (count2 == 1)
+    pfree(elems2);
+  else
+    pfree_array((void *) elems2, count2);
   return result;
 }
 

@@ -330,8 +330,24 @@ tfunc_tsequence_base(const TSequence *seq, Datum value,
   TInstant **instants = palloc(sizeof(TInstant *) * seq->count);
   for (int i = 0; i < seq->count; i++)
     instants[i] = tfunc_tinstant_base(TSEQUENCE_INST_N(seq, i), value, lfinfo);
+  /* Set the interpolation depending on the one of the sequence and the result
+   * as stated in the `lfinfo` structure */
+  interpType interp = MEOS_FLAGS_GET_INTERP(seq->flags);
+  if (interp == LINEAR && ! lfinfo->reslinear)
+    interp = STEP;
+  /* The last two values of sequences with step interpolation and exclusive
+     upper bound must be equal */
+  if (! seq->period.upper_inc && interp == STEP)
+  {
+    TInstant *inst = instants[seq->count - 1];
+    value = tinstant_value_p(instants[seq->count - 2]);
+    instants[seq->count - 1] = tinstant_make(value, lfinfo->restype,
+      instants[seq->count - 1]->t);
+    pfree(inst);
+  }
+  /* Create the result */
   return tsequence_make_free(instants, seq->count, seq->period.lower_inc,
-    seq->period.upper_inc, MEOS_FLAGS_GET_INTERP(seq->flags), NORMALIZE);
+    seq->period.upper_inc, interp, NORMALIZE);
 }
 
 /**
@@ -574,7 +590,7 @@ tfunc_tlinearseq_base_discfn(const TSequence *seq, Datum value,
       (ninsts == 1) ? true : lower_inc,
       (ninsts == 1) ? true : seq->period.upper_inc, STEP, NORMALIZE);
   }
-  pfree(instants);
+  pfree_array((void *) instants, ninsts);
   return nseqs;
 }
 
@@ -602,7 +618,9 @@ tfunc_tlinearseq_base(const TSequence *seq, Datum value,
       tfunc_tlinearseq_base_turnpt(seq, value, lfinfo, sequences);
     else
       sequences[0] = tfunc_tsequence_base(seq, value, lfinfo);
-    return (Temporal *) sequences[0];
+    Temporal *result = (Temporal *) sequences[0];
+    pfree(sequences);
+    return result;
   }
 }
 
@@ -780,6 +798,7 @@ tfunc_tsequenceset_tinstant(const TSequenceSet *ss, const TInstant *inst,
     return NULL;
 
   Datum resvalue = tfunc_base_base(value1, tinstant_value_p(inst), lfinfo);
+  DATUM_FREE(value1, temptype_basetype(inst->temptype));
   return tinstant_make_free(resvalue, lfinfo->restype, inst->t);
 }
 
@@ -1064,6 +1083,8 @@ tfunc_tcontseq_tcontseq_single(const TSequence *seq1, const TSequence *seq2,
   pfree_array((void **) tofree, nfree);
   interpType interp = Min(MEOS_FLAGS_GET_INTERP(seq1->flags),
     MEOS_FLAGS_GET_INTERP(seq2->flags));
+  if (interp == LINEAR && ! lfinfo->reslinear)
+    interp = STEP;
   result[0] = tsequence_make_free(instants, ninsts, inter->lower_inc,
     inter->upper_inc, interp, NORMALIZE);
   return 1;
@@ -1264,10 +1285,10 @@ tfunc_tcontseq_tcontseq_discfn(const TSequence *seq1, const TSequence *seq2,
   startresult = tfunc_base_base(tinstant_value_p(start1), tinstant_value_p(start2),
     lfinfo);
   instants[ninsts++] = tinstant_make_free(startresult, restype, start1->t);
-  result[nseqs++] = tsequence_make((const TInstant **) instants, ninsts,
+  result[nseqs++] = tsequence_make_free(instants, ninsts,
     (ninsts == 1) ? true : lower_inc,
     (ninsts == 1) ? true : inter->upper_inc, interp, NORMALIZE);
-  pfree(instants);
+  pfree_array((void *) tofree, nfree);
   return nseqs;
 }
 
