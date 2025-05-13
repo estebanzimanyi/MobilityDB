@@ -40,7 +40,7 @@
 #include <meos_internal.h>
 #include "geo/postgis_funcs.h"
 #include "geo/tgeo_spatialfuncs.h"
-#include "pose/tpose.h"
+#include "pose/pose.h"
 #include "pose/tpose_spatialfuncs.h"
 
 /*****************************************************************************

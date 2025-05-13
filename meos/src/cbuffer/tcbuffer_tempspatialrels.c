@@ -43,21 +43,18 @@
 #include <assert.h>
 #include <math.h>
 /* PostgreSQL */
+#include <postgres.h>
+#include <utils/timestamp.h>
 /* PostGIS */
 #include <liblwgeom.h>
 /* MEOS */
 #include <meos.h>
-#include <meos_cbuffer.h>
-#include <meos_internal.h>
 #include "temporal/lifting.h"
 #include "temporal/tbool_ops.h"
 #include "temporal/temporal_compops.h"
 #include "temporal/tinstant.h"
-#include "temporal/tsequence.h"
 #include "temporal/type_util.h"
-#include "geo/postgis_funcs.h"
 #include "geo/tgeo_spatialfuncs.h"
-#include "geo/tpoint_restrfuncs.h"
 #include "geo/tgeo_spatialrels.h"
 #include "cbuffer/cbuffer.h"
 #include "cbuffer/tcbuffer_boxops.h"
@@ -73,24 +70,23 @@
  * buffer instant and a geometry intersect or are disjoint
  * @param[in] inst Temporal circular buffer
  * @param[in] gs Geometry
- * @param[in] tinter True when computing tintersects, false for tdisjoint
+ * @param[in] tinter True when computing `tintersects`, false for `tdisjoint`
  */
 Temporal *
 tinterrel_tcbufferinst_geom(const TInstant *inst, const GSERIALIZED *gs,
   bool tinter)
 {
-  assert(inst); assert(inst->temptype == T_TCBUFFER);
+  assert(inst); assert(gs); assert(! gserialized_is_empty(gs));
+  assert(inst->temptype == T_TCBUFFER);
   GSERIALIZED *trav = tcbufferinst_trav_area(inst);
-  GSERIALIZED *inter = geom_intersection2d(trav, gs);
+  GSERIALIZED *inter = geom_intersection2d_coll(trav, gs);
   pfree(trav);
-  /* If there is no intersection */
-  if (gserialized_is_empty(inter))
-  {
-    pfree(inter);
-    return NULL;
-  }
-  pfree(inter);
   Datum datum_true = tinter ? BoolGetDatum(true) : BoolGetDatum(false);
+  Datum datum_false = tinter ? BoolGetDatum(false) : BoolGetDatum(true);
+  /* If there is no intersection */
+  if (! inter)
+    return (Temporal *) tinstant_make(datum_false, T_TBOOL, inst->t);
+  pfree(inter);
   return (Temporal *) tinstant_make(datum_true, T_TBOOL, inst->t);
 }
 
@@ -100,29 +96,30 @@ tinterrel_tcbufferinst_geom(const TInstant *inst, const GSERIALIZED *gs,
  * disjoint
  * @param[in] seq Temporal circular buffer
  * @param[in] gs Geometry
- * @param[in] tinter True when computing tintersects, false for tdisjoint
+ * @param[in] tinter True when computing `tintersects`, false for `tdisjoint`
  */
 static Temporal *
 tinterrel_tcbufferseq_disc_geom(const TSequence *seq, const GSERIALIZED *gs,
   bool tinter)
 {
-  assert(seq); assert(seq->count > 1); assert(seq->temptype == T_TCBUFFER);
+  assert(seq); assert(gs); assert(! gserialized_is_empty(gs));
+  assert(seq->count > 1); assert(seq->temptype == T_TCBUFFER);
   assert(MEOS_FLAGS_GET_INTERP(seq->flags) == DISCRETE);
   /* Compute the intersection of the traversed area of a temporal circular
    * buffer and the geometry */
   GSERIALIZED *trav = tcbufferseq_trav_area(seq);
-  GSERIALIZED *inter = geom_intersection2d(trav, gs);
+  GSERIALIZED *inter = geom_intersection2d_coll(trav, gs);
   pfree(trav);
   /* If there is no intersection */
-  if (gserialized_is_empty(inter))
-  {
-    pfree(inter);
-    return NULL;
-  }
+  Datum datum_false = tinter ? BoolGetDatum(false) : BoolGetDatum(true);
+  if (! inter)
+    return (Temporal *) tsequence_from_base_temp(datum_false, T_TBOOL, seq);
+  /* Get the points composing the intersection */
   GSERIALIZED *points = geo_points(inter);
   LWMPOINT *mpoint = lwmpoint_from_lwgeom(lwgeom_from_gserialized(points));
   pfree(inter); pfree(points);
   Set *s = NULL;
+  /* Iterate for the points composing the intersection */
   for (int i = 0; i < seq->count; i++)
   {
     const TInstant *inst = TSEQUENCE_INST_N(seq, i);
@@ -142,7 +139,7 @@ tinterrel_tcbufferseq_disc_geom(const TSequence *seq, const GSERIALIZED *gs,
     {
       if (! s)
         /* Initialize the set for the first time */
-        s = value_set(TimestampTzGetDatum(inst->t), T_TSTZSET);
+        s = value_set(TimestampTzGetDatum(inst->t), T_TIMESTAMPTZ);
       else
       {
         /* Compute the union of the set and the newly found timestamp */
@@ -154,13 +151,13 @@ tinterrel_tcbufferseq_disc_geom(const TSequence *seq, const GSERIALIZED *gs,
     pfree(circle);
   }
   lwmpoint_free(mpoint);
-  /* If there is no intersection */
-  if (! s)
-    return NULL;
   /* Compute the result */
   Datum bool_true = tinter ? BoolGetDatum(true) : BoolGetDatum(false);
   Datum bool_false = tinter ? BoolGetDatum(false) : BoolGetDatum(true);
-  TSequence *res_true = tsequence_from_base_tstzset(bool_true, T_TBOOL, s);
+  /* If there is no intersection */
+  if (! s)
+    return (Temporal *) tsequence_from_base_temp(bool_true, T_TBOOL, seq);
+  TSequence *res_true = tsequence_from_base_tstzset(bool_false, T_TBOOL, s);
   int count;
   TimestampTz *times = tsequence_timestamps(seq, &count);
   Datum *datumarr = palloc(sizeof(Datum) * count);
@@ -168,11 +165,18 @@ tinterrel_tcbufferseq_disc_geom(const TSequence *seq, const GSERIALIZED *gs,
     datumarr[i] = TimestampTzGetDatum(times[i]);
   Set *s_time = set_make_free(datumarr, count, T_TIMESTAMPTZ, ORDER);
   Set *s_minus = minus_set_set(s_time, s);
-  TSequence *res_false = tsequence_from_base_tstzset(bool_false, T_TBOOL,
-    s_minus);
-  Temporal *result = tsequence_merge(res_true, res_false);
-  pfree(s); pfree(res_true); pfree(times); pfree(s_time); pfree(s_minus);
-  pfree(res_false);
+  /* If the result is true for the whole sequence set `s_minus` is empty */
+  Temporal *result;
+  if (s_minus)
+  {
+    TSequence *res_false = tsequence_from_base_tstzset(bool_false, T_TBOOL,
+      s_minus);
+    result = tsequence_merge(res_true, res_false);
+    pfree(res_true); pfree(s_minus); pfree(res_false);
+  }
+  else
+    result = (Temporal *) res_true;
+  pfree(s); pfree(s_time); 
   return result;
 }
 
@@ -182,25 +186,25 @@ tinterrel_tcbufferseq_disc_geom(const TSequence *seq, const GSERIALIZED *gs,
  * disjoint
  * @param[in] seq Temporal circular buffer
  * @param[in] gs Geometry
- * @param[in] tinter True when computing tintersects, false for tdisjoint
+ * @param[in] tinter True when computing `tintersects`, false for `tdisjoint`
  */
 static Temporal *
 tinterrel_tcbufferseq_step_geom(const TSequence *seq, const GSERIALIZED *gs,
   bool tinter)
 {
-  assert(seq); assert(seq->count > 1); assert(seq->temptype == T_TCBUFFER);
-  assert(MEOS_FLAGS_LINEAR_INTERP(seq->flags));
+  assert(seq); assert(gs); assert(! gserialized_is_empty(gs));
+  assert(seq->count > 1); assert(seq->temptype == T_TCBUFFER);
+  assert(MEOS_FLAGS_GET_INTERP(seq->flags) == STEP);
   /* Compute the intersection of the traversed area of a temporal circular
    * buffer and the geometry */
   GSERIALIZED *trav = tcbufferseq_trav_area(seq);
-  GSERIALIZED *inter = geom_intersection2d(trav, gs);
+  GSERIALIZED *inter = geom_intersection2d_coll(trav, gs);
   pfree(trav);
   /* If there is no intersection */
-  if (gserialized_is_empty(inter))
-  {
-    pfree(inter);
-    return NULL;
-  }
+  Datum datum_false = tinter ? BoolGetDatum(false) : BoolGetDatum(true);
+  if (! inter)
+    return (Temporal *) tsequence_from_base_temp(datum_false, T_TBOOL, seq);
+  /* Get the points composing the intersection */
   GSERIALIZED *points = geo_points(inter);
   LWMPOINT *mpoint = lwmpoint_from_lwgeom(lwgeom_from_gserialized(points));
   pfree(inter); pfree(points);
@@ -232,21 +236,36 @@ tinterrel_tcbufferseq_step_geom(const TSequence *seq, const GSERIALIZED *gs,
     /* If intersection found */
     if (mint != DT_NOEND && maxt != DT_NOBEGIN)
     {
-      bool lower_inc1 = (mint == inst->t) ? lower_inc : true;
-      bool upper_inc1 = (maxt == next->t) ? upper_inc : true;
-      Span *s = span_make(TimestampTzGetDatum(mint), TimestampTzGetDatum(maxt),
-        lower_inc1, upper_inc1, T_TSTZSPAN);
-      if (! ss)
-        /* Initialize the spanset for the first time */
-        ss = span_spanset(s);
-      else
+      /* If mint and maxt are equal they cannot be at an exclusive bound */
+      if (mint != maxt || ( ! (mint == inst->t && ! lower_inc) &&
+           ! (mint == next->t && ! upper_inc) ) )
       {
-        /* Compute the union of the spanset and the newly found span bounds */
-        SpanSet *ss1 = union_spanset_span(ss, s);
-        pfree(ss);
-        ss = ss1;
+        bool lower_inc1, upper_inc1;
+        if (mint == maxt)
+        {
+          lower_inc1 = upper_inc1 = true;
+        }
+        else
+        {
+          lower_inc1 = (mint == inst->t) ? lower_inc : true;
+          upper_inc1 = (maxt == next->t) ? upper_inc : true;
+        }
+        Span *s = span_make(TimestampTzGetDatum(mint),
+          TimestampTzGetDatum(maxt), lower_inc1, upper_inc1, T_TIMESTAMPTZ);
+        if (! ss)
+          /* Initialize the spanset for the first time */
+          ss = span_spanset(s);
+        else
+        {
+          /* Compute the union of the spanset and the newly found span bounds */
+          SpanSet *ss1 = union_spanset_span(ss, s);
+          pfree(ss);
+          ss = ss1;
+        }
+        pfree(s);
       }
-      pfree(s);
+      else
+      {}
     }
     pfree(circle);
     inst = next;
@@ -261,11 +280,18 @@ tinterrel_tcbufferseq_step_geom(const TSequence *seq, const GSERIALIZED *gs,
     T_TBOOL, ss, STEP);
   SpanSet *ss_time = tsequence_time(seq);
   SpanSet *ss_minus = minus_spanset_spanset(ss_time, ss);
-  TSequenceSet *res_false = tsequenceset_from_base_tstzspanset(bool_false,
-    T_TBOOL, ss_minus, STEP);
-  TSequenceSet *result = tsequenceset_merge(res_true, res_false);
-  pfree(ss); pfree(res_true); pfree(ss_time); pfree(ss_minus);
-  pfree(res_false);
+  /* If the result is true for the whole sequence, `ss_minus` is empty */
+  TSequenceSet *result;
+  if (ss_minus)
+  {
+    TSequenceSet *res_false = tsequenceset_from_base_tstzspanset(bool_false,
+      T_TBOOL, ss_minus, STEP);
+    result = tsequenceset_merge(res_true, res_false);
+    pfree(res_true); pfree(ss_minus); pfree(res_false);
+  }
+  else
+    result = res_true;
+  pfree(ss); pfree(ss_time); 
   return (Temporal *) result;
 }
 
@@ -274,25 +300,25 @@ tinterrel_tcbufferseq_step_geom(const TSequence *seq, const GSERIALIZED *gs,
  * buffer sequence with linear interpolation and a geometry intersect
  * @param[in] seq Temporal circular buffer
  * @param[in] gs Geometry
- * @param[in] tinter True when computing tintersects, false for tdisjoint
+ * @param[in] tinter True when computing `tintersects`, false for `tdisjoint`
  */
 static Temporal *
-tinterrel_tcbufferseq_linear_geom(const TSequence *seq,
-  const GSERIALIZED *gs, bool tinter)
+tinterrel_tcbufferseq_linear_geom(const TSequence *seq, const GSERIALIZED *gs,
+  bool tinter)
 {
-  assert(seq); assert(seq->count > 1); assert(seq->temptype == T_TCBUFFER);
+  assert(seq); assert(gs); assert(seq->count > 1);
+  assert(! gserialized_is_empty(gs)); assert(seq->temptype == T_TCBUFFER);
   assert(MEOS_FLAGS_LINEAR_INTERP(seq->flags));
   /* Compute the intersection of the traversed area of a temporal circular
    * buffer and the geometry */
   GSERIALIZED *trav = tcbufferseq_trav_area(seq);
-  GSERIALIZED *inter = geom_intersection2d(trav, gs);
+  GSERIALIZED *inter = geom_intersection2d_coll(trav, gs);
   pfree(trav);
   /* If there is no intersection */
-  if (gserialized_is_empty(inter))
-  {
-    pfree(inter);
-    return NULL;
-  }
+  Datum datum_false = tinter ? BoolGetDatum(false) : BoolGetDatum(true);
+  if (! inter)
+    return (Temporal *) tsequence_from_base_temp(datum_false, T_TBOOL, seq);
+  /* Get the points composing the intersection */
   GSERIALIZED *points = geo_points(inter);
   LWMPOINT *mpoint = lwmpoint_from_lwgeom(lwgeom_from_gserialized(points));
   pfree(inter); pfree(points);
@@ -302,7 +328,7 @@ tinterrel_tcbufferseq_linear_geom(const TSequence *seq,
   for (int i = 1; i < seq->count; i++)
   {
     const TInstant *inst2 = TSEQUENCE_INST_N(seq, i);
-    TimestampTz maxt = DT_NOEND, mint = DT_NOBEGIN;
+    TimestampTz mint = DT_NOEND, maxt = DT_NOBEGIN;
     bool upper_inc = (i == seq->count - 1) ? false : seq->period.upper_inc;
     /* Loop for each point in the intersection */
     for (uint32_t j = 0; j < mpoint->ngeoms; j++)
@@ -328,7 +354,7 @@ tinterrel_tcbufferseq_linear_geom(const TSequence *seq,
       bool lower_inc1 = (mint == inst1->t) ? lower_inc : true;
       bool upper_inc1 = (maxt == inst2->t) ? upper_inc : true;
       Span *s = span_make(TimestampTzGetDatum(mint), TimestampTzGetDatum(maxt),
-        lower_inc1, upper_inc1, T_TSTZSPAN);
+        lower_inc1, upper_inc1, T_TIMESTAMPTZ);
       if (! ss)
         /* Initialize the spanset for the first time */
         ss = span_spanset(s);
@@ -353,11 +379,18 @@ tinterrel_tcbufferseq_linear_geom(const TSequence *seq,
     T_TBOOL, ss, STEP);
   SpanSet *ss_time = tsequence_time(seq);
   SpanSet *ss_minus = minus_spanset_spanset(ss_time, ss);
-  TSequenceSet *res_false = tsequenceset_from_base_tstzspanset(bool_false,
-    T_TBOOL, ss_minus, STEP);
-  TSequenceSet *result = tsequenceset_merge(res_true, res_false);
-  pfree(ss); pfree(res_true); pfree(ss_time);
-  pfree(ss_minus); pfree(res_false);
+  /* If the result is true for the whole sequence set `ss_minus` is empty */
+  TSequenceSet *result;
+  if (ss_minus)
+  {
+    TSequenceSet *res_false = tsequenceset_from_base_tstzspanset(bool_false,
+      T_TBOOL, ss_minus, STEP);
+    result = tsequenceset_merge(res_true, res_false);
+    pfree(res_true); pfree(ss_minus); pfree(res_false);
+  }
+  else
+    result = res_true;
+  pfree(ss); pfree(ss_time); 
   return (Temporal *) result;
 }
 
@@ -366,14 +399,14 @@ tinterrel_tcbufferseq_linear_geom(const TSequence *seq,
  * buffer sequence and a geometry intersect (dispatch function)
  * @param[in] seq Temporal circular buffer
  * @param[in] gs Geometry
- * @param[in] tinter True when computing tintersects, false for tdisjoint
+ * @param[in] tinter True when computing `tintersects`, false for `tdisjoint`
  */
 static Temporal *
 tinterrel_tcbufferseq_geom(const TSequence *seq, const GSERIALIZED *gs,
   bool tinter)
 {
-  assert(seq); assert(seq->temptype == T_TCBUFFER);
-  assert(MEOS_FLAGS_LINEAR_INTERP(seq->flags));
+  assert(seq); assert(gs); assert(! gserialized_is_empty(gs)); 
+  assert(seq->temptype == T_TCBUFFER);
 
   /* Instantaneous sequence */
   if (seq->count == 1)
@@ -394,13 +427,14 @@ tinterrel_tcbufferseq_geom(const TSequence *seq, const GSERIALIZED *gs,
  * buffer sequence set and a geometry intersect (dispatch function)
  * @param[in] ss Temporal circular buffer
  * @param[in] gs Geometry
- * @param[in] tinter True when computing tintersects, false for tdisjoint
+ * @param[in] tinter True when computing `tintersects`, false for `tdisjoint`
  */
 static Temporal *
 tinterrel_tcbufferseqset_geom(const TSequenceSet *ss, const GSERIALIZED *gs,
   bool tinter)
 {
-  assert(ss); assert(ss->temptype == T_TCBUFFER);
+  assert(ss); assert(gs); assert(! gserialized_is_empty(gs)); 
+  assert(ss->temptype == T_TCBUFFER);
   assert(MEOS_FLAGS_LINEAR_INTERP(ss->flags));
 
   /* Singleton sequence set */
@@ -408,22 +442,29 @@ tinterrel_tcbufferseqset_geom(const TSequenceSet *ss, const GSERIALIZED *gs,
     return tinterrel_tcbufferseq_geom(TSEQUENCESET_SEQ_N(ss, 0), gs, tinter);
 
   /* General case */
-  TSequence **sequences = palloc(sizeof(TSequence *) * ss->count);
+  Temporal **res_seq = palloc(sizeof(Temporal *) * ss->count);
+  int count = 0;
   for (int i = 0; i < ss->count; i++)
   {
-    const TSequence *seq = TSEQUENCESET_SEQ_N(ss, i);
-    TSequenceSet *res = (TSequenceSet *) tinterrel_tcbufferseq_geom(seq, gs,
+    Temporal *res = tinterrel_tcbufferseq_geom(TSEQUENCESET_SEQ_N(ss, i), gs,
       tinter);
-    assert(res->count == 1);
-    sequences[i] = (TSequence *) TSEQUENCESET_SEQ_N(res, 0);
+    if (res)
+      res_seq[count++] = res;
   }
   /* If there is no intersection */
-  if (! ss)
-    return NULL;
+  Datum datum_false = tinter ? BoolGetDatum(false) : BoolGetDatum(true);
+  if (! count)
+    return (Temporal *) tsequenceset_from_base_temp(datum_false, T_TBOOL, ss);
   /* Compute the result */
-  Temporal *result = tsequence_merge_array((const TSequence **) sequences,
-    ss->count);
-  pfree_array((void *) sequences, ss->count);
+  Temporal *result;
+  if (count == 1)
+  {
+    result = res_seq[0];
+    pfree(res_seq);
+    return result;
+  }
+  result = temporal_merge_array((const Temporal **) res_seq, count);
+  pfree_array((void *) res_seq, count);
   return result;
 }
 
@@ -432,7 +473,7 @@ tinterrel_tcbufferseqset_geom(const TSequenceSet *ss, const GSERIALIZED *gs,
  * buffer and a geometry intersect
  * @param[in] temp Temporal circular buffer
  * @param[in] gs Geometry
- * @param[in] tinter True when computing tintersects, false for tdisjoint
+ * @param[in] tinter True when computing `tintersects`, false for `tdisjoint`
  * @param[in] restr True if the atValue function is applied to the result
  * @param[in] atvalue Value to be used for the atValue function
  */
@@ -485,7 +526,7 @@ tinterrel_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs,
  * buffer and a geometry intersect or are disjoint
  * @param[in] temp Temporal circular buffer
  * @param[in] cb Circular buffer
- * @param[in] tinter True when computing tintersects, false for tdisjoint
+ * @param[in] tinter True when computing `tintersects`, false for `tdisjoint`
  * @param[in] restr True if the atValue function is applied to the result
  * @param[in] atvalue Value to be used for the atValue function
  */
@@ -554,7 +595,7 @@ tinterrel_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb,
  * @brief Return a temporal Boolean that states whether two temporal circular
  * buffers intersect or are disjoint
  * @param[in] temp1,temp2 Temporal circular buffers
- * @param[in] tinter True when computing tintersects, false for tdisjoint
+ * @param[in] tinter True when computing `tintersects`, false for `tdisjoint`
  * @param[in] restr True if the atValue function is applied to the result
  * @param[in] atvalue Value to be used for the atValue function
  */
@@ -643,7 +684,7 @@ tspatialrel_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb,
   lfinfo.argtype[0] = temp->temptype;
   lfinfo.argtype[1] = temptype_basetype(temp->temptype);
   lfinfo.restype = T_TBOOL;
-  lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
+  lfinfo.reslinear = false;
   lfinfo.invert = invert;
   lfinfo.discont = false;
   return tfunc_temporal_base(temp, PointerGetDatum(cb), &lfinfo);
@@ -674,8 +715,7 @@ tspatialrel_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
   lfinfo.param[0] = param;
   lfinfo.argtype[0] = lfinfo.argtype[1] = temp1->temptype;
   lfinfo.restype = T_TBOOL;
-  lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp1->flags) ||
-    MEOS_FLAGS_LINEAR_INTERP(temp2->flags);
+  lfinfo.reslinear = false;
   lfinfo.invert = invert;
   lfinfo.discont = false;
   return tfunc_temporal_temporal(temp1, temp2, &lfinfo);
@@ -836,7 +876,7 @@ tcontains_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
     return NULL;
 
   Temporal *result = tspatialrel_tcbuffer_tcbuffer(temp1, temp2, (Datum) NULL,
-    (varfunc) &datum_geom_contains, 0, INVERT_NO);
+    (varfunc) &datum_cbuffer_contains, 0, INVERT_NO);
 
   /* Restrict the result to the Boolean value in the last argument if any */
   if (result && restr)
@@ -1025,7 +1065,7 @@ tcovers_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
     return NULL;
 
   Temporal *result = tspatialrel_tcbuffer_tcbuffer(temp1, temp2, (Datum) NULL,
-    (varfunc) &datum_geom_covers, 0, INVERT_NO);
+    (varfunc) &datum_cbuffer_covers, 0, INVERT_NO);
 
   /* Restrict the result to the Boolean value in the last argument if any */
   if (result && restr)
@@ -1251,7 +1291,7 @@ ttouches_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
     return NULL;
 
   Temporal *result =  tspatialrel_tcbuffer_tcbuffer(temp1, temp2, (Datum) NULL,
-    (varfunc) &datum_geom_touches, 0, INVERT_NO);
+    (varfunc) &datum_cbuffer_touches, 0, INVERT_NO);
 
   /* Restrict the result to the Boolean value in the last argument if any */
   if (result && restr)
@@ -1663,10 +1703,6 @@ tdwithin_tcbufferseqset_point(const TSequenceSet *ss, Datum point, Datum dist,
   return tsequenceset_make_free(sequences, nseqs, NORMALIZE);
 }
 
-/*****************************************************************************
- * Temporal dwithin
- *****************************************************************************/
-
 /**
  * @ingroup meos_cbuffer_rel_temp
  * @brief Return a temporal Boolean that states whether a temporal circular
@@ -1679,20 +1715,16 @@ tdwithin_tcbufferseqset_point(const TSequenceSet *ss, Datum point, Datum dist,
  * @csqlfn #Tdwithin_tcbuffer_geo()
  */
 Temporal *
-tdwithin_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs, double dist,
-  bool restr, bool atvalue)
+tdwithin_tcbuffer_geo_old(const Temporal *temp, const GSERIALIZED *gs,
+  double dist, bool restr, bool atvalue)
 {
   VALIDATE_TCBUFFER(temp, NULL); VALIDATE_NOT_NULL(gs, NULL);
   /* Ensure the validity of the arguments */
   if (! ensure_valid_tcbuffer_geo(temp, gs) || gserialized_is_empty(gs) ||
-      (tpoint_type(temp->temptype) && ! ensure_point_type(gs)) ||
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return NULL;
 
-  datum_func3 func =
-    /* 3D only if both arguments are 3D */
-    MEOS_FLAGS_GET_Z(temp->flags) && FLAGS_GET_Z(gs->gflags) ?
-    &datum_geom_dwithin3d : &datum_geom_dwithin2d;
+  datum_func3 func = &datum_geom_dwithin2d;
   Temporal *result;
   assert(temptype_subtype(temp->subtype));
   switch (temp->subtype)
@@ -1734,6 +1766,38 @@ tdwithin_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs, double dist,
     pfree(result);
     result = atresult;
   }
+  return result;
+}
+
+/*****************************************************************************
+ * Temporal dwithin
+ *****************************************************************************/
+
+/**
+ * @ingroup meos_cbuffer_rel_temp
+ * @brief Return a temporal Boolean that states whether a temporal circular
+ * buffer and a geometry are within a distance
+ * @param[in] temp Temporal circular buffer
+ * @param[in] gs Geometry
+ * @param[in] dist Distance
+ * @param[in] restr True when the result is restricted to a value
+ * @param[in] atvalue Value to restrict
+ * @csqlfn #Tdwithin_tcbuffer_geo()
+ */
+Temporal *
+tdwithin_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs, double dist,
+  bool restr, bool atvalue)
+{
+  VALIDATE_TCBUFFER(temp, NULL); VALIDATE_NOT_NULL(gs, NULL);
+  /* Ensure the validity of the arguments */
+  if (! ensure_valid_tcbuffer_geo(temp, gs) || gserialized_is_empty(gs) ||
+      ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
+    return NULL;
+
+  Temporal *temp_exp = tcbuffer_expand(temp, dist);
+  Temporal *result = tinterrel_tcbuffer_geo(temp_exp, gs, TINTERSECTS, restr,
+    atvalue);
+  pfree(temp_exp);
   return result;
 }
 

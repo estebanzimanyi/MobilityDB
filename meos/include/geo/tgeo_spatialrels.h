@@ -68,6 +68,8 @@ extern datum_func3 geo_dwithin_fn_geo(int16 flags1, uint8_t flags2);
 
 /*****************************************************************************/
 
+extern int spatialrel_geo_geo(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
+  Datum param, varfunc func, int numparam, bool invert);
 extern int spatialrel_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
   Datum param, varfunc func, int numparam);
 

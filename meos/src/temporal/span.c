@@ -1180,6 +1180,22 @@ numspan_shift_scale(const Span *s, Datum shift, Datum width, bool hasshift,
 }
 
 /**
+ * @ingroup meos_pg_types
+ * @brief Return a timestamptz shifted by an interval
+ * @param[in] t Timestamp
+ * @param[in] interv Interval to shift the instant
+ * @return On error return @DT_NOEND
+ * @csqlfn #Tim_shift()
+ */
+TimestampTz
+timestamptz_shift(TimestampTz t, const Interval *interv)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(interv, DT_NOEND);
+  return add_timestamptz_interval(t, interv);
+}
+
+/**
  * @ingroup meos_setspan_transf
  * @brief Return a timestamptz span shifted and/or scaled by two intervals
  * @param[in] s Span

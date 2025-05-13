@@ -54,6 +54,12 @@ SELECT COUNT(*) FROM tbl_cbuffer WHERE cb::geometry IS NOT NULL;
 SELECT COUNT(*) FROM tbl_cbuffer WHERE cb ~= (cb::geometry)::cbuffer;
 
 -------------------------------------------------------------------------------
+-- Transformations
+-------------------------------------------------------------------------------
+
+SELECT COUNT(*) FROM tbl_tcbuffer WHERE expand(temp, 1) IS NOT NULL;
+
+-------------------------------------------------------------------------------
 -- Comparisons
 -------------------------------------------------------------------------------
 

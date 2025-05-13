@@ -280,7 +280,7 @@ tpose_minus_geom(const Temporal *temp, const GSERIALIZED *gs,
  * @param[in] temp Temporal pose
  * @param[in] box Spatiotemporal box
  * @param[in] border_inc True when the box contains the upper border
- * @param[in] atfunc True if the restriction is at, false for minus
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
  */
 Temporal *
 tpose_restrict_stbox(const Temporal *temp, const STBox *box, bool border_inc,

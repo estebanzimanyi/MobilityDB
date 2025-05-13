@@ -181,8 +181,7 @@ arithop_tnumber_number(const Temporal *temp, Datum value, TArithmetic oper,
   lfinfo.argtype[0] = temp->temptype;
   lfinfo.argtype[1] = basetype;
   lfinfo.restype = temp->temptype;
-  /* This parameter is not used for temp <op> base */
-  lfinfo.reslinear = false;
+  lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   lfinfo.invert = invert;
   lfinfo.discont = CONTINUOUS;
   return tfunc_temporal_base(temp, value, &lfinfo);
@@ -722,43 +721,40 @@ double
 pg_exp(double d)
 {
   double result;
-
-	/*
-	 * Handle NaN and Inf cases explicitly.  This avoids needing to assume
-	 * that the platform's exp() conforms to POSIX for these cases, and it
-	 * removes some edge cases for the overflow checks below.
-	 */
-	if (isnan(d))
-		result = d;
-	else if (isinf(d))
-	{
-		/* Per POSIX, exp(-Inf) is 0 */
-		result = (d > 0.0) ? d : 0;
-	}
-	else
-	{
-		/*
-		 * On some platforms, exp() will not set errno but just return Inf or
-		 * zero to report overflow/underflow; therefore, test both cases.
-		 */
-		errno = 0;
-		result = exp(d);
-		if (unlikely(errno == ERANGE))
-		{
-			if (result != 0.0)
-				float_overflow_error();
-			else
-				float_underflow_error();
-		}
-		else if (unlikely(isinf(result)))
-			float_overflow_error();
-		else if (unlikely(result == 0.0))
-			float_underflow_error();
-	}
-
+  /*
+   * Handle NaN and Inf cases explicitly.  This avoids needing to assume
+   * that the platform's exp() conforms to POSIX for these cases, and it
+   * removes some edge cases for the overflow checks below.
+   */
+  if (isnan(d))
+    result = d;
+  else if (isinf(d))
+  {
+    /* Per POSIX, exp(-Inf) is 0 */
+    result = (d > 0.0) ? d : 0;
+  }
+  else
+  {
+    /*
+     * On some platforms, exp() will not set errno but just return Inf or
+     * zero to report overflow/underflow; therefore, test both cases.
+     */
+    errno = 0;
+    result = exp(d);
+    if (unlikely(errno == ERANGE))
+    {
+      if (result != 0.0)
+        float_overflow_error();
+      else
+        float_underflow_error();
+    }
+    else if (unlikely(isinf(result)))
+      float_overflow_error();
+    else if (unlikely(result == 0.0))
+      float_underflow_error();
+  }
   return result;
 }
-
 
 /**
  * @brief Return the exponential of a double

@@ -591,12 +591,26 @@ Tstzspan_duration(PG_FUNCTION_ARGS)
 
 /*****************************************************************************
  * Transformation functions
- *
  * Since in PostgreSQL the type date is defined as follows
  *   typedef int32 DateADT;
  * the functions #Numspan_shift, #Numspan_scale, and #Numspan_shift_scale are
  * also used for datespans and datespansets
  *****************************************************************************/
+
+PGDLLEXPORT Datum Timestamptz_shift(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Timestamptz_shift);
+/**
+ * @ingroup mobilitydb_setspan_transf
+ * @brief Return a timestamptz shifted by an interval
+ * @sqlfn shift()
+ */
+Datum
+Timestamptz_shift(PG_FUNCTION_ARGS)
+{
+  TimestampTz t = PG_GETARG_TIMESTAMPTZ(0);
+  Interval *shift = PG_GETARG_INTERVAL_P(1);
+  PG_RETURN_TIMESTAMPTZ(timestamptz_shift(t, shift));
+}
 
 PGDLLEXPORT Datum Numspan_shift(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Numspan_shift);

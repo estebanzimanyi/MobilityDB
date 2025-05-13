@@ -1468,6 +1468,7 @@ pg_timestamptz_out(TimestampTz t)
  * @brief Convert a timestamp with time zone into a date
  * @param[in] t Timestamp
  * @note PostgreSQL function @p timestamptz_date(PG_FUNCTION_ARGS)
+ * @return On error, return @p DATE_NOEND
  */
 DateADT
 timestamptz_to_date(TimestampTz t)
@@ -1478,18 +1479,17 @@ timestamptz_to_date(TimestampTz t)
   int tz;
 
   if (TIMESTAMP_IS_NOBEGIN(t))
-    DATE_NOBEGIN(result);
-  else if (TIMESTAMP_IS_NOEND(t))
-    DATE_NOEND(result);
-  else
+    return DATE_NOBEGIN(result);
+  if (TIMESTAMP_IS_NOEND(t))
+    return DATE_NOEND(result);
+
+  if (timestamp2tm(t, &tz, tm, &fsec, NULL, NULL) != 0)
   {
-    if (timestamp2tm(t, &tz, tm, &fsec, NULL, NULL) != 0)
-        meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-          "timestamp out of range");
-
-    result = date2j(tm->tm_year, tm->tm_mon, tm->tm_mday) - POSTGRES_EPOCH_JDATE;
+    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
+      "timestamp out of range");
+    return DATE_NOEND(result);
   }
-
+  result = date2j(tm->tm_year, tm->tm_mon, tm->tm_mday) - POSTGRES_EPOCH_JDATE;
   return result;
 }
 

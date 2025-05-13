@@ -1773,7 +1773,7 @@ synchronize_tsequenceset_tsequence(const TSequenceSet *ss, const TSequence *seq,
     TSequence *interseq1, *interseq2;
     bool hasinter;
     /* mode == SYNCHRONIZE or SYNCHRONIZE_CROSS */
-    hasinter = synchronize_tsequence_tsequence(seq, seq1,
+    hasinter = synchronize_tsequence_tsequence(seq1, seq,
       &interseq1, &interseq2, mode == SYNCHRONIZE_CROSS);
     if (hasinter)
     {

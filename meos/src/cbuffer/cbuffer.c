@@ -48,9 +48,6 @@
 #include <liblwgeom.h>
 /* MEOS */
 #include <meos.h>
-#include <meos_geo.h>
-#include <meos_internal.h>
-#include <meos_cbuffer.h>
 #include "temporal/pg_types.h"
 #include "temporal/set.h"
 #include "temporal/tsequence.h"
@@ -60,8 +57,6 @@
 #include "geo/meos_transform.h"
 #include "geo/postgis_funcs.h"
 #include "geo/tspatial.h"
-#include "geo/tgeo.h"
-#include "geo/tgeo_out.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/tspatial_parser.h"
 #include "cbuffer/cbuffer.h"

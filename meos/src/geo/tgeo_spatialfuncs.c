@@ -216,7 +216,6 @@ geopoint_same(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   }
 }
 
-
 /**
  * @brief Return true if the points are equal taking into account floating 
  * point imprecision
@@ -288,6 +287,37 @@ datum2_geog_centroid(Datum geo)
 {
   return GserializedPGetDatum(geog_centroid(DatumGetGserializedP(geo),
     BoolGetDatum(false)));
+}
+
+/*****************************************************************************
+ * Collection extraction functions
+ * Some GEOS operations, e.g., intersects or intersection do not support
+ * collections. In this cases, we need to extract the elements of the
+ * collection and iterate over the elements
+ *****************************************************************************/
+
+GSERIALIZED **
+geo_extract_elements(const GSERIALIZED *gs, int *count)
+{
+  assert(gs); assert(count);
+  /* Extract the elements of the arguments, if they are collections */
+  LWCOLLECTION *coll;
+  GSERIALIZED **result = NULL;
+  if (geo_is_unitary(gs))
+  {
+    *count = 1;
+    result = palloc(sizeof(LWGEOM *));
+    result[0] = (GSERIALIZED *) gs;
+  }
+  else
+  {
+    coll = lwgeom_as_lwcollection(lwgeom_from_gserialized(gs));
+    *count = coll->ngeoms;
+    result = palloc(sizeof(LWGEOM *) * coll->ngeoms);
+    for (uint32_t i = 0; i < coll->ngeoms; i++)
+      result[i] = geo_serialize(coll->geoms[i]);
+  }
+  return result;
 }
 
 /*****************************************************************************

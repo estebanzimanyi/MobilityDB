@@ -44,18 +44,15 @@
 #include <lwgeodetic.h>
 /* MEOS */
 #include <meos.h>
-#include <meos_internal.h>
 #include "temporal/pg_types.h"
 #include "temporal/set.h"
 #include "temporal/span.h"
 #include "temporal/spanset.h"
-#include "temporal/tnumber_mathfuncs.h"
 #include "temporal/type_inout.h"
 #include "temporal/type_util.h"
 #include "geo/meos_transform.h"
 #include "geo/postgis_funcs.h"
 #include "geo/tgeo_spatialfuncs.h"
-#include "geo/tspatial.h"
 #include "geo/tspatial_parser.h"
 #if CBUFFER
   #include "cbuffer/cbuffer.h"

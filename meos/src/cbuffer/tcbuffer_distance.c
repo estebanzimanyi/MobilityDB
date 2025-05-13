@@ -36,14 +36,9 @@
 
 /* MEOS */
 #include <meos.h>
-#include <meos_cbuffer.h>
-#include <meos_internal.h>
-#include <meos_cbuffer.h>
 #include "temporal/lifting.h"
-#include "geo/postgis_funcs.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "cbuffer/cbuffer.h"
-#include "cbuffer/tcbuffer_spatialfuncs.h"
 
 /*****************************************************************************
  * Turning point functions

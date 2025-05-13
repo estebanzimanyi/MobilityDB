@@ -169,6 +169,7 @@ meos_finalize_projsrs(void)
         PROJSRSDestroyPJ(cache->MEOSPROJSRSCache[i].projection);
     }
   }
+  pfree(cache);
   return;
 }
 
@@ -278,6 +279,7 @@ GetProjStringsSPI(int32_t srid)
     meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
       "Cannot find SRID (%d) in spatial_ref_sys", srid);
   }
+  fclose(file);
   return strs;
 }
 #else

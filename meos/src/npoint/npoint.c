@@ -84,7 +84,7 @@ static int32_t SRID_WAYS = SRID_INVALID;
  * of the timestamps associated to `np1` and `np3`
  */
 bool
-npoint_collinear(const Npoint *np1, const Npoint *np2, const Npoint *np3, 
+npoint_collinear(const Npoint *np1, const Npoint *np2, const Npoint *np3,
   double ratio)
 {
   assert(np1->rid == np2->rid); assert(np1->rid == np3->rid);
@@ -175,15 +175,15 @@ get_srid_ways()
 
   /* Close the input file */
   fclose(file);
-  
+
   if (! found)
     return SRID_INVALID;
-  
+
   int32_t result = gserialized_get_srid(rec.the_geom);
   free(rec.the_geom);
   /* Save the SRID value in a global variable */
   SRID_WAYS = result;
-  return result;  
+  return result;
 }
 #else
 int32_t
@@ -192,7 +192,7 @@ get_srid_ways()
   /* Get the value from the global variable if it has been already set */
   if (SRID_WAYS != SRID_INVALID)
     return SRID_WAYS;
-  
+
   /* Fetch the SRID value from the table */
   int32_t result = 0; /* make compiler quiet */
   bool isNull = true;
@@ -288,8 +288,8 @@ route_exists(int64 rid)
 
   /* Close the input file */
   fclose(file);
-  
-  return result; 
+
+  return result;
 }
 #else
 bool
@@ -376,13 +376,13 @@ route_length(int64 rid)
 
   /* Close the input file */
   fclose(file);
-  
+
   if (! found)
     return -1.0;
-  
+
   double result = geom_length(rec.the_geom);
   free(rec.the_geom);
-  return result; 
+  return result;
 }
 #else
 double
@@ -476,13 +476,13 @@ route_geom(int64 rid)
 
   /* Close the input file */
   fclose(file);
-  
+
   if (! found)
     return NULL;
-  
+
   GSERIALIZED *result = geo_copy(rec.the_geom);
   free(rec.the_geom);
-  return result; 
+  return result;
 }
 #else
 GSERIALIZED *
@@ -598,7 +598,7 @@ geom_npoint(const GSERIALIZED *gs)
        *   FROM public.ways WHERE ST_DWithin(the_geom, geo, DIST_EPSILON)
        *   ORDER BY ST_Distance(the_geom, geo) LIMIT 1;
        */
-      
+
       pos = line_locate_point(rec.the_geom, gs);
       if (pos < 0)
       {
@@ -610,19 +610,19 @@ geom_npoint(const GSERIALIZED *gs)
       if (dist < min_dist)
         min_dist = dist;
 
-    }    
+    }
   } while (! feof(file));
 
   /* Close the input file */
   fclose(file);
-  
+
   /* If the point was not found */
   if (! gs)
     return NULL;
-  
+
   Npoint *result = npoint_make(rec.gid, pos);
   free(rec.the_geom);
-  return result; 
+  return result;
 }
 #else
 Npoint *
@@ -795,7 +795,7 @@ npoint_parse(const char **str, bool end)
   /* Parse rid */
   p_whitespace(str);
   Datum d;
-  if (! basetype_parse(str, T_INT8, ',', &d)) 
+  if (! basetype_parse(str, T_INT8, ',', &d))
     return NULL;
   int64 rid = DatumGetInt64(d);
 
@@ -1043,7 +1043,7 @@ npoint_as_ewkt(const Npoint *np, int maxdd)
 
 /**
  * @ingroup meos_npoint_base_inout
- * @brief Return a network point from its Well-Known Binary (WKB) 
+ * @brief Return a network point from its Well-Known Binary (WKB)
  * representation
  * @param[in] wkb WKB string
  * @param[in] size Size of the string
@@ -1180,7 +1180,7 @@ nsegment_make(int64 rid, double pos1, double pos2)
 void
 nsegment_set(int64 rid, double pos1, double pos2, Nsegment *ns)
 {
-  assert(route_exists(rid)); 
+  assert(route_exists(rid));
   assert(pos1 >= 0 && pos1 <= 1 && pos2 >= 0 && pos2 <= 1);
 
   ns->rid = rid;
