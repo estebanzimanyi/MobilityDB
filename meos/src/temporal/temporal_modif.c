@@ -184,6 +184,8 @@ tinstant_merge_array_iter(const TInstant **instants, int count, int *newcount)
   memcpy(newinstants, instants1, sizeof(TInstant *) * count1);
   *newcount = tinstarr_remove_duplicates((const TInstant **) newinstants, 
     count1);
+  if (tgeo_type(instants[0]->temptype))
+    pfree(instants1);
   return newinstants;
 }
 
@@ -206,7 +208,10 @@ tinstant_merge_array(const TInstant **instants, int count)
   /* Ensure the validity of the arguments and TODO compute the bounding box */
   if (! ensure_valid_tinstarr((const TInstant **) instants1, count1, MERGE,
       DISCRETE))
+  {
+    pfree_array((void **) instants1, count1);
     return NULL;
+  }
 
   const TInstant **newinstants = palloc(sizeof(TInstant *) * count1);
   memcpy(newinstants, instants1, sizeof(TInstant *) * count1);
@@ -218,6 +223,8 @@ tinstant_merge_array(const TInstant **instants, int count)
   pfree(newinstants);
   if (tgeo_type(instants[0]->temptype))
     pfree_array((void **) instants1, count1);
+  else
+    pfree(instants1);
   return result;
 }
 
@@ -480,6 +487,7 @@ tsequenceset_merge_array(const TSequenceSet **seqsets, int count)
   int newcount;
   TSequence **newseqs = tcontseq_merge_array_iter(sequences, totalcount,
     &newcount);
+  pfree(sequences);
   return tsequenceset_make_free(newseqs, newcount, NORMALIZE);
 }
 
@@ -713,7 +721,7 @@ temporal_merge_array(const Temporal **temparr, int count)
       result = (Temporal *) tsequenceset_merge_array(
         (const TSequenceSet **) newtemps, count);
   }
-  if (subtype != origsubtype)
+  if (newtemps != (Temporal **) temparr)
     pfree_array((void **) newtemps, count);
   return result;
 }

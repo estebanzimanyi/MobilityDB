@@ -338,6 +338,7 @@ extern GSERIALIZED *geo_makeline_garray(GSERIALIZED **gsarr, int count);
 extern int geo_npoints(const GSERIALIZED *gs);
 extern char *geo_out(const GSERIALIZED *gs);
 extern GSERIALIZED *geo_points(const GSERIALIZED *gs);
+extern GSERIALIZED **geo_pointarr(const GSERIALIZED *gs, int *count);
 extern GSERIALIZED *geo_reverse(const GSERIALIZED *gs);
 extern GSERIALIZED *geo_round(const GSERIALIZED *gs, int maxdd);
 extern bool geo_same(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
@@ -800,11 +801,11 @@ extern Temporal *tcovers_geo_tspatial(const GSERIALIZED *gs, const Temporal *tem
 extern Temporal *tcovers_tspatial_geo(const Temporal *temp, const GSERIALIZED *gs, bool restr, bool atvalue);
 extern Temporal *tcovers_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2, bool restr, bool atvalue);
 extern Temporal *tdisjoint_tspatial_geo(const Temporal *temp, const GSERIALIZED *gs, bool restr, bool atvalue);
-extern Temporal *tdisjoint_tspatial_tspatial (const Temporal *temp1, const Temporal *temp2, bool restr, bool atvalue);
+extern Temporal *tdisjoint_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2, bool restr, bool atvalue);
 extern Temporal *tdwithin_tspatial_geo(const Temporal *temp, const GSERIALIZED *gs, double dist, bool restr, bool atvalue);
 extern Temporal *tdwithin_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2, double dist, bool restr, bool atvalue);
 extern Temporal *tintersects_tspatial_geo(const Temporal *temp, const GSERIALIZED *gs, bool restr, bool atvalue);
-extern Temporal *tintersects_tspatial_tspatial (const Temporal *temp1, const Temporal *temp2, bool restr, bool atvalue);
+extern Temporal *tintersects_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2, bool restr, bool atvalue);
 extern Temporal *ttouches_tspatial_geo(const Temporal *temp, const GSERIALIZED *gs, bool restr, bool atvalue);
 extern Temporal *ttouches_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2, bool restr, bool atvalue);
 

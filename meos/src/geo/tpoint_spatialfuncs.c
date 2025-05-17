@@ -2199,7 +2199,8 @@ tpointseq_grid(const TSequence *seq, const gridspec *grid, bool filter_pts)
       lwpoint_make3dz(srid, p.x, p.y, p.z) : lwpoint_make2d(srid, p.x, p.y);
     GSERIALIZED *gs = geo_serialize((LWGEOM *) lwpoint);
     lwpoint_free(lwpoint);
-    instants[ninsts++] = tinstant_make_free(PointerGetDatum(gs), T_TGEOMPOINT, inst->t);
+    instants[ninsts++] = tinstant_make_free(PointerGetDatum(gs), T_TGEOMPOINT,
+      inst->t);
     memcpy(&prev_p, &p, sizeof(POINT4D));
   }
   /* We are sure that ninsts > 0 */

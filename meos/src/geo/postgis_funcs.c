@@ -102,6 +102,7 @@ geompoint_make2d(int32_t srid, double x, double y)
 {
   LWPOINT *point = lwpoint_make2d(srid, x, y);
   GSERIALIZED *result = geo_serialize((LWGEOM *) point);
+  lwpoint_free(point);
   return result;
 }
 
@@ -224,6 +225,7 @@ box2d_to_lwgeom(GBOX *box, int32_t srid)
     /* MobilityDB: The above function does not set the geodetic flag */
     FLAGS_SET_GEODETIC(point->flags, FLAGS_GET_GEODETIC(box->flags));
     result = lwpoint_as_lwgeom(point);
+    /* We cannot lwpoint_free(point); */
   }
   else if ( (box->xmin == box->xmax) || (box->ymin == box->ymax) )
   {
@@ -680,7 +682,9 @@ geo_reverse(const GSERIALIZED *gs)
   assert(gs);
   LWGEOM *geom = lwgeom_from_gserialized(gs);
   lwgeom_reverse_in_place(geom);
-  return geo_serialize(geom);
+  GSERIALIZED *result = geo_serialize(geom);
+  pfree(geom);
+  return result;
 }
 
 /**
@@ -822,6 +826,7 @@ geo_collect_garray(GSERIALIZED **gsarr, int nelems)
   LWGEOM *outlwg = (LWGEOM *) lwcollection_construct(outtype, srid, box, count,
     lwgeoms);
   GSERIALIZED *result = geom_serialize(outlwg);
+  lwgeom_free(outlwg);
   return result;
 }
 
@@ -898,9 +903,27 @@ geo_points(const GSERIALIZED *gs)
   assert(gs);
   LWGEOM *lwgeom = lwgeom_from_gserialized(gs);
   LWMPOINT *res = lwmpoint_from_lwgeom(lwgeom);
-  lwgeom_free(lwgeom);
   GSERIALIZED *result = geo_serialize(lwmpoint_as_lwgeom(res));
-  lwmpoint_free(res);
+  lwgeom_free(lwgeom); lwmpoint_free(res);
+  return result;
+}
+
+/**
+ * @ingroup meos_geo_base_spatial
+ * @brief Return a point array containing all the coordinates of a geometry
+ * @param[in] gs Geometry/geography
+ * @note Optimized version of PostGIS function: @p ST_Points(PG_FUNCTION_ARGS)
+ */
+GSERIALIZED **
+geo_pointarr(const GSERIALIZED *gs, int *count)
+{
+  assert(gs);
+  LWMPOINT *res = lwmpoint_from_lwgeom(lwgeom_from_gserialized(gs));
+  GSERIALIZED **result = palloc(sizeof(GSERIALIZED *) * res->ngeoms);
+  for (uint32_t i = 0; i < res->ngeoms; i++)
+    result[i] = geo_serialize((LWGEOM *) res->geoms[i]);
+  *count = res->ngeoms;
+  lwmpoint_free(res); 
   return result;
 }
 
@@ -1424,7 +1447,12 @@ geom_array_union(GSERIALIZED **gsarr, int count)
     finishGEOS();
     /* If it was only empties, we'll return the largest type number */
     if (empty_type > 0)
-      return geo_serialize(lwgeom_construct_empty(empty_type, srid, is3d, 0));
+    {
+      LWGEOM *geom = lwgeom_construct_empty(empty_type, srid, is3d, 0);
+      GSERIALIZED *result = geo_serialize(geom);
+      lwgeom_free(geom);
+      return result;
+    }
     /* Nothing but NULL, returns NULL */
     else
       return NULL;
@@ -1735,6 +1763,40 @@ geom_buffer(const GSERIALIZED *gs, double size, char *params)
 
 /*****************************************************************************/
 
+/**
+ * @brief Extract the first-level elements of a gemetry collection
+ */
+GSERIALIZED **
+geo_extract_elements(const GSERIALIZED *gs, int *count)
+{
+  assert(gs); assert(count);
+  /* Extract the elements of the arguments, if they are collections */
+  LWCOLLECTION *coll;
+  GSERIALIZED **result = NULL;
+  if (geo_is_unitary(gs))
+  {
+    *count = 1;
+    result = palloc(sizeof(LWGEOM *));
+    result[0] = geo_copy(gs);
+  }
+  else
+  {
+    coll = lwgeom_as_lwcollection(lwgeom_from_gserialized(gs));
+    *count = coll->ngeoms;
+    result = palloc(sizeof(LWGEOM *) * coll->ngeoms);
+    for (uint32_t i = 0; i < coll->ngeoms; i++)
+      result[i] = geo_serialize(coll->geoms[i]);
+  }
+  return result;
+}
+
+/**
+ * @brief Call function #geom_intersection2d for each element of the collection
+ * if the arguments are collections
+ * @details Some GEOS operations, e.g., intersects or intersection do not
+ * support collections. In this cases, we need to extract the elements of the
+ * collection and iterate over the elements
+ */
 GSERIALIZED *
 geom_intersection2d_coll(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 {
@@ -1760,19 +1822,19 @@ geom_intersection2d_coll(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   if (count)
   {
     if (count == 1)
+    {
       result = res[0];
+      pfree(res);
+    }
     else
+    {
       result = geo_collect_garray(res, count);
+      pfree_array((void *) res, count);
+    }
   }
   /* Clean up and return */
-  if (count1 == 1)
-    pfree(elems1);
-  else
-    pfree_array((void *) elems1, count1);
-  if (count2 == 1)
-    pfree(elems2);
-  else
-    pfree_array((void *) elems2, count2);
+  pfree_array((void *) elems1, count1);
+  pfree_array((void *) elems2, count2);
   return result;
 }
 
@@ -2228,6 +2290,7 @@ geog_centroid(const GSERIALIZED *g, bool use_spheroid)
       0, 0);
     lwgeom_out = lwcollection_as_lwgeom(empty);
     g_out = geo_serialize(lwgeom_out);
+    lwgeom_free(lwgeom_out);
     return g_out;
   }
 
@@ -2305,6 +2368,7 @@ geog_centroid(const GSERIALIZED *g, bool use_spheroid)
   }
   lwgeom_out = lwpoint_as_lwgeom(lwpoint_out);
   g_out = geo_serialize(lwgeom_out);
+  lwgeom_free(lwgeom_out);
   return g_out;
 }
 
@@ -2641,6 +2705,7 @@ postgis_valid_typmod(GSERIALIZED *gs, int32_t typmod)
     pfree(gs);
     /* MEOS: use internal geo_serialize that copes with both geom and geog */
     gs = geo_serialize(lwpoint_as_lwgeom(empty_point));
+    lwpoint_free(empty_point);
   }
 
   /* Typmod has a preference for SRID, but geometry does not? Harmonize the geometry SRID. */
@@ -3742,7 +3807,9 @@ line_point_n(const GSERIALIZED *gs, int n)
   lwgeom_free(geom);
   if (! point)
     return NULL;
-  return geo_serialize(lwpoint_as_lwgeom(point));
+  GSERIALIZED *result = geo_serialize(lwpoint_as_lwgeom(point));
+  pfree(point);
+  return result;
 }
 
 /**

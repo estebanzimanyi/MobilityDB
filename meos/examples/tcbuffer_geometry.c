@@ -29,9 +29,9 @@
 
 /**
  * @file1
- * @brief A simple program that reads two CSV files, the first one containig
- * temporal circular buffers and the second geometries and restricts the
- * temporal circular buffers to the geometries.
+ * @brief A simple program that reads two CSV files, the first one containing
+ * temporal circular buffers and the second containing geometries and restricts
+ * the temporal circular buffers to the geometries.
  *
  * The corresponding SQL query would be
  * @code
@@ -55,14 +55,14 @@
 #define MAX_LENGTH_HEADER 1024
 /* Maximum length in characters of a geometry in the input data as computed by
  * the following query on the corresponding table
- * SELECT MAX(length(g::text)) FROM tbl_geometry;
+ * SELECT MAX(length(ST_AsHexewkb(g))) FROM tbl_tcbuffer;
  * -- 11572
  */
 #define MAX_LENGTH_GEO 12001
 /* Maximum length in characters of a temporal circular buffer in the input
  * data as compute by the following query on the corresponding table
- * SELECT MAX(length(ST_AsHexewkb(g))) FROM tbl_tcbuffer;
- * -- 11572
+ * SELECT MAX(length(temp::text)) FROM tbl_tcbuffer LIMIT 10;
+ * -- 7449
  */
 #define MAX_LENGTH_TCBUFFER 7501
 
@@ -136,18 +136,20 @@ int main(void)
         return 1;
       }
 
-      /* Transform the string representing the tcbuffer into a tcbuffer value */
-      GSERIALIZED *gs = geom_in(geo_buffer, -1);
-
-      /* Compute the atGeometry function */
-      Temporal *rest = tcbuffer_at_geom(temp, gs);
-      /* Get the number of instants of the result */
-      int count = rest ? temporal_num_instants(temp): 0;
-      free(rest);
-      
       /* Print only 1 out of 100 records */
       if (k1 % 10 == 0 && k2 % 10 == 0)
       {
+
+        /* Transform the string representing the tcbuffer into a tcbuffer value */
+        GSERIALIZED *gs = geom_in(geo_buffer, -1);
+
+        /* Compute the atGeometry function */
+        Temporal *rest = tintersects_tcbuffer_geo(temp, gs, false, false);
+        /* Get the number of instants of the result */
+        int count = rest ? temporal_num_instants(temp): 0;
+        free(rest);
+        free(gs);
+
         printf("k1: %d, k2: %d: Number of instants of the result: %d\n",
           k1, k2, count);
       }

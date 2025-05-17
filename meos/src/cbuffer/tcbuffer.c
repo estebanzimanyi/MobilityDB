@@ -315,18 +315,23 @@ tcbuffer_make(const Temporal *tpoint, const Temporal *tfloat)
     return NULL;
 
   assert(temptype_subtype(sync1->subtype));
+  Temporal *result;
   switch (sync1->subtype)
   {
     case TINSTANT:
-      return (Temporal *) tcbufferinst_make((TInstant *) sync1, 
+      result = (Temporal *) tcbufferinst_make((TInstant *) sync1, 
         (TInstant *) sync2);
+      break;
     case TSEQUENCE:
-      return (Temporal *) tcbufferseq_make((TSequence *) sync1,
+      result = (Temporal *) tcbufferseq_make((TSequence *) sync1,
         (TSequence *) sync2);
+      break;
     default: /* TSEQUENCESET */
-      return (Temporal *) tcbufferseqset_make((TSequenceSet *) sync1, 
+      result = (Temporal *) tcbufferseqset_make((TSequenceSet *) sync1, 
         (TSequenceSet *) sync2);
   }
+  pfree(sync1); pfree(sync2);
+  return result;
 }
 
 /*****************************************************************************
@@ -658,6 +663,9 @@ tcbufferseq_members(const TSequence *seq, bool point)
   }
   datumarr_sort(values, seq->count, T_GEOMETRY);
   int count = datumarr_remove_duplicates(values, seq->count, T_GEOMETRY);
+  /* Free the duplicate values that have been found */
+  for (int i = count; i < seq->count; i++)
+    pfree(DatumGetPointer(values[i]));
   return set_make_free(values, count, T_GEOMETRY, ORDER_NO);
 }
 
@@ -681,6 +689,9 @@ tcbufferseqset_members(const TSequenceSet *ss, bool point)
   meosType basetype = point ? T_GEOMETRY : T_TFLOAT;
   datumarr_sort(values, ss->count, basetype);
   int count = datumarr_remove_duplicates(values, ss->count, basetype);
+  /* Free the duplicate values that have been found */
+  for (int i = count; i < ss->count; i++)
+    pfree(DatumGetPointer(values[i]));
   return set_make_free(values, count, basetype, ORDER_NO);
 }
 
@@ -918,9 +929,9 @@ tcbuffer_restrict_geom(const Temporal *temp, const GSERIALIZED *gs, bool atfunc)
   Temporal *tpoint = tcbuffer_tgeompoint(temp);
   Temporal *tfloat = tcbuffer_tfloat(temp);
   Temporal *tpoint_rest = tgeo_restrict_geom(tpoint, gs, NULL, atfunc);
-  if (! tpoint_rest)
-    return NULL;
-  Temporal *result = tcbuffer_make(tpoint_rest, tfloat);
+  Temporal *result = NULL;
+  if (tpoint_rest)
+    result = tcbuffer_make(tpoint_rest, tfloat);
   pfree(tpoint); pfree(tfloat); pfree(tpoint_rest);
   return result;
 }

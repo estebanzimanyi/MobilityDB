@@ -115,9 +115,9 @@ tinterrel_tcbufferseq_disc_geom(const TSequence *seq, const GSERIALIZED *gs,
   if (! inter)
     return (Temporal *) tsequence_from_base_temp(datum_false, T_TBOOL, seq);
   /* Get the points composing the intersection */
-  GSERIALIZED *points = geo_points(inter);
-  LWMPOINT *mpoint = lwmpoint_from_lwgeom(lwgeom_from_gserialized(points));
-  pfree(inter); pfree(points);
+  int npoints;
+  GSERIALIZED **points = geo_pointarr(inter, &npoints);
+  pfree(inter);
   Set *s = NULL;
   /* Iterate for the points composing the intersection */
   for (int i = 0; i < seq->count; i++)
@@ -126,11 +126,9 @@ tinterrel_tcbufferseq_disc_geom(const TSequence *seq, const GSERIALIZED *gs,
     GSERIALIZED *circle = tcbufferinst_trav_area(inst);
     /* Loop for each point in the intersection */
     bool found = false;
-    for (uint32_t j = 0; j < mpoint->ngeoms; j++)
+    for (int j = 0; j < npoints; j++)
     {
-      GSERIALIZED *pt = geo_serialize((LWGEOM *) mpoint->geoms[j]);
-      found = geom_intersects2d(circle, pt);
-      pfree(pt);
+      found = geom_intersects2d(circle, points[j]);
       if (found)
         break;
     }
@@ -150,7 +148,7 @@ tinterrel_tcbufferseq_disc_geom(const TSequence *seq, const GSERIALIZED *gs,
     }
     pfree(circle);
   }
-  lwmpoint_free(mpoint);
+  pfree_array((void *) points, npoints);
   /* Compute the result */
   Datum bool_true = tinter ? BoolGetDatum(true) : BoolGetDatum(false);
   Datum bool_false = tinter ? BoolGetDatum(false) : BoolGetDatum(true);
@@ -163,6 +161,7 @@ tinterrel_tcbufferseq_disc_geom(const TSequence *seq, const GSERIALIZED *gs,
   Datum *datumarr = palloc(sizeof(Datum) * count);
   for (int i = 0; i < count; i++)
     datumarr[i] = TimestampTzGetDatum(times[i]);
+  pfree(times);
   Set *s_time = set_make_free(datumarr, count, T_TIMESTAMPTZ, ORDER);
   Set *s_minus = minus_set_set(s_time, s);
   /* If the result is true for the whole sequence set `s_minus` is empty */
@@ -205,9 +204,9 @@ tinterrel_tcbufferseq_step_geom(const TSequence *seq, const GSERIALIZED *gs,
   if (! inter)
     return (Temporal *) tsequence_from_base_temp(datum_false, T_TBOOL, seq);
   /* Get the points composing the intersection */
-  GSERIALIZED *points = geo_points(inter);
-  LWMPOINT *mpoint = lwmpoint_from_lwgeom(lwgeom_from_gserialized(points));
-  pfree(inter); pfree(points);
+  int npoints;
+  GSERIALIZED **points = geo_pointarr(inter, &npoints);
+  pfree(inter);
   SpanSet *ss = NULL;
   bool lower_inc = seq->period.lower_inc;
   for (int i = 0; i < seq->count; i++)
@@ -220,11 +219,9 @@ tinterrel_tcbufferseq_step_geom(const TSequence *seq, const GSERIALIZED *gs,
     GSERIALIZED *circle = tcbufferinst_trav_area(inst);
     /* Loop for each point in the intersection */
     bool found = false;
-    for (uint32_t j = 0; j < mpoint->ngeoms; j++)
+    for (int j = 0; j < npoints; j++)
     {
-      GSERIALIZED *pt = geo_serialize((LWGEOM *) mpoint->geoms[j]);
-      found = geom_intersects2d(circle, pt);
-      pfree(pt);
+      found = geom_intersects2d(circle, points[j]);
       if (found)
       {
         if (timestamptz_cmp_internal(inst->t, mint) < 0)
@@ -270,7 +267,7 @@ tinterrel_tcbufferseq_step_geom(const TSequence *seq, const GSERIALIZED *gs,
     pfree(circle);
     inst = next;
   }
-  lwmpoint_free(mpoint);
+  pfree_array((void *) points, npoints);
   /* If there is no intersection */
   if (! ss)
     return NULL;
@@ -319,9 +316,9 @@ tinterrel_tcbufferseq_linear_geom(const TSequence *seq, const GSERIALIZED *gs,
   if (! inter)
     return (Temporal *) tsequence_from_base_temp(datum_false, T_TBOOL, seq);
   /* Get the points composing the intersection */
-  GSERIALIZED *points = geo_points(inter);
-  LWMPOINT *mpoint = lwmpoint_from_lwgeom(lwgeom_from_gserialized(points));
-  pfree(inter); pfree(points);
+  int npoints;
+  GSERIALIZED **points = geo_pointarr(inter, &npoints);
+  pfree(inter);
   const TInstant *inst1 = TSEQUENCE_INST_N(seq, 0);
   SpanSet *ss = NULL;
   bool lower_inc = seq->period.lower_inc;
@@ -331,10 +328,9 @@ tinterrel_tcbufferseq_linear_geom(const TSequence *seq, const GSERIALIZED *gs,
     TimestampTz mint = DT_NOEND, maxt = DT_NOBEGIN;
     bool upper_inc = (i == seq->count - 1) ? false : seq->period.upper_inc;
     /* Loop for each point in the intersection */
-    for (uint32_t j = 0; j < mpoint->ngeoms; j++)
+    for (int j = 0; j < npoints; j++)
     {
-      GSERIALIZED *pt = geo_serialize((LWGEOM *) mpoint->geoms[j]);
-      Cbuffer *cb = cbuffer_make(pt, 0.0);
+      Cbuffer *cb = cbuffer_make(points[j], 0.0);
       TimestampTz t1, t2;
       int found = tcbuffersegm_intersection_value(tinstant_value_p(inst1),
         tinstant_value_p(inst2), PointerGetDatum(cb), inst1->t, inst2->t,
@@ -346,7 +342,7 @@ tinterrel_tcbufferseq_linear_geom(const TSequence *seq, const GSERIALIZED *gs,
         if (timestamptz_cmp_internal(t2, maxt) > 0)
           maxt = t2;
       }
-      pfree(pt); pfree(cb);
+      pfree(cb);
     }
     /* If intersection found */
     if (mint != DT_NOEND && maxt != DT_NOBEGIN)
@@ -369,7 +365,7 @@ tinterrel_tcbufferseq_linear_geom(const TSequence *seq, const GSERIALIZED *gs,
     }
     inst1 = inst2;
   }
-  lwmpoint_free(mpoint);
+  pfree_array((void *) points, npoints);
   /* If there is no intersection */
   if (! ss)
     return NULL;
@@ -454,7 +450,10 @@ tinterrel_tcbufferseqset_geom(const TSequenceSet *ss, const GSERIALIZED *gs,
   /* If there is no intersection */
   Datum datum_false = tinter ? BoolGetDatum(false) : BoolGetDatum(true);
   if (! count)
+  {
+    pfree(res_seq);
     return (Temporal *) tsequenceset_from_base_temp(datum_false, T_TBOOL, ss);
+  }
   /* Compute the result */
   Temporal *result;
   if (count == 1)
