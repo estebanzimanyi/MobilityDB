@@ -59,6 +59,7 @@
  *****************************************************************************/
 
 /**
+ * @ingroup meos_setspan_bin
  * @brief Return the initial value of the bin that contains an integer
  * @param[in] value Input value
  * @param[in] size Size of the bins
@@ -110,6 +111,7 @@ int_get_bin(int value, int size, int origin)
 }
 
 /**
+ * @ingroup meos_setspan_bin
  * @brief Return the initial value of the bin that contains an integer
  * @param[in] value Input value
  * @param[in] size Size of the bins
@@ -161,6 +163,7 @@ bigint_get_bin(int64 value, int64 size, int64 origin)
 }
 
 /**
+ * @ingroup meos_setspan_bin
  * @brief Return the initial value of the bin that contains a float
  * @param[in] value Input value
  * @param[in] size Size of the bins
@@ -223,6 +226,7 @@ date_bin_start(DateADT d, int32 ndays, DateADT origin)
 }
 
 /**
+ * @ingroup meos_setspan_bin
  * @brief Return the initial date of the bin that contains a date
  * @param[in] d Input date
  * @param[in] duration Interval defining the size of the bins
@@ -299,6 +303,7 @@ timestamptz_bin_start(TimestampTz t, int64 size, TimestampTz origin)
 }
 
 /**
+ * @ingroup meos_setspan_bin
  * @brief Return the initial timestamp of the bin that contains a timestamptz
  * @param[in] t Input timestamp
  * @param[in] duration Interval defining the size of the bins
@@ -413,6 +418,7 @@ span_num_bins(const Span *s, Datum size, Datum origin, Datum *start_bin,
 /*****************************************************************************/
 
 /**
+ * @ingroup meos_setspan_bin
  * @brief Return the bins from a span
  * @param[in] s ISpan to split
  * @param[in] size Bin size
@@ -461,6 +467,7 @@ span_bins(const Span *s, Datum size, Datum origin, int *count)
 }
 
 /**
+ * @ingroup meos_setspan_bin
  * @brief Return the bins from a span set
  * @param[in] ss Span set to split
  * @param[in] size Bin size
@@ -471,7 +478,6 @@ Span *
 spanset_bins(const SpanSet *ss, Datum size, Datum origin, int *count)
 {
   assert(numspan_type(ss->spantype) || timespan_type(ss->spantype));
-  // meosType basetype = temptype_basetype(ss->spantype);
   Interval *duration = NULL;
   if (timespan_type(ss->spantype))
     duration = DatumGetIntervalP(size);

@@ -47,7 +47,6 @@
 /* General functions */
 
 extern void mobilitydb_init(void);
-extern GSERIALIZED *geo_copy(const GSERIALIZED *g);
 
 /* Temporal comparisons */
 

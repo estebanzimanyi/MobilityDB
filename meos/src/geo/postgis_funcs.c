@@ -53,6 +53,7 @@
 #include <meos_internal.h>
 #include "temporal/type_util.h"
 #include "geo/meos_transform.h"
+#include "geo/tgeo.h"
 #include "geo/tgeo_spatialfuncs.h"
 
 /* To avoid including lwgeom_functions_analytic.h */

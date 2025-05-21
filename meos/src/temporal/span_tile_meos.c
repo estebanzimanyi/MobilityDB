@@ -59,7 +59,7 @@
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_analytics_tile
+ * @ingroup meos_setspan_bin
  * @brief Return the bins of an integer span
  * @param[in] s Input span to split
  * @param[in] size Size of the bins
@@ -70,12 +70,12 @@ Span *
 intspan_bins(const Span *s, int size, int origin, int *count)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_INTSPAN(s, NULL); VALIDATE_NOT_NULL(count, NULL);
+  VALIDATE_INTSPAN(s, NULL);
   return span_bins(s, Int32GetDatum(size), Int32GetDatum(origin), count);
 }
 
 /**
- * @ingroup meos_temporal_analytics_tile
+ * @ingroup meos_setspan_bin
  * @brief Return the bins of a big integer span
  * @param[in] s Input span to split
  * @param[in] size Size of the bins
@@ -86,12 +86,12 @@ Span *
 bigintspan_bins(const Span *s, int64 size, int64 origin, int *count)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_BIGINTSPAN(s, NULL); VALIDATE_NOT_NULL(count, NULL);
+  VALIDATE_BIGINTSPAN(s, NULL);
   return span_bins(s, Int64GetDatum(size), Int64GetDatum(origin), count);
 }
 
 /**
- * @ingroup meos_temporal_analytics_tile
+ * @ingroup meos_setspan_bin
  * @brief Return the bins of a float span
  * @param[in] s Input span to split
  * @param[in] size Size of the bins
@@ -102,12 +102,12 @@ Span *
 floatspan_bins(const Span *s, double size, double origin, int *count)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_FLOATSPAN(s, NULL); VALIDATE_NOT_NULL(count, NULL);
+  VALIDATE_FLOATSPAN(s, NULL);
   return span_bins(s, Float8GetDatum(size), Float8GetDatum(origin), count);
 }
 
 /**
- * @ingroup meos_temporal_analytics_tile
+ * @ingroup meos_setspan_bin
  * @brief Return the bins of a date span
  * @param[in] s Input span to split
  * @param[in] duration Interval defining the size of the bins
@@ -119,8 +119,7 @@ datespan_bins(const Span *s, const Interval *duration, DateADT origin,
   int *count)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_DATESPAN(s, NULL); VALIDATE_NOT_NULL(duration, NULL);
-  VALIDATE_NOT_NULL(count, NULL);
+  VALIDATE_DATESPAN(s, NULL);
   if (! ensure_valid_day_duration(duration))
     return NULL;
 
@@ -129,7 +128,7 @@ datespan_bins(const Span *s, const Interval *duration, DateADT origin,
 }
 
 /**
- * @ingroup meos_temporal_analytics_tile
+ * @ingroup meos_setspan_bin
  * @brief Return the bins of a timestamptz span
  * @param[in] s Input span to split
  * @param[in] duration Interval defining the size of the bins
@@ -141,8 +140,7 @@ tstzspan_bins(const Span *s, const Interval *duration, TimestampTz origin,
   int *count)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_TSTZSPAN(s, NULL); VALIDATE_NOT_NULL(duration, NULL);
-  VALIDATE_NOT_NULL(count, NULL);
+  VALIDATE_TSTZSPAN(s, NULL);
   if (! ensure_valid_duration(duration))
     return NULL;
 
@@ -154,7 +152,7 @@ tstzspan_bins(const Span *s, const Interval *duration, TimestampTz origin,
 /*****************************************************************************/
 
 /**
- * @ingroup meos_temporal_analytics_tile
+ * @ingroup meos_setspan_bin
  * @brief Return the bins of an integer span set
  * @param[in] ss SpanSet number
  * @param[in] vsize Size of the bins
@@ -165,13 +163,13 @@ Span *
 intspanset_bins(const SpanSet *ss, int vsize, int vorigin, int *count)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_INTSPANSET(ss, NULL); VALIDATE_NOT_NULL(count, NULL);
+  VALIDATE_INTSPANSET(ss, NULL);
   return spanset_bins(ss, Int32GetDatum(vsize), Int32GetDatum(vorigin),
     count);
 }
 
 /**
- * @ingroup meos_temporal_analytics_tile
+ * @ingroup meos_setspan_bin
  * @brief Return the bins of a big integer span set
  * @param[in] ss SpanSet number
  * @param[in] vsize Size of the bins
@@ -183,13 +181,13 @@ bigintspanset_bins(const SpanSet *ss, int64 vsize, int64 vorigin,
   int *count)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_BIGINTSPANSET(ss, NULL); VALIDATE_NOT_NULL(count, NULL);
+  VALIDATE_BIGINTSPANSET(ss, NULL);
   return spanset_bins(ss, Int64GetDatum(vsize), Int64GetDatum(vorigin),
     count);
 }
 
 /**
- * @ingroup meos_temporal_analytics_tile
+ * @ingroup meos_setspan_bin
  * @brief Return the bins of a float span set
  * @param[in] ss SpanSet number
  * @param[in] vsize Size of the bins
@@ -201,49 +199,43 @@ floatspanset_bins(const SpanSet *ss, double vsize, double vorigin,
   int *count)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_FLOATSPANSET(ss, NULL); VALIDATE_NOT_NULL(count, NULL);
+  VALIDATE_FLOATSPANSET(ss, NULL);
   return spanset_bins(ss, Float8GetDatum(vsize), Float8GetDatum(vorigin),
     count);
 }
 
 /**
- * @ingroup meos_temporal_analytics_tile
+ * @ingroup meos_setspan_bin
  * @brief Return the bins of a date span set
  * @param[in] ss Input span to split
  * @param[in] duration Interval defining the size of the bins
  * @param[in] torigin Origin of the bins
  * @param[out] count Number of elements in the output array
- * @note The tests for the validity of the arguments is done in function
- * #spanset_time_bin_init
  */
 Span *
 datespanset_bins(const SpanSet *ss, const Interval *duration,
   DateADT torigin, int *count)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_DATESPANSET(ss, NULL); VALIDATE_NOT_NULL(duration, NULL);
-  VALIDATE_NOT_NULL(count, NULL);
+  VALIDATE_DATESPANSET(ss, NULL);
   return spanset_bins(ss, PointerGetDatum(duration), DateADTGetDatum(torigin),
     count);
 }
 
 /**
- * @ingroup meos_temporal_analytics_tile
+ * @ingroup meos_setspan_bin
  * @brief Return the bins of a timestamptz span set
  * @param[in] ss Input span to split
  * @param[in] duration Interval defining the size of the bins
  * @param[in] torigin Origin of the bins
  * @param[out] count Number of elements in the output array
- * @note The tests for the validity of the arguments is done in function
- * #spanset_time_bin_init
  */
 Span *
 tstzspanset_bins(const SpanSet *ss, const Interval *duration,
   TimestampTz torigin, int *count)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_TSTZSPANSET(ss, NULL); VALIDATE_NOT_NULL(duration, NULL);
-  VALIDATE_NOT_NULL(count, NULL);
+  VALIDATE_TSTZSPANSET(ss, NULL);
   return spanset_bins(ss, PointerGetDatum(duration),
     TimestampTzGetDatum(torigin), count);
 }

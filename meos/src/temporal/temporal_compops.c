@@ -755,7 +755,7 @@ tcomp_temporal_temporal(const Temporal *temp1, const Temporal *temp2,
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_meos_temporal_comp_temp
+ * @ingroup meos_temporal_comp_temp
  * @brief Return the temporal equality of two temporal values
  * @param[in] temp1,temp2 Temporal values
  * @csqlfn #Teq_temporal_temporal()

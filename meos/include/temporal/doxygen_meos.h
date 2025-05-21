@@ -157,13 +157,13 @@
  * @ingroup meos_setspan
  * @brief Bounding box functions for set and span types
  *
- * @defgroup meos_setspan_topo Topological functions
- * @ingroup meos_setspan_bbox
- * @brief Topological functions for set and span types
+ *   @defgroup meos_setspan_topo Topological functions
+ *   @ingroup meos_setspan_bbox
+ *   @brief Topological functions for set and span types
  *
- * @defgroup meos_setspan_pos Position functions
- * @ingroup meos_setspan_bbox
- * @brief Position functions for set and span types
+ *   @defgroup meos_setspan_pos Position functions
+ *   @ingroup meos_setspan_bbox
+ *   @brief Position functions for set and span types
  *
  * @defgroup meos_setspan_set Set functions
  * @ingroup meos_setspan
@@ -176,6 +176,10 @@
  * @defgroup meos_setspan_agg Aggregate functions
  * @ingroup meos_setspan
  * @brief Aggregate functions for set and span types
+ *
+ * @defgroup meos_setspan_bin Bin functions
+ * @ingroup meos_setspan
+ * @brief Bin functions for set and span types
  */
 
 /*****************************************************************************/
@@ -281,13 +285,17 @@
  * @ingroup meos_temporal
  * @brief Bounding box functions for temporal types
  *
- * @defgroup meos_temporal_bbox_topo Topological functions
- * @ingroup meos_temporal_bbox
- * @brief Topological functions for temporal types
+ *   @defgroup meos_temporal_bbox_split Split functions
+ *   @ingroup meos_temporal_bbox
+ *   @brief Split functions for temporal types
  *
- * @defgroup meos_temporal_bbox_pos Position functions
- * @ingroup meos_temporal_bbox
- * @brief Position functions for temporal types
+ *   @defgroup meos_temporal_bbox_topo Topological functions
+ *   @ingroup meos_temporal_bbox
+ *   @brief Topological functions for temporal types
+ *
+ *   @defgroup meos_temporal_bbox_pos Position functions
+ *   @ingroup meos_temporal_bbox
+ *   @brief Position functions for temporal types
  *
  * @defgroup meos_temporal_bool Boolean functions
  * @ingroup meos_temporal

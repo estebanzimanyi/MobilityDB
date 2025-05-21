@@ -1203,7 +1203,7 @@ round_fn(meosType basetype)
 }
 
 /**
- * @ingroup meos_internal_temporal_transf
+ * @ingroup meos_temporal_transf
  * @brief Return a temporal value rounded to a given number of decimal places
  * @param[in] temp Temporal value
  * @param[in] maxdd Maximum number of decimal digits to output
@@ -1225,7 +1225,7 @@ temporal_round(const Temporal *temp, int maxdd)
 }
 
 /**
- * @ingroup meos_internal_temporal_transf
+ * @ingroup meos_temporal_transf
  * @brief Return an array of temporal floats with the precision of the
  * coordinates set to a number of decimal places
  * @param[in] temparr Array of temporal values
@@ -2048,7 +2048,7 @@ temporal_max_value(const Temporal *temp)
 }
 
 /**
- * @ingroup meos_temporal_accessor
+ * @ingroup meos_internal_temporal_accessor
  * @brief Return in the last argument a copy of the n-th value of a temporal
  * value 
  * @param[in] temp Temporal value

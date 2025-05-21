@@ -107,7 +107,7 @@ tbox_value_time_tiles(const TBox *box, Datum vsize, const Interval *duration,
 
 /**
  * @ingroup meos_temporal_analytics_tile
- * @brief Return the tile list of a temporal integer box
+ * @brief Return the tiles of a temporal integer box
  * @param[in] box Input box to split
  * @param[in] vsize Value size of the tiles
  * @param[in] duration Interval defining the size of the bins
@@ -128,7 +128,7 @@ tintbox_value_time_tiles(const TBox *box, int vsize, const Interval *duration,
 
 /**
  * @ingroup meos_temporal_analytics_tile
- * @brief Return the tile list of a temporal float box
+ * @brief Return the tiles of a temporal float box
  * @param[in] box Input box to split
  * @param[in] vsize Value size of the tiles
  * @param[in] duration Interval defining the size of the bins
@@ -147,9 +147,101 @@ tfloatbox_value_time_tiles(const TBox *box, double vsize,
     Float8GetDatum(vorigin), torigin, count);
 }
 
+/**
+ * @ingroup meos_temporal_analytics_tile
+ * @brief Return the value tiles of a temporal integer box
+ * @param[in] box Input box to split
+ * @param[in] vsize Value size of the tiles
+ * @param[in] vorigin Value origin of the tiles
+ * @param[out] count Number of elements in the output array
+ * @csqlfn #Tbox_value_tiles()
+ */
+TBox *
+tintbox_value_tiles(const TBox *box, int vsize, int vorigin, int *count)
+{
+  return tbox_value_time_tiles(box, Int32GetDatum(vsize), NULL,
+    Int32GetDatum(vorigin), 0, count);
+}
+
+/**
+ * @ingroup meos_temporal_analytics_tile
+ * @brief Return the value tiles of a temporal float box
+ * @param[in] box Input box to split
+ * @param[in] vsize Value size of the tiles
+ * @param[in] vorigin Value origin of the tiles
+ * @param[out] count Number of elements in the output array
+ * @csqlfn #Tbox_value_tiles()
+ */
+TBox *
+tfloatbox_value_tiles(const TBox *box, double vsize, double vorigin,
+  int *count)
+{
+  return tbox_value_time_tiles(box, Float8GetDatum(vsize), NULL,
+    Float8GetDatum(vorigin), 0, count);
+}
+
+/**
+ * @ingroup meos_temporal_analytics_tile
+ * @brief Return the time tiles of a temporal float box
+ * @param[in] box Input box to split
+ * @param[in] duration Interval defining the size of the bins
+ * @param[in] torigin Time origin of the tiles
+ * @param[out] count Number of elements in the output array
+ * @csqlfn #Tbox_time_tiles()
+ */
+TBox *
+tintbox_time_tiles(const TBox *box, const Interval *duration, 
+  TimestampTz torigin, int *count)
+{
+  return tbox_value_time_tiles(box, Int32GetDatum(0), duration,
+    Int32GetDatum(0), torigin, count);
+}
+
+/**
+ * @ingroup meos_temporal_analytics_tile
+ * @brief Return the time tiles of a temporal float box
+ * @param[in] box Input box to split
+ * @param[in] duration Interval defining the size of the bins
+ * @param[in] torigin Time origin of the tiles
+ * @param[out] count Number of elements in the output array
+ * @csqlfn #Tbox_time_tiles()
+ */
+TBox *
+tfloatbox_time_tiles(const TBox *box, const Interval *duration, 
+  TimestampTz torigin, int *count)
+{
+  return tbox_value_time_tiles(box, Float8GetDatum(0.0), duration,
+    Float8GetDatum(0.0), torigin, count);
+}
+
 /*****************************************************************************
- * TBoxes functions for temporal numbers
+ * Boxes functions for temporal numbers
  *****************************************************************************/
+
+/**
+ * @ingroup meos_temporal_analytics_tile
+ * @brief Return the temporal boxes of a temporal number split with respect to
+ * a value grid
+ */
+TBox *
+tint_value_boxes(const Temporal *temp, int vsize, int vorigin, int *count)
+{
+  return tnumber_value_time_boxes(temp, Int32GetDatum(vsize), NULL,
+    Int32GetDatum(vorigin), Int64GetDatum(0), count);
+}
+
+/**
+ * @ingroup meos_temporal_analytics_tile
+ * @brief Return the temporal boxes of a temporal number split with respect to
+ * a time grid
+ */
+TBox *
+tint_time_boxes(const Temporal *temp, const Interval *duration,
+  TimestampTz torigin, int *count)
+{
+  return tnumber_value_time_boxes(temp, Int32GetDatum(0), duration,
+    Int32GetDatum(0), torigin, count);
+}
 
 /**
  * @ingroup meos_temporal_analytics_tile
@@ -162,6 +254,34 @@ tint_value_time_boxes(const Temporal *temp, int vsize,
 {
   return tnumber_value_time_boxes(temp, Int32GetDatum(vsize), duration,
     Int32GetDatum(vorigin), torigin, count);
+}
+
+/*****************************************************************************/
+
+/**
+ * @ingroup meos_temporal_analytics_tile
+ * @brief Return the temporal boxes of a temporal number split with respect to
+ * a value grid
+ */
+TBox *
+tfloat_value_boxes(const Temporal *temp, double vsize, double vorigin,
+  int *count)
+{
+  return tnumber_value_time_boxes(temp, Float8GetDatum(vsize), NULL,
+    Float8GetDatum(vorigin), Float8GetDatum(0.0), count);
+}
+
+/**
+ * @ingroup meos_temporal_analytics_tile
+ * @brief Return the temporal boxes of a temporal number split with respect to
+ * a value and possibly a time grid
+ */
+TBox *
+tfloat_time_boxes(const Temporal *temp, const Interval *duration, 
+  TimestampTz torigin, int *count)
+{
+  return tnumber_value_time_boxes(temp, Float8GetDatum(0.0), duration,
+    Float8GetDatum(0.0), torigin, count);
 }
 
 /**
