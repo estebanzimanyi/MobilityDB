@@ -166,7 +166,7 @@ tbox_make(const Span *s, const Span *p)
   if (! ensure_one_not_null((void *) s, (void *) p) ||
       (s &&  ! ensure_numspan_type(s->spantype)) || 
       (p && ! ensure_span_isof_type(p, T_TSTZSPAN)))
-    return NULL;
+    MEOS_RETURN(NULL);
   /* Note: zero-fill is done in function tbox_set */
   TBox *result = palloc(sizeof(TBox));
   tbox_set(s, p, result);
@@ -536,7 +536,7 @@ set_tbox(const Set *s)
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "Unknown set type for converting to temporal box: %s",
       meostype_name(s->settype));
-    return NULL;
+    MEOS_RETURN(NULL);
   }
   return result;
 }
@@ -1058,7 +1058,7 @@ tbox_round(const TBox *box, int maxdd)
   VALIDATE_NOT_NULL(box, NULL);
   if (! ensure_has_X(T_TBOX, box->flags) || ! ensure_not_negative(maxdd) ||
       ! ensure_span_isof_type(&box->span, T_FLOATSPAN))
-    return NULL;
+    MEOS_RETURN(NULL);
   TBox *result = tbox_copy(box);
   floatspan_round_set(&box->span, maxdd, &result->span);
   return result;
@@ -1086,7 +1086,7 @@ tbox_shift_scale_value(const TBox *box, Datum shift, Datum width,
       ! ensure_one_true(hasshift, haswidth) ||
       ! ensure_span_isof_type(&box->span, box->span.spantype) ||
       (haswidth && ! ensure_positive_datum(width, box->span.basetype)))
-    return NULL;
+    MEOS_RETURN(NULL);
 
   /* Copy the input box to the result */
   TBox *result = tbox_copy(box);
@@ -1167,7 +1167,7 @@ tbox_shift_scale_time(const TBox *box, const Interval *shift,
   if (! ensure_has_T(T_TBOX, box->flags) ||
       ! ensure_one_not_null((void *) shift, (void *) duration) ||
       (duration && ! ensure_positive_duration(duration)))
-    return NULL;
+    MEOS_RETURN(NULL);
 
   /* Copy the input period to the result */
   TBox *result = tbox_copy(box);
@@ -1212,7 +1212,7 @@ tbox_expand_int(const TBox *box, const int i)
   VALIDATE_NOT_NULL(box, NULL);
   if (! ensure_has_X(T_TBOX, box->flags) || 
       ! ensure_span_isof_type(&box->span, T_INTSPAN))
-    return NULL;
+    MEOS_RETURN(NULL);
   /* When the value is negative, ensure that its absolute value is less than
    * the width of the span */ 
   if (i < 0 && abs(i) >=
@@ -1241,7 +1241,7 @@ tbox_expand_float(const TBox *box, const double d)
   VALIDATE_NOT_NULL(box, NULL);
   if (! ensure_has_X(T_TBOX, box->flags) || 
       ! ensure_span_isof_type(&box->span, T_FLOATSPAN))
-    return NULL;
+    MEOS_RETURN(NULL);
   /* When the value is negative, ensure that its absolute value is less than
    * the width of the span */ 
   if (d < 0.0 && fabs(d) >=
@@ -1456,7 +1456,7 @@ left_tbox_tbox(const TBox *box1, const TBox *box2)
   assert(box1); assert(box2);
   if (! ensure_has_X(T_TBOX, box1->flags) || 
       ! ensure_has_X(T_TBOX, box2->flags))
-    return false;
+    MEOS_RETURN(false);
   return left_span_span(&box1->span, &box2->span);
 }
 
@@ -1474,7 +1474,7 @@ overleft_tbox_tbox(const TBox *box1, const TBox *box2)
   VALIDATE_NOT_NULL(box1, false); VALIDATE_NOT_NULL(box2, false);
   if (! ensure_has_X(T_TBOX, box1->flags) ||
       ! ensure_has_X(T_TBOX, box2->flags))
-    return false;
+    MEOS_RETURN(false);
   return overleft_span_span(&box1->span, &box2->span);
 }
 
@@ -1492,8 +1492,7 @@ right_tbox_tbox(const TBox *box1, const TBox *box2)
   VALIDATE_NOT_NULL(box1, false); VALIDATE_NOT_NULL(box2, false);
   if (! ensure_has_X(T_TBOX, box1->flags) || 
       ! ensure_has_X(T_TBOX, box2->flags))
-    return false;
-
+    MEOS_RETURN(false);
   return right_span_span(&box1->span, &box2->span);
 }
 
@@ -1511,8 +1510,7 @@ overright_tbox_tbox(const TBox *box1, const TBox *box2)
   VALIDATE_NOT_NULL(box1, false); VALIDATE_NOT_NULL(box2, false);
   if (! ensure_has_X(T_TBOX, box1->flags) || 
       ! ensure_has_X(T_TBOX, box2->flags))
-    return false;
-
+    MEOS_RETURN(false);
   return overright_span_span(&box1->span, &box2->span);
 }
 
@@ -1529,7 +1527,7 @@ before_tbox_tbox(const TBox *box1, const TBox *box2)
   VALIDATE_NOT_NULL(box1, false); VALIDATE_NOT_NULL(box2, false);
   if (! ensure_has_T(T_TBOX, box1->flags) || 
       ! ensure_has_T(T_TBOX, box2->flags))
-    return false;
+    MEOS_RETURN(false);
   return left_span_span(&box1->period, &box2->period);
 }
 
@@ -1546,7 +1544,7 @@ overbefore_tbox_tbox(const TBox *box1, const TBox *box2)
   VALIDATE_NOT_NULL(box1, false); VALIDATE_NOT_NULL(box2, false);
   if (! ensure_has_T(T_TBOX, box1->flags) || 
       ! ensure_has_T(T_TBOX, box2->flags))
-    return false;
+    MEOS_RETURN(false);
   return overleft_span_span(&box1->period, &box2->period);
 }
 
@@ -1563,7 +1561,7 @@ after_tbox_tbox(const TBox *box1, const TBox *box2)
   VALIDATE_NOT_NULL(box1, false); VALIDATE_NOT_NULL(box2, false);
   if (! ensure_has_T(T_TBOX, box1->flags) || 
       ! ensure_has_T(T_TBOX, box2->flags))
-    return false;
+    MEOS_RETURN(false);
   return right_span_span(&box1->period, &box2->period);
 }
 
@@ -1580,7 +1578,7 @@ overafter_tbox_tbox(const TBox *box1, const TBox *box2)
   VALIDATE_NOT_NULL(box1, false); VALIDATE_NOT_NULL(box2, false);
   if (! ensure_has_T(T_TBOX, box1->flags) || 
       ! ensure_has_T(T_TBOX, box2->flags))
-    return false;
+    MEOS_RETURN(false);
   return overright_span_span(&box1->period, &box2->period);
 }
 
@@ -1603,14 +1601,14 @@ union_tbox_tbox(const TBox *box1, const TBox *box2, bool strict)
   if (! ensure_same_dimensionality_tbox(box1, box2) ||
       (MEOS_FLAGS_GET_X(box1->flags) && MEOS_FLAGS_GET_X(box2->flags) &&
         ! ensure_same_span_type(&box1->span, &box2->span)))
-    return NULL;
+    MEOS_RETURN(NULL);
 
   /* The union of boxes that do not intersect cannot be represented by a box */
   if (strict && ! overlaps_tbox_tbox(box1, box2))
   {
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "Result of box union would not be contiguous");
-    return NULL;
+    MEOS_RETURN(NULL);
   }
 
   bool hasx = MEOS_FLAGS_GET_X(box1->flags);

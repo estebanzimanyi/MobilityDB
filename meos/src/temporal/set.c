@@ -345,7 +345,7 @@ set_make_exp(const Datum *values, int count, int maxcount, meosType basetype,
             spatial_flags(values[i], basetype)) ||
           (geo_basetype(basetype) && ! 
             ensure_not_empty(DatumGetGserializedP(values[i]))))
-        return NULL;
+        MEOS_RETURN(NULL);
     }
   }
 
@@ -927,7 +927,7 @@ numset_shift_scale(const Set *s, Datum shift, Datum width, bool hasshift,
   VALIDATE_NUMSET(s, NULL);
   if (! ensure_one_true(hasshift, haswidth) ||
       (haswidth && ! ensure_positive_datum(width, type)))
-    return NULL;
+    MEOS_RETURN(NULL);
 
   /* Copy the input set to the output set */
   Set *result = set_copy(s);
@@ -980,7 +980,7 @@ tstzset_shift_scale(const Set *s, const Interval *shift,
   VALIDATE_TSTZSET(s, NULL);
   if (! ensure_one_not_null((void *) shift, (void *) duration) ||
       (duration && ! ensure_positive_duration(duration)))
-    return NULL;
+    MEOS_RETURN(NULL);
 
   Set *result = set_copy(s);
   /* Set the first and last instants */

@@ -256,6 +256,16 @@ enum MEOS_WKB_TSUBTYPE
 #define DEFAULT_BIGINTSPAN_ORIGIN (0)
 
 /*****************************************************************************
+ * Return after meos_error that corresponds to NOOP in MobilityDB
+ *****************************************************************************/
+
+#if MEOS
+  #define MEOS_RETURN(value) return value
+#else
+  #define MEOS_RETURN(value) assert(true)
+#endif
+
+/*****************************************************************************
  * Additional struct definitions for temporal types
  *****************************************************************************/
 

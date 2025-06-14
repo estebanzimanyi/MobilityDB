@@ -283,8 +283,10 @@ spanset_make_exp(Span *spans, int count, int maxcount, bool normalize,
         char *str2 = span_out(&spans[i + 1], OUT_MAX_DIGITS);
         meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
           "The spans composing a span set must be increasing: %s, %s", str1, str2);
+#if MEOS
         pfree(str1); pfree(str2);
         return NULL;
+#endif
       }
     }
   }
@@ -1194,7 +1196,7 @@ numspanset_shift_scale(const SpanSet *ss, Datum shift, Datum width,
   /* Ensure the validity of the arguments */
   if (! ensure_one_true(hasshift, haswidth) ||
       (haswidth && ! ensure_positive_datum(haswidth, ss->basetype)))
-    return NULL;
+    MEOS_RETURN(NULL);
 
   /* Copy the input span set to the output span set */
   SpanSet *copy = spanset_copy(ss);
@@ -1236,7 +1238,7 @@ tstzspanset_shift_scale(const SpanSet *ss, const Interval *shift,
   VALIDATE_TSTZSPANSET(ss, NULL);
   if (! ensure_one_not_null((void *) shift, (void *) duration) ||
       (duration && ! ensure_positive_duration(duration)))
-    return NULL;
+    MEOS_RETURN(NULL);
 
   /* Copy the input span set to the output span set */
   SpanSet *result = spanset_copy(ss);

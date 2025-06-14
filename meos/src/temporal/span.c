@@ -1306,7 +1306,7 @@ numspan_shift_scale(const Span *s, Datum shift, Datum width, bool hasshift,
   VALIDATE_NOT_NULL(s, NULL);
   if (! ensure_one_true(hasshift, haswidth) ||
       (haswidth && ! ensure_positive_datum(width, s->basetype)))
-    return NULL;
+    MEOS_RETURN(NULL);
 
   /* Copy the input span to the result */
   Span *result = span_copy(s);
@@ -1348,7 +1348,7 @@ tstzspan_shift_scale(const Span *s, const Interval *shift,
   VALIDATE_TSTZSPAN(s, NULL);
   if (! ensure_one_not_null((void *) shift, (void *) duration) ||
       (duration && ! ensure_positive_duration(duration)))
-    return NULL;
+    MEOS_RETURN(NULL);
 
   /* Copy the input period to the result */
   Span *result = span_copy(s);
