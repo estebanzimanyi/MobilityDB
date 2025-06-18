@@ -70,9 +70,12 @@
 /**
  * @brief Return true if the three values are collinear
  * @param[in] cb1,cb2,cb3 Input values
- * @param[in] ratio Value in [0,1] representing the duration of the
- * timestamps associated to `cb1` and `cb2` divided by the duration
- * of the timestamps associated to `cb1` and `cb3`
+ * @param[in] ratio Value in [0,1] representing the duration of the timestamps
+ * associated to `cb1` and `cb2` divided by the duration of the timestamps
+ * associated to `cb1` and `cb3`
+ * @pre The function supposes that the segments are not constant
+ * @note Function used for normalizing temporal values by removing redundant
+ * instants
  */
 bool
 cbuffer_collinear(const Cbuffer *cb1, const Cbuffer *cb2, const Cbuffer *cb3,
@@ -86,12 +89,20 @@ cbuffer_collinear(const Cbuffer *cb1, const Cbuffer *cb2, const Cbuffer *cb3,
   return float_collinear(cb1->radius, cb2->radius, cb3->radius, ratio);
 }
 
+/*****************************************************************************
+ * Locate function
+ *****************************************************************************/
+
 /**
  * @brief Return a float in [0,1] representing the location of the closest
  * location on the circular buffer segment to the given circular buffer,
  * as a fraction of the segment length
  * @param[in] start,end Circular buffers defining the segment
  * @param[in] value Circular buffer to locate
+ * @result Return -1.0 if the value is not located in the segment or if the
+ * value is equal to the start or the end value
+ * @note Function used in the lifting infrastructure for determining if a
+ * temporal segment intersects a value between the segment bounds
  */
 long double
 cbuffersegm_locate(const Cbuffer *start, const Cbuffer *end,
@@ -138,12 +149,16 @@ cbuffersegm_locate(const Cbuffer *start, const Cbuffer *end,
     return -1.0;
 }
 
+/*****************************************************************************
+ * Interpolate function
+ *****************************************************************************/
 /**
  * @brief Return a circular buffer interpolated from a circular buffer segment
  * with respect to a fraction of its total length
  * @param[in] start,end Circular buffers defining the segment
  * @param[in] ratio Float in [0,1] representing the fraction of the total
  * length of the segment for locating the interpolated circular buffer
+ * @note Function used for determining the value of a segment at a timestamp
  */
 Cbuffer *
 cbuffersegm_interpolate(const Cbuffer *start, const Cbuffer *end,

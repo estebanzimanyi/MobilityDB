@@ -80,8 +80,6 @@
 
 /*****************************************************************************
  * Collinear functions
- * Are the three values collinear?
- * These functions suppose that the segments are not constant.
  *****************************************************************************/
 
 /**
@@ -90,70 +88,15 @@
  * @param[in] ratio Value in [0,1] representing the duration of the timestamps
  * associated to `x1` and `x2` divided by the duration of the timestamps
  * associated to `x1` and `x3`
+ * @pre The function supposes that the segments are not constant
+ * @note Function used for normalizing temporal values by removing redundant
+ * instants
  */
 bool
 float_collinear(double x1, double x2, double x3, double ratio)
 {
   double x = x1 + (x3 - x1) * ratio;
   return (fabs(x2 - x) <= MEOS_EPSILON);
-}
-
-/**
- * @brief Return true if the three double2 values are collinear
- * @param[in] x1,x2,x3 Input values
- * @param[in] ratio Value in [0,1] representing the duration of the timestamps
- * associated to `x1` and `x2` divided by the duration
- * of the timestamps associated to `x1` and `x3`
- */
-static bool
-double2_collinear(const double2 *x1, const double2 *x2, const double2 *x3,
-  double ratio)
-{
-  double2 x;
-  x.a = x1->a + (x3->a - x1->a) * ratio;
-  x.b = x1->b + (x3->b - x1->b) * ratio;
-  return (fabs(x2->a - x.a) <= MEOS_EPSILON &&
-    fabs(x2->b - x.b) <= MEOS_EPSILON);
-}
-
-/**
- * @brief Return true if the three values are collinear
- * @param[in] x1,x2,x3 Input values
- * @param[in] ratio Value in [0,1] representing the duration of the
- * timestamps associated to `x1` and `x2` divided by the duration
- * of the timestamps associated to `x1` and `x3`
- */
-static bool
-double3_collinear(const double3 *x1, const double3 *x2, const double3 *x3,
-  double ratio)
-{
-  double3 x;
-  x.a = x1->a + (x3->a - x1->a) * ratio;
-  x.b = x1->b + (x3->b - x1->b) * ratio,
-  x.c = x1->c + (x3->c - x1->c) * ratio;
-  return (fabs(x2->a - x.a) <= MEOS_EPSILON &&
-    fabs(x2->b - x.b) <= MEOS_EPSILON && fabs(x2->c - x.c) <= MEOS_EPSILON);
-}
-
-/**
- * @brief Return true if the three values are collinear
- * @param[in] x1,x2,x3 Input values
- * @param[in] ratio Value in [0,1] representing the duration of the
- * timestamps associated to `x1` and `x2` divided by the duration
- * of the timestamps associated to `x1` and `x3`
- */
-static bool
-double4_collinear(const double4 *x1, const double4 *x2, const double4 *x3,
-  double ratio)
-{
-  double4 x;
-  x.a = x1->a + (x3->a - x1->a) * ratio;
-  x.b = x1->b + (x3->b - x1->b) * ratio;
-  x.c = x1->c + (x3->c - x1->c) * ratio;
-  x.d = x1->d + (x3->d - x1->d) * ratio;
-  return (fabs(x2->a - x.a) <= MEOS_EPSILON &&
-    fabs(x2->b - x.b) <= MEOS_EPSILON && fabs(x2->c - x.c) <= MEOS_EPSILON &&
-    fabs(x2->d - x.d) <= MEOS_EPSILON);
 }
 
 /*****************************************************************************/
@@ -163,7 +106,10 @@ double4_collinear(const double4 *x1, const double4 *x2, const double4 *x3,
  * @param[in] value1,value2,value3 Input values
  * @param[in] basetype Type of the values
  * @param[in] t1,t2,t3 Input timestamps
- */
+ * @pre The function supposes that the segments are not constant
+ * @note Function used for normalizing temporal values by removing redundant
+ * instants
+*/
 static bool
 datum_collinear(Datum value1, Datum value2, Datum value3, meosType basetype,
   TimestampTz t1, TimestampTz t2, TimestampTz t3)
@@ -220,10 +166,10 @@ datum_collinear(Datum value1, Datum value2, Datum value3, meosType basetype,
  * segment or if it is approximately equal to the start or the end value
  * @param[in] start,end Values defining the segment
  * @param[in] value Value to locate
- * @note The function returns -1.0 if the value is approximately equal to the
- * start or the end value since it is used in the lifting infrastructure for
- * determining the crossings or the turning points after verifying that the
- * bounds of the segment are not equal to the value.
+ * @result Return -1.0 if the value is not located in the segment or if the
+ * value is equal to the first or the last value
+ * @note Function used in the lifting infrastructure for determining if a
+ * temporal segment intersects a value between the segment bounds
  */
 long double
 floatsegm_locate(double start, double end, double value)
@@ -245,35 +191,35 @@ floatsegm_locate(double start, double end, double value)
 /**
  * @brief Return a float value in (0,1) if a segment of base values intersects
  * a base value, return -1.0 otherwise
- * @param[in] value1,value2 Values defining the segment
+ * @param[in] start,end Values defining the segment
  * @param[in] value Value to locate
  * @param[in] basetype Type of the values
  * @result Return -1.0 if the value is not located in the segment or if the
- * value is equal to the first or the last value. The reason is that the
- * function is used in the lifting infrastructure for determining the crossings
- * after testing whether the bounds of the segments are equal to a value.
+ * value is equal to the start or the end value
+ * @note Function used in the lifting infrastructure for determining if a
+ * temporal segment intersects a value between the segment bounds
  */
 long double
-datumsegm_locate(Datum value1, Datum value2, Datum value, meosType basetype)
+datumsegm_locate(Datum start, Datum end, Datum value, meosType basetype)
 {
   if (basetype == T_FLOAT8)
-    return floatsegm_locate(DatumGetFloat8(value1), DatumGetFloat8(value2),
+    return floatsegm_locate(DatumGetFloat8(start), DatumGetFloat8(end),
       DatumGetFloat8(value));
   if (geo_basetype(basetype))
-    return pointsegm_locate(value1, value2, value, NULL);
+    return pointsegm_locate(start, end, value, NULL);
 #if CBUFFER
   if (basetype == T_CBUFFER)
-    return cbuffersegm_locate(DatumGetCbufferP(value1),
-      DatumGetCbufferP(value2), DatumGetCbufferP(value));
+    return cbuffersegm_locate(DatumGetCbufferP(start),
+      DatumGetCbufferP(end), DatumGetCbufferP(value));
 #endif
 #if NPOINT
   if (basetype == T_NPOINT)
-    return npointsegm_locate(DatumGetNpointP(value1), DatumGetNpointP(value2),
+    return npointsegm_locate(DatumGetNpointP(start), DatumGetNpointP(end),
       DatumGetNpointP(value));
 #endif
 #if POSE || RGEO
   if (basetype == T_POSE)
-    return posesegm_locate(DatumGetPoseP(value1), DatumGetPoseP(value2),
+    return posesegm_locate(DatumGetPoseP(start), DatumGetPoseP(end),
       DatumGetPoseP(value));
 #endif
   meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
@@ -291,6 +237,7 @@ datumsegm_locate(Datum value1, Datum value2, Datum value, meosType basetype)
  * @param[in] start,end Values defining the segment
  * @param[in] ratio Value between 0 and 1 representing the fraction of the
  * total length of the segment where the value must be located
+ * @note Function used for determining the value of a segment at a timestamp
  */
 double
 floatsegm_interpolate(double start, double end, long double ratio)
@@ -300,73 +247,13 @@ floatsegm_interpolate(double start, double end, long double ratio)
 }
 
 /**
- * @brief Return a double2 interpolated from a double2 segment with respect to
- * a fraction of its total length
- * @param[in] start,end Values defining the segment
- * @param[in] ratio Value between 0 and 1 representing the fraction of the
- * total length of the segment where the value must be located
- */
-double2 *
-double2segm_interpolate(const double2 *start, const double2 *end,
-  long double ratio)
-{
-  assert(ratio >= 0.0 || ratio <= 1.0);
-  double2 *result = palloc(sizeof(double2));
-  result->a = start->a + (double) ((long double)(end->a - start->a) * ratio);
-  result->b = start->b + (double) ((long double)(end->b - start->b) * ratio);
-  return result;
-}
-
-/**
- * @brief Return a double3 interpolated from a double3 segment with respect to
- * a fraction of its total length
- * @param[in] start,end Values defining the segment
- * @param[in] ratio Value between 0 and 1 representing the fraction of the
- * total length of the segment where the value must be located
- */
-double3 *
-double3segm_interpolate(const double3 *start, const double3 *end,
-  long double ratio)
-{
-  assert(ratio >= 0.0 || ratio <= 1.0);
-  double3 *result = palloc(sizeof(double3));
-  result->a = start->a + (double) ((long double)(end->a - start->a) * ratio);
-  result->b = start->b + (double) ((long double)(end->b - start->b) * ratio);
-  result->c = start->c + (double) ((long double)(end->c - start->c) * ratio);
-  return result;
-}
-
-/**
- * @brief Return a double4 interpolated from a double4 segment with respect to
- * a fraction of its total length
- * @param[in] start,end Values defining the segment
- * @param[in] ratio Value between 0 and 1 representing the fraction of the
- * total length of the segment where the value must be located
- */
-double4 *
-double4segm_interpolate(const double4 *start, const double4 *end,
-  long double ratio)
-{
-  assert(ratio >= 0.0 || ratio <= 1.0);
-  double4 *result = palloc(sizeof(double4));
-  result->a = start->a + (double) ((long double)(end->a - start->a) * ratio);
-  result->b = start->b + (double) ((long double)(end->b - start->b) * ratio);
-  result->c = start->c + (double) ((long double)(end->c - start->c) * ratio);
-  result->d = start->d + (double) ((long double)(end->d - start->d) * ratio);
-  return result;
-}
-
-/**
- * @brief Return base value interpolated from a base segment with respect to
+ * @brief Return a base value interpolated from a base segment with respect to
  * a fraction of its total length
  * @param[in] start,end Temporal instants defining the segment
  * @param[in] temptype Temporal type of the value
  * @param[in] ratio Float between 0 and 1 representing the fraction of the
  * total length of the segment where the interpolated buffer must be located
- * @note Return false if the value is equal to the first or the last instant.
- * The reason is that the function is used in the lifting infrastructure for
- * determining the crossings after testing whether the bounds of the segments
- * are equal to the given value.
+ * @note Function used for determining the value of a segment at a timestamp
  */
 Datum
 datumsegm_interpolate(Datum start, Datum end, meosType temptype,
@@ -2450,6 +2337,40 @@ synchronize_tsequence_tsequence(const TSequence *seq1, const TSequence *seq2,
  *****************************************************************************/
 
 /**
+ * @brief Temporally intersect a temporal sequence and a temporal instant
+ * @param[in] seq,inst Input values
+ * @param[out] inter1, inter2 Output values
+ * @return Return false if the input values do not overlap on time.
+ */
+bool
+intersection_tsequence_tinstant(const TSequence *seq, const TInstant *inst,
+  TInstant **inter1, TInstant **inter2)
+{
+  assert(seq); assert(inst);
+  assert(inter1); assert(inter2);
+  TInstant *inst1 = tsequence_at_timestamptz(seq, inst->t);
+  if (inst1 == NULL)
+    return false;
+
+  *inter1 = inst1;
+  *inter2 = tinstant_copy(inst);
+  return true;
+}
+
+/**
+ * @brief Temporally intersect a temporal instant and a temporal sequence
+ * @param[in] inst,seq Temporal values
+ * @param[out] inter1, inter2 Output values
+ * @return Return false if the input values do not overlap on time.
+ */
+inline bool
+intersection_tinstant_tsequence(const TInstant *inst, const TSequence *seq,
+  TInstant **inter1, TInstant **inter2)
+{
+  return intersection_tsequence_tinstant(seq, inst, inter2, inter1);
+}
+
+/**
  * @brief Temporally intersect two temporal discrete sequences
  * @param[in] seq1,seq2 Input values
  * @param[out] inter1, inter2 Output values
@@ -2594,12 +2515,13 @@ tfloatsegm_intersection_value(Datum start, Datum end, Datum value,
 
 /**
  * @brief Return true if a segment of a temporal sequence intersects a base
- * value at a timestamptz
+ * value during the period defined by the timestamps output in the last
+ * arguments
  * @param[in] start,end Values defining the segment
  * @param[in] value Value to locate
  * @param[in] temptype Temporal type
  * @param[in] lower,upper Timestamps defining the segment
- * @param[out] t1,t2 
+ * @param[out] t1,t2 Timestamps defining the intersection period
  * @note Return false if the value is equal to the first or the last instant.
  * The reason is that the function is used in the lifting infrastructure for
  * determining the crossings after testing whether the bounds of the segments
@@ -2653,13 +2575,13 @@ tsegment_intersection_value(Datum start, Datum end, Datum value,
  */
 
 /**
- * @brief Return true if two segments of two temporal numbers intersect at a
- * timestamptz
+ * @brief Return 1 if two segments of two temporal numbers intersect at the
+ * timestamptz output in the last argument, 0 otherwise
  * @param[in] start1,end1 Values defining the first segment
  * @param[in] start2,end2 Values defining the second segment
  * @param[in] basetype Base type of the values
  * @param[in] lower,upper Timestamps defining the segments
- * @param[out] t Resulting timestamp
+ * @param[out] t1,t2 Resulting timestamp
  * @note Only the intersection inside the segments is considered
  */
 int
@@ -2719,13 +2641,13 @@ tnumbersegm_intersection(Datum start1, Datum end1, Datum start2, Datum end2,
 }
 
 /**
- * @brief Return true if two segments of a temporal sequence intersect at a
- * timestamptz
+ * @brief Return true if two segments of a temporal sequence intersect during
+ * the period defined by the timestamps output in the last arguments
  * @param[in] start1,end1 Base values defining the first segment
  * @param[in] start2,end2 Base values defining the second segment
  * @param[in] temptype Temporal type
  * @param[in] lower, upper Timestampts defining the segments
- * @param[out] t1,t2 
+ * @param[out] t1,t2 Timestamps defining the intersection period
  * @pre The instants are synchronized
  */
 int
@@ -2773,40 +2695,6 @@ tsegment_intersection(Datum start1, Datum end1, Datum start2, Datum end2,
     return -1;
   }
   return result;
-}
-
-/**
- * @brief Temporally intersect two temporal sequences
- * @param[in] seq,inst Input values
- * @param[out] inter1, inter2 Output values
- * @return Return false if the input values do not overlap on time.
- */
-bool
-intersection_tsequence_tinstant(const TSequence *seq, const TInstant *inst,
-  TInstant **inter1, TInstant **inter2)
-{
-  assert(seq); assert(inst);
-  assert(inter1); assert(inter2);
-  TInstant *inst1 = tsequence_at_timestamptz(seq, inst->t);
-  if (inst1 == NULL)
-    return false;
-
-  *inter1 = inst1;
-  *inter2 = tinstant_copy(inst);
-  return true;
-}
-
-/**
- * @brief Temporally intersect two temporal values
- * @param[in] inst,seq Temporal values
- * @param[out] inter1, inter2 Output values
- * @return Return false if the input values do not overlap on time.
- */
-inline bool
-intersection_tinstant_tsequence(const TInstant *inst, const TSequence *seq,
-  TInstant **inter1, TInstant **inter2)
-{
-  return intersection_tsequence_tinstant(seq, inst, inter2, inter1);
 }
 
 /*****************************************************************************

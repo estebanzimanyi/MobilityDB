@@ -73,15 +73,17 @@
 static int32_t SRID_WAYS = SRID_INVALID;
 
 /*****************************************************************************
- * Collinear and interpolation function
+ * Collinear function
  *****************************************************************************/
 
 /**
  * @brief Return true if the three values are collinear
  * @param[in] np1,np2,np3 Input values
- * @param[in] ratio Value in [0,1] representing the duration of the
- * timestamps associated to `np1` and `np2` divided by the duration
- * of the timestamps associated to `np1` and `np3`
+ * @param[in] ratio Value in [0,1] representing the duration of the timestamps
+ * associated to `np1` and `np2` divided by the duration of the timestamps
+ * associated to `np1` and `np3`
+ * @pre The function supposes that the segments are not constant
+ * @note Function used for normalizing temporal values by removing redundant
  */
 bool
 npoint_collinear(const Npoint *np1, const Npoint *np2, const Npoint *np3,
@@ -91,12 +93,17 @@ npoint_collinear(const Npoint *np1, const Npoint *np2, const Npoint *np3,
   return float_collinear(np1->pos, np2->pos, np3->pos, ratio);
 }
 
+/*****************************************************************************
+ * Interpolate function
+ *****************************************************************************/
+
 /**
  * @brief Return a network point interpolated from a network point segment
  * with respect to a fraction of its total length
  * @param[in] start,end Network points defining the segment
  * @param[in] ratio Float between 0 and 1 representing the fraction of the
  * total length of the segment where the interpolated network point is located
+ * @note Function used for determining the value of a segment at a timestamp
  */
 Npoint *
 npointsegm_interpolate(const Npoint *start, const Npoint *end,
@@ -109,16 +116,20 @@ npointsegm_interpolate(const Npoint *start, const Npoint *end,
   return result;
 }
 
+/*****************************************************************************
+ * Locate function
+ *****************************************************************************/
+
 /**
  * @brief Return a float in (0,1) if a network point segment intersects a 
  * network point, return -1.0 if the network point is not located in the
  * segment or if it is approximately equal to the start or the end valuess
  * @param[in] start,end Values defining the segment
  * @param[in] value Value to locate
- * @note The function returns -1.0 if the network point is approximately equal 
- * to the start or the end network points since it is used in the lifting
- * infrastructure for determining the crossings or the turning points after
- * verifying that the bounds of the segment are not equal to the value.
+ * @result Return -1.0 if the value is not located in the segment or if the
+ * value is equal to the start or the end value
+ * @note Function used in the lifting infrastructure for determining if a
+ * temporal segment intersects a value between the segment bounds
  */
 long double
 npointsegm_locate(const Npoint *start, const Npoint *end, const Npoint *value)

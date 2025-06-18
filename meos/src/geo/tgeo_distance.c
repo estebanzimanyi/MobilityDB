@@ -65,8 +65,8 @@ extern double circ_tree_distance_tree_internal(const CIRC_NODE* n1,
  * @details When the first geometry is a segment it also computes a value
  * between 0 and 1 that represents the location in the segment of the closest
  * point to the second geometry, as a fraction of total segment length.
- * @note Function inspired by PostGIS function lw_dist2d_distancepoint
- * from measures.c
+ * @note Function inspired by PostGIS function #lw_dist2d_distancepoint
+ * from file `measures.c`
  */
 static double
 lw_distance_fraction(const LWGEOM *geom1, const LWGEOM *geom2, int mode,

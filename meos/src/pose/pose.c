@@ -123,7 +123,63 @@ ensure_valid_poseset_pose(const Set *s, const Pose *pose)
 }
 
 /*****************************************************************************
- * Interpolation function
+ * Parameter tests
+ *****************************************************************************/
+
+/**
+ * @brief Ensure that a 3D orientation has a unit norm
+ */
+bool
+ensure_valid_rotation(double theta)
+{
+  if (theta < -M_PI || theta > M_PI)
+  {
+    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
+      "Rotation angle must be in ]-pi, pi]. Received: %f", theta);
+    return false;
+  }
+  return true;
+}
+
+/**
+ * @brief Ensure that a 3D orientation has a unit norm
+ */
+bool
+ensure_unit_norm(double W, double X, double Y, double Z)
+{
+  if (fabs(sqrt(W * W + X * X + Y * Y + Z * Z) - 1) > MEOS_EPSILON)
+  {
+    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
+      "Rotation quaternion must be of unit norm. Received: %f",
+      sqrt(W * W + X * X + Y * Y + Z * Z));
+    return false;
+  }
+  return true;
+}
+
+/*****************************************************************************
+ * Collinear function
+ *****************************************************************************/
+
+/**
+ * @brief Return true if the three values are collinear
+ * @param[in] p1,p2,p3 Poses
+ * @param[in] ratio Value in [0,1] representing the duration of the timestamps
+ * associated to `p1` and `p2` divided by the duration of the timestamps
+ * associated to `p1` and `p3`
+ */
+bool
+pose_collinear(const Pose *p1, const Pose *p2, const Pose *p3, double ratio)
+{
+  assert(p1); assert(p2); assert(p3); 
+  Pose *p2_interpolated = posesegm_interpolate(p1, p3, ratio);
+  bool result = pose_same(p2, p2_interpolated);
+  pfree(p2_interpolated);
+  return result;
+}
+
+/*****************************************************************************
+ * Interpolate function
  *****************************************************************************/
 
 /**
@@ -132,6 +188,7 @@ ensure_valid_poseset_pose(const Set *s, const Pose *pose)
  * @param[in] ratio Value in [0,1] representing the duration of the
  * timestamps associated to `p1` and `p2` divided by the duration
  * of the timestamps associated to `p1` and `p3`
+ * @note Function used for determining the value of a segment at a timestamp
  */
 Pose *
 posesegm_interpolate(const Pose *start, const Pose *end, double ratio)
@@ -209,16 +266,20 @@ posesegm_interpolate(const Pose *start, const Pose *end, double ratio)
   return result;
 }
 
+/*****************************************************************************
+ * Locate function
+ *****************************************************************************/
+
 /**
  * @brief Return a float in (0,1) if a network point segment intersects a 
  * network point, return -1.0 if the network point is not located in the
  * segment or if it is approximately equal to the start or the end valuess
  * @param[in] start,end Values defining the segment
  * @param[in] value Value to locate
- * @note The function returns -1.0 if the network point is approximately equal 
- * to the start or the end network points since it is used in the lifting
- * infrastructure for determining the crossings or the turning points after
- * verifying that the bounds of the segment are not equal to the value.
+ * @result Return -1.0 if the value is not located in the segment or if the
+ * value is equal to the start or the end value
+ * @note Function used in the lifting infrastructure for determining if a
+ * temporal segment intersects a value between the segment bounds
  */
 long double
 posesegm_locate(const Pose *start, const Pose *end, const Pose *value)
@@ -278,62 +339,6 @@ posesegm_locate(const Pose *start, const Pose *end, const Pose *value)
     return result1;
   else /* The three values are equal */
     return -1.0;
-}
-
-/*****************************************************************************
- * Collinear function
- *****************************************************************************/
-
-/**
- * @brief Return true if the three values are collinear
- * @param[in] p1,p2,p3 Poses
- * @param[in] ratio Value in [0,1] representing the duration of the
- * timestamps associated to `p1` and `p2` divided by the duration
- * of the timestamps associated to `p1` and `p3`
- */
-bool
-pose_collinear(const Pose *p1, const Pose *p2, const Pose *p3, double ratio)
-{
-  assert(p1); assert(p2); assert(p3); 
-  Pose *p2_interpolated = posesegm_interpolate(p1, p3, ratio);
-  bool result = pose_same(p2, p2_interpolated);
-  pfree(p2_interpolated);
-  return result;
-}
-
-/*****************************************************************************
- * Parameter tests
- *****************************************************************************/
-
-/**
- * @brief Ensure that a 3D orientation has a unit norm
- */
-bool
-ensure_valid_rotation(double theta)
-{
-  if (theta < -M_PI || theta > M_PI)
-  {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-      "Rotation angle must be in ]-pi, pi]. Received: %f", theta);
-    return false;
-  }
-  return true;
-}
-
-/**
- * @brief Ensure that a 3D orientation has a unit norm
- */
-bool
-ensure_unit_norm(double W, double X, double Y, double Z)
-{
-  if (fabs(sqrt(W * W + X * X + Y * Y + Z * Z) - 1) > MEOS_EPSILON)
-  {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-      "Rotation quaternion must be of unit norm. Received: %f",
-      sqrt(W * W + X * X + Y * Y + Z * Z));
-    return false;
-  }
-  return true;
 }
 
 /*****************************************************************************

@@ -231,6 +231,9 @@ tpoint_get_z(const Temporal *temp)
  * @brief Return a long double between 0 and 1 representing the location of the
  * closest point on the 2D segment to the given point, as a fraction of total
  * segment length
+ * @param[in] p Reference point
+ * @param[in] A,B Points defining the segment
+ * @param[out] closest Closest point in the segment
  * @note Function derived from the PostGIS function @p closest_point_on_segment
  */
 long double
@@ -286,12 +289,16 @@ closest_point2d_on_segment_ratio(const POINT2D *p, const POINT2D *A,
  * @brief Return a long double between 0 and 1 representing the location of the
  * closest point on the 3D segment to the given point, as a fraction of total
  * segment length
+ * @param[in] p Reference point
+ * @param[in] A,B Points defining the segment
+ * @param[out] closest Closest point in the segment
  * @note Function derived from the PostGIS function @p closest_point_on_segment
  */
 long double
 closest_point3dz_on_segment_ratio(const POINT3DZ *p, const POINT3DZ *A,
   const POINT3DZ *B, POINT3DZ *closest)
 {
+  assert(p); assert(A); assert(B); assert(closest);
   if (FP_EQUALS(A->x, B->x) && FP_EQUALS(A->y, B->y) && FP_EQUALS(A->z, B->z))
   {
     *closest = *A;
@@ -334,6 +341,7 @@ long double
 closest_point_on_segment_sphere(const POINT4D *p, const POINT4D *A,
   const POINT4D *B, POINT4D *closest, double *dist)
 {
+  assert(p); assert(A); assert(B); assert(closest); assert(dist);
   GEOGRAPHIC_EDGE e;
   GEOGRAPHIC_POINT gp, proj;
   long double length, /* length from A to the closest point */
@@ -382,6 +390,7 @@ void
 interpolate_point4d_spheroid(const POINT4D *p1, const POINT4D *p2,
   POINT4D *p, const SPHEROID *s, double f)
 {
+  assert(p1); assert(p2); assert(p);
   GEOGRAPHIC_POINT g, g1, g2;
   geographic_point_init(p1->x, p1->y, &g1);
   geographic_point_init(p2->x, p2->y, &g2);
@@ -421,8 +430,7 @@ interpolate_point4d_spheroid(const POINT4D *p1, const POINT4D *p2,
 }
 
 /*****************************************************************************
- * Functions specializing the PostGIS functions ST_LineInterpolatePoint and
- * ST_LineLocatePoint
+ * Interpolate function
  *****************************************************************************/
 
 /**
@@ -431,6 +439,8 @@ interpolate_point4d_spheroid(const POINT4D *p1, const POINT4D *p2,
  * @param[in] start,end Points defining the segment
  * @param[in] ratio Float between 0 and 1 representing the fraction of the
  * total length of the segment where the point must be located
+ * @note Function used for determining the value of a segment at a timestamp
+ * @note Function derived from PostGIS function `ST_LineInterpolatePoint`
  */
 Datum
 pointsegm_interpolate(Datum start, Datum end, long double ratio)
@@ -469,10 +479,11 @@ pointsegm_interpolate(Datum start, Datum end, long double ratio)
  * @param[in] start,end Points defining the segment
  * @param[in] point Reference point
  * @param[out] dist Distance
- * @note The function returns -1.0 if the point is approximately equal to the
- * start or the end point since it is used in the lifting infrastructure for
- * determining the crossings or the turning points after verifying that the
- * bounds of the segment are not equal to the point.
+ * @result Return -1.0 if the value is not located in the segment or if the
+ * value is equal to the start or the end value
+ * @note Function used in the lifting infrastructure for determining if a
+ * temporal segment intersects a value between the segment bounds
+ * @note Function derived from PostGIS function `ST_LineLocatePoint`
  */
 long double
 pointsegm_locate(Datum start, Datum end, Datum point, double *dist)
@@ -508,27 +519,27 @@ pointsegm_locate(Datum start, Datum end, Datum point, double *dist)
       const POINT3DZ *p1 = DATUM_POINT3DZ_P(start);
       const POINT3DZ *p2 = DATUM_POINT3DZ_P(end);
       const POINT3DZ *p = DATUM_POINT3DZ_P(point);
-      POINT3DZ proj;
-      result = closest_point3dz_on_segment_ratio(p, p1, p2, &proj);
-      dist1 = distance3d_pt_pt((POINT3D *) p, (POINT3D *) &proj);
+      POINT3DZ closest;
+      result = closest_point3dz_on_segment_ratio(p, p1, p2, &closest);
+      dist1 = distance3d_pt_pt((POINT3D *) p, (POINT3D *) &closest);
       if (fabs(dist1) >= MEOS_EPSILON ||
-          p3d_same((POINT3D *) p1, (POINT3D *) &proj) ||
-          p3d_same((POINT3D *) p2, (POINT3D *) &proj))
+          p3d_same((POINT3D *) p1, (POINT3D *) &closest) ||
+          p3d_same((POINT3D *) p2, (POINT3D *) &closest))
         return -1.0;
       /* Return the distance between the closest point and the point */
       if (dist)
-        *dist = distance3d_pt_pt((POINT3D *) p, (POINT3D *) &proj);
+        *dist = distance3d_pt_pt((POINT3D *) p, (POINT3D *) &closest);
     }
     else
     {
       const POINT2D *p1 = DATUM_POINT2D_P(start);
       const POINT2D *p2 = DATUM_POINT2D_P(end);
       const POINT2D *p = DATUM_POINT2D_P(point);
-      POINT2D proj;
-      result = closest_point2d_on_segment_ratio(p, p1, p2, &proj);
-      dist1 = distance2d_pt_pt((POINT2D *) p, &proj);
-      if (fabs(dist1) >= MEOS_EPSILON || p2d_same(p1, &proj) ||
-          p2d_same(p2, &proj))
+      POINT2D closest;
+      result = closest_point2d_on_segment_ratio(p, p1, p2, &closest);
+      dist1 = distance2d_pt_pt((POINT2D *) p, &closest);
+      if (fabs(dist1) >= MEOS_EPSILON || p2d_same(p1, &closest) ||
+          p2d_same(p2, &closest))
         return -1.0;
       /* Return the distance between the closest point and the segment */
       if (dist)
