@@ -106,10 +106,7 @@ float_collinear(double x1, double x2, double x3, double ratio)
  * @param[in] value1,value2,value3 Input values
  * @param[in] basetype Type of the values
  * @param[in] t1,t2,t3 Input timestamps
- * @pre The function supposes that the segments are not constant
- * @note Function used for normalizing temporal values by removing redundant
- * instants
-*/
+ */
 static bool
 datum_collinear(Datum value1, Datum value2, Datum value3, meosType basetype,
   TimestampTz t1, TimestampTz t2, TimestampTz t3)
@@ -166,10 +163,11 @@ datum_collinear(Datum value1, Datum value2, Datum value3, meosType basetype,
  * segment or if it is approximately equal to the start or the end value
  * @param[in] start,end Values defining the segment
  * @param[in] value Value to locate
- * @result Return -1.0 if the value is not located in the segment or if the
- * value is equal to the first or the last value
- * @note Function used in the lifting infrastructure for determining if a
- * temporal segment intersects a value between the segment bounds
+ * @result The function returns -1.0 if the value is approximately equal to the
+ * start or the end value
+ * @note The function is used in the lifting infrastructure for
+ * determining the crossings or the turning points after verifying that the
+ * bounds of the segment are not equal to the value.
  */
 long double
 floatsegm_locate(double start, double end, double value)
@@ -191,35 +189,35 @@ floatsegm_locate(double start, double end, double value)
 /**
  * @brief Return a float value in (0,1) if a segment of base values intersects
  * a base value, return -1.0 otherwise
- * @param[in] start,end Values defining the segment
+ * @param[in] value1,value2 Values defining the segment
  * @param[in] value Value to locate
  * @param[in] basetype Type of the values
  * @result Return -1.0 if the value is not located in the segment or if the
- * value is equal to the start or the end value
- * @note Function used in the lifting infrastructure for determining if a
- * temporal segment intersects a value between the segment bounds
+ * value is equal to the first or the last value. The reason is that the
+ * function is used in the lifting infrastructure for determining the crossings
+ * after testing whether the bounds of the segments are equal to a value.
  */
 long double
-datumsegm_locate(Datum start, Datum end, Datum value, meosType basetype)
+datumsegm_locate(Datum value1, Datum value2, Datum value, meosType basetype)
 {
   if (basetype == T_FLOAT8)
-    return floatsegm_locate(DatumGetFloat8(start), DatumGetFloat8(end),
+    return floatsegm_locate(DatumGetFloat8(value1), DatumGetFloat8(value2),
       DatumGetFloat8(value));
   if (geo_basetype(basetype))
-    return pointsegm_locate(start, end, value, NULL);
+    return pointsegm_locate(value1, value2, value, NULL);
 #if CBUFFER
   if (basetype == T_CBUFFER)
-    return cbuffersegm_locate(DatumGetCbufferP(start),
-      DatumGetCbufferP(end), DatumGetCbufferP(value));
+    return cbuffersegm_locate(DatumGetCbufferP(value1),
+      DatumGetCbufferP(value2), DatumGetCbufferP(value));
 #endif
 #if NPOINT
   if (basetype == T_NPOINT)
-    return npointsegm_locate(DatumGetNpointP(start), DatumGetNpointP(end),
+    return npointsegm_locate(DatumGetNpointP(value1), DatumGetNpointP(value2),
       DatumGetNpointP(value));
 #endif
 #if POSE || RGEO
   if (basetype == T_POSE)
-    return posesegm_locate(DatumGetPoseP(start), DatumGetPoseP(end),
+    return posesegm_locate(DatumGetPoseP(value1), DatumGetPoseP(value2),
       DatumGetPoseP(value));
 #endif
   meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
@@ -237,7 +235,6 @@ datumsegm_locate(Datum start, Datum end, Datum value, meosType basetype)
  * @param[in] start,end Values defining the segment
  * @param[in] ratio Value between 0 and 1 representing the fraction of the
  * total length of the segment where the value must be located
- * @note Function used for determining the value of a segment at a timestamp
  */
 double
 floatsegm_interpolate(double start, double end, long double ratio)
@@ -246,14 +243,19 @@ floatsegm_interpolate(double start, double end, long double ratio)
   return start + (double) ((long double) (end - start) * ratio);
 }
 
+/*****************************************************************************/
+
 /**
- * @brief Return a base value interpolated from a base segment with respect to
+ * @brief Return base value interpolated from a base segment with respect to
  * a fraction of its total length
  * @param[in] start,end Temporal instants defining the segment
  * @param[in] temptype Temporal type of the value
  * @param[in] ratio Float between 0 and 1 representing the fraction of the
  * total length of the segment where the interpolated buffer must be located
- * @note Function used for determining the value of a segment at a timestamp
+ * @note Return false if the value is equal to the first or the last instant.
+ * The reason is that the function is used in the lifting infrastructure for
+ * determining the crossings after testing whether the bounds of the segments
+ * are equal to the given value.
  */
 Datum
 datumsegm_interpolate(Datum start, Datum end, meosType temptype,
@@ -2337,40 +2339,6 @@ synchronize_tsequence_tsequence(const TSequence *seq1, const TSequence *seq2,
  *****************************************************************************/
 
 /**
- * @brief Temporally intersect a temporal sequence and a temporal instant
- * @param[in] seq,inst Input values
- * @param[out] inter1, inter2 Output values
- * @return Return false if the input values do not overlap on time.
- */
-bool
-intersection_tsequence_tinstant(const TSequence *seq, const TInstant *inst,
-  TInstant **inter1, TInstant **inter2)
-{
-  assert(seq); assert(inst);
-  assert(inter1); assert(inter2);
-  TInstant *inst1 = tsequence_at_timestamptz(seq, inst->t);
-  if (inst1 == NULL)
-    return false;
-
-  *inter1 = inst1;
-  *inter2 = tinstant_copy(inst);
-  return true;
-}
-
-/**
- * @brief Temporally intersect a temporal instant and a temporal sequence
- * @param[in] inst,seq Temporal values
- * @param[out] inter1, inter2 Output values
- * @return Return false if the input values do not overlap on time.
- */
-inline bool
-intersection_tinstant_tsequence(const TInstant *inst, const TSequence *seq,
-  TInstant **inter1, TInstant **inter2)
-{
-  return intersection_tsequence_tinstant(seq, inst, inter2, inter1);
-}
-
-/**
  * @brief Temporally intersect two temporal discrete sequences
  * @param[in] seq1,seq2 Input values
  * @param[out] inter1, inter2 Output values
@@ -2514,18 +2482,16 @@ tfloatsegm_intersection_value(Datum start, Datum end, Datum value,
 }
 
 /**
- * @brief Return true if a segment of a temporal sequence intersects a base
- * value during the period defined by the timestamps output in the last
- * arguments
+ * @brief Return 1 or 2 if a segment of a temporal sequence intersects a base
+ * value during the period defined by the timestamps output in the last arguments
  * @param[in] start,end Values defining the segment
  * @param[in] value Value to locate
  * @param[in] temptype Temporal type
  * @param[in] lower,upper Timestamps defining the segment
- * @param[out] t1,t2 Timestamps defining the intersection period
- * @note Return false if the value is equal to the first or the last instant.
- * The reason is that the function is used in the lifting infrastructure for
- * determining the crossings after testing whether the bounds of the segments
- * are equal to the given value.
+ * @param[out] t1,t2 
+ * @result Return 0 if the value is equal to the first or the last instant
+ * @note The function is used in the lifting infrastructure for determining
+ * whether a temporal segment intersects a value
  */
 int
 tsegment_intersection_value(Datum start, Datum end, Datum value,
@@ -2575,13 +2541,13 @@ tsegment_intersection_value(Datum start, Datum end, Datum value,
  */
 
 /**
- * @brief Return 1 if two segments of two temporal numbers intersect at the
- * timestamptz output in the last argument, 0 otherwise
+ * @brief Return true if two segments of two temporal numbers intersect at a
+ * timestamptz
  * @param[in] start1,end1 Values defining the first segment
  * @param[in] start2,end2 Values defining the second segment
  * @param[in] basetype Base type of the values
  * @param[in] lower,upper Timestamps defining the segments
- * @param[out] t1,t2 Resulting timestamp
+ * @param[out] t Resulting timestamp
  * @note Only the intersection inside the segments is considered
  */
 int
@@ -2641,13 +2607,13 @@ tnumbersegm_intersection(Datum start1, Datum end1, Datum start2, Datum end2,
 }
 
 /**
- * @brief Return true if two segments of a temporal sequence intersect during
- * the period defined by the timestamps output in the last arguments
+ * @brief Return true if two segments of a temporal sequence intersect at a
+ * timestamptz
  * @param[in] start1,end1 Base values defining the first segment
  * @param[in] start2,end2 Base values defining the second segment
  * @param[in] temptype Temporal type
  * @param[in] lower, upper Timestampts defining the segments
- * @param[out] t1,t2 Timestamps defining the intersection period
+ * @param[out] t1,t2 
  * @pre The instants are synchronized
  */
 int
@@ -2695,6 +2661,40 @@ tsegment_intersection(Datum start1, Datum end1, Datum start2, Datum end2,
     return -1;
   }
   return result;
+}
+
+/**
+ * @brief Temporally intersect two temporal sequences
+ * @param[in] seq,inst Input values
+ * @param[out] inter1, inter2 Output values
+ * @return Return false if the input values do not overlap on time.
+ */
+bool
+intersection_tsequence_tinstant(const TSequence *seq, const TInstant *inst,
+  TInstant **inter1, TInstant **inter2)
+{
+  assert(seq); assert(inst);
+  assert(inter1); assert(inter2);
+  TInstant *inst1 = tsequence_at_timestamptz(seq, inst->t);
+  if (inst1 == NULL)
+    return false;
+
+  *inter1 = inst1;
+  *inter2 = tinstant_copy(inst);
+  return true;
+}
+
+/**
+ * @brief Temporally intersect two temporal values
+ * @param[in] inst,seq Temporal values
+ * @param[out] inter1, inter2 Output values
+ * @return Return false if the input values do not overlap on time.
+ */
+inline bool
+intersection_tinstant_tsequence(const TInstant *inst, const TSequence *seq,
+  TInstant **inter1, TInstant **inter2)
+{
+  return intersection_tsequence_tinstant(seq, inst, inter2, inter1);
 }
 
 /*****************************************************************************

@@ -273,8 +273,8 @@ double4_eq(const double4 *d1, const double4 *d2)
  * @brief Return true if the three double2 values are collinear
  * @param[in] x1,x2,x3 Input values
  * @param[in] ratio Value in [0,1] representing the duration of the timestamps
- * associated to `x1` and `x2` divided by the duration
- * of the timestamps associated to `x1` and `x3`
+ * associated to `x1` and `x2` divided by the duration of the timestamps
+ * associated to `x1` and `x3`
  * @pre The function supposes that the segments are not constant
  * @note Function used for normalizing temporal values by removing redundant
  * instants
@@ -293,9 +293,10 @@ double2_collinear(const double2 *x1, const double2 *x2, const double2 *x3,
 /**
  * @brief Return true if the three values are collinear
  * @param[in] x1,x2,x3 Input values
- * @param[in] ratio Value in [0,1] representing the duration of the
- * timestamps associated to `x1` and `x2` divided by the duration
- * of the timestamps associated to `x1` and `x3`
+ * @param[in] ratio Value in [0,1] representing the duration of the timestamps
+ * associated to `x1` and `x2` divided by the duration of the timestamps
+ * associated to `x1` and `x3`
+ * @pre The function supposes that the segments are not constant
  * @note Function used for normalizing temporal values by removing redundant
  * instants
  */
@@ -314,9 +315,10 @@ double3_collinear(const double3 *x1, const double3 *x2, const double3 *x3,
 /**
  * @brief Return true if the three values are collinear
  * @param[in] x1,x2,x3 Input values
- * @param[in] ratio Value in [0,1] representing the duration of the
- * timestamps associated to `x1` and `x2` divided by the duration
- * of the timestamps associated to `x1` and `x3`
+ * @param[in] ratio Value in [0,1] representing the duration of the timestamps
+ * associated to `x1` and `x2` divided by the duration of the timestamps
+ * associated to `x1` and `x3`
+ * @pre The function supposes that the segments are not constant
  * @note Function used for normalizing temporal values by removing redundant
  * instants
  */

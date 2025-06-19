@@ -161,7 +161,6 @@ npointsegm_locate(const Npoint *start, const Npoint *end, const Npoint *value)
  * Notice that the file does not have header and the separator are tabs
  *****************************************************************************/
 
-#if MEOS
 /* Maximum length in characters of a geometry in the input data */
 #define MAX_LENGTH_GEOM 100001
 /* Location of the ways.csv file */
@@ -173,7 +172,177 @@ typedef struct
   GSERIALIZED *the_geom;
   double length;
 } ways_record;
-#endif /* MEOS */
+
+/* An entry in the Ways cache */
+typedef struct struct_WaysCacheItem
+{
+  long int gid;
+  GSERIALIZED *the_geom;
+  double length;
+  uint64_t hits;
+} WaysCacheItem;
+
+/* Ways lookup transaction cache methods */
+#define WAYS_CACHE_ITEMS 128
+
+/**
+ * @brief The ways cache holds a fixed number of ways records read from the
+ * ways table or file.
+ * In normal usage we don't expect it to have many entries, so we always
+ * linearly scan the list.
+ */
+typedef struct struct_WaysCache
+{
+  WaysCacheItem WaysCache[WAYS_CACHE_ITEMS];
+  uint32_t WaysCacheCount;
+} WaysCache;
+
+/* Global variable to hold the Ways record cache */
+WaysCache *MEOS_WAYS_CACHE = NULL;
+
+/*****************************************************************************
+ * General functions
+ *****************************************************************************/
+
+/**
+ * @brief Get the Proj cache entry from the global variable if one exists.
+ * If it doesn't exist, make a new blank one and return it.
+*/
+WaysCache *
+GetWaysCache()
+{
+  WaysCache* cache = MEOS_WAYS_CACHE;
+  if (! cache)
+  {
+    /* Allocate memory */
+    cache = palloc(sizeof(WaysCache));
+    if (! cache)
+    {
+      meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+        "Unable to allocate space for WaysCache");
+      return NULL;
+    }
+    cache->WaysCacheCount = 0;
+    MEOS_WAYS_CACHE = cache;
+  }
+  return cache;
+}
+
+/**
+ * @brief Destroy all the malloc'ed Ways records stored in the WaysCache
+ */
+void
+meos_finalize_wayscache(void)
+{
+  WaysCache *cache = MEOS_WAYS_CACHE;
+  if (cache)
+  {
+    for (uint32_t i = 0; i < cache->WaysCacheCount; i++)
+    {
+      if (cache->WaysCache[i].the_geom)
+        pfree(cache->WaysCache[i].the_geom);
+    }
+  }
+  pfree(cache);
+  return;
+}
+
+/**
+ * @brief Get a Ways cache item structure from the Ways cache
+ * @return On error return `NULL`
+ */
+static WaysCacheItem *
+GetRouteFromWaysCache(WaysCache *ways_cache, long int gid)
+{
+  for (uint32_t i = 0; i < ways_cache->WaysCacheCount; i++)
+  {
+    if (ways_cache->WaysCache[i].gid == gid)
+    {
+      ways_cache->WaysCache[i].hits++;
+      return &ways_cache->WaysCache[i];
+    }
+  }
+  return NULL;
+}
+
+/**
+ * @brief Remove an entry to the Ways cache
+ */
+static void
+DeleteRouteFromWaysCache(WaysCache *ways_cache, uint32_t position)
+{
+  if (ways_cache->WaysCache[position].the_geom)
+    pfree(ways_cache->WaysCache[position].the_geom);
+  memset(&ways_cache->WaysCache[position], 0, sizeof(WaysCacheItem));
+  return;
+}
+
+/**
+ * @brief Add a Route to the Ways cache
+ */
+static WaysCacheItem *
+AddRouteToWaysCache(WaysCache *ways_cache, long int gid,
+  GSERIALIZED *the_geom, double length)
+{
+  WaysCacheItem *ways_cache_item = NULL;
+  /* If the cache is already full then find the least used element and delete it */
+  uint32_t cache_position = ways_cache->WaysCacheCount;
+  uint32_t hits = 1;
+  if (cache_position == WAYS_CACHE_ITEMS)
+  {
+    cache_position = 0;
+    hits = ways_cache->WaysCache[0].hits;
+    for (uint32_t i = 1; i < WAYS_CACHE_ITEMS; i++)
+    {
+      if (ways_cache->WaysCache[i].hits < hits)
+      {
+        cache_position = i;
+        hits = ways_cache->WaysCache[i].hits;
+      }
+    }
+    DeleteRouteFromWaysCache(ways_cache, cache_position);
+    /* To avoid the element we are introduced now being evicted next (as
+     * it would have 1 hit, being most likely the lower one) we reuse the
+     * hits from the evicted position and add some extra buffer */
+    hits += 5;
+  }
+  else
+  {
+    ways_cache->WaysCacheCount++;
+  }
+
+  /* Store everything in new cache entry */
+  ways_cache->WaysCache[cache_position].gid = gid;
+  ways_cache->WaysCache[cache_position].the_geom = the_geom;
+  ways_cache->WaysCache[cache_position].length = length;
+  ways_cache->WaysCache[cache_position].hits = hits;
+
+  return ways_cache_item;
+}
+
+/**
+ * @brief Return 1 if the Ways structure was read from the Ways cache,
+ * return 0 otherwise
+ */
+int
+route_lookup(long int gid, WaysCacheItem **ways_item)
+{
+  /* Get or initialize the cache for this round */
+  WaysCache* ways_cache = GetWaysCache();
+  if (! ways_cache)
+    return LW_FAILURE;
+
+  /* Add the route to the cache if it is not already there */
+  *ways_item = GetRouteFromWaysCache(ways_cache, gid);
+  if (*ways_item == NULL)
+  {
+    // TODO
+    GSERIALIZED *the_geom = NULL;
+    double length = 0.0;
+    *ways_item = AddRouteToWaysCache(ways_cache, gid, the_geom, length);
+  }
+  return *ways_item != NULL;
+}
 
 /*****************************************************************************
  * Route functions
