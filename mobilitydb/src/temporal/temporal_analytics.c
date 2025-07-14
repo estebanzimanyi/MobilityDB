@@ -47,8 +47,9 @@
 #include "temporal/span.h"
 #include "temporal/temporal.h"
 /* MobilityDB */
-#include "pg_temporal/skiplist.h" /* For store_fcinfo */
-#include "pg_temporal/temporal.h" /* For input_interp_string */
+#include "pg_temporal/skiplist.h"  /* For store_fcinfo */
+#include "pg_temporal/temporal.h"  /* For input_interp_string */
+#include "pg_temporal/type_util.h" /* For doublearr_to_array */
 
 /*****************************************************************************
  * Time precision functions for time types
@@ -442,6 +443,113 @@ Temporal_simplify_dp(PG_FUNCTION_ARGS)
   Temporal *result = temporal_simplify_dp(temp, dist, syncdist);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_TEMPORAL_P(result);
+}
+
+/*****************************************************************************
+ * Outlier dectection functions
+ *****************************************************************************/
+
+/**
+ * Struct for storing the state that persists across multiple calls generating
+ * a multidimensional grid
+ */
+typedef struct WLOF_State
+{
+  int count;
+  GSERIALIZED **geos;
+  double *scores;
+  int i;
+} WLOF_State;
+
+WLOF_State *
+wlof_state_make(GSERIALIZED **geos, double *scores, int count)
+{
+  /* palloc0 to initialize the counters to 0 */
+  WLOF_State *state = palloc0(sizeof(WLOF_State));
+  /* Fill in state */
+  state->count = count;
+  state->geos = geos;
+  state->scores = scores;
+  return state;
+}
+
+bool
+wlof_state_get(WLOF_State *state, GSERIALIZED **gs, double *score)
+{
+  if (! state || state->i >= state->count)
+    return false;
+  /* Get the box of the n-th geometry */
+  *gs = state->geos[state->i];
+  *score = state->scores[state->i++];
+  return true;
+}
+
+PGDLLEXPORT Datum Geo_wlof(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Geo_wlof);
+/**
+ * @ingroup mobilitydb_temporal_modif
+ * @brief Compute the weighted local outlier factor (WLOF) of an array of
+ * geometries
+ * @sqlfn wlocalOutlierFunction()
+ */
+Datum
+Geo_wlof(PG_FUNCTION_ARGS)
+{
+  FuncCallContext *funcctx;
+  /* If the function is being called for the first time */
+  if (SRF_IS_FIRSTCALL())
+  {
+    ArrayType *array = PG_GETARG_ARRAYTYPE_P(0);
+    int k = PG_GETARG_INT32(1);
+    ensure_not_empty_array(array);
+
+    /* Initialize the FuncCallContext */
+    funcctx = SRF_FIRSTCALL_INIT();
+    /* Switch to memory context appropriate for multiple function calls */
+    MemoryContext oldcontext =
+      MemoryContextSwitchTo(funcctx->multi_call_memory_ctx);
+    /* Extract the geometries */
+    int count;
+    GSERIALIZED **geoarr = geoarr_extract(array, &count);
+    /* Compute the function */
+    uint32_t newcount;
+    GSERIALIZED **clusters;
+    double *scores = geo_wlof((const GSERIALIZED **) geoarr, count, k,
+      &newcount, &clusters);
+    /* Create function state */
+    funcctx->user_fctx = wlof_state_make(clusters, scores, newcount);
+    /* Build a tuple description for a multidim_grid tuple */
+    get_call_result_type(fcinfo, 0, &funcctx->tuple_desc);
+    BlessTupleDesc(funcctx->tuple_desc);
+    MemoryContextSwitchTo(oldcontext);
+  }
+
+  /* Stuff done on every call of the function */
+  funcctx = SRF_PERCALL_SETUP();
+  /* Get state */
+  WLOF_State *state = funcctx->user_fctx;
+  /* Stop when we've used up all geometries */
+  GSERIALIZED *gs;
+  double score;
+  if (! wlof_state_get(state, &gs, &score))
+  {
+    /* Switch to memory context appropriate for multiple function calls */
+    MemoryContext oldcontext =
+      MemoryContextSwitchTo(funcctx->multi_call_memory_ctx);
+    pfree(state);
+    MemoryContextSwitchTo(oldcontext);
+    SRF_RETURN_DONE(funcctx);
+  }
+
+  /* Form tuple and return
+   * The i value was incremented with the previous _next function call */
+  Datum values[2]; /* used to construct the composite return value */
+  values[0] = PointerGetDatum(gs);
+  values[1] = Float8GetDatum(score);
+  bool isnull[2] = {0,0}; /* needed to say no value is null */
+  HeapTuple tuple = heap_form_tuple(funcctx->tuple_desc, values, isnull);
+  Datum result = HeapTupleGetDatum(tuple);
+  SRF_RETURN_NEXT(funcctx, result);
 }
 
 /*****************************************************************************/

@@ -1649,7 +1649,6 @@ tgeo_centroid(const Temporal *temp)
 
 /*****************************************************************************/
 
-#if MEOS
 /**
  * @ingroup meos_geo_base_spatial
  * @brief Return an array of integers specifying the cluster number assigned to
@@ -1843,7 +1842,7 @@ geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms,
  */
 GSERIALIZED **
 geo_cluster_within(const GSERIALIZED **geoms, uint32_t ngeoms,
-  double tolerance, int *count)
+  double tolerance, uint32_t *count)
 {
   /* Ensure validity of arguments */
   /* Ensure validity of arguments */
@@ -1887,6 +1886,5 @@ geo_cluster_within(const GSERIALIZED **geoms, uint32_t ngeoms,
   *count = nclusters;
   return result;
 }
-#endif /* MEOS */
 
 /*****************************************************************************/
