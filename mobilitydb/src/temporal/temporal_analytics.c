@@ -450,8 +450,8 @@ Temporal_simplify_dp(PG_FUNCTION_ARGS)
  *****************************************************************************/
 
 /**
- * Struct for storing the state that persists across multiple calls generating
- * a multidimensional grid
+ * @brief Struct for storing the state that persists across multiple calls for
+ * output a set of records composed of a geometry and a score
  */
 typedef struct WLOF_State
 {
@@ -461,6 +461,13 @@ typedef struct WLOF_State
   int i;
 } WLOF_State;
 
+/**
+ * @brief Create the initial state to output the set of records obtained from
+ * the weighted local outlier factor
+ * @param[in] geos Array of geometries
+ * @param[in] geos Array of scores
+ * @param[in] count Number of elements in the arrays
+ */
 WLOF_State *
 wlof_state_make(GSERIALIZED **geos, double *scores, int count)
 {
@@ -473,6 +480,12 @@ wlof_state_make(GSERIALIZED **geos, double *scores, int count)
   return state;
 }
 
+/**
+ * @brief Get the current record to output
+ * @param[in] state State to increment
+ * @param[out] gs Current geometry
+ * @param[out] score Current score
+ */
 bool
 wlof_state_get(WLOF_State *state, GSERIALIZED **gs, double *score)
 {
@@ -501,6 +514,7 @@ Geo_wlof(PG_FUNCTION_ARGS)
   {
     ArrayType *array = PG_GETARG_ARRAYTYPE_P(0);
     int k = PG_GETARG_INT32(1);
+    double distance = PG_GETARG_FLOAT8(2);
     ensure_not_empty_array(array);
 
     /* Initialize the FuncCallContext */
@@ -515,7 +529,7 @@ Geo_wlof(PG_FUNCTION_ARGS)
     uint32_t newcount;
     GSERIALIZED **clusters;
     double *scores = geo_wlof((const GSERIALIZED **) geoarr, count, k,
-      &newcount, &clusters);
+      distance, &newcount, &clusters);
     /* Create function state */
     funcctx->user_fctx = wlof_state_make(clusters, scores, newcount);
     /* Build a tuple description for a multidim_grid tuple */

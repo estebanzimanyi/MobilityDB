@@ -214,7 +214,8 @@ CREATE TYPE geom_wlof AS (
   score float 
 );
 
-CREATE FUNCTION wlocalOutlierFactor(geometry[], k integer)
+CREATE FUNCTION wlocalOutlierFactor(geometry[], k integer, 
+    distance float DEFAULT 0.001)
   RETURNS SETOF geom_wlof
   AS 'MODULE_PATHNAME', 'Geo_wlof'
   LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;

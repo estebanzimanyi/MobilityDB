@@ -402,18 +402,20 @@ geo_knn_search(KSortedList *list, const GSERIALIZED **geoarr, uint32_t count,
  * @param[in] geoarr Array of geometries
  * @param[in] count Number of elements in the input array
  * @param[in] k Number of nearest neighbors
+ * @param[in] distance Distance value for grouping geometries into clusters
  * @csqlfn #Geo_wlof()
  */
 double *
-geo_wlof(const GSERIALIZED **geoarr, uint32_t count, uint32_t k,
-  uint32_t *newcount, GSERIALIZED ***clusters)
+geo_wlof(const GSERIALIZED **geoarr, uint32_t count, uint32_t k, 
+  double distance, uint32_t *newcount, GSERIALIZED ***clusters)
 {
   assert(geoarr); assert(count > 0); assert(k > 0);
   int destination;
 
-  /* Cluster equal or similar geometries into clusters */
+  /* Cluster geometries so that a geometry in a cluster is within the given
+     distance of at least another geometry in the same cluster */
   uint32_t count1;
-  GSERIALIZED **clusts = geo_cluster_within(geoarr, count, 0.01, &count1);
+  GSERIALIZED **clusts = geo_cluster_within(geoarr, count, distance, &count1);
   GSERIALIZED **geos = palloc(sizeof(GSERIALIZED *) * count1);
   uint32_t *counts = palloc(sizeof(uint32_t) * count1);
   for (uint32_t i = 0; i < count1; i++)

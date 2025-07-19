@@ -888,7 +888,7 @@ extern int *geo_cluster_kmeans(const GSERIALIZED **geoms, uint32_t ngeoms, uint3
 extern uint32_t *geo_cluster_dbscan(const GSERIALIZED **geoms, uint32_t ngeoms, double tolerance, int minpoints);
 extern GSERIALIZED **geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms, int *count);
 extern GSERIALIZED **geo_cluster_within(const GSERIALIZED **geoms, uint32_t ngeoms, double tolerance, uint32_t *count);
-extern double *geo_wlof(const GSERIALIZED **geoms, uint32_t n, uint32_t k, uint32_t *newcount, GSERIALIZED ***clusters);
+extern double *geo_wlof(const GSERIALIZED **geoms, uint32_t n, uint32_t k, double epsilon, uint32_t *newcount, GSERIALIZED ***clusters);
 
 /*****************************************************************************/
 
