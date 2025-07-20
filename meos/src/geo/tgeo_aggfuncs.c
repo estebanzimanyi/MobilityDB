@@ -48,6 +48,10 @@
 #include "temporal/type_util.h"
 #include "geo/tgeo_spatialfuncs.h"
 
+#if ! MEOS
+  extern FunctionCallInfo fetch_fcinfo();
+#endif /* ! MEOS */
+
 /*****************************************************************************
  * Generic functions
  *****************************************************************************/
@@ -88,6 +92,32 @@ ensure_geoaggstate_state(const SkipList *state1, const SkipList *state2)
   if (extra2)
     return ensure_geoaggstate(state1, extra2->srid, extra2->hasz);
   return true;
+}
+
+/*****************************************************************************/
+
+/**
+ * @brief Reads the state value from the buffer
+ * @param[in] state State
+ * @param[in] data Structure containing the data
+ * @param[in] size Size of the structure
+ */
+void
+aggstate_set_extra(SkipList *state, void *data, size_t size)
+{
+#if ! MEOS
+  MemoryContext ctx;
+  if(! AggCheckCallContext(fetch_fcinfo(), &ctx))
+    elog(ERROR, "Transition function called in non-aggregate context");
+  MemoryContext oldctx = MemoryContextSwitchTo(ctx);
+#endif /* ! MEOS */
+  state->extra = palloc(size);
+  state->extrasize = size;
+  memcpy(state->extra, data, size);
+#if ! MEOS
+  MemoryContextSwitchTo(oldctx);
+#endif /* ! MEOS */
+  return;
 }
 
 /*****************************************************************************/
@@ -223,11 +253,10 @@ tpoint_tcentroid_transfn(SkipList *state, Temporal *temp)
 
   int count;
   Temporal **temparr = tpoint_transform_tcentroid(temp, &count);
-  if (state)
-    skiplist_splice(state, (void **) temparr, count, func, false);
-  else
+  /* Create the skiplist with default capacity if does not exist */
+  if (! state)
   {
-    state = skiplist_make((void **) temparr, count);
+    state = skiplist_make(0, 0, sizeof(Temporal *), NULL, NULL);
     struct GeoAggregateState extra =
     {
       .srid = tspatial_srid(temp),
@@ -235,7 +264,9 @@ tpoint_tcentroid_transfn(SkipList *state, Temporal *temp)
     };
     aggstate_set_extra(state, &extra, sizeof(struct GeoAggregateState));
   }
-
+  /* Add elements */
+  skiplist_splice_temporal(state, (void **) temparr, count, func, false);
+  /* Clean up and return */
   pfree_array((void **) temparr, count);
   return state;
 }

@@ -65,17 +65,16 @@ tnpoint_tcentroid_transfn(SkipList *state, Temporal *temp)
   /* Ensure the validity of the arguments */
   if (! ensure_geoaggstate(state, tspatial_srid(temp), hasz))
     return NULL;
+  /* Transform the temporal value for aggregation */
   Temporal *temp1 = tnpoint_to_tgeompoint(temp);
   datum_func2 func = MEOS_FLAGS_GET_Z(temp1->flags) ?
     &datum_sum_double4 : &datum_sum_double3;
-
   int count;
   Temporal **temparr = tpoint_transform_tcentroid(temp1, &count);
-  if (state)
-    skiplist_splice(state, (void **) temparr, count, func, false);
-  else
+  /* Create the skiplist with default capacity if does not exist */
+  if (! state)
   {
-    state = skiplist_make((void **) temparr, count);
+    state = skiplist_make(0, 0, sizeof(Temporal *), NULL, NULL);
     struct GeoAggregateState extra =
     {
       .srid = tspatial_srid(temp1),
@@ -83,7 +82,9 @@ tnpoint_tcentroid_transfn(SkipList *state, Temporal *temp)
     };
     aggstate_set_extra(state, &extra, sizeof(struct GeoAggregateState));
   }
-
+  /* Add the elements */
+  skiplist_splice_temporal(state, (void **) temparr, count, func, false);
+  /* Clean up and return */
   pfree_array((void **) temparr, count);
   pfree(temp1);
   return state;

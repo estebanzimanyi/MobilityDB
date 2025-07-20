@@ -260,6 +260,7 @@ typedef struct
 
 typedef struct
 {
+  void *key;
   void *value;
   int height;
   int next[SKIPLIST_MAXLEVEL];
@@ -271,6 +272,8 @@ typedef struct
  */
 typedef struct
 {
+  size_t key_size;     /**< Size in bytes of the keys */
+  size_t value_size;   /**< Size in bytes of the values */
   int capacity;        /**< Maximum number of elements */
   int length;          /**< Number of elements */
   int next;            /**< Index of the next free element */
@@ -280,6 +283,8 @@ typedef struct
   int freecap;         /**< Maximum number of deleted elements */
   void *extra;         /**< Pointer to additional data needed for processing */
   size_t extrasize;    /**< Size of additional data needed for processing */
+  int (*comp_fn)(void *, void *); /**< Comparison function for the elements */
+  void (*merge_fn)(void *, void *); /**< Merge function for the elements */
   SkipListElem *elems; /**< Array of elements */
 } SkipList;
 

@@ -49,15 +49,30 @@
 #define PG_GETARG_SKIPLIST_P(n)   DatumGetSkipListP(PG_GETARG_DATUM(n))
 #define PG_RETURN_SKIPLIST_P(x)   return SkipListPGetDatum(x)
 
+/*****************************************************************************
+ * Constants defining the behaviour of skip lists
+ *****************************************************************************/
+
+#define SKIPLIST_INITIAL_CAPACITY 1024
+#define SKIPLIST_GROW 1   /**< double the capacity to expand the skiplist */
+#define SKIPLIST_INITIAL_FREELIST 32
+
 /*****************************************************************************/
 
 extern bool ensure_same_skiplist_subtype(SkipList *state, uint8 subtype);
 
 extern void aggstate_set_extra(SkipList *state, void *data, size_t size);
 
-extern SkipList *skiplist_make(void **values, int count);
+extern SkipList *skiplist_make(int capacity, size_t key_size, 
+  size_t value_size, int (*comp_fn)(void *, void *),
+  void (*merge_fn)(void *, void *));
+extern int random_level();
+extern int skiplist_alloc(SkipList *list);
 extern void *skiplist_headval(SkipList *list);
-extern void skiplist_splice(SkipList *list, void **values, int count,
+extern void skiplist_splice(SkipList *list, void **keys, void **values,
+  int count);
+extern void skiplist_delete(SkipList *list, int cur);
+extern void skiplist_splice_temporal(SkipList *list, void **values, int count,
   datum_func2 func, bool crossings);
 extern void **skiplist_values(SkipList *list);
 extern Temporal **skiplist_temporal_values(SkipList *list);

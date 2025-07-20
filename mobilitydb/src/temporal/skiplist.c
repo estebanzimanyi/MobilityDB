@@ -86,7 +86,7 @@ aggstate_write(SkipList *state, StringInfo buf)
   int i;
   void **values = skiplist_values(state);
   pq_sendint32(buf, (uint32) state->length);
-  for (i = 0; i < state->length; i ++)
+  for (i = 0; i < state->length; i++)
   {
     SPI_connect();
     temporal_write((Temporal *) values[i], buf);
@@ -109,10 +109,11 @@ aggstate_read(StringInfo buf)
   int length = pq_getmsgint(buf, 4);
   void **values = palloc0(sizeof(void *) * length);
   SkipList *result = NULL; /* make compiler quiet */
-  for (int i = 0; i < length; i ++)
+  for (int i = 0; i < length; i++)
     values[i] = temporal_recv(buf);
   size_t extrasize = (size_t) pq_getmsgint64(buf);
-  result = skiplist_make(values, length);
+  result = skiplist_make(0, 0, sizeof(Temporal *), NULL, NULL);
+  skiplist_splice(result, NULL, values, length);
   if (extrasize)
   {
     const char *extra = pq_getmsgbytes(buf, (int) extrasize);
