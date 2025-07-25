@@ -96,7 +96,7 @@ main(int argc, char **argv)
   /* Iterator variables */
   int i, j;
   /* Exit value initialized to 1 (i.e., error) to quickly exit upon error */
-  int exit_value = 1;
+  int exit_value = EXIT_FAILURE;
 
   /***************************************************************************
    * Section 1: Open the output file
@@ -222,7 +222,7 @@ main(int argc, char **argv)
   fclose(file_in);
 
   /* State that the program executed successfully */
-  exit_value = 0;
+  exit_value = EXIT_SUCCESS;
   
 /* Clean up */
 cleanup:

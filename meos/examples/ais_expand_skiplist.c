@@ -70,7 +70,7 @@
  * records
  */
 /* Maximum number of records read from the CSV file */
-#define MAX_NO_RECORDS 2000 // 0000
+#define MAX_NO_RECORDS 20000000
 /* Number of instants in a batch for printing a marker */
 #define NO_RECORDS_BATCH 100000
 /* Initial number of allocated instants for an input trip and SOG */
@@ -472,8 +472,6 @@ cleanup:
 
  /* Free memory */
   rec_skiplist_free(list);
-  for (i = 0; i < list->length; i++)
-    free(values[i]);
   free(values);
 
   /* Finalize MEOS */

@@ -146,7 +146,7 @@ main(int argc, char **argv)
   /* Iterator variables */
   int i, j;
   /* Exit value initialized to 1 (i.e., error) to quickly exit upon error */
-  int exit_value = 1;
+  int exit_value = EXIT_FAILURE;
 
   /* Get start time */
   clock_t t;
@@ -334,7 +334,7 @@ main(int argc, char **argv)
   PQclear(res);
 
   /* State that the program executed successfully */
-  exit_value = 0;
+  exit_value = EXIT_SUCCESS;
   
   /* Calculate the elapsed time */
   t = clock() - t;

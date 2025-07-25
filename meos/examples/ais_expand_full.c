@@ -72,7 +72,7 @@
  * available memory in your computer
  */
 /* Maximum number of records read in the CSV file */
-#define MAX_NO_RECORDS 2000 // 0000
+#define MAX_NO_RECORDS 20000000
 /* Maximum number of trips */
 #define MAX_SHIPS 6500
 /* Number of instants in a batch for printing a marker */
@@ -125,7 +125,7 @@ int main(void)
   /* Iterator variables */
   int i, j;
   /* Exit value initialized to 1 (i.e., error) to quickly exit upon error */
-  int exit_value = 1;
+  int exit_value = EXIT_FAILURE;
 
   /* Initialize MEOS */
   meos_initialize();
@@ -412,7 +412,7 @@ int main(void)
   printf("The program took %f seconds to execute\n", time_taken);
 
   /* State that the program executed successfully */
-  exit_value = 0;
+  exit_value = EXIT_SUCCESS;
 
 /* Clean up */
 cleanup:

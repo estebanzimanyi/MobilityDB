@@ -59,6 +59,7 @@
 #include <liblwgeom_internal.h> /* for OUT_DOUBLE_BUFFER_SIZE */
 /* MEOS */
 #include <meos.h>
+#include <meos_geo.h>
 #include <meos_internal.h>
 #include "temporal/temporal.h"
 
@@ -1420,7 +1421,7 @@ pg_timestamp_out(Timestamp t)
  * @param[in] t Timestamp
  * @note PostgreSQL function: @p timestamptz_out(PG_FUNCTION_ARGS)
  */
-inline char *
+char *
 timestamptz_out(TimestampTz t)
 {
   return timestamp_out_common(t, true);
@@ -1728,7 +1729,7 @@ pg_interval_in(const char *str, int32 prec)
   return result;
 }
 
-inline Interval *
+Interval *
 interval_in(const char *str, int32 prec)
 {
   return pg_interval_in(str, prec);
@@ -1820,7 +1821,7 @@ pg_interval_out(const Interval *interv)
   return pstrdup(buf);
 }
 
-inline char *
+char *
 interval_out(const Interval *interv)
 {
   return pg_interval_out(interv);
@@ -2217,7 +2218,7 @@ pg_interval_cmp(const Interval *interv1, const Interval *interv2)
  * @param[in] interv1,interv2 Intervals
  * @note PostgreSQL function: @p interval_cmp(PG_FUNCTION_ARGS)
  */
-inline int
+int
 interval_cmp(const Interval *interv1, const Interval *interv2)
 {
   return pg_interval_cmp(interv1, interv2);
