@@ -41,7 +41,7 @@
  *
  * Please read the assumptions made about the input CSV file in the file
  * `02_ais_read.c` in the same directory. The program uses a compilation
- * constraint that can be used to reduce the number of records in processed. 
+ * constraint that can be used to reduce the number of records processed. 
  * Also, the program copes with minimal error correction, that is,
  * - It supposes that the observations have increasing timestamp values
  * - It verifies that the latitude, longitude, and SOG values read are in
@@ -70,7 +70,7 @@
  * records
  */
 /* Maximum number of records read from the CSV file */
-#define MAX_NO_RECORDS 20000000
+#define MAX_NO_RECORDS 2000 // 0000
 /* Number of instants in a batch for printing a marker */
 #define NO_RECORDS_BATCH 100000
 /* Initial number of allocated instants for an input trip and SOG */
@@ -122,7 +122,7 @@ trip_merge_fn(void *left, void *right)
 
 /**
  * @brief Specific free function for the skiplist that also frees the temporal
- * values in the record values
+ * values in the `trip_record`
  */
 void
 rec_skiplist_free(SkipList *list)
@@ -144,6 +144,7 @@ rec_skiplist_free(SkipList *list)
         free(elem->key);
       if (elem->value)
       {
+        /* Free the temporal values of the record before delete the record */
         trip_record *rec = (trip_record *) (elem->value);
         free(rec->trip);
         free(rec->SOG);
@@ -161,7 +162,7 @@ rec_skiplist_free(SkipList *list)
 /* Main program */
 int main(void)
 {
-  /* Input buffer to read the CSV file */
+  /* Input buffer to read one line of the CSV file */
   char line_buffer[MAX_LENGTH_LINE];
   /* Record storing one line read from of the CSV file*/
   AIS_record rec;
@@ -172,7 +173,7 @@ int main(void)
   /* Iterator variables */
   int i;
   /* Exit value initialized to 1 (i.e., error) to quickly exit upon error */
-  int exit_value = 1;
+  int exit_value = EXIT_FAILURE;
 
   /* Initialize MEOS */
   meos_initialize();
@@ -225,7 +226,7 @@ int main(void)
       printf("*");
       fflush(stdout);
     }
-    /* Break if maximum number of records read */
+    /* Break if maximum number of records has been read */
     if (no_records == MAX_NO_RECORDS)
       break;
 
@@ -233,8 +234,8 @@ int main(void)
     memset(&rec, 0, sizeof(rec));
     int field = 0;
     char *token = strtok(line_buffer, ",");
-    bool has_t = false, has_mmsi = false, has_lat = false,
-      has_long = false, has_sog = false;
+    bool has_t = false, has_mmsi = false, has_lat = false, has_long = false,
+      has_sog = false;
     while (token)
     {
       if (strlen(token) != 0 && strcmp(token, "Unknown") != 0)
@@ -367,6 +368,7 @@ int main(void)
           // printf("Trip %d -> %d ", new_seq->maxcount / 2, new_seq->maxcount);
           // fflush(stdout);
         // }
+        free(inst);
         rec1->trip = new_seq;
         rec1->no_trip_instants++;
       }
@@ -416,6 +418,7 @@ int main(void)
           // printf("SOG %d -> %d ", new_seq->maxcount / 2, new_seq->maxcount);
           // fflush(stdout);
         // }
+        free(inst);
         rec1->SOG = new_seq;
         rec1->no_SOG_instants++;
       }
@@ -462,13 +465,16 @@ int main(void)
   printf("The program took %f seconds to execute\n", time_taken);
 
   /* State that the program executed successfully */
-  exit_value = 0;
+  exit_value = EXIT_SUCCESS;
 
 /* Clean up */
 cleanup:
 
  /* Free memory */
   rec_skiplist_free(list);
+  for (i = 0; i < list->length; i++)
+    free(values[i]);
+  free(values);
 
   /* Finalize MEOS */
   meos_finalize();

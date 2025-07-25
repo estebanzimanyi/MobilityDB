@@ -969,14 +969,14 @@ geo_npoints(const GSERIALIZED *gs)
  * @note PostGIS function: @p LWGEOM_numgeometries_collection(PG_FUNCTION_ARGS)
  */
 int
-geo_ngeos(const GSERIALIZED *geo)
+geo_ngeos(const GSERIALIZED *gs)
 {
   /* Ensure validity of arguments */
-  if (! ensure_not_null((void *) geo))
+  if (! ensure_not_null((void *) gs))
     return -1;
 
   int result = 0;
-  LWGEOM *lwgeom = lwgeom_from_gserialized(geo);
+  LWGEOM *lwgeom = lwgeom_from_gserialized(gs);
   if (lwgeom_is_empty(lwgeom))
     result = 0;
   else if (lwgeom_is_unitary(lwgeom))
@@ -998,13 +998,13 @@ geo_ngeos(const GSERIALIZED *geo)
  * @note PostGIS function: @p LWGEOM_geometryn_collection(PG_FUNCTION_ARGS)
  */
 GSERIALIZED *
-geo_geoN(const GSERIALIZED *geom, int n)
+geo_geoN(const GSERIALIZED *gs, int n)
 {
   /* Ensure validity of arguments */
-  if (!ensure_not_null((void *) geom))
+  if (!ensure_not_null((void *) gs))
     return NULL;
 
-  LWGEOM *lwgeom = lwgeom_from_gserialized(geom);
+  LWGEOM *lwgeom = lwgeom_from_gserialized(gs);
 
   /* Empty returns NULL */
   if (lwgeom_is_empty(lwgeom))
@@ -1013,7 +1013,7 @@ geo_geoN(const GSERIALIZED *geom, int n)
   if (lwgeom_is_unitary(lwgeom))
   {
     if (n == 1)
-      return geo_copy(geom);
+      return geo_copy(gs);
     else
       return NULL;
   }

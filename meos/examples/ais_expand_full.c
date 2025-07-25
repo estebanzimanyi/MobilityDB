@@ -72,7 +72,7 @@
  * available memory in your computer
  */
 /* Maximum number of records read in the CSV file */
-#define MAX_NO_RECORDS 20000000
+#define MAX_NO_RECORDS 2000 // 0000
 /* Maximum number of trips */
 #define MAX_SHIPS 6500
 /* Number of instants in a batch for printing a marker */
@@ -319,6 +319,7 @@ int main(void)
           // printf("Trip %d -> %d ", new_seq->maxcount / 2, new_seq->maxcount);
           // fflush(stdout);
         // }
+        free(inst);
         trips[j].trip = new_seq;
         trips[j].no_trip_instants++;
       }
@@ -368,6 +369,7 @@ int main(void)
           // printf("SOG %d -> %d ", new_seq->maxcount / 2, new_seq->maxcount);
           // fflush(stdout);
         // }
+        free(inst);
         trips[j].SOG = new_seq;
         trips[j].no_SOG_instants++;
       }

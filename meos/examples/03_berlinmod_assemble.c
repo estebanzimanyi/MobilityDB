@@ -61,7 +61,7 @@
 #include <meos_geo.h>
 
 /* Maximum number of instants in an input trip */
-#define MAX_INSTANTS 50000
+#define MAX_INSTANTS 64000
 /* Number of instants in a batch for printing a marker */
 #define NO_INSTANTS_BATCH 1000
 /* Maximum length in characters of a header record in the input CSV file */
@@ -195,11 +195,19 @@ int main(void)
       trip = no_trips++;
       if (trip == MAX_TRIPS)
       {
-        printf("The maximum number of trips in the input file is bigger than %d",
+        printf("\nThe maximum number of trips in the input file is bigger than %d\n",
           MAX_TRIPS);
         return_value = 1;
         goto cleanup;
       }
+    }
+
+    if (trips[trip].no_instants == MAX_INSTANTS)
+    {
+      printf("\nThe maximum number of instants for trips in the input file is bigger than %d\n",
+        MAX_INSTANTS);
+      return_value = 1;
+      goto cleanup;
     }
 
     /*

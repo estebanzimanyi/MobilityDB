@@ -422,11 +422,12 @@ skiplist_print(const SkipList *list)
  * @param[in] count Number of elements in the arrays
  * @param[out] lower Array index of the start of the segment 
  * @param[out] upper Array index of the end of the segment 
- * @result Number of elements in the list that will be merged with the new
+ * @param[out] update Array of level indexes for the new element to be created 
+ * @return Number of elements in the list that will be merged with the new
  * values, on error return -1
  */
 int
-keyval_skiplist_common(SkipList *list, void **keys, void **values, int count,
+skiplist_overlaps(SkipList *list, void **keys, void **values, int count,
   int *lower, int *upper, int update[SKIPLIST_MAXLEVEL])
 {
   /* Compute the min and max of the new values */
@@ -475,16 +476,18 @@ keyval_skiplist_common(SkipList *list, void **keys, void **values, int count,
 
 /**
  * @brief Generic aggregate function for temporal values
- * @param[in] values1 Accumulated state
- * @param[in] values2 New values
- * @note Return new values that must be freed by the calling function.
+ * @param[in] list Skiplist
+ * @param[in] keys1,keys2 Arrays of keys
  * @param[in] values1,values2 Arrays of values
  * @param[in] count1,count2 Number of values in the input arrays
- * @param[in] func Function, may be NULL for the merge aggregate function
  * @param[out] newcount Number of values in the output array
+ * @param[out] newkeys Array of keys corresponding to the output array
+ * @param[out] tofree Array of values that must be freed by the calling function
+ * @param[out] nfree Number of values that must be freed by the calling function
+ * @return Return new values that must be freed by the calling function.
  */
 void **
-keyval_skiplist_merge(SkipList *list, void **keys1, void **values1,
+skiplist_merge(SkipList *list, void **keys1, void **values1,
   int count1, void **keys2, void **values2, int count2, int *newcount,
   void ***newkeys, void ***tofree, int *nfree)
 {
@@ -559,12 +562,14 @@ keyval_skiplist_merge(SkipList *list, void **keys1, void **values1,
  * - worst case: O(n + count*log(n)) (when period spans the whole list so
  *   everything has to be deleted)
  * @param[in,out] list Skiplist
+ * @param[in] keys Array of keys
  * @param[in] values Array of values
  * @param[in] count Number of elements in the array
  * @param[in] func Function used when aggregating temporal values, may be NULL
  * for the merge aggregate function
  * @param[in] crossings True if turning points are added in the segments when
  * aggregating temporal value
+ * @param[in] sktype Enumerated value stating the contents of the skiplist
  */
 void
 skiplist_splice(SkipList *list, void **keys, void **values, int count,
@@ -594,10 +599,10 @@ skiplist_splice(SkipList *list, void **keys, void **values, int count,
     int lower, upper;
 #if MEOS
     spliced_count = (sktype == TEMPORAL) ?
-      temporal_skiplist_common(list, values, count, &lower, &upper, update) :
-      keyval_skiplist_common(list, keys, values, count, &lower, &upper, update);
+      temporal_skiplist_overlaps(list, values, count, &lower, &upper, update) :
+      skiplist_overlaps(list, keys, values, count, &lower, &upper, update);
 #else
-    spliced_count = temporal_skiplist_common(list, values, count, &lower,
+    spliced_count = temporal_skiplist_overlaps(list, values, count, &lower,
       &upper, update);
 #endif /* MEOS */
     /* Delete spliced-out elements (if any) but save their keys and values for later */
@@ -644,7 +649,7 @@ skiplist_splice(SkipList *list, void **keys, void **values, int count,
       void **newvalues = (sktype == TEMPORAL) ?
         temporal_skiplist_merge(spliced_vals, spliced_count, values, count,
           func, crossings, &newcount, &tofree, &nfree) :
-        keyval_skiplist_merge(list, spliced_keys, spliced_vals, spliced_count,
+        skiplist_merge(list, spliced_keys, spliced_vals, spliced_count,
           keys, values, count, &newcount, &newkeys, &tofree, &nfree);
 #else
       void **newvalues = temporal_skiplist_merge(spliced_vals, spliced_count,
@@ -702,6 +707,7 @@ skiplist_splice(SkipList *list, void **keys, void **values, int count,
       {
         void *newkey = palloc(list->key_size);
         memcpy(newkey, keys[i], list->key_size);
+        newelem->key = newkey;
       }
       else
         newelem->key = NULL;

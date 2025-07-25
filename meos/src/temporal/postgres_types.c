@@ -686,7 +686,7 @@ pg_date_in(const char *str)
   return date;
 }
 
-inline DateADT
+DateADT
 date_in(const char *str)
 {
   return pg_date_in(str);
@@ -725,7 +725,7 @@ pg_date_out(DateADT d)
   return pstrdup(buf);
 }
 
-inline char *
+char *
 date_out(DateADT d)
 {
   return pg_date_out(d);
@@ -1326,7 +1326,7 @@ timestamp_in(const char *str, int32 prec)
 {
   return (Timestamp) timestamp_in_common(str, prec, false);
 }
-inline Timestamp
+Timestamp
 pg_timestamp_in(const char *str, int32 prec)
 {
   return (Timestamp) timestamp_in_common(str, prec, false);
@@ -1342,12 +1342,12 @@ pg_timestamp_in(const char *str, int32 prec)
  * @return On error return @p DT_NOEND
  * @note PostgreSQL function: @p timestamptz_in(PG_FUNCTION_ARGS)
  */
-inline TimestampTz
+TimestampTz
 timestamptz_in(const char *str, int32 prec)
 {
   return timestamp_in_common(str, prec, true);
 }
-inline TimestampTz
+TimestampTz
 pg_timestamptz_in(const char *str, int32 prec)
 {
   return timestamp_in_common(str, prec, true);
@@ -1403,12 +1403,12 @@ timestamp_out_common(TimestampTz t, bool withtz)
  * @param[in] t Timestamp
  * @note PostgreSQL function: @p timestamp_out(PG_FUNCTION_ARGS)
  */
-inline char *
+char *
 timestamp_out(Timestamp t)
 {
   return timestamp_out_common((TimestampTz) t, false);
 }
-inline char *
+char *
 pg_timestamp_out(Timestamp t)
 {
   return timestamp_out_common((TimestampTz) t, false);
