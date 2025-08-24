@@ -154,9 +154,9 @@ UF_get_collapsed_cluster_ids(UNIONFIND* uf, const char* is_in_cluster)
 	for (i = 0; i < uf->N; i++)
 	{
 		uint32_t j = ordered_components[i];
+		if (!is_in_cluster || is_in_cluster[j])
 		// MEOS
 		new_ids[j] = -1;
-		if (!is_in_cluster || is_in_cluster[j])
 		{
 			uint32_t current_old_id = UF_find(uf, j);
 			if (!encountered_cluster)
