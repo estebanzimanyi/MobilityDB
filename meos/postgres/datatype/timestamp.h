@@ -1,11 +1,11 @@
 /*-------------------------------------------------------------------------
  *
  * timestamp.h
- *    Timestamp and Interval typedefs and related macros.
+ *	  Timestamp and Interval typedefs and related macros.
  *
  * Note: this file must be includable in both frontend and backend contexts.
  *
- * Portions Copyright (c) 1996-2021, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2025, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  * src/include/datatype/timestamp.h
@@ -36,26 +36,65 @@
  */
 
 typedef int64 Timestamp;
-typedef int32 fsec_t;      /* fractional seconds (in microseconds) */
-
 typedef int64 TimestampTz;
 typedef int64 TimeOffset;
+typedef int32 fsec_t;			/* fractional seconds (in microseconds) */
 
+
+/*
+ * Storage format for type interval.
+ */
 typedef struct
 {
-  TimeOffset  time;      /* all time units other than days, months and
-                 * years */
-  int32    day;      /* days, after time for alignment */
-  int32    month;      /* months and years, after time for alignment */
+	TimeOffset	time;			/* all time units other than days, months and
+								 * years */
+	int32		day;			/* days, after time for alignment */
+	int32		month;			/* months and years, after time for alignment */
 } Interval;
+
+/*
+ * Data structure representing a broken-down interval.
+ *
+ * For historical reasons, this is modeled on struct pg_tm for timestamps.
+ * Unlike the situation for timestamps, there's no magic interpretation
+ * needed for months or years: they're just zero or not.  Note that fields
+ * can be negative; however, because of the divisions done while converting
+ * from struct Interval, only tm_mday could be INT_MIN.  This is important
+ * because we may need to negate the values in some code paths.
+ */
+struct pg_itm
+{
+	int			tm_usec;
+	int			tm_sec;
+	int			tm_min;
+	int64		tm_hour;		/* needs to be wide */
+	int			tm_mday;
+	int			tm_mon;
+	int			tm_year;
+};
+
+/*
+ * Data structure for decoding intervals.  We could just use struct pg_itm,
+ * but then the requirement for tm_usec to be 64 bits would propagate to
+ * places where it's not really needed.  Also, omitting the fields that
+ * aren't used during decoding seems like a good error-prevention measure.
+ */
+struct pg_itm_in
+{
+	int64		tm_usec;		/* needs to be wide */
+	int			tm_mday;
+	int			tm_mon;
+	int			tm_year;
+};
+
 
 /* Limits on the "precision" option (typmod) for these data types */
 #define MAX_TIMESTAMP_PRECISION 6
 #define MAX_INTERVAL_PRECISION 6
 
 /*
- *  Round off to MAX_TIMESTAMP_PRECISION decimal places.
- *  Note: this is also used for rounding off intervals.
+ *	Round off to MAX_TIMESTAMP_PRECISION decimal places.
+ *	Note: this is also used for rounding off intervals.
  */
 #define TS_PREC_INV 1000000.0
 #define TSROUND(j) (rint(((double) (j)) * TS_PREC_INV) / TS_PREC_INV)
@@ -65,59 +104,67 @@ typedef struct
  * Assorted constants for datetime-related calculations
  */
 
-#define DAYS_PER_YEAR  365.25  /* assumes leap year every four years */
+#define DAYS_PER_YEAR	365.25	/* assumes leap year every four years */
 #define MONTHS_PER_YEAR 12
 /*
- *  DAYS_PER_MONTH is very imprecise.  The more accurate value is
- *  365.2425/12 = 30.436875, or '30 days 10:29:06'.  Right now we only
- *  return an integral number of days, but someday perhaps we should
- *  also return a 'time' value to be used as well.  ISO 8601 suggests
- *  30 days.
+ *	DAYS_PER_MONTH is very imprecise.  The more accurate value is
+ *	365.2425/12 = 30.436875, or '30 days 10:29:06'.  Right now we only
+ *	return an integral number of days, but someday perhaps we should
+ *	also return a 'time' value to be used as well.  ISO 8601 suggests
+ *	30 days.
  */
-#define DAYS_PER_MONTH  30    /* assumes exactly 30 days per month */
-#define HOURS_PER_DAY  24    /* assume no daylight savings time changes */
+#define DAYS_PER_MONTH	30		/* assumes exactly 30 days per month */
+#define DAYS_PER_WEEK	7
+#define HOURS_PER_DAY	24		/* assume no daylight savings time changes */
 
 /*
- *  This doesn't adjust for uneven daylight savings time intervals or leap
- *  seconds, and it crudely estimates leap years.  A more accurate value
- *  for days per years is 365.2422.
+ *	This doesn't adjust for uneven daylight savings time intervals or leap
+ *	seconds, and it crudely estimates leap years.  A more accurate value
+ *	for days per years is 365.2422.
  */
-#define SECS_PER_YEAR  (36525 * 864)  /* avoid floating-point computation */
-#define SECS_PER_DAY  86400
-#define SECS_PER_HOUR  3600
+#define SECS_PER_YEAR	(36525 * 864)	/* avoid floating-point computation */
+#define SECS_PER_DAY	86400
+#define SECS_PER_HOUR	3600
 #define SECS_PER_MINUTE 60
-#define MINS_PER_HOUR  60
+#define MINS_PER_HOUR	60
 
-#define USECS_PER_DAY  INT64CONST(86400000000)
-#define USECS_PER_HOUR  INT64CONST(3600000000)
+#define USECS_PER_DAY	INT64CONST(86400000000)
+#define USECS_PER_HOUR	INT64CONST(3600000000)
 #define USECS_PER_MINUTE INT64CONST(60000000)
-#define USECS_PER_SEC  INT64CONST(1000000)
+#define USECS_PER_SEC	INT64CONST(1000000)
 
 /*
  * We allow numeric timezone offsets up to 15:59:59 either way from Greenwich.
  * Currently, the record holders for wackiest offsets in actual use are zones
- * Asia/Manila, at -15:56:00 until 1844, and America/Metlakatla, at +15:13:42
+ * Asia/Manila, at -15:56:08 until 1844, and America/Metlakatla, at +15:13:42
  * until 1867.  If we were to reject such values we would fail to dump and
  * restore old timestamptz values with these zone settings.
  */
-#define MAX_TZDISP_HOUR    15  /* maximum allowed hour part */
-#define TZDISP_LIMIT    ((MAX_TZDISP_HOUR + 1) * SECS_PER_HOUR)
+#define MAX_TZDISP_HOUR		15	/* maximum allowed hour part */
+#define TZDISP_LIMIT		((MAX_TZDISP_HOUR + 1) * SECS_PER_HOUR)
 
 /*
- * DT_NOBEGIN represents timestamp -infinity; DT_NOEND represents +infinity
+ * We reserve the minimum and maximum integer values to represent
+ * timestamp (or timestamptz) -infinity and +infinity.
  */
-#define DT_NOBEGIN    PG_INT64_MIN
-#define DT_NOEND    PG_INT64_MAX
+#define TIMESTAMP_MINUS_INFINITY	PG_INT64_MIN
+#define TIMESTAMP_INFINITY	PG_INT64_MAX
 
-#define TIMESTAMP_NOBEGIN(j)  \
-  do {(j) = DT_NOBEGIN;} while (0)
+/*
+ * Historically these aliases for infinity have been used.
+ */
+#define DT_NOBEGIN		TIMESTAMP_MINUS_INFINITY
+#define DT_NOEND		TIMESTAMP_INFINITY
+
+#define TIMESTAMP_NOBEGIN(j)	\
+	do {(j) = DT_NOBEGIN;} while (0)
 
 #define TIMESTAMP_IS_NOBEGIN(j) ((j) == DT_NOBEGIN)
 
-#define TIMESTAMP_NOEND(j)    \
-  do {(j) = DT_NOEND;} while (0)
+#define TIMESTAMP_NOEND(j)		\
+	do {(j) = DT_NOEND;} while (0)
 
-#define TIMESTAMP_IS_NOEND(j)  ((j) == DT_NOEND)
+#define TIMESTAMP_IS_NOEND(j)	((j) == DT_NOEND)
 
 #define TIMESTAMP_NOT_FINITE(j) (TIMESTAMP_IS_NOBEGIN(j) || TIMESTAMP_IS_NOEND(j))
 
@@ -125,25 +172,25 @@ typedef struct
  * Infinite intervals are represented by setting all fields to the minimum or
  * maximum integer values.
  */
-#define INTERVAL_NOBEGIN(i)  \
-  do {  \
-    (i)->time = PG_INT64_MIN;  \
-    (i)->day = PG_INT32_MIN;  \
-    (i)->month = PG_INT32_MIN;  \
-  } while (0)
+#define INTERVAL_NOBEGIN(i)	\
+	do {	\
+		(i)->time = PG_INT64_MIN;	\
+		(i)->day = PG_INT32_MIN;	\
+		(i)->month = PG_INT32_MIN;	\
+	} while (0)
 
-#define INTERVAL_IS_NOBEGIN(i)  \
-  ((i)->month == PG_INT32_MIN && (i)->day == PG_INT32_MIN && (i)->time == PG_INT64_MIN)
+#define INTERVAL_IS_NOBEGIN(i)	\
+	((i)->month == PG_INT32_MIN && (i)->day == PG_INT32_MIN && (i)->time == PG_INT64_MIN)
 
-#define INTERVAL_NOEND(i)  \
-  do {  \
-    (i)->time = PG_INT64_MAX;  \
-    (i)->day = PG_INT32_MAX;  \
-    (i)->month = PG_INT32_MAX;  \
-  } while (0)
+#define INTERVAL_NOEND(i)	\
+	do {	\
+		(i)->time = PG_INT64_MAX;	\
+		(i)->day = PG_INT32_MAX;	\
+		(i)->month = PG_INT32_MAX;	\
+	} while (0)
 
-#define INTERVAL_IS_NOEND(i)  \
-  ((i)->month == PG_INT32_MAX && (i)->day == PG_INT32_MAX && (i)->time == PG_INT64_MAX)
+#define INTERVAL_IS_NOEND(i)	\
+	((i)->month == PG_INT32_MAX && (i)->day == PG_INT32_MAX && (i)->time == PG_INT64_MAX)
 
 #define INTERVAL_NOT_FINITE(i) (INTERVAL_IS_NOBEGIN(i) || INTERVAL_IS_NOEND(i))
 
@@ -178,14 +225,14 @@ typedef struct
 #define JULIAN_MAXDAY (3)
 
 #define IS_VALID_JULIAN(y,m,d) \
-  (((y) > JULIAN_MINYEAR || \
-    ((y) == JULIAN_MINYEAR && ((m) >= JULIAN_MINMONTH))) && \
-   ((y) < JULIAN_MAXYEAR || \
-    ((y) == JULIAN_MAXYEAR && ((m) < JULIAN_MAXMONTH))))
+	(((y) > JULIAN_MINYEAR || \
+	  ((y) == JULIAN_MINYEAR && ((m) >= JULIAN_MINMONTH))) && \
+	 ((y) < JULIAN_MAXYEAR || \
+	  ((y) == JULIAN_MAXYEAR && ((m) < JULIAN_MAXMONTH))))
 
 /* Julian-date equivalents of Day 0 in Unix and Postgres reckoning */
-#define UNIX_EPOCH_JDATE    2440588 /* == date2j(1970, 1, 1) */
-#define POSTGRES_EPOCH_JDATE  2451545 /* == date2j(2000, 1, 1) */
+#define UNIX_EPOCH_JDATE		2440588 /* == date2j(1970, 1, 1) */
+#define POSTGRES_EPOCH_JDATE	2451545 /* == date2j(2000, 1, 1) */
 
 /*
  * Range limits for dates and timestamps.
@@ -202,21 +249,21 @@ typedef struct
 
 /* First allowed date, and first disallowed date, in Julian-date form */
 #define DATETIME_MIN_JULIAN (0)
-#define DATE_END_JULIAN (2147483494)  /* == date2j(JULIAN_MAXYEAR, 1, 1) */
-#define TIMESTAMP_END_JULIAN (109203528)  /* == date2j(294277, 1, 1) */
+#define DATE_END_JULIAN (2147483494)	/* == date2j(JULIAN_MAXYEAR, 1, 1) */
+#define TIMESTAMP_END_JULIAN (109203528)	/* == date2j(294277, 1, 1) */
 
 /* Timestamp limits */
-#define MIN_TIMESTAMP  INT64CONST(-211813488000000000)
+#define MIN_TIMESTAMP	INT64CONST(-211813488000000000)
 /* == (DATETIME_MIN_JULIAN - POSTGRES_EPOCH_JDATE) * USECS_PER_DAY */
-#define END_TIMESTAMP  INT64CONST(9223371331200000000)
+#define END_TIMESTAMP	INT64CONST(9223371331200000000)
 /* == (TIMESTAMP_END_JULIAN - POSTGRES_EPOCH_JDATE) * USECS_PER_DAY */
 
 /* Range-check a date (given in Postgres, not Julian, numbering) */
 #define IS_VALID_DATE(d) \
-  ((DATETIME_MIN_JULIAN - POSTGRES_EPOCH_JDATE) <= (d) && \
-   (d) < (DATE_END_JULIAN - POSTGRES_EPOCH_JDATE))
+	((DATETIME_MIN_JULIAN - POSTGRES_EPOCH_JDATE) <= (d) && \
+	 (d) < (DATE_END_JULIAN - POSTGRES_EPOCH_JDATE))
 
 /* Range-check a timestamp */
 #define IS_VALID_TIMESTAMP(t)  (MIN_TIMESTAMP <= (t) && (t) < END_TIMESTAMP)
 
-#endif              /* DATATYPE_TIMESTAMP_H */
+#endif							/* DATATYPE_TIMESTAMP_H */
