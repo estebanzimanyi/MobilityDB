@@ -14,7 +14,8 @@
 #define TIMESTAMP_H
 
 #include "datatype/timestamp.h"
-#include "fmgr.h"
+// MEOS
+// #include "fmgr.h"
 #include "pgtime.h"
 
 

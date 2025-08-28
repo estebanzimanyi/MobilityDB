@@ -12,6 +12,7 @@
  */
 // MEOS
 // #include "postgres_fe.h"
+#include "postgres.h" 
 
 #include <fcntl.h>
 #include <sys/stat.h>

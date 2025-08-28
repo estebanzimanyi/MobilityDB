@@ -389,28 +389,30 @@ CStringGetDatum(const char *X)
 	return PointerGetDatum(X);
 }
 
-/*
- * DatumGetName
- *		Returns name value of a datum.
- */
-static inline Name
-DatumGetName(Datum X)
-{
-	return (Name) DatumGetPointer(X);
-}
+// MEOS
+// /*
+ // * DatumGetName
+ // *		Returns name value of a datum.
+ // */
+// static inline Name
+// DatumGetName(Datum X)
+// {
+	// return (Name) DatumGetPointer(X);
+// }
 
-/*
- * NameGetDatum
- *		Returns datum representation for a name.
- *
- * Note: Name is pass-by-reference; caller must ensure the pointed-to
- * value has adequate lifetime.
- */
-static inline Datum
-NameGetDatum(const NameData *X)
-{
-	return CStringGetDatum(NameStr(*X));
-}
+// MEOS
+// /*
+ // * NameGetDatum
+ // *		Returns datum representation for a name.
+ // *
+ // * Note: Name is pass-by-reference; caller must ensure the pointed-to
+ // * value has adequate lifetime.
+ // */
+// static inline Datum
+// NameGetDatum(const NameData *X)
+// {
+	// return CStringGetDatum(NameStr(*X));
+// }
 
 /*
  * DatumGetInt64

@@ -21,13 +21,48 @@
 
 #include "common/file_utils.h"
 #include "datatype/timestamp.h"
-#include "miscadmin.h"
+// MEOS
+// #include "miscadmin.h"
 #include "pgtz.h"
-#include "storage/fd.h"
+// MEOS
+// #include "storage/fd.h"
 #include "utils/hsearch.h"
 
 // MEOS
 #include "../../include/meos.h"
+
+// ********** BEGIN MEOS TIMEZONE **********
+/**
+ * Structure to represent the timezone cache hash table, which extends
+ * the `ENTRY` structure used by hsearch
+ * https://man7.org/linux/man-pages/man3/hsearch.3.html
+ * with the additional field `status` required by `simplehash`
+ */
+typedef struct
+{
+  char *key;     /**< timezone name (hashtable key) */
+  void *data;    /**< pointer to the timezone structure */
+  char status;   /**< hash status */
+} tzentry;
+
+static uint32 hash_string_pointer(const char *s);
+// static void tzcache_my_destroy(SH_TYPE *tb);
+#define SH_PREFIX tzcache
+#define SH_ELEMENT_TYPE tzentry
+#define SH_KEY_TYPE const char *
+#define SH_KEY key
+#define SH_HASH_KEY(tb, key) hash_string_pointer(key)
+#define SH_EQUAL(tb, a, b) (strcmp(a, b) == 0)
+#define SH_SCOPE static inline
+#define SH_RAW_ALLOCATOR palloc0
+#define SH_DESTROY tzcache_destroy(tzcache)
+#define SH_DEFINE
+#define SH_DECLARE
+#include <lib/simplehash.h>
+
+/* Size of the timezone hash table */
+#define TZCACHE_INITIAL_SIZE 32
+// ********** END MEOS TIMEZONE **********
 
 /* Current session timezone (controlled by TimeZone GUC) */
 pg_tz	   *session_timezone = NULL;
@@ -342,6 +377,17 @@ pg_tzset(const char *tzname)
 	// memcpy(&tzp->tz.state, &tzstate, sizeof(tzstate));
 
 	// return &tzp->tz;
+
+  /* MEOS: Create timezone object */
+  pg_tz *tz = palloc(sizeof(pg_tz));
+  strcpy(tz->TZname, canonname);
+  memcpy(&tz->state, &tzstate, sizeof(tzstate));
+
+  /* MEOS: Create copy for cache */
+  pg_tz *cached_tz = palloc(sizeof(pg_tz));
+  strcpy(cached_tz->TZname, canonname);
+  memcpy(&cached_tz->state, &tzstate, sizeof(tzstate));
+
   /* MEOS: Fill the struct to be added to the hash table */
   bool found;
   entry = tzcache_insert(timezone_cache, uppername, &found);

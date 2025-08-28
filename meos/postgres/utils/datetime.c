@@ -12,25 +12,18 @@
  *
  *-------------------------------------------------------------------------
  */
+
+/* MEOS: Only a few #include are kept wrt to the original file */
+
 #include "postgres.h"
 
-#include <ctype.h>
 #include <limits.h>
-#include <math.h>
 
-#include "access/htup_details.h"
-#include "access/xact.h"
-#include "common/int.h"
-#include "common/string.h"
-#include "funcapi.h"
-#include "miscadmin.h"
-#include "nodes/nodeFuncs.h"
-#include "parser/scansup.h"
-#include "utils/builtins.h"
-#include "utils/date.h"
+#include "datatype/timestamp.h"
 #include "utils/datetime.h"
-#include "utils/guc.h"
-#include "utils/tzparser.h"
+#include "utils/date.h"
+
+#include "../../include/meos.h"
 
 static int	DecodeNumber(int flen, char *str, bool haveTextMonth,
 						 int fmask, int *tmask,
@@ -427,9 +420,15 @@ GetCurrentTimeUsec(struct pg_tm *tm, fsec_t *fsec, int *tzp)
 		 */
 		if (timestamp2tm(cur_ts, &cache_tz, &cache_tm, &cache_fsec,
 						 NULL, session_timezone) != 0)
-			ereport(ERROR,
-					(errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE),
-					 errmsg("timestamp out of range")));
+			// MEOS
+			// ereport(ERROR,
+					// (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE),
+					 // errmsg("timestamp out of range")));
+		{
+			meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
+					"timestamp out of range");
+			return;
+		}
 
 		/* OK, so mark the cache valid. */
 		cache_ts = cur_ts;
@@ -1821,9 +1820,15 @@ DetermineTimeZoneAbbrevOffsetTS(TimestampTz ts, const char *abbr,
 	 * Else, break down the timestamp so we can use DetermineTimeZoneOffset.
 	 */
 	if (timestamp2tm(ts, &tz, &tm, &fsec, NULL, tzp) != 0)
-		ereport(ERROR,
-				(errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE),
-				 errmsg("timestamp out of range")));
+		// MEOS
+		// ereport(ERROR,
+				// (errcode(ERRCODE_DATETIME_VALUE_OUT_OF_RANGE),
+				 // errmsg("timestamp out of range")));
+		{
+			meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
+					"timestamp out of range");
+			return -1; // ?
+		}
 
 	zone_offset = DetermineTimeZoneOffset(&tm, tzp);
 	*isdst = tm.tm_isdst;
@@ -3308,7 +3313,9 @@ DecodeTimezoneName(const char *tzname, int *offset, pg_tz **tz)
 
 	dterr = DecodeTimezoneAbbrev(0, lowzone, &type, offset, tz, &extra);
 	if (dterr)
-		DateTimeParseError(dterr, &extra, NULL, NULL, NULL);
+		// MEOS
+		// DateTimeParseError(dterr, &extra, NULL, NULL, NULL);
+		DateTimeParseError(dterr, &extra, NULL, NULL);
 
 	if (type == TZ || type == DTZ)
 	{
@@ -3325,9 +3332,15 @@ DecodeTimezoneName(const char *tzname, int *offset, pg_tz **tz)
 		/* try it as a full zone name */
 		*tz = pg_tzset(tzname);
 		if (*tz == NULL)
-			ereport(ERROR,
-					(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-					 errmsg("time zone \"%s\" not recognized", tzname)));
+			// MEOS
+			// ereport(ERROR,
+					// (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+					 // errmsg("time zone \"%s\" not recognized", tzname)));
+		{
+			meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+				"time zone \"%s\" not recognized", tzname);
+		}
+
 		return TZNAME_ZONE;
 	}
 }
@@ -4210,59 +4223,46 @@ DecodeUnits(int field, const char *lowtoken, int *val)
  * DTERR_TZDISP_OVERFLOW from DTERR_FIELD_OVERFLOW, but SQL99 mandates three
  * separate SQLSTATE codes, so ...
  */
+
+/* MEOS: removed the last parameter Node *escontext of the function and
+ * changed the way errors are output */
 void
 DateTimeParseError(int dterr, DateTimeErrorExtra *extra,
-				   const char *str, const char *datatype,
-				   Node *escontext)
+				   const char *str, const char *datatype)
 {
+	size_t size = strlen(str) + strlen(datatype) + 50;
+	char *errmsg = palloc(size);
 	switch (dterr)
 	{
 		case DTERR_FIELD_OVERFLOW:
-			errsave(escontext,
-					(errcode(ERRCODE_DATETIME_FIELD_OVERFLOW),
-					 errmsg("date/time field value out of range: \"%s\"",
-							str)));
+			sprintf(errmsg,
+				"date/time field value out of range: \"%s\"", str);
 			break;
 		case DTERR_MD_FIELD_OVERFLOW:
 			/* <nanny>same as above, but add hint about DateStyle</nanny> */
-			errsave(escontext,
-					(errcode(ERRCODE_DATETIME_FIELD_OVERFLOW),
-					 errmsg("date/time field value out of range: \"%s\"",
-							str),
-					 errhint("Perhaps you need a different \"DateStyle\" setting.")));
+			sprintf(errmsg,
+				"date/time field value out of range: \"%s\"", str);
 			break;
 		case DTERR_INTERVAL_OVERFLOW:
-			errsave(escontext,
-					(errcode(ERRCODE_INTERVAL_FIELD_OVERFLOW),
-					 errmsg("interval field value out of range: \"%s\"",
-							str)));
+			sprintf(errmsg,
+				"interval field value out of range: \"%s\"", str);
 			break;
 		case DTERR_TZDISP_OVERFLOW:
-			errsave(escontext,
-					(errcode(ERRCODE_INVALID_TIME_ZONE_DISPLACEMENT_VALUE),
-					 errmsg("time zone displacement out of range: \"%s\"",
-							str)));
+			sprintf(errmsg,
+				"time zone displacement out of range: \"%s\"", str);
 			break;
 		case DTERR_BAD_TIMEZONE:
-			errsave(escontext,
-					(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-					 errmsg("time zone \"%s\" not recognized",
-							extra->dtee_timezone)));
+			sprintf(errmsg,
+				"time zone \"%s\" not recognized", extra->dtee_timezone);
 			break;
 		case DTERR_BAD_ZONE_ABBREV:
-			errsave(escontext,
-					(errcode(ERRCODE_CONFIG_FILE_ERROR),
-					 errmsg("time zone \"%s\" not recognized",
-							extra->dtee_timezone),
-					 errdetail("This time zone name appears in the configuration file for time zone abbreviation \"%s\".",
-							   extra->dtee_abbrev)));
+			sprintf(errmsg,
+				"time zone \"%s\" not recognized", extra->dtee_timezone);
 			break;
 		case DTERR_BAD_FORMAT:
 		default:
-			errsave(escontext,
-					(errcode(ERRCODE_INVALID_DATETIME_FORMAT),
-					 errmsg("invalid input syntax for type %s: \"%s\"",
-							datatype, str)));
+			sprintf(errmsg,
+				"invalid input syntax for type %s: \"%s\"", datatype, str);
 			break;
 	}
 }
@@ -4892,501 +4892,4 @@ EncodeInterval(struct pg_itm *itm, int style, char *str)
 	}
 }
 
-
-/*
- * We've been burnt by stupid errors in the ordering of the datetkn tables
- * once too often.  Arrange to check them during postmaster start.
- */
-static bool
-CheckDateTokenTable(const char *tablename, const datetkn *base, int nel)
-{
-	bool		ok = true;
-	int			i;
-
-	for (i = 0; i < nel; i++)
-	{
-		/* check for token strings that don't fit */
-		if (strlen(base[i].token) > TOKMAXLEN)
-		{
-			/* %.*s is safe since all our tokens are ASCII */
-			elog(LOG, "token too long in %s table: \"%.*s\"",
-				 tablename,
-				 TOKMAXLEN + 1, base[i].token);
-			ok = false;
-			break;				/* don't risk applying strcmp */
-		}
-		/* check for out of order */
-		if (i > 0 &&
-			strcmp(base[i - 1].token, base[i].token) >= 0)
-		{
-			elog(LOG, "ordering error in %s table: \"%s\" >= \"%s\"",
-				 tablename,
-				 base[i - 1].token,
-				 base[i].token);
-			ok = false;
-		}
-	}
-	return ok;
-}
-
-bool
-CheckDateTokenTables(void)
-{
-	bool		ok = true;
-
-	Assert(UNIX_EPOCH_JDATE == date2j(1970, 1, 1));
-	Assert(POSTGRES_EPOCH_JDATE == date2j(2000, 1, 1));
-
-	ok &= CheckDateTokenTable("datetktbl", datetktbl, szdatetktbl);
-	ok &= CheckDateTokenTable("deltatktbl", deltatktbl, szdeltatktbl);
-	return ok;
-}
-
-/*
- * Common code for temporal prosupport functions: simplify, if possible,
- * a call to a temporal type's length-coercion function.
- *
- * Types time, timetz, timestamp and timestamptz each have a range of allowed
- * precisions.  An unspecified precision is rigorously equivalent to the
- * highest specifiable precision.  We can replace the function call with a
- * no-op RelabelType if it is coercing to the same or higher precision as the
- * input is known to have.
- *
- * The input Node is always a FuncExpr, but to reduce the #include footprint
- * of datetime.h, we declare it as Node *.
- *
- * Note: timestamp_scale throws an error when the typmod is out of range, but
- * we can't get there from a cast: our typmodin will have caught it already.
- */
-Node *
-TemporalSimplify(int32 max_precis, Node *node)
-{
-	FuncExpr   *expr = castNode(FuncExpr, node);
-	Node	   *ret = NULL;
-	Node	   *typmod;
-
-	Assert(list_length(expr->args) >= 2);
-
-	typmod = (Node *) lsecond(expr->args);
-
-	if (IsA(typmod, Const) && !((Const *) typmod)->constisnull)
-	{
-		Node	   *source = (Node *) linitial(expr->args);
-		int32		old_precis = exprTypmod(source);
-		int32		new_precis = DatumGetInt32(((Const *) typmod)->constvalue);
-
-		if (new_precis < 0 || new_precis == max_precis ||
-			(old_precis >= 0 && new_precis >= old_precis))
-			ret = relabel_to_typmod(source, new_precis);
-	}
-
-	return ret;
-}
-
-/*
- * This function gets called during timezone config file load or reload
- * to create the final array of timezone tokens.  The argument array
- * is already sorted in name order.
- *
- * The result is a TimeZoneAbbrevTable (which must be a single guc_malloc'd
- * chunk) or NULL on alloc failure.  No other error conditions are defined.
- */
-TimeZoneAbbrevTable *
-ConvertTimeZoneAbbrevs(struct tzEntry *abbrevs, int n)
-{
-	TimeZoneAbbrevTable *tbl;
-	Size		tbl_size;
-	int			i;
-
-	/* Space for fixed fields and datetkn array */
-	tbl_size = offsetof(TimeZoneAbbrevTable, abbrevs) +
-		n * sizeof(datetkn);
-	tbl_size = MAXALIGN(tbl_size);
-	/* Count up space for dynamic abbreviations */
-	for (i = 0; i < n; i++)
-	{
-		struct tzEntry *abbr = abbrevs + i;
-
-		if (abbr->zone != NULL)
-		{
-			Size		dsize;
-
-			dsize = offsetof(DynamicZoneAbbrev, zone) +
-				strlen(abbr->zone) + 1;
-			tbl_size += MAXALIGN(dsize);
-		}
-	}
-
-	/* Alloc the result ... */
-	tbl = guc_malloc(LOG, tbl_size);
-	if (!tbl)
-		return NULL;
-
-	/* ... and fill it in */
-	tbl->tblsize = tbl_size;
-	tbl->numabbrevs = n;
-	/* in this loop, tbl_size reprises the space calculation above */
-	tbl_size = offsetof(TimeZoneAbbrevTable, abbrevs) +
-		n * sizeof(datetkn);
-	tbl_size = MAXALIGN(tbl_size);
-	for (i = 0; i < n; i++)
-	{
-		struct tzEntry *abbr = abbrevs + i;
-		datetkn    *dtoken = tbl->abbrevs + i;
-
-		/* use strlcpy to truncate name if necessary */
-		strlcpy(dtoken->token, abbr->abbrev, TOKMAXLEN + 1);
-		if (abbr->zone != NULL)
-		{
-			/* Allocate a DynamicZoneAbbrev for this abbreviation */
-			DynamicZoneAbbrev *dtza;
-			Size		dsize;
-
-			dtza = (DynamicZoneAbbrev *) ((char *) tbl + tbl_size);
-			dtza->tz = NULL;
-			strcpy(dtza->zone, abbr->zone);
-
-			dtoken->type = DYNTZ;
-			/* value is offset from table start to DynamicZoneAbbrev */
-			dtoken->value = (int32) tbl_size;
-
-			dsize = offsetof(DynamicZoneAbbrev, zone) +
-				strlen(abbr->zone) + 1;
-			tbl_size += MAXALIGN(dsize);
-		}
-		else
-		{
-			dtoken->type = abbr->is_dst ? DTZ : TZ;
-			dtoken->value = abbr->offset;
-		}
-	}
-
-	/* Assert the two loops above agreed on size calculations */
-	Assert(tbl->tblsize == tbl_size);
-
-	/* Check the ordering, if testing */
-	Assert(CheckDateTokenTable("timezone abbreviations", tbl->abbrevs, n));
-
-	return tbl;
-}
-
-/*
- * Install a TimeZoneAbbrevTable as the active table.
- *
- * Caller is responsible that the passed table doesn't go away while in use.
- */
-void
-InstallTimeZoneAbbrevs(TimeZoneAbbrevTable *tbl)
-{
-	zoneabbrevtbl = tbl;
-	/* reset tzabbrevcache, which may contain results from old table */
-	memset(tzabbrevcache, 0, sizeof(tzabbrevcache));
-}
-
-/*
- * Helper subroutine to locate pg_tz timezone for a dynamic abbreviation.
- *
- * On failure, returns NULL and fills *extra for a DTERR_BAD_ZONE_ABBREV error.
- */
-static pg_tz *
-FetchDynamicTimeZone(TimeZoneAbbrevTable *tbl, const datetkn *tp,
-					 DateTimeErrorExtra *extra)
-{
-	DynamicZoneAbbrev *dtza;
-
-	/* Just some sanity checks to prevent indexing off into nowhere */
-	Assert(tp->type == DYNTZ);
-	Assert(tp->value > 0 && tp->value < tbl->tblsize);
-
-	dtza = (DynamicZoneAbbrev *) ((char *) tbl + tp->value);
-
-	/* Look up the underlying zone if we haven't already */
-	if (dtza->tz == NULL)
-	{
-		dtza->tz = pg_tzset(dtza->zone);
-		if (dtza->tz == NULL)
-		{
-			/* Ooops, bogus zone name in config file entry */
-			extra->dtee_timezone = dtza->zone;
-			extra->dtee_abbrev = tp->token;
-		}
-	}
-	return dtza->tz;
-}
-
-
-/*
- * This set-returning function reads all the time zone abbreviations
- * defined by the IANA data for the current timezone setting,
- * and returns a set of (abbrev, utc_offset, is_dst).
- */
-Datum
-pg_timezone_abbrevs_zone(PG_FUNCTION_ARGS)
-{
-	FuncCallContext *funcctx;
-	int		   *pindex;
-	Datum		result;
-	HeapTuple	tuple;
-	Datum		values[3];
-	bool		nulls[3] = {0};
-	TimestampTz now = GetCurrentTransactionStartTimestamp();
-	pg_time_t	t = timestamptz_to_time_t(now);
-	const char *abbrev;
-	long int	gmtoff;
-	int			isdst;
-	struct pg_itm_in itm_in;
-	Interval   *resInterval;
-
-	/* stuff done only on the first call of the function */
-	if (SRF_IS_FIRSTCALL())
-	{
-		TupleDesc	tupdesc;
-		MemoryContext oldcontext;
-
-		/* create a function context for cross-call persistence */
-		funcctx = SRF_FIRSTCALL_INIT();
-
-		/*
-		 * switch to memory context appropriate for multiple function calls
-		 */
-		oldcontext = MemoryContextSwitchTo(funcctx->multi_call_memory_ctx);
-
-		/* allocate memory for user context */
-		pindex = (int *) palloc(sizeof(int));
-		*pindex = 0;
-		funcctx->user_fctx = pindex;
-
-		if (get_call_result_type(fcinfo, NULL, &tupdesc) != TYPEFUNC_COMPOSITE)
-			elog(ERROR, "return type must be a row type");
-		funcctx->tuple_desc = tupdesc;
-
-		MemoryContextSwitchTo(oldcontext);
-	}
-
-	/* stuff done on every call of the function */
-	funcctx = SRF_PERCALL_SETUP();
-	pindex = (int *) funcctx->user_fctx;
-
-	while ((abbrev = pg_get_next_timezone_abbrev(pindex,
-												 session_timezone)) != NULL)
-	{
-		/* Ignore abbreviations that aren't all-alphabetic */
-		if (strspn(abbrev, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") != strlen(abbrev))
-			continue;
-
-		/* Determine the current meaning of the abbrev */
-		if (!pg_interpret_timezone_abbrev(abbrev,
-										  &t,
-										  &gmtoff,
-										  &isdst,
-										  session_timezone))
-			continue;			/* hm, not actually used in this zone? */
-
-		values[0] = CStringGetTextDatum(abbrev);
-
-		/* Convert offset (in seconds) to an interval; can't overflow */
-		MemSet(&itm_in, 0, sizeof(struct pg_itm_in));
-		itm_in.tm_usec = (int64) gmtoff * USECS_PER_SEC;
-		resInterval = (Interval *) palloc(sizeof(Interval));
-		(void) itmin2interval(&itm_in, resInterval);
-		values[1] = IntervalPGetDatum(resInterval);
-
-		values[2] = BoolGetDatum(isdst);
-
-		tuple = heap_form_tuple(funcctx->tuple_desc, values, nulls);
-		result = HeapTupleGetDatum(tuple);
-
-		SRF_RETURN_NEXT(funcctx, result);
-	}
-
-	SRF_RETURN_DONE(funcctx);
-}
-
-/*
- * This set-returning function reads all the time zone abbreviations
- * defined by the timezone_abbreviations setting,
- * and returns a set of (abbrev, utc_offset, is_dst).
- */
-Datum
-pg_timezone_abbrevs_abbrevs(PG_FUNCTION_ARGS)
-{
-	FuncCallContext *funcctx;
-	int		   *pindex;
-	Datum		result;
-	HeapTuple	tuple;
-	Datum		values[3];
-	bool		nulls[3] = {0};
-	const datetkn *tp;
-	char		buffer[TOKMAXLEN + 1];
-	int			gmtoffset;
-	bool		is_dst;
-	unsigned char *p;
-	struct pg_itm_in itm_in;
-	Interval   *resInterval;
-
-	/* stuff done only on the first call of the function */
-	if (SRF_IS_FIRSTCALL())
-	{
-		TupleDesc	tupdesc;
-		MemoryContext oldcontext;
-
-		/* create a function context for cross-call persistence */
-		funcctx = SRF_FIRSTCALL_INIT();
-
-		/*
-		 * switch to memory context appropriate for multiple function calls
-		 */
-		oldcontext = MemoryContextSwitchTo(funcctx->multi_call_memory_ctx);
-
-		/* allocate memory for user context */
-		pindex = (int *) palloc(sizeof(int));
-		*pindex = 0;
-		funcctx->user_fctx = pindex;
-
-		if (get_call_result_type(fcinfo, NULL, &tupdesc) != TYPEFUNC_COMPOSITE)
-			elog(ERROR, "return type must be a row type");
-		funcctx->tuple_desc = tupdesc;
-
-		MemoryContextSwitchTo(oldcontext);
-	}
-
-	/* stuff done on every call of the function */
-	funcctx = SRF_PERCALL_SETUP();
-	pindex = (int *) funcctx->user_fctx;
-
-	if (zoneabbrevtbl == NULL ||
-		*pindex >= zoneabbrevtbl->numabbrevs)
-		SRF_RETURN_DONE(funcctx);
-
-	tp = zoneabbrevtbl->abbrevs + *pindex;
-
-	switch (tp->type)
-	{
-		case TZ:
-			gmtoffset = tp->value;
-			is_dst = false;
-			break;
-		case DTZ:
-			gmtoffset = tp->value;
-			is_dst = true;
-			break;
-		case DYNTZ:
-			{
-				/* Determine the current meaning of the abbrev */
-				pg_tz	   *tzp;
-				DateTimeErrorExtra extra;
-				TimestampTz now;
-				int			isdst;
-
-				tzp = FetchDynamicTimeZone(zoneabbrevtbl, tp, &extra);
-				if (tzp == NULL)
-					DateTimeParseError(DTERR_BAD_ZONE_ABBREV, &extra,
-									   NULL, NULL, NULL);
-				now = GetCurrentTransactionStartTimestamp();
-				gmtoffset = -DetermineTimeZoneAbbrevOffsetTS(now,
-															 tp->token,
-															 tzp,
-															 &isdst);
-				is_dst = (bool) isdst;
-				break;
-			}
-		default:
-			elog(ERROR, "unrecognized timezone type %d", (int) tp->type);
-			gmtoffset = 0;		/* keep compiler quiet */
-			is_dst = false;
-			break;
-	}
-
-	/*
-	 * Convert name to text, using upcasing conversion that is the inverse of
-	 * what ParseDateTime() uses.
-	 */
-	strlcpy(buffer, tp->token, sizeof(buffer));
-	for (p = (unsigned char *) buffer; *p; p++)
-		*p = pg_toupper(*p);
-
-	values[0] = CStringGetTextDatum(buffer);
-
-	/* Convert offset (in seconds) to an interval; can't overflow */
-	MemSet(&itm_in, 0, sizeof(struct pg_itm_in));
-	itm_in.tm_usec = (int64) gmtoffset * USECS_PER_SEC;
-	resInterval = (Interval *) palloc(sizeof(Interval));
-	(void) itmin2interval(&itm_in, resInterval);
-	values[1] = IntervalPGetDatum(resInterval);
-
-	values[2] = BoolGetDatum(is_dst);
-
-	(*pindex)++;
-
-	tuple = heap_form_tuple(funcctx->tuple_desc, values, nulls);
-	result = HeapTupleGetDatum(tuple);
-
-	SRF_RETURN_NEXT(funcctx, result);
-}
-
-/*
- * This set-returning function reads all the available full time zones
- * and returns a set of (name, abbrev, utc_offset, is_dst).
- */
-Datum
-pg_timezone_names(PG_FUNCTION_ARGS)
-{
-	ReturnSetInfo *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
-	pg_tzenum  *tzenum;
-	pg_tz	   *tz;
-	Datum		values[4];
-	bool		nulls[4] = {0};
-	int			tzoff;
-	struct pg_tm tm;
-	fsec_t		fsec;
-	const char *tzn;
-	Interval   *resInterval;
-	struct pg_itm_in itm_in;
-
-	InitMaterializedSRF(fcinfo, 0);
-
-	/* initialize timezone scanning code */
-	tzenum = pg_tzenumerate_start();
-
-	/* search for another zone to display */
-	for (;;)
-	{
-		tz = pg_tzenumerate_next(tzenum);
-		if (!tz)
-			break;
-
-		/* Convert now() to local time in this zone */
-		if (timestamp2tm(GetCurrentTransactionStartTimestamp(),
-						 &tzoff, &tm, &fsec, &tzn, tz) != 0)
-			continue;			/* ignore if conversion fails */
-
-		/*
-		 * IANA's rather silly "Factory" time zone used to emit ridiculously
-		 * long "abbreviations" such as "Local time zone must be set--see zic
-		 * manual page" or "Local time zone must be set--use tzsetup".  While
-		 * modern versions of tzdb emit the much saner "-00", it seems some
-		 * benighted packagers are hacking the IANA data so that it continues
-		 * to produce these strings.  To prevent producing a weirdly wide
-		 * abbrev column, reject ridiculously long abbreviations.
-		 */
-		if (tzn && strlen(tzn) > 31)
-			continue;
-
-		values[0] = CStringGetTextDatum(pg_get_timezone_name(tz));
-		values[1] = CStringGetTextDatum(tzn ? tzn : "");
-
-		/* Convert tzoff to an interval; can't overflow */
-		MemSet(&itm_in, 0, sizeof(struct pg_itm_in));
-		itm_in.tm_usec = (int64) -tzoff * USECS_PER_SEC;
-		resInterval = (Interval *) palloc(sizeof(Interval));
-		(void) itmin2interval(&itm_in, resInterval);
-		values[2] = IntervalPGetDatum(resInterval);
-
-		values[3] = BoolGetDatum(tm.tm_isdst > 0);
-
-		tuplestore_putvalues(rsinfo->setResult, rsinfo->setDesc, values, nulls);
-	}
-
-	pg_tzenumerate_end(tzenum);
-	return (Datum) 0;
-}
+/* MEOS: ALL REMAINING FUNCTIONS HAVE BEEN DELETED */

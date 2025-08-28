@@ -12,19 +12,24 @@
  *-------------------------------------------------------------------------
  */
 
-#ifndef FRONTEND
-#include "postgres.h"
-#else
-#include "postgres_fe.h"
-#endif
+// MEOS
+// #ifndef FRONTEND
+// #include "postgres.h"
+// #else
+// #include "postgres_fe.h"
+// #endif
 
 #include <dirent.h>
+// MEOS
+#include "postgres.h"
+#include "../../include/meos.h"
 
-#ifndef FRONTEND
-#define pg_log_warning(...) elog(WARNING, __VA_ARGS__)
-#else
-#include "common/logging.h"
-#endif
+// MEOS
+// #ifndef FRONTEND
+// #define pg_log_warning(...) elog(WARNING, __VA_ARGS__)
+// #else
+// #include "common/logging.h"
+// #endif
 
 /*
  * pgfnames
@@ -45,7 +50,10 @@ pgfnames(const char *path)
 	dir = opendir(path);
 	if (dir == NULL)
 	{
-		pg_log_warning("could not open directory \"%s\": %m", path);
+		// MEOS
+		// pg_log_warning("could not open directory \"%s\": %m", path);
+		meos_error(WARNING, MEOS_ERR_DIRECTORY_ERROR,
+		"could not open directory \"%s\": %m", path);
 		return NULL;
 	}
 
@@ -66,12 +74,24 @@ pgfnames(const char *path)
 	}
 
 	if (errno)
-		pg_log_warning("could not read directory \"%s\": %m", path);
+	// MEOS
+	// pg_log_warning("could not read directory \"%s\": %m", path);
+	{
+		meos_error(WARNING, MEOS_ERR_DIRECTORY_ERROR,
+			"could not read directory \"%s\": %m", path);
+		return NULL;
+	}
 
 	filenames[numnames] = NULL;
 
 	if (closedir(dir))
-		pg_log_warning("could not close directory \"%s\": %m", path);
+	// MEOS
+		// pg_log_warning("could not close directory \"%s\": %m", path);
+	{
+		meos_error(WARNING, MEOS_ERR_DIRECTORY_ERROR,
+			"could not close directory \"%s\": %m", path);
+		return NULL;
+	}
 
 	return filenames;
 }

@@ -17,7 +17,8 @@
 #include <math.h>
 
 #include "datatype/timestamp.h"
-#include "fmgr.h"
+// MEOS
+// #include "fmgr.h"
 #include "pgtime.h"
 
 typedef int32 DateADT;

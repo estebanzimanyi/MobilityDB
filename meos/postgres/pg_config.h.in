@@ -4,22 +4,22 @@
 #undef AC_APPLE_UNIVERSAL_BUILD
 
 /* The normal alignment of `double', in bytes. */
-#undef ALIGNOF_DOUBLE
+#define ALIGNOF_DOUBLE 8
 
 /* The normal alignment of `int', in bytes. */
-#undef ALIGNOF_INT
+#define ALIGNOF_INT 4
 
 /* The normal alignment of `int64_t', in bytes. */
-#undef ALIGNOF_INT64_T
+#define ALIGNOF_INT64_T 8
 
 /* The normal alignment of `long', in bytes. */
-#undef ALIGNOF_LONG
+#define ALIGNOF_LONG 8
 
 /* The normal alignment of `PG_INT128_TYPE', in bytes. */
-#undef ALIGNOF_PG_INT128_TYPE
+#define ALIGNOF_PG_INT128_TYPE 16
 
 /* The normal alignment of `short', in bytes. */
-#undef ALIGNOF_SHORT
+#define ALIGNOF_SHORT 2
 
 /* Size of a disk block --- this also limits the size of a tuple. You can set
    it bigger if you need bigger tuples (although TOAST should reduce the need
@@ -28,7 +28,7 @@
    currently 2^15 (32768). This is determined by the 15-bit widths of the
    lp_off and lp_len fields in ItemIdData (see include/storage/itemid.h).
    Changing BLCKSZ requires an initdb. */
-#undef BLCKSZ
+#define BLCKSZ 8192
 
 /* Saved arguments from configure */
 #undef CONFIGURE_ARGS
@@ -227,7 +227,7 @@
 #undef HAVE_INT_OPTRESET
 
 /* Define to 1 if you have the global variable 'int timezone'. */
-#undef HAVE_INT_TIMEZONE
+#define HAVE_INT_TIMEZONE 1
 
 /* Define to 1 if you have the `io_uring_queue_init_mem' function. */
 #undef HAVE_IO_URING_QUEUE_INIT_MEM
@@ -610,7 +610,7 @@
 #undef PG_MINORVERSION_NUM
 
 /* Define to best printf format archetype, usually gnu_printf if available. */
-#undef PG_PRINTF_ATTRIBUTE
+#define PG_PRINTF_ATTRIBUTE gnu_printf
 
 /* PostgreSQL version as a string */
 #undef PG_VERSION
@@ -643,7 +643,7 @@
 #undef RELSEG_SIZE
 
 /* The size of `long', as computed by sizeof. */
-#undef SIZEOF_LONG
+#define SIZEOF_LONG 8
 
 /* The size of `long long', as computed by sizeof. */
 #undef SIZEOF_LONG_LONG
@@ -777,7 +777,7 @@
    XLOG_BLCKSZ must be a multiple of the alignment requirement for direct-I/O
    buffers, else direct I/O may fail. Changing XLOG_BLCKSZ requires an initdb.
    */
-#undef XLOG_BLCKSZ
+#define XLOG_BLCKSZ 8192
 
 
 
