@@ -38,6 +38,8 @@
 
 /* PostgreSQL */
 #include <postgres.h>
+#include <utils/float.h>
+#include <utils/numeric.h>
 #if MEOS
 #include "postgres_int_defs.h"
 #else
@@ -73,6 +75,76 @@
 #define INTERVAL_NOT_FINITE(i) (INTERVAL_IS_NOBEGIN(i) || INTERVAL_IS_NOEND(i))
 #endif /* POSTGRESQL_VERSION_NUMBER < 170000 */
 
+/* Functions adapted from bool.c */
+
+extern bool bool_eq(bool b1, bool b2);
+extern bool bool_ge(bool b1, bool b2);
+extern bool bool_gt(bool b1, bool b2);
+extern uint32 bool_hash(bool b);
+extern bool bool_in(const char *str);
+extern bool bool_le(bool b1, bool b2);
+extern bool bool_lt(bool b1, bool b2);
+extern bool bool_ne(bool b1, bool b2);
+extern char * bool_out(bool b);
+extern text * bool_to_text(bool b);
+
+/* Functions adapted from numeric.c */
+
+extern Numeric numeric_in_internal(char *str, int32 typmod);
+extern char *numeric_out_internal(Numeric num);
+extern Numeric numeric_internal(Numeric num, int32 typmod);
+extern Numeric numeric_abs_internal(Numeric num);
+extern Numeric numeric_uplus_internal(Numeric num);
+extern Numeric numeric_uminus_internal(Numeric num);
+extern int numeric_sign_internal(Numeric num);
+extern Numeric numeric_round_internal(Numeric num, int32 scale);
+extern Numeric numeric_trunc_internal(Numeric num, int32 scale);
+extern Numeric numeric_ceil_internal(Numeric num);
+extern Numeric numeric_floor_internal(Numeric num);
+extern int32 width_bucket_numeric_internal(Numeric operand, Numeric bound1,
+  Numeric bound2, int32 count);
+extern int numeric_cmp_internal(Numeric num1, Numeric num2);
+extern bool numeric_eq_internal(Numeric num1, Numeric num2);
+extern bool numeric_ne_internal(Numeric num1, Numeric num2);
+extern bool numeric_gt_internal(Numeric num1, Numeric num2);
+extern bool numeric_ge_internal(Numeric num1, Numeric num2);
+extern bool numeric_lt_internal(Numeric num1, Numeric num2);
+extern bool numeric_le_internal(Numeric num1, Numeric num2);
+extern bool in_range_numeric_numeric_internal(Numeric val, Numeric base,
+  Numeric offset, bool sub, bool less);
+extern int numeric_hash(Numeric key);
+extern uint64 numeric_hash_extended(Numeric num, uint64 seed);
+extern Numeric numeric_add_internal(Numeric num1, Numeric num2);
+extern Numeric numeric_sub_internal(Numeric num1, Numeric num2);
+extern Numeric numeric_mul_internal(Numeric num1, Numeric num2);
+extern Numeric numeric_div_internal(Numeric num1, Numeric num2);
+extern Numeric numeric_div_trunc_internal(Numeric num1, Numeric num2);
+extern Numeric numeric_mod_internal(Numeric num1, Numeric num2);
+extern Numeric numeric_inc_internal(Numeric num);
+extern Numeric numeric_smaller_internal(Numeric num1, Numeric num2);
+extern Numeric numeric_larger_internal(Numeric num1, Numeric num2);
+extern Numeric numeric_gcd_internal(Numeric num1, Numeric num2);
+extern Numeric numeric_lcm_internal(Numeric num1, Numeric num2);
+extern Numeric numeric_fac_internal(int64 num);
+extern Numeric numeric_sqrt_internal(Numeric num);
+extern Numeric numeric_exp_internal(Numeric num);
+extern Numeric numeric_ln_internal(Numeric num);
+extern Numeric numeric_log_internal(Numeric num1, Numeric num2);
+extern Numeric numeric_power_internal(Numeric num1, Numeric num2);
+extern int numeric_scale_internal(Numeric num);
+extern int numeric_min_scale_internal(Numeric num);
+extern Numeric numeric_trim_scale_internal(Numeric num);
+extern Numeric int4_numeric_internal(int32 num);
+extern int numeric_int4_internal(Numeric num);
+extern Numeric int8_numeric_internal(int64 num);
+extern int64 numeric_int8_internal(Numeric num);
+extern Numeric int2_numeric_internal(int16 num);
+extern int16 numeric_int2_internal(Numeric num);
+extern Numeric float8_numeric_internal(float8 num);
+extern double numeric_float8_internal(Numeric num);
+extern double numeric_float8_no_overflow_internal(Numeric num);
+extern Numeric float4_numeric_internal(float4 num);
+
 /* Functions adapted from int.c */
 
 extern int32 int4_in(const char *str);
@@ -85,13 +157,103 @@ extern char *int8_out(int64 val);
 
 /* Functions adapted from float.c */
 
-extern float8 float8_in(const char *num, const char *type_name,
-  const char *orig_string);
-extern char *float8_out(double num, int maxdd);
-extern float8 pg_dsin(float8 arg1);
-extern float8 pg_dcos(float8 arg1);
-extern float8 pg_datan(float8 arg1);
-extern float8 pg_datan2(float8 arg1, float8 arg2);
+extern float8 degrees_internal(float8 num);
+extern float8 float48_div(float4 num1, float8 num2);
+extern bool float48_eq(float4 num1, float8 num2);
+extern bool float48_ge(float4 num1, float8 num2);
+extern bool float48_gt(float4 num1, float8 num2);
+extern bool float48_le(float4 num1, float8 num2);
+extern bool float48_lt(float4 num1, float8 num2);
+extern float8 float48_mi(float4 num1, float8 num2);
+extern float8 float48_mul(float4 num1, float8 num2);
+extern bool float48_ne(float4 num1, float8 num2);
+extern float8 float48_pl(float4 num1, float8 num2);
+extern float4 float4_abs(float4 num);
+extern int float4_cmp_internal(float4 a, float4 b);
+extern float4 float4_in(char *num);
+extern float4 float4_larger(float4 num1, float4 num2);
+extern char * float4_out(float4 num);
+extern float4 float4_smaller(float4 num1, float4 num2);
+extern int16 float4_to_int2(float4 num);
+extern int32 float4_to_int4(float4 num);
+extern float8 float4_tod(float4 num);
+extern float4 float4_um(float4 num);
+extern float4 float4_up(float4 num);
+extern bool float84_eq(float8 num1, float4 num2);
+extern bool float84_ge(float8 num1, float4 num2);
+extern bool float84_gt(float8 num1, float4 num2);
+extern bool float84_le(float8 num1, float4 num2);
+extern bool float84_lt(float8 num1, float4 num2);
+extern float8 float84_mi(float8 num1, float4 num2);
+extern float8 float84_mul(float8 num1, float4 num2);
+extern bool float84_ne(float8 num1, float4 num2);
+extern float8 float84_pl(float8 num1, float4 num2);
+extern float8 float84div(float8 num1, float4 num2);
+extern float8 float8_abs(float8 num);
+extern float8 float8_acosd(float8 num);
+extern float8 float8_acosh(float8 num);
+extern float8 float8_asind(float8 num);
+extern float8 float8_asinh(float8 num);
+extern float8 float8_atan(float8 num);
+extern float8 float8_atan2(float8 num1, float8 num2);
+extern float8 float8_atan2d(float8 num1, float8 num2);
+extern float8 float8_atand(float8 num);
+extern float8 float8_atanh(float8 num);
+extern int float8_cmp_internal(float8 a, float8 b);
+extern float8 float8_cos(float8 num);
+extern float8 float8_cosd(float8 num);
+extern float8 float8_cosh(float8 num);
+extern float8 float8_cotd(float8 num);
+extern float8 float8_gamma(float8 num);
+extern float8 float8_in(const char *str);
+extern float8 float8_larger(float8 num1, float8 num2);
+extern float8 float8_lgamma(float8 num);
+extern char * float8_out(float8 num, int maxdd);
+extern float8 float8_pi(void);
+extern float8 float8_rint(float8 num);
+extern float8 float8_round(float8 num, int maxdd);
+extern float8 float8_sin(float8 num);
+extern float8 float8_sind(float8 num);
+extern float8 float8_sinh(float8 num);
+extern float8 float8_smaller(float8 num1, float8 num2);
+extern float8 float8_tand(float8 num);
+extern float8 float8_tanh(float8 num);
+extern float4 float8_to_float4(float8 num);
+extern int16 float8_to_int2(float8 num);
+extern int32 float8_to_int4(float8 num);
+extern float8 float8_um(float8 num);
+extern float8 float8_up(float8 num);
+extern float8 float8_angular_difference(float8 degrees1, float8 degrees2);
+extern float8 float8_exp(float8 num);
+extern float8 float8_ln(float8 num);
+extern float8 float8_log10(float8 num);
+extern float8 float8_round(float8 num, int maxdd);
+extern float4 int2_to_float4(int16 num);
+extern float8 int2_to_float8(int16 num);
+extern float4 int4_to_float4(int32 num);
+extern float8 int4_to_float8(int32 num);
+extern float4 pg_float4_div(float4 num1, float4 num2);
+extern bool pg_float4_eq(float4 num1, float4 num2);
+extern bool pg_float4_ge(float4 num1, float4 num2);
+extern bool pg_float4_gt(float4 num1, float4 num2);
+extern bool pg_float4_le(float4 num1, float4 num2);
+extern bool pg_float4_lt(float4 num1, float4 num2);
+extern float4 pg_float4_mi(float4 num1, float4 num2);
+extern float4 pg_float4_mul(float4 num1, float4 num2);
+extern bool pg_float4_ne(float4 num1, float4 num2);
+extern float4 pg_float4_pl(float4 num1, float4 num2);
+extern float8 pg_float8_div(float8 num1, float8 num2);
+extern bool pg_float8_eq(float8 num1, float8 num2);
+extern bool pg_float8_ge(float8 num1, float8 num2);
+extern bool pg_float8_gt(float8 num1, float8 num2);
+extern bool pg_float8_le(float8 num1, float8 num2);
+extern bool pg_float8_lt(float8 num1, float8 num2);
+extern float8 pg_float8_mi(float8 num1, float8 num2);
+extern float8 pg_float8_mul(float8 num1, float8 num2);
+extern bool pg_float8_ne(float8 num1, float8 num2);
+extern float8 pg_float8_pl(float8 num1, float8 num2);
+extern float8 radians_internal(float8 num);
+extern int32 width_bucket_float8_internal(float8 operand, float8 bound1, float8 bound2, int32 count);
 
 /* Functions adadpted from timestamp.c */
 

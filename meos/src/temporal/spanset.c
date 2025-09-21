@@ -535,7 +535,7 @@ int
 spanset_mem_size(const SpanSet *ss)
 {
   VALIDATE_NOT_NULL(ss, -1);
-  return (int) VARSIZE(DatumGetPointer(ss));
+  return (int) VARSIZE(ss);
 }
 
 /**
