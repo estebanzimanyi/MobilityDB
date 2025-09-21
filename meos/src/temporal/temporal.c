@@ -1252,7 +1252,7 @@ temparr_round(const Temporal **temparr, int count, int maxdd)
 /*****************************************************************************/
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_float
  * @brief Return a float number rounded to a given number of decimal places
  */
 double
@@ -1779,7 +1779,7 @@ temporal_scale_time(const Temporal *temp, const Interval *duration)
 size_t
 temporal_mem_size(const Temporal *temp)
 {
-  assert(temp);
+  VALIDATE_NOT_NULL(temp, -1);
   return VARSIZE(temp);
 }
 #endif /* MEOS || DEBUG_BUILD */

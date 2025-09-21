@@ -22,7 +22,7 @@
 #include "utils/datetime.h"
 #include "utils/date.h"
 
-#include "../../include/meos.h"
+#include "../include/meos.h"
 
 static const datetkn *datebsearch(const char *key, const datetkn *base, int nel);
 
@@ -422,14 +422,14 @@ AppendSeconds(char *cp, int sec, fsec_t fsec, int precision, bool fillzeros)
   Assert(precision >= 0);
 
   if (fillzeros)
-    cp = pg_ultostr_zeropad(cp, Abs(sec), 2);
+    cp = pg_ultostr_zeropad(cp, abs(sec), 2);
   else
-    cp = pg_ultostr(cp, Abs(sec));
+    cp = pg_ultostr(cp, abs(sec));
 
   /* fsec_t is just an int32 */
   if (fsec != 0)
   {
-    int32    value = Abs(fsec);
+    int32    value = abs(fsec);
     char     *end = &cp[precision + 1];
     bool    gotnonzero = false;
 
@@ -464,7 +464,7 @@ AppendSeconds(char *cp, int sec, fsec_t fsec, int precision, bool fillzeros)
      * which will generate a correct answer in the minimum valid width.
      */
     if (value)
-      return pg_ultostr(cp, Abs(fsec));
+      return pg_ultostr(cp, abs(fsec));
 
     return end;
   }

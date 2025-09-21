@@ -480,7 +480,7 @@ angular_difference(Datum degrees1, Datum degrees2)
 }
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_float
  * @brief Return the angular difference, i.e., the smaller angle between the
  * two degree values
  * @param[in] degrees1,degrees2 Values
@@ -596,7 +596,7 @@ tnumber_angular_difference(const Temporal *temp)
  *****************************************************************************/
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_float
  * @brief Return the exponential of a double
  * @param[in] d Value
  * @note PostgreSQL function: dexp(PG_FUNCTION_ARGS)
@@ -677,7 +677,7 @@ tfloat_exp(const Temporal *temp)
  *****************************************************************************/
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_float
  * @brief Return the natural logarithm of a double
  * @param[in] d Value
  * @note PostgreSQL function: dlog1(PG_FUNCTION_ARGS)
@@ -749,7 +749,7 @@ tfloat_ln(const Temporal *temp)
 /*****************************************************************************/
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_float
  * @brief Return the logarithm base 10 of a double
  * @param[in] d Value
  * @note PostgreSQL function: dlog10(PG_FUNCTION_ARGS)

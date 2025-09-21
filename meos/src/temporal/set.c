@@ -616,7 +616,7 @@ int
 set_mem_size(const Set *s)
 {
   VALIDATE_NOT_NULL(s, -1);
-  return (int) VARSIZE(DatumGetPointer(s));
+  return (int) VARSIZE(s);
 }
 #endif /* MEOS */
 

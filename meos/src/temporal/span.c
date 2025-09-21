@@ -1317,7 +1317,7 @@ numspan_shift_scale(const Span *s, Datum shift, Datum width, bool hasshift,
 }
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_timestamp
  * @brief Return a timestamptz shifted by an interval
  * @param[in] t Timestamp
  * @param[in] interv Interval to shift the instant
@@ -1506,7 +1506,7 @@ span_ne(const Span *s1, const Span *s2)
 /**
  * @ingroup meos_setspan_comp
  * @brief Return -1, 0, or 1 depending on whether the first span is less than,
- * equal, or greater than the second one
+ * equal to, or greater than the second one
  * @param[in] s1,s2 Sets
  * @note Function used for B-tree comparison
  * @csqlfn #Span_cmp()

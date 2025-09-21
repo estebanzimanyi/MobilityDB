@@ -18,7 +18,7 @@
 
 // MEOS
 // #include "datatype/timestamp.h"
-// #include "utils/timestamp_def.h"
+#include "utils/timestamp_def.h"
 #include "../pgtime.h"
 
 typedef int32 DateADT;

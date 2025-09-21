@@ -15,14 +15,12 @@
 
 #include <limits.h>
 
-#include "postgres.h"
-
-#include "../../include/meos.h"
-
 // MEOS
-// #include "datatype/timestamp.h"
-#include "utils/timestamp_def.h"
+#include "postgres.h"
 #include "utils/datetime.h"
+#include "utils/date.h"
+
+#include "../include/meos.h"
 
 #define SAMESIGN(a,b) (((a) < 0) == ((b) < 0))
 

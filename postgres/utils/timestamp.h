@@ -28,8 +28,8 @@
 #define DatumGetTimestampTz(X)	((TimestampTz) DatumGetInt64(X))
 #define DatumGetIntervalP(X)  ((Interval *) DatumGetPointer(X))
 
-#define TimestampGetDatum(X) Int64GetDatum(X)
-#define TimestampTzGetDatum(X) Int64GetDatum(X)
+#define TimestampGetDatum(X) ((Datum) (X))
+#define TimestampTzGetDatum(X) ((Datum) (X))
 #define IntervalPGetDatum(X) PointerGetDatum(X)
 
 #define PG_GETARG_TIMESTAMP(n) DatumGetTimestamp(PG_GETARG_DATUM(n))

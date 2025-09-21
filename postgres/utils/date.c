@@ -13,15 +13,15 @@
  *-------------------------------------------------------------------------
  */
 
-#include "postgres.h"
-
 #include <limits.h>
 
+/* PostgreSQL */
+#include "postgres.h"
 #include "utils/timestamp_def.h"
 #include "utils/date.h"
 #include "utils/datetime.h"
 
-#include "../../include/meos.h"
+#include "../include/meos.h"
 
 /*
  * gcc's -ffast-math switch breaks routines that expect exact results from
@@ -83,6 +83,27 @@ time2tm(TimeADT time, struct pg_tm *tm, fsec_t *fsec)
   tm->tm_sec = time / USECS_PER_SEC;
   time -= tm->tm_sec * USECS_PER_SEC;
   *fsec = time;
+  return 0;
+}
+
+/* timetz2tm()
+ * Convert TIME WITH TIME ZONE data type to POSIX time structure.
+ */
+int
+timetz2tm(TimeTzADT *time, struct pg_tm *tm, fsec_t *fsec, int *tzp)
+{
+  TimeOffset  trem = time->time;
+
+  tm->tm_hour = trem / USECS_PER_HOUR;
+  trem -= tm->tm_hour * USECS_PER_HOUR;
+  tm->tm_min = trem / USECS_PER_MINUTE;
+  trem -= tm->tm_min * USECS_PER_MINUTE;
+  tm->tm_sec = trem / USECS_PER_SEC;
+  *fsec = trem - tm->tm_sec * USECS_PER_SEC;
+
+  if (tzp != NULL)
+    *tzp = time->zone;
+
   return 0;
 }
 

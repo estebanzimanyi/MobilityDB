@@ -14,9 +14,13 @@
 
 #include <dirent.h>
 
+// MEOS
 #include "postgres.h"
+#include "utils/timestamp_def.h"
+#include "utils/datetime.h"
+#include "utils/date.h"
 
-#include "../../include/meos.h"
+#include <meos.h>
 
 /*
  * pgfnames

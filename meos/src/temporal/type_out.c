@@ -89,7 +89,7 @@ size_t lwgeom_to_wkb_size(const LWGEOM *geom, uint8_t variant);
  *****************************************************************************/
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_text
  * @brief Return the string representation of a text value
  * @param[in] txt Text
  */

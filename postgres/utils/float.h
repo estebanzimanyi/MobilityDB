@@ -12,10 +12,13 @@
  *
  *-------------------------------------------------------------------------
  */
-#ifndef FLOAT_H
-#define FLOAT_H
+#ifndef UTILS_FLOAT_H
+#define UTILS_FLOAT_H
 
 #include <math.h>
+
+// MEOS
+#include <postgres.h>
 
 #ifndef M_PI
 /* From my RH5.2 gcc math.h file - thomas 2000-04-03 */
@@ -32,21 +35,13 @@ static const uint32 nan[2] = {0xffffffff, 0x7fffffff};
 #define NAN (*(const float8 *) nan)
 #endif
 
-extern PGDLLIMPORT int extra_float_digits;
+// MEOS
+// extern PGDLLIMPORT int extra_float_digits;
+extern int extra_float_digits;
 
 /*
  * Utility functions in float.c
  */
-extern void float_overflow_error(void); // pg_attribute_noreturn();
-extern void float_underflow_error(void); // pg_attribute_noreturn();
-extern void float_zero_divide_error(void); // pg_attribute_noreturn();
-extern int	is_infinite(float8 val);
-extern float8 float8in_internal(char *num, char **endptr_p,
-								const char *type_name, const char *orig_string);
-extern float8 float8in_internal_opt_error(char *num, char **endptr_p,
-										  const char *type_name, const char *orig_string,
-										  bool *have_error);
-extern char *float8out_internal(float8 num);
 extern int	float4_cmp_internal(float4 a, float4 b);
 extern int	float8_cmp_internal(float8 a, float8 b);
 
@@ -353,4 +348,4 @@ float8_max(const float8 val1, const float8 val2)
 	return float8_gt(val1, val2) ? val1 : val2;
 }
 
-#endif							/* FLOAT_H */
+#endif							/* UTILS_FLOAT_H */
