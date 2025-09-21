@@ -91,146 +91,6 @@ extern int varstr_cmp(const char *arg1, int len1, const char *arg2, int len2,
   Oid collid);
 
 /*****************************************************************************
- * Functions adapted from bool.c
- *****************************************************************************/
-
-static bool
-parse_bool_with_len(const char *value, size_t len, bool *result)
-{
-  switch (*value)
-  {
-    case 't':
-    case 'T':
-      if (pg_strncasecmp(value, "true", len) == 0)
-      {
-        if (result)
-          *result = true;
-        return true;
-      }
-      break;
-    case 'f':
-    case 'F':
-      if (pg_strncasecmp(value, "false", len) == 0)
-      {
-        if (result)
-          *result = false;
-        return true;
-      }
-      break;
-    case 'y':
-    case 'Y':
-      if (pg_strncasecmp(value, "yes", len) == 0)
-      {
-        if (result)
-          *result = true;
-        return true;
-      }
-      break;
-    case 'n':
-    case 'N':
-      if (pg_strncasecmp(value, "no", len) == 0)
-      {
-        if (result)
-          *result = false;
-        return true;
-      }
-      break;
-    case 'o':
-    case 'O':
-      /* 'o' is not unique enough */
-      if (pg_strncasecmp(value, "on", (len > 2 ? len : 2)) == 0)
-      {
-        if (result)
-          *result = true;
-        return true;
-      }
-      else if (pg_strncasecmp(value, "off", (len > 2 ? len : 2)) == 0)
-      {
-        if (result)
-          *result = false;
-        return true;
-      }
-      break;
-    case '1':
-      if (len == 1)
-      {
-        if (result)
-          *result = true;
-        return true;
-      }
-      break;
-    case '0':
-      if (len == 1)
-      {
-        if (result)
-          *result = false;
-        return true;
-      }
-      break;
-    default:
-      break;
-  }
-
-  if (result)
-    *result = false;    /* suppress compiler warning */
-  return false;
-}
-
-/**
- * @ingroup meos_base_types
- * @brief Return a boolean from its string representation
- * @param[in] str String
- * @details Convert @p "t" or @p "f" to 1 or 0.
- * Check explicitly for @p "true/false" and @p TRUE/FALSE, @p 1/0, @p YES/NO,
- * @p ON/OFF and reject other values. In the @p switch statement, check the
- * most-used possibilities first.
- * @note PostgreSQL function: @p boolin(PG_FUNCTION_ARGS)
- */
-bool
-bool_in(const char *str)
-{
-  /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(str, false);
-
-  /*
-   * Skip leading and trailing whitespace
-   */
-  const char *str1 = str;
-  while (isspace((unsigned char) *str1))
-    str1++;
-
-  size_t len = strlen(str1);
-  while (len > 0 && isspace((unsigned char) str1[len - 1]))
-    len--;
-
-  bool result;
-  if (parse_bool_with_len(str1, len, &result))
-    return result;
-
-  meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
-    "invalid input syntax for type %s: \"%s\"", "boolean", str);
-
-  /* not reached */
-  return false;
-}
-
-/**
- * @ingroup meos_base_types
- * @brief Return the string representation of a boolean
- * @param[in] b Boolean value
- * @details Convert 1 or 0 to @p "t" or @p "f"
- * @note PostgreSQL function: @p boolout(PG_FUNCTION_ARGS)
- */
-char *
-bool_out(bool b)
-{
-  char *result = palloc(2);
-  result[0] = (b) ? 't' : 'f';
-  result[1] = '\0';
-  return result;
-}
-
-/*****************************************************************************
  * Functions adapted from int.c
  *****************************************************************************/
 
@@ -307,290 +167,11 @@ int8_out(int64 val)
 }
 
 /*****************************************************************************
- * Functions adapted from float.c
- *****************************************************************************/
-
-/**
- * float8in_internal_opt_error - guts of float8in()
- * @return On error return @p DBL_MAX
- *
- * This is exposed for use by functions that want a reasonably
- * platform-independent way of inputting doubles.  The behavior is
- * essentially like strtod + ereport on error, but note the following
- * differences:
- * 1. Both leading and trailing whitespace are skipped.
- * 2. If endptr_p is NULL, we throw error if there's trailing junk.
- * Otherwise, it's up to the caller to complain about trailing junk.
- * 3. In event of a syntax error, the report mentions the given type_name
- * and prints orig_string as the input; this is meant to support use of
- * this function with types such as "box" and "point", where what we are
- * parsing here is just a substring of orig_string.
- *
- * "num" could validly be declared "const char *", but that results in an
- * unreasonable amount of extra casting both here and in callers, so we don't.
- */
-double
-float8_in_opt_error(char *num, const char *type_name, const char *orig_string)
-{
-  double    val;
-  char     *endptr;
-
-  /* skip leading whitespace */
-  while (*num != '\0' && isspace((unsigned char) *num))
-    num++;
-
-  /*
-   * Check for an empty-string input to begin with, to avoid the vagaries of
-   * strtod() on different platforms.
-   */
-  if (*num == '\0')
-  {
-    meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
-      "invalid input syntax for type %s: \"%s\"", type_name, orig_string);
-    return DBL_MAX;
-  }
-
-  errno = 0;
-  val = strtod(num, &endptr);
-
-  /* did we not see anything that looks like a double? */
-  if (endptr == num || errno != 0)
-  {
-    int      save_errno = errno;
-
-    /*
-     * C99 requires that strtod() accept NaN, [+-]Infinity, and [+-]Inf,
-     * but not all platforms support all of these (and some accept them
-     * but set ERANGE anyway...)  Therefore, we check for these inputs
-     * ourselves if strtod() fails.
-     *
-     * Note: C99 also requires hexadecimal input as well as some extended
-     * forms of NaN, but we consider these forms unportable and don't try
-     * to support them.  You can use 'em if your strtod() takes 'em.
-     */
-    if (pg_strncasecmp(num, "NaN", 3) == 0)
-    {
-      val = get_float8_nan();
-      endptr = num + 3;
-    }
-    else if (pg_strncasecmp(num, "Infinity", 8) == 0)
-    {
-      val = get_float8_infinity();
-      endptr = num + 8;
-    }
-    else if (pg_strncasecmp(num, "+Infinity", 9) == 0)
-    {
-      val = get_float8_infinity();
-      endptr = num + 9;
-    }
-    else if (pg_strncasecmp(num, "-Infinity", 9) == 0)
-    {
-      val = -get_float8_infinity();
-      endptr = num + 9;
-    }
-    else if (pg_strncasecmp(num, "inf", 3) == 0)
-    {
-      val = get_float8_infinity();
-      endptr = num + 3;
-    }
-    else if (pg_strncasecmp(num, "+inf", 4) == 0)
-    {
-      val = get_float8_infinity();
-      endptr = num + 4;
-    }
-    else if (pg_strncasecmp(num, "-inf", 4) == 0)
-    {
-      val = -get_float8_infinity();
-      endptr = num + 4;
-    }
-    else if (save_errno == ERANGE)
-    {
-      /*
-       * Some platforms return ERANGE for denormalized numbers (those
-       * that are not zero, but are too close to zero to have full
-       * precision).  We'd prefer not to throw error for that, so try to
-       * detect whether it's a "real" out-of-range condition by checking
-       * to see if the result is zero or huge.
-       *
-       * On error, we intentionally complain about double precision not
-       * the given type name, and we print only the part of the string
-       * that is the current number.
-       */
-      if (val == 0.0 || val >= HUGE_VAL || val <= -HUGE_VAL)
-      {
-        char *errnumber = strdup(num);
-        errnumber[endptr - num] = '\0';
-        meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
-          "\"%s\" is out of range for type double precision", errnumber);
-        pfree(errnumber);
-        return DBL_MAX;
-      }
-    }
-    else
-    {
-      meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
-        "invalid input syntax for type %s: \"%s\"", type_name, orig_string);
-      return DBL_MAX;
-    }
-  }
-
-  /* skip trailing whitespace */
-  while (*endptr != '\0' && isspace((unsigned char) *endptr))
-    endptr++;
-
-  return val;
-}
-
-/*
- * Interface to float8in_internal_opt_error().
- */
-double
-float8_in(const char *num, const char *type_name, const char *orig_string)
-{
-  return float8_in_opt_error((char *) num, type_name, orig_string);
-}
-
-/*
- * This function uses the PostGIS function lwprint_double to print an ordinate
- * value using at most **maxdd** number of decimal digits. The actual number
- * of printed decimal digits may be less than the requested ones if out of
- * significant digits.
- *
- * The function will write at most OUT_DOUBLE_BUFFER_SIZE bytes, including the
- * terminating NULL.
- */
-char *
-float8_out(double num, int maxdd)
-{
-  assert(maxdd >= 0);
-  char *ascii = palloc(OUT_DOUBLE_BUFFER_SIZE);
-  lwprint_double(num, maxdd, ascii);
-  return ascii;
-}
-
-/**
- * @brief Return the sine of arg1 (radians)
- * @return On error return @p DBL_MAX
- * @note PostgreSQL function: @p dsin(PG_FUNCTION_ARGS)
- */
-float8
-pg_dsin(float8 arg1)
-{
-  float8 result;
-
-  /* Per the POSIX spec, return NaN if the input is NaN */
-  if (isnan(arg1))
-    return get_float8_nan();
-
-  /* Be sure to throw an error if the input is infinite --- see dcos() */
-  errno = 0;
-  result = sin(arg1);
-  if (errno != 0 || isinf(arg1))
-  {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "input is out of range");
-    return DBL_MAX;
-  }
-  if (unlikely(isinf(result)))
-    float_overflow_error();
-
-  return result;
-}
-
-/**
- * @brief Return the cosine of arg1 (radians)
- * @return On error return @p DBL_MAX
- * @note PostgreSQL function: @p dcos(PG_FUNCTION_ARGS)
- */
-float8
-pg_dcos(float8 arg1)
-{
-  float8 result;
-
-  /* Per the POSIX spec, return NaN if the input is NaN */
-  if (isnan(arg1))
-    return get_float8_nan();
-
-  /*
-   * cos() is periodic and so theoretically can work for all finite inputs,
-   * but some implementations may choose to throw error if the input is so
-   * large that there are no significant digits in the result.  So we should
-   * check for errors.  POSIX allows an error to be reported either via
-   * errno or via fetestexcept(), but currently we only support checking
-   * errno.  (fetestexcept() is rumored to report underflow unreasonably
-   * early on some platforms, so it's not clear that believing it would be a
-   * net improvement anyway.)
-   *
-   * For infinite inputs, POSIX specifies that the trigonometric functions
-   * should return a domain error; but we won't notice that unless the
-   * platform reports via errno, so also explicitly test for infinite
-   * inputs.
-   */
-  errno = 0;
-  result = cos(arg1);
-  if (errno != 0 || isinf(arg1))
-  {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "input is out of range");
-    return DBL_MAX;
-  }
-  if (unlikely(isinf(result)))
-    float_overflow_error();
-
-  return result;
-}
-
-/**
- * @brief Return the arctan of a double (radians)
- * @note PostgreSQL function: @p datan(PG_FUNCTION_ARGS)
- */
-float8
-pg_datan(float8 arg1)
-{
-  float8 result;
-
-  /* Per the POSIX spec, return NaN if the input is NaN */
-  if (isnan(arg1))
-    return get_float8_nan();
-
-  /*
-   * The principal branch of the inverse tangent function maps all inputs to
-   * values in the range [-Pi/2, Pi/2], so the result should always be
-   * finite, even if the input is infinite.
-   */
-  result = atan(arg1);
-  if (unlikely(isinf(result)))
-    float_overflow_error();
-
-  return result;
-}
-
-/**
- * @brief Return the arctan of two doubles (radians)
- * @note PostgreSQL function: @p datan2d(PG_FUNCTION_ARGS)
- */
-float8
-pg_datan2(float8 arg1, float8 arg2)
-{
-  /* Per the POSIX spec, return NaN if either input is NaN */
-  if (isnan(arg1) || isnan(arg2))
-    return get_float8_nan();
-
-  /*
-   * atan2 maps all inputs to values in the range [-Pi, Pi], so the result
-   * should always be finite, even if the inputs are infinite.
-   */
-  float8 result = atan2(arg1, arg2);
-  if (unlikely(isinf(result)))
-    float_overflow_error();
-
-  return result;
-}
-
-/*****************************************************************************
  * Functions adapted from date.c
  *****************************************************************************/
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_date
  * @brief Return a date from its string representation
  * @param[in] str String
  * @return On error return @p DATEVAL_NOEND
@@ -694,7 +275,7 @@ date_in(const char *str)
 #endif /* MEOS */
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_date
  * @brief Return the string representation of a date
  * @param[in] d Date
  * @note PostgreSQL function: @p date_out(PG_FUNCTION_ARGS)
@@ -820,7 +401,7 @@ date2timestamptz_opt_overflow(DateADT dateVal, int *overflow)
 #endif /* MEOS */
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_date
  * @brief Convert a date into a timestamptz
  * @param[in] d Date
  * @note PostgreSQL function: @p date_timestamptz(PG_FUNCTION_ARGS)
@@ -832,7 +413,7 @@ date_to_timestamptz(DateADT d)
 }
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_date
  * @brief Return the addition of a date and a number of days
  * @details Must handle both positive and negative numbers of days.
  * @param[in] d Date
@@ -861,7 +442,7 @@ add_date_int(DateADT d, int32 days)
 
 #if MEOS
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_date
  * @brief Return the subtraction of a date and a number of days
  * @param[in] d Date
  * @param[in] days Number of days to subtract
@@ -889,7 +470,7 @@ minus_date_int(DateADT d, int32 days)
 #endif /* MEOS */
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_date
  * @brief Return the subtraction of two dates
  * @param[in] d1,d2 Dates
  * @note PostgreSQL function: @p date_mi(PG_FUNCTION_ARGS)
@@ -972,7 +553,7 @@ date2timestamp(DateADT dateVal)
 }
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_date
  * @brief Convert a date into a timestamp 
  * @param[in] d Date
  * @note PostgreSQL function: @p date_timestamp(PG_FUNCTION_ARGS)
@@ -986,7 +567,7 @@ date_to_timestamp(DateADT d)
 }
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_timestamp
  * @brief Convert a timestamp into a date
  * @param[in] t Timestamp
  * @note PostgreSQL function: @p timestamp_date(PG_FUNCTION_ARGS)
@@ -1069,7 +650,7 @@ MEOSAdjustTimeForTypmod(TimeADT *time, int32 typmod)
 }
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_time
  * @brief Return a time from its string representation
  * @param[in] str String
  * @param[in] prec Precision
@@ -1113,7 +694,7 @@ time_in(const char *str, int32 prec)
 }
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_time
  * @brief Return the string representation of a time
  * @param[in] t Time value
  * @note PostgreSQL function: @p time_out(PG_FUNCTION_ARGS)
@@ -1138,7 +719,7 @@ time_out(TimeADT t)
 
 #if ! MEOS
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_timestamp
  * @brief Return timestamp with timezone from a string
  * @param[in] str String
  * @param[in] prec Precision, that is, the number of fractional digits retained
@@ -1312,7 +893,7 @@ timestamp_in_common(const char *str, int32 typmod, bool withtz)
 }
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_timestamp
  * @brief Return a timestamp without time zone from its string representation
  * @param[in] str String
  * @param[in] prec Precision, that is, the number of fractional digits retained
@@ -1333,7 +914,7 @@ pg_timestamp_in(const char *str, int32 prec)
 }
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_timestamp
  * @brief Return the string representation of a timestamp with time zone
  * @param[in] str String
  * @param[in] prec Precision, that is, the number of fractional digits retained
@@ -1356,7 +937,7 @@ pg_timestamptz_in(const char *str, int32 prec)
 
 #if ! MEOS
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_timestamp
  * @brief Return the string representation a timestamp with timezone
  * @param[in] t Timestamp
  * @return On error return @p NULL
@@ -1398,7 +979,7 @@ timestamp_out_common(TimestampTz t, bool withtz)
 }
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_timestamp
  * @brief Return the string representation of a timestamp without timezone
  * @param[in] t Timestamp
  * @note PostgreSQL function: @p timestamp_out(PG_FUNCTION_ARGS)
@@ -1415,7 +996,7 @@ pg_timestamp_out(Timestamp t)
 }
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_timestamp
  * @brief Return the string representation of a timestamp with timezone
  * @param[in] t Timestamp
  * @note PostgreSQL function: @p timestamptz_out(PG_FUNCTION_ARGS)
@@ -1433,7 +1014,7 @@ pg_timestamptz_out(TimestampTz t)
 #endif /* MEOS */
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_timestamp
  * @brief Convert a timestamp with time zone into a date
  * @param[in] t Timestamp
  * @note PostgreSQL function @p timestamptz_date(PG_FUNCTION_ARGS)
@@ -1641,7 +1222,7 @@ AdjustIntervalForTypmod(Interval *interval, int32 typmod)
 }
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_interval
  * @brief Return an interval from its string representation
  * @param[in] str String
  * @param[in] prec Precision
@@ -1735,7 +1316,7 @@ interval_in(const char *str, int32 prec)
 }
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_interval
  * @brief Return an interval constructed from its arguments
  * @param[in] years Years
  * @param[in] months Months
@@ -1774,21 +1355,8 @@ interval_make(int32 years, int32 months, int32 weeks, int32 days, int32 hours,
 }
 #endif /* MEOS */
 
-#if ! MEOS
 /**
- * @brief Return the string representation of an interval
- * @return On error return @p NULL
- * @note PostgreSQL function: @p interval_out(PG_FUNCTION_ARGS)
- */
-char *
-pg_interval_out(const Interval *interv)
-{
-  Datum d = PointerGetDatum(interv);
-  return DatumGetCString(call_function1(interval_out, d));
-}
-#else
-/**
- * @ingroup meos_base_types
+ * @ingroup meos_base_interval
  * @brief Return the string representation of an interval
  * @param[in] interv Interval
  * @note PostgreSQL function: @p interval_out(PG_FUNCTION_ARGS)
@@ -1798,6 +1366,14 @@ pg_interval_out(const Interval *interv)
  * style specified at the initialization of the MEOS library (`postgres` by
  * default)
  */
+#if ! MEOS
+char *
+pg_interval_out(const Interval *interv)
+{
+  Datum d = PointerGetDatum(interv);
+  return DatumGetCString(call_function1(interval_out, d));
+}
+#else
 char *
 pg_interval_out(const Interval *interv)
 {
@@ -1832,7 +1408,7 @@ interval_out(const Interval *interv)
 #define SAMESIGN(a,b) (((a) < 0) == ((b) < 0))
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_interval
  * @brief Return the addition of two intervals
  * @param[in] interv1,interv2 Intervals
  * @note PostgreSQL function: @p interval_pl(PG_FUNCTION_ARGS)
@@ -1876,7 +1452,7 @@ add_interval_interval(const Interval *interv1, const Interval *interv2)
 }
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_interval
  * @brief Return the addition of a timestamp and an interval
  * @details Note that interval has provisions for qualitative year/month and
  * day units, so try to do the right thing with them.
@@ -1980,8 +1556,7 @@ add_timestamptz_interval(TimestampTz t, const Interval *interv)
 }
 
 /**
- * @ingroup meos_base_types
- * @ingroup meos_base_types
+ * @ingroup meos_base_interval
  * @brief Return the subtraction of a timestamptz and an interval
  * @param[in] t Timestamp
  * @param[in] interv Interval
@@ -2034,7 +1609,7 @@ pg_interval_justify_hours(const Interval *interv)
 }
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_interval
  * @brief Return the subtraction of two timestamptz values
  * @param[in] t1,t2 Timestamps
  * @note PostgreSQL function: @p timestamp_mi(PG_FUNCTION_ARGS). Notice that
@@ -2059,7 +1634,8 @@ minus_timestamptz_timestamptz(TimestampTz t1, TimestampTz t2)
 }
 
 /**
- * @brief Negate an interval.
+ * @ingroup meos_base_interval
+ * @brief Negate an interval
  * @note The PostgreSQL function @p interval_um_internal is declared static
  */
 void
@@ -2114,7 +1690,7 @@ interval_cmp_value(const Interval *interval)
 }
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_interval
  * @brief Return the multiplication of an interval and a factor
  * @param[in] interv Interval
  * @param[in] factor Factor
@@ -2212,7 +1788,7 @@ pg_interval_cmp(const Interval *interv1, const Interval *interv2)
 
 #if MEOS
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_interval
  * @brief Return the comparison of two intervals
  * @param[in] interv1,interv2 Intervals
  * @note PostgreSQL function: @p interval_cmp(PG_FUNCTION_ARGS)
@@ -2241,7 +1817,7 @@ bstring2bytea(const uint8_t *wkb, size_t size)
 }
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_text
  * @brief Convert a C string into a text
  * @param[in] str String
  * @note Function taken from PostGIS file `lwgeom_in_geojson.c`
@@ -2260,7 +1836,7 @@ cstring2text(const char *str)
 }
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_text
  * @brief Convert a text into a C string
  * @param[in] txt Text
  * @note Function taken from PostGIS file @p lwgeom_in_geojson.c
@@ -2295,7 +1871,7 @@ varstr_cmp(const char *arg1, int len1, const char *arg2, int len2,
 #endif /* MEOS */
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_text
  * @brief Comparison function for text values
  * @param[in] txt1,txt2 Text values
  * @note Function derived from PostgreSQL since it is declared static. Notice
@@ -2314,7 +1890,7 @@ text_cmp(const text *txt1, const text *txt2)
 
 #if MEOS
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_text
  * @brief Copy a text value
  * @param[in] txt Text
  */
@@ -2329,7 +1905,7 @@ text_copy(const text *txt)
 #endif /* MEOS */
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_text
  * @brief Return the concatenation of the two text values
  * @param[in] txt1,txt2 Text values
  * @note Function adapted from the external function @p text_catenate in file
@@ -2397,7 +1973,7 @@ pnstrdup(const char *in, Size size)
 #endif /* MEOS */
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_text
  * @brief Return the text value transformed to lowercase
  * @param[in] txt Text value
  * @note PostgreSQL function: @p lower() in file @p varlena.c.
@@ -2429,7 +2005,7 @@ datum_lower(Datum value)
 }
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_text
  * @brief Return the text value transformed to uppercase
  * @param[in] txt Text value
  * @note PostgreSQL function: @p upper() in file @p varlena.c.
@@ -2461,7 +2037,7 @@ datum_upper(Datum value)
 }
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_text
  * @brief Convert the text value to initcap
  * @param[in] txt Text value
  * @note PostgreSQL function: @p initcap() in file @p varlena.c.

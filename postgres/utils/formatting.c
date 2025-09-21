@@ -67,6 +67,8 @@
 #include "utils/date.h"
 #include "utils/float.h"
 
+#include "../../meos/include/meos.h"
+
 #define DEFAULT_COLLATION_OID 100
 
 /*

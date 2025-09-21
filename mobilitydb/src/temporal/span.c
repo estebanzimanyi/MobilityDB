@@ -46,6 +46,7 @@
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
+#include "temporal/postgres_types.h"
 #include "temporal/set.h"
 #include "temporal/span.h"
 #include "temporal/temporal.h"
@@ -780,7 +781,7 @@ Float_round(PG_FUNCTION_ARGS)
 {
   double d = PG_GETARG_FLOAT8(0);
   int maxdd = PG_GETARG_INT32(1);
-  PG_RETURN_FLOAT8(float_round(d, maxdd));
+  PG_RETURN_FLOAT8(float8_round(d, maxdd));
 }
 
 PGDLLEXPORT Datum Floatspan_round(PG_FUNCTION_ARGS);

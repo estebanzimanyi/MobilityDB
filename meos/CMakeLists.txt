@@ -105,6 +105,12 @@ include_directories(SYSTEM "${CMAKE_BINARY_DIR}/postgis/liblwgeom")
 include_directories(SYSTEM "${CMAKE_BINARY_DIR}/postgis")
 add_subdirectory("${CMAKE_SOURCE_DIR}/postgis" "postgis")
 
+# PostgreSQL
+configure_file(../postgres/pg_config.h.in ../postgres/pg_config.h)
+include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/postgres")
+include_directories(SYSTEM "${CMAKE_BINARY_DIR}/postgres")
+add_subdirectory("${CMAKE_SOURCE_DIR}/postgres" "postgres")
+
 # MEOS
 include_directories("include")
 add_subdirectory("src")

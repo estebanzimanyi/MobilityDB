@@ -12,10 +12,15 @@
  *
  *-------------------------------------------------------------------------
  */
-#include "postgres.h"
 
+// MEOS
+#include "postgres.h"
+#include "utils/datetime.h"
+#include "utils/date.h"
 #include "common/int.h"
 #include "port/pg_bitutils.h"
+
+#include "../../meos/include/meos.h"
 
 /*
  * A table of all two-digit numbers. This is used to speed up decimal digit

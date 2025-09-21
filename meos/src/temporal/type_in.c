@@ -105,8 +105,7 @@ bool
 #if CBUFFER || NPOINT || POSE || RGEO
 basetype_in(const char *str, meosType type, bool end, Datum *result)
 #else
-basetype_in(const char *str, meosType type,
-  bool end UNUSED, Datum *result)
+basetype_in(const char *str, meosType type, bool end UNUSED, Datum *result)
 #endif
 {
   assert(meos_basetype(type));
@@ -154,7 +153,7 @@ basetype_in(const char *str, meosType type,
     }
     case T_FLOAT8:
     {
-      double d = float8_in(str, "double precision", str);
+      double d = float8_in(str);
       if (d == DBL_MAX)
         return false;
       *result = Float8GetDatum(d);
