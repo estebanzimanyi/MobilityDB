@@ -804,8 +804,8 @@ floatspan_round_set(const Span *s, int maxdd, Span *result)
 {
   assert(s); assert(s->spantype == T_FLOATSPAN); assert(result);
   /* Set precision of bounds */
-  double lower = float_round(DatumGetFloat8(s->lower), maxdd);
-  double upper = float_round(DatumGetFloat8(s->upper), maxdd);
+  double lower = float8_round(DatumGetFloat8(s->lower), maxdd);
+  double upper = float8_round(DatumGetFloat8(s->upper), maxdd);
   /* Fix the bounds */
   bool lower_inc, upper_inc;
   if (float8_eq(lower, upper))
@@ -1317,7 +1317,7 @@ numspan_shift_scale(const Span *s, Datum shift, Datum width, bool hasshift,
 }
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_timestamp
  * @brief Return a timestamptz shifted by an interval
  * @param[in] t Timestamp
  * @param[in] interv Interval to shift the instant
@@ -1506,7 +1506,7 @@ span_ne(const Span *s1, const Span *s2)
 /**
  * @ingroup meos_setspan_comp
  * @brief Return -1, 0, or 1 depending on whether the first span is less than,
- * equal, or greater than the second one
+ * equal to, or greater than the second one
  * @param[in] s1,s2 Sets
  * @note Function used for B-tree comparison
  * @csqlfn #Span_cmp()
