@@ -759,7 +759,7 @@ cbuffer_round(const Cbuffer *cb, int maxdd)
 
   /* Set precision of the point and the radius */
   GSERIALIZED *point = point_round((GSERIALIZED *) (&cb->point), maxdd);
-  double radius = float_round(cb->radius, maxdd);
+  double radius = float8_round(cb->radius, maxdd);
   return cbuffer_make(point, radius);
 }
 
