@@ -3,12 +3,15 @@ set(TEMPORAL_SRCS
   doublen.c
   error.c
   float.c
+  json.c
+  jsonb.c
+  jsonb_op.c
+  jsonb_util.c
+  jsonfuncs.c
   lifting.c
   meos.c
   meos_catalog.c
   numeric.c
-  jsonb_op.c
-  jsonb_util.c
   postgres_types.c
   skiplist.c
   set.c

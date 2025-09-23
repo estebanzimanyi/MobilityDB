@@ -16,6 +16,8 @@
 #define UTILS_FLOAT_H
 
 #include <math.h>
+// MEOS
+#include <meos.h>
 
 // MEOS
 #include <postgres.h>
@@ -143,7 +145,14 @@ float4_pl(const float4 val1, const float4 val2)
 
 	result = val1 + val2;
 	if (unlikely(isinf(result)) && !isinf(val1) && !isinf(val2))
+  {
+#if MEOS
+  meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
+    "value out of range: overflow");
+#else 
 		float_overflow_error();
+#endif
+  }
 
 	return result;
 }
@@ -155,7 +164,14 @@ float8_pl(const float8 val1, const float8 val2)
 
 	result = val1 + val2;
 	if (unlikely(isinf(result)) && !isinf(val1) && !isinf(val2))
+  {
+#if MEOS
+  meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
+    "value out of range: overflow");
+#else 
 		float_overflow_error();
+#endif
+  }
 
 	return result;
 }
@@ -167,7 +183,14 @@ float4_mi(const float4 val1, const float4 val2)
 
 	result = val1 - val2;
 	if (unlikely(isinf(result)) && !isinf(val1) && !isinf(val2))
+  {
+#if MEOS
+  meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
+    "value out of range: overflow");
+#else 
 		float_overflow_error();
+#endif
+  }
 
 	return result;
 }
@@ -179,7 +202,14 @@ float8_mi(const float8 val1, const float8 val2)
 
 	result = val1 - val2;
 	if (unlikely(isinf(result)) && !isinf(val1) && !isinf(val2))
+  {
+#if MEOS
+  meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
+    "value out of range: overflow");
+#else 
 		float_overflow_error();
+#endif
+  }
 
 	return result;
 }
@@ -191,9 +221,23 @@ float4_mul(const float4 val1, const float4 val2)
 
 	result = val1 * val2;
 	if (unlikely(isinf(result)) && !isinf(val1) && !isinf(val2))
+  {
+#if MEOS
+  meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
+    "value out of range: overflow");
+#else 
 		float_overflow_error();
+#endif
+  }
 	if (unlikely(result == 0.0f) && val1 != 0.0f && val2 != 0.0f)
+  {
+#if MEOS
+  meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
+    "value out of range: underflow");
+#else 
 		float_underflow_error();
+#endif
+  }
 
 	return result;
 }
@@ -205,9 +249,23 @@ float8_mul(const float8 val1, const float8 val2)
 
 	result = val1 * val2;
 	if (unlikely(isinf(result)) && !isinf(val1) && !isinf(val2))
+  {
+#if MEOS
+  meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
+    "value out of range: overflow");
+#else 
 		float_overflow_error();
+#endif
+  }
 	if (unlikely(result == 0.0) && val1 != 0.0 && val2 != 0.0)
+  {
+#if MEOS
+  meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
+    "value out of range: underflow");
+#else 
 		float_underflow_error();
+#endif
+  }
 
 	return result;
 }
@@ -218,12 +276,32 @@ float4_div(const float4 val1, const float4 val2)
 	float4		result;
 
 	if (unlikely(val2 == 0.0f) && !isnan(val1))
+  {
+#if MEOS
+  meos_error(ERROR, MEOS_ERR_DIVISION_BY_ZERO, "division by zero");
+#else 
 		float_zero_divide_error();
+#endif
+  }
 	result = val1 / val2;
 	if (unlikely(isinf(result)) && !isinf(val1))
+  {
+#if MEOS
+  meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
+    "value out of range: overflow");
+#else 
 		float_overflow_error();
+#endif
+  }
 	if (unlikely(result == 0.0f) && val1 != 0.0f && !isinf(val2))
+  {
+#if MEOS
+  meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
+    "value out of range: underflow");
+#else 
 		float_underflow_error();
+#endif
+  }
 
 	return result;
 }
@@ -234,12 +312,32 @@ float8_div(const float8 val1, const float8 val2)
 	float8		result;
 
 	if (unlikely(val2 == 0.0) && !isnan(val1))
+  {
+#if MEOS
+  meos_error(ERROR, MEOS_ERR_DIVISION_BY_ZERO, "division by zero");
+#else 
 		float_zero_divide_error();
+#endif
+  }
 	result = val1 / val2;
 	if (unlikely(isinf(result)) && !isinf(val1))
+  {
+#if MEOS
+  meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
+    "value out of range: overflow");
+#else 
 		float_overflow_error();
+#endif
+  }
 	if (unlikely(result == 0.0) && val1 != 0.0 && !isinf(val2))
+  {
+#if MEOS
+  meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
+    "value out of range: underflow");
+#else 
 		float_underflow_error();
+#endif
+  }
 
 	return result;
 }

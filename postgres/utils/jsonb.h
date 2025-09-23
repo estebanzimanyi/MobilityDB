@@ -380,20 +380,6 @@ DatumGetJsonbP(Datum d)
 #endif /* MEOS */
 }
 
-/**
- * @ingroup meos_temporal_constructor
- * @brief Return a copy of a temporal value
- * @param[in] temp Temporal value
- */
-inline Jsonb *
-jsonb_copy(Jsonb *jb)
-{
-  Jsonb *result = palloc(VARSIZE(jb));
-  memcpy(result, jb, VARSIZE(jb));
-  return result;
-}
-
-
 static inline Jsonb *
 DatumGetJsonbPCopy(Datum d)
 {

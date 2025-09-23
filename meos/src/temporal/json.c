@@ -11,25 +11,46 @@
  *
  *-------------------------------------------------------------------------
  */
-#include "postgres.h"
 
-#include "catalog/pg_proc.h"
-#include "catalog/pg_type.h"
-#include "common/hashfn.h"
-#include "funcapi.h"
-#include "libpq/pqformat.h"
-#include "miscadmin.h"
+/* C */
+#include <assert.h>
+#include <limits.h>
+#include <string.h>
+#include <stdlib.h>
+/* PostgreSQL */
+#include <postgres.h>
+#include "catalog/pg_type_d.h"
+#include <common/hashfn.h>
+#include <common/int.h>
 #include "port/simd.h"
-#include "utils/array.h"
-#include "utils/builtins.h"
-#include "utils/date.h"
-#include "utils/datetime.h"
-#include "utils/fmgroids.h"
-#include "utils/json.h"
-#include "utils/jsonfuncs.h"
-#include "utils/lsyscache.h"
-#include "utils/typcache.h"
+#include <utils/json.h>
+#include <utils/jsonb.h>
+/* MEOS */
+#include <meos.h>
+#include "temporal/postgres_types.h"
+#include "temporal/temporal.h"
+#include "temporal/lifting.h"
+#include "temporal/type_util.h"
 
+// #include "postgres.h"
+// #include "catalog/pg_proc.h"
+// #include "catalog/pg_type.h"
+// #include "common/hashfn.h"
+// #include "funcapi.h"
+// #include "libpq/pqformat.h"
+// #include "miscadmin.h"
+// #include "port/simd.h"
+// #include "utils/array.h"
+// #include "utils/builtins.h"
+// #include "utils/date.h"
+// #include "utils/datetime.h"
+// #include "utils/fmgroids.h"
+// #include "utils/json.h"
+// #include "utils/jsonfuncs.h"
+// #include "utils/lsyscache.h"
+// #include "utils/typcache.h"
+
+#if 0 /* NOT USED */
 
 /*
  * Support for fast key uniqueness checking.
@@ -1518,6 +1539,8 @@ json_object_two_arg_internal(XX)
   return rval);
 }
 
+#endif /* NOT USED */
+
 /*
  * escape_json_char
  *    Inline helper function for escape_json* functions
@@ -1670,7 +1693,7 @@ escape_json_with_len(StringInfo buf, const char *str, int len)
      * Per-byte loop for Vector8s containing special chars and for
      * processing the tail of the string.
      */
-    for (int b = 0; b < sizeof(Vector8); b++)
+    for (int b = 0; b < (int) sizeof(Vector8); b++)
     {
       /* check if we've finished */
       if (i == len)
@@ -1688,6 +1711,8 @@ escape_json_with_len(StringInfo buf, const char *str, int len)
 done:
   appendStringInfoCharMacro(buf, '"');
 }
+
+#if 0 /* NOT USED */
 
 /*
  * escape_json_text
@@ -1875,3 +1900,7 @@ json_typeof_internal(XX)
 
   return cstring_to_text(type));
 }
+
+#endif /* NOT USED */
+
+/*****************************************************************************/

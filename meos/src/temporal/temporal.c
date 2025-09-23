@@ -1252,35 +1252,12 @@ temparr_round(const Temporal **temparr, int count, int maxdd)
 /*****************************************************************************/
 
 /**
- * @ingroup meos_base_float
- * @brief Return a float number rounded to a given number of decimal places
- */
-double
-float_round(double d, int maxdd)
-{
-  assert(maxdd >= 0);
-  double inf = get_float8_infinity();
-  double result = d;
-  if (d != -1 * inf && d != inf)
-  {
-    if (maxdd == 0)
-      result = round(d);
-    else
-    {
-      double power10 = pow(10.0, maxdd);
-      result = round(d * power10) / power10;
-    }
-  }
-  return result;
-}
-
-/**
  * @brief Return a float number rounded to a given number of decimal places
  */
 Datum
 datum_float_round(Datum value, Datum size)
 {
-  return Float8GetDatum(float_round(DatumGetFloat8(value),
+  return Float8GetDatum(float8_round(DatumGetFloat8(value),
     DatumGetInt32(size)));
 }
 

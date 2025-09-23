@@ -804,8 +804,8 @@ floatspan_round_set(const Span *s, int maxdd, Span *result)
 {
   assert(s); assert(s->spantype == T_FLOATSPAN); assert(result);
   /* Set precision of bounds */
-  double lower = float_round(DatumGetFloat8(s->lower), maxdd);
-  double upper = float_round(DatumGetFloat8(s->upper), maxdd);
+  double lower = float8_round(DatumGetFloat8(s->lower), maxdd);
+  double upper = float8_round(DatumGetFloat8(s->upper), maxdd);
   /* Fix the bounds */
   bool lower_inc, upper_inc;
   if (float8_eq(lower, upper))
