@@ -16,11 +16,13 @@
 #define UTILS_FLOAT_H
 
 #include <math.h>
-// MEOS
-#include <meos.h>
-
-// MEOS
+/* PostgreSQL */
 #include <postgres.h>
+/* MEOS */
+#include "../../meos/include/meos.h"
+
+
+
 
 #ifndef M_PI
 /* From my RH5.2 gcc math.h file - thomas 2000-04-03 */

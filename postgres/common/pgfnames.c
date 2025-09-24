@@ -20,7 +20,7 @@
 #include "utils/datetime.h"
 #include "utils/date.h"
 
-#include <meos.h>
+#include "../../meos/include/meos.h"
 
 /*
  * pgfnames

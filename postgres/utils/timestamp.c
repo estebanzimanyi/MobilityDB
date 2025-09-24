@@ -20,7 +20,7 @@
 #include "utils/datetime.h"
 #include "utils/date.h"
 
-#include "../include/meos.h"
+#include "../../meos/include/meos.h"
 
 #define SAMESIGN(a,b) (((a) < 0) == ((b) < 0))
 

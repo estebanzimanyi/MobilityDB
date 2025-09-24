@@ -22,7 +22,7 @@
 #include "utils/datetime.h"
 #include "utils/date.h"
 
-#include "../include/meos.h"
+#include "../../meos/include/meos.h"
 
 static const datetkn *datebsearch(const char *key, const datetkn *base, int nel);
 

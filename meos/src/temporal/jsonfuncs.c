@@ -900,7 +900,7 @@ json_object_field(text *json, text *fname)
 #endif /* NOT USED */
 
 /**
- * @ingroup meos_base_jsonb
+ * @ingroup meos_base_json
  * @brief Extracts a JSONB object field with the given key
  * @note Derived from PostgreSQL function @p jsonb_object_field(jsonb, text)
  */
@@ -939,7 +939,7 @@ json_object_field_text(text *json, text *fname)
 #endif /* NOT USED */
 
 /**
- * @ingroup meos_base_jsonb
+ * @ingroup meos_base_json
  * @brief Extracts a JSONB object field with the given key
  * @note Derived from PostgreSQL function @p jsonb_object_field(jsonb, text)
  */
@@ -1524,7 +1524,7 @@ get_scalar(void *state, char *token, JsonTokenType tokentype)
 #endif /* NOT USED */
 
 /**
- * @ingroup meos_base_jsonb
+ * @ingroup meos_base_json
  * @brief Extract a JSONB object field with the given path
  */
 Jsonb *
@@ -1541,7 +1541,7 @@ get_jsonb_path_all_internal(const Jsonb *jb, Datum *pathtext, int path_len,
 }
 
 /**
- * @ingroup meos_base_jsonb
+ * @ingroup meos_base_json
  * @brief Extract a JSONB object field with the given path
  */
 Jsonb *
@@ -1551,7 +1551,7 @@ jsonb_extract_path_internal(const Jsonb *jb, Datum *pathtext, int path_len)
 }
 
 /**
- * @ingroup meos_base_jsonb
+ * @ingroup meos_base_json
  * @brief Extract a JSONB object field with the given path in text format
  */
 Jsonb *
@@ -4544,7 +4544,7 @@ sn_scalar(void *state, char *token, JsonTokenType tokentype)
 }
 
 /**
- * @ingroup meos_base_jsonb
+ * @ingroup meos_base_json
  * @brief Return a JSON value without nulls
  * @return On error return @p DBL_MAX
  * @note PostgreSQL function: @p json_strip_nulls(json) -> json
@@ -4582,7 +4582,7 @@ json_strip_nulls_internal(text *json, bool strip_in_arrays)
 #endif /* NOT USED */
 
 /**
- * @ingroup meos_base_jsonb
+ * @ingroup meos_base_json
  * @brief Return a JSON value without nulls
  * @return On error return @p DBL_MAX
  * @note PostgreSQL function: @p jsonb_strip_nulls(jsonb, bool) -> jsonb
@@ -4644,7 +4644,7 @@ jsonb_strip_nulls_internal(Jsonb *jb, bool strip_in_arrays)
 }
 
 /**
- * @ingroup meos_base_jsonb
+ * @ingroup meos_base_json
  * @brief Return a pretty-printed text from a JSONB value
  * @return On error return @p DBL_MAX
  * @note PostgreSQL function: @p jsonb_pretty(jsonb) -> text
@@ -4659,7 +4659,7 @@ jsonb_pretty_internal(Jsonb *jb)
 }
 
 /**
- * @ingroup meos_base_jsonb
+ * @ingroup meos_base_json
  * @brief Return the concatenation of the two JSONB values (objects ou arrays)
  * @return On error return @p DBL_MAX
  * @note PostgreSQL function: @p jsonb_concat(jsonb1, jsonb2) -> jsonb
@@ -4697,7 +4697,7 @@ jsonb_concat_internal(Jsonb *jb1, Jsonb *jb2)
 }
 
 /**
- * @ingroup meos_base_jsonb
+ * @ingroup meos_base_json
  * @brief Return a copy of the jsonb value with the indicated items removed
  * @note Derived from the PostgreSQL function @p jsonb_delete (jsonb, text)
  */
@@ -4992,7 +4992,7 @@ jsonb_set_lax(PG_FUNCTION_ARGS)
 #endif /* NOT USED */
 
 /**
- * @ingroup meos_base_jsonb
+ * @ingroup meos_base_json
  * @brief Delete the field or array element at the specified path, where path
  * elements can be either field keys or array indexes
  * @note Derived from PostgreSQL function @p jsonb_delete_path(jsonb, text[])

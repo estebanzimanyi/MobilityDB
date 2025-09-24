@@ -87,7 +87,7 @@
  *
  *   @defgroup meos_base_bool Functions for the boolean type
  *   @ingroup meos_base_types
- *   @brief Functions for the numeric type
+ *   @brief Functions for the boolean type
  *
  *   @defgroup meos_base_int Functions for the integer types
  *   @ingroup meos_base_types
@@ -120,6 +120,10 @@
  *   @defgroup meos_base_interval Functions for the interval type
  *   @ingroup meos_base_types
  *   @brief Functions for the interval types
+ *
+ *   @defgroup meos_base_json Functions for the JSON types
+ *   @ingroup meos_base_types
+ *   @brief Functions for the JSON types
  *
  * @defgroup meos_setspan Functions for set and span types
  * @ingroup meos_api

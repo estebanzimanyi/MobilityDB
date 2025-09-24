@@ -22,7 +22,7 @@
 #include "catalog/pg_type_d.h"
 #include <common/hashfn.h>
 #include <common/int.h>
-#include "port/simd.h"
+#include <port/simd.h>
 #include <utils/json.h>
 #include <utils/jsonb.h>
 /* MEOS */

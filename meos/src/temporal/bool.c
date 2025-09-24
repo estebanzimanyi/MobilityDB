@@ -156,8 +156,6 @@ bool_in(const char *str)
 
   meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
     "invalid input syntax for type %s: \"%s\"", "boolean", str);
-
-  /* not reached */
   return false;
 }
 
