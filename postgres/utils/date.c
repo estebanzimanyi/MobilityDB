@@ -13,15 +13,13 @@
  *-------------------------------------------------------------------------
  */
 
-#include <limits.h>
+// #include <limits.h>
 
 /* PostgreSQL */
 #include "postgres.h"
 #include "utils/timestamp_def.h"
 #include "utils/date.h"
 #include "utils/datetime.h"
-
-#include "../../meos/include/meos.h"
 
 /*
  * gcc's -ffast-math switch breaks routines that expect exact results from

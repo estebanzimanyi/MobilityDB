@@ -48,7 +48,6 @@
 
 /* C */
 #include <assert.h>
-#include <math.h>
 /* PostgreSQL */
 /* PostGIS */
 #include <liblwgeom.h>

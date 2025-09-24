@@ -36,7 +36,6 @@
 
 /* C */
 #include <assert.h>
-#include <math.h>
 /* PostgreSQL */
 #include <utils/timestamp.h>
 /* PostGIS */

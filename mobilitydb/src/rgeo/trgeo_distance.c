@@ -36,9 +36,8 @@
 /* C */
 #include <assert.h>
 #include <float.h>
-#include <fmgr.h>
-#include <math.h>
 /* PostgreSQL */
+#include <fmgr.h>
 #include <utils/timestamp.h>
 #include <utils/float.h>
 /* PostGIS */

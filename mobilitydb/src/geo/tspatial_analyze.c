@@ -57,7 +57,6 @@
 /* C */
 #include <assert.h>
 #include <float.h>
-#include <math.h>
 /* PostgreSQL */
 #include <postgres.h>
 #if POSTGRESQL_VERSION_NUMBER >= 160000

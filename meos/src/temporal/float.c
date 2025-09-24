@@ -14,9 +14,8 @@
  */
 
 /* C */
-#include <ctype.h>
+#include <assert.h>
 #include <float.h>
-#include <math.h>
 #include <limits.h>
 /* PostgreSQL */
 #include "postgres.h"
@@ -25,8 +24,7 @@
 #include "utils/float.h"
 
 /* MEOS */
-#include <meos.h>
-#include "temporal/temporal.h"
+#include "../include/meos.h"
 #include "temporal/type_inout.h"
 
 extern int pg_strfromd(char *str, size_t count, int precision, double value);

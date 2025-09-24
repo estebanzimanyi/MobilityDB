@@ -39,7 +39,7 @@
 /* C */
 #include <assert.h>
 #include <float.h>
-#include <limits.h>
+// #include <limits.h>
 #include <math.h>
 /* PostgreSQL */
 #include <postgres.h>

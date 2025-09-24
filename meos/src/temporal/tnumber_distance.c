@@ -35,8 +35,6 @@
 /* C */
 #include <assert.h>
 #include <float.h>
-#include <math.h>
-#include <limits.h>
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>

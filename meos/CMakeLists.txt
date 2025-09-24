@@ -100,6 +100,10 @@ add_subdirectory("${CMAKE_SOURCE_DIR}/postgis" "postgis")
 
 # PostgreSQL
 configure_file(../postgres/pg_config.h.in ../postgres/pg_config.h)
+include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/postgres/common")
+include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/postgres/port")
+include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/postgres/timezone")
+include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/postgres/utils")
 include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/postgres")
 include_directories(SYSTEM "${CMAKE_BINARY_DIR}/postgres")
 add_subdirectory("${CMAKE_SOURCE_DIR}/postgres" "postgres")

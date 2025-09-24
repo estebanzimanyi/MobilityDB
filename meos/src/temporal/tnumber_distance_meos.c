@@ -35,7 +35,6 @@
 /* C */
 #include <assert.h>
 #include <float.h>
-#include <math.h>
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
@@ -204,7 +203,7 @@ nad_tint_tint(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_TINT(temp1, -1); VALIDATE_TINT(temp2, -1);
-    return (int) nad_tnumber_tnumber(temp1, temp2);
+  return (int) nad_tnumber_tnumber(temp1, temp2);
 }
 
 /**
@@ -219,7 +218,7 @@ nad_tfloat_tfloat(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_TFLOAT(temp1, -1.0); VALIDATE_TFLOAT(temp2, -1.0);
-    return nad_tnumber_tnumber(temp1, temp2);
+  return nad_tnumber_tnumber(temp1, temp2);
 }
 
 /*****************************************************************************/

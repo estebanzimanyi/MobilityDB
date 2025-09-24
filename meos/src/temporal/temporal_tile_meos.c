@@ -39,8 +39,6 @@
 /* C */
 #include <assert.h>
 #include <float.h>
-#include <limits.h>
-#include <math.h>
 /* PostgreSQL */
 #include <postgres.h>
 #include <utils/date.h>

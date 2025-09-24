@@ -14,7 +14,6 @@
 
 /* C */
 #include <assert.h>
-#include <limits.h>
 #include <string.h>
 #include <stdlib.h>
 /* PostgreSQL */
@@ -27,10 +26,6 @@
 #include <utils/jsonb.h>
 /* MEOS */
 #include <meos.h>
-#include "temporal/postgres_types.h"
-#include "temporal/temporal.h"
-#include "temporal/lifting.h"
-#include "temporal/type_util.h"
 
 // #include "postgres.h"
 // #include "catalog/pg_proc.h"
@@ -1862,7 +1857,7 @@ json_validate(text *json, bool check_unique_keys, bool throw_error)
 Datum
 json_typeof_internal(XX)
 {
-  text     *json = PG_GETARG_TEXT_PP(0);
+  text *json = PG_GETARG_TEXT_PP(0);
   JsonLexContext lex;
   char     *type;
   JsonParseErrorType result;

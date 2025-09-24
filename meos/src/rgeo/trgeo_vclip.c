@@ -38,7 +38,6 @@
 #include <assert.h>
 #include <c.h>
 #include <float.h>
-#include <math.h>
 /* PostgreSQL */
 #include <stdio.h>
 #include <utils/timestamp.h>

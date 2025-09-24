@@ -15,7 +15,6 @@
 
 /* C */
 #include <assert.h>
-#include <limits.h>
 #include <string.h>
 #include <stdlib.h>
 /* PostgreSQL */
@@ -40,7 +39,7 @@
  * element within the JSON value
  * @param[in] jb JSONB value
  * @param[in] key Key
- * @csqlfn #jsonb_exists()
+ * @note Derived from PostgreSQL function @ pjsonb_exists()
  */
 bool
 jsonb_exists_internal(const Jsonb *jb, const text *key)
@@ -151,7 +150,7 @@ datum_jsonb_contained(Datum l, Datum r)
  * @ingroup meos_jsonb_base_comp
  * @brief Return true if the two JSONB values are equal
  * @param[in] jb1,jb2 JSONB values
- * @csqlfn #jsonb_eq()
+ * @note Derived from PostgreSQL function @ pjsonb_eq()
  */
 bool
 jsonb_eq_internal(const Jsonb *jb1, const Jsonb *jb2)
@@ -166,7 +165,7 @@ jsonb_eq_internal(const Jsonb *jb1, const Jsonb *jb2)
  * @ingroup meos_jsonb_base_comp
  * @brief Return true if the two JSONB values are not equal
  * @param[in] jb1,jb2 JSONB values
- * @csqlfn #jsonb_ne()
+ * @note Derived from PostgreSQL function @ pjsonb_ne()
  */
 bool
 jsonb_ne_internal(const Jsonb *jb1, const Jsonb *jb2)
@@ -181,7 +180,7 @@ jsonb_ne_internal(const Jsonb *jb1, const Jsonb *jb2)
  * @ingroup meos_jsonb_base_comp
  * @brief Return true if the first JSONB value is less than the second one
  * @param[in] jb1,jb2 JSONB values
- * @csqlfn #jsonb_lt()
+ * @note Derived from PostgreSQL function @ pjsonb_lt()
  */
 bool
 jsonb_lt_internal(const Jsonb *jb1, const Jsonb *jb2)
@@ -196,7 +195,7 @@ jsonb_lt_internal(const Jsonb *jb1, const Jsonb *jb2)
  * @ingroup meos_jsonb_base_comp
  * @brief Return true if the first JSONB value is greater than the second one
  * @param[in] jb1,jb2 JSONB values
- * @csqlfn #jsonb_gt()
+ * @note Derived from PostgreSQL function @ pjsonb_gt()
  */
 bool
 jsonb_gt_internal(const Jsonb *jb1, const Jsonb *jb2)
@@ -212,7 +211,7 @@ jsonb_gt_internal(const Jsonb *jb1, const Jsonb *jb2)
  * @brief Return true if the first JSONB value is less than or equal to the
  * second one
  * @param[in] jb1,jb2 JSONB values
- * @csqlfn #jsonb_le()
+ * @note Derived from PostgreSQL function @ pjsonb_le()
  */
 bool
 jsonb_le_internal(const Jsonb *jb1, const Jsonb *jb2)
@@ -228,7 +227,7 @@ jsonb_le_internal(const Jsonb *jb1, const Jsonb *jb2)
  * @brief Return true if the first JSONB value is greater than or equal to the
  * second one
  * @param[in] jb1,jb2 JSONB values
- * @csqlfn #jsonb_ge()
+ * @note Derived from PostgreSQL function @ pjsonb_ge()
  */
 bool
 jsonb_ge_internal(const Jsonb *jb1, const Jsonb *jb2)
@@ -244,7 +243,7 @@ jsonb_ge_internal(const Jsonb *jb1, const Jsonb *jb2)
  * @brief Return -1, 0, or 1 depending on whether the first JSONB value
  * is less than, equal to, or greater than the second one
  * @param[in] jb1,jb2 JSONB values
- * @csqlfn #jsonb_cmp()
+ * @note Derived from PostgreSQL function @ pjsonb_cmp()
  */
 int
 jsonb_cmp_internal(const Jsonb *jb1, const Jsonb *jb2)

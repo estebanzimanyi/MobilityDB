@@ -34,7 +34,6 @@
 
 /* C */
 #include <assert.h>
-#include <limits.h>
 /* PostGIS */
 #include <liblwgeom_internal.h>
 /* MEOS */

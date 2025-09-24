@@ -38,7 +38,6 @@
 #include <assert.h>
 #include <c.h>
 #include <float.h>
-#include <math.h>
 /* PostgreSQL */
 #include <postgres.h>
 #include <stdio.h>

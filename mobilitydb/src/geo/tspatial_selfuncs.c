@@ -36,7 +36,6 @@
 #include "pg_geo/tspatial_selfuncs.h"
 
 /* C */
-#include <math.h>
 /* PostgreSQL */
 #include <postgres.h>
 #include <utils/lsyscache.h>

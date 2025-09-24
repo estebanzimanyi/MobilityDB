@@ -14,14 +14,13 @@
  */
 
 /* C */
-#include <ctype.h>
+#include <assert.h>
 /* PostgreSQL */
 #include <postgres.h>
-#include "common/hashfn.h"
+#include <common/hashfn.h>
 /* MEOS */
 #include <meos.h>
-#include <meos_internal.h>
-#include "temporal/temporal.h"
+#include "temporal/type_inout.h"
 
 /*****************************************************************************/
 bool
@@ -136,8 +135,7 @@ parse_bool(const char *value, bool *result)
 bool
 bool_in(const char *str)
 {
-  /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(str, false);
+  assert(str);
 
   /*
    * Skip leading and trailing whitespace

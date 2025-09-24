@@ -37,7 +37,6 @@
 /* C */
 #include <assert.h>
 #include <float.h>
-#include <limits.h>
 /* PostgreSQL */
 #include <postgres.h>
 #include <libpq/pqformat.h>

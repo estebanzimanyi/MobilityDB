@@ -32,9 +32,7 @@
  */
 
 /* C */
-#include <math.h>
 #include <float.h>
-#include <limits.h>
 /* Postgres */
 #include <postgres.h>
 #if POSTGRESQL_VERSION_NUMBER >= 160000

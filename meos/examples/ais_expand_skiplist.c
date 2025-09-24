@@ -108,7 +108,7 @@ trip_comp_fn(void *left, void *right)
 {
   trip_record *left1 = (trip_record *) left;
   trip_record *right1 = (trip_record *) right;
-  return int64_cmp(left1->MMSI, right1->MMSI);
+  return int8_cmp(left1->MMSI, right1->MMSI);
 }
 
 void *

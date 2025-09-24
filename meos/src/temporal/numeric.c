@@ -23,7 +23,6 @@
 #include <ctype.h>
 #include <float.h>
 #include <limits.h>
-#include <math.h>
 /* PostgreSQL */
 #include <postgres.h>
 #if POSTGRESQL_VERSION_NUMBER >= 160000
@@ -34,15 +33,14 @@
 #include <lib/stringinfo.h>
 #if MEOS
   #include <utils/timestamp_def.h>
-#endif /* MEOS */
+#endif
 #include <utils/date.h>
 #include <utils/float.h>
 #include <utils/datetime.h>
 #include <utils/numeric.h>
 #include <utils/timestamp.h>
 /* MEOS */
-#include <meos.h>
-#include <meos_internal.h>
+#include "../../include/meos.h"
 #include "temporal/postgres_types.h"
 
 #if POSTGRESQL_VERSION_NUMBER < 160000
@@ -547,7 +545,7 @@ static void compute_bucket(Numeric operand, Numeric bound1, Numeric bound2,
  * @note Derived from PostgreSQL function @p numeric_in()
  */
 Numeric
-numeric_in_internal(char *str, int32 typmod)
+numeric_in_internal(const char *str, int32 typmod)
 {
   Numeric res;
   const char *cp;

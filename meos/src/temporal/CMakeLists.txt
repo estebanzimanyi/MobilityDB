@@ -1,12 +1,17 @@
+message(STATUS "**** Adding PG types ****")
+
 set(TEMPORAL_SRCS
   bool.c
   doublen.c
   error.c
   float.c
+  int.c
+  int8.c
   lifting.c
   meos.c
   meos_catalog.c
   numeric.c
+  # numutils.c
   postgres_types.c
   skiplist.c
   set.c
@@ -41,7 +46,7 @@ set(TEMPORAL_SRCS
   type_util.c
 )
 
-if(${POSTGRESQL_VERSION_MAJOR} GREATER_EQUAL "160000")
+if(${POSTGRESQL_VERSION_MAJOR} GREATER_EQUAL 16)
   list(APPEND TEMPORAL_SRCS
     json.c
     jsonb.c

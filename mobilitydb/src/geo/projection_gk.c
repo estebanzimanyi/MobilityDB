@@ -37,7 +37,6 @@
  */
 
 /* C */
-#include <math.h>
 /* PostgreSQL */
 #include <postgres.h>
 /* PostGIS */

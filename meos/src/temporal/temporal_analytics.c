@@ -36,7 +36,6 @@
 
 /* C */
 #include <assert.h>
-#include <math.h>
 #include <float.h>
 /* PostgreSQL */
 #include <postgres.h>

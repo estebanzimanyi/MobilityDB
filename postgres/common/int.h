@@ -415,7 +415,7 @@ pg_mul_u16_overflow(uint16 a, uint16 b, uint16 *result)
 #endif
 }
 
-static inline bool
+inline bool
 pg_neg_u16_overflow(uint16 a, int16 *result)
 {
 #if defined(HAVE__BUILTIN_OP_OVERFLOW)
@@ -488,7 +488,7 @@ pg_mul_u32_overflow(uint32 a, uint32 b, uint32 *result)
 #endif
 }
 
-static inline bool
+inline bool
 pg_neg_u32_overflow(uint32 a, int32 *result)
 {
 #if defined(HAVE__BUILTIN_OP_OVERFLOW)
@@ -571,7 +571,7 @@ pg_mul_u64_overflow(uint64 a, uint64 b, uint64 *result)
 #endif
 }
 
-static inline bool
+inline bool
 pg_neg_u64_overflow(uint64 a, int64 *result)
 {
 #if defined(HAVE__BUILTIN_OP_OVERFLOW)

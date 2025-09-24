@@ -77,7 +77,7 @@
  * equal to, or greater than the second one
  */
 int
-int32_cmp(int32 l, int32 r)
+int4_cmp(int32 l, int32 r)
 {
   return (l < r) ? -1 : ((l > r) ? 1 : 0);
 }
@@ -88,7 +88,7 @@ int32_cmp(int32 l, int32 r)
  * equal to, or greater than the second one
  */
 int
-int64_cmp(int64 l, int64 r)
+int8_cmp(int64 l, int64 r)
 {
   return (l < r) ? -1 : ((l > r) ? 1 : 0);
 }
