@@ -12,16 +12,15 @@
  *
  *-------------------------------------------------------------------------
  */
-#ifndef UTILS_FLOAT_H
-#define UTILS_FLOAT_H
+#ifndef FLOAT_H
+#define FLOAT_H
 
+/* C */
 #include <math.h>
 /* PostgreSQL */
 #include <postgres.h>
 /* MEOS */
-#include "../../meos/include/meos.h"
-
-
+#include "../../meos/include/meos_error.h"
 
 
 #ifndef M_PI
@@ -448,4 +447,4 @@ float8_max(const float8 val1, const float8 val2)
 	return float8_gt(val1, val2) ? val1 : val2;
 }
 
-#endif							/* UTILS_FLOAT_H */
+#endif							/* FLOAT_H */

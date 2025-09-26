@@ -70,7 +70,7 @@ if(CMAKE_GENERATOR STREQUAL "Visual Studio 17 2022")
   add_definitions(-D_CRT_SECURE_NO_WARNINGS=1)
 endif()
 
-# Option for including network points
+# Option for selecting the build process between MEOS and MobilityDB
 option(MEOS
   "Set MEOS (default=OFF) to build the MEOS library instead of the MobilityDB
   PostgreSQL extension

@@ -89,7 +89,19 @@ add_definitions(-DPOSTGIS_PGSQL_VERSION=${POSTGIS_PGSQL_VERSION})
 # MobilityDB directories
 #--------------------------------
 
+# PostgreSQL
+configure_file(../postgres/pg_config.h.in ../postgres/pg_config.h)
+include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/postgres/common")
+include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/postgres/port")
+include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/postgres/timezone")
+include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/postgres/utils")
+include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/postgres")
+include_directories(SYSTEM "${CMAKE_BINARY_DIR}/postgres")
+add_subdirectory("${CMAKE_SOURCE_DIR}/postgres" "postgres")
+
 # PostGIS
+set(SRID_MAX "999999")
+set(SRID_USR_MAX "998999")
 configure_file(../postgis/liblwgeom/liblwgeom.h.in ../postgis/liblwgeom/liblwgeom.h)
 configure_file(../postgis/postgis_config.h.in ../postgis/postgis_config.h)
 include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/postgis/liblwgeom")
@@ -97,12 +109,6 @@ include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/postgis")
 include_directories(SYSTEM "${CMAKE_BINARY_DIR}/postgis/liblwgeom")
 include_directories(SYSTEM "${CMAKE_BINARY_DIR}/postgis")
 add_subdirectory("${CMAKE_SOURCE_DIR}/postgis" "postgis")
-
-# PostgreSQL
-configure_file(../postgres/pg_config.h.in ../postgres/pg_config.h)
-include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/postgres")
-include_directories(SYSTEM "${CMAKE_BINARY_DIR}/postgres")
-add_subdirectory("${CMAKE_SOURCE_DIR}/postgres" "postgres")
 
 # MEOS
 include_directories("include")

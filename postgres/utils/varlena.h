@@ -13,6 +13,8 @@
 #ifndef VARLENA_H
 #define VARLENA_H
 
+#include <postgres.h>
+
 // #include "nodes/pg_list.h"
 // #include "utils/sortsupport.h"
 
@@ -49,5 +51,14 @@ typedef struct ClosestMatchState
 extern void initClosestMatch(ClosestMatchState *state, const char *source, int max_d);
 extern void updateClosestMatch(ClosestMatchState *state, const char *candidate);
 extern const char *getClosestMatch(ClosestMatchState *state);
+
+/* popular functions from varlena.c */
+extern text *cstring_to_text(const char *s);
+extern text *cstring_to_text_with_len(const char *s, int len);
+extern char *text_to_cstring(const text *t);
+extern void text_to_cstring_buffer(const text *src, char *dst, size_t dst_len);
+
+#define CStringGetTextDatum(s) PointerGetDatum(cstring_to_text(s))
+#define TextDatumGetCString(d) text_to_cstring((text *) DatumGetPointer(d))
 
 #endif

@@ -1,12 +1,12 @@
 set(TEMPORAL_SRCS
-  bool.c
+  # bool.c
   doublen.c
   error.c
-  float.c
+  # float.c
   lifting.c
   meos.c
   meos_catalog.c
-  numeric.c
+  # numeric.c
   postgres_types.c
   skiplist.c
   set.c

@@ -215,12 +215,16 @@ tgeoinstarr_set_stbox(const TInstant **instants, int count, STBox *box)
  * @param[in] instants Temporal instants
  * @param[in] count Number of elements in the array
  * @param[in] lower_inc,upper_inc Period bounds
- * @param[in] interp Interpolation
+ * @param[in] interp Interpolation, only used for network points
  * @param[out] box Bounding box
  */
 void
 tspatialinstarr_set_stbox(const TInstant **instants, int count,
+#if NPOINT
   bool lower_inc, bool upper_inc, interpType interp, void *box)
+#else
+  bool lower_inc, bool upper_inc, interpType interp UNUSED, void *box)
+#endif /* NPOINT */
 {
   meosType temptype = instants[0]->temptype;
   assert(tspatial_type(temptype));

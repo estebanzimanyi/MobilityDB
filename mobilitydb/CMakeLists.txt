@@ -87,10 +87,19 @@ add_definitions(-DPOSTGIS_PGSQL_VERSION=${POSTGIS_PGSQL_VERSION})
 # MobilityDB directories
 #--------------------------------
 
+# PostgreSQL
+configure_file(../postgres/pg_config.h.in ../postgres/pg_config.h)
+include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/postgres/common")
+include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/postgres/port")
+include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/postgres/timezone")
+include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/postgres/utils")
+include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/postgres")
+include_directories(SYSTEM "${CMAKE_BINARY_DIR}/postgres")
+add_subdirectory("${CMAKE_SOURCE_DIR}/postgres" "postgres")
+
+# PostGIS
 set(SRID_MAX "999999")
 set(SRID_USR_MAX "998999")
-
-# Embed PostGIS
 configure_file(../postgis/liblwgeom/liblwgeom.h.in ../postgis/liblwgeom/liblwgeom.h)
 configure_file(../postgis/postgis_config.h.in ../postgis/postgis_config.h)
 include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/postgis/liblwgeom")
@@ -165,6 +174,12 @@ if(RGEO)
   message(STATUS "Including rigid geometries")
   set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:rgeo>")
 endif()
+
+# PostgreSQL
+# set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:common>")
+# set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:port>")
+# set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:timezone>")
+set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:utils>")
 
 # Build the library: PostGIS
 set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:liblwgeom>")
