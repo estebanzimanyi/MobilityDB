@@ -3,7 +3,7 @@
  * pgfnames.c
  *    directory handling functions
  *
- * Portions Copyright (c) 1996-2021, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2025, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  * IDENTIFICATION
@@ -12,15 +12,11 @@
  *-------------------------------------------------------------------------
  */
 
+#include "postgres.h"
+
 #include <dirent.h>
 
-// MEOS
-#include "postgres.h"
-#include "utils/timestamp_def.h"
-#include "utils/datetime.h"
-#include "utils/date.h"
-
-#include "../../meos/include/meos.h"
+#include "../../meos/include/meos_error.h"
 
 /*
  * pgfnames
@@ -29,14 +25,14 @@
  * must call pgfnames_cleanup later to free the memory allocated by this
  * function.
  */
-char **
+char    **
 pgfnames(const char *path)
 {
-  DIR *dir;
+  DIR       *dir;
   struct dirent *file;
-  char **filenames;
-  int numnames = 0;
-  int fnsize = 200;  /* enough for many small dbs */
+  char    **filenames;
+  int      numnames = 0;
+  int      fnsize = 200;  /* enough for many small dbs */
 
   dir = opendir(path);
   if (dir == NULL)
@@ -55,7 +51,8 @@ pgfnames(const char *path)
       if (numnames + 1 >= fnsize)
       {
         fnsize *= 2;
-        filenames = (char **) repalloc(filenames, fnsize * sizeof(char *));
+        filenames = (char **) repalloc(filenames,
+                         fnsize * sizeof(char *));
       }
       filenames[numnames++] = pstrdup(file->d_name);
     }
@@ -65,7 +62,6 @@ pgfnames(const char *path)
   {
     meos_error(WARNING, MEOS_ERR_DIRECTORY_ERROR,
       "could not read directory \"%s\": %m", path);
-    return NULL;
   }
 
   filenames[numnames] = NULL;
@@ -74,7 +70,6 @@ pgfnames(const char *path)
   {
     meos_error(WARNING, MEOS_ERR_DIRECTORY_ERROR,
       "could not close directory \"%s\": %m", path);
-    return NULL;
   }
 
   return filenames;
@@ -89,7 +84,7 @@ pgfnames(const char *path)
 void
 pgfnames_cleanup(char **filenames)
 {
-  char **fn;
+  char    **fn;
 
   for (fn = filenames; *fn; fn++)
     pfree(*fn);

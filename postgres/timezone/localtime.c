@@ -18,9 +18,7 @@
 
 #include <fcntl.h>
 
-// MEOS
-// #include "datatype/timestamp.h"
-#include "utils/timestamp_def.h"
+#include "datatype/timestamp.h"
 #include "pgtz.h"
 
 #include "private.h"
