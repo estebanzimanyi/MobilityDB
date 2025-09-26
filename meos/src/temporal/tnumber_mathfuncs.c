@@ -44,9 +44,9 @@
 #include <utils/float.h>
 /* MEOS */
 #include <meos.h>
+#include "temporal/postgres_types.h"
 #include <meos_internal.h>
 #include "temporal/lifting.h"
-#include "temporal/postgres_types.h"
 #include "temporal/tinstant.h"
 #include "temporal/tsequence.h"
 #include "temporal/type_util.h"

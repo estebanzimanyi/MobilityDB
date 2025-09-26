@@ -113,7 +113,7 @@ basetype_in(const char *str, meosType type, bool end UNUSED, Datum *result)
   {
     case T_TIMESTAMPTZ:
     {
-      TimestampTz t = pg_timestamptz_in(str, -1);
+      TimestampTz t = pg_timestamptz_in((char *) str, -1);
       if (t == DT_NOEND)
         return false;
       *result = TimestampTzGetDatum(t);
@@ -121,7 +121,7 @@ basetype_in(const char *str, meosType type, bool end UNUSED, Datum *result)
     }
     case T_DATE:
     {
-      DateADT d = pg_date_in(str);
+      DateADT d = pg_date_in((char *) str);
       if (d == DATEVAL_NOEND)
         return false;
       *result = DateADTGetDatum(d);

@@ -531,9 +531,9 @@ static void setPathArray(JsonbIterator **it, Datum *path_elems,
 /*****************************************************************************/
 
 /**
- * @ingroup meos_temporal_constructor
- * @brief Return a copy of a temporal value
- * @param[in] temp Temporal value
+ * @ingroup meos_base_jsonb
+ * @brief Return a copy of a JSONB value
+ * @param[in] jb JSONB value
  */
 Jsonb *
 jsonb_copy(Jsonb *jb)

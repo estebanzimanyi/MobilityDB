@@ -32,17 +32,16 @@
 #include <common/hashfn.h>
 #include <common/int.h>
 #include <lib/stringinfo.h>
-#if MEOS
-  #include <utils/timestamp_def.h>
-#endif /* MEOS */
 #include <utils/date.h>
 #include <utils/float.h>
 #include <utils/datetime.h>
 #include <utils/numeric.h>
 #include <utils/timestamp.h>
 /* MEOS */
-#include <meos.h>
-#include <meos_internal.h>
+#include "../../meos/include/meos_error.h"
+
+// #include <meos.h>
+// #include <meos_internal.h>
 #include "temporal/postgres_types.h"
 
 #if POSTGRESQL_VERSION_NUMBER < 160000
@@ -1743,7 +1742,7 @@ numeric_hash(Numeric key)
  * @note Derived from PostgreSQL function @p hash_numeric_extended()
  */
 uint64
-numeric_hash_extended(Numeric key, uint64 seed)
+numeric_hash_extended(Numeric num, uint64 seed)
 {
   Datum    digit_hash;
   Datum    result;
@@ -1755,15 +1754,15 @@ numeric_hash_extended(Numeric key, uint64 seed)
   NumericDigit *digits;
 
   /* If it's NaN or infinity, don't try to hash the rest of the fields */
-  if (NUMERIC_IS_SPECIAL(key))
+  if (NUMERIC_IS_SPECIAL(num))
     return seed;
 
-  weight = NUMERIC_WEIGHT(key);
+  weight = NUMERIC_WEIGHT(num);
   start_offset = 0;
   end_offset = 0;
 
-  digits = NUMERIC_DIGITS(key);
-  for (i = 0; i < (int) NUMERIC_NDIGITS(key); i++)
+  digits = NUMERIC_DIGITS(num);
+  for (i = 0; i < (int) NUMERIC_NDIGITS(num); i++)
   {
     if (digits[i] != (NumericDigit) 0)
       break;
@@ -1773,10 +1772,10 @@ numeric_hash_extended(Numeric key, uint64 seed)
     weight--;
   }
 
-  if ((int) NUMERIC_NDIGITS(key) == start_offset)
+  if ((int) NUMERIC_NDIGITS(num) == start_offset)
     return (seed - 1);
 
-  for (i = (int) NUMERIC_NDIGITS(key) - 1; i >= 0; i--)
+  for (i = (int) NUMERIC_NDIGITS(num) - 1; i >= 0; i--)
   {
     if (digits[i] != (NumericDigit) 0)
       break;
@@ -1784,10 +1783,10 @@ numeric_hash_extended(Numeric key, uint64 seed)
     end_offset++;
   }
 
-  Assert(start_offset + end_offset < NUMERIC_NDIGITS(key));
+  Assert(start_offset + end_offset < NUMERIC_NDIGITS(num));
 
-  hash_len = NUMERIC_NDIGITS(key) - start_offset - end_offset;
-  digit_hash = hash_any_extended((unsigned char *) (NUMERIC_DIGITS(key)
+  hash_len = NUMERIC_NDIGITS(num) - start_offset - end_offset;
+  digit_hash = hash_any_extended((unsigned char *) (NUMERIC_DIGITS(num)
                             + start_offset),
                    hash_len * sizeof(NumericDigit),
                    seed);
@@ -3253,9 +3252,9 @@ int64_div_fast_to_numeric(int64 val1, int log10val2)
  * @note Derived from PostgreSQL function @p numeric_int4()
  */
 Numeric
-int4_to_numeric(int32 val)
+int4_to_numeric(int32 num)
 {
-  return int64_to_numeric(val);
+  return int64_to_numeric(num);
 }
 
 #if MEOS
@@ -3348,9 +3347,9 @@ numericvar_to_int32(const NumericVar *var, int32 *result)
  * @note Derived from PostgreSQL function @p int8_numeric()
  */
 Numeric
-int8_to_numeric(int64 val)
+int8_to_numeric(int64 num)
 {
-  return int64_to_numeric(val);
+  return int64_to_numeric(num);
 }
 
 int64
@@ -3419,9 +3418,9 @@ numeric_to_int8(Numeric num)
  * @note Derived from PostgreSQL function @p numeric_int8()
  */
 Numeric
-int2_to_numeric(int16 val)
+int2_to_numeric(int16 num)
 {
-  return int64_to_numeric(val);
+  return int64_to_numeric(num);
 }
 
 /**
@@ -3476,25 +3475,25 @@ numeric_to_int2(Numeric num)
  * @note Derived from PostgreSQL function @p numeric_float8()
  */
 Numeric
-float8_to_numeric(float8 val)
+float8_to_numeric(float8 num)
 {
   Numeric    res;
   NumericVar  result;
   char    buf[DBL_DIG + 100];
   const char *endptr;
 
-  if (isnan(val))
+  if (isnan(num))
     return make_result(&const_nan);
 
-  if (isinf(val))
+  if (isinf(num))
   {
-    if (val < 0)
+    if (num < 0)
       return make_result(&const_ninf);
     else
       return make_result(&const_pinf);
   }
 
-  snprintf(buf, sizeof(buf), "%.*g", DBL_DIG, val);
+  snprintf(buf, sizeof(buf), "%.*g", DBL_DIG, num);
 
   init_var(&result);
 
@@ -3568,25 +3567,25 @@ numeric_float8_no_overflow_internal(Numeric num)
  * @note Derived from PostgreSQL function @p float4_numeric()
  */
 Numeric
-float4_to_numeric(float4 val)
+float4_to_numeric(float4 num)
 {
   Numeric    res;
   NumericVar  result;
   char    buf[FLT_DIG + 100];
   const char *endptr;
 
-  if (isnan(val))
+  if (isnan(num))
     return make_result(&const_nan);
 
-  if (isinf(val))
+  if (isinf(num))
   {
-    if (val < 0)
+    if (num < 0)
       return make_result(&const_ninf);
     else
       return make_result(&const_pinf);
   }
 
-  snprintf(buf, sizeof(buf), "%.*g", FLT_DIG, val);
+  snprintf(buf, sizeof(buf), "%.*g", FLT_DIG, num);
 
   init_var(&result);
 
@@ -4444,7 +4443,7 @@ make_result_opt_error(const NumericVar *var, bool *have_error)
       return NULL;
     }
 
-    result = (Numeric) palloc(NUMERIC_HDRSZ_SHORT);
+    result = (Numeric) palloc(NUMERIC_HDRSZ);
 
     SET_VARSIZE(result, NUMERIC_HDRSZ_SHORT);
     result->choice.n_header = sign;

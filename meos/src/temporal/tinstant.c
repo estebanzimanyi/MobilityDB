@@ -492,7 +492,7 @@ tinstant_shift_time(const TInstant *inst, const Interval *interv)
 {
   assert(inst); assert(interv);
   TInstant *result = tinstant_copy(inst);
-  result->t = add_timestamptz_interval(inst->t, interv);
+  result->t = add_timestamptz_interval(inst->t, (Interval *) interv);
   return result;
 }
 

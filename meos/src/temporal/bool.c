@@ -124,7 +124,7 @@ parse_bool(const char *value, bool *result)
  *****************************************************************************/
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_bool
  * @brief Return a boolean from its string representation
  * @param[in] str String
  * @details Convert @p "t" or @p "f" to 1 or 0.
@@ -160,7 +160,7 @@ bool_in(const char *str)
 }
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_bool
  * @brief Return the string representation of a boolean
  * @param[in] b Boolean value
  * @details Convert 1 or 0 to @p "t" or @p "f"
@@ -176,7 +176,7 @@ bool_out(bool b)
 }
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_bool
  * @brief Return the text representation of a boolean
  * @param[in] b Boolean value
  * @note PostgreSQL function: @p booltext()
@@ -198,7 +198,7 @@ bool_to_text(bool b)
 
 /**
  * @ingroup meos_base_bool
- * @brief Return true if two boolean values are equal
+ * @brief Return true if two booleans are equal
  * @note Derived from PostgreSQL function @p booleq()
  */
 bool
@@ -209,7 +209,7 @@ bool_eq(bool arg1, bool arg2)
 
 /**
  * @ingroup meos_base_bool
- * @brief Return true if two boolean values are not equal
+ * @brief Return true if two booleans are not equal
  * @note Derived from PostgreSQL function @p boolne()
  */
 bool
@@ -220,7 +220,7 @@ bool_ne(bool arg1, bool arg2)
 
 /**
  * @ingroup meos_base_bool
- * @brief Return true if a boolean value is less than another one
+ * @brief Return true if a boolean is less than another one
  * @note Derived from PostgreSQL function @p boollt()
  */
 bool
@@ -231,7 +231,7 @@ bool_lt(bool arg1, bool arg2)
 
 /**
  * @ingroup meos_base_bool
- * @brief Return true if a boolean value is less than or equal to another one
+ * @brief Return true if a boolean is less than or equal to another one
  * @note Derived from PostgreSQL function @p boolgt()
  */
 bool
@@ -242,7 +242,7 @@ bool_gt(bool arg1, bool arg2)
 
 /**
  * @ingroup meos_base_bool
- * @brief Return true if a boolean value is greater than another one
+ * @brief Return true if a boolean is greater than another one
  * @note Derived from PostgreSQL function @p boolle()
  */
 bool
@@ -253,7 +253,7 @@ bool_le(bool arg1, bool arg2)
 
 /**
  * @ingroup meos_base_bool
- * @brief Return true if a boolean value is greater than or equal to another one
+ * @brief Return true if a boolean is greater than or equal to another one
  * @note Derived from PostgreSQL function @p boolge()
  */
 bool
@@ -275,7 +275,7 @@ bool_hash(bool arg)
 
 /**
  * @ingroup meos_base_bool
- * @brief Return the 64-bit hash of a boolean value using a seed
+ * @brief Return the 64-bit hash of a boolean using a seed
  * @note Derived from PostgreSQL function @p hashboolextended()
  */
 uint64
