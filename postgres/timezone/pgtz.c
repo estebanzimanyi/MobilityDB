@@ -15,11 +15,10 @@
 #include <ctype.h>
 #include <fcntl.h>
 #include <time.h>
-#include <dirent.h> /* MEOS */
-#include <common/hashfn.h> /* MEOS */
-#include <sys/stat.h> /* MEOS */
-// #include "datatype/timestamp.h" /* MEOS */
-#include "utils/timestamp_def.h"
+#include <dirent.h>
+#include <common/hashfn.h>
+#include <sys/stat.h>
+#include "datatype/timestamp.h"
 #include "utils/datetime.h"
 #include "utils/date.h"
 #include "pgtz.h"

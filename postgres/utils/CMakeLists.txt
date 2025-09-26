@@ -2,10 +2,12 @@ add_library(utils OBJECT
   date.c
   datetime.c
   # float.c
+  format_type.c
   formatting.c
   # numeric.c
   numutils.c
   timestamp.c
+  varlena.c
   )
 
 # set_property(TARGET utils PROPERTY C_VISIBILITY_PRESET hidden)

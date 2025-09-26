@@ -281,43 +281,7 @@ extern int *rtree_search(const RTree *rtree,const void *query, int *count);
  * Error codes
  *****************************************************************************/
 
-typedef enum
-{
-  MEOS_SUCCESS                   = 0,  // Successful operation
-
-  MEOS_ERR_INTERNAL_ERROR        = 1,  // Unspecified internal error
-  MEOS_ERR_INTERNAL_TYPE_ERROR   = 2,  // Internal type error
-  MEOS_ERR_VALUE_OUT_OF_RANGE    = 3,  // Internal out of range error
-  MEOS_ERR_DIVISION_BY_ZERO      = 4,  // Internal division by zero error
-  MEOS_ERR_MEMORY_ALLOC_ERROR    = 5,  // Internal malloc error
-  MEOS_ERR_AGGREGATION_ERROR     = 6,  // Internal aggregation error
-  MEOS_ERR_DIRECTORY_ERROR       = 7,  // Internal directory error
-  MEOS_ERR_FILE_ERROR            = 8,  // Internal file error
-
-  MEOS_ERR_INVALID_ARG           = 10, // Invalid argument
-  MEOS_ERR_INVALID_ARG_TYPE      = 11, // Invalid argument type
-  MEOS_ERR_INVALID_ARG_VALUE     = 12, // Invalid argument value
-  MEOS_ERR_FEATURE_NOT_SUPPORTED = 13, // Feature not currently supported
-
-  MEOS_ERR_MFJSON_INPUT          = 20, // MFJSON input error
-  MEOS_ERR_MFJSON_OUTPUT         = 21, // MFJSON output error
-  MEOS_ERR_TEXT_INPUT            = 22, // Text input error
-  MEOS_ERR_TEXT_OUTPUT           = 23, // Text output error
-  MEOS_ERR_WKB_INPUT             = 24, // WKB input error
-  MEOS_ERR_WKB_OUTPUT            = 25, // WKB output error
-  MEOS_ERR_GEOJSON_INPUT         = 26, // GEOJSON input error
-  MEOS_ERR_GEOJSON_OUTPUT        = 27, // GEOJSON output error
-
-} errorCode;
-
-extern void meos_error(int errlevel, int errcode, const char *format, ...);
-
-/* Set or read error level */
-
-extern int meos_errno(void);
-extern int meos_errno_set(int err);
-extern int meos_errno_restore(int err);
-extern int meos_errno_reset(void);
+#include "meos_error.h"
 
 /*****************************************************************************
  * Initialization of the MEOS library
@@ -347,8 +311,8 @@ extern void meos_finalize(void);
  ******************************************************************************/
 
 extern DateADT add_date_int(DateADT d, int32 days);
-extern Interval *add_interval_interval(const Interval *interv1, const Interval *interv2);
-extern TimestampTz add_timestamptz_interval(TimestampTz t, const Interval *interv);
+extern Interval *add_interval_interval(Interval *interv1, Interval *interv2);
+extern TimestampTz add_timestamptz_interval(TimestampTz t, Interval *interv);
 extern bool bool_in(const char *str);
 extern char *bool_out(bool b);
 extern text *cstring2text(const char *str);
@@ -363,17 +327,17 @@ extern int int64_cmp(int64 l, int64 r);
 extern Interval *interval_make(int32 years, int32 months, int32 weeks, int32 days, int32 hours, int32 mins, double secs);
 extern Interval *minus_date_date(DateADT d1, DateADT d2);
 extern DateADT minus_date_int(DateADT d, int32 days);
-extern TimestampTz minus_timestamptz_interval(TimestampTz t, const Interval *interv);
+extern TimestampTz minus_timestamptz_interval(TimestampTz t, Interval *interv); //TODO
 extern Interval *minus_timestamptz_timestamptz(TimestampTz t1, TimestampTz t2);
 extern Interval *mul_interval_double(const Interval *interv, double factor);
-extern DateADT pg_date_in(const char *str);
+extern DateADT pg_date_in(char *str); // TODO
 extern char *pg_date_out(DateADT d);
-extern int pg_interval_cmp(const Interval *interv1, const Interval *interv2);
-extern Interval *pg_interval_in(const char *str, int32 typmod);
-extern char *pg_interval_out(const Interval *interv);
-extern Timestamp pg_timestamp_in(const char *str, int32 typmod);
+extern int pg_interval_cmp(Interval *interv1, Interval *interv2); // TODO
+extern Interval *pg_interval_in(char *str, int32 typmod); // TODO
+extern char *pg_interval_out(Interval *interv); // TODO
+extern Timestamp pg_timestamp_in(char *str, int32 typmod); // TODO
 extern char *pg_timestamp_out(Timestamp t);
-extern TimestampTz pg_timestamptz_in(const char *str, int32 typmod);
+extern TimestampTz pg_timestamptz_in(char *str, int32 typmod); // TODO
 extern char *pg_timestamptz_out(TimestampTz t);
 extern char *text2cstring(const text *txt);
 extern int text_cmp(const text *txt1, const text *txt2);

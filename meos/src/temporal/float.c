@@ -14,6 +14,7 @@
  */
 
 /* C */
+#include <assert.h>
 #include <ctype.h>
 #include <float.h>
 #include <math.h>
@@ -25,12 +26,35 @@
 #include "utils/float.h"
 
 /* MEOS */
-#include <meos.h>
-#include "temporal/temporal.h"
-#include "temporal/type_inout.h"
+#include "../../meos/include/meos_error.h"
+// #include "temporal/temporal.h"
+// #include "temporal/type_inout.h"
 
 extern int pg_strfromd(char *str, size_t count, int precision, double value);
 extern int lwprint_double(double d, int maxdd, char *buf);
+
+
+/*****************************************************************************
+ * Definitions taken from the file liblwgeom_internal.h
+ *****************************************************************************/
+
+/* Any (absolute) values outside this range will be printed in scientific
+ * notation */
+#define OUT_MIN_DOUBLE 1E-8
+#define OUT_MAX_DOUBLE 1E15
+#define OUT_DEFAULT_DECIMAL_DIGITS 15
+
+/* 17 digits are sufficient for round-tripping
+ * Then we might add up to 8 (from OUT_MIN_DOUBLE) max leading zeroes (or
+ * 2 digits for "e+") */
+#define OUT_MAX_DIGITS 17 + 8
+
+/* Limit for the max amount of characters that a double can use, including dot
+ * and sign */
+#define OUT_MAX_BYTES_DOUBLE (1 /* Sign */ + 2 /* 0.x */ + OUT_MAX_DIGITS)
+#define OUT_DOUBLE_BUFFER_SIZE OUT_MAX_BYTES_DOUBLE + 1 /* +1 including NULL */
+
+/*****************************************************************************/
 
 /*
  * Configurable GUC parameter

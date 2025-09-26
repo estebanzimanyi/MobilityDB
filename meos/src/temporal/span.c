@@ -1047,7 +1047,7 @@ tstzspan_expand(const Span *s, const Interval *interv)
    * shifting the bounds with the interval is empty */ 
   Interval intervalzero;
   memset(&intervalzero, 0, sizeof(Interval));
-  bool negative = pg_interval_cmp(interv, &intervalzero) <= 0;
+  bool negative = pg_interval_cmp((Interval *) interv, &intervalzero) <= 0;
   Interval interv_neg;
   if (negative)
   {
@@ -1064,9 +1064,9 @@ tstzspan_expand(const Span *s, const Interval *interv)
   Span *result = span_copy(s);
   TimestampTz tmin = negative ?
     add_timestamptz_interval(DatumGetTimestampTz(s->lower), &interv_neg) :
-    minus_timestamptz_interval(DatumGetTimestampTz(s->lower), interv);
+    minus_timestamptz_interval(DatumGetTimestampTz(s->lower), (Interval *) interv);
   TimestampTz tmax = add_timestamptz_interval(DatumGetTimestampTz(s->upper),
-    interv);
+    (Interval *) interv);
   result->lower = TimestampTzGetDatum(tmin);
   result->upper = TimestampTzGetDatum(tmax);
   return result;
@@ -1125,14 +1125,14 @@ span_bounds_shift_scale_time(const Interval *shift, const Interval *duration,
   bool instant = (*lower == *upper);
   if (shift)
   {
-    *lower = add_timestamptz_interval(*lower, shift);
+    *lower = add_timestamptz_interval(*lower, (Interval *) shift);
     if (instant)
       *upper = *lower;
     else
-      *upper = add_timestamptz_interval(*upper, shift);
+      *upper = add_timestamptz_interval(*upper, (Interval *) shift);
   }
   if (duration && ! instant)
-    *upper = add_timestamptz_interval(*lower, duration);
+    *upper = add_timestamptz_interval(*lower, (Interval *) duration);
   return;
 }
 
@@ -1329,7 +1329,7 @@ timestamptz_shift(TimestampTz t, const Interval *interv)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(interv, DT_NOEND);
-  return add_timestamptz_interval(t, interv);
+  return add_timestamptz_interval(t, (Interval *) interv);
 }
 
 /**

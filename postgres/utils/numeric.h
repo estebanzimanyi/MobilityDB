@@ -14,6 +14,8 @@
 #ifndef _PG_NUMERIC_H_
 #define _PG_NUMERIC_H_
 
+#include <postgres.h>
+
 /*
  * Limits on the precision and scale specifiable in a NUMERIC typmod.  The
  * precision is strictly positive, but the scale may be positive or negative.
@@ -67,7 +69,7 @@ DatumGetNumeric(Datum X)
 /**
  * @ingroup meos_temporal_constructor
  * @brief Return a copy of a temporal value
- * @param[in] temp Temporal value
+ * @param[in] num Temporal value
  */
 inline Numeric
 numeric_copy(Numeric num)

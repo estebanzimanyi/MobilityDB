@@ -88,22 +88,22 @@ size_t lwgeom_to_wkb_size(const LWGEOM *geom, uint8_t variant);
  * Output of base types
  *****************************************************************************/
 
-/**
- * @ingroup meos_base_text
- * @brief Return the string representation of a text value
- * @param[in] txt Text
- */
-char *
-text_out(const text *txt)
-{
-  assert(txt);
-  char *str = text2cstring(txt);
-  size_t size = strlen(str) + 4;
-  char *result = palloc(size);
-  snprintf(result, size, "\"%s\"", str);
-  pfree(str);
-  return result;
-}
+// /**
+ // * @ingroup meos_base_text
+ // * @brief Return the string representation of a text value
+ // * @param[in] txt Text
+ // */
+// char *
+// text_out(const text *txt)
+// {
+  // assert(txt);
+  // char *str = text2cstring(txt);
+  // size_t size = strlen(str) + 4;
+  // char *result = palloc(size);
+  // snprintf(result, size, "\"%s\"", str);
+  // pfree(str);
+  // return result;
+// }
 
 /**
  * @brief Return the string representation of a base value
