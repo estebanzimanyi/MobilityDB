@@ -47,6 +47,8 @@
 #include <utils/timestamp.h>
 #endif
 
+#include "meos_error.h"
+
 /*****************************************************************************
  * Toolchain dependent definitions
  *****************************************************************************/
@@ -276,12 +278,6 @@ extern RTree *rtree_create_stbox();
 extern void rtree_free(RTree *rtree);
 extern void rtree_insert(RTree *rtree, void *box, int64 id);
 extern int *rtree_search(const RTree *rtree,const void *query, int *count);
-
-/*****************************************************************************
- * Error codes
- *****************************************************************************/
-
-#include "meos_error.h"
 
 /*****************************************************************************
  * Initialization of the MEOS library
