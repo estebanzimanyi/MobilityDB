@@ -47,8 +47,8 @@
 #include <meos.h>
 #include <meos_internal.h>
 #include <meos_internal_geo.h>
+#include <postgres_types.h>
 #include "temporal/meos_catalog.h"
-#include "temporal/postgres_types.h"
 #include "temporal/tsequence.h"
 #include "temporal/type_parser.h"
 #include "temporal/type_util.h"
@@ -601,7 +601,7 @@ tinstant_hash(const TInstant *inst)
   /* Apply the hash function to the base type */
   uint32 value_hash = datum_hash(tinstant_value_p(inst), basetype);
   /* Apply the hash function to the timestamp */
-  uint32 time_hash = pg_hashint8(inst->t);
+  uint32 time_hash = int64_hash(inst->t);
   /* Merge hashes of value and timestamp */
   uint32 result = value_hash;
   result = (result << 1) | (result >> 31);

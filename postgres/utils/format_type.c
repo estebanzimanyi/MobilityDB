@@ -121,7 +121,9 @@ format_type_extended(Oid type_oid, int32 typemod, bits16 flags)
     else if ((flags & FORMAT_TYPE_ALLOW_INVALID) != 0)
       return pstrdup("???");
     else
+    {
       elog(ERROR, "cache lookup failed for type %u", type_oid);
+    }
   }
   typeform = (Form_pg_type) GETSTRUCT(tuple);
 
@@ -146,7 +148,9 @@ format_type_extended(Oid type_oid, int32 typemod, bits16 flags)
       else if ((flags & FORMAT_TYPE_ALLOW_INVALID) != 0)
         return pstrdup("???[]");
       else
+      {
         elog(ERROR, "cache lookup failed for type %u", type_oid);
+      }
     }
     typeform = (Form_pg_type) GETSTRUCT(tuple);
     type_oid = array_base_type;

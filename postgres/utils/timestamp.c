@@ -51,7 +51,6 @@
 // #include "utils/skipsupport.h"
 // #include "utils/sortsupport.h"
 
-extern Interval *pg_interval_justify_hours(Interval *interval);
 /*
  * gcc's -ffast-math switch breaks routines that expect exact results from
  * expressions like timeval / SECS_PER_HOUR, where timeval is double.
@@ -103,7 +102,7 @@ anytimestamp_typmodout(bool istz, int32 typmod)
  * @note Derived from PostgreSQL function @p timestamp_in()
  */
 Timestamp
-pg_timestamp_in(char *str, int32 typmod)
+pg_timestamp_in(const char *str, int32 typmod)
 {
   Timestamp  result;
   fsec_t    fsec;
@@ -134,8 +133,7 @@ pg_timestamp_in(char *str, int32 typmod)
     case DTK_DATE:
       if (tm2timestamp(tm, fsec, NULL, &result) != 0)
       {
-        meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-          "timestamp out of range: \"%s\"", str);
+        elog(ERROR, "timestamp out of range: \"%s\"", str);
         return (Datum) 0;
       }
       break;
@@ -154,8 +152,8 @@ pg_timestamp_in(char *str, int32 typmod)
 
     default:
     {
-      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-        "unexpected dtype %d while parsing timestamp \"%s\"", dtype, str);
+      elog(ERROR, "unexpected dtype %d while parsing timestamp \"%s\"",
+        dtype, str);
       TIMESTAMP_NOEND(result);
     }
   }
@@ -185,7 +183,7 @@ pg_timestamp_out(Timestamp timestamp)
     EncodeDateTime(tm, fsec, false, 0, NULL, DateStyle, buf);
   else
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+    elog(ERROR, "timestamp out of range");
     return NULL;
   }
 
@@ -249,8 +247,7 @@ AdjustTimestampForTypmod(Timestamp *time, int32 typmod, Node *escontext)
   {
     if (typmod < 0 || typmod > MAX_TIMESTAMP_PRECISION)
     {
-      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-        "timestamp(%d) precision must be between %d and %d",
+      elog(ERROR, "timestamp(%d) precision must be between %d and %d",
         typmod, 0, MAX_TIMESTAMP_PRECISION);
       return false;
     }
@@ -277,7 +274,7 @@ AdjustTimestampForTypmod(Timestamp *time, int32 typmod, Node *escontext)
  * @note Derived from PostgreSQL function @p timestamptz_in()
  */
 TimestampTz
-pg_timestamptz_in(char *str, int32 typmod)
+pg_timestamptz_in(const char *str, int32 typmod)
 {
   TimestampTz result;
   fsec_t    fsec;
@@ -308,8 +305,7 @@ pg_timestamptz_in(char *str, int32 typmod)
     case DTK_DATE:
       if (tm2timestamp(tm, fsec, &tz, &result) != 0)
       {
-        meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, 
-          "timestamp out of range: \"%s\"", str);
+        elog(ERROR, "timestamp out of range: \"%s\"", str);
         return (Datum) 0;
       }
       break;
@@ -327,8 +323,8 @@ pg_timestamptz_in(char *str, int32 typmod)
       break;
 
     default:
-      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-        "unexpected dtype %d while parsing timestamptz \"%s\"", dtype, str);
+      elog(ERROR, "unexpected dtype %d while parsing timestamptz \"%s\"",
+        dtype, str);
       TIMESTAMP_NOEND(result);
   }
 
@@ -364,8 +360,7 @@ parse_sane_timezone(struct pg_tm *tm, text *zone)
    */
   if (isdigit((unsigned char) *tzname))
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "invalid input syntax for type %s: \"%s\"", 
+    elog(ERROR, "invalid input syntax for type %s: \"%s\"", 
       "numeric time zone", tzname);
     return INT_MAX;
   }
@@ -379,14 +374,12 @@ parse_sane_timezone(struct pg_tm *tm, text *zone)
 
     if (dterr == DTERR_TZDISP_OVERFLOW)
     {
-      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-        "numeric time zone \"%s\" out of range", tzname);
+      elog(ERROR, "numeric time zone \"%s\" out of range", tzname);
       return INT_MAX;
     }
     else if (dterr != DTERR_BAD_FORMAT)
     {
-      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-        "time zone \"%s\" not recognized", tzname);
+      elog(ERROR, "time zone \"%s\" not recognized", tzname);
       return INT_MAX;
     }
 
@@ -457,15 +450,13 @@ make_timestamp_internal(int year, int month, int day, int hour, int min,
 
   if (dterr != 0)
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-      "date field value out of range: %d-%02d-%02d", year, month, day);
+    elog(ERROR, "date field value out of range: %d-%02d-%02d", year, month, day);
     return DT_NOEND;
   }
 
   if (!IS_VALID_JULIAN(tm.tm_year, tm.tm_mon, tm.tm_mday))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-        "date out of range: %d-%02d-%02d", year, month, day);
+    elog(ERROR, "date out of range: %d-%02d-%02d", year, month, day);
     return DT_NOEND;
   }
 
@@ -474,8 +465,7 @@ make_timestamp_internal(int year, int month, int day, int hour, int min,
   /* Check for time overflow */
   if (float_time_overflows(hour, min, sec))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-      "time field value out of range: %d:%02d:%02g", hour, min, sec);
+    elog(ERROR, "time field value out of range: %d:%02d:%02g", hour, min, sec);
     return DT_NOEND;
   }
 
@@ -486,8 +476,7 @@ make_timestamp_internal(int year, int month, int day, int hour, int min,
   if (unlikely(pg_mul_s64_overflow(date, USECS_PER_DAY, &result) ||
          pg_add_s64_overflow(result, time, &result)))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-      "timestamp out of range: %d-%02d-%02d %d:%02d:%02g",
+    elog(ERROR, "timestamp out of range: %d-%02d-%02d %d:%02d:%02g",
       year, month, day, hour, min, sec);
     return DT_NOEND;
   }
@@ -495,8 +484,7 @@ make_timestamp_internal(int year, int month, int day, int hour, int min,
   /* final range check catches just-out-of-range timestamps */
   if (!IS_VALID_TIMESTAMP(result))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-      "timestamp out of range: %d-%02d-%02d %d:%02d:%02g",
+    elog(ERROR, "timestamp out of range: %d-%02d-%02d %d:%02d:%02g",
       year, month, day, hour, min, sec);
     return DT_NOEND;
   }
@@ -538,7 +526,7 @@ timestamptz_make(int year, int month, int day, int hour, int min, double sec)
  */
 TimestampTz
 timestamptz_make_at_timezone(int year, int month, int day, int hour, int min,
-  double sec, text *zone)
+  double sec, const text *zone)
 {
   TimestampTz result;
   Timestamp timestamp;
@@ -550,7 +538,7 @@ timestamptz_make_at_timezone(int year, int month, int day, int hour, int min,
 
   if (timestamp2tm(timestamp, NULL, &tt, &fsec, NULL, NULL) != 0)
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+    elog(ERROR, "timestamp out of range");
     return DT_NOEND;
   }
 
@@ -558,7 +546,7 @@ timestamptz_make_at_timezone(int year, int month, int day, int hour, int min,
   result = dt2local(timestamp, -tz);
   if (!IS_VALID_TIMESTAMP(result))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+    elog(ERROR, "timestamp out of range");
     return DT_NOEND;
   }
   return result;
@@ -578,7 +566,7 @@ float8_to_timestamptz(float8 seconds)
   /* Deal with NaN and infinite inputs ... */
   if (isnan(seconds))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp cannot be NaN");
+    elog(ERROR, "timestamp cannot be NaN");
     return DT_NOEND;
   }
 
@@ -597,8 +585,7 @@ float8_to_timestamptz(float8 seconds)
       || seconds >=
       (float8) SECS_PER_DAY * (TIMESTAMP_END_JULIAN - UNIX_EPOCH_JDATE))
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-        "timestamp out of range: \"%g\"", seconds);
+      elog(ERROR, "timestamp out of range: \"%g\"", seconds);
       return DT_NOEND;
     }
 
@@ -611,8 +598,7 @@ float8_to_timestamptz(float8 seconds)
     /* Recheck in case roundoff produces something just out of range */
     if (!IS_VALID_TIMESTAMP(result))
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-        "timestamp out of range: \"%g\"", seconds);
+      elog(ERROR, "timestamp out of range: \"%g\"", seconds);
       return DT_NOEND;
     }
   }
@@ -643,7 +629,7 @@ pg_timestamptz_out(TimestampTz dt)
     EncodeDateTime(tm, fsec, true, tz, tzn, DateStyle, buf);
   else
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+    elog(ERROR, "timestamp out of range");
     return NULL;
   }
 
@@ -678,7 +664,7 @@ pg_timestamptz_scale(TimestampTz timestamp, int32 typmod)
  * @note Derived from PostgreSQL function @p interval_in()
  */
 Interval *
-pg_interval_in(char *str, int32 typmod)
+pg_interval_in(const char *str, int32 typmod)
 {
   Interval   *result;
   struct pg_itm_in tt,
@@ -726,7 +712,7 @@ pg_interval_in(char *str, int32 typmod)
     case DTK_DELTA:
       if (itmin2interval(itm_in, result) != 0)
       {
-        meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+        elog(ERROR, "interval out of range");
         return NULL;
       }
       break;
@@ -740,8 +726,8 @@ pg_interval_in(char *str, int32 typmod)
       break;
 
     default:
-      meos_error(ERROR,  MEOS_ERR_INVALID_ARG_VALUE,
-        "unexpected dtype %d while parsing interval \"%s\"", dtype, str);
+      elog(ERROR, "unexpected dtype %d while parsing interval \"%s\"", dtype,
+        str);
       return NULL;
   }
 
@@ -755,7 +741,7 @@ pg_interval_in(char *str, int32 typmod)
  * @note Derived from PostgreSQL function @p interval_out()
  */
 char *
-pg_interval_out(Interval *interval)
+pg_interval_out(const Interval *interval)
 {
   char     *result;
   struct pg_itm tt,
@@ -910,7 +896,7 @@ intervaltypmodleastfield(int32 typmod)
  * @note Derived from PostgreSQL function @p interval_scale()
  */
 Interval *
-pg_interval_scale(Interval *interval, int32 typmod)
+pg_interval_scale(const Interval *interval, int32 typmod)
 {
   Interval *result  = palloc(sizeof(Interval));
   *result = *interval;
@@ -1073,8 +1059,7 @@ AdjustIntervalForTypmod(Interval *interval, int32 typmod,
     {
       if (precision < 0 || precision > MAX_INTERVAL_PRECISION)
       {
-        meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-          "interval(%d) precision must be between %d and %d",
+        elog(ERROR, "interval(%d) precision must be between %d and %d",
           precision, 0, MAX_INTERVAL_PRECISION);
         return false;
       }
@@ -1084,8 +1069,7 @@ AdjustIntervalForTypmod(Interval *interval, int32 typmod,
         if (pg_add_s64_overflow(interval->time, IntervalOffsets[precision],
               &interval->time))
         {
-          meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-            "interval out of range");
+          elog(ERROR, "interval out of range");
           return false;
         }
         
@@ -1096,8 +1080,7 @@ AdjustIntervalForTypmod(Interval *interval, int32 typmod,
         if (pg_sub_s64_overflow(interval->time, IntervalOffsets[precision],
               &interval->time))
         {
-          meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-            "interval out of range");
+          elog(ERROR, "interval out of range");
           return false;
         }
         interval->time -= interval->time % IntervalScales[precision];
@@ -1153,7 +1136,7 @@ interval_make(int32 years, int32 months, int32 weeks, int32 days, int32 hours,
   return result;
 
 out_of_range:
-  meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+  elog(ERROR, "interval out of range");
   return NULL;
 }
 
@@ -1676,7 +1659,7 @@ timestamp_is_finite(Timestamp timestamp)
  * @note Derived from PostgreSQL function @p interval_finite()
  */
 bool
-interval_is_finite(Interval *interval)
+interval_is_finite(const Interval *interval)
 {
   return ! INTERVAL_NOT_FINITE(interval);
 }
@@ -1816,12 +1799,12 @@ pg_timestamp_cmp(Timestamp dt1, Timestamp dt2)
 /**
  * @ingroup meos_base_timestamp
  * @brief Return the 32-bit hash value of a timestamp
- * @note Derived from PostgreSQL function @p timestamptz_hash()
+ * @note Derived from PostgreSQL function @p timestamp_hash()
  */
 int32
 pg_timestamp_hash(Timestamp timestamp)
 {
-  return int8_hash(timestamp);
+  return int64_hash(timestamp);
 }
 
 /**
@@ -1832,7 +1815,7 @@ pg_timestamp_hash(Timestamp timestamp)
 int32
 pg_timestamptz_hash(TimestampTz timestamp)
 {
-  return int8_hash(timestamp);
+  return int64_hash(timestamp);
 }
 
 /**
@@ -1843,7 +1826,7 @@ pg_timestamptz_hash(TimestampTz timestamp)
 uint64
 pg_timestamp_hash_extended(TimestampTz timestamp, uint64 seed)
 {
-  return hashint8extended(timestamp, seed);
+  return int64_hash_extended(timestamp, seed);
 }
 
 /**
@@ -1854,7 +1837,7 @@ pg_timestamp_hash_extended(TimestampTz timestamp, uint64 seed)
 uint64
 pg_timestamptz_hash_extended(TimestampTz timestamp, uint64 seed)
 {
-  return int8_hash_extended(timestamp, seed);
+  return int64_hash_extended(timestamp, seed);
 }
 
 /*
@@ -2092,7 +2075,7 @@ interval_sign(const Interval *interval)
  * @note Derived from PostgreSQL function @p interval_eq()
  */
 bool
-pg_interval_eq(Interval *interval1, Interval *interval2)
+pg_interval_eq(const Interval *interval1, const Interval *interval2)
 {
   return (interval_cmp_internal(interval1, interval2) == 0);
 }
@@ -2103,7 +2086,7 @@ pg_interval_eq(Interval *interval1, Interval *interval2)
  * @note Derived from PostgreSQL function @p interval_ne()
  */
 bool
-pg_interval_ne(Interval *interval1, Interval *interval2)
+pg_interval_ne(const Interval *interval1, const Interval *interval2)
 {
   return (interval_cmp_internal(interval1, interval2) != 0);
 }
@@ -2114,7 +2097,7 @@ pg_interval_ne(Interval *interval1, Interval *interval2)
  * @note Derived from PostgreSQL function @p interval_lt()
  */
 bool
-pg_interval_lt(Interval *interval1, Interval *interval2)
+pg_interval_lt(const Interval *interval1, const Interval *interval2)
 {
   return (interval_cmp_internal(interval1, interval2) < 0);
 }
@@ -2125,7 +2108,7 @@ pg_interval_lt(Interval *interval1, Interval *interval2)
  * @note Derived from PostgreSQL function @p interval_gt()
  */
 bool
-pg_interval_gt(Interval *interval1, Interval *interval2)
+pg_interval_gt(const Interval *interval1, const Interval *interval2)
 {
   return (interval_cmp_internal(interval1, interval2) > 0);
 }
@@ -2137,7 +2120,7 @@ pg_interval_gt(Interval *interval1, Interval *interval2)
  * @note Derived from PostgreSQL function @p interval_le()
  */
 bool
-pg_interval_le(Interval *interval1, Interval *interval2)
+pg_interval_le(const Interval *interval1, const Interval *interval2)
 {
   return (interval_cmp_internal(interval1, interval2) <= 0);
 }
@@ -2149,7 +2132,7 @@ pg_interval_le(Interval *interval1, Interval *interval2)
  * @note Derived from PostgreSQL function @p interval_ge()
  */
 bool
-pg_interval_ge(Interval *interval1, Interval *interval2)
+pg_interval_ge(const Interval *interval1, const Interval *interval2)
 {
   return (interval_cmp_internal(interval1, interval2) >= 0);
 }
@@ -2161,7 +2144,7 @@ pg_interval_ge(Interval *interval1, Interval *interval2)
  * @note Derived from PostgreSQL function @p interval_cmp()
  */
 int32
-pg_interval_cmp(Interval *interval1, Interval *interval2)
+pg_interval_cmp(const Interval *interval1, const Interval *interval2)
 {
   return interval_cmp_internal(interval1, interval2);
 }
@@ -2175,7 +2158,7 @@ pg_interval_cmp(Interval *interval1, Interval *interval2)
  * @note Derived from PostgreSQL function @p interval_hash()
  */
 int32
-pg_interval_hash(Interval *interval)
+pg_interval_hash(const Interval *interval)
 {
   INT128 span = interval_cmp_value(interval);
   /*
@@ -2185,7 +2168,7 @@ pg_interval_hash(Interval *interval)
    * introduced.
    */
   int64 span64 = int128_to_int64(span);
-  return int8_hash(span64);
+  return int64_hash(span64);
 }
 
 /**
@@ -2194,12 +2177,12 @@ pg_interval_hash(Interval *interval)
  * @note Derived from PostgreSQL function @p interval_hash_extended()
  */
 uint64
-pg_interval_hash_extended(Interval *interval, uint64 seed)
+pg_interval_hash_extended(const Interval *interval, uint64 seed)
 {
   INT128 span = interval_cmp_value(interval);
   /* Same approach as interval_hash */
   int64 span64 = int128_to_int64(span);
-  return int8_hash_extended(span64, seed);
+  return int64_hash_extended(span64, seed);
 }
 
 /**
@@ -2303,7 +2286,7 @@ pg_timestamp_larger(Timestamp dt1, Timestamp dt2)
  * @note Derived from PostgreSQL function @p timestamp_mi()
  */
 Interval *
-pg_timestamp_mi(Timestamp dt1, Timestamp dt2)
+minus_timestamp_timestamp(Timestamp dt1, Timestamp dt2)
 {
   Interval *result = (Interval *) palloc(sizeof(Interval));
 
@@ -2319,8 +2302,7 @@ pg_timestamp_mi(Timestamp dt1, Timestamp dt2)
     {
       if (TIMESTAMP_IS_NOBEGIN(dt2))
       {
-        meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-          "interval out of range");
+        elog(ERROR, "interval out of range");
         return NULL;
       }
       else
@@ -2330,8 +2312,7 @@ pg_timestamp_mi(Timestamp dt1, Timestamp dt2)
     {
       if (TIMESTAMP_IS_NOEND(dt2))
       {
-        meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-          "interval out of range");
+        elog(ERROR, "interval out of range");
         return NULL;
       }
       else
@@ -2347,7 +2328,7 @@ pg_timestamp_mi(Timestamp dt1, Timestamp dt2)
 
   if (unlikely(pg_sub_s64_overflow(dt1, dt2, &result->time)))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+    elog(ERROR, "interval out of range");
     return NULL;
   }
 
@@ -2383,6 +2364,19 @@ pg_timestamp_mi(Timestamp dt1, Timestamp dt2)
 }
 
 /**
+ * @ingroup meos_base_timestamp
+ * @brief Return the subraction of two timestamps
+ * @return On error return NULL
+ * @note Derived from PostgreSQL function @p timestamp_mi()
+ */
+Interval *
+minus_timestamptz_timestamptz(TimestampTz dt1, TimestampTz dt2)
+{
+  return minus_timestamp_timestamp((Timestamp) dt1, (Timestamp) dt2);
+}
+
+
+/**
  * @ingroup meos_base_interval
  * @brief Adjust interval so 'month', 'day', and 'time' portions are within
  * customary bounds
@@ -2395,7 +2389,7 @@ pg_timestamp_mi(Timestamp dt1, Timestamp dt2)
  * @note Derived from PostgreSQL function @p interval_justify_interval()
  */
 Interval *
-pg_interval_justify_interval(Interval *interval)
+pg_interval_justify_interval(const Interval *interval)
 {
   Interval   *result;
   TimeOffset  wholeday;
@@ -2418,7 +2412,7 @@ pg_interval_justify_interval(Interval *interval)
     result->day -= wholemonth * DAYS_PER_MONTH;
     if (pg_add_s32_overflow(result->month, wholemonth, &result->month))
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+      elog(ERROR, "interval out of range");
       return NULL;
     }
   }
@@ -2436,7 +2430,7 @@ pg_interval_justify_interval(Interval *interval)
   result->day -= wholemonth * DAYS_PER_MONTH;
   if (pg_add_s32_overflow(result->month, wholemonth, &result->month))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+    elog(ERROR, "interval out of range");
     return NULL;
   }
 
@@ -2477,7 +2471,7 @@ pg_interval_justify_interval(Interval *interval)
  * @note Derived from PostgreSQL function @p interval_justify_hours()
  */
 Interval *
-pg_interval_justify_hours(Interval *interval)
+pg_interval_justify_hours(const Interval *interval)
 {
   Interval   *result;
   TimeOffset  wholeday;
@@ -2494,7 +2488,7 @@ pg_interval_justify_hours(Interval *interval)
   TMODULO(result->time, wholeday, USECS_PER_DAY);
   if (pg_add_s32_overflow(result->day, wholeday, &result->day))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+    elog(ERROR, "interval out of range");
     return NULL;
   }
 
@@ -2520,7 +2514,7 @@ pg_interval_justify_hours(Interval *interval)
  * @note Derived from PostgreSQL function @p interval_justify_days()
  */
 Interval *
-pg_interval_justify_days(Interval *interval)
+pg_interval_justify_days(const Interval *interval)
 {
   Interval   *result;
   int32    wholemonth;
@@ -2538,7 +2532,7 @@ pg_interval_justify_days(Interval *interval)
   result->day -= wholemonth * DAYS_PER_MONTH;
   if (pg_add_s32_overflow(result->month, wholemonth, &result->month))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+    elog(ERROR, "interval out of range");
     return NULL;
   }
 
@@ -2570,7 +2564,7 @@ pg_interval_justify_days(Interval *interval)
  * @note Derived from PostgreSQL function @p timestamp_pl_interval()
  */
 Timestamp
-add_timestamp_interval(Timestamp timestamp, Interval *interval)
+add_timestamp_interval(Timestamp timestamp, const Interval *interval)
 {
   Timestamp  result;
 
@@ -2584,7 +2578,7 @@ add_timestamp_interval(Timestamp timestamp, Interval *interval)
   {
     if (TIMESTAMP_IS_NOEND(timestamp))
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+      elog(ERROR, "timestamp out of range");
       return DT_NOEND;
     }
     else
@@ -2594,7 +2588,7 @@ add_timestamp_interval(Timestamp timestamp, Interval *interval)
   {
     if (TIMESTAMP_IS_NOBEGIN(timestamp))
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+      elog(ERROR, "timestamp out of range");
       return DT_NOEND;
     }
     else
@@ -2612,15 +2606,13 @@ add_timestamp_interval(Timestamp timestamp, Interval *interval)
 
       if (timestamp2tm(timestamp, NULL, tm, &fsec, NULL, NULL) != 0)
       {
-        meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-          "timestamp out of range");
+        elog(ERROR, "timestamp out of range");
         return DT_NOEND;
       }
 
       if (pg_add_s32_overflow(tm->tm_mon, interval->month, &tm->tm_mon))
       {
-        meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-          "timestamp out of range");
+        elog(ERROR, "timestamp out of range");
         return DT_NOEND;
       }
       if (tm->tm_mon > MONTHS_PER_YEAR)
@@ -2640,8 +2632,7 @@ add_timestamp_interval(Timestamp timestamp, Interval *interval)
 
       if (tm2timestamp(tm, fsec, NULL, &timestamp) != 0)
       {
-        meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-          "timestamp out of range");
+        elog(ERROR, "timestamp out of range");
         return DT_NOEND;
       }
     }
@@ -2655,8 +2646,7 @@ add_timestamp_interval(Timestamp timestamp, Interval *interval)
 
       if (timestamp2tm(timestamp, NULL, tm, &fsec, NULL, NULL) != 0)
       {
-        meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-          "timestamp out of range");
+        elog(ERROR, "timestamp out of range");
         return DT_NOEND;
       }
 
@@ -2668,29 +2658,27 @@ add_timestamp_interval(Timestamp timestamp, Interval *interval)
       if (pg_add_s32_overflow(julian, interval->day, &julian) ||
         julian < 0)
       {
-        meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-          "timestamp out of range");
+        elog(ERROR, "timestamp out of range");
         return DT_NOEND;
       }
       j2date(julian, &tm->tm_year, &tm->tm_mon, &tm->tm_mday);
 
       if (tm2timestamp(tm, fsec, NULL, &timestamp) != 0)
       {
-        meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-          "timestamp out of range");
+        elog(ERROR, "timestamp out of range");
         return DT_NOEND;
       }
     }
 
     if (pg_add_s64_overflow(timestamp, interval->time, &timestamp))
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+      elog(ERROR, "timestamp out of range");
         return DT_NOEND;
     }
 
     if (!IS_VALID_TIMESTAMP(timestamp))
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+      elog(ERROR, "timestamp out of range");
       return DT_NOEND;
     }
 
@@ -2707,11 +2695,11 @@ add_timestamp_interval(Timestamp timestamp, Interval *interval)
  * @note Derived from PostgreSQL function @p timestamp_mi_interval()
  */
 Timestamp
-minus_timestamp_interval(Timestamp timestamp, Interval *interval)
+minus_timestamp_interval(Timestamp timestamp, const Interval *interval)
 {
   Interval  tspan;
   interval_um_internal(interval, &tspan);
-  return pg_timestamp_pl_interval(timestamp, &tspan);
+  return add_timestamp_interval(timestamp, &tspan);
 }
 
 
@@ -2743,7 +2731,7 @@ timestamptz_pl_interval_internal(TimestampTz timestamp,
   {
     if (TIMESTAMP_IS_NOEND(timestamp))
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+      elog(ERROR, "timestamp out of range");
       return DT_NOEND;
     }
     else
@@ -2753,7 +2741,7 @@ timestamptz_pl_interval_internal(TimestampTz timestamp,
   {
     if (TIMESTAMP_IS_NOBEGIN(timestamp))
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+      elog(ERROR, "timestamp out of range");
       return DT_NOEND;
     }
     else
@@ -2775,15 +2763,13 @@ timestamptz_pl_interval_internal(TimestampTz timestamp,
 
       if (timestamp2tm(timestamp, &tz, tm, &fsec, NULL, attimezone) != 0)
       {
-        meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-          "timestamp out of range");
+        elog(ERROR, "timestamp out of range");
         return DT_NOEND;
       }
 
       if (pg_add_s32_overflow(tm->tm_mon, interval->month, &tm->tm_mon))
       {
-        meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-          "timestamp out of range");
+        elog(ERROR, "timestamp out of range");
         return DT_NOEND;
       }
       if (tm->tm_mon > MONTHS_PER_YEAR)
@@ -2805,8 +2791,7 @@ timestamptz_pl_interval_internal(TimestampTz timestamp,
 
       if (tm2timestamp(tm, fsec, &tz, &timestamp) != 0)
       {
-        meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-          "timestamp out of range");
+        elog(ERROR, "timestamp out of range");
         return DT_NOEND;
       }
     }
@@ -2820,8 +2805,7 @@ timestamptz_pl_interval_internal(TimestampTz timestamp,
 
       if (timestamp2tm(timestamp, &tz, tm, &fsec, NULL, attimezone) != 0)
       {
-        meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-            "timestamp out of range");
+        elog(ERROR, "timestamp out of range");
         return DT_NOEND;
       }
 
@@ -2836,8 +2820,7 @@ timestamptz_pl_interval_internal(TimestampTz timestamp,
       if (pg_add_s32_overflow(julian, interval->day, &julian) ||
         julian < -1)
       {
-        meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-            "timestamp out of range");
+        elog(ERROR, "timestamp out of range");
         return DT_NOEND;
       }
       j2date(julian, &tm->tm_year, &tm->tm_mon, &tm->tm_mday);
@@ -2846,21 +2829,20 @@ timestamptz_pl_interval_internal(TimestampTz timestamp,
 
       if (tm2timestamp(tm, fsec, &tz, &timestamp) != 0)
       {
-        meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-          "timestamp out of range");
+        elog(ERROR, "timestamp out of range");
         return DT_NOEND;
       }
     }
 
     if (pg_add_s64_overflow(timestamp, interval->time, &timestamp))
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+      elog(ERROR, "timestamp out of range");
       return DT_NOEND;
     }
 
     if (!IS_VALID_TIMESTAMP(timestamp))
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+      elog(ERROR, "timestamp out of range");
       return DT_NOEND;
     }
 
@@ -2888,20 +2870,20 @@ timestamptz_mi_interval_internal(TimestampTz timestamp, Interval *interval,
  * @return On error return DT_NOEND
  * @note Derived from PostgreSQL function @p timestamptz_pl_interval()
  */
-Timestamp
-add_timestamptz_interval(TimestampTz timestamp, Interval *interval)
+TimestampTz
+add_timestamptz_interval(TimestampTz timestamp, const Interval *interval)
 {
   return timestamptz_pl_interval_internal(timestamp, interval, NULL);
 }
 
 /**
  * @ingroup meos_base_timestamp
- * @brief Subratc an interval to a timestamptz, in the current timezone
+ * @brief Subtract an interval to a timestamptz, in the current timezone
  * @return On error return DT_NOEND
  * @note Derived from PostgreSQL function @p timestamptz_mi_interval()
  */
-Timestamp
-minus_timestamptz_interval(TimestampTz timestamp, Interval *interval)
+TimestampTz
+minus_timestamptz_interval(TimestampTz timestamp, const Interval *interval)
 {
   return timestamptz_mi_interval_internal(timestamp, interval, NULL);
 }
@@ -2913,8 +2895,8 @@ minus_timestamptz_interval(TimestampTz timestamp, Interval *interval)
  * @note Derived from PostgreSQL function @p timestamptz_pl_interval_at_zone()
  */
 Timestamp
-add_timestamptz_interval_at_zone(TimestampTz timestamp, Interval *interval,
-  text *zone)
+add_timestamptz_interval_at_zone(TimestampTz timestamp, const Interval *interval,
+  const text *zone)
 {
   pg_tz *attimezone = lookup_timezone(zone);
   return timestamptz_pl_interval_internal(timestamp, interval, attimezone);
@@ -2927,8 +2909,8 @@ add_timestamptz_interval_at_zone(TimestampTz timestamp, Interval *interval,
  * @note Derived from PostgreSQL function @p timestamptz_mi_interval_at_zone()
  */
 Timestamp
-minus_timestamptz_interval_at_zone(TimestampTz timestamp, Interval *interval,
-  text *zone)
+minus_timestamptz_interval_at_zone(TimestampTz timestamp, const Interval *interval,
+  const text *zone)
 {
   pg_tz *attimezone = lookup_timezone(zone);
   return timestamptz_mi_interval_internal(timestamp, interval, attimezone);
@@ -2952,7 +2934,7 @@ interval_um_internal(const Interval *interval, Interval *result)
       pg_sub_s32_overflow(0, interval->month, &result->month) ||
       INTERVAL_NOT_FINITE(result))
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+      elog(ERROR, "interval out of range");
     }
   }
 }
@@ -2963,7 +2945,7 @@ interval_um_internal(const Interval *interval, Interval *result)
  * @note Derived from PostgreSQL function @p interval_um()
  */
 Interval *
-pg_interval_um(Interval *interval)
+interval_negate(const Interval *interval)
 {
   Interval *result = (Interval *) palloc(sizeof(Interval));
   interval_um_internal(interval, result);
@@ -2976,7 +2958,7 @@ pg_interval_um(Interval *interval)
  * @note Derived from PostgreSQL function @p interval_smaller()
  */
 Interval *
-pg_interval_smaller(Interval *interval1, Interval *interval2)
+pg_interval_smaller(const Interval *interval1, const Interval *interval2)
 {
   Interval   *result;
 
@@ -2994,7 +2976,7 @@ pg_interval_smaller(Interval *interval1, Interval *interval2)
  * @note Derived from PostgreSQL function @p interval_larger()
  */
 Interval *
-pg_interval_larger(Interval *interval1, Interval *interval2)
+pg_interval_larger(const Interval *interval1, const Interval *interval2)
 {
   Interval   *result;
 
@@ -3016,7 +2998,7 @@ finite_interval_pl(const Interval *interval1, const Interval *interval2, Interva
     pg_add_s64_overflow(interval1->time, interval2->time, &result->time) ||
     INTERVAL_NOT_FINITE(result))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+    elog(ERROR, "interval out of range");
   }
 }
 
@@ -3027,7 +3009,7 @@ finite_interval_pl(const Interval *interval1, const Interval *interval2, Interva
  * @note Derived from PostgreSQL function @p interval_pl()
  */
 Interval *
-add_interval_interval(Interval *interval1, Interval *interval2)
+add_interval_interval(const Interval *interval1, const Interval *interval2)
 {
   Interval *result = (Interval *) palloc(sizeof(Interval));
 
@@ -3041,7 +3023,7 @@ add_interval_interval(Interval *interval1, Interval *interval2)
   {
     if (INTERVAL_IS_NOEND(interval2))
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+      elog(ERROR, "interval out of range");
       pfree(result);
       return NULL;
     }
@@ -3052,7 +3034,7 @@ add_interval_interval(Interval *interval1, Interval *interval2)
   {
     if (INTERVAL_IS_NOBEGIN(interval2))
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+      elog(ERROR, "interval out of range");
       pfree(result);
       return NULL;
     }
@@ -3079,7 +3061,7 @@ finite_interval_mi(const Interval *interval1, const Interval *interval2,
     pg_sub_s64_overflow(interval1->time, interval2->time, &result->time) ||
     INTERVAL_NOT_FINITE(result))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+    elog(ERROR, "interval out of range");
   }
   return;
 }
@@ -3091,7 +3073,7 @@ finite_interval_mi(const Interval *interval1, const Interval *interval2,
  * @note Derived from PostgreSQL function @p interval_mi()
  */
 Interval *
-minus_interval_interval(Interval *interval1, Interval *interval2)
+minus_interval_interval(const Interval *interval1, const Interval *interval2)
 {
   Interval *result = (Interval *) palloc(sizeof(Interval));
 
@@ -3105,7 +3087,7 @@ minus_interval_interval(Interval *interval1, Interval *interval2)
   {
     if (INTERVAL_IS_NOBEGIN(interval2))
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+      elog(ERROR, "interval out of range");
       pfree(result);
       return NULL;
     }
@@ -3116,7 +3098,7 @@ minus_interval_interval(Interval *interval1, Interval *interval2)
   {
     if (INTERVAL_IS_NOEND(interval2))
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+      elog(ERROR, "interval out of range");
       pfree(result);
       return NULL;
     }
@@ -3140,7 +3122,7 @@ minus_interval_interval(Interval *interval1, Interval *interval2)
  * @note Derived from PostgreSQL function @p interval_mul()
  */
 Interval *
-mul_interval_float8(Interval *interval, float8 factor)
+mul_interval_float8(const Interval *interval, float8 factor)
 {
   double month_remainder_days, sec_remainder, result_double;
   int32    orig_month = interval->month,
@@ -3246,7 +3228,7 @@ mul_interval_float8(Interval *interval, float8 factor)
   return result;
 
 out_of_range:
-  meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+  elog(ERROR, "interval out of range");
   pfree(result);
   return NULL;
 }
@@ -3258,7 +3240,7 @@ out_of_range:
  * @note Derived from PostgreSQL function @p mul_d_interval()
  */
 Interval *
-mul_float8_interval(float8 factor, Interval *interval)
+mul_float8_interval(float8 factor, const Interval *interval)
 {
   return mul_interval_float8(interval, factor);
 }
@@ -3270,7 +3252,7 @@ mul_float8_interval(float8 factor, Interval *interval)
  * @note Derived from PostgreSQL function @p interval_div()
  */
 Interval *
-div_interval_float8(Interval *interval, float8 factor)
+div_interval_float8(const Interval *interval, float8 factor)
 {
   double month_remainder_days, sec_remainder, result_double;
   int32    orig_month = interval->month,
@@ -3278,7 +3260,7 @@ div_interval_float8(Interval *interval, float8 factor)
 
   if (factor == 0.0)
   {
-    meos_error(ERROR, MEOS_ERR_DIVISION_BY_ZERO, "division by zero");
+    elog(ERROR, "division by zero");
     return NULL;
   }
 
@@ -3348,7 +3330,7 @@ div_interval_float8(Interval *interval, float8 factor)
   return result;
 
 out_of_range:
-  meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+  elog(ERROR, "interval out of range");
   pfree(result);
   return NULL;
 }
@@ -3387,7 +3369,7 @@ pg_timestamp_age(Timestamp dt1, Timestamp dt2)
   {
     if (TIMESTAMP_IS_NOBEGIN(dt2))
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+      elog(ERROR, "interval out of range");
       return NULL;
     }
     else
@@ -3397,7 +3379,7 @@ pg_timestamp_age(Timestamp dt1, Timestamp dt2)
   {
     if (TIMESTAMP_IS_NOEND(dt2))
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+      elog(ERROR, "interval out of range");
       return NULL;
     }
     else
@@ -3490,13 +3472,13 @@ pg_timestamp_age(Timestamp dt1, Timestamp dt2)
 
     if (itm2interval(tm, result) != 0)
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+      elog(ERROR, "interval out of range");
       return NULL;
     }
   }
   else
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+    elog(ERROR, "interval out of range");
     return NULL;
   }
   return result;
@@ -3537,7 +3519,7 @@ pg_timestamptz_age(TimestampTz dt1, TimestampTz dt2)
   {
     if (TIMESTAMP_IS_NOBEGIN(dt2))
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+      elog(ERROR, "interval out of range");
       return NULL;
     }
     else
@@ -3547,7 +3529,7 @@ pg_timestamptz_age(TimestampTz dt1, TimestampTz dt2)
   {
     if (TIMESTAMP_IS_NOEND(dt2))
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+      elog(ERROR, "interval out of range");
       return NULL;
     }
     else
@@ -3644,13 +3626,13 @@ pg_timestamptz_age(TimestampTz dt1, TimestampTz dt2)
 
     if (itm2interval(tm, result) != 0)
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+      elog(ERROR, "interval out of range");
       return NULL;
     }
   }
   else
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+    elog(ERROR, "interval out of range");
     return NULL;
   }
   return result;
@@ -3667,7 +3649,7 @@ pg_timestamptz_age(TimestampTz dt1, TimestampTz dt2)
  * @note Derived from PostgreSQL function @p timestamp_bin()
  */
 Timestamp
-pg_timestamp_bin(Interval *stride, Timestamp timestamp, Timestamp origin)
+pg_timestamp_bin(const Interval *stride, Timestamp timestamp, Timestamp origin)
 {
   Timestamp  result,
         stride_usecs,
@@ -3680,20 +3662,20 @@ pg_timestamp_bin(Interval *stride, Timestamp timestamp, Timestamp origin)
 
   if (TIMESTAMP_NOT_FINITE(origin))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "origin out of range");
+    elog(ERROR, "origin out of range");
     return DT_NOEND;
   }
 
   if (INTERVAL_NOT_FINITE(stride))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
+    elog(ERROR,
       "timestamps cannot be binned into infinite intervals");
     return DT_NOEND;
   }
 
   if (stride->month != 0)
   {
-    meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
+    elog(ERROR, 
       "timestamps cannot be binned into intervals containing months or years");
     return DT_NOEND;
   }
@@ -3701,20 +3683,19 @@ pg_timestamp_bin(Interval *stride, Timestamp timestamp, Timestamp origin)
   if (unlikely(pg_mul_s64_overflow(stride->day, USECS_PER_DAY, &stride_usecs)) ||
     unlikely(pg_add_s64_overflow(stride_usecs, stride->time, &stride_usecs)))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+    elog(ERROR, "interval out of range");
     return DT_NOEND;
   }
 
   if (stride_usecs <= 0)
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-      "stride must be greater than zero");
+    elog(ERROR, "stride must be greater than zero");
     return DT_NOEND;
   }
 
   if (unlikely(pg_sub_s64_overflow(timestamp, origin, &tm_diff)))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+    elog(ERROR, "interval out of range");
     return DT_NOEND;
   }
 
@@ -3733,7 +3714,7 @@ pg_timestamp_bin(Interval *stride, Timestamp timestamp, Timestamp origin)
     if (unlikely(pg_sub_s64_overflow(result, stride_usecs, &result)) ||
       !IS_VALID_TIMESTAMP(result))
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+      elog(ERROR, "timestamp out of range");
       return DT_NOEND;
     }
   }
@@ -3748,7 +3729,7 @@ pg_timestamp_bin(Interval *stride, Timestamp timestamp, Timestamp origin)
  * @note Derived from PostgreSQL function @p timestamp_trunc()
  */
 Timestamp
-pg_timestamp_trunc(text *units, Timestamp timestamp)
+pg_timestamp_trunc(const text *units, Timestamp timestamp)
 {
   Timestamp  result;
   int      type,
@@ -3790,8 +3771,7 @@ pg_timestamp_trunc(text *units, Timestamp timestamp)
           return timestamp;
           break;
         default:
-          meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
-            "unit \"%s\" not supported for type %s",
+          elog(ERROR, "unit \"%s\" not supported for type %s",
             lowunits, format_type_be(TIMESTAMPOID));
           result = 0;
       }
@@ -3799,7 +3779,7 @@ pg_timestamp_trunc(text *units, Timestamp timestamp)
 
     if (timestamp2tm(timestamp, NULL, tm, &fsec, NULL, NULL) != 0)
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+      elog(ERROR, "timestamp out of range");
       return DT_NOEND;
     }
 
@@ -3881,22 +3861,20 @@ pg_timestamp_trunc(text *units, Timestamp timestamp)
         break;
 
       default:
-        meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
-          "unit \"%s\" not supported for type %s",
+        elog(ERROR, "unit \"%s\" not supported for type %s",
           lowunits, format_type_be(TIMESTAMPOID));
         result = 0;
     }
 
     if (tm2timestamp(tm, fsec, NULL, &result) != 0)
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+      elog(ERROR, "timestamp out of range");
       return DT_NOEND;
     }
   }
   else
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "unit \"%s\" not recognized for type %s",
+    elog(ERROR, "unit \"%s\" not recognized for type %s",
       lowunits, format_type_be(TIMESTAMPOID));
     result = 0;
   }
@@ -3911,7 +3889,7 @@ pg_timestamp_trunc(text *units, Timestamp timestamp)
  * @note Derived from PostgreSQL function @p timestamptz_bin()
  */
 TimestampTz
-pg_timestamptz_bin(Interval *stride, TimestampTz timestamp, TimestampTz origin)
+pg_timestamptz_bin(const Interval *stride, TimestampTz timestamp, TimestampTz origin)
 {
   TimestampTz result, stride_usecs, tm_diff, tm_modulo, tm_delta;
 
@@ -3920,20 +3898,19 @@ pg_timestamptz_bin(Interval *stride, TimestampTz timestamp, TimestampTz origin)
 
   if (TIMESTAMP_NOT_FINITE(origin))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "origin out of range");
+    elog(ERROR, "origin out of range");
     return DT_NOEND;
   }
 
   if (INTERVAL_NOT_FINITE(stride))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-      "timestamps cannot be binned into infinite intervals");
+    elog(ERROR, "timestamps cannot be binned into infinite intervals");
     return DT_NOEND;
   }
 
   if (stride->month != 0)
   {
-    meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
+    elog(ERROR,
       "timestamps cannot be binned into intervals containing months or years");
     return DT_NOEND;
   }
@@ -3941,20 +3918,19 @@ pg_timestamptz_bin(Interval *stride, TimestampTz timestamp, TimestampTz origin)
   if (unlikely(pg_mul_s64_overflow(stride->day, USECS_PER_DAY, &stride_usecs)) ||
     unlikely(pg_add_s64_overflow(stride_usecs, stride->time, &stride_usecs)))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+    elog(ERROR, "interval out of range");
     return DT_NOEND;
   }
 
   if (stride_usecs <= 0)
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-      "stride must be greater than zero");
+    elog(ERROR, "stride must be greater than zero");
     return DT_NOEND;
   }
 
   if (unlikely(pg_sub_s64_overflow(timestamp, origin, &tm_diff)))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+    elog(ERROR, "interval out of range");
     return DT_NOEND;
   }
 
@@ -3973,7 +3949,7 @@ pg_timestamptz_bin(Interval *stride, TimestampTz timestamp, TimestampTz origin)
     if (unlikely(pg_sub_s64_overflow(result, stride_usecs, &result)) ||
       !IS_VALID_TIMESTAMP(result))
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+      elog(ERROR, "timestamp out of range");
       return DT_NOEND;
     }
   }
@@ -4033,8 +4009,7 @@ timestamptz_trunc_internal(text *units, TimestampTz timestamp, pg_tz *tzp)
           break;
 
         default:
-          meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
-            "unit \"%s\" not supported for type %s",
+          elog(ERROR, "unit \"%s\" not supported for type %s",
             lowunits, format_type_be(TIMESTAMPTZOID));
           result = 0;
       }
@@ -4042,7 +4017,7 @@ timestamptz_trunc_internal(text *units, TimestampTz timestamp, pg_tz *tzp)
 
     if (timestamp2tm(timestamp, &tz, tm, &fsec, NULL, tzp) != 0)
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+      elog(ERROR, "timestamp out of range");
       return DT_NOEND;
     }
 
@@ -4134,8 +4109,7 @@ timestamptz_trunc_internal(text *units, TimestampTz timestamp, pg_tz *tzp)
         break;
 
       default:
-        meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
-          "unit \"%s\" not supported for type %s",
+        elog(ERROR, "unit \"%s\" not supported for type %s",
           lowunits, format_type_be(TIMESTAMPTZOID));
         result = 0;
     }
@@ -4145,14 +4119,13 @@ timestamptz_trunc_internal(text *units, TimestampTz timestamp, pg_tz *tzp)
 
     if (tm2timestamp(tm, fsec, &tz, &result) != 0)
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+      elog(ERROR, "timestamp out of range");
       result = 0;
     }
   }
   else
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "unit \"%s\" not recognized for type %s",
+    elog(ERROR, "unit \"%s\" not recognized for type %s",
       lowunits, format_type_be(TIMESTAMPTZOID));
     result = 0;
   }
@@ -4167,7 +4140,7 @@ timestamptz_trunc_internal(text *units, TimestampTz timestamp, pg_tz *tzp)
  * @note Derived from PostgreSQL function @p timestamptz_trunc()
  */
 TimestampTz
-pg_timestamptz_trunc(text *units, TimestampTz timestamp)
+pg_timestamptz_trunc(const text *units, TimestampTz timestamp)
 {
   return timestamptz_trunc_internal(units, timestamp, session_timezone);
 }
@@ -4179,7 +4152,8 @@ pg_timestamptz_trunc(text *units, TimestampTz timestamp)
  * @note Derived from PostgreSQL function @p timestamptz_trunc_zone()
  */
 TimestampTz
-pg_timestamptz_trunc_zone(text *units, TimestampTz timestamp, text *zone)
+pg_timestamptz_trunc_zone(const text *units, TimestampTz timestamp,
+  const text *zone)
 {
   TimestampTz result;
   pg_tz     *tzp;
@@ -4198,7 +4172,7 @@ pg_timestamptz_trunc_zone(text *units, TimestampTz timestamp, text *zone)
  * @note Derived from PostgreSQL function @p interval_trunc()
  */
 Interval *
-pg_interval_trunc(text *units, Interval *interval)
+pg_interval_trunc(const text *units, const Interval *interval)
 {
   Interval   *result;
   int      type,
@@ -4242,8 +4216,7 @@ pg_interval_trunc(text *units, Interval *interval)
           break;
 
         default:
-          meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
-            "unit \"%s\" not supported for type %s", lowunits,
+          elog(ERROR, "unit \"%s\" not supported for type %s", lowunits,
             format_type_be(INTERVALOID));
           result = 0;
       }
@@ -4293,8 +4266,7 @@ pg_interval_trunc(text *units, Interval *interval)
 
       default:
       {
-        meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
-          "unit \"%s\" not supported for type %s",
+        elog(ERROR, "unit \"%s\" not supported for type %s",
           lowunits, format_type_be(INTERVALOID));
         return NULL;
       }
@@ -4302,14 +4274,13 @@ pg_interval_trunc(text *units, Interval *interval)
 
     if (itm2interval(tm, result) != 0)
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "interval out of range");
+      elog(ERROR, "interval out of range");
       return NULL;
     }
   }
   else
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "unit \"%s\" not recognized for type %s",
+    elog(ERROR, "unit \"%s\" not recognized for type %s",
       lowunits, format_type_be(INTERVALOID));
     return NULL;
   }
@@ -4512,8 +4483,7 @@ NonFiniteTimestampTzPart(int type, int unit, char *lowunits,
 {
   if ((type != UNITS) && (type != RESERV))
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "unit \"%s\" not recognized for type %s", lowunits,
+    elog(ERROR, "unit \"%s\" not recognized for type %s", lowunits,
       format_type_be(isTz ? TIMESTAMPTZOID : TIMESTAMPOID));
     return get_float8_infinity();
   }
@@ -4552,8 +4522,7 @@ NonFiniteTimestampTzPart(int type, int unit, char *lowunits,
         return get_float8_infinity();
 
     default:
-      meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
-        "unit \"%s\" not supported for type %s", lowunits,
+      elog(ERROR, "unit \"%s\" not supported for type %s", lowunits,
         format_type_be(isTz ? TIMESTAMPTZOID : TIMESTAMPOID));
       return get_float8_infinity();
   }
@@ -4606,7 +4575,7 @@ timestamp_part_common(text *units, Timestamp timestamp, bool retnumeric)
   {
     if (timestamp2tm(timestamp, NULL, tm, &fsec, NULL, NULL) != 0)
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+      elog(ERROR, "timestamp out of range");
       return (Datum) 0;
     }
 
@@ -4742,8 +4711,7 @@ timestamp_part_common(text *units, Timestamp timestamp, bool retnumeric)
       case DTK_TZ_MINUTE:
       case DTK_TZ_HOUR:
       default:
-        meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
-          "unit \"%s\" not supported for type %s",
+        elog(ERROR, "unit \"%s\" not supported for type %s",
           lowunits, format_type_be(TIMESTAMPOID));
         intresult = 0;
     }
@@ -4786,16 +4754,14 @@ timestamp_part_common(text *units, Timestamp timestamp, bool retnumeric)
         break;
 
       default:
-        meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
-          "unit \"%s\" not supported for type %s",
+        elog(ERROR, "unit \"%s\" not supported for type %s",
           lowunits, format_type_be(TIMESTAMPOID));
         intresult = 0;
     }
   }
   else
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "unit \"%s\" not recognized for type %s",
+    elog(ERROR, "unit \"%s\" not recognized for type %s",
       lowunits, format_type_be(TIMESTAMPOID));
     intresult = 0;
   }
@@ -4813,7 +4779,7 @@ timestamp_part_common(text *units, Timestamp timestamp, bool retnumeric)
  * @note Derived from PostgreSQL function @p timestamp_part()
  */
 float8
-pg_timestamp_part(Timestamp timestamp, text *units)
+pg_timestamp_part(Timestamp timestamp, const text *units)
 {
   return DatumGetFloat8(timestamp_part_common(units, timestamp, false));
 }
@@ -4825,7 +4791,7 @@ pg_timestamp_part(Timestamp timestamp, text *units)
  * @note Derived from PostgreSQL function @p extract_timestamp()
  */
 Numeric
-timestamp_extract(Timestamp timestamp, text *units)
+timestamp_extract(Timestamp timestamp, const text *units)
 {
   return NumericGetDatum(timestamp_part_common(units, timestamp, true));
 }
@@ -4879,7 +4845,7 @@ timestamptz_part_common(text *units, TimestampTz timestamp, bool retnumeric)
   {
     if (timestamp2tm(timestamp, &tz, tm, &fsec, NULL, NULL) != 0)
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+      elog(ERROR, "timestamp out of range");
       return (Datum) 0;
     }
 
@@ -5012,8 +4978,7 @@ timestamptz_part_common(text *units, TimestampTz timestamp, bool retnumeric)
         break;
 
       default:
-        meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
-          "unit \"%s\" not supported for type %s",
+        elog(ERROR, "unit \"%s\" not supported for type %s",
           lowunits, format_type_be(TIMESTAMPTZOID));
         intresult = 0;
     }
@@ -5056,16 +5021,14 @@ timestamptz_part_common(text *units, TimestampTz timestamp, bool retnumeric)
         break;
 
       default:
-        meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
-          "unit \"%s\" not supported for type %s",
+        elog(ERROR, "unit \"%s\" not supported for type %s",
           lowunits, format_type_be(TIMESTAMPTZOID));
         intresult = 0;
     }
   }
   else
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "unit \"%s\" not recognized for type %s",
+    elog(ERROR, "unit \"%s\" not recognized for type %s",
       lowunits, format_type_be(TIMESTAMPTZOID));
     intresult = 0;
   }
@@ -5083,7 +5046,7 @@ timestamptz_part_common(text *units, TimestampTz timestamp, bool retnumeric)
  * @note Derived from PostgreSQL function @p timestamptz_part()
  */
 float8
-pg_timestamptz_part(TimestampTz timestamp, text *units)
+pg_timestamptz_part(TimestampTz timestamp, const text *units)
 {
   return timestamptz_part_common(units, timestamp, false);
 }
@@ -5095,7 +5058,7 @@ pg_timestamptz_part(TimestampTz timestamp, text *units)
  * @note Derived from PostgreSQL function @p extract_timestamptz()
  */
 Interval *
-timestamptz_extract(TimestampTz timestamp, text *units)
+timestamptz_extract(TimestampTz timestamp, const text *units)
 {
   return timestamptz_part_common(units, timestamp, true);
 }
@@ -5116,8 +5079,7 @@ NonFiniteIntervalPart(int type, int unit, char *lowunits, bool isNegative)
 {
   if ((type != UNITS) && (type != RESERV))
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "unit \"%s\" not recognized for type %s",
+    elog(ERROR, "unit \"%s\" not recognized for type %s",
       lowunits, format_type_be(INTERVALOID));
     return get_float8_infinity();
   }
@@ -5148,8 +5110,7 @@ NonFiniteIntervalPart(int type, int unit, char *lowunits, bool isNegative)
         return get_float8_infinity();
 
     default:
-      meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
-        "unit \"%s\" not supported for type %s",
+      elog(ERROR, "unit \"%s\" not supported for type %s",
         lowunits, format_type_be(INTERVALOID));
       return get_float8_infinity();
   }
@@ -5282,8 +5243,7 @@ interval_part_common(text *units, Interval *interval, bool retnumeric)
         break;
 
       default:
-        meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
-          "unit \"%s\" not supported for type %s",
+        elog(ERROR, "unit \"%s\" not supported for type %s",
           lowunits, format_type_be(INTERVALOID));
         intresult = 0;
     }
@@ -5341,8 +5301,7 @@ interval_part_common(text *units, Interval *interval, bool retnumeric)
   }
   else
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "unit \"%s\" not recognized for type %s",
+    elog(ERROR, "unit \"%s\" not recognized for type %s",
       lowunits, format_type_be(INTERVALOID));
     intresult = 0;
   }
@@ -5360,7 +5319,7 @@ interval_part_common(text *units, Interval *interval, bool retnumeric)
  * @note Derived from PostgreSQL function @p interval_part()
  */
 float8
-pg_interval_part(Interval *interval, text *units)
+pg_interval_part(const Interval *interval, const text *units)
 {
   return interval_part_common(units, interval, false);
 }
@@ -5372,7 +5331,7 @@ pg_interval_part(Interval *interval, text *units)
  * @note Derived from PostgreSQL function @p extract_interval()
  */
 Numeric
-interval_extract(Interval *interval, text *units)
+interval_extract(const Interval *interval, const text *units)
 {
   return interval_part_common(units, interval, true);
 }
@@ -5389,7 +5348,7 @@ interval_extract(Interval *interval, text *units)
  * @note Derived from PostgreSQL function @p timestamp_zone()
  */
 TimestampTz
-pg_timestamp_zone(Timestamp timestamp, text *zone)
+pg_timestamp_zone(Timestamp timestamp, const text *zone)
 {
   TimestampTz result;
   int      tz;
@@ -5421,7 +5380,7 @@ pg_timestamp_zone(Timestamp timestamp, text *zone)
     /* dynamic-offset abbreviation, resolve using specified time */
     if (timestamp2tm(timestamp, NULL, &tm, &fsec, NULL, tzp) != 0)
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+      elog(ERROR, "timestamp out of range");
       return DT_NOEND;
     }
     tz = -DetermineTimeZoneAbbrevOffset(&tm, tzname, tzp);
@@ -5432,20 +5391,20 @@ pg_timestamp_zone(Timestamp timestamp, text *zone)
     /* full zone name, rotate to that zone */
     if (timestamp2tm(timestamp, NULL, &tm, &fsec, NULL, tzp) != 0)
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+      elog(ERROR, "timestamp out of range");
       return DT_NOEND;
     }
     tz = DetermineTimeZoneOffset(&tm, tzp);
     if (tm2timestamp(&tm, fsec, &tz, &result) != 0)
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+      elog(ERROR, "timestamp out of range");
       return DT_NOEND;
     }
   }
 
   if (!IS_VALID_TIMESTAMP(result))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+    elog(ERROR, "timestamp out of range");
     return DT_NOEND;
   }
 
@@ -5459,7 +5418,7 @@ pg_timestamp_zone(Timestamp timestamp, text *zone)
  * @note Derived from PostgreSQL function @p timestamp_izone()
  */
 TimestampTz
-pg_timestamp_izone(Timestamp timestamp, Interval *zone)
+pg_timestamp_izone(Timestamp timestamp, const Interval *zone)
 {
   TimestampTz result;
   int      tz;
@@ -5469,15 +5428,14 @@ pg_timestamp_izone(Timestamp timestamp, Interval *zone)
 
   if (INTERVAL_NOT_FINITE(zone))
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "interval time zone \"%s\" must be finite", pg_interval_out(zone));
+    elog(ERROR, "interval time zone \"%s\" must be finite",
+      pg_interval_out(zone));
     return DT_NOEND;
   }
 
   if (zone->month != 0 || zone->day != 0)
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "interval time zone \"%s\" must not include months or days",
+    elog(ERROR, "interval time zone \"%s\" must not include months or days",
       pg_interval_out(zone));
     return DT_NOEND;
   }
@@ -5488,7 +5446,7 @@ pg_timestamp_izone(Timestamp timestamp, Interval *zone)
 
   if (!IS_VALID_TIMESTAMP(result))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+    elog(ERROR, "timestamp out of range");
     return DT_NOEND;
   }
 
@@ -5575,7 +5533,7 @@ timestamp2timestamptz_opt_overflow(Timestamp timestamp, int *overflow)
     }
   }
 
-  meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+  elog(ERROR, "timestamp out of range");
   return DT_NOEND;
 }
 
@@ -5615,12 +5573,12 @@ timestamptz2timestamp(TimestampTz timestamp)
   {
     if (timestamp2tm(timestamp, &tz, tm, &fsec, NULL, NULL) != 0)
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+      elog(ERROR, "timestamp out of range");
       return DT_NOEND;
     }
     if (tm2timestamp(tm, fsec, NULL, &result) != 0)
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+      elog(ERROR, "timestamp out of range");
       return DT_NOEND;
     }
   }
@@ -5634,7 +5592,7 @@ timestamptz2timestamp(TimestampTz timestamp)
  * @note Derived from PostgreSQL function @p timestamptz_zone()
  */
 Timestamp
-pg_timestamptz_zone(text *zone, TimestampTz timestamp)
+pg_timestamptz_zone(const text *zone, TimestampTz timestamp)
 {
   Timestamp  result;
   int      tz;
@@ -5675,19 +5633,19 @@ pg_timestamptz_zone(text *zone, TimestampTz timestamp)
 
     if (timestamp2tm(timestamp, &tz, &tm, &fsec, NULL, tzp) != 0)
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+      elog(ERROR, "timestamp out of range");
       return DT_NOEND;
     }
     if (tm2timestamp(&tm, fsec, NULL, &result) != 0)
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+      elog(ERROR, "timestamp out of range");
       return DT_NOEND;
     }
   }
 
   if (!IS_VALID_TIMESTAMP(result))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+    elog(ERROR, "timestamp out of range");
     return DT_NOEND;
   }
 
@@ -5701,7 +5659,7 @@ pg_timestamptz_zone(text *zone, TimestampTz timestamp)
  * @note Derived from PostgreSQL function @p timestamptz_izone()
  */
 Timestamp
-pg_timestamptz_izone(Interval *zone, TimestampTz timestamp)
+pg_timestamptz_izone(const Interval *zone, TimestampTz timestamp)
 {
   Timestamp  result;
   int      tz;
@@ -5711,14 +5669,14 @@ pg_timestamptz_izone(Interval *zone, TimestampTz timestamp)
 
   if (INTERVAL_NOT_FINITE(zone))
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "interval time zone \"%s\" must be finite", pg_interval_out(zone));
+    elog(ERROR, "interval time zone \"%s\" must be finite", 
+      pg_interval_out(zone));
     return DT_NOEND;
   }
 
   if (zone->month != 0 || zone->day != 0)
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+    elog(ERROR,
       "interval time zone \"%s\" must not include months or days",
       pg_interval_out(zone));
     return DT_NOEND;
@@ -5730,7 +5688,7 @@ pg_timestamptz_izone(Interval *zone, TimestampTz timestamp)
 
   if (!IS_VALID_TIMESTAMP(result))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+    elog(ERROR, "timestamp out of range");
      return DT_NOEND;
  }
 
@@ -5747,7 +5705,7 @@ pg_timestamptz_izone(Interval *zone, TimestampTz timestamp)
 TimestampTz
 pg_timestamp_at_local(Timestamp timestamp)
 {
-  return pg_timestamp_timestamptz(timestamp);
+  return timestamp_to_timestamptz(timestamp);
 }
 
 /**
@@ -5759,7 +5717,7 @@ pg_timestamp_at_local(Timestamp timestamp)
 TimestampTz
 timestamptz_at_local(TimestampTz timestamp)
 {
-  return pg_timestamptz_timestamp(timestamp);
+  return timestamptz_to_timestamp(timestamp);
 }
 
 /*****************************************************************************/

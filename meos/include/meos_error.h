@@ -17,6 +17,7 @@ typedef enum
   MEOS_ERR_AGGREGATION_ERROR     = 6,  // Internal aggregation error
   MEOS_ERR_DIRECTORY_ERROR       = 7,  // Internal directory error
   MEOS_ERR_FILE_ERROR            = 8,  // Internal file error
+  MEOS_ERR_OUT_OF_MEMORY         = 9,  // Out of memory error
 
   MEOS_ERR_INVALID_ARG           = 10, // Invalid argument
   MEOS_ERR_INVALID_ARG_TYPE      = 11, // Invalid argument type

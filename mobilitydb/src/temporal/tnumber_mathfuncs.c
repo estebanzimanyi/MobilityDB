@@ -39,7 +39,7 @@
 #include <utils/float.h>
 /* MEOS */
 #include <meos.h>
-#include "temporal/postgres_types.h"
+#include <postgres_types.h>
 #include "temporal/temporal.h"
 #include "temporal/tnumber_mathfuncs.h"
 #include "temporal/type_util.h"

@@ -22,8 +22,6 @@
 #include "port/pg_bitutils.h"
 #include "utils/builtins.h"
 
-#include "../../meos/include/meos_error.h"
-
 /*
  * A table of all two-digit numbers. This is used to speed up decimal digit
  * generation by copying pairs of digits into the final output.
@@ -341,13 +339,11 @@ slow:
   return (int16) tmp;
 
 out_of_range:
-  meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-    "value \"%s\" is out of range for type %s", s, "smallint");
+  elog(ERROR, "value \"%s\" is out of range for type %s", s, "smallint");
   return SHRT_MAX;
 
 invalid_syntax:
-  meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-    "invalid input syntax for type %s: \"%s\"", "smallint", s);
+  elog(ERROR, "invalid input syntax for type %s: \"%s\"", "smallint", s);
   return SHRT_MAX;
 }
 
@@ -607,13 +603,11 @@ slow:
   return (int32) tmp;
 
 out_of_range:
-  meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-    "value \"%s\" is out of range for type %s", s, "integer");
+  elog(ERROR, "value \"%s\" is out of range for type %s", s, "integer");
   return INT_MAX;
 
 invalid_syntax:
-  meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-    "invalid input syntax for type %s: \"%s\"", "integer", s);
+  elog(ERROR, "invalid input syntax for type %s: \"%s\"", "integer", s);
   return INT_MAX;
 }
 
@@ -860,13 +854,11 @@ slow:
   return (int64) tmp;
 
 out_of_range:
-  meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-    "value \"%s\" is out of range for type %s", s, "bigint");
+  elog(ERROR, "value \"%s\" is out of range for type %s", s, "bigint");
   return LONG_MAX;
 
 invalid_syntax:
-  meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-    "invalid input syntax for type %s: \"%s\"", "bigint", s);
+  elog(ERROR, "invalid input syntax for type %s: \"%s\"", "bigint", s);
   return LONG_MAX;
 }
 
@@ -910,15 +902,13 @@ uint32in_subr(const char *s, char **endloc,
    */
   if ((errno && errno != ERANGE) || endptr == s)
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "invalid input syntax for type %s: \"%s\"", typname, s);
+    elog(ERROR, "invalid input syntax for type %s: \"%s\"", typname, s);
     return UINT_MAX;
   }
 
   if (errno == ERANGE)
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-      "value \"%s\" is out of range for type %s", s, typname);
+    elog(ERROR, "value \"%s\" is out of range for type %s", s, typname);
     return UINT_MAX ;
   }
 
@@ -934,8 +924,7 @@ uint32in_subr(const char *s, char **endloc,
       endptr++;
     if (*endptr)
     {
-      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-        "invalid input syntax for type %s: \"%s\"", typname, s);
+      elog(ERROR, "invalid input syntax for type %s: \"%s\"", typname, s);
       return UINT_MAX ;
     }
   }
@@ -958,8 +947,7 @@ uint32in_subr(const char *s, char **endloc,
   if (cvt != (unsigned long) result &&
     cvt != (unsigned long) ((int) result))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-      "value \"%s\" is out of range for type %s", s, typname);
+    elog(ERROR, "value \"%s\" is out of range for type %s", s, typname);
     return UINT_MAX ;
   }
 #endif
@@ -1000,15 +988,13 @@ uint64in_subr(const char *s, char **endloc,
    */
   if ((errno && errno != ERANGE) || endptr == s)
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "invalid input syntax for type %s: \"%s\"", typname, s);
+    elog(ERROR, "invalid input syntax for type %s: \"%s\"", typname, s);
     return ULONG_MAX;
   }
 
   if (errno == ERANGE)
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-      "value \"%s\" is out of range for type %s", s, typname);
+    elog(ERROR, "value \"%s\" is out of range for type %s", s, typname);
     return ULONG_MAX;
   }
 
@@ -1024,8 +1010,7 @@ uint64in_subr(const char *s, char **endloc,
       endptr++;
     if (*endptr)
     {
-      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-        "invalid input syntax for type %s: \"%s\"", typname, s);
+      elog(ERROR, "invalid input syntax for type %s: \"%s\"", typname, s);
       return ULONG_MAX;
     }
   }

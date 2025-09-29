@@ -27,7 +27,7 @@
 #include <utils/jsonb.h>
 /* MEOS */
 #include <meos.h>
-#include "temporal/postgres_types.h"
+#include <postgres_types.h>
 #include "temporal/temporal.h"
 #include "temporal/lifting.h"
 #include "temporal/type_util.h"
@@ -263,7 +263,7 @@ datum_to_json_internal(Datum val, bool is_null, StringInfo result,
       break;
     case JSONTYPE_CAST:
       /* outfuncoid refers to a cast function, not an output function */
-      jsontext = DatumGetTextPP(OidFunctionCall1(outfuncoid, val));
+      jsontext = DatumGetTextP(OidFunctionCall1(outfuncoid, val));
       appendBinaryStringInfo(result, VARDATA_ANY(jsontext),
                    VARSIZE_ANY_EXHDR(jsontext));
       pfree(jsontext);

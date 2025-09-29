@@ -45,7 +45,7 @@
 /* MEOS */
 #include <meos.h>
 #include <meos_pose.h>
-#include "temporal/postgres_types.h"
+#include <postgres_types.h>
 #include "temporal/set.h"
 #include "temporal/span.h"
 #include "temporal/type_inout.h"

@@ -26,7 +26,7 @@
 /* MEOS */
 #include <meos.h>
 // #include <meos_jsonb.h>
-#include "temporal/postgres_types.h"
+#include <postgres_types.h>
 #include "temporal/temporal.h"
 #include "temporal/lifting.h"
 #include "temporal/type_util.h"

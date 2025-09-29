@@ -18,10 +18,6 @@
 /* PostgreSQL */
 #include <postgres.h>
 #include "common/hashfn.h"
-/* MEOS */
-#include <meos.h>
-#include <meos_internal.h>
-#include "temporal/temporal.h"
 
 /*****************************************************************************/
 bool
@@ -136,9 +132,6 @@ parse_bool(const char *value, bool *result)
 bool
 bool_in(const char *str)
 {
-  /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(str, false);
-
   /*
    * Skip leading and trailing whitespace
    */
@@ -154,8 +147,7 @@ bool_in(const char *str)
   if (parse_bool_with_len(str1, len, &result))
     return result;
 
-  meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
-    "invalid input syntax for type %s: \"%s\"", "boolean", str);
+  elog(ERROR, "invalid input syntax for type %s: \"%s\"", "boolean", str);
   return false;
 }
 

@@ -25,7 +25,7 @@
 #include <utils/jsonb.h>
 /* MEOS */
 #include <meos.h>
-#include "temporal/postgres_types.h"
+#include <postgres_types.h>
 #include "temporal/temporal.h"
 #include "temporal/lifting.h"
 #include "temporal/type_util.h"
@@ -731,7 +731,7 @@ datum_to_jsonb_internal(Datum val, bool is_null, JsonbInState *result,
           /* parse the json right into the existing result object */
           JsonLexContext lex;
           JsonSemAction sem;
-          text     *json = DatumGetTextPP(val);
+          text     *json = DatumGetTextP(val);
 
           makeJsonLexContext(&lex, json, true);
 

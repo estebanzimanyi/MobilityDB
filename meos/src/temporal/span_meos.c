@@ -45,7 +45,7 @@
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
-#include "temporal/postgres_types.h"
+#include <postgres_types.h>
 #include "temporal/set.h"
 #include "temporal/temporal.h"
 #include "temporal/tnumber_mathfuncs.h"

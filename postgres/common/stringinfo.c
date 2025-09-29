@@ -346,13 +346,12 @@ enlargeStringInfo(StringInfo str, int needed)
 	 */
 	if (needed < 0)				/* should not happen */
 	{
-		meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-      "invalid string enlargement request size: %d", needed);
+		elog(ERROR, "invalid string enlargement request size: %d", needed);
 		exit(EXIT_FAILURE);
 	}
 	if (((Size) needed) >= (MaxAllocSize - (Size) str->len))
 	{
-		meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+		elog(ERROR,
 				"string buffer exceeds maximum allowed length (%zu bytes)\n\nCannot enlarge string buffer containing %d bytes by %d more bytes.\n",
 				MaxAllocSize, str->len, needed);
 		exit(EXIT_FAILURE);
