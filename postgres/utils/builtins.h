@@ -55,7 +55,4 @@ extern void text_to_cstring_buffer(const text *src, char *dst, size_t dst_len);
 #define CStringGetTextDatum(s) PointerGetDatum(cstring_to_text(s))
 #define TextDatumGetCString(d) text_to_cstring((text *) DatumGetPointer(d))
 
-/* numeric.c */
-extern Datum numeric_float8_no_overflow(PG_FUNCTION_ARGS);
-
 #endif              /* BUILTINS_H */
