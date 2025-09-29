@@ -33,7 +33,7 @@
  * PostgreSQL functions in order to bypass the function manager @p fmgr.c.
  */
 
-#include "temporal/postgres_types.h"
+#include <postgres_types.h>
 
 /* C */
 #include <float.h>
@@ -77,87 +77,6 @@
 #else
   extern bool scanint8(const char *str, bool errorOK, int64 *result);
 #endif
-
-/* Definition in numutils.c */
-extern int32 pg_strtoint32(const char *s);
-extern int pg_ultoa_n(uint32 value, char *a);
-extern int pg_ulltoa_n(uint64 l, char *a);
-
-/*****************************************************************************
- * Functions adapted from int.c
- *****************************************************************************/
-
-#define MAXINT4LEN 12
-
-/**
- * @brief Return an int4 from a string
- * @note PostgreSQL function: @p int4in(PG_FUNCTION_ARGS)
- */
-int32
-int4_in(const char *str)
-{
-  return pg_strtoint32(str);
-}
-
-extern int pg_ltoa(int32 value, char *a);
-
-/**
- * @brief Return a string from an int4
- * @note PostgreSQL function: @p int4out(PG_FUNCTION_ARGS)
- */
-char *
-int4_out(int32 val)
-{
-  char *result = palloc(MAXINT4LEN);  /* sign, 10 digits, '\0' */
-  pg_ltoa(val, result);
-  return result;
-}
-
-/*****************************************************************************
- * Functions adapted from int8.c
- *****************************************************************************/
-
-/* Sign + the most decimal digits an 8-byte number could have */
-#define MAXINT8LEN 20
-
-/**
- * @brief Return an int8 from a string
- * @return On error return @p PG_INT64_MAX;
- * @note PostgreSQL function: @p int8in(PG_FUNCTION_ARGS)
- */
-int64
-int8_in(const char *str)
-{
-#if POSTGRESQL_VERSION_NUMBER >= 150000 || MEOS
-  int64 result = pg_strtoint64(str);
-#else
-  int64 result;
-  (void) scanint8(str, false, &result);
-#endif
-  return result;
-}
-
-/* The function is not exported in file numutils.c */
-extern int pg_lltoa(int64 value, char *a);
-
-/**
- * @brief Return a string from an @p int8
- * @note PostgreSQL function: @p int8out(PG_FUNCTION_ARGS)
- */
-char *
-int8_out(int64 val)
-{
-  char *result;
-  char buf[MAXINT8LEN + 1];
-  int len = pg_lltoa(val, buf) + 1;
-  /*
-   * Since the length is already known, we do a manual palloc() and memcpy()
-   * to avoid the strlen() call that would otherwise be done in pstrdup().
-   */
-  result = palloc(len);
-  memcpy(result, buf, len);
-  return result;
-}
 
 /*****************************************************************************
  * Text and binary string functions

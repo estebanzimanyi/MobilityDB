@@ -49,7 +49,7 @@
 /* MEOS */
 #include <meos.h>
 #include <meos_internal_geo.h>
-#include "temporal/postgres_types.h"
+#include <postgres_types.h>
 #include "temporal/set.h"
 #include "temporal/tsequence.h"
 #include "temporal/type_inout.h"
@@ -1511,7 +1511,7 @@ cbuffer_hash(const Cbuffer *cb)
   /* Compute hashes of value and radius */
   Datum d = PointerGetDatum(&cb->point);
   uint32 point_hash = gserialized_hash(DatumGetGserializedP(d));
-  uint32 radius_hash = pg_hashfloat8(cb->radius);
+  uint32 radius_hash = float8_hash(cb->radius);
 
   /* Merge hashes of value and radius */
   uint32 result = point_hash;

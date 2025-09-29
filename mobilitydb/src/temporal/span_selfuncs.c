@@ -40,6 +40,8 @@
 /* C */
 #include <assert.h>
 /* PostgreSQL */
+#include <postgres.h>
+#include <postgres_types.h>
 #include <access/htup_details.h>
 #include "utils/syscache.h"
 #include <utils/lsyscache.h>

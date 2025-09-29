@@ -219,6 +219,7 @@ target_link_libraries(${MEOS_LIB_NAME} ${GSL_CBLAS_LIBRARY})
 # Belongs to MEOS
 #--------------------------------
 
+# Files from ${CMAKE_BINARY_DIR}
 install(FILES "${CMAKE_BINARY_DIR}/meos_export.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
   RENAME "meos.h")
@@ -230,6 +231,10 @@ install(
   FILES "${CMAKE_BINARY_DIR}/meos_geo_export.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
   RENAME "meos_geo.h")
+
+# Files from ${CMAKE_SOURCE_DIR}
+install(FILES "${CMAKE_SOURCE_DIR}/postgres/postgres_types.h"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 install(
   FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_internal_geo.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")

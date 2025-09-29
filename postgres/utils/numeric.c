@@ -26,6 +26,7 @@
 #include <math.h>
 /* PostgreSQL */
 #include <postgres.h>
+#include <postgres_types.h>
 #if POSTGRESQL_VERSION_NUMBER >= 160000
   #include "varatt.h"
 #endif
@@ -37,12 +38,6 @@
 #include <utils/datetime.h>
 #include <utils/numeric.h>
 #include <utils/timestamp.h>
-/* MEOS */
-#include "../../meos/include/meos_error.h"
-
-// #include <meos.h>
-// #include <meos_internal.h>
-#include "temporal/postgres_types.h"
 
 #if POSTGRESQL_VERSION_NUMBER < 160000
 /*
@@ -453,9 +448,7 @@ static void set_var_from_num(Numeric num, NumericVar *dest);
 static void init_var_from_num(Numeric num, NumericVar *dest);
 static void set_var_from_var(const NumericVar *value, NumericVar *dest);
 static char *get_str_from_var(const NumericVar *var);
-#if MEOS
 static char *get_str_from_var_sci(const NumericVar *var, int rscale);
-#endif /* MEOS */
 
 static Numeric duplicate_numeric(Numeric num);
 static Numeric make_result(const NumericVar *var);
@@ -495,9 +488,7 @@ static void div_var_int(const NumericVar *var, int ival, int ival_weight,
 static void div_var_int64(const NumericVar *var, int64 ival, int ival_weight,
               NumericVar *result, int rscale, bool round);
 #endif
-#if MEOS
 static int select_div_scale(const NumericVar *var1, const NumericVar *var2);
-#endif /* MEOS */
 static void mod_var(const NumericVar *var1, const NumericVar *var2,
           NumericVar *result);
 static void div_mod_var(const NumericVar *var1, const NumericVar *var2,
@@ -517,9 +508,7 @@ static void power_var(const NumericVar *base, const NumericVar *exp,
             NumericVar *result);
 static void power_var_int(const NumericVar *base, int exp, int exp_dscale,
               NumericVar *result);
-#if MEOS
 static void power_ten_int(int exp, NumericVar *result);
-#endif /* MEOS */
 static int  cmp_abs(const NumericVar *var1, const NumericVar *var2);
 static int  cmp_abs_common(const NumericDigit *var1digits, int var1ndigits,
                int var1weight,
@@ -546,7 +535,7 @@ static void compute_bucket(Numeric operand, Numeric bound1, Numeric bound2,
  * @note Derived from PostgreSQL function @p numeric_in()
  */
 Numeric
-numeric_in_internal(char *str, int32 typmod)
+numeric_in_internal(const char *str, int32 typmod)
 {
   Numeric res;
   const char *cp;
@@ -697,8 +686,7 @@ numeric_in_internal(char *str, int32 typmod)
 
     if (have_error)
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-        "value overflows numeric format");
+      elog(ERROR, "value overflows numeric format");
       return NULL;
     }
 
@@ -708,8 +696,7 @@ numeric_in_internal(char *str, int32 typmod)
   return res;
 
 invalid_syntax:
-  meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-    "invalid input syntax for type %s: \"%s\"", "numeric", str);
+  elog(ERROR, "invalid input syntax for type %s: \"%s\"", "numeric", str);
   return NULL; // TODO
 }
 
@@ -1380,8 +1367,7 @@ width_bucket_numeric_internal(Numeric operand, Numeric bound1, Numeric bound2,
   int32    result;
 
   if (count <= 0)
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-         "count must be greater than zero");
+    elog(ERROR, "count must be greater than zero");
 
   if (NUMERIC_IS_SPECIAL(operand) ||
     NUMERIC_IS_SPECIAL(bound1) ||
@@ -1390,12 +1376,10 @@ width_bucket_numeric_internal(Numeric operand, Numeric bound1, Numeric bound2,
     if (NUMERIC_IS_NAN(operand) ||
       NUMERIC_IS_NAN(bound1) ||
       NUMERIC_IS_NAN(bound2))
-      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-        "operand, lower bound, and upper bound cannot be NaN");
+      elog(ERROR, "operand, lower bound, and upper bound cannot be NaN");
     /* We allow "operand" to be infinite; cmp_numerics will cope */
     if (NUMERIC_IS_INF(bound1) || NUMERIC_IS_INF(bound2))
-      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-        "lower and upper bounds must be finite");
+      elog(ERROR, "lower and upper bounds must be finite");
   }
 
   init_var(&result_var);
@@ -1407,8 +1391,7 @@ width_bucket_numeric_internal(Numeric operand, Numeric bound1, Numeric bound2,
   switch (cmp_numerics(bound1, bound2))
   {
     case 0:
-      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-        "lower bound cannot equal upper bound");
+      elog(ERROR, "lower bound cannot equal upper bound");
       break;
 
       /* bound1 < bound2 */
@@ -1434,11 +1417,10 @@ width_bucket_numeric_internal(Numeric operand, Numeric bound1, Numeric bound2,
       break;
   }
 
-  /* if result exceeds the range of a legal int4, we meos_error here */
+  /* if result exceeds the range of a legal int4, we elog here */
   if (!numericvar_to_int32(&result_var, &result))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-      "integer out of range");
+    elog(ERROR, "integer out of range");
     return INT_MAX;
   }
 
@@ -1813,7 +1795,6 @@ numeric_add_internal(Numeric num1, Numeric num2)
   return numeric_add_opt_error(num1, num2, NULL);
 }
 
-#if MEOS
 /*
  * numeric_add_opt_error() -
  *
@@ -1872,7 +1853,6 @@ numeric_add_opt_error(Numeric num1, Numeric num2, bool *have_error)
 
   return res;
 }
-#endif /* MEOS */
 
 /**
  * @ingroup meos_base_numeric
@@ -1885,7 +1865,6 @@ numeric_sub_internal(Numeric num1, Numeric num2)
   return numeric_sub_opt_error(num1, num2, NULL);
 }
 
-#if MEOS
 /*
  * numeric_sub_opt_error() -
  *
@@ -1944,7 +1923,6 @@ numeric_sub_opt_error(Numeric num1, Numeric num2, bool *have_error)
 
   return res;
 }
-#endif /* MEOS */
 
 /**
  * @ingroup meos_base_numeric
@@ -1957,7 +1935,6 @@ numeric_mul_internal(Numeric num1, Numeric num2)
   return numeric_mul_opt_error(num1, num2, NULL);
 }
 
-#if MEOS
 /*
  * numeric_mul_opt_error() -
  *
@@ -2059,7 +2036,6 @@ numeric_mul_opt_error(Numeric num1, Numeric num2, bool *have_error)
 
   return res;
 }
-#endif /* MEOS */
 
 /**
  * @ingroup meos_base_numeric
@@ -2072,7 +2048,6 @@ numeric_div_internal(Numeric num1, Numeric num2)
   return numeric_div_opt_error(num1, num2, NULL);
 }
 
-#if MEOS
 /*
  * numeric_div_opt_error() -
  *
@@ -2108,8 +2083,7 @@ numeric_div_opt_error(Numeric num1, Numeric num2, bool *have_error)
         case 0:
           if (have_error)
             *have_error = true;
-          meos_error(ERROR, MEOS_ERR_DIVISION_BY_ZERO,
-            "division by zero");
+          elog(ERROR, "division by zero");
           return NULL;
         case 1:
           return make_result(&const_pinf);
@@ -2127,8 +2101,7 @@ numeric_div_opt_error(Numeric num1, Numeric num2, bool *have_error)
         case 0:
           if (have_error)
             *have_error = true;
-          meos_error(ERROR, MEOS_ERR_DIVISION_BY_ZERO,
-            "division by zero");
+          elog(ERROR, "division by zero");
           return NULL;
         case 1:
           return make_result(&const_ninf);
@@ -2180,7 +2153,6 @@ numeric_div_opt_error(Numeric num1, Numeric num2, bool *have_error)
 
   return res;
 }
-#endif /* MEOS */
 
 /**
  * @ingroup meos_base_numeric
@@ -2210,8 +2182,7 @@ numeric_div_trunc_internal(Numeric num1, Numeric num2)
       switch (numeric_sign_internal(num2))
       {
         case 0:
-          meos_error(ERROR, MEOS_ERR_DIVISION_BY_ZERO,
-            "division by zero");
+          elog(ERROR, "division by zero");
           return NULL;
         case 1:
           return make_result(&const_pinf);
@@ -2227,8 +2198,7 @@ numeric_div_trunc_internal(Numeric num1, Numeric num2)
       switch (numeric_sign_internal(num2))
       {
         case 0:
-          meos_error(ERROR, MEOS_ERR_DIVISION_BY_ZERO,
-            "division by zero");
+          elog(ERROR, "division by zero");
           return NULL;
         case 1:
           return make_result(&const_ninf);
@@ -2278,7 +2248,6 @@ numeric_mod_internal(Numeric num1, Numeric num2)
   return numeric_mod_opt_error(num1, num2, NULL);
 }
 
-#if MEOS
 /*
  * numeric_mod_opt_error() -
  *
@@ -2312,8 +2281,7 @@ numeric_mod_opt_error(Numeric num1, Numeric num2, bool *have_error)
       {
         if (have_error)
           *have_error = true;
-        meos_error(ERROR, MEOS_ERR_DIVISION_BY_ZERO,
-          "division by zero");
+        elog(ERROR, "division by zero");
         return NULL;
       }
       /* Inf % any nonzero = NaN */
@@ -2345,7 +2313,6 @@ numeric_mod_opt_error(Numeric num1, Numeric num2, bool *have_error)
 
   return res;
 }
-#endif /* MEOS */
 
 /**
  * @ingroup meos_base_numeric
@@ -2532,8 +2499,7 @@ numeric_fac_internal(int64 num)
 
   if (num < 0)
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "factorial of a negative number is undefined");
+    elog(ERROR, "factorial of a negative number is undefined");
     return NULL;
   }
   if (num <= 1)
@@ -2544,8 +2510,7 @@ numeric_fac_internal(int64 num)
   /* Fail immediately if the result would overflow */
   if (num > 32177)
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-      "value overflows numeric format");
+    elog(ERROR, "value overflows numeric format");
     return NULL;
   }
 
@@ -2594,8 +2559,7 @@ numeric_sqrt_internal(Numeric num)
     /* error should match that in sqrt_var() */
     if (NUMERIC_IS_NINF(num))
     {
-      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-        "cannot take square root of a negative number");
+      elog(ERROR, "cannot take square root of a negative number");
       return NULL;
     }
     /* For NAN or PINF, just duplicate the input */
@@ -2730,8 +2694,7 @@ numeric_ln_internal(Numeric num)
   {
     if (NUMERIC_IS_NINF(num))
     {
-      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-           "cannot take logarithm of a negative number");
+      elog(ERROR, "cannot take logarithm of a negative number");
       return NULL;
     }
     /* For NAN or PINF, just duplicate the input */
@@ -2787,15 +2750,13 @@ numeric_log_internal(Numeric num1, Numeric num2)
     sign2 = numeric_sign_internal(num2);
     if (sign1 < 0 || sign2 < 0)
     {
-      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-         "cannot take logarithm of a negative number");
+      elog(ERROR, "cannot take logarithm of a negative number");
       return NULL;
     }
     /* fail on zero inputs, as log_var would */
     if (sign1 == 0 || sign2 == 0)
     {
-      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-        "cannot take logarithm of zero");
+      elog(ERROR, "cannot take logarithm of zero");
       return NULL;
     }
     if (NUMERIC_IS_PINF(num1))
@@ -2881,13 +2842,12 @@ numeric_power_internal(Numeric num1, Numeric num2)
     sign2 = numeric_sign_internal(num2);
     if (sign1 == 0 && sign2 < 0)
     {
-      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-        "zero raised to a negative power is undefined");
+      elog(ERROR, "zero raised to a negative power is undefined");
       return NULL;
     }
     if (sign1 < 0 && !numeric_is_integral(num2))
     {
-      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      elog(ERROR, 
         "a negative number raised to a non-integer power yields a complex result");
       return NULL;
     }
@@ -2997,8 +2957,7 @@ numeric_power_internal(Numeric num1, Numeric num2)
 
   if (sign1 == 0 && sign2 < 0)
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-       "zero raised to a negative power is undefined");
+    elog(ERROR, "zero raised to a negative power is undefined");
       return NULL;
     }
 
@@ -3154,8 +3113,6 @@ int64_to_numeric(int64 val)
   return res;
 }
 
-#if MEOS
-
 /*
  * Convert val1/(10**log10val2) to numeric.  This is much faster than normal
  * numeric division.
@@ -3244,20 +3201,18 @@ int64_div_fast_to_numeric(int64 val1, int log10val2)
 
   return res;
 }
-#endif /* MEOS */
 
 /**
  * @ingroup meos_base_numeric
  * @brief Transform an int4 value into a numeric value 
  * @note Derived from PostgreSQL function @p numeric_int4()
  */
-Numeric
-int4_to_numeric(int32 num)
+int32
+numeric_to_int32(Numeric num)
 {
-  return int64_to_numeric(num);
+  return numeric_int4_opt_error(num, NULL);
 }
 
-#if MEOS
 int32
 numeric_int4_opt_error(Numeric num, bool *have_error)
 {
@@ -3277,11 +3232,9 @@ numeric_int4_opt_error(Numeric num, bool *have_error)
     else
     {
       if (NUMERIC_IS_NAN(num))
-        meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
-             "cannot convert NaN to %s", "integer");
+        elog(ERROR, "cannot convert NaN to %s", "integer");
       else
-        meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
-             "cannot convert infinity to %s", "integer");
+        elog(ERROR, "cannot convert infinity to %s", "integer");
       return INT_MAX;
     }
   }
@@ -3298,25 +3251,12 @@ numeric_int4_opt_error(Numeric num, bool *have_error)
     }
     else
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-           "integer out of range");
+      elog(ERROR, "integer out of range");
       return INT_MAX;
     }
   }
 
   return result;
-}
-#endif /* MEOS */
-
-/**
- * @ingroup meos_base_numeric
- * @brief Transform a numeric value into an int4 value
- * @note Derived from PostgreSQL function @p numeric_int4()
- */
-int
-numeric_to_int4(Numeric num)
-{
-  return numeric_int4_opt_error(num, NULL);
 }
 
 /*
@@ -3347,7 +3287,7 @@ numericvar_to_int32(const NumericVar *var, int32 *result)
  * @note Derived from PostgreSQL function @p int8_numeric()
  */
 Numeric
-int8_to_numeric(int64 num)
+pg_int64_to_numeric(int64 num)
 {
   return int64_to_numeric(num);
 }
@@ -3371,11 +3311,9 @@ numeric_int8_opt_error(Numeric num, bool *have_error)
     else
     {
       if (NUMERIC_IS_NAN(num))
-        meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
-             "cannot convert NaN to %s", "bigint");
+        elog(ERROR, "cannot convert NaN to %s", "bigint");
       else
-        meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
-             "cannot convert infinity to %s", "bigint");
+        elog(ERROR, "cannot convert infinity to %s", "bigint");
       return LONG_MAX;
     }
   }
@@ -3392,8 +3330,7 @@ numeric_int8_opt_error(Numeric num, bool *have_error)
     }
     else
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-           "bigint out of range");
+      elog(ERROR, "bigint out of range");
       return LONG_MAX;
     }
   }
@@ -3418,7 +3355,7 @@ numeric_to_int8(Numeric num)
  * @note Derived from PostgreSQL function @p numeric_int8()
  */
 Numeric
-int2_to_numeric(int16 num)
+int16_to_numeric(int16 num)
 {
   return int64_to_numeric(num);
 }
@@ -3438,11 +3375,9 @@ numeric_to_int2(Numeric num)
   if (NUMERIC_IS_SPECIAL(num))
   {
     if (NUMERIC_IS_NAN(num))
-      meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
-           "cannot convert NaN to %s", "smallint");
+      elog(ERROR, "cannot convert NaN to %s", "smallint");
     else
-      meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
-           "cannot convert infinity to %s", "smallint");
+      elog(ERROR, "cannot convert infinity to %s", "smallint");
     return INT16_MAX;
   }
 
@@ -3451,15 +3386,13 @@ numeric_to_int2(Numeric num)
 
   if (!numericvar_to_int64(&x, &val))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-         "smallint out of range");
+    elog(ERROR, "smallint out of range");
     return INT16_MAX;
   }
 
   if (unlikely(val < PG_INT16_MIN) || unlikely(val > PG_INT16_MAX))
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-       "smallint out of range");
+    elog(ERROR, "smallint out of range");
     return INT16_MAX;
   }
 
@@ -3512,7 +3445,7 @@ float8_to_numeric(float8 num)
  * @brief Transform a numeric value into a float8 value
  * @note Derived from PostgreSQL function @p numeric_float8()
  */
-double
+float8
 numeric_to_float8(Numeric num)
 {
   if (NUMERIC_IS_SPECIAL(num))
@@ -3537,7 +3470,7 @@ numeric_to_float8(Numeric num)
  *
  * (internal helper function, not directly callable from SQL)
  */
-double 
+float8 
 numeric_float8_no_overflow_internal(Numeric num)
 {
   double    val;
@@ -3790,7 +3723,7 @@ set_var_from_str(const char *str, const char *cp,
      * constraining the exponent similarly should be enough to prevent
      * integer overflow in this function.  If the value is too large to
      * fit in storage format, make_result() will complain about it later;
-     * for consistency use the same meos_error errcode/text as make_result().
+     * for consistency use the same elog errcode/text as make_result().
      */
 
     /* exponent sign */
@@ -3882,13 +3815,11 @@ set_var_from_str(const char *str, const char *cp,
   return true;
 
 out_of_range:
-  meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-       "value overflows numeric format");
+  elog(ERROR, "value overflows numeric format");
   return false;
 
 invalid_syntax:
-  meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-    "invalid input syntax for type %s: \"%s\"", "numeric", str);
+  elog(ERROR, "invalid input syntax for type %s: \"%s\"", "numeric", str);
   return false;
 }
 
@@ -4083,13 +4014,11 @@ set_var_from_non_decimal_integer_str(const char *str, const char *cp, int sign,
   return true;
 
 out_of_range:
-  meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-       "value overflows numeric format");
+  elog(ERROR, "value overflows numeric format");
   return false;
 
 invalid_syntax:
-  meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-       "invalid input syntax for type %s: \"%s\"", "numeric", str);
+  elog(ERROR, "invalid input syntax for type %s: \"%s\"", "numeric", str);
   return false;
 }
 
@@ -4300,7 +4229,6 @@ get_str_from_var(const NumericVar *var)
   return str;
 }
 
-#if MEOS
 /*
  * get_str_from_var_sci() -
  *
@@ -4390,7 +4318,6 @@ get_str_from_var_sci(const NumericVar *var, int rscale)
 
   return str;
 }
-#endif /* MEOS */
 
 /*
  * duplicate_numeric() - copy a packed-format Numeric
@@ -4438,8 +4365,7 @@ make_result_opt_error(const NumericVar *var, bool *have_error)
      */
     if (!(sign == NUMERIC_NAN || sign == NUMERIC_PINF || sign == NUMERIC_NINF))
     {
-      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-        "invalid numeric sign value 0x%x", sign);
+      elog(ERROR, "invalid numeric sign value 0x%x", sign);
       return NULL;
     }
 
@@ -4511,8 +4437,7 @@ make_result_opt_error(const NumericVar *var, bool *have_error)
     }
     else
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-           "value overflows numeric format");
+      elog(ERROR, "value overflows numeric format");
       return NULL;
     }
   }
@@ -4600,8 +4525,7 @@ apply_typmod(NumericVar *var, int32 typmod)
 #endif
         if (ddigits > maxdigits)
         {
-          meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-               "numeric field overflow");
+          elog(ERROR, "numeric field overflow");
           return false;
         }
         break;
@@ -4640,8 +4564,7 @@ apply_typmod_special(Numeric num, int32 typmod)
   if (!is_valid_numeric_typmod(typmod))
     return true;
 
-  meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-       "numeric field overflow");
+  elog(ERROR, "numeric field overflow");
   return false;
 }
 
@@ -4832,9 +4755,9 @@ numericvar_to_double_no_overflow(const NumericVar *var)
   if (*endptr != '\0')
   {
     /* shouldn't happen ... */
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+    elog(ERROR,
       "invalid input syntax for type %s: \"%s\"", "double precision", tmp);
-    return DBL_MAX;
+    return get_float8_infinity();
   }
 
   pfree(tmp);
@@ -5752,8 +5675,7 @@ div_var(const NumericVar *var1, const NumericVar *var2, NumericVar *result,
    */
   if (var2ndigits == 0 || var2->digits[0] == 0)
   {
-    meos_error(ERROR, MEOS_ERR_DIVISION_BY_ZERO,
-         "division by zero");
+    elog(ERROR, "division by zero");
     return;
   }
 
@@ -6277,8 +6199,7 @@ div_var_int(const NumericVar *var, int ival, int ival_weight,
   /* Guard against division by zero */
   if (ival == 0)
   {
-    meos_error(ERROR, MEOS_ERR_DIVISION_BY_ZERO,
-        "division by zero");
+    elog(ERROR, "division by zero");
     return;
   }
 
@@ -6394,8 +6315,7 @@ div_var_int64(const NumericVar *var, int64 ival, int ival_weight,
   /* Guard against division by zero */
   if (ival == 0)
   {
-    meos_error(ERROR, MEOS_ERR_DIVISION_BY_ZERO,
-        "division by zero");
+    elog(ERROR, "division by zero");
     return;
   }
 
@@ -6485,7 +6405,6 @@ div_var_int64(const NumericVar *var, int64 ival, int ival_weight,
 }
 #endif
 
-#if MEOS
 /*
  * Default scale selection for division
  *
@@ -6553,7 +6472,6 @@ select_div_scale(const NumericVar *var1, const NumericVar *var2)
 
   return rscale;
 }
-#endif /* MEOS */
 
 /*
  * mod_var() -
@@ -6806,8 +6724,7 @@ sqrt_var(const NumericVar *arg, NumericVar *result, int rscale)
    */
   if (stat < 0)
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-         "cannot take square root of a negative number");
+    elog(ERROR, "cannot take square root of a negative number");
     return;
   }
 
@@ -7281,8 +7198,7 @@ exp_var(const NumericVar *arg, NumericVar *result, int rscale)
   {
     if (val > 0)
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-           "value overflows numeric format");
+      elog(ERROR, "value overflows numeric format");
       return;
     }
     zero_var(result);
@@ -7478,14 +7394,12 @@ ln_var(const NumericVar *arg, NumericVar *result, int rscale)
   cmp = cmp_var(arg, &const_zero);
   if (cmp == 0)
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-         "cannot take logarithm of zero");
+    elog(ERROR, "cannot take logarithm of zero");
     return;
   }
   else if (cmp < 0)
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-         "cannot take logarithm of a negative number");
+    elog(ERROR, "cannot take logarithm of a negative number");
     return;
   }
 
@@ -7700,8 +7614,8 @@ power_var(const NumericVar *base, const NumericVar *exp, NumericVar *result)
      */
     if (exp->ndigits > 0 && exp->ndigits > exp->weight + 1)
     {
-      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-           "a negative number raised to a non-integer power yields a complex result");
+      elog(ERROR, 
+        "a negative number raised to a non-integer power yields a complex result");
       return;
     }
 
@@ -7760,8 +7674,7 @@ power_var(const NumericVar *base, const NumericVar *exp, NumericVar *result)
   {
     if (val > 0)
     {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-           "value overflows numeric format");
+      elog(ERROR, "value overflows numeric format");
       return;
     }
     zero_var(result);
@@ -7856,8 +7769,7 @@ power_var_int(const NumericVar *base, int exp, int exp_dscale,
   /* overflow/underflow tests with fuzz factors */
   if (f > (NUMERIC_WEIGHT_MAX + 1) * DEC_DIGITS)
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-         "value overflows numeric format");
+    elog(ERROR, "value overflows numeric format");
     return;
   }
   if (f + 1 < -NUMERIC_MAX_DISPLAY_SCALE)
@@ -7911,8 +7823,7 @@ power_var_int(const NumericVar *base, int exp, int exp_dscale,
   {
     if (exp < 0)
     {
-      meos_error(ERROR, MEOS_ERR_DIVISION_BY_ZERO,
-           "division by zero");
+      elog(ERROR, "division by zero");
       return;
     }
     zero_var(result);
@@ -7996,8 +7907,7 @@ power_var_int(const NumericVar *base, int exp, int exp_dscale,
       /* overflow, unless neg, in which case result should be 0 */
       if (!neg)
       {
-        meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-             "value overflows numeric format");
+        elog(ERROR, "value overflows numeric format");
         return;
       }
       zero_var(result);
@@ -8015,7 +7925,6 @@ power_var_int(const NumericVar *base, int exp, int exp_dscale,
     round_var(result, rscale);
 }
 
-#if MEOS
 /*
  * power_ten_int() -
  *
@@ -8043,7 +7952,6 @@ power_ten_int(int exp, NumericVar *result)
   while (exp-- > 0)
     result->digits[0] *= 10;
 }
-#endif /* MEOS */
 
 /* ----------------------------------------------------------------------
  *

@@ -302,51 +302,6 @@ extern void meos_set_spatial_ref_sys_csv(const char* path);
 extern void meos_initialize(void);
 extern void meos_finalize(void);
 
-/******************************************************************************
- * Functions for base and time types
- ******************************************************************************/
-
-extern DateADT add_date_int(DateADT d, int32 days);
-extern Interval *add_interval_interval(Interval *interv1, Interval *interv2);
-extern TimestampTz add_timestamptz_interval(TimestampTz t, Interval *interv);
-extern bool bool_in(const char *str);
-extern char *bool_out(bool b);
-extern text *cstring2text(const char *str);
-extern Timestamp date_to_timestamp(DateADT dateVal);
-extern TimestampTz date_to_timestamptz(DateADT d);
-// extern float8 float8_exp(float8 d);
-// extern double float_ln(double d);
-// extern double float_log10(double d);
-// extern double float_round(double d, int maxdd);
-extern int int32_cmp(int32 l, int32 r);
-extern int int64_cmp(int64 l, int64 r);
-extern Interval *interval_make(int32 years, int32 months, int32 weeks, int32 days, int32 hours, int32 mins, double secs);
-extern Interval *minus_date_date(DateADT d1, DateADT d2);
-extern DateADT minus_date_int(DateADT d, int32 days);
-extern TimestampTz minus_timestamptz_interval(TimestampTz t, Interval *interv); //TODO
-extern Interval *minus_timestamptz_timestamptz(TimestampTz t1, TimestampTz t2);
-extern Interval *mul_interval_double(const Interval *interv, double factor);
-extern DateADT pg_date_in(char *str); // TODO
-extern char *pg_date_out(DateADT d);
-extern int pg_interval_cmp(Interval *interv1, Interval *interv2); // TODO
-extern Interval *pg_interval_in(char *str, int32 typmod); // TODO
-extern char *pg_interval_out(Interval *interv); // TODO
-extern Timestamp pg_timestamp_in(char *str, int32 typmod); // TODO
-extern char *pg_timestamp_out(Timestamp t);
-extern TimestampTz pg_timestamptz_in(char *str, int32 typmod); // TODO
-extern char *pg_timestamptz_out(TimestampTz t);
-extern char *text2cstring(const text *txt);
-extern int text_cmp(const text *txt1, const text *txt2);
-extern text *text_copy(const text *txt);
-extern text *text_initcap(const text *txt);
-extern text *text_lower(const text *txt);
-extern char *text_out(const text *txt);
-extern text *text_upper(const text *txt);
-extern text *textcat_text_text(const text *txt1, const text *txt2);
-extern TimestampTz timestamptz_shift(TimestampTz t, const Interval *interv);
-extern DateADT timestamp_to_date(Timestamp t);
-extern DateADT timestamptz_to_date(TimestampTz t);
-
 /*============================================================================
  * Functions for set and span types
   ===========================================================================*/

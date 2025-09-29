@@ -42,8 +42,6 @@
 // #include "utils/guc.h"
 // #include "utils/tzparser.h"
 
-#include "../../meos/include/meos_error.h"
-
 static int  DecodeNumber(int flen, char *str, bool haveTextMonth,
              int fmask, int *tmask,
              struct pg_tm *tm, fsec_t *fsec, bool *is2digits);
@@ -439,7 +437,7 @@ GetCurrentTimeUsec(struct pg_tm *tm, fsec_t *fsec, int *tzp)
     if (timestamp2tm(cur_ts, &cache_tz, &cache_tm, &cache_fsec,
              NULL, session_timezone) != 0)
    {
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+      elog(ERROR, "timestamp out of range");
       return; // TODO
    }
 
@@ -1834,7 +1832,7 @@ DetermineTimeZoneAbbrevOffsetTS(TimestampTz ts, const char *abbr,
    */
   if (timestamp2tm(ts, &tz, &tm, &fsec, NULL, tzp) != 0)
   {
-    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE, "timestamp out of range");
+    elog(ERROR, "timestamp out of range");
     return INT_MAX;
   }
 
@@ -3338,8 +3336,7 @@ DecodeTimezoneName(const char *tzname, int *offset, pg_tz **tz)
     *tz = pg_tzset(tzname);
     if (*tz == NULL)
     {
-      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-        "time zone \"%s\" not recognized", tzname);
+      elog(ERROR, "time zone \"%s\" not recognized", tzname);
       return -1;
     }
     return TZNAME_ZONE;
@@ -4233,34 +4230,27 @@ DateTimeParseError(int dterr, DateTimeErrorExtra *extra,
   switch (dterr)
   {
     case DTERR_FIELD_OVERFLOW:
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-        "date/time field value out of range: \"%s\"", str);
+      elog(ERROR, "date/time field value out of range: \"%s\"", str);
       break;
     case DTERR_MD_FIELD_OVERFLOW:
       /* <nanny>same as above, but add hint about DateStyle</nanny> */
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-        "date/time field value out of range: \"%s\"", str);
+      elog(ERROR, "date/time field value out of range: \"%s\"", str);
       break;
     case DTERR_INTERVAL_OVERFLOW:
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-        "interval field value out of range: \"%s\"", str);
+      elog(ERROR, "interval field value out of range: \"%s\"", str);
       break;
     case DTERR_TZDISP_OVERFLOW:
-      meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
-        "time zone displacement out of range: \"%s\"", str);
+      elog(ERROR, "time zone displacement out of range: \"%s\"", str);
       break;
     case DTERR_BAD_TIMEZONE:
-      meos_error(ERROR, MEOS_ERR_INVALID_ARG_TYPE,
-        "time zone \"%s\" not recognized", extra->dtee_timezone);
+      elog(ERROR, "time zone \"%s\" not recognized", extra->dtee_timezone);
       break;
     case DTERR_BAD_ZONE_ABBREV:
-      meos_error(ERROR, MEOS_ERR_INVALID_ARG_TYPE,
-          "time zone \"%s\" not recognized", extra->dtee_timezone);
+      elog(ERROR, "time zone \"%s\" not recognized", extra->dtee_timezone);
       break;
     case DTERR_BAD_FORMAT:
     default:
-      meos_error(ERROR, MEOS_ERR_INVALID_ARG_TYPE,
-          "invalid input syntax for type %s: \"%s\"", datatype, str);
+      elog(ERROR, "invalid input syntax for type %s: \"%s\"", datatype, str);
       break;
   }
 }
@@ -4904,8 +4894,7 @@ CheckDateTokenTable(const char *tablename, const datetkn *base, int nel)
     if (strlen(base[i].token) > TOKMAXLEN)
     {
       /* %.*s is safe since all our tokens are ASCII */
-      meos_error(WARNING, MEOS_ERR_INVALID_ARG_TYPE,
-        "token too long in %s table: \"%.*s\"", tablename,
+      elog(WARNING, "token too long in %s table: \"%.*s\"", tablename,
          TOKMAXLEN + 1, base[i].token);
       ok = false;
       break;        /* don't risk applying strcmp */
@@ -4914,8 +4903,7 @@ CheckDateTokenTable(const char *tablename, const datetkn *base, int nel)
     if (i > 0 &&
       strcmp(base[i - 1].token, base[i].token) >= 0)
     {
-      meos_error(WARNING, MEOS_ERR_INVALID_ARG_TYPE,
-          "ordering error in %s table: \"%s\" >= \"%s\"",
+      elog(WARNING, "ordering error in %s table: \"%s\" >= \"%s\"",
          tablename,
          base[i - 1].token,
          base[i].token);

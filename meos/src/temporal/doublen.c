@@ -49,7 +49,7 @@
 #include <postgres.h>
 /* MEOS */
 #include <meos.h>
-#include "temporal/postgres_types.h"
+#include <postgres_types.h>
 #include "temporal/temporal.h"
 
 /*****************************************************************************
