@@ -1,12 +1,9 @@
 set(TEMPORAL_SRCS
-  bool.c
   doublen.c
   error.c
-  float.c
   lifting.c
   meos.c
   meos_catalog.c
-  numeric.c
   postgres_types.c
   skiplist.c
   set.c
@@ -41,15 +38,15 @@ set(TEMPORAL_SRCS
   type_util.c
 )
 
-if(${POSTGRESQL_VERSION_MAJOR} GREATER_EQUAL "160000")
-  list(APPEND TEMPORAL_SRCS
-    json.c
-    jsonb.c
-    jsonb_op.c
-    jsonb_util.c
-    jsonfuncs.c
-)
-endif()
+# if(${POSTGRESQL_VERSION_MAJOR} GREATER_EQUAL "160000")
+  # list(APPEND TEMPORAL_SRCS
+    # json.c
+    # jsonb.c
+    # jsonb_op.c
+    # jsonb_util.c
+    # jsonfuncs.c
+# )
+# endif()
 
 if(MEOS)
   list(APPEND TEMPORAL_SRCS

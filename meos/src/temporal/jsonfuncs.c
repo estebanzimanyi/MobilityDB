@@ -26,7 +26,7 @@
 #include <utils/jsonb.h>
 /* MEOS */
 #include <meos.h>
-#include "temporal/postgres_types.h"
+#include <postgres_types.h>
 #include "temporal/temporal.h"
 #include "temporal/lifting.h"
 #include "temporal/type_util.h"
@@ -3407,7 +3407,7 @@ json_populate_type(Datum json_val, Oid json_type,
   }
   else if (jsv.is_json)
   {
-    text     *json = DatumGetTextPP(json_val);
+    text     *json = DatumGetTextP(json_val);
 
     jsv.val.json.str = VARDATA_ANY(json);
     jsv.val.json.len = VARSIZE_ANY_EXHDR(json);

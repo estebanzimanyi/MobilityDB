@@ -43,7 +43,7 @@
 #include <meos.h>
 #include <meos_rgeo.h>
 #include <meos_internal.h>
-#include "temporal/postgres_types.h"
+#include <postgres_types.h>
 #include "temporal/set.h"
 #include "temporal/span.h"
 #include "temporal/tbox.h"
@@ -137,7 +137,7 @@ basetype_in(const char *str, meosType type, bool end UNUSED, Datum *result)
     }
     case T_INT4:
     {
-      int i = int4_in(str);
+      int i = int32_in(str);
       if (i == PG_INT32_MAX)
         return false;
       *result = Int32GetDatum(i);
@@ -145,7 +145,7 @@ basetype_in(const char *str, meosType type, bool end UNUSED, Datum *result)
     }
     case T_INT8:
     {
-      int64 i = int8_in(str);
+      int64 i = int64_in(str);
       if (i == PG_INT64_MAX)
         return false;
       *result = Int64GetDatum(i);

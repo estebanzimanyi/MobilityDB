@@ -298,6 +298,10 @@ SH_SCOPE void SH_STAT(SH_TYPE * tb);
 #else
 #define sh_error(...) elog(ERROR, __VA_ARGS__)
 #define sh_log(...) elog(LOG, __VA_ARGS__)
+// #define sh_error(...) elog(ERROR, __VA_ARGS__)
+#define sh_error(...) elog(ERROR, __VA_ARGS__)
+// /* MEOS */
+// #define sh_log(...) elog(LOG, __VA_ARGS__)
 #endif
 
 #endif

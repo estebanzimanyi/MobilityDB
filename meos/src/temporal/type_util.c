@@ -49,7 +49,7 @@
 #include <meos.h>
 #include <meos_internal.h>
 #include <meos_internal_geo.h>
-#include "temporal/postgres_types.h"
+#include <postgres_types.h>
 #include "temporal/span.h"
 #include "geo/tgeo_spatialfuncs.h"
 #if CBUFFER
@@ -423,19 +423,19 @@ datum_hash(Datum d, meosType type)
   switch (type)
   {
     case T_TIMESTAMPTZ:
-      return pg_hashint8(TimestampTzGetDatum(d));
+      return int64_hash(TimestampTzGetDatum(d));
     case T_DATE:
-      return hash_bytes_uint32(DateADTGetDatum(d));
+      return int32_hash(DateADTGetDatum(d));
     case T_BOOL:
-      return hash_bytes_uint32((int32) DatumGetBool(d));
+      return char_hash((int32) DatumGetBool(d));
     case T_INT4:
-      return hash_bytes_uint32(DatumGetInt32(d));
+      return int32_hash(DatumGetInt32(d));
     case T_INT8:
-      return pg_hashint8(DatumGetInt64(d));
+      return int64_hash(DatumGetInt64(d));
     case T_FLOAT8:
-      return pg_hashfloat8(DatumGetFloat8(d));
+      return float8_hash(DatumGetFloat8(d));
     case T_TEXT:
-      return pg_hashtext(DatumGetTextP(d));
+      return text_hash(DatumGetTextP(d), DEFAULT_COLLATION_OID);
     case T_GEOMETRY:
     case T_GEOGRAPHY:
       return gserialized_hash(DatumGetGserializedP(d));
@@ -472,19 +472,19 @@ datum_hash_extended(Datum d, meosType type, uint64 seed)
   switch (type)
   {
     case T_TIMESTAMPTZ:
-      return pg_hashint8extended(DatumGetTimestampTz(d), seed);
+      return int64_hash_extended(DatumGetTimestampTz(d), seed);
     case T_DATE:
-      return hash_bytes_uint32_extended((int32) DatumGetDateADT(d), seed);
+      return int32_hash_extended((int32) DatumGetDateADT(d), seed);
     case T_BOOL:
-      return hash_bytes_uint32_extended((int32) DatumGetBool(d), seed);
+      return char_hash_extended((int32) DatumGetBool(d), seed);
     case T_INT4:
-      return hash_bytes_uint32_extended(DatumGetInt32(d), seed);
+      return int32_hash_extended(DatumGetInt32(d), seed);
     case T_INT8:
-      return pg_hashint8extended(DatumGetInt64(d), seed);
+      return int64_hash_extended(DatumGetInt64(d), seed);
     case T_FLOAT8:
-      return pg_hashfloat8extended(DatumGetFloat8(d), seed);
+      return float8_hash_extended(DatumGetFloat8(d), seed);
     case T_TEXT:
-      return pg_hashtextextended(DatumGetTextP(d), seed);
+      return text_hash_extended(DatumGetTextP(d), seed, DEFAULT_COLLATION_OID);
     // PostGIS currently does not provide an extended hash function
     // case T_GEOMETRY:
     // case T_GEOGRAPHY:

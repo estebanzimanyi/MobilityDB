@@ -49,7 +49,7 @@
 #include <meos_internal.h>
 #include <meos_internal_geo.h>
 #include <meos_geo.h>
-#include "temporal/postgres_types.h"
+#include <postgres_types.h>
 #include "temporal/set.h"
 #include "temporal/span.h"
 #include "temporal/spanset.h"
@@ -123,9 +123,9 @@ basetype_out(Datum value, meosType type, int maxdd)
     case T_BOOL:
       return bool_out(DatumGetBool(value));
     case T_INT4:
-      return int4_out(DatumGetInt32(value));
+      return int32_out(DatumGetInt32(value));
     case T_INT8:
-      return int8_out(DatumGetInt64(value));
+      return int64_out(DatumGetInt64(value));
     case T_FLOAT8:
       return float8_out(DatumGetFloat8(value), maxdd);
     case T_TEXT:

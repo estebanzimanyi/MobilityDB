@@ -40,6 +40,8 @@
 #include <float.h>
 #include <limits.h>
 /* PostgreSQL */
+#include <postgres.h>
+#include <postgres_types.h>
 #include <common/hashfn.h>
 #include <utils/float.h>
 #include <utils/timestamp.h>
@@ -47,7 +49,6 @@
 #include <meos.h>
 #include <meos_internal.h>
 #include "temporal/meos_catalog.h"
-#include "temporal/postgres_types.h"
 #include "temporal/set.h"
 #include "temporal/temporal.h"
 #include "temporal/tnumber_mathfuncs.h"
@@ -1048,27 +1049,32 @@ tstzspan_expand(const Span *s, const Interval *interv)
   Interval intervalzero;
   memset(&intervalzero, 0, sizeof(Interval));
   bool negative = pg_interval_cmp((Interval *) interv, &intervalzero) <= 0;
-  Interval interv_neg;
+  Interval *interv_neg;
   if (negative)
   {
     Interval *duration = tstzspan_duration(s);
     /* Negate the interval */
-    interval_negate(interv, &interv_neg);
-    Interval *interv_neg2 = mul_interval_double(&interv_neg, 2.0);
+    interv_neg = interval_negate(interv);
+    Interval *interv_neg2 = mul_interval_float8(interv_neg, 2.0);
     int cmp = pg_interval_cmp(duration, interv_neg2);
     pfree(duration); pfree(interv_neg2);
     if (cmp < 0 || (cmp == 0 && (! s->lower_inc || ! s->upper_inc)))
+    {
+      pfree(interv_neg);
       return NULL;
+    }
   }
 
   Span *result = span_copy(s);
   TimestampTz tmin = negative ?
-    add_timestamptz_interval(DatumGetTimestampTz(s->lower), &interv_neg) :
+    add_timestamptz_interval(DatumGetTimestampTz(s->lower), interv_neg) :
     minus_timestamptz_interval(DatumGetTimestampTz(s->lower), (Interval *) interv);
   TimestampTz tmax = add_timestamptz_interval(DatumGetTimestampTz(s->upper),
     (Interval *) interv);
   result->lower = TimestampTzGetDatum(tmin);
   result->upper = TimestampTzGetDatum(tmax);
+  if (negative)
+    pfree(interv_neg);
   return result;
 }
 
@@ -1656,8 +1662,8 @@ span_hash_extended(const Span *s, uint64 seed)
   type_hash = DatumGetUInt64(hash_uint32_extended(type, seed));
 
   /* Apply the hash function to each bound */
-  lower_hash = pg_hashint8extended(s->lower, seed);
-  upper_hash = pg_hashint8extended(s->upper, seed);
+  lower_hash = int64_hash_extended(s->lower, seed);
+  upper_hash = int64_hash_extended(s->upper, seed);
 
   /* Merge hashes of flags and bounds */
   result = DatumGetUInt64(hash_uint32_extended((uint32) flags,

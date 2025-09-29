@@ -114,7 +114,7 @@ int32_hash_extended(int32 val, uint64 seed)
  * @note Derived from PostgreSQL function @p hashint8()
  */
 uint32
-int8_hash(int64 val)
+int64_hash(int64 val)
 {
   /*
    * The idea here is to produce a hash value compatible with the values
@@ -259,52 +259,50 @@ float8_hash_extended(float8 key, uint64 seed)
 uint32
 text_hash(text *key, Oid collid)
 {
-  pg_locale_t mylocale;
+  // pg_locale_t mylocale;
   Datum    result;
 
   if (!collid)
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "could not determine which collation to use for string hashing");
+    elog(ERROR, "could not determine which collation to use for string hashing");
   }
 
-  mylocale = pg_newlocale_from_collation(collid);
+  // mylocale = pg_newlocale_from_collation(collid);
 
-  if (mylocale->deterministic)
-  {
+  // if (mylocale->deterministic)
+  // {
     result = hash_any((unsigned char *) VARDATA_ANY(key),
       VARSIZE_ANY_EXHDR(key));
-  }
-  else
-  {
-    Size    bsize,
-          rsize;
-    char     *buf;
-    const char *keydata = VARDATA_ANY(key);
-    size_t    keylen = VARSIZE_ANY_EXHDR(key);
+  // }
+  // else
+  // {
+    // Size    bsize,
+          // rsize;
+    // char     *buf;
+    // const char *keydata = VARDATA_ANY(key);
+    // size_t    keylen = VARSIZE_ANY_EXHDR(key);
 
 
-    bsize = pg_strnxfrm(NULL, 0, keydata, keylen, mylocale);
-    buf = palloc(bsize + 1);
+    // bsize = pg_strnxfrm(NULL, 0, keydata, keylen, mylocale);
+    // buf = palloc(bsize + 1);
 
-    rsize = pg_strnxfrm(buf, bsize + 1, keydata, keylen, mylocale);
+    // rsize = pg_strnxfrm(buf, bsize + 1, keydata, keylen, mylocale);
 
-    /* the second call may return a smaller value than the first */
-    if (rsize > bsize)
-    {
-      meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-        "pg_strnxfrm() returned unexpected result");
-    }
+    // /* the second call may return a smaller value than the first */
+    // if (rsize > bsize)
+    // {
+      // elog(ERROR, "pg_strnxfrm() returned unexpected result");
+    // }
 
-    /*
-     * In principle, there's no reason to include the terminating NUL
-     * character in the hash, but it was done before and the behavior must
-     * be preserved.
-     */
-    result = hash_any((uint8_t *) buf, bsize + 1);
+    // /*
+     // * In principle, there's no reason to include the terminating NUL
+     // * character in the hash, but it was done before and the behavior must
+     // * be preserved.
+     // */
+    // result = hash_any((uint8_t *) buf, bsize + 1);
 
-    pfree(buf);
-  }
+    // pfree(buf);
+  // }
   return result;
 }
 
@@ -316,50 +314,48 @@ text_hash(text *key, Oid collid)
 uint64
 text_hash_extended(text *key, uint64 seed, Oid collid)
 {
-  pg_locale_t mylocale;
+  // pg_locale_t mylocale;
   Datum    result;
 
   if (!collid)
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "could not determine which collation to use for string hashing");
+    elog(ERROR, "could not determine which collation to use for string hashing");
   }
 
-  mylocale = pg_newlocale_from_collation(collid);
+  // mylocale = pg_newlocale_from_collation(collid);
 
-  if (mylocale->deterministic)
-  {
+  // if (mylocale->deterministic)
+  // {
     result = hash_any_extended((unsigned char *) VARDATA_ANY(key),
        VARSIZE_ANY_EXHDR(key), seed);
-  }
-  else
-  {
-    Size    bsize,
-          rsize;
-    char     *buf;
-    const char *keydata = VARDATA_ANY(key);
-    size_t    keylen = VARSIZE_ANY_EXHDR(key);
+  // }
+  // else
+  // {
+    // Size    bsize,
+          // rsize;
+    // char     *buf;
+    // const char *keydata = VARDATA_ANY(key);
+    // size_t    keylen = VARSIZE_ANY_EXHDR(key);
 
-    bsize = pg_strnxfrm(NULL, 0, keydata, keylen, mylocale);
-    buf = palloc(bsize + 1);
+    // bsize = pg_strnxfrm(NULL, 0, keydata, keylen, mylocale);
+    // buf = palloc(bsize + 1);
 
-    rsize = pg_strnxfrm(buf, bsize + 1, keydata, keylen, mylocale);
+    // rsize = pg_strnxfrm(buf, bsize + 1, keydata, keylen, mylocale);
 
-    /* the second call may return a smaller value than the first */
-    if (rsize > bsize)
-    {
-      meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-        "pg_strnxfrm() returned unexpected result");
-    }
+    // /* the second call may return a smaller value than the first */
+    // if (rsize > bsize)
+    // {
+      // elog(ERROR, "pg_strnxfrm() returned unexpected result");
+    // }
 
-    /*
-     * In principle, there's no reason to include the terminating NUL
-     * character in the hash, but it was done before and the behavior must
-     * be preserved.
-     */
-    result = hash_any_extended((uint8_t *) buf, bsize + 1, seed);
-    pfree(buf);
-  }
+    // /*
+     // * In principle, there's no reason to include the terminating NUL
+     // * character in the hash, but it was done before and the behavior must
+     // * be preserved.
+     // */
+    // result = hash_any_extended((uint8_t *) buf, bsize + 1, seed);
+    // pfree(buf);
+  // }
   return result;
 }
 

@@ -16,8 +16,6 @@
 
 #include <dirent.h>
 
-#include "../../meos/include/meos_error.h"
-
 /*
  * pgfnames
  *
@@ -59,16 +57,14 @@ pgfnames(const char *path)
 
   if (errno)
   {
-    meos_error(WARNING, MEOS_ERR_DIRECTORY_ERROR,
-      "could not read directory \"%s\": %m", path);
+    elog(WARNING, "could not read directory \"%s\": %m", path);
   }
 
   filenames[numnames] = NULL;
 
   if (closedir(dir))
   {
-    meos_error(WARNING, MEOS_ERR_DIRECTORY_ERROR,
-      "could not close directory \"%s\": %m", path);
+    elog(WARNING, "could not close directory \"%s\": %m", path);
   }
 
   return filenames;
