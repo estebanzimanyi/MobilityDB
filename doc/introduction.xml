@@ -1,0 +1,493 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+   ****************************************************************************
+    MobilityDB Manual
+    Copyright(c) MobilityDB Contributors
+
+    This documentation is licensed under a Creative Commons Attribution-Share
+    Alike 3.0 License: https://creativecommons.org/licenses/by-sa/3.0/
+   ****************************************************************************
+-->
+<chapter xml:id="introduction">
+	<title>Introduction</title>
+
+	<para>MobilityDB is an extension of <ulink url="http://postgresql.org">PostgreSQL</ulink> and <ulink url="http://postgis.net">PostGIS</ulink> that provides <emphasis>temporal types</emphasis>. Such data types represent the evolution on time of values of some element type, called the <emphasis>base type</emphasis> of the temporal type. For instance, temporal integers may be used to represent the evolution on time of the the gear used by a moving car. In this case, the data type is <emphasis>temporal integer</emphasis> and the base type is <emphasis>integer</emphasis>. Similarly, a temporal float may be used to represent the evolution on time of the speed of a car. As another example, a temporal point may be used to represent the evolution on time of the location of a car, as reported by GPS devices. Temporal types are useful because representing values that evolve in time is essential in many applications, for example in mobility applications. Furthermore, the operators on the base types (such as arithmetic operators and aggregation for integers and floats, topological and distance relationships for geometries) can be intuitively generalized when the values evolve in time.</para>
+
+	<para>MobilityDB provides the temporal types <varname>tbool</varname>, <varname>tint</varname>, <varname>tfloat</varname>, <varname>ttext</varname>, <varname>tgeometry</varname>, <varname>tgeography</varname>, <varname>tgeompoint</varname>, and <varname>tgeogpoint</varname>. These temporal types are based, respectively, on the <varname>bool</varname>, <varname>integer</varname>, <varname>float</varname>, and <varname>text</varname> base types provided by PostgreSQL, and on the <varname>geometry</varname> and <varname>geography</varname> base types provided by PostGIS, where <varname>tgeometry</varname> and <varname>tgeography</varname> accept arbitrary geometries/geographies, while <varname>tgeompoint</varname> and <varname>tgeogpoint</varname> only accept 2D or 3D points.<footnote><para>Although 4D temporal points can be represented, the M dimension is currently not taken into account.</para></footnote> Furthermore, MobilityDB provides <emphasis>set</emphasis>, <emphasis>span</emphasis>, and <emphasis>span set</emphasis> template types for representing, respectively, sets of values, ranges of values, and sets of ranges of values of base types or time types. Examples of values of set types are <varname>intset</varname>, <varname>floatset</varname>, and <varname>tstzset</varname>, where the latter represents set of <varname>timestamptz</varname> values. Examples of values of span types are <varname>intspan</varname>, <varname>floatspan</varname>, and <varname>tstzspan</varname>. Examples of values of span set types are <varname>intspanset</varname>, <varname>floatspanset</varname>, and <varname>tstzspanset</varname>.
+	</para>
+
+	<sect1 xml:id="psc">
+		<title>Project Steering Committee</title>
+		<para>
+			The MobilityDB Project Steering Committee (PSC) coordinates the general direction, release cycles, documentation, and outreach efforts for the MobilityDB project. In addition, the PSC provides general user support, accepts and approves patches from the general MobilityDB community and votes on miscellaneous issues involving MobilityDB such as developer commit access, new PSC members or significant API changes.
+		</para>
+		<para>
+			The current members in alphabetical order and their main responsibilities are given next:
+			<itemizedlist>
+				<listitem><para>Mohamed Bakli: <ulink url="https://github.com/MobilityDB/MobilityDB-docker">MobilityDB-docker</ulink>, cloud and distributed versions, integration with <ulink url="https://www.citusdata.com/">Citus</ulink></para></listitem>
+				<listitem><para>Krishna Chaitanya Bommakanti: <ulink url="https://www.libmeos.org/">MEOS (Mobility Engine Open Source)</ulink>, <ulink url="https://pypi.org/project/pymeos/">pyMEOS</ulink></para></listitem>
+				<listitem><para>Anita Graser: integration with <ulink url="https://github.com/anitagraser/movingpandas">Moving Pandas</ulink> and the Python ecosystem, integration with <ulink url="https://qgis.org/">QGIS</ulink></para></listitem>
+				<listitem><para>Darafei Praliaskouski: integration with <ulink url="https://postgis.net/">PostGIS</ulink></para></listitem>
+				<listitem><para>Mahmoud Sakr: co-founder of the MobilityDB project, <ulink url="https://github.com/MobilityDB/MobilityDB-workshop">MobilityDB workshop</ulink>, co-chair of the OGC Moving Feature Standard Working Group (<ulink url="https://www.ogc.org/projects/groups/movfeatswg">MF-SWG</ulink>)</para></listitem>
+				<listitem><para>Vicky Vergara: integration with <ulink url="https://pgrouting.org/">pgRouting</ulink>, liason with <ulink url="https://osgeo.org/">OSGeo</ulink></para></listitem>
+				<listitem><para>Esteban Zimányi (chair): co-founder of the MobilityDB project, overall project coordination, main contributor of the backend code, <ulink url="https://github.com/MobilityDB/MobilityDB-BerlinMOD">BerlinMOD generator</ulink></para></listitem>
+			</itemizedlist>
+		</para>
+	</sect1>
+
+	<sect1 xml:id="other_code_contributors">
+		<title>Other Code Contributors</title>
+		<itemizedlist>
+			<listitem><para>Arthur Lesuisse</para></listitem>
+			<listitem><para>Xinyiang Li</para></listitem>
+			<listitem><para>Maxime Schoemans</para></listitem>
+		</itemizedlist>
+	</sect1>
+
+	<sect1 xml:id="sponsors">
+		<title>Sponsors</title>
+		<para>
+			These are research funding organizations (in alphabetical order) that have contributed with monetary funding to the MobilityDB project.
+			<itemizedlist>
+				<listitem><para><ulink url="https://ec.europa.eu/research/mariecurieactions/">European Commission</ulink></para></listitem>
+				<listitem><para><ulink url="https://www.frs-fnrs.be/en">Fonds de la Recherche Scientifique (FNRS), Belgium</ulink></para></listitem>
+				<listitem><para><ulink url="https://innoviris.brussels/">Innoviris, Belgium</ulink></para></listitem>
+			</itemizedlist>
+		</para>
+
+		<para>
+			These are corporate entities (in alphabetical order) that have contributed developer time or monetary funding to the MobilityDB project.
+			<itemizedlist>
+				<listitem><para><ulink url="https://www.adonmo.com/">Adonmo, India</ulink></para></listitem>
+				<listitem><para><ulink url="https://georepublic.info/en/">Georepublic, Germany</ulink></para></listitem>
+				<listitem><para><ulink url="https://www.ulb.be">Université libre de Bruxelles, Belgium</ulink></para></listitem>
+			</itemizedlist>
+		</para>
+	</sect1>
+
+	<sect1 xml:id="license">
+		<title>Licenses</title>
+		<para>The following licenses can be found in MobilityDB:</para>
+		<informaltable frame="all" colsep="1" rowsep="1">
+			<?dblatex table-width="autowidth.column: 1 2"?>
+			<tgroup cols="2" align="left" colsep="1" rowsep="1">
+				<thead>
+					<row>
+						<entry>Resource</entry>
+						<entry>Licence</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>MobilityDB code</entry>
+						<entry><ulink url="https://opensource.org/licenses/postgresql">PostgreSQL Licence</ulink></entry>
+					</row>
+					<row>
+						<entry>MobilityDB documentation</entry>
+						<entry><ulink url="https://creativecommons.org/licenses/by-sa/3.0/">Creative Commons Attribution-Share Alike 3.0 License</ulink></entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</informaltable>
+	</sect1>
+
+	<sect1 xml:id="installation_sources">
+		<title>Installation from Sources</title>
+		<sect2 xml:id="short_version">
+			<title>Short Version</title>
+			<para>
+				To compile assuming you have all the dependencies in your search path
+			</para>
+			<programlisting language="bash" xml:space="preserve" format="linespecific">
+git clone https://github.com/MobilityDB/MobilityDB
+mkdir MobilityDB/build
+cd MobilityDB/build
+cmake  ..
+make
+sudo make install
+</programlisting>
+			<para>
+				The above commands install the <varname>master</varname> branch. If you want to install another branch, for example, <varname>develop</varname>, you can replace the first command above as follows
+			</para>
+			<programlisting language="bash" xml:space="preserve" format="linespecific">
+git clone --branch develop https://github.com/MobilityDB/MobilityDB
+</programlisting>
+
+			<para>
+				You should also set the following in the <varname>postgresql.conf</varname> file depending on the version of PostGIS you have installed (below we use PostGIS 3):
+			</para>
+			<programlisting language="bash" xml:space="preserve" format="linespecific">
+shared_preload_libraries = 'postgis-3'
+max_locks_per_transaction = 128
+</programlisting>
+
+			<para>
+				If you do not preload the PostGIS library with the above configuration you will not be able to load the MobilityDB library and will get an error message such as the following one:
+			</para>
+			<programlisting language="bash" xml:space="preserve" format="linespecific">
+ERROR:  could not load library "/usr/local/pgsql/lib/libMobilityDB-1.1.so":
+  undefined symbol: ST_Distance
+</programlisting>
+
+			<para>
+				You can find the location of the <varname>postgresql.conf</varname> file as given next.
+			</para>
+			<programlisting language="bash" xml:space="preserve" format="linespecific">
+$ which postgres
+/usr/local/pgsql/bin/postgres
+$ ls /usr/local/pgsql/data/postgresql.conf
+/usr/local/pgsql/data/postgresql.conf
+</programlisting>
+			<para>
+				As can be seen, the PostgreSQL binaries are in the <varname>bin</varname> subdirectory while the <varname>postgresql.conf</varname> file is in the <varname>data</varname> subdirectory.
+			</para>
+
+			<para>
+				Once MobilityDB is installed, it needs to be enabled in each database you want to use it in. In the example below we use a database named <varname>mobility</varname>.
+			</para>
+			<programlisting language="bash" xml:space="preserve" format="linespecific">
+createdb mobility
+psql mobility -c "CREATE EXTENSION PostGIS"
+psql mobility -c "CREATE EXTENSION MobilityDB"
+</programlisting>
+
+			<para>
+				The two extensions PostGIS and MobilityDB can also be created using a single command.
+			</para>
+			<programlisting language="bash" xml:space="preserve" format="linespecific">
+psql mobility -c "CREATE EXTENSION MobilityDB cascade"
+</programlisting>
+		</sect2>
+
+		<sect2 xml:id="get_sources">
+			<title>Get the Sources</title>
+			<para>
+				The MobilityDB latest release can be found in <ulink url="https://github.com/MobilityDB/MobilityDB/releases/latest"/>
+			</para>
+
+			<para>
+				<emphasis role="bold">wget</emphasis>
+			</para>
+
+			<para>
+				To download this release:
+			</para>
+			<programlisting language="bash" xml:space="preserve" format="linespecific">
+wget -O mobilitydb-1.3.tar.gz https://github.com/MobilityDB/MobilityDB/archive/v1.3.tar.gz
+</programlisting>
+			<para>
+				Go to <xref linkend="short_version"/> to the extract and compile instructions.
+			</para>
+
+			<para>
+				<emphasis role="bold">git</emphasis>
+			</para>
+
+			<para>
+				To download the repository
+			</para>
+			<programlisting language="bash" xml:space="preserve" format="linespecific">
+git clone https://github.com/MobilityDB/MobilityDB.git
+cd MobilityDB
+git checkout v1.3
+</programlisting>
+			<para>
+				Go to <xref linkend="short_version"/> to the compile instructions (there is no tar ball).
+			</para>
+		</sect2>
+		<sect2 xml:id="enabling_database">
+			<title>Enabling the Database</title>
+			<para>
+				MobilityDB is an extension that depends on PostGIS. Enabling PostGIS before enabling MobilityDB in the database can be done as follows
+			</para>
+			<programlisting language="sql" xml:space="preserve" format="linespecific">
+CREATE EXTENSION postgis;
+CREATE EXTENSION mobilitydb;
+</programlisting>
+			<para>
+				Alternatively, this can be done in a single command by using <varname>CASCADE</varname>, which installs the required PostGIS extension before installing the MobilityDB extension
+			</para>
+			<programlisting language="sql" xml:space="preserve" format="linespecific">
+CREATE EXTENSION mobilitydb CASCADE;
+</programlisting>
+		</sect2>
+		<sect2 xml:id="dependencies">
+			<title>Dependencies</title>
+
+			<para>
+				<emphasis role="bold">Compilation Dependencies</emphasis>
+			</para>
+
+			<para>
+				To be able to compile MobilityDB, make sure that the following dependencies are met:
+			</para>
+			<itemizedlist>
+				<listitem><para><filename>CMake</filename> cross-platform build system.</para></listitem>
+				<listitem><para>C compiler <filename>gcc</filename> or <filename>clang</filename>. Other ANSI C compilers can be used but may cause problems compiling some dependencies.</para></listitem>
+				<listitem><para>GNU Make (<filename>gmake</filename> or <filename>make</filename>) version 3.1 or higher. For many systems, GNU make is the default version of make. Check the version by invoking <filename>make -v</filename>.</para></listitem>
+				<listitem><para>PostgreSQL version 12 or higher. PostgreSQL is available from <ulink url="http://www.postgresql.org">http://www.postgresql.org</ulink>.</para></listitem>
+				<listitem><para>PostGIS version 3 or higher. PostGIS is available from <ulink url="https://postgis.net/">https://postgis.net/</ulink>.</para></listitem>
+				<listitem><para>GNU Scientific Library (GSL). GSL is available from <ulink url="https://www.gnu.org/software/gsl/">https://www.gnu.org/software/gsl/</ulink>. GSL is used for the random number generators.</para></listitem>
+			</itemizedlist>
+			<para>
+				Notice that PostGIS has its own dependencies such as Proj, GEOS, LibXML2, or JSON-C, and these libraries are also used in MobilityDB. Refer to <ulink url="http://trac.osgeo.org/postgis/wiki/UsersWikiPostgreSQLPostGIS">http://trac.osgeo.org/postgis/wiki/UsersWikiPostgreSQLPostGIS</ulink> for a support matrix of PostGIS with PostgreSQL, GEOS, and Proj.
+			</para>
+
+			<para>
+				<emphasis role="bold">Optional Dependencies</emphasis>
+			</para>
+
+			<para>For the user's documentation</para>
+			<itemizedlist>
+				<listitem><para>The DocBook DTD and XSL files are required for building the documentation. For Ubuntu, they are provided by the packages <varname>docbook</varname> and <varname>docbook-xsl</varname>.</para></listitem>
+				<listitem><para>The XML validator <varname>xmllint</varname> is required for validating the XML files of the documentation. For Ubuntu, it is provided by the package <varname>libxml2</varname>.</para></listitem>
+				<listitem><para>The XSLT processor <varname>xsltproc</varname> is required for building the documentation in HTML format. For Ubuntu, it is provided by the package <varname>libxslt</varname>.</para></listitem>
+				<listitem><para>The program <varname>dblatex</varname> is required for building the documentation in PDF format. For Ubuntu, it is provided by the package <varname>dblatex</varname>.</para></listitem>
+				<listitem><para>The program <varname>dbtoepub</varname> is required for building the documentation in EPUB format.  For Ubuntu, it is provided by the package <varname>dbtoepub</varname>.</para></listitem>
+			</itemizedlist>
+
+			<para>For the developers's documentation</para>
+			<itemizedlist>
+				<listitem><para>The program <varname>doxygen</varname> is required for building the documentation. For Ubuntu, it is provided by the package <varname>doxygen</varname>.</para></listitem>
+			</itemizedlist>
+
+			<para>
+				<emphasis role="bold">Example: Installing dependencies on Linux</emphasis>
+			</para>
+
+			<para>Database dependencies</para>
+			<programlisting language="bash" xml:space="preserve" format="linespecific">
+sudo apt-get install postgresql-16 postgresql-server-dev-16 postgresql-16-postgis
+</programlisting>
+			<para>Build dependencies</para>
+			<programlisting language="bash" xml:space="preserve" format="linespecific">
+sudo apt-get install cmake gcc libgsl-dev
+</programlisting>
+		</sect2>
+
+		<sect2 xml:id="configuring">
+			<title>Configuring</title>
+			<para>
+				MobilityDB uses the <varname>cmake</varname> system to do the configuration. The build directory must be different from the source directory.
+			</para>
+			<para>To create the build directory</para>
+			<programlisting language="bash" xml:space="preserve" format="linespecific">
+mkdir build
+</programlisting>
+			<para>To see the variables that can be configured</para>
+			<programlisting language="bash" xml:space="preserve" format="linespecific">
+cd build
+cmake -L ..
+</programlisting>
+		</sect2>
+
+		<sect2 xml:id="build_install">
+			<title>Build and Install</title>
+			<para>
+				Notice that the current version of MobilityDB has been tested on Linux, MacOS, and Windows systems. It may work on other Unix-like systems, but remain untested. We are looking for volunteers to help us to test MobilityDB on multiple platforms.
+			</para>
+			<para>
+				The following instructions start from <varname>path/to/MobilityDB</varname> on a Linux system
+			</para>
+			<programlisting language="bash" xml:space="preserve" format="linespecific">
+mkdir build
+cd build
+cmake ..
+make
+sudo make install
+</programlisting>
+			<para>
+				When the configuration changes
+			</para>
+			<programlisting language="bash" xml:space="preserve" format="linespecific">
+rm -rf build
+</programlisting>
+			<para>
+				and start the build process as mentioned above.
+			</para>
+		</sect2>
+
+		<sect2 xml:id="testing">
+			<title>Testing</title>
+			<para>
+				MobilityDB uses <varname>ctest</varname>, the CMake test driver program, for testing. This program will run the tests and report results.
+			</para>
+			<para>
+				To run all the tests
+			</para>
+			<programlisting language="bash" xml:space="preserve" format="linespecific">
+ctest
+</programlisting>
+			<para>
+				To run a given test file
+			</para>
+			<programlisting language="bash" xml:space="preserve" format="linespecific">
+ctest -R '021_tbox'
+</programlisting>
+			<para>
+				To run a set of given test files you can use wildcards
+			</para>
+			<programlisting language="bash" xml:space="preserve" format="linespecific">
+ctest -R '022_*'
+</programlisting>
+		</sect2>
+
+		<sect2 xml:id="documentation">
+			<title>Documentation</title>
+			<para>
+				MobilityDB user's documentation can be generated in HTML, PDF, and EPUB format. Furthermore, the documentation is available in English and in other languages (currently, only in Spanish). The user's documentation can be generated in all formats and in all languages, or specific formats and/or languages can be specified. MobilityDB developer's documentation can only be generated in HTML format and in English.
+			</para>
+			<para>
+				The variables used for generating user's and the developer's documentation are as follows:
+			</para>
+			<table frame="all" colsep="1" rowsep="1">
+				<?dblatex table-width="autowidth.column: 1 2 3"?>
+				<title>Variables for the user's and the developer's documentation</title>
+				<tgroup cols="3" align="left" colsep="1" rowsep="1">
+				<thead>
+					<row>
+						<entry>Variable</entry>
+						<entry>Default value</entry>
+						<entry>Comment</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry><varname>DOC_ALL</varname></entry>
+						<entry><varname>BOOL=OFF</varname></entry>
+						<entry>The user's documentation is generated in HTML, PDF, and EPUB formats.</entry>
+					</row>
+					<row>
+						<entry><varname>DOC_HTML</varname></entry>
+						<entry><varname>BOOL=OFF</varname></entry>
+						<entry>The user's documentation is generated in HTML format.</entry>
+					</row>
+					<row>
+						<entry><varname>DOC_PDF</varname></entry>
+						<entry><varname>BOOL=OFF</varname></entry>
+						<entry>The user's documentation is generated in PDF format.</entry>
+					</row>
+					<row>
+						<entry><varname>DOC_EPUB</varname></entry>
+						<entry><varname>BOOL=OFF</varname></entry>
+						<entry>The user's documentation is generated in EPUB format.</entry>
+					</row>
+					<row>
+						<entry><varname>LANG_ALL</varname></entry>
+						<entry><varname>BOOL=OFF</varname></entry>
+						<entry>The user's documentation is generated in English and in all available translations.</entry>
+					</row>
+					<row>
+						<entry><varname>ES</varname></entry>
+						<entry><varname>BOOL=OFF</varname></entry>
+						<entry>The user's documentation is generated in English and in Spanish.</entry>
+					</row>
+					<row>
+						<entry><varname>DOC_DEV</varname></entry>
+						<entry><varname>BOOL=OFF</varname></entry>
+						<entry>The English developer's documentation is generated in HTML format.</entry>
+					</row>
+				</tbody>
+				</tgroup>
+			</table>
+			<para>
+				Generate the user's and the developer's documentation in all formats and in all languages.
+			</para>
+			<programlisting language="bash" xml:space="preserve" format="linespecific">
+cmake -D DOC_ALL=ON -D LANG_ALL=ON -D DOC_DEV=ON ..
+make doc
+make doc_dev
+</programlisting>
+			<para>
+				Generate the user's documentation in HTML format and in all languages.
+			</para>
+			<programlisting language="bash" xml:space="preserve" format="linespecific">
+cmake -D DOC_HTML=ON -D LANG_ALL=ON ..
+make doc
+</programlisting>
+			<para>
+				Generate the English user's documentation in all formats.
+			</para>
+			<programlisting language="bash" xml:space="preserve" format="linespecific">
+cmake -D DOC_ALL=ON ..
+make doc
+</programlisting>
+			<para>
+				Generate the user's documentation in PDF format in English and in Spanish.
+			</para>
+			<programlisting language="bash" xml:space="preserve" format="linespecific">
+cmake -D DOC_PDF=ON -D ES=ON ..
+make doc
+</programlisting>
+		</sect2>
+	</sect1>
+
+	<sect1 xml:id="installation_binaries">
+		<title>Installation from Binaries</title>
+		<sect2 xml:id="Debian">
+			<title>Debian-based Linux Distributions</title>
+			<para>
+					Support for Debian-based Linux systems, such as Ubuntu and Arch Linux, is being developed.
+			</para>
+		</sect2>
+
+		<sect2 xml:id="Windows">
+			<title>Windows</title>
+			<para>
+					Since PostGIS version 3.3.3, MobilityDB is distributed in the PostGIS Bundle for Windows, which is available on application stackbuilder and OSGeo website. For more information, refer to the <ulink url="https://postgis.net/documentation/getting_started/install_windows/">PostGIS documentation</ulink>.
+			</para>
+		</sect2>
+	</sect1>
+
+	<sect1 xml:id="support">
+		<title>Support</title>
+		<para>MobilityDB community support is available through the MobilityDB github page, documentation, tutorials, mailing lists and others.</para>
+
+		<sect2 xml:id="reporting_problems">
+			<title>Reporting Problems</title>
+			<para>
+				Bugs are reported and managed in an <ulink url="https://github.com/MobilityDB/MobilityDB/issues">issue tracker</ulink>. Please follow these steps:
+			</para>
+			<orderedlist inheritnum="ignore" continuation="restarts">
+				<listitem><para>Search the tickets to see if your problem has already been reported. If so, add any extra context you might have found, or at least indicate that you too are having the problem. This will help us prioritize common issues.</para></listitem>
+				<listitem><para>If your problem is unreported, create a <ulink url="https://github.com/MobilityDB/MobilityDB/issues/new">new issue</ulink> for it.</para></listitem>
+				<listitem><para>In your report include explicit instructions to replicate your issue. The best tickets include the exact SQL necessary to replicate a problem. Please also, note the operating system and versions of MobilityDB, PostGIS, and PostgreSQL.</para></listitem>
+				<listitem><para>It is recommended to use the following wrapper on the problem to pin point the step that is causing the problem.
+					<programlisting language="sql" xml:space="preserve" format="linespecific">
+SET client_min_messages TO debug;
+&lt;your code&gt;
+SET client_min_messages TO notice;
+</programlisting>
+				</para></listitem>
+			</orderedlist>
+		</sect2>
+
+		<sect2 xml:id="mailing_lists">
+			<title>Mailing Lists</title>
+			<para>
+				There are two mailing lists for MobilityDB hosted on OSGeo mailing list server:
+			</para>
+			<itemizedlist>
+				<listitem><para>User mailing list: <ulink url="http://lists.osgeo.org/mailman/listinfo/mobilitydb-users">http://lists.osgeo.org/mailman/listinfo/mobilitydb-users</ulink></para></listitem>
+				<listitem><para>Developer mailing list: <ulink url="http://lists.osgeo.org/mailman/listinfo/mobilitydb-dev">http://lists.osgeo.org/mailman/listinfo/mobilitydb-dev</ulink></para></listitem>
+			</itemizedlist>
+			<para>
+				For general questions and topics about how to use MobilityDB, please write to the user mailing list.
+			</para>
+		</sect2>
+	</sect1>
+
+	<sect1 xml:id="migrating_1.3">
+		<title>Migrating from Version 1.2 to Version 1.3</title>
+		<para>
+			MobilityDB 1.3 is a major revision with respect to version 1.2. The most important change in version 1.3 was to enable new spatiotemporal types. While version 1.2 defined the spatiotemporal types <varname>tgeompoint</varname> (temporal geometry point), <varname>tgeogpoint</varname> (temporal geography point), and <varname>tnpoint</varname> (temporal network point), version 1.3 added the new types <varname>tgeometry</varname> (temporal geometry), <varname>tgeography</varname> (temporal geography), <varname>tcbuffer</varname> (temporal circular buffer), <varname>tpose</varname> (temporal pose), and <varname>trgeometry</varname> (temporal rigid geometry). At a conceptual level, all the spatiotemporal types are organized in the hierarchy depicted in <xref linkend="tspatial_fig" />.
+		</para>
+		<para>
+			In order to enable the above, a refactoring of the code base was necessary. All the types provided by version 1.2 in addition to the new types <varname>tgeometry</varname> and <varname>tgeography</varname> are defined as core types and thus, are always included in the building process. Each one of the other spatiotemporal types can be included in the building process by setting its corresponding compilation flag. For example, when adding <varname>-DCBUFFER=1</varname> the types built upon the <varname>cbuffer</varname> base type, that is <varname>cbuffer</varname>, <varname>cbufferset</varname>, and <varname>tcbuffer</varname>, will be included in the building process. The possibility to select the types to be included in the executable program is important in particular for stream processing, due to the limited capability of the edge devices. Please notice that the new types <varname>tcbuffer</varname>, <varname>tpose</varname>, and <varname>trgeometry</varname> are still in development and will be finalized in a forthcoming release.
+		</para>
+		<para>
+			In addition, the API of MobilityDB and MEOS was extended with new functionality and streamlined to improve usability. Finally, version 1.3 also enables the latest versions PostgreSQL 18 and PostGIS 3.6.0. For all these reasons, the binary format of the temporal types have changed from version 1.2 to 1.3 and thus a backup and restore is needed for migrating to the newer version 1.3 of MobilityDB.
+		</para>
+	</sect1>
+</chapter>
+

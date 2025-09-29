@@ -1,0 +1,86 @@
+name: Build for Ubuntu with clang
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/clang.yml'
+      - 'cmake/**'
+      - 'meos/**'
+      - 'mobilitydb/**'
+      - 'postgis/**'
+      - 'CMakeLists.txt'
+    branch_ignore: gh-pages
+  pull_request:
+    paths:
+      - '.github/workflows/clang.yml'
+      - 'cmake/**'
+      - 'meos/**'
+      - 'mobilitydb/**'
+      - 'postgis/**'
+      - 'CMakeLists.txt'
+    branch_ignore: gh-pages
+
+jobs:
+  Test_clang:
+    name: Build
+    runs-on: ubuntu-latest
+
+    strategy:
+        fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get postgres version
+        run: |
+          sudo service postgresql start
+          pgver=$(psql --version | grep -Po '(?<=psql \(PostgreSQL\) )[^;]+(?=\.\d+ \()')
+          echo "PGVER=${pgver}" >> $GITHUB_ENV
+          echo "PGIS=3" >> $GITHUB_ENV
+          echo "PGPORT=5432" >> $GITHUB_ENV
+
+      - name: Add PostgreSQL APT repository
+        run: |
+          sudo apt-get install curl ca-certificates gnupg
+          curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ \
+            $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang \
+            libgeos++-dev \
+            libproj-dev \
+            libjson-c-dev \
+            libgsl-dev \
+            postgresql-${PGVER} \
+            postgresql-${PGVER}-postgis-${PGIS} \
+            postgresql-server-dev-${PGVER}
+          xzcat --version
+
+      - name: Configure
+        run: |
+          export PATH=/usr/lib/postgresql/${PGVER}/bin:$PATH
+          mkdir build
+          cd build
+          CC=clang cmake -DCMAKE_BUILD_TYPE=Release ..
+
+      - name: Build
+        run: |
+          cd build
+          make -j 4
+          sudo make install
+
+      - name: test install
+        run: |
+          sudo service postgresql start
+          sudo -u postgres createdb -p ${PGPORT}  ___mobdb___test___
+          sudo -u postgres psql -p ${PGPORT}  -d ___mobdb___test___ -c "CREATE EXTENSION mobilitydb CASCADE; SELECT mobilitydb_full_version()"
+
+      - name: Test
+        run: |
+          cd build
+          make test

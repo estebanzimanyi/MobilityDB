@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+   ****************************************************************************
+    MobilityDB Manual
+    Copyright(c) MobilityDB Contributors
+
+    This documentation is licensed under a Creative Commons Attribution-Share
+    Alike 3.0 License: https://creativecommons.org/licenses/by-sa/3.0/
+   ****************************************************************************
+-->
+<!DOCTYPE book [
+
+<!ENTITY last_release_version "1.3">
+
+<!ENTITY introduction SYSTEM "introduction.xml">
+<!ENTITY set_span_types SYSTEM "set_span_types.xml">
+<!ENTITY box_types SYSTEM "box_types.xml">
+<!ENTITY temporal_types_p1 SYSTEM "temporal_types_p1.xml">
+<!ENTITY temporal_types_p2 SYSTEM "temporal_types_p2.xml">
+<!ENTITY temporal_alpha SYSTEM "temporal_alpha.xml">
+<!ENTITY temporal_spatial_p1 SYSTEM "temporal_spatial_p1.xml">
+<!ENTITY temporal_spatial_p2 SYSTEM "temporal_spatial_p2.xml">
+<!ENTITY temporal_types_analytics SYSTEM "temporal_types_analytics.xml">
+<!ENTITY temporal_types_aggregation SYSTEM "temporal_types_aggregation.xml">
+<!ENTITY temporal_poses SYSTEM "temporal_poses.xml">
+<!ENTITY temporal_network_points SYSTEM "temporal_network_points.xml">
+<!ENTITY temporal_circular_buffers SYSTEM "temporal_circular_buffers.xml">
+<!ENTITY reference SYSTEM "reference.xml">
+<!ENTITY data_generator SYSTEM "data_generator.xml">
+
+<!ENTITY geography_support
+"<inlinemediaobject>
+	<imageobject><imagedata fileref='images/world.pdf' width='10pt'/></imageobject>
+	<imageobject><imagedata fileref='images/world.svg' width='10pt'/></imageobject>
+	<imageobject><imagedata fileref='images/world.png' width='10pt'/></imageobject>
+</inlinemediaobject>
+">
+
+<!ENTITY Z_support
+"<inlinemediaobject>
+	<imageobject><imagedata fileref='images/cube.pdf' width='10pt'/></imageobject>
+	<imageobject><imagedata fileref='images/cube.svg' width='10pt'/></imageobject>
+	<imageobject><imagedata fileref='images/cube.png' width='10pt'/></imageobject>
+</inlinemediaobject>
+">
+
+<!ENTITY SRF
+"<inlinemediaobject>
+	<imageobject><imagedata fileref='images/srf.pdf' width='10pt'/></imageobject>
+	<imageobject><imagedata fileref='images/srf.svg' width='10pt'/></imageobject>
+	<imageobject><imagedata fileref='images/srf.png' width='10pt'/></imageobject>
+</inlinemediaobject>
+">
+
+<!ENTITY python_support
+"<inlinemediaobject>
+	<imageobject><imagedata fileref='images/python.pdf' width='10pt'/></imageobject>
+	<imageobject><imagedata fileref='images/python.svg' width='10pt'/></imageobject>
+	<imageobject><imagedata fileref='images/python.png' width='10pt'/></imageobject>
+</inlinemediaobject>
+">
+
+]>
+<book xmlns="http://docbook.org/ns/docbook" 
+  xmlns:xl="http://www.w3.org/1999/xlink"
+  xmlns:mml="https://www.w3.org/1998/Math/MathML" version="5.0" xml:lang="en">
+	<bookinfo>
+		<title>MobilityDB 1.3 User's Manual</title>
+		<author>
+			<firstname>Esteban</firstname>
+			<surname>Zimányi</surname>
+			<affiliation>
+				<orgname>Université libre de Bruxelles, Belgium</orgname>
+			</affiliation>
+		</author>
+
+		<pubdate><?dbtimestamp format="Y-m-d"?></pubdate>
+		<abstract>
+			<para>
+				MobilityDB is an extension to the <link xl:href="https://www.postgresql.org/">PostgreSQL</link> database system and its spatial extension <link xl:href="http://postgis.net/">PostGIS</link>. It allows temporal and spatio-temporal objects to be stored in the database, that is, objects whose attribute values and/or location evolves in time. MobilityDB includes functions for analysis and processing of temporal and spatio-temporal objects and provides support for GiST and SP-GiST indexes. MobilityDB is open source and its code is available on <link xl:href="https://github.com/MobilityDB/MobilityDB">Github</link>. A binding for the Python programming language is also available on <link xl:href="https://github.com/MobilityDB/PyMEOS">Github</link>.
+			</para>
+
+			<para>
+				<inlinemediaobject xmlns='http://docbook.org/docbook-ng'>
+					<imageobject>
+						<imagedata fileref="images/mobilitydb-logo.png" width="200pt"/>
+					</imageobject>
+				</inlinemediaobject>
+			</para>
+
+			<para>
+				MobilityDB is developed by the Computer &amp; Decision Engineering Department of the Université Libre de Bruxelles (ULB) under the direction of Prof. Esteban Zimányi. ULB is an OGC Associate Member and member of the OGC Moving Feature Standard Working Group (<link xl:href="https://www.ogc.org/projects/groups/movfeatswg">MF-SWG</link>).
+			</para>
+
+			<para>
+				<inlinemediaobject xmlns='http://docbook.org/docbook-ng'>
+					<imageobject>
+						<imagedata fileref="images/OGC_Associate_Member_3DR.png" width="100pt"/>
+					</imageobject>
+				</inlinemediaobject>
+			</para>
+
+			<para>
+				The MobilityDB Manual is licensed under a <link xl:href="https://creativecommons.org/licenses/by-sa/3.0/">Creative Commons Attribution-Share Alike 3.0 License 3</link>. Feel free to use this material any way you like, but we ask that you attribute credit to the MobilityDB Project and wherever possible, a link back to <link xl:href="https://github.com/MobilityDB/MobilityDB">MobilityDB</link>.
+			</para>
+
+			<para>
+				<inlinemediaobject xmlns='http://docbook.org/docbook-ng'>
+					<imageobject>
+						<imagedata fileref="images/cc-by-sa.png" width="100pt"/>
+					</imageobject>
+				</inlinemediaobject>
+			</para>
+		</abstract>
+	</bookinfo>
+
+	&introduction;
+	&set_span_types;
+	&box_types;
+	&temporal_types_p1;
+	&temporal_types_p2;
+	&temporal_alpha;
+	&temporal_spatial_p1;
+	&temporal_spatial_p2;
+	&temporal_types_analytics;
+	&temporal_types_aggregation;
+	&temporal_poses;
+	&temporal_network_points;
+	&temporal_circular_buffers;
+	&reference;
+	&data_generator;
+<!--
+	<index />
+-->
+
+</book>

@@ -1,0 +1,125 @@
+name: Main Build
+
+# Test for supported PosgreSQL/PostGIS versions
+# 5 (PosgreSQL) * 1 (PostGIS) * 1 (Linux) + 1 (coverage) = 6 jobs are triggered
+# Allow manual trigger
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/pgversion.yml'
+      - 'cmake/**'
+      - 'meos/**'
+      - 'mobilitydb/**'
+      - 'postgis/**'
+      - 'CMakeLists.txt'
+    branch_ignore: gh-pages
+  pull_request:
+    paths:
+      - '.github/workflows/pgversion.yml'
+      - 'cmake/**'
+      - 'meos/**'
+      - 'mobilitydb/**'
+      - 'postgis/**'
+      - 'CMakeLists.txt'
+    branch_ignore: gh-pages
+
+jobs:
+  build:
+    name: Build
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+        fail-fast: false
+        matrix:
+          psql: [13,14,15,16,17,18]
+          postgis: [3]
+          os: ["ubuntu-24.04"]
+          coverage: [0]
+          include:
+            - psql: 17
+              postgis: 3
+              os: "ubuntu-24.04"
+              coverage: 1
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Remove existing PostgreSQL installations [prefer apt.postgresql.org ]
+        run: |
+          sudo service postgresql stop || true
+          sudo apt-get --purge remove postgresql* -y || true
+          sudo rm -rf /var/lib/postgresql/ || true
+          sudo rm -rf /etc/postgresql/ || true
+          sudo rm -rf /var/log/postgresql/ || true
+          echo "Removed existing PostgreSQL installation"
+
+      - name: Set postgresql port as a default
+        run: |
+          PGP=5432
+          echo "PGPORT=${PGP}" >> $GITHUB_ENV        
+
+      - name: Add PostgreSQL APT repository
+        run: |
+          sudo apt-get install curl ca-certificates gnupg
+          curl https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ \
+            $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgeos++-dev \
+            libproj-dev \
+            libjson-c-dev \
+            libgsl-dev \
+            postgresql-${{ matrix.psql }} \
+            postgresql-${{ matrix.psql }}-postgis-${{ matrix.postgis }} \
+            postgresql-server-dev-${{ matrix.psql }}
+          ls /usr/lib/postgresql/${{ matrix.psql }}/lib/
+          xzcat --version
+
+      - name: Install coverall dependencies
+        if: matrix.coverage == '1'
+        run: |
+          sudo apt-get -y install lcov
+
+      - name: Configure for gcc
+        run: |
+          export PATH=/usr/lib/postgresql/${{ matrix.psql }}/bin:$PATH
+          mkdir build
+          cd build
+          cmake -DCMAKE_BUILD_TYPE=Release -DWITH_COVERAGE=${{ matrix.coverage }} ..
+
+      - name: Build
+        run: |
+          cd build
+          make -j 4
+          sudo make install
+
+      - name: test install
+        run: |
+          sudo service postgresql start
+          sudo -u postgres createdb -p ${PGPORT}  ___mobdb___test___
+          sudo -u postgres psql -p ${PGPORT}  -d ___mobdb___test___ -c "CREATE EXTENSION mobilitydb CASCADE; SELECT postgis_full_version(); SELECT mobilitydb_full_version();"
+
+      - name: Test
+        run: |
+          cd build
+          make test
+
+      - name: Generate coverage
+        if: matrix.coverage == '1'
+        run: |
+          cd build
+          # Excluding MEOS-specific and other miscellaneous files
+          lcov --capture --directory . --include */mobilitydb/* --include */meos/* --exclude */mobilitydb/postgis/* --exclude */geo_constructors.c --exclude */tpoint_datagen.c --output-file=lcov.info
+
+      - name: Coveralls
+        if: matrix.coverage == '1'
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: "./build/lcov.info"
