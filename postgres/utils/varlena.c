@@ -18,9 +18,14 @@
 #include <limits.h>
 
 #include "miscadmin.h"
+#include "common/unicode_category.h"
+#include "common/unicode_norm.h"
+#include "common/unicode_version.h"
 #include "utils/pg_locale.h"
 #include "utils/varlena.h"
 #include "lib/stringinfo.h"
+
+#include <postgres_types.h>
 
 // #include "access/detoast.h"
 // #include "access/toast_compression.h"
@@ -55,6 +60,39 @@
 
 // MEOS force the collation to DEFAULT_COLLATION_OID
 #define PG_GET_COLLATION()  DEFAULT_COLLATION_OID
+
+// MEOS force the encoding to PG_SQL_ASCII
+#define GetDatabaseEncoding()  PG_SQL_ASCII
+
+/* Borrowed from tupmacs.h */
+
+/*
+ * att_addlength_pointer performs the same calculation as att_addlength_datum,
+ * but is used when walking a tuple --- attptr is the pointer to the field
+ * within the tuple.
+ *
+ * Note: some callers pass a "char *" pointer for cur_offset.  This is
+ * actually perfectly OK, but probably should be cleaned up along with
+ * the same practice for att_align_pointer.
+ */
+#define att_addlength_pointer(cur_offset, attlen, attptr) \
+( \
+	((attlen) > 0) ? \
+	( \
+		(cur_offset) + (attlen) \
+	) \
+	: (((attlen) == -1) ? \
+	( \
+		(cur_offset) + VARSIZE_ANY(attptr) \
+	) \
+	: \
+	( \
+		AssertMacro((attlen) == -2), \
+		(cur_offset) + (strlen((char *) (attptr)) + 1) \
+	)) \
+)
+
+/*****************************************************************************/
 
 typedef struct varlena VarString;
 
@@ -101,25 +139,18 @@ typedef struct
  */
 #define TEXTBUFLEN    1024
 
-// #define DatumGetVarStringP(X)    ((VarString *) PG_DETOAST_DATUM(X))
-// #define DatumGetVarStringPP(X)    ((VarString *) PG_DETOAST_DATUM_PACKED(X))
-
-static int32 text_length(Datum str);
-static text *text_catenate(text *txt1, text *txt2);
-static text *text_substring(Datum str,
-              int32 start,
-              int32 length,
-              bool length_not_specified);
-static text *text_overlay(text *txt1, text *txt2, int sp, int sl);
-static int  text_position(text *txt1, text *txt2, Oid collid);
+static int32 text_length(const text *txt);
+static text *text_catenate(const text *txt1, const text *txt2);
+static text *text_substring(const text *str, int32 start, int32 length, bool length_not_specified);
+static int  text_position(const text *txt1, const text *txt2, Oid collid);
 static void text_position_setup(text *txt1, text *txt2, Oid collid, TextPositionState *state);
 static bool text_position_next(TextPositionState *state);
 static char *text_position_next_internal(char *start_ptr, TextPositionState *state);
 static char *text_position_get_match_ptr(TextPositionState *state);
 static int  text_position_get_match_pos(TextPositionState *state);
-// static void text_position_cleanup(TextPositionState *state);
-// static void check_collation_set(Oid collid);
-static int  text_cmp(text *txt1, text *txt2, Oid collid);
+static void text_position_cleanup(TextPositionState *state);
+static void check_collation_set(Oid collid);
+// static int  text_cmp(text *txt1, text *txt2, Oid collid);
 static bytea *bytea_catenate(bytea *txt1, bytea *txt2);
 static bytea *bytea_substring(Datum str,
                 int S,
@@ -196,7 +227,6 @@ text_to_cstring(const text *txt)
   return result;
 }
 
-#if 0 /* NOT USED */
 /*
  * text_to_cstring_buffer
  *
@@ -218,15 +248,15 @@ text_to_cstring_buffer(const text *src, char *dst, size_t dst_len)
   if (dst_len > 0)
   {
     dst_len--;
-    if (dst_len >= src_len)
+    // MEOS
+    // if (dst_len >= src_len)
       dst_len = src_len;
-    else          /* ensure truncation is encoding-safe */
-      dst_len = pg_mbcliplen(VARDATA_ANY(src), src_len, dst_len);
+    // else          /* ensure truncation is encoding-safe */
+      // dst_len = pg_mbcliplen(VARDATA_ANY(src), src_len, dst_len);
     memcpy(dst, VARDATA_ANY(src), dst_len);
     dst[dst_len] = '\0';
   }
 }
-#endif /* NOT USED */
 
 /*****************************************************************************
  *   USER I/O ROUTINES                             *
@@ -255,7 +285,7 @@ text_in(const char *str)
  */
 
 char *
-text_out(text *txt)
+text_out(const text *txt)
 {
   return text_to_cstring(txt);
 }
@@ -269,9 +299,9 @@ text_out(text *txt)
  * @note Derived from PostgreSQL function @p textlen()
  */
 int32
-text_len(text *txt)
+text_len(const text *txt)
 {
-  return text_length(PointerGetDatum(txt));
+  return text_length(txt);
 }
 
 /*
@@ -284,17 +314,16 @@ text_len(text *txt)
  *  in some cases.
  */
 static int32
-text_length(Datum txt)
+text_length(const text *txt)
 {
   /* fastpath when max encoding length is one */
   // if (pg_database_encoding_max_length() == 1)
-    return (toast_raw_datum_size(txt) - VARHDRSZ);
+    // return (toast_raw_datum_size(txt) - VARHDRSZ);
+    return (VARSIZE(txt) - VARHDRSZ);
   // else
   // {
-    // text     *t = DatumGetTextP(txt);
-
-    // return (pg_mbstrlen_with_len(VARDATA_ANY(t),
-                       // VARSIZE_ANY_EXHDR(t)));
+    // return pg_mbstrlen_with_len(VARDATA_ANY(const text *),
+      // VARSIZE_ANY_EXHDR(const text *));
   // }
 }
 
@@ -305,10 +334,9 @@ text_length(Datum txt)
  * @note Derived from PostgreSQL function @p textoctetlen()
  */
 int32
-text_octetlen(text *txt)
+text_octetlen(const text *txt)
 {
-  /* We need not detoast the input at all */
-  return (toast_raw_datum_size(txt) - VARHDRSZ);
+  return (VARSIZE(txt) - VARHDRSZ);
 }
 
 /**
@@ -317,7 +345,7 @@ text_octetlen(text *txt)
  * @note Derived from PostgreSQL function @p textcat()
  */
 text *
-text_cat(text *txt1, text *txt2)
+text_cat(const text *txt1, const text *txt2)
 {
   return text_catenate(txt1, txt2);
 }
@@ -329,7 +357,7 @@ text_cat(text *txt1, text *txt2)
  * Arguments can be in short-header form, but not compressed or out-of-line
  */
 static text *
-text_catenate(text *txt1, text *txt2)
+text_catenate(const text *txt1, const text *txt2)
 {
   text     *result;
   int      len1,
@@ -383,39 +411,68 @@ charlen_to_bytelen(const char *p, int n)
 
     // for (s = p; n > 0; n--)
       // s += pg_mblen(s);
-
     // return s - p;
   // }
 }
 
-#if 0 /* NOT USED */
 /**
- * @ingroup meos_base_text
- * @brief Return a substring starting at the specified position
- * @param[in] txt String
- * @param[in] start Starting position (one-based)
- * @param[in] length String length
- * @details If the starting position is zero or less, then return from the
- * start of the string adjusting the length to be consistent with the 
- * "negative start" per SQL.If the length is less than zero, return the
- * remaining string.
- * @note Derived from PostgreSQL function @p text_substr()
+ * @brief Return the slice of a varlena specified by the arguments
+ * @note Derived from PostgreSQL function @p detoast_attr_slice
  */
-text *
-pg_text_substr(text *txt, int32 start, int32 length)
+struct varlena *
+varlena_slice(struct varlena *attr, int32 sliceoffset, int32 slicelength)
 {
-  return text_substring(PointerGetDatum(txt), start, length, false);
-}
+  struct varlena *preslice;
+  struct varlena *result;
+  char     *attrdata;
+  int32    slicelimit;
+  int32    attrsize;
 
-/**
- * @ingroup meos_base_text
- * @brief Return a substring starting at the specified position
- * @note Derived from PostgreSQL function @p text_substr_no_len()
- */
-text *
-text_substr_no_len(text *txt, int32 start)
-{
-  return text_substring(PointerGetDatum(txt), start, -1, true);
+  if (sliceoffset < 0)
+    elog(ERROR, "invalid sliceoffset: %d", sliceoffset);
+
+  /*
+   * Compute slicelimit = offset + length, or -1 if we must fetch all of the
+   * value.  In case of integer overflow, we must fetch all.
+   */
+  if (slicelength < 0)
+    slicelimit = -1;
+  else if (pg_add_s32_overflow(sliceoffset, slicelength, &slicelimit))
+    slicelength = slicelimit = -1;
+
+  preslice = attr;
+  assert(!VARATT_IS_EXTERNAL(preslice));
+
+  if (VARATT_IS_SHORT(preslice))
+  {
+    attrdata = VARDATA_SHORT(preslice);
+    attrsize = VARSIZE_SHORT(preslice) - VARHDRSZ_SHORT;
+  }
+  else
+  {
+    attrdata = VARDATA(preslice);
+    attrsize = VARSIZE(preslice) - VARHDRSZ;
+  }
+
+  /* slicing of datum for compressed cases and plain value */
+
+  if (sliceoffset >= attrsize)
+  {
+    sliceoffset = 0;
+    slicelength = 0;
+  }
+  else if (slicelength < 0 || slicelimit > attrsize)
+    slicelength = attrsize - sliceoffset;
+
+  result = (struct varlena *) palloc(slicelength + VARHDRSZ);
+  SET_VARSIZE(result, slicelength + VARHDRSZ);
+
+  memcpy(VARDATA(result), attrdata + sliceoffset, slicelength);
+
+  if (preslice != attr)
+    pfree(preslice);
+
+  return result;
 }
 
 /*
@@ -430,13 +487,15 @@ text_substr_no_len(text *txt, int32 start)
  *  The result is always a freshly palloc'd datum.
  */
 static text *
-text_substring(Datum str, int32 start, int32 length, bool length_not_specified)
+text_substring(const text *txt, int32 start, int32 length,
+  bool length_not_specified)
 {
-  int32    eml = pg_database_encoding_max_length();
-  int32    S = start;    /* start position */
+  // int32    eml = pg_database_encoding_max_length();
+  int32    eml = 1;
+  int32    S = start; /* start position */
   int32    S1;        /* adjusted start position */
   int32    L1;        /* adjusted substring length */
-  int32    E;        /* end position */
+  int32    E;         /* end position */
 
   /*
    * SQL99 says S can be zero or negative (which we don't document), but we
@@ -448,8 +507,7 @@ text_substring(Datum str, int32 start, int32 length, bool length_not_specified)
   /* life is easy if the encoding max length is 1 */
   if (eml == 1)
   {
-    if (length_not_specified)  /* special case - get length to end of
-                   * string */
+    if (length_not_specified)  /* special case - get length to end of string */
       L1 = -1;
     else if (length < 0)
     {
@@ -483,7 +541,7 @@ text_substring(Datum str, int32 start, int32 length, bool length_not_specified)
      * return a zero-length string -- DatumGetTextPSlice() will do that
      * for us.  We need only convert S1 to zero-based starting position.
      */
-    return DatumGetTextPSlice(str, S1 - 1, L1);
+    return varlena_slice(txt, S1 - 1, L1);
   }
   else if (eml > 1)
   {
@@ -509,8 +567,7 @@ text_substring(Datum str, int32 start, int32 length, bool length_not_specified)
      */
     slice_start = 0;
 
-    if (length_not_specified)  /* special case - get length to end of
-                   * string */
+    if (length_not_specified)  /* special case - get length to end of string */
       slice_size = L1 = -1;
     else if (length < 0)
     {
@@ -555,16 +612,12 @@ text_substring(Datum str, int32 start, int32 length, bool length_not_specified)
      * If we're working with an untoasted source, no need to do an extra
      * copying step.
      */
-    if (VARATT_IS_COMPRESSED(DatumGetPointer(str)) ||
-      VARATT_IS_EXTERNAL(DatumGetPointer(str)))
-      slice = DatumGetTextPSlice(str, slice_start, slice_size);
-    else
-      slice = (text *) DatumGetPointer(str);
+    slice = (text *) DatumGetPointer(txt);
 
     /* see if we got back an empty string */
     if (VARSIZE_ANY_EXHDR(slice) == 0)
     {
-      if (slice != (text *) DatumGetPointer(str))
+      if (slice != (text *) DatumGetPointer(txt))
         pfree(slice);
       return cstring_to_text("");
     }
@@ -579,7 +632,7 @@ text_substring(Datum str, int32 start, int32 length, bool length_not_specified)
      */
     if (S1 > slice_strlen)
     {
-      if (slice != (text *) DatumGetPointer(str))
+      if (slice != (text *) DatumGetPointer(txt))
         pfree(slice);
       return cstring_to_text("");
     }
@@ -614,7 +667,7 @@ text_substring(Datum str, int32 start, int32 length, bool length_not_specified)
     SET_VARSIZE(ret, VARHDRSZ + (p - s));
     memcpy(VARDATA(ret), s, (p - s));
 
-    if (slice != (text *) DatumGetPointer(str))
+    if (slice != (text *) DatumGetPointer(txt))
       pfree(slice);
 
     return ret;
@@ -625,35 +678,59 @@ text_substring(Datum str, int32 start, int32 length, bool length_not_specified)
   /* not reached: suppress compiler warning */
   return NULL;
 }
-#endif /* NOT USED */
+
+/**
+ * @ingroup meos_base_text
+ * @brief Return a substring starting at the specified position
+ * @param[in] txt String
+ * @param[in] start Starting position (one-based)
+ * @param[in] length String length
+ * @details If the starting position is zero or less, then return from the
+ * start of the string adjusting the length to be consistent with the 
+ * "negative start" per SQL. If the length is less than zero, return the
+ * remaining string.
+ * @note Derived from PostgreSQL function @p text_substr()
+ */
+ #if MEOS
+text *
+text_substr(const text *txt, int32 start, int32 length)
+{
+  return text_substring(txt, start, length, false);
+}
+#endif
+text *
+pg_text_substr(const text *txt, int32 start, int32 length)
+{
+  return text_substring(txt, start, length, false);
+}
+
+/**
+ * @ingroup meos_base_text
+ * @brief Return a substring starting at the specified position
+ * @note Derived from PostgreSQL function @p text_substr_no_len()
+ */
+#if MEOS
+text *
+text_substr_no_len(const text *txt, int32 start)
+{
+  return text_substring(txt, start, -1, true);
+}
+#endif
+text *
+pg_text_substr_no_len(const text *txt, int32 start)
+{
+  return text_substring(txt, start, -1, true);
+}
 
 /**
  * @ingroup meos_base_text
  * @brief Replace a specified substring of the first string with the second one
  * @details The SQL standard defines OVERLAY() in terms of substring and
  * concatenation. This code is a direct implementation of what the standard says.
- * @note Derived from PostgreSQL function @p textoverlay()
+ * @note Existing static PostgreSQL function
  */
 text *
-pg_text_overlay(text *txt1, text *txt2, int sp, int sl)
-{
-  return text_overlay(txt1, txt2, sp, sl);
-}
-
-/**
- * @ingroup meos_base_text
- * @brief Replace a specified substring of the first string with the second one
- * @note Derived from PostgreSQL function @p textoverlay_no_len()
- */
-text *
-text_overlay_no_len(text *txt1, text *txt2, int sp)
-{
-  int sl = text_length(PointerGetDatum(txt2));  /* defaults to length(txt2) */
-  return text_overlay(txt1, txt2, sp, sl);
-}
-
-static text *
-text_overlay(text *txt1, text *txt2, int sp, int sl)
+text_overlay(const text *txt1, const text *txt2, int sp, int sl)
 {
   text     *result;
   text     *s1;
@@ -684,18 +761,16 @@ text_overlay(text *txt1, text *txt2, int sp, int sl)
   return result;
 }
 
-#if 0 /* NOT USED */
 /**
  * @ingroup meos_base_text
- * @brief Return the position of the specified substring
- * @brief Implements the SQL POSITION() function.
- * Ref: A Guide To The SQL Standard, Date & Darwen, 1997
- * @note Derived from PostgreSQL function @p textpos()
+ * @brief Replace a specified substring of the first string with the second one
+ * @note Derived from PostgreSQL function @p textoverlay_no_len()
  */
-int32
-text_pos(text *txt, text *search_txt)
+text *
+text_overlay_no_len(const text *txt1, const text *txt2, int sp)
 {
-  return (int32) text_position(txt, search_txt, PG_GET_COLLATION());
+  int sl = text_length(PointerGetDatum(txt2));  /* defaults to length(txt2) */
+  return text_overlay(txt1, txt2, sp, sl);
 }
 
 /*
@@ -713,12 +788,12 @@ text_pos(text *txt, text *search_txt)
  *  functions.
  */
 static int
-text_position(text *txt1, text *txt2, Oid collid)
+text_position(const text *txt1, const text *txt2, Oid collid)
 {
   TextPositionState state;
-  int      result;
+  int result;
 
-  // check_collation_set(collid);
+  check_collation_set(collid);
 
   /* Empty needle always matches at position 1 */
   if (VARSIZE_ANY_EXHDR(txt2) < 1)
@@ -742,6 +817,18 @@ text_position(text *txt1, text *txt2, Oid collid)
   return result;
 }
 
+/**
+ * @ingroup meos_base_text
+ * @brief Return the position of the specified substring
+ * @brief Implements the SQL POSITION() function.
+ * Ref: A Guide To The SQL Standard, Date & Darwen, 1997
+ * @note Derived from PostgreSQL function @p textpos()
+ */
+int32
+text_pos(text *txt, text *search_txt)
+{
+  return (int32) text_position(txt, search_txt, PG_GET_COLLATION());
+}
 
 /*
  * text_position_setup, text_position_next, text_position_cleanup -
@@ -758,14 +845,14 @@ text_position(text *txt1, text *txt2, Oid collid)
  * NOTE: text_position_next skips over the matched portion.  For example,
  * searching for "xx" in "xxx" returns only one match, not two.
  */
-
 static void
-text_position_setup(text *txt1, text *txt2, Oid collid, TextPositionState *state)
+text_position_setup(text *txt1, text *txt2, Oid collid,
+  TextPositionState *state)
 {
-  int      len1 = VARSIZE_ANY_EXHDR(txt1);
-  int      len2 = VARSIZE_ANY_EXHDR(txt2);
+  int len1 = VARSIZE_ANY_EXHDR(txt1);
+  int len2 = VARSIZE_ANY_EXHDR(txt2);
 
-  // check_collation_set(collid);
+  check_collation_set(collid);
 
   // state->locale = pg_newlocale_from_collation(collid);
 
@@ -786,12 +873,12 @@ text_position_setup(text *txt1, text *txt2, Oid collid, TextPositionState *state
    * verify afterwards that the match we found is at a character boundary,
    * and continue the search if it was a false match.
    */
-  // if (pg_database_encoding_max_length() == 1)
+  if (pg_database_encoding_max_length() == 1)
     state->is_multibyte_char_in_char = false;
-  // else if (GetDatabaseEncoding() == PG_UTF8)
-    // state->is_multibyte_char_in_char = false;
-  // else
-    // state->is_multibyte_char_in_char = true;
+  else if (GetDatabaseEncoding() == PG_UTF8)
+    state->is_multibyte_char_in_char = false;
+  else
+    state->is_multibyte_char_in_char = true;
 
   state->str1 = VARDATA_ANY(txt1);
   state->str2 = VARDATA_ANY(txt2);
@@ -816,10 +903,10 @@ text_position_setup(text *txt1, text *txt2, Oid collid, TextPositionState *state
    */
   if (len1 >= len2 && len2 > 1 && state->locale->deterministic)
   {
-    int      searchlength = len1 - len2;
-    int      skiptablemask;
-    int      last;
-    int      i;
+    int searchlength = len1 - len2;
+    int skiptablemask;
+    int last;
+    int i;
     const char *str2 = state->str2;
 
     /*
@@ -870,6 +957,7 @@ text_position_setup(text *txt1, text *txt2, Oid collid, TextPositionState *state
     for (i = 0; i < last; i++)
       state->skiptable[(unsigned char) str2[i] & skiptablemask] = last - i;
   }
+  return;
 }
 
 /*
@@ -883,9 +971,9 @@ text_position_setup(text *txt1, text *txt2, Oid collid, TextPositionState *state
 static bool
 text_position_next(TextPositionState *state)
 {
-  int      needle_len = state->len2;
-  char     *start_ptr;
-  char     *matchptr;
+  int needle_len = state->len2;
+  char *start_ptr;
+  char *matchptr;
 
   if (needle_len <= 0)
     return false;      /* result for empty pattern */
@@ -948,9 +1036,9 @@ retry:
 static char *
 text_position_next_internal(char *start_ptr, TextPositionState *state)
 {
-  int      haystack_len = state->len1;
-  int      needle_len = state->len2;
-  int      skiptablemask = state->skiptablemask;
+  int haystack_len = state->len1;
+  int needle_len = state->len2;
+  int skiptablemask = state->skiptablemask;
   const char *haystack = state->str1;
   const char *needle = state->str2;
   const char *haystack_end = &haystack[haystack_len];
@@ -1060,7 +1148,7 @@ text_position_next_internal(char *start_ptr, TextPositionState *state)
     }
   }
 
-  return 0;          /* not found */
+  return NULL;          /* not found */
 }
 
 /*
@@ -1108,23 +1196,22 @@ text_position_cleanup(TextPositionState *state)
 {
   /* no cleanup needed */
 }
-#endif /* NOT USED */
 
-// static void
-// check_collation_set(Oid collid)
-// {
-/* MEOS */
-// #define InvalidOid ((Oid) 0)
+static void
+check_collation_set(Oid collid)
+{
+// /* MEOS */
+#define InvalidOid ((Oid) 0)
 
-  // if (!OidIsValid(collid))
-  // {
-    // /*
-     // * This typically means that the parser could not resolve a conflict
-     // * of implicit collations, so report it that way.
-     // */
-    // elog(ERROR, "could not determine which collation to use for string comparison");
-  // }
-// }
+  if (!OidIsValid(collid))
+  {
+    /*
+     * This typically means that the parser could not resolve a conflict
+     * of implicit collations, so report it that way.
+     */
+    elog(ERROR, "could not determine which collation to use for string comparison");
+  }
+}
 
 /*
  * varstr_cmp()
@@ -1142,13 +1229,12 @@ text_position_cleanup(TextPositionState *state)
 int
 varstr_cmp(const char *txt1, int len1, const char *txt2, int len2, Oid collid)
 {
-  int      result;
-  // pg_locale_t mylocale;
+  int result;
+  pg_locale_t mylocale;
 
-  // check_collation_set(collid);
+  check_collation_set(collid);
 
   // mylocale = pg_newlocale_from_collation(collid);
-
   // if (mylocale->collate_is_c)
   // {
     result = memcmp(txt1, txt2, Min(len1, len2));
@@ -1183,24 +1269,19 @@ varstr_cmp(const char *txt1, int len1, const char *txt2, int len2, Oid collid)
   return result;
 }
 
-/* text_cmp()
- * Internal comparison function for text strings.
- * Returns -1, 0 or 1
+/**
+ * @ingroup meos_base_text
+ * @brief Return -1, 0 or 1 depending on whether the first text is less than,
+ * equal to, or greater than the second one
+ * @note Existing static PostgreSQL function
  */
-static int
-text_cmp_internal(text *txt1, text *txt2, Oid collid)
+int
+text_cmp(const text *txt1, const text *txt2, Oid collid)
 {
-  char     *a1p,
-         *a2p;
-  int      len1,
-        len2;
-
-  a1p = VARDATA_ANY(txt1);
-  a2p = VARDATA_ANY(txt2);
-
-  len1 = VARSIZE_ANY_EXHDR(txt1);
-  len2 = VARSIZE_ANY_EXHDR(txt2);
-
+  char *a1p = VARDATA_ANY(txt1);
+  char *a2p = VARDATA_ANY(txt2);
+  int len1 = VARSIZE_ANY_EXHDR(txt1);
+  int len2 = VARSIZE_ANY_EXHDR(txt2);
   return varstr_cmp(a1p, len1, a2p, len2, collid);
 }
 
@@ -1210,23 +1291,17 @@ text_cmp_internal(text *txt1, text *txt2, Oid collid)
  * @note Derived from PostgreSQL function @p texteq()
  */
 bool
-text_eq(text *txt1, text *txt2)
+text_eq(const text *txt1, const text *txt2)
 {
   Oid collid = PG_GET_COLLATION();
-  // pg_locale_t mylocale = 0;
-  bool    result;
+  pg_locale_t mylocale = 0;
+  bool result;
 
-  // check_collation_set(collid);
+  check_collation_set(collid);
 
   // mylocale = pg_newlocale_from_collation(collid);
-
   // if (mylocale->deterministic)
   // {
-    // Datum    txt1 = PG_GETARG_DATUM(0);
-    // Datum    txt2 = PG_GETARG_DATUM(1);
-    // Size    len1,
-          // len2;
-
     // /*
      // * Since we only care about equality or not-equality, we can avoid all
      // * the expense of strcoll() here, and just do bitwise comparison.  In
@@ -1234,20 +1309,14 @@ text_eq(text *txt1, text *txt2)
      // * the lengths of the strings are unequal; which might save us from
      // * having to detoast one or both values.
      // */
-    // len1 = toast_raw_datum_size(txt1);
-    // len2 = toast_raw_datum_size(txt2);
+    // Size len1 = VARSIZE(txt1);
+    // Size len2 = VARSIZE(txt2);
     // if (len1 != len2)
       // result = false;
     // else
     // {
-      // text     *targ1 = DatumGetTextP(txt1);
-      // text     *targ2 = DatumGetTextP(txt2);
-
-      // result = (memcmp(VARDATA_ANY(targ1), VARDATA_ANY(targ2),
+      // result = (memcmp(VARDATA_ANY(txt1), VARDATA_ANY(txt2),
                // len1 - VARHDRSZ) == 0);
-
-      // PG_FREE_IF_COPY(targ1, 0);
-      // PG_FREE_IF_COPY(targ2, 1);
     // }
   // }
   // else
@@ -1264,47 +1333,32 @@ text_eq(text *txt1, text *txt2)
  * @note Derived from PostgreSQL function @p textne()
  */
 bool
-text_ne(text *txt1, text *txt2)
+text_ne(const text *txt1, const text *txt2)
 {
-  Oid      collid = PG_GET_COLLATION();
-  // pg_locale_t mylocale;
-  bool    result;
+  Oid collid = PG_GET_COLLATION();
+  pg_locale_t mylocale;
+  bool result;
 
-  // check_collation_set(collid);
+  check_collation_set(collid);
 
   // mylocale = pg_newlocale_from_collation(collid);
-
   // if (mylocale->deterministic)
   // {
-    // Datum    txt1 = PG_GETARG_DATUM(0);
-    // Datum    txt2 = PG_GETARG_DATUM(1);
-    // Size    len1,
-          // len2;
-
     // /* See comment in texteq() */
-    // len1 = toast_raw_datum_size(txt1);
-    // len2 = toast_raw_datum_size(txt2);
+    // Size len1 = VARSIZE(txt1);
+    // Size len2 = VARSIZE(txt2);
     // if (len1 != len2)
       // result = true;
     // else
     // {
-      // text     *targ1 = DatumGetTextP(txt1);
-      // text     *targ2 = DatumGetTextP(txt2);
-
-      // result = (memcmp(VARDATA_ANY(targ1), VARDATA_ANY(targ2),
+      // result = (memcmp(VARDATA_ANY(txt1), VARDATA_ANY(txt2),
                // len1 - VARHDRSZ) != 0);
-
-      // PG_FREE_IF_COPY(targ1, 0);
-      // PG_FREE_IF_COPY(targ2, 1);
     // }
   // }
   // else
   // {
-
     result = (text_cmp(txt1, txt2, collid) != 0);
-
   // }
-
   return result;
 }
 
@@ -1313,8 +1367,15 @@ text_ne(text *txt1, text *txt2)
  * @brief Return true if the first text is less than the second one
  * @note Derived from PostgreSQL function @p text_lt()
  */
+#if MEOS
 bool
-pg_text_lt(text *txt1, text *txt2)
+text_lt(const text *txt1, const text *txt2)
+{
+  return pg_text_lt(txt1, txt2);
+}
+#endif
+bool
+pg_text_lt(const text *txt1, const text *txt2)
 {
   return (text_cmp(txt1, txt2, PG_GET_COLLATION()) < 0);
 }
@@ -1324,8 +1385,15 @@ pg_text_lt(text *txt1, text *txt2)
  * @brief Return true if the first text is less than or equal to the second one
  * @note Derived from PostgreSQL function @p text_le()
  */
+#if MEOS
 bool
-pg_text_le(text *txt1, text *txt2)
+text_le(const text *txt1, const text *txt2)
+{
+  return pg_text_le(txt1, txt2);
+}
+#endif
+bool
+pg_text_le(const text *txt1, const text *txt2)
 {
   return (text_cmp(txt1, txt2, PG_GET_COLLATION()) <= 0);
 }
@@ -1335,8 +1403,15 @@ pg_text_le(text *txt1, text *txt2)
  * @brief Return true if the first text is greater than the second one
  * @note Derived from PostgreSQL function @p text_gt()
  */
+#if MEOS
 bool
-pg_text_gt(text *txt1, text *txt2)
+text_gt(const text *txt1, const text *txt2)
+{
+  return pg_text_gt(txt1, txt2);
+}
+#endif
+bool
+pg_text_gt(const text *txt1, const text *txt2)
 {
   return (text_cmp(txt1, txt2, PG_GET_COLLATION()) > 0);
 }
@@ -1347,61 +1422,75 @@ pg_text_gt(text *txt1, text *txt2)
  * one
  * @note Derived from PostgreSQL function @p text_ge()
  */
+#if MEOS
 bool
-pg_text_ge(text *txt1, text *txt2)
+text_ge(const text *txt1, const text *txt2)
+{
+  return pg_text_ge(txt1, txt2);
+}
+#endif
+bool
+pg_text_ge(const text *txt1, const text *txt2)
 {
   return (text_cmp(txt1, txt2, PG_GET_COLLATION()) >= 0);
 }
 
-#if 0 /* NOT USED */
 /**
  * @ingroup meos_base_text
  * @brief Return true if the first text starts with the second one
  * @note Derived from PostgreSQL function @p text_starts_with()
  */
+#if MEOS
 bool
-pg_text_starts_with(text *txt1, text *txt2)
+text_starts_with(const text *txt1, const text *txt2)
 {
-  Datum    txt1d = PointerGetDatum(txt1);
-  Datum    txt2d = PointerGetDatum(txt1);
-  Oid      collid = PG_GET_COLLATION();
-  // pg_locale_t mylocale;
-  bool    result;
+  return pg_text_starts_with(txt1, txt2);
+}
+#endif
+bool
+pg_text_starts_with(const text *txt1, const text *txt2)
+{
+  Oid collid = PG_GET_COLLATION();
+  pg_locale_t mylocale;
+  bool result;
 
-  // check_collation_set(collid);
+  check_collation_set(collid);
 
   // mylocale = pg_newlocale_from_collation(collid);
-
   // if (!mylocale->deterministic)
-    // ereport(ERROR,
-        // (errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
+  // {
+    // elog(ERROR,
       // "nondeterministic collations are not supported for substring searches"));
+  // }
 
-  Size len1 = toast_raw_datum_size(txt1d);
-  Size len2 = toast_raw_datum_size(txt2d);
+  Size len1 = VARSIZE(txt1);
+  Size len2 = VARSIZE(txt2);
   if (len2 > len1)
     result = false;
   else
   {
-    text     *targ1 = text_substring(txt1d, 1, len2, false);
-    text     *targ2 = DatumGetTextP(txt2d);
-
-    result = (memcmp(VARDATA_ANY(targ1), VARDATA_ANY(targ2),
-             VARSIZE_ANY_EXHDR(targ2)) == 0);
-
+    text *targ1 = text_substring(txt1, 1, len2, false);
+    result = (memcmp(VARDATA_ANY(targ1), VARDATA_ANY(txt2),
+      VARSIZE_ANY_EXHDR(txt2)) == 0);
+    pfree(targ1);
   }
-
   return result;
 }
-#endif /* NOT USED */
 
 /**
  * @ingroup meos_base_text
  * @brief Return the larger from two texts
  * @note Derived from PostgreSQL function @p text_larger()
  */
+#if MEOS
 text *
-pg_text_larger(text *txt1, text *txt2)
+text_larger(const text *txt1, const text *txt2)
+{
+  return pg_text_larger(txt1, txt2);
+}
+#endif
+text *
+pg_text_larger(const text *txt1, const text *txt2)
 {
   return ((text_cmp(txt1, txt2, PG_GET_COLLATION()) > 0) ? txt1 : txt2);
 }
@@ -1411,8 +1500,15 @@ pg_text_larger(text *txt1, text *txt2)
  * @brief Return the smaller from two texts
  * @note Derived from PostgreSQL function @p text_smaller()
  */
+#if MEOS
 text *
-pg_text_smaller(text *txt1, text *txt2)
+text_smaller(const text *txt1, const text *txt2)
+{
+  return pg_text_smaller(txt1, txt2);
+}
+#endif
+text *
+pg_text_smaller(const text *txt1, const text *txt2)
 {
   return ((text_cmp(txt1, txt2, PG_GET_COLLATION()) < 0) ? txt1 : txt2);
 }
@@ -1424,9 +1520,8 @@ pg_text_smaller(text *txt1, text *txt2)
  * support functions 1 and 2 with "C" collation are assumed to be
  * compatible with these!
  */
-
 static int
-internal_text_pattern_compare(text *txt1, text *txt2)
+internal_text_pattern_compare(const text *txt1, const text *txt2)
 {
   int      result;
   int      len1,
@@ -1451,8 +1546,15 @@ internal_text_pattern_compare(text *txt1, text *txt2)
  * @brief Return true if the first text is less than the second one
  * @note Derived from PostgreSQL function @p text_pattern_lt()
  */
+#if MEOS
 bool
-pg_text_pattern_lt(text *txt1, text *txt2)
+text_pattern_lt(const text *txt1, const text *txt2)
+{
+  return pg_text_pattern_lt(txt1, txt2);
+}
+#endif
+bool
+pg_text_pattern_lt(const text *txt1, const text *txt2)
 {
   return (internal_text_pattern_compare(txt1, txt2) < 0);
 }
@@ -1462,8 +1564,15 @@ pg_text_pattern_lt(text *txt1, text *txt2)
  * @brief Return true if first text text is less than or equal to the second one
  * @note Derived from PostgreSQL function @p text_pattern_le()
  */
-Datum
-pg_text_pattern_le(text *txt1, text *txt2)
+#if MEOS
+bool
+text_pattern_le(const text *txt1, const text *txt2)
+{
+  return pg_text_pattern_le(txt1, txt2);
+}
+#endif
+bool
+pg_text_pattern_le(const text *txt1, const text *txt2)
 {
   return (internal_text_pattern_compare(txt1, txt2) <= 0);
 }
@@ -1473,8 +1582,15 @@ pg_text_pattern_le(text *txt1, text *txt2)
  * @brief Return true if first text text is greater than or equal to the second one
  * @note Derived from PostgreSQL function @p text_pattern_ge()
  */
-Datum
-pg_text_pattern_ge(text *txt1, text *txt2)
+#if MEOS
+bool
+text_pattern_ge(const text *txt1, const text *txt2)
+{
+  return pg_text_pattern_ge(txt1, txt2);
+}
+#endif
+bool
+pg_text_pattern_ge(const text *txt1, const text *txt2)
 {
   return (internal_text_pattern_compare(txt1, txt2) >= 0);
 }
@@ -1484,8 +1600,15 @@ pg_text_pattern_ge(text *txt1, text *txt2)
  * @brief Return true if first text text is greater than the second one
  * @note Derived from PostgreSQL function @p text_pattern_gt()
  */
-Datum
-pg_text_pattern_gt(text *txt1, text *txt2)
+#if MEOS
+bool
+text_pattern_gt(const text *txt1, const text *txt2)
+{
+  return pg_text_pattern_gt(txt1, txt2);
+}
+#endif
+bool
+pg_text_pattern_gt(const text *txt1, const text *txt2)
 {
   return (internal_text_pattern_compare(txt1, txt2) > 0);
 }
@@ -1502,7 +1625,6 @@ appendStringInfoText(StringInfo str, const text *t)
   appendBinaryStringInfo(str, VARDATA_ANY(t), VARSIZE_ANY_EXHDR(t));
 }
 
-#if 0 /* NOT USED */
 /**
  * @ingroup meos_base_text
  * @brief Return all occurrences of 'old_sub_str' in 'orig_str'
@@ -1618,15 +1740,15 @@ check_replace_text_has_escape(const text *replace_text)
  * @note Derived from PostgreSQL function @p split_part()
  */
 text *
-text_split_part(text *inputstring, text *fldsep, int fldnum)
+text_split_part(const text *txt, text *sep, int fldnum)
 {
-  int      inputstring_len;
-  int      fldsep_len;
+  int txt_len;
+  int sep_len;
   TextPositionState state;
-  char     *start_ptr;
-  char     *end_ptr;
-  text     *result_text;
-  bool    found;
+  char *start_ptr;
+  char *end_ptr;
+  text *result;
+  bool found;
 
   /* field number is 1 based */
   if (fldnum == 0)
@@ -1635,35 +1757,33 @@ text_split_part(text *inputstring, text *fldsep, int fldnum)
     return NULL;
   }
 
-  inputstring_len = VARSIZE_ANY_EXHDR(inputstring);
-  fldsep_len = VARSIZE_ANY_EXHDR(fldsep);
+  txt_len = VARSIZE_ANY_EXHDR(txt);
+  sep_len = VARSIZE_ANY_EXHDR(sep);
 
   /* return empty string for empty input string */
-  if (inputstring_len < 1)
-    return (cstring_to_text(""));
+  if (txt_len < 1)
+    return cstring_to_text("");
 
   /* handle empty field separator */
-  if (fldsep_len < 1)
+  if (sep_len < 1)
   {
     /* if first or last field, return input string, else empty string */
     if (fldnum == 1 || fldnum == -1)
-      return (inputstring);
+      return (txt);
     else
-      return (cstring_to_text(""));
+      return cstring_to_text("");
   }
 
   /* find the first field separator */
-  text_position_setup(inputstring, fldsep, PG_GET_COLLATION(), &state);
-
+  text_position_setup(txt, sep, PG_GET_COLLATION(), &state);
   found = text_position_next(&state);
-
-  /* special case if fldsep not found at all */
-  if (!found)
+  /* special case if sep not found at all */
+  if (! found)
   {
     text_position_cleanup(&state);
     /* if first or last field, return input string, else empty string */
     if (fldnum == 1 || fldnum == -1)
-      return (inputstring);
+      return (txt);
     else
       return (cstring_to_text(""));
   }
@@ -1674,8 +1794,8 @@ text_split_part(text *inputstring, text *fldsep, int fldnum)
    */
   if (fldnum < 0)
   {
-    /* we found a fldsep, so there are at least two fields */
-    int      numfields = 2;
+    /* we found a sep, so there are at least two fields */
+    int numfields = 2;
 
     while (text_position_next(&state))
       numfields++;
@@ -1684,7 +1804,7 @@ text_split_part(text *inputstring, text *fldsep, int fldnum)
     if (fldnum == -1)
     {
       start_ptr = text_position_get_match_ptr(&state) + state.last_match_len;
-      end_ptr = VARDATA_ANY(inputstring) + inputstring_len;
+      end_ptr = VARDATA_ANY(txt) + txt_len;
       text_position_cleanup(&state);
       return (cstring_to_text_with_len(start_ptr, end_ptr - start_ptr));
     }
@@ -1706,7 +1826,7 @@ text_split_part(text *inputstring, text *fldsep, int fldnum)
   }
 
   /* identify bounds of first field */
-  start_ptr = VARDATA_ANY(inputstring);
+  start_ptr = VARDATA_ANY(txt);
   end_ptr = text_position_get_match_ptr(&state);
 
   while (found && --fldnum > 0)
@@ -1726,23 +1846,22 @@ text_split_part(text *inputstring, text *fldsep, int fldnum)
     /* if last field requested, return it, else empty string */
     if (fldnum == 1)
     {
-      int      last_len = start_ptr - VARDATA_ANY(inputstring);
+      int last_len = start_ptr - VARDATA_ANY(txt);
 
-      result_text = cstring_to_text_with_len(start_ptr,
-                           inputstring_len - last_len);
+      result = cstring_to_text_with_len(start_ptr,
+        txt_len - last_len);
     }
     else
-      result_text = cstring_to_text("");
+      result = cstring_to_text("");
   }
   else
   {
     /* non-last field requested */
-    result_text = cstring_to_text_with_len(start_ptr, end_ptr - start_ptr);
+    result = cstring_to_text_with_len(start_ptr, end_ptr - start_ptr);
   }
 
-  return (result_text);
+  return result;
 }
-#endif /* NOT USED */
 
 /*
  * Workhorse for to_bin, to_oct, and to_hex.  Note that base must be > 1 and <=
@@ -1848,91 +1967,53 @@ int64_to_hex(int64 num)
   return convert_to_base(value, 16);
 }
 
-#if 0 /* NOT USED */
-
 /*
- * Implementation of both concat() and concat_ws().
- *
- * sepstr is the separator string to place between values.
- * argidx identifies the first argument to concatenate (counting from zero);
- * note that this must be constant across any one series of calls.
- *
- * Returns NULL if result should be NULL, else text value.
+ * common code for array_to_text and array_to_text_null functions
  */
 static text *
-concat_internal(const char *sepstr, int argidx,
-        FunctionCallInfo fcinfo)
+textarr_to_text(text **textarr, int count, const char *sep,
+  const char *null_string)
 {
-  text     *result;
-  StringInfoData str;
-  FmgrInfo   *foutcache;
-  bool    first_arg = true;
-  int      i;
+  /* if there are no elements, return an empty string */
+  if (count == 0)
+    return cstring_to_text_with_len("", 0);
 
-  /*
-   * concat(VARIADIC some-array) is essentially equivalent to
-   * array_to_text(), ie concat the array elements with the given separator.
-   * So we just pass the case off to that code.
-   */
-  if (get_fn_expr_variadic(fcinfo->flinfo))
+  StringInfoData buf;
+  initStringInfo(&buf);
+  for (int i = 0; i < count; i++)
   {
-    ArrayType  *arr;
+    text *itemvalue = textarr[i];
+    char *value;
+    bool printed = false;
 
-    /* Should have just the one argument */
-    Assert(argidx == PG_NARGS() - 1);
-
-    /* concat(VARIADIC NULL) is defined as NULL */
-    if (PG_ARGISNULL(argidx))
-      return NULL;
-
-    /*
-     * Non-null argument had better be an array.  We assume that any call
-     * context that could let get_fn_expr_variadic return true will have
-     * checked that a VARIADIC-labeled parameter actually is an array.  So
-     * it should be okay to just Assert that it's an array rather than
-     * doing a full-fledged error check.
-     */
-    Assert(OidIsValid(get_base_element_type(get_fn_expr_argtype(fcinfo->flinfo, argidx))));
-
-    /* OK, safe to fetch the array value */
-    arr = PG_GETARG_ARRAYTYPE_P(argidx);
-
-    /*
-     * And serialize the array.  We tell array_to_text to ignore null
-     * elements, which matches the behavior of the loop below.
-     */
-    return array_to_text_internal(fcinfo, arr, sepstr, NULL);
-  }
-
-  /* Normal case without explicit VARIADIC marker */
-  initStringInfo(&str);
-
-  /* Get output function info, building it if first time through */
-  foutcache = (FmgrInfo *) fcinfo->flinfo->fn_extra;
-  if (foutcache == NULL)
-    foutcache = build_concat_foutcache(fcinfo, argidx);
-
-  for (i = argidx; i < PG_NARGS(); i++)
-  {
-    if (!PG_ARGISNULL(i))
+    /* Get source element, checking for NULL */
+    if (! itemvalue)
     {
-      Datum    value = PG_GETARG_DATUM(i);
-
-      /* add separator if appropriate */
-      if (first_arg)
-        first_arg = false;
+      /* if null_string is NULL, we just ignore null elements */
+      if (null_string != NULL)
+      {
+        if (printed)
+          appendStringInfo(&buf, "%s%s", sep, null_string);
+        else
+          appendStringInfoString(&buf, null_string);
+        printed = true;
+      }
+    }
+    else
+    {
+      value = text_to_cstring(itemvalue);
+      if (printed)
+        appendStringInfo(&buf, "%s%s", sep, value);
       else
-        appendStringInfoString(&str, sepstr);
+        appendStringInfoString(&buf, value);
+      printed = true;
 
-      /* call the appropriate type output function, append the result */
-      appendStringInfoString(&str,
-                   OutputFunctionCall(&foutcache[i], value));
+      char *p = att_addlength_pointer(p, -1, p);
+      p = (char *) SHORTALIGN(p);
     }
   }
-
-  result = cstring_to_text_with_len(str.data, str.len);
-  pfree(str.data);
-
+  text *result = cstring_to_text_with_len(buf.data, buf.len);
+  pfree(buf.data);
   return result;
 }
 
@@ -1941,14 +2022,17 @@ concat_internal(const char *sepstr, int argidx,
  * @brief Concatenate all arguments
  * @note Derived from PostgreSQL function @p text_concat()
  */
-
+#if MEOS
 text *
-pg_text_concat(PG_FUNCTION_ARGS)
+text_concat(text **textarr, int count)
 {
-  text *result = concat_internal("", 0, fcinfo);
-  if (result == NULL)
-    PG_RETURN_NULL();
-  return result;
+  return textarr_to_text(textarr, count, "", "");
+}
+#endif
+text *
+pg_text_concat(text **textarr, int count)
+{
+  return textarr_to_text(textarr, count, "", "");
 }
 
 /**
@@ -1957,16 +2041,20 @@ pg_text_concat(PG_FUNCTION_ARGS)
  * parameter is used as the separator.
  * @note Derived from PostgreSQL function @p text_concat_ws()
  */
+#if MEOS
 text *
-pg_text_concat_ws(text *txt)
+text_concat_ws(text **textarr, int count, const text *sep)
 {
-  text *result;
-
-  char *sep = text_to_cstring(txt);
-
-  result = concat_internal(sep, 1, fcinfo);
-  if (result == NULL)
-    PG_RETURN_NULL();
+  return pg_text_concat_ws(textarr, count, sep);
+}
+#endif
+text *
+pg_text_concat_ws(text **textarr, int count, const text *sep)
+{
+  assert(sep);
+  char *sepstr = text_to_cstring(sep);
+  text *result = textarr_to_text(textarr, count, sepstr, "");
+  pfree(sep);
   return result;
 }
 
@@ -1976,21 +2064,28 @@ pg_text_concat_ws(text *txt)
  * return all but the last |n| characters.
  * @note Derived from PostgreSQL function @p text_left()
  */
+#if MEOS
 text *
-pg_text_left(text *txt, int n)
+text_left(const text *txt, int n)
+{
+  return pg_text_left(txt, n);
+}
+#endif
+text *
+pg_text_left(const text *txt, int n)
 {
   if (n < 0)
   {
     const char *p = VARDATA_ANY(txt);
-    int      len = VARSIZE_ANY_EXHDR(txt);
-    int      rlen;
+    int len = VARSIZE_ANY_EXHDR(txt);
+    int rlen;
 
     n = pg_mbstrlen_with_len(p, len) + n;
     rlen = pg_mbcharcliplen(p, len, n);
-    return cstring_to_text_with_len(p, rlen));
+    return cstring_to_text_with_len(p, rlen);
   }
   else
-    return text_substring(PG_GETARG_DATUM(0), 1, n, false);
+    return text_substring(txt, 1, n, false);
 }
 
 /**
@@ -1999,12 +2094,19 @@ pg_text_left(text *txt, int n)
  * return all but first |n| characters.
  * @note Derived from PostgreSQL function @p text_right()
  */
+#if MEOS
+text *
+text_right(text *txt, int n)
+{
+  return pg_text_right(txt, n);
+}
+#endif
 text *
 pg_text_right(text *txt, int n)
 {
   const char *p = VARDATA_ANY(txt);
-  int      len = VARSIZE_ANY_EXHDR(txt);
-  int      off;
+  int len = VARSIZE_ANY_EXHDR(txt);
+  int off;
 
   if (n < 0)
     n = -n;
@@ -2015,15 +2117,20 @@ pg_text_right(text *txt, int n)
   return cstring_to_text_with_len(p + off, len - off);
 }
 
-#endif 0 /* NOT USED */
-
 /**
  * @ingroup meos_base_text
  * @brief Return a text reversed
  * @note Derived from PostgreSQL function @p text_reverse()
  */
-Datum
-pg_text_reverse(text *txt)
+#if MEOS
+text *
+text_reverse(const text *txt)
+{
+  return pg_text_reverse(txt);
+}
+#endif
+text *
+pg_text_reverse(const text *txt)
 {
   const char *p = VARDATA_ANY(txt);
   int      len = VARSIZE_ANY_EXHDR(txt);
@@ -2059,7 +2166,6 @@ pg_text_reverse(text *txt)
 }
 
 #if 0 /* NOT USED */
-
 /*
  * Support macros for text_format()
  */
@@ -2078,95 +2184,27 @@ pg_text_reverse(text *txt)
  * @note Derived from PostgreSQL function @p text_format()
  */
 text *
-pg_text_format(PG_FUNCTION_ARGS)
+pg_text_format(Datum *elements, int nitems, const text *fmt)
 {
-  text     *fmt;
-  StringInfoData str;
-  const char *cp;
-  const char *start_ptr;
-  const char *end_ptr;
-  text     *result;
-  int      arg;
-  bool    funcvariadic;
-  int      nargs;
-  Datum     *elements = NULL;
-  bool     *nulls = NULL;
-  Oid      element_type = InvalidOid;
-  Oid      prev_type = InvalidOid;
-  Oid      prev_width_type = InvalidOid;
-  FmgrInfo  typoutputfinfo;
-  FmgrInfo  typoutputinfo_width;
-
   /* When format string is null, immediately return null */
-  if (PG_ARGISNULL(0))
-    PG_RETURN_NULL();
+  if (! fmt)
+    return NULL;
 
-  /* If argument is marked VARIADIC, expand array into elements */
-  if (get_fn_expr_variadic(fcinfo->flinfo))
-  {
-    ArrayType  *arr;
-    int16    elmlen;
-    bool    elmbyval;
-    char    elmalign;
-    int      nitems;
-
-    /* Should have just the one argument */
-    Assert(PG_NARGS() == 2);
-
-    /* If argument is NULL, we treat it as zero-length array */
-    if (PG_ARGISNULL(1))
-      nitems = 0;
-    else
-    {
-      /*
-       * Non-null argument had better be an array.  We assume that any
-       * call context that could let get_fn_expr_variadic return true
-       * will have checked that a VARIADIC-labeled parameter actually is
-       * an array.  So it should be okay to just Assert that it's an
-       * array rather than doing a full-fledged error check.
-       */
-      Assert(OidIsValid(get_base_element_type(get_fn_expr_argtype(fcinfo->flinfo, 1))));
-
-      /* OK, safe to fetch the array value */
-      arr = PG_GETARG_ARRAYTYPE_P(1);
-
-      /* Get info about array element type */
-      element_type = ARR_ELEMTYPE(arr);
-      get_typlenbyvalalign(element_type,
-                 &elmlen, &elmbyval, &elmalign);
-
-      /* Extract all array elements */
-      deconstruct_array(arr, element_type, elmlen, elmbyval, elmalign,
-                &elements, &nulls, &nitems);
-    }
-
-    nargs = nitems + 1;
-    funcvariadic = true;
-  }
-  else
-  {
-    /* Non-variadic case, we'll process the arguments individually */
-    nargs = PG_NARGS();
-    funcvariadic = false;
-  }
+  int nargs = nitems + 1;
 
   /* Setup for main loop. */
-  fmt = PG_GETARG_TEXT_PP(0);
-  start_ptr = VARDATA_ANY(fmt);
-  end_ptr = start_ptr + VARSIZE_ANY_EXHDR(fmt);
+  const char *start_ptr = VARDATA_ANY(fmt);
+  const char *end_ptr = start_ptr + VARSIZE_ANY_EXHDR(fmt);
+  StringInfoData str;
   initStringInfo(&str);
-  arg = 1;          /* next argument position to print */
+  int arg = 1;          /* next argument position to print */
 
   /* Scan format string, looking for conversion specifiers. */
-  for (cp = start_ptr; cp < end_ptr; cp++)
+  for (const char *cp = start_ptr; cp < end_ptr; cp++)
   {
-    int      argpos;
-    int      widthpos;
-    int      flags;
-    int      width;
-    Datum    value;
-    bool    isNull;
-    Oid      typid;
+    Oid element_type = InvalidOid;
+    Oid prev_type = InvalidOid;
+    Oid prev_width_type = InvalidOid;
 
     /*
      * If it's not the start of a conversion specifier, just copy it to
@@ -2188,9 +2226,9 @@ pg_text_format(PG_FUNCTION_ARGS)
     }
 
     /* Parse the optional portions of the format specifier */
-    cp = text_format_parse_format(cp, end_ptr,
-                    &argpos, &widthpos,
-                    &flags, &width);
+    int argpos, widthpos, flags, width;
+    cp = text_format_parse_format(cp, end_ptr, &argpos, &widthpos, &flags,
+      &width);
 
     /*
      * Next we should see the main conversion specifier.  Whether or not
@@ -2204,6 +2242,7 @@ pg_text_format(PG_FUNCTION_ARGS)
     {
       elog(ERROR, "unrecognized format() type specifier \"%.*s\"",
         pg_mblen(cp), cp);
+      return NULL;
     }
 
     /* If indirect width was specified, get its value */
@@ -2215,23 +2254,18 @@ pg_text_format(PG_FUNCTION_ARGS)
       if (arg >= nargs)
       {
         elog(ERROR, "too few arguments for format()");
+        return NULL;
       }
 
       /* Get the value and type of the selected argument */
-      if (!funcvariadic)
-      {
-        value = PG_GETARG_DATUM(arg);
-        isNull = PG_ARGISNULL(arg);
-        typid = get_fn_expr_argtype(fcinfo->flinfo, arg);
-      }
-      else
-      {
-        value = elements[arg - 1];
-        isNull = nulls[arg - 1];
-        typid = element_type;
-      }
+      Datum value = elements[arg - 1];
+      bool isNull = (elements[arg - 1] == NULL);
+      Oid typid = element_type;
       if (!OidIsValid(typid))
+      {
         elog(ERROR, "could not determine data type of format() input");
+        return NULL;
+      }
 
       arg++;
 
@@ -2245,23 +2279,18 @@ pg_text_format(PG_FUNCTION_ARGS)
       else
       {
         /* For less-usual datatypes, convert to text then to int */
-        char     *str;
-
         if (typid != prev_width_type)
         {
-          Oid      typoutputfunc;
-          bool    typIsVarlena;
-
+          Oid typoutputfunc;
+          bool typIsVarlena;
           getTypeOutputInfo(typid, &typoutputfunc, &typIsVarlena);
           fmgr_info(typoutputfunc, &typoutputinfo_width);
           prev_width_type = typid;
         }
 
-        str = OutputFunctionCall(&typoutputinfo_width, value);
-
+        char *str = OutputFunctionCall(&typoutputinfo_width, value);
         /* pg_strtoint32 will complain about bad data or overflow */
         width = pg_strtoint32(str);
-
         pfree(str);
       }
     }
@@ -2272,23 +2301,18 @@ pg_text_format(PG_FUNCTION_ARGS)
     if (arg >= nargs)
     {
       elog(ERROR, "too few arguments for format()");
+      return NULL;
     }
 
     /* Get the value and type of the selected argument */
-    if (!funcvariadic)
-    {
-      value = PG_GETARG_DATUM(arg);
-      isNull = PG_ARGISNULL(arg);
-      typid = get_fn_expr_argtype(fcinfo->flinfo, arg);
-    }
-    else
-    {
-      value = elements[arg - 1];
-      isNull = nulls[arg - 1];
-      typid = element_type;
-    }
+    value = elements[arg - 1];
+    isNull = nulls[arg - 1];
+    typid = element_type;
     if (!OidIsValid(typid))
+    {
       elog(ERROR, "could not determine data type of format() input");
+      return NULL;
+    }
 
     arg++;
 
@@ -2315,15 +2339,14 @@ pg_text_format(PG_FUNCTION_ARGS)
       case 's':
       case 'I':
       case 'L':
-        text_format_string_conversion(&str, *cp, &typoutputfinfo,
-                        value, isNull,
-                        flags, width);
+        text_format_string_conversion(&str, *cp, &typoutputfinfo, value,
+          isNull, flags, width);
         break;
       default:
         /* should not get here, because of previous check */
         elog(ERROR, "unrecognized format() type specifier \"%.*s\"",
           pg_mblen(cp), cp);
-        break;
+        return NULL;
     }
   }
 
@@ -2334,7 +2357,7 @@ pg_text_format(PG_FUNCTION_ARGS)
     pfree(nulls);
 
   /* Generate results. */
-  result = cstring_to_text_with_len(str.data, str.len);
+  text *result = cstring_to_text_with_len(str.data, str.len);
   pfree(str.data);
 
   return result;
@@ -2402,11 +2425,10 @@ text_format_parse_digits(const char **ptr, const char *end_ptr, int *value)
  */
 static const char *
 text_format_parse_format(const char *start_ptr, const char *end_ptr,
-             int *argpos, int *widthpos,
-             int *flags, int *width)
+  int *argpos, int *widthpos, int *flags, int *width)
 {
   const char *cp = start_ptr;
-  int      n;
+  int n;
 
   /* set defaults for output parameters */
   *argpos = -1;
@@ -2484,12 +2506,8 @@ text_format_parse_format(const char *start_ptr, const char *end_ptr,
  */
 static void
 text_format_string_conversion(StringInfo buf, char conversion,
-                FmgrInfo *typOutputInfo,
-                Datum value, bool isNull,
-                int flags, int width)
+  FmgrInfo *typOutputInfo, Datum value, bool isNull, int flags, int width)
 {
-  char     *str;
-
   /* Handle NULL arguments before trying to stringify the value. */
   if (isNull)
   {
@@ -2503,7 +2521,7 @@ text_format_string_conversion(StringInfo buf, char conversion,
   }
 
   /* Stringify. */
-  str = OutputFunctionCall(typOutputInfo, value);
+  char *str = OutputFunctionCall(typOutputInfo, value);
 
   /* Escape. */
   if (conversion == 'I')
@@ -2513,8 +2531,7 @@ text_format_string_conversion(StringInfo buf, char conversion,
   }
   else if (conversion == 'L')
   {
-    char     *qstr = quote_literal_cstr(str);
-
+    char *qstr = quote_literal_cstr(str);
     text_format_append_string(buf, qstr, flags, width);
     /* quote_literal_cstr() always allocates a new string */
     pfree(qstr);
@@ -2532,10 +2549,10 @@ text_format_string_conversion(StringInfo buf, char conversion,
  */
 static void
 text_format_append_string(StringInfo buf, const char *str,
-              int flags, int width)
+ int flags, int width)
 {
-  bool    align_to_left = false;
-  int      len;
+  bool align_to_left = false;
+  int len;
 
   /* fast path for typical easy case */
   if (width == 0)
@@ -2576,120 +2593,7 @@ text_format_append_string(StringInfo buf, const char *str,
   }
 }
 
-/**
- * @ingroup meos_base_text
- * @brief Nonvariadic wrapper for text_format function
- * @note Derived from PostgreSQL function @p text_format_nv()
- */
-Datum
-pg_text_format_nv(PG_FUNCTION_ARGS)
-{
-  return text_format(fcinfo);
-}
-
-/*
- * Helper function for Levenshtein distance functions. Faster than memcmp(),
- * for this use case.
- */
-static inline bool
-rest_of_char_same(const char *s1, const char *s2, int len)
-{
-  while (len > 0)
-  {
-    len--;
-    if (s1[len] != s2[len])
-      return false;
-  }
-  return true;
-}
-
-/* Expand each Levenshtein distance variant */
-#include "levenshtein.c"
-#define LEVENSHTEIN_LESS_EQUAL
-#include "levenshtein.c"
-
-
-/*
- * The following *ClosestMatch() functions can be used to determine whether a
- * user-provided string resembles any known valid values, which is useful for
- * providing hints in log messages, among other things.  Use these functions
- * like so:
- *
- *    initClosestMatch(&state, source_string, max_distance);
- *
- *    for (int i = 0; i < num_valid_strings; i++)
- *      updateClosestMatch(&state, valid_strings[i]);
- *
- *    closestMatch = getClosestMatch(&state);
- */
-
-/*
- * Initialize the given state with the source string and maximum Levenshtein
- * distance to consider.
- */
-void
-initClosestMatch(ClosestMatchState *state, const char *source, int max_d)
-{
-  Assert(state);
-  Assert(max_d >= 0);
-
-  state->source = source;
-  state->min_d = -1;
-  state->max_d = max_d;
-  state->match = NULL;
-}
-
-/*
- * If the candidate string is a closer match than the current one saved (or
- * there is no match saved), save it as the closest match.
- *
- * If the source or candidate string is NULL, empty, or too long, this function
- * takes no action.  Likewise, if the Levenshtein distance exceeds the maximum
- * allowed or more than half the characters are different, no action is taken.
- */
-void
-updateClosestMatch(ClosestMatchState *state, const char *candidate)
-{
-  int      dist;
-
-  Assert(state);
-
-  if (state->source == NULL || state->source[0] == '\0' ||
-    candidate == NULL || candidate[0] == '\0')
-    return;
-
-  /*
-   * To avoid ERROR-ing, we check the lengths here instead of setting
-   * 'trusted' to false in the call to varstr_levenshtein_less_equal().
-   */
-  if (strlen(state->source) > MAX_LEVENSHTEIN_STRLEN ||
-    strlen(candidate) > MAX_LEVENSHTEIN_STRLEN)
-    return;
-
-  dist = varstr_levenshtein_less_equal(state->source, strlen(state->source),
-                     candidate, strlen(candidate), 1, 1, 1,
-                     state->max_d, true);
-  if (dist <= state->max_d &&
-    dist <= strlen(state->source) / 2 &&
-    (state->min_d == -1 || dist < state->min_d))
-  {
-    state->min_d = dist;
-    state->match = candidate;
-  }
-}
-
-/*
- * Return the closest match.  If no suitable candidates were provided via
- * updateClosestMatch(), return NULL.
- */
-const char *
-getClosestMatch(ClosestMatchState *state)
-{
-  Assert(state);
-
-  return state->match;
-}
-
+#endif /* NOT USED */
 
 /*
  * Unicode support
@@ -2763,9 +2667,6 @@ pg_icu_unicode_version(void)
 bool
 pg_unicode_assigned(text *input)
 {
-  unsigned char *p;
-  int      size;
-
   if (GetDatabaseEncoding() != PG_UTF8)
   {
     elog(ERROR,
@@ -2774,19 +2675,16 @@ pg_unicode_assigned(text *input)
   }
 
   /* convert to pg_wchar */
-  size = pg_mbstrlen_with_len(VARDATA_ANY(input), VARSIZE_ANY_EXHDR(input));
-  p = (unsigned char *) VARDATA_ANY(input);
+  int size = pg_mbstrlen_with_len(VARDATA_ANY(input), VARSIZE_ANY_EXHDR(input));
+  unsigned char *p = (unsigned char *) VARDATA_ANY(input);
   for (int i = 0; i < size; i++)
   {
     pg_wchar  uchar = utf8_to_unicode(p);
-    int      category = unicode_category(uchar);
-
+    int category = unicode_category(uchar);
     if (category == PG_U_UNASSIGNED)
       return false;
-
     p += pg_utf_mblen(p);
   }
-
   return true;
 }
 
@@ -2799,20 +2697,13 @@ text *
 pg_unicode_normalize_func(text *input, text *formtxt)
 {
   char *formstr = text_to_cstring(formtxt);
-  UnicodeNormalizationForm form;
-  int      size;
-  pg_wchar   *input_chars;
-  pg_wchar   *output_chars;
-  unsigned char *p;
-  text     *result;
-  int      i;
-
-  form = unicode_norm_form_from_string(formstr);
+  UnicodeNormalizationForm form = unicode_norm_form_from_string(formstr);
 
   /* convert to pg_wchar */
-  size = pg_mbstrlen_with_len(VARDATA_ANY(input), VARSIZE_ANY_EXHDR(input));
-  input_chars = palloc((size + 1) * sizeof(pg_wchar));
-  p = (unsigned char *) VARDATA_ANY(input);
+  int size = pg_mbstrlen_with_len(VARDATA_ANY(input), VARSIZE_ANY_EXHDR(input));
+  pg_wchar *input_chars = palloc((size + 1) * sizeof(pg_wchar));
+  unsigned char *p = (unsigned char *) VARDATA_ANY(input);
+  int i;
   for (i = 0; i < size; i++)
   {
     input_chars[i] = utf8_to_unicode(p);
@@ -2822,21 +2713,19 @@ pg_unicode_normalize_func(text *input, text *formtxt)
   Assert((char *) p == VARDATA_ANY(input) + VARSIZE_ANY_EXHDR(input));
 
   /* action */
-  output_chars = unicode_normalize(form, input_chars);
+  pg_wchar *output_chars = unicode_normalize(form, input_chars);
 
   /* convert back to UTF-8 string */
   size = 0;
   for (pg_wchar *wp = output_chars; *wp; wp++)
   {
     unsigned char buf[4];
-
     unicode_to_utf8(*wp, buf);
     size += pg_utf_mblen(buf);
   }
 
-  result = palloc(size + VARHDRSZ);
+  text *result = palloc(size + VARHDRSZ);
   SET_VARSIZE(result, size + VARHDRSZ);
-
   p = (unsigned char *) VARDATA_ANY(result);
   for (pg_wchar *wp = output_chars; *wp; wp++)
   {
@@ -2844,7 +2733,6 @@ pg_unicode_normalize_func(text *input, text *formtxt)
     p += pg_utf_mblen(p);
   }
   Assert((char *) p == (char *) result + size + VARHDRSZ);
-
   return result;
 }
 
@@ -2864,23 +2752,14 @@ pg_unicode_normalize_func(text *input, text *formtxt)
 bool
 pg_unicode_is_normalized(text *input, text *fmt)
 {
-  char     *formstr = text_to_cstring(fmt);
-  UnicodeNormalizationForm form;
-  int      size;
-  pg_wchar   *input_chars;
-  pg_wchar   *output_chars;
-  unsigned char *p;
-  int      i;
-  UnicodeNormalizationQC quickcheck;
-  int      output_size;
-  bool    result;
-
-  form = unicode_norm_form_from_string(formstr);
+  char *formstr = text_to_cstring(fmt);
+  UnicodeNormalizationForm form = unicode_norm_form_from_string(formstr);
 
   /* convert to pg_wchar */
-  size = pg_mbstrlen_with_len(VARDATA_ANY(input), VARSIZE_ANY_EXHDR(input));
-  input_chars = palloc((size + 1) * sizeof(pg_wchar));
-  p = (unsigned char *) VARDATA_ANY(input);
+  int size = pg_mbstrlen_with_len(VARDATA_ANY(input), VARSIZE_ANY_EXHDR(input));
+  pg_wchar *input_chars = palloc((size + 1) * sizeof(pg_wchar));
+  unsigned char *p = (unsigned char *) VARDATA_ANY(input);
+  int i;
   for (i = 0; i < size; i++)
   {
     input_chars[i] = utf8_to_unicode(p);
@@ -2890,20 +2769,21 @@ pg_unicode_is_normalized(text *input, text *fmt)
   Assert((char *) p == VARDATA_ANY(input) + VARSIZE_ANY_EXHDR(input));
 
   /* quick check (see UAX #15) */
-  quickcheck = unicode_is_normalized_quickcheck(form, input_chars);
+  UnicodeNormalizationQC quickcheck =
+    unicode_is_normalized_quickcheck(form, input_chars);
   if (quickcheck == UNICODE_NORM_QC_YES)
     return true;
   else if (quickcheck == UNICODE_NORM_QC_NO)
     return false;
 
   /* normalize and compare with original */
-  output_chars = unicode_normalize(form, input_chars);
+  pg_wchar *output_chars = unicode_normalize(form, input_chars);
 
-  output_size = 0;
+  int output_size = 0;
   for (pg_wchar *wp = output_chars; *wp; wp++)
     output_size++;
 
-  result = (size == output_size) &&
+  bool result = (size == output_size) &&
     (memcmp(input_chars, output_chars, size * sizeof(pg_wchar)) == 0);
 
   return result;
@@ -2918,7 +2798,6 @@ isxdigits_n(const char *instr, size_t n)
   for (size_t i = 0; i < n; i++)
     if (!isxdigit((unsigned char) instr[i]))
       return false;
-
   return true;
 }
 
@@ -2942,10 +2821,8 @@ static unsigned int
 hexval_n(const char *instr, size_t n)
 {
   unsigned int result = 0;
-
   for (size_t i = 0; i < n; i++)
     result += hexval(instr[i]) << (4 * (n - i - 1));
-
   return result;
 }
 
@@ -3122,7 +2999,5 @@ invalid_pair:
   elog(ERROR, "invalid Unicode surrogate pair");
   return NULL;
 }
-
-#endif /* NOT USED */
 
 /*****************************************************************************/

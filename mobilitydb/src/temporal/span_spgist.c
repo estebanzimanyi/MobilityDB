@@ -41,7 +41,7 @@
 /* PostgreSQL */
 #include <postgres.h>
 #include <access/spgist.h>
-#include <catalog/pg_type_d.h> /* For VOIDOID */
+#include <catalog/pg_type.h> /* For VOIDOID */
 #include <utils/timestamp.h>
 /* MEOS */
 #include <meos.h>

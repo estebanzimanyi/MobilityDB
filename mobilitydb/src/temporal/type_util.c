@@ -38,8 +38,9 @@
 #include <assert.h>
 /* PostgreSQL */
 #include <postgres.h>
+#include <postgres_types.h>
 #include <utils/lsyscache.h>
-#include <catalog/pg_type_d.h>
+#include <catalog/pg_type.h>
 #include <utils/array.h>
 #include <utils/rangetypes.h>
 #if POSTGRESQL_VERSION_NUMBER >= 140000

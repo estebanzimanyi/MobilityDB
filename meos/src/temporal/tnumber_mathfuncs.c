@@ -34,20 +34,19 @@
  * ...) for temporal numbers
  */
 
-#include "temporal/tnumber_mathfuncs.h"
-
 /* C */
 #include <assert.h>
 #include <math.h>
 /* PostgreSQL */
 #include <postgres.h>
+#include <postgres_types.h>
 #include <utils/float.h>
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
-#include <postgres_types.h>
 #include "temporal/lifting.h"
 #include "temporal/tinstant.h"
+#include "temporal/tnumber_mathfuncs.h"
 #include "temporal/tsequence.h"
 #include "temporal/type_util.h"
 
@@ -487,7 +486,7 @@ angular_difference(Datum degrees1, Datum degrees2)
  * @param[in] degrees1,degrees2 Values
  */
 double
-float8_angular_difference(double degrees1, double degrees2)
+float8_angular_difference(float8 degrees1, float8 degrees2)
 {
   return DatumGetFloat8(angular_difference(Float8GetDatum(degrees1),
     Float8GetDatum(degrees2)));

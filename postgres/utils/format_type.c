@@ -177,17 +177,17 @@ format_type_extended(Oid type_oid, int32 typemod, bits16 flags)
   switch (type_oid)
   {
     case BITOID:
-      if (with_typemod)
-        buf = printTypmod("bit", typemod, typeform->typmodout);
-      else if ((flags & FORMAT_TYPE_TYPEMOD_GIVEN) != 0)
-      {
-        /*
-         * bit with typmod -1 is not the same as BIT, which means
-         * BIT(1) per SQL spec.  Report it as the quoted typename so
-         * that parser will not assign a bogus typmod.
-         */
-      }
-      else
+      // if (with_typemod)
+        // buf = printTypmod("bit", typemod, typeform->typmodout);
+      // else if ((flags & FORMAT_TYPE_TYPEMOD_GIVEN) != 0)
+      // {
+        // /*
+         // * bit with typmod -1 is not the same as BIT, which means
+         // * BIT(1) per SQL spec.  Report it as the quoted typename so
+         // * that parser will not assign a bogus typmod.
+         // */
+      // }
+      // else
         buf = pstrdup("bit");
       break;
 
@@ -196,17 +196,17 @@ format_type_extended(Oid type_oid, int32 typemod, bits16 flags)
       break;
 
     case BPCHAROID:
-      if (with_typemod)
-        buf = printTypmod("character", typemod, typeform->typmodout);
-      else if ((flags & FORMAT_TYPE_TYPEMOD_GIVEN) != 0)
-      {
-        /*
-         * bpchar with typmod -1 is not the same as CHARACTER, which
-         * means CHARACTER(1) per SQL spec.  Report it as bpchar so
-         * that parser will not assign a bogus typmod.
-         */
-      }
-      else
+      // if (with_typemod)
+        // buf = printTypmod("character", typemod, typeform->typmodout);
+      // else if ((flags & FORMAT_TYPE_TYPEMOD_GIVEN) != 0)
+      // {
+        // /*
+         // * bpchar with typmod -1 is not the same as CHARACTER, which
+         // * means CHARACTER(1) per SQL spec.  Report it as bpchar so
+         // * that parser will not assign a bogus typmod.
+         // */
+      // }
+      // else
         buf = pstrdup("character");
       break;
 
@@ -232,57 +232,63 @@ format_type_extended(Oid type_oid, int32 typemod, bits16 flags)
 
     case NUMERICOID:
       if (with_typemod)
-        buf = printTypmod("numeric", typemod, typeform->typmodout);
+        // buf = printTypmod("numeric", typemod, typeform->typmodout);
+        buf = numeric_typmodout(typemod);
       else
         buf = pstrdup("numeric");
       break;
 
     case INTERVALOID:
       if (with_typemod)
-        buf = printTypmod("interval", typemod, typeform->typmodout);
+        // buf = printTypmod("interval", typemod, typeform->typmodout);
+        buf = interval_typmodout(typemod);
       else
         buf = pstrdup("interval");
       break;
 
     case TIMEOID:
       if (with_typemod)
-        buf = printTypmod("time", typemod, typeform->typmodout);
+        // buf = printTypmod("time", typemod, typeform->typmodout);
+        buf = time_typmodout(typemod);
       else
         buf = pstrdup("time without time zone");
       break;
 
     case TIMETZOID:
       if (with_typemod)
-        buf = printTypmod("time", typemod, typeform->typmodout);
+        // buf = printTypmod("time", typemod, typeform->typmodout);
+        buf = timetz_typmodout(typemod);
       else
         buf = pstrdup("time with time zone");
       break;
 
     case TIMESTAMPOID:
       if (with_typemod)
-        buf = printTypmod("timestamp", typemod, typeform->typmodout);
+        // buf = printTypmod("timestamp", typemod, typeform->typmodout);
+        buf = timestamp_typmodout(typemod);
       else
         buf = pstrdup("timestamp without time zone");
       break;
 
     case TIMESTAMPTZOID:
       if (with_typemod)
-        buf = printTypmod("timestamp", typemod, typeform->typmodout);
+        // buf = printTypmod("timestamp", typemod, typeform->typmodout);
+        buf = timestamptz_typmodout(typemod);
       else
         buf = pstrdup("timestamp with time zone");
       break;
 
     case VARBITOID:
-      if (with_typemod)
-        buf = printTypmod("bit varying", typemod, typeform->typmodout);
-      else
+      // if (with_typemod)
+        // buf = printTypmod("bit varying", typemod, typeform->typmodout);
+      // else
         buf = pstrdup("bit varying");
       break;
 
     case VARCHAROID:
-      if (with_typemod)
-        buf = printTypmod("character varying", typemod, typeform->typmodout);
-      else
+      // if (with_typemod)
+        // buf = printTypmod("character varying", typemod, typeform->typmodout);
+      // else
         buf = pstrdup("character varying");
       break;
 
@@ -324,6 +330,8 @@ format_type_extended(Oid type_oid, int32 typemod, bits16 flags)
   return buf;
 }
 
+#endif /* NOT USED */
+
 /*
  * This version is for use within the backend in error messages, etc.
  * One difference is that it will fail for an invalid type.
@@ -340,20 +348,22 @@ format_type_be(Oid type_oid)
  * This version returns a name that is always qualified (unless it's one
  * of the SQL-keyword type names, such as TIMESTAMP WITH TIME ZONE).
  */
-char *
-format_type_be_qualified(Oid type_oid)
-{
-  return format_type_extended(type_oid, -1, FORMAT_TYPE_FORCE_QUALIFY);
-}
+// char *
+// format_type_be_qualified(Oid type_oid)
+// {
+  // return format_type_extended(type_oid, -1, FORMAT_TYPE_FORCE_QUALIFY);
+// }
 
 /*
  * This version allows a nondefault typemod to be specified.
  */
-char *
-format_type_with_typemod(Oid type_oid, int32 typemod)
-{
-  return format_type_extended(type_oid, typemod, FORMAT_TYPE_TYPEMOD_GIVEN);
-}
+// char *
+// format_type_with_typemod(Oid type_oid, int32 typemod)
+// {
+  // return format_type_extended(type_oid, typemod, FORMAT_TYPE_TYPEMOD_GIVEN);
+// }
+
+#if 0 /* NOT USED */
 
 /*
  * Add typmod decoration to the basic type name
@@ -407,14 +417,14 @@ type_maximum_size(Oid type_oid, int32 typemod)
 
   switch (type_oid)
   {
-    case BPCHAROID:
-    case VARCHAROID:
-      /* typemod includes varlena header */
+    // case BPCHAROID:
+    // case VARCHAROID:
+      // /* typemod includes varlena header */
 
-      /* typemod is in characters not bytes */
-      return (typemod - VARHDRSZ) *
-        pg_encoding_max_length(GetDatabaseEncoding())
-        + VARHDRSZ;
+      // /* typemod is in characters not bytes */
+      // return (typemod - VARHDRSZ) *
+        // pg_encoding_max_length(GetDatabaseEncoding())
+        // + VARHDRSZ;
 
     case NUMERICOID:
       return numeric_maximum_size(typemod);

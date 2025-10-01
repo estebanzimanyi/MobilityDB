@@ -34,6 +34,7 @@
 
 /* PostgreSQL */
 #include <postgres.h>
+#include <postgres_types.h>
 #include <fmgr.h>
 #include <utils/timestamp.h>
 /* MEOS */

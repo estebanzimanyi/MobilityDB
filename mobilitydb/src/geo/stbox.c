@@ -39,6 +39,7 @@
 #include <float.h>
 /* PostgreSQL */
 #include <postgres.h>
+#include <postgres_types.h>
 #include <lib/stringinfo.h>
 /* MEOS */
 #include <meos.h>

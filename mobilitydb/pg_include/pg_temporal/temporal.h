@@ -37,7 +37,7 @@
 /* PostgreSQL */
 #include <postgres.h>
 #include <fmgr.h>
-#include <catalog/pg_type_d.h> /* for TIMESTAMPTZOID and similar */
+#include <catalog/pg_type.h> /* for TIMESTAMPTZOID and similar */
 #include <lib/stringinfo.h>
 #include <utils/array.h>
 #include <utils/lsyscache.h>

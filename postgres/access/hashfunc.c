@@ -312,7 +312,7 @@ text_hash(text *key, Oid collid)
  * @note Derived from PostgreSQL function @p hashtextextended()
  */
 uint64
-text_hash_extended(text *key, uint64 seed, Oid collid)
+text_hash_extended(const text *key, uint64 seed, Oid collid)
 {
   // pg_locale_t mylocale;
   Datum    result;

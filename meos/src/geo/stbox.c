@@ -39,6 +39,8 @@
 #include <float.h>
 #include <limits.h>
 /* PostgreSQL */
+#include <postgres.h>
+#include <postgres_types.h>
 #include "utils/timestamp.h"
 /* PostGIS */
 #include <lwgeodetic.h>

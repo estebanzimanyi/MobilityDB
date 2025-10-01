@@ -38,6 +38,7 @@
 #include <assert.h>
 /* PostgreSQL */
 #include <postgres.h>
+#include <postgres_types.h>
 #include <utils/timestamp.h>
 /* MEOS */
 #include <meos.h>

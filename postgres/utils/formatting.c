@@ -1569,6 +1569,8 @@ str_numth(char *dest, char *num, int type)
   return dest;
 }
 
+#endif /* NOT USED */
+
 /*****************************************************************************
  *      upper/lower/initcap functions
  *****************************************************************************/
@@ -1593,7 +1595,7 @@ char *
 str_tolower(const char *buff, size_t nbytes, Oid collid)
 {
   char     *result;
-  pg_locale_t mylocale;
+  // pg_locale_t mylocale;
 
   if (!buff)
     return NULL;
@@ -1655,7 +1657,7 @@ char *
 str_toupper(const char *buff, size_t nbytes, Oid collid)
 {
   char     *result;
-  pg_locale_t mylocale;
+  // pg_locale_t mylocale;
 
   if (!buff)
     return NULL;
@@ -1671,7 +1673,7 @@ str_toupper(const char *buff, size_t nbytes, Oid collid)
     return NULL;
   }
 
-  mylocale = pg_newlocale_from_collation(collid);
+  // mylocale = pg_newlocale_from_collation(collid);
 
   // /* C/POSIX collations use this path regardless of database encoding */
   // if (mylocale->ctype_is_c)
@@ -1717,7 +1719,7 @@ char *
 str_initcap(const char *buff, size_t nbytes, Oid collid)
 {
   char     *result;
-  pg_locale_t mylocale;
+  // pg_locale_t mylocale;
 
   if (!buff)
     return NULL;
@@ -1733,110 +1735,110 @@ str_initcap(const char *buff, size_t nbytes, Oid collid)
     return NULL;
   }
 
-  mylocale = pg_newlocale_from_collation(collid);
+  // mylocale = pg_newlocale_from_collation(collid);
 
-  /* C/POSIX collations use this path regardless of database encoding */
-  if (mylocale->ctype_is_c)
-  {
+  // /* C/POSIX collations use this path regardless of database encoding */
+  // if (mylocale->ctype_is_c)
+  // {
     result = asc_initcap(buff, nbytes);
-  }
-  else
-  {
-    const char *src = buff;
-    size_t    srclen = nbytes;
-    size_t    dstsize;
-    char     *dst;
-    size_t    needed;
+  // }
+  // else
+  // {
+    // const char *src = buff;
+    // size_t    srclen = nbytes;
+    // size_t    dstsize;
+    // char     *dst;
+    // size_t    needed;
 
-    /* first try buffer of equal size plus terminating NUL */
-    dstsize = srclen + 1;
-    dst = palloc(dstsize);
+    // /* first try buffer of equal size plus terminating NUL */
+    // dstsize = srclen + 1;
+    // dst = palloc(dstsize);
 
-    needed = pg_strtitle(dst, dstsize, src, srclen, mylocale);
-    if (needed + 1 > dstsize)
-    {
-      /* grow buffer if needed and retry */
-      dstsize = needed + 1;
-      dst = repalloc(dst, dstsize);
-      needed = pg_strtitle(dst, dstsize, src, srclen, mylocale);
-      Assert(needed + 1 <= dstsize);
-    }
+    // needed = pg_strtitle(dst, dstsize, src, srclen, mylocale);
+    // if (needed + 1 > dstsize)
+    // {
+      // /* grow buffer if needed and retry */
+      // dstsize = needed + 1;
+      // dst = repalloc(dst, dstsize);
+      // needed = pg_strtitle(dst, dstsize, src, srclen, mylocale);
+      // Assert(needed + 1 <= dstsize);
+    // }
 
-    Assert(dst[needed] == '\0');
-    result = dst;
-  }
-
-  return result;
-}
-
-/*
- * collation-aware, wide-character-aware case folding
- *
- * We pass the number of bytes so we can pass varlena and char*
- * to this function.  The result is a palloc'd, null-terminated string.
- */
-char *
-str_casefold(const char *buff, size_t nbytes, Oid collid)
-{
-  char     *result;
-  pg_locale_t mylocale;
-
-  if (!buff)
-    return NULL;
-
-  if (!OidIsValid(collid))
-  {
-    /*
-     * This typically means that the parser could not resolve a conflict
-     * of implicit collations, so report it that way.
-     */
-    elog(ERROR, "could not determine which collation to use for %s function",
-      "lower()");
-    return NULL;
-  }
-
-  if (GetDatabaseEncoding() != PG_UTF8)
-  {
-    elog(ERROR, 
-      "Unicode case folding can only be performed if server encoding is UTF8");
-    return NULL;
-  }
-
-  mylocale = pg_newlocale_from_collation(collid);
-
-  /* C/POSIX collations use this path regardless of database encoding */
-  if (mylocale->ctype_is_c)
-  {
-    result = asc_tolower(buff, nbytes);
-  }
-  else
-  {
-    const char *src = buff;
-    size_t    srclen = nbytes;
-    size_t    dstsize;
-    char     *dst;
-    size_t    needed;
-
-    /* first try buffer of equal size plus terminating NUL */
-    dstsize = srclen + 1;
-    dst = palloc(dstsize);
-
-    needed = pg_strfold(dst, dstsize, src, srclen, mylocale);
-    if (needed + 1 > dstsize)
-    {
-      /* grow buffer if needed and retry */
-      dstsize = needed + 1;
-      dst = repalloc(dst, dstsize);
-      needed = pg_strfold(dst, dstsize, src, srclen, mylocale);
-      Assert(needed + 1 <= dstsize);
-    }
-
-    Assert(dst[needed] == '\0');
-    result = dst;
-  }
+    // Assert(dst[needed] == '\0');
+    // result = dst;
+  // }
 
   return result;
 }
+
+// /*
+ // * collation-aware, wide-character-aware case folding
+ // *
+ // * We pass the number of bytes so we can pass varlena and char*
+ // * to this function.  The result is a palloc'd, null-terminated string.
+ // */
+// char *
+// str_casefold(const char *buff, size_t nbytes, Oid collid)
+// {
+  // char     *result;
+  // pg_locale_t mylocale;
+
+  // if (!buff)
+    // return NULL;
+
+  // if (!OidIsValid(collid))
+  // {
+    // /*
+     // * This typically means that the parser could not resolve a conflict
+     // * of implicit collations, so report it that way.
+     // */
+    // elog(ERROR, "could not determine which collation to use for %s function",
+      // "lower()");
+    // return NULL;
+  // }
+
+  // if (GetDatabaseEncoding() != PG_UTF8)
+  // {
+    // elog(ERROR, 
+      // "Unicode case folding can only be performed if server encoding is UTF8");
+    // return NULL;
+  // }
+
+  // mylocale = pg_newlocale_from_collation(collid);
+
+  // /* C/POSIX collations use this path regardless of database encoding */
+  // if (mylocale->ctype_is_c)
+  // {
+    // result = asc_tolower(buff, nbytes);
+  // }
+  // else
+  // {
+    // const char *src = buff;
+    // size_t    srclen = nbytes;
+    // size_t    dstsize;
+    // char     *dst;
+    // size_t    needed;
+
+    // /* first try buffer of equal size plus terminating NUL */
+    // dstsize = srclen + 1;
+    // dst = palloc(dstsize);
+
+    // needed = pg_strfold(dst, dstsize, src, srclen, mylocale);
+    // if (needed + 1 > dstsize)
+    // {
+      // /* grow buffer if needed and retry */
+      // dstsize = needed + 1;
+      // dst = repalloc(dst, dstsize);
+      // needed = pg_strfold(dst, dstsize, src, srclen, mylocale);
+      // Assert(needed + 1 <= dstsize);
+    // }
+
+    // Assert(dst[needed] == '\0');
+    // result = dst;
+  // }
+
+  // return result;
+// }
 
 /*
  * ASCII-only lower function
@@ -1953,6 +1955,7 @@ asc_toupper_z(const char *buff)
 
 /* asc_initcap_z is not currently needed */
 
+#if 0 /* NOT USED */
 
 /* ----------
  * Skip TM / th in FROM_CHAR

@@ -38,16 +38,6 @@ set(TEMPORAL_SRCS
   type_util.c
 )
 
-# if(${POSTGRESQL_VERSION_MAJOR} GREATER_EQUAL "160000")
-  # list(APPEND TEMPORAL_SRCS
-    # json.c
-    # jsonb.c
-    # jsonb_op.c
-    # jsonb_util.c
-    # jsonfuncs.c
-# )
-# endif()
-
 if(MEOS)
   list(APPEND TEMPORAL_SRCS
     set_aggfuncs_meos.c

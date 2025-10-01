@@ -17,7 +17,7 @@
 #ifndef MEMUTILS_H
 #define MEMUTILS_H
 
-#include "nodes/memnodes.h"
+// #include "nodes/memnodes.h"
 
 
 /*
@@ -48,6 +48,7 @@
 
 #define AllocHugeSizeIsValid(size)	((Size) (size) <= MaxAllocHugeSize)
 
+#if 0 /* NOT USED */
 
 /*
  * Standard top-level memory contexts.
@@ -318,5 +319,7 @@ pg_memory_is_all_zeros(const void *ptr, size_t len)
 
 	return true;
 }
+
+#endif /* NOT USED */
 
 #endif							/* MEMUTILS_H */

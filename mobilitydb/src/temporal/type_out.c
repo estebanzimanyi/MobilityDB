@@ -35,6 +35,7 @@
 
 /* PostgreSQL */
 #include <postgres.h>
+#include <postgres_types.h>
 /* PostGIS */
 #include <liblwgeom_internal.h>
 /* MEOS */

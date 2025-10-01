@@ -32,6 +32,8 @@
  *---------------------------------------------------------------------------
  */
 
+#include <string.h>
+
 #include "postgres.h"
 
 #include "common/shortest_dec.h"

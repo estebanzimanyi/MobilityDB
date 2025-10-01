@@ -2,6 +2,9 @@
  *	qsort.c: standard quicksort algorithm
  */
 
+#include <string.h>
+
+#include <postgres.h>
 #include "c.h"
 
 #define ST_SORT pg_qsort
@@ -11,6 +14,8 @@
 #define ST_DECLARE
 #define ST_DEFINE
 #include "sort_template.h"
+
+#include <string.h>
 
 /*
  * qsort comparator wrapper for strcmp.

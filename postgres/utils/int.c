@@ -55,10 +55,10 @@ int16_in(const char *str)
  * @note Derived from PostgreSQL function @p int2out()
  */
 char *
-int16_out(int16 arg)
+int16_out(int16 num)
 {
   char *result = (char *) palloc(7);  /* sign, 5 digits, '\0' */
-  pg_itoa(arg, result);
+  pg_itoa(num, result);
   return result;
 }
 
@@ -83,10 +83,10 @@ int32_in(const char *str)
  * @note Derived from PostgreSQL function @p int4out()
  */
 char *
-int32_out(int32 arg)
+int32_out(int32 num)
 {
   char *result = (char *) palloc(12);  /* sign, 10 digits, '\0' */
-  pg_ltoa(arg, result);
+  pg_ltoa(num, result);
   return result;
 }
 
@@ -102,9 +102,9 @@ int32_out(int32 arg)
  * @note Derived from PostgreSQL function @p i2toi4()
  */
 int32
-int16_to_int32(int16 arg)
+int16_to_int32(int16 num)
 {
-  return ((int32) arg);
+  return ((int32) num);
 }
 
 /**
@@ -113,14 +113,14 @@ int16_to_int32(int16 arg)
  * @note Derived from PostgreSQL function @p i4toi2()
  */
 int16
-int32_to_int16(int32 arg)
+int32_to_int16(int32 num)
 {
-  if (unlikely(arg < SHRT_MIN) || unlikely(arg > SHRT_MAX))
+  if (unlikely(num < SHRT_MIN) || unlikely(num > SHRT_MAX))
   {
     elog(ERROR, "smallint out of range");
     return SHRT_MAX;
   }
-  return ((int16) arg);
+  return ((int16) num);
 }
 
 /**
@@ -129,9 +129,9 @@ int32_to_int16(int32 arg)
  * @note Derived from PostgreSQL function @p int4bool()
  */
 bool
-int32_to_bool(int32 arg)
+int32_to_bool(int32 num)
 {
-  if (arg == 0)
+  if (num == 0)
     return (false);
   else
     return (true);
@@ -143,12 +143,12 @@ int32_to_bool(int32 arg)
  * @note Derived from PostgreSQL function @p boolint4()
  */
 int32
-bool_to_int32(bool arg)
+bool_to_int32(bool b)
 {
-  if (arg == false)
-    return (0);
+  if (b == false)
+    return 0;
   else
-    return (1);
+    return 1;
 }
 
 /*
@@ -158,12 +158,12 @@ bool_to_int32(bool arg)
  */
 
 /*
- *    inteq      - returns 1 iff arg1 == arg2
- *    intne      - returns 1 iff arg1 != arg2
- *    intlt      - returns 1 iff arg1 < arg2
- *    intle      - returns 1 iff arg1 <= arg2
- *    intgt      - returns 1 iff arg1 > arg2
- *    intge      - returns 1 iff arg1 >= arg2
+ *    inteq      - returns 1 iff num1 == num2
+ *    intne      - returns 1 iff num1 != num2
+ *    intlt      - returns 1 iff num1 < num2
+ *    intle      - returns 1 iff num1 <= num2
+ *    intgt      - returns 1 iff num1 > num2
+ *    intge      - returns 1 iff num1 >= num2
  */
 
 /**
@@ -172,9 +172,9 @@ bool_to_int32(bool arg)
  * @note Derived from PostgreSQL function @p int4eq()
  */
 bool
-int32_eq(int32 arg1, int32 arg2)
+eq_int32_int32(int32 num1, int32 num2)
 {
-  return (arg1 == arg2);
+  return (num1 == num2);
 }
 
 /**
@@ -183,9 +183,9 @@ int32_eq(int32 arg1, int32 arg2)
  * @note Derived from PostgreSQL function @p int4ne()
  */
 bool
-int32_ne(int32 arg1, int32 arg2)
+ne_int32_int32(int32 num1, int32 num2)
 {
-  return (arg1 != arg2);
+  return (num1 != num2);
 }
 
 /**
@@ -194,9 +194,9 @@ int32_ne(int32 arg1, int32 arg2)
  * @note Derived from PostgreSQL function @p int4lt()
  */
 bool
-int32_lt(int32 arg1, int32 arg2)
+lt_int32_int32(int32 num1, int32 num2)
 {
-  return (arg1 < arg2);
+  return (num1 < num2);
 }
 
 /**
@@ -206,9 +206,9 @@ int32_lt(int32 arg1, int32 arg2)
  * @note Derived from PostgreSQL function @p int4le()
  */
 bool
-int32_le(int32 arg1, int32 arg2)
+le_int32_int32(int32 num1, int32 num2)
 {
-  return (arg1 <= arg2);
+  return (num1 <= num2);
 }
 
 /**
@@ -217,9 +217,9 @@ int32_le(int32 arg1, int32 arg2)
  * @note Derived from PostgreSQL function @p int4gt()
  */
 bool
-int32_gt(int32 arg1, int32 arg2)
+gt_int32_int32(int32 num1, int32 num2)
 {
-  return (arg1 > arg2);
+  return (num1 > num2);
 }
 
 /**
@@ -229,31 +229,31 @@ int32_gt(int32 arg1, int32 arg2)
  * @note Derived from PostgreSQL function @p int4ge()
  */
 bool
-int32_ge(int32 arg1, int32 arg2)
+ge_int32_int32(int32 num1, int32 num2)
 {
-  return (arg1 >= arg2);
+  return (num1 >= num2);
 }
 
 /**
  * @ingroup meos_base_int
- * @brief Return true if two int16 values are equal
+ * @brief Return true if two int16 numbers are equal
  * @note Derived from PostgreSQL function @p int2eq()
  */
 bool
-int16_eq(int16 arg1, int16 arg2)
+eq_int16_int16(int16 num1, int16 num2)
 {
-  return (arg1 == arg2);
+  return (num1 == num2);
 }
 
 /**
  * @ingroup meos_base_int
- * @brief Return true if two int16 values are not equal
+ * @brief Return true if two int16 numbers are not equal
  * @note Derived from PostgreSQL function @p int2ne()
  */
 bool
-int16_ne(int16 arg1, int16 arg2)
+ne_int16_int16(int16 num1, int16 num2)
 {
-  return (arg1 != arg2);
+  return (num1 != num2);
 }
 
 /**
@@ -262,9 +262,9 @@ int16_ne(int16 arg1, int16 arg2)
  * @note Derived from PostgreSQL function @p int2lt()
  */
 bool
-int16_lt(int16 arg1, int16 arg2)
+lt_int16_int16(int16 num1, int16 num2)
 {
-  return (arg1 < arg2);
+  return (num1 < num2);
 }
 
 /**
@@ -274,9 +274,9 @@ int16_lt(int16 arg1, int16 arg2)
  * @note Derived from PostgreSQL function @p int2le()
  */
 bool
-int16_le(int16 arg1, int16 arg2)
+le_int16_int16(int16 num1, int16 num2)
 {
-  return (arg1 <= arg2);
+  return (num1 <= num2);
 }
 
 /**
@@ -285,9 +285,9 @@ int16_le(int16 arg1, int16 arg2)
  * @note Derived from PostgreSQL function @p int2gt()
  */
 bool
-int16_gt(int16 arg1, int16 arg2)
+gt_int16_int16(int16 num1, int16 num2)
 {
-  return (arg1 > arg2);
+  return (num1 > num2);
 }
 
 /**
@@ -297,9 +297,9 @@ int16_gt(int16 arg1, int16 arg2)
  * @note Derived from PostgreSQL function @p int2ge()
  */
 bool
-int16_ge(int16 arg1, int16 arg2)
+ge_int16_int16(int16 num1, int16 num2)
 {
-  return (arg1 >= arg2);
+  return (num1 >= num2);
 }
 
 /**
@@ -308,9 +308,9 @@ int16_ge(int16 arg1, int16 arg2)
  * @note Derived from PostgreSQL function @p int24eq()
  */
 bool
-eq_int16_int32(int16 arg1, int32 arg2)
+eq_in16_int32(int16 num1, int32 num2)
 {
-  return (arg1 == arg2);
+  return (num1 == num2);
 }
 
 /**
@@ -319,20 +319,20 @@ eq_int16_int32(int16 arg1, int32 arg2)
  * @note Derived from PostgreSQL function @p int24ne()
  */
 bool
-ne_int16_int32(int16 arg1, int32 arg2)
+ne_int16_int32(int16 num1, int32 num2)
 {
-  return (arg1 != arg2);
+  return (num1 != num2);
 }
 
 /**
  * @ingroup meos_base_int
- * @brief Return true if an int16 number is less than and an int32 number
+ * @brief Return true if an int16 number is less than an int32 number
  * @note Derived from PostgreSQL function @p int24lt()
  */
 bool
-lt_int16_int32(int16 arg1, int32 arg2)
+lt_int16_int32(int16 num1, int32 num2)
 {
-  return (arg1 < arg2);
+  return (num1 < num2);
 }
 
 /**
@@ -342,9 +342,9 @@ lt_int16_int32(int16 arg1, int32 arg2)
  * @note Derived from PostgreSQL function @p int24le()
  */
 bool
-le_int16_int32(int16 arg1, int32 arg2)
+le_int16_int32(int16 num1, int32 num2)
 {
-  return (arg1 <= arg2);
+  return (num1 <= num2);
 }
 
 /**
@@ -353,9 +353,9 @@ le_int16_int32(int16 arg1, int32 arg2)
  * @note Derived from PostgreSQL function @p int24gt()
  */
 bool
-gt_int16_int32(int16 arg1, int32 arg2)
+gt_int16_int32(int16 num1, int32 num2)
 {
-  return (arg1 > arg2);
+  return (num1 > num2);
 }
 
 /**
@@ -365,9 +365,9 @@ gt_int16_int32(int16 arg1, int32 arg2)
  * @note Derived from PostgreSQL function @p int24ge()
  */
 bool
-ge_int16_int32(int16 arg1, int32 arg2)
+ge_int16_int32(int16 num1, int32 num2)
 {
-  return (arg1 >= arg2);
+  return (num1 >= num2);
 }
 
 /**
@@ -376,9 +376,9 @@ ge_int16_int32(int16 arg1, int32 arg2)
  * @note Derived from PostgreSQL function @p int42eq()
  */
 bool
-eq_int32_int16(int32 arg1, int16 arg2)
+eq_int32_int16(int32 num1, int16 num2)
 {
-  return (arg1 == arg2);
+  return (num1 == num2);
 }
 
 /**
@@ -387,9 +387,9 @@ eq_int32_int16(int32 arg1, int16 arg2)
  * @note Derived from PostgreSQL function @p int42ne()
  */
 bool
-ne_int32_int16(int32 arg1, int16 arg2)
+ne_int32_int16(int32 num1, int16 num2)
 {
-  return (arg1 != arg2);
+  return (num1 != num2);
 }
 
 /**
@@ -398,9 +398,9 @@ ne_int32_int16(int32 arg1, int16 arg2)
  * @note Derived from PostgreSQL function @p int42lt()
  */
 bool
-lt_int32_int16(int32 arg1, int16 arg2)
+lt_int32_int16(int32 num1, int16 num2)
 {
-  return (arg1 < arg2);
+  return (num1 < num2);
 }
 
 /**
@@ -410,9 +410,9 @@ lt_int32_int16(int32 arg1, int16 arg2)
  * @note Derived from PostgreSQL function @p int42le()
  */
 bool
-le_int32_int16(int32 arg1, int16 arg2)
+le_int32_int16(int32 num1, int16 num2)
 {
-  return (arg1 <= arg2);
+  return (num1 <= num2);
 }
 
 /**
@@ -421,9 +421,9 @@ le_int32_int16(int32 arg1, int16 arg2)
  * @note Derived from PostgreSQL function @p int42gt()
  */
 bool
-gt_int32_int16(int32 arg1, int16 arg2)
+gt_int32_int16(int32 num1, int16 num2)
 {
-  return (arg1 > arg2);
+  return (num1 > num2);
 }
 
 /**
@@ -433,20 +433,19 @@ gt_int32_int16(int32 arg1, int16 arg2)
  * @note Derived from PostgreSQL function @p int42ge()
  */
 bool
-ge_int32_int16(int32 arg1, int16 arg2)
+ge_int32_int16(int32 num1, int16 num2)
 {
-  return (arg1 >= arg2);
+  return (num1 >= num2);
 }
-
 
 /*----------------------------------------------------------*/
 
 
 /*
- *    int[24]pl    - returns arg1 + arg2
- *    int[24]mi    - returns arg1 - arg2
- *    int[24]mul    - returns arg1 * arg2
- *    int[24]div    - returns arg1 / arg2
+ *    int[24]pl    - returns num1 + num2
+ *    int[24]mi    - returns num1 - num2
+ *    int[24]mul    - returns num1 * num2
+ *    int[24]div    - returns num1 / num2
  */
  
 /**
@@ -455,14 +454,14 @@ ge_int32_int16(int32 arg1, int16 arg2)
  * @note Derived from PostgreSQL function @p int4um()
  */
 int32
-int32_um(int32 arg)
+int32_uminus(int32 num)
 {
-  if (unlikely(arg == PG_INT32_MIN))
+  if (unlikely(num == PG_INT32_MIN))
   {
     elog(ERROR, "integer out of range");
     return INT_MAX;
   }
-  return (-arg);
+  return (-num);
 }
 
 /**
@@ -471,9 +470,9 @@ int32_um(int32 arg)
  * @note Derived from PostgreSQL function @p int4up()
  */
 int32
-int32_up(int32 arg)
+int32_uplus(int32 num)
 {
-  return (arg);
+  return (num);
 }
 
 /**
@@ -482,11 +481,11 @@ int32_up(int32 arg)
  * @note Derived from PostgreSQL function @p int4pl()
  */
 int32
-int32_pl(int32 arg1, int32 arg2)
+add_int32_int32(int32 num1, int32 num2)
 {
   int32 result;
 
-  if (unlikely(pg_add_s32_overflow(arg1, arg2, &result)))
+  if (unlikely(pg_add_s32_overflow(num1, num2, &result)))
   {
     elog(ERROR, "integer out of range");
     return INT_MAX;
@@ -500,11 +499,11 @@ int32_pl(int32 arg1, int32 arg2)
  * @note Derived from PostgreSQL function @p int4mi()
  */
 int32
-int32_mi(int32 arg1, int32 arg2)
+minus_int32_int32(int32 num1, int32 num2)
 {
   int32 result;
 
-  if (unlikely(pg_sub_s32_overflow(arg1, arg2, &result)))
+  if (unlikely(pg_sub_s32_overflow(num1, num2, &result)))
   {
     elog(ERROR, "integer out of range");
     return INT_MAX;
@@ -518,11 +517,11 @@ int32_mi(int32 arg1, int32 arg2)
  * @note Derived from PostgreSQL function @p int4mul()
  */
 int32
-int32_mul(int32 arg1, int32 arg2)
+mul_int32_int32(int32 num1, int32 num2)
 {
   int32 result;
 
-  if (unlikely(pg_mul_s32_overflow(arg1, arg2, &result)))
+  if (unlikely(pg_mul_s32_overflow(num1, num2, &result)))
   {
     elog(ERROR, "integer out of range");
     return INT_MAX;
@@ -536,11 +535,11 @@ int32_mul(int32 arg1, int32 arg2)
  * @note Derived from PostgreSQL function @p int4div()
  */
 int32
-int32_div(int32 arg1, int32 arg2)
+div_int32_int32(int32 num1, int32 num2)
 {
   int32 result;
 
-  if (arg2 == 0)
+  if (num2 == 0)
   {
     elog(ERROR, "division by zero");
     return INT_MAX;
@@ -552,20 +551,20 @@ int32_div(int32 arg1, int32 arg2)
    * zero, some throw an exception.  We can dodge the problem by recognizing
    * that division by -1 is the same as negation.
    */
-  if (arg2 == -1)
+  if (num2 == -1)
   {
-    if (unlikely(arg1 == PG_INT32_MIN))
+    if (unlikely(num1 == PG_INT32_MIN))
     {
       elog(ERROR, "integer out of range");
       return INT_MAX;
     }
-    result = -arg1;
+    result = -num1;
     return result;
   }
 
   /* No overflow is possible */
 
-  result = arg1 / arg2;
+  result = num1 / num2;
 
   return result;
 }
@@ -576,10 +575,10 @@ int32_div(int32 arg1, int32 arg2)
  * @note Derived from PostgreSQL function @p int4inc()
  */
 int32
-int32_inc(int32 arg)
+int32_inc(int32 num)
 {
   int32 result;
-  if (unlikely(pg_add_s32_overflow(arg, 1, &result)))
+  if (unlikely(pg_add_s32_overflow(num, 1, &result)))
   {
     elog(ERROR, "integer out of range");
     return INT_MAX;
@@ -594,14 +593,14 @@ int32_inc(int32 arg)
  * @note Derived from PostgreSQL function @p int2um()
  */
 int16
-int16_um(int16 arg)
+int16_uminus(int16 num)
 {
-  if (unlikely(arg == PG_INT16_MIN))
+  if (unlikely(num == PG_INT16_MIN))
   {
     elog(ERROR, "smallint out of range");
     return SHRT_MAX;
   }
-  return (-arg);
+  return (-num);
 }
 
 /**
@@ -610,9 +609,9 @@ int16_um(int16 arg)
  * @note Derived from PostgreSQL function @p int2up()
  */
 int16
-int16_up(int16 arg)
+int16_uplus(int16 num)
 {
-  return (arg);
+  return (num);
 }
 
 /**
@@ -621,11 +620,11 @@ int16_up(int16 arg)
  * @note Derived from PostgreSQL function @p int2pl()
  */
 int16
-int16_pl(int16 arg1, int16 arg2)
+add_int16_int16(int16 num1, int16 num2)
 {
   int16    result;
 
-  if (unlikely(pg_add_s16_overflow(arg1, arg2, &result)))
+  if (unlikely(pg_add_s16_overflow(num1, num2, &result)))
   {
     elog(ERROR, "smallint out of range");
     return SHRT_MAX;
@@ -639,11 +638,11 @@ int16_pl(int16 arg1, int16 arg2)
  * @note Derived from PostgreSQL function @p int2mi()
  */
 int16
-int16_mi(int16 arg1, int16 arg2)
+minus_int16_int16(int16 num1, int16 num2)
 {
   int16    result;
 
-  if (unlikely(pg_sub_s16_overflow(arg1, arg2, &result)))
+  if (unlikely(pg_sub_s16_overflow(num1, num2, &result)))
   {
     elog(ERROR, "smallint out of range");
     return SHRT_MAX;
@@ -657,11 +656,11 @@ int16_mi(int16 arg1, int16 arg2)
  * @note Derived from PostgreSQL function @p int2mul()
  */
 int16
-int16_mul(int16 arg1, int16 arg2)
+mul_int16_int16(int16 num1, int16 num2)
 {
   int16    result;
 
-  if (unlikely(pg_mul_s16_overflow(arg1, arg2, &result)))
+  if (unlikely(pg_mul_s16_overflow(num1, num2, &result)))
   {
     elog(ERROR, "smallint out of range");
     return SHRT_MAX;
@@ -676,11 +675,11 @@ int16_mul(int16 arg1, int16 arg2)
  * @note Derived from PostgreSQL function @p int2div()
  */
 int16
-int16_div(int16 arg1, int16 arg2)
+div_int16_int16(int16 num1, int16 num2)
 {
   int16    result;
 
-  if (arg2 == 0)
+  if (num2 == 0)
   {
     elog(ERROR, "division by zero");
     return SHRT_MAX;
@@ -692,20 +691,20 @@ int16_div(int16 arg1, int16 arg2)
    * produce zero, some throw an exception.  We can dodge the problem by
    * recognizing that division by -1 is the same as negation.
    */
-  if (arg2 == -1)
+  if (num2 == -1)
   {
-    if (unlikely(arg1 == PG_INT16_MIN))
+    if (unlikely(num1 == PG_INT16_MIN))
     {
       elog(ERROR, "smallint out of range");
       return SHRT_MAX;
     }
-    result = -arg1;
+    result = -num1;
     return result;
   }
 
   /* No overflow is possible */
 
-  result = arg1 / arg2;
+  result = num1 / num2;
 
   return result;
 }
@@ -716,11 +715,11 @@ int16_div(int16 arg1, int16 arg2)
  * @note Derived from PostgreSQL function @p int24pl()
  */
 int32
-pl_int16_int32(int16 arg1, int32 arg2)
+add_int16_int32(int16 num1, int32 num2)
 {
   int32 result;
 
-  if (unlikely(pg_add_s32_overflow((int32) arg1, arg2, &result)))
+  if (unlikely(pg_add_s32_overflow((int32) num1, num2, &result)))
   {
     elog(ERROR, "integer out of range");
     return INT_MAX;
@@ -734,11 +733,11 @@ pl_int16_int32(int16 arg1, int32 arg2)
  * @note Derived from PostgreSQL function @p int24mi()
  */
 int32
-mi_int16_int32(int16 arg1, int32 arg2)
+minus_int16_int32(int16 num1, int32 num2)
 {
   int32 result;
 
-  if (unlikely(pg_sub_s32_overflow((int32) arg1, arg2, &result)))
+  if (unlikely(pg_sub_s32_overflow((int32) num1, num2, &result)))
   {
     elog(ERROR, "integer out of range");
     return INT_MAX;
@@ -752,11 +751,11 @@ mi_int16_int32(int16 arg1, int32 arg2)
  * @note Derived from PostgreSQL function @p int24mul()
  */
 int32
-mul_int16_int32(int16 arg1, int32 arg2)
+mul_int16_int32(int16 num1, int32 num2)
 {
   int32 result;
 
-  if (unlikely(pg_mul_s32_overflow((int32) arg1, arg2, &result)))
+  if (unlikely(pg_mul_s32_overflow((int32) num1, num2, &result)))
   {
     elog(ERROR, "integer out of range");
     return INT_MAX;
@@ -770,16 +769,16 @@ mul_int16_int32(int16 arg1, int32 arg2)
  * @note Derived from PostgreSQL function @p int24div()
  */
 int32
-div_int16_int32(int16 arg1, int32 arg2)
+div_int16_int32(int16 num1, int32 num2)
 {
-  if (unlikely(arg2 == 0))
+  if (unlikely(num2 == 0))
   {
     elog(ERROR, "division by zero");
     return INT_MAX;
   }
 
   /* No overflow is possible */
-  return ((int32) arg1 / arg2);
+  return ((int32) num1 / num2);
 }
 
 /**
@@ -788,11 +787,11 @@ div_int16_int32(int16 arg1, int32 arg2)
  * @note Derived from PostgreSQL function @p int42pl()
  */
 int32
-pl_int32_int16(int32 arg1, int16 arg2)
+add_int32_int16(int32 num1, int16 num2)
 {
   int32 result;
 
-  if (unlikely(pg_add_s32_overflow(arg1, (int32) arg2, &result)))
+  if (unlikely(pg_add_s32_overflow(num1, (int32) num2, &result)))
   {
     elog(ERROR, "integer out of range");
     return INT_MAX;
@@ -806,11 +805,11 @@ pl_int32_int16(int32 arg1, int16 arg2)
  * @note Derived from PostgreSQL function @p int42mi()
  */
 int32
-mi_int32_int16(int32 arg1, int16 arg2)
+minus_int32_int16(int32 num1, int16 num2)
 {
   int32 result;
 
-  if (unlikely(pg_sub_s32_overflow(arg1, (int32) arg2, &result)))
+  if (unlikely(pg_sub_s32_overflow(num1, (int32) num2, &result)))
   {
     elog(ERROR, "integer out of range");
     return INT_MAX;
@@ -824,11 +823,11 @@ mi_int32_int16(int32 arg1, int16 arg2)
  * @note Derived from PostgreSQL function @p int42mul()
  */
 int32
-mul_int32_int16(int32 arg1, int16 arg2)
+mul_int32_int16(int32 num1, int16 num2)
 {
   int32 result;
 
-  if (unlikely(pg_mul_s32_overflow(arg1, (int32) arg2, &result)))
+  if (unlikely(pg_mul_s32_overflow(num1, (int32) num2, &result)))
   {
     elog(ERROR, "integer out of range");
     return INT_MAX;
@@ -842,11 +841,11 @@ mul_int32_int16(int32 arg1, int16 arg2)
  * @note Derived from PostgreSQL function @p int42div()
  */
 int32
-div_int32_int16(int32 arg1, int16 arg2)
+div_int32_int16(int32 num1, int16 num2)
 {
   int32 result;
 
-  if (unlikely(arg2 == 0))
+  if (unlikely(num2 == 0))
   {
     elog(ERROR, "division by zero");
     return INT_MAX;
@@ -858,20 +857,20 @@ div_int32_int16(int32 arg1, int16 arg2)
    * zero, some throw an exception.  We can dodge the problem by recognizing
    * that division by -1 is the same as negation.
    */
-  if (arg2 == -1)
+  if (num2 == -1)
   {
-    if (unlikely(arg1 == PG_INT32_MIN))
+    if (unlikely(num1 == PG_INT32_MIN))
     {
       elog(ERROR, "integer out of range");
       return INT_MAX;
     }
-    result = -arg1;
+    result = -num1;
     return result;
   }
 
   /* No overflow is possible */
 
-  result = arg1 / arg2;
+  result = num1 / num2;
 
   return result;
 }
@@ -882,9 +881,9 @@ div_int32_int16(int32 arg1, int16 arg2)
  * @note Derived from PostgreSQL function @p int4mod()
  */
 int32
-int32_mod(int32 arg1, int32 arg2)
+int32_mod(int32 num1, int32 num2)
 {
-  if (unlikely(arg2 == 0))
+  if (unlikely(num2 == 0))
   {
     elog(ERROR, "division by zero");
     return INT_MAX;
@@ -895,12 +894,12 @@ int32_mod(int32 arg1, int32 arg2)
    * is a bit silly since the correct answer is perfectly well-defined,
    * namely zero.
    */
-  if (arg2 == -1)
+  if (num2 == -1)
     return (0);
 
   /* No overflow is possible */
 
-  return (arg1 % arg2);
+  return (num1 % num2);
 }
 
 /**
@@ -909,9 +908,9 @@ int32_mod(int32 arg1, int32 arg2)
  * @note Derived from PostgreSQL function @p int2mod()
  */
 int16
-int16_mod(int16 arg1, int16 arg2)
+int16_mod(int16 num1, int16 num2)
 {
-  if (unlikely(arg2 == 0))
+  if (unlikely(num2 == 0))
   {
     elog(ERROR, "division by zero");
     return SHRT_MAX;
@@ -923,12 +922,12 @@ int16_mod(int16 arg1, int16 arg2)
    * namely zero.  (It's not clear this ever happens when dealing with
    * int16, but we might as well have the test for safety.)
    */
-  if (arg2 == -1)
+  if (num2 == -1)
     return (0);
 
   /* No overflow is possible */
 
-  return (arg1 % arg2);
+  return (num1 % num2);
 }
 
 /**
@@ -937,16 +936,16 @@ int16_mod(int16 arg1, int16 arg2)
  * @note Derived from PostgreSQL function @p int4abs()
  */
 int32
-int32_abs(int32 arg)
+int32_abs(int32 num)
 {
   int32 result;
 
-  if (unlikely(arg == PG_INT32_MIN))
+  if (unlikely(num == PG_INT32_MIN))
   {
     elog(ERROR, "integer out of range");
     return INT_MAX;
   }
-  result = (arg < 0) ? -arg : arg;
+  result = (num < 0) ? -num : num;
   return result;
 }
 
@@ -956,16 +955,16 @@ int32_abs(int32 arg)
  * @note Derived from PostgreSQL function @p int2abs()
  */
 int16
-int16_abs(int16 arg)
+int16_abs(int16 num)
 {
   int16    result;
 
-  if (unlikely(arg == PG_INT16_MIN))
+  if (unlikely(num == PG_INT16_MIN))
   {
     elog(ERROR, "smallint out of range");
     return SHRT_MAX;
   }
-  result = (arg < 0) ? -arg : arg;
+  result = (num < 0) ? -num : num;
   return result;
 }
 
@@ -984,14 +983,14 @@ int16_abs(int16 arg)
  * which cannot be represented as a 32-bit signed integer.
  */
 static int32
-int4gcd_internal(int32 arg1, int32 arg2)
+int4gcd_internal(int32 num1, int32 num2)
 {
   int32    swap;
   int32    a1,
         a2;
 
   /*
-   * Put the greater absolute value in arg1.
+   * Put the greater absolute value in num1.
    *
    * This would happen automatically in the loop below, but avoids an
    * expensive modulo operation, and simplifies the special-case handling
@@ -999,19 +998,19 @@ int4gcd_internal(int32 arg1, int32 arg2)
    *
    * We do this in negative space in order to handle INT_MIN.
    */
-  a1 = (arg1 < 0) ? arg1 : -arg1;
-  a2 = (arg2 < 0) ? arg2 : -arg2;
+  a1 = (num1 < 0) ? num1 : -num1;
+  a2 = (num2 < 0) ? num2 : -num2;
   if (a1 > a2)
   {
-    swap = arg1;
-    arg1 = arg2;
-    arg2 = swap;
+    swap = num1;
+    num1 = num2;
+    num2 = swap;
   }
 
   /* Special care needs to be taken with INT_MIN.  See comments above. */
-  if (arg1 == PG_INT32_MIN)
+  if (num1 == PG_INT32_MIN)
   {
-    if (arg2 == 0 || arg2 == PG_INT32_MIN)
+    if (num2 == 0 || num2 == PG_INT32_MIN)
     {
       elog(ERROR, "integer out of range");
     }
@@ -1022,26 +1021,26 @@ int4gcd_internal(int32 arg1, int32 arg2)
      * well-defined, namely zero.  Guard against this and just return the
      * result, gcd(INT_MIN, -1) = 1.
      */
-    if (arg2 == -1)
+    if (num2 == -1)
       return 1;
   }
 
   /* Use the Euclidean algorithm to find the GCD */
-  while (arg2 != 0)
+  while (num2 != 0)
   {
-    swap = arg2;
-    arg2 = arg1 % arg2;
-    arg1 = swap;
+    swap = num2;
+    num2 = num1 % num2;
+    num1 = swap;
   }
 
   /*
    * Make sure the result is positive. (We know we don't have INT_MIN
    * anymore).
    */
-  if (arg1 < 0)
-    arg1 = -arg1;
+  if (num1 < 0)
+    num1 = -num1;
 
-  return arg1;
+  return num1;
 }
 
 /**
@@ -1050,9 +1049,9 @@ int4gcd_internal(int32 arg1, int32 arg2)
  * @note Derived from PostgreSQL function @p int4gcd()
  */
 int32
-int32_gcd(int32 arg1, int32 arg2)
+int32_gcd(int32 num1, int32 num2)
 {
-  int32 result = int4gcd_internal(arg1, arg2);
+  int32 result = int4gcd_internal(num1, num2);
   return result;
 }
 
@@ -1062,7 +1061,7 @@ int32_gcd(int32 arg1, int32 arg2)
  * @note Derived from PostgreSQL function @p int4lcm()
  */
 int32
-int32_lcm(int32 arg1, int32 arg2)
+int32_lcm(int32 num1, int32 num2)
 {
   int32    gcd;
   int32 result;
@@ -1072,14 +1071,14 @@ int32_lcm(int32 arg1, int32 arg2)
    * division-by-zero error below when x is zero, and an overflow error from
    * the GCD computation when x = INT_MIN.
    */
-  if (arg1 == 0 || arg2 == 0)
+  if (num1 == 0 || num2 == 0)
     return (0);
 
   /* lcm(x, y) = abs(x / gcd(x, y) * y) */
-  gcd = int4gcd_internal(arg1, arg2);
-  arg1 = arg1 / gcd;
+  gcd = int4gcd_internal(num1, num2);
+  num1 = num1 / gcd;
 
-  if (unlikely(pg_mul_s32_overflow(arg1, arg2, &result)))
+  if (unlikely(pg_mul_s32_overflow(num1, num2, &result)))
   {
     elog(ERROR, "integer out of range");
     return INT_MAX;
@@ -1104,9 +1103,9 @@ int32_lcm(int32 arg1, int32 arg2)
  * @note Derived from PostgreSQL function @p int2larger()
  */
 int16
-int16_larger(int16 arg1, int16 arg2)
+int16_larger(int16 num1, int16 num2)
 {
-  return ((arg1 > arg2) ? arg1 : arg2);
+  return ((num1 > num2) ? num1 : num2);
 }
 
 /**
@@ -1115,9 +1114,9 @@ int16_larger(int16 arg1, int16 arg2)
  * @note Derived from PostgreSQL function @p int2smaller()
  */
 int16
-int16_smaller(int16 arg1, int16 arg2)
+int16_smaller(int16 num1, int16 num2)
 {
-  return ((arg1 < arg2) ? arg1 : arg2);
+  return ((num1 < num2) ? num1 : num2);
 }
 
 /**
@@ -1126,9 +1125,9 @@ int16_smaller(int16 arg1, int16 arg2)
  * @note Derived from PostgreSQL function @p int4larger()
  */
 int32
-int32_larger(int32 arg1, int32 arg2)
+int32_larger(int32 num1, int32 num2)
 {
-  return ((arg1 > arg2) ? arg1 : arg2);
+  return ((num1 > num2) ? num1 : num2);
 }
 
 /**
@@ -1137,53 +1136,53 @@ int32_larger(int32 arg1, int32 arg2)
  * @note Derived from PostgreSQL function @p int4smaller()
  */
 int32
-int32_smaller(int32 arg1, int32 arg2)
+int32_smaller(int32 num1, int32 num2)
 {
-  return ((arg1 < arg2) ? arg1 : arg2);
+  return ((num1 < num2) ? num1 : num2);
 }
 
 /*
  * Bit-pushing operators
  *
- *    int[24]and    - returns arg1 & arg2
- *    int[24]or    - returns arg1 | arg2
- *    int[24]xor    - returns arg1 # arg2
- *    int[24]not    - returns ~arg1
- *    int[24]shl    - returns arg1 << arg2
- *    int[24]shr    - returns arg1 >> arg2
+ *    int[24]and    - returns num1 & num2
+ *    int[24]or    - returns num1 | num2
+ *    int[24]xor    - returns num1 # num2
+ *    int[24]not    - returns ~num1
+ *    int[24]shl    - returns num1 << num2
+ *    int[24]shr    - returns num1 >> num2
  */
 
 /**
  * @ingroup meos_base_int
- * @brief Return the bit and of two int32 numbers
+ * @brief Return the binary and of two int32 numbers
  * @note Derived from PostgreSQL function @p int4and()
  */
 int32
-int32_and(int32 arg1, int32 arg2)
+int32_and(int32 num1, int32 num2)
 {
-  return (arg1 & arg2);
+  return (num1 & num2);
 }
 
 /**
  * @ingroup meos_base_int
- * @brief Return the bit or of two int32 numbers
+ * @brief Return the binary or of two int32 numbers
  * @note Derived from PostgreSQL function @p int4or()
  */
 int32
-int32_or(int32 arg1, int32 arg2)
+int32_or(int32 num1, int32 num2)
 {
-  return (arg1 | arg2);
+  return (num1 | num2);
 }
 
 /**
  * @ingroup meos_base_int
- * @brief Return the bit xor of two int32 numbers
+ * @brief Return the binary xor of two int32 numbers
  * @note Derived from PostgreSQL function @p int4xor()
  */
 int32
-int32_xor(int32 arg1, int32 arg2)
+int32_xor(int32 num1, int32 num2)
 {
-  return (arg1 ^ arg2);
+  return (num1 ^ num2);
 }
 
 /**
@@ -1192,9 +1191,9 @@ int32_xor(int32 arg1, int32 arg2)
  * @note Derived from PostgreSQL function @p int4shl()
  */
 int32
-int32_shl(int32 arg1, int32 arg2)
+int32_shl(int32 num1, int32 num2)
 {
-  return (arg1 << arg2);
+  return (num1 << num2);
 }
 
 /**
@@ -1203,64 +1202,64 @@ int32_shl(int32 arg1, int32 arg2)
  * @note Derived from PostgreSQL function @p int4shr()
  */
 int32
-int32_shr(int32 arg1, int32 arg2)
+int32_shr(int32 num1, int32 num2)
 {
-  return (arg1 >> arg2);
+  return (num1 >> num2);
 }
 
 /**
  * @ingroup meos_base_int
- * @brief Return the bit not of two int32 numbers
+ * @brief Return the binary not of a int32 number
  * @note Derived from PostgreSQL function @p int4not()
  */
 int32
-int32_not(int32 arg)
+int32_not(int32 num)
 {
-  return (~arg);
+  return (~num);
 }
 
 /**
  * @ingroup meos_base_int
- * @brief Return the bit and of two int16 numbers
+ * @brief Return the binary and of two int16 numbers
  * @note Derived from PostgreSQL function @p int2and()
  */
 int16
-int16_and(int16 arg1, int16 arg2)
+int16_and(int16 num1, int16 num2)
 {
-  return (arg1 & arg2);
+  return (num1 & num2);
 }
 
 /**
  * @ingroup meos_base_int
- * @brief Return the bit or of two int16 numbers
+ * @brief Return the binary or of two int16 numbers
  * @note Derived from PostgreSQL function @p int2or()
  */
 int16
-int16_or(int16 arg1, int16 arg2)
+int16_or(int16 num1, int16 num2)
 {
-  return (arg1 | arg2);
+  return (num1 | num2);
 }
 
 /**
  * @ingroup meos_base_int
- * @brief Return the bit xor of two int16 numbers
+ * @brief Return the binary xor of two int16 numbers
  * @note Derived from PostgreSQL function @p int2xor()
  */
 int16
-int16_xor(int16 arg1, int16 arg2)
+int16_xor(int16 num1, int16 num2)
 {
-  return (arg1 ^ arg2);
+  return (num1 ^ num2);
 }
 
 /**
  * @ingroup meos_base_int
- * @brief Return the bit not of an int16 number
+ * @brief Return the binary not of an int16 number
  * @note Derived from PostgreSQL function @p int2not()
  */
 int16
-int16_not(int16 arg)
+int16_not(int16 num)
 {
-  return (~arg);
+  return (~num);
 }
 
 /**
@@ -1269,9 +1268,9 @@ int16_not(int16 arg)
  * @note Derived from PostgreSQL function @p int2shl()
  */
 int16
-int16_shl(int16 arg1, int32 arg2)
+int16_shl(int16 num1, int32 num2)
 {
-  return (arg1 << arg2);
+  return (num1 << num2);
 }
 
 /**
@@ -1280,9 +1279,9 @@ int16_shl(int16 arg1, int32 arg2)
  * @note Derived from PostgreSQL function @p int2shr()
  */
 int16
-int16_shr(int16 arg1, int32 arg2)
+int16_shr(int16 num1, int32 num2)
 {
-  return (arg1 >> arg2);
+  return (num1 >> num2);
 }
 
 /*****************************************************************************/

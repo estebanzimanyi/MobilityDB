@@ -33,14 +33,13 @@
  * PostgreSQL functions in order to bypass the function manager @p fmgr.c.
  */
 
-#include <postgres_types.h>
-
 /* C */
 #include <float.h>
 #include <math.h>
 #include <limits.h>
 /* PostgreSQL */
 #include <postgres.h>
+#include <postgres_types.h>
 #include <common/hashfn.h>
 #include <common/int.h>
 #include <common/int128.h>
@@ -48,10 +47,10 @@
 #include <utils/float.h>
 #include "utils/formatting.h"
 #include "utils/timestamp.h"
-#include "utils/varlena.h"
 #if POSTGRESQL_VERSION_NUMBER >= 160000
   #include "varatt.h"
 #endif
+#include "utils/varlena.h"
 /* PostGIS */
 #include <liblwgeom_internal.h> /* for OUT_DOUBLE_BUFFER_SIZE */
 /* MEOS */
@@ -130,24 +129,6 @@ text2cstring(const text *txt)
   memcpy(str, VARDATA(txt), size);
   str[size] = '\0';
   return str;
-}
-
-/**
- * @ingroup meos_base_text
- * @brief Comparison function for text values
- * @param[in] txt1,txt2 Text values
- * @note Function derived from PostgreSQL since it is declared static. Notice
- * that the third attribute @p collid of the original function has been removed
- * while waiting for locale management in MEOS
- */
-int
-text_cmp(const text *txt1, const text *txt2)
-{
-  char *t1p = VARDATA_ANY(txt1);
-  char *t2p = VARDATA_ANY(txt2);
-  int len1 = (int) VARSIZE_ANY_EXHDR(txt1);
-  int len2 = (int) VARSIZE_ANY_EXHDR(txt2);
-  return varstr_cmp(t1p, len1, t2p, len2, DEFAULT_COLLATION_OID);
 }
 
 #if MEOS

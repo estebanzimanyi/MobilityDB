@@ -19,18 +19,15 @@
 #include <stdlib.h>
 /* PostgreSQL */
 #include <postgres.h>
-#include "catalog/pg_type_d.h"
+#include <postgres_types.h>
+#include "catalog/pg_type.h"
 #include <common/hashfn.h>
 #include <common/int.h>
 #include <port/simd.h>
+#include <utils/date.h>
 #include <utils/json.h>
 #include <utils/jsonb.h>
-/* MEOS */
-#include <meos.h>
-#include <postgres_types.h>
-#include "temporal/temporal.h"
-#include "temporal/lifting.h"
-#include "temporal/type_util.h"
+#include <utils/varlena.h> /* For DatumGetTextP */
 
 // #include "postgres.h"
 // #include "catalog/pg_proc.h"

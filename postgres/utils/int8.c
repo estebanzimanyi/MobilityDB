@@ -76,7 +76,7 @@ int64_out(int64 num)
  * @note Derived from PostgreSQL function @p int8eq()
  */
 bool
-int64_eq(int64 num1, int64 num2)
+eq_int64_int64(int64 num1, int64 num2)
 {
   return (num1 == num2);
 }
@@ -87,7 +87,7 @@ int64_eq(int64 num1, int64 num2)
  * @note Derived from PostgreSQL function @p int8ne()
  */
 bool
-int64_ne(int64 num1, int64 num2)
+ne_int64_int64(int64 num1, int64 num2)
 {
   return (num1 != num2);
 }
@@ -98,7 +98,7 @@ int64_ne(int64 num1, int64 num2)
  * @note Derived from PostgreSQL function @p int8lt()
  */
 bool
-int64_lt(int64 num1, int64 num2)
+lt_int64_int64(int64 num1, int64 num2)
 {
   return (num1 < num2);
 }
@@ -109,7 +109,7 @@ int64_lt(int64 num1, int64 num2)
  * @note Derived from PostgreSQL function @p int8gt()
  */
 bool
-int64_gt(int64 num1, int64 num2)
+gt_int64_int64(int64 num1, int64 num2)
 {
   return (num1 > num2);
 }
@@ -121,7 +121,7 @@ int64_gt(int64 num1, int64 num2)
  * @note Derived from PostgreSQL function @p int8le()
  */
 bool
-int64_le(int64 num1, int64 num2)
+le_int64_int64(int64 num1, int64 num2)
 {
   return (num1 <= num2);
 }
@@ -133,7 +133,7 @@ int64_le(int64 num1, int64 num2)
  * @note Derived from PostgreSQL function @p int8ge()
  */
 bool
-int64_ge(int64 num1, int64 num2)
+ge_int64_int64(int64 num1, int64 num2)
 {
   return (num1 >= num2);
 }
@@ -420,7 +420,7 @@ ge_int16_int64(int16 num1, int64 num2)
  * @note Derived from PostgreSQL function @p int8um()
  */
 int64
-int64_um(int64 num)
+int64_uminus(int64 num)
 {
   int64 result;
   if (unlikely(num == PG_INT64_MIN))
@@ -438,7 +438,7 @@ int64_um(int64 num)
  * @note Derived from PostgreSQL function @p int8up()
  */
 int64
-int64_up(int64 num)
+int64_uplus(int64 num)
 {
   return num;
 }
@@ -449,7 +449,7 @@ int64_up(int64 num)
  * @note Derived from PostgreSQL function @p int8pl()
  */
 int64
-int64_pl(int64 num1, int64 num2)
+add_int64_int64(int64 num1, int64 num2)
 {
   int64 result;
   if (unlikely(pg_add_s64_overflow(num1, num2, &result)))
@@ -466,7 +466,7 @@ int64_pl(int64 num1, int64 num2)
  * @note Derived from PostgreSQL function @p int8mi()
  */
 int64
-int64_mi(int64 num1, int64 num2)
+minus_int64_int64(int64 num1, int64 num2)
 {
   int64 result;
   if (unlikely(pg_sub_s64_overflow(num1, num2, &result)))
@@ -483,7 +483,7 @@ int64_mi(int64 num1, int64 num2)
  * @note Derived from PostgreSQL function @p int8mul()
  */
 int64
-int64_mul(int64 num1, int64 num2)
+mul_int64_int64(int64 num1, int64 num2)
 {
   int64 result;
   if (unlikely(pg_mul_s64_overflow(num1, num2, &result)))
@@ -500,7 +500,7 @@ int64_mul(int64 num1, int64 num2)
  * @note Derived from PostgreSQL function @p int8div()
  */
 int64
-int64_div(int64 num1, int64 num2)
+div_int64_int64(int64 num1, int64 num2)
 {
   int64 result;
 
@@ -550,7 +550,7 @@ int64_abs(int64 num)
 
 /**
  * @ingroup meos_base_int
- * @brief Return the modulo of an int64 number by another one
+ * @brief Return the modulo of two int64 numbers
  * @note Derived from PostgreSQL function @p int8mod()
  */
 int64
@@ -767,7 +767,7 @@ int64_smaller(int64 num1, int64 num2)
  * @note Derived from PostgreSQL function @p int84pl()
  */
 int64
-pl_int64_int32(int64 num1, int32 num2)
+add_int64_int32(int64 num1, int32 num2)
 {
   int64 result;
   if (unlikely(pg_add_s64_overflow(num1, (int64) num2, &result)))
@@ -784,7 +784,7 @@ pl_int64_int32(int64 num1, int32 num2)
  * @note Derived from PostgreSQL function @p int84mi()
  */
 int64
-mi_int64_int32(int64 num1, int32 num2)
+minus_int64_int32(int64 num1, int32 num2)
 {
   int64 result;
   if (unlikely(pg_sub_s64_overflow(num1, (int64) num2, &result)))
@@ -854,7 +854,7 @@ div_int64_int32(int64 num1, int32 num2)
  * @note Derived from PostgreSQL function @p int48pl()
  */
 int64
-pl_int32_int64(int32 num1, int64 num2)
+add_int32_int64(int32 num1, int64 num2)
 {
   int64 result;
   if (unlikely(pg_add_s64_overflow((int64) num1, num2, &result)))
@@ -871,7 +871,7 @@ pl_int32_int64(int32 num1, int64 num2)
  * @note Derived from PostgreSQL function @p int48mi()
  */
 int64
-mi_int32_int64(int32 num1, int64 num2)
+minus_int32_int64(int32 num1, int64 num2)
 {
   int64 result;
   if (unlikely(pg_sub_s64_overflow((int64) num1, num2, &result)))
@@ -923,7 +923,7 @@ div_int32_int64(int32 num1, int64 num2)
  * @note Derived from PostgreSQL function @p int82pl()
  */
 int64
-pl_int64_int16(int64 num1, int16 num2)
+add_int64_int16(int64 num1, int16 num2)
 {
   int64 result;
   if (unlikely(pg_add_s64_overflow(num1, (int64) num2, &result)))
@@ -940,7 +940,7 @@ pl_int64_int16(int64 num1, int16 num2)
  * @note Derived from PostgreSQL function @p int82mi()
  */
 int64
-mi_int64_int16(int64 num1, int16 num2)
+minus_int64_int16(int64 num1, int16 num2)
 {
   int64 result;
   if (unlikely(pg_sub_s64_overflow(num1, (int64) num2, &result)))
@@ -1009,7 +1009,7 @@ div_int64_int16(int64 num1, int16 num2)
  * @note Derived from PostgreSQL function @p int28pl()
  */
 int64
-pl_int16_int64(int16 num1, int64 num2)
+add_int16_int64(int16 num1, int64 num2)
 {
   int64 result;
   if (unlikely(pg_add_s64_overflow((int64) num1, num2, &result)))
@@ -1026,7 +1026,7 @@ pl_int16_int64(int16 num1, int64 num2)
  * @note Derived from PostgreSQL function @p int28mi()
  */
 int64
-mi_int16_int64(int16 num1, int64 num2)
+minus_int16_int64(int16 num1, int64 num2)
 {
   int64 result;
   if (unlikely(pg_sub_s64_overflow((int64) num1, num2, &result)))

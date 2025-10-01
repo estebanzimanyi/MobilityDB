@@ -32,25 +32,25 @@
  * @brief General utility functions for temporal types
  */
 
-#include "temporal/type_util.h"
-
 /* C */
 #include <assert.h>
 #include <float.h>
 #include <limits.h>
 /* PostgreSQL */
 #include <postgres.h>
+#include <postgres_types.h>
 #include <utils/float.h>
 #include <utils/timestamp.h>
 #if POSTGRESQL_VERSION_NUMBER >= 160000
   #include "varatt.h"
 #endif
+#include "utils/varlena.h"
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
 #include <meos_internal_geo.h>
-#include <postgres_types.h>
 #include "temporal/span.h"
+#include "temporal/type_util.h"
 #include "geo/tgeo_spatialfuncs.h"
 #if CBUFFER
   #include <meos_cbuffer.h>
@@ -119,9 +119,9 @@ datum_cmp(Datum l, Datum r, meosType type)
       return (DatumGetInt64(l) < DatumGetInt64(r)) ? -1 :
         ((DatumGetInt64(l) > DatumGetInt64(r)) ? 1 : 0);
     case T_FLOAT8:
-      return float8_cmp_internal(DatumGetFloat8(l), DatumGetFloat8(r));
+      return pg_float8_cmp(DatumGetFloat8(l), DatumGetFloat8(r));
     case T_TEXT:
-      return text_cmp(DatumGetTextP(l), DatumGetTextP(r));
+      return text_cmp(DatumGetTextP(l), DatumGetTextP(r), DEFAULT_COLLATION_OID);
     case T_GEOMETRY:
     case T_GEOGRAPHY:
       return gserialized_cmp(DatumGetGserializedP(l), DatumGetGserializedP(r));
@@ -202,7 +202,7 @@ datum_eq(Datum l, Datum r, meosType type)
     case T_FLOAT8:
       return float8_eq(DatumGetFloat8(l), DatumGetFloat8(r));
     case T_TEXT:
-      return text_cmp(DatumGetTextP(l), DatumGetTextP(r)) == 0;
+      return text_cmp(DatumGetTextP(l), DatumGetTextP(r), DEFAULT_COLLATION_OID) == 0;
     case T_DOUBLE2:
       return double2_eq(DatumGetDouble2P(l), DatumGetDouble2P(r));
     case T_DOUBLE3:

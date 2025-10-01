@@ -36,6 +36,7 @@
 #include <assert.h>
 /* PostgreSQL */
 #include <postgres.h>
+#include <postgres_types.h>
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
