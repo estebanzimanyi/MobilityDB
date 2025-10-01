@@ -194,9 +194,9 @@ bool_to_text(bool b)
  * @note Derived from PostgreSQL function @p booleq()
  */
 bool
-bool_eq(bool arg1, bool arg2)
+bool_eq(bool b1, bool b2)
 {
-  return (arg1 == arg2);
+  return (b1 == b2);
 }
 
 /**
@@ -205,9 +205,9 @@ bool_eq(bool arg1, bool arg2)
  * @note Derived from PostgreSQL function @p boolne()
  */
 bool
-bool_ne(bool arg1, bool arg2)
+bool_ne(bool b1, bool b2)
 {
-  return (arg1 != arg2);
+  return (b1 != b2);
 }
 
 /**
@@ -216,9 +216,9 @@ bool_ne(bool arg1, bool arg2)
  * @note Derived from PostgreSQL function @p boollt()
  */
 bool
-bool_lt(bool arg1, bool arg2)
+bool_lt(bool b1, bool b2)
 {
-  return (arg1 < arg2);
+  return (b1 < b2);
 }
 
 /**
@@ -227,9 +227,9 @@ bool_lt(bool arg1, bool arg2)
  * @note Derived from PostgreSQL function @p boolgt()
  */
 bool
-bool_gt(bool arg1, bool arg2)
+bool_gt(bool b1, bool b2)
 {
-  return (arg1 > arg2);
+  return (b1 > b2);
 }
 
 /**
@@ -238,9 +238,9 @@ bool_gt(bool arg1, bool arg2)
  * @note Derived from PostgreSQL function @p boolle()
  */
 bool
-bool_le(bool arg1, bool arg2)
+bool_le(bool b1, bool b2)
 {
-  return (arg1 <= arg2);
+  return (b1 <= b2);
 }
 
 /**
@@ -249,9 +249,9 @@ bool_le(bool arg1, bool arg2)
  * @note Derived from PostgreSQL function @p boolge()
  */
 bool
-bool_ge(bool arg1, bool arg2)
+bool_ge(bool b1, bool b2)
 {
-  return (arg1 >= arg2);
+  return (b1 >= b2);
 }
 
 /**
@@ -260,9 +260,9 @@ bool_ge(bool arg1, bool arg2)
  * @note Derived from PostgreSQL function @p hashbool()
  */
 uint32
-bool_hash(bool arg)
+bool_hash(bool b)
 {
-  return hash_uint32((int32) arg);
+  return hash_uint32((int32) b);
 }
 
 /**
@@ -271,9 +271,9 @@ bool_hash(bool arg)
  * @note Derived from PostgreSQL function @p hashboolextended()
  */
 uint64
-bool_hash_extended(bool arg, int64 seed)
+bool_hash_extended(bool b, int64 seed)
 {
-  return hash_uint32_extended((int32) arg, seed);
+  return hash_uint32_extended((int32) b, seed);
 }
 
 /****************************************************************************/

@@ -34,6 +34,7 @@
 
 /* PostgreSQL */
 #include <postgres.h>
+#include <postgres_types.h>
 #include <fmgr.h>
 #if POSTGRESQL_VERSION_NUMBER >= 160000
   #include "varatt.h"

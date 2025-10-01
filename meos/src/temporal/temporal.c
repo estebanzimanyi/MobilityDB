@@ -40,6 +40,8 @@
 #include <geos_c.h>
 #include <limits.h>
 /* PostgreSQL */
+#include <postgres.h>
+#include <postgres_types.h>
 #include <utils/float.h>
 #if POSTGRESQL_VERSION_NUMBER >= 160000
   #include "varatt.h"

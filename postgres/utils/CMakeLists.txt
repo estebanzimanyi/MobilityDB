@@ -1,18 +1,32 @@
-add_library(utils OBJECT
+set(UTILS_SRCS
   bool.c
   int.c
   int8.c
   date.c
   datetime.c
-  # float.c
-  format_type.c
+  float.c
+  # format_type.c
   formatting.c
-  # numeric.c
+  mbutils.c
+  numeric.c
   numutils.c
+  pg_error.c
   # pg_locale.c
   timestamp.c
   varlena.c
   )
 
-# set_property(TARGET utils PROPERTY C_VISIBILITY_PRESET hidden)
-# set_property(TARGET utils PROPERTY POSITION_INDEPENDENT_CODE ON)
+if(${POSTGRESQL_VERSION_NUMBER} GREATER_EQUAL 160000)
+  list(APPEND UTILS_SRCS
+    json.c
+    jsonb.c
+    jsonb_op.c
+    jsonb_util.c
+    jsonfuncs.c
+)
+endif()
+
+add_library(utils OBJECT ${UTILS_SRCS})
+
+set_property(TARGET utils PROPERTY C_VISIBILITY_PRESET hidden)
+set_property(TARGET utils PROPERTY POSITION_INDEPENDENT_CODE ON)

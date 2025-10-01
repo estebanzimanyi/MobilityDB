@@ -22,6 +22,7 @@
 // #include "common/string.h"
 #include "miscadmin.h"
 // #include "nodes/nodeFuncs.h"
+#include "parser/scansup.h"
 #include "utils/builtins.h"
 #include "utils/date.h"
 #include "utils/datetime.h"
@@ -372,85 +373,85 @@ j2day(int date)
 
 #if 0 /* NOT USED */
 
-/*
- * GetCurrentDateTime()
- *
- * Get the transaction start time ("now()") broken down as a struct pg_tm,
- * converted according to the session timezone setting.
- *
- * This is just a convenience wrapper for GetCurrentTimeUsec, to cover the
- * case where caller doesn't need either fractional seconds or tz offset.
- */
-void
-GetCurrentDateTime(struct pg_tm *tm)
-{
-  fsec_t    fsec;
+// /*
+ // * GetCurrentDateTime()
+ // *
+ // * Get the transaction start time ("now()") broken down as a struct pg_tm,
+ // * converted according to the session timezone setting.
+ // *
+ // * This is just a convenience wrapper for GetCurrentTimeUsec, to cover the
+ // * case where caller doesn't need either fractional seconds or tz offset.
+ // */
+// void
+// GetCurrentDateTime(struct pg_tm *tm)
+// {
+  // fsec_t    fsec;
 
-  GetCurrentTimeUsec(tm, &fsec, NULL);
-}
+  // GetCurrentTimeUsec(tm, &fsec, NULL);
+// }
 
-/*
- * GetCurrentTimeUsec()
- *
- * Get the transaction start time ("now()") broken down as a struct pg_tm,
- * including fractional seconds and timezone offset.  The time is converted
- * according to the session timezone setting.
- *
- * Callers may pass tzp = NULL if they don't need the offset, but this does
- * not affect the conversion behavior (unlike timestamp2tm()).
- *
- * Internally, we cache the result, since this could be called many times
- * in a transaction, within which now() doesn't change.
- */
-void
-GetCurrentTimeUsec(struct pg_tm *tm, fsec_t *fsec, int *tzp)
-{
-  TimestampTz cur_ts = GetCurrentTransactionStartTimestamp();
+// /*
+ // * GetCurrentTimeUsec()
+ // *
+ // * Get the transaction start time ("now()") broken down as a struct pg_tm,
+ // * including fractional seconds and timezone offset.  The time is converted
+ // * according to the session timezone setting.
+ // *
+ // * Callers may pass tzp = NULL if they don't need the offset, but this does
+ // * not affect the conversion behavior (unlike timestamp2tm()).
+ // *
+ // * Internally, we cache the result, since this could be called many times
+ // * in a transaction, within which now() doesn't change.
+ // */
+// void
+// GetCurrentTimeUsec(struct pg_tm *tm, fsec_t *fsec, int *tzp)
+// {
+  // TimestampTz cur_ts = GetCurrentTransactionStartTimestamp();
 
-  /*
-   * The cache key must include both current time and current timezone.  By
-   * representing the timezone by just a pointer, we're assuming that
-   * distinct timezone settings could never have the same pointer value.
-   * This is true by virtue of the hashtable used inside pg_tzset();
-   * however, it might need another look if we ever allow entries in that
-   * hash to be recycled.
-   */
-  static TimestampTz cache_ts = 0;
-  static pg_tz *cache_timezone = NULL;
-  static struct pg_tm cache_tm;
-  static fsec_t cache_fsec;
-  static int  cache_tz;
+  // /*
+   // * The cache key must include both current time and current timezone.  By
+   // * representing the timezone by just a pointer, we're assuming that
+   // * distinct timezone settings could never have the same pointer value.
+   // * This is true by virtue of the hashtable used inside pg_tzset();
+   // * however, it might need another look if we ever allow entries in that
+   // * hash to be recycled.
+   // */
+  // static TimestampTz cache_ts = 0;
+  // static pg_tz *cache_timezone = NULL;
+  // static struct pg_tm cache_tm;
+  // static fsec_t cache_fsec;
+  // static int  cache_tz;
 
-  if (cur_ts != cache_ts || session_timezone != cache_timezone)
-  {
-    /*
-     * Make sure cache is marked invalid in case of error after partial
-     * update within timestamp2tm.
-     */
-    cache_timezone = NULL;
+  // if (cur_ts != cache_ts || session_timezone != cache_timezone)
+  // {
+    // /*
+     // * Make sure cache is marked invalid in case of error after partial
+     // * update within timestamp2tm.
+     // */
+    // cache_timezone = NULL;
 
-    /*
-     * Perform the computation, storing results into cache.  We do not
-     * really expect any error here, since current time surely ought to be
-     * within range, but check just for sanity's sake.
-     */
-    if (timestamp2tm(cur_ts, &cache_tz, &cache_tm, &cache_fsec,
-             NULL, session_timezone) != 0)
-   {
-      elog(ERROR, "timestamp out of range");
-      return; // TODO
-   }
+    // /*
+     // * Perform the computation, storing results into cache.  We do not
+     // * really expect any error here, since current time surely ought to be
+     // * within range, but check just for sanity's sake.
+     // */
+    // if (timestamp2tm(cur_ts, &cache_tz, &cache_tm, &cache_fsec,
+             // NULL, session_timezone) != 0)
+   // {
+      // elog(ERROR, "timestamp out of range");
+      // return; // TODO
+   // }
 
-    /* OK, so mark the cache valid. */
-    cache_ts = cur_ts;
-    cache_timezone = session_timezone;
-  }
+    // /* OK, so mark the cache valid. */
+    // cache_ts = cur_ts;
+    // cache_timezone = session_timezone;
+  // }
 
-  *tm = cache_tm;
-  *fsec = cache_fsec;
-  if (tzp != NULL)
-    *tzp = cache_tz;
-}
+  // *tm = cache_tm;
+  // *fsec = cache_fsec;
+  // if (tzp != NULL)
+    // *tzp = cache_tz;
+// }
 
 #endif /* NOT USED */
 
@@ -1328,194 +1329,194 @@ DecodeDateTime(char **field, int *ftype, int nf,
         }
         break;
 
-      case DTK_STRING:
-      case DTK_SPECIAL:
-        /* timezone abbrevs take precedence over built-in tokens */
-        dterr = DecodeTimezoneAbbrev(i, field[i],
-                       &type, &val, &valtz, extra);
-        if (dterr)
-          return dterr;
-        if (type == UNKNOWN_FIELD)
-          type = DecodeSpecial(i, field[i], &val);
-        if (type == IGNORE_DTF)
-          continue;
+      // case DTK_STRING:
+      // case DTK_SPECIAL:
+        // /* timezone abbrevs take precedence over built-in tokens */
+        // dterr = DecodeTimezoneAbbrev(i, field[i],
+                       // &type, &val, &valtz, extra);
+        // if (dterr)
+          // return dterr;
+        // if (type == UNKNOWN_FIELD)
+          // type = DecodeSpecial(i, field[i], &val);
+        // if (type == IGNORE_DTF)
+          // continue;
 
-        tmask = DTK_M(type);
-        switch (type)
-        {
-          case RESERV:
-            switch (val)
-            {
-              case DTK_NOW:
-                tmask = (DTK_DATE_M | DTK_TIME_M | DTK_M(TZ));
-                *dtype = DTK_DATE;
-                GetCurrentTimeUsec(tm, fsec, tzp);
-                break;
+        // tmask = DTK_M(type);
+        // switch (type)
+        // {
+          // case RESERV:
+            // switch (val)
+            // {
+              // case DTK_NOW:
+                // tmask = (DTK_DATE_M | DTK_TIME_M | DTK_M(TZ));
+                // *dtype = DTK_DATE;
+                // GetCurrentTimeUsec(tm, fsec, tzp);
+                // break;
 
-              case DTK_YESTERDAY:
-                tmask = DTK_DATE_M;
-                *dtype = DTK_DATE;
-                GetCurrentDateTime(&cur_tm);
-                j2date(date2j(cur_tm.tm_year, cur_tm.tm_mon, cur_tm.tm_mday) - 1,
-                     &tm->tm_year, &tm->tm_mon, &tm->tm_mday);
-                break;
+              // case DTK_YESTERDAY:
+                // tmask = DTK_DATE_M;
+                // *dtype = DTK_DATE;
+                // GetCurrentDateTime(&cur_tm);
+                // j2date(date2j(cur_tm.tm_year, cur_tm.tm_mon, cur_tm.tm_mday) - 1,
+                     // &tm->tm_year, &tm->tm_mon, &tm->tm_mday);
+                // break;
 
-              case DTK_TODAY:
-                tmask = DTK_DATE_M;
-                *dtype = DTK_DATE;
-                GetCurrentDateTime(&cur_tm);
-                tm->tm_year = cur_tm.tm_year;
-                tm->tm_mon = cur_tm.tm_mon;
-                tm->tm_mday = cur_tm.tm_mday;
-                break;
+              // case DTK_TODAY:
+                // tmask = DTK_DATE_M;
+                // *dtype = DTK_DATE;
+                // GetCurrentDateTime(&cur_tm);
+                // tm->tm_year = cur_tm.tm_year;
+                // tm->tm_mon = cur_tm.tm_mon;
+                // tm->tm_mday = cur_tm.tm_mday;
+                // break;
 
-              case DTK_TOMORROW:
-                tmask = DTK_DATE_M;
-                *dtype = DTK_DATE;
-                GetCurrentDateTime(&cur_tm);
-                j2date(date2j(cur_tm.tm_year, cur_tm.tm_mon, cur_tm.tm_mday) + 1,
-                     &tm->tm_year, &tm->tm_mon, &tm->tm_mday);
-                break;
+              // case DTK_TOMORROW:
+                // tmask = DTK_DATE_M;
+                // *dtype = DTK_DATE;
+                // GetCurrentDateTime(&cur_tm);
+                // j2date(date2j(cur_tm.tm_year, cur_tm.tm_mon, cur_tm.tm_mday) + 1,
+                     // &tm->tm_year, &tm->tm_mon, &tm->tm_mday);
+                // break;
 
-              case DTK_ZULU:
-                tmask = (DTK_TIME_M | DTK_M(TZ));
-                *dtype = DTK_DATE;
-                tm->tm_hour = 0;
-                tm->tm_min = 0;
-                tm->tm_sec = 0;
-                if (tzp != NULL)
-                  *tzp = 0;
-                break;
+              // case DTK_ZULU:
+                // tmask = (DTK_TIME_M | DTK_M(TZ));
+                // *dtype = DTK_DATE;
+                // tm->tm_hour = 0;
+                // tm->tm_min = 0;
+                // tm->tm_sec = 0;
+                // if (tzp != NULL)
+                  // *tzp = 0;
+                // break;
 
-              case DTK_EPOCH:
-              case DTK_LATE:
-              case DTK_EARLY:
-                tmask = (DTK_DATE_M | DTK_TIME_M | DTK_M(TZ));
-                *dtype = val;
-                /* caller ignores tm for these dtype codes */
-                break;
+              // case DTK_EPOCH:
+              // case DTK_LATE:
+              // case DTK_EARLY:
+                // tmask = (DTK_DATE_M | DTK_TIME_M | DTK_M(TZ));
+                // *dtype = val;
+                // /* caller ignores tm for these dtype codes */
+                // break;
 
-              default:
-                elog(ERROR, "unrecognized RESERV datetime token: %d",
-                   val);
-            }
+              // default:
+                // elog(ERROR, "unrecognized RESERV datetime token: %d",
+                   // val);
+            // }
 
-            break;
+            // break;
 
-          case MONTH:
+          // case MONTH:
 
-            /*
-             * already have a (numeric) month? then see if we can
-             * substitute...
-             */
-            if ((fmask & DTK_M(MONTH)) && !haveTextMonth &&
-              !(fmask & DTK_M(DAY)) && tm->tm_mon >= 1 &&
-              tm->tm_mon <= 31)
-            {
-              tm->tm_mday = tm->tm_mon;
-              tmask = DTK_M(DAY);
-            }
-            haveTextMonth = true;
-            tm->tm_mon = val;
-            break;
+            // /*
+             // * already have a (numeric) month? then see if we can
+             // * substitute...
+             // */
+            // if ((fmask & DTK_M(MONTH)) && !haveTextMonth &&
+              // !(fmask & DTK_M(DAY)) && tm->tm_mon >= 1 &&
+              // tm->tm_mon <= 31)
+            // {
+              // tm->tm_mday = tm->tm_mon;
+              // tmask = DTK_M(DAY);
+            // }
+            // haveTextMonth = true;
+            // tm->tm_mon = val;
+            // break;
 
-          case DTZMOD:
+          // case DTZMOD:
 
-            /*
-             * daylight savings time modifier (solves "MET DST"
-             * syntax)
-             */
-            tmask |= DTK_M(DTZ);
-            tm->tm_isdst = 1;
-            if (tzp == NULL)
-              return DTERR_BAD_FORMAT;
-            *tzp -= val;
-            break;
+            // /*
+             // * daylight savings time modifier (solves "MET DST"
+             // * syntax)
+             // */
+            // tmask |= DTK_M(DTZ);
+            // tm->tm_isdst = 1;
+            // if (tzp == NULL)
+              // return DTERR_BAD_FORMAT;
+            // *tzp -= val;
+            // break;
 
-          case DTZ:
+          // case DTZ:
 
-            /*
-             * set mask for TZ here _or_ check for DTZ later when
-             * getting default timezone
-             */
-            tmask |= DTK_M(TZ);
-            tm->tm_isdst = 1;
-            if (tzp == NULL)
-              return DTERR_BAD_FORMAT;
-            *tzp = -val;
-            break;
+            // /*
+             // * set mask for TZ here _or_ check for DTZ later when
+             // * getting default timezone
+             // */
+            // tmask |= DTK_M(TZ);
+            // tm->tm_isdst = 1;
+            // if (tzp == NULL)
+              // return DTERR_BAD_FORMAT;
+            // *tzp = -val;
+            // break;
 
-          case TZ:
-            tm->tm_isdst = 0;
-            if (tzp == NULL)
-              return DTERR_BAD_FORMAT;
-            *tzp = -val;
-            break;
+          // case TZ:
+            // tm->tm_isdst = 0;
+            // if (tzp == NULL)
+              // return DTERR_BAD_FORMAT;
+            // *tzp = -val;
+            // break;
 
-          case DYNTZ:
-            tmask |= DTK_M(TZ);
-            if (tzp == NULL)
-              return DTERR_BAD_FORMAT;
-            /* we'll determine the actual offset later */
-            abbrevTz = valtz;
-            abbrev = field[i];
-            break;
+          // case DYNTZ:
+            // tmask |= DTK_M(TZ);
+            // if (tzp == NULL)
+              // return DTERR_BAD_FORMAT;
+            // /* we'll determine the actual offset later */
+            // abbrevTz = valtz;
+            // abbrev = field[i];
+            // break;
 
-          case AMPM:
-            mer = val;
-            break;
+          // case AMPM:
+            // mer = val;
+            // break;
 
-          case ADBC:
-            bc = (val == BC);
-            break;
+          // case ADBC:
+            // bc = (val == BC);
+            // break;
 
-          case DOW:
-            tm->tm_wday = val;
-            break;
+          // case DOW:
+            // tm->tm_wday = val;
+            // break;
 
-          case UNITS:
-            tmask = 0;
-            /* reject consecutive unhandled units */
-            if (ptype != 0)
-              return DTERR_BAD_FORMAT;
-            ptype = val;
-            break;
+          // case UNITS:
+            // tmask = 0;
+            // /* reject consecutive unhandled units */
+            // if (ptype != 0)
+              // return DTERR_BAD_FORMAT;
+            // ptype = val;
+            // break;
 
-          case ISOTIME:
+          // case ISOTIME:
 
-            /*
-             * This is a filler field "t" indicating that the next
-             * field is time. Try to verify that this is sensible.
-             */
-            tmask = 0;
+            // /*
+             // * This is a filler field "t" indicating that the next
+             // * field is time. Try to verify that this is sensible.
+             // */
+            // tmask = 0;
 
-            /* No preceding date? Then quit... */
-            if ((fmask & DTK_DATE_M) != DTK_DATE_M)
-              return DTERR_BAD_FORMAT;
+            // /* No preceding date? Then quit... */
+            // if ((fmask & DTK_DATE_M) != DTK_DATE_M)
+              // return DTERR_BAD_FORMAT;
 
-            /* reject consecutive unhandled units */
-            if (ptype != 0)
-              return DTERR_BAD_FORMAT;
-            ptype = val;
-            break;
+            // /* reject consecutive unhandled units */
+            // if (ptype != 0)
+              // return DTERR_BAD_FORMAT;
+            // ptype = val;
+            // break;
 
-          case UNKNOWN_FIELD:
+          // case UNKNOWN_FIELD:
 
-            /*
-             * Before giving up and declaring error, check to see
-             * if it is an all-alpha timezone name.
-             */
-            namedTz = pg_tzset(field[i]);
-            if (!namedTz)
-              return DTERR_BAD_FORMAT;
-            /* we'll apply the zone setting below */
-            tmask = DTK_M(TZ);
-            break;
+            // /*
+             // * Before giving up and declaring error, check to see
+             // * if it is an all-alpha timezone name.
+             // */
+            // namedTz = pg_tzset(field[i]);
+            // if (!namedTz)
+              // return DTERR_BAD_FORMAT;
+            // /* we'll apply the zone setting below */
+            // tmask = DTK_M(TZ);
+            // break;
 
-          default:
-            return DTERR_BAD_FORMAT;
-        }
-        break;
+          // default:
+            // return DTERR_BAD_FORMAT;
+        // }
+        // break;
 
       default:
         return DTERR_BAD_FORMAT;
@@ -1875,38 +1876,38 @@ DetermineTimeZoneAbbrevOffsetInternal(pg_time_t t, const char *abbr, pg_tz *tzp,
 }
 
 
-/* TimeZoneAbbrevIsKnown()
- *
- * Detect whether the given string is a time zone abbreviation that's known
- * in the specified TZDB timezone, and if so whether it's fixed or varying
- * meaning.  The match is not case-sensitive.
- */
-static bool
-TimeZoneAbbrevIsKnown(const char *abbr, pg_tz *tzp,
-            bool *isfixed, int *offset, int *isdst)
-{
-  char    upabbr[TZ_STRLEN_MAX + 1];
-  unsigned char *p;
-  long int  gmtoff;
+// /* TimeZoneAbbrevIsKnown()
+ // *
+ // * Detect whether the given string is a time zone abbreviation that's known
+ // * in the specified TZDB timezone, and if so whether it's fixed or varying
+ // * meaning.  The match is not case-sensitive.
+ // */
+// static bool
+// TimeZoneAbbrevIsKnown(const char *abbr, pg_tz *tzp,
+            // bool *isfixed, int *offset, int *isdst)
+// {
+  // char    upabbr[TZ_STRLEN_MAX + 1];
+  // unsigned char *p;
+  // long int  gmtoff;
 
-  /* We need to force the abbrev to upper case */
-  strlcpy(upabbr, abbr, sizeof(upabbr));
-  for (p = (unsigned char *) upabbr; *p; p++)
-    *p = pg_toupper(*p);
+  // /* We need to force the abbrev to upper case */
+  // strlcpy(upabbr, abbr, sizeof(upabbr));
+  // for (p = (unsigned char *) upabbr; *p; p++)
+    // *p = pg_toupper(*p);
 
-  /* Look up the abbrev's meaning in this zone */
-  if (pg_timezone_abbrev_is_known(upabbr,
-                  isfixed,
-                  &gmtoff,
-                  isdst,
-                  tzp))
-  {
-    /* Change sign to agree with DetermineTimeZoneOffset() */
-    *offset = (int) -gmtoff;
-    return true;
-  }
-  return false;
-}
+  // /* Look up the abbrev's meaning in this zone */
+  // if (pg_timezone_abbrev_is_known(upabbr,
+                  // isfixed,
+                  // &gmtoff,
+                  // isdst,
+                  // tzp))
+  // {
+    // /* Change sign to agree with DetermineTimeZoneOffset() */
+    // *offset = (int) -gmtoff;
+    // return true;
+  // }
+  // return false;
+// }
 
 
 /* DecodeTimeOnly()
@@ -2198,131 +2199,131 @@ DecodeTimeOnly(char **field, int *ftype, int nf,
         }
         break;
 
-      case DTK_STRING:
-      case DTK_SPECIAL:
-        /* timezone abbrevs take precedence over built-in tokens */
-        dterr = DecodeTimezoneAbbrev(i, field[i],
-                       &type, &val, &valtz, extra);
-        if (dterr)
-          return dterr;
-        if (type == UNKNOWN_FIELD)
-          type = DecodeSpecial(i, field[i], &val);
-        if (type == IGNORE_DTF)
-          continue;
+      // case DTK_STRING:
+      // case DTK_SPECIAL:
+        // /* timezone abbrevs take precedence over built-in tokens */
+        // dterr = DecodeTimezoneAbbrev(i, field[i],
+                       // &type, &val, &valtz, extra);
+        // if (dterr)
+          // return dterr;
+        // if (type == UNKNOWN_FIELD)
+          // type = DecodeSpecial(i, field[i], &val);
+        // if (type == IGNORE_DTF)
+          // continue;
 
-        tmask = DTK_M(type);
-        switch (type)
-        {
-          case RESERV:
-            switch (val)
-            {
-              case DTK_NOW:
-                tmask = DTK_TIME_M;
-                *dtype = DTK_TIME;
-                GetCurrentTimeUsec(tm, fsec, NULL);
-                break;
+        // tmask = DTK_M(type);
+        // switch (type)
+        // {
+          // case RESERV:
+            // switch (val)
+            // {
+              // case DTK_NOW:
+                // tmask = DTK_TIME_M;
+                // *dtype = DTK_TIME;
+                // GetCurrentTimeUsec(tm, fsec, NULL);
+                // break;
 
-              case DTK_ZULU:
-                tmask = (DTK_TIME_M | DTK_M(TZ));
-                *dtype = DTK_TIME;
-                tm->tm_hour = 0;
-                tm->tm_min = 0;
-                tm->tm_sec = 0;
-                tm->tm_isdst = 0;
-                break;
+              // case DTK_ZULU:
+                // tmask = (DTK_TIME_M | DTK_M(TZ));
+                // *dtype = DTK_TIME;
+                // tm->tm_hour = 0;
+                // tm->tm_min = 0;
+                // tm->tm_sec = 0;
+                // tm->tm_isdst = 0;
+                // break;
 
-              default:
-                return DTERR_BAD_FORMAT;
-            }
+              // default:
+                // return DTERR_BAD_FORMAT;
+            // }
 
-            break;
+            // break;
 
-          case DTZMOD:
+          // case DTZMOD:
 
-            /*
-             * daylight savings time modifier (solves "MET DST"
-             * syntax)
-             */
-            tmask |= DTK_M(DTZ);
-            tm->tm_isdst = 1;
-            if (tzp == NULL)
-              return DTERR_BAD_FORMAT;
-            *tzp -= val;
-            break;
+            // /*
+             // * daylight savings time modifier (solves "MET DST"
+             // * syntax)
+             // */
+            // tmask |= DTK_M(DTZ);
+            // tm->tm_isdst = 1;
+            // if (tzp == NULL)
+              // return DTERR_BAD_FORMAT;
+            // *tzp -= val;
+            // break;
 
-          case DTZ:
+          // case DTZ:
 
-            /*
-             * set mask for TZ here _or_ check for DTZ later when
-             * getting default timezone
-             */
-            tmask |= DTK_M(TZ);
-            tm->tm_isdst = 1;
-            if (tzp == NULL)
-              return DTERR_BAD_FORMAT;
-            *tzp = -val;
-            ftype[i] = DTK_TZ;
-            break;
+            // /*
+             // * set mask for TZ here _or_ check for DTZ later when
+             // * getting default timezone
+             // */
+            // tmask |= DTK_M(TZ);
+            // tm->tm_isdst = 1;
+            // if (tzp == NULL)
+              // return DTERR_BAD_FORMAT;
+            // *tzp = -val;
+            // ftype[i] = DTK_TZ;
+            // break;
 
-          case TZ:
-            tm->tm_isdst = 0;
-            if (tzp == NULL)
-              return DTERR_BAD_FORMAT;
-            *tzp = -val;
-            ftype[i] = DTK_TZ;
-            break;
+          // case TZ:
+            // tm->tm_isdst = 0;
+            // if (tzp == NULL)
+              // return DTERR_BAD_FORMAT;
+            // *tzp = -val;
+            // ftype[i] = DTK_TZ;
+            // break;
 
-          case DYNTZ:
-            tmask |= DTK_M(TZ);
-            if (tzp == NULL)
-              return DTERR_BAD_FORMAT;
-            /* we'll determine the actual offset later */
-            abbrevTz = valtz;
-            abbrev = field[i];
-            ftype[i] = DTK_TZ;
-            break;
+          // case DYNTZ:
+            // tmask |= DTK_M(TZ);
+            // if (tzp == NULL)
+              // return DTERR_BAD_FORMAT;
+            // /* we'll determine the actual offset later */
+            // abbrevTz = valtz;
+            // abbrev = field[i];
+            // ftype[i] = DTK_TZ;
+            // break;
 
-          case AMPM:
-            mer = val;
-            break;
+          // case AMPM:
+            // mer = val;
+            // break;
 
-          case ADBC:
-            bc = (val == BC);
-            break;
+          // case ADBC:
+            // bc = (val == BC);
+            // break;
 
-          case UNITS:
-            tmask = 0;
-            /* reject consecutive unhandled units */
-            if (ptype != 0)
-              return DTERR_BAD_FORMAT;
-            ptype = val;
-            break;
+          // case UNITS:
+            // tmask = 0;
+            // /* reject consecutive unhandled units */
+            // if (ptype != 0)
+              // return DTERR_BAD_FORMAT;
+            // ptype = val;
+            // break;
 
-          case ISOTIME:
-            tmask = 0;
-            /* reject consecutive unhandled units */
-            if (ptype != 0)
-              return DTERR_BAD_FORMAT;
-            ptype = val;
-            break;
+          // case ISOTIME:
+            // tmask = 0;
+            // /* reject consecutive unhandled units */
+            // if (ptype != 0)
+              // return DTERR_BAD_FORMAT;
+            // ptype = val;
+            // break;
 
-          case UNKNOWN_FIELD:
+          // case UNKNOWN_FIELD:
 
-            /*
-             * Before giving up and declaring error, check to see
-             * if it is an all-alpha timezone name.
-             */
-            namedTz = pg_tzset(field[i]);
-            if (!namedTz)
-              return DTERR_BAD_FORMAT;
-            /* we'll apply the zone setting below */
-            tmask = DTK_M(TZ);
-            break;
+            // /*
+             // * Before giving up and declaring error, check to see
+             // * if it is an all-alpha timezone name.
+             // */
+            // namedTz = pg_tzset(field[i]);
+            // if (!namedTz)
+              // return DTERR_BAD_FORMAT;
+            // /* we'll apply the zone setting below */
+            // tmask = DTK_M(TZ);
+            // break;
 
-          default:
-            return DTERR_BAD_FORMAT;
-        }
-        break;
+          // default:
+            // return DTERR_BAD_FORMAT;
+        // }
+        // break;
 
       default:
         return DTERR_BAD_FORMAT;
@@ -2357,93 +2358,93 @@ DecodeTimeOnly(char **field, int *ftype, int nf,
   if ((fmask & DTK_TIME_M) != DTK_TIME_M)
     return DTERR_BAD_FORMAT;
 
-  /*
-   * If we had a full timezone spec, compute the offset (we could not do it
-   * before, because we may need the date to resolve DST status).
-   */
-  if (namedTz != NULL)
-  {
-    long int  gmtoff;
+  // /*
+   // * If we had a full timezone spec, compute the offset (we could not do it
+   // * before, because we may need the date to resolve DST status).
+   // */
+  // if (namedTz != NULL)
+  // {
+    // long int  gmtoff;
 
-    /* daylight savings time modifier disallowed with full TZ */
-    if (fmask & DTK_M(DTZMOD))
-      return DTERR_BAD_FORMAT;
+    // /* daylight savings time modifier disallowed with full TZ */
+    // if (fmask & DTK_M(DTZMOD))
+      // return DTERR_BAD_FORMAT;
 
-    /* if non-DST zone, we do not need to know the date */
-    if (pg_get_timezone_offset(namedTz, &gmtoff))
-    {
-      *tzp = -(int) gmtoff;
-    }
-    else
-    {
-      /* a date has to be specified */
-      if ((fmask & DTK_DATE_M) != DTK_DATE_M)
-        return DTERR_BAD_FORMAT;
-      *tzp = DetermineTimeZoneOffset(tm, namedTz);
-    }
-  }
+    // /* if non-DST zone, we do not need to know the date */
+    // if (pg_get_timezone_offset(namedTz, &gmtoff))
+    // {
+      // *tzp = -(int) gmtoff;
+    // }
+    // else
+    // {
+      // /* a date has to be specified */
+      // if ((fmask & DTK_DATE_M) != DTK_DATE_M)
+        // return DTERR_BAD_FORMAT;
+      // *tzp = DetermineTimeZoneOffset(tm, namedTz);
+    // }
+  // }
 
-  /*
-   * Likewise, if we had a dynamic timezone abbreviation, resolve it now.
-   */
-  if (abbrevTz != NULL)
-  {
-    struct pg_tm tt,
-           *tmp = &tt;
+  // /*
+   // * Likewise, if we had a dynamic timezone abbreviation, resolve it now.
+   // */
+  // if (abbrevTz != NULL)
+  // {
+    // struct pg_tm tt,
+           // *tmp = &tt;
 
-    /*
-     * daylight savings time modifier but no standard timezone? then error
-     */
-    if (fmask & DTK_M(DTZMOD))
-      return DTERR_BAD_FORMAT;
+    // /*
+     // * daylight savings time modifier but no standard timezone? then error
+     // */
+    // if (fmask & DTK_M(DTZMOD))
+      // return DTERR_BAD_FORMAT;
 
-    if ((fmask & DTK_DATE_M) == 0)
-      GetCurrentDateTime(tmp);
-    else
-    {
-      /* a date has to be specified */
-      if ((fmask & DTK_DATE_M) != DTK_DATE_M)
-        return DTERR_BAD_FORMAT;
-      tmp->tm_year = tm->tm_year;
-      tmp->tm_mon = tm->tm_mon;
-      tmp->tm_mday = tm->tm_mday;
-    }
-    tmp->tm_hour = tm->tm_hour;
-    tmp->tm_min = tm->tm_min;
-    tmp->tm_sec = tm->tm_sec;
-    *tzp = DetermineTimeZoneAbbrevOffset(tmp, abbrev, abbrevTz);
-    tm->tm_isdst = tmp->tm_isdst;
-  }
+    // if ((fmask & DTK_DATE_M) == 0)
+      // GetCurrentDateTime(tmp);
+    // else
+    // {
+      // /* a date has to be specified */
+      // if ((fmask & DTK_DATE_M) != DTK_DATE_M)
+        // return DTERR_BAD_FORMAT;
+      // tmp->tm_year = tm->tm_year;
+      // tmp->tm_mon = tm->tm_mon;
+      // tmp->tm_mday = tm->tm_mday;
+    // }
+    // tmp->tm_hour = tm->tm_hour;
+    // tmp->tm_min = tm->tm_min;
+    // tmp->tm_sec = tm->tm_sec;
+    // *tzp = DetermineTimeZoneAbbrevOffset(tmp, abbrev, abbrevTz);
+    // tm->tm_isdst = tmp->tm_isdst;
+  // }
 
-  /* timezone not specified? then use session timezone */
-  if (tzp != NULL && !(fmask & DTK_M(TZ)))
-  {
-    struct pg_tm tt,
-           *tmp = &tt;
+  // /* timezone not specified? then use session timezone */
+  // if (tzp != NULL && !(fmask & DTK_M(TZ)))
+  // {
+    // struct pg_tm tt,
+           // *tmp = &tt;
 
-    /*
-     * daylight savings time modifier but no standard timezone? then error
-     */
-    if (fmask & DTK_M(DTZMOD))
-      return DTERR_BAD_FORMAT;
+    // /*
+     // * daylight savings time modifier but no standard timezone? then error
+     // */
+    // if (fmask & DTK_M(DTZMOD))
+      // return DTERR_BAD_FORMAT;
 
-    if ((fmask & DTK_DATE_M) == 0)
-      GetCurrentDateTime(tmp);
-    else
-    {
-      /* a date has to be specified */
-      if ((fmask & DTK_DATE_M) != DTK_DATE_M)
-        return DTERR_BAD_FORMAT;
-      tmp->tm_year = tm->tm_year;
-      tmp->tm_mon = tm->tm_mon;
-      tmp->tm_mday = tm->tm_mday;
-    }
-    tmp->tm_hour = tm->tm_hour;
-    tmp->tm_min = tm->tm_min;
-    tmp->tm_sec = tm->tm_sec;
-    *tzp = DetermineTimeZoneOffset(tmp, session_timezone);
-    tm->tm_isdst = tmp->tm_isdst;
-  }
+    // if ((fmask & DTK_DATE_M) == 0)
+      // GetCurrentDateTime(tmp);
+    // else
+    // {
+      // /* a date has to be specified */
+      // if ((fmask & DTK_DATE_M) != DTK_DATE_M)
+        // return DTERR_BAD_FORMAT;
+      // tmp->tm_year = tm->tm_year;
+      // tmp->tm_mon = tm->tm_mon;
+      // tmp->tm_mday = tm->tm_mday;
+    // }
+    // tmp->tm_hour = tm->tm_hour;
+    // tmp->tm_min = tm->tm_min;
+    // tmp->tm_sec = tm->tm_sec;
+    // *tzp = DetermineTimeZoneOffset(tmp, session_timezone);
+    // tm->tm_isdst = tmp->tm_isdst;
+  // }
 
   return 0;
 }
@@ -3128,117 +3129,117 @@ DecodeTimezone(const char *str, int *tzp)
 }
 
 
-/* DecodeTimezoneAbbrev()
- * Interpret string as a timezone abbreviation, if possible.
- *
- * Sets *ftype to an abbreviation type (TZ, DTZ, or DYNTZ), or UNKNOWN_FIELD if
- * string is not any known abbreviation.  On success, set *offset and *tz to
- * represent the UTC offset (for TZ or DTZ) or underlying zone (for DYNTZ).
- * Note that full timezone names (such as America/New_York) are not handled
- * here, mostly for historical reasons.
- *
- * The function result is 0 or a DTERR code; in the latter case, *extra
- * is filled as needed.  Note that unknown-abbreviation is not considered
- * an error case.  Also note that many callers assume that the DTERR code
- * is one that DateTimeParseError does not require "str" or "datatype"
- * strings for.
- *
- * Given string must be lowercased already.
- *
- * Implement a cache lookup since it is likely that dates
- *  will be related in format.
- */
-int
-DecodeTimezoneAbbrev(int field, const char *lowtoken,
-           int *ftype, int *offset, pg_tz **tz,
-           DateTimeErrorExtra *extra)
-{
-  TzAbbrevCache *tzc = &tzabbrevcache[field];
-  bool    isfixed;
-  int      isdst;
-  const datetkn *tp;
+// /* DecodeTimezoneAbbrev()
+ // * Interpret string as a timezone abbreviation, if possible.
+ // *
+ // * Sets *ftype to an abbreviation type (TZ, DTZ, or DYNTZ), or UNKNOWN_FIELD if
+ // * string is not any known abbreviation.  On success, set *offset and *tz to
+ // * represent the UTC offset (for TZ or DTZ) or underlying zone (for DYNTZ).
+ // * Note that full timezone names (such as America/New_York) are not handled
+ // * here, mostly for historical reasons.
+ // *
+ // * The function result is 0 or a DTERR code; in the latter case, *extra
+ // * is filled as needed.  Note that unknown-abbreviation is not considered
+ // * an error case.  Also note that many callers assume that the DTERR code
+ // * is one that DateTimeParseError does not require "str" or "datatype"
+ // * strings for.
+ // *
+ // * Given string must be lowercased already.
+ // *
+ // * Implement a cache lookup since it is likely that dates
+ // *  will be related in format.
+ // */
+// int
+// DecodeTimezoneAbbrev(int field, const char *lowtoken,
+           // int *ftype, int *offset, pg_tz **tz,
+           // DateTimeErrorExtra *extra)
+// {
+  // TzAbbrevCache *tzc = &tzabbrevcache[field];
+  // bool    isfixed;
+  // int      isdst;
+  // const datetkn *tp;
 
-  /*
-   * Do we have a cached result?  Use strncmp so that we match truncated
-   * names, although we shouldn't really see that happen with normal
-   * abbreviations.
-   */
-  if (strncmp(lowtoken, tzc->abbrev, TOKMAXLEN) == 0)
-  {
-    *ftype = tzc->ftype;
-    *offset = tzc->offset;
-    *tz = tzc->tz;
-    return 0;
-  }
+  // /*
+   // * Do we have a cached result?  Use strncmp so that we match truncated
+   // * names, although we shouldn't really see that happen with normal
+   // * abbreviations.
+   // */
+  // if (strncmp(lowtoken, tzc->abbrev, TOKMAXLEN) == 0)
+  // {
+    // *ftype = tzc->ftype;
+    // *offset = tzc->offset;
+    // *tz = tzc->tz;
+    // return 0;
+  // }
 
-  /*
-   * See if the current session_timezone recognizes it.  Checking this
-   * before zoneabbrevtbl allows us to correctly handle abbreviations whose
-   * meaning varies across zones, such as "LMT".
-   */
-  if (session_timezone &&
-    TimeZoneAbbrevIsKnown(lowtoken, session_timezone,
-                &isfixed, offset, &isdst))
-  {
-    *ftype = (isfixed ? (isdst ? DTZ : TZ) : DYNTZ);
-    *tz = (isfixed ? NULL : session_timezone);
-    /* flip sign to agree with the convention used in zoneabbrevtbl */
-    *offset = -(*offset);
-    /* cache result; use strlcpy to truncate name if necessary */
-    strlcpy(tzc->abbrev, lowtoken, TOKMAXLEN + 1);
-    tzc->ftype = *ftype;
-    tzc->offset = *offset;
-    tzc->tz = *tz;
-    return 0;
-  }
+  // /*
+   // * See if the current session_timezone recognizes it.  Checking this
+   // * before zoneabbrevtbl allows us to correctly handle abbreviations whose
+   // * meaning varies across zones, such as "LMT".
+   // */
+  // if (session_timezone &&
+    // TimeZoneAbbrevIsKnown(lowtoken, session_timezone,
+                // &isfixed, offset, &isdst))
+  // {
+    // *ftype = (isfixed ? (isdst ? DTZ : TZ) : DYNTZ);
+    // *tz = (isfixed ? NULL : session_timezone);
+    // /* flip sign to agree with the convention used in zoneabbrevtbl */
+    // *offset = -(*offset);
+    // /* cache result; use strlcpy to truncate name if necessary */
+    // strlcpy(tzc->abbrev, lowtoken, TOKMAXLEN + 1);
+    // tzc->ftype = *ftype;
+    // tzc->offset = *offset;
+    // tzc->tz = *tz;
+    // return 0;
+  // }
 
-  /* Nope, so look in zoneabbrevtbl */
-  if (zoneabbrevtbl)
-    tp = datebsearch(lowtoken, zoneabbrevtbl->abbrevs,
-             zoneabbrevtbl->numabbrevs);
-  else
-    tp = NULL;
-  if (tp == NULL)
-  {
-    *ftype = UNKNOWN_FIELD;
-    *offset = 0;
-    *tz = NULL;
-    /* failure results are not cached */
-  }
-  else
-  {
-    *ftype = tp->type;
-    if (tp->type == DYNTZ)
-    {
-      *offset = 0;
-      *tz = FetchDynamicTimeZone(zoneabbrevtbl, tp, extra);
-      if (*tz == NULL)
-        return DTERR_BAD_ZONE_ABBREV;
-    }
-    else
-    {
-      *offset = tp->value;
-      *tz = NULL;
-    }
+  // /* Nope, so look in zoneabbrevtbl */
+  // if (zoneabbrevtbl)
+    // tp = datebsearch(lowtoken, zoneabbrevtbl->abbrevs,
+             // zoneabbrevtbl->numabbrevs);
+  // else
+    // tp = NULL;
+  // if (tp == NULL)
+  // {
+    // *ftype = UNKNOWN_FIELD;
+    // *offset = 0;
+    // *tz = NULL;
+    // /* failure results are not cached */
+  // }
+  // else
+  // {
+    // *ftype = tp->type;
+    // if (tp->type == DYNTZ)
+    // {
+      // *offset = 0;
+      // *tz = FetchDynamicTimeZone(zoneabbrevtbl, tp, extra);
+      // if (*tz == NULL)
+        // return DTERR_BAD_ZONE_ABBREV;
+    // }
+    // else
+    // {
+      // *offset = tp->value;
+      // *tz = NULL;
+    // }
 
-    /* cache result; use strlcpy to truncate name if necessary */
-    strlcpy(tzc->abbrev, lowtoken, TOKMAXLEN + 1);
-    tzc->ftype = *ftype;
-    tzc->offset = *offset;
-    tzc->tz = *tz;
-  }
+    // /* cache result; use strlcpy to truncate name if necessary */
+    // strlcpy(tzc->abbrev, lowtoken, TOKMAXLEN + 1);
+    // tzc->ftype = *ftype;
+    // tzc->offset = *offset;
+    // tzc->tz = *tz;
+  // }
 
-  return 0;
-}
+  // return 0;
+// }
 
-/*
- * Reset tzabbrevcache after a change in session_timezone.
- */
-void
-ClearTimeZoneAbbrevCache(void)
-{
-  memset(tzabbrevcache, 0, sizeof(tzabbrevcache));
-}
+// /*
+ // * Reset tzabbrevcache after a change in session_timezone.
+ // */
+// void
+// ClearTimeZoneAbbrevCache(void)
+// {
+  // memset(tzabbrevcache, 0, sizeof(tzabbrevcache));
+// }
 
 /* DecodeSpecial()
  * Decode text string using lookup table.
@@ -3316,9 +3317,9 @@ DecodeTimezoneName(const char *tzname, int *offset, pg_tz **tz)
                        strlen(tzname),
                        false);
 
-  dterr = DecodeTimezoneAbbrev(0, lowzone, &type, offset, tz, &extra);
-  if (dterr)
-    DateTimeParseError(dterr, &extra, NULL, NULL, NULL);
+  // dterr = DecodeTimezoneAbbrev(0, lowzone, &type, offset, tz, &extra);
+  // if (dterr)
+    // DateTimeParseError(dterr, &extra, NULL, NULL, NULL);
 
   if (type == TZ || type == DTZ)
   {
@@ -3378,91 +3379,91 @@ DecodeTimezoneNameToTz(const char *tzname)
  * is a fixed-offset abbreviation, or sets *tz to the pg_tz struct for
  * a dynamic abbreviation.
  */
-int
-DecodeTimezoneAbbrevPrefix(const char *str, int *offset, pg_tz **tz)
-{
-  char    lowtoken[TOKMAXLEN + 1];
-  int      len;
+// int
+// DecodeTimezoneAbbrevPrefix(const char *str, int *offset, pg_tz **tz)
+// {
+  // char    lowtoken[TOKMAXLEN + 1];
+  // int      len;
 
-  *offset = 0;        /* avoid uninitialized vars on failure */
-  *tz = NULL;
+  // *offset = 0;        /* avoid uninitialized vars on failure */
+  // *tz = NULL;
 
-  /* Downcase as much of the string as we could need */
-  for (len = 0; len < TOKMAXLEN; len++)
-  {
-    if (*str == '\0' || !isalpha((unsigned char) *str))
-      break;
-    lowtoken[len] = pg_tolower((unsigned char) *str++);
-  }
-  lowtoken[len] = '\0';
+  // /* Downcase as much of the string as we could need */
+  // for (len = 0; len < TOKMAXLEN; len++)
+  // {
+    // if (*str == '\0' || !isalpha((unsigned char) *str))
+      // break;
+    // lowtoken[len] = pg_tolower((unsigned char) *str++);
+  // }
+  // lowtoken[len] = '\0';
 
-  /*
-   * We could avoid doing repeated binary searches if we cared to duplicate
-   * datebsearch here, but it's not clear that such an optimization would be
-   * worth the trouble.  In common cases there's probably not anything after
-   * the zone abbrev anyway.  So just search with successively truncated
-   * strings.
-   */
-  while (len > 0)
-  {
-    bool    isfixed;
-    int      isdst;
-    const datetkn *tp;
+  // /*
+   // * We could avoid doing repeated binary searches if we cared to duplicate
+   // * datebsearch here, but it's not clear that such an optimization would be
+   // * worth the trouble.  In common cases there's probably not anything after
+   // * the zone abbrev anyway.  So just search with successively truncated
+   // * strings.
+   // */
+  // while (len > 0)
+  // {
+    // bool    isfixed;
+    // int      isdst;
+    // const datetkn *tp;
 
-    /* See if the current session_timezone recognizes it. */
-    if (session_timezone &&
-      TimeZoneAbbrevIsKnown(lowtoken, session_timezone,
-                  &isfixed, offset, &isdst))
-    {
-      if (isfixed)
-      {
-        /* flip sign to agree with the convention in zoneabbrevtbl */
-        *offset = -(*offset);
-      }
-      else
-      {
-        /* Caller must resolve the abbrev's current meaning */
-        *tz = session_timezone;
-      }
-      return len;
-    }
+    // /* See if the current session_timezone recognizes it. */
+    // if (session_timezone &&
+      // TimeZoneAbbrevIsKnown(lowtoken, session_timezone,
+                  // &isfixed, offset, &isdst))
+    // {
+      // if (isfixed)
+      // {
+        // /* flip sign to agree with the convention in zoneabbrevtbl */
+        // *offset = -(*offset);
+      // }
+      // else
+      // {
+        // /* Caller must resolve the abbrev's current meaning */
+        // *tz = session_timezone;
+      // }
+      // return len;
+    // }
 
-    /* Known in zoneabbrevtbl? */
-    if (zoneabbrevtbl)
-      tp = datebsearch(lowtoken, zoneabbrevtbl->abbrevs,
-               zoneabbrevtbl->numabbrevs);
-    else
-      tp = NULL;
-    if (tp != NULL)
-    {
-      if (tp->type == DYNTZ)
-      {
-        DateTimeErrorExtra extra;
-        pg_tz     *tzp = FetchDynamicTimeZone(zoneabbrevtbl, tp,
-                             &extra);
+    // /* Known in zoneabbrevtbl? */
+    // if (zoneabbrevtbl)
+      // tp = datebsearch(lowtoken, zoneabbrevtbl->abbrevs,
+               // zoneabbrevtbl->numabbrevs);
+    // else
+      // tp = NULL;
+    // if (tp != NULL)
+    // {
+      // if (tp->type == DYNTZ)
+      // {
+        // DateTimeErrorExtra extra;
+        // pg_tz     *tzp = FetchDynamicTimeZone(zoneabbrevtbl, tp,
+                             // &extra);
 
-        if (tzp != NULL)
-        {
-          /* Caller must resolve the abbrev's current meaning */
-          *tz = tzp;
-          return len;
-        }
-      }
-      else
-      {
-        /* Fixed-offset zone abbrev, so it's easy */
-        *offset = tp->value;
-        return len;
-      }
-    }
+        // if (tzp != NULL)
+        // {
+          // /* Caller must resolve the abbrev's current meaning */
+          // *tz = tzp;
+          // return len;
+        // }
+      // }
+      // else
+      // {
+        // /* Fixed-offset zone abbrev, so it's easy */
+        // *offset = tp->value;
+        // return len;
+      // }
+    // }
 
-    /* Nope, try the next shorter string. */
-    lowtoken[--len] = '\0';
-  }
+    // /* Nope, try the next shorter string. */
+    // lowtoken[--len] = '\0';
+  // }
 
-  /* Did not find a match */
-  return -1;
-}
+  // /* Did not find a match */
+  // return -1;
+// }
 
 
 /* ClearPgItmIn

@@ -32,11 +32,11 @@
  * @brief Spatial functions for temporal points
  */
 
-#include "geo/tgeo_spatialfuncs.h"
-
 /* C */
 #include <assert.h>
 /* PostgreSQL */
+#include <postgres.h>
+#include <postgres_types.h>
 #include <utils/float.h>
 #if POSTGRESQL_VERSION_NUMBER >= 160000
   #include "varatt.h"
@@ -60,6 +60,7 @@
 #include "geo/stbox.h"
 #include "geo/tgeo.h"
 #include "geo/tgeo_distance.h"
+#include "geo/tgeo_spatialfuncs.h"
 #if CBUFFER
   #include "cbuffer/cbuffer.h"
 #endif
@@ -632,21 +633,21 @@ lwpoint_cmp(const LWPOINT *p, const LWPOINT *q)
   /* We are sure the points are not empty */
   lwpoint_getPoint4d_p(p, &p4d);
   lwpoint_getPoint4d_p(q, &q4d);
-  int cmp = float8_cmp_internal(p4d.x, q4d.x);
+  int cmp = pg_float8_cmp(p4d.x, q4d.x);
   if (cmp != 0)
     return cmp;
-  cmp = float8_cmp_internal(p4d.y, q4d.y);
+  cmp = pg_float8_cmp(p4d.y, q4d.y);
   if (cmp != 0)
     return cmp;
   if (FLAGS_GET_Z(p->flags))
   {
-    cmp = float8_cmp_internal(p4d.z, q4d.z);
+    cmp = pg_float8_cmp(p4d.z, q4d.z);
     if (cmp != 0)
       return cmp;
   }
   if (FLAGS_GET_M(p->flags))
   {
-    cmp = float8_cmp_internal(p4d.m, q4d.m);
+    cmp = pg_float8_cmp(p4d.m, q4d.m);
     if (cmp != 0)
       return cmp;
   }

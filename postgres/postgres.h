@@ -53,7 +53,7 @@
  * MEOS: redefining elog
  * If WIN32 is set ERROR is defined in wingdi.h as #define ERROR 0
  * and is imported through windows.h. Since in MEOS we do not use ERROR
- * but keep it so elog(ERROR, "xxx") can be both used in MEOS and in PostgreSQL
+ * but keep it so elog(ERROR, "xxx") can be both used in MEOS and in MobilityDB
  * as soon as it is defined everything works fine.
  */
 #define INFO      17      /* Messages specifically requested by user (eg
@@ -71,21 +71,7 @@
 #endif
 #define EXIT_FAILURE 1
 
-inline void
-elog(int errlevel, const char *format, ...)
-{
-  char buffer[1024];
-  va_list args;
-  va_start(args, format);
-  /* TODO: maybe check if the error message was truncated */
-  vsnprintf(buffer, sizeof(buffer), format, args);
-  va_end(args);
-  /* Execute the error handler function */
-  fprintf (stderr, "%s\n", buffer);
-  if (errlevel == ERROR)
-    exit(EXIT_FAILURE);
-  return;
-}
+extern void elog(int errlevel, const char *format, ...);
 
 /* MEOS: redefining palloc0, palloc, and pfree */
 #if MEOS

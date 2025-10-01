@@ -3,7 +3,9 @@ add_library(port OBJECT
   qsort.c
   qsort_arg.c
   snprintf.c
+  strerror.c
+  strlcpy.c
   )
 
-# set_property(TARGET port PROPERTY C_VISIBILITY_PRESET hidden)
-# set_property(TARGET port PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_property(TARGET port PROPERTY C_VISIBILITY_PRESET hidden)
+set_property(TARGET port PROPERTY POSITION_INDEPENDENT_CODE ON)

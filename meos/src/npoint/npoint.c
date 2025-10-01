@@ -40,6 +40,7 @@
 #include <limits.h>
 /* PostgreSQL */
 #include <postgres.h>
+#include <postgres_types.h>
 #include <utils/timestamp.h>
 #if ! MEOS
   #include <libpq/pqformat.h>
