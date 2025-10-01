@@ -39,9 +39,9 @@ extern PGDLLIMPORT int extra_float_digits;
 /*
  * Utility functions in float.c
  */
-pg_noreturn extern void float_overflow_error(void);
-pg_noreturn extern void float_underflow_error(void);
-pg_noreturn extern void float_zero_divide_error(void);
+// pg_noreturn extern void float_overflow_error(void);
+// pg_noreturn extern void float_underflow_error(void);
+// pg_noreturn extern void float_zero_divide_error(void);
 extern int	is_infinite(float8 val);
 extern float8 float8in_internal(char *num, char **endptr_p,
 								const char *type_name, const char *orig_string,
@@ -151,8 +151,10 @@ float4_pl(const float4 val1, const float4 val2)
 
 	result = val1 + val2;
 	if (unlikely(isinf(result)) && !isinf(val1) && !isinf(val2))
-		float_overflow_error();
-
+  {
+    elog(ERROR, "value out of range: overflow");
+    return get_float4_infinity();
+  }
 	return result;
 }
 
@@ -163,7 +165,10 @@ float8_pl(const float8 val1, const float8 val2)
 
 	result = val1 + val2;
 	if (unlikely(isinf(result)) && !isinf(val1) && !isinf(val2))
-		float_overflow_error();
+  {
+    elog(ERROR, "value out of range: overflow");
+    return get_float4_infinity();
+  }
 
 	return result;
 }
@@ -175,7 +180,10 @@ float4_mi(const float4 val1, const float4 val2)
 
 	result = val1 - val2;
 	if (unlikely(isinf(result)) && !isinf(val1) && !isinf(val2))
-		float_overflow_error();
+  {
+    elog(ERROR, "value out of range: overflow");
+    return get_float4_infinity();
+  }
 
 	return result;
 }
@@ -187,7 +195,10 @@ float8_mi(const float8 val1, const float8 val2)
 
 	result = val1 - val2;
 	if (unlikely(isinf(result)) && !isinf(val1) && !isinf(val2))
-		float_overflow_error();
+  {
+    elog(ERROR, "value out of range: overflow");
+    return get_float4_infinity();
+  }
 
 	return result;
 }
@@ -199,9 +210,15 @@ float4_mul(const float4 val1, const float4 val2)
 
 	result = val1 * val2;
 	if (unlikely(isinf(result)) && !isinf(val1) && !isinf(val2))
-		float_overflow_error();
+  {
+    elog(ERROR, "value out of range: overflow");
+    return get_float4_infinity();
+  }
 	if (unlikely(result == 0.0f) && val1 != 0.0f && val2 != 0.0f)
-		float_underflow_error();
+  {
+    elog(ERROR, "value out of range: underflow");
+    return get_float4_infinity();
+  }
 
 	return result;
 }
@@ -213,9 +230,15 @@ float8_mul(const float8 val1, const float8 val2)
 
 	result = val1 * val2;
 	if (unlikely(isinf(result)) && !isinf(val1) && !isinf(val2))
-		float_overflow_error();
+  {
+    elog(ERROR, "value out of range: overflow");
+    return get_float4_infinity();
+  }
 	if (unlikely(result == 0.0) && val1 != 0.0 && val2 != 0.0)
-		float_underflow_error();
+  {
+    elog(ERROR, "value out of range: underflow");
+    return get_float4_infinity();
+  }
 
 	return result;
 }
@@ -229,9 +252,15 @@ float4_div(const float4 val1, const float4 val2)
 		float_zero_divide_error();
 	result = val1 / val2;
 	if (unlikely(isinf(result)) && !isinf(val1))
-		float_overflow_error();
+  {
+    elog(ERROR, "value out of range: overflow");
+    return get_float4_infinity();
+  }
 	if (unlikely(result == 0.0f) && val1 != 0.0f && !isinf(val2))
-		float_underflow_error();
+  {
+    elog(ERROR, "value out of range: underflow");
+    return get_float4_infinity();
+  }
 
 	return result;
 }
@@ -245,9 +274,15 @@ float8_div(const float8 val1, const float8 val2)
 		float_zero_divide_error();
 	result = val1 / val2;
 	if (unlikely(isinf(result)) && !isinf(val1))
-		float_overflow_error();
+  {
+    elog(ERROR, "value out of range: overflow");
+    return get_float4_infinity();
+  }
 	if (unlikely(result == 0.0) && val1 != 0.0 && !isinf(val2))
-		float_underflow_error();
+  {
+    elog(ERROR, "value out of range: underflow");
+    return get_float4_infinity();
+  }
 
 	return result;
 }

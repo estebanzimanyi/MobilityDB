@@ -21,9 +21,14 @@
 #include <limits.h>
 /* PostgreSQL */
 #include "postgres.h"
+#include "postgres_types.h"
 #include "common/int.h"
 #include "common/shortest_dec.h"
 #include "utils/float.h"
+
+// TODO REMOVE
+#define FLT_DIG 6
+#define DBL_DIG 15
 
 /*****************************************************************************
  * Definitions taken from the file liblwgeom_internal.h
@@ -286,18 +291,18 @@ pg_float4in_internal(char *num, char **endptr_p,
 
 /**
  * @ingroup meos_base_float
- * @brief Return true if two float values are equal
+ * @brief Return a float4 number from its string representation
  * @note Derived from PostgreSQL function @p float4in()
  */
 float4
-float4_in(char *num)
+float4_in(const char *num)
 {
   return pg_float4in_internal(num, NULL, "real", num);
 }
 
 /**
  * @ingroup meos_base_float
- * @brief Return the string representation of a float4 value
+ * @brief Return the string representation of a float4 number
  * @note Derived from PostgreSQL function @p float4out()
  */
 char *
@@ -479,7 +484,7 @@ float8_in(const char *str)
  * platform-independent way of outputting doubles.
  * The result is always palloc'd.
  */
-char *
+static char *
 pg_float8out_internal(double num)
 {
   char     *ascii = (char *) palloc(32);
@@ -497,7 +502,7 @@ pg_float8out_internal(double num)
 
 /**
  * @ingroup meos_base_float
- * @brief Return true if two float values are equal
+ * @brief Return the string representation of a float8 number
  * @details This function uses the PostGIS function lwprint_double to print an
  * ordinate value using at most **maxdd** number of decimal digits. The actual 
  * number of printed decimal digits may be less than the requested ones if out 
@@ -507,7 +512,7 @@ pg_float8out_internal(double num)
  * terminating NULL.
  */
 char *
-float8_out(double num, int maxdd)
+float8_out(float8 num, int maxdd)
 {
   assert(maxdd >= 0);
   char *ascii = palloc(OUT_DOUBLE_BUFFER_SIZE);
@@ -527,7 +532,7 @@ float8_out(double num, int maxdd)
 /**
  * @ingroup meos_base_float
  * @brief Return the absolute value of a float4 number
- * @note Derived from PostgreSQL function @p float8in()
+ * @note Derived from PostgreSQL function @p float8abs()
  */
 float4
 float4_abs(float4 num)
@@ -537,8 +542,8 @@ float4_abs(float4 num)
 
 /**
  * @ingroup meos_base_float
- * @brief Return the unary minus of two float4 numbers
- * @note Derived from PostgreSQL function @p float8in()
+ * @brief Return the unary minus of a float4 number
+ * @note Derived from PostgreSQL function @p float8um()
  */
 float4
 float4_um(float4 num)
@@ -548,8 +553,8 @@ float4_um(float4 num)
 
 /**
  * @ingroup meos_base_float
- * @brief Return the unary plus of two float4 numbers
- * @note Derived from PostgreSQL function @p float8in()
+ * @brief Return the unary plus of a float4 number
+ * @note Derived from PostgreSQL function @p float8up()
  */
 float4
 float4_up(float4 num)
@@ -560,7 +565,7 @@ float4_up(float4 num)
 /**
  * @ingroup meos_base_float
  * @brief Return the larger of two float4 numbers
- * @note Derived from PostgreSQL function @p float8in()
+ * @note Derived from PostgreSQL function @p float8larger()
  */
 float4
 float4_larger(float4 num1, float4 num2)
@@ -576,7 +581,7 @@ float4_larger(float4 num1, float4 num2)
 /**
  * @ingroup meos_base_float
  * @brief Return the smaller of two float4 numbers
- * @note Derived from PostgreSQL function @p float8in()
+ * @note Derived from PostgreSQL function @p float8smaller()
  */
 float4
 float4_smaller(float4 num1, float4 num2)
@@ -679,7 +684,7 @@ float8_smaller(float8 num1, float8 num2)
  * @note Derived from PostgreSQL function @p float4pl()
  */
 float4
-pg_float4_pl(float4 num1, float4 num2)
+add_float4_float4(float4 num1, float4 num2)
 {
   return float4_pl(num1, num2);
 }
@@ -690,7 +695,7 @@ pg_float4_pl(float4 num1, float4 num2)
  * @note Derived from PostgreSQL function @p float4mi()
  */
 float4
-pg_float4_mi(float4 num1, float4 num2)
+minus_float4_float4(float4 num1, float4 num2)
 {
   return float4_mi(num1, num2);
 }
@@ -701,7 +706,7 @@ pg_float4_mi(float4 num1, float4 num2)
  * @note Derived from PostgreSQL function @p float4mul()
  */
 float4
-pg_float4_mul(float4 num1, float4 num2)
+mul_float4_float4(float4 num1, float4 num2)
 {
   return float4_mul(num1, num2);
 }
@@ -712,7 +717,7 @@ pg_float4_mul(float4 num1, float4 num2)
  * @note Derived from PostgreSQL function @p float4div()
  */
 float4
-pg_float4_div(float4 num1, float4 num2)
+div_float4_float4(float4 num1, float4 num2)
 {
   return float4_div(num1, num2);
 }
@@ -730,7 +735,7 @@ pg_float4_div(float4 num1, float4 num2)
  * @note Derived from PostgreSQL function @p float8pl()
  */
 float8
-pg_float8_pl(float8 num1, float8 num2)
+add_float8_float8(float8 num1, float8 num2)
 {
   return float8_pl(num1, num2);
 }
@@ -741,7 +746,7 @@ pg_float8_pl(float8 num1, float8 num2)
  * @note Derived from PostgreSQL function @p float8mi()
  */
 float8
-pg_float8_mi(float8 num1, float8 num2)
+minus_float8_float8(float8 num1, float8 num2)
 {
   return float8_mi(num1, num2);
 }
@@ -752,7 +757,7 @@ pg_float8_mi(float8 num1, float8 num2)
  * @note Derived from PostgreSQL function @p float8mul()
  */
 float8
-pg_float8_mul(float8 num1, float8 num2)
+mul_float8_float8(float8 num1, float8 num2)
 {
   return float8_mul(num1, num2);
 }
@@ -763,7 +768,7 @@ pg_float8_mul(float8 num1, float8 num2)
  * @note Derived from PostgreSQL function @p float8div()
  */
 float8
-pg_float8_div(float8 num1, float8 num2)
+div_float8_float8(float8 num1, float8 num2)
 {
   return float8_div(num1, num2);
 }
@@ -782,14 +787,21 @@ pg_float8_div(float8 num1, float8 num2)
  * @ingroup meos_base_float
  * @brief Return -1, 0, or 1 depending on whether the first float4 number is
  * less than, equal, or greater than the second one
- * @note Existing PostgreSQL function
+ * @note Derived from PostgreSQL function @p float4_cmp_internal
  */
+#if MEOS
 int
-float4_cmp_internal(float4 a, float4 b)
+float4_cmp(float4 num1, float4 num2)
 {
-  if (float4_gt(a, b))
+  return pg_float4_cmp(num1, num2);
+}
+#endif
+int
+pg_float4_cmp(float4 num1, float4 num2)
+{
+  if (float4_gt(num1, num2))
     return 1;
-  if (float4_lt(a, b))
+  if (float4_lt(num1, num2))
     return -1;
   return 0;
 }
@@ -800,7 +812,7 @@ float4_cmp_internal(float4 a, float4 b)
  * @note Derived from PostgreSQL function @p float4eq()
  */
 bool
-pg_float4_eq(float4 num1, float4 num2)
+eq_float4_float4(float4 num1, float4 num2)
 {
   return float4_eq(num1, num2);
 }
@@ -811,7 +823,7 @@ pg_float4_eq(float4 num1, float4 num2)
  * @note Derived from PostgreSQL function @p float4ne()
  */
 bool
-pg_float4_ne(float4 num1, float4 num2)
+ne_float4_float4(float4 num1, float4 num2)
 {
   return float4_ne(num1, num2);
 }
@@ -822,7 +834,7 @@ pg_float4_ne(float4 num1, float4 num2)
  * @note Derived from PostgreSQL function @p float4lt()
  */
 bool
-pg_float4_lt(float4 num1, float4 num2)
+lt_float4_float4(float4 num1, float4 num2)
 {
   return float4_lt(num1, num2);
 }
@@ -833,7 +845,7 @@ pg_float4_lt(float4 num1, float4 num2)
  * @note Derived from PostgreSQL function @p float4le()
  */
 bool
-pg_float4_le(float4 num1, float4 num2)
+le_float4_float4(float4 num1, float4 num2)
 {
   return float4_le(num1, num2);
 }
@@ -844,7 +856,7 @@ pg_float4_le(float4 num1, float4 num2)
  * @note Derived from PostgreSQL function @p float4gt()
  */
 bool
-pg_float4_gt(float4 num1, float4 num2)
+gt_float4_float4(float4 num1, float4 num2)
 {
   return float4_gt(num1, num2);
 }
@@ -855,7 +867,7 @@ pg_float4_gt(float4 num1, float4 num2)
  * @note Derived from PostgreSQL function @p float4ge()
  */
 bool
-pg_float4_ge(float4 num1, float4 num2)
+ge_float4_float4(float4 num1, float4 num2)
 {
   return float4_ge(num1, num2);
 }
@@ -870,12 +882,19 @@ pg_float4_ge(float4 num1, float4 num2)
  * less than, equal, or greater than the second one
  * @note Existing PostgreSQL function
  */
+#if MEOS
 int
-float8_cmp_internal(float8 a, float8 b)
+float8_cmp(float8 num1, float8 num2)
 {
-  if (float8_gt(a, b))
+  return pg_float8_cmp(num1, num2);
+}
+#endif
+int
+pg_float8_cmp(float8 num1, float8 num2)
+{
+  if (float8_gt(num1, num2))
     return 1;
-  if (float8_lt(a, b))
+  if (float8_lt(num1, num2))
     return -1;
   return 0;
 }
@@ -886,7 +905,7 @@ float8_cmp_internal(float8 a, float8 b)
  * @note Derived from PostgreSQL function @p float8eq()
  */
 bool
-pg_float8_eq(float8 num1, float8 num2)
+eq_float8_float8(float8 num1, float8 num2)
 {
   return float8_eq(num1, num2);
 }
@@ -897,7 +916,7 @@ pg_float8_eq(float8 num1, float8 num2)
  * @note Derived from PostgreSQL function @p float8ne()
  */
 bool
-pg_float8_ne(float8 num1, float8 num2)
+ne_float8_float8(float8 num1, float8 num2)
 {
   return float8_ne(num1, num2);
 }
@@ -908,7 +927,7 @@ pg_float8_ne(float8 num1, float8 num2)
  * @note Derived from PostgreSQL function @p float8lt()
  */
 bool
-pg_float8_lt(float8 num1, float8 num2)
+lt_float8_float8(float8 num1, float8 num2)
 {
   return float8_lt(num1, num2);
 }
@@ -919,7 +938,7 @@ pg_float8_lt(float8 num1, float8 num2)
  * @note Derived from PostgreSQL function @p float8le()
  */
 bool
-pg_float8_le(float8 num1, float8 num2)
+le_float8_float8(float8 num1, float8 num2)
 {
   return float8_le(num1, num2);
 }
@@ -930,7 +949,7 @@ pg_float8_le(float8 num1, float8 num2)
  * @note Derived from PostgreSQL function @p float8gt()
  */
 bool
-pg_float8_gt(float8 num1, float8 num2)
+gt_float8_float8(float8 num1, float8 num2)
 {
   return float8_gt(num1, num2);
 }
@@ -941,7 +960,7 @@ pg_float8_gt(float8 num1, float8 num2)
  * @note Derived from PostgreSQL function @p float8ge()
  */
 bool
-pg_float8_ge(float8 num1, float8 num2)
+ge_float8_float8(float8 num1, float8 num2)
 {
   return float8_ge(num1, num2);
 }
@@ -958,7 +977,7 @@ pg_float8_ge(float8 num1, float8 num2)
  * @note Derived from PostgreSQL function @p ftod()
  */
 float8
-float4_tod(float4 num)
+float4_to_float8(float4 num)
 {
   return (float8) num;
 }
@@ -990,11 +1009,11 @@ float8_to_float4(float8 num)
 
 /**
  * @ingroup meos_base_float
- * @brief Convert a float8 number into an int4 number
+ * @brief Convert a float8 number into an int32 number
  * @note Derived from PostgreSQL function @p dtoi4()
  */
 int32
-float8_to_int4(float8 num)
+float8_to_int32(float8 num)
 {
   /*
    * Get rid of any fractional part in the input.  This is so we don't fail
@@ -1015,11 +1034,11 @@ float8_to_int4(float8 num)
 
 /**
  * @ingroup meos_base_float
- * @brief Convert a float8 number into an int2 number
+ * @brief Convert a float8 number into an int16 number
  * @note Derived from PostgreSQL function @p dtoi2()
  */
 int16
-float8_to_int2(float8 num)
+float8_to_int16(float8 num)
 {
   /*
    * Get rid of any fractional part in the input.  This is so we don't fail
@@ -1040,33 +1059,33 @@ float8_to_int2(float8 num)
 
 /**
  * @ingroup meos_base_float
- * @brief Convert an int4 number into a float8 number
+ * @brief Convert an int32 number into a float8 number
  * @note Derived from PostgreSQL function @p i4tod()
  */
 float8
-int4_to_float8(int32 num)
+int32_to_float8(int32 num)
 {
   return (float8) num;
 }
 
 /**
  * @ingroup meos_base_float
- * @brief Convert an int2 number into a float8 number
+ * @brief Convert an int16 number into a float8 number
  * @note Derived from PostgreSQL function @p i2tod()
  */
 float8
-int2_to_float8(int16 num)
+int16_to_float8(int16 num)
 {
   return (float8) num;
 }
 
 /**
  * @ingroup meos_base_float
- * @brief Convert a float4 number into an int4 number
+ * @brief Convert a float4 number into an int32 number
  * @note Derived from PostgreSQL function @p ftoi4()
  */
 int32
-float4_to_int4(float4 num)
+float4_to_int32(float4 num)
 {
   /*
    * Get rid of any fractional part in the input.  This is so we don't fail
@@ -1087,11 +1106,11 @@ float4_to_int4(float4 num)
 
 /**
  * @ingroup meos_base_float
- * @brief Convert a float4 number into an int2 number
+ * @brief Convert a float4 number into an int16 number
  * @note Derived from PostgreSQL function @p ftoi2()
  */
 int16
-float4_to_int2(float4 num)
+float4_to_int16(float4 num)
 {
   /*
    * Get rid of any fractional part in the input.  This is so we don't fail
@@ -1112,22 +1131,22 @@ float4_to_int2(float4 num)
 
 /**
  * @ingroup meos_base_float
- * @brief Convert an int4 number into a float4 number
+ * @brief Convert an int32 number into a float4 number
  * @note Derived from PostgreSQL function @p i4tof()
  */
 float4
-int4_to_float4(int32 num)
+int32_to_float4(int32 num)
 {
   return (float4) num;
 }
 
 /**
  * @ingroup meos_base_float
- * @brief Convert an int2 number into a float4 number
+ * @brief Convert an int16 number into a float4 number
  * @note Derived from PostgreSQL function @p i2tof()
  */
 float4
-int2_to_float4(int16 num)
+int16_to_float4(int16 num)
 {
   return (float4) num;
 }
@@ -1153,6 +1172,7 @@ float8_rint(float8 num)
 /**
  * @ingroup meos_base_float
  * @brief Return a float number rounded to a given number of decimal places
+ * @note MEOS function
  */
 float8
 float8_round(float8 d, int maxdd)
@@ -1290,7 +1310,7 @@ float8_cbrt(float8 num)
 
 /**
  * @ingroup meos_base_float
- * @brief Return pow(num1,num2)
+ * @brief Return the first float8 number powered to the second one
  * @note PostgreSQL function: @p dpow()
  */
 float8
@@ -1465,7 +1485,7 @@ float8_pow(float8 num1, float8 num2)
 
 /**
  * @ingroup meos_base_float
- * @brief Return the exponential function of a float8 number
+ * @brief Return the exponential of a float8 number
  * @note PostgreSQL function: @p dexp()
  */
 float8
@@ -1703,7 +1723,7 @@ float8_atan(float8 num)
 
 /**
  * @ingroup meos_base_float
- * @brief Return the arctan of two doubles (radians)
+ * @brief Return the arctan of two float8 numbers (radians)
  * @note PostgreSQL function: @p datan2d()
  */
 float8
@@ -1826,12 +1846,12 @@ float8_sin(float8 num)
   if (errno != 0 || isinf(num))
   {
     elog(ERROR, "input is out of range");
-    return get_float8_infinity();
+    return get_float8_infinity(); // TODO
   }
   if (unlikely(isinf(result)))
   {
     elog(ERROR, "value out of range: overflow");
-    return get_float8_infinity();
+    return get_float8_infinity(); // TODO
   }
 
   return result;
@@ -1858,7 +1878,7 @@ float8_tan(float8 num)
   if (errno != 0 || isinf(num))
   {
     elog(ERROR, "input is out of range");
-    return get_float8_infinity();
+    return get_float8_infinity(); // TODO
   }
         
   /* Not checking for overflow because tan(pi/2) == Inf */
@@ -2100,7 +2120,7 @@ float8_atand(float8 num)
 
 /**
  * @ingroup meos_base_float
- * @brief Return the arctan of a float8 number/num2 (degrees)
+ * @brief Return the arctan of two float8 numbers (degrees)
  * @note Derived from PostgreSQL function @p atan2d()
  */
 float8
@@ -2459,7 +2479,7 @@ float8_tand(float8 num)
  * @note Derived from PostgreSQL function @p degrees()
  */
 float8
-degrees_internal(float8 num)
+float8_degrees(float8 num)
 {
   return float8_div(num, RADIANS_PER_DEGREE);
 }
@@ -2481,7 +2501,7 @@ float8_pi(void)
  * @note Derived from PostgreSQL function @p radians()
  */
 float8
-radians_internal(float8 num)
+float8_radians(float8 num)
 {
   return float8_mul(num, RADIANS_PER_DEGREE);
 }
@@ -2770,7 +2790,7 @@ float8_lgamma(float8 num)
  * @note Derived from PostgreSQL function @p float48pl()
  */
 float8
-float48_pl(float4 num1, float8 num2)
+add_float4_float8(float4 num1, float8 num2)
 {
   return float8_pl((float8) num1, num2);
 }
@@ -2781,7 +2801,7 @@ float48_pl(float4 num1, float8 num2)
  * @note Derived from PostgreSQL function @p float48mi()
  */
 float8
-float48_mi(float4 num1, float8 num2)
+minus_float4_float8(float4 num1, float8 num2)
 {
   return float8_mi((float8) num1, num2);
 }
@@ -2792,7 +2812,7 @@ float48_mi(float4 num1, float8 num2)
  * @note Derived from PostgreSQL function @p float48mul()
  */
 float8
-float48_mul(float4 num1, float8 num2)
+mul_float4_float8(float4 num1, float8 num2)
 {
   return float8_mul((float8) num1, num2);
 }
@@ -2803,7 +2823,7 @@ float48_mul(float4 num1, float8 num2)
  * @note Derived from PostgreSQL function @p float48div()
  */
 float8
-float48_div(float4 num1, float8 num2)
+div_float4_float8(float4 num1, float8 num2)
 {
   return float8_div((float8) num1, num2);
 }
@@ -2821,7 +2841,7 @@ float48_div(float4 num1, float8 num2)
  * @note Derived from PostgreSQL function @p float84pl()
  */
 float8
-float84_pl(float8 num1, float4 num2)
+add_float8_float4(float8 num1, float4 num2)
 {
   return float8_pl(num1, (float8) num2);
 }
@@ -2832,7 +2852,7 @@ float84_pl(float8 num1, float4 num2)
  * @note Derived from PostgreSQL function @p float84mi()
  */
 float8
-float84_mi(float8 num1, float4 num2)
+minus_float8_float4(float8 num1, float4 num2)
 {
   return float8_mi(num1, (float8) num2);
 }
@@ -2843,7 +2863,7 @@ float84_mi(float8 num1, float4 num2)
  * @note Derived from PostgreSQL function @p float84mul()
  */
 float8
-float84_mul(float8 num1, float4 num2)
+mul_float8_float4(float8 num1, float4 num2)
 {
   return float8_mul(num1, (float8) num2);
 }
@@ -2854,7 +2874,7 @@ float84_mul(float8 num1, float4 num2)
  * @note Derived from PostgreSQL function @p float84div()
  */
 float8
-float84div(float8 num1, float4 num2)
+div_float8_float4(float8 num1, float4 num2)
 {
   return float8_div(num1, (float8) num2);
 }
@@ -2875,7 +2895,7 @@ float84div(float8 num1, float4 num2)
  * @note Derived from PostgreSQL function @p float48eq()
  */
 bool
-float48_eq(float4 num1, float8 num2)
+eq_float4_float8(float4 num1, float8 num2)
 {
   return float8_eq((float8) num1, num2);
 }
@@ -2886,7 +2906,7 @@ float48_eq(float4 num1, float8 num2)
  * @note Derived from PostgreSQL function @p float48ne()
  */
 bool
-float48_ne(float4 num1, float8 num2)
+ne_float4_float8(float4 num1, float8 num2)
 {
   return float8_ne((float8) num1, num2);
 }
@@ -2897,7 +2917,7 @@ float48_ne(float4 num1, float8 num2)
  * @note Derived from PostgreSQL function @p float48lt()
  */
 bool
-float48_lt(float4 num1, float8 num2)
+lt_float4_float8(float4 num1, float8 num2)
 {
   return float8_lt((float8) num1, num2);
 }
@@ -2909,7 +2929,7 @@ float48_lt(float4 num1, float8 num2)
  * @note Derived from PostgreSQL function @p float48le()
  */
 bool
-float48_le(float4 num1, float8 num2)
+le_float4_float8(float4 num1, float8 num2)
 {
   return float8_le((float8) num1, num2);
 }
@@ -2920,7 +2940,7 @@ float48_le(float4 num1, float8 num2)
  * @note Derived from PostgreSQL function @p float48gt()
  */
 bool
-float48_gt(float4 num1, float8 num2)
+gt_float4_float8(float4 num1, float8 num2)
 {
   return float8_gt((float8) num1, num2);
 }
@@ -2932,7 +2952,7 @@ float48_gt(float4 num1, float8 num2)
  * @note Derived from PostgreSQL function @p float48ge()
  */
 bool
-float48_ge(float4 num1, float8 num2)
+ge_float4_float8(float4 num1, float8 num2)
 {
   return float8_ge((float8) num1, num2);
 }
@@ -2947,7 +2967,7 @@ float48_ge(float4 num1, float8 num2)
  * @note Derived from PostgreSQL function @p float84eq()
  */
 bool
-float84_eq(float8 num1, float4 num2)
+eq_float8_float4(float8 num1, float4 num2)
 {
   return float8_eq(num1, (float8) num2);
 }
@@ -2958,7 +2978,7 @@ float84_eq(float8 num1, float4 num2)
  * @note Derived from PostgreSQL function @p float84ne()
  */
 bool
-float84_ne(float8 num1, float4 num2)
+ne_float8_float4(float8 num1, float4 num2)
 {
   return float8_ne(num1, (float8) num2);
 }
@@ -2969,7 +2989,7 @@ float84_ne(float8 num1, float4 num2)
  * @note Derived from PostgreSQL function @p float84lt()
  */
 bool
-float84_lt(float8 num1, float4 num2)
+lt_float8_float4(float8 num1, float4 num2)
 {
   return float8_lt(num1, (float8) num2);
 }
@@ -2981,7 +3001,7 @@ float84_lt(float8 num1, float4 num2)
  * @note Derived from PostgreSQL function @p float84le()
  */
 bool
-float84_le(float8 num1, float4 num2)
+le_float8_float4(float8 num1, float4 num2)
 {
   return float8_le(num1, (float8) num2);
 }
@@ -2992,7 +3012,7 @@ float84_le(float8 num1, float4 num2)
  * @note Derived from PostgreSQL function @p float84gt()
  */
 bool
-float84_gt(float8 num1, float4 num2)
+gt_float8_float4(float8 num1, float4 num2)
 {
   return float8_gt(num1, (float8) num2);
 }
@@ -3004,7 +3024,7 @@ float84_gt(float8 num1, float4 num2)
  * @note Derived from PostgreSQL function @p float84ge()
  */
 bool
-float84_ge(float8 num1, float4 num2)
+ge_float8_float4(float8 num1, float4 num2)
 {
   return float8_ge(num1, (float8) num2);
 }
@@ -3019,8 +3039,8 @@ float84_ge(float8 num1, float4 num2)
  * 'bound1' and 'bound2' are the lower and upper bounds of the
  * histogram's range, respectively. 'count' is the number of buckets
  * in the histogram. width_bucket() Return an integer indicating the
- * bucket number that 'operand' belongs to in an equiwidth histogram
- * with the specified characteristics. An operand smaller than the
+ * bucket number that 'num' belongs to in an equiwidth histogram
+ * with the specified characteristics. An num smaller than the
  * lower bound is assigned to bucket 0. An operand greater than or equal
  * to the upper bound is assigned to an additional bucket (with number
  * count+1). We don't allow "NaN" for any of the float8 inputs, and we
@@ -3028,7 +3048,7 @@ float84_ge(float8 num1, float4 num2)
  * @note Derived from PostgreSQL function @p width_bucket_float8()
  */
 int32
-width_bucket_float8_internal(float8 operand, float8 bound1, float8 bound2, int32 count)
+float8_width_bucket(float8 operand, float8 bound1, float8 bound2, int32 count)
 {
   int32    result;
 

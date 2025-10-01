@@ -34,6 +34,9 @@
 #ifndef RYU_COMMON_H
 #define RYU_COMMON_H
 
+// MEOS
+#include <string.h> 
+
 /*
  * Upstream Ryu's output is always the shortest possible. But we adjust that
  * slightly to improve portability: we avoid outputting the exact midpoint

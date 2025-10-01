@@ -12,7 +12,6 @@
  *-------------------------------------------------------------------------
  */
 
-
 /* C */
 #include <assert.h>
 #include <limits.h>
@@ -20,17 +19,11 @@
 #include <stdlib.h>
 /* PostgreSQL */
 #include <postgres.h>
+#include <postgres_types.h>
 #include <common/hashfn.h>
 #include <common/int.h>
 #include <utils/jsonb.h>
-/* MEOS */
-#include <meos.h>
-// #include <meos_jsonb.h>
-#include <postgres_types.h>
-#include "temporal/temporal.h"
-#include "temporal/lifting.h"
-#include "temporal/type_util.h"
-// #include "jsonb/tjsonb_funcs.h"
+#include <utils/varlena.h> /* For DatumGetTextP */
 
 /*****************************************************************************/
 
@@ -40,7 +33,7 @@
  * element within the JSON value
  * @param[in] jb JSONB value
  * @param[in] key Key
- * @csqlfn #jsonb_exists()
+ * @note Derived from PostgreSQL function @p jsonb_exists()
  */
 bool
 jsonb_exists_internal(const Jsonb *jb, const text *key)
@@ -151,13 +144,12 @@ datum_jsonb_contained(Datum l, Datum r)
  * @ingroup meos_jsonb_base_comp
  * @brief Return true if the two JSONB values are equal
  * @param[in] jb1,jb2 JSONB values
- * @csqlfn #jsonb_eq()
+ * @note Derived from PostgreSQL function @p jsonb_eq()
  */
 bool
 jsonb_eq_internal(const Jsonb *jb1, const Jsonb *jb2)
 {
-  /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(jb1, false); VALIDATE_NOT_NULL(jb2, false);
+  assert(jb1); assert(jb2);
   return compareJsonbContainers((JsonbContainer *) &jb1->root,
     (JsonbContainer *) &jb2->root) == 0;
 }
@@ -166,13 +158,12 @@ jsonb_eq_internal(const Jsonb *jb1, const Jsonb *jb2)
  * @ingroup meos_jsonb_base_comp
  * @brief Return true if the two JSONB values are not equal
  * @param[in] jb1,jb2 JSONB values
- * @csqlfn #jsonb_ne()
+ * @note Derived from PostgreSQL function @p jsonb_ne()
  */
 bool
 jsonb_ne_internal(const Jsonb *jb1, const Jsonb *jb2)
 {
-  /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(jb1, false); VALIDATE_NOT_NULL(jb2, false);
+  assert(jb1); assert(jb2);
   return compareJsonbContainers((JsonbContainer *) &jb1->root,
     (JsonbContainer *) &jb2->root) != 0;
 }
@@ -181,13 +172,12 @@ jsonb_ne_internal(const Jsonb *jb1, const Jsonb *jb2)
  * @ingroup meos_jsonb_base_comp
  * @brief Return true if the first JSONB value is less than the second one
  * @param[in] jb1,jb2 JSONB values
- * @csqlfn #jsonb_lt()
+ * @note Derived from PostgreSQL function @p jsonb_lt()
  */
 bool
 jsonb_lt_internal(const Jsonb *jb1, const Jsonb *jb2)
 {
-  /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(jb1, false); VALIDATE_NOT_NULL(jb2, false);
+  assert(jb1); assert(jb2);
   return compareJsonbContainers((JsonbContainer *) &jb1->root,
     (JsonbContainer *) &jb2->root) < 0;
 }
@@ -196,13 +186,12 @@ jsonb_lt_internal(const Jsonb *jb1, const Jsonb *jb2)
  * @ingroup meos_jsonb_base_comp
  * @brief Return true if the first JSONB value is greater than the second one
  * @param[in] jb1,jb2 JSONB values
- * @csqlfn #jsonb_gt()
+ * @note Derived from PostgreSQL function @p jsonb_gt()
  */
 bool
 jsonb_gt_internal(const Jsonb *jb1, const Jsonb *jb2)
 {
-  /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(jb1, false); VALIDATE_NOT_NULL(jb2, false);
+  assert(jb1); assert(jb2);
   return compareJsonbContainers((JsonbContainer *) &jb1->root,
     (JsonbContainer *) &jb2->root) > 0;
 }
@@ -212,13 +201,12 @@ jsonb_gt_internal(const Jsonb *jb1, const Jsonb *jb2)
  * @brief Return true if the first JSONB value is less than or equal to the
  * second one
  * @param[in] jb1,jb2 JSONB values
- * @csqlfn #jsonb_le()
+ * @note Derived from PostgreSQL function @p jsonb_le()
  */
 bool
 jsonb_le_internal(const Jsonb *jb1, const Jsonb *jb2)
 {
-  /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(jb1, false); VALIDATE_NOT_NULL(jb2, false);
+  assert(jb1); assert(jb2);
   return compareJsonbContainers((JsonbContainer *) &jb1->root,
     (JsonbContainer *) &jb2->root) <= 0;
 }
@@ -228,13 +216,12 @@ jsonb_le_internal(const Jsonb *jb1, const Jsonb *jb2)
  * @brief Return true if the first JSONB value is greater than or equal to the
  * second one
  * @param[in] jb1,jb2 JSONB values
- * @csqlfn #jsonb_ge()
+ * @note Derived from PostgreSQL function @p jsonb_ge()
  */
 bool
 jsonb_ge_internal(const Jsonb *jb1, const Jsonb *jb2)
 {
-  /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(jb1, false); VALIDATE_NOT_NULL(jb2, false);
+  assert(jb1); assert(jb2);
   return compareJsonbContainers((JsonbContainer *) &jb1->root,
     (JsonbContainer *) &jb2->root) >= 0;
 }
@@ -244,13 +231,12 @@ jsonb_ge_internal(const Jsonb *jb1, const Jsonb *jb2)
  * @brief Return -1, 0, or 1 depending on whether the first JSONB value
  * is less than, equal to, or greater than the second one
  * @param[in] jb1,jb2 JSONB values
- * @csqlfn #jsonb_cmp()
+ * @note Derived from PostgreSQL function @p jsonb_cmp()
  */
 int
 jsonb_cmp_internal(const Jsonb *jb1, const Jsonb *jb2)
 {
-  /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(jb1, false); VALIDATE_NOT_NULL(jb2, false);
+  assert(jb1); assert(jb2);
   return compareJsonbContainers((JsonbContainer *) &jb1->root,
     (JsonbContainer *) &jb2->root) <= 0;
 }
@@ -293,8 +279,7 @@ jsonb_hash_internal(Jsonb *jb)
       case WJB_END_OBJECT:
         break;
       default:
-        meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-          "invalid JsonbIteratorNext rc: %d", (int) r);
+        elog(ERROR, "invalid JsonbIteratorNext rc: %d", (int) r);
     }
   }
 
@@ -339,8 +324,7 @@ jsonb_hash_extended_internal(Jsonb *jb, uint64 seed)
       case WJB_END_OBJECT:
         break;
       default:
-        meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-          "invalid JsonbIteratorNext rc: %d", (int) r);
+        elog(ERROR, "invalid JsonbIteratorNext rc: %d", (int) r);
     }
   }
 

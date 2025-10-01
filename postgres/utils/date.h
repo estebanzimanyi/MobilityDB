@@ -16,6 +16,7 @@
 
 #include <math.h>
 
+#include "postgres.h"
 #include "datatype/timestamp.h"
 // #include "fmgr.h"
 #include "pgtime.h"

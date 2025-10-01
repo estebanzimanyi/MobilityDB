@@ -13,7 +13,6 @@
  *-------------------------------------------------------------------------
  */
 
-#include "postgres.h"
 
 #include <ctype.h>
 #include <limits.h>
@@ -21,14 +20,19 @@
 #include <math.h>
 #include <time.h>
 
+#include "postgres.h"
+#include "postgres_types.h"
 #include "miscadmin.h"
 #include "catalog/pg_type.h"
 #include "common/hashfn.h"
 #include "common/int.h"
+#include "parser/scansup.h"
 #include "utils/builtins.h"
 #include "utils/date.h"
 #include "utils/datetime.h"
 #include "utils/numeric.h"
+
+extern Numeric int64_div_fast_to_numeric(int64 val1, int log10val2);
 
 // #include "access/xact.h"
 // #include "catalog/pg_type.h"
@@ -98,6 +102,13 @@ anytime_typmodout(bool istz, int32 typmod)
  * @return On error return INT_MAX
  * @note Derived from PostgreSQL function @p date_in()
  */
+#if MEOS
+DateADT
+date_in(const char *str)
+{
+  return pg_date_in(str);
+}
+#endif
 DateADT
 pg_date_in(const char *str)
 {
@@ -172,12 +183,18 @@ pg_date_in(const char *str)
  * @return On error return INT_MAX
  * @note Derived from PostgreSQL function @p date_out()
  */
+#if MEOS
+char *
+date_out(DateADT date)
+{
+  return pg_date_out(date);
+}
+#endif
 char *
 pg_date_out(DateADT date)
 {
   char     *result;
-  struct pg_tm tt,
-         *tm = &tt;
+  struct pg_tm tt, *tm = &tt;
   char    buf[MAXDATELEN + 1];
 
   if (DATE_NOT_FINITE(date))
@@ -198,6 +215,13 @@ pg_date_out(DateADT date)
  * @brief Return a date from a year, a month, and a day
  * @note Derived from PostgreSQL function @p date_make()
  */
+#if MEOS
+DateADT
+date_make(int year, int mon, int mday)
+{
+  return pg_date_make(year, mon, mday);
+}
+#endif
 DateADT
 pg_date_make(int year, int mon, int mday)
 {
@@ -276,7 +300,7 @@ EncodeSpecialDate(DateADT dt, char *str)
  * @note Derived from PostgreSQL function @p date_eq()
  */
 bool
-pg_date_eq(DateADT date1, DateADT date2)
+eq_date_date(DateADT date1, DateADT date2)
 {
   return (date1 == date2);
 }
@@ -287,7 +311,7 @@ pg_date_eq(DateADT date1, DateADT date2)
  * @note Derived from PostgreSQL function @p date_ne()
  */
 bool
-pg_date_ne(DateADT date1, DateADT date2)
+ne_date_date(DateADT date1, DateADT date2)
 {
   return (date1 != date2);
 }
@@ -298,7 +322,7 @@ pg_date_ne(DateADT date1, DateADT date2)
  * @note Derived from PostgreSQL function @p date_lt()
  */
 bool
-pg_date_lt(DateADT date1, DateADT date2)
+lt_date_date(DateADT date1, DateADT date2)
 {
   return (date1 < date2);
 }
@@ -309,7 +333,7 @@ pg_date_lt(DateADT date1, DateADT date2)
  * @note Derived from PostgreSQL function @p date_le()
  */
 bool
-pg_date_le(DateADT date1, DateADT date2)
+le_date_date(DateADT date1, DateADT date2)
 {
   return (date1 <= date2);
 }
@@ -320,7 +344,7 @@ pg_date_le(DateADT date1, DateADT date2)
  * @note Derived from PostgreSQL function @p date_gt()
  */
 bool
-pg_date_gt(DateADT date1, DateADT date2)
+gt_date_date(DateADT date1, DateADT date2)
 {
   return (date1 > date2);
 }
@@ -331,7 +355,7 @@ pg_date_gt(DateADT date1, DateADT date2)
  * @note Derived from PostgreSQL function @p date_ge()
  */
 bool
-pg_date_ge(DateADT date1, DateADT date2)
+ge_date_date(DateADT date1, DateADT date2)
 {
   return (date1 >= date2);
 }
@@ -343,7 +367,7 @@ pg_date_ge(DateADT date1, DateADT date2)
  * @note Derived from PostgreSQL function @p date_cmp()
  */
 int
-pg_date_cmp(DateADT date1, DateADT date2)
+cmp_date_date(DateADT date1, DateADT date2)
 {
   if (date1 < date2)
     return -1;
@@ -390,6 +414,13 @@ date_is_finite(DateADT date)
  * @brief Return the larger of two dates
  * @note Derived from PostgreSQL function @p date_larger()
  */
+#if MEOS
+DateADT
+date_larger(DateADT date1, DateADT date2)
+{
+  pg_date_larger(date1, date2);
+}
+#endif 
 DateADT
 pg_date_larger(DateADT date1, DateADT date2)
 {
@@ -401,6 +432,13 @@ pg_date_larger(DateADT date1, DateADT date2)
  * @brief Return the smaller of two dates
  * @note Derived from PostgreSQL function @p date_smaller()
  */
+#if MEOS
+DateADT
+date_smaller(DateADT date1, DateADT date2)
+{
+  pg_date_smaller(date1, date2);
+}
+#endif
 DateADT
 pg_date_smaller(DateADT date1, DateADT date2)
 {
@@ -754,7 +792,7 @@ ge_date_timestamp(DateADT date, Timestamp dt2)
 int32
 cmp_date_timestamp(DateADT date, Timestamp dt2)
 {
-  return (date_cmp_timestamp_internal(date, dt2));
+  return date_cmp_timestamp_internal(date, dt2);
 }
 
 int32
@@ -1054,12 +1092,13 @@ date_extract(DateADT date, text *units)
       case DTK_ISOYEAR:
       case DTK_EPOCH:
         if (DATE_IS_NOBEGIN(date))
-          return NumericGetDatum(numeric_in_internal("-Infinity", -1));
+          return NumericGetDatum(pg_numeric_in("-Infinity", -1));
         else
-          return NumericGetDatum(numeric_in_internal("Infinity", -1));
+          return NumericGetDatum(pg_numeric_in("Infinity", -1));
       default:
         elog(ERROR, "unit \"%s\" not supported for type %s",
-          lowunits, format_type_be(DATEOID));
+          // lowunits, format_type_be(DATEOID));
+          lowunits, "date");
         return NULL;
     }
   }
@@ -1141,7 +1180,8 @@ date_extract(DateADT date, text *units)
 
       default:
         elog(ERROR, "unit \"%s\" not supported for type %s",
-          lowunits, format_type_be(DATEOID));
+          // lowunits, format_type_be(DATEOID));
+          lowunits, "date");
         intresult = 0;
     }
   }
@@ -1155,14 +1195,16 @@ date_extract(DateADT date, text *units)
 
       default:
         elog(ERROR, "unit \"%s\" not supported for type %s",
-          lowunits, format_type_be(DATEOID));
+          // lowunits, format_type_be(DATEOID));
+          lowunits, "date");
         intresult = 0;
     }
   }
   else
   {
     elog(ERROR, "unit \"%s\" not recognized for type %s",
-        lowunits, format_type_be(DATEOID));
+        // lowunits, format_type_be(DATEOID));
+        lowunits, "date");
     intresult = 0;
   }
 
@@ -1290,8 +1332,15 @@ timestamptz_to_date(TimestampTz timestamp)
  * @brief Return a time from its string representation
  * @note Derived from PostgreSQL function @p time_in()
  */
+#if MEOS
 TimeADT
-pg_time_in(char *str, int32 typmod)
+time_in(const char *str, int32 typmod)
+{
+  return pg_time_in(str, typmod);
+}
+#endif
+TimeADT
+pg_time_in(const char *str, int32 typmod)
 {
   TimeADT    result;
   fsec_t    fsec;
@@ -1416,6 +1465,13 @@ time2tm(TimeADT time, struct pg_tm *tm, fsec_t *fsec)
  * @brief Return the string representation of a time
  * @note Derived from PostgreSQL function @p time_out()
  */
+#if MEOS
+char *
+time_out(TimeADT time)
+{
+  return pg_time_out(time);
+}
+#endif
 char *
 pg_time_out(TimeADT time)
 {
@@ -1466,6 +1522,13 @@ time_make(int tm_hour, int tm_min, double sec)
  * @brief Adjust a time to a scale factor
  * @note Derived from PostgreSQL function @p time_scale()
  */
+#if MEOS
+TimeADT
+time_scale(TimeADT date, int32 typmod)
+{
+  return pg_time_scale(date, typmod);
+}
+#endif
 TimeADT
 pg_time_scale(TimeADT date, int32 typmod)
 {
@@ -1520,6 +1583,13 @@ AdjustTimeForTypmod(TimeADT *time, int32 typmod)
  * @brief Return true if two times are equal
  * @note Derived from PostgreSQL function @p time_eq()
  */
+#if MEOS
+bool
+time_eq(TimeADT time1, TimeADT time2)
+{
+  return (time1 == time2);
+}
+#endif
 bool
 pg_time_eq(TimeADT time1, TimeADT time2)
 {
@@ -1531,6 +1601,13 @@ pg_time_eq(TimeADT time1, TimeADT time2)
  * @brief Return true if two times are not equal
  * @note Derived from PostgreSQL function @p time_ne()
  */
+#if MEOS
+bool
+time_ne(TimeADT time1, TimeADT time2)
+{
+  return (time1 != time2);
+}
+#endif
 bool
 pg_time_ne(TimeADT time1, TimeADT time2)
 {
@@ -1542,6 +1619,13 @@ pg_time_ne(TimeADT time1, TimeADT time2)
  * @brief Return true if a time is less than another one
  * @note Derived from PostgreSQL function @p time_lt()
  */
+#if MEOS
+bool
+time_lt(TimeADT time1, TimeADT time2)
+{
+  return (time1 < time2);
+}
+#endif
 bool
 pg_time_lt(TimeADT time1, TimeADT time2)
 {
@@ -1553,6 +1637,13 @@ pg_time_lt(TimeADT time1, TimeADT time2)
  * @brief Return true if a time is less than or equal to another one
  * @note Derived from PostgreSQL function @p time_le()
  */
+#if MEOS
+bool
+time_le(TimeADT time1, TimeADT time2)
+{
+  return (time1 <= time2);
+}
+#endif
 bool
 pg_time_le(TimeADT time1, TimeADT time2)
 {
@@ -1564,6 +1655,13 @@ pg_time_le(TimeADT time1, TimeADT time2)
  * @brief Return true if a time is greater than another one
  * @note Derived from PostgreSQL function @p time_gt()
  */
+#if MEOS
+bool
+time_gt(TimeADT time1, TimeADT time2)
+{
+  return (time1 > time2);
+}
+#endif
 bool
 pg_time_gt(TimeADT time1, TimeADT time2)
 {
@@ -1575,6 +1673,13 @@ pg_time_gt(TimeADT time1, TimeADT time2)
  * @brief Return true if a time is greater than or equal to another one
  * @note Derived from PostgreSQL function @p time_ge()
  */
+#if MEOS
+bool
+time_ge(TimeADT time1, TimeADT time2)
+{
+  return (time1 >= time2);
+}
+#endif
 bool
 pg_time_ge(TimeADT time1, TimeADT time2)
 {
@@ -1587,6 +1692,13 @@ pg_time_ge(TimeADT time1, TimeADT time2)
  * equal to, or less than the second one
  * @note Derived from PostgreSQL function @p time_cmp()
  */
+#if MEOS
+int
+time_cmp(TimeADT time1, TimeADT time2)
+{
+  return pg_time_cmp(time1, time2);
+}
+#endif
 int
 pg_time_cmp(TimeADT time1, TimeADT time2)
 {
@@ -1602,6 +1714,13 @@ pg_time_cmp(TimeADT time1, TimeADT time2)
  * @brief Return the 32-bit hash value of a time
  * @note Derived from PostgreSQL function @p time_hash()
  */
+#if MEOS
+uint32
+time_hash(TimeADT time)
+{
+  return int64_hash(time);
+}
+#endif
 uint32
 pg_time_hash(TimeADT time)
 {
@@ -1613,6 +1732,13 @@ pg_time_hash(TimeADT time)
  * @brief Return the 64-bit hash value of a time using a seed
  * @note Derived from PostgreSQL function @p time_hash_extended()
  */
+#if MEOS
+uint64
+time_hash_extended(TimeADT time, int32 seed)
+{
+  return int64_hash_extended(time, seed);
+}
+#endif
 uint64
 pg_time_hash_extended(TimeADT time, int32 seed)
 {
@@ -1624,6 +1750,13 @@ pg_time_hash_extended(TimeADT time, int32 seed)
  * @brief Return the larger of two times
  * @note Derived from PostgreSQL function @p time_larger()
  */
+#if MEOS
+TimeADT
+time_larger(TimeADT time1, TimeADT time2)
+{
+ return ((time1 > time2) ? time1 : time2);
+}
+#endif
 TimeADT
 pg_time_larger(TimeADT time1, TimeADT time2)
 {
@@ -1635,6 +1768,13 @@ pg_time_larger(TimeADT time1, TimeADT time2)
  * @brief Return the smaller of two times
  * @note Derived from PostgreSQL function @p time_smaller()
  */
+#if MEOS
+TimeADT
+time_smaller(TimeADT time1, TimeADT time2)
+{
+ return ((time1 < time2) ? time1 : time2);
+}
+#endif
 TimeADT
 pg_time_smaller(TimeADT time1, TimeADT time2)
 {
@@ -1666,23 +1806,23 @@ time_overlaps(TimeADT *ts1, TimeADT *te1, TimeADT *ts2, TimeADT *te2)
      * in the presence of nulls it's not quite completely so.
      */
     if (TIMEADT_LT(ts1, te2))
-      return result(true);
+      return true;
 
     /*
      * We had ts1 <= te1 above, and we just found ts1 >= te2, hence te1 >= te2
      */
-    return (false);
+    return false;
   }
   else if (TIMEADT_LT(ts1, ts2))
   {
     /* This case is ts2 < te1 OR te2 < te1 */
     if (TIMEADT_LT(ts2, te1))
-      return (true);
+      return true;
 
     /*
      * We had ts2 <= te2 above, and we just found ts2 >= te1, hence te2 >= te1
      */
-    return (false);
+    return false;
   }
   else
   {
@@ -1690,7 +1830,7 @@ time_overlaps(TimeADT *ts1, TimeADT *te1, TimeADT *ts2, TimeADT *te2)
      * For ts1 = ts2 the spec says te1 <> te2 OR te1 = te2, which is a
      * rather silly way of saying "true if both are nonnull, else null".
      */
-    return (true);
+    return true;
   }
 
 #undef TIMEADT_GT
@@ -1810,7 +1950,7 @@ time_to_interval(TimeADT date)
  * @note Derived from PostgreSQL function @p interval_time()
  */
 TimeADT
-interval_to_time(Interval *span)
+interval_to_time(const Interval *span)
 {
   if (INTERVAL_NOT_FINITE(span))
   {
@@ -1960,7 +2100,8 @@ time_part_common(text *units, TimeADT time, bool retnumeric)
       case DTK_ISOYEAR:
       default:
         elog(ERROR, "unit \"%s\" not supported for type %s",
-          lowunits, format_type_be(TIMEOID));
+          // lowunits, format_type_be(TIMEOID));
+          lowunits, "time without time zone");
         intresult = 0;
     }
   }
@@ -1974,7 +2115,8 @@ time_part_common(text *units, TimeADT time, bool retnumeric)
   else
   {
     elog(ERROR, "unit \"%s\" not recognized for type %s",
-        lowunits, format_type_be(TIMEOID));
+      // lowunits, format_type_be(TIMEOID));
+      lowunits, "time without time zone");
     intresult = 0;
   }
 
@@ -1989,8 +2131,15 @@ time_part_common(text *units, TimeADT time, bool retnumeric)
  * @brief Extract a field from a time
  * @note Derived from PostgreSQL function @p time_part()
  */
+#if MEOS
 float8
-pg_time_part(TimeADT time, text *units)
+time_part(TimeADT time, const text *units)
+{
+  return DatumGetFloat8(time_part_common(units, time, false));
+}
+#endif
+float8
+pg_time_part(TimeADT time, const text *units)
 {
   return DatumGetFloat8(time_part_common(units, time, false));
 }
@@ -2001,7 +2150,7 @@ pg_time_part(TimeADT time, text *units)
  * @note Derived from PostgreSQL function @p extract_time()
  */
 Numeric
-time_extract(TimeADT time, text *units)
+time_extract(TimeADT time, const text *units)
 {
   return DatumGetNumeric(time_part_common(units, time, true));
 }
@@ -2009,8 +2158,6 @@ time_extract(TimeADT time, text *units)
 /*****************************************************************************
  *   Time With Time Zone ADT
  *****************************************************************************/
-
-#if 0 /* NOT USED */
 
 /* tm2timetz()
  * Convert a tm structure to a time data type.
@@ -2026,12 +2173,19 @@ tm2timetz(struct pg_tm *tm, fsec_t fsec, int tz, TimeTzADT *result)
 }
 
 /**
- * @ingroup meos_base_timetz
+ * @ingroup meos_base_time
  * @brief Return true if two dates are equal
  * @note Derived from PostgreSQL function @p timetz_in()
  */
-TimeTzADT
-pg_timetz_in(char *str, int32 typmod)
+#if MEOS
+TimeTzADT *
+timetz_in(const char *str, int32 typmod)
+{
+  return pg_timetz_in(str, typmod);
+}
+#endif
+TimeTzADT *
+pg_timetz_in(const char *str, int32 typmod)
 {
   TimeTzADT  *result;
   fsec_t    fsec;
@@ -2065,14 +2219,21 @@ pg_timetz_in(char *str, int32 typmod)
 }
 
 /**
- * @ingroup meos_base_timetz
+ * @ingroup meos_base_time
  * @brief Return true if two dates are equal
  * @note Derived from PostgreSQL function @p timetz_out()
  */
+#if MEOS
 char *
-pg_timetz_out(TimeTzADT *time)
+timetz_out(const TimeTzADT *time)
 {
-  char     *result;
+  return pg_timetz_out(time);
+}
+#endif
+char *
+pg_timetz_out(const TimeTzADT *time)
+{
+  char *result;
   struct pg_tm tt,
          *tm = &tt;
   fsec_t    fsec;
@@ -2092,7 +2253,6 @@ timetz_typmodout(int32 typmod)
 {
   return anytime_typmodout(true, typmod);
 }
-
 
 /* timetz2tm()
  * Convert TIME WITH TIME ZONE data type to POSIX time structure.
@@ -2116,12 +2276,19 @@ timetz2tm(TimeTzADT *time, struct pg_tm *tm, fsec_t *fsec, int *tzp)
 }
 
 /**
- * @ingroup meos_base_timetz
+ * @ingroup meos_base_time
  * @brief Adjust time type for specified scale factor
  * @note Derived from PostgreSQL function @p timetz_scale()
  */
-TimeTzADT
-pg_timetz_scale(TimeTzADT *time, int32 typmod)
+#if MEOS
+TimeTzADT *
+timetz_scale(const TimeTzADT *time, int32 typmod)
+{
+  return pg_timetz_scale(time, typmod);
+}
+#endif
+TimeTzADT *
+pg_timetz_scale(const TimeTzADT *time, int32 typmod)
 {
   TimeTzADT *result = (TimeTzADT *) palloc(sizeof(TimeTzADT));
   result->time = time->time;
@@ -2157,90 +2324,146 @@ timetz_cmp_internal(TimeTzADT *time1, TimeTzADT *time2)
 }
 
 /**
- * @ingroup meos_base_timetz
+ * @ingroup meos_base_time
  * @brief Return true if two dates are equal
  * @note Derived from PostgreSQL function @p timetz_eq()
  */
+#if MEOS
 bool
-pg_timetz_eq(TimeTzADT time1, TimeTzADT time2)
+timetz_eq(const TimeTzADT *time1, const TimeTzADT *time2)
+{
+  return (timetz_cmp_internal(time1, time2) == 0);
+}
+#endif
+bool
+pg_timetz_eq(const TimeTzADT *time1, const TimeTzADT *time2)
 {
   return (timetz_cmp_internal(time1, time2) == 0);
 }
 
 /**
- * @ingroup meos_base_timetz
+ * @ingroup meos_base_time
  * @brief Return true if two dates are equal
  * @note Derived from PostgreSQL function @p timetz_ne()
  */
+#if MEOS
 bool
-pg_timetz_ne(TimeTzADT time1, TimeTzADT time2)
+timetz_ne(const TimeTzADT *time1, const TimeTzADT *time2)
+{
+  return (timetz_cmp_internal(time1, time2) != 0);
+}
+#endif
+bool
+pg_timetz_ne(const TimeTzADT *time1, const TimeTzADT *time2)
 {
   return (timetz_cmp_internal(time1, time2) != 0);
 }
 
 /**
- * @ingroup meos_base_timetz
+ * @ingroup meos_base_time
  * @brief Return true if two dates are equal
  * @note Derived from PostgreSQL function @p timetz_lt()
  */
+#if MEOS
 bool
-pg_timetz_lt(TimeTzADT time1, TimeTzADT time2)
+timetz_lt(const TimeTzADT *time1, const TimeTzADT *time2)
+{
+  return (timetz_cmp_internal(time1, time2) < 0);
+}
+#endif
+bool
+pg_timetz_lt(const TimeTzADT *time1, const TimeTzADT *time2)
 {
   return (timetz_cmp_internal(time1, time2) < 0);
 }
 
 /**
- * @ingroup meos_base_timetz
+ * @ingroup meos_base_time
  * @brief Return true if two dates are equal
  * @note Derived from PostgreSQL function @p timetz_le()
  */
+#if MEOS
 bool
-pg_timetz_le(TimeTzADT time1, TimeTzADT time2)
+timetz_le(const TimeTzADT *time1, const TimeTzADT *time2)
+{
+  return (timetz_cmp_internal(time1, time2) <= 0);
+}
+#endif
+bool
+pg_timetz_le(const TimeTzADT *time1, const TimeTzADT *time2)
 {
   return (timetz_cmp_internal(time1, time2) <= 0);
 }
 
 /**
- * @ingroup meos_base_timetz
+ * @ingroup meos_base_time
  * @brief Return true if two dates are equal
  * @note Derived from PostgreSQL function @p timetz_gt()
  */
+#if MEOS
 bool
-pg_timetz_gt(TimeTzADT time1, TimeTzADT time2)
+timetz_gt(const TimeTzADT *time1, const TimeTzADT *time2)
+{
+  return (timetz_cmp_internal(time1, time2) > 0);
+}
+#endif
+bool
+pg_timetz_gt(const TimeTzADT *time1, const TimeTzADT *time2)
 {
   return (timetz_cmp_internal(time1, time2) > 0);
 }
 
 /**
- * @ingroup meos_base_timetz
+ * @ingroup meos_base_time
  * @brief Return true if two dates are equal
  * @note Derived from PostgreSQL function @p timetz_ge()
  */
+#if MEOS
 bool
-pg_timetz_ge(TimeTzADT time1, TimeTzADT time2)
+timetz_ge(const TimeTzADT *time1, const TimeTzADT *time2)
+{
+  return (timetz_cmp_internal(time1, time2) >= 0);
+}
+#endif
+bool
+pg_timetz_ge(const TimeTzADT *time1, const TimeTzADT *time2)
 {
   return (timetz_cmp_internal(time1, time2) >= 0);
 }
 
 /**
- * @ingroup meos_base_timetz
+ * @ingroup meos_base_time
  * @brief Return -1, 0, or 1 depending on whether the first timetz is less than,
  * equal to, or less than the second one
  * @note Derived from PostgreSQL function @p timetz_cmp()
  */
+#if MEOS
 int32
-pg_timetz_cmp(TimeTzADT time1, TimeTzADT time2)
+timetz_cmp(const TimeTzADT *time1, const TimeTzADT *time2)
+{
+  return (timetz_cmp_internal(time1, time2));
+}
+#endif
+int32
+pg_timetz_cmp(const TimeTzADT *time1, const TimeTzADT *time2)
 {
   return (timetz_cmp_internal(time1, time2));
 }
 
 /**
- * @ingroup meos_base_timetz
+ * @ingroup meos_base_time
  * @brief Return true if two dates are equal
  * @note Derived from PostgreSQL function @p timetz_hash()
  */
+#if MEOS
 uint32
-pg_timetz_hash(TimeTzADT *key)
+timetz_hash(const TimeTzADT *key)
+{
+  return pg_timetz_hash(key);
+}
+#endif
+uint32
+pg_timetz_hash(const TimeTzADT *key)
 {
   /*
    * To avoid any problems with padding bytes in the struct, we figure the
@@ -2252,12 +2475,19 @@ pg_timetz_hash(TimeTzADT *key)
 }
 
 /**
- * @ingroup meos_base_timetz
+ * @ingroup meos_base_time
  * @brief Return true if two dates are equal
  * @note Derived from PostgreSQL function @p timetz_hash_extended()
  */
+#if MEOS
 uint64
-pg_timetz_hash_extended(TimeTzADT *key, int64 seed)
+timetz_hash_extended(const TimeTzADT *key, int64 seed)
+{
+  return pg_timetz_hash_extended(key, seed);
+}
+#endif
+uint64
+pg_timetz_hash_extended(const TimeTzADT *key, int64 seed)
 {
   /* Same approach as timetz_hash */
   uint64 thash = int64_hash_extended(key->time, seed);
@@ -2267,12 +2497,19 @@ pg_timetz_hash_extended(TimeTzADT *key, int64 seed)
 }
 
 /**
- * @ingroup meos_base_timetz
+ * @ingroup meos_base_time
  * @brief Return true if two dates are equal
  * @note Derived from PostgreSQL function @p timetz_larger()
  */
-TimeADT
-pg_timetz_larger(TimeTzADT time1, TimeTzADT time2)
+#if MEOS
+TimeTzADT * 
+timetz_larger(const TimeTzADT *time1, const TimeTzADT *time2)
+{
+  return pg_timetz_larger(time1, time2);
+}
+#endif
+TimeTzADT *
+pg_timetz_larger(const TimeTzADT *time1, const TimeTzADT *time2)
 {
   TimeTzADT *result;
   if (timetz_cmp_internal(time1, time2) > 0)
@@ -2283,12 +2520,19 @@ pg_timetz_larger(TimeTzADT time1, TimeTzADT time2)
 }
 
 /**
- * @ingroup meos_base_timetz
+ * @ingroup meos_base_time
  * @brief Return true if two dates are equal
  * @note Derived from PostgreSQL function @p timetz_smaller()
  */
-TimeADT
-pg_timetz_smaller(TimeTzADT time1, TimeTzADT time2)
+#if MEOS
+TimeTzADT * 
+timetz_smaller(const TimeTzADT *time1, const TimeTzADT *time2)
+{
+  return pg_timetz_smaller(time1, time2);
+}
+#endif
+TimeTzADT * 
+pg_timetz_smaller(const TimeTzADT *time1, const TimeTzADT *time2)
 {
   TimeTzADT *result;
   if (timetz_cmp_internal(time1, time2) < 0)
@@ -2299,12 +2543,12 @@ pg_timetz_smaller(TimeTzADT time1, TimeTzADT time2)
 }
 
 /**
- * @ingroup meos_base_timetz
+ * @ingroup meos_base_time
  * @brief Add an interval to a timetz
  * @note Derived from PostgreSQL function @p timetz_pl_interval()
  */
-TimeADT
-plus_timetz_interval(TimeTzADT time, Interval *span)
+TimeTzADT *
+plus_timetz_interval(const TimeTzADT *time, const Interval *span)
 {
   if (INTERVAL_NOT_FINITE(span))
   {
@@ -2322,12 +2566,12 @@ plus_timetz_interval(TimeTzADT time, Interval *span)
 }
 
 /**
- * @ingroup meos_base_timetz
+ * @ingroup meos_base_time
  * @brief Subtract an interval from a timetz
  * @note Derived from PostgreSQL function @p timetz_mi_interval()
  */
-TimeADT
-minus_timetz_interval(TimeTzADT time, Interval *span)
+TimeTzADT *
+minus_timetz_interval(const TimeTzADT *time, const Interval *span)
 {
   if (INTERVAL_NOT_FINITE(span))
   {
@@ -2345,47 +2589,43 @@ minus_timetz_interval(TimeTzADT time, Interval *span)
 }
 
 /**
- * @ingroup meos_base_timetz
+ * @ingroup meos_base_time
  * @brief Return true if two timetz values overlap
  * @details Implements the SQL OVERLAPS operator, although in this case none
  * of the inputs is null
  * @note Derived from PostgreSQL function @p overlaps_timetz()
  */
 bool
-timetz_overlaps(TimeTzADT *ts1, TimeTzADT *te1, TimeTzADT *ts2, TimeTzADT *te2)
+timetz_overlaps(const TimeTzADT *ts1, const TimeTzADT *te1,
+  const TimeTzADT *ts2, const TimeTzADT *te2)
 {
-#define TIMETZ_GT(t1,t2) \
-  DatumGetBool(DirectFunctionCall2(timetz_gt,t1,t2))
-#define TIMETZ_LT(t1,t2) \
-  DatumGetBool(DirectFunctionCall2(timetz_lt,t1,t2))
-
   /*
    * We can consider three cases: ts1 > ts2, ts1 < ts2, ts1 = ts2
    */
-  if (TIMETZ_GT(ts1, ts2))
+  if (pg_timetz_gt(ts1, ts2))
   {
     /*
      * This case is ts1 < te2 OR te1 < te2, which may look redundant but
      * in the presence of nulls it's not quite completely so.
      */
-    if (TIMETZ_LT(ts1, te2))
-      return (true);
+    if (pg_timetz_lt(ts1, te2))
+      return true;
 
     /*
      * We had ts1 <= te1 above, and we just found ts1 >= te2, hence te1 >= te2
      */
-    return (false);
+    return false;
   }
-  else if (TIMETZ_LT(ts1, ts2))
+  else if (pg_timetz_lt(ts1, ts2))
   {
     /* This case is ts2 < te1 OR te2 < te1 */
-    if (TIMETZ_LT(ts2, te1))
-      return (true);
+    if (pg_timetz_lt(ts2, te1))
+      return true;
 
     /*
      * We had ts2 <= te2 above, and we just found ts2 >= te1, hence te2 >= te1
      */
-    return (false);
+    return false;
   }
   else
   {
@@ -2393,37 +2633,31 @@ timetz_overlaps(TimeTzADT *ts1, TimeTzADT *te1, TimeTzADT *ts2, TimeTzADT *te2)
      * For ts1 = ts2 the spec says te1 <> te2 OR te1 = te2, which is a
      * rather silly way of saying "true if both are nonnull, else null".
      */
-    if (te1IsNull || te2IsNull)
-      return false;
-    return (true);
+    return true;
   }
-
-#undef TIMETZ_GT
-#undef TIMETZ_LT
 }
 
 /**
- * @ingroup meos_base_timetz
+ * @ingroup meos_base_time
  * @brief Return true if two dates are equal
  * @note Derived from PostgreSQL function @p timetz_time()
  */
 TimeADT
-timetz_to_time(TimeTzADT *timetz)
+timetz_to_time(const TimeTzADT *timetz)
 {
   /* swallow the time zone and just return the time */
-  TimeADT result = timetz->time;
-  return result;
+  return timetz->time;
 }
 
 /**
- * @ingroup meos_base_timetz
+ * @ingroup meos_base_time
  * @brief Return true if two dates are equal
  * @note Derived from PostgreSQL function @p time_timetz()
  */
-TimeADT
+TimeTzADT *
 time_to_timetz(TimeADT date)
 {
-  TimeTzADT  *result;
+  TimeTzADT *result;
   struct pg_tm tt, *tm = &tt;
   fsec_t fsec;
   int tz;
@@ -2441,11 +2675,11 @@ time_to_timetz(TimeADT date)
 }
 
 /**
- * @ingroup meos_base_timetz
+ * @ingroup meos_base_time
  * @brief Convert timestamp to timetz data type
  * @note Derived from PostgreSQL function @p timestamptz_timetz()
  */
-TimeADT
+TimeTzADT *
 timestamptz_to_timetz(TimestampTz timestamp)
 {
   struct pg_tm tt, *tm = &tt;
@@ -2467,19 +2701,19 @@ timestamptz_to_timetz(TimestampTz timestamp)
 }
 
 /**
- * @ingroup meos_base_timetz
+ * @ingroup meos_base_time
  * @brief Convert date and timetz to timestamp with time zone data type
  * @details Timestamp is stored in GMT, so add the time zone stored with the
  * timetz to the result.
  * @note Derived from PostgreSQL function @p datetimetz_timestamptz()
  */
 TimestampTz
-datetimetz_to_timestamptz(DateADT date, TimeTzADT *time)
+date_timetz_to_timestamptz(DateADT date, const TimeTzADT *time)
 {
   if (DATE_IS_NOBEGIN(date))
-    TIMESTAMP_NOBEGIN(result);
+    return DT_NOBEGIN;
   else if (DATE_IS_NOEND(date))
-    TIMESTAMP_NOEND(result);
+    return DT_NOEND;
   else
   {
     /*
@@ -2505,9 +2739,9 @@ datetimetz_to_timestamptz(DateADT date, TimeTzADT *time)
       elog(ERROR, "date out of range for timestamp");
       return DT_NOEND;
     }
-  }
 
-  return result;
+    return result;
+  }
 }
 
 
@@ -2596,7 +2830,8 @@ timetz_part_common(text *units, TimeTzADT *time, bool retnumeric)
       case DTK_MILLENNIUM:
       default:
         elog(ERROR, "unit \"%s\" not supported for type %s",
-                lowunits, format_type_be(TIMETZOID));
+          // lowunits, format_type_be(TIMETZOID));
+          lowunits, "time with time zone");
         intresult = 0;
     }
   }
@@ -2614,7 +2849,8 @@ timetz_part_common(text *units, TimeTzADT *time, bool retnumeric)
   else
   {
     elog(ERROR, "unit \"%s\" not recognized for type %s",
-      lowunits, format_type_be(TIMETZOID));
+      // lowunits, format_type_be(TIMETZOID));
+      lowunits, "time with time zone");
     intresult = 0;
   }
 
@@ -2625,35 +2861,49 @@ timetz_part_common(text *units, TimeTzADT *time, bool retnumeric)
 }
 
 /**
- * @ingroup meos_base_timetz
+ * @ingroup meos_base_time
  * @brief Return true if two dates are equal
  * @note Derived from PostgreSQL function @p timetz_part()
  */
+#if MEOS
 float8
-pg_timetz_part(TimeTzADT *time, text *units)
+timetz_part(const TimeTzADT *time, const text *units)
 {
-  return DatumGetNumeric(timetz_part_common(units, time, false));
+  return pg_timetz_part(time, units);
+}
+#endif
+float8
+pg_timetz_part(const TimeTzADT *time, const text *units)
+{
+  return DatumGetFloat8(timetz_part_common(units, time, false));
 }
 
 /**
- * @ingroup meos_base_timetz
+ * @ingroup meos_base_time
  * @brief Extract a field from a timetz
  * @note Derived from PostgreSQL function @p extract_timetz()
  */
 Numeric
-timetz_extract(TimeTzADT *time, text *units)
+timetz_extract(const TimeTzADT *time, const text *units)
 {
   return DatumGetNumeric(timetz_part_common(units, time, true));
 }
 
 /**
- * @ingroup meos_base_timetz
+ * @ingroup meos_base_time
  * @brief Encode a time with time zone with a specified time zone
  * @details Applies DST rules as of the transaction start time
  * @note Derived from PostgreSQL function @p timetz_zone()
  */
-TimeADT
-pg_timetz_zone(TimeTzADT *t, text *zone)
+#if MEOS
+TimeTzADT *
+timetz_zone(const TimeTzADT *t, const text *zone)
+{
+  return pg_timetz_zone(t, zone);
+}
+#endif
+TimeTzADT *
+pg_timetz_zone(const TimeTzADT *t, const text *zone)
 {
   TimeTzADT *result;
   int tz;
@@ -2710,15 +2960,22 @@ pg_timetz_zone(TimeTzADT *t, text *zone)
 }
 
 /**
- * @ingroup meos_base_timetz
+ * @ingroup meos_base_time
  * @brief Encode a time with time zone with a time interval as time zone
  * @result On error return NULL
  * @note Derived from PostgreSQL function @p timetz_izone()
  */
-TimeTzADT
-pg_timetz_izone(TimeTzADT *time, Interval *zone)
+#if MEOS
+TimeTzADT *
+timetz_izone(const TimeTzADT *time, const Interval *zone)
 {
-  TimeTzADT  *result;
+  return pg_timetz_izone(time, zone);
+}
+#endif
+TimeTzADT *
+pg_timetz_izone(const TimeTzADT *time, const Interval *zone)
+{
+  TimeTzADT *result;
   int tz;
 
   if (INTERVAL_NOT_FINITE(zone))
@@ -2752,21 +3009,26 @@ pg_timetz_izone(TimeTzADT *time, Interval *zone)
 }
 
 /**
- * @ingroup meos_base_timetz
+ * @ingroup meos_base_time
  * @brief Encode a time with time zone with the local time zone
  * @details Unlike for timestamp[tz]_at_local, the type for timetz does not
  * flip between time with/without time zone, so we cannot just call the
  * conversion function
  * @note Derived from PostgreSQL function @p timetz_at_local()
  */
-TimeADT
-pg_timetz_at_local(TimeTzADT time)
+#if MEOS
+TimeTzADT *
+timetz_at_local(const TimeTzADT *time)
+{
+  return pg_timetz_at_local(time);
+}
+#endif
+TimeTzADT *
+pg_timetz_at_local(TimeTzADT *time)
 {
   const char *tzn = pg_get_timezone_name(session_timezone);
   char *zone = cstring_to_text(tzn);
-  return pg_timetz_zone(zone, time);
+  return pg_timetz_zone(time, zone);
 }
-
-#endif /* NOT USED */
 
 /*****************************************************************************/

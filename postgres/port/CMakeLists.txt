@@ -3,5 +3,7 @@ add_library(port OBJECT
   qsort.c
   qsort_arg.c
   snprintf.c
+  strerror.c
+  strlcpy.c
   )
 

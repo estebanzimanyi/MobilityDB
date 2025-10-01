@@ -19,17 +19,13 @@
 #include <stdlib.h>
 /* PostgreSQL */
 #include <postgres.h>
-#include "catalog/pg_type_d.h"
+#include <postgres_types.h>
+#include "catalog/pg_type.h"
 #include <common/hashfn.h>
 #include <common/int.h>
 #include <utils/json.h>
 #include <utils/jsonb.h>
-/* MEOS */
-#include <meos.h>
-#include <postgres_types.h>
-#include "temporal/temporal.h"
-#include "temporal/lifting.h"
-#include "temporal/type_util.h"
+#include <utils/varlena.h> /* For DatumGetTextP */
 
 /* TODO REMOVE TO AVOID CALLING POSTGRESQL FUNCTIONS DIRECTLY */
 #if ! MEOS
@@ -623,13 +619,11 @@ jsonb_object_keys(PG_FUNCTION_ARGS)
     if (JB_ROOT_IS_SCALAR(jb))
       ereport(ERROR,
           (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-           "cannot call %s on a scalar",
-              "jsonb_object_keys")));
+           "cannot call %s on a scalar", "jsonb_object_keys"));
     else if (JB_ROOT_IS_ARRAY(jb))
       ereport(ERROR,
           (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-           "cannot call %s on an array",
-              "jsonb_object_keys")));
+           "cannot call %s on an array", "jsonb_object_keys"));
 
     funcctx = SRF_FIRSTCALL_INIT();
     oldcontext = MemoryContextSwitchTo(funcctx->multi_call_memory_ctx);
@@ -686,8 +680,7 @@ json_errsave_error(JsonParseErrorType error, JsonLexContext *lex,
     error == JSON_UNICODE_UNTRANSLATABLE ||
     error == JSON_UNICODE_CODE_POINT_ZERO)
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "unsupported Unicode escape sequence");
+    elog(ERROR, "unsupported Unicode escape sequence");
     return; // TODO
   }
   else if (error == JSON_SEM_ACTION_FAILED)
@@ -695,13 +688,12 @@ json_errsave_error(JsonParseErrorType error, JsonLexContext *lex,
     /* semantic action function had better have reported something */
     if (!SOFT_ERROR_OCCURRED(escontext))
     {
-      meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+      elog(ERROR,
         "JSON semantic action function did not provide error information");
     }
   }
   else
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "invalid input syntax for type %s", "json");
+    elog(ERROR, "invalid input syntax for type %s", "json");
 }
 
 /*
@@ -855,8 +847,7 @@ okeys_array_start(void *state)
   if (_state->lex->lex_level == 0)
     ereport(ERROR,
         (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-         "cannot call %s on an array",
-            "json_object_keys")));
+         "cannot call %s on an array", "json_object_keys"));
 
   return JSON_SUCCESS;
 }
@@ -871,7 +862,7 @@ okeys_scalar(void *state, char *token, JsonTokenType tokentype)
     ereport(ERROR,
         (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
          "cannot call %s on a scalar",
-            "json_object_keys")));
+            "json_object_keys"));
 
   return JSON_SUCCESS;
 }
@@ -1647,8 +1638,7 @@ jsonb_get_element(Jsonb *jb, Datum *path, int npath, bool *isnull, bool as_text)
         /* Container must be array, but make sure */
         if (!JsonContainerIsArray(container))
         {
-          meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-            "not a jsonb array");
+          elog(ERROR, "not a jsonb array");
         }
 
         nelements = JsonContainerSize(container);
@@ -1864,7 +1854,7 @@ JsonbValueAsText(JsonbValue *v)
 
     case jbvNumeric:
       {
-        char *cstr = numeric_out_internal(v->val.numeric);
+        char *cstr = pg_numeric_out(v->val.numeric);
         // return cstring_to_text(DatumGetCString(cstr));
         return cstring2text(cstr);
       }
@@ -1882,8 +1872,7 @@ JsonbValueAsText(JsonbValue *v)
       }
 
     default:
-      meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-        "unrecognized jsonb type: %d", (int) v->type);
+      elog(ERROR, "unrecognized jsonb type: %d", (int) v->type);
       return NULL;
   }
 }
@@ -1924,11 +1913,11 @@ jsonb_array_length(Jsonb *jb)
   if (JB_ROOT_IS_SCALAR(jb))
     ereport(ERROR,
         (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-         "cannot get array length of a scalar")));
+         "cannot get array length of a scalar"));
   else if (!JB_ROOT_IS_ARRAY(jb))
     ereport(ERROR,
         (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-         "cannot get array length of a non-array")));
+         "cannot get array length of a non-array"));
 
   return JB_ROOT_COUNT(jb);
 }
@@ -1947,7 +1936,7 @@ alen_object_start(void *state)
   if (_state->lex->lex_level == 0)
     ereport(ERROR,
         (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-         "cannot get array length of a non-array")));
+         "cannot get array length of a non-array"));
 
   return JSON_SUCCESS;
 }
@@ -1961,7 +1950,7 @@ alen_scalar(void *state, char *token, JsonTokenType tokentype)
   if (_state->lex->lex_level == 0)
     ereport(ERROR,
         (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-         "cannot get array length of a scalar")));
+         "cannot get array length of a scalar"));
 
   return JSON_SUCCESS;
 }
@@ -2028,7 +2017,7 @@ each_worker_jsonb(FunctionCallInfo fcinfo, const char *funcname, bool as_text)
     ereport(ERROR,
         (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
          "cannot call %s on a non-object",
-            funcname)));
+            funcname));
 
   rsi = (ReturnSetInfo *) fcinfo->resultinfo;
   InitMaterializedSRF(fcinfo, MAT_SRF_BLESS);
@@ -2217,7 +2206,7 @@ each_array_start(void *state)
   if (_state->lex->lex_level == 0)
     ereport(ERROR,
         (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-         "cannot deconstruct an array as an object")));
+         "cannot deconstruct an array as an object"));
 
   return JSON_SUCCESS;
 }
@@ -2231,7 +2220,7 @@ each_scalar(void *state, char *token, JsonTokenType tokentype)
   if (_state->lex->lex_level == 0)
     ereport(ERROR,
         (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-         "cannot deconstruct a scalar")));
+         "cannot deconstruct a scalar"));
 
   /* supply de-escaped value if required */
   if (_state->next_scalar)
@@ -2276,11 +2265,11 @@ elements_worker_jsonb(FunctionCallInfo fcinfo, const char *funcname,
   if (JB_ROOT_IS_SCALAR(jb))
     ereport(ERROR,
         (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-         "cannot extract elements from a scalar")));
+         "cannot extract elements from a scalar"));
   else if (!JB_ROOT_IS_ARRAY(jb))
     ereport(ERROR,
         (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-         "cannot extract elements from an object")));
+         "cannot extract elements from an object"));
 
   rsi = (ReturnSetInfo *) fcinfo->resultinfo;
 
@@ -2469,7 +2458,7 @@ elements_object_start(void *state)
     ereport(ERROR,
         (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
          "cannot call %s on a non-array",
-            _state->function_name)));
+            _state->function_name));
 
   return JSON_SUCCESS;
 }
@@ -2484,7 +2473,7 @@ elements_scalar(void *state, char *token, JsonTokenType tokentype)
     ereport(ERROR,
         (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
          "cannot call %s on a scalar",
-            _state->function_name)));
+            _state->function_name));
 
   /* supply de-escaped value if required */
   if (_state->next_scalar)
@@ -2559,12 +2548,11 @@ populate_array_report_expected_array(PopulateArrayContext *ctx, int ndim)
     if (ctx->colname)
       errsave(ctx->escontext,
           (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-           "expected JSON array"),
-           errhint("See the value of key \"%s\".", ctx->colname)));
+           "expected JSON array"));
     else
       errsave(ctx->escontext,
           (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-           "expected JSON array")));
+           "expected JSON array"));
     return;
   }
   else
@@ -2582,15 +2570,11 @@ populate_array_report_expected_array(PopulateArrayContext *ctx, int ndim)
     if (ctx->colname)
       errsave(ctx->escontext,
           (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-           "expected JSON array"),
-           errhint("See the array element %s of key \"%s\".",
-               indices.data, ctx->colname)));
+           "expected JSON array"));
     else
       errsave(ctx->escontext,
           (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-           "expected JSON array"),
-           errhint("See the array element %s.",
-               indices.data)));
+           "expected JSON array"));
     return;
   }
 }
@@ -2641,9 +2625,7 @@ populate_array_check_dimension(PopulateArrayContext *ctx, int ndim)
   else if (ctx->dims[ndim] != dim)
     ereturn(ctx->escontext, false,
         (errcode(ERRCODE_INVALID_TEXT_REPRESENTATION),
-         "malformed JSON array"),
-         errdetail("Multidimensional arrays must have "
-               "sub-arrays with matching dimensions.")));
+         "malformed JSON array"));
 
   /* reset the current array dimension size counter */
   ctx->sizes[ndim] = 0;
@@ -3062,7 +3044,7 @@ JsValueToJsObject(JsValue *jsv, JsObject *jso, Node *escontext)
            ? "cannot call %s on a scalar",
                 "populate_composite")
            : "cannot call %s on an array",
-                "populate_composite")));
+                "populate_composite");
     }
   }
 
@@ -3692,7 +3674,7 @@ get_record_type_from_argument(FunctionCallInfo fcinfo,
         (errcode(ERRCODE_DATATYPE_MISMATCH),
     /* translator: %s is a function name, eg json_to_record */
          "first argument of %s must be a row type",
-            funcname)));
+            funcname));
 }
 
 /*
@@ -3716,10 +3698,7 @@ get_record_type_from_query(FunctionCallInfo fcinfo,
         (errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
     /* translator: %s is a function name, eg json_to_record */
          "could not determine row type for result of %s",
-            funcname),
-         errhint("Provide a non-null record argument, "
-             "or call the function in the FROM clause "
-             "using a column definition list.")));
+            funcname));
 
   Assert(tupdesc);
   cache->argtype = tupdesc->tdtypeid;
@@ -3979,7 +3958,7 @@ hash_array_start(void *state)
   if (_state->lex->lex_level == 0)
     ereport(ERROR,
         (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-         "cannot call %s on an array", _state->function_name)));
+         "cannot call %s on an array", _state->function_name));
 
   return JSON_SUCCESS;
 }
@@ -3992,7 +3971,7 @@ hash_scalar(void *state, char *token, JsonTokenType tokentype)
   if (_state->lex->lex_level == 0)
     ereport(ERROR,
         (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-         "cannot call %s on a scalar", _state->function_name)));
+         "cannot call %s on a scalar", _state->function_name));
 
   if (_state->lex->lex_level == 1)
   {
@@ -4098,12 +4077,12 @@ populate_recordset_worker(FunctionCallInfo fcinfo, const char *funcname,
   if (!rsi || !IsA(rsi, ReturnSetInfo))
     ereport(ERROR,
         (errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-         "set-valued function called in context that cannot accept a set")));
+         "set-valued function called in context that cannot accept a set"));
 
   if (!(rsi->allowedModes & SFRM_Materialize))
     ereport(ERROR,
         (errcode(ERRCODE_FEATURE_NOT_SUPPORTED),
-         "materialize mode required, but it is not allowed in this context")));
+         "materialize mode required, but it is not allowed in this context"));
 
   rsi->returnMode = SFRM_Materialize;
 
@@ -4217,8 +4196,7 @@ populate_recordset_worker(FunctionCallInfo fcinfo, const char *funcname,
     if (JB_ROOT_IS_SCALAR(jb) || !JB_ROOT_IS_ARRAY(jb))
       ereport(ERROR,
           (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-           "cannot call %s on a non-array",
-              funcname)));
+           "cannot call %s on a non-array", funcname));
 
     it = JsonbIteratorInit(&jb->root);
 
@@ -4234,8 +4212,7 @@ populate_recordset_worker(FunctionCallInfo fcinfo, const char *funcname,
           !JsonContainerIsObject(v.val.binary.data))
           ereport(ERROR,
               (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-               "argument of %s must be an array of objects",
-                  funcname)));
+               "argument of %s must be an array of objects", funcname));
 
         obj.is_json = false;
         obj.val.jsonb_cont = v.val.binary.data;
@@ -4267,8 +4244,7 @@ populate_recordset_object_start(void *state)
   if (lex_level == 0)
     ereport(ERROR,
         (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-         "cannot call %s on an object",
-            _state->function_name)));
+         "cannot call %s on an object", _state->function_name));
 
   /* Nested objects require no special processing */
   if (lex_level > 1)
@@ -4318,8 +4294,7 @@ populate_recordset_array_element_start(void *state, bool isnull)
     _state->lex->token_type != JSON_TOKEN_OBJECT_START)
     ereport(ERROR,
         (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-         "argument of %s must be an array of objects",
-            _state->function_name)));
+         "argument of %s must be an array of objects", _state->function_name));
 
   return JSON_SUCCESS;
 }
@@ -4340,7 +4315,7 @@ populate_recordset_scalar(void *state, char *token, JsonTokenType tokentype)
     ereport(ERROR,
         (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
          "cannot call %s on a scalar",
-            _state->function_name)));
+            _state->function_name));
 
   if (_state->lex->lex_level == 2)
     _state->saved_scalar = token;
@@ -4720,8 +4695,7 @@ jsonb_delete_internal(Jsonb *in, text *key)
 
   if (JB_ROOT_IS_SCALAR(in))
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "cannot delete from scalar");
+    elog(ERROR, "cannot delete from scalar");
     return NULL;
   }
 
@@ -4775,8 +4749,7 @@ jsonb_delete_key_array_internal(const Jsonb *in, const text **keys_elems,
 
   if (JB_ROOT_IS_SCALAR(in))
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "cannot delete from scalar");
+    elog(ERROR, "cannot delete from scalar");
     return NULL;
   }
 
@@ -4846,12 +4819,10 @@ jsonb_delete_idx_internal(Jsonb *in, int idx)
   JsonbIteratorToken r;
 
   if (JB_ROOT_IS_SCALAR(in))
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-         "cannot delete from scalar");
+    elog(ERROR, "cannot delete from scalar");
 
   if (JB_ROOT_IS_OBJECT(in))
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "cannot delete from object using integer index");
+    elog(ERROR, "cannot delete from object using integer index");
 
   if (JB_ROOT_COUNT(in) == 0)
     return jsonb_copy(in);
@@ -4903,7 +4874,7 @@ jsonb_set_internal(const Jsonb *jb, Datum *path_elems, bool *path_nulls,
   JsonbToJsonbValue(newjsonb, &newval);
 
   if (JB_ROOT_IS_SCALAR(jb))
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE, "cannot set path jb scalar");
+    elog(ERROR, "cannot set path jb scalar");
 
   if (JB_ROOT_COUNT(jb) == 0 && !create)
     return jsonb_copy((Jsonb *) jb);
@@ -4942,7 +4913,7 @@ jsonb_set_lax(PG_FUNCTION_ARGS)
   if (PG_ARGISNULL(4))
     ereport(ERROR,
         (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-         "null_value_treatment must be \"delete_key\", \"return_target\", \"use_json_null\", or \"raise_exception\"")));
+         "null_value_treatment must be \"delete_key\", \"return_target\", \"use_json_null\", or \"raise_exception\""));
 
   /* if the new value isn't an SQL NULL just call jsonb_set */
   if (!PG_ARGISNULL(2))
@@ -4957,7 +4928,7 @@ jsonb_set_lax(PG_FUNCTION_ARGS)
         (errcode(ERRCODE_NULL_VALUE_NOT_ALLOWED),
          "JSON value must not be null"),
          errdetail("Exception was raised because null_value_treatment is \"raise_exception\"."),
-         errhint("To avoid, either change the null_value_treatment argument or ensure that an SQL NULL is not passed.")));
+         errhint("To avoid, either change the null_value_treatment argument or ensure that an SQL NULL is not passed."));
     return (Datum) 0;    /* silence stupider compilers */
   }
   else if (strcmp(handle_val, "use_json_null") == 0)
@@ -4984,7 +4955,7 @@ jsonb_set_lax(PG_FUNCTION_ARGS)
   {
     ereport(ERROR,
         (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-         "null_value_treatment must be \"delete_key\", \"return_target\", \"use_json_null\", or \"raise_exception\"")));
+         "null_value_treatment must be \"delete_key\", \"return_target\", \"use_json_null\", or \"raise_exception\""));
     return (Datum) 0;    /* silence stupider compilers */
   }
 }
@@ -5003,8 +4974,7 @@ jsonb_delete_path_internal(const Jsonb *jb, Datum *path_elems,
 {
   if (JB_ROOT_IS_SCALAR(jb))
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "cannot delete path jb scalar");
+    elog(ERROR, "cannot delete path jb scalar");
     return NULL;
   }
 
@@ -5037,8 +5007,7 @@ jsonb_insert_internal(const Jsonb *jb, Datum *path_elems, bool *path_nulls,
 
   if (JB_ROOT_IS_SCALAR(jb))
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "cannot set path in scalar");
+    elog(ERROR, "cannot set path in scalar");
     return NULL;
   }
 
@@ -5202,8 +5171,7 @@ setPath(JsonbIterator **it, Datum *path_elems,
 
   if (path_nulls[level])
   {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "path element at position %d is null", level + 1);
+    elog(ERROR, "path element at position %d is null", level + 1);
     return NULL;
   }
 
@@ -5221,8 +5189,7 @@ setPath(JsonbIterator **it, Datum *path_elems,
        */
       if ((op_type & JB_PATH_FILL_GAPS) && (level <= path_len - 1) &&
         v.val.array.rawScalar)
-        meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-           "cannot replace existing key");
+        elog(ERROR, "cannot replace existing key");
 
       (void) pushJsonbValue(st, r, NULL);
       setPathArray(it, path_elems, path_nulls, path_len, st, level,
@@ -5249,15 +5216,15 @@ setPath(JsonbIterator **it, Datum *path_elems,
        * an object or an array, not an element or value.
        */
       if ((op_type & JB_PATH_FILL_GAPS) && (level <= path_len - 1))
-        meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-          "cannot replace existing key");
+      {
+        elog(ERROR, "cannot replace existing key");
+      }
 
       res = pushJsonbValue(st, r, &v);
       break;
     default:
-      meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-        "unrecognized iterator result: %d", (int) r);
-      return NULL;      /* keep compiler quiet */
+      elog(ERROR, "unrecognized iterator result: %d", (int) r);
+      return NULL; 
   }
 
   return res;
@@ -5320,8 +5287,7 @@ setPathObject(JsonbIterator **it, Datum *path_elems, bool *path_nulls,
          */
         if (op_type & (JB_PATH_INSERT_BEFORE | JB_PATH_INSERT_AFTER))
         {
-          meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-            "cannot replace existing key");
+          elog(ERROR, "cannot replace existing key");
           return; // TODO
         }
 
@@ -5425,7 +5391,7 @@ setPathArray(JsonbIterator **it, Datum *path_elems, bool *path_nulls,
     idx = strtoint(c, &badp, 10);
     if (badp == c || *badp != '\0' || errno != 0)
     {
-      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      elog(ERROR,
         "path element at position %d is not an integer: \"%s\"", level + 1, c);
       return; // TODO
     }
@@ -5444,7 +5410,7 @@ setPathArray(JsonbIterator **it, Datum *path_elems, bool *path_nulls,
        */
       if (op_type & JB_PATH_CONSISTENT_POSITION)
       {
-        meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+        elog(ERROR,
           "path element at position %d is out of range: %d", level + 1, idx);
         return; // TODO
       }
@@ -5600,7 +5566,7 @@ parse_jsonb_index_flags(Jsonb *jb)
    */
   if (type != WJB_BEGIN_ARRAY)
     ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-            "wrong flag type, only arrays and scalars are allowed")));
+            "wrong flag type, only arrays and scalars are allowed"));
 
   while ((type = JsonbIteratorNext(&it, &v, false)) == WJB_ELEM)
   {
@@ -5608,7 +5574,7 @@ parse_jsonb_index_flags(Jsonb *jb)
       ereport(ERROR,
           (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
            "flag array element is not a string"),
-           errhint("Possible values are: \"string\", \"numeric\", \"boolean\", \"key\", and \"all\".")));
+           errhint("Possible values are: \"string\", \"numeric\", \"boolean\", \"key\", and \"all\"."));
 
     if (v.val.string.len == 3 &&
       pg_strncasecmp(v.val.string.val, "all", 3) == 0)
@@ -5630,7 +5596,7 @@ parse_jsonb_index_flags(Jsonb *jb)
           (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
            "wrong flag in flag array: \"%s\"",
               pnstrdup(v.val.string.val, v.val.string.len)),
-           errhint("Possible values are: \"string\", \"numeric\", \"boolean\", \"key\", and \"all\".")));
+           errhint("Possible values are: \"string\", \"numeric\", \"boolean\", \"key\", and \"all\"."));
   }
 
   /* expect end of array now */

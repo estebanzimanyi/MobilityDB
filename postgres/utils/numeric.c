@@ -39,6 +39,10 @@
 #include <utils/numeric.h>
 #include <utils/timestamp.h>
 
+// TODO REMOVE
+#define FLT_DIG 6
+#define DBL_DIG 15
+
 #if POSTGRESQL_VERSION_NUMBER < 160000
 /*
  * Similarly, wrappers around labs()/llabs() matching our int64.
@@ -534,8 +538,15 @@ static void compute_bucket(Numeric operand, Numeric bound1, Numeric bound2,
  * @param[in] typmod Typmod
  * @note Derived from PostgreSQL function @p numeric_in()
  */
+#if MEOS
 Numeric
-numeric_in_internal(const char *str, int32 typmod)
+numeric_in(const char *str, int32 typmod)
+{
+  return pg_numeric_in(str, typmod);
+}
+#endif 
+Numeric
+pg_numeric_in(const char *str, int32 typmod)
 {
   Numeric res;
   const char *cp;
@@ -705,8 +716,15 @@ invalid_syntax:
  * @brief Return the string representation a numeric value
  * @note Derived from PostgreSQL function @p numeric_out()
  */
+#if MEOS
+Numeric
+numeric_out(Numeric num)
+{
+  return pg_numeric_out(num);
+}
+#endif 
 char *
-numeric_out_internal(Numeric num)
+pg_numeric_out(Numeric num)
 {
   NumericVar  x;
   char *str;
@@ -732,7 +750,6 @@ numeric_out_internal(Numeric num)
   return str;
 }
 
-#if MEOS
 /*
  * numeric_is_nan() -
  *
@@ -754,7 +771,6 @@ numeric_is_inf(Numeric num)
 {
   return NUMERIC_IS_INF(num);
 }
-#endif /* MEOS */
 
 /*
  * numeric_is_integral() -
@@ -836,7 +852,6 @@ numeric_typmod_scale(int32 typmod)
   return (((typmod - VARHDRSZ) & 0x7ff) ^ 1024) - 1024;
 }
 
-#if MEOS
 /*
  * numeric_maximum_size() -
  *
@@ -960,15 +975,21 @@ numeric_normalize(Numeric num)
 
   return str;
 }
-#endif /* MEOS */
 
 /**
  * @ingroup meos_base_numeric
  * @brief Return a numeric value with the given precision and scale
  * @note Derived from PostgreSQL function @p numeric()
  */
+#if MEOS
 Numeric
-numeric_internal(Numeric num, int32 typmod)
+numeric(Numeric num, int32 typmod)
+{
+  return pg_numeric(num, typmod);
+}
+#endif 
+Numeric
+pg_numeric(Numeric num, int32 typmod)
 {
   Numeric    new;
   int      precision;
@@ -1043,6 +1064,23 @@ numeric_internal(Numeric num, int32 typmod)
   return new;
 }
 
+/**
+ * @brief Return the character string that represents a typmod value
+ * @note Derived from PostgreSQL function @p numerictypmodout()
+ */
+char *
+numeric_typmodout(int32 typmod)
+{
+  char *res = (char *) palloc(64);
+  if (is_valid_numeric_typmod(typmod))
+    snprintf(res, 64, "(%d,%d)", numeric_typmod_precision(typmod),
+      numeric_typmod_scale(typmod));
+  else
+    *res = '\0';
+
+  return res;
+}
+
 /* ----------------------------------------------------------------------
  *
  * Sign manipulation, rounding and the like
@@ -1055,8 +1093,15 @@ numeric_internal(Numeric num, int32 typmod)
  * @brief Return the absolute value of a numeric value
  * @note Derived from PostgreSQL function @p numeric_abs()
  */
+#if MEOS
 Numeric
-numeric_abs_internal(Numeric num)
+numeric_abs(Numeric num)
+{
+  return pg_numeric_abs(num);
+}
+#endif 
+Numeric
+pg_numeric_abs(Numeric num)
 {
   /*
    * Do it the easy way directly on the packed format
@@ -1083,8 +1128,15 @@ numeric_abs_internal(Numeric num)
  * @brief Return the unary plus of a numeric value
  * @note Derived from PostgreSQL function @p numeric_uplus()
  */
+#if MEOS
 Numeric
-numeric_uplus_internal(Numeric num)
+numeric_uplus(Numeric num)
+{
+  return pg_numeric_uplus(num);
+}
+#endif 
+Numeric
+pg_numeric_uplus(Numeric num)
 {
   return duplicate_numeric(num);
 }
@@ -1094,8 +1146,15 @@ numeric_uplus_internal(Numeric num)
  * @brief Return the unary minus of a numeric value
  * @note Derived from PostgreSQL function @p numeric_uminus()
  */
+#if MEOS
 Numeric
-numeric_uminus_internal(Numeric num)
+numeric_uminus(Numeric num)
+{
+  return pg_numeric_uminus(num);
+}
+#endif 
+Numeric
+pg_numeric_uminus(Numeric num)
 {
   /*
    * Do it the easy way directly on the packed format
@@ -1171,6 +1230,13 @@ numeric_sign_internal(Numeric num)
  * to 0, and 1 if it is greater than zero
  * @note Derived from PostgreSQL function @p numeric_sign()
  */
+#if MEOS
+Numeric
+numeric_sign(Numeric num)
+{
+  return pg_numeric_sign(num);
+}
+#endif
 Numeric
 pg_numeric_sign(Numeric num)
 {
@@ -1201,8 +1267,15 @@ pg_numeric_sign(Numeric num)
  * point --- Oracle interprets rounding that way.
  * @note Derived from PostgreSQL function @p numeric_round()
  */
+#if MEOS
 Numeric
-numeric_round_internal(Numeric num, int32 scale)
+numeric_round(Numeric num, int32 scale)
+{
+  return pg_numeric_round(num, scale);
+}
+#endif
+Numeric
+pg_numeric_round(Numeric num, int32 scale)
 {
   /*
    * Handle NaN and infinities
@@ -1250,8 +1323,15 @@ numeric_round_internal(Numeric num, int32 scale)
  *  point --- Oracle interprets truncation that way
  * @note Derived from PostgreSQL function @p numeric_trunc()
  */
+#if MEOS
 Numeric
-numeric_trunc_internal(Numeric num, int32 scale)
+numeric_trunc(Numeric num, int32 scale)
+{
+  return pg_numeric_trunc(num, scale);
+}
+#endif
+Numeric
+pg_numeric_trunc(Numeric num, int32 scale)
 {
   /*
    * Handle NaN and infinities
@@ -1295,8 +1375,15 @@ numeric_trunc_internal(Numeric num, int32 scale)
  * @brief Return the smallest integer greater than or equal to the argument
  * @note Derived from PostgreSQL function @p numeric_ceil()
  */
+#if MEOS
 Numeric
-numeric_ceil_internal(Numeric num)
+numeric_ceil(Numeric num)
+{
+  return pg_numeric_ceil(num);
+}
+#endif
+Numeric
+pg_numeric_ceil(Numeric num)
 {
   /*
    * Handle NaN and infinities
@@ -1319,8 +1406,15 @@ numeric_ceil_internal(Numeric num)
  * @brief Return the largest integer equal to or less than a numeric value
  * @note Derived from PostgreSQL function @p numeric_floor()
  */
+#if MEOS
 Numeric
-numeric_floor_internal(Numeric num)
+numeric_floor(Numeric num)
+{
+  return pg_numeric_floor(num);
+}
+#endif
+Numeric
+pg_numeric_floor(Numeric num)
 {
   /*
    * Handle NaN and infinities
@@ -1342,11 +1436,8 @@ numeric_floor_internal(Numeric num)
  * @ingroup meos_base_numeric
  * @brief Return the number of the bucket in which a numeric value falls in a
  * histogram having count equal-width buckets spanning the range low to high
- * @note Derived from PostgreSQL function @p width_bucket()
- */
-/*
- * Implements the numeric version of the width_bucket() function
- * defined by SQL2003. See also width_bucket_float8().
+ * @details Implements the numeric version of the width_bucket() function
+ * defined by SQL2003. See also float8_width_bucket().
  *
  * 'bound1' and 'bound2' are the lower and upper bounds of the
  * histogram's range, respectively. 'count' is the number of buckets
@@ -1357,9 +1448,10 @@ numeric_floor_internal(Numeric num)
  * to the upper bound is assigned to an additional bucket (with number
  * count+1). We don't allow "NaN" for any of the numeric inputs, and we
  * don't allow either of the histogram bounds to be +/- infinity.
+ * @note Derived from PostgreSQL function @p width_bucket()
  */
 int32
-width_bucket_numeric_internal(Numeric operand, Numeric bound1, Numeric bound2,
+numeric_width_bucket(Numeric operand, Numeric bound1, Numeric bound2,
   int32 count)
 {
   NumericVar  count_var;
@@ -1511,12 +1603,19 @@ compute_bucket(Numeric operand, Numeric bound1, Numeric bound2,
  
  /**
  * @ingroup meos_base_numeric
- * @brief Return -1, 0, or 1 depending on whether the first numeric number is
+ * @brief Return -1, 0, or 1 depending on whether the first numeric value is
  * less than, equal, or greater than the second one
  * @note Derived from PostgreSQL function @p numeric_cmp()
  */
+#if MEOS
 int
-numeric_cmp_internal(Numeric num1, Numeric num2)
+numeric_cmp(Numeric num1, Numeric num2)
+{
+  return pg_numeric_cmp(num1, num2);
+}
+#endif
+int
+pg_numeric_cmp(Numeric num1, Numeric num2)
 {
   return cmp_numerics(num1, num2);
 }
@@ -1525,8 +1624,16 @@ numeric_cmp_internal(Numeric num1, Numeric num2)
  * @ingroup meos_base_numeric
  * @brief Return true if two numeric values are equal
  * @note Derived from PostgreSQL function @p numeric_eq()
- */bool
-numeric_eq_internal(Numeric num1, Numeric num2)
+ */
+#if MEOS
+int
+numeric_eq(Numeric num1, Numeric num2)
+{
+  return pg_numeric_eq(num1, num2);
+}
+#endif
+bool
+pg_numeric_eq(Numeric num1, Numeric num2)
 {
   return cmp_numerics(num1, num2) == 0;
 }
@@ -1535,8 +1642,16 @@ numeric_eq_internal(Numeric num1, Numeric num2)
  * @ingroup meos_base_numeric
  * @brief Return true if two numeric values are not equal
  * @note Derived from PostgreSQL function @p numeric_ne()
- */bool
-numeric_ne_internal(Numeric num1, Numeric num2)
+ */
+#if MEOS
+int
+numeric_ne(Numeric num1, Numeric num2)
+{
+  return pg_numeric_ne(num1, num2);
+}
+#endif
+bool
+pg_numeric_ne(Numeric num1, Numeric num2)
 {
   return cmp_numerics(num1, num2) != 0;
 }
@@ -1545,8 +1660,16 @@ numeric_ne_internal(Numeric num1, Numeric num2)
  * @ingroup meos_base_numeric
  * @brief Return true if a numeric value is greater than another one
  * @note Derived from PostgreSQL function @p numeric_gt()
- */bool
-numeric_gt_internal(Numeric num1, Numeric num2)
+ */
+#if MEOS
+int
+numeric_gt(Numeric num1, Numeric num2)
+{
+  return pg_numeric_gt(num1, num2);
+}
+#endif
+bool
+pg_numeric_gt(Numeric num1, Numeric num2)
 {
   return cmp_numerics(num1, num2) > 0;
 }
@@ -1556,8 +1679,15 @@ numeric_gt_internal(Numeric num1, Numeric num2)
  * @brief Return true if a numeric value is greater than or equal to another one
  * @note Derived from PostgreSQL function @p numeric_ge()
  */
+#if MEOS
+int
+numeric_ge(Numeric num1, Numeric num2)
+{
+  return pg_numeric_ge(num1, num2);
+}
+#endif
 bool
-numeric_ge_internal(Numeric num1, Numeric num2)
+pg_numeric_ge(Numeric num1, Numeric num2)
 {
   return cmp_numerics(num1, num2) >= 0;
 }
@@ -1567,8 +1697,15 @@ numeric_ge_internal(Numeric num1, Numeric num2)
  * @brief Return true if a numeric value is less than another one
  * @note Derived from PostgreSQL function @p numeric_lt()
  */
+#if MEOS
+int
+numeric_lt(Numeric num1, Numeric num2)
+{
+  return pg_numeric_lt(num1, num2);
+}
+#endif
 bool
-numeric_lt_internal(Numeric num1, Numeric num2)
+pg_numeric_lt(Numeric num1, Numeric num2)
 {
   return cmp_numerics(num1, num2) < 0;
 }
@@ -1578,8 +1715,15 @@ numeric_lt_internal(Numeric num1, Numeric num2)
  * @brief Return true if a numeric value is less than or equal to another one
  * @note Derived from PostgreSQL function @p numeric_le()
  */
+#if MEOS
+int
+numeric_le(Numeric num1, Numeric num2)
+{
+  return pg_numeric_le(num1, num2);
+}
+#endif
 bool
-numeric_le_internal(Numeric num1, Numeric num2)
+pg_numeric_le(Numeric num1, Numeric num2)
 {
   return cmp_numerics(num1, num2) <= 0;
 }
@@ -1790,7 +1934,7 @@ numeric_hash_extended(Numeric num, uint64 seed)
  * @note Derived from PostgreSQL function @p numeric_add()
  */
 Numeric
-numeric_add_internal(Numeric num1, Numeric num2)
+numeric_add(Numeric num1, Numeric num2)
 {
   return numeric_add_opt_error(num1, num2, NULL);
 }
@@ -1860,7 +2004,7 @@ numeric_add_opt_error(Numeric num1, Numeric num2, bool *have_error)
  * @note Derived from PostgreSQL function @p numeric_sub()
  */
 Numeric
-numeric_sub_internal(Numeric num1, Numeric num2)
+numeric_minus(Numeric num1, Numeric num2)
 {
   return numeric_sub_opt_error(num1, num2, NULL);
 }
@@ -1929,8 +2073,15 @@ numeric_sub_opt_error(Numeric num1, Numeric num2, bool *have_error)
  * @brief Return the product of two numeric values
  * @note Derived from PostgreSQL function @p numeric_mul()
  */
+#if MEOS
 Numeric
-numeric_mul_internal(Numeric num1, Numeric num2)
+numeric_mul(Numeric num1, Numeric num2)
+{
+  return pg_numeric_mul(num1, num2);
+}
+#endif
+Numeric
+pg_numeric_mul(Numeric num1, Numeric num2)
 {
   return numeric_mul_opt_error(num1, num2, NULL);
 }
@@ -2042,8 +2193,15 @@ numeric_mul_opt_error(Numeric num1, Numeric num2, bool *have_error)
  * @brief Return the division of one numeric by another
  * @note Derived from PostgreSQL function @p numeric_div()
  */
+#if MEOS
 Numeric
-numeric_div_internal(Numeric num1, Numeric num2)
+numeric_div(Numeric num1, Numeric num2)
+{
+  return pg_numeric_div(num1, num2);
+}
+#endif
+Numeric
+pg_numeric_div(Numeric num1, Numeric num2)
 {
   return numeric_div_opt_error(num1, num2, NULL);
 }
@@ -2160,8 +2318,15 @@ numeric_div_opt_error(Numeric num1, Numeric num2, bool *have_error)
  * to an integer
  * @note Derived from PostgreSQL function @p numeric_div_trunc()
  */
+#if MEOS
 Numeric
-numeric_div_trunc_internal(Numeric num1, Numeric num2)
+numeric_div_trunc(Numeric num1, Numeric num2)
+{
+  return pg_numeric_div_trunc(num1, num2);
+}
+#endif
+Numeric
+pg_numeric_div_trunc(Numeric num1, Numeric num2)
 {
   NumericVar  arg1;
   NumericVar  arg2;
@@ -2242,8 +2407,15 @@ numeric_div_trunc_internal(Numeric num1, Numeric num2)
  * @brief Return modulo of two numeric values
  * @note Derived from PostgreSQL function @p numeric_mod()
  */
+#if MEOS
 Numeric
-numeric_mod_internal(Numeric num1, Numeric num2)
+numeric_mod(Numeric num1, Numeric num2)
+{
+  return pg_numeric_mod(num1, num2);
+}
+#endif
+Numeric
+pg_numeric_mod(Numeric num1, Numeric num2)
 {
   return numeric_mod_opt_error(num1, num2, NULL);
 }
@@ -2319,8 +2491,15 @@ numeric_mod_opt_error(Numeric num1, Numeric num2, bool *have_error)
  * @brief Return a numeric value incremented by one
  * @note Derived from PostgreSQL function @p numeric_inc()
  */
+#if MEOS
 Numeric
-numeric_inc_internal(Numeric num)
+numeric_inc(Numeric num)
+{
+  return pg_numeric_inc(num);
+}
+#endif
+Numeric
+pg_numeric_inc(Numeric num)
 {
   NumericVar  arg;
   Numeric    res;
@@ -2350,8 +2529,15 @@ numeric_inc_internal(Numeric num)
  * @brief Return the smaller of two numeric values
  * @note Derived from PostgreSQL function @p numeric_smaller()
  */
+#if MEOS
 Numeric
-numeric_smaller_internal(Numeric num1, Numeric num2)
+numeric_smaller(Numeric num1, Numeric num2)
+{
+  return pg_numeric_smaller(num1, num2);
+}
+#endif
+Numeric
+pg_numeric_smaller(Numeric num1, Numeric num2)
 {
   /*
    * Use cmp_numerics so that this will agree with the comparison operators,
@@ -2368,8 +2554,15 @@ numeric_smaller_internal(Numeric num1, Numeric num2)
  * @brief Return the larger of two numeric values
  * @note Derived from PostgreSQL function @p numeric_larger()
  */
+#if MEOS
 Numeric
-numeric_larger_internal(Numeric num1, Numeric num2)
+numeric_larger(Numeric num1, Numeric num2)
+{
+  return pg_numeric_larger(num1, num2);
+}
+#endif
+Numeric
+pg_numeric_larger(Numeric num1, Numeric num2)
 {
   /*
    * Use cmp_numerics so that this will agree with the comparison operators,
@@ -2393,8 +2586,15 @@ numeric_larger_internal(Numeric num1, Numeric num2)
  * @brief Return the greatest common divisor of two numeric values
  * @note Derived from PostgreSQL function @p numeric_gcd()
  */
+#if MEOS
 Numeric
-numeric_gcd_internal(Numeric num1, Numeric num2)
+numeric_gcd(Numeric num1, Numeric num2)
+{
+  return pg_numeric_gcd(num1, num2);
+}
+#endif
+Numeric
+pg_numeric_gcd(Numeric num1, Numeric num2)
 {
   NumericVar  arg1;
   NumericVar  arg2;
@@ -2433,8 +2633,15 @@ numeric_gcd_internal(Numeric num1, Numeric num2)
  * @brief Return the least common multiple of two numeric values
  * @note Derived from PostgreSQL function @p numeric_lcm()
  */
+#if MEOS
 Numeric
-numeric_lcm_internal(Numeric num1, Numeric num2)
+numeric_lcm(Numeric num1, Numeric num2)
+{
+  return pg_numeric_lcm(num1, num2);
+}
+#endif
+Numeric
+pg_numeric_lcm(Numeric num1, Numeric num2)
 {
   NumericVar  arg1;
   NumericVar  arg2;
@@ -2490,8 +2697,15 @@ numeric_lcm_internal(Numeric num1, Numeric num2)
  * @brief Return the factorial of a numeric value
  * @note Derived from PostgreSQL function @p numeric_fac()
  */
+#if MEOS
 Numeric
-numeric_fac_internal(int64 num)
+numeric_fac(Numeric num)
+{
+  return pg_numeric_fac(num);
+}
+#endif
+Numeric
+pg_numeric_fac(int64 num)
 {
   Numeric    res;
   NumericVar  fact;
@@ -2542,8 +2756,15 @@ numeric_fac_internal(int64 num)
  * @brief Return the square root of a numeric
  * @note Derived from PostgreSQL function @p numeric_sqrt()
  */
+#if MEOS
 Numeric
-numeric_sqrt_internal(Numeric num)
+numeric_sqrt(Numeric num)
+{
+  return pg_numeric_sqrt(num);
+}
+#endif
+Numeric
+pg_numeric_sqrt(Numeric num)
 {
   Numeric    res;
   NumericVar  arg;
@@ -2613,8 +2834,15 @@ numeric_sqrt_internal(Numeric num)
  * @brief Return e raised to the power of a numeric value
  * @note Derived from PostgreSQL function @p numeric_exp()
  */
+#if MEOS
 Numeric
-numeric_exp_internal(Numeric num)
+numeric_exp(Numeric num)
+{
+  return pg_numeric_exp(num);
+}
+#endif
+Numeric
+pg_numeric_exp(Numeric num)
 {
   Numeric    res;
   NumericVar  arg;
@@ -2678,8 +2906,15 @@ numeric_exp_internal(Numeric num)
  * @brief Return the natural logarithm of a numeric value
  * @note Derived from PostgreSQL function @p numeric_ln()
  */
+#if MEOS
 Numeric
-numeric_ln_internal(Numeric num)
+numeric_ln(Numeric num)
+{
+  return pg_numeric_ln(num);
+}
+#endif
+Numeric
+pg_numeric_ln(Numeric num)
 {
   Numeric    res;
   NumericVar  arg;
@@ -2726,8 +2961,15 @@ numeric_ln_internal(Numeric num)
  * @brief Return the logarithm of x in a given base
  * @note Derived from PostgreSQL function @p numeric_log()
  */
+#if MEOS
 Numeric
-numeric_log_internal(Numeric num1, Numeric num2)
+numeric_log(Numeric num1, Numeric num2)
+{
+  return pg_numeric_log(num1, num2);
+}
+#endif
+Numeric
+pg_numeric_log(Numeric num1, Numeric num2)
 {
   
   Numeric    res;
@@ -2798,7 +3040,7 @@ numeric_log_internal(Numeric num1, Numeric num2)
  * @note Derived from PostgreSQL function @p numeric_power()
  */
 Numeric
-numeric_power_internal(Numeric num1, Numeric num2)
+numeric_pow(Numeric num1, Numeric num2)
 {
   Numeric    res;
   NumericVar  arg1;
@@ -2987,8 +3229,15 @@ numeric_power_internal(Numeric num1, Numeric num2)
  * fractional part
  * @note Derived from PostgreSQL function @p numeric_scale()
  */
+#if MEOS
 int
-numeric_scale_internal(Numeric num)
+numeric_scale(Numeric num)
+{
+  return pg_numeric_scale(num);
+}
+#endif
+int
+pg_numeric_scale(Numeric num)
 {
   if (NUMERIC_IS_SPECIAL(num))
     return INT_MAX;
@@ -3051,8 +3300,15 @@ get_min_scale(NumericVar *var)
  * @brief Returns minimum scale required to represent the numeric value without loss
  * @note Derived from PostgreSQL function @p numeric_min_scale()
  */
+#if MEOS
 int
-numeric_min_scale_internal(Numeric num)
+numeric_min_scale(Numeric num)
+{
+  return pg_numeric_min_scale(num);
+}
+#endif
+int
+pg_numeric_min_scale(Numeric num)
 {
   NumericVar  arg;
   int      min_scale;
@@ -3072,8 +3328,15 @@ numeric_min_scale_internal(Numeric num)
  * @brief Reduce scale of numeric value to represent it without loss
  * @note Derived from PostgreSQL function @p numeric_trim_scale()
  */
+#if MEOS
+int
+numeric_trim_scale(Numeric num)
+{
+  return pg_numeric_trim_scale(num);
+}
+#endif
 Numeric
-numeric_trim_scale_internal(Numeric num)
+pg_numeric_trim_scale(Numeric num)
 {
   Numeric    res;
   NumericVar  result;
@@ -3096,15 +3359,20 @@ numeric_trim_scale_internal(Numeric num)
  * ----------------------------------------------------------------------
  */
 
+/**
+ * @ingroup meos_base_numeric
+ * @brief Transform an int64 number into a numeric value
+ * @note Existing PostgreSQL function
+ */
 Numeric
-int64_to_numeric(int64 val)
+int64_to_numeric(int64 num)
 {
   Numeric    res;
   NumericVar  result;
 
   init_var(&result);
 
-  int64_to_numericvar(val, &result);
+  int64_to_numericvar(num, &result);
 
   res = make_result(&result);
 
@@ -3281,16 +3549,6 @@ numericvar_to_int32(const NumericVar *var, int32 *result)
   return true;
 }
 
-/**
- * @ingroup meos_base_numeric
- * @brief Transform an int8 value into a numeric value
- * @note Derived from PostgreSQL function @p int8_numeric()
- */
-Numeric
-pg_int64_to_numeric(int64 num)
-{
-  return int64_to_numeric(num);
-}
 
 int64
 numeric_int8_opt_error(Numeric num, bool *have_error)
@@ -3340,11 +3598,11 @@ numeric_int8_opt_error(Numeric num, bool *have_error)
 
 /**
  * @ingroup meos_base_numeric
- * @brief Transform a numeric value into an int8 value
+ * @brief Transform a numeric value into an int64 number
  * @note Derived from PostgreSQL function @p numeric_int8()
  */
 int64
-numeric_to_int8(Numeric num)
+numeric_to_int64(Numeric num)
 {
   return numeric_int8_opt_error(num, NULL);
 }
@@ -3366,7 +3624,7 @@ int16_to_numeric(int16 num)
  * @note Derived from PostgreSQL function @p numeric_int2()
  */
 int16
-numeric_to_int2(Numeric num)
+numeric_to_int16(Numeric num)
 {
   NumericVar  x;
   int64    val;
@@ -3458,7 +3716,7 @@ numeric_to_float8(Numeric num)
       return get_float8_nan();
   }
 
-  char *tmp = numeric_out_internal(num);
+  char *tmp = pg_numeric_out(num);
   double result = float8_in(tmp);
 
   pfree(tmp);
@@ -3550,7 +3808,7 @@ numeric_to_float4(Numeric num)
       return get_float4_nan();
   }
 
-  char *tmp = numeric_out_internal(num);
+  char *tmp = pg_numeric_out(num);
   float4 result = float4_in(tmp);
   pfree(tmp);
   return result;
