@@ -37,6 +37,7 @@
 #include <assert.h>
 /* PostgreSQL */
 #include <postgres.h>
+#include <postgres_types.h>
 #include <access/heaptoast.h>
 #include <access/detoast.h>
 #include <utils/timestamp.h>

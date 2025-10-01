@@ -18,17 +18,13 @@
 #include <stdlib.h>
 /* PostgreSQL */
 #include <postgres.h>
-#include "catalog/pg_type_d.h"
+#include <postgres_types.h>
+#include "catalog/pg_type.h"
 #include <common/hashfn.h>
 #include <common/int.h>
 #include <utils/json.h>
 #include <utils/jsonb.h>
-/* MEOS */
-#include <meos.h>
-#include <postgres_types.h>
-#include "temporal/temporal.h"
-#include "temporal/lifting.h"
-#include "temporal/type_util.h"
+#include <utils/varlena.h> /* For DatumGetTextP */
 
 extern void escape_json_with_len(StringInfo buf, const char *str, int len);
 
@@ -331,7 +327,7 @@ jsonb_put_escaped_value(StringInfo out, JsonbValue *scalarVal)
       escape_json_with_len(out, scalarVal->val.string.val, scalarVal->val.string.len);
       break;
     case jbvNumeric:
-      appendStringInfoString(out, numeric_out_internal(scalarVal->val.numeric));
+      appendStringInfoString(out, pg_numeric_out(scalarVal->val.numeric));
       break;
     case jbvBool:
       if (scalarVal->val.boolean)
@@ -340,8 +336,7 @@ jsonb_put_escaped_value(StringInfo out, JsonbValue *scalarVal)
         appendBinaryStringInfo(out, "false", 5);
       break;
     default:
-      meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-        "unknown jsonb scalar type");
+      elog(ERROR, "unknown jsonb scalar type");
   }
 }
 
@@ -577,8 +572,7 @@ JsonbToCStringWorker(StringInfo out, JsonbContainer *in, int estimated_len, bool
         first = false;
         break;
       default:
-        meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-          "unknown jsonb iterator token type");
+        elog(ERROR, "unknown jsonb iterator token type");
     }
     use_indent = indent;
     last_was_key = redo_switch;

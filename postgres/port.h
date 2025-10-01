@@ -256,10 +256,10 @@ extern char *pg_strerror_r(int errnum, char *buf, size_t buflen);
 #define strerror_r pg_strerror_r
 #define PG_STRERROR_R_BUFLEN 256	/* Recommended buffer size for strerror_r */
 
-/* Wrap strsignal(), or provide our own version if necessary */
-extern const char *pg_strsignal(int signum);
+// /* Wrap strsignal(), or provide our own version if necessary */
+// extern const char *pg_strsignal(int signum);
 
-extern int	pclose_check(FILE *stream);
+// extern int	pclose_check(FILE *stream);
 
 /* Global variable holding time zone information. */
 #if defined(WIN32) || defined(__CYGWIN__)

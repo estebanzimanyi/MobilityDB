@@ -51,12 +51,6 @@
 #define C_COLLATION_OID 950
 #define POSIX_COLLATION_OID 951
 
-#ifndef FMGR_H
-  /* To avoid including fmgr.h However this implies that the text values must
-   * be ALWAYS detoasted */
-  #define DatumGetTextP(X)      ((text *) DatumGetPointer(X)) // ((text *) PG_DETOAST_DATUM(X))
-#endif /* FMGR_H */
-
 /**
  * Floating point precision
  */

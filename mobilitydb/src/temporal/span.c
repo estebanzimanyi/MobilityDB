@@ -40,7 +40,8 @@
 #include <assert.h>
 /* PostgreSQL */
 #include <postgres.h>
-#include <catalog/pg_type_d.h>
+#include <postgres_types.h>
+#include <catalog/pg_type.h>
 #include <utils/rangetypes.h>
 #include <utils/timestamp.h>
 /* MEOS */
