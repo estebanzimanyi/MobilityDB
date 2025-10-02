@@ -4,7 +4,7 @@ set(TEMPORAL_SRCS
   lifting.c
   meos.c
   meos_catalog.c
-  postgres_types.c
+  # postgres_types.c
   skiplist.c
   set.c
   set_ops.c
@@ -65,7 +65,7 @@ if(MEOS)
     tsequenceset_meos.c
     ttext_funcs_meos.c
     type_in_meos.c
-)
-endif()
+  )
+  endif()
 
 add_library(temporal OBJECT ${TEMPORAL_SRCS})

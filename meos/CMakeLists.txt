@@ -91,7 +91,6 @@ add_definitions(-DPOSTGIS_PGSQL_VERSION=${POSTGIS_PGSQL_VERSION})
 
 # PostgreSQL
 configure_file(../postgres/pg_config.h.in ../postgres/pg_config.h)
-include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/postgres/timezone")
 include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/postgres")
 include_directories(SYSTEM "${CMAKE_BINARY_DIR}/postgres")
 add_subdirectory("${CMAKE_SOURCE_DIR}/postgres" "postgres")

@@ -4184,7 +4184,7 @@ AddVerboseIntPart(char *cp, int value, const char *units,
  * "day-time literal"s (that look like ('4 5:6:7')
  */
 void
-EncodeInterval(struct pg_tm *tm, fsec_t fsec, int style, char *str)
+meosEncodeInterval(struct pg_tm *tm, fsec_t fsec, int style, char *str)
 {
   char     *cp = str;
   int      year = tm->tm_year;
