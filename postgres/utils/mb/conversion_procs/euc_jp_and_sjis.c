@@ -12,7 +12,7 @@
  */
 
 #include "postgres.h"
-#include "mb/pg_wchar.h"
+#include "utils/mb/pg_wchar.h"
 
 /*
  * SJIS alternative code.
@@ -47,46 +47,52 @@ static int  mic2euc_jp(const unsigned char *mic, unsigned char *p, int len, bool
 static int  euc_jp2sjis(const unsigned char *euc, unsigned char *p, int len, bool noError);
 static int  sjis2euc_jp(const unsigned char *sjis, unsigned char *p, int len, bool noError);
 
-Datum
-euc_jp_to_sjis(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+euc_jp_to_sjis(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_EUC_JP, PG_SJIS);
-  return = euc_jp2sjis(src, dest, len, noError);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_EUC_JP, PG_SJIS);
+  return euc_jp2sjis(src, dest, len, noError);
 }
 
-Datum
-sjis_to_euc_jp(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+sjis_to_euc_jp(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_SJIS, PG_EUC_JP);
-  return = sjis2euc_jp(src, dest, len, noError);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_SJIS, PG_EUC_JP);
+  return sjis2euc_jp(src, dest, len, noError);
 }
 
-Datum
-euc_jp_to_mic(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+euc_jp_to_mic(int src_id, int dest_id, unsigned char *src, unsigned char *dest,
+  int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_EUC_JP, PG_MULE_INTERNAL);
-  return = euc_jp2mic(src, dest, len, noError);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_EUC_JP, PG_MULE_INTERNAL);
+  return euc_jp2mic(src, dest, len, noError);
 }
 
-Datum
-mic_to_euc_jp(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+mic_to_euc_jp(int src_id, int dest_id, unsigned char *src, unsigned char *dest,
+  int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_MULE_INTERNAL, PG_EUC_JP);
-  return = mic2euc_jp(src, dest, len, noError);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_MULE_INTERNAL, PG_EUC_JP);
+  return mic2euc_jp(src, dest, len, noError);
 }
 
-Datum
-sjis_to_mic(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+sjis_to_mic(int src_id, int dest_id, unsigned char *src, unsigned char *dest,
+  int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_SJIS, PG_MULE_INTERNAL);
-  return = sjis2mic(src, dest, len, noError);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_SJIS, PG_MULE_INTERNAL);
+  return sjis2mic(src, dest, len, noError);
 }
 
-Datum
-mic_to_sjis(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+mic_to_sjis(int src_id, int dest_id, unsigned char *src, unsigned char *dest,
+  int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_MULE_INTERNAL, PG_SJIS);
-  return = mic2sjis(src, dest, len, noError);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_MULE_INTERNAL, PG_SJIS);
+  return mic2sjis(src, dest, len, noError);
 }
 
 /*

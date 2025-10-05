@@ -12,7 +12,7 @@
  */
 
 #include "postgres.h"
-#include "mb/pg_wchar.h"
+#include "utils/mb/pg_wchar.h"
 #include "../Unicode/utf8_to_win1250.map"
 #include "../Unicode/utf8_to_win1251.map"
 #include "../Unicode/utf8_to_win1252.map"
@@ -71,40 +71,38 @@ static const pg_conv_map maps[] = {
   {PG_WIN1258, &win1258_to_unicode_tree, &win1258_from_unicode_tree},
 };
 
-Datum
-win_to_utf8(int encoding, unsigned char *src, unsigned char *dest, int len,
+int
+win_to_utf8(int src_id, int dest_id, unsigned char *src, unsigned char *dest, int len,
   bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(-1, PG_UTF8);
-
-  for (int i = 0; i < lengthof(maps); i++)
+  check_encoding_conversion_args(src_id, dest_id, len, -1, PG_UTF8);
+  for (int i = 0; i < (int) lengthof(maps); i++)
   {
-    if (encoding == maps[i].encoding)
+    if (src_id == (int) maps[i].encoding)
     {
       return LocalToUtf(src, len, dest, maps[i].map1, NULL, 0, NULL,
-        encoding, noError);
+        src_id, noError);
     }
   }
 
-  elog(ERROR, "unexpected encoding ID %d for WIN character sets", encoding);
+  elog(ERROR, "unexpected encoding ID %d for WIN character sets", src_id);
   return 0;
 }
 
-Datum
-utf8_to_win(int encoding, unsigned char *src, unsigned char *dest, int len,
+int
+utf8_to_win(int src_id, int dest_id, unsigned char *src, unsigned char *dest, int len,
   bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_UTF8, -1);
-
-  for (int i = 0; i < lengthof(maps); i++)
+  check_encoding_conversion_args(src_id, dest_id, len, PG_UTF8, -1);
+  for (int i = 0; i < (int) lengthof(maps); i++)
   {
-    if (encoding == maps[i].encoding)
+    if (src_id == (int) maps[i].encoding)
     {
       return UtfToLocal(src, len, dest, maps[i].map2, NULL, 0, NULL,
-        encoding, noError);
+        src_id, noError);
     }
   }
 
-  elog(ERROR, "unexpected encoding ID %d for WIN character sets", encoding);
+  elog(ERROR, "unexpected encoding ID %d for WIN character sets", src_id);
   return 0;
 }

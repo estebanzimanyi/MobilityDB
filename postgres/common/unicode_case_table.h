@@ -18,7 +18,7 @@
  */
 
 #include "common/unicode_case.h"
-#include "mb/pg_wchar.h"
+#include "utils/mb/pg_wchar.h"
 
 /*
  * The maximum number of codepoints that can result from case mapping

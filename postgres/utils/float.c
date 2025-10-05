@@ -26,10 +26,6 @@
 #include "common/shortest_dec.h"
 #include "utils/float.h"
 
-// TODO REMOVE
-#define FLT_DIG 6
-#define DBL_DIG 15
-
 /*****************************************************************************
  * Definitions taken from the file liblwgeom_internal.h
  *****************************************************************************/
@@ -336,19 +332,15 @@ float4_out(float4 num)
  * this function with types such as "box" and "point", where what we are
  * parsing here is just a substring of orig_string.
  *
- * If escontext points to an ErrorSaveContext node, that is filled instead
- * of throwing an error; the caller must check SOFT_ERROR_OCCURRED()
- * to detect errors.
- *
  * "num" could validly be declared "const char *", but that results in an
  * unreasonable amount of extra casting both here and in callers, so we don't.
  */
 static float8
-pg_float8in_internal(char *num, char **endptr_p,
-          const char *type_name, const char *orig_string)
+pg_float8in_internal(char *num, char **endptr_p, const char *type_name,
+  const char *orig_string)
 {
-  float8    val;
-  char     *endptr;
+  float8 val;
+  char *endptr;
 
   /* skip leading whitespace */
   while (*num != '\0' && isspace((unsigned char) *num))

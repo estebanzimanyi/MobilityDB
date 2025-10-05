@@ -1,28 +1,29 @@
 set(CONVERSION_PROCS_SRCS
-  cyrillic_and_mic
-  euc_cn_and_mic
-  euc_jp_and_sjis
-  euc_kr_and_mic
-  euc_tw_and_big5
-  euc2004_sjis2004
-  latin_and_mic
-  latin2_and_win1250
-  utf8_and_big5
-  utf8_and_cyrillic
-  utf8_and_euc_cn
-  utf8_and_euc_jp
-  utf8_and_euc_kr
-  utf8_and_euc_tw
-  utf8_and_euc2004
-  utf8_and_gb18030
-  utf8_and_gbk
-  utf8_and_iso8859
-  utf8_and_iso8859_1
-  utf8_and_johab
-  utf8_and_sjis
-   utf8_and_sjis2004
-  utf8_and_uhc
-  utf8_and_win
+  big5.c
+  cyrillic_and_mic.c
+  euc_cn_and_mic.c
+  euc_jp_and_sjis.c
+  euc_kr_and_mic.c
+  euc_tw_and_big5.c
+  euc2004_sjis2004.c
+  latin_and_mic.c
+  latin2_and_win1250.c
+  utf8_and_big5.c
+  utf8_and_cyrillic.c
+  utf8_and_euc_cn.c
+  utf8_and_euc_jp.c
+  utf8_and_euc_kr.c
+  utf8_and_euc_tw.c
+  utf8_and_euc2004.c
+  utf8_and_gb18030.c
+  utf8_and_gbk.c
+  utf8_and_iso8859.c
+  utf8_and_iso8859_1.c
+  utf8_and_johab.c
+  utf8_and_sjis.c
+   utf8_and_sjis2004.c
+  utf8_and_uhc.c
+  utf8_and_win.c
 )
 
-add_library(utils OBJECT ${CONVERSION_PROCS_SRCS})
+add_library(conversion_procs OBJECT ${CONVERSION_PROCS_SRCS})

@@ -12,7 +12,7 @@
  */
 
 #include "postgres.h"
-#include "mb/pg_wchar.h"
+#include "utils/mb/pg_wchar.h"
 
 /* ----------
  * conv_proc(
@@ -31,18 +31,20 @@
 static int  euc_kr2mic(const unsigned char *euc, unsigned char *p, int len, bool noError);
 static int  mic2euc_kr(const unsigned char *mic, unsigned char *p, int len, bool noError);
 
-Datum
-euc_kr_to_mic(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+euc_kr_to_mic(int src_id, int dest_id, unsigned char *src, unsigned char *dest,
+  int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_EUC_KR, PG_MULE_INTERNAL);
-  return = euc_kr2mic(src, dest, len, noError);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_EUC_KR, PG_MULE_INTERNAL);
+  return euc_kr2mic(src, dest, len, noError);
 }
 
-Datum
-mic_to_euc_kr(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+mic_to_euc_kr(int src_id, int dest_id, unsigned char *src, unsigned char *dest,
+  int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_MULE_INTERNAL, PG_EUC_KR);
-  return = mic2euc_kr(src, dest, len, noError);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_MULE_INTERNAL, PG_EUC_KR);
+  return mic2euc_kr(src, dest, len, noError);
 }
 
 /*

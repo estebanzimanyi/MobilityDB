@@ -79,7 +79,7 @@ strtoint(const char *pg_restrict str, char **pg_restrict endptr, int base)
  * for now.
  */
 char *
-pg_clean_ascii(const char *str, int alloc_flags)
+pg_clean_ascii(const char *str, int alloc_flags UNUSED)
 {
 	size_t		dstlen;
 	char	   *dst;

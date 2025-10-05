@@ -12,7 +12,7 @@
  */
 
 #include "postgres.h"
-#include "mb/pg_wchar.h"
+#include "utils/mb/pg_wchar.h"
 #include "../Unicode/euc_jis_2004_to_utf8.map"
 #include "../Unicode/utf8_to_euc_jis_2004.map"
 
@@ -30,18 +30,20 @@
  * ----------
  */
 int
-euc_jis_2004_to_utf8(unsigned char *src, unsigned char *dest, int len, bool noError)
+euc_jis_2004_to_utf8(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_EUC_JIS_2004, PG_UTF8);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_EUC_JIS_2004, PG_UTF8);
   return LocalToUtf(src, len, dest, &euc_jis_2004_to_unicode_tree,
     LUmapEUC_JIS_2004_combined, lengthof(LUmapEUC_JIS_2004_combined), NULL,
     PG_EUC_JIS_2004, noError);
 }
 
 int
-utf8_to_euc_jis_2004(unsigned char *src, unsigned char *dest, int len, bool noError)
+utf8_to_euc_jis_2004(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_UTF8, PG_EUC_JIS_2004);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_UTF8, PG_EUC_JIS_2004);
   return UtfToLocal(src, len, dest, &euc_jis_2004_from_unicode_tree,
     ULmapEUC_JIS_2004_combined, lengthof(ULmapEUC_JIS_2004_combined), NULL,
     PG_EUC_JIS_2004, noError);

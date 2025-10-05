@@ -73,14 +73,15 @@
 
 extern void elog(int errlevel, const char *format, ...);
 
-/* MEOS: redefining palloc0, palloc, and pfree */
-#if MEOS
-#define palloc0(X) (calloc(1, X))
-#define palloc malloc
-#define repalloc realloc
-#define pfree free
-#define pstrdup strdup
-#endif /* MEOS */
+// /* MEOS: redefining palloc0, palloc, and pfree */
+// #if MEOS
+// #define palloc0(X) (calloc(1, X))
+// #define palloc malloc
+// #define repalloc realloc
+// #define pfree free
+// #define pstrdup strdup
+// #endif /* MEOS */
+#include "common/fe_memutils.h"
 
 /* IWYU pragma: end_exports */
 

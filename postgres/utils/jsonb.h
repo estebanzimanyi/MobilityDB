@@ -405,44 +405,41 @@ extern uint32 getJsonbOffset(const JsonbContainer *jc, int index);
 extern uint32 getJsonbLength(const JsonbContainer *jc, int index);
 extern int	compareJsonbContainers(JsonbContainer *a, JsonbContainer *b);
 extern JsonbValue *findJsonbValueFromContainer(JsonbContainer *container,
-											   uint32 flags,
-											   JsonbValue *key);
+  uint32 flags, JsonbValue *key);
 extern JsonbValue *getKeyJsonValueFromContainer(JsonbContainer *container,
-												const char *keyVal, int keyLen,
-												JsonbValue *res);
+  const char *keyVal, int keyLen, JsonbValue *res);
 extern JsonbValue *getIthJsonbValueFromContainer(JsonbContainer *container,
-												 uint32 i);
+  uint32 i);
 extern JsonbValue *pushJsonbValue(JsonbParseState **pstate,
-								  JsonbIteratorToken seq, JsonbValue *jbval);
+  JsonbIteratorToken seq, JsonbValue *jbval);
 extern JsonbIterator *JsonbIteratorInit(JsonbContainer *container);
 extern JsonbIteratorToken JsonbIteratorNext(JsonbIterator **it, JsonbValue *val,
-											bool skipNested);
+  bool skipNested);
 extern void JsonbToJsonbValue(Jsonb *jsonb, JsonbValue *val);
 extern Jsonb *JsonbValueToJsonb(JsonbValue *val);
 extern bool JsonbDeepContains(JsonbIterator **val,
-							  JsonbIterator **mContained);
+  JsonbIterator **mContained);
 extern void JsonbHashScalarValue(const JsonbValue *scalarVal, uint32 *hash);
 extern void JsonbHashScalarValueExtended(const JsonbValue *scalarVal,
-										 uint64 *hash, uint64 seed);
+  uint64 *hash, uint64 seed);
 
 /* jsonb.c support functions */
 extern char *JsonbToCString(StringInfo out, JsonbContainer *in,
-							int estimated_len);
+  int estimated_len);
 extern char *JsonbToCStringIndent(StringInfo out, JsonbContainer *in,
-								  int estimated_len);
+  int estimated_len);
 extern char *JsonbUnquote(Jsonb *jb);
 extern bool JsonbExtractScalar(JsonbContainer *jbc, JsonbValue *res);
 extern const char *JsonbTypeName(JsonbValue *val);
 
-extern Datum jsonb_set_element(Jsonb *jb, Datum *path, int path_len,
-							   JsonbValue *newval);
-extern Datum jsonb_get_element(Jsonb *jb, Datum *path, int npath,
-							   bool *isnull, bool as_text);
+extern Jsonb *jsonb_set_element(Jsonb *jb, Datum *path, int path_len,
+  JsonbValue *newval);
+extern Jsonb *jsonb_get_element(Jsonb *jb, Datum *path, int npath,
+  bool *isnull, bool as_text);
 extern bool to_jsonb_is_immutable(Oid typoid);
-extern Datum jsonb_build_object_worker(int nargs, const Datum *args, const bool *nulls,
-									   const Oid *types, bool absent_on_null,
-									   bool unique_keys);
-extern Datum jsonb_build_array_worker(int nargs, const Datum *args, const bool *nulls,
-									  const Oid *types, bool absent_on_null);
+extern Datum jsonb_build_object_worker(int nargs, const Datum *args,
+  const bool *nulls, const Oid *types, bool absent_on_null, bool unique_keys);
+extern Datum jsonb_build_array_worker(int nargs, const Datum *args,
+  const bool *nulls, const Oid *types, bool absent_on_null);
 
 #endif							/* __JSONB_H__ */

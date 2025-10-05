@@ -11,7 +11,7 @@
  */
 
 #include "postgres.h"
-#include "mb/pg_wchar.h"
+#include "utils/mb/pg_wchar.h"
 
 static int euc_jis_20042shift_jis_2004(const unsigned char *euc, unsigned char *p, int len, bool noError);
 static int shift_jis_20042euc_jis_2004(const unsigned char *sjis, unsigned char *p, int len, bool noError);
@@ -31,16 +31,18 @@ static int shift_jis_20042euc_jis_2004(const unsigned char *sjis, unsigned char 
  */
 
 int
-euc_jis_2004_to_shift_jis_2004(unsigned char *src, unsigned char *dest, int len, bool noError)
+euc_jis_2004_to_shift_jis_2004(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_EUC_JIS_2004, PG_SHIFT_JIS_2004);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_EUC_JIS_2004, PG_SHIFT_JIS_2004);
   return euc_jis_20042shift_jis_2004(src, dest, len, noError);
 }
 
 int
-shift_jis_2004_to_euc_jis_2004(unsigned char *src, unsigned char *dest, int len, bool noError)
+shift_jis_2004_to_euc_jis_2004(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_SHIFT_JIS_2004, PG_EUC_JIS_2004);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_SHIFT_JIS_2004, PG_EUC_JIS_2004);
   return shift_jis_20042euc_jis_2004(src, dest, len, noError);
 }
 

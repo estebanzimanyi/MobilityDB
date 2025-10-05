@@ -33,9 +33,9 @@
  * SUCH DAMAGE.
  */
 /* can be used in either frontend or backend */
-#include "postgres_fe.h"
+#include "postgres.h"
 
-#include "mb/pg_wchar.h"
+#include "utils/mb/pg_wchar.h"
 
 int
 pg_char_and_wchar_strcmp(const char *s1, const pg_wchar *s2)

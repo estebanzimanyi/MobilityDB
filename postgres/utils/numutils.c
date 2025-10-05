@@ -878,21 +878,14 @@ pg_strtoint64(const char *s)
  * but whitespace follows.
  *
  * typname is what is reported in error messages.
- *
- * If escontext points to an ErrorSaveContext node, that is filled instead
- * of throwing an error; the caller must check SOFT_ERROR_OCCURRED()
- * to detect errors.
  */
 uint32
-uint32in_subr(const char *s, char **endloc,
-        const char *typname, Node *escontext)
+uint32in_subr(const char *s, char **endloc, const char *typname,
+  Node *escontext)
 {
-  uint32    result;
-  unsigned long cvt;
-  char     *endptr;
-
+  char *endptr;
   errno = 0;
-  cvt = strtoul(s, &endptr, 0);
+  unsigned long cvt = strtoul(s, &endptr, 0);
 
   /*
    * strtoul() normally only sets ERANGE.  On some systems it may also set
@@ -929,7 +922,7 @@ uint32in_subr(const char *s, char **endloc,
     }
   }
 
-  result = (uint32) cvt;
+  uint32 result = (uint32) cvt;
 
   /*
    * Cope with possibility that unsigned long is wider than uint32, in which
@@ -965,20 +958,14 @@ uint32in_subr(const char *s, char **endloc,
  * but whitespace follows.
  *
  * typname is what is reported in error messages.
- *
- * If escontext points to an ErrorSaveContext node, that is filled instead
- * of throwing an error; the caller must check SOFT_ERROR_OCCURRED()
- * to detect errors.
  */
 uint64
-uint64in_subr(const char *s, char **endloc,
-        const char *typname, Node *escontext)
+uint64in_subr(const char *s, char **endloc, const char *typname,
+  Node *escontext)
 {
-  uint64    result;
-  char     *endptr;
-
+  char *endptr;
   errno = 0;
-  result = strtou64(s, &endptr, 0);
+  uint64 result = strtou64(s, &endptr, 0);
 
   /*
    * strtoul[l] normally only sets ERANGE.  On some systems it may also set
