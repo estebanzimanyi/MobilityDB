@@ -106,6 +106,12 @@
 #define ZLIB_CONST
 #endif
 
+/* only GCC supports the unused attribute */
+#ifdef __GNUC__
+#define UNUSED __attribute__((unused))
+#else
+#define UNUSED
+#endif
 
 /* ----------------------------------------------------------------
  *				Section 1: compiler characteristics

@@ -67,7 +67,14 @@
  */
 #define DIST_EPSILON    1.0e-06
 
-#define UNUSED          __attribute__((unused))
+/* only GCC supports the unused attribute */
+#if ! MEOS
+#ifdef __GNUC__
+#define UNUSED __attribute__((unused))
+#else
+#define UNUSED
+#endif
+#endif /* ! MEOS */
 
 /** Symbolic constants for lifting */
 #define DISCONTINUOUS   true

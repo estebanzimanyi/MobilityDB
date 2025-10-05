@@ -39,10 +39,6 @@
 #include <utils/numeric.h>
 #include <utils/timestamp.h>
 
-// TODO REMOVE
-#define FLT_DIG 6
-#define DBL_DIG 15
-
 #if POSTGRESQL_VERSION_NUMBER < 160000
 /*
  * Similarly, wrappers around labs()/llabs() matching our int64.
@@ -3042,12 +3038,9 @@ pg_numeric_log(Numeric num1, Numeric num2)
 Numeric
 numeric_pow(Numeric num1, Numeric num2)
 {
-  Numeric    res;
-  NumericVar  arg1;
-  NumericVar  arg2;
-  NumericVar  result;
-  int      sign1,
-        sign2;
+  NumericVar arg1;
+  NumericVar arg2;
+  int sign1, sign2;
 
   /*
    * Handle NaN and infinities
@@ -3206,7 +3199,8 @@ numeric_pow(Numeric num1, Numeric num2)
   /*
    * Initialize things
    */
-  init_var(&result);
+  NumericVar res;
+  init_var(&res);
   init_var_from_num(num1, &arg1);
   init_var_from_num(num2, &arg2);
 
@@ -3214,13 +3208,12 @@ numeric_pow(Numeric num1, Numeric num2)
    * Call power_var() to compute and return the result; note it handles
    * scale selection itself.
    */
-  power_var(&arg1, &arg2, &result);
+  power_var(&arg1, &arg2, &res);
 
-  res = make_result(&result);
+  Numeric result = make_result(&res);
+  free_var(&res);
 
-  free_var(&result);
-
-  return res;
+  return result;
 }
 
 /**

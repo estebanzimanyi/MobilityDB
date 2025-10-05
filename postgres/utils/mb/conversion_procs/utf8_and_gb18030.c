@@ -12,7 +12,7 @@
  */
 
 #include "postgres.h"
-#include "mb/pg_wchar.h"
+#include "utils/mb/pg_wchar.h"
 #include "../Unicode/gb18030_to_utf8.map"
 #include "../Unicode/utf8_to_gb18030.map"
 
@@ -185,17 +185,19 @@ conv_utf8_to_18030(uint32 code)
  * ----------
  */
 int
-gb18030_to_utf8(unsigned char *src, unsigned char *dest, int len, bool noError)
+gb18030_to_utf8(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_GB18030, PG_UTF8);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_GB18030, PG_UTF8);
   return LocalToUtf(src, len, dest, &gb18030_to_unicode_tree, NULL, 0,
     conv_18030_to_utf8, PG_GB18030, noError);
 }
 
 int
-utf8_to_gb18030(unsigned char *src, unsigned char *dest, int len, bool noError)
+utf8_to_gb18030(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_UTF8, PG_GB18030);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_UTF8, PG_GB18030);
   return UtfToLocal(src, len, dest, &gb18030_from_unicode_tree, NULL, 0,
     conv_utf8_to_18030, PG_GB18030, noError);
 }

@@ -12,7 +12,7 @@
  */
 
 #include "postgres.h"
-#include "mb/pg_wchar.h"
+#include "utils/mb/pg_wchar.h"
 
 /* ----------
  * conv_proc(
@@ -36,45 +36,51 @@ static int euc_tw2mic(const unsigned char *euc, unsigned char *p, int len, bool 
 static int mic2euc_tw(const unsigned char *mic, unsigned char *p, int len, bool noError);
 
 int
-euc_tw_to_big5(unsigned char *src, unsigned char *dest, int len, bool noError)
+euc_tw_to_big5(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_EUC_TW, PG_BIG5);
-  return = euc_tw2big5(src, dest, len, noError);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_EUC_TW, PG_BIG5);
+  return euc_tw2big5(src, dest, len, noError);
 }
 
 int
-big5_to_euc_tw(PG_FUNCTION_ARGS)
+big5_to_euc_tw(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_BIG5, PG_EUC_TW);
-  return = big52euc_tw(src, dest, len, noError);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_BIG5, PG_EUC_TW);
+  return big52euc_tw(src, dest, len, noError);
 }
 
 int
-euc_tw_to_mic(PG_FUNCTION_ARGS)
+euc_tw_to_mic(int src_id, int dest_id, unsigned char *src, unsigned char *dest,
+  int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_EUC_TW, PG_MULE_INTERNAL);
-  return = euc_tw2mic(src, dest, len, noError);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_EUC_TW, PG_MULE_INTERNAL);
+  return euc_tw2mic(src, dest, len, noError);
 }
 
 int
-mic_to_euc_tw(PG_FUNCTION_ARGS)
+mic_to_euc_tw(int src_id, int dest_id, unsigned char *src, unsigned char *dest,
+  int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_MULE_INTERNAL, PG_EUC_TW);
-  return = mic2euc_tw(src, dest, len, noError);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_MULE_INTERNAL, PG_EUC_TW);
+  return mic2euc_tw(src, dest, len, noError);
 }
 
 int
-big5_to_mic(PG_FUNCTION_ARGS)
+big5_to_mic(int src_id, int dest_id, unsigned char *src, unsigned char *dest,
+  int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_BIG5, PG_MULE_INTERNAL);
-  return = big52mic(src, dest, len, noError);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_BIG5, PG_MULE_INTERNAL);
+  return big52mic(src, dest, len, noError);
 }
 
 int
-mic_to_big5(PG_FUNCTION_ARGS)
+mic_to_big5(int src_id, int dest_id, unsigned char *src, unsigned char *dest,
+  int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_MULE_INTERNAL, PG_BIG5);
-  return = mic2big5(src, dest, len, noError);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_MULE_INTERNAL, PG_BIG5);
+  return mic2big5(src, dest, len, noError);
 }
 
 

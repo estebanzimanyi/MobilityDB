@@ -40,6 +40,7 @@
 #include <limits.h>
 /* PostgreSQL */
 #include <postgres.h>
+#include <postgres_types.h>
 #include "utils/timestamp.h"
 #if POSTGRESQL_VERSION_NUMBER >= 160000
   #include "varatt.h"
@@ -47,7 +48,6 @@
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
-#include <postgres_types.h>
 #include "temporal/span.h"
 #include "temporal/temporal.h"
 #include "temporal/type_parser.h"

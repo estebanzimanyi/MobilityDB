@@ -32,9 +32,9 @@
  * SUCH DAMAGE.
  */
 /* can be used in either frontend or backend */
-#include "postgres_fe.h"
+#include "postgres.h"
 
-#include "mb/pg_wchar.h"
+#include "utils/mb/pg_wchar.h"
 
 int
 pg_wchar_strncmp(const pg_wchar *s1, const pg_wchar *s2, size_t n)

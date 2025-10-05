@@ -18,8 +18,12 @@
 #ifndef PG_COLLATION_H
 #define PG_COLLATION_H
 
+// #include "catalog/pg_collation_d.h" /* IWYU pragma: export */
+
 // #include "catalog/genbki.h"
-#include "catalog/pg_collation_d.h" /* IWYU pragma: export */
+// #include "catalog/pg_collation_d.h" /* IWYU pragma: export */
+
+#if 0 /* NOT USED */
 
 /* ----------------
  *		pg_collation definition.  cpp turns this into
@@ -65,7 +69,9 @@ DECLARE_UNIQUE_INDEX_PKEY(pg_collation_oid_index, 3085, CollationOidIndexId, pg_
 MAKE_SYSCACHE(COLLNAMEENCNSP, pg_collation_name_enc_nsp_index, 8);
 MAKE_SYSCACHE(COLLOID, pg_collation_oid_index, 8);
 
-#ifdef EXPOSE_TO_CLIENT_CODE
+#endif /* NOT USED */
+
+// #ifdef EXPOSE_TO_CLIENT_CODE
 
 #define COLLPROVIDER_DEFAULT	'd'
 #define COLLPROVIDER_BUILTIN	'b'
@@ -88,8 +94,9 @@ collprovider_name(char c)
 	}
 }
 
-#endif							/* EXPOSE_TO_CLIENT_CODE */
+// #endif							/* EXPOSE_TO_CLIENT_CODE */
 
+#if 0 /* NOT USED */
 
 extern Oid	CollationCreate(const char *collname, Oid collnamespace,
 							Oid collowner,
@@ -104,3 +111,5 @@ extern Oid	CollationCreate(const char *collname, Oid collnamespace,
 							bool quiet);
 
 #endif							/* PG_COLLATION_H */
+
+#endif /* NOT USED */

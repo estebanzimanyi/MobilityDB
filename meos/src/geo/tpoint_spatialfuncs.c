@@ -2265,8 +2265,7 @@ tpoint_as_mvtgeom(const Temporal *temp, const STBox *bounds, int32_t extent,
   double bounds_height = ((bounds->ymax - bounds->ymin) / extent) / 2.0;
   if (tpoint_width < bounds_width && tpoint_height < bounds_height)
   {
-    PG_FREE_IF_COPY(temp, 0);
-    PG_RETURN_NULL();
+    return NULL;
   }
   */
 

@@ -371,8 +371,6 @@ j2day(int date)
   return date;
 }                /* j2day() */
 
-#if 0 /* NOT USED */
-
 /*
  * GetCurrentDateTime()
  *
@@ -385,8 +383,7 @@ j2day(int date)
 void
 GetCurrentDateTime(struct pg_tm *tm)
 {
-  fsec_t    fsec;
-
+  fsec_t fsec;
   GetCurrentTimeUsec(tm, &fsec, NULL);
 }
 
@@ -406,7 +403,7 @@ GetCurrentDateTime(struct pg_tm *tm)
 void
 GetCurrentTimeUsec(struct pg_tm *tm, fsec_t *fsec, int *tzp)
 {
-  TimestampTz cur_ts = GetCurrentTransactionStartTimestamp();
+  TimestampTz cur_ts = GetCurrentTimestamp();
 
   /*
    * The cache key must include both current time and current timezone.  By
@@ -452,8 +449,6 @@ GetCurrentTimeUsec(struct pg_tm *tm, fsec_t *fsec, int *tzp)
   if (tzp != NULL)
     *tzp = cache_tz;
 }
-
-#endif /* NOT USED */
 
 /*
  * Append seconds and fractional seconds (if any) at *cp.
@@ -654,12 +649,11 @@ AdjustMicroseconds(int64 val, double fval, int64 scale,
 static bool
 AdjustDays(int64 val, int scale, struct pg_itm_in *itm_in)
 {
-  int      days;
-
   if (val < INT_MIN || val > INT_MAX)
     return false;
-  return !pg_mul_s32_overflow((int32) val, scale, &days) &&
-    !pg_add_s32_overflow(itm_in->tm_mday, days, &itm_in->tm_mday);
+  int days;
+  return ! pg_mul_s32_overflow((int32) val, scale, &days) &&
+    ! pg_add_s32_overflow(itm_in->tm_mday, days, &itm_in->tm_mday);
 }
 
 /*
@@ -680,17 +674,14 @@ AdjustMonths(int64 val, struct pg_itm_in *itm_in)
  * Returns true if successful, false if itm_in overflows.
  */
 static bool
-AdjustYears(int64 val, int scale,
-      struct pg_itm_in *itm_in)
+AdjustYears(int64 val, int scale, struct pg_itm_in *itm_in)
 {
-  int      years;
-
   if (val < INT_MIN || val > INT_MAX)
     return false;
-  return !pg_mul_s32_overflow((int32) val, scale, &years) &&
-    !pg_add_s32_overflow(itm_in->tm_year, years, &itm_in->tm_year);
+  int years;
+  return ! pg_mul_s32_overflow((int32) val, scale, &years) &&
+    ! pg_add_s32_overflow(itm_in->tm_year, years, &itm_in->tm_year);
 }
-
 
 /*
  * Parse the fractional part of a number (decimal point and optional digits,
@@ -4872,59 +4863,16 @@ CheckDateTokenTable(const char *tablename, const datetkn *base, int nel)
 bool
 CheckDateTokenTables(void)
 {
-  bool    ok = true;
-
   Assert(UNIX_EPOCH_JDATE == date2j(1970, 1, 1));
   Assert(POSTGRES_EPOCH_JDATE == date2j(2000, 1, 1));
 
+  bool ok = true;
   ok &= CheckDateTokenTable("datetktbl", datetktbl, szdatetktbl);
   ok &= CheckDateTokenTable("deltatktbl", deltatktbl, szdeltatktbl);
   return ok;
 }
 
 #if 0 /* NOT USED */
-
-/*
- * Common code for temporal prosupport functions: simplify, if possible,
- * a call to a temporal type's length-coercion function.
- *
- * Types time, timetz, timestamp and timestamptz each have a range of allowed
- * precisions.  An unspecified precision is rigorously equivalent to the
- * highest specifiable precision.  We can replace the function call with a
- * no-op RelabelType if it is coercing to the same or higher precision as the
- * input is known to have.
- *
- * The input Node is always a FuncExpr, but to reduce the #include footprint
- * of datetime.h, we declare it as Node *.
- *
- * Note: timestamp_scale throws an error when the typmod is out of range, but
- * we can't get there from a cast: our typmodin will have caught it already.
- */
-Node *
-TemporalSimplify(int32 max_precis, Node *node)
-{
-  FuncExpr   *expr = castNode(FuncExpr, node);
-  Node     *ret = NULL;
-  Node     *typmod;
-
-  Assert(list_length(expr->args) >= 2);
-
-  typmod = (Node *) lsecond(expr->args);
-
-  if (IsA(typmod, Const) && !((Const *) typmod)->constisnull)
-  {
-    Node     *source = (Node *) linitial(expr->args);
-    int32    old_precis = exprTypmod(source);
-    int32    new_precis = DatumGetInt32(((Const *) typmod)->constvalue);
-
-    if (new_precis < 0 || new_precis == max_precis ||
-      (old_precis >= 0 && new_precis >= old_precis))
-      ret = relabel_to_typmod(source, new_precis);
-  }
-
-  return ret;
-}
-
 /*
  * This function gets called during timezone config file load or reload
  * to create the final array of timezone tokens.  The argument array
@@ -4964,8 +4912,7 @@ ConvertTimeZoneAbbrevs(struct tzEntry *abbrevs, int n)
   tbl->tblsize = tbl_size;
   tbl->numabbrevs = n;
   /* in this loop, tbl_size reprises the space calculation above */
-  tbl_size = offsetof(TimeZoneAbbrevTable, abbrevs) +
-    n * sizeof(datetkn);
+  tbl_size = offsetof(TimeZoneAbbrevTable, abbrevs) + n * sizeof(datetkn);
   tbl_size = MAXALIGN(tbl_size);
   for (i = 0; i < n; i++)
   {
@@ -5007,7 +4954,6 @@ ConvertTimeZoneAbbrevs(struct tzEntry *abbrevs, int n)
 
   return tbl;
 }
-
 #endif /* NOT USED */
 
 /*
@@ -5069,7 +5015,7 @@ pg_timezone_abbrevs_zone(PG_FUNCTION_ARGS)
   HeapTuple  tuple;
   Datum    values[3];
   bool    nulls[3] = {0};
-  TimestampTz now = GetCurrentTransactionStartTimestamp();
+  TimestampTz now = GetCurrentTimestamp();
   pg_time_t  t = timestamptz_to_time_t(now);
   const char *abbrev;
   long int  gmtoff;
@@ -5115,11 +5061,8 @@ pg_timezone_abbrevs_zone(PG_FUNCTION_ARGS)
       continue;
 
     /* Determine the current meaning of the abbrev */
-    if (!pg_interpret_timezone_abbrev(abbrev,
-                      &t,
-                      &gmtoff,
-                      &isdst,
-                      session_timezone))
+    if (!pg_interpret_timezone_abbrev(abbrev, &t, &gmtoff, &isdst,
+        session_timezone))
       continue;      /* hm, not actually used in this zone? */
 
     values[0] = CStringGetTextDatum(abbrev);
@@ -5168,15 +5111,9 @@ pg_timezone_abbrevs_abbrevs(PG_FUNCTION_ARGS)
   if (SRF_IS_FIRSTCALL())
   {
     TupleDesc  tupdesc;
-    MemoryContext oldcontext;
 
     /* create a function context for cross-call persistence */
     funcctx = SRF_FIRSTCALL_INIT();
-
-    /*
-     * switch to memory context appropriate for multiple function calls
-     */
-    oldcontext = MemoryContextSwitchTo(funcctx->multi_call_memory_ctx);
 
     /* allocate memory for user context */
     pindex = (int *) palloc(sizeof(int));
@@ -5213,20 +5150,15 @@ pg_timezone_abbrevs_abbrevs(PG_FUNCTION_ARGS)
     case DYNTZ:
       {
         /* Determine the current meaning of the abbrev */
-        pg_tz     *tzp;
         DateTimeErrorExtra extra;
-        TimestampTz now;
-        int      isdst;
-
-        tzp = FetchDynamicTimeZone(zoneabbrevtbl, tp, &extra);
+        pg_tz *tzp = FetchDynamicTimeZone(zoneabbrevtbl, tp, &extra);
         if (tzp == NULL)
           DateTimeParseError(DTERR_BAD_ZONE_ABBREV, &extra,
                      NULL, NULL, NULL);
-        now = GetCurrentTransactionStartTimestamp();
-        gmtoffset = -DetermineTimeZoneAbbrevOffsetTS(now,
-                               tp->token,
-                               tzp,
-                               &isdst);
+        TimestampTz now = GetCurrentTimestamp();
+        int isdst;
+        gmtoffset = -DetermineTimeZoneAbbrevOffsetTS(now, tp->token, tzp,
+          &isdst);
         is_dst = (bool) isdst;
         break;
       }
@@ -5296,8 +5228,7 @@ pg_timezone_names(PG_FUNCTION_ARGS)
       break;
 
     /* Convert now() to local time in this zone */
-    if (timestamp2tm(GetCurrentTransactionStartTimestamp(),
-             &tzoff, &tm, &fsec, &tzn, tz) != 0)
+    if (timestamp2tm(GetCurrentTimestamp(), &tzoff, &tm, &fsec, &tzn, tz) != 0)
       continue;      /* ignore if conversion fails */
 
     /*

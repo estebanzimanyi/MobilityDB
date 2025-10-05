@@ -14,7 +14,7 @@
 #ifndef UNICODE_CASE_H
 #define UNICODE_CASE_H
 
-#include "mb/pg_wchar.h"
+#include "utils/mb/pg_wchar.h"
 
 typedef size_t (*WordBoundaryNext) (void *wbstate);
 

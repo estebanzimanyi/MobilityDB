@@ -12,7 +12,7 @@
  */
 
 #include "postgres.h"
-#include "mb/pg_wchar.h"
+#include "utils/mb/pg_wchar.h"
 
 /* ----------
  * conv_proc(
@@ -32,16 +32,18 @@ static int  euc_cn2mic(const unsigned char *euc, unsigned char *p, int len, bool
 static int  mic2euc_cn(const unsigned char *mic, unsigned char *p, int len, bool noError);
 
 int
-euc_cn_to_mic(unsigned char *src, unsigned char *dest, int len, bool noError)
+euc_cn_to_mic(int src_id, int dest_id, unsigned char *src, unsigned char *dest,
+  int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_EUC_CN, PG_MULE_INTERNAL);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_EUC_CN, PG_MULE_INTERNAL);
   return euc_cn2mic(src, dest, len, noError);
 }
 
 int
-mic_to_euc_cn(unsigned char *src, unsigned char *dest, int len, bool noError)
+mic_to_euc_cn(int src_id, int dest_id, unsigned char *src, unsigned char *dest,
+  int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_MULE_INTERNAL, PG_EUC_CN);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_MULE_INTERNAL, PG_EUC_CN);
   return mic2euc_cn(src, dest, len, noError);
 }
 

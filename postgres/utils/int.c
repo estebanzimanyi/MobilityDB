@@ -34,6 +34,49 @@
 #include "postgres.h"
 #include "common/int.h"
 
+/*****************************************************************************/
+
+/* Functions migrated from int.h since they are declared static inline */
+
+/*
+ * INT32
+ */
+bool
+pg_add_s32_overflow(int32 a, int32 b, int32 *result)
+{
+#if defined(HAVE__BUILTIN_OP_OVERFLOW)
+	return __builtin_add_overflow(a, b, result);
+#else
+	int64		res = (int64) a + (int64) b;
+
+	if (res > PG_INT32_MAX || res < PG_INT32_MIN)
+	{
+		*result = 0x5EED;		/* to avoid spurious warnings */
+		return true;
+	}
+	*result = (int32) res;
+	return false;
+#endif
+}
+
+bool
+pg_mul_s32_overflow(int32 a, int32 b, int32 *result)
+{
+#if defined(HAVE__BUILTIN_OP_OVERFLOW)
+	return __builtin_mul_overflow(a, b, result);
+#else
+	int64		res = (int64) a * (int64) b;
+
+	if (res > PG_INT32_MAX || res < PG_INT32_MIN)
+	{
+		*result = 0x5EED;		/* to avoid spurious warnings */
+		return true;
+	}
+	*result = (int32) res;
+	return false;
+#endif
+}
+
 /*****************************************************************************
  *   USER I/O ROUTINES                             *
  *****************************************************************************/

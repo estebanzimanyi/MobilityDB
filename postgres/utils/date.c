@@ -30,6 +30,7 @@
 #include "utils/builtins.h"
 #include "utils/date.h"
 #include "utils/datetime.h"
+#include "utils/float.h"
 #include "utils/numeric.h"
 
 extern Numeric int64_div_fast_to_numeric(int64 val1, int log10val2);
@@ -58,7 +59,6 @@ extern Numeric int64_div_fast_to_numeric(int64 val1, int log10val2);
 #error -ffast-math is known to break this code
 #endif
 
-#if 0 /* NOT USED */
 /* Check the typmod of a time value */
 int32
 anytime_typmod_check(bool istz, int32 typmod)
@@ -78,7 +78,6 @@ anytime_typmod_check(bool istz, int32 typmod)
 
   return typmod;
 }
-#endif /* NOT USED */
 
 /* common code for timetypmodout and timetztypmodout */
 static char *
@@ -2926,18 +2925,16 @@ pg_timetz_zone(const TimeTzADT *t, const text *zone)
   else if (type == TZNAME_DYNTZ)
   {
     /* dynamic-offset abbreviation, resolve using transaction start time */
-    TimestampTz now = GetCurrentTransactionStartTimestamp();
-    int      isdst;
-
+    TimestampTz now = GetCurrentTimestamp();
+    int isdst;
     tz = DetermineTimeZoneAbbrevOffsetTS(now, tzname, tzp, &isdst);
   }
   else
   {
     /* Get the offset-from-GMT that is valid now for the zone name */
-    TimestampTz now = GetCurrentTransactionStartTimestamp();
+    TimestampTz now = GetCurrentTimestamp();
     struct pg_tm tm;
-    fsec_t    fsec;
-
+    fsec_t fsec;
     if (timestamp2tm(now, &tz, &tm, &fsec, NULL, tzp) != 0)
     {
       elog(ERROR, "timestamp out of range");
@@ -2946,14 +2943,12 @@ pg_timetz_zone(const TimeTzADT *t, const text *zone)
   }
 
   result = (TimeTzADT *) palloc(sizeof(TimeTzADT));
-
   result->time = t->time + (t->zone - tz) * USECS_PER_SEC;
   /* C99 modulo has the wrong sign convention for negative input */
   while (result->time < INT64CONST(0))
     result->time += USECS_PER_DAY;
   if (result->time >= USECS_PER_DAY)
     result->time %= USECS_PER_DAY;
-
   result->zone = tz;
 
   return result;
@@ -2962,7 +2957,7 @@ pg_timetz_zone(const TimeTzADT *t, const text *zone)
 /**
  * @ingroup meos_base_time
  * @brief Encode a time with time zone with a time interval as time zone
- * @result On error return NULL
+ * @return On error return NULL
  * @note Derived from PostgreSQL function @p timetz_izone()
  */
 #if MEOS
@@ -2981,14 +2976,14 @@ pg_timetz_izone(const TimeTzADT *time, const Interval *zone)
   if (INTERVAL_NOT_FINITE(zone))
   {
     elog(ERROR, "interval time zone \"%s\" must be finite", 
-      interval_out_internal(zone));
+      pg_interval_out(zone));
     return NULL;
   }
 
   if (zone->month != 0 || zone->day != 0)
   {
     elog(ERROR, "interval time zone \"%s\" must not include months or days",
-      interval_out_internal(zone));
+      pg_interval_out(zone));
     return NULL;
   }
 

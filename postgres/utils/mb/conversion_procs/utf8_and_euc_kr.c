@@ -12,7 +12,7 @@
  */
 
 #include "postgres.h"
-#include "mb/pg_wchar.h"
+#include "utils/mb/pg_wchar.h"
 #include "../Unicode/euc_kr_to_utf8.map"
 #include "../Unicode/utf8_to_euc_kr.map"
 
@@ -30,17 +30,19 @@
  * ----------
  */
 int
-euc_kr_to_utf8(unsigned char *src, unsigned char *dest, int len, bool noError)
+euc_kr_to_utf8(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_EUC_KR, PG_UTF8);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_EUC_KR, PG_UTF8);
   return LocalToUtf(src, len, dest, &euc_kr_to_unicode_tree, NULL, 0,
     NULL, PG_EUC_KR, noError);
 }
 
 int
-utf8_to_euc_kr(unsigned char *src, unsigned char *dest, int len, bool noError)
+utf8_to_euc_kr(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_UTF8, PG_EUC_KR);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_UTF8, PG_EUC_KR);
   return UtfToLocal(src, len, dest, &euc_kr_from_unicode_tree, NULL, 0, NULL,
     PG_EUC_KR, noError);
 }

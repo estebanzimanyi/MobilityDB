@@ -12,7 +12,7 @@
  */
 
 #include "postgres.h"
-#include "mb/pg_wchar.h"
+#include "utils/mb/pg_wchar.h"
 #include "../Unicode/euc_cn_to_utf8.map"
 #include "../Unicode/utf8_to_euc_cn.map"
 
@@ -29,18 +29,20 @@
  * Returns the number of bytes successfully converted.
  * ----------
  */
-Datum
-euc_cn_to_utf8(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+euc_cn_to_utf8(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_EUC_CN, PG_UTF8);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_EUC_CN, PG_UTF8);
   return LocalToUtf(src, len, dest, &euc_cn_to_unicode_tree, NULL, 0,
     NULL, PG_EUC_CN, noError);
 }
 
-Datum
-utf8_to_euc_cn(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+utf8_to_euc_cn(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_UTF8, PG_EUC_CN);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_UTF8, PG_EUC_CN);
   return UtfToLocal(src, len, dest, &euc_cn_from_unicode_tree, NULL, 0, NULL,
     PG_EUC_CN, noError);
 }

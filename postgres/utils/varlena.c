@@ -14,6 +14,7 @@
  */
 #include "postgres.h"
 
+#include <assert.h>
 #include <ctype.h>
 #include <limits.h>
 
@@ -150,26 +151,19 @@ static char *text_position_get_match_ptr(TextPositionState *state);
 static int  text_position_get_match_pos(TextPositionState *state);
 static void text_position_cleanup(TextPositionState *state);
 static void check_collation_set(Oid collid);
-// static int  text_cmp(text *txt1, text *txt2, Oid collid);
+// static int text_cmp(text *txt1, text *txt2, Oid collid);
 static bytea *bytea_catenate(bytea *txt1, bytea *txt2);
-static bytea *bytea_substring(Datum str,
-                int S,
-                int L,
-                bool length_not_specified);
+static bytea *bytea_substring(Datum str, int S, int L, bool length_not_specified);
 static bytea *bytea_overlay(bytea *txt1, bytea *txt2, int sp, int sl);
 static void appendStringInfoText(StringInfo str, const text *t);
 static bool text_format_parse_digits(const char **ptr, const char *end_ptr,
-                   int *value);
+  int *value);
 static const char *text_format_parse_format(const char *start_ptr,
-                      const char *end_ptr,
-                      int *argpos, int *widthpos,
-                      int *flags, int *width);
+  const char *end_ptr, int *argpos, int *widthpos, int *flags, int *width);
 // static void text_format_string_conversion(StringInfo buf, char conversion,
-                      // FmgrInfo *typOutputInfo,
-                      // Datum value, bool isNull,
-                      // int flags, int width);
+  // FmgrInfo *typOutputInfo, Datum value, bool isNull, int flags, int width);
 static void text_format_append_string(StringInfo buf, const char *str,
-                    int flags, int width);
+  int flags, int width);
 
 /*****************************************************************************
  *   CONVERSION ROUTINES EXPORTED FOR USE BY C CODE               *
@@ -184,11 +178,9 @@ static void text_format_append_string(StringInfo buf, const char *str,
 text *
 cstring_to_text_with_len(const char *s, int len)
 {
-  text     *result = (text *) palloc(len + VARHDRSZ);
-
+  text *result = (text *) palloc(len + VARHDRSZ);
   SET_VARSIZE(result, len + VARHDRSZ);
   memcpy(VARDATA(result), s, len);
-
   return result;
 }
 
@@ -218,10 +210,8 @@ cstring_to_text(const char *s)
 char *
 text_to_cstring(const text *txt)
 {
-  int      len = VARSIZE_ANY_EXHDR(txt);
-  char     *result;
-
-  result = (char *) palloc(len + 1);
+  int len = VARSIZE_ANY_EXHDR(txt);
+  char *result = (char *) palloc(len + 1);
   memcpy(result, VARDATA_ANY(txt), len);
   result[len] = '\0';
   return result;
@@ -243,16 +233,14 @@ text_to_cstring(const text *txt)
 void
 text_to_cstring_buffer(const text *src, char *dst, size_t dst_len)
 {
-  size_t    src_len = VARSIZE_ANY_EXHDR(src);
-
+  size_t src_len = VARSIZE_ANY_EXHDR(src);
   if (dst_len > 0)
   {
     dst_len--;
-    // MEOS
-    // if (dst_len >= src_len)
+    if (dst_len >= src_len)
       dst_len = src_len;
-    // else          /* ensure truncation is encoding-safe */
-      // dst_len = pg_mbcliplen(VARDATA_ANY(src), src_len, dst_len);
+    else          /* ensure truncation is encoding-safe */
+      dst_len = pg_mbcliplen(VARDATA_ANY(src), src_len, dst_len);
     memcpy(dst, VARDATA_ANY(src), dst_len);
     dst[dst_len] = '\0';
   }
@@ -261,7 +249,6 @@ text_to_cstring_buffer(const text *src, char *dst, size_t dst_len)
 /*****************************************************************************
  *   USER I/O ROUTINES                             *
  *****************************************************************************/
-
 
 #define VAL(CH)      ((CH) - '0')
 #define DIG(VAL)    ((VAL) + '0')
@@ -283,7 +270,6 @@ text_in(const char *str)
  * @param[in] txt Text
  * @note Derived from PostgreSQL function @p textout()
  */
-
 char *
 text_out(const text *txt)
 {
@@ -317,14 +303,13 @@ static int32
 text_length(const text *txt)
 {
   /* fastpath when max encoding length is one */
-  // if (pg_database_encoding_max_length() == 1)
+  if (pg_database_encoding_max_length() == 1)
     // return (toast_raw_datum_size(txt) - VARHDRSZ);
     return (VARSIZE(txt) - VARHDRSZ);
-  // else
-  // {
-    // return pg_mbstrlen_with_len(VARDATA_ANY(const text *),
-      // VARSIZE_ANY_EXHDR(const text *));
-  // }
+  else
+  {
+    return pg_mbstrlen_with_len(VARDATA_ANY(txt), VARSIZE_ANY_EXHDR(txt));
+  }
 }
 
 /**
@@ -359,29 +344,22 @@ text_cat(const text *txt1, const text *txt2)
 static text *
 text_catenate(const text *txt1, const text *txt2)
 {
-  text     *result;
-  int      len1,
-        len2,
-        len;
-  char     *ptr;
-
-  len1 = VARSIZE_ANY_EXHDR(txt1);
-  len2 = VARSIZE_ANY_EXHDR(txt2);
-
+  int len1 = VARSIZE_ANY_EXHDR(txt1);
+  int len2 = VARSIZE_ANY_EXHDR(txt2);
   /* paranoia ... probably should throw error instead? */
   if (len1 < 0)
     len1 = 0;
   if (len2 < 0)
     len2 = 0;
 
-  len = len1 + len2 + VARHDRSZ;
-  result = (text *) palloc(len);
+  int len = len1 + len2 + VARHDRSZ;
+  text *result = (text *) palloc(len);
 
   /* Set size of result string... */
   SET_VARSIZE(result, len);
 
   /* Fill data field of result string... */
-  ptr = VARDATA(result);
+  char *ptr = VARDATA(result);
   if (len1 > 0)
     memcpy(ptr, VARDATA_ANY(txt1), len1);
   if (len2 > 0)
@@ -400,19 +378,18 @@ text_catenate(const text *txt1, const text *txt2)
 static int
 charlen_to_bytelen(const char *p, int n)
 {
-  // if (pg_database_encoding_max_length() == 1)
-  // {
+  if (pg_database_encoding_max_length() == 1)
+  {
     /* Optimization for single-byte encodings */
     return n;
-  // }
-  // else
-  // {
-    // const char *s;
-
-    // for (s = p; n > 0; n--)
-      // s += pg_mblen(s);
-    // return s - p;
-  // }
+  }
+  else
+  {
+    const char *s;
+    for (s = p; n > 0; n--)
+      s += pg_mblen(s);
+    return s - p;
+  }
 }
 
 /**
@@ -490,8 +467,7 @@ static text *
 text_substring(const text *txt, int32 start, int32 length,
   bool length_not_specified)
 {
-  // int32    eml = pg_database_encoding_max_length();
-  int32    eml = 1;
+  int32    eml = pg_database_encoding_max_length();
   int32    S = start; /* start position */
   int32    S1;        /* adjusted start position */
   int32    L1;        /* adjusted substring length */
@@ -624,7 +600,7 @@ text_substring(const text *txt, int32 start, int32 length,
 
     /* Now we can get the actual length of the slice in MB characters */
     slice_strlen = pg_mbstrlen_with_len(VARDATA_ANY(slice),
-                      VARSIZE_ANY_EXHDR(slice));
+      VARSIZE_ANY_EXHDR(slice));
 
     /*
      * Check that the start position wasn't > slice_strlen. If so, SQL99
@@ -732,11 +708,6 @@ pg_text_substr_no_len(const text *txt, int32 start)
 text *
 text_overlay(const text *txt1, const text *txt2, int sp, int sl)
 {
-  text     *result;
-  text     *s1;
-  text     *s2;
-  int      sp_pl_sl;
-
   /*
    * Check for possible integer-overflow cases.  For negative sp, throw a
    * "substring length" error because that's what should be expected
@@ -747,15 +718,16 @@ text_overlay(const text *txt1, const text *txt2, int sp, int sl)
     elog(ERROR, "negative substring length not allowed");
     return NULL;
   }
+  int sp_pl_sl;
   if (pg_add_s32_overflow(sp, sl, &sp_pl_sl))
   {
     elog(ERROR, "integer out of range");
     return NULL;
   }
 
-  s1 = text_substring(PointerGetDatum(txt1), 1, sp - 1, false);
-  s2 = text_substring(PointerGetDatum(txt1), sp_pl_sl, -1, true);
-  result = text_catenate(s1, txt2);
+  text *s1 = text_substring(PointerGetDatum(txt1), 1, sp - 1, false);
+  text *s2 = text_substring(PointerGetDatum(txt1), sp_pl_sl, -1, true);
+  text *result = text_catenate(s1, txt2);
   result = text_catenate(result, s2);
 
   return result;
@@ -854,7 +826,7 @@ text_position_setup(text *txt1, text *txt2, Oid collid,
 
   check_collation_set(collid);
 
-  // state->locale = pg_newlocale_from_collation(collid);
+  state->locale = pg_newlocale_from_collation(collid);
 
   /*
    * Most callers need greedy mode, but some might want to unset this to
@@ -1234,37 +1206,37 @@ varstr_cmp(const char *txt1, int len1, const char *txt2, int len2, Oid collid)
 
   check_collation_set(collid);
 
-  // mylocale = pg_newlocale_from_collation(collid);
-  // if (mylocale->collate_is_c)
-  // {
+  mylocale = pg_newlocale_from_collation(collid);
+  if (mylocale->collate_is_c)
+  {
     result = memcmp(txt1, txt2, Min(len1, len2));
     if ((result == 0) && (len1 != len2))
       result = (len1 < len2) ? -1 : 1;
-  // }
-  // else
-  // {
-    // /*
-     // * memcmp() can't tell us which of two unequal strings sorts first,
-     // * but it's a cheap way to tell if they're equal.  Testing shows that
-     // * memcmp() followed by strcoll() is only trivially slower than
-     // * strcoll() by itself, so we don't lose much if this doesn't work out
-     // * very often, and if it does - for example, because there are many
-     // * equal strings in the input - then we win big by avoiding expensive
-     // * collation-aware comparisons.
-     // */
-    // if (len1 == len2 && memcmp(txt1, txt2, len1) == 0)
-      // return 0;
+  }
+  else
+  {
+    /*
+     * memcmp() can't tell us which of two unequal strings sorts first,
+     * but it's a cheap way to tell if they're equal.  Testing shows that
+     * memcmp() followed by strcoll() is only trivially slower than
+     * strcoll() by itself, so we don't lose much if this doesn't work out
+     * very often, and if it does - for example, because there are many
+     * equal strings in the input - then we win big by avoiding expensive
+     * collation-aware comparisons.
+     */
+    if (len1 == len2 && memcmp(txt1, txt2, len1) == 0)
+      return 0;
 
-    // result = pg_strncoll(txt1, len1, txt2, len2, mylocale);
+    result = pg_strncoll(txt1, len1, txt2, len2, mylocale);
 
-    // /* Break tie if necessary. */
-    // if (result == 0 && mylocale->deterministic)
-    // {
-      // result = memcmp(txt1, txt2, Min(len1, len2));
-      // if ((result == 0) && (len1 != len2))
-        // result = (len1 < len2) ? -1 : 1;
-    // }
-  // }
+    /* Break tie if necessary. */
+    if (result == 0 && mylocale->deterministic)
+    {
+      result = memcmp(txt1, txt2, Min(len1, len2));
+      if ((result == 0) && (len1 != len2))
+        result = (len1 < len2) ? -1 : 1;
+    }
+  }
 
   return result;
 }
@@ -1299,30 +1271,30 @@ text_eq(const text *txt1, const text *txt2)
 
   check_collation_set(collid);
 
-  // mylocale = pg_newlocale_from_collation(collid);
-  // if (mylocale->deterministic)
-  // {
-    // /*
-     // * Since we only care about equality or not-equality, we can avoid all
-     // * the expense of strcoll() here, and just do bitwise comparison.  In
-     // * fact, we don't even have to do a bitwise comparison if we can show
-     // * the lengths of the strings are unequal; which might save us from
-     // * having to detoast one or both values.
-     // */
-    // Size len1 = VARSIZE(txt1);
-    // Size len2 = VARSIZE(txt2);
-    // if (len1 != len2)
-      // result = false;
-    // else
-    // {
-      // result = (memcmp(VARDATA_ANY(txt1), VARDATA_ANY(txt2),
-               // len1 - VARHDRSZ) == 0);
-    // }
-  // }
-  // else
-  // {
+  mylocale = pg_newlocale_from_collation(collid);
+  if (mylocale->deterministic)
+  {
+    /*
+     * Since we only care about equality or not-equality, we can avoid all
+     * the expense of strcoll() here, and just do bitwise comparison.  In
+     * fact, we don't even have to do a bitwise comparison if we can show
+     * the lengths of the strings are unequal; which might save us from
+     * having to detoast one or both values.
+     */
+    Size len1 = VARSIZE(txt1);
+    Size len2 = VARSIZE(txt2);
+    if (len1 != len2)
+      result = false;
+    else
+    {
+      result = (memcmp(VARDATA_ANY(txt1), VARDATA_ANY(txt2), 
+        len1 - VARHDRSZ) == 0);
+    }
+  }
+  else
+  {
     result = (text_cmp(txt1, txt2, collid) == 0);
-  // }
+  }
 
   return result;
 }
@@ -1341,24 +1313,24 @@ text_ne(const text *txt1, const text *txt2)
 
   check_collation_set(collid);
 
-  // mylocale = pg_newlocale_from_collation(collid);
-  // if (mylocale->deterministic)
-  // {
-    // /* See comment in texteq() */
-    // Size len1 = VARSIZE(txt1);
-    // Size len2 = VARSIZE(txt2);
-    // if (len1 != len2)
-      // result = true;
-    // else
-    // {
-      // result = (memcmp(VARDATA_ANY(txt1), VARDATA_ANY(txt2),
-               // len1 - VARHDRSZ) != 0);
-    // }
-  // }
-  // else
-  // {
+  mylocale = pg_newlocale_from_collation(collid);
+  if (mylocale->deterministic)
+  {
+    /* See comment in texteq() */
+    Size len1 = VARSIZE(txt1);
+    Size len2 = VARSIZE(txt2);
+    if (len1 != len2)
+      result = true;
+    else
+    {
+      result = (memcmp(VARDATA_ANY(txt1), VARDATA_ANY(txt2),
+               len1 - VARHDRSZ) != 0);
+    }
+  }
+  else
+  {
     result = (text_cmp(txt1, txt2, collid) != 0);
-  // }
+  }
   return result;
 }
 
@@ -1456,12 +1428,13 @@ pg_text_starts_with(const text *txt1, const text *txt2)
 
   check_collation_set(collid);
 
-  // mylocale = pg_newlocale_from_collation(collid);
-  // if (!mylocale->deterministic)
-  // {
-    // elog(ERROR,
-      // "nondeterministic collations are not supported for substring searches"));
-  // }
+  mylocale = pg_newlocale_from_collation(collid);
+  if (!mylocale->deterministic)
+  {
+    elog(ERROR,
+      "nondeterministic collations are not supported for substring searches");
+    return false;
+  }
 
   Size len1 = VARSIZE(txt1);
   Size len2 = VARSIZE(txt2);
@@ -2142,30 +2115,29 @@ pg_text_reverse(const text *txt)
   dst = (char *) VARDATA(result) + len;
   SET_VARSIZE(result, len + VARHDRSZ);
 
-  // if (pg_database_encoding_max_length() > 1)
-  // {
-    // /* multibyte version */
-    // while (p < endp)
-    // {
-      // int      sz;
+  if (pg_database_encoding_max_length() > 1)
+  {
+    /* multibyte version */
+    while (p < endp)
+    {
+      int      sz;
 
-      // sz = pg_mblen(p);
-      // dst -= sz;
-      // memcpy(dst, p, sz);
-      // p += sz;
-    // }
-  // }
-  // else
-  // {
+      sz = pg_mblen(p);
+      dst -= sz;
+      memcpy(dst, p, sz);
+      p += sz;
+    }
+  }
+  else
+  {
     /* single byte version */
     while (p < endp)
       *(--dst) = *p++;
-  // }
+  }
 
   return result;
 }
 
-#if 0 /* NOT USED */
 /*
  * Support macros for text_format()
  */
@@ -2178,6 +2150,7 @@ pg_text_reverse(const text *txt)
         "unterminated format() type specifier"); \
   } while (0)
 
+#if 0 /* NOT USED */
 /**
  * @ingroup meos_base_text
  * @brief Returns a formatted string
@@ -2362,6 +2335,7 @@ pg_text_format(Datum *elements, int nitems, const text *fmt)
 
   return result;
 }
+#endif /* NOT USED */
 
 /*
  * Parse contiguous digits as a decimal number.
@@ -2376,14 +2350,12 @@ pg_text_format(Datum *elements, int nitems, const text *fmt)
 static bool
 text_format_parse_digits(const char **ptr, const char *end_ptr, int *value)
 {
-  bool    found = false;
+  bool found = false;
   const char *cp = *ptr;
-  int      val = 0;
-
+  int val = 0;
   while (*cp >= '0' && *cp <= '9')
   {
-    int8    digit = (*cp - '0');
-
+    int8 digit = (*cp - '0');
     if (unlikely(pg_mul_s32_overflow(val, 10, &val)) ||
       unlikely(pg_add_s32_overflow(val, digit, &val)))
     {
@@ -2393,10 +2365,8 @@ text_format_parse_digits(const char **ptr, const char *end_ptr, int *value)
     ADVANCE_PARSE_POINTER(cp, end_ptr);
     found = true;
   }
-
   *ptr = cp;
   *value = val;
-
   return found;
 }
 
@@ -2435,7 +2405,6 @@ text_format_parse_format(const char *start_ptr, const char *end_ptr,
   *widthpos = -1;
   *flags = 0;
   *width = 0;
-
   /* try to identify first number */
   if (text_format_parse_digits(&cp, end_ptr, &n))
   {
@@ -2501,6 +2470,7 @@ text_format_parse_format(const char *start_ptr, const char *end_ptr,
   return cp;
 }
 
+#if 0 /* NOT USED */
 /*
  * Format a %s, %I, or %L conversion
  */
@@ -2543,6 +2513,7 @@ text_format_string_conversion(StringInfo buf, char conversion,
   pfree(str);
   return;
 }
+#endif /* NOT USED */
 
 /*
  * Append str to buf, padding as directed by flags/width
@@ -2552,7 +2523,6 @@ text_format_append_string(StringInfo buf, const char *str,
  int flags, int width)
 {
   bool align_to_left = false;
-  int len;
 
   /* fast path for typical easy case */
   if (width == 0)
@@ -2576,7 +2546,7 @@ text_format_append_string(StringInfo buf, const char *str,
   else if (flags & TEXT_FORMAT_FLAG_MINUS)
     align_to_left = true;
 
-  len = pg_mbstrlen(str);
+  int len = pg_mbstrlen(str);
   if (align_to_left)
   {
     /* left justify */
@@ -2592,8 +2562,6 @@ text_format_append_string(StringInfo buf, const char *str,
     appendStringInfoString(buf, str);
   }
 }
-
-#endif /* NOT USED */
 
 /*
  * Unicode support

@@ -14,6 +14,7 @@
  
 #include "postgres.h"
 #include "postgres_types.h"
+#include "miscadmin.h"
 #include "catalog/pg_collation_d.h"
 #include "catalog/pg_type.h"
 #include "common/hashfn.h"
@@ -26,9 +27,6 @@
 #include "utils/memutils.h"
 #include "utils/numeric.h"
 #include "utils/varlena.h"
-
-// TODO REMOVE
-#define USE_XSD_DATES      4
 
 /*
  * Maximum number of elements in an array (or key/value pairs in an object).
@@ -1710,12 +1708,12 @@ convertJsonbArray(StringInfo buffer, JEntry *header, JsonbValue *val, int level)
 static void
 convertJsonbObject(StringInfo buffer, JEntry *header, JsonbValue *val, int level)
 {
-  int      base_offset;
-  int      jentry_offset;
-  int      i;
-  int      totallen;
-  uint32    containerheader;
-  int      nPairs = val->val.object.nPairs;
+  int base_offset;
+  int jentry_offset;
+  int i;
+  int totallen;
+  uint32 containerheader;
+  int nPairs = val->val.object.nPairs;
 
   /* Remember where in the buffer this object starts. */
   base_offset = buffer->len;
@@ -1826,128 +1824,11 @@ convertJsonbObject(StringInfo buffer, JEntry *header, JsonbValue *val, int level
   *header = JENTRY_ISCONTAINER | totallen;
 }
 
-/*
- * Encode 'value' of datetime type 'typid' into JSON string in ISO format using
- * optionally preallocated buffer 'buf'.  Optional 'tzp' determines time-zone
- * offset (in seconds) in which we want to show timestamptz.
- */
-char *
-JsonEncodeDateTime(char *buf, Datum value, Oid typid, const int *tzp)
-{
-  if (!buf)
-    buf = palloc(MAXDATELEN + 1);
-
-  switch (typid)
-  {
-    case DATEOID:
-      {
-        DateADT    date;
-        struct pg_tm tm;
-
-        date = DatumGetDateADT(value);
-
-        /* Same as date_out(), but forcing DateStyle */
-        if (DATE_NOT_FINITE(date))
-          EncodeSpecialDate(date, buf);
-        else
-        {
-          j2date(date + POSTGRES_EPOCH_JDATE,
-               &(tm.tm_year), &(tm.tm_mon), &(tm.tm_mday));
-          EncodeDateOnly(&tm, USE_XSD_DATES, buf);
-        }
-      }
-      break;
-    case TIMEOID:
-      {
-        TimeADT    time = DatumGetTimeADT(value);
-        struct pg_tm tt,
-               *tm = &tt;
-        fsec_t    fsec;
-
-        /* Same as time_out(), but forcing DateStyle */
-        time2tm(time, tm, &fsec);
-        EncodeTimeOnly(tm, fsec, false, 0, USE_XSD_DATES, buf);
-      }
-      break;
-    case TIMETZOID:
-      {
-        TimeTzADT  *time = DatumGetTimeTzADTP(value);
-        struct pg_tm tt,
-               *tm = &tt;
-        fsec_t    fsec;
-        int      tz;
-
-        /* Same as timetz_out(), but forcing DateStyle */
-        timetz2tm(time, tm, &fsec, &tz);
-        EncodeTimeOnly(tm, fsec, true, tz, USE_XSD_DATES, buf);
-      }
-      break;
-    case TIMESTAMPOID:
-      {
-        Timestamp  timestamp;
-        struct pg_tm tm;
-        fsec_t    fsec;
-
-        timestamp = DatumGetTimestamp(value);
-        /* Same as timestamp_out(), but forcing DateStyle */
-        if (TIMESTAMP_NOT_FINITE(timestamp))
-          EncodeSpecialTimestamp(timestamp, buf);
-        else if (timestamp2tm(timestamp, NULL, &tm, &fsec, NULL, NULL) == 0)
-          EncodeDateTime(&tm, fsec, false, 0, NULL, USE_XSD_DATES, buf);
-        else
-          elog(ERROR, "timestamp out of range");
-      }
-      break;
-    case TIMESTAMPTZOID:
-      {
-        TimestampTz timestamp;
-        struct pg_tm tm;
-        int      tz;
-        fsec_t    fsec;
-        const char *tzn = NULL;
-
-        timestamp = DatumGetTimestampTz(value);
-
-        /*
-         * If a time zone is specified, we apply the time-zone shift,
-         * convert timestamptz to pg_tm as if it were without a time
-         * zone, and then use the specified time zone for converting
-         * the timestamp into a string.
-         */
-        if (tzp)
-        {
-          tz = *tzp;
-          timestamp -= (TimestampTz) tz * USECS_PER_SEC;
-        }
-
-        /* Same as timestamptz_out(), but forcing DateStyle */
-        if (TIMESTAMP_NOT_FINITE(timestamp))
-          EncodeSpecialTimestamp(timestamp, buf);
-        else if (timestamp2tm(timestamp, tzp ? NULL : &tz, &tm, &fsec,
-                    tzp ? NULL : &tzn, NULL) == 0)
-        {
-          if (tzp)
-            tm.tm_isdst = 1;  /* set time-zone presence flag */
-
-          EncodeDateTime(&tm, fsec, true, tz, tzn, USE_XSD_DATES, buf);
-        }
-        else
-          elog(ERROR, "timestamp out of range");
-      }
-      break;
-    default:
-      elog(ERROR, "unknown jsonb value datetime type oid %u", typid);
-      return NULL;
-  }
-
-  return buf;
-}
-
 static void
 convertJsonbScalar(StringInfo buffer, JEntry *header, JsonbValue *scalarVal)
 {
-  int      numlen;
-  short    padlen;
+  int numlen;
+  short padlen;
 
   switch (scalarVal->type)
   {

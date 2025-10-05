@@ -184,37 +184,6 @@ datum_textcat(Datum l, Datum r)
   return PointerGetDatum(textcat_text_text(DatumGetTextP(l), DatumGetTextP(r)));
 }
 
-#if MEOS
-/**
- * @brief Return a copy of the string value
- */
-char *
-pnstrdup(const char *in, Size size)
-{
-  char *tmp;
-  size_t len;
-
-  if (!in)
-  {
-    fprintf(stderr, "cannot duplicate null pointer (internal error)\n");
-    exit(EXIT_FAILURE);
-  }
-
-  len = strnlen(in, size);
-  tmp = palloc(len + 1);
-  if (tmp == NULL)
-  {
-    fprintf(stderr, "out of memory\n");
-    exit(EXIT_FAILURE);
-  }
-
-  memcpy(tmp, in, len);
-  tmp[len] = '\0';
-
-  return tmp;
-}
-#endif /* MEOS */
-
 /**
  * @ingroup meos_base_text
  * @brief Return the text value transformed to lowercase

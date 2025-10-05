@@ -1,14 +1,14 @@
 /*-------------------------------------------------------------------------
  *
  * scansup.c
- *	  scanner support routines used by the core lexer
+ *    scanner support routines used by the core lexer
  *
  * Portions Copyright (c) 1996-2025, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  *
  * IDENTIFICATION
- *	  src/backend/parser/scansup.c
+ *    src/backend/parser/scansup.c
  *
  *-------------------------------------------------------------------------
  */
@@ -16,7 +16,7 @@
 
 #include <ctype.h>
 
-#include "mb/pg_wchar.h"
+#include "utils/mb/pg_wchar.h"
 #include "parser/scansup.h"
 
 extern int cliplen(const char *str, int len, int limit);
@@ -37,7 +37,7 @@ extern int cliplen(const char *str, int len, int limit);
 char *
 downcase_truncate_identifier(const char *ident, int len, bool warn)
 {
-	return downcase_identifier(ident, len, warn, true);
+  return downcase_identifier(ident, len, warn, true);
 }
 
 /*
@@ -46,42 +46,34 @@ downcase_truncate_identifier(const char *ident, int len, bool warn)
 char *
 downcase_identifier(const char *ident, int len, bool warn, bool truncate)
 {
-	char	   *result;
-	int			i;
-	bool		enc_is_single_byte;
+  char *result = palloc(len + 1);
+  bool enc_is_single_byte = pg_database_encoding_max_length() == 1;
 
-	result = palloc(len + 1);
-  // MEOS
-	// enc_is_single_byte = pg_database_encoding_max_length() == 1;
-	enc_is_single_byte = true;
+  /*
+   * SQL99 specifies Unicode-aware case normalization, which we don't yet
+   * have the infrastructure for.  Instead we use tolower() to provide a
+   * locale-aware translation.  However, there are some locales where this
+   * is not right either (eg, Turkish may do strange things with 'i' and
+   * 'I').  Our current compromise is to use tolower() for characters with
+   * the high bit set, as long as they aren't part of a multi-byte
+   * character, and use an ASCII-only downcasing for 7-bit characters.
+   */
+  int i;
+  for (i = 0; i < len; i++)
+  {
+    unsigned char ch = (unsigned char) ident[i];
+    if (ch >= 'A' && ch <= 'Z')
+      ch += 'a' - 'A';
+    else if (enc_is_single_byte && IS_HIGHBIT_SET(ch) && isupper(ch))
+      ch = tolower(ch);
+    result[i] = (char) ch;
+  }
+  result[i] = '\0';
+  if (i >= NAMEDATALEN && truncate)
+    truncate_identifier(result, i, warn);
 
-	/*
-	 * SQL99 specifies Unicode-aware case normalization, which we don't yet
-	 * have the infrastructure for.  Instead we use tolower() to provide a
-	 * locale-aware translation.  However, there are some locales where this
-	 * is not right either (eg, Turkish may do strange things with 'i' and
-	 * 'I').  Our current compromise is to use tolower() for characters with
-	 * the high bit set, as long as they aren't part of a multi-byte
-	 * character, and use an ASCII-only downcasing for 7-bit characters.
-	 */
-	for (i = 0; i < len; i++)
-	{
-		unsigned char ch = (unsigned char) ident[i];
-
-		if (ch >= 'A' && ch <= 'Z')
-			ch += 'a' - 'A';
-		else if (enc_is_single_byte && IS_HIGHBIT_SET(ch) && isupper(ch))
-			ch = tolower(ch);
-		result[i] = (char) ch;
-	}
-	result[i] = '\0';
-
-	if (i >= NAMEDATALEN && truncate)
-		truncate_identifier(result, i, warn);
-
-	return result;
+  return result;
 }
-
 
 /*
  * truncate_identifier() --- truncate an identifier to NAMEDATALEN-1 bytes.
@@ -95,16 +87,14 @@ downcase_identifier(const char *ident, int len, bool warn, bool truncate)
 void
 truncate_identifier(char *ident, int len, bool warn)
 {
-	if (len >= NAMEDATALEN)
-	{
-    // MEOS
-		// len = pg_mbcliplen(ident, len, NAMEDATALEN - 1);
-		len = cliplen(ident, len, NAMEDATALEN - 1);
-		if (warn)
-			elog(NOTICE,
-        "identifier \"%s\" will be truncated to \"%.*s\"", ident, len, ident);
-		ident[len] = '\0';
-	}
+  if (len >= NAMEDATALEN)
+  {
+    len = pg_mbcliplen(ident, len, NAMEDATALEN - 1);
+    if (warn)
+      elog(NOTICE, "identifier \"%s\" will be truncated to \"%.*s\"",
+        ident, len, ident);
+    ident[len] = '\0';
+  }
 }
 
 /*
@@ -119,13 +109,9 @@ truncate_identifier(char *ident, int len, bool warn)
 bool
 scanner_isspace(char ch)
 {
-	/* This must match scan.l's list of {space} characters */
-	if (ch == ' ' ||
-		ch == '\t' ||
-		ch == '\n' ||
-		ch == '\r' ||
-		ch == '\v' ||
-		ch == '\f')
-		return true;
-	return false;
+  /* This must match scan.l's list of {space} characters */
+  if (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' || ch == '\v' ||
+      ch == '\f')
+    return true;
+  return false;
 }
