@@ -67,26 +67,30 @@
 #include <wctype.h>
 
 #include "common/int.h"
-// #include "catalog/pg_collation.h"
-// #include "catalog/pg_type.h"
-#include "mb/pg_wchar.h"
+#include "catalog/pg_collation_d.h"
+#include "catalog/pg_type.h"
+#include "utils/mb/pg_wchar.h"
 #include "utils/builtins.h"
 #include "utils/date.h"
 #include "utils/datetime.h"
 #include "utils/formatting.h"
-// #include "utils/pg_locale.h"
+#include "utils/numeric.h"
+#include "utils/pg_locale.h"
 // #include "varatt.h"
 
-// #ifdef USE_ICU
-// #include <unicode/ustring.h>
-// #endif
+#ifdef USE_ICU
+#include <unicode/ustring.h>
+#endif
+
+// MEOS force the collation to DEFAULT_COLLATION_OID
+#define PG_GET_COLLATION()  DEFAULT_COLLATION_OID
 
 // #include "catalog/pg_collation.h"
 // #include "catalog/pg_type.h"
 // #include "common/int.h"
 // #include "common/unicode_case.h"
 // #include "common/unicode_category.h"
-// #include "mb/pg_wchar.h"
+// #include "utils/mb/pg_wchar.h"
 // #include "nodes/miscnodes.h"
 // #include "parser/scansup.h"
 // #include "utils/builtins.h"
@@ -1045,8 +1049,6 @@ typedef struct NUMProc
 #define OVERLOAD_TEST  (Np->inout_p >= Np->inout + input_len)
 #define AMOUNT_TEST(s)  (Np->inout_p <= Np->inout + (input_len - (s)))
 
-#if 0 /* NOT USED */
-
 /* ----------
  * Functions
  * ----------
@@ -1103,7 +1105,6 @@ static DCHCacheEntry *DCH_cache_fetch(const char *str, bool std);
 static NUMCacheEntry *NUM_cache_getnew(const char *str);
 static NUMCacheEntry *NUM_cache_search(const char *str);
 static NUMCacheEntry *NUM_cache_fetch(const char *str);
-
 
 /* ----------
  * Fast sequential search, use index for data selection which
@@ -1367,7 +1368,7 @@ NUMDesc_prepare(NUMDesc *num, FormatNode *n)
  */
 static void
 parse_format(FormatNode *node, const char *str, const KeyWord *kw,
-       const KeySuffix *suf, const int *index, uint32 flags, NUMDesc *Num)
+  const KeySuffix *suf, const int *index, uint32 flags, NUMDesc *Num)
 {
   FormatNode *n;
 
@@ -1554,7 +1555,6 @@ get_th(char *num, int type)
       return numth[3];
   }
 }
-
 /* ----------
  * Convert string-number to ordinal string-number
  * type --> 0 upper, 1 lower
@@ -1569,7 +1569,6 @@ str_numth(char *dest, char *num, int type)
   return dest;
 }
 
-#endif /* NOT USED */
 
 /*****************************************************************************
  *      upper/lower/initcap functions
@@ -1955,8 +1954,6 @@ asc_toupper_z(const char *buff)
 
 /* asc_initcap_z is not currently needed */
 
-#if 0 /* NOT USED */
-
 /* ----------
  * Skip TM / th in FROM_CHAR
  *
@@ -2206,7 +2203,7 @@ from_char_parse_int_len(int *dest, const char **src, const int len, FormatNode *
  */
 static int
 from_char_parse_int(int *dest, const char **src, FormatNode *node,
-          Node *escontext)
+  Node *escontext)
 {
   return from_char_parse_int_len(dest, src, node->key->len, node, escontext);
 }
@@ -3057,10 +3054,6 @@ DCH_to_char(FormatNode *node, bool is_interval, TmToChar *in, char *out, Oid col
  * 'collid' identifies the collation to use, if needed.
  * 'std' specifies standard parsing mode.
  *
- * If escontext points to an ErrorSaveContext, data errors will be reported
- * by filling that struct; the caller must test SOFT_ERROR_OCCURRED() to see
- * whether an error occurred.  Otherwise, errors are thrown.
- *
  * Note: we currently don't have any to_interval() function, so there
  * is no need here for INVALID_FOR_INTERVAL checks.
  */
@@ -3502,7 +3495,7 @@ DCH_from_char(FormatNode *node, const char *in, TmFromChar *out,
           matched = sscanf(s, "%d,%03d%n", &millennia, &years, &nch);
           if (matched < 2)
           {
-            elog(ERROR, "invalid value \"%s\" for \"%s\"", s, "Y,YYY")));
+            elog(ERROR, "invalid value \"%s\" for \"%s\"", s, "Y,YYY");
             return; // TODO
           }
 
@@ -3774,7 +3767,7 @@ DCH_cache_getnew(const char *str, bool std)
   {
     Assert(DCHCache[n_DCHCache] == NULL);
     DCHCache[n_DCHCache] = ent = (DCHCacheEntry *)
-      MemoryContextAllocZero(TopMemoryContext, sizeof(DCHCacheEntry));
+      palloc0(sizeof(DCHCacheEntry));
     ent->valid = false;
     strlcpy(ent->str, str, DCH_CACHE_SIZE + 1);
     ent->std = std;
@@ -3838,8 +3831,7 @@ static text *
 datetime_to_char_body(TmToChar *tmtc, text *fmt, bool is_interval, Oid collid)
 {
   FormatNode *format;
-  char     *fmt_str,
-         *result;
+  char *fmt_str, *res;
   bool    incache;
   int      fmt_len;
   text     *result;
@@ -3853,8 +3845,8 @@ datetime_to_char_body(TmToChar *tmtc, text *fmt, bool is_interval, Oid collid)
   /*
    * Allocate workspace for result as C string
    */
-  result = palloc((fmt_len * DCH_MAX_ITEM_SIZ) + 1);
-  *result = '\0';
+  res = palloc((fmt_len * DCH_MAX_ITEM_SIZ) + 1);
+  *res = '\0';
 
   if (fmt_len > DCH_CACHE_SIZE)
   {
@@ -3881,7 +3873,7 @@ datetime_to_char_body(TmToChar *tmtc, text *fmt, bool is_interval, Oid collid)
   }
 
   /* The real work is here */
-  DCH_to_char(format, is_interval, tmtc, result, collid);
+  DCH_to_char(format, is_interval, tmtc, res, collid);
 
   if (!incache)
     pfree(format);
@@ -3889,9 +3881,8 @@ datetime_to_char_body(TmToChar *tmtc, text *fmt, bool is_interval, Oid collid)
   pfree(fmt_str);
 
   /* convert C-string result to TEXT format */
-  result = cstring_to_text(result);
-
-  pfree(result);
+  result = cstring_to_text(res);
+  pfree(res);
   return result;
 }
 
@@ -3984,7 +3975,7 @@ timestamptz_to_char(TimestampTz dt, text *fmt)
  * @note Derived from PostgreSQL function @p interval_to_char()
  */
 text *
-interval_to_char(Interval *i, text *fmt)
+interval_to_char(Interval *it, text *fmt)
 {
   text *result;
   TmToChar  tmtc;
@@ -4104,15 +4095,10 @@ to_date(text *date_txt, text *fmt, Oid collid)
  *
  * When a timezone component is present, the corresponding offset is
  * returned in '*tz'.
- *
- * If escontext points to an ErrorSaveContext, data errors will be reported
- * by filling that struct; the caller must test SOFT_ERROR_OCCURRED() to see
- * whether an error occurred.  Otherwise, errors are thrown.
  */
 Datum
 parse_datetime(text *date_txt, text *fmt, Oid collid, bool strict,
-         Oid *typid, int32 *typmod, int *tz,
-         Node *escontext)
+  Oid *typid, int32 *typmod, int *tz, Node *escontext)
 {
   struct pg_tm tm;
   struct fmt_tz ftz;
@@ -4155,7 +4141,7 @@ parse_datetime(text *date_txt, text *fmt, Oid collid, bool strict,
         if (tm2timestamp(&tm, fsec, tz, &result) != 0)
         {
           elog(ERROR, "timestamptz out of range");
-          return (Datum) 0
+          return (Datum) 0;
         }
 
         AdjustTimestampForTypmod(&result, *typmod, escontext);
@@ -4170,7 +4156,7 @@ parse_datetime(text *date_txt, text *fmt, Oid collid, bool strict,
         if (tm2timestamp(&tm, fsec, NULL, &result) != 0)
         {
           elog(ERROR, "timestamp out of range");
-          return (Datum) 0
+          return (Datum) 0;
         }
 
         AdjustTimestampForTypmod(&result, *typmod, escontext);
@@ -4184,7 +4170,7 @@ parse_datetime(text *date_txt, text *fmt, Oid collid, bool strict,
       if (flags & DCH_ZONED)
       {
         elog(ERROR, "datetime format is zoned but not timed");
-        return (Datum) 0
+        return (Datum) 0;
       }
       else
       {
@@ -4194,7 +4180,7 @@ parse_datetime(text *date_txt, text *fmt, Oid collid, bool strict,
         if (!IS_VALID_JULIAN(tm.tm_year, tm.tm_mon, tm.tm_mday))
         {
           elog(ERROR, "date out of range: \"%s\"", text_to_cstring(date_txt));
-          return (Datum) 0
+          return (Datum) 0;
         }
 
         result = date2j(tm.tm_year, tm.tm_mon, tm.tm_mday) -
@@ -4204,7 +4190,7 @@ parse_datetime(text *date_txt, text *fmt, Oid collid, bool strict,
         if (!IS_VALID_DATE(result))
         {
           elog(ERROR, "date out of range: \"%s\"", text_to_cstring(date_txt));
-          return (Datum) 0
+          return (Datum) 0;
         }
 
         *typid = DATEOID;
@@ -4232,13 +4218,13 @@ parse_datetime(text *date_txt, text *fmt, Oid collid, bool strict,
         Assert(!strict);
 
         elog(ERROR, "missing time zone in input string for type timetz");
-          return (Datum) 0
+          return (Datum) 0;
       }
 
       if (tm2timetz(&tm, fsec, *tz, result) != 0)
       {
         elog(ERROR, "timetz out of range");
-        return (Datum) 0
+        return (Datum) 0;
       }
 
       AdjustTimeForTypmod(&result->time, *typmod);
@@ -4248,12 +4234,11 @@ parse_datetime(text *date_txt, text *fmt, Oid collid, bool strict,
     }
     else
     {
-      TimeADT    result;
-
+      TimeADT result;
       if (tm2time(&tm, fsec, &result) != 0)
       {
         elog(ERROR, "time out of range");
-        return (Datum) 0
+        return (Datum) 0;
       }
 
       AdjustTimeForTypmod(&result, *typmod);
@@ -4265,7 +4250,7 @@ parse_datetime(text *date_txt, text *fmt, Oid collid, bool strict,
   else
   {
     elog(ERROR, "datetime format is not dated and not timed");
-    return (Datum) 0
+    return (Datum) 0;
   }
 }
 
@@ -4338,20 +4323,19 @@ datetime_format_has_tz(const char *fmt_str)
  */
 static bool
 do_to_timestamp(text *date_txt, text *fmt, Oid collid, bool std,
-        struct pg_tm *tm, fsec_t *fsec, struct fmt_tz *tz,
-        int *fprec, uint32 *flags, Node *escontext)
+  struct pg_tm *tm, fsec_t *fsec, struct fmt_tz *tz, int *fprec, uint32 *flags,
+  Node *escontext)
 {
   FormatNode *format = NULL;
-  TmFromChar  tmfc;
-  int      fmt_len;
-  char     *date_str;
-  int      fmask;
-  bool    incache = false;
+  TmFromChar tmfc;
+  int fmt_len;
+  int fmask;
+  bool incache = false;
 
   Assert(tm != NULL);
   Assert(fsec != NULL);
 
-  date_str = text_to_cstring(date_txt);
+  char *date_str = text_to_cstring(date_txt);
 
   ZERO_tmfc(&tmfc);
   ZERO_tm(tm);
@@ -4367,10 +4351,8 @@ do_to_timestamp(text *date_txt, text *fmt, Oid collid, bool std,
 
   if (fmt_len)
   {
-    char     *fmt_str;
-
+    char *fmt_str;
     fmt_str = text_to_cstring(fmt);
-
     if (fmt_len > DCH_CACHE_SIZE)
     {
       /*
@@ -4388,15 +4370,12 @@ do_to_timestamp(text *date_txt, text *fmt, Oid collid, bool std,
        * Use cache buffers
        */
       DCHCacheEntry *ent = DCH_cache_fetch(fmt_str, std);
-
       incache = true;
       format = ent->format;
     }
 
     DCH_from_char(format, date_str, &tmfc, collid, std, escontext);
     pfree(fmt_str);
-    if (SOFT_ERROR_OCCURRED(escontext))
-      goto fail;
 
     if (flags)
       *flags = DCH_datetime_type(format);
@@ -4408,15 +4387,12 @@ do_to_timestamp(text *date_txt, text *fmt, Oid collid, bool std,
     }
   }
 
-  DEBUG_TMFC(&tmfc);
-
   /*
    * Convert to_date/to_timestamp input fields to standard 'tm'
    */
   if (tmfc.ssss)
   {
-    int      x = tmfc.ssss;
-
+    int x = tmfc.ssss;
     tm->tm_hour = x / SECS_PER_HOUR;
     x %= SECS_PER_HOUR;
     tm->tm_min = x / SECS_PER_MINUTE;
@@ -4435,10 +4411,7 @@ do_to_timestamp(text *date_txt, text *fmt, Oid collid, bool std,
   {
     if (tm->tm_hour < 1 || tm->tm_hour > HOURS_PER_DAY / 2)
     {
-      errsave(escontext,
-          (errcode(ERRCODE_INVALID_DATETIME_FORMAT),
-          ("hour \"%d\" is invalid for the 12-hour clock",
-              tm->tm_hour);
+      elog(ERROR, "hour \"%d\" is invalid for the 12-hour clock", tm->tm_hour);
       goto fail;
     }
 
@@ -4473,8 +4446,7 @@ do_to_timestamp(text *date_txt, text *fmt, Oid collid, bool std,
             pg_add_s32_overflow(tm->tm_year, tmp, &tm->tm_year))
           {
             DateTimeParseError(DTERR_FIELD_OVERFLOW, NULL,
-                       text_to_cstring(date_txt), "timestamp",
-                       escontext);
+              text_to_cstring(date_txt), "timestamp", escontext);
             goto fail;
           }
         }
@@ -4487,8 +4459,7 @@ do_to_timestamp(text *date_txt, text *fmt, Oid collid, bool std,
             pg_add_s32_overflow(tmp, 1, &tm->tm_year))
           {
             DateTimeParseError(DTERR_FIELD_OVERFLOW, NULL,
-                       text_to_cstring(date_txt), "timestamp",
-                       escontext);
+              text_to_cstring(date_txt), "timestamp", escontext);
             goto fail;
           }
         }
@@ -4524,8 +4495,7 @@ do_to_timestamp(text *date_txt, text *fmt, Oid collid, bool std,
         pg_add_s32_overflow(tm->tm_year, 1, &tm->tm_year))
       {
         DateTimeParseError(DTERR_FIELD_OVERFLOW, NULL,
-                   text_to_cstring(date_txt), "timestamp",
-                   escontext);
+          text_to_cstring(date_txt), "timestamp", escontext);
         goto fail;
       }
     }
@@ -4537,8 +4507,7 @@ do_to_timestamp(text *date_txt, text *fmt, Oid collid, bool std,
         pg_add_s32_overflow(tm->tm_year, 1, &tm->tm_year))
       {
         DateTimeParseError(DTERR_FIELD_OVERFLOW, NULL,
-                   text_to_cstring(date_txt), "timestamp",
-                   escontext);
+          text_to_cstring(date_txt), "timestamp", escontext);
         goto fail;
       }
     }
@@ -4572,8 +4541,8 @@ do_to_timestamp(text *date_txt, text *fmt, Oid collid, bool std,
         pg_mul_s32_overflow(tmfc.ddd, 7, &tmfc.ddd) ||
         pg_add_s32_overflow(tmfc.ddd, 1, &tmfc.ddd))
       {
-        DateTimeParseError(DTERR_FIELD_OVERFLOW, NULL,
-                   date_str, "timestamp", escontext);
+        DateTimeParseError(DTERR_FIELD_OVERFLOW, NULL, date_str, "timestamp",
+          escontext);
         goto fail;
       }
     }
@@ -4586,8 +4555,8 @@ do_to_timestamp(text *date_txt, text *fmt, Oid collid, bool std,
       pg_mul_s32_overflow(tmfc.dd, 7, &tmfc.dd) ||
       pg_add_s32_overflow(tmfc.dd, 1, &tmfc.dd))
     {
-      DateTimeParseError(DTERR_FIELD_OVERFLOW, NULL,
-                 date_str, "timestamp", escontext);
+      DateTimeParseError(DTERR_FIELD_OVERFLOW, NULL, date_str, "timestamp",
+        escontext);
       goto fail;
     }
   }
@@ -4613,9 +4582,7 @@ do_to_timestamp(text *date_txt, text *fmt, Oid collid, bool std,
 
     if (!tm->tm_year && !tmfc.bc)
     {
-      errsave(escontext,
-          (errcode(ERRCODE_INVALID_DATETIME_FORMAT),
-          ("cannot calculate day of year without year information")));
+      elog(ERROR, "cannot calculate day of year without year information");
       goto fail;
     }
 
@@ -4662,8 +4629,8 @@ do_to_timestamp(text *date_txt, text *fmt, Oid collid, bool std,
     if (pg_mul_s32_overflow(tmfc.ms, 1000, &tmp) ||
       pg_add_s32_overflow(*fsec, tmp, fsec))
     {
-      DateTimeParseError(DTERR_FIELD_OVERFLOW, NULL,
-                 date_str, "timestamp", escontext);
+      DateTimeParseError(DTERR_FIELD_OVERFLOW, NULL, date_str, "timestamp",
+        escontext);
       goto fail;
     }
   }
@@ -4685,8 +4652,8 @@ do_to_timestamp(text *date_txt, text *fmt, Oid collid, bool std,
        * said DTERR_MD_FIELD_OVERFLOW, because we don't want to print an
        * irrelevant hint about datestyle.
        */
-      DateTimeParseError(DTERR_FIELD_OVERFLOW, NULL,
-                 date_str, "timestamp", escontext);
+      DateTimeParseError(DTERR_FIELD_OVERFLOW, NULL, date_str, "timestamp",
+        escontext);
       goto fail;
     }
   }
@@ -4697,8 +4664,8 @@ do_to_timestamp(text *date_txt, text *fmt, Oid collid, bool std,
     tm->tm_sec < 0 || tm->tm_sec >= SECS_PER_MINUTE ||
     *fsec < INT64CONST(0) || *fsec >= USECS_PER_SEC)
   {
-    DateTimeParseError(DTERR_FIELD_OVERFLOW, NULL,
-               date_str, "timestamp", escontext);
+    DateTimeParseError(DTERR_FIELD_OVERFLOW, NULL, date_str, "timestamp",
+      escontext);
     goto fail;
   }
 
@@ -4713,8 +4680,8 @@ do_to_timestamp(text *date_txt, text *fmt, Oid collid, bool std,
     if (tmfc.tzh < 0 || tmfc.tzh > MAX_TZDISP_HOUR ||
       tmfc.tzm < 0 || tmfc.tzm >= MINS_PER_HOUR)
     {
-      DateTimeParseError(DTERR_TZDISP_OVERFLOW, NULL,
-                 date_str, "timestamp", escontext);
+      DateTimeParseError(DTERR_TZDISP_OVERFLOW, NULL, date_str, "timestamp",
+        escontext);
       goto fail;
     }
 
@@ -4736,12 +4703,9 @@ do_to_timestamp(text *date_txt, text *fmt, Oid collid, bool std,
     else
     {
       /* dynamic-offset abbreviation, resolve using specified time */
-      tz->gmtoffset = DetermineTimeZoneAbbrevOffset(tm, tmfc.abbrev,
-                              tmfc.tzp);
+      tz->gmtoffset = DetermineTimeZoneAbbrevOffset(tm, tmfc.abbrev, tmfc.tzp);
     }
   }
-
-  DEBUG_TM(tm);
 
   if (format && !incache)
     pfree(format);
@@ -4757,11 +4721,9 @@ fail:
   return false;
 }
 
-
 /**********************************************************************
  *  the NUMBER version part
  *********************************************************************/
-
 
 static char *
 fill_str(char *str, int c, int max)
@@ -4836,7 +4798,7 @@ NUM_cache_getnew(const char *str)
   {
     Assert(NUMCache[n_NUMCache] == NULL);
     NUMCache[n_NUMCache] = ent = (NUMCacheEntry *)
-      MemoryContextAllocZero(TopMemoryContext, sizeof(NUMCacheEntry));
+      palloc0(sizeof(NUMCacheEntry));
     ent->valid = false;
     strlcpy(ent->str, str, NUM_CACHE_SIZE + 1);
     ent->age = (++NUMCounter);
@@ -4948,7 +4910,6 @@ NUM_cache(int len, NUMDesc *Num, text *pars_str, bool *shouldFree)
   return format;
 }
 
-
 /*
  * Convert integer to Roman numerals
  * Result is upper-case and not blank-padded (NUM_processor converts as needed)
@@ -4957,11 +4918,8 @@ NUM_cache(int len, NUMDesc *Num, text *pars_str, bool *shouldFree)
 static char *
 int_to_roman(int number)
 {
-  int      len,
-        num;
-  char     *p,
-         *result,
-        numstr[12];
+  int len, num;
+  char *p, *result, numstr[12];
 
   result = (char *) palloc(MAX_ROMAN_LEN + 1);
   *result = '\0';
@@ -5158,7 +5116,6 @@ roman_to_int(NUMProc *Np, int input_len)
 
   return result;
 }
-
 
 /* ----------
  * Locale
@@ -5639,9 +5596,9 @@ NUM_eat_non_data_chars(NUMProc *Np, int n, int input_len)
 }
 
 static char *
-NUM_processor(FormatNode *node, NUMDesc *Num, char *inout,
-        char *number, int input_len, int to_char_out_pre_spaces,
-        int sign, bool is_to_char, Oid collid)
+NUM_processor(FormatNode *node, NUMDesc *Num, char *inout, char *number,
+  int input_len, int to_char_out_pre_spaces, int sign, bool is_to_char,
+  Oid collid)
 {
   FormatNode *n;
   NUMProc    _Np,
@@ -6086,7 +6043,7 @@ NUM_processor(FormatNode *node, NUMDesc *Num, char *inout,
 do { \
   int len = VARSIZE_ANY_EXHDR(fmt); \
   if (len <= 0 || len >= (INT_MAX-VARHDRSZ)/NUM_MAX_ITEM_SIZ)    \
-    return cstring_to_text("")); \
+    return cstring_to_text(""); \
   result  = (text *) palloc0((len * NUM_MAX_ITEM_SIZ) + 1 + VARHDRSZ);  \
   format  = NUM_cache(len, &Num, fmt, &shouldFree);    \
 } while (0)
@@ -6118,29 +6075,28 @@ do { \
  * @brief Convert a string to a numeric
  * @note Derived from PostgreSQL function @p numeric_to_number()
  */
-Datum
-numeric_to_number(text *value, text *fmt)
+Numeric
+pg_numeric_to_number(text *value, text *fmt)
 {
-  NUMDesc    Num;
-  Datum    result;
+  NUMDesc Num;
+  Datum result;
   FormatNode *format;
-  char     *numstr;
-  bool    shouldFree;
-  int      len = 0;
-  int      scale,
-        precision;
+  char *numstr;
+  bool shouldFree;
+  int len = 0;
+  int scale, precision;
 
   len = VARSIZE_ANY_EXHDR(fmt);
 
   if (len <= 0 || len >= INT_MAX / NUM_MAX_ITEM_SIZ)
-    PG_RETURN_NULL();
+    return NULL;
 
   format = NUM_cache(len, &Num, fmt, &shouldFree);
 
   numstr = (char *) palloc((len * NUM_MAX_ITEM_SIZ) + 1);
 
   NUM_processor(format, &Num, VARDATA_ANY(value), numstr,
-          VARSIZE_ANY_EXHDR(value), 0, 0, false, PG_GET_COLLATION());
+    VARSIZE_ANY_EXHDR(value), 0, 0, false, PG_GET_COLLATION());
 
   scale = Num.post;
   precision = Num.pre + Num.multi + scale;
@@ -6148,23 +6104,17 @@ numeric_to_number(text *value, text *fmt)
   if (shouldFree)
     pfree(format);
 
-  result = DirectFunctionCall3(numeric_in,
-                 CStringGetDatum(numstr),
-                 ObjectIdGetDatum(InvalidOid),
-                 Int32GetDatum(((precision << 16) | scale) + VARHDRSZ));
+  result = pg_numeric_in(numstr, InvalidOid,
+    ((precision << 16) | scale) + VARHDRSZ);
 
   if (IS_MULTI(&Num))
   {
-    Numeric    x;
-    Numeric    a = int64_to_numeric(10);
-    Numeric    b = int64_to_numeric(-Num.multi);
+    Numeric x;
+    Numeric a = int64_to_numeric(10);
+    Numeric b = int64_to_numeric(-Num.multi);
 
-    x = DatumGetNumeric(DirectFunctionCall2(numeric_power,
-                        NumericGetDatum(a),
-                        NumericGetDatum(b)));
-    result = DirectFunctionCall2(numeric_mul,
-                   result,
-                   NumericGetDatum(x));
+    x = numeric_pow(a, b);
+    result = pg_numeric_mul(result, x);
   }
 
   pfree(numstr);
@@ -6255,20 +6205,13 @@ numeric_to_char(Numeric value, text *fmt)
       Numeric    a = int64_to_numeric(10);
       Numeric    b = int64_to_numeric(Num.multi);
 
-      x = DatumGetNumeric(DirectFunctionCall2(numeric_power,
-                          NumericGetDatum(a),
-                          NumericGetDatum(b)));
-      val = DatumGetNumeric(DirectFunctionCall2(numeric_mul,
-                            NumericGetDatum(value),
-                            NumericGetDatum(x)));
+      x = numeric_pow(a, b);
+      val = pg_numeric_mul(value, x);
       Num.pre += Num.multi;
     }
 
-    x = DatumGetNumeric(DirectFunctionCall2(numeric_round,
-                        NumericGetDatum(val),
-                        Int32GetDatum(Num.post)));
-    orgnum = DatumGetCString(DirectFunctionCall1(numeric_out,
-                           NumericGetDatum(x)));
+    x = pg_numeric_round(val, Num.post);
+    orgnum = pg_numeric_out(x);
 
     if (*orgnum == '-')
     {
@@ -6347,14 +6290,13 @@ int4_to_char(int32 value, text *fmt)
 
     if (IS_MULTI(&Num))
     {
-      orgnum = DatumGetCString(DirectFunctionCall1(int4out,
-                             Int32GetDatum(value * ((int32) pow((double) 10, (double) Num.multi)))));
+      orgnum = int32_out(value * ((int32) pow((double) 10, 
+        (double) Num.multi)));
       Num.pre += Num.multi;
     }
     else
     {
-      orgnum = DatumGetCString(DirectFunctionCall1(int4out,
-                             Int32GetDatum(value)));
+      orgnum = int32_out(value);
     }
 
     if (*orgnum == '-')
@@ -6455,18 +6397,12 @@ int8_to_char(int64 value, text *fmt)
 
     if (IS_MULTI(&Num))
     {
-      double    multi = pow((double) 10, (double) Num.multi);
-
-      value = DatumGetInt64(DirectFunctionCall2(int8mul,
-                            Int64GetDatum(value),
-                            DirectFunctionCall1(dtoi8,
-                                      Float8GetDatum(multi))));
+      double multi = pow((double) 10, (double) Num.multi);
+      value = mul_int64_int64(value, float8_to_int64(multi));
       Num.pre += Num.multi;
     }
 
-    orgnum = DatumGetCString(DirectFunctionCall1(int8out,
-                           Int64GetDatum(value)));
-
+    orgnum = int64_out(value);
     if (*orgnum == '-')
     {
       sign = '-';
@@ -6728,7 +6664,5 @@ float8_to_char(float8 value, text *fmt)
   NUM_TOCHAR_finish;
   return result;
 }
-
-#endif /* NOT USED */
 
 /*****************************************************************************/

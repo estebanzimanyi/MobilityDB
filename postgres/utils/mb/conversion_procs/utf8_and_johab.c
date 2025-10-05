@@ -12,7 +12,7 @@
  */
 
 #include "postgres.h"
-#include "mb/pg_wchar.h"
+#include "utils/mb/pg_wchar.h"
 #include "../Unicode/johab_to_utf8.map"
 #include "../Unicode/utf8_to_johab.map"
 
@@ -30,17 +30,19 @@
  * ----------
  */
 int
-johab_to_utf8(unsigned char *src, unsigned char *dest, int len, bool noError)
+johab_to_utf8(int src_id, int dest_id, unsigned char *src, unsigned char *dest,
+  int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_JOHAB, PG_UTF8);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_JOHAB, PG_UTF8);
   return LocalToUtf(src, len, dest, &johab_to_unicode_tree, NULL, 0, NULL,
     PG_JOHAB,  noError);
 }
 
 int
-utf8_to_johab(unsigned char *src, unsigned char *dest, int len, bool noError)
+utf8_to_johab(int src_id, int dest_id, unsigned char *src, unsigned char *dest,
+  int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_UTF8, PG_JOHAB);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_UTF8, PG_JOHAB);
   return UtfToLocal(src, len, dest, &johab_from_unicode_tree, NULL, 0,  NULL,
     PG_JOHAB, noError);
 }

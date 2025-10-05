@@ -18,19 +18,21 @@
 #include <ctype.h>
 
 #include "catalog/pg_type.h"
-#include "mb/pg_wchar.h"
+#include "utils/mb/pg_wchar.h"
 #include "utils/builtins.h"
 #include "utils/numeric.h"
 
 // #include "access/htup_details.h"
 // #include "catalog/namespace.h"
 // #include "catalog/pg_type.h"
-// #include "mb/pg_wchar.h"
+// #include "utils/mb/pg_wchar.h"
 // #include "utils/builtins.h"
 // #include "utils/fmgroids.h"
 // #include "utils/lsyscache.h"
 // #include "utils/numeric.h"
 // #include "utils/syscache.h"
+
+#if 0 /* NOT USED */
 
 static char *printTypmod(const char *typname, int32 typmod, Oid typmodout);
 
@@ -67,8 +69,6 @@ format_type(Oid type_oid, int32 typemod)
   char *result = format_type_extended(type_oid, typemod, flags);
   return cstring_to_text(result);
 }
-
-#if 0 /* NOT USED */
 
 /*
  * format_type_extended
@@ -330,8 +330,6 @@ format_type_extended(Oid type_oid, int32 typemod, bits16 flags)
   return buf;
 }
 
-#endif /* NOT USED */
-
 /*
  * This version is for use within the backend in error messages, etc.
  * One difference is that it will fail for an invalid type.
@@ -363,35 +361,30 @@ format_type_be(Oid type_oid)
   // return format_type_extended(type_oid, typemod, FORMAT_TYPE_TYPEMOD_GIVEN);
 // }
 
-#if 0 /* NOT USED */
-
 /*
  * Add typmod decoration to the basic type name
  */
 static char *
 printTypmod(const char *typname, int32 typmod, Oid typmodout)
 {
-  char     *res;
-
   /* Shouldn't be called if typmod is -1 */
   Assert(typmod >= 0);
 
+  char *result;
   if (typmodout == InvalidOid)
   {
     /* Default behavior: just print the integer typmod with parens */
-    res = psprintf("%s(%d)", typname, (int) typmod);
+    result = psprintf("%s(%d)", typname, (int) typmod);
   }
   else
   {
     /* Use the type-specific typmodout procedure */
-    char     *tmstr;
-
-    tmstr = DatumGetCString(OidFunctionCall1(typmodout,
-                         Int32GetDatum(typmod)));
-    res = psprintf("%s%s", typname, tmstr);
+    char *tmstr = DatumGetCString(OidFunctionCall1(typmodout,
+      Int32GetDatum(typmod)));
+    result = psprintf("%s%s", typname, tmstr);
   }
 
-  return res;
+  return result;
 }
 
 
@@ -440,31 +433,25 @@ type_maximum_size(Oid type_oid, int32 typemod)
   return -1;
 }
 
-
 /*
  * oidvectortypes      - converts a vector of type OIDs to "typname" list
  */
-Datum
-oidvectortypes(PG_FUNCTION_ARGS)
+text *
+oidvectortypes(oidvector *oidArray)
 {
-  oidvector  *oidArray = (oidvector *) PG_GETARG_POINTER(0);
-  char     *result;
-  int      numargs = oidArray->dim1;
-  int      num;
-  size_t    total;
-  size_t    left;
+  char *result;
+  int numargs = oidArray->dim1;
 
-  total = 20 * numargs + 1;
+  size_t total = 20 * numargs + 1;
   result = palloc(total);
   result[0] = '\0';
-  left = total - 1;
+  size_t left = total - 1;
 
-  for (num = 0; num < numargs; num++)
+  for (int num = 0; num < numargs; num++)
   {
-    char     *typename = format_type_extended(oidArray->values[num], -1,
-                          FORMAT_TYPE_ALLOW_INVALID);
-    size_t    slen = strlen(typename);
-
+    char *typename = format_type_extended(oidArray->values[num], -1,
+      FORMAT_TYPE_ALLOW_INVALID);
+    size_t slen = strlen(typename);
     if (left < (slen + 2))
     {
       total += slen + 2;
@@ -481,7 +468,7 @@ oidvectortypes(PG_FUNCTION_ARGS)
     left -= slen;
   }
 
-  PG_RETURN_TEXT_P(cstring_to_text(result));
+  return cstring_to_text(result);
 }
 
 #endif /* NOT USED */

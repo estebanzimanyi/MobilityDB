@@ -16,7 +16,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "pg_wchar.h"
+#include "utils/mb/pg_wchar.h"
 
 
 /* ----------

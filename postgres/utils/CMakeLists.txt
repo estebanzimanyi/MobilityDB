@@ -1,3 +1,6 @@
+
+add_subdirectory("mb")
+
 set(UTILS_SRCS
   bool.c
   int.c
@@ -7,11 +10,13 @@ set(UTILS_SRCS
   float.c
   # format_type.c
   formatting.c
-  mbutils.c
   numeric.c
   numutils.c
   pg_error.c
-  # pg_locale.c
+  pg_locale.c
+  pg_locale_builtin.c
+  pg_locale_libc.c
+  pg_locale_icu.c
   timestamp.c
   varlena.c
   )
@@ -27,6 +32,3 @@ if(${POSTGRESQL_VERSION_NUMBER} GREATER_EQUAL 160000)
 endif()
 
 add_library(utils OBJECT ${UTILS_SRCS})
-
-set_property(TARGET utils PROPERTY C_VISIBILITY_PRESET hidden)
-set_property(TARGET utils PROPERTY POSITION_INDEPENDENT_CODE ON)

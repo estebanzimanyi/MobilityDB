@@ -12,7 +12,7 @@
  */
 
 #include "postgres.h"
-#include "mb/pg_wchar.h"
+#include "utils/mb/pg_wchar.h"
 
 /* ----------
  * conv_proc(
@@ -28,18 +28,16 @@
  * ----------
  */
 
-Datum
-iso8859_1_to_utf8(unsigned char *src, unsigned char *dest, int len,
-  bool noError)
+int
+iso8859_1_to_utf8(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
+  check_encoding_conversion_args(src_id, dest_id, len, PG_LATIN1, PG_UTF8);
+
   unsigned char *start = src;
-  unsigned short c;
-
-  CHECK_ENCODING_CONVERSION_ARGS(PG_LATIN1, PG_UTF8);
-
   while (len > 0)
   {
-    c = *src;
+    unsigned short c = *src;
     if (c == 0)
     {
       if (noError)
@@ -60,17 +58,15 @@ iso8859_1_to_utf8(unsigned char *src, unsigned char *dest, int len,
   return (src - start);
 }
 
-Datum
-utf8_to_iso8859_1(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+utf8_to_iso8859_1(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
+  check_encoding_conversion_args(src_id, dest_id, len, PG_UTF8, PG_LATIN1);
   unsigned char *start = src;
-  unsigned short c, c1;
-
-  CHECK_ENCODING_CONVERSION_ARGS(PG_UTF8, PG_LATIN1);
-
   while (len > 0)
   {
-    c = *src;
+    unsigned short c = *src;
     if (c == 0)
     {
       if (noError)
@@ -99,7 +95,7 @@ utf8_to_iso8859_1(unsigned char *src, unsigned char *dest, int len, bool noError
           break;
         report_untranslatable_char(PG_UTF8, PG_LATIN1, (const char *) src, len);
       }
-      c1 = src[1] & 0x3f;
+      unsigned short c1 = src[1] & 0x3f;
       c = ((c & 0x1f) << 6) | c1;
       if (c >= 0x80 && c <= 0xff)
       {

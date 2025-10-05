@@ -2347,13 +2347,13 @@ timestamp_overlaps(Timestamp ts1, Timestamp te1, Timestamp ts2, Timestamp te2)
   /*
    * We can consider three cases: ts1 > ts2, ts1 < ts2, ts1 = ts2
    */
-  if (pg_timestamp_gt(ts1, ts2))
+  if (gt_timestamp_timestamp(ts1, ts2))
   {
     /*
      * This case is ts1 < te2 OR te1 < te2, which may look redundant but
      * in the presence of nulls it's not quite completely so.
      */
-    if (pg_timestamp_lt(ts1, te2))
+    if (lt_timestamp_timestamp(ts1, te2))
       return (true);
 
     /*
@@ -2361,10 +2361,10 @@ timestamp_overlaps(Timestamp ts1, Timestamp te1, Timestamp ts2, Timestamp te2)
      */
     return (false);
   }
-  else if (pg_timestamp_lt(ts1, ts2))
+  else if (lt_timestamp_timestamp(ts1, ts2))
   {
     /* This case is ts2 < te1 OR te2 < te1 */
-    if (pg_timestamp_lt(ts2, te1))
+    if (lt_timestamp_timestamp(ts2, te1))
       return (true);
 
     /*
@@ -2543,7 +2543,7 @@ minus_timestamptz_timestamptz(TimestampTz ts1, TimestampTz ts2)
  * @note Derived from PostgreSQL function @p interval_justify_interval()
  */
 Interval *
-justify_interval_interval(const Interval *interv)
+pg_interval_justify_interval(const Interval *interv)
 {
   Interval   *result;
   TimeOffset  wholeday;
@@ -2625,7 +2625,7 @@ justify_interval_interval(const Interval *interv)
  * @note Derived from PostgreSQL function @p interval_justify_hours()
  */
 Interval *
-justify_interval_hours(const Interval *interv)
+pg_interval_justify_hours(const Interval *interv)
 {
   Interval   *result;
   TimeOffset  wholeday;
@@ -2668,7 +2668,7 @@ justify_interval_hours(const Interval *interv)
  * @note Derived from PostgreSQL function @p interval_justify_days()
  */
 Interval *
-justify_interval_days(const Interval *interv)
+pg_interval_justify_days(const Interval *interv)
 {
   Interval   *result;
   int32    wholemonth;

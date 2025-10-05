@@ -14,7 +14,7 @@
 #ifndef UNICODE_CATEGORY_H
 #define UNICODE_CATEGORY_H
 
-#include "mb/pg_wchar.h"
+#include "utils/mb/pg_wchar.h"
 
 /*
  * Unicode General Category Values

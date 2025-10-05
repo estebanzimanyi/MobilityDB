@@ -12,7 +12,7 @@
  */
 
 #include "postgres.h"
-#include "mb/pg_wchar.h"
+#include "utils/mb/pg_wchar.h"
 #include "../Unicode/big5_to_utf8.map"
 #include "../Unicode/utf8_to_big5.map"
 
@@ -30,17 +30,19 @@
  * ----------
  */
 int
-big5_to_utf8(unsigned char *src, unsigned char *dest, int len, bool noError)
+big5_to_utf8(int src_id, int dest_id, unsigned char *src, unsigned char *dest,
+  int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_BIG5, PG_UTF8);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_BIG5, PG_UTF8);
   return LocalToUtf(src, len, dest, &big5_to_unicode_tree, NULL, 0, NULL,
     PG_BIG5, noError);
 }
 
 int
-utf8_to_big5(unsigned char *src, unsigned char *dest, int len, bool noError)
+utf8_to_big5(int src_id, int dest_id, unsigned char *src, unsigned char *dest,
+  int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_UTF8, PG_BIG5);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_UTF8, PG_BIG5);
   return UtfToLocal(src, len, dest, &big5_from_unicode_tree, NULL, 0, NULL,
     PG_BIG5, noError);
 }

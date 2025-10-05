@@ -14,7 +14,7 @@
 #ifndef UNICODE_NORM_H
 #define UNICODE_NORM_H
 
-#include "mb/pg_wchar.h"
+#include "utils/mb/pg_wchar.h"
 
 typedef enum
 {

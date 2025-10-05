@@ -12,7 +12,7 @@
  */
 
 #include "postgres.h"
-#include "mb/pg_wchar.h"
+#include "utils/mb/pg_wchar.h"
 
 /* ----------
  * conv_proc(
@@ -279,142 +279,162 @@ static const unsigned char win8662iso[] = {
 };
 
 
-Datum
-koi8r_to_mic(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+koi8r_to_mic(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_KOI8R, PG_MULE_INTERNAL);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_KOI8R, PG_MULE_INTERNAL);
   return latin2mic(src, dest, len, LC_KOI8_R, PG_KOI8R, noError);
 }
 
-Datum
-mic_to_koi8r(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+mic_to_koi8r(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_MULE_INTERNAL, PG_KOI8R);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_MULE_INTERNAL, PG_KOI8R);
   return mic2latin(src, dest, len, LC_KOI8_R, PG_KOI8R, noError);
 }
 
-Datum
-iso_to_mic(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+iso_to_mic(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_ISO_8859_5, PG_MULE_INTERNAL);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_ISO_8859_5, PG_MULE_INTERNAL);
   return latin2mic_with_table(src, dest, len, LC_KOI8_R, PG_ISO_8859_5, iso2koi, noError);
 }
 
-Datum
-mic_to_iso(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+mic_to_iso(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_MULE_INTERNAL, PG_ISO_8859_5);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_MULE_INTERNAL, PG_ISO_8859_5);
   return mic2latin_with_table(src, dest, len, LC_KOI8_R, PG_ISO_8859_5, koi2iso, noError);
 }
 
-Datum
-win1251_to_mic(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+win1251_to_mic(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_WIN1251, PG_MULE_INTERNAL);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_WIN1251, PG_MULE_INTERNAL);
   return latin2mic_with_table(src, dest, len, LC_KOI8_R, PG_WIN1251, win12512koi, noError);
 }
 
-Datum
-mic_to_win1251(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+mic_to_win1251(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_MULE_INTERNAL, PG_WIN1251);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_MULE_INTERNAL, PG_WIN1251);
   return mic2latin_with_table(src, dest, len, LC_KOI8_R, PG_WIN1251, koi2win1251, noError);
 }
 
-Datum
-win866_to_mic(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+win866_to_mic(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_WIN866, PG_MULE_INTERNAL);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_WIN866, PG_MULE_INTERNAL);
   return latin2mic_with_table(src, dest, len, LC_KOI8_R, PG_WIN866, win8662koi, noError);
 }
 
-Datum
-mic_to_win866(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+mic_to_win866(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest,  int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_MULE_INTERNAL, PG_WIN866);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_MULE_INTERNAL, PG_WIN866);
   return mic2latin_with_table(src, dest, len, LC_KOI8_R, PG_WIN866, koi2win866, noError);
 }
 
-Datum
-koi8r_to_win1251(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+koi8r_to_win1251(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_KOI8R, PG_WIN1251);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_KOI8R, PG_WIN1251);
   return local2local(src, dest, len, PG_KOI8R, PG_WIN1251, koi2win1251, noError);
 }
 
-Datum
-win1251_to_koi8r(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+win1251_to_koi8r(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_WIN1251, PG_KOI8R);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_WIN1251, PG_KOI8R);
   return local2local(src, dest, len, PG_WIN1251, PG_KOI8R, win12512koi, noError);
 }
 
-Datum
-koi8r_to_win866(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+koi8r_to_win866(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_KOI8R, PG_WIN866);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_KOI8R, PG_WIN866);
   return local2local(src, dest, len, PG_KOI8R, PG_WIN866, koi2win866, noError);
 }
 
-Datum
-win866_to_koi8r(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+win866_to_koi8r(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_WIN866, PG_KOI8R);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_WIN866, PG_KOI8R);
   return local2local(src, dest, len, PG_WIN866, PG_KOI8R, win8662koi, noError);
 }
 
-Datum
-win866_to_win1251(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+win866_to_win1251(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_WIN866, PG_WIN1251);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_WIN866, PG_WIN1251);
   return local2local(src, dest, len, PG_WIN866, PG_WIN1251, win8662win1251, noError);
 }
 
-Datum
-win1251_to_win866(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+win1251_to_win866(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_WIN1251, PG_WIN866);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_WIN1251, PG_WIN866);
   return local2local(src, dest, len, PG_WIN1251, PG_WIN866, win12512win866, noError);
 }
 
-Datum
-iso_to_koi8r(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+iso_to_koi8r(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_ISO_8859_5, PG_KOI8R);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_ISO_8859_5, PG_KOI8R);
   return local2local(src, dest, len, PG_ISO_8859_5, PG_KOI8R, iso2koi, noError);
 }
 
-Datum
-koi8r_to_iso(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+koi8r_to_iso(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_KOI8R, PG_ISO_8859_5);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_KOI8R, PG_ISO_8859_5);
   return local2local(src, dest, len, PG_KOI8R, PG_ISO_8859_5, koi2iso, noError);
 }
 
-Datum
-iso_to_win1251(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+iso_to_win1251(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_ISO_8859_5, PG_WIN1251);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_ISO_8859_5, PG_WIN1251);
   return local2local(src, dest, len, PG_ISO_8859_5, PG_WIN1251, iso2win1251, noError);
 }
 
-Datum
-win1251_to_iso(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+win1251_to_iso(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_WIN1251, PG_ISO_8859_5);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_WIN1251, PG_ISO_8859_5);
   return local2local(src, dest, len, PG_WIN1251, PG_ISO_8859_5, win12512iso, noError);
 }
 
-Datum
-iso_to_win866(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+iso_to_win866(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_ISO_8859_5, PG_WIN866);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_ISO_8859_5, PG_WIN866);
   return local2local(src, dest, len, PG_ISO_8859_5, PG_WIN866, iso2win866, noError);
 }
 
-Datum
-win866_to_iso(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+win866_to_iso(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_WIN866, PG_ISO_8859_5);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_WIN866, PG_ISO_8859_5);
   return local2local(src, dest, len, PG_WIN866, PG_ISO_8859_5, win8662iso, noError);
 }

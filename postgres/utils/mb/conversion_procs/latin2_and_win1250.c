@@ -12,7 +12,7 @@
  */
 
 #include "postgres.h"
-#include "mb/pg_wchar.h"
+#include "utils/mb/pg_wchar.h"
 
 /* ----------
  * conv_proc(
@@ -69,48 +69,54 @@ static const unsigned char iso88592_2_win1250[] = {
 };
 
 
-Datum
-latin2_to_mic(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+latin2_to_mic(int src_id, int dest_id, unsigned char *src, unsigned char *dest,
+  int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_LATIN2, PG_MULE_INTERNAL);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_LATIN2, PG_MULE_INTERNAL);
   return latin2mic(src, dest, len, LC_ISO8859_2, PG_LATIN2, noError);
 }
 
-Datum
-mic_to_latin2(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+mic_to_latin2(int src_id, int dest_id, unsigned char *src, unsigned char *dest,
+  int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_MULE_INTERNAL, PG_LATIN2);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_MULE_INTERNAL, PG_LATIN2);
   return mic2latin(src, dest, len, LC_ISO8859_2, PG_LATIN2, noError);
 }
 
-Datum
-win1250_to_mic(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+win1250_to_mic(int src_id, int dest_id, unsigned char *src, unsigned char *dest,
+  int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_WIN1250, PG_MULE_INTERNAL);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_WIN1250, PG_MULE_INTERNAL);
   return latin2mic_with_table(src, dest, len, LC_ISO8859_2, PG_WIN1250,
     win1250_2_iso88592, noError);
 }
 
-Datum
-mic_to_win1250(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+mic_to_win1250(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_MULE_INTERNAL, PG_WIN1250);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_MULE_INTERNAL, PG_WIN1250);
   return mic2latin_with_table(src, dest, len, LC_ISO8859_2, PG_WIN1250,
     iso88592_2_win1250, noError);
 }
 
-Datum
-latin2_to_win1250(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+latin2_to_win1250(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_LATIN2, PG_WIN1250);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_LATIN2, PG_WIN1250);
   return local2local(src, dest, len, PG_LATIN2, PG_WIN1250,
     iso88592_2_win1250, noError);
 }
 
-Datum
-win1250_to_latin2(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+win1250_to_latin2(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_WIN1250, PG_LATIN2);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_WIN1250, PG_LATIN2);
   return local2local(src, dest, len, PG_WIN1250, PG_LATIN2,
     win1250_2_iso88592, noError);
 }

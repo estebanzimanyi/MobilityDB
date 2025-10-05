@@ -12,7 +12,7 @@
  */
 
 #include "postgres.h"
-#include "mb/pg_wchar.h"
+#include "utils/mb/pg_wchar.h"
 #include "../Unicode/uhc_to_utf8.map"
 #include "../Unicode/utf8_to_uhc.map"
 
@@ -29,18 +29,20 @@
  * Returns the number of bytes successfully converted.
  * ----------
  */
-Datum
-uhc_to_utf8(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+uhc_to_utf8(int src_id, int dest_id, unsigned char *src, unsigned char *dest,
+  int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_UHC, PG_UTF8);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_UHC, PG_UTF8);
   return LocalToUtf(src, len, dest, &uhc_to_unicode_tree, NULL, 0, NULL,
     PG_UHC, noError);
 }
 
-Datum
-utf8_to_uhc(unsigned char *src, unsigned char *dest, int len, bool noError)
+int
+utf8_to_uhc(int src_id, int dest_id, unsigned char *src, unsigned char *dest,
+  int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_UTF8, PG_UHC);
+  check_encoding_conversion_args(src_id, dest_id, len, PG_UTF8, PG_UHC);
   return UtfToLocal(src, len, dest, &uhc_from_unicode_tree, NULL, 0, NULL,
     PG_UHC, noError);
 }

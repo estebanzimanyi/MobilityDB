@@ -12,7 +12,7 @@
  */
 
 #include "postgres.h"
-#include "mb/pg_wchar.h"
+#include "utils/mb/pg_wchar.h"
 #include "../Unicode/iso8859_10_to_utf8.map"
 #include "../Unicode/iso8859_13_to_utf8.map"
 #include "../Unicode/iso8859_14_to_utf8.map"
@@ -90,40 +90,40 @@ static const pg_conv_map maps[] = {
   &iso8859_8_from_unicode_tree},  /* ISO-8859-8 */
 };
 
-Datum
-iso8859_to_utf8(int encoding, unsigned char *src, unsigned char *dest, int len,
-  bool noError)
+int
+iso8859_to_utf8(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(-1, PG_UTF8);
-  for (int i = 0; i < lengthof(maps); i++)
+  check_encoding_conversion_args(src_id, dest_id, len, -1, PG_UTF8);
+  for (int i = 0; i < (int) lengthof(maps); i++)
   {
-    if (encoding == maps[i].encoding)
+    if (src_id == (int) maps[i].encoding)
     {
       return LocalToUtf(src, len, dest, maps[i].map1, NULL, 0, NULL,
-        encoding, noError);
+        src_id, noError);
     }
   }
 
   elog(ERROR, "unexpected encoding ID %d for ISO 8859 character sets",
-    encoding);
+    src_id);
   return 0;
 }
 
-Datum
-utf8_to_iso8859(int encoding, unsigned char *src, unsigned char *dest, int len,
-  bool noError)
+int
+utf8_to_iso8859(int src_id, int dest_id, unsigned char *src,
+  unsigned char *dest, int len, bool noError)
 {
-  CHECK_ENCODING_CONVERSION_ARGS(PG_UTF8, -1);
-  for (int i = 0; i < lengthof(maps); i++)
+  check_encoding_conversion_args(src_id, dest_id, len, PG_UTF8, -1);
+  for (int i = 0; i < (int) lengthof(maps); i++)
   {
-    if (encoding == maps[i].encoding)
+    if (src_id == (int) maps[i].encoding)
     {
       return UtfToLocal(src, len, dest, maps[i].map2, NULL, 0, NULL,
-        encoding, noError);
+        src_id, noError);
     }
   }
 
   elog(ERROR, "unexpected encoding ID %d for ISO 8859 character sets",
-    encoding);
+    src_id);
   return 0;
 }
