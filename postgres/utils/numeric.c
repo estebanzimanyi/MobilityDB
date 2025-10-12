@@ -746,6 +746,19 @@ pg_numeric_out(Numeric num)
   return str;
 }
 
+/**
+ * @ingroup meos_temporal_constructor
+ * @brief Return a copy of a temporal value
+ * @param[in] num Temporal value
+ */
+Numeric
+numeric_copy(Numeric num)
+{
+  Numeric result = palloc(VARSIZE(num));
+  memcpy(result, num, VARSIZE(num));
+  return result;
+}
+
 /*
  * numeric_is_nan() -
  *

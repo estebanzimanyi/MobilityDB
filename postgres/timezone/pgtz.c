@@ -63,9 +63,8 @@ pg_tz *session_timezone = NULL;
 /* Current log timezone (controlled by log_timezone GUC) */
 // pg_tz *log_timezone = NULL; /* MEOS */
 
-static bool scan_directory_ci(const char *dirname,
-                const char *fname, int fnamelen,
-                char *canonname, int canonnamelen);
+static bool scan_directory_ci(const char *dirname, const char *fname,
+  int fnamelen, char *canonname, int canonnamelen);
 
 /*
  * Helper function borrowed from PostgreSQL file `filemap.c`.
@@ -95,10 +94,8 @@ init_timezone_hashtable(void)
 {
   /* MEOS: Create the timezone hash table */
   timezone_cache = tzcache_create(TZCACHE_INITIAL_SIZE, NULL);
-
   if (!timezone_cache)
     return false;
-
   return true;
 }
 

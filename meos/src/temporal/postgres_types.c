@@ -131,22 +131,6 @@ text2cstring(const text *txt)
   return str;
 }
 
-#if MEOS
-/**
- * @ingroup meos_base_text
- * @brief Copy a text value
- * @param[in] txt Text
- */
-text *
-text_copy(const text *txt)
-{
-  assert(txt);
-  text *result = palloc(VARSIZE(txt));
-  memcpy(result, txt, VARSIZE(txt));
-  return result;
-}
-#endif /* MEOS */
-
 /**
  * @ingroup meos_base_text
  * @brief Return the concatenation of the two text values

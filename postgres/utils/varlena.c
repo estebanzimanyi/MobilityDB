@@ -152,9 +152,9 @@ static int  text_position_get_match_pos(TextPositionState *state);
 static void text_position_cleanup(TextPositionState *state);
 static void check_collation_set(Oid collid);
 // static int text_cmp(text *txt1, text *txt2, Oid collid);
-static bytea *bytea_catenate(bytea *txt1, bytea *txt2);
-static bytea *bytea_substring(Datum str, int S, int L, bool length_not_specified);
-static bytea *bytea_overlay(bytea *txt1, bytea *txt2, int sp, int sl);
+// static bytea *bytea_catenate(bytea *txt1, bytea *txt2);
+// static bytea *bytea_substring(Datum str, int S, int L, bool length_not_specified);
+// static bytea *bytea_overlay(bytea *txt1, bytea *txt2, int sp, int sl);
 static void appendStringInfoText(StringInfo str, const text *t);
 static bool text_format_parse_digits(const char **ptr, const char *end_ptr,
   int *value);
@@ -274,6 +274,33 @@ char *
 text_out(const text *txt)
 {
   return text_to_cstring(txt);
+}
+
+/**
+ * @ingroup meos_base_text
+ * @brief Copy a text value
+ * @param[in] txt Text
+ */
+text *
+text_copy(const text *txt)
+{
+  assert(txt);
+  text *result = palloc(VARSIZE(txt));
+  memcpy(result, txt, VARSIZE(txt));
+  return result;
+}
+
+/**
+ * @brief Copy a bytea value
+ * @param[in] ba Byte array
+ */
+bytea *
+bytea_copy(const bytea *ba)
+{
+  assert(ba);
+  bytea *result = palloc(VARSIZE(ba));
+  memcpy(result, ba, VARSIZE(ba));
+  return result;
 }
 
 /* ========== PUBLIC ROUTINES ========== */
@@ -2134,7 +2161,6 @@ pg_text_reverse(const text *txt)
     while (p < endp)
       *(--dst) = *p++;
   }
-
   return result;
 }
 

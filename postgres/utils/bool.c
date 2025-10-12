@@ -18,6 +18,7 @@
 /* PostgreSQL */
 #include <postgres.h>
 #include "common/hashfn.h"
+#include "utils/builtins.h"
 
 /*****************************************************************************/
 bool
@@ -181,7 +182,7 @@ bool_to_text(bool b)
     str = "true";
   else
     str = "false";
-  return cstring2text(str);
+  return cstring_to_text(str);
 }
 
 /*****************************************************************************

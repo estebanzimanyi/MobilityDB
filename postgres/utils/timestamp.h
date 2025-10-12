@@ -55,20 +55,11 @@ TimestampTzGetDatum(TimestampTz X)
 	return Int64GetDatum(X);
 }
 
-inline Datum
+static inline Datum
 IntervalPGetDatum(const Interval *X)
 {
 	return PointerGetDatum(X);
 }
-
-#define PG_GETARG_TIMESTAMP(n) DatumGetTimestamp(PG_GETARG_DATUM(n))
-#define PG_GETARG_TIMESTAMPTZ(n) DatumGetTimestampTz(PG_GETARG_DATUM(n))
-#define PG_GETARG_INTERVAL_P(n) DatumGetIntervalP(PG_GETARG_DATUM(n))
-
-#define PG_RETURN_TIMESTAMP(x) return TimestampGetDatum(x)
-#define PG_RETURN_TIMESTAMPTZ(x) return TimestampTzGetDatum(x)
-#define PG_RETURN_INTERVAL_P(x) return IntervalPGetDatum(x)
-
 
 #define TIMESTAMP_MASK(b) (1 << (b))
 #define INTERVAL_MASK(b) (1 << (b))

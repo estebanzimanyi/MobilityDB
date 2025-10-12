@@ -286,7 +286,7 @@ static JsonParseErrorType
 jsonb_in_object_field_start(void *pstate, char *fname, bool isnull)
 {
   JsonbInState *_state = (JsonbInState *) pstate;
-  JsonbValue  v;
+  JsonbValue v;
 
   Assert(fname != NULL);
   v.type = jbvString;
@@ -785,28 +785,25 @@ array_dim_to_jsonb(JsonbInState *result, int dim, int ndims, int *dims,
   const Datum *vals, const bool *nulls, int *valcount,
   JsonTypeCategory tcategory, Oid outfuncoid)
 {
-  int      i;
-
   Assert(dim < ndims);
 
   result->res = pushJsonbValue(&result->parseState, WJB_BEGIN_ARRAY, NULL);
-
-  for (i = 1; i <= dims[dim]; i++)
+  for (int i = 1; i <= dims[dim]; i++)
   {
     if (dim + 1 == ndims)
     {
-      datum_to_jsonb_internal(vals[*valcount], nulls[*valcount], result, tcategory,
-                  outfuncoid, false);
+      datum_to_jsonb_internal(vals[*valcount], nulls[*valcount], result,
+        tcategory, outfuncoid, false);
       (*valcount)++;
     }
     else
     {
       array_dim_to_jsonb(result, dim + 1, ndims, dims, vals, nulls,
-                 valcount, tcategory, outfuncoid);
+        valcount, tcategory, outfuncoid);
     }
   }
-
   result->res = pushJsonbValue(&result->parseState, WJB_END_ARRAY, NULL);
+  return;
 }
 
 /*
@@ -1145,58 +1142,57 @@ jsonb_build_array_internal(XX)
 Jsonb *
 jsonb_build_array_noargs_internal(XX)
 {
-  JsonbInState result;
-
-  memset(&result, 0, sizeof(JsonbInState));
-
-  (void) pushJsonbValue(&result.parseState, WJB_BEGIN_ARRAY, NULL);
-  result.res = pushJsonbValue(&result.parseState, WJB_END_ARRAY, NULL);
-
-  return JsonbValueToJsonb(result.res);
+  JsonbInState state;
+  memset(&state, 0, sizeof(JsonbInState));
+  (void) pushJsonbValue(&state.parseState, WJB_BEGIN_ARRAY, NULL);
+  state.res = pushJsonbValue(&state.parseState, WJB_END_ARRAY, NULL);
+  Jsonb *result = JsonbValueToJsonb(state.res);
+  pfree(state.res);
+  return JsonbValueToJsonb(state.res);
 }
 
-/*
- * SQL function jsonb_object(text[])
- *
- * take a one or two dimensional array of text as name value pairs
- * for a jsonb object.
- *
+#endif /* NOT USED */
+
+/**
+ * @ingroup meos_base_json
+ * @brief Return a JSONB value constructed from an array of alternating keys
+ * and values
+ * @param[in] keys_vals Array of alternating keys and vals 
+ * @param[in] count Number of elements in the input array 
+ * @note Derived from PostgreSQL function @p jsonb_object()
  */
 Jsonb *
-jsonb_object_internal(Datum *in_datums, bool *in_nulls, int in_count)
+pg_jsonb_object(text **keys_vals, int count)
 {
   JsonbInState result;
   memset(&result, 0, sizeof(JsonbInState));
   (void) pushJsonbValue(&result.parseState, WJB_BEGIN_OBJECT, NULL);
   
-  int count = in_count / 2;
-  for (int i = 0; i < count; ++i)
+  int count1 = count / 2;
+  for (int i = 0; i < count1; ++i)
   {
-    JsonbValue  v;
-    char *str;
-    int len;
-
-    if (in_nulls[i * 2])
+    if (! keys_vals[i * 2])
     {
       elog(ERROR, "null value not allowed for object key");
       return NULL;
     }
 
-    str = TextDatumGetCString(in_datums[i * 2]);
-    len = strlen(str);
+    char *str = text_to_cstring(keys_vals[i * 2]);
+    int len = strlen(str);
 
+    JsonbValue v;
     v.type = jbvString;
     v.val.string.len = len;
     v.val.string.val = str;
     (void) pushJsonbValue(&result.parseState, WJB_KEY, &v);
 
-    if (in_nulls[i * 2 + 1])
+    if (! keys_vals[i * 2 + 1])
     {
       v.type = jbvNull;
     }
     else
     {
-      str = TextDatumGetCString(in_datums[i * 2 + 1]);
+      str = text_to_cstring(keys_vals[i * 2 + 1]);
       len = strlen(str);
 
       v.type = jbvString;
@@ -1213,100 +1209,66 @@ close_object:
   return JsonbValueToJsonb(result.res);
 }
 
-/*
- * SQL function jsonb_object(text[], text[])
- *
- * take separate name and value arrays of text to construct a jsonb object
- * pairwise.
+/**
+ * @ingroup meos_base_json
+ * @brief Return a JSONB value constructed from separate key and value arrays
+ * of text values
+ * @param[in] keys Keys
+ * @param[in] values Keys
+ * @param[in] count Number of elements in the input arrays
+ * @note Derived from PostgreSQL function @p jsonb_object_two_arg()
  */
 Jsonb *
-jsonb_object_two_arg_internal(XX)
+pg_jsonb_object_two_arg(text **keys, text **values, int count)
 {
-  ArrayType  *key_array = PG_GETARG_ARRAYTYPE_P(0);
-  ArrayType  *val_array = PG_GETARG_ARRAYTYPE_P(1);
-  int      nkdims = ARR_NDIM(key_array);
-  int      nvdims = ARR_NDIM(val_array);
-  Datum     *key_datums,
-         *val_datums;
-  bool     *key_nulls,
-         *val_nulls;
-  int      key_count,
-        val_count,
-        i;
-  JsonbInState result;
+  JsonbInState state;
+  memset(&state, 0, sizeof(JsonbInState));
+  (void) pushJsonbValue(&state.parseState, WJB_BEGIN_OBJECT, NULL);
 
-  memset(&result, 0, sizeof(JsonbInState));
-
-  (void) pushJsonbValue(&result.parseState, WJB_BEGIN_OBJECT, NULL);
-
-  if (nkdims > 1 || nkdims != nvdims)
+  for (int i = 0; i < count; ++i)
   {
-    elog(ERROR, "wrong number of array subscripts");
-    return NULL;
-  }
-
-  if (nkdims == 0)
-    goto close_object;
-
-  deconstruct_array_builtin(key_array, TEXTOID, &key_datums, &key_nulls, &key_count);
-  deconstruct_array_builtin(val_array, TEXTOID, &val_datums, &val_nulls, &val_count);
-
-  if (key_count != val_count)
-  {
-    elog(ERROR, "mismatched array dimensions");
-    return NULL;
-  }
-
-  for (int i = 0; i < key_count; ++i)
-  {
-    JsonbValue  v;
-    char     *str;
-    int      len;
-
-    if (key_nulls[i])
+    if (! keys[i])
     {
       elog(ERROR, "null value not allowed for object key");
       return NULL;
     }
 
-    str = TextDatumGetCString(key_datums[i]);
-    len = strlen(str);
+    char *str = text_to_cstring(keys[i]);
+    int len = strlen(str);
 
+    JsonbValue v;
     v.type = jbvString;
-
     v.val.string.len = len;
     v.val.string.val = str;
 
-    (void) pushJsonbValue(&result.parseState, WJB_KEY, &v);
+    (void) pushJsonbValue(&state.parseState, WJB_KEY, &v);
 
-    if (val_nulls[i])
+    if (! values[i])
     {
       v.type = jbvNull;
     }
     else
     {
-      str = TextDatumGetCString(val_datums[i]);
+      str = values[i];
       len = strlen(str);
 
       v.type = jbvString;
-
       v.val.string.len = len;
       v.val.string.val = str;
     }
 
-    (void) pushJsonbValue(&result.parseState, WJB_VALUE, &v);
+    (void) pushJsonbValue(&state.parseState, WJB_VALUE, &v);
   }
 
-  pfree(key_datums);
-  pfree(key_nulls);
-  pfree(val_datums);
-  pfree(val_nulls);
-
 close_object:
-  result.res = pushJsonbValue(&result.parseState, WJB_END_OBJECT, NULL);
+  state.res = pushJsonbValue(&state.parseState, WJB_END_OBJECT, NULL);
 
-  return JsonbValueToJsonb(result.res);
+  Jsonb *result = JsonbValueToJsonb(state.res);
+  pfree(state.res);
+  return result;
 }
+
+#if 0 /* NOT USED */
 
 /*
  * shallow clone of a parse state, suitable for use in aggregate
@@ -1834,7 +1796,7 @@ jsonb_to_numeric(Jsonb *in)
    * v.val.numeric points into jsonb body, so we need to make a copy to
    * return
    */
-  retValue = DatumGetNumericCopy(NumericGetDatum(v.val.numeric));
+  retValue = numeric_copy(v.val.numeric);
   return retValue;
 }
 

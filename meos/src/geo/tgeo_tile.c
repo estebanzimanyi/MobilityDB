@@ -942,7 +942,7 @@ stbox_get_time_tile(TimestampTz t, const Interval *duration,
  * @param[in] border_inc True when the box contains the upper border, otherwise
  * the upper border is assumed as outside of the box.
  * @param[out] count Number of elements in the output array
- * @csqlfn #Tgeo_space_time_boxes_ext
+ * @csqlfn #Tgeo_space_time_boxes_common
  */
 STBox *
 tgeo_space_time_boxes(const Temporal *temp, double xsize, double ysize,
@@ -1354,7 +1354,7 @@ tgeo_space_time_tile_init(const Temporal *temp, double xsize, double ysize,
  * @param[out] time_bins Array of time bins
  * @param[out] count Number of elements in the output arrays
  * @note This function in MEOS corresponds to the MobilityDB function
- * #Tgeo_space_time_split_ext. Note that the test for the validity of the
+ * #Tgeo_space_time_split_common. Note that the test for the validity of the
  * arguments is done in #tgeo_space_time_tile_init
  */
 Temporal **

@@ -76,6 +76,7 @@
 #include "utils/formatting.h"
 #include "utils/numeric.h"
 #include "utils/pg_locale.h"
+#include "utils/timestamp.h"
 // #include "varatt.h"
 
 #ifdef USE_ICU

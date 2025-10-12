@@ -46,6 +46,10 @@
 // #include "utils/relcache.h"
 // #include "varatt.h"
 
+/* Function defined in varlena.c */
+extern bytea *bytea_copy(const bytea *ba);
+
+/* Function defined in this file */
 extern bytea *pg_convert(const bytea *string, const char *src_encoding_name,
   const char *dest_encoding_name);
 
@@ -359,7 +363,7 @@ pg_convert(const bytea *string, const char *src_encoding_name,
 
   /* return source string if no conversion happened */
   if (dest_str == src_str)
-    return string;
+    return bytea_copy(string);
 
   /*
    * build bytea data type structure.

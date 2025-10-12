@@ -806,7 +806,7 @@ json_count_array_elements(JsonLexContext *lex, int *elements)
 
   count = 0;
   result = lex_expect(JSON_PARSE_ARRAY_START, &copylex,
-            JSON_TOKEN_ARRAY_START);
+    JSON_TOKEN_ARRAY_START);
   if (result != JSON_SUCCESS)
     return result;
   if (lex_peek(&copylex) != JSON_TOKEN_ARRAY_END)
@@ -824,8 +824,7 @@ json_count_array_elements(JsonLexContext *lex, int *elements)
         return result;
     }
   }
-  result = lex_expect(JSON_PARSE_ARRAY_NEXT, &copylex,
-            JSON_TOKEN_ARRAY_END);
+  result = lex_expect(JSON_PARSE_ARRAY_NEXT, &copylex, JSON_TOKEN_ARRAY_END);
   if (result != JSON_SUCCESS)
     return result;
 

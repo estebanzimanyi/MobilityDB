@@ -66,29 +66,6 @@ DatumGetNumeric(Datum X)
 #endif /* MEOS */
 }
 
-/**
- * @ingroup meos_temporal_constructor
- * @brief Return a copy of a temporal value
- * @param[in] num Temporal value
- */
-inline Numeric
-numeric_copy(Numeric num)
-{
-  Numeric result = palloc(VARSIZE(num));
-  memcpy(result, num, VARSIZE(num));
-  return result;
-}
-
-static inline Numeric
-DatumGetNumericCopy(Datum X)
-{
-#if MEOS
-	return numeric_copy((Numeric) X);
-#else
-	return (Numeric) PG_DETOAST_DATUM_COPY(X);
-#endif /* MEOS */
-}
-
 static inline Datum
 NumericGetDatum(Numeric X)
 {
@@ -96,7 +73,6 @@ NumericGetDatum(Numeric X)
 }
 
 #define PG_GETARG_NUMERIC(n)	  DatumGetNumeric(PG_GETARG_DATUM(n))
-#define PG_GETARG_NUMERIC_COPY(n) DatumGetNumericCopy(PG_GETARG_DATUM(n))
 #define PG_RETURN_NUMERIC(x)	  return NumericGetDatum(x)
 
 /*

@@ -93,16 +93,16 @@ JsonbToJsonbValue(Jsonb *jsonb, JsonbValue *val)
  * where it would be inconvenient to deal with a great amount of other state.
  */
 Jsonb *
-JsonbValueToJsonb(JsonbValue *val)
+JsonbValueToJsonb(const JsonbValue *val)
 {
-  Jsonb     *out;
+  Jsonb *out;
 
   if (IsAJsonbScalar(val))
   {
     /* Scalar value */
     JsonbParseState *pstate = NULL;
     JsonbValue *res;
-    JsonbValue  scalarArray;
+    JsonbValue scalarArray;
 
     scalarArray.type = jbvArray;
     scalarArray.val.array.rawScalar = true;
@@ -572,7 +572,7 @@ fillJsonbValue(JsonbContainer *container, int index,
  */
 JsonbValue *
 pushJsonbValue(JsonbParseState **pstate, JsonbIteratorToken seq,
-         JsonbValue *jbval)
+  JsonbValue *jbval)
 {
   JsonbIterator *it;
   JsonbValue *res = NULL;
@@ -633,9 +633,8 @@ pushJsonbValue(JsonbParseState **pstate, JsonbIteratorToken seq,
 
   while ((tok = JsonbIteratorNext(&it, &v, false)) != WJB_DONE)
     res = pushJsonbValueScalar(pstate, tok,
-                   tok < WJB_BEGIN_ARRAY ||
-                   (tok == WJB_BEGIN_ARRAY &&
-                  v.val.array.rawScalar) ? &v : NULL);
+      tok < WJB_BEGIN_ARRAY || 
+      (tok == WJB_BEGIN_ARRAY && v.val.array.rawScalar) ? &v : NULL);
 
   return res;
 }
@@ -646,7 +645,7 @@ pushJsonbValue(JsonbParseState **pstate, JsonbIteratorToken seq,
  */
 static JsonbValue *
 pushJsonbValueScalar(JsonbParseState **pstate, JsonbIteratorToken seq,
-           JsonbValue *scalarVal)
+  JsonbValue *scalarVal)
 {
   JsonbValue *result = NULL;
 

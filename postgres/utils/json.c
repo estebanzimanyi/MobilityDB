@@ -28,6 +28,8 @@
 #include <port/simd.h>
 #include <utils/date.h>
 #include <utils/datetime.h>
+#include <utils/timestamp.h>
+#include <utils/hsearch.h>
 #include <utils/json.h>
 #include <utils/jsonb.h>
 #include <utils/jsonfuncs.h>
@@ -51,8 +53,6 @@
 // #include "utils/lsyscache.h"
 // #include "utils/typcache.h"
 
-#if 0 /* NOT USED */
-
 /*
  * Support for fast key uniqueness checking.
  *
@@ -67,21 +67,6 @@ typedef struct JsonUniqueHashEntry
   int      key_len;
   int      object_id;
 } JsonUniqueHashEntry;
-
-#define SH_PREFIX    collation_cache
-#define SH_ELEMENT_TYPE  collation_cache_entry
-#define SH_KEY_TYPE    Oid
-#define SH_KEY      collid
-#define SH_HASH_KEY(tb, key)     murmurhash32((uint32) key)
-#define SH_EQUAL(tb, a, b)    (a == b)
-#define SH_GET_HASH(tb, a)    a->hash
-#define SH_SCOPE    static inline
-#define SH_STORE_HASH
-#define SH_RAW_ALLOCATOR palloc0
-#define SH_DESTROY collation_cache_destroy(collation_cache)
-#define SH_DECLARE
-#define SH_DEFINE
-#include "lib/simplehash.h"
 
 /* Common context for key uniqueness check */
 typedef struct HTAB *JsonUniqueCheckState;  /* hash table for key names */
@@ -108,7 +93,7 @@ typedef struct JsonUniqueBuilderState
 {
   JsonUniqueCheckState check; /* unique check */
   StringInfoData skipped_keys;  /* skipped keys with NULL values */
-  MemoryContext mcxt;      /* context for saving skipped keys */
+  // MemoryContext mcxt;      /* context for saving skipped keys */
 } JsonUniqueBuilderState;
 
 /* State struct for JSON aggregation */
@@ -129,24 +114,22 @@ static void array_dim_to_json(StringInfo result, int dim, int ndims, int *dims,
   Oid outfuncoid, bool use_line_feeds);
 static void array_to_json_internal(Datum array, StringInfo result,
   bool use_line_feeds);
-static void datum_to_json_internal(Datum val, bool is_null, StringInfo result,
-  JsonTypeCategory tcategory, Oid outfuncoid, bool key_scalar);
+// static void datum_to_json_internal(Datum val, bool is_null, StringInfo result,
+  // JsonTypeCategory tcategory, Oid outfuncoid, bool key_scalar);
 static void add_json(Datum val, bool is_null, StringInfo result,
   Oid val_type, bool key_scalar);
 static text *catenate_stringinfo_string(StringInfo buffer, const char *addon);
 
-#endif /* NOT USED */
-
 /**
  * @ingroup meos_base_json
  * @brief Return a JSON value from its string representation
- * @param[in] jb JSONB value
+ * @param[in] str String
  * @note Derived from PostgreSQL function @p json_in()
  */
 text *
-json_in_internal(char *json)
+pg_json_in(const char *str)
 {
-  text *result = cstring_to_text(json);
+  text *result = cstring_to_text(str);
 
   /* validate it */
   JsonLexContext lex;
@@ -161,13 +144,13 @@ json_in_internal(char *json)
 /**
  * @ingroup meos_base_json
  * @brief Return the string representation of a JSON value
- * @param[in] jb JSONB value
+ * @param[in] json JSON value
  * @note Derived from PostgreSQL function @p json_out()
  */
 char *
-json_out_internal(text *txt)
+pg_json_out(const text *json)
 {
-  return text_to_cstring(txt);
+  return text_to_cstring(json);
 }
 
 #if 0 /* NOT USED */
@@ -411,6 +394,8 @@ JsonEncodeDateTime(char *buf, Datum value, Oid typid, const int *tzp)
   return buf;
 }
 
+#if 0 /* NOT USED */
+
 /*
  * Process a single dimension of an array.
  * If it's the innermost dimension, output the values, otherwise call
@@ -447,8 +432,6 @@ array_dim_to_json(StringInfo result, int dim, int ndims, int *dims,
 
   appendStringInfoChar(result, ']');
 }
-
-#if 0 /* NOT USED */
 
 /*
  * Turn an array into JSON.
@@ -500,25 +483,17 @@ array_to_json_internal(Datum array, StringInfo result, bool use_line_feeds)
 static void
 composite_to_json(Datum composite, StringInfo result, bool use_line_feeds)
 {
-  HeapTupleHeader td;
-  Oid      tupType;
-  int32    tupTypmod;
-  TupleDesc  tupdesc;
-  HeapTupleData tmptup,
-         *tuple;
-  int      i;
-  bool    needsep = false;
-  const char *sep;
-  int      seplen;
-
+  Oid tupType;
+  int32 tupTypmod;
+  TupleDesc tupdesc;
+  HeapTupleData tmptup, *tuple;
   /*
    * We can avoid expensive strlen() calls by precalculating the separator
    * length.
    */
-  sep = use_line_feeds ? ",\n " : ",";
-  seplen = use_line_feeds ? strlen(",\n ") : strlen(",");
-
-  td = DatumGetHeapTupleHeader(composite);
+  const char *sep = use_line_feeds ? ",\n " : ",";
+  int seplen = use_line_feeds ? strlen(",\n ") : strlen(",");
+  HeapTupleHeader td = DatumGetHeapTupleHeader(composite);
 
   /* Extract rowtype info and find a tupdesc */
   tupType = HeapTupleHeaderGetTypeId(td);
@@ -529,16 +504,15 @@ composite_to_json(Datum composite, StringInfo result, bool use_line_feeds)
   tmptup.t_len = HeapTupleHeaderGetDatumLength(td);
   tmptup.t_data = td;
   tuple = &tmptup;
-
   appendStringInfoChar(result, '{');
-
-  for (i = 0; i < tupdesc->natts; i++)
+  bool needsep = false;
+  for (int i = 0; i < tupdesc->natts; i++)
   {
-    Datum    val;
-    bool    isnull;
-    char     *attname;
+    Datum val;
+    bool isnull;
+    char *attname;
     JsonTypeCategory tcategory;
-    Oid      outfuncoid;
+    Oid outfuncoid;
     Form_pg_attribute att = TupleDescAttr(tupdesc, i);
 
     if (att->attisdropped)
@@ -580,15 +554,14 @@ static void
 add_json(Datum val, bool is_null, StringInfo result, Oid val_type,
   bool key_scalar)
 {
-  JsonTypeCategory tcategory;
-  Oid outfuncoid;
-
   if (val_type == InvalidOid)
   {
     elog(ERROR, "could not determine input data type");
     return;
   }
 
+  JsonTypeCategory tcategory;
+  Oid outfuncoid;
   if (is_null)
   {
     tcategory = JSONTYPE_NULL;
@@ -725,7 +698,7 @@ datum_to_json(Datum val, JsonTypeCategory tcategory, Oid outfuncoid)
  *
  * aggregate input column as a json array value.
  */
-static Datum
+static JsonAggState *
 json_agg_transfn_worker(JsonAggState *state, Datum val, Oid arg_type,
   bool arg_null, bool absent_on_null)
 {
@@ -734,12 +707,11 @@ json_agg_transfn_worker(JsonAggState *state, Datum val, Oid arg_type,
     if (arg_type == InvalidOid)
     {
       elog(ERROR, "could not determine input data type");
-      return (Datum) 0;
+      return NULL;
     }
 
     state = (JsonAggState *) palloc(sizeof(JsonAggState));
     state->str = makeStringInfo();
-
     appendStringInfoChar(state->str, '[');
     json_categorize_type(arg_type, false, &state->val_category,
       &state->val_output_func);
@@ -761,8 +733,8 @@ json_agg_transfn_worker(JsonAggState *state, Datum val, Oid arg_type,
 
   /* add some whitespace if structured type and not first item */
   if (!PG_ARGISNULL(0) && state->str->len > 1 &&
-    (state->val_category == JSONTYPE_ARRAY ||
-     state->val_category == JSONTYPE_COMPOSITE))
+      (state->val_category == JSONTYPE_ARRAY ||
+       state->val_category == JSONTYPE_COMPOSITE))
   {
     appendStringInfoString(state->str, "\n ");
   }
@@ -781,7 +753,7 @@ json_agg_transfn_worker(JsonAggState *state, Datum val, Oid arg_type,
 /*
  * json_agg aggregate function
  */
-Datum
+JsonAggState *
 json_agg_transfn_internal(JsonAggState *state, Datum val, Oid arg_type,
   bool arg_null)
 {
@@ -791,7 +763,7 @@ json_agg_transfn_internal(JsonAggState *state, Datum val, Oid arg_type,
 /*
  * json_agg_strict aggregate function
  */
-Datum
+JsonAggState *
 json_agg_strict_transfn_internal(JsonAggState *state, Datum val, Oid arg_type,
   bool arg_null)
 {
@@ -811,6 +783,8 @@ json_agg_finalfn_internal(JsonAggState *state)
   /* Else return state with appropriate array terminator added */
   return catenate_stringinfo_string(state->str, "]");
 }
+
+#endif /* NOT USED */
 
 /* Functions implementing hash table for key uniqueness check */
 static uint32
@@ -850,20 +824,19 @@ json_unique_check_init(JsonUniqueCheckState *cxt)
   memset(&ctl, 0, sizeof(ctl));
   ctl.keysize = sizeof(JsonUniqueHashEntry);
   ctl.entrysize = sizeof(JsonUniqueHashEntry);
-  ctl.hcxt = CurrentMemoryContext;
   ctl.hash = json_unique_hash;
   ctl.match = json_unique_hash_match;
-
   *cxt = hash_create("json object hashtable", 32, &ctl,
-    HASH_ELEM | HASH_CONTEXT | HASH_FUNCTION | HASH_COMPARE);
+    HASH_ELEM | HASH_FUNCTION | HASH_COMPARE);
+  return;
 }
 
 static void
 json_unique_builder_init(JsonUniqueBuilderState *cxt)
 {
   json_unique_check_init(&cxt->check);
-  cxt->mcxt = CurrentMemoryContext;
   cxt->skipped_keys.data = NULL;
+  return;
 }
 
 static bool
@@ -874,10 +847,8 @@ json_unique_check_key(JsonUniqueCheckState *cxt, const char *key,
   entry.key = key;
   entry.key_len = strlen(key);
   entry.object_id = object_id;
-
   bool found;
   (void) hash_search(*cxt, &entry, HASH_ENTER, &found);
-
   return !found;
 }
 
@@ -891,15 +862,14 @@ json_unique_builder_get_throwawaybuf(JsonUniqueBuilderState *cxt)
 {
   StringInfo out = &cxt->skipped_keys;
   if (!out->data)
-  {
     initStringInfo(out);
-  }
   else
     /* Just reset the string to empty */
     out->len = 0;
-
   return out;
 }
+
+#if 0 /* NOT USED */
 
 /*
  * json_object_agg transition function.
@@ -1028,7 +998,7 @@ json_object_agg_transfn_worker(JsonAggState *state, Datum arg1, Oid arg_type1,
 /*
  * json_object_agg aggregate function
  */
-Datum
+JsonAggState *
 json_object_agg_transfn_internal(JsonAggState *state, Datum arg1,
   Oid arg_type1, bool arg1_null, Datum arg2, Oid arg_type2, bool arg2_null)
 {
@@ -1039,7 +1009,7 @@ json_object_agg_transfn_internal(JsonAggState *state, Datum arg1,
 /*
  * json_object_agg_strict aggregate function
  */
-Datum
+JsonAggState *
 json_object_agg_strict_transfn_internal(JsonAggState *state, Datum arg1,
   Oid arg_type1, bool arg1_null, Datum arg2, Oid arg_type2, bool arg2_null)
 {
@@ -1050,7 +1020,7 @@ json_object_agg_strict_transfn_internal(JsonAggState *state, Datum arg1,
 /*
  * json_object_agg_unique aggregate function
  */
-Datum
+JsonAggState *
 json_object_agg_unique_transfn_internal(JsonAggState *state, Datum arg1,
   Oid arg_type1, bool arg1_null, Datum arg2, Oid arg_type2, bool arg2_null)
 {
@@ -1061,7 +1031,7 @@ json_object_agg_unique_transfn_internal(JsonAggState *state, Datum arg1,
 /*
  * json_object_agg_unique_strict aggregate function
  */
-Datum
+JsonAggState *
 json_object_agg_unique_strict_transfn_internal(JsonAggState *state, Datum arg1,
   Oid arg_type1, bool arg1_null, Datum arg2, Oid arg_type2, bool arg2_null)
 {
@@ -1250,21 +1220,22 @@ json_build_array_noargs_internal(XX)
 
 /**
  * @ingroup meos_base_json
- * @brief Return a JSON value constructed from a one or two dimensional array
- * of text as key/value pairs
- * @param[in] jb JSONB value 
+ * @brief Return a JSON value constructed from an array of alternating keys
+ * and values
+ * @param[in] keys_vals Array of alternating keys and vals 
+ * @param[in] count Number of elements in the input array 
  * @note Derived from PostgreSQL function @p json_object()
  */
 text *
-json_object_internal(Datum *in_datums, bool *in_nulls, int in_count)
+pg_json_object(text **keys_vals, int count)
 {
   StringInfoData res;
-  int count = in_count / 2;
+  int count1 = count / 2;
   initStringInfo(&res);
   appendStringInfoChar(&res, '{');
-  for (int i = 0; i < count; ++i)
+  for (int i = 0; i < count1; ++i)
   {
-    if (in_nulls[i * 2])
+    if (! keys_vals[i * 2])
     {
       elog(ERROR, "null value not allowed for object key");
       return NULL;
@@ -1272,14 +1243,12 @@ json_object_internal(Datum *in_datums, bool *in_nulls, int in_count)
 
     if (i > 0)
       appendStringInfoString(&res, ", ");
-    escape_json_text(&res, (text *) DatumGetPointer(in_datums[i * 2]));
+    escape_json_text(&res, keys_vals[i * 2]);
     appendStringInfoString(&res, " : ");
-    if (in_nulls[i * 2 + 1])
+    if (! keys_vals[i * 2 + 1])
       appendStringInfoString(&res, "null");
     else
-    {
-      escape_json_text(&res, (text *) DatumGetPointer(in_datums[i * 2 + 1]));
-    }
+      escape_json_text(&res, keys_vals[i * 2 + 1]);
   }
   appendStringInfoChar(&res, '}');
   text *result = cstring_to_text_with_len(res.data, res.len);
@@ -1287,30 +1256,24 @@ json_object_internal(Datum *in_datums, bool *in_nulls, int in_count)
   return result;
 }
 
-
 /**
  * @ingroup meos_base_json
  * @brief Return a JSON value constructed from separate key and value arrays
  * of text values
- * @param[in] jb JSONB value 
+ * @param[in] keys Keys
+ * @param[in] values Keys
+ * @param[in] count Number of elements in the input arrays
  * @note Derived from PostgreSQL function @p json_object_two_arg()
  */
-Datum
-json_object_two_arg_internal(Datum *key_datums, bool *key_nulls, int key_count,
-  Datum *val_datums, bool *val_nulls, int val_count)
+text *
+pg_json_object_two_arg(text **keys, text **values, int count)
 {
-  if (key_count != val_count)
-  {
-    elog(ERROR, "mismatched array dimensions");
-    return NULL;
-  }
-
   StringInfoData res;
   initStringInfo(&res);
   appendStringInfoChar(&res, '{');
-  for (int i = 0; i < key_count; ++i)
+  for (int i = 0; i < count; ++i)
   {
-    if (key_nulls[i])
+    if (! keys[i])
     {
       elog(ERROR, "null value not allowed for object key");
       return NULL;
@@ -1318,12 +1281,12 @@ json_object_two_arg_internal(Datum *key_datums, bool *key_nulls, int key_count,
 
     if (i > 0)
       appendStringInfoString(&res, ", ");
-    escape_json_text(&res, (text *) DatumGetPointer(key_datums[i]));
+    escape_json_text(&res, keys[i]);
     appendStringInfoString(&res, " : ");
-    if (val_nulls[i])
+    if (! values[i])
       appendStringInfoString(&res, "null");
     else
-      escape_json_text(&res, (text *) DatumGetPointer(val_datums[i]));
+      escape_json_text(&res, values[i]);
   }
 
   appendStringInfoChar(&res, '}');
@@ -1510,8 +1473,6 @@ escape_json_text(StringInfo buf, const text *txt)
   return;
 }
 
-#if 0 /* NOT USED */
-
 /* Semantic actions for key uniqueness check */
 static JsonParseErrorType
 json_unique_object_start(void *_state)
@@ -1615,20 +1576,21 @@ json_validate(text *json, bool check_unique_keys, bool throw_error)
   return true;        /* ok */
 }
 
-/*
- * SQL function json_typeof(json) -> text
- *
- * Returns the type of the outermost JSON value as TEXT.  Possible types are
- * "object", "array", "string", "number", "boolean", and "null".
- *
- * Performs a single call to json_lex() to get the first token of the supplied
- * value.  This initial token uniquely determines the value's type.  As our
- * input must already have been validated by json_in() or json_recv(), the
- * initial token should never be JSON_TOKEN_OBJECT_END, JSON_TOKEN_ARRAY_END,
- * JSON_TOKEN_COLON, JSON_TOKEN_COMMA, or JSON_TOKEN_END.
+/**
+ * @ingroup meos_base_json
+ * @brief Returns the type of the outermost JSON value as `text`
+ * @details Possible types are "object", "array", "string", "number",
+ * "boolean", and "null".
+ * @details Performs a single call to json_lex() to get the first token of the
+ * supplied value.  This initial token uniquely determines the value's type.
+ * As our input must already have been validated by json_in() or json_recv(),
+ * theinitial token should never be JSON_TOKEN_OBJECT_END,
+ * JSON_TOKEN_ARRAY_END, JSON_TOKEN_COLON, JSON_TOKEN_COMMA, or JSON_TOKEN_END.
+ * @param[in] json JSON value 
+ * @note Derived from PostgreSQL function @p json_typeof()
  */
 text *
-json_typeof_internal(text *json)
+pg_json_typeof(text *json)
 {
   JsonLexContext lex;
   char *type;
@@ -1667,7 +1629,5 @@ json_typeof_internal(text *json)
 
   return cstring_to_text(type);
 }
-
-#endif /* NOT USED */
 
 /*****************************************************************************/

@@ -264,6 +264,7 @@ extern bool ne_int64_int64(int64 num1, int64 num2);
 
 /* Functions for numeric */
 
+extern Numeric numeric_copy(Numeric num);
 extern Numeric pg_numeric_in(const char *str, int32 typmod);
 extern char *pg_numeric_out(Numeric num);
 extern Numeric pg_numeric(Numeric num, int32 typmod);
@@ -478,6 +479,10 @@ extern text *text_overlay_no_len(const text *txt1, const text *txt2, int sp);
 extern int32 text_pos(text *txt, text *search_txt);
 extern text *text_upper(const text *txt);
 extern text *textcat_text_text(const text *txt1, const text *txt2);
+
+/* Functions for bytea */
+
+extern bytea *bytea_copy(const bytea *ba);
 
 /* Functions for date */
 
@@ -697,22 +702,27 @@ extern Interval *pg_interval_trunc(const Interval *interv, const text *units);
 
 /* Functions for JSON types */
 
-extern Jsonb *get_jsonb_path_all_internal(const Jsonb *jb, Datum *pathtext, int path_len, bool as_text);
+extern Jsonb *jsonb_copy(const Jsonb *jb);
+extern Jsonb *jsonb_get_path_all(const Jsonb *jb, text **path_elems, int path_len, bool as_text);
 
-extern text *json_in_internal(char *json);
-extern char *json_out_internal(text *txt);
-extern text *json_strip_nulls_internal(text *json, bool strip_in_arrays);
+extern int pg_json_array_length(const text *json);
+extern text *pg_json_in(const char *str);
+extern text *pg_json_object(text **keyvalarr, int count);
+extern text *pg_json_object_two_arg(text **keys, text **values, int count);
+extern char *pg_json_out(const text *json);
+extern text *pg_json_strip_nulls(const text *json, bool strip_in_arrays);
+extern text *pg_json_typeof(text *json);
 
-extern Jsonb *jsonb_concat_internal(Jsonb *jb1, Jsonb *jb2);
-extern Jsonb *jsonb_delete_internal(Jsonb *in, text *key);
-extern Jsonb *jsonb_delete_path_internal(const Jsonb *jb, Datum *path_elems, bool *path_nulls, int path_len);
-extern Jsonb *jsonb_extract_path_internal(const Jsonb *jb, Datum *pathtext, int path_len);
-extern Jsonb *jsonb_extract_path_text_internal(const Jsonb *jb, Datum *pathtext, int path_len);
-extern Jsonb *jsonb_object_field_internal(const Jsonb *jb, const text *key);
-extern text *jsonb_object_field_text_internal(const Jsonb *jb, const text *key);
-extern char **jsonb_object_keys_internal(Jsonb *jb);
-extern text *jsonb_pretty_internal(Jsonb *jb);
-extern Jsonb *jsonb_strip_nulls_internal(Jsonb *jb, bool strip_in_arrays);
+extern Jsonb *pg_jsonb_concat(const Jsonb *jb1, const Jsonb *jb2);
+extern Jsonb *pg_jsonb_delete(const Jsonb *jb, const text *key);
+extern Jsonb *pg_jsonb_delete_path(const Jsonb *jb, text **path_elems, int path_len);
+extern Jsonb *pg_jsonb_extract_path(const Jsonb *jb, text **path_elems, int path_len);
+extern text *pg_jsonb_extract_path_text(const Jsonb *jb, text **path_elems, int path_len);
+extern Jsonb *pg_jsonb_object_field(const Jsonb *jb, const text *key);
+extern text *pg_jsonb_object_field_text(const Jsonb *jb, const text *key);
+extern char **pg_jsonb_object_keys(const Jsonb *jb);
+extern text *pg_jsonb_pretty(const Jsonb *jb);
+extern Jsonb *pg_jsonb_strip_nulls(const Jsonb *jb, bool strip_in_arrays);
 
 /*****************************************************************************/
 

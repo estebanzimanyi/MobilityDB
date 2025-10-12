@@ -151,6 +151,8 @@ extern MemoryContext BumpContextCreate(MemoryContext parent,
 									   Size initBlockSize,
 									   Size maxBlockSize);
 
+#endif /* NOT USED */
+
 /*
  * Recommended default alloc parameters, suitable for "ordinary" contexts
  * that might hold quite a lot of data.
@@ -178,6 +180,7 @@ extern MemoryContext BumpContextCreate(MemoryContext parent,
 #define ALLOCSET_START_SMALL_SIZES \
 	ALLOCSET_SMALL_MINSIZE, ALLOCSET_SMALL_INITSIZE, ALLOCSET_DEFAULT_MAXSIZE
 
+#if 0 /* NOT USED */
 
 /*
  * Threshold above which a request in an AllocSet context is certain to be

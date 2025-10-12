@@ -25,20 +25,14 @@
 #include <common/int.h>
 #include <common/jsonapi.h>
 #include <nodes/nodes.h>
+#include <utils/hsearch.h>
 #include <utils/json.h>
 #include <utils/jsonb.h>
 #include "utils/jsonfuncs.h"
 #include <utils/varlena.h> /* For DatumGetTextP */
 
 /* TODO REMOVE */
-extern Jsonb *pg_jsonb_in(char *json);
-
 extern int strtoint(const char *pg_restrict str, char **pg_restrict endptr, int base);
-#if MEOS
-extern Jsonb *jsonb_copy(Jsonb *jb);
-#else
-
-#endif
 
 // #include "access/htup_details.h"
 // #include "catalog/pg_type.h"
@@ -114,9 +108,9 @@ typedef struct GetState
   bool     next_scalar;
   int      npath;         /* length of each path-related array */
   char   **path_names;    /* field name(s) being sought */
-  int      *path_indexes; /* array index(es) being sought */
-  bool     *pathok;       /* is path matched to current depth? */
-  int       *array_cur_index;  /* current element index at each path level */
+  int     *path_indexes; /* array index(es) being sought */
+  bool    *pathok;       /* is path matched to current depth? */
+  int     *array_cur_index;  /* current element index at each path level */
 } GetState;
 
 /* state for json_array_length */
@@ -153,24 +147,24 @@ typedef struct AlenState
   // char *normalized_scalar;
 // } ElementsState;
 
-// /* state for get_json_object_as_hash */
-// typedef struct JHashState
-// {
-  // JsonLexContext *lex;
-  // const char *function_name;
-  // HTAB     *hash;
-  // char     *saved_scalar;
-  // const char *save_json_start;
-  // JsonTokenType saved_token_type;
-// } JHashState;
+/* state for get_json_object_as_hash */
+typedef struct JHashState
+{
+  JsonLexContext *lex;
+  const char *function_name;
+  HTAB     *hash;
+  char     *saved_scalar;
+  const char *save_json_start;
+  JsonTokenType saved_token_type;
+} JHashState;
 
-// /* hashtable element */
-// typedef struct JsonHashEntry
-// {
-  // char    fname[NAMEDATALEN]; /* hash key (MUST BE FIRST) */
-  // char     *val;
-  // JsonTokenType type;
-// } JsonHashEntry;
+/* hashtable element */
+typedef struct JsonHashEntry
+{
+  char    fname[NAMEDATALEN]; /* hash key (MUST BE FIRST) */
+  char     *val;
+  JsonTokenType type;
+} JsonHashEntry;
 
 // /* structure to cache type I/O metadata needed for populate_scalar() */
 // typedef struct ScalarIOData
@@ -327,15 +321,15 @@ typedef struct JsValue
   }      val;
 } JsValue;
 
-// typedef struct JsObject
-// {
-  // bool    is_json;    /* json/jsonb */
-  // union
-  // {
-    // HTAB     *json_hash;
-    // JsonbContainer *jsonb_cont;
-  // }      val;
-// } JsObject;
+typedef struct JsObject
+{
+  bool    is_json;    /* json/jsonb */
+  union
+  {
+    HTAB     *json_hash;
+    JsonbContainer *jsonb_cont;
+  }      val;
+} JsObject;
 
 /* useful macros for testing JsValue properties */
 #define JsValueIsNull(jsv) \
@@ -413,8 +407,8 @@ static JsonParseErrorType elements_array_element_end(void *state, bool isnull);
 static JsonParseErrorType elements_scalar(void *state, char *token, JsonTokenType tokentype);
 
 // /* turn a json object into a hash table */
-// static HTAB *get_json_object_as_hash(const char *json, int len, const char *funcname,
-                   // Node *escontext);
+static HTAB *get_json_object_as_hash(const char *json, int len, const char *funcname,
+  Node *escontext);
 
 /* semantic actions for populate_array_json */
 static JsonParseErrorType populate_array_object_start(void *_state);
@@ -498,15 +492,14 @@ static JsonParseErrorType sn_scalar(void *state, char *token, JsonTokenType toke
 /* functions supporting jsonb_delete, jsonb_set and jsonb_concat */
 static JsonbValue *IteratorConcat(JsonbIterator **it1, JsonbIterator **it2,
   JsonbParseState **state);
-static JsonbValue *setPath(JsonbIterator **it, Datum *path_elems,
-  bool *path_nulls, int path_len, JsonbParseState **st, int level,
-  JsonbValue *newval, int op_type);
-static void setPathObject(JsonbIterator **it, Datum *path_elems,
-  bool *path_nulls, int path_len, JsonbParseState **st, int level,
-  JsonbValue *newval, uint32 npairs, int op_type);
-static void setPathArray(JsonbIterator **it, Datum *path_elems,
-  bool *path_nulls, int path_len, JsonbParseState **st, int level,
-  JsonbValue *newval, uint32 nelems, int op_type);
+static JsonbValue *setPath(JsonbIterator **it, text **path_elems, int path_len,
+  JsonbParseState **st, int level, JsonbValue *newval, int op_type);
+static void setPathObject(JsonbIterator **it, text **path_elems, int path_len,
+  JsonbParseState **st, int level, JsonbValue *newval, uint32 npairs,
+  int op_type);
+static void setPathArray(JsonbIterator **it, text **path_elems, int path_len,
+  JsonbParseState **st, int level, JsonbValue *newval, uint32 nelems,
+  int op_type);
 
 /* function supporting iterate_json_values */
 static JsonParseErrorType iterate_values_scalar(void *state, char *token, JsonTokenType tokentype);
@@ -530,7 +523,7 @@ static JsonParseErrorType transform_string_values_scalar(void *state, char *toke
  * @note MEOS function
  */
 Jsonb *
-jsonb_copy(Jsonb *jb)
+jsonb_copy(const Jsonb *jb)
 {
   Jsonb *result = palloc(VARSIZE(jb));
   memcpy(result, jb, VARSIZE(jb));
@@ -582,7 +575,7 @@ makeJsonLexContext(JsonLexContext *lex, text *json, bool need_escapes)
  * @note Derived from PostgreSQL function @p jsonb_object_keys()
  */
 char **
-jsonb_object_keys_internal(Jsonb *jb)
+jsonb_object_keys_internal(const Jsonb *jb)
 {
   if (JB_ROOT_IS_SCALAR(jb))
   {
@@ -695,8 +688,8 @@ report_json_context(JsonLexContext *lex)
     context_end - lex->input < lex->input_length &&
     *context_end != '\n' && *context_end != '\r') ? "..." : "";
 
-  return errcontext("JSON data, line %d: %s%s%s", lex->line_number, prefix,
-    ctxt, suffix);
+  elog("JSON data, line %d: %s%s%s", lex->line_number, prefix, ctxt, suffix);
+  return -1;
 }
 
 Datum
@@ -805,7 +798,7 @@ json_object_field(text *json, text *fname)
  * @note Derived from PostgreSQL function @p jsonb_object_field(jsonb, text)
  */
 Jsonb *
-jsonb_object_field_internal(const Jsonb *jb, const text *key)
+pg_jsonb_object_field(const Jsonb *jb, const text *key)
 {
   if (!JB_ROOT_IS_OBJECT(jb))
     return NULL;
@@ -814,10 +807,11 @@ jsonb_object_field_internal(const Jsonb *jb, const text *key)
   JsonbValue *v = getKeyJsonValueFromContainer(&((Jsonb *)jb)->root,
     VARDATA_ANY(key), VARSIZE_ANY_EXHDR(key), &vbuf);
 
-  if (v != NULL)
-    return JsonbValueToJsonb(v);
-
-  return NULL;
+  if (v == NULL)
+    return NULL;
+  Jsonb *result = JsonbValueToJsonb(v);
+  pfree(v);
+  return result;
 }
 
 text *
@@ -837,7 +831,7 @@ json_object_field_text(text *json, text *fname)
  * @note Derived from PostgreSQL function @p jsonb_object_field(jsonb, text)
  */
 text *
-jsonb_object_field_text_internal(const Jsonb *jb, const text *key)
+pg_jsonb_object_field_text(const Jsonb *jb, const text *key)
 {
   if (!JB_ROOT_IS_OBJECT(jb))
     return NULL;
@@ -873,12 +867,12 @@ jsonb_array_element(Jsonb *jb, int element)
     else
       element += nelements;
   }
-
   JsonbValue *v = getIthJsonbValueFromContainer(&jb->root, element);
-  if (v != NULL)
-    return JsonbValueToJsonb(v);
-
-  return NULL;
+  if (v == NULL)
+    return NULL;
+  Jsonb *result = JsonbValueToJsonb(v);
+  pfree(v);
+  return result;
 }
 
 text *
@@ -918,15 +912,14 @@ jsonb_array_element_text(Jsonb *jb, int element)
  * common routine for extract_path functions
  */
 static text *
-get_path_all(text *json, Datum *pathtext, bool *pathnulls, int npath,
-  bool as_text)
+get_path_all(text *json, text **path_elems, int npath, bool as_text)
 {
   char **tpath = palloc(npath * sizeof(char *));
   int *ipath = palloc(npath * sizeof(int));
   for (int i = 0; i < npath; i++)
   {
-    Assert(!pathnulls[i]);
-    tpath[i] = DatumGetCString(pathtext[i]);
+    Assert(! path_elems[i]);
+    tpath[i] = text_to_cstring(path_elems[i]);
 
     /*
      * we have no idea at this stage what structure the document is so
@@ -951,15 +944,15 @@ get_path_all(text *json, Datum *pathtext, bool *pathnulls, int npath,
 }
 
 text *
-json_extract_path(text *json, Datum *pathtext, bool *pathnulls, int npath)
+json_extract_path(text *json, text **path_elems, int npath)
 {
-  return get_path_all(json, pathtext, pathnulls, npath, false);
+  return get_path_all(json, path_elems, npath, false);
 }
 
 text *
-json_extract_path_text(text *json, Datum *pathtext, bool *pathnulls, int npath)
+json_extract_path_text(text *json, text **path_elems, int npath)
 {
-  return get_path_all(json, pathtext, pathnulls, npath, true);
+  return get_path_all(json, path_elems, npath, true);
 }
 
 /*
@@ -1363,51 +1356,35 @@ get_scalar(void *state, char *token, JsonTokenType tokentype)
 /**
  * @ingroup meos_base_json
  * @brief Extract a JSONB object field with the given path
- * @note Derived from PostgreSQL function @p get_jsonb_path_all()
- */
-Jsonb *
-get_jsonb_path_all_internal(const Jsonb *jb, Datum *pathtext, int path_len,
-  bool as_text)
-{
-  bool isnull;
-  Datum res = jsonb_get_element((Jsonb *) jb, pathtext, path_len, &isnull,
-    as_text);
-  if (isnull)
-    return NULL;
-  else
-    return DatumGetJsonbP(res);
-}
-
-/**
- * @ingroup meos_base_json
- * @brief Extract a JSONB object field with the given path
  * @note Derived from PostgreSQL function @p jsonb_extract_path()
  */
 Jsonb *
-jsonb_extract_path_internal(const Jsonb *jb, Datum *pathtext, int path_len)
+pg_jsonb_extract_path(const Jsonb *jb, text **path_elems, int path_len)
 {
-  return get_jsonb_path_all_internal(jb, pathtext, path_len, false);
+  return (Jsonb *) jsonb_get_element(jb, path_elems, path_len, false);
 }
 
 /**
  * @ingroup meos_base_json
  * @brief Extract a JSONB object field with the given path in text format
  */
-Jsonb *
-jsonb_extract_path_text_internal(const Jsonb *jb, Datum *pathtext,
-  int path_len)
+text *
+pg_jsonb_extract_path_text(const Jsonb *jb, text **path_elems, int path_len)
 {
-  return get_jsonb_path_all_internal(jb, pathtext, path_len, true);
+  return (text *) jsonb_get_element(jb, path_elems, path_len, true);
 }
 
-Jsonb *
-jsonb_get_element(Jsonb *jb, Datum *path, int npath, bool *isnull, bool as_text)
+/**
+ * @ingroup meos_base_json
+ * @brief Extract a JSONB object field with the given path in text format
+ */
+void *
+jsonb_get_element(Jsonb *jb, text **path_elems, int npath, bool as_text)
 {
   JsonbContainer *container = &jb->root;
-  JsonbValue *jbvp = NULL;
+  JsonbValue *v = NULL;
   int i;
   bool have_object = false, have_array = false;
-  *isnull = false;
 
   /* Identify whether we have object, array, or scalar at top-level */
   if (JB_ROOT_IS_OBJECT(jb))
@@ -1419,7 +1396,7 @@ jsonb_get_element(Jsonb *jb, Datum *path, int npath, bool *isnull, bool as_text)
     Assert(JB_ROOT_IS_ARRAY(jb) && JB_ROOT_IS_SCALAR(jb));
     /* Extract the scalar value, if it is what we'll return */
     if (npath <= 0)
-      jbvp = getIthJsonbValueFromContainer(container, 0);
+      v = getIthJsonbValueFromContainer(container, 0);
   }
 
   /*
@@ -1430,46 +1407,38 @@ jsonb_get_element(Jsonb *jb, Datum *path, int npath, bool *isnull, bool as_text)
    * (This inconsistency arises because there's no easy way to generate a
    * JsonbValue directly for root-level containers.)
    */
-  if (npath <= 0 && jbvp == NULL)
+  if (npath <= 0 && v == NULL)
   {
     if (as_text)
-    {
-      return cstring_to_text(JsonbToCString(NULL, container, VARSIZE(jb)));
-    }
+      return (void *) cstring_to_text(JsonbToCString(NULL, container,
+        VARSIZE(jb)));
     else
-    {
       /* not text mode - just hand back the jsonb */
-      return jb;
-    }
+      return (void *) jb;
   }
 
   for (i = 0; i < npath; i++)
   {
     if (have_object)
     {
-      text *subscr = DatumGetTextP(path[i]);
-      jbvp = getKeyJsonValueFromContainer(container, VARDATA_ANY(subscr),
+      text *subscr = path_elems[i];
+      v = getKeyJsonValueFromContainer(container, VARDATA_ANY(subscr),
         VARSIZE_ANY_EXHDR(subscr), NULL);
     }
     else if (have_array)
     {
       int lindex;
       uint32 index;
-      char *indextext = DatumGetCString(path[i]);
+      char *indextext = DatumGetCString(path_elems[i]);
       char *endptr;
 
       errno = 0;
       lindex = strtoint(indextext, &endptr, 10);
       if (endptr == indextext || *endptr != '\0' || errno != 0)
-      {
-        *isnull = true;
         return NULL;
-      }
 
       if (lindex >= 0)
-      {
         index = (uint32) lindex;
-      }
       else
       {
         /* Handle negative subscript */
@@ -1482,43 +1451,32 @@ jsonb_get_element(Jsonb *jb, Datum *path, int npath, bool *isnull, bool as_text)
         }
 
         uint32 nelements = JsonContainerSize(container);
-
         if (lindex == INT_MIN || -lindex > (int) nelements)
-        {
-          *isnull = true;
           return NULL;
-        }
         else
           index = nelements + lindex;
       }
-
-      jbvp = getIthJsonbValueFromContainer(container, index);
+      v = getIthJsonbValueFromContainer(container, index);
     }
     else
-    {
       /* scalar, extraction yields a null */
-      *isnull = true;
       return NULL;
-    }
 
-    if (jbvp == NULL)
-    {
-      *isnull = true;
+    if (v == NULL)
       return NULL;
-    }
     else if (i == npath - 1)
       break;
 
-    if (jbvp->type == jbvBinary)
+    if (v->type == jbvBinary)
     {
-      container = jbvp->val.binary.data;
+      container = v->val.binary.data;
       have_object = JsonContainerIsObject(container);
       have_array = JsonContainerIsArray(container);
       Assert(!JsonContainerIsScalar(container));
     }
     else
     {
-      Assert(IsAJsonbScalar(jbvp));
+      Assert(IsAJsonbScalar(v));
       have_object = false;
       have_array = false;
     }
@@ -1526,34 +1484,34 @@ jsonb_get_element(Jsonb *jb, Datum *path, int npath, bool *isnull, bool as_text)
 
   if (as_text)
   {
-    if (jbvp->type == jbvNull)
-    {
-      *isnull = true;
+    if (v->type == jbvNull)
       return NULL;
-    }
-    return JsonbValueAsText(jbvp);
+    text *result = JsonbValueAsText(v);
+    pfree(v);
+    return (void *) result;
   }
   else
   {
     /* not text mode - just hand back the jsonb */
-    return JsonbValueToJsonb(jbvp);
+    Jsonb *result = JsonbValueToJsonb(v);
+    pfree(v);
+    return (void *) result;
   }
 }
 
 Jsonb *
-jsonb_set_element(Jsonb *jb, Datum *path, int path_len, JsonbValue *newval)
+jsonb_set_element(Jsonb *jb, text **path_elems, int path_len, JsonbValue *newval)
 {
   if (newval->type == jbvArray && newval->val.array.rawScalar)
     *newval = newval->val.array.elems[0];
 
   JsonbIterator *it = JsonbIteratorInit(&jb->root);
   JsonbParseState *state = NULL;
-  bool *path_nulls = palloc0(path_len * sizeof(bool));
-  JsonbValue *res = setPath(&it, path, path_nulls, path_len, &state, 0, newval,
+  JsonbValue *res = setPath(&it, path_elems, path_len, &state, 0, newval,
     JB_PATH_CREATE | JB_PATH_FILL_GAPS | JB_PATH_CONSISTENT_POSITION);
-
-  pfree(path_nulls);
-  return JsonbValueToJsonb(res);
+  Jsonb *result = JsonbValueToJsonb(res);
+  pfree(res);
+  return result;
 }
 
 static void
@@ -1574,9 +1532,10 @@ push_null_elements(JsonbParseState **ps, int num)
  * Caller is responsible to make sure such path does not exist yet.
  */
 static void
-push_path(JsonbParseState **st, int level, Datum *path_elems,
-  bool *path_nulls, int path_len, JsonbValue *newval)
+push_path(JsonbParseState **st, int level, text **path_elems, int path_len,
+  JsonbValue *newval)
 {
+  int i;
   /*
    * tpath contains expected type of an empty jsonb created at each level
    * higher or equal to the current one, either jbvObject or jbvArray. Since
@@ -1591,18 +1550,18 @@ push_path(JsonbParseState **st, int level, Datum *path_elems,
    * level WJB_BEGIN_OBJECT/WJB_BEGIN_ARRAY was already created, so start
    * with the next one.
    */
-  for (int i = level + 1; i < path_len; i++)
+  for (i = level + 1; i < path_len; i++)
   {
     char *c, *badp;
     int lindex;
-    if (path_nulls[i])
+    if (! path_elems[i])
       break;
 
     /*
      * Try to convert to an integer to find out the expected type, object
      * or array.
      */
-    c = DatumGetCString(path_elems[i]);
+    c = text_to_cstring(path_elems[i]);
     errno = 0;
     lindex = strtoint(c, &badp, 10);
     if (badp == c || *badp != '\0' || errno != 0)
@@ -1611,10 +1570,8 @@ push_path(JsonbParseState **st, int level, Datum *path_elems,
       newkey.type = jbvString;
       newkey.val.string.val = c;
       newkey.val.string.len = strlen(c);
-
       (void) pushJsonbValue(st, WJB_BEGIN_OBJECT, NULL);
       (void) pushJsonbValue(st, WJB_KEY, &newkey);
-
       tpath[i - level] = jbvObject;
     }
     else
@@ -1638,9 +1595,9 @@ push_path(JsonbParseState **st, int level, Datum *path_elems,
    * Close everything up to the last but one level. The last one will be
    * closed outside of this function.
    */
-  for (int i = path_len - 1; i > level; i--)
+  for (i = path_len - 1; i > level; i--)
   {
-    if (path_nulls[i])
+    if (! path_elems[i])
       break;
 
     if (tpath[i - level] == jbvObject)
@@ -1648,6 +1605,7 @@ push_path(JsonbParseState **st, int level, Datum *path_elems,
     else
       (void) pushJsonbValue(st, WJB_END_ARRAY, NULL);
   }
+  return;
 }
 
 /*
@@ -1689,11 +1647,14 @@ JsonbValueAsText(JsonbValue *v)
   }
 }
 
-/*
- * SQL function json_array_length(json) -> int
+/**
+ * @ingroup meos_base_json
+ * @brief Returns the length of an JSON array value`
+ * @param[in] json JSON value 
+ * @note Derived from PostgreSQL function @p json_array_length()
  */
 int
-json_array_length(text *json)
+pg_json_array_length(const text *json)
 {
   AlenState *state = palloc0(sizeof(AlenState));
   JsonLexContext lex;
@@ -1895,7 +1856,6 @@ static JsonParseErrorType
 each_object_field_start(void *state, char *fname, bool isnull)
 {
   EachState  *_state = (EachState *) state;
-
   /* save a pointer to where the value starts */
   if (_state->lex->lex_level == 1)
   {
@@ -1909,7 +1869,6 @@ each_object_field_start(void *state, char *fname, bool isnull)
     else
       _state->result_start = _state->lex->token_start;
   }
-
   return JSON_SUCCESS;
 }
 
@@ -2005,8 +1964,7 @@ jsonb_array_elements_text(PG_FUNCTION_ARGS)
 }
 
 static Datum
-elements_worker_jsonb(Jsonb *jb, const char *funcname,
-  bool as_text)
+elements_worker_jsonb(Jsonb *jb, const char *funcname, bool as_text)
 {
   if (JB_ROOT_IS_SCALAR(jb))
   {
@@ -2613,8 +2571,7 @@ populate_array(ArrayIOData *aio, const char *colname, JsValue *jsv,
   {
     /* Return null if an error was found. */
     if (!populate_array_json(&ctx, jsv->val.json.str,
-                 jsv->val.json.len >= 0 ? jsv->val.json.len
-                 : strlen(jsv->val.json.str)))
+      jsv->val.json.len >= 0 ? jsv->val.json.len : strlen(jsv->val.json.str)))
     {
       *isnull = true;
       return (Datum) 0;
@@ -3170,7 +3127,7 @@ populate_record(TupleDesc tupdesc, RecordIOData **record_p,
   {
     for (i = 0; i < ncolumns; ++i)
     {
-      values[i] = (Datum) 0;
+      values[i] = NULL;
       nulls[i] = true;
     }
   }
@@ -3203,14 +3160,8 @@ populate_record(TupleDesc tupdesc, RecordIOData **record_p,
       continue;
 
     values[i] = populate_record_field(&record->columns[i],
-                      att->atttypid,
-                      att->atttypmod,
-                      colname,
-                      nulls[i] ? (Datum) 0 : values[i],
-                      &field,
-                      &nulls[i],
-                      escontext,
-                      false);
+      att->atttypid, att->atttypmod, colname, nulls[i] ? (Datum) 0 : values[i],
+      &field, &nulls[i], escontext, false);
   }
 
   res = heap_form_tuple(tupdesc, values, nulls);
@@ -3301,7 +3252,7 @@ populate_record_worker(FunctionCallInfo fcinfo, const char *funcname,
   /* Collect record arg if we have one */
   if (!have_record_arg)
     rec = NULL;        /* it's json{b}_to_record() */
-  else if (!PG_ARGISNULL(0))
+  else if (! PG_ARGISNULL(0))
   {
     rec = PG_GETARG_HEAPTUPLEHEADER(0);
     /*
@@ -3346,7 +3297,7 @@ populate_record_worker(FunctionCallInfo fcinfo, const char *funcname,
   }
   else
   {
-    Jsonb     *jb = PG_GETARG_JSONB_P(json_arg_num);
+    Jsonb *jb = PG_GETARG_JSONB_P(json_arg_num);
 
     jsv.val.jsonb = &jbv;
 
@@ -3375,27 +3326,19 @@ static HTAB *
 get_json_object_as_hash(const char *json, int len, const char *funcname,
   Node *escontext)
 {
-  HASHCTL    ctl;
-  HTAB     *tab;
-  JHashState *state;
-  JsonSemAction *sem;
-
+  HASHCTL ctl;
   ctl.keysize = NAMEDATALEN;
   ctl.entrysize = sizeof(JsonHashEntry);
-  ctl.hcxt = CurrentMemoryContext;
-  tab = hash_create("json object hashtable",
-            100,
-            &ctl,
-            HASH_ELEM | HASH_STRINGS | HASH_CONTEXT);
+  HTAB *tab = hash_create("json object hashtable", 100, &ctl,
+    HASH_ELEM | HASH_STRINGS);
 
-  state = palloc0(sizeof(JHashState));
-  sem = palloc0(sizeof(JsonSemAction));
-
+  JHashState *state = palloc0(sizeof(JHashState));
   state->function_name = funcname;
   state->hash = tab;
   state->lex = makeJsonLexContextCstringLen(NULL, json, len,
-                        GetDatabaseEncoding(), true);
+    GetDatabaseEncoding(), true);
 
+  JsonSemAction *sem = palloc0(sizeof(JsonSemAction));
   sem->semstate = state;
   sem->array_start = hash_array_start;
   sem->scalar = hash_scalar;
@@ -3409,7 +3352,6 @@ get_json_object_as_hash(const char *json, int len, const char *funcname,
   }
 
   freeJsonLexContext(state->lex);
-
   return tab;
 }
 
@@ -3493,12 +3435,11 @@ static JsonParseErrorType
 hash_array_start(void *state)
 {
   JHashState *_state = (JHashState *) state;
-
   if (_state->lex->lex_level == 0)
   {
     elog(ERROR, "cannot call %s on an array", _state->function_name);
+    return JSON_INVALID_TOKEN;
   }
-
   return JSON_SUCCESS;
 }
 
@@ -3506,17 +3447,17 @@ static JsonParseErrorType
 hash_scalar(void *state, char *token, JsonTokenType tokentype)
 {
   JHashState *_state = (JHashState *) state;
-
   if (_state->lex->lex_level == 0)
+  {
     elog(ERROR, "cannot call %s on a scalar", _state->function_name);
-
+    return JSON_INVALID_TOKEN;
+  }
   if (_state->lex->lex_level == 1)
   {
     _state->saved_scalar = token;
     /* saved_token_type must already be set in hash_object_field_start() */
     Assert(_state->saved_token_type == tokentype);
   }
-
   return JSON_SUCCESS;
 }
 
@@ -3763,7 +3704,7 @@ populate_recordset_object_start(void *state)
   ctl.entrysize = sizeof(JsonHashEntry);
   ctl.hcxt = CurrentMemoryContext;
   _state->json_hash = hash_create("json object hashtable", 100, &ctl,
-    HASH_ELEM | HASH_STRINGS | HASH_CONTEXT);
+    HASH_ELEM | HASH_STRINGS);
 
   return JSON_SUCCESS;
 }
@@ -3772,12 +3713,12 @@ static JsonParseErrorType
 populate_recordset_object_end(void *state)
 {
   PopulateRecordsetState *_state = (PopulateRecordsetState *) state;
-  JsObject  obj;
 
   /* Nested objects require no special processing */
   if (_state->lex->lex_level > 1)
     return JSON_SUCCESS;
 
+  JsObject obj;
   obj.is_json = true;
   obj.val.json_hash = _state->json_hash;
 
@@ -3878,9 +3819,8 @@ populate_recordset_object_field_end(void *state, char *fname, bool isnull)
 
   if (_state->save_json_start != NULL)
   {
-    int      len = _state->lex->prev_token_terminator - _state->save_json_start;
-    char     *val = palloc((len + 1) * sizeof(char));
-
+    int len = _state->lex->prev_token_terminator - _state->save_json_start;
+    char *val = palloc((len + 1) * sizeof(char));
     memcpy(val, _state->save_json_start, len);
     val[len] = '\0';
     hashentry->val = val;
@@ -3941,7 +3881,6 @@ static JsonParseErrorType
 sn_object_field_start(void *state, char *fname, bool isnull)
 {
   StripnullState *_state = (StripnullState *) state;
-
   if (isnull)
   {
     /*
@@ -3969,7 +3908,6 @@ static JsonParseErrorType
 sn_array_element_start(void *state, bool isnull)
 {
   StripnullState *_state = (StripnullState *) state;
-
   /* If strip_in_arrays is enabled and this is a null, mark it for skipping */
   if (isnull && _state->strip_in_arrays)
   {
@@ -4009,24 +3947,19 @@ sn_scalar(void *state, char *token, JsonTokenType tokentype)
 /**
  * @ingroup meos_base_json
  * @brief Return a JSON value without nulls
- * @return On error return @p DBL_MAX
  * @note Derived from PostgreSQL function: @p json_strip_nulls()
  */
 text *
-json_strip_nulls_internal(text *json, bool strip_in_arrays)
+pg_json_strip_nulls(const text *json, bool strip_in_arrays)
 {
-  StripnullState *state;
   JsonLexContext lex;
-  JsonSemAction *sem;
-
-  state = palloc0(sizeof(StripnullState));
-  sem = palloc0(sizeof(JsonSemAction));
-
+  StripnullState *state = palloc0(sizeof(StripnullState));
   state->lex = makeJsonLexContext(&lex, json, true);
   state->strval = makeStringInfo();
   state->skip_next_null = false;
   state->strip_in_arrays = strip_in_arrays;
 
+  JsonSemAction *sem = palloc0(sizeof(JsonSemAction));
   sem->semstate = state;
   sem->object_start = sn_object_start;
   sem->object_end = sn_object_end;
@@ -4038,7 +3971,15 @@ json_strip_nulls_internal(text *json, bool strip_in_arrays)
 
   pg_parse_json_or_ereport(&lex, sem);
 
-  return cstring_to_text_with_len(state->strval->data, state->strval->len);
+  text *result = cstring_to_text_with_len(state->strval->data,
+    state->strval->len);
+
+  /* Clean up and return */
+  freeJsonLexContext(&lex);
+  destroyStringInfo(state->strval);
+  pfree(state);
+  pfree(sem);
+  return result;
 }
 
 /**
@@ -4048,7 +3989,7 @@ json_strip_nulls_internal(text *json, bool strip_in_arrays)
  * @note Derived from PostgreSQL function: @p jsonb_strip_nulls()
  */
 Jsonb *
-jsonb_strip_nulls_internal(Jsonb *jb, bool strip_in_arrays)
+pg_jsonb_strip_nulls(const Jsonb *jb, bool strip_in_arrays)
 {
   JsonbParseState *parseState = NULL;
   JsonbValue *res = NULL;
@@ -4060,11 +4001,9 @@ jsonb_strip_nulls_internal(Jsonb *jb, bool strip_in_arrays)
     return (jb);
 
   JsonbIterator *it = JsonbIteratorInit(&jb->root);
-
   while ((type = JsonbIteratorNext(&it, &v, false)) != WJB_DONE)
   {
     Assert(!(type == WJB_KEY && last_was_key));
-
     if (type == WJB_KEY)
     {
       /* stash the key until we know if it has a null value */
@@ -4109,7 +4048,7 @@ jsonb_strip_nulls_internal(Jsonb *jb, bool strip_in_arrays)
  * @note Derived from PostgreSQL function: @p jsonb_pretty()
  */
 text *
-jsonb_pretty_internal(Jsonb *jb)
+pg_jsonb_pretty(const Jsonb *jb)
 {
   StringInfo str = makeStringInfo();
   JsonbToCStringIndent(str, &jb->root, VARSIZE(jb));
@@ -4123,7 +4062,7 @@ jsonb_pretty_internal(Jsonb *jb)
  * @note Derived from PostgreSQL function: @p jsonb_concat()
  */
 Jsonb *
-jsonb_concat_internal(Jsonb *jb1, Jsonb *jb2)
+pg_jsonb_concat(const Jsonb *jb1, const Jsonb *jb2)
 {
   /*
    * If one of the jsonb is empty, just return the other if it's not scalar
@@ -4154,7 +4093,7 @@ jsonb_concat_internal(Jsonb *jb1, Jsonb *jb2)
  * @note Derived from the PostgreSQL function @p jsonb_delete()
  */
 Jsonb *
-jsonb_delete_internal(Jsonb *jb, text *key)
+pg_jsonb_delete(const Jsonb *jb, const text *key)
 {
   char *keyptr = VARDATA_ANY(key);
   int keylen = VARSIZE_ANY_EXHDR(key);
@@ -4176,18 +4115,15 @@ jsonb_delete_internal(Jsonb *jb, text *key)
   while ((r = JsonbIteratorNext(&it, &v, skipNested)) != WJB_DONE)
   {
     skipNested = true;
-
     if ((r == WJB_ELEM || r == WJB_KEY) &&
-      (v.type == jbvString && keylen == v.val.string.len &&
-       memcmp(keyptr, v.val.string.val, keylen) == 0))
+        (v.type == jbvString && keylen == v.val.string.len &&
+         memcmp(keyptr, v.val.string.val, keylen) == 0))
     {
       /* skip corresponding value as well */
       if (r == WJB_KEY)
         (void) JsonbIteratorNext(&it, &v, true);
-
       continue;
     }
-
     res = pushJsonbValue(&state, r, r < WJB_BEGIN_ARRAY ? &v : NULL);
   }
 
@@ -4196,35 +4132,29 @@ jsonb_delete_internal(Jsonb *jb, text *key)
   return JsonbValueToJsonb(res);
 }
 
-/*
- * SQL function jsonb_delete (jsonb, variadic text[])
- *
- * return a copy of the jsonb with the indicated items
- * removed.
- */
 /**
+ * @ingroup meos_base_json
  * @brief Return a copy of the JSONB with the indicated items removed
  * @note Derived from PostgreSQL function @p jsonb_delete_array()
  */
 Jsonb *
-jsonb_delete_key_array_internal(const Jsonb *in, const text **keys_elems,
-  bool *keys_nulls, int keys_len)
+pg_jsonb_delete_array(const Jsonb *jb, const text **keys_elems, int keys_len)
 {
   JsonbParseState *state = NULL;
   JsonbValue v, *res = NULL;
 
-  if (JB_ROOT_IS_SCALAR(in))
+  if (JB_ROOT_IS_SCALAR(jb))
   {
     elog(ERROR, "cannot delete from scalar");
     return NULL;
   }
 
-  if (JB_ROOT_COUNT(in) == 0 || keys_len == 0)
-    return jsonb_copy((Jsonb *) in);
+  if (JB_ROOT_COUNT(jb) == 0 || keys_len == 0)
+    return jsonb_copy((Jsonb *) jb);
 
   bool skipNested = false;
   JsonbIteratorToken r;
-  JsonbIterator *it = JsonbIteratorInit(&((Jsonb *) in)->root);
+  JsonbIterator *it = JsonbIteratorInit(&((Jsonb *) jb)->root);
   while ((r = JsonbIteratorNext(&it, &v, skipNested)) != WJB_DONE)
   {
     skipNested = true;
@@ -4234,15 +4164,12 @@ jsonb_delete_key_array_internal(const Jsonb *in, const text **keys_elems,
       bool found = false;
       for (i = 0; i < keys_len; i++)
       {
-        char *keyptr;
-        int keylen;
-
-        if (keys_nulls[i])
+        if (! keys_elems[i])
           continue;
 
         /* We rely on the array elements not being toasted */
-        keyptr = VARDATA_ANY(keys_elems[i]);
-        keylen = VARSIZE_ANY_EXHDR(keys_elems[i]);
+        char *keyptr = VARDATA_ANY(keys_elems[i]);
+        int keylen = VARSIZE_ANY_EXHDR(keys_elems[i]);
         if (keylen == v.val.string.len &&
           memcmp(keyptr, v.val.string.val, keylen) == 0)
         {
@@ -4265,20 +4192,14 @@ jsonb_delete_key_array_internal(const Jsonb *in, const text **keys_elems,
   return JsonbValueToJsonb(res);
 }
 
-/*
- * SQL function jsonb_delete (jsonb, int)
- *
- * return a copy of the jsonb with the indicated item
- * removed. Negative int means count back from the
- * end of the items.
- */
 /**
+ * @ingroup meos_base_json
  * @brief Return a copy of the jsonb with the indicated item removed
  * @details Negative int means count back from the end of the items
  * @note Derived from PostgreSQL function @p jsonb_delete_idx(jsonb, int)
  */
 Jsonb *
-jsonb_delete_idx_internal(Jsonb *in, int idx)
+pg_jsonb_delete_idx(Jsonb *in, int idx)
 {
   JsonbParseState *state = NULL;
   uint32 i = 0, n;
@@ -4331,13 +4252,14 @@ jsonb_delete_idx_internal(Jsonb *in, int idx)
 }
 
 /**
+ * @ingroup meos_base_json
  * @brief Replace a JSONB value specified by a path with a new value
  * @note Derived from the PostgreSQL function @p
  * jsonb_set(jsonb, text[], jsonb, boolean)
  */
 Jsonb *
-jsonb_set_internal(const Jsonb *jb, Datum *path_elems, bool *path_nulls,
-  int path_len, Jsonb *newjsonb, bool create)
+pg_jsonb_set(const Jsonb *jb, text **path_elems, int path_len,
+  Jsonb *newjsonb, bool create)
 {
   JsonbValue newval;
   JsonbToJsonbValue(newjsonb, &newval);
@@ -4353,19 +4275,22 @@ jsonb_set_internal(const Jsonb *jb, Datum *path_elems, bool *path_nulls,
 
   JsonbIterator *it = JsonbIteratorInit(&((Jsonb *)jb)->root);
   JsonbParseState *st = NULL;
-  JsonbValue *res = setPath(&it, path_elems, path_nulls, path_len, &st, 0,
+  JsonbValue *res = setPath(&it, path_elems, path_len, &st, 0,
     &newval, create ? JB_PATH_CREATE : JB_PATH_REPLACE);
 
   assert(res != NULL);
   return JsonbValueToJsonb(res);
 }
 
-/*
- * SQL function jsonb_set_lax(jsonb, text[], jsonb, boolean, text)
+/**
+ * @ingroup meos_base_json
+ * @brief Delete the field or array element at the specified path, where path
+ * elements can be either field keys or array indexes
+ * @note Derived from PostgreSQL function @p jsonb_set_lax(jsonb, text[], jsonb, boolean, text)
  */
 Jsonb *
-jsonb_set_lax(Jsonb *jb, Datum *path_elems, bool *path_nulls,
-  int path_len, Jsonb *newjsonb, bool create, text *handle_null)
+pg_jsonb_set_lax(const Jsonb *jb, text **path_elems, int path_len,
+  Jsonb *newjsonb, bool create, const text *handle_null)
 {
   if (! jb || ! path_elems || ! path_len || ! newjsonb)
     return NULL;
@@ -4379,8 +4304,7 @@ jsonb_set_lax(Jsonb *jb, Datum *path_elems, bool *path_nulls,
 
   /* if the new value isn't an SQL NULL just call jsonb_set */
   if (! path_elems)
-    return jsonb_set_internal(jb, path_elems, path_nulls, path_len, newjsonb,
-      create);
+    return jsonb_set_internal(jb, path_elems, path_len, newjsonb, create);
 
   char *handle_val = text_to_cstring(handle_null);
   if (strcmp(handle_val, "raise_exception") == 0)
@@ -4391,14 +4315,13 @@ jsonb_set_lax(Jsonb *jb, Datum *path_elems, bool *path_nulls,
   else if (strcmp(handle_val, "use_json_null") == 0)
   {
     Jsonb *null = pg_jsonb_in("null");
-    Jsonb *result = jsonb_set_internal(jb, path_elems, path_nulls, path_len,
-      null, create);
+    Jsonb *result = jsonb_set_internal(jb, path_elems, path_len, null, create);
     pfree(null);
     return result;
   }
   else if (strcmp(handle_val, "delete_key") == 0)
   {
-    return jsonb_delete_path_internal(jb, path_elems, path_nulls, path_len);
+    return pg_jsonb_delete_path(jb, path_elems, path_len);
   }
   else if (strcmp(handle_val, "return_target") == 0)
   {
@@ -4408,7 +4331,7 @@ jsonb_set_lax(Jsonb *jb, Datum *path_elems, bool *path_nulls,
   {
     elog(ERROR,
       "null_value_treatment must be \"delete_key\", \"return_target\", \"use_json_null\", or \"raise_exception\"");
-    return (Datum) 0;
+    return NULL;
   }
 }
 
@@ -4416,11 +4339,10 @@ jsonb_set_lax(Jsonb *jb, Datum *path_elems, bool *path_nulls,
  * @ingroup meos_base_json
  * @brief Delete the field or array element at the specified path, where path
  * elements can be either field keys or array indexes
- * @note Derived from PostgreSQL function @p jsonb_delete_path(jsonb, text[])
+ * @note Derived from PostgreSQL function @p jsonb_delete_path()
  */
 Jsonb *
-jsonb_delete_path_internal(const Jsonb *jb, Datum *path_elems,
-  bool *path_nulls, int path_len)
+pg_jsonb_delete_path(const Jsonb *jb, text **path_elems, int path_len)
 {
   if (JB_ROOT_IS_SCALAR(jb))
   {
@@ -4433,24 +4355,22 @@ jsonb_delete_path_internal(const Jsonb *jb, Datum *path_elems,
 
   JsonbIterator *it = JsonbIteratorInit(&((Jsonb *) jb)->root);
   JsonbParseState *st = NULL;
-  JsonbValue *res = setPath(&it, path_elems, path_nulls, path_len, &st, 0,
-    NULL, JB_PATH_DELETE);
+  JsonbValue *res = setPath(&it, path_elems, path_len, &st, 0, NULL,
+    JB_PATH_DELETE);
 
   assert(res != NULL);
   return JsonbValueToJsonb(res);
 }
 
-/*
- * SQL function jsonb_insert(jsonb, text[], jsonb, boolean)
- */
 /**
+ * @ingroup meos_base_json
  * @brief Replace a JSONB value specified by a path with a new value
  * @note Derived from the PostgreSQL function @p
  * jsonb_insert(jsonb, text[], jsonb, boolean)
  */
 Jsonb *
-jsonb_insert_internal(const Jsonb *jb, Datum *path_elems, bool *path_nulls,
-  int path_len, Jsonb *newjsonb, bool after)
+pg_jsonb_insert(const Jsonb *jb, text **path_elems, int path_len,
+  Jsonb *newjsonb, bool after)
 {
   JsonbValue newval;
   JsonbToJsonbValue(newjsonb, &newval);
@@ -4466,7 +4386,7 @@ jsonb_insert_internal(const Jsonb *jb, Datum *path_elems, bool *path_nulls,
 
   JsonbIterator *it = JsonbIteratorInit(&((Jsonb *)jb)->root);
   JsonbParseState *st = NULL;
-  JsonbValue *res = setPath(&it, path_elems, path_nulls, path_len, &st, 0, 
+  JsonbValue *res = setPath(&it, path_elems, path_len, &st, 0, 
     &newval, after ? JB_PATH_INSERT_AFTER : JB_PATH_INSERT_BEFORE);
 
   assert(res != NULL);
@@ -4601,10 +4521,10 @@ IteratorConcat(JsonbIterator **it1, JsonbIterator **it2,
  * whatever bits in op_type are set, or nothing is done.
  */
 static JsonbValue *
-setPath(JsonbIterator **it, Datum *path_elems, bool *path_nulls, int path_len,
+setPath(JsonbIterator **it, text **path_elems, int path_len,
   JsonbParseState **st, int level, JsonbValue *newval, int op_type)
 {
-  if (path_nulls[level])
+  if (! path_elems[level])
   {
     elog(ERROR, "path element at position %d is null", level + 1);
     return NULL;
@@ -4628,7 +4548,7 @@ setPath(JsonbIterator **it, Datum *path_elems, bool *path_nulls, int path_len,
         elog(ERROR, "cannot replace existing key");
 
       (void) pushJsonbValue(st, r, NULL);
-      setPathArray(it, path_elems, path_nulls, path_len, st, level, newval,
+      setPathArray(it, path_elems, path_len, st, level, newval,
         v.val.array.nElems, op_type);
       r = JsonbIteratorNext(it, &v, false);
       Assert(r == WJB_END_ARRAY);
@@ -4636,7 +4556,7 @@ setPath(JsonbIterator **it, Datum *path_elems, bool *path_nulls, int path_len,
       break;
     case WJB_BEGIN_OBJECT:
       (void) pushJsonbValue(st, r, NULL);
-      setPathObject(it, path_elems, path_nulls, path_len, st, level, newval,
+      setPathObject(it, path_elems, path_len, st, level, newval,
         v.val.object.nPairs, op_type);
       r = JsonbIteratorNext(it, &v, true);
       Assert(r == WJB_END_OBJECT);
@@ -4671,21 +4591,21 @@ setPath(JsonbIterator **it, Datum *path_elems, bool *path_nulls, int path_len,
  * Object walker for setPath
  */
 static void
-setPathObject(JsonbIterator **it, Datum *path_elems, bool *path_nulls,
-  int path_len, JsonbParseState **st, int level, JsonbValue *newval,
-  uint32 npairs, int op_type)
+setPathObject(JsonbIterator **it, text **path_elems, int path_len,
+  JsonbParseState **st, int level, JsonbValue *newval, uint32 npairs,
+  int op_type)
 {
   text *pathelem = NULL;
   int i;
   JsonbValue k, v;
   bool done = false;
 
-  if (level >= path_len || path_nulls[level])
+  if (level >= path_len || ! path_elems[level])
     done = true;
   else
   {
     /* The path Datum could be toasted, in which case we must detoast it */
-    pathelem = DatumGetTextP(path_elems[level]);
+    pathelem = path_elems[level];
   }
 
   /* empty object is a special case for create */
@@ -4731,7 +4651,7 @@ setPathObject(JsonbIterator **it, Datum *path_elems, bool *path_nulls,
       else
       {
         (void) pushJsonbValue(st, r, &k);
-        setPath(it, path_elems, path_nulls, path_len, st, level + 1, newval,
+        setPath(it, path_elems, path_len, st, level + 1, newval,
           op_type);
       }
     }
@@ -4784,7 +4704,7 @@ setPathObject(JsonbIterator **it, Datum *path_elems, bool *path_nulls,
     newkey.val.string.val = VARDATA_ANY(pathelem);
     newkey.val.string.len = VARSIZE_ANY_EXHDR(pathelem);
     (void) pushJsonbValue(st, WJB_KEY, &newkey);
-    (void) push_path(st, level, path_elems, path_nulls, path_len, newval);
+    (void) push_path(st, level, path_elems, path_len, newval);
     /* Result is closed with WJB_END_OBJECT outside of this function */
   }
 }
@@ -4793,18 +4713,18 @@ setPathObject(JsonbIterator **it, Datum *path_elems, bool *path_nulls,
  * Array walker for setPath
  */
 static void
-setPathArray(JsonbIterator **it, Datum *path_elems, bool *path_nulls,
-  int path_len, JsonbParseState **st, int level, JsonbValue *newval,
-  uint32 nelems, int op_type)
+setPathArray(JsonbIterator **it, text **path_elems, int path_len,
+  JsonbParseState **st, int level, JsonbValue *newval, uint32 nelems,
+  int op_type)
 {
   JsonbValue v;
   int idx, i;
   bool done = false;
 
   /* pick correct index */
-  if (level < path_len && !path_nulls[level])
+  if (level < path_len && ! path_elems[level])
   {
-    char *c = DatumGetCString(path_elems[level]);
+    char *c = path_elems[level];
     char *badp;
     errno = 0;
     idx = strtoint(c, &badp, 10);
@@ -4890,7 +4810,7 @@ setPathArray(JsonbIterator **it, Datum *path_elems, bool *path_nulls,
           (void) pushJsonbValue(st, WJB_ELEM, newval);
       }
       else
-        (void) setPath(it, path_elems, path_nulls, path_len, st, level + 1,
+        (void) setPath(it, path_elems, path_len, st, level + 1,
           newval, op_type);
     }
     else
@@ -4939,7 +4859,7 @@ setPathArray(JsonbIterator **it, Datum *path_elems, bool *path_nulls,
   {
     if (idx > 0)
       push_null_elements(st, idx - nelems);
-    (void) push_path(st, level, path_elems, path_nulls, path_len, newval);
+    (void) push_path(st, level, path_elems, path_len, newval);
     /* Result is closed with WJB_END_OBJECT outside of this function */
   }
 }

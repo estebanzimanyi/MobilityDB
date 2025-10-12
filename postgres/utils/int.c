@@ -33,6 +33,7 @@
 /* PostgreSQL */
 #include "postgres.h"
 #include "common/int.h"
+#include "utils/builtins.h"
 
 /*****************************************************************************/
 
