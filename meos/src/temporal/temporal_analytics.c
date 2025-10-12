@@ -47,7 +47,6 @@
 #include <meos.h>
 #include <meos_internal.h>
 #include <meos_internal_geo.h>
-#include <postgres_types.h>
 #include "temporal/set.h"
 #include "temporal/span.h"
 #include "temporal/spanset.h"
@@ -56,6 +55,10 @@
 #include "temporal/type_util.h"
 #include "geo/tgeo_distance.h"
 #include "geo/tgeo_spatialfuncs.h"
+
+#include <utils/jsonb.h>
+#include <utils/numeric.h>
+#include <postgres_types.h>
 
 /*****************************************************************************
  * Time precision functions for time values

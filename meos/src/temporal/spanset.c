@@ -40,7 +40,6 @@
 #include <limits.h>
 /* PostgreSQL */
 #include <postgres.h>
-#include <postgres_types.h>
 #include "utils/timestamp.h"
 #if POSTGRESQL_VERSION_NUMBER >= 160000
   #include "varatt.h"
@@ -53,6 +52,10 @@
 #include "temporal/type_parser.h"
 #include "temporal/type_inout.h"
 #include "temporal/type_util.h"
+
+#include <utils/jsonb.h>
+#include <utils/numeric.h>
+#include <postgres_types.h>
 
 /*****************************************************************************
  * Parameter tests
@@ -175,14 +178,6 @@ spanset_find_value(const SpanSet *ss, Datum v, int *loc)
   *loc = middle;
   return false;
 }
-
-#if MEOS
-inline bool
-tstzspanset_find_timestamptz(const SpanSet *ss, TimestampTz t, int *loc)
-{
-  return spanset_find_value(ss, TimestampTzGetDatum(t), loc);
-}
-#endif /* MEOS */
 
 #if DEBUG_BUILD
 /**
@@ -648,17 +643,22 @@ datespanset_duration(const SpanSet *ss, bool boundspan)
   /* Ensure the validity of the arguments */
   VALIDATE_DATESPANSET(ss, NULL);
 
+  Interval *result = palloc0(sizeof(Interval));
+  int ndays;
   if (boundspan)
-    return minus_date_date(ss->span.upper, ss->span.lower);
+  {
+    ndays = minus_date_date(ss->span.upper, ss->span.lower);
+    result->day = ndays;
+    return result;
+  }
 
-  int nodays = 0;
+  ndays = 0;
   for (int i = 0; i < ss->count; i++)
   {
     const Span *s = SPANSET_SP_N(ss, i);
-    nodays += (int32) (s->upper - s->lower);
+    ndays += (int32) (s->upper - s->lower);
   }
-  Interval *result = palloc0(sizeof(Interval));
-  result->day = nodays;
+  result->day = ndays;
   return result;
 }
 

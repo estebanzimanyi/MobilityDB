@@ -38,7 +38,6 @@
 #include <limits.h>
 /* PostgreSQL */
 #include <postgres.h>
-#include <postgres_types.h>
 #include <utils/float.h>
 #include <utils/timestamp.h>
 #if POSTGRESQL_VERSION_NUMBER >= 160000
@@ -66,6 +65,10 @@
 #if RGEO
   #include "rgeo/trgeo.h"
 #endif
+
+#include <utils/jsonb.h>
+#include <utils/numeric.h>
+#include <postgres_types.h>
 
 /*****************************************************************************
  * Comparison functions on datums

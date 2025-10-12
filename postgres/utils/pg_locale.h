@@ -140,6 +140,7 @@ typedef struct
 } pg_collation_record;
 
 extern void init_database_collation(void);
+extern void free_database_collation(void);
 extern pg_locale_t pg_newlocale_from_collation(Oid collid);
 
 extern char *get_collation_actual_version(char collprovider, const char *collcollate);

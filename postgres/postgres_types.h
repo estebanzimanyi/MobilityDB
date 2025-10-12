@@ -36,13 +36,13 @@
 #ifndef POSTGRES_TYPES_H
 #define POSTGRES_TYPES_H
 
-/* PostgreSQL */
-#include <postgres.h>
-#include "utils/numeric.h"
-#include <utils/date.h>
-#include <utils/json.h>
-#include <utils/jsonb.h>
-#include <utils/timestamp.h>
+// /* PostgreSQL */
+// #include <postgres.h>
+// #include "utils/numeric.h"
+// #include <utils/date.h>
+// #include <utils/json.h>
+// #include <utils/jsonb.h>
+// #include <utils/timestamp.h>
 
 #if POSTGRESQL_VERSION_NUMBER < 170000
 /*
@@ -84,12 +84,12 @@ extern uint32 int32_hash(int32 val);
 extern uint64 int32_hash_extended(int32 val, uint64 seed);
 extern uint32 int64_hash(int64 val);
 extern uint64 int64_hash_extended(int64 val, uint64 seed);
-extern uint32 float4_hash(float4 key);
-extern uint64 float4_hash_extended(float4 key, uint64 seed);
-extern uint32 float8_hash(float8 key);
-extern uint64 float8_hash_extended(float8 key, uint64 seed);
-extern uint32 text_hash(const text *key, Oid collid);
-extern uint64 text_hash_extended(const text *key, uint64 seed, Oid collid);
+extern uint32 float4_hash(float4 num);
+extern uint64 float4_hash_extended(float4 num, uint64 seed);
+extern uint32 float8_hash(float8 num);
+extern uint64 float8_hash_extended(float8 num, uint64 seed);
+extern uint32 text_hash(const text *num, Oid collid);
+extern uint64 text_hash_extended(const text *txt, uint64 seed, Oid collid);
 
 /* Functions for booleans */
 
@@ -126,7 +126,7 @@ extern int64 div_int32_int64(int32 num1, int64 num2);
 extern int64 div_int64_int16(int64 num1, int16 num2);
 extern int64 div_int64_int32(int64 num1, int32 num2);
 extern int64 div_int64_int64(int64 num1, int64 num2);
-extern bool eq_in16_int32(int16 num1, int32 num2);
+extern bool eq_int16_int32(int16 num1, int32 num2);
 extern bool eq_int16_int16(int16 num1, int16 num2);
 extern bool eq_int16_int64(int16 num1, int64 num2);
 extern bool eq_int32_int16(int32 num1, int16 num2);
@@ -264,6 +264,7 @@ extern bool ne_int64_int64(int64 num1, int64 num2);
 
 /* Functions for numeric */
 
+extern Numeric numeric_copy(Numeric num);
 extern Numeric pg_numeric_in(const char *str, int32 typmod);
 extern char *pg_numeric_out(Numeric num);
 extern Numeric pg_numeric(Numeric num, int32 typmod);
@@ -277,14 +278,14 @@ extern Numeric pg_numeric_ceil(Numeric num);
 extern Numeric pg_numeric_floor(Numeric num);
 extern int32 numeric_width_bucket(Numeric operand, Numeric bound1,
   Numeric bound2, int32 count);
-extern int pg_numeric_cmp(Numeric num1, Numeric num2);
+extern int32 pg_numeric_cmp(Numeric num1, Numeric num2);
 extern bool pg_numeric_eq(Numeric num1, Numeric num2);
 extern bool pg_numeric_ne(Numeric num1, Numeric num2);
 extern bool pg_numeric_gt(Numeric num1, Numeric num2);
 extern bool pg_numeric_ge(Numeric num1, Numeric num2);
 extern bool pg_numeric_lt(Numeric num1, Numeric num2);
 extern bool pg_numeric_le(Numeric num1, Numeric num2);
-extern int numeric_hash(Numeric key);
+extern uint32 numeric_hash(Numeric key);
 extern uint64 numeric_hash_extended(Numeric key, uint64 seed);
 extern Numeric pg_numeric_add(Numeric num1, Numeric num2);
 extern Numeric pg_numeric_sub(Numeric num1, Numeric num2);
@@ -303,8 +304,8 @@ extern Numeric pg_numeric_exp(Numeric num);
 extern Numeric pg_numeric_ln(Numeric num);
 extern Numeric pg_numeric_log(Numeric num1, Numeric num2);
 extern Numeric numeric_pow(Numeric num1, Numeric num2);
-extern int pg_numeric_scale(Numeric num);
-extern int pg_numeric_min_scale(Numeric num);
+extern int32 pg_numeric_scale(Numeric num);
+extern int32 pg_numeric_min_scale(Numeric num);
 extern Numeric pg_numeric_trim_scale(Numeric num);
 extern Numeric int32_to_numeric(int32 num);
 extern int32 numeric_to_int32(Numeric num);
@@ -378,7 +379,7 @@ extern float8 float8_pi(void);
 extern float8 float8_pow(float8 num1, float8 num2);
 extern float8 float8_radians(float8 num);
 extern float8 float8_rint(float8 num);
-extern float8 float8_round(float8 d, int maxdd);
+extern float8 float8_round(float8 num, int maxdd);
 extern float8 float8_sign(float8 num);
 extern float8 float8_sin(float8 num);
 extern float8 float8_sind(float8 num);
@@ -434,13 +435,14 @@ extern int pg_float8_cmp(float8 a, float8 b);
 
 extern uint32 char_hash(char c);
 extern uint64 char_hash_extended(char c, uint64 seed);
-extern text *cstring2text(const char *str);
+extern text *cstring_to_text(const char *str);
 extern text *int32_to_bin(int32 num);
 extern text *int32_to_hex(int32 num);
 extern text *int32_to_oct(int32 num);
 extern text *int64_to_bin(int64 num);
 extern text *int64_to_hex(int64 num);
 extern text *int64_to_oct(int64 num);
+extern text *pg_icu_unicode_version(void);
 extern text *pg_text_concat(text **textarr, int count);
 extern text *pg_text_concat_ws(text **textarr, int count, const text *sep);
 extern bool pg_text_ge(const text *txt1, const text *txt2);
@@ -454,18 +456,23 @@ extern bool pg_text_pattern_gt(const text *txt1, const text *txt2);
 extern bool pg_text_pattern_le(const text *txt1, const text *txt2);
 extern bool pg_text_pattern_lt(const text *txt1, const text *txt2);
 extern text *pg_text_reverse(const text *txt);
-extern text *pg_text_right(text *txt, int n);
+extern text *pg_text_right(const text *txt, int n);
 extern text *pg_text_smaller(const text *txt1, const text *txt2);
 extern bool pg_text_starts_with(const text *txt1, const text *txt2);
 extern text *pg_text_substr(const text *txt, int32 start, int32 length);
 extern text *pg_text_substr_no_len(const text *txt, int32 start);
-extern char *text2cstring(const text *txt);
+extern bool pg_unicode_assigned(const text *txt);
+extern bool pg_unicode_is_normalized(const text *txt, const text *fmt);
+extern text *pg_unicode_normalize_func(const text *txt, const text *fmt);
+extern text *pg_unicode_version(void);
+extern text *pg_unistr(const text *txt);
+extern char *text_to_cstring(const text *txt);
 extern text *text_cat(const text *txt1, const text *txt2);
 extern int text_cmp(const text *txt1, const text *txt2, Oid collid);
 extern text *text_copy(const text *txt);
 extern bool text_eq(const text *txt1, const text *txt2);
-extern uint32 text_hash(const text *key, Oid collid);
-extern uint64 text_hash_extended(const text *key, uint64 seed, Oid collid);
+extern uint32 text_hash(const text *txt, Oid collid);
+extern uint64 text_hash_extended(const text *txt, uint64 seed, Oid collid);
 extern text *text_in(const char *str);
 extern text *text_initcap(const text *txt);
 extern int32 text_len(const text *txt);
@@ -473,25 +480,30 @@ extern text *text_lower(const text *txt);
 extern bool text_ne(const text *txt1, const text *txt2);
 extern int32 text_octetlen(const text *txt);
 extern char *text_out(const text *txt);
-extern text *text_overlay(const text *txt1, const text *txt2, int sp, int sl);
-extern text *text_overlay_no_len(const text *txt1, const text *txt2, int sp);
-extern int32 text_pos(text *txt, text *search_txt);
+extern text *text_overlay(const text *txt1, const text *txt2, int from, int count);
+extern text *text_overlay_no_len(const text *txt1, const text *txt2, int from);
+extern int32 text_pos(const text *txt, const text *search);
 extern text *text_upper(const text *txt);
 extern text *textcat_text_text(const text *txt1, const text *txt2);
+
+/* Functions for bytea */
+
+extern bytea *bytea_copy(const bytea *ba);
 
 /* Functions for date */
 
 extern DateADT add_date_int(DateADT date, int32 days);
-extern DateADT add_date_interval(DateADT date, Interval *span);
+extern DateADT add_date_interval(DateADT date, Interval *interv);
 extern int32 cmp_date_timestamp(DateADT date, Timestamp ts2);
 extern int cmp_date_date(DateADT date1, DateADT date2);
 extern int32 cmp_date_timestamptz(DateADT date, TimestampTz ts2);
 extern int32 cmp_timestamp_date(Timestamp ts1, DateADT date);
 extern int32 cmp_timestamptz_date(TimestampTz ts1, DateADT date);
-extern Numeric date_extract(DateADT date, text *units);
+extern Numeric date_extract(DateADT date, const text *units);
 extern uint32 date_hash(DateADT date);
 extern uint64 date_hash_extended(DateADT date, int64 seed);
 extern bool date_is_finite(DateADT date);
+extern Timestamp date_time_to_timestamp(DateADT date, TimeADT time);
 extern Timestamp date_to_timestamp(DateADT date);
 extern Timestamp date_to_timestamptz(DateADT date);
 extern bool eq_date_date(DateADT date1, DateADT date2);
@@ -500,30 +512,30 @@ extern bool eq_date_timestamptz(DateADT date, TimestampTz ts2);
 extern bool eq_timestamp_date(Timestamp ts1, DateADT date);
 extern bool eq_timestamptz_date(TimestampTz ts1, DateADT date);
 extern bool ge_date_date(DateADT date1, DateADT date2);
-extern bool ge_date_timestamp(DateADT date, Timestamp ts2);
+extern bool ge_date_timestamp(DateADT date, Timestamp ts);
 extern bool ge_date_timestamptz(DateADT date, TimestampTz ts2);
 extern bool ge_timestamp_date(Timestamp ts1, DateADT date);
 extern bool ge_timestamptz_date(TimestampTz ts1, DateADT date);
 extern bool gt_date_date(DateADT date1, DateADT date2);
-extern bool gt_date_timestamp(DateADT date, Timestamp ts2);
+extern bool gt_date_timestamp(DateADT date, Timestamp ts);
 extern bool gt_date_timestamptz(DateADT date, TimestampTz ts2);
 extern bool gt_timestamp_date(Timestamp ts1, DateADT date);
 extern bool gt_timestamptz_date(TimestampTz ts1, DateADT date);
 extern bool le_date_date(DateADT date1, DateADT date2);
-extern bool le_date_timestamp(DateADT date, Timestamp ts2);
+extern bool le_date_timestamp(DateADT date, Timestamp ts);
 extern bool le_date_timestamptz(DateADT date, TimestampTz ts2);
 extern bool le_timestamp_date(Timestamp ts1, DateADT date);
 extern bool le_timestamptz_date(TimestampTz ts1, DateADT date);
 extern bool lt_date_date(DateADT date1, DateADT date2);
-extern bool lt_date_timestamp(DateADT date, Timestamp ts2);
+extern bool lt_date_timestamp(DateADT date, Timestamp ts);
 extern bool lt_date_timestamptz(DateADT date, TimestampTz ts2);
 extern bool lt_timestamp_date(Timestamp ts1, DateADT date);
 extern bool lt_timestamptz_date(TimestampTz ts1, DateADT date);
-extern Interval *minus_date_date(DateADT date1, DateADT date2);
+extern int32 minus_date_date(DateADT date1, DateADT date2);
 extern DateADT minus_date_int(DateADT date, int32 days);
 extern DateADT minus_date_interval(DateADT date, Interval *span);
 extern bool ne_date_date(DateADT date1, DateADT date2);
-extern bool ne_date_timestamp(DateADT date, Timestamp ts2);
+extern bool ne_date_timestamp(DateADT date, Timestamp ts);
 extern bool ne_date_timestamptz(DateADT date, TimestampTz ts2);
 extern bool ne_timestamp_date(Timestamp ts1, DateADT date);
 extern bool ne_timestamptz_date(TimestampTz ts1, DateADT date);
@@ -532,17 +544,17 @@ extern DateADT pg_date_larger(DateADT date1, DateADT date2);
 extern DateADT pg_date_make(int year, int mon, int mday);
 extern DateADT pg_date_smaller(DateADT date1, DateADT date2);
 extern char *pg_date_out(DateADT date);
-extern bool time_overlaps(TimeADT *ts1, TimeADT *te1, TimeADT *ts2, TimeADT *te2);
+extern bool time_overlaps(TimeADT ts1, TimeADT te1, TimeADT ts2, TimeADT te2);
 extern DateADT timestamp_to_date(Timestamp timestamp);
 extern DateADT timestamptz_to_date(TimestampTz timestamp);
  
 /* Functions for time */
 
-extern TimestampTz date_timetz_to_timestamptz(DateADT date, const TimeTzADT *time);
-extern TimeADT interval_to_time(const Interval *span);
-extern TimeADT minus_time_interval(TimeADT date, Interval *span);
+extern TimestampTz date_timetz_to_timestamptz(DateADT date, const TimeTzADT *timetz);
+extern TimeADT interval_to_time(const Interval *interv);
+extern TimeADT minus_time_interval(TimeADT time, const Interval *interv);
 extern Interval *minus_time_time(TimeADT time1, TimeADT time2);
-extern TimeTzADT *minus_timetz_interval(const TimeTzADT *time, const Interval *span);
+extern TimeTzADT *minus_timetz_interval(const TimeTzADT *timetz, const Interval *interv);
 extern int pg_time_cmp(TimeADT time1, TimeADT time2);
 extern bool pg_time_eq(TimeADT time1, TimeADT time2);
 extern bool pg_time_ge(TimeADT time1, TimeADT time2);
@@ -558,81 +570,81 @@ extern char *pg_time_out(TimeADT time);
 extern float8 pg_time_part(TimeADT time, const text *units);
 extern TimeADT pg_time_scale(TimeADT date, int32 typmod);
 extern TimeADT pg_time_smaller(TimeADT time1, TimeADT time2);
-extern TimeTzADT *pg_timetz_at_local(TimeTzADT *time);
-extern int32 pg_timetz_cmp(const TimeTzADT *time1, const TimeTzADT *time2);
-extern bool pg_timetz_eq(const TimeTzADT *time1, const TimeTzADT *time2);
-extern bool pg_timetz_ge(const TimeTzADT *time1, const TimeTzADT *time2);
-extern bool pg_timetz_gt(const TimeTzADT *time1, const TimeTzADT *time2);
-extern uint32 pg_timetz_hash(const TimeTzADT *key);
-extern uint64 pg_timetz_hash_extended(const TimeTzADT *key, int64 seed);
+extern TimeTzADT *pg_timetz_at_local(const TimeTzADT *timetz);
+extern int32 pg_timetz_cmp(const TimeTzADT *timetz1, const TimeTzADT *timetz2);
+extern bool pg_timetz_eq(const TimeTzADT *timetz1, const TimeTzADT *timetz2);
+extern bool pg_timetz_ge(const TimeTzADT *timetz1, const TimeTzADT *timetz2);
+extern bool pg_timetz_gt(const TimeTzADT *timetz1, const TimeTzADT *timetz2);
+extern uint32 pg_timetz_hash(const TimeTzADT *timetz);
+extern uint64 pg_timetz_hash_extended(const TimeTzADT *timetz, int64 seed);
 extern TimeTzADT *pg_timetz_in(const char *str, int32 typmod);
-extern TimeTzADT *pg_timetz_izone(const TimeTzADT *time, const Interval *zone);
-extern bool pg_timetz_le(const TimeTzADT *time1, const TimeTzADT *time2);
-extern bool pg_timetz_lt(const TimeTzADT *time1, const TimeTzADT *time2);
-extern bool pg_timetz_ne(const TimeTzADT *time1, const TimeTzADT *time2);
-extern char *pg_timetz_out(const TimeTzADT *time);
-extern TimeTzADT *pg_timetz_larger(const TimeTzADT *time1, const TimeTzADT *time2);
-extern float8 pg_timetz_part(const TimeTzADT *time, const text *units);
-extern TimeTzADT *pg_timetz_scale(const TimeTzADT *time, int32 typmod);
-extern TimeTzADT *pg_timetz_smaller(const TimeTzADT *time1, const TimeTzADT *time2);
-extern TimeTzADT *pg_timetz_zone(const TimeTzADT *t, const text *zone);
-extern TimeADT plus_time_interval(TimeADT date, Interval *span);
-extern TimeTzADT *plus_timetz_interval(const TimeTzADT *time, const Interval *span);
+extern TimeTzADT *pg_timetz_izone(const TimeTzADT *timetz, const Interval *zone);
+extern bool pg_timetz_le(const TimeTzADT *timetz1, const TimeTzADT *timetz2);
+extern bool pg_timetz_lt(const TimeTzADT *timetz1, const TimeTzADT *timetz2);
+extern bool pg_timetz_ne(const TimeTzADT *timetz1, const TimeTzADT *timetz2);
+extern char *pg_timetz_out(const TimeTzADT *timetz);
+extern TimeTzADT *pg_timetz_larger(const TimeTzADT *timetz1, const TimeTzADT *timetz2);
+extern float8 pg_timetz_part(const TimeTzADT *timetz, const text *units);
+extern TimeTzADT *pg_timetz_scale(const TimeTzADT *timetz, int32 typmod);
+extern TimeTzADT *pg_timetz_smaller(const TimeTzADT *timetz1, const TimeTzADT *timetz2);
+extern TimeTzADT *pg_timetz_zone(const TimeTzADT *timetz, const text *zone);
+extern TimeADT plus_time_interval(TimeADT time, Interval *interv);
+extern TimeTzADT *plus_timetz_interval(const TimeTzADT *timetz, const Interval *interv);
 extern Numeric time_extract(TimeADT time, const text *units);
 extern TimeADT time_make(int tm_hour, int tm_min, double sec);
-extern Interval *time_to_interval(TimeADT date);
-extern TimeTzADT *time_to_timetz(TimeADT date);
-extern TimeADT timestamp_to_time(Timestamp timestamp);
-extern TimeADT timestamptz_to_time(TimestampTz timestamp);
-extern TimeTzADT *timestamptz_to_timetz(TimestampTz timestamp);
+extern Interval *time_to_interval(TimeADT time);
+extern TimeTzADT *time_to_timetz(TimeADT time);
+extern TimeADT timestamp_to_time(Timestamp ts);
+extern TimeADT timestamptz_to_time(TimestampTz tztz);
+extern TimeTzADT *timestamptz_to_timetz(TimestampTz tztz);
 extern bool timetz_overlaps(const TimeTzADT *ts1, const TimeTzADT *te1, const TimeTzADT *ts2, const TimeTzADT *te2);
 extern TimeADT timetz_to_time(const TimeTzADT *timetz);
-extern Numeric timetz_extract(const TimeTzADT *time, const text *units);
+extern Numeric timetz_extract(const TimeTzADT *timetz, const text *units);
  
 /* Functions for timestamps */
 
 extern Timestamp add_timestamp_interval(Timestamp ts, const Interval *interv);
-extern Timestamp add_timestamptz_interval(TimestampTz ts, const Interval *interv);
-extern Timestamp add_timestamptz_interval_at_zone(TimestampTz ts, const Interval *interv, const text *zone);
+extern Timestamp add_timestamptz_interval(TimestampTz tstz, const Interval *interv);
+extern Timestamp add_timestamptz_interval_at_zone(TimestampTz tstz, const Interval *interv, const text *zone);
 extern int32 cmp_timestamp_timestamp(Timestamp ts1, Timestamp ts2);
-extern int32 cmp_timestamp_timestamptz(Timestamp ts1, TimestampTz ts2);
-extern int32 cmp_timestamptz_timestamp(TimestampTz ts1, Timestamp ts);
-extern bool eq_timestamp_date(Timestamp ts1, DateADT date);
+extern int32 cmp_timestamp_timestamptz(Timestamp ts, TimestampTz tstz);
+extern int32 cmp_timestamptz_timestamp(TimestampTz tstz, Timestamp ts);
+extern bool eq_timestamp_date(Timestamp ts, DateADT date);
 extern bool eq_timestamp_timestamp(Timestamp ts1, Timestamp ts2);
-extern bool eq_timestamp_timestamptz(Timestamp ts1, TimestampTz ts2);
-extern bool eq_timestamptz_date(TimestampTz ts1, DateADT date);
-extern bool eq_timestamptz_timestamp(TimestampTz ts1, Timestamp ts2);
+extern bool eq_timestamp_timestamptz(Timestamp ts, TimestampTz tstz);
+extern bool eq_timestamptz_date(TimestampTz tstz, DateADT date);
+extern bool eq_timestamptz_timestamp(TimestampTz tstz, Timestamp ts);
 extern TimestampTz float8_to_timestamptz(float8 seconds);
 extern bool gt_timestamp_timestamp(Timestamp ts1, Timestamp ts2);
-extern bool gt_timestamp_timestamptz(Timestamp ts1, TimestampTz ts2);
-extern bool gt_timestamptz_timestamp(TimestampTz ts1, Timestamp ts2);
+extern bool gt_timestamp_timestamptz(Timestamp ts, TimestampTz tstz);
+extern bool gt_timestamptz_timestamp(TimestampTz tstz, Timestamp ts);
 extern bool ge_timestamp_timestamp(Timestamp ts1, Timestamp ts2);
-extern bool ge_timestamp_timestamptz(Timestamp ts1, TimestampTz ts2);
-extern bool ge_timestamptz_timestamp(TimestampTz ts1, Timestamp ts2);
+extern bool ge_timestamp_timestamptz(Timestamp ts, TimestampTz tstz);
+extern bool ge_timestamptz_timestamp(TimestampTz tstz, Timestamp ts);
 extern bool le_timestamp_timestamp(Timestamp ts1, Timestamp ts2);
-extern bool le_timestamp_timestamptz(Timestamp ts1, TimestampTz ts2);
-extern bool le_timestamptz_timestamp(TimestampTz ts1, Timestamp ts2);
+extern bool le_timestamp_timestamptz(Timestamp ts, TimestampTz tstz);
+extern bool le_timestamptz_timestamp(TimestampTz tstz, Timestamp ts);
 extern bool lt_timestamp_timestamp(Timestamp ts1, Timestamp ts2);
-extern bool lt_timestamp_timestamptz(Timestamp ts1, TimestampTz ts2);
-extern bool lt_timestamptz_timestamp(TimestampTz ts1, Timestamp ts2);
+extern bool lt_timestamp_timestamptz(Timestamp ts, TimestampTz tstz);
+extern bool lt_timestamptz_timestamp(TimestampTz tstz, Timestamp ts);
 extern Timestamp minus_timestamp_interval(Timestamp ts, const Interval *interv);
 extern Interval *minus_timestamp_timestamp(Timestamp ts1, Timestamp ts2);
-extern TimestampTz minus_timestamptz_interval(TimestampTz ts, const Interval *interv);
-extern TimestampTz minus_timestamptz_interval_at_zone(TimestampTz ts, const Interval *interv, const text *zone);
-extern Interval *minus_timestamptz_timestamptz(TimestampTz ts1, TimestampTz ts2);
-extern bool ne_timestamp_date(Timestamp ts1, DateADT date);
-extern bool ne_timestamptz_date(TimestampTz ts1, DateADT date);
+extern TimestampTz minus_timestamptz_interval(TimestampTz tstz, const Interval *interv);
+extern TimestampTz minus_timestamptz_interval_at_zone(TimestampTz tstz, const Interval *interv, const text *zone);
+extern Interval *minus_timestamptz_timestamptz(TimestampTz tstz1, TimestampTz tstz2);
+extern bool ne_timestamp_date(Timestamp ts, DateADT date);
+extern bool ne_timestamptz_date(TimestampTz tstz, DateADT date);
 extern bool ne_timestamp_timestamp(Timestamp ts1, Timestamp ts2);
-extern bool ne_timestamp_timestamptz(Timestamp ts1, TimestampTz ts2);
-extern bool ne_timestamptz_timestamp(TimestampTz ts1, Timestamp ts2);
+extern bool ne_timestamp_timestamptz(Timestamp ts, TimestampTz tstz);
+extern bool ne_timestamptz_timestamp(TimestampTz tstz, Timestamp ts);
 extern Interval *pg_interval_justify_days(const Interval *interv);
 extern Interval *pg_interval_justify_hours(const Interval *interv);
 extern Interval *pg_interval_justify_interval(const Interval *interv);
 extern Interval *pg_timestamp_age(Timestamp ts1, Timestamp ts2);
 extern TimestampTz pg_timestamp_at_local(Timestamp ts);
 extern Timestamp pg_timestamp_bin(Timestamp ts, const Interval *stride, Timestamp origin);
-extern int32 pg_timestamp_hash(Timestamp ts);
-extern uint64 pg_timestamp_hash_extended(TimestampTz ts, uint64 seed);
+extern uint32 pg_timestamp_hash(Timestamp ts);
+extern uint64 pg_timestamp_hash_extended(TimestampTz tstz, uint64 seed);
 extern Timestamp pg_timestamp_in(const char *str, int32 typmod);
 extern TimestampTz pg_timestamp_izone(Timestamp ts, const Interval *zone);
 extern text *time_of_day(void);
@@ -643,29 +655,29 @@ extern Timestamp pg_timestamp_scale(Timestamp ts, int32 typmod);
 extern Timestamp pg_timestamp_smaller(Timestamp ts1, Timestamp ts2);
 extern Timestamp pg_timestamp_trunc(Timestamp ts, const text *units);
 extern TimestampTz pg_timestamp_zone(Timestamp ts, const text *zone);
-extern Interval *pg_timestamptz_age(TimestampTz ts1, TimestampTz ts2);
-extern TimestampTz pg_timestamptz_bin(TimestampTz ts, const Interval *stride, TimestampTz origin);
-extern int32 pg_timestamptz_hash(TimestampTz ts);
-extern uint64 pg_timestamptz_hash_extended(TimestampTz ts, uint64 seed);
+extern Interval *pg_timestamptz_age(TimestampTz tstz1, TimestampTz tstz2);
+extern TimestampTz pg_timestamptz_bin(TimestampTz tstz, const Interval *stride, TimestampTz origin);
+extern uint32 pg_timestamptz_hash(TimestampTz tstz);
+extern uint64 pg_timestamptz_hash_extended(TimestampTz tstz, uint64 seed);
 extern TimestampTz pg_timestamptz_in(const char *str, int32 typmod);
-extern Timestamp pg_timestamptz_izone(TimestampTz ts, const Interval *zone);
-extern char *pg_timestamptz_out(TimestampTz dt);
-extern float8 pg_timestamptz_part(TimestampTz ts, const text *units);
-extern TimestampTz pg_timestamptz_scale(TimestampTz ts, int32 typmod);
-extern TimestampTz pg_timestamptz_trunc(TimestampTz ts, const text *units);
-extern TimestampTz pg_timestamptz_trunc_zone(TimestampTz ts, const text *units, const text *zone);
-extern Timestamp pg_timestamptz_zone(TimestampTz ts, const text *zone);
+extern Timestamp pg_timestamptz_izone(TimestampTz tstz, const Interval *zone);
+extern char *pg_timestamptz_out(TimestampTz tstz);
+extern float8 pg_timestamptz_part(TimestampTz tstz, const text *units);
+extern TimestampTz pg_timestamptz_scale(TimestampTz tstz, int32 typmod);
+extern TimestampTz pg_timestamptz_trunc(TimestampTz tstz, const text *units);
+extern TimestampTz pg_timestamptz_trunc_zone(TimestampTz tstz, const text *units, const text *zone);
+extern Timestamp pg_timestamptz_zone(TimestampTz tstz, const text *zone);
 extern Numeric timestamp_extract(Timestamp ts, const text *units);
 extern bool timestamp_is_finite(Timestamp ts);
 extern Timestamp timestamp_make(int32 year, int32 month, int32 mday, int32 hour, int32 min, float8 sec);
 extern bool timestamp_overlaps(Timestamp ts1, Timestamp te1, Timestamp ts2, Timestamp te2);
 extern TimestampTz timestamp_to_timestamptz(Timestamp ts);
-extern TimestampTz timestamptz_at_local(TimestampTz timestamp);
-extern Interval *timestamptz_extract(TimestampTz timestamp, const text *units);
+extern TimestampTz timestamptz_at_local(TimestampTz tstz);
+extern Numeric timestamptz_extract(TimestampTz tstz, const text *units);
 extern TimestampTz timestamptz_make(int32 year, int32 month, int32 day, int32 hour, int32 min, float8 sec);
 extern TimestampTz timestamptz_make_at_timezone(int32 year, int32 month, int32 day, int32 hour, int32 min, float8 sec, const text *zone);
-extern TimestampTz timestamptz_shift(TimestampTz t, const Interval *interv);
-extern Timestamp timestamptz_to_timestamp(TimestampTz ts);
+extern TimestampTz timestamptz_shift(TimestampTz tstz, const Interval *interv);
+extern Timestamp timestamptz_to_timestamp(TimestampTz tstz);
 
 /* Functions for intervals */
 
@@ -682,7 +694,7 @@ extern int32 pg_interval_cmp(const Interval *interv1, const Interval *interv2);
 extern bool pg_interval_eq(const Interval *interv1, const Interval *interv2);
 extern bool pg_interval_ge(const Interval *interv1, const Interval *interv2);
 extern bool pg_interval_gt(const Interval *interv1, const Interval *interv2);
-extern int32 pg_interval_hash(const Interval *interv);
+extern uint32 pg_interval_hash(const Interval *interv);
 extern uint64 pg_interval_hash_extended(const Interval *interv, uint64 seed);
 extern Interval *pg_interval_in(const char *str, int32 typmod);
 extern Interval *pg_interval_larger(const Interval *interv1, const Interval *interv2);
@@ -697,22 +709,56 @@ extern Interval *pg_interval_trunc(const Interval *interv, const text *units);
 
 /* Functions for JSON types */
 
-extern Jsonb *get_jsonb_path_all_internal(const Jsonb *jb, Datum *pathtext, int path_len, bool as_text);
+extern Jsonb *jsonb_copy(const Jsonb *jb);
 
-extern text *json_in_internal(char *json);
-extern char *json_out_internal(text *txt);
-extern text *json_strip_nulls_internal(text *json, bool strip_in_arrays);
+extern text **pg_json_array_elements(const text *json, int *count);
+extern text **pg_json_array_elements_text(const text *json, int *count);
+extern int pg_json_array_length(const text *json);
+extern text **pg_json_each(const text *json, text **values, int *count);
+extern text **pg_json_each_text(const text *json, text **values, int *count);
+extern text *pg_json_in(const char *str);
+extern text *pg_json_object(text **keyvalarr, int count);
+extern text **pg_json_object_keys(const text *json, int *count);
+extern text *pg_json_object_two_arg(text **keys, text **values, int count);
+extern char *pg_json_out(const text *json);
+extern text *pg_json_strip_nulls(const text *json, bool strip_in_arrays);
+extern text *pg_json_typeof(const text *json);
 
-extern Jsonb *jsonb_concat_internal(Jsonb *jb1, Jsonb *jb2);
-extern Jsonb *jsonb_delete_internal(Jsonb *in, text *key);
-extern Jsonb *jsonb_delete_path_internal(const Jsonb *jb, Datum *path_elems, bool *path_nulls, int path_len);
-extern Jsonb *jsonb_extract_path_internal(const Jsonb *jb, Datum *pathtext, int path_len);
-extern Jsonb *jsonb_extract_path_text_internal(const Jsonb *jb, Datum *pathtext, int path_len);
-extern Jsonb *jsonb_object_field_internal(const Jsonb *jb, const text *key);
-extern text *jsonb_object_field_text_internal(const Jsonb *jb, const text *key);
-extern char **jsonb_object_keys_internal(Jsonb *jb);
-extern text *jsonb_pretty_internal(Jsonb *jb);
-extern Jsonb *jsonb_strip_nulls_internal(Jsonb *jb, bool strip_in_arrays);
+extern Jsonb **pg_jsonb_array_elements(const Jsonb *jb, int *count);
+extern text **pg_jsonb_array_elements_text(const Jsonb *jb, int *count);
+extern int pg_jsonb_cmp(const Jsonb *jb1, const Jsonb *jb2);
+extern Jsonb *pg_jsonb_concat(const Jsonb *jb1, const Jsonb *jb2);
+extern bool pg_jsonb_contains(const Jsonb *jb1, const Jsonb *jb2);
+extern Jsonb *pg_jsonb_delete(const Jsonb *jb, const text *key);
+extern Jsonb *pg_jsonb_delete_array(const Jsonb *jb, const text **keys_elems, int keys_len);
+extern Jsonb *pg_jsonb_delete_idx(const Jsonb *in, int idx);
+extern Jsonb *pg_jsonb_delete_path(const Jsonb *jb, text **path_elems, int path_len);
+extern text **pg_jsonb_each(const Jsonb *jb, Jsonb **values, int *count);
+extern text **pg_jsonb_each_text(const Jsonb *jb, text **values, int *count);
+extern bool pg_jsonb_eq(const Jsonb *jb1, const Jsonb *jb2);
+extern bool pg_jsonb_exists(const Jsonb *jb, const text *key);
+extern Jsonb *pg_jsonb_extract_path(const Jsonb *jb, text **path_elems, int path_len);
+extern text *pg_jsonb_extract_path_text(const Jsonb *jb, text **path_elems, int path_len);
+extern Jsonb *pg_jsonb_from_text(text *txt, bool unique_keys);
+extern bool pg_jsonb_ge(const Jsonb *jb1, const Jsonb *jb2);
+extern bool pg_jsonb_gt(const Jsonb *jb1, const Jsonb *jb2);
+extern uint32 pg_jsonb_hash(const Jsonb *jb);
+extern uint64 pg_jsonb_hash_extended(Jsonb *jb, uint64 seed);
+extern Jsonb * pg_jsonb_in(char *str);
+extern Jsonb *pg_jsonb_insert(const Jsonb *jb, text **path_elems, int path_len, Jsonb *newjb, bool after);
+extern bool pg_jsonb_le(const Jsonb *jb1, const Jsonb *jb2);
+extern bool pg_jsonb_lt(const Jsonb *jb1, const Jsonb *jb2);
+extern bool pg_jsonb_ne(const Jsonb *jb1, const Jsonb *jb2);
+extern Jsonb *pg_jsonb_object(text **keys_vals, int count);
+extern Jsonb *pg_jsonb_object_field(const Jsonb *jb, const text *key);
+extern text *pg_jsonb_object_field_text(const Jsonb *jb, const text *key);
+extern text **pg_jsonb_object_keys(const Jsonb *jb, int *count);
+extern Jsonb *pg_jsonb_object_two_arg(text **keys, text **values, int count);
+extern char *pg_jsonb_out(Jsonb *jb);
+extern text *pg_jsonb_pretty(const Jsonb *jb);
+extern Jsonb *pg_jsonb_set(const Jsonb *jb, text **path_elems, int path_len, Jsonb *newjb, bool create);
+extern Jsonb *pg_jsonb_set_lax(const Jsonb *jb, text **path_elems, int path_len, Jsonb *newjb, bool create, const text *handle_null);
+extern Jsonb *pg_jsonb_strip_nulls(const Jsonb *jb, bool strip_in_arrays);
 
 /*****************************************************************************/
 

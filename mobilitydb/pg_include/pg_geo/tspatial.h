@@ -47,7 +47,7 @@ extern void store_fcinfo(FunctionCallInfo fcinfo);
 
 extern Temporal *tspatial_valid_typmod(Temporal *temp, int32_t typmod);
 extern uint32 tspatial_typmod_in(ArrayType *arr, int is_point, int is_geodetic);
-extern Datum Spatialarr_as_text_ext(FunctionCallInfo fcinfo, bool extended);
+extern Datum Spatialarr_as_text_common(FunctionCallInfo fcinfo, bool extended);
 
 extern Datum EAcomp_tspatial_geo(FunctionCallInfo fcinfo,
   int (*func)(const Temporal *, const GSERIALIZED *));

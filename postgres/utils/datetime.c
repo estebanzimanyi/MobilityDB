@@ -21,13 +21,11 @@
 #include "common/int.h"
 // #include "common/string.h"
 #include "miscadmin.h"
-// #include "nodes/nodeFuncs.h"
 #include "parser/scansup.h"
 #include "utils/builtins.h"
 #include "utils/date.h"
 #include "utils/datetime.h"
-// #include "utils/guc.h"
-// #include "utils/tzparser.h"
+#include "utils/tzparser.h"
 
 // #include "access/htup_details.h"
 // #include "access/xact.h"
@@ -3120,8 +3118,6 @@ DecodeTimezoneAbbrev(int field, const char *lowtoken, int *ftype, int *offset,
   pg_tz **tz, DateTimeErrorExtra *extra)
 {
   TzAbbrevCache *tzc = &tzabbrevcache[field];
-  bool    isfixed;
-  int      isdst;
   const datetkn *tp;
 
   /*
@@ -3142,9 +3138,10 @@ DecodeTimezoneAbbrev(int field, const char *lowtoken, int *ftype, int *offset,
    * before zoneabbrevtbl allows us to correctly handle abbreviations whose
    * meaning varies across zones, such as "LMT".
    */
-  if (session_timezone &&
-    TimeZoneAbbrevIsKnown(lowtoken, session_timezone,
-                &isfixed, offset, &isdst))
+  bool isfixed;
+  int isdst;
+  if (session_timezone && TimeZoneAbbrevIsKnown(lowtoken, session_timezone,
+        &isfixed, offset, &isdst))
   {
     *ftype = (isfixed ? (isdst ? DTZ : TZ) : DYNTZ);
     *tz = (isfixed ? NULL : session_timezone);
@@ -3160,8 +3157,8 @@ DecodeTimezoneAbbrev(int field, const char *lowtoken, int *ftype, int *offset,
 
   /* Nope, so look in zoneabbrevtbl */
   if (zoneabbrevtbl)
-    tp = datebsearch(lowtoken, zoneabbrevtbl->abbrevs,
-             zoneabbrevtbl->numabbrevs);
+    tp = datebsearch(lowtoken, zoneabbrevtbl->abbrevs, 
+      zoneabbrevtbl->numabbrevs);
   else
     tp = NULL;
   if (tp == NULL)
@@ -3221,15 +3218,13 @@ ClearTimeZoneAbbrevCache(void)
 int
 DecodeSpecial(int field, const char *lowtoken, int *val)
 {
-  int      type;
-  const datetkn *tp;
-
-  tp = datecache[field];
+  const datetkn *tp = datecache[field];
   /* use strncmp so that we match truncated tokens */
   if (tp == NULL || strncmp(lowtoken, tp->token, TOKMAXLEN) != 0)
   {
     tp = datebsearch(lowtoken, datetktbl, szdatetktbl);
   }
+  int type;
   if (tp == NULL)
   {
     type = UNKNOWN_FIELD;
@@ -3241,7 +3236,6 @@ DecodeSpecial(int field, const char *lowtoken, int *val)
     type = tp->type;
     *val = tp->value;
   }
-
   return type;
 }
 
@@ -3262,11 +3256,6 @@ DecodeSpecial(int field, const char *lowtoken, int *val)
 int
 DecodeTimezoneName(const char *tzname, int *offset, pg_tz **tz)
 {
-  char     *lowzone;
-  int      dterr,
-        type;
-  DateTimeErrorExtra extra;
-
   /*
    * First we look in the timezone abbreviation table (to handle cases like
    * "EST"), and if that fails, we look in the timezone database (to handle
@@ -3277,12 +3266,15 @@ DecodeTimezoneName(const char *tzname, int *offset, pg_tz **tz)
    */
 
   /* DecodeTimezoneAbbrev requires lowercase input */
-  lowzone = downcase_truncate_identifier(tzname, strlen(tzname), false);
+  char *lowzone = downcase_truncate_identifier(tzname, strlen(tzname), false);
 
-  dterr = DecodeTimezoneAbbrev(0, lowzone, &type, offset, tz, &extra);
+  int type;
+  DateTimeErrorExtra extra;
+  int dterr = DecodeTimezoneAbbrev(0, lowzone, &type, offset, tz, &extra);
   if (dterr)
     DateTimeParseError(dterr, &extra, NULL, NULL, NULL);
 
+  pfree(lowzone);
   if (type == TZ || type == DTZ)
   {
     /* fixed-offset abbreviation, return the offset */
@@ -3316,9 +3308,8 @@ DecodeTimezoneName(const char *tzname, int *offset, pg_tz **tz)
 pg_tz *
 DecodeTimezoneNameToTz(const char *tzname)
 {
-  pg_tz     *result;
-  int      offset;
-
+  pg_tz *result;
+  int offset;
   if (DecodeTimezoneName(tzname, &offset, &result) == TZNAME_FIXED_OFFSET)
   {
     /* fixed-offset abbreviation, get a pg_tz descriptor for that */
@@ -3344,8 +3335,8 @@ DecodeTimezoneNameToTz(const char *tzname)
 int
 DecodeTimezoneAbbrevPrefix(const char *str, int *offset, pg_tz **tz)
 {
-  char    lowtoken[TOKMAXLEN + 1];
-  int      len;
+  char lowtoken[TOKMAXLEN + 1];
+  int len;
 
   *offset = 0;        /* avoid uninitialized vars on failure */
   *tz = NULL;
@@ -3368,14 +3359,13 @@ DecodeTimezoneAbbrevPrefix(const char *str, int *offset, pg_tz **tz)
    */
   while (len > 0)
   {
-    bool    isfixed;
-    int      isdst;
+    bool isfixed;
+    int isdst;
     const datetkn *tp;
 
     /* See if the current session_timezone recognizes it. */
-    if (session_timezone &&
-      TimeZoneAbbrevIsKnown(lowtoken, session_timezone,
-                  &isfixed, offset, &isdst))
+    if (session_timezone && TimeZoneAbbrevIsKnown(lowtoken, session_timezone,
+          &isfixed, offset, &isdst))
     {
       if (isfixed)
       {
@@ -3393,7 +3383,7 @@ DecodeTimezoneAbbrevPrefix(const char *str, int *offset, pg_tz **tz)
     /* Known in zoneabbrevtbl? */
     if (zoneabbrevtbl)
       tp = datebsearch(lowtoken, zoneabbrevtbl->abbrevs,
-               zoneabbrevtbl->numabbrevs);
+        zoneabbrevtbl->numabbrevs);
     else
       tp = NULL;
     if (tp != NULL)
@@ -3401,9 +3391,7 @@ DecodeTimezoneAbbrevPrefix(const char *str, int *offset, pg_tz **tz)
       if (tp->type == DYNTZ)
       {
         DateTimeErrorExtra extra;
-        pg_tz     *tzp = FetchDynamicTimeZone(zoneabbrevtbl, tp,
-                             &extra);
-
+        pg_tz *tzp = FetchDynamicTimeZone(zoneabbrevtbl, tp, &extra);
         if (tzp != NULL)
         {
           /* Caller must resolve the abbrev's current meaning */
@@ -3440,7 +3428,6 @@ ClearPgItmIn(struct pg_itm_in *itm_in)
   itm_in->tm_year = 0;
 }
 
-
 /* DecodeInterval()
  * Interpret previously parsed fields for general time interval.
  * Returns 0 if successful, DTERR code if bogus input detected.
@@ -3459,18 +3446,15 @@ int
 DecodeInterval(char **field, int *ftype, int nf, int range, int *dtype,
   struct pg_itm_in *itm_in)
 {
-  bool    force_negative = false;
-  bool    is_before = false;
-  bool    parsing_unit_val = false;
-  char     *cp;
-  int      fmask = 0,
-        tmask,
-        type,
-        uval;
-  int      i;
-  int      dterr;
-  int64    val;
-  double    fval;
+  bool force_negative = false;
+  bool is_before = false;
+  bool parsing_unit_val = false;
+  char *cp;
+  int fmask = 0, tmask, type, uval;
+  int i;
+  int dterr;
+  int64 val;
+  double fval;
 
   *dtype = DTK_DELTA;
   type = IGNORE_DTF;
@@ -4639,14 +4623,14 @@ AddVerboseIntPart(char *cp, int64 value, const char *units, bool *is_zero,
 void
 EncodeInterval(struct pg_itm *itm, int style, char *str)
 {
-  char     *cp = str;
-  int      year = itm->tm_year;
-  int      mon = itm->tm_mon;
-  int64    mday = itm->tm_mday;  /* tm_mday could be INT_MIN */
-  int64    hour = itm->tm_hour;
-  int      min = itm->tm_min;
-  int      sec = itm->tm_sec;
-  int      fsec = itm->tm_usec;
+  char    *cp = str;
+  int     year = itm->tm_year;
+  int     mon = itm->tm_mon;
+  int64   mday = itm->tm_mday;  /* tm_mday could be INT_MIN */
+  int64   hour = itm->tm_hour;
+  int     min = itm->tm_min;
+  int     sec = itm->tm_sec;
+  int     fsec = itm->tm_usec;
   bool    is_before = false;
   bool    is_zero = true;
 
@@ -4661,17 +4645,17 @@ EncodeInterval(struct pg_itm *itm, int style, char *str)
       /* SQL Standard interval format */
     case INTSTYLE_SQL_STANDARD:
       {
-        bool    has_negative = year < 0 || mon < 0 ||
+        bool has_negative = year < 0 || mon < 0 ||
           mday < 0 || hour < 0 ||
           min < 0 || sec < 0 || fsec < 0;
         bool    has_positive = year > 0 || mon > 0 ||
           mday > 0 || hour > 0 ||
           min > 0 || sec > 0 || fsec > 0;
-        bool    has_year_month = year != 0 || mon != 0;
-        bool    has_day_time = mday != 0 || hour != 0 ||
+        bool has_year_month = year != 0 || mon != 0;
+        bool has_day_time = mday != 0 || hour != 0 ||
           min != 0 || sec != 0 || fsec != 0;
-        bool    has_day = mday != 0;
-        bool    sql_standard_value = !(has_negative && has_positive) &&
+        bool has_day = mday != 0;
+        bool sql_standard_value = !(has_negative && has_positive) &&
           !(has_year_month && has_day_time);
 
         /*
@@ -4701,15 +4685,14 @@ EncodeInterval(struct pg_itm *itm, int style, char *str)
            * the signs to avoid ambiguities with intervals with
            * mixed sign components.
            */
-          char    year_sign = (year < 0 || mon < 0) ? '-' : '+';
-          char    day_sign = (mday < 0) ? '-' : '+';
-          char    sec_sign = (hour < 0 || min < 0 ||
-                      sec < 0 || fsec < 0) ? '-' : '+';
+          char year_sign = (year < 0 || mon < 0) ? '-' : '+';
+          char day_sign = (mday < 0) ? '-' : '+';
+          char sec_sign = (hour < 0 || min < 0 || sec < 0 || fsec < 0) ? 
+            '-' : '+';
 
           sprintf(cp, "%c%d-%d %c%" PRId64 " %c%" PRId64 ":%02d:",
-              year_sign, abs(year), abs(mon),
-              day_sign, i64abs(mday),
-              sec_sign, i64abs(hour), abs(min));
+            year_sign, abs(year), abs(mon), day_sign, i64abs(mday), sec_sign,
+            i64abs(hour), abs(min));
           cp += strlen(cp);
           cp = AppendSeconds(cp, sec, fsec, MAX_INTERVAL_PRECISION, true);
           *cp = '\0';
@@ -4720,8 +4703,7 @@ EncodeInterval(struct pg_itm *itm, int style, char *str)
         }
         else if (has_day)
         {
-          sprintf(cp, "%" PRId64 " %" PRId64 ":%02d:",
-              mday, hour, min);
+          sprintf(cp, "%" PRId64 " %" PRId64 ":%02d:", mday, hour, min);
           cp += strlen(cp);
           cp = AppendSeconds(cp, sec, fsec, MAX_INTERVAL_PRECISION, true);
           *cp = '\0';
@@ -4739,8 +4721,8 @@ EncodeInterval(struct pg_itm *itm, int style, char *str)
       /* ISO 8601 "time-intervals by duration only" */
     case INTSTYLE_ISO_8601:
       /* special-case zero to avoid printing nothing */
-      if (year == 0 && mon == 0 && mday == 0 &&
-        hour == 0 && min == 0 && sec == 0 && fsec == 0)
+      if (year == 0 && mon == 0 && mday == 0 && hour == 0 && min == 0 && 
+        sec == 0 && fsec == 0)
       {
         sprintf(cp, "PT0S");
         break;
@@ -4776,12 +4758,9 @@ EncodeInterval(struct pg_itm *itm, int style, char *str)
       cp = AddPostgresIntPart(cp, mday, "day", &is_zero, &is_before);
       if (is_zero || hour != 0 || min != 0 || sec != 0 || fsec != 0)
       {
-        bool    minus = (hour < 0 || min < 0 || sec < 0 || fsec < 0);
-
-        sprintf(cp, "%s%s%02" PRId64 ":%02d:",
-            is_zero ? "" : " ",
-            (minus ? "-" : (is_before ? "+" : "")),
-            i64abs(hour), abs(min));
+        bool minus = (hour < 0 || min < 0 || sec < 0 || fsec < 0);
+        sprintf(cp, "%s%s%02" PRId64 ":%02d:", is_zero ? "" : " ",
+          (minus ? "-" : (is_before ? "+" : "")), i64abs(hour), abs(min));
         cp += strlen(cp);
         cp = AppendSeconds(cp, sec, fsec, MAX_INTERVAL_PRECISION, true);
         *cp = '\0';
@@ -4812,8 +4791,7 @@ EncodeInterval(struct pg_itm *itm, int style, char *str)
           *cp++ = '-';
         cp = AppendSeconds(cp, sec, fsec, MAX_INTERVAL_PRECISION, false);
         /* We output "ago", not negatives, so use abs(). */
-        sprintf(cp, " sec%s",
-            (abs(sec) != 1 || fsec != 0) ? "s" : "");
+        sprintf(cp, " sec%s", (abs(sec) != 1 || fsec != 0) ? "s" : "");
         is_zero = false;
       }
       /* identically zero? then put in a unitless zero... */
@@ -4872,7 +4850,6 @@ CheckDateTokenTables(void)
   return ok;
 }
 
-#if 0 /* NOT USED */
 /*
  * This function gets called during timezone config file load or reload
  * to create the final array of timezone tokens.  The argument array
@@ -4885,12 +4862,11 @@ TimeZoneAbbrevTable *
 ConvertTimeZoneAbbrevs(struct tzEntry *abbrevs, int n)
 {
   TimeZoneAbbrevTable *tbl;
-  Size    tbl_size;
-  int      i;
+  Size tbl_size;
+  int i;
 
   /* Space for fixed fields and datetkn array */
-  tbl_size = offsetof(TimeZoneAbbrevTable, abbrevs) +
-    n * sizeof(datetkn);
+  tbl_size = offsetof(TimeZoneAbbrevTable, abbrevs) + n * sizeof(datetkn);
   tbl_size = MAXALIGN(tbl_size);
   /* Count up space for dynamic abbreviations */
   for (i = 0; i < n; i++)
@@ -4904,7 +4880,7 @@ ConvertTimeZoneAbbrevs(struct tzEntry *abbrevs, int n)
   }
 
   /* Alloc the result ... */
-  tbl = guc_malloc(LOG, tbl_size);
+  tbl = malloc(tbl_size);
   if (!tbl)
     return NULL;
 
@@ -4917,17 +4893,15 @@ ConvertTimeZoneAbbrevs(struct tzEntry *abbrevs, int n)
   for (i = 0; i < n; i++)
   {
     struct tzEntry *abbr = abbrevs + i;
-    datetkn    *dtoken = tbl->abbrevs + i;
+    datetkn *dtoken = tbl->abbrevs + i;
 
     /* use strlcpy to truncate name if necessary */
     strlcpy(dtoken->token, abbr->abbrev, TOKMAXLEN + 1);
     if (abbr->zone != NULL)
     {
       /* Allocate a DynamicZoneAbbrev for this abbreviation */
-      DynamicZoneAbbrev *dtza;
-      Size    dsize;
-
-      dtza = (DynamicZoneAbbrev *) ((char *) tbl + tbl_size);
+      DynamicZoneAbbrev *dtza = 
+        (DynamicZoneAbbrev *) ((char *) tbl + tbl_size);
       dtza->tz = NULL;
       strcpy(dtza->zone, abbr->zone);
 
@@ -4935,7 +4909,7 @@ ConvertTimeZoneAbbrevs(struct tzEntry *abbrevs, int n)
       /* value is offset from table start to DynamicZoneAbbrev */
       dtoken->value = (int32) tbl_size;
 
-      dsize = offsetof(DynamicZoneAbbrev, zone) +
+      Size dsize = offsetof(DynamicZoneAbbrev, zone) +
         strlen(abbr->zone) + 1;
       tbl_size += MAXALIGN(dsize);
     }
@@ -4954,7 +4928,6 @@ ConvertTimeZoneAbbrevs(struct tzEntry *abbrevs, int n)
 
   return tbl;
 }
-#endif /* NOT USED */
 
 /*
  * Install a TimeZoneAbbrevTable as the active table.
@@ -5010,69 +4983,41 @@ Datum
 pg_timezone_abbrevs_zone(PG_FUNCTION_ARGS)
 {
   FuncCallContext *funcctx;
-  int       *pindex;
-  Datum    result;
+  int *pindex;
+  Datum result;
   HeapTuple  tuple;
-  Datum    values[3];
-  bool    nulls[3] = {0};
+  Datum values[3];
+  bool nulls[3] = {0};
   TimestampTz now = GetCurrentTimestamp();
   pg_time_t  t = timestamptz_to_time_t(now);
   const char *abbrev;
-  long int  gmtoff;
-  int      isdst;
+  long int gmtoff;
   struct pg_itm_in itm_in;
-  Interval   *resInterval;
 
-  /* stuff done only on the first call of the function */
-  if (SRF_IS_FIRSTCALL())
-  {
-    TupleDesc  tupdesc;
-    MemoryContext oldcontext;
+  pindex = (int *) palloc(sizeof(int));
+  *pindex = 0;
 
-    /* create a function context for cross-call persistence */
-    funcctx = SRF_FIRSTCALL_INIT();
-
-    /*
-     * switch to memory context appropriate for multiple function calls
-     */
-    oldcontext = MemoryContextSwitchTo(funcctx->multi_call_memory_ctx);
-
-    /* allocate memory for user context */
-    pindex = (int *) palloc(sizeof(int));
-    *pindex = 0;
-    funcctx->user_fctx = pindex;
-
-    if (get_call_result_type(fcinfo, NULL, &tupdesc) != TYPEFUNC_COMPOSITE)
-      elog(ERROR, "return type must be a row type");
-    funcctx->tuple_desc = tupdesc;
-
-    MemoryContextSwitchTo(oldcontext);
-  }
-
-  /* stuff done on every call of the function */
-  funcctx = SRF_PERCALL_SETUP();
-  pindex = (int *) funcctx->user_fctx;
-
-  while ((abbrev = pg_get_next_timezone_abbrev(pindex,
-                         session_timezone)) != NULL)
+  while ((abbrev = 
+          pg_get_next_timezone_abbrev(pindex, session_timezone)) != NULL)
   {
     /* Ignore abbreviations that aren't all-alphabetic */
     if (strspn(abbrev, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") != strlen(abbrev))
       continue;
 
     /* Determine the current meaning of the abbrev */
+  int isdst;
     if (!pg_interpret_timezone_abbrev(abbrev, &t, &gmtoff, &isdst,
         session_timezone))
       continue;      /* hm, not actually used in this zone? */
 
-    values[0] = CStringGetTextDatum(abbrev);
+    values[0] = cstring_to_text(abbrev);
 
     /* Convert offset (in seconds) to an interval; can't overflow */
     MemSet(&itm_in, 0, sizeof(struct pg_itm_in));
     itm_in.tm_usec = (int64) gmtoff * USECS_PER_SEC;
-    resInterval = (Interval *) palloc(sizeof(Interval));
+    Interval *resInterval = (Interval *) palloc(sizeof(Interval));
     (void) itmin2interval(&itm_in, resInterval);
-    values[1] = IntervalPGetDatum(resInterval);
+    values[1] = resInterval;
 
     values[2] = BoolGetDatum(isdst);
 
@@ -5093,50 +5038,24 @@ pg_timezone_abbrevs_zone(PG_FUNCTION_ARGS)
 Datum
 pg_timezone_abbrevs_abbrevs(PG_FUNCTION_ARGS)
 {
-  FuncCallContext *funcctx;
-  int       *pindex;
-  Datum    result;
-  HeapTuple  tuple;
-  Datum    values[3];
-  bool    nulls[3] = {0};
-  const datetkn *tp;
-  char    buffer[TOKMAXLEN + 1];
-  int      gmtoffset;
-  bool    is_dst;
+  Datum result;
+  HeapTuple tuple;
+  Datum values[3];
+  bool nulls[3] = {0};
+  char buffer[TOKMAXLEN + 1];
+  int gmtoffset;
+  bool is_dst;
   unsigned char *p;
   struct pg_itm_in itm_in;
-  Interval   *resInterval;
+  Interval *resInterval;
 
-  /* stuff done only on the first call of the function */
-  if (SRF_IS_FIRSTCALL())
-  {
-    TupleDesc  tupdesc;
+  int *pindex = (int *) palloc(sizeof(int));
+  *pindex = 0;
 
-    /* create a function context for cross-call persistence */
-    funcctx = SRF_FIRSTCALL_INIT();
+  if (zoneabbrevtbl == NULL || *pindex >= zoneabbrevtbl->numabbrevs)
+    return (Datum) 0; // TODO
 
-    /* allocate memory for user context */
-    pindex = (int *) palloc(sizeof(int));
-    *pindex = 0;
-    funcctx->user_fctx = pindex;
-
-    if (get_call_result_type(fcinfo, NULL, &tupdesc) != TYPEFUNC_COMPOSITE)
-      elog(ERROR, "return type must be a row type");
-    funcctx->tuple_desc = tupdesc;
-
-    MemoryContextSwitchTo(oldcontext);
-  }
-
-  /* stuff done on every call of the function */
-  funcctx = SRF_PERCALL_SETUP();
-  pindex = (int *) funcctx->user_fctx;
-
-  if (zoneabbrevtbl == NULL ||
-    *pindex >= zoneabbrevtbl->numabbrevs)
-    SRF_RETURN_DONE(funcctx);
-
-  tp = zoneabbrevtbl->abbrevs + *pindex;
-
+  const datetkn *tp = zoneabbrevtbl->abbrevs + *pindex;
   switch (tp->type)
   {
     case TZ:
@@ -5153,8 +5072,7 @@ pg_timezone_abbrevs_abbrevs(PG_FUNCTION_ARGS)
         DateTimeErrorExtra extra;
         pg_tz *tzp = FetchDynamicTimeZone(zoneabbrevtbl, tp, &extra);
         if (tzp == NULL)
-          DateTimeParseError(DTERR_BAD_ZONE_ABBREV, &extra,
-                     NULL, NULL, NULL);
+          DateTimeParseError(DTERR_BAD_ZONE_ABBREV, &extra, NULL, NULL, NULL);
         TimestampTz now = GetCurrentTimestamp();
         int isdst;
         gmtoffset = -DetermineTimeZoneAbbrevOffsetTS(now, tp->token, tzp,
@@ -5205,14 +5123,13 @@ pg_timezone_names(PG_FUNCTION_ARGS)
 {
   ReturnSetInfo *rsinfo = (ReturnSetInfo *) fcinfo->resultinfo;
   pg_tzenum  *tzenum;
-  pg_tz     *tz;
-  Datum    values[4];
-  bool    nulls[4] = {0};
-  int      tzoff;
+  pg_tz *tz;
+  Datum values[4];
+  bool nulls[4] = {0};
+  int tzoff;
   struct pg_tm tm;
-  fsec_t    fsec;
+  fsec_t fsec;
   const char *tzn;
-  Interval   *resInterval;
   struct pg_itm_in itm_in;
 
   InitMaterializedSRF(fcinfo, 0);
@@ -5249,9 +5166,9 @@ pg_timezone_names(PG_FUNCTION_ARGS)
     /* Convert tzoff to an interval; can't overflow */
     MemSet(&itm_in, 0, sizeof(struct pg_itm_in));
     itm_in.tm_usec = (int64) -tzoff * USECS_PER_SEC;
-    resInterval = (Interval *) palloc(sizeof(Interval));
+    Interval *resInterval = (Interval *) palloc(sizeof(Interval));
     (void) itmin2interval(&itm_in, resInterval);
-    values[2] = IntervalPGetDatum(resInterval);
+    values[2] = resInterval;
 
     values[3] = BoolGetDatum(tm.tm_isdst > 0);
 

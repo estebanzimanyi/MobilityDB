@@ -143,8 +143,8 @@ static pg_locale_t default_locale = NULL;
 static bool CurrentLocaleConvValid = false;
 static bool CurrentLCTimeValid = false;
 
-/* Global variables */
-char *database_locale = NULL;
+/* Global variables added by MEOS */
+char *database_locale = "C";
 char *database_locprovider = COLLPROVIDER_BUILTIN;
 char *database_icurules = NULL;
 char *database_ctype = NULL;
@@ -182,7 +182,8 @@ static collation_cache_hash *CollationCache = NULL;
 /**
  * @brief Destroy function to free the memory allocated for the hash table
  */
-static void collation_cache_my_destroy(collation_cache_hash *tb)
+static void
+collation_cache_my_destroy(collation_cache_hash *tb)
 {
   collation_cache_iterator it;
   collation_cache_entry *entry;
@@ -1220,7 +1221,7 @@ create_pg_locale(Oid collid)
  * Initialize default_locale with database locale settings.
  */
 void
-init_database_collation(void)
+meos_initialize_collation(void)
 {
   Assert(default_locale == NULL);
   pg_locale_t result;
@@ -1235,8 +1236,24 @@ init_database_collation(void)
     PGLOCALE_SUPPORT_ERROR(database_locprovider);
 
   result->is_default = true;
+  if (default_locale != NULL)
+    pfree(default_locale);
   default_locale = result;
   return;
+}
+
+/*
+ * Free default_locale 
+ */
+void
+meos_finalize_collation(void)
+{
+  // collation_cache_my_destroy(CollationCache);
+  if (default_locale != NULL)
+  {
+    pfree(default_locale->info.builtin.locale);
+    pfree(default_locale);
+  }
 }
 
 /*
@@ -1541,7 +1558,7 @@ const char *
 builtin_validate_locale(int encoding, const char *locale)
 {
   const char *canonical_name = NULL;
-  int      required_encoding;
+  int required_encoding;
 
   if (strcmp(locale, "C") == 0)
     canonical_name = "C";

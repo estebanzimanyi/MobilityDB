@@ -13,7 +13,7 @@
 #define __JSONB_H__
 
 #include "lib/stringinfo.h"
-// #include "utils/array.h"
+#include <nodes/nodes.h>
 #include "utils/numeric.h"
 
 /* Tokens used when sequentially processing a jsonb value */
@@ -221,7 +221,20 @@ typedef struct
 #define JB_ROOT_IS_OBJECT(jbp_) ((*(uint32 *) VARDATA(jbp_) & JB_FOBJECT) != 0)
 #define JB_ROOT_IS_ARRAY(jbp_)	((*(uint32 *) VARDATA(jbp_) & JB_FARRAY) != 0)
 
+/* Structure of a global variable to keep track of the values to free when
+ * finihed parsing a JSONB value */
+ 
+#define JSON_TO_FREE_INITIAL_SIZE 256
 
+typedef struct
+{
+  int tofree_size;
+  int tofree_count;
+  void **tofree;
+} json_to_free;
+
+/* Enumeration of the possible types of a JSONB value */
+ 
 enum jbvType
 {
 	/* Scalar types */
@@ -368,6 +381,13 @@ typedef struct JsonbIterator
 	struct JsonbIterator *parent;
 } JsonbIterator;
 
+typedef struct JsonbInState
+{
+  JsonbParseState *parseState;
+  JsonbValue *res;
+  bool unique_keys;
+  Node *escontext;
+} JsonbInState;
 
 /* Convenience macros */
 static inline Jsonb *
@@ -396,10 +416,6 @@ JsonbPGetDatum(const Jsonb *p)
 	return PointerGetDatum(p);
 }
 
-#define PG_GETARG_JSONB_P(x)	DatumGetJsonbP(PG_GETARG_DATUM(x))
-#define PG_GETARG_JSONB_P_COPY(x)	DatumGetJsonbPCopy(PG_GETARG_DATUM(x))
-#define PG_RETURN_JSONB_P(x)	PG_RETURN_POINTER(x)
-
 /* Support functions */
 extern uint32 getJsonbOffset(const JsonbContainer *jc, int index);
 extern uint32 getJsonbLength(const JsonbContainer *jc, int index);
@@ -416,7 +432,7 @@ extern JsonbIterator *JsonbIteratorInit(JsonbContainer *container);
 extern JsonbIteratorToken JsonbIteratorNext(JsonbIterator **it, JsonbValue *val,
   bool skipNested);
 extern void JsonbToJsonbValue(Jsonb *jsonb, JsonbValue *val);
-extern Jsonb *JsonbValueToJsonb(JsonbValue *val);
+extern Jsonb *JsonbValueToJsonb(const JsonbValue *val);
 extern bool JsonbDeepContains(JsonbIterator **val,
   JsonbIterator **mContained);
 extern void JsonbHashScalarValue(const JsonbValue *scalarVal, uint32 *hash);
@@ -432,14 +448,19 @@ extern char *JsonbUnquote(Jsonb *jb);
 extern bool JsonbExtractScalar(JsonbContainer *jbc, JsonbValue *res);
 extern const char *JsonbTypeName(JsonbValue *val);
 
-extern Jsonb *jsonb_set_element(Jsonb *jb, Datum *path, int path_len,
+extern Jsonb *jsonb_set_element(Jsonb *jb, text **path, int path_len,
   JsonbValue *newval);
-extern Jsonb *jsonb_get_element(Jsonb *jb, Datum *path, int npath,
-  bool *isnull, bool as_text);
+extern void *jsonb_get_element(Jsonb *jb, text **path, int npath,
+  bool as_text);
 extern bool to_jsonb_is_immutable(Oid typoid);
 extern Datum jsonb_build_object_worker(int nargs, const Datum *args,
   const bool *nulls, const Oid *types, bool absent_on_null, bool unique_keys);
 extern Datum jsonb_build_array_worker(int nargs, const Datum *args,
   const bool *nulls, const Oid *types, bool absent_on_null);
+
+extern json_to_free *json_get_tofree(void);
+extern void json_add_tofree(void *value);
+extern void json_reset_tofree(void);
+extern void json_destroy_tofree(void);
 
 #endif							/* __JSONB_H__ */

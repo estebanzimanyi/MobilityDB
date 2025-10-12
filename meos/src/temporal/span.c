@@ -41,7 +41,6 @@
 #include <limits.h>
 /* PostgreSQL */
 #include <postgres.h>
-#include <postgres_types.h>
 #include <common/hashfn.h>
 #include <utils/float.h>
 #include <utils/timestamp.h>
@@ -55,6 +54,10 @@
 #include "temporal/type_parser.h"
 #include "temporal/type_inout.h"
 #include "temporal/type_util.h"
+
+#include <utils/jsonb.h>
+#include <utils/numeric.h>
+#include <postgres_types.h>
 
 /*****************************************************************************
  * Parameter tests

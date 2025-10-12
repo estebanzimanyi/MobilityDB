@@ -237,8 +237,31 @@ install(
   RENAME "meos_geo.h")
 
 # Files from ${CMAKE_SOURCE_DIR}
+
+install(FILES "${CMAKE_SOURCE_DIR}/postgres/pg_bool.h"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+install(FILES "${CMAKE_SOURCE_DIR}/postgres/pg_date.h"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+install(FILES "${CMAKE_SOURCE_DIR}/postgres/pg_float.h"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+install(FILES "${CMAKE_SOURCE_DIR}/postgres/pg_int.h"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+install(FILES "${CMAKE_SOURCE_DIR}/postgres/pg_interval.h"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+install(FILES "${CMAKE_SOURCE_DIR}/postgres/pg_numeric.h"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+install(FILES "${CMAKE_SOURCE_DIR}/postgres/pg_text.h"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+install(FILES "${CMAKE_SOURCE_DIR}/postgres/pg_time.h"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+install(FILES "${CMAKE_SOURCE_DIR}/postgres/pg_timestamp.h"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+install(FILES "${CMAKE_SOURCE_DIR}/postgres/pg_json.h"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+  
 install(FILES "${CMAKE_SOURCE_DIR}/postgres/postgres_types.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+
 install(
   FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_internal_geo.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")

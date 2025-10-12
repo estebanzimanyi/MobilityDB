@@ -38,7 +38,6 @@
 #include <assert.h>
 /* PostgreSQL */
 #include <postgres.h>
-#include <postgres_types.h>
 #include <utils/timestamp.h>
 #if POSTGRESQL_VERSION_NUMBER >= 160000
   #include "varatt.h"
@@ -58,6 +57,10 @@
   #include "npoint/tnpoint_spatialfuncs.h"
   #include "npoint/tnpoint_distance.h"
 #endif
+
+#include <utils/jsonb.h>
+#include <utils/numeric.h>
+#include <postgres_types.h>
 
 /*****************************************************************************
  * General functions
