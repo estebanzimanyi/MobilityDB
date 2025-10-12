@@ -19,26 +19,37 @@
 #include <stdlib.h>
 /* PostgreSQL */
 #include <postgres.h>
-#include <postgres_types.h>
 #include <common/hashfn.h>
 #include <common/int.h>
 #include <utils/jsonb.h>
 #include <utils/varlena.h> /* For DatumGetTextP */
 
+#include <utils/date.h>
+#include <utils/numeric.h>
+#include <utils/timestamp.h>
+#include <postgres_types.h>
+
 /*****************************************************************************/
 
 /**
- * @ingroup meos_jsonb_base_comp
+ * @ingroup meos_base_json
  * @brief Return true if the text string exist as a top-level key or array
  * element within the JSON value
  * @param[in] jb JSONB value
  * @param[in] key Key
  * @note Derived from PostgreSQL function @p jsonb_exists()
  */
+#if MEOS
 bool
-jsonb_exists_internal(const Jsonb *jb, const text *key)
+jsonb_exists(const Jsonb *jb, const text *key)
 {
-  JsonbValue  kval;
+  return pg_jsonb_exists(jb, key);
+}
+#endif /* MEOS */
+bool
+pg_jsonb_exists(const Jsonb *jb, const text *key)
+{
+  JsonbValue kval;
   JsonbValue *v = NULL;
 
   /*
@@ -51,9 +62,11 @@ jsonb_exists_internal(const Jsonb *jb, const text *key)
   kval.val.string.val = VARDATA_ANY(key);
   kval.val.string.len = VARSIZE_ANY_EXHDR(key);
 
-  v = findJsonbValueFromContainer(&((Jsonb *) jb)->root,
+  v = findJsonbValueFromContainer(&((Jsonb *) jb)->root, 
     JB_FOBJECT | JB_FARRAY, &kval);
-  return (v != NULL);
+  bool result = (v != NULL); // MEOS
+  pfree(v);
+  return result;
 }
 
 /**
@@ -63,8 +76,7 @@ jsonb_exists_internal(const Jsonb *jb, const text *key)
 Datum
 datum_jsonb_exists(Datum l, Datum r)
 {
-  return BoolGetDatum(jsonb_exists_internal(DatumGetJsonbP(l),
-    DatumGetTextP(r)));
+  return BoolGetDatum(pg_jsonb_exists(DatumGetJsonbP(l), DatumGetTextP(r)));
 }
 
 /**
@@ -79,12 +91,10 @@ jsonb_exists_array(const Jsonb *jb, const text **keys_elems,
   for (int i = 0; i < keys_len; i++)
   {
     JsonbValue strVal;
-
     strVal.type = jbvString;
     /* We rely on the array elements not being toasted */
     strVal.val.string.val = VARDATA_ANY(keys_elems[i]);
     strVal.val.string.len = VARSIZE_ANY_EXHDR(keys_elems[i]);
-
     bool res = findJsonbValueFromContainer(&((Jsonb *) jb)->root,
         JB_FOBJECT | JB_FARRAY, &strVal) != NULL;
     if ((any && res) || (! any && ! res))
@@ -94,30 +104,45 @@ jsonb_exists_array(const Jsonb *jb, const text **keys_elems,
 }
 
 /**
- * @ingroup meos_jsonb_base
+ * @ingroup meos_base_json
  * @brief Return true if the first JSON value contains the second one
  * @note Derived from PostgreSQL function @p jsonb_contains()
  */
- bool
-jsonb_contains_internal(const Jsonb *jb1, const Jsonb *jb2)
+#if MEOS
+bool
+jsonb_contains(const Jsonb *jb1, const Jsonb *jb2)
+{
+  return pg_jsonb_contains(jb1, jb2);
+}
+#endif /* MEOS */
+bool
+pg_jsonb_contains(const Jsonb *jb1, const Jsonb *jb2)
 {
   if (JB_ROOT_IS_OBJECT(jb1) != JB_ROOT_IS_OBJECT(jb2))
     return false;
-
   JsonbIterator *it1 = JsonbIteratorInit(&((Jsonb *)jb1)->root);
   JsonbIterator *it2 = JsonbIteratorInit(&((Jsonb *)jb2)->root);
-  return JsonbDeepContains(&it1, &it2);
+  bool result = JsonbDeepContains(&it1, &it2); // MEOS
+  pfree(it1); pfree(it2);
+  return result;
 }
 
 /**
- * @ingroup meos_jsonb_base
+ * @ingroup meos_base_json
  * @brief Return true if the first JSON value is contained into the second one
  * @note Derived from PostgreSQL function @p jsonb_contained()
  */
+#if MEOS
 bool
-jsonb_contained_internal(const Jsonb *jb1, const Jsonb *jb2)
+jsonb_contained(const Jsonb *jb1, const Jsonb *jb2)
 {
-  return jsonb_contains_internal(jb2, jb1);
+  return pg_jsonb_contains(jb2, jb1);
+}
+#endif /* MEOS */
+bool
+pg_jsonb_contained(const Jsonb *jb1, const Jsonb *jb2)
+{
+  return pg_jsonb_contains(jb2, jb1);
 }
 
 /**
@@ -126,8 +151,7 @@ jsonb_contained_internal(const Jsonb *jb1, const Jsonb *jb2)
 Datum
 datum_jsonb_contains(Datum l, Datum r)
 {
-  return BoolGetDatum(jsonb_contains_internal(DatumGetJsonbP(l),
-    DatumGetJsonbP(r)));
+  return BoolGetDatum(pg_jsonb_contains(DatumGetJsonbP(l), DatumGetJsonbP(r)));
 }
 
 /**
@@ -136,18 +160,24 @@ datum_jsonb_contains(Datum l, Datum r)
 Datum
 datum_jsonb_contained(Datum l, Datum r)
 {
-  return BoolGetDatum(jsonb_contained_internal(DatumGetJsonbP(l),
-    DatumGetJsonbP(r)));
+  return BoolGetDatum(pg_jsonb_contains(DatumGetJsonbP(r), DatumGetJsonbP(l)));
 }
 
 /**
- * @ingroup meos_jsonb_base_comp
+ * @ingroup meos_base_json
  * @brief Return true if the two JSONB values are equal
  * @param[in] jb1,jb2 JSONB values
  * @note Derived from PostgreSQL function @p jsonb_eq()
  */
+#if MEOS
 bool
-jsonb_eq_internal(const Jsonb *jb1, const Jsonb *jb2)
+jsonb_eq(const Jsonb *jb1, const Jsonb *jb2)
+{
+  return pg_jsonb_eq(jb1, jb2);
+}
+#endif /* MEOS */
+bool
+pg_jsonb_eq(const Jsonb *jb1, const Jsonb *jb2)
 {
   assert(jb1); assert(jb2);
   return compareJsonbContainers((JsonbContainer *) &jb1->root,
@@ -155,13 +185,20 @@ jsonb_eq_internal(const Jsonb *jb1, const Jsonb *jb2)
 }
 
 /**
- * @ingroup meos_jsonb_base_comp
+ * @ingroup meos_base_json
  * @brief Return true if the two JSONB values are not equal
  * @param[in] jb1,jb2 JSONB values
  * @note Derived from PostgreSQL function @p jsonb_ne()
  */
+#if MEOS
 bool
-jsonb_ne_internal(const Jsonb *jb1, const Jsonb *jb2)
+jsonb_ne(const Jsonb *jb1, const Jsonb *jb2)
+{
+  return pg_jsonb_ne(jb1, jb2);
+}
+#endif /* MEOS */
+bool
+pg_jsonb_ne(const Jsonb *jb1, const Jsonb *jb2)
 {
   assert(jb1); assert(jb2);
   return compareJsonbContainers((JsonbContainer *) &jb1->root,
@@ -169,13 +206,20 @@ jsonb_ne_internal(const Jsonb *jb1, const Jsonb *jb2)
 }
 
 /**
- * @ingroup meos_jsonb_base_comp
+ * @ingroup meos_base_json
  * @brief Return true if the first JSONB value is less than the second one
  * @param[in] jb1,jb2 JSONB values
  * @note Derived from PostgreSQL function @p jsonb_lt()
  */
+#if MEOS
 bool
-jsonb_lt_internal(const Jsonb *jb1, const Jsonb *jb2)
+jsonb_lt(const Jsonb *jb1, const Jsonb *jb2)
+{
+  return pg_jsonb_lt(jb1, jb2);
+}
+#endif /* MEOS */
+bool
+pg_jsonb_lt(const Jsonb *jb1, const Jsonb *jb2)
 {
   assert(jb1); assert(jb2);
   return compareJsonbContainers((JsonbContainer *) &jb1->root,
@@ -183,13 +227,20 @@ jsonb_lt_internal(const Jsonb *jb1, const Jsonb *jb2)
 }
 
 /**
- * @ingroup meos_jsonb_base_comp
+ * @ingroup meos_base_json
  * @brief Return true if the first JSONB value is greater than the second one
  * @param[in] jb1,jb2 JSONB values
  * @note Derived from PostgreSQL function @p jsonb_gt()
  */
+#if MEOS
 bool
-jsonb_gt_internal(const Jsonb *jb1, const Jsonb *jb2)
+jsonb_gt(const Jsonb *jb1, const Jsonb *jb2)
+{
+  return pg_jsonb_gt(jb1, jb2);
+}
+#endif /* MEOS */
+bool
+pg_jsonb_gt(const Jsonb *jb1, const Jsonb *jb2)
 {
   assert(jb1); assert(jb2);
   return compareJsonbContainers((JsonbContainer *) &jb1->root,
@@ -197,14 +248,21 @@ jsonb_gt_internal(const Jsonb *jb1, const Jsonb *jb2)
 }
 
 /**
- * @ingroup meos_jsonb_base_comp
+ * @ingroup meos_base_json
  * @brief Return true if the first JSONB value is less than or equal to the
  * second one
  * @param[in] jb1,jb2 JSONB values
  * @note Derived from PostgreSQL function @p jsonb_le()
  */
+#if MEOS
 bool
-jsonb_le_internal(const Jsonb *jb1, const Jsonb *jb2)
+jsonb_le(const Jsonb *jb1, const Jsonb *jb2)
+{
+  return pg_jsonb_le(jb1, jb2);
+}
+#endif /* MEOS */
+bool
+pg_jsonb_le(const Jsonb *jb1, const Jsonb *jb2)
 {
   assert(jb1); assert(jb2);
   return compareJsonbContainers((JsonbContainer *) &jb1->root,
@@ -212,14 +270,21 @@ jsonb_le_internal(const Jsonb *jb1, const Jsonb *jb2)
 }
 
 /**
- * @ingroup meos_jsonb_base_comp
+ * @ingroup meos_base_json
  * @brief Return true if the first JSONB value is greater than or equal to the
  * second one
  * @param[in] jb1,jb2 JSONB values
  * @note Derived from PostgreSQL function @p jsonb_ge()
  */
+#if MEOS
 bool
-jsonb_ge_internal(const Jsonb *jb1, const Jsonb *jb2)
+jsonb_ge(const Jsonb *jb1, const Jsonb *jb2)
+{
+  return pg_jsonb_ge(jb1, jb2);
+}
+#endif /* MEOS */
+bool
+pg_jsonb_ge(const Jsonb *jb1, const Jsonb *jb2)
 {
   assert(jb1); assert(jb2);
   return compareJsonbContainers((JsonbContainer *) &jb1->root,
@@ -227,14 +292,21 @@ jsonb_ge_internal(const Jsonb *jb1, const Jsonb *jb2)
 }
 
 /**
- * @ingroup meos_jsonb_base_comp
+ * @ingroup meos_base_json
  * @brief Return -1, 0, or 1 depending on whether the first JSONB value
  * is less than, equal to, or greater than the second one
  * @param[in] jb1,jb2 JSONB values
  * @note Derived from PostgreSQL function @p jsonb_cmp()
  */
+#if MEOS
 int
-jsonb_cmp_internal(const Jsonb *jb1, const Jsonb *jb2)
+jsonb_cmp(const Jsonb *jb1, const Jsonb *jb2)
+{
+  return pg_jsonb_cmp(jb1, jb2);
+}
+#endif /* MEOS */
+int
+pg_jsonb_cmp(const Jsonb *jb1, const Jsonb *jb2)
 {
   assert(jb1); assert(jb2);
   return compareJsonbContainers((JsonbContainer *) &jb1->root,
@@ -242,23 +314,27 @@ jsonb_cmp_internal(const Jsonb *jb1, const Jsonb *jb2)
 }
 
 /**
- * @ingroup meos_jsonb_base
+ * @ingroup meos_base_json
  * @brief Return the hash value of a temporal value
  * @note Derived from PostgreSQL function @p jsonb_hash()
  */
+#if MEOS
 uint32
-jsonb_hash_internal(Jsonb *jb)
+jsonb_hash(const Jsonb *jb)
 {
-  JsonbIterator *it;
-  JsonbValue  v;
-  JsonbIteratorToken r;
-  uint32    hash = 0;
-
+  return pg_jsonb_hash(jb);
+}
+#endif /* MEOS */
+uint32
+pg_jsonb_hash(const Jsonb *jb)
+{
   if (JB_ROOT_COUNT(jb) == 0)
     return (0);
 
-  it = JsonbIteratorInit(&jb->root);
-
+  JsonbIterator *it = JsonbIteratorInit(&jb->root);
+  JsonbIteratorToken r;
+  JsonbValue v;
+  uint32 hash = 0;
   while ((r = JsonbIteratorNext(&it, &v, false)) != WJB_DONE)
   {
     switch (r)
@@ -282,28 +358,31 @@ jsonb_hash_internal(Jsonb *jb)
         elog(ERROR, "invalid JsonbIteratorNext rc: %d", (int) r);
     }
   }
-
   return hash;
 }
 
 /**
- * @ingroup meos_jsonb_base
+ * @ingroup meos_base_json
  * @brief Return the 64-bit hash of a JSONB value using a seed
  * @note Derived from PostgreSQL function @p jsonb_hash_extended()
  */
+#if MEOS
 uint64
-jsonb_hash_extended_internal(Jsonb *jb, uint64 seed)
+jsonb_hash_extended(const Jsonb *jb, uint64 seed)
 {
-  JsonbIterator *it;
-  JsonbValue  v;
-  JsonbIteratorToken r;
-  uint64    hash = 0;
-
+  return pg_jsonb_hash_extended(jb, seed);
+}
+#endif /* MEOS */
+uint64
+pg_jsonb_hash_extended(Jsonb *jb, uint64 seed)
+{
   if (JB_ROOT_COUNT(jb) == 0)
     return seed;
 
-  it = JsonbIteratorInit(&jb->root);
-
+  JsonbIterator *it = JsonbIteratorInit(&jb->root);
+  JsonbValue v;
+  JsonbIteratorToken r;
+  uint64 hash = 0;
   while ((r = JsonbIteratorNext(&it, &v, false)) != WJB_DONE)
   {
     switch (r)
@@ -327,7 +406,6 @@ jsonb_hash_extended_internal(Jsonb *jb, uint64 seed)
         elog(ERROR, "invalid JsonbIteratorNext rc: %d", (int) r);
     }
   }
-
   return hash;
 }
 

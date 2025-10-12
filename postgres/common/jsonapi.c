@@ -15,6 +15,7 @@
 
 #include "common/jsonapi.h"
 #include "utils/mb/pg_wchar.h"
+#include "utils/jsonb.h"
 #include "port/pg_lfind.h"
 
 #ifdef JSONAPI_USE_PQEXPBUFFER
@@ -642,7 +643,6 @@ set_fname(JsonLexContext *lex, char *fname)
      */
     FREE(lex->pstack->fnames[lex->lex_level]);
   }
-
   lex->pstack->fnames[lex->lex_level] = fname;
 }
 
@@ -742,22 +742,18 @@ pg_parse_json(JsonLexContext *lex, const JsonSemAction *sem)
 
 #else
 
-  JsonTokenType tok;
-  JsonParseErrorType result;
-
   if (lex == &failed_oom)
     return JSON_OUT_OF_MEMORY;
   if (lex->incremental)
     return JSON_INVALID_LEXER_TYPE;
 
   /* get the initial token */
-  result = json_lex(lex);
+  JsonParseErrorType result = json_lex(lex);
   if (result != JSON_SUCCESS)
     return result;
 
-  tok = lex_peek(lex);
-
   /* parse by recursive descent */
+  JsonTokenType tok = lex_peek(lex);
   switch (tok)
   {
     case JSON_TOKEN_OBJECT_START:
@@ -806,7 +802,7 @@ json_count_array_elements(JsonLexContext *lex, int *elements)
 
   count = 0;
   result = lex_expect(JSON_PARSE_ARRAY_START, &copylex,
-            JSON_TOKEN_ARRAY_START);
+    JSON_TOKEN_ARRAY_START);
   if (result != JSON_SUCCESS)
     return result;
   if (lex_peek(&copylex) != JSON_TOKEN_ARRAY_END)
@@ -824,8 +820,7 @@ json_count_array_elements(JsonLexContext *lex, int *elements)
         return result;
     }
   }
-  result = lex_expect(JSON_PARSE_ARRAY_NEXT, &copylex,
-            JSON_TOKEN_ARRAY_END);
+  result = lex_expect(JSON_PARSE_ARRAY_NEXT, &copylex, JSON_TOKEN_ARRAY_END);
   if (result != JSON_SUCCESS)
     return result;
 
@@ -996,7 +991,7 @@ pg_parse_json_incremental(JsonLexContext *lex, const JsonSemAction *sem,
              * to wait to get past the ':' to see if the next
              * value is null so we can call the semantic routine
              */
-            char     *fname = NULL;
+            char *fname = NULL;
             json_ofield_action ostart = sem->object_field_start;
             json_ofield_action oend = sem->object_field_end;
 
@@ -1022,11 +1017,13 @@ pg_parse_json_incremental(JsonLexContext *lex, const JsonSemAction *sem,
 
             if (ostart != NULL)
             {
-              char     *fname = get_fname(lex);
-
+              char *fname = get_fname(lex);
               result = (*ostart) (sem->semstate, fname, isnull);
               if (result != JSON_SUCCESS)
+              {
+                FREE(fname);
                 return result;
+              }
             }
           }
           break;
@@ -1036,22 +1033,22 @@ pg_parse_json_incremental(JsonLexContext *lex, const JsonSemAction *sem,
 
             if (oend != NULL)
             {
-              char     *fname = get_fname(lex);
-              bool    isnull = get_fnull(lex);
-
+              char *fname = get_fname(lex);
+              bool isnull = get_fnull(lex);
               result = (*oend) (sem->semstate, fname, isnull);
               if (result != JSON_SUCCESS)
+              {
+                FREE(fname);
                 return result;
+              }
             }
           }
           break;
         case JSON_SEM_AELEM_START:
           {
             json_aelem_action astart = sem->array_element_start;
-            bool    isnull = tok == JSON_TOKEN_NULL;
-
+            bool isnull = tok == JSON_TOKEN_NULL;
             set_fnull(lex, isnull);
-
             if (astart != NULL)
             {
               result = (*astart) (sem->semstate, isnull);
@@ -1063,11 +1060,9 @@ pg_parse_json_incremental(JsonLexContext *lex, const JsonSemAction *sem,
         case JSON_SEM_AELEM_END:
           {
             json_aelem_action aend = sem->array_element_end;
-
             if (aend != NULL)
             {
-              bool    isnull = get_fnull(lex);
-
+              bool isnull = get_fnull(lex);
               result = (*aend) (sem->semstate, isnull);
               if (result != JSON_SUCCESS)
                 return result;
@@ -1077,9 +1072,7 @@ pg_parse_json_incremental(JsonLexContext *lex, const JsonSemAction *sem,
         case JSON_SEM_SCALAR_INIT:
           {
             json_scalar_action sfunc = sem->scalar;
-
             pstack->scalar_val = NULL;
-
             if (sfunc != NULL)
             {
               /*
@@ -1138,7 +1131,6 @@ pg_parse_json_incremental(JsonLexContext *lex, const JsonSemAction *sem,
               if (lex->flags & JSONLEX_CTX_OWNS_TOKENS)
                 FREE(pstack->scalar_val);
               pstack->scalar_val = NULL;
-
               if (result != JSON_SUCCESS)
                 return result;
             }
@@ -1234,15 +1226,14 @@ pg_parse_json_incremental(JsonLexContext *lex, const JsonSemAction *sem,
 static inline JsonParseErrorType
 parse_scalar(JsonLexContext *lex, const JsonSemAction *sem)
 {
-  char     *val = NULL;
   json_scalar_action sfunc = sem->scalar;
   JsonTokenType tok = lex_peek(lex);
   JsonParseErrorType result;
 
   /* a scalar must be a string, a number, true, false, or null */
   if (tok != JSON_TOKEN_STRING && tok != JSON_TOKEN_NUMBER &&
-    tok != JSON_TOKEN_TRUE && tok != JSON_TOKEN_FALSE &&
-    tok != JSON_TOKEN_NULL)
+      tok != JSON_TOKEN_TRUE && tok != JSON_TOKEN_FALSE &&
+      tok != JSON_TOKEN_NULL)
     return report_parse_error(JSON_PARSE_VALUE, lex);
 
   /* if no semantic function, just consume the token */
@@ -1250,19 +1241,19 @@ parse_scalar(JsonLexContext *lex, const JsonSemAction *sem)
     return json_lex(lex);
 
   /* extract the de-escaped string value, or the raw lexeme */
+  char *val = NULL;
   if (lex_peek(lex) == JSON_TOKEN_STRING)
   {
     if (lex->need_escapes)
     {
-      val = STRDUP(lex->strval->data);
+      val = (void *) STRDUP(lex->strval->data);
       if (val == NULL)
         return JSON_OUT_OF_MEMORY;
     }
   }
   else
   {
-    int      len = (lex->token_terminator - lex->token_start);
-
+    int len = (lex->token_terminator - lex->token_start);
     val = ALLOC(len + 1);
     if (val == NULL)
       return JSON_OUT_OF_MEMORY;
@@ -1278,6 +1269,9 @@ parse_scalar(JsonLexContext *lex, const JsonSemAction *sem)
     FREE(val);
     return result;
   }
+
+  /* Add val to the values that need to be freed */
+  json_add_tofree((void *) val);
 
   /*
    * invoke the callback, which may take ownership of val. For string
@@ -1300,10 +1294,10 @@ parse_object_field(JsonLexContext *lex, const JsonSemAction *sem)
    * generally call a field name a "key".
    */
 
-  char     *fname = NULL;
+  char *fname = NULL;
   json_ofield_action ostart = sem->object_field_start;
   json_ofield_action oend = sem->object_field_end;
-  bool    isnull;
+  bool isnull;
   JsonTokenType tok;
   JsonParseErrorType result;
 
@@ -1315,6 +1309,8 @@ parse_object_field(JsonLexContext *lex, const JsonSemAction *sem)
     fname = STRDUP(lex->strval->data);
     if (fname == NULL)
       return JSON_OUT_OF_MEMORY;
+    /* Add fname to the values that need to be freed */
+    json_add_tofree((void *) fname);
   }
   result = json_lex(lex);
   if (result != JSON_SUCCESS)
@@ -1332,7 +1328,6 @@ parse_object_field(JsonLexContext *lex, const JsonSemAction *sem)
 
   tok = lex_peek(lex);
   isnull = tok == JSON_TOKEN_NULL;
-
   if (ostart != NULL)
   {
     result = (*ostart) (sem->semstate, fname, isnull);
@@ -1364,6 +1359,7 @@ parse_object_field(JsonLexContext *lex, const JsonSemAction *sem)
 ofield_cleanup:
   if (lex->flags & JSONLEX_CTX_OWNS_TOKENS)
     FREE(fname);
+  
   return result;
 }
 
@@ -1433,7 +1429,6 @@ parse_object(JsonLexContext *lex, const JsonSemAction *sem)
     if (result != JSON_SUCCESS)
       return result;
   }
-
   return JSON_SUCCESS;
 }
 
@@ -1444,8 +1439,7 @@ parse_array_element(JsonLexContext *lex, const JsonSemAction *sem)
   json_aelem_action aend = sem->array_element_end;
   JsonTokenType tok = lex_peek(lex);
   JsonParseErrorType result;
-  bool    isnull;
-
+  bool isnull;
   isnull = tok == JSON_TOKEN_NULL;
 
   if (astart != NULL)
@@ -1470,14 +1464,12 @@ parse_array_element(JsonLexContext *lex, const JsonSemAction *sem)
 
   if (result != JSON_SUCCESS)
     return result;
-
   if (aend != NULL)
   {
     result = (*aend) (sem->semstate, isnull);
     if (result != JSON_SUCCESS)
       return result;
   }
-
   return JSON_SUCCESS;
 }
 
@@ -1491,7 +1483,6 @@ parse_array(JsonLexContext *lex, const JsonSemAction *sem)
   json_struct_action astart = sem->array_start;
   json_struct_action aend = sem->array_end;
   JsonParseErrorType result;
-
   if (astart != NULL)
   {
     result = (*astart) (sem->semstate);
@@ -1506,12 +1497,10 @@ parse_array(JsonLexContext *lex, const JsonSemAction *sem)
    * array end.
    */
   lex->lex_level++;
-
   result = lex_expect(JSON_PARSE_ARRAY_START, lex, JSON_TOKEN_ARRAY_START);
   if (result == JSON_SUCCESS && lex_peek(lex) != JSON_TOKEN_ARRAY_END)
   {
     result = parse_array_element(lex, sem);
-
     while (result == JSON_SUCCESS && lex_peek(lex) == JSON_TOKEN_COMMA)
     {
       result = json_lex(lex);

@@ -37,7 +37,6 @@ typedef struct
 } tzentry;
 
 static uint32 hash_string_pointer(const char *s);
-// static void tzcache_my_destroy(SH_TYPE *tb);
 #define SH_PREFIX tzcache
 #define SH_ELEMENT_TYPE tzentry
 #define SH_KEY_TYPE const char *
@@ -46,10 +45,11 @@ static uint32 hash_string_pointer(const char *s);
 #define SH_EQUAL(tb, a, b) (strcmp(a, b) == 0)
 #define SH_SCOPE static inline
 #define SH_RAW_ALLOCATOR palloc0
-#define SH_DESTROY tzcache_destroy(tzcache)
+#define SH_DESTROY tzcache_my_destroy(tzcache)
 #define SH_DEFINE
 #define SH_DECLARE
 #include <lib/simplehash.h>
+static void tzcache_my_destroy(tzcache_hash *tb);
 
 /* Size of the timezone hash table */
 #define TZCACHE_INITIAL_SIZE 32
@@ -63,9 +63,8 @@ pg_tz *session_timezone = NULL;
 /* Current log timezone (controlled by log_timezone GUC) */
 // pg_tz *log_timezone = NULL; /* MEOS */
 
-static bool scan_directory_ci(const char *dirname,
-                const char *fname, int fnamelen,
-                char *canonname, int canonnamelen);
+static bool scan_directory_ci(const char *dirname, const char *fname,
+  int fnamelen, char *canonname, int canonnamelen);
 
 /*
  * Helper function borrowed from PostgreSQL file `filemap.c`.
@@ -95,10 +94,8 @@ init_timezone_hashtable(void)
 {
   /* MEOS: Create the timezone hash table */
   timezone_cache = tzcache_create(TZCACHE_INITIAL_SIZE, NULL);
-
   if (!timezone_cache)
     return false;
-
   return true;
 }
 
@@ -116,7 +113,6 @@ static void tzcache_my_destroy(tzcache_hash *tb)
       pfree(entry->key); 
     if (entry->data != NULL)
       pfree(entry->data);
-    tzcache_delete_item(timezone_cache, entry);
   }
   tzcache_destroy(tb);
 }
@@ -160,10 +156,9 @@ pg_TZDIR(void)
 int
 pg_open_tzfile(const char *name, char *canonname)
 {
-  const char *fname;
-  char    fullname[MAXPGPATH];
-  int      fullnamelen;
-  int      orignamelen;
+  char fullname[MAXPGPATH];
+  int fullnamelen;
+  int orignamelen;
 
   /* Initialize fullname with base name of tzdata directory */
   // strlcpy(fullname, pg_TZDIR(), sizeof(fullname)); /* MEOS */
@@ -182,12 +177,10 @@ pg_open_tzfile(const char *name, char *canonname)
    */
   if (canonname == NULL)
   {
-    int result;
-
     fullname[fullnamelen] = '/';
     /* test above ensured this will fit: */
     strcpy(fullname + fullnamelen + 1, name);
-    result = open(fullname, O_RDONLY | PG_BINARY, 0);
+    int result = open(fullname, O_RDONLY | PG_BINARY, 0);
     if (result >= 0)
       return result;
     /* If that didn't work, fall through to do it the hard way */
@@ -198,20 +191,17 @@ pg_open_tzfile(const char *name, char *canonname)
    * Loop to split the given name into directory levels; for each level,
    * search using scan_directory_ci().
    */
-  fname = name;
+  const char *fname = name;
   for (;;)
   {
-    const char *slashptr;
+    const char *slashptr = strchr(fname, '/');
     int fnamelen;
-
-    slashptr = strchr(fname, '/');
     if (slashptr)
       fnamelen = slashptr - fname;
     else
       fnamelen = strlen(fname);
     if (!scan_directory_ci(fullname, fname, fnamelen,
-                 fullname + fullnamelen + 1,
-                 MAXPGPATH - fullnamelen - 1))
+      fullname + fullnamelen + 1, MAXPGPATH - fullnamelen - 1))
       return -1;
     fullname[fullnamelen++] = '/';
     fullnamelen += strlen(fullname + fullnamelen);
@@ -241,8 +231,6 @@ pg_open_tzfile(const char *name, char *canonname)
 struct dirent *
 ReadDir(DIR *dir, const char *dirname)
 {
-  struct dirent *dent;
-
   /* Give a generic message for AllocateDir failure, if caller didn't */
   if (dir == NULL)
   {
@@ -251,6 +239,7 @@ ReadDir(DIR *dir, const char *dirname)
   }
 
   errno = 0;
+  struct dirent *dent;
   if ((dent = readdir(dir)) != NULL)
     return dent;
 
@@ -268,13 +257,11 @@ static bool
 scan_directory_ci(const char *dirname, const char *fname, int fnamelen,
   char *canonname, int canonnamelen)
 {
-  bool found = false;
-  DIR *dirdesc;
-  struct dirent *direntry;
-
   // dirdesc = AllocateDir(dirname); /* MEOS */
-  dirdesc = opendir(dirname);
+  DIR *dirdesc = opendir(dirname);
 
+  bool found = false;
+  struct dirent *direntry;
   // while ((direntry = ReadDirExtended(dirdesc, dirname, LOG)) != NULL) /* MEOS */
   while ((direntry = ReadDir(dirdesc, dirname)) != NULL)
   {
@@ -323,7 +310,6 @@ pg_tzset(const char *name)
   struct state tzstate;
   char uppername[TZ_STRLEN_MAX + 1];
   char canonname[TZ_STRLEN_MAX + 1];
-  char *p;
 
   if (strlen(name) > TZ_STRLEN_MAX)
     return NULL;      /* not going to fit */
@@ -338,7 +324,7 @@ pg_tzset(const char *name)
    * can get consistently upcased results from tzparse() in case the name is
    * a POSIX-style timezone spec.)
    */
-  p = uppername;
+  char *p = uppername;
   while (*name)
     *p++ = pg_toupper((unsigned char) *name++);
   *p = '\0';
@@ -419,31 +405,26 @@ pg_tzset(const char *name)
 pg_tz *
 pg_tzset_offset(long gmtoffset)
 {
-  long    absoffset = (gmtoffset < 0) ? -gmtoffset : gmtoffset;
-  char    offsetstr[64];
-  // char    tzname[128]; /* MEOS */
-  char    tzname[256];
+  long absoffset = (gmtoffset < 0) ? -gmtoffset : gmtoffset;
+  char offsetstr[64];
+  char tzname[256];  /* MEOS Value was 128 */
 
-  snprintf(offsetstr, sizeof(offsetstr),
-       "%02ld", absoffset / SECS_PER_HOUR);
+  snprintf(offsetstr, sizeof(offsetstr), "%02ld", absoffset / SECS_PER_HOUR);
   absoffset %= SECS_PER_HOUR;
   if (absoffset != 0)
   {
     snprintf(offsetstr + strlen(offsetstr),
-         sizeof(offsetstr) - strlen(offsetstr),
-         ":%02ld", absoffset / SECS_PER_MINUTE);
+      sizeof(offsetstr) - strlen(offsetstr), ":%02ld", 
+      absoffset / SECS_PER_MINUTE);
     absoffset %= SECS_PER_MINUTE;
     if (absoffset != 0)
       snprintf(offsetstr + strlen(offsetstr),
-           sizeof(offsetstr) - strlen(offsetstr),
-           ":%02ld", absoffset);
+        sizeof(offsetstr) - strlen(offsetstr), ":%02ld", absoffset);
   }
   if (gmtoffset > 0)
-    snprintf(tzname, sizeof(tzname), "<-%s>+%s",
-         offsetstr, offsetstr);
+    snprintf(tzname, sizeof(tzname), "<-%s>+%s", offsetstr, offsetstr);
   else
-    snprintf(tzname, sizeof(tzname), "<+%s>-%s",
-         offsetstr, offsetstr);
+    snprintf(tzname, sizeof(tzname), "<+%s>-%s", offsetstr, offsetstr);
 
   return pg_tzset(tzname);
 }
@@ -479,18 +460,8 @@ meos_finalize_timezone(void)
   if (session_timezone)
     pfree(session_timezone); 
   if (timezone_cache)
-  {
-    /* Free the timezone name strings associated to the keys */
-    tzcache_iterator it;
-    tzentry *entry;
-    tzcache_start_iterate(timezone_cache, &it);
-    while ((entry = tzcache_iterate(timezone_cache, &it)) != NULL)
-    {
-      if (entry->key != NULL)
-        pfree(entry->key); 
-    }
-    tzcache_destroy(timezone_cache);
-  }
+    tzcache_my_destroy(timezone_cache);
   return;
 }
+
 /*****************************************************************************/

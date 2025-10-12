@@ -14,9 +14,7 @@
 #define TIMESTAMP_H
 
 #include "datatype/timestamp.h"
-// #include "fmgr.h"
 #include "pgtime.h"
-
 
 /*
  * Functions for fmgr-callable functions.
@@ -24,51 +22,41 @@
  * For Timestamp, we make use of the same support routines as for int64.
  * Therefore Timestamp is pass-by-reference if and only if int64 is!
  */
- // MEOS remove the "static" keyword int the following 6 functions
-inline Timestamp
+static inline Timestamp
 DatumGetTimestamp(Datum X)
 {
 	return (Timestamp) DatumGetInt64(X);
 }
 
-inline TimestampTz
+static inline TimestampTz
 DatumGetTimestampTz(Datum X)
 {
 	return (TimestampTz) DatumGetInt64(X);
 }
 
-inline Interval *
+static inline Interval *
 DatumGetIntervalP(Datum X)
 {
 	return (Interval *) DatumGetPointer(X);
 }
 
-inline Datum
+static inline Datum
 TimestampGetDatum(Timestamp X)
 {
 	return Int64GetDatum(X);
 }
 
-inline Datum
+static inline Datum
 TimestampTzGetDatum(TimestampTz X)
 {
 	return Int64GetDatum(X);
 }
 
-inline Datum
+static inline Datum
 IntervalPGetDatum(const Interval *X)
 {
 	return PointerGetDatum(X);
 }
-
-#define PG_GETARG_TIMESTAMP(n) DatumGetTimestamp(PG_GETARG_DATUM(n))
-#define PG_GETARG_TIMESTAMPTZ(n) DatumGetTimestampTz(PG_GETARG_DATUM(n))
-#define PG_GETARG_INTERVAL_P(n) DatumGetIntervalP(PG_GETARG_DATUM(n))
-
-#define PG_RETURN_TIMESTAMP(x) return TimestampGetDatum(x)
-#define PG_RETURN_TIMESTAMPTZ(x) return TimestampTzGetDatum(x)
-#define PG_RETURN_INTERVAL_P(x) return IntervalPGetDatum(x)
-
 
 #define TIMESTAMP_MASK(b) (1 << (b))
 #define INTERVAL_MASK(b) (1 << (b))
@@ -88,8 +76,7 @@ IntervalPGetDatum(const Interval *X)
 
 /* Helper for simple subtraction between two timestamps */
 static inline uint64
-TimestampDifferenceMicroseconds(TimestampTz start_time,
-								TimestampTz stop_time)
+TimestampDifferenceMicroseconds(TimestampTz start_time, TimestampTz stop_time)
 {
 	if (start_time >= stop_time)
 		return 0;
@@ -140,7 +127,7 @@ extern void GetEpochTime(struct pg_tm *tm);
 
 extern int	timestamp_cmp_internal(Timestamp dt1, Timestamp dt2);
 
-/* timestamp comparison works for timestamptz also */
+/* timestamp comparisons works for timestamptz also */
 #define timestamptz_cmp_internal(dt1,dt2)	timestamp_cmp_internal(dt1, dt2)
 
 extern TimestampTz timestamp2timestamptz_opt_overflow(Timestamp timestamp,

@@ -96,21 +96,22 @@ typedef struct JsonIncrementalState JsonIncrementalState;
  */
 #define JSONLEX_FREE_STRUCT      (1 << 0)
 #define JSONLEX_FREE_STRVAL      (1 << 1)
-#define JSONLEX_CTX_OWNS_TOKENS    (1 << 2)
+#define JSONLEX_CTX_OWNS_TOKENS  (1 << 2)
+
 typedef struct JsonLexContext
 {
-  const char *input;
-  size_t    input_length;
-  int      input_encoding;
-  const char *token_start;
-  const char *token_terminator;
-  const char *prev_token_terminator;
-  bool    incremental;
+  const   char *input;
+  size_t        input_length;
+  int           input_encoding;
+  const char   *token_start;
+  const char   *token_terminator;
+  const char   *prev_token_terminator;
+  bool          incremental;
   JsonTokenType token_type;
-  int      lex_level;
-  bits32    flags;
-  int      line_number;  /* line number, starting from 1 */
-  const char *line_start;    /* where that line starts within input */
+  int           lex_level;
+  bits32        flags;
+  int           line_number;  /* line number, starting from 1 */
+  const char   *line_start;    /* where that line starts within input */
   JsonParserStack *pstack;
   JsonIncrementalState *inc_state;
   bool    need_escapes;

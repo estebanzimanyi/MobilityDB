@@ -46,6 +46,10 @@
 // #include "utils/relcache.h"
 // #include "varatt.h"
 
+/* Function defined in varlena.c */
+extern bytea *bytea_copy(const bytea *ba);
+
+/* Function defined in this file */
 extern bytea *pg_convert(const bytea *string, const char *src_encoding_name,
   const char *dest_encoding_name);
 
@@ -359,7 +363,7 @@ pg_convert(const bytea *string, const char *src_encoding_name,
 
   /* return source string if no conversion happened */
   if (dest_str == src_str)
-    return string;
+    return bytea_copy(string);
 
   /*
    * build bytea data type structure.
@@ -508,8 +512,7 @@ pg_server_to_any(const char *s, int len, int encoding)
   if (len <= 0)
     return unconstify(char *, s);  /* empty string is always valid */
 
-  if (encoding == (int) DatabaseEncoding->encoding ||
-    encoding == PG_SQL_ASCII)
+  if (encoding == (int) DatabaseEncoding->encoding || encoding == PG_SQL_ASCII)
     return unconstify(char *, s);  /* assume data is valid */
 
   if (DatabaseEncoding->encoding == PG_SQL_ASCII)

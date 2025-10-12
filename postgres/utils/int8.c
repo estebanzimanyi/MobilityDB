@@ -18,6 +18,7 @@
 /* PostgreSQL */
 #include "postgres.h"
 #include "common/int.h"
+#include "utils/builtins.h"
 
 /* Sign + the most decimal digits an 8-byte number could have */
 #define MAXINT8LEN 20

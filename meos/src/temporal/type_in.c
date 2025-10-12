@@ -43,7 +43,6 @@
 #include <meos.h>
 #include <meos_rgeo.h>
 #include <meos_internal.h>
-#include <postgres_types.h>
 #include "temporal/set.h"
 #include "temporal/span.h"
 #include "temporal/tbox.h"
@@ -64,6 +63,10 @@
 #if RGEO
   #include "rgeo/trgeo.h"
 #endif
+
+#include <utils/jsonb.h>
+#include <utils/numeric.h>
+#include <postgres_types.h>
 
 /*****************************************************************************/
 
@@ -161,7 +164,7 @@ basetype_in(const char *str, meosType type, bool end UNUSED, Datum *result)
     }
     case T_TEXT:
     {
-      text *txt = cstring2text(str);
+      text *txt = cstring_to_text(str);
       if (! txt)
         return false;
       *result = PointerGetDatum(txt);
@@ -380,7 +383,8 @@ parse_mfjson_values(json_object *mfjson, meosType temptype, int *count)
             "Invalid string value in 'values' array in MFJSON string");
           return NULL;
         }
-        values[i] = PointerGetDatum(cstring2text(json_object_get_string(jvalue)));
+        values[i] = PointerGetDatum(cstring_to_text(
+          json_object_get_string(jvalue)));
         break;
       default: /* Error! */
         meos_error(ERROR, MEOS_ERR_MFJSON_INPUT,
@@ -1297,7 +1301,7 @@ text_from_wkb_state(meos_wkb_parse_state *s)
   str[size] = '\0';
   /* Advance the state and return */
   s->pos += size;
-  text *result = cstring2text(str);
+  text *result = cstring_to_text(str);
   pfree(str);
   return result;
 }

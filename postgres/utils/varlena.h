@@ -15,13 +15,10 @@
 
 #include "postgres.h"
 
-// #include "nodes/pg_list.h"
-// #include "utils/sortsupport.h"
-
 #ifndef FMGR_H
   /* To avoid including fmgr.h However this implies that the text values must
    * be ALWAYS detoasted */
-  #define DatumGetTextP(X)      ((text *) DatumGetPointer(X)) // ((text *) PG_DETOAST_DATUM(X))
+  #define DatumGetTextP(X)      ((text *) DatumGetPointer(X))
 #endif /* FMGR_H */
 
 extern int	varstr_cmp(const char *arg1, int len1, const char *arg2, int len2, Oid collid);

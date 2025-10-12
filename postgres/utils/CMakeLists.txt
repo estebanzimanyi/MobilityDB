@@ -1,5 +1,6 @@
 set(UTILS_SRCS
   bool.c
+  dynahash.c
   int.c
   int8.c
   date.c
