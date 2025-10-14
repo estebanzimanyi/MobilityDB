@@ -139,11 +139,9 @@ uint64
 int64_hash_extended(int64 val, uint64 seed)
 {
   /* Same approach as hashint8 */
-  uint32    lohalf = (uint32) val;
-  uint32    hihalf = (uint32) (val >> 32);
-
+  uint32 lohalf = (uint32) val;
+  uint32 hihalf = (uint32) (val >> 32);
   lohalf ^= (val >= 0) ? hihalf : ~hihalf;
-
   return hash_uint32_extended(lohalf, seed);
 }
 
@@ -153,16 +151,14 @@ int64_hash_extended(int64 val, uint64 seed)
  * @note Derived from PostgreSQL function @p hashfloat4()
  */
 uint32
-float4_hash(float4 key)
+float4_hash(float4 num)
 {
-  float8    key8;
-
   /*
    * On IEEE-float machines, minus zero and zero have different bit patterns
    * but should compare as equal.  We must ensure that they have the same
    * hash value, which is most reliably done this way:
    */
-  if (key == (float4) 0)
+  if (num == (float4) 0)
     return 0;
 
   /*
@@ -172,7 +168,7 @@ float4_hash(float4 key)
    * than have hashfloat8 try to narrow its value to float4; that could fail
    * on overflow.)
    */
-  key8 = key;
+  float8 num8 = num;
 
   /*
    * Similarly, NaNs can have different bit patterns but they should all
@@ -181,10 +177,10 @@ float4_hash(float4 key)
    * replace key with a float4 NaN and then widen it; but on some old
    * platforms, that way produces a different bit pattern.)
    */
-  if (isnan(key8))
-    key8 = get_float8_nan();
+  if (isnan(num8))
+    num8 = get_float8_nan();
 
-  return hash_any((unsigned char *) &key8, sizeof(key8));
+  return hash_any((unsigned char *) &num8, sizeof(num8));
 }
 
 /**
@@ -193,18 +189,16 @@ float4_hash(float4 key)
  * @note Derived from PostgreSQL function @p hashfloat4extended()
  */
 uint64
-float4_hash_extended(float4 key, uint64 seed)
+float4_hash_extended(float4 num, uint64 seed)
 {
-  float8    key8;
-
   /* Same approach as hashfloat4 */
-  if (key == (float4) 0)
+  if (num == (float4) 0)
     return seed;
-  key8 = key;
-  if (isnan(key8))
-    key8 = get_float8_nan();
+  float8 num8 = num;
+  if (isnan(num8))
+    num8 = get_float8_nan();
 
-  return hash_any_extended((unsigned char *) &key8, sizeof(key8), seed);
+  return hash_any_extended((unsigned char *) &num8, sizeof(num8), seed);
 }
 
 /**
@@ -213,14 +207,14 @@ float4_hash_extended(float4 key, uint64 seed)
  * @note Derived from PostgreSQL function @p hashfloat8()
  */
 uint32
-float8_hash(float8 key)
+float8_hash(float8 num)
 {
   /*
    * On IEEE-float machines, minus zero and zero have different bit patterns
    * but should compare as equal.  We must ensure that they have the same
    * hash value, which is most reliably done this way:
    */
-  if (key == (float8) 0)
+  if (num == (float8) 0)
     return 0;
 
   /*
@@ -228,10 +222,10 @@ float8_hash(float8 key)
    * compare as equal.  For backwards-compatibility reasons we force them to
    * have the hash value of a standard NaN.
    */
-  if (isnan(key))
-    key = get_float8_nan();
+  if (isnan(num))
+    num = get_float8_nan();
 
-  return hash_any((unsigned char *) &key, sizeof(key));
+  return hash_any((unsigned char *) &num, sizeof(num));
 }
 
 /**
@@ -240,15 +234,15 @@ float8_hash(float8 key)
  * @note Derived from PostgreSQL function @p hashfloat8extended()
  */
 uint64
-float8_hash_extended(float8 key, uint64 seed)
+float8_hash_extended(float8 num, uint64 seed)
 {
   /* Same approach as hashfloat8 */
-  if (key == (float8) 0)
+  if (num == (float8) 0)
     return seed;
-  if (isnan(key))
-    key = get_float8_nan();
+  if (isnan(num))
+    num = get_float8_nan();
 
-  return hash_any_extended((unsigned char *) &key, sizeof(key), seed);
+  return hash_any_extended((unsigned char *) &num, sizeof(num), seed);
 }
 
 /**
@@ -257,52 +251,43 @@ float8_hash_extended(float8 key, uint64 seed)
  * @note Derived from PostgreSQL function @p hashtext()
  */
 uint32
-text_hash(text *key, Oid collid)
+text_hash(const text *txt, Oid collid)
 {
-  // pg_locale_t mylocale;
-  Datum    result;
-
   if (!collid)
   {
     elog(ERROR, "could not determine which collation to use for string hashing");
   }
 
-  // mylocale = pg_newlocale_from_collation(collid);
+  uint32 result;
+  pg_locale_t mylocale = pg_newlocale_from_collation(collid);
+  if (mylocale->deterministic)
+  {
+    result = hash_any((unsigned char *) VARDATA_ANY(txt),
+      VARSIZE_ANY_EXHDR(txt));
+  }
+  else
+  {
+    const char *txtdata = VARDATA_ANY(txt);
+    size_t txtlen = VARSIZE_ANY_EXHDR(txt);
 
-  // if (mylocale->deterministic)
-  // {
-    result = hash_any((unsigned char *) VARDATA_ANY(key),
-      VARSIZE_ANY_EXHDR(key));
-  // }
-  // else
-  // {
-    // Size    bsize,
-          // rsize;
-    // char     *buf;
-    // const char *keydata = VARDATA_ANY(key);
-    // size_t    keylen = VARSIZE_ANY_EXHDR(key);
+    Size bsize = pg_strnxfrm(NULL, 0, txtdata, txtlen, mylocale);
+    char *buf = palloc(bsize + 1);
+    Size rsize = pg_strnxfrm(buf, bsize + 1, txtdata, txtlen, mylocale);
 
+    /* the second call may return a smaller value than the first */
+    if (rsize > bsize)
+    {
+      elog(ERROR, "pg_strnxfrm() returned unexpected result");
+    }
 
-    // bsize = pg_strnxfrm(NULL, 0, keydata, keylen, mylocale);
-    // buf = palloc(bsize + 1);
-
-    // rsize = pg_strnxfrm(buf, bsize + 1, keydata, keylen, mylocale);
-
-    // /* the second call may return a smaller value than the first */
-    // if (rsize > bsize)
-    // {
-      // elog(ERROR, "pg_strnxfrm() returned unexpected result");
-    // }
-
-    // /*
-     // * In principle, there's no reason to include the terminating NUL
-     // * character in the hash, but it was done before and the behavior must
-     // * be preserved.
-     // */
-    // result = hash_any((uint8_t *) buf, bsize + 1);
-
-    // pfree(buf);
-  // }
+    /*
+     * In principle, there's no reason to include the terminating NUL
+     * character in the hash, but it was done before and the behavior must
+     * be preserved.
+     */
+    result = hash_any((uint8_t *) buf, bsize + 1);
+    pfree(buf);
+  }
   return result;
 }
 
@@ -312,50 +297,43 @@ text_hash(text *key, Oid collid)
  * @note Derived from PostgreSQL function @p hashtextextended()
  */
 uint64
-text_hash_extended(const text *key, uint64 seed, Oid collid)
+text_hash_extended(const text *txt, uint64 seed, Oid collid)
 {
-  // pg_locale_t mylocale;
-  Datum    result;
-
   if (!collid)
   {
     elog(ERROR, "could not determine which collation to use for string hashing");
   }
 
-  // mylocale = pg_newlocale_from_collation(collid);
+  uint64 result;
+  pg_locale_t mylocale = pg_newlocale_from_collation(collid);
+  if (mylocale->deterministic)
+  {
+    result = hash_any_extended((unsigned char *) VARDATA_ANY(txt),
+       VARSIZE_ANY_EXHDR(txt), seed);
+  }
+  else
+  {
+    const char *txtdata = VARDATA_ANY(txt);
+    size_t txtlen = VARSIZE_ANY_EXHDR(txt);
 
-  // if (mylocale->deterministic)
-  // {
-    result = hash_any_extended((unsigned char *) VARDATA_ANY(key),
-       VARSIZE_ANY_EXHDR(key), seed);
-  // }
-  // else
-  // {
-    // Size    bsize,
-          // rsize;
-    // char     *buf;
-    // const char *keydata = VARDATA_ANY(key);
-    // size_t    keylen = VARSIZE_ANY_EXHDR(key);
+    Size bsize = pg_strnxfrm(NULL, 0, txtdata, txtlen, mylocale);
+    char *buf = palloc(bsize + 1);
+    Size rsize = pg_strnxfrm(buf, bsize + 1, txtdata, txtlen, mylocale);
 
-    // bsize = pg_strnxfrm(NULL, 0, keydata, keylen, mylocale);
-    // buf = palloc(bsize + 1);
+    /* the second call may return a smaller value than the first */
+    if (rsize > bsize)
+    {
+      elog(ERROR, "pg_strnxfrm() returned unexpected result");
+    }
 
-    // rsize = pg_strnxfrm(buf, bsize + 1, keydata, keylen, mylocale);
-
-    // /* the second call may return a smaller value than the first */
-    // if (rsize > bsize)
-    // {
-      // elog(ERROR, "pg_strnxfrm() returned unexpected result");
-    // }
-
-    // /*
-     // * In principle, there's no reason to include the terminating NUL
-     // * character in the hash, but it was done before and the behavior must
-     // * be preserved.
-     // */
-    // result = hash_any_extended((uint8_t *) buf, bsize + 1, seed);
-    // pfree(buf);
-  // }
+    /*
+     * In principle, there's no reason to include the terminating NUL
+     * character in the hash, but it was done before and the behavior must
+     * be preserved.
+     */
+    result = hash_any_extended((uint8_t *) buf, bsize + 1, seed);
+    pfree(buf);
+  }
   return result;
 }
 

@@ -42,14 +42,12 @@ extern PGDLLIMPORT int extra_float_digits;
 
 extern int  is_infinite(float8 val);
 extern float8 float8in_internal(char *num, char **endptr_p,
-                const char *type_name, const char *orig_string,
-                struct Node *escontext);
+  const char *type_name, const char *orig_string, struct Node *escontext);
 extern float4 float4in_internal(char *num, char **endptr_p,
-                const char *type_name, const char *orig_string,
-                struct Node *escontext);
+  const char *type_name, const char *orig_string, struct Node *escontext);
 extern char *float8out_internal(float8 num);
-extern int  float4_cmp_internal(float4 a, float4 b);
-extern int  float8_cmp_internal(float8 a, float8 b);
+extern int float4_cmp_internal(float4 a, float4 b);
+extern int float8_cmp_internal(float8 a, float8 b);
 
 /*
  * Routines to provide reasonably platform-independent handling of

@@ -26,6 +26,9 @@
 #include "utils/varlena.h"
 #include "lib/stringinfo.h"
 
+#include "utils/date.h"
+#include "utils/jsonb.h"
+#include "utils/numeric.h"
 #include <postgres_types.h>
 
 // #include "access/detoast.h"
@@ -184,28 +187,23 @@ cstring_to_text_with_len(const char *s, int len)
   return result;
 }
 
-/*
- * cstring_to_text
- *
- * Create a text value from a null-terminated C string.
- *
- * The new text value is freshly palloc'd with a full-size VARHDR.
+/**
+ * @ingroup meos_base_text
+ * @brief Convert a C string into a text
+ * @param[in] str String
+ * @note Function taken from PostGIS file `lwgeom_in_geojson.c`
  */
 text *
-cstring_to_text(const char *s)
+cstring_to_text(const char *str)
 {
-  return cstring_to_text_with_len(s, strlen(s));
+  return cstring_to_text_with_len(str, strlen(str));
 }
 
-/*
- * text_to_cstring
- *
- * Create a palloc'd, null-terminated C string from a text value.
- *
- * We support being passed a compressed or toasted text value.
- * This is a bit bogus since such values shouldn't really be referred to as
- * "text *", but it seems useful for robustness.  If we didn't handle that
- * case here, we'd need another routine that did, anyway.
+/**
+ * @ingroup meos_base_text
+ * @brief Convert a text into a C string
+ * @param[in] txt Text
+ * @note Function taken from PostGIS file @p lwgeom_in_geojson.c
  */
 char *
 text_to_cstring(const text *txt)
@@ -694,7 +692,7 @@ text_substring(const text *txt, int32 start, int32 length,
  * remaining string.
  * @note Derived from PostgreSQL function @p text_substr()
  */
- #if MEOS
+#if MEOS
 text *
 text_substr(const text *txt, int32 start, int32 length)
 {
@@ -733,30 +731,29 @@ pg_text_substr_no_len(const text *txt, int32 start)
  * @note Existing static PostgreSQL function
  */
 text *
-text_overlay(const text *txt1, const text *txt2, int sp, int sl)
+text_overlay(const text *txt1, const text *txt2, int from, int count)
 {
   /*
-   * Check for possible integer-overflow cases.  For negative sp, throw a
+   * Check for possible integer-overflow cases.  For negative from, throw a
    * "substring length" error because that's what should be expected
    * according to the spec's definition of OVERLAY().
    */
-  if (sp <= 0)
+  if (from <= 0)
   {
     elog(ERROR, "negative substring length not allowed");
     return NULL;
   }
-  int sp_pl_sl;
-  if (pg_add_s32_overflow(sp, sl, &sp_pl_sl))
+  int sp_from_count;
+  if (pg_add_s32_overflow(from, count, &sp_from_count))
   {
     elog(ERROR, "integer out of range");
     return NULL;
   }
 
-  text *s1 = text_substring(PointerGetDatum(txt1), 1, sp - 1, false);
-  text *s2 = text_substring(PointerGetDatum(txt1), sp_pl_sl, -1, true);
+  text *s1 = text_substring(PointerGetDatum(txt1), 1, from - 1, false);
+  text *s2 = text_substring(PointerGetDatum(txt1), sp_from_count, -1, true);
   text *result = text_catenate(s1, txt2);
   result = text_catenate(result, s2);
-
   return result;
 }
 
@@ -766,10 +763,10 @@ text_overlay(const text *txt1, const text *txt2, int sp, int sl)
  * @note Derived from PostgreSQL function @p textoverlay_no_len()
  */
 text *
-text_overlay_no_len(const text *txt1, const text *txt2, int sp)
+text_overlay_no_len(const text *txt1, const text *txt2, int from)
 {
-  int sl = text_length(PointerGetDatum(txt2));  /* defaults to length(txt2) */
-  return text_overlay(txt1, txt2, sp, sl);
+  int len = text_length(PointerGetDatum(txt2));  /* defaults to length(txt2) */
+  return text_overlay(txt1, txt2, from, len);
 }
 
 /*
@@ -789,9 +786,6 @@ text_overlay_no_len(const text *txt1, const text *txt2, int sp)
 static int
 text_position(const text *txt1, const text *txt2, Oid collid)
 {
-  TextPositionState state;
-  int result;
-
   check_collation_set(collid);
 
   /* Empty needle always matches at position 1 */
@@ -804,10 +798,12 @@ text_position(const text *txt1, const text *txt2, Oid collid)
   if (VARSIZE_ANY_EXHDR(txt1) < VARSIZE_ANY_EXHDR(txt2))
     return 0;
 
+  TextPositionState state;
   text_position_setup(txt1, txt2, collid, &state);
   /* don't need greedy mode here */
   state.greedy = false;
 
+  int result;
   if (!text_position_next(&state))
     result = 0;
   else
@@ -824,9 +820,9 @@ text_position(const text *txt1, const text *txt2, Oid collid)
  * @note Derived from PostgreSQL function @p textpos()
  */
 int32
-text_pos(text *txt, text *search_txt)
+text_pos(const text *txt, const text *search)
 {
-  return (int32) text_position(txt, search_txt, PG_GET_COLLATION());
+  return (int32) text_position(txt, search, PG_GET_COLLATION());
 }
 
 /*
@@ -1634,54 +1630,37 @@ appendStringInfoText(StringInfo str, const text *t)
  * @note Derived from PostgreSQL function @p replace_text()
  */
 text *
-text_replace(text *src_text, text *from_sub_text, text *to_sub_text)
+text_replace(const text *txt, const text *from, const text *to)
 {
-  int      src_text_len;
-  int      from_sub_text_len;
-  TextPositionState state;
-  text     *ret_text;
-  int      chunk_len;
-  char     *curr_ptr;
-  char     *start_ptr;
-  StringInfoData str;
-  bool    found;
-
-  src_text_len = VARSIZE_ANY_EXHDR(src_text);
-  from_sub_text_len = VARSIZE_ANY_EXHDR(from_sub_text);
+  int txt_len = VARSIZE_ANY_EXHDR(txt);
+  int from_len = VARSIZE_ANY_EXHDR(from);
 
   /* Return unmodified source string if empty source or pattern */
-  if (src_text_len < 1 || from_sub_text_len < 1)
-  {
-    return (src_text);
-  }
+  if (txt_len < 1 || from_len < 1)
+    return text_copy(txt);
 
-  text_position_setup(src_text, from_sub_text, PG_GET_COLLATION(), &state);
-
-  found = text_position_next(&state);
-
-  /* When the from_sub_text is not found, there is nothing to do. */
+  TextPositionState state;
+  text_position_setup(txt, from, PG_GET_COLLATION(), &state);
+  bool found = text_position_next(&state);
+  /* When the from is not found, there is nothing to do. */
   if (!found)
   {
     text_position_cleanup(&state);
-    return (src_text);
+    return (txt);
   }
-  curr_ptr = text_position_get_match_ptr(&state);
-  start_ptr = VARDATA_ANY(src_text);
 
+  char *curr_ptr = text_position_get_match_ptr(&state);
+  char *start_ptr = VARDATA_ANY(txt);
+  StringInfoData str;
   initStringInfo(&str);
-
+  int chunk_len;
   do
   {
-    // CHECK_FOR_INTERRUPTS();
-
     /* copy the data skipped over by last text_position_next() */
     chunk_len = curr_ptr - start_ptr;
     appendBinaryStringInfo(&str, start_ptr, chunk_len);
-
-    appendStringInfoText(&str, to_sub_text);
-
+    appendStringInfoText(&str, to);
     start_ptr = curr_ptr + state.last_match_len;
-
     found = text_position_next(&state);
     if (found)
       curr_ptr = text_position_get_match_ptr(&state);
@@ -1689,15 +1668,14 @@ text_replace(text *src_text, text *from_sub_text, text *to_sub_text)
   while (found);
 
   /* copy trailing data */
-  chunk_len = ((char *) src_text + VARSIZE_ANY(src_text)) - start_ptr;
+  chunk_len = ((char *) txt + VARSIZE_ANY(txt)) - start_ptr;
   appendBinaryStringInfo(&str, start_ptr, chunk_len);
-
   text_position_cleanup(&state);
 
-  ret_text = cstring_to_text_with_len(str.data, str.len);
+  text *result = cstring_to_text_with_len(str.data, str.len);
   pfree(str.data);
 
-  return (ret_text);
+  return (result);
 }
 
 /*
@@ -1740,7 +1718,7 @@ check_replace_text_has_escape(const text *replace_text)
  * @note Derived from PostgreSQL function @p split_part()
  */
 text *
-text_split_part(const text *txt, text *sep, int fldnum)
+text_split_part(const text *txt, const text *sep, int fldnum)
 {
   int txt_len;
   int sep_len;
@@ -1769,7 +1747,7 @@ text_split_part(const text *txt, text *sep, int fldnum)
   {
     /* if first or last field, return input string, else empty string */
     if (fldnum == 1 || fldnum == -1)
-      return (txt);
+      return text_copy(txt);
     else
       return cstring_to_text("");
   }
@@ -1783,7 +1761,7 @@ text_split_part(const text *txt, text *sep, int fldnum)
     text_position_cleanup(&state);
     /* if first or last field, return input string, else empty string */
     if (fldnum == 1 || fldnum == -1)
-      return (txt);
+      return text_copy(txt);
     else
       return (cstring_to_text(""));
   }
@@ -1806,7 +1784,7 @@ text_split_part(const text *txt, text *sep, int fldnum)
       start_ptr = text_position_get_match_ptr(&state) + state.last_match_len;
       end_ptr = VARDATA_ANY(txt) + txt_len;
       text_position_cleanup(&state);
-      return (cstring_to_text_with_len(start_ptr, end_ptr - start_ptr));
+      return cstring_to_text_with_len(start_ptr, end_ptr - start_ptr);
     }
 
     /* else, convert fldnum to positive notation */
@@ -1816,7 +1794,7 @@ text_split_part(const text *txt, text *sep, int fldnum)
     if (fldnum <= 0)
     {
       text_position_cleanup(&state);
-      return (cstring_to_text(""));
+      return cstring_to_text("");
     }
 
     /* reset to pointing at first match, but now with positive fldnum */
@@ -1859,7 +1837,6 @@ text_split_part(const text *txt, text *sep, int fldnum)
     /* non-last field requested */
     result = cstring_to_text_with_len(start_ptr, end_ptr - start_ptr);
   }
-
   return result;
 }
 
@@ -2096,23 +2073,22 @@ pg_text_left(const text *txt, int n)
  */
 #if MEOS
 text *
-text_right(text *txt, int n)
+text_right(const text *txt, int n)
 {
   return pg_text_right(txt, n);
 }
 #endif
 text *
-pg_text_right(text *txt, int n)
+pg_text_right(const text *txt, int n)
 {
   const char *p = VARDATA_ANY(txt);
   int len = VARSIZE_ANY_EXHDR(txt);
-  int off;
 
   if (n < 0)
     n = -n;
   else
     n = pg_mbstrlen_with_len(p, len) - n;
-  off = pg_mbcharcliplen(p, len, n);
+  int off = pg_mbcharcliplen(p, len, n);
 
   return cstring_to_text_with_len(p + off, len - off);
 }
@@ -2631,6 +2607,13 @@ unicode_norm_form_from_string(const char *formstr)
  * @see https://unicode.org/versions/
  * @note Derived from PostgreSQL function @p unicode_version()
  */
+#if MEOS
+text *
+unicode_version(void)
+{
+  return pg_unicode_version();
+}
+#endif /* MEOS */
 text *
 pg_unicode_version(void)
 {
@@ -2642,6 +2625,13 @@ pg_unicode_version(void)
  * @brief Returns version of Unicode used by ICU, if enabled; otherwise NULL
  * @note Derived from PostgreSQL function @p icu_unicode_version()
  */
+#if MEOS
+text *
+icu_unicode_version(void)
+{
+  return pg_icu_unicode_version();
+}
+#endif /* MEOS */
 text *
 pg_icu_unicode_version(void)
 {
@@ -2658,8 +2648,15 @@ pg_icu_unicode_version(void)
  * @details Requires that the encoding is UTF-8
  * @note Derived from PostgreSQL function @p unicode_assigned()
  */
+#if MEOS
 bool
-pg_unicode_assigned(text *input)
+unicode_assigned(const text *txt)
+{ 
+  return pg_unicode_assigned(txt);
+}
+#endif /* MEOS */
+bool
+pg_unicode_assigned(const text *txt)
 {
   if (GetDatabaseEncoding() != PG_UTF8)
   {
@@ -2669,8 +2666,8 @@ pg_unicode_assigned(text *input)
   }
 
   /* convert to pg_wchar */
-  int size = pg_mbstrlen_with_len(VARDATA_ANY(input), VARSIZE_ANY_EXHDR(input));
-  unsigned char *p = (unsigned char *) VARDATA_ANY(input);
+  int size = pg_mbstrlen_with_len(VARDATA_ANY(txt), VARSIZE_ANY_EXHDR(txt));
+  unsigned char *p = (unsigned char *) VARDATA_ANY(txt);
   for (int i = 0; i < size; i++)
   {
     pg_wchar  uchar = utf8_to_unicode(p);
@@ -2687,16 +2684,23 @@ pg_unicode_assigned(text *input)
  * @brief Return a Unicode text normalized
  * @note Derived from PostgreSQL function @p unicode_normalize_func()
  */
+#if MEOS
 text *
-pg_unicode_normalize_func(text *input, text *formtxt)
+unicode_normalize_func(const text *txt, const text *fmt)
+{ 
+  return pg_unicode_normalize_func(txt, fmt);
+}
+#endif /* MEOS */
+text *
+pg_unicode_normalize_func(const text *txt, const text *fmt)
 {
-  char *formstr = text_to_cstring(formtxt);
+  char *formstr = text_to_cstring(fmt);
   UnicodeNormalizationForm form = unicode_norm_form_from_string(formstr);
 
   /* convert to pg_wchar */
-  int size = pg_mbstrlen_with_len(VARDATA_ANY(input), VARSIZE_ANY_EXHDR(input));
+  int size = pg_mbstrlen_with_len(VARDATA_ANY(txt), VARSIZE_ANY_EXHDR(txt));
   pg_wchar *input_chars = palloc((size + 1) * sizeof(pg_wchar));
-  unsigned char *p = (unsigned char *) VARDATA_ANY(input);
+  unsigned char *p = (unsigned char *) VARDATA_ANY(txt);
   int i;
   for (i = 0; i < size; i++)
   {
@@ -2704,7 +2708,7 @@ pg_unicode_normalize_func(text *input, text *formtxt)
     p += pg_utf_mblen(p);
   }
   input_chars[i] = (pg_wchar) '\0';
-  Assert((char *) p == VARDATA_ANY(input) + VARSIZE_ANY_EXHDR(input));
+  Assert((char *) p == VARDATA_ANY(txt) + VARSIZE_ANY_EXHDR(txt));
 
   /* action */
   pg_wchar *output_chars = unicode_normalize(form, input_chars);
@@ -2743,16 +2747,23 @@ pg_unicode_normalize_func(text *input, text *formtxt)
  * string, so it's probably not worth doing any incremental conversion etc.
  * @note Derived from PostgreSQL function @p unicode_is_normalized()
  */
+#if MEOS
 bool
-pg_unicode_is_normalized(text *input, text *fmt)
+unicode_is_normalized(const text *txt, const text *fmt)
+{
+  return pg_unicode_is_normalized(txt, fmt);
+}
+#endif /* MEOS */
+bool
+pg_unicode_is_normalized(const text *txt, const text *fmt)
 {
   char *formstr = text_to_cstring(fmt);
   UnicodeNormalizationForm form = unicode_norm_form_from_string(formstr);
 
   /* convert to pg_wchar */
-  int size = pg_mbstrlen_with_len(VARDATA_ANY(input), VARSIZE_ANY_EXHDR(input));
+  int size = pg_mbstrlen_with_len(VARDATA_ANY(txt), VARSIZE_ANY_EXHDR(txt));
   pg_wchar *input_chars = palloc((size + 1) * sizeof(pg_wchar));
-  unsigned char *p = (unsigned char *) VARDATA_ANY(input);
+  unsigned char *p = (unsigned char *) VARDATA_ANY(txt);
   int i;
   for (i = 0; i < size; i++)
   {
@@ -2760,7 +2771,7 @@ pg_unicode_is_normalized(text *input, text *fmt)
     p += pg_utf_mblen(p);
   }
   input_chars[i] = (pg_wchar) '\0';
-  Assert((char *) p == VARDATA_ANY(input) + VARSIZE_ANY_EXHDR(input));
+  Assert((char *) p == VARDATA_ANY(txt) + VARSIZE_ANY_EXHDR(txt));
 
   /* quick check (see UAX #15) */
   UnicodeNormalizationQC quickcheck =
@@ -2826,21 +2837,23 @@ hexval_n(const char *instr, size_t n)
  * Unicode characters
  * @note Derived from PostgreSQL function @p unistr()
  */
+#if MEOS
 text *
-pg_unistr(text *input_text)
+unistr(const text *txt)
 {
-  char     *instr;
-  int      len;
+  return pg_unistr(txt);
+}
+#endif /* MEOS */
+text *
+pg_unistr(const text *txt)
+{
+  pg_wchar pair_first = 0;
+  char cbuf[MAX_UNICODE_EQUIVALENT_STRING + 1];
+  char *instr = VARDATA_ANY(txt);
+  int len = VARSIZE_ANY_EXHDR(txt);
+
   StringInfoData str;
-  text     *result;
-  pg_wchar  pair_first = 0;
-  char    cbuf[MAX_UNICODE_EQUIVALENT_STRING + 1];
-
-  instr = VARDATA_ANY(input_text);
-  len = VARSIZE_ANY_EXHDR(input_text);
-
   initStringInfo(&str);
-
   while (len > 0)
   {
     if (instr[0] == '\\')
@@ -2858,10 +2871,8 @@ pg_unistr(text *input_text)
            (len >= 6 && instr[1] == 'u' && isxdigits_n(instr + 2, 4)))
       {
         pg_wchar  unicode;
-        int      offset = instr[1] == 'u' ? 2 : 1;
-
+        int offset = instr[1] == 'u' ? 2 : 1;
         unicode = hexval_n(instr + offset, 4);
-
         if (!is_valid_unicode_codepoint(unicode))
         {
           elog(ERROR, "invalid Unicode code point: %04X", unicode);
@@ -2894,10 +2905,8 @@ pg_unistr(text *input_text)
       }
       else if (len >= 8 && instr[1] == '+' && isxdigits_n(instr + 2, 6))
       {
-        pg_wchar  unicode;
-
+        pg_wchar unicode;
         unicode = hexval_n(instr + 2, 6);
-
         if (!is_valid_unicode_codepoint(unicode))
         {
           elog(ERROR, "invalid Unicode code point: %04X", unicode);
@@ -2931,9 +2940,7 @@ pg_unistr(text *input_text)
       else if (len >= 10 && instr[1] == 'U' && isxdigits_n(instr + 2, 8))
       {
         pg_wchar  unicode;
-
         unicode = hexval_n(instr + 2, 8);
-
         if (!is_valid_unicode_codepoint(unicode))
         {
           elog(ERROR, "invalid Unicode code point: %04X", unicode);
@@ -2960,7 +2967,6 @@ pg_unistr(text *input_text)
           pg_unicode_to_server(unicode, (unsigned char *) cbuf);
           appendStringInfoString(&str, cbuf);
         }
-
         instr += 10;
         len -= 10;
       }
@@ -2974,7 +2980,6 @@ pg_unistr(text *input_text)
     {
       if (pair_first)
         goto invalid_pair;
-
       appendStringInfoChar(&str, *instr++);
       len--;
     }
@@ -2984,7 +2989,7 @@ pg_unistr(text *input_text)
   if (pair_first)
     goto invalid_pair;
 
-  result = cstring_to_text_with_len(str.data, str.len);
+  text *result = cstring_to_text_with_len(str.data, str.len);
   pfree(str.data);
 
   return result;

@@ -143,8 +143,8 @@ static pg_locale_t default_locale = NULL;
 static bool CurrentLocaleConvValid = false;
 static bool CurrentLCTimeValid = false;
 
-/* Global variables */
-char *database_locale = NULL;
+/* Global variables added by MEOS */
+char *database_locale = "C";
 char *database_locprovider = COLLPROVIDER_BUILTIN;
 char *database_icurules = NULL;
 char *database_ctype = NULL;
@@ -1541,7 +1541,7 @@ const char *
 builtin_validate_locale(int encoding, const char *locale)
 {
   const char *canonical_name = NULL;
-  int      required_encoding;
+  int required_encoding;
 
   if (strcmp(locale, "C") == 0)
     canonical_name = "C";

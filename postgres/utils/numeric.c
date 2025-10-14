@@ -26,7 +26,6 @@
 #include <math.h>
 /* PostgreSQL */
 #include <postgres.h>
-#include <postgres_types.h>
 #if POSTGRESQL_VERSION_NUMBER >= 160000
   #include "varatt.h"
 #endif
@@ -38,6 +37,9 @@
 #include <utils/datetime.h>
 #include <utils/numeric.h>
 #include <utils/timestamp.h>
+
+#include "utils/jsonb.h"
+#include <postgres_types.h>
 
 #if POSTGRESQL_VERSION_NUMBER < 160000
 /*
@@ -747,7 +749,7 @@ pg_numeric_out(Numeric num)
 }
 
 /**
- * @ingroup meos_temporal_constructor
+ * @ingroup meos_base_numeric
  * @brief Return a copy of a temporal value
  * @param[in] num Temporal value
  */
@@ -1463,26 +1465,22 @@ int32
 numeric_width_bucket(Numeric operand, Numeric bound1, Numeric bound2,
   int32 count)
 {
-  NumericVar  count_var;
-  NumericVar  result_var;
-  int32    result;
-
   if (count <= 0)
     elog(ERROR, "count must be greater than zero");
 
-  if (NUMERIC_IS_SPECIAL(operand) ||
-    NUMERIC_IS_SPECIAL(bound1) ||
+  if (NUMERIC_IS_SPECIAL(operand) || NUMERIC_IS_SPECIAL(bound1) ||
     NUMERIC_IS_SPECIAL(bound2))
   {
-    if (NUMERIC_IS_NAN(operand) ||
-      NUMERIC_IS_NAN(bound1) ||
-      NUMERIC_IS_NAN(bound2))
+    if (NUMERIC_IS_NAN(operand) || NUMERIC_IS_NAN(bound1) ||
+        NUMERIC_IS_NAN(bound2))
       elog(ERROR, "operand, lower bound, and upper bound cannot be NaN");
     /* We allow "operand" to be infinite; cmp_numerics will cope */
     if (NUMERIC_IS_INF(bound1) || NUMERIC_IS_INF(bound2))
       elog(ERROR, "lower and upper bounds must be finite");
   }
 
+  NumericVar count_var;
+  NumericVar result_var;
   init_var(&result_var);
   init_var(&count_var);
 
@@ -1502,8 +1500,7 @@ numeric_width_bucket(Numeric operand, Numeric bound1, Numeric bound2,
       else if (cmp_numerics(operand, bound2) >= 0)
         add_var(&count_var, &const_one, &result_var);
       else
-        compute_bucket(operand, bound1, bound2, &count_var,
-                 &result_var);
+        compute_bucket(operand, bound1, bound2, &count_var, &result_var);
       break;
 
       /* bound1 > bound2 */
@@ -1513,12 +1510,12 @@ numeric_width_bucket(Numeric operand, Numeric bound1, Numeric bound2,
       else if (cmp_numerics(operand, bound2) <= 0)
         add_var(&count_var, &const_one, &result_var);
       else
-        compute_bucket(operand, bound1, bound2, &count_var,
-                 &result_var);
+        compute_bucket(operand, bound1, bound2, &count_var, &result_var);
       break;
   }
 
   /* if result exceeds the range of a legal int4, we elog here */
+  int32 result;
   if (!numericvar_to_int32(&result_var, &result))
   {
     elog(ERROR, "integer out of range");
@@ -1635,7 +1632,7 @@ pg_numeric_cmp(Numeric num1, Numeric num2)
  * @note Derived from PostgreSQL function @p numeric_eq()
  */
 #if MEOS
-int
+bool
 numeric_eq(Numeric num1, Numeric num2)
 {
   return pg_numeric_eq(num1, num2);
@@ -1653,7 +1650,7 @@ pg_numeric_eq(Numeric num1, Numeric num2)
  * @note Derived from PostgreSQL function @p numeric_ne()
  */
 #if MEOS
-int
+bool
 numeric_ne(Numeric num1, Numeric num2)
 {
   return pg_numeric_ne(num1, num2);
@@ -1671,7 +1668,7 @@ pg_numeric_ne(Numeric num1, Numeric num2)
  * @note Derived from PostgreSQL function @p numeric_gt()
  */
 #if MEOS
-int
+bool
 numeric_gt(Numeric num1, Numeric num2)
 {
   return pg_numeric_gt(num1, num2);
@@ -1689,7 +1686,7 @@ pg_numeric_gt(Numeric num1, Numeric num2)
  * @note Derived from PostgreSQL function @p numeric_ge()
  */
 #if MEOS
-int
+bool
 numeric_ge(Numeric num1, Numeric num2)
 {
   return pg_numeric_ge(num1, num2);
@@ -1707,7 +1704,7 @@ pg_numeric_ge(Numeric num1, Numeric num2)
  * @note Derived from PostgreSQL function @p numeric_lt()
  */
 #if MEOS
-int
+bool
 numeric_lt(Numeric num1, Numeric num2)
 {
   return pg_numeric_lt(num1, num2);
@@ -1725,7 +1722,7 @@ pg_numeric_lt(Numeric num1, Numeric num2)
  * @note Derived from PostgreSQL function @p numeric_le()
  */
 #if MEOS
-int
+bool
 numeric_le(Numeric num1, Numeric num2)
 {
   return pg_numeric_le(num1, num2);
@@ -1740,7 +1737,7 @@ pg_numeric_le(Numeric num1, Numeric num2)
 static int
 cmp_numerics(Numeric num1, Numeric num2)
 {
-  int      result;
+  int result;
 
   /*
    * We consider all NANs to be equal and larger than any non-NAN (including
@@ -1796,8 +1793,8 @@ cmp_numerics(Numeric num1, Numeric num2)
  * @brief Return the 32-bit hash value of a numeric value
  * @note Derived from PostgreSQL function @p hash_numeric()
  */
-int
-numeric_hash(Numeric key)
+uint32
+numeric_hash(Numeric num)
 {
   Datum    digit_hash;
   Datum    result;
@@ -1809,10 +1806,10 @@ numeric_hash(Numeric key)
   NumericDigit *digits;
 
   /* If it's NaN or infinity, don't try to hash the rest of the fields */
-  if (NUMERIC_IS_SPECIAL(key))
+  if (NUMERIC_IS_SPECIAL(num))
     return 0;
 
-  weight = NUMERIC_WEIGHT(key);
+  weight = NUMERIC_WEIGHT(num);
   start_offset = 0;
   end_offset = 0;
 
@@ -1822,8 +1819,8 @@ numeric_hash(Numeric key)
    * zeros are suppressed, but we're paranoid. Note that we measure the
    * starting and ending offsets in units of NumericDigits, not bytes.
    */
-  digits = NUMERIC_DIGITS(key);
-  for (i = 0; i < (int) NUMERIC_NDIGITS(key); i++)
+  digits = NUMERIC_DIGITS(num);
+  for (i = 0; i < (int) NUMERIC_NDIGITS(num); i++)
   {
     if (digits[i] != (NumericDigit) 0)
       break;
@@ -1841,19 +1838,18 @@ numeric_hash(Numeric key)
    * If there are no non-zero digits, then the value of the number is zero,
    * regardless of any other fields.
    */
-  if ((int) NUMERIC_NDIGITS(key) == start_offset)
+  if ((int) NUMERIC_NDIGITS(num) == start_offset)
     return -1;
 
-  for (i = (int) NUMERIC_NDIGITS(key) - 1; i >= 0; i--)
+  for (i = (int) NUMERIC_NDIGITS(num) - 1; i >= 0; i--)
   {
     if (digits[i] != (NumericDigit) 0)
       break;
-
     end_offset++;
   }
 
   /* If we get here, there should be at least one non-zero digit */
-  Assert(start_offset + end_offset < NUMERIC_NDIGITS(key));
+  Assert(start_offset + end_offset < NUMERIC_NDIGITS(num));
 
   /*
    * Note that we don't hash on the Numeric's scale, since two numerics can
@@ -1861,9 +1857,9 @@ numeric_hash(Numeric key)
    * sign, although we could: since a sign difference implies inequality,
    * this shouldn't affect correctness.
    */
-  hash_len = NUMERIC_NDIGITS(key) - start_offset - end_offset;
-  digit_hash = hash_any((unsigned char *) (NUMERIC_DIGITS(key) + start_offset),
-              hash_len * sizeof(NumericDigit));
+  hash_len = NUMERIC_NDIGITS(num) - start_offset - end_offset;
+  digit_hash = hash_any((unsigned char *) (NUMERIC_DIGITS(num) + start_offset),
+    hash_len * sizeof(NumericDigit));
 
   /* Mix in the weight, via XOR */
   result = digit_hash ^ weight;
@@ -2708,7 +2704,7 @@ pg_numeric_lcm(Numeric num1, Numeric num2)
  */
 #if MEOS
 Numeric
-numeric_fac(Numeric num)
+numeric_fac(int64 num)
 {
   return pg_numeric_fac(num);
 }
@@ -2716,9 +2712,9 @@ numeric_fac(Numeric num)
 Numeric
 pg_numeric_fac(int64 num)
 {
-  Numeric    res;
-  NumericVar  fact;
-  NumericVar  result;
+  Numeric res;
+  NumericVar fact;
+  NumericVar result;
 
   if (num < 0)
   {
@@ -2744,11 +2740,7 @@ pg_numeric_fac(int64 num)
 
   for (num = num - 1; num > 1; num--)
   {
-    /* this loop can take awhile, so allow it to be interrupted */
-    // CHECK_FOR_INTERRUPTS();
-
     int64_to_numericvar(num, &fact);
-
     mul_var(&result, &fact, &result, 0);
   }
 
@@ -3335,7 +3327,7 @@ pg_numeric_min_scale(Numeric num)
  * @note Derived from PostgreSQL function @p numeric_trim_scale()
  */
 #if MEOS
-int
+Numeric
 numeric_trim_scale(Numeric num)
 {
   return pg_numeric_trim_scale(num);

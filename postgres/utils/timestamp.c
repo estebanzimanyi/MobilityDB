@@ -21,7 +21,6 @@
 #include <sys/time.h>
 
 #include "miscadmin.h"
-#include "postgres_types.h"
 #include "catalog/pg_type.h"
 #include "common/int.h"
 #include "common/int128.h"
@@ -31,6 +30,9 @@
 #include "utils/datetime.h"
 #include "utils/float.h"
 #include "utils/numeric.h"
+
+#include "utils/jsonb.h"
+#include "postgres_types.h"
 
 extern Numeric int64_div_fast_to_numeric(int64 val1, int log10val2);
 
@@ -1789,11 +1791,33 @@ eq_timestamp_timestamp(Timestamp ts1, Timestamp ts2)
 
 /**
  * @ingroup meos_base_timestamp
+ * @brief Return true if two timestamptz are equal
+ * @note Derived from PostgreSQL function @p timestamp_eq()
+ */
+bool
+eq_timestamptz_timestamptz(Timestamp ts1, Timestamp ts2)
+{
+  return (timestamp_cmp_internal(ts1, ts2) == 0);
+}
+
+/**
+ * @ingroup meos_base_timestamp
  * @brief Return true if two timestamps are not equal
  * @note Derived from PostgreSQL function @p timestamp_ne()
  */
 bool
 ne_timestamp_timestamp(Timestamp ts1, Timestamp ts2)
+{
+  return (timestamp_cmp_internal(ts1, ts2) != 0);
+}
+
+/**
+ * @ingroup meos_base_timestamp
+ * @brief Return true if two timestamps are not equal
+ * @note Derived from PostgreSQL function @p timestamp_ne()
+ */
+bool
+ne_timestamptz_timestamptz(TimestampTz ts1, TimestampTz ts2)
 {
   return (timestamp_cmp_internal(ts1, ts2) != 0);
 }
@@ -1811,11 +1835,33 @@ lt_timestamp_timestamp(Timestamp ts1, Timestamp ts2)
 
 /**
  * @ingroup meos_base_timestamp
+ * @brief Return true if the first timestamp is less than the second one
+ * @note Derived from PostgreSQL function @p timestamp_lt()
+ */
+bool
+lt_timestamptz_timestamptz(TimestampTz ts1, TimestampTz ts2)
+{
+  return (timestamp_cmp_internal(ts1, ts2) < 0);
+}
+
+/**
+ * @ingroup meos_base_timestamp
  * @brief Return true if the first timestamp is greater than the second one
  * @note Derived from PostgreSQL function @p timestamp_gt()
  */
 bool
 gt_timestamp_timestamp(Timestamp ts1, Timestamp ts2)
+{
+  return (timestamp_cmp_internal(ts1, ts2) > 0);
+}
+
+/**
+ * @ingroup meos_base_timestamp
+ * @brief Return true if the first timestamp is greater than the second one
+ * @note Derived from PostgreSQL function @p timestamp_gt()
+ */
+bool
+gt_timestamptz_timestamptz(TimestampTz ts1, TimestampTz ts2)
 {
   return (timestamp_cmp_internal(ts1, ts2) > 0);
 }
@@ -1834,12 +1880,36 @@ le_timestamp_timestamp(Timestamp ts1, Timestamp ts2)
 
 /**
  * @ingroup meos_base_timestamp
+ * @brief Return true if the first timestamp is less than or equal to the
+ * second one
+ * @note Derived from PostgreSQL function @p timestamp_le()
+ */
+bool
+le_timestamptz_timestamptz(TimestampTz ts1, TimestampTz ts2)
+{
+  return (timestamp_cmp_internal(ts1, ts2) <= 0);
+}
+
+/**
+ * @ingroup meos_base_timestamp
  * @brief Return true if the first timestamp is greater than or equal to the
  * second one
  * @note Derived from PostgreSQL function @p timestamp_ge()
  */
 bool
 ge_timestamp_timestamp(Timestamp ts1, Timestamp ts2)
+{
+  return (timestamp_cmp_internal(ts1, ts2) >= 0);
+}
+
+/**
+ * @ingroup meos_base_timestamp
+ * @brief Return true if the first timestamp is greater than or equal to the
+ * second one
+ * @note Derived from PostgreSQL function @p timestamp_ge()
+ */
+bool
+ge_timestamptz_timestamptz(TimestampTz ts1, TimestampTz ts2)
 {
   return (timestamp_cmp_internal(ts1, ts2) >= 0);
 }
@@ -1858,17 +1928,29 @@ cmp_timestamp_timestamp(Timestamp ts1, Timestamp ts2)
 
 /**
  * @ingroup meos_base_timestamp
+ * @brief Return -1, 0, or 1 depending on whether the first timestamptz is less
+ * than, equal to, or less than the second one
+ * @note Derived from PostgreSQL function @p timestamp_cmp()
+ */
+int32
+cmp_timestamptz_timestamptz(TimestampTz ts1, TimestampTz ts2)
+{
+  return timestamp_cmp_internal(ts1, ts2);
+}
+
+/**
+ * @ingroup meos_base_timestamp
  * @brief Return the 32-bit hash value of a timestamp
  * @note Derived from PostgreSQL function @p timestamp_hash()
  */
 #if MEOS
-int32
+uint32
 timestamp_hash(Timestamp ts)
 {
   return int64_hash(ts);
 }
 #endif
-int32
+uint32
 pg_timestamp_hash(Timestamp ts)
 {
   return int64_hash(ts);
@@ -1880,13 +1962,13 @@ pg_timestamp_hash(Timestamp ts)
  * @note Derived from PostgreSQL function @p timestamptz_hash()
  */
 #if MEOS
-int32
+uint32
 timestamptz_hash(TimestampTz ts)
 {
   return int64_hash(ts);
 }
 #endif
-int32
+uint32
 pg_timestamptz_hash(TimestampTz ts)
 {
   return int64_hash(ts);
@@ -2336,7 +2418,7 @@ pg_interval_hash_extended(const Interval *interv, uint64 seed)
 
 /**
  * @ingroup meos_base_timestamp
- * @brief Return true if the two timestamps overlaps_timestamp
+ * @brief Return true if two timestamps overlap
  * @details Implements the SQL OVERLAPS operator, although in this case none
  * of the inputs is null
  * @note Derived from PostgreSQL function @p overlaps_timestamp()
@@ -2380,6 +2462,21 @@ timestamp_overlaps(Timestamp ts1, Timestamp te1, Timestamp ts2, Timestamp te2)
      */
     return (true);
   }
+}
+
+/**
+ * @ingroup meos_base_timestamp
+ * @brief Return true if two timestamptz overlap
+ * @details Implements the SQL OVERLAPS operator, although in this case none
+ * of the inputs is null
+ * @note Derived from PostgreSQL function @p overlaps_timestamp()
+ */
+bool
+timestamptz_overlaps(TimestampTz ts1, TimestampTz te1, TimestampTz ts2,
+  TimestampTz te2)
+{
+  return timestamp_overlaps((Timestamp) ts1, (Timestamp) te1, (Timestamp) ts2,
+    (Timestamp) te2);
 }
 
 /*----------------------------------------------------------
@@ -2542,6 +2639,13 @@ minus_timestamptz_timestamptz(TimestampTz ts1, TimestampTz ts2)
  * @return On error return NULL
  * @note Derived from PostgreSQL function @p interval_justify_interval()
  */
+#if MEOS
+Interval *
+interval_justify_interval(const Interval *interv)
+{
+  return pg_interval_justify_interval(interv);
+}
+#endif /* MEOS */
 Interval *
 pg_interval_justify_interval(const Interval *interv)
 {
@@ -2624,6 +2728,13 @@ pg_interval_justify_interval(const Interval *interv)
  * @return On error return NULL
  * @note Derived from PostgreSQL function @p interval_justify_hours()
  */
+#if MEOS
+Interval *
+interval_justify_hours(const Interval *interv)
+{
+  return pg_interval_justify_hours(interv);
+}
+#endif /* MEOS */
 Interval *
 pg_interval_justify_hours(const Interval *interv)
 {
@@ -2667,6 +2778,13 @@ pg_interval_justify_hours(const Interval *interv)
  * @return On error return NULL
  * @note Derived from PostgreSQL function @p interval_justify_days()
  */
+#if MEOS
+Interval *
+interval_justify_days(const Interval *interv)
+{
+  return pg_interval_justify_days(interv);
+}
+#endif /* MEOS */
 Interval *
 pg_interval_justify_days(const Interval *interv)
 {
@@ -5043,17 +5161,14 @@ timestamp_extract(Timestamp ts, const text *units)
 static Datum
 timestamptz_part_common(TimestampTz timestamp, text *units, bool retnumeric)
 {
-  int64    intresult;
+  int64 intresult;
   Timestamp  epoch;
-  int      tz;
-  int      type,
-        val;
-  char     *lowunits;
-  fsec_t    fsec;
-  struct pg_tm tt,
-         *tm = &tt;
+  int tz;
+  int type, val;
+  fsec_t fsec;
+  struct pg_tm tt, *tm = &tt;
 
-  lowunits = downcase_truncate_identifier(VARDATA_ANY(units),
+  char *lowunits = downcase_truncate_identifier(VARDATA_ANY(units),
     VARSIZE_ANY_EXHDR(units), false);
 
   type = DecodeUnits(0, lowunits, &val);
@@ -5064,7 +5179,6 @@ timestamptz_part_common(TimestampTz timestamp, text *units, bool retnumeric)
   {
     double r = NonFiniteTimestampTzPart(type, val, lowunits,
       TIMESTAMP_IS_NOBEGIN(timestamp), true);
-
     if (r != 0.0)
     {
       if (retnumeric)
@@ -5310,7 +5424,7 @@ pg_timestamptz_part(TimestampTz ts, const text *units)
 Interval *
 timestamptz_extract(TimestampTz ts, const text *units)
 {
-  return timestamptz_part_common(units, ts, true);
+  return timestamptz_part_common(ts, units, true);
 }
 
 /*
@@ -5372,7 +5486,7 @@ NonFiniteIntervalPart(int type, int unit, char *lowunits, bool isNegative)
  * Extract specified field from interval.
  */
 static Datum
-interval_part_common(text *units, Interval *interval, bool retnumeric)
+interval_part_common(Interval *interval, text *units, bool retnumeric)
 {
   int64    intresult;
   int      type,
@@ -5576,13 +5690,13 @@ interval_part_common(text *units, Interval *interval, bool retnumeric)
 float8
 interval_part(const Interval *interv, const text *units)
 {
-  return interval_part_common(units, interv, false);
+  return interval_part_common(interv, units, false);
 }
 #endif
 float8
 pg_interval_part(const Interval *interv, const text *units)
 {
-  return interval_part_common(units, interv, false);
+  return interval_part_common(interv, units, false);
 }
 
 /**
@@ -5594,7 +5708,7 @@ pg_interval_part(const Interval *interv, const text *units)
 Numeric
 interval_extract(const Interval *interv, const text *units)
 {
-  return interval_part_common(units, interv, true);
+  return interval_part_common(interv, units, true);
 }
 
 /**
@@ -5619,13 +5733,9 @@ TimestampTz
 pg_timestamp_zone(Timestamp ts, const text *zone)
 {
   TimestampTz result;
-  int      tz;
-  char    tzname[TZ_STRLEN_MAX + 1];
-  int      type,
-        val;
-  pg_tz     *tzp;
+  char tzname[TZ_STRLEN_MAX + 1];
   struct pg_tm tm;
-  fsec_t    fsec;
+  fsec_t fsec;
 
   if (TIMESTAMP_NOT_FINITE(ts))
     return ts;
@@ -5634,9 +5744,9 @@ pg_timestamp_zone(Timestamp ts, const text *zone)
    * Look up the requested timezone.
    */
   text_to_cstring_buffer(zone, tzname, sizeof(tzname));
-
-  type = DecodeTimezoneName(tzname, &val, &tzp);
-
+  int val, tz;
+  pg_tz *tzp;
+  int type = DecodeTimezoneName(tzname, &val, &tzp);
   if (type == TZNAME_FIXED_OFFSET)
   {
     /* fixed-offset abbreviation */
@@ -5675,7 +5785,6 @@ pg_timestamp_zone(Timestamp ts, const text *zone)
     elog(ERROR, "timestamp out of range");
     return DT_NOEND;
   }
-
   return result;
 }
 
@@ -5695,19 +5804,14 @@ timestamp_izone(Timestamp ts, const Interval *zone)
 TimestampTz
 pg_timestamp_izone(Timestamp ts, const Interval *zone)
 {
-  TimestampTz result;
-  int      tz;
-
   if (TIMESTAMP_NOT_FINITE(ts))
     return ts;
-
   if (INTERVAL_NOT_FINITE(zone))
   {
     elog(ERROR, "interval time zone \"%s\" must be finite",
       pg_interval_out(zone));
     return DT_NOEND;
   }
-
   if (zone->month != 0 || zone->day != 0)
   {
     elog(ERROR, "interval time zone \"%s\" must not include months or days",
@@ -5715,16 +5819,13 @@ pg_timestamp_izone(Timestamp ts, const Interval *zone)
     return DT_NOEND;
   }
 
-  tz = zone->time / USECS_PER_SEC;
-
-  result = dt2local(ts, tz);
-
+  int tz = zone->time / USECS_PER_SEC;
+  TimestampTz result = dt2local(ts, tz);
   if (!IS_VALID_TIMESTAMP(result))
   {
     elog(ERROR, "timestamp out of range");
     return DT_NOEND;
   }
-
   return result;
 }
 
@@ -5738,8 +5839,7 @@ pg_timestamp_izone(Timestamp ts, const Interval *zone)
 bool
 TimestampTimestampTzRequiresRewrite(void)
 {
-  long    offset;
-
+  long offset;
   if (pg_get_timezone_offset(session_timezone, &offset) && offset == 0)
     return false;
   return true;
@@ -5767,26 +5867,22 @@ timestamp_to_timestamptz(Timestamp ts)
  * of the overflow, and return the appropriate timestamptz infinity.
  */
 TimestampTz
-timestamp2timestamptz_opt_overflow(Timestamp timestamp, int *overflow)
+timestamp2timestamptz_opt_overflow(Timestamp ts, int *overflow)
 {
-  TimestampTz result;
-  struct pg_tm tt,
-         *tm = &tt;
-  fsec_t    fsec;
-  int      tz;
-
   if (overflow)
     *overflow = 0;
 
-  if (TIMESTAMP_NOT_FINITE(timestamp))
-    return timestamp;
+  if (TIMESTAMP_NOT_FINITE(ts))
+    return ts;
 
+  int tz;
+  struct pg_tm tt, *tm = &tt;
+  fsec_t fsec;
   /* We don't expect this to fail, but check it pro forma */
-  if (timestamp2tm(timestamp, NULL, tm, &fsec, NULL, NULL) == 0)
+  if (timestamp2tm(ts, NULL, tm, &fsec, NULL, NULL) == 0)
   {
     tz = DetermineTimeZoneOffset(tm, session_timezone);
-
-    result = dt2local(timestamp, -tz);
+    TimestampTz result = dt2local(ts, -tz);
 
     if (IS_VALID_TIMESTAMP(result))
     {
@@ -5807,7 +5903,6 @@ timestamp2timestamptz_opt_overflow(Timestamp timestamp, int *overflow)
       return result;
     }
   }
-
   elog(ERROR, "timestamp out of range");
   return DT_NOEND;
 }
@@ -5816,9 +5911,9 @@ timestamp2timestamptz_opt_overflow(Timestamp timestamp, int *overflow)
  * Promote timestamp to timestamptz, throwing error for overflow.
  */
 static TimestampTz
-timestamp2timestamptz(Timestamp timestamp)
+timestamp2timestamptz(Timestamp ts)
 {
-  return timestamp2timestamptz_opt_overflow(timestamp, NULL);
+  return timestamp2timestamptz_opt_overflow(ts, NULL);
 }
 
 /**
@@ -5828,13 +5923,13 @@ timestamp2timestamptz(Timestamp timestamp)
  * @note Derived from PostgreSQL function @p timestamptz_timestamp()
  */
 Timestamp
-timestamptz_to_timestamp(TimestampTz ts)
+timestamptz_to_timestamp(TimestampTz tstz)
 {
-  return timestamptz2timestamp(ts);
+  return timestamptz2timestamp(tstz);
 }
 
 static Timestamp
-timestamptz2timestamp(TimestampTz ts)
+timestamptz2timestamp(TimestampTz tstz)
 {
   Timestamp  result;
   struct pg_tm tt,
@@ -5842,11 +5937,11 @@ timestamptz2timestamp(TimestampTz ts)
   fsec_t    fsec;
   int      tz;
 
-  if (TIMESTAMP_NOT_FINITE(ts))
-    result = ts;
+  if (TIMESTAMP_NOT_FINITE(tstz))
+    result = tstz;
   else
   {
-    if (timestamp2tm(ts, &tz, tm, &fsec, NULL, NULL) != 0)
+    if (timestamp2tm(tstz, &tz, tm, &fsec, NULL, NULL) != 0)
     {
       elog(ERROR, "timestamp out of range");
       return DT_NOEND;
@@ -5868,13 +5963,13 @@ timestamptz2timestamp(TimestampTz ts)
  */
 #if MEOS
 Timestamp
-timestamptz_zone(TimestampTz ts, const text *zone)
+timestamptz_zone(TimestampTz tstz, const text *zone)
 {
-  return pg_timestamptz_zone(ts, zone);
+  return pg_timestamptz_zone(tstz, zone);
 }
 #endif
 Timestamp
-pg_timestamptz_zone(TimestampTz ts, const text *zone)
+pg_timestamptz_zone(TimestampTz tstz, const text *zone)
 {
   Timestamp  result;
   int      tz;
@@ -5883,8 +5978,8 @@ pg_timestamptz_zone(TimestampTz ts, const text *zone)
         val;
   pg_tz     *tzp;
 
-  if (TIMESTAMP_NOT_FINITE(ts))
-    return ts;
+  if (TIMESTAMP_NOT_FINITE(tstz))
+    return tstz;
 
   /*
    * Look up the requested timezone.
@@ -5897,23 +5992,21 @@ pg_timestamptz_zone(TimestampTz ts, const text *zone)
   {
     /* fixed-offset abbreviation */
     tz = -val;
-    result = dt2local(ts, tz);
+    result = dt2local(tstz, tz);
   }
   else if (type == TZNAME_DYNTZ)
   {
     /* dynamic-offset abbreviation, resolve using specified time */
-    int      isdst;
-
-    tz = DetermineTimeZoneAbbrevOffsetTS(ts, tzname, tzp, &isdst);
-    result = dt2local(ts, tz);
+    int isdst;
+    tz = DetermineTimeZoneAbbrevOffsetTS(tstz, tzname, tzp, &isdst);
+    result = dt2local(tstz, tz);
   }
   else
   {
     /* full zone name, rotate from that zone */
     struct pg_tm tm;
-    fsec_t    fsec;
-
-    if (timestamp2tm(ts, &tz, &tm, &fsec, NULL, tzp) != 0)
+    fsec_t fsec;
+    if (timestamp2tm(tstz, &tz, &tm, &fsec, NULL, tzp) != 0)
     {
       elog(ERROR, "timestamp out of range");
       return DT_NOEND;
@@ -5924,13 +6017,11 @@ pg_timestamptz_zone(TimestampTz ts, const text *zone)
       return DT_NOEND;
     }
   }
-
   if (!IS_VALID_TIMESTAMP(result))
   {
     elog(ERROR, "timestamp out of range");
     return DT_NOEND;
   }
-
   return result;
 }
 
@@ -5942,19 +6033,19 @@ pg_timestamptz_zone(TimestampTz ts, const text *zone)
  */
 #if MEOS
 Timestamp
-timestamptz_izone(TimestampTz ts, const Interval *zone)
+timestamptz_izone(TimestampTz tstz, const Interval *zone)
 {
-  return pg_timestamptz_izone(ts, zone);
+  return pg_timestamptz_izone(tstz, zone);
 }
 #endif
 Timestamp
-pg_timestamptz_izone(TimestampTz ts, const Interval *zone)
+pg_timestamptz_izone(TimestampTz tstz, const Interval *zone)
 {
   Timestamp  result;
   int      tz;
 
-  if (TIMESTAMP_NOT_FINITE(ts))
-    return ts;
+  if (TIMESTAMP_NOT_FINITE(tstz))
+    return tstz;
 
   if (INTERVAL_NOT_FINITE(zone))
   {
@@ -5973,7 +6064,7 @@ pg_timestamptz_izone(TimestampTz ts, const Interval *zone)
 
   tz = -(zone->time / USECS_PER_SEC);
 
-  result = dt2local(ts, tz);
+  result = dt2local(tstz, tz);
 
   if (!IS_VALID_TIMESTAMP(result))
   {
@@ -6011,9 +6102,9 @@ pg_timestamp_at_local(Timestamp ts)
  * @note Derived from PostgreSQL function @p timestamptz_at_local()
  */
 TimestampTz
-timestamptz_at_local(TimestampTz ts)
+timestamptz_at_local(TimestampTz tstz)
 {
-  return timestamptz_to_timestamp(ts);
+  return timestamptz_to_timestamp(tstz);
 }
 
 /*****************************************************************************/

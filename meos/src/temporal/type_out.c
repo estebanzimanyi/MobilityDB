@@ -36,7 +36,6 @@
 #include <assert.h>
 /* PostgreSQL */
 #include <postgres.h>
-#include <postgres_types.h>
 #include "utils/timestamp.h"
 #if POSTGRESQL_VERSION_NUMBER >= 160000
   #include "varatt.h"
@@ -51,7 +50,6 @@
 #include <meos_internal.h>
 #include <meos_internal_geo.h>
 #include <meos_geo.h>
-#include <postgres_types.h>
 #include "temporal/set.h"
 #include "temporal/span.h"
 #include "temporal/spanset.h"
@@ -71,6 +69,10 @@
   #include "rgeo/trgeo_all.h"
 #endif
 
+#include <utils/jsonb.h>
+#include <utils/numeric.h>
+#include <postgres_types.h>
+
 #define MEOS_WKT_BOOL_SIZE sizeof("false")
 #define MEOS_WKT_INT4_SIZE sizeof("+2147483647")
 #define MEOS_WKT_INT8_SIZE sizeof("+9223372036854775807")
@@ -89,23 +91,6 @@ size_t lwgeom_to_wkb_size(const LWGEOM *geom, uint8_t variant);
 /*****************************************************************************
  * Output of base types
  *****************************************************************************/
-
-// /**
- // * @ingroup meos_base_text
- // * @brief Return the string representation of a text value
- // * @param[in] txt Text
- // */
-// char *
-// text_out(const text *txt)
-// {
-  // assert(txt);
-  // char *str = text2cstring(txt);
-  // size_t size = strlen(str) + 4;
-  // char *result = palloc(size);
-  // snprintf(result, size, "\"%s\"", str);
-  // pfree(str);
-  // return result;
-// }
 
 /**
  * @brief Return the string representation of a base value
@@ -204,7 +189,7 @@ double_as_mfjson_sb(stringbuffer_t *sb, double d, int precision)
 static void
 text_as_mfjson_sb(stringbuffer_t *sb, const text *txt)
 {
-  char *str = text2cstring(txt);
+  char *str = text_to_cstring(txt);
   stringbuffer_aprintf(sb, "\"%s\"", str);
   pfree(str);
   return;

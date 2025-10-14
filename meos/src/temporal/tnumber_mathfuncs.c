@@ -39,7 +39,6 @@
 #include <math.h>
 /* PostgreSQL */
 #include <postgres.h>
-#include <postgres_types.h>
 #include <utils/float.h>
 /* MEOS */
 #include <meos.h>
@@ -49,6 +48,10 @@
 #include "temporal/tnumber_mathfuncs.h"
 #include "temporal/tsequence.h"
 #include "temporal/type_util.h"
+
+#include <utils/jsonb.h>
+#include <utils/numeric.h>
+#include <postgres_types.h>
 
 /*****************************************************************************
  * General functions on datums

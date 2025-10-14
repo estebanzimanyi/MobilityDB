@@ -352,7 +352,7 @@ ge_int16_int16(int16 num1, int16 num2)
  * @note Derived from PostgreSQL function @p int24eq()
  */
 bool
-eq_in16_int32(int16 num1, int32 num2)
+eq_int16_int32(int16 num1, int32 num2)
 {
   return (num1 == num2);
 }

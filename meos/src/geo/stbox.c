@@ -40,14 +40,12 @@
 #include <limits.h>
 /* PostgreSQL */
 #include <postgres.h>
-#include <postgres_types.h>
 #include "utils/timestamp.h"
 /* PostGIS */
 #include <lwgeodetic.h>
 /* MEOS */
 #include <meos.h>
 #include <meos_internal_geo.h>
-#include <postgres_types.h>
 #include "temporal/set.h"
 #include "temporal/span.h"
 #include "temporal/spanset.h"
@@ -72,6 +70,10 @@
 #if RGEO
   #include "rgeo/trgeo_boxops.h"
 #endif
+
+#include <utils/jsonb.h>
+#include <utils/numeric.h>
+#include <postgres_types.h>
 
 /* Buffer size for input and output of STBox */
 #define MAXGBOXLEN     256

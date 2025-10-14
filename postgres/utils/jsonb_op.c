@@ -19,11 +19,15 @@
 #include <stdlib.h>
 /* PostgreSQL */
 #include <postgres.h>
-#include <postgres_types.h>
 #include <common/hashfn.h>
 #include <common/int.h>
 #include <utils/jsonb.h>
 #include <utils/varlena.h> /* For DatumGetTextP */
+
+#include <utils/date.h>
+#include <utils/numeric.h>
+#include <utils/timestamp.h>
+#include <postgres_types.h>
 
 /*****************************************************************************/
 

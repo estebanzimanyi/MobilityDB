@@ -100,8 +100,60 @@ extern Numeric numeric_mod_opt_error(Numeric num1, Numeric num2,
 extern int32 numeric_int4_opt_error(Numeric num, bool *have_error);
 extern int64 numeric_int8_opt_error(Numeric num, bool *have_error);
 
-// MEOS
-// extern Numeric random_numeric(pg_prng_state *state,
-							  // Numeric rmin, Numeric rmax);
+/* MEOS functions for numeric */
+
+extern Numeric pg_numeric_copy(Numeric num);
+extern Numeric pg_numeric_in(const char *str, int32 typmod);
+extern char *pg_numeric_out(Numeric num);
+extern Numeric pg_numeric(Numeric num, int32 typmod);
+extern Numeric pg_numeric_abs(Numeric num);
+extern Numeric pg_numeric_uplus(Numeric num);
+extern Numeric pg_numeric_uminus(Numeric num);
+extern Numeric pg_numeric_sign(Numeric num);
+extern Numeric pg_numeric_round(Numeric num, int32 scale);
+extern Numeric pg_numeric_trunc(Numeric num, int32 scale);
+extern Numeric pg_numeric_ceil(Numeric num);
+extern Numeric pg_numeric_floor(Numeric num);
+extern int32 numeric_width_bucket(Numeric operand, Numeric bound1,
+  Numeric bound2, int32 count);
+extern int32 pg_numeric_cmp(Numeric num1, Numeric num2);
+extern bool pg_numeric_eq(Numeric num1, Numeric num2);
+extern bool pg_numeric_ne(Numeric num1, Numeric num2);
+extern bool pg_numeric_gt(Numeric num1, Numeric num2);
+extern bool pg_numeric_ge(Numeric num1, Numeric num2);
+extern bool pg_numeric_lt(Numeric num1, Numeric num2);
+extern bool pg_numeric_le(Numeric num1, Numeric num2);
+extern uint32 numeric_hash(Numeric key);
+extern uint64 numeric_hash_extended(Numeric key, uint64 seed);
+extern Numeric pg_numeric_add(Numeric num1, Numeric num2);
+extern Numeric pg_numeric_sub(Numeric num1, Numeric num2);
+extern Numeric pg_numeric_mul(Numeric num1, Numeric num2);
+extern Numeric pg_numeric_div(Numeric num1, Numeric num2);
+extern Numeric pg_numeric_div_trunc(Numeric num1, Numeric num2);
+extern Numeric pg_numeric_mod(Numeric num1, Numeric num2);
+extern Numeric pg_numeric_inc(Numeric num);
+extern Numeric pg_numeric_smaller(Numeric num1, Numeric num2);
+extern Numeric pg_numeric_larger(Numeric num1, Numeric num2);
+extern Numeric pg_numeric_gcd(Numeric num1, Numeric num2);
+extern Numeric pg_numeric_lcm(Numeric num1, Numeric num2);
+extern Numeric pg_numeric_fac(int64 num);
+extern Numeric pg_numeric_sqrt(Numeric num);
+extern Numeric pg_numeric_exp(Numeric num);
+extern Numeric pg_numeric_ln(Numeric num);
+extern Numeric pg_numeric_log(Numeric num1, Numeric num2);
+extern char *pg_numeric_out(Numeric num);
+extern Numeric numeric_pow(Numeric num1, Numeric num2);
+extern int32 pg_numeric_scale(Numeric num);
+extern int32 pg_numeric_min_scale(Numeric num);
+extern Numeric pg_numeric_trim_scale(Numeric num);
+extern Numeric int32_to_numeric(int32 num);
+extern int32 numeric_to_int32(Numeric num);
+extern Numeric int64_to_numeric(int64 num);
+extern int64 numeric_to_int64(Numeric num);
+extern Numeric int16_to_numeric(int16 num);
+extern int16 numeric_to_int16(Numeric num);
+extern float8 numeric_to_float8(Numeric num);
+extern Numeric float4_to_numeric(float4 num);
+extern Numeric float8_to_numeric(float8 num);
 
 #endif							/* _PG_NUMERIC_H_ */

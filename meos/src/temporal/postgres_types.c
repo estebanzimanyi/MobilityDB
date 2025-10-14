@@ -39,7 +39,6 @@
 #include <limits.h>
 /* PostgreSQL */
 #include <postgres.h>
-#include <postgres_types.h>
 #include <common/hashfn.h>
 #include <common/int.h>
 #include <common/int128.h>
@@ -58,6 +57,10 @@
 #include <meos_geo.h>
 #include <meos_internal.h>
 #include "temporal/temporal.h"
+
+#include <utils/jsonb.h>
+#include <utils/numeric.h>
+#include <postgres_types.h>
 
 #if ! MEOS
   extern Datum call_function1(PGFunction func, Datum arg1);
@@ -81,55 +84,55 @@
  * Text and binary string functions
  *****************************************************************************/
 
-/**
- * @brief Convert a C binary string into a bytea
- */
-bytea *
-bstring2bytea(const uint8_t *wkb, size_t size)
-{
-  bytea *result = palloc(size + VARHDRSZ);
-  memcpy(VARDATA(result), wkb, size);
-  SET_VARSIZE(result, size + VARHDRSZ);
-  return result;
-}
+// /**
+ // * @brief Convert a C binary string into a bytea
+ // */
+// bytea *
+// bstring2bytea(const uint8_t *wkb, size_t size)
+// {
+  // bytea *result = palloc(size + VARHDRSZ);
+  // memcpy(VARDATA(result), wkb, size);
+  // SET_VARSIZE(result, size + VARHDRSZ);
+  // return result;
+// }
 
-/**
- * @ingroup meos_base_text
- * @brief Convert a C string into a text
- * @param[in] str String
- * @note Function taken from PostGIS file `lwgeom_in_geojson.c`
- */
-text *
-cstring2text(const char *str)
-{
-  /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(str, NULL);
+// /**
+ // * @ingroup meos_base_text
+ // * @brief Convert a C string into a text
+ // * @param[in] str String
+ // * @note Function taken from PostGIS file `lwgeom_in_geojson.c`
+ // */
+// text *
+// cstring2text(const char *str)
+// {
+  // /* Ensure the validity of the arguments */
+  // VALIDATE_NOT_NULL(str, NULL);
 
-  size_t len = strlen(str);
-  text *result = palloc(len + VARHDRSZ);
-  SET_VARSIZE(result, len + VARHDRSZ);
-  memcpy(VARDATA(result), str, len);
-  return result;
-}
+  // size_t len = strlen(str);
+  // text *result = palloc(len + VARHDRSZ);
+  // SET_VARSIZE(result, len + VARHDRSZ);
+  // memcpy(VARDATA(result), str, len);
+  // return result;
+// }
 
-/**
- * @ingroup meos_base_text
- * @brief Convert a text into a C string
- * @param[in] txt Text
- * @note Function taken from PostGIS file @p lwgeom_in_geojson.c
- */
-char *
-text2cstring(const text *txt)
-{
-  /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(txt, NULL);
+// /**
+ // * @ingroup meos_base_text
+ // * @brief Convert a text into a C string
+ // * @param[in] txt Text
+ // * @note Function taken from PostGIS file @p lwgeom_in_geojson.c
+ // */
+// char *
+// text2cstring(const text *txt)
+// {
+  // /* Ensure the validity of the arguments */
+  // VALIDATE_NOT_NULL(txt, NULL);
 
-  size_t size = VARSIZE_ANY_EXHDR(txt);
-  char *str = palloc(size + 1);
-  memcpy(str, VARDATA(txt), size);
-  str[size] = '\0';
-  return str;
-}
+  // size_t size = VARSIZE_ANY_EXHDR(txt);
+  // char *str = palloc(size + 1);
+  // memcpy(str, VARDATA(txt), size);
+  // str[size] = '\0';
+  // return str;
+// }
 
 /**
  * @ingroup meos_base_text
@@ -186,7 +189,7 @@ text_lower(const text *txt)
   char *out_string = str_tolower(VARDATA_ANY(txt), VARSIZE_ANY_EXHDR(txt),
     DEFAULT_COLLATION_OID);
 #endif /* MEOS */
-  text *result = cstring2text(out_string);
+  text *result = cstring_to_text(out_string);
   pfree(out_string);
   return result;
 }
@@ -218,7 +221,7 @@ text_upper(const text *txt)
   char *out_string = str_toupper(VARDATA_ANY(txt), VARSIZE_ANY_EXHDR(txt),
     DEFAULT_COLLATION_OID);
 #endif /* MEOS */
-  text *result = cstring2text(out_string);
+  text *result = cstring_to_text(out_string);
   pfree(out_string);
   return result;
 }
@@ -250,7 +253,7 @@ text_initcap(const text *txt)
   char *out_string = str_initcap(VARDATA_ANY(txt), VARSIZE_ANY_EXHDR(txt),
     DEFAULT_COLLATION_OID);
 #endif /* MEOS */
-  text *result = cstring2text(out_string);
+  text *result = cstring_to_text(out_string);
   pfree(out_string);
   return result;
 }

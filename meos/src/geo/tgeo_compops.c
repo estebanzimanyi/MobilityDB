@@ -37,12 +37,15 @@
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
-#include <postgres_types.h>
 #include "temporal/lifting.h"
 #include "temporal/temporal.h"
 #include "temporal/temporal_compops.h"
 #include "temporal/type_util.h"
 #include "geo/tgeo_spatialfuncs.h"
+
+#include <utils/jsonb.h>
+#include <utils/numeric.h>
+#include <postgres_types.h>
 
 /*****************************************************************************
  * Ever/always comparisons

@@ -555,6 +555,8 @@ meos_get_intervalstyle(void)
 
 /*****************************************************************************/
 
+extern void init_database_collation(void);
+
 /*
  * Initialize MEOS library
  */
@@ -563,6 +565,8 @@ meos_initialize(void)
 {
   meos_initialize_error_handler(NULL);
   meos_initialize_timezone(NULL);
+  /* Initialize default collation */
+  init_database_collation();
   /* Initialize PROJ */
   proj_initialize();
   /* Initialize GSL */

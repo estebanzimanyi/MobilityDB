@@ -19,7 +19,6 @@
 #include <stdlib.h>
 /* PostgreSQL */
 #include <postgres.h>
-#include <postgres_types.h>
 #include "catalog/pg_type.h"
 #include <common/hashfn.h>
 #include <common/int.h>
@@ -30,6 +29,9 @@
 #include <utils/jsonb.h>
 #include "utils/jsonfuncs.h"
 #include <utils/varlena.h> /* For DatumGetTextP */
+
+#include <utils/date.h>
+#include <postgres_types.h>
 
 /* TODO REMOVE */
 extern int strtoint(const char *pg_restrict str, char **pg_restrict endptr, int base);
@@ -1775,7 +1777,9 @@ each_worker_jsonb(Jsonb *jb, const char *funcname, bool as_text)
   ReturnSetInfo *rsi;
 
   if (!JB_ROOT_IS_OBJECT(jb))
+  {
     elog(ERROR, "cannot call %s on a non-object", funcname);
+  }
 
   rsi = (ReturnSetInfo *) fcinfo->resultinfo;
   InitMaterializedSRF(fcinfo, MAT_SRF_BLESS);
@@ -1792,7 +1796,6 @@ each_worker_jsonb(Jsonb *jb, const char *funcname, bool as_text)
       text *key;
       Datum values[2];
       bool nulls[2] = {false, false};
-
       key = cstring_to_text_with_len(v.val.string.val, v.val.string.len);
 
       /*
@@ -1803,7 +1806,6 @@ each_worker_jsonb(Jsonb *jb, const char *funcname, bool as_text)
       Assert(r != WJB_DONE);
 
       values[0] = PointerGetDatum(key);
-
       if (as_text)
       {
         if (v.type == jbvNull)
@@ -4304,7 +4306,7 @@ pg_jsonb_set_lax(const Jsonb *jb, text **path_elems, int path_len,
 
   /* if the new value isn't an SQL NULL just call jsonb_set */
   if (! path_elems)
-    return jsonb_set_internal(jb, path_elems, path_len, newjsonb, create);
+    return pg_jsonb_set(jb, path_elems, path_len, newjsonb, create);
 
   char *handle_val = text_to_cstring(handle_null);
   if (strcmp(handle_val, "raise_exception") == 0)
@@ -4315,7 +4317,7 @@ pg_jsonb_set_lax(const Jsonb *jb, text **path_elems, int path_len,
   else if (strcmp(handle_val, "use_json_null") == 0)
   {
     Jsonb *null = pg_jsonb_in("null");
-    Jsonb *result = jsonb_set_internal(jb, path_elems, path_len, null, create);
+    Jsonb *result = pg_jsonb_set(jb, path_elems, path_len, null, create);
     pfree(null);
     return result;
   }

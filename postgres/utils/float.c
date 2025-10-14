@@ -21,10 +21,15 @@
 #include <limits.h>
 /* PostgreSQL */
 #include "postgres.h"
-#include "postgres_types.h"
 #include "common/int.h"
 #include "common/shortest_dec.h"
 #include "utils/float.h"
+
+#include "utils/date.h"
+#include "utils/datetime.h"
+#include "utils/numeric.h"
+#include "utils/jsonb.h"
+#include "postgres_types.h"
 
 /*****************************************************************************
  * Definitions taken from the file liblwgeom_internal.h
@@ -157,8 +162,8 @@ is_infinite(double val)
  * comments also apply here, except regarding use in geometric types.
  */
 static float4
-pg_float4in_internal(char *num, char **endptr_p,
-          const char *type_name, const char *orig_string)
+pg_float4in_internal(char *num, char **endptr_p, const char *type_name,
+  const char *orig_string)
 {
   float    val;
   char     *endptr;
@@ -304,8 +309,8 @@ float4_in(const char *num)
 char *
 float4_out(float4 num)
 {
-  char     *ascii = (char *) palloc(32);
-  int      ndig = FLT_DIG + extra_float_digits;
+  char *ascii = (char *) palloc(32);
+  int ndig = FLT_DIG + extra_float_digits;
 
   if (extra_float_digits > 0)
   {
@@ -476,8 +481,8 @@ float8_in(const char *str)
  * platform-independent way of outputting doubles.
  * The result is always palloc'd.
  */
-static char *
-pg_float8out_internal(double num)
+char *
+float8out_internal(double num)
 {
   char     *ascii = (char *) palloc(32);
   int      ndig = DBL_DIG + extra_float_digits;
@@ -1167,19 +1172,19 @@ float8_rint(float8 num)
  * @note MEOS function
  */
 float8
-float8_round(float8 d, int maxdd)
+float8_round(float8 num, int maxdd)
 {
   assert(maxdd >= 0);
   float8 inf = get_float8_infinity();
-  float8 result = d;
-  if (d != -1 * inf && d != inf)
+  float8 result = num;
+  if (num != -1 * inf && num != inf)
   {
     if (maxdd == 0)
-      result = round(d);
+      result = round(num);
     else
     {
       float8 power10 = pow(10.0, maxdd);
-      result = round(d * power10) / power10;
+      result = round(num * power10) / power10;
     }
   }
   return result;
@@ -1353,8 +1358,7 @@ float8_pow(float8 num1, float8 num2)
    */
   if (isinf(num2))
   {
-    float8    absx = fabs(num1);
-
+    float8 absx = fabs(num1);
     if (absx == 1.0)
       result = 1.0;
     else if (num2 > 0.0)  /* y = +Inf */

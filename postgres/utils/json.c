@@ -19,7 +19,6 @@
 #include <stdlib.h>
 /* PostgreSQL */
 #include <postgres.h>
-#include <postgres_types.h>
 #include <miscadmin.h>
 #include "catalog/pg_type.h"
 #include <common/hashfn.h>
@@ -34,6 +33,9 @@
 #include <utils/jsonb.h>
 #include <utils/jsonfuncs.h>
 #include <utils/varlena.h> /* For DatumGetTextP */
+
+#include "utils/jsonb.h"
+#include <postgres_types.h>
 
 // #include "postgres.h"
 // #include "catalog/pg_proc.h"

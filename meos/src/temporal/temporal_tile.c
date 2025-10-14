@@ -43,7 +43,6 @@
 #include <math.h>
 /* PostgreSQL */
 #include <postgres.h>
-#include <postgres_types.h>
 #include <utils/date.h>
 #include <utils/datetime.h>
 #include <utils/timestamp.h>
@@ -55,6 +54,10 @@
 #include "temporal/temporal_restrict.h"
 #include "temporal/tsequence.h"
 #include "temporal/type_util.h"
+
+#include <utils/jsonb.h>
+#include <utils/numeric.h>
+#include <postgres_types.h>
 
 /*****************************************************************************
  * Bin functions for the various span base types

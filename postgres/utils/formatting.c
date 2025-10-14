@@ -3936,7 +3936,7 @@ timestamp_to_char(Timestamp dt, text *fmt)
  * @note Derived from PostgreSQL function @p timestamptz_to_char()
  */
 text *
-timestamptz_to_char(TimestampTz dt, text *fmt)
+timestamptz_to_char(TimestampTz tstz, text *fmt)
 {
   text *result;
   TmToChar  tmtc;
@@ -3945,13 +3945,13 @@ timestamptz_to_char(TimestampTz dt, text *fmt)
   struct fmt_tm *tm;
   int      thisdate;
 
-  if (VARSIZE_ANY_EXHDR(fmt) <= 0 || TIMESTAMP_NOT_FINITE(dt))
+  if (VARSIZE_ANY_EXHDR(fmt) <= 0 || TIMESTAMP_NOT_FINITE(tstz))
     return NULL;
 
   ZERO_tmtc(&tmtc);
   tm = tmtcTm(&tmtc);
 
-  if (timestamp2tm(dt, &tz, &tt, &tmtcFsec(&tmtc), &tmtcTzn(&tmtc), NULL) != 0)
+  if (timestamp2tm(tstz, &tz, &tt, &tmtcFsec(&tmtc), &tmtcTzn(&tmtc), NULL) != 0)
   {
     elog(ERROR,  "timestamp out of range");
     return NULL;
@@ -3976,20 +3976,20 @@ timestamptz_to_char(TimestampTz dt, text *fmt)
  * @note Derived from PostgreSQL function @p interval_to_char()
  */
 text *
-interval_to_char(Interval *it, text *fmt)
+interval_to_char(Interval *interv, text *fmt)
 {
   text *result;
   TmToChar  tmtc;
   struct fmt_tm *tm;
   struct pg_itm tt, *itm = &tt;
 
-  if (VARSIZE_ANY_EXHDR(fmt) <= 0 || INTERVAL_NOT_FINITE(it))
+  if (VARSIZE_ANY_EXHDR(fmt) <= 0 || INTERVAL_NOT_FINITE(interv))
     return NULL;
 
   ZERO_tmtc(&tmtc);
   tm = tmtcTm(&tmtc);
 
-  interval2itm(*it, itm);
+  interval2itm(*interv, itm);
   tmtc.fsec = itm->tm_usec;
   tm->tm_sec = itm->tm_sec;
   tm->tm_min = itm->tm_min;
@@ -3999,7 +3999,8 @@ interval_to_char(Interval *it, text *fmt)
   tm->tm_year = itm->tm_year;
 
   /* wday is meaningless, yday approximates the total span in days */
-  tm->tm_yday = (tm->tm_year * MONTHS_PER_YEAR + tm->tm_mon) * DAYS_PER_MONTH + tm->tm_mday;
+  tm->tm_yday = (tm->tm_year * MONTHS_PER_YEAR + tm->tm_mon) * DAYS_PER_MONTH +
+    tm->tm_mday;
 
   if (!(result = datetime_to_char_body(&tmtc, fmt, true, PG_GET_COLLATION())))
     return NULL;
@@ -4009,28 +4010,22 @@ interval_to_char(Interval *it, text *fmt)
 
 /**
  * @ingroup meos_base_date
- * @brief Return a date from the arguments
+ * @brief Return a timestamp from a date text formatted with a format
+ * @details to_timestamp() is reverse to_char()
  * @note Derived from PostgreSQL function @p to_timestamp()
- */
-/* ---------------------
- * TO_TIMESTAMP()
- *
- * Make Timestamp from date_str which is formatted at argument 'fmt'
- * ( to_timestamp is reverse to_char() )
- * ---------------------
  */
 Timestamp
 to_timestamp(text *date_txt, text *fmt, Oid collid)
 {
-  Timestamp  result;
-  int      tz;
+  Timestamp result;
+  int tz;
   struct pg_tm tm;
   struct fmt_tz ftz;
-  fsec_t    fsec;
-  int      fprec;
+  fsec_t fsec;
+  int fprec;
 
-  do_to_timestamp(date_txt, fmt, collid, false,
-          &tm, &fsec, &ftz, &fprec, NULL, NULL);
+  do_to_timestamp(date_txt, fmt, collid, false, &tm, &fsec, &ftz, &fprec,
+    NULL, NULL);
 
   /* Use the specified time zone, if any. */
   if (ftz.has_tz)
@@ -4053,13 +4048,13 @@ to_timestamp(text *date_txt, text *fmt, Oid collid)
 
 /**
  * @ingroup meos_base_date
- * @brief Return a date from the arguments
+ * @brief Return a date from a date text formatted with a format
  * @note Derived from PostgreSQL function @p to_date()
  */
 DateADT
 to_date(text *date_txt, text *fmt, Oid collid)
 {
-  DateADT    result;
+  DateADT result;
   struct pg_tm tm;
   struct fmt_tz ftz;
   fsec_t    fsec;
@@ -4262,11 +4257,10 @@ parse_datetime(text *date_txt, text *fmt, Oid collid, bool strict,
 bool
 datetime_format_has_tz(const char *fmt_str)
 {
-  bool    incache;
-  int      fmt_len = strlen(fmt_str);
-  int      result;
+  bool incache;
+  int fmt_len = strlen(fmt_str);
+  int result;
   FormatNode *format;
-
   if (fmt_len > DCH_CACHE_SIZE)
   {
     /*
@@ -6055,69 +6049,54 @@ do { \
  */
 #define NUM_TOCHAR_finish \
 do { \
-  int    len; \
-                  \
-  NUM_processor(format, &Num, VARDATA(result), numstr, 0, out_pre_spaces, sign, true, PG_GET_COLLATION()); \
-                  \
-  if (shouldFree)          \
-    pfree(format);        \
-                  \
-  /*                \
+  NUM_processor(format, &Num, VARDATA(result), numstr, 0, out_pre_spaces, \
+    sign, true, PG_GET_COLLATION()); \
+  if (shouldFree) \
+    pfree(format); \
+  /* \
    * Convert null-terminated representation of result to standard text. \
    * The result is usually much bigger than it needs to be, but there \
    * seems little point in realloc'ing it smaller. \
-   */                \
-  len = strlen(VARDATA(result));  \
+   */ \
+  int len = strlen(VARDATA(result));  \
   SET_VARSIZE(result, len + VARHDRSZ); \
 } while (0)
 
 /**
  * @ingroup meos_base_date
- * @brief Convert a string to a numeric
+ * @brief Convert a text representing a numeric to a numeric
  * @note Derived from PostgreSQL function @p numeric_to_number()
  */
 Numeric
-pg_numeric_to_number(text *value, text *fmt)
+pg_numeric_to_number(text *txt, text *fmt)
 {
-  NUMDesc Num;
-  Datum result;
-  FormatNode *format;
-  char *numstr;
-  bool shouldFree;
-  int len = 0;
-  int scale, precision;
-
-  len = VARSIZE_ANY_EXHDR(fmt);
-
+  int len = VARSIZE_ANY_EXHDR(fmt);
   if (len <= 0 || len >= INT_MAX / NUM_MAX_ITEM_SIZ)
     return NULL;
 
-  format = NUM_cache(len, &Num, fmt, &shouldFree);
+  NUMDesc Num;
+  bool shouldFree;
+  FormatNode *format = NUM_cache(len, &Num, fmt, &shouldFree);
+  char *numstr = (char *) palloc((len * NUM_MAX_ITEM_SIZ) + 1);
 
-  numstr = (char *) palloc((len * NUM_MAX_ITEM_SIZ) + 1);
+  NUM_processor(format, &Num, VARDATA_ANY(txt), numstr,
+    VARSIZE_ANY_EXHDR(txt), 0, 0, false, PG_GET_COLLATION());
 
-  NUM_processor(format, &Num, VARDATA_ANY(value), numstr,
-    VARSIZE_ANY_EXHDR(value), 0, 0, false, PG_GET_COLLATION());
-
-  scale = Num.post;
-  precision = Num.pre + Num.multi + scale;
-
+  int scale = Num.post;
+  int precision = Num.pre + Num.multi + scale;
   if (shouldFree)
     pfree(format);
 
-  result = pg_numeric_in(numstr, InvalidOid,
-    ((precision << 16) | scale) + VARHDRSZ);
-
+  Numeric result = pg_numeric_in(numstr, ((precision << 16) | scale) +
+    VARHDRSZ);
   if (IS_MULTI(&Num))
   {
     Numeric x;
     Numeric a = int64_to_numeric(10);
     Numeric b = int64_to_numeric(-Num.multi);
-
     x = numeric_pow(a, b);
     result = pg_numeric_mul(result, x);
   }
-
   pfree(numstr);
   return result;
 }
@@ -6127,22 +6106,15 @@ pg_numeric_to_number(text *value, text *fmt)
  * @brief Return a date from the arguments
  * @note Derived from PostgreSQL function @p numeric_to_char()
  */
-/* ------------------
- * NUMERIC to_char()
- * ------------------
- */
 text *
 numeric_to_char(Numeric value, text *fmt)
 {
-  NUMDesc    Num;
+  NUMDesc Num;
   FormatNode *format;
-  text     *result;
-  bool    shouldFree;
-  int      out_pre_spaces = 0,
-        sign = 0;
-  char     *numstr,
-         *orgnum,
-         *p;
+  text *result;
+  bool shouldFree;
+  int out_pre_spaces = 0, sign = 0;
+  char *numstr, *orgnum, *p;
 
   NUM_TOCHAR_prepare;
 
@@ -6151,11 +6123,9 @@ numeric_to_char(Numeric value, text *fmt)
    */
   if (IS_ROMAN(&Num))
   {
-    int32    intvalue;
-    bool    err;
-
     /* Round and convert to int */
-    intvalue = numeric_int4_opt_error(value, &err);
+    bool err;
+    int32 intvalue = numeric_int4_opt_error(value, &err);
     /* On overflow, just use PG_INT32_MAX; int_to_roman will cope */
     if (err)
       intvalue = PG_INT32_MAX;
@@ -6197,15 +6167,13 @@ numeric_to_char(Numeric value, text *fmt)
   }
   else
   {
-    int      numstr_pre_len;
-    Numeric    val = value;
-    Numeric    x;
-
+    int numstr_pre_len;
+    Numeric val = value;
+    Numeric x;
     if (IS_MULTI(&Num))
     {
-      Numeric    a = int64_to_numeric(10);
-      Numeric    b = int64_to_numeric(Num.multi);
-
+      Numeric a = int64_to_numeric(10);
+      Numeric b = int64_to_numeric(Num.multi);
       x = numeric_pow(a, b);
       val = pg_numeric_mul(value, x);
       Num.pre += Num.multi;
@@ -6254,14 +6222,12 @@ numeric_to_char(Numeric value, text *fmt)
 text *
 int4_to_char(int32 value, text *fmt)
 {
-  NUMDesc    Num;
+  NUMDesc Num;
   FormatNode *format;
-  text     *result;
-  bool    shouldFree;
-  int      out_pre_spaces = 0,
-        sign = 0;
-  char     *numstr,
-         *orgnum;
+  text *result;
+  bool shouldFree;
+  int out_pre_spaces = 0, sign = 0;
+  char *numstr, *orgnum;
 
   NUM_TOCHAR_prepare;
 
@@ -6273,22 +6239,18 @@ int4_to_char(int32 value, text *fmt)
   else if (IS_EEEE(&Num))
   {
     /* we can do it easily because float8 won't lose any precision */
-    float8    val = (float8) value;
-
+    float8 val = (float8) value;
     orgnum = (char *) psprintf("%+.*e", Num.post, val);
-
     /*
      * Swap a leading positive sign for a space.
      */
     if (*orgnum == '+')
       *orgnum = ' ';
-
     numstr = orgnum;
   }
   else
   {
-    int      numstr_pre_len;
-
+    int numstr_pre_len;
     if (IS_MULTI(&Num))
     {
       orgnum = int32_out(value * ((int32) pow((double) 10, 

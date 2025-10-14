@@ -19,7 +19,6 @@
 #include <stdlib.h>
 /* PostgreSQL */
 #include <postgres.h>
-#include <postgres_types.h>
 #include "catalog/pg_type.h"
 #include <common/hashfn.h>
 #include <common/int.h>
@@ -29,6 +28,9 @@
 #include <utils/jsonb.h>
 #include "utils/jsonfuncs.h"
 #include <utils/varlena.h> /* For DatumGetTextP */
+
+#include <utils/date.h>
+#include <postgres_types.h>
 
 extern void escape_json_with_len(StringInfo buf, const char *str, int len);
 
@@ -1148,7 +1150,7 @@ jsonb_build_array_noargs_internal(XX)
   state.res = pushJsonbValue(&state.parseState, WJB_END_ARRAY, NULL);
   Jsonb *result = JsonbValueToJsonb(state.res);
   pfree(state.res);
-  return JsonbValueToJsonb(state.res);
+  return result;
 }
 
 #endif /* NOT USED */

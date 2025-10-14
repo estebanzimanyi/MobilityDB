@@ -36,7 +36,6 @@
 #include <assert.h>
 /* PostgreSQL */
 #include <postgres.h>
-#include <postgres_types.h>
 #include <utils/float.h>
 #if POSTGRESQL_VERSION_NUMBER >= 160000
   #include "varatt.h"
@@ -50,7 +49,6 @@
 #include <meos.h>
 #include <meos_internal.h>
 #include <meos_internal_geo.h>
-#include <postgres_types.h>
 #include "temporal/lifting.h"
 #include "temporal/temporal_compops.h"
 #include "temporal/tnumber_mathfuncs.h"
@@ -68,6 +66,10 @@
   #include "npoint/tnpoint.h"
   #include "npoint/tnpoint_spatialfuncs.h"
 #endif
+
+#include <utils/jsonb.h>
+#include <utils/numeric.h>
+#include <postgres_types.h>
 
 /* Timestamps in PostgreSQL are encoded as MICROseconds since '2000-01-01'
  * while Unix epoch are encoded as MILLIseconds since '1970-01-01'.
@@ -3461,6 +3463,7 @@ tpointseq_stops_iter(const TSequence *seq, double maxdist, int64 mintunits,
     result[nseqs++] = tsequence_make(insts, end - start, true, true, LINEAR,
       NORMALIZE_NO);
   }
+  finishGEOS();
   return nseqs;
 }
 
