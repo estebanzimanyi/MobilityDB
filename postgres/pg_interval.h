@@ -36,6 +36,26 @@
 #ifndef PG_INTERVAL_H
 #define PG_INTERVAL_H
 
+#include <stdbool.h>
+#include <stdint.h>
+
+typedef int32_t int32;
+typedef int64_t int64;
+typedef uint32_t uint32;
+typedef uint64_t uint64;
+typedef float float4;
+typedef double float8;
+
+typedef struct varlena;
+typedef struct varlena text;
+
+struct NumericData;
+typedef struct NumericData *Numeric;
+
+typedef int64 TimeOffset;
+
+// typedef struct Interval;
+
 /*****************************************************************************/
 
 /* Functions for intervals */
@@ -53,7 +73,7 @@ extern int32 pg_interval_cmp(const Interval *interv1, const Interval *interv2);
 extern bool pg_interval_eq(const Interval *interv1, const Interval *interv2);
 extern bool pg_interval_ge(const Interval *interv1, const Interval *interv2);
 extern bool pg_interval_gt(const Interval *interv1, const Interval *interv2);
-extern int32 pg_interval_hash(const Interval *interv);
+extern uint32 pg_interval_hash(const Interval *interv);
 extern uint64 pg_interval_hash_extended(const Interval *interv, uint64 seed);
 extern Interval *pg_interval_in(const char *str, int32 typmod);
 extern Interval *pg_interval_larger(const Interval *interv1, const Interval *interv2);

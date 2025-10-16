@@ -694,7 +694,7 @@ extern int32 pg_interval_cmp(const Interval *interv1, const Interval *interv2);
 extern bool pg_interval_eq(const Interval *interv1, const Interval *interv2);
 extern bool pg_interval_ge(const Interval *interv1, const Interval *interv2);
 extern bool pg_interval_gt(const Interval *interv1, const Interval *interv2);
-extern int32 pg_interval_hash(const Interval *interv);
+extern uint32 pg_interval_hash(const Interval *interv);
 extern uint64 pg_interval_hash_extended(const Interval *interv, uint64 seed);
 extern Interval *pg_interval_in(const char *str, int32 typmod);
 extern Interval *pg_interval_larger(const Interval *interv1, const Interval *interv2);

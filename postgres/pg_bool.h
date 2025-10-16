@@ -36,6 +36,16 @@
 #ifndef PG_BOOL_H
 #define PG_BOOL_H
 
+#include <stdbool.h>
+#include <stdint.h>
+
+typedef uint32_t uint32;
+typedef uint64_t uint64;
+typedef int64_t int64;
+
+typedef struct varlena;
+typedef struct varlena text;
+
 /*****************************************************************************/
 
 /* Functions for booleans */

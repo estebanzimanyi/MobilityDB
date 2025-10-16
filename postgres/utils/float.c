@@ -61,7 +61,7 @@
  * get round-trip-accurate results. If 0 or less, then use the old, slow,
  * decimal rounding method.
  */
-int      extra_float_digits = 1;
+int extra_float_digits = 1;
 
 /* Cached constants for degree-based trig functions */
 static bool degree_consts_set = false;
@@ -87,11 +87,11 @@ extern float8 degree_c_forty_five;
 extern float8 degree_c_sixty;
 extern float8 degree_c_one_half;
 extern float8 degree_c_one;
-float8    degree_c_thirty = 30.0;
-float8    degree_c_forty_five = 45.0;
-float8    degree_c_sixty = 60.0;
-float8    degree_c_one_half = 0.5;
-float8    degree_c_one = 1.0;
+float8 degree_c_thirty = 30.0;
+float8 degree_c_forty_five = 45.0;
+float8 degree_c_sixty = 60.0;
+float8 degree_c_one_half = 0.5;
+float8 degree_c_one = 1.0;
 
 /* Local function prototypes */
 static double sind_q1(double x);
@@ -108,8 +108,7 @@ static void init_degree_constants(void);
 int
 is_infinite(double val)
 {
-  int      inf = isinf(val);
-
+  int inf = isinf(val);
   if (inf == 0)
     return 0;
   else if (val > 0)
@@ -165,8 +164,8 @@ static float4
 pg_float4in_internal(char *num, char **endptr_p, const char *type_name,
   const char *orig_string)
 {
-  float    val;
-  char     *endptr;
+  float val;
+  char *endptr;
 
   /*
    * endptr points to the first character _after_ the sequence we recognized
@@ -484,8 +483,8 @@ float8_in(const char *str)
 char *
 float8out_internal(double num)
 {
-  char     *ascii = (char *) palloc(32);
-  int      ndig = DBL_DIG + extra_float_digits;
+  char *ascii = (char *) palloc(32);
+  int ndig = DBL_DIG + extra_float_digits;
 
   if (extra_float_digits > 0)
   {
@@ -987,9 +986,7 @@ float4_to_float8(float4 num)
 float4
 float8_to_float4(float8 num)
 {
-  float4    result;
-
-  result = (float4) num;
+  float4 result = (float4) num;
   if (unlikely(isinf(result)) && !isinf(num))
   {
     elog(ERROR, "value out of range: overflow");
@@ -1000,7 +997,6 @@ float8_to_float4(float8 num)
     elog(ERROR, "value out of range: underflow");
     return get_float4_infinity();
   }
-
   return result;
 }
 
@@ -1257,15 +1253,13 @@ float8_trunc(float8 num)
 float8
 float8_sqrt(float8 num)
 {
-  float8    result;
-
   if (num < 0)
   {
     elog(ERROR, "cannot take square root of a negative number");
     return get_float8_infinity();
   }
 
-  result = sqrt(num);
+  float8 result = sqrt(num);
   if (unlikely(isinf(result)) && !isinf(num))
   {
     elog(ERROR, "value out of range: overflow");
@@ -1276,7 +1270,6 @@ float8_sqrt(float8 num)
     elog(ERROR, "value out of range: underflow");
     return get_float8_infinity();
   }
-
   return result;
 }
 
@@ -1288,9 +1281,7 @@ float8_sqrt(float8 num)
 float8
 float8_cbrt(float8 num)
 {
-  float8    result;
-
-  result = cbrt(num);
+  float8 result = cbrt(num);
   if (unlikely(isinf(result)) && !isinf(num))
   {
     elog(ERROR, "value out of range: overflow");
@@ -1301,7 +1292,6 @@ float8_cbrt(float8 num)
     elog(ERROR, "value out of range: underflow");
     return get_float8_infinity();
   }
-
   return result;
 }
 
@@ -1313,8 +1303,6 @@ float8_cbrt(float8 num)
 float8
 float8_pow(float8 num1, float8 num2)
 {
-  float8    result;
-
   /*
    * The POSIX spec says that NaN ^ 0 = 1, and 1 ^ NaN = 1, while all other
    * cases with NaN inputs yield NaN (with no error).  Many older platforms
@@ -1356,6 +1344,7 @@ float8_pow(float8 num1, float8 num2)
    * spec either, so deal with those explicitly too.  It's easier to handle
    * infinite y first, so that it doesn't matter if x is also infinite.
    */
+  float8 result;
   if (isinf(num2))
   {
     float8 absx = fabs(num1);
@@ -1432,8 +1421,7 @@ float8_pow(float8 num1, float8 num2)
         result = 0.0;  /* we already verified y is positive */
       else
       {
-        float8    absx = fabs(num1);
-
+        float8 absx = fabs(num1);
         if (absx == 1.0)
           result = 1.0;
         else if (num2 >= 0.0 ? (absx > 1.0) : (absx < 1.0))
@@ -1487,13 +1475,12 @@ float8_pow(float8 num1, float8 num2)
 float8
 float8_exp(float8 num)
 {
-  float8    result;
-
   /*
    * Handle NaN and Inf cases explicitly.  This avoids needing to assume
    * that the platform's exp() conforms to POSIX for these cases, and it
    * removes some edge cases for the overflow checks below.
    */
+  float8 result;
   if (isnan(num))
     result = num;
   else if (isinf(num))
@@ -1533,7 +1520,6 @@ float8_exp(float8 num)
       return get_float8_infinity();
     }
   }
-
   return result;
 }
 
@@ -1545,8 +1531,6 @@ float8_exp(float8 num)
 float8
 float8_ln(float8 num)
 {
-  float8    result;
-
   /*
    * Emit particular SQLSTATE error codes for ln(). This is required by the
    * SQL standard.
@@ -1562,7 +1546,7 @@ float8_ln(float8 num)
     return get_float8_infinity();
   }
 
-  result = log(num);
+  float8 result = log(num);
   if (unlikely(isinf(result)) && !isinf(num))
   {
     elog(ERROR, "value out of range: overflow");
@@ -1585,8 +1569,6 @@ float8_ln(float8 num)
 float8
 float8_log10(float8 num)
 {
-  float8    result;
-
   /*
    * Emit particular SQLSTATE error codes for log(). The SQL spec doesn't
    * define log(), but it does define ln(), so it makes sense to emit the
@@ -1603,7 +1585,7 @@ float8_log10(float8 num)
     return get_float8_infinity();
   }
 
-  result = log10(num);
+  float8 result = log10(num);
   if (unlikely(isinf(result)) && !isinf(num))
   {
     elog(ERROR, "value out of range: overflow");
@@ -1614,7 +1596,6 @@ float8_log10(float8 num)
     elog(ERROR, "value out of range: underflow");
     return get_float8_infinity();
   }
-
   return result;
 }
 
@@ -1626,12 +1607,9 @@ float8_log10(float8 num)
 float8
 float8_acos(float8 num)
 {
-  float8    result;
-
   /* Per the POSIX spec, return NaN if the input is NaN */
   if (isnan(num))
     return get_float8_nan();
-
   /*
    * The principal branch of the inverse cosine function maps values in the
    * range [-1, 1] to values in the range [0, Pi], so we should reject any
@@ -1643,13 +1621,12 @@ float8_acos(float8 num)
     return get_float8_infinity();
   }
 
-  result = acos(num);
+  float8 result = acos(num);
   if (unlikely(isinf(result)))
   {
     elog(ERROR, "value out of range: overflow");
     return get_float8_infinity();
   }
-
   return result;
 }
 
@@ -1661,8 +1638,6 @@ float8_acos(float8 num)
 float8
 float8_asin(float8 num)
 {
-  float8    result;
-
   /* Per the POSIX spec, return NaN if the input is NaN */
   if (isnan(num))
     return get_float8_nan();
@@ -1678,7 +1653,7 @@ float8_asin(float8 num)
     return get_float8_infinity();
   }
 
-  result = asin(num);
+  float8 result = asin(num);
   if (unlikely(isinf(result)))
   {
     elog(ERROR, "value out of range: overflow");
@@ -1696,8 +1671,6 @@ float8_asin(float8 num)
 float8
 float8_atan(float8 num)
 {
-  float8    result;
-
   /* Per the POSIX spec, return NaN if the input is NaN */
   if (isnan(num))
     return get_float8_nan();
@@ -1707,7 +1680,7 @@ float8_atan(float8 num)
    * values in the range [-Pi/2, Pi/2], so the result should always be
    * finite, even if the input is infinite.
    */
-  result = atan(num);
+  float8 result = atan(num);
   if (unlikely(isinf(result)))
   {
     elog(ERROR, "value out of range: overflow");
@@ -1725,8 +1698,6 @@ float8_atan(float8 num)
 float8
 float8_atan2(float8 num1, float8 num2)
 {
-  float8    result;
-
   /* Per the POSIX spec, return NaN if either input is NaN */
   if (isnan(num1) || isnan(num2))
     return get_float8_nan();
@@ -1735,7 +1706,7 @@ float8_atan2(float8 num1, float8 num2)
    * atan2 maps all inputs to values in the range [-Pi, Pi], so the result
    * should always be finite, even if the inputs are infinite.
    */
-  result = atan2(num1, num2);
+  float8 result = atan2(num1, num2);
   if (unlikely(isinf(result)))
   {
     elog(ERROR, "value out of range: overflow");
@@ -1754,8 +1725,6 @@ float8_atan2(float8 num1, float8 num2)
 float8
 float8_cos(float8 num)
 {
-  float8    result;
-
   /* Per the POSIX spec, return NaN if the input is NaN */
   if (isnan(num))
     return get_float8_nan();
@@ -1776,7 +1745,7 @@ float8_cos(float8 num)
    * inputs.
    */
   errno = 0;
-  result = cos(num);
+  float8 result = cos(num);
   if (errno != 0 || isinf(num))
   {
     elog(ERROR, "input is out of range");
@@ -1800,15 +1769,13 @@ float8_cos(float8 num)
 float8
 float8_cot(float8 num)
 {
-  float8    result;
-
   /* Per the POSIX spec, return NaN if the input is NaN */
   if (isnan(num))
     return get_float8_nan();
 
   /* Be sure to throw an error if the input is infinite --- see dcos() */
   errno = 0;
-  result = tan(num);
+  float8 result = tan(num);
   if (errno != 0 || isinf(num))
   {
     elog(ERROR, "input is out of range");
@@ -1817,7 +1784,6 @@ float8_cot(float8 num)
 
   result = 1.0 / result;
   /* Not checking for overflow because cot(0) == Inf */
-
   return result;
 }
 
@@ -1830,26 +1796,23 @@ float8_cot(float8 num)
 float8
 float8_sin(float8 num)
 {
-  float8    result;
-
   /* Per the POSIX spec, return NaN if the input is NaN */
   if (isnan(num))
     return get_float8_nan();
 
   /* Be sure to throw an error if the input is infinite --- see dcos() */
   errno = 0;
-  result = sin(num);
+  float8 result = sin(num);
   if (errno != 0 || isinf(num))
   {
     elog(ERROR, "input is out of range");
-    return get_float8_infinity(); // TODO
+    return get_float8_infinity();
   }
   if (unlikely(isinf(result)))
   {
     elog(ERROR, "value out of range: overflow");
-    return get_float8_infinity(); // TODO
+    return get_float8_infinity();
   }
-
   return result;
 }
 
@@ -1862,23 +1825,19 @@ float8_sin(float8 num)
 float8
 float8_tan(float8 num)
 {
-  float8    result;
-
   /* Per the POSIX spec, return NaN if the input is NaN */
   if (isnan(num))
     return get_float8_nan();
 
   /* Be sure to throw an error if the input is infinite --- see dcos() */
   errno = 0;
-  result = tan(num);
+  float8 result = tan(num);
   if (errno != 0 || isinf(num))
   {
     elog(ERROR, "input is out of range");
-    return get_float8_infinity(); // TODO
+    return get_float8_infinity();
   }
-        
   /* Not checking for overflow because tan(pi/2) == Inf */
-
   return result;
 }
 
@@ -1954,13 +1913,11 @@ asind_q1(double x)
   if (x <= 0.5)
   {
     volatile float8 asin_x = asin(x);
-
     return (asin_x / asin_0_5) * 30.0;
   }
   else
   {
     volatile float8 acos_x = acos(x);
-
     return 90.0 - (acos_x / acos_0_5) * 60.0;
   }
 }
@@ -1986,13 +1943,11 @@ acosd_q1(double x)
   if (x <= 0.5)
   {
     volatile float8 asin_x = asin(x);
-
     return 90.0 - (asin_x / asin_0_5) * 30.0;
   }
   else
   {
     volatile float8 acos_x = acos(x);
-
     return (acos_x / acos_0_5) * 60.0;
   }
 }
@@ -2005,8 +1960,6 @@ acosd_q1(double x)
 float8
 float8_acosd(float8 num)
 {
-  float8    result;
-
   /* Per the POSIX spec, return NaN if the input is NaN */
   if (isnan(num))
     return get_float8_nan();
@@ -2024,6 +1977,7 @@ float8_acosd(float8 num)
     return get_float8_infinity();
   }
 
+  float8 result;
   if (num >= 0.0)
     result = acosd_q1(num);
   else
@@ -2034,7 +1988,6 @@ float8_acosd(float8 num)
     elog(ERROR, "value out of range: overflow");
     return get_float8_infinity();
   }
-
   return result;
 }
 
@@ -2046,8 +1999,6 @@ float8_acosd(float8 num)
 float8
 float8_asind(float8 num)
 {
-  float8    result;
-
   /* Per the POSIX spec, return NaN if the input is NaN */
   if (isnan(num))
     return get_float8_nan();
@@ -2065,6 +2016,7 @@ float8_asind(float8 num)
     return get_float8_infinity();
   }
 
+  float8 result;
   if (num >= 0.0)
     result = asind_q1(num);
   else
@@ -2075,7 +2027,6 @@ float8_asind(float8 num)
     elog(ERROR, "value out of range: overflow");
     return get_float8_infinity();
   }
-
   return result;
 }
 
@@ -2087,9 +2038,6 @@ float8_asind(float8 num)
 float8
 float8_atand(float8 num)
 {
-  float8    result;
-  volatile float8 atan_num;
-
   /* Per the POSIX spec, return NaN if the input is NaN */
   if (isnan(num))
     return get_float8_nan();
@@ -2102,15 +2050,13 @@ float8_atand(float8 num)
    * even if the input is infinite.  Additionally, we take care to ensure
    * than when num1 is 1, the result is exactly 45.
    */
-  atan_num = atan(num);
-  result = (atan_num / atan_1_0) * 45.0;
-
+  volatile float8 atan_num = atan(num);
+  float8 result = (atan_num / atan_1_0) * 45.0;
   if (unlikely(isinf(result)))
   {
     elog(ERROR, "value out of range: overflow");
     return get_float8_infinity();
   }
-
   return result;
 }
 
@@ -2122,9 +2068,6 @@ float8_atand(float8 num)
 float8
 float8_atan2d(float8 num1, float8 num2)
 {
-  float8    result;
-  volatile float8 atan2_num1_num2;
-
   /* Per the POSIX spec, return NaN if either input is NaN */
   if (isnan(num1) || isnan(num2))
     return get_float8_nan();
@@ -2140,15 +2083,13 @@ float8_atan2d(float8 num1, float8 num2)
    * some point, requiring us to decide exactly what inputs we think we're
    * going to guarantee an exact result for.
    */
-  atan2_num1_num2 = atan2(num1, num2);
-  result = (atan2_num1_num2 / atan_1_0) * 45.0;
-
+  volatile float8 atan2_num1_num2 = atan2(num1, num2);
+  float8 result = (atan2_num1_num2 / atan_1_0) * 45.0;
   if (unlikely(isinf(result)))
   {
     elog(ERROR, "value out of range: overflow");
     return get_float8_infinity();
   }
-
   return result;
 }
 
@@ -2161,7 +2102,6 @@ static double
 sind_0_to_30(double x)
 {
   volatile float8 sin_x = sin(x * RADIANS_PER_DEGREE);
-
   return (sin_x / sin_30) / 2.0;
 }
 
@@ -2174,7 +2114,6 @@ static double
 cosd_0_to_60(double x)
 {
   volatile float8 one_minus_cos_x = 1.0 - cos(x * RADIANS_PER_DEGREE);
-
   return 1.0 - (one_minus_cos_x / one_minus_cos_60) / 2.0;
 }
 
@@ -2224,9 +2163,6 @@ cosd_q1(double x)
 float8
 float8_cosd(float8 num)
 {
-  float8    result;
-  int      sign = 1;
-
   /*
    * Per the POSIX spec, return NaN if the input is NaN and throw an error
    * if the input is infinite.
@@ -2257,6 +2193,7 @@ float8_cosd(float8 num)
     num = 360.0 - num;
   }
 
+  int sign = 1;
   if (num > 90.0)
   {
     /* cosd(180-x) = -cosd(x) */
@@ -2264,14 +2201,12 @@ float8_cosd(float8 num)
     sign = -sign;
   }
 
-  result = sign * cosd_q1(num);
-
+  float8 result = sign * cosd_q1(num);
   if (unlikely(isinf(result)))
   {
     elog(ERROR, "value out of range: overflow");
     return get_float8_infinity();
   }
-
   return result;
 }
 
@@ -2283,10 +2218,6 @@ float8_cosd(float8 num)
 float8
 float8_cotd(float8 num)
 {
-  float8    result;
-  volatile float8 cot_num;
-  int      sign = 1;
-
   /*
    * Per the POSIX spec, return NaN if the input is NaN and throw an error
    * if the input is infinite.
@@ -2305,6 +2236,7 @@ float8_cotd(float8 num)
   /* Reduce the range of the input to [0,90] degrees */
   num = fmod(num, 360.0);
 
+  int sign = 1;
   if (num < 0.0)
   {
     /* cotd(-x) = -cotd(x) */
@@ -2326,8 +2258,8 @@ float8_cotd(float8 num)
     sign = -sign;
   }
 
-  cot_num = cosd_q1(num) / sind_q1(num);
-  result = sign * (cot_num / cot_45);
+  volatile float8 cot_num = cosd_q1(num) / sind_q1(num);
+  float8 result = sign * (cot_num / cot_45);
 
   /*
    * On some machines we get cotd(270) = minus zero, but this isn't always
@@ -2336,9 +2268,7 @@ float8_cotd(float8 num)
    */
   if (result == 0.0)
     result = 0.0;
-
   /* Not checking for overflow because cotd(0) == Inf */
-
   return result;
 }
 
@@ -2350,16 +2280,12 @@ float8_cotd(float8 num)
 float8
 float8_sind(float8 num)
 {
-  float8    result;
-  int      sign = 1;
-
   /*
    * Per the POSIX spec, return NaN if the input is NaN and throw an error
    * if the input is infinite.
    */
   if (isnan(num))
     return get_float8_nan();
-
   if (isinf(num))
   {
     elog(ERROR, "input is out of range");
@@ -2370,7 +2296,7 @@ float8_sind(float8 num)
 
   /* Reduce the range of the input to [0,90] degrees */
   num = fmod(num, 360.0);
-
+  int sign = 1;
   if (num < 0.0)
   {
     /* sind(-x) = -sind(x) */
@@ -2391,14 +2317,12 @@ float8_sind(float8 num)
     num = 180.0 - num;
   }
 
-  result = sign * sind_q1(num);
-
+  float8 result = sign * sind_q1(num);
   if (unlikely(isinf(result)))
   {
     elog(ERROR, "value out of range: overflow");
     return get_float8_infinity();
   }
-
   return result;
 }
 
@@ -2410,17 +2334,12 @@ float8_sind(float8 num)
 float8
 float8_tand(float8 num)
 {
-  float8    result;
-  volatile float8 tan_num;
-  int      sign = 1;
-
   /*
    * Per the POSIX spec, return NaN if the input is NaN and throw an error
    * if the input is infinite.
    */
   if (isnan(num))
     return get_float8_nan();
-
   if (isinf(num))
   {
     elog(ERROR, "input is out of range");
@@ -2431,21 +2350,19 @@ float8_tand(float8 num)
 
   /* Reduce the range of the input to [0,90] degrees */
   num = fmod(num, 360.0);
-
+  int sign = 1;
   if (num < 0.0)
   {
     /* tand(-x) = -tand(x) */
     num = -num;
     sign = -sign;
   }
-
   if (num > 180.0)
   {
     /* tand(360-x) = -tand(x) */
     num = 360.0 - num;
     sign = -sign;
   }
-
   if (num > 90.0)
   {
     /* tand(180-x) = -tand(x) */
@@ -2453,9 +2370,8 @@ float8_tand(float8 num)
     sign = -sign;
   }
 
-  tan_num = sind_q1(num) / cosd_q1(num);
-  result = sign * (tan_num / tan_45);
-
+  volatile float8 tan_num = sind_q1(num) / cosd_q1(num);
+  float8 result = sign * (tan_num / tan_45);
   /*
    * On some machines we get tand(180) = minus zero, but this isn't always
    * true.  For portability, and because the user constituency for this
@@ -2463,9 +2379,7 @@ float8_tand(float8 num)
    */
   if (result == 0.0)
     result = 0.0;
-
   /* Not checking for overflow because tand(90) == Inf */
-
   return result;
 }
 
@@ -2512,11 +2426,8 @@ float8_radians(float8 num)
 float8
 float8_sinh(float8 num)
 {
-  float8    result;
-
   errno = 0;
-  result = sinh(num);
-
+  float8 result = sinh(num);
   /*
    * if an ERANGE error occurs, it means there is an overflow.  For sinh,
    * the result should be either -infinity or infinity, depending on the
@@ -2529,7 +2440,6 @@ float8_sinh(float8 num)
     else
       result = get_float8_infinity();
   }
-
   return result;
 }
 
@@ -2541,24 +2451,19 @@ float8_sinh(float8 num)
 float8
 float8_cosh(float8 num)
 {
-  float8    result;
-
   errno = 0;
-  result = cosh(num);
-
+  float8 result = cosh(num);
   /*
    * if an ERANGE error occurs, it means there is an overflow.  As cosh is
    * always positive, it always means the result is positive infinity.
    */
   if (errno == ERANGE)
     result = get_float8_infinity();
-
   if (unlikely(result == 0.0))
   {
     elog(ERROR, "value out of range: underflow");
     return get_float8_infinity();
   }
-
   return result;
 }
 
@@ -2570,19 +2475,15 @@ float8_cosh(float8 num)
 float8
 float8_tanh(float8 num)
 {
-  float8    result;
-
   /*
    * For tanh, we don't need an errno check because it never overflows.
    */
-  result = tanh(num);
-
+  float8  result = tanh(num);
   if (unlikely(isinf(result)))
   {
     elog(ERROR, "value out of range: overflow");
     return get_float8_infinity();
   }
-
   return result;
 }
 
@@ -2594,13 +2495,10 @@ float8_tanh(float8 num)
 float8
 float8_asinh(float8 num)
 {
-  float8    result;
-
   /*
    * For asinh, we don't need an errno check because it never overflows.
    */
-  result = asinh(num);
-
+  float8 result = asinh(num);
   return result;
 }
 
@@ -2612,8 +2510,6 @@ float8_asinh(float8 num)
 float8
 float8_acosh(float8 num)
 {
-  float8    result;
-
   /*
    * acosh is only defined for inputs >= 1.0.  By checking this ourselves,
    * we need not worry about checking for an EDOM error, which is a good
@@ -2625,9 +2521,7 @@ float8_acosh(float8 num)
     elog(ERROR, "input is out of range");
     return get_float8_infinity();
   }
-
-  result = acosh(num);
-
+  float8 result = acosh(num);
   return result;
 }
 
@@ -2639,8 +2533,6 @@ float8_acosh(float8 num)
 float8
 float8_atanh(float8 num)
 {
-  float8    result;
-
   /*
    * atanh is only defined for inputs between -1 and 1.  By checking this
    * ourselves, we need not worry about checking for an EDOM error, which is
@@ -2657,13 +2549,13 @@ float8_atanh(float8 num)
    * glibc versions may produce the wrong errno for this.  All other inputs
    * cannot produce an error.
    */
+  float8 result;
   if (num == -1.0)
     result = -get_float8_infinity();
   else if (num == 1.0)
     result = get_float8_infinity();
   else
     result = atanh(num);
-
   return result;
 }
 
@@ -2677,12 +2569,11 @@ float8_atanh(float8 num)
 float8
 float8_gamma(float8 num)
 {
-  float8    result;
-
   /*
    * Handle NaN and Inf cases explicitly.  This simplifies the overflow
    * checks on platforms that do not set errno.
    */
+  float8 result;
   if (isnan(num))
     result = num;
   else if (isinf(num))
@@ -2708,7 +2599,6 @@ float8_gamma(float8 num)
      */
     errno = 0;
     result = tgamma(num);
-
     if (errno != 0 || isinf(result) || isnan(result))
     {
       if (result != 0.0)
@@ -2728,7 +2618,6 @@ float8_gamma(float8 num)
       return get_float8_infinity();
     }
   }
-
   return result;
 }
 
@@ -2741,16 +2630,13 @@ float8_gamma(float8 num)
 float8
 float8_lgamma(float8 num)
 {
-  float8    result;
-
   /*
    * Note: lgamma may not be thread-safe because it may write to a global
    * variable signgam, which may not be thread-local. However, this doesn't
    * matter to us, since we don't use signgam.
    */
   errno = 0;
-  result = lgamma(num);
-
+  float8 result = lgamma(num);
   /*
    * If an ERANGE error occurs, it means there was an overflow or a pole
    * error (which happens for zero and negative integer inputs).
@@ -2763,7 +2649,6 @@ float8_lgamma(float8 num)
     elog(ERROR, "value out of range: overflow");
     return get_float8_infinity();
   }
-
   return result;
 }
 
@@ -3046,8 +2931,6 @@ ge_float8_float4(float8 num1, float4 num2)
 int32
 float8_width_bucket(float8 operand, float8 bound1, float8 bound2, int32 count)
 {
-  int32    result;
-
   if (count <= 0)
   {
     elog(ERROR, "count must be greater than zero");
@@ -3066,6 +2949,7 @@ float8_width_bucket(float8 operand, float8 bound1, float8 bound2, int32 count)
     return INT_MAX;
   }
 
+  int32 result;
   if (bound1 < bound2)
   {
     if (operand < bound1)
@@ -3133,7 +3017,6 @@ float8_width_bucket(float8 operand, float8 bound1, float8 bound2, int32 count)
     elog(ERROR, "lower bound cannot equal upper bound");
     return INT_MAX;
   }
-
   return result;
 }
 

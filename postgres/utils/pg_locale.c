@@ -144,7 +144,7 @@ static bool CurrentLocaleConvValid = false;
 static bool CurrentLCTimeValid = false;
 
 /* Global variables added by MEOS */
-char *database_locale = "C";
+char *database_locale = "UTF-8";
 char *database_locprovider = COLLPROVIDER_BUILTIN;
 char *database_icurules = NULL;
 char *database_ctype = NULL;

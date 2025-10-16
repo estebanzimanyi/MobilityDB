@@ -2375,13 +2375,13 @@ pg_interval_cmp(const Interval *interv1, const Interval *interv2)
  * @note Derived from PostgreSQL function @p interval_hash()
  */
 #if MEOS
-int32
+uint32
 interval_hash(const Interval *interv)
 {
   return pg_interval_hash(interv);
 }
 #endif
-int32
+uint32
 pg_interval_hash(const Interval *interv)
 {
   INT128 span = interval_cmp_value(interv);

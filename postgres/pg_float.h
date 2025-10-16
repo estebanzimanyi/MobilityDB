@@ -36,6 +36,12 @@
 #ifndef PG_FLOAT_H
 #define PG_FLOAT_H
 
+#include <stdbool.h>
+#include <stdint.h>
+
+typedef int32_t int32;
+typedef int64_t int64;
+
 typedef float float4;
 typedef double float8;
 
