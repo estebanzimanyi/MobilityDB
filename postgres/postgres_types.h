@@ -36,13 +36,13 @@
 #ifndef POSTGRES_TYPES_H
 #define POSTGRES_TYPES_H
 
-// /* PostgreSQL */
-// #include <postgres.h>
-// #include "utils/numeric.h"
-// #include <utils/date.h>
-// #include <utils/json.h>
-// #include <utils/jsonb.h>
-// #include <utils/timestamp.h>
+/* PostgreSQL */
+#include <postgres.h>
+#include "utils/numeric.h"
+#include <utils/date.h>
+#include <utils/json.h>
+#include <utils/jsonb.h>
+#include <utils/timestamp.h>
 
 #if POSTGRESQL_VERSION_NUMBER < 170000
 /*

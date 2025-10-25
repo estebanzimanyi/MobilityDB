@@ -142,14 +142,8 @@ spatialrel_geo_geo(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
       break;
   }
   /* Clean up and return */
-  if (count1 == 1)
-    pfree(elems1);
-  else
-    pfree_array((void *) elems1, count1);
-  if (count2 == 1)
-    pfree(elems2);
-  else
-    pfree_array((void *) elems2, count2);
+  pfree_array((void *) elems1, count1);
+  pfree_array((void *) elems2, count2);
   return result;
 }
 

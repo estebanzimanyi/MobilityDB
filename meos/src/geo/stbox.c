@@ -618,7 +618,9 @@ stbox_geo(const STBox *box)
   FLAGS_SET_Z(geo->flags, hasz);
   FLAGS_SET_GEODETIC(geo->flags, geodetic);
   result = geo_serialize(geo);
-  // lwgeom_free(geo);
+  /* We cannot lwgeom_free(geo); */
+  if (gserialized_get_type(result) != POINTTYPE)
+    lwgeom_free(geo);
   return result;
 }
 

@@ -688,7 +688,7 @@ Temporal *
 tgeometry_to_tcbuffer(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_TGEOMETRY(temp, NULL);
+  VALIDATE_TGEO(temp, NULL);
 
   assert(temptype_subtype(temp->subtype));
   switch (temp->subtype)
@@ -808,9 +808,12 @@ tcbufferseq_members(const TSequence *seq, bool point)
   meosType basetype = point ? T_GEOMETRY : T_FLOAT8;
   datumarr_sort(values, seq->count, basetype);
   int count = datumarr_remove_duplicates(values, seq->count, basetype);
-  /* Free the duplicate values that have been found */
-  for (int i = count; i < seq->count; i++)
-    pfree(DatumGetPointer(values[i]));
+  if (point)
+  {
+    /* Free the duplicate values that have been found */
+    for (int i = count; i < seq->count; i++)
+      pfree(DatumGetPointer(values[i]));
+  }
   return set_make_free(values, count, basetype, ORDER_NO);
 }
 
