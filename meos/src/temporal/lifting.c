@@ -1477,8 +1477,7 @@ tfunc_tcontseq_tcontseq(const TSequence *seq1, const TSequence *seq2,
       pfree(result);
       return resultseq;
     }
-    else
-      return (Temporal *) result;
+    return (Temporal *) result;
   }
 }
 
@@ -2280,6 +2279,7 @@ eafunc_tcontseq_tcontseq_discfn(const TSequence *seq1,
         Datum tpvalue2 = tsegment_value_at_timestamptz(startvalue1, endvalue1, 
           start1->temptype, start1->t, end1->t, tpt1);
         res = DatumGetBool(tfunc_base_base(tpvalue1, tpvalue2, lfinfo));
+        pfree(DatumGetPointer(tpvalue1)); pfree(DatumGetPointer(tpvalue2));
         if ((lfinfo->ever && res) || (! lfinfo->ever && ! res))
         {
           pfree_array((void **) tofree, nfree);

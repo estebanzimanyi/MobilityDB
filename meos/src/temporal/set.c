@@ -483,6 +483,8 @@ set_make(const Datum *values, int count, meosType basetype, bool order)
  * @param[in] basetype Type of the values
  * @param[in] order True when the values should be ordered and duplicates
  * should be removed
+ * @note The function ONLY remove the array, it DOES NOT remove the individual
+ * values if they are passed by reference
  */
 Set *
 set_make_free(Datum *values, int count, meosType basetype, bool order)
@@ -782,7 +784,9 @@ floatset_func(const Set *s, Datum (*func)(Datum))
   Datum *values = palloc(sizeof(Datum) * s->count);
   for (int i = 0; i < s->count; i++)
     values[i] = func(SET_VAL_N(s, i));
-  return set_make_exp(values, s->count, s->count, T_FLOAT8, ORDER);
+  Set *result = set_make_exp(values, s->count, s->count, T_FLOAT8, ORDER);
+  pfree(values);
+  return result;
 }
 
 /**
@@ -850,7 +854,9 @@ textset_func(const Set *s, Datum (*func)(Datum))
   Datum *values = palloc(sizeof(Datum) * s->count);
   for (int i = 0; i < s->count; i++)
     values[i] = func(SET_VAL_N(s, i));
-  return set_make_exp(values, s->count, s->count, T_TEXT, ORDER);
+  Set *result = set_make_exp(values, s->count, s->count, T_TEXT, ORDER);
+  pfree_array((void *) values, s->count);
+  return result;
 }
 
 /**
@@ -896,7 +902,7 @@ textset_initcap(const Set *s)
  * @param[in] invert True when the arguments must be inverted
  */
 Set *
-textcat_textset_text_int(const Set *s, const text *txt, bool invert)
+textcat_textset_text_common(const Set *s, const text *txt, bool invert)
 {
   assert(s); assert(txt); assert((s->settype == T_TEXTSET));
   Datum *values = palloc(sizeof(Datum) * s->count);
@@ -904,7 +910,9 @@ textcat_textset_text_int(const Set *s, const text *txt, bool invert)
     values[i] = invert ?
       datum_textcat(PointerGetDatum(txt), SET_VAL_N(s, i)) :
       datum_textcat(SET_VAL_N(s, i), PointerGetDatum(txt));
-  return set_make_free(values, s->count, T_TEXT, ORDER_NO);
+  Set *result = set_make(values, s->count, T_TEXT, ORDER_NO);
+  pfree_array((void **) values, s->count);
+  return result;
 }
 
 /*****************************************************************************/

@@ -597,7 +597,8 @@ tsequenceset_make_gaps(const TInstant **instants, int count, interpType interp,
         ninsts, ninsts, true, true, interp, NORMALIZE, NULL);
     result = tsequenceset_make((const TSequence **) sequences, nseqs,
       NORMALIZE);
-    pfree(newinsts); pfree(sequences);
+    pfree(splits); pfree(newinsts); 
+    pfree_array((void *) sequences, nseqs);
   }
   return result;
 }

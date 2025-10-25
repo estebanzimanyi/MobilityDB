@@ -978,14 +978,14 @@ shortestline_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
   Temporal *dist = tdistance_tgeo_tgeo(temp1, temp2);
   if (dist == NULL)
     return NULL;
-  const TInstant *inst = temporal_min_instant(dist);
+  const TInstant *inst = temporal_min_inst(dist);
   /* Timestamp t may be at an exclusive bound */
   Datum value1, value2;
   temporal_value_at_timestamptz(temp1, inst->t, false, &value1);
   temporal_value_at_timestamptz(temp2, inst->t, false, &value2);
   LWGEOM *line = (LWGEOM *) lwline_make(value1, value2);
   GSERIALIZED *result = geo_serialize(line);
-  lwgeom_free(line);
+  lwgeom_free(line); pfree(dist);
   return result;
 }
 

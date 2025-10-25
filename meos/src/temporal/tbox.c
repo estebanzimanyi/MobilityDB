@@ -1116,7 +1116,7 @@ tbox_shift_scale_value(const TBox *box, Datum shift, Datum width,
  * @csqlfn #Tbox_shift_value(), #Tbox_scale_value(), #Tbox_shift_scale_value()
  */
 TBox *
-tbox_shift_scale_int(const TBox *box, int shift, int width, bool hasshift,
+tintbox_shift_scale(const TBox *box, int shift, int width, bool hasshift,
   bool haswidth)
 {
   VALIDATE_NOT_NULL(box, NULL);
@@ -1139,7 +1139,7 @@ tbox_shift_scale_int(const TBox *box, int shift, int width, bool hasshift,
  * @csqlfn #Tbox_shift_value(), #Tbox_scale_value(), #Tbox_shift_scale_value()
  */
 TBox *
-tbox_shift_scale_float(const TBox *box, double shift, double width,
+tfloatbox_shift_scale(const TBox *box, double shift, double width,
   bool hasshift, bool haswidth)
 {
   VALIDATE_NOT_NULL(box, NULL);
@@ -1209,7 +1209,7 @@ tbox_expand(const TBox *box1, TBox *box2)
  * @csqlfn #Tbox_expand_value()
  */
 TBox *
-tbox_expand_int(const TBox *box, const int i)
+tintbox_expand(const TBox *box, const int i)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(box, NULL);
@@ -1238,7 +1238,7 @@ tbox_expand_int(const TBox *box, const int i)
  * @csqlfn #Tbox_expand_value()
  */
 TBox *
-tbox_expand_float(const TBox *box, const double d)
+tfloatbox_expand(const TBox *box, const double d)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(box, NULL);
@@ -1274,7 +1274,7 @@ tbox_expand_value(const TBox *box, Datum value, meosType basetype)
   if (box->span.basetype == T_INT4)
   {
     if (basetype == T_INT4)
-      return tbox_expand_int(box, DatumGetInt32(value));
+      return tintbox_expand(box, DatumGetInt32(value));
     else /* basetype == T_FLOAT8 */
     {
       meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
@@ -1285,9 +1285,9 @@ tbox_expand_value(const TBox *box, Datum value, meosType basetype)
   else
   {
     if (basetype == T_INT4)
-      return tbox_expand_float(box, (double) DatumGetInt32(value));
+      return tfloatbox_expand(box, (double) DatumGetInt32(value));
     else /* basetype == T_FLOAT8 */
-      return tbox_expand_float(box, DatumGetFloat8(value));
+      return tfloatbox_expand(box, DatumGetFloat8(value));
   }
 }
 
@@ -1311,6 +1311,7 @@ tbox_expand_time(const TBox *box, const Interval *interv)
     return NULL;
   TBox *result = tbox_copy(box);
   memcpy(&result->period, s, sizeof(Span));
+  pfree(s);
   return result;
 }
 

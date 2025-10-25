@@ -169,7 +169,18 @@ setop_set_set(const Set *s1, const Set *s2, SetOper op)
     while (j < s2->count)
       values[nvals++] = SET_VAL_N(s2, j++);
   }
-  return set_make_free(values, nvals, basetype, ORDER_NO);
+  /* If the resulting set is empty */
+  if (! nvals)
+  {
+    pfree(values);
+    return NULL;
+  }
+  Set *result = set_make(values, nvals, basetype, ORDER_NO);
+  if (basetype_byvalue(basetype))
+    pfree(values);
+  else
+    pfree_array((void **) values, count);
+  return result;
 }
 
 /*****************************************************************************

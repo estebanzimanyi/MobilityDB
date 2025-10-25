@@ -608,8 +608,8 @@ meos_basetype(meosType type)
 inline bool
 basetype_byvalue(meosType type)
 {
-  return (type == T_BOOL || type == T_INT4 || type == T_INT8 || type == T_FLOAT8 ||
-    type == T_DATE || type == T_TIMESTAMPTZ);
+  return (type == T_BOOL || type == T_INT4 || type == T_INT8 ||
+    type == T_FLOAT8 || type == T_DATE || type == T_TIMESTAMPTZ);
 }
 
 /**
@@ -984,7 +984,8 @@ numspan_basetype(meosType type)
 inline bool
 numspan_type(meosType type)
 {
-  return (type == T_INTSPAN || type == T_BIGINTSPAN || type == T_FLOATSPAN);
+  return (type == T_INTSPAN || type == T_BIGINTSPAN || type == T_FLOATSPAN ||
+    type == T_DATESPAN);
 }
 
 /**

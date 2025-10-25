@@ -529,13 +529,13 @@ temporal_restrict_tstzspan(const Temporal *temp, const Span *s, bool atfunc)
   switch (temp->subtype)
   {
     case TINSTANT:
-      return (Temporal *) tinstant_restrict_tstzspan(
-        (TInstant *) temp, s, atfunc);
+      return (Temporal *) tinstant_restrict_tstzspan((TInstant *) temp, s,
+        atfunc);
     case TSEQUENCE:
       return tsequence_restrict_tstzspan((TSequence *) temp, s, atfunc);
     default: /* TSEQUENCESET */
-      return (Temporal *) tsequenceset_restrict_tstzspan(
-        (TSequenceSet *) temp, s, atfunc);
+      return (Temporal *) tsequenceset_restrict_tstzspan((TSequenceSet *) temp,
+        s, atfunc);
   }
 }
 
@@ -2307,6 +2307,7 @@ tcontseq_minus_timestamp_iter(const TSequence *seq, TimestampTz t,
       seq->count - n, false, seq->period.upper_inc, interp, NORMALIZE_NO);
     pfree(instants[0]);
   }
+  pfree(instants);
   return nseqs;
 }
 

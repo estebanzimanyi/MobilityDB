@@ -563,8 +563,8 @@ tsequenceset_time_split(const TSequenceSet *ss, TimestampTz start,
      * if the current sequence starts on the next time bin */
     if (nfrags > 0 && DatumGetTimestampTz(seq->period.lower) >= upper)
     {
-      result[nbucks++] = tsequenceset_make((const TSequence **) fragments, nfrags,
-        NORMALIZE);
+      result[nbucks++] = tsequenceset_make((const TSequence **) fragments,
+        nfrags, NORMALIZE);
       for (int j = 0; j < nfrags; j++)
         pfree(fragments[j]);
       nfrags = 0;
@@ -577,7 +577,7 @@ tsequenceset_time_split(const TSequenceSet *ss, TimestampTz start,
     /* If the current sequence has produced more than two time bins */
     if (l > 1)
     {
-      /* Assemble the accumulated fragments of the first time bin (if any)  */
+      /* Assemble the accumulated fragments of the first time bin (if any) */
       if (nfrags == 0)
         result[nbucks++] = tsequence_to_tsequenceset_free(sequences[0]);
       else
@@ -600,8 +600,8 @@ tsequenceset_time_split(const TSequenceSet *ss, TimestampTz start,
   /* Process the accumulated fragments of the last time bin */
   if (nfrags > 0)
   {
-    result[nbucks++] = tsequenceset_make((const TSequence **) fragments, nfrags,
-      NORMALIZE);
+    result[nbucks++] = tsequenceset_make((const TSequence **) fragments,
+      nfrags, NORMALIZE);
     for (int j = 0; j < nfrags; j++)
       pfree(fragments[j]);
   }
@@ -625,7 +625,7 @@ tsequenceset_time_split(const TSequenceSet *ss, TimestampTz start,
  * @param[out] newcount Number of values in the output array
  */
 static Temporal **
-temporal_time_split_int(const Temporal *temp, TimestampTz start,
+temporal_time_split_common(const Temporal *temp, TimestampTz start,
   TimestampTz end, int64 tunits, TimestampTz torigin, int count,
   TimestampTz **bins, int *newcount)
 {
@@ -677,7 +677,7 @@ temporal_time_split(const Temporal *temp, const Interval *duration,
   int64 tunits = interval_units(duration);
   int nbins = span_num_bins(&s, Int64GetDatum(tunits),
     TimestampTzGetDatum(torigin), &start_bin, &end_bin);
-  return temporal_time_split_int(temp, DatumGetTimestampTz(start_bin),
+  return temporal_time_split_common(temp, DatumGetTimestampTz(start_bin),
     DatumGetTimestampTz(end_bin), tunits, torigin, nbins, bins, count);
 }
 
@@ -1033,8 +1033,8 @@ tnumberseq_linear_value_split(const TSequence *seq, Datum start_bin,
         break;
       seq_no = nseqs[j]++;
       result[j * numcols + seq_no] = tsequence_make((const TInstant **) bounds,
-        nfrags, (nfrags > 1) ? lower_inc1 : true, (nfrags > 1) ? upper_inc1 : true,
-        LINEAR, NORMALIZE_NO);
+        nfrags, (nfrags > 1) ? lower_inc1 : true, 
+        (nfrags > 1) ? upper_inc1 : true, LINEAR, NORMALIZE_NO);
       bounds[first] = bounds[last];
       bin_lower = bin_upper;
       bin_upper = datum_add(bin_upper, size, basetype);
@@ -1271,7 +1271,7 @@ tnumber_value_time_split(const Temporal *temp, Datum size,
     {
       int num_time_splits;
       TimestampTz *times;
-      Temporal **time_splits = temporal_time_split_int(atspan, start_time,
+      Temporal **time_splits = temporal_time_split_common(atspan, start_time,
         end_time, tunits, torigin, time_count, &times, &num_time_splits);
       for (int i = 0; i < num_time_splits; i++)
       {

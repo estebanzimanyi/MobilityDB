@@ -254,16 +254,14 @@ nad_tnumber_tbox(const Temporal *temp, const TBox *box)
   /* Test if the bounding boxes overlap */
   TBox box1;
   tnumber_set_tbox(temp1, &box1);
+  if (hast)
+    pfree(temp1);
   if (overlaps_tbox_tbox(box, &box1))
     return 0.0;
 
   /* Get the minimum distance between the values of the boxes */
   Datum res = distance_value_value(box->span.lower, box1.span.upper,
     box->span.basetype);
-
-  if (hast)
-    pfree(temp1);
-
   return datum_double(res, temptype_basetype(temp->temptype));
 }
 

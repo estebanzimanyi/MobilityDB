@@ -40,6 +40,7 @@
 #include <meos_geo.h>
 #include <meos_internal.h>
 #include <meos_internal_geo.h>
+#include "temporal/type_util.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "cbuffer/cbuffer.h"
 
@@ -113,6 +114,7 @@ lwcircle_make(double x, double y, double radius, int32_t srid)
   /* Clean up and return */
   lwpoint_free(points[0]); lwpoint_free(points[1]);
   /* We cannot lwgeom_free(ring); */
+  pfree(ring);
   return lwcurvepoly_as_lwgeom(result);
 }
 
@@ -573,7 +575,7 @@ tcbufferseq_trav_area(const TSequence *seq, bool unary_union)
   }
   else
     result = res;
-  pfree(geoms);
+  pfree_array((void **) geoms, count);
   return result;
 }
 

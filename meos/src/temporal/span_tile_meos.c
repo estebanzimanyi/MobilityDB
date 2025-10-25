@@ -213,13 +213,13 @@ floatspanset_bins(const SpanSet *ss, double vsize, double vorigin,
  * @param[out] count Number of elements in the output array
  */
 Span *
-datespanset_bins(const SpanSet *ss, const Interval *duration,
-  DateADT torigin, int *count)
+datespanset_bins(const SpanSet *ss, const Interval *duration, DateADT torigin,
+  int *count)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_DATESPANSET(ss, NULL);
-  return spanset_bins(ss, PointerGetDatum(duration), DateADTGetDatum(torigin),
-    count);
+  return spanset_bins(ss, Int64GetDatum(interval_units(duration)),
+    DateADTGetDatum(torigin), count);
 }
 
 /**
@@ -236,7 +236,7 @@ tstzspanset_bins(const SpanSet *ss, const Interval *duration,
 {
   /* Ensure the validity of the arguments */
   VALIDATE_TSTZSPANSET(ss, NULL);
-  return spanset_bins(ss, PointerGetDatum(duration),
+  return spanset_bins(ss, Int64GetDatum(interval_units(duration)),
     TimestampTzGetDatum(torigin), count);
 }
 

@@ -433,37 +433,22 @@ span_num_bins(const Span *s, Datum size, Datum origin, Datum *start_bin,
 Span *
 span_bins(const Span *s, Datum size, Datum origin, int *count)
 {
+  assert(s); assert(s);
   assert(numspan_type(s->spantype) || timespan_type(s->spantype));
-  Interval *duration = NULL;
-  if (timespan_type(s->spantype))
-    duration = DatumGetIntervalP(size);
-  /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(s, NULL); VALIDATE_NOT_NULL(count, NULL);
   if ((numspan_type(s->spantype) && 
-        ! ensure_positive_datum(size, s->basetype)) ||
-      (s->spantype == T_DATESPAN && ! ensure_valid_day_duration(duration)) ||
-      (s->spantype == T_TSTZSPAN &&  ! ensure_positive_duration(duration)))
+      ! ensure_positive_datum(size, s->basetype)))
     return NULL;
-
-  /* Compute the size in time units */
-  Datum size1;
-  if (s->spantype == T_DATESPAN)
-    size1 = Int32GetDatum((int)(interval_units(duration) / USECS_PER_DAY));
-  else if (s->spantype == T_TSTZSPAN)
-    size1 = Int64GetDatum(interval_units(duration));
-  else 
-    size1 = size;
 
   /* Get the span bounds of the state */
   Datum start_bin, end_bin;
-  int nbins = span_num_bins(s, size1, origin, &start_bin, &end_bin);
+  int nbins = span_num_bins(s, size, origin, &start_bin, &end_bin);
   Span *bins = palloc0(sizeof(Span) * nbins);
   /* Set the span of the state */
   /* Iterate for each bin */
   Datum lower = start_bin;
   for (int i = 0; i < nbins; i++)
   {
-    Datum upper = datum_add(lower, size1, s->basetype);
+    Datum upper = datum_add(lower, size, s->basetype);
     span_set(lower, upper, true, false, s->basetype, s->spantype, &bins[i]);
     lower = upper;
   }
@@ -482,30 +467,15 @@ span_bins(const Span *s, Datum size, Datum origin, int *count)
 Span *
 spanset_bins(const SpanSet *ss, Datum size, Datum origin, int *count)
 {
+  assert(ss); assert(count);
   assert(numspan_type(ss->spantype) || timespan_type(ss->spantype));
-  Interval *duration = NULL;
-  if (timespan_type(ss->spantype))
-    duration = DatumGetIntervalP(size);
-  /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(ss, NULL); VALIDATE_NOT_NULL(count, NULL);
   if ((numspan_type(ss->spantype) && 
-        ! ensure_positive_datum(size, ss->basetype)) ||
-      (ss->spantype == T_DATESPAN && ! ensure_valid_day_duration(duration)) ||
-      (ss->spantype == T_TSTZSPAN &&  ! ensure_positive_duration(duration)))
+        ! ensure_positive_datum(size, ss->basetype)))
     return NULL;
-
-  /* Compute the size in time units */
-  Datum size1;
-  if (ss->spantype == T_DATESPAN)
-    size1 = Int32GetDatum((int)(interval_units(duration) / USECS_PER_DAY));
-  else if (ss->spantype == T_TSTZSPAN)
-    size1 = Int64GetDatum(interval_units(duration));
-  else 
-    size1 = size;
 
   /* Get the span bounds of the state */
   Datum start_bin, end_bin;
-  int nbins = span_num_bins(&ss->span, size1, origin, &start_bin, &end_bin);
+  int nbins = span_num_bins(&ss->span, size, origin, &start_bin, &end_bin);
   Span *bins = palloc0(sizeof(Span) * nbins);
   /* Set the span of the state */
   /* Iterate for each bin */
@@ -513,7 +483,7 @@ spanset_bins(const SpanSet *ss, Datum size, Datum origin, int *count)
   int count1 = 0;
   for (int i = 0; i < nbins; i++)
   {
-    Datum upper = datum_add(lower, size1, ss->basetype);
+    Datum upper = datum_add(lower, size, ss->basetype);
     Span span;
     span_set(lower, upper, true, false, ss->basetype, ss->spantype, &span);
     /* Restrict the spanset to the span */
@@ -556,7 +526,7 @@ temporal_time_bins(const Temporal *temp, const Interval *duration,
   temporal_set_tstzspan(temp, &bounds);
   /* Compute the spans and create the resulting array */
   int nbins;
-  Span *bins = span_bins(&bounds, PointerGetDatum(duration), 
+  Span *bins = span_bins(&bounds, Int64GetDatum(interval_units(duration)),
     TimestampTzGetDatum(torigin), &nbins);
   Span *result = palloc(sizeof(Span) * nbins);
   int count1 = 0;
@@ -855,7 +825,8 @@ tbox_get_value_time_tile(Datum value, TimestampTz t, Datum vsize,
  * @brief Set the state with a temporal number and a value and possibly time
  * grid for splitting or obtaining a set of temporal boxes
  * @param[in] temp Temporal number
- * @param[in] vsize Size of the value dimension
+ * @param[in] vsize Size of the value dimension, may be zero if the value
+ * dimension is not used for splitting
  * @param[in] duration Size of the time dimension as an interval
  * @param[in] vorigin Origin for the value dimension
  * @param[in] torigin Origin for the time dimension
@@ -869,7 +840,7 @@ tnumber_value_time_tile_init(const Temporal *temp, Datum vsize,
 {
   /* Ensure the validity of the arguments */
   VALIDATE_TNUMBER(temp, NULL); VALIDATE_NOT_NULL(ntiles, NULL);
-  if (! ensure_positive_datum(vsize, temptype_basetype(temp->temptype)) ||
+  if (! ensure_not_negative_datum(vsize, temptype_basetype(temp->temptype)) ||
       (duration && ! ensure_positive_duration(duration)))
     return NULL;
 

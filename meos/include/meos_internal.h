@@ -818,7 +818,7 @@ extern Set *set_compact(const Set *s);
 extern void span_expand(const Span *s1, Span *s2);
 extern SpanSet *spanset_compact(const SpanSet *ss);
 extern TBox *tbox_expand_value(const TBox *box, Datum value, meosType basetyp);
-extern Set *textcat_textset_text_int(const Set *s, const text *txt, bool invert);
+extern Set *textcat_textset_text_common(const Set *s, const text *txt, bool invert);
 extern void tstzspan_set_datespan(const Span *s1, Span *s2);
 
 /*****************************************************************************
@@ -1060,6 +1060,7 @@ extern const TInstant *temporal_inst_n(const Temporal *temp, int n);
 extern const TInstant **temporal_instants_p(const Temporal *temp, int *count);
 extern Datum temporal_max_value(const Temporal *temp);
 extern size_t temporal_mem_size(const Temporal *temp);
+extern const TInstant *temporal_min_inst(const Temporal *temp);
 extern Datum temporal_min_value(const Temporal *temp);
 extern const TSequence **temporal_sequences_p(const Temporal *temp, int *count);
 extern void temporal_set_bbox(const Temporal *temp, void *box);
