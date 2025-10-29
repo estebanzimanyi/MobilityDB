@@ -34,6 +34,7 @@
 
 /* PostgreSQL */
 #include <postgres.h>
+#include <pgtypes.h>
 #include <fmgr.h>
 #if POSTGRESQL_VERSION_NUMBER >= 160000
   #include "varatt.h"
@@ -83,7 +84,7 @@ Datum
 Temporal_from_hexwkb(PG_FUNCTION_ARGS)
 {
   text *hexwkb_text = PG_GETARG_TEXT_P(0);
-  char *hexwkb = text2cstring(hexwkb_text);
+  char *hexwkb = text_to_cstring(hexwkb_text);
   Temporal *result = temporal_from_hexwkb(hexwkb);
   pfree(hexwkb);
   PG_FREE_IF_COPY(hexwkb_text, 0);

@@ -42,6 +42,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <meos.h>
+#include <pg_bool.h>
+#include <pg_float.h>
+#include <pg_text.h>
 
 /* Main program */
 int main(void)
@@ -3730,7 +3733,6 @@ int main(void)
     free(char_result);
   }
   free(ispanarray_result);
-
 
   /* TBox *tint_value_boxes(const Temporal *temp, int vsize, int vorigin, int *count); */
   tboxarray_result = tint_value_boxes(tint1, int32_in1, int32_in2, &count);
