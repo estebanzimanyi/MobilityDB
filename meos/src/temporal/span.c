@@ -40,6 +40,7 @@
 #include <float.h>
 #include <limits.h>
 /* PostgreSQL */
+#include <postgres.h>
 #include <common/hashfn.h>
 #include <utils/float.h>
 #include <utils/timestamp.h>
@@ -47,13 +48,16 @@
 #include <meos.h>
 #include <meos_internal.h>
 #include "temporal/meos_catalog.h"
-#include "temporal/postgres_types.h"
 #include "temporal/set.h"
 #include "temporal/temporal.h"
 #include "temporal/tnumber_mathfuncs.h"
 #include "temporal/type_parser.h"
 #include "temporal/type_inout.h"
 #include "temporal/type_util.h"
+
+#include <utils/jsonb.h>
+#include <utils/numeric.h>
+#include <postgres_types.h>
 
 /*****************************************************************************
  * Parameter tests
@@ -804,8 +808,8 @@ floatspan_round_set(const Span *s, int maxdd, Span *result)
 {
   assert(s); assert(s->spantype == T_FLOATSPAN); assert(result);
   /* Set precision of bounds */
-  double lower = float_round(DatumGetFloat8(s->lower), maxdd);
-  double upper = float_round(DatumGetFloat8(s->upper), maxdd);
+  double lower = float8_round(DatumGetFloat8(s->lower), maxdd);
+  double upper = float8_round(DatumGetFloat8(s->upper), maxdd);
   /* Fix the bounds */
   bool lower_inc, upper_inc;
   if (float8_eq(lower, upper))
@@ -1047,28 +1051,33 @@ tstzspan_expand(const Span *s, const Interval *interv)
    * shifting the bounds with the interval is empty */ 
   Interval intervalzero;
   memset(&intervalzero, 0, sizeof(Interval));
-  bool negative = pg_interval_cmp(interv, &intervalzero) <= 0;
-  Interval interv_neg;
+  bool negative = pg_interval_cmp((Interval *) interv, &intervalzero) <= 0;
+  Interval *interv_neg;
   if (negative)
   {
     Interval *duration = tstzspan_duration(s);
     /* Negate the interval */
-    interval_negate(interv, &interv_neg);
-    Interval *interv_neg2 = mul_interval_double(&interv_neg, 2.0);
+    interv_neg = interval_negate(interv);
+    Interval *interv_neg2 = mul_interval_float8(interv_neg, 2.0);
     int cmp = pg_interval_cmp(duration, interv_neg2);
     pfree(duration); pfree(interv_neg2);
     if (cmp < 0 || (cmp == 0 && (! s->lower_inc || ! s->upper_inc)))
+    {
+      pfree(interv_neg);
       return NULL;
+    }
   }
 
   Span *result = span_copy(s);
   TimestampTz tmin = negative ?
-    add_timestamptz_interval(DatumGetTimestampTz(s->lower), &interv_neg) :
-    minus_timestamptz_interval(DatumGetTimestampTz(s->lower), interv);
+    add_timestamptz_interval(DatumGetTimestampTz(s->lower), interv_neg) :
+    minus_timestamptz_interval(DatumGetTimestampTz(s->lower), (Interval *) interv);
   TimestampTz tmax = add_timestamptz_interval(DatumGetTimestampTz(s->upper),
-    interv);
+    (Interval *) interv);
   result->lower = TimestampTzGetDatum(tmin);
   result->upper = TimestampTzGetDatum(tmax);
+  if (negative)
+    pfree(interv_neg);
   return result;
 }
 
@@ -1125,14 +1134,14 @@ span_bounds_shift_scale_time(const Interval *shift, const Interval *duration,
   bool instant = (*lower == *upper);
   if (shift)
   {
-    *lower = add_timestamptz_interval(*lower, shift);
+    *lower = add_timestamptz_interval(*lower, (Interval *) shift);
     if (instant)
       *upper = *lower;
     else
-      *upper = add_timestamptz_interval(*upper, shift);
+      *upper = add_timestamptz_interval(*upper, (Interval *) shift);
   }
   if (duration && ! instant)
-    *upper = add_timestamptz_interval(*lower, duration);
+    *upper = add_timestamptz_interval(*lower, (Interval *) duration);
   return;
 }
 
@@ -1317,7 +1326,7 @@ numspan_shift_scale(const Span *s, Datum shift, Datum width, bool hasshift,
 }
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_timestamp
  * @brief Return a timestamptz shifted by an interval
  * @param[in] t Timestamp
  * @param[in] interv Interval to shift the instant
@@ -1329,7 +1338,7 @@ timestamptz_shift(TimestampTz t, const Interval *interv)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(interv, DT_NOEND);
-  return add_timestamptz_interval(t, interv);
+  return add_timestamptz_interval(t, (Interval *) interv);
 }
 
 /**
@@ -1506,7 +1515,7 @@ span_ne(const Span *s1, const Span *s2)
 /**
  * @ingroup meos_setspan_comp
  * @brief Return -1, 0, or 1 depending on whether the first span is less than,
- * equal, or greater than the second one
+ * equal to, or greater than the second one
  * @param[in] s1,s2 Sets
  * @note Function used for B-tree comparison
  * @csqlfn #Span_cmp()
@@ -1656,8 +1665,8 @@ span_hash_extended(const Span *s, uint64 seed)
   type_hash = DatumGetUInt64(hash_uint32_extended(type, seed));
 
   /* Apply the hash function to each bound */
-  lower_hash = pg_hashint8extended(s->lower, seed);
-  upper_hash = pg_hashint8extended(s->upper, seed);
+  lower_hash = int64_hash_extended(s->lower, seed);
+  upper_hash = int64_hash_extended(s->upper, seed);
 
   /* Merge hashes of flags and bounds */
   result = DatumGetUInt64(hash_uint32_extended((uint32) flags,

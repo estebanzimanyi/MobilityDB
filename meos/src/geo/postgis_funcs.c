@@ -650,11 +650,12 @@ geom_shortestline2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   LWGEOM *geom1 = lwgeom_from_gserialized(gs1);
   LWGEOM *geom2 = lwgeom_from_gserialized(gs2);
   LWGEOM *line = lwgeom_closest_line(geom1, geom2);
+  lwgeom_free(geom1); lwgeom_free(geom2);
   if (lwgeom_is_empty(line))
     return NULL;
 
   GSERIALIZED *result = geo_serialize(line);
-  lwgeom_free(line); lwgeom_free(geom1); lwgeom_free(geom2);
+  lwgeom_free(line);
   return result;
 }
 
@@ -1057,6 +1058,7 @@ geo_pointarr(const GSERIALIZED *gs, int *count)
     result[i] = geo_serialize((LWGEOM *) res->geoms[i]);
   *count = res->ngeoms;
   lwgeom_free(lwgeom); 
+  lwmpoint_free(res); 
   return result;
 }
 #endif /* CBUFFER */

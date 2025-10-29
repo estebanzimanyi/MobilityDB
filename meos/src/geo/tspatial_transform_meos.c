@@ -104,9 +104,14 @@ typedef struct
 
 char* SPATIAL_REF_SYS_CSV = "/usr/local/share/spatial_ref_sys.csv";
 
-void meos_set_spatial_ref_sys_csv(const char* path) {
-    SPATIAL_REF_SYS_CSV = malloc(strlen(path) + 1);
-    strcpy(SPATIAL_REF_SYS_CSV, path);
+/**
+ * @brief Set the location of the SPATIAL_REF_SYS_CSV files
+ */
+void
+meos_set_spatial_ref_sys_csv(const char* path)
+{
+  SPATIAL_REF_SYS_CSV = malloc(strlen(path) + 1);
+  strcpy(SPATIAL_REF_SYS_CSV, path);
 }
 
 typedef struct

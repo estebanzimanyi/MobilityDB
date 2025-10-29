@@ -39,13 +39,13 @@
 #include <float.h>
 #include <limits.h>
 /* PostgreSQL */
+#include <postgres.h>
 #include "utils/timestamp.h"
 /* PostGIS */
 #include <lwgeodetic.h>
 /* MEOS */
 #include <meos.h>
 #include <meos_internal_geo.h>
-#include "temporal/postgres_types.h"
 #include "temporal/set.h"
 #include "temporal/span.h"
 #include "temporal/spanset.h"
@@ -70,6 +70,10 @@
 #if RGEO
   #include "rgeo/trgeo_boxops.h"
 #endif
+
+#include <utils/jsonb.h>
+#include <utils/numeric.h>
+#include <postgres_types.h>
 
 /* Buffer size for input and output of STBox */
 #define MAXGBOXLEN     256
@@ -614,7 +618,9 @@ stbox_geo(const STBox *box)
   FLAGS_SET_Z(geo->flags, hasz);
   FLAGS_SET_GEODETIC(geo->flags, geodetic);
   result = geo_serialize(geo);
-  // lwgeom_free(geo);
+  /* We cannot lwgeom_free(geo); */
+  if (gserialized_get_type(result) != POINTTYPE)
+    lwgeom_free(geo);
   return result;
 }
 
@@ -1393,14 +1399,14 @@ stbox_round_set(const STBox *box, int maxdd, STBox *result)
   assert(box); assert(result); assert(MEOS_FLAGS_GET_X(box->flags));
   assert(maxdd >=0);
 
-  result->xmin = float_round(box->xmin, maxdd);
-  result->xmax = float_round(box->xmax, maxdd);
-  result->ymin = float_round(box->ymin, maxdd);
-  result->ymax = float_round(box->ymax, maxdd);
+  result->xmin = float8_round(box->xmin, maxdd);
+  result->xmax = float8_round(box->xmax, maxdd);
+  result->ymin = float8_round(box->ymin, maxdd);
+  result->ymax = float8_round(box->ymax, maxdd);
   if (MEOS_FLAGS_GET_Z(box->flags) || MEOS_FLAGS_GET_GEODETIC(box->flags))
   {
-    result->zmin = float_round(box->zmin, maxdd);
-    result->zmax = float_round(box->zmax, maxdd);
+    result->zmin = float8_round(box->zmin, maxdd);
+    result->zmax = float8_round(box->zmax, maxdd);
   }
   return;
 }

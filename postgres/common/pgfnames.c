@@ -3,7 +3,7 @@
  * pgfnames.c
  *    directory handling functions
  *
- * Portions Copyright (c) 1996-2021, PostgreSQL Global Development Group
+ * Portions Copyright (c) 1996-2025, PostgreSQL Global Development Group
  * Portions Copyright (c) 1994, Regents of the University of California
  *
  * IDENTIFICATION
@@ -12,9 +12,9 @@
  *-------------------------------------------------------------------------
  */
 
-#include <dirent.h>
-
 #include "postgres.h"
+
+#include <dirent.h>
 
 /*
  * pgfnames
@@ -23,14 +23,14 @@
  * must call pgfnames_cleanup later to free the memory allocated by this
  * function.
  */
-char **
+char    **
 pgfnames(const char *path)
 {
-  DIR *dir;
+  DIR       *dir;
   struct dirent *file;
-  char **filenames;
-  int numnames = 0;
-  int fnsize = 200;  /* enough for many small dbs */
+  char    **filenames;
+  int      numnames = 0;
+  int      fnsize = 200;  /* enough for many small dbs */
 
   dir = opendir(path);
   if (dir == NULL)
@@ -48,7 +48,8 @@ pgfnames(const char *path)
       if (numnames + 1 >= fnsize)
       {
         fnsize *= 2;
-        filenames = (char **) repalloc(filenames, fnsize * sizeof(char *));
+        filenames = (char **) repalloc(filenames,
+                         fnsize * sizeof(char *));
       }
       filenames[numnames++] = pstrdup(file->d_name);
     }
@@ -57,7 +58,6 @@ pgfnames(const char *path)
   if (errno)
   {
     elog(WARNING, "could not read directory \"%s\": %m", path);
-    return NULL;
   }
 
   filenames[numnames] = NULL;
@@ -65,7 +65,6 @@ pgfnames(const char *path)
   if (closedir(dir))
   {
     elog(WARNING, "could not close directory \"%s\": %m", path);
-    return NULL;
   }
 
   return filenames;
@@ -80,7 +79,7 @@ pgfnames(const char *path)
 void
 pgfnames_cleanup(char **filenames)
 {
-  char **fn;
+  char    **fn;
 
   for (fn = filenames; *fn; fn++)
     pfree(*fn);

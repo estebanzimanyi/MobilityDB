@@ -137,7 +137,7 @@ extern GSERIALIZED *npoint_to_geompoint(const Npoint *np);
 extern Nsegment *npoint_to_nsegment(const Npoint *np);
 extern STBox *npoint_to_stbox(const Npoint *np);
 extern GSERIALIZED *nsegment_to_geom(const Nsegment *ns);
-extern STBox *nsegment_to_stbox(const Nsegment *np);
+extern STBox *nsegment_to_stbox(const Nsegment *ns);
 
 /* Accessor functions */
 
@@ -217,7 +217,7 @@ extern Npoint **npointset_values(const Set *s);
 /* Set operations */
 
 extern bool contained_npoint_set(const Npoint *np, const Set *s);
-extern bool contains_set_npoint(const Set *s, Npoint *np);
+extern bool contains_set_npoint(const Set *s, const Npoint *np);
 extern Set *intersection_npoint_set(const Npoint *np, const Set *s);
 extern Set *intersection_set_npoint(const Set *s, const Npoint *np);
 extern Set *minus_npoint_set(const Npoint *np, const Set *s);

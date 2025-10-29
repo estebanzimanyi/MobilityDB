@@ -40,6 +40,11 @@
 #include <limits.h>
 /* PostgreSQL */
 #include <postgres.h>
+#include "utils/numeric.h"
+#include <utils/date.h>
+#include <utils/json.h>
+#include <utils/jsonb.h>
+#include <utils/timestamp.h>
 #if ! MEOS
   #include <libpq/pqformat.h>
   #include <executor/spi.h>
@@ -53,7 +58,7 @@
 #include <meos_npoint.h>
 #include <meos_internal.h>
 #include <meos_internal_geo.h>
-#include "temporal/postgres_types.h"
+#include <postgres_types.h>
 #include "temporal/span.h"
 #include "temporal/tsequence.h"
 #include "temporal/type_inout.h"
@@ -327,7 +332,7 @@ npoint_out(const Npoint *np, int maxdd)
     return NULL;
 
   char *result = palloc(NPOINT_MAXLEN);
-  char *rid = int8_out(np->rid);
+  char *rid = int64_out(np->rid);
   char *pos = float8_out(np->pos, maxdd);
   snprintf(result, NPOINT_MAXLEN, "NPoint(%s,%s)", rid, pos);
   pfree(rid); pfree(pos);
@@ -431,7 +436,7 @@ nsegment_out(const Nsegment *ns, int maxdd)
     return NULL;
 
   char *result = palloc(NSEGMENT_MAXLEN);
-  char *rid = int8_out(ns->rid);
+  char *rid = int64_out(ns->rid);
   char *pos1 = float8_out(ns->pos1, maxdd);
   char *pos2 = float8_out(ns->pos2, maxdd);
   snprintf(result, NSEGMENT_MAXLEN, "NSegment(%s,%s,%s)", rid, pos1, pos2);
@@ -451,7 +456,7 @@ char *
 npoint_wkt_out(Datum value, int maxdd)
 {
   Npoint *np = DatumGetNpointP(value);
-  char *rid = int8_out(np->rid);
+  char *rid = int64_out(np->rid);
   char *pos = float8_out(np->pos, maxdd);
   size_t len = strlen(rid) + strlen(pos) + 10; // Npoint(,) + end NULL
   char *result = palloc(len);
@@ -1024,7 +1029,7 @@ npoint_round(const Npoint *np, int maxdd)
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(np, NULL);
   /* Set precision of position */
-  double pos = float_round(np->pos, maxdd);
+  double pos = float8_round(np->pos, maxdd);
   return npoint_make(np->rid, pos);
 }
 
@@ -1051,8 +1056,8 @@ nsegment_round(const Nsegment *ns, int maxdd)
 {
   VALIDATE_NOT_NULL(ns, NULL);
   /* Set precision of positions */
-  double pos1 = float_round(ns->pos1, maxdd);
-  double pos2 = float_round(ns->pos2, maxdd);
+  double pos1 = float8_round(ns->pos1, maxdd);
+  double pos2 = float8_round(ns->pos2, maxdd);
   return nsegment_make(ns->rid, pos1, pos2);
 }
 
@@ -1399,8 +1404,8 @@ npoint_hash(const Npoint *np)
   VALIDATE_NOT_NULL(np, INT_MAX);
 
   /* Compute hashes of value and position */
-  uint32 rid_hash = pg_hashint8(np->rid);
-  uint32 pos_hash = pg_hashfloat8(np->pos);
+  uint32 rid_hash = int64_hash(np->rid);
+  uint32 pos_hash = float8_hash(np->pos);
 
   /* Merge hashes of value and position */
   uint32 result = rid_hash;
@@ -1422,8 +1427,8 @@ npoint_hash_extended(const Npoint *np, uint64 seed)
   VALIDATE_NOT_NULL(np, LONG_MAX);
 
   /* Compute hashes of value and position */
-  uint64 rid_hash = pg_hashint8extended(np->rid, seed);
-  uint64 pos_hash = pg_hashfloat8extended(np->pos, seed);
+  uint64 rid_hash = int64_hash_extended(np->rid, seed);
+  uint64 pos_hash = float8_hash_extended(np->pos, seed);
 
   /* Merge hashes of value and position */
   uint64 result = rid_hash;

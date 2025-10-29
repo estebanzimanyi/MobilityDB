@@ -49,8 +49,11 @@
 #include <postgres.h>
 /* MEOS */
 #include <meos.h>
-#include "temporal/postgres_types.h"
 #include "temporal/temporal.h"
+
+#include <utils/numeric.h>
+#include <utils/jsonb.h>
+#include <postgres_types.h>
 
 /*****************************************************************************
  * Double2
