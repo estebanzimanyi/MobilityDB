@@ -45,6 +45,7 @@
 #include <postgres.h>
 #include <utils/date.h>
 #include <utils/datetime.h>
+#include <utils/timestamp.h>
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
@@ -53,6 +54,10 @@
 #include "temporal/temporal_restrict.h"
 #include "temporal/tsequence.h"
 #include "temporal/type_util.h"
+
+#include <utils/jsonb.h>
+#include <utils/numeric.h>
+#include <postgres_types.h>
 
 /*****************************************************************************
  * Bin functions for the various span base types
@@ -850,7 +855,8 @@ tbox_get_value_time_tile(Datum value, TimestampTz t, Datum vsize,
  * @brief Set the state with a temporal number and a value and possibly time
  * grid for splitting or obtaining a set of temporal boxes
  * @param[in] temp Temporal number
- * @param[in] vsize Size of the value dimension
+ * @param[in] vsize Size of the value dimension, may be zero if the value
+ * dimension is not used for splitting
  * @param[in] duration Size of the time dimension as an interval
  * @param[in] vorigin Origin for the value dimension
  * @param[in] torigin Origin for the time dimension
@@ -864,7 +870,7 @@ tnumber_value_time_tile_init(const Temporal *temp, Datum vsize,
 {
   /* Ensure the validity of the arguments */
   VALIDATE_TNUMBER(temp, NULL); VALIDATE_NOT_NULL(ntiles, NULL);
-  if (! ensure_positive_datum(vsize, temptype_basetype(temp->temptype)) ||
+  if (! ensure_not_negative_datum(vsize, temptype_basetype(temp->temptype)) ||
       (duration && ! ensure_positive_duration(duration)))
     return NULL;
 

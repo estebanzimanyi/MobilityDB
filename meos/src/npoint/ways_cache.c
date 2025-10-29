@@ -133,14 +133,12 @@ GetWaysCache()
   {
     /* Put Ways cache in a child of the CacheContext */
     MemoryContext context = AllocSetContextCreate(
-        CacheMemoryContext,
-        "Ways Context",
-        ALLOCSET_SMALL_SIZES);
+      CacheMemoryContext, "Ways Context", ALLOCSET_SMALL_SIZES);
 
     /* Allocate in the upper context */
     ways_cache = MemoryContextAllocZero(context, sizeof(WaysCache));
 
-    if (!ways_cache)
+    if (! ways_cache)
       elog(ERROR, "Unable to allocate space for Ways cache in context %p", (void *)context);
 
     ways_cache->count = 0;

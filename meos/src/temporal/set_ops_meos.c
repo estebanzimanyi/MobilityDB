@@ -36,6 +36,7 @@
 #include <assert.h>
 /* PostgreSQL */
 #include <postgres.h>
+#include <utils/timestamp.h>
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
@@ -1634,7 +1635,7 @@ int64
 distance_bigintset_bigintset(const Set *s1, const Set *s2)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_set_set(s1, s2) || ! ensure_set_isof_type(s1, T_INTSET))
+  if (! ensure_valid_set_set(s1, s2) || ! ensure_set_isof_type(s1, T_BIGINTSET))
     return -1;
   return DatumGetInt64(distance_set_set(s1, s2));
 }

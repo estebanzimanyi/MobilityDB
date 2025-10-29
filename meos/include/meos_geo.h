@@ -330,7 +330,7 @@ extern char *geo_as_ewkt(const GSERIALIZED *gs, int precision);
 extern char *geo_as_geojson(const GSERIALIZED *gs, int option, int precision, const char *srs);
 extern char *geo_as_hexewkb(const GSERIALIZED *gs, const char *endian);
 extern char *geo_as_text(const GSERIALIZED *gs, int precision);
-extern GSERIALIZED *geo_from_ewkb(const uint8_t *wkb, size_t wkb_size, int32 srid);
+extern GSERIALIZED *geo_from_ewkb(const uint8_t *wkb, size_t wkb_size, int32_t srid);
 extern GSERIALIZED *geo_from_geojson(const char *geojson);
 extern GSERIALIZED *geo_from_text(const char *wkt, int32_t srid);
 extern char *geo_out(const GSERIALIZED *gs);
@@ -342,7 +342,7 @@ extern GSERIALIZED *geom_in(const char *str, int32 typmod);
 
 /* Constructor functions */
 
-extern GSERIALIZED *geo_copy(const GSERIALIZED *g);
+extern GSERIALIZED *geo_copy(const GSERIALIZED *gs);
 extern GSERIALIZED *geogpoint_make2d(int32_t srid, double x, double y);
 extern GSERIALIZED *geogpoint_make3dz(int32_t srid, double x, double y, double z);
 extern GSERIALIZED *geompoint_make2d(int32_t srid, double x, double y);
@@ -355,15 +355,13 @@ extern GSERIALIZED *geog_to_geom(const GSERIALIZED *geog);
 
 /* Accessor functions */
 
-extern bool geo_is_empty(const GSERIALIZED *g);
-#if CBUFFER
+extern bool geo_is_empty(const GSERIALIZED *gs);
 extern bool geo_is_unitary(const GSERIALIZED *gs);
-#endif
 extern const char *geo_typename(int type);
-extern double geog_area(const GSERIALIZED *g, bool use_spheroid);
-extern GSERIALIZED *geog_centroid(const GSERIALIZED *g, bool use_spheroid);
-extern double geog_length(const GSERIALIZED *g, bool use_spheroid);
-extern double geog_perimeter(const GSERIALIZED *g, bool use_spheroid);
+extern double geog_area(const GSERIALIZED *gs, bool use_spheroid);
+extern GSERIALIZED *geog_centroid(const GSERIALIZED *gs, bool use_spheroid);
+extern double geog_length(const GSERIALIZED *gs, bool use_spheroid);
+extern double geog_perimeter(const GSERIALIZED *gs, bool use_spheroid);
 extern bool geom_azimuth(const GSERIALIZED *gs1, const GSERIALIZED *gs2, double *result);
 extern double geom_length(const GSERIALIZED *gs);
 extern double geom_perimeter(const GSERIALIZED *gs);
@@ -389,10 +387,8 @@ extern GSERIALIZED *geo_makeline_garray(GSERIALIZED **gsarr, int count);
 extern int geo_npoints(const GSERIALIZED *gs);
 extern int geo_ngeos(const GSERIALIZED *gs);
 extern GSERIALIZED *geo_geoN(const GSERIALIZED *geom, int n);
-#if CBUFFER
 extern GSERIALIZED **geo_pointarr(const GSERIALIZED *gs, int *count);
 extern GSERIALIZED *geo_points(const GSERIALIZED *gs);
-#endif
 extern GSERIALIZED *geom_array_union(GSERIALIZED **gsarr, int count);
 extern GSERIALIZED *geom_boundary(const GSERIALIZED *gs);
 extern GSERIALIZED *geom_buffer(const GSERIALIZED *gs, double size, char *params);
@@ -400,12 +396,10 @@ extern GSERIALIZED *geom_centroid(const GSERIALIZED *gs);
 extern GSERIALIZED *geom_convex_hull(const GSERIALIZED *gs);
 extern GSERIALIZED *geom_difference2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
 extern GSERIALIZED *geom_intersection2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
-#if CBUFFER
 extern GSERIALIZED *geom_intersection2d_coll(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
 extern GSERIALIZED *geom_min_bounding_radius(const GSERIALIZED *geom, double *radius);
-#endif
-extern GSERIALIZED *geom_shortestline2d(const GSERIALIZED *gs1, const GSERIALIZED *s2);
-extern GSERIALIZED *geom_shortestline3d(const GSERIALIZED *gs1, const GSERIALIZED *s2);
+extern GSERIALIZED *geom_shortestline2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
+extern GSERIALIZED *geom_shortestline3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
 extern GSERIALIZED *geom_unary_union(GSERIALIZED *gs, double prec);
 extern GSERIALIZED *line_interpolate_point(GSERIALIZED *gs, double distance_fraction, bool repeat);
 extern double line_locate_point(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
@@ -450,6 +444,7 @@ extern bool geo_same(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
 
 extern Set *geogset_in(const char *str);
 extern Set *geomset_in(const char *str);
+extern char *spatialset_out(const Set *s, int maxdd);
 extern char *spatialset_as_text(const Set *set, int maxdd);
 extern char *spatialset_as_ewkt(const Set *set, int maxdd);
 
@@ -505,7 +500,7 @@ extern char *stbox_out(const STBox *box, int maxdd);
 extern STBox *geo_timestamptz_to_stbox(const GSERIALIZED *gs, TimestampTz t);
 extern STBox *geo_tstzspan_to_stbox(const GSERIALIZED *gs, const Span *s);
 extern STBox *stbox_copy(const STBox *box);
-extern STBox *stbox_make(bool hasx, bool hasz, bool geodetic, int32 srid, double xmin, double xmax, double ymin, double ymax, double zmin, double zmax, const Span *s);
+extern STBox *stbox_make(bool hasx, bool hasz, bool geodetic, int32_t srid, double xmin, double xmax, double ymin, double ymax, double zmin, double zmax, const Span *s);
 
 /* Conversion functions */
 
@@ -612,7 +607,7 @@ extern bool stbox_ne(const STBox *box1, const STBox *box2);
 
 /* Input and output functions */
 
-extern char *tgeo_out(const Temporal *temp, int maxdd);
+extern char *tspatial_out(const Temporal *temp, int maxdd);
 extern Temporal *tgeogpoint_from_mfjson(const char *str);
 extern Temporal *tgeogpoint_in(const char *str);
 extern Temporal *tgeography_from_mfjson(const char *mfjson);
@@ -635,7 +630,7 @@ extern Temporal *tpoint_from_base_temp(const GSERIALIZED *gs, const Temporal *te
 extern TInstant *tpointinst_make(const GSERIALIZED *gs, TimestampTz t);
 extern TSequence *tpointseq_from_base_tstzset(const GSERIALIZED *gs, const Set *s);
 extern TSequence *tpointseq_from_base_tstzspan(const GSERIALIZED *gs, const Span *s, interpType interp);
-extern TSequence *tpointseq_make_coords(const double *xcoords, const double *ycoords, const double *zcoords, const TimestampTz *times, int count, int32 srid, bool geodetic, bool lower_inc, bool upper_inc, interpType interp, bool normalize);
+extern TSequence *tpointseq_make_coords(const double *xcoords, const double *ycoords, const double *zcoords, const TimestampTz *times, int count, int32_t srid, bool geodetic, bool lower_inc, bool upper_inc, interpType interp, bool normalize);
 extern TSequenceSet *tpointseqset_from_base_tstzspanset(const GSERIALIZED *gs, const SpanSet *ss, interpType interp);
 
 /* Conversion functions */
@@ -649,7 +644,7 @@ extern Temporal *tgeography_to_tgeometry(const Temporal *temp);
 extern Temporal *tgeometry_to_tgeography(const Temporal *temp);
 extern Temporal *tgeometry_to_tgeompoint(const Temporal *temp);
 extern Temporal *tgeompoint_to_tgeometry(const Temporal *temp);
-extern bool tpoint_as_mvtgeom(const Temporal *temp, const STBox *bounds, int32_t extent, int32_t buffer, bool clip_geom, GSERIALIZED **gsarr, int64 **timesarr, int *count);
+extern bool tpoint_as_mvtgeom(const Temporal *temp, const STBox *bounds, int32_t extent, int32_t buffer, bool clip_geom, GSERIALIZED **gsarr, TimestampTz **timesarr, int *count);
 extern bool tpoint_tfloat_to_geomeas(const Temporal *tpoint, const Temporal *measure, bool segmentize, GSERIALIZED **result);
 extern STBox *tspatial_to_stbox(const Temporal *temp);
 
