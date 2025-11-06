@@ -71,7 +71,7 @@
 
 #include <utils/jsonb.h>
 #include <utils/numeric.h>
-#include <postgres_types.h>
+#include <pgtypes.h>
 
 #define MEOS_WKT_BOOL_SIZE sizeof("false")
 #define MEOS_WKT_INT4_SIZE sizeof("+2147483647")

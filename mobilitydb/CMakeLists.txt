@@ -46,8 +46,8 @@ endif()
 #-------------------------------------
 
 # Find PostgreSQL
-set(PG_MIN_MAJOR_VERSION "13")
-set(PG_MAX_MAJOR_VERSION "14")
+set(PG_MIN_MAJOR_VERSION "14")
+set(PG_MAX_MAJOR_VERSION "18")
 find_package(POSTGRESQL ${PG_MIN_MAJOR_VERSION} REQUIRED)
 if(NOT POSTGRES_VERSION VERSION_LESS PG_MAX_MAJOR_VERSION)
   message(FATAL_ERROR "Not supporting PostgreSQL ${POSTGRESQL_VERSION}")
@@ -146,6 +146,22 @@ endif()
 # Build MobilityDB library
 #--------------------------------
 
+# PostgreSQL
+set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:access>")
+set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:catalog>")
+set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:common>")
+set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:conversion_procs>")
+set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:parser>")
+set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:port>")
+set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:timezone>")
+set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:utils>")
+set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:mb>")
+
+# Build the library: PostGIS
+set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:liblwgeom>")
+set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:libpgcommon>")
+set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:ryu>")
+
 # MEOS
 set(PROJECT_OBJECTS "$<TARGET_OBJECTS:temporal>")
 set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:geo>")
@@ -165,11 +181,6 @@ if(RGEO)
   message(STATUS "Including rigid geometries")
   set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:rgeo>")
 endif()
-
-# Build the library: PostGIS
-set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:liblwgeom>")
-set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:libpgcommon>")
-set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:ryu>")
 
 # MobilityDB
 set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:pg_temporal>")
@@ -210,6 +221,9 @@ if(WIN32)
   message(STATUS "Adding PostGIS as a target link library")
   target_link_libraries(${MOBILITYDB_LIB_NAME} ${POSTGIS_LIBRARY})
 endif()
+
+# Link the application to pgtypes
+target_link_libraries(${MOBILITYDB_LIB_NAME} pgtypes)
 
 #--------------------------------
 # Belongs to MobilityDB

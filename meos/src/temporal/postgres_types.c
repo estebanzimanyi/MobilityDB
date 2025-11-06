@@ -60,7 +60,7 @@
 
 #include <utils/jsonb.h>
 #include <utils/numeric.h>
-#include <postgres_types.h>
+#include <pgtypes.h>
 
 #if ! MEOS
   extern Datum call_function1(PGFunction func, Datum arg1);

@@ -1,0 +1,27 @@
+# PostgreSQL
+configure_file(pg_config.h.in pg_config.h)
+include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/postgres")
+include_directories(SYSTEM "${CMAKE_BINARY_DIR}/postgres")
+
+add_subdirectory("{CMAKE_SOURCE_DIR}/access" "access")
+add_subdirectory("{CMAKE_SOURCE_DIR}/catalog" "catalog")
+add_subdirectory("{CMAKE_SOURCE_DIR}/common" "common")
+add_subdirectory("{CMAKE_SOURCE_DIR}/parser" "parser")
+add_subdirectory("{CMAKE_SOURCE_DIR}/port" "port")
+# add_subdirectory("{CMAKE_SOURCE_DIR}/storage" "storage")
+add_subdirectory("{CMAKE_SOURCE_DIR}/timezone" "timezone")
+add_subdirectory("{CMAKE_SOURCE_DIR}/utils" "utils")
+
+set(POSTGRES_OBJECTS "$<TARGET_OBJECTS:access>")
+set(POSTGRES_OBJECTS "$<TARGET_OBJECTS:catalog>")
+set(POSTGRES_OBJECTS "$<TARGET_OBJECTS:common>")
+set(POSTGRES_OBJECTS "$<TARGET_OBJECTS:parser>")
+set(POSTGRES_OBJECTS "$<TARGET_OBJECTS:port>")
+set(POSTGRES_OBJECTS "$<TARGET_OBJECTS:storage>")
+set(POSTGRES_OBJECTS "$<TARGET_OBJECTS:timezone>")
+set(POSTGRES_OBJECTS "$<TARGET_OBJECTS:utils>")
+
+# Define a static library for lib_a
+add_library(lib_a STATIC src/lib_a.cpp)
+
+add_library(postgres STATIC ${POSTGRES_OBJECTS})

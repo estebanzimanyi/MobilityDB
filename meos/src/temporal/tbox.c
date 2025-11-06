@@ -54,7 +54,7 @@
 
 #include <utils/jsonb.h>
 #include <utils/numeric.h>
-#include <postgres_types.h>
+#include <pgtypes.h>
 
 /** Buffer size for input and output of TBox values */
 #define TBOX_MAXLEN    128

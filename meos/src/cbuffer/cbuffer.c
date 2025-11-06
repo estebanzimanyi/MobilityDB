@@ -40,7 +40,7 @@
 #include <limits.h>
 /* PostgreSQL */
 #include <postgres.h>
-#include <postgres_types.h>
+#include <pgtypes.h>
 #if POSTGRESQL_VERSION_NUMBER >= 160000
   #include "varatt.h"
 #endif
@@ -50,7 +50,7 @@
 /* MEOS */
 #include <meos.h>
 #include <meos_internal_geo.h>
-#include <postgres_types.h>
+#include <pgtypes.h>
 #include "temporal/set.h"
 #include "temporal/tsequence.h"
 #include "temporal/type_inout.h"

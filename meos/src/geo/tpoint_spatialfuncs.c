@@ -69,7 +69,7 @@
 
 #include <utils/jsonb.h>
 #include <utils/numeric.h>
-#include <postgres_types.h>
+#include <pgtypes.h>
 
 /* Timestamps in PostgreSQL are encoded as MICROseconds since '2000-01-01'
  * while Unix epoch are encoded as MILLIseconds since '1970-01-01'.

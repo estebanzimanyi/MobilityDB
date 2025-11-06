@@ -46,7 +46,7 @@
 
 #include <utils/jsonb.h>
 #include <utils/numeric.h>
-#include <postgres_types.h>
+#include <pgtypes.h>
 
 /*****************************************************************************
  * Generic functions

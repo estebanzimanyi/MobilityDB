@@ -42,8 +42,6 @@
 #include <postgres.h>
 #include "utils/numeric.h"
 #include <utils/date.h>
-#include <utils/json.h>
-#include <utils/jsonb.h>
 #include <utils/timestamp.h>
 #if ! MEOS
   #include <libpq/pqformat.h>
@@ -58,7 +56,7 @@
 #include <meos_npoint.h>
 #include <meos_internal.h>
 #include <meos_internal_geo.h>
-#include <postgres_types.h>
+#include <pgtypes.h>
 #include "temporal/span.h"
 #include "temporal/tsequence.h"
 #include "temporal/type_inout.h"

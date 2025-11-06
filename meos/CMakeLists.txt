@@ -19,10 +19,6 @@ set(MEOS_LIB_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
 set(MEOS_LIB_NAME "meos")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-# Set the location of the directory of the time zone database
-add_definitions(-DSYSTEMTZDIR="/usr/share/zoneinfo")
-message(STATUS "Directory of the time zone database: /usr/share/zoneinfo")
-
 # Option to build MEOS as a shared or static library
 option(BUILD_SHARED_LIBS
   "Set BUILD_SHARED_LIBS (default=ON) to build MEOS as a shared library"
@@ -90,10 +86,8 @@ add_definitions(-DPOSTGIS_PGSQL_VERSION=${POSTGIS_PGSQL_VERSION})
 #--------------------------------
 
 # PostgreSQL
-configure_file(../postgres/pg_config.h.in ../postgres/pg_config.h)
-include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/postgres")
-include_directories(SYSTEM "${CMAKE_BINARY_DIR}/postgres")
-add_subdirectory("${CMAKE_SOURCE_DIR}/postgres" "postgres")
+include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/pgtypes")
+include_directories(SYSTEM "${CMAKE_BINARY_DIR}/pgtypes")
 
 # PostGIS
 configure_file(../postgis/liblwgeom/liblwgeom.h.in ../postgis/liblwgeom/liblwgeom.h)
@@ -113,14 +107,10 @@ if(CMAKE_GENERATOR STREQUAL "Unix Makefiles" OR CMAKE_GENERATOR STREQUAL "Ninja"
   # Disable all warnings on embeded code from PostgreSQL and PostGIS
   target_compile_options(liblwgeom PRIVATE "-w")
   target_compile_options(ryu PRIVATE "-w")
-  target_compile_options(timezone PRIVATE "-w")
-  target_compile_options(utils PRIVATE "-w")
 elseif(CMAKE_GENERATOR STREQUAL "Visual Studio 17 2022")
   # Disable all warnings on embedded code from PostgreSQL and PostGIS
   target_compile_options(liblwgeom PRIVATE "/W0")
   target_compile_options(ryu PRIVATE "/W0")
-  target_compile_options(timezone PRIVATE "/W0")
-  target_compile_options(utils PRIVATE "/W0")
   # Enable all warnings on MEOS and MobilityDB
   target_compile_options(temporal PRIVATE "/W4")
   target_compile_options(geo PRIVATE "/W4")
@@ -153,8 +143,9 @@ file(READ "${CMAKE_SOURCE_DIR}/meos/include/postgis_ext_defs.in.h" POSTGIS_EXT_D
 
 # Generate meos_export.h
 string(REPLACE "#if MEOS\n#include \"postgres_int_defs.h\"\n#else\n#include <postgres.h>\n#include <utils/date.h>\n#include <utils/timestamp.h>\n#endif" "${POSTGRES_EXT_DEFS_IN_H}" MEOS_EXP_H1 "${MEOS_H}")
-string(REPLACE "#ifndef __MEOS_ERROR_H__\n#define __MEOS_ERROR_H__\n" "" MEOS_EXP_H2 "${MEOS_EXP_H1}")
-string(REPLACE "\n\n#endif /* __MEOS_ERROR_H__ */\n" "" MEOS_EXP_H "${MEOS_EXP_H2}")
+string(REPLACE "\n\n#include \"meos_error.h\"\n" "${MEOS_ERROR_H}" MEOS_EXP_H2 "${MEOS_EXP_H1}")
+string(REPLACE "#ifndef __MEOS_ERROR_H__\n#define __MEOS_ERROR_H__\n" "" MEOS_EXP_H3 "${MEOS_EXP_H2}")
+string(REPLACE "\n\n#endif /* __MEOS_ERROR_H__ */\n" "" MEOS_EXP_H "${MEOS_EXP_H3}")
 file(WRITE "${CMAKE_BINARY_DIR}/meos_export.h" "${MEOS_EXP_H}")
 
 # Generate meos_internal_export.h
@@ -217,9 +208,35 @@ target_link_libraries(${MEOS_LIB_NAME} ${PROJ_LIBRARIES})
 target_link_libraries(${MEOS_LIB_NAME} ${GSL_LIBRARY})
 target_link_libraries(${MEOS_LIB_NAME} ${GSL_CBLAS_LIBRARY})
 
+# Link the application to pgtypes
+target_link_libraries(${MEOS_LIB_NAME} pgtypes)
+
 #--------------------------------
 # Belongs to MEOS
 #--------------------------------
+
+# Customize the meos.in.h and meos_internal.in.h files for external include with MEOS library
+
+# Read files
+file(READ "${CMAKE_SOURCE_DIR}/meos/include/meos.h" MEOS_H)
+file(READ "${CMAKE_SOURCE_DIR}/meos/include/meos_internal.h" MEOS_INTERNAL_H)
+file(READ "${CMAKE_SOURCE_DIR}/meos/include/meos_geo.h" MEOS_GEO_H)
+file(READ "${CMAKE_SOURCE_DIR}/meos/include/postgres_ext_defs.in.h" POSTGRES_EXT_DEFS_IN_H)
+file(READ "${CMAKE_SOURCE_DIR}/meos/include/postgis_ext_defs.in.h" POSTGIS_EXT_DEFS_IN_H)
+
+# Generate meos_export.h
+string(REPLACE "#if MEOS\n#include \"postgres_int_defs.h\"\n#else\n#include <postgres.h>\n#include <utils/date.h>\n#include <utils/timestamp.h>\n#endif" "${POSTGRES_EXT_DEFS_IN_H}" MEOS_EXP_H1 "${MEOS_H}")
+string(REPLACE "#ifndef __MEOS_ERROR_H__\n#define __MEOS_ERROR_H__\n" "" MEOS_EXP_H2 "${MEOS_EXP_H1}")
+string(REPLACE "\n\n#endif /* __MEOS_ERROR_H__ */\n" "" MEOS_EXP_H "${MEOS_EXP_H2}")
+file(WRITE "${CMAKE_BINARY_DIR}/meos_export.h" "${MEOS_EXP_H}")
+
+# Generate meos_internal_export.h
+string(REGEX REPLACE "#include \"temporal/meos_catalog.h\"" "#include \"meos_catalog.h\"" MEOS_INTERNAL_EXP_H "${MEOS_INTERNAL_H}")
+file(WRITE "${CMAKE_BINARY_DIR}/meos_internal_export.h" "${MEOS_INTERNAL_EXP_H}")
+
+# Generate meos_geo_export.h
+string(REGEX REPLACE "#include <liblwgeom.h>" "${POSTGIS_EXT_DEFS_IN_H}" MEOS_GEO_EXP_H "${MEOS_GEO_H}")
+file(WRITE "${CMAKE_BINARY_DIR}/meos_geo_export.h" "${MEOS_GEO_EXP_H}")
 
 # Files from ${CMAKE_BINARY_DIR}
 install(FILES "${CMAKE_BINARY_DIR}/meos_export.h"
@@ -236,28 +253,28 @@ install(
 
 # Files from ${CMAKE_SOURCE_DIR}
 
-install(FILES "${CMAKE_SOURCE_DIR}/postgres/pg_bool.h"
+install(FILES "${CMAKE_SOURCE_DIR}/pgtypes/pg_bool.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-install(FILES "${CMAKE_SOURCE_DIR}/postgres/pg_date.h"
+install(FILES "${CMAKE_SOURCE_DIR}/pgtypes/pg_date.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-install(FILES "${CMAKE_SOURCE_DIR}/postgres/pg_float.h"
+install(FILES "${CMAKE_SOURCE_DIR}/pgtypes/pg_float.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-install(FILES "${CMAKE_SOURCE_DIR}/postgres/pg_int.h"
+install(FILES "${CMAKE_SOURCE_DIR}/pgtypes/pg_int.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-install(FILES "${CMAKE_SOURCE_DIR}/postgres/pg_interval.h"
+install(FILES "${CMAKE_SOURCE_DIR}/pgtypes/pg_interval.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-install(FILES "${CMAKE_SOURCE_DIR}/postgres/pg_numeric.h"
+install(FILES "${CMAKE_SOURCE_DIR}/pgtypes/pg_numeric.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-install(FILES "${CMAKE_SOURCE_DIR}/postgres/pg_text.h"
+install(FILES "${CMAKE_SOURCE_DIR}/pgtypes/pg_text.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-install(FILES "${CMAKE_SOURCE_DIR}/postgres/pg_time.h"
+install(FILES "${CMAKE_SOURCE_DIR}/pgtypes/pg_time.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-install(FILES "${CMAKE_SOURCE_DIR}/postgres/pg_timestamp.h"
+install(FILES "${CMAKE_SOURCE_DIR}/pgtypes/pg_timestamp.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-install(FILES "${CMAKE_SOURCE_DIR}/postgres/pg_json.h"
+install(FILES "${CMAKE_SOURCE_DIR}/pgtypes/pg_json.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
   
-install(FILES "${CMAKE_SOURCE_DIR}/postgres/postgres_types.h"
+install(FILES "${CMAKE_SOURCE_DIR}/pgtypes/pgtypes.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
 install(

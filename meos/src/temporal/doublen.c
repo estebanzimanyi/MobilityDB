@@ -53,7 +53,7 @@
 
 #include <utils/numeric.h>
 #include <utils/jsonb.h>
-#include <postgres_types.h>
+#include <pgtypes.h>
 
 /*****************************************************************************
  * Double2
