@@ -33,12 +33,12 @@
 #include <common/int.h>
 #include <lib/stringinfo.h>
 #include <utils/date.h>
-#include <utils/float.h>
 #include <utils/datetime.h>
+#include <utils/float.h>
 #include <utils/numeric.h>
 #include <utils/timestamp.h>
+#include <utils/jsonb.h>
 
-#include "utils/jsonb.h"
 #include <pgtypes.h>
 
 #if POSTGRESQL_VERSION_NUMBER < 160000

@@ -1,17 +1,16 @@
 
-add_subdirectory("mb")
-
 set(UTILS_SRCS
   bool.c
   dynahash.c
   int.c
   int8.c
+  numeric.c
   date.c
   datetime.c
   float.c
   # format_type.c
   formatting.c
-  numeric.c
+  # numeric.c
   numutils.c
   pg_error.c
   pg_locale.c
@@ -22,7 +21,7 @@ set(UTILS_SRCS
   varlena.c
   )
 
-# if(${POSTGRESQL_VERSION_NUMBER} GREATER_EQUAL 160000)
+# if(JSON)
   list(APPEND UTILS_SRCS
     json.c
     jsonb.c
@@ -30,6 +29,8 @@ set(UTILS_SRCS
     jsonb_util.c
     jsonfuncs.c
 )
-# endif()
+# endif(JSON)
+
+add_subdirectory("mb")
 
 add_library(utils OBJECT ${UTILS_SRCS})

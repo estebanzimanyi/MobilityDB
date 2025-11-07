@@ -271,12 +271,6 @@ static uint32 hash_initial_lookup(HTAB *hashp, uint32 hashvalue,
 static long next_pow2_long(long num);
 static int  next_pow2_int(long num);
 
-static void *
-DynaHashAlloc(Size size)
-{
-  return palloc(size);
-}
-
 /*
  * HashCompareFunc for string keys
  *
@@ -317,6 +311,106 @@ mul_size(Size s1, Size s2)
   /* We are assuming Size is an unsigned type here... */
   if (result / s2 != s1)
     elog(ERROR, "requested shared memory size overflows size_t");
+  return result;
+}
+
+/************************** MEMORY ALLOCATION **********************/
+
+#define HTAB_TO_FREE_INITIAL_SIZE 256
+
+typedef struct
+{
+  int size;
+  int count;
+  void **tofree;
+} htab_to_free;
+
+/**
+ * @brief Global variable that keeps the elements to free for an HTAB
+ */
+
+htab_to_free *HTAB_TO_FREE = NULL;
+
+/**
+ * @brief Get the global variable that keeps the elements to free for
+ * destroying an HTAB
+ * @details If the list empty, it is initialized with a fix number of elements
+ * but it expands when adding elements and the list is full
+ */
+
+htab_to_free *
+htab_get_tofree(void)
+{
+  if (! HTAB_TO_FREE)
+  {
+    HTAB_TO_FREE = (htab_to_free *) palloc(sizeof(htab_to_free));
+    HTAB_TO_FREE->size = HTAB_TO_FREE_INITIAL_SIZE;
+    HTAB_TO_FREE->count = 0;
+    HTAB_TO_FREE->tofree = (void **) palloc0(HTAB_TO_FREE_INITIAL_SIZE * 
+      sizeof(void *));
+  }
+ return HTAB_TO_FREE;
+}
+
+/**
+ * @brief Add a value to be freed when destroying an HTAB
+ */
+void
+htab_add_tofree(void *value)
+{
+  /* Get the global variable that keeps the items to free */
+  htab_to_free *tofree = htab_get_tofree();
+    /* enlarge tofree array if necessary */
+  if (tofree->count >= tofree->size)
+  {
+    tofree->size *= 2;
+    tofree->tofree = (void **) repalloc(tofree->tofree, sizeof(void *) * 
+      tofree->size);
+  }
+  /* save the value */
+  tofree->tofree[tofree->count++] = (void *) value;
+  return;
+}
+
+/**
+ * @brief Reset the list that contains the values to be freed for an HTAB
+ */
+void
+htab_reset_tofree(void)
+{
+  /* Get Global variable that keeps the items to free for destroying an HTAB */
+  htab_to_free *tofree = htab_get_tofree();
+  if (! tofree || ! tofree->count)
+    return;
+  for (int i = 0; i < tofree->count; i++)
+    pfree(tofree->tofree[i]);
+  tofree->count = 0;
+  return;
+}
+
+/**
+ * @brief Destroy the list that contains the values to be freed for destroying
+ * an HTAB
+ */
+void
+htab_destroy_tofree(void)
+{
+  /* Get Global variable that keeps the items to free for a HTAB */
+  htab_to_free *tofree = htab_get_tofree();
+  for (int i = 0; i < tofree->count; ++i)
+    pfree(tofree->tofree[i]);
+  pfree(tofree->tofree);
+  pfree(tofree);
+  tofree = NULL;
+  return;
+}
+
+static void *
+DynaHashAlloc(Size size)
+{
+  void *result = palloc(size);
+  /* Add result to the values that need to be freed */
+  htab_add_tofree((void *) result);
   return result;
 }
 
@@ -383,6 +477,8 @@ hash_create(const char *tabname, long nelem, const HASHCTL *info, int flags)
   /* Initialize the hash header, plus a copy of the table name */
   HTAB *hashp = (HTAB *) palloc(sizeof(HTAB) + strlen(tabname) + 1);
   MemSet(hashp, 0, sizeof(HTAB));
+  /* Add hashp to the values that need to be freed */
+  htab_add_tofree((void *) hashp);
 
   hashp->tabname = (char *) (hashp + 1);
   strcpy(hashp->tabname, tabname);
@@ -728,10 +824,7 @@ hash_destroy(HTAB *hashp)
     Assert(hashp->alloc == DynaHashAlloc);
     hash_stats("destroy", hashp);
 
-    /*
-     * Free everything by destroying the hash table's memory context.
-     */
-    // MemoryContextDelete(hashp->hcxt); // TODO
+    htab_destroy_tofree();
     pfree(hashp);
   }
 }
@@ -754,7 +847,6 @@ hash_stats(const char *where UNUSED, HTAB *hashp UNUSED)
 }
 
 /*******************************SEARCH ROUTINES *****************************/
-
 
 /*
  * get_hash_value -- exported routine to calculate a key's hash value

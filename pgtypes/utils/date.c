@@ -13,27 +13,27 @@
  *-------------------------------------------------------------------------
  */
 
-
+/* C */
 #include <ctype.h>
-#include <limits.h>
 #include <float.h>
+#include <limits.h>
 #include <math.h>
 #include <time.h>
+/* PostgreSQL */
+#include <postgres.h>
+#include <miscadmin.h>
+#include <catalog/pg_type.h>
+#include <common/hashfn.h>
+#include <common/int.h>
+#include <parser/scansup.h>
+#include <utils/builtins.h>
+#include <utils/date.h>
+#include <utils/datetime.h>
+#include <utils/float.h>
+#include <utils/numeric.h>
+#include <utils/jsonb.h>
 
-#include "postgres.h"
-#include "pgtypes.h"
-#include "miscadmin.h"
-#include "catalog/pg_type.h"
-#include "common/hashfn.h"
-#include "common/int.h"
-#include "parser/scansup.h"
-#include "utils/builtins.h"
-#include "utils/date.h"
-#include "utils/datetime.h"
-#include "utils/float.h"
-#include "utils/numeric.h"
-
-#include "utils/jsonb.h"
+#include <pgtypes.h>
 
 extern Numeric int64_div_fast_to_numeric(int64 val1, int log10val2);
 
