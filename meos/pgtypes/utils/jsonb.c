@@ -705,7 +705,7 @@ pg_jsonb_object_two_arg(text **keys, text **values, int count)
       return NULL;
     }
     keys_str[i] = text_to_cstring(keys[i]);
-    if (! values[i])
+    if (values[i])
       values_str[i] = text_to_cstring(values[i]);
   }
   for (int i = 0; i < count; ++i)

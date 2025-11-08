@@ -4366,7 +4366,7 @@ timestamptz_trunc_internal(TimestampTz ts, text *units, pg_tz *tzp)
 TimestampTz
 timestamptz_trunc(TimestampTz ts, const text *units)
 {
-  return timestamptz_trunc_internal(ts, units, session_timezone);
+  return timestamptz_trunc_internal(ts, (text *) units, session_timezone);
 }
 #endif
 TimestampTz
@@ -5568,7 +5568,7 @@ interval_part_common(Interval *interval, text *units, bool retnumeric)
 float8
 interval_part(const Interval *interv, const text *units)
 {
-  return interval_part_common(interv, units, false);
+  return pg_interval_part(interv, units);
 }
 #endif
 float8

@@ -333,9 +333,8 @@ endif()
 # Build either MobilityDB or MEOS
 #-------------------------------------
 
-add_subdirectory(pgtypes)
+add_subdirectory(meos)
 if(MEOS)
-  add_subdirectory(meos)
 else()
   add_subdirectory(mobilitydb)
 endif()

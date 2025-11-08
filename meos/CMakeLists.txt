@@ -85,9 +85,11 @@ add_definitions(-DPOSTGIS_PGSQL_VERSION=${POSTGIS_PGSQL_VERSION})
 # MobilityDB directories
 #--------------------------------
 
-# PostgreSQL
-include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/pgtypes")
-include_directories(SYSTEM "${CMAKE_BINARY_DIR}/pgtypes")
+# PGTYPES
+include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/meos/pgtypes")
+include_directories(SYSTEM "${CMAKE_BINARY_DIR}/meos/pgtypes")
+
+add_subdirectory(pgtypes)
 
 # PostGIS
 configure_file(../postgis/liblwgeom/liblwgeom.h.in ../postgis/liblwgeom/liblwgeom.h)
@@ -190,11 +192,20 @@ set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:liblwgeom>")
 set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:ryu>")
 
 # Build the library: All
-add_library(${MEOS_LIB_NAME} ${PROJECT_OBJECTS})
+if (MEOS)
+  add_library(${MEOS_LIB_NAME} ${PROJECT_OBJECTS})
+else()
+  message(STATUS "************************ STATIC ************************")
+  add_library(${MEOS_LIB_NAME} STATIC ${PROJECT_OBJECTS})
+endif()
+
 if(APPLE)
   set_target_properties(${MEOS_LIB_NAME} PROPERTIES
     LINK_FLAGS "-Wl,-undefined,dynamic_lookup")
 endif()
+
+target_include_directories(${MEOS_LIB_NAME} PUBLIC "${CMAKE_SOURCE_DIR}/meos")
+target_include_directories(${MEOS_LIB_NAME} PUBLIC "${CMAKE_BINARY_DIR}/meos")
 
 #--------------------------------
 # Specify libraries to link
@@ -205,9 +216,6 @@ target_link_libraries(${MEOS_LIB_NAME} ${GEOS_LIBRARY})
 target_link_libraries(${MEOS_LIB_NAME} ${PROJ_LIBRARIES})
 target_link_libraries(${MEOS_LIB_NAME} ${GSL_LIBRARY})
 target_link_libraries(${MEOS_LIB_NAME} ${GSL_CBLAS_LIBRARY})
-
-# Link the application to pgtypes
-target_link_libraries(${MEOS_LIB_NAME} pgtypes)
 
 #--------------------------------
 # Belongs to MEOS
@@ -251,28 +259,28 @@ install(
 
 # Files from ${CMAKE_SOURCE_DIR}
 
-install(FILES "${CMAKE_SOURCE_DIR}/pgtypes/pg_bool.h"
+install(FILES "${CMAKE_SOURCE_DIR}/meos/pgtypes/pg_bool.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-install(FILES "${CMAKE_SOURCE_DIR}/pgtypes/pg_date.h"
+install(FILES "${CMAKE_SOURCE_DIR}/meos/pgtypes/pg_date.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-install(FILES "${CMAKE_SOURCE_DIR}/pgtypes/pg_float.h"
+install(FILES "${CMAKE_SOURCE_DIR}/meos/pgtypes/pg_float.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-install(FILES "${CMAKE_SOURCE_DIR}/pgtypes/pg_int.h"
+install(FILES "${CMAKE_SOURCE_DIR}/meos/pgtypes/pg_int.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-install(FILES "${CMAKE_SOURCE_DIR}/pgtypes/pg_interval.h"
+install(FILES "${CMAKE_SOURCE_DIR}/meos/pgtypes/pg_interval.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-install(FILES "${CMAKE_SOURCE_DIR}/pgtypes/pg_numeric.h"
+install(FILES "${CMAKE_SOURCE_DIR}/meos/pgtypes/pg_numeric.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-install(FILES "${CMAKE_SOURCE_DIR}/pgtypes/pg_text.h"
+install(FILES "${CMAKE_SOURCE_DIR}/meos/pgtypes/pg_text.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-install(FILES "${CMAKE_SOURCE_DIR}/pgtypes/pg_time.h"
+install(FILES "${CMAKE_SOURCE_DIR}/meos/pgtypes/pg_time.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-install(FILES "${CMAKE_SOURCE_DIR}/pgtypes/pg_timestamp.h"
+install(FILES "${CMAKE_SOURCE_DIR}/meos/pgtypes/pg_timestamp.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-install(FILES "${CMAKE_SOURCE_DIR}/pgtypes/pg_json.h"
+install(FILES "${CMAKE_SOURCE_DIR}/meos/pgtypes/pg_json.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
   
-install(FILES "${CMAKE_SOURCE_DIR}/pgtypes/pgtypes.h"
+install(FILES "${CMAKE_SOURCE_DIR}/meos/pgtypes/pgtypes.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 
 install(
