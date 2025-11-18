@@ -86,8 +86,8 @@ add_definitions(-DPOSTGIS_PGSQL_VERSION=${POSTGIS_PGSQL_VERSION})
 #--------------------------------
 
 # PGTYPES
-include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/meos/pgtypes")
-include_directories(SYSTEM "${CMAKE_BINARY_DIR}/meos/pgtypes")
+# include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/meos/pgtypes")
+# include_directories(SYSTEM "${CMAKE_BINARY_DIR}/meos/pgtypes")
 
 add_subdirectory(pgtypes)
 
@@ -101,8 +101,8 @@ include_directories(SYSTEM "${CMAKE_BINARY_DIR}/postgis")
 add_subdirectory("${CMAKE_SOURCE_DIR}/postgis" "postgis")
 
 # MEOS
-include_directories("include")
-add_subdirectory("src")
+include_directories(include)
+add_subdirectory(src)
 
 # Must be after add_library
 if(CMAKE_GENERATOR STREQUAL "Unix Makefiles" OR CMAKE_GENERATOR STREQUAL "Ninja")
@@ -177,15 +177,15 @@ if(RGEO)
 endif()
 
 # PostgreSQL
-set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:access>")
-set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:catalog>")
-set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:common>")
-set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:conversion_procs>")
-set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:parser>")
-set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:port>")
-set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:timezone>")
-set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:utils>")
-set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:mb>")
+# set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:access>")
+# set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:catalog>")
+# set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:common>")
+# set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:conversion_procs>")
+# set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:parser>")
+# set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:port>")
+# set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:timezone>")
+# set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:utils>")
+# set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:mb>")
 
 # Build the library: PostGIS
 set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:liblwgeom>")
@@ -194,9 +194,14 @@ set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:ryu>")
 # Build the library: All
 if (MEOS)
   add_library(${MEOS_LIB_NAME} ${PROJECT_OBJECTS})
+  # target_link_libraries(${MEOS_LIB_NAME} pgtypes)
+  # get_target_property(MEOS_INCLUDES meos INCLUDE_DIRECTORIES)
+  # message(STATUS "meos include dirs = ${MEOS_INCLUDES}")
+  # message(STATUS "PROJECT_OBJECTS = ${PROJECT_OBJECTS}")
 else()
   message(STATUS "************************ STATIC ************************")
   add_library(${MEOS_LIB_NAME} STATIC ${PROJECT_OBJECTS})
+  target_link_libraries(${MEOS_LIB_NAME} pgtypes)
 endif()
 
 if(APPLE)

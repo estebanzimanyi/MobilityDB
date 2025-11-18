@@ -69,3 +69,4 @@ if(MEOS)
 endif()
 
 add_library(temporal OBJECT ${TEMPORAL_SRCS})
+target_link_libraries(temporal PRIVATE pgtypes)

@@ -32,5 +32,4 @@ if(MEOS)
 endif()
 
 add_library(geo OBJECT ${GEO_SRCS})
-
-
+target_link_libraries(geo PRIVATE pgtypes)

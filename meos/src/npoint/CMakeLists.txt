@@ -21,3 +21,4 @@ else()
 endif()
 
 add_library(npoint OBJECT ${NPOINT_SRCS})
+target_link_libraries(npoint PRIVATE pgtypes)
