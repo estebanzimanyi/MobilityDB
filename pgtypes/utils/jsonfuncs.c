@@ -1243,7 +1243,7 @@ get_scalar(void *state, char *token, JsonTokenType tokentype)
 Jsonb *
 jsonb_extract_path(const Jsonb *jb, text **path_elems, int path_len)
 {
-  return (Jsonb *) jsonb_get_element(jb, path_elems, path_len, false);
+  return pg_jsonb_extract_path(jb, path_elems, path_len);
 }
 #endif /* MEOS */
 Jsonb *
@@ -2079,7 +2079,7 @@ each_worker_jsonb(const Jsonb *jb, void **values, int *count,
 Jsonb **
 jsonb_array_elements(const Jsonb *jb, int *count)
 {
-  return elements_worker_jsonb(jb, count, "jsonb_array_elements", false);
+  return pg_jsonb_array_elements(jb, count);
 }
 #endif /* MEOS */
 Jsonb **

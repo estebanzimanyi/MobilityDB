@@ -1,3 +1,10 @@
+# Set MEOS option for building the MEOS library
+# set(MEOS ON)
+
+# Enable code specific to MEOS, typically user-oriented wrapper functions
+# hiding internal implementation details from the API. Such functions are
+# not used in the MobilityDB PostgreSQL extension.
+add_definitions(-DMEOS=1)
 
 # PostgreSQL Types
 configure_file(pg_config.h.in pg_config.h)

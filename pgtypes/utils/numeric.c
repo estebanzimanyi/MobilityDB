@@ -715,7 +715,7 @@ invalid_syntax:
  * @note Derived from PostgreSQL function @p numeric_out()
  */
 #if MEOS
-Numeric
+char *
 numeric_out(Numeric num)
 {
   return pg_numeric_out(num);

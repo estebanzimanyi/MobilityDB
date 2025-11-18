@@ -4186,7 +4186,7 @@ pg_timestamptz_bin(TimestampTz ts, const Interval *stride, TimestampTz origin)
  * infinite timestamps have already been rejected.
  */
 static TimestampTz
-timestamptz_trunc_internal(TimestampTz ts, text *units, pg_tz *tzp)
+timestamptz_trunc_internal(TimestampTz ts, const text *units, pg_tz *tzp)
 {
   TimestampTz result;
   int tz;
@@ -5363,7 +5363,8 @@ NonFiniteIntervalPart(int type, int unit, char *lowunits, bool isNegative)
  * Extract specified field from interval.
  */
 static Datum
-interval_part_common(Interval *interval, text *units, bool retnumeric)
+interval_part_common(const Interval *interval, const text *units,
+  bool retnumeric)
 {
   char *lowunits = downcase_truncate_identifier(VARDATA_ANY(units),
     VARSIZE_ANY_EXHDR(units), false);

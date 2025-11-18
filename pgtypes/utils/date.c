@@ -417,7 +417,7 @@ date_is_finite(DateADT date)
 DateADT
 date_larger(DateADT date1, DateADT date2)
 {
-  pg_date_larger(date1, date2);
+  return pg_date_larger(date1, date2);
 }
 #endif 
 DateADT
@@ -435,7 +435,7 @@ pg_date_larger(DateADT date1, DateADT date2)
 DateADT
 date_smaller(DateADT date1, DateADT date2)
 {
-  pg_date_smaller(date1, date2);
+  return pg_date_smaller(date1, date2);
 }
 #endif
 DateADT

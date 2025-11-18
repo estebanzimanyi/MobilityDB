@@ -374,12 +374,12 @@ jsonb_hash_extended(const Jsonb *jb, uint64 seed)
 }
 #endif /* MEOS */
 uint64
-pg_jsonb_hash_extended(Jsonb *jb, uint64 seed)
+pg_jsonb_hash_extended(const Jsonb *jb, uint64 seed)
 {
   if (JB_ROOT_COUNT(jb) == 0)
     return seed;
 
-  JsonbIterator *it = JsonbIteratorInit(&jb->root);
+  JsonbIterator *it = JsonbIteratorInit(&((Jsonb *) jb)->root);
   JsonbValue v;
   JsonbIteratorToken r;
   uint64 hash = 0;

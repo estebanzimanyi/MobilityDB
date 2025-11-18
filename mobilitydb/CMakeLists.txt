@@ -10,7 +10,7 @@ message(STATUS "-------------------")
 # extension.
 add_definitions(-DMEOS=0)
 
-# Set the version and name of the library
+# Set the version and name of the MobilityDB library
 set(MOBILITYDB_LIB_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
 set(MOBILITYDB_LIB_NAME "${CMAKE_PROJECT_NAME}-${MOBILITYDB_LIB_VERSION}")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -19,6 +19,12 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 string(TOLOWER ${CMAKE_PROJECT_NAME} MOBILITYDB_LOWERCASE_NAME)
 set(MOBILITYDB_EXTENSION_FILE "${MOBILITYDB_LOWERCASE_NAME}--${PROJECT_VERSION}.sql")
 set(MOBILITYDB_DATAGEN_EXTENSION_FILE "${MOBILITYDB_LOWERCASE_NAME}_datagen--${PROJECT_VERSION}.sql")
+
+# Option to build MEOS as a shared or static library
+option(BUILD_SHARED_LIBS
+  "Set BUILD_SHARED_LIBS (default=ON) to build MEOS as a shared library"
+  ON
+)
 
 # Comment out code used for debugging purposes so it is not concerned by the coverage
 if(CMAKE_BUILD_TYPE MATCHES Debug)
@@ -199,7 +205,7 @@ if(RGEO)
 endif()
 
 # Build the library
-add_library(${MOBILITYDB_LIB_NAME} MODULE ${PROJECT_OBJECTS})
+add_library(${MOBILITYDB_LIB_NAME} ${PROJECT_OBJECTS})
 if(APPLE)
   set_target_properties(${MOBILITYDB_LIB_NAME} PROPERTIES
     SUFFIX ".dylib"
