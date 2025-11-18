@@ -1756,7 +1756,7 @@ geom_convex_hull(const GSERIALIZED *gs)
  * @note PostGIS function: @p ST_Buffer(PG_FUNCTION_ARGS)
  */
 GSERIALIZED *
-geom_buffer(const GSERIALIZED *gs, double size, char *params)
+geom_buffer(const GSERIALIZED *gs, double size, const char *params)
 {
   assert(gs); assert(params);
 
@@ -1784,8 +1784,13 @@ geom_buffer(const GSERIALIZED *gs, double size, char *params)
   int endCapStyle = DEFAULT_ENDCAP_STYLE;
   int joinStyle  = DEFAULT_JOIN_STYLE;
 
+  /* In the for loop below the params parameter is modified. 
+   * Therefore we need to take a copy of it */
+  size_t params_size = strlen(params) + 1;
+  char *params1 = palloc(params_size);
+  memcpy(params1, params, params_size);
   char *param;
-  for (param = params; ; param = NULL)
+  for (param = params1; ; param = NULL)
   {
     char *key, *val;
     param = strtok(param, " ");
@@ -1869,6 +1874,7 @@ geom_buffer(const GSERIALIZED *gs, double size, char *params)
       return NULL;
     }
   }
+  pfree(params1);
 
   /* Empty.Buffer() == Empty[polygon] */
   if (gserialized_is_empty(gs))
@@ -3148,10 +3154,9 @@ geo_from_text(const char *wkt, int32_t srid)
     lwgeom_set_srid(lwgeom, srid);
 
   geo_result = geo_serialize(lwgeom);
-  /* Clean up */
-  lwgeom_free(lwg_parser_result.geom);
-  lwgeom_parser_result_free(&lwg_parser_result);
 
+  /* Clean up */
+  lwgeom_parser_result_free(&lwg_parser_result);
   return geo_result;
 }
 #endif /* MEOS */

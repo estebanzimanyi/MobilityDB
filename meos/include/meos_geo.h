@@ -391,7 +391,7 @@ extern GSERIALIZED **geo_pointarr(const GSERIALIZED *gs, int *count);
 extern GSERIALIZED *geo_points(const GSERIALIZED *gs);
 extern GSERIALIZED *geom_array_union(GSERIALIZED **gsarr, int count);
 extern GSERIALIZED *geom_boundary(const GSERIALIZED *gs);
-extern GSERIALIZED *geom_buffer(const GSERIALIZED *gs, double size, char *params);
+extern GSERIALIZED *geom_buffer(const GSERIALIZED *gs, double size, const char *params);
 extern GSERIALIZED *geom_centroid(const GSERIALIZED *gs);
 extern GSERIALIZED *geom_convex_hull(const GSERIALIZED *gs);
 extern GSERIALIZED *geom_difference2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
@@ -488,6 +488,12 @@ extern Set *spatialset_transform_pipeline(const Set *s, const char *pipelinestr,
 
 /* Input/output functions */
 
+extern BOX3D *box3d_from_gbox(const GBOX *box);
+extern char *box3d_out(const BOX3D *box, int maxdd);
+extern GBOX *gbox_make(bool hasz, bool hasm, bool geodetic, double xmin,
+  double xmax, double ymin, double ymax, double zmin, double zmax, double mmin,
+  double mmax);
+  extern char *gbox_out(const GBOX *box, int maxdd);
 extern char *stbox_as_hexwkb(const STBox *box, uint8_t variant, size_t *size);
 extern uint8_t *stbox_as_wkb(const STBox *box, uint8_t variant, size_t *size_out);
 extern STBox *stbox_from_hexwkb(const char *hexwkb);
@@ -884,7 +890,7 @@ extern Temporal **tgeo_space_time_split(const Temporal *temp, double xsize, doub
 /* Clustering functions */
 
 extern int *geo_cluster_kmeans(const GSERIALIZED **geoms, uint32_t ngeoms, uint32_t k);
-extern uint32_t *geo_cluster_dbscan(const GSERIALIZED **geoms, uint32_t ngeoms, double tolerance, int minpoints);
+extern uint32_t *geo_cluster_dbscan(const GSERIALIZED **geoms, uint32_t ngeoms, double tolerance, int minpoints, int *count);
 extern GSERIALIZED **geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms, int *count);
 extern GSERIALIZED **geo_cluster_within(const GSERIALIZED **geoms, uint32_t ngeoms, double tolerance, int *count);
 

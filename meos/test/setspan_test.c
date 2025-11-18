@@ -3446,11 +3446,6 @@ int main(void)
   }
   free(dspanarray_result);
 
-
-  char_result = datespan_out(dspan_result);
-  printf("datespan_bins(%s, %s, %s): %s\n", dspan1_out, interv1_out, date1_out, char_result);
-  free(dspan_result); free(char_result);
-
   /* Span *datespanset_bins(spanset1, const Interval *duration, DateADT torigin, int *count); */
   dspan_result = datespanset_bins(dspanset1, interv1, date1, &count);
   char_result = datespan_out(dspan_result);

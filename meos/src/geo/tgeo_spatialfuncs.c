@@ -1709,11 +1709,12 @@ geo_cluster_kmeans(const GSERIALIZED **geoms, uint32_t n, uint32_t k)
  * @param[in] ngeoms Number of elements in the input array
  * @param[in] tolerance Tolerance
  * @param[in] minpoints Minimum number of points
+  * @param[out] count Number of elements in the output array
  * @note PostGIS function: @p ST_ClusterDBSCAN(PG_FUNCTION_ARGS)
  */
 uint32_t *
 geo_cluster_dbscan(const GSERIALIZED **geoms, uint32_t ngeoms,
-  double tolerance, int minpoints)
+  double tolerance, int minpoints, int *count)
 {
   /* Ensure validity of arguments */
   if (! ensure_not_null(geoms))
@@ -1756,7 +1757,11 @@ geo_cluster_dbscan(const GSERIALIZED **geoms, uint32_t ngeoms,
   }
 
   uint32_t *result_ids = UF_get_collapsed_cluster_ids(uf, is_in_cluster);
+  *count = uf->N;
   finishGEOS();
+  UF_destroy(uf);
+  if (is_in_cluster)
+    lwfree(is_in_cluster);
   return result_ids;
 }
 

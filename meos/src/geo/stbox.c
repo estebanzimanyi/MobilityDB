@@ -237,6 +237,78 @@ stbox_out(const STBox *box, int maxdd)
   return str;
 }
 
+/**
+ * @ingroup meos_geo_box_inout
+ * @brief Return the Well-Known Text (WKT) representation of a PostGIS BOX3D
+ * @param[in] box Box
+ * @param[in] maxdd Maximum number of decimal digits
+ */
+char *
+box3d_out(const BOX3D *box, int maxdd)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(box, NULL);
+  if (! ensure_not_negative(maxdd))
+    return NULL;
+
+  static size_t size = MAXSTBOXLEN + 1;
+  char *xmin = NULL, *xmax = NULL, *ymin = NULL, *ymax = NULL, *zmin = NULL,
+    *zmax = NULL;
+
+  char *str = palloc(size);
+  char srid[18];
+  if (box->srid > 0)
+    /* SRID_MAXIMUM is defined by PostGIS as 999999 */
+    snprintf(srid, sizeof(srid), "SRID=%d;", box->srid);
+  else
+    srid[0] = '\0';
+
+  xmin = float8_out(box->xmin, maxdd);
+  xmax = float8_out(box->xmax, maxdd);
+  ymin = float8_out(box->ymin, maxdd);
+  ymax = float8_out(box->ymax, maxdd);
+  zmin = float8_out(box->zmin, maxdd);
+  zmax = float8_out(box->zmax, maxdd);
+  snprintf(str, size, "%sBOX3D Z((%s,%s,%s),(%s,%s,%s))",
+    srid, xmin, ymin, zmin, xmax, ymax, zmax);
+
+  pfree(xmin); pfree(xmax);
+  pfree(ymin); pfree(ymax);
+  pfree(zmin); pfree(zmax);
+  return str;
+}
+
+/**
+ * @ingroup meos_geo_box_inout
+ * @brief Return a PostGIS GBOX from its Well-Known Text (WKT) representation
+ * @param[in] str String
+ */
+GBOX *
+gbox_in(const char *str)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(str, NULL);
+
+  return gbox_from_string(str);
+}
+
+/**
+ * @ingroup meos_geo_box_inout
+ * @brief Return the Well-Known Text (WKT) representation of a PostGIS GBOX
+ * @param[in] box Box
+ * @param[in] maxdd Maximum number of decimal digits
+ */
+char *
+gbox_out(const GBOX *box, int maxdd)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(box, NULL);
+  if (! ensure_not_negative(maxdd))
+    return NULL;
+
+  return gbox_to_string(box);
+}
+
 /*****************************************************************************
  * WKB and HexWKB input/output functions
  *****************************************************************************/
@@ -319,7 +391,7 @@ stbox_as_hexwkb(const STBox *box, uint8_t variant, size_t *size_out)
 /**
  * @ingroup meos_geo_box_constructor
  * @brief Return a spatiotemporal box from the arguments
- * @param[in] hasx True if the values for the spatial dimension are givne
+ * @param[in] hasx True if there is a spatial dimension
  * @param[in] hasz True if there is a Z dimension
  * @param[in] geodetic True if geodetic
  * @param[in] srid SRID
@@ -410,6 +482,42 @@ stbox_copy(const STBox *box)
   VALIDATE_NOT_NULL(box, NULL);
   STBox *result = palloc(sizeof(STBox));
   memcpy(result, box, sizeof(STBox));
+  return result;
+}
+
+/**
+ * @ingroup meos_geo_box_constructor
+ * @brief Return a PostGIS GBOX from the arguments
+ * @param[in] hasz True if there is a Z dimension
+ * @param[in] hasm True if there is a M dimension
+ * @param[in] geodetic True if geodetic
+ * @param[in] xmin,ymin,zmin,mmin Minimum bounds for the spatial dimensions
+ * @param[in] xmax,ymax,zmax,mmax Maximum bounds for the spatial dimensions
+ */
+GBOX *
+gbox_make(bool hasz, bool hasm, bool geodetic, double xmin, double xmax, 
+  double ymin, double ymax, double zmin, double zmax, double mmin,
+  double mmax)
+{
+  GBOX *result = gbox_new(lwflags(hasz, hasm, geodetic));
+  /* Process X min/max */
+  result->xmin = Min(xmin, xmax);
+  result->xmax = Max(xmin, xmax);
+  /* Process Y min/max */
+  result->ymin = Min(ymin, ymax);
+  result->ymax = Max(ymin, ymax);
+  if (hasz)
+  {
+    /* Process Z min/max */
+    result->zmin = Min(zmin, zmax);
+    result->zmax = Max(zmin, zmax);
+  }
+  if (hasm)
+  {
+    /* Process M min/max */
+    result->mmin = Min(mmin, mmax);
+    result->mmax = Max(mmin, mmax);
+  }
   return result;
 }
 
