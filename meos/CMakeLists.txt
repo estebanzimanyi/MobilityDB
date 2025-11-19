@@ -61,12 +61,12 @@ add_definitions(-DPOSTGRESQL_VERSION_NUMBER=${POSTGRESQL_VERSION_NUMBER})
 # Set default PostGIS Version for MEOS
 #--------------------------------------
 
-set(POSTGIS_VERSION_STRING "PostGIS 3.5.0")
-set(POSTGIS_VERSION_NUMBER "30500")
+set(POSTGIS_VERSION_STRING "PostGIS 3.6.0")
+set(POSTGIS_VERSION_NUMBER "30600")
 set(POSTGIS_VERSION_MAJOR "3")
-set(POSTGIS_VERSION_MINOR "5")
+set(POSTGIS_VERSION_MINOR "6")
 set(POSTGIS_VERSION_MICRO "0")
-set(POSTGIS_VERSION "3.5.0")
+set(POSTGIS_VERSION "3.6.0")
 
 set(SRID_MAX "999999")
 set(SRID_USR_MAX "998999")
@@ -89,7 +89,7 @@ add_definitions(-DPOSTGIS_PGSQL_VERSION=${POSTGIS_PGSQL_VERSION})
 include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/pgtypes")
 include_directories(SYSTEM "${CMAKE_BINARY_DIR}/pgtypes")
 
-# PostGIS
+# Embed PostGIS
 configure_file(../postgis/liblwgeom/liblwgeom.h.in ../postgis/liblwgeom/liblwgeom.h)
 configure_file(../postgis/postgis_config.h.in ../postgis/postgis_config.h)
 include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/postgis/liblwgeom")
@@ -193,7 +193,9 @@ set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:ryu>")
 add_library(${MEOS_LIB_NAME} ${PROJECT_OBJECTS})
 if(APPLE)
   set_target_properties(${MEOS_LIB_NAME} PROPERTIES
-    LINK_FLAGS "-Wl,-undefined,dynamic_lookup")
+    SUFFIX ".dylib"
+    LINK_FLAGS "-Wl,-undefined,dynamic_lookup"
+  )
 endif()
 
 #--------------------------------

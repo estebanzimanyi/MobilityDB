@@ -41,5 +41,3 @@ add_library(pgtypes STATIC ${POSTGRES_OBJECTS})
 target_include_directories(pgtypes PUBLIC "${CMAKE_SOURCE_DIR}/pgtypes")
 target_include_directories(pgtypes PUBLIC "${CMAKE_BINARY_DIR}/pgtypes")
 
-message(STATUS "********************** '${CMAKE_SOURCE_DIR}/pgtypes'")
-message(STATUS "********************** '${CMAKE_BINARY_DIR}/pgtypes'")

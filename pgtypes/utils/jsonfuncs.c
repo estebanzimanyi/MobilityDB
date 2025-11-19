@@ -39,11 +39,6 @@ extern int GetDatabaseEncoding(void);
 /* TODO REMOVE */
 extern int strtoint(const char *pg_restrict str, char **pg_restrict endptr, int base);
 
-// TODO REMOVE
-extern text *my_cstring_to_text_with_len(const char *str, size_t len);
-extern text *my_cstring_to_text(const char *str);
-
-
 // #include "access/htup_details.h"
 // #include "catalog/pg_type.h"
 // #include "common/int.h"
@@ -365,26 +360,6 @@ static JsonParseErrorType transform_string_values_array_end(void *state);
 static JsonParseErrorType transform_string_values_object_field_start(void *state, char *fname, bool isnull);
 static JsonParseErrorType transform_string_values_array_element_start(void *state, bool isnull);
 static JsonParseErrorType transform_string_values_scalar(void *state, char *token, JsonTokenType tokentype);
-
-/*****************************************************************************/
-
-// TODO REMOVE
-text *
-my_cstring_to_text_with_len(const char *str, size_t len)
-{
-  text *result = (text *) palloc(len + VARHDRSZ);
-  SET_VARSIZE(result, len + VARHDRSZ);
-  memcpy(VARDATA(result), str, len);
-  return result;
-}
-
-// TODO REMOVE
-text *
-my_cstring_to_text(const char *str)
-{
-  size_t len = strlen(str);
-  return my_cstring_to_text_with_len(str, len);
-}
 
 /*****************************************************************************/
 
@@ -1525,12 +1500,12 @@ JsonbValueAsText(JsonbValue *v)
 
     case jbvBool:
       return v->val.boolean ?
-        my_cstring_to_text_with_len("true", 4) :
-        my_cstring_to_text_with_len("false", 5);
+        cstring_to_text_with_len("true", 4) :
+        cstring_to_text_with_len("false", 5);
 
     case jbvString:
     {
-      text *result = my_cstring_to_text_with_len(v->val.string.val,
+      text *result = cstring_to_text_with_len(v->val.string.val,
         v->val.string.len);
       return result;
     }
@@ -1538,7 +1513,7 @@ JsonbValueAsText(JsonbValue *v)
     case jbvNumeric:
       {
         char *cstr = pg_numeric_out(v->val.numeric);
-        text *result = my_cstring_to_text(cstr); // MEOS
+        text *result = cstring_to_text(cstr); // MEOS
         pfree(cstr);
         return result;
       }
@@ -1548,7 +1523,7 @@ JsonbValueAsText(JsonbValue *v)
         StringInfoData jtext;
         initStringInfo(&jtext);
         (void) JsonbToCString(&jtext, v->val.binary.data, v->val.binary.len);
-        text *result = my_cstring_to_text_with_len(jtext.data, jtext.len); // MEOS
+        text *result = cstring_to_text_with_len(jtext.data, jtext.len); // MEOS
         pfree(jtext.data);
         return result;
       }
@@ -1766,13 +1741,13 @@ each_object_field_end(void *state, char *fname, bool isnull)
   }
   else if (_state->next_scalar)
   {
-    val = (void *) my_cstring_to_text(_state->normalized_scalar);
+    val = (void *) cstring_to_text(_state->normalized_scalar);
     _state->next_scalar = false;
   }
   else
   {
     size_t len = _state->lex->prev_token_terminator - _state->result_start;
-    val = (void *) my_cstring_to_text_with_len(_state->result_start, len);
+    val = (void *) cstring_to_text_with_len(_state->result_start, len);
   }
 
   /* enlarge keys and values arrays if necessary */
@@ -1930,13 +1905,13 @@ elements_array_element_end(void *state, bool isnull)
   }
   else if (_state->next_scalar)
   {
-    val = (text *) my_cstring_to_text(_state->normalized_scalar);
+    val = (text *) cstring_to_text(_state->normalized_scalar);
     _state->next_scalar = false;
   }
   else
   {
     int len = _state->lex->prev_token_terminator - _state->result_start;
-    val = my_cstring_to_text_with_len(_state->result_start, len);
+    val = cstring_to_text_with_len(_state->result_start, len);
   }
 
   /* enlarge result array if necessary */
@@ -2040,7 +2015,7 @@ each_worker_jsonb(const Jsonb *jb, void **values, int *count,
     skipNested = true;
     if (r == WJB_KEY)
     {
-      result_keys[result_count] = my_cstring_to_text_with_len(v.val.string.val, 
+      result_keys[result_count] = cstring_to_text_with_len(v.val.string.val, 
         (size_t) v.val.string.len);
       /*
        * The next thing the iterator fetches should be the value, no
@@ -2295,7 +2270,7 @@ pg_json_strip_nulls(const text *json, bool strip_in_arrays)
   sem->object_field_start = sn_object_field_start;
 
   pg_parse_json_or_ereport(&lex, sem);
-  text *result = my_cstring_to_text_with_len(state->strval->data,
+  text *result = cstring_to_text_with_len(state->strval->data,
     (size_t) state->strval->len); // MEOS
 
   /* Clean up and return */
@@ -2390,7 +2365,7 @@ pg_jsonb_pretty(const Jsonb *jb)
 {
   StringInfo str = makeStringInfo();
   JsonbToCStringIndent(str, (JsonbContainer *) &jb->root, VARSIZE(jb));
-  text *result = my_cstring_to_text_with_len(str->data, str->len); // MEOS
+  text *result = cstring_to_text_with_len(str->data, str->len); // MEOS
   destroyStringInfo(str);
   return result;
 }

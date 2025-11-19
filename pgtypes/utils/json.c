@@ -25,6 +25,7 @@
 #include <common/int.h>
 #include <common/jsonapi.h>
 #include <port/simd.h>
+#include "utils/builtins.h"
 #include <utils/date.h>
 #include <utils/datetime.h>
 #include <utils/timestamp.h>
@@ -54,10 +55,6 @@
 // #include "utils/jsonfuncs.h"
 // #include "utils/lsyscache.h"
 // #include "utils/typcache.h"
-
-// TODO REMOVE
-extern text *my_cstring_to_text_with_len(const char *str, size_t len);
-extern text *my_cstring_to_text(const char *str);
 
 /*
  * Support for fast key uniqueness checking.
@@ -402,7 +399,7 @@ pg_json_object(text **keys_vals, int count)
       escape_json_text(&res, keys_vals[i * 2 + 1]);
   }
   appendStringInfoChar(&res, '}');
-  text *result = my_cstring_to_text_with_len(res.data, res.len);
+  text *result = cstring_to_text_with_len(res.data, res.len);
   pfree(res.data);
   return result;
 }
@@ -448,7 +445,7 @@ pg_json_object_two_arg(text **keys, text **values, int count)
   }
 
   appendStringInfoChar(&res, '}');
-  text *result = my_cstring_to_text_with_len(res.data, res.len);
+  text *result = cstring_to_text_with_len(res.data, res.len);
   pfree(res.data);
   return result;
 }
