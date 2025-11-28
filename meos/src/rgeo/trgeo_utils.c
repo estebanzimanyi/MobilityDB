@@ -184,8 +184,8 @@ lwgeom_apply_pose(const Pose *pose, LWGEOM *geom)
     double b = sin(pose->data[2]);
 
     lwgeom_affine_transform(geom,
-      a, -b, 0,
-      b, a, 0,
+      a, b, 0,
+      b, -a, 0,
       0, 0, 1,
       pose->data[0], pose->data[1], 0);
   }

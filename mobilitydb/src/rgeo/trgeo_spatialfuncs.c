@@ -39,7 +39,7 @@
 #include <meos_internal.h>
 #include <meos_rgeo.h>
 #include "rgeo/trgeo.h"
-#include "rgeo/trgeo_spatialfuncs.h"
+// #include "rgeo/trgeo_spatialfuncs.h"
 /* MobilityDB */
 #include "pg_temporal/temporal.h"
 #include "pg_geo/postgis.h"
@@ -55,11 +55,14 @@ PG_FUNCTION_INFO_V1(Trgeometry_traversed_area);
  * @brief Return a temporal rigid geometry restricted to a geometry
  * @sqlfn atGeometry()
  */
-inline Datum
+Datum
 Trgeometry_traversed_area(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  GSERIALIZED *result = trgeo_traversed_area(temp);
+  bool unary_union = false;
+  if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
+    unary_union = PG_GETARG_BOOL(1);
+  GSERIALIZED *result = trgeo_traversed_area(temp, unary_union);
   PG_FREE_IF_COPY(temp, 0);
   if (! result)
     PG_RETURN_NULL();
@@ -77,14 +80,16 @@ Trgeometry_traversed_area(PG_FUNCTION_ARGS)
 static Datum
 Trgeometry_restrict_geom(FunctionCallInfo fcinfo, bool atfunc)
 {
-  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
-  Temporal *result = trgeo_restrict_geom(temp, gs, NULL, atfunc);
-  PG_FREE_IF_COPY(temp, 0);
-  PG_FREE_IF_COPY(gs, 1);
-  if (! result)
-    PG_RETURN_NULL();
-  PG_RETURN_TEMPORAL_P(result);
+  elog(NOTICE, "Function not yet implemented");
+  PG_RETURN_NULL();
+  // Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  // GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
+  // Temporal *result = trgeo_restrict_geom(temp, gs, NULL, atfunc);
+  // PG_FREE_IF_COPY(temp, 0);
+  // PG_FREE_IF_COPY(gs, 1);
+  // if (! result)
+    // PG_RETURN_NULL();
+  // PG_RETURN_TEMPORAL_P(result);
 }
 
 PGDLLEXPORT Datum Trgeometry_at_geom(PG_FUNCTION_ARGS);
@@ -122,14 +127,16 @@ Trgeometry_minus_geom(PG_FUNCTION_ARGS)
 static Datum
 Trgeometry_restrict_stbox(FunctionCallInfo fcinfo, bool atfunc)
 {
-  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  STBox *box = PG_GETARG_STBOX_P(1);
-  bool border_inc = PG_GETARG_BOOL(2);
-  Temporal *result = trgeo_restrict_stbox(temp, box, border_inc, atfunc);
-  PG_FREE_IF_COPY(temp, 0);
-  if (! result)
-    PG_RETURN_NULL();
-  PG_RETURN_TEMPORAL_P(result);
+  elog(NOTICE, "Function not yet implemented");
+  PG_RETURN_NULL();
+  // Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  // STBox *box = PG_GETARG_STBOX_P(1);
+  // bool border_inc = PG_GETARG_BOOL(2);
+  // Temporal *result = trgeo_restrict_stbox(temp, box, border_inc, atfunc);
+  // PG_FREE_IF_COPY(temp, 0);
+  // if (! result)
+    // PG_RETURN_NULL();
+  // PG_RETURN_TEMPORAL_P(result);
 }
 
 PGDLLEXPORT Datum Trgeometry_at_stbox(PG_FUNCTION_ARGS);

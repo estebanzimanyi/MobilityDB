@@ -62,6 +62,8 @@ extern const GSERIALIZED *trgeo_geom_p(const Temporal *temp);
 /* Input/output functions */
 
 extern char *trgeo_wkt_out(const Temporal *temp, int maxdd, bool extended);
+extern char *trgeo_as_ewkt(const Temporal *temp, int maxdd);
+extern char *trgeo_as_text(const Temporal *temp, int maxdd);
 
 /* Constructor functions */
 

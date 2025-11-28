@@ -165,6 +165,22 @@ CREATE FUNCTION trgeometry(geometry, pose, timestamptz)
   AS 'MODULE_PATHNAME', 'Trgeometry_inst_constructor'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION trgeometry(geometry, pose, tstzset)
+  RETURNS trgeometry
+  AS 'MODULE_PATHNAME', 'Trgeoseq_from_base_tstzset'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION trgeometry(geometry, pose, tstzspan, text DEFAULT 'linear')
+  RETURNS trgeometry
+  AS 'MODULE_PATHNAME', 'Trgeoseq_from_base_tstzspan'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION trgeometry(geometry, pose, tstzspanset, text DEFAULT 'linear')
+  RETURNS trgeometry
+  AS 'MODULE_PATHNAME', 'Trgeoseqset_from_base_tstzspanset'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/******************************************************************************/
 CREATE FUNCTION trgeometrySeq(trgeometry[], text DEFAULT 'linear',
     lower_inc boolean DEFAULT true, upper_inc boolean DEFAULT true)
   RETURNS trgeometry

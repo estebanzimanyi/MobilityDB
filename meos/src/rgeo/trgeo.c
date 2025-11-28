@@ -219,7 +219,7 @@ trgeo_wkt_out(const Temporal *temp, int maxdd, bool extended)
  * @param[in] temp Temporal rigid geometry
  * @param[in] maxdd Maximum number of decimal digits
  */
-inline char *
+char *
 trgeo_as_text(const Temporal *temp, int maxdd)
 {
   return trgeo_wkt_out(temp, maxdd, false);
@@ -232,7 +232,7 @@ trgeo_as_text(const Temporal *temp, int maxdd)
  * @param[in] temp Temporal rigid geometry
  * @param[in] maxdd Maximum number of decimal digits
  */
-inline char *
+char *
 trgeo_as_ewkt(const Temporal *temp, int maxdd)
 {
   return trgeo_wkt_out(temp, maxdd, true);

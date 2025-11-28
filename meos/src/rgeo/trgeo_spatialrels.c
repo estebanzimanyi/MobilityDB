@@ -50,7 +50,7 @@
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/tgeo_spatialrels.h"
 #include "rgeo/trgeo.h"
-#include "rgeo/trgeo_spatialfuncs.h"
+// #include "rgeo/trgeo_spatialfuncs.h"
 
 /*****************************************************************************
  * Generic ever/always spatial relationship functions

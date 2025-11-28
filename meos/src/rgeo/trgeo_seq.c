@@ -147,8 +147,8 @@ trgeoseq_make_valid(const GSERIALIZED *geom, TInstant **instants,
  * @pre The validity of the arguments has been tested before
  */
 TSequence *
-trgeoseq_make1_exp(const GSERIALIZED *geom, TInstant **instants,
-  int count, int maxcount, bool lower_inc, bool upper_inc, interpType interp,
+trgeoseq_make1_exp(const GSERIALIZED *geom, TInstant **instants, int count,
+  int maxcount, bool lower_inc, bool upper_inc, interpType interp,
   bool normalize)
 {
   /* Normalize the array of instants */

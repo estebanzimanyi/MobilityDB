@@ -396,6 +396,81 @@ Trgeometry_constructor(PG_FUNCTION_ARGS)
   PG_RETURN_POINTER(result);
 }
 
+/*****************************************************************************/
+
+PGDLLEXPORT Datum Trgeoseq_from_base_tstzset(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Trgeoseq_from_base_tstzset);
+/**
+ * @ingroup mobilitydb_temporal_constructor
+ * @brief Return a temporal rigid geometry discrete sequence from a geometry,
+ * a pose, and a timestamptz set
+ * @sqlfn trgeometry()
+ */
+Datum
+Trgeoseq_from_base_tstzset(PG_FUNCTION_ARGS)
+{
+  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
+  Datum pose = PG_GETARG_ANYDATUM(1);
+  Set *s = PG_GETARG_SET_P(2);
+  Temporal *tpose = (Temporal *) tsequence_from_base_tstzset(pose, T_TPOSE, s);
+  TSequence *result = (TSequence *) geo_tpose_to_trgeo(gs, tpose);
+  pfree(tpose);
+  PG_FREE_IF_COPY(gs, 0); PG_FREE_IF_COPY(DatumGetPointer(pose), 0);
+  PG_FREE_IF_COPY(s, 2);
+  PG_RETURN_TSEQUENCE_P(result);
+}
+
+PGDLLEXPORT Datum Trgeoseq_from_base_tstzspan(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Trgeoseq_from_base_tstzspan);
+/**
+ * @ingroup mobilitydb_temporal_constructor
+ * @brief Return a temporal rigid geometry continuous sequence from a geometry,
+ * a pose, and a timestamptz set
+ * @sqlfn trgeometry()
+ */
+Datum
+Trgeoseq_from_base_tstzspan(PG_FUNCTION_ARGS)
+{
+  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
+  Datum pose = PG_GETARG_ANYDATUM(1);
+  Span *s = PG_GETARG_SPAN_P(2);
+  interpType interp = LINEAR;
+  if (PG_NARGS() > 3 && ! PG_ARGISNULL(3))
+    interp = input_interp_string(fcinfo, 3);
+  Temporal *tpose = (Temporal *) tsequence_from_base_tstzspan(pose, T_TPOSE,
+    s, interp);
+  TSequence *result = (TSequence *) geo_tpose_to_trgeo(gs, tpose);
+  pfree(tpose);
+  PG_FREE_IF_COPY(gs, 0); PG_FREE_IF_COPY(DatumGetPointer(pose), 0);
+  PG_RETURN_TSEQUENCE_P(result);
+}
+
+PGDLLEXPORT Datum Trgeoseqset_from_base_tstzspanset(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Trgeoseqset_from_base_tstzspanset);
+/**
+ * @ingroup mobilitydb_temporal_constructor
+ * @brief Return a temporal rigid geometry sequence set from a geometry,
+ * a pose, and a timestamptz set
+ * @sqlfn trgeometry()
+ */
+Datum
+Trgeoseqset_from_base_tstzspanset(PG_FUNCTION_ARGS)
+{
+  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
+  Datum pose = PG_GETARG_ANYDATUM(1);
+  SpanSet *ss = PG_GETARG_SPANSET_P(2);
+  interpType interp = LINEAR;
+  if (PG_NARGS() > 3 && ! PG_ARGISNULL(3))
+    interp = input_interp_string(fcinfo, 3);
+  Temporal *tpose = (Temporal *) tsequenceset_from_base_tstzspanset(pose,
+    T_TPOSE, ss, interp);
+  TSequence *result = (TSequence *) geo_tpose_to_trgeo(gs, tpose);
+  pfree(tpose);
+  PG_FREE_IF_COPY(gs, 0); PG_FREE_IF_COPY(DatumGetPointer(pose), 0);
+  PG_FREE_IF_COPY(ss, 2);
+  PG_RETURN_TSEQUENCE_P(result);
+}
+
 /*****************************************************************************
  * Conversion functions
  *****************************************************************************/
