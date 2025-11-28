@@ -1541,7 +1541,6 @@ geom_intersects2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   return geom_spatialrel(gs1, gs2, INTERSECTS);
 }
 
-#if MEOS
 /**
  * @ingroup meos_geo_base_rel
  * @brief Return true if the first geometry contains the second one
@@ -1553,7 +1552,6 @@ geom_contains(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 {
   return geom_spatialrel(gs1, gs2, CONTAINS);
 }
-#endif /* MEOS */
 
 /**
  * @ingroup meos_geo_base_rel
@@ -1567,7 +1565,6 @@ geom_touches(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   return geom_spatialrel(gs1, gs2, TOUCHES);
 }
 
-#if MEOS
 /**
  * @ingroup meos_geo_base_rel
  * @brief Return true if the first geometry covers the second one
@@ -1591,7 +1588,6 @@ geom_disjoint2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 {
   return ! geom_spatialrel(gs1, gs2, INTERSECTS);
 }
-#endif /* MEOS */
 
 /**
  * @ingroup meos_geo_base_rel
@@ -2328,7 +2324,6 @@ geo_serialize(const LWGEOM *geom)
  * Functions adapted from lwgeom_transform.c
  *****************************************************************************/
 
-#if MEOS
 /**
  * @ingroup meos_geo_base_srid
  * @brief Return the geometry/geography transformed to an SRID
@@ -2396,8 +2391,8 @@ geo_transform(const GSERIALIZED *gs, int32_t srid_to)
  * @note PostGIS function: @p transform_pipeline_geom(PG_FUNCTION_ARGS)
  */
 GSERIALIZED *
-geo_transform_pipeline(const GSERIALIZED *gs, char *pipeline, int32_t srid_to,
-  bool is_forward)
+geo_transform_pipeline(const GSERIALIZED *gs, const char *pipeline,
+  int32_t srid_to, bool is_forward)
 {
   assert(gs); assert(pipeline);
   GSERIALIZED *gs1 = geo_copy(gs);
@@ -2420,7 +2415,6 @@ geo_transform_pipeline(const GSERIALIZED *gs, char *pipeline, int32_t srid_to,
   lwgeom_free(geom); pfree(gs1);
   return (result); /* new geometry */
 }
-#endif /* MEOS */
 
 /*****************************************************************************
  * Functions adapted from geography_centroid.c

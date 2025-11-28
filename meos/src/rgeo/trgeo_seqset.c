@@ -44,6 +44,7 @@
 #include <meos_internal.h>
 #include "temporal/tsequenceset.h"
 #include "temporal/temporal.h"
+#include "temporal/tsequence.h"
 #include "temporal/type_util.h"
 #include "temporal/temporal_boxops.h"
 #include "rgeo/trgeo_all.h"
@@ -89,6 +90,87 @@ trgeoseqset_tposeseqset(const TSequenceSet *ss)
 /*****************************************************************************/
 
 /**
+ * @brief Join two temporal temporal rigid geometry sequences
+ * @param[in] geom Geometry
+ * @param[in] seq1,seq2 Temporal sequences
+ * @param[in] removelast,removefirst Remove the last and/or the
+ * first instant of the first/second sequence
+ * @pre The two input sequences are adjacent and have the same interpolation
+ * @note The function is a variant of function #tsequence_join
+ */
+static TSequence *
+trgeoseq_join(const GSERIALIZED *geom, const TSequence *seq1,
+  const TSequence *seq2, bool removelast, bool removefirst)
+{
+  int count1 = removelast ? seq1->count - 1 : seq1->count;
+  int start2 = removefirst ? 1 : 0;
+  int count = count1 + (seq2->count - start2);
+  TInstant **instants = palloc(sizeof(TSequence *) * count);
+  int i, ninsts = 0;
+  for (i = 0; i < count1; i++)
+    instants[ninsts++] = (TInstant *) TSEQUENCE_INST_N(seq1, i);
+  for (i = start2; i < seq2->count; i++)
+    instants[ninsts++] = (TInstant *) TSEQUENCE_INST_N(seq2, i);
+  /* Get the bounding box size */
+  size_t bboxsize = DOUBLE_PAD(temporal_bbox_size(seq1->temptype));
+  bboxunion bbox;
+  memcpy(&bbox, TSEQUENCE_BBOX_PTR(seq1), bboxsize);
+  bbox_expand(TSEQUENCE_BBOX_PTR(seq2), &bbox, seq1->temptype);
+  TSequence *result = trgeoseq_make_exp1(geom, instants, count, count,
+    seq1->period.lower_inc, seq2->period.upper_inc,
+    MEOS_FLAGS_GET_INTERP(seq1->flags), NORMALIZE_NO);
+  pfree(instants);
+  return result;
+}
+/**
+ * @brief Normalize the array of temporal rigid geometry sequences
+ * @param[in] geom Geometry
+ * @param[in] sequences Array of temporal sequences
+ * @param[in] count Number of elements in the input array
+ * @param[out] newcount Number of elements in the output array
+ * @return Array of normalized temporal sequences values
+ * @pre Each sequence in the input array is normalized.
+ * When merging sequences, the test whether the value is the same
+ * at the common instant should be ensured by the calling function.
+ * @note The function is a variant of function #tseqarr_normalize
+ */
+static TSequence **
+trgeoseqarr_normalize(const GSERIALIZED *geom, TSequence **sequences,
+  int count, int *newcount)
+{
+  assert(sequences); assert(newcount); assert(count > 0);
+  TSequence **result = palloc(sizeof(TSequence *) * count);
+  /* seq1 is the sequence to which we try to join subsequent seq2 */
+  TSequence *seq1 = (TSequence *) sequences[0];
+  /* newseq is the result of joining seq1 and seq2 */
+  bool isnew = false;
+  int nseqs = 0;
+  for (int i = 1; i < count; i++)
+  {
+    TSequence *seq2 = (TSequence *) sequences[i];
+    bool removelast, removefirst;
+    if (tsequence_join_test(seq1, seq2, &removelast, &removefirst))
+    {
+      TSequence *newseq1 = trgeoseq_join(geom, seq1, seq2, removelast,
+        removefirst);
+      if (isnew)
+        pfree(seq1);
+      seq1 = newseq1;
+      isnew = true;
+    }
+    else
+    {
+      result[nseqs++] = isnew ? seq1 : tsequence_copy(seq1);
+      seq1 = seq2;
+      isnew = false;
+    }
+  }
+  result[nseqs++] = isnew ? seq1 : tsequence_copy(seq1);
+  *newcount = nseqs;
+  return result;
+}
+
+/**
  * @brief Construct a temporal sequence set from an array of temporal sequences
  * @details For example, the memory structure of a temporal sequence set with
  * two sequences is as follows
@@ -111,7 +193,7 @@ trgeoseqset_tposeseqset(const TSequenceSet *ss)
  * sets before applying an operation to them.
  */
 TSequenceSet *
-trgeoseqset_make1_exp(const GSERIALIZED *geom, TSequence **sequences,
+trgeoseqset_make_exp1(const GSERIALIZED *geom, TSequence **sequences,
   int count, int maxcount, bool normalize)
 {
   assert(maxcount >= count);
@@ -132,7 +214,7 @@ trgeoseqset_make1_exp(const GSERIALIZED *geom, TSequence **sequences,
   TSequence **normseqs = (TSequence **) sequences;
   int newcount = count;
   if (normalize && count > 1)
-    normseqs = tseqarr_normalize(sequences, count, &newcount);
+    normseqs = trgeoseqarr_normalize(geom, sequences, count, &newcount);
 
   /* Get the bounding box size */
   size_t bboxsize = temporal_bbox_size(sequences[0]->temptype);
@@ -227,7 +309,7 @@ trgeoseqset_make_exp(const GSERIALIZED *geom, TSequence **sequences,
   if (! ensure_positive(count) ||
       ! ensure_valid_tseqarr(sequences, count))
     return NULL;
-  return trgeoseqset_make1_exp(geom, sequences, count, maxcount, normalize);
+  return trgeoseqset_make_exp1(geom, sequences, count, maxcount, normalize);
 }
 
 /**
@@ -338,7 +420,7 @@ trgeoseqset_make_gaps(const GSERIALIZED *geom, TInstant **instants,
   {
     /* There are no gaps */
     pfree(splits);
-    seq = trgeoseq_make1(geom, instants, count, true, true, interp, NORMALIZE);
+    seq = trgeoseq_make(geom, instants, count, true, true, interp, NORMALIZE);
     result = trgeoseqset_make(geom, &seq, 1, NORMALIZE_NO);
     pfree(seq);
   }
@@ -355,7 +437,7 @@ trgeoseqset_make_gaps(const GSERIALIZED *geom, TInstant **instants,
       {
         /* Finalize the current sequence and start a new one */
         assert(k > 0);
-        sequences[newcount++] = trgeoseq_make1(geom, newinsts, k, true, true,
+        sequences[newcount++] = trgeoseq_make(geom, newinsts, k, true, true,
           interp, NORMALIZE);
         j++; k = 0;
       }
@@ -364,7 +446,7 @@ trgeoseqset_make_gaps(const GSERIALIZED *geom, TInstant **instants,
     }
     /* Construct last sequence */
     if (k > 0)
-      sequences[newcount++] = trgeoseq_make1(geom, newinsts, k, true, true,
+      sequences[newcount++] = trgeoseq_make(geom, newinsts, k, true, true,
         interp, NORMALIZE);
     result = trgeoseqset_make(geom, sequences, newcount, NORMALIZE);
     pfree(newinsts); pfree(sequences);

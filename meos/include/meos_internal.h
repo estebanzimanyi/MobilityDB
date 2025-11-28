@@ -1322,6 +1322,7 @@ extern void skiplist_free(SkipList *list);
 extern void skiplist_splice(SkipList *list, void **keys, void **values, int count, datum_func2 func, bool crossings, SkipListType sktype);
 extern void temporal_skiplist_splice(SkipList *list, void **values, int count, datum_func2 func, bool crossings);
 extern void **skiplist_values(SkipList *list);
+extern Temporal **skiplist_temporal_values(SkipList *list);
 extern void **skiplist_keys_values(SkipList *list, void **values);
 
 extern Temporal *temporal_app_tinst_transfn(Temporal *state, const TInstant *inst, interpType interp, double maxdist, const Interval *maxt);

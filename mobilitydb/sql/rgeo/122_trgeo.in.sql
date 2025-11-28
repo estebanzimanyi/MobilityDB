@@ -40,24 +40,24 @@ CREATE TYPE trgeometry;
 
 CREATE FUNCTION trgeometry_in(cstring, oid, integer)
   RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Trgeometry_in'
+  AS 'MODULE_PATHNAME', 'Trgeo_in'
   LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION trgeometry_out(trgeometry)
   RETURNS cstring
-  AS 'MODULE_PATHNAME', 'Trgeometry_out'
+  AS 'MODULE_PATHNAME', 'Trgeo_out'
   LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION trgeometry_recv(internal)
   RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Trgeometry_recv'
+  AS 'MODULE_PATHNAME', 'Trgeo_recv'
   LANGUAGE C IMMUTABLE STRICT;
 CREATE FUNCTION trgeometry_send(trgeometry)
   RETURNS bytea
-  AS 'MODULE_PATHNAME', 'Trgeometry_send'
+  AS 'MODULE_PATHNAME', 'Trgeo_send'
   LANGUAGE C IMMUTABLE STRICT;
 
 CREATE FUNCTION trgeo_typmod_in(cstring[])
   RETURNS integer
-  AS 'MODULE_PATHNAME', 'Trgeometry_typmod_in'
+  AS 'MODULE_PATHNAME', 'Trgeo_typmod_in'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE TYPE trgeometry (
@@ -87,12 +87,12 @@ CREATE CAST (trgeometry AS trgeometry) WITH FUNCTION trgeometry(trgeometry, inte
 
 CREATE FUNCTION trgeometryFromText(text)
   RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Trgeometry_from_ewkt'
+  AS 'MODULE_PATHNAME', 'Trgeo_from_ewkt'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION trgeometryFromEWKT(text)
   RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Trgeometry_from_ewkt'
+  AS 'MODULE_PATHNAME', 'Trgeo_from_ewkt'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION trgeometryFromMFJSON(text)
@@ -119,7 +119,7 @@ CREATE FUNCTION trgeometryFromHexEWKB(text)
 
 CREATE FUNCTION asText(trgeometry, maxdecimaldigits int4 DEFAULT 15)
   RETURNS text
-  AS 'MODULE_PATHNAME', 'Trgeometry_as_text'
+  AS 'MODULE_PATHNAME', 'Trgeo_as_text'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION asText(trgeometry[], maxdecimaldigits int4 DEFAULT 15)
   RETURNS text[]
@@ -128,7 +128,7 @@ CREATE FUNCTION asText(trgeometry[], maxdecimaldigits int4 DEFAULT 15)
 
 CREATE FUNCTION asEWKT(trgeometry, maxdecimaldigits int4 DEFAULT 15)
   RETURNS text
-  AS 'MODULE_PATHNAME', 'Trgeometry_as_ewkt'
+  AS 'MODULE_PATHNAME', 'Trgeo_as_ewkt'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION asEWKT(trgeometry[], maxdecimaldigits int4 DEFAULT 15)
   RETURNS text[]
@@ -162,32 +162,48 @@ CREATE FUNCTION asHexEWKB(trgeometry, endianenconding text DEFAULT '')
 
 CREATE FUNCTION trgeometry(geometry, pose, timestamptz)
   RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Trgeometry_inst_constructor'
+  AS 'MODULE_PATHNAME', 'Trgeoinst_constructor'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION trgeometry(geometry, pose, tstzset)
+  RETURNS trgeometry
+  AS 'MODULE_PATHNAME', 'Trgeoseq_from_base_tstzset'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION trgeometry(geometry, pose, tstzspan, text DEFAULT 'linear')
+  RETURNS trgeometry
+  AS 'MODULE_PATHNAME', 'Trgeoseq_from_base_tstzspan'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION trgeometry(geometry, pose, tstzspanset, text DEFAULT 'linear')
+  RETURNS trgeometry
+  AS 'MODULE_PATHNAME', 'Trgeoseqset_from_base_tstzspanset'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/******************************************************************************/
 CREATE FUNCTION trgeometrySeq(trgeometry[], text DEFAULT 'linear',
     lower_inc boolean DEFAULT true, upper_inc boolean DEFAULT true)
   RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Trgeometry_seq_constructor'
+  AS 'MODULE_PATHNAME', 'Trgeoseq_constructor'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION trgeometrySeqSet(trgeometry[])
   RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Trgeometry_seqset_constructor'
+  AS 'MODULE_PATHNAME', 'Trgeoseqset_constructor'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 -- The function is not strict
 CREATE FUNCTION trgeometrySeqSetGaps(trgeometry[], maxt interval DEFAULT NULL,
     maxdist float DEFAULT NULL, text DEFAULT 'linear')
   RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Trgeometry_seqset_constructor_gaps'
+  AS 'MODULE_PATHNAME', 'Trgeoseqset_constructor_gaps'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
 /*****************************************************************************/
 
 CREATE FUNCTION trgeometry(geometry, tpose)
   RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Trgeometry_constructor'
+  AS 'MODULE_PATHNAME', 'Trgeo_constructor'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************
@@ -203,11 +219,11 @@ CREATE CAST (trgeometry AS tstzspan) WITH FUNCTION timeSpan(trgeometry);
 
 CREATE FUNCTION tpose(trgeometry)
   RETURNS tpose
-  AS 'MODULE_PATHNAME', 'Trgeometry_to_tpose'
+  AS 'MODULE_PATHNAME', 'Trgeo_to_tpose'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tgeompoint(trgeometry)
   RETURNS tgeompoint
-  AS 'MODULE_PATHNAME', 'Trgeometry_to_tpoint'
+  AS 'MODULE_PATHNAME', 'Trgeo_to_tpoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE CAST (trgeometry AS tpose) WITH FUNCTION tpose(trgeometry);
@@ -222,7 +238,7 @@ CREATE CAST (trgeometry AS stbox) WITH FUNCTION stbox(trgeometry);
 
 CREATE FUNCTION geometry(trgeometry)
   RETURNS geometry
-  AS 'MODULE_PATHNAME', 'Trgeometry_to_geom'
+  AS 'MODULE_PATHNAME', 'Trgeo_to_geom'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE CAST (trgeometry AS geometry) WITH FUNCTION geometry(trgeometry);
@@ -248,10 +264,10 @@ CREATE FUNCTION memSize(trgeometry)
   AS 'MODULE_PATHNAME', 'Temporal_mem_size'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
--- value is a reserved word in SQL
-CREATE FUNCTION getValue(trgeometry)
-  RETURNS pose
-  AS 'MODULE_PATHNAME', 'Tinstant_value'
+-- the cast function above uses already geometry()
+CREATE FUNCTION getGeometry(trgeometry)
+  RETURNS geometry
+  AS 'MODULE_PATHNAME', 'Trgeoinst_geom'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 -- timestamp is a reserved word in SQL
@@ -260,36 +276,35 @@ CREATE FUNCTION getTimestamp(trgeometry)
   AS 'MODULE_PATHNAME', 'Tinstant_timestamptz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
--- timestamp is a reserved word in SQL
-CREATE FUNCTION getValues(trgeometry)
-  RETURNS poseset
-  AS 'MODULE_PATHNAME', 'Temporal_valueset'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
 -- time is a reserved word in SQL
 CREATE FUNCTION getTime(trgeometry)
   RETURNS tstzspanset
   AS 'MODULE_PATHNAME', 'Temporal_time'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION startValue(trgeometry)
+CREATE FUNCTION startGeometry(trgeometry)
   RETURNS geometry
-  AS 'MODULE_PATHNAME', 'Trgeometry_start_value'
+  AS 'MODULE_PATHNAME', 'Trgeo_start_geom'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION endValue(trgeometry)
+CREATE FUNCTION endGeometry(trgeometry)
   RETURNS geometry
-  AS 'MODULE_PATHNAME', 'Trgeometry_end_value'
+  AS 'MODULE_PATHNAME', 'Trgeo_end_geom'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION valueN(trgeometry, int)
+CREATE FUNCTION geometryN(trgeometry, int)
   RETURNS geometry
-  AS 'MODULE_PATHNAME', 'Trgeometry_value_n'
+  AS 'MODULE_PATHNAME', 'Trgeo_geom_n'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+  CREATE FUNCTION geometries(trgeometry)
+  RETURNS geoset
+  AS 'MODULE_PATHNAME', 'Trgeo_geoms'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION valueAtTimestamp(trgeometry, timestamptz)
   RETURNS geometry
-  AS 'MODULE_PATHNAME', 'Trgeometry_value_at_timestamptz'
+  AS 'MODULE_PATHNAME', 'Trgeo_geom_at_timestamptz'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION duration(trgeometry, boundspan boolean DEFAULT FALSE)
@@ -393,17 +408,17 @@ CREATE FUNCTION segments(trgeometry)
 
 CREATE FUNCTION trgeometryInst(trgeometry)
   RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Trgeometry_to_tinstant'
+  AS 'MODULE_PATHNAME', 'Trgeo_to_tinstant'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 -- The function is not strict
 CREATE FUNCTION trgeometrySeq(trgeometry, text DEFAULT NULL)
   RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Trgeometry_to_tsequence'
+  AS 'MODULE_PATHNAME', 'Trgeo_to_tsequence'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 -- The function is not strict
 CREATE FUNCTION trgeometrySeqSet(trgeometry, text DEFAULT NULL)
   RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Trgeometry_to_tsequenceset'
+  AS 'MODULE_PATHNAME', 'Trgeo_to_tsequenceset'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
 CREATE FUNCTION setInterp(trgeometry, text)
@@ -577,12 +592,12 @@ CREATE FUNCTION appendSequence(trgeometry, trgeometry)
 -- The function is not strict
 CREATE FUNCTION merge(trgeometry, trgeometry)
   RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Temporal_merge'
+  AS 'MODULE_PATHNAME', 'Trgeo_merge'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
 CREATE FUNCTION merge(trgeometry[])
   RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Temporal_merge_array'
+  AS 'MODULE_PATHNAME', 'Trgeo_merge_array'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************

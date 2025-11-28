@@ -147,10 +147,11 @@ trgeoseq_make_valid(const GSERIALIZED *geom, TInstant **instants,
  * @pre The validity of the arguments has been tested before
  */
 TSequence *
-trgeoseq_make1_exp(const GSERIALIZED *geom, TInstant **instants,
-  int count, int maxcount, bool lower_inc, bool upper_inc, interpType interp,
+trgeoseq_make_exp1(const GSERIALIZED *geom, TInstant **instants, int count,
+  int maxcount, bool lower_inc, bool upper_inc, interpType interp,
   bool normalize)
 {
+  assert(geom); assert(instants); assert(maxcount >= count);
   /* Normalize the array of instants */
   TInstant **norminsts = (TInstant **) instants;
   int newcount = count;
@@ -164,7 +165,6 @@ trgeoseq_make1_exp(const GSERIALIZED *geom, TInstant **instants,
 
   /* Compute the size of the temporal sequence */
   size_t insts_size = 0;
-  /* Size of composing instants */
   /* Size of composing instants */
   for (int i = 0; i < newcount; i++)
     insts_size += DOUBLE_PAD(trgeoinst_pose_varsize(norminsts[i]));
@@ -233,18 +233,6 @@ trgeoseq_make1_exp(const GSERIALIZED *geom, TInstant **instants,
 
 /**
  * @brief Construct a temporal sequence from an array of temporal instants
- * @pre The validity of the arguments has been tested before
- */
-inline TSequence *
-trgeoseq_make1(const GSERIALIZED *geom, TInstant **instants, int count,
-  bool lower_inc, bool upper_inc, interpType interp, bool normalize)
-{
-  return trgeoseq_make1_exp(geom, instants, count, count, lower_inc, upper_inc,
-    interp, normalize);
-}
-
-/**
- * @brief Construct a temporal sequence from an array of temporal instants
  * @param[in] geom Reference geometry
  * @param[in] instants Array of instants
  * @param[in] count Number of elements in the array
@@ -264,7 +252,7 @@ trgeoseq_make_exp(const GSERIALIZED *geom, TInstant **instants,
       ! trgeoseq_make_valid(geom, instants, count, lower_inc, upper_inc,
           interp))
     return NULL;
-  return trgeoseq_make1_exp(geom, instants, count, maxcount, lower_inc,
+  return trgeoseq_make_exp1(geom, instants, count, maxcount, lower_inc,
     upper_inc, interp, normalize);
 }
 

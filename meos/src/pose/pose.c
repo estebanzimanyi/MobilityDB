@@ -58,6 +58,7 @@
 #include "geo/tspatial.h"
 #include "geo/tspatial_parser.h"
 #include "pose/pose.h"
+#include "rgeo/quaternion.h"
 
 /** Buffer size for input and output of pose values */
 #define MAXPOSELEN    256
@@ -299,6 +300,72 @@ pose_collinear(const Pose *p1, const Pose *p2, const Pose *p3, double ratio)
   bool result = pose_same(p2, p2_interpolated);
   pfree(p2_interpolated);
   return result;
+}
+
+/*****************************************************************************
+ * Invert function
+ *****************************************************************************/
+
+/**
+ * @brief Combine a pose
+ */
+Pose *
+pose_invert(const Pose *pose)
+{
+  if (! MEOS_FLAGS_GET_Z(pose->flags))
+  {
+    double theta = - pose->data[2];
+    if (theta == -M_PI)
+        theta = M_PI;
+    double dx = - pose->data[0];
+    double dy = - pose->data[1];
+    return pose_make_2d(dx, dy, theta, pose_srid(pose));
+  }
+  else
+  {
+    Quaternion q = (Quaternion) {pose->data[0], pose->data[1],
+      pose->data[2], pose->data[3]};
+    double dx = - pose->data[0];
+    double dy = - pose->data[1];
+    double dz = - pose->data[2];
+    return pose_make_3d(dx, dy, dz, q.X, q.Y, q.Z, q.W, pose_srid(pose));
+  }
+}
+
+/*****************************************************************************
+ * Combine function
+ *****************************************************************************/
+
+/**
+ * @brief Combine two poses
+ */
+Pose *
+pose_combine(const Pose *pose1, const Pose *pose2)
+{
+  if (! MEOS_FLAGS_GET_Z(pose1->flags))
+  {
+    double theta = pose1->data[2] + pose2->data[2];
+    if (theta > M_PI)
+      theta = theta - 2 * M_PI;
+    if (theta <= -M_PI)
+      theta = theta + 2 * M_PI;
+    double dx = pose1->data[0] + pose2->data[0];
+    double dy = pose1->data[1] + pose2->data[1];
+    return pose_make_2d(dx, dy, theta, pose_srid(pose1));
+  }
+  else
+  {
+    Quaternion q1 = (Quaternion) {pose1->data[0], pose1->data[1],
+      pose1->data[2], pose1->data[3]};
+    Quaternion q2 = (Quaternion) {pose2->data[0], pose2->data[1],
+      pose2->data[2], pose2->data[3]};
+    Quaternion q = quaternion_multiply(q1, q2); // Apply pose1 before pose2
+    q = quaternion_normalize(q);
+    double dx = pose1->data[0] + pose2->data[0];
+    double dy = pose1->data[1] + pose2->data[1];
+    double dz = pose1->data[2] + pose2->data[2];
+    return pose_make_3d(dx, dy, dz, q.X, q.Y, q.Z, q.W, pose_srid(pose1));
+  }
 }
 
 /*****************************************************************************
@@ -808,6 +875,16 @@ pose_copy(const Pose *pose)
   return result;
 }
 
+/**
+ * @brief 
+ */
+Pose *
+pose_make_zero(bool hasz, int32_t srid)
+{
+  return hasz ?
+    pose_make_3d(0, 0, 0, 1, 0, 0, 0, srid) : pose_make_2d(0, 0, 0, srid);
+}
+
 /*****************************************************************************
  * Conversion functions
  *****************************************************************************/
@@ -1078,7 +1155,8 @@ pose_transf_pj(const Pose *pose, int32_t srid_to, const LWPROJ *pj)
     return NULL;
   }
   POINT4D *p = (POINT4D *) GS_POINT_PTR(gs);
-  /* Only the coordinates are transformed, not the orientation */
+  /* Only the coordinates are transformed, not the srid and orientation */
+  pose_set_srid(result, srid_to);
   const double * coordarr = (const double *) p;
   if (MEOS_FLAGS_GET_Z(pose->flags))
   {

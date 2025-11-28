@@ -29,7 +29,7 @@
 
 /**
  * @file
- * @brief Temporal spatial relationships for temporal circurlar buffers
+ * @brief Temporal spatial relationships for temporal circular buffers
  */
 
 /*****************************************************************************

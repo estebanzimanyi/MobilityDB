@@ -612,21 +612,29 @@ v_clip_tpoly_tpoly(const LWPOLY *poly1, const LWPOLY *poly2,
   do
   {
     if (*poly1_feature % 2 == 0 && *poly2_feature % 2 == 0) /* vertex <-> vertex */
-      result = vertex_vertex_tpoly_tpoly(poly1, poly2, pose1, pose2, poly1_feature, poly2_feature);
+      result = vertex_vertex_tpoly_tpoly(poly1, poly2, pose1, pose2,
+        poly1_feature, poly2_feature);
     else if (*poly1_feature % 2 == 0) /* vertex <-> edge */
-      result = edge_vertex_tpoly_tpoly(poly2, poly1, ccw_poly2, pose2, pose1, poly2_feature, poly1_feature);
+      result = edge_vertex_tpoly_tpoly(poly2, poly1, ccw_poly2, pose2, pose1,
+        poly2_feature, poly1_feature);
     else if (*poly2_feature % 2 == 0) /* edge <-> vertex */
-      result = edge_vertex_tpoly_tpoly(poly1, poly2, ccw_poly1, pose1, pose2, poly1_feature, poly2_feature);
+      result = edge_vertex_tpoly_tpoly(poly1, poly2, ccw_poly1, pose1, pose2,
+        poly1_feature, poly2_feature);
     else /* edge <-> edge */
-      result = edge_edge_tpoly_tpoly(poly1, poly2, pose1, pose2, poly1_feature, poly2_feature);
-      // meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE, "V-clip: Invalid combination of current features: (%d, %d)", *poly1_feature, *poly2_feature);
+      result = edge_edge_tpoly_tpoly(poly1, poly2, pose1, pose2, poly1_feature,
+        poly2_feature);
+      // meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE, 
+        // "V-clip: Invalid combination of current features: (%d, %d)", 
+        // *poly1_feature, *poly2_feature);
 
     if (loop++ == MEOS_MAX_ITERS) break;
 
   } while (result == MEOS_CONTINUE);
 
   if (loop > MEOS_MAX_ITERS)
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE, "V-clip: Cycle detected, current features: (%d, %d)", *poly1_feature, *poly2_feature);
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE, 
+      "V-clip: Cycle detected, current features: (%d, %d)",
+      *poly1_feature, *poly2_feature);
     // return result;
 
   if (dist && result == MEOS_DISJOINT)
@@ -681,7 +689,9 @@ v_clip_tpoly_tpoly(const LWPOLY *poly1, const LWPOLY *poly2,
       *dist = sqrt(compute_dist2(v2, v1_start, v1_end));
     }
     else
-      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE, "V-clip: Invalid combination of current features: (%d, %d)", *poly1_feature, *poly2_feature);
+      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE, 
+        "V-clip: Invalid combination of current features: (%d, %d)",
+        *poly1_feature, *poly2_feature);
   }
   return result;
 }

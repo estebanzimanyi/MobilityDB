@@ -400,5 +400,149 @@ double4segm_interpolate(const double4 *start, const double4 *end,
   return result;
 }
 
+/*****************************************************************************
+ * 2D Vector Functions
+ *****************************************************************************/
+
+/**
+ * @brief 
+ */
+bool
+vec2_eq(double2 v1, double2 v2)
+{
+  return v1.a == v2.a && v1.b == v2.b;
+}
+
+/**
+ * @brief 
+ */
+double
+vec2_norm(double2 v)
+{
+  return sqrt(v.a * v.a + v.b * v.b);
+}
+
+/**
+ * @brief 
+ */
+double
+vec2_dist2(double2 v1, double2 v2)
+{
+  return pow(v2.a - v1.a, 2) + pow(v2.b - v1.b, 2);
+}
+
+/**
+ * @brief 
+ */
+double
+vec2_dist(double2 v1, double2 v2)
+{
+  return sqrt(vec2_dist2(v1, v2));
+}
+
+/**
+ * @brief 
+ */
+double
+vec2_dot(double2 v1, double2 v2)
+{
+  return v1.a * v2.a + v1.b * v2.b;
+}
+
+/**
+ * @brief 
+ */
+double
+vec2_angle(double2 p, double2 q, double2 r)
+{
+  double2 qp = (double2) {p.a - q.a, p.b - q.b};
+  double2 qr = (double2) {r.a - q.a, r.b - q.b};
+  double angle = atan2(qp.a * qr.b - qp.b * qr.a, qp.a * qr.a + qp.b * qr.b);
+  if (angle < 0)
+    angle += 2 * M_PI;
+  return angle;
+}
+
+/**
+ * @brief 
+ */
+double2
+vec2_normalize(double2 v)
+{
+  double norm = vec2_norm(v);
+  return (double2) {v.a / norm, v.b / norm};
+}
+
+/*****************************************************************************
+ * 3D Vector Functions
+ *****************************************************************************/
+
+/**
+ * @brief 
+ */
+double
+vec3_norm(double3 v)
+{
+  return sqrt(v.a * v.a + v.b * v.b + v.c * v.c);
+}
+
+/**
+ * @brief 
+ */
+double
+vec3_dot(double3 v1, double3 v2)
+{
+  return v1.a * v2.a + v1.b * v2.b + v1.c * v2.c;
+}
+
+/**
+ * @brief 
+ */
+double3
+vec3_normalize(double3 v)
+{
+  double norm = vec3_norm(v);
+  return (double3) {v.a / norm, v.b / norm, v.c / norm};
+}
+
+/**
+ * @brief 
+ */
+double3
+vec3_mult(double3 v, double s)
+{
+  return (double3) {v.a * s, v.b * s, v.c * s};
+}
+
+/**
+ * @brief 
+ */
+double3
+vec3_add(double3 v1, double3 v2)
+{
+  return (double3) {v1.a + v2.a, v1.b + v2.b, v1.c + v2.c};
+}
+
+/**
+ * @brief 
+ */
+double3
+vec3_diff(double3 v1, double3 v2)
+{
+  return (double3) {v1.a - v2.a, v1.b - v2.b, v1.c - v2.c};
+}
+
+/**
+ * @brief 
+ */
+double3
+vec3_cross(double3 v1, double3 v2)
+{
+  double a = v1.b * v2.c - v1.c * v2.b;
+  double b = v1.c * v2.a - v1.a * v2.c;
+  double c = v1.a * v2.b - v1.b * v2.a;
+  return (double3) {a, b, c};
+}
+
 /*****************************************************************************/
 

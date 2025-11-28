@@ -96,9 +96,9 @@ TInstant *
 trgeoinst_tposeinst(const TInstant *inst)
 {
   assert(inst->temptype == T_TRGEOMETRY);
-  size_t inst_size = trgeoinst_pose_varsize(inst);
-  TInstant *result = palloc(inst_size);
-  memcpy(((char *)result), ((char *)inst), inst_size);
+  size_t size = trgeoinst_pose_varsize(inst);
+  TInstant *result = palloc(size);
+  memcpy((char *) result, (char *) inst, size);
   MEOS_FLAGS_SET_GEOM(result->flags, false);
   result->temptype = T_TPOSE;
   return result;

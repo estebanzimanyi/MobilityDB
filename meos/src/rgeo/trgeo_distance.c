@@ -295,24 +295,24 @@ dist2d_trgeoinst_geo(const TInstant *inst, const GSERIALIZED *gs)
  * @brief
  */
 static void
-pose_interpolate_2d(Pose *pose1, Pose *pose2, double ratio, double *x,
+pose_interpolate_2d(Pose *start, Pose *end, double ratio, double *x,
   double *y, double *theta)
 {
   assert(0 <= ratio && ratio <= 1);
-  *x = pose1->data[0] * (1 - ratio) + pose2->data[0] * ratio;
-  *y = pose1->data[1] * (1 - ratio) + pose2->data[1] * ratio;
-  double theta_delta = pose2->data[2] - pose1->data[2];
+  *x = start->data[0] * (1 - ratio) + end->data[0] * ratio;
+  *y = start->data[1] * (1 - ratio) + end->data[1] * ratio;
+  double theta_delta = end->data[2] - start->data[2];
   /* If fabs(theta_delta) == M_PI: Always turn counter-clockwise */
   if (fabs(theta_delta) < MEOS_EPSILON)
-    *theta = pose1->data[2];
+    *theta = start->data[2];
   else if (theta_delta > 0 && fabs(theta_delta) <= M_PI)
-    *theta = pose1->data[2] + theta_delta*ratio;
+    *theta = start->data[2] + theta_delta*ratio;
   else if (theta_delta > 0 && fabs(theta_delta) > M_PI)
-    *theta = pose2->data[2] + (2*M_PI - theta_delta)*(1 - ratio);
+    *theta = end->data[2] + (2*M_PI - theta_delta)*(1 - ratio);
   else if (theta_delta < 0 && fabs(theta_delta) < M_PI)
-    *theta = pose1->data[2] + theta_delta*ratio;
+    *theta = start->data[2] + theta_delta*ratio;
   else /* (theta_delta < 0 && fabs(theta_delta) >= M_PI) */
-    *theta = pose1->data[2] + (2*M_PI + theta_delta)*ratio;
+    *theta = start->data[2] + (2*M_PI + theta_delta)*ratio;
   if (*theta > M_PI)
     *theta = *theta - 2*M_PI;
 }
@@ -321,11 +321,11 @@ pose_interpolate_2d(Pose *pose1, Pose *pose2, double ratio, double *x,
  * @brief
  */
 static void
-pose_diff_2d(Pose *pose1, Pose *pose2, double *x, double *y, double *theta)
+posesegm_diff_2d(Pose *start, Pose *end, double *x, double *y, double *theta)
 {
-  *x = pose2->data[0] - pose1->data[0];
-  *y = pose2->data[1] - pose1->data[1];
-  double theta_delta = pose2->data[2] - pose1->data[2];
+  *x = end->data[0] - start->data[0];
+  *y = end->data[1] - start->data[1];
+  double theta_delta = end->data[2] - start->data[2];
   /* If fabs(theta_delta) == M_PI: Always turn counter-clockwise */
   if (fabs(theta_delta) < MEOS_EPSILON)
     *theta = theta_delta;
@@ -505,7 +505,7 @@ f_turnpoints_v_v_tpoint_poly(POINT4D p, POINT4D q, Pose *poly_pose_s,
   double dx, dy, dtheta;
   double co, si, qx, qy, qx_, qy_;
   pose_interpolate_2d(poly_pose_s, poly_pose_e, ratio, &tx, &ty, &ttheta);
-  pose_diff_2d(poly_pose_s, poly_pose_e, &dx, &dy, &dtheta);
+  posesegm_diff_2d(poly_pose_s, poly_pose_e, &dx, &dy, &dtheta);
   co = cos(ttheta);
   si = sin(ttheta);
   qx = q.x * co - q.y * si + tx;
@@ -531,7 +531,7 @@ f_turnpoints_v_e_tpoint_poly(POINT4D p, POINT4D q, POINT4D r,
   double x, y, x_, y_;
   double l2 = (q.x - r.x) * (q.x - r.x) + (q.y - r.y) * (q.y - r.y);
   pose_interpolate_2d(poly_pose_s, poly_pose_e, ratio, &tx, &ty, &ttheta);
-  pose_diff_2d(poly_pose_s, poly_pose_e, &dx, &dy, &dtheta);
+  posesegm_diff_2d(poly_pose_s, poly_pose_e, &dx, &dy, &dtheta);
   co = cos(ttheta);
   si = sin(ttheta);
   qx = q.x * co - q.y * si + tx;
@@ -2109,11 +2109,15 @@ shortestline_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
   Temporal *dist = tdistance_trgeo_geo(temp, gs);
   const TInstant *inst = temporal_min_instant(dist);
   /* Timestamp t may be at an exclusive bound */
-  Datum value;
-  trgeo_value_at_timestamptz(temp, inst->t, false, &value);
-  LWGEOM *line = (LWGEOM *) lwline_make(value, PointerGetDatum(gs));
-  GSERIALIZED *result = geo_serialize(line);
-  lwgeom_free(line);
+  GSERIALIZED *geom = NULL;
+  trgeo_geom_at_timestamptz(temp, inst->t, false, &geom);
+  if (! geom)
+  {
+    pfree(dist); 
+    return NULL;
+  }
+  GSERIALIZED *result = geom_shortestline2d(geom, gs);
+  pfree(dist); pfree(geom);
   return result;
 }
 
@@ -2135,12 +2139,13 @@ shortestline_trgeo_tpoint(const Temporal *temp1, const Temporal *temp2)
     return NULL;
   const TInstant *inst = temporal_min_instant(dist);
   /* Timestamp t may be at an exclusive bound */
-  Datum value1, value2;
-  trgeo_value_at_timestamptz(temp1, inst->t, false, &value1);
-  temporal_value_at_timestamptz(temp2, inst->t, false, &value2);
-  LWGEOM *line = (LWGEOM *) lwline_make(value1, value2);
-  GSERIALIZED *result = geo_serialize(line);
-  lwgeom_free(line);
+  Datum value;
+  GSERIALIZED *gs;
+  trgeo_geom_at_timestamptz(temp1, inst->t, false, &gs);
+  temporal_value_at_timestamptz(temp2, inst->t, false, &value);
+  pfree(dist);
+  GSERIALIZED *result = geom_shortestline2d(gs, DatumGetGserializedP(value));
+  pfree(gs); pfree(DatumGetPointer(value));
   return result;
 }
 
@@ -2162,12 +2167,11 @@ shortestline_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2)
     return NULL;
   const TInstant *inst = temporal_min_instant(dist);
   /* Timestamp t may be at an exclusive bound */
-  Datum value1, value2;
-  trgeo_value_at_timestamptz(temp1, inst->t, false, &value1);
-  trgeo_value_at_timestamptz(temp2, inst->t, false, &value2);
-  LWGEOM *line = (LWGEOM *) lwline_make(value1, value2);
-  GSERIALIZED *result = geo_serialize(line);
-  lwgeom_free(line);
+  GSERIALIZED *gs1, *gs2;
+  trgeo_geom_at_timestamptz(temp1, inst->t, false, &gs1);
+  trgeo_geom_at_timestamptz(temp2, inst->t, false, &gs2);
+  GSERIALIZED *result = geom_shortestline2d(gs1, gs2);
+  pfree(dist); pfree(gs1); pfree(gs2);
   return result;
 }
 

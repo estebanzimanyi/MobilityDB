@@ -284,10 +284,11 @@ datumsegm_interpolate(Datum start, Datum end, meosType temptype,
     return PointerGetDatum(npointsegm_interpolate(DatumGetNpointP(start),
       DatumGetNpointP(end), ratio));
 #endif
-// #if POSE || RGEO
-  // else if (temptype == T_TPOSE)
-    // return PointerGetDatum(posesegm_interpolate(start, end, ratio));
-// #endif
+#if POSE || RGEO
+  else if (temptype == T_TPOSE || temptype == T_TRGEOMETRY)
+    return PointerGetDatum(posesegm_interpolate(DatumGetPoseP(start),
+      DatumGetPoseP(end), ratio));
+#endif
   else
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
@@ -506,8 +507,8 @@ tsequence_join(const TSequence *seq1, const TSequence *seq2,
   memcpy(&bbox, TSEQUENCE_BBOX_PTR(seq1), bboxsize);
   bbox_expand(TSEQUENCE_BBOX_PTR(seq2), &bbox, seq1->temptype);
   TSequence *result = tsequence_make_exp1(instants, count, count,
-    seq1->period.lower_inc, seq2->period.upper_inc,
-    MEOS_FLAGS_GET_INTERP(seq1->flags), NORMALIZE_NO, &bbox);
+      seq1->period.lower_inc, seq2->period.upper_inc,
+      MEOS_FLAGS_GET_INTERP(seq1->flags), NORMALIZE_NO, &bbox);
   pfree(instants);
   return result;
 }

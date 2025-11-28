@@ -116,6 +116,16 @@ datum_geog_disjoint(Datum geog1, Datum geog2)
 }
 
 /**
+ * @brief Return a Datum true if two geometries are equal in 2D
+ */
+Datum
+datum_geom_equals2d(Datum geom1, Datum geom2)
+{
+  return BoolGetDatum(geo_equals(DatumGetGserializedP(geom1),
+    DatumGetGserializedP(geom2)));
+}
+
+/**
  * @brief Return a Datum true if two geometries intersect in 2D
  */
 Datum

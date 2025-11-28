@@ -64,19 +64,23 @@ CREATE AGGREGATE wcount(trgeometry, interval) (
 
 /*****************************************************************************/
 
-CREATE FUNCTION temporal_merge_transfn(internal, trgeometry)
+CREATE FUNCTION trgeo_merge_transfn(internal, trgeometry)
   RETURNS internal
-  AS 'MODULE_PATHNAME', 'Temporal_merge_transfn'
+  AS 'MODULE_PATHNAME', 'Trgeo_merge_transfn'
+  LANGUAGE C IMMUTABLE PARALLEL SAFE;
+CREATE FUNCTION trgeo_merge_combinefn(internal, internal)
+  RETURNS internal
+  AS 'MODULE_PATHNAME', 'Trgeo_merge_transfn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 CREATE FUNCTION trgeometry_tagg_finalfn(internal)
   RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Temporal_tagg_finalfn'
+  AS 'MODULE_PATHNAME', 'Trgeo_merge_finalfn'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE AGGREGATE merge(trgeometry) (
-  SFUNC = temporal_merge_transfn,
+  SFUNC = trgeo_merge_transfn,
   STYPE = internal,
-  COMBINEFUNC = temporal_merge_combinefn,
+  COMBINEFUNC = trgeo_merge_combinefn,
   FINALFUNC = trgeometry_tagg_finalfn,
   SERIALFUNC = taggstate_serialize,
   DESERIALFUNC = taggstate_deserialize,

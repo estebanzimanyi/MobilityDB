@@ -115,6 +115,7 @@ extern Pose *pose_make_2d(double x, double y, double theta, int32_t srid);
 extern Pose *pose_make_3d(double x, double y, double z, double W, double X, double Y, double Z, int32_t srid);
 extern Pose *pose_make_point2d(const GSERIALIZED *gs, double theta);
 extern Pose *pose_make_point3d(const GSERIALIZED *gs, double W, double X, double Y, double Z);
+extern Pose *pose_make_zero(bool hasz, int32_t srid);
 
 /* Conversion functions */
 

@@ -104,6 +104,22 @@ extern double3 *double3segm_interpolate(const double3 *start,
 extern double4 *double4segm_interpolate(const double4 *start,
   const double4 *end, long double ratio);
 
+extern bool vec2_eq(double2 v1, double2 v2);
+extern double vec2_norm(double2 v);
+extern double vec2_dist2(double2 v1, double2 v2);
+extern double vec2_dist(double2 v1, double2 v2);
+extern double vec2_dot(double2 v1, double2 v2);
+extern double vec2_angle(double2 p, double2 q, double2 r);
+extern double2 vec2_normalize(double2 v);
+
+extern double vec3_norm(double3 v);
+extern double vec3_dot(double3 v1, double3 v2);
+extern double3 vec3_normalize(double3 v);
+extern double3 vec3_mult(double3 v, double s);
+extern double3 vec3_add(double3 v1, double3 v2);
+extern double3 vec3_diff(double3 v1, double3 v2);
+extern double3 vec3_cross(double3 v1, double3 v2);
+
 /*****************************************************************************/
 
 #endif /* __DOUBLEN_H__ */

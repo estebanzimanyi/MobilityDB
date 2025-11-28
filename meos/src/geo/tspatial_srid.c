@@ -466,6 +466,10 @@ Datum
       return PointerGetDatum(cbuffer_transf_pj(DatumGetCbufferP(d), srid_to,
         pj));
 #endif
+#if POSE
+    case T_POSE:
+      return PointerGetDatum(pose_transf_pj(DatumGetPoseP(d), srid_to, pj));
+#endif
     default: /* Error! */
       meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
         "Unknown transformation function for type: %s",
