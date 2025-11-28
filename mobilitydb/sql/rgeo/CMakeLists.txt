@@ -6,9 +6,12 @@ SET(LOCAL_FILES
   125_trgeo_spatialfuncs
   128_trgeo_topops
   129_trgeo_posops
+  131_trgeo_aggfuncs
   133_trgeo_distance
   133_trgeo_vclip
   134_trgeo_indexes
+  135_trgeo_spatialrels
+  # 137_trgeo_spatiotemprels
   )
 
 foreach (f ${LOCAL_FILES})

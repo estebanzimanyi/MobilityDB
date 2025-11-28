@@ -46,10 +46,136 @@
 #include "temporal/set.h"
 #include "temporal/span.h"
 #include "temporal/spanset.h"
+#include "temporal/tsequence.h"
 #include "temporal/type_util.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/tspatial_parser.h"
 #include "pose/pose.h"
+#include "pose/quaternion.h"
+
+/*****************************************************************************
+ * Intersection functions
+ *****************************************************************************/
+
+/**
+ * @brief Return 1 or 0 if a temporal pose segment intersects a pose during the
+ * period defined by the output timestamps, return 0 otherwise
+ * @param[in] start,end Base values defining the segment
+ * @param[in] value Base value
+ * @param[in] lower,upper Timestamps defining the segments
+ * @param[out] t1,t2 Timestamps defining the resulting period, may be equal
+ */
+int
+tposesegm_intersection_value(Datum start, Datum end, Datum value,
+  TimestampTz lower, TimestampTz upper, TimestampTz *t1, TimestampTz *t2)
+{
+  assert(lower < upper); assert(t1); assert(t2);
+  /* We are sure that the trajectory is a line */
+  Datum geom_start = datum_pose_point(start);
+  Datum geom_end = datum_pose_point(end);
+  Datum geom = datum_pose_point(value);
+  double dist;
+  /* Compute the value taking into account position only */
+  double fraction = (double) pointsegm_locate(geom_start, geom_end, geom,
+    &dist);
+  pfree(DatumGetPointer(geom_start)); pfree(DatumGetPointer(geom_end));
+  pfree(DatumGetPointer(geom));
+  if (fraction < 0.0)
+    return 0;
+  /* Compare value with interpolated pose to take into account orientation as
+   * well */
+  const Pose *pose1 = DatumGetPoseP(start);
+  const Pose *pose2 = DatumGetPoseP(end);
+  Pose *pose_interp = posesegm_interpolate(pose1, pose2, fraction);
+  Pose *pose = DatumGetPoseP(value);
+  bool same = pose_same(pose, pose_interp);
+  pfree(pose_interp);
+  if (! same)
+    return 0;
+  if (t1)
+  {
+    double duration = (double) (upper - lower);
+    /* Note that due to roundoff errors it may be the case that the
+     * resulting timestamp t may be equal to inst1->t or to inst2->t */
+    *t1 = lower + (TimestampTz) (duration * fraction);
+    if (t2)
+      *t2 = *t1;
+  }
+  return 1;
+}
+
+/**
+ * @brief Return 1 if two temporal pose segments intersect during the period
+ * defined by the output timestamps, return 0 otherwise
+ * @param[in] start1,end1 Temporal instants defining the first segment
+ * @param[in] start2,end2 Temporal instants defining the second segment
+ * @param[in] lower,upper Timestamps defining the segments
+ * @param[out] t1,t2 Timestamps defining the resulting period, may be equal
+ */
+int
+tposesegm_intersection(Datum start1, Datum end1, Datum start2, Datum end2,
+  TimestampTz lower, TimestampTz upper, TimestampTz *t1, TimestampTz *t2)
+{
+  assert(lower < upper); assert(t1); assert(t2);
+
+  /* Extract values */
+  const Pose *p1 = DatumGetPoseP(start1);
+  const Pose *p2 = DatumGetPoseP(end1);
+  const Pose *p3 = DatumGetPoseP(start2);
+  const Pose *p4 = DatumGetPoseP(end2);
+  GSERIALIZED *pt1 = pose_to_point(p1);
+  GSERIALIZED *pt2 = pose_to_point(p2);
+  GSERIALIZED *pt3 = pose_to_point(p3);
+  GSERIALIZED *pt4 = pose_to_point(p4);
+  Datum d1 = PointerGetDatum(pt1);
+  Datum d2 = PointerGetDatum(pt2);
+  Datum d3 = PointerGetDatum(pt3);
+  Datum d4 = PointerGetDatum(pt4);
+    
+  /* Test whether the point segments intersect */
+  int ninter = MEOS_FLAGS_GET_Z(p1->flags) ?
+    tgeogpointsegm_intersection(d1, d2, d3, d4, lower, upper, t1, t2) :
+    tgeompointsegm_intersection(d1, d2, d3, d4, lower, upper, t1, t2);
+  pfree(pt1); pfree(pt2); pfree(pt3); pfree(pt4);
+  /* If no intersection found */
+  if (! ninter)
+    return 0;
+
+  /* Test whether the orientation segments intersect */
+  TimestampTz t;
+  if (MEOS_FLAGS_GET_Z(p1->flags))
+  {
+    Quaternion q1 = (Quaternion) {p1->data[6], p1->data[3], p1->data[4],
+      p1->data[5]};
+    Quaternion q2 = (Quaternion) {p2->data[6], p2->data[3], p2->data[4],
+      p2->data[5]};
+    Quaternion q3 = (Quaternion) {p3->data[6], p3->data[3], p3->data[4],
+      p3->data[5]};
+    Quaternion q4 = (Quaternion) {p4->data[6], p4->data[3], p4->data[4],
+      p4->data[5]};
+    double fraction = quaternion_slerp_intersection(q1, q2, q3, q4);
+    /* If no intersection found */
+    if (fraction < 0.0)
+      return 0;
+
+    /* Interpolation timestamps */
+    double duration = (double) (upper - lower);
+    /* Note that due to roundoff errors it may be the case that the
+     * resulting timestamp t may be equal to inst1->t or to inst2->t */
+    t = lower + (TimestampTz) (duration * fraction);
+  }
+  else
+  {
+    Datum d1 = Float8GetDatum(p1->data[2]);
+    Datum d2 = Float8GetDatum(p2->data[2]);
+    Datum d3 = Float8GetDatum(p3->data[2]);
+    Datum d4 = Float8GetDatum(p4->data[2]);
+    if (! tfloatsegm_intersection(d1, d2, d3, d4, lower, upper, &t, &t))
+      return 0;
+  }
+
+  return (*t1 == t);
+}
 
 /*****************************************************************************
  * Validity functions
@@ -103,96 +229,6 @@ ensure_valid_tpose_tpose(const Temporal *temp1, const Temporal *temp2)
     return false;
   return true;
 }
-
-/*****************************************************************************
- * Intersection functions
- *****************************************************************************/
-
-/**
- * @brief Return 1 or 0 if a temporal pose segment intersects a pose during the
- * period defined by the output timestamps, return 0 otherwise
- * @param[in] start,end Base values defining the segment
- * @param[in] value Base value
- * @param[in] lower,upper Timestamps defining the segments
- * @param[out] t1,t2 Timestamps defining the resulting period, may be equal
- */
-int
-tposesegm_intersection_value(Datum start, Datum end, Datum value,
-  TimestampTz lower, TimestampTz upper, TimestampTz *t1, TimestampTz *t2)
-{
-  assert(lower < upper); assert(t1); assert(t2);
-  /* We are sure that the trajectory is a line */
-  Datum geom_start = datum_pose_point(start);
-  Datum geom_end = datum_pose_point(end);
-  Datum geom = datum_pose_point(value);
-  double dist;
-  /* Compute the value taking into account position only */
-  double fraction = (double) pointsegm_locate(geom_start, geom_end, geom,
-    &dist);
-  pfree(DatumGetPointer(geom_start)); pfree(DatumGetPointer(geom_end));
-  pfree(DatumGetPointer(geom));
-  if (fraction < 0.0)
-    return 0;
-  /* Compare value with interpolated pose to take into account orientation as
-   * well */
-  const Pose *pose1 = DatumGetPoseP(start);
-  const Pose *pose2 = DatumGetPoseP(end);
-  Pose *pose_interp = posesegm_interpolate(pose1, pose2, fraction);
-  Pose *pose = DatumGetPoseP(value);
-  bool same = pose_same(pose, pose_interp);
-  /* Temporal rigid geometries have poses as base values but are restricted
-   * to geometries */
-  // bool same;
-  // if (inst1->temptype == T_TRGEOMETRY)
-  // {
-    // const GSERIALIZED *gs1 = DatumGetGserializedP(start);
-    // const GSERIALIZED *gs2 = DatumGetGserializedP(value);
-    // LWGEOM *geom1 = lwgeom_from_gserialized(gs1);
-    // LWGEOM *geom2 = lwgeom_from_gserialized(gs2);
-    // LWGEOM *geom_interp = lwgeom_clone_deep(geom2);
-    // lwgeom_apply_pose(pose_interp, geom_interp);
-    // if (geom_interp->bbox)
-      // lwgeom_refresh_bbox(geom_interp);
-    // same = lwgeom_same(geom1, geom_interp);
-    // lwgeom_free(geom1); lwgeom_free(geom2); lwgeom_free(geom_interp);
-  // }
-  // else
-  // {
-    // Pose *pose = DatumGetPoseP(value);
-    // same = pose_same(pose, pose_interp);
-  // }
-  pfree(pose_interp);
-  if (! same)
-    return 0;
-  if (t1)
-  {
-    double duration = (double) (upper - lower);
-    /* Note that due to roundoff errors it may be the case that the
-     * resulting timestamp t may be equal to inst1->t or to inst2->t */
-    *t1 = lower + (TimestampTz) (duration * fraction);
-    if (t2)
-      *t2 = *t1;
-  }
-  return 1;
-}
-
-// /**
- // * @brief Return 1 if two temporal pose segments intersect during the period
- // * defined by the output timestamps, return 0 otherwise
- // * @param[in] start1,end1 Temporal instants defining the first segment
- // * @param[in] start2,end2 Temporal instants defining the second segment
- // * @param[in] lower,upper Timestamps defining the segments
- // * @param[out] t1,t2 Timestamps defining the resulting period, may be equal
- // */
-// int
-// tposesegm_intersection(Datum start1, Datum end1, Datum start2, Datum end2,
-  // TimestampTz lower, TimestampTz upper, TimestampTz *t1, TimestampTz *t2)
-// {
-  // assert(lower < upper); assert(t1); assert(t2);
-  // /* While waiting for this function we cheat and call the function below */
-  // return posesegm_distance_turnpt(DatumGetPoseP(start1), DatumGetPoseP(end1),
-    // DatumGetPoseP(start2), DatumGetPoseP(end2), lower, upper, t1, t2);
-// }
 
 /*****************************************************************************
  * Input/output functions
@@ -380,7 +416,7 @@ tposeseqset_make(const TSequenceSet *ss1, const TSequenceSet *ss2)
  * @brief Return a temporal pose from a temporal point and a temporal float
  * @param[in] tpoint Temporal point
  * @param[in] tradius Temporal float
- * @csqlfn #Tpose_make()
+ * @csqlfn #Tpose_constructor()
  */
 Temporal *
 tpose_make(const Temporal *tpoint, const Temporal *tradius)

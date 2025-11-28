@@ -60,6 +60,7 @@
 #include "geo/tgeo.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "pose/pose.h"
+#include "rgeo/lwgeom_utils.h"
 #include "rgeo/trgeo_all.h"
 #include "rgeo/trgeo_vclip.h"
 
@@ -68,38 +69,40 @@
  *****************************************************************************/
 
 /**
- * @brief
+ * @brief Construct a closed features pair
  */
 static cfp_elem
-cfp_make(LWGEOM *geom_1, LWGEOM *geom_2, Pose *pose_1, Pose *pose_2,
-  uint32_t cf_1, uint32_t cf_2, TimestampTz t, bool store)
+cfp_make(LWGEOM *geom1, LWGEOM *geom2, Pose *pose1, Pose *pose2,
+  uint32_t cf1, uint32_t cf2, TimestampTz t, bool store)
 {
   cfp_elem cfp;
-  cfp.geom_1 = geom_1;
-  cfp.geom_2 = geom_2;
-  cfp.pose_1 = pose_1;
-  cfp.pose_2 = pose_2;
-  cfp.cf_1 = cf_1;
-  cfp.cf_2 = cf_2;
+  cfp.geom1 = geom1;
+  cfp.geom2 = geom2;
+  cfp.pose1 = pose1;
+  cfp.pose2 = pose2;
+  cfp.cf1 = cf1;
+  cfp.cf2 = cf2;
   cfp.t = t;
   cfp.store = store;
-  cfp.free_pose_1 = MEOS_CFP_FREE_NO;
-  cfp.free_pose_2 = MEOS_CFP_FREE_NO;
+  cfp.free_pose1 = MEOS_CFP_FREE_NO;
+  cfp.free_pose2 = MEOS_CFP_FREE_NO;
   return cfp;
 }
 
 /**
- * @brief
+ * @brief Construct an empty cfp (closed features pair) structure
  */
 static inline cfp_elem
-cfp_make_zero(LWGEOM *geom_1, LWGEOM *geom_2, Pose *pose_1, Pose *pose_2,
+cfp_make_zero(LWGEOM *geom1, LWGEOM *geom2, Pose *pose1, Pose *pose2,
   TimestampTz t, bool store)
 {
-  return cfp_make(geom_1, geom_2, pose_1, pose_2, 0, 0, t, store);
+  return cfp_make(geom1, geom2, pose1, pose2, 0, 0, t, store);
 }
 
 /**
- * @brief
+ * @brief Initialize an array of closed features pairs
+ * @param[in] cfpa Array of closed features pairs
+ * @param[in] n Number of elements of the array
  */
 static void
 init_cfp_array(cfp_array *cfpa, size_t n)
@@ -107,28 +110,33 @@ init_cfp_array(cfp_array *cfpa, size_t n)
   cfpa->arr = palloc0(sizeof(cfp_elem) * n);
   cfpa->count = 0;
   cfpa->size = n;
+  return;
 }
 
 /**
- * @brief
+ * @brief Free an array of closed features pairs
+ * @param[in] cfpa Array of closed features pairs
  */
 static void
 free_cfp_array(cfp_array *cfpa)
 {
   for (uint32_t i = 0; i < cfpa->count; ++i)
   {
-    if (cfpa->arr[i].free_pose_1)
-      pfree(cfpa->arr[i].pose_1);
-    if (cfpa->arr[i].free_pose_2)
-      pfree(cfpa->arr[i].pose_2);
+    if (cfpa->arr[i].free_pose1)
+      pfree(cfpa->arr[i].pose1);
+    if (cfpa->arr[i].free_pose2)
+      pfree(cfpa->arr[i].pose2);
   }
   pfree(cfpa->arr);
+  return;
 }
 
 /**
- * @brief
+ * @brief Append an element to an array of closed features pairs
+ * @param[in] cfpa Array of closed features pairs
+ * @param[in] cfp Closed features pair
  */
-static void
+static bool
 append_cfp_elem(cfp_array *cfpa, cfp_elem cfp)
 {
   if (cfpa->count == cfpa->size)
@@ -136,15 +144,21 @@ append_cfp_elem(cfp_array *cfpa, cfp_elem cfp)
     cfpa->size *= 2;
     cfp_elem *new_arr = repalloc(cfpa->arr, sizeof(cfp_elem) * cfpa->size);
     if (new_arr == NULL)
+    {
       meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE, "Not enough memory");
+      return false;
+    }
     else
       cfpa->arr = new_arr;
   }
   cfpa->arr[cfpa->count++] = cfp;
+  return true;
 }
 
 /**
- * @brief
+ * @brief Construct a temporal distance element
+ * @param[in] dist Distance
+ * @param[in] t Timestamp
  */
 static tdist_elem
 tdist_make(double dist, TimestampTz t)
@@ -156,7 +170,9 @@ tdist_make(double dist, TimestampTz t)
 }
 
 /**
- * @brief
+ * @brief Construct an array temporal distances
+ * @param[in] tda Array of temporal distance elements
+ * @param[in] n Initial number of elements of the array
  */
 static void
 init_tdist_array(tdist_array *tda, size_t n)
@@ -164,21 +180,26 @@ init_tdist_array(tdist_array *tda, size_t n)
   tda->arr = palloc0(sizeof(tdist_elem) * n);
   tda->count = 0;
   tda->size = n;
+  return;
 }
 
 /**
- * @brief
+ * @brief Free an array of temporal distance elements
+ * @param[in] tda Array of temporal distance elements
  */
 static inline void
 free_tdist_array(tdist_array *tda)
 {
   pfree(tda->arr);
+  return;
 }
 
 /**
- * @brief
- */
-static void
+ * @brief Append an element to an array of temporal distance elements
+ * @param[in] tda Array of temporal distance elements
+ * @param[in] td Temporal distance element
+*/
+static bool
 append_tdist_elem(tdist_array *tda, tdist_elem td)
 {
   if (tda->count == tda->size)
@@ -186,11 +207,15 @@ append_tdist_elem(tdist_array *tda, tdist_elem td)
     tda->size *= 2;
     tdist_elem *new_arr = repalloc(tda->arr, sizeof(tdist_elem) * tda->size);
     if (new_arr == NULL)
+    {
       meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE, "Not enough memory");
+      return false;
+    }
     else
       tda->arr = new_arr;
   }
   tda->arr[tda->count++] = td;
+  return true;
 }
 
 /*****************************************************************************
@@ -282,7 +307,8 @@ compute_dist2(POINT4D p, POINT4D vs, POINT4D ve)
  *****************************************************************************/
 
 /**
- * @brief
+ * @brief Return the temporal distance between a 2D temporal rigid geometry and
+ * a geometry
  */
 TInstant *
 dist2d_trgeoinst_geo(const TInstant *inst, const GSERIALIZED *gs)
@@ -295,37 +321,11 @@ dist2d_trgeoinst_geo(const TInstant *inst, const GSERIALIZED *gs)
  * @brief
  */
 static void
-pose_interpolate_2d(Pose *pose1, Pose *pose2, double ratio, double *x,
-  double *y, double *theta)
+posesegm_diff_2d(Pose *start, Pose *end, double *x, double *y, double *theta)
 {
-  assert(0 <= ratio && ratio <= 1);
-  *x = pose1->data[0] * (1 - ratio) + pose2->data[0] * ratio;
-  *y = pose1->data[1] * (1 - ratio) + pose2->data[1] * ratio;
-  double theta_delta = pose2->data[2] - pose1->data[2];
-  /* If fabs(theta_delta) == M_PI: Always turn counter-clockwise */
-  if (fabs(theta_delta) < MEOS_EPSILON)
-    *theta = pose1->data[2];
-  else if (theta_delta > 0 && fabs(theta_delta) <= M_PI)
-    *theta = pose1->data[2] + theta_delta*ratio;
-  else if (theta_delta > 0 && fabs(theta_delta) > M_PI)
-    *theta = pose2->data[2] + (2*M_PI - theta_delta)*(1 - ratio);
-  else if (theta_delta < 0 && fabs(theta_delta) < M_PI)
-    *theta = pose1->data[2] + theta_delta*ratio;
-  else /* (theta_delta < 0 && fabs(theta_delta) >= M_PI) */
-    *theta = pose1->data[2] + (2*M_PI + theta_delta)*ratio;
-  if (*theta > M_PI)
-    *theta = *theta - 2*M_PI;
-}
-
-/**
- * @brief
- */
-static void
-pose_diff_2d(Pose *pose1, Pose *pose2, double *x, double *y, double *theta)
-{
-  *x = pose2->data[0] - pose1->data[0];
-  *y = pose2->data[1] - pose1->data[1];
-  double theta_delta = pose2->data[2] - pose1->data[2];
+  *x = end->data[0] - start->data[0];
+  *y = end->data[1] - start->data[1];
+  double theta_delta = end->data[2] - start->data[2];
   /* If fabs(theta_delta) == M_PI: Always turn counter-clockwise */
   if (fabs(theta_delta) < MEOS_EPSILON)
     *theta = theta_delta;
@@ -337,6 +337,7 @@ pose_diff_2d(Pose *pose1, Pose *pose2, double *x, double *y, double *theta)
     *theta = theta_delta;
   else /* (theta_delta < 0 && fabs(theta_delta) >= M_PI) */
     *theta = 2*M_PI + theta_delta;
+  return;
 }
 
 /**
@@ -348,7 +349,7 @@ f_tpoint_poly(POINT4D p, POINT4D q, POINT4D r, Pose *poly_pose_s,
 {
   double dx, dy, dtheta;
   double co, si, qx, qy, rx, ry;
-  pose_interpolate_2d(poly_pose_s, poly_pose_e, ratio, &dx, &dy, &dtheta);
+  posesegm_interpolate_2d(poly_pose_s, poly_pose_e, ratio, &dx, &dy, &dtheta);
   co = cos(dtheta);
   si = sin(dtheta);
   qx = q.x * co - q.y * si + dx;
@@ -375,12 +376,12 @@ solve_s_tpoly_point(LWPOLY *poly, LWPOINT *point, Pose *poly_pose_s,
   getPoint4d_p(poly->rings[0], uint_mod_add(poly_v, 1, n), &r);
 
 /*  if (solution_kind)
-    printf("s(t) = 0; p = (%lf, %lf), q = (%lf, %lf), r = (%lf, %lf), \npose_1 = (%lf, %lf, %lf), pose_2 = (%lf, %lf, %lf)\n",
+    printf("s(t) = 0; p = (%lf, %lf), q = (%lf, %lf), r = (%lf, %lf), \npose1 = (%lf, %lf, %lf), pose2 = (%lf, %lf, %lf)\n",
       p.x, p.y, q.x, q.y, r.x, r.y,
       poly_pose_s->data[0], poly_pose_s->data[1], poly_pose_s->data[2],
       poly_pose_e->data[0], poly_pose_e->data[1], poly_pose_e->data[2]);
   else
-    printf("s(t) = 1; p = (%lf, %lf), q = (%lf, %lf), r = (%lf, %lf), \npose_1 = (%lf, %lf, %lf), pose_2 = (%lf, %lf, %lf)\n",
+    printf("s(t) = 1; p = (%lf, %lf), q = (%lf, %lf), r = (%lf, %lf), \npose1 = (%lf, %lf, %lf), pose2 = (%lf, %lf, %lf)\n",
       p.x, p.y, q.x, q.y, r.x, r.y,
       poly_pose_s->data[0], poly_pose_s->data[1], poly_pose_s->data[2],
       poly_pose_e->data[0], poly_pose_e->data[1], poly_pose_e->data[2]);
@@ -388,8 +389,8 @@ solve_s_tpoly_point(LWPOLY *poly, LWPOINT *point, Pose *poly_pose_s,
 
   if (fabs(poly_pose_s->data[2] - poly_pose_e->data[2]) < MEOS_EPSILON)
   {
-    apply_pose_point4d(&q, poly_pose_s);
-    apply_pose_point4d(&r, poly_pose_s);
+    point4d_apply_pose(poly_pose_s, &q);
+    point4d_apply_pose(poly_pose_s, &r);
     double result;
     double discr = ((poly_pose_e->data[0] - poly_pose_s->data[0]) * (r.x - q.x)
       + (poly_pose_e->data[1] - poly_pose_s->data[1]) * (r.y - q.y));
@@ -447,51 +448,50 @@ solve_s_tpoly_point(LWPOLY *poly, LWPOINT *point, Pose *poly_pose_s,
  * @brief
  */
 static double
-solve_angle_0_tpoly_point(LWPOLY *poly UNUSED,
-  LWPOINT *point UNUSED,
-  Pose *poly_pose_s UNUSED,
-  Pose *poly_pose_e UNUSED,
-  uint32_t poly_v UNUSED,
+solve_angle_0_tpoly_point(LWPOLY *poly UNUSED, LWPOINT *point UNUSED,
+  Pose *poly_pose_s UNUSED, Pose *poly_pose_e UNUSED, uint32_t poly_v UNUSED,
   double r_prev UNUSED)
 {
   return 2;
 }
 
 /**
- * @brief
+ * @brief Return the distance between a temporal polygon and a point
  */
-static void
+static bool
 compute_dist_tpoly_point(cfp_elem *cfp, tdist_array *tda)
 {
   double dist;
   POINT4D p, q, r;
-  LWPOLY *poly = (LWPOLY *)cfp->geom_1;
-  LWPOINT *point = (LWPOINT *)cfp->geom_2;
+  LWPOLY *poly = (LWPOLY *)cfp->geom1;
+  LWPOINT *point = (LWPOINT *)cfp->geom2;
   uint32_t n = poly->rings[0]->npoints - 1;
-  uint32_t v = cfp->cf_1 / 2;
+  uint32_t v = cfp->cf1 / 2;
   lwpoint_getPoint4d_p(point, &p);
   getPoint4d_p(poly->rings[0], v, &q);
-  apply_pose_point4d(&q, cfp->pose_1);
-  if (cfp->cf_1 % 2 == 0)
+  point4d_apply_pose(cfp->pose1, &q);
+  if (cfp->cf1 % 2 == 0)
     dist = sqrt((p.x - q.x) * (p.x - q.x) + (p.y - q.y) * (p.y - q.y));
-  else /* cfp->cf_1 % 2 == 1 */
+  else /* cfp->cf1 % 2 == 1 */
   {
     getPoint4d_p(poly->rings[0], uint_mod_add(v, 1, n), &r);
-    apply_pose_point4d(&r, cfp->pose_1);
+    point4d_apply_pose(cfp->pose1, &r);
     double s = ((p.x - q.x) * (r.x - q.x) + (p.y - q.y) * (r.y - q.y)) /
       ((r.x - q.x) * (r.x - q.x) + (r.y - q.y) * (r.y - q.y));
     if (s <= 0 || s >= 1)
     {
-      /*printf("Problem, s should be between 0 and 1: s = %lf\n", s);
-      fflush(stdout);*/
-      return;
+      meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+        "Problem, s should be between 0 and 1: s = %lf\n", s);
+      return false;
     }
     double x = q.x  + (r.x - q.x) * s;
     double y = q.y  + (r.y - q.y) * s;
     dist = sqrt((p.x - x) * (p.x - x) + (p.y - y) * (p.y - y));
   }
   tdist_elem td = tdist_make(dist, cfp->t);
-  append_tdist_elem(tda, td);
+  if (! append_tdist_elem(tda, td))
+    return false;
+  return true;
 }
 
 /**
@@ -504,8 +504,8 @@ f_turnpoints_v_v_tpoint_poly(POINT4D p, POINT4D q, Pose *poly_pose_s,
   double tx, ty, ttheta;
   double dx, dy, dtheta;
   double co, si, qx, qy, qx_, qy_;
-  pose_interpolate_2d(poly_pose_s, poly_pose_e, ratio, &tx, &ty, &ttheta);
-  pose_diff_2d(poly_pose_s, poly_pose_e, &dx, &dy, &dtheta);
+  posesegm_interpolate_2d(poly_pose_s, poly_pose_e, ratio, &tx, &ty, &ttheta);
+  posesegm_diff_2d(poly_pose_s, poly_pose_e, &dx, &dy, &dtheta);
   co = cos(ttheta);
   si = sin(ttheta);
   qx = q.x * co - q.y * si + tx;
@@ -530,8 +530,8 @@ f_turnpoints_v_e_tpoint_poly(POINT4D p, POINT4D q, POINT4D r,
   double rx, ry, rx_, ry_;
   double x, y, x_, y_;
   double l2 = (q.x - r.x) * (q.x - r.x) + (q.y - r.y) * (q.y - r.y);
-  pose_interpolate_2d(poly_pose_s, poly_pose_e, ratio, &tx, &ty, &ttheta);
-  pose_diff_2d(poly_pose_s, poly_pose_e, &dx, &dy, &dtheta);
+  posesegm_interpolate_2d(poly_pose_s, poly_pose_e, ratio, &tx, &ty, &ttheta);
+  posesegm_diff_2d(poly_pose_s, poly_pose_e, &dx, &dy, &dtheta);
   co = cos(ttheta);
   si = sin(ttheta);
   qx = q.x * co - q.y * si + tx;
@@ -555,97 +555,99 @@ f_turnpoints_v_e_tpoint_poly(POINT4D p, POINT4D q, POINT4D r,
 /**
  * @brief
  */
-static void
+static bool
 compute_turnpoints_tpoly_point(cfp_elem *cfp_s, cfp_elem *cfp_e,
   tdist_array *tda)
 {
-  if (fabs(cfp_s->pose_1->data[0] - cfp_e->pose_1->data[0]) < MEOS_EPSILON &&
-      fabs(cfp_s->pose_1->data[1] - cfp_e->pose_1->data[1]) < MEOS_EPSILON &&
-      fabs(cfp_s->pose_1->data[2] - cfp_e->pose_1->data[2]) < MEOS_EPSILON)
-    return;
+  if (fabs(cfp_s->pose1->data[0] - cfp_e->pose1->data[0]) < MEOS_EPSILON &&
+      fabs(cfp_s->pose1->data[1] - cfp_e->pose1->data[1]) < MEOS_EPSILON &&
+      fabs(cfp_s->pose1->data[2] - cfp_e->pose1->data[2]) < MEOS_EPSILON)
+    return true;
 
   double dist;
   POINT4D p, q, r;
-  LWPOLY *poly = (LWPOLY *)cfp_s->geom_1;
-  LWPOINT *point = (LWPOINT *)cfp_s->geom_2;
-  uint32_t v = cfp_s->cf_1 / 2;
+  LWPOLY *poly = (LWPOLY *)cfp_s->geom1;
+  LWPOINT *point = (LWPOINT *)cfp_s->geom2;
+  uint32_t v = cfp_s->cf1 / 2;
   uint32_t n = poly->rings[0]->npoints - 1;
   lwpoint_getPoint4d_p(point, &p);
   getPoint4d_p(poly->rings[0], v, &q);
   getPoint4d_p(poly->rings[0], uint_mod_add(v, 1, n), &r);
 
-  if (fabs(cfp_s->pose_1->data[2] - cfp_e->pose_1->data[2]) < MEOS_EPSILON)
+  if (fabs(cfp_s->pose1->data[2] - cfp_e->pose1->data[2]) < MEOS_EPSILON)
   {
     double ratio;
-    apply_pose_point4d(&q, cfp_s->pose_1);
-    apply_pose_point4d(&r, cfp_s->pose_1);
-    double dx = cfp_s->pose_1->data[0] - cfp_e->pose_1->data[0];
-    double dy = cfp_s->pose_1->data[1] - cfp_e->pose_1->data[1];
-    if (cfp_s->cf_1 % 2 == 0)
+    point4d_apply_pose(cfp_s->pose1, &q);
+    point4d_apply_pose(cfp_s->pose1, &r);
+    double dx = cfp_s->pose1->data[0] - cfp_e->pose1->data[0];
+    double dy = cfp_s->pose1->data[1] - cfp_e->pose1->data[1];
+    if (cfp_s->cf1 % 2 == 0)
     {
       ratio = (dx * (q.x - p.x) + dy * (q.y - p.y)) / (dx * dx + dy * dy);
       if (0 < ratio && ratio < 1)
       {
-        Pose *pose_at_ratio = posesegm_interpolate(cfp_s->pose_1, cfp_e->pose_1,
+        Pose *pose_at_ratio = posesegm_interpolate(cfp_s->pose1, cfp_e->pose1,
           ratio);
         getPoint4d_p(poly->rings[0], v, &q);
-        apply_pose_point4d(&q, pose_at_ratio);
+        point4d_apply_pose(pose_at_ratio, &q);
         dist = sqrt((p.x - q.x) * (p.x - q.x) + (p.y - q.y) * (p.y - q.y));
         tdist_elem td = tdist_make(dist, cfp_s->t + 
           (cfp_e->t - cfp_s->t) * ratio);
-        append_tdist_elem(tda, td);
+        if (! append_tdist_elem(tda, td))
+          return false;
         pfree(pose_at_ratio);
       }
     }
-    else /* cfp_s->cf_1 % 2 == 1 */
+    else /* cfp_s->cf1 % 2 == 1 */
     {
       /* TODO: Maybe remove, since we never have turnpoints here */
       double det = dx * (r.y - q.y) - dy * (r.x - q.x);
       /* TODO: Check if we have to return ratio = 0 and ratio = 1, or nothing*/
       if (fabs(det) < MEOS_EPSILON)
-        return;
+        return true;
       ratio = ((q.x - p.x) * (r.y - q.y) + (q.y - p.y) * (r.x - q.x)) / det;
       if (0 < ratio && ratio < 1)
       {
-        Pose *pose_at_ratio = posesegm_interpolate(cfp_s->pose_1, cfp_e->pose_1,
+        Pose *pose_at_ratio = posesegm_interpolate(cfp_s->pose1, cfp_e->pose1,
           ratio);
         getPoint4d_p(poly->rings[0], v, &q);
-        apply_pose_point4d(&q, pose_at_ratio);
+        point4d_apply_pose(pose_at_ratio, &q);
         getPoint4d_p(poly->rings[0], uint_mod_add(v, 1, n), &r);
-        apply_pose_point4d(&r, pose_at_ratio);
+        point4d_apply_pose(pose_at_ratio, &r);
         double s = ((p.x - q.x) * (r.x - q.x) + (p.y - q.y) * (r.y - q.y)) /
           ((r.x - q.x) * (r.x - q.x) + (r.y - q.y) * (r.y - q.y));
         if (s <= 0 || s >= 1)
         {
-          /*printf("Problem, s should be between 0 and 1: s = %lf\n", s);
-          fflush(stdout);*/
-          return;
+          meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+            "Problem, s should be between 0 and 1: s = %lf\n", s);
+          return false;
         }
         double x = q.x  + (r.x - q.x) * s;
         double y = q.y  + (r.y - q.y) * s;
         dist = sqrt((p.x - x) * (p.x - x) + (p.y - y) * (p.y - y));
         tdist_elem td = tdist_make(dist, cfp_s->t + 
           (cfp_e->t - cfp_s->t) * ratio);
-        append_tdist_elem(tda, td);
+        if (! append_tdist_elem(tda, td))
+          return false;
         pfree(pose_at_ratio);
       }
     }
-    return;
+    return true;
   }
 
   for (double i = 0; i < 4; ++i)
   {
     double tl = i / 4, tr = (i + 1) / 4, t0 = -1;
     double vl, vr, v0;
-    if (cfp_s->cf_1 % 2 == 0)
+    if (cfp_s->cf1 % 2 == 0)
     {
-      vl = f_turnpoints_v_v_tpoint_poly(p, q, cfp_s->pose_1, cfp_e->pose_1, tl);
-      vr = f_turnpoints_v_v_tpoint_poly(p, q, cfp_s->pose_1, cfp_e->pose_1, tr);
+      vl = f_turnpoints_v_v_tpoint_poly(p, q, cfp_s->pose1, cfp_e->pose1, tl);
+      vr = f_turnpoints_v_v_tpoint_poly(p, q, cfp_s->pose1, cfp_e->pose1, tr);
     }
-    else /* cfp_s->cf_1 % 2 == 1 */
+    else /* cfp_s->cf1 % 2 == 1 */
     {
-      vl = f_turnpoints_v_e_tpoint_poly(p, q, r, cfp_s->pose_1, cfp_e->pose_1, tl);
-      vr = f_turnpoints_v_e_tpoint_poly(p, q, r, cfp_s->pose_1, cfp_e->pose_1, tr);
+      vl = f_turnpoints_v_e_tpoint_poly(p, q, r, cfp_s->pose1, cfp_e->pose1, tl);
+      vr = f_turnpoints_v_e_tpoint_poly(p, q, r, cfp_s->pose1, cfp_e->pose1, tr);
     }
     if (fabs(vr) < MEOS_EPSILON && i != 3)
       t0 = tr;
@@ -656,10 +658,10 @@ compute_turnpoints_tpoly_point(cfp_elem *cfp_s, cfp_elem *cfp_e,
       {
         ++j;
         t0 = (tl * vr - tr * vl) / (vr - vl);
-        if (cfp_s->cf_1 % 2 == 0)
-          v0 = f_turnpoints_v_v_tpoint_poly(p, q, cfp_s->pose_1, cfp_e->pose_1, t0);
-        else /* cfp_s->cf_1 % 2 == 1 */
-          v0 = f_turnpoints_v_e_tpoint_poly(p, q, r, cfp_s->pose_1, cfp_e->pose_1, t0);
+        if (cfp_s->cf1 % 2 == 0)
+          v0 = f_turnpoints_v_v_tpoint_poly(p, q, cfp_s->pose1, cfp_e->pose1, t0);
+        else /* cfp_s->cf1 % 2 == 1 */
+          v0 = f_turnpoints_v_e_tpoint_poly(p, q, r, cfp_s->pose1, cfp_e->pose1, t0);
         if (fabs(v0) < MEOS_EPSILON)
           break;
         if (vl * v0 <= 0)
@@ -671,16 +673,16 @@ compute_turnpoints_tpoly_point(cfp_elem *cfp_s, cfp_elem *cfp_e,
     if (t0 != -1)
     {
       double dx, dy, theta;
-      pose_interpolate_2d(cfp_s->pose_1, cfp_e->pose_1, t0, &dx, &dy, &theta);
+      posesegm_interpolate_2d(cfp_s->pose1, cfp_e->pose1, t0, &dx, &dy, &theta);
       double co = cos(theta);
       double si = sin(theta);
       double qx = q.x * co - q.y * si + dx;
       double qy = q.x * si + q.y * co + dy;
-      if (cfp_s->cf_1 % 2 == 0)
+      if (cfp_s->cf1 % 2 == 0)
       {
         dist = sqrt((p.x - qx) * (p.x - qx) + (p.y - qy) * (p.y - qy));
       }
-      else /* cfp_s->cf_1 % 2 == 1 */
+      else /* cfp_s->cf1 % 2 == 1 */
       {
         double rx = r.x * co - r.y * si + dx;
         double ry = r.x * si + r.y * co + dy;
@@ -688,19 +690,20 @@ compute_turnpoints_tpoly_point(cfp_elem *cfp_s, cfp_elem *cfp_e,
           ((rx - qx) * (rx - qx) + (ry - qy) * (ry - qy));
         if (s <= 0 || s >= 1)
         {
-          /*printf("Problem, s should be between 0 and 1: s = %lf\n", s);
-          fflush(stdout);*/
-          return;
+          meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+            "Problem, s should be between 0 and 1: s = %lf\n", s);
+          return false;
         }
         double x = qx  + (rx - qx) * s;
         double y = qy  + (ry - qy) * s;
         dist = sqrt((p.x - x) * (p.x - x) + (p.y - y) * (p.y - y));
       }
       tdist_elem td = tdist_make(dist, cfp_s->t + (cfp_e->t - cfp_s->t) * t0);
-      append_tdist_elem(tda, td);
+      if (! append_tdist_elem(tda, td))
+        return false;
     }
   }
-  return;
+  return true;
 }
 
 /**
@@ -803,10 +806,10 @@ TSequence *
 dist2d_trgeoseq_point(const TSequence *seq, const GSERIALIZED *gs)
 {
   /* TODO: Add check and code for stepwise seq */
-  const GSERIALIZED *ref_gs = trgeoseq_geom_p(seq);
+  const GSERIALIZED *refgs = trgeoseq_geom_p(seq);
 
   /* TODO: check that polygon is convex */
-  LWPOLY *poly = lwgeom_as_lwpoly(lwgeom_from_gserialized(ref_gs));
+  LWPOLY *poly = lwgeom_as_lwpoly(lwgeom_from_gserialized(refgs));
   LWPOINT *point = lwgeom_as_lwpoint(lwgeom_from_gserialized(gs));
 
   const TInstant *inst1, *inst2;
@@ -820,8 +823,9 @@ dist2d_trgeoseq_point(const TSequence *seq, const GSERIALIZED *gs)
   init_cfp_array(&cfpa, seq->count);
   cfp_elem cfp = cfp_make_zero((LWGEOM *)poly, (LWGEOM *)point,
     pose1, NULL, inst1->t, MEOS_CFP_STORE);
-  v_clip_tpoly_point(poly, point, pose1, &cfp.cf_1, NULL);
-  append_cfp_elem(&cfpa, cfp);
+  v_clip_tpoly_point(poly, point, pose1, &cfp.cf1, NULL);
+  if (! append_cfp_elem(&cfpa, cfp))
+    return NULL;
   for (int i = 0; i < seq->count - 1; ++i)
   {
     /* TODO: optimise using simple checks, such as:
@@ -836,20 +840,21 @@ dist2d_trgeoseq_point(const TSequence *seq, const GSERIALIZED *gs)
     /* Compute the evolution of closest features for this segment */
     do
     {
-      if (cfp.cf_1 % 2 == 0) /* poly_feature is a vertex */
+      if (cfp.cf1 % 2 == 0) /* poly_feature is a vertex */
         state = vertex_vertex_tpoly_point(poly, pose1, pose2, point,
-          &cfp.cf_1, &direction, &ratio);
+          &cfp.cf1, &direction, &ratio);
       else /* poly_feature is an edge */
         state = edge_vertex_tpoly_point(poly, pose1, pose2, point,
-          &cfp.cf_1, &direction, &ratio);
+          &cfp.cf1, &direction, &ratio);
 
       if (state == MEOS_CONTINUE)
       {
         cfp.t = inst1->t + (inst2->t - inst1->t) * ratio;
-        cfp.pose_1 = posesegm_interpolate(pose1, pose2, ratio);
-        cfp.free_pose_1 = MEOS_CFP_FREE;
+        cfp.pose1 = posesegm_interpolate(pose1, pose2, ratio);
+        cfp.free_pose1 = MEOS_CFP_FREE;
         cfp.store = MEOS_CFP_STORE_NO;
-        append_cfp_elem(&cfpa, cfp);
+        if (! append_cfp_elem(&cfpa, cfp))
+          return NULL;
       }
 
       if (loop++ == MEOS_MAX_ITERS) break;
@@ -859,22 +864,24 @@ dist2d_trgeoseq_point(const TSequence *seq, const GSERIALIZED *gs)
     if (loop > MEOS_MAX_ITERS)
     {
       meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-        "Temporal distance: Cycle detected, current feature: %d", cfp.cf_1);
+        "Temporal distance: Cycle detected, current feature: %d", cfp.cf1);
       return NULL;
     }
 
-    cfp.pose_1 = pose2;
-    cfp.free_pose_1 = MEOS_CFP_FREE_NO;
+    cfp.pose1 = pose2;
+    cfp.free_pose1 = MEOS_CFP_FREE_NO;
     cfp.t = inst2->t;
     cfp.store = MEOS_CFP_STORE;
     cfp_elem next_cfp = cfp;
-    v_clip_tpoly_point(poly, point, pose2, &next_cfp.cf_1, NULL);
-    append_cfp_elem(&cfpa, next_cfp);
-    if (next_cfp.cf_1 != cfp.cf_1)
+    v_clip_tpoly_point(poly, point, pose2, &next_cfp.cf1, NULL);
+    if (! append_cfp_elem(&cfpa, next_cfp))
+      return NULL;
+    if (next_cfp.cf1 != cfp.cf1)
     {
-      printf("Problem, cfp changed from %d to %d at end of temporal segment\n",
-        cfp.cf_1, next_cfp.cf_1);
-      fflush(stdout);
+      meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+        "Problem, cfp changed from %d to %d at end of temporal segment\n",
+        cfp.cf1, next_cfp.cf1);
+      return NULL;
     }
     cfp = next_cfp;
   }
@@ -886,10 +893,14 @@ dist2d_trgeoseq_point(const TSequence *seq, const GSERIALIZED *gs)
   for (uint32_t i = 0; i < cfpa.count - 1; ++i)
   {
     if (cfpa.arr[i].store)
-      compute_dist_tpoly_point(&cfpa.arr[i], &tda);
+    {
+      if (! compute_dist_tpoly_point(&cfpa.arr[i], &tda))
+        return NULL;
+    }
     compute_turnpoints_tpoly_point(&cfpa.arr[i], &cfpa.arr[i+1], &tda);
   }
-  compute_dist_tpoly_point(&cfpa.arr[cfpa.count-1], &tda);
+  if (! compute_dist_tpoly_point(&cfpa.arr[cfpa.count-1], &tda))
+    return NULL;
 
   /* Create the result tfloat */
   TInstant **instants = palloc(sizeof(TInstant *) * tda.count);
@@ -916,7 +927,7 @@ f_tpoly_poly(POINT4D p, POINT4D q, POINT4D r, Pose *poly_pose_s,
 {
   double dx, dy, dtheta;
   double co, si, qx, qy, rx, ry;
-  pose_interpolate_2d(poly_pose_s, poly_pose_e, ratio, &dx, &dy, &dtheta);
+  posesegm_interpolate_2d(poly_pose_s, poly_pose_e, ratio, &dx, &dy, &dtheta);
   co = cos(dtheta);
   si = sin(dtheta);
   qx = q.x * co - q.y * si + dx;
@@ -945,8 +956,8 @@ solve_s_tpoly_poly(LWPOLY *poly1, Pose *poly_pose_s, Pose *poly_pose_e,
 
   if (fabs(poly_pose_s->data[2] - poly_pose_e->data[2]) < MEOS_EPSILON)
   {
-    apply_pose_point4d(&q, poly_pose_s);
-    apply_pose_point4d(&r, poly_pose_s);
+    point4d_apply_pose(poly_pose_s, &q);
+    point4d_apply_pose(poly_pose_s, &r);
     double result;
     double discr = (poly_pose_e->data[0] - poly_pose_s->data[0]) * (r.x - q.x)
                  + (poly_pose_e->data[1] - poly_pose_s->data[1]) * (r.y - q.y);
@@ -1011,7 +1022,7 @@ f_poly_tpoly(POINT4D p, POINT4D q, POINT4D r, Pose *poly_pose_s,
 {
   double dx, dy, dtheta;
   double co, si, px, py;
-  pose_interpolate_2d(poly_pose_s, poly_pose_e, ratio, &dx, &dy, &dtheta);
+  posesegm_interpolate_2d(poly_pose_s, poly_pose_e, ratio, &dx, &dy, &dtheta);
   co = cos(dtheta);
   si = sin(dtheta);
   px = p.x * co - p.y * si + dx;
@@ -1038,7 +1049,7 @@ solve_s_poly_tpoly(LWPOLY *poly1, LWPOLY *poly2, Pose *poly_pose_s,
 
   if (fabs(poly_pose_s->data[2] - poly_pose_e->data[2]) < MEOS_EPSILON)
   {
-    apply_pose_point4d(&p, poly_pose_s);
+    point4d_apply_pose(poly_pose_s, &p);
     double result;
     double discr = - (poly_pose_e->data[0] - poly_pose_s->data[0]) * (r.x - q.x)
                    - (poly_pose_e->data[1] - poly_pose_s->data[1]) * (r.y - q.y);
@@ -1181,7 +1192,7 @@ f_parallel_edges_tpoly_poly(LWPOLY *poly1, Pose *poly_pose_s, Pose *poly_pose_e,
   getPoint4d_p(poly2->rings[0], uint_mod_add(poly2_v, 1, n2), &pe);
   double dx, dy, dtheta;
   double co, si, qsx, qsy, qex, qey;
-  pose_interpolate_2d(poly_pose_s, poly_pose_e, ratio, &dx, &dy, &dtheta);
+  posesegm_interpolate_2d(poly_pose_s, poly_pose_e, ratio, &dx, &dy, &dtheta);
   co = cos(dtheta);
   si = sin(dtheta);
   qsx = qs.x * co - qs.y * si + dx;
@@ -1253,13 +1264,9 @@ solve_parallel_edges_tpoly_poly(LWPOLY *poly1, Pose *poly_pose_s,
  * @brief
  */
 static inline double
-solve_angle_0_poly_tpoly(LWPOLY *poly1 UNUSED, 
-  LWPOLY *poly2 UNUSED, 
-  Pose *poly_pose_s UNUSED,
-  Pose *poly_pose_e UNUSED, 
-  uint32_t poly1_v UNUSED, 
-  uint32_t poly2_v UNUSED,
-  double ratio UNUSED)
+solve_angle_0_poly_tpoly(LWPOLY *poly1 UNUSED, LWPOLY *poly2 UNUSED, 
+  Pose *poly_pose_s UNUSED, Pose *poly_pose_e UNUSED, uint32_t poly1_v UNUSED, 
+  uint32_t poly2_v UNUSED, double ratio UNUSED)
 {
   return 2;
 }
@@ -1330,8 +1337,8 @@ vertex_edge_tpoly_poly(LWPOLY *poly1, Pose *pose_start, Pose *pose_end,
     getPoint4d_p(poly2->rings[0], i2, &ps);
     getPoint4d_p(poly2->rings[0], uint_mod_add(i2, 1, n2), &pe);
     Pose *pose = posesegm_interpolate(pose_start, pose_end, ratio_3);
-    apply_pose_point4d(&qs, pose);
-    apply_pose_point4d(&qe, pose);
+    point4d_apply_pose(pose, &qs);
+    point4d_apply_pose(pose, &qe);
     pfree(pose);
     /* TODO: check if we assume that ccw1 == ccw2 here or not */
     double s1 = compute_s(qe, ps, pe);
@@ -1382,8 +1389,8 @@ vertex_edge_tpoly_poly(LWPOLY *poly1, Pose *pose_start, Pose *pose_end,
     getPoint4d_p(poly2->rings[0], i2, &ps);
     getPoint4d_p(poly2->rings[0], uint_mod_add(i2, 1, n2), &pe);
     Pose *pose = posesegm_interpolate(pose_start, pose_end, ratio_4);
-    apply_pose_point4d(&qs, pose);
-    apply_pose_point4d(&qe, pose);
+    point4d_apply_pose(pose, &qs);
+    point4d_apply_pose(pose, &qe);
     pfree(pose);
     /* TODO: check if we assume that ccw1 == ccw2 here or not */
     double s1 = compute_s(qs, ps, pe);
@@ -1493,8 +1500,8 @@ edge_vertex_tpoly_poly(LWPOLY *poly1, Pose *pose_start, Pose *pose_end,
     getPoint4d_p(poly2->rings[0], i2, &ps);
     getPoint4d_p(poly2->rings[0], uint_mod_add(i2, 1, n2), &pe);
     Pose *pose = posesegm_interpolate(pose_start, pose_end, ratio_3);
-    apply_pose_point4d(&qs, pose);
-    apply_pose_point4d(&qe, pose);
+    point4d_apply_pose(pose, &qs);
+    point4d_apply_pose(pose, &qe);
     pfree(pose);
     /* TODO: check if we assume that ccw1 == ccw2 here or not */
     double s1 = compute_s(pe, qs, qe);
@@ -1545,8 +1552,8 @@ edge_vertex_tpoly_poly(LWPOLY *poly1, Pose *pose_start, Pose *pose_end,
     getPoint4d_p(poly2->rings[0], uint_mod_sub(i2, 1, n2), &ps);
     getPoint4d_p(poly2->rings[0], i2, &pe);
     Pose *pose = posesegm_interpolate(pose_start, pose_end, ratio_4);
-    apply_pose_point4d(&qs, pose);
-    apply_pose_point4d(&qe, pose);
+    point4d_apply_pose(pose, &qs);
+    point4d_apply_pose(pose, &qe);
     pfree(pose);
     /* TODO: check if we assume that ccw1 == ccw2 here or not */
     double s1 = compute_s(ps, qs, qe);
@@ -1593,40 +1600,40 @@ edge_vertex_tpoly_poly(LWPOLY *poly1, Pose *pose_start, Pose *pose_end,
 /**
  * @brief
  */
-static void
+static bool
 compute_dist_tpoly_poly(cfp_elem *cfp, tdist_array *tda)
 {
   double dist;
   POINT4D ps, pe, qs, qe;
-  LWPOLY *poly1 = (LWPOLY *)cfp->geom_1;
-  LWPOLY *poly2 = (LWPOLY *)cfp->geom_2;
+  LWPOLY *poly1 = (LWPOLY *)cfp->geom1;
+  LWPOLY *poly2 = (LWPOLY *)cfp->geom2;
   uint32_t n1 = poly1->rings[0]->npoints - 1;
   uint32_t n2 = poly2->rings[0]->npoints - 1;
-  uint32_t v1 = cfp->cf_1 / 2;
-  uint32_t v2 = cfp->cf_2 / 2;
+  uint32_t v1 = cfp->cf1 / 2;
+  uint32_t v2 = cfp->cf2 / 2;
   getPoint4d_p(poly2->rings[0], v2, &ps);
   getPoint4d_p(poly1->rings[0], v1, &qs);
-  apply_pose_point4d(&qs, cfp->pose_1);
-  if (cfp->cf_1 % 2 == 0 && cfp->cf_2 % 2 == 0)
+  point4d_apply_pose(cfp->pose1, &qs);
+  if (cfp->cf1 % 2 == 0 && cfp->cf2 % 2 == 0)
     dist = sqrt((ps.x - qs.x) * (ps.x - qs.x) + (ps.y - qs.y) * (ps.y - qs.y));
-  else if (cfp->cf_2 % 2 == 0) /* cfp->cf_1 % 2 == 1 */
+  else if (cfp->cf2 % 2 == 0) /* cfp->cf1 % 2 == 1 */
   {
     getPoint4d_p(poly1->rings[0], uint_mod_add(v1, 1, n1), &qe);
-    apply_pose_point4d(&qe, cfp->pose_1);
+    point4d_apply_pose(cfp->pose1, &qe);
     double s = 
       ((ps.x - qs.x) * (qe.x - qs.x) + (ps.y - qs.y) * (qe.y - qs.y)) /
       ((qe.x - qs.x) * (qe.x - qs.x) + (qe.y - qs.y) * (qe.y - qs.y));
     if (s <= 0 || s >= 1)
     {
-      printf("Problem 1, s should be between 0 and 1: s = %lf\n", s);
-      fflush(stdout);
-      return;
+      meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+        "Problem 1, s should be between 0 and 1: s = %lf\n", s);
+      return false;
     }
     double x = qs.x  + (qe.x - qs.x) * s;
     double y = qs.y  + (qe.y - qs.y) * s;
     dist = sqrt((ps.x - x) * (ps.x - x) + (ps.y - y) * (ps.y - y));
   }
-  else /* cfp->cf_1 % 2 == 0 && cfp->cf_2 % 2 == 1 */
+  else /* cfp->cf1 % 2 == 0 && cfp->cf2 % 2 == 1 */
   {
     getPoint4d_p(poly2->rings[0], uint_mod_add(v2, 1, n2), &pe);
     double s = 
@@ -1634,16 +1641,18 @@ compute_dist_tpoly_poly(cfp_elem *cfp, tdist_array *tda)
       ((pe.x - ps.x) * (pe.x - ps.x) + (pe.y - ps.y) * (pe.y - ps.y));
     if (s <= 0 || s >= 1)
     {
-      printf("Problem 2, s should be between 0 and 1: s = %lf\n", s);
-      fflush(stdout);
-      return;
+      meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+        "Problem 2, s should be between 0 and 1: s = %lf\n", s);
+      return false;
     }
     double x = ps.x  + (pe.x - ps.x) * s;
     double y = ps.y  + (pe.y - ps.y) * s;
     dist = sqrt((qs.x - x) * (qs.x - x) + (qs.y - y) * (qs.y - y));
   }
   tdist_elem td = tdist_make(dist, cfp->t);
-  append_tdist_elem(tda, td);
+  if (! append_tdist_elem(tda, td))
+    return false;
+  return true;
 }
 
 /**
@@ -1652,11 +1661,18 @@ compute_dist_tpoly_poly(cfp_elem *cfp, tdist_array *tda)
 TSequence *
 dist2d_trgeoseq_poly(const TSequence *seq, const GSERIALIZED *gs)
 {
-  /* TODO: Add check and code for stepwise seq */
-  const GSERIALIZED *ref_gs = trgeoseq_geom_p(seq);
+  /* Ensure the validity of the arguments */
+  const GSERIALIZED *refgs = trgeoseq_geom_p(seq);
+  if (! poly_is_convex(refgs) || ! poly_is_convex(gs))
+  {
+    meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+      "The two geometries must be convext");
+    return NULL;
+  }
 
-  /* TODO: check that both polygons are convex */
-  LWPOLY *poly1 = lwgeom_as_lwpoly(lwgeom_from_gserialized(ref_gs));
+  /* TODO: Add check and code for stepwise sequence */
+
+  LWPOLY *poly1 = lwgeom_as_lwpoly(lwgeom_from_gserialized(refgs));
   LWPOLY *poly2 = lwgeom_as_lwpoly(lwgeom_from_gserialized(gs));
 
   const TInstant *inst1, *inst2;
@@ -1670,8 +1686,9 @@ dist2d_trgeoseq_poly(const TSequence *seq, const GSERIALIZED *gs)
   init_cfp_array(&cfpa, seq->count);
   cfp_elem cfp = cfp_make_zero((LWGEOM *)poly1, (LWGEOM *)poly2,
     pose1, NULL, inst1->t, MEOS_CFP_STORE);
-  v_clip_tpoly_tpoly(poly1, poly2, pose1, NULL, &cfp.cf_1, &cfp.cf_2, NULL);
-  append_cfp_elem(&cfpa, cfp);
+  v_clip_tpoly_tpoly(poly1, poly2, pose1, NULL, &cfp.cf1, &cfp.cf2, NULL);
+  if (! append_cfp_elem(&cfpa, cfp))
+    return NULL;
   for (int i = 0; i < seq->count - 1; ++i)
   {
     // printf("Segment %d\n", i);
@@ -1688,43 +1705,47 @@ dist2d_trgeoseq_poly(const TSequence *seq, const GSERIALIZED *gs)
     /* Compute the evolution of closest features for this segment */
     do
     {
-      // printf("Features before %d, %d\n", cfp.cf_1, cfp.cf_2);
+      // printf("Features before %d, %d\n", cfp.cf1, cfp.cf2);
       // printf("Dirs before = (%d, %d)\n", dir1, dir2);
       // fflush(stdout);
 
-      if (cfp.cf_1 % 2 == 0 && cfp.cf_2 % 2 == 0) /* vertex <-> vertex */
+      if (cfp.cf1 % 2 == 0 && cfp.cf2 % 2 == 0) /* vertex <-> vertex */
         state = vertex_vertex_tpoly_poly(poly1, pose1, pose2, poly2,
-          &cfp.cf_1, &cfp.cf_2, &dir1, &dir2, &ratio);
-      else if (cfp.cf_1 % 2 == 0) /* vertex <-> edge */
+          &cfp.cf1, &cfp.cf2, &dir1, &dir2, &ratio);
+      else if (cfp.cf1 % 2 == 0) /* vertex <-> edge */
         state = vertex_edge_tpoly_poly(poly1, pose1, pose2, poly2,
-          &cfp.cf_1, &cfp.cf_2, &dir1, &dir2, &ratio);
-      else if (cfp.cf_2 % 2 == 0) /* edge <-> vertex */
+          &cfp.cf1, &cfp.cf2, &dir1, &dir2, &ratio);
+      else if (cfp.cf2 % 2 == 0) /* edge <-> vertex */
         state = edge_vertex_tpoly_poly(poly1, pose1, pose2, poly2,
-          &cfp.cf_1, &cfp.cf_2, &dir1, &dir2, &ratio);
+          &cfp.cf1, &cfp.cf2, &dir1, &dir2, &ratio);
       else /* edge <-> edge */
         // state = edge_edge_tpoly_poly(poly1, pose1, pose2, poly2,
-        //   &cfp.cf_1, &cfp.cf_2, &dir1, &dir2, &ratio);
+        //   &cfp.cf1, &cfp.cf2, &dir1, &dir2, &ratio);
+      {
         meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE, "Can't happen");
+        return NULL;
+      }
 
-      // printf("Features after %d, %d\n", cfp.cf_1, cfp.cf_2);
+      // printf("Features after %d, %d\n", cfp.cf1, cfp.cf2);
       // printf("Dirs after = (%d, %d)\n", dir1, dir2);
       // fflush(stdout);
 
       if (state == MEOS_CONTINUE)
       {
         cfp.t = inst1->t + (inst2->t - inst1->t) * ratio;
-        cfp.pose_1 = posesegm_interpolate(pose1, pose2, ratio);
-        cfp.free_pose_1 = MEOS_CFP_FREE;
+        cfp.pose1 = posesegm_interpolate(pose1, pose2, ratio);
+        cfp.free_pose1 = MEOS_CFP_FREE;
         cfp.store = MEOS_CFP_STORE_NO;
-        append_cfp_elem(&cfpa, cfp);
+        if (! append_cfp_elem(&cfpa, cfp))
+          return NULL;
       }
 
       // cfp_elem test_cfp = cfp;
-      // v_clip_tpoly_tpoly(poly1, poly2, cfp.pose_1, NULL, &test_cfp.cf_1, &test_cfp.cf_2, NULL);
-      // if (test_cfp.cf_1 != cfp.cf_1 || test_cfp.cf_2 != cfp.cf_2)
+      // v_clip_tpoly_tpoly(poly1, poly2, cfp.pose1, NULL, &test_cfp.cf1, &test_cfp.cf2, NULL);
+      // if (test_cfp.cf1 != cfp.cf1 || test_cfp.cf2 != cfp.cf2)
       // {
       //   printf("Problem, test cfp changed from (%d, %d) to (%d, %d) during temporal segment\n",
-      //     cfp.cf_1, cfp.cf_2, test_cfp.cf_1, test_cfp.cf_2);
+      //     cfp.cf1, cfp.cf2, test_cfp.cf1, test_cfp.cf2);
       //   fflush(stdout);
       // }
 
@@ -1736,23 +1757,25 @@ dist2d_trgeoseq_poly(const TSequence *seq, const GSERIALIZED *gs)
     {
       meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE, 
         "Temporal distance: Cycle detected, current features: (%d, %d)",
-        cfp.cf_1, cfp.cf_2);
+        cfp.cf1, cfp.cf2);
       return NULL;
     }
 
-    cfp.pose_1 = pose2;
-    cfp.free_pose_1 = MEOS_CFP_FREE_NO;
+    cfp.pose1 = pose2;
+    cfp.free_pose1 = MEOS_CFP_FREE_NO;
     cfp.t = inst2->t;
     cfp.store = MEOS_CFP_STORE;
     cfp_elem next_cfp = cfp;
-    v_clip_tpoly_tpoly(poly1, poly2, pose2, NULL, &next_cfp.cf_1,
-      &next_cfp.cf_2, NULL);
-    append_cfp_elem(&cfpa, next_cfp);
-    if (next_cfp.cf_1 != cfp.cf_1 || next_cfp.cf_2 != cfp.cf_2)
+    v_clip_tpoly_tpoly(poly1, poly2, pose2, NULL, &next_cfp.cf1,
+      &next_cfp.cf2, NULL);
+    if (! append_cfp_elem(&cfpa, next_cfp))
+      return NULL;
+    if (next_cfp.cf1 != cfp.cf1 || next_cfp.cf2 != cfp.cf2)
     {
-      printf("Problem, cfp changed from (%d, %d) to (%d, %d) at end of temporal segment\n",
-        cfp.cf_1, cfp.cf_2, next_cfp.cf_1, next_cfp.cf_2);
-      fflush(stdout);
+      meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR, 
+        "Problem, cfp changed from (%d, %d) to (%d, %d) at end of temporal segment\n",
+        cfp.cf1, cfp.cf2, next_cfp.cf1, next_cfp.cf2);
+      return NULL;
     }
     cfp = next_cfp;
   }
@@ -1833,7 +1856,6 @@ tdistance_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
   /* Ensure the validity of the arguments */
   if (! ensure_valid_trgeo_geo(temp, gs) || gserialized_is_empty(gs))
     return NULL;
-
   if (MEOS_FLAGS_GET_Z(temp->flags))
   {
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
@@ -2034,8 +2056,7 @@ nad_trgeo_stbox(const Temporal *temp, const STBox *box)
   /* Convert the stbox to a geometry */
   GSERIALIZED *geo = stbox_geo(box);
   Temporal *temp1 = hast ?
-    temporal_restrict_tstzspan(temp, &inter, REST_AT) :
-    (Temporal *) temp;
+    temporal_restrict_tstzspan(temp, &inter, REST_AT) : (Temporal *) temp;
   /* Compute the result */
   Temporal *dist = tdistance_trgeo_geo(temp, geo);
   double result = DatumGetFloat8(temporal_min_value(dist));
@@ -2109,11 +2130,15 @@ shortestline_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
   Temporal *dist = tdistance_trgeo_geo(temp, gs);
   const TInstant *inst = temporal_min_instant(dist);
   /* Timestamp t may be at an exclusive bound */
-  Datum value;
-  trgeo_value_at_timestamptz(temp, inst->t, false, &value);
-  LWGEOM *line = (LWGEOM *) lwline_make(value, PointerGetDatum(gs));
-  GSERIALIZED *result = geo_serialize(line);
-  lwgeom_free(line);
+  GSERIALIZED *geom = NULL;
+  trgeo_geom_at_timestamptz(temp, inst->t, false, &geom);
+  if (! geom)
+  {
+    pfree(dist); 
+    return NULL;
+  }
+  GSERIALIZED *result = geom_shortestline2d(geom, gs);
+  pfree(dist); pfree(geom);
   return result;
 }
 
@@ -2135,12 +2160,13 @@ shortestline_trgeo_tpoint(const Temporal *temp1, const Temporal *temp2)
     return NULL;
   const TInstant *inst = temporal_min_instant(dist);
   /* Timestamp t may be at an exclusive bound */
-  Datum value1, value2;
-  trgeo_value_at_timestamptz(temp1, inst->t, false, &value1);
-  temporal_value_at_timestamptz(temp2, inst->t, false, &value2);
-  LWGEOM *line = (LWGEOM *) lwline_make(value1, value2);
-  GSERIALIZED *result = geo_serialize(line);
-  lwgeom_free(line);
+  Datum value;
+  GSERIALIZED *gs;
+  trgeo_geom_at_timestamptz(temp1, inst->t, false, &gs);
+  temporal_value_at_timestamptz(temp2, inst->t, false, &value);
+  pfree(dist);
+  GSERIALIZED *result = geom_shortestline2d(gs, DatumGetGserializedP(value));
+  pfree(gs); pfree(DatumGetPointer(value));
   return result;
 }
 
@@ -2162,12 +2188,11 @@ shortestline_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2)
     return NULL;
   const TInstant *inst = temporal_min_instant(dist);
   /* Timestamp t may be at an exclusive bound */
-  Datum value1, value2;
-  trgeo_value_at_timestamptz(temp1, inst->t, false, &value1);
-  trgeo_value_at_timestamptz(temp2, inst->t, false, &value2);
-  LWGEOM *line = (LWGEOM *) lwline_make(value1, value2);
-  GSERIALIZED *result = geo_serialize(line);
-  lwgeom_free(line);
+  GSERIALIZED *gs1, *gs2;
+  trgeo_geom_at_timestamptz(temp1, inst->t, false, &gs1);
+  trgeo_geom_at_timestamptz(temp2, inst->t, false, &gs2);
+  GSERIALIZED *result = geom_shortestline2d(gs1, gs2);
+  pfree(dist); pfree(gs1); pfree(gs2);
   return result;
 }
 

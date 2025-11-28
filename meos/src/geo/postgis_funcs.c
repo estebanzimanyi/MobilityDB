@@ -72,6 +72,28 @@
 extern int spheroid_init_from_srid(int32_t srid, SPHEROID *s);
 
 /*****************************************************************************
+ * Convexity Testing
+ * Original MEOS function
+ *****************************************************************************/
+
+/**
+ * @brief Return true if a polygon is convex
+ * @details Since PostGIS does not have a direct IsConvex() function, we test
+ * whether its area is equal to the area of its ST_ConvexHull; if they are the
+ * same, the polygon is convex, otherwise it is concave.
+ */
+bool
+poly_is_convex(const GSERIALIZED *gs)
+{
+  assert(gs);
+  double area1 = geom_area(gs);
+  GSERIALIZED *conhull = geom_convex_hull(gs);
+  double area2 = geom_area(conhull);
+  pfree(conhull);
+  return fabs(area1 - area2) < MEOS_EPSILON;
+}
+
+/*****************************************************************************
  * Output functions for GBOX and BOX3D
  * Original MEOS functions
  *****************************************************************************/
@@ -724,6 +746,22 @@ geo_is_unitary(const GSERIALIZED *gs)
     default:
       return false;
   }
+}
+
+/**
+ * @brief Calculate the area of all the subobjects in a polygon
+ * @details area(point) = 0
+ *  area (line) = 0
+ *  area(polygon) = find its 2d area
+ * @note PostGIS function: @p ST_Area(PG_FUNCTION_ARGS)
+ */
+double
+geom_area(const GSERIALIZED *geom)
+{
+  LWGEOM *lwgeom = lwgeom_from_gserialized(geom);
+  double area = lwgeom_area(lwgeom);
+  lwgeom_free(lwgeom);
+  return area;
 }
 
 #if MEOS
@@ -1541,7 +1579,6 @@ geom_intersects2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   return geom_spatialrel(gs1, gs2, INTERSECTS);
 }
 
-#if MEOS
 /**
  * @ingroup meos_geo_base_rel
  * @brief Return true if the first geometry contains the second one
@@ -1553,7 +1590,6 @@ geom_contains(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 {
   return geom_spatialrel(gs1, gs2, CONTAINS);
 }
-#endif /* MEOS */
 
 /**
  * @ingroup meos_geo_base_rel
@@ -1567,7 +1603,6 @@ geom_touches(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   return geom_spatialrel(gs1, gs2, TOUCHES);
 }
 
-#if MEOS
 /**
  * @ingroup meos_geo_base_rel
  * @brief Return true if the first geometry covers the second one
@@ -1591,7 +1626,6 @@ geom_disjoint2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 {
   return ! geom_spatialrel(gs1, gs2, INTERSECTS);
 }
-#endif /* MEOS */
 
 /**
  * @ingroup meos_geo_base_rel
@@ -2328,7 +2362,6 @@ geo_serialize(const LWGEOM *geom)
  * Functions adapted from lwgeom_transform.c
  *****************************************************************************/
 
-#if MEOS
 /**
  * @ingroup meos_geo_base_srid
  * @brief Return the geometry/geography transformed to an SRID
@@ -2396,8 +2429,8 @@ geo_transform(const GSERIALIZED *gs, int32_t srid_to)
  * @note PostGIS function: @p transform_pipeline_geom(PG_FUNCTION_ARGS)
  */
 GSERIALIZED *
-geo_transform_pipeline(const GSERIALIZED *gs, char *pipeline, int32_t srid_to,
-  bool is_forward)
+geo_transform_pipeline(const GSERIALIZED *gs, const char *pipeline,
+  int32_t srid_to, bool is_forward)
 {
   assert(gs); assert(pipeline);
   GSERIALIZED *gs1 = geo_copy(gs);
@@ -2420,7 +2453,6 @@ geo_transform_pipeline(const GSERIALIZED *gs, char *pipeline, int32_t srid_to,
   lwgeom_free(geom); pfree(gs1);
   return (result); /* new geometry */
 }
-#endif /* MEOS */
 
 /*****************************************************************************
  * Functions adapted from geography_centroid.c
@@ -2759,7 +2791,6 @@ geog_area(const GSERIALIZED *gs, bool use_spheroid)
   double area;
 
   /* Initialize spheroid */
-  /* We currently cannot use the next statement since it uses PostGIS cache */
   SPHEROID s;
   spheroid_init_from_srid(gserialized_get_srid(gs), &s);
 

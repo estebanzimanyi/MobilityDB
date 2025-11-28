@@ -54,6 +54,7 @@
 
 /**
  * @brief Return the reference geometry of the temporal value
+ * @param[in] seq Temporal sequence
  */
 const GSERIALIZED *
 trgeoseq_geom_p(const TSequence *seq)
@@ -72,7 +73,9 @@ trgeoseq_geom_p(const TSequence *seq)
 /*****************************************************************************/
 
 /**
- * @brief Return the size of the trgeometryseq without reference geometry
+ * @brief Return the size of the temporal rigid geometry of sequence subtype
+ * without the reference geometry
+ * @param[in] seq Temporal sequence
  */
 size_t
 trgeoseq_pose_varsize(const TSequence *seq)
@@ -82,7 +85,8 @@ trgeoseq_pose_varsize(const TSequence *seq)
 }
 
 /**
- * @brief Set the size of the trgeometryseq without reference geometry
+ * @brief Set the size of the trgeometry sequence without reference geometry
+ * @param[in] seq Temporal sequence
  */
 void
 trgeoseq_set_pose(TSequence *seq)
@@ -95,6 +99,7 @@ trgeoseq_set_pose(TSequence *seq)
 /**
  * @brief Return a new temporal pose sequence obtained by removing the 
  * reference geometry of a temporal rigid geometry
+ * @param[in] seq Temporal sequence
  */
 TSequence *
 trgeoseq_tposeseq(const TSequence *seq)
@@ -113,7 +118,7 @@ trgeoseq_tposeseq(const TSequence *seq)
  * @brief Ensure the validity of the arguments when creating a temporal value
  */
 bool
-trgeoseq_make_valid(const GSERIALIZED *geom, TInstant **instants,
+trgeoseq_make_valid(const GSERIALIZED *gs, TInstant **instants,
   int count, bool lower_inc, bool upper_inc, bool linear)
 {
   if (! tsequence_make_valid(instants, count, lower_inc, upper_inc, linear))
@@ -124,7 +129,7 @@ trgeoseq_make_valid(const GSERIALIZED *geom, TInstant **instants,
   for (int i = 0; i < count; ++i)
     if (MEOS_FLAGS_GET_GEOM(instants[i]->flags))
     {
-      if (! ensure_same_geom(geom, trgeoinst_geom_p(instants[i])))
+      if (! ensure_same_geom(gs, trgeoinst_geom_p(instants[i])))
         return false;
     }
   return true;
@@ -147,10 +152,11 @@ trgeoseq_make_valid(const GSERIALIZED *geom, TInstant **instants,
  * @pre The validity of the arguments has been tested before
  */
 TSequence *
-trgeoseq_make1_exp(const GSERIALIZED *geom, TInstant **instants,
-  int count, int maxcount, bool lower_inc, bool upper_inc, interpType interp,
+trgeoseq_make_exp1(const GSERIALIZED *gs, TInstant **instants, int count,
+  int maxcount, bool lower_inc, bool upper_inc, interpType interp,
   bool normalize)
 {
+  assert(gs); assert(instants); assert(maxcount >= count);
   /* Normalize the array of instants */
   TInstant **norminsts = (TInstant **) instants;
   int newcount = count;
@@ -165,7 +171,6 @@ trgeoseq_make1_exp(const GSERIALIZED *geom, TInstant **instants,
   /* Compute the size of the temporal sequence */
   size_t insts_size = 0;
   /* Size of composing instants */
-  /* Size of composing instants */
   for (int i = 0; i < newcount; i++)
     insts_size += DOUBLE_PAD(trgeoinst_pose_varsize(norminsts[i]));
   /* Compute the total size for maxcount instants as a proportion of the size
@@ -178,7 +183,7 @@ trgeoseq_make1_exp(const GSERIALIZED *geom, TInstant **instants,
   else
     maxcount = newcount;
   /* Size of the reference geometry */
-  size_t geom_size = DOUBLE_PAD(VARSIZE(geom));
+  size_t geom_size = DOUBLE_PAD(VARSIZE(gs));
   /* Total size of the struct */
   size_t memsize = DOUBLE_PAD(sizeof(TSequence)) + bboxsize_extra +
     (maxcount + 1) * sizeof(size_t) + insts_size + geom_size;
@@ -202,7 +207,7 @@ trgeoseq_make1_exp(const GSERIALIZED *geom, TInstant **instants,
   MEOS_FLAGS_SET_GEOM(result->flags, WITH_GEOM);
   /* Initialization of the variable-length part */
   /* Compute the bounding box */
-  trgeoinstarr_compute_bbox(geom, norminsts, newcount, interp,
+  trgeoinstarr_compute_bbox(gs, norminsts, newcount, interp,
     TSEQUENCE_BBOX_PTR(result));
   /* Set the lower_inc and upper_inc bounds of the period at the beginning
    * of the bounding box */
@@ -212,7 +217,7 @@ trgeoseq_make1_exp(const GSERIALIZED *geom, TInstant **instants,
   /* Store the composing instants */
   size_t pdata = DOUBLE_PAD(sizeof(TSequence)) + bboxsize_extra +
     sizeof(size_t) * maxcount;
-  size_t pos = sizeof(size_t); /* Account for geom offset pointer */
+  size_t pos = sizeof(size_t); /* Account for geometry offset pointer */
   for (int i = 0; i < newcount; i++)
   {
     size_t inst_size = trgeoinst_pose_varsize(norminsts[i]);
@@ -222,7 +227,7 @@ trgeoseq_make1_exp(const GSERIALIZED *geom, TInstant **instants,
     pos += DOUBLE_PAD(inst_size);
   }
   /* Store the reference geometry */
-  void *geom_from = (void *) geom;
+  void *geom_from = (void *) gs;
   memcpy(((char *) result) + pdata + pos, geom_from, VARSIZE(geom_from));
   (TSEQUENCE_OFFSETS_PTR(result))[newcount] = pos;
 
@@ -233,19 +238,7 @@ trgeoseq_make1_exp(const GSERIALIZED *geom, TInstant **instants,
 
 /**
  * @brief Construct a temporal sequence from an array of temporal instants
- * @pre The validity of the arguments has been tested before
- */
-inline TSequence *
-trgeoseq_make1(const GSERIALIZED *geom, TInstant **instants, int count,
-  bool lower_inc, bool upper_inc, interpType interp, bool normalize)
-{
-  return trgeoseq_make1_exp(geom, instants, count, count, lower_inc, upper_inc,
-    interp, normalize);
-}
-
-/**
- * @brief Construct a temporal sequence from an array of temporal instants
- * @param[in] geom Reference geometry
+ * @param[in] gs Reference geometry
  * @param[in] instants Array of instants
  * @param[in] count Number of elements in the array
  * @param[in] maxcount Maximum number of elements in the array
@@ -254,24 +247,24 @@ trgeoseq_make1(const GSERIALIZED *geom, TInstant **instants, int count,
  * @param[in] normalize True if the resulting value should be normalized
  */
 TSequence *
-trgeoseq_make_exp(const GSERIALIZED *geom, TInstant **instants,
+trgeoseq_make_exp(const GSERIALIZED *gs, TInstant **instants,
   int count, int maxcount, bool lower_inc, bool upper_inc, interpType interp,
   bool normalize)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(geom, NULL); VALIDATE_NOT_NULL(instants, NULL);
+  VALIDATE_NOT_NULL(gs, NULL); VALIDATE_NOT_NULL(instants, NULL);
   if (! ensure_positive(count) ||
-      ! trgeoseq_make_valid(geom, instants, count, lower_inc, upper_inc,
+      ! trgeoseq_make_valid(gs, instants, count, lower_inc, upper_inc,
           interp))
     return NULL;
-  return trgeoseq_make1_exp(geom, instants, count, maxcount, lower_inc,
+  return trgeoseq_make_exp1(gs, instants, count, maxcount, lower_inc,
     upper_inc, interp, normalize);
 }
 
 /**
  * @ingroup meos_rgeo_constructor
  * @brief Construct a temporal sequence from an array of temporal instants.
- * @param[in] geom Reference geometry
+ * @param[in] gs Reference geometry
  * @param[in] instants Array of instants
  * @param[in] count Number of elements in the array
  * @param[in] lower_inc,upper_inc True if the respective bound is inclusive
@@ -279,17 +272,17 @@ trgeoseq_make_exp(const GSERIALIZED *geom, TInstant **instants,
  * @param[in] normalize True if the resulting value should be normalized
  */
 inline TSequence *
-trgeoseq_make(const GSERIALIZED *geom, TInstant **instants, int count,
+trgeoseq_make(const GSERIALIZED *gs, TInstant **instants, int count,
   bool lower_inc, bool upper_inc, interpType interp, bool normalize)
 {
-  return trgeoseq_make_exp(geom, instants, count, count, lower_inc, upper_inc,
+  return trgeoseq_make_exp(gs, instants, count, count, lower_inc, upper_inc,
     interp, normalize);
 }
 
 /**
  * @brief Construct a temporal sequence from an array of temporal instants
  * and free the array and the instants after the creation.
- * @param[in] geom Reference geometry
+ * @param[in] gs Reference geometry
  * @param[in] instants Array of instants
  * @param[in] count Number of elements in the array
  * @param[in] maxcount Maximum number of elements in the array
@@ -300,12 +293,12 @@ trgeoseq_make(const GSERIALIZED *geom, TInstant **instants, int count,
  * @see tsequence_make
  */
 TSequence *
-trgeoseq_make_free_exp(const GSERIALIZED *geom, TInstant **instants, int count,
+trgeoseq_make_free_exp(const GSERIALIZED *gs, TInstant **instants, int count,
   int maxcount, bool lower_inc, bool upper_inc, interpType interp,
   bool normalize)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(geom, NULL); VALIDATE_NOT_NULL(instants, NULL);
+  VALIDATE_NOT_NULL(gs, NULL); VALIDATE_NOT_NULL(instants, NULL);
   if (! ensure_not_negative(count))
     return NULL;
 
@@ -314,7 +307,7 @@ trgeoseq_make_free_exp(const GSERIALIZED *geom, TInstant **instants, int count,
     pfree(instants);
     return NULL;
   }
-  TSequence *result = trgeoseq_make_exp(geom, instants, count, maxcount,
+  TSequence *result = trgeoseq_make_exp(gs, instants, count, maxcount,
     lower_inc, upper_inc, interp, normalize);
   pfree_array((void **) instants, count);
   return result;
@@ -324,7 +317,7 @@ trgeoseq_make_free_exp(const GSERIALIZED *geom, TInstant **instants, int count,
  * @ingroup meos_rgeo_constructor
  * @brief Construct a temporal sequence from an array of temporal instants
  * and free the array and the instants after the creation
- * @param[in] geom Reference geometry
+ * @param[in] gs Reference geometry
  * @param[in] instants Array of instants
  * @param[in] count Number of elements in the array
  * @param[in] lower_inc,upper_inc True if the respective bound is inclusive
@@ -334,10 +327,10 @@ trgeoseq_make_free_exp(const GSERIALIZED *geom, TInstant **instants, int count,
  * @see tsequence_make
  */
 inline TSequence *
-trgeoseq_make_free(const GSERIALIZED *geom, TInstant **instants, int count,
+trgeoseq_make_free(const GSERIALIZED *gs, TInstant **instants, int count,
   bool lower_inc, bool upper_inc, interpType interp, bool normalize)
 {
-  return trgeoseq_make_free_exp(geom, instants, count, count, lower_inc,
+  return trgeoseq_make_free_exp(gs, instants, count, count, lower_inc,
     upper_inc, interp, normalize);
 }
 
@@ -376,10 +369,5 @@ trgeoseqset_to_tsequence(const TSequenceSet *ss)
   }
   return tsequence_copy(TSEQUENCESET_SEQ_N(ss, 0));
 }
-
-/*****************************************************************************
- * Accessor functions
- *****************************************************************************/
-
 
 /*****************************************************************************/

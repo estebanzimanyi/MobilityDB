@@ -1,5 +1,6 @@
 set(POSE_SRCS
   pose.c
+  quaternion.c
   tpose.c
   tpose_compops.c
   tpose_boxops.c

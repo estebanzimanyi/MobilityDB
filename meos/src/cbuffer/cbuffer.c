@@ -65,7 +65,7 @@
 #include "cbuffer/cbuffer.h"
 
 /*****************************************************************************
- * Collinear and interpolation function
+ * Collinear, interpolate and locate functions
  *****************************************************************************/
 
 /**
@@ -88,9 +88,30 @@ cbuffer_collinear(const Cbuffer *cb1, const Cbuffer *cb2, const Cbuffer *cb3,
 }
 
 /**
- * @brief Return a float in [0,1] representing the location of the closest
- * location on the circular buffer segment to the given circular buffer,
- * as a fraction of the segment length
+ * @brief Return a circular buffer interpolated from a circular buffer segment
+ * with respect to a fraction of its total length
+ * @param[in] start,end Circular buffers defining the segment
+ * @param[in] ratio Float in [0,1] representing the fraction of the total
+ * length of the segment for locating the interpolated circular buffer
+ */
+Cbuffer *
+cbuffersegm_interpolate(const Cbuffer *start, const Cbuffer *end,
+  long double ratio)
+{
+  assert(ratio >= 0.0 && ratio <= 1.0);
+  Datum value1 = PointerGetDatum(&start->point);
+  Datum value2 = PointerGetDatum(&end->point);
+  Datum value = pointsegm_interpolate(value1, value2, ratio);
+  double radius = floatsegm_interpolate(start->radius, end->radius, ratio);
+  Cbuffer *result = cbuffer_make(DatumGetGserializedP(value), radius);
+  pfree(DatumGetPointer(value));
+  return result;
+}
+
+/**
+ * @brief Return a float in [0,1] representing the location of the given
+ * circular buffer on the circular buffer segment, as a fraction of the segment
+ * length
  * @param[in] start,end Circular buffers defining the segment
  * @param[in] value Circular buffer to locate
  */
@@ -137,27 +158,6 @@ cbuffersegm_locate(const Cbuffer *start, const Cbuffer *end,
     return result1;
   else /* The three values are equal */
     return -1.0;
-}
-
-/**
- * @brief Return a circular buffer interpolated from a circular buffer segment
- * with respect to a fraction of its total length
- * @param[in] start,end Circular buffers defining the segment
- * @param[in] ratio Float in [0,1] representing the fraction of the total
- * length of the segment for locating the interpolated circular buffer
- */
-Cbuffer *
-cbuffersegm_interpolate(const Cbuffer *start, const Cbuffer *end,
-  long double ratio)
-{
-  assert(ratio >= 0.0 && ratio <= 1.0);
-  Datum value1 = PointerGetDatum(&start->point);
-  Datum value2 = PointerGetDatum(&end->point);
-  Datum value = pointsegm_interpolate(value1, value2, ratio);
-  double radius = floatsegm_interpolate(start->radius, end->radius, ratio);
-  Cbuffer *result = cbuffer_make(DatumGetGserializedP(value), radius);
-  pfree(DatumGetPointer(value));
-  return result;
 }
 
 /*****************************************************************************
@@ -591,7 +591,7 @@ geom_to_cbuffer(const GSERIALIZED *gs)
  * @param[in] count Number of elements in the input array
  */
 GSERIALIZED *
-cbufferarr_to_geom(const Cbuffer **cbarr, int count)
+cbufferarr_to_geom(Cbuffer **cbarr, int count)
 {
   assert(cbarr); assert(count > 1);
   GSERIALIZED **geoms = palloc(sizeof(GSERIALIZED *) * count);
@@ -789,7 +789,7 @@ datum_cbuffer_round(Datum cbuffer, Datum size)
  * @csqlfn #Cbufferarr_round()
  */
 Cbuffer **
-cbufferarr_round(const Cbuffer **cbarr, int count, int maxdd)
+cbufferarr_round(Cbuffer **cbarr, int count, int maxdd)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(cbarr, NULL);

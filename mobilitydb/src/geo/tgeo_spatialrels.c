@@ -51,7 +51,7 @@
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
-#include <meos_geo.h>
+#include <meos_rgeo.h>
 #include "temporal/temporal.h" /* For varfunc */
 #include "geo/tgeo_spatialfuncs.h"
 /* MobilityDB */

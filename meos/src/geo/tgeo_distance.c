@@ -274,7 +274,7 @@ tgeompointsegm_distance_turnpt(Datum start1, Datum end1, Datum start2,
     const POINT3DZ *p3 = DATUM_POINT3DZ_P(start2);
     const POINT3DZ *p4 = DATUM_POINT3DZ_P(end2);
     bool found = point3d_min_dist(p1, p2, p3, p4, &fraction);
-    if (!found)
+    if (! found)
       return 0;
   }
   else /* 2D */
@@ -610,7 +610,7 @@ nai_tpointseq_linear_geo(const TSequence *seq, const LWGEOM *geo)
   nai_tpointseq_linear_geo_iter(seq, geo, DBL_MAX, &t);
   /* The closest point may be at an exclusive bound */
   Datum value;
-  tsequence_value_at_timestamptz(seq, t, false, &value);
+  tcontseq_value_at_timestamptz(seq, t, false, &value);
   return tinstant_make_free(value, seq->temptype, t);
 }
 

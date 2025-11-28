@@ -43,42 +43,60 @@ CREATE FUNCTION SRID(trgeometry)
 
 CREATE FUNCTION setSRID(trgeometry, integer)
   RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Tspatial_set_srid'
+  AS 'MODULE_PATHNAME', 'Trgeo_set_srid'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION transform(trgeometry, integer)
   RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Tspatial_transform'
+  AS 'MODULE_PATHNAME', 'Trgeo_transform'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION transformPipeline(trgeometry, text, srid integer DEFAULT 0,
     is_forward boolean DEFAULT true)
   RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Tspatial_transform_pipeline'
+  AS 'MODULE_PATHNAME', 'Trgeo_transform_pipeline'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/*****************************************************************************
+ * Trajectory
+ *****************************************************************************/
+
+CREATE FUNCTION trajectoryCenter(trgeometry)
+  RETURNS tgeompoint
+  AS 'MODULE_PATHNAME', 'Trgeo_trajectory_center'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/*****************************************************************************
+ * Traversed area
+ *****************************************************************************/
+
+CREATE FUNCTION traversedArea(trgeometry, bool DEFAULT true)
+  RETURNS geometry
+  AS 'MODULE_PATHNAME', 'Trgeo_traversed_area'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************
  * AtGeometry and MinusGeometry
  *****************************************************************************/
 
--- CREATE FUNCTION atGeometry(trgeometry, geometry)
-  -- RETURNS trgeometry
-  -- AS 'MODULE_PATHNAME', 'Trgeo_at_geom'
-  -- LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION atGeometry(trgeometry, geometry)
+  RETURNS trgeometry
+  AS 'MODULE_PATHNAME', 'Trgeo_at_geom'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
--- CREATE FUNCTION minusGeometry(trgeometry, geometry)
-  -- RETURNS trgeometry
-  -- AS 'MODULE_PATHNAME', 'Trgeo_minus_geom'
-  -- LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION minusGeometry(trgeometry, geometry)
+  RETURNS trgeometry
+  AS 'MODULE_PATHNAME', 'Trgeo_minus_geom'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
--- CREATE FUNCTION atStbox(trgeometry, stbox, bool DEFAULT TRUE)
-  -- RETURNS trgeometry
-  -- AS 'MODULE_PATHNAME', 'Trgeo_at_stbox'
-  -- LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION atStbox(trgeometry, stbox, bool DEFAULT TRUE)
+  RETURNS trgeometry
+  AS 'MODULE_PATHNAME', 'Trgeo_at_stbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
--- CREATE FUNCTION minusStbox(trgeometry, stbox, bool DEFAULT TRUE)
-  -- RETURNS trgeometry
-  -- AS 'MODULE_PATHNAME', 'Trgeo_minus_stbox'
-  -- LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION minusStbox(trgeometry, stbox, bool DEFAULT TRUE)
+  RETURNS trgeometry
+  AS 'MODULE_PATHNAME', 'Trgeo_minus_stbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************/

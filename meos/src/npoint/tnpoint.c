@@ -46,6 +46,35 @@
 #include "geo/tspatial_parser.h"
 
 /*****************************************************************************
+ * Intersection functions
+ *****************************************************************************/
+
+/**
+ * @brief Return 1 or 2 if two temporal network point segments intersect
+ * during the period defined by the output timestamps, return 0 otherwise
+ * @param[in] start1,end1 Temporal instants defining the first segment
+ * @param[in] start2,end2 Temporal instants defining the second segment
+ * @param[in] lower,upper Timestamps defining the segments
+ * @param[out] t1,t2 Timestamps defining the resulting period, may be equal
+ */
+int
+tnpointsegm_intersection(Datum start1, Datum end1, Datum start2, Datum end2,
+  TimestampTz lower, TimestampTz upper, TimestampTz *t1, TimestampTz *t2)
+{
+  assert(lower < upper); assert(t1); assert(t2);
+  /* Convert the network points into geometric points */
+  GSERIALIZED *sv1 = npoint_to_geompoint(DatumGetNpointP(start1));
+  GSERIALIZED *ev1 = npoint_to_geompoint(DatumGetNpointP(end1));
+  GSERIALIZED *sv2 = npoint_to_geompoint(DatumGetNpointP(start2));
+  GSERIALIZED *ev2 = npoint_to_geompoint(DatumGetNpointP(end2));
+  int result = tgeompointsegm_intersection(PointerGetDatum(sv1),
+    PointerGetDatum(ev1), PointerGetDatum(sv2), PointerGetDatum(ev2),
+    lower, upper, t1, t2);
+  pfree(sv1); pfree(ev1); pfree(sv2); pfree(ev2);
+  return result;
+}
+
+/*****************************************************************************
  * Validity functions
  *****************************************************************************/
 
@@ -172,35 +201,6 @@ ensure_valid_tnpoint_tnpoint(const Temporal *temp1, const Temporal *temp2)
   if (! ensure_same_srid(tspatial_srid(temp1), tspatial_srid(temp2)))
     return false;
   return true;
-}
-
-/*****************************************************************************
- * Intersection functions
- *****************************************************************************/
-
-/**
- * @brief Return 1 or 2 if two temporal network point segments intersect
- * during the period defined by the output timestamps, return 0 otherwise
- * @param[in] start1,end1 Temporal instants defining the first segment
- * @param[in] start2,end2 Temporal instants defining the second segment
- * @param[in] lower,upper Timestamps defining the segments
- * @param[out] t1,t2 Timestamps defining the resulting period, may be equal
- */
-int
-tnpointsegm_intersection(Datum start1, Datum end1, Datum start2, Datum end2,
-  TimestampTz lower, TimestampTz upper, TimestampTz *t1, TimestampTz *t2)
-{
-  assert(lower < upper); assert(t1); assert(t2);
-  /* Convert the network points into geometric points */
-  GSERIALIZED *sv1 = npoint_to_geompoint(DatumGetNpointP(start1));
-  GSERIALIZED *ev1 = npoint_to_geompoint(DatumGetNpointP(end1));
-  GSERIALIZED *sv2 = npoint_to_geompoint(DatumGetNpointP(start2));
-  GSERIALIZED *ev2 = npoint_to_geompoint(DatumGetNpointP(end2));
-  int result = tgeompointsegm_intersection(PointerGetDatum(sv1),
-    PointerGetDatum(ev1), PointerGetDatum(sv2), PointerGetDatum(ev2),
-    lower, upper, t1, t2);
-  pfree(sv1); pfree(ev1); pfree(sv2); pfree(ev2);
-  return result;
 }
 
 /*****************************************************************************

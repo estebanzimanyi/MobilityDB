@@ -86,6 +86,34 @@ Acontains_geo_trgeo(PG_FUNCTION_ARGS)
   return EA_spatialrel_geo_tspatial(fcinfo, &ea_contains_geo_trgeo, ALWAYS);
 }
 
+/*****************************************************************************/
+
+PGDLLEXPORT Datum Econtains_trgeo_geo(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Econtains_trgeo_geo);
+/**
+ * @ingroup mobilitydb_geo_rel_ever
+ * @brief Return true if a temporal rigid geometry ever contains a geometry
+ * @sqlfn eContains()
+ */
+inline Datum
+Econtains_trgeo_geo(PG_FUNCTION_ARGS)
+{
+  return EA_spatialrel_tspatial_geo(fcinfo, &ea_contains_trgeo_geo, EVER);
+}
+
+PGDLLEXPORT Datum Acontains_trgeo_geo(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Acontains_trgeo_geo);
+/**
+ * @ingroup mobilitydb_geo_rel_ever
+ * @brief Return true if a temporal rigid geometry always contains a geometry
+ * @sqlfn aContains()
+ */
+inline Datum
+Acontains_trgeo_geo(PG_FUNCTION_ARGS)
+{
+  return EA_spatialrel_tspatial_geo(fcinfo, &ea_contains_trgeo_geo, ALWAYS);
+}
+
 /*****************************************************************************
  * Ever/always covers
  *****************************************************************************/
@@ -144,8 +172,40 @@ Acovers_trgeo_geo(PG_FUNCTION_ARGS)
   return EA_spatialrel_tspatial_geo(fcinfo, &ea_covers_trgeo_geo, ALWAYS);
 }
 
+/*****************************************************************************/
+
+PGDLLEXPORT Datum Ecovers_trgeo_trgeo(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Ecovers_trgeo_trgeo);
+/**
+ * @ingroup mobilitydb_geo_rel_ever
+ * @brief Return true if the first temporal rigid geometries ever covers the
+ * second one
+ * @sqlfn eCovers()
+ */
+inline Datum
+Ecovers_trgeo_trgeo(PG_FUNCTION_ARGS)
+{
+  return EA_spatialrel_tspatial_tspatial(fcinfo, &ea_covers_trgeo_trgeo,
+    EVER);
+}
+
+PGDLLEXPORT Datum Acovers_trgeo_trgeo(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Acovers_trgeo_trgeo);
+/**
+ * @ingroup mobilitydb_geo_rel_ever
+ * @brief Return true if the first temporal rigid geometries always covers the
+ * second one
+ * @sqlfn aCovers()
+ */
+inline Datum
+Acovers_trgeo_trgeo(PG_FUNCTION_ARGS)
+{
+  return EA_spatialrel_tspatial_tspatial(fcinfo, &ea_covers_trgeo_trgeo,
+    ALWAYS);
+}
+
 /*****************************************************************************
- * Ever disjoint (for both geometry and geography)
+ * Ever disjoint
  *****************************************************************************/
 
 PGDLLEXPORT Datum Edisjoint_geo_trgeo(PG_FUNCTION_ARGS);
@@ -394,7 +454,7 @@ PG_FUNCTION_INFO_V1(Edwithin_geo_trgeo);
 inline Datum
 Edwithin_geo_trgeo(PG_FUNCTION_ARGS)
 {
-  return EA_dwithin_geo_tspatial(fcinfo, EVER);
+  return EA_dwithin_geo_tspatial(fcinfo, &ea_dwithin_trgeo_geo, EVER);
 }
 
 PGDLLEXPORT Datum Adwithin_geo_trgeo(PG_FUNCTION_ARGS);
@@ -408,7 +468,7 @@ PG_FUNCTION_INFO_V1(Adwithin_geo_trgeo);
 inline Datum
 Adwithin_geo_trgeo(PG_FUNCTION_ARGS)
 {
-  return EA_dwithin_geo_tspatial(fcinfo, ALWAYS);
+  return EA_dwithin_geo_tspatial(fcinfo, &ea_dwithin_trgeo_geo, ALWAYS);
 }
 
 PGDLLEXPORT Datum Edwithin_trgeo_geo(PG_FUNCTION_ARGS);
@@ -422,7 +482,7 @@ PG_FUNCTION_INFO_V1(Edwithin_trgeo_geo);
 inline Datum
 Edwithin_trgeo_geo(PG_FUNCTION_ARGS)
 {
-  return EA_dwithin_tspatial_geo(fcinfo, EVER);
+  return EA_dwithin_tspatial_geo(fcinfo, &ea_dwithin_trgeo_geo, EVER);
 }
 
 PGDLLEXPORT Datum Adwithin_trgeo_geo(PG_FUNCTION_ARGS);
@@ -436,7 +496,7 @@ PG_FUNCTION_INFO_V1(Adwithin_trgeo_geo);
 inline Datum
 Adwithin_trgeo_geo(PG_FUNCTION_ARGS)
 {
-  return EA_dwithin_tspatial_geo(fcinfo, ALWAYS);
+  return EA_dwithin_tspatial_geo(fcinfo, &ea_dwithin_trgeo_geo, ALWAYS);
 }
 
 /**
@@ -483,7 +543,7 @@ PG_FUNCTION_INFO_V1(Adwithin_trgeo_trgeo);
 inline Datum
 Adwithin_trgeo_trgeo(PG_FUNCTION_ARGS)
 {
-  return EA_spatialrel_tspatial_geo(fcinfo, &ea_dwithin_trgeo_geo, ALWAYS);
+  return EA_dwithin_trgeo_trgeo(fcinfo, ALWAYS);
 }
 
 /*****************************************************************************/

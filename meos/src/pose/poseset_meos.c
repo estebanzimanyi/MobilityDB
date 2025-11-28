@@ -105,11 +105,11 @@ poseset_out(const Set *s, int maxdd)
  * @csqlfn #Set_constructor()
  */
 Set *
-poseset_make(const Pose **values, int count)
+poseset_make(Pose **values, int count)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(values, NULL);
-  if (! ! ensure_positive(count))
+  if (! ensure_positive(count))
     return NULL;
 
   Datum *datums = palloc(sizeof(Datum) * count);

@@ -214,6 +214,8 @@ tinstant_merge_array_iter(TInstant **instants, int count, int *newcount)
   int count1;
   if (tgeo_type(instants[0]->temptype))
     instants1 = tgeoinst_merge_array_iter(instants, count, &count1);
+  // else if (instants[0]->temptype == TRGEOMETRY)
+    // instants1 = trgeoinst_merge_array_iter(instants, count, &count1);
   else
   {
     instants1 = (TInstant **) instants;
@@ -325,8 +327,7 @@ tdiscseq_merge_array(TSequence **sequences, int count)
  * @note The values in the array may overlap on a single instant.
  */
 static TSequence **
-tgeoseq_merge_array_iter(TSequence **sequences, int count,
-  int *totalcount)
+tgeoseq_merge_array_iter(TSequence **sequences, int count, int *totalcount)
 {
   assert(sequences); assert(count > 0); assert(totalcount);
 
@@ -405,7 +406,7 @@ tgeoseq_merge_array_iter(TSequence **sequences, int count,
 static TSequence **
 tcontseq_merge_array_iter(TSequence **sequences, int count, int *totalcount)
 {
-  assert(sequences); assert(totalcount);
+  assert(sequences); assert(count > 0); assert(totalcount);
   if (count > 1)
     tseqarr_sort((TSequence **) sequences, count);
 

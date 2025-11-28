@@ -29,7 +29,7 @@
 
 /**
  * @file
- * @brief Temporal spatial relationships for temporal geometries/geographies
+ * @brief Spatiotemporal relationships for temporal geometries/geographies
  */
 
 /*****************************************************************************

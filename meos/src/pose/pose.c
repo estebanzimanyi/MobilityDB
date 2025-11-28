@@ -49,6 +49,7 @@
 #include <meos_internal_geo.h>
 #include "temporal/postgres_types.h"
 #include "temporal/set.h"
+#include "temporal/temporal.h"
 #include "temporal/tsequence.h"
 #include "temporal/type_inout.h"
 #include "temporal/type_parser.h"
@@ -58,106 +59,82 @@
 #include "geo/tspatial.h"
 #include "geo/tspatial_parser.h"
 #include "pose/pose.h"
+#include "pose/quaternion.h"
 
 /** Buffer size for input and output of pose values */
 #define MAXPOSELEN    256
 
 /*****************************************************************************
- * Validity functions
+ * Collinear, interpolate and locate functions
  *****************************************************************************/
 
 /**
- * @brief Ensure the validity of a pose and a geometry/geography
- */
-bool
-ensure_valid_pose_geo(const Pose *pose, const GSERIALIZED *gs)
-{
-  VALIDATE_NOT_NULL(pose, false); VALIDATE_NOT_NULL(gs, false); 
-  if (gserialized_is_empty(gs) ||
-      ! ensure_same_srid(pose_srid(pose), gserialized_get_srid(gs)) ||
-      MEOS_FLAGS_GET_Z(pose->flags) != FLAGS_GET_Z(gs->gflags))
-    return false;
-  return true;
-}
-
-/**
- * @brief Ensure the validity of a pose and a spatiotemporal box
- */
-bool
-ensure_valid_pose_stbox(const Pose *pose, const STBox *box)
-{
-  VALIDATE_NOT_NULL(pose, false); VALIDATE_NOT_NULL(box, false);
-  if (! ensure_has_X(T_STBOX, box->flags) ||
-      ! ensure_same_srid(pose_srid(pose), box->srid))
-    return false;
-  return true;
-}
-
-/**
- * @brief Ensure the validity of two circular poses
- */
-bool
-ensure_valid_pose_pose(const Pose *pose1, const Pose *pose2)
-{
-  VALIDATE_NOT_NULL(pose1, false); VALIDATE_NOT_NULL(pose2, false); 
-  if (! ensure_same_srid(pose_srid(pose1), pose_srid(pose2)) ||
-      MEOS_FLAGS_GET_Z(pose1->flags) != MEOS_FLAGS_GET_Z(pose2->flags))
-    return false;
-  return true;
-}
-
-/**
- * @brief Return true if a set and a pose are valid for set operations
- * @param[in] s Set
- * @param[in] pose Value
- */
-bool
-ensure_valid_poseset_pose(const Set *s, const Pose *pose)
-{
-  /* Ensure the validity of the arguments */
-  VALIDATE_POSESET(s, false); VALIDATE_NOT_NULL(pose, false);
-  if (! ensure_same_srid(spatialset_srid(s), pose_srid(pose)) ||
-      MEOS_FLAGS_GET_Z(pose->flags) != MEOS_FLAGS_GET_Z(s->flags))
-    return false;
-  return true;
-}
-
-/*****************************************************************************
- * Interpolation function
- *****************************************************************************/
-
-/**
- * @brief Return the pose value interpolated from the two poses and a ratio
- * @param[in] start,end Poses
+ * @brief Return true if the three values are collinear
+ * @param[in] p1,p2,p3 Poses
  * @param[in] ratio Value in [0,1] representing the duration of the
  * timestamps associated to `p1` and `p2` divided by the duration
  * of the timestamps associated to `p1` and `p3`
  */
+bool
+pose_collinear(const Pose *p1, const Pose *p2, const Pose *p3, double ratio)
+{
+  assert(p1); assert(p2); assert(p3); 
+  Pose *p2_interp = posesegm_interpolate(p1, p3, ratio);
+  bool result = pose_same(p2, p2_interp);
+  pfree(p2_interp);
+  return result;
+}
+
+/**
+ * @brief Interpolate between two 2D poses
+ * @param[in] start,end Poses
+ * @param[in] ratio Poses
+ * @param[out] x,y Values for the translation
+ * @param[in] theta Rotation
+ */
+void
+posesegm_interpolate_2d(const Pose *start, const Pose *end, double ratio,
+  double *x, double *y, double *theta)
+{
+  assert(start); assert(end); assert(x); assert(y); assert(theta);
+  assert(0 <= ratio && ratio <= 1);
+  *x = start->data[0] * (1 - ratio) + end->data[0] * ratio;
+  *y = start->data[1] * (1 - ratio) + end->data[1] * ratio;
+  double theta_delta = end->data[2] - start->data[2];
+  /* If fabs(theta_delta) == M_PI: Always turn counter-clockwise */
+  if (fabs(theta_delta) < MEOS_EPSILON)
+    *theta = start->data[2];
+  else if (theta_delta > 0 && fabs(theta_delta) <= M_PI)
+    *theta = start->data[2] + theta_delta * ratio;
+  else if (theta_delta > 0 && fabs(theta_delta) > M_PI)
+    *theta = end->data[2] + (2 * M_PI - theta_delta) * (1 - ratio);
+  else if (theta_delta < 0 && fabs(theta_delta) < M_PI)
+    *theta = start->data[2] + theta_delta * ratio;
+  else /* (theta_delta < 0 && fabs(theta_delta) >= M_PI) */
+    *theta = start->data[2] + (2 * M_PI + theta_delta) * ratio;
+  if (*theta > M_PI)
+    *theta = *theta - 2*M_PI;
+  return;
+}
+
+/**
+ * @brief Return the pose obtained by interpolation from two poses and a ratio
+ * @param[in] start,end Poses
+ * @param[in] ratio Value in [0,1] representing the duration of the timestamps
+ * associated to `p1` and `p2` divided by the duration of the timestamps
+ * associated to `p1` and `p3`
+ */
 Pose *
 posesegm_interpolate(const Pose *start, const Pose *end, double ratio)
 {
+  assert(0 <= ratio && ratio <= 1);
   if (! ensure_valid_pose_pose(start, end))
     return NULL; 
   Pose *result;
   if (! MEOS_FLAGS_GET_Z(start->flags))
   {
-    double x = start->data[0] * (1 - ratio) + end->data[0] * ratio;
-    double y = start->data[1] * (1 - ratio) + end->data[1] * ratio;
-    double theta;
-    double theta_delta = end->data[2] - start->data[2];
-    /* If fabs(theta_delta) == M_PI: Always turn counter-clockwise */
-    if (fabs(theta_delta) < MEOS_EPSILON)
-      theta = start->data[2];
-    else if (theta_delta > 0 && fabs(theta_delta) <= M_PI)
-      theta = start->data[2] + theta_delta * ratio;
-    else if (theta_delta > 0 && fabs(theta_delta) > M_PI)
-      theta = end->data[2] + (2 * M_PI - theta_delta) * (1 - ratio);
-    else if (theta_delta < 0 && fabs(theta_delta) < M_PI)
-      theta = start->data[2] + theta_delta * ratio;
-    else /* (theta_delta < 0 && fabs(theta_delta) >= M_PI) */
-      theta = start->data[2] + (2 * M_PI + theta_delta) * ratio;
-    if (theta > M_PI)
-      theta = theta - 2 * M_PI;
+    double x, y, theta;
+    posesegm_interpolate_2d(start, end, ratio, &x, &y, &theta);
     result = pose_make_2d(x, y, theta, pose_srid(start));
   }
   else
@@ -223,7 +200,7 @@ posesegm_interpolate(const Pose *start, const Pose *end, double ratio)
 long double
 posesegm_locate(const Pose *start, const Pose *end, const Pose *value)
 {
-   /* Return if the value to locate has a different road identifier */
+  /* Ensure the validity of the arguments */
   if (ensure_valid_pose_pose(start, end) || 
       ensure_valid_pose_pose(start, value))
     return -1.0;
@@ -246,25 +223,43 @@ posesegm_locate(const Pose *start, const Pose *end, const Pose *value)
     if (! geopoint_eq(gs1, gs))
       return -1.0;
   }
+
   if (MEOS_FLAGS_GET_Z(start->flags))
   {
-    // TODO
-      return -1.0;
+    Quaternion qs = (Quaternion) {start->data[0], start->data[1],
+      start->data[2], start->data[1]};
+    Quaternion qe = (Quaternion) {end->data[0], end->data[1], end->data[2],
+      end->data[3]};
+    if (! quaternion_same(qs, qe))
+    {
+      Quaternion qv = (Quaternion) {value->data[0], value->data[1],
+        value->data[2], value->data[3]};
+      result2 = quaternion_slerp_locate(qs, qe, qv);
+      if (result2 < 0.0)
+        return -1.0;
+    }
+    else
+    {
+      /* If the quaternions are equal return result1 where
+       * - result1 = -1.0 if gs1 == gs2 == gs, or
+       * - result1 in [0,1] if gs1 != gs2 */
+      return result1;
+    }
   }
   else
   {
     double rotation1 = pose_rotation(start);
-    double rotation2 = pose_rotation(value);
-    double rotation = pose_rotation(value);
+    double rotation2 = pose_rotation(end);
     if (rotation1 != rotation2)
     {
+      double rotation = pose_rotation(value);
       result2 = floatsegm_locate(rotation1, rotation2, rotation);
       if (result2 < 0.0)
         return -1.0;
     }
     else
     {
-      /* If the rotiation are equal return result1 where
+      /* If the rotations are equal return result1 where
        * - result1 = -1.0 if gs1 == gs2 == gs, or
        * - result1 in [0,1] if gs1 != gs2 */
       return result1;
@@ -281,24 +276,130 @@ posesegm_locate(const Pose *start, const Pose *end, const Pose *value)
 }
 
 /*****************************************************************************
- * Collinear function
+ * Invert function
  *****************************************************************************/
 
 /**
- * @brief Return true if the three values are collinear
- * @param[in] p1,p2,p3 Poses
- * @param[in] ratio Value in [0,1] representing the duration of the
- * timestamps associated to `p1` and `p2` divided by the duration
- * of the timestamps associated to `p1` and `p3`
+ * @brief Combine a pose
+ */
+Pose *
+pose_invert(const Pose *pose)
+{
+  if (! MEOS_FLAGS_GET_Z(pose->flags))
+  {
+    double theta = - pose->data[2];
+    if (theta == -M_PI)
+        theta = M_PI;
+    double dx = - pose->data[0];
+    double dy = - pose->data[1];
+    return pose_make_2d(dx, dy, theta, pose_srid(pose));
+  }
+  else
+  {
+    Quaternion q = (Quaternion) {pose->data[0], pose->data[1],
+      pose->data[2], pose->data[3]};
+    double dx = - pose->data[0];
+    double dy = - pose->data[1];
+    double dz = - pose->data[2];
+    return pose_make_3d(dx, dy, dz, q.X, q.Y, q.Z, q.W, pose_srid(pose));
+  }
+}
+
+/*****************************************************************************
+ * Combine function
+ *****************************************************************************/
+
+/**
+ * @brief Combine two poses
+ */
+Pose *
+pose_combine(const Pose *pose1, const Pose *pose2)
+{
+  if (! MEOS_FLAGS_GET_Z(pose1->flags))
+  {
+    double theta = pose1->data[2] + pose2->data[2];
+    if (theta > M_PI)
+      theta = theta - 2 * M_PI;
+    if (theta <= -M_PI)
+      theta = theta + 2 * M_PI;
+    double dx = pose1->data[0] + pose2->data[0];
+    double dy = pose1->data[1] + pose2->data[1];
+    return pose_make_2d(dx, dy, theta, pose_srid(pose1));
+  }
+  else
+  {
+    Quaternion q1 = (Quaternion) {pose1->data[0], pose1->data[1],
+      pose1->data[2], pose1->data[3]};
+    Quaternion q2 = (Quaternion) {pose2->data[0], pose2->data[1],
+      pose2->data[2], pose2->data[3]};
+    /* Apply pose1 before pose2 */
+    Quaternion q = quaternion_multiply(q1, q2);
+    q = quaternion_normalize(q);
+    double dx = pose1->data[0] + pose2->data[0];
+    double dy = pose1->data[1] + pose2->data[1];
+    double dz = pose1->data[2] + pose2->data[2];
+    return pose_make_3d(dx, dy, dz, q.X, q.Y, q.Z, q.W, pose_srid(pose1));
+  }
+}
+
+/*****************************************************************************
+ * Validity functions
+ *****************************************************************************/
+
+/**
+ * @brief Ensure the validity of a pose and a geometry/geography
  */
 bool
-pose_collinear(const Pose *p1, const Pose *p2, const Pose *p3, double ratio)
+ensure_valid_pose_geo(const Pose *pose, const GSERIALIZED *gs)
 {
-  assert(p1); assert(p2); assert(p3); 
-  Pose *p2_interpolated = posesegm_interpolate(p1, p3, ratio);
-  bool result = pose_same(p2, p2_interpolated);
-  pfree(p2_interpolated);
-  return result;
+  VALIDATE_NOT_NULL(pose, false); VALIDATE_NOT_NULL(gs, false); 
+  if (gserialized_is_empty(gs) ||
+      ! ensure_same_srid(pose_srid(pose), gserialized_get_srid(gs)) ||
+      MEOS_FLAGS_GET_Z(pose->flags) != FLAGS_GET_Z(gs->gflags))
+    return false;
+  return true;
+}
+
+/**
+ * @brief Ensure the validity of a pose and a spatiotemporal box
+ */
+bool
+ensure_valid_pose_stbox(const Pose *pose, const STBox *box)
+{
+  VALIDATE_NOT_NULL(pose, false); VALIDATE_NOT_NULL(box, false);
+  if (! ensure_has_X(T_STBOX, box->flags) ||
+      ! ensure_same_srid(pose_srid(pose), box->srid))
+    return false;
+  return true;
+}
+
+/**
+ * @brief Ensure the validity of two circular poses
+ */
+bool
+ensure_valid_pose_pose(const Pose *pose1, const Pose *pose2)
+{
+  VALIDATE_NOT_NULL(pose1, false); VALIDATE_NOT_NULL(pose2, false); 
+  if (! ensure_same_srid(pose_srid(pose1), pose_srid(pose2)) ||
+      MEOS_FLAGS_GET_Z(pose1->flags) != MEOS_FLAGS_GET_Z(pose2->flags))
+    return false;
+  return true;
+}
+
+/**
+ * @brief Return true if a set and a pose are valid for set operations
+ * @param[in] s Set
+ * @param[in] pose Value
+ */
+bool
+ensure_valid_poseset_pose(const Set *s, const Pose *pose)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_POSESET(s, false); VALIDATE_NOT_NULL(pose, false);
+  if (! ensure_same_srid(spatialset_srid(s), pose_srid(pose)) ||
+      MEOS_FLAGS_GET_Z(pose->flags) != MEOS_FLAGS_GET_Z(s->flags))
+    return false;
+  return true;
 }
 
 /*****************************************************************************
@@ -470,7 +571,7 @@ pose_out(const Pose *pose, int maxdd)
   if (!MEOS_FLAGS_GET_Z(pose->flags))
   {
     char *theta = float8_out(pose->data[2], maxdd); /* theta if 2D*/
-    snprintf(result, MAXPOSELEN - 1, "POSE (%s, %s)", point, theta);
+    snprintf(result, MAXPOSELEN - 1, "POSE(%s, %s)", point, theta);
     pfree(theta);
   }
   else
@@ -522,14 +623,14 @@ pose_wkt_out(const Pose *pose, bool extended, int maxdd)
     X = float8_out(pose->data[4], maxdd);
     Y = float8_out(pose->data[5], maxdd);
     Z = float8_out(pose->data[6], maxdd);
-    len += strlen(W) + strlen(X) + strlen(Y) + strlen(Z) + 3; // Three ','
+    len += strlen(W) + strlen(X) + strlen(Y) + strlen(Z) + 3; /* Three ',' */
   }
   else
   {
     theta = float8_out(pose->data[2], maxdd);
-    len += strlen(theta) + 1; // One ','
+    len += strlen(theta) + 1; /* One ',' */
   }
-  len += 7; // Pose() + '\0' at the end
+  len += 7; /* Pose() + '\0' at the end */
   char *result = palloc(len);
   if (hasz)
   {
@@ -573,6 +674,37 @@ pose_as_ewkt(const Pose *pose, int maxdd)
   VALIDATE_NOT_NULL(pose, NULL);
   return spatialbase_as_ewkt(PointerGetDatum(pose), T_POSE, maxdd);
 }
+
+/*****************************************************************************/
+
+#if MEOS
+/**
+ * @ingroup meos_internal_geo_inout
+ * @brief Return the Well-Known Text (WKT) representation of an array of poses
+ * @param[in] posearr Array of poses
+ * @param[in] count Number of elements in the input array
+ * @param[in] maxdd Maximum number of decimal digits to output
+ */
+char **
+posearr_as_text(Pose **posearr, int count, int maxdd)
+{
+  return spatialarr_wkt_out((Datum *) posearr, T_POSE, count, maxdd, false);
+}
+
+/**
+ * @ingroup meos_internal_geo_inout
+ * @brief Return the Extended Well-Known Text (EWKT) representation of an array
+ * of poses
+ * @param[in] posearr Array of poses
+ * @param[in] count Number of elements in the input array
+ * @param[in] maxdd Maximum number of decimal digits to output
+ */
+char **
+posearr_as_ewkt(Pose **posearr, int count, int maxdd)
+{
+  return spatialarr_wkt_out((Datum *) posearr, T_POSE, count, maxdd, true);
+}
+#endif /* MEOS */
 
 /*****************************************************************************
  * WKB and HexWKB input/output functions for poses
@@ -920,7 +1052,7 @@ pose_orientation(const Pose *pose)
   if (! ensure_has_Z(T_POSE, pose->flags))
     return NULL;
 
-  double *result = palloc(sizeof(double) * 4);
+  double *result = palloc(sizeof(Quaternion));
   result[0] = pose->data[3];
   result[1] = pose->data[4];
   result[2] = pose->data[5];
@@ -993,7 +1125,7 @@ datum_pose_round(Datum pose, Datum size)
  * @csqlfn #Posearr_round()
  */
 Pose **
-posearr_round(const Pose **posearr, int count, int maxdd)
+posearr_round(Pose **posearr, int count, int maxdd)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(posearr, NULL);
@@ -1078,7 +1210,8 @@ pose_transf_pj(const Pose *pose, int32_t srid_to, const LWPROJ *pj)
     return NULL;
   }
   POINT4D *p = (POINT4D *) GS_POINT_PTR(gs);
-  /* Only the coordinates are transformed, not the orientation */
+  /* Only the coordinates are transformed, not the srid and orientation */
+  pose_set_srid(result, srid_to);
   const double * coordarr = (const double *) p;
   if (MEOS_FLAGS_GET_Z(pose->flags))
   {

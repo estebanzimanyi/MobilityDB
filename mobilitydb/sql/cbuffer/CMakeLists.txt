@@ -10,7 +10,7 @@ SET(LOCAL_FILES
   160_tcbuffer_distance
   161_tcbuffer_aggfuncs
   162_tcbuffer_spatialrels
-  164_tcbuffer_tempspatialrels
+  164_tcbuffer_spatiotemprels
   166_tcbuffer_indexes
   )
 

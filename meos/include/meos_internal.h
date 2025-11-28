@@ -1104,7 +1104,7 @@ extern const TSequence **tsequence_seqs(const TSequence *seq, int *count);
 extern TimestampTz tsequence_start_timestamptz(const TSequence *seq);
 extern SpanSet *tsequence_time(const TSequence *seq);
 extern TimestampTz *tsequence_timestamps(const TSequence *seq, int *count);
-extern bool tsequence_value_at_timestamptz(const TSequence *seq, TimestampTz t, bool strict, Datum *result);
+extern bool tcontseq_value_at_timestamptz(const TSequence *seq, TimestampTz t, bool strict, Datum *result);
 extern Datum *tsequence_values_p(const TSequence *seq, int *count);
 extern Interval *tsequenceset_duration(const TSequenceSet *ss, bool boundspan);
 extern TimestampTz tsequenceset_end_timestamptz(const TSequenceSet *ss);
@@ -1322,6 +1322,7 @@ extern void skiplist_free(SkipList *list);
 extern void skiplist_splice(SkipList *list, void **keys, void **values, int count, datum_func2 func, bool crossings, SkipListType sktype);
 extern void temporal_skiplist_splice(SkipList *list, void **values, int count, datum_func2 func, bool crossings);
 extern void **skiplist_values(SkipList *list);
+extern Temporal **skiplist_temporal_values(SkipList *list);
 extern void **skiplist_keys_values(SkipList *list, void **values);
 
 extern Temporal *temporal_app_tinst_transfn(Temporal *state, const TInstant *inst, interpType interp, double maxdist, const Interval *maxt);

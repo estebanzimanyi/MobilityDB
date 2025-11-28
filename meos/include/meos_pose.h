@@ -107,6 +107,8 @@ extern Pose *pose_from_wkb(const uint8_t *wkb, size_t size);
 extern Pose *pose_from_hexwkb(const char *hexwkb);
 extern Pose *pose_in(const char *str);
 extern char *pose_out(const Pose *pose, int maxdd);
+extern char **posearr_as_text(Pose **posearr, int count, int maxdd);
+extern char **posearr_as_ewkt(Pose **posearr, int count, int maxdd);
 
 /* Constructor functions */
 
@@ -131,7 +133,7 @@ extern double pose_rotation(const Pose *pose);
 /* Transformation functions */
 
 extern Pose *pose_round(const Pose *pose, int maxdd);
-extern Pose **posearr_round(const Pose **posearr, int count, int maxdd);
+extern Pose **posearr_round(Pose **posearr, int count, int maxdd);
 
 /* Spatial reference system functions */
 
@@ -174,7 +176,7 @@ extern char *poseset_out(const Set *s, int maxdd);
 
 /* Constructor functions */
 
-extern Set *poseset_make(const Pose **values, int count);
+extern Set *poseset_make(Pose **values, int count);
 
 /* Conversion functions */
 
@@ -213,12 +215,12 @@ Temporal *tpose_in(const char *str);
  * Constructor functions
  *****************************************************************************/
 
+extern Temporal *tpose_make(const Temporal *tpoint, const Temporal *tradius);
 
 /*****************************************************************************
  * Conversion functions
  *****************************************************************************/
 
-extern Temporal *tpose_make(const Temporal *tpoint, const Temporal *tradius);
 extern Temporal *tpose_to_tpoint(const Temporal *temp);
 
 /*****************************************************************************
@@ -240,8 +242,8 @@ extern Pose **tpose_values(const Temporal *temp, int *count);
  *****************************************************************************/
 
 extern Temporal *tpose_at_geom(const Temporal *temp, const GSERIALIZED *gs, const Span *zspan);
-extern Temporal *tpose_at_stbox(const Temporal *temp, const STBox *box, bool border_inc);
 extern Temporal *tpose_at_pose(const Temporal *temp, const Pose *pose);
+extern Temporal *tpose_at_stbox(const Temporal *temp, const STBox *box, bool border_inc);
 extern Temporal *tpose_minus_geom(const Temporal *temp, const GSERIALIZED *gs, const Span *zspan);
 extern Temporal *tpose_minus_pose(const Temporal *temp, const Pose *pose);
 extern Temporal *tpose_minus_stbox(const Temporal *temp, const STBox *box, bool border_inc);
@@ -251,7 +253,7 @@ extern Temporal *tpose_minus_stbox(const Temporal *temp, const STBox *box, bool 
  *****************************************************************************/
 
 extern Temporal *tdistance_tpose_pose(const Temporal *temp, const Pose *pose);
-extern Temporal *tdistance_tpose_point(const Temporal *temp, const GSERIALIZED *gs);
+extern Temporal *tdistance_tpose_geo(const Temporal *temp, const GSERIALIZED *gs);
 extern Temporal *tdistance_tpose_tpose(const Temporal *temp1, const Temporal *temp2);
 extern double nad_tpose_geo(const Temporal *temp, const GSERIALIZED *gs);
 extern double nad_tpose_pose(const Temporal *temp, const Pose *pose);
@@ -289,16 +291,6 @@ extern Temporal *teq_pose_tpose(const Pose *pose, const Temporal *temp);
 extern Temporal *teq_tpose_pose(const Temporal *temp, const Pose *pose);
 extern Temporal *tne_pose_tpose(const Pose *pose, const Temporal *temp);
 extern Temporal *tne_tpose_pose(const Temporal *temp, const Pose *pose);
-
-/*****************************************************************************/
-
-/* Ever and always spatial relationship functions */
-
-
-/*****************************************************************************/
-
-/* Spatiotemporal relationship functions */
-
 
 /*****************************************************************************/
 

@@ -32,6 +32,10 @@
  * @ingroup meos_rgeo
  * @brief Input and output functions for temporal rigid geometries
  *
+ * @defgroup meos_rgeo_constructor Constructor functions
+ * @ingroup meos_rgeo
+ * @brief Constructor functions for temporal rigid geometries
+ *
  * @defgroup meos_rgeo_conversion Conversion functions
  * @ingroup meos_rgeo
  * @brief Conversion functions for temporal rigid geometries
@@ -40,13 +44,13 @@
  * @ingroup meos_rgeo
  * @brief Accessor functions for temporal rigid geometries
  *
+ * @defgroup meos_rgeo_transf Transformation functions
+ * @ingroup meos_rgeo
+ * @brief Transformation functions for temporal rigid geometries
+ *
  * @defgroup meos_rgeo_restrict Restriction functions
  * @ingroup meos_rgeo
  * @brief Restriction functions for temporal rigid geometries
- *
- * @defgroup meos_rgeo_dist Distance functions
- * @ingroup meos_rgeo
- * @brief Distance functions for temporal rigid geometries
  *
  * @defgroup meos_rgeo_comp Comparison functions
  * @ingroup meos_rgeo
@@ -59,6 +63,42 @@
  *   @defgroup meos_rgeo_comp_temp Temporal comparison functions
  *   @ingroup meos_rgeo_comp
  *   @brief Temporal comparison functions for temporal rigid geometries
+ *
+ * @defgroup meos_geo_bbox Bounding box functions
+ * @ingroup meos_geo
+ * @brief Bounding box functions for temporal geometries
+ *
+ *   @defgroup meos_geo_bbox_split Split functions
+ *   @ingroup meos_geo_bbox
+ *   @brief Split functions for temporal geometries
+ *
+ *   @defgroup meos_geo_bbox_topo Topological functions
+ *   @ingroup meos_geo_bbox
+ *   @brief Topological functions for temporal geometries
+ *
+ *   @defgroup meos_geo_bbox_pos Position functions
+ *   @ingroup meos_geo_bbox
+ *   @brief Position functions for temporal geometries
+ *
+ * @defgroup meos_rgeo_dist Distance functions
+ * @ingroup meos_rgeo
+ * @brief Distance functions for temporal rigid geometries
+ *
+ * @defgroup meos_rgeo_srid Spatial reference system functions
+ * @ingroup meos_rgeo
+ * @brief Spatial reference system functions for temporal rigid geometries
+ *
+ * @defgroup meos_rgeo_rel Spatial relationship functions
+ * @ingroup meos_rgeo
+ * @brief Spatial relationship functions for temporal rigid geometries
+ *
+ *   @defgroup meos_rgeo_rel_ever Ever/always relationship functions
+ *   @ingroup meos_rgeo_rel
+ *   @brief Ever/always relationship functions for temporal rigid geometries
+ *
+ *   @defgroup meos_rgeo_rel_temp Temporal relationship functions
+ *   @ingroup meos_rgeo_rel
+ *   @brief Temporal relationship functions for temporal rigid geometries
  */
 
 /*****************************************************************************/

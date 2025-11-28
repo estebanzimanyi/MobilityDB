@@ -127,7 +127,7 @@ VClip_tpoly_point(PG_FUNCTION_ARGS)
   /* TODO: check SRID, geometry type and dimension */
   Datum value;
   bool found = temporal_value_at_timestamptz(temp, ts, false, &value);
-  if (!found)
+  if (! found)
   {
     PG_FREE_IF_COPY(temp, 0);
     PG_FREE_IF_COPY(gs_point, 1);
@@ -162,7 +162,7 @@ VClip_tpoly_poly(PG_FUNCTION_ARGS)
   /* TODO: check SRID, geometry type and dimension */
   Datum value;
   bool found = temporal_value_at_timestamptz(temp, ts, false, &value);
-  if (!found)
+  if (! found)
   {
     PG_FREE_IF_COPY(temp, 0);
     PG_FREE_IF_COPY(gs_poly2, 1);
@@ -198,7 +198,7 @@ VClip_tpoly_tpoint(PG_FUNCTION_ARGS)
   Datum value1, value2;
   bool found1 = temporal_value_at_timestamptz(temp1, ts, false, &value1);
   bool found2 = temporal_value_at_timestamptz(temp2, ts, false, &value2);
-  if (!found1 || !found2)
+  if (! found1 || ! found2)
   {
     PG_FREE_IF_COPY(temp1, 0);
     PG_FREE_IF_COPY(temp2, 1);
@@ -234,7 +234,7 @@ VClip_tpoly_tpoly(PG_FUNCTION_ARGS)
   Datum value1, value2;
   bool found1 = temporal_value_at_timestamptz(temp1, ts, false, &value1);
   bool found2 = temporal_value_at_timestamptz(temp2, ts, false, &value2);
-  if (!found1 || !found2)
+  if (! found1 || ! found2)
   {
     PG_FREE_IF_COPY(temp1, 0);
     PG_FREE_IF_COPY(temp2, 1);

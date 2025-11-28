@@ -32,17 +32,17 @@
  * @brief Temporal distance for temporal poses
  */
 
-CREATE FUNCTION tDistance(geometry(Point), tpose)
+CREATE FUNCTION tDistance(geometry, tpose)
   RETURNS tfloat
-  AS 'MODULE_PATHNAME', 'Tdistance_point_tpose'
+  AS 'MODULE_PATHNAME', 'Tdistance_geo_tpose'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tDistance(pose, tpose)
   RETURNS tfloat
   AS 'MODULE_PATHNAME', 'Tdistance_pose_tpose'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tDistance(tpose, geometry(Point))
+CREATE FUNCTION tDistance(tpose, geometry)
   RETURNS tfloat
-  AS 'MODULE_PATHNAME', 'Tdistance_tpose_point'
+  AS 'MODULE_PATHNAME', 'Tdistance_tpose_geo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tDistance(tpose, pose)
   RETURNS tfloat

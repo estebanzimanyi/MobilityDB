@@ -44,6 +44,7 @@
 #include <meos_internal.h>
 #include "temporal/tsequenceset.h"
 #include "temporal/temporal.h"
+#include "temporal/tsequence.h"
 #include "temporal/type_util.h"
 #include "temporal/temporal_boxops.h"
 #include "rgeo/trgeo_all.h"
@@ -57,6 +58,7 @@
 
 /**
  * @brief Return the reference geometry of the temporal value
+ * @param[in] ss Temporal rigid geometry of subtype sequence set
  */
 const GSERIALIZED *
 trgeoseqset_geom_p(const TSequenceSet *ss)
@@ -75,6 +77,7 @@ trgeoseqset_geom_p(const TSequenceSet *ss)
 /**
  * @brief Return a new temporal pose sequence obtained by removing the 
  * reference geometry of a temporal rigid geometry
+ * @param[in] ss Temporal rigid geometry of subtype sequence set
  */
 TSequenceSet *
 trgeoseqset_tposeseqset(const TSequenceSet *ss)
@@ -87,6 +90,87 @@ trgeoseqset_tposeseqset(const TSequenceSet *ss)
 }
 
 /*****************************************************************************/
+
+/**
+ * @brief Join two temporal temporal rigid geometry sequences
+ * @param[in] gs Geometry
+ * @param[in] seq1,seq2 Temporal sequences
+ * @param[in] removelast,removefirst Remove the last and/or the
+ * first instant of the first/second sequence
+ * @pre The two input sequences are adjacent and have the same interpolation
+ * @note The function is a variant of function #tsequence_join
+ */
+static TSequence *
+trgeoseq_join(const GSERIALIZED *gs, const TSequence *seq1,
+  const TSequence *seq2, bool removelast, bool removefirst)
+{
+  int count1 = removelast ? seq1->count - 1 : seq1->count;
+  int start2 = removefirst ? 1 : 0;
+  int count = count1 + (seq2->count - start2);
+  TInstant **instants = palloc(sizeof(TSequence *) * count);
+  int i, ninsts = 0;
+  for (i = 0; i < count1; i++)
+    instants[ninsts++] = (TInstant *) TSEQUENCE_INST_N(seq1, i);
+  for (i = start2; i < seq2->count; i++)
+    instants[ninsts++] = (TInstant *) TSEQUENCE_INST_N(seq2, i);
+  /* Get the bounding box size */
+  size_t bboxsize = DOUBLE_PAD(temporal_bbox_size(seq1->temptype));
+  bboxunion bbox;
+  memcpy(&bbox, TSEQUENCE_BBOX_PTR(seq1), bboxsize);
+  bbox_expand(TSEQUENCE_BBOX_PTR(seq2), &bbox, seq1->temptype);
+  TSequence *result = trgeoseq_make_exp1(gs, instants, count, count,
+    seq1->period.lower_inc, seq2->period.upper_inc,
+    MEOS_FLAGS_GET_INTERP(seq1->flags), NORMALIZE_NO);
+  pfree(instants);
+  return result;
+}
+/**
+ * @brief Normalize the array of temporal rigid geometry sequences
+ * @param[in] gs Geometry
+ * @param[in] sequences Array of temporal sequences
+ * @param[in] count Number of elements in the input array
+ * @param[out] newcount Number of elements in the output array
+ * @return Array of normalized temporal sequences values
+ * @pre Each sequence in the input array is normalized.
+ * When merging sequences, the test whether the value is the same
+ * at the common instant should be ensured by the calling function.
+ * @note The function is a variant of function #tseqarr_normalize
+ */
+static TSequence **
+trgeoseqarr_normalize(const GSERIALIZED *gs, TSequence **sequences,
+  int count, int *newcount)
+{
+  assert(sequences); assert(newcount); assert(count > 0);
+  TSequence **result = palloc(sizeof(TSequence *) * count);
+  /* seq1 is the sequence to which we try to join subsequent seq2 */
+  TSequence *seq1 = (TSequence *) sequences[0];
+  /* newseq is the result of joining seq1 and seq2 */
+  bool isnew = false;
+  int nseqs = 0;
+  for (int i = 1; i < count; i++)
+  {
+    TSequence *seq2 = (TSequence *) sequences[i];
+    bool removelast, removefirst;
+    if (tsequence_join_test(seq1, seq2, &removelast, &removefirst))
+    {
+      TSequence *newseq1 = trgeoseq_join(gs, seq1, seq2, removelast,
+        removefirst);
+      if (isnew)
+        pfree(seq1);
+      seq1 = newseq1;
+      isnew = true;
+    }
+    else
+    {
+      result[nseqs++] = isnew ? seq1 : tsequence_copy(seq1);
+      seq1 = seq2;
+      isnew = false;
+    }
+  }
+  result[nseqs++] = isnew ? seq1 : tsequence_copy(seq1);
+  *newcount = nseqs;
+  return result;
+}
 
 /**
  * @brief Construct a temporal sequence set from an array of temporal sequences
@@ -102,7 +186,7 @@ trgeoseqset_tposeseqset(const TSequenceSet *ss)
  * @endcode
  * where the `_X` are unused bytes added for double padding, `offset_0` and
  * `offset_1` are offsets for the corresponding sequences.
- * @param[in] geom Reference geometry
+ * @param[in] gs Reference geometry
  * @param[in] sequences Array of sequences
  * @param[in] count Number of elements in the array
  * @param[in] maxcount Maximum number of elements in the array
@@ -111,7 +195,7 @@ trgeoseqset_tposeseqset(const TSequenceSet *ss)
  * sets before applying an operation to them.
  */
 TSequenceSet *
-trgeoseqset_make1_exp(const GSERIALIZED *geom, TSequence **sequences,
+trgeoseqset_make_exp1(const GSERIALIZED *gs, TSequence **sequences,
   int count, int maxcount, bool normalize)
 {
   assert(maxcount >= count);
@@ -123,7 +207,7 @@ trgeoseqset_make1_exp(const GSERIALIZED *geom, TSequence **sequences,
   for (int i = 0; i < count; ++i)
     if (MEOS_FLAGS_GET_GEOM(sequences[i]->flags))
     {
-      if (! ensure_same_geom(geom, trgeoseq_geom_p(sequences[i])))
+      if (! ensure_same_geom(gs, trgeoseq_geom_p(sequences[i])))
         return NULL;
       // TODO free
     }
@@ -132,7 +216,7 @@ trgeoseqset_make1_exp(const GSERIALIZED *geom, TSequence **sequences,
   TSequence **normseqs = (TSequence **) sequences;
   int newcount = count;
   if (normalize && count > 1)
-    normseqs = tseqarr_normalize(sequences, count, &newcount);
+    normseqs = trgeoseqarr_normalize(gs, sequences, count, &newcount);
 
   /* Get the bounding box size */
   size_t bboxsize = temporal_bbox_size(sequences[0]->temptype);
@@ -157,7 +241,7 @@ trgeoseqset_make1_exp(const GSERIALIZED *geom, TSequence **sequences,
   else
     maxcount = newcount;
   /* Size of the reference geometry */
-  size_t geom_size = DOUBLE_PAD(VARSIZE(geom));
+  size_t geom_size = DOUBLE_PAD(VARSIZE(gs));
   /* Total size of the struct */
   size_t memsize = DOUBLE_PAD(sizeof(TSequenceSet)) + bboxsize_extra +
     (maxcount + 1) * sizeof(size_t) + seqs_size + geom_size;
@@ -188,7 +272,7 @@ trgeoseqset_make1_exp(const GSERIALIZED *geom, TSequence **sequences,
   /* Store the composing instants */
   size_t pdata = DOUBLE_PAD(sizeof(TSequenceSet)) + bboxsize_extra +
     sizeof(size_t) * newcount;
-  size_t pos = sizeof(size_t); /* Account for geom offset pointer */
+  size_t pos = sizeof(size_t); /* Account for geometry offset pointer */
   for (int i = 0; i < newcount; i++)
   {
     size_t seq_size = trgeoseq_pose_varsize(normseqs[i]);
@@ -198,7 +282,7 @@ trgeoseqset_make1_exp(const GSERIALIZED *geom, TSequence **sequences,
     pos += DOUBLE_PAD(seq_size);
   }
   /* Store the reference geometry */
-  void *geom_from = (void *) geom;
+  void *geom_from = (void *) gs;
   memcpy(((char *) result) + pdata + pos, geom_from, VARSIZE(geom_from));
   (TSEQUENCESET_OFFSETS_PTR(result))[newcount] = pos;
 
@@ -210,7 +294,7 @@ trgeoseqset_make1_exp(const GSERIALIZED *geom, TSequence **sequences,
 /**
  * @ingroup meos_internal_rgeo_constructor
  * @brief Construct a temporal sequence set from an array of temporal sequences.
- * @param[in] geom Reference geometry
+ * @param[in] gs Reference geometry
  * @param[in] sequences Array of sequences
  * @param[in] count Number of elements in the array
  * @param[in] maxcount Maximum number of elements in the array
@@ -219,21 +303,20 @@ trgeoseqset_make1_exp(const GSERIALIZED *geom, TSequence **sequences,
  * temporal sequence sets before applying an operation to them.
  */
 TSequenceSet *
-trgeoseqset_make_exp(const GSERIALIZED *geom, TSequence **sequences,
+trgeoseqset_make_exp(const GSERIALIZED *gs, TSequence **sequences,
   int count, int maxcount, bool normalize)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(geom, NULL); VALIDATE_NOT_NULL(sequences, NULL);
-  if (! ensure_positive(count) ||
-      ! ensure_valid_tseqarr(sequences, count))
+  VALIDATE_NOT_NULL(gs, NULL); VALIDATE_NOT_NULL(sequences, NULL);
+  if (! ensure_positive(count) || ! ensure_valid_tseqarr(sequences, count))
     return NULL;
-  return trgeoseqset_make1_exp(geom, sequences, count, maxcount, normalize);
+  return trgeoseqset_make_exp1(gs, sequences, count, maxcount, normalize);
 }
 
 /**
  * @ingroup meos_rgeo_constructor
  * @brief Construct a temporal sequence set from an array of temporal sequences
- * @param[in] geom Reference geometry
+ * @param[in] gs Reference geometry
  * @param[in] sequences Array of sequences
  * @param[in] count Number of elements in the array
  * @param[in] normalize True if the resulting value should be normalized.
@@ -242,17 +325,17 @@ trgeoseqset_make_exp(const GSERIALIZED *geom, TSequence **sequences,
  * @sqlfn tbool_seqset(), tint_seqset(), tfloat_seqset(), ttext_seqset(), etc.
  */
 inline TSequenceSet *
-trgeoseqset_make(const GSERIALIZED *geom, TSequence **sequences, int count,
+trgeoseqset_make(const GSERIALIZED *gs, TSequence **sequences, int count,
   bool normalize)
 {
-  return trgeoseqset_make_exp(geom, sequences, count, count, normalize);
+  return trgeoseqset_make_exp(gs, sequences, count, count, normalize);
 }
 
 /**
  * @ingroup meos_rgeo_constructor
  * @brief Construct a temporal sequence set from an array of temporal
  * sequences and free the array and the sequences after the creation
- * @param[in] geom Reference geometry
+ * @param[in] gs Reference geometry
  * @param[in] sequences Array of sequences
  * @param[in] count Number of elements in the array
  * @param[in] normalize True if the resulting value should be normalized
@@ -260,11 +343,11 @@ trgeoseqset_make(const GSERIALIZED *geom, TSequence **sequences, int count,
  * @see tsequenceset_make
  */
 TSequenceSet *
-trgeoseqset_make_free(const GSERIALIZED *geom, TSequence **sequences,
+trgeoseqset_make_free(const GSERIALIZED *gs, TSequence **sequences,
   int count, bool normalize)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(geom, NULL); VALIDATE_NOT_NULL(sequences, NULL);
+  VALIDATE_NOT_NULL(gs, NULL); VALIDATE_NOT_NULL(sequences, NULL);
   if (! ensure_positive(count) || ! ensure_valid_tseqarr(sequences, count))
     return NULL;
 
@@ -273,7 +356,7 @@ trgeoseqset_make_free(const GSERIALIZED *geom, TSequence **sequences,
     pfree(sequences);
     return NULL;
   }
-  TSequenceSet *result = trgeoseqset_make(geom, sequences, count, normalize);
+  TSequenceSet *result = trgeoseqset_make(gs, sequences, count, normalize);
   pfree_array((void **) sequences, count);
   return result;
 }
@@ -284,13 +367,12 @@ trgeoseqset_make_free(const GSERIALIZED *geom, TSequence **sequences,
  * the sequences according the maximum distance or interval between instants
  */
 static int *
-trgeoseqset_make_valid_gaps(const GSERIALIZED *geom, TInstant **instants,
+trgeoseqset_make_valid_gaps(const GSERIALIZED *gs, TInstant **instants,
   int count, bool lower_inc, bool upper_inc, interpType interp, double maxdist,
   Interval *maxt, int *nsplits)
 {
   assert(interp != DISCRETE);
-  trgeoseq_make_valid(geom, instants, count, lower_inc, upper_inc,
-    interp);
+  trgeoseq_make_valid(gs, instants, count, lower_inc, upper_inc, interp);
   return ensure_valid_tinstarr_gaps(instants, count, MERGE_NO, maxdist, maxt,
     nsplits);
 }
@@ -300,7 +382,7 @@ trgeoseqset_make_valid_gaps(const GSERIALIZED *geom, TInstant **instants,
  * @brief Construct a temporal sequence set from an array of temporal instants
  * introducing a gap when two consecutive instants are separated from each
  * other by at least the given distance or the given time interval.
- * @param[in] geom Geometry
+ * @param[in] gs Geometry
  * @param[in] instants Array of instants
  * @param[in] count Number of elements in the array
  * @param[in] interp Interpolation
@@ -310,11 +392,11 @@ trgeoseqset_make_valid_gaps(const GSERIALIZED *geom, TInstant **instants,
  * tgeompoint_seqset_gaps(), tgeogpoint_seqset_gaps()
  */
 TSequenceSet *
-trgeoseqset_make_gaps(const GSERIALIZED *geom, TInstant **instants,
-  int count, interpType interp, Interval *maxt, double maxdist)
+trgeoseqset_make_gaps(const GSERIALIZED *gs, TInstant **instants, int count,
+  interpType interp, Interval *maxt, double maxdist)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(geom, NULL); VALIDATE_NOT_NULL(instants, NULL);
+  VALIDATE_NOT_NULL(gs, NULL); VALIDATE_NOT_NULL(instants, NULL);
   if (! ensure_positive(count))
     return NULL;
 
@@ -324,22 +406,22 @@ trgeoseqset_make_gaps(const GSERIALIZED *geom, TInstant **instants,
   /* If no gaps are given construt call the standard sequence constructor */
   if (maxt == NULL && maxdist <= 0.0)
   {
-    seq = trgeoseq_make(geom, instants, count, true, true, interp, NORMALIZE);
-    result = trgeoseqset_make(geom, &seq, 1, NORMALIZE_NO);
+    seq = trgeoseq_make(gs, instants, count, true, true, interp, NORMALIZE);
+    result = trgeoseqset_make(gs, &seq, 1, NORMALIZE_NO);
     pfree(seq);
     return result;
   }
 
   /* Ensure that the array of instants is valid and determine the splits */
   int countsplits;
-  int *splits = trgeoseqset_make_valid_gaps(geom, instants, count, true, true,
+  int *splits = trgeoseqset_make_valid_gaps(gs, instants, count, true, true,
     interp, maxdist, maxt, &countsplits);
   if (countsplits == 0)
   {
     /* There are no gaps */
     pfree(splits);
-    seq = trgeoseq_make1(geom, instants, count, true, true, interp, NORMALIZE);
-    result = trgeoseqset_make(geom, &seq, 1, NORMALIZE_NO);
+    seq = trgeoseq_make(gs, instants, count, true, true, interp, NORMALIZE);
+    result = trgeoseqset_make(gs, &seq, 1, NORMALIZE_NO);
     pfree(seq);
   }
   else
@@ -355,7 +437,7 @@ trgeoseqset_make_gaps(const GSERIALIZED *geom, TInstant **instants,
       {
         /* Finalize the current sequence and start a new one */
         assert(k > 0);
-        sequences[newcount++] = trgeoseq_make1(geom, newinsts, k, true, true,
+        sequences[newcount++] = trgeoseq_make(gs, newinsts, k, true, true,
           interp, NORMALIZE);
         j++; k = 0;
       }
@@ -364,9 +446,9 @@ trgeoseqset_make_gaps(const GSERIALIZED *geom, TInstant **instants,
     }
     /* Construct last sequence */
     if (k > 0)
-      sequences[newcount++] = trgeoseq_make1(geom, newinsts, k, true, true,
+      sequences[newcount++] = trgeoseq_make(gs, newinsts, k, true, true,
         interp, NORMALIZE);
-    result = trgeoseqset_make(geom, sequences, newcount, NORMALIZE);
+    result = trgeoseqset_make(gs, sequences, newcount, NORMALIZE);
     pfree(newinsts); pfree(sequences);
   }
   return result;
@@ -443,10 +525,5 @@ trgeoseq_to_tsequenceset_free(TSequence *seq)
   pfree(seq);
   return result;
 }
-
-/*****************************************************************************
- * Accessor functions
- *****************************************************************************/
-
 
 /*****************************************************************************/

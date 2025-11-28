@@ -298,6 +298,7 @@ typedef enum
   MEOS_ERR_INVALID_ARG_TYPE      = 11, // Invalid argument type
   MEOS_ERR_INVALID_ARG_VALUE     = 12, // Invalid argument value
   MEOS_ERR_FEATURE_NOT_SUPPORTED = 13, // Feature not currently supported
+  MEOS_ERR_RESTRICT_VIOLATION    = 14, // Violation of a restriction
 
   MEOS_ERR_MFJSON_INPUT          = 20, // MFJSON input error
   MEOS_ERR_MFJSON_OUTPUT         = 21, // MFJSON output error
@@ -1328,6 +1329,7 @@ extern text **ttext_values(const Temporal *temp, int *count);
  *****************************************************************************/
 
 extern double float_degrees(double value, bool normalize);
+extern double float_radians(double value);
 extern Temporal **temparr_round(Temporal **temp, int count, int maxdd);
 extern Temporal *temporal_round(const Temporal *temp, int maxdd);
 extern Temporal *temporal_scale_time(const Temporal *temp, const Interval *duration);

@@ -50,25 +50,25 @@
 #include "rgeo/trgeo_utils.h"
 
 /*****************************************************************************
- * Transform a temporal geometry to a STBox
+ * Transform a temporal rigid geometry into an STBox
  *****************************************************************************/
 
 /**
  * @brief Set the spatiotemporal box from the geometry value
- * @param[in] geom Reference geometry
- * @param[in] inst Temporal network point
+ * @param[in] gs Reference geometry
+ * @param[in] inst Temporal rigid geometry
  * @param[out] box Spatiotemporal box
  */
 void
-trgeoinst_set_stbox(const GSERIALIZED *geom, const TInstant *inst, STBox *box)
+trgeoinst_set_stbox(const GSERIALIZED *gs, const TInstant *inst, STBox *box)
 {
   const Pose *pose = DatumGetPoseP(tinstant_value(inst));
 
   /* Note: zero-fill is required here, just as in heap tuples */
   memset(box, 0, sizeof(STBox));
-  bool hasz = (bool) FLAGS_GET_Z(geom->gflags);
-  bool geodetic = (bool) FLAGS_GET_GEODETIC(geom->gflags);
-  box->srid = gserialized_get_srid(geom);
+  bool hasz = (bool) FLAGS_GET_Z(gs->gflags);
+  bool geodetic = (bool) FLAGS_GET_GEODETIC(gs->gflags);
+  box->srid = gserialized_get_srid(gs);
   MEOS_FLAGS_SET_X(box->flags, true);
   MEOS_FLAGS_SET_Z(box->flags, hasz);
   MEOS_FLAGS_SET_T(box->flags, true);
@@ -77,7 +77,7 @@ trgeoinst_set_stbox(const GSERIALIZED *geom, const TInstant *inst, STBox *box)
   span_set(TimestampTzGetDatum(inst->t), TimestampTzGetDatum(inst->t),
     true, true, T_TIMESTAMPTZ, T_TSTZSPAN, &box->period);
 
-  LWGEOM *lwgeom = lwgeom_from_gserialized(geom);
+  LWGEOM *lwgeom = lwgeom_from_gserialized(gs);
   LWGEOM *lwgeom_copy = lwgeom_clone_deep(lwgeom);
   lwgeom_apply_pose(pose, lwgeom_copy);
 
@@ -100,21 +100,21 @@ trgeoinst_set_stbox(const GSERIALIZED *geom, const TInstant *inst, STBox *box)
 
 /**
  * @brief Set the spatiotemporal box from the array of temporal rigid geometry values
- * @param[in] geom Reference geometry
+ * @param[in] gs Reference geometry
  * @param[in] instants Temporal geometry values
  * @param[in] count Number of elements in the array
  * @param[out] box Spatiotemporal box
  */
 void
-trgeoinstarr_static_stbox(const GSERIALIZED *geom, TInstant **instants,
+trgeoinstarr_static_stbox(const GSERIALIZED *gs, TInstant **instants,
   int count, STBox *box)
 {
-  trgeoinst_set_stbox(geom, instants[0], box);
+  trgeoinst_set_stbox(gs, instants[0], box);
   for (int i = 1; i < count; i++)
   {
     STBox box1;
     memset(&box1, 0, sizeof(STBox));
-    trgeoinst_set_stbox(geom, instants[i], &box1);
+    trgeoinst_set_stbox(gs, instants[i], &box1);
     stbox_expand(&box1, box);
   }
 }
@@ -122,7 +122,7 @@ trgeoinstarr_static_stbox(const GSERIALIZED *geom, TInstant **instants,
 /**
  * @brief Set the spatiotemporal box from the pose value
  * @param[out] box Spatiotemporal box
- * @param[in] inst Temporal network point
+ * @param[in] inst Temporal rigid geometry
  */
 static void
 trgeoinst_make_pose_stbox(const TInstant *inst, STBox *box)
@@ -143,16 +143,16 @@ trgeoinst_make_pose_stbox(const TInstant *inst, STBox *box)
 /**
  * @brief Set the spatiotemporal box from the array of temporal rigid geometry
  * values
- * @param[in] geom Geometry
+ * @param[in] gs Geometry
  * @param[in] instants Temporal instants
  * @param[in] count Number of elements in the array
  * @param[out] box Spatiotemporal box
  */
 void
-trgeoinstarr_rotating_stbox(const GSERIALIZED *geom, TInstant **instants,
+trgeoinstarr_rotating_stbox(const GSERIALIZED *gs, TInstant **instants,
   int count, STBox *box)
 {
-  double r = geom_radius(geom);
+  double r = geom_radius(gs);
   trgeoinst_make_pose_stbox(instants[0], box);
   for (int i = 1; i < count; i++)
   {
@@ -170,7 +170,7 @@ trgeoinstarr_rotating_stbox(const GSERIALIZED *geom, TInstant **instants,
     box->zmin -= r;
     box->zmax += r;
   }
-  box->srid = gserialized_get_srid(geom);
+  box->srid = gserialized_get_srid(gs);
   MEOS_FLAGS_SET_GEODETIC(box->flags, false);
   return;
 }
@@ -180,14 +180,14 @@ trgeoinstarr_rotating_stbox(const GSERIALIZED *geom, TInstant **instants,
 /**
  * @brief Set the bounding box from the array of temporal instant values
  * (dispatch function)
- * @param[in] geom Geometry
+ * @param[in] gs Geometry
  * @param[in] instants Temporal instants
  * @param[in] count Number of elements in the array
  * @param[in] interp Interpolation
  * @param[out] box Box
  */
 void
-trgeoinstarr_compute_bbox(const GSERIALIZED *geom, TInstant **instants,
+trgeoinstarr_compute_bbox(const GSERIALIZED *gs, TInstant **instants,
   int count, interpType interp, void *box)
 {
   /* Only external types have bounding box */
@@ -195,9 +195,9 @@ trgeoinstarr_compute_bbox(const GSERIALIZED *geom, TInstant **instants,
   if (instants[0]->temptype == T_TRGEOMETRY)
   {
     if (interp == LINEAR)
-      trgeoinstarr_rotating_stbox(geom, instants, count, (STBox *) box);
+      trgeoinstarr_rotating_stbox(gs, instants, count, (STBox *) box);
     else
-      trgeoinstarr_static_stbox(geom, instants, count, (STBox *) box);
+      trgeoinstarr_static_stbox(gs, instants, count, (STBox *) box);
   }
   else
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,

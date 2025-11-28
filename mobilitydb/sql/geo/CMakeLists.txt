@@ -12,7 +12,7 @@ SET(LOCAL_FILES
   066_tpoint_similarity
   068_tpoint_aggfuncs
   070_tpoint_spatialrels
-  072_tpoint_tempspatialrels
+  072_tpoint_spatiotemprels
   073_tpoint_gist
   074_tpoint_spgist
   076_tpoint_analytics

@@ -332,9 +332,18 @@ spatialarr_wkt_out(const Datum *spatialarr, meosType elemtype, int count,
   for (int i = 0; i < count; i++)
   {
     if (temporal_type(elemtype))
-      result[i] = extended ?
-        tspatial_as_ewkt(DatumGetTemporalP(spatialarr[i]), maxdd) :
-        tspatial_as_text(DatumGetTemporalP(spatialarr[i]), maxdd);
+    {
+#if RGEO
+      if (elemtype == T_TRGEOMETRY)
+        result[i] = extended ?
+          trgeo_as_ewkt(DatumGetTemporalP(spatialarr[i]), maxdd) :
+          trgeo_as_text(DatumGetTemporalP(spatialarr[i]), maxdd);
+      else
+#endif
+        result[i] = extended ?
+          tspatial_as_ewkt(DatumGetTemporalP(spatialarr[i]), maxdd) :
+          tspatial_as_text(DatumGetTemporalP(spatialarr[i]), maxdd);
+    }
     else
       result[i] = extended ?
         spatialbase_as_ewkt(spatialarr[i], elemtype, maxdd) :

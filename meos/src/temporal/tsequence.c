@@ -70,8 +70,9 @@
   #include "npoint/tnpoint_spatialfuncs.h"
 #endif
 #if POSE
-  #include <meos_pose.h>
+  // #include <meos_pose.h>
   #include "pose/pose.h"
+  #include "pose/tpose.h"
   #include "pose/tpose_spatialfuncs.h"
 #endif
 #if RGEO
@@ -153,7 +154,7 @@ datum_collinear(Datum value1, Datum value2, Datum value3, meosType basetype,
 }
 
 /*****************************************************************************
- * Locate functions
+ * Locate, interpolate, and intersection functions for float segments
  *****************************************************************************/
 
 /**
@@ -184,6 +185,118 @@ floatsegm_locate(double start, double end, double value)
     return -1.0;
   return fraction;
 }
+
+/**
+ * @brief Return a float interpolated from a float segment with respect to a
+ * fraction of its total length
+ * @param[in] start,end Values defining the segment
+ * @param[in] ratio Value between 0 and 1 representing the fraction of the
+ * total length of the segment where the value must be located
+ */
+double
+floatsegm_interpolate(double start, double end, long double ratio)
+{
+  assert(ratio >= 0.0 || ratio <= 1.0);
+  return start + (double) ((long double) (end - start) * ratio);
+}
+
+/**
+ * @brief Return true if the segment of a temporal number intersects
+ * the base value at a timestamptz
+ * @param[in] start,end Values defining the segment
+ * @param[in] value Value to locate
+ * @param[in] lower,upper Timestamps defining the segment
+ * @param[out] t Resulting timestamp
+ */
+int
+tfloatsegm_intersection_value(Datum start, Datum end, Datum value,
+  TimestampTz lower, TimestampTz upper, TimestampTz *t)
+{
+  assert(lower < upper); assert(t);
+  double dstart = DatumGetFloat8(start);
+  double dend = DatumGetFloat8(end);
+  double dvalue = DatumGetFloat8(value);
+  double fraction = floatsegm_locate(dstart, dend, dvalue);
+  if (fraction < 0.0)
+    return 0;
+  if (t)
+  {
+    double duration = (double) (upper - lower);
+    /* Note that due to roundoff errors it may be the case that the
+     * resulting timestamp t may be equal to lower or to upper */
+    *t = lower + (TimestampTz) (duration * fraction);
+  }
+  return 1;
+}
+
+/**
+ * @brief Return 1 or 2 if two temporal number segments intersect during the
+ * the period defined by the output timestamps, return 0 otherwise
+ * @param[in] start1,end1 Values defining the first segment
+ * @param[in] start2,end2 Values defining the second segment
+ * @param[in] basetype Base type of the values
+ * @param[in] lower,upper Timestamps defining the segments
+ * @param[out] t1,t2 Timestamps defining the resulting period, may be equal
+ * @note Only the intersection inside the segments is considered
+ */
+int
+tfloatsegm_intersection(Datum start1, Datum end1, Datum start2, Datum end2,
+  TimestampTz lower, TimestampTz upper, TimestampTz *t1, TimestampTz *t2)
+{
+  assert(lower < upper); assert(t1); assert(t2);
+  double x1 = datum_double(start1, T_FLOAT8);
+  double x2 = datum_double(end1, T_FLOAT8);
+  double x3 = datum_double(start2, T_FLOAT8);
+  double x4 = datum_double(end2, T_FLOAT8);
+
+  /* Segments intersecting in the boundaries */
+  if (float8_eq(x1, x3) || float8_eq(x2, x4))
+    return 0;
+
+  /*
+   * Using the parametric form of the segments, compute the instant t at which
+   * the two segments are equal: x1 + (x2 - x1) t = x3 + (x4 -x3) t
+   * that is t = (x3 - x1) / (x2 - x1 - x4 + x3).
+   */
+  long double denom = x2 - x1 - x4 + x3;
+  if (denom == 0)
+    /* Parallel segments */
+    return 0;
+
+  /*
+   * Potentially avoid the division based on
+   * Franklin Antonio, Faster Line Segment Intersection, Graphic Gems III
+   * https://github.com/erich666/GraphicsGems/blob/master/gemsiii/insectc.c
+   */
+  long double num = x3 - x1;
+  if (denom > 0)
+  {
+    if (num < 0 || num > denom)
+      return 0;
+  }
+  else
+  {
+    if (num > 0 || num < denom)
+      return 0;
+  }
+
+  long double fraction = num / denom;
+  if (fraction <= MEOS_EPSILON || fraction >= (1.0 - MEOS_EPSILON))
+    /* Intersection occurs out of the period */
+    return 0;
+
+  double duration = (double) (upper - lower);
+  *t1 = *t2 = lower + (TimestampTz) (duration * fraction);
+  /* Note that due to roundoff errors it may be the case that the
+   * resulting timestamp t may be equal to inst1->t or to inst2->t */
+  if (*t1 <= lower || *t2 >= upper)
+    return 0;
+  return 1;
+}
+
+/*****************************************************************************
+ * Generic locate and interpolate functions
+ *****************************************************************************/
 
 /**
  * @brief Return a float value in (0,1) if a segment of base values intersects
@@ -229,22 +342,6 @@ datumsegm_locate(Datum value1, Datum value2, Datum value, meosType basetype)
  *****************************************************************************/
 
 /**
- * @brief Return a float interpolated from a float segment with respect to a
- * fraction of its total length
- * @param[in] start,end Values defining the segment
- * @param[in] ratio Value between 0 and 1 representing the fraction of the
- * total length of the segment where the value must be located
- */
-double
-floatsegm_interpolate(double start, double end, long double ratio)
-{
-  assert(ratio >= 0.0 || ratio <= 1.0);
-  return start + (double) ((long double) (end - start) * ratio);
-}
-
-/*****************************************************************************/
-
-/**
  * @brief Return base value interpolated from a base segment with respect to
  * a fraction of its total length
  * @param[in] start,end Temporal instants defining the segment
@@ -284,10 +381,11 @@ datumsegm_interpolate(Datum start, Datum end, meosType temptype,
     return PointerGetDatum(npointsegm_interpolate(DatumGetNpointP(start),
       DatumGetNpointP(end), ratio));
 #endif
-// #if POSE || RGEO
-  // else if (temptype == T_TPOSE)
-    // return PointerGetDatum(posesegm_interpolate(start, end, ratio));
-// #endif
+#if POSE || RGEO
+  else if (temptype == T_TPOSE || temptype == T_TRGEOMETRY)
+    return PointerGetDatum(posesegm_interpolate(DatumGetPoseP(start),
+      DatumGetPoseP(end), ratio));
+#endif
   else
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
@@ -506,8 +604,8 @@ tsequence_join(const TSequence *seq1, const TSequence *seq2,
   memcpy(&bbox, TSEQUENCE_BBOX_PTR(seq1), bboxsize);
   bbox_expand(TSEQUENCE_BBOX_PTR(seq2), &bbox, seq1->temptype);
   TSequence *result = tsequence_make_exp1(instants, count, count,
-    seq1->period.lower_inc, seq2->period.upper_inc,
-    MEOS_FLAGS_GET_INTERP(seq1->flags), NORMALIZE_NO, &bbox);
+      seq1->period.lower_inc, seq2->period.upper_inc,
+      MEOS_FLAGS_GET_INTERP(seq1->flags), NORMALIZE_NO, &bbox);
   pfree(instants);
   return result;
 }
@@ -2129,7 +2227,7 @@ tsegment_value_at_timestamptz(Datum start, Datum end, meosType temptype,
  * @csqlfn #Temporal_value_at_timestamptz()
  */
 bool
-tsequence_value_at_timestamptz(const TSequence *seq, TimestampTz t, bool strict,
+tcontseq_value_at_timestamptz(const TSequence *seq, TimestampTz t, bool strict,
   Datum *result)
 {
   assert(seq); assert(result);
@@ -2450,35 +2548,6 @@ intersection_tdiscseq_tcontseq(const TSequence *seq1, const TSequence *seq2,
  *****************************************************************************/
 
 /**
- * @brief Return true if the segment of a temporal number intersects
- * the base value at a timestamptz
- * @param[in] start,end Values defining the segment
- * @param[in] value Value to locate
- * @param[in] lower,upper Timestamps defining the segment
- * @param[out] t Resulting timestamp
- */
-int
-tfloatsegm_intersection_value(Datum start, Datum end, Datum value,
-  TimestampTz lower, TimestampTz upper, TimestampTz *t)
-{
-  assert(lower < upper); assert(t);
-  double dstart = DatumGetFloat8(start);
-  double dend = DatumGetFloat8(end);
-  double dvalue = DatumGetFloat8(value);
-  double fraction = floatsegm_locate(dstart, dend, dvalue);
-  if (fraction < 0.0)
-    return 0;
-  if (t)
-  {
-    double duration = (double) (upper - lower);
-    /* Note that due to roundoff errors it may be the case that the
-     * resulting timestamp t may be equal to lower or to upper */
-    *t = lower + (TimestampTz) (duration * fraction);
-  }
-  return 1;
-}
-
-/**
  * @brief Return 1 or 2 if a temporal segment intersects a base value during
  * the period defined by the output timestamps, return 0 otherwise
  * @param[in] start,end Values defining the segment
@@ -2538,72 +2607,6 @@ tsegment_intersection_value(Datum start, Datum end, Datum value,
  */
 
 /**
- * @brief Return 1 or 2 if two temporal number segments intersect during the
- * the period defined by the output timestamps, return 0 otherwise
- * @param[in] start1,end1 Values defining the first segment
- * @param[in] start2,end2 Values defining the second segment
- * @param[in] basetype Base type of the values
- * @param[in] lower,upper Timestamps defining the segments
- * @param[out] t1,t2 Timestamps defining the resulting period, may be equal
- * @note Only the intersection inside the segments is considered
- */
-int
-tnumbersegm_intersection(Datum start1, Datum end1, Datum start2, Datum end2,
-  meosType basetype, TimestampTz lower, TimestampTz upper, TimestampTz *t1,
-  TimestampTz *t2)
-{
-  assert(lower < upper); assert(t1); assert(t2);
-  double x1 = datum_double(start1, basetype);
-  double x2 = datum_double(end1, basetype);
-  double x3 = datum_double(start2, basetype);
-  double x4 = datum_double(end2, basetype);
-
-  /* Segments intersecting in the boundaries */
-  if (float8_eq(x1, x3) || float8_eq(x2, x4))
-    return 0;
-
-  /*
-   * Using the parametric form of the segments, compute the instant t at which
-   * the two segments are equal: x1 + (x2 - x1) t = x3 + (x4 -x3) t
-   * that is t = (x3 - x1) / (x2 - x1 - x4 + x3).
-   */
-  long double denom = x2 - x1 - x4 + x3;
-  if (denom == 0)
-    /* Parallel segments */
-    return 0;
-
-  /*
-   * Potentially avoid the division based on
-   * Franklin Antonio, Faster Line Segment Intersection, Graphic Gems III
-   * https://github.com/erich666/GraphicsGems/blob/master/gemsiii/insectc.c
-   */
-  long double num = x3 - x1;
-  if (denom > 0)
-  {
-    if (num < 0 || num > denom)
-      return 0;
-  }
-  else
-  {
-    if (num > 0 || num < denom)
-      return 0;
-  }
-
-  long double fraction = num / denom;
-  if (fraction <= MEOS_EPSILON || fraction >= (1.0 - MEOS_EPSILON))
-    /* Intersection occurs out of the period */
-    return 0;
-
-  double duration = (double) (upper - lower);
-  *t1 = *t2 = lower + (TimestampTz) (duration * fraction);
-  /* Note that due to roundoff errors it may be the case that the
-   * resulting timestamp t may be equal to inst1->t or to inst2->t */
-  if (*t1 <= lower || *t2 >= upper)
-    return 0;
-  return 1;
-}
-
-/**
  * @brief Return 1 or 2 if two temporal segments intersect during the period 
  * defined by the output timestamps, return 0 otherwise
  * @param[in] start1,end1 Base values defining the first segment
@@ -2632,8 +2635,8 @@ tsegment_intersection(Datum start1, Datum end1, Datum start2, Datum end2,
   int result = 0; /* Make compiler quiet */
   assert(temporal_type(temptype));
   if (tnumber_type(temptype))
-    result = tnumbersegm_intersection(start1, end1, start2, end2, basetype,
-      lower, upper, t1, t2);
+    result = tfloatsegm_intersection(start1, end1, start2, end2, lower, upper,
+      t1, t2);
   else if (temptype == T_TGEOMPOINT)
     result = tgeompointsegm_intersection(start1, end1, start2, end2, lower,
       upper, t1, t2);
@@ -2649,6 +2652,11 @@ tsegment_intersection(Datum start1, Datum end1, Datum start2, Datum end2,
   else if (temptype == T_TNPOINT)
     result = tnpointsegm_intersection(start1, end1, start2, end2, lower,
       upper, t1, t2);
+#endif
+#if POSE
+  else if (temptype == T_TPOSE)
+    result = tposesegm_intersection(start1, end1, start2, end2, lower, upper,
+      t1, t2);
 #endif
   else 
   {

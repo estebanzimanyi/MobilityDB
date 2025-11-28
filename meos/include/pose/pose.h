@@ -82,10 +82,18 @@ extern bool ensure_valid_poseset_pose(const Set *s, const Pose *pose);
 
 extern bool pose_collinear(const Pose *pose1, const Pose *pose2,
   const Pose *pose3, double ratio);
+extern Pose *pose_invert(const Pose *pose);
+extern Pose *pose_combine(const Pose *pose1, const Pose *pose2);
 extern Pose *posesegm_interpolate(const Pose *start, const Pose *end,
   double ratio);
+extern void posesegm_interpolate_2d(const Pose *start, const Pose *end,
+  double ratio, double *x, double *y, double *theta);
 extern long double posesegm_locate(const Pose *start, const Pose *end,
   const Pose *value);
+
+/* Collinear and interpolation functions */
+
+extern Pose *pose_combine(const Pose *pose1, const Pose *pose2);
 
 /* Input/output functions */
 
@@ -99,6 +107,8 @@ extern Datum datum_pose_rotation(Datum pose);
 /* Transformation functions */
 
 extern Datum datum_pose_round(Datum pose, Datum size);
+extern Pose *pose_transf_pj(const Pose *pose, int32_t srid_to,
+  const LWPROJ *pj);
 
 /* Distance */
 

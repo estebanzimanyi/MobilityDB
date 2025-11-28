@@ -75,7 +75,7 @@
 #define SQL_ROUTE_MAXLEN  64
 
 /*****************************************************************************
- * Collinear and interpolation function
+ * Collinear, interpolate and locate functions
  *****************************************************************************/
 
 /**
@@ -131,20 +131,7 @@ npointsegm_locate(const Npoint *start, const Npoint *end, const Npoint *value)
    /* Return if the value to locate has a different road identifier */
   if (start->rid != value->rid)
     return -1.0;
-  double min = Min(start->pos, end->pos);
-  double max = Max(start->pos, end->pos);
-  /* If value is to the left or to the right of the position range */
-  if ((value->pos < start->pos && value->pos < end->pos) ||
-      (value->pos > start->pos && value->pos > end->pos))
-    return -1.0;
-
-  double range = (max - min);
-  double partial = (value->pos - min);
-  double fraction = start->pos < end->pos ? 
-    partial / range : 1 - partial / range;
-  if (fabs(fraction) < MEOS_EPSILON || fabs(fraction - 1.0) < MEOS_EPSILON)
-    return -1.0;
-  return fraction;
+  return floatsegm_locate(start->pos, end->pos, value->pos);
 }
 
 /*****************************************************************************

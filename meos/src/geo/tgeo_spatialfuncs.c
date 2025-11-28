@@ -1668,7 +1668,7 @@ tgeo_centroid(const Temporal *temp)
  * @note PostGIS function: @p ST_ClusterKMeans(PG_FUNCTION_ARGS)
  */
 int *
-geo_cluster_kmeans(const GSERIALIZED **geoms, uint32_t n, uint32_t k)
+geo_cluster_kmeans(GSERIALIZED **geoms, uint32_t n, uint32_t k)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(geoms, NULL);
@@ -1711,8 +1711,8 @@ geo_cluster_kmeans(const GSERIALIZED **geoms, uint32_t n, uint32_t k)
  * @note PostGIS function: @p ST_ClusterDBSCAN(PG_FUNCTION_ARGS)
  */
 uint32_t *
-geo_cluster_dbscan(const GSERIALIZED **geoms, uint32_t ngeoms,
-  double tolerance, int minpoints, int *count)
+geo_cluster_dbscan(GSERIALIZED **geoms, uint32_t ngeoms, double tolerance,
+  int minpoints, int *count)
 {
   /* Ensure validity of arguments */
   if (! ensure_not_null(geoms))
@@ -1775,8 +1775,7 @@ geo_cluster_dbscan(const GSERIALIZED **geoms, uint32_t ngeoms,
   * @note PostGIS function: @p ST_ClusterIntersectingWin(PG_FUNCTION_ARGS)
   */
 GSERIALIZED ** 
-geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms,
-  int *count)
+geo_cluster_intersecting(GSERIALIZED **geoms, uint32_t ngeoms, int *count)
 {
   int is3d = 0;
   uint32_t nclusters, i, j;
@@ -1856,8 +1855,8 @@ geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms,
  * @note PostGIS function: @p ST_ClusterWithin(PG_FUNCTION_ARGS)
  */
 GSERIALIZED **
-geo_cluster_within(const GSERIALIZED **geoms, uint32_t ngeoms,
-  double tolerance, int *count)
+geo_cluster_within(GSERIALIZED **geoms, uint32_t ngeoms, double tolerance,
+  int *count)
 {
   /* Ensure validity of arguments */
   /* Ensure validity of arguments */

@@ -1471,11 +1471,7 @@
 					</listitem>
 
 					<listitem>
-						<para><link linkend="pose_rotation"><varname>rotation</varname></link>: Return the rotation</para>
-					</listitem>
-
-					<listitem>
-						<para><link linkend="pose_orientation"><varname>orientation</varname></link>: Return the orientation</para>
+						<para><link linkend="pose_rotation"><varname>rotation, orientation</varname></link>: Return the rotation or the orientation</para>
 					</listitem>
 				</itemizedlist>
 			</sect3>

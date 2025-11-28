@@ -66,14 +66,14 @@
 /* Closest features pair */
 
 typedef struct {
-  LWGEOM *geom_1;
-  LWGEOM *geom_2;
-  Pose *pose_1;
-  Pose *pose_2;
-  bool free_pose_1;
-  bool free_pose_2;
-  uint32_t cf_1;
-  uint32_t cf_2;
+  LWGEOM *geom1;
+  LWGEOM *geom2;
+  Pose *pose1;
+  Pose *pose2;
+  bool free_pose1;
+  bool free_pose2;
+  uint32_t cf1;
+  uint32_t cf2;
   TimestampTz t;
   bool store;
 } cfp_elem;

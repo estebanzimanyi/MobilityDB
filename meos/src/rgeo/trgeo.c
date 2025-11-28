@@ -130,7 +130,6 @@ ensure_valid_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2)
  * Input/output functions
  *****************************************************************************/
 
-#if MEOS
 /**
  * @ingroup meos_rgeo_inout
  * @brief Return a temporal rigid geometry from its Well-Known Text (WKT)
@@ -159,7 +158,6 @@ trgeo_from_mfjson(const char *mfjson)
   VALIDATE_NOT_NULL(mfjson, NULL);
   return temporal_from_mfjson(mfjson, T_TRGEOMETRY);
 }
-#endif /* MEOS */
 
 /**
  * @ingroup meos_rgeo_inout
@@ -219,7 +217,7 @@ trgeo_wkt_out(const Temporal *temp, int maxdd, bool extended)
  * @param[in] temp Temporal rigid geometry
  * @param[in] maxdd Maximum number of decimal digits
  */
-inline char *
+char *
 trgeo_as_text(const Temporal *temp, int maxdd)
 {
   return trgeo_wkt_out(temp, maxdd, false);
@@ -232,7 +230,7 @@ trgeo_as_text(const Temporal *temp, int maxdd)
  * @param[in] temp Temporal rigid geometry
  * @param[in] maxdd Maximum number of decimal digits
  */
-inline char *
+char *
 trgeo_as_ewkt(const Temporal *temp, int maxdd)
 {
   return trgeo_wkt_out(temp, maxdd, true);
@@ -313,7 +311,7 @@ trgeo_geom_p(const Temporal *temp)
  * @param[in] temp Temporal rigid geometry
  */
 GSERIALIZED *
-trgeo_geom(const Temporal *temp)
+trgeo_to_geom(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_TRGEOMETRY(temp, NULL);
@@ -417,7 +415,7 @@ geo_tpose_to_trgeo(const GSERIALIZED *gs, const Temporal *temp)
  *****************************************************************************/
 
 /**
- * @ingroup meos_internal_rgeo_transf
+ * @ingroup meos_rgeo_transf
  * @brief Return a geometry obtained by appling a pose to a geometry
  * @param[in] pose Pose
  * @param[inout] gs Geometry
@@ -437,13 +435,27 @@ geom_apply_pose(const GSERIALIZED *gs, const Pose *pose)
 }
 
 /**
+ * @brief Return a copy of the value of a temporal rigid geometry of instant
+ * subtype
+ * @param[in] inst Temporal rigid geometry
+ */
+GSERIALIZED *
+trgeoinst_geom(const TInstant *inst)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_TRGEOMETRY(inst, NULL);
+  Datum pose = tinstant_value_p(inst);
+  return geom_apply_pose(trgeo_geom_p((Temporal *) inst), DatumGetPoseP(pose));
+}
+
+/**
  * @ingroup meos_rgeo_accessor
  * @brief Return a copy of the start value of a temporal rigid geometry
  * @param[in] temp Temporal rigid geometry
- * @csqlfn #Trgeometry_start_value()
+ * @csqlfn #Trgeo_start_geom()
  */
 GSERIALIZED *
-trgeo_start_value(const Temporal *temp)
+trgeo_start_geom(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_TRGEOMETRY(temp, NULL);
@@ -469,9 +481,10 @@ trgeo_start_value(const Temporal *temp)
  * @ingroup meos_rgeo_accessor
  * @brief Return a copy of the end base value of a temporal rigid geometry
  * @param[in] temp Temporal rigid geometry
+ * @csqlfn #Trgeo_end_geom()
  */
 GSERIALIZED *
-trgeo_end_value(const Temporal *temp)
+trgeo_end_geom(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_TRGEOMETRY(temp, NULL);
@@ -505,10 +518,10 @@ trgeo_end_value(const Temporal *temp)
  * @param[in] n Number (1-based)
  * @param[out] result Resulting timestamp
  * @return On error return false
- * @csqlfn #Trgeometry_value_n()
+ * @csqlfn #Trgeo_geom_n()
  */
 bool
-trgeo_value_n(const Temporal *temp, int n, GSERIALIZED **result)
+trgeo_geom_n(const Temporal *temp, int n, GSERIALIZED **result)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_TRGEOMETRY(temp, false); VALIDATE_NOT_NULL(result, false);
@@ -542,22 +555,50 @@ trgeo_value_n(const Temporal *temp, int n, GSERIALIZED **result)
 }
 
 /**
+ * @ingroup meos_internal_temporal_accessor
+ * @brief Return the array of geometries a temporal rigid geometry
+ * @param[in] temp Temporal rigid geometry
+ * @param[out] count Number of geometries in the output array
+ * @return On error return @p NULL
+ * @csqlfn #Trgeo_geoms()
+ */
+GSERIALIZED **
+trgeo_geoms(const Temporal *temp, int *count)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_TRGEOMETRY(temp, NULL); VALIDATE_NOT_NULL(count, NULL);
+
+  const TInstant **instants = temporal_insts_p(temp, count);
+  GSERIALIZED **result = palloc(sizeof(GSERIALIZED *) * *count);
+  const GSERIALIZED *geo = trgeo_geom_p(temp);
+  for (int i = 0; i < *count; i ++)
+  {
+    const Pose *pose = DatumGetPoseP(tinstant_value_p(instants[i]));
+    result[i] = geom_apply_pose(geo, pose);
+  }
+  return result;
+}
+
+/**
  * @ingroup meos_internal_rgeo_accessor
- * @brief Return the value of a temporal rigid geometry at a timestamptz
+ * @brief Return the geometry of a temporal rigid geometry at a timestamptz
+ * @param[in] temp Temporal rigid geometry
+ * @param[in] t Timestamp
+ * @param[in] strict True when the value cannot be in an exclusive boudn
+ * @param[out] result Resulting geometry
+ * @return On error return false
+ * @csqlfn #Trgeo_geom_at_timestamptz()
  */
 bool
-trgeo_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict,
-  Datum *result)
+trgeo_geom_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict,
+  GSERIALIZED **result)
 {
   assert(temp); assert(result); assert(temp->temptype == T_TRGEOMETRY);
   Datum pose;
   bool found = temporal_value_at_timestamptz(temp, t, strict, &pose);
   if (found)
-  {
     /* Apply pose to reference geometry */
-    GSERIALIZED *gs = geom_apply_pose(trgeo_geom_p(temp), DatumGetPoseP(pose));
-    *result = PointerGetDatum(gs);
-  }
+    *result = geom_apply_pose(trgeo_geom_p(temp), DatumGetPoseP(pose));
   return found;
 }
 
@@ -661,14 +702,13 @@ trgeo_instants(const Temporal *temp, int *count)
  * @brief Return a copy of the start sequence of a temporal sequence (set)
  * @param[in] temp Temporal rigid geometry
  * @return On error return @p NULL
- * @csqlfn #Temporal_start_sequence()
+ * @csqlfn #Trgeo_start_sequence()
  */
 TSequence *
 trgeo_start_sequence(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_TRGEOMETRY(temp, NULL);
-  /* Ensure the validity of the arguments */
   if (! ensure_continuous(temp))
     return NULL;
 
@@ -685,13 +725,12 @@ trgeo_start_sequence(const Temporal *temp)
  * @brief Return a copy of the end sequence of a temporal sequence (set)
  * @param[in] temp Temporal rigid geometry
  * @return On error return @p NULL
- * @csqlfn #Temporal_end_sequence()
+ * @csqlfn #Trgeo_end_sequence()
  */
 TSequence *
 trgeo_end_sequence(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
-
   VALIDATE_TRGEOMETRY(temp, NULL);
   if (! ensure_continuous(temp))
     return NULL;
@@ -711,13 +750,12 @@ trgeo_end_sequence(const Temporal *temp)
  * @param[in] temp Temporal rigid geometry
  * @param[in] n Number (1-based)
  * @return On error return @p NULL
- * @csqlfn #Temporal_sequence_n()
+ * @csqlfn #Trgeo_sequence_n()
  */
 TSequence *
 trgeo_sequence_n(const Temporal *temp, int n)
 {
   /* Ensure the validity of the arguments */
-
   VALIDATE_TRGEOMETRY(temp, NULL);
   if (! ensure_continuous(temp) || ! ensure_positive(n))
     return NULL;
@@ -746,13 +784,12 @@ trgeo_sequence_n(const Temporal *temp, int n)
  * @param[in] temp Temporal rigid geometry
  * @param[out] count Number of values in the output array
  * @return On error return @p NULL
- * @csqlfn #Temporal_sequences()
+ * @csqlfn #Trgeo_sequences()
  */
 TSequence **
 trgeo_sequences(const Temporal *temp, int *count)
 {
   /* Ensure the validity of the arguments */
-
   VALIDATE_TRGEOMETRY(temp, NULL);
   if (! ensure_continuous(temp))
     return NULL;
@@ -770,6 +807,35 @@ trgeo_sequences(const Temporal *temp, int *count)
   return result;
 }
 
+/**
+ * @ingroup meos_rgeo_accessor
+ * @brief Return the array of segments of a temporal sequence (set)
+ * @param[in] temp Temporal rigid geometry
+ * @param[out] count Number of values in the output array
+ * @return On error return @p NULL
+ * @csqlfn #Trgeo_segments()
+ */
+TSequence **
+trgeo_segments(const Temporal *temp, int *count)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_TRGEOMETRY(temp, NULL);
+  if (! ensure_continuous(temp))
+    return NULL;
+
+  const GSERIALIZED *geo = trgeo_geom_p(temp);
+  TSequence **segments = temporal_segments(temp, count);
+  TSequence **result = palloc(sizeof(TSequence *) * *count);
+  for (int i = 0; i < *count; i ++)
+  {
+    TSequence *seq = trgeoseq_tposeseq(segments[i]);
+    result[i] = geo_tposeseq_to_trgeo(geo, seq);
+    pfree(seq);
+  }
+  pfree(segments);
+  return result;
+}
+
 /*****************************************************************************
  * Transformation functions
  *****************************************************************************/
@@ -779,13 +845,12 @@ trgeo_sequences(const Temporal *temp, int *count)
  * @brief Return a temporal rigid geometry rounded to a given number of decimal places
  * @param[in] temp Temporal rigid geometry
  * @param[in] maxdd Maximum number of decimal digits to output
- * @csqlfn #Temporal_round()
+ * @csqlfn #Trgeo_round()
  */
 Temporal *
 trgeo_round(const Temporal *temp, int maxdd)
 {
   /* Ensure the validity of the arguments */
-
   VALIDATE_TRGEOMETRY(temp, NULL);
   if (! ensure_not_negative(maxdd))
     return NULL;
@@ -804,13 +869,12 @@ trgeo_round(const Temporal *temp, int maxdd)
  * @ingroup meos_rgeo_transf
  * @brief Return a temporal rigid geometry transformed to a temporal instant
  * @param[in] temp Temporal rigid geometry
- * @csqlfn #Trgeometry_to_tinstant()
+ * @csqlfn #Trgeo_to_tinstant()
  */
 TInstant *
 trgeo_to_tinstant(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
-
   VALIDATE_TRGEOMETRY(temp, NULL);
 
   assert(temptype_subtype(temp->subtype));
@@ -830,13 +894,12 @@ trgeo_to_tinstant(const Temporal *temp)
  * @brief Return a temporal rigid geometry transformed to a temporal sequence
  * @param[in] temp Temporal rigid geometry
  * @param[in] interp_str Interpolation string, may be NULL
- * @csqlfn #Trgeometry_to_tsequence()
+ * @csqlfn #Trgeo_to_tsequence()
  */
 TSequence *
 trgeo_to_tsequence(const Temporal *temp, const char *interp_str)
 {
   /* Ensure the validity of the arguments */
-
   VALIDATE_TRGEOMETRY(temp, NULL);
 
   interpType interp;
@@ -862,13 +925,12 @@ trgeo_to_tsequence(const Temporal *temp, const char *interp_str)
  * @brief Return a temporal rigid geometry transformed to a temporal sequence set
  * @param[in] temp Temporal rigid geometry
  * @param[in] interp_str Interpolation string, may be @p NULL
- * @csqlfn #Trgeometry_to_tsequenceset()
+ * @csqlfn #Trgeo_to_tsequenceset()
  */
 TSequenceSet *
 trgeo_to_tsequenceset(const Temporal *temp, const char *interp_str)
 {
   /* Ensure the validity of the arguments */
-
   VALIDATE_TRGEOMETRY(temp, NULL);
 
   interpType interp;
@@ -910,6 +972,250 @@ trgeo_set_interp(const Temporal *temp, interpType interp)
   res->temptype = T_TPOSE;
   Temporal *result = geo_tpose_to_trgeo(trgeo_geom_p(temp), res);
   pfree(res); pfree(tpose);
+  return result;
+}
+
+/*****************************************************************************
+ * Modification functions
+ *****************************************************************************/
+
+/**
+ * @ingroup meos_rgeo_modif
+ * @brief Append an instant to a temporal value
+ * @param[in,out] temp Temporal rigid geometry
+ * @param[in] inst Temporal instant
+ * @param[in] interp Interpolation
+ * @param[in] maxdist Maximum distance for defining a gap
+ * @param[in] maxt Maximum time interval for defining a gap
+ * @param[in] expand True when reserving space for additional instants
+ * @csqlfn #Temporal_append_tinstant()
+ * @return When the temporal value passed as first argument has space for 
+ * adding the instant, the function returns the temporal value. Otherwise,
+ * a NEW temporal value is returned and the input value is freed.
+ * @note Always use the function to overwrite the existing temporal value as in: 
+ * @code
+ * temp = temporal_append_tinstant(temp, inst, ...);
+ * @endcode
+ */
+Temporal *
+trgeo_append_tinstant(Temporal *temp, const TInstant *inst, 
+  interpType interp, double maxdist, const Interval *maxt, bool expand)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_TRGEOMETRY(temp, NULL); VALIDATE_TRGEOMETRY(inst, NULL);
+  if (! ensure_spatial_validity(temp, (const Temporal *) inst) ||
+      ! ensure_temporal_isof_subtype((Temporal *) inst, TINSTANT))
+    return NULL;
+
+  Temporal *tpose = trgeo_to_tpose(temp);
+  TInstant *tpose_inst = trgeoinst_tposeinst(inst);
+  Temporal *res = temporal_append_tinstant(tpose, tpose_inst, interp, maxdist,
+    maxt, expand);
+  if (! res)
+    return NULL;
+  
+  Temporal *result = geo_tpose_to_trgeo(trgeo_geom_p(temp), res);
+  pfree(res); pfree(tpose); pfree(tpose_inst);
+  return result;
+}
+
+/**
+ * @ingroup meos_rgeo_modif
+ * @brief Append a sequence to a temporal value
+ * @param[in,out] temp Temporal rigid geometry
+ * @param[in] seq Temporal sequence
+ * @param[in] expand True when reserving space for additional sequences
+ * @csqlfn #Temporal_append_tsequence()
+ */
+Temporal *
+trgeo_append_tsequence(Temporal *temp, const TSequence *seq, bool expand)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_TRGEOMETRY(temp, NULL); VALIDATE_TRGEOMETRY(seq, NULL);
+  if ((temp->subtype != TINSTANT && 
+      ! ensure_same_interp(temp, (Temporal *) seq)) ||
+      ! ensure_spatial_validity(temp, (Temporal *) seq) ||
+      ! ensure_temporal_isof_subtype((Temporal *) seq, TSEQUENCE))
+    return NULL;
+
+  Temporal *tpose = trgeo_to_tpose(temp);
+  TSequence *tpose_seq = trgeoseq_tposeseq(seq);
+  Temporal *res = temporal_append_tsequence(tpose, tpose_seq, expand);
+  if (! res)
+    return NULL;
+  Temporal *result = geo_tpose_to_trgeo(trgeo_geom_p(temp), res);
+  pfree(res); pfree(tpose); pfree(tpose_seq);
+  return result;
+}
+
+/*****************************************************************************/
+
+/**
+ * @ingroup meos_rgeo_modif
+ * @brief Return the value of a temporal rigid geometry at a timestamptz
+ * @csqlfn #Temporal_delete_timestamptz
+ */
+Temporal *
+trgeo_delete_timestamptz(const Temporal *temp, TimestampTz t, bool connect)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_TRGEOMETRY(temp, NULL);
+  Temporal *tpose = trgeo_to_tpose(temp);
+  Temporal *res = temporal_delete_timestamptz(tpose, t, connect);
+  pfree(tpose);
+  if (! res)
+    return NULL;
+  Temporal *result = geo_tpose_to_trgeo(trgeo_geom_p(temp), res);
+  pfree(res);
+  return result;
+}
+
+/**
+ * @ingroup meos_rgeo_modif
+ * @brief Delete a timestamp set from a temporal rigid geometry connecting the
+ * instants before and after the given timestamp, if any
+ * @param[in] temp Temporal rigid geometry
+ * @param[in] s Timestamp set
+ * @param[in] connect True when the instants before and after the timestamp
+ * set are connected in the result
+ * @csqlfn #Temporal_delete_tstzset()
+ */
+Temporal *
+trgeo_delete_tstzset(const Temporal *temp, const Set *s, bool connect)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_TRGEOMETRY(temp, NULL); VALIDATE_TSTZSET(s, NULL);
+  Temporal *tpose = trgeo_to_tpose(temp);
+  Temporal *res = temporal_delete_tstzset(tpose, s, connect);
+  pfree(tpose);
+  if (! res)
+    return NULL;
+  Temporal *result = geo_tpose_to_trgeo(trgeo_geom_p(temp), res);
+  pfree(res);
+  return result;
+}
+
+/**
+ * @ingroup meos_rgeo_modif
+ * @brief Delete a timestamptz span from a temporal rigid geometry
+ * @param[in] temp Temporal rigid geometry
+ * @param[in] s Span
+ * @param[in] connect True when the instants before and after the span, if any,
+ * are connected in the result
+ * @csqlfn #Temporal_delete_tstzspan()
+ */
+Temporal *
+trgeo_delete_tstzspan(const Temporal *temp, const Span *s, bool connect)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_TRGEOMETRY(temp, NULL); VALIDATE_TSTZSPAN(s, NULL);
+  Temporal *tpose = trgeo_to_tpose(temp);
+  Temporal *res = temporal_delete_tstzspan(tpose, s, connect);
+  pfree(tpose);
+  if (! res)
+    return NULL;
+  Temporal *result = geo_tpose_to_trgeo(trgeo_geom_p(temp), res);
+  pfree(res);
+  return result;
+}
+
+/**
+ * @ingroup meos_rgeo_modif
+ * @brief Delete a timestamptz span set from a temporal rigid geometry
+ * @param[in] temp Temporal rigid geometry
+ * @param[in] ss Span set
+ * @param[in] connect True when the instants before and after the span set, if
+ * any, are connected in the result
+ * @csqlfn #Temporal_delete_tstzspanset()
+ */
+Temporal *
+trgeo_delete_tstzspanset(const Temporal *temp, const SpanSet *ss,
+  bool connect)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_TRGEOMETRY(temp, NULL); VALIDATE_TSTZSPANSET(ss, NULL);
+  Temporal *tpose = trgeo_to_tpose(temp);
+  Temporal *res = temporal_delete_tstzspanset(tpose, ss, connect);
+  pfree(tpose);
+  if (! res)
+    return NULL;
+  Temporal *result = geo_tpose_to_trgeo(trgeo_geom_p(temp), res);
+  pfree(res);
+  return result;
+}
+
+/*****************************************************************************/
+
+/**
+ * @ingroup meos_trgeo_modif
+ * @brief Merge two temporal rigid geometries
+ * @param[in] temp1,temp2 Temporal rigid geometries
+ * @return Return @p NULL if both arguments are @p NULL.
+ * If one argument is null, return the other argument.
+ * @csqlfn #Trgeo_merge()
+ */
+Temporal *
+trgeo_merge(const Temporal *temp1, const Temporal *temp2)
+{
+  /* Cannot do anything with null inputs */
+  if (! temp1 && ! temp2)
+    return NULL;
+  /* One argument is null, return a copy of the other temporal */
+  if (! temp1)
+    return temporal_copy(temp2);
+  if (! temp2)
+    return temporal_copy(temp1);
+
+  /* Ensure the validity of the arguments */
+  if (! ensure_same_temporal_type(temp1, temp2) ||
+      ! ensure_same_continuous_interp(temp1->flags, temp2->flags) ||
+      ! ensure_spatial_validity(temp1, temp2) ||
+      ! ensure_same_geom(trgeo_geom_p(temp1), trgeo_geom_p(temp2)))
+   return NULL;
+
+  Temporal *tpose1 = trgeo_to_tpose(temp1);
+  Temporal *tpose2 = trgeo_to_tpose(temp2);
+  Temporal *res = temporal_merge(tpose1, tpose2);
+  Temporal *result = geo_tpose_to_trgeo(trgeo_geom_p(temp1), res);
+  pfree(tpose1); pfree(tpose2); pfree(res);
+  return result;
+}
+
+/**
+ * @ingroup meos_trgeo_modif
+ * @brief Merge an array of temporal rigid geometries
+ * @param[in] temparr Array of temporal rigid geometries
+ * @param[in] count Number of values in the array
+ * @csqlfn #Trgeo_merge_array()
+ */
+Temporal *
+trgeo_merge_array(Temporal **temparr, int count)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(temparr, NULL);
+  if (! ensure_positive(count))
+    return NULL;
+
+  /* Singleton array */
+  if (count == 1)
+    return temporal_copy(temparr[0]);
+
+  /* General case */
+  const GSERIALIZED *geom = trgeo_geom_p(temparr[0]);
+  for (int i = 1; i < count; ++i)
+  {
+    if (! ensure_same_geom(geom, trgeo_geom_p(temparr[i])))
+      return NULL;
+  }
+
+  /* Transform to an array of temporal poses */
+  Temporal **tposearr = palloc(sizeof(Temporal *) * count);
+  for (int i = 0; i < count; ++i)
+     tposearr[i] = trgeo_to_tpose(temparr[i]);
+
+  Temporal *tpose = temporal_merge_array(tposearr, count);
+  Temporal *result = geo_tpose_to_trgeo(trgeo_geom_p(temparr[0]), tpose);
+  pfree_array((void *) tposearr, count); pfree(tpose);
   return result;
 }
 
@@ -1231,175 +1537,6 @@ inline Temporal *
 trgeo_minus_tstzspanset(const Temporal *temp, const SpanSet *ss)
 {
   return trgeo_restrict_tstzspanset(temp, ss, REST_MINUS);
-}
-
-/*****************************************************************************
- * Modification functions
- *****************************************************************************/
-
-/**
- * @ingroup meos_rgeo_modif
- * @brief Append an instant to a temporal value
- * @param[in,out] temp Temporal rigid geometry
- * @param[in] inst Temporal instant
- * @param[in] interp Interpolation
- * @param[in] maxdist Maximum distance for defining a gap
- * @param[in] maxt Maximum time interval for defining a gap
- * @param[in] expand True when reserving space for additional instants
- * @csqlfn #Temporal_append_tinstant()
- * @return When the temporal value passed as first argument has space for 
- * adding the instant, the function returns the temporal value. Otherwise,
- * a NEW temporal value is returned and the input value is freed.
- * @note Always use the function to overwrite the existing temporal value as in: 
- * @code
- * temp = temporal_append_tinstant(temp, inst, ...);
- * @endcode
- */
-Temporal *
-trgeo_append_tinstant(Temporal *temp, const TInstant *inst, 
-  interpType interp, double maxdist, const Interval *maxt, bool expand)
-{
-  /* Ensure the validity of the arguments */
-  VALIDATE_TRGEOMETRY(temp, NULL); VALIDATE_TRGEOMETRY(inst, NULL);
-  if (! ensure_spatial_validity(temp, (const Temporal *) inst) ||
-      ! ensure_temporal_isof_subtype((Temporal *) inst, TINSTANT))
-    return NULL;
-
-  Temporal *tpose = trgeo_to_tpose(temp);
-  TInstant *tpose_inst = trgeoinst_tposeinst(inst);
-  Temporal *res = temporal_append_tinstant(tpose, tpose_inst, interp, maxdist,
-    maxt, expand);
-  if (! res)
-    return NULL;
-  
-  Temporal *result = geo_tpose_to_trgeo(trgeo_geom_p(temp), res);
-  pfree(res); pfree(tpose); pfree(tpose_inst);
-  return result;
-}
-
-/**
- * @ingroup meos_rgeo_modif
- * @brief Append a sequence to a temporal value
- * @param[in,out] temp Temporal rigid geometry
- * @param[in] seq Temporal sequence
- * @param[in] expand True when reserving space for additional sequences
- * @csqlfn #Temporal_append_tsequence()
- */
-Temporal *
-trgeo_append_tsequence(Temporal *temp, const TSequence *seq, bool expand)
-{
-  /* Ensure the validity of the arguments */
-  VALIDATE_TRGEOMETRY(temp, NULL); VALIDATE_TRGEOMETRY(seq, NULL);
-  if ((temp->subtype != TINSTANT && 
-      ! ensure_same_interp(temp, (Temporal *) seq)) ||
-      ! ensure_spatial_validity(temp, (Temporal *) seq) ||
-      ! ensure_temporal_isof_subtype((Temporal *) seq, TSEQUENCE))
-    return NULL;
-
-  Temporal *tpose = trgeo_to_tpose(temp);
-  TSequence *tpose_seq = trgeoseq_tposeseq(seq);
-  Temporal *res = temporal_append_tsequence(tpose, tpose_seq, expand);
-  if (! res)
-    return NULL;
-  Temporal *result = geo_tpose_to_trgeo(trgeo_geom_p(temp), res);
-  pfree(res); pfree(tpose); pfree(tpose_seq);
-  return result;
-}
-
-/*****************************************************************************/
-
-/**
- * @ingroup meos_rgeo_modif
- * @brief Return the value of a temporal rigid geometry at a timestamptz
- * @csqlfn #Temporal_delete_timestamptz
- */
-Temporal *
-trgeo_delete_timestamptz(const Temporal *temp, TimestampTz t, bool connect)
-{
-  /* Ensure the validity of the arguments */
-  VALIDATE_TRGEOMETRY(temp, NULL);
-  Temporal *tpose = trgeo_to_tpose(temp);
-  Temporal *res = temporal_delete_timestamptz(tpose, t, connect);
-  pfree(tpose);
-  if (! res)
-    return NULL;
-  Temporal *result = geo_tpose_to_trgeo(trgeo_geom_p(temp), res);
-  pfree(res);
-  return result;
-}
-
-/**
- * @ingroup meos_rgeo_modif
- * @brief Delete a timestamp set from a temporal rigid geometry connecting the
- * instants before and after the given timestamp, if any
- * @param[in] temp Temporal rigid geometry
- * @param[in] s Timestamp set
- * @param[in] connect True when the instants before and after the timestamp
- * set are connected in the result
- * @csqlfn #Temporal_delete_tstzset()
- */
-Temporal *
-trgeo_delete_tstzset(const Temporal *temp, const Set *s, bool connect)
-{
-  /* Ensure the validity of the arguments */
-  VALIDATE_TRGEOMETRY(temp, NULL); VALIDATE_TSTZSET(s, NULL);
-  Temporal *tpose = trgeo_to_tpose(temp);
-  Temporal *res = temporal_delete_tstzset(tpose, s, connect);
-  pfree(tpose);
-  if (! res)
-    return NULL;
-  Temporal *result = geo_tpose_to_trgeo(trgeo_geom_p(temp), res);
-  pfree(res);
-  return result;
-}
-
-/**
- * @ingroup meos_rgeo_modif
- * @brief Delete a timestamptz span from a temporal rigid geometry
- * @param[in] temp Temporal rigid geometry
- * @param[in] s Span
- * @param[in] connect True when the instants before and after the span, if any,
- * are connected in the result
- * @csqlfn #Temporal_delete_tstzspan()
- */
-Temporal *
-trgeo_delete_tstzspan(const Temporal *temp, const Span *s, bool connect)
-{
-  /* Ensure the validity of the arguments */
-  VALIDATE_TRGEOMETRY(temp, NULL); VALIDATE_TSTZSPAN(s, NULL);
-  Temporal *tpose = trgeo_to_tpose(temp);
-  Temporal *res = temporal_delete_tstzspan(tpose, s, connect);
-  pfree(tpose);
-  if (! res)
-    return NULL;
-  Temporal *result = geo_tpose_to_trgeo(trgeo_geom_p(temp), res);
-  pfree(res);
-  return result;
-}
-
-/**
- * @ingroup meos_rgeo_modif
- * @brief Delete a timestamptz span set from a temporal rigid geometry
- * @param[in] temp Temporal rigid geometry
- * @param[in] ss Span set
- * @param[in] connect True when the instants before and after the span set, if
- * any, are connected in the result
- * @csqlfn #Temporal_delete_tstzspanset()
- */
-Temporal *
-trgeo_delete_tstzspanset(const Temporal *temp, const SpanSet *ss,
-  bool connect)
-{
-  /* Ensure the validity of the arguments */
-  VALIDATE_TRGEOMETRY(temp, NULL); VALIDATE_TSTZSPANSET(ss, NULL);
-  Temporal *tpose = trgeo_to_tpose(temp);
-  Temporal *res = temporal_delete_tstzspanset(tpose, ss, connect);
-  pfree(tpose);
-  if (! res)
-    return NULL;
-  Temporal *result = geo_tpose_to_trgeo(trgeo_geom_p(temp), res);
-  pfree(res);
-  return result;
 }
 
 /*****************************************************************************/

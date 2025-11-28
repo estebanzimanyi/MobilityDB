@@ -118,7 +118,7 @@ extern Cbuffer *cbuffer_make(const GSERIALIZED *point, double radius);
 
 extern GSERIALIZED *cbuffer_to_geom(const Cbuffer *cb);
 extern STBox *cbuffer_to_stbox(const Cbuffer *cb);
-extern GSERIALIZED *cbufferarr_to_geom(const Cbuffer **cbarr, int count);
+extern GSERIALIZED *cbufferarr_to_geom(Cbuffer **cbarr, int count);
 extern Cbuffer *geom_to_cbuffer(const GSERIALIZED *gs);
 
 /* Accessor functions */
@@ -131,7 +131,7 @@ extern double cbuffer_radius(const Cbuffer *cb);
 /* Transformation functions */
 
 extern Cbuffer *cbuffer_round(const Cbuffer *cb, int maxdd);
-extern Cbuffer **cbufferarr_round(const Cbuffer **cbarr, int count, int maxdd);
+extern Cbuffer **cbufferarr_round(Cbuffer **cbarr, int count, int maxdd);
 
 /* Spatial reference system functions */
 
@@ -231,7 +231,7 @@ extern Temporal *tcbuffer_make(const Temporal *tpoint, const Temporal *tfloat);
 
 extern Set *tcbuffer_points(const Temporal *temp);
 extern Set *tcbuffer_radius(const Temporal *temp);
-extern GSERIALIZED *tcbuffer_trav_area(const Temporal *temp, bool merge_union);
+extern GSERIALIZED *tcbuffer_traversed_area(const Temporal *temp, bool merge_union);
 
 /*****************************************************************************
  * Conversion functions

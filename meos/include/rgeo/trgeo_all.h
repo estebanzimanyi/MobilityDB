@@ -29,7 +29,7 @@
 
 /**
  * @file
- * @brief General functions for temporal rigid geometries
+ * @brief General functions for temporal rigid geometries of any subtype
  */
 
 #ifndef __TRGEO_ALL_H__

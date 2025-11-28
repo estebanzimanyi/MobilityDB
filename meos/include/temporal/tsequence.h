@@ -47,16 +47,17 @@
 
 extern bool float_collinear(double x1, double x2, double x3, double ratio);
 
-/* Interpolation functions */
+/* Interpolation, locate, and intersection functions for float segments */
 
 extern double floatsegm_interpolate(double value1, double value2,
   long double value);
 extern long double floatsegm_locate(double value1, double value2,
   double value);
-
-extern int tnumbersegm_intersection(Datum start1, Datum end1, Datum start2,
-  Datum end2, meosType basetype, TimestampTz lower, TimestampTz upper,
-  TimestampTz *t1, TimestampTz *t2);
+extern int tfloatsegm_intersection_value(Datum start, Datum end, Datum value,
+  TimestampTz lower, TimestampTz upper, TimestampTz *t);
+extern int tfloatsegm_intersection(Datum start1, Datum end1, Datum start2,
+  Datum end2, TimestampTz lower, TimestampTz upper, TimestampTz *t1,
+  TimestampTz *t2);
 
 /* Normalization functions */
 
@@ -91,8 +92,6 @@ extern bool synchronize_tsequence_tsequence(const TSequence *seq1,
 
 /* Intersection functions */
 
-extern int tfloatsegm_intersection_value(Datum start, Datum end, Datum value,
-  TimestampTz lower, TimestampTz upper, TimestampTz *t);
 extern int tsegment_intersection_value(Datum start, Datum end, Datum value,
   meosType temptype, TimestampTz lower, TimestampTz upper, TimestampTz *t1,
   TimestampTz *t2);

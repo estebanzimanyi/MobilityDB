@@ -58,10 +58,15 @@ extern bool ensure_valid_trgeo_trgeo(const Temporal *temp1,
 extern bool ensure_valid_trgeo_tpoint(const Temporal *temp1,
   const Temporal *temp2);
 extern const GSERIALIZED *trgeo_geom_p(const Temporal *temp);
-
+extern TSequence *trgeoseq_make_exp1(const GSERIALIZED *geom,
+  TInstant **instants, int count, int maxcount, bool lower_inc, bool upper_inc,
+  interpType interp, bool normalize);
+  
 /* Input/output functions */
 
 extern char *trgeo_wkt_out(const Temporal *temp, int maxdd, bool extended);
+extern char *trgeo_as_ewkt(const Temporal *temp, int maxdd);
+extern char *trgeo_as_text(const Temporal *temp, int maxdd);
 
 /* Constructor functions */
 
@@ -77,10 +82,19 @@ extern TSequenceSet *geo_tposeseqset_to_trgeo(const GSERIALIZED *gs,
 
 /* Accessor functions */
 
-extern bool trgeo_value_at_timestamptz(const Temporal *temp, TimestampTz t,
-  bool strict, Datum *result);
 
 /* Transformation functions */
+
+extern GSERIALIZED *trgeoinst_geom(const TInstant *inst);
+
+/* Restriction functions */
+
+extern Temporal *trgeo_restrict_timestamptz(const Temporal *temp, TimestampTz t, bool atfunc);
+extern Temporal *trgeo_restrict_tstzset(const Temporal *temp, const Set *s, bool atfunc);
+extern Temporal *trgeo_restrict_tstzspan(const Temporal *temp, const Span *s, bool atfunc);
+extern Temporal *trgeo_restrict_tstzspanset(const Temporal *temp, const SpanSet *ss, bool atfunc);
+extern Temporal *trgeo_restrict_value(const Temporal *temp, Datum value, bool atfunc);
+extern Temporal *trgeo_restrict_values(const Temporal *temp, const Set *s, bool atfunc);
 
 
 /*****************************************************************************/

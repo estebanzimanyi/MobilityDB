@@ -63,7 +63,7 @@
  *****************************************************************************/
 
 /**
- * @brief 
+ * @brief Return the modulo addition of an unsigned integer
  */
 static inline uint32_t
 uint_mod_add(uint32_t i, uint32_t j, uint32_t n)
@@ -72,7 +72,7 @@ uint_mod_add(uint32_t i, uint32_t j, uint32_t n)
 }
 
 /**
- * @brief 
+ * @brief Return the modulo subtraction of an unsigned integer
  */
 // Handle negative values correctly
 // Requirement: j < n
@@ -83,10 +83,10 @@ uint_mod_sub(uint32_t i, uint32_t j, uint32_t n)
 }
 
 /**
- * @brief 
+ * @brief Apply a pose to a POINT4D
  */
 void
-apply_pose_point4d(POINT4D *p, const Pose *pose)
+point4d_apply_pose(const Pose *pose, POINT4D *p)
 {
   double c = cos(pose->data[2]);
   double s = sin(pose->data[2]);
@@ -97,7 +97,8 @@ apply_pose_point4d(POINT4D *p, const Pose *pose)
 }
 
 /**
- * @brief Computes the relative position of point on segment v(vs, ve)
+ * @brief Return the relative position of point on segment v(vs, ve)
+ * @details
  * s < 0      -> p before point vs
  * s = 0      -> p = vs
  * 0 < s < 1  -> p = vs * (1 - s)  + ve * s
@@ -112,7 +113,7 @@ compute_s(POINT4D p, POINT4D vs, POINT4D ve)
 }
 
 /**
- * @brief Computes the signed length of the cross product of the vectors
+ * @brief Return the signed length of the cross product of the vectors
  * (vs, p) and (vs, ve)
  * @details The sign of this value determines the relative position between p
  * and the line l going though segment (vs, ve) (oriented towards ve)
@@ -127,11 +128,9 @@ compute_angle(POINT4D p, POINT4D vs, POINT4D ve)
 }
 
 /**
- * @brief Computes the distance between point p and segment v(vs, ve)
- *
- * Note: this assumes that the projection of p
- * on the line l going through (vs, ve) is
- * between vs and ve. (0 <= compute_s(p, vs, ve) <= 1)
+ * @brief Return the distance between point p and segment v(vs, ve)
+ * @note This assumes that the projection of p  on the line l going through
+ * (vs, ve) is between vs and ve. (0 <= compute_s(p, vs, ve) <= 1)
  */
 static inline double
 compute_dist2(POINT4D p, POINT4D vs, POINT4D ve)
@@ -142,7 +141,7 @@ compute_dist2(POINT4D p, POINT4D vs, POINT4D ve)
 }
 
 /**
- * @brief Computes the distance between point p and segment v(vs, ve)
+ * @brief Return the distance between point p and segment v(vs, ve)
  */
 static inline double
 compute_dist2_safe(POINT4D p, POINT4D vs, POINT4D ve)
@@ -174,11 +173,12 @@ poly_is_ccw(const LWPOLY *poly)
 }
 
 /**
- * @brief 
+ * @brief Return the feature when computing the vertex to vertex distance
+ * between a temporal rigid geometry and a point
  */
 static int
-vertex_vertex_tpoly_point(const LWPOLY *poly, POINT4D point,
-  const Pose *pose, uint32_t *poly_feature)
+vertex_vertex_tpoly_point(const LWPOLY *poly, POINT4D point, const Pose *pose,
+  uint32_t *poly_feature)
 {
   double s_next, s_prev;
   POINT4D v, v_prev, v_next;
@@ -191,9 +191,9 @@ vertex_vertex_tpoly_point(const LWPOLY *poly, POINT4D point,
   getPoint4d_p(poly->rings[0], uint_mod_add(i, 1, n), &v_next);
   if (pose)
   {
-    apply_pose_point4d(&v_prev, pose);
-    apply_pose_point4d(&v, pose);
-    apply_pose_point4d(&v_next, pose);
+    point4d_apply_pose(pose, &v_prev);
+    point4d_apply_pose(pose, &v);
+    point4d_apply_pose(pose, &v_next);
   }
 
   /* Check if the point is in v's Voronoi region */
@@ -220,7 +220,8 @@ vertex_vertex_tpoly_point(const LWPOLY *poly, POINT4D point,
 }
 
 /**
- * @brief 
+ * @brief Return the feature when computing the edge to vertex distance
+ * between a temporal rigid geometry and a point
  */
 static int
 edge_vertex_tpoly_point(const LWPOLY *poly, POINT4D point,
@@ -236,8 +237,8 @@ edge_vertex_tpoly_point(const LWPOLY *poly, POINT4D point,
   getPoint4d_p(poly->rings[0], uint_mod_add(i, 1, n), &v_end);
   if (pose)
   {
-    apply_pose_point4d(&v_start, pose);
-    apply_pose_point4d(&v_end, pose);
+    point4d_apply_pose(pose, &v_start);
+    point4d_apply_pose(pose, &v_end);
   }
 
   /* Check if the point is in the edge's Voronoi region */
@@ -264,7 +265,7 @@ edge_vertex_tpoly_point(const LWPOLY *poly, POINT4D point,
     double dmax = -1;
     getPoint4d_p(poly->rings[0], 0, &v_start);
     if (pose)
-      apply_pose_point4d(&v_start, pose);
+      point4d_apply_pose(pose, &v_start);
     for (i = 0; i < n; ++i)
     {
       /* Find edge with the largest positive distance
@@ -272,7 +273,7 @@ edge_vertex_tpoly_point(const LWPOLY *poly, POINT4D point,
       double distance = -1;
       getPoint4d_p(poly->rings[0], i + 1, &v_end);
       if (pose)
-        apply_pose_point4d(&v_end, pose);
+        point4d_apply_pose(pose, &v_end);
       angle = compute_angle(point, v_start, v_end);
       if ((ccw_poly && angle > 0)
         || (!ccw_poly && angle < 0))
@@ -298,7 +299,8 @@ edge_vertex_tpoly_point(const LWPOLY *poly, POINT4D point,
 }
 
 /**
- * @brief 
+ * @brief Return the v-clip feature when computing distance between a temporal
+ * rigid geometry and a point
  */
 int
 v_clip_tpoly_point(const LWPOLY *poly, const LWPOINT *point,
@@ -334,7 +336,7 @@ v_clip_tpoly_point(const LWPOLY *poly, const LWPOINT *point,
       uint32_t i = *poly_feature / 2;
       getPoint4d_p(poly->rings[0], i, &v);
       if (pose)
-        apply_pose_point4d(&v, pose);
+        point4d_apply_pose(pose, &v);
       *dist = sqrt((pt.x - v.x) * (pt.x - v.x) + (pt.y - v.y) * (pt.y - v.y));
     }
     else
@@ -345,8 +347,8 @@ v_clip_tpoly_point(const LWPOLY *poly, const LWPOINT *point,
       getPoint4d_p(poly->rings[0], i + 1, &v_end);
       if (pose)
       {
-        apply_pose_point4d(&v_start, pose);
-        apply_pose_point4d(&v_end, pose);
+        point4d_apply_pose(pose, &v_start);
+        point4d_apply_pose(pose, &v_end);
       }
       *dist = sqrt(compute_dist2(pt, v_start, v_end));
     }
@@ -355,7 +357,8 @@ v_clip_tpoly_point(const LWPOLY *poly, const LWPOINT *point,
 }
 
 /**
- * @brief 
+ * @brief Return the feature when computing the vertex to vertex distance
+ * between two temporal rigid geometries
  */
 static int
 vertex_vertex_tpoly_tpoly(const LWPOLY *poly1, const LWPOLY *poly2,
@@ -376,9 +379,9 @@ vertex_vertex_tpoly_tpoly(const LWPOLY *poly1, const LWPOLY *poly2,
   getPoint4d_p(poly1->rings[0], uint_mod_add(i1, 1, n1), &v1_next);
   if (pose1)
   {
-    apply_pose_point4d(&v1_prev, pose1);
-    apply_pose_point4d(&v1, pose1);
-    apply_pose_point4d(&v1_next, pose1);
+    point4d_apply_pose(pose1, &v1_prev);
+    point4d_apply_pose(pose1, &v1);
+    point4d_apply_pose(pose1, &v1_next);
   }
   /* poly2 */
   getPoint4d_p(poly2->rings[0], uint_mod_sub(i2, 1, n2), &v2_prev);
@@ -386,9 +389,9 @@ vertex_vertex_tpoly_tpoly(const LWPOLY *poly1, const LWPOLY *poly2,
   getPoint4d_p(poly2->rings[0], uint_mod_add(i2, 1, n2), &v2_next);
   if (pose2)
   {
-    apply_pose_point4d(&v2_prev, pose2);
-    apply_pose_point4d(&v2, pose2);
-    apply_pose_point4d(&v2_next, pose2);
+    point4d_apply_pose(pose2, &v2_prev);
+    point4d_apply_pose(pose2, &v2);
+    point4d_apply_pose(pose2, &v2_next);
   }
 
   /* Check if v2 is in v1's Voronoi region */
@@ -431,7 +434,8 @@ vertex_vertex_tpoly_tpoly(const LWPOLY *poly1, const LWPOLY *poly2,
 }
 
 /**
- * @brief 
+ * @brief Return the feature when computing the edge to vertex distance
+ * between two temporal rigid geometries
  */
 static int
 edge_vertex_tpoly_tpoly(const LWPOLY *poly1, const LWPOLY *poly2,
@@ -450,8 +454,8 @@ edge_vertex_tpoly_tpoly(const LWPOLY *poly1, const LWPOLY *poly2,
   getPoint4d_p(poly1->rings[0], uint_mod_add(i1, 1, n1), &v1_end);
   if (pose1)
   {
-    apply_pose_point4d(&v1_start, pose1);
-    apply_pose_point4d(&v1_end, pose1);
+    point4d_apply_pose(pose1, &v1_start);
+    point4d_apply_pose(pose1, &v1_end);
   }
   /* Get endpoints of previous and next edges of poly2 */
   getPoint4d_p(poly2->rings[0], uint_mod_sub(i2, 1, n2), &v2_prev);
@@ -459,9 +463,9 @@ edge_vertex_tpoly_tpoly(const LWPOLY *poly1, const LWPOLY *poly2,
   getPoint4d_p(poly2->rings[0], uint_mod_add(i2, 1, n2), &v2_next);
   if (pose2)
   {
-    apply_pose_point4d(&v2_prev, pose2);
-    apply_pose_point4d(&v2, pose2);
-    apply_pose_point4d(&v2_next, pose2);
+    point4d_apply_pose(pose2, &v2_prev);
+    point4d_apply_pose(pose2, &v2);
+    point4d_apply_pose(pose2, &v2_next);
   }
 
   /* Check if v2 is in the Voronoi region of the edge of poly1 */
@@ -488,7 +492,7 @@ edge_vertex_tpoly_tpoly(const LWPOLY *poly1, const LWPOLY *poly2,
     double dmax = -1;
     getPoint4d_p(poly1->rings[0], 0, &v1_start);
     if (pose1)
-      apply_pose_point4d(&v1_start, pose1);
+      point4d_apply_pose(pose1, &v1_start);
     for (i1 = 0; i1 < n1; ++i1)
     {
       /* Find edge of poly1 with the largest
@@ -496,7 +500,7 @@ edge_vertex_tpoly_tpoly(const LWPOLY *poly1, const LWPOLY *poly2,
       double distance = -1;
       getPoint4d_p(poly1->rings[0], i1 + 1, &v1_end);
       if (pose1)
-        apply_pose_point4d(&v1_end, pose1);
+        point4d_apply_pose(pose1, &v1_end);
       angle1 = compute_angle(v2, v1_start, v1_end);
       if ((ccw_poly1 && angle1 > 0)
         || (!ccw_poly1 && angle1 < 0))
@@ -539,7 +543,8 @@ edge_vertex_tpoly_tpoly(const LWPOLY *poly1, const LWPOLY *poly2,
 }
 
 /**
- * @brief 
+ * @brief Return the feature when computing the edge to edge distance
+ * between two temporal rigid geometries
  */
 static int
 edge_edge_tpoly_tpoly(const LWPOLY *poly1, const LWPOLY *poly2,
@@ -558,16 +563,16 @@ edge_edge_tpoly_tpoly(const LWPOLY *poly1, const LWPOLY *poly2,
   getPoint4d_p(poly1->rings[0], uint_mod_add(i1, 1, n1), &v1_end);
   if (pose1)
   {
-    apply_pose_point4d(&v1_start, pose1);
-    apply_pose_point4d(&v1_end, pose1);
+    point4d_apply_pose(pose1, &v1_start);
+    point4d_apply_pose(pose1, &v1_end);
   }
   /* Get edge endpoints of edge of poly2 */
   getPoint4d_p(poly2->rings[0], i2, &v2_start);
   getPoint4d_p(poly2->rings[0], uint_mod_add(i2, 1, n2), &v2_end);
   if (pose2)
   {
-    apply_pose_point4d(&v2_start, pose2);
-    apply_pose_point4d(&v2_end, pose2);
+    point4d_apply_pose(pose2, &v2_start);
+    point4d_apply_pose(pose2, &v2_end);
   }
 
   /* Check if the edges intersect */
@@ -597,7 +602,8 @@ edge_edge_tpoly_tpoly(const LWPOLY *poly1, const LWPOLY *poly2,
 }
 
 /**
- * @brief 
+ * @brief Return the v-clip feature when computing distance between two
+ * temporal rigid geometries
  */
 int
 v_clip_tpoly_tpoly(const LWPOLY *poly1, const LWPOLY *poly2,
@@ -612,21 +618,29 @@ v_clip_tpoly_tpoly(const LWPOLY *poly1, const LWPOLY *poly2,
   do
   {
     if (*poly1_feature % 2 == 0 && *poly2_feature % 2 == 0) /* vertex <-> vertex */
-      result = vertex_vertex_tpoly_tpoly(poly1, poly2, pose1, pose2, poly1_feature, poly2_feature);
+      result = vertex_vertex_tpoly_tpoly(poly1, poly2, pose1, pose2,
+        poly1_feature, poly2_feature);
     else if (*poly1_feature % 2 == 0) /* vertex <-> edge */
-      result = edge_vertex_tpoly_tpoly(poly2, poly1, ccw_poly2, pose2, pose1, poly2_feature, poly1_feature);
+      result = edge_vertex_tpoly_tpoly(poly2, poly1, ccw_poly2, pose2, pose1,
+        poly2_feature, poly1_feature);
     else if (*poly2_feature % 2 == 0) /* edge <-> vertex */
-      result = edge_vertex_tpoly_tpoly(poly1, poly2, ccw_poly1, pose1, pose2, poly1_feature, poly2_feature);
+      result = edge_vertex_tpoly_tpoly(poly1, poly2, ccw_poly1, pose1, pose2,
+        poly1_feature, poly2_feature);
     else /* edge <-> edge */
-      result = edge_edge_tpoly_tpoly(poly1, poly2, pose1, pose2, poly1_feature, poly2_feature);
-      // meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE, "V-clip: Invalid combination of current features: (%d, %d)", *poly1_feature, *poly2_feature);
+      result = edge_edge_tpoly_tpoly(poly1, poly2, pose1, pose2, poly1_feature,
+        poly2_feature);
+      // meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE, 
+        // "V-clip: Invalid combination of current features: (%d, %d)", 
+        // *poly1_feature, *poly2_feature);
 
     if (loop++ == MEOS_MAX_ITERS) break;
 
   } while (result == MEOS_CONTINUE);
 
   if (loop > MEOS_MAX_ITERS)
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE, "V-clip: Cycle detected, current features: (%d, %d)", *poly1_feature, *poly2_feature);
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE, 
+      "V-clip: Cycle detected, current features: (%d, %d)",
+      *poly1_feature, *poly2_feature);
     // return result;
 
   if (dist && result == MEOS_DISJOINT)
@@ -639,10 +653,10 @@ v_clip_tpoly_tpoly(const LWPOLY *poly1, const LWPOLY *poly2,
       uint32_t i2 = *poly2_feature / 2;
       getPoint4d_p(poly1->rings[0], i1, &v1);
       if (pose1)
-        apply_pose_point4d(&v1, pose1);
+        point4d_apply_pose(pose1, &v1);
       getPoint4d_p(poly2->rings[0], i2, &v2);
       if (pose2)
-        apply_pose_point4d(&v2, pose2);
+        point4d_apply_pose(pose2, &v2);
       *dist = sqrt((v1.x - v2.x) * (v1.x - v2.x) + 
         (v1.y - v2.y) * (v1.y - v2.y));
     }
@@ -653,13 +667,13 @@ v_clip_tpoly_tpoly(const LWPOLY *poly1, const LWPOLY *poly2,
       uint32_t i2 = *poly2_feature / 2;
       getPoint4d_p(poly1->rings[0], i1, &v1);
       if (pose1)
-        apply_pose_point4d(&v1, pose1);
+        point4d_apply_pose(pose1, &v1);
       getPoint4d_p(poly2->rings[0], i2, &v2_start);
       getPoint4d_p(poly2->rings[0], i2 + 1, &v2_end);
       if (pose2)
       {
-        apply_pose_point4d(&v2_start, pose2);
-        apply_pose_point4d(&v2_end, pose2);
+        point4d_apply_pose(pose2, &v2_start);
+        point4d_apply_pose(pose2, &v2_end);
       }
       *dist = sqrt(compute_dist2(v1, v2_start, v2_end));
     }
@@ -672,16 +686,18 @@ v_clip_tpoly_tpoly(const LWPOLY *poly1, const LWPOLY *poly2,
       getPoint4d_p(poly1->rings[0], i1 + 1, &v1_end);
       if (pose1)
       {
-        apply_pose_point4d(&v1_start, pose1);
-        apply_pose_point4d(&v1_end, pose1);
+        point4d_apply_pose(pose1, &v1_start);
+        point4d_apply_pose(pose1, &v1_end);
       }
       getPoint4d_p(poly2->rings[0], i2, &v2);
       if (pose2)
-        apply_pose_point4d(&v2, pose2);
+        point4d_apply_pose(pose2, &v2);
       *dist = sqrt(compute_dist2(v2, v1_start, v1_end));
     }
     else
-      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE, "V-clip: Invalid combination of current features: (%d, %d)", *poly1_feature, *poly2_feature);
+      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE, 
+        "V-clip: Invalid combination of current features: (%d, %d)",
+        *poly1_feature, *poly2_feature);
   }
   return result;
 }

@@ -28,6 +28,7 @@
  *****************************************************************************/
 
 /**
+ * @file
  * @brief Functions for temporal rigid instant geometries.
  */
 

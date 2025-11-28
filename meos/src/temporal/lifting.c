@@ -772,7 +772,7 @@ tfunc_tcontseq_tinstant(const TSequence *seq, const TInstant *inst,
   Datum value;
   /* The following call is ensured to return true due to the period bound test
    * in the dispatch function */
-  tsequence_value_at_timestamptz(seq, inst->t, true, &value);
+  tcontseq_value_at_timestamptz(seq, inst->t, true, &value);
   Datum resvalue = tfunc_base_base(value, tinstant_value_p(inst), lfinfo);
   DATUM_FREE(value, temptype_basetype(seq->temptype));
   return tinstant_make_free(resvalue, lfinfo->restype, inst->t);
@@ -880,7 +880,7 @@ tfunc_tcontseq_tdiscseq(const TSequence *seq1, const TSequence *seq2,
     if (contains_span_timestamptz(&seq1->period, inst->t))
     {
       Datum value;
-      tsequence_value_at_timestamptz(seq1, inst->t, true, &value);
+      tcontseq_value_at_timestamptz(seq1, inst->t, true, &value);
       Datum resvalue = tfunc_base_base(value, tinstant_value_p(inst), lfinfo);
       DATUM_FREE(value, temptype_basetype(seq1->temptype));
       instants[ninsts++] = tinstant_make_free(resvalue, lfinfo->restype,
@@ -1422,8 +1422,8 @@ tfunc_tcontseq_tcontseq_dispatch(const TSequence *seq1, const TSequence *seq2,
   if (inter.lower == inter.upper)
   {
     Datum value1, value2;
-    tsequence_value_at_timestamptz(seq1, inter.lower, true, &value1);
-    tsequence_value_at_timestamptz(seq2, inter.lower, true, &value2);
+    tcontseq_value_at_timestamptz(seq1, inter.lower, true, &value1);
+    tcontseq_value_at_timestamptz(seq2, inter.lower, true, &value2);
     Datum resvalue = tfunc_base_base(value1, value2, lfinfo);
     TInstant *inst = tinstant_make_free(resvalue, lfinfo->restype, inter.lower);
     interpType interp = lfinfo->reslinear ? LINEAR : STEP;
@@ -1958,7 +1958,7 @@ eafunc_tcontseq_tinstant(const TSequence *seq, const TInstant *inst,
   Datum value1;
   /* The following call is ensured to return true due to the period bound test
    * in the dispatch function */
-  tsequence_value_at_timestamptz(seq, inst->t, true, &value1);
+  tcontseq_value_at_timestamptz(seq, inst->t, true, &value1);
   /* Result is the same for both EVER and ALWAYS */
   bool result = DatumGetBool(tfunc_base_base(value1, tinstant_value_p(inst),
     lfinfo)) ? 1 : 0;
@@ -2088,7 +2088,7 @@ eafunc_tcontseq_tdiscseq(const TSequence *seq1, const TSequence *seq2,
     if (contains_span_timestamptz(&seq1->period, inst->t))
     {
       Datum value1;
-      tsequence_value_at_timestamptz(seq1, inst->t, true, &value1);
+      tcontseq_value_at_timestamptz(seq1, inst->t, true, &value1);
       bool res = DatumGetBool(tfunc_base_base(value1, tinstant_value_p(inst),
         lfinfo));
       DATUM_FREE(value1, temptype_basetype(seq1->temptype));
@@ -2411,8 +2411,8 @@ eafunc_tcontseq_tcontseq(const TSequence *seq1,
   if (inter.lower == inter.upper)
   {
     Datum value1, value2;
-    tsequence_value_at_timestamptz(seq1, inter.lower, true, &value1);
-    tsequence_value_at_timestamptz(seq2, inter.lower, true, &value2);
+    tcontseq_value_at_timestamptz(seq1, inter.lower, true, &value1);
+    tcontseq_value_at_timestamptz(seq2, inter.lower, true, &value2);
     int result = DatumGetBool(tfunc_base_base(value1, value2, lfinfo)) ? 1 : 0;
     DATUM_FREE(value1, temptype_basetype(seq1->temptype));
     DATUM_FREE(value2, temptype_basetype(seq2->temptype));

@@ -468,7 +468,7 @@ temporal_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict,
     case TSEQUENCE:
       return MEOS_FLAGS_DISCRETE_INTERP(temp->flags) ?
         tdiscseq_value_at_timestamptz((TSequence *) temp, t, result) :
-        tsequence_value_at_timestamptz((TSequence *) temp, t, strict, result);
+        tcontseq_value_at_timestamptz((TSequence *) temp, t, strict, result);
     default: /* TSEQUENCESET */
       return tsequenceset_value_at_timestamptz((TSequenceSet *) temp, t,
         strict, result);

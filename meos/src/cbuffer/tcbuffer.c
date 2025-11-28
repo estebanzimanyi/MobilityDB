@@ -47,72 +47,7 @@
 #include "cbuffer/cbuffer.h"
 
 /*****************************************************************************
- * Validity functions
- *****************************************************************************/
-
-/**
- * @brief Return true if a temporal circular buffer and a circular buffer are
- * valid for operations
- * @param[in] temp Temporal value
- * @param[in] cb Value
- */
-bool
-ensure_valid_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
-{
-  /* Ensure the validity of the arguments */
-  VALIDATE_TCBUFFER(temp, false); VALIDATE_NOT_NULL(cb, false);
-  if (! ensure_same_srid(tspatial_srid(temp), cbuffer_srid(cb)))
-    return false;
-  return true;
-}
-
-/**
- * @brief Ensure the validity of a temporal circular buffer and a geometry
- * @param[in] temp Temporal value
- * @param[in] gs Geometry
- */
-bool
-ensure_valid_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
-{
-  VALIDATE_TCBUFFER(temp, false); VALIDATE_NOT_NULL(gs, false);
-  if (! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)))
-    return false;
-  return true;
-}
-
-/**
- * @brief Ensure the validity of a temporal circular buffer and a
- * spatiotemporal box
- * @param[in] temp Temporal value
- * @param[in] box Spatiotemporal box
- */
-bool
-ensure_valid_tcbuffer_stbox(const Temporal *temp, const STBox *box)
-{
-  VALIDATE_TCBUFFER(temp, false); VALIDATE_NOT_NULL(box, false);
-  if (! ensure_has_X(T_STBOX, box->flags) ||
-      ! ensure_same_srid(tspatial_srid(temp), box->srid))
-    return false;
-  return true;
-}
-
-/**
- * @brief Return true if a temporal circular buffer and a circular buffer are
- * valid for operations
- * @param[in] temp1,temp2 Temporal value
- */
-bool
-ensure_valid_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
-{
-  /* Ensure the validity of the arguments */
-  VALIDATE_TCBUFFER(temp1, false); VALIDATE_TCBUFFER(temp2, false);
-  if (! ensure_same_srid(tspatial_srid(temp1), tspatial_srid(temp2)))
-    return false;
-  return true;
-}
-
-/*****************************************************************************
- * Intersection functions
+ * Turning point and intersection functions
  *****************************************************************************/
 
 /**
@@ -307,6 +242,71 @@ tcbuffersegm_intersection(Datum start1, Datum end1, Datum start2, Datum end2,
   assert(lower < upper); assert(t1); assert(t2);
   return tcbuffersegm_distance_turnpt(start1, end1, start2, end2, (Datum) 0.0,
     lower, upper, t1, t2);
+}
+
+/*****************************************************************************
+ * Validity functions
+ *****************************************************************************/
+
+/**
+ * @brief Return true if a temporal circular buffer and a circular buffer are
+ * valid for operations
+ * @param[in] temp Temporal value
+ * @param[in] cb Value
+ */
+bool
+ensure_valid_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_TCBUFFER(temp, false); VALIDATE_NOT_NULL(cb, false);
+  if (! ensure_same_srid(tspatial_srid(temp), cbuffer_srid(cb)))
+    return false;
+  return true;
+}
+
+/**
+ * @brief Ensure the validity of a temporal circular buffer and a geometry
+ * @param[in] temp Temporal value
+ * @param[in] gs Geometry
+ */
+bool
+ensure_valid_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
+{
+  VALIDATE_TCBUFFER(temp, false); VALIDATE_NOT_NULL(gs, false);
+  if (! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)))
+    return false;
+  return true;
+}
+
+/**
+ * @brief Ensure the validity of a temporal circular buffer and a
+ * spatiotemporal box
+ * @param[in] temp Temporal value
+ * @param[in] box Spatiotemporal box
+ */
+bool
+ensure_valid_tcbuffer_stbox(const Temporal *temp, const STBox *box)
+{
+  VALIDATE_TCBUFFER(temp, false); VALIDATE_NOT_NULL(box, false);
+  if (! ensure_has_X(T_STBOX, box->flags) ||
+      ! ensure_same_srid(tspatial_srid(temp), box->srid))
+    return false;
+  return true;
+}
+
+/**
+ * @brief Return true if a temporal circular buffer and a circular buffer are
+ * valid for operations
+ * @param[in] temp1,temp2 Temporal value
+ */
+bool
+ensure_valid_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_TCBUFFER(temp1, false); VALIDATE_TCBUFFER(temp2, false);
+  if (! ensure_same_srid(tspatial_srid(temp1), tspatial_srid(temp2)))
+    return false;
+  return true;
 }
 
 /*****************************************************************************

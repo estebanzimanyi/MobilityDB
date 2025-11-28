@@ -1380,12 +1380,24 @@ datum_degrees(Datum value, Datum normalize)
 }
 
 /**
+ * @ingroup meos_temporal_transf
+ * @brief Return a float converted from degrees to radians
+ * @param[in] value Value
+ * @csqlfn #Float_radians()
+ */
+double
+float_radians(double value)
+{
+  return float8_mul(value, RADIANS_PER_DEGREE);
+}
+
+/**
  * @brief Return a double converted from degrees to radians
  */
 Datum
 datum_radians(Datum value)
 {
-  return Float8GetDatum(float8_mul(DatumGetFloat8(value), RADIANS_PER_DEGREE));
+  return Float8GetDatum(float_radians(DatumGetFloat8(value)));
 }
 
 /**

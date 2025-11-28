@@ -262,7 +262,7 @@ tsequence_tprecision(const TSequence *seq, const Interval *duration,
             ininsts[k++] = inst;
           else
           {
-            tsequence_value_at_timestamptz(seq, upper, false, &value);
+            tcontseq_value_at_timestamptz(seq, upper, false, &value);
             ininsts[k++] = end = tinstant_make_free(value, seq->temptype, upper);
           }
         }

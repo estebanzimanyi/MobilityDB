@@ -4,11 +4,13 @@ SET(LOCAL_FILES
   102_tpose
   104_tpose_compops
   105_tpose_spatialfuncs
-  108_tpose_topops
+  107_tpose_topops
   109_tpose_posops
   111_tpose_aggfuncs
   113_tpose_distance
   114_tpose_indexes
+  # 115_tpose_spatialrels
+  # 117_tpose_spatiotemprels
   )
 
 foreach (f ${LOCAL_FILES})

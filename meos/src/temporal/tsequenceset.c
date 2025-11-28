@@ -1280,7 +1280,7 @@ tsequenceset_value_at_timestamptz(const TSequenceSet *ss, TimestampTz t,
   {
     /* Singleton sequence set */
     if (ss->count == 1)
-      return tsequence_value_at_timestamptz(TSEQUENCESET_SEQ_N(ss, 0), t,
+      return tcontseq_value_at_timestamptz(TSEQUENCESET_SEQ_N(ss, 0), t,
         false, result);
 
     for (int i = 0; i < ss->count; i++)
@@ -1295,7 +1295,7 @@ tsequenceset_value_at_timestamptz(const TSequenceSet *ss, TimestampTz t,
         return tinstant_value_at_timestamptz(inst, t, result);
       /* Call the function on the sequence with strict set to true */
       if (contains_span_timestamptz(&seq->period, t))
-        return tsequence_value_at_timestamptz(seq, t, true, result);
+        return tcontseq_value_at_timestamptz(seq, t, true, result);
     }
     /* Since this function is always called with a timestamp that appears
      * in the sequence set the next statement is never reached */
@@ -1304,14 +1304,14 @@ tsequenceset_value_at_timestamptz(const TSequenceSet *ss, TimestampTz t,
 
   /* Singleton sequence set */
   if (ss->count == 1)
-    return tsequence_value_at_timestamptz(TSEQUENCESET_SEQ_N(ss, 0), t, true,
+    return tcontseq_value_at_timestamptz(TSEQUENCESET_SEQ_N(ss, 0), t, true,
       result);
 
   /* General case */
   int loc;
   if (! tsequenceset_find_timestamptz(ss, t, &loc))
     return false;
-  return tsequence_value_at_timestamptz(TSEQUENCESET_SEQ_N(ss, loc), t, true,
+  return tcontseq_value_at_timestamptz(TSEQUENCESET_SEQ_N(ss, loc), t, true,
     result);
 }
 

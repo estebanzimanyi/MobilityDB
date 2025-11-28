@@ -402,6 +402,20 @@ Tfloat_degrees(PG_FUNCTION_ARGS)
   PG_RETURN_TEMPORAL_P(result);
 }
 
+PGDLLEXPORT Datum Float_radians(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Float_radians);
+/**
+ * @ingroup mobilitydb_temporal_math
+ * @brief Return a number transformed from degrees to radians
+ * @sqlfn degrees()
+ */
+Datum
+Float_radians(PG_FUNCTION_ARGS)
+{
+  double value = PG_GETARG_FLOAT8(0);
+  PG_RETURN_FLOAT8(float_radians(value));
+}
+
 PGDLLEXPORT Datum Tfloat_radians(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tfloat_radians);
 /**

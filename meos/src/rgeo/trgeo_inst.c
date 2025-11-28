@@ -96,9 +96,9 @@ TInstant *
 trgeoinst_tposeinst(const TInstant *inst)
 {
   assert(inst->temptype == T_TRGEOMETRY);
-  size_t inst_size = trgeoinst_pose_varsize(inst);
-  TInstant *result = palloc(inst_size);
-  memcpy(((char *)result), ((char *)inst), inst_size);
+  size_t size = trgeoinst_pose_varsize(inst);
+  TInstant *result = palloc(size);
+  memcpy((char *) result, (char *) inst, size);
   MEOS_FLAGS_SET_GEOM(result->flags, false);
   result->temptype = T_TPOSE;
   return result;
@@ -143,17 +143,29 @@ trgeoinst_make_valid(const GSERIALIZED *gs, const Pose *pose)
 
 /**
  * @brief Creating a temporal value from its arguments
+ * @param gs Reference geometry
+ * @param pose Pose
+ * @param t Timestamp
+ * @details The memory structure of a temporal geometry instant value is as
+ * follows
+ * @code
+ * -----------------------------
+ * ( TInstant )_X | ( Geom )_X |
+ * -----------------------------
+ * @endcode
+ * where the attribute `value` of type `Datum` in the TInstant struct stores
+ * the base value (pose). The `_X` are unused bytes added for double padding
  * @pre The validity of the arguments has been tested before
  */
 TInstant *
-trgeoinst_make1(const GSERIALIZED *geom, const Pose *pose, TimestampTz t)
+trgeoinst_make1(const GSERIALIZED *gs, const Pose *pose, TimestampTz t)
 {
   size_t value_offset = sizeof(TInstant) - sizeof(Datum);
   size_t size = value_offset;
   /* Create the temporal instant */
   void *value_from = (void *) pose;
   size_t value_size = DOUBLE_PAD(VARSIZE(value_from));
-  void *geom_from = (void *) geom;
+  void *geom_from = (void *) gs;
   size_t geom_size = DOUBLE_PAD(VARSIZE(geom_from));
   size += value_size + geom_size;
   TInstant *result = palloc0(size);
@@ -180,26 +192,17 @@ trgeoinst_make1(const GSERIALIZED *geom, const Pose *pose, TimestampTz t)
 /**
  * @ingroup meos_rgeo_constructor
  * @brief Construct a temporal geometry instant value from the arguments
- * @details The memory structure of a temporal geometry instant value is as
- * follows
- * @code
- * -----------------------------
- * ( TInstant )_X | ( Geom )_X |
- * -----------------------------
- * @endcode
- * where the attribute `value` of type `Datum` in the TInstant struct stores
- * the base value (pose). The `_X` are unused bytes added for double padding
- * @param geom Reference geometry
+ * @param gs Reference geometry
  * @param pose Pose
  * @param t Timestamp
  */
 TInstant *
-trgeoinst_make(const GSERIALIZED *geom, const Pose *pose, TimestampTz t)
+trgeoinst_make(const GSERIALIZED *gs, const Pose *pose, TimestampTz t)
 {
-  VALIDATE_NOT_NULL(geom, NULL); VALIDATE_NOT_NULL(pose, NULL);
-  if (! trgeoinst_make_valid(geom, pose))
+  VALIDATE_NOT_NULL(gs, NULL); VALIDATE_NOT_NULL(pose, NULL);
+  if (! trgeoinst_make_valid(gs, pose))
     return NULL;
-  return trgeoinst_make1(geom, pose, t);
+  return trgeoinst_make1(gs, pose, t);
 }
 
 /*****************************************************************************
@@ -246,9 +249,5 @@ trgeoseqset_to_tinstant(const TSequenceSet *ss)
   return trgeoinst_make(trgeoseqset_geom_p(ss),
     DatumGetPoseP(tinstant_value_p(inst)), inst->t);
 }
-
-/*****************************************************************************
- * Accessor functions
- *****************************************************************************/
 
 /*****************************************************************************/

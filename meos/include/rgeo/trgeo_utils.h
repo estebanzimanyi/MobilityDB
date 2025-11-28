@@ -46,6 +46,8 @@
 extern bool ensure_same_geom(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
 extern void lwgeom_apply_pose(const Pose *pose, LWGEOM *geom);
 extern double geom_radius(const GSERIALIZED *gs);
+extern Pose *geom_compute_pose(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
+extern bool ensure_is_convex(const GSERIALIZED *gs);
 
 /*****************************************************************************/
 

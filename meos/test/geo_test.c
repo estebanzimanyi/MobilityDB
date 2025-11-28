@@ -334,12 +334,6 @@ int main(void)
   printf("geo_out(%s): %s\n", geom1_out, char_result);
   free(char_result);
 
-  /* GSERIALIZED *geog_from_binary(const char *wkb_bytea); */
-  geom_result = geo_from_ewkb(geog1_wkb, geog_size_wkb, 4326);
-  char_result = geo_as_ewkt(geom_result, 6);
-  printf("geog_from_binary(%s, %ld): %s\n", geog1_wkb, geog_size_wkb, char_result);
-  free(geom_result); free(char_result);
-
   /* GSERIALIZED *geog_from_hexewkb(const char *wkt); */
   geom_result = geog_from_hexewkb(geog1_hexwkb);
   char_result = geo_as_ewkt(geom_result, 6);
@@ -2720,10 +2714,10 @@ int main(void)
   /* Clustering functions */
   printf("****************************************************************\n");
 
-  /* int *geo_cluster_kmeans(const GSERIALIZED **geoms, uint32_t ngeoms, uint32_t k); */
+  /* int *geo_cluster_kmeans(GSERIALIZED **geoms, uint32_t ngeoms, uint32_t k); */
   geomarray[0] = geom1;
   geomarray[1] = geom2;
-  int32array_result = geo_cluster_kmeans((const GSERIALIZED **) geomarray, 2, 2);
+  int32array_result = geo_cluster_kmeans(geomarray, 2, 2);
   printf("geo_cluster_kmeans(%s, 2, 2): {", geom1_out);
   for (int i = 0; i < 2; i++)
   {
@@ -2735,10 +2729,10 @@ int main(void)
   }
   free(int32array_result);
 
-  /* uint32_t *geo_cluster_dbscan(const GSERIALIZED **geoms, uint32_t ngeoms, double tolerance, int minpoints, int *count); */
+  /* uint32_t *geo_cluster_dbscan(GSERIALIZED **geoms, uint32_t ngeoms, double tolerance, int minpoints, int *count); */
   geomarray[0] = geom1;
   geomarray[1] = geom2;
-  uint32array_result = geo_cluster_dbscan((const GSERIALIZED **) geomarray, 2, 0.1, 2, &count);
+  uint32array_result = geo_cluster_dbscan(geomarray, 2, 0.1, 2, &count);
   printf("geo_cluster_dbscan({%s, %s}, 2, 0.1, 2): {", geom1_out, geom2_out);
   for (int i = 0; i < count; i++)
   {
@@ -2750,10 +2744,10 @@ int main(void)
   }
   free(uint32array_result);
 
-  /* GSERIALIZED **geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms, int *count); */
+  /* GSERIALIZED **geo_cluster_intersecting(GSERIALIZED **geoms, uint32_t ngeoms, int *count); */
   geomarray[0] = geom1;
   geomarray[1] = geom2;
-  geomarray_result = geo_cluster_intersecting((const GSERIALIZED **) geomarray, 2, &count);
+  geomarray_result = geo_cluster_intersecting(geomarray, 2, &count);
   printf("geo_cluster_intersecting({%s, %s}, 2, %d): {", geom1_out, geom2_out, count);
   for (int i = 0; i < count; i++)
   {
@@ -2768,10 +2762,10 @@ int main(void)
   }
   free(geomarray_result);
 
-  /* GSERIALIZED **geo_cluster_within(const GSERIALIZED **geoms, uint32_t ngeoms, double tolerance, int *count); */
+  /* GSERIALIZED **geo_cluster_within(GSERIALIZED **geoms, uint32_t ngeoms, double tolerance, int *count); */
   geomarray[0] = geom1;
   geomarray[1] = geom2;
-  geomarray_result = geo_cluster_within((const GSERIALIZED **) geomarray, 2, 0.1, &count);
+  geomarray_result = geo_cluster_within(geomarray, 2, 0.1, &count);
   printf("geo_cluster_within(%s, 2, 0.1, %d): {", geom1_out, count);
   for (int i = 0; i < count; i++)
   {

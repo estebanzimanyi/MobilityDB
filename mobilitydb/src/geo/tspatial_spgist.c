@@ -1311,7 +1311,7 @@ stbox_spgist_inner_consistent(FunctionCallInfo fcinfo, SPGistIndexType idxtype)
           elog(ERROR, "unrecognized strategy: %d", strategy);
       }
       /* If any check is failed, we have found our answer. */
-      if (!flag)
+      if (! flag)
         break;
     }
 
