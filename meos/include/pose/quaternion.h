@@ -75,11 +75,12 @@ extern Quaternion quaternion_multiply(Quaternion q1, Quaternion q2);
 extern Quaternion quaternion_multiply_scalar(Quaternion q, double s);
 extern double quaternion_distance(Quaternion q1, Quaternion q2);
 extern Quaternion quaternion_slerp(Quaternion q1, Quaternion q2, double ratio);
+extern Quaternion quaternion_lerp(Quaternion q1, Quaternion q2, double ratio);
 extern Quaternion quaternion_pow(Quaternion q, double fraction);
-extern double quaternion_slerp_locate(Quaternion q1, Quaternion q2,
-  Quaternion q);
-extern double quaternion_slerp_intersection(Quaternion q1, Quaternion q2,
-  Quaternion q3, Quaternion q4);
+extern double quaternion_locate(Quaternion q1, Quaternion q2, Quaternion q,
+  bool geodetic);
+extern double quaternion_intersection(Quaternion q1, Quaternion q2,
+  Quaternion q3, Quaternion q4, bool geodetic);
 
 /*****************************************************************************/
 

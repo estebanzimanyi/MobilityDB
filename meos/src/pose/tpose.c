@@ -145,15 +145,16 @@ tposesegm_intersection(Datum start1, Datum end1, Datum start2, Datum end2,
   TimestampTz t;
   if (MEOS_FLAGS_GET_Z(p1->flags))
   {
-    Quaternion q1 = (Quaternion) {p1->data[6], p1->data[3], p1->data[4],
-      p1->data[5]};
-    Quaternion q2 = (Quaternion) {p2->data[6], p2->data[3], p2->data[4],
-      p2->data[5]};
-    Quaternion q3 = (Quaternion) {p3->data[6], p3->data[3], p3->data[4],
-      p3->data[5]};
-    Quaternion q4 = (Quaternion) {p4->data[6], p4->data[3], p4->data[4],
-      p4->data[5]};
-    double fraction = quaternion_slerp_intersection(q1, q2, q3, q4);
+    Quaternion q1 = (Quaternion) {p1->data[3], p1->data[4], p1->data[5],
+      p1->data[6]};
+    Quaternion q2 = (Quaternion) {p2->data[3], p2->data[4], p2->data[5],
+      p2->data[6]};
+    Quaternion q3 = (Quaternion) {p3->data[3], p3->data[4], p3->data[5],
+      p3->data[6]};
+    Quaternion q4 = (Quaternion) {p4->data[3], p4->data[4], p4->data[5],
+      p4->data[6]};
+    double fraction = quaternion_intersection(q1, q2, q3, q4,
+      MEOS_FLAGS_GET_Z(p1->flags));
     /* If no intersection found */
     if (fraction < 0.0)
       return 0;
@@ -327,7 +328,8 @@ tposeinst_make(const TInstant *inst1, const TInstant *inst2)
   const GSERIALIZED *gs = DatumGetGserializedP(tinstant_value_p(inst1));
   POINT4D *p = (POINT4D *) GS_POINT_PTR(gs);
   double radius = DatumGetFloat8(tinstant_value_p(inst2));
-  Pose *pose = pose_make_2d(p->x, p->y, radius, gserialized_get_srid(gs));
+  Pose *pose = pose_make_2d(p->x, p->y, radius, gserialized_get_srid(gs),
+    FLAGS_GET_GEODETIC(gs->gflags));
   TInstant *result = tinstant_make(PointerGetDatum(pose), T_TPOSE, inst1->t);
   pfree(pose);
   return result;

@@ -135,7 +135,8 @@ posesegm_interpolate(const Pose *start, const Pose *end, double ratio)
   {
     double x, y, theta;
     posesegm_interpolate_2d(start, end, ratio, &x, &y, &theta);
-    result = pose_make_2d(x, y, theta, pose_srid(start));
+    result = pose_make_2d(x, y, theta, pose_srid(start),
+      MEOS_FLAGS_GET_GEODETIC(start->flags));
   }
   else
   {
@@ -181,7 +182,8 @@ posesegm_interpolate(const Pose *start, const Pose *end, double ratio)
     X /= norm;
     Y /= norm;
     Z /= norm;
-    result = pose_make_3d(x, y, z, W, X, Y, Z, pose_srid(start));
+    result = pose_make_3d(x, y, z, W, X, Y, Z, pose_srid(start),
+      MEOS_FLAGS_GET_GEODETIC(start->flags));
   }
   return result;
 }
@@ -201,8 +203,8 @@ long double
 posesegm_locate(const Pose *start, const Pose *end, const Pose *value)
 {
   /* Ensure the validity of the arguments */
-  if (ensure_valid_pose_pose(start, end) || 
-      ensure_valid_pose_pose(start, value))
+  if (! ensure_valid_pose_pose(start, end) || 
+      ! ensure_valid_pose_pose(start, value))
     return -1.0;
 
   GSERIALIZED *gs1 = pose_to_point(start);
@@ -226,15 +228,16 @@ posesegm_locate(const Pose *start, const Pose *end, const Pose *value)
 
   if (MEOS_FLAGS_GET_Z(start->flags))
   {
-    Quaternion qs = (Quaternion) {start->data[0], start->data[1],
-      start->data[2], start->data[1]};
-    Quaternion qe = (Quaternion) {end->data[0], end->data[1], end->data[2],
-      end->data[3]};
+    Quaternion qs = (Quaternion) {start->data[3], start->data[4],
+      start->data[5], start->data[6]};
+    Quaternion qe = (Quaternion) {end->data[3], end->data[4], end->data[5],
+      end->data[6]};
     if (! quaternion_same(qs, qe))
     {
-      Quaternion qv = (Quaternion) {value->data[0], value->data[1],
-        value->data[2], value->data[3]};
-      result2 = quaternion_slerp_locate(qs, qe, qv);
+      Quaternion qv = (Quaternion) {value->data[3], value->data[4],
+        value->data[5], value->data[6]};
+      result2 = quaternion_locate(qs, qe, qv,
+        MEOS_FLAGS_GET_GEODETIC(start->flags));
       if (result2 < 0.0)
         return -1.0;
     }
@@ -292,16 +295,18 @@ pose_invert(const Pose *pose)
         theta = M_PI;
     double dx = - pose->data[0];
     double dy = - pose->data[1];
-    return pose_make_2d(dx, dy, theta, pose_srid(pose));
+    return pose_make_2d(dx, dy, theta, pose_srid(pose),
+      MEOS_FLAGS_GET_GEODETIC(pose->flags));
   }
   else
   {
-    Quaternion q = (Quaternion) {pose->data[0], pose->data[1],
-      pose->data[2], pose->data[3]};
+    Quaternion q = (Quaternion) {pose->data[3], pose->data[4],
+      pose->data[5], pose->data[6]};
     double dx = - pose->data[0];
     double dy = - pose->data[1];
     double dz = - pose->data[2];
-    return pose_make_3d(dx, dy, dz, q.X, q.Y, q.Z, q.W, pose_srid(pose));
+    return pose_make_3d(dx, dy, dz, q.W, q.X, q.Y, q.Z, pose_srid(pose),
+      MEOS_FLAGS_GET_GEODETIC(pose->flags));
   }
 }
 
@@ -324,7 +329,8 @@ pose_combine(const Pose *pose1, const Pose *pose2)
       theta = theta + 2 * M_PI;
     double dx = pose1->data[0] + pose2->data[0];
     double dy = pose1->data[1] + pose2->data[1];
-    return pose_make_2d(dx, dy, theta, pose_srid(pose1));
+    return pose_make_2d(dx, dy, theta, pose_srid(pose1),
+      MEOS_FLAGS_GET_GEODETIC(pose1->flags));
   }
   else
   {
@@ -338,7 +344,8 @@ pose_combine(const Pose *pose1, const Pose *pose2)
     double dx = pose1->data[0] + pose2->data[0];
     double dy = pose1->data[1] + pose2->data[1];
     double dz = pose1->data[2] + pose2->data[2];
-    return pose_make_3d(dx, dy, dz, q.X, q.Y, q.Z, q.W, pose_srid(pose1));
+    return pose_make_3d(dx, dy, dz, q.W, q.X, q.Y, q.Z, pose_srid(pose1),
+      MEOS_FLAGS_GET_GEODETIC(pose1->flags));
   }
 }
 
@@ -463,15 +470,22 @@ pose_parse(const char **str, bool end)
       return NULL;
   }
 
+  bool geodetic = false;
   if (strncasecmp(*str, "POSE", 4) == 0)
   {
     *str += 4;
     p_whitespace(str);
   }
+  else if (strncasecmp(*str, "GEODPOSE", 8) == 0)
+  {
+    geodetic = true;
+    *str += 8;
+    p_whitespace(str);
+  }
   else
   {
     meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
-      "Could not parse %s value: Missing prefix 'Pose'",
+      "Could not parse %s value: Missing prefix '(Geod)Pose'",
       meostype_name(T_POSE));
     return NULL;
   }
@@ -501,7 +515,7 @@ pose_parse(const char **str, bool end)
     if (! double_parse(str, &theta) || ! ensure_valid_rotation(theta))
       return NULL;
     POINT4D *p = (POINT4D *) GS_POINT_PTR(point);
-    result = pose_make_2d(p->x, p->y, theta, srid);
+    result = pose_make_2d(p->x, p->y, theta, srid, geodetic);
   }
   else
   {
@@ -521,7 +535,7 @@ pose_parse(const char **str, bool end)
     if (! ensure_unit_norm(W, X, Y, Z))
       return NULL;
     POINT4D *p = (POINT4D *) GS_POINT_PTR(point);
-    result = pose_make_3d(p->x, p->y, p->z, W, X, Y, Z, srid);
+    result = pose_make_3d(p->x, p->y, p->z, W, X, Y, Z, srid, geodetic);
   }
   pfree(point);
 
@@ -580,8 +594,8 @@ pose_out(const Pose *pose, int maxdd)
     char *X = float8_out(pose->data[4], maxdd);
     char *Y = float8_out(pose->data[5], maxdd);
     char *Z = float8_out(pose->data[6], maxdd);
-    snprintf(result, MAXPOSELEN - 1, "POSE(%s, %s, %s, %s, %s)",
-      point, W, X, Y, Z);
+    snprintf(result, MAXPOSELEN - 1, "%sPOSE(%s, %s, %s, %s, %s)", 
+      MEOS_FLAGS_GET_GEODETIC(pose->flags) ? "GEOD" : "", point, W, X, Y, Z);
     pfree(W); pfree(X); pfree(Y); pfree(Z);
   }
   pfree(gs); pfree(point);
@@ -612,7 +626,7 @@ pose_wkt_out(const Pose *pose, bool extended, int maxdd)
     geopoint_make(pose->data[0], pose->data[1], 0.0, false, false, srid);
   LWGEOM *geom = lwgeom_from_gserialized(gs);
   size_t len;
-  char *wkt_point = lwgeom_to_wkt(geom, extended ? WKT_EXTENDED : WKT_ISO,
+  char *point = lwgeom_to_wkt(geom, extended ? WKT_EXTENDED : WKT_ISO,
     maxdd, &len);
   /* Previous call added 1 (i.e., '\0') to len */
   len--;
@@ -634,15 +648,16 @@ pose_wkt_out(const Pose *pose, bool extended, int maxdd)
   char *result = palloc(len);
   if (hasz)
   {
-    snprintf(result, len, "Pose(%s,%s,%s,%s,%s)", wkt_point, W, X, Y, Z);
+    snprintf(result, len, "%sPOSE(%s,%s,%s,%s,%s)",
+      MEOS_FLAGS_GET_GEODETIC(pose->flags) ? "GEOD" : "", point, W, X, Y, Z);
     pfree(W); pfree(X); pfree(Y); pfree(Z); 
   }
   else
   {
-    snprintf(result, len, "Pose(%s,%s)", wkt_point, theta);
+    snprintf(result, len, "POSE(%s,%s)", point, theta);
     pfree(theta);
   }
-  lwgeom_free(geom); pfree(wkt_point);
+  lwgeom_free(geom); pfree(point);
   return result;
 }
 
@@ -789,7 +804,7 @@ pose_as_hexwkb(const Pose *pose, uint8_t variant, size_t *size_out)
  * @param[in] srid SRID
  */
 Pose *
-pose_make_2d(double x, double y, double theta, int32_t srid)
+pose_make_2d(double x, double y, double theta, int32_t srid, bool geodetic)
 {
   if (! ensure_valid_rotation(theta))
     return NULL;
@@ -803,6 +818,7 @@ pose_make_2d(double x, double y, double theta, int32_t srid)
   SET_VARSIZE(result, memsize);
   MEOS_FLAGS_SET_X(result->flags, true);
   MEOS_FLAGS_SET_Z(result->flags, false);
+  MEOS_FLAGS_SET_GEODETIC(result->flags, geodetic);
   pose_set_srid(result, srid);
   result->data[0] = x;
   result->data[1] = y;
@@ -849,13 +865,21 @@ pose_make_point2d(const GSERIALIZED *gs, double theta)
  * @param[in] x,y,z Position
  * @param[in] W,X,Y,Z Orientation
  * @param[in] srid SRID
+ * @param[in] geodetic True for geodetic coordinates, false for planar ones.
  */
 Pose *
 pose_make_3d(double x, double y, double z, double W, double X, double Y,
-  double Z, int32_t srid)
+  double Z, int32_t srid, bool geodetic)
 {
+  /* Ensure validity of the arguments */
   if (! ensure_unit_norm(W, X, Y, Z))
       return NULL;
+  if (srid_is_latlong(srid) && ! geodetic)
+  {
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      "Operation on mixed planar and geodetic coordinates");
+    return NULL;
+  }
 
   /* Ensure a unique representation for the quaternion */
   if (W < 0.0)
@@ -865,12 +889,13 @@ pose_make_3d(double x, double y, double z, double W, double X, double Y,
     Y = -Y;
     Z = -Z;
   }
-
+  /* Create the pose */
   size_t memsize = DOUBLE_PAD(sizeof(Pose)) + 7 * sizeof(double);
   Pose *result = palloc0(memsize);
   SET_VARSIZE(result, memsize);
   MEOS_FLAGS_SET_X(result->flags, true);
   MEOS_FLAGS_SET_Z(result->flags, true);
+  MEOS_FLAGS_SET_GEODETIC(result->flags, geodetic);
   pose_set_srid(result, srid);
   result->data[0] = x;
   result->data[1] = y;
@@ -1091,14 +1116,16 @@ pose_round(const Pose *pose, int maxdd)
     double X = float_round(pose->data[4], maxdd);
     double Y = float_round(pose->data[5], maxdd);
     double Z = float_round(pose->data[6], maxdd);
-    result = pose_make_3d(x, y, z, W, X, Y, Z, pose_srid(pose));
+    result = pose_make_3d(x, y, z, W, X, Y, Z, pose_srid(pose),
+      MEOS_FLAGS_GET_GEODETIC(pose->flags));
   }
   else
   {
     double x = float_round(pose->data[0], maxdd);
     double y = float_round(pose->data[1], maxdd);
     double theta = float_round(pose->data[2], maxdd);
-    result = pose_make_2d(x, y, theta, pose_srid(pose));
+    result = pose_make_2d(x, y, theta, pose_srid(pose),
+      MEOS_FLAGS_GET_GEODETIC(pose->flags));
   }
   return result;
 }

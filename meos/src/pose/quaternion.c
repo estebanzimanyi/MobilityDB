@@ -237,43 +237,16 @@ quaternion_slerp(Quaternion q1, Quaternion q2, double ratio)
 }
 
 /**
- * @brief Return the power of a quaternion to a scalar value between [0,1]
- * @param[in] q1,q2 Quaternions
- * @param[in] fraction Fraction
- */
-Quaternion
-quaternion_pow(Quaternion q, double fraction)
-{
-  /* Ensure q is normalized */
-  q = quaternion_normalize(q);
-
-  /* Clamp fraction to [0,1] */
-  if (fraction <= 0.0) return (Quaternion){1, 0, 0, 0};
-  if (fraction >= 1.0) return q;
-
-  /* Extract angle (θ) and axis (u) */
-  double theta = acos(q.W);      // θ
-  double sin_theta = sin(theta);
-
-  /* If angle is tiny, return q (avoids divide-by-zero) */
-  if (fabs(sin_theta) < 1e-10)
-      return q;
-
-  double new_theta = theta * fraction;
-  double scale = sin(new_theta) / sin_theta;
-
-  Quaternion result = {cos(new_theta), q.X * scale, q.Y * scale, q.Z * scale};
-  return quaternion_normalize(result);
-}
-
-/**
  * @brief Return a float in [0,1] representing the location of the given
  * quaternion on the quaternion segment, as a fraction of the segment length
- * @param[in] start,end Poses defining the segment
- * @param[in] value Pose to locate
+ * using SLERP
+ * @param[in] q1,q2 Quaternion defining the segment
+ * @param[in] q Quaternion to locate
+ * @param[in] geodetic True when using spherical interpolation (SLERP), 
+ * false for linear interpolation (LERP)
  */
 double
-quaternion_slerp_locate(Quaternion q1, Quaternion q2, Quaternion q)
+quaternion_locate(Quaternion q1, Quaternion q2, Quaternion q, bool geodetic)
 {
   /* Normalize all three */
   q1 = quaternion_normalize(q1);
@@ -303,6 +276,7 @@ quaternion_slerp_locate(Quaternion q1, Quaternion q2, Quaternion q)
     return -1.0;
   }
 
+
   /* Compute angles */
   double theta0 = acos(dot12);   /* full arc */
   double theta  = acos(dot1q);   /* arc from q1 -> q */
@@ -322,7 +296,7 @@ quaternion_slerp_locate(Quaternion q1, Quaternion q2, Quaternion q)
   if (diff < 1e-5)
     return t;
 
-  return -1.0;  /* not on the slerp curve */
+  return -1.0;  /* not on the curve */
 }
 
 /*****************************************************************************/
@@ -333,10 +307,12 @@ quaternion_slerp_locate(Quaternion q1, Quaternion q2, Quaternion q)
  * intersect
  * @param[in] q1,q2 Quaternions defining the first segment
  * @param[in] q3,q4 Quaternions defining the second segment
+ * @param[in] geodetic True when using spherical interpolation (SLERP), 
+ * false for linear interpolation (LERP)
  */
 double
-quaternion_slerp_intersection(Quaternion q1, Quaternion q2, Quaternion q3,
-  Quaternion q4)
+quaternion_intersection(Quaternion q1, Quaternion q2, Quaternion q3,
+  Quaternion q4, bool geodetic)
 {
   const int MAX_ITERS = 80;
   double lo = 0.0;
@@ -367,10 +343,10 @@ quaternion_slerp_intersection(Quaternion q1, Quaternion q2, Quaternion q3,
     double tleft  = mid - 1e-4; if (tleft < 0) tleft = 0;
     double tright = mid + 1e-4; if (tright > 1) tright = 1;
 
-    double dl = quaternion_distance(quaternion_slerp(q1, q2, tleft),
-      quaternion_slerp(q3, q4, tleft));
-    double dr = quaternion_distance(quaternion_slerp(q1, q2, tright),
-      quaternion_slerp(q3, q4, tright));
+    double dl = quaternion_distance(interp_func(q1, q2, tleft),
+      interp_func(q3, q4, tleft));
+    double dr = quaternion_distance(interp_func(q1, q2, tright),
+      interp_func(q3, q4, tright));
 
     /* If the left distance is smaller, the root is left */
     if (dl < dr)

@@ -200,16 +200,16 @@ int main(void)
   printf("pose_copy(%s): %s\n", pose1_out, char_result);
   free(pose_result); free(char_result);
 
-  /* Pose *pose_make_2d(double x, double y, double theta, int32_t srid); */
-  pose_result = pose_make_2d(x1, y1, theta1, 5676);
+  /* Pose *pose_make_2d(double x, double y, double theta, int32_t srid, bool geodetic); */
+  pose_result = pose_make_2d(x1, y1, theta1, 5676, false);
   char_result = pose_as_text(pose_result, 6);
-  printf("pose_make_2d(%lf, %lf, %lf): %s\n", x1, y1, theta1, char_result);
+  printf("pose_make_2d(%lf, %lf, %lf, 5676, false): %s\n", x1, y1, theta1, char_result);
   free(pose_result); free(char_result);
 
-  /* Pose *pose_make_3d(double x, double y, double z, double W, double X, double Y, double Z, int32_t srid); */
-  pose_result = pose_make_3d(x1, y1, z1, X1, Y1, Z1, W1, 5676);
+  /* Pose *pose_make_3d(double x, double y, double z, double W, double X, double Y, double Z, int32_t srid, bool geodetic); */
+  pose_result = pose_make_3d(x1, y1, z1, X1, Y1, Z1, W1, 5676, false);
   char_result = pose_as_text(pose_result, 6);
-  printf("pose_make_3d(%lf, %lf, %lf, %lf, %lf, %lf, %lf): %s\n", x1, y1, z1, X1, Y1, Z1, W1, char_result);
+  printf("pose_make_3d(%lf, %lf, %lf, %lf, %lf, %lf, %lf, 5676, false): %s\n", x1, y1, z1, X1, Y1, Z1, W1, char_result);
   free(pose_result); free(char_result);
 
   /* Conversion functions */
@@ -278,7 +278,7 @@ int main(void)
   printf("****************************************************************\n");
 
   /* void pose_set_srid(Pose *pose, int32_t srid); */
-  Pose *p = pose_make_2d(x2, y2, theta2, 0);
+  Pose *p = pose_make_2d(x2, y2, theta2, 0, false);
   char *p_out = pose_as_ewkt(p, 6);
   pose_set_srid(p, 5676);
   char_result = pose_as_text(pose_result, 6);
@@ -286,7 +286,7 @@ int main(void)
   free(p); free(p_out); free(pose_result); free(char_result);
 
   /* void pose_set_srid(Pose *pose, int32_t srid); */
-  p = pose_make_3d(x2, y2, z2, X2, Y2, Z2, W2, 0);
+  p = pose_make_3d(x2, y2, z2, X2, Y2, Z2, W2, 0, false);
   p_out = pose_as_ewkt(p, 6);
   pose_set_srid(p, 5676);
   char_result = pose_as_text(pose_result, 6);

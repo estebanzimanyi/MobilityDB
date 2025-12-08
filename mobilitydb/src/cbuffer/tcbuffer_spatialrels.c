@@ -85,7 +85,7 @@ EA_spatialrel_cbuffer_tcbuffer(FunctionCallInfo fcinfo,
 }
 
 /**
- * @brief Return true if a geometry and a spatiotemporal value ever/always
+ * @brief Return true if a geometry and a temporal circular buffer ever/always
  * satisfy a spatial relationship
  */
 Datum

@@ -306,22 +306,25 @@ Pose_constructor(PG_FUNCTION_ARGS)
   double z = PG_GETARG_FLOAT8(2);
   double theta = z;
   int32_t srid;
+  bool geodetic;
 
-  assert(PG_NARGS() == 4 || PG_NARGS() == 8);
+  assert(PG_NARGS() == 5 || PG_NARGS() == 9);
   Pose *result;
-  if (PG_NARGS() == 4)
+  if (PG_NARGS() == 5)
   {
     srid = PG_GETARG_INT32(3);
-    result = pose_make_2d(x, y, theta, srid);
+    geodetic = PG_GETARG_BOOL(4);
+    result = pose_make_2d(x, y, theta, srid, geodetic);
   }
-  else /* PG_NARGS() == 8 */
+  else /* PG_NARGS() == 9 */
   {
     double W = PG_GETARG_FLOAT8(3);
     double X = PG_GETARG_FLOAT8(4);
     double Y = PG_GETARG_FLOAT8(5);
     double Z = PG_GETARG_FLOAT8(6);
     srid = PG_GETARG_INT32(7);
-    result = pose_make_3d(x, y, z, W, X, Y, Z, srid);
+    geodetic = PG_GETARG_BOOL(8);
+    result = pose_make_3d(x, y, z, W, X, Y, Z, srid, geodetic);
   }
   PG_RETURN_POINTER(result);
 }

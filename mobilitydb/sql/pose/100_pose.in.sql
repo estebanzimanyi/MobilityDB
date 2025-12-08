@@ -144,7 +144,7 @@ CREATE FUNCTION pose(double precision, double precision, double precision,
 
 CREATE FUNCTION pose(double precision, double precision, double precision,
   double precision, double precision, double precision, double precision,
-    srid integer DEFAULT 0)
+    srid integer DEFAULT 0, geodetic bool DEFAULT false)
   RETURNS pose
   AS 'MODULE_PATHNAME', 'Pose_constructor'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;

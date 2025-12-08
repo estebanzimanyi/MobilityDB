@@ -42,22 +42,12 @@ CREATE FUNCTION eContains(geometry, tpose)
   AS 'MODULE_PATHNAME', 'Econtains_geo_tpose'
   -- SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION eContains(tpose, geometry)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Econtains_tpose_geo'
-  -- SUPPORT tspatial_supportfn
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************/
 
 CREATE FUNCTION aContains(geometry, tpose)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Acontains_geo_tpose'
-  -- SUPPORT tspatial_supportfn
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION aContains(tpose, geometry)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Acontains_tpose_geo'
   -- SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 

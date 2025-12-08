@@ -9,7 +9,7 @@ SET(LOCAL_FILES
   111_tpose_aggfuncs
   113_tpose_distance
   114_tpose_indexes
-  # 115_tpose_spatialrels
+  115_tpose_spatialrels
   # 117_tpose_spatiotemprels
   )
 

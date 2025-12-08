@@ -59,7 +59,7 @@
  * reference geometry 
  */
 TInstant *
-trgeoinst_geom_to_tpose(const TInstant *inst, const GSERIALIZED *gs)
+trgeoinst_geo_to_tpose(const TInstant *inst, const GSERIALIZED *gs)
 {
   const GSERIALIZED *geom = DatumGetGserializedP(tinstant_value_p(inst));
   Datum pose = PointerGetDatum(geom_compute_pose(gs, geom));
@@ -73,12 +73,12 @@ trgeoinst_geom_to_tpose(const TInstant *inst, const GSERIALIZED *gs)
  * @note Creates a new array of instants, does not free old array
  */
 TInstant **
-trgeoinstarr_geom_to_tpose(TInstant **instants, int count, 
+trgeoinstarr_geo_to_tpose(TInstant **instants, int count, 
   const GSERIALIZED *gs)
 {
   TInstant **newinsts = palloc(sizeof(TInstant *) * count);;
   for (int i = 0; i < count; ++i)
-    newinsts[i] = trgeoinst_geom_to_tpose(instants[i], gs);
+    newinsts[i] = trgeoinst_geo_to_tpose(instants[i], gs);
   return newinsts;
 }
 
@@ -105,19 +105,20 @@ trgeoinst_pose_to_tgeom(const TInstant *inst, const GSERIALIZED *gs)
  * @brief 
  */
 static Pose *
-pose_make_zero(bool hasz, int32_t srid)
+pose_make_zero(bool hasz, int32_t srid, bool geodetic)
 {
   return hasz ?
-    pose_make_3d(0, 0, 0, 1, 0, 0, 0, srid) : pose_make_2d(0, 0, 0, srid);
+    pose_make_3d(0, 0, 0, 1, 0, 0, 0, srid, geodetic) : 
+    pose_make_2d(0, 0, 0, srid, geodetic);
 }
 
 /**
  * @brief 
  */
 TInstant *
-trgeoinst_pose_zero(TimestampTz t, bool hasz, int32_t srid)
+trgeoinst_pose_zero(TimestampTz t, bool hasz, int32_t srid, bool geodetic)
 {
-  Datum pose = PointerGetDatum(pose_make_zero(hasz, srid));
+  Datum pose = PointerGetDatum(pose_make_zero(hasz, srid, geodetic));
   return tinstant_make_free(pose, t, T_TPOSE);
 }
 

@@ -778,7 +778,7 @@ SELECT asText(merge(inst)) FROM temp;
 			<listitem xml:id="tpose_atValues">
 				<indexterm significance="normal"><primary><varname>atValues</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>minusValues</varname></primary></indexterm>
-				<para>TODO Restrict to (the complement of) a set of values</para>
+				<para>Restrict to (the complement of) a set of values</para>
 				<para><varname>atValues(tpose,values) → tpose</varname></para>
 				<para><varname>minusValues(tpose,values) → tpose</varname></para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
@@ -995,15 +995,18 @@ SELECT round(tpose '[Pose(Point(1 1),0.3)@2001-01-01,
 			<listitem xml:id="tpose_espatialrels">
 				<para>Ever and always relationships</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
-SELECT eContains(geometry 'Polygon((0 0,0 50,50 50,50 0,0 0))',
-  tgeompoint(tpose '[Pose(Point(1 1),0.1)@2001-01-01, Pose(Point(1 1),0.3)@2001-01-03)'));
+SELECT eContains(geometry 'Polygon((2 2,2 3,3 3,3 2,2 2))',
+  tgeompoint(tpose '[Pose(Point(1 1),0.1)@2001-01-01, Pose(Point(4 4),0.3)@2001-01-03)'));
+-- true
+SELECT aContains(geometry 'Polygon((0 0,0 5,5 5,5 0,0 0))',
+  tgeompoint(tpose '[Pose(Point(1 1),0.1)@2001-01-01, Pose(Point(4 4),0.3)@2001-01-03)'));
 -- true
 SELECT eDisjoint(geometry(pose 'Pose(Point(2 2),0.0)'),
   tgeompoint(tpose '[Pose(Point(1 1),0.1)@2001-01-01, Pose(Point(1 1),0.3)@2001-01-03)'));
 -- true
 SELECT eIntersects(
-  tpose '[Pose(Point(1 1),0.1)@2001-01-01, Pose(Point(1 1),0.3)@2001-01-03)'::tgeompoint,
-  tpose '[Pose(Point(2 2),0.0)@2001-01-01, Pose(Point(2 2),1)@2001-01-03)'::tgeompoint);
+  tpose '[Pose(Point(1 1),0.1)@2001-01-01, Pose(Point(3 3),0.3)@2001-01-03)',
+  tpose '[Pose(Point(3 3),0.0)@2001-01-01, Pose(Point(1 1),1)@2001-01-03)');
 -- false
 </programlisting>
 			</listitem>
@@ -1055,29 +1058,37 @@ SELECT tpose '[Pose(Point(1 1),0.1)@2001-01-01,
 				<indexterm significance="normal"><primary><varname>?=</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>%=</varname></primary></indexterm>
 				<para>Ever and always comparisons</para>
-				<para><varname>tpose {?=, %=} tpose → boolean</varname></para>
+				<para><varname>tpose {?=, %=} {pose,tpose} → boolean</varname></para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
-SELECT tpose '[Pose(Point(1 1),0.1)@2001-01-01,
-  Pose(Point(1 1),0.2)@2001-01-03]' ?= 'Pose(Point(1 1),0.2)@2001-01-02';
--- true
-SELECT tpose '[Pose(Point(1 1),0.1)@2001-01-01,
-  Pose(Point(1 1),0.2)@2001-01-03]' &amp;= 'Pose(Point(1 1),0.2)@2001-01-02';
--- true
+SELECT tpose '[Pose(Point(1 1),0.1)@2001-01-01, Pose(Point(3 3),0.3)@2001-01-03]' ?=
+  pose 'Pose(Point(2 2),0.2)';
+-- t
+SELECT tpose '[Pose(Point(1 1),0.1)@2001-01-01, Pose(Point(1 1),0.1)@2001-01-03]' &amp;=
+  pose 'Pose(Point(1 1),0.1)';
+-- t
+SELECT tpose '[Pose(Point(1 1),0.1)@2001-01-01, Pose(Point(3 3),0.3)@2001-01-03]' ?=
+  tpose 'Pose(Point(2 2),0.2)@2001-01-02';
+-- t
+SELECT tpose '[Pose(Point(1 1),0.1)@2001-01-01, Pose(Point(3 3),0.3)@2001-01-03]' ?=
+  tpose '[Pose(Point(3 3),0.3)@2001-01-01, Pose(Point(1 1),0.1)@2001-01-03]';
+-- t
 </programlisting>
 			</listitem>
 
 			<listitem xml:id="tpose_tcomp">
 				<indexterm significance="normal"><primary><varname>::</varname></primary></indexterm>
 				<para>Temporal comparisons</para>
-				<para><varname>tpose {#=, #&lt;&gt;} tpose → tbool</varname></para>
+				<para><varname>{pose,tpose} {#=, #&lt;&gt;} {pose,tpose} → tbool</varname></para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
-SELECT tpose '[Pose(Point(1 1),0.2)@2001-01-01, 
-  Pose(Point(1 1),0.4)@2001-01-03)' #= pose 'Pose(Point(1 1),0.3)';
--- {[f@2001-01-01, t@2001-01-02], (f@2001-01-02, f@2001-01-03)}
-SELECT tpose '[Pose(Point(1 1),0.2)@2001-01-01, 
-  Pose(Point(1 1),0.8)@2001-01-03)' #&lt;&gt;
-  tpose '[Pose(Point(1 1),0.3)@2001-01-01, Pose(Point(1 1),0.7)@2001-01-03)';
--- {[t@2001-01-01, f@2001-01-02], (t@2001-01-02, t@2001-01-03)}
+SELECT tpose '[Pose(Point(1 1),0.1)@2001-01-01, Pose(Point(3 3),0.3)@2001-01-03]' #=
+  pose 'Pose(Point(2 2),0.2)';
+-- {[f@2001-01-01, t@2001-01-02], (f@2001-01-02, f@2001-01-03]}
+SELECT tpose '[Pose(Point(1 1),0.1)@2001-01-01, Pose(Point(3 3),0.3)@2001-01-03]' #=
+  tpose 'Pose(Point(2 2),0.2)@2001-01-02';
+-- t@2001-01-02
+SELECT tpose '[Pose(Point(1 1),0.1)@2001-01-01, Pose(Point(3 3),0.3)@2001-01-03]' #=
+  tpose '[Pose(Point(3 3),0.3)@2001-01-01, Pose(Point(1 1),0.1)@2001-01-03]';
+-- {[f@2001-01-01, t@2001-01-02], (f@2001-01-02, f@2001-01-03]}
 </programlisting>
 			</listitem>
 		</itemizedlist>

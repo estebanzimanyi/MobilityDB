@@ -259,7 +259,7 @@ lwpoly_compute_2d(const LWPOLY *poly1, const LWPOLY *poly2)
   d = y1_ - a*y1 - b*x1;
 
   double theta = atan2(b, a);
-  return pose_make_2d(c, d, theta, poly1->srid);
+  return pose_make_2d(c, d, theta, poly1->srid, FLAGS_GET_GEODETIC(poly1->flags));
 }
 
 /**
@@ -336,8 +336,9 @@ lwpsurf_compute_3d(const LWPSURFACE *psurf1, const LWPSURFACE *psurf2)
 
   double3 e;
   double theta;
+  bool geodetic = FLAGS_GET_GEODETIC(psurf1->flags);
   if (Pnorm < MEOS_EPSILON && Rnorm < MEOS_EPSILON) // No rotation
-    return pose_make_3d(dx, dy, dz, 1, 0, 0, 0, psurf1->srid);
+    return pose_make_3d(dx, dy, dz, 1, 0, 0, 0, psurf1->srid, geodetic);
   else if (Pnorm < MEOS_EPSILON) // Rotation around P
   {
     e = vec3_normalize(P);
@@ -360,7 +361,7 @@ lwpsurf_compute_3d(const LWPSURFACE *psurf1, const LWPSURFACE *psurf2)
     theta = pose_compute_angle_3d(e, P, P_);
   }
   Quaternion q = quaternion_from_axis_angle(e, theta);
-  return pose_make_3d(dx, dy, dz, q.X, q.Y, q.Z, q.W, psurf1->srid);
+  return pose_make_3d(dx, dy, dz, q.X, q.Y, q.Z, q.W, psurf1->srid, geodetic);
 }
 
 /**

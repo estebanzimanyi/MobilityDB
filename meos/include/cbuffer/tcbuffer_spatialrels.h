@@ -28,7 +28,7 @@
  *****************************************************************************/
 
 /**
- * @brief Spatial relationships for temporal points.
+ * @brief Spatial relationships for temporal circular buffers.
  */
 
 #ifndef __TCBUFFER_SPATIALRELS_H__

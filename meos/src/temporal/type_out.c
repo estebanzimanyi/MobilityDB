@@ -276,13 +276,13 @@ pose_as_json_sb(stringbuffer_t *sb, const Pose *pose, int precision)
     stringbuffer_append_double(sb, pt->x, precision);
     stringbuffer_append_len(sb, ",\"h\":", 5);
     stringbuffer_append_double(sb, pt->z, precision);
-    stringbuffer_append_len(sb, "},\"quaternion\":{\"x\":", 20);
+    stringbuffer_append_len(sb, "},\"quaternion\":{\"w\":", 20);
     stringbuffer_append_double(sb, pose->data[4], precision);
-    stringbuffer_append_len(sb, ",\"y\":", 5);
+    stringbuffer_append_len(sb, ",\"x\":", 5);
     stringbuffer_append_double(sb, pose->data[5], precision);
-    stringbuffer_append_len(sb, ",\"z\":", 5);
+    stringbuffer_append_len(sb, ",\"y\":", 5);
     stringbuffer_append_double(sb, pose->data[6], precision);
-    stringbuffer_append_len(sb, ",\"w\":", 5);
+    stringbuffer_append_len(sb, ",\"z\":", 5);
     stringbuffer_append_double(sb, pose->data[3], precision);
     stringbuffer_append_char(sb, '}');
   }

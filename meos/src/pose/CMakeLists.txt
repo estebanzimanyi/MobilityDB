@@ -6,6 +6,7 @@ set(POSE_SRCS
   tpose_boxops.c
   tpose_distance.c
   tpose_spatialfuncs.c
+  # tpose_spatialrels.c
 )
 
 if(MEOS)

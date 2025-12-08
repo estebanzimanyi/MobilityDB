@@ -226,14 +226,14 @@ trgeo_trajectory_center(const Temporal *temp)
 /**
  * @brief Return the traversed area of a temporal rigid geometry 
  * @param[in] inst Temporal rigid geometry
- * @param[in] refgeom Reference geometry,
+ * @param[in] refgeo Reference geometry,
  */
 static LWGEOM *
-trgeoinst_traversed_area_iter(const TInstant *inst, const LWGEOM *refgeom)
+trgeoinst_traversed_area_iter(const TInstant *inst, const LWGEOM *refgeo)
 {
-  assert(inst->temptype == T_TRGEOMETRY); assert(refgeom);
+  assert(inst->temptype == T_TRGEOMETRY); assert(refgeo);
   const Pose *pose = DatumGetPoseP(tinstant_value_p(inst));
-  LWGEOM *result = lwgeom_clone_deep(refgeom);
+  LWGEOM *result = lwgeom_clone_deep(refgeo);
   lwgeom_apply_pose(pose, result);
   if (result->bbox)
     lwgeom_refresh_bbox(result);
@@ -243,7 +243,7 @@ trgeoinst_traversed_area_iter(const TInstant *inst, const LWGEOM *refgeom)
 /**
  * @brief Return the traversed area of a temporal rigid geometry 
  * @param[in] seq Temporal rigid geometry
- * @param[in] refgeom Reference geometry,
+ * @param[in] refgeo Reference geometry,
  * @param[in] unary_union True when the result is a single geometry, not a
  * collection. It is only used when the interpolation is not linear.
  * @param[out] result Array of component geometries,
@@ -251,10 +251,10 @@ trgeoinst_traversed_area_iter(const TInstant *inst, const LWGEOM *refgeom)
  */
 static int
 trgeoseq_discstep_traversed_area_iter(const TSequence *seq,
-  const LWGEOM *refgeom, bool unary_union, LWGEOM **result)
+  const LWGEOM *refgeo, bool unary_union, LWGEOM **result)
 {
   /* Ensure the validity of the arguments */
-  assert(seq->temptype == T_TRGEOMETRY); assert(refgeom); assert(result);
+  assert(seq->temptype == T_TRGEOMETRY); assert(refgeo); assert(result);
   LWGEOM *geom;
   const Pose *pose;
 
@@ -264,7 +264,7 @@ trgeoseq_discstep_traversed_area_iter(const TSequence *seq,
     for (int i = 0; i < seq->count; ++i)
     {
       pose = DatumGetPoseP(tinstant_value_p(TSEQUENCE_INST_N(seq, i)));
-      geom = lwgeom_clone_deep(refgeom);
+      geom = lwgeom_clone_deep(refgeo);
       lwgeom_apply_pose(pose, geom);
       if (geom->bbox)
         lwgeom_refresh_bbox(geom);
@@ -275,7 +275,7 @@ trgeoseq_discstep_traversed_area_iter(const TSequence *seq,
 
   /* Perform the union of the geometries */
   pose = DatumGetPoseP(tinstant_value_p(TSEQUENCE_INST_N(seq, 0)));
-  geom = lwgeom_clone_deep(refgeom);
+  geom = lwgeom_clone_deep(refgeo);
   lwgeom_apply_pose(pose, geom);
   if (geom->bbox)
     lwgeom_refresh_bbox(geom);
@@ -283,7 +283,7 @@ trgeoseq_discstep_traversed_area_iter(const TSequence *seq,
   {
     LWGEOM *geom1 = geom;
     pose = DatumGetPoseP(tinstant_value_p(TSEQUENCE_INST_N(seq, i)));
-    LWGEOM *geom2 = lwgeom_clone_deep(refgeom);
+    LWGEOM *geom2 = lwgeom_clone_deep(refgeo);
     lwgeom_apply_pose(pose, geom2);
     geom = lwgeom_union(geom1, geom2);
     lwgeom_free(geom1); lwgeom_free(geom2);
@@ -296,22 +296,22 @@ trgeoseq_discstep_traversed_area_iter(const TSequence *seq,
 /**
  * @brief Return the traversed area of a temporal rigid geometry 
  * @param[in] seq Temporal rigid geometry
- * @param[in] refgeom Reference geometry,
+ * @param[in] refgeo Reference geometry,
  * @param[out] result Array of component geometries,
  * @return Number of geometries in the output array
  */
 static int
-trgeoseq_linear_traversed_area_iter(const TSequence *seq,
-  const LWGEOM *refgeom, LWGEOM **result)
+trgeoseq_linear_traversed_area_iter(const TSequence *seq, const LWGEOM *refgeo,
+  LWGEOM **result)
 {
   /* Ensure the validity of the arguments */
-  assert(seq->temptype == T_TRGEOMETRY); assert(refgeom); assert(result);
+  assert(seq->temptype == T_TRGEOMETRY); assert(refgeo); assert(result);
 
   /* Instantaneous sequence */
   if (seq->count == 1)
   {
     result[0] = trgeoinst_traversed_area_iter(TSEQUENCE_INST_N(seq, 0),
-      refgeom);
+      refgeo);
     return 1;
   }
 
@@ -349,15 +349,15 @@ trgeoseq_linear_traversed_area_iter(const TSequence *seq,
       Datum value1 = tinstant_value_p(inst1);
       Datum value2 = tinstant_value_p(inst2);
       if (i == 1)
-        inst1 = trgeoinst_pose_zero(inst1->t, FLAGS_GET_Z(refgeom->flags),
-          refgeom->srid);
+        inst1 = trgeoinst_pose_zero(inst1->t, FLAGS_GET_Z(refgeo->flags),
+          refgeo->srid, FLAGS_GET_GEODETIC(refgeo->flags));
 
       double duration = (inst2->t - inst1->t);
       double ratio = (double) j / (double) (n + 1);
       TimestampTz tj = inst1->t + (long) (duration * ratio);
       Pose *pose = DatumGetPoseP(tsegment_value_at_timestamptz(value1, value2,
         T_TPOSE, inst1->t, inst2->t, tj));
-      geom2 = lwgeom_clone_deep(refgeom);
+      geom2 = lwgeom_clone_deep(refgeo);
       lwgeom_apply_pose(pose, geom2);
       pfree(pose);
       if (i == 1)
@@ -371,7 +371,7 @@ trgeoseq_linear_traversed_area_iter(const TSequence *seq,
     }
 
     const Pose *pose = DatumGetPoseP(tinstant_value_p(TSEQUENCE_INST_N(seq, i)));
-    geom2 = lwgeom_clone_deep(refgeom);
+    geom2 = lwgeom_clone_deep(refgeo);
     lwgeom_apply_pose(pose, geom2);
 
     LWGEOM *old_result = lwgeom_result;
@@ -389,21 +389,21 @@ trgeoseq_linear_traversed_area_iter(const TSequence *seq,
 /**
  * @brief Return the traversed area of a temporal rigid geometry 
  * @param[in] seq Temporal rigid geometry
- * @param[in] refgeom Reference geometry,
+ * @param[in] refgeo Reference geometry,
  * @param[in] unary_union True when the result is a single geometry, not a
  * collection. It is only used when the interpolation is not linear.
  * @param[out] result Array of component geometries,
  * @return Number of geometries in the output array
  */
 static int
-trgeoseq_traversed_area_iter(const TSequence *seq, const LWGEOM *refgeom,
+trgeoseq_traversed_area_iter(const TSequence *seq, const LWGEOM *refgeo,
   bool unary_union, LWGEOM **result)
 {
   /* Ensure the validity of the arguments */
-  assert(seq->temptype == T_TRGEOMETRY); assert(refgeom); assert(result);
+  assert(seq->temptype == T_TRGEOMETRY); assert(refgeo); assert(result);
   return (MEOS_FLAGS_GET_INTERP(seq->flags) == LINEAR) ?
-    trgeoseq_linear_traversed_area_iter(seq, refgeom, result) :
-    trgeoseq_discstep_traversed_area_iter(seq, refgeom, unary_union, result);
+    trgeoseq_linear_traversed_area_iter(seq, refgeo, result) :
+    trgeoseq_discstep_traversed_area_iter(seq, refgeo, unary_union, result);
 }
 
 /**
@@ -422,11 +422,11 @@ trgeoseq_traversed_area(const TSequence *seq, bool unary_union)
 
   /* General case */
   const GSERIALIZED *gs = trgeo_geom_p((Temporal *) seq);
-  LWGEOM *refgeom = lwgeom_from_gserialized(gs);
+  LWGEOM *refgeo = lwgeom_from_gserialized(gs);
   LWGEOM **geoms = palloc(sizeof(LWGEOM *) * (unary_union ? 1 : seq->count));
-  int ngeoms = trgeoseq_traversed_area_iter(seq, refgeom, unary_union,
+  int ngeoms = trgeoseq_traversed_area_iter(seq, refgeo, unary_union,
     &geoms[0]);
-  lwgeom_free(refgeom);
+  lwgeom_free(refgeo);
 
   /* Construct the result */
   GSERIALIZED *result;
@@ -456,20 +456,20 @@ static GSERIALIZED *
 trgeoseqset_traversed_area(const TSequenceSet *ss, bool unary_union)
 {
   const GSERIALIZED *gs = trgeo_geom_p((Temporal *) ss);
-  LWGEOM *refgeom = lwgeom_from_gserialized(gs);
+  LWGEOM *refgeo = lwgeom_from_gserialized(gs);
   GSERIALIZED *result;
 
   /* Perform the union of the resulting geometries */
   if (unary_union || MEOS_FLAGS_GET_INTERP(ss->flags == LINEAR))
   {
     LWGEOM *geoms[1];
-    trgeoseq_traversed_area_iter(TSEQUENCESET_SEQ_N(ss, 0), refgeom,
+    trgeoseq_traversed_area_iter(TSEQUENCESET_SEQ_N(ss, 0), refgeo,
       unary_union, geoms);
     LWGEOM *lwgeom_result = geoms[0];
     for (int i = 1; i < ss->count; ++i)
     {
       LWGEOM *geom1 = lwgeom_result;
-      trgeoseq_traversed_area_iter(TSEQUENCESET_SEQ_N(ss, i), refgeom,
+      trgeoseq_traversed_area_iter(TSEQUENCESET_SEQ_N(ss, i), refgeo,
         unary_union, geoms);
       LWGEOM *geom2 = geoms[0];
       lwgeom_result = lwgeom_union(geom1, geom2);
@@ -477,7 +477,7 @@ trgeoseqset_traversed_area(const TSequenceSet *ss, bool unary_union)
     }
     lwgeom_simplify_in_place(lwgeom_result, MEOS_EPSILON, LW_TRUE);
     result = gserialized_from_lwgeom(lwgeom_result, NULL);
-    lwgeom_free(lwgeom_result); lwgeom_free(refgeom);
+    lwgeom_free(lwgeom_result); lwgeom_free(refgeo);
     return result;
   }
 
@@ -486,7 +486,7 @@ trgeoseqset_traversed_area(const TSequenceSet *ss, bool unary_union)
   int ngeoms = 0;
   for (int i = 0; i < ss->count; ++i)
     ngeoms += trgeoseq_traversed_area_iter(TSEQUENCESET_SEQ_N(ss, i),
-      refgeom, unary_union, &geoms[ngeoms]);
+      refgeo, unary_union, &geoms[ngeoms]);
 
   /* Construct the result */
   if (ngeoms == 1)

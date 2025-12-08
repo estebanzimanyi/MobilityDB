@@ -1162,7 +1162,6 @@ ea_intersects_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
 {
   return ea_spatialrel_tcbuffer_tcbuffer(temp1, temp2,
     &datum_cbuffer_intersects, ever, true);
-
 }
 
 #if MEOS
