@@ -52,61 +52,61 @@
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a timestamptz span is before a temporal value
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] temp Temporal value
  * @csqlfn #Before_tstzspan_temporal()
  */
 bool
-before_tstzspan_temporal(const Span *s, const Temporal *temp)
+before_tstzspan_temporal(const Span *sp, const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(s, NULL);
-  return boxop_temporal_tstzspan(temp, s, &left_span_span, INVERT);
+  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(sp, NULL);
+  return boxop_temporal_tstzspan(temp, sp, &left_span_span, INVERT);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a timestamptz span is not after a temporal value
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] temp Temporal value
  * @csqlfn #Overbefore_tstzspan_temporal()
  */
 bool
-overbefore_tstzspan_temporal(const Span *s, const Temporal *temp)
+overbefore_tstzspan_temporal(const Span *sp, const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(s, NULL);
-  return boxop_temporal_tstzspan(temp, s, &overleft_span_span, INVERT);
+  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(sp, NULL);
+  return boxop_temporal_tstzspan(temp, sp, &overleft_span_span, INVERT);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a timestamptz span is after a temporal value
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] temp Temporal value
  * @csqlfn #After_tstzspan_temporal()
  */
 bool
-after_tstzspan_temporal(const Span *s, const Temporal *temp)
+after_tstzspan_temporal(const Span *sp, const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(s, NULL);
-  return boxop_temporal_tstzspan(temp, s, &right_span_span, INVERT);
+  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(sp, NULL);
+  return boxop_temporal_tstzspan(temp, sp, &right_span_span, INVERT);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a timestamptz span is not before a temporal value
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] temp Temporal value
  * @csqlfn #Overafter_tstzspan_temporal()
  */
 bool
-overafter_tstzspan_temporal(const Span *s, const Temporal *temp)
+overafter_tstzspan_temporal(const Span *sp, const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(s, NULL);
-  return boxop_temporal_tstzspan(temp, s, &overright_span_span, INVERT);
+  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(sp, NULL);
+  return boxop_temporal_tstzspan(temp, sp, &overright_span_span, INVERT);
 }
 
 /*****************************************************************************/
@@ -116,60 +116,60 @@ overafter_tstzspan_temporal(const Span *s, const Temporal *temp)
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a temporal value is before a timestamptz span
  * @param[in] temp Temporal value
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Before_temporal_tstzspan()
  */
 bool
-before_temporal_tstzspan(const Temporal *temp, const Span *s)
+before_temporal_tstzspan(const Temporal *temp, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(s, NULL);
-  return boxop_temporal_tstzspan(temp, s, &left_span_span, INVERT_NO);
+  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(sp, NULL);
+  return boxop_temporal_tstzspan(temp, sp, &left_span_span, INVERT_NO);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a temporal value is not after a timestamptz span
  * @param[in] temp Temporal value
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Overbefore_temporal_tstzspan()
  */
 bool
-overbefore_temporal_tstzspan(const Temporal *temp, const Span *s)
+overbefore_temporal_tstzspan(const Temporal *temp, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(s, NULL);
-  return boxop_temporal_tstzspan(temp, s, &overleft_span_span, INVERT_NO);
+  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(sp, NULL);
+  return boxop_temporal_tstzspan(temp, sp, &overleft_span_span, INVERT_NO);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a temporal value is after a timestamptz span
  * @param[in] temp Temporal value
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #After_temporal_tstzspan()
  */
 bool
-after_temporal_tstzspan(const Temporal *temp, const Span *s)
+after_temporal_tstzspan(const Temporal *temp, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(s, NULL);
-  return boxop_temporal_tstzspan(temp, s, &right_span_span, INVERT_NO);
+  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(sp, NULL);
+  return boxop_temporal_tstzspan(temp, sp, &right_span_span, INVERT_NO);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a temporal value is not before a timestamptz span
  * @param[in] temp Temporal value
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Overafter_temporal_tstzspan()
  */
 bool
-overafter_temporal_tstzspan(const Temporal *temp, const Span *s)
+overafter_temporal_tstzspan(const Temporal *temp, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(s, NULL);
-  return boxop_temporal_tstzspan(temp, s, &overright_span_span, INVERT_NO);
+  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(sp, NULL);
+  return boxop_temporal_tstzspan(temp, sp, &overright_span_span, INVERT_NO);
 }
 
 /*****************************************************************************/
@@ -237,67 +237,67 @@ overafter_temporal_temporal(const Temporal *temp1, const Temporal *temp2)
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a number span is to the left of a temporal number
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] temp Temporal value
  * @csqlfn #Left_numspan_tnumber()
  */
 bool
-left_numspan_tnumber(const Span *s, const Temporal *temp)
+left_numspan_tnumber(const Span *sp, const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tnumber_numspan(temp, s))
+  if (! ensure_valid_tnumber_numspan(temp, sp))
     return false;
-  return boxop_tnumber_numspan(temp, s, &left_span_span, INVERT);
+  return boxop_tnumber_numspan(temp, sp, &left_span_span, INVERT);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a number span does not extend to the right of a
  * temporal number
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] temp Temporal value
  * @csqlfn #Overleft_numspan_tnumber()
  */
 bool
-overleft_numspan_tnumber(const Span *s, const Temporal *temp)
+overleft_numspan_tnumber(const Span *sp, const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tnumber_numspan(temp, s))
+  if (! ensure_valid_tnumber_numspan(temp, sp))
     return false;
-  return boxop_tnumber_numspan(temp, s, &overleft_span_span, INVERT);
+  return boxop_tnumber_numspan(temp, sp, &overleft_span_span, INVERT);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a number span is to the right of a temporal number
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] temp Temporal value
  * @csqlfn #Right_numspan_tnumber()
  */
 bool
-right_numspan_tnumber(const Span *s, const Temporal *temp)
+right_numspan_tnumber(const Span *sp, const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tnumber_numspan(temp, s))
+  if (! ensure_valid_tnumber_numspan(temp, sp))
     return false;
-  return boxop_tnumber_numspan(temp, s, &right_span_span, INVERT);
+  return boxop_tnumber_numspan(temp, sp, &right_span_span, INVERT);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a number span does not extend to the left of a
  * temporal number
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] temp Temporal value
  * @csqlfn #Overright_numspan_tnumber()
  */
 bool
-overright_numspan_tnumber(const Span *s, const Temporal *temp)
+overright_numspan_tnumber(const Span *sp, const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tnumber_numspan(temp, s))
+  if (! ensure_valid_tnumber_numspan(temp, sp))
     return false;
-  return boxop_tnumber_numspan(temp, s, &overright_span_span, INVERT);
+  return boxop_tnumber_numspan(temp, sp, &overright_span_span, INVERT);
 }
 
 /*****************************************************************************/
@@ -306,17 +306,17 @@ overright_numspan_tnumber(const Span *s, const Temporal *temp)
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a temporal number is to the left of a number span
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] temp Temporal value
  * @csqlfn #Left_tnumber_numspan()
  */
 bool
-left_tnumber_numspan(const Temporal *temp, const Span *s)
+left_tnumber_numspan(const Temporal *temp, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tnumber_numspan(temp, s))
+  if (! ensure_valid_tnumber_numspan(temp, sp))
     return false;
-  return boxop_tnumber_numspan(temp, s, &left_span_span, INVERT_NO);
+  return boxop_tnumber_numspan(temp, sp, &left_span_span, INVERT_NO);
 }
 
 /**
@@ -324,32 +324,32 @@ left_tnumber_numspan(const Temporal *temp, const Span *s)
  * @brief Return true if a temporal number does not extend to the right of a
  * number span
  * @param[in] temp Temporal value
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Overleft_tnumber_numspan()
  */
 bool
-overleft_tnumber_numspan(const Temporal *temp, const Span *s)
+overleft_tnumber_numspan(const Temporal *temp, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tnumber_numspan(temp, s))
+  if (! ensure_valid_tnumber_numspan(temp, sp))
     return false;
-  return boxop_tnumber_numspan(temp, s, &overleft_span_span, INVERT_NO);
+  return boxop_tnumber_numspan(temp, sp, &overleft_span_span, INVERT_NO);
 }
 
 /**
  * @ingroup meos_temporal_bbox_pos
  * @brief Return true if a temporal number is to the right of a number span
  * @param[in] temp Temporal value
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Right_tnumber_numspan()
  */
 bool
-right_tnumber_numspan(const Temporal *temp, const Span *s)
+right_tnumber_numspan(const Temporal *temp, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tnumber_numspan(temp, s))
+  if (! ensure_valid_tnumber_numspan(temp, sp))
     return false;
-  return boxop_tnumber_numspan(temp, s, &right_span_span, INVERT_NO);
+  return boxop_tnumber_numspan(temp, sp, &right_span_span, INVERT_NO);
 }
 
 /**
@@ -357,16 +357,16 @@ right_tnumber_numspan(const Temporal *temp, const Span *s)
  * @brief Return true if a temporal number does not extend to the left of a
  * number span
  * @param[in] temp Temporal value
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Overright_tnumber_numspan()
  */
 bool
-overright_tnumber_numspan(const Temporal *temp, const Span *s)
+overright_tnumber_numspan(const Temporal *temp, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tnumber_numspan(temp, s))
+  if (! ensure_valid_tnumber_numspan(temp, sp))
     return false;
-  return boxop_tnumber_numspan(temp, s, &overright_span_span, INVERT_NO);
+  return boxop_tnumber_numspan(temp, sp, &overright_span_span, INVERT_NO);
 }
 
 /*****************************************************************************/

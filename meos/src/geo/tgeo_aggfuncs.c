@@ -208,7 +208,7 @@ tpoint_transform_tcentroid(const Temporal *temp, int *count)
  * @csqlfn #Tpoint_tcentroid_transfn()
  */
 SkipList *
-tpoint_tcentroid_transfn(SkipList *state, Temporal *temp)
+tpoint_tcentroid_transfn(SkipList *state, const Temporal *temp)
 {
   /* Null temporal: return state */
   if (! temp)

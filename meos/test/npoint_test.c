@@ -217,13 +217,13 @@ int main(void)
   /* Constructor functions */
   printf("****************************************************************\n");
 
-  /* Npoint *npoint_make(int64 rid, double pos); */
+  /* Npoint *npoint_make(int64_t rid, double pos); */
   npoint_result = npoint_make(int64_in1, float8_in1);
   char_result = npoint_out(npoint_result, 6);
   printf("npoint_make(%ld, %lf): %s\n", int64_in1, float8_in1, char_result);
   free(npoint_result); free(char_result);
 
-  /* Nsegment *nsegment_make(int64 rid, double pos1, double pos2); */
+  /* Nsegment *nsegment_make(int64_t rid, double pos1, double pos2); */
   nsegment_result = nsegment_make(int64_in1, float8_in1, float8_in2);
   char_result = nsegment_out(nsegment_result, 6);
   printf("nsegment_make(%ld, %lf, %lf): %s\n", int64_in1, float8_in1, float8_in2, char_result);
@@ -277,11 +277,11 @@ int main(void)
   /* Accessor functions */
   printf("****************************************************************\n");
 
-  /* uint32 npoint_hash(const Npoint *np); */
+  /* uint32_t npoint_hash(const Npoint *np); */
   uint32_result = npoint_hash(npoint1);
   printf("npoint_hash(%s): %u\n", npoint1_out, uint32_result);
 
-  /* uint64 npoint_hash_extended(const Npoint *np, uint64 seed); */
+  /* uint64_t npoint_hash_extended(const Npoint *np, uint64_t seed); */
   uint64_result = npoint_hash_extended(npoint1, 1);
   printf("npoint_hash_extended(%s, 1): %lu\n", npoint1_out, uint64_result);
 
@@ -289,7 +289,7 @@ int main(void)
   float8_result = npoint_position(npoint1);
   printf("npoint_position(%s): %lf\n", npoint1_out, float8_result);
 
-  /* int64 npoint_route(const Npoint *np); */
+  /* int64_t npoint_route(const Npoint *np); */
   int64_result = npoint_route(npoint1);
   printf("npoint_route(%s): %lu\n", npoint1_out, int64_result);
 
@@ -297,7 +297,7 @@ int main(void)
   float8_result = nsegment_end_position(nsegment1);
   printf("nsegment_end_position(%s): %lf\n", nsegment1_out, float8_result);
 
-  /* int64 nsegment_route(const Nsegment *ns); */
+  /* int64_t nsegment_route(const Nsegment *ns); */
   int64_result = nsegment_route(nsegment1);
   printf("nsegment_route(%s): %lu\n", nsegment1_out, int64_result);
 
@@ -308,17 +308,17 @@ int main(void)
   /* Route functions */
   printf("****************************************************************\n");
 
-  /* bool route_exists(int64 rid); */
+  /* bool route_exists(int64_t rid); */
   bool_result = route_exists(int64_in1);
   printf("route_exists(%lu): %c\n", int64_in1, bool_result ? 't' : 'n');
 
-  /* const GSERIALIZED *route_geom(int64 rid); */
+  /* const GSERIALIZED *route_geom(int64_t rid); */
   const GSERIALIZED *route = route_geom(int64_in1);
   char_result = geo_as_text(route, 6);
   printf("route_geom(%lu): %s\n", int64_in1, char_result);
   free(char_result);
 
-  /* double route_length(int64 rid); */
+  /* double route_length(int64_t rid); */
   float8_result = route_length(int64_in1);
   printf("route_length(%lu): %lf\n", int64_in1, float8_result);
 
@@ -361,7 +361,7 @@ int main(void)
   printf("npoint_timestamptz_to_stbox(%s, %s): %s\n", npoint1_out, tstz1_out, char_result);
   free(stbox_result); free(char_result);
 
-  /* STBox *npoint_tstzspan_to_stbox(const Npoint *np, const Span *s); */
+  /* STBox *npoint_tstzspan_to_stbox(const Npoint *np, const Span *sp); */
   stbox_result = npoint_tstzspan_to_stbox(npoint1, tstzspan1);
   char_result = stbox_out(stbox_result, 6);
   printf("npoint_tstzspan_to_stbox(%s, %s): %s\n", npoint1_out, tstzspan1_out, char_result);
@@ -651,7 +651,7 @@ int main(void)
   }
   free(nsegmentarray_result);
 
-  /* int64 tnpoint_route(const Temporal *temp); */
+  /* int64_t tnpoint_route(const Temporal *temp); */
   int64_result = tnpoint_route(tnpoint1);
   printf("tnpoint_route(%s): %lu\n", tnpoint1_out, int64_result);
 
@@ -828,8 +828,8 @@ int main(void)
    *****************************************************************************/
   printf("****************************************************************\n");
 
-  // /* SkipList *tnpoint_tcentroid_transfn(SkipList *state, Temporal *temp); */
-  // SkipList *tnpoint_tcentroid_transfn(SkipList *state, Temporal *temp);
+  // /* SkipList *tnpoint_tcentroid_transfn(SkipList *state, const Temporal *temp); */
+  // SkipList *tnpoint_tcentroid_transfn(SkipList *state, const Temporal *temp);
 
   /*****************************************************************************
    * Comparison functions

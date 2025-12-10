@@ -760,10 +760,10 @@ PG_FUNCTION_INFO_V1(Span_gist_same);
 Datum
 Span_gist_same(PG_FUNCTION_ARGS)
 {
-  Span *s1 = PG_GETARG_SPAN_P(0);
-  Span *s2 = PG_GETARG_SPAN_P(1);
+  Span *sp1 = PG_GETARG_SPAN_P(0);
+  Span *sp2 = PG_GETARG_SPAN_P(1);
   bool *result = (bool *) PG_GETARG_POINTER(2);
-  *result = span_eq(s1, s2);
+  *result = span_eq(sp1, sp2);
   PG_RETURN_POINTER(result);
 }
 

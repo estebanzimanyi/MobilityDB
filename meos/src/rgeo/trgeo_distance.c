@@ -262,21 +262,6 @@ compute_dist2(POINT4D p, POINT4D vs, POINT4D ve)
     (p.y - vs.y - (ve.y - vs.y) * s) * (p.y - vs.y - (ve.y - vs.y) * s);
 }
 
-// /**
- // * @brief Tests if a polygon is defined in counter-clockwise order (ccw)
- // * @return Returns True if it is the case
- // * @note The polygon must be convex
- // */
-// static bool
-// poly_is_ccw(const LWPOLY *poly)
-// {
-  // POINT4D v1, v2, v3;
-  // getPoint4d_p(poly->rings[0], 0, &v1);
-  // getPoint4d_p(poly->rings[0], 1, &v2);
-  // getPoint4d_p(poly->rings[0], 2, &v3);
-  // return compute_angle(v1, v2, v3) < 0;
-// }
-
 /*****************************************************************************
  * Temporal distance
  *****************************************************************************/
@@ -1855,8 +1840,8 @@ tdistance_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 
 /**
  * @ingroup meos_rgeo_dist
- * @brief Return the temporal distance between two
- * temporal rigid geometries.
+ * @brief Return the temporal distance between a temporal rigid geometry and
+ * a temporal point
  * @sqlop @p <->
  */
 Temporal *
@@ -2024,11 +2009,11 @@ nad_trgeo_stbox(const Temporal *temp, const STBox *box)
 
   /* Project the temporal point to the timespan of the box */
   bool hast = MEOS_FLAGS_GET_T(box->flags);
-  Span p, inter;
+  Span sp, inter;
   if (hast)
   {
-    temporal_set_tstzspan(temp, &p);
-    if (! inter_span_span(&p, &box->period, &inter))
+    temporal_set_tstzspan(temp, &sp);
+    if (! inter_span_span(&sp, &box->period, &inter))
       return -1.0;
   }
   /* Convert the stbox to a geometry */
@@ -2047,8 +2032,8 @@ nad_trgeo_stbox(const Temporal *temp, const STBox *box)
 
 /**
  * @ingroup meos_rgeo_dist
- * @brief Return the nearest approach distance between two temporal rigid
- * geometries
+ * @brief Return the nearest approach distance between a temporal rigid
+ * geometry and a temporal point
  * @sqlop @p |=|
  */
 double

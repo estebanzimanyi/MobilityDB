@@ -54,8 +54,8 @@ int main(void)
   /* Create values to test the functions of the API */
   bool b1 = bool_in("true");
   char *b1_out = bool_out(b1);
-  int32 int32_in1 = 32;
-  int64 int64_in1 = 64;
+  int32_t int32_in1 = 32;
+  int64_t int64_in1 = 64;
   text *text1 = text_in("abcdef");
   text *text2 = text_in("ghijkl");
   char *text1_out = text_out(text1);
@@ -63,9 +63,9 @@ int main(void)
 
   /* Create the result types for the functions of the API */
   bool bool_result;
-  int32 int32_result;
-  uint32 uint32_result;
-  uint64 uint64_result;
+  int32_t int32_result;
+  uint32_t uint32_result;
+  uint64_t uint64_result;
   char *char_result;
   text *text_result;
   
@@ -75,11 +75,11 @@ int main(void)
   printf("* Text *\n");
   printf("****************************************************************\n");
 
-  /* uint32 char_hash(char c); */
+  /* uint32_t char_hash(char c); */
   uint32_result = char_hash('c');
   printf("char_hash('c'): %u\n", uint32_result);
 
-  /* uint64 char_hash_extended(char c, uint64 seed); */
+  /* uint64_t char_hash_extended(char c, uint64_t seed); */
   uint64_result = char_hash_extended('c', 1);
   printf("char_hash_extended('c', 1): %lu\n", uint64_result);
 
@@ -98,37 +98,37 @@ int main(void)
     free(text_result); free(char_result);
   }
 
-  /* text *int32_to_bin(int32 num); */
+  /* text *int32_to_bin(int32_t num); */
   text_result = int32_to_bin(int32_in1);
   char_result = text_out(text_result);
   printf("int32_to_bin(%d): %s\n", int32_in1, char_result);
   free(text_result); free(char_result);
 
-  /* text *int32_to_hex(int32 num); */
+  /* text *int32_to_hex(int32_t num); */
   text_result = int32_to_hex(int32_in1);
   char_result = text_out(text_result);
   printf("int32_to_hex(%d): %s\n", int32_in1, char_result);
   free(text_result); free(char_result);
 
-  /* text *int32_to_oct(int32 num); */
+  /* text *int32_to_oct(int32_t num); */
   text_result = int32_to_oct(int32_in1);
   char_result = text_out(text_result);
   printf("int32_to_oct(%d): %s\n", int32_in1, char_result);
   free(text_result); free(char_result);
 
-  /* text *int64_to_bin(int64 num); */
+  /* text *int64_to_bin(int64_t num); */
   text_result = int64_to_bin(int64_in1);
   char_result = text_out(text_result);
   printf("int64_to_bin(%ld): %s\n", int64_in1, char_result);
   free(text_result); free(char_result);
 
-  /* text *int64_to_hex(int64 num); */
+  /* text *int64_to_hex(int64_t num); */
   text_result = int64_to_hex(int64_in1);
   char_result = text_out(text_result);
   printf("int64_to_hex(%ld): %s\n", int64_in1, char_result);
   free(text_result); free(char_result);
 
-  /* text *int64_to_oct(int64 num); */
+  /* text *int64_to_oct(int64_t num); */
   text_result = int64_to_oct(int64_in1);
   char_result = text_out(text_result);
   printf("int64_to_oct(%ld): %s\n", int64_in1, char_result);
@@ -183,11 +183,11 @@ int main(void)
   bool_result = text_gt(text1, text2);
   printf("text_gt(%s, %s): %c\n", text1_out, text2_out, bool_result ? 't' : 'n');
 
-  /* uint32 text_hash(const text *txt, Oid collid); */
+  /* uint32_t text_hash(const text *txt, Oid collid); */
   uint32_result = text_hash(text1, 100);
   printf("text_hash(%s, 100): %d\n", text1_out, uint32_result);
 
-  /* uint64 text_hash_extended(const text *txt, uint64 seed, Oid collid); */
+  /* uint64_t text_hash_extended(const text *txt, uint64_t seed, Oid collid); */
   uint64_result = text_hash_extended(text1, 1, 100);
   printf("text_hash_extended(%s, 1, 100): %lud\n", text1_out, uint64_result);
 
@@ -219,7 +219,7 @@ int main(void)
   printf("text_left(%s, 3): %s\n", text1_out, char_result);
   free(text_result); free(char_result);
 
-  /* int32 text_len(const text *txt); */
+  /* int32_t text_len(const text *txt); */
   int32_result = text_len(text1);
   printf("text_len(%s): %d\n", text1_out, int32_result);
 
@@ -237,7 +237,7 @@ int main(void)
   bool_result = text_ne(text1, text2);
   printf("text_ne(%s, %s): %c\n", text1_out, text2_out, bool_result ? 't' : 'n');
 
-  /* int32 text_octetlen(const text *txt); */
+  /* int32_t text_octetlen(const text *txt); */
   int32_result = text_octetlen(text1);
   printf("text_octetlen(%s): %d\n", text1_out, int32_result);
 
@@ -274,7 +274,7 @@ int main(void)
   bool_result = text_pattern_lt(text1, text2);
   printf("text_pattern_lt(%s, %s): %c\n", text1_out, text2_out, bool_result ? 't' : 'n');
 
-  /* int32 text_pos(const text *txt, const text *search); */
+  /* int32_t text_pos(const text *txt, const text *search); */
   text *search = text_in("c");
   int32_result = text_pos(text1, search);
   printf("text_pos(%s, \"c\"): %d\n", text1_out, int32_result);
@@ -320,13 +320,13 @@ int main(void)
   bool_result = text_starts_with(text1, text2);
   printf("text_starts_with(%s, %s): %c\n", text1_out, text2_out, bool_result ? 't' : 'n');
 
-  /* text *text_substr(const text *txt, int32 start, int32 length); */
+  /* text *text_substr(const text *txt, int32_t start, int32_t length); */
   text_result = text_substr(text1, 3, 2);
   char_result = text_out(text_result);
   printf("text_substr(%s, 3, 2): %s\n", text1_out, char_result);
   free(text_result); free(char_result);
 
-  /* text *text_substr_no_len(const text *txt, int32 start); */
+  /* text *text_substr_no_len(const text *txt, int32_t start); */
   text_result = text_substr_no_len(text1, 3);
   char_result = text_out(text_result);
   printf("text_substr_no_len(%s, 3): %s\n", text1_out, char_result);

@@ -64,7 +64,7 @@
  * @brief Ensure that a temporal rigid geometry has a reference geometry
  */
 bool
-ensure_has_geom(int16 flags)
+ensure_has_geom(int16_t flags)
 {
   if (MEOS_FLAGS_GET_GEOM(flags))
     return true;
@@ -280,7 +280,6 @@ trgeo_to_tpoint(const Temporal *temp)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) &datum_pose_point;
-  lfinfo.numparam = 0;
   lfinfo.argtype[0] = temptype_basetype(temp->temptype);
   lfinfo.restype = T_TGEOMPOINT;
   Temporal *result = tfunc_temporal(temp, &lfinfo);
@@ -1133,17 +1132,17 @@ trgeo_minus_tstzset(const Temporal *temp, const Set *s)
  * @brief Restrict a temporal rigid geometry to (the complement of) a
  * timestamptz span
  * @param[in] temp Temporal rigid geometry
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] atfunc True if the restriction is `at`, false for `minus`
  * @csqlfn #Temporal_restrict_tstzspan()
  */
 Temporal *
-trgeo_restrict_tstzspan(const Temporal *temp, const Span *s, bool atfunc)
+trgeo_restrict_tstzspan(const Temporal *temp, const Span *sp, bool atfunc)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_TRGEOMETRY(temp, NULL); VALIDATE_TSTZSPAN(s, NULL);
+  VALIDATE_TRGEOMETRY(temp, NULL); VALIDATE_TSTZSPAN(sp, NULL);
   Temporal *tpose = trgeo_to_tpose(temp);
-  Temporal *res = temporal_restrict_tstzspan(tpose, s, atfunc);
+  Temporal *res = temporal_restrict_tstzspan(tpose, sp, atfunc);
   pfree(tpose);
   if (! res)
     return NULL;
@@ -1156,13 +1155,13 @@ trgeo_restrict_tstzspan(const Temporal *temp, const Span *s, bool atfunc)
  * @ingroup meos_rgeo_restrict
  * @brief Restrict a temporal rigid geometry to a timestamptz span
  * @param[in] temp Temporal rigid geometry
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Temporal_at_tstzspan()
  */
 inline Temporal *
-trgeo_at_tstzspan(const Temporal *temp, const Span *s)
+trgeo_at_tstzspan(const Temporal *temp, const Span *sp)
 {
-  return trgeo_restrict_tstzspan(temp, s, REST_AT);
+  return trgeo_restrict_tstzspan(temp, sp, REST_AT);
 }
 
 /**
@@ -1170,13 +1169,13 @@ trgeo_at_tstzspan(const Temporal *temp, const Span *s)
  * @brief Restrict a temporal rigid geometry to the complement of a timestamptz
  * span
  * @param[in] temp Temporal rigid geometry
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Temporal_minus_tstzspan()
  */
 inline Temporal *
-trgeo_minus_tstzspan(const Temporal *temp, const Span *s)
+trgeo_minus_tstzspan(const Temporal *temp, const Span *sp)
 {
-  return trgeo_restrict_tstzspan(temp, s, REST_MINUS);
+  return trgeo_restrict_tstzspan(temp, sp, REST_MINUS);
 }
 
 /*****************************************************************************/
@@ -1246,13 +1245,13 @@ trgeo_minus_tstzspanset(const Temporal *temp, const SpanSet *ss)
  * @csqlfn #Temporal_before_timestamptz()
  */
 Temporal *
-trgeo_before_timestamptz(const Temporal *temp, TimestampTz t, bool atfunc)
+trgeo_before_timestamptz(const Temporal *temp, TimestampTz t, bool strict)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_TRGEOMETRY(temp, NULL);
 
   Temporal *tpose = trgeo_to_tpose(temp);
-  Temporal *res = temporal_before_timestamptz(tpose, t, atfunc);
+  Temporal *res = temporal_before_timestamptz(tpose, t, strict);
   pfree(tpose); 
   if (! res)
     return NULL;
@@ -1268,17 +1267,17 @@ trgeo_before_timestamptz(const Temporal *temp, TimestampTz t, bool atfunc)
  * @param[in] temp Temporal rigid geometry
  * @param[in] t Timestamptz
  * @param[in] strict True if the restriction is strictly after, false when
- * the restriction is before or equal
+ * the restriction is after or equal
  * @csqlfn #Temporal_after_timestamptz()
  */
 Temporal *
-trgeo_after_timestamptz(const Temporal *temp, TimestampTz t, bool atfunc)
+trgeo_after_timestamptz(const Temporal *temp, TimestampTz t, bool strict)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_TRGEOMETRY(temp, NULL);
 
   Temporal *tpose = trgeo_to_tpose(temp);
-  Temporal *res = temporal_after_timestamptz(tpose, t, atfunc);
+  Temporal *res = temporal_after_timestamptz(tpose, t, strict);
   pfree(tpose); 
   if (! res)
     return NULL;
@@ -1411,18 +1410,18 @@ trgeo_delete_tstzset(const Temporal *temp, const Set *s, bool connect)
  * @ingroup meos_rgeo_modif
  * @brief Delete a timestamptz span from a temporal rigid geometry
  * @param[in] temp Temporal rigid geometry
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] connect True when the instants before and after the span, if any,
  * are connected in the result
  * @csqlfn #Temporal_delete_tstzspan()
  */
 Temporal *
-trgeo_delete_tstzspan(const Temporal *temp, const Span *s, bool connect)
+trgeo_delete_tstzspan(const Temporal *temp, const Span *sp, bool connect)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_TRGEOMETRY(temp, NULL); VALIDATE_TSTZSPAN(s, NULL);
+  VALIDATE_TRGEOMETRY(temp, NULL); VALIDATE_TSTZSPAN(sp, NULL);
   Temporal *tpose = trgeo_to_tpose(temp);
-  Temporal *res = temporal_delete_tstzspan(tpose, s, connect);
+  Temporal *res = temporal_delete_tstzspan(tpose, sp, connect);
   pfree(tpose);
   if (! res)
     return NULL;

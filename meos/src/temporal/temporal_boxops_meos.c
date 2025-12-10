@@ -62,16 +62,16 @@
  * @ingroup meos_temporal_bbox_topo
  * @brief Return true if a timestamptz span contains the time span of a
  * temporal value
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] temp Temporal value
  * @csqlfn #Contains_tstzspan_temporal()
  */
 bool
-contains_tstzspan_temporal(const Span *s, const Temporal *temp)
+contains_tstzspan_temporal(const Span *sp, const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(s, NULL);
-  return boxop_temporal_tstzspan(temp, s, &contains_span_span, INVERT);
+  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(sp, NULL);
+  return boxop_temporal_tstzspan(temp, sp, &contains_span_span, INVERT);
 }
 
 /**
@@ -79,15 +79,15 @@ contains_tstzspan_temporal(const Span *s, const Temporal *temp)
  * @brief Return true if the time span of a temporal value contains a
  * timestamptz span
  * @param[in] temp Temporal value
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Contains_temporal_tstzspan()
  */
 bool
-contains_temporal_tstzspan(const Temporal *temp, const Span *s)
+contains_temporal_tstzspan(const Temporal *temp, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(s, NULL);
-  return boxop_temporal_tstzspan(temp, s, &contains_span_span, INVERT_NO);
+  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(sp, NULL);
+  return boxop_temporal_tstzspan(temp, sp, &contains_span_span, INVERT_NO);
 }
 
 /**
@@ -111,16 +111,16 @@ contains_temporal_temporal(const Temporal *temp1, const Temporal *temp2)
  * @ingroup meos_temporal_bbox_topo
  * @brief Return true if a timestamptz span is contained the time span of
  * a temporal value
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] temp Temporal value
  * @csqlfn #Contained_tstzspan_temporal()
  */
 bool
-contained_tstzspan_temporal(const Span *s, const Temporal *temp)
+contained_tstzspan_temporal(const Span *sp, const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(s, NULL);
-  return boxop_temporal_tstzspan(temp, s, &contained_span_span, INVERT);
+  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(sp, NULL);
+  return boxop_temporal_tstzspan(temp, sp, &contained_span_span, INVERT);
 }
 
 /**
@@ -128,15 +128,15 @@ contained_tstzspan_temporal(const Span *s, const Temporal *temp)
  * @brief Return true if the time span of a temporal value is contained
  * in a timestamptz span
  * @param[in] temp Temporal value
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Contained_temporal_tstzspan()
  */
 bool
-contained_temporal_tstzspan(const Temporal *temp, const Span *s)
+contained_temporal_tstzspan(const Temporal *temp, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(s, NULL);
-  return boxop_temporal_tstzspan(temp, s, &contained_span_span, INVERT_NO);
+  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(sp, NULL);
+  return boxop_temporal_tstzspan(temp, sp, &contained_span_span, INVERT_NO);
 }
 
 /**
@@ -160,16 +160,16 @@ contained_temporal_temporal(const Temporal *temp1, const Temporal *temp2)
  * @ingroup meos_temporal_bbox_topo
  * @brief Return true if a timestamptz span and the time span of a
  * temporal value overlap
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] temp Temporal value
  * @csqlfn #Overlaps_tstzspan_temporal()
  */
 bool
-overlaps_tstzspan_temporal(const Span *s, const Temporal *temp)
+overlaps_tstzspan_temporal(const Span *sp, const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(s, NULL);
-  return boxop_temporal_tstzspan(temp, s, &overlaps_span_span, INVERT);
+  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(sp, NULL);
+  return boxop_temporal_tstzspan(temp, sp, &overlaps_span_span, INVERT);
 }
 
 /**
@@ -177,15 +177,15 @@ overlaps_tstzspan_temporal(const Span *s, const Temporal *temp)
  * @brief Return true if the time span of a temporal value and a
  * timestamptz span overlap
  * @param[in] temp Temporal value
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Overlaps_temporal_tstzspan()
  */
 bool
-overlaps_temporal_tstzspan(const Temporal *temp, const Span *s)
+overlaps_temporal_tstzspan(const Temporal *temp, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(s, NULL);
-  return boxop_temporal_tstzspan(temp, s, &overlaps_span_span, INVERT_NO);
+  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(sp, NULL);
+  return boxop_temporal_tstzspan(temp, sp, &overlaps_span_span, INVERT_NO);
 }
 
 /**
@@ -208,16 +208,16 @@ overlaps_temporal_temporal(const Temporal *temp1, const Temporal *temp2)
  * @ingroup meos_temporal_bbox_topo
  * @brief Return true if a timestamptz span and the time span of a
  * temporal value are equal
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] temp Temporal value
  * @csqlfn #Same_tstzspan_temporal()
  */
 bool
-same_tstzspan_temporal(const Span *s, const Temporal *temp)
+same_tstzspan_temporal(const Span *sp, const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(s, NULL);
-  return boxop_temporal_tstzspan(temp, s, &span_eq, INVERT);
+  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(sp, NULL);
+  return boxop_temporal_tstzspan(temp, sp, &span_eq, INVERT);
 }
 
 /**
@@ -225,15 +225,15 @@ same_tstzspan_temporal(const Span *s, const Temporal *temp)
  * @brief Return true if the time span of a temporal value and a timestamptz
  * span are equal
  * @param[in] temp Temporal value
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Same_temporal_tstzspan()
  */
 bool
-same_temporal_tstzspan(const Temporal *temp, const Span *s)
+same_temporal_tstzspan(const Temporal *temp, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(s, NULL);
-  return boxop_temporal_tstzspan(temp, s, &span_eq, INVERT_NO);
+  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(sp, NULL);
+  return boxop_temporal_tstzspan(temp, sp, &span_eq, INVERT_NO);
 }
 
 /**
@@ -256,16 +256,16 @@ same_temporal_temporal(const Temporal *temp1, const Temporal *temp2)
  * @ingroup meos_temporal_bbox_topo
  * @brief Return true if a timestamptz span and the time span of a temporal
  * value are adjacent
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] temp Temporal value
  * @csqlfn #Adjacent_tstzspan_temporal()
  */
 bool
-adjacent_tstzspan_temporal(const Span *s, const Temporal *temp)
+adjacent_tstzspan_temporal(const Span *sp, const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(s, NULL);
-  return boxop_temporal_tstzspan(temp, s, &adjacent_span_span, INVERT);
+  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(sp, NULL);
+  return boxop_temporal_tstzspan(temp, sp, &adjacent_span_span, INVERT);
 }
 
 /**
@@ -273,15 +273,15 @@ adjacent_tstzspan_temporal(const Span *s, const Temporal *temp)
  * @brief Return true if the time span of a temporal value and a timestamptz
  * span are adjacent
  * @param[in] temp Temporal value
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Adjacent_temporal_tstzspan()
  */
 bool
-adjacent_temporal_tstzspan(const Temporal *temp, const Span *s)
+adjacent_temporal_tstzspan(const Temporal *temp, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(s, NULL);
-  return boxop_temporal_tstzspan(temp, s, &adjacent_span_span, INVERT_NO);
+  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(sp, NULL);
+  return boxop_temporal_tstzspan(temp, sp, &adjacent_span_span, INVERT_NO);
 }
 
 /**
@@ -306,17 +306,17 @@ adjacent_temporal_temporal(const Temporal *temp1, const Temporal *temp2)
  * @ingroup meos_temporal_bbox_topo
  * @brief Return true if a number span contains the value span of a temporal
  * number
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] temp Temporal value
  * @csqlfn #Contains_numspan_tnumber()
  */
 bool
-contains_numspan_tnumber(const Span *s, const Temporal *temp)
+contains_numspan_tnumber(const Span *sp, const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tnumber_numspan(temp, s))
+  if (! ensure_valid_tnumber_numspan(temp, sp))
     return NULL;
-  return boxop_tnumber_numspan(temp, s, &contains_span_span, INVERT);
+  return boxop_tnumber_numspan(temp, sp, &contains_span_span, INVERT);
 }
 
 /**
@@ -324,16 +324,16 @@ contains_numspan_tnumber(const Span *s, const Temporal *temp)
  * @brief Return true if the value span of a temporal number contains a number
  * span
  * @param[in] temp Temporal value
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Contains_tnumber_numspan()
  */
 bool
-contains_tnumber_numspan(const Temporal *temp, const Span *s)
+contains_tnumber_numspan(const Temporal *temp, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tnumber_numspan(temp, s))
+  if (! ensure_valid_tnumber_numspan(temp, sp))
     return NULL;
-  return boxop_tnumber_numspan(temp, s, &contains_span_span, INVERT_NO);
+  return boxop_tnumber_numspan(temp, sp, &contains_span_span, INVERT_NO);
 }
 
 /**
@@ -392,17 +392,17 @@ contains_tnumber_tnumber(const Temporal *temp1, const Temporal *temp2)
  * @ingroup meos_temporal_bbox_topo
  * @brief Return true if a number span is contained in the value span of a
  * temporal number
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] temp Temporal value
  * @csqlfn #Contained_numspan_tnumber()
  */
 bool
-contained_numspan_tnumber(const Span *s, const Temporal *temp)
+contained_numspan_tnumber(const Span *sp, const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tnumber_numspan(temp, s))
+  if (! ensure_valid_tnumber_numspan(temp, sp))
     return NULL;
-  return boxop_tnumber_numspan(temp, s, &contained_span_span, INVERT);
+  return boxop_tnumber_numspan(temp, sp, &contained_span_span, INVERT);
 }
 
 /**
@@ -410,16 +410,16 @@ contained_numspan_tnumber(const Span *s, const Temporal *temp)
  * @brief Return true if the value span of a temporal number is contained in a
  * number span
  * @param[in] temp Temporal value
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Contained_tnumber_numspan()
  */
 bool
-contained_tnumber_numspan(const Temporal *temp, const Span *s)
+contained_tnumber_numspan(const Temporal *temp, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tnumber_numspan(temp, s))
+  if (! ensure_valid_tnumber_numspan(temp, sp))
     return NULL;
-  return boxop_tnumber_numspan(temp, s, &contained_span_span, INVERT_NO);
+  return boxop_tnumber_numspan(temp, sp, &contained_span_span, INVERT_NO);
 }
 
 /**
@@ -478,17 +478,17 @@ contained_tnumber_tnumber(const Temporal *temp1, const Temporal *temp2)
  * @ingroup meos_temporal_bbox_topo
  * @brief Return true if a number span and the value span of a temporal number
  * overlap
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] temp Temporal value
  * @csqlfn #Overlaps_numspan_tnumber()
  */
 bool
-overlaps_numspan_tnumber(const Span *s, const Temporal *temp)
+overlaps_numspan_tnumber(const Span *sp, const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tnumber_numspan(temp, s))
+  if (! ensure_valid_tnumber_numspan(temp, sp))
     return NULL;
-  return boxop_tnumber_numspan(temp, s, &overlaps_span_span, INVERT);
+  return boxop_tnumber_numspan(temp, sp, &overlaps_span_span, INVERT);
 }
 
 /**
@@ -496,16 +496,16 @@ overlaps_numspan_tnumber(const Span *s, const Temporal *temp)
  * @brief Return true if the value span of a temporal number and the number
  * span overlap
  * @param[in] temp Temporal value
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Overlaps_tnumber_numspan()
  */
 bool
-overlaps_tnumber_numspan(const Temporal *temp, const Span *s)
+overlaps_tnumber_numspan(const Temporal *temp, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tnumber_numspan(temp, s))
+  if (! ensure_valid_tnumber_numspan(temp, sp))
     return NULL;
-  return boxop_tnumber_numspan(temp, s, &overlaps_span_span, INVERT_NO);
+  return boxop_tnumber_numspan(temp, sp, &overlaps_span_span, INVERT_NO);
 }
 
 /**
@@ -563,17 +563,17 @@ overlaps_tnumber_tnumber(const Temporal *temp1, const Temporal *temp2)
  * @ingroup meos_temporal_bbox_topo
  * @brief Return true if a number span and the value span of a temporal number
  * are equal
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] temp Temporal value
  * @csqlfn #Same_numspan_tnumber()
  */
 bool
-same_numspan_tnumber(const Span *s, const Temporal *temp)
+same_numspan_tnumber(const Span *sp, const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tnumber_numspan(temp, s))
+  if (! ensure_valid_tnumber_numspan(temp, sp))
     return NULL;
-  return boxop_tnumber_numspan(temp, s, &span_eq, INVERT);
+  return boxop_tnumber_numspan(temp, sp, &span_eq, INVERT);
 }
 
 /**
@@ -581,16 +581,16 @@ same_numspan_tnumber(const Span *s, const Temporal *temp)
  * @brief Return true if the value span of a temporal number and a number span
  * are equal
  * @param[in] temp Temporal value
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Same_tnumber_numspan()
  */
 bool
-same_tnumber_numspan(const Temporal *temp, const Span *s)
+same_tnumber_numspan(const Temporal *temp, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tnumber_numspan(temp, s))
+  if (! ensure_valid_tnumber_numspan(temp, sp))
     return NULL;
-  return boxop_tnumber_numspan(temp, s, &span_eq, INVERT_NO);
+  return boxop_tnumber_numspan(temp, sp, &span_eq, INVERT_NO);
 }
 
 /**
@@ -648,17 +648,17 @@ same_tnumber_tnumber(const Temporal *temp1, const Temporal *temp2)
  * @ingroup meos_temporal_bbox_topo
  * @brief Return true if a number span and the value span of a temporal number
  * are adjacent
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] temp Temporal value
  * @csqlfn #Adjacent_numspan_tnumber()
  */
 bool
-adjacent_numspan_tnumber(const Span *s, const Temporal *temp)
+adjacent_numspan_tnumber(const Span *sp, const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tnumber_numspan(temp, s))
+  if (! ensure_valid_tnumber_numspan(temp, sp))
     return NULL;
-  return boxop_tnumber_numspan(temp, s, &adjacent_span_span, INVERT);
+  return boxop_tnumber_numspan(temp, sp, &adjacent_span_span, INVERT);
 }
 
 /**
@@ -666,16 +666,16 @@ adjacent_numspan_tnumber(const Span *s, const Temporal *temp)
  * @brief Return true if the value span of a temporal number and a number span
  * are adjacent
  * @param[in] temp Temporal value
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Adjacent_tnumber_numspan()
  */
 bool
-adjacent_tnumber_numspan(const Temporal *temp, const Span *s)
+adjacent_tnumber_numspan(const Temporal *temp, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tnumber_numspan(temp, s))
+  if (! ensure_valid_tnumber_numspan(temp, sp))
     return NULL;
-  return boxop_tnumber_numspan(temp, s, &adjacent_span_span, INVERT_NO);
+  return boxop_tnumber_numspan(temp, sp, &adjacent_span_span, INVERT_NO);
 }
 
 /**

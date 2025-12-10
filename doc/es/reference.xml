@@ -1158,7 +1158,7 @@
 				</listitem>
 
 				<listitem>
-					<para><link linkend="tgeo_atStbox"><varname>atStbox</varname>, <varname>minuStbox</varname></link>: Restringir a (al complemento de) un <varname>stbox</varname></para>
+					<para><link linkend="tgeo_atStbox"><varname>atStbox</varname>, <varname>minusStbox</varname></link>: Restringir a (al complemento de) un <varname>stbox</varname></para>
 				</listitem>
 			</itemizedlist>
 		</sect2>

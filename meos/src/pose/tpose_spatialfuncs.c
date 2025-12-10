@@ -121,7 +121,7 @@ tpose_at_geom(const Temporal *temp, const GSERIALIZED *gs,
 
 /**
  * @ingroup meos_pose_restrict
- * @brief Return a temporal point restricted to (the complement of) a geometry
+ * @brief Return a temporal point restricted to the complement of a geometry
  * @param[in] temp Temporal pose
  * @param[in] gs Geometry
  * @param[in] zspan Span of values to restrict the Z dimension
@@ -173,7 +173,7 @@ tpose_restrict_stbox(const Temporal *temp, const STBox *box, bool border_inc,
 #if MEOS
 /**
  * @ingroup meos_pose_restrict
- * @brief Return a temporal pose restricted to a geometry
+ * @brief Return a temporal pose restricted to a spatiotemporal box
  * @param[in] temp Temporal pose
  * @param[in] box Spatiotemporal box
  * @param[in] border_inc True when the box contains the upper border
@@ -187,7 +187,8 @@ tpose_at_stbox(const Temporal *temp, const STBox *box, bool border_inc)
 
 /**
  * @ingroup meos_pose_restrict
- * @brief Return a temporal point restricted to (the complement of) a geometry
+ * @brief Return a temporal point restricted to the complement of a
+ * spatiotemporal box
  * @param[in] temp Temporal pose
  * @param[in] box Spatiotemporal box
  * @param[in] border_inc True when the box contains the upper border

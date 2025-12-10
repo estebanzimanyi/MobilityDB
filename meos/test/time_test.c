@@ -82,10 +82,10 @@ int main(void)
 
   /* Create the result types for the functions of the API */
   bool bool_result;
-  int32 int32_result;
-  uint32 uint32_result;
-  uint64 uint64_result;
-  float8 float8_result;
+  int32_t int32_result;
+  uint32_t uint32_result;
+  uint64_t uint64_result;
+  double float8_result;
   char *char_result;
   Numeric numeric_result;
   TimeADT time_result;
@@ -164,15 +164,15 @@ int main(void)
   bool_result = time_gt(time1, time2);
   printf("time_gt(%s, %s): %s\n", time1_out, time2_out, bool_result ? "t" : "f");
 
-  /* uint32 time_hash(TimeADT time); */
+  /* uint32_t time_hash(TimeADT time); */
   uint32_result = time_hash(time1);
   printf("time_hash(%s): %u\n", time1_out, uint32_result);
 
-  /* uint64 time_hash_extended(TimeADT time, int32 seed); */
+  /* uint64_t time_hash_extended(TimeADT time, int32_t seed); */
   uint64_result = time_hash_extended(time1, 1);
   printf("time_hash_extended(%s, 1): %lu\n", time1_out, uint64_result);
 
-  /* TimeADT time_in(const char *str, int32 typmod); */
+  /* TimeADT time_in(const char *str, int32_t typmod); */
   time_result = time_in("08:00:00", -1);
   char_result = time_out(time_result);
   printf("time_in(\"08:00:00\"): %s\n", char_result);
@@ -211,13 +211,13 @@ int main(void)
   bool_result = time_overlaps(time1, time2, time3, time4);
   printf("time_overlaps(%s, %s, %s, %s): %s\n", time1_out, time2_out, time_out3, time_out4, bool_result ? "t" : "f");
 
-  /* float8 time_part(TimeADT time, const text *units); */
+  /* double time_part(TimeADT time, const text *units); */
   units = text_in("seconds");
   float8_result = time_part(time1, units);
   printf("time_part(%s, \"seconds\"): %lf\n", time1_out, float8_result);
   free(units);
 
-  /* TimeADT time_scale(TimeADT date, int32 typmod); */
+  /* TimeADT time_scale(TimeADT date, int32_t typmod); */
   time_result = time_scale(date1, -1);
   char_result = time_out(time_result);
   printf("time_scale(%s, -1): %s\n", date1_out, char_result);
@@ -265,7 +265,7 @@ int main(void)
   // printf("timetz_at_local(%s): %s\n", timetz1_out, char_result);
   // free(timetz_result); free(char_result);
 
-  // /* int32 timetz_cmp(const TimeTzADT *timetz1, const TimeTzADT *timetz2); */
+  // /* int32_t timetz_cmp(const TimeTzADT *timetz1, const TimeTzADT *timetz2); */
   // int32_result = timetz_cmp(timetz1, timetz2);
   // printf("timetz_cmp(%s, %s): %d\n", timetz1_out, timetz2_out, int32_result);
 
@@ -288,15 +288,15 @@ int main(void)
   // bool_result = timetz_gt(timetz1, timetz2);
   // printf("timetz_gt(%s, %s): %s\n", timetz1_out, timetz2_out, bool_result ? "t" : "f");
 
-  // /* uint32 timetz_hash(const TimeTzADT *timetz); */
+  // /* uint32_t timetz_hash(const TimeTzADT *timetz); */
   // uint32_result = timetz_hash(timetz1);
   // printf("timetz_hash(%s): %u\n", timetz1_out, uint32_result);
 
-  // /* uint64 timetz_hash_extended(const TimeTzADT *timetz, int64 seed); */
+  // /* uint64_t timetz_hash_extended(const TimeTzADT *timetz, uint64_t seed); */
   // uint64_result = timetz_hash_extended(timetz1, 1);
   // printf("timetz_hash_extended(%s, 1): %lu\n", timetz1_out, uint64_result);
 
-  // /* TimeTzADT *timetz_in(const char *str, int32 typmod); */
+  // /* TimeTzADT *timetz_in(const char *str, int32_t typmod); */
   // timetz_result = timetz_in("2025-03-01", -1);
   // char_result = timetz_out(timetz_result);
   // printf("timetz_in(\"2025-03-01\", -1): %s\n", char_result);
@@ -335,13 +335,13 @@ int main(void)
   // bool_result = timetz_overlaps(timetz1, timetz2, timetz3, timetz4);
   // printf("timetz_overlaps(%s, %s, %s, %s): %s\n", timetz1_out, timetz2_out, timetz3_out, timetz4_out, bool_result ? "t" : "f");
 
-  // /* float8 timetz_part(const TimeTzADT *timetz, const text *units); */
+  // /* double timetz_part(const TimeTzADT *timetz, const text *units); */
   // units = text_in("seconds");
   // float8_result = timetz_part(timetz1, units);
   // printf("timetz_part(%s, \"seconds\"): %lf\n", timetz1_out, float8_result);
   // free(units);
 
-  // /* TimeTzADT *timetz_scale(const TimeTzADT *timetz, int32 typmod); */
+  // /* TimeTzADT *timetz_scale(const TimeTzADT *timetz, int32_t typmod); */
   // timetz_result = timetz_scale(timetz1, -1);
   // char_result = timetz_out(timetz_result);
   // printf("timetz_scale(%s, -1): %s\n", timetz1_out, char_result);

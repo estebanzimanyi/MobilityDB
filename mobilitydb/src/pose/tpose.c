@@ -89,7 +89,7 @@ Datum
 Tpose_typmod_in(PG_FUNCTION_ARGS)
 {
   ArrayType *array = (ArrayType *) DatumGetPointer(PG_GETARG_DATUM(0));
-  uint32 typmod = tspatial_typmod_in(array, true, false);
+  uint32_t typmod = tspatial_typmod_in(array, true, false);
   PG_RETURN_INT32(typmod);
 }
 
@@ -147,7 +147,7 @@ PGDLLEXPORT Datum Tpose_points(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpose_points);
 /**
  * @ingroup mobilitydb_pose_accessor
- * @brief Return the array of points of a temporal pose
+ * @brief Return the set of points of a temporal pose
  * @sqlfn points()
  */
 Datum

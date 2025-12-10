@@ -58,9 +58,7 @@
 #include <access/heapam.h>
 #include <access/htup_details.h>
 #include <access/tableam.h>
-#if POSTGRESQL_VERSION_NUMBER < 140000
 #include <catalog/indexing.h>
-#endif
 #include <catalog/namespace.h>
 #include <catalog/pg_extension.h>
 #include <commands/extension.h>

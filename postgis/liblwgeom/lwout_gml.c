@@ -353,7 +353,7 @@ asgml2_collection(stringbuffer_t* sb, const LWCOLLECTION *col, const GML_Options
 				asgml2_point(sb, (LWPOINT*)subgeom, &subopts);
 				break;
 			case LINETYPE:
-				asgml2_line(sb, (LWLINE*)subgeom, &subopts);;
+				asgml2_line(sb, (LWLINE*)subgeom, &subopts);
 				break;
 			case POLYGONTYPE:
 				asgml2_poly(sb, (LWPOLY*)subgeom, &subopts);

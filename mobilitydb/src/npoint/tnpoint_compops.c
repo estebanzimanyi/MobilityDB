@@ -311,7 +311,7 @@ PGDLLEXPORT Datum Teq_npoint_tnpoint(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Teq_npoint_tnpoint);
 /**
  * @ingroup mobilitydb_npoint_comp_temp
- * @brief Return a temporal Boolean that states whether a temporal network
+ * @brief Return a temporal boolean that states whether a temporal network
  * point is equal to a network point
  * @sqlfn temporal_teq()
  * @sqlop @p #=
@@ -326,7 +326,7 @@ PGDLLEXPORT Datum Tne_npoint_tnpoint(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tne_npoint_tnpoint);
 /**
  * @ingroup mobilitydb_npoint_comp_temp
- * @brief Return a temporal Boolean that states whether a temporal network
+ * @brief Return a temporal boolean that states whether a temporal network
  * point is different from a network point
  * network point
  * @sqlfn temporal_tne()
@@ -342,7 +342,7 @@ PGDLLEXPORT Datum Teq_tnpoint_npoint(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Teq_tnpoint_npoint);
 /**
  * @ingroup mobilitydb_npoint_comp_temp
- * @brief Return a temporal Boolean that states whether a temporal network
+ * @brief Return a temporal boolean that states whether a temporal network
  * point is equal to a network point
  * @sqlfn temporal_teq()
  * @sqlop @p #=
@@ -357,7 +357,7 @@ PGDLLEXPORT Datum Tne_tnpoint_npoint(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tne_tnpoint_npoint);
 /**
  * @ingroup mobilitydb_npoint_comp_temp
- * @brief Return a temporal Boolean that states whether a temporal network
+ * @brief Return a temporal boolean that states whether a temporal network
  * point is different from a network point
  * @sqlfn temporal_tne()
  * @sqlop @p #<>
@@ -374,7 +374,7 @@ PGDLLEXPORT Datum Teq_tnpoint_tnpoint(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Teq_tnpoint_tnpoint);
 /**
  * @ingroup mobilitydb_npoint_comp_temp
- * @brief Return a temporal Boolean that states whether two temporal geos are
+ * @brief Return a temporal boolean that states whether two temporal geos are
  * equal
  * @sqlfn temporal_teq()
  * @sqlop @p #=
@@ -389,7 +389,7 @@ PGDLLEXPORT Datum Tne_tnpoint_tnpoint(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tne_tnpoint_tnpoint);
 /**
  * @ingroup mobilitydb_npoint_comp_temp
- * @brief Return a temporal Boolean that states whether two temporal geos are
+ * @brief Return a temporal boolean that states whether two temporal geos are
  * different
  * @sqlfn temporal_tne()
  * @sqlop @p #<>

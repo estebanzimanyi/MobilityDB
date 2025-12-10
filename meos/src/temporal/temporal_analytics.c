@@ -107,22 +107,22 @@ tstzset_tprecision(const Set *s, const Interval *duration, TimestampTz torigin)
 /**
  * @ingroup meos_setspan_transf
  * @brief Return a timestamptz span with the precision set to a time bin
- * @param[in] s Time value
+ * @param[in] sp Time span
  * @param[in] duration Size of the time bins
  * @param[in] torigin Time origin of the bins
  */
 Span *
-tstzspan_tprecision(const Span *s, const Interval *duration,
+tstzspan_tprecision(const Span *sp, const Interval *duration,
   TimestampTz torigin)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_TSTZSPAN(s, NULL); VALIDATE_NOT_NULL(duration, NULL);
+  VALIDATE_TSTZSPAN(sp, NULL); VALIDATE_NOT_NULL(duration, NULL);
   if (! ensure_positive_duration(duration))
     return NULL;
 
-  int64 tunits = interval_units(duration);
-  TimestampTz lower = DatumGetTimestampTz(s->lower);
-  TimestampTz upper = DatumGetTimestampTz(s->upper);
+  int64_t tunits = interval_units(duration);
+  TimestampTz lower = DatumGetTimestampTz(sp->lower);
+  TimestampTz upper = DatumGetTimestampTz(sp->upper);
   TimestampTz lower_bin = timestamptz_get_bin(lower, duration, torigin);
   /* We need to add tunits to obtain the end timestamptz of the last bin */
   TimestampTz upper_bin = timestamptz_get_bin(upper, duration, torigin) +
@@ -147,7 +147,7 @@ tstzspanset_tprecision(const SpanSet *ss, const Interval *duration,
   if (! ensure_positive_duration(duration))
     return NULL;
 
-  int64 tunits = interval_units(duration);
+  int64_t tunits = interval_units(duration);
   TimestampTz lower = DatumGetTimestampTz(ss->span.lower);
   TimestampTz upper = DatumGetTimestampTz(ss->span.upper);
   TimestampTz lower_bin = timestamptz_get_bin(lower, duration, torigin);
@@ -155,7 +155,7 @@ tstzspanset_tprecision(const SpanSet *ss, const Interval *duration,
   TimestampTz upper_bin = timestamptz_get_bin(upper, duration, torigin) +
     tunits;
   /* Number of bins */
-  int count = (int) (((int64) upper_bin - (int64) lower_bin) / tunits);
+  int count = (int) (((int64_t) upper_bin - (int64_t) lower_bin) / tunits);
   Span *spans = palloc(sizeof(Span) * count);
   lower = lower_bin;
   upper = lower_bin + tunits;
@@ -163,11 +163,11 @@ tstzspanset_tprecision(const SpanSet *ss, const Interval *duration,
   /* Loop for each bin */
   for (int i = 0; i < count; i++)
   {
-    Span s;
+    Span sp;
     span_set(TimestampTzGetDatum(lower),TimestampTzGetDatum(upper),
-      true, false, T_TIMESTAMPTZ, T_TSTZSPAN, &s);
-    if (overlaps_spanset_span(ss, &s))
-      spans[nspans++] = s;
+      true, false, T_TIMESTAMPTZ, T_TSTZSPAN, &sp);
+    if (overlaps_spanset_span(ss, &sp))
+      spans[nspans++] = sp;
     lower += tunits;
     upper += tunits;
   }
@@ -208,7 +208,7 @@ tsequence_tprecision(const TSequence *seq, const Interval *duration,
     seq->temptype == T_TGEOMPOINT || seq->temptype == T_TGEOGPOINT ||
     seq->temptype == T_TGEOMETRY || seq->temptype == T_TGEOGRAPHY );
 
-  int64 tunits = interval_units(duration);
+  int64_t tunits = interval_units(duration);
   TimestampTz lower = DatumGetTimestampTz(seq->period.lower);
   TimestampTz upper = DatumGetTimestampTz(seq->period.upper);
   TimestampTz lower_bin = timestamptz_get_bin(lower, duration, torigin);
@@ -216,7 +216,7 @@ tsequence_tprecision(const TSequence *seq, const Interval *duration,
   TimestampTz upper_bin = timestamptz_get_bin(upper, duration, torigin) +
     tunits;
   /* Number of bins */
-  int count = (int) (((int64) upper_bin - (int64) lower_bin) / tunits);
+  int count = (int) (((int64_t) upper_bin - (int64_t) lower_bin) / tunits);
   TInstant **ininsts = palloc(sizeof(TInstant *) * seq->count);
   TInstant **outinsts = palloc(sizeof(TInstant *) * count);
   lower = lower_bin;
@@ -355,7 +355,7 @@ tsequenceset_tprecision(const TSequenceSet *ss, const Interval *duration,
   assert(ss->temptype == T_TINT || ss->temptype == T_TFLOAT ||
     ss->temptype == T_TGEOMPOINT || ss->temptype == T_TGEOGPOINT );
 
-  int64 tunits = interval_units(duration);
+  int64_t tunits = interval_units(duration);
   TimestampTz lower = DatumGetTimestampTz(ss->period.lower);
   TimestampTz upper = DatumGetTimestampTz(ss->period.upper);
   TimestampTz lower_bin = timestamptz_get_bin(lower, duration, torigin);
@@ -363,7 +363,7 @@ tsequenceset_tprecision(const TSequenceSet *ss, const Interval *duration,
   TimestampTz upper_bin = timestamptz_get_bin(upper, duration, torigin) +
     tunits;
   /* Number of bins */
-  int count = (int) (((int64) upper_bin - (int64) lower_bin) / tunits);
+  int count = (int) (((int64_t) upper_bin - (int64_t) lower_bin) / tunits);
   TInstant **instants = palloc(sizeof(TInstant *) * count);
   TSequence **sequences = palloc(sizeof(TSequence *) * count);
   lower = lower_bin;
@@ -378,10 +378,10 @@ tsequenceset_tprecision(const TSequenceSet *ss, const Interval *duration,
   /* Loop for each bin */
   for (int i = 0; i < count; i++)
   {
-    Span p;
+    Span sp;
     span_set(TimestampTzGetDatum(lower), TimestampTzGetDatum(upper),
-      true, false, T_TIMESTAMPTZ, T_TSTZSPAN, &p);
-    TSequenceSet *proj = tsequenceset_restrict_tstzspan(ss, &p, REST_AT);
+      true, false, T_TIMESTAMPTZ, T_TSTZSPAN, &sp);
+    TSequenceSet *proj = tsequenceset_restrict_tstzspan(ss, &sp, REST_AT);
     if (proj)
     {
       Datum value = twavg ? Float8GetDatum(tnumber_twavg((Temporal *) proj)) :
@@ -487,7 +487,7 @@ tinstant_tsample(const TInstant *inst, const Interval *duration,
  */
 int
 tsequence_tsample_iter(const TSequence *seq, TimestampTz lower_bin,
-  TimestampTz upper_bin, int64 tunits, TInstant **result)
+  TimestampTz upper_bin, int64_t tunits, TInstant **result)
 {
   meosType basetype = temptype_basetype(seq->temptype);
   interpType interp = MEOS_FLAGS_GET_INTERP(seq->flags);
@@ -580,7 +580,7 @@ tsequence_tsample(const TSequence *seq, const Interval *duration,
 {
   assert(seq); assert(duration); assert(positive_duration(duration));
 
-  int64 tunits = interval_units(duration);
+  int64_t tunits = interval_units(duration);
   TimestampTz lower = DatumGetTimestampTz(seq->period.lower);
   TimestampTz upper = DatumGetTimestampTz(seq->period.upper);
   TimestampTz lower_bin = timestamptz_get_bin(lower, duration, torigin);
@@ -588,7 +588,7 @@ tsequence_tsample(const TSequence *seq, const Interval *duration,
   TimestampTz upper_bin = timestamptz_get_bin(upper, duration, torigin) +
     tunits;
   /* Number of bins */
-  int count = (int) (((int64) upper_bin - (int64) lower_bin) / tunits) + 1;
+  int count = (int) (((int64_t) upper_bin - (int64_t) lower_bin) / tunits) + 1;
   TInstant **instants = palloc(sizeof(TInstant *) * count);
   int ninsts = tsequence_tsample_iter(seq, lower_bin, upper_bin, tunits,
     &instants[0]);
@@ -607,7 +607,7 @@ tsequenceset_disc_tsample(const TSequenceSet *ss, const Interval *duration,
 {
   assert(ss); assert(duration); assert(positive_duration(duration));
 
-  int64 tunits = interval_units(duration);
+  int64_t tunits = interval_units(duration);
   TimestampTz lower = tsequenceset_start_timestamptz(ss);
   TimestampTz upper = tsequenceset_end_timestamptz(ss);
   TimestampTz lower_bin = timestamptz_get_bin(lower, duration, torigin);
@@ -615,7 +615,7 @@ tsequenceset_disc_tsample(const TSequenceSet *ss, const Interval *duration,
   TimestampTz upper_bin = timestamptz_get_bin(upper, duration, torigin) +
     tunits;
   /* Number of bins */
-  int count = (int) (((int64) upper_bin - (int64) lower_bin) / tunits) + 1;
+  int count = (int) (((int64_t) upper_bin - (int64_t) lower_bin) / tunits) + 1;
   TInstant **instants = palloc(sizeof(TInstant *) * count);
   /* Loop for each segment */
   int ninsts = 0;
@@ -1488,71 +1488,71 @@ dist3d_pt_pt(POINT3DZ *p1, POINT3DZ *p2)
 
 /**
  * @brief Return the 2D distance between the point the segment
- * @param[in] p Point
+ * @param[in] pt Point
  * @param[in] A,B Points defining the segment
  * @see http://geomalgorithms.com/a02-_lines.html
  * @note Derived from the PostGIS function lw_dist2d_pt_seg in
  * file measures.c
  */
 static double
-dist2d_pt_seg(POINT2D *p, POINT2D *A, POINT2D *B)
+dist2d_pt_seg(POINT2D *pt, POINT2D *A, POINT2D *B)
 {
   POINT2D c;
   double r;
   /* If start==end, then use pt distance */
   if (A->x == B->x && A->y == B->y)
-    return dist2d_pt_pt(p, A);
+    return dist2d_pt_pt(pt, A);
 
-  r = ( (p->x-A->x) * (B->x-A->x) + (p->y-A->y) * (B->y-A->y) ) /
+  r = ( (pt->x-A->x) * (B->x-A->x) + (pt->y-A->y) * (B->y-A->y) ) /
       ( (B->x-A->x) * (B->x-A->x) + (B->y-A->y) * (B->y-A->y) );
 
-  if (r < 0) /* If the first vertex A is closest to the point p */
-    return dist2d_pt_pt(p, A);
-  if (r > 1)  /* If the second vertex B is closest to the point p */
-    return dist2d_pt_pt(p, B);
+  if (r < 0) /* If the first vertex A is closest to the point pt */
+    return dist2d_pt_pt(pt, A);
+  if (r > 1)  /* If the second vertex B is closest to the point pt */
+    return dist2d_pt_pt(pt, B);
 
-  /* else if the point p is closer to some point between a and b
+  /* else if the point pt is closer to some point between a and b
   then we find that point and send it to dist2d_pt_pt */
   c.x = A->x + r * (B->x - A->x);
   c.y = A->y + r * (B->y - A->y);
 
-  return dist2d_pt_pt(p, &c);
+  return dist2d_pt_pt(pt, &c);
 }
 
 /**
  * @brief Return the 3D distance between the point the segment
- * @param[in] p Point
+ * @param[in] pt Point
  * @param[in] A,B Points defining the segment
  * @note Derived from the PostGIS function lw_dist3d_pt_seg in file
  * measures3d.c
  * @see http://geomalgorithms.com/a02-_lines.html
  */
 static double
-dist3d_pt_seg(POINT3DZ *p, POINT3DZ *A, POINT3DZ *B)
+dist3d_pt_seg(POINT3DZ *pt, POINT3DZ *A, POINT3DZ *B)
 {
   POINT3DZ c;
   double r;
   /* If start==end, then use pt distance */
   if (FP_EQUALS(A->x, B->x) && FP_EQUALS(A->y, B->y) && FP_EQUALS(A->z, B->z))
-    return dist3d_pt_pt(p, A);
+    return dist3d_pt_pt(pt, A);
 
-  r = ( (p->x-A->x) * (B->x-A->x) + (p->y-A->y) * (B->y-A->y) +
-        (p->z-A->z) * (B->z-A->z) ) /
+  r = ( (pt->x-A->x) * (B->x-A->x) + (pt->y-A->y) * (B->y-A->y) +
+        (pt->z-A->z) * (B->z-A->z) ) /
       ( (B->x-A->x) * (B->x-A->x) + (B->y-A->y) * (B->y-A->y) +
         (B->z-A->z) * (B->z-A->z) );
 
-  if (r < 0) /* If the first vertex A is closest to the point p */
-    return dist3d_pt_pt(p, A);
-  if (r > 1) /* If the second vertex B is closest to the point p */
-    return dist3d_pt_pt(p, B);
+  if (r < 0) /* If the first vertex A is closest to the point pt */
+    return dist3d_pt_pt(pt, A);
+  if (r > 1) /* If the second vertex B is closest to the point pt */
+    return dist3d_pt_pt(pt, B);
 
-  /* If the point p is closer to some point between a and b, then we find that
+  /* If the point pt is closer to some point between a and b, then we find that
      point and send it to dist3d_pt_pt */
   c.x = A->x + r * (B->x - A->x);
   c.y = A->y + r * (B->y - A->y);
   c.z = A->z + r * (B->z - A->z);
 
-  return dist3d_pt_pt(p, &c);
+  return dist3d_pt_pt(pt, &c);
 }
 
 /**

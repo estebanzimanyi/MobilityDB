@@ -71,15 +71,15 @@
  * @brief Transform the constant into a timestamptz span
  */
 static bool
-temporal_const_to_tstzspan(Node *other, Span *s)
+temporal_const_to_tstzspan(Node *other, Span *sp)
 {
   Oid consttype = ((Const *) other)->consttype;
   Datum constvalue = ((Const *) other)->constvalue;
   meosType type = oid_meostype(consttype);
   if (time_type(type))
-    span_const_to_span(other, s);
+    span_const_to_span(other, sp);
   else if (talpha_type(type))
-    temporal_set_bbox(DatumGetTemporalP(constvalue), s);
+    temporal_set_bbox(DatumGetTemporalP(constvalue), sp);
   else
     return false;
   return true;
@@ -89,7 +89,7 @@ temporal_const_to_tstzspan(Node *other, Span *s)
  * @brief Transform the constant into a temporal box
  */
 bool
-tnumber_const_to_span_tstzspan(const Node *other, Span **s, Span **p)
+tnumber_const_to_span_tstzspan(const Node *other, Span **sp1, Span **sp2)
 {
   Oid consttypid = ((Const *) other)->consttype;
   meosType type = oid_meostype(consttypid);
@@ -97,28 +97,28 @@ tnumber_const_to_span_tstzspan(const Node *other, Span **s, Span **p)
   if (numspan_type(type))
   {
     span = DatumGetSpanP(((Const *) other)->constvalue);
-    *s = span_copy(span);
+    *sp1 = span_copy(span);
   }
   else if (type == T_TSTZSPAN)
   {
     span = DatumGetSpanP(((Const *) other)->constvalue);
-    *p = span_copy(span);
+    *sp2 = span_copy(span);
   }
   else if (type == T_TBOX)
   {
     const TBox *box = DatumGetTboxP(((Const *) other)->constvalue);
     if (MEOS_FLAGS_GET_X(box->flags))
-      *s = span_copy(&box->span);
+      *sp1 = span_copy(&box->span);
     if (MEOS_FLAGS_GET_T(box->flags))
-      *p = span_copy(&box->period);
+      *sp2 = span_copy(&box->period);
   }
   else if (tnumber_type(type))
   {
     const Temporal *temp = DatumGetTemporalP(((Const *) other)->constvalue);
     TBox box;
     tnumber_set_tbox(temp, &box);
-    *s = span_copy(&box.span);
-    *p = span_copy(&box.period);
+    *sp1 = span_copy(&box.span);
+    *sp2 = span_copy(&box.period);
   }
   else
   {
@@ -435,7 +435,7 @@ temporal_oper_sel_family(meosOper oper UNUSED, meosType ltype,
  * <> are eqsel and neqsel, respectively.
  */
 Selectivity
-temporal_sel_tstzspan(VariableStatData *vardata, Span *s, meosOper oper)
+temporal_sel_tstzspan(VariableStatData *vardata, Span *sp, meosOper oper)
 {
   Selectivity selec;
 
@@ -447,7 +447,7 @@ temporal_sel_tstzspan(VariableStatData *vardata, Span *s, meosOper oper)
   {
     Oid operid = meosoper_oid(EQ_OP, T_TSTZSPAN, T_TSTZSPAN);
     selec = var_eq_const(vardata, operid, DEFAULT_COLLATION_OID,
-      SpanPGetDatum(s), false, false, false);
+      SpanPGetDatum(sp), false, false, false);
   }
   else if (oper == OVERLAPS_OP || oper == CONTAINS_OP ||
     oper == CONTAINED_OP ||  oper == ADJACENT_OP ||
@@ -461,7 +461,7 @@ temporal_sel_tstzspan(VariableStatData *vardata, Span *s, meosOper oper)
     oper == LT_OP || oper == LE_OP || oper == GT_OP || oper == GE_OP)
   {
     /* Convert the period as a span to call the span selectivity functions */
-    selec = span_sel_hist(vardata, s, oper, TIME_SEL);
+    selec = span_sel_hist(vardata, sp, oper, TIME_SEL);
   }
   else /* Unknown operator */
   {
@@ -642,17 +642,17 @@ temporal_sel(PlannerInfo *root, Oid operid, List *args, int varRelid,
   else if (tempfamily == TNUMBERTYPE)
   {
     /* Transform the constant into a value and/or a timestamptz span */
-    Span *s = NULL;
-    Span *p = NULL;
-    if (! tnumber_const_to_span_tstzspan(other, &s, &p))
+    Span *sp1 = NULL;
+    Span *sp2 = NULL;
+    if (! tnumber_const_to_span_tstzspan(other, &sp1, &sp2))
       /* In the case of unknown constant */
       return tnumber_sel_default(oper);
 
     /* Compute the selectivity */
-    selec = tnumber_sel_span_tstzspan(&vardata, s, p, oper);
+    selec = tnumber_sel_span_tstzspan(&vardata, sp1, sp2, oper);
     /* Free variables */
-    if (s) pfree(s);
-    if (p) pfree(p);
+    if (sp1) pfree(sp1);
+    if (sp2) pfree(sp2);
   }
   else /* tempfamily == TSPATIALTYPE */
   {

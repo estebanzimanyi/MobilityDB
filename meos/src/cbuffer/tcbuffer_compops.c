@@ -301,7 +301,7 @@ teq_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp)
 
 /**
  * @ingroup meos_cbuffer_comp_temp
- * @brief Return the temporal inequality of a circular buffer and a temporal
+ * @brief Return the temporal difference of a circular buffer and a temporal
  * circular buffer
  * @param[in] cb Circular buffer
  * @param[in] temp Temporal value
@@ -331,7 +331,7 @@ teq_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
 
 /**
  * @ingroup meos_cbuffer_comp_temp
- * @brief Return the temporal inequality of a temporal circular buffer and a
+ * @brief Return the temporal difference of a temporal circular buffer and a
  * circular buffer
  * @param[in] temp Temporal value
  * @param[in] cb Circular buffer

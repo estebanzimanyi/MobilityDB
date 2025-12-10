@@ -536,7 +536,7 @@ Nsegment *
 tnpointseq_linear_positions(const TSequence *seq)
 {
   Npoint *np = DatumGetNpointP(tinstant_value_p(TSEQUENCE_INST_N(seq, 0)));
-  int64 rid = np->rid;
+  int64_t rid = np->rid;
   double minPos, maxPos;
   minPos = maxPos = np->pos;
   for (int i = 1; i < seq->count; i++)
@@ -640,7 +640,7 @@ tnpoint_positions(const Temporal *temp, int *count)
 /**
  * @brief Return the route of the temporal network point
  */
-int64
+int64_t
 tnpointinst_route(const TInstant *inst)
 {
   Npoint *np = DatumGetNpointP(tinstant_value_p(inst));
@@ -653,7 +653,7 @@ tnpointinst_route(const TInstant *inst)
  * @return On error return @p INT_MAX
  * @csqlfn #Tnpoint_route()
  */
-int64
+int64_t
 tnpoint_route(const Temporal *temp)
 {
   if (temp->subtype != TINSTANT && MEOS_FLAGS_DISCRETE_INTERP(temp->flags))
@@ -714,7 +714,7 @@ tnpointseq_cont_routes(const TSequence *seq)
 Set *
 tnpointseqset_routes(const TSequenceSet *ss)
 {
-  Datum *values = palloc(sizeof(int64) * ss->count);
+  Datum *values = palloc(sizeof(int64_t) * ss->count);
   for (int i = 0; i < ss->count; i++)
   {
     const TInstant *inst = TSEQUENCE_INST_N(TSEQUENCESET_SEQ_N(ss, i), 0);
@@ -728,7 +728,7 @@ tnpointseqset_routes(const TSequenceSet *ss)
 
 /**
  * @ingroup meos_npoint_accessor
- * @brief Return the array of routes of a temporal network point
+ * @brief Return the set of routes of a temporal network point
  * @csqlfn #Tnpoint_routes()
  */
 Set *

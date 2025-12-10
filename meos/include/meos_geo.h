@@ -344,9 +344,9 @@ extern GSERIALIZED *geo_from_text(const char *wkt, int32_t srid);
 extern char *geo_out(const GSERIALIZED *gs);
 extern GSERIALIZED *geog_from_binary(const char *wkb_bytea);
 extern GSERIALIZED *geog_from_hexewkb(const char *wkt);
-extern GSERIALIZED *geog_in(const char *str, int32 typmod);
+extern GSERIALIZED *geog_in(const char *str, int32_t typmod);
 extern GSERIALIZED *geom_from_hexewkb(const char *wkt);
-extern GSERIALIZED *geom_in(const char *str, int32 typmod);
+extern GSERIALIZED *geom_in(const char *str, int32_t typmod);
 
 /* Constructor functions */
 
@@ -474,7 +474,7 @@ extern GSERIALIZED **geoset_values(const Set *s);
 /* Set operations */
 
 extern bool contained_geo_set(const GSERIALIZED *gs, const Set *s);
-extern bool contains_set_geo(const Set *s, GSERIALIZED *gs);
+extern bool contains_set_geo(const Set *s, const GSERIALIZED *gs);
 extern Set *geo_union_transfn(Set *state, const GSERIALIZED *gs);
 extern Set *intersection_geo_set(const GSERIALIZED *gs, const Set *s);
 extern Set *intersection_set_geo(const Set *s, const GSERIALIZED *gs);
@@ -506,9 +506,9 @@ extern char *stbox_out(const STBox *box, int maxdd);
 /* Constructor functions */
 
 extern STBox *geo_timestamptz_to_stbox(const GSERIALIZED *gs, TimestampTz t);
-extern STBox *geo_tstzspan_to_stbox(const GSERIALIZED *gs, const Span *s);
+extern STBox *geo_tstzspan_to_stbox(const GSERIALIZED *gs, const Span *sp);
 extern STBox *stbox_copy(const STBox *box);
-extern STBox *stbox_make(bool hasx, bool hasz, bool geodetic, int32_t srid, double xmin, double xmax, double ymin, double ymax, double zmin, double zmax, const Span *s);
+extern STBox *stbox_make(bool hasx, bool hasz, bool geodetic, int32_t srid, double xmin, double xmax, double ymin, double ymax, double zmin, double zmax, const Span *sp);
 
 /* Conversion functions */
 
@@ -520,14 +520,14 @@ extern GSERIALIZED *stbox_to_geo(const STBox *box);
 extern Span *stbox_to_tstzspan(const STBox *box);
 extern STBox *timestamptz_to_stbox(TimestampTz t);
 extern STBox *tstzset_to_stbox(const Set *s);
-extern STBox *tstzspan_to_stbox(const Span *s);
+extern STBox *tstzspan_to_stbox(const Span *sp);
 extern STBox *tstzspanset_to_stbox(const SpanSet *ss);
 
 /* Accessor functions */
 
 extern double stbox_area(const STBox *box, bool spheroid);
-extern uint32 stbox_hash(const STBox *box);
-extern uint64 stbox_hash_extended(const STBox *box, uint64 seed);
+extern uint32_t stbox_hash(const STBox *box);
+extern uint64_t stbox_hash_extended(const STBox *box, uint64_t seed);
 extern bool stbox_hast(const STBox *box);
 extern bool stbox_hasx(const STBox *box);
 extern bool stbox_hasz(const STBox *box);
@@ -608,7 +608,7 @@ extern bool stbox_ne(const STBox *box1, const STBox *box2);
 
 // extern RTree *rtree_create_stbox();
 // extern void rtree_free(RTree *rtree);
-// extern void rtree_insert(RTree *rtree, STBox *box, int64 id);
+// extern void rtree_insert(RTree *rtree, STBox *box, int64_t id);
 // extern int *rtree_search(const RTree *rtree,const STBox *query, int *count);
 
 /*****************************************************************************
@@ -635,12 +635,12 @@ extern char *tspatial_out(const Temporal *temp, int maxdd);
 extern Temporal *tgeo_from_base_temp(const GSERIALIZED *gs, const Temporal *temp);
 extern TInstant *tgeoinst_make(const GSERIALIZED *gs, TimestampTz t);
 extern TSequence *tgeoseq_from_base_tstzset(const GSERIALIZED *gs, const Set *s);
-extern TSequence *tgeoseq_from_base_tstzspan(const GSERIALIZED *gs, const Span *s, interpType interp);
+extern TSequence *tgeoseq_from_base_tstzspan(const GSERIALIZED *gs, const Span *sp, interpType interp);
 extern TSequenceSet *tgeoseqset_from_base_tstzspanset(const GSERIALIZED *gs, const SpanSet *ss, interpType interp);
 extern Temporal *tpoint_from_base_temp(const GSERIALIZED *gs, const Temporal *temp);
 extern TInstant *tpointinst_make(const GSERIALIZED *gs, TimestampTz t);
 extern TSequence *tpointseq_from_base_tstzset(const GSERIALIZED *gs, const Set *s);
-extern TSequence *tpointseq_from_base_tstzspan(const GSERIALIZED *gs, const Span *s, interpType interp);
+extern TSequence *tpointseq_from_base_tstzspan(const GSERIALIZED *gs, const Span *sp, interpType interp);
 extern TSequence *tpointseq_make_coords(const double *xcoords, const double *ycoords, const double *zcoords, const TimestampTz *times, int count, int32_t srid, bool geodetic, bool lower_inc, bool upper_inc, interpType interp, bool normalize);
 extern TSequenceSet *tpointseqset_from_base_tstzspanset(const GSERIALIZED *gs, const SpanSet *ss, interpType interp);
 
@@ -878,7 +878,7 @@ extern GSERIALIZED *shortestline_tgeo_tgeo(const Temporal *temp1, const Temporal
 /* Aggregates */
 
 extern Temporal *tpoint_tcentroid_finalfn(SkipList *state);
-extern SkipList *tpoint_tcentroid_transfn(SkipList *state, Temporal *temp);
+extern SkipList *tpoint_tcentroid_transfn(SkipList *state, const Temporal *temp);
 extern STBox *tspatial_extent_transfn(STBox *box, const Temporal *temp);
 
 /* Tile functions */

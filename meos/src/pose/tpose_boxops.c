@@ -224,15 +224,15 @@ pose_timestamptz_to_stbox(const Pose *pose, TimestampTz t)
  * @brief Return in the last argument a spatiotemporal box constructed from a
  * pose and a timestamptz span
  * @param[in] pose Pose
- * @param[in] s Timestamptz span
+ * @param[in] sp Timestamptz span
  * @param[out] box Spatiotemporal box
  */
 bool
-pose_tstzspan_set_stbox(const Pose *pose, const Span *s, STBox *box)
+pose_tstzspan_set_stbox(const Pose *pose, const Span *sp, STBox *box)
 {
-  assert(pose); assert(s); assert(box);
+  assert(pose); assert(sp); assert(box);
   pose_set_stbox(pose, box);
-  memcpy(&box->period, s, sizeof(Span));
+  memcpy(&box->period, sp, sizeof(Span));
   MEOS_FLAGS_SET_T(box->flags, true);
   return true;
 }
@@ -240,18 +240,18 @@ pose_tstzspan_set_stbox(const Pose *pose, const Span *s, STBox *box)
 /**
  * @ingroup meos_pose_base_bbox
  * @brief Return a spatiotemporal box constructed from a pose and a
- * timestamptz
+ * timestamptz span
  * @param[in] pose Pose
- * @param[in] s Timestamptz span
+ * @param[in] sp Timestamptz span
  * @csqlfn #Pose_tstzspan_to_stbox()
  */
 STBox *
-pose_tstzspan_to_stbox(const Pose *pose, const Span *s)
+pose_tstzspan_to_stbox(const Pose *pose, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(pose, NULL); VALIDATE_TSTZSPAN(s, NULL);
+  VALIDATE_NOT_NULL(pose, NULL); VALIDATE_TSTZSPAN(sp, NULL);
   STBox box;
-  if (! pose_tstzspan_set_stbox(pose, s, &box))
+  if (! pose_tstzspan_set_stbox(pose, sp, &box))
     return NULL;
   return stbox_copy(&box);
 }

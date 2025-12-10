@@ -148,10 +148,10 @@ Tgeo_in(PG_FUNCTION_ARGS)
 /**
  * @brief Input typmod information for temporal geos
  */
-uint32
+int32_t
 tspatial_typmod_in(ArrayType *arr, int is_point, int is_geodetic)
 {
-  uint32 typmod = 0;
+  int32_t typmod = 0;
   Datum *elem_values;
   int n = 0;
 
@@ -182,7 +182,7 @@ tspatial_typmod_in(ArrayType *arr, int is_point, int is_geodetic)
     elog(ERROR, "Incorrect number of type modifiers for spatiotemporal values");
 
   /* Set default values for typmod if they are not given */
-  int16 tempsubtype = ANYTEMPSUBTYPE;
+  int16_t tempsubtype = ANYTEMPSUBTYPE;
   uint8_t geometry_type = 0;
   int hasZ = 0, hasM = 0, srid = SRID_UNKNOWN;
   bool has_geo = false, has_srid = false;
@@ -210,7 +210,7 @@ tspatial_typmod_in(ArrayType *arr, int is_point, int is_geodetic)
 #if POSTGRESQL_VERSION_NUMBER >= 150000
     srid = pg_strtoint32(s[2]);
 #else
-    srid = pg_atoi(s[2], sizeof(int32), '\0');
+    srid = pg_atoi(s[2], sizeof(int32_t), '\0');
 #endif /* POSTGRESQL_VERSION_NUMBER >= 150000 */
     srid = clamp_srid(srid);
     has_geo = has_srid = true;
@@ -226,7 +226,7 @@ tspatial_typmod_in(ArrayType *arr, int is_point, int is_geodetic)
 #if POSTGRESQL_VERSION_NUMBER >= 150000
         srid = pg_strtoint32(s[1]);
 #else
-        srid = pg_atoi(s[1], sizeof(int32), '\0');
+        srid = pg_atoi(s[1], sizeof(int32_t), '\0');
 #endif /* POSTGRESQL_VERSION_NUMBER >= 150000 */
         srid = clamp_srid(srid);
         has_srid = true;
@@ -242,7 +242,7 @@ tspatial_typmod_in(ArrayType *arr, int is_point, int is_geodetic)
 #if POSTGRESQL_VERSION_NUMBER >= 150000
       srid = pg_strtoint32(s[1]);
 #else
-      srid = pg_atoi(s[1], sizeof(int32), '\0');
+      srid = pg_atoi(s[1], sizeof(int32_t), '\0');
 #endif /* POSTGRESQL_VERSION_NUMBER >= 150000 */
       srid = clamp_srid(srid);
       has_geo = has_srid = true;
@@ -261,7 +261,7 @@ tspatial_typmod_in(ArrayType *arr, int is_point, int is_geodetic)
 #if POSTGRESQL_VERSION_NUMBER >= 150000
       srid = pg_strtoint32(s[0]);
 #else
-      srid = pg_atoi(s[0], sizeof(int32), '\0');
+      srid = pg_atoi(s[0], sizeof(int32_t), '\0');
 #endif /* POSTGRESQL_VERSION_NUMBER >= 150000 */
       srid = clamp_srid(srid);
       has_srid = true;
@@ -309,7 +309,7 @@ Datum
 Tgeometry_typmod_in(PG_FUNCTION_ARGS)
 {
   ArrayType *array = (ArrayType *) DatumGetPointer(PG_GETARG_DATUM(0));
-  uint32 typmod = tspatial_typmod_in(array, false, false);
+  uint32_t typmod = tspatial_typmod_in(array, false, false);
   PG_RETURN_INT32(typmod);
 }
 
@@ -322,7 +322,7 @@ Datum
 Tgeography_typmod_in(PG_FUNCTION_ARGS)
 {
   ArrayType *array = (ArrayType *) DatumGetPointer(PG_GETARG_DATUM(0));
-  int32 typmod = tspatial_typmod_in(array, false, true);
+  int32_t typmod = tspatial_typmod_in(array, false, true);
   int32_t srid = TYPMOD_GET_SRID(typmod);
   /* Check the SRID is legal (geographic coordinates) */
   if (! ensure_srid_is_latlong(srid))
@@ -339,7 +339,7 @@ Datum
 Tgeompoint_typmod_in(PG_FUNCTION_ARGS)
 {
   ArrayType *array = (ArrayType *) DatumGetPointer(PG_GETARG_DATUM(0));
-  uint32 typmod = tspatial_typmod_in(array, true, false);
+  uint32_t typmod = tspatial_typmod_in(array, true, false);
   PG_RETURN_INT32(typmod);
 }
 
@@ -352,7 +352,7 @@ Datum
 Tgeogpoint_typmod_in(PG_FUNCTION_ARGS)
 {
   ArrayType *array = (ArrayType *) DatumGetPointer(PG_GETARG_DATUM(0));
-  int32 typmod = tspatial_typmod_in(array, true, true);
+  int32_t typmod = tspatial_typmod_in(array, true, true);
   int32_t srid = TYPMOD_GET_SRID(typmod);
   /* Check the SRID is legal (geographic coordinates) */
   if (! ensure_srid_is_latlong(srid))
@@ -374,11 +374,11 @@ Tspatial_typmod_out(PG_FUNCTION_ARGS)
   char *s = palloc(MAX_TYPMOD_LEN);
   char *str = s;
   size_t len = 0;
-  int32 typmod = PG_GETARG_INT32(0);
-  int16 tempsubtype = TYPMOD_GET_TEMPSUBTYPE(typmod);
-  int32 srid = TYPMOD_GET_SRID(typmod);
+  int32_t typmod = PG_GETARG_INT32(0);
+  int16_t tempsubtype = TYPMOD_GET_TEMPSUBTYPE(typmod);
+  int32_t srid = TYPMOD_GET_SRID(typmod);
   uint8_t geometry_type = (uint8_t) TYPMOD_GET_TYPE(typmod);
-  int32 hasz = TYPMOD_GET_Z(typmod);
+  int32_t hasz = TYPMOD_GET_Z(typmod);
 
   /* No temporal subtype or geometry type? Then no typmod at all.
     Return empty string. */
@@ -422,13 +422,13 @@ tspatial_valid_typmod(Temporal *temp, int32_t typmod)
 {
   /* Get the characteristics of the temporal value */
   uint8 subtype = temp->subtype;
-  int32 srid = tspatial_srid(temp);
-  int32 hasz = MEOS_FLAGS_GET_Z(temp->flags);
+  int32_t srid = tspatial_srid(temp);
+  int32_t hasz = MEOS_FLAGS_GET_Z(temp->flags);
   /* Get the characteristics of the typmod */
   uint8 typmod_subtype = TYPMOD_GET_TEMPSUBTYPE(typmod);
-  int32 typmod_srid = TYPMOD_GET_SRID(typmod);
-  int32 typmod_type = TYPMOD_GET_TYPE(typmod);
-  int32 typmod_hasz = TYPMOD_GET_Z(typmod);
+  int32_t typmod_srid = TYPMOD_GET_SRID(typmod);
+  int32_t typmod_type = TYPMOD_GET_TYPE(typmod);
+  int32_t typmod_hasz = TYPMOD_GET_Z(typmod);
   const char *type_str = meostype_name(temp->temptype);
 
   /* No typmod (-1) */
@@ -477,7 +477,7 @@ Datum
 Tspatial_enforce_typmod(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  int32 typmod = PG_GETARG_INT32(1);
+  int32_t typmod = PG_GETARG_INT32(1);
   /* Check if typmod of the temporal geo is consistent with the supplied one */
   temp = tspatial_valid_typmod(temp, typmod);
   PG_RETURN_TEMPORAL_P(temp);

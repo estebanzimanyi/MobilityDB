@@ -307,7 +307,7 @@ teq_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp)
 
 /**
  * @ingroup meos_rgeo_comp_temp
- * @brief Return the temporal inequality of a geometry and a temporal rigid
+ * @brief Return the temporal difference of a geometry and a temporal rigid
  * geometry
  * @param[in] gs Geometry
  * @param[in] temp Temporal value
@@ -337,7 +337,7 @@ teq_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 
 /**
  * @ingroup meos_rgeo_comp_temp
- * @brief Return the temporal inequality of a temporal rigid geometry and a
+ * @brief Return the temporal difference of a temporal rigid geometry and a
  * geometry
  * @param[in] temp Temporal value
  * @param[in] gs Geometry

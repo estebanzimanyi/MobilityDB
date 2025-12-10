@@ -74,7 +74,7 @@
  *
  *   @defgroup meos_cbuffer_comp_temp Temporal comparison functions
  *   @ingroup meos_cbuffer_comp
- *   @brief Temporal comparison functions for temporal circular buffers
+ *   @brief %Temporal comparison functions for temporal circular buffers
  *
  * @defgroup meos_cbuffer_rel Spatial relationship functions
  * @ingroup meos_cbuffer
@@ -86,7 +86,7 @@
  *
  *   @defgroup meos_cbuffer_rel_temp Temporal relationship functions
  *   @ingroup meos_cbuffer_rel
- *   @brief Temporal relationship functions for temporal circular buffers
+ *   @brief %Temporal relationship functions for temporal circular buffers
  */
 
 /*****************************************************************************/
@@ -150,7 +150,7 @@
  *
  * @defgroup meos_cbuffer_set_setops Set operations
  * @ingroup meos_cbuffer_set
- * @brief Set operations for circular buffer sets
+ * @brief %Set operations for circular buffer sets
  */
 
 /*****************************************************************************/

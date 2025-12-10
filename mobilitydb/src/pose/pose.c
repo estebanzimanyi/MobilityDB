@@ -147,7 +147,7 @@ Datum
 Pose_from_ewkt(PG_FUNCTION_ARGS)
 {
   text *wkt_text = PG_GETARG_TEXT_P(0);
-  char *wkt = text_to_cstring(wkt_text);
+  char *wkt = pg_text_to_cstring(wkt_text);
   /* Copy the pointer since it will be advanced during parsing */
   const char *wkt_ptr = wkt;
   Pose *result = pose_parse(&wkt_ptr, true);
@@ -185,7 +185,7 @@ Datum
 Pose_from_hexwkb(PG_FUNCTION_ARGS)
 {
   text *hexwkb_text = PG_GETARG_TEXT_P(0);
-  char *hexwkb = text_to_cstring(hexwkb_text);
+  char *hexwkb = pg_text_to_cstring(hexwkb_text);
   Pose *result = pose_from_hexwkb(hexwkb);
   pfree(hexwkb);
   PG_FREE_IF_COPY(hexwkb_text, 0);
@@ -208,7 +208,7 @@ Pose_as_text_common(FunctionCallInfo fcinfo, bool extended)
     dbl_dig_for_wkt = PG_GETARG_INT32(1);
   char *str = extended ? pose_as_ewkt(pose, dbl_dig_for_wkt) : 
     pose_as_text(pose, dbl_dig_for_wkt);
-  text *result = cstring_to_text(str);
+  text *result = pg_cstring_to_text(str);
   pfree(str);
   PG_FREE_IF_COPY(pose, 0);
   PG_RETURN_TEXT_P(result);
@@ -541,8 +541,8 @@ Posearr_round(PG_FUNCTION_ARGS)
   int maxdd = PG_GETARG_INT32(1);
 
   Pose **posearr = posearr_extract(array, &count);
-  Pose **resarr = posearr_round((const Pose **) posearr, count, maxdd);
-  ArrayType *result = posearr_to_array((const Pose **) resarr, count);
+  Pose **resarr = posearr_round(posearr, count, maxdd);
+  ArrayType *result = posearr_to_array(resarr, count);
   pfree(posearr);
   PG_FREE_IF_COPY(array, 0);
   PG_RETURN_ARRAYTYPE_P(result);
@@ -615,7 +615,7 @@ Pose_transform_pipeline(PG_FUNCTION_ARGS)
   text *pipelinetxt = PG_GETARG_TEXT_P(1);
   int32_t srid = PG_GETARG_INT32(2);
   bool is_forward = PG_GETARG_BOOL(3);
-  char *pipelinestr = text_to_cstring(pipelinetxt);
+  char *pipelinestr = pg_text_to_cstring(pipelinetxt);
   Pose *result = pose_transform_pipeline(cb, pipelinestr, srid,
     is_forward);
   pfree(pipelinestr);
@@ -777,7 +777,7 @@ Datum
 Pose_hash(PG_FUNCTION_ARGS)
 {
   Pose *pose = PG_GETARG_POSE_P(0);
-  uint32 result = pose_hash(pose);
+  uint32_t result = pose_hash(pose);
   PG_FREE_IF_COPY(pose, 0);
   PG_RETURN_UINT32(result);
 }
@@ -793,8 +793,8 @@ Datum
 Pose_hash_extended(PG_FUNCTION_ARGS)
 {
   Pose *pose = PG_GETARG_POSE_P(0);
-  uint64 seed = PG_GETARG_INT64(1);
-  uint64 result = pose_hash_extended(pose, seed);
+  uint64_t seed = PG_GETARG_INT64(1);
+  uint64_t result = pose_hash_extended(pose, seed);
   PG_FREE_IF_COPY(pose, 0);
   PG_RETURN_UINT64(result);
 }

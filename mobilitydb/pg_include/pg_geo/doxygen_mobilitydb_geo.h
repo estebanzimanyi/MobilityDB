@@ -185,7 +185,7 @@
  *
  * @defgroup mobilitydb_geo_box_set Set functions
  * @ingroup mobilitydb_geo_box
- * @brief Set functions for spatiotemporal boxes
+ * @brief %Set functions for spatiotemporal boxes
  *
  * @defgroup mobilitydb_geo_box_comp Comparison functions
  * @ingroup mobilitydb_geo_box

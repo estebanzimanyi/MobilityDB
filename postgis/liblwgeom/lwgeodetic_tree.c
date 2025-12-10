@@ -920,7 +920,7 @@ lwpoint_calculate_circ_tree(const LWPOINT* lwpoint)
 {
 	CIRC_NODE* node;
 	node = circ_tree_new(lwpoint->point);
-	node->geom_type = lwgeom_get_type((LWGEOM*)lwpoint);;
+	node->geom_type = lwgeom_get_type((LWGEOM*)lwpoint);
 	return node;
 }
 

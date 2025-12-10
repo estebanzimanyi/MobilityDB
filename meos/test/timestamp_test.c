@@ -54,7 +54,7 @@ int main(void)
   meos_initialize_timezone("UTC");
 
   /* Create values to test the functions of the API */
-  float8 float8_in1 = 8;
+  double float8_in1 = 8;
   DateADT date1 = date_in("2025-03-01");
   char *date1_out = date_out(date1);
   Interval *interv = interval_in("8 hours", -1);
@@ -78,10 +78,10 @@ int main(void)
 
   /* Create the result types for the functions of the API */
   bool bool_result;
-  int32 int32_result;
-  uint32 uint32_result;
-  uint64 uint64_result;
-  float8 float8_result;
+  int32_t int32_result;
+  uint32_t uint32_result;
+  uint64_t uint64_result;
+  double float8_result;
   char *char_result;
   text *text_result;
   Interval *interv_result;
@@ -114,15 +114,15 @@ int main(void)
   printf("add_timestamptz_interval_at_zone(%s, %s, \"Europe/Brussels\"): %s\n",tstz1_out, interv_out, char_result);
   free(zone); free(char_result);
 
-  /* int32 cmp_timestamp_timestamp(Timestamp ts1, Timestamp ts2); */
+  /* int32_t cmp_timestamp_timestamp(Timestamp ts1, Timestamp ts2); */
   int32_result = cmp_timestamp_timestamp(ts1, ts2);
   printf("cmp_timestamp_timestamp(%s, %s): %d\n", ts1_out, ts2_out, int32_result);
 
-  /* int32 cmp_timestamp_timestamptz(Timestamp ts, TimestampTz tstz); */
+  /* int32_t cmp_timestamp_timestamptz(Timestamp ts, TimestampTz tstz); */
   int32_result = cmp_timestamp_timestamptz(ts1, tstz1);
   printf("cmp_timestamp_timestamptz(%s, %s): %c\n", ts1_out, tstz1_out, int32_result);
 
-  /* int32 cmp_timestamptz_timestamp(TimestampTz tstz, Timestamp ts); */
+  /* int32_t cmp_timestamptz_timestamp(TimestampTz tstz, Timestamp ts); */
   int32_result = cmp_timestamptz_timestamp(tstz1, ts1);
   printf("cmp_timestamptz_timestamp(%s, %s): %c\n", tstz1_out, ts1_out, int32_result);
 
@@ -150,7 +150,7 @@ int main(void)
   bool_result = eq_timestamptz_timestamptz(tstz1, tstz2);
   printf("timestamptz_eq(%s, %s): %c\n", tstz1_out, tstz_out2, bool_result ? 't' : 'f');
 
-  /* TimestampTz float8_to_timestamptz(float8 seconds); */
+  /* TimestampTz float8_to_timestamptz(double seconds); */
   tstz_result = float8_to_timestamptz(float8_in1);
   char_result = timestamptz_out(tstz_result);
   printf("float8_to_timestamptz(%lf): %s\n", float8_in1, char_result);
@@ -282,15 +282,15 @@ int main(void)
   printf("timestamp_extract(%s, \"seconds\"): %s\n", ts1_out, char_result);
   free(units); free(numeric_result); free(char_result);
 
-  /* uint32 timestamp_hash(Timestamp ts); */
+  /* uint32_t timestamp_hash(Timestamp ts); */
   uint32_result = timestamp_hash(ts1);
   printf("timestamp_hash(%s): %u\n", ts1_out, uint32_result);
 
-  /* uint64 timestamp_hash_extended(TimestampTz tstz, uint64 seed); */
+  /* uint64_t timestamp_hash_extended(TimestampTz tstz, uint64_t seed); */
   uint64_result = timestamp_hash_extended(ts1, 1);
   printf("timestamp_hash_extended(%s, 1): %lu\n", ts1_out, uint64_result);
 
-  /* Timestamp timestamp_in(const char *str, int32 typmod); */
+  /* Timestamp timestamp_in(const char *str, int32_t typmod); */
   ts_result = timestamp_in("2025-03-01 08:00:00", -1);
   char_result = timestamp_out(ts_result);
   printf("timestamp_in(\"2025-03-01 08:00:00\", -1): %s\n", char_result);
@@ -319,7 +319,7 @@ int main(void)
   printf("timestamp_larger(%s, %s): %s\n", ts1_out, ts2_out, char_result);
   free(char_result);
 
-  /* Timestamp timestamp_make(int32 year, int32 month, int32 mday, int32 hour, int32 min, float8 sec); */
+  /* Timestamp timestamp_make(int32_t year, int32_t month, int32_t mday, int32_t hour, int32_t min, double sec); */
   ts_result = timestamp_make(2025, 3, 1, 8, 0, 0);
   char_result = timestamp_out(ts_result);
   printf("timestamp_make(2025, 3, 1, 8, 0, 0): %s\n", char_result);
@@ -334,13 +334,13 @@ int main(void)
   bool_result = timestamp_overlaps(ts1, ts2, ts3, ts4);
   printf("timestamp_overlaps(%s, %s, %s, %s): %c\n", ts1_out, ts2_out, ts3_out, ts4_out, bool_result ? 't' : 'f');
 
-  /* float8 timestamp_part(Timestamp ts, const text *units); */
+  /* double timestamp_part(Timestamp ts, const text *units); */
   units = text_in("seconds");
   float8_result = timestamp_part(ts1, units);
   printf("timestamp_part(%s, \"seconds\"): %lf\n", ts1_out, float8_result);
   free(units);
 
-  /* Timestamp timestamp_scale(Timestamp ts, int32 typmod); */
+  /* Timestamp timestamp_scale(Timestamp ts, int32_t typmod); */
   ts_result = timestamp_scale(ts1, -1);
   char_result = timestamp_out(ts_result);
   printf("timestamp_scale(%s, -1): %s\n", ts1_out, char_result);
@@ -399,15 +399,15 @@ int main(void)
   printf("timestamptz_extract(%s, \"seconds\"): %s\n", tstz1_out, char_result);
   free(numeric_result); free(units); free(char_result);
 
-  /* int32 timestamptz_hash(TimestampTz tstz); */
-  int32_result = timestamptz_hash(tstz1);
+  /* uint32_t timestamptz_hash(TimestampTz tstz); */
+  uint32_result = timestamptz_hash(tstz1);
   printf("timestamptz_hash(%s): %d\n", tstz1_out, int32_result);
 
-  /* uint64 timestamptz_hash_extended(TimestampTz tstz, uint64 seed); */
+  /* uint64_t timestamptz_hash_extended(TimestampTz tstz, uint64_t seed); */
   uint64_result = timestamptz_hash_extended(tstz1, 1);
   printf("timestamptz_hash_extended(%s, 1): %ld\n", tstz1_out, uint64_result);
 
-  /* TimestampTz timestamptz_in(const char *str, int32 typmod); */
+  /* TimestampTz timestamptz_in(const char *str, int32_t typmod); */
   tstz_result = timestamptz_in("2025-03-01 08:00:00", -1);
   char_result = timestamptz_out(tstz_result);
   printf("timestamptz_in(\"2025-03-01 08:00:00\", -1): %s\n", char_result);
@@ -420,13 +420,13 @@ int main(void)
   printf("timestamptz_izone(%s, \"Europe/Brussels\"): %s\n", tstz1_out, char_result);
   free(interv_zone); free(char_result);
 
-  /* TimestampTz timestamptz_make(int32 year, int32 month, int32 day, int32 hour, int32 min, float8 sec); */
+  /* TimestampTz timestamptz_make(int32_t year, int32_t month, int32_t day, int32_t hour, int32_t min, double sec); */
   tstz_result = timestamptz_make(2025, 3, 1, 8, 0, 0);
   char_result = timestamptz_out(tstz_result);
   printf("timestamptz_make(2025, 03, 01, 08, 00, 00): %s\n", char_result);
   free(char_result);
 
-  /* TimestampTz timestamptz_make_at_timezone(int32 year, int32 month, int32 day, int32 hour, int32 min, float8 sec, const text *zone); */
+  /* TimestampTz timestamptz_make_at_timezone(int32_t year, int32_t month, int32_t day, int32_t hour, int32_t min, double sec, const text *zone); */
   zone = text_in("Europe/Brussels");
   tstz_result = timestamptz_make_at_timezone(2025, 3, 1, 8, 0, 0, zone);
   char_result = timestamptz_out(tstz_result);
@@ -442,13 +442,13 @@ int main(void)
   bool_result = timestamptz_overlaps(tstz1, tstz2, tstz3, tstz4);
   printf("timestamptz_overlaps(%s, %s, %s, %s): %c\n", tstz1_out, tstz_out2, tstz_out3, tstz_out4, bool_result ? 't' : 'f');
 
-  /* float8 timestamptz_part(TimestampTz tstz, const text *units); */
+  /* double timestamptz_part(TimestampTz tstz, const text *units); */
   units = text_in("seconds");
   float8_result = timestamptz_part(tstz1, units);
   printf("timestamptz_part(%s, \"seconds\"): %lf\n", tstz1_out, float8_result);
   free(units);
 
-  /* TimestampTz timestamptz_scale(TimestampTz tstz, int32 typmod); */
+  /* TimestampTz timestamptz_scale(TimestampTz tstz, int32_t typmod); */
   tstz_result = timestamptz_scale(tstz1, -1);
   char_result = timestamptz_out(tstz_result);
   printf("timestamptz_scale(%s, -1): %s\n", tstz1_out, char_result);

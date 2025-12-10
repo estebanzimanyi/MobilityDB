@@ -941,9 +941,9 @@ tcontseq_delete_tstzset(const TSequence *seq, const Set *s)
       DatumGetTimestampTz(SET_VAL_N(s, 0)));
 
   /* Bounding box test */
-  Span p;
-  set_set_span(s, &p);
-  if (! overlaps_span_span(&seq->period, &p))
+  Span sp;
+  set_set_span(s, &sp);
+  if (! overlaps_span_span(&seq->period, &sp))
     return tsequence_copy(seq);
 
   const TInstant *inst;
@@ -1031,14 +1031,14 @@ tsequence_delete_tstzset(const TSequence *seq, const Set *s, bool connect)
 /**
  * @brief Delete a timestamptz span from a continuous temporal sequence
  * @param[in] seq Temporal sequence
- * @param[in] s Span
+ * @param[in] sp Span
  */
 TSequence *
-tcontseq_delete_tstzspan(const TSequence *seq, const Span *s)
+tcontseq_delete_tstzspan(const TSequence *seq, const Span *sp)
 {
-  assert(seq); assert(s);
+  assert(seq); assert(sp);
   /* Bounding box test */
-  if (! overlaps_span_span(&seq->period, s))
+  if (! overlaps_span_span(&seq->period, sp))
     return tsequence_copy(seq);
 
   /* Instantaneous sequence */
@@ -1053,7 +1053,7 @@ tcontseq_delete_tstzspan(const TSequence *seq, const Span *s)
   for (int i = 0; i < seq->count; i++)
   {
     const TInstant *inst = TSEQUENCE_INST_N(seq, i);
-    if (! contains_span_timestamptz(s, inst->t))
+    if (! contains_span_timestamptz(sp, inst->t))
       instants[ninsts++] = (TInstant *) inst;
     else /* instant is inside the period */
     {
@@ -1078,21 +1078,21 @@ tcontseq_delete_tstzspan(const TSequence *seq, const Span *s)
  * @ingroup meos_internal_temporal_modif
  * @brief Delete a timestamptz span from a temporal sequence
  * @param[in] seq Temporal sequence
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] connect True when the instants before and after the span, if any,
  * are connected in the result
  * @csqlfn #Temporal_delete_tstzspan()
  */
 Temporal *
-tsequence_delete_tstzspan(const TSequence *seq, const Span *s, bool connect)
+tsequence_delete_tstzspan(const TSequence *seq, const Span *sp, bool connect)
 {
-  assert(seq); assert(s);
+  assert(seq); assert(sp);
   if (MEOS_FLAGS_DISCRETE_INTERP(seq->flags))
-    return (Temporal *) tsequence_restrict_tstzspan(seq, s, REST_MINUS);
+    return (Temporal *) tsequence_restrict_tstzspan(seq, sp, REST_MINUS);
   else
     return connect ?
-      (Temporal *) tcontseq_delete_tstzspan(seq, s) :
-      (Temporal *) tcontseq_minus_tstzspan(seq, s);
+      (Temporal *) tcontseq_delete_tstzspan(seq, sp) :
+      (Temporal *) tcontseq_minus_tstzspan(seq, sp);
 }
 
 /**
@@ -1416,14 +1416,14 @@ tsequenceset_delete_tstzset(const TSequenceSet *ss, const Set *s)
  * @ingroup meos_internal_temporal_modif
  * @brief Delete a timestamptz span from a temporal sequence set
  * @param[in] ss Temporal sequence set
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Temporal_minus_tstzspan(), #Temporal_delete_tstzspan()
  */
 TSequenceSet *
-tsequenceset_delete_tstzspan(const TSequenceSet *ss, const Span *s)
+tsequenceset_delete_tstzspan(const TSequenceSet *ss, const Span *sp)
 {
   assert(ss); assert(ss);
-  SpanSet *sps = span_to_spanset(s);
+  SpanSet *sps = span_to_spanset(sp);
   TSequenceSet *result = tsequenceset_delete_tstzspanset(ss, sps);
   pfree(sps);
   return result;
@@ -1465,7 +1465,7 @@ tsequenceset_delete_tstzspanset(const TSequenceSet *ss, const SpanSet *ps)
   TSequence **tofree = palloc(sizeof(TSequence *) * (minus->count - 1));
   TInstant *instants[2] = {0};
   sequences[0] = seq = (TSequence *) TSEQUENCESET_SEQ_N(minus, 0);
-  const Span *s = SPANSET_SP_N(ps, 0);
+  const Span *sp = SPANSET_SP_N(ps, 0);
   int i = 1,    /* current composing sequence */
     j = 0,      /* current composing period */
     nseqs = 1,  /* number of sequences in the currently constructed sequence */
@@ -1473,15 +1473,15 @@ tsequenceset_delete_tstzspanset(const TSequenceSet *ss, const SpanSet *ps)
   /* Skip all composing periods that are before or adjacent to seq */
   while (j < ps->count)
   {
-    if (timestamptz_cmp_internal(DatumGetTimestampTz(s->upper),
+    if (timestamptz_cmp_internal(DatumGetTimestampTz(sp->upper),
           DatumGetTimestampTz(seq->period.lower)) > 0)
       break;
-    s = SPANSET_SP_N(ps, j++);
+    sp = SPANSET_SP_N(ps, j++);
   }
   seq = (TSequence *) TSEQUENCESET_SEQ_N(minus, 1);
   while (i < ss->count && j < ps->count)
   {
-    if (timestamptz_cmp_internal(DatumGetTimestampTz(s->upper),
+    if (timestamptz_cmp_internal(DatumGetTimestampTz(sp->upper),
           DatumGetTimestampTz(seq->period.lower) <= 0))
     {
       instants[0] = (TInstant *) TSEQUENCE_INST_N(sequences[nseqs - 1],
@@ -1496,7 +1496,7 @@ tsequenceset_delete_tstzspanset(const TSequenceSet *ss, const SpanSet *ps)
     }
     sequences[nseqs++] = seq;
     seq = (TSequence *) TSEQUENCESET_SEQ_N(minus, ++i);
-    s = SPANSET_SP_N(ps, j++);
+    sp = SPANSET_SP_N(ps, j++);
   }
   /* Add remaining sequences to the result */
   while (i < ss->count)
@@ -1653,30 +1653,30 @@ temporal_delete_tstzset(const Temporal *temp, const Set *s, bool connect)
  * @ingroup meos_temporal_modif
  * @brief Delete a timestamptz span from a temporal value
  * @param[in] temp Temporal value
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] connect True when the instants before and after the span, if any,
  * are connected in the result
  * @csqlfn #Temporal_delete_tstzspan()
  */
 Temporal *
-temporal_delete_tstzspan(const Temporal *temp, const Span *s, bool connect)
+temporal_delete_tstzspan(const Temporal *temp, const Span *sp, bool connect)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(s, NULL);
+  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(sp, NULL);
 
   assert(temptype_subtype(temp->subtype));
   switch (temp->subtype)
   {
     case TINSTANT:
-      return (Temporal *) tinstant_restrict_tstzspan((TInstant *) temp, s,
+      return (Temporal *) tinstant_restrict_tstzspan((TInstant *) temp, sp,
         REST_MINUS);
     case TSEQUENCE:
-      return (Temporal *) tsequence_delete_tstzspan((TSequence *) temp, s,
+      return (Temporal *) tsequence_delete_tstzspan((TSequence *) temp, sp,
         connect);
     default: /* TSEQUENCESET */
       return connect ?
-        (Temporal *) tsequenceset_delete_tstzspan((TSequenceSet *) temp, s) :
-        (Temporal *) tsequenceset_restrict_tstzspan((TSequenceSet *) temp, s,
+        (Temporal *) tsequenceset_delete_tstzspan((TSequenceSet *) temp, sp) :
+        (Temporal *) tsequenceset_restrict_tstzspan((TSequenceSet *) temp, sp,
           REST_MINUS);
   }
 }

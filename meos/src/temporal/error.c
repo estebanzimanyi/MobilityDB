@@ -96,9 +96,8 @@ meos_errno_restore(int err)
 
 /**
  * @brief Clears an error number
- * @return Returns the previous value of the errno, for convenient reset/restore
+ * @return Return the previous value of the errno, for convenient reset/restore
  * operations
- *
  * @code
  * int foo(void)
  * {

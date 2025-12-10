@@ -57,7 +57,7 @@ extern bool ensure_same_dimensionality_tbox(const TBox *box1, const TBox *box2);
 /* Conversion */
 
 extern TBox *set_tbox(const Set *s);
-extern TBox *span_tbox(const Span *s);
+extern TBox *span_tbox(const Span *sp);
 extern Span *tbox_tstzspan(const TBox *box);
 extern Span *tbox_intspan(const TBox *box);
 extern Span *tbox_floatspan(const TBox *box);

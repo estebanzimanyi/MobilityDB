@@ -386,7 +386,7 @@ tnumberinst_transform_wavg(const TInstant *inst, const Interval *interv,
   TSequence **result)
 {
   /* TODO: Should be an additional attribute */
-  float8 value = 0.0;
+  double value = 0.0;
   assert(tnumber_type(inst->temptype));
   if (inst->temptype == T_TINT)
     value = DatumGetInt32(tinstant_value_p(inst));

@@ -392,7 +392,6 @@ tdistance_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) geo_distance_fn(temp->flags);
-  lfinfo.numparam = 0;
   lfinfo.argtype[0] = temp->temptype;
   lfinfo.argtype[1] = temptype_basetype(temp->temptype);
   lfinfo.restype = T_TFLOAT;
@@ -422,7 +421,6 @@ tdistance_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) geo_distance_fn(temp1->flags);
-  lfinfo.numparam = 0;
   lfinfo.argtype[0] = lfinfo.argtype[1] = temp1->temptype;
   lfinfo.restype = T_TFLOAT;
   lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp1->flags) ||
@@ -832,11 +830,11 @@ nad_tgeo_stbox(const Temporal *temp, const STBox *box)
 
   /* Project the temporal geo to the timespan of the box */
   bool hast = MEOS_FLAGS_GET_T(box->flags);
-  Span p, inter;
+  Span sp, inter;
   if (hast)
   {
-    temporal_set_tstzspan(temp, &p);
-    if (! inter_span_span(&p, &box->period, &inter))
+    temporal_set_tstzspan(temp, &sp);
+    if (! inter_span_span(&sp, &box->period, &inter))
       return DBL_MAX;
   }
 

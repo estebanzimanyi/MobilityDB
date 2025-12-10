@@ -59,8 +59,8 @@ int main(void)
 
   /* Create the result types for the functions of the API */
   bool bool_result;
-  uint32 uint32_result;
-  uint64 uint64_result;
+  uint32_t uint32_result;
+  uint64_t uint64_result;
   char *char_result;
   text *text_result;
   
@@ -82,11 +82,11 @@ int main(void)
   bool_result = bool_gt(b1, b2);
   printf("bool_gt(%s, %s): %c\n", b1_out, b2_out, bool_result ? 't' : 'f');
 
-  /* uint32 bool_hash(bool arg); */
+  /* uint32_t bool_hash(bool arg); */
   uint32_result = bool_hash(b1);
   printf("bool_hash(%s): %u\n", b1_out, uint32_result);
 
-  /* uint64 bool_hash_extended(bool arg, int64 seed); */
+  /* uint64_t bool_hash_extended(bool arg, uint64_t seed); */
   uint64_result = bool_hash_extended(b1, 1);
   printf("bool_hash_extended(%s, 1): %lu\n", b1_out, uint64_result);
 

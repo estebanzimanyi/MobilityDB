@@ -206,9 +206,9 @@ trgeoseq_make1_exp(const GSERIALIZED *geom, TInstant **instants,
     TSEQUENCE_BBOX_PTR(result));
   /* Set the lower_inc and upper_inc bounds of the period at the beginning
    * of the bounding box */
-  Span *p = (Span *) TSEQUENCE_BBOX_PTR(result);
-  p->lower_inc = lower_inc;
-  p->upper_inc = upper_inc;
+  Span *sp = (Span *) TSEQUENCE_BBOX_PTR(result);
+  sp->lower_inc = lower_inc;
+  sp->upper_inc = upper_inc;
   /* Store the composing instants */
   size_t pdata = DOUBLE_PAD(sizeof(TSequence)) + bboxsize_extra +
     sizeof(size_t) * maxcount;

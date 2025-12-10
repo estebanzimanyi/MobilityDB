@@ -85,7 +85,7 @@ tbox_value_time_tiles(const TBox *box, Datum vsize, const Interval *duration,
   if (datum_double(vsize, box->span.basetype))
     nrows = span_num_bins(&box->span, vsize, vorigin, &start_bin, &end_bin);
   /* Determine the number of time bins */
-  int64 tunits = duration ? interval_units(duration) : 0;
+  int64_t tunits = duration ? interval_units(duration) : 0;
   if (tunits)
     ncols = span_num_bins(&box->period, Int64GetDatum(tunits),
       TimestampTzGetDatum(torigin), &start_bin, &end_bin);
@@ -311,7 +311,7 @@ tfloat_value_time_boxes(const Temporal *temp, double vsize,
  * @param[out] count Number of values in the output array
  */
 static TInstant **
-tinstant_time_split(const TInstant *inst, int64 tunits, TimestampTz torigin,
+tinstant_time_split(const TInstant *inst, int64_t tunits, TimestampTz torigin,
   TimestampTz **bins, int *count)
 {
   assert(inst);
@@ -337,7 +337,7 @@ tinstant_time_split(const TInstant *inst, int64 tunits, TimestampTz torigin,
  * @param[out] newcount Number of values in the output array
  */
 static TSequence **
-tdiscseq_time_split(const TSequence *seq, TimestampTz start, int64 tunits,
+tdiscseq_time_split(const TSequence *seq, TimestampTz start, int64_t tunits,
   int count, TimestampTz **bins, int *newcount)
 {
   assert(seq); assert(bins); assert(newcount);
@@ -398,7 +398,7 @@ tdiscseq_time_split(const TSequence *seq, TimestampTz start, int64 tunits,
  */
 static int
 tcontseq_time_split_iter(const TSequence *seq, TimestampTz start,
-  TimestampTz end, int64 tunits, int count, TSequence **result,
+  TimestampTz end, int64_t tunits, int count, TSequence **result,
   TimestampTz *times)
 {
   assert(seq); assert(result); assert(times);
@@ -500,7 +500,7 @@ tcontseq_time_split_iter(const TSequence *seq, TimestampTz start,
  */
 static TSequence **
 tcontseq_time_split(const TSequence *seq, TimestampTz start, TimestampTz end,
-  int64 tunits, int count, TimestampTz **bins, int *newcount)
+  int64_t tunits, int count, TimestampTz **bins, int *newcount)
 {
   assert(seq); assert(bins); assert(newcount);
   assert(MEOS_FLAGS_GET_INTERP(seq->flags) != DISCRETE);
@@ -524,7 +524,7 @@ tcontseq_time_split(const TSequence *seq, TimestampTz start, TimestampTz end,
  */
 static TSequenceSet **
 tsequenceset_time_split(const TSequenceSet *ss, TimestampTz start,
-  TimestampTz end, int64 tunits, int count, TimestampTz **bins,
+  TimestampTz end, int64_t tunits, int count, TimestampTz **bins,
   int *newcount)
 {
   assert(ss); assert(bins); assert(newcount);
@@ -623,7 +623,7 @@ tsequenceset_time_split(const TSequenceSet *ss, TimestampTz start,
  */
 static Temporal **
 temporal_time_split_int(const Temporal *temp, TimestampTz start,
-  TimestampTz end, int64 tunits, TimestampTz torigin, int count,
+  TimestampTz end, int64_t tunits, TimestampTz torigin, int count,
   TimestampTz **bins, int *newcount)
 {
   assert(temp); assert(bins); assert(newcount); assert(start < end);
@@ -671,7 +671,7 @@ temporal_time_split(const Temporal *temp, const Interval *duration,
   Span s;
   temporal_set_tstzspan(temp, &s);
   Datum start_bin, end_bin;
-  int64 tunits = interval_units(duration);
+  int64_t tunits = interval_units(duration);
   int nbins = span_num_bins(&s, Int64GetDatum(tunits),
     TimestampTzGetDatum(torigin), &start_bin, &end_bin);
   return temporal_time_split_int(temp, DatumGetTimestampTz(start_bin),
@@ -1244,7 +1244,7 @@ tnumber_value_time_split(const Temporal *temp, Datum size,
     &end_bin);
   /* Compute the time bounds */
   temporal_set_tstzspan(temp, &s);
-  int64 tunits = interval_units(duration);
+  int64_t tunits = interval_units(duration);
   int time_count = span_num_bins(&s, Int64GetDatum(tunits),
     TimestampTzGetDatum(torigin), &start_time_bin, &end_time_bin);
   TimestampTz start_time = DatumGetTimestampTz(start_time_bin);

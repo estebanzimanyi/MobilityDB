@@ -686,7 +686,6 @@ tsequence_to_string(const TSequence *seq, int maxdd, bool component,
   assert(maxdd >= 0);
 
   char **strings = palloc(sizeof(char *) * seq->count);
-  size_t outlen = 0;
   char prefix[13];
   interpType interp = MEOS_FLAGS_GET_INTERP(seq->flags);
   if (! component && MEOS_FLAGS_GET_CONTINUOUS(seq->flags) &&
@@ -695,11 +694,8 @@ tsequence_to_string(const TSequence *seq, int maxdd, bool component,
   else
     prefix[0] = '\0';
   for (int i = 0; i < seq->count; i++)
-  {
     strings[i] = tinstant_to_string(TSEQUENCE_INST_N(seq, i), maxdd,
       value_out);
-    outlen += strlen(strings[i]) + 1;
-  }
   char open, close;
   if (MEOS_FLAGS_DISCRETE_INTERP(seq->flags))
   {
@@ -711,7 +707,7 @@ tsequence_to_string(const TSequence *seq, int maxdd, bool component,
     open = seq->period.lower_inc ? (char) '[' : (char) '(';
     close = seq->period.upper_inc ? (char) ']' : (char) ')';
   }
-  return stringarr_to_string(strings, seq->count, outlen, prefix, open, close,
+  return stringarr_to_string(strings, seq->count, prefix, open, close,
     QUOTES_NO, SPACES);
 }
 
@@ -842,7 +838,7 @@ tsequence_make_exp1(TInstant **instants, int count, int maxcount,
   result->maxcount = maxcount;
   result->temptype = instants[0]->temptype;
   result->subtype = TSEQUENCE;
-  result->bboxsize = (int16) bboxsize;
+  result->bboxsize = (int16_t) bboxsize;
   MEOS_FLAGS_SET_CONTINUOUS(result->flags,
     MEOS_FLAGS_GET_CONTINUOUS(norminsts[0]->flags));
   MEOS_FLAGS_SET_INTERP(result->flags, interp);
@@ -1110,7 +1106,7 @@ tsequence_make_free(TInstant **instants, int count, bool lower_inc,
  */
 TSequence *
 tpointseq_make_coords(const double *xcoords, const double *ycoords,
-  const double *zcoords, const TimestampTz *times, int count, int32 srid,
+  const double *zcoords, const TimestampTz *times, int count, int32_t srid,
   bool geodetic, bool lower_inc, bool upper_inc, interpType interp,
   bool normalize)
 {
@@ -1174,24 +1170,24 @@ tsequence_from_base_tstzset(Datum value, meosType temptype, const Set *s)
  * @brief Return a temporal sequence from a base value and a timestamptz span
  * @param[in] value Value
  * @param[in] temptype Temporal type
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] interp Interpolation
  */
 TSequence *
-tsequence_from_base_tstzspan(Datum value, meosType temptype, const Span *s,
+tsequence_from_base_tstzspan(Datum value, meosType temptype, const Span *sp,
   interpType interp)
 {
-  assert(s);
+  assert(sp);
   int count = 1;
   TInstant *instants[2];
-  instants[0] = tinstant_make(value, temptype, s->lower);
-  if (s->lower != s->upper)
+  instants[0] = tinstant_make(value, temptype, sp->lower);
+  if (sp->lower != sp->upper)
   {
-    instants[1] = tinstant_make(value, temptype, s->upper);
+    instants[1] = tinstant_make(value, temptype, sp->upper);
     count = 2;
   }
-  TSequence *result = tsequence_make(instants, count, s->lower_inc,
-    s->upper_inc, interp, NORMALIZE_NO);
+  TSequence *result = tsequence_make(instants, count, sp->lower_inc,
+    sp->upper_inc, interp, NORMALIZE_NO);
   pfree(instants[0]);
   if (count == 2)
     pfree(instants[1]);
@@ -1658,7 +1654,7 @@ tsequence_shift_scale_time(const TSequence *seq, const Interval *shift,
 
 /**
  * @ingroup meos_internal_temporal_accessor
- * @brief Return the array of (pointer to the) distinct values of a temporal
+ * @brief Return an array of pointers to the distinct values of a temporal
  * sequence
  * @param[in] seq Temporal sequence
  * @param[out] count Number of values in the resulting array
@@ -1893,13 +1889,13 @@ tsequence_duration(const TSequence *seq)
  * @ingroup meos_internal_temporal_accessor
  * @brief Return in the last argument the time span of a temporal sequence
  * @param[in] seq Temporal sequence
- * @param[out] s Span
+ * @param[out] sp Span
  */
 void
-tsequence_set_tstzspan(const TSequence *seq, Span *s)
+tsequence_set_tstzspan(const TSequence *seq, Span *sp)
 {
-  assert(seq); assert(s);
-  memcpy(s, &seq->period, sizeof(Span));
+  assert(seq); assert(sp);
+  memcpy(sp, &seq->period, sizeof(Span));
   return;
 }
 
@@ -2008,7 +2004,7 @@ tsequence_segments(const TSequence *seq, int *count)
 
 /**
  * @ingroup meos_internal_temporal_accessor
- * @brief Return the array of pointers to distinct instants of a temporal
+ * @brief Return an array of pointers to the distinct instants of a temporal
  * sequence
  * @param[in] seq Temporal sequence
  * @note By definition, all instants of a sequence are distinct. This not the
@@ -2903,7 +2899,7 @@ tsequence_cmp(const TSequence *seq1, const TSequence *seq2)
  * @param[in] seq Temporal sequence
  * @csqlfn #Temporal_hash()
  */
-uint32
+uint32_t
 tsequence_hash(const TSequence *seq)
 {
   assert(seq);
@@ -2913,12 +2909,12 @@ tsequence_hash(const TSequence *seq)
     flags |= 0x01;
   if (seq->period.upper_inc)
     flags |= 0x02;
-  uint32 result = hash_bytes_uint32((uint32) flags);
+  uint32_t result = hash_bytes_uint32((uint32_t) flags);
 
   /* Merge with hash of instants */
   for (int i = 0; i < seq->count; i++)
   {
-    uint32 inst_hash = tinstant_hash(TSEQUENCE_INST_N(seq, i));
+    uint32_t inst_hash = tinstant_hash(TSEQUENCE_INST_N(seq, i));
     result = (result << 5) - result + inst_hash;
   }
   return result;

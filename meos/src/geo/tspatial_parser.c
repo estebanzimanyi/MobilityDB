@@ -271,7 +271,7 @@ stbox_parse(const char **str)
  * @param[out] result New geometry, may be NULL
  */
 bool 
-geo_parse(const char **str, meosType basetype, char delim, int *srid,
+geo_parse(const char **str, meosType basetype, const char *delim, int *srid,
   GSERIALIZED **result)
 {
   p_whitespace(str);
@@ -323,7 +323,7 @@ geo_parse(const char **str, meosType basetype, char delim, int *srid,
  * @param[out] result New spatial base value, may be NULL
  */
 bool 
-spatial_parse_elem(const char **str, meosType temptype, char delim, 
+spatial_parse_elem(const char **str, meosType temptype, const char *delim, 
   int *temp_srid, Datum *result)
 {
   p_whitespace(str);
@@ -375,7 +375,7 @@ tspatialinst_parse(const char **str, meosType temptype, bool end,
   int *temp_srid)
 {
   Datum base;
-  if (! spatial_parse_elem(str, temptype, '@', temp_srid, &base))
+  if (! spatial_parse_elem(str, temptype, "@", temp_srid, &base))
     return NULL;
 
   p_delimchar(str, '@');
@@ -429,7 +429,7 @@ tspatialseq_disc_parse(const char **str, meosType temptype, int *temp_srid)
 
   /* Create the array of instants now with the actual size */
   TInstant **instants = palloc(sizeof(TInstant *) * array->count);
-  for (int i = 0; i < array->count; i++)
+  for (int i = 0; i < (int) array->count; i++)
     instants[i] = DatumGetTInstantP(meos_array_get_n(array, i));
   p_cbrace(str);
   result = tsequence_make(instants, array->count, true, true, DISCRETE,
@@ -497,7 +497,7 @@ tspatialseq_cont_parse(const char **str, meosType temptype, interpType interp,
 
   /* Create the array of instants now with the actual size */
   TInstant **instants = palloc(sizeof(TInstant *) * array->count);
-  for (int i = 0; i < array->count; i++)
+  for (int i = 0; i < (int) array->count; i++)
     instants[i] = DatumGetTInstantP(meos_array_get_n(array, i));
   p_cbracket(str);
   p_cparen(str);
@@ -548,7 +548,7 @@ tspatialseqset_parse(const char **str, meosType temptype, interpType interp,
 
   /* Create the array of sequences now with the actual size */
   TSequence **sequences = palloc(sizeof(TSequence *) * array->count);
-  for (int i = 0; i < array->count; i++)
+  for (int i = 0; i < (int) array->count; i++)
     sequences[i] = DatumGetTSequenceP(meos_array_get_n(array, i));
   p_cbrace(str);
   result = tsequenceset_make(sequences, array->count, NORMALIZE);

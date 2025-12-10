@@ -74,7 +74,7 @@ tand_tbool_bool(const Temporal *temp, bool b)
 
 /**
  * @ingroup meos_temporal_bool
- * @brief Return the boolean and of the temporal booleans
+ * @brief Return the boolean and of two temporal booleans
  * @param[in] temp1,temp2 Temporal values
  * @csqlfn #Tand_tbool_tbool()
  */
@@ -122,7 +122,7 @@ tor_tbool_bool(const Temporal *temp, bool b)
 
 /**
  * @ingroup meos_temporal_bool
- * @brief Return the boolean or of the temporal booleans
+ * @brief Return the boolean or of two temporal booleans
  * @param[in] temp1,temp2 Temporal values
  * @csqlfn #Tor_tbool_tbool()
  */

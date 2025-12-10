@@ -78,7 +78,7 @@ Datum
 Spatialset_from_ewkt(PG_FUNCTION_ARGS)
 {
   text *wkt_text = PG_GETARG_TEXT_P(0);
-  char *wkt = text_to_cstring(wkt_text);
+  char *wkt = pg_text_to_cstring(wkt_text);
   /* Copy the pointer since it will be advanced during parsing */
   const char *wkt_ptr = wkt;
   Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);
@@ -107,7 +107,7 @@ Spatialset_as_text(PG_FUNCTION_ARGS)
   if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
     dbl_dig_for_wkt = PG_GETARG_INT32(1);
   char *str = spatialset_as_text(s, dbl_dig_for_wkt);
-  text *result = cstring_to_text(str);
+  text *result = pg_cstring_to_text(str);
   pfree(str);
   PG_FREE_IF_COPY(s, 0);
   PG_RETURN_TEXT_P(result);
@@ -129,7 +129,7 @@ Spatialset_as_ewkt(PG_FUNCTION_ARGS)
   if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
     dbl_dig_for_wkt = PG_GETARG_INT32(1);
   char *str = spatialset_as_ewkt(s, dbl_dig_for_wkt);
-  text *result = cstring_to_text(str);
+  text *result = pg_cstring_to_text(str);
   pfree(str);
   PG_FREE_IF_COPY(s, 0);
   PG_RETURN_TEXT_P(result);
@@ -311,8 +311,9 @@ Spatialset_transform_pipeline(PG_FUNCTION_ARGS)
   text *pipelinetxt = PG_GETARG_TEXT_P(1);
   int32_t srid = PG_GETARG_INT32(2);
   bool is_forward = PG_GETARG_BOOL(3);
-  char *pipelinestr = text_to_cstring(pipelinetxt);
-  Set *result = spatialset_transform_pipeline(s, pipelinestr, srid, is_forward);
+  char *pipelinestr = pg_text_to_cstring(pipelinetxt);
+  Set *result = spatialset_transform_pipeline(s, pipelinestr, srid,
+    is_forward);
   pfree(pipelinestr);
   PG_FREE_IF_COPY(s, 0);
   PG_FREE_IF_COPY(pipelinetxt, 1);

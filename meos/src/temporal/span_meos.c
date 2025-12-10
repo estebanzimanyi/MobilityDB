@@ -137,76 +137,76 @@ tstzspan_in(const char *str)
  * @ingroup meos_setspan_inout
  * @brief Return the Well-Known Text (WKT) representation of an integer span
  * @return On error return @p NULL
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Span_out()
  */
 char *
-intspan_out(const Span *s)
+intspan_out(const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_INTSPAN(s, NULL);
-  return span_out(s, 0);
+  VALIDATE_INTSPAN(sp, NULL);
+  return span_out(sp, 0);
 }
 
 /**
  * @ingroup meos_setspan_inout
  * @brief Return the Well-Known Text (WKT) representation of a big integer span
- * @param[in] s Span
+ * @param[in] sp Span
  * @return On error return @p NULL
  * @csqlfn #Span_out()
  */
 char *
-bigintspan_out(const Span *s)
+bigintspan_out(const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_BIGINTSPAN(s, NULL);
-  return span_out(s, 0);
+  VALIDATE_BIGINTSPAN(sp, NULL);
+  return span_out(sp, 0);
 }
 
 /**
  * @ingroup meos_setspan_inout
  * @brief Return the Well-Known Text (WKT) representation of a float span
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] maxdd Maximum number of decimal digits
  * @return On error return @p NULL
   * @csqlfn #Span_out()
 */
 char *
-floatspan_out(const Span *s, int maxdd)
+floatspan_out(const Span *sp, int maxdd)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_FLOATSPAN(s, NULL);
-  return span_out(s, maxdd);
+  VALIDATE_FLOATSPAN(sp, NULL);
+  return span_out(sp, maxdd);
 }
 
 /**
  * @ingroup meos_setspan_inout
  * @brief Return the Well-Known Text (WKT) representation of a date span
- * @param[in] s Span
+ * @param[in] sp Span
  * @return On error return @p NULL
  * @csqlfn #Span_out()
  */
 char *
-datespan_out(const Span *s)
+datespan_out(const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_DATESPAN(s, NULL);
-  return span_out(s, 0);
+  VALIDATE_DATESPAN(sp, NULL);
+  return span_out(sp, 0);
 }
 
 /**
  * @ingroup meos_setspan_inout
  * @brief Return the Well-Known Text (WKT) representation of a timestamtz span
- * @param[in] s Span
+ * @param[in] sp Span
  * @return On error return @p NULL
  * @csqlfn #Span_out()
  */
 char *
-tstzspan_out(const Span *s)
+tstzspan_out(const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_TSTZSPAN(s, NULL);
-  return span_out(s, 0);
+  VALIDATE_TSTZSPAN(sp, NULL);
+  return span_out(sp, 0);
 }
 
 /*****************************************************************************
@@ -224,10 +224,10 @@ Span *
 intspan_make(int lower, int upper, bool lower_inc, bool upper_inc)
 {
   /* Note: zero-fill is done in the span_set function */
-  Span *s = palloc(sizeof(Span));
+  Span *sp = palloc(sizeof(Span));
   span_set(Int32GetDatum(lower), Int32GetDatum(upper), lower_inc, upper_inc,
-    T_INT4, T_INTSPAN, s);
-  return s;
+    T_INT4, T_INTSPAN, sp);
+  return sp;
 }
 
 /**
@@ -238,13 +238,13 @@ intspan_make(int lower, int upper, bool lower_inc, bool upper_inc)
  * @csqlfn #Span_constructor()
  */
 Span *
-bigintspan_make(int64 lower, int64 upper, bool lower_inc, bool upper_inc)
+bigintspan_make(int64_t lower, int64_t upper, bool lower_inc, bool upper_inc)
 {
   /* Note: zero-fill is done in the span_set function */
-  Span *s = palloc(sizeof(Span));
+  Span *sp = palloc(sizeof(Span));
   span_set(Int64GetDatum(lower), Int64GetDatum(upper), lower_inc, upper_inc,
-    T_INT8, T_BIGINTSPAN, s);
-  return s;
+    T_INT8, T_BIGINTSPAN, sp);
+  return sp;
 }
 
 /**
@@ -258,10 +258,10 @@ Span *
 floatspan_make(double lower, double upper, bool lower_inc, bool upper_inc)
 {
   /* Note: zero-fill is done in the span_set function */
-  Span *s = palloc(sizeof(Span));
+  Span *sp = palloc(sizeof(Span));
   span_set(Float8GetDatum(lower), Float8GetDatum(upper), lower_inc, upper_inc,
-    T_FLOAT8, T_FLOATSPAN, s);
-  return s;
+    T_FLOAT8, T_FLOATSPAN, sp);
+  return sp;
 }
 
 /**
@@ -275,10 +275,10 @@ Span *
 datespan_make(DateADT lower, DateADT upper, bool lower_inc, bool upper_inc)
 {
   /* Note: zero-fill is done in the span_set function */
-  Span *s = palloc(sizeof(Span));
+  Span *sp = palloc(sizeof(Span));
   span_set(DateADTGetDatum(lower), DateADTGetDatum(upper), lower_inc,
-    upper_inc, T_DATE, T_DATESPAN, s);
-  return s;
+    upper_inc, T_DATE, T_DATESPAN, sp);
+  return sp;
 }
 /**
  * @ingroup meos_setspan_constructor
@@ -292,10 +292,10 @@ tstzspan_make(TimestampTz lower, TimestampTz upper, bool lower_inc,
   bool upper_inc)
 {
   /* Note: zero-fill is done in the span_set function */
-  Span *s = palloc(sizeof(Span));
+  Span *sp = palloc(sizeof(Span));
   span_set(TimestampTzGetDatum(lower), TimestampTzGetDatum(upper), lower_inc,
-    upper_inc, T_TIMESTAMPTZ, T_TSTZSPAN, s);
-  return s;
+    upper_inc, T_TIMESTAMPTZ, T_TSTZSPAN, sp);
+  return sp;
 }
 
 /*****************************************************************************
@@ -388,75 +388,75 @@ timestamptz_to_span(TimestampTz t)
  * @ingroup meos_setspan_accessor
  * @brief Return the lower bound of an integer span
  * @return On error return @p INT_MAX
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Span_lower()
  */
 int
-intspan_lower(const Span *s)
+intspan_lower(const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_INTSPAN(s, INT_MAX);
-  return DatumGetInt32(s->lower);
+  VALIDATE_INTSPAN(sp, INT_MAX);
+  return DatumGetInt32(sp->lower);
 }
 
 /**
  * @ingroup meos_setspan_accessor
  * @brief Return the lower bound of an integer span
- * @param[in] s Span
+ * @param[in] sp Span
  * @return On error return LONG_MAX
  * @csqlfn #Span_lower()
  */
-int64
-bigintspan_lower(const Span *s)
+int64_t
+bigintspan_lower(const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_BIGINTSPAN(s, LONG_MAX);
-  return DatumGetInt64(s->lower);
+  VALIDATE_BIGINTSPAN(sp, LONG_MAX);
+  return DatumGetInt64(sp->lower);
 }
 
 /**
  * @ingroup meos_setspan_accessor
  * @brief Return the lower bound of a float span
- * @param[in] s Span
+ * @param[in] sp Span
  * @return On error return @p DBL_MAX
  * @csqlfn #Span_lower()
  */
 double
-floatspan_lower(const Span *s)
+floatspan_lower(const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_FLOATSPAN(s, DBL_MAX);
-  return DatumGetFloat8(s->lower);
+  VALIDATE_FLOATSPAN(sp, DBL_MAX);
+  return DatumGetFloat8(sp->lower);
 }
 
 /**
  * @ingroup meos_setspan_accessor
  * @brief Return the lower bound of a date span
- * @param[in] s Span
+ * @param[in] sp Span
  * @return On error return DATEVAL_NOEND
  * @csqlfn #Span_lower()
  */
 DateADT
-datespan_lower(const Span *s)
+datespan_lower(const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_DATESPAN(s, DATEVAL_NOEND);
-  return DateADTGetDatum(s->lower);
+  VALIDATE_DATESPAN(sp, DATEVAL_NOEND);
+  return DateADTGetDatum(sp->lower);
 }
 
 /**
  * @ingroup meos_setspan_accessor
  * @brief Return the lower bound of a timestamptz span
- * @param[in] s Span
+ * @param[in] sp Span
  * @return On error return DT_NOEND
  * @csqlfn #Span_lower()
  */
 TimestampTz
-tstzspan_lower(const Span *s)
+tstzspan_lower(const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_TSTZSPAN(s, DT_NOEND);
-  return TimestampTzGetDatum(s->lower);
+  VALIDATE_TSTZSPAN(sp, DT_NOEND);
+  return TimestampTzGetDatum(sp->lower);
 }
 
 /*****************************************************************************/
@@ -464,104 +464,104 @@ tstzspan_lower(const Span *s)
 /**
  * @ingroup meos_setspan_accessor
  * @brief Return the upper bound of an integer span
- * @param[in] s Span
+ * @param[in] sp Span
  * @return On error return @p INT_MAX
  * @csqlfn #Span_upper()
  */
 int
-intspan_upper(const Span *s)
+intspan_upper(const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_INTSPAN(s, INT_MAX);
-  return Int32GetDatum(s->upper);
+  VALIDATE_INTSPAN(sp, INT_MAX);
+  return Int32GetDatum(sp->upper);
 }
 
 /**
  * @ingroup meos_setspan_accessor
  * @brief Return the upper bound of an integer span
- * @param[in] s Span
+ * @param[in] sp Span
  * @return On error return LONG_MAX
  * @csqlfn #Span_upper()
  */
-int64
-bigintspan_upper(const Span *s)
+int64_t
+bigintspan_upper(const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_BIGINTSPAN(s, LONG_MAX);
-  return Int64GetDatum(s->upper);
+  VALIDATE_BIGINTSPAN(sp, LONG_MAX);
+  return Int64GetDatum(sp->upper);
 }
 
 /**
  * @ingroup meos_setspan_accessor
  * @brief Return the upper bound of a float span
- * @param[in] s Span
+ * @param[in] sp Span
  * @return On error return @p DBL_MAX
  * @csqlfn #Span_upper()
  */
 double
-floatspan_upper(const Span *s)
+floatspan_upper(const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_FLOATSPAN(s, DBL_MAX);
-  return DatumGetFloat8(s->upper);
+  VALIDATE_FLOATSPAN(sp, DBL_MAX);
+  return DatumGetFloat8(sp->upper);
 }
 
 /**
  * @ingroup meos_setspan_accessor
  * @brief Return the upper bound of a date span
- * @param[in] s Span
+ * @param[in] sp Span
  * @return On error return DATEVAL_NOEND
  * @csqlfn #Span_upper()
  */
 DateADT
-datespan_upper(const Span *s)
+datespan_upper(const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_DATESPAN(s, DATEVAL_NOEND);
-  return DateADTGetDatum(s->upper);
+  VALIDATE_DATESPAN(sp, DATEVAL_NOEND);
+  return DateADTGetDatum(sp->upper);
 }
 
 /**
  * @ingroup meos_setspan_accessor
  * @brief Return the upper bound of a timestamptz span
- * @param[in] s Span
+ * @param[in] sp Span
  * @return On error return DT_NOEND
  * @csqlfn #Span_upper()
  */
 TimestampTz
-tstzspan_upper(const Span *s)
+tstzspan_upper(const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_TSTZSPAN(s, DT_NOEND);
-  return TimestampTzGetDatum(s->upper);
+  VALIDATE_TSTZSPAN(sp, DT_NOEND);
+  return TimestampTzGetDatum(sp->upper);
 }
 
 /**
  * @ingroup meos_setspan_accessor
  * @brief Return true if the lower bound of a span is inclusive
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Span_lower_inc()
  */
 bool
-span_lower_inc(const Span *s)
+span_lower_inc(const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(s, false);
-  return s->lower_inc;
+  VALIDATE_NOT_NULL(sp, false);
+  return sp->lower_inc;
 }
 
 /**
  * @ingroup meos_setspan_accessor
  * @brief Return true if the upper bound of a span is inclusive
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Span_lower_inc()
  */
 bool
-span_upper_inc(const Span *s)
+span_upper_inc(const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(s, false);
-  return s->upper_inc;
+  VALIDATE_NOT_NULL(sp, false);
+  return sp->upper_inc;
 }
 
 /*****************************************************************************/
@@ -569,46 +569,46 @@ span_upper_inc(const Span *s)
 /**
  * @ingroup meos_setspan_accessor
  * @brief Return the width of an integer span
- * @param[in] s Span
+ * @param[in] sp Span
  * @return On error return -1
  * @csqlfn #Numspan_width()
  */
 int
-intspan_width(const Span *s)
+intspan_width(const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_INTSPAN(s, -1);
-  return Int32GetDatum(numspan_width(s));
+  VALIDATE_INTSPAN(sp, -1);
+  return Int32GetDatum(numspan_width(sp));
 }
 
 /**
  * @ingroup meos_setspan_accessor
  * @brief Return the width of a big integer span
- * @param[in] s Span
+ * @param[in] sp Span
  * @return On error return -1
  * @csqlfn #Numspan_width()
  */
-int64
-bigintspan_width(const Span *s)
+int64_t
+bigintspan_width(const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_BIGINTSPAN(s, -1);
-  return Int64GetDatum(numspan_width(s));
+  VALIDATE_BIGINTSPAN(sp, -1);
+  return Int64GetDatum(numspan_width(sp));
 }
 
 /**
  * @ingroup meos_setspan_accessor
  * @brief Return the width of a float span
- * @param[in] s Span
+ * @param[in] sp Span
  * @return On error return -1
  * @csqlfn #Numspan_width()
  */
 double
-floatspan_width(const Span *s)
+floatspan_width(const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_FLOATSPAN(s, -1.0);
-  return DatumGetFloat8(numspan_width(s));
+  VALIDATE_FLOATSPAN(sp, -1.0);
+  return DatumGetFloat8(numspan_width(sp));
 }
 
 /*****************************************************************************
@@ -618,7 +618,7 @@ floatspan_width(const Span *s)
 /**
  * @ingroup meos_setspan_transf
  * @brief Return an integer span shifted and/or scaled by the values
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] shift Value for shifting the bounds
  * @param[in] width Width of the result
  * @param[in] hasshift True when the shift argument is given
@@ -626,19 +626,19 @@ floatspan_width(const Span *s)
  * @csqlfn #Numspan_shift(), #Numspan_scale(), #Numspan_shift_scale()
  */
 Span *
-intspan_shift_scale(const Span *s, int shift, int width, bool hasshift,
+intspan_shift_scale(const Span *sp, int shift, int width, bool hasshift,
   bool haswidth)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_INTSPAN(s, NULL);
-  return numspan_shift_scale(s, Int32GetDatum(shift), Int32GetDatum(width),
+  VALIDATE_INTSPAN(sp, NULL);
+  return numspan_shift_scale(sp, Int32GetDatum(shift), Int32GetDatum(width),
     hasshift, haswidth);
 }
 
 /**
  * @ingroup meos_setspan_transf
  * @brief Return a big integer span shifted and/or scaled by the values
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] shift Value for shifting the bounds
  * @param[in] width Width of the result
  * @param[in] hasshift True when the shift argument is given
@@ -646,19 +646,19 @@ intspan_shift_scale(const Span *s, int shift, int width, bool hasshift,
  * @csqlfn #Numspan_shift(), #Numspan_scale(), #Numspan_shift_scale()
  */
 Span *
-bigintspan_shift_scale(const Span *s, int64 shift, int64 width, bool hasshift,
+bigintspan_shift_scale(const Span *sp, int64_t shift, int64_t width, bool hasshift,
   bool haswidth)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_BIGINTSPAN(s, NULL);
-  return numspan_shift_scale(s, Int64GetDatum(shift), Int64GetDatum(width),
+  VALIDATE_BIGINTSPAN(sp, NULL);
+  return numspan_shift_scale(sp, Int64GetDatum(shift), Int64GetDatum(width),
     hasshift, haswidth);
 }
 
 /**
  * @ingroup meos_setspan_transf
  * @brief Return a float span shifted and/or scaled by the values
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] shift Value for shifting the bounds
  * @param[in] width Width of the result
  * @param[in] hasshift True when the shift argument is given
@@ -666,19 +666,19 @@ bigintspan_shift_scale(const Span *s, int64 shift, int64 width, bool hasshift,
  * @csqlfn #Numspan_shift(), #Numspan_scale(), #Numspan_shift_scale()
  */
 Span *
-floatspan_shift_scale(const Span *s, double shift, double width, bool hasshift,
+floatspan_shift_scale(const Span *sp, double shift, double width, bool hasshift,
   bool haswidth)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_FLOATSPAN(s, NULL);
-  return numspan_shift_scale(s, Float8GetDatum(shift), Float8GetDatum(width),
+  VALIDATE_FLOATSPAN(sp, NULL);
+  return numspan_shift_scale(sp, Float8GetDatum(shift), Float8GetDatum(width),
     hasshift, haswidth);
 }
 
 /**
  * @ingroup meos_setspan_transf
  * @brief Return a date span shifted and/or scaled by the values
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] shift Value for shifting the bounds
  * @param[in] width Width of the result
  * @param[in] hasshift True when the shift argument is given
@@ -686,12 +686,12 @@ floatspan_shift_scale(const Span *s, double shift, double width, bool hasshift,
  * @csqlfn #Numspan_shift(), #Numspan_scale(), #Numspan_shift_scale()
  */
 Span *
-datespan_shift_scale(const Span *s, int shift, int width, bool hasshift,
+datespan_shift_scale(const Span *sp, int shift, int width, bool hasshift,
   bool haswidth)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_DATESPAN(s, NULL);
-  return numspan_shift_scale(s, Int32GetDatum(shift), Int32GetDatum(width),
+  VALIDATE_DATESPAN(sp, NULL);
+  return numspan_shift_scale(sp, Int32GetDatum(shift), Int32GetDatum(width),
     hasshift, haswidth);
 }
 

@@ -176,11 +176,11 @@ tpoint_force2d(const Temporal *temp)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) &point_force2d;
-  lfinfo.numparam = 1;
-  int32 srid = tspatial_srid(temp);
-  lfinfo.param[0] = Int32GetDatum(srid);
   lfinfo.argtype[0] = temp->temptype;
+  lfinfo.numparam = 1;
+  lfinfo.param[0] = Int32GetDatum(tspatial_srid(temp));
   lfinfo.restype = T_TGEOMPOINT;
+  lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   return tfunc_temporal(temp, &lfinfo);
 }
 

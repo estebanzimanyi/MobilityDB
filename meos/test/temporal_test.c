@@ -60,8 +60,8 @@ int main(void)
   bool bool1 = bool_in("true");
   char *bool1_out = bool_out(bool1);
 
-  int32 int32_in1 = 1;
-  int32 int32_in2 = 3;
+  int32_t int32_in1 = 1;
+  int32_t int32_in2 = 3;
 
   double float8_in1 = 1;
   double float8_in2 = 3;
@@ -200,8 +200,8 @@ int main(void)
 
   bool bool_result;
   bool bool1_result;
-  int32 int32_result;
-  uint32 uint32_result;
+  int32_t int32_result;
+  uint32_t uint32_result;
   double float8_result;
   char *char_result;
   char *char1_result;
@@ -229,7 +229,7 @@ int main(void)
   uint8_t *binchar_result;
 
   bool *boolarray_result;
-  int32 *int32array_result;
+  int32_t *int32array_result;
   double *float8array_result;
   text **textarray_result;
   TimestampTz *tstzarray_result;
@@ -303,7 +303,7 @@ int main(void)
   printf("float_timestamptz_to_tbox(%lf, %s): %s\n", float8_in1, tstz1_out, char_result);
   free(tbox_result); free(char_result);
 
-  /* TBox *float_tstzspan_to_tbox(double d, const Span *s); */
+  /* TBox *float_tstzspan_to_tbox(double d, const Span *sp); */
   tbox_result = float_tstzspan_to_tbox(float8_in1, tstzspan1);
   char_result = tbox_out(tbox_result, 6);
   printf("float_tstzspan_to_tbox(%lf, %s): %s\n", float8_in1, tstzspan1_out, char_result);
@@ -315,19 +315,19 @@ int main(void)
   printf("int_timestamptz_to_tbox(%d, %s): %s\n", int32_in1, tstz1_out, char_result);
   free(tbox_result); free(char_result);
 
-  /* TBox *int_tstzspan_to_tbox(int i, const Span *s); */
+  /* TBox *int_tstzspan_to_tbox(int i, const Span *sp); */
   tbox_result = int_tstzspan_to_tbox(int32_in1, tstzspan1);
   char_result = tbox_out(tbox_result, 6);
   printf("int_tstzspan_to_tbox(%d, %s): %s\n", int32_in1, tstzspan1_out, char_result);
   free(tbox_result); free(char_result);
 
-  /* TBox *numspan_tstzspan_to_tbox(const Span *span, const Span *s); */
+  /* TBox *numspan_tstzspan_to_tbox(const Span *sp1, const Span *sp2); */
   tbox_result = numspan_tstzspan_to_tbox(fspan1, tstzspan1);
   char_result = tbox_out(tbox_result, 6);
   printf("numspan_tstzspan_to_tbox(%s, %s): %s\n", fspan1_out, tstzspan1_out, char_result);
   free(tbox_result); free(char_result);
 
-  /* TBox *numspan_timestamptz_to_tbox(const Span *span, TimestampTz t); */
+  /* TBox *numspan_timestamptz_to_tbox(const Span *sp, TimestampTz t); */
   tbox_result = numspan_timestamptz_to_tbox(fspan1, tstz1);
   char_result = tbox_out(tbox_result, 6);
   printf("numspan_timestamptz_to_tbox(%s, %s): %s\n", fspan1_out, tstz1_out, char_result);
@@ -339,7 +339,7 @@ int main(void)
   printf("tbox_copy(%s): %s\n", tbox1_out, char_result);
   free(tbox_result); free(char_result);
 
-  /* TBox *tbox_make(const Span *s, const Span *p); */
+  /* TBox *tbox_make(const Span *sp1, const Span *sp2); */
   tbox_result = tbox_make(fspan1, tstzspan1);
   char_result = tbox_out(tbox_result, 6);
   printf("tbox_make(%s, %s): %s\n", fspan1_out, tstzspan1_out, char_result);
@@ -367,7 +367,7 @@ int main(void)
   printf("set_to_tbox(%s): %s\n", fset1_out, char_result);
   free(tbox_result); free(char_result);
 
-  /* TBox *span_to_tbox(const Span *s); */
+  /* TBox *span_to_tbox(const Span *sp); */
   tbox_result = span_to_tbox(fspan1);
   char_result = tbox_out(tbox_result, 6);
   printf("span_to_tbox(%s): %s\n", fspan1_out, char_result);
@@ -407,7 +407,7 @@ int main(void)
    * Accessor functions for box types
    *****************************************************************************/
 
-  /* uint32 tbox_hash(const TBox *box); */
+  /* uint32_t tbox_hash(const TBox *box); */
   uint32_result = tbox_hash(tbox1);
   printf("tbox_hash(%s): %ud\n", tbox1_out, uint32_result);
 
@@ -754,7 +754,7 @@ int main(void)
   printf("tboolseq_from_base_tstzset(%s, %s): %s\n", bool1_out, tstz1_out, char_result);
   free(tbool_result); free(char_result);
 
-  /* TSequence *tboolseq_from_base_tstzspan(bool b, const Span *s); */
+  /* TSequence *tboolseq_from_base_tstzspan(bool b, const Span *sp); */
   tbool_result = (Temporal *) tboolseq_from_base_tstzspan(bool1, tstzspan1);
   char_result = tbool_out(tbool_result);
   printf("tboolseq_from_base_tstzspan(%s, %s): %s\n", bool1_out, tstzspan1_out, char_result);
@@ -790,7 +790,7 @@ int main(void)
   printf("tfloatseq_from_base_tstzset(%lf, %s): %s\n", float8_in1, tstz1_out, char_result);
   free(tfloat_result); free(char_result);
 
-  /* TSequence *tfloatseq_from_base_tstzspan(double d, const Span *s, interpType interp); */
+  /* TSequence *tfloatseq_from_base_tstzspan(double d, const Span *sp, interpType interp); */
   tfloat_result = (Temporal *) tfloatseq_from_base_tstzspan(float8_in1, tstzspan1, LINEAR);
   char_result = tfloat_out(tfloat_result, 6);
   printf("tfloatseq_from_base_tstzspan(%lf, %s, LINEAR): %s\n", float8_in1, tstzspan1_out, char_result);
@@ -820,7 +820,7 @@ int main(void)
   printf("tintinst_make(%d, %s): %s\n", int32_in1, tstzset1_out, char_result);
   free(tint_result); free(char_result);
 
-  /* TSequence *tintseq_from_base_tstzspan(int i, const Span *s); */
+  /* TSequence *tintseq_from_base_tstzspan(int i, const Span *sp); */
   tint_result = (Temporal *) tintseq_from_base_tstzspan(int32_in1, tstzspan1);
   char_result = tint_out(tint_result);
   printf("tintseq_from_base_tstzspan(%d, %s): %s\n", int32_in1, tstzspan1_out, char_result);
@@ -874,7 +874,7 @@ int main(void)
   printf("ttextinst_make(%s, %s): %s\n", text1_out, tstz1_out, char_result);
   free(ttext_result); free(char_result);
 
-  /* TSequence *ttextseq_from_base_tstzspan(const text *txt, const Span *s); */
+  /* TSequence *ttextseq_from_base_tstzspan(const text *txt, const Span *sp); */
   ttext_result = (Temporal *) ttextseq_from_base_tstzspan(text1, tstzspan1);
   char_result = ttext_out(ttext_result);
   printf("ttextseq_from_base_tstzspan(%s, %s): %s\n", text1_out, tstzspan1_out, char_result);
@@ -986,7 +986,7 @@ int main(void)
   printf("temporal_end_timestamptz(%s): %s\n", tfloat1_out, char_result);
   free(char_result);
 
-  /* uint32 temporal_hash(const Temporal *temp); */
+  /* uint32_t temporal_hash(const Temporal *temp); */
   uint32_result = temporal_hash(tfloat1);
   printf("temporal_hash(%s): %ud\n", tfloat1_out, uint32_result);
 
@@ -1457,7 +1457,7 @@ int main(void)
   printf("temporal_delete_tstzset(%s, %s): %s\n", tfloat1_out, tstzset1_out, char_result);
   free(tfloat_start); free(tfloat_result); free(char_result);
 
-  /* Temporal *temporal_delete_tstzspan(const Temporal *temp, const Span *s, bool connect); */
+  /* Temporal *temporal_delete_tstzspan(const Temporal *temp, const Span *sp, bool connect); */
   tfloat_start = tfloat_in("[1@20001-01-01, 3@20001-01-03]");
   tfloat_result = temporal_delete_tstzspan(tfloat_start, tstzspan1, true);
   char_result = tfloat_out(tfloat_result, 6);
@@ -1541,7 +1541,7 @@ int main(void)
   printf("temporal_at_tstzset(%s, %s): %s\n", tfloat1_out, tstzset1_out, char_result);
   free(tfloat_result); free(char_result);
 
-  /* Temporal *temporal_at_tstzspan(const Temporal *temp, const Span *s); */
+  /* Temporal *temporal_at_tstzspan(const Temporal *temp, const Span *sp); */
   tfloat_result = temporal_at_tstzspan(tfloat1, tstzspan1);
   char_result = tfloat_out(tfloat_result, 6);
   printf("temporal_at_tstzspan(%s, %s): %s\n", tfloat1_out, tstzspan1_out, char_result);
@@ -1587,7 +1587,7 @@ int main(void)
     free(tfloat_result);
   free(char_result);
 
-  /* Temporal *temporal_minus_tstzspan(const Temporal *temp, const Span *s); */
+  /* Temporal *temporal_minus_tstzspan(const Temporal *temp, const Span *sp); */
   tfloat_result = temporal_minus_tstzspan(tfloat1, tstzspan1);
   char_result = tfloat_result ? tfloat_out(tfloat_result, 6) : text_out(text_null);
   printf("temporal_minus_tstzspan(%s, %s): %s\n", tfloat1_out, tstzspan1_out, char_result);
@@ -1635,7 +1635,7 @@ int main(void)
   printf("tint_minus_value(%s, %d): %s\n", tint1_out, int32_in1, char_result);
   free(tint_result); free(char_result);
 
-  /* Temporal *tnumber_at_span(const Temporal *temp, const Span *span); */
+  /* Temporal *tnumber_at_span(const Temporal *temp, const Span *sp); */
   tfloat_result = tnumber_at_span(tfloat1, fspan1);
   char_result = tfloat_out(tfloat_result, 6);
   printf("tnumber_at_span(%s, %s): %s\n", tfloat1_out, fspan1_out, char_result);
@@ -1653,7 +1653,7 @@ int main(void)
   printf("tnumber_at_tbox(%s, %s): %s\n", tfloat1_out, tbox1_out, char_result);
   free(tfloat_result); free(char_result);
 
-  /* Temporal *tnumber_minus_span(const Temporal *temp, const Span *span); */
+  /* Temporal *tnumber_minus_span(const Temporal *temp, const Span *sp); */
   tfloat_result = tnumber_minus_span(tfloat1, fspan1);
   char_result = tfloat_result ? tfloat_out(tfloat_result, 6) : text_out(text_null);
   printf("tnumber_minus_span(%s, %s): %s\n", tfloat1_out, fspan1_out, char_result);
@@ -2469,7 +2469,7 @@ int main(void)
 
   /* Topological functions for temporal types */
 
-  /* bool adjacent_numspan_tnumber(const Span *s, const Temporal *temp); */
+  /* bool adjacent_numspan_tnumber(const Span *sp, const Temporal *temp); */
   bool_result = adjacent_numspan_tnumber(fspan1, tfloat1);
   printf("adjacent_numspan_tnumber(%s, %s): %c\n", fspan1_out, tfloat1_out, bool_result ? 't' : 'n');
 
@@ -2481,11 +2481,11 @@ int main(void)
   bool_result = adjacent_temporal_temporal(tfloat1, tfloat2);
   printf("adjacent_temporal_temporal(%s, %s): %c\n", tfloat1_out, tfloat2_out, bool_result ? 't' : 'n');
 
-  /* bool adjacent_temporal_tstzspan(const Temporal *temp, const Span *s); */
+  /* bool adjacent_temporal_tstzspan(const Temporal *temp, const Span *sp); */
   bool_result = adjacent_temporal_tstzspan(tfloat1, tstzspan1);
   printf("adjacent_temporal_tstzspan(%s, %s): %c\n", tfloat1_out, tstzspan1_out, bool_result ? 't' : 'n');
 
-  /* bool adjacent_tnumber_numspan(const Temporal *temp, const Span *s); */
+  /* bool adjacent_tnumber_numspan(const Temporal *temp, const Span *sp); */
   bool_result = adjacent_tnumber_numspan(tfloat1, fspan1);
   printf("adjacent_tnumber_numspan(%s, %s): %c\n", tfloat1_out, fspan1_out, bool_result ? 't' : 'n');
 
@@ -2497,11 +2497,11 @@ int main(void)
   bool_result = adjacent_tnumber_tnumber(tfloat1, tfloat2);
   printf("adjacent_tnumber_tnumber(%s, %s): %c\n", tfloat1_out, tfloat2_out, bool_result ? 't' : 'n');
 
-  /* bool adjacent_tstzspan_temporal(const Span *s, const Temporal *temp); */
+  /* bool adjacent_tstzspan_temporal(const Span *sp, const Temporal *temp); */
   bool_result = adjacent_tstzspan_temporal(tstzspan1, tfloat1);
   printf("adjacent_tstzspan_temporal(%s, %s): %c\n", tstzspan1_out, tstzspan1_out, bool_result ? 't' : 'n');
 
-  /* bool contained_numspan_tnumber(const Span *s, const Temporal *temp); */
+  /* bool contained_numspan_tnumber(const Span *sp, const Temporal *temp); */
   bool_result = contained_numspan_tnumber(fspan1, tfloat1);
   printf("contained_numspan_tnumber(%s, %s): %c\n", fspan1_out, tfloat1_out, bool_result ? 't' : 'n');
 
@@ -2513,11 +2513,11 @@ int main(void)
   bool_result = contained_temporal_temporal(tfloat1, tfloat2);
   printf("contained_temporal_temporal(%s, %s): %c\n", tfloat1_out, tfloat2_out, bool_result ? 't' : 'n');
 
-  /* bool contained_temporal_tstzspan(const Temporal *temp, const Span *s); */
+  /* bool contained_temporal_tstzspan(const Temporal *temp, const Span *sp); */
   bool_result = contained_temporal_tstzspan(tfloat1, tstzspan1);
   printf("contained_temporal_tstzspan(%s, %s): %c\n", tfloat1_out, tstzspan1_out, bool_result ? 't' : 'n');
 
-  /* bool contained_tnumber_numspan(const Temporal *temp, const Span *s); */
+  /* bool contained_tnumber_numspan(const Temporal *temp, const Span *sp); */
   bool_result = contained_tnumber_numspan(tfloat1, fspan1);
   printf("contained_tnumber_numspan(%s, %s): %c\n", tfloat1_out, fspan1_out, bool_result ? 't' : 'n');
 
@@ -2529,11 +2529,11 @@ int main(void)
   bool_result = contained_tnumber_tnumber(tfloat1, tfloat2);
   printf("contained_tnumber_tnumber(%s, %s): %c\n", tfloat1_out, tfloat2_out, bool_result ? 't' : 'n');
 
-  /* bool contained_tstzspan_temporal(const Span *s, const Temporal *temp); */
+  /* bool contained_tstzspan_temporal(const Span *sp, const Temporal *temp); */
   bool_result = contained_tstzspan_temporal(tstzspan1, tfloat1);
   printf("contained_tstzspan_temporal(%s, %s): %c\n", tstzspan1_out, tfloat1_out, bool_result ? 't' : 'n');
 
-  /* bool contains_numspan_tnumber(const Span *s, const Temporal *temp); */
+  /* bool contains_numspan_tnumber(const Span *sp, const Temporal *temp); */
   bool_result = contains_numspan_tnumber(fspan1, tfloat1);
   printf("contains_numspan_tnumber(%s, %s): %c\n", fspan1_out, tfloat1_out, bool_result ? 't' : 'n');
 
@@ -2541,7 +2541,7 @@ int main(void)
   bool_result = contains_tbox_tnumber(tbox1, tfloat1);
   printf("contains_tbox_tnumber(%s, %s): %c\n", tbox1_out, tfloat1_out, bool_result ? 't' : 'n');
 
-  /* bool contains_temporal_tstzspan(const Temporal *temp, const Span *s); */
+  /* bool contains_temporal_tstzspan(const Temporal *temp, const Span *sp); */
   bool_result = contains_temporal_tstzspan(tfloat1, tstzspan1);
   printf("contains_temporal_tstzspan(%s, %s): %c\n", tfloat1_out, tstzspan1_out, bool_result ? 't' : 'n');
 
@@ -2549,7 +2549,7 @@ int main(void)
   bool_result = contains_temporal_temporal(tfloat1, tfloat2);
   printf("contains_temporal_temporal(%s, %s): %c\n", tfloat1_out, tfloat2_out, bool_result ? 't' : 'n');
 
-  /* bool contains_tnumber_numspan(const Temporal *temp, const Span *s); */
+  /* bool contains_tnumber_numspan(const Temporal *temp, const Span *sp); */
   bool_result = contains_tnumber_numspan(tfloat1, fspan1);
   printf("contains_tnumber_numspan(%s, %s): %c\n", tfloat1_out, fspan1_out, bool_result ? 't' : 'n');
 
@@ -2561,11 +2561,11 @@ int main(void)
   bool_result = contains_tnumber_tnumber(tfloat1, tfloat2);
   printf("contains_tnumber_tnumber(%s, %s): %c\n", tfloat1_out, tfloat2_out, bool_result ? 't' : 'n');
 
-  /* bool contains_tstzspan_temporal(const Span *s, const Temporal *temp); */
+  /* bool contains_tstzspan_temporal(const Span *sp, const Temporal *temp); */
   bool_result = contains_tstzspan_temporal(tstzspan1, tfloat1);
   printf("contains_tstzspan_temporal(%s, %s): %c\n", tstzspan1_out, tfloat1_out, bool_result ? 't' : 'n');
 
-  /* bool overlaps_numspan_tnumber(const Span *s, const Temporal *temp); */
+  /* bool overlaps_numspan_tnumber(const Span *sp, const Temporal *temp); */
   bool_result = overlaps_numspan_tnumber(fspan1, tfloat1);
   printf("overlaps_numspan_tnumber(%s, %s): %c\n", fspan1_out, tfloat1_out, bool_result ? 't' : 'n');
 
@@ -2577,11 +2577,11 @@ int main(void)
   bool_result = overlaps_temporal_temporal(tfloat1, tfloat2);
   printf("overlaps_temporal_temporal(%s, %s): %c\n", tfloat1_out, tfloat2_out, bool_result ? 't' : 'n');
 
-  /* bool overlaps_temporal_tstzspan(const Temporal *temp, const Span *s); */
+  /* bool overlaps_temporal_tstzspan(const Temporal *temp, const Span *sp); */
   bool_result = overlaps_temporal_tstzspan(tfloat1, tstzspan1);
   printf("overlaps_temporal_tstzspan(%s, %s): %c\n", tfloat1_out, tstzspan1_out, bool_result ? 't' : 'n');
 
-  /* bool overlaps_tnumber_numspan(const Temporal *temp, const Span *s); */
+  /* bool overlaps_tnumber_numspan(const Temporal *temp, const Span *sp); */
   bool_result = overlaps_tnumber_numspan(tfloat1, fspan1);
   printf("overlaps_tnumber_numspan(%s, %s): %c\n", tfloat1_out, fspan1_out, bool_result ? 't' : 'n');
 
@@ -2593,11 +2593,11 @@ int main(void)
   bool_result = overlaps_tnumber_tnumber(tfloat1, tfloat2);
   printf("overlaps_tnumber_tnumber(%s, %s): %c\n", tfloat1_out, tfloat2_out, bool_result ? 't' : 'n');
 
-  /* bool overlaps_tstzspan_temporal(const Span *s, const Temporal *temp); */
+  /* bool overlaps_tstzspan_temporal(const Span *sp, const Temporal *temp); */
   bool_result = overlaps_tstzspan_temporal(tstzspan1, tfloat1);
   printf("overlaps_tstzspan_temporal(%s, %s): %c\n", tstzspan1_out, tfloat1_out, bool_result ? 't' : 'n');
 
-  /* bool same_numspan_tnumber(const Span *s, const Temporal *temp); */
+  /* bool same_numspan_tnumber(const Span *sp, const Temporal *temp); */
   bool_result = same_numspan_tnumber(fspan1, tfloat1);
   printf("same_numspan_tnumber(%s, %s): %c\n", fspan1_out, tfloat1_out, bool_result ? 't' : 'n');
 
@@ -2609,11 +2609,11 @@ int main(void)
   bool_result = same_temporal_temporal(tfloat1, tfloat2);
   printf("same_temporal_temporal(%s, %s): %c\n", tfloat1_out, tfloat2_out, bool_result ? 't' : 'n');
 
-  /* bool same_temporal_tstzspan(const Temporal *temp, const Span *s); */
+  /* bool same_temporal_tstzspan(const Temporal *temp, const Span *sp); */
   bool_result = same_temporal_tstzspan(tfloat1, tstzspan1);
   printf("same_temporal_tstzspan(%s, %s): %c\n", tfloat1_out, tstzspan1_out, bool_result ? 't' : 'n');
 
-  /* bool same_tnumber_numspan(const Temporal *temp, const Span *s); */
+  /* bool same_tnumber_numspan(const Temporal *temp, const Span *sp); */
   bool_result = same_tnumber_numspan(tfloat1, fspan1);
   printf("same_tnumber_numspan(%s, %s): %c\n", tfloat1_out, fspan1_out, bool_result ? 't' : 'n');
 
@@ -2625,7 +2625,7 @@ int main(void)
   bool_result = same_tnumber_tnumber(tfloat1, tfloat2);
   printf("same_tnumber_tnumber(%s, %s): %c\n", tfloat1_out, tfloat2_out, bool_result ? 't' : 'n');
 
-  /* bool same_tstzspan_temporal(const Span *s, const Temporal *temp); */
+  /* bool same_tstzspan_temporal(const Span *sp, const Temporal *temp); */
   bool_result = same_tstzspan_temporal(tstzspan1, tfloat1);
   printf("same_tstzspan_temporal(%s, %s): %c\n", tstzspan1_out, tfloat1_out, bool_result ? 't' : 'n');
 
@@ -2637,7 +2637,7 @@ int main(void)
   bool_result = after_tbox_tnumber(tbox1, tfloat1);
   printf("after_tbox_tnumber(%s, %s): %c\n", tbox1_out, tfloat1_out, bool_result ? 't' : 'n');
 
-  /* bool after_temporal_tstzspan(const Temporal *temp, const Span *s); */
+  /* bool after_temporal_tstzspan(const Temporal *temp, const Span *sp); */
   bool_result = after_temporal_tstzspan(tfloat1, tstzspan1);
   printf("after_temporal_tstzspan(%s, %s): %c\n", tfloat1_out, tstzspan1_out, bool_result ? 't' : 'n');
 
@@ -2653,7 +2653,7 @@ int main(void)
   bool_result = after_tnumber_tnumber(tfloat1, tfloat2);
   printf("after_tnumber_tnumber(%s, %s): %c\n", tfloat1_out, tfloat2_out, bool_result ? 't' : 'n');
 
-  /* bool after_tstzspan_temporal(const Span *s, const Temporal *temp); */
+  /* bool after_tstzspan_temporal(const Span *sp, const Temporal *temp); */
   bool_result = after_tstzspan_temporal(tstzspan1, tfloat1);
   printf("after_tstzspan_temporal(%s, %s): %c\n", tstzspan1_out, tfloat1_out, bool_result ? 't' : 'n');
 
@@ -2661,7 +2661,7 @@ int main(void)
   bool_result = before_tbox_tnumber(tbox1, tfloat1);
   printf("before_tbox_tnumber(%s, %s): %c\n", tbox1_out, tfloat1_out, bool_result ? 't' : 'n');
 
-  /* bool before_temporal_tstzspan(const Temporal *temp, const Span *s); */
+  /* bool before_temporal_tstzspan(const Temporal *temp, const Span *sp); */
   bool_result = before_temporal_tstzspan(tfloat1, tstzspan1);
   printf("before_temporal_tstzspan(%s, %s): %c\n", tfloat1_out, tstzspan1_out, bool_result ? 't' : 'n');
 
@@ -2677,7 +2677,7 @@ int main(void)
   bool_result = before_tnumber_tnumber(tfloat1, tfloat2);
   printf("before_tnumber_tnumber(%s, %s): %c\n", tfloat1_out, tfloat2_out, bool_result ? 't' : 'n');
 
-  /* bool before_tstzspan_temporal(const Span *s, const Temporal *temp); */
+  /* bool before_tstzspan_temporal(const Span *sp, const Temporal *temp); */
   bool_result = before_tstzspan_temporal(tstzspan1, tfloat1);
   printf("before_tstzspan_temporal(%s, %s): %c\n", tstzspan1_out, tfloat1_out, bool_result ? 't' : 'n');
 
@@ -2685,11 +2685,11 @@ int main(void)
   bool_result = left_tbox_tnumber(tbox1, tfloat1);
   printf("left_tbox_tnumber(%s, %s): %c\n", tbox1_out, tfloat1_out, bool_result ? 't' : 'n');
 
-  /* bool left_numspan_tnumber(const Span *s, const Temporal *temp); */
+  /* bool left_numspan_tnumber(const Span *sp, const Temporal *temp); */
   bool_result = left_numspan_tnumber(fspan1, tfloat1);
   printf("left_numspan_tnumber(%s, %s): %c\n", fspan1_out, tfloat1_out, bool_result ? 't' : 'n');
 
-  /* bool left_tnumber_numspan(const Temporal *temp, const Span *s); */
+  /* bool left_tnumber_numspan(const Temporal *temp, const Span *sp); */
   bool_result = left_tnumber_numspan(tfloat1, fspan1);
   printf("left_tnumber_numspan(%s, %s): %c\n", tfloat1_out, fspan1_out, bool_result ? 't' : 'n');
 
@@ -2705,7 +2705,7 @@ int main(void)
   bool_result = overafter_tbox_tnumber(tbox1, tfloat1);
   printf("overafter_tbox_tnumber(%s, %s): %c\n", tbox1_out, tfloat1_out, bool_result ? 't' : 'n');
 
-  /* bool overafter_temporal_tstzspan(const Temporal *temp, const Span *s); */
+  /* bool overafter_temporal_tstzspan(const Temporal *temp, const Span *sp); */
   bool_result = overafter_temporal_tstzspan(tfloat1, tstzspan1);
   printf("overafter_temporal_tstzspan(%s, %s): %c\n", tfloat1_out, tstzspan1_out, bool_result ? 't' : 'n');
 
@@ -2721,7 +2721,7 @@ int main(void)
   bool_result = overafter_tnumber_tnumber(tfloat1, tfloat2);
   printf("overafter_tnumber_tnumber(%s, %s): %c\n", tfloat1_out, tfloat2_out, bool_result ? 't' : 'n');
 
-  /* bool overafter_tstzspan_temporal(const Span *s, const Temporal *temp); */
+  /* bool overafter_tstzspan_temporal(const Span *sp, const Temporal *temp); */
   bool_result = overafter_tstzspan_temporal(tstzspan1, tfloat1);
   printf("overafter_tstzspan_temporal(%s, %s): %c\n", tstzspan1_out, tfloat1_out, bool_result ? 't' : 'n');
 
@@ -2729,7 +2729,7 @@ int main(void)
   bool_result = overbefore_tbox_tnumber(tbox1, tfloat1);
   printf("overbefore_tbox_tnumber(%s, %s): %c\n", tbox1_out, tfloat1_out, bool_result ? 't' : 'n');
 
-  /* bool overbefore_temporal_tstzspan(const Temporal *temp, const Span *s); */
+  /* bool overbefore_temporal_tstzspan(const Temporal *temp, const Span *sp); */
   bool_result = overbefore_temporal_tstzspan(tfloat1, tstzspan1);
   printf("overbefore_temporal_tstzspan(%s, %s): %c\n", tfloat1_out, tstzspan1_out, bool_result ? 't' : 'n');
 
@@ -2745,11 +2745,11 @@ int main(void)
   bool_result = overbefore_tnumber_tnumber(tfloat1, tfloat2);
   printf("overbefore_tnumber_tnumber(%s, %s): %c\n", tfloat1_out, tfloat2_out, bool_result ? 't' : 'n');
 
-  /* bool overbefore_tstzspan_temporal(const Span *s, const Temporal *temp); */
+  /* bool overbefore_tstzspan_temporal(const Span *sp, const Temporal *temp); */
   bool_result = overbefore_tstzspan_temporal(tstzspan1, tfloat1);
   printf("overbefore_tstzspan_temporal(%s, %s): %c\n", tstzspan1_out, tfloat1_out, bool_result ? 't' : 'n');
 
-  /* bool overleft_numspan_tnumber(const Span *s, const Temporal *temp); */
+  /* bool overleft_numspan_tnumber(const Span *sp, const Temporal *temp); */
   bool_result = overleft_numspan_tnumber(fspan1, tfloat1);
   printf("overleft_numspan_tnumber(%s, %s): %c\n", fspan1_out, tfloat1_out, bool_result ? 't' : 'n');
 
@@ -2757,7 +2757,7 @@ int main(void)
   bool_result = overleft_tbox_tnumber(tbox1, tfloat1);
   printf("overleft_tbox_tnumber(%s, %s): %c\n", tbox1_out, tfloat1_out, bool_result ? 't' : 'n');
 
-  /* bool overleft_tnumber_numspan(const Temporal *temp, const Span *s); */
+  /* bool overleft_tnumber_numspan(const Temporal *temp, const Span *sp); */
   bool_result = overleft_tnumber_numspan(tfloat1, fspan1);
   printf("overleft_tnumber_numspan(%s, %s): %c\n", tfloat1_out, fspan1_out, bool_result ? 't' : 'n');
 
@@ -2769,7 +2769,7 @@ int main(void)
   bool_result = overleft_tnumber_tnumber(tfloat1, tfloat2);
   printf("overleft_tnumber_tnumber(%s, %s): %c\n", tfloat1_out, tfloat2_out, bool_result ? 't' : 'n');
 
-  /* bool overright_numspan_tnumber(const Span *s, const Temporal *temp); */
+  /* bool overright_numspan_tnumber(const Span *sp, const Temporal *temp); */
   bool_result = overright_numspan_tnumber(fspan1, tfloat1);
   printf("overright_numspan_tnumber(%s, %s): %c\n", fspan1_out, tfloat1_out, bool_result ? 't' : 'n');
 
@@ -2777,7 +2777,7 @@ int main(void)
   bool_result = overright_tbox_tnumber(tbox1, tfloat1);
   printf("overright_tbox_tnumber(%s, %s): %c\n", tbox1_out, tfloat1_out, bool_result ? 't' : 'n');
 
-  /* bool overright_tnumber_numspan(const Temporal *temp, const Span *s); */
+  /* bool overright_tnumber_numspan(const Temporal *temp, const Span *sp); */
   bool_result = overright_tnumber_numspan(tfloat1, fspan1);
   printf("overright_tnumber_numspan(%s, %s): %c\n", tfloat1_out, fspan1_out, bool_result ? 't' : 'n');
 
@@ -2789,7 +2789,7 @@ int main(void)
   bool_result = overright_tnumber_tnumber(tfloat1, tfloat2);
   printf("overright_tnumber_tnumber(%s, %s): %c\n", tfloat1_out, tfloat2_out, bool_result ? 't' : 'n');
 
-  /* bool right_numspan_tnumber(const Span *s, const Temporal *temp); */
+  /* bool right_numspan_tnumber(const Span *sp, const Temporal *temp); */
   bool_result = right_numspan_tnumber(fspan1, tfloat1);
   printf("right_numspan_tnumber(%s, %s): %c\n", fspan1_out, tfloat1_out, bool_result ? 't' : 'n');
 
@@ -2797,7 +2797,7 @@ int main(void)
   bool_result = right_tbox_tnumber(tbox1, tfloat1);
   printf("right_tbox_tnumber(%s, %s): %c\n", tbox1_out, tfloat1_out, bool_result ? 't' : 'n');
 
-  /* bool right_tnumber_numspan(const Temporal *temp, const Span *s); */
+  /* bool right_tnumber_numspan(const Temporal *temp, const Span *sp); */
   bool_result = right_tnumber_numspan(tfloat1, fspan1);
   printf("right_tnumber_numspan(%s, %s): %c\n", tfloat1_out, fspan1_out, bool_result ? 't' : 'n');
 
@@ -3154,7 +3154,7 @@ int main(void)
   printf("%s\n", char_result);
   free(tbool_result); free(char_result);
 
-  /* Span *temporal_extent_transfn(Span *s, const Temporal *temp); */
+  /* Span *temporal_extent_transfn(Span *sp, const Temporal *temp); */
   Span *result_agg = temporal_extent_transfn(NULL, tbool1);
   result_agg = temporal_extent_transfn(result_agg, tbool2);
   char_result = tstzspan_out(result_agg);
@@ -3383,7 +3383,7 @@ int main(void)
   printf("%s\n", char_result);
   free(tint_result); free(char_result);
 
-  /* SkipList *tstzspan_tcount_transfn(SkipList *state, const Span *s); */
+  /* SkipList *tstzspan_tcount_transfn(SkipList *state, const Span *sp); */
   sklist = tstzspan_tcount_transfn(NULL, tstzspan1);
   sklist = tstzspan_tcount_transfn(sklist, tstzspan2);
   tint_result = temporal_tagg_finalfn(sklist);

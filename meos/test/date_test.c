@@ -70,9 +70,9 @@ int main(void)
 
   /* Create the result types for the functions of the API */
   bool bool_result;
-  int32 int32_result;
-  uint32 uint32_result;
-  uint64 uint64_result;
+  int32_t int32_result;
+  uint32_t uint32_result;
+  uint64_t uint64_result;
   Numeric numeric_result;
   DateADT date_result;
   char *char_result;
@@ -85,7 +85,7 @@ int main(void)
   printf("* Date *\n");
   printf("****************************************************************\n");
 
-  /* DateADT add_date_int(DateADT date, int32 days); */
+  /* DateADT add_date_int(DateADT date, int32_t days); */
   date_result = add_date_int(date1, 15);
   char_result = date_out(date_result);
   printf("add_date_int(%s, 15): %s\n", date1_out, char_result);
@@ -97,7 +97,7 @@ int main(void)
   printf("add_date_interval(%s, %s): %s\n", date1_out, interv_out, char_result);
   free(char_result);
 
-  /* int32 cmp_date_timestamp(DateADT date, Timestamp ts); */
+  /* int32_t cmp_date_timestamp(DateADT date, Timestamp ts); */
   int32_result = cmp_date_timestamp(date1, tstz_in);
   printf("cmp_date_timestamp(%s, %s): %d\n", date1_out, tstz_out, int32_result);
 
@@ -105,15 +105,15 @@ int main(void)
   int32_result = cmp_date_date(date1, date2);
   printf("cmp_date_date(%s, %s): %d\n", date1_out, date2_out, int32_result);
 
-  /* int32 cmp_date_timestamptz(DateADT date, TimestampTz tstz); */
+  /* int32_t cmp_date_timestamptz(DateADT date, TimestampTz tstz); */
   int32_result = cmp_date_timestamptz(date1, tstz_in);
   printf("cmp_date_timestamptz(%s, %s): %d\n", date1_out, tstz_out, int32_result);
 
-  /* int32 cmp_timestamp_date(Timestamp ts, DateADT date); */
+  /* int32_t cmp_timestamp_date(Timestamp ts, DateADT date); */
   int32_result = cmp_timestamp_date(ts_in, date1);
   printf("cmp_timestamp_date(%s, %s): %d\n", ts_out, date1_out, int32_result);
 
-  /* int32 cmp_timestamptz_date(TimestampTz tstz, DateADT date); */
+  /* int32_t cmp_timestamptz_date(TimestampTz tstz, DateADT date); */
   int32_result = cmp_timestamptz_date(tstz_in, date1);
   printf("cmp_timestamptz_date(%s, %s): %d\n", tstz_out, date1_out, int32_result);
 
@@ -124,11 +124,11 @@ int main(void)
   printf("date_extract(%s, \"days\"): %s\n", date1_out, char_result);
   free(units); free(numeric_result); free(char_result);
 
-  /* uint32 date_hash(DateADT date); */
+  /* uint32_t date_hash(DateADT date); */
   uint32_result = date_hash(date1);
   printf("date_hash(%s): %ud\n", date1_out, uint32_result);
 
-  /* uint64 date_hash_extended(DateADT date, int64 seed); */
+  /* uint64_t date_hash_extended(DateADT date, uint64_t seed); */
   uint64_result = date_hash_extended(date1, 1);
   printf("date_hash_extended(%s, 1): %lu\n", date1_out, uint64_result);
 
@@ -283,11 +283,11 @@ int main(void)
   bool_result = lt_timestamptz_date(tstz_in, date1);
   printf("lt_timestamptz_date(%s, %s): %c\n", tstz_out, date1_out, bool_result ? 't' : 'f');
 
-  /* int32 minus_date_date(DateADT date1, DateADT date2); */
+  /* int32_t minus_date_date(DateADT date1, DateADT date2); */
   int32_result = minus_date_date(date1, date2);
   printf("minus_date_date(%s, %s): %d\n", date1_out, date2_out, int32_result);
 
-  /* DateADT minus_date_int(DateADT date, int32 days); */
+  /* DateADT minus_date_int(DateADT date, int32_t days); */
   date_result = minus_date_int(date1, 3);
   char_result = date_out(date_result);
   printf("minus_date_int(%s, 3): %s\n", date1_out, char_result);

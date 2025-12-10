@@ -79,7 +79,7 @@ extern TSequenceSet *tcontseq_minus_timestamptz(const TSequence *seq,
 extern TSequenceSet *tcontseq_minus_tstzset(const TSequence *seq,
   const Set *s);
 extern TSequenceSet *tcontseq_minus_tstzspan(const TSequence *seq,
-  const Span *s);
+  const Span *sp);
 extern TSequenceSet *tcontseq_restrict_value(const TSequence *seq, Datum value,
   bool atfunc);
 extern TSequenceSet *tcontseq_restrict_values(const TSequence *seq,
@@ -100,7 +100,7 @@ extern int tcontseq_at_tstzspanset1(const TSequence *seq, const SpanSet *ss,
   TSequence **result);
 extern int tcontseq_minus_tstzspanset_iter(const TSequence *seq, const SpanSet *ss,
   TSequence **result);
-extern TSequence *tcontseq_at_tstzspan(const TSequence *seq, const Span *s);
+extern TSequence *tcontseq_at_tstzspan(const TSequence *seq, const Span *sp);
 extern TInstant *tcontseq_at_timestamptz(const TSequence *seq, TimestampTz t);
 extern TSequenceSet *tcontseq_restrict_tstzspanset(const TSequence *seq,
   const SpanSet *ss, bool atfunc);

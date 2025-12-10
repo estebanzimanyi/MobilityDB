@@ -74,7 +74,7 @@
  *
  *   @defgroup meos_geo_comp_temp Temporal comparison functions
  *   @ingroup meos_geo_comp
- *   @brief Temporal comparison functions for temporal geometries
+ *   @brief %Temporal comparison functions for temporal geometries
  *
  * @defgroup meos_geo_bbox Bounding box functions
  * @ingroup meos_geo
@@ -110,7 +110,7 @@
  *
  *   @defgroup meos_geo_rel_temp Temporal relationship functions
  *   @ingroup meos_geo_rel
- *   @brief Temporal relationship functions for temporal geometries
+ *   @brief %Temporal relationship functions for temporal geometries
  *
  * @defgroup meos_geo_agg Aggregate functions
  * @ingroup meos_geo
@@ -194,7 +194,7 @@
  *
  * @defgroup meos_geo_set_setops Set operations
  * @ingroup meos_geo_set
- * @brief Set operations for geometry sets
+ * @brief %Set operations for geometry sets
  */
 
 /*****************************************************************************/
@@ -238,7 +238,7 @@
  *
  * @defgroup meos_geo_box_set Set functions
  * @ingroup meos_geo_box
- * @brief Set functions for spatiotemporal boxes
+ * @brief %Set functions for spatiotemporal boxes
  *
  * @defgroup meos_geo_box_comp Comparison functions
  * @ingroup meos_geo_box

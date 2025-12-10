@@ -32,7 +32,7 @@
  * @ingroup meos_json
  * @brief Functions for static JSON types
  *
- * @defgroup meos_json_set Functions for JSON sets
+ * @defgroup meos_json_set Functions for JSONB sets
  * @ingroup meos_json
  * @brief Functions for JSON sets
  *
@@ -52,9 +52,9 @@
  * @ingroup meos_json
  * @brief Accessor functions for temporal JSON
  *
- * @defgroup meos_json_transf Transformation functions
+ * @defgroup meos_json_json Temporal JSON functions
  * @ingroup meos_json
- * @brief Transformation functions for temporal circular buffers
+ * @brief %Temporal JSON functions
  *
  * @defgroup meos_json_restrict Restriction functions
  * @ingroup meos_json
@@ -70,11 +70,7 @@
  *
  *   @defgroup meos_json_comp_temp Temporal comparison functions
  *   @ingroup meos_json_comp
- *   @brief Temporal comparison functions for temporal JSON
- *
- * @defgroup meos_json_distance Distance functions
- * @ingroup meos_json
- * @brief Distance functions for temporal JSON
+ *   @brief %Temporal comparison functions for temporal JSON
  */
 
 /*****************************************************************************/
@@ -100,13 +96,13 @@
  * @ingroup meos_json_base
  * @brief Transformation functions for static JSON types
  *
- * @defgroup meos_json_base_bbox Bounding box functions
- * @ingroup meos_json_base
- * @brief Bounding box functions for static JSON types
- *
  * @defgroup meos_json_base_comp Comparison functions
  * @ingroup meos_json_base
  * @brief Comparison functions for static JSON types
+ *
+ * @defgroup meos_json_base_jsonpath JSON path functions
+ * @ingroup meos_json_base
+ * @brief JSON path functions for static JSON types
  */
 
 /*****************************************************************************/
@@ -114,23 +110,23 @@
 /**
  * @defgroup meos_json_set_inout Input and output functions
  * @ingroup meos_json_set
- * @brief Input and output functions for JSON sets
+ * @brief Input and output functions for JSONB sets
  *
  * @defgroup meos_json_set_constructor Constructor functions
  * @ingroup meos_json_set
- * @brief Constructor functions for JSON sets
+ * @brief Constructor functions for JSONB sets
  *
  * @defgroup meos_json_set_conversion Conversion functions
  * @ingroup meos_json_set
- * @brief Conversion functions for JSON sets
+ * @brief Conversion functions for JSONB sets
  *
  * @defgroup meos_json_set_accessor Accessor functions
  * @ingroup meos_json_set
- * @brief Accessor functions for JSON sets
+ * @brief Accessor functions for JSONB sets
  *
  * @defgroup meos_json_set_setops Set operations
  * @ingroup meos_json_set
- * @brief Set operations for JSON sets
+ * @brief %Set operations for JSONB sets
  */
 
 /*****************************************************************************/

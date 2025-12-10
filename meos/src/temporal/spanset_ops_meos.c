@@ -72,7 +72,7 @@ contains_spanset_int(const SpanSet *ss, int i)
  * @csqlfn #Contains_spanset_value()
  */
 bool
-contains_spanset_bigint(const SpanSet *ss, int64 i)
+contains_spanset_bigint(const SpanSet *ss, int64_t i)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSPANSET(ss, false);
@@ -136,7 +136,7 @@ contained_int_spanset(int i, const SpanSet *ss)
  * @csqlfn #Contained_value_spanset()
  */
 bool
-contained_bigint_spanset(int64 i, const SpanSet *ss)
+contained_bigint_spanset(int64_t i, const SpanSet *ss)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSPANSET(ss, false);
@@ -215,7 +215,7 @@ adjacent_spanset_int(const SpanSet *ss, int i)
  * @csqlfn #Adjacent_spanset_value()
  */
 bool
-adjacent_spanset_bigint(const SpanSet *ss, int64 i)
+adjacent_spanset_bigint(const SpanSet *ss, int64_t i)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSPANSET(ss, false);
@@ -294,7 +294,7 @@ left_int_spanset(int i, const SpanSet *ss)
  * @csqlfn #Left_value_spanset()
  */
 bool
-left_bigint_spanset(int64 i, const SpanSet *ss)
+left_bigint_spanset(int64_t i, const SpanSet *ss)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSPANSET(ss, false);
@@ -371,7 +371,7 @@ left_spanset_int(const SpanSet *ss, int i)
  * @csqlfn #Left_spanset_value()
  */
 bool
-left_spanset_bigint(const SpanSet *ss, int64 i)
+left_spanset_bigint(const SpanSet *ss, int64_t i)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSPANSET(ss, false);
@@ -448,7 +448,7 @@ right_int_spanset(int i, const SpanSet *ss)
  * @csqlfn #Right_value_spanset()
  */
 bool
-right_bigint_spanset(int64 i, const SpanSet *ss)
+right_bigint_spanset(int64_t i, const SpanSet *ss)
 {
   return left_spanset_bigint(ss, i);
 }
@@ -515,7 +515,7 @@ right_spanset_int(const SpanSet *ss, int i)
  * @csqlfn #Right_spanset_value()
  */
 bool
-right_spanset_bigint(const SpanSet *ss, int64 i)
+right_spanset_bigint(const SpanSet *ss, int64_t i)
 {
   return left_bigint_spanset(i, ss);
 }
@@ -587,7 +587,7 @@ overleft_spanset_int(const SpanSet *ss, int i)
  * @csqlfn #Overleft_spanset_value()
  */
 bool
-overleft_spanset_bigint(const SpanSet *ss, int64 i)
+overleft_spanset_bigint(const SpanSet *ss, int64_t i)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSPANSET(ss, false);
@@ -665,7 +665,7 @@ overleft_int_spanset(int i, const SpanSet *ss)
  * @csqlfn #Overleft_value_spanset()
  */
 bool
-overleft_bigint_spanset(int64 i, const SpanSet *ss)
+overleft_bigint_spanset(int64_t i, const SpanSet *ss)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSPANSET(ss, false);
@@ -744,7 +744,7 @@ overright_int_spanset(int i, const SpanSet *ss)
  * @csqlfn #Overright_value_spanset()
  */
 bool
-overright_bigint_spanset(int64 i, const SpanSet *ss)
+overright_bigint_spanset(int64_t i, const SpanSet *ss)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSPANSET(ss, false);
@@ -821,7 +821,7 @@ overright_spanset_int(const SpanSet *ss, int i)
  * @csqlfn #Overright_spanset_value()
  */
 bool
-overright_spanset_bigint(const SpanSet *ss, int64 i)
+overright_spanset_bigint(const SpanSet *ss, int64_t i)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSPANSET(ss, false);
@@ -900,7 +900,7 @@ union_int_spanset(int i, SpanSet *ss)
  * @csqlfn #Union_spanset_value()
  */
 SpanSet *
-union_bigint_spanset(int64 i, SpanSet *ss)
+union_bigint_spanset(int64_t i, SpanSet *ss)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSPANSET(ss, NULL);
@@ -975,7 +975,7 @@ union_spanset_int(const SpanSet *ss, int i)
  * @csqlfn #Union_spanset_value()
  */
 SpanSet *
-union_spanset_bigint(const SpanSet *ss, int64 i)
+union_spanset_bigint(const SpanSet *ss, int64_t i)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSPANSET(ss, NULL);
@@ -1054,7 +1054,7 @@ intersection_spanset_int(const SpanSet *ss, int i)
  * @csqlfn #Intersection_spanset_value()
  */
 SpanSet *
-intersection_spanset_bigint(const SpanSet *ss, int64 i)
+intersection_spanset_bigint(const SpanSet *ss, int64_t i)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSPANSET(ss, NULL);
@@ -1134,7 +1134,7 @@ minus_int_spanset(int i, const SpanSet *ss)
  * @csqlfn #Minus_value_spanset()
  */
 SpanSet *
-minus_bigint_spanset(int64 i, const SpanSet *ss)
+minus_bigint_spanset(int64_t i, const SpanSet *ss)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSPANSET(ss, NULL);
@@ -1211,7 +1211,7 @@ minus_spanset_int(const SpanSet *ss, int i)
  * @csqlfn #Minus_spanset_value()
  */
 SpanSet *
-minus_spanset_bigint(const SpanSet *ss, int64 i)
+minus_spanset_bigint(const SpanSet *ss, int64_t i)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSPANSET(ss, NULL);
@@ -1291,8 +1291,8 @@ distance_spanset_int(const SpanSet *ss, int i)
  * @return On error return -1.0
  * @csqlfn #Distance_spanset_value()
  */
-int64
-distance_spanset_bigint(const SpanSet *ss, int64 i)
+int64_t
+distance_spanset_bigint(const SpanSet *ss, int64_t i)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSPANSET(ss, -1);
@@ -1354,64 +1354,64 @@ distance_spanset_timestamptz(const SpanSet *ss, TimestampTz t)
  * @ingroup meos_setspan_dist
  * @brief Return the distance between an integer span set and a span
  * @param[in] ss Spanset
- * @param[in] s Span
+ * @param[in] sp Span
  * @return On error return -1.0
  * @csqlfn #Distance_spanset_span()
  */
 int
-distance_intspanset_intspan(const SpanSet *ss, const Span *s)
+distance_intspanset_intspan(const SpanSet *ss, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_INTSPANSET(ss, -1); VALIDATE_INTSPAN(s, -1);
-  return DatumGetInt32(distance_spanset_span(ss, s));
+  VALIDATE_INTSPANSET(ss, -1); VALIDATE_INTSPAN(sp, -1);
+  return DatumGetInt32(distance_spanset_span(ss, sp));
 }
 
 /**
  * @ingroup meos_setspan_dist
  * @brief Return the distance between a big integer span set and a span
  * @param[in] ss Spanset
- * @param[in] s Span
+ * @param[in] sp Span
  * @return On error return -1.0
  * @csqlfn #Distance_spanset_span()
  */
-int64
-distance_bigintspanset_bigintspan(const SpanSet *ss, const Span *s)
+int64_t
+distance_bigintspanset_bigintspan(const SpanSet *ss, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_BIGINTSPANSET(ss, -1); VALIDATE_BIGINTSPAN(s, -1);
-  return DatumGetInt64(distance_spanset_span(ss, s));
+  VALIDATE_BIGINTSPANSET(ss, -1); VALIDATE_BIGINTSPAN(sp, -1);
+  return DatumGetInt64(distance_spanset_span(ss, sp));
 }
 
 /**
  * @ingroup meos_setspan_dist
  * @brief Return the distance between a float span set and a span
  * @param[in] ss Spanset
- * @param[in] s Span
+ * @param[in] sp Span
  * @return On error return -1.0
  * @csqlfn #Distance_spanset_span()
  */
 double
-distance_floatspanset_floatspan(const SpanSet *ss, const Span *s)
+distance_floatspanset_floatspan(const SpanSet *ss, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_FLOATSPANSET(ss, -1.0); VALIDATE_FLOATSPAN(s, -1.0);
-  return DatumGetFloat8(distance_spanset_span(ss, s));
+  VALIDATE_FLOATSPANSET(ss, -1.0); VALIDATE_FLOATSPAN(sp, -1.0);
+  return DatumGetFloat8(distance_spanset_span(ss, sp));
 }
 
 /**
  * @ingroup meos_setspan_dist
  * @brief Return the distance in days between a date span set and a span
  * @param[in] ss Spanset
- * @param[in] s Span
+ * @param[in] sp Span
  * @return On error return -1.0
  * @csqlfn #Distance_spanset_span()
  */
 int
-distance_datespanset_datespan(const SpanSet *ss, const Span *s)
+distance_datespanset_datespan(const SpanSet *ss, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_DATESPANSET(ss, -1); VALIDATE_DATESPAN(s, -1);
-  return DatumGetInt32(distance_spanset_span(ss, s));
+  VALIDATE_DATESPANSET(ss, -1); VALIDATE_DATESPAN(sp, -1);
+  return DatumGetInt32(distance_spanset_span(ss, sp));
 }
 
 /**
@@ -1419,16 +1419,16 @@ distance_datespanset_datespan(const SpanSet *ss, const Span *s)
  * @brief Return the distance in seconds between a timestamptz span set and a
  * span
  * @param[in] ss Spanset
- * @param[in] s Span
+ * @param[in] sp Span
  * @return On error return -1.0
  * @csqlfn #Distance_spanset_span()
  */
 double
-distance_tstzspanset_tstzspan(const SpanSet *ss, const Span *s)
+distance_tstzspanset_tstzspan(const SpanSet *ss, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_TSTZSPANSET(ss, -1.0); VALIDATE_TSTZSPAN(s, -1.0);
-  return DatumGetFloat8(distance_spanset_span(ss, s));
+  VALIDATE_TSTZSPANSET(ss, -1.0); VALIDATE_TSTZSPAN(sp, -1.0);
+  return DatumGetFloat8(distance_spanset_span(ss, sp));
 }
 
 /*****************************************************************************/
@@ -1455,7 +1455,7 @@ distance_intspanset_intspanset(const SpanSet *ss1, const SpanSet *ss2)
  * @return On error return -1.0
  * @csqlfn #Distance_spanset_spanset()
  */
-int64
+int64_t
 distance_bigintspanset_bigintspanset(const SpanSet *ss1, const SpanSet *ss2)
 {
   /* Ensure the validity of the arguments */

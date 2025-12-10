@@ -351,7 +351,7 @@ Tpoint_AsMVTGeom(PG_FUNCTION_ARGS)
   bool clip_geom = PG_GETARG_BOOL(4);
 
   GSERIALIZED *geom;
-  int64 *times; /* Timestamps are returned in Unix time */
+  int64_t *times; /* Timestamps are returned in Unix time */
   int count;
   bool found = tpoint_as_mvtgeom(temp, bounds, extent, buffer, clip_geom,
     &geom, &times, &count);
@@ -687,7 +687,7 @@ PGDLLEXPORT Datum Tpoint_make_simple(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpoint_make_simple);
 /**
  * @ingroup mobilitydb_geo_transf
- * @brief Return the array of non self-intersecting fragments of a temporal point
+ * @brief Return an array of non self-intersecting fragments of a temporal point
  * @sqlfn makeSimple()
  */
 Datum

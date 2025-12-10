@@ -81,8 +81,8 @@ get_axis_tbox(const void *box, int axis, bool upper)
   if (axis == 0)
     return upper ? (double) tbox->span.upper : (double) tbox->span.lower;
   else /* axis == 1 */
-    return upper ? (double)((int64) tbox->period.upper) :
-      (double)((int64) tbox->period.lower);
+    return upper ? (double)((int64_t) tbox->period.upper) :
+      (double)((int64_t) tbox->period.lower);
 }
 
 /**
@@ -105,8 +105,8 @@ get_axis_stbox(const void *box, int axis, bool upper)
   else if (axis == 1)
     return upper ? stbox->ymax : stbox->ymin;
   else if (axis == 2)
-    return upper ? (double)((int64) stbox->period.upper) :
-      (double)((int64) stbox->period.lower);
+    return upper ? (double)((int64_t) stbox->period.upper) :
+      (double)((int64_t) stbox->period.lower);
   else /* axis == 3 */
     return upper ? stbox->zmax : stbox->zmin;
 }
@@ -181,7 +181,7 @@ bbox_contains_stbox(const void *box1, const void *box2)
 /*****************************************************************************/
 
 /**
- * @brief Return `true` if the two spans overlap, `false` otherwise
+ * @brief Return `true` if two spans overlap, `false` otherwise
  * @param[in] box1,box2 Spans
  */
 static inline bool
@@ -191,7 +191,7 @@ bbox_overlaps_span(const void *box1, const void *box2)
 }
 
 /**
- * @brief Return `true` if the two temporal boxes overlap, `false` otherwise
+ * @brief Return `true` if two temporal boxes overlap, `false` otherwise
  * @param[in] box1,box2 Temporal boxes
  */
 static inline bool
@@ -201,7 +201,7 @@ bbox_overlaps_tbox(const void *box1, const void *box2)
 }
 
 /**
- * @brief Return `true` if the two spatiotemporal boxes overlap, `false`
+ * @brief Return `true` if two spatiotemporal boxes overlap, `false`
  * otherwise
  * @param[in] box1,box2 Spatiotemporal boxes
  */
@@ -320,7 +320,7 @@ node_choose_least_enlargement(const RTree *rtree, const RTreeNode *node,
 }
 
 /**
- * @brief Returns the best child node for inserting a new bounding box in an
+ * @brief Return the best child node for inserting a new bounding box in an
  * RTree
  * @details The function determines the most suitable child node within a node
  * for inserting a new bounding box. It first checks if the new box can be
@@ -656,7 +656,7 @@ node_insert(RTree *rtree, void *node_bounding_box, RTreeNode *node,
 }
 
 /**
- * @brief Returns `true` if a number greater than 0 is a power of two, `false`
+ * @brief Return `true` if a number greater than 0 is a power of two, `false`
  * otherwise
  * @param[in] n Number to check
  */
@@ -835,7 +835,7 @@ rtree_create_stbox()
  * @param[in] id The id of the box being inserted
  */
 void
-rtree_insert(RTree *rtree, void *box, int64 id)
+rtree_insert(RTree *rtree, void *box, int64_t id)
 {
   while (1)
   {
@@ -870,7 +870,7 @@ rtree_insert(RTree *rtree, void *box, int64 id)
 
 /**
  * @ingroup meos_geo_box_index
- * @brief Queries an RTree with a bounding box. Returns an array of ids of
+ * @brief Queries an RTree with a bounding box. Return an array of ids of
  * bounding boxes.
  * @param[in] rtree The RTree to query
  * @param[in] query The bounding box that serves as query
