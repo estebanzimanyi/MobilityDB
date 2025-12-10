@@ -28,209 +28,205 @@
  *****************************************************************************/
 
 /**
- * @defgroup meos_internal_geo_base Functions for static geometries
+ * @defgroup meos_internal_geo_base Internal functions for static geometries
  * @ingroup meos_internal_geo
- * @brief Functions for static geometries
+ * @brief Internal functions for static geometries
  *
- * @defgroup meos_internal_geo_set Functions for geometry sets
+ * @defgroup meos_internal_geo_set Internal functions for geometry sets
  * @ingroup meos_internal_geo
- * @brief Functions for geometry sets
+ * @brief Internal functions for geometry sets
  *
- * @defgroup meos_internal_geo_box Functions for spatiotemporal boxes
+ * @defgroup meos_internal_geo_box Internal functions for spatiotemporal boxes
  * @ingroup meos_internal_geo
- * @brief Functions for spatiotemporal boxes
+ * @brief Internal functions for spatiotemporal boxes
  *
- * @defgroup meos_internal_geo_inout Input and output functions
+ * @defgroup meos_internal_geo_inout Internal input and output functions
  * @ingroup meos_internal_geo
- * @brief Input and output functions for temporal geometries
+ * @brief Internal input and output functions for temporal geometries
  *
- * @defgroup meos_internal_geo_constructor Constructor functions
+ * @defgroup meos_internal_geo_constructor Internal constructor functions
  * @ingroup meos_internal_geo
- * @brief Constructor functions for temporal geometries
+ * @brief Internal constructor functions for temporal geometries
  *
- * @defgroup meos_internal_geo_conversion Conversion functions
+ * @defgroup meos_internal_geo_conversion Internal conversion functions
  * @ingroup meos_internal_geo
- * @brief Conversion functions for temporal geometries
+ * @brief Internal conversion functions for temporal geometries
  *
- * @defgroup meos_internal_geo_accessor Accessor functions
+ * @defgroup meos_internal_geo_accessor Internal accessor functions
  * @ingroup meos_internal_geo
- * @brief Accessor functions for temporal geometries
+ * @brief Internal accessor functions for temporal geometries
  *
- * @defgroup meos_internal_geo_transf Transformation functions
+ * @defgroup meos_internal_geo_transf Internal transformation functions
  * @ingroup meos_internal_geo
- * @brief Transformation functions for temporal geometries
+ * @brief Internal transformation functions for temporal geometries
  *
- * @defgroup meos_internal_geo_restrict Restriction functions
+ * @defgroup meos_internal_geo_restrict Internal restriction functions
  * @ingroup meos_internal_geo
- * @brief Restriction functions for temporal geometries
+ * @brief Internal restriction functions for temporal geometries
  *
- * @defgroup meos_internal_geo_comp Comparison functions
+ * @defgroup meos_internal_geo_comp Internal comparison functions
  * @ingroup meos_internal_geo
- * @brief Comparison functions for temporal geometries
+ * @brief Internal comparison functions for temporal geometries
  *
- *   @defgroup meos_internal_geo_comp_ever Ever and always comparison functions
+ *   @defgroup meos_internal_geo_comp_ever Internal ever and always comparison functions
  *   @ingroup meos_internal_geo_comp
- *   @brief Ever and always comparison functions for temporal geometries
+ *   @brief Internal ever and always comparison functions for temporal geometries
  *
- *   @defgroup meos_internal_geo_comp_temp Temporal comparison functions
+ *   @defgroup meos_internal_geo_comp_temp Internal temporal comparison functions
  *   @ingroup meos_internal_geo_comp
- *   @brief Temporal comparison functions for temporal geometries
+ *   @brief Internal temporal comparison functions for temporal geometries
  *
- * @defgroup meos_internal_geo_bbox Bounding box functions
+ * @defgroup meos_internal_geo_bbox Internal bounding box functions
  * @ingroup meos_internal_geo
- * @brief Bounding box functions for temporal geometries
+ * @brief Internal bounding box functions for temporal geometries
  *
- *   @defgroup meos_internal_geo_bbox_topo Topological functions
+ *   @defgroup meos_internal_geo_bbox_topo Internal topological functions
  *   @ingroup meos_internal_geo_bbox
- *   @brief Topological functions for temporal geometries
+ *   @brief Internal topological functions for temporal geometries
  *
- *   @defgroup meos_internal_geo_bbox_pos Position functions
+ *   @defgroup meos_internal_geo_bbox_pos Internal position functions
  *   @ingroup meos_internal_geo_bbox
- *   @brief Position functions for temporal geometries
+ *   @brief Internal position functions for temporal geometries
  *
- * @defgroup meos_internal_geo_dist Distance functions
+ * @defgroup meos_internal_geo_dist Internal distance functions
  * @ingroup meos_internal_geo
- * @brief Distance functions for temporal geometries
+ * @brief Internal distance functions for temporal geometries
  *
- * @defgroup meos_internal_geo_srid Spatial reference system functions
+ * @defgroup meos_internal_geo_srid Internal spatial reference system functions
  * @ingroup meos_internal_geo
- * @brief Spatial reference system functions for temporal geos
+ * @brief Internal spatial reference system functions for temporal geos
  *
- * @defgroup meos_internal_geo_rel Spatial relationship functions
+ * @defgroup meos_internal_geo_rel Internal spatial relationship functions
  * @ingroup meos_internal_geo
- * @brief Spatial relationship functions for temporal geos
+ * @brief Internal spatial relationship functions for temporal geos
  *
- *   @defgroup meos_internal_geo_rel_ever Ever/always relationship functions
+ *   @defgroup meos_internal_geo_rel_ever Internal ever/always relationship functions
  *   @ingroup meos_internal_geo_rel
- *   @brief Ever/always relationship functions for temporal geometries
+ *   @brief Internal ever/always relationship functions for temporal geometries
  *
- *   @defgroup meos_internal_geo_rel_temp Temporal relationship functions
+ *   @defgroup meos_internal_geo_rel_temp Internal temporal relationship functions
  *   @ingroup meos_internal_geo_rel
- *   @brief Temporal relationship functions for temporal geometries
+ *   @brief Internal temporal relationship functions for temporal geometries
  *
- * @defgroup meos_internal_geo_agg Aggregate functions
+ * @defgroup meos_internal_geo_agg Internal aggregate functions
  * @ingroup meos_internal_geo
- * @brief Aggregate functions for temporal geometries
+ * @brief Internal aggregate functions for temporal geometries
  *
- * @defgroup meos_internal_geo_tile Tile functions
+ * @defgroup meos_internal_geo_tile Internal tile functions
  * @ingroup meos_internal_geo
- * @brief Tile functions for temporal geometries
+ * @brief Internal tile functions for temporal geometries
  */
 
 /*****************************************************************************/
 
 /**
- * @defgroup meos_internal_geo_base_inout Input and output functions
+ * @defgroup meos_internal_geo_base_inout Internal input and output functions
  * @ingroup meos_internal_geo_base
- * @brief Input and output functions for static geometries
+ * @brief Internal input and output functions for static geometries
  *
- * @defgroup meos_internal_geo_base_constructor Constructor functions
+ * @defgroup meos_internal_geo_base_constructor Internal constructor functions
  * @ingroup meos_internal_geo_base
- * @brief Constructor functions for static geometries
+ * @brief Internal constructor functions for static geometries
  *
- * @defgroup meos_internal_geo_base_conversion Conversion functions
+ * @defgroup meos_internal_geo_base_conversion Internal conversion functions
  * @ingroup meos_internal_geo_base
- * @brief Conversion functions for static geometries
+ * @brief Internal conversion functions for static geometries
  *
- * @defgroup meos_internal_geo_base_accessor Accessor functions
+ * @defgroup meos_internal_geo_base_accessor Internal accessor functions
  * @ingroup meos_internal_geo_base
- * @brief Accessor functions for static geometries
+ * @brief Internal accessor functions for static geometries
  *
- * @defgroup meos_internal_geo_base_transf Transformation functions
+ * @defgroup meos_internal_geo_base_transf Internal transformation functions
  * @ingroup meos_internal_geo_base
- * @brief Transformation functions for static geometries
+ * @brief Internal transformation functions for static geometries
  *
- * @defgroup meos_internal_geo_base_srid Spatial reference system functions
+ * @defgroup meos_internal_geo_base_srid Internal spatial reference system functions
  * @ingroup meos_internal_geo_base
- * @brief Spatial reference system functions for temporal geos
+ * @brief Internal spatial reference system functions for temporal geos
  *
- * @defgroup meos_internal_geo_base_spatial Spatial processing functions
+ * @defgroup meos_internal_geo_base_spatial Internal spatial processing functions
  * @ingroup meos_internal_geo_base
- * @brief Spatial processing functions for static geometries
+ * @brief Internal spatial processing functions for static geometries
  *
- * @defgroup meos_internal_geo_base_rel Spatial relationship functions
+ * @defgroup meos_internal_geo_base_rel Internal spatial relationship functions
  * @ingroup meos_internal_geo_base
- * @brief Spatial relationship functions for temporal geos
+ * @brief Internal spatial relationship functions for temporal geos
  *
- * @defgroup meos_internal_geo_base_bbox Bounding box functions
+ * @defgroup meos_internal_geo_base_bbox Internal bounding box functions
  * @ingroup meos_internal_geo_base
- * @brief Bounding box functions for static geometries
+ * @brief Internal bounding box functions for static geometries
  *
- * @defgroup meos_internal_geo_base_comp Comparison functions
+ * @defgroup meos_internal_geo_base_comp Internal comparison functions
  * @ingroup meos_internal_geo_base
- * @brief Comparison functions for static geometries
+ * @brief Internal comparison functions for static geometries
  */
 
 /*****************************************************************************/
 
 /**
- * @defgroup meos_internal_geo_set_inout Input and output functions
+ * @defgroup meos_internal_geo_set_inout Internal input and output functions
  * @ingroup meos_internal_geo_set
- * @brief Input and output functions for geometry sets
+ * @brief Internal input and output functions for geometry sets
  *
- * @defgroup meos_internal_geo_set_constructor Constructor functions
+ * @defgroup meos_internal_geo_set_constructor Internal constructor functions
  * @ingroup meos_internal_geo_set
- * @brief Constructor functions for geometry sets
+ * @brief Internal constructor functions for geometry sets
  *
- * @defgroup meos_internal_geo_set_conversion Conversion functions
+ * @defgroup meos_internal_geo_set_conversion Internal conversion functions
  * @ingroup meos_internal_geo_set
- * @brief Conversion functions for geometry sets
+ * @brief Internal conversion functions for geometry sets
  *
- * @defgroup meos_internal_geo_set_accessor Accessor functions
+ * @defgroup meos_internal_geo_set_accessor Internal accessor functions
  * @ingroup meos_internal_geo_set
- * @brief Accessor functions for geometry sets
+ * @brief Internal accessor functions for geometry sets
  *
- * @defgroup meos_internal_geo_set_setops Set operations
+ * @defgroup meos_internal_geo_set_setops Internal set operations
  * @ingroup meos_internal_geo_set
- * @brief Set operations for geometry sets
+ * @brief Internal set operations for geometry sets
  */
 
 /*****************************************************************************/
 
 /**
- * @defgroup meos_internal_geo_box_inout Input and output functions
+ * @defgroup meos_internal_geo_box_inout Internal input and output functions
  * @ingroup meos_internal_geo_box
- * @brief Input and output functions for spatiotemporal boxes
+ * @brief Internal input and output functions for spatiotemporal boxes
  *
- * @defgroup meos_internal_geo_box_constructor Constructor functions
+ * @defgroup meos_internal_geo_box_constructor Internal constructor functions
  * @ingroup meos_internal_geo_box
- * @brief Constructor functions for spatiotemporal boxes
+ * @brief Internal constructor functions for spatiotemporal boxes
  *
- * @defgroup meos_internal_geo_box_conversion Conversion functions
+ * @defgroup meos_internal_geo_box_conversion Internal conversion functions
  * @ingroup meos_internal_geo_box
- * @brief Conversion functions for spatiotemporal boxes
+ * @brief Internal conversion functions for spatiotemporal boxes
  *
- * @defgroup meos_internal_geo_box_accessor Accessor functions
+ * @defgroup meos_internal_geo_box_accessor Internal accessor functions
  * @ingroup meos_internal_geo_box
- * @brief Accessor functions for spatiotemporal boxes
+ * @brief Internal accessor functions for spatiotemporal boxes
  *
- * @defgroup meos_internal_geo_box_transf Transformation functions
+ * @defgroup meos_internal_geo_box_transf Internal transformation functions
  * @ingroup meos_internal_geo_box
- * @brief Transformation functions for spatiotemporal boxes
+ * @brief Internal transformation functions for spatiotemporal boxes
  *
- * @defgroup meos_internal_geo_box_srid Spatial reference system functions
+ * @defgroup meos_internal_geo_box_srid Internal spatial reference system functions
  * @ingroup meos_internal_geo_box
- * @brief Spatial reference system functions for spatiotemporal boxes
+ * @brief Internal spatial reference system functions for spatiotemporal boxes
  *
- * @defgroup meos_internal_geo_box_bbox Bounding box functions
+ * @defgroup meos_internal_geo_box_topo Internal topological functions
  * @ingroup meos_internal_geo_box
- * @brief Bounding box functions for spatiotemporal boxes
+ * @brief Internal topological functions for spatiotemporal boxes
  *
- * @defgroup meos_internal_geo_box_topo Topological functions
- * @ingroup meos_internal_geo_box_bbox
- * @brief Topological functions for spatiotemporal boxes
- *
- * @defgroup meos_internal_geo_box_pos Position functions
- * @ingroup meos_internal_geo_box_bbox
- * @brief Position functions for spatiotemporal boxes
- *
- * @defgroup meos_internal_geo_box_set Set functions
+ * @defgroup meos_internal_geo_box_pos Internal position functions
  * @ingroup meos_internal_geo_box
- * @brief Set functions for spatiotemporal boxes
+ * @brief Internal position functions for spatiotemporal boxes
  *
- * @defgroup meos_internal_geo_box_comp Comparison functions
+ * @defgroup meos_internal_geo_box_set Internal set functions
  * @ingroup meos_internal_geo_box
- * @brief Comparison functions for spatiotemporal boxes
+ * @brief Internal set functions for spatiotemporal boxes
+ *
+ * @defgroup meos_internal_geo_box_comp Internal comparison functions
+ * @ingroup meos_internal_geo_box
+ * @brief Internal comparison functions for spatiotemporal boxes
  */
 
 /*****************************************************************************/

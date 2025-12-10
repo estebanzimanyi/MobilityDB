@@ -64,6 +64,10 @@
  * @ingroup mobilitydb_api
  * @brief Functions for temporal circular buffers
  *
+ * @defgroup mobilitydb_json Functions for temporal JSON
+ * @ingroup mobilitydb_api
+ * @brief Functions for temporal JSON
+ *
  * @defgroup mobilitydb_npoint Functions for temporal network points
  * @ingroup mobilitydb_api
  * @brief Functions for temporal network points

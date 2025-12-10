@@ -52,9 +52,9 @@
  * @ingroup meos_json
  * @brief Accessor functions for temporal JSON
  *
- * @defgroup meos_json_transf Transformation functions
+ * @defgroup meos_json_json Temporal JSON functions
  * @ingroup meos_json
- * @brief Transformation functions for temporal circular buffers
+ * @brief Temporal JSON functions
  *
  * @defgroup meos_json_restrict Restriction functions
  * @ingroup meos_json
@@ -71,10 +71,6 @@
  *   @defgroup meos_json_comp_temp Temporal comparison functions
  *   @ingroup meos_json_comp
  *   @brief Temporal comparison functions for temporal JSON
- *
- * @defgroup meos_json_distance Distance functions
- * @ingroup meos_json
- * @brief Distance functions for temporal JSON
  */
 
 /*****************************************************************************/

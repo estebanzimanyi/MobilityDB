@@ -22,6 +22,8 @@
 #include "utils/builtins.h"
 #include "utils/numeric.h"
 
+#include "../../meos/include/meos_error.h"
+
 // #include "access/htup_details.h"
 // #include "catalog/namespace.h"
 // #include "catalog/pg_type.h"

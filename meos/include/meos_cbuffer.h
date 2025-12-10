@@ -37,7 +37,6 @@
 /* C */
 #include <stdbool.h>
 #include <stdint.h>
-
 /* MEOS */
 #include <meos.h>
 #include <meos_geo.h>
@@ -226,20 +225,24 @@ extern Temporal *tcbuffer_in(const char *str);
 extern Temporal *tcbuffer_make(const Temporal *tpoint, const Temporal *tfloat);
 
 /*****************************************************************************
- * Accessor functions
- *****************************************************************************/
-
-extern Set *tcbuffer_points(const Temporal *temp);
-extern Set *tcbuffer_radius(const Temporal *temp);
-extern GSERIALIZED *tcbuffer_trav_area(const Temporal *temp, bool merge_union);
-
-/*****************************************************************************
  * Conversion functions
  *****************************************************************************/
 
 extern Temporal *tcbuffer_to_tfloat(const Temporal *temp);
 extern Temporal *tcbuffer_to_tgeompoint(const Temporal *temp);
 extern Temporal *tgeometry_to_tcbuffer(const Temporal *temp);
+
+/*****************************************************************************
+ * Accessor functions
+ *****************************************************************************/
+
+extern Cbuffer *tcbuffer_start_value(const Temporal *temp);
+extern Cbuffer *tcbuffer_end_value(const Temporal *temp);
+extern bool tcbuffer_value_n(const Temporal *temp, int n, Cbuffer **result);
+extern Cbuffer **tcbuffer_values(const Temporal *temp, int *count);
+extern Set *tcbuffer_points(const Temporal *temp);
+extern Set *tcbuffer_radius(const Temporal *temp);
+extern bool tcbuffer_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict, Cbuffer **value);
 
 /*****************************************************************************
  * Transformation functions
@@ -257,6 +260,12 @@ extern Temporal *tcbuffer_at_stbox(const Temporal *temp, const STBox *box, bool 
 extern Temporal *tcbuffer_minus_cbuffer(const Temporal *temp, const Cbuffer *cb);
 extern Temporal *tcbuffer_minus_geom(const Temporal *temp, const GSERIALIZED *gs);
 extern Temporal *tcbuffer_minus_stbox(const Temporal *temp, const STBox *box, bool border_inc);
+
+/*****************************************************************************
+ * Spatial functions
+ *****************************************************************************/
+
+extern GSERIALIZED *tcbuffer_trav_area(const Temporal *temp, bool merge_union);
 
 /*****************************************************************************
  * Distance functions

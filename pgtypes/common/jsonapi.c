@@ -735,10 +735,11 @@ pg_parse_json(JsonLexContext *lex, const JsonSemAction *sem)
    * still need to init the partial token string so that freeJsonLexContext
    * works, so perform the full incremental initialization.
    */
-  if (!allocate_incremental_state(lex))
+  if (! allocate_incremental_state(lex))
     return JSON_OUT_OF_MEMORY;
 
-  return pg_parse_json_incremental(lex, sem, lex->input, lex->input_length, true);
+  return pg_parse_json_incremental(lex, sem, lex->input, lex->input_length,
+    true);
 
 #else
 
@@ -2125,9 +2126,9 @@ json_lex_string(JsonLexContext *lex)
        * can batch calls to jsonapi_appendBinaryStringInfo.
        */
       while (p < end - sizeof(Vector8) &&
-           !pg_lfind8('\\', (uint8 *) p, sizeof(Vector8)) &&
-           !pg_lfind8('"', (uint8 *) p, sizeof(Vector8)) &&
-           !pg_lfind8_le(31, (uint8 *) p, sizeof(Vector8)))
+             ! pg_lfind8('\\', (uint8 *) p, sizeof(Vector8)) &&
+             ! pg_lfind8('"', (uint8 *) p, sizeof(Vector8)) &&
+             ! pg_lfind8_le(31, (uint8 *) p, sizeof(Vector8)))
         p += sizeof(Vector8);
 
       for (; p < end; p++)

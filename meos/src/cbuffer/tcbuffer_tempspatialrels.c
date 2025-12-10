@@ -73,7 +73,7 @@
  * @param[in] temp Temporal circular buffer
  * @param[in] gs Geometry
  * @param[in] restr True when the result is restricted to a value
- * @param[in] invert True if the arguments should be inverted
+ * @param[in] invert True if the arguments must be inverted
  * @param[in] atvalue Value to restrict
  * @param[in] func Spatial relationship function to be applied
  */
@@ -638,7 +638,7 @@ tinterrel_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb,
  * @param[in] param Parameter
  * @param[in] func Spatial relationship function to be applied
  * @param[in] numparam Number of parameters of the function
- * @param[in] invert True if the arguments should be inverted
+ * @param[in] invert True if the arguments must be inverted
  * @return On error return `NULL`
  */
 static Temporal *
@@ -667,7 +667,7 @@ tspatialrel_tcbuffer_cbuffer_int(const Temporal *temp, const Cbuffer *cb,
  * @param[in] temp Temporal circular buffer
  * @param[in] cb Circular buffer
  * @param[in] restr True when the result is restricted to a value
- * @param[in] invert True if the arguments should be inverted
+ * @param[in] invert True if the arguments must be inverted
  * @param[in] atvalue Value to restrict
  * @param[in] func Spatial relationship function to be applied
  */

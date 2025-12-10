@@ -397,6 +397,7 @@ tcbufferinst_make(const TInstant *inst1, const TInstant *inst2)
 }
 
 /**
+ * @ingroup meos_internal_cbuffer_constructor
  * @brief Return a temporal circular buffer from a temporal point and a
  * temporal float
  * @note This function is called after the synchronization done in function
@@ -417,6 +418,7 @@ tcbufferseq_make(const TSequence *seq1, const TSequence *seq2)
 }
 
 /**
+ * @ingroup meos_internal_cbuffer_constructor
  * @brief Return a temporal circular buffer from a temporal point and a
  * temporal float
  * @note This function is called after the synchronization done in function
@@ -880,7 +882,7 @@ tcbuffer_points(const Temporal *temp)
 /**
  * @ingroup meos_cbuffer_accessor
  * @brief Return the array of radii of a temporal circular buffer
- * @csqlfn #Tcbuffer_points()
+ * @csqlfn #Tcbuffer_radius()
  */
 inline Set *
 tcbuffer_radius(const Temporal *temp)

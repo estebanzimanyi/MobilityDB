@@ -55,6 +55,10 @@
   #include <meos_cbuffer.h>
   #include "cbuffer/cbuffer.h"
 #endif
+#if JSON
+  #include <utils/jsonb.h>
+  #include "json/tjsonb.h"
+#endif
 #if NPOINT
   // #include <meos_npoint.h>
   #include "npoint/tnpoint.h"
@@ -66,7 +70,6 @@
   #include "rgeo/trgeo.h"
 #endif
 
-#include <utils/jsonb.h>
 #include <utils/numeric.h>
 #include <pgtypes.h>
 
@@ -131,6 +134,10 @@ datum_cmp(Datum l, Datum r, meosType type)
 #if CBUFFER
     case T_CBUFFER:
       return cbuffer_cmp(DatumGetCbufferP(l), DatumGetCbufferP(r));
+#endif
+#if JSON
+    case T_JSONB:
+      return pg_jsonb_cmp(DatumGetJsonbP(l), DatumGetJsonbP(r));
 #endif
 #if NPOINT
     case T_NPOINT:
@@ -227,6 +234,10 @@ datum_eq(Datum l, Datum r, meosType type)
 #if CBUFFER
     case T_CBUFFER:
       return cbuffer_eq(DatumGetCbufferP(l), DatumGetCbufferP(r));
+#endif
+#if JSON
+    case T_JSONB:
+      return pg_jsonb_eq(DatumGetJsonbP(l), DatumGetJsonbP(r));
 #endif
 #if NPOINT
     case T_NPOINT:
@@ -445,6 +456,10 @@ datum_hash(Datum d, meosType type)
 #if CBUFFER
     case T_CBUFFER:
       return cbuffer_hash(DatumGetCbufferP(d));
+#endif
+#if JSON
+    case T_JSONB:
+      return pg_jsonb_hash(DatumGetJsonbP(d));
 #endif
 #if NPOINT
     case T_NPOINT:

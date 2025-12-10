@@ -41,6 +41,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <meos.h>
+#include <meos_json.h>
 #include <pg_bool.h>
 #include <pg_text.h>
 #include <pg_json.h>
@@ -61,6 +62,13 @@ int main(void)
   char *js2_out = json_out(js2);
   char *jb1_out = jsonb_out(jb1);
   char *jb2_out = jsonb_out(jb2);
+
+  char *tjsonb1_in = "[{\"a\":1, \"b\":[1,2]}@2001-01-01, {\"a\":5, \"b\":[\"c\",3]}@2001-01-03]";
+  Temporal *tjsonb1 = tjsonb_in(tjsonb1_in);
+  char *tjsonb1_out = tjsonb_out(tjsonb1);
+  char *tjsonb2_in = "[{\"a\":1, \"b\":[1,2]}@2001-01-01, {\"a\":5, \"b\":[\"c\",3]}@2001-01-03]";
+  Temporal *tjsonb2 = tjsonb_in(tjsonb2_in);
+  char *tjsonb2_out = tjsonb_out(tjsonb2);
 
   /* Create result types for the functions of the API */
   bool bool_result;

@@ -50,7 +50,7 @@
  * that apply the lifted function to two base values.
  */
 
-#define MAX_PARAMS 1
+#define MAX_PARAMS 5
 #define MAX_ARGS   2
 
 typedef struct
@@ -60,6 +60,8 @@ typedef struct
   Datum param[MAX_PARAMS];    /**< Datum array for the parameters of the function */
   meosType argtype[MAX_ARGS]; /**< Type of the arguments of the function */
   meosType restype;           /**< Type of the result of the function */
+  Datum reserror;             /**< Resulting value error (e.g., INT_MAX or NULL pointer) */
+  bool reserrcheck;           /**< True/false when the resulting value may */
   bool reslinear;             /**< True if the result has linear interpolation */
   bool invert;                /**< True if the arguments of the function must be inverted */
   bool discont;               /**< True if the function has instantaneous discontinuities */

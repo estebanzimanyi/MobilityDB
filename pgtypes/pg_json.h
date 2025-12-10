@@ -93,12 +93,13 @@ extern bool jsonb_eq(const Jsonb *jb1, const Jsonb *jb2);
 extern bool jsonb_exists(const Jsonb *jb, const text *key);
 extern Jsonb *jsonb_extract_path(const Jsonb *jb, text **path_elems, int path_len);
 extern text *jsonb_extract_path_text(const Jsonb *jb, text **path_elems, int path_len);
-extern Jsonb *jsonb_from_text(text *txt, bool unique_keys);
+extern Jsonb *jsonb_from_text(const text *txt, bool unique_keys);
 extern bool jsonb_ge(const Jsonb *jb1, const Jsonb *jb2);
 extern bool jsonb_gt(const Jsonb *jb1, const Jsonb *jb2);
 extern uint32 jsonb_hash(const Jsonb *jb);
-extern uint64 jsonb_hash_extended(Jsonb *jb, uint64 seed);
-extern Jsonb *jsonb_in(char *str);extern bool jsonb_gt(const Jsonb *jb1, const Jsonb *jb2);
+extern uint64 jsonb_hash_extended(const Jsonb *jb, uint64 seed);
+extern Jsonb *jsonb_in(const char *str);
+extern bool jsonb_gt(const Jsonb *jb1, const Jsonb *jb2);
 extern Jsonb *jsonb_insert(const Jsonb *jb, text **path_elems, int path_len, Jsonb *newjb, bool after);
 extern bool jsonb_le(const Jsonb *jb1, const Jsonb *jb2);
 extern bool jsonb_lt(const Jsonb *jb1, const Jsonb *jb2);
@@ -113,7 +114,6 @@ extern text *jsonb_pretty(const Jsonb *jb);
 extern Jsonb *jsonb_set(const Jsonb *jb, text **path_elems, int path_len, Jsonb *newjb, bool create);
 extern Jsonb *jsonb_set_lax(const Jsonb *jb, text **path_elems, int path_len, Jsonb *newjb, bool create, const text *handle_null);
 extern Jsonb *jsonb_strip_nulls(const Jsonb *jb, bool strip_in_arrays);
-
 
 /*****************************************************************************/
 

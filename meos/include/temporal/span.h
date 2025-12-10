@@ -78,7 +78,6 @@ typedef struct
 
 /* General functions */
 
-extern bool ensure_span_isof_type(const Span *s, meosType spantype);
 extern bool ensure_span_isof_basetype(const Span *s, meosType basetype);
 extern bool ensure_same_span_type(const Span *s1, const Span *s2);
 extern bool ensure_valid_span_span(const Span *s1, const Span *s2);

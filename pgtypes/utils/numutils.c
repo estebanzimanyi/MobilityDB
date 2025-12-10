@@ -22,6 +22,8 @@
 #include "port/pg_bitutils.h"
 #include "utils/builtins.h"
 
+#include "../../meos/include/meos_error.h"
+
 /*
  * A table of all two-digit numbers. This is used to speed up decimal digit
  * generation by copying pairs of digits into the final output.

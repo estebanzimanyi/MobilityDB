@@ -27,6 +27,8 @@
 #include "utils/datetime.h"
 #include "utils/tzparser.h"
 
+#include "../../meos/include/meos_error.h"
+
 // #include "access/htup_details.h"
 // #include "access/xact.h"
 // #include "common/int.h"

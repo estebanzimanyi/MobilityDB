@@ -518,8 +518,7 @@ set_parse(const char **str, meosType settype)
     count++;
     DATUM_FREE(d, basetype);
   }
-  if (! ensure_cbrace(str, type_str) ||
-      ! ensure_end_input(str, type_str))
+  if (! ensure_cbrace(str, type_str) || ! ensure_end_input(str, type_str))
     return NULL;
 
   /* Second parsing */

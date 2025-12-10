@@ -20,6 +20,8 @@
 #include "common/hashfn.h"
 #include "utils/builtins.h"
 
+#include "../../meos/include/meos_error.h"
+
 /*****************************************************************************/
 bool
 parse_bool_with_len(const char *value, size_t len, bool *result)

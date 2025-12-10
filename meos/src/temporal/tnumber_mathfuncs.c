@@ -624,7 +624,6 @@ tfloat_exp(const Temporal *temp)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) datum_exp;
-  lfinfo.numparam = 0;
   lfinfo.argtype[0] = T_TFLOAT;
   lfinfo.restype = T_TFLOAT;
   return tfunc_temporal(temp, &lfinfo);
@@ -667,7 +666,6 @@ tfloat_ln(const Temporal *temp)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) datum_ln;
-  lfinfo.numparam = 0;
   lfinfo.argtype[0] = T_TFLOAT;
   lfinfo.restype = T_TFLOAT;
   return tfunc_temporal(temp, &lfinfo);
@@ -708,7 +706,6 @@ tfloat_log10(const Temporal *temp)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) datum_log10;
-  lfinfo.numparam = 0;
   lfinfo.argtype[0] = T_TFLOAT;
   lfinfo.restype = T_TFLOAT;
   return tfunc_temporal(temp, &lfinfo);

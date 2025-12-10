@@ -30,6 +30,7 @@
 #include "utils/float.h"
 
 #include "pgtypes.h"
+#include "../../meos/include/meos_error.h"
 
 /*****************************************************************************
  * Definitions taken from the file liblwgeom_internal.h
@@ -374,7 +375,7 @@ pg_float8in_internal(char *num, char **endptr_p, const char *type_name,
   /* did we not see anything that looks like a double? */
   if (endptr == num || errno != 0)
   {
-    int      save_errno = errno;
+    int save_errno = errno;
 
     /*
      * C99 requires that strtod() accept NaN, [+-]Infinity, and [+-]Inf,
@@ -475,7 +476,7 @@ pg_float8in_internal(char *num, char **endptr_p, const char *type_name,
 /**
  * @ingroup meos_base_float
  * @brief Return a float8 number from its string representation
- * @return On error return `DBL_MAX`
+ * @return On error return @p DBL_MAX
  * @note Derived from PostgreSQL function @p float8in()
  */
 float8

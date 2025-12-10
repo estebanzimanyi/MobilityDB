@@ -33,6 +33,7 @@
 #include <utils/date.h>
 
 #include <pgtypes.h>
+#include "../../meos/include/meos_error.h"
 
 extern int GetDatabaseEncoding(void);
 
@@ -369,8 +370,15 @@ static JsonParseErrorType transform_string_values_scalar(void *state, char *toke
  * @param[in] jb JSONB value
  * @note MEOS function
  */
+#if MEOS
 Jsonb *
 jsonb_copy(const Jsonb *jb)
+{
+  return pg_jsonb_copy(jb);
+}
+#endif /* MEOS */
+Jsonb *
+pg_jsonb_copy(const Jsonb *jb)
 {
   Jsonb *result = palloc(VARSIZE(jb));
   memcpy(result, jb, VARSIZE(jb));
@@ -1339,7 +1347,7 @@ jsonb_get_element(Jsonb *jb, text **path_elems, int path_len, bool as_text)
     }
     else
       /* not text mode - just hand back the jsonb */
-      return (void *) jsonb_copy(jb); // MEOS
+      return (void *) pg_jsonb_copy(jb); // MEOS
   }
 
   for (i = 0; i < path_len; i++)
@@ -1589,7 +1597,7 @@ JsonbValueAsText(JsonbValue *v)
 
 /**
  * @ingroup meos_json_base_accessor
- * @brief Returns the length of an JSON array value`
+ * @brief Returns the length of a JSON array
  * @param[in] json JSON value 
  * @note Derived from PostgreSQL function @p json_array_length()
  */
@@ -2368,7 +2376,7 @@ pg_jsonb_strip_nulls(const Jsonb *jb, bool strip_in_arrays)
   bool last_was_key = false;
 
   if (JB_ROOT_IS_SCALAR(jb))
-    return jsonb_copy(jb);
+    return pg_jsonb_copy(jb);
 
   JsonbIterator *it = JsonbIteratorInit((JsonbContainer *) &jb->root);
   while ((type = JsonbIteratorNext(&it, &v, false)) != WJB_DONE)
@@ -2459,9 +2467,9 @@ pg_jsonb_concat(const Jsonb *jb1, const Jsonb *jb2)
   if (JB_ROOT_IS_OBJECT(jb1) == JB_ROOT_IS_OBJECT(jb2))
   {
     if (JB_ROOT_COUNT(jb1) == 0 && !JB_ROOT_IS_SCALAR(jb2))
-      return jsonb_copy(jb2);
+      return pg_jsonb_copy(jb2);
     else if (JB_ROOT_COUNT(jb2) == 0 && !JB_ROOT_IS_SCALAR(jb1))
-      return jsonb_copy(jb1);
+      return pg_jsonb_copy(jb1);
   }
 
   JsonbIterator *it1 = JsonbIteratorInit((JsonbContainer *) &jb1->root);
@@ -2501,7 +2509,7 @@ pg_jsonb_delete(const Jsonb *jb, const text *key)
   }
 
   if (JB_ROOT_COUNT(jb) == 0)
-    return jsonb_copy(jb);
+    return pg_jsonb_copy(jb);
 
   JsonbIteratorToken r;
   bool skipNested = false;
@@ -2533,14 +2541,17 @@ pg_jsonb_delete(const Jsonb *jb, const text *key)
  */
 #if MEOS
 Jsonb *
-jsonb_delete_array(const Jsonb *jb, const text **keys_elems, int keys_len)
+jsonb_delete_array(const Jsonb *jb, text **keys_elems, int keys_len)
 {
   return pg_jsonb_delete_array(jb, keys_elems, keys_len);
 }
 #endif /* MEOS */
 Jsonb *
-pg_jsonb_delete_array(const Jsonb *jb, const text **keys_elems, int keys_len)
+pg_jsonb_delete_array(const Jsonb *jb, text **keys_elems, int keys_len)
 {
+  /* Ensure the validity of the arguments */
+  assert(jb); assert(keys_elems); assert(keys_len > 0);
+  
   JsonbParseState *state = NULL;
   JsonbValue v, *res = NULL;
 
@@ -2552,7 +2563,7 @@ pg_jsonb_delete_array(const Jsonb *jb, const text **keys_elems, int keys_len)
   }
 
   if (JB_ROOT_COUNT(jb) == 0 || keys_len == 0)
-    return jsonb_copy((Jsonb *) jb);
+    return pg_jsonb_copy((Jsonb *) jb);
 
   bool skipNested = false;
   JsonbIteratorToken r;
@@ -2629,7 +2640,7 @@ pg_jsonb_delete_idx(const Jsonb *jb, int idx)
   }
 
   if (JB_ROOT_COUNT(jb) == 0)
-    return jsonb_copy(jb);
+    return pg_jsonb_copy(jb);
 
   JsonbIterator *it = JsonbIteratorInit((JsonbContainer *) &jb->root);
   JsonbIteratorToken r = JsonbIteratorNext(&it, &v, false);
@@ -2645,7 +2656,7 @@ pg_jsonb_delete_idx(const Jsonb *jb, int idx)
       idx = n + idx;
   }
   if (idx >= (int) n)
-    return jsonb_copy(jb);
+    return pg_jsonb_copy(jb);
 
   pushJsonbValue(&state, r, NULL);
   while ((r = JsonbIteratorNext(&it, &v, true)) != WJB_DONE)
@@ -2688,10 +2699,10 @@ pg_jsonb_set(const Jsonb *jb, text **path_elems, int path_len, Jsonb *newjb,
       "cannot set path jb scalar");
 
   if (JB_ROOT_COUNT(jb) == 0 && !create)
-    return jsonb_copy((Jsonb *) jb);
+    return pg_jsonb_copy((Jsonb *) jb);
 
   if (path_len == 0)
-    return jsonb_copy((Jsonb *) jb);
+    return pg_jsonb_copy((Jsonb *) jb);
 
   JsonbIterator *it = JsonbIteratorInit(&((Jsonb *)jb)->root);
   JsonbParseState *st = NULL;
@@ -2704,9 +2715,10 @@ pg_jsonb_set(const Jsonb *jb, text **path_elems, int path_len, Jsonb *newjb,
 
 /**
  * @ingroup meos_json_base_transf
- * @brief Delete the field or array element at the specified path, where path
+ * @brief Replace a JSONB value specified by a path with a new value
  * elements can be either field keys or array indexes
- * @note Derived from PostgreSQL function @p jsonb_set_lax(jsonb, text[], jsonb, boolean, text)
+ * @note Derived from PostgreSQL function 
+ * @p jsonb_set_lax(jsonb, text[], jsonb, boolean, text)
  */
 #if MEOS
 Jsonb *
@@ -2761,7 +2773,7 @@ pg_jsonb_set_lax(const Jsonb *jb, text **path_elems, int path_len,
   else if (strcmp(handle_val, "return_target") == 0)
   {
     pfree(handle_val);
-    return jsonb_copy(jb);
+    return pg_jsonb_copy(jb);
   }
   else
   {
@@ -2797,7 +2809,7 @@ pg_jsonb_delete_path(const Jsonb *jb, text **path_elems, int path_len)
   }
 
   if (JB_ROOT_COUNT(jb) == 0 || path_len == 0)
-    return jsonb_copy((Jsonb *) jb);
+    return pg_jsonb_copy((Jsonb *) jb);
 
   JsonbIterator *it = JsonbIteratorInit(&((Jsonb *) jb)->root);
   JsonbParseState *st = NULL;
@@ -2837,7 +2849,7 @@ pg_jsonb_insert(const Jsonb *jb, text **path_elems, int path_len,
   }
 
   if (path_len == 0)
-    return jsonb_copy((Jsonb *) jb);
+    return pg_jsonb_copy((Jsonb *) jb);
 
   JsonbIterator *it = JsonbIteratorInit(&((Jsonb *)jb)->root);
   JsonbParseState *st = NULL;

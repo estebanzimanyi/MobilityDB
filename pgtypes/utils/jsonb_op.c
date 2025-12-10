@@ -70,24 +70,17 @@ pg_jsonb_exists(const Jsonb *jb, const text *key)
 }
 
 /**
- * @brief Return true if the text string exist as a top-level key or array
- * element within the JSON value
- */
-Datum
-datum_jsonb_exists(Datum l, Datum r)
-{
-  return BoolGetDatum(pg_jsonb_exists(DatumGetJsonbP(l), DatumGetTextP(r)));
-}
-
-/**
- * @brief Return true if the text string exist as a top-level key or array
+ * @ingroup meos_base_json
+ * @brief Return true if the text string exists as a top-level key or array
  * element within the JSONB value
- * @note Derived from PostgreSQL function @p jsonb_delete_array()
+ * @note Derived from PostgreSQL function @p jsonb_exists_array()
  */
 bool
-jsonb_exists_array(const Jsonb *jb, const text **keys_elems,
-  int keys_len, bool any)
+jsonb_exists_array(const Jsonb *jb, text **keys_elems, int keys_len, bool any)
 {
+  /* Ensure the validity of the arguments */
+  assert(jb); assert(keys_elems); assert(keys_len > 0);
+
   for (int i = 0; i < keys_len; i++)
   {
     JsonbValue strVal;
@@ -96,7 +89,7 @@ jsonb_exists_array(const Jsonb *jb, const text **keys_elems,
     strVal.val.string.val = VARDATA_ANY(keys_elems[i]);
     strVal.val.string.len = VARSIZE_ANY_EXHDR(keys_elems[i]);
     bool res = findJsonbValueFromContainer(&((Jsonb *) jb)->root,
-        JB_FOBJECT | JB_FARRAY, &strVal) != NULL;
+      JB_FOBJECT | JB_FARRAY, &strVal) != NULL;
     if ((any && res) || (! any && ! res))
       return any ? true : false;
   }
@@ -123,7 +116,7 @@ pg_jsonb_contains(const Jsonb *jb1, const Jsonb *jb2)
   JsonbIterator *it1 = JsonbIteratorInit(&((Jsonb *)jb1)->root);
   JsonbIterator *it2 = JsonbIteratorInit(&((Jsonb *)jb2)->root);
   bool result = JsonbDeepContains(&it1, &it2); // MEOS
-  pfree(it1); pfree(it2);
+  // pfree(it1); pfree(it2);
   return result;
 }
 
@@ -143,24 +136,6 @@ bool
 pg_jsonb_contained(const Jsonb *jb1, const Jsonb *jb2)
 {
   return pg_jsonb_contains(jb2, jb1);
-}
-
-/**
- * @brief Return true if the first JSON value contains the second one
- */
-Datum
-datum_jsonb_contains(Datum l, Datum r)
-{
-  return BoolGetDatum(pg_jsonb_contains(DatumGetJsonbP(l), DatumGetJsonbP(r)));
-}
-
-/**
- * @brief Return true if the first JSON value is contained into the second one
- */
-Datum
-datum_jsonb_contained(Datum l, Datum r)
-{
-  return BoolGetDatum(pg_jsonb_contains(DatumGetJsonbP(r), DatumGetJsonbP(l)));
 }
 
 /**

@@ -728,6 +728,7 @@ extern Jsonb *pg_jsonb_make_two_arg(text **keys, text **values, int count);
 
 /* Conversion functions */
 
+extern Jsonb *cstring_to_jsonb(const char *str);
 
 /* Accessor functions */
 
@@ -741,11 +742,23 @@ extern text *pg_json_typeof(const text *json);
 
 extern Jsonb **pg_jsonb_array_elements(const Jsonb *jb, int *count);
 extern text **pg_jsonb_array_elements_text(const Jsonb *jb, int *count);
-extern bool pg_jsonb_contained(const Jsonb *jb1, const Jsonb *jb2); 
-extern bool pg_jsonb_contains(const Jsonb *jb1, const Jsonb *jb2); 
-extern text **pg_jsonb_each(const Jsonb *jb, Jsonb **values, int *count); 
-extern text **pg_jsonb_each_text(const Jsonb *jb, text **values, int *count); 
-extern bool pg_jsonb_exists(const Jsonb *jb, const text *key); 
+extern int pg_jsonb_cmp(const Jsonb *jb1, const Jsonb *jb2);
+extern Jsonb *pg_jsonb_concat(const Jsonb *jb1, const Jsonb *jb2);
+extern bool pg_jsonb_contained(const Jsonb *jb1, const Jsonb *jb2);
+extern bool pg_jsonb_contains(const Jsonb *jb1, const Jsonb *jb2);
+extern Jsonb *pg_jsonb_delete(const Jsonb *jb, const text *key);
+extern Jsonb *pg_jsonb_delete_array(const Jsonb *jb, text **keys_elems, int keys_len);
+extern Jsonb *pg_jsonb_delete_idx(const Jsonb *in, int idx);
+extern Jsonb *pg_jsonb_delete_path(const Jsonb *jb, text **path_elems, int path_len);
+extern text **pg_jsonb_each(const Jsonb *jb, Jsonb **values, int *count);
+extern text **pg_jsonb_each_text(const Jsonb *jb, text **values, int *count);
+extern bool pg_jsonb_eq(const Jsonb *jb1, const Jsonb *jb2);
+extern bool pg_jsonb_exists(const Jsonb *jb, const text *key);
+extern Jsonb *pg_jsonb_extract_path(const Jsonb *jb, text **path_elems, int path_len);
+extern text *pg_jsonb_extract_path_text(const Jsonb *jb, text **path_elems, int path_len);
+extern Jsonb *pg_jsonb_from_text(const text *txt, bool unique_keys);
+extern bool pg_jsonb_ge(const Jsonb *jb1, const Jsonb *jb2);
+extern bool pg_jsonb_gt(const Jsonb *jb1, const Jsonb *jb2);
 extern uint32 pg_jsonb_hash(const Jsonb *jb);
 extern uint64 pg_jsonb_hash_extended(const Jsonb *jb, uint64 seed);
 extern text **pg_jsonb_object_keys(const Jsonb *jb, int *count);
@@ -763,7 +776,7 @@ extern Jsonb *pg_jsonb_array_element(const Jsonb *jb, int element);
 extern text *pg_jsonb_array_element_text(const Jsonb *jb, int element);
 extern Jsonb *pg_jsonb_concat(const Jsonb *jb1, const Jsonb *jb2);
 extern Jsonb *pg_jsonb_delete(const Jsonb *jb, const text *key);
-extern Jsonb *pg_jsonb_delete_array(const Jsonb *jb, const text **keys_elems, int keys_len);
+extern Jsonb *pg_jsonb_delete_array(const Jsonb *jb, text **keys_elems, int keys_len);
 extern Jsonb *pg_jsonb_delete_idx(const Jsonb *jb, int idx);
 extern Jsonb *pg_jsonb_delete_path(const Jsonb *jb, text **path_elems, int path_len);
 extern Jsonb *pg_jsonb_extract_path(const Jsonb *jb, text **path_elems, int path_len);

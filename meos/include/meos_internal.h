@@ -721,13 +721,16 @@ typedef enum
 } SkipListType;
 
 /*****************************************************************************
- * Definition of a function with one to three Datum arguments and returning 
+ * Definition of a function with one to six Datum arguments and returning 
  * a Datum
  *****************************************************************************/
 
 typedef Datum (*datum_func1) (Datum);
 typedef Datum (*datum_func2) (Datum, Datum);
 typedef Datum (*datum_func3) (Datum, Datum, Datum);
+typedef Datum (*datum_func4) (Datum, Datum, Datum, Datum);
+typedef Datum (*datum_func5) (Datum, Datum, Datum, Datum, Datum);
+typedef Datum (*datum_func6) (Datum, Datum, Datum, Datum, Datum, Datum);
 
 /*****************************************************************************
  * Internal function accessing the Gnu Scientic Library (GSL)
@@ -979,41 +982,41 @@ extern bool inter_tbox_tbox(const TBox *box1, const TBox *box2, TBox *result);
 
 /* Input and output functions for temporal types */
 
-extern TInstant *tboolinst_from_mfjson(json_object *mfjson);
+extern TInstant *tboolinst_from_mfjson(const json_object *mfjson);
 extern TInstant *tboolinst_in(const char *str);
-extern TSequence *tboolseq_from_mfjson(json_object *mfjson);
+extern TSequence *tboolseq_from_mfjson(const json_object *mfjson);
 extern TSequence *tboolseq_in(const char *str, interpType interp);
-extern TSequenceSet *tboolseqset_from_mfjson(json_object *mfjson);
+extern TSequenceSet *tboolseqset_from_mfjson(const json_object *mfjson);
 extern TSequenceSet *tboolseqset_in(const char *str);
 extern Temporal *temporal_in(const char *str, meosType temptype);
 extern char *temporal_out(const Temporal *temp, int maxdd);
 extern char **temparr_out(Temporal **temparr, int count, int maxdd);
-extern TInstant *tfloatinst_from_mfjson(json_object *mfjson);
+extern TInstant *tfloatinst_from_mfjson(const json_object *mfjson);
 extern TInstant *tfloatinst_in(const char *str);
-extern TSequence *tfloatseq_from_mfjson(json_object *mfjson, interpType interp);
+extern TSequence *tfloatseq_from_mfjson(const json_object *mfjson, interpType interp);
 extern TSequence *tfloatseq_in(const char *str, interpType interp);
-extern TSequenceSet *tfloatseqset_from_mfjson(json_object *mfjson, interpType interp);
+extern TSequenceSet *tfloatseqset_from_mfjson(const json_object *mfjson, interpType interp);
 extern TSequenceSet *tfloatseqset_in(const char *str);
-extern TInstant *tinstant_from_mfjson(json_object *mfjson, bool spatial, int32_t srid, meosType temptype);
+extern TInstant *tinstant_from_mfjson(const json_object *mfjson, bool spatial, int32_t srid, meosType temptype);
 extern TInstant *tinstant_in(const char *str, meosType temptype);
 extern char *tinstant_out(const TInstant *inst, int maxdd);
-extern TInstant *tintinst_from_mfjson(json_object *mfjson);
+extern TInstant *tintinst_from_mfjson(const json_object *mfjson);
 extern TInstant *tintinst_in(const char *str);
-extern TSequence *tintseq_from_mfjson(json_object *mfjson);
+extern TSequence *tintseq_from_mfjson(const json_object *mfjson);
 extern TSequence *tintseq_in(const char *str, interpType interp);
-extern TSequenceSet *tintseqset_from_mfjson(json_object *mfjson);
+extern TSequenceSet *tintseqset_from_mfjson(const json_object *mfjson);
 extern TSequenceSet *tintseqset_in(const char *str);
-extern TSequence *tsequence_from_mfjson(json_object *mfjson, bool spatial, int32_t srid, meosType temptype, interpType interp);
+extern TSequence *tsequence_from_mfjson(const json_object *mfjson, bool spatial, int32_t srid, meosType temptype, interpType interp);
 extern TSequence *tsequence_in(const char *str, meosType temptype, interpType interp);
 extern char *tsequence_out(const TSequence *seq, int maxdd);
-extern TSequenceSet *tsequenceset_from_mfjson(json_object *mfjson, bool spatial, int32_t srid, meosType temptype, interpType interp);
+extern TSequenceSet *tsequenceset_from_mfjson(const json_object *mfjson, bool spatial, int32_t srid, meosType temptype, interpType interp);
 extern TSequenceSet *tsequenceset_in(const char *str, meosType temptype, interpType interp);
 extern char *tsequenceset_out(const TSequenceSet *ss, int maxdd);
-extern TInstant *ttextinst_from_mfjson(json_object *mfjson);
+extern TInstant *ttextinst_from_mfjson(const json_object *mfjson);
 extern TInstant *ttextinst_in(const char *str);
-extern TSequence *ttextseq_from_mfjson(json_object *mfjson);
+extern TSequence *ttextseq_from_mfjson(const json_object *mfjson);
 extern TSequence *ttextseq_in(const char *str, interpType interp);
-extern TSequenceSet *ttextseqset_from_mfjson(json_object *mfjson);
+extern TSequenceSet *ttextseqset_from_mfjson(const json_object *mfjson);
 extern TSequenceSet *ttextseqset_in(const char *str);
 extern Temporal *temporal_from_mfjson(const char *mfjson, meosType temptype);
 

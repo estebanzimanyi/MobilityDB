@@ -116,9 +116,13 @@ typedef enum
   T_TGEOMETRY      = 60,  /**< temporal geometry type */
   T_TGEOGRAPHY     = 61,  /**< temporal geography type */
   T_TRGEOMETRY     = 62,  /**< temporal rigid geometry type */
+  T_JSONB          = 63,  /**< base type for PostgreSQL jsonb */
+  T_JSONPATH       = 64,  /**< base type for PostgreSQL jsonpath */
+  T_JSONBSET       = 65,  /**< static set of JSONB values */
+  T_TJSONB         = 66  /**< temporal JSONB value */
 } meosType;
 
-#define NO_MEOS_TYPES 63
+#define NO_MEOS_TYPES 67
 
 /**
  * Enumeration that defines the classes of Boolean operators used in
@@ -248,14 +252,15 @@ extern bool set_basetype(meosType type);
 
 extern bool set_type(meosType type);
 extern bool numset_type(meosType type);
-extern bool ensure_numset_type(meosType type);
 extern bool timeset_type(meosType type);
 extern bool set_spantype(meosType type);
-extern bool ensure_set_spantype(meosType type);
 extern bool alphanumset_type(meosType settype);
 extern bool geoset_type(meosType type);
-extern bool ensure_geoset_type(meosType type);
 extern bool spatialset_type(meosType type);
+extern bool ensure_set_isof_type(const Set *s, meosType settype);
+extern bool ensure_set_spantype(meosType type);
+extern bool ensure_geoset_type(meosType type);
+extern bool ensure_numset_type(meosType type);
 extern bool ensure_spatialset_type(meosType type);
 
 extern bool span_basetype(meosType type);
@@ -263,15 +268,17 @@ extern bool span_canon_basetype(meosType type);
 extern bool span_type(meosType type);
 extern bool type_span_bbox(meosType type);
 extern bool span_tbox_type(meosType type);
-extern bool ensure_span_tbox_type(meosType type);
 extern bool numspan_basetype(meosType type);
 extern bool numspan_type(meosType type);
-extern bool ensure_numspan_type(meosType type);
 extern bool timespan_basetype(meosType type);
 extern bool timespan_type(meosType type);
+extern bool ensure_span_isof_type(const Span *s, meosType spantype);
+extern bool ensure_span_tbox_type(meosType type);
+extern bool ensure_numspan_type(meosType type);
 
 extern bool spanset_type(meosType type);
 extern bool timespanset_type(meosType type);
+extern bool ensure_spanset_isof_type(const SpanSet *ss, meosType spansettype);
 extern bool ensure_timespanset_type(meosType type);
 
 extern bool temporal_type(meosType type);
@@ -282,9 +289,8 @@ extern bool temptype_continuous(meosType type);
 extern bool basetype_byvalue(meosType type);
 extern bool basetype_varlength(meosType type);
 extern int16 basetype_length(meosType type);
-#ifndef NDEBUG
 extern bool talphanum_type(meosType type);
-#endif
+extern bool ensure_talphanum_type(meosType type);
 extern bool talpha_type(meosType type);
 extern bool tnumber_type(meosType type);
 extern bool ensure_tnumber_type(meosType type);

@@ -28,81 +28,81 @@
  *****************************************************************************/
 
 /**
- * @defgroup meos_internal_cbuffer_base Functions for static circular buffers
+ * @defgroup meos_internal_cbuffer_base Internal functions for static circular buffers
  * @ingroup meos_internal_cbuffer
- * @brief Functions for static circular buffers
+ * @brief Internal functions for static circular buffers
  *
- * @defgroup meos_internal_cbuffer_set Functions for circular buffer sets
+ * @defgroup meos_internal_cbuffer_set Internal functions for circular buffer sets
  * @ingroup meos_internal_cbuffer
- * @brief Functions for circular buffer sets
+ * @brief Internal functions for circular buffer sets
  *
- * @defgroup meos_internal_cbuffer_inout Input and output functions
+ * @defgroup meos_internal_cbuffer_inout Internal input and output functions
  * @ingroup meos_internal_cbuffer
- * @brief Input and output functions for temporal circular buffers
+ * @brief Internal input and output functions for temporal circular buffers
  *
- * @defgroup meos_internal_cbuffer_constructor Constructor functions
+ * @defgroup meos_internal_cbuffer_constructor Internal constructor functions
  * @ingroup meos_internal_cbuffer
- * @brief Constructor functions for temporal circular buffers
+ * @brief Internal constructor functions for temporal circular buffers
  *
- * @defgroup meos_internal_cbuffer_conversion Conversion functions
+ * @defgroup meos_internal_cbuffer_conversion Internal conversion functions
  * @ingroup meos_internal_cbuffer
- * @brief Conversion functions for temporal circular buffers
+ * @brief Internal conversion functions for temporal circular buffers
  *
- * @defgroup meos_internal_cbuffer_accessor Accessor functions
+ * @defgroup meos_internal_cbuffer_accessor Internal accessor functions
  * @ingroup meos_internal_cbuffer
- * @brief Accessor functions for temporal circular buffers
+ * @brief Internal accessor functions for temporal circular buffers
  *
- * @defgroup meos_internal_cbuffer_restrict Restriction functions
+ * @defgroup meos_internal_cbuffer_restrict Internal restriction functions
  * @ingroup meos_internal_cbuffer
- * @brief Restriction functions for temporal circular buffers
+ * @brief Internal restriction functions for temporal circular buffers
  *
- * @defgroup meos_internal_cbuffer_comp Comparison functions
+ * @defgroup meos_internal_cbuffer_comp Internal comparison functions
  * @ingroup meos_internal_cbuffer
- * @brief Comparison functions for temporal circular buffers
+ * @brief Internal comparison functions for temporal circular buffers
  *
- *   @defgroup meos_internal_cbuffer_comp_ever Ever and always comparison functions
+ *   @defgroup meos_internal_cbuffer_comp_ever Internal ever and always comparison functions
  *   @ingroup meos_internal_cbuffer_comp
- *   @brief Ever and always comparison functions for temporal circular buffers
+ *   @brief Internal ever and always comparison functions for temporal circular buffers
  *
- *   @defgroup meos_internal_cbuffer_comp_temp Temporal comparison functions
+ *   @defgroup meos_internal_cbuffer_comp_temp Internal temporal comparison functions
  *   @ingroup meos_internal_cbuffer_comp
- *   @brief Temporal comparison functions for temporal circular buffers
+ *   @brief Internal temporal comparison functions for temporal circular buffers
  *
- * @defgroup meos_internal_cbuffer_dist Distance functions
+ * @defgroup meos_internal_cbuffer_dist Internal distance functions
  * @ingroup meos_internal_cbuffer
- * @brief Distance functions for temporal circular buffers
+ * @brief Internal distance functions for temporal circular buffers
  */
 
 /*****************************************************************************/
 
 /**
- * @defgroup meos_internal_cbuffer_base_inout Input and output functions
+ * @defgroup meos_internal_cbuffer_base_inout Internal input and output functions
  * @ingroup meos_internal_cbuffer_base
- * @brief Input and output functions for static circular buffers
+ * @brief Internal input and output functions for static circular buffers
  *
- * @defgroup meos_internal_cbuffer_base_constructor Constructor functions
+ * @defgroup meos_internal_cbuffer_base_constructor Internal constructor functions
  * @ingroup meos_internal_cbuffer_base
- * @brief Constructor functions for static circular buffers
+ * @brief Internal constructor functions for static circular buffers
  *
- * @defgroup meos_internal_cbuffer_base_conversion Conversion functions
+ * @defgroup meos_internal_cbuffer_base_conversion Internal conversion functions
  * @ingroup meos_internal_cbuffer_base
- * @brief Conversion functions for static circular buffers
+ * @brief Internal conversion functions for static circular buffers
  *
- * @defgroup meos_internal_cbuffer_base_accessor Accessor functions
+ * @defgroup meos_internal_cbuffer_base_accessor Internal accessor functions
  * @ingroup meos_internal_cbuffer_base
- * @brief Accessor functions for static circular buffers
+ * @brief Internal accessor functions for static circular buffers
+ *a
+ * @defgroup meos_internal_cbuffer_base_transf Internal transformation functions
+ * @ingroup meos_internal_cbuffer_base
+ * @brief Internal transformation functions for static circular buffers
  *
- * @defgroup meos_internal_cbuffer_base_transf Transformation functions
+ * @defgroup meos_internal_cbuffer_base_srid Internal spatial reference system functions
  * @ingroup meos_internal_cbuffer_base
- * @brief Transformation functions for static circular buffers
+ * @brief Internal spatial reference system functions for static circular buffers
  *
- * @defgroup meos_internal_cbuffer_base_srid Spatial reference system functions
+ * @defgroup meos_internal_cbuffer_base_comp Internal comparison functions
  * @ingroup meos_internal_cbuffer_base
- * @brief Spatial reference system functions for static circular buffers
- *
- * @defgroup meos_internal_cbuffer_base_comp Comparison functions
- * @ingroup meos_internal_cbuffer_base
- * @brief Comparison functions for static circular buffers
+ * @brief Internal comparison functions for static circular buffers
  */
 
 /*****************************************************************************/
@@ -110,23 +110,23 @@
 /**
  * @defgroup meos_internal_cbuffer_set_inout Input and output functions
  * @ingroup meos_internal_cbuffer_set
- * @brief Input and output functions for circular buffer sets
+ * @brief Internal input and output functions for circular buffer sets
  *
  * @defgroup meos_internal_cbuffer_set_constructor Constructor functions
  * @ingroup meos_internal_cbuffer_set
- * @brief Constructor functions for circular buffer sets
+ * @brief Internal constructor functions for circular buffer sets
  *
  * @defgroup meos_internal_cbuffer_set_conversion Conversion functions
  * @ingroup meos_internal_cbuffer_set
- * @brief Conversion functions for circular buffer sets
+ * @brief Internal conversion functions for circular buffer sets
  *
  * @defgroup meos_internal_cbuffer_set_accessor Accessor functions
  * @ingroup meos_internal_cbuffer_set
- * @brief Accessor functions for circular buffer sets
+ * @brief Internal accessor functions for circular buffer sets
  *
  * @defgroup meos_internal_cbuffer_set_setops Set operations
  * @ingroup meos_internal_cbuffer_set
- * @brief Set operations for circular buffer sets
+ * @brief Internal set operations for circular buffer sets
  */
 
 /*****************************************************************************/

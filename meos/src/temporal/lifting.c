@@ -205,13 +205,36 @@ tfunc_base(Datum value, LiftedFunctionInfo *lfinfo)
   assert(lfinfo->numparam >= 0 && lfinfo->numparam <= MAX_PARAMS);
   if (lfinfo->numparam == 0)
   {
-    datum_func1 noParamFunc = (datum_func1)(*lfinfo->func);
-    return noParamFunc(value);
+    datum_func1 func = (datum_func1)(*lfinfo->func);
+    return func(value);
   }
-  else /* if (lfinfo->numparam == 1) */
+  else if (lfinfo->numparam == 1)
   {
-    datum_func2 oneParamFunc = (datum_func2)(*lfinfo->func);
-    return oneParamFunc(value, lfinfo->param[0]);
+    datum_func2 func = (datum_func2)(*lfinfo->func);
+    return func(value, lfinfo->param[0]);
+  }
+  else if (lfinfo->numparam == 2)
+  {
+    datum_func3 func = (datum_func3)(*lfinfo->func);
+    return func(value, lfinfo->param[0], lfinfo->param[1]);
+  }
+  else if (lfinfo->numparam == 3)
+  {
+    datum_func4 func = (datum_func4)(*lfinfo->func);
+    return func(value, lfinfo->param[0], lfinfo->param[1],
+      lfinfo->param[2]);
+  }
+  else if (lfinfo->numparam == 4)
+  {
+    datum_func5 func = (datum_func5)(*lfinfo->func);
+    return func(value, lfinfo->param[0], lfinfo->param[1], lfinfo->param[2],
+      lfinfo->param[3]);
+  }
+  else /* if (lfinfo->numparam == 5) */
+  {
+    datum_func6 func = (datum_func6)(*lfinfo->func);
+    return func(value, lfinfo->param[0], lfinfo->param[1], lfinfo->param[2],
+      lfinfo->param[3], lfinfo->param[4]);
   }
 }
 
@@ -225,7 +248,10 @@ TInstant *
 tfunc_tinstant(const TInstant *inst, LiftedFunctionInfo *lfinfo)
 {
   Datum resvalue = tfunc_base(tinstant_value_p(inst), lfinfo);
-  return tinstant_make_free(resvalue, lfinfo->restype, inst->t);
+  /* Currently, we ONLY check NULL pointers if resquested to check errors */
+  if (lfinfo->reserrcheck && ! resvalue) 
+    return NULL;
+  return tinstant_make(resvalue, lfinfo->restype, inst->t);
 }
 
 /**
@@ -238,7 +264,17 @@ tfunc_tsequence(const TSequence *seq, LiftedFunctionInfo *lfinfo)
 {
   TInstant **instants = palloc(sizeof(TInstant *) * seq->count);
   for (int i = 0; i < seq->count; i++)
-    instants[i] = tfunc_tinstant(TSEQUENCE_INST_N(seq, i), lfinfo);
+  {
+    TInstant *inst = tfunc_tinstant(TSEQUENCE_INST_N(seq, i), lfinfo);
+    if (! inst)
+    {
+      for (int j = 0; j < i; j++)
+        pfree(instants[j]);
+      pfree(instants);
+      return NULL;
+    }
+    instants[i] = inst;
+  }
   return tsequence_make_free(instants, seq->count, seq->period.lower_inc,
     seq->period.upper_inc, MEOS_FLAGS_GET_INTERP(seq->flags), NORMALIZE);
 }
@@ -253,7 +289,17 @@ tfunc_tsequenceset(const TSequenceSet *ss, LiftedFunctionInfo *lfinfo)
 {
   TSequence **sequences = palloc(sizeof(TSequence *) * ss->count);
   for (int i = 0; i < ss->count; i++)
-    sequences[i] = tfunc_tsequence(TSEQUENCESET_SEQ_N(ss, i), lfinfo);
+  {
+    TSequence *seq = tfunc_tsequence(TSEQUENCESET_SEQ_N(ss, i), lfinfo);
+    if (! seq)
+    {
+      for (int j = 0; j < i; j++)
+        pfree(sequences[j]);
+      pfree(sequences);
+      return NULL;
+    }
+    sequences[i] = seq;
+  }
   return tsequenceset_make_free(sequences, ss->count, NORMALIZE);
 }
 
@@ -295,16 +341,14 @@ tfunc_base_base(Datum value1, Datum value2, LiftedFunctionInfo *lfinfo)
   assert(lfinfo->numparam >= 0 && lfinfo->numparam <= MAX_PARAMS);
   if (lfinfo->numparam == 0)
   {
-    datum_func2 noParamFunc = (datum_func2)(*lfinfo->func);
-    return lfinfo->invert ?
-      noParamFunc(value2, value1) : noParamFunc(value1, value2);
+    datum_func2 func = (datum_func2)(*lfinfo->func);
+    return lfinfo->invert ? func(value2, value1) : func(value1, value2);
   }
   else /* if (lfinfo->numparam == 1) */
   {
-    datum_func3 oneParamFunc = (datum_func3)(*lfinfo->func);
-    return lfinfo->invert ?
-      oneParamFunc(value2, value1, lfinfo->param[0]) :
-      oneParamFunc(value1, value2, lfinfo->param[0]);
+    datum_func3 func = (datum_func3)(*lfinfo->func);
+    return lfinfo->invert ? func(value2, value1, lfinfo->param[0]) :
+      func(value1, value2, lfinfo->param[0]);
   }
 }
 

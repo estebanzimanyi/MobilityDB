@@ -41,7 +41,6 @@
 #include "utils/timestamp.h"
 /* MEOS */
 #include <meos.h>
-#include <meos_rgeo.h>
 #include <meos_internal.h>
 #include "temporal/set.h"
 #include "temporal/span.h"
@@ -52,6 +51,10 @@
 #if CBUFFER
   #include "cbuffer/cbuffer.h"
 #endif
+#if JSON
+#include <meos_json.h>
+  #include <utils/jsonb.h>
+#endif
 #if NPOINT
   #include "npoint/tnpoint.h"
   #include "npoint/tnpoint_parser.h"
@@ -61,10 +64,10 @@
   #include "pose/pose.h"
 #endif
 #if RGEO
+#include <meos_rgeo.h>
   #include "rgeo/trgeo.h"
 #endif
 
-#include <utils/jsonb.h>
 #include <utils/numeric.h>
 #include <pgtypes.h>
 
@@ -196,6 +199,16 @@ basetype_in(const char *str, meosType type, bool end UNUSED, Datum *result)
       return true;
     }
 #endif
+#if JSON
+    case T_JSONB:
+    {
+      Jsonb *jb = cstring_to_jsonb(str);
+      if (! jb)
+        return false;
+      *result = PointerGetDatum(jb);
+      return true;
+    }
+#endif
 #if NPOINT
     case T_NPOINT:
     {
@@ -232,9 +245,9 @@ basetype_in(const char *str, meosType type, bool end UNUSED, Datum *result)
  * @note Function taken from PostGIS file lwin_geojson.c
  */
 static json_object *
-findMemberByName(json_object *poObj, const char *pszName)
+findMemberByName(const json_object *poObj, const char *pszName)
 {
-  json_object *poTmp = poObj;
+  const json_object *poTmp = poObj;
   json_object_iter it;
 
   if (pszName == NULL || poObj == NULL)
@@ -324,9 +337,9 @@ parse_mfjson_coord(json_object *poObj, int32_t srid, bool geodetic)
  * @brief Return an array of values from its MF-JSON representation
  */
 static Datum *
-parse_mfjson_values(json_object *mfjson, meosType temptype, int *count)
+parse_mfjson_values(const json_object *mfjson, meosType temptype, int *count)
 {
-  json_object *mfjsonTmp = mfjson;
+  const json_object *mfjsonTmp = mfjson;
   json_object *jvalues = NULL;
   jvalues = findMemberByName(mfjsonTmp, "values");
   if (jvalues == NULL)
@@ -386,6 +399,22 @@ parse_mfjson_values(json_object *mfjson, meosType temptype, int *count)
         values[i] = PointerGetDatum(cstring_to_text(
           json_object_get_string(jvalue)));
         break;
+#if JSON
+      case T_TJSONB:
+      {
+        /* Accept any JSON value for temporal‐JSONB */
+        const char *jstr = json_object_to_json_string(jvalue);
+        Jsonb *jb = cstring_to_jsonb(jstr);
+        if (! jb)
+        {
+          meos_error(ERROR, MEOS_ERR_MFJSON_INPUT,
+            "Invalid JSON value in 'values' array in MFJSON string");
+          return NULL;
+        }
+        values[i] = PointerGetDatum(jb);
+        break;
+      }
+#endif /* JSON */
       default: /* Error! */
         meos_error(ERROR, MEOS_ERR_MFJSON_INPUT,
           "Unknown temporal type in MFJSON string: %s",
@@ -404,9 +433,10 @@ parse_mfjson_values(json_object *mfjson, meosType temptype, int *count)
  * cordinates such as `"values":[1.5,2.5]`.
  */
 static Datum *
-parse_mfjson_points(json_object *mfjson, int32_t srid, bool geodetic, int *count)
+parse_mfjson_points(const json_object *mfjson, int32_t srid, bool geodetic,
+  int *count)
 {
-  json_object *mfjsonTmp = mfjson;
+  const json_object *mfjsonTmp = mfjson;
   json_object *coordinates = NULL;
   coordinates = findMemberByName(mfjsonTmp, "coordinates");
   if (coordinates == NULL)
@@ -445,9 +475,10 @@ parse_mfjson_points(json_object *mfjson, int32_t srid, bool geodetic, int *count
  * representation
  */
 static Datum *
-parse_mfjson_geos(json_object *mfjson, int32_t srid, bool geodetic, int *count)
+parse_mfjson_geos(const json_object *mfjson, int32_t srid, bool geodetic,
+  int *count)
 {
-  json_object *mfjsonTmp = mfjson;
+  const json_object *mfjsonTmp = mfjson;
   json_object *values_json = NULL;
   values_json = findMemberByName(mfjsonTmp, "values");
   if (values_json == NULL)
@@ -506,7 +537,7 @@ parse_mfjson_geos(json_object *mfjson, int32_t srid, bool geodetic, int *count)
 static GSERIALIZED *
 parse_mfjson_ref_geo(json_object *mfjson, int32_t srid, bool geodetic)
 {
-  json_object *mfjsonTmp = mfjson;
+  const json_object *mfjsonTmp = mfjson;
   json_object *geo_json = NULL;
   geo_json = findMemberByName(mfjsonTmp, "geometry");
   if (geo_json == NULL)
@@ -652,9 +683,9 @@ parse_mfjson_pose(json_object *mfjson, int32_t srid)
  * @brief Return an array of poses from its GeoJSON pose values
  */
 static Datum *
-parse_mfjson_poses(json_object *mfjson, int32_t srid, int *count)
+parse_mfjson_poses(const json_object *mfjson, int32_t srid, int *count)
 {
-  json_object *mfjsonTmp = mfjson;
+  const json_object *mfjsonTmp = mfjson;
   json_object *values_json = NULL;
   values_json = findMemberByName(mfjsonTmp, "values");
   if (values_json == NULL)
@@ -695,7 +726,7 @@ parse_mfjson_poses(json_object *mfjson, int32_t srid, int *count)
  * @brief Return an array of timestamps from their MF-JSON datetimes values
  */
 static TimestampTz *
-parse_mfjson_datetimes(json_object *mfjson, int *count)
+parse_mfjson_datetimes(const json_object *mfjson, int *count)
 {
   json_object *datetimes = NULL;
   datetimes = findMemberByName(mfjson, "datetimes");
@@ -751,7 +782,7 @@ parse_mfjson_datetimes(json_object *mfjson, int *count)
  * @param[in] temptype Temporal type
  */
 TInstant *
-tinstant_from_mfjson(json_object *mfjson, bool spatial, int32_t srid,
+tinstant_from_mfjson(const json_object *mfjson, bool spatial, int32_t srid,
   meosType temptype)
 {
   assert(mfjson); assert(temporal_type(temptype));
@@ -798,7 +829,7 @@ tinstant_from_mfjson(json_object *mfjson, bool spatial, int32_t srid,
  * representation
  */
 static TInstant **
-tinstarr_from_mfjson(json_object *mfjson, bool isgeo, int32_t srid,
+tinstarr_from_mfjson(const json_object *mfjson, bool isgeo, int32_t srid,
   meosType temptype, int *count)
 {
   assert(mfjson); assert(count);
@@ -855,7 +886,7 @@ tinstarr_from_mfjson(json_object *mfjson, bool isgeo, int32_t srid,
  * @param[in] interp Interpolation
  */
 TSequence *
-tsequence_from_mfjson(json_object *mfjson, bool spatial, int32_t srid,
+tsequence_from_mfjson(const json_object *mfjson, bool spatial, int32_t srid,
   meosType temptype, interpType interp)
 {
   assert(mfjson);
@@ -903,7 +934,7 @@ tsequence_from_mfjson(json_object *mfjson, bool spatial, int32_t srid,
  * @param[in] interp Interpolation
  */
 TSequenceSet *
-tsequenceset_from_mfjson(json_object *mfjson, bool spatial, int32_t srid,
+tsequenceset_from_mfjson(const json_object *mfjson, bool spatial, int32_t srid,
   meosType temptype, interpType interp)
 {
   assert(mfjson);
@@ -955,7 +986,11 @@ ensure_temptype_mfjson(const char *typestr)
       strcmp(typestr, "MovingPoint") != 0 &&
       strcmp(typestr, "MovingGeometry") != 0  &&
       strcmp(typestr, "MovingPose") != 0 &&
-      strcmp(typestr, "MovingRigidGeometry") != 0 )
+      strcmp(typestr, "MovingRigidGeometry") != 0
+#if JSON
+      && strcmp(typestr, "MovingJSON") != 0 
+#endif /* JSON */
+     )
   {
     meos_error(ERROR, MEOS_ERR_MFJSON_INPUT,
       "Invalid 'type' value in MFJSON string: %s", typestr);
@@ -1021,6 +1056,10 @@ temporal_from_mfjson(const char *mfjson, meosType temptype)
     jtemptype = T_TFLOAT;
   else if (strcmp(typestr, "MovingText") == 0)
     jtemptype = T_TTEXT;
+#if JSON
+  else if (strcmp(typestr, "MovingJSON") == 0)
+    jtemptype = T_TJSONB;
+#endif /* JSON */
   else if (strcmp(typestr, "MovingPoint") == 0)
   {
     if (temptype == T_TGEOGPOINT)
@@ -1408,6 +1447,34 @@ cbuffer_from_wkb_state(meos_wkb_parse_state *s, bool component)
 }
 #endif /* CBUFFER */
 
+#if JSON
+/**
+ * @brief Read a JSONB value and advance the parse state forward
+ */
+Jsonb *
+jsonb_from_wkb_state(meos_wkb_parse_state *s)
+{
+  /* Get the size of the JSONB payload (without VARHDRSZ) */
+  size_t size = int64_from_wkb_state(s);
+  assert(size > 0);
+
+  /* Check that there is enough data to read */
+  wkb_parse_state_check(s, size);
+
+  /* Allocate space for a full varlena (VARSIZE = header + payload) */
+  Jsonb *jb = (Jsonb *) palloc(size + VARHDRSZ);
+  SET_VARSIZE(jb, size + VARHDRSZ);
+
+  /* Copy raw payload into VARDATA() */
+  memcpy(VARDATA(jb), s->pos, size);
+
+  /* Advance position */
+  s->pos += size;
+
+  return jb;
+}
+#endif /* JSONB */
+
 #if NPOINT
 /**
  * @brief Return the state flags initialized with a byte flag read from the
@@ -1543,6 +1610,10 @@ base_from_wkb_state(meos_wkb_parse_state *s)
     case T_CBUFFER:
       return PointerGetDatum(cbuffer_from_wkb_state(s, true));
 #endif /* NPOINT */
+#if JSON
+    case T_JSONB:
+      return PointerGetDatum(jsonb_from_wkb_state(s));
+#endif /* JSONB */
 #if NPOINT
     case T_NPOINT:
       return PointerGetDatum(npoint_from_wkb_state(s));
@@ -2066,6 +2137,10 @@ type_from_wkb(const uint8_t *wkb, size_t size, meosType type)
   if (type == T_CBUFFER)
     return PointerGetDatum(cbuffer_from_wkb_state(&s, false));
 #endif /* CBUFFER */
+#if JSON
+  if (type == T_JSONB)
+    return PointerGetDatum(jsonb_from_wkb_state(&s));
+#endif /* JSONB */
 #if NPOINT
   if (type == T_NPOINT)
     return PointerGetDatum(npoint_from_wkb_state(&s));

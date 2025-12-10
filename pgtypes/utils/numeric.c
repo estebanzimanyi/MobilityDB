@@ -40,6 +40,7 @@
 #include <utils/jsonb.h>
 
 #include <pgtypes.h>
+#include "../../meos/include/meos_error.h"
 
 #if POSTGRESQL_VERSION_NUMBER < 160000
 /*
@@ -1179,7 +1180,6 @@ pg_numeric_uminus(Numeric num)
       res->choice.n_short.n_header =
         num->choice.n_short.n_header ^ NUMERIC_INF_SIGN_MASK;
   }
-
   /*
    * The packed format is known to be totally zero digit trimmed always. So
    * once we've eliminated specials, we can identify a zero by the fact that
@@ -1192,13 +1192,10 @@ pg_numeric_uminus(Numeric num)
       res->choice.n_short.n_header =
         num->choice.n_short.n_header ^ NUMERIC_SHORT_SIGN_MASK;
     else if (NUMERIC_SIGN(num) == NUMERIC_POS)
-      res->choice.n_long.n_sign_dscale =
-        NUMERIC_NEG | NUMERIC_DSCALE(num);
+      res->choice.n_long.n_sign_dscale = NUMERIC_NEG | NUMERIC_DSCALE(num);
     else
-      res->choice.n_long.n_sign_dscale =
-        NUMERIC_POS | NUMERIC_DSCALE(num);
+      res->choice.n_long.n_sign_dscale = NUMERIC_POS | NUMERIC_DSCALE(num);
   }
-
   return res;
 }
 
@@ -1311,18 +1308,14 @@ pg_numeric_round(Numeric num, int32 scale)
   NumericVar arg;
   init_var(&arg);
   set_var_from_num(num, &arg);
-
   round_var(&arg, scale);
-
   /* We don't allow negative output dscale */
   if (scale < 0)
     arg.dscale = 0;
-
   /*
    * Return the rounded result
    */
   Numeric res = make_result(&arg);
-
   free_var(&arg);
   return res;
 }
@@ -1344,39 +1337,28 @@ numeric_trunc(Numeric num, int32 scale)
 Numeric
 pg_numeric_trunc(Numeric num, int32 scale)
 {
-  /*
-   * Handle NaN and infinities
-   */
+  /* Handle NaN and infinities */
   if (NUMERIC_IS_SPECIAL(num))
     return duplicate_numeric(num);
 
   /*
    * Limit the scale value to avoid possible overflow in calculations.
-   *
    * These limits are based on the maximum number of digits a Numeric value
    * can have before and after the decimal point.
    */
   scale = Max(scale, -(NUMERIC_WEIGHT_MAX + 1) * DEC_DIGITS);
   scale = Min(scale, NUMERIC_DSCALE_MAX);
 
-  /*
-   * Unpack the argument and truncate it at the proper digit position
-   */
+  /* Unpack the argument and truncate it at the proper digit position */
   NumericVar arg;
   init_var(&arg);
   set_var_from_num(num, &arg);
-
   trunc_var(&arg, scale);
-
   /* We don't allow negative output dscale */
   if (scale < 0)
     arg.dscale = 0;
-
-  /*
-   * Return the truncated result
-   */
+  /* Return the truncated result */
   Numeric res = make_result(&arg);
-
   free_var(&arg);
   return res;
 }
@@ -1396,19 +1378,14 @@ numeric_ceil(Numeric num)
 Numeric
 pg_numeric_ceil(Numeric num)
 {
-  /*
-   * Handle NaN and infinities
-   */
+  /* Handle NaN and infinities */
   if (NUMERIC_IS_SPECIAL(num))
     return duplicate_numeric(num);
-
   NumericVar result;
   init_var_from_num(num, &result);
   ceil_var(&result, &result);
-
   Numeric res = make_result(&result);
   free_var(&result);
-
   return res;
 }
 
@@ -1432,14 +1409,11 @@ pg_numeric_floor(Numeric num)
    */
   if (NUMERIC_IS_SPECIAL(num))
     return duplicate_numeric(num);
-
   NumericVar result;
   init_var_from_num(num, &result);
   floor_var(&result, &result);
-
   Numeric res = make_result(&result);
   free_var(&result);
-
   return res;
 }
 
@@ -1486,10 +1460,8 @@ numeric_width_bucket(Numeric operand, Numeric bound1, Numeric bound2,
   NumericVar result_var;
   init_var(&result_var);
   init_var(&count_var);
-
   /* Convert 'count' to a numeric, for ease of use later */
   int64_to_numericvar((int64) count, &count_var);
-
   switch (cmp_numerics(bound1, bound2))
   {
     case 0:
@@ -1526,10 +1498,8 @@ numeric_width_bucket(Numeric operand, Numeric bound1, Numeric bound2,
       "integer out of range");
     return INT_MAX;
   }
-
   free_var(&count_var);
   free_var(&result_var);
-
   return result;
 }
 
@@ -1562,12 +1532,10 @@ compute_bucket(Numeric operand, Numeric bound1, Numeric bound2,
    */
   sub_var(&operand_var, &bound1_var, &operand_var);
   sub_var(&bound2_var, &bound1_var, &bound2_var);
-
   mul_var(&operand_var, count_var, &operand_var,
       operand_var.dscale + count_var->dscale);
   div_var(&operand_var, &bound2_var, result_var, 0, false, true);
   add_var(result_var, &const_one, result_var);
-
   free_var(&bound1_var);
   free_var(&bound2_var);
   free_var(&operand_var);
@@ -1785,11 +1753,9 @@ cmp_numerics(Numeric num1, Numeric num2)
   else
   {
     result = cmp_var_common(NUMERIC_DIGITS(num1), NUMERIC_NDIGITS(num1),
-                NUMERIC_WEIGHT(num1), NUMERIC_SIGN(num1),
-                NUMERIC_DIGITS(num2), NUMERIC_NDIGITS(num2),
-                NUMERIC_WEIGHT(num2), NUMERIC_SIGN(num2));
+      NUMERIC_WEIGHT(num1), NUMERIC_SIGN(num1), NUMERIC_DIGITS(num2),
+      NUMERIC_NDIGITS(num2), NUMERIC_WEIGHT(num2), NUMERIC_SIGN(num2));
   }
-
   return result;
 }
 
@@ -1801,13 +1767,12 @@ cmp_numerics(Numeric num1, Numeric num2)
 uint32
 numeric_hash(Numeric num)
 {
-  Datum    digit_hash;
-  Datum    result;
-  int      weight;
-  int      start_offset;
-  int      end_offset;
-  int      i;
-  int      hash_len;
+  uint32_t digit_hash;
+  int weight;
+  int start_offset;
+  int end_offset;
+  int i;
+  int hash_len;
   NumericDigit *digits;
 
   /* If it's NaN or infinity, don't try to hash the rest of the fields */
@@ -1829,9 +1794,7 @@ numeric_hash(Numeric num)
   {
     if (digits[i] != (NumericDigit) 0)
       break;
-
     start_offset++;
-
     /*
      * The weight is effectively the # of digits before the decimal point,
      * so decrement it for each leading zero we skip.
@@ -1867,9 +1830,7 @@ numeric_hash(Numeric num)
     hash_len * sizeof(NumericDigit));
 
   /* Mix in the weight, via XOR */
-  result = digit_hash ^ weight;
-
-  return DatumGetInt32(result);
+  return digit_hash ^ weight;
 }
 
 /**
@@ -1880,13 +1841,12 @@ numeric_hash(Numeric num)
 uint64
 numeric_hash_extended(Numeric num, uint64 seed)
 {
-  Datum    digit_hash;
-  Datum    result;
-  int      weight;
-  int      start_offset;
-  int      end_offset;
-  int      i;
-  int      hash_len;
+  uint32_t digit_hash;
+  int weight;
+  int start_offset;
+  int end_offset;
+  int i;
+  int hash_len;
   NumericDigit *digits;
 
   /* If it's NaN or infinity, don't try to hash the rest of the fields */
@@ -1896,39 +1856,30 @@ numeric_hash_extended(Numeric num, uint64 seed)
   weight = NUMERIC_WEIGHT(num);
   start_offset = 0;
   end_offset = 0;
-
   digits = NUMERIC_DIGITS(num);
   for (i = 0; i < (int) NUMERIC_NDIGITS(num); i++)
   {
     if (digits[i] != (NumericDigit) 0)
       break;
-
     start_offset++;
-
     weight--;
   }
 
   if ((int) NUMERIC_NDIGITS(num) == start_offset)
     return (seed - 1);
-
   for (i = (int) NUMERIC_NDIGITS(num) - 1; i >= 0; i--)
   {
     if (digits[i] != (NumericDigit) 0)
       break;
-
     end_offset++;
   }
 
   Assert(start_offset + end_offset < NUMERIC_NDIGITS(num));
-
   hash_len = NUMERIC_NDIGITS(num) - start_offset - end_offset;
-  digit_hash = hash_any_extended((unsigned char *) (NUMERIC_DIGITS(num)
-                            + start_offset),
-                   hash_len * sizeof(NumericDigit),
-                   seed);
+  digit_hash = hash_any_extended((unsigned char *) (NUMERIC_DIGITS(num) +
+    start_offset),  hash_len * sizeof(NumericDigit), seed);
 
-  result = DatumGetUInt64(digit_hash) ^ weight;
-  return result;
+  return DatumGetUInt64(digit_hash) ^ weight;
 }
 
 /* ----------------------------------------------------------------------
@@ -1959,10 +1910,10 @@ numeric_add(Numeric num1, Numeric num2)
 Numeric
 numeric_add_opt_error(Numeric num1, Numeric num2, bool *have_error)
 {
-  NumericVar  arg1;
-  NumericVar  arg2;
-  NumericVar  result;
-  Numeric    res;
+  NumericVar arg1;
+  NumericVar arg2;
+  NumericVar result;
+  Numeric res;
 
   /*
    * Handle NaN and infinities
@@ -1997,14 +1948,10 @@ numeric_add_opt_error(Numeric num1, Numeric num2, bool *have_error)
    */
   init_var_from_num(num1, &arg1);
   init_var_from_num(num2, &arg2);
-
   init_var(&result);
   add_var(&arg1, &arg2, &result);
-
   res = make_result_opt_error(&result, have_error);
-
   free_var(&result);
-
   return res;
 }
 
@@ -2029,10 +1976,10 @@ numeric_minus(Numeric num1, Numeric num2)
 Numeric
 numeric_sub_opt_error(Numeric num1, Numeric num2, bool *have_error)
 {
-  NumericVar  arg1;
-  NumericVar  arg2;
-  NumericVar  result;
-  Numeric    res;
+  NumericVar arg1;
+  NumericVar arg2;
+  NumericVar result;
+  Numeric res;
 
   /*
    * Handle NaN and infinities
@@ -2067,14 +2014,10 @@ numeric_sub_opt_error(Numeric num1, Numeric num2, bool *have_error)
    */
   init_var_from_num(num1, &arg1);
   init_var_from_num(num2, &arg2);
-
   init_var(&result);
   sub_var(&arg1, &arg2, &result);
-
   res = make_result_opt_error(&result, have_error);
-
   free_var(&result);
-
   return res;
 }
 
@@ -2106,10 +2049,10 @@ pg_numeric_mul(Numeric num1, Numeric num2)
 Numeric
 numeric_mul_opt_error(Numeric num1, Numeric num2, bool *have_error)
 {
-  NumericVar  arg1;
-  NumericVar  arg2;
-  NumericVar  result;
-  Numeric    res;
+  NumericVar arg1;
+  NumericVar arg2;
+  NumericVar result;
+  Numeric res;
 
   /*
    * Handle NaN and infinities
@@ -2184,17 +2127,12 @@ numeric_mul_opt_error(Numeric num1, Numeric num2, bool *have_error)
    */
   init_var_from_num(num1, &arg1);
   init_var_from_num(num2, &arg2);
-
   init_var(&result);
   mul_var(&arg1, &arg2, &result, arg1.dscale + arg2.dscale);
-
   if (result.dscale > NUMERIC_DSCALE_MAX)
     round_var(&result, NUMERIC_DSCALE_MAX);
-
   res = make_result_opt_error(&result, have_error);
-
   free_var(&result);
-
   return res;
 }
 
@@ -2227,10 +2165,10 @@ Numeric
 numeric_div_opt_error(Numeric num1, Numeric num2, bool *have_error)
 {
   NumericVar  arg1;
-  NumericVar  arg2;
-  NumericVar  result;
-  Numeric    res;
-  int      rscale;
+  NumericVar arg2;
+  NumericVar result;
+  Numeric res;
+  int rscale;
 
   if (have_error)
     *have_error = false;

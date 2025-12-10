@@ -124,6 +124,10 @@ static const char *MEOS_TYPE_NAMES[] =
   [T_TGEOMETRY] = "tgeometry",
   [T_TGEOGRAPHY] = "tgeography",
   [T_TRGEOMETRY] = "trgeometry",
+  [T_JSONB]      = "jsonb",      /**< PostgreSQL jsonb base type */
+  [T_JSONPATH]   = "jsonpath",   /**< PostgreSQL json path */
+  [T_JSONBSET]   = "jsonbset",   /**< static set of JSONB values */
+  [T_TJSONB]     = "tjsonb",     /**< temporal JSONB trajectory */
 };
 
 /**
@@ -226,6 +230,7 @@ static const settype_catalog_struct MEOS_SETTYPE_CATALOG[] =
   {T_POSESET,       T_POSE},
   {T_NPOINTSET,     T_NPOINT},
   {T_CBUFFERSET,    T_CBUFFER},
+  {T_JSONBSET,      T_JSONB},
 };
 
 /**
@@ -278,6 +283,7 @@ static const temptype_catalog_struct MEOS_TEMPTYPE_CATALOG[] =
   {T_TRGEOMETRY, T_POSE},
   {T_TNPOINT,    T_NPOINT},
   {T_TCBUFFER,   T_CBUFFER},
+  {T_TJSONB,     T_JSONB},
 };
 
 /*****************************************************************************/
@@ -592,6 +598,9 @@ meos_basetype(meosType type)
 #if CBUFFER
     || type == T_CBUFFER
 #endif
+#if JSON
+    || type == T_JSONB
+#endif
 #if NPOINT
     || type == T_NPOINT
 #endif
@@ -649,6 +658,10 @@ basetype_length(meosType type)
   if (type == T_CBUFFER)
     return -1;
 #endif
+#if JSON
+  if (type == T_JSONB)
+    return -1;
+#endif
 #if NPOINT
   if (type == T_NPOINT)
     return sizeof(Npoint);
@@ -672,7 +685,11 @@ alphanum_basetype(meosType type)
 {
   return (type == T_BOOL || type == T_INT4 || type == T_INT8 ||
     type == T_FLOAT8 || type == T_TEXT || type == T_DATE ||
-    type == T_TIMESTAMPTZ);
+    type == T_TIMESTAMPTZ
+#if JSON
+      || type == T_JSONB
+#endif
+    );
 }
 
 /**
@@ -683,7 +700,11 @@ inline bool
 alphanum_temptype(meosType type)
 {
   return (type == T_TBOOL || type == T_TINT || type == T_TFLOAT ||
-    type == T_TTEXT);
+    type == T_TTEXT
+#if JSON
+  || type == T_TJSONB
+#endif
+  );
 }
 #endif
 
@@ -744,6 +765,9 @@ set_basetype(meosType type)
 #if CBUFFER
       || type == T_CBUFFER
 #endif
+#if JSON
+      || type == T_JSONB
+#endif
 #if NPOINT
       || type == T_NPOINT
 #endif
@@ -765,6 +789,9 @@ set_type(meosType type)
       type == T_GEOMSET || type == T_GEOGSET
 #if CBUFFER
       || type == T_CBUFFERSET
+#endif
+#if JSON
+      || type == T_JSONBSET
 #endif
 #if NPOINT
       || type == T_NPOINTSET
@@ -840,7 +867,11 @@ inline bool
 alphanumset_type(meosType type)
 {
   return (type == T_TSTZSET || type == T_DATESET || type == T_INTSET ||
-    type == T_BIGINTSET || type == T_FLOATSET || type == T_TEXTSET);
+    type == T_BIGINTSET || type == T_FLOATSET || type == T_TEXTSET
+#if JSON
+    || type == T_JSONBSET
+#endif
+    );
 }
 
 #if MEOS
@@ -1072,6 +1103,9 @@ temporal_type(meosType type)
 #if CBUFFER
     || type == T_TCBUFFER
 #endif
+#if JSON
+    || type == T_TJSONB
+#endif
 #if NPOINT
     || type == T_TNPOINT
 #endif
@@ -1100,6 +1134,9 @@ temporal_basetype(meosType type)
 #if CBUFFER
     || type == T_CBUFFER
 #endif
+#if JSON
+    || type == T_JSONB
+#endif
 #if NPOINT
     || type == T_NPOINT
 #endif
@@ -1116,7 +1153,7 @@ temporal_basetype(meosType type)
 inline bool
 temptype_continuous(meosType type)
 {
-  return (type == T_TFLOAT || type == T_TDOUBLE2 || type == T_TDOUBLE3 ||
+  bool result = (type == T_TFLOAT || type == T_TDOUBLE2 || type == T_TDOUBLE3 ||
       type == T_TDOUBLE4 || type == T_TGEOMPOINT || type == T_TGEOGPOINT
 #if CBUFFER
     || type == T_TCBUFFER
@@ -1131,9 +1168,9 @@ temptype_continuous(meosType type)
     || type == T_TRGEOMETRY
 #endif
     );
+  return result;
 }
 
-#ifndef NDEBUG
 /**
  * @brief Return true if the type is a temporal alphanumeric type
  * @note This function is only used in the asserts
@@ -1142,9 +1179,25 @@ inline bool
 talphanum_type(meosType type)
 {
   return (type == T_TBOOL || type == T_TINT || type == T_TFLOAT ||
-    type == T_TTEXT);
+    type == T_TTEXT
+// #if JSON
+    // || type == T_TJSONB
+// #endif
+    );
 }
-#endif
+
+/**
+ * @brief Ensure that a type is a temporal alphanumeric type
+ */
+bool
+ensure_talphanum_type(meosType type)
+{
+  if (talphanum_type(type))
+    return true;
+  meos_error(ERROR, MEOS_ERR_INVALID_ARG_TYPE,
+    "The temporal value must be a temporal alphanumeric type");
+  return false;
+}
 
 /**
  * @brief Return true if the type is a temporal alpha type (i.e., those whose
@@ -1154,7 +1207,11 @@ inline bool
 talpha_type(meosType type)
 {
   return (type == T_TBOOL || type == T_TTEXT || type == T_TDOUBLE2 ||
-    type == T_TDOUBLE3 || type == T_TDOUBLE4);
+    type == T_TDOUBLE3 || type == T_TDOUBLE4
+#if JSON
+    || type == T_TJSONB
+#endif
+    );
 }
 
 /**

@@ -32,6 +32,7 @@
 #include "utils/varlena.h"
 
 #include <pgtypes.h>
+#include "../../meos/include/meos_error.h"
 
 // #include "access/detoast.h"
 // #include "access/toast_compression.h"

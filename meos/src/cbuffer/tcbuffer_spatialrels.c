@@ -83,7 +83,7 @@
  * @param[in] param Parameter
  * @param[in] func PostGIS function to be called
  * @param[in] numparam Number of parameters of the function
- * @param[in] invert True if the arguments should be inverted
+ * @param[in] invert True if the arguments must be inverted
  * @return On error return -1
  * @pre None of the two geometries is a geometry collection
  */
@@ -116,7 +116,7 @@ spatialrel_geo_geo_simple(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
  * @param[in] param Parameter
  * @param[in] func PostGIS function to be called
  * @param[in] numparam Number of parameters of the functions
- * @param[in] invert True if the arguments should be inverted
+ * @param[in] invert True if the arguments must be inverted
  * @return On error return -1
  */
 int
@@ -1375,7 +1375,7 @@ atouches_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
  * @param[in] gs Geometry
  * @param[in] dist Distance
  * @param[in] ever True for the ever semantics, false for the always semantics
- * @param[in] invert True if the arguments should be inverted
+ * @param[in] invert True if the arguments must be inverted
  * @csqlfn #Edwithin_tcbuffer_geo(), #Adwithin_tcbuffer_geo()
  */
 int

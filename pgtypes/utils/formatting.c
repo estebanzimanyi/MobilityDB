@@ -81,6 +81,7 @@
 // #include "varatt.h"
 
 #include "pgtypes.h"
+#include "../../meos/include/meos_error.h"
 
 #ifdef USE_ICU
 #include <unicode/ustring.h>
