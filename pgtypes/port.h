@@ -10,8 +10,8 @@
  *
  *-------------------------------------------------------------------------
  */
-#ifndef PG_PORT_H
-#define PG_PORT_H
+#ifndef __PG_PORT_H__
+#define __PG_PORT_H__
 
 #include <ctype.h>
 
@@ -562,4 +562,4 @@ extern int	wait_result_to_exit_code(int exit_status);
 #define HAVE_SYMLINK 1
 #endif
 
-#endif							/* PG_PORT_H */
+#endif /* __PG_PORT_H__ */
