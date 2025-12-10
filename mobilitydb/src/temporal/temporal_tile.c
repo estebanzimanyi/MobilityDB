@@ -71,12 +71,12 @@ PG_FUNCTION_INFO_V1(Span_bins);
 Datum
 Span_bins(PG_FUNCTION_ARGS)
 {
-  Span *s = PG_GETARG_SPAN_P(0);
+  Span *sp = PG_GETARG_SPAN_P(0);
   Datum vsize = PG_GETARG_DATUM(1);
   Datum vorigin = PG_GETARG_DATUM(2);
   /* Get the spans */
   int count;
-  Span *spans = span_bins(s, vsize, vorigin, &count);
+  Span *spans = span_bins(sp, vsize, vorigin, &count);
   ArrayType *result = spanarr_to_array(spans, count);
   /* Clean up and return */
   pfree(spans);
@@ -513,7 +513,7 @@ Tnumber_value_time_boxes(PG_FUNCTION_ARGS)
  * @brief Create the initial state for tiling operations
  * @param[in] to_split Value to split, currently either a spanset or a temporal
  * value, may be @p NULL
- * @param[in] s Bounds for generating the bins
+ * @param[in] sp Bounds for generating the bins
  * @param[in] size Size of the bins
  * @param[in] origin Origin of the bins
  * @note The first argument is NULL when generating the bins, otherwise
@@ -521,24 +521,24 @@ Tnumber_value_time_boxes(PG_FUNCTION_ARGS)
  * bounding span of the value to split
  */
 SpanBinState *
-span_bin_state_make(const void *to_split, const Span *s, Datum size,
+span_bin_state_make(const void *to_split, const Span *sp, Datum size,
   Datum origin)
 {
-  assert(s); assert(positive_datum(size, s->basetype));
+  assert(sp); assert(positive_datum(size, sp->basetype));
 
   /* Use palloc0 for initialization */
   SpanBinState *state = palloc0(sizeof(SpanBinState));
   /* Fill in state */
   state->done = false;
-  state->basetype = s->basetype;
+  state->basetype = sp->basetype;
   state->i = 1;
   state->size = size;
   state->origin = origin;
   /* Get the span bounds of the state */
   Datum start_bin, end_bin;
-  state->nbins = span_num_bins(s, size, origin, &start_bin, &end_bin);
+  state->nbins = span_num_bins(sp, size, origin, &start_bin, &end_bin);
   /* Set the span of the state */
-  span_set(start_bin, end_bin, true, false, s->basetype, s->spantype,
+  span_set(start_bin, end_bin, true, false, sp->basetype, sp->spantype,
     &state->span);
   state->value = start_bin;
   state->to_split = to_split;

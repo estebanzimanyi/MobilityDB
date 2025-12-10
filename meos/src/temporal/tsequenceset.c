@@ -174,7 +174,7 @@ tseqarr_normalize(TSequence **sequences, int count, int *newcount)
  * @return On error return -1.0
  */
 double
-datum_distance(Datum value1, Datum value2, meosType type, int16 flags)
+datum_distance(Datum value1, Datum value2, meosType type, int16_t flags)
 {
   if (tnumber_basetype(type))
     return datum_double(distance_value_value(value1, value2, type), type);
@@ -361,7 +361,7 @@ tsequenceset_make_exp(TSequence **sequences, int count, int maxcount,
   result->totalcount = totalcount;
   result->temptype = normseqs[0]->temptype;
   result->subtype = TSEQUENCESET;
-  result->bboxsize = (int16) bboxsize;
+  result->bboxsize = (int16_t) bboxsize;
   MEOS_FLAGS_SET_CONTINUOUS(result->flags,
     MEOS_FLAGS_GET_CONTINUOUS(normseqs[0]->flags));
   MEOS_FLAGS_SET_INTERP(result->flags,
@@ -460,7 +460,7 @@ ensure_valid_tinstarr_gaps(TInstant **instants, int count, bool merge,
   /* Ensure that zero-fill is done */
   int *result = palloc0(sizeof(int) * count);
   Datum value1 = tinstant_value_p(instants[0]);
-  int16 flags = instants[0]->flags;
+  int16_t flags = instants[0]->flags;
   int k = 0;
   for (int i = 1; i < count; i++)
   {
@@ -671,7 +671,7 @@ tsequenceset_from_base_tstzspanset(Datum value, meosType temptype,
 
 /**
  * @ingroup meos_internal_temporal_accessor
- * @brief Return the array of (pointers to the) distinct values of a temporal
+ * @brief Return an array of pointers to the distinct values of a temporal
  * sequence set
  * @param[in] ss Temporal sequence set
  * @param[out] count Number of elements in the output array
@@ -984,13 +984,13 @@ tsequenceset_duration(const TSequenceSet *ss, bool boundspan)
  * @ingroup meos_internal_temporal_accessor
  * @brief Return in the last argument the time span of a temporal sequence set
  * @param[in] ss Temporal sequence set
- * @param[out] s Span
+ * @param[out] result Span
  */
 void
-tsequenceset_set_tstzspan(const TSequenceSet *ss, Span *s)
+tsequenceset_set_tstzspan(const TSequenceSet *ss, Span *result)
 {
-  assert(ss); assert(s);
-  memcpy(s, &ss->period, sizeof(Span));
+  assert(ss); assert(result);
+  memcpy(result, &ss->period, sizeof(Span));
   return;
 }
 
@@ -1331,7 +1331,7 @@ tsequenceset_value_at_timestamptz(const TSequenceSet *ss, TimestampTz t,
  * @brief Return a copy of a temporal sequence set without any extra storage
  * space
  * @param[in] ss Temporal sequence set
- * @note We cannot simply test whether `s->count == ss->maxcount` since
+ * @note We cannot simply test whether `ss->count == ss->maxcount` since
  * there could be extra space allocated for the (variable-length) sequences
  */
 TSequenceSet *
@@ -2018,7 +2018,6 @@ tsequenceset_to_string(const TSequenceSet *ss, int maxdd, outfunc value_out)
   assert(ss); assert(maxdd >= 0);
 
   char **strings = palloc(sizeof(char *) * ss->count);
-  size_t outlen = 0;
   char prefix[13];
   if (MEOS_FLAGS_GET_CONTINUOUS(ss->flags) &&
       ! MEOS_FLAGS_LINEAR_INTERP(ss->flags))
@@ -2026,12 +2025,9 @@ tsequenceset_to_string(const TSequenceSet *ss, int maxdd, outfunc value_out)
   else
     prefix[0] = '\0';
   for (int i = 0; i < ss->count; i++)
-  {
     strings[i] = tsequence_to_string(TSEQUENCESET_SEQ_N(ss, i), maxdd, true,
       value_out);
-    outlen += strlen(strings[i]) + 1;
-  }
-  return stringarr_to_string(strings, ss->count, outlen, prefix, '{', '}',
+  return stringarr_to_string(strings, ss->count, prefix, '{', '}',
     QUOTES_NO, SPACES);
 }
 
@@ -2194,14 +2190,14 @@ tsequenceset_cmp(const TSequenceSet *ss1, const TSequenceSet *ss2)
  * @param[in] ss Temporal sequence set
  * @csqlfn #Temporal_hash()
  */
-uint32
+uint32_t
 tsequenceset_hash(const TSequenceSet *ss)
 {
   assert(ss);
-  uint32 result = 1;
+  uint32_t result = 1;
   for (int i = 0; i < ss->count; i++)
   {
-    uint32 seq_hash = tsequence_hash(TSEQUENCESET_SEQ_N(ss, i));
+    uint32_t seq_hash = tsequence_hash(TSEQUENCESET_SEQ_N(ss, i));
     result = (result << 5) - result + seq_hash;
   }
   return result;

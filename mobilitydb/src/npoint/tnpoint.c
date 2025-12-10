@@ -167,7 +167,7 @@ PGDLLEXPORT Datum Tnpoint_routes(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tnpoint_routes);
 /**
  * @ingroup mobilitydb_npoint_accessor
- * @brief Return the array of routes of a temporal network point
+ * @brief Return the set of routes of a temporal network point
  * @sqlfn routes()
  */
 Datum

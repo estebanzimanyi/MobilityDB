@@ -362,16 +362,16 @@ temporal_minus_max(const Temporal *temp)
  * @ingroup meos_temporal_restrict
  * @brief Return a temporal value restricted to a span of base values
  * @param[in] temp Temporal value
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Tnumber_at_span()
  */
 Temporal *
-tnumber_at_span(const Temporal *temp, const Span *s)
+tnumber_at_span(const Temporal *temp, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tnumber_numspan(temp, s))
+  if (! ensure_valid_tnumber_numspan(temp, sp))
     return NULL;
-  return tnumber_restrict_span(temp, s, REST_AT);
+  return tnumber_restrict_span(temp, sp, REST_AT);
 }
 
 /**
@@ -379,16 +379,16 @@ tnumber_at_span(const Temporal *temp, const Span *s)
  * @brief Return a temporal value restricted to the complement of a span of
  * base values
  * @param[in] temp Temporal value
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Tnumber_minus_span()
  */
 Temporal *
-tnumber_minus_span(const Temporal *temp, const Span *s)
+tnumber_minus_span(const Temporal *temp, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_tnumber_numspan(temp, s))
+  if (! ensure_valid_tnumber_numspan(temp, sp))
     return NULL;
-  return tnumber_restrict_span(temp, s, REST_MINUS);
+  return tnumber_restrict_span(temp, sp, REST_MINUS);
 }
 
 /**
@@ -491,15 +491,15 @@ temporal_minus_tstzset(const Temporal *temp, const Set *s)
  * @ingroup meos_temporal_restrict
  * @brief Return a temporal value restricted to a timestamptz span
  * @param[in] temp Temporal value
- * @param[in] s Timestamp span
+ * @param[in] sp Timestamp span
  * @csqlfn #Temporal_at_tstzspan()
  */
 Temporal *
-temporal_at_tstzspan(const Temporal *temp, const Span *s)
+temporal_at_tstzspan(const Temporal *temp, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(s, NULL);
-  return temporal_restrict_tstzspan(temp, s, REST_AT);
+  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(sp, NULL);
+  return temporal_restrict_tstzspan(temp, sp, REST_AT);
 }
 
 /**
@@ -507,15 +507,15 @@ temporal_at_tstzspan(const Temporal *temp, const Span *s)
  * @brief Return a temporal value restricted to the complement of a timestamptz
  * span
  * @param[in] temp Temporal value
- * @param[in] s Timestamp span
+ * @param[in] sp Timestamp span
  * @csqlfn #Temporal_minus_tstzspan()
  */
 Temporal *
-temporal_minus_tstzspan(const Temporal *temp, const Span *s)
+temporal_minus_tstzspan(const Temporal *temp, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(s, NULL);
-  return temporal_restrict_tstzspan(temp, s, REST_MINUS);
+  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_TSTZSPAN(sp, NULL);
+  return temporal_restrict_tstzspan(temp, sp, REST_MINUS);
 }
 
 /**

@@ -40,7 +40,6 @@
 #include <json-c/json.h>
 /* PROJ */
 #include <proj.h>
-/* PostgreSQL */
 /* MEOS */
 #include <meos.h>
 #include <meos_geo.h>
@@ -112,7 +111,7 @@ extern GSERIALIZED *point_round(const GSERIALIZED *gs, int maxdd);
 
 /* Constructor functions for box types */
 
-extern void stbox_set(bool hasx, bool hasz, bool geodetic, int32 srid, double xmin, double xmax, double ymin, double ymax, double zmin, double zmax, const Span *s, STBox *box);
+extern void stbox_set(bool hasx, bool hasz, bool geodetic, int32_t srid, double xmin, double xmax, double ymin, double ymax, double zmin, double zmax, const Span *sp, STBox *box);
 
 /*****************************************************************************/
 
@@ -126,7 +125,7 @@ extern void spatialset_set_stbox(const Set *set, STBox *box);
 extern void stbox_set_box3d(const STBox *box, BOX3D *box3d);
 extern void stbox_set_gbox(const STBox *box, GBOX *gbox);
 extern void tstzset_set_stbox(const Set *s, STBox *box);
-extern void tstzspan_set_stbox(const Span *s, STBox *box);
+extern void tstzspan_set_stbox(const Span *sp, STBox *box);
 extern void tstzspanset_set_stbox(const SpanSet *s, STBox *box);
 
 /*****************************************************************************/

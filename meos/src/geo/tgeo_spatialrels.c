@@ -202,7 +202,7 @@ datum_geom_touches(Datum geom1, Datum geom2)
  * @note We need two parameters to cope with mixed 2D/3D arguments
  */
 datum_func2
-geo_disjoint_fn(int16 flags1, int16 flags2)
+geo_disjoint_fn(int16_t flags1, int16_t flags2)
 {
   if (MEOS_FLAGS_GET_GEODETIC(flags1))
     return &datum_geog_disjoint;
@@ -217,7 +217,7 @@ geo_disjoint_fn(int16 flags1, int16 flags2)
  * @note We need two parameters to cope with mixed 2D/3D arguments
  */
 datum_func2
-geo_disjoint_fn_geo(int16 flags1, uint8_t flags2)
+geo_disjoint_fn_geo(int16_t flags1, uint8_t flags2)
 {
   if (MEOS_FLAGS_GET_GEODETIC(flags1))
     return &datum_geog_disjoint;
@@ -232,7 +232,7 @@ geo_disjoint_fn_geo(int16 flags1, uint8_t flags2)
  * @note We need two parameters to cope with mixed 2D/3D arguments
  */
 datum_func2
-geo_intersects_fn(int16 flags1, int16 flags2)
+geo_intersects_fn(int16_t flags1, int16_t flags2)
 {
   if (MEOS_FLAGS_GET_GEODETIC(flags1))
     return &datum_geog_intersects;
@@ -247,7 +247,7 @@ geo_intersects_fn(int16 flags1, int16 flags2)
  * @note We need two parameters to cope with mixed 2D/3D arguments
  */
 datum_func2
-geo_intersects_fn_geo(int16 flags1, uint8_t flags2)
+geo_intersects_fn_geo(int16_t flags1, uint8_t flags2)
 {
   if (MEOS_FLAGS_GET_GEODETIC(flags1))
     return &datum_geog_intersects;
@@ -262,7 +262,7 @@ geo_intersects_fn_geo(int16 flags1, uint8_t flags2)
  * @note We need two parameters to cope with mixed 2D/3D arguments
  */
 datum_func3
-geo_dwithin_fn(int16 flags1, int16 flags2)
+geo_dwithin_fn(int16_t flags1, int16_t flags2)
 {
   if (MEOS_FLAGS_GET_GEODETIC(flags1))
     return &datum_geog_dwithin;
@@ -277,7 +277,7 @@ geo_dwithin_fn(int16 flags1, int16 flags2)
  * @note We need two parameters to cope with mixed 2D/3D arguments
  */
 datum_func3
-geo_dwithin_fn_geo(int16 flags1, uint8_t flags2)
+geo_dwithin_fn_geo(int16_t flags1, uint8_t flags2)
 {
   if (MEOS_FLAGS_GET_GEODETIC(flags1))
     return &datum_geog_dwithin;
@@ -301,7 +301,7 @@ geo_dwithin_fn_geo(int16 flags1, uint8_t flags2)
  * @param[in] param Parameter
  * @param[in] func PostGIS function to be called
  * @param[in] numparam Number of parameters of the function
- * @param[in] invert True if the arguments should be inverted
+ * @param[in] invert True if the arguments must be inverted
  * @return On error return -1
  * @note Since some GEOS versions do not support geometry collections, the
  * function iterates for each geometry of the collection and returns when the
@@ -453,7 +453,7 @@ spatialrel_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
  * @param[in] gs Geometry
  * @param[in] func Spatial relationship
  * @param[in] ever True for the ever semantics, false for the always semantics
- * @param[in] invert True if the arguments should be inverted
+ * @param[in] invert True if the arguments must be inverted
  * @note Mixed 2D/3D allowed
  * @note The function assumes that all validity tests have been previously done
  */
@@ -510,10 +510,8 @@ ea_spatialrel_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2,
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) func;
-  lfinfo.numparam = 0;
   lfinfo.argtype[0] = lfinfo.argtype[1] = temp1->temptype;
   lfinfo.restype = T_TBOOL;
-  lfinfo.reslinear = false;
   lfinfo.invert = INVERT_NO;
   lfinfo.discont = MEOS_FLAGS_LINEAR_INTERP(temp1->flags) ||
     MEOS_FLAGS_LINEAR_INTERP(temp2->flags);
@@ -573,7 +571,7 @@ ea_spatialrel_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
  * @param[in] gs Geometry
  * @param[in] temp Temporal geo
  * @param[in] ever True for the ever semantics, false for the always semantics
- * @param[in] invert True if the arguments should be inverted
+ * @param[in] invert True if the arguments must be inverted
  * @note Please refer to the documentation of the `ST_Contains` and `ST_Covers`
  * functions
  * https://postgis.net/docs/ST_Contains.html
@@ -749,7 +747,7 @@ acontains_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
  * @param[in] gs Geometry
  * @param[in] temp Temporal geo
  * @param[in] ever True for the ever semantics, false for the always semantics
- * @param[in] invert True if the arguments should be inverted
+ * @param[in] invert True if the arguments must be inverted
  * @note Please refer to the documentation of the `ST_Covers` and `ST_Covers`
  * functions
  * https://postgis.net/docs/ST_Covers.html
@@ -1698,11 +1696,10 @@ ea_dwithin_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2, double dist,
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) func;
+  lfinfo.argtype[0] = lfinfo.argtype[1] = temp1->temptype;
   lfinfo.numparam = 1;
   lfinfo.param[0] = Float8GetDatum(dist);
-  lfinfo.argtype[0] = lfinfo.argtype[1] = temp1->temptype;
   lfinfo.restype = T_TFLOAT;
-  lfinfo.reslinear = false;
   lfinfo.invert = INVERT_NO;
   lfinfo.discont = MEOS_FLAGS_LINEAR_INTERP(temp1->flags) ||
     MEOS_FLAGS_LINEAR_INTERP(temp2->flags);

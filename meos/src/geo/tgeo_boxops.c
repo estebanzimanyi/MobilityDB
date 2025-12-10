@@ -438,7 +438,7 @@ tgeoseq_cont_stboxes_iter(const TSequence *seq, STBox *result)
 
 /**
  * @ingroup meos_internal_geo_bbox
- * @brief Return an array of spatiotemporal boxes from the instants or segments
+ * @brief Return an array of spatiotemporal boxes from the instants or the segments
  * of a temporal geo sequence, where the choice between instants or segments
  * depends, respectively, on whether the interpolation is discrete or
  * continuous
@@ -489,9 +489,9 @@ tgeoseqset_stboxes(const TSequenceSet *ss, int *count)
 
 /**
  * @ingroup meos_geo_bbox_split
- * @brief Return an array of spatiotemporal boxes from the instants or segments
- * of a temporal geo, where the choice between instants or segments depends,
- * respectively, on whether the interpolation is discrete or continuous
+ * @brief Return an array of spatiotemporal boxes from the instants or the
+ * segments of a temporal geo, where the choice between instants or segments
+ * depends, respectively, on whether the interpolation is discrete or continuous
  * @param[in] temp Temporal geo
  * @param[out] count Number of values of the output array
  * @return On error return @p NULL

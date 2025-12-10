@@ -43,9 +43,9 @@
 #include <postgres.h>
 #include <pgtypes.h>
 #include <access/htup_details.h>
-#include "utils/syscache.h"
 #include <utils/lsyscache.h>
 #include <catalog/pg_statistic.h>
+#include "utils/syscache.h"
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
@@ -55,6 +55,10 @@
 #include "pg_temporal/meos_catalog.h"
 #include "pg_temporal/span_analyze.h"
 #include "pg_temporal/temporal_selfuncs.h"
+
+/* To avoid conflicts while importing builtins.h */
+extern char *text_to_cstring(const text *t);
+
 
 /*****************************************************************************/
 

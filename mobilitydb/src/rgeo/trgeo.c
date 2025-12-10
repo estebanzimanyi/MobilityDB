@@ -163,7 +163,7 @@ Datum
 Trgeometry_typmod_in(PG_FUNCTION_ARGS)
 {
   ArrayType *array = (ArrayType *) DatumGetPointer(PG_GETARG_DATUM(0));
-  uint32 typmod = tspatial_typmod_in(array, true, false);
+  uint32_t typmod = tspatial_typmod_in(array, true, false);
   PG_RETURN_INT32(typmod);
 }
 
@@ -186,7 +186,7 @@ Trgeometry_from_ewkt(PG_FUNCTION_ARGS)
 {
   text *wkt_text = PG_GETARG_TEXT_P(0);
   Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);
-  char *wkt = text_to_cstring(wkt_text);
+  char *wkt = pg_text_to_cstring(wkt_text);
   /* Copy the pointer since it will be advanced during parsing */
   const char *wkt_ptr = wkt;
   Temporal *result = trgeo_parse(&wkt_ptr, oid_meostype(temptypid));
@@ -211,7 +211,7 @@ Trgeometry_as_text_common(FunctionCallInfo fcinfo, bool extended)
   if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
     dbl_dig_for_wkt = PG_GETARG_INT32(1);
   char *str = trgeo_wkt_out(temp, dbl_dig_for_wkt, extended);
-  text *result = cstring_to_text(str);
+  text *result = pg_cstring_to_text(str);
   pfree(str);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_TEXT_P(result);
@@ -288,7 +288,7 @@ Trgeometry_seq_constructor(PG_FUNCTION_ARGS)
   if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
   {
     text *interp_txt = PG_GETARG_TEXT_P(1);
-    char *interp_str = text_to_cstring(interp_txt);
+    char *interp_str = pg_text_to_cstring(interp_txt);
     interp = interptype_from_string(interp_str);
     pfree(interp_str);
   }
@@ -358,7 +358,7 @@ Trgeometry_seqset_constructor_gaps(PG_FUNCTION_ARGS)
   if (PG_NARGS() > 3 && ! PG_ARGISNULL(3))
   {
     text *interp_txt = PG_GETARG_TEXT_P(3);
-    char *interp_str = text_to_cstring(interp_txt);
+    char *interp_str = pg_text_to_cstring(interp_txt);
     interp = interptype_from_string(interp_str);
     pfree(interp_str);
   }
@@ -566,7 +566,7 @@ Trgeometry_to_tsequence(PG_FUNCTION_ARGS)
   if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
   {
     text *interp_txt = PG_GETARG_TEXT_P(1);
-    interp_str = text_to_cstring(interp_txt);
+    interp_str = pg_text_to_cstring(interp_txt);
   }
   TSequence *result = trgeo_to_tsequence(temp, interp_str);
   PG_FREE_IF_COPY(temp, 0);
@@ -593,7 +593,7 @@ Trgeometry_to_tsequenceset(PG_FUNCTION_ARGS)
   if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
   {
     text *interp_txt = PG_GETARG_TEXT_P(1);
-    interp_str = text_to_cstring(interp_txt);
+    interp_str = pg_text_to_cstring(interp_txt);
   }
   TSequenceSet *result = trgeo_to_tsequenceset(temp, interp_str);
   PG_FREE_IF_COPY(temp, 0);

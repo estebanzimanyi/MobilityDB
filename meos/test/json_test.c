@@ -41,6 +41,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <meos.h>
+#include <meos_json.h>
 #include <pg_bool.h>
 #include <pg_text.h>
 #include <pg_json.h>
@@ -62,14 +63,29 @@ int main(void)
   char *jb1_out = jsonb_out(jb1);
   char *jb2_out = jsonb_out(jb2);
 
+  char *jp1_in = "$.b[1] == 2";
+  char *jp2_in = "$.b[1] == \"c\"";
+  JsonPath *jp1 = jsonpath_in(jp1_in);
+  JsonPath *jp2 = jsonpath_in(jp2_in);
+  char *jp1_out = jsonpath_out(jp1);
+  char *jp2_out = jsonpath_out(jp2);
+
+  // char *tjsonb1_in = "[{\"a\":1, \"b\":[1,2]}@2001-01-01, {\"a\":5, \"b\":[\"c\",3]}@2001-01-03]";
+  // Temporal *tjsonb1 = tjsonb_in(tjsonb1_in);
+  // char *tjsonb1_out = tjsonb_out(tjsonb1);
+  // char *tjsonb2_in = "[{\"a\":1, \"b\":[1,2]}@2001-01-01, {\"a\":5, \"b\":[\"c\",3]}@2001-01-03]";
+  // Temporal *tjsonb2 = tjsonb_in(tjsonb2_in);
+  // char *tjsonb2_out = tjsonb_out(tjsonb2);
+
   /* Create result types for the functions of the API */
   bool bool_result;
-  int32 int32_result;
-  uint32 uint32_result;
-  uint64 uint64_result;
+  int32_t int32_result;
+  uint32_t uint32_result;
+  uint64_t uint64_result;
   char *char_result;
   text *text_result;
   Jsonb *jsonb_result;
+  JsonPath *jsonpath_result;
   
   /* Execute and print the result for the functions of the API */
 
@@ -77,7 +93,7 @@ int main(void)
   printf("* JSON *\n");
   printf("****************************************************************\n");
 
-  /* int json_array_length(const text *json) */
+  /* int json_array_length(const text *js) */
   text *array = text_in("[\"a\", \"b\", \"c\"]");
   int32_result = json_array_length(array);
   printf("json_array_length(%s): %d\n", js1_out, int32_result);
@@ -178,7 +194,7 @@ int main(void)
   free(keys_vals[2]); free(keys_vals[3]);
   free(text_result); free(char_result);
 
-  /* text **json_object_keys(const text *json, int *count); */
+  /* text **json_object_keys(const text *js, int *count); */
   textarray_result = json_object_keys(js1, &count);
   printf("json_object_keys(%s): {", js1_out);
   for (int i = 0; i < count; i++)
@@ -208,18 +224,18 @@ int main(void)
   free(vals[0]); free(vals[1]);
   free(text_result); free(char_result);
 
-  /* char *json_out(const text *json); */
+  /* char *json_out(const text *js); */
   char_result = json_out(js1);
   printf("json_out(%s): %s\n", js1_out, char_result);
   free(char_result);
 
-  /* text *json_strip_nulls(const text *json, bool strip_in_arrays); */
+  /* text *json_strip_nulls(const text *js, bool strip_in_arrays); */
   text_result = json_strip_nulls(js1, true);
   char_result = text_out(text_result);
   printf("json_strip_nulls(%s, true): %s\n", js1_out, char_result);
   free(text_result); free(char_result);
 
-  /* text *json_typeof(const text *json); */
+  /* text *json_typeof(const text *js); */
   text_result = json_typeof(js1);
   char_result = text_out(text_result);
   printf("json_typeof(%s): %s\n", js1_out, char_result);
@@ -302,11 +318,11 @@ int main(void)
   free(keys_elems[0]); free(keys_elems[1]);
   free(jsonb_result); free(char_result);
 
-  /* Jsonb *jsonb_delete_idx(const Jsonb *in, int idx); */
+  /* Jsonb *jsonb_delete_index(const Jsonb *in, int idx); */
   jbarray = jsonb_in("[\"a\", \"b\", \"c\"]");
-  jsonb_result = jsonb_delete_idx(jbarray, 1);
+  jsonb_result = jsonb_delete_index(jbarray, 1);
   char_result = jsonb_out(jsonb_result);
-  printf("jsonb_delete_idx(%s, 1): %s\n", jb1_out, char_result);
+  printf("jsonb_delete_index(%s, 1): %s\n", jb1_out, char_result);
   free(jbarray); free(jsonb_result); free(char_result);
 
   /* Jsonb *jsonb_delete_path(const Jsonb *jb, text **path_elems, int path_len); */
@@ -392,15 +408,15 @@ int main(void)
   printf("jsonb_from_text(%s, true): %s\n", js1_out, char_result);
   free(jsonb_result); free(char_result);
 
-  /* uint32 jsonb_hash(const Jsonb *jb); */
+  /* uint32_t jsonb_hash(const Jsonb *jb); */
   uint32_result = jsonb_hash(jb1);
   printf("jsonb_hash(%s): %u\n", jb1_out, uint32_result);
 
-  /* uint64 jsonb_hash_extended(Jsonb *jb, uint64 seed); */
+  /* uint64_t jsonb_hash_extended(Jsonb *jb, uint64_t seed); */
   uint64_result = jsonb_hash_extended(jb1, 1);
   printf("jsonb_hash_extended(%s, 1): %lu\n", jb1_out, uint64_result);
 
-  /* Jsonb *jsonb_in(char *str);extern bool jsonb_gt(const Jsonb *jb1, const Jsonb *jb2); */
+  /* Jsonb *jsonb_in(const char *str); */
   jsonb_result = jsonb_in("{}");
   char_result = jsonb_out(jsonb_result);
   printf("jsonb_in(\"{}\"): %s\n", char_result);
@@ -414,7 +430,7 @@ int main(void)
   bool_result = jsonb_gt(jb1, jb2);
   printf("jsonb_gt(%s, %s): %c\n", jb1_out, jb2_out, bool_result ? 't' : 'f');
 
-  /* Jsonb *jsonb_insert(const Jsonb *jb, text **path_elems, int path_len, Jsonb *newjb, bool after); */
+  /* Jsonb *jsonb_insert(const Jsonb *jb, text **path_elems, int path_len, const Jsonb *newjb, bool after); */
   path_elems[0] = text_in("b");
   path_elems[1] = text_in("1");
   Jsonb *newjb = jsonb_in("\"X\"");
@@ -502,7 +518,7 @@ int main(void)
   printf("jsonb_pretty(%s): %s\n", jb1_out, char_result);
   free(text_result); free(char_result);
 
-  /* Jsonb *jsonb_set(const Jsonb *jb, text **path_elems, int path_len, Jsonb *newjb, bool create); */
+  /* Jsonb *jsonb_set(const Jsonb *jb, text **path_elems, int path_len, const Jsonb *newjb, bool create); */
   path_elems[0] = text_in("b");
   path_elems[1] = text_in("2");
   newjb = jsonb_in("\"X\"");
@@ -512,7 +528,7 @@ int main(void)
   free(path_elems[0]); free(path_elems[1]);
   free(newjb); free(jsonb_result); free(char_result);
 
-  /* Jsonb *jsonb_set_lax(const Jsonb *jb, text **path_elems, int path_len, Jsonb *newjb, bool create, const text *handle_null); */
+  /* Jsonb *jsonb_set_lax(const Jsonb *jb, text **path_elems, int path_len, const Jsonb *newjb, bool create, const text *handle_null); */
   path_elems[0] = text_in("b");
   path_elems[1] = text_in("1");
   text *handle_null = text_in("use_json_null");
@@ -528,6 +544,12 @@ int main(void)
   printf("json_strip_nulls(%s, true): %s\n", js1_out, char_result);
   free(jsonb_result); free(char_result);
 
+  /* JsonPath *jsonpath_in(const char *str); */
+  jsonpath_result = jsonpath_in(jp1_in);
+  char_result = jsonpath_out(jsonpath_result);
+  printf("jsonpath_in(\"%s\"): %s\n", jp1_in, char_result);
+  free(jsonpath_result); free(char_result);
+  
   printf("****************************************************************\n");
 
   /* Clean up */
@@ -535,6 +557,9 @@ int main(void)
   free(jb1); free(jb2);
   free(js1_out); free(js2_out);
   free(jb1_out); free(jb2_out);
+  
+  free(jp1); free(jp1_out);
+  free(jp2); free(jp2_out);
   
   /* Finalize MEOS */
   meos_finalize();

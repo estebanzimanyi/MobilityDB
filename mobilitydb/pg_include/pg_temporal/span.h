@@ -47,7 +47,7 @@
 /* Send/receive functions */
 
 extern Span *span_recv(StringInfo buf);
-extern void span_write(const Span *s, StringInfo buf);
+extern void span_write(const Span *sp, StringInfo buf);
 
 /* Conversion functions */
 

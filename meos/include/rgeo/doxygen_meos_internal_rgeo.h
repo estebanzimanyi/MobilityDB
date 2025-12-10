@@ -28,33 +28,33 @@
  *****************************************************************************/
 
 /**
- * @defgroup meos_internal_rgeo_inout Input and output functions
+ * @defgroup meos_internal_rgeo_inout Internal input and output functions
  * @ingroup meos_internal_rgeo
- * @brief Input and output functions for temporal rigid geometries
+ * @brief Internal input and output functions for temporal rigid geometries
  *
- * @defgroup meos_internal_rgeo_conversion Conversion functions
+ * @defgroup meos_internal_rgeo_conversion Internal conversion functions
  * @ingroup meos_internal_rgeo
- * @brief Conversion functions for temporal rigid geometries
+ * @brief Internal conversion functions for temporal rigid geometries
  *
- * @defgroup meos_internal_rgeo_accessor Accessor functions
+ * @defgroup meos_internal_rgeo_accessor Internal accessor functions
  * @ingroup meos_internal_rgeo
- * @brief Accessor functions for temporal rigid geometries
+ * @brief Internal accessor functions for temporal rigid geometries
  *
- * @defgroup meos_internal_rgeo_restrict Restriction functions
+ * @defgroup meos_internal_rgeo_restrict Internal restriction functions
  * @ingroup meos_internal_rgeo
- * @brief Restriction functions for temporal rigid geometries
+ * @brief Internal restriction functions for temporal rigid geometries
  *
- * @defgroup meos_internal_rgeo_comp Comparison functions
+ * @defgroup meos_internal_rgeo_comp Internal comparison functions
  * @ingroup meos_internal_rgeo
- * @brief Comparison functions for temporal rigid geometries
+ * @brief Internal comparison functions for temporal rigid geometries
  *
- *   @defgroup meos_internal_rgeo_comp_ever Ever and always comparison functions
+ *   @defgroup meos_internal_rgeo_comp_ever Internal ever and always comparison functions
  *   @ingroup meos_internal_rgeo_comp
- *   @brief Ever and always comparison functions for temporal rigid geometries
+ *   @brief Internal ever and always comparison functions for temporal rigid geometries
  *
- *   @defgroup meos_internal_rgeo_comp_temp Temporal comparison functions
+ *   @defgroup meos_internal_rgeo_comp_temp Internal temporal comparison functions
  *   @ingroup meos_internal_rgeo_comp
- *   @brief Temporal comparison functions for temporal rigid geometries
+ *   @brief Internal temporal comparison functions for temporal rigid geometries
  */
 
 /*****************************************************************************/

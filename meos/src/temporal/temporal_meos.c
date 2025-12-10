@@ -405,7 +405,7 @@ tfloat_values(const Temporal *temp, int *count)
 
 /**
  * @ingroup meos_temporal_accessor
- * @brief Return the array of copies of base values of a temporal text
+ * @brief Return an array of copies of the base values of a temporal text
  * @param[in] temp Temporal value
  * @param[out] count Number of values in the output array
  * @csqlfn #Temporal_valueset()

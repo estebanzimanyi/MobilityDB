@@ -293,7 +293,7 @@ teq_tnpoint_npoint(const Temporal *temp, const Npoint *np)
 
 /**
  * @ingroup meos_npoint_comp_temp
- * @brief Return the temporal inequality of a temporal network point and a
+ * @brief Return the temporal difference of a temporal network point and a
  * network point
  * @param[in] temp Temporal network point
  * @param[in] np Network point

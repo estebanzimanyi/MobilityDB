@@ -36,10 +36,6 @@
 
 /* C */
 #include <stdbool.h>
-/* PostgreSQL */
-#ifndef int16
-typedef signed short int16;
-#endif
 /* MEOS */
 #include <meos.h>
 
@@ -116,9 +112,13 @@ typedef enum
   T_TGEOMETRY      = 60,  /**< temporal geometry type */
   T_TGEOGRAPHY     = 61,  /**< temporal geography type */
   T_TRGEOMETRY     = 62,  /**< temporal rigid geometry type */
-  NO_MEOS_TYPES           /* Dummy value that determines the size of the 
-                           * lookup array meosType -> Oid */
+  T_JSONB          = 63,  /**< base type for PostgreSQL jsonb */
+  T_JSONPATH       = 64,  /**< base type for PostgreSQL jsonpath */
+  T_JSONBSET       = 65,  /**< static set of JSONB values */
+  T_TJSONB         = 66  /**< temporal JSONB value */
 } meosType;
+
+#define NO_MEOS_TYPES 67
 
 /**
  * Enumeration that defines the classes of Boolean operators used in
@@ -126,49 +126,51 @@ typedef enum
  */
 typedef enum
 {
-  UNKNOWN_OP      = 0,
-  EQ_OP           = 1,  /**< Equality `=` operator */
-  NE_OP           = 2,  /**< Distinct `!=` operator */
-  LT_OP           = 3,  /**< Less than `<` operator */
-  LE_OP           = 4,  /**< Less than or equal to `<=` operator */
-  GT_OP           = 5,  /**< Greater than `<` operator */
-  GE_OP           = 6,  /**< Greater than or equal to `>=` operator */
-  ADJACENT_OP     = 7,  /**< Adjacent `-|-` operator */
-  UNION_OP        = 8,  /**< Union `+` operator */
-  MINUS_OP        = 9,  /**< Minus `-` operator */
-  INTERSECT_OP    = 10, /**< Intersection `*` operator */
-  OVERLAPS_OP     = 11, /**< Overlaps `&&` operator */
-  CONTAINS_OP     = 12, /**< Contains `@>` operator */
-  CONTAINED_OP    = 13, /**< Contained `<@` operator */
-  SAME_OP         = 14, /**< Same `~=` operator */
-  LEFT_OP         = 15, /**< Left `<<` operator */
-  OVERLEFT_OP     = 16, /**< Overleft `&<` operator */
-  RIGHT_OP        = 17, /**< Right `>>` operator */
-  OVERRIGHT_OP    = 18, /**< Overright `&>` operator */
-  BELOW_OP        = 19, /**< Below `<<|` operator */
-  OVERBELOW_OP    = 20, /**< Overbelow `&<|` operator */
-  ABOVE_OP        = 21, /**< Above `|>>` operator */
-  OVERABOVE_OP    = 22, /**< Overbove `|&>` operator */
-  FRONT_OP        = 23, /**< Front `<</` operator */
-  OVERFRONT_OP    = 24, /**< Overfront `&</` operator */
-  BACK_OP         = 25, /**< Back `/>>` operator */
-  OVERBACK_OP     = 26, /**< Overback `/&>` operator */
-  BEFORE_OP       = 27, /**< Before `<<#` operator */
-  OVERBEFORE_OP   = 28, /**< Overbefore `&<#` operator */
-  AFTER_OP        = 29, /**< After `#>>` operator */
-  OVERAFTER_OP    = 30, /**< Overafter `#&>` operator */
-  EVEREQ_OP       = 31, /**< Evereq `?=` operator */
-  EVERNE_OP       = 32, /**< Everne `?<>` operator */
-  EVERLT_OP       = 33, /**< Everlt `?<` operator */
-  EVERLE_OP       = 34, /**< Everle `?<=` operator */
-  EVERGT_OP       = 35, /**< Evergt `?>` operator */
-  EVERGE_OP       = 36, /**< Everge `?>=` operator */
-  ALWAYSEQ_OP     = 37, /**< Alwayseq `%=` operator */
-  ALWAYSNE_OP     = 38, /**< Alwaysne `%<>` operator */
-  ALWAYSLT_OP     = 39, /**< Alwayslt `%<` operator */
-  ALWAYSLE_OP     = 40, /**< Alwaysle `%<=` operator */
-  ALWAYSGT_OP     = 41, /**< Alwaysgt `%>` operator */
-  ALWAYSGE_OP     = 42, /**< Alwaysge `%>=` operator */
+  UNKNOWN_OP       = 0,
+  EQ_OP            = 1,  /**< Equality `=` operator */
+  NE_OP            = 2,  /**< Distinct `!=` operator */
+  LT_OP            = 3,  /**< Less than `<` operator */
+  LE_OP            = 4,  /**< Less than or equal to `<=` operator */
+  GT_OP            = 5,  /**< Greater than `<` operator */
+  GE_OP            = 6,  /**< Greater than or equal to `>=` operator */
+  ADJACENT_OP      = 7,  /**< Adjacent `-|-` operator */
+  UNION_OP         = 8,  /**< Union `+` operator */
+  MINUS_OP         = 9,  /**< Minus `-` operator */
+  INTERSECT_OP     = 10, /**< Intersection `*` operator */
+  OVERLAPS_OP      = 11, /**< Overlaps `&&` operator */
+  CONTAINS_OP      = 12, /**< Contains `@>` operator */
+  CONTAINED_OP     = 13, /**< Contained `<@` operator */
+  SAME_OP          = 14, /**< Same `~=` operator */
+  LEFT_OP          = 15, /**< Left `<<` operator */
+  OVERLEFT_OP      = 16, /**< Overleft `&<` operator */
+  RIGHT_OP         = 17, /**< Right `>>` operator */
+  OVERRIGHT_OP     = 18, /**< Overright `&>` operator */
+  BELOW_OP         = 19, /**< Below `<<|` operator */
+  OVERBELOW_OP     = 20, /**< Overbelow `&<|` operator */
+  ABOVE_OP         = 21, /**< Above `|>>` operator */
+  OVERABOVE_OP     = 22, /**< Overbove `|&>` operator */
+  FRONT_OP         = 23, /**< Front `<</` operator */
+  OVERFRONT_OP     = 24, /**< Overfront `&</` operator */
+  BACK_OP          = 25, /**< Back `/>>` operator */
+  OVERBACK_OP      = 26, /**< Overback `/&>` operator */
+  BEFORE_OP        = 27, /**< Before `<<#` operator */
+  OVERBEFORE_OP    = 28, /**< Overbefore `&<#` operator */
+  AFTER_OP         = 29, /**< After `#>>` operator */
+  OVERAFTER_OP     = 30, /**< Overafter `#&>` operator */
+  EVEREQ_OP        = 31, /**< Evereq `?=` operator */
+  EVERNE_OP        = 32, /**< Everne `?<>` operator */
+  EVERLT_OP        = 33, /**< Everlt `?<` operator */
+  EVERLE_OP        = 34, /**< Everle `?<=` operator */
+  EVERGT_OP        = 35, /**< Evergt `?>` operator */
+  EVERGE_OP        = 36, /**< Everge `?>=` operator */
+  ALWAYSEQ_OP      = 37, /**< Alwayseq `%=` operator */
+  ALWAYSNE_OP      = 38, /**< Alwaysne `%<>` operator */
+  ALWAYSLT_OP      = 39, /**< Alwayslt `%<` operator */
+  ALWAYSLE_OP      = 40, /**< Alwaysle `%<=` operator */
+  ALWAYSGT_OP      = 41, /**< Alwaysgt `%>` operator */
+  ALWAYSGE_OP      = 42, /**< Alwaysge `%>=` operator */
+  TEMPCONTAINS_OP  = 43, /**< Contains `#@>` operator for JSON */
+  TEMPCONTAINED_OP = 44, /**< Contained `<@#` operator for JSON */
 } meosOper;
 
 /**
@@ -214,7 +216,7 @@ extern bool temptype_subtype(tempSubtype subtype);
 extern bool temptype_subtype_all(tempSubtype subtype);
 #endif
 extern const char *tempsubtype_name(tempSubtype subtype);
-extern bool tempsubtype_from_string(const char *str, int16 *subtype);
+extern bool tempsubtype_from_string(const char *str, int16_t *subtype);
 extern const char *meosoper_name(meosOper oper);
 extern meosOper meosoper_from_string(const char *name);
 extern const char *interptype_name(interpType interp);
@@ -238,7 +240,7 @@ extern bool geo_basetype(meosType type);
 #ifndef NDEBUG
 extern bool meos_basetype(meosType type);
 extern bool alphanum_basetype(meosType type);
-extern bool alphanum_temptype(meosType type);
+extern bool talphanum_temptype(meosType type);
 #endif
 
 extern bool time_type(meosType type);
@@ -248,14 +250,15 @@ extern bool set_basetype(meosType type);
 
 extern bool set_type(meosType type);
 extern bool numset_type(meosType type);
-extern bool ensure_numset_type(meosType type);
 extern bool timeset_type(meosType type);
 extern bool set_spantype(meosType type);
-extern bool ensure_set_spantype(meosType type);
 extern bool alphanumset_type(meosType settype);
 extern bool geoset_type(meosType type);
-extern bool ensure_geoset_type(meosType type);
 extern bool spatialset_type(meosType type);
+extern bool ensure_set_isof_type(const Set *s, meosType settype);
+extern bool ensure_set_spantype(meosType type);
+extern bool ensure_geoset_type(meosType type);
+extern bool ensure_numset_type(meosType type);
 extern bool ensure_spatialset_type(meosType type);
 
 extern bool span_basetype(meosType type);
@@ -263,15 +266,17 @@ extern bool span_canon_basetype(meosType type);
 extern bool span_type(meosType type);
 extern bool type_span_bbox(meosType type);
 extern bool span_tbox_type(meosType type);
-extern bool ensure_span_tbox_type(meosType type);
 extern bool numspan_basetype(meosType type);
 extern bool numspan_type(meosType type);
-extern bool ensure_numspan_type(meosType type);
 extern bool timespan_basetype(meosType type);
 extern bool timespan_type(meosType type);
+extern bool ensure_span_isof_type(const Span *sp, meosType spantype);
+extern bool ensure_span_tbox_type(meosType type);
+extern bool ensure_numspan_type(meosType type);
 
 extern bool spanset_type(meosType type);
 extern bool timespanset_type(meosType type);
+extern bool ensure_spanset_isof_type(const SpanSet *ss, meosType spansettype);
 extern bool ensure_timespanset_type(meosType type);
 
 extern bool temporal_type(meosType type);
@@ -281,10 +286,9 @@ extern bool temporal_basetype(meosType type);
 extern bool temptype_continuous(meosType type);
 extern bool basetype_byvalue(meosType type);
 extern bool basetype_varlength(meosType type);
-extern int16 basetype_length(meosType type);
-#ifndef NDEBUG
+extern int16_t basetype_length(meosType type);
 extern bool talphanum_type(meosType type);
-#endif
+extern bool ensure_talphanum_type(meosType type);
 extern bool talpha_type(meosType type);
 extern bool tnumber_type(meosType type);
 extern bool ensure_tnumber_type(meosType type);

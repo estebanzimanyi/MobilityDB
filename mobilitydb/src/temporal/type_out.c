@@ -70,7 +70,7 @@ Temporal_as_text(PG_FUNCTION_ARGS)
   if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
     dbl_dig_for_wkt = PG_GETARG_INT32(1);
   char *str = temporal_out(temp, dbl_dig_for_wkt);
-  text *result = cstring_to_text(str);
+  text *result = pg_cstring_to_text(str);
   pfree(str);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_TEXT_P(result);
@@ -185,7 +185,7 @@ Temporal_as_mfjson(PG_FUNCTION_ARGS)
   }
 
   char *mfjson = temporal_as_mfjson(temp, with_bbox, flags, precision, srs);
-  text *result = cstring_to_text(mfjson);
+  text *result = pg_cstring_to_text(mfjson);
   // CURRENTLY we cannot pfree since we get the error message
   // pfree called with invalid pointer
   // pfree(mfjson);
@@ -204,7 +204,7 @@ static uint8_t
 get_endian_variant(const text *txt)
 {
   uint8_t variant = 0;
-  char *endian = text_to_cstring(txt);
+  char *endian = pg_text_to_cstring(txt);
   /* When the endian is not given the default value is an empty text */
   if (strlen(endian) == 0)
     ;
@@ -263,7 +263,7 @@ Datum_as_hexwkb(FunctionCallInfo fcinfo, Datum value, meosType type)
   /* Create WKB hex string */
   size_t hexwkb_size;
   char *hexwkb = datum_as_hexwkb(value, type, variant, &hexwkb_size);
-  text *result = cstring_to_text(hexwkb);
+  text *result = pg_cstring_to_text(hexwkb);
   pfree(hexwkb);
   return result;
 }

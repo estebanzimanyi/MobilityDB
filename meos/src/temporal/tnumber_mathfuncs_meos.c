@@ -111,7 +111,7 @@ add_tfloat_float(const Temporal *temp, double d)
 
 /**
  * @ingroup meos_temporal_math
- * @brief Return the temporal addition of the temporal numbers
+ * @brief Return the temporal addition of two temporal numbers
  * @param[in] temp1,temp2 Temporal values
  * @csqlfn #Add_tnumber_tnumber()
  */
@@ -194,7 +194,7 @@ sub_tfloat_float(const Temporal *temp, double d)
 
 /**
  * @ingroup meos_temporal_math
- * @brief Return the temporal subtraction of the temporal numbers
+ * @brief Return the temporal subtraction of two temporal numbers
  * @param[in] temp1,temp2 Temporal values
  * @csqlfn #Sub_tnumber_tnumber()
  */
@@ -279,7 +279,7 @@ mult_tfloat_float(const Temporal *temp, double d)
 
 /**
  * @ingroup meos_temporal_math
- * @brief Return the temporal multiplication of the temporal numbers
+ * @brief Return the temporal multiplication of two temporal numbers
  * @param[in] temp1,temp2 Temporal values
  * @csqlfn #Mult_tnumber_tnumber()
  */
@@ -364,7 +364,7 @@ div_tfloat_float(const Temporal *temp, double d)
 
 /**
  * @ingroup meos_temporal_math
- * @brief Return the temporal division of the temporal numbers
+ * @brief Return the temporal division of two temporal numbers
  * @param[in] temp1,temp2 Temporal values
  * @csqlfn #Div_tnumber_tnumber()
  */

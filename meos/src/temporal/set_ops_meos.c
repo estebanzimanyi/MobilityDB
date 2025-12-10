@@ -71,7 +71,7 @@ contains_set_int(const Set *s, int i)
  * @csqlfn #Contains_set_value()
  */
 bool
-contains_set_bigint(const Set *s, int64 i)
+contains_set_bigint(const Set *s, int64_t i)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSET(s, false);
@@ -166,7 +166,7 @@ contained_int_set(int i, const Set *s)
  * @csqlfn #Contained_value_set()
  */
 bool
-contained_bigint_set(int64 i, const Set *s)
+contained_bigint_set(int64_t i, const Set *s)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSET(s, false);
@@ -261,7 +261,7 @@ left_int_set(int i, const Set *s)
  * @csqlfn #Left_value_set()
  */
 bool
-left_bigint_set(int64 i, const Set *s)
+left_bigint_set(int64_t i, const Set *s)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSET(s, false);
@@ -354,7 +354,7 @@ left_set_int(const Set *s, int i)
  * @csqlfn #Left_set_value()
  */
 bool
-left_set_bigint(const Set *s, int64 i)
+left_set_bigint(const Set *s, int64_t i)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSET(s, false);
@@ -449,7 +449,7 @@ right_int_set(int i, const Set *s)
  * @csqlfn #Right_value_set()
  */
 bool
-right_bigint_set(int64 i, const Set *s)
+right_bigint_set(int64_t i, const Set *s)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSET(s, false);
@@ -541,7 +541,7 @@ right_set_int(const Set *s, int i)
  * @csqlfn #Right_set_value()
  */
 bool
-right_set_bigint(const Set *s, int64 i)
+right_set_bigint(const Set *s, int64_t i)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSET(s, false);
@@ -636,7 +636,7 @@ overleft_int_set(int i, const Set *s)
  * @csqlfn #Overleft_value_set()
  */
 bool
-overleft_bigint_set(int64 i, const Set *s)
+overleft_bigint_set(int64_t i, const Set *s)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSET(s, false);
@@ -729,7 +729,7 @@ overleft_set_int(const Set *s, int i)
  * @csqlfn #Overleft_set_value()
  */
 bool
-overleft_set_bigint(const Set *s, int64 i)
+overleft_set_bigint(const Set *s, int64_t i)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSET(s, false);
@@ -824,7 +824,7 @@ overright_int_set(int i, const Set *s)
  * @csqlfn #Overright_value_set()
  */
 bool
-overright_bigint_set(int64 i, const Set *s)
+overright_bigint_set(int64_t i, const Set *s)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSET(s, false);
@@ -917,7 +917,7 @@ overright_set_int(const Set *s, int i)
  * @csqlfn #Overright_set_value()
  */
 bool
-overright_set_bigint(const Set *s, int64 i)
+overright_set_bigint(const Set *s, int64_t i)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSET(s, false);
@@ -1011,7 +1011,7 @@ union_set_int(const Set *s, int i)
  * @csqlfn #Union_set_value()
  */
 Set *
-union_set_bigint(const Set *s, int64 i)
+union_set_bigint(const Set *s, int64_t i)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSET(s, NULL);
@@ -1102,7 +1102,7 @@ union_int_set(int i, const Set *s)
  * @csqlfn #Union_set_value()
  */
 inline Set *
-union_bigint_set(int64 i, const Set *s)
+union_bigint_set(int64_t i, const Set *s)
 {
   return union_set_bigint(s, i);
 }
@@ -1186,7 +1186,7 @@ intersection_set_int(const Set *s, int i)
  * @csqlfn #Intersection_set_value()
  */
 Set *
-intersection_set_bigint(const Set *s, int64 i)
+intersection_set_bigint(const Set *s, int64_t i)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSET(s, NULL);
@@ -1276,7 +1276,7 @@ intersection_int_set(int i, const Set *s)
  * @csqlfn #Union_set_value()
  */
 inline Set *
-intersection_bigint_set(int64 i, const Set *s)
+intersection_bigint_set(int64_t i, const Set *s)
 {
   return intersection_set_bigint(s, i);
 }
@@ -1361,7 +1361,7 @@ minus_int_set(int i, const Set *s)
  * @csqlfn #Minus_value_set()
  */
 Set *
-minus_bigint_set(int64 i, const Set *s)
+minus_bigint_set(int64_t i, const Set *s)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSET(s, NULL);
@@ -1454,7 +1454,7 @@ minus_set_int(const Set *s, int i)
  * @csqlfn #Minus_set_value()
  */
 Set *
-minus_set_bigint(const Set *s, int64 i)
+minus_set_bigint(const Set *s, int64_t i)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSET(s, NULL);
@@ -1549,8 +1549,8 @@ distance_set_int(const Set *s, int i)
  * @return On error return -1.0
  * @csqlfn #Distance_set_value()
  */
-int64
-distance_set_bigint(const Set *s, int64 i)
+int64_t
+distance_set_bigint(const Set *s, int64_t i)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSET(s, -1);
@@ -1631,7 +1631,7 @@ distance_intset_intset(const Set *s1, const Set *s2)
  * @return On error return -1
  * @csqlfn #Distance_set_set()
  */
-int64
+int64_t
 distance_bigintset_bigintset(const Set *s1, const Set *s2)
 {
   /* Ensure the validity of the arguments */

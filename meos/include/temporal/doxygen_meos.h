@@ -81,49 +81,45 @@
 /*****************************************************************************/
 
 /**
- * @defgroup meos_base_types Functions for base and time types
+ * @defgroup meos_base Functions for base and time types
  * @ingroup meos_api
  * @brief Functions for base and time types
  *
  *   @defgroup meos_base_bool Functions for the boolean type
- *   @ingroup meos_base_types
+ *   @ingroup meos_base
  *   @brief Functions for the boolean type
  *
  *   @defgroup meos_base_int Functions for the integer types
- *   @ingroup meos_base_types
+ *   @ingroup meos_base
  *   @brief Functions for the integer types
  *
  *   @defgroup meos_base_float Functions for the float types
- *   @ingroup meos_base_types
+ *   @ingroup meos_base
  *   @brief Functions for the float types
  *
  *   @defgroup meos_base_text Functions for the text type
- *   @ingroup meos_base_types
+ *   @ingroup meos_base
  *   @brief Functions for the text types
  *
  *   @defgroup meos_base_numeric Functions for the numeric type
- *   @ingroup meos_base_types
+ *   @ingroup meos_base
  *   @brief Functions for the numeric type
  *
  *   @defgroup meos_base_date Functions for the date type
- *   @ingroup meos_base_types
+ *   @ingroup meos_base
  *   @brief Functions for the date type
  *
  *   @defgroup meos_base_time Functions for the time type
- *   @ingroup meos_base_types
+ *   @ingroup meos_base
  *   @brief Functions for the time type
  *
  *   @defgroup meos_base_timestamp Functions for the timestamp types
- *   @ingroup meos_base_types
+ *   @ingroup meos_base
  *   @brief Functions for the timestamp types
  *
  *   @defgroup meos_base_interval Functions for the interval type
- *   @ingroup meos_base_types
+ *   @ingroup meos_base
  *   @brief Functions for the interval types
- *
- *   @defgroup meos_base_json Functions for the JSON types
- *   @ingroup meos_base_types
- *   @brief Functions for the JSON types
  *
  * @defgroup meos_setspan Functions for set and span types
  * @ingroup meos_api
@@ -189,10 +185,6 @@
  * @ingroup meos_setspan
  * @brief Transformation functions for set and span types
  *
- * @defgroup meos_setspan_srid Spatial reference system functions
- * @ingroup meos_setspan
- * @brief Spatial reference system functions for set and span types
- *
  * @defgroup meos_setspan_comp Comparison functions
  * @ingroup meos_setspan
  * @brief Comparison functions for set and span types
@@ -215,7 +207,7 @@
  *
  * @defgroup meos_setspan_set Set functions
  * @ingroup meos_setspan
- * @brief Set functions for set and span types
+ * @brief %Set functions for set and span types
  *
  * @defgroup meos_setspan_dist Distance functions
  * @ingroup meos_setspan
@@ -253,13 +245,9 @@
  * @ingroup meos_box
  * @brief Transformation functions for temporal boxes
  *
- * @defgroup meos_box_srid Spatial reference system functions
- * @ingroup meos_box
- * @brief Spatial reference system functions for temporal boxes
- *
  * @defgroup meos_box_set Set functions
  * @ingroup meos_box
- * @brief Set functions for temporal boxes
+ * @brief %Set functions for temporal boxes
  *
  * @defgroup meos_box_bbox Bounding box functions
  * @ingroup meos_box
@@ -323,7 +311,7 @@
  *
  * @defgroup meos_temporal_comp_temp Temporal comparison functions
  * @ingroup meos_temporal_comp
- * @brief Temporal comparison functions for temporal types
+ * @brief %Temporal comparison functions for temporal types
  *
  * @defgroup meos_temporal_bbox Bounding box functions
  * @ingroup meos_temporal
@@ -343,7 +331,7 @@
  *
  * @defgroup meos_temporal_bool Boolean functions
  * @ingroup meos_temporal
- * @brief Boolean functions for temporal types
+ * @brief %Boolean functions for temporal types
  *
  * @defgroup meos_temporal_math Mathematical functions
  * @ingroup meos_temporal

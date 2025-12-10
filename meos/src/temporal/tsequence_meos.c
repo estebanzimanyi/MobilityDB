@@ -182,14 +182,14 @@ ttextseq_from_base_tstzset(const text *txt, const Set *s)
  * @brief Return a temporal boolean sequence from a boolean and a timestamptz
  * span
  * @param[in] b Value
- * @param[in] s Span
+ * @param[in] sp Span
  */
 TSequence *
-tboolseq_from_base_tstzspan(bool b, const Span *s)
+tboolseq_from_base_tstzspan(bool b, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_TSTZSPAN(s, NULL);
-  return tsequence_from_base_tstzspan(BoolGetDatum(b), T_TBOOL, s, STEP);
+  VALIDATE_TSTZSPAN(sp, NULL);
+  return tsequence_from_base_tstzspan(BoolGetDatum(b), T_TBOOL, sp, STEP);
 }
 
 /**
@@ -197,14 +197,14 @@ tboolseq_from_base_tstzspan(bool b, const Span *s)
  * @brief Return a temporal integer sequence from an integer and a timestamptz
  * span
  * @param[in] i Value
- * @param[in] s Span
+ * @param[in] sp Span
  */
 TSequence *
-tintseq_from_base_tstzspan(int i, const Span *s)
+tintseq_from_base_tstzspan(int i, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_TSTZSPAN(s, NULL);
-  return tsequence_from_base_tstzspan(Int32GetDatum(i), T_TINT, s, STEP);
+  VALIDATE_TSTZSPAN(sp, NULL);
+  return tsequence_from_base_tstzspan(Int32GetDatum(i), T_TINT, sp, STEP);
 }
 
 /**
@@ -212,29 +212,29 @@ tintseq_from_base_tstzspan(int i, const Span *s)
  * @brief Return a temporal float sequence from a float and a timestamptz
  * span
  * @param[in] d Value
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] interp Interpolation
  */
 TSequence *
-tfloatseq_from_base_tstzspan(double d, const Span *s, interpType interp)
+tfloatseq_from_base_tstzspan(double d, const Span *sp, interpType interp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_TSTZSPAN(s, NULL);
-  return tsequence_from_base_tstzspan(Float8GetDatum(d), T_TFLOAT, s, interp);
+  VALIDATE_TSTZSPAN(sp, NULL);
+  return tsequence_from_base_tstzspan(Float8GetDatum(d), T_TFLOAT, sp, interp);
 }
 
 /**
  * @ingroup meos_temporal_constructor
  * @brief Return a temporal text sequence from a text and a timestamptz span
  * @param[in] txt Value
- * @param[in] s Span
+ * @param[in] sp Span
  */
 TSequence *
-ttextseq_from_base_tstzspan(const text *txt, const Span *s)
+ttextseq_from_base_tstzspan(const text *txt, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_TSTZSPAN(s, NULL);
-  return tsequence_from_base_tstzspan(PointerGetDatum(txt), T_TTEXT, s, STEP);
+  VALIDATE_TSTZSPAN(sp, NULL);
+  return tsequence_from_base_tstzspan(PointerGetDatum(txt), T_TTEXT, sp, STEP);
 }
 
 /*****************************************************************************/

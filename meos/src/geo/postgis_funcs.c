@@ -54,7 +54,7 @@
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
-#include "temporal/postgres_types.h"
+#include <pgtypes.h>
 #include "temporal/type_util.h"
 #include "geo/meos_transform.h"
 #include "geo/tgeo.h"
@@ -145,7 +145,7 @@ gbox_out(const GBOX *box, int maxdd)
  */
 BOX3D *
 box3d_make(double xmin, double xmax, double ymin, double ymax, double zmin,
-  double zmax, int32 srid)
+  double zmax, int32_t srid)
 {
   /* Note: zero-fill is required here, just as in heap tuples */
   BOX3D *result = palloc0(sizeof(BOX3D));
@@ -407,7 +407,7 @@ geogpoint_make3dz(int32_t srid, double x, double y, double z)
 #if MEOS
 /**
  * @ingroup meos_geo_base_srid
- * @brief Get the SRID of a geometry/geography
+ * @brief Return the SRID of a geometry/geography
  * @param[in] gs Geometry
  */
 int32_t
@@ -419,7 +419,7 @@ geo_srid(const GSERIALIZED *gs)
 
 /**
  * @ingroup meos_geo_base_srid
- * @brief Set the SRID of a geometry/geography
+ * @brief Return a geometry/geography with the coordinates set to an SRID
  * @param[in] gs Geometry
  * @param[in] srid SRID
  */
@@ -434,7 +434,7 @@ geo_set_srid(const GSERIALIZED *gs, int32_t srid)
 
 /**
  * @ingroup meos_geo_base_accessor
- * @brief Get the SRID of a geometry/geography
+ * @brief Return true if a geometry/geography is empty
  * @param[in] gs Geometry
  */
 bool
@@ -683,6 +683,8 @@ box3d_to_lwgeom(BOX3D *box)
 
 /**
  * @ingroup meos_geo_base_accessor
+ * @brief Return true is the geometry is unitary, that is, it is not a
+ * collection
  * @note Derived from PostGIS function: @p lwgeom_is_unitary(const LWGEOM *geom)
  */
 bool
@@ -820,7 +822,7 @@ geom_shortestline3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 
 /**
  * @ingroup meos_geo_base_distance
- * @brief Return the distance between two geometries
+ * @brief Return the 2D distance between two geometries
  * @param[in] gs1,gs2 Geometries
  * @note PostGIS function: @p ST_Distance(PG_FUNCTION_ARGS)
  * @return On error or empty geometries return DBL_MAX
@@ -861,7 +863,7 @@ geom_distance3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 
 /**
  * @ingroup meos_geo_base_rel
- * @brief Return true if the 3D geometries intersect
+ * @brief Return true if two 3D geometries intersect
  * @param[in] gs1,gs2 Geometries
  * @note PostGIS function: @p ST_3DIntersects(PG_FUNCTION_ARGS)
  */
@@ -934,7 +936,7 @@ geom_dwithin3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
 #if MEOS
 /**
  * @ingroup meos_geo_base_transf
- * @brief Reverse vertex order of a geometry
+ * @brief Reverse the vertex order of a geometry
  * @param[in] gs Geometry/geography
  * @note PostGIS function: @p LWGEOM_reverse(PG_FUNCTION_ARGS)
  */
@@ -1018,7 +1020,8 @@ geom_azimuth(const GSERIALIZED *gs1, const GSERIALIZED *gs2, double *result)
 
 /**
  * @ingroup meos_geo_base_spatial
- * @brief Collect the array of geometries/geographies into a geo collection
+ * @brief Return a geometry obtained by collecting the array of
+ * geometries/geographies into a collection
  * @param[in] gsarr Array of geometries/geographies
  * @param[in] nelems Number of elements in the array
  * @note PostGIS function: @p LWGEOM_collect_garray(PG_FUNCTION_ARGS)
@@ -1032,7 +1035,7 @@ geo_collect_garray(GSERIALIZED **gsarr, int nelems)
   if (nelems == 1)
     return geo_copy(gsarr[0]);
     
-  uint32 outtype = 0;
+  uint32_t outtype = 0;
   int count = 0;
   int32_t srid = SRID_UNKNOWN;
   GBOX *box = NULL;
@@ -1276,7 +1279,7 @@ geo_geo_n(const GSERIALIZED *gs, int n)
 
   /* Handle out-of-range index value */
   n -= 1;
-  if (n < 0 || n >= (int32) coll->ngeoms)
+  if (n < 0 || n >= (int32_t) coll->ngeoms)
     return NULL;
 
   LWGEOM *subgeom = coll->geoms[n];
@@ -1528,7 +1531,7 @@ geom_contains(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 
 /**
  * @ingroup meos_geo_base_rel
- * @brief Return true if the two geometries intersect on a border
+ * @brief Return true if two geometries intersect on a border
  * @param[in] gs1,gs2 Geometries
  * @note PostGIS function: @p touches(PG_FUNCTION_ARGS)
  */
@@ -1809,7 +1812,7 @@ geom_unary_union(const GSERIALIZED *gs, double prec)
 
 /**
  * @ingroup meos_geo_base_spatial
- * @brief Return the convex hull of the geometry
+ * @brief Return the convex hull of a geometry
  * @param[in] gs Geometry
  * @note PostGIS function: @p ST_ConvexHull(PG_FUNCTION_ARGS). With respect to
  * the original function we do not use the @p prec argument.
@@ -2124,7 +2127,8 @@ geo_extract_elements(const GSERIALIZED *gs, int *count)
 
 /**
  * @ingroup meos_geo_base_spatial
- * @brief Call function #geom_intersection2d for each element of the collection
+ * @brief Return the intersection between two collections by calling function
+ * #geom_intersection2d for each pair of elements in the collections
  * if the arguments are collections
  * @details Some GEOS operations, e.g., intersects or intersection do not
  * support collections. In this cases, we need to extract the elements of the
@@ -2177,7 +2181,7 @@ geom_intersection2d_coll(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 
 /**
  * @ingroup meos_geo_base_comp
- * @brief Return true if the geometries/geographies are equal, false otherwise
+ * @brief Return true if two geometries/geographies are equal, false otherwise
  * @param[in] gs1,gs2 Geometries/geographies
  * @note PostGIS function: @p ST_Equals(PG_FUNCTION_ARGS)
  */
@@ -2302,7 +2306,8 @@ geo_serialize(const LWGEOM *geom)
 #if MEOS
 /**
  * @ingroup meos_geo_base_srid
- * @brief Return the geometry/geography transformed to an SRID
+ * @brief Return the geometry/geography with the coordinates transformed to an
+ * SRID
  * @return On error return @p NULL
  * @param[in] gs Geometry/geography
  * @param[in] srid_to Target SRID
@@ -2359,7 +2364,8 @@ geo_transform(const GSERIALIZED *gs, int32_t srid_to)
 
 /**
  * @ingroup meos_geo_base_srid
- * @brief Return a geometry/geography transformed to another SRID using a pipeline
+ * @brief Return a geometry/geography with the coordinates transformed to an
+ * SRID using a pipeline
  * @param[in] gs Geometry/geography
  * @param[in] pipeline Pipeline string
  * @param[in] srid_to Target SRID, may be @p SRID_UNKNOWN
@@ -2842,7 +2848,7 @@ geog_perimeter(const GSERIALIZED *gs, bool use_spheroid)
 
 /**
  * @ingroup meos_geo_base_accessor
- * @brief Return double length in meters
+ * @brief Return the length of a geometry in meters
  * @param[in] gs Geography
  * @param[in] use_spheroid True when using a spheroid
  * @return On error return @p DBL_MAX
@@ -2852,7 +2858,7 @@ double
 geog_length(const GSERIALIZED *gs, bool use_spheroid)
 {
   /* EMPTY things have no length */
-  int32 geo_type = gserialized_get_type(gs);
+  int32_t geo_type = gserialized_get_type(gs);
   if (gserialized_is_empty(gs) || geo_type == POLYGONTYPE ||
       geo_type == MULTIPOLYGONTYPE)
     return 0.0;
@@ -2879,9 +2885,8 @@ geog_length(const GSERIALIZED *gs, bool use_spheroid)
     return DBL_MAX;
   }
 
-  /* Clean up */
+  /* Clean up and return */
   lwgeom_free(geom);
-
   return length;
 }
 
@@ -2933,7 +2938,7 @@ geog_dwithin(const GSERIALIZED *gs1, const GSERIALIZED *gs2, double tolerance,
 
 /**
  * @ingroup meos_geo_base_rel
- * @brief Return true if the geographies intersect
+ * @brief Return true if two geographies intersect
  * @param[in] gs1,gs2 Geographies
  * @param[in] use_spheroid True when using a spheroid
  * @note PostGIS function: @p geography_intersects(PG_FUNCTION_ARGS)
@@ -3013,14 +3018,14 @@ geog_distance(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 GSERIALIZED *
 postgis_valid_typmod(GSERIALIZED *gs, int32_t typmod)
 {
-  int32 geom_srid = gserialized_get_srid(gs);
-  int32 geom_type = gserialized_get_type(gs);
-  int32 geom_z = gserialized_has_z(gs);
-  int32 geom_m = gserialized_has_m(gs);
-  int32 typmod_srid = TYPMOD_GET_SRID(typmod);
-  int32 typmod_type = TYPMOD_GET_TYPE(typmod);
-  int32 typmod_z = TYPMOD_GET_Z(typmod);
-  int32 typmod_m = TYPMOD_GET_M(typmod);
+  int32_t geom_srid = gserialized_get_srid(gs);
+  int32_t geom_type = gserialized_get_type(gs);
+  int32_t geom_z = gserialized_has_z(gs);
+  int32_t geom_m = gserialized_has_m(gs);
+  int32_t typmod_srid = TYPMOD_GET_SRID(typmod);
+  int32_t typmod_type = TYPMOD_GET_TYPE(typmod);
+  int32_t typmod_z = TYPMOD_GET_Z(typmod);
+  int32_t typmod_m = TYPMOD_GET_M(typmod);
 
   /* No typmod (-1) => no preferences */
   if (typmod < 0) return gs;
@@ -3129,7 +3134,7 @@ postgis_valid_typmod(GSERIALIZED *gs, int32_t typmod)
  * @note PostGIS function: @p LWGEOM_in(PG_FUNCTION_ARGS)
  */
 GSERIALIZED *
-geom_in(const char *str, int32 typmod)
+geom_in(const char *str, int32_t typmod)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(str, NULL);
@@ -3423,7 +3428,7 @@ geo_as_hexewkb(const GSERIALIZED *gs, const char *endian)
  * @note wkb is in *binary* not hex form
  */
 GSERIALIZED *
-geo_from_ewkb(const uint8_t *wkb, size_t wkb_size, int32 srid)
+geo_from_ewkb(const uint8_t *wkb, size_t wkb_size, int32_t srid)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(wkb, NULL);
@@ -3583,7 +3588,7 @@ geo_as_geojson(const GSERIALIZED *gs, int option, int precision,
 
 /**
  * @ingroup meos_geo_base_comp
- * @brief Return true if the geometries/geographies are the same
+ * @brief Return true if two geometries/geographies are the same
  * @param[in] gs1,gs2 Geometries/geographies
  */
 bool
@@ -3624,10 +3629,10 @@ geography_valid_type(uint8_t type)
  * @brief Return a geography from a LWGEOM
  * @note Function derived from
  *   GSERIALIZED* gserialized_geography_from_lwgeom(LWGEOM *lwgeom,
- *   int32 geog_typmod)
+ *   int32_t geog_typmod)
  */
 GSERIALIZED *
-geog_from_lwgeom(LWGEOM *lwgeom, int32 typmod)
+geog_from_lwgeom(LWGEOM *lwgeom, int32_t typmod)
 {
   GSERIALIZED *result = NULL;
 
@@ -3669,7 +3674,7 @@ geog_from_lwgeom(LWGEOM *lwgeom, int32 typmod)
  * @note PostGIS function: @p geography_in(PG_FUNCTION_ARGS)
  */
 GSERIALIZED *
-geog_in(const char *str, int32 typmod)
+geog_in(const char *str, int32_t typmod)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(str, NULL);
@@ -3785,7 +3790,7 @@ geog_to_geom(const GSERIALIZED *gs)
  *****************************************************************************/
 
 /**
- * @brief Interpolate a point from a line
+ * @brief Return the point(s) obtained by interpolating a point in a line
  * @pre The argument @p fraction is in [0,1] and the type of the geometry is
  * @p LINETYPE
  * @note PostGIS function: @p LWGEOM_line_interpolate_point(PG_FUNCTION_ARGS)
@@ -3811,7 +3816,8 @@ lwgeom_line_interpolate_point(LWGEOM *lwgeom, double fraction, int32_t srid,
 
 /**
  * @ingroup meos_geo_base_spatial
- * @brief Interpolate one or several points from a line
+ * @brief Return the point(s) obtained by interpolating a fraction in [0,1] 
+ * over a line
  * @param[in] gs Geometry
  * @param[in] fraction Value in [0,1] representing the distance where the point
  * is located
@@ -4038,7 +4044,7 @@ geom_min_bounding_radius(const GSERIALIZED *geom, double *radius)
 
 /**
  * @ingroup meos_geo_base_spatial
- * @brief Locate a point into a line
+ * @brief Return a value in [0,1] representing the location a point into a line
  * @param[in] gs1 Line
  * @param[in] gs2 Point
  * @return On error return -1.0
@@ -4050,7 +4056,6 @@ line_locate_point(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   LWPOINT *lwpoint;
   POINTARRAY *pa;
   POINT4D p, p_proj;
-  double ret;
 
   if ( gserialized_get_type(gs1) != LINETYPE )
   {
@@ -4073,9 +4078,9 @@ line_locate_point(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   pa = lwline->points;
   lwpoint_getPoint4d_p(lwpoint, &p);
 
-  ret = ptarray_locate_point(pa, &p, NULL, &p_proj);
+  double result = ptarray_locate_point(pa, &p, NULL, &p_proj);
   lwline_free(lwline); lwpoint_free(lwpoint);
-  return ret;
+  return result;
 }
 
 /*****************************************************************************

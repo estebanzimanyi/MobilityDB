@@ -19,19 +19,24 @@
 #include <limits.h>
 
 #include "miscadmin.h"
+#include "catalog/pg_collation_d.h"
 #include "common/int.h"
 #include "common/unicode_category.h"
 #include "common/unicode_norm.h"
 #include "common/unicode_version.h"
 #include "lib/stringinfo.h"
+#include "regex/regex.h"
+#include "utils/builtins.h"
 #include "utils/date.h"
 #include "utils/jsonb.h"
+#include "utils/jsonpath.h"
 #include "utils/mb/pg_wchar.h"
 #include "utils/numeric.h"
 #include "utils/pg_locale.h"
 #include "utils/varlena.h"
 
 #include <pgtypes.h>
+#include "../../meos/include/meos_error.h"
 
 // #include "access/detoast.h"
 // #include "access/toast_compression.h"
@@ -59,44 +64,11 @@
 // #include "utils/sortsupport.h"
 // #include "utils/varlena.h"
 
-/* To avoid including pg_collation_d */
-#define DEFAULT_COLLATION_OID 100
-#define C_COLLATION_OID 950
-#define POSIX_COLLATION_OID 951
-
 // MEOS force the collation to DEFAULT_COLLATION_OID
 #define PG_GET_COLLATION()  DEFAULT_COLLATION_OID
 
 // MEOS force the encoding to PG_SQL_ASCII
 #define GetDatabaseEncoding()  PG_SQL_ASCII
-
-/* Borrowed from tupmacs.h */
-
-/*
- * att_addlength_pointer performs the same calculation as att_addlength_datum,
- * but is used when walking a tuple --- attptr is the pointer to the field
- * within the tuple.
- *
- * Note: some callers pass a "char *" pointer for cur_offset.  This is
- * actually perfectly OK, but probably should be cleaned up along with
- * the same practice for att_align_pointer.
- */
-#define att_addlength_pointer(cur_offset, attlen, attptr) \
-( \
-	((attlen) > 0) ? \
-	( \
-		(cur_offset) + (attlen) \
-	) \
-	: (((attlen) == -1) ? \
-	( \
-		(cur_offset) + VARSIZE_ANY(attptr) \
-	) \
-	: \
-	( \
-		AssertMacro((attlen) == -2), \
-		(cur_offset) + (strlen((char *) (attptr)) + 1) \
-	)) \
-)
 
 /*****************************************************************************/
 
@@ -173,11 +145,18 @@ static void appendStringInfoText(StringInfo str, const text *t);
 /*
  * cstring_to_text_with_len
  *
- * Same as cstring_to_text except the caller specifies the string length;
+ * Same as pg_cstring_to_text except the caller specifies the string length;
  * the string need not be null_terminated.
  */
+#if MEOS
 text *
 cstring_to_text_with_len(const char *str, size_t len)
+{
+  return pg_cstring_to_text_with_len(str, len);
+}
+#endif
+text *
+pg_cstring_to_text_with_len(const char *str, size_t len)
 {
   text *result = (text *) palloc(len + VARHDRSZ);
   SET_VARSIZE(result, len + VARHDRSZ);
@@ -191,10 +170,17 @@ cstring_to_text_with_len(const char *str, size_t len)
  * @param[in] str String
  * @note Function taken from PostGIS file `lwgeom_in_geojson.c`
  */
+ #if MEOS
 text *
 cstring_to_text(const char *str)
 {
-  return cstring_to_text_with_len(str, strlen(str));
+  return pg_cstring_to_text_with_len(str, strlen(str));
+}
+#endif
+text *
+pg_cstring_to_text(const char *str)
+{
+  return pg_cstring_to_text_with_len(str, strlen(str));
 }
 
 /**
@@ -203,8 +189,15 @@ cstring_to_text(const char *str)
  * @param[in] txt Text
  * @note Function taken from PostGIS file @p lwgeom_in_geojson.c
  */
+#if MEOS
 char *
 text_to_cstring(const text *txt)
+{
+  return pg_text_to_cstring(txt);
+}
+#endif /* MEOS */
+char *
+pg_text_to_cstring(const text *txt)
 {
   int len = VARSIZE_ANY_EXHDR(txt);
   char *result = (char *) palloc(len + 1);
@@ -214,7 +207,7 @@ text_to_cstring(const text *txt)
 }
 
 /*
- * text_to_cstring_buffer
+ * pg_text_to_cstring_buffer
  *
  * Copy a text value into a caller-supplied buffer of size dst_len.
  *
@@ -227,7 +220,7 @@ text_to_cstring(const text *txt)
  * case here, we'd need another routine that did, anyway.
  */
 void
-text_to_cstring_buffer(const text *src, char *dst, size_t dst_len)
+pg_text_to_cstring_buffer(const text *src, char *dst, size_t dst_len)
 {
   size_t src_len = VARSIZE_ANY_EXHDR(src);
   if (dst_len > 0)
@@ -258,7 +251,7 @@ text *
 text_in(const char *str)
 {
   assert(str);
-  return cstring_to_text((char *) str);
+  return pg_cstring_to_text((char *) str);
 }
 
 /**
@@ -271,12 +264,7 @@ char *
 text_out(const text *txt)
 {
   assert(txt);
-  char *str = text_to_cstring(txt);
-  size_t size = strlen(str) + 3;
-  char *result = palloc(size);
-  snprintf(result, size, "\"%s\"", str);
-  pfree(str);
-  return result;
+  return pg_text_to_cstring(txt);
 }
 
 /**
@@ -398,29 +386,29 @@ text_catenate(const text *txt1, const text *txt2)
   return result;
 }
 
-// /*
- // * charlen_to_bytelen()
- // *  Compute the number of bytes occupied by n characters starting at *p
- // *
- // * It is caller's responsibility that there actually are n characters;
- // * the string need not be null-terminated.
- // */
-// static int
-// charlen_to_bytelen(const char *p, int n)
-// {
-  // if (pg_database_encoding_max_length() == 1)
-  // {
-    // /* Optimization for single-byte encodings */
-    // return n;
-  // }
-  // else
-  // {
-    // const char *s;
-    // for (s = p; n > 0; n--)
-      // s += pg_mblen(s);
-    // return s - p;
-  // }
-// }
+/*
+ * charlen_to_bytelen()
+ *  Compute the number of bytes occupied by n characters starting at *p
+ *
+ * It is caller's responsibility that there actually are n characters;
+ * the string need not be null-terminated.
+ */
+static int
+charlen_to_bytelen(const char *p, int n)
+{
+  if (pg_database_encoding_max_length() == 1)
+  {
+    /* Optimization for single-byte encodings */
+    return n;
+  }
+  else
+  {
+    const char *s;
+    for (s = p; n > 0; n--)
+      s += pg_mblen(s);
+    return s - p;
+  }
+}
 
 /**
  * @brief Return the slice of a varlena specified by the arguments
@@ -542,7 +530,7 @@ text_substring(const text *txt, int32 start, int32 length,
        * string.
        */
       if (E < 1)
-        return cstring_to_text("");
+        return pg_cstring_to_text("");
 
       L1 = E - S1;
     }
@@ -603,7 +591,7 @@ text_substring(const text *txt, int32 start, int32 length,
        * string.
        */
       if (E < 1)
-        return cstring_to_text("");
+        return pg_cstring_to_text("");
 
       /*
        * if E is past the end of the string, the tuple toaster will
@@ -631,7 +619,7 @@ text_substring(const text *txt, int32 start, int32 length,
     {
       if (slice != txt)
         pfree(slice);
-      return cstring_to_text("");
+      return pg_cstring_to_text("");
     }
 
     /* Now we can get the actual length of the slice in MB characters */
@@ -646,7 +634,7 @@ text_substring(const text *txt, int32 start, int32 length,
     {
       if (slice != txt)
         pfree(slice);
-      return cstring_to_text("");
+      return pg_cstring_to_text("");
     }
 
     /*
@@ -1590,7 +1578,7 @@ pg_text_pattern_gt(const text *txt1, const text *txt2)
  * appendStringInfoText
  *
  * Append a text to str.
- * Like appendStringInfoString(str, text_to_cstring(t)) but faster.
+ * Like appendStringInfoString(str, pg_text_to_cstring(t)) but faster.
  */
 static void
 appendStringInfoText(StringInfo str, const text *t)
@@ -1649,44 +1637,289 @@ text_replace(const text *txt, const text *from, const text *to)
   appendBinaryStringInfo(&str, start_ptr, chunk_len);
   text_position_cleanup(&state);
 
-  text *result = cstring_to_text_with_len(str.data, str.len);
+  text *result = pg_cstring_to_text_with_len(str.data, str.len);
   pfree(str.data);
 
   return (result);
 }
 
-// /*
- // * check_replace_text_has_escape
- // *
- // * Returns 0 if text contains no backslashes that need processing.
- // * Returns 1 if text contains backslashes, but not regexp submatch specifiers.
- // * Returns 2 if text contains regexp submatch specifiers (\1 .. \9).
- // */
-// static int
-// check_replace_text_has_escape(const text *replace_text)
-// {
-  // int result = 0;
-  // const char *p = VARDATA_ANY(replace_text);
-  // const char *p_end = p + VARSIZE_ANY_EXHDR(replace_text);
+/*
+ * check_replace_text_has_escape
+ *
+ * Returns 0 if text contains no backslashes that need processing.
+ * Returns 1 if text contains backslashes, but not regexp submatch specifiers.
+ * Returns 2 if text contains regexp submatch specifiers (\1 .. \9).
+ */
+static int
+check_replace_text_has_escape(const text *replace_text)
+{
+  int result = 0;
+  const char *p = VARDATA_ANY(replace_text);
+  const char *p_end = p + VARSIZE_ANY_EXHDR(replace_text);
 
-  // while (p < p_end)
-  // {
-    // /* Find next escape char, if any. */
-    // p = memchr(p, '\\', p_end - p);
-    // if (p == NULL)
-      // break;
-    // p++;
-    // /* Note: a backslash at the end doesn't require extra processing. */
-    // if (p < p_end)
-    // {
-      // if (*p >= '1' && *p <= '9')
-        // return 2;    /* Found a submatch specifier, so done */
-      // result = 1;      /* Found some other sequence, keep looking */
-      // p++;
-    // }
-  // }
-  // return result;
-// }
+  while (p < p_end)
+  {
+    /* Find next escape char, if any. */
+    p = memchr(p, '\\', p_end - p);
+    if (p == NULL)
+      break;
+    p++;
+    /* Note: a backslash at the end doesn't require extra processing. */
+    if (p < p_end)
+    {
+      if (*p >= '1' && *p <= '9')
+        return 2;    /* Found a submatch specifier, so done */
+      result = 1;      /* Found some other sequence, keep looking */
+      p++;
+    }
+  }
+  return result;
+}
+
+/*
+ * appendStringInfoRegexpSubstr
+ *
+ * Append replace_text to str, substituting regexp back references for
+ * \n escapes.  start_ptr is the start of the match in the source string,
+ * at logical character position data_pos.
+ */
+static void
+appendStringInfoRegexpSubstr(StringInfo str, text *replace_text,
+  regmatch_t *pmatch, char *start_ptr, int data_pos)
+{
+  const char *p = VARDATA_ANY(replace_text);
+  const char *p_end = p + VARSIZE_ANY_EXHDR(replace_text);
+
+  while (p < p_end)
+  {
+    const char *chunk_start = p;
+    int so, eo;
+
+    /* Find next escape char, if any. */
+    p = memchr(p, '\\', p_end - p);
+    if (p == NULL)
+      p = p_end;
+
+    /* Copy the text we just scanned over, if any. */
+    if (p > chunk_start)
+      appendBinaryStringInfo(str, chunk_start, p - chunk_start);
+
+    /* Done if at end of string, else advance over escape char. */
+    if (p >= p_end)
+      break;
+    p++;
+
+    if (p >= p_end)
+    {
+      /* Escape at very end of input.  Treat same as unexpected char */
+      appendStringInfoChar(str, '\\');
+      break;
+    }
+
+    if (*p >= '1' && *p <= '9')
+    {
+      /* Use the back reference of regexp. */
+      int idx = *p - '0';
+      so = pmatch[idx].rm_so;
+      eo = pmatch[idx].rm_eo;
+      p++;
+    }
+    else if (*p == '&')
+    {
+      /* Use the entire matched string. */
+      so = pmatch[0].rm_so;
+      eo = pmatch[0].rm_eo;
+      p++;
+    }
+    else if (*p == '\\')
+    {
+      /* \\ means transfer one \ to output. */
+      appendStringInfoChar(str, '\\');
+      p++;
+      continue;
+    }
+    else
+    {
+      /*
+       * If escape char is not followed by any expected char, just treat
+       * it as ordinary data to copy.  (XXX would it be better to throw
+       * an error?)
+       */
+      appendStringInfoChar(str, '\\');
+      continue;
+    }
+
+    if (so >= 0 && eo >= 0)
+    {
+      /*
+       * Copy the text that is back reference of regexp.  Note so and eo
+       * are counted in characters not bytes.
+       */
+      char *chunk_start;
+      int chunk_len;
+      Assert(so >= data_pos);
+      chunk_start = start_ptr;
+      chunk_start += charlen_to_bytelen(chunk_start, so - data_pos);
+      chunk_len = charlen_to_bytelen(chunk_start, eo - so);
+      appendBinaryStringInfo(str, chunk_start, chunk_len);
+    }
+  }
+}
+
+/*
+ * replace_text_regexp
+ *
+ * replace substring(s) in src_text that match pattern with replace_text.
+ * The replace_text can contain backslash markers to substitute
+ * (parts of) the matched text.
+ *
+ * cflags: regexp compile flags.
+ * collation: collation to use.
+ * search_start: the character (not byte) offset in src_text at which to
+ * begin searching.
+ * n: if 0, replace all matches; if > 0, replace only the N'th match.
+ */
+text *
+replace_text_regexp(text *src_text, text *pattern_text, text *replace_text,
+  int cflags, Oid collation, int search_start, int n)
+{
+  text *ret_text;
+  regex_t *re;
+  int src_text_len = VARSIZE_ANY_EXHDR(src_text);
+  int nmatches = 0;
+  StringInfoData buf;
+  regmatch_t pmatch[10];    /* main match, plus \1 to \9 */
+  int nmatch = lengthof(pmatch);
+  pg_wchar *data;
+  size_t data_len;
+  int data_pos;
+  char *start_ptr;
+  int escape_status;
+
+  initStringInfo(&buf);
+
+  /* Convert data string to wide characters. */
+  data = (pg_wchar *) palloc((src_text_len + 1) * sizeof(pg_wchar));
+  data_len = pg_mb2wchar_with_len(VARDATA_ANY(src_text), data, src_text_len);
+
+  /* Check whether replace_text has escapes, especially regexp submatches. */
+  escape_status = check_replace_text_has_escape(replace_text);
+
+  /* If no regexp submatches, we can use REG_NOSUB. */
+  if (escape_status < 2)
+  {
+    cflags |= REG_NOSUB;
+    /* Also tell pg_regexec we only want the whole-match location. */
+    nmatch = 1;
+  }
+
+  /* Prepare the regexp. */
+  re = RE_compile_and_cache(pattern_text, cflags, collation);
+
+  /* start_ptr points to the data_pos'th character of src_text */
+  start_ptr = (char *) VARDATA_ANY(src_text);
+  data_pos = 0;
+
+  while ((size_t) search_start <= data_len)
+  {
+    int regexec_result;
+
+    // CHECK_FOR_INTERRUPTS();
+
+    regexec_result = pg_regexec(re, data, data_len, search_start, NULL, nmatch,
+      pmatch, 0);
+
+    if (regexec_result == REG_NOMATCH)
+      break;
+
+    if (regexec_result != REG_OKAY)
+    {
+      char errMsg[100];
+      pg_regerror(regexec_result, re, errMsg, sizeof(errMsg));
+      meos_error(ERROR, MEOS_ERR_INVALID_REGULAR_EXPRESSION,
+        "regular expression failed: %s", errMsg);
+      return NULL;
+    }
+
+    /*
+     * Count matches, and decide whether to replace this match.
+     */
+    nmatches++;
+    if (n > 0 && nmatches != n)
+    {
+      /*
+       * No, so advance search_start, but not start_ptr/data_pos. (Thus,
+       * we treat the matched text as if it weren't matched, and copy it
+       * to the output later.)
+       */
+      search_start = pmatch[0].rm_eo;
+      if (pmatch[0].rm_so == pmatch[0].rm_eo)
+        search_start++;
+      continue;
+    }
+
+    /*
+     * Copy the text to the left of the match position.  Note we are given
+     * character not byte indexes.
+     */
+    if (pmatch[0].rm_so - data_pos > 0)
+    {
+      int chunk_len = charlen_to_bytelen(start_ptr, pmatch[0].rm_so - data_pos);
+      appendBinaryStringInfo(&buf, start_ptr, chunk_len);
+
+      /*
+       * Advance start_ptr over that text, to avoid multiple rescans of
+       * it if the replace_text contains multiple back-references.
+       */
+      start_ptr += chunk_len;
+      data_pos = pmatch[0].rm_so;
+    }
+
+    /*
+     * Copy the replace_text, processing escapes if any are present.
+     */
+    if (escape_status > 0)
+      appendStringInfoRegexpSubstr(&buf, replace_text, pmatch,
+                     start_ptr, data_pos);
+    else
+      appendStringInfoText(&buf, replace_text);
+
+    /* Advance start_ptr and data_pos over the matched text. */
+    start_ptr += charlen_to_bytelen(start_ptr, pmatch[0].rm_eo - data_pos);
+    data_pos = pmatch[0].rm_eo;
+
+    /*
+     * If we only want to replace one occurrence, we're done.
+     */
+    if (n > 0)
+      break;
+
+    /*
+     * Advance search position.  Normally we start the next search at the
+     * end of the previous match; but if the match was of zero length, we
+     * have to advance by one character, or we'd just find the same match
+     * again.
+     */
+    search_start = data_pos;
+    if (pmatch[0].rm_so == pmatch[0].rm_eo)
+      search_start++;
+  }
+
+  /*
+   * Copy the text to the right of the last match.
+   */
+  if ((size_t) data_pos < data_len)
+  {
+    int chunk_len = ((char *) src_text + VARSIZE_ANY(src_text)) - start_ptr;
+    appendBinaryStringInfo(&buf, start_ptr, chunk_len);
+  }
+
+  ret_text = pg_cstring_to_text_with_len(buf.data, buf.len);
+  pfree(buf.data);
+  pfree(data);
+
+  return ret_text;
+}
 
 /**
  * @ingroup meos_base_text
@@ -1718,7 +1951,7 @@ text_split_part(const text *txt, const text *sep, int fldnum)
 
   /* return empty string for empty input string */
   if (txt_len < 1)
-    return cstring_to_text("");
+    return pg_cstring_to_text("");
 
   /* handle empty field separator */
   if (sep_len < 1)
@@ -1727,7 +1960,7 @@ text_split_part(const text *txt, const text *sep, int fldnum)
     if (fldnum == 1 || fldnum == -1)
       return text_copy(txt);
     else
-      return cstring_to_text("");
+      return pg_cstring_to_text("");
   }
 
   /* find the first field separator */
@@ -1741,7 +1974,7 @@ text_split_part(const text *txt, const text *sep, int fldnum)
     if (fldnum == 1 || fldnum == -1)
       return text_copy(txt);
     else
-      return (cstring_to_text(""));
+      return (pg_cstring_to_text(""));
   }
 
   /*
@@ -1762,7 +1995,7 @@ text_split_part(const text *txt, const text *sep, int fldnum)
       start_ptr = text_position_get_match_ptr(&state) + state.last_match_len;
       end_ptr = VARDATA_ANY(txt) + txt_len;
       text_position_cleanup(&state);
-      return cstring_to_text_with_len(start_ptr, end_ptr - start_ptr);
+      return pg_cstring_to_text_with_len(start_ptr, end_ptr - start_ptr);
     }
 
     /* else, convert fldnum to positive notation */
@@ -1772,7 +2005,7 @@ text_split_part(const text *txt, const text *sep, int fldnum)
     if (fldnum <= 0)
     {
       text_position_cleanup(&state);
-      return cstring_to_text("");
+      return pg_cstring_to_text("");
     }
 
     /* reset to pointing at first match, but now with positive fldnum */
@@ -1803,16 +2036,16 @@ text_split_part(const text *txt, const text *sep, int fldnum)
     if (fldnum == 1)
     {
       int last_len = start_ptr - VARDATA_ANY(txt);
-      result = cstring_to_text_with_len(start_ptr,
+      result = pg_cstring_to_text_with_len(start_ptr,
         txt_len - last_len);
     }
     else
-      result = cstring_to_text("");
+      result = pg_cstring_to_text("");
   }
   else
   {
     /* non-last field requested */
-    result = cstring_to_text_with_len(start_ptr, end_ptr - start_ptr);
+    result = pg_cstring_to_text_with_len(start_ptr, end_ptr - start_ptr);
   }
   return result;
 }
@@ -1840,7 +2073,7 @@ convert_to_base(uint64 value, int base)
     value /= base;
   } while (ptr > buf && value);
 
-  return cstring_to_text_with_len(ptr, end - ptr);
+  return pg_cstring_to_text_with_len(ptr, end - ptr);
 }
 
 /**
@@ -1930,7 +2163,7 @@ textarr_to_text(text **textarr, int count, const char *sep,
 {
   /* if there are no elements, return an empty string */
   if (count == 0)
-    return cstring_to_text_with_len("", 0);
+    return pg_cstring_to_text_with_len("", 0);
 
   StringInfoData buf;
   initStringInfo(&buf);
@@ -1954,7 +2187,7 @@ textarr_to_text(text **textarr, int count, const char *sep,
     }
     else
     {
-      char *value = text_to_cstring(itemvalue);
+      char *value = pg_text_to_cstring(itemvalue);
       if (printed)
         appendStringInfo(&buf, "%s%s", sep, value);
       else
@@ -1963,7 +2196,7 @@ textarr_to_text(text **textarr, int count, const char *sep,
       pfree(value); // MEOS
     }
   }
-  text *result = cstring_to_text_with_len(buf.data, buf.len);
+  text *result = pg_cstring_to_text_with_len(buf.data, buf.len);
   pfree(buf.data);
   return result;
 }
@@ -2003,7 +2236,7 @@ text *
 pg_text_concat_ws(text **textarr, int count, const text *sep)
 {
   assert(sep);
-  char *sepstr = text_to_cstring(sep);
+  char *sepstr = pg_text_to_cstring(sep);
   text *result = textarr_to_text(textarr, count, sepstr, "");
   pfree(sepstr);
   return result;
@@ -2031,7 +2264,7 @@ pg_text_left(const text *txt, int n)
     int len = VARSIZE_ANY_EXHDR(txt);
     n = pg_mbstrlen_with_len(p, len) + n;
     int rlen = pg_mbcharcliplen(p, len, n);
-    return cstring_to_text_with_len(p, rlen);
+    return pg_cstring_to_text_with_len(p, rlen);
   }
   else
     return text_substring(txt, 1, n, false);
@@ -2060,7 +2293,7 @@ pg_text_right(const text *txt, int n)
   else
     n = pg_mbstrlen_with_len(p, len) - n;
   int off = pg_mbcharcliplen(p, len, n);
-  return cstring_to_text_with_len(p + off, len - off);
+  return pg_cstring_to_text_with_len(p + off, len - off);
 }
 
 /**
@@ -2303,7 +2536,7 @@ pg_text_format(Datum *elements, int nitems, const text *fmt)
     pfree(nulls);
 
   /* Generate results. */
-  text *result = cstring_to_text_with_len(str.data, str.len);
+  text *result = pg_cstring_to_text_with_len(str.data, str.len);
   pfree(str.data);
 
   return result;
@@ -2596,7 +2829,7 @@ unicode_version(void)
 text *
 pg_unicode_version(void)
 {
-  return cstring_to_text(PG_UNICODE_VERSION);
+  return pg_cstring_to_text(PG_UNICODE_VERSION);
 }
 
 /**
@@ -2615,7 +2848,7 @@ text *
 pg_icu_unicode_version(void)
 {
 #ifdef USE_ICU
-  return cstring_to_text(U_UNICODE_VERSION);
+  return pg_cstring_to_text(U_UNICODE_VERSION);
 #else
   return NULL;
 #endif
@@ -2673,7 +2906,7 @@ unicode_normalize_func(const text *txt, const text *fmt)
 text *
 pg_unicode_normalize_func(const text *txt, const text *fmt)
 {
-  char *formstr = text_to_cstring(fmt);
+  char *formstr = pg_text_to_cstring(fmt);
   UnicodeNormalizationForm form = unicode_norm_form_from_string(formstr);
 
   /* convert to pg_wchar */
@@ -2736,7 +2969,7 @@ unicode_is_normalized(const text *txt, const text *fmt)
 bool
 pg_unicode_is_normalized(const text *txt, const text *fmt)
 {
-  char *formstr = text_to_cstring(fmt);
+  char *formstr = pg_text_to_cstring(fmt);
   UnicodeNormalizationForm form = unicode_norm_form_from_string(formstr);
 
   /* convert to pg_wchar */
@@ -2973,7 +3206,7 @@ pg_unistr(const text *txt)
   if (pair_first)
     goto invalid_pair;
 
-  text *result = cstring_to_text_with_len(str.data, str.len);
+  text *result = pg_cstring_to_text_with_len(str.data, str.len);
   pfree(str.data);
   return result;
 

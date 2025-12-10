@@ -48,7 +48,7 @@
  * Miscellaneous functions defined in trgeo.c
  *****************************************************************************/
 
-extern bool ensure_has_geom(int16 flags);
+extern bool ensure_has_geom(int16_t flags);
 extern bool ensure_valid_trgeo_geo(const Temporal *temp,
   const GSERIALIZED *gs);
 extern bool ensure_valid_trgeo_stbox(const Temporal *temp,

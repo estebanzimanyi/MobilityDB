@@ -1434,7 +1434,7 @@ teq_ttext_text(const Temporal *temp, const text *txt)
 
 /**
  * @ingroup meos_temporal_comp_temp
- * @brief Return the temporal inequality of a boolean and a temporal boolean
+ * @brief Return the temporal difference of a boolean and a temporal boolean
  * @param[in] b Value
  * @param[in] temp Temporal value
  * @csqlfn #Tne_base_temporal()
@@ -1449,7 +1449,7 @@ tne_bool_tbool(bool b, const Temporal *temp)
 
 /**
  * @ingroup meos_temporal_comp_temp
- * @brief Return the temporal inequality of an integer and a temporal integer
+ * @brief Return the temporal difference of an integer and a temporal integer
  * @param[in] i Value
  * @param[in] temp Temporal value
  * @csqlfn #Tne_base_temporal()
@@ -1464,7 +1464,7 @@ tne_int_tint(int i, const Temporal *temp)
 
 /**
  * @ingroup meos_temporal_comp_temp
- * @brief Return the temporal inequality of a float and a temporal float
+ * @brief Return the temporal difference of a float and a temporal float
  * @param[in] d Value
  * @param[in] temp Temporal value
  * @csqlfn #Tne_base_temporal()
@@ -1479,7 +1479,7 @@ tne_float_tfloat(double d, const Temporal *temp)
 
 /**
  * @ingroup meos_temporal_comp_temp
- * @brief Return the temporal inequality of a text and a temporal text
+ * @brief Return the temporal difference of a text and a temporal text
  * @param[in] txt Value
  * @param[in] temp Temporal value
  * @csqlfn #Tne_base_temporal()
@@ -1496,7 +1496,7 @@ tne_text_ttext(const text *txt, const Temporal *temp)
 
 /**
  * @ingroup meos_temporal_comp_temp
- * @brief Return the temporal inequality of a temporal boolean and a boolean
+ * @brief Return the temporal difference of a temporal boolean and a boolean
  * @param[in] temp Temporal value
  * @param[in] b Value
  * @csqlfn #Tne_temporal_base()
@@ -1511,7 +1511,7 @@ tne_tbool_bool(const Temporal *temp, bool b)
 
 /**
  * @ingroup meos_temporal_comp_temp
- * @brief Return the temporal inequality of a temporal integer and an integer
+ * @brief Return the temporal difference of a temporal integer and an integer
  * @param[in] temp Temporal value
  * @param[in] i Value
  * @csqlfn #Tne_temporal_base()
@@ -1526,7 +1526,7 @@ tne_tint_int(const Temporal *temp, int i)
 
 /**
  * @ingroup meos_temporal_comp_temp
- * @brief Return the temporal inequality of a temporal float and a float
+ * @brief Return the temporal difference of a temporal float and a float
  * @param[in] temp Temporal value
  * @param[in] d Value
  * @csqlfn #Tne_temporal_base()
@@ -1541,7 +1541,7 @@ tne_tfloat_float(const Temporal *temp, double d)
 
 /**
  * @ingroup meos_temporal_comp_temp
- * @brief Return the temporal inequality of a temporal text and a text
+ * @brief Return the temporal difference of a temporal text and a text
  * @param[in] temp Temporal value
  * @param[in] txt Value
  * @csqlfn #Tne_temporal_base()

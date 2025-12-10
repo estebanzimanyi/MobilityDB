@@ -28,97 +28,97 @@
  *****************************************************************************/
 
 /**
- * @defgroup meos_internal_pose_base Functions for static poses
+ * @defgroup meos_internal_pose_base Internal functions for static poses
  * @ingroup meos_internal_pose
- * @brief Functions for static poses
+ * @brief Internal functions for static poses
  *
- * @defgroup meos_internal_pose_set Functions for pose sets
+ * @defgroup meos_internal_pose_set Internal functions for pose sets
  * @ingroup meos_internal_pose
- * @brief Functions for pose sets
+ * @brief Internal functions for pose sets
  *
- * @defgroup meos_internal_pose_inout Input and output functions
+ * @defgroup meos_internal_pose_inout Internal input and output functions
  * @ingroup meos_internal_pose
- * @brief Input and output functions for temporal poses
+ * @brief Internal input and output functions for temporal poses
  *
- * @defgroup meos_internal_pose_conversion Conversion functions
+ * @defgroup meos_internal_pose_conversion Internal conversion  functions
  * @ingroup meos_internal_pose
- * @brief Conversion functions for temporal poses
+ * @brief Internal conversion  functions for temporal poses
  *
- * @defgroup meos_internal_pose_accessor Accessor functions
+ * @defgroup meos_internal_pose_accessor Internal accessor functions
  * @ingroup meos_internal_pose
- * @brief Accessor functions for temporal poses
+ * @brief Internal accessor functions for temporal poses
  *
- * @defgroup meos_internal_pose_restrict Restriction functions
+ * @defgroup meos_internal_pose_restrict Internal restriction functions
  * @ingroup meos_internal_pose
- * @brief Restriction functions for temporal poses
+ * @brief Internal restriction functions for temporal poses
  *
- * @defgroup meos_internal_pose_comp Comparison functions
+ * @defgroup meos_internal_pose_comp Internal comparison functions
  * @ingroup meos_internal_pose
- * @brief Comparison functions for temporal poses
+ * @brief Internal comparison functions for temporal poses
  *
- *   @defgroup meos_internal_pose_comp_ever Ever and always comparison functions
+ *   @defgroup meos_internal_pose_comp_ever Internal ever and always comparison functions
  *   @ingroup meos_internal_pose_comp
- *   @brief Ever and always comparison functions for temporal poses
+ *   @brief Internal ever and always comparison functions for temporal poses
  *
- *   @defgroup meos_internal_pose_comp_temp Temporal comparison functions
+ *   @defgroup meos_internal_pose_comp_temp Internal temporal comparison functions
  *   @ingroup meos_internal_pose_comp
- *   @brief Temporal comparison functions for temporal poses
+ *   @brief Internal temporal comparison functions for temporal poses
  */
 
 /*****************************************************************************/
 
 /**
- * @defgroup meos_internal_pose_base_inout Input and output functions
+ * @defgroup meos_internal_pose_base_inout Internal input and output functions
  * @ingroup meos_internal_pose_base
- * @brief Input and output functions for static poses
+ * @brief Internal input and output functions for static poses
  *
- * @defgroup meos_internal_pose_base_constructor Constructor functions
+ * @defgroup meos_internal_pose_base_constructor Internal constructor functions
  * @ingroup meos_internal_pose_base
- * @brief Constructor functions for static poses
+ * @brief Internal constructor functions for static poses
  *
- * @defgroup meos_internal_pose_base_conversion Conversion functions
+ * @defgroup meos_internal_pose_base_conversion Internal conversion  functions
  * @ingroup meos_internal_pose_base
- * @brief Conversion functions for static poses
+ * @brief Internal conversion  functions for static poses
  *
- * @defgroup meos_internal_pose_base_accessor Accessor functions
+ * @defgroup meos_internal_pose_base_accessor Internal accessor functions
  * @ingroup meos_internal_pose_base
- * @brief Accessor functions for static poses
+ * @brief Internal accessor functions for static poses
  *
- * @defgroup meos_internal_pose_base_transf Transformation functions
+ * @defgroup meos_internal_pose_base_transf Internal transformation functions
  * @ingroup meos_internal_pose_base
- * @brief Transformation functions for static poses
+ * @brief Internal transformation functions for static poses
  *
- * @defgroup meos_internal_pose_base_srid Spatial reference system functions
+ * @defgroup meos_internal_pose_base_srid Internal spatial reference system functions
  * @ingroup meos_internal_pose_base
- * @brief Spatial reference system functions for static poses
+ * @brief Internal spatial reference system functions for static poses
  *
- * @defgroup meos_internal_pose_base_comp Comparison functions
+ * @defgroup meos_internal_pose_base_comp Internal comparison functions
  * @ingroup meos_internal_pose_base
- * @brief Comparison functions for static poses
+ * @brief Internal comparison functions for static poses
  */
 
 /*****************************************************************************/
 
 /**
- * @defgroup meos_internal_pose_set_inout Input and output functions
+ * @defgroup meos_internal_pose_set_inout Internal input and output functions
  * @ingroup meos_internal_pose_set
- * @brief Input and output functions for pose sets
+ * @brief Internal input and output functions for pose sets
  *
- * @defgroup meos_internal_pose_set_constructor Constructor functions
+ * @defgroup meos_internal_pose_set_constructor Internal constructor functions
  * @ingroup meos_internal_pose_set
- * @brief Constructor functions for pose sets
+ * @brief Internal constructor functions for pose sets
  *
- * @defgroup meos_internal_pose_set_conversion Conversion functions
+ * @defgroup meos_internal_pose_set_conversion Internal conversion  functions
  * @ingroup meos_internal_pose_set
- * @brief Conversion functions for pose sets
+ * @brief Internal conversion  functions for pose sets
  *
- * @defgroup meos_internal_pose_set_accessor Accessor functions
+ * @defgroup meos_internal_pose_set_accessor Internal accessor functions
  * @ingroup meos_internal_pose_set
- * @brief Accessor functions for pose sets
+ * @brief Internal accessor functions for pose sets
  *
- * @defgroup meos_internal_pose_set_setops Set operations
+ * @defgroup meos_internal_pose_set_setops Internal set operations
  * @ingroup meos_internal_pose_set
- * @brief Set operations for pose sets
+ * @brief Internal set operations for pose sets
  */
 
 /*****************************************************************************/

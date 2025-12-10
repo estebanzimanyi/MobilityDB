@@ -86,7 +86,7 @@ npoint_send(const Npoint *np)
 {
   StringInfoData buf;
   pq_begintypsend(&buf);
-  pq_sendint64(&buf, (uint64) np->rid);
+  pq_sendint64(&buf, (uint64_t) np->rid);
   pq_sendfloat8(&buf, np->pos);
   return pq_endtypsend(&buf);
 }
@@ -112,7 +112,7 @@ nsegment_send(const Nsegment *ns)
 {
   StringInfoData buf;
   pq_begintypsend(&buf);
-  pq_sendint64(&buf, (uint64) ns->rid);
+  pq_sendint64(&buf, (uint64_t) ns->rid);
   pq_sendfloat8(&buf, ns->pos1);
   pq_sendfloat8(&buf, ns->pos2);
   return pq_endtypsend(&buf);
@@ -204,7 +204,7 @@ Datum
 Npoint_from_ewkt(PG_FUNCTION_ARGS)
 {
   text *wkt_text = PG_GETARG_TEXT_P(0);
-  char *wkt = text_to_cstring(wkt_text);
+  char *wkt = pg_text_to_cstring(wkt_text);
   /* Copy the pointer since it will be advanced during parsing */
   const char *wkt_ptr = wkt;
   Npoint *result = npoint_parse(&wkt_ptr, true);
@@ -243,7 +243,7 @@ Datum
 Npoint_from_hexwkb(PG_FUNCTION_ARGS)
 {
   text *hexwkb_text = PG_GETARG_TEXT_P(0);
-  char *hexwkb = text_to_cstring(hexwkb_text);
+  char *hexwkb = pg_text_to_cstring(hexwkb_text);
   Npoint *result = npoint_from_hexwkb(hexwkb);
   pfree(hexwkb);
   PG_FREE_IF_COPY(hexwkb_text, 0);
@@ -266,7 +266,7 @@ Npoint_as_text_common(FunctionCallInfo fcinfo, bool extended)
     dbl_dig_for_wkt = PG_GETARG_INT32(1);
   char *str = extended ? npoint_as_ewkt(np, dbl_dig_for_wkt) : 
     npoint_as_text(np, dbl_dig_for_wkt);
-  text *result = cstring_to_text(str);
+  text *result = pg_cstring_to_text(str);
   pfree(str);
   PG_RETURN_TEXT_P(result);
 }
@@ -618,7 +618,7 @@ PGDLLEXPORT Datum Npointset_routes(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Npointset_routes);
 /**
  * @ingroup mobilitydb_npoint_accessor
- * @brief Return the array of routes of a temporal network point
+ * @brief Return the set of routes of a temporal network point
  * @sqlfn routes()
  */
 Datum

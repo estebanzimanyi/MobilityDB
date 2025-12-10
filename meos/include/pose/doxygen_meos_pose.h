@@ -66,7 +66,7 @@
  *
  *   @defgroup meos_pose_comp_temp Temporal comparison functions
  *   @ingroup meos_pose_comp
- *   @brief Temporal comparison functions for temporal poses
+ *   @brief %Temporal comparison functions for temporal poses
  *
  * @defgroup meos_pose_distance Distance functions
  * @ingroup meos_pose
@@ -130,7 +130,7 @@
  *
  * @defgroup meos_pose_set_setops Set operations
  * @ingroup meos_pose_set
- * @brief Set operations for pose sets
+ * @brief %Set operations for pose sets
  */
 
 /*****************************************************************************/

@@ -72,12 +72,11 @@ eacomp_base_temporal(Datum value, const Temporal *temp,
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) func;
-  lfinfo.numparam = 1;
-  lfinfo.param[0] = basetype;
   lfinfo.argtype[0] = temp->temptype;
   lfinfo.argtype[1] = basetype;
+  lfinfo.numparam = 1;
+  lfinfo.param[0] = basetype;
   lfinfo.restype = T_BOOL;
-  lfinfo.reslinear = false;
   lfinfo.invert = INVERT;
   lfinfo.discont = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   lfinfo.ever = ever;
@@ -102,12 +101,11 @@ eacomp_temporal_base(const Temporal *temp, Datum value,
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) func;
-  lfinfo.numparam = 1;
-  lfinfo.param[0] = basetype;
   lfinfo.argtype[0] = temp->temptype;
   lfinfo.argtype[1] = basetype;
+  lfinfo.numparam = 1;
+  lfinfo.param[0] = basetype;
   lfinfo.restype = T_BOOL;
-  lfinfo.reslinear = false;
   lfinfo.invert = INVERT_NO;
   lfinfo.discont = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   lfinfo.ever = ever;
@@ -131,11 +129,10 @@ eacomp_temporal_temporal(const Temporal *temp1, const Temporal *temp2,
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) func;
+  lfinfo.argtype[0] = lfinfo.argtype[1] = temp1->temptype;
   lfinfo.numparam = 1;
   lfinfo.param[0] = basetype;
-  lfinfo.argtype[0] = lfinfo.argtype[1] = temp1->temptype;
   lfinfo.restype = T_BOOL;
-  lfinfo.reslinear = false;
   lfinfo.invert = INVERT_NO;
   lfinfo.discont = MEOS_FLAGS_LINEAR_INTERP(temp1->flags) ||
     MEOS_FLAGS_LINEAR_INTERP(temp2->flags);
@@ -684,12 +681,11 @@ tcomp_base_temporal(Datum value, const Temporal *temp,
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) func;
-  lfinfo.numparam = 1;
-  lfinfo.param[0] = basetype;
   lfinfo.argtype[0] = temp->temptype;
   lfinfo.argtype[1] = basetype;
+  lfinfo.numparam = 1;
+  lfinfo.param[0] = basetype;
   lfinfo.restype = T_TBOOL;
-  lfinfo.reslinear = false;
   lfinfo.invert = INVERT;
   lfinfo.discont = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   return tfunc_temporal_base(temp, value, &lfinfo);
@@ -712,12 +708,11 @@ tcomp_temporal_base(const Temporal *temp, Datum value,
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) func;
-  lfinfo.numparam = 1;
-  lfinfo.param[0] = basetype;
   lfinfo.argtype[0] = temp->temptype;
   lfinfo.argtype[1] = basetype;
+  lfinfo.numparam = 1;
+  lfinfo.param[0] = basetype;
   lfinfo.restype = T_TBOOL;
-  lfinfo.reslinear = false;
   lfinfo.invert = INVERT_NO;
   lfinfo.discont = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   return tfunc_temporal_base(temp, value, &lfinfo);
@@ -740,11 +735,10 @@ tcomp_temporal_temporal(const Temporal *temp1, const Temporal *temp2,
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) func;
+  lfinfo.argtype[0] = lfinfo.argtype[1] = temp1->temptype;
   lfinfo.numparam = 1;
   lfinfo.param[0] = basetype;
-  lfinfo.argtype[0] = lfinfo.argtype[1] = temp1->temptype;
   lfinfo.restype = T_TBOOL;
-  lfinfo.reslinear = false;
   lfinfo.invert = INVERT_NO;
   lfinfo.discont = MEOS_FLAGS_LINEAR_INTERP(temp1->flags) ||
     MEOS_FLAGS_LINEAR_INTERP(temp2->flags);
@@ -777,7 +771,7 @@ teq_temporal_temporal(const Temporal *temp1, const Temporal *temp2)
 
 /**
  * @ingroup meos_temporal_comp_temp
- * @brief Return the temporal inequality of two temporal values
+ * @brief Return the temporal difference of two temporal values
  * @param[in] temp1,temp2 Temporal values
  * @csqlfn #Tne_temporal_temporal()
  */

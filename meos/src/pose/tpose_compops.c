@@ -91,8 +91,7 @@ eacomp_tpose_tpose(const Temporal *temp1, const Temporal *temp2,
 
 /**
  * @ingroup meos_pose_comp_ever
- * @brief Return true if a pose is ever equal to a temporal circular
- * buffer
+ * @brief Return true if a pose is ever equal to a temporal pose
  * @param[in] pose Pose
  * @param[in] temp Temporal value
  * @csqlfn #Ever_eq_pose_tpose()
@@ -105,8 +104,7 @@ ever_eq_pose_tpose(const Pose *pose, const Temporal *temp)
 
 /**
  * @ingroup meos_pose_comp_ever
- * @brief Return true if a temporal pose is ever equal to a circular
- * buffer
+ * @brief Return true if a temporal pose is ever equal to a pose
  * @param[in] temp Temporal value
  * @param[in] pose Pose
  * @csqlfn #Ever_eq_tpose_pose()
@@ -306,7 +304,7 @@ teq_pose_tpose(const Pose *pose, const Temporal *temp)
 
 /**
  * @ingroup meos_pose_comp_temp
- * @brief Return the temporal inequality of a pose and a temporal pose
+ * @brief Return the temporal difference of a pose and a temporal pose
  * @param[in] pose Pose
  * @param[in] temp Temporal value
  * @csqlfn #Tne_pose_tpose()
@@ -335,7 +333,7 @@ teq_tpose_pose(const Temporal *temp, const Pose *pose)
 
 /**
  * @ingroup meos_pose_comp_temp
- * @brief Return the temporal inequality of a temporal pose and a
+ * @brief Return the temporal difference of a temporal pose and a
  * pose
  * @param[in] temp Temporal value
  * @param[in] pose Pose

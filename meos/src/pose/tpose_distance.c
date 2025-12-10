@@ -113,7 +113,7 @@ tdistance_tpose_tpose(const Temporal *temp1, const Temporal *temp2)
 
 /**
  * @ingroup meos_pose_distance
- * @brief Return the nearest approach instant of the temporal pose and a
+ * @brief Return the nearest approach instant of a temporal pose and a
  * geometry
  * @param[in] temp Temporal pose
  * @param[in] gs Geometry
@@ -194,8 +194,8 @@ nai_tpose_tpose(const Temporal *temp1, const Temporal *temp2)
 
 /**
  * @ingroup meos_pose_distance
- * @brief Return the nearest approach distance of two temporal pose
- * and a geometry
+ * @brief Return the nearest approach distance of a temporal pose and a
+ * geometry
  * @param[in] temp Temporal pose
  * @param[in] gs Geometry
  * @csqlfn #NAD_tpose_geo()
@@ -326,7 +326,7 @@ shortestline_tpose_pose(const Temporal *temp, const Pose *pose)
 /**
  * @ingroup meos_pose_distance
  * @brief Return the line connecting the nearest approach point between two
- * temporal networks
+ * temporal poses
  * @param[in] temp1,temp2 Temporal poses
  * @csqlfn #Shortestline_tpose_tpose()
  */

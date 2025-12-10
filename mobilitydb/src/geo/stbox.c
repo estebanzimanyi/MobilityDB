@@ -150,7 +150,7 @@ Stbox_as_text(PG_FUNCTION_ARGS)
   if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
     dbl_dig_for_wkt = PG_GETARG_INT32(1);
   char *str = stbox_out(box, dbl_dig_for_wkt);
-  text *result = cstring_to_text(str);
+  text *result = pg_cstring_to_text(str);
   pfree(str);
   PG_RETURN_TEXT_P(result);
 }
@@ -220,7 +220,7 @@ Datum
 Stbox_from_hexwkb(PG_FUNCTION_ARGS)
 {
   text *hexwkb_text = PG_GETARG_TEXT_P(0);
-  char *hexwkb = text_to_cstring(hexwkb_text);
+  char *hexwkb = pg_text_to_cstring(hexwkb_text);
   STBox *result = stbox_from_hexwkb(hexwkb);
   pfree(hexwkb);
   PG_FREE_IF_COPY(hexwkb_text, 0);
@@ -427,8 +427,8 @@ Datum
 Geo_tstzspan_to_stbox(PG_FUNCTION_ARGS)
 {
   GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
-  Span *p = PG_GETARG_SPAN_P(1);
-  STBox *result = geo_tstzspan_to_stbox(gs, p);
+  Span *sp = PG_GETARG_SPAN_P(1);
+  STBox *result = geo_tstzspan_to_stbox(gs, sp);
   PG_FREE_IF_COPY(gs, 0);
   if (! result)
     PG_RETURN_NULL();
@@ -1150,7 +1150,7 @@ Stbox_transform_pipeline(PG_FUNCTION_ARGS)
   text *pipelinetxt = PG_GETARG_TEXT_P(1);
   int32_t srid = PG_GETARG_INT32(2);
   bool is_forward = PG_GETARG_BOOL(3);
-  char *pipelinestr = text_to_cstring(pipelinetxt);
+  char *pipelinestr = pg_text_to_cstring(pipelinetxt);
   STBox *result = stbox_transform_pipeline(box, pipelinestr, srid, is_forward);
   pfree(pipelinestr);
   PG_FREE_IF_COPY(pipelinetxt, 1);
@@ -1764,7 +1764,7 @@ PGDLLEXPORT Datum Stbox_hash(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Stbox_hash);
 /**
  * @ingroup mobilitydb_geo_box_comp
- * @brief Return the hash value of a spatiotemporal box
+ * @brief Return the 32-bit hash value of a spatiotemporal box
  * @sqlfn stbox_hash()
  */
 Datum
@@ -1778,14 +1778,14 @@ PGDLLEXPORT Datum Stbox_hash_extended(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Stbox_hash_extended);
 /**
  * @ingroup mobilitydb_geo_box_comp
- * @brief Return the hash value of a spatiotemporal box
+ * @brief Return the 64-bit hash value of a spatiotemporal box using a seed
  * @sqlfn stbox_hash_extended()
  */
 Datum
 Stbox_hash_extended(PG_FUNCTION_ARGS)
 {
   STBox *box = PG_GETARG_STBOX_P(0);
-  uint64 seed = PG_GETARG_INT64(1);
+  uint64_t seed = PG_GETARG_INT64(1);
   PG_RETURN_UINT64(stbox_hash_extended(box, seed));
 }
 

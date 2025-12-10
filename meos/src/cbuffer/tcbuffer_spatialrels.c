@@ -83,7 +83,7 @@
  * @param[in] param Parameter
  * @param[in] func PostGIS function to be called
  * @param[in] numparam Number of parameters of the function
- * @param[in] invert True if the arguments should be inverted
+ * @param[in] invert True if the arguments must be inverted
  * @return On error return -1
  * @pre None of the two geometries is a geometry collection
  */
@@ -116,7 +116,7 @@ spatialrel_geo_geo_simple(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
  * @param[in] param Parameter
  * @param[in] func PostGIS function to be called
  * @param[in] numparam Number of parameters of the functions
- * @param[in] invert True if the arguments should be inverted
+ * @param[in] invert True if the arguments must be inverted
  * @return On error return -1
  */
 int
@@ -1375,7 +1375,7 @@ atouches_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
  * @param[in] gs Geometry
  * @param[in] dist Distance
  * @param[in] ever True for the ever semantics, false for the always semantics
- * @param[in] invert True if the arguments should be inverted
+ * @param[in] invert True if the arguments must be inverted
  * @csqlfn #Edwithin_tcbuffer_geo(), #Adwithin_tcbuffer_geo()
  */
 int
@@ -1500,11 +1500,10 @@ ea_dwithin_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) datum_cbuffer_dwithin;
+  lfinfo.argtype[0] = lfinfo.argtype[1] = T_TCBUFFER;
   lfinfo.numparam = 1;
   lfinfo.param[0] = Float8GetDatum(dist);
-  lfinfo.argtype[0] = lfinfo.argtype[1] = temp1->temptype;
   lfinfo.restype = T_TFLOAT;
-  lfinfo.reslinear = false;
   lfinfo.invert = INVERT_NO;
   lfinfo.discont = MEOS_FLAGS_LINEAR_INTERP(temp1->flags) ||
     MEOS_FLAGS_LINEAR_INTERP(temp2->flags);

@@ -181,7 +181,7 @@ npointset_value_n(const Set *s, int n, Npoint **result)
 
 /**
  * @ingroup meos_npoint_set_accessor
- * @brief Return the array of copies of the values of a network point set
+ * @brief Return an array of copies of the values of a network point set
  * @param[in] s Set
  * @return On error return @p NULL
  * @csqlfn #Set_values()

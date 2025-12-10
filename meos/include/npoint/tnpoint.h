@@ -104,8 +104,8 @@ extern char *npoint_wkt_out(Datum value, int maxdd);
 
 /* Constructor functions */
 
-extern void npoint_set(int64 rid, double pos, Npoint *np);
-extern void nsegment_set(int64 rid, double pos1, double pos2, Nsegment *ns);
+extern void npoint_set(int64_t rid, double pos, Npoint *np);
+extern void nsegment_set(int64_t rid, double pos1, double pos2, Nsegment *ns);
 
 /* Transformation functions */
 
@@ -133,7 +133,7 @@ extern TSequenceSet *tgeompointseqset_tnpointseqset(const TSequenceSet *ss);
 extern Nsegment **tnpointinst_positions(const TInstant *inst);
 extern Nsegment **tnpointseq_positions(const TSequence *seq, int *count);
 extern Nsegment **tnpointseqset_positions(const TSequenceSet *ss, int *count);
-extern int64 tnpointinst_route(const TInstant *inst);
+extern int64_t tnpointinst_route(const TInstant *inst);
 extern Set *tnpointinst_routes(const TInstant *inst);
 extern Set *tnpointseq_disc_routes(const TSequence *is);
 extern Set *tnpointseq_cont_routes(const TSequence *seq);

@@ -61,83 +61,83 @@
 /**
  * @ingroup meos_setspan_bin
  * @brief Return the bins of an integer span
- * @param[in] s Input span to split
+ * @param[in] sp Input span to split
  * @param[in] size Size of the bins
  * @param[in] origin Origin of the bins
  * @param[out] count Number of elements in the output array
  */
 Span *
-intspan_bins(const Span *s, int size, int origin, int *count)
+intspan_bins(const Span *sp, int size, int origin, int *count)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_INTSPAN(s, NULL);
-  return span_bins(s, Int32GetDatum(size), Int32GetDatum(origin), count);
+  VALIDATE_INTSPAN(sp, NULL);
+  return span_bins(sp, Int32GetDatum(size), Int32GetDatum(origin), count);
 }
 
 /**
  * @ingroup meos_setspan_bin
  * @brief Return the bins of a big integer span
- * @param[in] s Input span to split
+ * @param[in] sp Input span to split
  * @param[in] size Size of the bins
  * @param[in] origin Origin of the bins
  * @param[out] count Number of elements in the output array
  */
 Span *
-bigintspan_bins(const Span *s, int64 size, int64 origin, int *count)
+bigintspan_bins(const Span *sp, int64_t size, int64_t origin, int *count)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_BIGINTSPAN(s, NULL);
-  return span_bins(s, Int64GetDatum(size), Int64GetDatum(origin), count);
+  VALIDATE_BIGINTSPAN(sp, NULL);
+  return span_bins(sp, Int64GetDatum(size), Int64GetDatum(origin), count);
 }
 
 /**
  * @ingroup meos_setspan_bin
  * @brief Return the bins of a float span
- * @param[in] s Input span to split
+ * @param[in] sp Input span to split
  * @param[in] size Size of the bins
  * @param[in] origin Origin of the bins
  * @param[out] count Number of elements in the output array
  */
 Span *
-floatspan_bins(const Span *s, double size, double origin, int *count)
+floatspan_bins(const Span *sp, double size, double origin, int *count)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_FLOATSPAN(s, NULL);
-  return span_bins(s, Float8GetDatum(size), Float8GetDatum(origin), count);
+  VALIDATE_FLOATSPAN(sp, NULL);
+  return span_bins(sp, Float8GetDatum(size), Float8GetDatum(origin), count);
 }
 
 /**
  * @ingroup meos_setspan_bin
  * @brief Return the bins of a date span
- * @param[in] s Input span to split
+ * @param[in] sp Input span to split
  * @param[in] duration Interval defining the size of the bins
  * @param[in] origin Origin of the bins
  * @param[out] count Number of elements in the output array
  */
 Span *
-datespan_bins(const Span *s, const Interval *duration, DateADT origin,
+datespan_bins(const Span *sp, const Interval *duration, DateADT origin,
   int *count)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_DATESPAN(s, NULL);
-  return span_bins(s, PointerGetDatum(duration), DateADTGetDatum(origin), count);
+  VALIDATE_DATESPAN(sp, NULL);
+  return span_bins(sp, PointerGetDatum(duration), DateADTGetDatum(origin), count);
 }
 
 /**
  * @ingroup meos_setspan_bin
  * @brief Return the bins of a timestamptz span
- * @param[in] s Input span to split
+ * @param[in] sp Input span to split
  * @param[in] duration Interval defining the size of the bins
  * @param[in] origin Origin of the bins
  * @param[out] count Number of elements in the output array
  */
 Span *
-tstzspan_bins(const Span *s, const Interval *duration, TimestampTz origin,
+tstzspan_bins(const Span *sp, const Interval *duration, TimestampTz origin,
   int *count)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_TSTZSPAN(s, NULL);
-  return span_bins(s, PointerGetDatum(duration), TimestampTzGetDatum(origin),
+  VALIDATE_TSTZSPAN(sp, NULL);
+  return span_bins(sp, PointerGetDatum(duration), TimestampTzGetDatum(origin),
     count);
 }
 
@@ -169,7 +169,7 @@ intspanset_bins(const SpanSet *ss, int vsize, int vorigin, int *count)
  * @param[out] count Number of elements in the output array
  */
 Span *
-bigintspanset_bins(const SpanSet *ss, int64 vsize, int64 vorigin,
+bigintspanset_bins(const SpanSet *ss, int64_t vsize, int64_t vorigin,
   int *count)
 {
   /* Ensure the validity of the arguments */

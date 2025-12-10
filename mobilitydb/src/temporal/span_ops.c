@@ -73,9 +73,9 @@ PG_FUNCTION_INFO_V1(Contains_span_span);
 Datum
 Contains_span_span(PG_FUNCTION_ARGS)
 {
-  Span *s1 = PG_GETARG_SPAN_P(0);
-  Span *s2 = PG_GETARG_SPAN_P(1);
-  PG_RETURN_BOOL(contains_span_span(s1, s2));
+  Span *sp1 = PG_GETARG_SPAN_P(0);
+  Span *sp2 = PG_GETARG_SPAN_P(1);
+  PG_RETURN_BOOL(contains_span_span(sp1, sp2));
 }
 
 /*****************************************************************************
@@ -109,9 +109,9 @@ PG_FUNCTION_INFO_V1(Contained_span_span);
 Datum
 Contained_span_span(PG_FUNCTION_ARGS)
 {
-  Span *s1 = PG_GETARG_SPAN_P(0);
-  Span *s2 = PG_GETARG_SPAN_P(1);
-  PG_RETURN_BOOL(contained_span_span(s1, s2));
+  Span *sp1 = PG_GETARG_SPAN_P(0);
+  Span *sp2 = PG_GETARG_SPAN_P(1);
+  PG_RETURN_BOOL(contained_span_span(sp1, sp2));
 }
 
 /*****************************************************************************
@@ -129,9 +129,9 @@ PG_FUNCTION_INFO_V1(Overlaps_span_span);
 Datum
 Overlaps_span_span(PG_FUNCTION_ARGS)
 {
-  Span *s1 = PG_GETARG_SPAN_P(0);
-  Span *s2 = PG_GETARG_SPAN_P(1);
-  PG_RETURN_BOOL(overlaps_span_span(s1, s2));
+  Span *sp1 = PG_GETARG_SPAN_P(0);
+  Span *sp2 = PG_GETARG_SPAN_P(1);
+  PG_RETURN_BOOL(overlaps_span_span(sp1, sp2));
 }
 
 /*****************************************************************************
@@ -181,9 +181,9 @@ PG_FUNCTION_INFO_V1(Adjacent_span_span);
 Datum
 Adjacent_span_span(PG_FUNCTION_ARGS)
 {
-  Span *s1 = PG_GETARG_SPAN_P(0);
-  Span *s2 = PG_GETARG_SPAN_P(1);
-  PG_RETURN_BOOL(adjacent_span_span(s1, s2));
+  Span *sp1 = PG_GETARG_SPAN_P(0);
+  Span *sp2 = PG_GETARG_SPAN_P(1);
+  PG_RETURN_BOOL(adjacent_span_span(sp1, sp2));
 }
 
 /*****************************************************************************
@@ -233,9 +233,9 @@ PG_FUNCTION_INFO_V1(Left_span_span);
 Datum
 Left_span_span(PG_FUNCTION_ARGS)
 {
-  Span *s1 = PG_GETARG_SPAN_P(0);
-  Span *s2 = PG_GETARG_SPAN_P(1);
-  PG_RETURN_BOOL(left_span_span(s1, s2));
+  Span *sp1 = PG_GETARG_SPAN_P(0);
+  Span *sp2 = PG_GETARG_SPAN_P(1);
+  PG_RETURN_BOOL(left_span_span(sp1, sp2));
 }
 
 /*****************************************************************************
@@ -285,9 +285,9 @@ PG_FUNCTION_INFO_V1(Right_span_span);
 Datum
 Right_span_span(PG_FUNCTION_ARGS)
 {
-  Span *s1 = PG_GETARG_SPAN_P(0);
-  Span *s2 = PG_GETARG_SPAN_P(1);
-  PG_RETURN_BOOL(right_span_span(s1, s2));
+  Span *sp1 = PG_GETARG_SPAN_P(0);
+  Span *sp2 = PG_GETARG_SPAN_P(1);
+  PG_RETURN_BOOL(right_span_span(sp1, sp2));
 }
 
 /*****************************************************************************
@@ -338,9 +338,9 @@ PG_FUNCTION_INFO_V1(Overleft_span_span);
 Datum
 Overleft_span_span(PG_FUNCTION_ARGS)
 {
-  Span *s1 = PG_GETARG_SPAN_P(0);
-  Span *s2 = PG_GETARG_SPAN_P(1);
-  PG_RETURN_BOOL(overleft_span_span(s1, s2));
+  Span *sp1 = PG_GETARG_SPAN_P(0);
+  Span *sp2 = PG_GETARG_SPAN_P(1);
+  PG_RETURN_BOOL(overleft_span_span(sp1, sp2));
 }
 
 /*****************************************************************************
@@ -391,9 +391,9 @@ PG_FUNCTION_INFO_V1(Overright_span_span);
 Datum
 Overright_span_span(PG_FUNCTION_ARGS)
 {
-  Span *s1 = PG_GETARG_SPAN_P(0);
-  Span *s2 = PG_GETARG_SPAN_P(1);
-  PG_RETURN_BOOL(overright_span_span(s1, s2));
+  Span *sp1 = PG_GETARG_SPAN_P(0);
+  Span *sp2 = PG_GETARG_SPAN_P(1);
+  PG_RETURN_BOOL(overright_span_span(sp1, sp2));
 }
 
 /*****************************************************************************
@@ -443,9 +443,9 @@ PG_FUNCTION_INFO_V1(Union_span_span);
 Datum
 Union_span_span(PG_FUNCTION_ARGS)
 {
-  Span *s1 = PG_GETARG_SPAN_P(0);
-  Span *s2 = PG_GETARG_SPAN_P(1);
-  PG_RETURN_SPANSET_P(union_span_span(s1, s2));
+  Span *sp1 = PG_GETARG_SPAN_P(0);
+  Span *sp2 = PG_GETARG_SPAN_P(1);
+  PG_RETURN_SPANSET_P(union_span_span(sp1, sp2));
 }
 
 /*****************************************************************************
@@ -501,9 +501,9 @@ PG_FUNCTION_INFO_V1(Intersection_span_span);
 Datum
 Intersection_span_span(PG_FUNCTION_ARGS)
 {
-  Span *s1 = PG_GETARG_SPAN_P(0);
-  Span *s2 = PG_GETARG_SPAN_P(1);
-  Span *result = intersection_span_span(s1, s2);
+  Span *sp1 = PG_GETARG_SPAN_P(0);
+  Span *sp2 = PG_GETARG_SPAN_P(1);
+  Span *result = intersection_span_span(sp1, sp2);
   if (! result)
     PG_RETURN_NULL();
   PG_RETURN_SPAN_P(result);
@@ -562,9 +562,9 @@ PG_FUNCTION_INFO_V1(Minus_span_span);
 Datum
 Minus_span_span(PG_FUNCTION_ARGS)
 {
-  Span *s1 = PG_GETARG_SPAN_P(0);
-  Span *s2 = PG_GETARG_SPAN_P(1);
-  SpanSet *result = minus_span_span(s1, s2);
+  Span *sp1 = PG_GETARG_SPAN_P(0);
+  Span *sp2 = PG_GETARG_SPAN_P(1);
+  SpanSet *result = minus_span_span(sp1, sp2);
   if (! result)
     PG_RETURN_NULL();
   PG_RETURN_SPANSET_P(result);
@@ -635,9 +635,9 @@ PG_FUNCTION_INFO_V1(Distance_span_span);
 Datum
 Distance_span_span(PG_FUNCTION_ARGS)
 {
-  Span *s1 = PG_GETARG_SPAN_P(0);
-  Span *s2 = PG_GETARG_SPAN_P(1);
-  PG_RETURN_DATUM(distance_span_span(s1, s2));
+  Span *sp1 = PG_GETARG_SPAN_P(0);
+  Span *sp2 = PG_GETARG_SPAN_P(1);
+  PG_RETURN_DATUM(distance_span_span(sp1, sp2));
 }
 
 /******************************************************************************/

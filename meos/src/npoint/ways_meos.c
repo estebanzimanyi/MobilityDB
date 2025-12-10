@@ -62,7 +62,7 @@
  */
 typedef struct
 {
-  int64 gid;              /**< Identifier of the route */
+  int64_t gid;            /**< Identifier of the route */
   GSERIALIZED *the_geom;  /**< Geometry of the route */
   double length;          /**< Length of the route */
 } ways_record;
@@ -72,7 +72,7 @@ typedef struct
  */
 typedef struct struct_WaysCacheEntry
 {
-  int64 gid;              /**< Identifier of the route */
+  int64_t gid;            /**< Identifier of the route */
   GSERIALIZED *the_geom;  /**< Geometry of the route */
   double length;          /**< Length of the route */
   uint64_t hits;          /**< Number of hits of the route */
@@ -155,7 +155,7 @@ meos_finalize_ways(void)
  * @brief Get a route from the ways cache, if not found return `NULL`
  */
 static WaysCacheEntry *
-GetRouteFromWaysCache(WaysCache *ways_cache, int64 gid, bool any_gid)
+GetRouteFromWaysCache(WaysCache *ways_cache, int64_t gid, bool any_gid)
 {
   assert(ways_cache->count <= WAYS_CACHE_SIZE);
   for (uint32_t i = 0; i < ways_cache->count; i++)
@@ -231,7 +231,7 @@ AddRouteToWaysCache(WaysCache *ways_cache, ways_record *rec)
  * @param[out] rec Record to store on the cache
  */
 static bool
-get_ways_record(int64 rid, ways_record *rec)
+get_ways_record(int64_t rid, ways_record *rec)
 {
   /* The full file path in the first argument is defined in a global variable*/
   FILE *file = fopen(WAYS_CSV, "r");
@@ -284,7 +284,7 @@ get_ways_record(int64 rid, ways_record *rec)
  * return false otherwise
  */
 static bool
-route_lookup(int64 gid, bool any_gid, ways_record *rec)
+route_lookup(int64_t gid, bool any_gid, ways_record *rec)
 {
   /* Get or initialize the cache for this round */
   WaysCache* ways_cache = GetWaysCache();
@@ -317,7 +317,7 @@ route_lookup(int64 gid, bool any_gid, ways_record *rec)
  * @param[in] rid Route identifier
  */
 bool
-route_exists(int64 rid)
+route_exists(int64_t rid)
 {
   ways_record rec;
   if (route_lookup(rid, false, &rec) == LW_FAILURE)
@@ -332,7 +332,7 @@ route_exists(int64 rid)
  * @return On error return @p NULL
  */
 const GSERIALIZED *
-route_geom(int64 rid)
+route_geom(int64_t rid)
 {
   ways_record rec;
   if (route_lookup(rid, false, &rec) == LW_FAILURE)
@@ -348,7 +348,7 @@ route_geom(int64 rid)
  * @return On error return -1.0
  */
 double
-route_length(int64 rid)
+route_length(int64_t rid)
 {
   ways_record rec;
   if (route_lookup(rid, false, &rec) == LW_FAILURE)

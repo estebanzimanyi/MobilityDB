@@ -150,7 +150,7 @@ Tbox_as_text(PG_FUNCTION_ARGS)
   if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
     dbl_dig_for_wkt = PG_GETARG_INT32(1);
   char *str = tbox_out(box, dbl_dig_for_wkt);
-  text *result = cstring_to_text(str);
+  text *result = pg_cstring_to_text(str);
   pfree(str);
   PG_RETURN_TEXT_P(result);
 }
@@ -186,7 +186,7 @@ Datum
 Tbox_from_hexwkb(PG_FUNCTION_ARGS)
 {
   text *hexwkb_text = PG_GETARG_TEXT_P(0);
-  char *hexwkb = text_to_cstring(hexwkb_text);
+  char *hexwkb = pg_text_to_cstring(hexwkb_text);
   TBox *result = tbox_from_hexwkb(hexwkb);
   pfree(hexwkb);
   PG_FREE_IF_COPY(hexwkb_text, 0);
@@ -286,9 +286,9 @@ PG_FUNCTION_INFO_V1(Numspan_tstzspan_to_tbox);
 Datum
 Numspan_tstzspan_to_tbox(PG_FUNCTION_ARGS)
 {
-  Span *s = PG_GETARG_SPAN_P(0);
-  Span *p = PG_GETARG_SPAN_P(1);
-  PG_RETURN_TBOX_P(numspan_tstzspan_to_tbox(s, p));
+  Span *sp1 = PG_GETARG_SPAN_P(0);
+  Span *sp2 = PG_GETARG_SPAN_P(1);
+  PG_RETURN_TBOX_P(numspan_tstzspan_to_tbox(sp1, sp2));
 }
 
 /*****************************************************************************
@@ -1204,7 +1204,7 @@ PGDLLEXPORT Datum Tbox_hash(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tbox_hash);
 /**
  * @ingroup mobilitydb_temporal_box_comp
- * @brief Return the hash value of a temporal box
+ * @brief Return the 32-bit hash value of a temporal box
  * @sqlfn tbox_hash()
  */
 Datum
@@ -1218,14 +1218,14 @@ PGDLLEXPORT Datum Tbox_hash_extended(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tbox_hash_extended);
 /**
  * @ingroup mobilitydb_temporal_box_comp
- * @brief Return the hash value of a temporal box
+ * @brief Return the 64-bit hash value of a temporal box using a seed
  * @sqlfn tbox_hash_extended()
  */
 Datum
 Tbox_hash_extended(PG_FUNCTION_ARGS)
 {
   TBox *box = PG_GETARG_TBOX_P(0);
-  uint64 seed = PG_GETARG_INT64(1);
+  uint64_t seed = PG_GETARG_INT64(1);
   PG_RETURN_UINT64(tbox_hash_extended(box, seed));
 }
 

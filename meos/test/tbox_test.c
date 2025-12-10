@@ -52,8 +52,8 @@ int main(void)
 
   /* Create values to test the functions of the API */
 
-  int32 int32_in1 = 1;
-  int32 int32_in2 = 2;
+  int32_t int32_in1 = 1;
+  int32_t int32_in2 = 2;
   double float8_in1 = 1;
   double float8_in2 = 2;
 
@@ -99,9 +99,9 @@ int main(void)
 
   bool bool_result;
   bool bool1_result;
-  int32 int32_result;
-  // uint32 uint32_result;
-  // uint64 uint64_result;
+  int32_t int32_result;
+  // uint32_t uint32_result;
+  // uint64_t uint64_result;
   double float8_result;
   TimestampTz tstz_result;
   char *char_result;
@@ -166,7 +166,7 @@ int main(void)
   printf("float_timestamptz_to_tbox(%lf, %s): %s\n", float8_in1, tstz1_out, char_result);
   free(tbox_result); free(char_result);
 
-  /* TBox *float_tstzspan_to_tbox(double d, const Span *s); */
+  /* TBox *float_tstzspan_to_tbox(double d, const Span *sp); */
   tbox_result = float_tstzspan_to_tbox(float8_in1, tstzspan1);
   char_result = tbox_out(tbox_result, 6);
   printf("float_tstzspan_to_tbox(%lf, %s): %s\n", float8_in1, tstzspan1_out, char_result);
@@ -178,13 +178,13 @@ int main(void)
   printf("int_timestamptz_to_tbox(%d, %s): %s\n", int32_in1, tstz1_out, char_result);
   free(tbox_result); free(char_result);
 
-  /* TBox *int_tstzspan_to_tbox(int i, const Span *s); */
+  /* TBox *int_tstzspan_to_tbox(int i, const Span *sp); */
   tbox_result = int_tstzspan_to_tbox(int32_in1, tstzspan1);
   char_result = tbox_out(tbox_result, 6);
   printf("int_tstzspan_to_tbox(%d, %s): %s\n", int32_in1, tstzspan1_out, char_result);
   free(tbox_result); free(char_result);
 
-  /* TBox *numspan_tstzspan_to_tbox(const Span *span, const Span *s); */
+  /* TBox *numspan_tstzspan_to_tbox(const Span *span, const Span *sp); */
   tbox_result = numspan_tstzspan_to_tbox(fspan1, tstzspan1);
   char_result = tbox_out(tbox_result, 6);
   printf("numspan_tstzspan_to_tbox(%s, %s): %s\n", fspan1_out, tstzspan1_out, char_result);
@@ -202,7 +202,7 @@ int main(void)
   printf("tbox_copy(%s): %s\n", tbox1_out, char_result);
   free(tbox_result); free(char_result);
 
-  /* TBox *tbox_make(const Span *s, const Span *p); */
+  /* TBox *tbox_make(const Span *sp1, const Span *sp2); */
   tbox_result = tbox_make(fspan1, tstzspan1);
   char_result = tbox_out(tbox_result, 6);
   printf("tbox_make(%s, %s): %s\n", fspan1_out, tstzspan1_out, char_result);
@@ -230,7 +230,7 @@ int main(void)
   printf("set_to_tbox(%s): %s\n", fset1_out, char_result);
   free(tbox_result); free(char_result);
 
-  /* TBox *span_to_tbox(const Span *s); */
+  /* TBox *span_to_tbox(const Span *sp); */
   tbox_result = span_to_tbox(fspan1);
   char_result = tbox_out(tbox_result, 6);
   printf("span_to_tbox(%s): %s\n", fspan1_out, char_result);
