@@ -304,7 +304,7 @@ datum2_geog_centroid(Datum geo)
  * @brief Select the appropriate distance function
  */
 datum_func2
-geo_distance_fn(int16 flags)
+geo_distance_fn(int16_t flags)
 {
   if (MEOS_FLAGS_GET_GEODETIC(flags))
     return &datum_geog_distance;
@@ -317,7 +317,7 @@ geo_distance_fn(int16 flags)
  * @brief Select the appropriate distance function
  */
 datum_func2
-pt_distance_fn(int16 flags)
+pt_distance_fn(int16_t flags)
 {
   if (MEOS_FLAGS_GET_GEODETIC(flags))
     return &datum_geog_distance;
@@ -327,7 +327,7 @@ pt_distance_fn(int16 flags)
 }
 
 /**
- * @brief Return the 2D distance between the two geometries
+ * @brief Return the 2D distance between two geometries
  * @pre For PostGIS version > 3 the geometries are NOT toasted
  */
 Datum
@@ -338,7 +338,7 @@ datum_geom_distance2d(Datum geom1, Datum geom2)
 }
 
 /**
- * @brief Return the 3D distance between the two geometries
+ * @brief Return the 3D distance between two geometries
  */
 Datum
 datum_geom_distance3d(Datum geom1, Datum geom2)
@@ -348,7 +348,7 @@ datum_geom_distance3d(Datum geom1, Datum geom2)
 }
 
 /**
- * @brief Return the distance between the two geographies
+ * @brief Return the distance between two geographies
  */
 Datum
 datum_geog_distance(Datum geog1, Datum geog2)
@@ -358,7 +358,7 @@ datum_geog_distance(Datum geog1, Datum geog2)
 }
 
 /**
- * @brief Return the 2D distance between the two geometry points
+ * @brief Return the 2D distance between two geometry points
  */
 Datum
 datum_pt_distance2d(Datum geom1, Datum geom2)
@@ -369,7 +369,7 @@ datum_pt_distance2d(Datum geom1, Datum geom2)
 }
 
 /**
- * @brief Return the 3D distance between the two geometry points
+ * @brief Return the 3D distance between two geometry points
  */
 Datum
 datum_pt_distance3d(Datum geom1, Datum geom2)
@@ -384,10 +384,10 @@ datum_pt_distance3d(Datum geom1, Datum geom2)
 /**
  * @brief Get the MEOS flags from a geo value
  */
-static int16
+static int16_t
 gserialized_flags(const GSERIALIZED *gs)
 {
-  int16 result = 0; /* Set all flags to false */
+  int16_t result = 0; /* Set all flags to false */
   MEOS_FLAGS_SET_X(result, true);
   MEOS_FLAGS_SET_Z(result, FLAGS_GET_Z(gs->gflags));
   MEOS_FLAGS_SET_GEODETIC(result, FLAGS_GET_GEODETIC(gs->gflags));
@@ -398,10 +398,10 @@ gserialized_flags(const GSERIALIZED *gs)
 /**
  * @brief Get the MEOS flags from a circular buffer
  */
-static int16
+static int16_t
 cbuffer_flags(void)
 {
-  int16 result = 0; /* Set all flags to false */
+  int16_t result = 0; /* Set all flags to false */
   MEOS_FLAGS_SET_X(result, true);
   return result;
 }
@@ -411,10 +411,10 @@ cbuffer_flags(void)
 /**
  * @brief Get the MEOS flags from a network point
  */
-static int16
+static int16_t
 npoint_flags(void)
 {
-  int16 result = 0; /* Set all flags to false */
+  int16_t result = 0; /* Set all flags to false */
   MEOS_FLAGS_SET_X(result, true);
   return result;
 }
@@ -424,10 +424,10 @@ npoint_flags(void)
 /**
  * @brief Get the MEOS flags from a pose
  */
-static int16
+static int16_t
 pose_flags(Pose *pose)
 {
-  int16 result = 0; /* Set all flags to false */
+  int16_t result = 0; /* Set all flags to false */
   MEOS_FLAGS_SET_X(result, true);
   MEOS_FLAGS_SET_Z(result, MEOS_FLAGS_GET_Z(pose->flags));
   return result;
@@ -437,7 +437,7 @@ pose_flags(Pose *pose)
 /**
  * @brief Get the MEOS flags from a spatial value
  */
-int16
+int16_t
 spatial_flags(Datum d, meosType basetype)
 {
   assert(spatial_basetype(basetype));
@@ -487,7 +487,7 @@ ensure_spatial_validity(const Temporal *temp1, const Temporal *temp2)
  * @brief Ensure that the spatiotemporal argument has planar coordinates
  */
 bool
-ensure_not_geodetic(int16 flags)
+ensure_not_geodetic(int16_t flags)
 {
   if ((MEOS_FLAGS_GET_X(flags) || MEOS_FLAGS_GET_Z(flags)) && 
     ! MEOS_FLAGS_GET_GEODETIC(flags))
@@ -502,7 +502,7 @@ ensure_not_geodetic(int16 flags)
  * coordinates, either planar or geodetic
  */
 bool
-ensure_same_geodetic(int16 flags1, int16 flags2)
+ensure_same_geodetic(int16_t flags1, int16_t flags2)
 {
   if (MEOS_FLAGS_GET_X(flags1) && MEOS_FLAGS_GET_X(flags2) &&
     MEOS_FLAGS_GET_GEODETIC(flags1) != MEOS_FLAGS_GET_GEODETIC(flags2))
@@ -553,7 +553,7 @@ ensure_same_geodetic_tspatial_base(const Temporal *temp, Datum base)
 {
   meosType basetype = temptype_basetype(temp->temptype);
   assert(spatial_basetype(basetype));
-  int16 flags = spatial_flags(base, basetype);
+  int16_t flags = spatial_flags(base, basetype);
   if (MEOS_FLAGS_GET_GEODETIC(temp->flags) != MEOS_FLAGS_GET_GEODETIC(flags))
   {
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
@@ -595,7 +595,7 @@ ensure_same_srid(int32_t srid1, int32_t srid2)
  * by their flags
  */
 bool
-ensure_same_dimensionality(int16 flags1, int16 flags2)
+ensure_same_dimensionality(int16_t flags1, int16_t flags2)
 {
   if (MEOS_FLAGS_GET_X(flags1) == MEOS_FLAGS_GET_X(flags2) &&
       MEOS_FLAGS_GET_Z(flags1) == MEOS_FLAGS_GET_Z(flags2) &&
@@ -607,11 +607,11 @@ ensure_same_dimensionality(int16 flags1, int16 flags2)
 }
 
 /**
- * @brief Return true if the two temporal points have the same spatial
+ * @brief Return true if two temporal points have the same spatial
  * dimensionality as given by their flags
  */
 bool
-same_spatial_dimensionality(int16 flags1, int16 flags2)
+same_spatial_dimensionality(int16_t flags1, int16_t flags2)
 {
   if (MEOS_FLAGS_GET_X(flags1) == MEOS_FLAGS_GET_X(flags2) &&
       MEOS_FLAGS_GET_Z(flags1) == MEOS_FLAGS_GET_Z(flags2))
@@ -624,7 +624,7 @@ same_spatial_dimensionality(int16 flags1, int16 flags2)
  * as given by their flags
  */
 bool
-ensure_same_spatial_dimensionality(int16 flags1, int16 flags2)
+ensure_same_spatial_dimensionality(int16_t flags1, int16_t flags2)
 {
   if (same_spatial_dimensionality(flags1, flags2))
     return true;
@@ -897,7 +897,7 @@ bool
 ensure_valid_tspatial_base(const Temporal *temp, Datum base)
 {
   VALIDATE_TSPATIAL(temp, false);
-  VALIDATE_NOT_NULL(DatumGetPointer(base), false);;
+  VALIDATE_NOT_NULL(DatumGetPointer(base), false);
   meosType basetype = temptype_basetype(temp->temptype);
   if (! ensure_same_srid(tspatial_srid(temp), spatial_srid(base, basetype)) ||
       ! ensure_same_geodetic_tspatial_base(temp, base))
@@ -1651,7 +1651,6 @@ tgeo_centroid(const Temporal *temp)
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) 
     (geodetic ? &datum2_geog_centroid : &datum2_geom_centroid);
-  lfinfo.numparam = 0;
   lfinfo.argtype[0] = temp->temptype;
   lfinfo.restype = geodetic ? T_TGEOGPOINT : T_TGEOMPOINT;
   return tfunc_temporal(temp, &lfinfo);
@@ -1768,7 +1767,7 @@ geo_cluster_dbscan(const GSERIALIZED **geoms, uint32_t ngeoms,
 
 /**
   * @ingroup meos_geo_base_spatial
-  * @brief Return an array of GeometryCollections partitioning the input
+  * @brief Return an array of geometry collections partitioning the input
   * geometries into connected clusters that are disjoint
   * @details Each geometry in a cluster intersects at least one other geometry
   * in the cluster, and does not intersect any geometry in other clusters
@@ -1849,9 +1848,9 @@ geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms,
 
 /**
  * @ingroup meos_geo_base_spatial
-  * @brief Return an array of GeometryCollections partitioning the input
-  * geometries into clusters in which each geometry is within the specified
-  * distance of at least one other geometry in the same cluster.
+  * @brief Return an array of geometry collections partitioning the input
+  * geometries into clusters in which each geometry is within a specified
+  * distance of at least another geometry in the same cluster
  * @param[in] geoms Geometries
  * @param[in] ngeoms Number of elements in the input array
  * @param[in] tolerance Tolerance

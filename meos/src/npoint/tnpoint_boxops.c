@@ -95,7 +95,7 @@ void
 tnpointinstarr_linear_set_stbox(TInstant **instants, int count, STBox *box)
 {
   Npoint *np = DatumGetNpointP(tinstant_value_p(instants[0]));
-  int64 rid = np->rid;
+  int64_t rid = np->rid;
   double posmin, posmax;
   posmin = posmax = np->pos;
   TimestampTz tmin = instants[0]->t, tmax = instants[count - 1]->t;
@@ -155,7 +155,7 @@ tnpointseq_expand_stbox(const TSequence *seq, const TInstant *inst)
     const TInstant *last = TSEQUENCE_INST_N(seq, seq->count - 1);
     Npoint *np1 = DatumGetNpointP(tinstant_value_p(last));
     Npoint *np2 = DatumGetNpointP(tinstant_value_p(inst));
-    int64 rid = np1->rid;
+    int64_t rid = np1->rid;
     double posmin = Min(np1->pos, np2->pos);
     double posmax = Min(np1->pos, np2->pos);
     const GSERIALIZED *line = route_geom(rid);

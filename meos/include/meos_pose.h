@@ -123,15 +123,15 @@ extern STBox *pose_to_stbox(const Pose *pose);
 
 /* Accessor functions */
 
-extern uint32 pose_hash(const Pose *pose);
-extern uint64 pose_hash_extended(const Pose *pose, uint64 seed);
+extern uint32_t pose_hash(const Pose *pose);
+extern uint64_t pose_hash_extended(const Pose *pose, uint64_t seed);
 extern double *pose_orientation(const Pose *pose);
 extern double pose_rotation(const Pose *pose);
 
 /* Transformation functions */
 
 extern Pose *pose_round(const Pose *pose, int maxdd);
-extern Pose **posearr_round(const Pose **posearr, int count, int maxdd);
+extern Pose **posearr_round(Pose **posearr, int count, int maxdd);
 
 /* Spatial reference system functions */
 
@@ -142,7 +142,7 @@ extern Pose *pose_transform_pipeline(const Pose *pose, const char *pipelinestr, 
 
 /* Bounding box functions */
 
-extern STBox *pose_tstzspan_to_stbox(const Pose *pose, const Span *s);
+extern STBox *pose_tstzspan_to_stbox(const Pose *pose, const Span *sp);
 extern STBox *pose_timestamptz_to_stbox(const Pose *pose, TimestampTz t);
 
 /* Distance functions */
@@ -174,7 +174,7 @@ extern char *poseset_out(const Set *s, int maxdd);
 
 /* Constructor functions */
 
-extern Set *poseset_make(const Pose **values, int count);
+extern Set *poseset_make(Pose **values, int count);
 
 /* Conversion functions */
 
@@ -190,7 +190,7 @@ extern Pose **poseset_values(const Set *s);
 /* Set operations */
 
 extern bool contained_pose_set(const Pose *pose, const Set *s);
-extern bool contains_set_pose(const Set *s, Pose *pose);
+extern bool contains_set_pose(const Set *s, const Pose *pose);
 extern Set *intersection_pose_set(const Pose *pose, const Set *s);
 extern Set *intersection_set_pose(const Set *s, const Pose *pose);
 extern Set *minus_pose_set(const Pose *pose, const Set *s);

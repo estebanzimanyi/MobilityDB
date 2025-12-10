@@ -57,7 +57,7 @@
  * @csqlfn #Temporal_from_mfjson()
  */
 inline TInstant *
-tboolinst_from_mfjson(json_object *mfjson)
+tboolinst_from_mfjson(const json_object *mfjson)
 {
   return tinstant_from_mfjson(mfjson, false, 0, T_TBOOL);
 }
@@ -69,7 +69,7 @@ tboolinst_from_mfjson(json_object *mfjson)
  * @csqlfn #Temporal_from_mfjson()
  */
 inline TInstant *
-tintinst_from_mfjson(json_object *mfjson)
+tintinst_from_mfjson(const json_object *mfjson)
 {
   return tinstant_from_mfjson(mfjson, false, 0, T_TINT);
 }
@@ -81,7 +81,7 @@ tintinst_from_mfjson(json_object *mfjson)
  * @csqlfn #Temporal_from_mfjson()
  */
 inline TInstant *
-tfloatinst_from_mfjson(json_object *mfjson)
+tfloatinst_from_mfjson(const json_object *mfjson)
 {
   return tinstant_from_mfjson(mfjson, false, 0, T_TFLOAT);
 }
@@ -93,7 +93,7 @@ tfloatinst_from_mfjson(json_object *mfjson)
  * @csqlfn #Temporal_from_mfjson()
  */
 inline TInstant *
-ttextinst_from_mfjson(json_object *mfjson)
+ttextinst_from_mfjson(const json_object *mfjson)
 {
   return tinstant_from_mfjson(mfjson, false, 0, T_TTEXT);
 }
@@ -107,7 +107,7 @@ ttextinst_from_mfjson(json_object *mfjson)
  * @csqlfn #Temporal_from_mfjson()
  */
 inline TSequence *
-tboolseq_from_mfjson(json_object *mfjson)
+tboolseq_from_mfjson(const json_object *mfjson)
 {
   return tsequence_from_mfjson(mfjson, false, 0, T_TBOOL, STEP);
 }
@@ -119,7 +119,7 @@ tboolseq_from_mfjson(json_object *mfjson)
  * @csqlfn #Temporal_from_mfjson()
  */
 inline TSequence *
-tintseq_from_mfjson(json_object *mfjson)
+tintseq_from_mfjson(const json_object *mfjson)
 {
   return tsequence_from_mfjson(mfjson, false, 0, T_TINT, STEP);
 }
@@ -132,7 +132,7 @@ tintseq_from_mfjson(json_object *mfjson)
  * @csqlfn #Temporal_from_mfjson()
  */
 inline TSequence *
-tfloatseq_from_mfjson(json_object *mfjson, interpType interp)
+tfloatseq_from_mfjson(const json_object *mfjson, interpType interp)
 {
   return tsequence_from_mfjson(mfjson, false, 0, T_TFLOAT, interp);
 }
@@ -144,7 +144,7 @@ tfloatseq_from_mfjson(json_object *mfjson, interpType interp)
  * @csqlfn #Temporal_from_mfjson()
  */
 inline TSequence *
-ttextseq_from_mfjson(json_object *mfjson)
+ttextseq_from_mfjson(const json_object *mfjson)
 {
   return tsequence_from_mfjson(mfjson, false, 0, T_TTEXT, STEP);
 }
@@ -159,7 +159,7 @@ ttextseq_from_mfjson(json_object *mfjson)
  * @csqlfn #Temporal_from_mfjson()
  */
 inline TSequenceSet *
-tboolseqset_from_mfjson(json_object *mfjson)
+tboolseqset_from_mfjson(const json_object *mfjson)
 {
   return tsequenceset_from_mfjson(mfjson, false, 0, T_TBOOL, STEP);
 }
@@ -172,7 +172,7 @@ tboolseqset_from_mfjson(json_object *mfjson)
  * @csqlfn #Temporal_from_mfjson()
  */
 inline TSequenceSet *
-tintseqset_from_mfjson(json_object *mfjson)
+tintseqset_from_mfjson(const json_object *mfjson)
 {
   return tsequenceset_from_mfjson(mfjson, false, 0, T_TINT, STEP);
 }
@@ -185,7 +185,7 @@ tintseqset_from_mfjson(json_object *mfjson)
  * @csqlfn #Temporal_from_mfjson()
  */
 inline TSequenceSet *
-tfloatseqset_from_mfjson(json_object *mfjson, interpType interp)
+tfloatseqset_from_mfjson(const json_object *mfjson, interpType interp)
 {
   return tsequenceset_from_mfjson(mfjson, false, 0, T_TFLOAT, interp);
 }
@@ -197,7 +197,7 @@ tfloatseqset_from_mfjson(json_object *mfjson, interpType interp)
  * @csqlfn #Temporal_from_mfjson()
  */
 inline TSequenceSet *
-ttextseqset_from_mfjson(json_object *mfjson)
+ttextseqset_from_mfjson(const json_object *mfjson)
 {
   return tsequenceset_from_mfjson(mfjson, false, 0, T_TTEXT, STEP);
 }

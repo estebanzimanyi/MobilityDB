@@ -182,9 +182,9 @@ tpoint_get_coord(const Temporal *temp, int coord)
     lfinfo.func = (varfunc) &point_get_y;
   else /* coord == 2 */
     lfinfo.func = (varfunc) &point_get_z;
-  lfinfo.numparam = 0;
   lfinfo.argtype[0] = temp->temptype;
   lfinfo.restype = T_TFLOAT;
+  lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   return tfunc_temporal(temp, &lfinfo);
 }
 
@@ -2080,9 +2080,9 @@ tpoint_mvt(const Temporal *tpoint, const STBox *box, uint32_t extent,
  * @note The timestamps are returned in Unix epoch
  */
 static GSERIALIZED *
-tpointinst_decouple(const TInstant *inst, int64 **timesarr, int *count)
+tpointinst_decouple(const TInstant *inst, int64_t **timesarr, int *count)
 {
-  int64 *times = palloc(sizeof(int64));
+  int64_t *times = palloc(sizeof(int64_t));
   times[0] = (inst->t / 1000000) + DELTA_UNIX_POSTGRES_EPOCH;
   *timesarr = times;
   *count = 1;
@@ -2098,7 +2098,7 @@ tpointinst_decouple(const TInstant *inst, int64 **timesarr, int *count)
  * @note The timestamps are returned in Unix epoch
  */
 static LWGEOM *
-tpointseq_decouple_iter(const TSequence *seq, int64 *times)
+tpointseq_decouple_iter(const TSequence *seq, int64_t *times)
 {
   assert(seq); assert(times);
   /* General case */
@@ -2130,10 +2130,10 @@ tpointseq_decouple_iter(const TSequence *seq, int64 *times)
  * @note The timestamps are returned in Unix epoch
  */
 static GSERIALIZED *
-tpointseq_decouple(const TSequence *seq, int64 **timesarr, int *count)
+tpointseq_decouple(const TSequence *seq, int64_t **timesarr, int *count)
 {
   assert(seq); assert(timesarr); assert(count);
-  int64 *times = palloc(sizeof(int64) * seq->count);
+  int64_t *times = palloc(sizeof(int64_t) * seq->count);
   LWGEOM *geom = tpointseq_decouple_iter(seq, times);
   GSERIALIZED *result = geo_serialize(geom);
   *timesarr = times;
@@ -2152,7 +2152,7 @@ tpointseq_decouple(const TSequence *seq, int64 **timesarr, int *count)
  * @note The timestamps are returned in Unix epoch
  */
 static GSERIALIZED *
-tpointseqset_decouple(const TSequenceSet *ss, int64 **timesarr, int *count)
+tpointseqset_decouple(const TSequenceSet *ss, int64_t **timesarr, int *count)
 {
   assert(ss); assert(timesarr); assert(count);
   /* Singleton sequence set */
@@ -2162,7 +2162,7 @@ tpointseqset_decouple(const TSequenceSet *ss, int64 **timesarr, int *count)
   /* General case */
   uint32_t colltype = 0;
   LWGEOM **geoms = palloc(sizeof(LWGEOM *) * ss->count);
-  int64 *times = palloc(sizeof(int64) * ss->totalcount);
+  int64_t *times = palloc(sizeof(int64_t) * ss->totalcount);
   int ntimes = 0;
   for (int i = 0; i < ss->count; i++)
   {
@@ -2197,7 +2197,7 @@ tpointseqset_decouple(const TSequenceSet *ss, int64 **timesarr, int *count)
  * @note The timestamps are returned in Unix epoch
  */
 static GSERIALIZED *
-tpoint_decouple(const Temporal *temp, int64 **timesarr, int *count)
+tpoint_decouple(const Temporal *temp, int64_t **timesarr, int *count)
 {
   assert(temp); assert(timesarr); assert(count);
   assert(tpoint_type(temp->temptype));
@@ -2230,7 +2230,7 @@ tpoint_decouple(const Temporal *temp, int64 **timesarr, int *count)
  */
 bool
 tpoint_as_mvtgeom(const Temporal *temp, const STBox *bounds, int32_t extent,
-  int32_t buffer, bool clip_geom, GSERIALIZED **gsarr, int64 **timesarr,
+  int32_t buffer, bool clip_geom, GSERIALIZED **gsarr, int64_t **timesarr,
   int *count)
 {
   /* Ensure the validity of the arguments */
@@ -2986,7 +2986,7 @@ geog_bearing(Datum point1, Datum point2)
  * @brief Select the appropriate bearing function
  */
 static inline datum_func2
-geo_bearing_fn(int16 flags)
+geo_bearing_fn(int16_t flags)
 {
   return MEOS_FLAGS_GET_GEODETIC(flags) ? &geog_bearing : &geom_bearing;
 }
@@ -3158,7 +3158,7 @@ bearing_point_point(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
  * @brief Return the temporal bearing between a temporal point and a point
  * @param[in] temp Temporal point
  * @param[in] gs Geometry
- * @param[out] invert True when the result should be inverted
+ * @param[out] invert True when the result must be inverted
  * @return On empty geometry or on error return NULL
  * @csqlfn #Bearing_tpoint_point()
  */
@@ -3172,7 +3172,6 @@ bearing_tpoint_point(const Temporal *temp, const GSERIALIZED *gs, bool invert)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) geo_bearing_fn(temp->flags);
-  lfinfo.numparam = 0;
   lfinfo.argtype[0] = temp->temptype;
   lfinfo.argtype[1] = temptype_basetype(temp->temptype);
   lfinfo.restype = T_TFLOAT;
@@ -3201,7 +3200,6 @@ bearing_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) geo_bearing_fn(temp1->flags);
-  lfinfo.numparam = 0;
   lfinfo.argtype[0] = lfinfo.argtype[1] = temp1->temptype;
   lfinfo.restype = T_TFLOAT;
   lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp1->flags) ||
@@ -3395,7 +3393,7 @@ multipoint_add_inst_free(GEOSGeometry *geom, const TInstant *inst)
  * @pre The temporal sequence is not instantaneous
  */
 int
-tpointseq_stops_iter(const TSequence *seq, double maxdist, int64 mintunits,
+tpointseq_stops_iter(const TSequence *seq, double maxdist, int64_t mintunits,
   TSequence **result)
 {
   assert(seq); assert(seq->count > 1);
@@ -3422,7 +3420,7 @@ tpointseq_stops_iter(const TSequence *seq, double maxdist, int64 mintunits,
     inst2 = TSEQUENCE_INST_N(seq, end);
 
     while (! is_stopped && end - start > 1 &&
-      (int64)(inst2->t - inst1->t) >= mintunits)
+      (int64_t)(inst2->t - inst1->t) >= mintunits)
     {
       inst1 = TSEQUENCE_INST_N(seq, ++start);
       rebuild_geom = true;
@@ -3443,7 +3441,7 @@ tpointseq_stops_iter(const TSequence *seq, double maxdist, int64 mintunits,
     is_stopped = mrr_distance_geos(geom, geodetic) <= maxdist;
     inst2 = TSEQUENCE_INST_N(seq, end - 1);
     if (! is_stopped && previously_stopped &&
-      (int64)(inst2->t - inst1->t) >= mintunits) /* Found a stop */
+      (int64_t)(inst2->t - inst1->t) >= mintunits) /* Found a stop */
     {
       TInstant **instants = palloc(sizeof(TInstant *) * (end - start));
       for (int i = 0; i < end - start; ++i)
@@ -3458,7 +3456,7 @@ tpointseq_stops_iter(const TSequence *seq, double maxdist, int64 mintunits,
   GEOSGeom_destroy(geom);
 
   inst2 = TSEQUENCE_INST_N(seq, end - 1);
-  if (is_stopped && (int64)(inst2->t - inst1->t) >= mintunits)
+  if (is_stopped && (int64_t)(inst2->t - inst1->t) >= mintunits)
   {
     TInstant **instants = palloc(sizeof(TInstant *) * (end - start));
     for (int i = 0; i < end - start; ++i)

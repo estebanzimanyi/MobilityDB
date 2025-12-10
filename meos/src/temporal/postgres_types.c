@@ -75,9 +75,9 @@
 #endif /* ! MEOS */
 
 #if POSTGRESQL_VERSION_NUMBER >= 150000 || MEOS
-  extern int64 pg_strtoint64(const char *s);
+  extern int64_t pg_strtoint64(const char *s);
 #else
-  extern bool scanint8(const char *str, bool errorOK, int64 *result);
+  extern bool scanint8(const char *str, bool errorOK, int64_t *result);
 #endif
 
 
@@ -152,7 +152,7 @@ text_lower(const text *txt)
   char *out_string = str_tolower(VARDATA_ANY(txt), VARSIZE_ANY_EXHDR(txt),
     DEFAULT_COLLATION_OID);
 #endif /* MEOS */
-  text *result = cstring_to_text(out_string);
+  text *result = pg_cstring_to_text(out_string);
   pfree(out_string);
   return result;
 }
@@ -184,7 +184,7 @@ text_upper(const text *txt)
   char *out_string = str_toupper(VARDATA_ANY(txt), VARSIZE_ANY_EXHDR(txt),
     DEFAULT_COLLATION_OID);
 #endif /* MEOS */
-  text *result = cstring_to_text(out_string);
+  text *result = pg_cstring_to_text(out_string);
   pfree(out_string);
   return result;
 }
@@ -216,7 +216,7 @@ text_initcap(const text *txt)
   char *out_string = str_initcap(VARDATA_ANY(txt), VARSIZE_ANY_EXHDR(txt),
     DEFAULT_COLLATION_OID);
 #endif /* MEOS */
-  text *result = cstring_to_text(out_string);
+  text *result = pg_cstring_to_text(out_string);
   pfree(out_string);
   return result;
 }

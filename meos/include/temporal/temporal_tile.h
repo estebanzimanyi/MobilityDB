@@ -64,7 +64,7 @@ typedef struct TboxGridState
   bool done;            /**< True when the state is consumed */
   int i;                /**< Current tile number */
   Datum vsize;          /**< Value size */
-  int64 tunits;         /**< Time size */
+  int64_t tunits;       /**< Time size */
   TBox box;             /**< Bounding box */
   const Temporal *temp; /**< Optional temporal number to be split */
   Datum value;          /**< Current value */
@@ -76,10 +76,10 @@ typedef struct TboxGridState
 
 /*****************************************************************************/
 
-extern int span_num_bins(const Span *s, Datum size, Datum origin, 
+extern int span_num_bins(const Span *sp, Datum size, Datum origin, 
   Datum *start_bin, Datum *end_bin);
 
-extern Span *span_bins(const Span *s, Datum size, Datum origin, int *count);
+extern Span *span_bins(const Span *sp, Datum size, Datum origin, int *count);
 extern Span *spanset_bins(const SpanSet *ss, Datum size, Datum origin, int *count);
 
 extern SpanBinState *temporal_time_bin_init(const Temporal *temp,
@@ -90,12 +90,12 @@ extern TboxGridState *tbox_tile_state_make(const Temporal *temp,
   TimestampTz torigin);
 extern void tbox_tile_state_next(TboxGridState *state);
 extern void tbox_tile_state_set(Datum value, TimestampTz t, Datum vsize,
-  int64 tunits, meosType basetype, meosType spantype, TBox *box);
+  int64_t tunits, meosType basetype, meosType spantype, TBox *box);
 
 /*****************************************************************************/
 
-extern int64 interval_units(const Interval *interval);
-extern TimestampTz timestamptz_bin_start(TimestampTz timestamp, int64 tunits,
+extern int64_t interval_units(const Interval *interval);
+extern TimestampTz timestamptz_bin_start(TimestampTz timestamp, int64_t tunits,
   TimestampTz torigin);
 extern Datum datum_bin(Datum value, Datum size, Datum offset,
   meosType basetype);

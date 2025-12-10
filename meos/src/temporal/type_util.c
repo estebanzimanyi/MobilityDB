@@ -55,6 +55,10 @@
   #include <meos_cbuffer.h>
   #include "cbuffer/cbuffer.h"
 #endif
+#if JSON
+  #include <utils/jsonb.h>
+  #include "json/tjsonb.h"
+#endif
 #if NPOINT
   // #include <meos_npoint.h>
   #include "npoint/tnpoint.h"
@@ -66,9 +70,11 @@
   #include "rgeo/trgeo.h"
 #endif
 
-#include <utils/jsonb.h>
 #include <utils/numeric.h>
 #include <pgtypes.h>
+
+/* Function defined in formatting.c */
+extern bool scanner_isspace(char ch);
 
 /*****************************************************************************
  * Comparison functions on datums
@@ -76,28 +82,28 @@
 
 /**
  * @ingroup meos_base_int
- * @brief Return -1, 0, or 1 depending on whether the first value is less than, 
+ * @brief Return -1, 0, or 1 depending on whether the first value is less than,
  * equal to, or greater than the second one
  */
 int
-int32_cmp(int32 l, int32 r)
+int32_cmp(int32_t l, int32_t r)
 {
   return (l < r) ? -1 : ((l > r) ? 1 : 0);
 }
 
 /**
  * @ingroup meos_base_int
- * @brief Return -1, 0, or 1 depending on whether the first value is less than, 
+ * @brief Return -1, 0, or 1 depending on whether the first value is less than,
  * equal to, or greater than the second one
  */
 int
-int64_cmp(int64 l, int64 r)
+int64_cmp(int64_t l, int64_t r)
 {
   return (l < r) ? -1 : ((l > r) ? 1 : 0);
 }
 
 /**
- * @brief Return -1, 0, or 1 depending on whether the first value is less than, 
+ * @brief Return -1, 0, or 1 depending on whether the first value is less than,
  * equal to, or greater than the second one
  */
 int
@@ -131,6 +137,11 @@ datum_cmp(Datum l, Datum r, meosType type)
 #if CBUFFER
     case T_CBUFFER:
       return cbuffer_cmp(DatumGetCbufferP(l), DatumGetCbufferP(r));
+#endif
+#if JSON
+    case T_JSONB:
+      // return pg_jsonb_cmp(DatumGetJsonbP(l), DatumGetJsonbP(r));
+      return pg_jsonb_cmp((Jsonb *) l, (Jsonb *) r);
 #endif
 #if NPOINT
     case T_NPOINT:
@@ -227,6 +238,10 @@ datum_eq(Datum l, Datum r, meosType type)
 #if CBUFFER
     case T_CBUFFER:
       return cbuffer_eq(DatumGetCbufferP(l), DatumGetCbufferP(r));
+#endif
+#if JSON
+    case T_JSONB:
+      return pg_jsonb_eq(DatumGetJsonbP(l), DatumGetJsonbP(r));
 #endif
 #if NPOINT
     case T_NPOINT:
@@ -419,7 +434,7 @@ datum_div(Datum l, Datum r, meosType type)
  * @param[in] type Type of the value
  * @return On error return @p INT_MAX
  */
-uint32
+uint32_t
 datum_hash(Datum d, meosType type)
 {
   assert(meos_basetype(type));
@@ -430,7 +445,7 @@ datum_hash(Datum d, meosType type)
     case T_DATE:
       return int32_hash(DateADTGetDatum(d));
     case T_BOOL:
-      return char_hash((int32) DatumGetBool(d));
+      return char_hash((int32_t) DatumGetBool(d));
     case T_INT4:
       return int32_hash(DatumGetInt32(d));
     case T_INT8:
@@ -445,6 +460,10 @@ datum_hash(Datum d, meosType type)
 #if CBUFFER
     case T_CBUFFER:
       return cbuffer_hash(DatumGetCbufferP(d));
+#endif
+#if JSON
+    case T_JSONB:
+      return pg_jsonb_hash(DatumGetJsonbP(d));
 #endif
 #if NPOINT
     case T_NPOINT:
@@ -468,8 +487,8 @@ datum_hash(Datum d, meosType type)
  * @param[in] seed Seed
  * @return On error return @p INT_MAX
  */
-uint64
-datum_hash_extended(Datum d, meosType type, uint64 seed)
+uint64_t
+datum_hash_extended(Datum d, meosType type, uint64_t seed)
 {
   assert(meos_basetype(type));
   switch (type)
@@ -477,9 +496,9 @@ datum_hash_extended(Datum d, meosType type, uint64 seed)
     case T_TIMESTAMPTZ:
       return int64_hash_extended(DatumGetTimestampTz(d), seed);
     case T_DATE:
-      return int32_hash_extended((int32) DatumGetDateADT(d), seed);
+      return int32_hash_extended((int32_t) DatumGetDateADT(d), seed);
     case T_BOOL:
-      return char_hash_extended((int32) DatumGetBool(d), seed);
+      return char_hash_extended((int32_t) DatumGetBool(d), seed);
     case T_INT4:
       return int32_hash_extended(DatumGetInt32(d), seed);
     case T_INT8:
@@ -567,7 +586,7 @@ double_datum(double d, meosType type)
     case T_INT4:
       return Int32GetDatum((int) d);
     case T_INT8:
-      return Int64GetDatum((int64) d);
+      return Int64GetDatum((int64_t) d);
     case T_FLOAT8:
       return Float8GetDatum(d);
     case T_DATE:
@@ -756,53 +775,152 @@ pfree_array(void **array, int count)
 }
 
 /**
+ * @brief Return the string resulting from escaping the input string
+ * @param[in] str String
+ * @param[in] quotes States how the elements should be enclosed between quotes
+ * @note The function is derived from the PostgreSQL array_out() function
+ */
+char *
+string_escape(const char *str, int quotes)
+{
+  /* Ensure validity of arguments */
+  assert(str); assert(quotes == QUOTES || quotes == QUOTES_ESCAPE);
+
+  /* Size of the input string */
+  size_t size = strlen(str);
+  char *result, *p;
+  const char *tmp;
+
+  if (quotes == QUOTES)
+  {
+    /* Construct the output string counting the pair of double quotes + '\0' */
+    result = (char *) palloc0(size + 3);
+    p = result;
+    *p++ = '"';
+    for (tmp = str; *tmp; tmp++)
+      *p++ = *tmp;
+    *p++ = '"';
+    *p = '\0';
+    return result;
+  }
+
+  /* quotes == QUOTES_ESCAPE */
+  bool needquotes = false;
+  /* count data plus backslashes; detect chars needing quotes */
+  for (tmp = str; *tmp != '\0'; tmp++)
+  {
+    char ch = *tmp;
+    size += 1;
+    if (ch == '"' || ch == '\\')
+    {
+      needquotes = true;
+      size += 1;
+    }
+    else if (ch == '{' || ch == '}' || ch == ',' || scanner_isspace(ch))
+      needquotes = true;
+  }
+  /* Count the pair of double quotes */
+  if (needquotes)
+    size += 2;
+
+  /* Construct the output string */
+  result = (char *) palloc0(size);
+  p = result;
+  if (needquotes)
+    *p++ = '"';
+  for (tmp = str; *tmp; tmp++)
+  {
+    char ch = *tmp;
+    if (ch == '"' || ch == '\\')
+      *p++ = '\\';
+    *p++ = ch;
+  }
+  if (needquotes)
+    *p++ = '"';
+  *p = '\0';
+  return result;
+}
+
+/**
  * @brief Return the string resulting from assembling an array of strings
  * @param[in] strings Array of strings to ouput
  * @param[in] count Number of elements in the input array
- * @param[in] outlen Total length of the elements and the additional ','
  * @param[in] prefix Prefix to add to the string (e.g., for interpolation)
  * @param[in] open, close Starting/ending character (e.g., '{' and '}')
  * @param[in] quotes True when elements should be enclosed into quotes
  * @param[in] spaces True when elements should be separated by spaces
- * @note The function frees the memory of the input strings after finishing
+ * @note The function frees the memory of the input strings after finishing.
+ * @note The function is derived from the PostgreSQL array_out() function
  */
 char *
-stringarr_to_string(char **strings, int count, size_t outlen, char *prefix,
-  char open, char close, bool quotes, bool spaces)
+stringarr_to_string(char **strings, int count, char *prefix, char open,
+  char close, int quotes, bool spaces)
 {
-  size_t size = strlen(prefix) + outlen + 3;
-  if (quotes)
-    size += count * 4;
-  if (spaces)
-    size += count;
-  char *result = palloc(size);
-  size_t pos = 0;
-  strcpy(result, prefix);
-  pos += strlen(prefix);
-  result[pos++] = open;
+  /* Count total space needed (including any overhead such as escaping
+     backslashes), and detect whether each item needs double quotes */
+  char **escaped = (char **) palloc0(sizeof(char *) * count);
+  /* Prefix size + opening and closing characters */
+  size_t prefix_size = strlen(prefix);
+  size_t size = prefix_size + 2;
+
+  /* Iterate through the values */
   for (int i = 0; i < count; i++)
   {
-    if (quotes)
-      result[pos++] = '"';
-    strcpy(result + pos, strings[i]);
-    pos += strlen(strings[i]);
-    if (quotes)
-      result[pos++] = '"';
-    result[pos++] = ',';
-    if (spaces)
-      result[pos++] = ' ';
-    pfree(strings[i]);
+    size += strlen(strings[i]);
+    /* Count the pair of double quotes, if needed */
+    if (quotes == QUOTES || quotes == QUOTES_ESCAPE)
+    {
+      escaped[i] = string_escape(strings[i], quotes);
+      size += strlen(escaped[i]);
+    }
+    else
+      size += strlen(strings[i]);
+
+    /* Count the comma delimiter */
+    size += 1;
   }
+  /* The last element doesn't have a comma delimiter after it but that's OK,
+   * that space is needed for the trailing '\0'.
+   * Add in addition the spaces between elements if requested. */
   if (spaces)
+    size += count;
+
+  /* Construct the output string */
+  char *result = (char *) palloc0(size);
+  char *p = result;
+
+  /* Add the prefix, if any */
+  if (prefix_size)
   {
-    result[pos - 2] = close;
-    result[pos - 1] = '\0';
+    for (char *tmp = prefix; *tmp; tmp++)
+      *p++ = *tmp;
   }
-  else
+
+  *p++ = open;
+  for (int i = 0; i < count; i++)
   {
-    result[pos - 1] = close;
-    result[pos] = '\0';
+    if (escaped[i])
+    {
+      strcpy(p, escaped[i]);
+      p += strlen(p);
+      pfree(escaped[i]);
+    }
+    else
+    {
+      strcpy(p, strings[i]);
+      p += strlen(p);
+    }
+    if (i < count - 1)
+    {
+      *p++ = ',';
+      if (spaces)
+        *p++ = ' ';
+    }
   }
+  *p++ = close;
+  *p = '\0';
+
+  // pfree(escaped); 
   pfree(strings);
   return result;
 }

@@ -32,7 +32,7 @@
  * @brief Bounding box operators for spatiotemporal values
  * @details These operators test the bounding box of spatiotemporal values,
  * which is an`STBox`, where the *x*, *y*, and optional *z* coordinates are
- * or the space (value) dimension and the *t* coordinate is for the time 
+ * or the space (value) dimension and the *t* coordinate is for the time
  * dimension. The following operators are defined: `overlaps`, `contains`,
  * `contained`, and `same`.
  *
@@ -60,9 +60,9 @@ PGDLLEXPORT Datum Tgeo_stboxes(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tgeo_stboxes);
 /**
  * @ingroup mobilitydb_geo_bbox
- * @brief Return an array of spatiotemporal boxes from the instants or segments
- * of a spatiotemporal value, where the choice between instants or segments
- * depends, respectively, on whether the interpolation is discrete or 
+ * @brief Return an array of spatiotemporal boxes from the instants or the
+ * segments of a spatiotemporal value, where the choice between instants or
+ * segments depends, respectively, on whether the interpolation is discrete or
  * continuous
  * @sqlfn stboxes()
  */
@@ -82,7 +82,7 @@ PGDLLEXPORT Datum Geo_stboxes(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Geo_stboxes);
 /**
  * @ingroup mobilitydb_geo_bbox
- * @brief Return an array of spatial boxes from the segments of a 
+ * @brief Return an array of spatial boxes from the segments of a
  * (mult)linestring
  * @sqlfn stboxes()
  */
@@ -127,7 +127,7 @@ PGDLLEXPORT Datum Geo_split_n_stboxes(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Geo_split_n_stboxes);
 /**
  * @ingroup mobilitydb_geo_bbox
- * @brief Return an array of N spatial boxes from the segments of a 
+ * @brief Return an array of N spatial boxes from the segments of a
  * (multi)linestring
  * @sqlfn splitNStboxes()
  */
@@ -152,9 +152,9 @@ PGDLLEXPORT Datum Tgeo_split_each_n_stboxes(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tgeo_split_each_n_stboxes);
 /**
  * @ingroup mobilitydb_geo_bbox
- * @brief Return an array of spatiotemporal boxes from the instants or segments
- * of a spatiotemporal value, where the choice between instants or segments
- * depends, respectively, on whether the interpolation is discrete or
+ * @brief Return an array of spatiotemporal boxes from the instants or the
+ * segments of a spatiotemporal value, where the choice between instants or
+ * segments depends, respectively, on whether the interpolation is discrete or
  * continuous
  * @sqlfn splitEachNStboxes()
  */

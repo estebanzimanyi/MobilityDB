@@ -305,7 +305,7 @@ intspanset_shift_scale(const SpanSet *ss, int shift, int width, bool hasshift,
  * @csqlfn #Numspanset_shift(), #Numspanset_scale(), #Numspanset_shift_scale()
  */
 SpanSet *
-bigintspanset_shift_scale(const SpanSet *ss, int64 shift, int64 width,
+bigintspanset_shift_scale(const SpanSet *ss, int64_t shift, int64_t width,
   bool hasshift, bool haswidth)
 {
   /* Ensure the validity of the arguments */
@@ -380,7 +380,7 @@ intspanset_lower(const SpanSet *ss)
  * @return On error return LONG_MAX
  * @csqlfn #Spanset_lower()
  */
-int64
+int64_t
 bigintspanset_lower(const SpanSet *ss)
 {
   /* Ensure the validity of the arguments */
@@ -442,7 +442,7 @@ intspanset_upper(const SpanSet *ss)
  * @return On error return LONG_MAX
  * @csqlfn #Spanset_upper()
  */
-int64
+int64_t
 bigintspanset_upper(const SpanSet *ss)
 {
   /* Ensure the validity of the arguments */
@@ -506,7 +506,7 @@ intspanset_width(const SpanSet *ss, bool boundspan)
  * @return On error return -1
  * @csqlfn #Numspanset_width(()
  */
-int64
+int64_t
 bigintspanset_width(const SpanSet *ss, bool boundspan)
 {
   /* Ensure the validity of the arguments */

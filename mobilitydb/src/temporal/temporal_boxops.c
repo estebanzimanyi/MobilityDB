@@ -105,7 +105,7 @@ PGDLLEXPORT Datum Temporal_split_n_spans(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Temporal_split_n_spans);
 /**
  * @ingroup mobilitydb_temporal_bbox_split
- * @brief Return an array of N spans from the instants or segments of a
+ * @brief Return an array of N spans from the instants or the segments of a
  * temporal value, where the choice between instants or segments depends,
  * respectively, on whether the interpolation is discrete or continuous
  * @sqlfn splitNSpans()
@@ -127,7 +127,7 @@ PGDLLEXPORT Datum Tnumber_split_n_tboxes(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tnumber_split_n_tboxes);
 /**
  * @ingroup mobilitydb_temporal_bbox_split
- * @brief Return an array of N temporal boxes from the instants or segments of
+ * @brief Return an array of N temporal boxes from the instants or the segments of
  * a temporal number, where the choice between instants or segments depends,
  * respectively, on whether the interpolation is discrete or continuous
  * @sqlfn splitNTboxes()
@@ -151,7 +151,7 @@ PGDLLEXPORT Datum Temporal_split_each_n_spans(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Temporal_split_each_n_spans);
 /**
  * @ingroup mobilitydb_temporal_bbox_split
- * @brief Return an array of spans from the instants or segments of a
+ * @brief Return an array of spans from the instants or the segments of a
  * temporal value, where the choice between instants or segments depends,
  * respectively, on whether the interpolation is discrete or continuous
  * @sqlfn splitEachNSpans()
@@ -173,8 +173,8 @@ PGDLLEXPORT Datum Tnumber_split_each_n_tboxes(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tnumber_split_each_n_tboxes);
 /**
  * @ingroup mobilitydb_temporal_bbox_split
- * @brief Return an array of temporal boxes from the instants or segments of a
- * temporal number, where the choice between instants or segments depends,
+ * @brief Return an array of temporal boxes from the instants or the segments
+ * of a temporal number, where the choice between instants or segments depends,
  * respectively, on whether the interpolation is discrete or continuous
  * @sqlfn splitEachNTboxes()
  */

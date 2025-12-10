@@ -112,7 +112,7 @@ geometry 'polygon((0 0,1 1,2 0.5,3 1,4 1,4 0,0 0))'))
  *****************************************************************************/
 
 /**
- * @brief Return a temporal Boolean that states whether a spatiotemporal
+ * @brief Return a temporal boolean that states whether a spatiotemporal
  * instant and a base value intersect or are disjoint
  * @param[in] inst Spatiotemporal value
  * @param[in] base Base value
@@ -132,7 +132,7 @@ tinterrel_tspatialinst_base(const TInstant *inst, Datum base, bool tinter,
 }
 
 /**
- * @brief Return a temporal Boolean that states whether a spatiotemporal
+ * @brief Return a temporal boolean that states whether a spatiotemporal
  * sequence and a base value intersect or are disjoint
  * @param[in] seq Spatiotemporal value
  * @param[in] base Base value
@@ -160,7 +160,7 @@ tinterrel_tspatialseq_discstep_base(const TSequence *seq, Datum base,
 }
 
 /**
- * @brief Return an array of temporal Boolean sequences that state whether a
+ * @brief Return an array of temporal boolean sequences that state whether a
  * temporal point sequence with linear interpolation that is simple and a
  * geometry intersect or are disjoint
  * @param[in] seq Temporal point
@@ -267,7 +267,7 @@ tinterrel_tpointseq_simple_geo(const TSequence *seq, const GSERIALIZED *gs,
 }
 
 /**
- * @brief Return an array of temporal Boolean sequences that state whether a
+ * @brief Return an array of temporal boolean sequences that state whether a
  * temporal point sequence with linear interpolation and a geometry intersect
  * or are disjoint (iterator function)
  * @details The function splits the temporal geo in an array of fragments that
@@ -318,7 +318,7 @@ tinterrel_tpointseq_linear_geo_iter(const TSequence *seq, const GSERIALIZED *gs,
 }
 
 /**
- * @brief Return a temporal Boolean that states whether a temporal point with
+ * @brief Return a temporal boolean that states whether a temporal point with
  * linear interpolation and a geometry intersect or are disjoint
  * @details The function splits the temporal point in an array of temporal
  * point sequences that are simple (that is, not self-intersecting) and loops
@@ -345,7 +345,7 @@ tinterrel_tpointseq_linear_geo(const TSequence *seq, const GSERIALIZED *gs,
 }
 
 /**
- * @brief Return a temporal Boolean that states whether a spatiotemporal
+ * @brief Return a temporal boolean that states whether a spatiotemporal
  * sequence set and a base value intersect or are disjoint
  * @param[in] ss Spatiotemporal value
  * @param[in] base Base value
@@ -401,7 +401,7 @@ tinterrel_tspatialseqset_base(const TSequenceSet *ss, Datum base,
 }
 
 /**
- * @brief Return a temporal Boolean that states whether a spatialtemporal
+ * @brief Return a temporal boolean that states whether a spatialtemporal
  * value and a base value intersect or are disjoint
  * @param[in] temp Spatiotemporal value
  * @param[in] base Base value
@@ -466,7 +466,7 @@ tinterrel_tspatial_base(const Temporal *temp, Datum base, bool tinter,
 /*****************************************************************************/
 
 /**
- * @brief Return a temporal Boolean that states whether a temporal geo and a
+ * @brief Return a temporal boolean that states whether a temporal geo and a
  * geometry intersect or are disjoint
  * @param[in] temp Temporal geo
  * @param[in] gs Geometry
@@ -493,7 +493,7 @@ tinterrel_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool tinter,
 /*****************************************************************************/
 
 /**
- * @brief Return a temporal Boolean that states whether two temporal geos
+ * @brief Return a temporal boolean that states whether two temporal geos
  * intersect or are disjoint
  * @param[in] temp1,temp2 Temporal geos
  * @param[in] tinter True when computing tintersects, false for tdisjoint
@@ -536,7 +536,7 @@ tinterrel_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2,
  * @param[in] param Parameter
  * @param[in] func Spatial relationship function to be applied
  * @param[in] numparam Number of parameters of the function
- * @param[in] invert True if the arguments should be inverted
+ * @param[in] invert True if the arguments must be inverted
  * @return On error return `NULL`
  */
 Temporal *
@@ -549,10 +549,10 @@ tspatialrel_tspatial_base(const Temporal *temp, Datum base,
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = func;
-  lfinfo.numparam = numparam;
-  lfinfo.param[0] = param;
   lfinfo.argtype[0] = temp->temptype;
   lfinfo.argtype[1] = temptype_basetype(temp->temptype);
+  lfinfo.numparam = numparam;
+  lfinfo.param[0] = param;
   lfinfo.restype = T_TBOOL;
   lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   lfinfo.invert = invert;
@@ -561,14 +561,14 @@ tspatialrel_tspatial_base(const Temporal *temp, Datum base,
 }
 
 /**
- * @brief Return a temporal Boolean that states whether a temporal geometry
+ * @brief Return a temporal boolean that states whether a temporal geometry
  * and a geometry satisfy a spatial relationship
  * @details The temporal contains relationship for a temporal geometry and a
  * geometry is computed at each instant using the lifting infrastructure
  * @param[in] temp Temporal geo
  * @param[in] gs Geometry
  * @param[in] func Spatial relationship function to apply
- * @param[in] invert True if the arguments should be inverted
+ * @param[in] invert True if the arguments must be inverted
  * @param[in] restr True when the result is restricted to a value
  * @param[in] atvalue Value to restrict
  */
@@ -605,7 +605,7 @@ tspatialrel_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs,
  * @param[in] param Parameter
  * @param[in] func Spatial relationship function to be applied
  * @param[in] numparam Number of parameters of the function
- * @param[in] invert True if the arguments should be inverted
+ * @param[in] invert True if the arguments must be inverted
  * @return On error return `NULL`
  */
 Temporal *
@@ -618,11 +618,10 @@ tspatialrel_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2,
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = func;
+  lfinfo.argtype[0] = lfinfo.argtype[1] = temp1->temptype;
   lfinfo.numparam = numparam;
   lfinfo.param[0] = param;
-  lfinfo.argtype[0] = lfinfo.argtype[1] = temp1->temptype;
   lfinfo.restype = T_TBOOL;
-  lfinfo.reslinear = false;
   lfinfo.invert = invert;
   lfinfo.discont = MEOS_FLAGS_LINEAR_INTERP(temp1->flags) ||
     MEOS_FLAGS_LINEAR_INTERP(temp2->flags);
@@ -630,7 +629,7 @@ tspatialrel_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2,
 }
 
 /**
- * @brief Return a temporal Boolean that states whether two temporal geometries
+ * @brief Return a temporal boolean that states whether two temporal geometries
  * satisfy a spatial relationship
  * @param[in] temp1,temp2 Temporal geometries
  * @param[in] restr True when the result is restricted to a value
@@ -669,7 +668,7 @@ tspatialrel_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
 
 /**
  * @ingroup meos_geo_rel_temp
- * @brief Return a temporal Boolean that states whether a geometry contains a
+ * @brief Return a temporal boolean that states whether a geometry contains a
  * temporal geometry
  * @details The temporal contains relationship is computed as follows:
  * - For temporal points
@@ -680,8 +679,8 @@ tspatialrel_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
  *   where `&` and `~` are the temporal `and` and the temporal `or` operators.
  *   Notice that `tcontains(tpoint, geo)` is not defined, the `tintersects`
  *   function can be used instead.
- * - For temporal geometries, compute the relationship at each instant using
- *   the lifting infrastructure.
+ * - For temporal geometries, since they do not accept linear interpolation,
+ *   compute the relationship at each instant using the lifting infrastructure.
  * @param[in] gs Geometry
  * @param[in] temp Temporal geo
  * @param[in] restr True when the result is restricted to a value
@@ -739,7 +738,7 @@ tcontains_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, bool restr,
 
 /**
  * @ingroup meos_geo_rel_temp
- * @brief Return a temporal Boolean that states whether a temporal geometry
+ * @brief Return a temporal boolean that states whether a temporal geometry
  * contains a geometry
  * @details The temporal contains relationship for a temporal geometry and a
  * geometry is computed at each instant using the lifting infrastructure
@@ -761,7 +760,7 @@ tcontains_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool restr,
 
 /**
  * @ingroup meos_geo_rel_temp
- * @brief Return a temporal Boolean that states whether a temporal geometry
+ * @brief Return a temporal boolean that states whether a temporal geometry
  * contains another one
  * @details The temporal contains relationship for two temporal geometries
  * is computed at each instant using the lifting infrastructure
@@ -785,7 +784,7 @@ tcontains_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
 
 /**
  * @ingroup meos_geo_rel_temp
- * @brief Return a temporal Boolean that states whether a geometry covers a
+ * @brief Return a temporal boolean that states whether a geometry covers a
  * temporal geometry
  * @details The temporal covers relationship is computed as follows:
  * - For temporal points
@@ -814,7 +813,7 @@ tcovers_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, bool restr,
 
 /**
  * @ingroup meos_geo_rel_temp
- * @brief Return a temporal Boolean that states whether a temporal geometry
+ * @brief Return a temporal boolean that states whether a temporal geometry
  * covers a geometry
  * @details The temporal covers relationship for a temporal geometry and a
  * geometry is computed at each instant using the lifting infrastructure
@@ -836,7 +835,7 @@ tcovers_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool restr,
 
 /**
  * @ingroup meos_geo_rel_temp
- * @brief Return a temporal Boolean that states whether a spatiotemporal value
+ * @brief Return a temporal boolean that states whether a spatiotemporal value
  * covers another one
  * @details The temporal covers relationship for two temporal geometries
  * is computed at each instant using the lifting infrastructure
@@ -860,7 +859,7 @@ tcovers_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
 
 /**
  * @ingroup meos_geo_rel_temp
- * @brief Return a temporal Boolean that states whether a temporal geo and a
+ * @brief Return a temporal boolean that states whether a temporal geo and a
  * geometry are disjoint
  * @param[in] temp Temporal geo
  * @param[in] gs Geometry
@@ -877,7 +876,7 @@ tdisjoint_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp,
 
 /**
  * @ingroup meos_geo_rel_temp
- * @brief Return a temporal Boolean that states whether a temporal geo and a
+ * @brief Return a temporal boolean that states whether a temporal geo and a
  * geometry are disjoint
  * @param[in] temp Temporal geo
  * @param[in] gs Geometry
@@ -894,7 +893,7 @@ tdisjoint_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs,
 
 /**
  * @ingroup meos_geo_rel_temp
- * @brief Return a temporal Boolean that states whether two temporal geos are
+ * @brief Return a temporal boolean that states whether two temporal geos are
  * disjoint
  * @param[in] temp1,temp2 Temporal geos
  * @param[in] restr True when the result is restricted to a value
@@ -914,7 +913,7 @@ tdisjoint_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
 
 /**
  * @ingroup meos_geo_rel_temp
- * @brief Return a temporal Boolean that states whether a temporal geo and a
+ * @brief Return a temporal boolean that states whether a temporal geo and a
  * geometry intersect
  * @param[in] temp Temporal geo
  * @param[in] gs Geometry
@@ -931,7 +930,7 @@ tintersects_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs,
 
 /**
  * @ingroup meos_geo_rel_temp
- * @brief Return a temporal Boolean that states whether a temporal geo and a
+ * @brief Return a temporal boolean that states whether a temporal geo and a
  * geometry intersect
  * @param[in] temp Temporal geo
  * @param[in] gs Geometry
@@ -948,7 +947,7 @@ tintersects_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp,
 
 /**
  * @ingroup meos_geo_rel_temp
- * @brief Return a temporal Boolean that states whether two temporal geos
+ * @brief Return a temporal boolean that states whether two temporal geos
  * intersect
  * @param[in] temp1,temp2 Temporal geos
  * @param[in] restr True when the result is restricted to a value
@@ -969,7 +968,7 @@ tintersects_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
 
 /**
  * @ingroup meos_geo_rel_temp
- * @brief Return a temporal Boolean that states whether a temporal geo touches
+ * @brief Return a temporal boolean that states whether a temporal geo touches
  * a geometry
  * @details The temporal touches relationship is computed as follows:
  * - For temporal points
@@ -1029,7 +1028,7 @@ ttouches_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool restr,
 
 /**
  * @ingroup meos_geo_rel_temp
- * @brief Return a temporal Boolean that states whether a geometry touches
+ * @brief Return a temporal boolean that states whether a geometry touches
  * a temporal geo
  * @details The temporal touches relationship is computed as follows:
  * - For temporal points
@@ -1053,7 +1052,7 @@ ttouches_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, bool restr,
 
 /**
  * @ingroup meos_geo_rel_temp
- * @brief Return a temporal Boolean that states whether a temporal geometry
+ * @brief Return a temporal boolean that states whether a temporal geometry
  * touches another one
  * @details The temporal `touches` relationship for two temporal geometries is
  * computed at each instant using the lifting infrastructure
@@ -1479,7 +1478,7 @@ tdwithin_tlinearseqset_base(const TSequenceSet *ss, Datum point, Datum dist,
 
 /**
  * @ingroup meos_geo_rel_temp
- * @brief Return a temporal Boolean that states whether a spatiotemporal value
+ * @brief Return a temporal boolean that states whether a spatiotemporal value
  * and a base value are within a distance
  * @param[in] temp Spatiotemporal value
  * @param[in] base Base value
@@ -1545,7 +1544,7 @@ tdwithin_tspatial_spatial(const Temporal *temp, Datum base, Datum dist,
  
 /**
  * @ingroup meos_geo_rel_temp
- * @brief Return a temporal Boolean that states whether a temporal geo and
+ * @brief Return a temporal boolean that states whether a temporal geo and
  * a geometry are within a distance
  * @details The temporal `tdwithin` relationship is computed as follows:
  * - For temporal points, compute the instants in which the temporal sequence
@@ -1596,15 +1595,22 @@ tdwithin_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, double dist,
 /*****************************************************************************/
 
 /**
- * @brief Return a temporal Boolean that states whether two temporal geos
- * are within a distance
- * @pre The spatiotemporal values are synchronized.
+ * @brief Return a temporal boolean that states whether two spatiotemporal
+ * values are within a distance
  */
 Temporal *
-tdwithin_tspatial_tspatial(const Temporal *sync1, const Temporal *sync2,
+tdwithin_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2,
   Datum dist, bool restr, bool atvalue, datum_func3 func, tpfunc_temp tpfn)
 {
-  assert(sync1); assert(sync2);
+  assert(temp1); assert(temp2);
+
+  Temporal *sync1, *sync2;
+  /* Return false if the temporal geos do not intersect in time
+   * The operation is synchronization without adding crossings */
+  if (! intersection_temporal_temporal(temp1, temp2, SYNCHRONIZE_NOCROSS,
+      &sync1, &sync2))
+    return NULL;
+
   Temporal *result;
   assert(temptype_subtype(sync1->subtype));
   switch (sync1->subtype)
@@ -1661,7 +1667,7 @@ tdwithin_tspatial_tspatial(const Temporal *sync1, const Temporal *sync2,
 
 /**
  * @ingroup meos_geo_rel_temp
- * @brief Return a temporal Boolean that states whether two temporal geos
+ * @brief Return a temporal boolean that states whether two temporal geos
  * are within a distance
  * @details The temporal `tdwithin` relationship is computed as follows:
  * - For temporal points, compute the instants at which two temporal sequences
@@ -1689,20 +1695,11 @@ tdwithin_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return NULL;
 
-  Temporal *sync1, *sync2;
-  /* Return false if the temporal geos do not intersect in time
-   * The operation is synchronization without adding crossings */
-  if (! intersection_temporal_temporal(temp1, temp2, SYNCHRONIZE_NOCROSS,
-      &sync1, &sync2))
-    return NULL;
-
   /* Call the generic function passing the distance and the turning point
    * functions to be applied */
-  datum_func3 func = geo_dwithin_fn(sync1->flags, sync2->flags);
-  Temporal *result = tdwithin_tspatial_tspatial(sync1, sync2,
-    Float8GetDatum(dist), restr, atvalue, func, &tpointsegm_tdwithin_turnpt);
-  pfree(sync1); pfree(sync2);
-  return result;
+  datum_func3 func = geo_dwithin_fn(temp1->flags, temp2->flags);
+  return tdwithin_tspatial_tspatial(temp1, temp2, Float8GetDatum(dist),
+    restr, atvalue, func, &tpointsegm_tdwithin_turnpt);
 }
 
 /*****************************************************************************/

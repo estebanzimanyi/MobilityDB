@@ -167,12 +167,10 @@ trgeoinst_make1(const GSERIALIZED *geom, const Pose *pose, TimestampTz t)
   result->subtype = TINSTANT;
   result->t = t;
   SET_VARSIZE(result, size);
-  MEOS_FLAGS_SET_BYVAL(result->flags, false);
   MEOS_FLAGS_SET_CONTINUOUS(result->flags, true);
   MEOS_FLAGS_SET_X(result->flags, true);
   MEOS_FLAGS_SET_T(result->flags, true);
   MEOS_FLAGS_SET_Z(result->flags, MEOS_FLAGS_GET_Z(pose->flags));
-  MEOS_FLAGS_SET_GEODETIC(result->flags, false);
   MEOS_FLAGS_SET_GEOM(result->flags, WITH_GEOM);
   return result;
 }

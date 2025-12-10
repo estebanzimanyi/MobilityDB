@@ -69,7 +69,7 @@ int_extent_transfn(Span *state, int i)
  * @param[in] i Value to aggregate
  */
 Span *
-bigint_extent_transfn(Span *state, int64 i)
+bigint_extent_transfn(Span *state, int64_t i)
 {
   /* Ensure the validity of the arguments */
   if (state && ! ensure_span_isof_type(state, T_BIGINTSPAN))
@@ -216,7 +216,7 @@ spanset_append_spanset(SpanSet *ss1, const SpanSet *ss2, bool expand)
  * @ingroup meos_setspan_agg
  * @brief Transition function for span set aggregate union
  * @param[in,out] state Current aggregate state
- * @param[in] s Span to aggregate
+ * @param[in] sp Span to aggregate
  * @return When the state variable has space for adding the new span, the 
  * function returns the current state variable. Otherwise, a NEW state 
  * variable is returned and the input state is freed.
@@ -226,20 +226,20 @@ spanset_append_spanset(SpanSet *ss1, const SpanSet *ss2, bool expand)
  * @endcode
  */
 SpanSet *
-span_union_transfn(SpanSet *state, const Span *s)
+span_union_transfn(SpanSet *state, const Span *sp)
 {
   /* Null span: return current state */
-  if (! s)
+  if (! sp)
     return state;
   /* Null state: create a new span set with the input span */
   if (! state)
     /* Arbitrary initialization to 64 elements */
-    return spanset_make_exp((Span *) s, 1, 64, NORMALIZE_NO, ORDER);
+    return spanset_make_exp((Span *) sp, 1, 64, NORMALIZE_NO, ORDER);
 
   /* Ensure the validity of the arguments */
-  if (! ensure_same_span_type(&state->elems[0], s))
+  if (! ensure_same_span_type(&state->elems[0], sp))
     return NULL;
-  return spanset_append_span(state, s, true);
+  return spanset_append_span(state, sp, true);
 }
 
 /**

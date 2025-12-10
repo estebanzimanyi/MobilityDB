@@ -37,181 +37,185 @@
  *****************************************************************************/
 
 /**
- * @defgroup meos_internal_setspan Functions for set and span types
+ * @defgroup meos_internal_setspan Internal functions for set and span types
  * @ingroup meos_internal
- * @brief Functions for set and span types
+ * @brief Internal functions for set and span types
  *
- * @defgroup meos_internal_box Functions for temporal boxes
+ * @defgroup meos_internal_box Internal functions for temporal boxes
  * @ingroup meos_internal
- * @brief Functions for temporal boxes
+ * @brief Internal functions for temporal boxes
  *
- * @defgroup meos_internal_temporal Functions for temporal types
+ * @defgroup meos_internal_temporal Internal functions for temporal types
  * @ingroup meos_internal
- * @brief Functions for temporal types
+ * @brief Internal functions for temporal types
  *
- * @defgroup meos_internal_geo Functions for temporal geometries
+ * @defgroup meos_internal_geo Internal functions for temporal geometries
  * @ingroup meos_internal
- * @brief Functions for temporal geometries
+ * @brief Internal functions for temporal geometries
  *
- * @defgroup meos_internal_cbuffer Functions for temporal circular buffers
+ * @defgroup meos_internal_cbuffer Internal functions for temporal circular buffers
  * @ingroup meos_internal
- * @brief Functions for temporal circular buffers
+ * @brief Internal functions for temporal circular buffers
  *
- * @defgroup meos_internal_npoint Functions for temporal network points
+ * @defgroup meos_internal_json Internal functions for temporal circular buffers
  * @ingroup meos_internal
- * @brief Functions for temporal network points
+ * @brief Internal functions for temporal circular buffers
  *
- * @defgroup meos_internal_pose Functions for temporal poses
+ * @defgroup meos_internal_npoint Internal functions for temporal network points
  * @ingroup meos_internal
- * @brief Functions for temporal poses
+ * @brief Internal functions for temporal network points
  *
- * @defgroup meos_internal_rgeo Functions for temporal rigid geometries
+ * @defgroup meos_internal_pose Internal functions for temporal poses
  * @ingroup meos_internal
- * @brief Functions for temporal rigid geometries
+ * @brief Internal functions for temporal poses
+ *
+ * @defgroup meos_internal_rgeo Internal functions for temporal rigid geometries
+ * @ingroup meos_internal
+ * @brief Internal functions for temporal rigid geometries
  */
 
 /*****************************************************************************/
 
 /**
- * @defgroup meos_internal_setspan_inout Input and output functions
+ * @defgroup meos_internal_setspan_inout Internal input and output functions
  * @ingroup meos_internal_setspan
- * @brief Input and output functions for set and span types
+ * @brief Internal input and output functions for set and span types
  *
- * @defgroup meos_internal_setspan_constructor Constructor functions
+ * @defgroup meos_internal_setspan_constructor Internal constructor functions
  * @ingroup meos_internal_setspan
- * @brief Constructor functions for set and span types
+ * @brief Internal constructor functions for set and span types
  *
- * @defgroup meos_internal_setspan_conversion Conversion functions
+ * @defgroup meos_internal_setspan_conversion Internal conversion functions
  * @ingroup meos_internal_setspan
- * @brief Conversion functions for set and span types
+ * @brief Internal conversion functions for set and span types
  *
- * @defgroup meos_internal_setspan_accessor Accessor functions
+ * @defgroup meos_internal_setspan_accessor Internal accessor functions
  * @ingroup meos_internal_setspan
- * @brief Accessor functions for set and span types
+ * @brief Internal accessor functions for set and span types
  *
- * @defgroup meos_internal_setspan_transf Transformation functions
+ * @defgroup meos_internal_setspan_transf Internal transformation functions
  * @ingroup meos_internal_setspan
- * @brief Transformation functions for set and span types
+ * @brief Internal transformation functions for set and span types
  *
- * @defgroup meos_internal_setspan_bbox Bounding box functions
+ * @defgroup meos_internal_setspan_bbox Internal bounding box functions
  * @ingroup meos_internal_setspan
- * @brief Bounding box functions for set and span types
+ * @brief Internal bounding box functions for set and span types
  *
- * @defgroup meos_internal_setspan_topo Topological functions
+ * @defgroup meos_internal_setspan_topo Internal topological functions
  * @ingroup meos_internal_setspan_bbox
- * @brief Topological functions for set and span types
+ * @brief Internal topological functions for set and span types
  *
- * @defgroup meos_internal_setspan_pos Position functions
+ * @defgroup meos_internal_setspan_pos Internal position functions
  * @ingroup meos_internal_setspan_bbox
- * @brief Position functions for set and span types
+ * @brief Internal position functions for set and span types
  *
- * @defgroup meos_internal_setspan_set Set functions
+ * @defgroup meos_internal_setspan_set Internal set functions
  * @ingroup meos_internal_setspan
- * @brief Set functions for set and span types
+ * @brief Internal set functions for set and span types
  *
- * @defgroup meos_internal_setspan_dist Distance functions
+ * @defgroup meos_internal_setspan_dist Internal distance functions
  * @ingroup meos_internal_setspan
- * @brief Distance functions for set and span types
+ * @brief Internal distance functions for set and span types
  *
- * @defgroup meos_internal_setspan_agg Aggregate functions
+ * @defgroup meos_internal_setspan_agg Internal aggregate functions
  * @ingroup meos_internal_setspan
- * @brief Aggregate functions for set and span types
+ * @brief Internal aggregate functions for set and span types
  */
 
 /*****************************************************************************/
 
 /**
- * @defgroup meos_internal_box_constructor Constructor functions
+ * @defgroup meos_internal_box_constructor Internal constructor functions
  * @ingroup meos_internal_box
- * @brief Constructor functions for box types
+ * @brief Internal constructor functions for box types
  *
- * @defgroup meos_internal_box_conversion Conversion functions
+ * @defgroup meos_internal_box_conversion Internal conversion functions
  * @ingroup meos_internal_box
- * @brief Conversion functions for box types
+ * @brief Internal conversion functions for box types
  *
- * @defgroup meos_internal_box_transf Transformation functions
+ * @defgroup meos_internal_box_transf Internal transformation functions
  * @ingroup meos_internal_box
- * @brief Transformation functions for box types
+ * @brief Internal transformation functions for box types
  *
- * @defgroup meos_internal_box_set Set functions
+ * @defgroup meos_internal_box_set Internal set functions
  * @ingroup meos_internal_box
- * @brief Set functions for box types
+ * @brief Internal set functions for box types
   */
 
 /*****************************************************************************/
 
 /**
- * @defgroup meos_internal_temporal_inout Input and output functions
+ * @defgroup meos_internal_temporal_inout Internal input and output functions
  * @ingroup meos_internal_temporal
- * @brief Input and output functions for temporal types
+ * @brief Internal input and output functions for temporal types
  *
- * @defgroup meos_internal_temporal_constructor Constructor functions
+ * @defgroup meos_internal_temporal_constructor Internal constructor functions
  * @ingroup meos_internal_temporal
- * @brief Constructor functions for temporal types
+ * @brief Internal constructor functions for temporal types
  *
- * @defgroup meos_internal_temporal_conversion Conversion functions
+ * @defgroup meos_internal_temporal_conversion Internal conversion functions
  * @ingroup meos_internal_temporal
- * @brief Conversion functions for temporal types
+ * @brief Internal conversion functions for temporal types
  *
- * @defgroup meos_internal_temporal_accessor Accessor functions
+ * @defgroup meos_internal_temporal_accessor Internal accessor functions
  * @ingroup meos_internal_temporal
- * @brief Accessor functions for temporal types
+ * @brief Internal accessor functions for temporal types
  *
- * @defgroup meos_internal_temporal_transf Transformation functions
+ * @defgroup meos_internal_temporal_transf Internal transformation functions
  * @ingroup meos_internal_temporal
- * @brief Transformation functions for temporal types
+ * @brief Internal transformation functions for temporal types
  *
- * @defgroup meos_internal_temporal_modif Modification functions
+ * @defgroup meos_internal_temporal_modif Internal modification functions
  * @ingroup meos_internal_temporal
- * @brief Modification functions for temporal types
+ * @brief Internal modification functions for temporal types
  *
- * @defgroup meos_internal_temporal_restrict Restriction functions
+ * @defgroup meos_internal_temporal_restrict Internal restriction functions
  * @ingroup meos_internal_temporal
- * @brief Restriction functions for temporal types
+ * @brief Internal restriction functions for temporal types
  *
- * @defgroup meos_internal_temporal_comp Comparison functions
+ * @defgroup meos_internal_temporal_comp Internal comparison functions
  * @ingroup meos_internal_temporal
- * @brief Comparison functions for temporal types
+ * @brief Internal comparison functions for temporal types
  *
- * @defgroup meos_internal_temporal_bbox Bounding box functions
+ * @defgroup meos_internal_temporal_bbox Internal bounding box functions
  * @ingroup meos_internal_temporal
- * @brief Bounding box functions for temporal types
+ * @brief Internal bounding box functions for temporal types
  *
- * @defgroup meos_internal_temporal_math Mathematical functions
+ * @defgroup meos_internal_temporal_math Internal mathematical functions
  * @ingroup meos_internal_temporal
- * @brief Mathematical functions for temporal types
+ * @brief Internal mathematical functions for temporal types
  *
- * @defgroup meos_internal_temporal_dist Distance functions
+ * @defgroup meos_internal_temporal_dist Internal distance functions
  * @ingroup meos_internal_temporal
- * @brief Distance functions for temporal types
+ * @brief Internal distance functions for temporal types
  *
- * @defgroup meos_internal_temporal_comp_trad Traditional comparison functions
+ * @defgroup meos_internal_temporal_comp_trad Internal traditional comparison functions
  * @ingroup meos_internal_temporal_comp
- * @brief Tranditional comparison functions for temporal types
+ * @brief Internal tranditional comparison functions for temporal types
  *
- * @defgroup meos_internal_temporal_comp_ever Ever/always comparison functions
+ * @defgroup meos_internal_temporal_comp_ever Internal ever/always comparison functions
  * @ingroup meos_internal_temporal_comp
- * @brief Ever and always comparison functions for temporal types
+ * @brief Internal ever and always comparison functions for temporal types
  *
- * @defgroup meos_internal_temporal_comp_temp Temporal comparison functions
+ * @defgroup meos_internal_temporal_comp_temp Internal temporal comparison functions
  * @ingroup meos_internal_temporal_comp
- * @brief Temporal comparison functions for temporal types
+ * @brief Internal temporal comparison functions for temporal types
  *
- * @defgroup meos_internal_temporal_spatial Spatial functions
+ * @defgroup meos_internal_temporal_spatial Internal spatial functions
  * @ingroup meos_internal_temporal
- * @brief Spatial functions for temporal geos
+ * @brief Internal spatial functions for temporal geos
  *
- * @defgroup meos_internal_temporal_spatial_accessor Spatial accessor functions
+ * @defgroup meos_internal_temporal_spatial_accessor Internal spatial accessor functions
  * @ingroup meos_internal_temporal_spatial
- * @brief Spatial accessor functions for temporal geos
+ * @brief Internal spatial accessor functions for temporal geos
  *
- * @defgroup meos_internal_temporal_spatial_transf Spatial transformation functions
+ * @defgroup meos_internal_temporal_spatial_transf Internal spatial transformation functions
  * @ingroup meos_internal_temporal_spatial
- * @brief Spatial transformation functions for temporal geos
+ * @brief Internal spatial transformation functions for temporal geos
  *
- * @defgroup meos_internal_temporal_agg Aggregate functions
+ * @defgroup meos_internal_temporal_agg Internal aggregate functions
  * @ingroup meos_internal_temporal
- * @brief Aggregate functions for temporal types
+ * @brief Internal aggregate functions for temporal types
  */
 
 /*****************************************************************************/

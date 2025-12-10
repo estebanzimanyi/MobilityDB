@@ -68,10 +68,10 @@
 static Temporal *
 tcbuffer_valid_typmod(Temporal *temp, int32_t typmod)
 {
-  int32 srid = tspatial_srid(temp);
+  int32_t srid = tspatial_srid(temp);
   uint8 subtype = temp->subtype;
   uint8 typmod_subtype = TYPMOD_GET_TEMPSUBTYPE(typmod);
-  int32 typmod_srid = TYPMOD_GET_SRID(typmod);
+  int32_t typmod_srid = TYPMOD_GET_SRID(typmod);
 
   /* No typmod (-1) */
   if (typmod < 0 && typmod_subtype == ANYTEMPSUBTYPE)
@@ -116,7 +116,7 @@ Datum
 Tcbuffer_enforce_typmod(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  int32 typmod = PG_GETARG_INT32(1);
+  int32_t typmod = PG_GETARG_INT32(1);
   /* Check if the typmod of the temporal circular buffer is consistent with the
    * supplied one */
   temp = tcbuffer_valid_typmod(temp, typmod);
@@ -132,7 +132,7 @@ Datum
 Tcbuffer_typmod_in(PG_FUNCTION_ARGS)
 {
   ArrayType *array = (ArrayType *) DatumGetPointer(PG_GETARG_DATUM(0));
-  uint32 typmod = tspatial_typmod_in(array, true, false);
+  uint32_t typmod = tspatial_typmod_in(array, true, false);
   PG_RETURN_INT32(typmod);
 }
 

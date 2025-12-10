@@ -142,10 +142,10 @@ arithop_tnumber_number(const Temporal *temp, Datum value, TArithmetic oper,
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) func;
-  lfinfo.numparam = 1;
-  lfinfo.param[0] = basetype;
   lfinfo.argtype[0] = temp->temptype;
   lfinfo.argtype[1] = basetype;
+  lfinfo.numparam = 1;
+  lfinfo.param[0] = basetype;
   lfinfo.restype = temp->temptype;
   lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   lfinfo.invert = invert;
@@ -198,9 +198,9 @@ arithop_tnumber_tnumber(const Temporal *temp1, const Temporal *temp2,
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) func;
+  lfinfo.argtype[0] = lfinfo.argtype[1] = temp1->temptype;
   lfinfo.numparam = 1;
   lfinfo.param[0] = basetype;
-  lfinfo.argtype[0] = lfinfo.argtype[1] = temp1->temptype;
   lfinfo.restype = temp1->temptype;
   lfinfo.reslinear = linear1 || linear2;
   lfinfo.invert = INVERT_NO;
@@ -489,7 +489,7 @@ angular_difference(Datum degrees1, Datum degrees2)
  * @param[in] degrees1,degrees2 Values
  */
 double
-float8_angular_difference(float8 degrees1, float8 degrees2)
+float8_angular_difference(double degrees1, double degrees2)
 {
   return DatumGetFloat8(angular_difference(Float8GetDatum(degrees1),
     Float8GetDatum(degrees2)));
@@ -717,9 +717,9 @@ tfloat_exp(const Temporal *temp)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) datum_exp;
-  lfinfo.numparam = 0;
   lfinfo.argtype[0] = T_TFLOAT;
   lfinfo.restype = T_TFLOAT;
+  lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   return tfunc_temporal(temp, &lfinfo);
 }
 
@@ -760,9 +760,9 @@ tfloat_ln(const Temporal *temp)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) datum_ln;
-  lfinfo.numparam = 0;
   lfinfo.argtype[0] = T_TFLOAT;
   lfinfo.restype = T_TFLOAT;
+  lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   return tfunc_temporal(temp, &lfinfo);
 }
 
@@ -801,9 +801,9 @@ tfloat_log10(const Temporal *temp)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) datum_log10;
-  lfinfo.numparam = 0;
   lfinfo.argtype[0] = T_TFLOAT;
   lfinfo.restype = T_TFLOAT;
+  lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   return tfunc_temporal(temp, &lfinfo);
 }
 

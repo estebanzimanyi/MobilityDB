@@ -560,20 +560,20 @@ tgeoseq_from_base_tstzset(const GSERIALIZED *gs, const Set *s)
  * @ingroup meos_geo_constructor
  * @brief Return a temporal point sequence from a point and a timestamptz span
  * @param[in] gs Value
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] interp Interpolation
  */
 TSequence *
-tpointseq_from_base_tstzspan(const GSERIALIZED *gs, const Span *s,
+tpointseq_from_base_tstzspan(const GSERIALIZED *gs, const Span *sp,
   interpType interp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(gs, NULL); VALIDATE_TSTZSPAN(s, NULL);
+  VALIDATE_NOT_NULL(gs, NULL); VALIDATE_TSTZSPAN(sp, NULL);
   if (gserialized_is_empty(gs))
     return NULL;
   meosType temptype = FLAGS_GET_GEODETIC(gs->gflags) ?
     T_TGEOGPOINT : T_TGEOMPOINT;
-  return tsequence_from_base_tstzspan(PointerGetDatum(gs), temptype, s,
+  return tsequence_from_base_tstzspan(PointerGetDatum(gs), temptype, sp,
     interp);
 }
 
@@ -582,20 +582,20 @@ tpointseq_from_base_tstzspan(const GSERIALIZED *gs, const Span *s,
  * @brief Return a temporal geo sequence from a geometry/geography and a
  * timestamptz span
  * @param[in] gs Value
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[in] interp Interpolation
  */
 TSequence *
-tgeoseq_from_base_tstzspan(const GSERIALIZED *gs, const Span *s,
+tgeoseq_from_base_tstzspan(const GSERIALIZED *gs, const Span *sp,
   interpType interp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(gs, NULL); VALIDATE_TSTZSPAN(s, NULL);
+  VALIDATE_NOT_NULL(gs, NULL); VALIDATE_TSTZSPAN(sp, NULL);
   if (gserialized_is_empty(gs))
     return NULL;
   meosType temptype = FLAGS_GET_GEODETIC(gs->gflags) ?
     T_TGEOGRAPHY : T_TGEOMETRY;
-  return tsequence_from_base_tstzspan(PointerGetDatum(gs), temptype, s,
+  return tsequence_from_base_tstzspan(PointerGetDatum(gs), temptype, sp,
     interp);
 }
 
@@ -754,7 +754,7 @@ tgeo_value_n(const Temporal *temp, int n, GSERIALIZED **result)
 
 /**
  * @ingroup meos_geo_accessor
- * @brief Return the array of copies of base values of a temporal geo
+ * @brief Return an array of copies of base values of a temporal geo
  * @param[in] temp Temporal value
  * @param[out] count Number of values in the output array
  * @csqlfn #Temporal_valueset()

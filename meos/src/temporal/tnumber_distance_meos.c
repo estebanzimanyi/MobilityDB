@@ -91,8 +91,8 @@ tdistance_tfloat_float(const Temporal *temp, double d)
 
 /**
  * @ingroup meos_temporal_dist
- * @brief Return the nearest approach distance between a temporal number
- * and a number
+ * @brief Return the nearest approach distance between a temporal integer
+ * and an integer
  * @param[in] temp Temporal value
  * @param[in] i Value
  * @return On error return INT_MAX
@@ -108,8 +108,8 @@ nad_tint_int(const Temporal *temp, int i)
 
 /**
  * @ingroup meos_temporal_dist
- * @brief Return the nearest approach distance between a temporal number
- * and a number
+ * @brief Return the nearest approach distance between a temporal float
+ * and a float
  * @param[in] temp Temporal value
  * @param[in] d Value
  * @return On error return DBL_MAX
@@ -161,7 +161,8 @@ nad_tfloat_tbox(const Temporal *temp, const TBox *box)
 
 /**
  * @ingroup meos_temporal_dist
- * @brief Return the nearest approach distance between the int temporal boxes
+ * @brief Return the nearest approach distance between two integer temporal
+ * boxes
  * @param[in] box1,box2 Temporal boxes
  * @return On error return INT_MAX
  * @csqlfn #NAD_tbox_tbox()
@@ -178,7 +179,7 @@ nad_tboxint_tboxint(const TBox *box1, const TBox *box2)
 
 /**
  * @ingroup meos_temporal_dist
- * @brief Return the nearest approach distance between the float temporal boxes
+ * @brief Return the nearest approach distance between two float temporal boxes
  * @param[in] box1,box2 Temporal boxes
  * @return On error return DBL_MAX
  * @csqlfn #NAD_tbox_tbox()

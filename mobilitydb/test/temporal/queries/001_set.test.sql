@@ -43,9 +43,9 @@ SELECT tstzset '{2000-01-01, 2000-01-02';
 
 -- Output in WKT format
 
-SELECT asText(floatset '{1.12345678, 2.123456789}', 6);
+SELECT asText(floatset '{1.123456789, 2.123456789}', 6);
 /* Errors */
-SELECT asText(floatset '{1.12345678, 2.123456789}', -6);
+SELECT asText(floatset '{1.123456789, 2.123456789}', -6);
 
 -------------------------------------------------------------------------------
 -- Constructors

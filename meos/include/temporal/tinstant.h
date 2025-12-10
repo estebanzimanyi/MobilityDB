@@ -50,14 +50,14 @@ extern double tnumberinst_double(const TInstant *inst);
 /* Input/output functions */
 
 extern char *tinstant_to_string(const TInstant *inst, int maxdd,
-  outfunc value_out);
+  outfunc base_out_fn);
 
 /* Restriction Functions */
 
 extern bool tinstant_restrict_values_test(const TInstant *inst,
   const Set *s, bool atfunc);
 extern bool tnumberinst_restrict_span_test(const TInstant *inst,
-  const Span *s, bool atfunc);
+  const Span *sp, bool atfunc);
 extern bool tnumberinst_restrict_spanset_test(const TInstant *inst,
   const SpanSet *ss, bool atfunc);
 extern bool tinstant_restrict_tstzset_test(const TInstant *inst,

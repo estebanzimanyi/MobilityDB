@@ -260,7 +260,7 @@ intset_make(const int *values, int count)
  * @csqlfn #Set_constructor()
  */
 Set *
-bigintset_make(const int64 *values, int count)
+bigintset_make(const int64_t *values, int count)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(values, NULL);
@@ -381,7 +381,7 @@ int_to_set(int i)
  * @csqlfn #Value_to_set()
  */
 Set *
-bigint_to_set(int64 i)
+bigint_to_set(int64_t i)
 {
   Datum v = Int64GetDatum(i);
   return set_make_exp(&v, 1, 1, T_INT8, ORDER_NO);
@@ -467,7 +467,7 @@ intset_start_value(const Set *s)
  * @return On error return @p INT_MAX
  * @csqlfn #Set_start_value()
  */
-int64
+int64_t
 bigintset_start_value(const Set *s)
 {
   /* Ensure the validity of the arguments */
@@ -559,7 +559,7 @@ intset_end_value(const Set *s)
  * @return On error return @p INT_MAX
  * @csqlfn #Set_end_value()
  */
-int64
+int64_t
 bigintset_end_value(const Set *s)
 {
   /* Ensure the validity of the arguments */
@@ -659,7 +659,7 @@ intset_value_n(const Set *s, int n, int *result)
  * @csqlfn #Set_value_n()
  */
 bool
-bigintset_value_n(const Set *s, int n, int64 *result)
+bigintset_value_n(const Set *s, int n, int64_t *result)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSET(s, false); VALIDATE_NOT_NULL(result, false);
@@ -776,12 +776,12 @@ intset_values(const Set *s)
  * @return On error return @p NULL
  * @csqlfn #Set_values()
  */
-int64 *
+int64_t *
 bigintset_values(const Set *s)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_BIGINTSET(s, NULL);
-  int64 *result = palloc(sizeof(int64) * s->count);
+  int64_t *result = palloc(sizeof(int64_t) * s->count);
   for (int i = 0; i < s->count; i++)
     result[i] = DatumGetInt64(SET_VAL_N(s, i));
   return result;
@@ -807,7 +807,7 @@ floatset_values(const Set *s)
 
 /**
  * @ingroup meos_setspan_accessor
- * @brief Return the array of copies of the values of a text set
+ * @brief Return an array of copies of the values of a text set
  * @param[in] s Set
  * @return On error return @p NULL
  * @csqlfn #Set_values()
@@ -926,7 +926,7 @@ intset_shift_scale(const Set *s, int shift, int width, bool hasshift,
  * @csqlfn #Numset_shift(), #Numset_scale(), #Numset_shift_scale(),
  */
 Set *
-bigintset_shift_scale(const Set *s, int64 shift, int64 width, bool hasshift,
+bigintset_shift_scale(const Set *s, int64_t shift, int64_t width, bool hasshift,
   bool haswidth)
 {
   /* Ensure the validity of the arguments */

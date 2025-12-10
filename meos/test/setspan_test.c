@@ -56,11 +56,11 @@ int main(void)
   bool b1 = bool_in("true");
   char *b1_out = bool_out(b1);
 
-  int32 int32_in1 = 1;
-  int32 int32_in2 = 3;
+  int32_t int32_in1 = 1;
+  int32_t int32_in2 = 3;
 
-  int64 int64_in1 = 1;
-  int64 int64_in2 = 3;
+  int64_t int64_in1 = 1;
+  int64_t int64_in2 = 3;
 
   size_t size, iset1_wkb_size, ispan1_wkb_size, ispanset1_wkb_size;
 
@@ -209,7 +209,7 @@ int main(void)
 
   /* Create the result types for the functions of the API */
 
-  int64 int64_result;
+  int64_t int64_result;
   double float8_result;
   DateADT date_result;
   TimestampTz tstz_result;
@@ -232,17 +232,17 @@ int main(void)
   SpanSet *dspanset_result;
   SpanSet *tstzspanset_result;
   bool bool_result;
-  int32 int32_result;
-  uint32 uint32_result;
-  uint64 uint64_result;
+  int32_t int32_result;
+  uint32_t uint32_result;
+  uint64_t uint64_result;
   char *char_result;
   text *text_result;
   int count;
 
   uint8_t *binchar_result;
 
-  int32 *int32array_result;
-  int64 *int64array_result;
+  int32_t *int32array_result;
+  int64_t *int64array_result;
   double *float8array_result;
   text **textarray_result;
   DateADT *datearray_result;
@@ -278,7 +278,7 @@ int main(void)
   printf("bigintspan_in(%s): %s\n", bspan1_in, char_result);
   free(bspan_result); free(char_result);
 
-  /* char *bigintspan_out(const Span *s); */
+  /* char *bigintspan_out(const Span *sp); */
   char_result = bigintspan_out(bspan1);
   printf("bigintspan_out(%s): %s\n", bspan1_out, char_result);
   free(char_result);
@@ -311,7 +311,7 @@ int main(void)
   printf("datespan_in(%s): %s\n", dspan1_in, char_result);
   free(dspan_result); free(char_result);
 
-  /* char *datespan_out(const Span *s); */
+  /* char *datespan_out(const Span *sp); */
   char_result = datespan_out(dspan1);
   printf("datespan_out(%s): %s\n", dspan1_out, char_result);
   free(char_result);
@@ -344,7 +344,7 @@ int main(void)
   printf("floatspan_in(%s): %s\n", fspan1_in, char_result);
   free(fspan_result); free(char_result);
 
-  /* char *floatspan_out(const Span *s, int maxdd); */
+  /* char *floatspan_out(const Span *sp, int maxdd); */
   char_result = floatspan_out(fspan1, 6);
   printf("floatspan_out(%s, 6): %s\n", fspan1_out, char_result);
   free(char_result);
@@ -377,7 +377,7 @@ int main(void)
   printf("intspan_in(%s): %s\n", ispan1_in, char_result);
   free(ispan_result); free(char_result);
 
-  /* char *intspan_out(const Span *s); */
+  /* char *intspan_out(const Span *sp); */
   char_result = intspan_out(ispan1);
   printf("intspan_out(%s): %s\n", ispan1_out, char_result);
   free(char_result);
@@ -419,12 +419,12 @@ int main(void)
   printf("): %s\n", char_result);
   free(iset_result); free(char_result);
 
-  /* char *span_as_hexwkb(const Span *s, uint8_t variant, size_t *size_out); */
+  /* char *span_as_hexwkb(const Span *sp, uint8_t variant, size_t *size_out); */
   char_result = span_as_hexwkb(ispan1, 1, &size);
   printf("span_as_hexwkb(%s 1, &size): %s\n", ispan1_out, char_result);
   free(char_result);
 
-  /* uint8_t *span_as_wkb(const Span *s, uint8_t variant, size_t *size_out); */
+  /* uint8_t *span_as_wkb(const Span *sp, uint8_t variant, size_t *size_out); */
   binchar_result = span_as_wkb(ispan1, 1, &size);
   printf("span_as_wkb(%s, 1, %ld): ", ispan1_out, size);
   fwrite(binchar_result, size, 1, stdout);
@@ -499,7 +499,7 @@ int main(void)
   printf("tstzspan_in(%s): %s\n", tstzspan1_in, char_result);
   free(tstzspan_result); free(char_result);
 
-  /* char *tstzspan_out(const Span *s); */
+  /* char *tstzspan_out(const Span *sp); */
   char_result = tstzspan_out(tstzspan1);
   printf("tstzspan_out(%s): %s\n", tstzspan1_out, char_result);
   free(char_result);
@@ -520,8 +520,8 @@ int main(void)
    *****************************************************************************/
   printf("****************************************************************\n");
 
-  /* Set *bigintset_make(const int64 *values, int count); */
-  int64 bigintarray[2];
+  /* Set *bigintset_make(const int64_t *values, int count); */
+  int64_t bigintarray[2];
   bigintarray[0] = int64_in1;
   bigintarray[1] = int64_in2;
   bset_result = bigintset_make(bigintarray, 2);
@@ -529,7 +529,7 @@ int main(void)
   printf("bigintset_make({%lu, %lu} 2): %s\n", int64_in1, int64_in2, char_result);
   free(bset_result); free(char_result);
 
-  /* Span *bigintspan_make(int64 lower, int64 upper, bool lower_inc, bool upper_inc); */
+  /* Span *bigintspan_make(int64_t lower, int64_t upper, bool lower_inc, bool upper_inc); */
   bspan_result = bigintspan_make(int64_in1, int64_in2, true, false);
   char_result = bigintspan_out(bspan_result);
   printf("bigintspan_make(%ld, %ld, true, false): %s\n", int64_in1, int64_in2, char_result);
@@ -586,7 +586,7 @@ int main(void)
   printf("set_copy(%s): %s\n", iset1_out, char_result);
   free(iset_result); free(char_result);
 
-  /* Span *span_copy(const Span *s); */
+  /* Span *span_copy(const Span *sp); */
   ispan_result = span_copy(ispan1);
   char_result = intspan_out(ispan_result);
   printf("span_copy(%s): %s\n", ispan1_out, char_result);
@@ -636,7 +636,7 @@ int main(void)
    *****************************************************************************/
   printf("****************************************************************\n");
 
-  /* Set *bigint_to_set(int64 i); */
+  /* Set *bigint_to_set(int64_t i); */
   bset_result = bigint_to_set(int64_in1);
   char_result = bigintset_out(bset_result);
   printf("bigint_to_set(%lu): %s\n", int64_in1, char_result);
@@ -678,7 +678,7 @@ int main(void)
   printf("dateset_to_tstzset(%s): %s\n", dset1_out, char_result);
   free(tstzset_result); free(char_result);
 
-  /* Span *datespan_to_tstzspan(const Span *s); */
+  /* Span *datespan_to_tstzspan(const Span *sp); */
   tstzspan_result = datespan_to_tstzspan(dspan1);
   char_result = tstzspan_out(tstzspan_result);
   printf("datespan_to_tstzspan(%s): %s\n", dspan1_out, char_result);
@@ -714,7 +714,7 @@ int main(void)
   printf("floatset_to_intset(%s): %s\n", fset1_out, char_result);
   free(iset_result); free(char_result);
 
-  /* Span *floatspan_to_intspan(const Span *s); */
+  /* Span *floatspan_to_intspan(const Span *sp); */
   ispan_result = floatspan_to_intspan(fspan1);
   char_result = intspan_out(ispan_result);
   printf("floatspan_to_intspan(%s): %s\n", ispan1_out, char_result);
@@ -750,7 +750,7 @@ int main(void)
   printf("intset_to_floatset(%s, 6): %s\n", iset1_out, char_result);
   free(fset_result); free(char_result);
 
-  /* Span *intspan_to_floatspan(const Span *s); */
+  /* Span *intspan_to_floatspan(const Span *sp); */
   fspan_result = intspan_to_floatspan(ispan1);
   char_result = floatspan_out(fspan_result, 6);
   printf("intspan_to_floatspan(%s, 6): %s\n", ispan1_out, char_result);
@@ -774,7 +774,7 @@ int main(void)
   printf("set_to_spanset(%s): %s\n", iset1_out, char_result);
   free(ispanset_result); free(char_result);
 
-  /* SpanSet *span_to_spanset(const Span *s); */
+  /* SpanSet *span_to_spanset(const Span *sp); */
   ispanset_result = span_to_spanset(ispan1);
   char_result = intspanset_out(ispanset_result);
   printf("span_to_spanset(%s): %s\n", ispan1_out, char_result);
@@ -810,7 +810,7 @@ int main(void)
   printf("tstzset_to_dateset(%s): %s\n", tstzset1_out, char_result);
   free(dset_result); free(char_result);
 
-  /* Span *tstzspan_to_datespan(const Span *s); */
+  /* Span *tstzspan_to_datespan(const Span *sp); */
   dspan_result = tstzspan_to_datespan(tstzspan1);
   char_result = datespan_out(dspan_result);
   printf("tstzspan_to_datespan(%s): %s\n", tstzspan1_out, char_result);
@@ -827,19 +827,19 @@ int main(void)
    *****************************************************************************/
   printf("****************************************************************\n");
 
-  /* int64 bigintset_end_value(const Set *s); */
+  /* int64_t bigintset_end_value(const Set *s); */
   int64_result = bigintset_end_value(bset1);
   printf("bigintset_end_value(%s): %ld\n", bset1_out, int64_result);
 
-  /* int64 bigintset_start_value(const Set *s); */
+  /* int64_t bigintset_start_value(const Set *s); */
   int64_result = bigintset_start_value(bset1);
   printf("bigintset_start_value(%s): %ld\n", bset1_out, int64_result);
 
-  /* bool bigintset_value_n(const Set *s, int n, int64 *result); */
+  /* bool bigintset_value_n(const Set *s, int n, int64_t *result); */
   bool_result = bigintset_value_n(bset1, 1, &int64_result);
   printf("bigintset_value_n(%s, 1, %ld): %c\n", bset1_out, int64_result, bool_result ? 't' : 'n');
 
-  /* int64 *bigintset_values(const Set *s); */
+  /* int64_t *bigintset_values(const Set *s); */
   int64array_result = bigintset_values(bset1);
   printf("bigintset_values(%s): {", bset1_out);
   for (int i = 0; i < bset1->count; i++)
@@ -852,27 +852,27 @@ int main(void)
   }
   free(int64array_result);
 
-  /* int64 bigintspan_lower(const Span *s); */
+  /* int64_t bigintspan_lower(const Span *sp); */
   int64_result = bigintspan_lower(bspan1);
   printf("bigintspan_lower(%s): %ld\n", bspan1_out, int64_result);
 
-  /* int64 bigintspan_upper(const Span *s); */
+  /* int64_t bigintspan_upper(const Span *sp); */
   int64_result = bigintspan_upper(bspan1);
   printf("bigintspan_upper(%s): %ld\n", bspan1_out, int64_result);
 
-  /* int64 bigintspan_width(const Span *s); */
+  /* int64_t bigintspan_width(const Span *sp); */
   int64_result = bigintspan_width(bspan1);
   printf("bigintspan_width(%s): %ld\n", bspan1_out, int64_result);
 
-  /* int64 bigintspanset_lower(const SpanSet *ss); */
+  /* int64_t bigintspanset_lower(const SpanSet *ss); */
   int64_result = bigintspanset_lower(bspanset1);
   printf("bigintspanset_lower(%s): %ld\n", bspanset1_out, int64_result);
 
-  /* int64 bigintspanset_upper(const SpanSet *ss); */
+  /* int64_t bigintspanset_upper(const SpanSet *ss); */
   int64_result = bigintspanset_upper(bspanset1);
   printf("bigintspanset_upper(%s): %ld\n", bspanset1_out, int64_result);
 
-  /* int64 bigintspanset_width(spanset1, bool boundspan); */
+  /* int64_t bigintspanset_width(spanset1, bool boundspan); */
   int64_result = bigintspanset_width(bspanset1, true);
   printf("bigintspanset_width(%s): %ld\n", bspanset1_out, int64_result);
 
@@ -909,19 +909,19 @@ int main(void)
   }
   free(datearray_result);
 
-  /* Interval *datespan_duration(const Span *s); */
+  /* Interval *datespan_duration(const Span *sp); */
   interv_result = datespan_duration(dspan1);
   char_result = interval_out(interv_result);
   printf("datespan_duration(%s): %s\n", dspan1_out, char_result);
   free(interv_result); free(char_result);
 
-  /* DateADT datespan_lower(const Span *s); */
+  /* DateADT datespan_lower(const Span *sp); */
   date_result = datespan_lower(dspan1);
   char_result = date_out(date_result);
   printf("datespan_lower(%s): %s\n", dspan1_out, char_result);
   free(char_result);
 
-  /* DateADT datespan_upper(const Span *s); */
+  /* DateADT datespan_upper(const Span *sp); */
   date_result = datespan_upper(dspan1);
   char_result = date_out(date_result);
   printf("datespan_upper(%s): %s\n", dspan1_out, char_result);
@@ -986,15 +986,15 @@ int main(void)
   }
   free(float8array_result);
 
-  /* double floatspan_lower(const Span *s); */
+  /* double floatspan_lower(const Span *sp); */
   float8_result = floatspan_lower(fspan1);
   printf("floatspan_lower(%s): %lf\n", fspan1_out, float8_result);
 
-  /* double floatspan_upper(const Span *s); */
+  /* double floatspan_upper(const Span *sp); */
   float8_result = floatspan_upper(fspan1);
   printf("floatspan_upper(%s): %lf\n", fspan1_out, float8_result);
 
-  /* double floatspan_width(const Span *s); */
+  /* double floatspan_width(const Span *sp); */
   float8_result = floatspan_width(fspan1);
   printf("floatspan_width(%s): %lf\n", fspan1_out, float8_result);
 
@@ -1035,15 +1035,15 @@ int main(void)
   }
   free(int32array_result);
 
-  /* int intspan_lower(const Span *s); */
+  /* int intspan_lower(const Span *sp); */
   int32_result = intspan_lower(ispan1);
   printf("intspan_lower(%s): %d\n", ispan1_out, int32_result);
 
-  /* int intspan_upper(const Span *s); */
+  /* int intspan_upper(const Span *sp); */
   int32_result = intspan_upper(ispan1);
   printf("intspan_upper(%s): %d\n", ispan1_out, int32_result);
 
-  /* int intspan_width(const Span *s); */
+  /* int intspan_width(const Span *sp); */
   int32_result = intspan_width(ispan1);
   printf("intspan_width(%s): %d\n", ispan1_out, int32_result);
 
@@ -1059,11 +1059,11 @@ int main(void)
   int32_result = intspanset_width(ispanset1, true);
   printf("intspanset_width(%s): %d\n", ispanset1_out, int32_result);
 
-  /* uint32 set_hash(const Set *s); */
+  /* uint32_t set_hash(const Set *s); */
   uint32_result = set_hash(iset1);
   printf("set_hash(%s): %u\n", iset1_out, uint32_result);
 
-  /* uint64 set_hash_extended(const Set *s, uint64 seed); */
+  /* uint64_t set_hash_extended(const Set *s, uint64_t seed); */
   uint64_result = set_hash_extended(iset1, int32_in1);
   printf("set_hash_extended(%s): %lu\n", iset1_out, uint64_result);
 
@@ -1071,19 +1071,19 @@ int main(void)
   int32_result = set_num_values(iset1);
   printf("set_num_values(%s): %d\n", iset1_out, int32_result);
 
-  /* uint32 span_hash(const Span *s); */
+  /* uint32_t span_hash(const Span *sp); */
   uint32_result = span_hash(ispan1);
   printf("span_hash(%s): %u\n", ispan1_out, uint32_result);
 
-  /* uint64 span_hash_extended(const Span *s, uint64 seed); */
+  /* uint64_t span_hash_extended(const Span *sp, uint64_t seed); */
   uint64_result = span_hash_extended(ispan1, int32_in1);
   printf("span_hash_extended(%s): %lu\n", ispan1_out, uint64_result);
 
-  /* bool span_lower_inc(const Span *s); */
+  /* bool span_lower_inc(const Span *sp); */
   bool_result = span_lower_inc(ispan1);
   printf("span_lower_inc(%s): %c\n", ispan1_out, bool_result ? 't' : 'n');
 
-  /* bool span_upper_inc(const Span *s); */
+  /* bool span_upper_inc(const Span *sp); */
   bool_result = span_upper_inc(ispan1);
   printf("span_upper_inc(%s): %c\n", ispan1_out, bool_result ? 't' : 'n');
 
@@ -1093,11 +1093,11 @@ int main(void)
   printf("spanset_end_span(%s): %s\n", ispanset1_out, char_result);
   free(ispan_result); free(char_result);
 
-  /* uint32 spanset_hash(const SpanSet *ss); */
+  /* uint32_t spanset_hash(const SpanSet *ss); */
   uint32_result = spanset_hash(ispanset1);
   printf("spanset_hash(%s): %u\n", ispanset1_out, uint32_result);
 
-  /* uint64 spanset_hash_extended(spanset1, uint64 seed); */
+  /* uint64_t spanset_hash_extended(spanset1, uint64_t seed); */
   uint64_result = spanset_hash_extended(ispanset1, 1);
   printf("spanset_hash_extended(%s): %lu\n", ispanset1_out, uint64_result);
 
@@ -1214,19 +1214,19 @@ int main(void)
   }
   free(tstzarray_result);
 
-  /* Interval *tstzspan_duration(const Span *s); */
+  /* Interval *tstzspan_duration(const Span *sp); */
   interv_result = tstzspan_duration(tstzspan1);
   char_result = interval_out(interv_result);
   printf("tstzspan_duration(%s): %s\n", tstzspan1_out, char_result);
   free(interv_result); free(char_result);
 
-  /* TimestampTz tstzspan_lower(const Span *s); */
+  /* TimestampTz tstzspan_lower(const Span *sp); */
   tstz_result = tstzspan_lower(tstzspan1);
   char_result = timestamptz_out(tstz_result);
   printf("tstzspan_lower(%s): %s\n", tstzspan1_out, char_result);
   free(char_result);
 
-  /* TimestampTz tstzspan_upper(const Span *s); */
+  /* TimestampTz tstzspan_upper(const Span *sp); */
   tstz_result = tstzspan_upper(tstzspan1);
   char_result = timestamptz_out(tstz_result);
   printf("tstzspan_upper(%s): %s\n", tstzspan1_out, char_result);
@@ -1283,25 +1283,25 @@ int main(void)
    *****************************************************************************/
   printf("****************************************************************\n");
 
-  /* Set *bigintset_shift_scale(const Set *s, int64 shift, int64 width, bool hasshift, bool haswidth); */
+  /* Set *bigintset_shift_scale(const Set *s, int64_t shift, int64_t width, bool hasshift, bool haswidth); */
   bset_result = bigintset_shift_scale(bset1, int64_in1, int64_in2, true, true);
   char_result = bigintset_out(bset_result);
   printf("bigintset_shift_scale(%s, %ld, %ld, true, true): %s\n", bset1_out, int64_in1, int64_in2, char_result);
   free(bset_result); free(char_result);
 
-  /* Span *bigintspan_expand(const Span *s, int64 value); */
+  /* Span *bigintspan_expand(const Span *sp, int64_t value); */
   bspan_result = bigintspan_expand(bspan1, int64_in1);
   char_result = bigintspan_out(bspan_result);
   printf("bigintspan_expand(%s): %s\n", bspan1_out, char_result);
   free(bspan_result); free(char_result);
 
-  /* Span *bigintspan_shift_scale(const Span *s, int64 shift, int64 width, bool hasshift, bool haswidth); */
+  /* Span *bigintspan_shift_scale(const Span *sp, int64_t shift, int64_t width, bool hasshift, bool haswidth); */
   bspan_result = bigintspan_shift_scale(bspan1, int64_in1, int64_in2, true, true);
   char_result = bigintspan_out(bspan_result);
   printf("bigintspan_shift_scale(%s, %ld, %ld, true, true): %s\n", bspan1_out, int64_in1, int64_in2, char_result);
   free(bspan_result); free(char_result);
 
-  /* SpanSet *bigintspanset_shift_scale(spanset1, int64 shift, int64 width, bool hasshift, bool haswidth); */
+  /* SpanSet *bigintspanset_shift_scale(spanset1, int64_t shift, int64_t width, bool hasshift, bool haswidth); */
   bspanset_result = bigintspanset_shift_scale(bspanset1, int64_in1, int64_in2, true, true);
   char_result = bigintspanset_out(bspanset_result);
   printf("bigintspanset_shift_scale(%s, %ld, %ld, true, true): %s\n", bspanset1_out, int64_in1, int64_in2, char_result);
@@ -1313,7 +1313,7 @@ int main(void)
   printf("dateset_shift_scale(%s, %s, %s, true, true): %s\n", dset1_out, date1_out, date2_out, char_result);
   free(dset_result); free(char_result);
 
-  /* Span *datespan_shift_scale(const Span *s, int shift, int width, bool hasshift, bool haswidth); */
+  /* Span *datespan_shift_scale(const Span *sp, int shift, int width, bool hasshift, bool haswidth); */
   dspan_result = datespan_shift_scale(dspan1, date1, date2, true, true);
   char_result = datespan_out(dspan_result);
   printf("datespan_shift_scale(%s, %s, %s, true, trues): %s\n", dspan1_out, date1_out, date2_out, char_result);
@@ -1355,37 +1355,37 @@ int main(void)
   printf("floatset_shift_scale(%s): %s\n", fset1_out, char_result);
   free(fset_result); free(char_result);
 
-  /* Span *floatspan_ceil(const Span *s); */
+  /* Span *floatspan_ceil(const Span *sp); */
   fspan_result = floatspan_ceil(fspan1);
   char_result = floatspan_out(fspan_result, 6);
   printf("floatspan_ceil(%s): %s\n", fspan1_out, char_result);
   free(fspan_result); free(char_result);
 
-  /* Span *floatspan_degrees(const Span *s, bool normalize); */
+  /* Span *floatspan_degrees(const Span *sp, bool normalize); */
   fspan_result = floatspan_degrees(fspan1, true);
   char_result = floatspan_out(fspan_result, 6);
   printf("floatspan_degrees(%s): %s\n", fspan1_out, char_result);
   free(fspan_result); free(char_result);
 
-  /* Span *floatspan_floor(const Span *s); */
+  /* Span *floatspan_floor(const Span *sp); */
   fspan_result = floatspan_floor(fspan1);
   char_result = floatspan_out(fspan_result, 6);
   printf("floatspan_floor(%s): %s\n", fspan1_out, char_result);
   free(fspan_result); free(char_result);
 
-  /* Span *floatspan_radians(const Span *s); */
+  /* Span *floatspan_radians(const Span *sp); */
   fspan_result = floatspan_radians(fspan1);
   char_result = floatspan_out(fspan_result, 6);
   printf("floatspan_radians(%s): %s\n", fspan1_out, char_result);
   free(fspan_result); free(char_result);
 
-  /* Span *floatspan_round(const Span *s, int maxdd); */
+  /* Span *floatspan_round(const Span *sp, int maxdd); */
   fspan_result = floatspan_round(fspan1, 6);
   char_result = floatspan_out(fspan_result, 6);
   printf("floatspan_round(%s): %s\n", fspan1_out, char_result);
   free(fspan_result); free(char_result);
 
-  /* Span *floatspan_shift_scale(const Span *s, double shift, double width, bool hasshift, bool haswidth); */
+  /* Span *floatspan_shift_scale(const Span *sp, double shift, double width, bool hasshift, bool haswidth); */
   fspan_result = floatspan_shift_scale(fspan1, float8_in1, float8_in2, true, true);
   char_result = floatspan_out(fspan_result, 6);
   printf("floatspan_shift_scale(%s, %lf, %lf): %s\n", fspan1_out, float8_in1, float8_in2, char_result);
@@ -1433,13 +1433,13 @@ int main(void)
   printf("intset_shift_scale(%s, %d, %d): %s\n", iset1_out, int32_in1, int32_in2, char_result);
   free(iset_result); free(char_result);
 
-  /* Span *intspan_expand(const Span *s, int value); */
+  /* Span *intspan_expand(const Span *sp, int value); */
   ispan_result = intspan_expand(ispan1, int32_in1);
   char_result = intspan_out(ispan_result);
   printf("intspan_expand(%s, %d): %s\n", ispan1_out, int32_in1, char_result);
   free(ispan_result); free(char_result);
 
-  /* Span *intspan_shift_scale(const Span *s, int shift, int width, bool hasshift, bool haswidth); */
+  /* Span *intspan_shift_scale(const Span *sp, int shift, int width, bool hasshift, bool haswidth); */
   ispan_result = intspan_shift_scale(ispan1, int32_in1, int32_in2, true, true);
   char_result = intspan_out(ispan_result);
   printf("intspan_shift_scale(%s, %d, %ds): %s\n", fspan1_out, int32_in1, int32_in2, char_result);
@@ -1451,7 +1451,7 @@ int main(void)
   printf("intspanset_shift_scale(%s, %d, %d): %s\n", ispanset1_out, int32_in1, int32_in2, char_result);
   free(ispanset_result); free(char_result);
 
-  /* Span *numspan_expand(const Span *s, double value); */
+  /* Span *numspan_expand(const Span *sp, double value); */
   fspan_result = floatspan_expand(fspan1, float8_in1);
   char_result = floatspan_out(fspan_result, 6);
   printf("numspan_expand(%s, %lf): %s\n", fspan1_out, float8_in1, char_result);
@@ -1511,19 +1511,19 @@ int main(void)
   printf("tstzset_tprecision(%s, %s, %s): %s\n", tstzset1_out, interv1_out, tstz2_out, char_result);
   free(tstzset_result); free(char_result);
 
-  /* Span *tstzspan_expand(const Span *s, const Interval *interv); */
+  /* Span *tstzspan_expand(const Span *sp, const Interval *interv); */
   tstzspan_result = tstzspan_expand(tstzspan1, interv1);
   char_result = tstzspan_out(tstzspan_result);
   printf("tstzspan_expand(%s): %s\n", interv1_out, char_result);
   free(tstzspan_result); free(char_result);
 
-  /* Span *tstzspan_shift_scale(const Span *s, const Interval *shift, const Interval *duration); */
+  /* Span *tstzspan_shift_scale(const Span *sp, const Interval *shift, const Interval *duration); */
   tstzspan_result = tstzspan_shift_scale(tstzspan1, interv1, interv2);
   char_result = tstzspan_out(tstzspan_result);
   printf("tstzspan_shift_scale(%s, %s, %s): %s\n", tstzspan1_out, interv1_out, interv2_out, char_result);
   free(tstzspan_result); free(char_result);
 
-  /* Span *tstzspan_tprecision(const Span *s, const Interval *duration, TimestampTz torigin); */
+  /* Span *tstzspan_tprecision(const Span *sp, const Interval *duration, TimestampTz torigin); */
   tstzspan_result = tstzspan_tprecision(tstzspan1, interv1, tstz2);
   char_result = tstzspan_out(tstzspan_result);
   printf("tstzspan_tprecision(%s, %s, %s): %s\n", tstzspan1_out, interv1_out, tstz2_out, char_result);
@@ -1574,31 +1574,31 @@ int main(void)
   bool_result = set_ne(iset1, iset2);
   printf("set_ne(%s, %s): %c\n", iset1_out, iset2_out, bool_result ? 't' : 'n');
 
-  /* int span_cmp(const Span *s1, const Span *s2); */
+  /* int span_cmp(const Span *sp1, const Span *sp2); */
   int32_result = span_cmp(ispan1, ispan2);
   printf("span_cmp(%s, %s): %d\n", ispan1_out, ispan2_out, int32_result);
 
-  /* bool span_eq(const Span *s1, const Span *s2); */
+  /* bool span_eq(const Span *sp1, const Span *sp2); */
   bool_result = span_eq(ispan1, ispan2);
   printf("span_eq(%s, %s): %c\n", ispan1_out, ispan2_out, bool_result ? 't' : 'n');
 
-  /* bool span_ge(const Span *s1, const Span *s2); */
+  /* bool span_ge(const Span *sp1, const Span *sp2); */
   bool_result = span_ge(ispan1, ispan2);
   printf("span_ge(%s, %s): %c\n", ispan1_out, ispan2_out, bool_result ? 't' : 'n');
 
-  /* bool span_gt(const Span *s1, const Span *s2); */
+  /* bool span_gt(const Span *sp1, const Span *sp2); */
   bool_result = span_gt(ispan1, ispan2);
   printf("span_gt(%s, %s): %c\n", ispan1_out, ispan2_out, bool_result ? 't' : 'n');
 
-  /* bool span_le(const Span *s1, const Span *s2); */
+  /* bool span_le(const Span *sp1, const Span *sp2); */
   bool_result = span_le(ispan1, ispan2);
   printf("span_le(%s, %s): %c\n", ispan1_out, ispan2_out, bool_result ? 't' : 'n');
 
-  /* bool span_lt(const Span *s1, const Span *s2); */
+  /* bool span_lt(const Span *sp1, const Span *sp2); */
   bool_result = span_lt(ispan1, ispan2);
   printf("span_lt(%s, %s): %c\n", ispan1_out, ispan2_out, bool_result ? 't' : 'n');
 
-  /* bool span_ne(const Span *s1, const Span *s2); */
+  /* bool span_ne(const Span *sp1, const Span *sp2); */
   bool_result = span_ne(ispan1, ispan2);
   printf("span_ne(%s, %s): %c\n", ispan1_out, ispan2_out, bool_result ? 't' : 'n');
 
@@ -1730,35 +1730,35 @@ int main(void)
   /* Topological functions */
   printf("****************************************************************\n");
 
-  /* bool adjacent_span_bigint(const Span *s, int64 i); */
+  /* bool adjacent_span_bigint(const Span *sp, int64_t i); */
   bool_result = adjacent_span_bigint(bspan1, int64_in1);
   printf("adjacent_span_bigint(%s, %ld): %c\n", bspan1_out, int64_in1, bool_result ? 't' : 'n');
 
-  /* bool adjacent_span_date(const Span *s, DateADT d); */
+  /* bool adjacent_span_date(const Span *sp, DateADT d); */
   bool_result = adjacent_span_date(dspan1, date1);
   printf("adjacent_span_date(%s, %s): %c\n", dspan1_out, date1_out, bool_result ? 't' : 'n');
 
-  /* bool adjacent_span_float(const Span *s, double d); */
+  /* bool adjacent_span_float(const Span *sp, double d); */
   bool_result = adjacent_span_float(fspan1, float8_in1);
   printf("adjacent_span_float(%s, %lf): %c\n", fspan1_out, float8_in1, bool_result ? 't' : 'n');
 
-  /* bool adjacent_span_int(const Span *s, int i); */
+  /* bool adjacent_span_int(const Span *sp, int i); */
   bool_result = adjacent_span_int(ispan1, int32_in1);
   printf("adjacent_span_int(%s, %d): %c\n", ispan1_out, int32_in1, bool_result ? 't' : 'n');
 
-  /* bool adjacent_span_span(const Span *s1, const Span *s2); */
+  /* bool adjacent_span_span(const Span *sp1, const Span *sp2); */
   bool_result = adjacent_span_span(ispan1, ispan2);
   printf("adjacent_span_span(%s, %s): %c\n", ispan1_out, ispan2_out, bool_result ? 't' : 'n');
 
-  /* bool adjacent_span_spanset(const Span *s, const SpanSet *ss); */
+  /* bool adjacent_span_spanset(const Span *sp, const SpanSet *ss); */
   bool_result = adjacent_span_spanset(ispan1, ispanset1);
   printf("adjacent_span_spanset(%s, %s): %c\n", ispan1_out, ispanset1_out, bool_result ? 't' : 'n');
 
-  /* bool adjacent_span_timestamptz(const Span *s, TimestampTz t); */
+  /* bool adjacent_span_timestamptz(const Span *sp, TimestampTz t); */
   bool_result = adjacent_span_timestamptz(tstzspan1, tstz1);
   printf("adjacent_span_timestamptz(%s, %s): %c\n", tstzspan1_out, tstz1_out, bool_result ? 't' : 'n');
 
-  /* bool adjacent_spanset_bigint(spanset1, int64 i); */
+  /* bool adjacent_spanset_bigint(spanset1, int64_t i); */
   bool_result = adjacent_spanset_bigint(bspanset1, int64_in1);
   printf("adjacent_spanset_bigint(%s, %ld): %c\n", bspanset1_out, int64_in1, bool_result ? 't' : 'n');
 
@@ -1778,7 +1778,7 @@ int main(void)
   bool_result = adjacent_spanset_timestamptz(tstzspanset1, tstz1);
   printf("adjacent_spanset_timestamptz(%s, %s): %c\n", tstzspanset1_out, tstz1_out, bool_result ? 't' : 'n');
 
-  /* bool adjacent_spanset_span(spanset1, const Span *s); */
+  /* bool adjacent_spanset_span(spanset1, const Span *sp); */
   bool_result = adjacent_spanset_span(ispanset1, ispan1);
   printf("adjacent_spanset_span(%s, %s): %c\n", ispanset1_out, ispan1_out, bool_result ? 't' : 'n');
 
@@ -1786,15 +1786,15 @@ int main(void)
   bool_result = adjacent_spanset_spanset(ispanset1, ispanset2);
   printf("adjacent_spanset_spanset(%s, %s): %c\n", ispanset1_out, ispanset2_out, bool_result ? 't' : 'n');
 
-  /* bool contained_bigint_set(int64 i, const Set *s); */
+  /* bool contained_bigint_set(int64_t i, const Set *s); */
   bool_result = contained_bigint_set(int64_in1, bset1);
   printf("contained_bigint_set(%ld, %s): %c\n", int64_in1, bset1_out, bool_result ? 't' : 'n');
 
-  /* bool contained_bigint_span(int64 i, const Span *s); */
+  /* bool contained_bigint_span(int64_t i, const Span *sp); */
   bool_result = contained_bigint_span(int64_in1, bspan1);
   printf("contained_bigint_span(%ld, %s): %c\n", int64_in1, bspan1_out, bool_result ? 't' : 'n');
 
-  /* bool contained_bigint_spanset(int64 i, const SpanSet *ss); */
+  /* bool contained_bigint_spanset(int64_t i, const SpanSet *ss); */
   bool_result = contained_bigint_spanset(int64_in1, bspanset1);
   printf("contained_bigint_spanset(%ld, %s): %c\n", int64_in1, bspanset1_out, bool_result ? 't' : 'n');
 
@@ -1802,7 +1802,7 @@ int main(void)
   bool_result = contained_date_set(date1, dset1);
   printf("contained_date_set(%s, %s): %c\n", date1_out, dset1_out, bool_result ? 't' : 'n');
 
-  /* bool contained_date_span(DateADT d, const Span *s); */
+  /* bool contained_date_span(DateADT d, const Span *sp); */
   bool_result = contained_date_span(date1, dspan1);
   printf("contained_date_span(%s, %s): %c\n", date1_out, dspan1_out, bool_result ? 't' : 'n');
 
@@ -1814,7 +1814,7 @@ int main(void)
   bool_result = contained_float_set(float8_in1, fset1);
   printf("contained_float_set(%lf, %s): %c\n", float8_in1, dset1_out, bool_result ? 't' : 'n');
 
-  /* bool contained_float_span(double d, const Span *s); */
+  /* bool contained_float_span(double d, const Span *sp); */
   bool_result = contained_float_span(float8_in1, fspan1);
   printf("contained_float_span(%lf, %s): %c\n", float8_in1, dspan1_out, bool_result ? 't' : 'n');
 
@@ -1826,7 +1826,7 @@ int main(void)
   bool_result = contained_int_set(int32_in1, iset1);
   printf("contained_int_set(%d, %s): %c\n", int32_in1, iset1_out, bool_result ? 't' : 'n');
 
-  /* bool contained_int_span(int i, const Span *s); */
+  /* bool contained_int_span(int i, const Span *sp); */
   bool_result = contained_int_span(int32_in1, ispan1);
   printf("contained_int_span(%d, %s): %c\n", int32_in1, ispan1_out, bool_result ? 't' : 'n');
 
@@ -1838,15 +1838,15 @@ int main(void)
   bool_result = contained_set_set(iset1, iset2);
   printf("contained_set_set(%s, %s): %c\n", iset1_out, iset2_out, bool_result ? 't' : 'n');
 
-  /* bool contained_span_span(const Span *s1, const Span *s2); */
+  /* bool contained_span_span(const Span *sp1, const Span *sp2); */
   bool_result = contained_span_span(ispan1, ispan2);
   printf("contained_span_span(%s, %s): %c\n", ispan1_out, ispan2_out, bool_result ? 't' : 'n');
 
-  /* bool contained_span_spanset(const Span *s, const SpanSet *ss); */
+  /* bool contained_span_spanset(const Span *sp, const SpanSet *ss); */
   bool_result = contained_span_spanset(ispan1, ispanset1);
   printf("contained_span_spanset(%s, %s): %c\n", ispan1_out, ispanset1_out, bool_result ? 't' : 'n');
 
-  /* bool contained_spanset_span(spanset1, const Span *s); */
+  /* bool contained_spanset_span(spanset1, const Span *sp); */
   bool_result = contained_spanset_span(ispanset1, ispan1);
   printf("contained_spanset_span(%s, %s): %c\n", ispanset1_out, ispan1_out, bool_result ? 't' : 'n');
 
@@ -1862,7 +1862,7 @@ int main(void)
   bool_result = contained_timestamptz_set(tstz1, tstzset1);
   printf("contained_timestamptz_set(%s, %s): %c\n", tstz1_out, tstzset1_out, bool_result ? 't' : 'n');
 
-  /* bool contained_timestamptz_span(TimestampTz t, const Span *s); */
+  /* bool contained_timestamptz_span(TimestampTz t, const Span *sp); */
   bool_result = contained_timestamptz_span(tstz1, tstzspan1);
   printf("contained_timestamptz_span(%s, %s): %c\n", tstz1_out, tstzspan1_out, bool_result ? 't' : 'n');
 
@@ -1870,7 +1870,7 @@ int main(void)
   bool_result = contained_timestamptz_spanset(tstz1, tstzspanset1);
   printf("contained_timestamptz_spanset(%s, %s): %c\n", tstz1_out, tstzspanset1_out, bool_result ? 't' : 'n');
 
-  /* bool contains_set_bigint(const Set *s, int64 i); */
+  /* bool contains_set_bigint(const Set *s, int64_t i); */
   bool_result = contains_set_bigint(bset1, int64_in1);
   printf("contains_set_bigint(%s, %ld): %c\n", bset1_out, int64_in1, bool_result ? 't' : 'n');
 
@@ -1898,35 +1898,35 @@ int main(void)
   bool_result = contains_set_timestamptz(tstzset1, tstz1);
   printf("contains_set_timestamptz(%s, %s): %c\n", tstzset1_out, tstz1_out, bool_result ? 't' : 'n');
 
-  /* bool contains_span_bigint(const Span *s, int64 i); */
+  /* bool contains_span_bigint(const Span *sp, int64_t i); */
   bool_result = contains_span_bigint(bspan1, int64_in1);
   printf("contains_span_bigint(%s, %ld): %c\n", bspan1_out, int64_in1, bool_result ? 't' : 'n');
 
-  /* bool contains_span_date(const Span *s, DateADT d); */
+  /* bool contains_span_date(const Span *sp, DateADT d); */
   bool_result = contains_span_date(dspan1, date1);
   printf("contains_span_date(%s, %s): %c\n", dspan1_out, date1_out, bool_result ? 't' : 'n');
 
-  /* bool contains_span_float(const Span *s, double d); */
+  /* bool contains_span_float(const Span *sp, double d); */
   bool_result = contains_span_float(fspan1, float8_in1);
   printf("contains_span_float(%s, %lf): %c\n", fspan1_out, float8_in1, bool_result ? 't' : 'n');
 
-  /* bool contains_span_int(const Span *s, int i); */
+  /* bool contains_span_int(const Span *sp, int i); */
   bool_result = contains_span_int(ispan1, int32_in1);
   printf("contains_span_int(%s, %d): %c\n", ispan1_out, int32_in1, bool_result ? 't' : 'n');
 
-  /* bool contains_span_span(const Span *s1, const Span *s2); */
+  /* bool contains_span_span(const Span *sp1, const Span *sp2); */
   bool_result = contains_span_span(ispan1, ispan2);
   printf("contains_span_span(%s, %s): %c\n", ispan1_out, ispan2_out, bool_result ? 't' : 'n');
 
-  /* bool contains_span_spanset(const Span *s, const SpanSet *ss); */
+  /* bool contains_span_spanset(const Span *sp, const SpanSet *ss); */
   bool_result = contains_span_spanset(ispan1, ispanset1);
   printf("contains_span_spanset(%s, %s): %c\n", ispan1_out, ispanset1_out, bool_result ? 't' : 'n');
 
-  /* bool contains_span_timestamptz(const Span *s, TimestampTz t); */
+  /* bool contains_span_timestamptz(const Span *sp, TimestampTz t); */
   bool_result = contains_span_timestamptz(tstzspan1, tstz1);
   printf("contains_span_timestamptz(%s, %s): %c\n", tstzspan1_out, tstz1_out, bool_result ? 't' : 'n');
 
-  /* bool contains_spanset_bigint(spanset1, int64 i); */
+  /* bool contains_spanset_bigint(spanset1, int64_t i); */
   bool_result = contains_spanset_bigint(bspanset1, int64_in1);
   printf("contains_spanset_bigint(%s, %ld): %c\n", bspanset1_out, int64_in1, bool_result ? 't' : 'n');
 
@@ -1942,7 +1942,7 @@ int main(void)
   bool_result = contains_spanset_int(ispanset1, int32_in1);
   printf("contains_spanset_int(%s, %d): %c\n", ispanset1_out, int32_in1, bool_result ? 't' : 'n');
 
-  /* bool contains_spanset_span(spanset1, const Span *s); */
+  /* bool contains_spanset_span(spanset1, const Span *sp); */
   bool_result = contains_spanset_span(ispanset1, ispan1);
   printf("contains_spanset_span(%s, %s): %c\n", ispanset1_out, ispan1_out, bool_result ? 't' : 'n');
 
@@ -1958,15 +1958,15 @@ int main(void)
   bool_result = overlaps_set_set(iset1, iset2);
   printf("overlaps_set_set(%s, %s): %c\n", iset1_out, iset2_out, bool_result ? 't' : 'n');
 
-  /* bool overlaps_span_span(const Span *s1, const Span *s2); */
+  /* bool overlaps_span_span(const Span *sp1, const Span *sp2); */
   bool_result = overlaps_span_span(ispan1, ispan2);
   printf("overlaps_span_span(%s, %s): %c\n", ispan1_out, ispan2_out, bool_result ? 't' : 'n');
 
-  /* bool overlaps_span_spanset(const Span *s, const SpanSet *ss); */
+  /* bool overlaps_span_spanset(const Span *sp, const SpanSet *ss); */
   bool_result = overlaps_span_spanset(ispan1, ispanset1);
   printf("overlaps_span_spanset(%s, %s): %c\n", ispan1_out, ispanset1_out, bool_result ? 't' : 'n');
 
-  /* bool overlaps_spanset_span(spanset1, const Span *s); */
+  /* bool overlaps_spanset_span(spanset1, const Span *sp); */
   bool_result = overlaps_spanset_span(ispanset1, ispan1);
   printf("overlaps_spanset_span(%s, %s): %c\n", ispanset1_out, ispan1_out, bool_result ? 't' : 'n');
 
@@ -1981,7 +1981,7 @@ int main(void)
   bool_result = after_date_set(date1, dset1);
   printf("after_date_set(%s, %s): %c\n", date1_out, dset1_out, bool_result ? 't' : 'n');
 
-  /* bool after_date_span(DateADT d, const Span *s); */
+  /* bool after_date_span(DateADT d, const Span *sp); */
   bool_result = after_date_span(date1, dspan1);
   printf("after_date_span(%s, %s): %c\n", date1_out, dspan1_out, bool_result ? 't' : 'n');
 
@@ -1997,11 +1997,11 @@ int main(void)
   bool_result = after_set_timestamptz(tstzset1, tstz1);
   printf("after_set_timestamptz(%s, %s): %c\n", tstzset1_out, tstz1_out, bool_result ? 't' : 'n');
 
-  /* bool after_span_date(const Span *s, DateADT d); */
+  /* bool after_span_date(const Span *sp, DateADT d); */
   bool_result = after_span_date(dspan1, date1);
   printf("after_span_date(%s, %s): %c\n", dspan1_out, date1_out, bool_result ? 't' : 'n');
 
-  /* bool after_span_timestamptz(const Span *s, TimestampTz t); */
+  /* bool after_span_timestamptz(const Span *sp, TimestampTz t); */
   bool_result = after_span_timestamptz(tstzspan1, tstz1);
   printf("after_span_timestamptz(%s, %s): %c\n", tstzspan1_out, tstz1_out, bool_result ? 't' : 'n');
 
@@ -2017,7 +2017,7 @@ int main(void)
   bool_result = after_timestamptz_set(tstz1, tstzset1);
   printf("after_timestamptz_set(%s, %s): %c\n", tstz1_out, tstzset1_out, bool_result ? 't' : 'n');
 
-  /* bool after_timestamptz_span(TimestampTz t, const Span *s); */
+  /* bool after_timestamptz_span(TimestampTz t, const Span *sp); */
   bool_result = after_timestamptz_span(tstz1, tstzspan1);
   printf("after_timestamptz_span(%s, %s): %c\n", tstz1_out, tstzspan1_out, bool_result ? 't' : 'n');
 
@@ -2029,7 +2029,7 @@ int main(void)
   bool_result = before_date_set(date1, dset1);
   printf("before_date_set(%s, %s): %c\n", date1_out, dset1_out, bool_result ? 't' : 'n');
 
-  /* bool before_date_span(DateADT d, const Span *s); */
+  /* bool before_date_span(DateADT d, const Span *sp); */
   bool_result = before_date_span(date1, dspan1);
   printf("before_date_span(%s, %s): %c\n", date1_out, dspan1_out, bool_result ? 't' : 'n');
 
@@ -2045,11 +2045,11 @@ int main(void)
   bool_result = before_set_timestamptz(tstzset1, tstz1);
   printf("before_set_timestamptz(%s, %s): %c\n", tstzset1_out, tstz1_out, bool_result ? 't' : 'n');
 
-  /* bool before_span_date(const Span *s, DateADT d); */
+  /* bool before_span_date(const Span *sp, DateADT d); */
   bool_result = before_span_date(dspan1, date1);
   printf("before_span_date(%s, %s): %c\n", dspan1_out, date1_out, bool_result ? 't' : 'n');
 
-  /* bool before_span_timestamptz(const Span *s, TimestampTz t); */
+  /* bool before_span_timestamptz(const Span *sp, TimestampTz t); */
   bool_result = before_span_timestamptz(tstzspan1, tstz1);
   printf("before_span_timestamptz(%s, %s): %c\n", tstzspan1_out, tstz1_out, bool_result ? 't' : 'n');
 
@@ -2065,7 +2065,7 @@ int main(void)
   bool_result = before_timestamptz_set(tstz1, tstzset1);
   printf("before_timestamptz_set(%s, %s): %c\n", tstz1_out, tstzset1_out, bool_result ? 't' : 'n');
 
-  /* bool before_timestamptz_span(TimestampTz t, const Span *s); */
+  /* bool before_timestamptz_span(TimestampTz t, const Span *sp); */
   bool_result = before_timestamptz_span(tstz1, tstzspan1);
   printf("before_timestamptz_span(%s, %s): %c\n", tstz1_out, tstzspan1_out, bool_result ? 't' : 'n');
 
@@ -2073,15 +2073,15 @@ int main(void)
   bool_result = before_timestamptz_spanset(tstz1, tstzspanset1);
   printf("before_timestamptz_spanset(%s, %s): %c\n", tstz1_out, tstzspanset1_out, bool_result ? 't' : 'n');
 
-  /* bool left_bigint_set(int64 i, const Set *s); */
+  /* bool left_bigint_set(int64_t i, const Set *s); */
   bool_result = left_bigint_set(int64_in1, bset1);
   printf("left_bigint_set(%ld, %s): %c\n", int64_in1, bset1_out, bool_result ? 't' : 'n');
 
-  /* bool left_bigint_span(int64 i, const Span *s); */
+  /* bool left_bigint_span(int64_t i, const Span *sp); */
   bool_result = left_bigint_span(int64_in1, bspan1);
   printf("left_bigint_span(%ld, %s): %c\n", int64_in1, bspan1_out, bool_result ? 't' : 'n');
 
-  /* bool left_bigint_spanset(int64 i, const SpanSet *ss); */
+  /* bool left_bigint_spanset(int64_t i, const SpanSet *ss); */
   bool_result = left_bigint_spanset(int64_in1, bspanset1);
   printf("left_bigint_spanset(%ld, %s): %c\n", int64_in1, bspanset1_out, bool_result ? 't' : 'n');
 
@@ -2089,7 +2089,7 @@ int main(void)
   bool_result = left_float_set(float8_in1, fset1);
   printf("left_float_set(%lf, %s): %c\n", float8_in1, fset1_out, bool_result ? 't' : 'n');
 
-  /* bool left_float_span(double d, const Span *s); */
+  /* bool left_float_span(double d, const Span *sp); */
   bool_result = left_float_span(float8_in1, fspan1);
   printf("left_float_span(%lf, %s): %c\n", float8_in1, fspan1_out, bool_result ? 't' : 'n');
 
@@ -2101,7 +2101,7 @@ int main(void)
   bool_result = left_int_set(int32_in1, iset1);
   printf("left_int_set(%d, %s): %c\n", int32_in1, iset1_out, bool_result ? 't' : 'n');
 
-  /* bool left_int_span(int i, const Span *s); */
+  /* bool left_int_span(int i, const Span *sp); */
   bool_result = left_int_span(int32_in1, ispan1);
   printf("left_int_span(%d, %s): %c\n", int32_in1, ispan1_out, bool_result ? 't' : 'n');
 
@@ -2109,7 +2109,7 @@ int main(void)
   bool_result = left_int_spanset(int32_in1, ispanset1);
   printf("left_int_spanset(%d, %s): %c\n", int32_in1, ispanset1_out, bool_result ? 't' : 'n');
 
-  /* bool left_set_bigint(const Set *s, int64 i); */
+  /* bool left_set_bigint(const Set *s, int64_t i); */
   bool_result = left_set_bigint(bset1, int64_in1);
   printf("left_set_bigint(%s, %ld): %c\n", bset1_out, int64_in1, bool_result ? 't' : 'n');
 
@@ -2129,27 +2129,27 @@ int main(void)
   bool_result = left_set_text(textset1, text1);
   printf("left_set_text(%s, %s): %c\n", textset1_out, text1_out, bool_result ? 't' : 'n');
 
-  /* bool left_span_bigint(const Span *s, int64 i); */
+  /* bool left_span_bigint(const Span *sp, int64_t i); */
   bool_result = left_span_bigint(bspan1, int64_in1);
   printf("left_span_bigint(%s, %ld): %c\n", bspan1_out, int64_in1, bool_result ? 't' : 'n');
 
-  /* bool left_span_float(const Span *s, double d); */
+  /* bool left_span_float(const Span *sp, double d); */
   bool_result = left_span_float(fspan1, float8_in1);
   printf("left_span_float(%s, %lf): %c\n", fspan1_out, float8_in1, bool_result ? 't' : 'n');
 
-  /* bool left_span_int(const Span *s, int i); */
+  /* bool left_span_int(const Span *sp, int i); */
   bool_result = left_span_int(ispan1, int32_in1);
   printf("left_span_int(%s, %d): %c\n", ispan1_out, int32_in1, bool_result ? 't' : 'n');
 
-  /* bool left_span_span(const Span *s1, const Span *s2); */
+  /* bool left_span_span(const Span *sp1, const Span *sp2); */
   bool_result = left_span_span(ispan1, ispan2);
   printf("left_span_span(%s, %s): %c\n", ispan1_out, ispan2_out, bool_result ? 't' : 'n');
 
-  /* bool left_span_spanset(const Span *s, const SpanSet *ss); */
+  /* bool left_span_spanset(const Span *sp, const SpanSet *ss); */
   bool_result = left_span_spanset(ispan1, ispanset1);
   printf("left_span_spanset(%s, %s): %c\n", ispan1_out, ispanset1_out, bool_result ? 't' : 'n');
 
-  /* bool left_spanset_bigint(spanset1, int64 i); */
+  /* bool left_spanset_bigint(spanset1, int64_t i); */
   bool_result = left_spanset_bigint(bspanset1, int64_in1);
   printf("left_spanset_bigint(%s, %ld): %c\n", bspanset1_out, int64_in1, bool_result ? 't' : 'n');
 
@@ -2161,7 +2161,7 @@ int main(void)
   bool_result = left_spanset_int(ispanset1, int32_in1);
   printf("left_spanset_int(%s, %d): %c\n", ispanset1_out, int32_in1, bool_result ? 't' : 'n');
 
-  /* bool left_spanset_span(spanset1, const Span *s); */
+  /* bool left_spanset_span(spanset1, const Span *sp); */
   bool_result = left_spanset_span(ispanset1, ispan1);
   printf("left_spanset_span(%s, %s): %c\n", ispanset1_out, ispan1_out, bool_result ? 't' : 'n');
 
@@ -2177,7 +2177,7 @@ int main(void)
   bool_result = overafter_date_set(date1, dset1);
   printf("overafter_date_set(%s, %s): %c\n", date1_out, dset1_out, bool_result ? 't' : 'n');
 
-  /* bool overafter_date_span(DateADT d, const Span *s); */
+  /* bool overafter_date_span(DateADT d, const Span *sp); */
   bool_result = overafter_date_span(date1, dspan1);
   printf("overafter_date_span(%s, %s): %c\n", date1_out, dspan1_out, bool_result ? 't' : 'n');
 
@@ -2193,11 +2193,11 @@ int main(void)
   bool_result = overafter_set_timestamptz(tstzset1, tstz1);
   printf("overafter_set_timestamptz(%s, %s): %c\n", tstzset1_out, tstz1_out, bool_result ? 't' : 'n');
 
-  /* bool overafter_span_date(const Span *s, DateADT d); */
+  /* bool overafter_span_date(const Span *sp, DateADT d); */
   bool_result = overafter_span_date(dspan1, date1);
   printf("overafter_span_date(%s, %s): %c\n", dspan1_out, date1_out, bool_result ? 't' : 'n');
 
-  /* bool overafter_span_timestamptz(const Span *s, TimestampTz t); */
+  /* bool overafter_span_timestamptz(const Span *sp, TimestampTz t); */
   bool_result = overafter_span_timestamptz(tstzspan1, tstz1);
   printf("overafter_span_timestamptz(%s, %s): %c\n", tstzspan1_out, tstz1_out, bool_result ? 't' : 'n');
 
@@ -2213,7 +2213,7 @@ int main(void)
   bool_result = overafter_timestamptz_set(tstz1, tstzset1);
   printf("overafter_timestamptz_set(%s, %s): %c\n", tstz1_out, tstzset1_out, bool_result ? 't' : 'n');
 
-  /* bool overafter_timestamptz_span(TimestampTz t, const Span *s); */
+  /* bool overafter_timestamptz_span(TimestampTz t, const Span *sp); */
   bool_result = overafter_timestamptz_span(tstz1, tstzspan1);
   printf("overafter_timestamptz_span(%s, %s): %c\n", tstz1_out, tstzspan1_out, bool_result ? 't' : 'n');
 
@@ -2225,7 +2225,7 @@ int main(void)
   bool_result = overbefore_date_set(date1, dset1);
   printf("overbefore_date_set(%s, %s): %c\n", date1_out, dset1_out, bool_result ? 't' : 'n');
 
-  /* bool overbefore_date_span(DateADT d, const Span *s); */
+  /* bool overbefore_date_span(DateADT d, const Span *sp); */
   bool_result = overbefore_date_span(date1, dspan1);
   printf("overbefore_date_span(%s, %s): %c\n", date1_out, dspan1_out, bool_result ? 't' : 'n');
 
@@ -2241,11 +2241,11 @@ int main(void)
   bool_result = overbefore_set_timestamptz(tstzset1, tstz1);
   printf("overbefore_set_timestamptz(%s, %s): %c\n", tstzset1_out, tstz1_out, bool_result ? 't' : 'n');
 
-  /* bool overbefore_span_date(const Span *s, DateADT d); */
+  /* bool overbefore_span_date(const Span *sp, DateADT d); */
   bool_result = overbefore_span_date(dspan1, date1);
   printf("overbefore_span_date(%s, %s): %c\n", dspan1_out, date1_out, bool_result ? 't' : 'n');
 
-  /* bool overbefore_span_timestamptz(const Span *s, TimestampTz t); */
+  /* bool overbefore_span_timestamptz(const Span *sp, TimestampTz t); */
   bool_result = overbefore_span_timestamptz(tstzspan1, tstz1);
   printf("overbefore_span_timestamptz(%s, %s): %c\n", tstzspan1_out, tstz1_out, bool_result ? 't' : 'n');
 
@@ -2261,7 +2261,7 @@ int main(void)
   bool_result = overbefore_timestamptz_set(tstz1, tstzset1);
   printf("overbefore_timestamptz_set(%s, %s): %c\n", tstz1_out, tstzset1_out, bool_result ? 't' : 'n');
 
-  /* bool overbefore_timestamptz_span(TimestampTz t, const Span *s); */
+  /* bool overbefore_timestamptz_span(TimestampTz t, const Span *sp); */
   bool_result = overbefore_timestamptz_span(tstz1, tstzspan1);
   printf("overbefore_timestamptz_span(%s, %s): %c\n", tstz1_out, tstzspan1_out, bool_result ? 't' : 'n');
 
@@ -2269,15 +2269,15 @@ int main(void)
   bool_result = overbefore_timestamptz_spanset(tstz1, tstzspanset1);
   printf("overbefore_timestamptz_spanset(%s, %s): %c\n", tstz1_out, tstzspanset1_out, bool_result ? 't' : 'n');
 
-  /* bool overleft_bigint_set(int64 i, const Set *s); */
+  /* bool overleft_bigint_set(int64_t i, const Set *s); */
   bool_result = overleft_bigint_set(int64_in1, bset1);
   printf("overleft_bigint_set(%ld, %s): %c\n", int64_in1, bset1_out, bool_result ? 't' : 'n');
 
-  /* bool overleft_bigint_span(int64 i, const Span *s); */
+  /* bool overleft_bigint_span(int64_t i, const Span *sp); */
   bool_result = overleft_bigint_span(int64_in1, bspan1);
   printf("overleft_bigint_span(%ld, %s): %c\n", int64_in1, bspan1_out, bool_result ? 't' : 'n');
 
-  /* bool overleft_bigint_spanset(int64 i, const SpanSet *ss); */
+  /* bool overleft_bigint_spanset(int64_t i, const SpanSet *ss); */
   bool_result = overleft_bigint_spanset(int64_in1, bspanset1);
   printf("overleft_bigint_spanset(%ld, %s): %c\n", int64_in1, bspanset1_out, bool_result ? 't' : 'n');
 
@@ -2285,7 +2285,7 @@ int main(void)
   bool_result = overleft_float_set(float8_in1, fset1);
   printf("overleft_float_set(%lf, %s): %c\n", float8_in1, fset1_out, bool_result ? 't' : 'n');
 
-  /* bool overleft_float_span(double d, const Span *s); */
+  /* bool overleft_float_span(double d, const Span *sp); */
   bool_result = overleft_float_span(float8_in1, fspan1);
   printf("overleft_float_span(%lf, %s): %c\n", float8_in1, fspan1_out, bool_result ? 't' : 'n');
 
@@ -2297,7 +2297,7 @@ int main(void)
   bool_result = overleft_int_set(int32_in1, iset1);
   printf("overleft_int_set(%d, %s): %c\n", int32_in1, iset1_out, bool_result ? 't' : 'n');
 
-  /* bool overleft_int_span(int i, const Span *s); */
+  /* bool overleft_int_span(int i, const Span *sp); */
   bool_result = overleft_int_span(int32_in1, ispan1);
   printf("overleft_int_span(%d, %s): %c\n", int32_in1, ispan1_out, bool_result ? 't' : 'n');
 
@@ -2305,7 +2305,7 @@ int main(void)
   bool_result = overleft_int_spanset(int32_in1, ispanset1);
   printf("overleft_int_spanset(%d, %s): %c\n", int32_in1, ispanset1_out, bool_result ? 't' : 'n');
 
-  /* bool overleft_set_bigint(const Set *s, int64 i); */
+  /* bool overleft_set_bigint(const Set *s, int64_t i); */
   bool_result = overleft_set_bigint(bset1, int64_in1);
   printf("overleft_set_bigint(%s, %ld): %c\n", bset1_out, int64_in1, bool_result ? 't' : 'n');
 
@@ -2325,39 +2325,39 @@ int main(void)
   bool_result = overleft_set_text(textset1, text1);
   printf("overleft_set_text(%s, %s): %c\n", textset1_out, text1_out, bool_result ? 't' : 'n');
 
-  /* bool overleft_span_bigint(const Span *s, int64 i); */
+  /* bool overleft_span_bigint(const Span *sp, int64_t i); */
   bool_result = overleft_span_bigint(bspan1, int64_in1);
   printf("overleft_span_bigint(%s, %ld): %c\n", bspan1_out, int64_in1, bool_result ? 't' : 'n');
 
-  /* bool overleft_span_float(const Span *s, double d); */
+  /* bool overleft_span_float(const Span *sp, double d); */
   bool_result = overleft_span_float(fspan1, float8_in1);
   printf("overleft_span_float(%s, %lf): %c\n", fspan1_out, float8_in1, bool_result ? 't' : 'n');
 
-  /* bool overleft_span_int(const Span *s, int i); */
+  /* bool overleft_span_int(const Span *sp, int i); */
   bool_result = overleft_span_int(ispan1, int32_in1);
   printf("overleft_span_int(%s, %d): %c\n", ispan1_out, int32_in1, bool_result ? 't' : 'n');
 
-  /* bool overleft_span_span(const Span *s1, const Span *s2); */
+  /* bool overleft_span_span(const Span *sp1, const Span *sp2); */
   bool_result = overleft_span_span(ispan1, ispan2);
   printf("overleft_span_span(%s, %s): %c\n", ispan1_out, ispan2_out, bool_result ? 't' : 'n');
 
-  /* bool overleft_span_spanset(const Span *s, const SpanSet *ss); */
+  /* bool overleft_span_spanset(const Span *sp, const SpanSet *ss); */
   bool_result = overleft_span_spanset(ispan1, ispanset1);
   printf("overleft_span_spanset(%s, %s): %c\n", ispan1_out, ispanset1_out, bool_result ? 't' : 'n');
 
-  /* bool overleft_spanset_bigint(spanset1, int64 i); */
+  /* bool overleft_spanset_bigint(const SpanSet *ss, int64_t i); */
   bool_result = overleft_spanset_bigint(bspanset1, int64_in1);
   printf("overleft_spanset_bigint(%s, %ld): %c\n", bspanset1_out, int64_in1, bool_result ? 't' : 'n');
 
-  /* bool overleft_spanset_float(spanset1, double d); */
+  /* bool overleft_spanset_float(const SpanSet *ss, double d); */
   bool_result = overleft_spanset_float(fspanset1, float8_in1);
   printf("overleft_spanset_float(%s, %lf): %c\n", fspanset1_out, float8_in1, bool_result ? 't' : 'n');
 
-  /* bool overleft_spanset_int(spanset1, int i); */
+  /* bool overleft_spanset_int(const SpanSet *ss, int i); */
   bool_result = overleft_spanset_int(ispanset1, int32_in1);
   printf("overleft_spanset_int(%s, %d): %c\n", ispanset1_out, int32_in1, bool_result ? 't' : 'n');
 
-  /* bool overleft_spanset_span(spanset1, const Span *s); */
+  /* bool overleft_spanset_span(const SpanSet *ss, const Span *sp); */
   bool_result = overleft_spanset_span(ispanset1, ispan1);
   printf("overleft_spanset_span(%s, %s): %c\n", ispanset1_out, ispan1_out, bool_result ? 't' : 'n');
 
@@ -2369,15 +2369,15 @@ int main(void)
   bool_result = overleft_text_set(text1, textset1);
   printf("overleft_text_set(%s, %s): %c\n", text1_out, textset1_out, bool_result ? 't' : 'n');
 
-  /* bool overright_bigint_set(int64 i, const Set *s); */
+  /* bool overright_bigint_set(int64_t i, const Set *s); */
   bool_result = overright_bigint_set(int64_in1, bset1);
   printf("overright_bigint_set(%ld, %s): %c\n", int64_in1, bset1_out, bool_result ? 't' : 'n');
 
-  /* bool overright_bigint_span(int64 i, const Span *s); */
+  /* bool overright_bigint_span(int64_t i, const Span *sp); */
   bool_result = overright_bigint_span(int64_in1, bspan1);
   printf("overright_bigint_span(%ld, %s): %c\n", int64_in1, bspan1_out, bool_result ? 't' : 'n');
 
-  /* bool overright_bigint_spanset(int64 i, const SpanSet *ss); */
+  /* bool overright_bigint_spanset(int64_t i, const SpanSet *ss); */
   bool_result = overright_bigint_spanset(int64_in1, bspanset1);
   printf("overright_bigint_spanset(%ld, %s): %c\n", int64_in1, bspanset1_out, bool_result ? 't' : 'n');
 
@@ -2385,7 +2385,7 @@ int main(void)
   bool_result = overright_float_set(float8_in1, fset1);
   printf("overright_float_set(%lf, %s): %c\n", float8_in1, fset1_out, bool_result ? 't' : 'n');
 
-  /* bool overright_float_span(double d, const Span *s); */
+  /* bool overright_float_span(double d, const Span *sp); */
   bool_result = overright_float_span(float8_in1, fspan1);
   printf("overright_float_span(%lf, %s): %c\n",float8_in1, fspan1_out, bool_result ? 't' : 'n');
 
@@ -2397,7 +2397,7 @@ int main(void)
   bool_result = overright_int_set(int32_in1, iset1);
   printf("overright_int_set(%d, %s): %c\n", int32_in1, iset1_out, bool_result ? 't' : 'n');
 
-  /* bool overright_int_span(int i, const Span *s); */
+  /* bool overright_int_span(int i, const Span *sp); */
   bool_result = overright_int_span(int32_in1, ispan1);
   printf("overright_int_span(%d, %s): %c\n", int32_in1, ispan1_out, bool_result ? 't' : 'n');
 
@@ -2405,7 +2405,7 @@ int main(void)
   bool_result = overright_int_spanset(int32_in1, ispanset1);
   printf("overright_int_spanset(%d, %s): %c\n", int32_in1, ispanset1_out, bool_result ? 't' : 'n');
 
-  /* bool overright_set_bigint(const Set *s, int64 i); */
+  /* bool overright_set_bigint(const Set *s, int64_t i); */
   bool_result = overright_set_bigint(bset1, int64_in1);
   printf("overright_set_bigint(%s, %ld): %c\n", bset1_out, int64_in1, bool_result ? 't' : 'n');
 
@@ -2425,39 +2425,39 @@ int main(void)
   bool_result = overright_set_text(textset1, text1);
   printf("overright_set_text(%s, %s): %c\n", textset1_out, text1_out, bool_result ? 't' : 'n');
 
-  /* bool overright_span_bigint(const Span *s, int64 i); */
+  /* bool overright_span_bigint(const Span *sp, int64_t i); */
   bool_result = overright_span_bigint(bspan1, int64_in1);
   printf("overright_span_bigint(%s, %ld): %c\n", bspan1_out, int64_in1, bool_result ? 't' : 'n');
 
-  /* bool overright_span_float(const Span *s, double d); */
+  /* bool overright_span_float(const Span *sp, double d); */
   bool_result = overright_span_float(fspan1, float8_in1);
   printf("overright_span_float(%s, %lf): %c\n", fspan1_out, float8_in1, bool_result ? 't' : 'n');
 
-  /* bool overright_span_int(const Span *s, int i); */
+  /* bool overright_span_int(const Span *sp, int i); */
   bool_result = overright_span_int(ispan1, int32_in1);
   printf("overright_span_int(%s, %d): %c\n", ispan1_out, int32_in1, bool_result ? 't' : 'n');
 
-  /* bool overright_span_span(const Span *s1, const Span *s2); */
+  /* bool overright_span_span(const Span *sp1, const Span *sp2); */
   bool_result = overright_span_span(ispan1, ispan2);
   printf("overright_span_span(%s, %s): %c\n", ispan1_out, ispan2_out, bool_result ? 't' : 'n');
 
-  /* bool overright_span_spanset(const Span *s, const SpanSet *ss); */
+  /* bool overright_span_spanset(const Span *sp, const SpanSet *ss); */
   bool_result = overright_span_spanset(ispan1, ispanset1);
   printf("overright_span_spanset(%s, %s): %c\n", ispan1_out, ispanset1_out, bool_result ? 't' : 'n');
 
-  /* bool overright_spanset_bigint(spanset1, int64 i); */
+  /* bool overright_spanset_bigint(const SpanSet *ss, int64_t i); */
   bool_result = overright_spanset_bigint(bspanset1, int64_in1);
   printf("overright_spanset_bigint(%s, %ld): %c\n", bspanset1_out, int64_in1, bool_result ? 't' : 'n');
 
-  /* bool overright_spanset_float(spanset1, double d); */
+  /* bool overright_spanset_float(const SpanSet *ss, double d); */
   bool_result = overright_spanset_float(fspanset1, float8_in1);
   printf("overright_spanset_float(%s, %lf): %c\n", fspanset1_out, float8_in1, bool_result ? 't' : 'n');
 
-  /* bool overright_spanset_int(spanset1, int i); */
+  /* bool overright_spanset_int(const SpanSet *ss, int i); */
   bool_result = overright_spanset_int(ispanset1, int32_in1);
   printf("overright_spanset_int(%s, %d): %c\n", ispanset1_out, int32_in1, bool_result ? 't' : 'n');
 
-  /* bool overright_spanset_span(spanset1, const Span *s); */
+  /* bool overright_spanset_span(const SpanSet *ss, const Span *sp); */
   bool_result = overright_spanset_span(ispanset1, ispan1);
   printf("overright_spanset_span(%s, %s): %c\n", ispanset1_out, ispan1_out, bool_result ? 't' : 'n');
 
@@ -2469,15 +2469,15 @@ int main(void)
   bool_result = overright_text_set(text1, textset1);
   printf("overright_text_set(%s, %s): %c\n", text1_out, textset1_out, bool_result ? 't' : 'n');
 
-  /* bool right_bigint_set(int64 i, const Set *s); */
+  /* bool right_bigint_set(int64_t i, const Set *s); */
   bool_result = right_bigint_set(int64_in1, bset1);
   printf("right_bigint_set(%ld, %s): %c\n", int64_in1, bset1_out, bool_result ? 't' : 'n');
 
-  /* bool right_bigint_span(int64 i, const Span *s); */
+  /* bool right_bigint_span(int64_t i, const Span *sp); */
   bool_result = right_bigint_span(int64_in1, bspan1);
   printf("right_bigint_span(%ld, %s): %c\n", int64_in1, bspan1_out, bool_result ? 't' : 'n');
 
-  /* bool right_bigint_spanset(int64 i, const SpanSet *ss); */
+  /* bool right_bigint_spanset(int64_t i, const SpanSet *ss); */
   bool_result = right_bigint_spanset(int64_in1, bspanset1);
   printf("right_bigint_spanset(%ld, %s): %c\n", int64_in1, bspanset1_out, bool_result ? 't' : 'n');
 
@@ -2485,7 +2485,7 @@ int main(void)
   bool_result = right_float_set(float8_in1, fset1);
   printf("right_float_set(%lf, %s): %c\n", float8_in1, fset1_out, bool_result ? 't' : 'n');
 
-  /* bool right_float_span(double d, const Span *s); */
+  /* bool right_float_span(double d, const Span *sp); */
   bool_result = right_float_span(float8_in1, fspan1);
   printf("right_float_span(%lf, %s): %c\n", float8_in1, fspan1_out, bool_result ? 't' : 'n');
 
@@ -2497,7 +2497,7 @@ int main(void)
   bool_result = right_int_set(int32_in1, iset1);
   printf("right_int_set(%d, %s): %c\n", int32_in1, iset1_out, bool_result ? 't' : 'n');
 
-  /* bool right_int_span(int i, const Span *s); */
+  /* bool right_int_span(int i, const Span *sp); */
   bool_result = right_int_span(int32_in1, ispan1);
   printf("right_int_span(%d, %s): %c\n", int32_in1, ispan1_out, bool_result ? 't' : 'n');
 
@@ -2505,7 +2505,7 @@ int main(void)
   bool_result = right_int_spanset(int32_in1, ispanset1);
   printf("right_int_spanset(%d, %s): %c\n", int32_in1, ispanset1_out, bool_result ? 't' : 'n');
 
-  /* bool right_set_bigint(const Set *s, int64 i); */
+  /* bool right_set_bigint(const Set *s, int64_t i); */
   bool_result = right_set_bigint(bset1, int64_in1);
   printf("right_set_bigint(%s, %ld): %c\n", bset1_out, int64_in1, bool_result ? 't' : 'n');
 
@@ -2525,27 +2525,27 @@ int main(void)
   bool_result = right_set_text(textset1, text1);
   printf("right_set_text(%s, %s): %c\n", textset1_out, text1_out, bool_result ? 't' : 'n');
 
-  /* bool right_span_bigint(const Span *s, int64 i); */
+  /* bool right_span_bigint(const Span *sp, int64_t i); */
   bool_result = right_span_bigint(bspan1, int64_in1);
   printf("right_span_bigint(%s, %ld): %c\n", bspan1_out, int64_in1, bool_result ? 't' : 'n');
 
-  /* bool right_span_float(const Span *s, double d); */
+  /* bool right_span_float(const Span *sp, double d); */
   bool_result = right_span_float(fspan1, float8_in1);
   printf("right_span_float(%s, %lf): %c\n", fspan1_out, float8_in1, bool_result ? 't' : 'n');
 
-  /* bool right_span_int(const Span *s, int i); */
+  /* bool right_span_int(const Span *sp, int i); */
   bool_result = right_span_int(ispan1, int32_in1);
   printf("right_span_int(%s, %d): %c\n", ispan1_out, int32_in1, bool_result ? 't' : 'n');
 
-  /* bool right_span_span(const Span *s1, const Span *s2); */
+  /* bool right_span_span(const Span *sp1, const Span *sp2); */
   bool_result = right_span_span(ispan1, ispan2);
   printf("right_span_span(%s, %s): %c\n", ispan1_out, ispan2_out, bool_result ? 't' : 'n');
 
-  /* bool right_span_spanset(const Span *s, const SpanSet *ss); */
+  /* bool right_span_spanset(const Span *sp, const SpanSet *ss); */
   bool_result = right_span_spanset(ispan1, ispanset1);
   printf("right_span_spanset(%s, %s): %c\n", ispan1_out, ispanset1_out, bool_result ? 't' : 'n');
 
-  /* bool right_spanset_bigint(spanset1, int64 i); */
+  /* bool right_spanset_bigint(spanset1, int64_t i); */
   bool_result = right_spanset_bigint(bspanset1, int64_in1);
   printf("right_spanset_bigint(%s, %ld): %c\n", bspanset1_out, int64_in1, bool_result ? 't' : 'n');
 
@@ -2557,7 +2557,7 @@ int main(void)
   bool_result = right_spanset_int(ispanset1, int32_in1);
   printf("right_spanset_int(%s, %d): %c\n", ispanset1_out, int32_in1, bool_result ? 't' : 'n');
 
-  /* bool right_spanset_span(spanset1, const Span *s); */
+  /* bool right_spanset_span(spanset1, const Span *sp); */
   bool_result = right_spanset_span(ispanset1, ispan1);
   printf("right_spanset_span(%s, %s): %c\n", ispanset1_out, ispan1_out, bool_result ? 't' : 'n');
 
@@ -2574,7 +2574,7 @@ int main(void)
    *****************************************************************************/
   printf("****************************************************************\n");
 
-  /* Set *intersection_bigint_set(int64 i, const Set *s); */
+  /* Set *intersection_bigint_set(int64_t i, const Set *s); */
   bset_result = intersection_bigint_set(int64_in1, bset1);
   char_result = bset_result ? bigintset_out(bset_result) : text_out(text_null);
   printf("intersection_bigint_set(%ld, %s): %s\n", int64_in1, bset1_out, char_result);  if (bset_result)
@@ -2605,7 +2605,7 @@ int main(void)
     free(iset_result);
   free(char_result);
 
-  /* Set *intersection_set_bigint(const Set *s, int64 i); */
+  /* Set *intersection_set_bigint(const Set *s, int64_t i); */
   bset_result = intersection_set_bigint(bset1, int64_in1);
   char_result = bset_result ? bigintset_out(bset_result) : text_out(text_null);
   printf("intersection_set_bigint(%s, %ld): %s\n", bset1_out, int64_in1, char_result);
@@ -2661,7 +2661,7 @@ int main(void)
     free(tstzset_result);
   free(char_result);
 
-  /* Span *intersection_span_bigint(const Span *s, int64 i); */
+  /* Span *intersection_span_bigint(const Span *sp, int64_t i); */
   bspan_result = intersection_span_bigint(bspan1, int64_in1);
   char_result = bspan_result ? bigintspan_out(bspan_result) : text_out(text_null);
   printf("intersection_span_bigint(%s, %ld): %s\n", bspan1_out, int64_in1, char_result);
@@ -2669,7 +2669,7 @@ int main(void)
     free(bspan_result);
   free(char_result);
 
-  /* Span *intersection_span_date(const Span *s, DateADT d); */
+  /* Span *intersection_span_date(const Span *sp, DateADT d); */
   dspan_result = intersection_span_date(dspan1, date1);
   char_result = dspan_result ? datespan_out(dspan_result) : text_out(text_null);
   printf("intersection_span_date(%s, %s): %s\n", dspan1_out, date1_out, char_result);
@@ -2677,7 +2677,7 @@ int main(void)
     free(dspan_result);
   free(char_result);
 
-  /* Span *intersection_span_float(const Span *s, double d); */
+  /* Span *intersection_span_float(const Span *sp, double d); */
   fspan_result = intersection_span_float(fspan1, float8_in1);
   char_result = fspan_result ? floatspan_out(fspan_result, 6) : text_out(text_null);
   printf("intersection_span_float(%s, %lf): %s\n", fspan1_out, float8_in1, char_result);
@@ -2685,7 +2685,7 @@ int main(void)
     free(fspan_result);
   free(char_result);
 
-  /* Span *intersection_span_int(const Span *s, int i); */
+  /* Span *intersection_span_int(const Span *sp, int i); */
   ispan_result = intersection_span_int(ispan1, int32_in1);
   char_result = ispan_result ? intspan_out(ispan_result) : text_out(text_null);
   printf("intersection_span_int(%s, %d): %s\n", ispan1_out, int32_in1, char_result);
@@ -2693,7 +2693,7 @@ int main(void)
     free(ispan_result);
   free(char_result);
 
-  /* Span *intersection_span_span(const Span *s1, const Span *s2); */
+  /* Span *intersection_span_span(const Span *sp1, const Span *sp2); */
   ispan_result = intersection_span_span(ispan1, ispan2);
   char_result = ispan_result ? intspan_out(ispan_result) : text_out(text_null);
   printf("intersection_span_span(%s, %s): %s\n", ispan1_out, ispan2_out, char_result);
@@ -2701,7 +2701,7 @@ int main(void)
     free(ispan_result);
   free(char_result);
 
-  /* SpanSet *intersection_span_spanset(const Span *s, const SpanSet *ss); */
+  /* SpanSet *intersection_span_spanset(const Span *sp, const SpanSet *ss); */
   ispanset_result = intersection_span_spanset(ispan1, ispanset1);
   char_result = ispanset_result ? intspanset_out(ispanset_result) : text_out(text_null);
   printf("intersection_span_spanset(%s, %s): %s\n", ispan1_out, ispanset1_out, char_result);
@@ -2709,7 +2709,7 @@ int main(void)
     free(ispanset_result);
   free(char_result);
 
-  /* Span *intersection_span_timestamptz(const Span *s, TimestampTz t); */
+  /* Span *intersection_span_timestamptz(const Span *sp, TimestampTz t); */
   tstzspan_result = intersection_span_timestamptz(tstzspan1, tstz1);
   char_result = tstzspan_result ? tstzspan_out(tstzspan_result) : text_out(text_null);
   printf("intersection_span_timestamptz(%s, %s): %s\n", tstzspan1_out, tstz1_out, char_result);
@@ -2717,7 +2717,7 @@ int main(void)
     free(tstzspan_result);
   free(char_result);
 
-  /* SpanSet *intersection_spanset_bigint(spanset1, int64 i); */
+  /* SpanSet *intersection_spanset_bigint(spanset1, int64_t i); */
   bspanset_result = intersection_spanset_bigint(bspanset1, int64_in1);
   char_result = bspanset_result ? bigintspanset_out(bspanset_result) : text_out(text_null);
   printf("intersection_spanset_bigint(%s, %ld): %s\n", bspanset1_out, int64_in1, char_result);
@@ -2749,7 +2749,7 @@ int main(void)
     free(ispanset_result);
   free(char_result);
 
-  /* SpanSet *intersection_spanset_span(spanset1, const Span *s); */
+  /* SpanSet *intersection_spanset_span(spanset1, const Span *sp); */
   ispanset_result = intersection_spanset_span(ispanset1, ispan1);
   char_result = ispanset_result ? intspanset_out(ispanset_result) : text_out(text_null);
   printf("intersection_spanset_span(%s, %s): %s\n", ispanset1_out, ispan1_out, char_result);
@@ -2789,7 +2789,7 @@ int main(void)
     free(tstzset_result);
   free(char_result);
 
-  /* Set *minus_bigint_set(int64 i, const Set *s); */
+  /* Set *minus_bigint_set(int64_t i, const Set *s); */
   bset_result = minus_bigint_set(int64_in1, bset1);
   char_result = bset_result ? bigintset_out(bset_result) : text_out(text_null);
   printf("minus_bigint_set(%ld, %s): %s\n", int64_in1, bset1_out, char_result);
@@ -2797,7 +2797,7 @@ int main(void)
     free(bset_result);
   free(char_result);
 
-  /* SpanSet *minus_bigint_span(int64 i, const Span *s); */
+  /* SpanSet *minus_bigint_span(int64_t i, const Span *sp); */
   bspanset_result = minus_bigint_span(int64_in1, bspan1);
   char_result = bspanset_result ? bigintspanset_out(bspanset_result) : text_out(text_null);
   printf("minus_bigint_span(%ld, %s): %s\n", int64_in1, bspan1_out, char_result);
@@ -2805,7 +2805,7 @@ int main(void)
     free(bspanset_result);
   free(char_result);
 
-  /* SpanSet *minus_bigint_spanset(int64 i, const SpanSet *ss); */
+  /* SpanSet *minus_bigint_spanset(int64_t i, const SpanSet *ss); */
   bspanset_result = minus_bigint_spanset(int64_in1, bspanset1);
   char_result = bspanset_result ? bigintspanset_out(bspanset_result) : text_out(text_null);
   printf("minus_bigint_spanset(%ld, %s): %s\n", int64_in1, bspanset1_out, char_result);
@@ -2821,7 +2821,7 @@ int main(void)
     free(dset_result);
   free(char_result);
 
-  /* SpanSet *minus_date_span(DateADT d, const Span *s); */
+  /* SpanSet *minus_date_span(DateADT d, const Span *sp); */
   dspanset_result = minus_date_span(date1, dspan1);
   char_result = dspanset_result ? datespanset_out(dspanset_result) : text_out(text_null);
   printf("minus_date_span(%s, %s): %s\n", date1_out, dspan1_out, char_result);
@@ -2845,7 +2845,7 @@ int main(void)
     free(fset_result);
   free(char_result);
 
-  /* SpanSet *minus_float_span(double d, const Span *s); */
+  /* SpanSet *minus_float_span(double d, const Span *sp); */
   fspanset_result = minus_float_span(float8_in1, fspan1);
   char_result = fspanset_result ? floatspanset_out(fspanset_result, 6) : text_out(text_null);
   printf("minus_float_span(%lf, %s): %s\n", float8_in1, fspan1_out, char_result);
@@ -2869,7 +2869,7 @@ int main(void)
     free(iset_result);
   free(char_result);
 
-  /* SpanSet *minus_int_span(int i, const Span *s); */
+  /* SpanSet *minus_int_span(int i, const Span *sp); */
   ispanset_result = minus_int_span(int32_in1, ispan1);
   char_result = ispanset_result ? intspanset_out(ispanset_result) : text_out(text_null);
   printf("minus_int_span(%d, %s): %s\n", int32_in1, ispan1_out, char_result);
@@ -2885,7 +2885,7 @@ int main(void)
     free(ispanset_result);
   free(char_result);
 
-  /* Set *minus_set_bigint(const Set *s, int64 i); */
+  /* Set *minus_set_bigint(const Set *s, int64_t i); */
   bset_result = minus_set_bigint(bset1, int64_in1);
   char_result = bset_result ? bigintset_out(bset_result) : text_out(text_null);
   printf("minus_set_bigint(%s, %ld): %s\n", bset1_out, int64_in1, char_result);
@@ -2941,7 +2941,7 @@ int main(void)
     free(tstzset_result);
   free(char_result);
 
-  /* SpanSet *minus_span_bigint(const Span *s, int64 i); */
+  /* SpanSet *minus_span_bigint(const Span *sp, int64_t i); */
   bspanset_result = minus_span_bigint(bspan1, int64_in1);
   char_result = bspanset_result ? bigintspanset_out(bspanset_result) : text_out(text_null);
   printf("minus_span_bigint(%s, %ld): %s\n", bspan1_out, int64_in1, char_result);
@@ -2949,7 +2949,7 @@ int main(void)
     free(bspanset_result);
   free(char_result);
 
-  /* SpanSet *minus_span_date(const Span *s, DateADT d); */
+  /* SpanSet *minus_span_date(const Span *sp, DateADT d); */
   dspanset_result = minus_span_date(dspan1, date1);
   char_result = dspanset_result ? datespanset_out(dspanset_result) : text_out(text_null);
   printf("minus_span_date(%s, %s): %s\n", dspan1_out, date1_out, char_result);
@@ -2957,7 +2957,7 @@ int main(void)
     free(dspanset_result);
   free(char_result);
 
-  /* SpanSet *minus_span_float(const Span *s, double d); */
+  /* SpanSet *minus_span_float(const Span *sp, double d); */
   fspanset_result = minus_span_float(fspan1, float8_in1);
   char_result = fspanset_result ? floatspanset_out(fspanset_result, 6) : text_out(text_null);
   printf("minus_span_float(%s, %lf): %s\n", fspan1_out, float8_in1, char_result);
@@ -2965,7 +2965,7 @@ int main(void)
     free(fspanset_result);
   free(char_result);
 
-  /* SpanSet *minus_span_int(const Span *s, int i); */
+  /* SpanSet *minus_span_int(const Span *sp, int i); */
   ispanset_result = minus_span_int(ispan1, int32_in1);
   char_result = ispanset_result ? intspanset_out(ispanset_result) : text_out(text_null);
   printf("minus_span_int(%s, %d): %s\n", ispan1_out, int32_in1, char_result);
@@ -2973,7 +2973,7 @@ int main(void)
     free(ispanset_result);
   free(char_result);
 
-  /* SpanSet *minus_span_span(const Span *s1, const Span *s2); */
+  /* SpanSet *minus_span_span(const Span *sp1, const Span *sp2); */
   ispanset_result = minus_span_span(ispan1, ispan2);
   char_result = ispanset_result ? intspanset_out(ispanset_result) : text_out(text_null);
   printf("minus_span_span(%s, %s): %s\n", ispan1_out, ispan2_out, char_result);
@@ -2981,7 +2981,7 @@ int main(void)
     free(ispanset_result);
   free(char_result);
 
-  /* SpanSet *minus_span_spanset(const Span *s, const SpanSet *ss); */
+  /* SpanSet *minus_span_spanset(const Span *sp, const SpanSet *ss); */
   ispanset_result = minus_span_spanset(ispan1, ispanset1);
   char_result = ispanset_result ? intspanset_out(ispanset_result) : text_out(text_null);
   printf("minus_span_spanset(%s, %s): %s\n", ispan1_out, ispanset1_out, char_result);
@@ -2989,7 +2989,7 @@ int main(void)
     free(ispanset_result);
   free(char_result);
 
-  /* SpanSet *minus_span_timestamptz(const Span *s, TimestampTz t); */
+  /* SpanSet *minus_span_timestamptz(const Span *sp, TimestampTz t); */
   tstzspanset_result = minus_span_timestamptz(tstzspan1, tstz1);
   char_result = tstzspanset_result ? tstzspanset_out(tstzspanset_result) : text_out(text_null);
   printf("minus_span_timestamptz(%s, %s): %s\n", tstzspan1_out, tstz1_out, char_result);
@@ -2997,7 +2997,7 @@ int main(void)
     free(tstzspanset_result);
   free(char_result);
 
-  /* SpanSet *minus_spanset_bigint(spanset1, int64 i); */
+  /* SpanSet *minus_spanset_bigint(spanset1, int64_t i); */
   bspanset_result = minus_spanset_bigint(bspanset1, int64_in1);
   char_result = bspanset_result ? bigintspanset_out(bspanset_result) : text_out(text_null);
   printf("minus_spanset_bigint(%s, %ld): %s\n", bspanset1_out, int64_in1, char_result);
@@ -3029,7 +3029,7 @@ int main(void)
     free(ispanset_result);
   free(char_result);
 
-  /* SpanSet *minus_spanset_span(spanset1, const Span *s); */
+  /* SpanSet *minus_spanset_span(spanset1, const Span *sp); */
   ispanset_result = minus_spanset_span(ispanset1, ispan1);
   char_result = ispanset_result ? intspanset_out(ispanset_result) : text_out(text_null);
   printf("minus_spanset_span(%s, %s): %s\n", ispanset1_out, ispan1_out, char_result);
@@ -3069,7 +3069,7 @@ int main(void)
     free(tstzset_result);
   free(char_result);
 
-  /* SpanSet *minus_timestamptz_span(TimestampTz t, const Span *s); */
+  /* SpanSet *minus_timestamptz_span(TimestampTz t, const Span *sp); */
   tstzspanset_result = minus_timestamptz_span(tstz1, tstzspan1);
   char_result = tstzspanset_result ? tstzspanset_out(tstzspanset_result) : text_out(text_null);
   printf("minus_timestamptz_span(%s, %s): %s\n", tstz1_out, tstzspan1_out, char_result);
@@ -3085,19 +3085,19 @@ int main(void)
     free(tstzspanset_result);
   free(char_result);
 
-  /* Set *union_bigint_set(int64 i, const Set *s); */
+  /* Set *union_bigint_set(int64_t i, const Set *s); */
   bset_result = union_bigint_set(int64_in1, bset1);
   char_result = bigintset_out(bset_result);
   printf("union_bigint_set(%ld, %s): %s\n", int64_in1, bset1_out, char_result);
   free(bset_result); free(char_result);
 
-  /* SpanSet *union_bigint_spanspan1, int64 i); */
+  /* SpanSet *union_bigint_spanspan1, int64_t i); */
   bspanset_result = union_bigint_span(bspan1, int64_in1);
   char_result = bigintspanset_out(bspanset_result);
   printf("union_bigint_span(%s, %ld): %s\n", bspan1_out, int64_in1, char_result);
   free(bspanset_result); free(char_result);
 
-  /* SpanSet *union_bigint_spanset(int64 i, SpanSet *ss); */
+  /* SpanSet *union_bigint_spanset(int64_t i, SpanSet *ss); */
   bspanset_result = union_bigint_spanset(int64_in1, bspanset1);
   char_result = bigintspanset_out(bspanset_result);
   printf("union_bigint_spanset(%ld, %s): %s\n", int64_in1, bspanset1_out, char_result);
@@ -3127,7 +3127,7 @@ int main(void)
   printf("union_float_set(%lf, %s): %s\n", float8_in1, fset1_out, char_result);
   free(fset_result); free(char_result);
 
-  /* SpanSet *union_float_span(const Span *s, double d); */
+  /* SpanSet *union_float_span(const Span *sp, double d); */
   fspanset_result = union_float_span(fspan1, float8_in1);
   char_result = floatspanset_out(fspanset_result, 6);
   printf("union_float_span(%s, %lf): %s\n", fspan1_out, float8_in1, char_result);
@@ -3145,7 +3145,7 @@ int main(void)
   printf("union_int_set(%d, %s): %s\n", int32_in1, iset1_out, char_result);
   free(iset_result); free(char_result);
 
-  /* SpanSet *union_int_span(int i, const Span *s); */
+  /* SpanSet *union_int_span(int i, const Span *sp); */
   ispanset_result = union_int_span(int32_in1, ispan1);
   char_result = intspanset_out(ispanset_result);
   printf("union_int_span(%d, %s): %s\n", int32_in1, ispan1_out, char_result);
@@ -3157,7 +3157,7 @@ int main(void)
   printf("union_int_spanset(%d, %s): %s\n", int32_in1, ispanset1_out, char_result);
   free(ispanset_result); free(char_result);
 
-  /* Set *union_set_bigint(const Set *s, int64 i); */
+  /* Set *union_set_bigint(const Set *s, int64_t i); */
   bset_result = union_set_bigint(bset1, int64_in1);
   char_result = bigintset_out(bset_result);
   printf("union_set_bigint(%s, %ld): %s\n", bset1_out, int64_in1, char_result);
@@ -3199,49 +3199,49 @@ int main(void)
   printf("union_set_timestamptz(%s, %s): %s\n", tstzset1_out, tstz1_out, char_result);
   free(tstzset_result); free(char_result);
 
-  /* SpanSet *union_span_bigint(const Span *s, int64 i); */
+  /* SpanSet *union_span_bigint(const Span *sp, int64_t i); */
   bspanset_result = union_span_bigint(bspan1, int64_in1);
   char_result = bigintspanset_out(bspanset_result);
   printf("union_span_bigint(%s, %ld): %s\n", bspan1_out, int64_in1, char_result);
   free(bspanset_result); free(char_result);
 
-  /* SpanSet *union_span_date(const Span *s, DateADT d); */
+  /* SpanSet *union_span_date(const Span *sp, DateADT d); */
   dspanset_result = union_span_date(dspan1, date1);
   char_result = datespanset_out(dspanset_result);
   printf("union_span_date(%s, %s): %s\n", dspan1_out, date1_out, char_result);
   free(dspanset_result); free(char_result);
 
-  /* SpanSet *union_span_float(const Span *s, double d); */
+  /* SpanSet *union_span_float(const Span *sp, double d); */
   fspanset_result = union_span_float(fspan1, float8_in1);
   char_result = floatspanset_out(fspanset_result, 6);
   printf("union_span_float(%s, %lf): %s\n", fspan1_out, float8_in1, char_result);
   free(fspanset_result); free(char_result);
 
-  /* SpanSet *union_span_int(const Span *s, int i); */
+  /* SpanSet *union_span_int(const Span *sp, int i); */
   ispanset_result = union_span_int(ispan1, int32_in1);
   char_result = intspanset_out(ispanset_result);
   printf("union_span_int(%s, %d): %s\n", ispan1_out, int32_in1, char_result);
   free(ispanset_result); free(char_result);
 
-  /* SpanSet *union_span_span(const Span *s1, const Span *s2); */
+  /* SpanSet *union_span_span(const Span *sp1, const Span *sp2); */
   ispanset_result = union_span_span(ispan1, ispan2);
   char_result = intspanset_out(ispanset_result);
   printf("union_span_span(%s, %s): %s\n", ispan1_out, ispan2_out, char_result);
   free(ispanset_result); free(char_result);
 
-  /* SpanSet *union_span_spanset(const Span *s, const SpanSet *ss); */
+  /* SpanSet *union_span_spanset(const Span *sp, const SpanSet *ss); */
   ispanset_result = union_span_spanset(ispan1, ispanset1);
   char_result = intspanset_out(ispanset_result);
   printf("union_span_spanset(%s, %s): %s\n", ispan1_out, ispanset1_out, char_result);
   free(ispanset_result); free(char_result);
 
-  /* SpanSet *union_span_timestamptz(const Span *s, TimestampTz t); */
+  /* SpanSet *union_span_timestamptz(const Span *sp, TimestampTz t); */
   tstzspanset_result = union_span_timestamptz(tstzspan1, tstz1);
   char_result = tstzspanset_out(tstzspanset_result);
   printf("union_span_timestamptz(%s, %s): %s\n", tstzspan1_out, tstz1_out, char_result);
   free(tstzspanset_result); free(char_result);
 
-  /* SpanSet *union_spanset_bigint(spanset1, int64 i); */
+  /* SpanSet *union_spanset_bigint(spanset1, int64_t i); */
   bspanset_result = union_spanset_bigint(bspanset1, int64_in1);
   char_result = bigintspanset_out(bspanset_result);
   printf("union_spanset_bigint(%s, %ld): %s\n", bspanset1_out, int64_in1, char_result);
@@ -3265,7 +3265,7 @@ int main(void)
   printf("union_spanset_int(%s, %d): %s\n", ispanset1_out, int32_in1, char_result);
   free(ispanset_result); free(char_result);
 
-  /* SpanSet *union_spanset_span(spanset1, const Span *s); */
+  /* SpanSet *union_spanset_span(spanset1, const Span *sp); */
   ispanset_result = union_spanset_span(ispanset1, ispan1);
   char_result = intspanset_out(ispanset_result);
   printf("union_spanset_span(%s, %s): %s\n", ispanset1_out, ispan1_out, char_result);
@@ -3295,7 +3295,7 @@ int main(void)
   printf("union_timestamptz_set(%s, %s): %s\n", tstz1_out, tstzset1_out, char_result);
   free(tstzset_result); free(char_result);
 
-  /* SpanSet *union_timestamptz_span(TimestampTz t, const Span *s); */
+  /* SpanSet *union_timestamptz_span(TimestampTz t, const Span *sp); */
   tstzspanset_result = union_timestamptz_span(tstz1, tstzspan1);
   char_result = tstzspanset_out(tstzspanset_result);
   printf("union_timestamptz_span(%s, %s): %s\n", tstz1_out, tstzspan1_out, char_result);
@@ -3312,19 +3312,19 @@ int main(void)
    *****************************************************************************/
   printf("****************************************************************\n");
 
-  /* int64 distance_bigintset_bigintset(const Set *s1, const Set *s2); */
+  /* int64_t distance_bigintset_bigintset(const Set *s1, const Set *s2); */
   int64_result = distance_bigintset_bigintset(bset1, bset2);
   printf("distance_bigintset_bigintset(%s, %s): %ld\n", bset1_out, bset2_out, int64_result);
 
-  /* int64 distance_bigintspan_bigintspan(const Span *s1, const Span *s2); */
+  /* int64_t distance_bigintspan_bigintspan(const Span *sp1, const Span *sp2); */
   int64_result = distance_bigintspan_bigintspan(bspan1, bspan2);
   printf("distance_bigintspan_bigintspan(%s, %s): %ld\n", bspan1_out, bspan2_out, int64_result);
 
-  /* int64 distance_bigintspanset_bigintspan(spanset1, const Span *s); */
+  /* int64_t distance_bigintspanset_bigintspan(spanset1, const Span *sp); */
   int64_result = distance_bigintspanset_bigintspan(bspanset1, bspan1);
   printf("distance_bigintspanset_bigintspan(%s, %s): %ld\n", bspanset1_out, bspan1_out, int64_result);
 
-  /* int64 distance_bigintspanset_bigintspanset(const SpanSet *ss1, const SpanSet *ss2); */
+  /* int64_t distance_bigintspanset_bigintspanset(const SpanSet *ss1, const SpanSet *ss2); */
   int64_result = distance_bigintspanset_bigintspanset(bspanset1, bspanset2);
   printf("distance_bigintspanset_bigintspanset(%s, %s): %ld\n", bspanset1_out, bspanset2_out, int64_result);
 
@@ -3332,11 +3332,11 @@ int main(void)
   int32_result = distance_dateset_dateset(dset1, dset2);
   printf("distance_dateset_dateset(%s, %s): %d\n", dset1_out, dset2_out, int32_result);
 
-  /* int distance_datespan_datespan(const Span *s1, const Span *s2); */
+  /* int distance_datespan_datespan(const Span *sp1, const Span *sp2); */
   int32_result = distance_datespan_datespan(dspan1, dspan2);
   printf("distance_datespan_datespan(%s, %s): %d\n", dspan1_out, dspan2_out, int32_result);
 
-  /* int distance_datespanset_datespan(spanset1, const Span *s); */
+  /* int distance_datespanset_datespan(spanset1, const Span *sp); */
   int32_result = distance_datespanset_datespan(dspanset1, dspan1);
   printf("distance_datespanset_datespan(%s, %s): %d\n", dspanset1_out, dspan1_out, int32_result);
 
@@ -3348,11 +3348,11 @@ int main(void)
   float8_result = distance_floatset_floatset(fset1, fset2);
   printf("distance_floatset_floatset(%s, %s): %lf\n", fset1_out, fset2_out, float8_result);
 
-  /* double distance_floatspan_floatspan(const Span *s1, const Span *s2); */
+  /* double distance_floatspan_floatspan(const Span *sp1, const Span *sp2); */
   float8_result = distance_floatspan_floatspan(fspan1, fspan2);
   printf("distance_floatspan_floatspan(%s, %s): %lf\n", fspan1_out, fspan2_out, float8_result);
 
-  /* double distance_floatspanset_floatspan(spanset1, const Span *s); */
+  /* double distance_floatspanset_floatspan(spanset1, const Span *sp); */
   float8_result = distance_floatspanset_floatspan(fspanset1, fspan1);
   printf("distance_floatspanset_floatspan(%s, %s): %lf\n", fspanset1_out, fspan1_out, float8_result);
 
@@ -3364,11 +3364,11 @@ int main(void)
   int32_result = distance_intset_intset(iset1, iset2);
   printf("distance_intset_intset(%s, %s): %d\n", iset1_out, iset2_out, int32_result);
 
-  /* int distance_intspan_intspan(const Span *s1, const Span *s2); */
+  /* int distance_intspan_intspan(const Span *sp1, const Span *sp2); */
   int32_result = distance_intspan_intspan(ispan1, ispan2);
   printf("distance_intspan_intspan(%s, %s): %d\n", ispan1_out, ispan2_out, int32_result);
 
-  /* int distance_intspanset_intspan(spanset1, const Span *s); */
+  /* int distance_intspanset_intspan(spanset1, const Span *sp); */
   int32_result = distance_intspanset_intspan(ispanset1, ispan1);
   printf("distance_intspanset_intspan(%s, %s): %d\n", ispanset1_out, ispan1_out, int32_result);
 
@@ -3376,7 +3376,7 @@ int main(void)
   int32_result = distance_intspanset_intspanset(ispanset1, ispanset2);
   printf("distance_intspanset_intspanset(%s, %s): %d\n", ispanset1_out, ispanset2_out, int32_result);
 
-  /* int64 distance_set_bigint(const Set *s, int64 i); */
+  /* int64_t distance_set_bigint(const Set *s, int64_t i); */
   int64_result = distance_set_bigint(bset1, int64_in1);
   printf("distance_set_bigint(%s, %ld): %ld\n", bset1_out, int64_in1, int64_result);
 
@@ -3396,27 +3396,27 @@ int main(void)
   float8_result = distance_set_timestamptz(tstzset1, tstz1);
   printf("distance_set_timestamptz(%s, %s): %lf\n", tstzset1_out, tstz1_out, float8_result);
 
-  /* int64 distance_span_bigint(const Span *s, int64 i); */
+  /* int64_t distance_span_bigint(const Span *sp, int64_t i); */
   int64_result = distance_span_bigint(bspan1, int64_in1);
   printf("distance_span_bigint(%s, %ld): %ld\n", bspan1_out, int64_in1, int64_result);
 
-  /* int distance_span_date(const Span *s, DateADT d); */
+  /* int distance_span_date(const Span *sp, DateADT d); */
   int32_result = distance_span_date(dspan1, date1);
   printf("distance_span_date(%s, %s): %d\n", dspan1_out, date1_out, int32_result);
 
-  /* double distance_span_float(const Span *s, double d); */
+  /* double distance_span_float(const Span *sp, double d); */
   float8_result = distance_span_float(fspan1, float8_in1);
   printf("distance_span_float(%s, %lf): %lf\n", fspan1_out, float8_in1, float8_result);
 
-  /* int distance_span_int(const Span *s, int i); */
+  /* int distance_span_int(const Span *sp, int i); */
   int32_result = distance_span_int(ispan1, int32_in1);
   printf("distance_span_int(%s, %d): %d\n", ispan1_out, int32_in1, int32_result);
 
-  /* double distance_span_timestamptz(const Span *s, TimestampTz t); */
+  /* double distance_span_timestamptz(const Span *sp, TimestampTz t); */
   float8_result = distance_span_timestamptz(tstzspan1, tstz1);
   printf("distance_span_timestamptz(%s, %s): %lf\n", tstzspan1_out, tstz1_out, float8_result);
 
-  /* int64 distance_spanset_bigint(spanset1, int64 i); */
+  /* int64_t distance_spanset_bigint(spanset1, int64_t i); */
   int64_result = distance_spanset_bigint(bspanset1, int64_in1);
   printf("distance_spanset_bigint(%s, %ld): %ld\n", bspanset1_out, int64_in1, int64_result);
 
@@ -3440,11 +3440,11 @@ int main(void)
   float8_result = distance_tstzset_tstzset(tstzset1, tstzset2);
   printf("distance_tstzset_tstzset(%s, %s): %lf\n", tstzset1_out, tstzset2_out, float8_result);
 
-  /* double distance_tstzspan_tstzspan(const Span *s1, const Span *s2); */
+  /* double distance_tstzspan_tstzspan(const Span *sp1, const Span *sp2); */
   float8_result = distance_tstzspan_tstzspan(tstzspan1, tstzspan2);
   printf("distance_tstzspan_tstzspan(%s, %s): %lf\n", tstzspan1_out, tstzspan2_out, float8_result);
 
-  /* double distance_tstzspanset_tstzspan(spanset1, const Span *s); */
+  /* double distance_tstzspanset_tstzspan(spanset1, const Span *sp); */
   float8_result = distance_tstzspanset_tstzspan(tstzspanset1, tstzspan1);
   printf("distance_tstzspanset_tstzspan(%s, %s): %lf\n", tstzspanset1_out, tstzspan1_out, float8_result);
 
@@ -3457,14 +3457,14 @@ int main(void)
    *****************************************************************************/
   printf("****************************************************************\n");
 
-  /* Span *bigint_extent_transfn(Span *state, int64 i); */
+  /* Span *bigint_extent_transfn(Span *state, int64_t i); */
   ispan_result = bigint_extent_transfn(NULL, int64_in1);
   ispan_result = bigint_extent_transfn(ispan_result, int64_in2);
   char_result = bigintspan_out(ispan_result);
   printf("bigint_extent aggregate: %ld, %ld -> %s\n", int64_in1, int64_in2, char_result);
   free(ispan_result); free(char_result);
 
-  /* Set *bigint_union_transfn(Set *state, int64 i); */
+  /* Set *bigint_union_transfn(Set *state, int64_t i); */
   bset_result = bigint_union_transfn(NULL, int64_in1);
   bset_result = bigint_union_transfn(bset_result, int64_in2);
   char_result = bigintset_out(bset_result);
@@ -3513,7 +3513,7 @@ int main(void)
   printf("int_extent aggregate: %d, %d -> %s\n", int32_in1, int32_in2, char_result);
   free(ispan_result); free(char_result);
 
-  /* Set *int_union_transfn(Set *state, int32 i); */
+  /* Set *int_union_transfn(Set *state, int32_t i); */
   iset_result = int_union_transfn(NULL, int32_in1);
   iset_result = int_union_transfn(iset_result, int32_in2);
   iset_result = set_union_finalfn(iset_result);
@@ -3536,14 +3536,14 @@ int main(void)
   printf("set_union aggregate: %s, %s -> %s\n", iset1_out, iset2_out, char_result);
   free(iset_result); free(char_result);
 
-  /* Span *span_extent_transfn(Span *state, const Span *s); */
+  /* Span *span_extent_transfn(Span *state, const Span *sp); */
   ispan_result = span_extent_transfn(NULL, ispan1);
   ispan_result = span_extent_transfn(ispan_result, ispan2);
   char_result = intspan_out(ispan_result);
   printf("span_extent aggregate: %s, %s -> %s\n", ispan1_out, ispan2_out, char_result);
   free(ispan_result); free(char_result);
 
-  /* SpanSet *span_union_transfn(SpanSet *state, const Span *s); */
+  /* SpanSet *span_union_transfn(SpanSet *state, const Span *sp); */
   ispanset_result = span_union_transfn(NULL, ispan1);
   ispanset_result = span_union_transfn(ispanset_result, ispan2);
   ispanset_result = spanset_union_finalfn(ispanset_result);
@@ -3592,17 +3592,17 @@ int main(void)
    *****************************************************************************/
   printf("****************************************************************\n");
 
-  /* int64 bigint_get_bin(int64 value, int64 vsize, int64 vorigin); */
+  /* int64_t bigint_get_bin(int64_t value, int64_t vsize, int64_t vorigin); */
   int64_result = bigint_get_bin(int64_in1, int64_in2, int64_in2);
   printf("bigint_get_bin(%ld, %ld, %ld): %d\n", int64_in1, int64_in2, int64_in2, int32_result);
 
-  /* Span *bigintspan_bins(const Span *s, int64 vsize, int64 vorigin, int *count); */
+  /* Span *bigintspan_bins(const Span *sp, int64_t vsize, int64_t vorigin, int *count); */
   bspan_result = bigintspan_bins(bspan1, int64_in1, int64_in2, &count);
   char_result = bigintspan_out(bspan_result);
   printf("bigintspan_bins(%s, %ld, %ld): %s\n", bspan1_out, int64_in1, int64_in2, char_result);
   free(bspan_result); free(char_result);
 
-  /* Span *bigintspanset_bins(spanset1, int64 vsize, int64 vorigin, int *count); */
+  /* Span *bigintspanset_bins(spanset1, int64_t vsize, int64_t vorigin, int *count); */
   bspan_result = bigintspanset_bins(bspanset1, int64_in1, int64_in2, &count);
   char_result = bigintspan_out(bspan_result);
   printf("bigintspanset_bins(%s, %ld, %ld): %s\n", bspanset1_out, int64_in1, int64_in2, char_result);
@@ -3614,7 +3614,7 @@ int main(void)
   printf("date_get_bin(%s, %s, %s): %s\n", date1_out, interv1_out, date2_out, char_result);
   free(char_result);
 
-  /* Span *datespan_bins(const Span *s, const Interval *duration, DateADT torigin, int *count); */
+  /* Span *datespan_bins(const Span *sp, const Interval *duration, DateADT torigin, int *count); */
   dspanarray_result = datespan_bins(dspan1, interv1, date1, &count);
   printf("datespan_bins(%s, %s, %s, %d): {", dspan1_out, interv1_out, date1_out, count);
   for (int i = 0; i < count; i++)
@@ -3648,7 +3648,7 @@ int main(void)
   float8_result = float_get_bin(float8_in1, float8_in1, float8_in2);
   printf("float_get_bin(%lf, %lf, %lf): %lf\n", float8_in1, float8_in1, float8_in2, float8_result);
 
-  /* Span *floatspan_bins(const Span *s, double vsize, double vorigin, int *count); */
+  /* Span *floatspan_bins(const Span *sp, double vsize, double vorigin, int *count); */
   fspan_result = floatspan_bins(fspan1, float8_in1, float8_in2, &count);
   char_result = floatspan_out(fspan_result, 6);
   printf("floatspan_bins(%s, %lf, %lf): %s\n", fspan1_out, float8_in1, float8_in2, char_result);
@@ -3664,7 +3664,7 @@ int main(void)
   int32_result = int_get_bin(int32_in1, int32_in2, int32_in2);
   printf("int_get_bin(%d, %d, %d): %d\n", int32_in1, int32_in2, int32_in2, int32_result);
 
-  /* Span *intspan_bins(const Span *s, int vsize, int vorigin, int *count); */
+  /* Span *intspan_bins(const Span *sp, int vsize, int vorigin, int *count); */
   ispan_result = intspan_bins(ispan1, int32_in1, int32_in2, &count);
   char_result = intspan_out(ispan_result);
   printf("intspan_bins(%s, %d, %d): %s\n", ispan1_out, int32_in1, int32_in2, char_result);
@@ -3682,7 +3682,7 @@ int main(void)
   printf("timestamptz_get_bin(%s, %s, %s): %s\n", tstz1_out, interv1_out, tstz2_out, char_result);
   free(char_result);
 
-  /* Span *tstzspan_bins(const Span *s, const Interval *duration, TimestampTz origin, int *count); */
+  /* Span *tstzspan_bins(const Span *sp, const Interval *duration, TimestampTz origin, int *count); */
   tstzspan_result = tstzspan_bins(tstzspan1, interv1, tstz2, &count);
   char_result = tstzspan_out(tstzspan_result);
   printf("tstzspan_bins(%s, %s, %s): %s\n", tstzspan1_out, interv1_out, tstz2_out, char_result);

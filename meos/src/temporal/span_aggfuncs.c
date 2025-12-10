@@ -91,9 +91,9 @@ set_extent_transfn(Span *state, const Set *s)
       ! ensure_span_isof_basetype(state, s->basetype))
     return NULL;
 
-  Span s1;
-  set_set_span(s, &s1);
-  span_expand(&s1, state);
+  Span sp;
+  set_set_span(s, &sp);
+  span_expand(&sp, state);
   return state;
 }
 
@@ -101,26 +101,26 @@ set_extent_transfn(Span *state, const Set *s)
  * @ingroup meos_setspan_agg
  * @brief Transition function for span extent aggregate of spans
  * @param[in,out] state Current aggregate state
- * @param[in] s Span to aggregate
+ * @param[in] sp Span to aggregate
  */
 Span *
-span_extent_transfn(Span *state, const Span *s)
+span_extent_transfn(Span *state, const Span *sp)
 {
   /* Can't do anything with null inputs */
-  if (! state && ! s)
+  if (! state && ! sp)
     return NULL;
   /* Null span and non-null span, return the span */
   if (! state)
-    return span_copy(s);
+    return span_copy(sp);
   /* Non-null span and null span, return the span */
-  if (! s)
+  if (! sp)
     return state;
 
   /* Ensure the validity of the arguments */
-  if (! ensure_same_span_type(state, s))
+  if (! ensure_same_span_type(state, sp))
     return NULL;
 
-  span_expand(s, state);
+  span_expand(sp, state);
   return state;
 }
 

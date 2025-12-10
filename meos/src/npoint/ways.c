@@ -40,9 +40,11 @@
 #include <limits.h>
 /* PostgreSQL */
 #include <postgres.h>
-#include <libpq/pqformat.h>
-#include <executor/spi.h>
-#include <utils/memutils.h>
+#if ! MEOS
+  #include <libpq/pqformat.h>
+  #include <executor/spi.h>
+  #include <utils/memutils.h>
+#endif /* ! MEOS */
 /* PostGIS */
 #include <liblwgeom.h>
 /* MEOS */
@@ -58,8 +60,11 @@ static int32_t SRID_WAYS = SRID_INVALID;
 
 /*****************************************************************************
  * Route functions
+ * These functions are those for PostgreSQL which rely on SPI
+ * The corresponding MEOS functions are in the file ways_meos.c
  *****************************************************************************/
 
+#if ! MEOS
 /**
  * @ingroup meos_npoint_base_srid
  * @brief Return the SRID of the routes in the ways table
@@ -78,7 +83,7 @@ get_srid_ways()
   SPI_connect();
   int ret = SPI_execute("SELECT public.ST_SRID(the_geom) FROM public.ways LIMIT 1;",
     true, 1);
-  uint64 proc = SPI_processed;
+  uint64_t proc = SPI_processed;
   if (ret > 0 && proc > 0 && SPI_tuptable)
   {
     SPITupleTable *tuptable = SPI_tuptable;
@@ -112,7 +117,7 @@ get_srid_ways()
  * @param[in] rid Route identifier
  */
 bool
-route_exists(int64 rid)
+route_exists(int64_t rid)
 {
   char sql[SQL_ROUTE_MAXLEN];
   snprintf(sql, sizeof(sql),
@@ -121,7 +126,7 @@ route_exists(int64 rid)
   bool result = false;
   SPI_connect();
   int ret = SPI_execute(sql, true, 1);
-  uint64 proc = SPI_processed;
+  uint64_t proc = SPI_processed;
   if (ret > 0 && proc > 0 && SPI_tuptable)
   {
     SPITupleTable *tuptable = SPI_tuptable;
@@ -140,7 +145,7 @@ route_exists(int64 rid)
  * @return On error return -1.0
  */
 double
-route_length(int64 rid)
+route_length(int64_t rid)
 {
   char sql[SQL_ROUTE_MAXLEN];
   snprintf(sql, sizeof(sql),
@@ -149,7 +154,7 @@ route_length(int64 rid)
   double result = 0.0;
   SPI_connect();
   int ret = SPI_execute(sql, true, 1);
-  uint64 proc = SPI_processed;
+  uint64_t proc = SPI_processed;
   if (ret > 0 && proc > 0 && SPI_tuptable)
   {
     SPITupleTable *tuptable = SPI_tuptable;
@@ -175,7 +180,7 @@ route_length(int64 rid)
  * @return On error return @p NULL
  */
 const GSERIALIZED *
-route_geom(int64 rid)
+route_geom(int64_t rid)
 {
   char sql[SQL_ROUTE_MAXLEN];
   snprintf(sql, sizeof(sql),
@@ -184,7 +189,7 @@ route_geom(int64 rid)
   GSERIALIZED *result = NULL;
   SPI_connect();
   int ret = SPI_execute(sql, true, 1);
-  uint64 proc = SPI_processed;
+  uint64_t proc = SPI_processed;
   if (ret > 0 && proc > 0 && SPI_tuptable)
   {
     SPITupleTable *tuptable = SPI_tuptable;
@@ -212,6 +217,7 @@ route_geom(int64 rid)
   }
   return result;
 }
+#endif /* ! MEOS */
 
 /*****************************************************************************
  * Conversion functions
@@ -249,7 +255,7 @@ geompoint_to_npoint(const GSERIALIZED *gs)
   bool isNull = true;
   SPI_connect();
   int ret = SPI_execute(sql, true, 1);
-  uint64 proc = SPI_processed;
+  uint64_t proc = SPI_processed;
   if (ret > 0 && proc > 0 && SPI_tuptable)
   {
     SPITupleTable *tuptable = SPI_tuptable;

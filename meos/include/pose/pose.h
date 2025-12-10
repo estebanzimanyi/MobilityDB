@@ -54,8 +54,8 @@
  */
 struct Pose
 {
-  int32         vl_len_;       /**< varlena header (do not touch directly!) */
-  int8          flags;         /**< flags */
+  int32_t       vl_len_;       /**< varlena header (do not touch directly!) */
+  int8_t        flags;         /**< flags */
   uint8_t       srid[3];       /**< srid */
   double        data[];        /**< position and orientation values */
 };
@@ -110,7 +110,7 @@ extern bool pose_set_stbox(const Pose *pose, STBox *box);
 extern void posearr_set_stbox(const Datum *values, int count, STBox *box);
 extern bool pose_timestamptz_set_stbox(const Pose *pose, TimestampTz t,
   STBox *box);
-extern bool pose_tstzspan_set_stbox(const Pose *pose, const Span *p,
+extern bool pose_tstzspan_set_stbox(const Pose *pose, const Span *sp,
   STBox *box);
 
 /*****************************************************************************/

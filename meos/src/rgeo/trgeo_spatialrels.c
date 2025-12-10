@@ -64,7 +64,7 @@
  * @param[in] param Parameter
  * @param[in] func Spatial relationship function to be called
  * @param[in] numparam Number of parameters of the functions
- * @param[in] invert True if the arguments should be inverted
+ * @param[in] invert True if the arguments must be inverted
  * @return On error return -1
  */
 int
@@ -103,7 +103,7 @@ spatialrel_trgeo_trav_geo(const Temporal *temp, const GSERIALIZED *gs,
  * @param[in] param Parameter
  * @param[in] func PostGIS function to be called
  * @param[in] numparam Number of parameters of the functions
- * @param[in] invert True if the arguments should be inverted
+ * @param[in] invert True if the arguments must be inverted
  * @return On error return -1
  */
 static int

@@ -144,7 +144,7 @@ Set_as_text(PG_FUNCTION_ARGS)
   if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
     dbl_dig_for_wkt = PG_GETARG_INT32(1);
   char *str = set_out(s, dbl_dig_for_wkt);
-  text *result = cstring_to_text(str);
+  text *result = pg_cstring_to_text(str);
   pfree(str);
   PG_FREE_IF_COPY(s, 0);
   PG_RETURN_TEXT_P(result);
@@ -181,7 +181,7 @@ Datum
 Set_from_hexwkb(PG_FUNCTION_ARGS)
 {
   text *hexwkb_text = PG_GETARG_TEXT_P(0);
-  char *hexwkb = text_to_cstring(hexwkb_text);
+  char *hexwkb = pg_text_to_cstring(hexwkb_text);
   Set *result = set_from_hexwkb(hexwkb);
   pfree(hexwkb);
   PG_FREE_IF_COPY(hexwkb_text, 0);
@@ -432,7 +432,7 @@ PGDLLEXPORT Datum Set_values(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Set_values);
 /**
  * @ingroup mobilitydb_setspan_accessor
- * @brief Return the array of values of a set
+ * @brief Return an array of (copies of the) values of a set
  * @sqlfn getValues()
  */
 Datum
@@ -947,8 +947,8 @@ Datum
 Set_hash_extended(PG_FUNCTION_ARGS)
 {
   Set *s = PG_GETARG_SET_P(0);
-  uint64 seed = PG_GETARG_INT64(1);
-  uint64 result = set_hash_extended(s, seed);
+  uint64_t seed = PG_GETARG_INT64(1);
+  uint64_t result = set_hash_extended(s, seed);
   PG_FREE_IF_COPY(s, 0);
   PG_RETURN_UINT64(result);
 }

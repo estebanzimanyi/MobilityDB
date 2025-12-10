@@ -44,13 +44,13 @@ typedef struct varlena bytea;
 extern DateADT date_in(const char *str);
 extern char *date_out(DateADT date);
 extern int interval_cmp(const Interval *interv1, const Interval *interv2);
-extern Interval *interval_in(const char *str, int32 typmod);
+extern Interval *interval_in(const char *str, int32_t typmod);
 extern char *interval_out(const Interval *interv);
-extern TimeADT time_in(const char *str, int32 typmod);
+extern TimeADT time_in(const char *str, int32_t typmod);
 extern char *time_out(TimeADT time);
-extern Timestamp timestamp_in(const char *str, int32 typmod);
+extern Timestamp timestamp_in(const char *str, int32_t typmod);
 extern char *timestamp_out(Timestamp ts);
-extern TimestampTz timestamptz_in(const char *str, int32 typmod);
+extern TimestampTz timestamptz_in(const char *str, int32_t typmod);
 extern char *timestamptz_out(TimestampTz tstz);
 
 #endif /* POSTGRES_H */

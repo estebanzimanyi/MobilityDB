@@ -48,7 +48,7 @@
 
 struct Cbuffer
 {
-  int32 vl_len_;        /**< Varlena header (do not touch directly!) */
+  int32_t vl_len_;        /**< Varlena header (do not touch directly!) */
   double radius;        /**< radius */
   Datum point;          /**< First 8 bytes of the point which is passed by 
                              reference. The extra bytes needed are added upon 

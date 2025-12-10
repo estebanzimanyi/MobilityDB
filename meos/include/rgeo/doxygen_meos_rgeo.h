@@ -58,7 +58,7 @@
  *
  *   @defgroup meos_rgeo_comp_temp Temporal comparison functions
  *   @ingroup meos_rgeo_comp
- *   @brief Temporal comparison functions for temporal rigid geometries
+ *   @brief %Temporal comparison functions for temporal rigid geometries
  */
 
 /*****************************************************************************/

@@ -201,10 +201,10 @@ int main(void)
   printf("cbuffer_to_stbox(%s): %s\n", cbuffer1_out, char_result);
   free(stbox_result); free(char_result);
 
-  /* GSERIALIZED *cbufferarr_to_geom(const Cbuffer **cbarr, int count); */
+  /* GSERIALIZED *cbufferarr_to_geom(Cbuffer **cbarr, int count); */
   cbufferarray[0] = cbuffer1;
   cbufferarray[1] = cbuffer2;
-  geom_result = cbufferarr_to_geom((const Cbuffer **) cbufferarray, 2);
+  geom_result = cbufferarr_to_geom(cbufferarray, 2);
   char_result = geo_as_text(geom_result, 6);
   printf("cbufferarr_to_geom({%s, %s}): %s\n", cbuffer1_out, cbuffer2_out, char_result);
   free(geom_result); free(char_result);
@@ -218,11 +218,11 @@ int main(void)
   /* Accessor functions */
   printf("****************************************************************\n");
 
-  /* uint32 cbuffer_hash(const Cbuffer *cb); */
+  /* uint32_t cbuffer_hash(const Cbuffer *cb); */
   uint32_result = cbuffer_hash(cbuffer1);
   printf("cbuffer_hash(%s, true): %u\n", cbuffer1_out, uint32_result);
 
-  /* uint64 cbuffer_hash_extended(const Cbuffer *cb, uint64 seed); */
+  /* uint64_t cbuffer_hash_extended(const Cbuffer *cb, uint64_t seed); */
   uint64_result = cbuffer_hash_extended(cbuffer1, 1);
   printf("cbuffer_hash_extended(%s, 1): %lu\n", cbuffer1_out, uint64_result);
 
@@ -245,10 +245,10 @@ int main(void)
   printf("cbuffer_round(%s): %s\n", cbuffer1_out, char_result);
   free(cbuffer_result); free(char_result);
 
-  /* Cbuffer **cbufferarr_round(const Cbuffer **cbarr, int count, int maxdd); */
+  /* Cbuffer **cbufferarr_round(Cbuffer **cbarr, int count, int maxdd); */
   cbufferarray[0] = cbuffer1;
   cbufferarray[1] = cbuffer2;
-  cbufferarray_result = cbufferarr_round((const Cbuffer**) cbufferarray, 2, 6);
+  cbufferarray_result = cbufferarr_round(cbufferarray, 2, 6);
   printf("cbufferarr_round({%s, %s}): {", cbuffer1_out, cbuffer2_out);
   for (int i = 0; i < cbufferset1->count; i++)
   {
@@ -315,7 +315,7 @@ int main(void)
   /* Bounding box functions */
   printf("****************************************************************\n");
 
-  /* STBox *cbuffer_tstzspan_to_stbox(const Cbuffer *cb, const Span *s); */
+  /* STBox *cbuffer_tstzspan_to_stbox(const Cbuffer *cb, const Span *sp); */
   stbox_result = cbuffer_tstzspan_to_stbox(cbuffer1, tstzspan1);
   char_result = stbox_out(stbox_result, 6);
   printf("cbuffer_tstzspan_to_stbox(%s, %s): %s\n", cbuffer1_out, tstzspan1_out, char_result);
@@ -473,7 +473,7 @@ int main(void)
   bool_result = contained_cbuffer_set(cbuffer1, cbufferset1);
   printf("contained_cbuffer_set(%s, %s): %c\n", cbuffer1_out, cbufferset1_out, bool_result ? 't' : 'n');
 
-  /* bool contains_set_cbuffer(const Set *s, Cbuffer *cb); */
+  /* bool contains_set_cbuffer(const Set *s, const Cbuffer *cb); */
   bool_result = contains_set_cbuffer(cbufferset1, cbuffer1);
   printf("contains_set_cbuffer(%s, %s): %c\n", cbufferset1_out, cbuffer1_out, bool_result ? 't' : 'n');
 

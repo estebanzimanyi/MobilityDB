@@ -50,7 +50,7 @@
 
 typedef struct
 {
-  int64 rid;        /**< route identifier */
+  int64_t rid;      /**< route identifier */
   double pos;       /**< position */
 } Npoint;
 
@@ -58,7 +58,7 @@ typedef struct
 
 typedef struct
 {
-  int64 rid;       /**< route identifier */
+  int64_t rid;     /**< route identifier */
   double pos1;     /**< position1 */
   double pos2;     /**< position2 */
 } Nsegment;
@@ -126,8 +126,8 @@ extern char *nsegment_out(const Nsegment *ns, int maxdd);
 
 /* Constructor functions */
 
-extern Npoint *npoint_make(int64 rid, double pos);
-extern Nsegment *nsegment_make(int64 rid, double pos1, double pos2);
+extern Npoint *npoint_make(int64_t rid, double pos);
+extern Nsegment *nsegment_make(int64_t rid, double pos1, double pos2);
 
 /* Conversion functions */
 
@@ -141,19 +141,19 @@ extern STBox *nsegment_to_stbox(const Nsegment *ns);
 
 /* Accessor functions */
 
-extern uint32 npoint_hash(const Npoint *np);
-extern uint64 npoint_hash_extended(const Npoint *np, uint64 seed);
+extern uint32_t npoint_hash(const Npoint *np);
+extern uint64_t npoint_hash_extended(const Npoint *np, uint64_t seed);
 extern double npoint_position(const Npoint *np);
-extern int64 npoint_route(const Npoint *np);
+extern int64_t npoint_route(const Npoint *np);
 extern double nsegment_end_position(const Nsegment *ns);
-extern int64 nsegment_route(const Nsegment *ns);
+extern int64_t nsegment_route(const Nsegment *ns);
 extern double nsegment_start_position(const Nsegment *ns);
 
 /* Route functions */
 
-extern bool route_exists(int64 rid);
-extern const GSERIALIZED *route_geom(int64 rid);
-extern double route_length(int64 rid);
+extern bool route_exists(int64_t rid);
+extern const GSERIALIZED *route_geom(int64_t rid);
+extern double route_length(int64_t rid);
 
 /* Transformation functions */
 
@@ -169,7 +169,7 @@ extern int32_t nsegment_srid(const Nsegment *ns);
 /* Bounding box functions */
 
 extern STBox *npoint_timestamptz_to_stbox(const Npoint *np, TimestampTz t);
-extern STBox *npoint_tstzspan_to_stbox(const Npoint *np, const Span *s);
+extern STBox *npoint_tstzspan_to_stbox(const Npoint *np, const Span *sp);
 
 /* Comparison functions */
 
@@ -257,7 +257,7 @@ extern Temporal *tnpoint_to_tgeompoint(const Temporal *temp);
 extern Temporal *tnpoint_cumulative_length(const Temporal *temp);
 extern double tnpoint_length(const Temporal *temp);
 extern Nsegment **tnpoint_positions(const Temporal *temp, int *count);
-extern int64 tnpoint_route(const Temporal *temp);
+extern int64_t tnpoint_route(const Temporal *temp);
 extern Set *tnpoint_routes(const Temporal *temp);
 extern Temporal *tnpoint_speed(const Temporal *temp);
 extern GSERIALIZED *tnpoint_trajectory(const Temporal *temp);
@@ -298,7 +298,7 @@ extern GSERIALIZED *shortestline_tnpoint_tnpoint(const Temporal *temp1, const Te
  * Aggregate functions
  *****************************************************************************/
 
-extern SkipList *tnpoint_tcentroid_transfn(SkipList *state, Temporal *temp);
+extern SkipList *tnpoint_tcentroid_transfn(SkipList *state, const Temporal *temp);
 
 /*****************************************************************************
  * Comparison functions

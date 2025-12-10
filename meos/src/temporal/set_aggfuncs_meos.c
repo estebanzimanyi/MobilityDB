@@ -284,7 +284,7 @@ set_union_finalfn(Set *state)
  * @param[in] i Value
  */
 Set *
-int_union_transfn(Set *state, int32 i)
+int_union_transfn(Set *state, int32_t i)
 {
   /* Ensure the validity of the arguments */
   if (state && ! ensure_set_isof_type(state, T_INTSET))
@@ -299,7 +299,7 @@ int_union_transfn(Set *state, int32 i)
  * @param[in] i Value
  */
 Set *
-bigint_union_transfn(Set *state, int64 i)
+bigint_union_transfn(Set *state, int64_t i)
 {
   /* Ensure the validity of the arguments */
   if (state && ! ensure_set_isof_type(state, T_BIGINTSET))

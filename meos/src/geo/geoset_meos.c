@@ -49,7 +49,7 @@
 
 /**
  * @ingroup meos_geo_set_inout
- * @brief Return a set from its Well-Known Text (WKT) representation
+ * @brief Return a geometry set from its Well-Known Text (WKT) representation
  * @param[in] str String
  * @csqlfn #Set_in()
  */
@@ -63,7 +63,7 @@ geomset_in(const char *str)
 
 /**
  * @ingroup meos_geo_set_inout
- * @brief Return a set from its Well-Known Text (WKT) representation
+ * @brief Return a geography set from its Well-Known Text (WKT) representation
  * @param[in] str String
  * @csqlfn #Set_in()
  */
@@ -77,7 +77,7 @@ geogset_in(const char *str)
 
 /**
  * @ingroup meos_geo_set_inout
- * @brief Return the string representation of a float set
+ * @brief Return the string representation of a spatial set
  * @param[in] s Set
  * @param[in] maxdd Maximum number of decimal digits
  * @csqlfn #Set_out()
@@ -96,7 +96,7 @@ spatialset_out(const Set *s, int maxdd)
 
 /**
  * @ingroup meos_geo_set_constructor
- * @brief Return a geo set from an array of values
+ * @brief Return a geometry/geography set from an array of values
  * @param[in] values Array of values
  * @param[in] count Number of elements of the array
  * @csqlfn #Set_constructor()
@@ -254,7 +254,7 @@ ensure_valid_set_geo(const Set *s, const GSERIALIZED *gs)
  * @csqlfn #Contains_set_value()
  */
 bool
-contains_set_geo(const Set *s, GSERIALIZED *gs)
+contains_set_geo(const Set *s, const GSERIALIZED *gs)
 {
   /* Ensure the validity of the arguments */
   if (! ensure_valid_set_geo(s, gs))

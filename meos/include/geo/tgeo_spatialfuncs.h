@@ -75,14 +75,14 @@ extern GSERIALIZED *geo_serialize(const LWGEOM *geom);
 
 /* Generic functions */
 
-extern datum_func2 geo_distance_fn(int16 flags);
-extern datum_func2 pt_distance_fn(int16 flags);
+extern datum_func2 geo_distance_fn(int16_t flags);
+extern datum_func2 pt_distance_fn(int16_t flags);
 extern Datum datum_geom_distance2d(Datum geom1, Datum geom2);
 extern Datum datum_geom_distance3d(Datum geom1, Datum geom2);
 extern Datum datum_geog_distance(Datum geog1, Datum geog2);
 extern Datum datum_pt_distance2d(Datum geom1, Datum geom2);
 extern Datum datum_pt_distance3d(Datum geom1, Datum geom2);
-extern int16 spatial_flags(Datum d, meosType basetype);
+extern int16_t spatial_flags(Datum d, meosType basetype);
 
 /* Validity functions */
 
@@ -90,8 +90,8 @@ extern bool ensure_srid_is_latlong(int32_t srid);
 extern bool ensure_spatial_validity(const Temporal *temp1,
   const Temporal *temp2);
 extern int spheroid_init_from_srid(int32_t srid, SPHEROID *s);
-extern bool ensure_not_geodetic(int16 flags);
-extern bool ensure_same_geodetic(int16 flags1, int16 flags2);
+extern bool ensure_not_geodetic(int16_t flags);
+extern bool ensure_same_geodetic(int16_t flags1, int16_t flags2);
 extern bool ensure_same_geodetic_geo(const GSERIALIZED *gs1,
   const GSERIALIZED *gs2);
 extern bool ensure_same_geodetic_tspatial_geo(const Temporal *temp,
@@ -100,9 +100,9 @@ extern bool ensure_same_geodetic_tspatial_base(const Temporal *temp,
   Datum base);
 extern bool ensure_srid_known(int32_t srid);
 extern bool ensure_same_srid(int32_t srid1, int32_t srid2);
-extern bool ensure_same_dimensionality(int16 flags1, int16 flags2);
-extern bool same_spatial_dimensionality(int16 flags1, int16 flags2);
-extern bool ensure_same_spatial_dimensionality(int16 flags1, int16 flags2);
+extern bool ensure_same_dimensionality(int16_t flags1, int16_t flags2);
+extern bool same_spatial_dimensionality(int16_t flags1, int16_t flags2);
+extern bool ensure_same_spatial_dimensionality(int16_t flags1, int16_t flags2);
 extern bool ensure_same_dimensionality_geo(const GSERIALIZED *gs1,
   const GSERIALIZED *gs2);
 extern bool same_dimensionality_tspatial_geo(const Temporal *temp,
@@ -200,8 +200,8 @@ extern LWGEOM *lwcoll_from_points_lines(LWGEOM **points, LWGEOM **lines,
 
 /* Stop function */
 
-int tpointseq_stops_iter(const TSequence *seq, double maxdist, int64 mintunits,
-  TSequence **result);
+int tpointseq_stops_iter(const TSequence *seq, double maxdist,
+  int64_t mintunits, TSequence **result);
 
 /*****************************************************************************/
 

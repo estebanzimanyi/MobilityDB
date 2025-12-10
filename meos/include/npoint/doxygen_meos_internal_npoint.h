@@ -28,89 +28,89 @@
  *****************************************************************************/
 
 /**
- * @defgroup meos_internal_npoint_base Functions for static network points
+ * @defgroup meos_internal_npoint_base Internal functions for static network points
  * @ingroup meos_internal_npoint
- * @brief Functions for static network points
+ * @brief Internal functions for static network points
  *
- * @defgroup meos_internal_npoint_set Functions for network point sets
+ * @defgroup meos_internal_npoint_set Internal functions for network point sets
  * @ingroup meos_internal_npoint
- * @brief Functions for network point sets
+ * @brief Internal functions for network point sets
  *
- * @defgroup meos_internal_npoint_inout Input and output functions
+ * @defgroup meos_internal_npoint_inout Internal input and output functions
  * @ingroup meos_internal_npoint
- * @brief Input and output functions for temporal network points
+ * @brief Internal input and output functions for temporal network points
  *
- * @defgroup meos_internal_npoint_conversion Conversion functions
+ * @defgroup meos_internal_npoint_conversion Internal conversion functions
  * @ingroup meos_internal_npoint
- * @brief Conversion functions for temporal network points
+ * @brief Internal conversion functions for temporal network points
  *
- * @defgroup meos_internal_npoint_accessor Accessor functions
+ * @defgroup meos_internal_npoint_accessor Internal accessor functions
  * @ingroup meos_internal_npoint
- * @brief Accessor functions for temporal network points
+ * @brief Internal accessor functions for temporal network points
  *
- * @defgroup meos_internal_npoint_restrict Restriction functions
+ * @defgroup meos_internal_npoint_restrict Internal restriction functions
  * @ingroup meos_internal_npoint
- * @brief Restriction functions for temporal network points
+ * @brief Internal restriction functions for temporal network points
  *
- * @defgroup meos_internal_npoint_dist Distance functions
+ * @defgroup meos_internal_npoint_dist Internal distance functions
  * @ingroup meos_internal_npoint
- * @brief Distance functions for temporal network points
+ * @brief Internal distance functions for temporal network points
  *
- * @defgroup meos_internal_npoint_agg Aggregate functions
+ * @defgroup meos_internal_npoint_agg Internal aggregate functions
  * @ingroup meos_internal_npoint
- * @brief Aggregate functions for temporal network points
+ * @brief Internal aggregate functions for temporal network points
  */
 
 /*****************************************************************************/
 
 /**
- * @defgroup meos_internal_npoint_base_inout Input and output functions
+ * @defgroup meos_internal_npoint_base_inout Internal input and output functions
  * @ingroup meos_internal_npoint_base
- * @brief Input and output functions for static network points
+ * @brief Internal input and output functions for static network points
  *
- * @defgroup meos_internal_npoint_base_constructor Constructor functions
+ * @defgroup meos_internal_npoint_base_constructor Internal constructor functions
  * @ingroup meos_internal_npoint_base
- * @brief Constructor functions for static network points
+ * @brief Internal constructor functions for static network points
  *
- * @defgroup meos_internal_npoint_base_conversion Conversion functions
+ * @defgroup meos_internal_npoint_base_conversion Internal conversion functions
  * @ingroup meos_internal_npoint_base
- * @brief Conversion functions for static network points
+ * @brief Internal conversion functions for static network points
  *
- * @defgroup meos_internal_npoint_base_accessor Accessor functions
+ * @defgroup meos_internal_npoint_base_accessor Internal accessor functions
  * @ingroup meos_internal_npoint_base
- * @brief Accessor functions for static network points
+ * @brief Internal accessor functions for static network points
  *
- * @defgroup meos_internal_npoint_base_transf Transformation functions
+ * @defgroup meos_internal_npoint_base_transf Internal transformation functions
  * @ingroup meos_internal_npoint_base
- * @brief Transformation functions for static network points
+ * @brief Internal transformation functions for static network points
  *
- * @defgroup meos_internal_npoint_base_comp Comparison functions
+ * @defgroup meos_internal_npoint_base_comp Internal comparison functions
  * @ingroup meos_internal_npoint_base
- * @brief Comparison functions for static network points
+ * @brief Internal comparison functions for static network points
  */
 
 /*****************************************************************************/
 
 /**
- * @defgroup meos_internal_npoint_set_inout Input and output functions
+ * @defgroup meos_internal_npoint_set_inout Internal input and output functions
  * @ingroup meos_internal_npoint_set
- * @brief Input and output functions for network point sets
+ * @brief Internal input and output functions for network point sets
  *
- * @defgroup meos_internal_npoint_set_constructor Constructor functions
+ * @defgroup meos_internal_npoint_set_constructor Internal constructor functions
  * @ingroup meos_internal_npoint_set
- * @brief Constructor functions for network point sets
+ * @brief Internal constructor functions for network point sets
  *
- * @defgroup meos_internal_npoint_set_conversion Conversion functions
+ * @defgroup meos_internal_npoint_set_conversion Internal conversion functions
  * @ingroup meos_internal_npoint_set
- * @brief Conversion functions for network point sets
+ * @brief Internal cnversion functions for network point sets
  *
- * @defgroup meos_internal_npoint_set_accessor Accessor functions
+ * @defgroup meos_internal_npoint_set_accessor Internal accessor functions
  * @ingroup meos_internal_npoint_set
- * @brief Accessor functions for network point sets
+ * @brief Internal accessor functions for network point sets
  *
- * @defgroup meos_internal_npoint_set_setops Set operations
+ * @defgroup meos_internal_npoint_set_setops Internal set operations
  * @ingroup meos_internal_npoint_set
- * @brief Set operations for network point sets
+ * @brief Internal set operations for network point sets
  */
 
 /*****************************************************************************/

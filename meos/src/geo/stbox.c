@@ -327,24 +327,24 @@ stbox_as_hexwkb(const STBox *box, uint8_t variant, size_t *size_out)
  * @param[in] srid SRID
  * @param[in] xmin,ymin,zmin Minimum bounds for the spatial dimension
  * @param[in] xmax,ymax,zmax Maximum bounds for the spatial dimension
- * @param[in] s Span, may be `NULL`
+ * @param[in] sp Span, may be `NULL`
  * @csqlfn #Stbox_constructor()
  */
 STBox *
-stbox_make(bool hasx, bool hasz, bool geodetic, int32 srid, double xmin,
+stbox_make(bool hasx, bool hasz, bool geodetic, int32_t srid, double xmin,
   double xmax, double ymin, double ymax, double zmin, double zmax,
-  const Span *s)
+  const Span *sp)
 {
 #if MEOS
-  if (s && s->spantype != T_TSTZSPAN)
+  if (sp && sp->spantype != T_TSTZSPAN)
     return NULL;
 #else
-  assert(! s || s->spantype == T_TSTZSPAN);
+  assert(! sp || sp->spantype == T_TSTZSPAN);
 #endif /* MEOS */
 
   /* Note: zero-fill is done in function stbox_set */
   STBox *result = palloc(sizeof(STBox));
-  stbox_set(hasx, hasz, geodetic, srid, xmin, xmax, ymin, ymax, zmin, zmax, s,
+  stbox_set(hasx, hasz, geodetic, srid, xmin, xmax, ymin, ymax, zmin, zmax, sp,
     result);
   return result;
 }
@@ -359,14 +359,14 @@ stbox_make(bool hasx, bool hasz, bool geodetic, int32 srid, double xmin,
  * @param[in] srid SRID
  * @param[in] xmin,ymin,zmin Minimum bounds for the spatial dimension
  * @param[in] xmax,ymax,zmax Maximum bounds for the spatial dimension
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[out] box Resulting box
  * @note This function is equivalent to #stbox_make without memory allocation
  */
 void
-stbox_set(bool hasx, bool hasz, bool geodetic, int32 srid, double xmin,
+stbox_set(bool hasx, bool hasz, bool geodetic, int32_t srid, double xmin,
   double xmax, double ymin, double ymax, double zmin, double zmax,
-  const Span *s, STBox *box)
+  const Span *sp, STBox *box)
 {
   assert(box);
   /* Note: zero-fill is required here, just as in heap tuples */
@@ -376,10 +376,10 @@ stbox_set(bool hasx, bool hasz, bool geodetic, int32 srid, double xmin,
   MEOS_FLAGS_SET_GEODETIC(box->flags, geodetic);
   box->srid = srid;
 
-  if (s)
+  if (sp)
   {
     /* Process T min/max */
-    memcpy(&box->period, s, sizeof(Span));
+    memcpy(&box->period, sp, sizeof(Span));
     MEOS_FLAGS_SET_T(box->flags, true);
   }
   if (hasx)
@@ -446,20 +446,20 @@ geo_timestamptz_to_stbox(const GSERIALIZED *gs, TimestampTz t)
  * @brief Return a spatiotemporal box from a geometry/geography and a
  * timestamptz span
  * @param[in] gs Geometry/geography
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Stbox_constructor()
  */
 STBox *
-geo_tstzspan_to_stbox(const GSERIALIZED *gs, const Span *s)
+geo_tstzspan_to_stbox(const GSERIALIZED *gs, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(gs, NULL); VALIDATE_TSTZSPAN(s, NULL);
+  VALIDATE_NOT_NULL(gs, NULL); VALIDATE_TSTZSPAN(sp, NULL);
   if (gserialized_is_empty(gs))
     return NULL;
 
   STBox *result = palloc(sizeof(STBox));
   geo_set_stbox(gs, result);
-  memcpy(&result->period, s, sizeof(Span));
+  memcpy(&result->period, sp, sizeof(Span));
   MEOS_FLAGS_SET_T(result->flags, true);
   return result;
 }
@@ -948,16 +948,16 @@ tstzset_to_stbox(const Set *s)
  * @ingroup meos_internal_box_conversion
  * @brief Return in the last argument a spatiotemporal box constructed from a
  * timestamptz span
- * @param[in] s Span
+ * @param[in] sp Span
  * @param[out] box Spatiotemporal box
  */
 void
-tstzspan_set_stbox(const Span *s, STBox *box)
+tstzspan_set_stbox(const Span *sp, STBox *box)
 {
-  assert(s); assert(box); assert(s->spantype == T_TSTZSPAN);
+  assert(sp); assert(box); assert(sp->spantype == T_TSTZSPAN);
   /* Note: zero-fill is required here, just as in heap tuples */
   memset(box, 0, sizeof(STBox));
-  memcpy(&box->period, s, sizeof(Span));
+  memcpy(&box->period, sp, sizeof(Span));
   MEOS_FLAGS_SET_T(box->flags, true);
   return;
 }
@@ -965,16 +965,16 @@ tstzspan_set_stbox(const Span *s, STBox *box)
 /**
  * @ingroup meos_geo_box_conversion
  * @brief Convert a timestamptz span into a spatiotemporal box
- * @param[in] s Span
+ * @param[in] sp Span
  * @csqlfn #Tstzspan_to_stbox()
  */
 STBox *
-tstzspan_to_stbox(const Span *s)
+tstzspan_to_stbox(const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_TSTZSPAN(s, NULL);
+  VALIDATE_TSTZSPAN(sp, NULL);
   STBox *result = palloc(sizeof(STBox));
-  tstzspan_set_stbox(s, result);
+  tstzspan_set_stbox(sp, result);
   return result;
 }
 
@@ -1362,7 +1362,7 @@ stbox_volume(const STBox *box)
 
 /**
  * @ingroup meos_geo_box_accessor
- * @brief Return the permieter of the spatiotemporal box
+ * @brief Return the permieter of a spatiotemporal box
  * @param[in] box Spatiotemporal box
  * @param[in] spheroid When true, the calculation uses the WGS 84 spheroid,
  * otherwise it uses a faster spherical calculation
@@ -1566,12 +1566,12 @@ stbox_expand_time(const STBox *box, const Interval *interv)
   VALIDATE_NOT_NULL(box, NULL); VALIDATE_NOT_NULL(interv, NULL);
   if (! ensure_has_T(T_STBOX, box->flags))
     return NULL;
-  Span *s = tstzspan_expand(&box->period, interv);
-  if (! s)
+  Span *sp = tstzspan_expand(&box->period, interv);
+  if (! sp)
     return NULL;
   STBox *result = stbox_copy(box);
-  memcpy(&result->period, s, sizeof(Span));
-  pfree(s);
+  memcpy(&result->period, sp, sizeof(Span));
+  pfree(sp);
   return result;
 }
 
@@ -1817,7 +1817,7 @@ contained_stbox_stbox(const STBox *box1, const STBox *box2)
 
 /**
  * @ingroup meos_geo_box_topo
- * @brief Return true if the spatiotemporal boxes overlap
+ * @brief Return true if two spatiotemporal boxes overlap
  * @csqlfn #Overlaps_stbox_stbox()
  */
 bool
@@ -1842,7 +1842,7 @@ overlaps_stbox_stbox(const STBox *box1, const STBox *box2)
 
 /**
  * @ingroup meos_geo_box_topo
- * @brief Return true if the spatiotemporal boxes are equal in the common
+ * @brief Return true if two spatiotemporal boxes are equal in the common
  * dimensions
  * @param[in] box1,box2 Spatiotemporal boxes
  * @csqlfn #Same_stbox_stbox()
@@ -1868,7 +1868,7 @@ same_stbox_stbox(const STBox *box1, const STBox *box2)
 
 /**
  * @ingroup meos_geo_box_topo
- * @brief Return true if the spatiotemporal boxes are adjacent
+ * @brief Return true if two spatiotemporal boxes are adjacent
  * @param[in] box1,box2 Spatiotemporal boxes
  * @csqlfn #Adjacent_stbox_stbox()
  */
@@ -2218,7 +2218,7 @@ overafter_stbox_stbox(const STBox *box1, const STBox *box2)
 
 /**
  * @ingroup meos_geo_box_set
- * @brief Return the union of the spatiotemporal boxes
+ * @brief Return the union of two spatiotemporal boxes
  * @param[in] box1,box2 Spatiotemporal boxes
  * @param[in] strict True when the boxes must overlap
  * @csqlfn #Union_stbox_stbox()
@@ -2303,7 +2303,7 @@ inter_stbox_stbox(const STBox *box1, const STBox *box2, STBox *result)
 
 /**
  * @ingroup meos_geo_box_set
- * @brief Return the intersection of the spatiotemporal boxes
+ * @brief Return the intersection of two spatiotemporal boxes
  * @param[in] box1,box2 Spatiotemporal boxes
  * @csqlfn #Intersection_stbox_stbox()
  */
@@ -2414,7 +2414,7 @@ stbox_quad_split(const STBox *box, int *count)
 
 /**
  * @ingroup meos_geo_box_comp
- * @brief Return true if the spatiotemporal boxes are equal
+ * @brief Return true if two spatiotemporal boxes are equal
  * @param[in] box1,box2 Spatiotemporal boxes
  * @note The function #stbox_cmp is not used to increase efficiency
  * @csqlfn #Stbox_eq()
@@ -2436,7 +2436,7 @@ stbox_eq(const STBox *box1, const STBox *box2)
 
 /**
  * @ingroup meos_geo_box_comp
- * @brief Return true if the spatiotemporal boxes are different
+ * @brief Return true if two spatiotemporal boxes are different
  * @param[in] box1,box2 Spatiotemporal boxes
  * @csqlfn #Stbox_ne()
  */
@@ -2579,7 +2579,7 @@ stbox_gt(const STBox *box1, const STBox *box2)
  * @return On error return @p INT_MAX
  * @sqlfn stbox_hash()
  */
-uint32
+uint32_t
 stbox_hash(const STBox *box)
 {
   /* Ensure the validity of the arguments */
@@ -2591,7 +2591,7 @@ stbox_hash(const STBox *box)
   bool hast = MEOS_FLAGS_GET_T(box->flags);
 
   /* Merge hashes of period and remaining values */
-  uint32 result = 0;
+  uint32_t result = 0;
   if (hast)
     result = span_hash(&box->period);
   if (hasx)
@@ -2600,13 +2600,13 @@ stbox_hash(const STBox *box)
 #if POSTGRESQL_VERSION_NUMBER >= 150000
     result = pg_rotate_left32(result, 1);
 #else
-    result =  (result << 1) | (result >> 31);
+    result = (result << 1) | (result >> 31);
 #endif
     result ^= float8_hash(box->ymin);
 #if POSTGRESQL_VERSION_NUMBER >= 150000
     result = pg_rotate_left32(result, 1);
 #else
-    result =  (result << 1) | (result >> 31);
+    result = (result << 1) | (result >> 31);
 #endif
     if (hasz)
     {
@@ -2614,20 +2614,20 @@ stbox_hash(const STBox *box)
 #if POSTGRESQL_VERSION_NUMBER >= 150000
       result = pg_rotate_left32(result, 1);
 #else
-      result =  (result << 1) | (result >> 31);
+      result = (result << 1) | (result >> 31);
 #endif
     }
     result ^= float8_hash(box->xmax);
 #if POSTGRESQL_VERSION_NUMBER >= 150000
     result = pg_rotate_left32(result, 1);
 #else
-    result =  (result << 1) | (result >> 31);
+    result = (result << 1) | (result >> 31);
 #endif
     result ^= float8_hash(box->ymax);
 #if POSTGRESQL_VERSION_NUMBER >= 150000
     result = pg_rotate_left32(result, 1);
 #else
-    result =  (result << 1) | (result >> 31);
+    result = (result << 1) | (result >> 31);
 #endif
     if (hasz)
     {
@@ -2635,21 +2635,21 @@ stbox_hash(const STBox *box)
 #if POSTGRESQL_VERSION_NUMBER >= 150000
       result = pg_rotate_left32(result, 1);
 #else
-      result =  (result << 1) | (result >> 31);
+      result = (result << 1) | (result >> 31);
 #endif
     }
     result ^= hash_uint32(box->srid);
 #if POSTGRESQL_VERSION_NUMBER >= 150000
     result = pg_rotate_left32(result, 1);
 #else
-    result =  (result << 1) | (result >> 31);
+    result = (result << 1) | (result >> 31);
 #endif
   }
-  result ^= hash_uint32((uint32) box->flags);
+  result ^= hash_uint32((uint32_t) box->flags);
 #if POSTGRESQL_VERSION_NUMBER >= 150000
     result = pg_rotate_left32(result, 1);
 #else
-    result =  (result << 1) | (result >> 31);
+    result = (result << 1) | (result >> 31);
 #endif
   return result;
 }
@@ -2662,8 +2662,8 @@ stbox_hash(const STBox *box)
  * @return On error return @p LONG_MAX
  * @csqlfn #Stbox_hash_extended()
  */
-uint64
-stbox_hash_extended(const STBox *box, uint64 seed)
+uint64_t
+stbox_hash_extended(const STBox *box, uint64_t seed)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(box, LONG_MAX);
@@ -2673,7 +2673,7 @@ stbox_hash_extended(const STBox *box, uint64 seed)
   bool hast = MEOS_FLAGS_GET_T(box->flags);
 
   /* Merge hashes of period and remaining values */
-  uint64 result = 0;
+  uint64_t result = 0;
   if (hast)
     result = span_hash_extended(&box->period, seed);
   if (hasx)
@@ -2698,7 +2698,7 @@ stbox_hash_extended(const STBox *box, uint64 seed)
     }
     result ^= hash_uint32_extended(box->srid, seed);
     result = ROTATE_HIGH_AND_LOW_32BITS(result);
-    result ^= hash_uint32_extended((uint32) box->flags, seed);
+    result ^= hash_uint32_extended((uint32_t) box->flags, seed);
     result = ROTATE_HIGH_AND_LOW_32BITS(result);
   }
 

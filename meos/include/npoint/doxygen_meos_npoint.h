@@ -70,7 +70,7 @@
  *
  *   @defgroup meos_npoint_comp_temp Temporal comparison functions
  *   @ingroup meos_npoint_comp
- *   @brief Temporal comparison functions for temporal network points
+ *   @brief %Temporal comparison functions for temporal network points
  */
 
 /*****************************************************************************/
@@ -130,7 +130,7 @@
  *
  * @defgroup meos_npoint_set_setops Set operations
  * @ingroup meos_npoint_set
- * @brief Set operations for network point sets
+ * @brief %Set operations for network point sets
  */
 
 /*****************************************************************************/

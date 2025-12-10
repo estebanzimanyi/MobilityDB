@@ -64,6 +64,10 @@
  * @ingroup mobilitydb_api
  * @brief Functions for temporal circular buffers
  *
+ * @defgroup mobilitydb_json Functions for temporal JSON
+ * @ingroup mobilitydb_api
+ * @brief Functions for temporal JSON
+ *
  * @defgroup mobilitydb_npoint Functions for temporal network points
  * @ingroup mobilitydb_api
  * @brief Functions for temporal network points
@@ -118,7 +122,7 @@
  *
  * @defgroup mobilitydb_setspan_set Set functions
  * @ingroup mobilitydb_setspan
- * @brief Set functions for set and span types
+ * @brief %Set functions for set and span types
  *
  * @defgroup mobilitydb_setspan_dist Distance functions
  * @ingroup mobilitydb_setspan
@@ -170,7 +174,7 @@
  *
  * @defgroup mobilitydb_box_set Set functions
  * @ingroup mobilitydb_box
- * @brief Set functions for box types
+ * @brief %Set functions for box types
  *
  * @defgroup mobilitydb_box_comp Comparison functions
  * @ingroup mobilitydb_box

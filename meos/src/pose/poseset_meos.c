@@ -105,11 +105,11 @@ poseset_out(const Set *s, int maxdd)
  * @csqlfn #Set_constructor()
  */
 Set *
-poseset_make(const Pose **values, int count)
+poseset_make(Pose **values, int count)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(values, NULL);
-  if (! ! ensure_positive(count))
+  if (! ensure_positive(count))
     return NULL;
 
   Datum *datums = palloc(sizeof(Datum) * count);
@@ -194,7 +194,7 @@ poseset_value_n(const Set *s, int n, Pose **result)
 
 /**
  * @ingroup meos_pose_set_accessor
- * @brief Return the array of copies of the values of a pose set
+ * @brief Return an array of copies of the values of a pose set
  * @param[in] s Set
  * @return On error return @p NULL
  * @csqlfn #Set_values()
@@ -236,7 +236,7 @@ ensure_valid_set_pose(const Set *s, const Pose *pose)
  * @csqlfn #Contains_set_value()
  */
 bool
-contains_set_pose(const Set *s, Pose *pose)
+contains_set_pose(const Set *s, const Pose *pose)
 {
   /* Ensure the validity of the arguments */
   if (! ensure_valid_set_pose(s, pose))

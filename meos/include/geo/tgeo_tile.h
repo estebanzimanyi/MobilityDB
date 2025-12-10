@@ -67,7 +67,7 @@ typedef struct STboxGridState
   double xsize;            /**< Size of the x dimension */
   double ysize;            /**< Size of the y dimension */
   double zsize;            /**< Size of the z dimension, 0 for 2D */
-  int64 tunits;            /**< Size of the time dimension, 0 for spatial only */
+  int64_t tunits;          /**< Size of the time dimension, 0 for spatial only */
   STBox box;               /**< Bounding box of the grid */
   const Temporal *temp;    /**< Optional temporal point to be split */
   BitMatrix *bm;           /**< Optional bit matrix for speeding up the
@@ -89,8 +89,8 @@ extern int tpoint_set_tiles(const Temporal *temp, const STboxGridState *state,
 extern Temporal *tpoint_at_tile(const Temporal *temp, const STBox *box);
 
 extern void stbox_tile_state_set(double x, double y, double z, TimestampTz t,
-  double xsize, double ysize, double zsize, int64 tunits, bool hasx, bool hasz,
-  bool hast, int32 srid, STBox *result);
+  double xsize, double ysize, double zsize, int64_t tunits, bool hasx, bool hasz,
+  bool hast, int32_t srid, STBox *result);
 extern STboxGridState *stbox_tile_state_make(const Temporal *temp,
   const STBox *box, double xsize, double ysize, double zsize, 
   const Interval *duration, POINT3DZ sorigin, TimestampTz torigin, 
