@@ -3882,7 +3882,7 @@ datetime_to_char_body(TmToChar *tmtc, text *fmt, bool is_interval, Oid collid)
   /*
    * Convert fmt to C string
    */
-  fmt_str = text_to_cstring(fmt);
+  fmt_str = pg_text_to_cstring(fmt);
   fmt_len = strlen(fmt_str);
 
   /*
@@ -4112,7 +4112,7 @@ to_date(text *date_txt, text *fmt, Oid collid)
   if (!IS_VALID_JULIAN(tm.tm_year, tm.tm_mon, tm.tm_mday))
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-      "date out of range: \"%s\"", text_to_cstring(date_txt));
+      "date out of range: \"%s\"", pg_text_to_cstring(date_txt));
     return 0; // TODO
   }
 
@@ -4122,7 +4122,7 @@ to_date(text *date_txt, text *fmt, Oid collid)
   if (!IS_VALID_DATE(result))
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-      "date out of range: \"%s\"", text_to_cstring(date_txt));
+      "date out of range: \"%s\"", pg_text_to_cstring(date_txt));
     return 0; // TODO
   }
 
@@ -4227,7 +4227,7 @@ parse_datetime(text *date_txt, text *fmt, Oid collid, bool strict,
         if (!IS_VALID_JULIAN(tm.tm_year, tm.tm_mon, tm.tm_mday))
         {
           meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-            "date out of range: \"%s\"", text_to_cstring(date_txt));
+            "date out of range: \"%s\"", pg_text_to_cstring(date_txt));
           return (Datum) 0;
         }
 
@@ -4238,7 +4238,7 @@ parse_datetime(text *date_txt, text *fmt, Oid collid, bool strict,
         if (!IS_VALID_DATE(result))
         {
           meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-            "date out of range: \"%s\"", text_to_cstring(date_txt));
+            "date out of range: \"%s\"", pg_text_to_cstring(date_txt));
           return (Datum) 0;
         }
 
@@ -4386,7 +4386,7 @@ do_to_timestamp(text *date_txt, text *fmt, Oid collid, bool std,
   Assert(tm != NULL);
   Assert(fsec != NULL);
 
-  char *date_str = text_to_cstring(date_txt);
+  char *date_str = pg_text_to_cstring(date_txt);
 
   ZERO_tmfc(&tmfc);
   ZERO_tm(tm);
@@ -4402,7 +4402,7 @@ do_to_timestamp(text *date_txt, text *fmt, Oid collid, bool std,
   if (fmt_len)
   {
     char *fmt_str;
-    fmt_str = text_to_cstring(fmt);
+    fmt_str = pg_text_to_cstring(fmt);
     if (fmt_len > (int) DCH_CACHE_SIZE)
     {
       /*
@@ -4497,7 +4497,7 @@ do_to_timestamp(text *date_txt, text *fmt, Oid collid, bool std,
             pg_add_s32_overflow(tm->tm_year, tmp, &tm->tm_year))
           {
             pg_DateTimeParseError(DTERR_FIELD_OVERFLOW, NULL,
-              text_to_cstring(date_txt), "timestamp", escontext);
+              pg_text_to_cstring(date_txt), "timestamp", escontext);
             goto fail;
           }
         }
@@ -4510,7 +4510,7 @@ do_to_timestamp(text *date_txt, text *fmt, Oid collid, bool std,
             pg_add_s32_overflow(tmp, 1, &tm->tm_year))
           {
             pg_DateTimeParseError(DTERR_FIELD_OVERFLOW, NULL,
-              text_to_cstring(date_txt), "timestamp", escontext);
+              pg_text_to_cstring(date_txt), "timestamp", escontext);
             goto fail;
           }
         }
@@ -4546,7 +4546,7 @@ do_to_timestamp(text *date_txt, text *fmt, Oid collid, bool std,
         pg_add_s32_overflow(tm->tm_year, 1, &tm->tm_year))
       {
         pg_DateTimeParseError(DTERR_FIELD_OVERFLOW, NULL,
-          text_to_cstring(date_txt), "timestamp", escontext);
+          pg_text_to_cstring(date_txt), "timestamp", escontext);
         goto fail;
       }
     }
@@ -4558,7 +4558,7 @@ do_to_timestamp(text *date_txt, text *fmt, Oid collid, bool std,
         pg_add_s32_overflow(tm->tm_year, 1, &tm->tm_year))
       {
         pg_DateTimeParseError(DTERR_FIELD_OVERFLOW, NULL,
-          text_to_cstring(date_txt), "timestamp", escontext);
+          pg_text_to_cstring(date_txt), "timestamp", escontext);
         goto fail;
       }
     }
@@ -4914,7 +4914,7 @@ static FormatNode *
 NUM_cache(int len, NUMDesc *Num, text *pars_str, bool *shouldFree)
 {
   FormatNode *format = NULL;
-  char *str = text_to_cstring(pars_str);
+  char *str = pg_text_to_cstring(pars_str);
   if (len > (int) NUM_CACHE_SIZE)
   {
     /*
@@ -6181,7 +6181,7 @@ numeric_to_char(Numeric value, text *fmt)
   {
     /* Round and convert to int */
     bool err;
-    int32 intvalue = numeric_int4_opt_error(value, &err);
+    int32 intvalue = pg_numeric_int4_opt_error(value, &err);
     /* On overflow, just use PG_INT32_MAX; int_to_roman will cope */
     if (err)
       intvalue = PG_INT32_MAX;

@@ -204,7 +204,7 @@ Datum
 Npoint_from_ewkt(PG_FUNCTION_ARGS)
 {
   text *wkt_text = PG_GETARG_TEXT_P(0);
-  char *wkt = text_to_cstring(wkt_text);
+  char *wkt = pg_text_to_cstring(wkt_text);
   /* Copy the pointer since it will be advanced during parsing */
   const char *wkt_ptr = wkt;
   Npoint *result = npoint_parse(&wkt_ptr, true);
@@ -243,7 +243,7 @@ Datum
 Npoint_from_hexwkb(PG_FUNCTION_ARGS)
 {
   text *hexwkb_text = PG_GETARG_TEXT_P(0);
-  char *hexwkb = text_to_cstring(hexwkb_text);
+  char *hexwkb = pg_text_to_cstring(hexwkb_text);
   Npoint *result = npoint_from_hexwkb(hexwkb);
   pfree(hexwkb);
   PG_FREE_IF_COPY(hexwkb_text, 0);

@@ -639,7 +639,7 @@ pg_jsonb_make(text **keys_vals, int count)
   for (int i = 0; i < count; ++i)
   {
     if (keys_vals[i])
-      keys_vals_str[i] = text_to_cstring(keys_vals[i]);
+      keys_vals_str[i] = pg_text_to_cstring(keys_vals[i]);
   }
   /* Iterate for half of the count */
   int count1 = count / 2;
@@ -722,9 +722,9 @@ pg_jsonb_make_two_arg(text **keys, text **values, int count)
         "null value not allowed for object key");
       return NULL;
     }
-    keys_str[i] = text_to_cstring(keys[i]);
+    keys_str[i] = pg_text_to_cstring(keys[i]);
     if (values[i])
-      values_str[i] = text_to_cstring(values[i]);
+      values_str[i] = pg_text_to_cstring(values[i]);
   }
   /* Convert the keys and the values into strings */
   for (int i = 0; i < count; ++i)

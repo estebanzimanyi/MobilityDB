@@ -220,7 +220,7 @@ Datum
 Stbox_from_hexwkb(PG_FUNCTION_ARGS)
 {
   text *hexwkb_text = PG_GETARG_TEXT_P(0);
-  char *hexwkb = text_to_cstring(hexwkb_text);
+  char *hexwkb = pg_text_to_cstring(hexwkb_text);
   STBox *result = stbox_from_hexwkb(hexwkb);
   pfree(hexwkb);
   PG_FREE_IF_COPY(hexwkb_text, 0);
@@ -1150,7 +1150,7 @@ Stbox_transform_pipeline(PG_FUNCTION_ARGS)
   text *pipelinetxt = PG_GETARG_TEXT_P(1);
   int32_t srid = PG_GETARG_INT32(2);
   bool is_forward = PG_GETARG_BOOL(3);
-  char *pipelinestr = text_to_cstring(pipelinetxt);
+  char *pipelinestr = pg_text_to_cstring(pipelinetxt);
   STBox *result = stbox_transform_pipeline(box, pipelinestr, srid, is_forward);
   pfree(pipelinestr);
   PG_FREE_IF_COPY(pipelinetxt, 1);

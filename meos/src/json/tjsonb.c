@@ -70,7 +70,7 @@ datum_jsonb_to_text(Datum jb)
 Datum
 datum_text_to_jsonb(Datum txt)
 {
-  char *str = text_to_cstring(DatumGetTextP(txt));
+  char *str = pg_text_to_cstring(DatumGetTextP(txt));
   Jsonb *result = cstring_to_jsonb(str);
   pfree(str);
   return PointerGetDatum(result);

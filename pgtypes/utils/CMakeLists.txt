@@ -5,16 +5,15 @@ add_subdirectory("mb")
 set(UTILS_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/bool.c
   ${CMAKE_CURRENT_SOURCE_DIR}/dynahash.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/int.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/int8.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/numeric.c
   ${CMAKE_CURRENT_SOURCE_DIR}/date.c
   ${CMAKE_CURRENT_SOURCE_DIR}/datetime.c
   ${CMAKE_CURRENT_SOURCE_DIR}/float.c
   # ${CMAKE_CURRENT_SOURCE_DIR}/format_type.c
   ${CMAKE_CURRENT_SOURCE_DIR}/formatting.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/int.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/int8.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/numeric.c
   # ${CMAKE_CURRENT_SOURCE_DIR}/levenshtein.c
-  # ${CMAKE_CURRENT_SOURCE_DIR}/numeric.c
   ${CMAKE_CURRENT_SOURCE_DIR}/numutils.c
   ${CMAKE_CURRENT_SOURCE_DIR}/pg_locale.c
   ${CMAKE_CURRENT_SOURCE_DIR}/pg_locale_builtin.c
@@ -31,6 +30,7 @@ set(UTILS_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/jsonb_op.c
     ${CMAKE_CURRENT_SOURCE_DIR}/jsonb_util.c
     ${CMAKE_CURRENT_SOURCE_DIR}/jsonfuncs.c
+    # ${CMAKE_CURRENT_SOURCE_DIR}/jsonpath_exec.c
 )
 # endif(JSON)
 

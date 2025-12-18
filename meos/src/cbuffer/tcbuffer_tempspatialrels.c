@@ -650,14 +650,12 @@ tspatialrel_tcbuffer_cbuffer_int(const Temporal *temp, const Cbuffer *cb,
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = func;
+  lfinfo.argtype[0] = T_TCBUFFER;
+  lfinfo.argtype[1] = T_CBUFFER;
   lfinfo.numparam = numparam;
   lfinfo.param[0] = param;
-  lfinfo.argtype[0] = temp->temptype;
-  lfinfo.argtype[1] = temptype_basetype(temp->temptype);
   lfinfo.restype = T_TBOOL;
-  lfinfo.reslinear = false;
   lfinfo.invert = invert;
-  lfinfo.discont = false;
   return tfunc_temporal_base(temp, PointerGetDatum(cb), &lfinfo);
 }
 

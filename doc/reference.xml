@@ -2338,7 +2338,15 @@
 
 			<itemizedlist>
 				<listitem>
-					<para><link linkend="tjson_object_field"><varname>-></varname>, <varname>->></varname></link>: Extract a field from a temporal JSON value</para>
+					<para><link linkend="tjson_object_field"><varname>-></varname>, <varname>->></varname></link>: Extract a field from a temporal JSON value specified by a key</para>
+				</listitem>
+
+				<listitem>
+					<para><link linkend="tjson_extract_path"><varname>#></varname>, <varname>#>></varname></link>: Extract a field from a temporal JSON value specified by a path</para>
+				</listitem>
+
+				<listitem>
+					<para><link linkend="tjson_array_element"><varname>tjson_array_element</varname>, <varname>tjsonb_array_element</varname>, <varname>tjsonb_array_element_text</varname></link>: Extract an element from temporal JSON array</para>
 				</listitem>
 
 				<listitem>
@@ -2347,10 +2355,6 @@
 
 				<listitem>
 					<para><link linkend="tjsonb_delete"><varname>-</varname>, <varname>#-</varname></link>: Temporal JSONB deletion</para>
-				</listitem>
-
-				<listitem>
-					<para><link linkend="tjson_array_element"><varname>tjson_array_element</varname>, <varname>tjsonb_array_element</varname>, <varname>tjsonb_array_element_text</varname></link>: Extract an element from temporal JSON array</para>
 				</listitem>
 
 				<listitem>

@@ -204,8 +204,15 @@ cstring_to_text(const char *str)
  * @param[in] txt Text
  * @note Function taken from PostGIS file @p lwgeom_in_geojson.c
  */
+#if MEOS
 char *
 text_to_cstring(const text *txt)
+{
+  return pg_text_to_cstring(txt);
+}
+#endif /* MEOS */
+char *
+pg_text_to_cstring(const text *txt)
 {
   int len = VARSIZE_ANY_EXHDR(txt);
   char *result = (char *) palloc(len + 1);
@@ -215,7 +222,7 @@ text_to_cstring(const text *txt)
 }
 
 /*
- * text_to_cstring_buffer
+ * pg_text_to_cstring_buffer
  *
  * Copy a text value into a caller-supplied buffer of size dst_len.
  *
@@ -228,7 +235,7 @@ text_to_cstring(const text *txt)
  * case here, we'd need another routine that did, anyway.
  */
 void
-text_to_cstring_buffer(const text *src, char *dst, size_t dst_len)
+pg_text_to_cstring_buffer(const text *src, char *dst, size_t dst_len)
 {
   size_t src_len = VARSIZE_ANY_EXHDR(src);
   if (dst_len > 0)
@@ -272,7 +279,7 @@ char *
 text_out(const text *txt)
 {
   assert(txt);
-  char *str = text_to_cstring(txt);
+  char *str = pg_text_to_cstring(txt);
   size_t size = strlen(str) + 3;
   char *result = palloc(size);
   snprintf(result, size, "\"%s\"", str);
@@ -1591,7 +1598,7 @@ pg_text_pattern_gt(const text *txt1, const text *txt2)
  * appendStringInfoText
  *
  * Append a text to str.
- * Like appendStringInfoString(str, text_to_cstring(t)) but faster.
+ * Like appendStringInfoString(str, pg_text_to_cstring(t)) but faster.
  */
 static void
 appendStringInfoText(StringInfo str, const text *t)
@@ -1955,7 +1962,7 @@ textarr_to_text(text **textarr, int count, const char *sep,
     }
     else
     {
-      char *value = text_to_cstring(itemvalue);
+      char *value = pg_text_to_cstring(itemvalue);
       if (printed)
         appendStringInfo(&buf, "%s%s", sep, value);
       else
@@ -2004,7 +2011,7 @@ text *
 pg_text_concat_ws(text **textarr, int count, const text *sep)
 {
   assert(sep);
-  char *sepstr = text_to_cstring(sep);
+  char *sepstr = pg_text_to_cstring(sep);
   text *result = textarr_to_text(textarr, count, sepstr, "");
   pfree(sepstr);
   return result;
@@ -2674,7 +2681,7 @@ unicode_normalize_func(const text *txt, const text *fmt)
 text *
 pg_unicode_normalize_func(const text *txt, const text *fmt)
 {
-  char *formstr = text_to_cstring(fmt);
+  char *formstr = pg_text_to_cstring(fmt);
   UnicodeNormalizationForm form = unicode_norm_form_from_string(formstr);
 
   /* convert to pg_wchar */
@@ -2737,7 +2744,7 @@ unicode_is_normalized(const text *txt, const text *fmt)
 bool
 pg_unicode_is_normalized(const text *txt, const text *fmt)
 {
-  char *formstr = text_to_cstring(fmt);
+  char *formstr = pg_text_to_cstring(fmt);
   UnicodeNormalizationForm form = unicode_norm_form_from_string(formstr);
 
   /* convert to pg_wchar */

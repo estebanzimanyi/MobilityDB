@@ -109,6 +109,7 @@
 
 // /* Conversion functions */
 
+// extern Jsonb *cstring_to_jsonb(const char *str);
 // extern bool jsonb_to_bool(const Jsonb *jb);
 // extern char *jsonb_to_cstring(const Jsonb *jb);
 // extern float4 jsonb_to_float4(const Jsonb *jb);
@@ -320,7 +321,7 @@ extern Temporal *contains_tjsonb_jsonb(const Temporal *temp, const Jsonb *jb, bo
 extern Temporal *contains_tjsonb_tjsonb(const Temporal *temp1, const Temporal *temp2);
 extern Temporal *tjsonb_to_tbool(const Temporal *temp, const char *key);
 extern Temporal *tjsonb_to_tint(const Temporal *temp, const char *key);
-extern Temporal *tjsonb_to_tfloat(const Temporal *temp, const char *key);
+extern Temporal *tjsonb_to_tfloat(const Temporal *temp, const char *key, interpType interp);
 extern Temporal *tjsonb_to_ttext_key(const Temporal *temp, const char *key);
 extern Temporal *tjsonb_delete_idx(const Temporal *temp, int idx);
 extern Temporal *tjsonb_delete_key(const Temporal *temp, const text *key);

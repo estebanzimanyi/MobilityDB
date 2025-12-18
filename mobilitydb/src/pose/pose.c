@@ -147,7 +147,7 @@ Datum
 Pose_from_ewkt(PG_FUNCTION_ARGS)
 {
   text *wkt_text = PG_GETARG_TEXT_P(0);
-  char *wkt = text_to_cstring(wkt_text);
+  char *wkt = pg_text_to_cstring(wkt_text);
   /* Copy the pointer since it will be advanced during parsing */
   const char *wkt_ptr = wkt;
   Pose *result = pose_parse(&wkt_ptr, true);
@@ -185,7 +185,7 @@ Datum
 Pose_from_hexwkb(PG_FUNCTION_ARGS)
 {
   text *hexwkb_text = PG_GETARG_TEXT_P(0);
-  char *hexwkb = text_to_cstring(hexwkb_text);
+  char *hexwkb = pg_text_to_cstring(hexwkb_text);
   Pose *result = pose_from_hexwkb(hexwkb);
   pfree(hexwkb);
   PG_FREE_IF_COPY(hexwkb_text, 0);
@@ -615,7 +615,7 @@ Pose_transform_pipeline(PG_FUNCTION_ARGS)
   text *pipelinetxt = PG_GETARG_TEXT_P(1);
   int32_t srid = PG_GETARG_INT32(2);
   bool is_forward = PG_GETARG_BOOL(3);
-  char *pipelinestr = text_to_cstring(pipelinetxt);
+  char *pipelinestr = pg_text_to_cstring(pipelinetxt);
   Pose *result = pose_transform_pipeline(cb, pipelinestr, srid,
     is_forward);
   pfree(pipelinestr);

@@ -514,15 +514,16 @@ Temporal_send(PG_FUNCTION_ARGS)
  ****************************************************************************/
 
 /**
- * @ingroup mobilitydb_temporal_constructor
- * @brief Return a temporal instant from a value and a timestamptz
- * @sqlfn tint(), tfloat(), ...
+ * @brief Get an interpolation text
+ * @pre The text CANNOT be null. This is usually achieved by setting a default
+ * interpolation in the SQL definition, e.g., `interp text DEFAULT 'linear'`
  */
 interpType
 input_interp_string(FunctionCallInfo fcinfo, int argno)
 {
   text *interp_txt = PG_GETARG_TEXT_P(argno);
-  char *interp_str = text_to_cstring(interp_txt);
+  assert(interp_txt);
+  char *interp_str = pg_text_to_cstring(interp_txt);
   interpType result = interptype_from_string(interp_str);
   pfree(interp_str);
   PG_FREE_IF_COPY(interp_txt, argno);
@@ -719,7 +720,7 @@ Datum
 Temporal_from_text(PG_FUNCTION_ARGS)
 {
   text *wkt_text = PG_GETARG_TEXT_P(0);
-  char *wkt = text_to_cstring(wkt_text);
+  char *wkt = pg_text_to_cstring(wkt_text);
   /* Copy the pointer since it will be advanced during parsing */
   const char *wkt_ptr = wkt;
   Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);

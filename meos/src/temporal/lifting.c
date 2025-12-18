@@ -275,8 +275,10 @@ tfunc_tsequence(const TSequence *seq, LiftedFunctionInfo *lfinfo)
     }
     instants[i] = inst;
   }
+  interpType interp = (MEOS_FLAGS_GET_INTERP(seq->flags) == DISCRETE) ? 
+    DISCRETE : (lfinfo->reslinear ? LINEAR : STEP);
   return tsequence_make_free(instants, seq->count, seq->period.lower_inc,
-    seq->period.upper_inc, MEOS_FLAGS_GET_INTERP(seq->flags), NORMALIZE);
+    seq->period.upper_inc, interp, NORMALIZE);
 }
 
 /**

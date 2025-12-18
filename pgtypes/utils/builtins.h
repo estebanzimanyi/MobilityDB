@@ -56,8 +56,12 @@ extern int  bpchartruelen(char *s, int len);
 /* popular functions from varlena.c */
 extern text *cstring_to_text(const char *s);
 extern text *cstring_to_text_with_len(const char *s, int len);
-extern char *text_to_cstring(const text *t);
-extern void text_to_cstring_buffer(const text *src, char *dst, size_t dst_len);
+// extern char *text_to_cstring(const text *t);
+// extern void text_to_cstring_buffer(const text *src, char *dst, size_t dst_len);
+// MEOS added the internal versions of the two functions to avoid detoasting
+// in the above functions
+extern char *pg_text_to_cstring(const text *t);
+extern void pg_text_to_cstring_buffer(const text *src, char *dst, size_t dst_len);
 
 #define CStringGetTextDatum(s) PointerGetDatum(cstring_to_text(s))
 #define TextDatumGetCString(d) text_to_cstring((text *) DatumGetPointer(d))

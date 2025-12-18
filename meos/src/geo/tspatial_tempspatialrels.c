@@ -549,10 +549,10 @@ tspatialrel_tspatial_base(const Temporal *temp, Datum base,
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = func;
-  lfinfo.numparam = numparam;
-  lfinfo.param[0] = param;
   lfinfo.argtype[0] = temp->temptype;
   lfinfo.argtype[1] = temptype_basetype(temp->temptype);
+  lfinfo.numparam = numparam;
+  lfinfo.param[0] = param;
   lfinfo.restype = T_TBOOL;
   lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   lfinfo.invert = invert;
@@ -618,11 +618,10 @@ tspatialrel_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2,
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = func;
+  lfinfo.argtype[0] = lfinfo.argtype[1] = temp1->temptype;
   lfinfo.numparam = numparam;
   lfinfo.param[0] = param;
-  lfinfo.argtype[0] = lfinfo.argtype[1] = temp1->temptype;
   lfinfo.restype = T_TBOOL;
-  lfinfo.reslinear = false;
   lfinfo.invert = invert;
   lfinfo.discont = MEOS_FLAGS_LINEAR_INTERP(temp1->flags) ||
     MEOS_FLAGS_LINEAR_INTERP(temp2->flags);

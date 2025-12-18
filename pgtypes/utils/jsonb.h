@@ -436,7 +436,7 @@ extern const char *JsonbTypeName(JsonbValue *val);
 
 extern Jsonb *jsonb_set_element(Jsonb *jb, text **path, int path_len,
   JsonbValue *newval);
-extern void *jsonb_get_element(Jsonb *jb, text **path, int npath,
+extern void *pg_jsonb_get_element(Jsonb *jb, text **path, int npath,
   bool as_text);
 extern bool to_jsonb_is_immutable(Oid typoid);
 extern Datum jsonb_build_object_worker(int nargs, const Datum *args,

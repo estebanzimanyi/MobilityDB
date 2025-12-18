@@ -1221,10 +1221,11 @@ temporal_round(const Temporal *temp, int maxdd)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) round_fn(temptype_basetype(temp->temptype));
+  lfinfo.argtype[0] = temp->temptype;
   lfinfo.numparam = 1;
   lfinfo.param[0] = Int32GetDatum(maxdd);
-  lfinfo.argtype[0] = temp->temptype;
   lfinfo.restype = temp->temptype;
+  lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   return tfunc_temporal(temp, &lfinfo);
 }
 
@@ -1299,6 +1300,7 @@ tfloat_floor(const Temporal *temp)
   lfinfo.func = (varfunc) &datum_floor;
   lfinfo.argtype[0] = T_TFLOAT;
   lfinfo.restype = T_TFLOAT;
+  lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   return tfunc_temporal(temp, &lfinfo);
 }
 
@@ -1319,6 +1321,7 @@ tfloat_ceil(const Temporal *temp)
   lfinfo.func = (varfunc) &datum_ceil;
   lfinfo.argtype[0] = T_TFLOAT;
   lfinfo.restype = T_TFLOAT;
+  lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   return tfunc_temporal(temp, &lfinfo);
 }
 
@@ -1380,10 +1383,11 @@ tfloat_degrees(const Temporal *temp, bool normalize)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) &datum_degrees;
+  lfinfo.argtype[0] = T_TFLOAT;
   lfinfo.numparam = 1;
   lfinfo.param[0] = BoolGetDatum(normalize);
-  lfinfo.argtype[0] = T_TFLOAT;
   lfinfo.restype = T_TFLOAT;
+  lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   return tfunc_temporal(temp, &lfinfo);
 }
 
@@ -1404,6 +1408,7 @@ tfloat_radians(const Temporal *temp)
   lfinfo.func = (varfunc) &datum_radians;
   lfinfo.argtype[0] = T_TFLOAT;
   lfinfo.restype = T_TFLOAT;
+  lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   return tfunc_temporal(temp, &lfinfo);
 }
 

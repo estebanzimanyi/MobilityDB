@@ -28,6 +28,7 @@ typedef enum
   MEOS_ERR_WKB_OUTPUT            = 25, // WKB output error
   MEOS_ERR_GEOJSON_INPUT         = 26, // GEOJSON input error
   MEOS_ERR_GEOJSON_OUTPUT        = 27, // GEOJSON output error
+  MEOS_ERR_SQL_JSON_ERROR        = 27, // SQL JSON error
 
 } errorCode;
 

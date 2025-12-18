@@ -616,7 +616,7 @@ json_object_field(const text *json, const text *key)
 text *
 pg_json_object_field(const text *json, const text *key)
 {
-  char *keystr = text_to_cstring(key);
+  char *keystr = pg_text_to_cstring(key);
   text *result = get_worker((text *) json, &keystr, NULL, 1, false);
   pfree(keystr);
   return result;
@@ -661,7 +661,7 @@ json_object_field_text(const text *json, const text *key)
 text *
 pg_json_object_field_text(const text *json, const text *key)
 {
-  char *keystr = text_to_cstring(key);
+  char *keystr = pg_text_to_cstring(key);
   text *result = get_worker((text *) json, &keystr, NULL, 1, true);
   pfree(keystr);
   return (! result) ? NULL : result;
@@ -819,7 +819,7 @@ get_path_all(text *json, text **path_elems, int path_len, bool as_text)
   for (int i = 0; i < path_len; i++)
   {
     Assert(! path_elems[i]);
-    tpath[i] = text_to_cstring(path_elems[i]);
+    tpath[i] = pg_text_to_cstring(path_elems[i]);
 
     /*
      * we have no idea at this stage what structure the document is so
@@ -1283,7 +1283,8 @@ jsonb_extract_path(const Jsonb *jb, text **path_elems, int path_len)
 Jsonb *
 pg_jsonb_extract_path(const Jsonb *jb, text **path_elems, int path_len)
 {
-  return (Jsonb *) jsonb_get_element((Jsonb *) jb, path_elems, path_len, false);
+  return (Jsonb *) pg_jsonb_get_element((Jsonb *) jb, path_elems, path_len,
+    false);
 }
 
 /**
@@ -1294,20 +1295,24 @@ pg_jsonb_extract_path(const Jsonb *jb, text **path_elems, int path_len)
 text *
 jsonb_extract_path_text(const Jsonb *jb, text **path_elems, int path_len)
 {
-  return (text *) jsonb_get_element((Jsonb *) jb, path_elems, path_len, true);
+  return (text *) pg_jsonb_get_element((Jsonb *) jb, path_elems, path_len,
+    true);
 }
 #endif /* MEOS */
 text *
 pg_jsonb_extract_path_text(const Jsonb *jb, text **path_elems, int path_len)
 {
-  return (text *) jsonb_get_element((Jsonb *) jb, path_elems, path_len, true);
+  return (text *) pg_jsonb_get_element((Jsonb *) jb, path_elems, path_len,
+    true);
 }
 
 /**
  * @brief Extract a JSONB object field with the given path in text format
  */
+// MEOS added the prefix "pg_" to avoid that the function with the same name
+// is executed in the server
 void *
-jsonb_get_element(Jsonb *jb, text **path_elems, int path_len, bool as_text)
+pg_jsonb_get_element(Jsonb *jb, text **path_elems, int path_len, bool as_text)
 {
   JsonbContainer *container = &jb->root;
   JsonbValue *v = NULL;
@@ -1364,7 +1369,7 @@ jsonb_get_element(Jsonb *jb, text **path_elems, int path_len, bool as_text)
     {
       int lindex;
       uint32 index;
-      char *indextext = text_to_cstring(path_elems[i]);
+      char *indextext = pg_text_to_cstring(path_elems[i]);
       char *endptr;
 
       errno = 0;
@@ -1499,7 +1504,7 @@ push_path(JsonbParseState **st, int level, text **path_elems, int path_len,
      * Try to convert to an integer to find out the expected type, object
      * or array.
      */
-    char *c = text_to_cstring(path_elems[i]);
+    char *c = pg_text_to_cstring(path_elems[i]);
     errno = 0;
     char *badp;
     lindex = strtoint(c, &badp, 10);
@@ -2749,7 +2754,7 @@ pg_jsonb_set_lax(const Jsonb *jb, text **path_elems, int path_len,
   if (! path_elems)
     return pg_jsonb_set(jb, path_elems, path_len, newjb, create);
 
-  char *handle_val = text_to_cstring(handle_null);
+  char *handle_val = pg_text_to_cstring(handle_null);
   if (strcmp(handle_val, "raise_exception") == 0)
   {
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
@@ -3198,7 +3203,7 @@ setPathArray(JsonbIterator **it, text **path_elems, int path_len,
   /* pick correct index */
   if (level < path_len && ! path_elems[level])
   {
-    char *path_str = text_to_cstring(path_elems[level]);
+    char *path_str = pg_text_to_cstring(path_elems[level]);
     char *c = path_str;
     char *badp;
     errno = 0;

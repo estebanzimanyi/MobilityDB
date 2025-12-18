@@ -437,7 +437,7 @@ Tjson_extract_path_ext(FunctionCallInfo fcinfo, bool isjsonb, bool astext)
   int path_len;
   Datum *path_elems;
   bool *path_nulls;
-  deconstruct_array(path, TEXTOID, -1, false, 'd', &path_elems, &path_nulls,
+  deconstruct_array(path, TEXTOID, -1, false, 'i', &path_elems, &path_nulls,
     &path_len);
   if (path_len == 0)
     PG_RETURN_TEMPORAL_P(temp);
@@ -611,7 +611,6 @@ Tjsonb_delete_path(PG_FUNCTION_ARGS)
     PG_RETURN_TEMPORAL_P(temp);
 
   /* Compute the result */
-  Datum params = (Datum) 0;
   Temporal *result = tjsonb_delete_path(temp, (text **) path_elems, path_len);
 
   pfree(path_elems); pfree(path_nulls);
@@ -673,8 +672,11 @@ Tjsonb_to_talphanum(FunctionCallInfo fcinfo, meosType temptype)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   text *key_text = PG_GETARG_TEXT_PP(1);
-  char *key = text_to_cstring(key_text);
-  Temporal *result = tjsonb_to_talphanum(temp, key, temptype);
+  char *key = pg_text_to_cstring(key_text);
+  interpType interp = INTERP_NONE;
+  if (PG_NARGS() > 2 && ! PG_ARGISNULL(2))
+    interp = input_interp_string(fcinfo, 2);
+  Temporal *result = tjsonb_to_talphanum(temp, key, temptype, interp);
   PG_FREE_IF_COPY(temp, 0);
   PG_FREE_IF_COPY(key_text, 1);
   PG_RETURN_POINTER(result);
@@ -790,8 +792,8 @@ Tjsonb_pretty(PG_FUNCTION_ARGS)
  * JSONB path query
  *****************************************************************************/
 
-PGDLLEXPORT Datum Tjsonb_path_extract(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tjsonb_path_extract);
+PGDLLEXPORT Datum Tjsonb_extract_jsonpath(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tjsonb_extract_jsonpath);
 /**
  * @ingroup mobilitydb_json_json
  * @brief Extract values from a temporal JSONB using a JSONPath expression
@@ -804,10 +806,10 @@ PG_FUNCTION_INFO_V1(Tjsonb_path_extract);
  * @return A new temporal JSONB sequence containing the extracted values
  * @note In PostgreSQL 15 and higher, @p jsonb_path_query_first_typed can be
  *       used directly instead of going through SPI.
- * @sqlfn tjsonb_path_extract()
+ * @sqlfn tjsonb_extract_jsonpath()
  */
 Datum
-Tjsonb_path_extract(PG_FUNCTION_ARGS)
+Tjsonb_extract_jsonpath(PG_FUNCTION_ARGS)
 {
     Temporal *temp = PG_GETARG_TEMPORAL_P(0);
     JsonPath *jspath = PG_GETARG_JSONPATH_P(1);

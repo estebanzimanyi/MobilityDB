@@ -1191,7 +1191,7 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
         if (jb->type == jbvNumeric)
         {
           bool have_error;
-          int64 val = numeric_int8_opt_error(jb->val.numeric, &have_error);
+          int64 val = pg_numeric_int8_opt_error(jb->val.numeric, &have_error);
           if (have_error)
           {
             meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
@@ -1367,7 +1367,7 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
             meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
               "invalid jsonpath item type for .decimal() precision");
 
-          precision = numeric_int4_opt_error(jspGetNumeric(&elem),
+          precision = pg_numeric_int4_opt_error(jspGetNumeric(&elem),
             &have_error);
           if (have_error)
           {
@@ -1385,7 +1385,7 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
                 "invalid jsonpath item type for .decimal() scale");
               return jperError;
             }
-            scale = numeric_int4_opt_error(jspGetNumeric(&elem), &have_error);
+            scale = pg_numeric_int4_opt_error(jspGetNumeric(&elem), &have_error);
             if (have_error)
             {
               meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
@@ -1438,7 +1438,7 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
         {
           bool have_error;
           int32 val;
-          val = numeric_int4_opt_error(jb->val.numeric, &have_error);
+          val = pg_numeric_int4_opt_error(jb->val.numeric, &have_error);
           if (have_error)
           {
             meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,

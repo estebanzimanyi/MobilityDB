@@ -2931,7 +2931,7 @@ pg_timetz_zone(const TimeTzADT *timetz, const text *zone)
   /*
    * Look up the requested timezone.
    */
-  text_to_cstring_buffer(zone, tzname, sizeof(tzname));
+  pg_text_to_cstring_buffer(zone, tzname, sizeof(tzname));
 
   type = DecodeTimezoneName(tzname, &val, &tzp);
 

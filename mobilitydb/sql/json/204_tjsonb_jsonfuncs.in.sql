@@ -70,6 +70,75 @@ CREATE OPERATOR ->> (
   LEFTARG   = tjsonb, RIGHTARG = text
 );
 
+CREATE FUNCTION tjson_extract_path(temp ttext, path text[])
+RETURNS ttext
+AS 'MODULE_PATHNAME', 'Tjson_extract_path'
+LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tjsonb_extract_path(temp tjsonb, path text[])
+RETURNS tjsonb
+AS 'MODULE_PATHNAME', 'Tjsonb_extract_path'
+LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tjson_extract_path_text(temp ttext, path text[])
+RETURNS ttext
+AS 'MODULE_PATHNAME', 'Tjson_extract_path_text'
+LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tjsonb_extract_path_text(temp tjsonb, path text[])
+RETURNS tjsonb
+AS 'MODULE_PATHNAME', 'Tjsonb_extract_path_text'
+LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE OPERATOR #> (
+  PROCEDURE = tjson_extract_path,
+  LEFTARG   = ttext, RIGHTARG = text[]
+);
+CREATE OPERATOR #> (
+  PROCEDURE = tjsonb_extract_path,
+  LEFTARG   = tjsonb, RIGHTARG = text[]
+);
+CREATE OPERATOR #>> (
+  PROCEDURE = tjson_extract_path_text,
+  LEFTARG   = ttext, RIGHTARG = text[]
+);
+CREATE OPERATOR #>> (
+  PROCEDURE = tjsonb_extract_path_text,
+  LEFTARG   = tjsonb, RIGHTARG = text[]
+);
+
+CREATE FUNCTION tjson_array_element(ttext, integer)
+  RETURNS ttext
+  AS 'MODULE_PATHNAME', 'Tjson_array_element'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tjsonb_array_element(tjsonb, integer)
+  RETURNS tjsonb
+  AS 'MODULE_PATHNAME', 'Tjsonb_array_element'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tjsonb_array_element_text(tjsonb, integer)
+  RETURNS tjsonb
+  AS 'MODULE_PATHNAME', 'Tjsonb_array_element_text'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tbool(tjsonb, text) 
+RETURNS tbool
+AS 'MODULE_PATHNAME', 'Tjsonb_to_tbool'
+LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tint(tjsonb, text) 
+RETURNS tint
+AS 'MODULE_PATHNAME', 'Tjsonb_to_tint'
+LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tfloat(tjsonb, text, interp text DEFAULT 'linear') 
+RETURNS tfloat
+AS 'MODULE_PATHNAME', 'Tjsonb_to_tfloat'
+LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION ttext(tjsonb, text) 
+RETURNS ttext
+AS 'MODULE_PATHNAME', 'Tjsonb_to_ttext_key'
+LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/*****************************************************************************/
+
 CREATE FUNCTION tjsonb_concat(jsonb, tjsonb)
   RETURNS tjsonb
   AS 'MODULE_PATHNAME', 'Concat_jsonb_tjsonb'
@@ -122,53 +191,6 @@ CREATE OPERATOR - (
   LEFTARG   = tjsonb, RIGHTARG = integer
 );
 
-CREATE FUNCTION tjson_array_element(ttext, integer)
-  RETURNS ttext
-  AS 'MODULE_PATHNAME', 'Tjson_array_element'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tjsonb_array_element(tjsonb, integer)
-  RETURNS tjsonb
-  AS 'MODULE_PATHNAME', 'Tjsonb_array_element'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tjsonb_array_element_text(tjsonb, integer)
-  RETURNS tjsonb
-  AS 'MODULE_PATHNAME', 'Tjsonb_array_element_text'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION tjson_extract_path(temp ttext, path text[])
-RETURNS ttext
-AS 'MODULE_PATHNAME', 'Tjson_extract_path'
-LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tjsonb_extract_path(temp tjsonb, path text[])
-RETURNS tjsonb
-AS 'MODULE_PATHNAME', 'Tjsonb_extract_path'
-LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tjson_extract_path_text(temp ttext, path text[])
-RETURNS ttext
-AS 'MODULE_PATHNAME', 'Tjson_extract_path_text'
-LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tjsonb_extract_path_text(temp tjsonb, path text[])
-RETURNS tjsonb
-AS 'MODULE_PATHNAME', 'Tjsonb_extract_path_text'
-LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE OPERATOR #> (
-  PROCEDURE = tjson_extract_path,
-  LEFTARG   = ttext, RIGHTARG = text[]
-);
-CREATE OPERATOR #> (
-  PROCEDURE = tjsonb_extract_path,
-  LEFTARG   = tjsonb, RIGHTARG = text[]
-);
-CREATE OPERATOR #>> (
-  PROCEDURE = tjson_extract_path_text,
-  LEFTARG   = ttext, RIGHTARG = text[]
-);
-CREATE OPERATOR #>> (
-  PROCEDURE = tjsonb_extract_path_text,
-  LEFTARG   = tjsonb, RIGHTARG = text[]
-);
-
 CREATE FUNCTION tjsonb_delete_path(temp tjsonb, path text[])
 RETURNS tjsonb
 AS 'MODULE_PATHNAME', 'Tjsonb_delete_path'
@@ -178,6 +200,8 @@ CREATE OPERATOR #- (
   PROCEDURE = tjsonb_delete_path,
   LEFTARG   = tjsonb, RIGHTARG = text[]
 );
+
+/*****************************************************************************/
 
 CREATE FUNCTION tjsonb_set(temp tjsonb, path text[], val jsonb,
   create_missing boolean DEFAULT true)
@@ -191,36 +215,14 @@ AS 'MODULE_PATHNAME', 'Tjsonb_set_lax'
 LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION tjsonb_insert(temp tjsonb, path text[], val jsonb,
-  after boolean DEFAULT true)
+  after boolean DEFAULT false)
 RETURNS tjsonb
 AS 'MODULE_PATHNAME', 'Tjsonb_insert'
 LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-/*****************************************************************************/
-
-CREATE FUNCTION tjsonb_path_extract(tjsonb, jsonpath)
+CREATE FUNCTION tjsonb_extract_jsonpath(tjsonb, jsonpath)
 RETURNS tjsonb
-AS 'MODULE_PATHNAME', 'Tjsonb_path_extract'
-LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION tbool(tjsonb, text) 
-RETURNS tbool
-AS 'MODULE_PATHNAME', 'Tjsonb_to_tbool'
-LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION tint(tjsonb, text) 
-RETURNS tint
-AS 'MODULE_PATHNAME', 'Tjsonb_to_tint'
-LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION tfloat(tjsonb, text) 
-RETURNS tfloat
-AS 'MODULE_PATHNAME', 'Tjsonb_to_tfloat'
-LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION ttext(tjsonb, text) 
-RETURNS ttext
-AS 'MODULE_PATHNAME', 'Tjsonb_to_ttext_key'
+AS 'MODULE_PATHNAME', 'Tjsonb_extract_jsonpath'
 LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION tjson_strip_nulls(ttext, bool DEFAULT FALSE) 

@@ -84,7 +84,7 @@ Datum
 Temporal_from_hexwkb(PG_FUNCTION_ARGS)
 {
   text *hexwkb_text = PG_GETARG_TEXT_P(0);
-  char *hexwkb = text_to_cstring(hexwkb_text);
+  char *hexwkb = pg_text_to_cstring(hexwkb_text);
   Temporal *result = temporal_from_hexwkb(hexwkb);
   pfree(hexwkb);
   PG_FREE_IF_COPY(hexwkb_text, 0);
@@ -103,7 +103,7 @@ Datum
 Temporal_from_mfjson(PG_FUNCTION_ARGS)
 {
   text *mfjson_txt = PG_GETARG_TEXT_P(0);
-  char *mfjson = text_to_cstring(mfjson_txt);
+  char *mfjson = pg_text_to_cstring(mfjson_txt);
   meosType temptype = oid_type(get_fn_expr_rettype(fcinfo->flinfo));
   Temporal *result = temporal_from_mfjson(mfjson, temptype);
   pfree(mfjson);

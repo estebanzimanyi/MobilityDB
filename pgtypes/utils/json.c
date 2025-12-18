@@ -160,13 +160,13 @@ pg_json_in(const char *str)
 char *
 json_out(const text *json)
 {
-  return text_to_cstring(json);
+  return pg_text_to_cstring(json);
 }
 #endif /* MEOS */
 char *
 pg_json_out(const text *json)
 {
-  return text_to_cstring(json);
+  return pg_text_to_cstring(json);
 }
 
 /*
@@ -622,7 +622,7 @@ done:
  * escape_json_text
  *    Append 'txt' onto 'buf' and escape using escape_json_with_len.
  *
- * This is more efficient than calling text_to_cstring and appending the
+ * This is more efficient than calling pg_text_to_cstring and appending the
  * result as that could require an additional palloc and memcpy.
  */
 void

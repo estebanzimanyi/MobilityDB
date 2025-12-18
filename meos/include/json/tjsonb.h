@@ -131,7 +131,7 @@ extern Temporal *contains_tjsonb_jsonb(const Temporal *temp, const Jsonb *jb, bo
 extern Temporal *contains_tjsonb_tjsonb(const Temporal *temp1, const Temporal *temp2);
 extern Temporal *tjsonb_to_tbool(const Temporal *temp, const char *key);
 extern Temporal *tjsonb_to_tint(const Temporal *temp, const char *key);
-extern Temporal *tjsonb_to_tfloat(const Temporal *temp, const char *key);
+extern Temporal *tjsonb_to_tfloat(const Temporal *temp, const char *key, interpType interp);
 extern Temporal *tjsonb_to_ttext_key(const Temporal *temp, const char *key);
 extern Temporal *tjsonb_delete_idx(const Temporal *temp, int idx);
 extern Temporal *tjsonb_delete_key(const Temporal *temp, const text *key);
@@ -146,7 +146,7 @@ extern Temporal *ttext_to_tjsonb(const Temporal *temp);
 extern Temporal *tjsonb_extract_path(const Temporal *temp, text **path_elems, int path_len, bool astext);
 
 // Internal
-extern Temporal *tjsonb_to_talphanum(const Temporal *temp, const char *key, meosType temptype);
+extern Temporal *tjsonb_to_talphanum(const Temporal *temp, const char *key, meosType temptype, interpType interp);
 
 /*****************************************************************************
  * Set wrappers for JSONB operations

@@ -348,8 +348,8 @@ tdistance_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) datum_cbuffer_distance;
-  lfinfo.argtype[0] = temp->temptype;
-  lfinfo.argtype[1] = temptype_basetype(temp->temptype);
+  lfinfo.argtype[0] = T_TCBUFFER;
+  lfinfo.argtype[1] = T_CBUFFER;
   lfinfo.restype = T_TFLOAT;
   lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   lfinfo.invert = INVERT_NO;
@@ -396,8 +396,8 @@ tdistance_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) datum_cbuffer_distance;
-  lfinfo.argtype[0] = temp1->temptype;
-  lfinfo.argtype[1] = temp2->temptype;
+  lfinfo.argtype[0] = T_TCBUFFER;
+  lfinfo.argtype[1] = T_TCBUFFER;
   lfinfo.restype = T_TFLOAT;
   lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp1->flags) &&
     MEOS_FLAGS_LINEAR_INTERP(temp2->flags);

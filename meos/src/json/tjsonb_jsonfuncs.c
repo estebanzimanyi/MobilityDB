@@ -412,7 +412,6 @@ tjson_object_field(const Temporal *temp, const text *key, bool astext)
   lfinfo.param[0] = PointerGetDatum(key);
   lfinfo.restype = T_TTEXT;
   lfinfo.reserrcheck = true; /* Check for NULL result */
-  lfinfo.reslinear = false;
   lfinfo.invert = INVERT_NO;
   lfinfo.discont = CONTINUOUS;
   return tfunc_temporal(temp, &lfinfo);
@@ -442,7 +441,6 @@ tjsonb_object_field(const Temporal *temp, const text *key, bool astext)
   lfinfo.param[0] = PointerGetDatum(key);
   lfinfo.restype = astext ? T_TTEXT : T_TJSONB;
   lfinfo.reserrcheck = true; /* Check for NULL result */
-  lfinfo.reslinear = false;
   lfinfo.invert = INVERT_NO;
   lfinfo.discont = CONTINUOUS;
   return tfunc_temporal(temp, &lfinfo);
@@ -470,7 +468,6 @@ concat_tjsonb_jsonb(const Temporal *temp, const Jsonb *jb, bool invert)
   lfinfo.argtype[0] = T_TJSONB;
   lfinfo.argtype[1] = T_JSONB;
   lfinfo.restype = T_TJSONB;
-  lfinfo.reslinear = false;
   lfinfo.invert = invert;
   lfinfo.discont = CONTINUOUS;
   return tfunc_temporal_base(temp, PointerGetDatum(jb), &lfinfo);
@@ -491,10 +488,8 @@ concat_tjsonb_tjsonb(const Temporal *temp1, const Temporal *temp2)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) datum_jsonb_concat;
-  lfinfo.argtype[0] = T_TJSONB;
-  lfinfo.argtype[1] = T_TJSONB;
+  lfinfo.argtype[0] = lfinfo.argtype[1] = T_TJSONB;
   lfinfo.restype = T_TJSONB;
-  lfinfo.reslinear = false;
   lfinfo.invert = INVERT_NO;
   lfinfo.discont = CONTINUOUS;
   return tfunc_temporal_temporal(temp1, temp2, &lfinfo);
@@ -521,8 +516,7 @@ contains_tjsonb_jsonb(const Temporal *temp, const Jsonb *jb, bool invert)
   lfinfo.func = (varfunc) datum_jsonb_contains;
   lfinfo.argtype[0] = T_TJSONB;
   lfinfo.argtype[1] = T_JSONB;
-  lfinfo.restype = T_TJSONB;
-  lfinfo.reslinear = false;
+  lfinfo.restype = T_TBOOL;
   lfinfo.invert = invert;
   lfinfo.discont = CONTINUOUS;
   return tfunc_temporal_base(temp, PointerGetDatum(jb), &lfinfo);
@@ -543,10 +537,8 @@ contains_tjsonb_tjsonb(const Temporal *temp1, const Temporal *temp2)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) datum_jsonb_contains;
-  lfinfo.argtype[0] = T_TJSONB;
-  lfinfo.argtype[1] = T_TJSONB;
-  lfinfo.restype = T_TJSONB;
-  lfinfo.reslinear = false;
+  lfinfo.argtype[0] = lfinfo.argtype[1] = T_TJSONB;
+  lfinfo.restype = T_TBOOL;
   lfinfo.invert = INVERT_NO;
   lfinfo.discont = CONTINUOUS;
   return tfunc_temporal_temporal(temp1, temp2, &lfinfo);
@@ -562,7 +554,7 @@ contains_tjsonb_tjsonb(const Temporal *temp1, const Temporal *temp2)
  * @param[in] astext True when the output is a temporal text
  */
 Temporal *
-tjson_array_element(const Temporal *temp, int element, bool astext)
+tjson_array_element(const Temporal *temp, int element, bool astext UNUSED)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_TTEXT(temp, NULL);
@@ -745,7 +737,7 @@ tjsonb_exists_array(const Temporal *temp, text **keys, int count, bool any)
  * @param[in] create When true, if the last path step is an array index that
  * is out of range, the new value is added at the beginning of the array if
  * the index is negative, or at the end of the array if it is positive
- * @param[in] handle_null States the null_value_treatment which must be one of
+ * @param[in] handle_null States the null value treatment, which must be one of
  * 'raise_exception', 'use_json_null', 'delete_key', or 'return_target'
  * @param[in] lax True when the lax mode is used
  */
@@ -800,7 +792,7 @@ jsonb_to_alphanum(const Jsonb *jb, const char *key, meosType temptype)
       "JSON key \"%s\" not found", key);
     return (Datum) 0;
   }
-  Datum val;
+  Datum val = (Datum) NULL;
   switch (v->type)
   {
     case jbvBool:
@@ -906,7 +898,8 @@ datum_jsonb_to_alphanum(Datum jb, Datum key, Datum temptype)
  * @note Supported JSONB types: boolean, numeric, string
  */
 Temporal *
-tjsonb_to_talphanum(const Temporal *temp, const char *key, meosType temptype)
+tjsonb_to_talphanum(const Temporal *temp, const char *key, meosType temptype,
+  interpType interp)
 {
   /* Ensure the validity of the arguments */
   assert(temp); assert(key); assert(temp->temptype == T_TJSONB);
@@ -920,6 +913,7 @@ tjsonb_to_talphanum(const Temporal *temp, const char *key, meosType temptype)
   lfinfo.param[0] = PointerGetDatum(key);
   lfinfo.param[1] = temptype;
   lfinfo.restype = temptype;
+  lfinfo.reslinear = (interp == LINEAR);
   return tfunc_temporal(temp, &lfinfo);
 }
 
@@ -933,7 +927,7 @@ tjsonb_to_talphanum(const Temporal *temp, const char *key, meosType temptype)
 Temporal *
 tjsonb_to_tbool(const Temporal *temp, const char *key)
 {
-  return tjsonb_to_talphanum(temp, key, T_TBOOL);
+  return tjsonb_to_talphanum(temp, key, T_TBOOL, STEP);
 }
 
 /**
@@ -945,7 +939,7 @@ tjsonb_to_tbool(const Temporal *temp, const char *key)
 Temporal *
 tjsonb_to_tint(const Temporal *temp, const char *key)
 {
-  return tjsonb_to_talphanum(temp, key, T_TINT);
+  return tjsonb_to_talphanum(temp, key, T_TINT, STEP);
 }
 
 /**
@@ -955,9 +949,9 @@ tjsonb_to_tint(const Temporal *temp, const char *key)
  * @csqlfn #Tjsonb_to_tfloat()
  */
 Temporal *
-tjsonb_to_tfloat(const Temporal *temp, const char *key)
+tjsonb_to_tfloat(const Temporal *temp, const char *key, interpType interp)
 {
-  return tjsonb_to_talphanum(temp, key, T_TFLOAT);
+  return tjsonb_to_talphanum(temp, key, T_TFLOAT, interp);
 }
 
 /**
@@ -969,7 +963,7 @@ tjsonb_to_tfloat(const Temporal *temp, const char *key)
 Temporal *
 tjsonb_to_ttext_key(const Temporal *temp, const char *key)
 {
-  return tjsonb_to_talphanum(temp, key, T_TTEXT);
+  return tjsonb_to_talphanum(temp, key, T_TTEXT, STEP);
 }
 #endif /* MEOS */
 
@@ -1096,11 +1090,11 @@ tjson_extract_path(const Temporal *temp, text **path_elems, int path_len,
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = astext ? (varfunc) &datum_json_extract_path_text :
     (varfunc) &datum_json_extract_path;
-  lfinfo.argtype[0] = T_TEXT;
+  lfinfo.argtype[0] = T_TTEXT;
   lfinfo.numparam = 2;
   lfinfo.param[0] = PointerGetDatum(path_elems);
   lfinfo.param[1] = Int32GetDatum(path_len);
-  lfinfo.restype = T_TEXT;
+  lfinfo.restype = T_TTEXT;
   return tfunc_temporal(temp, &lfinfo);
 }
 
@@ -1129,7 +1123,7 @@ tjsonb_extract_path(const Temporal *temp, text **path_elems, int path_len,
   lfinfo.numparam = 2;
   lfinfo.param[0] = PointerGetDatum(path_elems);
   lfinfo.param[1] = Int32GetDatum(path_len);
-  lfinfo.restype = astext ? T_TEXT : T_TJSONB;
+  lfinfo.restype = astext ? T_TTEXT : T_TJSONB;
   return tfunc_temporal(temp, &lfinfo);
 }
 

@@ -79,7 +79,7 @@ Tpoint_from_ewkt(PG_FUNCTION_ARGS)
 {
   text *wkt_text = PG_GETARG_TEXT_P(0);
   Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);
-  char *wkt = text_to_cstring(wkt_text);
+  char *wkt = pg_text_to_cstring(wkt_text);
   /* Copy the pointer since it will be advanced during parsing */
   const char *wkt_ptr = wkt;
   Temporal *result = tpoint_parse(&wkt_ptr, oid_type(temptypid));
@@ -103,7 +103,7 @@ Datum
 Tspatial_from_ewkt(PG_FUNCTION_ARGS)
 {
   text *wkt_text = PG_GETARG_TEXT_P(0);
-  char *wkt = text_to_cstring(wkt_text);
+  char *wkt = pg_text_to_cstring(wkt_text);
   /* Copy the pointer since it will be advanced during parsing */
   const char *wkt_ptr = wkt;
   Oid temptypid = get_fn_expr_rettype(fcinfo->flinfo);
@@ -281,7 +281,7 @@ Tspatial_transform_pipeline(PG_FUNCTION_ARGS)
   text *pipelinetxt = PG_GETARG_TEXT_P(1);
   int32_t srid = PG_GETARG_INT32(2);
   bool is_forward = PG_GETARG_BOOL(3);
-  char *pipelinestr = text_to_cstring(pipelinetxt);
+  char *pipelinestr = pg_text_to_cstring(pipelinetxt);
   Temporal *result = tspatial_transform_pipeline(temp, pipelinestr, srid,
     is_forward);
   pfree(pipelinestr);

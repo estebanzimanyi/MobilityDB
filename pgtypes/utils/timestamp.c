@@ -378,7 +378,7 @@ static int
 parse_sane_timezone(struct pg_tm *tm, text *zone)
 {
   char tzname[TZ_STRLEN_MAX + 1];
-  text_to_cstring_buffer(zone, tzname, sizeof(tzname));
+  pg_text_to_cstring_buffer(zone, tzname, sizeof(tzname));
 
   /*
    * Look up the requested timezone.  First we try to interpret it as a
@@ -447,7 +447,7 @@ static pg_tz *
 lookup_timezone(text *zone)
 {
   char tzname[TZ_STRLEN_MAX + 1];
-  text_to_cstring_buffer(zone, tzname, sizeof(tzname));
+  pg_text_to_cstring_buffer(zone, tzname, sizeof(tzname));
   return DecodeTimezoneNameToTz(tzname);
 }
 
@@ -5739,7 +5739,7 @@ pg_timestamp_zone(Timestamp ts, const text *zone)
   /*
    * Look up the requested timezone.
    */
-  text_to_cstring_buffer(zone, tzname, sizeof(tzname));
+  pg_text_to_cstring_buffer(zone, tzname, sizeof(tzname));
   int val, tz;
   pg_tz *tzp;
   int type = DecodeTimezoneName(tzname, &val, &tzp);
@@ -5981,7 +5981,7 @@ pg_timestamptz_zone(TimestampTz tstz, const text *zone)
 
   /* Look up the requested timezone */
   char tzname[TZ_STRLEN_MAX + 1];
-  text_to_cstring_buffer(zone, tzname, sizeof(tzname));
+  pg_text_to_cstring_buffer(zone, tzname, sizeof(tzname));
 
   Timestamp result;
   int val;
@@ -6087,7 +6087,7 @@ pg_timestamptz_izone(TimestampTz tstz, const Interval *zone)
 TimestampTz
 timestamp_at_local(Timestamp ts)
 {
-  return timestamp_to_timestamptz(ts);
+  return timestamp_at_local(ts);
 }
 #endif
 TimestampTz
@@ -6103,7 +6103,14 @@ pg_timestamp_at_local(Timestamp ts)
  * @note Derived from PostgreSQL function @p timestamptz_at_local()
  */
 TimestampTz
-timestamptz_at_local(TimestampTz tstz)
+#if MEOS
+TimestampTz
+timestamptz_at_local(Timestamp ts)
+{
+  return pg_timestamptz_at_local(ts);
+}
+#endif
+pg_timestamptz_at_local(TimestampTz tstz)
 {
   return timestamptz_to_timestamp(tstz);
 }

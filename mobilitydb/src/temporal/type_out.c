@@ -204,7 +204,7 @@ static uint8_t
 get_endian_variant(const text *txt)
 {
   uint8_t variant = 0;
-  char *endian = text_to_cstring(txt);
+  char *endian = pg_text_to_cstring(txt);
   /* When the endian is not given the default value is an empty text */
   if (strlen(endian) == 0)
     ;

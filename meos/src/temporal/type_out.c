@@ -195,7 +195,7 @@ double_as_mfjson_sb(stringbuffer_t *sb, double d, int precision)
 static void
 text_as_mfjson_sb(stringbuffer_t *sb, const text *txt)
 {
-  char *str = text_to_cstring(txt);
+  char *str = pg_text_to_cstring(txt);
   stringbuffer_aprintf(sb, "\"%s\"", str);
   pfree(str);
   return;
@@ -1482,7 +1482,7 @@ text_to_wkb_buf(const text *txt, uint8_t *buf, uint8_t variant)
 
   /*
    * Get the text data directly from the varlena structure.
-   * This avoids the memory allocation of text_to_cstring.
+   * This avoids the memory allocation of pg_text_to_cstring.
    */
   size_t size = VARSIZE_ANY_EXHDR(txt);
   char *str = VARDATA(txt);
