@@ -389,7 +389,7 @@
 
 			<itemizedlist>
 				<listitem>
-					<para><link linkend="setspan_eq"><varname>=</varname>, <varname>&lt;&gt;</varname>, <varname>&lt;</varname>, <varname>&gt;</varname>, <varname>&lt;=</varname>, <varname>&gt;=</varname></link>: Traditional comparisons</para>
+					<para><link linkend="setspan_eq"><varname>=</varname>, <varname>&lt;&gt;</varname>, <varname>&lt;</varname>, <varname>&gt;</varname>, <varname>&lt;=</varname>, <varname>&gt;=</varname>, <varname>set_cmp</varname>, <varname>span_cmp</varname>, and <varname>spanset_cmp</varname></link>: Traditional comparisons</para>
 				</listitem>
 			</itemizedlist>
 		</sect2>
@@ -614,7 +614,7 @@
 			<title>Comparisons</title>
 			<itemizedlist>
 				<listitem>
-				<para><link linkend="box_eq"><varname>=</varname>, <varname>&lt;&gt;</varname>, <varname>&lt;</varname>, <varname>&gt;</varname>, <varname>&lt;=</varname>, <varname>&gt;=</varname></link>: Traditional comparisons</para>
+				<para><link linkend="box_eq"><varname>=</varname>, <varname>&lt;&gt;</varname>, <varname>&lt;</varname>, <varname>&gt;</varname>, <varname>&lt;=</varname>, <varname>&gt;=</varname><varname>tbox_cmp</varname>, </link>: Traditional comparisons</para>
 				</listitem>
 			</itemizedlist>
 		</sect2>
@@ -790,6 +790,10 @@
 				</listitem>
 
 				<listitem>
+					<para><link linkend="beforeTimestamp"><varname>beforeTimestamp</varname>, <varname>afterTimestamp</varname></link>: Keep the instants of a temporal value that are before/after or equal a timestamp</para>
+				</listitem>
+
+				<listitem>
 				<para><link linkend="appendInstant"><varname>appendInstant</varname></link>: Append a temporal instant to a temporal value</para>
 				</listitem>
 
@@ -822,7 +826,7 @@
 
 			<itemizedlist>
 				<listitem>
-				<para><link linkend="ttype_eq"><varname>=</varname>, <varname>&lt;&gt;</varname>, <varname>&lt;</varname>, <varname>&gt;</varname>, <varname>&lt;=</varname>, <varname>&gt;=</varname></link>: Traditional comparisons</para>
+				<para><link linkend="ttype_eq"><varname>=</varname>, <varname>&lt;&gt;</varname>, <varname>&lt;</varname>, <varname>&gt;</varname>, <varname>&lt;=</varname>, <varname>&gt;=</varname>, <varname>ttype_cmp</varname></link>: Traditional comparisons</para>
 				</listitem>
 
 				<listitem>
