@@ -679,11 +679,11 @@ tsequence_in(const char *str, meosType temptype, interpType interp)
  * @param[in] component True if the output string is a component of a
  * temporal sequence set and thus no interpolation string at the begining of
  * the string should be output
- * @param[in] value_out Function called to output the base value
+ * @param[in] base_out_fn Function called to output the base value
  */
 char *
 tsequence_to_string(const TSequence *seq, int maxdd, bool component,
-  outfunc value_out)
+  outfunc base_out_fn)
 {
   assert(seq);
   assert(maxdd >= 0);
@@ -700,7 +700,7 @@ tsequence_to_string(const TSequence *seq, int maxdd, bool component,
   for (int i = 0; i < seq->count; i++)
   {
     strings[i] = tinstant_to_string(TSEQUENCE_INST_N(seq, i), maxdd,
-      value_out);
+      base_out_fn);
     outlen += strlen(strings[i]) + 1;
   }
   char open, close;

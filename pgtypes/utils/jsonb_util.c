@@ -36,7 +36,7 @@
  * @brief Global variable that keeps the elements to free after a JSON parsing
  */
 
-json_to_free *JSON_TO_FREE = NULL;
+static json_to_free *JSON_TO_FREE = NULL;
 
 /**
  * @brief Get the global variable that keeps the elements to free after

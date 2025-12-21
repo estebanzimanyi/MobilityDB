@@ -50,7 +50,7 @@ extern double tnumberinst_double(const TInstant *inst);
 /* Input/output functions */
 
 extern char *tinstant_to_string(const TInstant *inst, int maxdd,
-  outfunc value_out);
+  outfunc base_out_fn);
 
 /* Restriction Functions */
 

@@ -307,14 +307,14 @@ extern int date2j(int year, int month, int day);
 
 extern int pg_ParseDateTime(const char *timestr, char *workbuf, size_t buflen,
   char **field, int *ftype, int maxfields, int *numfields);
-extern int  DecodeDateTime(char **field, int *ftype, int nf, int *dtype,
+extern int pg_DecodeDateTime(char **field, int *ftype, int nf, int *dtype,
   struct pg_tm *tm, fsec_t *fsec, int *tzp, DateTimeErrorExtra *extra);
-extern int DecodeTimezone(const char *str, int *tzp);
-extern int DecodeTimeOnly(char **field, int *ftype, int nf, int *dtype,
+extern int pg_DecodeTimezone(const char *str, int *tzp);
+extern int pg_DecodeTimeOnly(char **field, int *ftype, int nf, int *dtype,
   struct pg_tm *tm, fsec_t *fsec, int *tzp, DateTimeErrorExtra *extra);
-extern int DecodeInterval(char **field, int *ftype, int nf, int range,
+extern int pg_DecodeInterval(char **field, int *ftype, int nf, int range,
   int *dtype, struct pg_itm_in *itm_in);
-extern int DecodeISO8601Interval(char *str, int *dtype,
+extern int pg_DecodeISO8601Interval(char *str, int *dtype,
   struct pg_itm_in *itm_in);
 
 extern void pg_DateTimeParseError(int dterr, DateTimeErrorExtra *extra,

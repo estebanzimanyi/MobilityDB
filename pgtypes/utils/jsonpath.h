@@ -17,7 +17,7 @@
 // #include "executor/tablefunc.h"
 // #include "fmgr.h"
 #include "nodes/pg_list.h"
-// #include "nodes/primnodes.h"
+#include "nodes/primnodes.h"
 #include "utils/jsonb.h"
 
 typedef struct

@@ -109,7 +109,6 @@
 
 // /* Conversion functions */
 
-// extern Jsonb *cstring_to_jsonb(const char *str);
 // extern bool jsonb_to_bool(const Jsonb *jb);
 // extern char *jsonb_to_cstring(const Jsonb *jb);
 // extern float4 jsonb_to_float4(const Jsonb *jb);

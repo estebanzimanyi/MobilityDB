@@ -185,7 +185,7 @@ bool_to_text(bool b)
     str = "true";
   else
     str = "false";
-  return cstring_to_text(str);
+  return pg_cstring_to_text(str);
 }
 
 /*****************************************************************************

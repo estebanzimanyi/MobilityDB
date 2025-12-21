@@ -828,7 +828,7 @@ jsonb_to_alphanum(const Jsonb *jb, const char *key, meosType temptype)
       else if (temptype == T_TTEXT)
       {
         char *cstr = pg_numeric_out(v->val.numeric);
-        val = PointerGetDatum(cstring_to_text(cstr));
+        val = PointerGetDatum(pg_cstring_to_text(cstr));
         pfree(cstr);
       }
       break;
@@ -858,7 +858,7 @@ jsonb_to_alphanum(const Jsonb *jb, const char *key, meosType temptype)
       }
       else /* temptype == T_TTEXT */
       {
-        text *txt = cstring_to_text(buf);
+        text *txt = pg_cstring_to_text(buf);
         val = PointerGetDatum(txt);
       }
       pfree(buf);

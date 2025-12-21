@@ -267,6 +267,8 @@ extern bool ne_int64_int64(int64 num1, int64 num2);
 extern Numeric numeric_copy(Numeric num);
 extern Numeric pg_numeric_in(const char *str, int32 typmod);
 extern char *pg_numeric_out(Numeric num);
+extern int32 pg_numeric_typmodin(int32 *tl, int n);
+extern char *pg_numeric_typmodout(int32 typmod);
 extern Numeric pg_numeric(Numeric num, int32 typmod);
 extern Numeric pg_numeric_abs(Numeric num);
 extern Numeric pg_numeric_uplus(Numeric num);
@@ -436,13 +438,14 @@ extern int pg_float8_cmp(float8 a, float8 b);
 
 extern uint32 char_hash(char c);
 extern uint64 char_hash_extended(char c, uint64 seed);
-extern text *cstring_to_text(const char *str);
+extern text *pg_cstring_to_text(const char *str);
 extern text *int32_to_bin(int32 num);
 extern text *int32_to_hex(int32 num);
 extern text *int32_to_oct(int32 num);
 extern text *int64_to_bin(int64 num);
 extern text *int64_to_hex(int64 num);
 extern text *int64_to_oct(int64 num);
+extern text *pg_cstring_to_text(const char *str);
 extern text *pg_icu_unicode_version(void);
 extern text *pg_text_concat(text **textarr, int count);
 extern text *pg_text_concat_ws(text **textarr, int count, const text *sep);
@@ -715,6 +718,7 @@ extern Interval *pg_interval_trunc(const Interval *interv, const text *units);
 extern text *pg_json_in(const char *str);
 extern char *pg_json_out(const text *json);
 extern Jsonb *pg_jsonb_from_text(const text *txt, bool unique_keys);
+extern text *pg_jsonb_to_text(const Jsonb *jb);
 extern Jsonb *pg_jsonb_in(const char *str);
 extern char *pg_jsonb_out(const Jsonb *jb);
 
@@ -728,7 +732,6 @@ extern Jsonb *pg_jsonb_make_two_arg(text **keys, text **values, int count);
 
 /* Conversion functions */
 
-extern Jsonb *cstring_to_jsonb(const char *str);
 
 /* Accessor functions */
 

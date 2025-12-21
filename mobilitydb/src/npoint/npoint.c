@@ -266,7 +266,7 @@ Npoint_as_text_common(FunctionCallInfo fcinfo, bool extended)
     dbl_dig_for_wkt = PG_GETARG_INT32(1);
   char *str = extended ? npoint_as_ewkt(np, dbl_dig_for_wkt) : 
     npoint_as_text(np, dbl_dig_for_wkt);
-  text *result = cstring_to_text(str);
+  text *result = pg_cstring_to_text(str);
   pfree(str);
   PG_RETURN_TEXT_P(result);
 }

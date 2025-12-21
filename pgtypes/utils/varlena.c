@@ -24,6 +24,7 @@
 #include "common/unicode_norm.h"
 #include "common/unicode_version.h"
 #include "lib/stringinfo.h"
+#include "utils/builtins.h"
 #include "utils/date.h"
 #include "utils/jsonb.h"
 #include "utils/mb/pg_wchar.h"
@@ -174,11 +175,18 @@ static void appendStringInfoText(StringInfo str, const text *t);
 /*
  * cstring_to_text_with_len
  *
- * Same as cstring_to_text except the caller specifies the string length;
+ * Same as pg_cstring_to_text except the caller specifies the string length;
  * the string need not be null_terminated.
  */
+#if MEOS
 text *
 cstring_to_text_with_len(const char *str, size_t len)
+{
+  return pg_cstring_to_text_with_len(str, len);
+}
+#endif
+text *
+pg_cstring_to_text_with_len(const char *str, size_t len)
 {
   text *result = (text *) palloc(len + VARHDRSZ);
   SET_VARSIZE(result, len + VARHDRSZ);
@@ -192,10 +200,17 @@ cstring_to_text_with_len(const char *str, size_t len)
  * @param[in] str String
  * @note Function taken from PostGIS file `lwgeom_in_geojson.c`
  */
+ #if MEOS
 text *
 cstring_to_text(const char *str)
 {
-  return cstring_to_text_with_len(str, strlen(str));
+  return pg_cstring_to_text_with_len(str, strlen(str));
+}
+#endif
+text *
+pg_cstring_to_text(const char *str)
+{
+  return pg_cstring_to_text_with_len(str, strlen(str));
 }
 
 /**
@@ -266,7 +281,7 @@ text *
 text_in(const char *str)
 {
   assert(str);
-  return cstring_to_text((char *) str);
+  return pg_cstring_to_text((char *) str);
 }
 
 /**
@@ -550,7 +565,7 @@ text_substring(const text *txt, int32 start, int32 length,
        * string.
        */
       if (E < 1)
-        return cstring_to_text("");
+        return pg_cstring_to_text("");
 
       L1 = E - S1;
     }
@@ -611,7 +626,7 @@ text_substring(const text *txt, int32 start, int32 length,
        * string.
        */
       if (E < 1)
-        return cstring_to_text("");
+        return pg_cstring_to_text("");
 
       /*
        * if E is past the end of the string, the tuple toaster will
@@ -639,7 +654,7 @@ text_substring(const text *txt, int32 start, int32 length,
     {
       if (slice != txt)
         pfree(slice);
-      return cstring_to_text("");
+      return pg_cstring_to_text("");
     }
 
     /* Now we can get the actual length of the slice in MB characters */
@@ -654,7 +669,7 @@ text_substring(const text *txt, int32 start, int32 length,
     {
       if (slice != txt)
         pfree(slice);
-      return cstring_to_text("");
+      return pg_cstring_to_text("");
     }
 
     /*
@@ -1657,7 +1672,7 @@ text_replace(const text *txt, const text *from, const text *to)
   appendBinaryStringInfo(&str, start_ptr, chunk_len);
   text_position_cleanup(&state);
 
-  text *result = cstring_to_text_with_len(str.data, str.len);
+  text *result = pg_cstring_to_text_with_len(str.data, str.len);
   pfree(str.data);
 
   return (result);
@@ -1726,7 +1741,7 @@ text_split_part(const text *txt, const text *sep, int fldnum)
 
   /* return empty string for empty input string */
   if (txt_len < 1)
-    return cstring_to_text("");
+    return pg_cstring_to_text("");
 
   /* handle empty field separator */
   if (sep_len < 1)
@@ -1735,7 +1750,7 @@ text_split_part(const text *txt, const text *sep, int fldnum)
     if (fldnum == 1 || fldnum == -1)
       return text_copy(txt);
     else
-      return cstring_to_text("");
+      return pg_cstring_to_text("");
   }
 
   /* find the first field separator */
@@ -1749,7 +1764,7 @@ text_split_part(const text *txt, const text *sep, int fldnum)
     if (fldnum == 1 || fldnum == -1)
       return text_copy(txt);
     else
-      return (cstring_to_text(""));
+      return (pg_cstring_to_text(""));
   }
 
   /*
@@ -1770,7 +1785,7 @@ text_split_part(const text *txt, const text *sep, int fldnum)
       start_ptr = text_position_get_match_ptr(&state) + state.last_match_len;
       end_ptr = VARDATA_ANY(txt) + txt_len;
       text_position_cleanup(&state);
-      return cstring_to_text_with_len(start_ptr, end_ptr - start_ptr);
+      return pg_cstring_to_text_with_len(start_ptr, end_ptr - start_ptr);
     }
 
     /* else, convert fldnum to positive notation */
@@ -1780,7 +1795,7 @@ text_split_part(const text *txt, const text *sep, int fldnum)
     if (fldnum <= 0)
     {
       text_position_cleanup(&state);
-      return cstring_to_text("");
+      return pg_cstring_to_text("");
     }
 
     /* reset to pointing at first match, but now with positive fldnum */
@@ -1811,16 +1826,16 @@ text_split_part(const text *txt, const text *sep, int fldnum)
     if (fldnum == 1)
     {
       int last_len = start_ptr - VARDATA_ANY(txt);
-      result = cstring_to_text_with_len(start_ptr,
+      result = pg_cstring_to_text_with_len(start_ptr,
         txt_len - last_len);
     }
     else
-      result = cstring_to_text("");
+      result = pg_cstring_to_text("");
   }
   else
   {
     /* non-last field requested */
-    result = cstring_to_text_with_len(start_ptr, end_ptr - start_ptr);
+    result = pg_cstring_to_text_with_len(start_ptr, end_ptr - start_ptr);
   }
   return result;
 }
@@ -1848,7 +1863,7 @@ convert_to_base(uint64 value, int base)
     value /= base;
   } while (ptr > buf && value);
 
-  return cstring_to_text_with_len(ptr, end - ptr);
+  return pg_cstring_to_text_with_len(ptr, end - ptr);
 }
 
 /**
@@ -1938,7 +1953,7 @@ textarr_to_text(text **textarr, int count, const char *sep,
 {
   /* if there are no elements, return an empty string */
   if (count == 0)
-    return cstring_to_text_with_len("", 0);
+    return pg_cstring_to_text_with_len("", 0);
 
   StringInfoData buf;
   initStringInfo(&buf);
@@ -1971,7 +1986,7 @@ textarr_to_text(text **textarr, int count, const char *sep,
       pfree(value); // MEOS
     }
   }
-  text *result = cstring_to_text_with_len(buf.data, buf.len);
+  text *result = pg_cstring_to_text_with_len(buf.data, buf.len);
   pfree(buf.data);
   return result;
 }
@@ -2039,7 +2054,7 @@ pg_text_left(const text *txt, int n)
     int len = VARSIZE_ANY_EXHDR(txt);
     n = pg_mbstrlen_with_len(p, len) + n;
     int rlen = pg_mbcharcliplen(p, len, n);
-    return cstring_to_text_with_len(p, rlen);
+    return pg_cstring_to_text_with_len(p, rlen);
   }
   else
     return text_substring(txt, 1, n, false);
@@ -2068,7 +2083,7 @@ pg_text_right(const text *txt, int n)
   else
     n = pg_mbstrlen_with_len(p, len) - n;
   int off = pg_mbcharcliplen(p, len, n);
-  return cstring_to_text_with_len(p + off, len - off);
+  return pg_cstring_to_text_with_len(p + off, len - off);
 }
 
 /**
@@ -2311,7 +2326,7 @@ pg_text_format(Datum *elements, int nitems, const text *fmt)
     pfree(nulls);
 
   /* Generate results. */
-  text *result = cstring_to_text_with_len(str.data, str.len);
+  text *result = pg_cstring_to_text_with_len(str.data, str.len);
   pfree(str.data);
 
   return result;
@@ -2604,7 +2619,7 @@ unicode_version(void)
 text *
 pg_unicode_version(void)
 {
-  return cstring_to_text(PG_UNICODE_VERSION);
+  return pg_cstring_to_text(PG_UNICODE_VERSION);
 }
 
 /**
@@ -2623,7 +2638,7 @@ text *
 pg_icu_unicode_version(void)
 {
 #ifdef USE_ICU
-  return cstring_to_text(U_UNICODE_VERSION);
+  return pg_cstring_to_text(U_UNICODE_VERSION);
 #else
   return NULL;
 #endif
@@ -2981,7 +2996,7 @@ pg_unistr(const text *txt)
   if (pair_first)
     goto invalid_pair;
 
-  text *result = cstring_to_text_with_len(str.data, str.len);
+  text *result = pg_cstring_to_text_with_len(str.data, str.len);
   pfree(str.data);
   return result;
 

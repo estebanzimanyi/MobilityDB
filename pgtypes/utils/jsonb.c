@@ -24,6 +24,7 @@
 #include "common/int.h"
 #include "common/jsonapi.h"
 #include "nodes/nodes.h"
+#include "utils/builtins.h"
 #include "utils/date.h"
 #include "utils/json.h"
 #include "utils/jsonb.h"
@@ -116,7 +117,7 @@ pg_jsonb_out(const Jsonb *jb)
   StringInfo out = makeStringInfo(); // MEOS
   char *str = JsonbToCString(out, &((Jsonb *)jb)->root, VARSIZE(jb));
   char *result = pstrdup(str);
-  pfree(out); pfree(str);
+  destroyStringInfo(out); pfree(str);
   return (void *) result;
 }
 
@@ -139,6 +140,29 @@ pg_jsonb_from_text(const text *txt, bool unique_keys)
   return jsonb_from_cstring(VARDATA_ANY(txt), VARSIZE_ANY_EXHDR(txt),
     unique_keys, NULL);
 }
+
+/**
+ * @ingroup meos_json_base_inout
+ * @brief Return the text representation of a JSONB value
+ */
+#if MEOS
+text *
+jsonb_to_text(const Jsonb *jb)
+{
+  return pg_jsonb_to_text(jb);
+}
+#endif /* MEOS */
+text *
+pg_jsonb_to_text(const Jsonb *jb)
+{
+  StringInfo out = makeStringInfo();
+  char *str = JsonbToCString(out, (JsonbContainer *) &jb->root, VARSIZE(jb));
+  text *result = pg_cstring_to_text_with_len(str, out->len);
+  destroyStringInfo(out); pfree(str);
+  return result;
+}
+
+/*****************************************************************************/
 
 /*
  * Get the type name of a jsonb container.
@@ -219,7 +243,7 @@ text *
 jsonb_typeof_internal(Jsonb *in)
 {
   const char *result = JsonbContainerTypeName(&in->root);
-  return cstring_to_text(result);
+  return pg_cstring_to_text(result);
 }
 
 /*
@@ -487,9 +511,13 @@ JsonbToCStringWorker(StringInfo out, JsonbContainer *in, int estimated_len,
   bool use_indent = false;
   bool raw_scalar = false;
   bool last_was_key = false;
+  bool tofree = false;
 
   if (! out)
+  {
     out = makeStringInfo();
+    tofree = false;
+  }
 
   enlargeStringInfo(out, (estimated_len >= 0) ? estimated_len : 64);
   JsonbIterator *it = JsonbIteratorInit(in);
@@ -500,7 +528,7 @@ JsonbToCStringWorker(StringInfo out, JsonbContainer *in, int estimated_len,
     switch (type)
     {
       case WJB_BEGIN_ARRAY:
-        if (!first)
+        if (! first)
           appendBinaryStringInfo(out, ", ", ispaces);
 
         if (!v.val.array.rawScalar)
@@ -515,7 +543,7 @@ JsonbToCStringWorker(StringInfo out, JsonbContainer *in, int estimated_len,
         level++;
         break;
       case WJB_BEGIN_OBJECT:
-        if (!first)
+        if (! first)
           appendBinaryStringInfo(out, ", ", ispaces);
 
         add_indent(out, use_indent && !last_was_key, level);
@@ -525,7 +553,7 @@ JsonbToCStringWorker(StringInfo out, JsonbContainer *in, int estimated_len,
         level++;
         break;
       case WJB_KEY:
-        if (!first)
+        if (! first)
           appendBinaryStringInfo(out, ", ", ispaces);
         first = true;
 
@@ -554,7 +582,7 @@ JsonbToCStringWorker(StringInfo out, JsonbContainer *in, int estimated_len,
         }
         break;
       case WJB_ELEM:
-        if (!first)
+        if (! first)
           appendBinaryStringInfo(out, ", ", ispaces);
         first = false;
 
@@ -587,7 +615,8 @@ JsonbToCStringWorker(StringInfo out, JsonbContainer *in, int estimated_len,
   }
 
   Assert(level == 0);
-  /* pfree(out); // WE CANNOT pfree */
+  if (tofree)
+    destroyStringInfo(out);
   return out->data;
 }
 
@@ -762,49 +791,6 @@ pg_jsonb_make_two_arg(text **keys, text **values, int count)
 /*****************************************************************************
  * Conversion functions
  *****************************************************************************/
-
-/**
- * @ingroup meos_json_base_conversion
- * @brief Convert a C string into a jsonb object
- * @param[in] str String, possibly with escaped quotes
- */
-Jsonb *
-cstring_to_jsonb(const char *str)
-{
-  assert(str);
-
-  /* Step 1: De-escape \" to " */
-  size_t len = strlen(str);
-  char *clean = palloc(len + 1);
-  int j = 0;
-  for (size_t i = 0; i < len; i++)
-  {
-    if (str[i] == '\\' && str[i + 1] == '"')
-    {
-      clean[j++] = '"';
-      i++;
-    }
-    else
-    {
-      clean[j++] = str[i];
-    }
-  }
-  clean[j] = '\0';
-
-  /* Step 2: Strip outer quotes if any */
-  len = strlen(clean);
-  if (len >= 2 && clean[0] == '"' && clean[len - 1] == '"')
-  {
-    char *unquoted = palloc(len - 1);
-    memcpy(unquoted, clean + 1, len - 2);
-    unquoted[len - 2] = '\0';
-    pfree(clean);
-    clean = unquoted;
-  }
-
-  /* Step 3: Parse JSONB */
-  return pg_jsonb_in(clean);
-}
 
 /**
  * @ingroup meos_json_base_conversion
@@ -1052,7 +1038,7 @@ JsonbUnquote(Jsonb *jb)
     StringInfo out = makeStringInfo(); // MEOS
     char *str = JsonbToCString(out, (JsonbContainer *) &jb->root, VARSIZE(jb));
     char *result = pstrdup(str);
-    pfree(out); pfree(str);
+    destroyStringInfo(out); pfree(str);
     return (void *) result;
   }
   return JsonbToCString(NULL, &jb->root, VARSIZE(jb));

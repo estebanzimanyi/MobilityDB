@@ -1003,13 +1003,13 @@ numeric(Numeric num, int32 typmod)
 Numeric
 pg_numeric(Numeric num, int32 typmod)
 {
-  Numeric    new;
-  int      precision;
-  int      scale;
-  int      ddigits;
-  int      maxdigits;
-  int      dscale;
-  NumericVar  var;
+  Numeric new;
+  int precision;
+  int scale;
+  int ddigits;
+  int maxdigits;
+  int dscale;
+  NumericVar var;
 
   /*
    * Handle NaN and infinities: if apply_typmod_special doesn't complain,
@@ -1077,20 +1077,66 @@ pg_numeric(Numeric num, int32 typmod)
 }
 
 /**
+ * @brief Return the integer that represents a typmod string
+ * @note Derived from PostgreSQL function @p numerictypmodin()
+ */
+int32
+pg_numeric_typmodin(int32 *tl, int n)
+{
+  int32 result;
+  if (n == 2)
+  {
+    if (tl[0] < 1 || tl[0] > NUMERIC_MAX_PRECISION)
+    {
+      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+        "NUMERIC precision %d must be between 1 and %d",
+        tl[0], NUMERIC_MAX_PRECISION);
+      return INT_MAX;
+    }
+    if (tl[1] < NUMERIC_MIN_SCALE || tl[1] > NUMERIC_MAX_SCALE)
+    {
+      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+        "NUMERIC scale %d must be between %d and %d",
+        tl[1], NUMERIC_MIN_SCALE, NUMERIC_MAX_SCALE);
+      return INT_MAX;
+    }
+    result = make_numeric_typmod(tl[0], tl[1]);
+  }
+  else if (n == 1)
+  {
+    if (tl[0] < 1 || tl[0] > NUMERIC_MAX_PRECISION)
+    {
+      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+        "NUMERIC precision %d must be between 1 and %d",
+        tl[0], NUMERIC_MAX_PRECISION);
+      return INT_MAX;
+    }
+    /* scale defaults to zero */
+    result = make_numeric_typmod(tl[0], 0);
+  }
+  else
+  {
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+     "invalid NUMERIC type modifier");
+    return INT_MAX;
+  }
+  return result;
+}
+
+/**
  * @brief Return the character string that represents a typmod value
  * @note Derived from PostgreSQL function @p numerictypmodout()
  */
 char *
-numeric_typmodout(int32 typmod)
+pg_numeric_typmodout(int32 typmod)
 {
-  char *res = (char *) palloc(64);
+  char *result = (char *) palloc(64);
   if (is_valid_numeric_typmod(typmod))
-    snprintf(res, 64, "(%d,%d)", numeric_typmod_precision(typmod),
+    snprintf(result, 64, "(%d,%d)", numeric_typmod_precision(typmod),
       numeric_typmod_scale(typmod));
   else
-    *res = '\0';
-
-  return res;
+    *result = '\0';
+  return result;
 }
 
 /* ----------------------------------------------------------------------
@@ -1172,11 +1218,10 @@ pg_numeric_uminus(Numeric num)
    * Do it the easy way directly on the packed format
    */
   Numeric res = duplicate_numeric(num);
-
   if (NUMERIC_IS_SPECIAL(num))
   {
     /* Flip the sign, if it's Inf or -Inf */
-    if (!NUMERIC_IS_NAN(num))
+    if (! NUMERIC_IS_NAN(num))
       res->choice.n_short.n_header =
         num->choice.n_short.n_header ^ NUMERIC_INF_SIGN_MASK;
   }

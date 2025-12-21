@@ -34,9 +34,9 @@
 // #include "utils/numeric.h"
 // #include "utils/syscache.h"
 
-#if 0 /* NOT USED */
-
 static char *printTypmod(const char *typname, int32 typmod, Oid typmodout);
+
+#if 0 /* NOT USED */
 
 /*
  * SQL function: format_type(type_oid, typemod)
@@ -69,7 +69,7 @@ format_type(Oid type_oid, int32 typemod)
 {
   bits16 flags = FORMAT_TYPE_ALLOW_INVALID | FORMAT_TYPE_TYPEMOD_GIVEN;
   char *result = format_type_extended(type_oid, typemod, flags);
-  return cstring_to_text(result);
+  return pg_cstring_to_text(result);
 }
 
 /*
@@ -102,10 +102,10 @@ format_type_extended(Oid type_oid, int32 typemod, bits16 flags)
 {
   HeapTuple  tuple;
   Form_pg_type typeform;
-  Oid      array_base_type;
-  bool    is_array;
-  char     *buf;
-  bool    with_typemod;
+  Oid array_base_type;
+  bool is_array;
+  char *buf;
+  bool with_typemod;
 
   if (type_oid == InvalidOid)
   {
@@ -116,7 +116,7 @@ format_type_extended(Oid type_oid, int32 typemod, bits16 flags)
   }
 
   tuple = SearchSysCache1(TYPEOID, ObjectIdGetDatum(type_oid));
-  if (!HeapTupleIsValid(tuple))
+  if (! HeapTupleIsValid(tuple))
   {
     if ((flags & FORMAT_TYPE_INVALID_AS_NULL) != 0)
       return NULL;
@@ -422,8 +422,7 @@ type_maximum_size(Oid type_oid, int32 typemod)
 
       // /* typemod is in characters not bytes */
       // return (typemod - VARHDRSZ) *
-        // pg_encoding_max_length(GetDatabaseEncoding())
-        // + VARHDRSZ;
+        // pg_encoding_max_length(GetDatabaseEncoding()) + VARHDRSZ;
 
     case NUMERICOID:
       return numeric_maximum_size(typemod);
@@ -431,8 +430,8 @@ type_maximum_size(Oid type_oid, int32 typemod)
     case VARBITOID:
     case BITOID:
       /* typemod is the (max) number of bits */
-      return (typemod + (BITS_PER_BYTE - 1)) / BITS_PER_BYTE
-        + 2 * sizeof(int32);
+      return (typemod + (BITS_PER_BYTE - 1)) / BITS_PER_BYTE + 
+        2 * sizeof(int32);
   }
 
   /* Unknown type, or unlimited-width type such as 'text' */
@@ -474,7 +473,7 @@ oidvectortypes(oidvector *oidArray)
     left -= slen;
   }
 
-  return cstring_to_text(result);
+  return pg_cstring_to_text(result);
 }
 
 #endif /* NOT USED */

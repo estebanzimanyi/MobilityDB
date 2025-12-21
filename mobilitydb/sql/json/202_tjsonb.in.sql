@@ -492,6 +492,16 @@ CREATE FUNCTION minusTime(tjsonb, tstzspanset)
   AS 'MODULE_PATHNAME', 'Temporal_minus_tstzspanset'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION beforeTimestamp(tjsonb, timestamptz, strict bool DEFAULT TRUE)
+  RETURNS tjsonb
+  AS 'MODULE_PATHNAME', 'Temporal_before_timestamptz'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION afterTimestamp(tjsonb, timestamptz, strict bool DEFAULT TRUE)
+  RETURNS tjsonb
+  AS 'MODULE_PATHNAME', 'Temporal_after_timestamptz'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 /*****************************************************************************
  * Unnest Function
  *****************************************************************************/

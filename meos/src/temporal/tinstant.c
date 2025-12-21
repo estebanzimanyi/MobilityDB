@@ -153,16 +153,16 @@ tinstant_in(const char *str, meosType temptype)
  * @brief Return the Well-Known Text (WKT) representation of a temporal instant
  * @param[in] inst Temporal instant
  * @param[in] maxdd Maximum number of decimal digits
- * @param[in] value_out Function called to output the base value depending on
+ * @param[in] base_out_fn Function called to output the base value depending on
  * its type
  */
 char *
-tinstant_to_string(const TInstant *inst, int maxdd, outfunc value_out)
+tinstant_to_string(const TInstant *inst, int maxdd, outfunc base_out_fn)
 {
   assert(inst); assert(maxdd >= 0);
   char *t = pg_timestamptz_out(inst->t);
   meosType basetype = temptype_basetype(inst->temptype);
-  char *value = value_out(tinstant_value_p(inst), basetype, maxdd);
+  char *value = base_out_fn(tinstant_value_p(inst), basetype, maxdd);
   size_t size = strlen(value) + strlen(t) + 2;
   char *result = palloc(size);
   snprintf(result, size, "%s@%s", value, t);

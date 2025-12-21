@@ -131,7 +131,7 @@ pg_date_in(const char *str)
   dterr = pg_ParseDateTime((char *) str, workbuf, sizeof(workbuf), field,
     ftype, MAXDATEFIELDS, &nf);
   if (dterr == 0)
-    dterr = DecodeDateTime(field, ftype, nf, &dtype, tm, &fsec, &tzp, &extra);
+    dterr = pg_DecodeDateTime(field, ftype, nf, &dtype, tm, &fsec, &tzp, &extra);
   if (dterr != 0)
   {
     pg_DateTimeParseError(dterr, &extra, (char *) str, "date", NULL);
@@ -230,19 +230,15 @@ DateADT
 pg_date_make(int year, int mon, int mday)
 {
   struct pg_tm tm;
-  DateADT date;
-  int      dterr;
-  bool    bc = false;
-
   tm.tm_year = year;
   tm.tm_mon = mon;
   tm.tm_mday = mday;
+  bool bc = false;
 
   /* Handle negative years as BC */
   if (tm.tm_year < 0)
   {
-    int      year = tm.tm_year;
-
+    int year = tm.tm_year;
     bc = true;
     if (pg_neg_s32_overflow(year, &year))
     {
@@ -254,8 +250,7 @@ pg_date_make(int year, int mon, int mday)
     tm.tm_year = year;
   }
 
-  dterr = ValidateDate(DTK_DATE_M, false, false, bc, &tm);
-
+  int dterr = ValidateDate(DTK_DATE_M, false, false, bc, &tm);
   if (dterr != 0)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
@@ -273,7 +268,8 @@ pg_date_make(int year, int mon, int mday)
     return INT_MAX;
   }
 
-  date = date2j(tm.tm_year, tm.tm_mon, tm.tm_mday) - POSTGRES_EPOCH_JDATE;
+  DateADT date = date2j(tm.tm_year, tm.tm_mon, tm.tm_mday) -
+    POSTGRES_EPOCH_JDATE;
 
   /* Now check for just-out-of-range dates */
   if (!IS_VALID_DATE(date))
@@ -283,7 +279,6 @@ pg_date_make(int year, int mon, int mday)
       tm.tm_year, tm.tm_mon, tm.tm_mday);
     return INT_MAX;
   }
-
   return date;
 }
 
@@ -540,8 +535,6 @@ minus_date_int(DateADT date, int32 days)
 Timestamp
 date2timestamp_opt_overflow(DateADT date, int *overflow)
 {
-  Timestamp  result;
-
   if (overflow)
     *overflow = 0;
 
@@ -571,10 +564,8 @@ date2timestamp_opt_overflow(DateADT date, int *overflow)
     }
 
     /* date is days since 2000, timestamp is microseconds since same... */
-    result = date * USECS_PER_DAY;
+    return date * USECS_PER_DAY;
   }
-
-  return result;
 }
 
 /*
@@ -600,9 +591,8 @@ TimestampTz
 date2timestamptz_opt_overflow(DateADT date, int *overflow)
 {
   TimestampTz result;
-  struct pg_tm tt,
-         *tm = &tt;
-  int      tz;
+  struct pg_tm tt, *tm = &tt;
+  int tz;
 
   if (overflow)
     *overflow = 0;
@@ -719,17 +709,14 @@ date2timestamp_no_overflow(DateADT date)
 int32
 date_cmp_timestamp_internal(DateADT date, Timestamp dt2)
 {
-  Timestamp  dt1;
-  int      overflow;
-
-  dt1 = date2timestamp_opt_overflow(date, &overflow);
+  int overflow;
+  Timestamp dt1 = date2timestamp_opt_overflow(date, &overflow);
   if (overflow > 0)
   {
     /* dt1 is larger than any finite timestamp, but less than infinity */
     return TIMESTAMP_IS_NOEND(dt2) ? -1 : +1;
   }
   Assert(overflow == 0);    /* -1 case cannot occur */
-
   return timestamp_cmp_internal(dt1, dt2);
 }
 
@@ -1113,9 +1100,7 @@ date_extract(DateADT date, const text *units)
           return pg_numeric_in("Infinity", -1);
       default:
         meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-          "unit \"%s\" not supported for type %s",
-          // lowunits, format_type_be(DATEOID));
-          lowunits, "date");
+          "unit \"%s\" not supported for type date", lowunits);
         pfree(lowunits);
         return NULL;
     }
@@ -1199,9 +1184,7 @@ date_extract(DateADT date, const text *units)
 
       default:
         meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-          "unit \"%s\" not supported for type %s",
-          // lowunits, format_type_be(DATEOID));
-          lowunits, "date");
+          "unit \"%s\" not supported for type date", lowunits);
         intresult = 0;
     }
   }
@@ -1210,23 +1193,20 @@ date_extract(DateADT date, const text *units)
     switch (val)
     {
       case DTK_EPOCH:
-        intresult = ((int64) date + POSTGRES_EPOCH_JDATE - UNIX_EPOCH_JDATE) * SECS_PER_DAY;
+        intresult = ((int64) date + POSTGRES_EPOCH_JDATE - UNIX_EPOCH_JDATE) *
+          SECS_PER_DAY;
         break;
 
       default:
         meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-          "unit \"%s\" not supported for type %s",
-          // lowunits, format_type_be(DATEOID));
-          lowunits, "date");
+          "unit \"%s\" not supported for type date", lowunits);
         intresult = 0;
     }
   }
   else
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-      "unit \"%s\" not recognized for type %s",
-      // lowunits, format_type_be(DATEOID));
-      lowunits, "date");
+      "unit \"%s\" not recognized for type date", lowunits);
     intresult = 0;
   }
 
@@ -1379,7 +1359,7 @@ pg_time_in(const char *str, int32 typmod)
   dterr = pg_ParseDateTime(str, workbuf, sizeof(workbuf), field, ftype,
     MAXDATEFIELDS, &nf);
   if (dterr == 0)
-    dterr = DecodeTimeOnly(field, ftype, nf, &dtype, tm, &fsec, &tz, &extra);
+    dterr = pg_DecodeTimeOnly(field, ftype, nf, &dtype, tm, &fsec, &tz, &extra);
   if (dterr != 0)
   {
     pg_DateTimeParseError(dterr, &extra, str, "time", NULL);
@@ -1396,8 +1376,8 @@ pg_time_in(const char *str, int32 typmod)
 int
 tm2time(struct pg_tm *tm, fsec_t fsec, TimeADT *result)
 {
-  *result = ((((tm->tm_hour * MINS_PER_HOUR + tm->tm_min) * SECS_PER_MINUTE) + tm->tm_sec)
-         * USECS_PER_SEC) + fsec;
+  *result = ((((tm->tm_hour * MINS_PER_HOUR + tm->tm_min) * SECS_PER_MINUTE) +
+    tm->tm_sec) * USECS_PER_SEC) + fsec;
   return 0;
 }
 
@@ -1408,20 +1388,17 @@ bool
 time_overflows(int hour, int min, int sec, fsec_t fsec)
 {
   /* Range-check the fields individually. */
-  if (hour < 0 || hour > HOURS_PER_DAY ||
-    min < 0 || min >= MINS_PER_HOUR ||
-    sec < 0 || sec > SECS_PER_MINUTE ||
-    fsec < 0 || fsec > USECS_PER_SEC)
+  if (hour < 0 || hour > HOURS_PER_DAY || min < 0  || min >= MINS_PER_HOUR ||
+      sec < 0  || sec > SECS_PER_MINUTE || fsec < 0 || fsec > USECS_PER_SEC)
     return true;
 
   /*
    * Because we allow, eg, hour = 24 or sec = 60, we must check separately
    * that the total time value doesn't exceed 24:00:00.
    */
-  if ((((((hour * MINS_PER_HOUR + min) * SECS_PER_MINUTE)
-       + sec) * USECS_PER_SEC) + fsec) > USECS_PER_DAY)
+  if ((((((hour * MINS_PER_HOUR + min) * SECS_PER_MINUTE) + sec) *
+       USECS_PER_SEC) + fsec) > USECS_PER_DAY)
     return true;
-
   return false;
 }
 
@@ -1432,8 +1409,7 @@ bool
 float_time_overflows(int hour, int min, double sec)
 {
   /* Range-check the fields individually. */
-  if (hour < 0 || hour > HOURS_PER_DAY ||
-    min < 0 || min >= MINS_PER_HOUR)
+  if (hour < 0 || hour > HOURS_PER_DAY || min < 0 || min >= MINS_PER_HOUR)
     return true;
 
   /*
@@ -1452,10 +1428,9 @@ float_time_overflows(int hour, int min, double sec)
    * that the total time value doesn't exceed 24:00:00.  This must match the
    * way that callers will convert the fields to a time.
    */
-  if (((((hour * MINS_PER_HOUR + min) * SECS_PER_MINUTE)
-      * USECS_PER_SEC) + (int64) sec) > USECS_PER_DAY)
+  if (((((hour * MINS_PER_HOUR + min) * SECS_PER_MINUTE) * USECS_PER_SEC) +
+      (int64) sec) > USECS_PER_DAY)
     return true;
-
   return false;
 }
 
@@ -1923,7 +1898,6 @@ Timestamp
 date_time_to_timestamp(DateADT date, TimeADT time)
 {
   Timestamp result = date2timestamp(date);
-
   if (!TIMESTAMP_NOT_FINITE(result))
   {
     result += time;
@@ -1934,7 +1908,6 @@ date_time_to_timestamp(DateADT date, TimeADT time)
       return PG_INT64_MAX;
     }
   }
-
   return result;
 }
 
@@ -1971,7 +1944,6 @@ interval_to_time(const Interval *interv)
       "cannot convert infinite interval to time");
     return PG_INT64_MAX;
   }
-
   TimeADT result = interv->time % USECS_PER_DAY;
   if (result < 0)
     result += USECS_PER_DAY;
@@ -2001,8 +1973,6 @@ minus_time_time(TimeADT time1, TimeADT time2)
 TimeADT
 plus_time_interval(TimeADT time, Interval *interv)
 {
-  TimeADT result;
-
   if (INTERVAL_NOT_FINITE(interv))
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
@@ -2010,11 +1980,10 @@ plus_time_interval(TimeADT time, Interval *interv)
     return PG_INT64_MAX;
   }
 
-  result = time + interv->time;
+  TimeADT result = time + interv->time;
   result -= result / USECS_PER_DAY * USECS_PER_DAY;
   if (result < INT64CONST(0))
     result += USECS_PER_DAY;
-
  return result;
 }
 
@@ -2111,9 +2080,8 @@ time_part_common(TimeADT time, text *units, bool retnumeric)
       case DTK_ISOYEAR:
       default:
         meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-          "unit \"%s\" not supported for type %s",
-          // lowunits, format_type_be(TIMEOID));
-          lowunits, "time without time zone");
+          "unit \"%s\" not supported for type time without time zone",
+            lowunits);
         intresult = 0;
     }
   }
@@ -2128,9 +2096,7 @@ time_part_common(TimeADT time, text *units, bool retnumeric)
   else
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-      "unit \"%s\" not recognized for type %s",
-      // lowunits, format_type_be(TIMEOID));
-      lowunits, "time without time zone");
+      "unit \"%s\" not recognized for type time without time zone", lowunits);
     intresult = 0;
   }
 
@@ -2217,7 +2183,7 @@ pg_timetz_in(const char *str, int32 typmod)
   dterr = pg_ParseDateTime(str, workbuf, sizeof(workbuf), field, ftype,
     MAXDATEFIELDS, &nf);
   if (dterr == 0)
-    dterr = DecodeTimeOnly(field, ftype, nf, &dtype, tm, &fsec, &tz, &extra);
+    dterr = pg_DecodeTimeOnly(field, ftype, nf, &dtype, tm, &fsec, &tz, &extra);
   if (dterr != 0)
   {
     pg_DateTimeParseError(dterr, &extra, str, "time with time zone", NULL);
@@ -2680,7 +2646,6 @@ time_to_timetz(TimeADT time)
 {
   struct pg_tm tt, *tm = &tt;
   fsec_t fsec;
-
   GetCurrentDateTime(tm);
   time2tm(time, tm, &fsec);
   int tz = DetermineTimeZoneOffset(tm, session_timezone);
@@ -2688,7 +2653,6 @@ time_to_timetz(TimeADT time)
   TimeTzADT *result = (TimeTzADT *) palloc(sizeof(TimeTzADT));
   result->time = time;
   result->zone = tz;
-
   return result;
 }
 
@@ -2700,13 +2664,12 @@ time_to_timetz(TimeADT time)
 TimeTzADT *
 timestamptz_to_timetz(TimestampTz tztz)
 {
-  struct pg_tm tt, *tm = &tt;
-  int tz;
-  fsec_t fsec;
-
   if (TIMESTAMP_NOT_FINITE(tztz))
     return NULL;
 
+  struct pg_tm tt, *tm = &tt;
+  int tz;
+  fsec_t fsec;
   if (timestamp2tm(tztz, &tz, tm, &fsec, NULL, NULL) != 0)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
@@ -2843,9 +2806,7 @@ timetz_part_common(TimeTzADT *time, text *units, bool retnumeric)
       case DTK_MILLENNIUM:
       default:
         meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-          "unit \"%s\" not supported for type %s",
-          // lowunits, format_type_be(TIMETZOID));
-          lowunits, "time with time zone");
+          "unit \"%s\" not supported for type time with time zone", lowunits);
         intresult = 0;
     }
   }
@@ -2863,9 +2824,7 @@ timetz_part_common(TimeTzADT *time, text *units, bool retnumeric)
   else
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-      "unit \"%s\" not recognized for type %s",
-      // lowunits, format_type_be(TIMETZOID));
-      lowunits, "time with time zone");
+      "unit \"%s\" not recognized for type time with time zone", lowunits);
     intresult = 0;
   }
 
@@ -3034,7 +2993,7 @@ TimeTzADT *
 pg_timetz_at_local(const TimeTzADT *timetz)
 {
   const char *tzn = pg_get_timezone_name(session_timezone);
-  text *zone = cstring_to_text(tzn);
+  text *zone = pg_cstring_to_text(tzn);
   return pg_timetz_zone(timetz, zone);
 }
 

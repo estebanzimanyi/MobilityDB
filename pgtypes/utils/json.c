@@ -138,7 +138,7 @@ json_in(const char *str)
 text *
 pg_json_in(const char *str)
 {
-  text *result = cstring_to_text(str);
+  text *result = pg_cstring_to_text(str);
 
   /* validate it */
   JsonLexContext lex;
@@ -404,7 +404,7 @@ pg_json_make(text **keys_vals, int count)
       escape_json_text(&res, keys_vals[i * 2 + 1]);
   }
   appendStringInfoChar(&res, '}');
-  text *result = cstring_to_text_with_len(res.data, res.len);
+  text *result = pg_cstring_to_text_with_len(res.data, res.len);
   pfree(res.data);
   return result;
 }
@@ -451,7 +451,7 @@ pg_json_make_two_arg(text **keys, text **values, int count)
   }
 
   appendStringInfoChar(&res, '}');
-  text *result = cstring_to_text_with_len(res.data, res.len);
+  text *result = pg_cstring_to_text_with_len(res.data, res.len);
   pfree(res.data);
   return result;
 }
@@ -795,7 +795,7 @@ pg_json_typeof(const text *json)
       return NULL;
   }
 
-  return cstring_to_text(type);
+  return pg_cstring_to_text(type);
 }
 
 /*****************************************************************************/

@@ -293,7 +293,7 @@ basetype_parse(const char **str, meosType basetype, char delim, Datum *result)
   char *origstr = (char *) *str;
 
   /* ttext values must be enclosed between double quotes */
-  if (**str == '"')
+  if (**str == '"' && basetype == T_TEXT)
   {
     /* Consume the double quote */
     *str += 1;

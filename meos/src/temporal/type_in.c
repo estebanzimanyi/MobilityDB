@@ -167,7 +167,7 @@ basetype_in(const char *str, meosType type, bool end UNUSED, Datum *result)
     }
     case T_TEXT:
     {
-      text *txt = cstring_to_text(str);
+      text *txt = pg_cstring_to_text(str);
       if (! txt)
         return false;
       *result = PointerGetDatum(txt);
@@ -202,7 +202,7 @@ basetype_in(const char *str, meosType type, bool end UNUSED, Datum *result)
 #if JSON
     case T_JSONB:
     {
-      Jsonb *jb = cstring_to_jsonb(str);
+      Jsonb *jb = pg_jsonb_in(str);
       if (! jb)
         return false;
       *result = PointerGetDatum(jb);
@@ -396,7 +396,7 @@ parse_mfjson_values(const json_object *mfjson, meosType temptype, int *count)
             "Invalid string value in 'values' array in MFJSON string");
           return NULL;
         }
-        values[i] = PointerGetDatum(cstring_to_text(
+        values[i] = PointerGetDatum(pg_cstring_to_text(
           json_object_get_string(jvalue)));
         break;
 #if JSON
@@ -404,7 +404,7 @@ parse_mfjson_values(const json_object *mfjson, meosType temptype, int *count)
       {
         /* Accept any JSON value for temporal‐JSONB */
         const char *jstr = json_object_to_json_string(jvalue);
-        Jsonb *jb = cstring_to_jsonb(jstr);
+        Jsonb *jb = pg_jsonb_in(jstr);
         if (! jb)
         {
           meos_error(ERROR, MEOS_ERR_MFJSON_INPUT,
@@ -1340,7 +1340,7 @@ text_from_wkb_state(meos_wkb_parse_state *s)
   str[size] = '\0';
   /* Advance the state and return */
   s->pos += size;
-  text *result = cstring_to_text(str);
+  text *result = pg_cstring_to_text(str);
   pfree(str);
   return result;
 }

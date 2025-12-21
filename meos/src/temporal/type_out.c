@@ -929,6 +929,7 @@ jsonb_to_wkb_size(const Jsonb *jb, bool component)
     /* Endian flag */
     size += MEOS_WKB_BYTE_SIZE;
   }
+  /* size as an int8 + size of the varlena  */
   size += MEOS_WKB_INT8_SIZE + VARSIZE_ANY_EXHDR(jb);
   return size;
 }
@@ -1008,7 +1009,7 @@ base_to_wkb_size(Datum value, meosType basetype, uint8_t variant)
 #endif /* CBUFFER */
 #if JSON
     case T_JSONB:
-      return jsonb_to_wkb_size(DatumGetJsonbP(value), variant);
+      return jsonb_to_wkb_size(DatumGetJsonbP(value), true);
 #endif /* JSON */
 #if NPOINT
     case T_NPOINT:

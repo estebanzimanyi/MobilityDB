@@ -73,22 +73,22 @@ typedef struct List
 typedef struct ForEachState
 {
   const List *l;        /* list we're looping through */
-  int      i;        /* current element index */
+  int         i;        /* current element index */
 } ForEachState;
 
 typedef struct ForBothState
 {
   const List *l1;        /* lists we're looping through */
   const List *l2;
-  int      i;        /* common element index */
+  int          i;        /* common element index */
 } ForBothState;
 
 typedef struct ForBothCellState
 {
   const List *l1;        /* lists we're looping through */
   const List *l2;
-  int      i1;        /* current element indexes */
-  int      i2;
+  int         i1;        /* current element indexes */
+  int         i2;
 } ForBothCellState;
 
 typedef struct ForThreeState
@@ -96,7 +96,7 @@ typedef struct ForThreeState
   const List *l1;        /* lists we're looping through */
   const List *l2;
   const List *l3;
-  int      i;        /* common element index */
+  int         i;        /* common element index */
 } ForThreeState;
 
 typedef struct ForFourState
@@ -105,7 +105,7 @@ typedef struct ForFourState
   const List *l2;
   const List *l3;
   const List *l4;
-  int      i;        /* common element index */
+  int         i;        /* common element index */
 } ForFourState;
 
 typedef struct ForFiveState
@@ -115,7 +115,7 @@ typedef struct ForFiveState
   const List *l3;
   const List *l4;
   const List *l5;
-  int      i;        /* common element index */
+  int         i;        /* common element index */
 } ForFiveState;
 
 /*
@@ -169,33 +169,33 @@ list_length(const List *l)
  * linitial() than lfirst(): given a List, lsecond() returns the data
  * in the second list cell.
  */
-#define lfirst(lc)        ((lc)->ptr_value)
+#define lfirst(lc)          ((lc)->ptr_value)
 #define lfirst_int(lc)      ((lc)->int_value)
 #define lfirst_oid(lc)      ((lc)->oid_value)
 #define lfirst_xid(lc)      ((lc)->xid_value)
 #define lfirst_node(type,lc)  castNode(type, lfirst(lc))
 
-#define linitial(l)        lfirst(list_nth_cell(l, 0))
+#define linitial(l)          lfirst(list_nth_cell(l, 0))
 #define linitial_int(l)      lfirst_int(list_nth_cell(l, 0))
 #define linitial_oid(l)      lfirst_oid(list_nth_cell(l, 0))
 #define linitial_node(type,l)  castNode(type, linitial(l))
 
-#define lsecond(l)        lfirst(list_nth_cell(l, 1))
+#define lsecond(l)          lfirst(list_nth_cell(l, 1))
 #define lsecond_int(l)      lfirst_int(list_nth_cell(l, 1))
 #define lsecond_oid(l)      lfirst_oid(list_nth_cell(l, 1))
 #define lsecond_node(type,l)  castNode(type, lsecond(l))
 
-#define lthird(l)        lfirst(list_nth_cell(l, 2))
+#define lthird(l)          lfirst(list_nth_cell(l, 2))
 #define lthird_int(l)      lfirst_int(list_nth_cell(l, 2))
 #define lthird_oid(l)      lfirst_oid(list_nth_cell(l, 2))
 #define lthird_node(type,l)    castNode(type, lthird(l))
 
-#define lfourth(l)        lfirst(list_nth_cell(l, 3))
+#define lfourth(l)          lfirst(list_nth_cell(l, 3))
 #define lfourth_int(l)      lfirst_int(list_nth_cell(l, 3))
 #define lfourth_oid(l)      lfirst_oid(list_nth_cell(l, 3))
 #define lfourth_node(type,l)  castNode(type, lfourth(l))
 
-#define llast(l)        lfirst(list_last_cell(l))
+#define llast(l)          lfirst(list_last_cell(l))
 #define llast_int(l)      lfirst_int(list_last_cell(l))
 #define llast_oid(l)      lfirst_oid(list_last_cell(l))
 #define llast_xid(l)      lfirst_xid(list_last_cell(l))
@@ -215,14 +215,13 @@ list_length(const List *l)
   list_make2_impl(T_List, list_make_ptr_cell(x1), list_make_ptr_cell(x2))
 #define list_make3(x1,x2,x3) \
   list_make3_impl(T_List, list_make_ptr_cell(x1), list_make_ptr_cell(x2), \
-          list_make_ptr_cell(x3))
+    list_make_ptr_cell(x3))
 #define list_make4(x1,x2,x3,x4) \
   list_make4_impl(T_List, list_make_ptr_cell(x1), list_make_ptr_cell(x2), \
-          list_make_ptr_cell(x3), list_make_ptr_cell(x4))
+    list_make_ptr_cell(x3), list_make_ptr_cell(x4))
 #define list_make5(x1,x2,x3,x4,x5) \
   list_make5_impl(T_List, list_make_ptr_cell(x1), list_make_ptr_cell(x2), \
-          list_make_ptr_cell(x3), list_make_ptr_cell(x4), \
-          list_make_ptr_cell(x5))
+    list_make_ptr_cell(x3), list_make_ptr_cell(x4), list_make_ptr_cell(x5))
 
 #define list_make1_int(x1) \
   list_make1_impl(T_IntList, list_make_int_cell(x1))
@@ -230,14 +229,13 @@ list_length(const List *l)
   list_make2_impl(T_IntList, list_make_int_cell(x1), list_make_int_cell(x2))
 #define list_make3_int(x1,x2,x3) \
   list_make3_impl(T_IntList, list_make_int_cell(x1), list_make_int_cell(x2), \
-          list_make_int_cell(x3))
+  list_make_int_cell(x3))
 #define list_make4_int(x1,x2,x3,x4) \
   list_make4_impl(T_IntList, list_make_int_cell(x1), list_make_int_cell(x2), \
-          list_make_int_cell(x3), list_make_int_cell(x4))
+  list_make_int_cell(x3), list_make_int_cell(x4))
 #define list_make5_int(x1,x2,x3,x4,x5) \
   list_make5_impl(T_IntList, list_make_int_cell(x1), list_make_int_cell(x2), \
-          list_make_int_cell(x3), list_make_int_cell(x4), \
-          list_make_int_cell(x5))
+  list_make_int_cell(x3), list_make_int_cell(x4), list_make_int_cell(x5))
 
 #define list_make1_oid(x1) \
   list_make1_impl(T_OidList, list_make_oid_cell(x1))
@@ -245,14 +243,13 @@ list_length(const List *l)
   list_make2_impl(T_OidList, list_make_oid_cell(x1), list_make_oid_cell(x2))
 #define list_make3_oid(x1,x2,x3) \
   list_make3_impl(T_OidList, list_make_oid_cell(x1), list_make_oid_cell(x2), \
-          list_make_oid_cell(x3))
+  list_make_oid_cell(x3))
 #define list_make4_oid(x1,x2,x3,x4) \
   list_make4_impl(T_OidList, list_make_oid_cell(x1), list_make_oid_cell(x2), \
-          list_make_oid_cell(x3), list_make_oid_cell(x4))
+  list_make_oid_cell(x3), list_make_oid_cell(x4))
 #define list_make5_oid(x1,x2,x3,x4,x5) \
   list_make5_impl(T_OidList, list_make_oid_cell(x1), list_make_oid_cell(x2), \
-          list_make_oid_cell(x3), list_make_oid_cell(x4), \
-          list_make_oid_cell(x5))
+  list_make_oid_cell(x3), list_make_oid_cell(x4), list_make_oid_cell(x5))
 
 #define list_make1_xid(x1) \
   list_make1_impl(T_XidList, list_make_xid_cell(x1))
@@ -260,14 +257,13 @@ list_length(const List *l)
   list_make2_impl(T_XidList, list_make_xid_cell(x1), list_make_xid_cell(x2))
 #define list_make3_xid(x1,x2,x3) \
   list_make3_impl(T_XidList, list_make_xid_cell(x1), list_make_xid_cell(x2), \
-          list_make_xid_cell(x3))
+  list_make_xid_cell(x3))
 #define list_make4_xid(x1,x2,x3,x4) \
   list_make4_impl(T_XidList, list_make_xid_cell(x1), list_make_xid_cell(x2), \
-          list_make_xid_cell(x3), list_make_xid_cell(x4))
+  list_make_xid_cell(x3), list_make_xid_cell(x4))
 #define list_make5_xid(x1,x2,x3,x4,x5) \
   list_make5_impl(T_XidList, list_make_xid_cell(x1), list_make_xid_cell(x2), \
-          list_make_xid_cell(x3), list_make_xid_cell(x4), \
-          list_make_xid_cell(x5))
+  list_make_xid_cell(x3), list_make_xid_cell(x4), list_make_xid_cell(x5))
 
 /*
  * Locate the n'th cell (counting from 0) of the list.
@@ -601,12 +597,11 @@ for_both_cell_setup(const List *list1, const ListCell *initcell1,
 extern List *list_make1_impl(NodeTag t, ListCell datum1);
 extern List *list_make2_impl(NodeTag t, ListCell datum1, ListCell datum2);
 extern List *list_make3_impl(NodeTag t, ListCell datum1, ListCell datum2,
-               ListCell datum3);
+  ListCell datum3);
 extern List *list_make4_impl(NodeTag t, ListCell datum1, ListCell datum2,
-               ListCell datum3, ListCell datum4);
+  ListCell datum3, ListCell datum4);
 extern List *list_make5_impl(NodeTag t, ListCell datum1, ListCell datum2,
-               ListCell datum3, ListCell datum4,
-               ListCell datum5);
+  ListCell datum3, ListCell datum4, ListCell datum5);
 
 pg_nodiscard extern List *lappend(List *list, void *datum);
 pg_nodiscard extern List *lappend_int(List *list, int datum);

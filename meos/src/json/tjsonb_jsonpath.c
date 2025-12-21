@@ -39,6 +39,7 @@
 #include <stdlib.h>
 /* PostgreSQL */
 #include <postgres.h>
+#include "catalog/pg_type.h"
 #include "common/hashfn.h"
 #include "common/int.h"
 #include "nodes/pg_list.h"
@@ -47,6 +48,7 @@
 #include "utils/json.h"
 #include "utils/jsonb.h"
 #include "utils/jsonpath.h"
+#include "utils/numeric.h"
 /* MEOS */
 #include <meos.h>
 #include <meos_json.h>
@@ -380,7 +382,7 @@ getJsonPathVariable(JsonPathExecContext *cxt, JsonPathItem *variable,
   if (baseObjectId > 0)
   {
     *value = *v;
-    setBaseObject(&baseObject, baseObjectId);
+    setBaseObject(cxt, &baseObject, baseObjectId);
   }
 }
 
@@ -411,7 +413,7 @@ getJsonPathItem(JsonPathExecContext *cxt, JsonPathItem *item,
       value->val.string.val = jspGetString(item, &value->val.string.len);
       break;
     case jpiVariable:
-      getJsonPathVariable(item, value);
+      getJsonPathVariable(cxt, item, value);
       return;
     default:
       meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
@@ -448,9 +450,9 @@ copyJsonbValue(JsonbValue *src)
  *  - jpiAnyArray ([*] accessor)
  */
 JsonPathExecResult
-executeAnyItem(JsonPathExecContext *cxt, JsonPathItem *jsp, JsonbContainer *jbc,
-  JsonValueList *found, uint32 level, uint32 first, uint32 last,
-  bool ignoreStructuralErrors, bool unwrapNext)
+executeAnyItem(JsonPathExecContext *cxt, JsonPathItem *jsp,
+  JsonbContainer *jbc, JsonValueList *found, uint32 level, uint32 first,
+  uint32 last, bool ignoreStructuralErrors, bool unwrapNext)
 {
   JsonPathExecResult res = jperNotFound;
 
@@ -484,11 +486,11 @@ executeAnyItem(JsonPathExecContext *cxt, JsonPathItem *jsp, JsonbContainer *jbc,
           {
             bool savedIgnoreStructuralErrors = cxt->ignoreStructuralErrors;
             cxt->ignoreStructuralErrors = true;
-            res = executeItemOptUnwrapTarget(jsp, &v, found, unwrapNext);
+            res = executeItemOptUnwrapTarget(cxt, jsp, &v, found, unwrapNext);
             cxt->ignoreStructuralErrors = savedIgnoreStructuralErrors;
           }
           else
-            res = executeItemOptUnwrapTarget(jsp, &v, found, unwrapNext);
+            res = executeItemOptUnwrapTarget(cxt, jsp, &v, found, unwrapNext);
           if (jperIsError(res))
             break;
           if (res == jperOk && ! found)
@@ -502,7 +504,7 @@ executeAnyItem(JsonPathExecContext *cxt, JsonPathItem *jsp, JsonbContainer *jbc,
 
       if (level < last && v.type == jbvBinary)
       {
-        res = executeAnyItem(jsp, v.val.binary.data, found, level + 1,
+        res = executeAnyItem(cxt, jsp, v.val.binary.data, found, level + 1,
            first, last, ignoreStructuralErrors, unwrapNext);
         if (jperIsError(res))
           break;
@@ -528,7 +530,7 @@ executeItemUnwrapTargetArray(JsonPathExecContext *cxt, JsonPathItem *jsp,
       "invalid jsonb array value type: %d", jb->type);
     return jperError;
   }
-  return executeAnyItem(jsp, jb->val.binary.data, found, 1, 1, 1, false,
+  return executeAnyItem(cxt, jsp, jb->val.binary.data, found, 1, 1, 1, false,
     unwrapElements);
 }
 
@@ -539,7 +541,7 @@ JsonPathExecResult
 executeItem(JsonPathExecContext *cxt, JsonPathItem *jsp, JsonbValue *jb,
   JsonValueList *found)
 {
-  return executeItemOptUnwrapTarget(jsp, jb, found, jspAutoUnwrap(cxt));
+  return executeItemOptUnwrapTarget(cxt, jsp, jb, found, jspAutoUnwrap(cxt));
 }
 
 /*
@@ -563,7 +565,7 @@ executeNextItem(JsonPathExecContext *cxt, JsonPathItem *cur,
     hasNext = jspGetNext(cur, next);
   }
   if (hasNext)
-    return executeItem(next, v, found);
+    return executeItem(cxt, next, v, found);
   if (found)
     JsonValueListAppend(found, copy ? copyJsonbValue(v) : v);
   return jperOk;
@@ -593,14 +595,15 @@ executePredicate(JsonPathExecContext *cxt, JsonPathItem *pred,
   bool found = false;
 
   /* Left argument is always auto-unwrapped. */
-  res = executeItemOptUnwrapResultNoThrow(larg, jb, true, &lseq);
+  res = executeItemOptUnwrapResultNoThrow(cxt, larg, jb, true, &lseq);
   if (jperIsError(res))
     return jpbUnknown;
 
   if (rarg)
   {
     /* Right argument is conditionally auto-unwrapped. */
-    res = executeItemOptUnwrapResultNoThrow(rarg, jb, unwrapRightArg, &rseq);
+    res = executeItemOptUnwrapResultNoThrow(cxt, rarg, jb, unwrapRightArg,
+      &rseq);
     if (jperIsError(res))
       return jpbUnknown;
   }
@@ -657,7 +660,7 @@ executeBoolItem(JsonPathExecContext *cxt, JsonPathItem *jsp, JsonbValue *jb,
 
   if (!canHaveNext && jspHasNext(jsp))
   {
-    meos_error(ERROR,´MEOS_ERR_INTERNAL_ERROR,
+    meos_error(ERROR,MEOS_ERR_INTERNAL_ERROR,
       "boolean jsonpath item cannot have next item");
     return jpbUnknown;
   }
@@ -666,33 +669,33 @@ executeBoolItem(JsonPathExecContext *cxt, JsonPathItem *jsp, JsonbValue *jb,
   {
     case jpiAnd:
       jspGetLeftArg(jsp, &larg);
-      res = executeBoolItem(&larg, jb, false);
+      res = executeBoolItem(cxt, &larg, jb, false);
       if (res == jpbFalse)
         return jpbFalse;
       /* SQL/JSON says that we should check second arg in case of jperError */
       jspGetRightArg(jsp, &rarg);
-      res2 = executeBoolItem(&rarg, jb, false);
+      res2 = executeBoolItem(cxt, &rarg, jb, false);
       return res2 == jpbTrue ? res : res2;
 
     case jpiOr:
       jspGetLeftArg(jsp, &larg);
-      res = executeBoolItem(&larg, jb, false);
+      res = executeBoolItem(cxt, &larg, jb, false);
       if (res == jpbTrue)
         return jpbTrue;
       jspGetRightArg(jsp, &rarg);
-      res2 = executeBoolItem(&rarg, jb, false);
+      res2 = executeBoolItem(cxt, &rarg, jb, false);
       return res2 == jpbFalse ? res : res2;
 
     case jpiNot:
       jspGetArg(jsp, &larg);
-      res = executeBoolItem(&larg, jb, false);
+      res = executeBoolItem(cxt, &larg, jb, false);
       if (res == jpbUnknown)
         return jpbUnknown;
       return res == jpbTrue ? jpbFalse : jpbTrue;
 
     case jpiIsUnknown:
       jspGetArg(jsp, &larg);
-      res = executeBoolItem(&larg, jb, false);
+      res = executeBoolItem(cxt, &larg, jb, false);
       return res == jpbUnknown ? jpbTrue : jpbFalse;
 
     case jpiEqual:
@@ -703,13 +706,13 @@ executeBoolItem(JsonPathExecContext *cxt, JsonPathItem *jsp, JsonbValue *jb,
     case jpiGreaterOrEqual:
       jspGetLeftArg(jsp, &larg);
       jspGetRightArg(jsp, &rarg);
-      return executePredicate(jsp, &larg, &rarg, jb, true, executeComparison,
+      return executePredicate(cxt, jsp, &larg, &rarg, jb, true, executeComparison,
         cxt);
 
     case jpiStartsWith:    /* 'whole STARTS WITH initial' */
       jspGetLeftArg(jsp, &larg);  /* 'whole' */
       jspGetRightArg(jsp, &rarg); /* 'initial' */
-      return executePredicate(jsp, &larg, &rarg, jb, false, executeStartsWith,
+      return executePredicate(cxt, jsp, &larg, &rarg, jb, false, executeStartsWith,
         NULL);
 
     case jpiLikeRegex:    /* 'expr LIKE_REGEX pattern FLAGS flags' */
@@ -722,7 +725,7 @@ executeBoolItem(JsonPathExecContext *cxt, JsonPathItem *jsp, JsonbValue *jb,
          */
         JsonLikeRegexContext lrcxt = {0};
         jspInitByBuffer(&larg, jsp->base, jsp->content.like_regex.expr);
-        return executePredicate(jsp, &larg, NULL, jb, false, executeLikeRegex,
+        return executePredicate(cxt, jsp, &larg, NULL, jb, false, executeLikeRegex,
           &lrcxt);
       }
 
@@ -737,7 +740,7 @@ executeBoolItem(JsonPathExecContext *cxt, JsonPathItem *jsp, JsonbValue *jb,
          */
         JsonValueList vals = {0};
         JsonPathExecResult res =
-          executeItemOptUnwrapResultNoThrow(&larg, jb, false, &vals);
+          executeItemOptUnwrapResultNoThrow(cxt, &larg, jb, false, &vals);
         if (jperIsError(res))
           return jpbUnknown;
         return JsonValueListIsEmpty(&vals) ? jpbFalse : jpbTrue;
@@ -745,7 +748,7 @@ executeBoolItem(JsonPathExecContext *cxt, JsonPathItem *jsp, JsonbValue *jb,
       else
       {
         JsonPathExecResult res =
-          executeItemOptUnwrapResultNoThrow(&larg, jb, false, NULL);
+          executeItemOptUnwrapResultNoThrow(cxt, &larg, jb, false, NULL);
         if (jperIsError(res))
           return jpbUnknown;
         return res == jperOk ? jpbTrue : jpbFalse;
@@ -795,8 +798,8 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
         JsonbValue vbuf;
         JsonbValue *v = hasNext ? &vbuf : palloc(sizeof(*v));
         baseObject = cxt->baseObject;
-        getJsonPathItem(jsp, v);
-        res = executeNextItem(jsp, &elem, v, found, hasNext);
+        getJsonPathItem(cxt, jsp, v);
+        res = executeNextItem(cxt, jsp, &elem, v, found, hasNext);
         cxt->baseObject = baseObject;
       }
       break;
@@ -816,41 +819,47 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
     case jpiStartsWith:
     case jpiLikeRegex:
       {
-        JsonPathBool st = executeBoolItem(jsp, jb, true);
-        res = appendBoolResult(jsp, found, st);
+        JsonPathBool st = executeBoolItem(cxt, jsp, jb, true);
+        res = appendBoolResult(cxt, jsp, found, st);
         break;
       }
 
     case jpiAdd:
-      return numeric_add_opt_error(jsp, jb, found);
+      return executeBinaryArithmExpr(cxt, jsp, jb,
+        numeric_add_opt_error, found);
 
     case jpiSub:
-      return numeric_sub_opt_error(jsp, jb, found);
+      return executeBinaryArithmExpr(cxt, jsp, jb,
+        numeric_sub_opt_error, found);
 
     case jpiMul:
-      return numeric_mul_opt_error(jsp, jb, found);
+      return executeBinaryArithmExpr(cxt, jsp, jb,
+        numeric_mul_opt_error, found);
 
     case jpiDiv:
-      return numeric_div_opt_error(jsp, jb, found);
+      return executeBinaryArithmExpr(cxt, jsp, jb,
+        numeric_div_opt_error, found);
 
     case jpiMod:
-      return numeric_mod_opt_error(jsp, jb, found);
+      return executeBinaryArithmExpr(cxt, jsp, jb,
+        numeric_mod_opt_error, found);
 
     case jpiPlus:
-      return executeUnaryArithmExpr(jsp, jb, NULL, found);
+      return executeUnaryArithmExpr(cxt, jsp, jb, NULL, found);
 
     case jpiMinus:
-      return pg_numeric_uminus(jsp, jb);
+      return executeBinaryArithmExpr(cxt, jsp, jb,
+        pg_numeric_uminus, found);
 
     case jpiAnyArray:
       if (JsonbType(jb) == jbvArray)
       {
         bool hasNext = jspGetNext(jsp, &elem);
-        res = executeItemUnwrapTargetArray(hasNext ? &elem : NULL, jb, found,
-          jspAutoUnwrap(cxt));
+        res = executeItemUnwrapTargetArray(cxt, hasNext ? &elem : NULL, jb,
+          found, jspAutoUnwrap(cxt));
       }
       else if (jspAutoWrap(cxt))
-        res = executeNextItem(jsp, NULL, jb, found, true);
+        res = executeNextItem(cxt, jsp, NULL, jb, found, true);
       else if (!jspIgnoreStructuralErrors(cxt))
       {
         meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
@@ -869,11 +878,11 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
             "invalid jsonb object type: %d", jb->type);
           return jperError;
         }
-        return executeAnyItem(hasNext ? &elem : NULL, jb->val.binary.data,
+        return executeAnyItem(cxt, hasNext ? &elem : NULL, jb->val.binary.data,
            found, 1, 1, 1, false, jspAutoUnwrap(cxt));
       }
       else if (unwrap && JsonbType(jb) == jbvArray)
-        return executeItemUnwrapTargetArray(jsp, jb, found, false);
+        return executeItemUnwrapTargetArray(cxt, jsp, jb, found, false);
       else if (! jspIgnoreStructuralErrors(cxt))
       {
         Assert(found);
@@ -899,12 +908,12 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
           JsonPathItem from, to;
           int32 index, index_from, index_to;
           bool range = jspGetArraySubscript(jsp, &from, &to, i);
-          res = getArrayIndex(&from, jb, &index_from);
+          res = getArrayIndex(cxt, &from, jb, &index_from);
           if (jperIsError(res))
             break;
           if (range)
           {
-            res = getArrayIndex(&to, jb, &index_to);
+            res = getArrayIndex(cxt, &to, jb, &index_to);
             if (jperIsError(res))
               break;
           }
@@ -943,7 +952,7 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
 
             if (!hasNext && !found)
               return jperOk;
-            res = executeNextItem(jsp, &elem, v, found, copy);
+            res = executeNextItem(cxt, jsp, &elem, v, found, copy);
             if (jperIsError(res))
               break;
             if (res == jperOk && !found)
@@ -972,13 +981,13 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
         {
           bool savedIgnoreStructuralErrors = cxt->ignoreStructuralErrors;
           cxt->ignoreStructuralErrors = true;
-          res = executeNextItem(jsp, &elem, jb, found, true);
+          res = executeNextItem(cxt, jsp, &elem, jb, found, true);
           cxt->ignoreStructuralErrors = savedIgnoreStructuralErrors;
           if (res == jperOk && !found)
             break;
         }
         if (jb->type == jbvBinary)
-          res = executeAnyItem(hasNext ? &elem : NULL,
+          res = executeAnyItem(cxt, hasNext ? &elem : NULL,
             jb->val.binary.data, found, 1, jsp->content.anybounds.first,
             jsp->content.anybounds.last, true, jspAutoUnwrap(cxt));
         break;
@@ -994,7 +1003,7 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
           JB_FOBJECT, &key);
         if (v != NULL)
         {
-          res = executeNextItem(jsp, NULL, v, found, false);
+          res = executeNextItem(cxt, jsp, NULL, v, found, false);
           /* free value if it was not added to found list */
           if (jspHasNext(jsp) || !found)
             pfree(v);
@@ -1011,7 +1020,7 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
         }
       }
       else if (unwrap && JsonbType(jb) == jbvArray)
-        return executeItemUnwrapTargetArray(jsp, jb, found, false);
+        return executeItemUnwrapTargetArray(cxt, jsp, jb, found, false);
       else if (!jspIgnoreStructuralErrors(cxt))
       {
         Assert(found);
@@ -1022,13 +1031,13 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
       break;
 
     case jpiCurrent:
-      res = executeNextItem(jsp, NULL, cxt->current, found, true);
+      res = executeNextItem(cxt, jsp, NULL, cxt->current, found, true);
       break;
 
     case jpiRoot:
       jb = cxt->root;
-      baseObject = setBaseObject(jb, 0);
-      res = executeNextItem(jsp, NULL, jb, found, true);
+      baseObject = setBaseObject(cxt, jb, 0);
+      res = executeNextItem(cxt, jsp, NULL, jb, found, true);
       cxt->baseObject = baseObject;
       break;
 
@@ -1036,13 +1045,13 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
       {
         JsonPathBool st;
         if (unwrap && JsonbType(jb) == jbvArray)
-          return executeItemUnwrapTargetArray(jsp, jb, found, false);
+          return executeItemUnwrapTargetArray(cxt, jsp, jb, found, false);
         jspGetArg(jsp, &elem);
-        st = executeNestedBoolItem(&elem, jb);
+        st = executeNestedBoolItem(cxt, &elem, jb);
         if (st != jpbTrue)
           res = jperNotFound;
         else
-          res = executeNextItem(jsp, NULL, jb, found, true);
+          res = executeNextItem(cxt, jsp, NULL, jb, found, true);
         break;
       }
 
@@ -1052,7 +1061,7 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
         jbv->type = jbvString;
         jbv->val.string.val = pstrdup(JsonbTypeName(jb));
         jbv->val.string.len = strlen(jbv->val.string.val);
-        res = executeNextItem(jsp, NULL, jbv, found, false);
+        res = executeNextItem(cxt, jsp, NULL, jbv, found, false);
       }
       break;
 
@@ -1077,28 +1086,31 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
         jb = palloc(sizeof(*jb));
         jb->type = jbvNumeric;
         jb->val.numeric = int64_to_numeric(size);
-        res = executeNextItem(jsp, NULL, jb, found, false);
+        res = executeNextItem(cxt, jsp, NULL, jb, found, false);
       }
       break;
 
     case jpiAbs:
-      return pg_numeric_abs(jsp, jb, unwrap, , found);
+      return executeNumericItemMethod(cxt, jsp, jb, unwrap,
+        pg_numeric_abs, found);
 
     case jpiFloor:
-      return pg_numeric_floor(jsp, jb, unwrap, found);
+      return executeNumericItemMethod(cxt, jsp, jb, unwrap,
+        pg_numeric_floor, found);
 
     case jpiCeiling:
-      return pg_numeric_ceil(jsp, jb, unwrap, , found);
+      return executeNumericItemMethod(cxt, jsp, jb, unwrap,
+        pg_numeric_ceil, found);
 
     case jpiDouble:
       {
         JsonbValue jbv;
         if (unwrap && JsonbType(jb) == jbvArray)
-          return executeItemUnwrapTargetArray(jsp, jb, found, false);
+          return executeItemUnwrapTargetArray(cxt, jsp, jb, found, false);
         if (jb->type == jbvNumeric)
         {
           char *tmp = pg_numeric_out(jb->val.numeric);
-          double val = float64_in(tmp);
+          double val = float8_in(tmp);
           if (val == LONG_MAX)
           {
             meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
@@ -1139,7 +1151,7 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
             jspOperationName(jsp->type));
           return jperError;
         }
-        res = executeNextItem(jsp, NULL, jb, found, true);
+        res = executeNextItem(cxt, jsp, NULL, jb, found, true);
       }
       break;
 
@@ -1150,13 +1162,13 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
     case jpiTimestamp:
     case jpiTimestampTz:
       if (unwrap && JsonbType(jb) == jbvArray)
-        return executeItemUnwrapTargetArray(jsp, jb, found, false);
-      return executeDateTimeMethod(jsp, jb, found);
+        return executeItemUnwrapTargetArray(cxt, jsp, jb, found, false);
+      return executeDateTimeMethod(cxt, jsp, jb, found);
 
     case jpiKeyValue:
       if (unwrap && JsonbType(jb) == jbvArray)
-        return executeItemUnwrapTargetArray(jsp, jb, found, false);
-      return executeKeyValueMethod(jsp, jb, found);
+        return executeItemUnwrapTargetArray(cxt, jsp, jb, found, false);
+      return executeKeyValueMethod(cxt, jsp, jb, found);
 
     case jpiLast:
       {
@@ -1178,20 +1190,20 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
         lastjbv = hasNext ? &tmpjbv : palloc(sizeof(*lastjbv));
         lastjbv->type = jbvNumeric;
         lastjbv->val.numeric = int64_to_numeric(last);
-        res = executeNextItem(jsp, &elem, lastjbv, found, hasNext);
+        res = executeNextItem(cxt, jsp, &elem, lastjbv, found, hasNext);
       }
       break;
 
     case jpiBigint:
       {
         JsonbValue jbv;
-        Datum datum;
+        int64 value;
         if (unwrap && JsonbType(jb) == jbvArray)
-          return executeItemUnwrapTargetArray(jsp, jb, found, false);
+          return executeItemUnwrapTargetArray(cxt, jsp, jb, found, false);
         if (jb->type == jbvNumeric)
         {
           bool have_error;
-          int64 val = pg_numeric_int8_opt_error(jb->val.numeric, &have_error);
+          value = pg_numeric_int8_opt_error(jb->val.numeric, &have_error);
           if (have_error)
           {
             meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
@@ -1200,14 +1212,13 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
               jspOperationName(jsp->type), "bigint");
             return jperError;
           }
-          datum = Int64GetDatum(val);
           res = jperOk;
         }
         else if (jb->type == jbvString)
         {
           /* cast string as bigint */
           char *tmp = pnstrdup(jb->val.string.val, jb->val.string.len);
-          int64 value = int64_in(tmp);
+          value = int64_in(tmp);
           if (value == LONG_MAX)
           {
             meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
@@ -1227,7 +1238,7 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
         jb = &jbv;
         jb->type = jbvNumeric;
         jb->val.numeric = int64_to_numeric(value);
-        res = executeNextItem(jsp, NULL, jb, found, true);
+        res = executeNextItem(cxt, jsp, NULL, jb, found, true);
       }
       break;
 
@@ -1236,7 +1247,7 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
         JsonbValue jbv;
         bool bval;
         if (unwrap && JsonbType(jb) == jbvArray)
-          return executeItemUnwrapTargetArray(jsp, jb, found, false);
+          return executeItemUnwrapTargetArray(cxt, jsp, jb, found, false);
         if (jb->type == jbvBool)
         {
           bval = jb->val.boolean;
@@ -1245,7 +1256,7 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
         else if (jb->type == jbvNumeric)
         {
           char *tmp = pg_numeric_out(jb->val.numeric);
-          ival = int32_in(tmp);
+          int ival = int32_in(tmp);
           if (ival == INT_MAX)
           {
             meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
@@ -1253,7 +1264,6 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
               tmp, jspOperationName(jsp->type), "boolean");
             return jperError;
           }
-          ival = DatumGetInt32(datum);
           if (ival == 0)
             bval = false;
           else
@@ -1285,7 +1295,7 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
         jb = &jbv;
         jb->type = jbvBool;
         jb->val.boolean = bval;
-        res = executeNextItem(jsp, NULL, jb, found, true);
+        res = executeNextItem(cxt, jsp, NULL, jb, found, true);
       }
       break;
 
@@ -1296,7 +1306,7 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
         Numeric num;
         char *numstr = NULL;
         if (unwrap && JsonbType(jb) == jbvArray)
-          return executeItemUnwrapTargetArray(jsp, jb, found, false);
+          return executeItemUnwrapTargetArray(cxt, jsp, jb, found, false);
 
         if (jb->type == jbvNumeric)
         {
@@ -1337,7 +1347,7 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
           res = jperOk;
         }
         if (res == jperNotFound)
-       ´{
+        {
           meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
             "jsonpath item method .%s() can only be applied to a string or numeric value",
             jspOperationName(jsp->type));
@@ -1423,7 +1433,7 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
         jb = &jbv;
         jb->type = jbvNumeric;
         jb->val.numeric = num;
-        res = executeNextItem(jsp, NULL, jb, found, true);
+        res = executeNextItem(cxt, jsp, NULL, jb, found, true);
       }
       break;
 
@@ -1432,7 +1442,7 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
         JsonbValue jbv;
         Datum datum;
         if (unwrap && JsonbType(jb) == jbvArray)
-          return executeItemUnwrapTargetArray(jsp, jb, found, false);
+          return executeItemUnwrapTargetArray(cxt, jsp, jb, found, false);
 
         if (jb->type == jbvNumeric)
         {
@@ -1475,7 +1485,7 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
         jb = &jbv;
         jb->type = jbvNumeric;
         jb->val.numeric = int32_to_numeric(datum);
-        res = executeNextItem(jsp, NULL, jb, found, true);
+        res = executeNextItem(cxt, jsp, NULL, jb, found, true);
       }
       break;
 
@@ -1484,7 +1494,7 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
         JsonbValue jbv;
         char *tmp = NULL;
         if (unwrap && JsonbType(jb) == jbvArray)
-          return executeItemUnwrapTargetArray(jsp, jb, found, false);
+          return executeItemUnwrapTargetArray(cxt, jsp, jb, found, false);
         switch (JsonbType(jb))
         {
           case jbvString:
@@ -1523,7 +1533,7 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
         jb->val.string.val = tmp;
         jb->val.string.len = strlen(jb->val.string.val);
         jb->type = jbvString;
-        res = executeNextItem(jsp, NULL, jb, found, true);
+        res = executeNextItem(cxt, jsp, NULL, jb, found, true);
       }
       break;
 

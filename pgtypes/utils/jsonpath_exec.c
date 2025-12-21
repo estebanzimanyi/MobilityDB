@@ -59,13 +59,13 @@
 
 #include "postgres.h"
 
-#include "catalog/pg_collation.h"
+#include "catalog/pg_collation_d.h"
 #include "catalog/pg_type.h"
 // #include "funcapi.h"
 // #include "miscadmin.h"
-// #include "nodes/miscnodes.h"
-// #include "nodes/nodeFuncs.h"
-// #include "regex/regex.h"
+#include "nodes/pg_list.h"
+#include "nodes/nodeFuncs.h"
+#include "regex/regex.h"
 #include "utils/builtins.h"
 #include "utils/date.h"
 #include "utils/datetime.h"
@@ -74,10 +74,12 @@
 #include "utils/json.h"
 #include "utils/jsonpath.h"
 #include "utils/timestamp.h"
+#include "utils/varlena.h"
+#include "utils/mb/pg_wchar.h"
 
 #include "pgtypes.h"
 
-// #include "catalog/pg_collation.h"
+// #include "catalog/pg_collation_d.h"
 // #include "catalog/pg_type.h"
 // #include "funcapi.h"
 // #include "miscadmin.h"
@@ -249,11 +251,9 @@ typedef struct JsonValueListIterator
 #define jspIgnoreStructuralErrors(cxt)  ((cxt)->ignoreStructuralErrors)
 #define jspThrowErrors(cxt)             ((cxt)->throwErrors)
 
-// MEOS Definition taken from fmgr.h
-typedef Datum (*PGFunction) (FunctionCallInfo fcinfo);
-
 typedef JsonPathBool (*JsonPathPredicateCallback) (JsonPathItem *jsp,
  JsonbValue *larg, JsonbValue *rarg, void *param);
+typedef Numeric (*UnaryArithmFunc) (Numeric num);
 typedef Numeric (*BinaryArithmFunc) (Numeric num1, Numeric num2, bool *error);
 
 static JsonPathExecResult executeJsonPath(JsonPath *path, void *vars,
@@ -285,13 +285,13 @@ static JsonPathBool executePredicate(JsonPathExecContext *cxt,
 static JsonPathExecResult executeBinaryArithmExpr(JsonPathExecContext *cxt,
   JsonPathItem *jsp, JsonbValue *jb, BinaryArithmFunc func, JsonValueList *found);
 static JsonPathExecResult executeUnaryArithmExpr(JsonPathExecContext *cxt,
-  JsonPathItem *jsp, JsonbValue *jb, PGFunction func, JsonValueList *found);
+  JsonPathItem *jsp, JsonbValue *jb, UnaryArithmFunc func, JsonValueList *found);
 static JsonPathBool executeStartsWith(JsonPathItem *jsp,
   JsonbValue *whole, JsonbValue *initial, void *param);
 static JsonPathBool executeLikeRegex(JsonPathItem *jsp, JsonbValue *str,
   JsonbValue *rarg, void *param);
 static JsonPathExecResult executeNumericItemMethod(JsonPathExecContext *cxt,
-  JsonPathItem *jsp, JsonbValue *jb, bool unwrap, PGFunction func,
+  JsonPathItem *jsp, JsonbValue *jb, bool unwrap, UnaryArithmFunc func,
   JsonValueList *found);
 static JsonPathExecResult executeDateTimeMethod(JsonPathExecContext *cxt,
   JsonPathItem *jsp, JsonbValue *jb, JsonValueList *found);
@@ -306,7 +306,7 @@ static JsonbValue *GetJsonPathVar(void *cxt, char *varName, int varNameLen,
 static int CountJsonPathVars(void *cxt);
 static void JsonItemFromDatum(Datum val, Oid typid, int32 typmod,
   JsonbValue *res);
-static void JsonbValueInitNumericDatum(JsonbValue *jbv, Datum num);
+static void JsonbValueInitNumeric(JsonbValue *jbv, Numeric num);
 static void getJsonPathVariable(JsonPathExecContext *cxt,
   JsonPathItem *variable, JsonbValue *value);
 static int  countVariablesFromJsonb(void *varsJsonb);
@@ -499,10 +499,6 @@ pg_jsonb_path_query_first(Jsonb *jb, JsonPath *jp, Jsonb *vars,
 
 /********************Execute functions for JsonPath**************************/
 
-/*********************/
-#if 0 /* NOT USED */
-/*********************/
-
 /*
  * Interface to jsonpath executor
  *
@@ -667,8 +663,7 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
       return executeUnaryArithmExpr(cxt, jsp, jb, NULL, found);
 
     case jpiMinus:
-      return executeUnaryArithmExpr(cxt, jsp, jb, numeric_uminus,
-        found);
+      return executeUnaryArithmExpr(cxt, jsp, jb, pg_numeric_uminus, found);
 
     case jpiAnyArray:
       if (JsonbType(jb) == jbvArray)
@@ -681,8 +676,9 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
         res = executeNextItem(cxt, jsp, NULL, jb, found, true);
       else if (! jspIgnoreStructuralErrors(cxt))
       {
-        meos_error(ERROR, MEOS_ERR_SQL_JSON_ARRAY_NOT_FOUND,
+        meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
           "jsonpath wildcard array accessor can only be applied to an array");
+        return jperError;
       }
       break;
 
@@ -692,8 +688,9 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
         bool hasNext = jspGetNext(jsp, &elem);
         if (jb->type != jbvBinary)
         {
-          meos_error(ERROR, MEOS_ERR_SQL_JSON_ARRAY_NOT_FOUND,
+          meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
             "invalid jsonb object type: %d", jb->type);
+          return jperError;
         }
 
         return executeAnyItem(cxt, hasNext ? &elem : NULL,
@@ -704,8 +701,9 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
       else if (! jspIgnoreStructuralErrors(cxt))
       {
         Assert(found);
-        meos_error(ERROR, MEOS_ERR_SQL_JSON_OBJECT_NOT_FOUND,
+        meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
           "jsonpath wildcard member accessor can only be applied to an object");
+        return jperError;
       }
       break;
 
@@ -745,6 +743,7 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
           {
             meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
               "jsonpath array subscript is out of bounds");
+            return jperError;
           }
 
           if (index_from < 0)
@@ -788,8 +787,9 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
       }
       else if (! jspIgnoreStructuralErrors(cxt))
       {
-        meos_error(ERROR, MEOS_ERR_SQL_JSON_ARRAY_NOT_FOUND,
+        meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
           "jsonpath array accessor can only be applied to an array");
+        return jperError;
       }
       break;
 
@@ -832,11 +832,11 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
         else if (! jspIgnoreStructuralErrors(cxt))
         {
           Assert(found);
-          if (! jspThrowErrors(cxt))
-            return jperError;
-          meos_error(ERROR, MEOS_ERR_SQL_JSON_MEMBER_NOT_FOUND,
-            "JSON object does not contain key \"%s\"",
-            pnstrdup(key.val.string.val, key.val.string.len);
+          if (jspThrowErrors(cxt))
+            meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
+              "JSON object does not contain key \"%s\"",
+              pnstrdup(key.val.string.val, key.val.string.len));
+          return jperError;
         }
       }
       else if (unwrap && JsonbType(jb) == jbvArray)
@@ -844,8 +844,9 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
       else if (! jspIgnoreStructuralErrors(cxt))
       {
         Assert(found);
-        meos_error(ERROR, MEOS_ERR_SQL_JSON_MEMBER_NOT_FOUND,
+        meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
           "jsonpath member accessor can only be applied to an object");
+        return jperError;
       }
       break;
 
@@ -893,9 +894,10 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
           {
             if (! jspIgnoreStructuralErrors(cxt))
             {
-              meos_error(ERROR, MEOS_ERR_SQL_JSON_ARRAY_NOT_FOUND,
+              meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
                 "jsonpath item method .%s() can only be applied to an array",
                 jspOperationName(jsp->type));
+              return jperError;
             }
             break;
           }
@@ -909,15 +911,15 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
       break;
 
     case jpiAbs:
-      return executeNumericItemMethod(cxt, jsp, jb, unwrap, numeric_abs,
+      return executeNumericItemMethod(cxt, jsp, jb, unwrap, pg_numeric_abs,
         found);
 
     case jpiFloor:
-      return executeNumericItemMethod(cxt, jsp, jb, unwrap, numeric_floor,
+      return executeNumericItemMethod(cxt, jsp, jb, unwrap, pg_numeric_floor,
         found);
 
     case jpiCeiling:
-      return executeNumericItemMethod(cxt, jsp, jb, unwrap, numeric_ceil,
+      return executeNumericItemMethod(cxt, jsp, jb, unwrap, pg_numeric_ceil,
         found);
 
     case jpiDouble:
@@ -927,19 +929,22 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
           return executeItemUnwrapTargetArray(cxt, jsp, jb, found, false);
         if (jb->type == jbvNumeric)
         {
-          char *tmp = pg_numeric_out(jb->val.numeric));
-          ErrorSaveContext escontext = {T_ErrorSaveContext};
+          char *tmp = pg_numeric_out(jb->val.numeric);
           double val = float8_in(tmp);
-          if (escontext.error_occurred)
+          pfree(tmp);
+          if (val == DBL_MAX)
           {
             meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
               "argument \"%s\" of jsonpath item method .%s() is invalid for type %s",
               tmp, jspOperationName(jsp->type), "double precision");
+            return jperError;
+          }
           if (isinf(val) || isnan(val))
           {
             meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
               "NaN or Infinity is not allowed for jsonpath item method .%s()",
               jspOperationName(jsp->type));
+            return jperError;
           }
           res = jperOk;
         }
@@ -947,24 +952,26 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
         {
           /* cast string as double */
           char *tmp = pnstrdup(jb->val.string.val, jb->val.string.len);
-          ErrorSaveContext escontext = {T_ErrorSaveContext};
           double val = float8_in(tmp);
+          pfree(tmp);
           if (val == DBL_MAX)
           {
             meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
-              "argument \"%s\" of jsonpath item method .%s() is invalid for type %s",
-              tmp, jspOperationName(jsp->type), "double precision");
+              "argument \"%s\" of jsonpath item method .%s() is invalid for type double precision",
+              tmp, jspOperationName(jsp->type));
+            return jperError;
           }
           if (isinf(val) || isnan(val))
           {
             meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
               "NaN or Infinity is not allowed for jsonpath item method .%s()",
               jspOperationName(jsp->type));
+            return jperError;
           }
 
           jb = &jbv;
           jb->type = jbvNumeric;
-          jb->val.numeric = pg_float8_numeric(val);
+          jb->val.numeric = float8_to_numeric(val);
           res = jperOk;
         }
 
@@ -973,6 +980,7 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
           meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
             "jsonpath item method .%s() can only be applied to a string or numeric value",
             jspOperationName(jsp->type));
+          return jperError;
         }
         res = executeNextItem(cxt, jsp, NULL, jb, found, true);
       }
@@ -1001,8 +1009,9 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
         bool hasNext = jspGetNext(jsp, &elem);
         if (cxt->innermostArraySize < 0)
         {
-          meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+          meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
             "evaluating jsonpath LAST outside of array subscript");
+          return jperError;
         }
         if (! hasNext && ! found)
         {
@@ -1019,42 +1028,37 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
 
     case jpiBigint:
       {
-        JsonbValue  jbv;
-        Datum datum;
+        JsonbValue jbv;
+        int64 val;
         if (unwrap && JsonbType(jb) == jbvArray)
           return executeItemUnwrapTargetArray(cxt, jsp, jb, found, false);
         if (jb->type == jbvNumeric)
         {
           bool have_error;
-          int64 val = pg_numeric_int8_opt_error(jb->val.numeric, &have_error);
+          val = pg_numeric_int8_opt_error(jb->val.numeric, &have_error);
           if (have_error)
           {
+            char *tmp = pg_numeric_out(jb->val.numeric);
             meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
-              "argument \"%s\" of jsonpath item method .%s() is invalid for type %s",
-              pg_numeric_out(jb->val.numeric, jspOperationName(jsp->type),
-              "bigint");
+              "argument \"%s\" of jsonpath item method .%s() is invalid for type bigint",
+              tmp, jspOperationName(jsp->type));
+            return jperError;
           }
-
-          datum = Int64GetDatum(val);
           res = jperOk;
         }
         else if (jb->type == jbvString)
         {
           /* cast string as bigint */
           char *tmp = pnstrdup(jb->val.string.val, jb->val.string.len);
-          ErrorSaveContext escontext = {T_ErrorSaveContext};
-          bool noerr;
-
-          noerr = int8_in, tmp,
-                            InvalidOid, -1,
-                            (Node *) &escontext,
-                            &datum);
-
-          if (! noerr || escontext.error_occurred)
+          val = int64_in(tmp);
+          pfree(tmp);
+          if (val == PG_INT64_MAX)
           {
             meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
-              "argument \"%s\" of jsonpath item method .%s() is invalid for type %s",
-              tmp, jspOperationName(jsp->type), "bigint");
+              "argument \"%s\" of jsonpath item method .%s() is invalid for type bigint",
+              tmp, jspOperationName(jsp->type));
+            pfree(tmp);
+            return jperError;
           }
           res = jperOk;
         }
@@ -1064,18 +1068,19 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
           meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
             "jsonpath item method .%s() can only be applied to a string or numeric value",
             jspOperationName(jsp->type));
+          return jperError;
         }
 
         jb = &jbv;
         jb->type = jbvNumeric;
-        jb->val.numeric = pg_int8_to_numeric(datum);
+        jb->val.numeric = int64_to_numeric(val);
         res = executeNextItem(cxt, jsp, NULL, jb, found, true);
       }
       break;
 
     case jpiBoolean:
       {
-        JsonbValue  jbv;
+        JsonbValue jbv;
         bool bval;
         if (unwrap && JsonbType(jb) == jbvArray)
           return executeItemUnwrapTargetArray(cxt, jsp, jb, found, false);
@@ -1087,30 +1092,21 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
         }
         else if (jb->type == jbvNumeric)
         {
-          int ival;
-          Datum datum;
-          bool noerr;
           char *tmp = pg_numeric_out(jb->val.numeric);
-          ErrorSaveContext escontext = {T_ErrorSaveContext};
-
-          noerr = int4_in(tmp,
-                            InvalidOid, -1,
-                            (Node *) &escontext,
-                            &datum);
-
-          if (! noerr || escontext.error_occurred)
+          int ival = int32_in(tmp);
+          if (ival == PG_INT32_MAX)
           {
             meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
-              "argument \"%s\" of jsonpath item method .%s() is invalid for type %s",
-              tmp, jspOperationName(jsp->type), "boolean"));
+              "argument \"%s\" of jsonpath item method .%s() is invalid for type boolean",
+              tmp, jspOperationName(jsp->type));
+            pfree(tmp);
+            return jperError;
           }
-
-          ival = DatumGetInt32(datum);
+          pfree(tmp);
           if (ival == 0)
             bval = false;
           else
             bval = true;
-
           res = jperOk;
         }
         else if (jb->type == jbvString)
@@ -1120,8 +1116,10 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
           if (! parse_bool(tmp, &bval))
           {
             meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
-              "argument \"%s\" of jsonpath item method .%s() is invalid for type %s",
-              tmp, jspOperationName(jsp->type), "boolean");
+              "argument \"%s\" of jsonpath item method .%s() is invalid for type boolean",
+              tmp, jspOperationName(jsp->type));
+            pfree(tmp);
+            return jperError;
           }
           res = jperOk;
         }
@@ -1130,6 +1128,7 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
           meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
             "jsonpath item method .%s() can only be applied to a boolean, string, or numeric value",
             jspOperationName(jsp->type));
+          return jperError;
         }
 
         jb = &jbv;
@@ -1147,7 +1146,6 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
         char *numstr = NULL;
         if (unwrap && JsonbType(jb) == jbvArray)
           return executeItemUnwrapTargetArray(cxt, jsp, jb, found, false);
-
         if (jb->type == jbvNumeric)
         {
           num = jb->val.numeric;
@@ -1156,6 +1154,7 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
             meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
               "NaN or Infinity is not allowed for jsonpath item method .%s()",
               jspOperationName(jsp->type));
+            return jperError;
           }
 
           if (jsp->type == jpiDecimal)
@@ -1165,39 +1164,33 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
         else if (jb->type == jbvString)
         {
           /* cast string as number */
-          Datum datum;
           bool noerr;
-          ErrorSaveContext escontext = {T_ErrorSaveContext};
           numstr = pnstrdup(jb->val.string.val, jb->val.string.len);
-
-          noerr = pg_numeric_in(numstr,
-                            InvalidOid, -1,
-                            (Node *) &escontext,
-                            &datum);
-
-          if (! noerr || escontext.error_occurred)
+          num = pg_numeric_in(numstr, -1);
+          if (! num)
           {
             meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
-              "argument \"%s\" of jsonpath item method .%s() is invalid for type %s",
-              numstr, jspOperationName(jsp->type), "numeric");
+              "argument \"%s\" of jsonpath item method .%s() is invalid for type numeric",
+              numstr, jspOperationName(jsp->type));
+            pfree(numstr);
+            return jperError;
           }
-
-          num = DatumGetNumeric(datum);
+          pfree(numstr);
           if (numeric_is_nan(num) || numeric_is_inf(num))
           {
             meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
               "NaN or Infinity is not allowed for jsonpath item method .%s()",
               jspOperationName(jsp->type));
+            return jperError;
           }
-
           res = jperOk;
         }
-
         if (res == jperNotFound)
         {
           meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
             "jsonpath item method .%s() can only be applied to a string or numeric value",
             jspOperationName(jsp->type));
+          return jperError;
         }
 
         /*
@@ -1208,22 +1201,19 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
          */
         if (jsp->type == jpiDecimal && jsp->content.args.left)
         {
-          Datum numdatum;
-          Datum dtypmod;
+          Numeric num;
           int32 precision;
           int32 scale = 0;
           bool have_error;
           bool noerr;
-          ArrayType *arrtypmod;
-          Datum datums[2];
-          char pstr[12];  /* sign, 10 digits and '\0' */
-          char sstr[12];  /* sign, 10 digits and '\0' */
-          ErrorSaveContext escontext = {T_ErrorSaveContext};
+          int32 arrtypmod[2];
+          int32 typmod;
           jspGetLeftArg(jsp, &elem);
           if (elem.type != jpiNumeric)
           {
-            meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+            meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
               "invalid jsonpath item type for .decimal() precision");
+            return jperError;
           }
 
           precision = pg_numeric_int4_opt_error(jspGetNumeric(&elem),
@@ -1232,7 +1222,8 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
           {
             meos_error(ERROR,MEOS_ERR_SQL_JSON_ERROR,
               "precision of jsonpath item method .%s() is out of range for type integer",
-            jspOperationName(jsp->type));
+              jspOperationName(jsp->type));
+            return jperError;
           }
 
           if (jsp->content.args.right)
@@ -1240,8 +1231,9 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
             jspGetRightArg(jsp, &elem);
             if (elem.type != jpiNumeric)
             {
-              meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+              meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
                 "invalid jsonpath item type for .decimal() scale");
+              return jperError;
             }
 
             scale = pg_numeric_int4_opt_error(jspGetNumeric(&elem),
@@ -1251,35 +1243,23 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
               meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
                 "scale of jsonpath item method .%s() is out of range for type integer",
                 jspOperationName(jsp->type));
+              return jperError;
             }
           }
 
-          /*
-           * numerictypmodin() takes the precision and scale in the
-           * form of CString arrays.
-           */
-          pg_ltoa(precision, pstr);
-          datums[0] = CStringGetDatum(pstr);
-          pg_ltoa(scale, sstr);
-          datums[1] = CStringGetDatum(sstr);
-          arrtypmod = construct_array_builtin(datums, 2, CSTRINGOID);
-          dtypmod = pg_numeric_typmodin(arrtypmod);
-
+          /* pg_numeric_typmodin() takes the precision and scale */
+          typmod = pg_numeric_typmodin(arrtypmod, 2);
           /* Convert numstr to Numeric with typmod */
           Assert(numstr != NULL);
-          noerr = pg_numeric_in(numstr,
-                            InvalidOid, dtypmod,
-                            (Node *) &escontext,
-                            &numdatum);
-
-          if (! noerr || escontext.error_occurred)
+          num = pg_numeric_in(numstr, typmod);
+          if (! num)
           {
             meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
-              "argument \"%s\" of jsonpath item method .%s() is invalid for type %s",
-              numstr, jspOperationName(jsp->type), "numeric");
+              "argument \"%s\" of jsonpath item method .%s() is invalid for type numeric",
+              numstr, jspOperationName(jsp->type));
+            return jperError;
           }
-          num = DatumGetNumeric(numdatum);
-          pfree(arrtypmod);
+          pfree(numstr);
         }
 
         jb = &jbv;
@@ -1292,41 +1272,38 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
     case jpiInteger:
       {
         JsonbValue jbv;
-        Datum datum;
+        int32 val;
         if (unwrap && JsonbType(jb) == jbvArray)
           return executeItemUnwrapTargetArray(cxt, jsp, jb, found, false);
 
         if (jb->type == jbvNumeric)
         {
           bool have_error;
-          int32 val = pg_numeric_int4_opt_error(jb->val.numeric, &have_error);
+          val = pg_numeric_int4_opt_error(jb->val.numeric, &have_error);
           if (have_error)
           {
             meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
-              "argument \"%s\" of jsonpath item method .%s() is invalid for type %s",
+              "argument \"%s\" of jsonpath item method .%s() is invalid for type integer",
               pg_numeric_out(jb->val.numeric),
-              jspOperationName(jsp->type), "integer");
-          }
-
-          datum = Int32GetDatum(val);
-          res = jperOk;
+              jspOperationName(jsp->type));
+           return jperError;
+         }
+         res = jperOk;
         }
         else if (jb->type == jbvString)
         {
           /* cast string as integer */
           char *tmp = pnstrdup(jb->val.string.val, jb->val.string.len);
-          ErrorSaveContext escontext = {T_ErrorSaveContext};
-          bool noerr = int4_in(tmp,
-                            InvalidOid, -1,
-                            (Node *) &escontext,
-                            &datum);
-
-          if (! noerr || escontext.error_occurred)
+          val = int32_in(tmp);
+          if (val == PG_INT32_MAX)
           {
             meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
-              "argument \"%s\" of jsonpath item method .%s() is invalid for type %s",
-              tmp, jspOperationName(jsp->type), "integer");
+              "argument \"%s\" of jsonpath item method .%s() is invalid for type integer",
+              tmp, jspOperationName(jsp->type));
+            pfree(tmp);
+            return jperError;
           }
+          pfree(tmp);
           res = jperOk;
         }
 
@@ -1335,10 +1312,11 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
           meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
             "jsonpath item method .%s() can only be applied to a string or numeric value",
             jspOperationName(jsp->type));
+          return jperError;
         }
         jb = &jbv;
         jb->type = jbvNumeric;
-        jb->val.numeric = int4_to_numeric(datum);
+        jb->val.numeric = int32_to_numeric(val);
         res = executeNextItem(cxt, jsp, NULL, jb, found, true);
       }
       break;
@@ -1381,7 +1359,7 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
               "jsonpath item method .%s() can only be applied to a boolean, "
               "string, numeric, or datetime value",
               jspOperationName(jsp->type));
-            break;
+            return jperError;
         }
 
         jb = &jbv;
@@ -1394,8 +1372,9 @@ executeItemOptUnwrapTarget(JsonPathExecContext *cxt, JsonPathItem *jsp,
       break;
 
     default:
-      meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+      meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
         "unrecognized jsonpath item type: %d", jsp->type);
+      return jperError;
   }
 
   return res;
@@ -1411,7 +1390,7 @@ executeItemUnwrapTargetArray(JsonPathExecContext *cxt, JsonPathItem *jsp,
   if (jb->type != jbvBinary)
   {
     Assert(jb->type != jbvArray);
-    meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+    meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
       "invalid jsonb array value type: %d", jb->type);
     return jperError;
   }
@@ -1506,8 +1485,9 @@ executeBoolItem(JsonPathExecContext *cxt, JsonPathItem *jsp,
 
   if (!canHaveNext && jspHasNext(jsp))
   {
-    meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+    meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
       "boolean jsonpath item cannot have next item");
+    return jpbUnknown; // TODO
   }
 
   switch (jsp->type)
@@ -1518,8 +1498,7 @@ executeBoolItem(JsonPathExecContext *cxt, JsonPathItem *jsp,
       if (res == jpbFalse)
         return jpbFalse;
 
-      /* SQL/JSON says that we should check second arg in case of
-       * jperError  */
+      /* SQL/JSON says that we should check second arg in case of jperError  */
       jspGetRightArg(jsp, &rarg);
       res2 = executeBoolItem(cxt, &rarg, jb, false);
       return res2 == jpbTrue ? res : res2;
@@ -1586,7 +1565,7 @@ executeBoolItem(JsonPathExecContext *cxt, JsonPathItem *jsp,
         JsonPathExecResult res =
           executeItemOptUnwrapResultNoThrow(cxt, &larg, jb, false, &vals);
         if (jperIsError(res))
-          return jpbUnknown;
+          return jpbUnknown; // TODO
         return JsonValueListIsEmpty(&vals) ? jpbFalse : jpbTrue;
       }
       else
@@ -1594,13 +1573,13 @@ executeBoolItem(JsonPathExecContext *cxt, JsonPathItem *jsp,
         JsonPathExecResult res =
           executeItemOptUnwrapResultNoThrow(cxt, &larg, jb, false, NULL);
         if (jperIsError(res))
-          return jpbUnknown;
+          return jpbUnknown; // TODO
         return res == jperOk ? jpbTrue : jpbFalse;
       }
     default:
-      meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-      "invalid boolean jsonpath item type: %d", jsp->type);
-      return jpbUnknown;
+      meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
+        "invalid boolean jsonpath item type: %d", jsp->type);
+      return jpbUnknown; // TODO
   }
 }
 
@@ -1798,7 +1777,6 @@ executeBinaryArithmExpr(JsonPathExecContext *cxt, JsonPathItem *jsp,
     return jper;
 
   jspGetRightArg(jsp, &elem);
-
   jper = executeItemOptUnwrapResult(cxt, &elem, jb, true, &rseq);
   if (jperIsError(jper))
     return jper;
@@ -1806,7 +1784,7 @@ executeBinaryArithmExpr(JsonPathExecContext *cxt, JsonPathItem *jsp,
   if (JsonValueListLength(&lseq) != 1 ||
      ! (lval = getScalar(JsonValueListHead(&lseq), jbvNumeric)))
   {
-    meos_error(ERROR, MEOS_ERR_SINGLETON_SQL_JSON_ITEM_REQUIRED,
+    meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
       "left operand of jsonpath operator %s is not a single numeric value",
       jspOperationName(jsp->type));
     return jperError;
@@ -1815,7 +1793,7 @@ executeBinaryArithmExpr(JsonPathExecContext *cxt, JsonPathItem *jsp,
   if (JsonValueListLength(&rseq) != 1 ||
       ! (rval = getScalar(JsonValueListHead(&rseq), jbvNumeric)))
   {
-    meos_error(ERROR, MEOS_ERR_SINGLETON_SQL_JSON_ITEM_REQUIRED,
+    meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
       "right operand of jsonpath operator %s is not a single numeric value",
       jspOperationName(jsp->type));
     return jperError;
@@ -1847,7 +1825,7 @@ executeBinaryArithmExpr(JsonPathExecContext *cxt, JsonPathItem *jsp,
  */
 static JsonPathExecResult
 executeUnaryArithmExpr(JsonPathExecContext *cxt, JsonPathItem *jsp,
-  JsonbValue *jb, PGFunction func, JsonValueList *found)
+  JsonbValue *jb, UnaryArithmFunc func, JsonValueList *found)
 {
   JsonPathExecResult jper;
   JsonPathExecResult jper2;
@@ -1867,7 +1845,7 @@ executeUnaryArithmExpr(JsonPathExecContext *cxt, JsonPathItem *jsp,
   JsonValueListInitIterator(&seq, &it);
   while ((val = JsonValueListNext(&seq, &it)))
   {
-    if (val = getScalar(val, jbvNumeric))
+    if ((val = getScalar(val, jbvNumeric)))
     {
       if (! found && ! hasNext)
         return jperOk;
@@ -1876,8 +1854,7 @@ executeUnaryArithmExpr(JsonPathExecContext *cxt, JsonPathItem *jsp,
     {
       if (! found && ! hasNext)
         continue;    /* skip non-numerics processing */
-
-      meos_error(ERROR, MEOS_ERR_SQL_JSON_NUMBER_NOT_FOUND,
+      meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
         "operand of unary jsonpath operator %s is not a numeric value",
         jspOperationName(jsp->type));
       return jperError;
@@ -1935,7 +1912,7 @@ executeLikeRegex(JsonPathItem *jsp, JsonbValue *str, JsonbValue *rarg,
   /* Cache regex text and converted flags. */
   if (!cxt->regex)
   {
-    cxt->regex = cstring_to_text_with_len(jsp->content.like_regex.pattern,
+    cxt->regex = pg_cstring_to_text_with_len(jsp->content.like_regex.pattern,
       jsp->content.like_regex.patternlen);
     (void) jspConvertRegexFlags(jsp->content.like_regex.flags,
       &(cxt->cflags), NULL);
@@ -1953,7 +1930,7 @@ executeLikeRegex(JsonPathItem *jsp, JsonbValue *str, JsonbValue *rarg,
  */
 static JsonPathExecResult
 executeNumericItemMethod(JsonPathExecContext *cxt, JsonPathItem *jsp,
-  JsonbValue *jb, bool unwrap, PGFunction func, JsonValueList *found)
+  JsonbValue *jb, bool unwrap, UnaryArithmFunc func, JsonValueList *found)
 {
   JsonPathItem next;
   if (unwrap && JsonbType(jb) == jbvArray)
@@ -1992,9 +1969,7 @@ static JsonPathExecResult
 executeDateTimeMethod(JsonPathExecContext *cxt, JsonPathItem *jsp,
   JsonbValue *jb, JsonValueList *found)
 {
-  JsonbValue jbvbuf;
   Datum value;
-  Oid collid;
   Oid typid;
   int32 typmod = -1;
   int tz = 0;
@@ -2011,7 +1986,7 @@ executeDateTimeMethod(JsonPathExecContext *cxt, JsonPathItem *jsp,
     return jperError;
   }
 
-  text *datetime = cstring_to_text_with_len(jb->val.string.val,
+  text *datetime = pg_cstring_to_text_with_len(jb->val.string.val,
     jb->val.string.len);
 
   /*
@@ -2019,7 +1994,7 @@ executeDateTimeMethod(JsonPathExecContext *cxt, JsonPathItem *jsp,
    * use, but right now it's unclear that they'd be able to do better than
    * DEFAULT_COLLATION_OID anyway.
    */
-  collid = DEFAULT_COLLATION_OID;
+  Oid collid = DEFAULT_COLLATION_OID;
 
   /*
    * .datetime(template) has an argument, the rest of the methods don't have
@@ -2030,20 +2005,18 @@ executeDateTimeMethod(JsonPathExecContext *cxt, JsonPathItem *jsp,
     text *template;
     char *template_str;
     int template_len;
-    ErrorSaveContext escontext = {T_ErrorSaveContext};
     jspGetArg(jsp, &elem);
     if (elem.type != jpiString)
     {
-      meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+      meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
         "invalid jsonpath item type for .datetime() argument");
       return jperError;
     }
 
     template_str = jspGetString(&elem, &template_len);
-    template = cstring_to_text_with_len(template_str, template_len);
-    value = parse_datetime(datetime, template, collid, true, &typid,
-      &typmod, &tz, jspThrowErrors(cxt) ? NULL : (Node *) &escontext);
-    if (escontext.error_occurred)
+    template = pg_cstring_to_text_with_len(template_str, template_len);
+    if (! pg_parse_datetime(datetime, template, collid, true, &typid,
+        &typmod, &tz, &value))
       res = jperError;
     else
       res = jperOk;
@@ -2089,7 +2062,7 @@ executeDateTimeMethod(JsonPathExecContext *cxt, JsonPathItem *jsp,
       jspGetArg(jsp, &elem);
       if (elem.type != jpiNumeric)
       {
-        meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+        meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
           "invalid jsonpath item type for %s argument",
           jspOperationName(jsp->type));
         return jperError;
@@ -2109,16 +2082,12 @@ executeDateTimeMethod(JsonPathExecContext *cxt, JsonPathItem *jsp,
     /* loop until datetime format fits */
     for (i = 0; i < lengthof(fmt_str); i++)
     {
-      ErrorSaveContext escontext = {T_ErrorSaveContext};
       if (!fmt_txt[i])
       {
-        MemoryContext oldcxt = MemoryContextSwitchTo(TopMemoryContext);
-        fmt_txt[i] = cstring_to_text(fmt_str[i]);
-        MemoryContextSwitchTo(oldcxt);
+        fmt_txt[i] = pg_cstring_to_text(fmt_str[i]);
       }
-      value = parse_datetime(datetime, fmt_txt[i], collid, true, &typid,
-        &typmod, &tz, (Node *) &escontext);
-      if (!escontext.error_occurred)
+      if (pg_parse_datetime(datetime, fmt_txt[i], collid, true, &typid,
+        &typmod, &tz, &value))
       {
         res = jperOk;
         break;
@@ -2127,25 +2096,21 @@ executeDateTimeMethod(JsonPathExecContext *cxt, JsonPathItem *jsp,
 
     if (res == jperNotFound)
     {
+      char *tmp = pg_text_to_cstring(datetime);
       if (jsp->type == jpiDatetime)
-      {
         meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-          "%s format is not recognized: \"%s\"",
-          "datetime", text_to_cstring(datetime));
-        return jperError;
-      }
+          "datetime format is not recognized: \"%s\"", tmp);
       else
-      {
         meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
           "%s format is not recognized: \"%s\"",
-          jspOperationName(jsp->type), text_to_cstring(datetime));
-        return jperError;
-      }
+          jspOperationName(jsp->type), tmp);
+      pfree(tmp);
+      return jperError;
     }
   }
 
   /*
-   * parse_datetime() processes the entire input string per the template or
+   * pg_parse_datetime() processes the entire input string per the template or
    * ISO format and returns the Datum in best fitted datetime type.  So, if
    * this call is for a specific datatype, then we do the conversion here.
    * Throw an error for incompatible types.
@@ -2164,10 +2129,13 @@ executeDateTimeMethod(JsonPathExecContext *cxt, JsonPathItem *jsp,
             break;
           case TIMEOID:
           case TIMETZOID:
+          {
+            char *tmp = pg_text_to_cstring(datetime);
             meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-              "date format is not recognized: \"%s\"",
-              text_to_cstring(datetime));
+              "date format is not recognized: \"%s\"", tmp);
+            pfree(tmp);
             return jperError;
+          }
           case TIMESTAMPOID:
             value = timestamp_to_date(value);
             break;
@@ -2176,7 +2144,7 @@ executeDateTimeMethod(JsonPathExecContext *cxt, JsonPathItem *jsp,
             value = timestamptz_to_date(value);
             break;
           default:
-            meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+            meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
               "type with oid %u not supported", typid);
             return jperError;
         }
@@ -2190,15 +2158,18 @@ executeDateTimeMethod(JsonPathExecContext *cxt, JsonPathItem *jsp,
         switch (typid)
         {
           case DATEOID:
+          {
+            char *tmp = pg_text_to_cstring(datetime);
             meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-              "time format is not recognized: \"%s\"",
-              text_to_cstring(datetime));
+              "time format is not recognized: \"%s\"", tmp);
+            pfree(tmp);
             return jperError;
+          }
           case TIMEOID:  /* Nothing to do for TIME */
             break;
           case TIMETZOID:
             checkTimezoneIsUsedForCast(cxt->useTz, "timetz", "time");
-            value = timetz_to_time(value);
+            value = TimeADTGetDatum(timetz_to_time(DatumGetTimeTzADTP(value)));
             break;
           case TIMESTAMPOID:
             value = timestamp_to_time(value);
@@ -2208,7 +2179,7 @@ executeDateTimeMethod(JsonPathExecContext *cxt, JsonPathItem *jsp,
             value = timestamptz_to_time(value);
             break;
           default:
-            meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+            meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
               "type with oid %u not supported", typid);
             return jperError;
         }
@@ -2235,21 +2206,25 @@ executeDateTimeMethod(JsonPathExecContext *cxt, JsonPathItem *jsp,
         {
           case DATEOID:
           case TIMESTAMPOID:
+          {
+            char *tmp = pg_text_to_cstring(datetime);
             meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-              "time_tz format is not recognized: \"%s\"",
-              text_to_cstring(datetime));
+              "time_tz format is not recognized: \"%s\"", tmp);
+            pfree(tmp);
             return jperError;
+          }
           case TIMEOID:
             checkTimezoneIsUsedForCast(cxt->useTz, "time", "timetz");
-            value = time_to_timetz(value);
+            value = PointerGetDatum(time_to_timetz(TimeADTGetDatum(value)));
             break;
           case TIMETZOID: /* Nothing to do for TIMETZ */
             break;
           case TIMESTAMPTZOID:
-            value = timestamptz_to_timetz(value);
+            value = PointerGetDatum(timestamptz_to_timetz(
+              DatumGetTimestampTz(value)));
             break;
           default:
-            meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+            meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
               "type with oid %u not supported", typid);
             return jperError;
         }
@@ -2279,10 +2254,13 @@ executeDateTimeMethod(JsonPathExecContext *cxt, JsonPathItem *jsp,
             break;
           case TIMEOID:
           case TIMETZOID:
+          {
+            char *tmp = pg_text_to_cstring(datetime);
             meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-              "timestamp format is not recognized: \"%s\"",
-              text_to_cstring(datetime));
+              "timestamp format is not recognized: \"%s\"", tmp);
+            pfree(tmp);
             return jperError;
+          }
           case TIMESTAMPOID:  /* Nothing to do for TIMESTAMP */
             break;
           case TIMESTAMPTZOID:
@@ -2290,7 +2268,7 @@ executeDateTimeMethod(JsonPathExecContext *cxt, JsonPathItem *jsp,
             value = timestamptz_to_timestamp(value);
             break;
           default:
-            meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+            meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
               "type with oid %u not supported", typid);
             return jperError;
         }
@@ -2298,15 +2276,12 @@ executeDateTimeMethod(JsonPathExecContext *cxt, JsonPathItem *jsp,
         /* Force the user-given time precision, if any */
         if (time_precision != -1)
         {
-          Timestamp  result;
-          ErrorSaveContext escontext = {T_ErrorSaveContext};
-
           /* Get a warning when precision is reduced */
           time_precision = anytimestamp_typmod_check(false, time_precision);
-          result = DatumGetTimestamp(value);
-          AdjustTimestampForTypmod(&result, time_precision,
-             (Node *) &escontext);
-          if (escontext.error_occurred)  /* should not happen */
+          Timestamp result = DatumGetTimestamp(value);
+          bool success = AdjustTimestampForTypmod(&result, time_precision,
+             NULL);
+          if (! success)  /* should not happen */
           {
             meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
               "time precision of jsonpath item method .%s() is invalid",
@@ -2330,10 +2305,10 @@ executeDateTimeMethod(JsonPathExecContext *cxt, JsonPathItem *jsp,
         {
           case DATEOID:
             checkTimezoneIsUsedForCast(cxt->useTz, "date", "timestamptz");
-            /* Get the timezone value explicitly since JsonbValue
-             * keeps that separate */
+            /* Get the timezone value explicitly since JsonbValue keeps that
+             * separate */
             j2date(DatumGetDateADT(value) + POSTGRES_EPOCH_JDATE,
-                 &(tm.tm_year), &(tm.tm_mon), &(tm.tm_mday));
+              &(tm.tm_year), &(tm.tm_mon), &(tm.tm_mday));
             tm.tm_hour = 0;
             tm.tm_min = 0;
             tm.tm_sec = 0;
@@ -2342,9 +2317,12 @@ executeDateTimeMethod(JsonPathExecContext *cxt, JsonPathItem *jsp,
             break;
           case TIMEOID:
           case TIMETZOID:
+          {
+            char *tmp = pg_text_to_cstring(datetime);
             meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-              "%s format is not recognized: \"%s\"",
-              "timestamp_tz", text_to_cstring(datetime));
+              "timestamp_tz format is not recognized: \"%s\"", tmp);
+            pfree(tmp);
+          }
             break;
           case TIMESTAMPOID:
             checkTimezoneIsUsedForCast(cxt->useTz, "timestamp", "timestamptz");
@@ -2360,26 +2338,25 @@ executeDateTimeMethod(JsonPathExecContext *cxt, JsonPathItem *jsp,
           case TIMESTAMPTZOID:  /* Nothing to do for TIMESTAMPTZ */
             break;
           default:
-            meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+            meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
               "type with oid %u not supported", typid);
+            return jperError;
         }
 
         /* Force the user-given time precision, if any */
         if (time_precision != -1)
         {
-          Timestamp  result;
-          ErrorSaveContext escontext = {T_ErrorSaveContext};
-
           /* Get a warning when precision is reduced */
           time_precision = anytimestamp_typmod_check(true, time_precision);
-          result = DatumGetTimestampTz(value);
-          AdjustTimestampForTypmod(&result, time_precision,
-            (Node *) &escontext);
-          if (escontext.error_occurred)  /* should not happen */
+          Timestamp result = DatumGetTimestampTz(value);
+          bool success = AdjustTimestampForTypmod(&result, time_precision,
+            NULL);
+          if (! success)  /* should not happen */
           {
             meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
               "time precision of jsonpath item method .%s() is invalid",
               jspOperationName(jsp->type));
+            return jperError;
           }
           value = TimestampTzGetDatum(result);
           /* Update the typmod value with the user-given precision */
@@ -2390,8 +2367,8 @@ executeDateTimeMethod(JsonPathExecContext *cxt, JsonPathItem *jsp,
       break;
 
     default:
-      meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-      "unrecognized jsonpath item type: %d", jsp->type);
+      meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
+        "unrecognized jsonpath item type: %d", jsp->type);
       return jperError;
   }
 
@@ -2401,6 +2378,8 @@ executeDateTimeMethod(JsonPathExecContext *cxt, JsonPathItem *jsp,
   hasNext = jspGetNext(jsp, &elem);
   if (! hasNext && ! found)
     return res;
+
+  JsonbValue jbvbuf;
   jb = hasNext ? &jbvbuf : palloc(sizeof(*jb));
   jb->type = jbvDatetime;
   jb->val.datetime.value = value;
@@ -2453,9 +2432,10 @@ executeKeyValueMethod(JsonPathExecContext *cxt, JsonPathItem *jsp,
 
   if (JsonbType(jb) != jbvObject || jb->type != jbvBinary)
   {
-    meos_error(ERROR, MEOS_ERR_SQL_JSON_OBJECT_NOT_FOUND,
+    meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
       "jsonpath item method .%s() can only be applied to an object",
       jspOperationName(jsp->type));
+    return jperError;
   }
 
   jbc = jb->val.binary.data;
@@ -2519,10 +2499,6 @@ executeKeyValueMethod(JsonPathExecContext *cxt, JsonPathItem *jsp,
   return res;
 }
 
-/*********************/
-#endif /* NOT USED */
-/*********************/
-
 /*
  * Convert boolean execution status 'res' to a boolean JSON item and execute
  * next jsonpath.
@@ -2561,31 +2537,28 @@ getJsonPathItem(JsonPathExecContext *cxt, JsonPathItem *item,
   {
     case jpiNull:
       value->type = jbvNull;
-      break;
+      return;
     case jpiBool:
       value->type = jbvBool;
       value->val.boolean = jspGetBool(item);
-      break;
+      return;
     case jpiNumeric:
       value->type = jbvNumeric;
       value->val.numeric = jspGetNumeric(item);
-      break;
+      return;
     case jpiString:
       value->type = jbvString;
       value->val.string.val = jspGetString(item, &value->val.string.len);
-      break;
+      return;
     case jpiVariable:
       getJsonPathVariable(cxt, item, value);
       return;
     default:
-      meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
-      "unexpected jsonpath item type");
-  }
+      meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
+        "unexpected jsonpath item type");
+      return;
+ }
 }
-
-/*********************/
-#if 0 /* NOT USED */
-/*********************/
 
 /*
  * Returns the computed value of a JSON path variable with given name.
@@ -2636,10 +2609,6 @@ CountJsonPathVars(void *cxt)
   return list_length(vars);
 }
 
-/*********************/
-#endif /* NOT USED */
-/*********************/
-
 /*
  * Initialize JsonbValue to pass to jsonpath executor from given
  * datum value of the specified type.
@@ -2654,22 +2623,22 @@ JsonItemFromDatum(Datum val, Oid typid, int32 typmod, JsonbValue *res)
       res->val.boolean = DatumGetBool(val);
       break;
     case NUMERICOID:
-      JsonbValueInitNumericDatum(res, val);
+      JsonbValueInitNumeric(res, DatumGetNumeric(val));
       break;
     case INT2OID:
-      JsonbValueInitNumericDatum(res, int16_to_numeric(val));
+      JsonbValueInitNumeric(res, int16_to_numeric(DatumGetInt16(val)));
       break;
     case INT4OID:
-      JsonbValueInitNumericDatum(res, int32_to_numeric(val));
+      JsonbValueInitNumeric(res, int32_to_numeric(DatumGetInt32(val)));
       break;
     case INT8OID:
-      JsonbValueInitNumericDatum(res, int64_to_numeric(val));
+      JsonbValueInitNumeric(res, int64_to_numeric(DatumGetInt64(val)));
       break;
     case FLOAT4OID:
-      JsonbValueInitNumericDatum(res, float4_to_numeric(val));
+      JsonbValueInitNumeric(res, float4_to_numeric(DatumGetFloat4(val)));
       break;
     case FLOAT8OID:
-      JsonbValueInitNumericDatum(res, float8_to_numeric(val));
+      JsonbValueInitNumeric(res, float8_to_numeric(DatumGetFloat8(val)));
       break;
     case TEXTOID:
     case VARCHAROID:
@@ -2705,7 +2674,7 @@ JsonItemFromDatum(Datum val, Oid typid, int32 typmod, JsonbValue *res)
     case JSONOID:
       {
         text *txt = DatumGetTextP(val);
-        char *str = text_to_cstring(txt);
+        char *str = pg_text_to_cstring(txt);
         Jsonb *jb = pg_jsonb_in(str);
         pfree(str);
         JsonItemFromDatum(JsonbPGetDatum(jb), JSONBOID, -1, res);
@@ -2713,17 +2682,16 @@ JsonItemFromDatum(Datum val, Oid typid, int32 typmod, JsonbValue *res)
       }
     default:
       meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-        "could not convert value of type %s to jsonpath",
-        format_type_be(typid));
+        "could not convert value of type %d to jsonpath", typid);
   }
 }
 
 /* Initialize numeric value from the given datum */
 static void
-JsonbValueInitNumericDatum(JsonbValue *jbv, Datum num)
+JsonbValueInitNumeric(JsonbValue *jbv, Numeric num)
 {
   jbv->type = jbvNumeric;
-  jbv->val.numeric = DatumGetNumeric(num);
+  jbv->val.numeric = num;
 }
 
 /*
@@ -2745,9 +2713,9 @@ getJsonPathVariable(JsonPathExecContext *cxt, JsonPathItem *variable,
       (v = cxt->getVar(cxt->vars, varName, varNameLength, &baseObject,
         &baseObjectId)) == NULL)
   {
-    meos_error(ERROR, MEOS_ERR_UNDEFINED_OBJECT),
+    meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
       "could not find jsonpath variable \"%s\"",
-      pnstrdup(varName, varNameLength);
+      pnstrdup(varName, varNameLength));
     return;
   }
   if (baseObjectId > 0)
@@ -2757,10 +2725,6 @@ getJsonPathVariable(JsonPathExecContext *cxt, JsonPathItem *variable,
   }
   return;
 }
-
-/*********************/
-#endif /* NOT USED */
-/*********************/
 
 /*
  * Definition of JsonPathGetVarCallback for when JsonPathExecContext.vars
@@ -2964,7 +2928,7 @@ compareItems(int32 op, JsonbValue *jb1, JsonbValue *jb2, bool useTz)
       return jpbUnknown;  /* non-scalars are not comparable */
 
     default:
-      meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+      meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
         "invalid jsonb value type %d", jb1->type);
   }
 
@@ -2989,7 +2953,7 @@ compareItems(int32 op, JsonbValue *jb1, JsonbValue *jb2, bool useTz)
       res = (cmp >= 0);
       break;
     default:
-      meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+      meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
       "unrecognized jsonpath operation: %d", op);
       return jpbUnknown;
   }
@@ -3013,13 +2977,13 @@ static JsonPathExecResult
 getArrayIndex(JsonPathExecContext *cxt, JsonPathItem *jsp, JsonbValue *jb,
   int32 *index)
 {
+  JsonValueList found = {0};
   JsonPathExecResult res = executeItem(cxt, jsp, jb, &found);
   bool have_error = false;
   if (jperIsError(res))
     return res;
 
   JsonbValue *jbv;
-  JsonValueList found = {0};
   if (JsonValueListLength(&found) != 1 ||
     ! (jbv = getScalar(JsonValueListHead(&found), jbvNumeric)))
   {
@@ -3028,8 +2992,8 @@ getArrayIndex(JsonPathExecContext *cxt, JsonPathItem *jsp, JsonbValue *jb,
     return jperError;
   }
 
-  Datum numeric_index = pg_numeric_trunc(jbv->val.numeric, 0);
-  *index = pg_numeric_int4_opt_error(DatumGetNumeric(numeric_index), &have_error);
+  Numeric numeric_index = pg_numeric_trunc(jbv->val.numeric, 0);
+  *index = pg_numeric_int4_opt_error(numeric_index, &have_error);
 
   if (have_error)
   {
@@ -3171,9 +3135,9 @@ JsonbType(JsonbValue *jb)
       type = jbvArray;
     else
     {
-      meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+      meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
         "invalid jsonb container type: 0x%08x", jbc->header);
-      return 0
+      return 0;
     }
   }
   return type;
@@ -3218,7 +3182,7 @@ static Datum
 castTimeToTimeTz(Datum time, bool useTz)
 {
   checkTimezoneIsUsedForCast(useTz, "time", "timetz");
-  return time_to_timetz(time);
+  return TimeTzADTPGetDatum(time_to_timetz(time));
 }
 
 /*
@@ -3257,10 +3221,9 @@ cmpTimestampToTimestampTz(Timestamp ts1, TimestampTz tstz2, bool useTz)
  * If the cast requires timezone and it is not used, then explicit error is thrown.
  */
 static int
-compareDatetime(Datum val1, Oid typid1, Datum val2, Oid typid2,
-  bool useTz, bool *cast_error)
+compareDatetime(Datum val1, Oid typid1, Datum val2, Oid typid2, bool useTz,
+  bool *cast_error)
 {
-  PGFunction cmpfunc;
   *cast_error = false;
 
   switch (typid1)
@@ -3269,8 +3232,7 @@ compareDatetime(Datum val1, Oid typid1, Datum val2, Oid typid2,
       switch (typid2)
       {
         case DATEOID:
-          cmpfunc = date_cmp;
-          break;
+          return cmp_date_date(DatumGetDateADT(val1), DatumGetDateADT(val2));
 
         case TIMESTAMPOID:
           return cmpDateToTimestamp(DatumGetDateADT(val1),
@@ -3286,23 +3248,23 @@ compareDatetime(Datum val1, Oid typid1, Datum val2, Oid typid2,
           return 0;
 
         default:
-          meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+          meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
             "unrecognized SQL/JSON datetime type oid: %u",
             typid2);
+          *cast_error = true;
+          return 0;
       }
-      break;
 
     case TIMEOID:
       switch (typid2)
       {
         case TIMEOID:
-          cmpfunc = time_cmp;
-          break;
+          return pg_time_cmp(DatumGetTimeADT(val1), DatumGetTimeADT(val2));
 
         case TIMETZOID:
           val1 = castTimeToTimeTz(val1, useTz);
-          cmpfunc = timetz_cmp;
-          break;
+          return pg_timetz_cmp(DatumGetTimeTzADTP(val1),
+            DatumGetTimeTzADTP(val2));
 
         case DATEOID:
         case TIMESTAMPOID:
@@ -3311,23 +3273,24 @@ compareDatetime(Datum val1, Oid typid1, Datum val2, Oid typid2,
           return 0;
 
         default:
-          meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+          meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
             "unrecognized SQL/JSON datetime type oid: %u",
             typid2);
+          *cast_error = true;
+          return 0;
       }
-      break;
 
     case TIMETZOID:
       switch (typid2)
       {
         case TIMEOID:
           val2 = castTimeToTimeTz(val2, useTz);
-          cmpfunc = timetz_cmp;
-          break;
+          return pg_timetz_cmp(DatumGetTimeTzADTP(val1),
+            DatumGetTimeTzADTP(val2));
 
         case TIMETZOID:
-          cmpfunc = timetz_cmp;
-          break;
+          return pg_timetz_cmp(DatumGetTimeTzADTP(val1),
+            DatumGetTimeTzADTP(val2));
 
         case DATEOID:
         case TIMESTAMPOID:
@@ -3336,11 +3299,12 @@ compareDatetime(Datum val1, Oid typid1, Datum val2, Oid typid2,
           return 0;
 
         default:
-          meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+          meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
             "unrecognized SQL/JSON datetime type oid: %u",
             typid2);
+          *cast_error = true;
+          return 0;
       }
-      break;
 
     case TIMESTAMPOID:
       switch (typid2)
@@ -3350,8 +3314,8 @@ compareDatetime(Datum val1, Oid typid1, Datum val2, Oid typid2,
             DatumGetTimestamp(val1), useTz);
 
         case TIMESTAMPOID:
-          cmpfunc = timestamp_cmp;
-          break;
+          return cmp_timestamp_timestamp(DatumGetTimestamp(val1),
+            DatumGetTimestampTz(val2));
 
         case TIMESTAMPTZOID:
           return cmpTimestampToTimestampTz(DatumGetTimestamp(val1),
@@ -3363,11 +3327,12 @@ compareDatetime(Datum val1, Oid typid1, Datum val2, Oid typid2,
           return 0;
 
         default:
-          meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+          meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
             "unrecognized SQL/JSON datetime type oid: %u",
             typid2);
+          *cast_error = true;
+          return 0;
       }
-      break;
 
     case TIMESTAMPTZOID:
       switch (typid2)
@@ -3381,8 +3346,8 @@ compareDatetime(Datum val1, Oid typid1, Datum val2, Oid typid2,
               DatumGetTimestampTz(val1), useTz);
 
         case TIMESTAMPTZOID:
-          cmpfunc = timestamp_cmp;
-          break;
+          return cmp_timestamp_timestamp(DatumGetTimestamp(val1),
+              DatumGetTimestampTz(val2));
 
         case TIMEOID:
         case TIMETZOID:
@@ -3390,20 +3355,17 @@ compareDatetime(Datum val1, Oid typid1, Datum val2, Oid typid2,
           return 0;
 
         default:
-          meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+          meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
             "unrecognized SQL/JSON datetime type oid: %u",
             typid2);
       }
-      break;
 
     default:
-      meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+      meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
       "unrecognized SQL/JSON datetime type oid: %u", typid1);
+      *cast_error = true;
+      return 0;
   }
-
-  if (*cast_error)
-    return 0;        /* cast error */
-  return DatumGetInt32(pg_cmpfunc, val1, val2));
 }
 
 /*
@@ -3478,7 +3440,7 @@ JsonPathQuery(Datum jb, JsonPath *jp, JsonWrapper wrapper, bool *empty,
     wrap = count > 1;
   else
   {
-    meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+    meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
       "unrecognized json wrapper %d", (int) wrapper);
     wrap = false;
   }
@@ -3497,12 +3459,12 @@ JsonPathQuery(Datum jb, JsonPath *jp, JsonWrapper wrapper, bool *empty,
 
     if (column_name)
     {
-      meos_error(ERROR, MEOS_ERR_MORE_THAN_ONE_SQL_JSON_ITEM,
+      meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
         "JSON path expression for column \"%s\" must return single item when no wrapper is requested",
         column_name);
     }
     else
-      meos_error(ERROR, MEOS_ERR_MORE_THAN_ONE_SQL_JSON_ITEM,
+      meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
         "JSON path expression in JSON_QUERY must return single item when no wrapper is requested");
   }
 
@@ -3550,11 +3512,11 @@ JsonPathValue(Datum jb, JsonPath *jp, bool *empty, bool *error, List *vars,
 
     if (column_name)
       meos_error(ERROR,
-          MEOS_ERR_MORE_THAN_ONE_SQL_JSON_ITEM,
+          MEOS_ERR_SQL_JSON_ERROR,
           "JSON path expression for column \"%s\" must return single scalar item",
           column_name);
     else
-      meos_error(ERROR, MEOS_ERR_MORE_THAN_ONE_SQL_JSON_ITEM,
+      meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
         "JSON path expression in JSON_VALUE must return single scalar item");
   }
 
@@ -3572,11 +3534,11 @@ JsonPathValue(Datum jb, JsonPath *jp, bool *empty, bool *error, List *vars,
     }
 
     if (column_name)
-      meos_error(ERROR, MEOS_ERR_SQL_JSON_SCALAR_REQUIRED,
+      meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
         "JSON path expression for column \"%s\" must return single scalar item",
         column_name);
     else
-      meos_error(ERROR, MEOS_ERR_SQL_JSON_SCALAR_REQUIRED,
+      meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
         "JSON path expression in JSON_VALUE must return single scalar item");
   }
   if (res->type == jbvNull)
@@ -3584,7 +3546,7 @@ JsonPathValue(Datum jb, JsonPath *jp, bool *empty, bool *error, List *vars,
   return res;
 }
 
-// #if 0 /* NOT USED */
+#if 0 /* NOT USED */
 
 /************************ JSON_TABLE functions ***************************/
 
@@ -3597,11 +3559,11 @@ GetJsonTableExecContext(TableFuncScanState *state, const char *fname)
 {
   JsonTableExecContext *result;
   if (!IsA(state, TableFuncScanState))
-    meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+    meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
       "%s called with invalid TableFuncScanState", fname);
   result = (JsonTableExecContext *) state->opaque;
   if (result->magic != JSON_TABLE_EXEC_CONTEXT_MAGIC)
-    meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+    meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
       "%s called with invalid TableFuncScanState", fname);
   return result;
 }
@@ -3779,7 +3741,7 @@ JsonTablePlanNextRow(JsonTablePlanState *planstate)
   else if (IsA(planstate->plan, JsonTableSiblingJoin))
     return JsonTablePlanJoinNextRow(planstate);
   else
-    meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+    meos_error(ERROR, MEOS_ERR_SQL_JSON_ERROR,
       "invalid JsonTablePlan %d", (int) planstate->plan->type);
   Assert(false);
   /* Appease compiler */

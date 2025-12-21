@@ -286,7 +286,7 @@ Datum
 Mobilitydb_version(PG_FUNCTION_ARGS UNUSED)
 {
   char *version = mobilitydb_version();
-  text *result = cstring_to_text(version);
+  text *result = pg_cstring_to_text(version);
   PG_RETURN_TEXT_P(result);
 }
 
@@ -301,7 +301,7 @@ Datum
 Mobilitydb_full_version(PG_FUNCTION_ARGS UNUSED)
 {
   char *version = mobilitydb_full_version();
-  text *result = cstring_to_text(version);
+  text *result = pg_cstring_to_text(version);
   pfree(version);
   PG_RETURN_TEXT_P(result);
 }
@@ -850,7 +850,7 @@ Temporal_subtype(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   const char *str = temporal_subtype(temp);
-  text *result = cstring_to_text(str);
+  text *result = pg_cstring_to_text(str);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_TEXT_P(result);
 }
@@ -867,7 +867,7 @@ Temporal_interp(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   const char *str = temporal_interp(temp);
-  text *result = cstring_to_text(str);
+  text *result = pg_cstring_to_text(str);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_TEXT_P(result);
 }

@@ -133,7 +133,7 @@ pg_timestamp_in(const char *str, int32 typmod)
   dterr = pg_ParseDateTime(str, workbuf, sizeof(workbuf), field, ftype,
     MAXDATEFIELDS, &nf);
   if (dterr == 0)
-    dterr = DecodeDateTime(field, ftype, nf, &dtype, tm, &fsec, &tz, &extra);
+    dterr = pg_DecodeDateTime(field, ftype, nf, &dtype, tm, &fsec, &tz, &extra);
   if (dterr != 0)
   {
     pg_DateTimeParseError(dterr, &extra, str, "timestamp", NULL);
@@ -287,8 +287,8 @@ AdjustTimestampForTypmod(Timestamp *time, int32 typmod, Node *escontext UNUSED)
     }
     else
     {
-      *time = -((((-*time) + TimestampOffsets[typmod]) / TimestampScales[typmod])
-            * TimestampScales[typmod]);
+      *time = -((((-*time) + TimestampOffsets[typmod]) / 
+        TimestampScales[typmod]) * TimestampScales[typmod]);
     }
   }
 
@@ -326,7 +326,7 @@ pg_timestamptz_in(const char *str, int32 typmod)
   dterr = pg_ParseDateTime(str, workbuf, sizeof(workbuf), field, ftype,
     MAXDATEFIELDS, &nf);
   if (dterr == 0)
-    dterr = DecodeDateTime(field, ftype, nf, &dtype, tm, &fsec, &tz, &extra);
+    dterr = pg_DecodeDateTime(field, ftype, nf, &dtype, tm, &fsec, &tz, &extra);
   if (dterr != 0)
   {
     pg_DateTimeParseError(dterr, &extra, str, "timestamp with time zone", NULL);
@@ -382,10 +382,10 @@ parse_sane_timezone(struct pg_tm *tm, text *zone)
 
   /*
    * Look up the requested timezone.  First we try to interpret it as a
-   * numeric timezone specification; if DecodeTimezone decides it doesn't
+   * numeric timezone specification; if pg_DecodeTimezone decides it doesn't
    * like the format, we try timezone abbreviations and names.
    *
-   * Note pg_tzset happily parses numeric input that DecodeTimezone would
+   * Note pg_tzset happily parses numeric input that pg_DecodeTimezone would
    * reject.  To avoid having it accept input that would otherwise be seen
    * as invalid, it's enough to disallow having a digit in the first
    * position of our input string.
@@ -399,7 +399,7 @@ parse_sane_timezone(struct pg_tm *tm, text *zone)
   }
 
   int tz;
-  int dterr = DecodeTimezone(tzname, &tz);
+  int dterr = pg_DecodeTimezone(tzname, &tz);
   if (dterr != 0)
   {
     if (dterr == DTERR_TZDISP_OVERFLOW)
@@ -743,11 +743,11 @@ pg_interval_in(const char *str, int32 typmod)
   dterr = pg_ParseDateTime(str, workbuf, sizeof(workbuf), field, ftype,
     MAXDATEFIELDS, &nf);
   if (dterr == 0)
-    dterr = DecodeInterval(field, ftype, nf, range, &dtype, itm_in);
+    dterr = pg_DecodeInterval(field, ftype, nf, range, &dtype, itm_in);
 
   /* if those functions think it's a bad format, try ISO8601 style */
   if (dterr == DTERR_BAD_FORMAT)
-    dterr = DecodeISO8601Interval((char *) str, &dtype, itm_in);
+    dterr = pg_DecodeISO8601Interval((char *) str, &dtype, itm_in);
 
   if (dterr != 0)
   {
@@ -1263,13 +1263,10 @@ GetCurrentTimestamp(void)
 {
   TimestampTz result;
   struct timeval tp;
-
   gettimeofday(&tp, NULL);
-
   result = (TimestampTz) tp.tv_sec -
     ((POSTGRES_EPOCH_JDATE - UNIX_EPOCH_JDATE) * SECS_PER_DAY);
   result = (result * USECS_PER_SEC) + tp.tv_usec;
-
   return result;
 }
 
@@ -1289,7 +1286,7 @@ time_of_day(void)
   pg_strftime(templ, sizeof(templ), "%a %b %d %H:%M:%S.%%06d %Y %Z",
     pg_localtime(&tt, session_timezone));
   snprintf(buf, sizeof(buf), templ, tp.tv_usec);
-  return cstring_to_text(buf);
+  return pg_cstring_to_text(buf);
 }
 
 /*
@@ -1580,7 +1577,7 @@ tm2timestamp(struct pg_tm *tm, fsec_t fsec, int *tzp, Timestamp *result)
   TimeOffset time = time2t(tm->tm_hour, tm->tm_min, tm->tm_sec, fsec);
 
   if (unlikely(pg_mul_s64_overflow(date, USECS_PER_DAY, result) ||
-         pg_add_s64_overflow(*result, time, result)))
+      pg_add_s64_overflow(*result, time, result)))
   {
     *result = 0;      /* keep compiler quiet */
     return -1;
@@ -6102,7 +6099,6 @@ pg_timestamp_at_local(Timestamp ts)
  * @return Returns a timestamp without time zone. On error return DT_NOEND
  * @note Derived from PostgreSQL function @p timestamptz_at_local()
  */
-TimestampTz
 #if MEOS
 TimestampTz
 timestamptz_at_local(Timestamp ts)
@@ -6110,6 +6106,7 @@ timestamptz_at_local(Timestamp ts)
   return pg_timestamptz_at_local(ts);
 }
 #endif
+TimestampTz
 pg_timestamptz_at_local(TimestampTz tstz)
 {
   return timestamptz_to_timestamp(tstz);

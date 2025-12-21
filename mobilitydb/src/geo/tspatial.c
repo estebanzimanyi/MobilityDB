@@ -131,7 +131,7 @@ Tspatial_as_text_common(FunctionCallInfo fcinfo, bool extended)
     dbl_dig_for_wkt = PG_GETARG_INT32(1);
   char *str = extended ? tspatial_as_ewkt(temp, dbl_dig_for_wkt) : 
     tspatial_as_text(temp, dbl_dig_for_wkt);
-  text *result = cstring_to_text(str);
+  text *result = pg_cstring_to_text(str);
   pfree(str);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_TEXT_P(result);

@@ -65,7 +65,6 @@ pg_jsonb_exists(const Jsonb *jb, const text *key)
   v = findJsonbValueFromContainer(&((Jsonb *) jb)->root, 
     JB_FOBJECT | JB_FARRAY, &kval);
   bool result = (v != NULL); // MEOS
-  pfree(v);
   return result;
 }
 

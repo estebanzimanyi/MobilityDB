@@ -94,6 +94,7 @@ SELECT asText(ARRAY[tjsonb '"{\"vehicleId\":1, \"location\": \"Point(1 1)\"}"@20
 /* {"{\"location\": \"Point(1 1)\", \"vehicleId\": 1}@2001-01-01",
    "{\"location\": \"Point(2 2)\", \"vehicleId\": 1}@2001-01-02"} */
 </programlisting>
+		<para>As can be seen above, for arrays of JSONB values, the elements must be enclosed between quotes and thus, the inner quotes must be escaped.</para>
 			</listitem>
 
 			<listitem xml:id="tjsonb_asBinary">

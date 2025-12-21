@@ -17,8 +17,9 @@ set(UTILS_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/numutils.c
   ${CMAKE_CURRENT_SOURCE_DIR}/pg_locale.c
   ${CMAKE_CURRENT_SOURCE_DIR}/pg_locale_builtin.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/pg_locale_libc.c
   ${CMAKE_CURRENT_SOURCE_DIR}/pg_locale_icu.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/pg_locale_libc.c
+  # ${CMAKE_CURRENT_SOURCE_DIR}/regexp.c
   ${CMAKE_CURRENT_SOURCE_DIR}/timestamp.c
   ${CMAKE_CURRENT_SOURCE_DIR}/varlena.c
   # )
@@ -30,7 +31,8 @@ set(UTILS_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/jsonb_op.c
     ${CMAKE_CURRENT_SOURCE_DIR}/jsonb_util.c
     ${CMAKE_CURRENT_SOURCE_DIR}/jsonfuncs.c
-    # ${CMAKE_CURRENT_SOURCE_DIR}/jsonpath_exec.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/jsonpath.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/jsonpath_exec.c
 )
 # endif(JSON)
 

@@ -70,9 +70,8 @@ Datum
 Jsonb_as_text(PG_FUNCTION_ARGS)
 {
   Jsonb *jb = PG_GETARG_JSONB_P(0);
-  char *str = pg_jsonb_out(jb);
-  text *result = cstring_to_text(str);
-  pfree(str);
+  text *result = pg_jsonb_to_text(jb);
+  PG_FREE_IF_COPY(jb, 0);
   PG_RETURN_TEXT_P(result);
 }
 

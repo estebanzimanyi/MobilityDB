@@ -148,7 +148,7 @@ Cbuffer_as_text_common(FunctionCallInfo fcinfo, bool extended)
     dbl_dig_for_wkt = PG_GETARG_INT32(1);
   char *str = extended ? cbuffer_as_ewkt(cb, dbl_dig_for_wkt) : 
     cbuffer_as_text(cb, dbl_dig_for_wkt);
-  text *result = cstring_to_text(str);
+  text *result = pg_cstring_to_text(str);
   pfree(str);
   PG_FREE_IF_COPY(cb, 0);
   PG_RETURN_TEXT_P(result);

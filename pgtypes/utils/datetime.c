@@ -43,7 +43,7 @@
 // #include "utils/guc.h"
 // #include "utils/tzparser.h"
 
-static int  DecodeNumber(int flen, char *str, bool haveTextMonth, int fmask,
+static int DecodeNumber(int flen, char *str, bool haveTextMonth, int fmask,
   int *tmask, struct pg_tm *tm, fsec_t *fsec, bool *is2digits);
 static int DecodeNumberField(int len, char *str, int fmask, int *tmask,
   struct pg_tm *tm, fsec_t *fsec, bool *is2digits);
@@ -298,8 +298,8 @@ static TzAbbrevCache tzabbrevcache[MAXDATEFIELDS];
 int
 date2j(int year, int month, int day)
 {
-  int      julian;
-  int      century;
+  int julian;
+  int century;
 
   if (month > 2)
   {
@@ -344,7 +344,6 @@ j2date(int jd, int *year, int *month, int *day)
   *day = julian - 7834 * quad / 256;
   *month = (quad + 10) % MONTHS_PER_YEAR + 1;
 }                /* j2date() */
-
 
 /*
  * j2day - convert Julian date to day-of-week (0..6 == Sun..Sat)
@@ -512,7 +511,6 @@ AppendSeconds(char *cp, int sec, fsec_t fsec, int precision, bool fillzeros)
     return cp;
 }
 
-
 /*
  * Variant of above that's specialized to timestamp case.
  *
@@ -525,7 +523,6 @@ AppendTimestampSeconds(char *cp, struct pg_tm *tm, fsec_t fsec)
   return AppendSeconds(cp, tm->tm_sec, fsec, MAX_TIMESTAMP_PRECISION, true);
 }
 
-
 /*
  * Add val * multiplier to *sum.
  * Returns true if successful, false on overflow.
@@ -533,8 +530,7 @@ AppendTimestampSeconds(char *cp, struct pg_tm *tm, fsec_t fsec)
 static bool
 int64_multiply_add(int64 val, int64 multiplier, int64 *sum)
 {
-  int64    product;
-
+  int64 product;
   if (pg_mul_s64_overflow(val, multiplier, &product) ||
     pg_add_s64_overflow(*sum, product, sum))
     return false;
@@ -546,10 +542,9 @@ int64_multiply_add(int64 val, int64 multiplier, int64 *sum)
  * Returns true if successful, false if itm_in overflows.
  */
 static bool
-AdjustFractMicroseconds(double frac, int64 scale,
-            struct pg_itm_in *itm_in)
+AdjustFractMicroseconds(double frac, int64 scale, struct pg_itm_in *itm_in)
 {
-  int64    usec;
+  int64 usec;
 
   /* Fast path for common case */
   if (frac == 0)
@@ -578,10 +573,9 @@ AdjustFractMicroseconds(double frac, int64 scale,
  * Returns true if successful, false if itm_in overflows.
  */
 static bool
-AdjustFractDays(double frac, int scale,
-        struct pg_itm_in *itm_in)
+AdjustFractDays(double frac, int scale, struct pg_itm_in *itm_in)
 {
-  int      extra_days;
+  int extra_days;
 
   /* Fast path for common case */
   if (frac == 0)
@@ -610,16 +604,14 @@ AdjustFractDays(double frac, int scale,
  * Returns true if successful, false if itm_in overflows.
  */
 static bool
-AdjustFractYears(double frac, int scale,
-         struct pg_itm_in *itm_in)
+AdjustFractYears(double frac, int scale, struct pg_itm_in *itm_in)
 {
   /*
    * As above, we assume abs(frac) < 1, so this can't overflow for any
    * interesting value of scale.
    */
-  int      extra_months = (int) rint(frac * scale * MONTHS_PER_YEAR);
-
-  return !pg_add_s32_overflow(itm_in->tm_mon, extra_months, &itm_in->tm_mon);
+  int extra_months = (int) rint(frac * scale * MONTHS_PER_YEAR);
+  return ! pg_add_s32_overflow(itm_in->tm_mon, extra_months, &itm_in->tm_mon);
 }
 
 /*
@@ -628,7 +620,7 @@ AdjustFractYears(double frac, int scale,
  */
 static bool
 AdjustMicroseconds(int64 val, double fval, int64 scale,
-           struct pg_itm_in *itm_in)
+  struct pg_itm_in *itm_in)
 {
   /* Handle the integer part */
   if (!int64_multiply_add(val, scale, &itm_in->tm_usec))
@@ -725,10 +717,8 @@ ParseFraction(char *cp, double *frac)
 static int
 ParseFractionalSecond(char *cp, fsec_t *fsec)
 {
-  double    frac;
-  int      dterr;
-
-  dterr = ParseFraction(cp, &frac);
+  double frac;
+  int dterr = ParseFraction(cp, &frac);
   if (dterr)
     return dterr;
   *fsec = rint(frac * 1000000);
@@ -767,8 +757,8 @@ ParseFractionalSecond(char *cp, fsec_t *fsec)
  *  DTK_STRING can hold months (January) and time zones (PST)
  *  DTK_DATE can hold time zone names (America/New_York, GMT-8)
  */
-// MEOS The prefix 'pg_' was added to avoid the function with the same name
-// is executed from the server code which may be of a different PG version
+// MEOS The prefix 'pg_' was added to avoid executing the function with the
+// same name in the server code whose PG version may be different from PG 18
 int
 pg_ParseDateTime(const char *timestr, char *workbuf, size_t buflen,
   char **field, int *ftype, int maxfields, int *numfields)
@@ -965,7 +955,9 @@ pg_ParseDateTime(const char *timestr, char *workbuf, size_t buflen,
   return 0;
 }
 
-/* DecodeDateTime()
+// MEOS The prefix 'pg_' was added to avoid executing the function with the
+// same name in the server code whose PG version may be different from PG 18
+/* pg_DecodeDateTime()
  * Interpret previously parsed fields for general date and time.
  * Return 0 if full date, 1 if only time, and negative DTERR code if problems.
  * (Currently, all callers treat 1 as an error return too.)
@@ -993,23 +985,23 @@ pg_ParseDateTime(const char *timestr, char *workbuf, size_t buflen,
  * 1997-05-27
  */
 int
-DecodeDateTime(char **field, int *ftype, int nf, int *dtype, struct pg_tm *tm,
+pg_DecodeDateTime(char **field, int *ftype, int nf, int *dtype, struct pg_tm *tm,
   fsec_t *fsec, int *tzp, DateTimeErrorExtra *extra)
 {
   int fmask = 0, tmask, type;
-  int      ptype = 0;    /* "prefix type" for ISO and Julian formats */
-  int      i;
-  int      val;
-  int      dterr;
-  int      mer = HR24;
-  bool    haveTextMonth = false;
-  bool    isjulian = false;
-  bool    is2digits = false;
-  bool    bc = false;
-  pg_tz     *namedTz = NULL;
-  pg_tz     *abbrevTz = NULL;
-  pg_tz     *valtz;
-  char     *abbrev = NULL;
+  int ptype = 0;    /* "prefix type" for ISO and Julian formats */
+  int i;
+  int val;
+  int dterr;
+  int mer = HR24;
+  bool haveTextMonth = false;
+  bool isjulian = false;
+  bool is2digits = false;
+  bool bc = false;
+  pg_tz *namedTz = NULL;
+  pg_tz *abbrevTz = NULL;
+  pg_tz *valtz;
+  char *abbrev = NULL;
   struct pg_tm cur_tm;
 
   /*
@@ -1039,8 +1031,8 @@ DecodeDateTime(char **field, int *ftype, int nf, int *dtype, struct pg_tm *tm,
          */
         if (ptype == DTK_JULIAN)
         {
-          char     *cp;
-          int      jday;
+          char *cp;
+          int jday;
 
           if (tzp == NULL)
             return DTERR_BAD_FORMAT;
@@ -1054,7 +1046,7 @@ DecodeDateTime(char **field, int *ftype, int nf, int *dtype, struct pg_tm *tm,
           isjulian = true;
 
           /* Get the time zone from the end of the string */
-          dterr = DecodeTimezone(cp, tzp);
+          dterr = pg_DecodeTimezone(cp, tzp);
           if (dterr)
             return dterr;
 
@@ -1083,7 +1075,7 @@ DecodeDateTime(char **field, int *ftype, int nf, int *dtype, struct pg_tm *tm,
 
           if (isdigit((unsigned char) *field[i]) || ptype != 0)
           {
-            char     *cp;
+            char *cp;
 
             /*
              * Allow a preceding "t" field, but no other units.
@@ -1108,7 +1100,7 @@ DecodeDateTime(char **field, int *ftype, int nf, int *dtype, struct pg_tm *tm,
               return DTERR_BAD_FORMAT;
 
             /* Get the time zone from the end of the string */
-            dterr = DecodeTimezone(cp, tzp);
+            dterr = pg_DecodeTimezone(cp, tzp);
             if (dterr)
               return dterr;
             *cp = '\0';
@@ -1117,16 +1109,13 @@ DecodeDateTime(char **field, int *ftype, int nf, int *dtype, struct pg_tm *tm,
              * Then read the rest of the field as a concatenated
              * time
              */
-            dterr = DecodeNumberField(strlen(field[i]), field[i],
-                          fmask,
-                          &tmask, tm,
-                          fsec, &is2digits);
+            dterr = DecodeNumberField(strlen(field[i]), field[i], fmask,
+              &tmask, tm, fsec, &is2digits);
             if (dterr < 0)
               return dterr;
 
             /*
-             * modify tmask after returning from
-             * DecodeNumberField()
+             * modify tmask after returning from DecodeNumberField()
              */
             tmask |= DTK_M(TZ);
           }
@@ -1144,8 +1133,7 @@ DecodeDateTime(char **field, int *ftype, int nf, int *dtype, struct pg_tm *tm,
         }
         else
         {
-          dterr = DecodeDate(field[i], fmask,
-                     &tmask, &is2digits, tm);
+          dterr = DecodeDate(field[i], fmask, &tmask, &is2digits, tm);
           if (dterr)
             return dterr;
         }
@@ -1181,7 +1169,7 @@ DecodeDateTime(char **field, int *ftype, int nf, int *dtype, struct pg_tm *tm,
           if (tzp == NULL)
             return DTERR_BAD_FORMAT;
 
-          dterr = DecodeTimezone(field[i], &tz);
+          dterr = pg_DecodeTimezone(field[i], &tz);
           if (dterr)
             return dterr;
           *tzp = tz;
@@ -1584,7 +1572,6 @@ DecodeDateTime(char **field, int *ftype, int nf, int *dtype, struct pg_tm *tm,
   return 0;
 }
 
-
 /* DetermineTimeZoneOffset()
  *
  * Given a struct pg_tm in which tm_year, tm_mon, tm_mday, tm_hour, tm_min,
@@ -1600,11 +1587,9 @@ DecodeDateTime(char **field, int *ftype, int nf, int *dtype, struct pg_tm *tm,
 int
 DetermineTimeZoneOffset(struct pg_tm *tm, pg_tz *tzp)
 {
-  pg_time_t  t;
-
+  pg_time_t t;
   return DetermineTimeZoneOffsetInternal(tm, tzp, &t);
 }
-
 
 /* DetermineTimeZoneOffsetInternal()
  *
@@ -1622,19 +1607,11 @@ DetermineTimeZoneOffset(struct pg_tm *tm, pg_tz *tzp)
 static int
 DetermineTimeZoneOffsetInternal(struct pg_tm *tm, pg_tz *tzp, pg_time_t *tp)
 {
-  int      date,
-        sec;
-  pg_time_t  day,
-        mytime,
-        prevtime,
-        boundary,
-        beforetime,
-        aftertime;
-  long int  before_gmtoff,
-        after_gmtoff;
-  int      before_isdst,
-        after_isdst;
-  int      res;
+  int date, sec;
+  pg_time_t day, mytime, prevtime, boundary, beforetime, aftertime;
+  long int before_gmtoff, after_gmtoff;
+  int before_isdst, after_isdst;
+  int res;
 
   /*
    * First, generate the pg_time_t value corresponding to the given
@@ -1762,9 +1739,9 @@ int
 DetermineTimeZoneAbbrevOffset(struct pg_tm *tm, const char *abbr, pg_tz *tzp)
 {
   pg_time_t  t;
-  int      zone_offset;
-  int      abbr_offset;
-  int      abbr_isdst;
+  int zone_offset;
+  int abbr_offset;
+  int abbr_isdst;
 
   /*
    * Compute the UTC time we want to probe at.  (In event of overflow, we'll
@@ -1798,14 +1775,14 @@ DetermineTimeZoneAbbrevOffset(struct pg_tm *tm, const char *abbr, pg_tz *tzp)
  */
 int
 DetermineTimeZoneAbbrevOffsetTS(TimestampTz ts, const char *abbr,
-                pg_tz *tzp, int *isdst)
+  pg_tz *tzp, int *isdst)
 {
   pg_time_t  t = timestamptz_to_time_t(ts);
-  int      zone_offset;
-  int      abbr_offset;
-  int      tz;
+  int zone_offset;
+  int abbr_offset;
+  int tz;
   struct pg_tm tm;
-  fsec_t    fsec;
+  fsec_t fsec;
 
   /*
    * If the abbrev matches anything in the zone data, this is pretty easy.
@@ -1829,7 +1806,6 @@ DetermineTimeZoneAbbrevOffsetTS(TimestampTz ts, const char *abbr,
   return zone_offset;
 }
 
-
 /* DetermineTimeZoneAbbrevOffsetInternal()
  *
  * Workhorse for above two functions: work from a pg_time_t probe instant.
@@ -1837,11 +1813,11 @@ DetermineTimeZoneAbbrevOffsetTS(TimestampTz ts, const char *abbr,
  */
 static bool
 DetermineTimeZoneAbbrevOffsetInternal(pg_time_t t, const char *abbr, pg_tz *tzp,
-                    int *offset, int *isdst)
+  int *offset, int *isdst)
 {
-  char    upabbr[TZ_STRLEN_MAX + 1];
+  char upabbr[TZ_STRLEN_MAX + 1];
   unsigned char *p;
-  long int  gmtoff;
+  long int gmtoff;
 
   /* We need to force the abbrev to upper case */
   strlcpy(upabbr, abbr, sizeof(upabbr));
@@ -1849,11 +1825,7 @@ DetermineTimeZoneAbbrevOffsetInternal(pg_time_t t, const char *abbr, pg_tz *tzp,
     *p = pg_toupper(*p);
 
   /* Look up the abbrev's meaning at this time in this zone */
-  if (pg_interpret_timezone_abbrev(upabbr,
-                   &t,
-                   &gmtoff,
-                   isdst,
-                   tzp))
+  if (pg_interpret_timezone_abbrev(upabbr, &t, &gmtoff, isdst, tzp))
   {
     /* Change sign to agree with DetermineTimeZoneOffset() */
     *offset = (int) -gmtoff;
@@ -1861,7 +1833,6 @@ DetermineTimeZoneAbbrevOffsetInternal(pg_time_t t, const char *abbr, pg_tz *tzp,
   }
   return false;
 }
-
 
 /* TimeZoneAbbrevIsKnown()
  *
@@ -1873,9 +1844,9 @@ static bool
 TimeZoneAbbrevIsKnown(const char *abbr, pg_tz *tzp, bool *isfixed, int *offset,
   int *isdst)
 {
-  char    upabbr[TZ_STRLEN_MAX + 1];
+  char upabbr[TZ_STRLEN_MAX + 1];
   unsigned char *p;
-  long int  gmtoff;
+  long int gmtoff;
 
   /* We need to force the abbrev to upper case */
   strlcpy(upabbr, abbr, sizeof(upabbr));
@@ -1892,8 +1863,7 @@ TimeZoneAbbrevIsKnown(const char *abbr, pg_tz *tzp, bool *isfixed, int *offset,
   return false;
 }
 
-
-/* DecodeTimeOnly()
+/* pg_DecodeTimeOnly()
  * Interpret parsed string as time fields only.
  * Returns 0 if successful, DTERR code if bogus input detected.
  *
@@ -1909,25 +1879,22 @@ TimeZoneAbbrevIsKnown(const char *abbr, pg_tz *tzp, bool *isfixed, int *offset,
  * if time zones are allowed. - thomas 2001-12-26
  */
 int
-DecodeTimeOnly(char **field, int *ftype, int nf,
-         int *dtype, struct pg_tm *tm, fsec_t *fsec, int *tzp,
-         DateTimeErrorExtra *extra)
+pg_DecodeTimeOnly(char **field, int *ftype, int nf, int *dtype, struct pg_tm *tm,
+  fsec_t *fsec, int *tzp, DateTimeErrorExtra *extra)
 {
-  int      fmask = 0,
-        tmask,
-        type;
-  int      ptype = 0;    /* "prefix type" for ISO and Julian formats */
-  int      i;
-  int      val;
-  int      dterr;
-  bool    isjulian = false;
-  bool    is2digits = false;
-  bool    bc = false;
-  int      mer = HR24;
-  pg_tz     *namedTz = NULL;
-  pg_tz     *abbrevTz = NULL;
-  char     *abbrev = NULL;
-  pg_tz     *valtz;
+  int fmask = 0, tmask, type;
+  int ptype = 0;    /* "prefix type" for ISO and Julian formats */
+  int i;
+  int val;
+  int dterr;
+  bool isjulian = false;
+  bool is2digits = false;
+  bool bc = false;
+  int mer = HR24;
+  pg_tz *namedTz = NULL;
+  pg_tz *abbrevTz = NULL;
+  char *abbrev = NULL;
+  pg_tz *valtz;
 
   *dtype = DTK_TIME;
   tm->tm_hour = 0;
@@ -1957,8 +1924,7 @@ DecodeTimeOnly(char **field, int *ftype, int nf,
         if (i == 0 && nf >= 2 &&
           (ftype[nf - 1] == DTK_DATE || ftype[1] == DTK_TIME))
         {
-          dterr = DecodeDate(field[i], fmask,
-                     &tmask, &is2digits, tm);
+          dterr = DecodeDate(field[i], fmask, &tmask, &is2digits, tm);
           if (dterr)
             return dterr;
         }
@@ -1967,7 +1933,7 @@ DecodeTimeOnly(char **field, int *ftype, int nf,
         {
           if (isdigit((unsigned char) *field[i]))
           {
-            char     *cp;
+            char *cp;
 
             /*
              * Starts with a digit but we already have a time
@@ -1983,7 +1949,7 @@ DecodeTimeOnly(char **field, int *ftype, int nf,
               return DTERR_BAD_FORMAT;
 
             /* Get the time zone from the end of the string */
-            dterr = DecodeTimezone(cp, tzp);
+            dterr = pg_DecodeTimezone(cp, tzp);
             if (dterr)
               return dterr;
             *cp = '\0';
@@ -2043,7 +2009,7 @@ DecodeTimeOnly(char **field, int *ftype, int nf,
           if (tzp == NULL)
             return DTERR_BAD_FORMAT;
 
-          dterr = DecodeTimezone(field[i], &tz);
+          dterr = pg_DecodeTimezone(field[i], &tz);
           if (dterr)
             return dterr;
           *tzp = tz;
@@ -2134,8 +2100,7 @@ DecodeTimeOnly(char **field, int *ftype, int nf,
              */
             if (i == 0 && nf >= 2 && ftype[nf - 1] == DTK_DATE)
             {
-              dterr = DecodeDate(field[i], fmask,
-                         &tmask, &is2digits, tm);
+              dterr = DecodeDate(field[i], fmask, &tmask, &is2digits, tm);
               if (dterr)
                 return dterr;
             }
@@ -2443,19 +2408,15 @@ DecodeTimeOnly(char **field, int *ftype, int nf,
  *  *tm: field values are stored into appropriate members of this struct
  */
 static int
-DecodeDate(char *str, int fmask, int *tmask, bool *is2digits,
-       struct pg_tm *tm)
+DecodeDate(char *str, int fmask, int *tmask, bool *is2digits, struct pg_tm *tm)
 {
-  fsec_t    fsec;
-  int      nf = 0;
-  int      i,
-        len;
-  int      dterr;
-  bool    haveTextMonth = false;
-  int      type,
-        val,
-        dmask = 0;
-  char     *field[MAXDATEFIELDS];
+  fsec_t fsec;
+  int nf = 0;
+  int i, len;
+  int dterr;
+  bool haveTextMonth = false;
+  int type, val, dmask = 0;
+  char *field[MAXDATEFIELDS];
 
   *tmask = 0;
 
@@ -3026,19 +2987,17 @@ DecodeNumberField(int len, char *str, int fmask, int *tmask, struct pg_tm *tm,
   return DTERR_BAD_FORMAT;
 }
 
-/* DecodeTimezone()
+/* pg_DecodeTimezone()
  * Interpret string as a numeric timezone.
  *
  * Return 0 if okay (and set *tzp), a DTERR code if not okay.
  */
 int
-DecodeTimezone(const char *str, int *tzp)
+pg_DecodeTimezone(const char *str, int *tzp)
 {
-  int      tz;
-  int      hr,
-        min,
-        sec = 0;
-  char     *cp;
+  int tz;
+  int hr, min, sec = 0;
+  char *cp;
 
   /* leading character must be "+" or "-" */
   if (*str != '+' && *str != '-')
@@ -3430,7 +3389,7 @@ ClearPgItmIn(struct pg_itm_in *itm_in)
   itm_in->tm_year = 0;
 }
 
-/* DecodeInterval()
+/* pg_DecodeInterval()
  * Interpret previously parsed fields for general time interval.
  * Returns 0 if successful, DTERR code if bogus input detected.
  * dtype and itm_in are output parameters.
@@ -3445,7 +3404,7 @@ ClearPgItmIn(struct pg_itm_in *itm_in)
  * suffices.
  */
 int
-DecodeInterval(char **field, int *ftype, int nf, int range, int *dtype,
+pg_DecodeInterval(char **field, int *ftype, int nf, int range, int *dtype,
   struct pg_itm_in *itm_in)
 {
   bool force_negative = false;
@@ -3830,7 +3789,7 @@ DecodeInterval(char **field, int *ftype, int nf, int range, int *dtype,
 }
 
 /*
- * Helper functions to avoid duplicated code in DecodeISO8601Interval.
+ * Helper functions to avoid duplicated code in pg_DecodeISO8601Interval.
  *
  * Parse a decimal value and break it into integer and fractional parts.
  * Set *endptr to end+1 of the parsed substring.
@@ -3885,8 +3844,7 @@ ISO8601IntegerWidth(char *fieldstart)
   return strspn(fieldstart, "0123456789");
 }
 
-
-/* DecodeISO8601Interval()
+/* pg_DecodeISO8601Interval()
  *  Decode an ISO 8601 time interval of the "format with designators"
  *  (section 4.4.3.2) or "alternative format" (section 4.4.3.3)
  *  Examples:  P1D  for 1 day
@@ -3904,10 +3862,10 @@ ISO8601IntegerWidth(char *fieldstart)
  *   - allows decimals in fields other than the least significant unit.
  */
 int
-DecodeISO8601Interval(char *str, int *dtype, struct pg_itm_in *itm_in)
+pg_DecodeISO8601Interval(char *str, int *dtype, struct pg_itm_in *itm_in)
 {
-  bool    datepart = true;
-  bool    havefield = false;
+  bool datepart = true;
+  bool havefield = false;
 
   *dtype = DTK_DELTA;
   ClearPgItmIn(itm_in);
@@ -3918,11 +3876,11 @@ DecodeISO8601Interval(char *str, int *dtype, struct pg_itm_in *itm_in)
   str++;
   while (*str)
   {
-    char     *fieldstart;
-    int64    val;
-    double    fval;
-    char    unit;
-    int      dterr;
+    char *fieldstart;
+    int64 val;
+    double fval;
+    char unit;
+    int dterr;
 
     if (*str == 'T')    /* T indicates the beginning of the time part */
     {
@@ -4209,9 +4167,8 @@ datebsearch(const char *key, const datetkn *base, int nel)
 {
   if (nel > 0)
   {
-    const datetkn *last = base + nel - 1,
-           *position;
-    int      result;
+    const datetkn *last = base + nel - 1, *position;
+    int result;
 
     while (last >= base)
     {
@@ -5017,7 +4974,7 @@ pg_timezone_abbrevs_zone(PG_FUNCTION_ARGS)
         session_timezone))
       continue;      /* hm, not actually used in this zone? */
 
-    values[0] = cstring_to_text(abbrev);
+    values[0] = pg_cstring_to_text(abbrev);
 
     /* Convert offset (in seconds) to an interval; can't overflow */
     MemSet(&itm_in, 0, sizeof(struct pg_itm_in));
