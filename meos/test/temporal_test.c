@@ -3606,7 +3606,7 @@ int main(void)
   for (int i = 0; i < count; i++)
   {
     char_result = tfloat_out(tfloatarray_result[i], 6);
-    char1_result = float_out(float8array_result[i], 6);
+    char1_result = float8_out(float8array_result[i], 6);
     printf("%s:%s", char_result, char1_result);
     if (i < count - 1)
       printf(", ");
@@ -3640,7 +3640,7 @@ int main(void)
   for (int i = 0; i < count; i++)
   {
     char_result = tfloat_out(tfloatarray_result[i], 6);
-    char1_result = float_out(float8array_result[i], 6);
+    char1_result = float8_out(float8array_result[i], 6);
     char2_result = timestamptz_out(tstzarray_result[i]);
     printf("%s:%s,%s", char_result, char1_result, char2_result);
     if (i < count - 1)

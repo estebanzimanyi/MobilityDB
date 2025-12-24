@@ -90,26 +90,6 @@ size_t lwgeom_to_wkb_size(const LWGEOM *geom, uint8_t variant);
 
 /**
  * @ingroup meos_base_types
- * @brief Return the string representation of a float8 number
- * @details This function uses the PostGIS function lwprint_double to print an
- * ordinate value using at most **maxdd** number of decimal digits. The actual 
- * number of printed decimal digits may be less than the requested ones if out 
- * of significant digits.
- *
- * The function will write at most OUT_DOUBLE_BUFFER_SIZE bytes, including the
- * terminating NULL.
- */
-char *
-float_out(double num, int maxdd)
-{
-  assert(maxdd >= 0);
-  char *ascii = palloc(OUT_DOUBLE_BUFFER_SIZE);
-  lwprint_double(num, maxdd, ascii);
-  return ascii;
-}
-
-/**
- * @ingroup meos_base_types
  * @brief Return the string representation of a text value
  * @param[in] txt Text
  */
@@ -118,7 +98,7 @@ text_out(const text *txt)
 {
   assert(txt);
   char *str = text2cstring(txt);
-  size_t size = strlen(str) + 4;
+  size_t size = strlen(str) + 3; /* Pair of quotes + '\0' */
   char *result = palloc(size);
   snprintf(result, size, "\"%s\"", str);
   pfree(str);
@@ -149,7 +129,7 @@ basetype_out(Datum value, meosType type, int maxdd)
     case T_FLOAT8:
       return float8_out(DatumGetFloat8(value), maxdd);
     case T_TEXT:
-      return text_out(DatumGetTextP(value));
+      return text2cstring(DatumGetTextP(value));
 #if DEBUG_BUILD
     case T_DOUBLE2:
       return double2_out(DatumGetDouble2P(value), maxdd);

@@ -47,6 +47,9 @@
 #include "temporal/type_util.h"
 #include "geo/tspatial_parser.h"
 
+/* Function defined in formatting.c */
+extern bool scanner_isspace(char ch);
+
 /*****************************************************************************/
 
 /**
@@ -278,6 +281,68 @@ double_parse(const char **str, double *result)
 }
 
 /**
+ * @brief Return the unescaped string obtained from the input string enclosed
+ * between quotes
+ * @param[in] str String
+ * @param[in] delim Delimiter character after the closing double quote
+ * @param[out] result Unquoted string
+ * @return Return the number of characters of the input string consumed, 0 if
+ * error
+ */
+size_t
+basetype_parse_quoted(const char *str, char delim, char **result)
+{
+  assert(str); assert(str[0] == '"');
+
+  /* Initialize at the begining of the string */
+  const char *start = str, *p = str;
+  /* Consume the double quote */
+  p++;
+  StringInfoData buf;
+  initStringInfo(&buf);
+  for (;;)
+  {
+    switch (*p)
+    {
+      case '\0':
+        goto ending_error;
+      case '\\':
+        /* Skip backslash, copy next character as-is. */
+        p++;
+        if (*p == '\0')
+          goto ending_error;
+        appendStringInfoChar(&buf, *p++);
+        break;
+      case '"':
+
+        /*
+         * If next non-whitespace isn't delim complain about incorrect quoting */
+        while (*(++p) != '\0')
+        {
+          if (*p == delim)
+            break;
+          if (! scanner_isspace(*p))
+            goto ending_error;
+        }
+        goto ending_error;
+      default:
+        appendStringInfoChar(&buf, *p++);
+        break;
+    }
+  }
+
+  *result = strdup(buf.data);
+  pfree(buf.data);
+  return p - start;
+  
+ending_error:
+  meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+    "malformed array literal: \"%s\"", str);
+  pfree(buf.data);
+  return 0;
+}
+
+/**
  * @brief Parse a base value from the buffer
  * @return On error return false
  */
@@ -285,33 +350,34 @@ bool
 basetype_parse(const char **str, meosType basetype, char delim, Datum *result)
 {
   p_whitespace(str);
-  int pos = 0;
+  size_t pos = 0;
   /* Save the original string for error handling */
   char *origstr = (char *) *str;
+  char *str1;
 
   /* ttext values must be enclosed between double quotes */
   if (**str == '"')
   {
-    /* Consume the double quote */
-    *str += 1;
-    while ( ( (*str)[pos] != '"' || (*str)[pos - 1] == '\\' )  &&
-      (*str)[pos] != '\0' )
-      pos++;
+    size_t pos1 = basetype_parse_quoted(*str, delim, &str1);
+    if (! pos1)
+      return false;
+    pos += pos1;
   }
   else
   {
     while ((*str)[pos] != delim && (*str)[pos] != '\0')
       pos++;
+    if ((*str)[pos] == '\0')
+    {
+      meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
+        "Missing delimeter character '%c': %s", delim, origstr);
+      return false;
+    }
+    str1 = (char *) palloc(sizeof(char) * (pos + 1));
+    for (size_t i = 0; i < pos; i++)
+      str1[i] = (*str)[i];
+    str1[pos] = '\0';
   }
-  if ((*str)[pos] == '\0')
-  {
-    meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
-      "Missing delimeter character '%c': %s", delim, origstr);
-    return false;
-  }
-  char *str1 = palloc(sizeof(char) * (pos + 1));
-  strncpy(str1, *str, pos);
-  str1[pos] = '\0';
   bool success = basetype_in(str1, basetype, false, result);
   pfree(str1);
   if (! success)

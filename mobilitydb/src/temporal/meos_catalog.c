@@ -169,42 +169,31 @@ RelnameNspGetRelid(const char *relname, Oid nsp_oid)
 }
 
 #if POSTGRESQL_VERSION_NUMBER < 160000
-/*
- * get_extension_schema - given an extension OID, fetch its extnamespace
- *
- * Returns InvalidOid if no such extension.
+/**
+ * @brief Return the extnamespace Oid for the extension
+ * @return Return InvalidOid if no such extension
+ * @note Derived from PostgreSQL function get_extension_schema()
  */
 static Oid
 get_extension_schema(Oid ext_oid)
 {
-  Oid result;
-  Relation rel;
-  SysScanDesc scandesc;
-  HeapTuple tuple;
+  Relation rel = table_open(ExtensionRelationId, AccessShareLock);
+  ScanKeyInit(&entry[0], Anum_pg_extension_oid,
+    BTEqualStrategyNumber, F_OIDEQ, ObjectIdGetDatum(ext_oid));
+
   ScanKeyData entry[1];
-
-  rel = table_open(ExtensionRelationId, AccessShareLock);
-
-  ScanKeyInit(&entry[0],
-        Anum_pg_extension_oid,
-        BTEqualStrategyNumber, F_OIDEQ,
-        ObjectIdGetDatum(ext_oid));
-
-  scandesc = systable_beginscan(rel, ExtensionOidIndexId, true,
-                  NULL, 1, entry);
-
-  tuple = systable_getnext(scandesc);
+  SysScanDescscandesc = systable_beginscan(rel, ExtensionOidIndexId, true,
+    NULL, 1, entry);
+  HeapTuple tuple = systable_getnext(scandesc);
 
   /* We assume that there can be at most one matching tuple */
+  Oid result;
   if (HeapTupleIsValid(tuple))
     result = ((Form_pg_extension) GETSTRUCT(tuple))->extnamespace;
   else
     result = InvalidOid;
-
   systable_endscan(scandesc);
-
   table_close(rel, AccessShareLock);
-
   return result;
 }
 #endif

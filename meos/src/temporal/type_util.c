@@ -67,6 +67,9 @@
   #include "rgeo/trgeo.h"
 #endif
 
+/* Function defined in formatting.c */
+extern bool scanner_isspace(char ch);
+
 /*****************************************************************************
  * Comparison functions on datums
  *****************************************************************************/
@@ -756,50 +759,102 @@ pfree_array(void **array, int count)
  * @brief Return the string resulting from assembling an array of strings
  * @param[in] strings Array of strings to ouput
  * @param[in] count Number of elements in the input array
- * @param[in] outlen Total length of the elements and the additional ','
  * @param[in] prefix Prefix to add to the string (e.g., for interpolation)
  * @param[in] open, close Starting/ending character (e.g., '{' and '}')
  * @param[in] quotes True when elements should be enclosed into quotes
  * @param[in] spaces True when elements should be separated by spaces
- * @note The function frees the memory of the input strings after finishing
+ * @note The function frees the memory of the input strings after finishing.
+ * @note The functin is derived from the PostgreSQL array_out() function
  */
 char *
-stringarr_to_string(char **strings, int count, size_t outlen, char *prefix,
-  char open, char close, bool quotes, bool spaces)
+stringarr_to_string(char **strings, int count, char *prefix, char open,
+  char close, int quotes, bool spaces)
 {
-  size_t size = strlen(prefix) + outlen + 3;
-  if (quotes)
-    size += count * 4;
-  if (spaces)
-    size += count;
-  char *result = palloc(size);
-  size_t pos = 0;
-  strcpy(result, prefix);
-  pos += strlen(prefix);
-  result[pos++] = open;
+  /* Count total space needed (including any overhead such as escaping
+     backslashes), and detect whether each item needs double quotes */
+  bool *needquotes = (bool *) palloc0(count * sizeof(bool));
+  /* Prefix size + opening and closing characters */
+  size_t prefix_size = strlen(prefix);
+  size_t size = prefix_size + 2;
+
+  /* Iterate through the values */
   for (int i = 0; i < count; i++)
   {
-    if (quotes)
-      result[pos++] = '"';
-    strcpy(result + pos, strings[i]);
-    pos += strlen(strings[i]);
-    if (quotes)
-      result[pos++] = '"';
-    result[pos++] = ',';
-    if (spaces)
-      result[pos++] = ' ';
-    pfree(strings[i]);
+    size += strlen(strings[i]);
+    if (quotes == QUOTES)
+      needquotes[i] = true;
+    else if (quotes == QUOTES_ESCAPE)
+    {
+      bool needquote = false;
+      /* count data plus backslashes; detect chars needing quotes */
+      for (char *tmp = strings[i]; *tmp != '\0'; tmp++)
+      {
+        char ch = *tmp;
+        size += 1;
+        if (ch == '"' || ch == '\\')
+        {
+          needquote = true;
+          size += 1;
+        }
+        else if (ch == '{' || ch == '}' || ch == ',' || scanner_isspace(ch))
+          needquote = true;
+      }
+      needquotes[i] = needquote;
+    }
+
+    /* Count the pair of double quotes, if needed */
+    if (needquotes[i])
+      size += 2;
+    /* and the comma delimiter */
+    size += 1;
   }
+  /* The last element doesn't have a comma delimiter after it but that's OK,
+   * that space is needed for the trailing '\0'.
+   * Add in addition the spaces between elements if requested. */
   if (spaces)
+    size += count;
+
+  /* Construct the output string */
+  char *result = (char *) palloc0(size);
+  char *p = result;
+
+  /* Add the prefix, if any */
+  if (prefix_size)
   {
-    result[pos - 2] = close;
-    result[pos - 1] = '\0';
+    for (char *tmp = prefix; *tmp; tmp++)
+      *p++ = *tmp;
   }
-  else
+
+  *p++ = open;
+  for (int i = 0; i < count; i++)
   {
-    result[pos - 1] = close;
-    result[pos] = '\0';
+    if (needquotes[i])
+    {
+      *p++ = '"';
+      for (char *tmp = strings[i]; *tmp; tmp++)
+      {
+        char ch = *tmp;
+        if (ch == '"' || ch == '\\')
+          *p++ = '\\';
+        *p++ = ch;
+      }
+      *p++ = '"';
+    }
+    else
+    {
+      strcpy(p, strings[i]);
+      p += strlen(p);
+    }
+    if (i < count - 1)
+    {
+      *p++ = ',';
+      if (spaces)
+        *p++ = ' ';
+    }
   }
+  *p++ = close;
+  *p = '\0';
+
   pfree(strings);
   return result;
 }
