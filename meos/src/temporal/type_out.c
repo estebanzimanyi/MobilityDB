@@ -55,6 +55,7 @@
 #include "temporal/spanset.h"
 #include "temporal/tbox.h"
 #include "temporal/temporal.h"
+#include "temporal/type_util.h"
 #include "geo/stbox.h"
 #if CBUFFER
   #include "cbuffer/cbuffer.h"
@@ -97,11 +98,10 @@ char *
 text_out(const text *txt)
 {
   assert(txt);
-  char *str = text2cstring(txt);
-  size_t size = strlen(str) + 3; /* Pair of quotes + '\0' */
-  char *result = palloc(size);
-  snprintf(result, size, "\"%s\"", str);
-  pfree(str);
+  char *res = text2cstring(txt);
+  char *result;
+  if (string_escape(res, QUOTES_ESCAPE, &result))
+    pfree(res);
   return result;
 }
 
@@ -129,7 +129,7 @@ basetype_out(Datum value, meosType type, int maxdd)
     case T_FLOAT8:
       return float8_out(DatumGetFloat8(value), maxdd);
     case T_TEXT:
-      return text2cstring(DatumGetTextP(value));
+      return text_out(DatumGetTextP(value));
 #if DEBUG_BUILD
     case T_DOUBLE2:
       return double2_out(DatumGetDouble2P(value), maxdd);

@@ -281,13 +281,83 @@ double_parse(const char **str, double *result)
 }
 
 /**
- * @brief Return the unescaped string obtained from the input string enclosed
- * between quotes
+ * @brief Return an unescaped (sub)string obtained from an input string
+ * enclosed between quotes
+ * @details Notice that the string may be encoded twice as e.g.
+ * `"\"{\\\"a\\\": \\\"a1\\\"}\"@2001-01-01 00:00:00+01"` in which case the
+ * result should be 
+ * `"{\"a\": \"a1\"}\"@2001-01-01 00:00:00+01"`
  * @param[in] str String
- * @param[in] delim Delimiter character after the closing double quote
  * @param[out] result Unquoted string
  * @return Return the number of characters of the input string consumed, 0 if
  * error
+ * @note This function is the inverse of function #string_escape, which escapes
+ * the string values.
+ */
+size_t
+string_parse_quoted(const char *str, char **result)
+{
+  assert(str); assert(str[0] == '"');
+
+  /* Initialize at the begining of the string */
+  const char *start = str, *p = str;
+  /* Consume the double quote */
+  p++;
+  /* Create the buffer */
+  StringInfoData buf;
+  initStringInfo(&buf);
+  for (;;)
+  {
+    switch (*p)
+    {
+      case '\0':
+        break;
+      case '\\':
+        /* Skip backslash, copy next character as-is if it */
+        p++;
+        if (*p == '\0')
+          goto ending_error;
+        appendStringInfoChar(&buf, *p++);
+        break;
+      case '"':
+        /* Incorrect quoting if the next non-whitespace is not delim */
+        while (*(++p) != '\0')
+        {
+          if (! scanner_isspace(*p))
+            goto ending_error;
+        }
+        break;
+      default:
+        appendStringInfoChar(&buf, *p++);
+        break;
+    }
+    if (*p == '\0')
+      break;
+  }
+
+  *result = strdup(buf.data);
+  pfree(buf.data);
+  return p - start;
+  
+ending_error:
+  meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+    "malformed array literal: \"%s\"", str);
+  pfree(buf.data);
+  return 0;
+}
+
+/**
+ * @brief Return an unescaped (sub)string obtained from an input string
+ * enclosed between quotes
+ * @param[in] str String
+ * @param[in] delim Delimiter character after the closing double quote, if it 
+ * is '\0' the entire string (not the substring until the delimiter) is
+ * unescaped
+ * @param[out] result Unquoted string
+ * @return Return the number of characters of the input string consumed, 0 if
+ * error
+ * @note This function is the inverse of function #string_escape, which escapes
+ * the string values
  */
 size_t
 basetype_parse_quoted(const char *str, char delim, char **result)
@@ -314,9 +384,7 @@ basetype_parse_quoted(const char *str, char delim, char **result)
         appendStringInfoChar(&buf, *p++);
         break;
       case '"':
-
-        /*
-         * If next non-whitespace isn't delim complain about incorrect quoting */
+        /* Incorrect quoting if the next non-whitespace is not delim */
         while (*(++p) != '\0')
         {
           if (*p == delim)

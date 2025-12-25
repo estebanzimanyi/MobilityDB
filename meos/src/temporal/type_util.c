@@ -756,6 +756,66 @@ pfree_array(void **array, int count)
 }
 
 /**
+ * @brief Return the string resulting from escaping the input string
+ * @param[in] str String
+ * @param[in] quotes True when elements should be enclosed into quotes
+ * @param[out] result True when elements should be enclosed into quotes
+ * @result True when the string was escaped, false otherwise
+ * @note The function is derived from the PostgreSQL array_out() function
+ */
+bool
+string_escape(const char *str, int quotes, char **result)
+{
+  /* Count total space needed (including any overhead such as escaping
+     backslashes), and detect whether the string needs double quotes */
+  bool needquotes = false;
+  const char *tmp;
+  /* Size of the input string + '\0' */
+  size_t size = strlen(str) + 1;
+    if (quotes == QUOTES)
+      needquotes = true;
+  else if (quotes == QUOTES_ESCAPE)
+  {
+    /* count data plus backslashes; detect chars needing quotes */
+    for (tmp = str; *tmp != '\0'; tmp++)
+    {
+      char ch = *tmp;
+      size += 1;
+      if (ch == '"' || ch == '\\')
+      {
+        needquotes = true;
+        size += 1;
+      }
+      else if (ch == '{' || ch == '}' || ch == ',' || scanner_isspace(ch))
+        needquotes = true;
+    }
+  }
+  /* Return if no quotes are needed */
+  if (! needquotes)
+    return false;
+
+  /* Count the pair of double quotes */
+  size += 2;
+
+  /* Construct the output string */
+  *result = (char *) palloc0(size);
+  char *p = *result;
+
+  /* Add the prefix, if any */
+  *p++ = '"';
+  for (tmp = str; *tmp; tmp++)
+  {
+    char ch = *tmp;
+    if (ch == '"' || ch == '\\')
+      *p++ = '\\';
+    *p++ = ch;
+  }
+  *p++ = '"';
+  *p = '\0';
+  return needquotes;
+}
+
+/**
  * @brief Return the string resulting from assembling an array of strings
  * @param[in] strings Array of strings to ouput
  * @param[in] count Number of elements in the input array
@@ -772,7 +832,8 @@ stringarr_to_string(char **strings, int count, char *prefix, char open,
 {
   /* Count total space needed (including any overhead such as escaping
      backslashes), and detect whether each item needs double quotes */
-  bool *needquotes = (bool *) palloc0(count * sizeof(bool));
+  char **escaped = (char **) palloc0(sizeof(char *) * count);
+  bool *needquotes = (bool *) palloc0(sizeof(bool) * count);
   /* Prefix size + opening and closing characters */
   size_t prefix_size = strlen(prefix);
   size_t size = prefix_size + 2;
@@ -784,23 +845,7 @@ stringarr_to_string(char **strings, int count, char *prefix, char open,
     if (quotes == QUOTES)
       needquotes[i] = true;
     else if (quotes == QUOTES_ESCAPE)
-    {
-      bool needquote = false;
-      /* count data plus backslashes; detect chars needing quotes */
-      for (char *tmp = strings[i]; *tmp != '\0'; tmp++)
-      {
-        char ch = *tmp;
-        size += 1;
-        if (ch == '"' || ch == '\\')
-        {
-          needquote = true;
-          size += 1;
-        }
-        else if (ch == '{' || ch == '}' || ch == ',' || scanner_isspace(ch))
-          needquote = true;
-      }
-      needquotes[i] = needquote;
-    }
+      needquotes[i] = string_escape(strings[i], quotes, &escaped[i]);
 
     /* Count the pair of double quotes, if needed */
     if (needquotes[i])
@@ -830,13 +875,17 @@ stringarr_to_string(char **strings, int count, char *prefix, char open,
   {
     if (needquotes[i])
     {
-      *p++ = '"';
-      for (char *tmp = strings[i]; *tmp; tmp++)
+      /* If the string was already escaped */
+      if (escaped[i])
       {
-        char ch = *tmp;
-        if (ch == '"' || ch == '\\')
-          *p++ = '\\';
-        *p++ = ch;
+        strcpy(p, escaped[i]);
+        p += strlen(p);
+        pfree(escaped[i]);
+      }
+      else
+      {
+        strcpy(p, strings[i]);
+        p += strlen(p);
       }
       *p++ = '"';
     }
@@ -855,7 +904,7 @@ stringarr_to_string(char **strings, int count, char *prefix, char open,
   *p++ = close;
   *p = '\0';
 
-  pfree(strings);
+  pfree(escaped); pfree(needquotes); pfree(strings);
   return result;
 }
 

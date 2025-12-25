@@ -66,6 +66,7 @@ extern char *basetype_out(Datum value, meosType type, int maxdd);
 /* Array functions */
 
 extern void pfree_array(void **array, int count);
+extern bool string_escape(const char *str, int quotes, char **result);
 extern char *stringarr_to_string(char **strings, int count, char *prefix,
   char open, char close, int quotes, bool spaces);
 

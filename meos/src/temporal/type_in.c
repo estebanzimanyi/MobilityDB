@@ -102,12 +102,7 @@ extern LWGEOM *parse_geojson(json_object *geojson, int *hasz);
  * @brief Return a base value from its string representation
  */
 bool
-#if CBUFFER || NPOINT || POSE || RGEO
-basetype_in(const char *str, meosType type, bool end, Datum *result)
-#else
-basetype_in(const char *str, meosType type,
-  bool end UNUSED, Datum *result)
-#endif
+basetype_in(const char *str, meosType type, Datum *result)
 {
   assert(meos_basetype(type));
   switch (type)
@@ -187,7 +182,7 @@ basetype_in(const char *str, meosType type,
 #if CBUFFER
     case T_CBUFFER:
     {
-      Cbuffer *cb = cbuffer_parse(&str, end);
+      Cbuffer *cb = cbuffer_in(str);
       if (! cb)
         return false;
       *result = PointerGetDatum(cb);
@@ -197,7 +192,7 @@ basetype_in(const char *str, meosType type,
 #if NPOINT
     case T_NPOINT:
     {
-      Npoint *np = npoint_parse(&str, end);
+      Npoint *np = npoint_in(str);
       if (! np)
         return false;
       *result = PointerGetDatum(np);
@@ -207,7 +202,7 @@ basetype_in(const char *str, meosType type,
 #if POSE || RGEO
     case T_POSE:
     {
-      Pose *pose = pose_parse(&str, end);
+      Pose *pose = pose_in(str);
       if (! pose)
         return false;
       *result = PointerGetDatum(pose);
