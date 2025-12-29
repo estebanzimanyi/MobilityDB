@@ -67,6 +67,7 @@
 /**
  * @brief Return a network point from its binary representation read
  * from a buffer
+ * @param[in] buf Buffer
  */
 Npoint *
 npoint_recv(StringInfo buf)

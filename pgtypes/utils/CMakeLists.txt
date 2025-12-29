@@ -31,8 +31,8 @@ set(UTILS_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/jsonb_op.c
     ${CMAKE_CURRENT_SOURCE_DIR}/jsonb_util.c
     ${CMAKE_CURRENT_SOURCE_DIR}/jsonfuncs.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/jsonpath.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/jsonpath_exec.c
+    # ${CMAKE_CURRENT_SOURCE_DIR}/jsonpath.c
+    # ${CMAKE_CURRENT_SOURCE_DIR}/jsonpath_exec.c
 )
 # endif(JSON)
 

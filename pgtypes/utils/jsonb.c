@@ -117,7 +117,8 @@ pg_jsonb_out(const Jsonb *jb)
   StringInfo out = makeStringInfo(); // MEOS
   char *str = JsonbToCString(out, &((Jsonb *)jb)->root, VARSIZE(jb));
   char *result = pstrdup(str);
-  destroyStringInfo(out); pfree(str);
+  destroyStringInfo(out); 
+  // pfree(str);
   return (void *) result;
 }
 

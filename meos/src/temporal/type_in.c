@@ -52,8 +52,8 @@
   #include "cbuffer/cbuffer.h"
 #endif
 #if JSON
-#include <meos_json.h>
-  #include <utils/jsonb.h>
+// #include <meos_json.h>
+  #include "utils/jsonb.h"
 #endif
 #if NPOINT
   #include "npoint/tnpoint.h"

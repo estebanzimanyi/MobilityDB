@@ -37,18 +37,20 @@
 #include <float.h>
 /* PostgreSQL */
 #include <postgres.h>
+#include "utils/jsonb.h"
 #include "utils/varlena.h"
 /* MEOS */
 #include <meos.h>
-#include <meos_json.h>
 #include <meos_internal.h>
-#include <pgtypes.h>
 #include "temporal/meos_catalog.h"
 #include "temporal/temporal.h"
 #include "temporal/lifting.h"
 #include "temporal/type_parser.h"
 #include "temporal/type_util.h"
 #include "json/tjsonb.h"
+
+#include <pgtypes.h>
+#include <meos_json.h>
 
 /*****************************************************************************
  * Datum functions on JSON

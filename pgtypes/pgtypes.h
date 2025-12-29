@@ -39,10 +39,11 @@
 /* PostgreSQL */
 #include <postgres.h>
 #include "utils/numeric.h"
-#include <utils/date.h>
-#include <utils/json.h>
-#include <utils/jsonb.h>
-#include <utils/timestamp.h>
+#include "utils/date.h"
+#include "utils/json.h"
+#include "utils/jsonb.h"
+#include "utils/jsonpath.h"
+#include "utils/timestamp.h"
 
 #if POSTGRESQL_VERSION_NUMBER < 170000
 /*
@@ -804,6 +805,21 @@ extern bool pg_jsonb_lt(const Jsonb *jb1, const Jsonb *jb2);
 extern bool pg_jsonb_ne(const Jsonb *jb1, const Jsonb *jb2);
 extern bool pg_jsonb_ge(const Jsonb *jb1, const Jsonb *jb2);
 extern bool pg_jsonb_gt(const Jsonb *jb1, const Jsonb *jb2);
+
+/* JSON path input/output functions */
+
+extern JsonPath *pg_jsonpath_in(const char *str);
+extern JsonPath *pg_jsonpath_recv(StringInfo buf);
+extern char *pg_jsonpath_out(const JsonPath *jp);
+extern bytea *pg_jsonpath_send(const JsonPath *jp);
+
+/* JSON path execution functions */
+
+// extern JsonPathExecResult pg_jsonb_path_exists(Jsonb *jb, JsonPath *jp, Jsonb *vars, bool silent, bool tz);
+// extern JsonPathExecResult pg_jsonb_path_exists_opr(Jsonb *jb, JsonPath *jp, Jsonb *vars, bool silent);
+extern bool pg_jsonb_path_match(Jsonb *jb, JsonPath *jp, Jsonb *vars, bool silent, bool tz);
+extern Jsonb *pg_jsonb_path_query_array(Jsonb *jb, JsonPath *jp, Jsonb *vars, bool silent, bool tz);
+extern Jsonb *pg_jsonb_path_query_first(Jsonb *jb, JsonPath *jp, Jsonb *vars, bool silent, bool tz);
 
 /*****************************************************************************/
 

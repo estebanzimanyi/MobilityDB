@@ -20,6 +20,17 @@
 #include "nodes/primnodes.h"
 #include "utils/jsonb.h"
 
+// MEOS moved the following definition from the file jsonpath_exec.c
+// /* Result of jsonpath expression evaluation */
+// typedef enum JsonPathExecResult
+// {
+  // jperOk = 0,
+  // jperNotFound = 1,
+  // jperError = 2
+// } JsonPathExecResult;
+
+/*****************************************************************************/
+
 typedef struct
 {
   int32 vl_len_;    /* varlena header (do not touch directly!) */

@@ -145,6 +145,7 @@ typedef enum JsonPathBool
   jpbUnknown = 2
 } JsonPathBool;
 
+// MEOS moved the following definition to the file jsonpath.h
 /* Result of jsonpath expression evaluation */
 typedef enum JsonPathExecResult
 {
@@ -371,18 +372,33 @@ static void checkTimezoneIsUsedForCast(bool useTz, const char *type1,
 
 /****************** User interface to JsonPath executor ********************/
 
-/*
- * jsonb_path_exists
- *    Returns true if jsonpath returns at least one item for the specified
- *    jsonb value.  This function and jsonb_path_match() are used to
- *    implement @? and @@ operators, which in turn are intended to have an
- *    index support.  Thus, it's desirable to make it easier to achieve
- *    consistency between index scan results and sequential scan results.
- *    So, we throw as few errors as possible.  Regarding this function,
- *    such behavior also matches behavior of JSON_EXISTS() clause of
- *    SQL/JSON.  Regarding jsonb_path_match(), this function doesn't have
- *    an analogy in SQL/JSON, so we define its behavior on our own.
+/**
+ * @ingroup meos_json_jsonpath_exec
+ * @brief Return true if jsonpath returns at least one item for the specified
+ * jsonb value
+ * @details This function and jsonb_path_match() are used to implement the
+ * @? and @@ operators, which in turn are intended to have an index support.
+ * Thus, it's desirable to make it easier to achieve consistency between index
+ * scan results and sequential scan results. So, we throw as few errors as
+ * possible. Regarding this function, such behavior also matches behavior of 
+ * JSON_EXISTS() clause of SQL/JSON.  Regarding jsonb_path_match(), this
+ * function doesn't have an analogy in SQL/JSON, so we define its behavior
+ * on our own.
+ * @param[in] jb JSONB value
+ * @param[in] jp JSON path
+ * @param[in] vars JSON variables
+ * @param[in] silent JSON path
+ * @param[in] tz JSON path
+ * @note Derived from PostgreSQL function @p jsonb_path_exists()
  */
+#if MEOS
+JsonPathExecResult
+jsonb_path_exists(Jsonb *jb, JsonPath *jp, Jsonb *vars, bool silent,
+  bool tz)
+{
+  return pg_jsonb_path_exists(jb, jp, vars, silent, tz);
+}
+#endif /* MEOS */
 JsonPathExecResult
 pg_jsonb_path_exists(Jsonb *jb, JsonPath *jp, Jsonb *vars, bool silent,
   bool tz)
@@ -395,11 +411,23 @@ pg_jsonb_path_exists(Jsonb *jb, JsonPath *jp, Jsonb *vars, bool silent,
   return (res == jperOk);
 }
 
-/*
- * jsonb_path_exists_opr
- *    Implementation of operator "jsonb @? jsonpath" (2-argument version of
- *    jsonb_path_exists()).
+/**
+ * @ingroup meos_json_jsonpath_inout
+ * @brief Implementation of operator "jsonb @? jsonpath" (2-argument version
+ * of jsonb_path_exists())
+ * @param[in] jb JSONB value
+ * @param[in] jp JSON path
+ * @param[in] vars JSON variables
+ * @param[in] silent JSON path
+ * @note Derived from PostgreSQL function @p jsonb_path_exists_opr()
  */
+#if MEOS
+JsonPathExecResult
+jsonb_path_exists_opr(Jsonb *jb, JsonPath *jp, Jsonb *vars, bool silent)
+{
+  return pg_jsonb_path_exists_opr(jb, jp, vars, silent);
+}
+#endif /* MEOS */
 JsonPathExecResult
 pg_jsonb_path_exists_opr(Jsonb *jb, JsonPath *jp, Jsonb *vars, bool silent)
 {
@@ -407,13 +435,27 @@ pg_jsonb_path_exists_opr(Jsonb *jb, JsonPath *jp, Jsonb *vars, bool silent)
   return pg_jsonb_path_exists(jb, jp, vars, silent, false);
 }
 
-/*
- * pg_jsonb_path_match
- *    Returns jsonpath predicate result item for the specified jsonb value.
- *    See jsonb_path_exists() comment for details regarding error handling.
+/**
+ * @ingroup meos_json_jsonpath_inout
+ * @brief Returns jsonpath predicate result item for the specified jsonb value
+ * @details See #pg_jsonb_path_exists() comment for details regarding error
+ * handling
+ * @param[in] jb JSONB value
+ * @param[in] jp JSON path
+ * @param[in] vars JSON variables
+ * @param[in] silent JSON path
+ * @param[in] tz JSON path
+ * @note Derived from PostgreSQL function @p jsonb_path_match()
  */
+#if MEOS
 bool
-pg_jsonb_path_match(Jsonb *jb,JsonPath *jp, Jsonb *vars, bool silent, bool tz)
+jsonb_path_match(Jsonb *jb, JsonPath *jp, Jsonb *vars, bool silent, bool tz)
+{
+  return pg_jsonb_path_match(jb, jp, vars, silent, tz);
+}
+#endif /* MEOS */
+bool
+pg_jsonb_path_match(Jsonb *jb, JsonPath *jp, Jsonb *vars, bool silent, bool tz)
 {
   JsonValueList found = {0};
   (void) executeJsonPath(jp, vars, getJsonPathVariableFromJsonb,
@@ -464,14 +506,28 @@ pg_jsonb_path_query(Jsonb *jb, JsonPath *jp, Jsonb *vars, bool silent, bool tz)
 #endif /* NOT USED */
 /*********************/
 
-/*
- * jsonb_path_query_array
- *    Executes jsonpath for given jsonb document and returns result as
- *    jsonb array.
+/**
+ * @ingroup meos_json_jsonpath_inout
+ * @brief Executes jsonpath for given jsonb document and returns result as
+ * jsonb array
+ * @param[in] jb JSONB value
+ * @param[in] jp JSON path
+ * @param[in] vars JSON variables
+ * @param[in] silent JSON path
+ * @param[in] tz JSON path
+ * @note Derived from PostgreSQL function @p jsonb_path_query_array()
  */
+#if MEOS
 Jsonb *
-pg_jsonb_path_query_array(Jsonb *jb, JsonPath *jp, Jsonb *vars, 
-  bool silent, bool tz)
+jsonb_path_query_array(Jsonb *jb, JsonPath *jp, Jsonb *vars, bool silent,
+  bool tz)
+{
+  return pg_jsonb_path_query_array(jb, jp, vars, silent, tz);
+}
+#endif /* MEOS */
+Jsonb *
+pg_jsonb_path_query_array(Jsonb *jb, JsonPath *jp, Jsonb *vars, bool silent,
+  bool tz)
 {
   JsonValueList found = {0};
   (void) executeJsonPath(jp, vars, getJsonPathVariableFromJsonb,
@@ -479,14 +535,28 @@ pg_jsonb_path_query_array(Jsonb *jb, JsonPath *jp, Jsonb *vars,
   return JsonbValueToJsonb(wrapItemsInArray(&found));
 }
 
-/*
- * jsonb_path_query_first
- *    Executes jsonpath for given jsonb document and returns first result
- *    item. If there are no items, NULL returned.
+/**
+ * @ingroup meos_json_jsonpath_inout
+ * @brief Execute jsonpath for given jsonb document and returns first result
+ * item. If there are no items, NULL returned.
+ * @param[in] jb JSONB value
+ * @param[in] jp JSON path
+ * @param[in] vars JSON variables
+ * @param[in] silent JSON path
+ * @param[in] tz JSON path
+ * @note Derived from PostgreSQL function @p jsonb_path_query_first()
  */
+#if MEOS
 Jsonb *
-pg_jsonb_path_query_first(Jsonb *jb, JsonPath *jp, Jsonb *vars, 
-  bool silent, bool tz)
+jsonb_path_query_first(Jsonb *jb, JsonPath *jp, Jsonb *vars, bool silent,
+  bool tz)
+{
+  return pg_jsonb_path_query_first(jb, jp, vars, silent, tz);
+}
+#endif /* MEOS */
+Jsonb *
+pg_jsonb_path_query_first(Jsonb *jb, JsonPath *jp, Jsonb *vars, bool silent,
+  bool tz)
 {
   JsonValueList found = {0};
   (void) executeJsonPath(jp, vars, getJsonPathVariableFromJsonb,

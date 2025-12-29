@@ -37,6 +37,7 @@
 #include <float.h>
 /* PostgreSQL */
 #include <postgres.h>
+#include "utils/jsonpath.h"
 #include "utils/varlena.h"
 /* MEOS */
 #include <meos.h>

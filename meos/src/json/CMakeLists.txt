@@ -1,10 +1,9 @@
 set(JSON_SOURCES
   jsonbset.c
-  # jsonpath_exec.c
   tjsonb.c
+  tjsonb_compops.c
   tjsonb_jsonfuncs.c
   # tjsonb_jsonpath.c
-  tjsonb_compops.c
 )
 
 add_library(json OBJECT ${JSON_SOURCES})

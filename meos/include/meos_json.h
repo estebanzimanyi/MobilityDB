@@ -42,7 +42,7 @@
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
-#include <pgtypes.h>
+// #include <pg_json.h>
 
 /*****************************************************************************
  * Validity macros
@@ -86,96 +86,6 @@
       assert(((Temporal *) (temp))->temptype == T_TJSONB); \
     } while (0)
 #endif
-
-/******************************************************************************
- * Functions for JSON
- ******************************************************************************/
-
-// /* Input and output functions */
-
-// extern text *json_in(const char *str);
-// extern char *json_out(const text *json);
-// extern Jsonb *jsonb_from_text(const text *txt, bool unique_keys);
-// extern Jsonb *jsonb_in(const char *str);
-// extern char *jsonb_out(const Jsonb *jb);
-
-// /* Constructor functions */
-
-// extern text *json_make(text **keyvalarr, int count);
-// extern text *json_make_two_arg(text **keys, text **values, int count);
-// extern Jsonb *jsonb_copy(const Jsonb *jb);
-// extern Jsonb *jsonb_make(text **keys_vals, int count);
-// extern Jsonb *jsonb_make_two_arg(text **keys, text **values, int count);
-
-// /* Conversion functions */
-
-// extern bool jsonb_to_bool(const Jsonb *jb);
-// extern char *jsonb_to_cstring(const Jsonb *jb);
-// extern float4 jsonb_to_float4(const Jsonb *jb);
-// extern float8 jsonb_to_float8(const Jsonb *jb);
-// extern int16 jsonb_to_int16(const Jsonb *jb);
-// extern int32 jsonb_to_int32(const Jsonb *jb);
-// extern int64 jsonb_to_int64(const Jsonb *jb);
-// extern Numeric jsonb_to_numeric(const Jsonb *jb);
-
-/* Accessor functions */
-
-// extern text **json_array_elements(const text *json, int *count);
-// extern text **json_array_elements_text(const text *json, int *count);
-// extern int json_array_length(const text *json);
-// extern text **json_each(const text *json, text **values, int *count);
-// extern text **json_each_text(const text *json, text **values, int *count);
-// extern text **json_object_keys(const text *json, int *count);
-// extern text *json_typeof(const text *json);
-
-// extern Jsonb **jsonb_array_elements(const Jsonb *jb, int *count);
-// extern text **jsonb_array_elements_text(const Jsonb *jb, int *count);
-// extern bool jsonb_contained(const Jsonb *jb1, const Jsonb *jb2); 
-// extern bool jsonb_contains(const Jsonb *jb1, const Jsonb *jb2); 
-// extern text **jsonb_each(const Jsonb *jb, Jsonb **values, int *count); 
-// extern text **jsonb_each_text(const Jsonb *jb, text **values, int *count); 
-// extern bool jsonb_exists(const Jsonb *jb, const text *key); 
-// extern uint32 jsonb_hash(const Jsonb *jb);
-// extern uint64 jsonb_hash_extended(const Jsonb *jb, uint64 seed);
-// extern text **jsonb_object_keys(const Jsonb *jb, int *count);
-
-/* Transformation functions */
-
-// extern text *json_array_element(const text *json, int element);
-// extern text *json_array_element_text(const text *json, int element);
-// extern text *json_extract_path(const text *json, text **path_elems, int path_len);
-// extern text *json_extract_path_text(const text *json, text **path_elems, int path_len);
-// extern text *json_object_field(const text *json, const text *key);
-// extern text *json_object_field_text(const text *json, const text *key);
-// extern text *json_strip_nulls(const text *json, bool strip_in_arrays);
-// extern Jsonb *jsonb_array_element(const Jsonb *jb, int element);
-// extern text *jsonb_array_element_text(const Jsonb *jb, int element);
-// extern Jsonb *jsonb_concat(const Jsonb *jb1, const Jsonb *jb2);
-// extern Jsonb *jsonb_delete(const Jsonb *jb, const text *key);
-// extern Jsonb *jsonb_delete_array(const Jsonb *jb, text **keys_elems, int keys_len);
-// extern Jsonb *jsonb_delete_idx(const Jsonb *jb, int idx);
-// extern Jsonb *jsonb_delete_path(const Jsonb *jb, text **path_elems, int path_len);
-// extern Jsonb *jsonb_extract_path(const Jsonb *jb, text **path_elems, int path_len);
-// extern text *jsonb_extract_path_text(const Jsonb *jb, text **path_elems, int path_len);
-// extern Jsonb *jsonb_insert(const Jsonb *jb, text **path_elems, int path_len, Jsonb *newjb, bool after);
-// extern Jsonb *jsonb_object_field(const Jsonb *jb, const text *key);
-// extern text *jsonb_object_field_text(const Jsonb *jb, const text *key);
-// extern text *jsonb_pretty(const Jsonb *jb);
-// extern Jsonb *jsonb_set(const Jsonb *jb, text **path_elems, int path_len, Jsonb *newjb, bool create);
-// extern Jsonb *jsonb_set_lax(const Jsonb *jb, text **path_elems, int path_len, Jsonb *newjb, bool create, const text *handle_null);
-// extern Jsonb *jsonb_strip_nulls (const Jsonb *jb, bool strip_in_arrays);
-
-/* Bounding box functions */
-
-/* Comparison functions */
-
-// extern int jsonb_cmp(const Jsonb *jb1, const Jsonb *jb2);
-// extern bool jsonb_eq(const Jsonb *jb1, const Jsonb *jb2);
-// extern bool jsonb_le(const Jsonb *jb1, const Jsonb *jb2);
-// extern bool jsonb_lt(const Jsonb *jb1, const Jsonb *jb2);
-// extern bool jsonb_ne(const Jsonb *jb1, const Jsonb *jb2);
-// extern bool jsonb_ge(const Jsonb *jb1, const Jsonb *jb2);
-// extern bool jsonb_gt(const Jsonb *jb1, const Jsonb *jb2);
 
 /******************************************************************************
  * Functions for JSONB sets

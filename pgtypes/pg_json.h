@@ -39,6 +39,15 @@
 typedef struct varlena;
 typedef struct varlena text __attribute__((aligned(8)));
 
+// typedef struct StringInfoData
+// {
+  // char     *data;
+  // int      len;
+  // int      maxlen;
+  // int      cursor;
+// } StringInfoData;
+// typedef StringInfoData *StringInfo;
+
 typedef uint32 JEntry;
 typedef struct JsonbContainer
 {
@@ -51,6 +60,21 @@ typedef struct
   int32 vl_len_;    /* varlena header (do not touch directly!) */
   JsonbContainer root;
 } Jsonb;
+
+typedef struct
+{
+  int32 vl_len_;    /* varlena header (do not touch directly!) */
+  uint32 header;      /* version and flags (see below) */
+  char data[];
+} JsonPath;
+
+// /* Result of jsonpath expression evaluation moved from jsonpath_exec.c */
+// typedef enum JsonPathExecResult
+// {
+  // jperOk = 0,
+  // jperNotFound = 1,
+  // jperError = 2
+// } JsonPathExecResult;
 
 /*****************************************************************************/
 
@@ -114,6 +138,19 @@ extern text *jsonb_pretty(const Jsonb *jb);
 extern Jsonb *jsonb_set(const Jsonb *jb, text **path_elems, int path_len, Jsonb *newjb, bool create);
 extern Jsonb *jsonb_set_lax(const Jsonb *jb, text **path_elems, int path_len, Jsonb *newjb, bool create, const text *handle_null);
 extern Jsonb *jsonb_strip_nulls(const Jsonb *jb, bool strip_in_arrays);
+
+/*****************************************************************************/
+
+extern JsonPathExecResult jsonb_path_exists(Jsonb *jb, JsonPath *jp, Jsonb *vars, bool silent, bool tz);
+extern JsonPathExecResult jsonb_path_exists_opr(Jsonb *jb, JsonPath *jp, Jsonb *vars, bool silent);
+extern bool jsonb_path_match(Jsonb *jb, JsonPath *jp, Jsonb *vars, bool silent, bool tz);
+extern Jsonb *jsonb_path_query_array(Jsonb *jb, JsonPath *jp, Jsonb *vars, bool silent, bool tz);
+extern Jsonb *jsonb_path_query_first(Jsonb *jb, JsonPath *jp, Jsonb *vars, bool silent, bool tz);
+
+extern JsonPath *jsonpath_in(const char *str);
+extern char *jsonpath_out(const JsonPath *jp);
+extern JsonPath *jsonpath_recv(StringInfo buf);
+extern bytea *jsonpath_send(const JsonPath *jp);
 
 /*****************************************************************************/
 

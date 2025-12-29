@@ -47,7 +47,7 @@
 
 /* MEOS */
 #include <meos.h>
-#include <meos_json.h>
+// #include <meos_json.h>
 #include "temporal/span.h"
 #include "json/tjsonb.h"
 #include <pgtypes.h>

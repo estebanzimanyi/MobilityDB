@@ -32,8 +32,6 @@
  * @brief Functions for temporal geos
  */
 
-#include "geo/tgeo_aggfuncs.h"
-
 /* C */
 #include <assert.h>
 /* MEOS */

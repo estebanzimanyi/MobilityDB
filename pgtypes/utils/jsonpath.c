@@ -92,25 +92,28 @@ static int  operationPriority(JsonPathItemType op);
 
 /**************************** INPUT/OUTPUT ********************************/
 
-/*
- * jsonpath type input function
- * jsonpath_in
+/**
+ * @ingroup meos_json_jsonpath_inout
+ * @brief Return a JSON path from its string representation
+ * @param[in] str String
+ * @note Derived from PostgreSQL function @p json_in()
  */
 JsonPath *
-pg_jsonpath_in(char *str)
+pg_jsonpath_in(const char *str)
 {
   int len = strlen(str);
-  return jsonPathFromCstring(str, len, NULL);
+  return jsonPathFromCstring((char *) str, len, NULL);
 }
 
-/*
- * jsonpath type recv function
- *
- * The type is sent as text in binary mode, so this is almost the same
- * as the input function, but it's prefixed with a version number so we
- * can change the binary format sent in future if necessary. For now,
- * only version 1 is supported.
- * jsonpath_recv
+/**
+ * @ingroup meos_json_jsonpath_inout
+ * @brief Return a JSON path from its binary representation read from a buffer
+ * @details  The type is sent as text in binary mode, so this is almost the 
+ * same as the input function, but it's prefixed with a version number so we
+ * can change the binary format sent in future if necessary. For now, only
+ * version 1 is supported.
+ * @param[in] buf Buffer
+ * @note Derived from PostgreSQL function @p jsonpath_recv()
  */
 JsonPath *
 pg_jsonpath_recv(StringInfo buf)
@@ -129,30 +132,34 @@ pg_jsonpath_recv(StringInfo buf)
   return jsonPathFromCstring(str, nbytes, NULL);
 }
 
-/*
- * jsonpath type output function
- * jsonpath_out
+/**
+ * @ingroup meos_json_jsonpath_inout
+ * @brief Return the string representation of a JSON path
+ * @param[in] jp JSON path
+ * @note Derived from PostgreSQL function @p jsonpath_out()
  */
 char *
-pg_jsonpath_out(JsonPath *jp)
+pg_jsonpath_out(const JsonPath *jp)
 {
-  return jsonPathToCstring(NULL, jp, VARSIZE(jp));
+  return jsonPathToCstring(NULL, (JsonPath *) jp, VARSIZE(jp));
 }
 
-/*
- * jsonpath type send function
- *
- * Just send jsonpath as a version number, then a string of text
+/**
+ * @ingroup meos_json_jsonpath_inout
+ * @brief Return the binary representation of a JSON path
+ * @details Just send jsonpath as a version number, then a string of text
+ * @param[in] str String
+ * @note Derived from PostgreSQL function @p jsonpath_send()
  */
 bytea *
-jsonpath_send(JsonPath *jp)
+pg_jsonpath_send(const JsonPath *jp)
 {
   StringInfoData buf;
   StringInfoData jtext;
   int version = JSONPATH_VERSION;
 
   initStringInfo(&jtext);
-  (void) jsonPathToCstring(&jtext, jp, VARSIZE(jp));
+  (void) jsonPathToCstring(&jtext, (JsonPath *) jp, VARSIZE(jp));
 
   pq_begintypsend(&buf);
   pq_sendint8(&buf, version);
