@@ -62,7 +62,7 @@ trgeoinst_parse(const char **str, meosType temptype, bool end,
   int *temp_srid, const GSERIALIZED *geom, TInstant **result)
 {
   Datum base;
-  if (! spatial_parse_elem(str, temptype, '@', temp_srid, &base))
+  if (! spatial_parse_elem(str, temptype, "@", temp_srid, &base))
     return false;
   Pose *pose = DatumGetPoseP(base);
 

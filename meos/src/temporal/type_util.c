@@ -67,13 +67,19 @@
   #include "rgeo/trgeo.h"
 #endif
 
+#include <utils/numeric.h>
+#include <pgtypes.h>
+
+/* Function defined in formatting.c */
+extern bool scanner_isspace(char ch);
+
 /*****************************************************************************
  * Comparison functions on datums
  *****************************************************************************/
 
 /**
  * @ingroup meos_base_types
- * @brief Return -1, 0, or 1 depending on whether the first value is less than, 
+ * @brief Return -1, 0, or 1 depending on whether the first value is less than,
  * equal to, or greater than the second one
  */
 int
@@ -84,7 +90,7 @@ int32_cmp(int32 l, int32 r)
 
 /**
  * @ingroup meos_base_types
- * @brief Return -1, 0, or 1 depending on whether the first value is less than, 
+ * @brief Return -1, 0, or 1 depending on whether the first value is less than,
  * equal to, or greater than the second one
  */
 int
@@ -94,7 +100,7 @@ int64_cmp(int64 l, int64 r)
 }
 
 /**
- * @brief Return -1, 0, or 1 depending on whether the first value is less than, 
+ * @brief Return -1, 0, or 1 depending on whether the first value is less than,
  * equal to, or greater than the second one
  */
 int
@@ -753,54 +759,150 @@ pfree_array(void **array, int count)
 }
 
 /**
+ * @brief Return the string resulting from escaping the input string
+ * @param[in] str String
+ * @param[in] quotes True when elements should be enclosed into quotes
+ * @param[out] result True when elements should be enclosed into quotes
+ * @result True when the string was escaped, false otherwise
+ * @note The function is derived from the PostgreSQL array_out() function
+ */
+bool
+string_escape(const char *str, int quotes, char **result)
+{
+  /* Count total space needed (including any overhead such as escaping
+     backslashes), and detect whether the string needs double quotes */
+  bool needquotes = false;
+  const char *tmp;
+  /* Size of the input string + '\0' */
+  size_t size = strlen(str) + 1;
+  if (quotes == QUOTES)
+    needquotes = true;
+  else if (quotes == QUOTES_ESCAPE)
+  {
+    /* count data plus backslashes; detect chars needing quotes */
+    for (tmp = str; *tmp != '\0'; tmp++)
+    {
+      char ch = *tmp;
+      size += 1;
+      if (ch == '"' || ch == '\\')
+      {
+        needquotes = true;
+        size += 1;
+      }
+      else if (ch == '{' || ch == '}' || ch == ',' || scanner_isspace(ch))
+        needquotes = true;
+    }
+  }
+
+  /* Count the pair of double quotes */
+  size += 2;
+
+  /* Construct the output string */
+  *result = (char *) palloc0(size);
+  char *p = *result;
+
+  for (tmp = str; *tmp; tmp++)
+  {
+    char ch = *tmp;
+    if (ch == '"' || ch == '\\')
+      *p++ = '\\';
+    *p++ = ch;
+  }
+  *p = '\0';
+  return needquotes;
+}
+
+/**
  * @brief Return the string resulting from assembling an array of strings
  * @param[in] strings Array of strings to ouput
  * @param[in] count Number of elements in the input array
- * @param[in] outlen Total length of the elements and the additional ','
  * @param[in] prefix Prefix to add to the string (e.g., for interpolation)
  * @param[in] open, close Starting/ending character (e.g., '{' and '}')
  * @param[in] quotes True when elements should be enclosed into quotes
  * @param[in] spaces True when elements should be separated by spaces
- * @note The function frees the memory of the input strings after finishing
+ * @note The function frees the memory of the input strings after finishing.
+ * @note The functin is derived from the PostgreSQL array_out() function
  */
 char *
-stringarr_to_string(char **strings, int count, size_t outlen, char *prefix,
-  char open, char close, bool quotes, bool spaces)
+stringarr_to_string(char **strings, int count, char *prefix, char open,
+  char close, int quotes, bool spaces)
 {
-  size_t size = strlen(prefix) + outlen + 3;
-  if (quotes)
-    size += count * 4;
-  if (spaces)
-    size += count;
-  char *result = palloc(size);
-  size_t pos = 0;
-  strcpy(result, prefix);
-  pos += strlen(prefix);
-  result[pos++] = open;
+  /* Count total space needed (including any overhead such as escaping
+     backslashes), and detect whether each item needs double quotes */
+  char **escaped = (char **) palloc0(sizeof(char *) * count);
+  bool *needquotes = (bool *) palloc0(sizeof(bool) * count);
+  /* Prefix size + opening and closing characters */
+  size_t prefix_size = strlen(prefix);
+  size_t size = prefix_size + 2;
+
+  /* Iterate through the values */
   for (int i = 0; i < count; i++)
   {
-    if (quotes)
-      result[pos++] = '"';
-    strcpy(result + pos, strings[i]);
-    pos += strlen(strings[i]);
-    if (quotes)
-      result[pos++] = '"';
-    result[pos++] = ',';
-    if (spaces)
-      result[pos++] = ' ';
-    pfree(strings[i]);
+    size += strlen(strings[i]);
+    if (quotes == QUOTES)
+      needquotes[i] = true;
+    else if (quotes == QUOTES_ESCAPE)
+      needquotes[i] = string_escape(strings[i], quotes, &escaped[i]);
+
+    /* Count the pair of double quotes, if needed */
+    if (needquotes[i])
+      size += 2;
+    /* and the comma delimiter */
+    size += 1;
   }
+  /* The last element doesn't have a comma delimiter after it but that's OK,
+   * that space is needed for the trailing '\0'.
+   * Add in addition the spaces between elements if requested. */
   if (spaces)
+    size += count;
+
+  /* Construct the output string */
+  char *result = (char *) palloc0(size);
+  char *p = result;
+
+  /* Add the prefix, if any */
+  if (prefix_size)
   {
-    result[pos - 2] = close;
-    result[pos - 1] = '\0';
+    for (char *tmp = prefix; *tmp; tmp++)
+      *p++ = *tmp;
   }
-  else
+
+  *p++ = open;
+  for (int i = 0; i < count; i++)
   {
-    result[pos - 1] = close;
-    result[pos] = '\0';
+    if (needquotes[i])
+    {
+      *p++ = '"';
+      /* If the string was already escaped */
+      if (escaped[i])
+      {
+        strcpy(p, escaped[i]);
+        p += strlen(p);
+        pfree(escaped[i]);
+      }
+      else
+      {
+        strcpy(p, strings[i]);
+        p += strlen(p);
+      }
+      *p++ = '"';
+    }
+    else
+    {
+      strcpy(p, strings[i]);
+      p += strlen(p);
+    }
+    if (i < count - 1)
+    {
+      *p++ = ',';
+      if (spaces)
+        *p++ = ' ';
+    }
   }
-  pfree(strings);
+  *p++ = close;
+  *p = '\0';
+
+  pfree(escaped); pfree(needquotes); pfree(strings);
   return result;
 }
 

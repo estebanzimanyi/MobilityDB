@@ -253,7 +253,7 @@ cbuffer_parse(const char **str, bool end)
   p_whitespace(str);
   GSERIALIZED *gs;
   /* The following call consumes also the separator passed as parameter */
-  if (! geo_parse(str, T_GEOMETRY, ',', &srid, &gs))
+  if (! geo_parse(str, T_GEOMETRY, ",", &srid, &gs))
     return NULL;
   if (! ensure_point_type(gs) || ! ensure_not_empty(gs) ||
       ! ensure_has_not_Z_geo(gs) || ! ensure_has_not_M_geo(gs))
@@ -267,7 +267,7 @@ cbuffer_parse(const char **str, bool end)
   /* Parse radius */
   p_whitespace(str);
   Datum d;
-  if (! basetype_parse(str, T_FLOAT8, ')', &d))
+  if (! basetype_parse(str, T_FLOAT8, ")", &d))
     return NULL;
   double radius = DatumGetFloat8(d);
   if (radius < 0)

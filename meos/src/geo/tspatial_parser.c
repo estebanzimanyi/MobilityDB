@@ -271,7 +271,7 @@ stbox_parse(const char **str)
  * @param[out] result New geometry, may be NULL
  */
 bool 
-geo_parse(const char **str, meosType basetype, char delim, int *srid,
+geo_parse(const char **str, meosType basetype, const char *delim, int *srid,
   GSERIALIZED **result)
 {
   p_whitespace(str);
@@ -323,7 +323,7 @@ geo_parse(const char **str, meosType basetype, char delim, int *srid,
  * @param[out] result New spatial base value, may be NULL
  */
 bool 
-spatial_parse_elem(const char **str, meosType temptype, char delim, 
+spatial_parse_elem(const char **str, meosType temptype, const char *delim, 
   int *temp_srid, Datum *result)
 {
   p_whitespace(str);
@@ -375,7 +375,7 @@ tspatialinst_parse(const char **str, meosType temptype, bool end,
   int *temp_srid, TInstant **result)
 {
   Datum base;
-  if (! spatial_parse_elem(str, temptype, '@', temp_srid, &base))
+  if (! spatial_parse_elem(str, temptype, "@", temp_srid, &base))
     return false;
 
   p_delimchar(str, '@');

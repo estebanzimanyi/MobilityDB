@@ -358,7 +358,7 @@ pose_parse(const char **str, bool end)
   GSERIALIZED *geo = NULL;
   if (strncasecmp(*str,"POSE",4) != 0)
   {
-    if (! geo_parse(str, T_GEOMETRY, ',', &srid_geo, &geo))
+    if (! geo_parse(str, T_GEOMETRY, ",", &srid_geo, &geo))
       return NULL;
   }
 
@@ -382,7 +382,7 @@ pose_parse(const char **str, bool end)
   /* Parse geo */
   p_whitespace(str);
   GSERIALIZED *point;
-  if (! geo_parse(str, T_GEOMETRY, ',', &srid, &point))
+  if (! geo_parse(str, T_GEOMETRY, ",", &srid, &point))
     return NULL;
   if (! ensure_point_type(point) || ! ensure_not_empty(point) ||
       ! ensure_has_not_M_geo(point))
