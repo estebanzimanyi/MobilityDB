@@ -67,9 +67,6 @@
   #include "rgeo/trgeo.h"
 #endif
 
-#include <utils/numeric.h>
-#include <pgtypes.h>
-
 /* Function defined in formatting.c */
 extern bool scanner_isspace(char ch);
 
