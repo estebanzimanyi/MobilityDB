@@ -47,21 +47,27 @@
 
 /* eContains(geometry, tcbuffer) is not supported */
 
+CREATE FUNCTION eContains(geometry, tcbuffer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Econtains_geo_tcbuffer'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION eContains(cbuffer, tcbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Econtains_cbuffer_tcbuffer'
-  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION eContains(tcbuffer, geometry)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Econtains_tcbuffer_geo'
-  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION eContains(tcbuffer, cbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Econtains_tcbuffer_cbuffer'
-  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION eContains(tcbuffer, tcbuffer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Econtains_tcbuffer_tcbuffer'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************/
@@ -69,46 +75,51 @@ CREATE FUNCTION eContains(tcbuffer, cbuffer)
 CREATE FUNCTION aContains(geometry, tcbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Acontains_geo_tcbuffer'
-  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION aContains(cbuffer, tcbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Acontains_cbuffer_tcbuffer'
-  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION aContains(tcbuffer, geometry)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Acontains_tcbuffer_geo'
-  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION aContains(tcbuffer, cbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Acontains_tcbuffer_cbuffer'
-  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION aContains(tcbuffer, tcbuffer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Acontains_tcbuffer_tcbuffer'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************
  * eCovers, aCovers
  *****************************************************************************/
 
-/* eCovers(geometry, tcbuffer) is not supported */
-
+CREATE FUNCTION eCovers(geometry, tcbuffer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ecovers_geo_tcbuffer'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION eCovers(cbuffer, tcbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ecovers_cbuffer_tcbuffer'
-  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION eCovers(tcbuffer, geometry)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ecovers_tcbuffer_geo'
-  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION eCovers(tcbuffer, cbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ecovers_tcbuffer_cbuffer'
-  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION eCovers(tcbuffer, tcbuffer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ecovers_tcbuffer_tcbuffer'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************/
@@ -116,23 +127,24 @@ CREATE FUNCTION eCovers(tcbuffer, cbuffer)
 CREATE FUNCTION aCovers(geometry, tcbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Acovers_geo_tcbuffer'
-  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION aCovers(cbuffer, tcbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Acovers_cbuffer_tcbuffer'
-  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION aCovers(tcbuffer, geometry)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Acovers_tcbuffer_geo'
-  SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION aCovers(tcbuffer, cbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Acovers_tcbuffer_cbuffer'
-  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION aCovers(tcbuffer, tcbuffer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Acovers_tcbuffer_tcbuffer'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************

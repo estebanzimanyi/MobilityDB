@@ -105,7 +105,18 @@ EA_spatialrel_tcbuffer_cbuffer(FunctionCallInfo fcinfo,
  * Ever/always contains
  *****************************************************************************/
 
-/* Econtains_geo_tcbuffer is not supported */
+PGDLLEXPORT Datum Econtains_geo_tcbuffer(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Econtains_geo_tcbuffer);
+/**
+ * @ingroup mobilitydb_cbuffer_rel_ever
+ * @brief Return true if a geometry always contains a temporal circular buffer
+ * @sqlfn aContains()
+ */
+inline Datum
+Econtains_geo_tcbuffer(PG_FUNCTION_ARGS)
+{
+  return EA_spatialrel_geo_tspatial(fcinfo, &ea_contains_geo_tcbuffer, EVER);
+}
 
 PGDLLEXPORT Datum Acontains_geo_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Acontains_geo_tcbuffer);
@@ -119,6 +130,8 @@ Acontains_geo_tcbuffer(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_geo_tspatial(fcinfo, &ea_contains_geo_tcbuffer, ALWAYS);
 }
+
+/*****************************************************************************/
 
 PGDLLEXPORT Datum Econtains_tcbuffer_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Econtains_tcbuffer_geo);
@@ -176,6 +189,8 @@ Acontains_cbuffer_tcbuffer(PG_FUNCTION_ARGS)
     ALWAYS);
 }
 
+/*****************************************************************************/
+
 PGDLLEXPORT Datum Econtains_tcbuffer_cbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Econtains_tcbuffer_cbuffer);
 /**
@@ -204,11 +219,52 @@ Acontains_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
     ALWAYS);
 }
 
+/*****************************************************************************/
+
+PGDLLEXPORT Datum Econtains_tcbuffer_tcbuffer(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Econtains_tcbuffer_tcbuffer);
+/**
+ * @ingroup mobilitydb_cbuffer_rel_ever
+ * @brief Return true if a temporal circular buffer ever contains a geometry
+ * @sqlfn eContains()
+ */
+inline Datum
+Econtains_tcbuffer_tcbuffer(PG_FUNCTION_ARGS)
+{
+  return EA_spatialrel_tspatial_tspatial(fcinfo, &ea_contains_tcbuffer_tcbuffer,
+    EVER);
+}
+
+PGDLLEXPORT Datum Acontains_tcbuffer_tcbuffer(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Acontains_tcbuffer_tcbuffer);
+/**
+ * @ingroup mobilitydb_cbuffer_rel_ever
+ * @brief Return true if a temporal circular buffer always contains a geometry
+ * @sqlfn aContains()
+ */
+inline Datum
+Acontains_tcbuffer_tcbuffer(PG_FUNCTION_ARGS)
+{
+  return EA_spatialrel_tspatial_tspatial(fcinfo, &ea_contains_tcbuffer_tcbuffer,
+    ALWAYS);
+}
+
 /*****************************************************************************
  * Ever/always covers
  *****************************************************************************/
 
-/* Ecovers_geo_tcbuffer is not supported */
+PGDLLEXPORT Datum Ecovers_geo_tcbuffer(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Ecovers_geo_tcbuffer);
+/**
+ * @ingroup mobilitydb_cbuffer_rel_ever
+ * @brief Return true if a geometry ever covers a temporal circular buffer
+ * @sqlfn eCovers()
+ */
+inline Datum
+Ecovers_geo_tcbuffer(PG_FUNCTION_ARGS)
+{
+  return EA_spatialrel_geo_tspatial(fcinfo, &ea_covers_geo_tcbuffer, EVER);
+}
 
 PGDLLEXPORT Datum Acovers_geo_tcbuffer(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Acovers_geo_tcbuffer);

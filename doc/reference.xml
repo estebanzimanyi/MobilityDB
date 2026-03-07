@@ -2148,6 +2148,15 @@
 					</listitem>
 
 					<listitem>
+						<para><link linkend="tcbuffer_atCbuffer"><varname>atCbuffer</varname>, <varname>minusCbuffer</varname></link>: Restrict to (the complement of) a circular buffer</para>
+					</listitem>
+
+
+					<listitem>
+						<para><link linkend="tcbuffer_atStbox"><varname>atStbox</varname>, <varname>minusStbox</varname></link>: Restrict to (the complement of) a spatiotemporal box</para>
+					</listitem>
+
+					<listitem>
 						<para><link linkend="tcbuffer_atGeometry"><varname>atGeometry</varname>, <varname>minusGeometry</varname></link>: Restrict to (the complement of) a geometry</para>
 					</listitem>
 				</itemizedlist>
@@ -2243,10 +2252,6 @@
 
 					<listitem>
 						<para><link linkend="tcbuffer_wCount"><varname>wCount</varname></link>: Window count</para>
-					</listitem>
-
-					<listitem>
-						<para><link linkend="tcbuffer_tCentroid"><varname>tCentroid</varname></link>: Temporal centroid</para>
 					</listitem>
 				</itemizedlist>
 			</sect3>

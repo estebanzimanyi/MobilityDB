@@ -46,6 +46,8 @@
 
 extern bool ensure_valid_tcbuffer_cbuffer(const Temporal *temp,
   const Cbuffer *cb);
+extern bool ensure_valid_tcbuffer_cbufferset(const Temporal *temp,
+  const Set *s);
 extern bool ensure_valid_tcbuffer_geo(const Temporal *temp,
   const GSERIALIZED *gs);
 extern bool ensure_valid_tcbuffer_stbox(const Temporal *temp,

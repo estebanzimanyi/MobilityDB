@@ -368,7 +368,7 @@ geo_copy(const GSERIALIZED *gs)
   return result;
 }
 
-#if MEOS
+#if MEOS || CBUFFER
 /**
  * @ingroup meos_geo_base_constructor
  * @brief Return a 2D geometry point constructed from the arguments
@@ -381,7 +381,9 @@ geompoint_make2d(int32_t srid, double x, double y)
   lwpoint_free(point);
   return result;
 }
+#endif /* MEOS || CBUFFER */
 
+#if MEOS
 /**
  * @ingroup meos_geo_base_constructor
  * @brief Return a 2D geography point constructed from the arguments

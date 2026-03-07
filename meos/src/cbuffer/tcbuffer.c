@@ -45,6 +45,7 @@
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/tspatial_parser.h"
 #include "cbuffer/cbuffer.h"
+#include "cbuffer/tcbuffer_boxops.h"
 
 /*****************************************************************************
  * Validity functions
@@ -62,6 +63,22 @@ ensure_valid_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
   /* Ensure the validity of the arguments */
   VALIDATE_TCBUFFER(temp, false); VALIDATE_NOT_NULL(cb, false);
   if (! ensure_same_srid(tspatial_srid(temp), cbuffer_srid(cb)))
+    return false;
+  return true;
+}
+
+/**
+ * @brief Return true if a temporal circular buffer and a circular buffer set
+ * are valid for operations
+ * @param[in] temp Temporal circular buffer
+ * @param[in] s Circular buffer set
+ */
+bool
+ensure_valid_tcbuffer_cbufferset(const Temporal *temp, const Set *s)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_TCBUFFER(temp, false); VALIDATE_CBUFFERSET(s, false);
+  if (! ensure_same_srid(tspatial_srid(temp), spatialset_srid(s)))
     return false;
   return true;
 }
@@ -944,26 +961,48 @@ tcbuffer_expand(const Temporal *temp, double dist)
 /**
  * @ingroup meos_internal_cbuffer_restrict
  * @brief Return a temporal circular buffer restricted to a circular buffer
- * @param[in] temp Temporal value
- * @param[in] cb Value
+ * @param[in] temp Temporal circular buffer
+ * @param[in] cb Circular buffer
  * @param[in] atfunc True if the restriction is `at`, false for `minus`
- * @csqlfn #Temporal_at_value()
+ * @csqlfn #Tcbuffer_at_cbuffer()
  */
 Temporal *
-tcbuffer_restrict_cbuffer(const Temporal *temp, const Cbuffer *cb, bool atfunc)
+tcbuffer_restrict_cbuffer(const Temporal *temp, const Cbuffer *cb,
+  bool atfunc)
 {
+  VALIDATE_TCBUFFER(temp, NULL); VALIDATE_NOT_NULL(cb, NULL);
   /* Ensure the validity of the arguments */
   if (! ensure_valid_tcbuffer_cbuffer(temp, cb))
     return NULL;
-  return temporal_restrict_value(temp, PointerGetDatum(cb), atfunc);
+
+  /* Bounding box test */
+  STBox box1, box2;
+  tspatial_set_stbox(temp, &box1);
+  cbuffer_set_stbox(cb, &box2);
+  if (! overlaps_stbox_stbox(&box1, &box2))
+    return atfunc ? NULL : temporal_copy(temp);
+
+  Temporal *tpoint = tcbuffer_to_tgeompoint(temp);
+  Temporal *tfloat = tcbuffer_to_tfloat(temp);
+  GSERIALIZED *gs = cbuffer_to_geom(cb);
+  Temporal *tpoint_rest = tgeo_restrict_geom(tpoint, gs, NULL, atfunc);
+  pfree(tpoint);
+  if (! tpoint_rest)
+  {
+    pfree(tfloat);
+    return NULL;
+  }
+  Temporal *result = tcbuffer_make(tpoint_rest, tfloat);
+  pfree(tfloat); pfree(tpoint_rest);
+  return result;
 }
 
 /**
  * @ingroup meos_cbuffer_restrict
  * @brief Return a temporal circular buffer restricted to a circular buffer
- * @param[in] temp Temporal value
- * @param[in] cb Value
- * @csqlfn #Temporal_at_value()
+ * @param[in] temp Temporal circular buffer
+ * @param[in] cb Circular buffer
+ * @csqlfn #Tcbuffer_at_cbuffer()
  */
 Temporal *
 tcbuffer_at_cbuffer(const Temporal *temp, const Cbuffer *cb)
@@ -974,15 +1013,86 @@ tcbuffer_at_cbuffer(const Temporal *temp, const Cbuffer *cb)
 /**
  * @ingroup meos_cbuffer_restrict
  * @brief Return a temporal circular buffer restricted to the complement of a
- * circular buffer
- * @param[in] temp Temporal value
- * @param[in] cb Value
- * @csqlfn #Temporal_minus_value()
+ * geometry
+ * @param[in] temp Temporal circular buffer
+ * @param[in] cb Circular buffer
+ * @csqlfn #Tcbuffer_minus_cbuffer()
  */
 Temporal *
 tcbuffer_minus_cbuffer(const Temporal *temp, const Cbuffer *cb)
 {
   return tcbuffer_restrict_cbuffer(temp, cb, REST_MINUS);
+}
+
+/**
+ * @ingroup meos_internal_cbuffer_restrict
+ * @brief Return a temporal circular buffer restricted to a circular buffer
+ * @param[in] temp Temporal circular buffer
+ * @param[in] s Circular buffer set
+ * @param[in] atfunc True if the restriction is `at`, false for `minus`
+ * @csqlfn #Tcbuffer_at_cbuffer()
+ */
+Temporal *
+tcbuffer_restrict_cbufferset(const Temporal *temp, const Set *s, bool atfunc)
+{
+  VALIDATE_TCBUFFER(temp, NULL); VALIDATE_NOT_NULL(s, NULL);
+  /* Ensure the validity of the arguments */
+  if (! ensure_valid_tcbuffer_cbufferset(temp, s))
+    return NULL;
+
+  /* Singleton set */
+  if (s->count == 1)
+    return tcbuffer_restrict_cbuffer(temp,
+      DatumGetCbufferP(SET_VAL_N(s, 0)), atfunc);
+
+  /* Bounding box test */
+  STBox box1, box2;
+  tspatial_set_stbox(temp, &box1);
+  spatialset_set_stbox(s, &box2);
+  if (! overlaps_stbox_stbox(&box1, &box2))
+    return atfunc ? NULL : temporal_copy(temp);
+
+  Temporal *tpoint = tcbuffer_to_tgeompoint(temp);
+  Temporal *tfloat = tcbuffer_to_tfloat(temp);
+  Cbuffer **values = (Cbuffer **) set_vals(s);
+  GSERIALIZED *gs = cbufferarr_to_geom(values, s->count);
+  Temporal *tpoint_rest = tgeo_restrict_geom(tpoint, gs, NULL, atfunc);
+  pfree(tpoint);
+  if (! tpoint_rest)
+  {
+    pfree(tfloat);
+    return NULL;
+  }
+  Temporal *result = tcbuffer_make(tpoint_rest, tfloat);
+  pfree(tfloat); pfree(tpoint_rest);
+  return result;
+}
+
+/**
+ * @ingroup meos_cbuffer_restrict
+ * @brief Return a temporal circular buffer restricted to a circular buffer
+ * @param[in] temp Temporal circular buffer
+ * @param[in] s Circular buffer set
+ * @csqlfn #Tcbuffer_at_cbufferset()
+ */
+Temporal *
+tcbuffer_at_cbufferset(const Temporal *temp, const Set *s)
+{
+  return tcbuffer_restrict_cbufferset(temp, s, REST_AT);
+}
+
+/**
+ * @ingroup meos_cbuffer_restrict
+ * @brief Return a temporal circular buffer restricted to the complement of a
+ * geometry
+ * @param[in] temp Temporal circular buffer
+ * @param[in] s Circular buffer set
+ * @csqlfn #Tcbuffer_minus_cbufferset()
+ */
+Temporal *
+tcbuffer_minus_cbufferset(const Temporal *temp, const Set *s)
+{
+  return tcbuffer_restrict_cbufferset(temp, s, REST_MINUS);
 }
 
 /*****************************************************************************/
@@ -1068,8 +1178,8 @@ tcbuffer_minus_stbox(const Temporal *temp, const STBox *box, bool border_inc)
  * @csqlfn #Tcbuffer_at_geom()
  */
 Temporal *
-tcbuffer_restrict_geom(const Temporal *temp, const GSERIALIZED *gs, bool
-  atfunc)
+tcbuffer_restrict_geom(const Temporal *temp, const GSERIALIZED *gs,
+  bool atfunc)
 {
   VALIDATE_TCBUFFER(temp, NULL); VALIDATE_NOT_NULL(gs, NULL);
   /* Ensure the validity of the arguments */

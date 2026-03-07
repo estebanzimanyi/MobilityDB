@@ -54,6 +54,8 @@ extern GSERIALIZED *tcbuffersegm_trav_area(const TInstant *inst1,
 
 extern Temporal *tcbuffer_restrict_cbuffer(const Temporal *temp,
   const Cbuffer *cb, bool atfunc);
+extern Temporal *tcbuffer_restrict_cbufferset(const Temporal *temp,
+  const Set *s, bool atfunc);
 extern Temporal *tcbuffer_restrict_stbox(const Temporal *temp,
  const STBox *box, bool border_inc, bool atfunc);
 extern Temporal *tcbuffer_restrict_geom(const Temporal *temp,

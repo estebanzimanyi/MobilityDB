@@ -460,25 +460,25 @@ CREATE FUNCTION shiftScaleTime(tcbuffer, interval, interval)
  * Restriction functions
  *****************************************************************************/
 
-CREATE FUNCTION atValues(tcbuffer, cbuffer)
-  RETURNS tcbuffer
-  AS 'MODULE_PATHNAME', 'Temporal_at_value'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+-- CREATE FUNCTION atValues(tcbuffer, cbuffer)
+  -- RETURNS tcbuffer
+  -- AS 'MODULE_PATHNAME', 'Temporal_at_value'
+  -- LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION minusValues(tcbuffer, cbuffer)
-  RETURNS tcbuffer
-  AS 'MODULE_PATHNAME', 'Temporal_minus_value'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+-- CREATE FUNCTION minusValues(tcbuffer, cbuffer)
+  -- RETURNS tcbuffer
+  -- AS 'MODULE_PATHNAME', 'Temporal_minus_value'
+  -- LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION atValues(tcbuffer, cbufferset)
-  RETURNS tcbuffer
-  AS 'MODULE_PATHNAME', 'Temporal_at_values'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+-- CREATE FUNCTION atValues(tcbuffer, cbufferset)
+  -- RETURNS tcbuffer
+  -- AS 'MODULE_PATHNAME', 'Temporal_at_values'
+  -- LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION minusValues(tcbuffer, cbufferset)
-  RETURNS tcbuffer
-  AS 'MODULE_PATHNAME', 'Temporal_minus_values'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+-- CREATE FUNCTION minusValues(tcbuffer, cbufferset)
+  -- RETURNS tcbuffer
+  -- AS 'MODULE_PATHNAME', 'Temporal_minus_values'
+  -- LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION atTime(tcbuffer, timestamptz)
   RETURNS tcbuffer

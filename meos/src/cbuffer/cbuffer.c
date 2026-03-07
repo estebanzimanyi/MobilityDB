@@ -532,7 +532,8 @@ cbuffer_to_geom(const Cbuffer *cb)
   const GSERIALIZED *gs = DatumGetGserializedP(PointerGetDatum(&cb->point));
   const POINT2D *p = (POINT2D *) GS_POINT_PTR(gs);
   int32_t srid = gserialized_get_srid(gs);
-  return geocircle_make(p->x, p->y, cb->radius, srid);
+  return cb->radius > 0 ? geocircle_make(p->x, p->y, cb->radius, srid) : 
+    geompoint_make2d(srid, p->x, p->y);
 }
 
 /**
@@ -591,7 +592,7 @@ geom_to_cbuffer(const GSERIALIZED *gs)
  * @param[in] count Number of elements in the input array
  */
 GSERIALIZED *
-cbufferarr_to_geom(const Cbuffer **cbarr, int count)
+cbufferarr_to_geom(Cbuffer **cbarr, int count)
 {
   assert(cbarr); assert(count > 1);
   GSERIALIZED **geoms = palloc(sizeof(GSERIALIZED *) * count);
@@ -789,7 +790,7 @@ datum_cbuffer_round(Datum cbuffer, Datum size)
  * @csqlfn #Cbufferarr_round()
  */
 Cbuffer **
-cbufferarr_round(const Cbuffer **cbarr, int count, int maxdd)
+cbufferarr_round(Cbuffer **cbarr, int count, int maxdd)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(cbarr, NULL);
