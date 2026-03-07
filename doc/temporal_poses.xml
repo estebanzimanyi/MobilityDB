@@ -787,15 +787,15 @@ SELECT asText(merge(inst)) FROM temp;
 			<listitem xml:id="tpose_atValues">
 				<indexterm significance="normal"><primary><varname>atValues</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>minusValues</varname></primary></indexterm>
-				<para>TODO Restrict to (the complement of) a set of values</para>
+				<para>Restrict to (the complement of) a set of values</para>
 				<para><varname>atValues(tpose,values) → tpose</varname></para>
 				<para><varname>minusValues(tpose,values) → tpose</varname></para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT atValues(tpose '[Pose(Point(2 2), 0.3)@2001-01-01, 
-  Pose(Point(2 2), 0.7)@2001-01-03]', 'Pose(Point(2 2), 0.5)');
+  Pose(Point(2 2), 0.7)@2001-01-03]', pose 'Pose(Point(2 2), 0.5)');
 -- {[Pose(Point(2 2),0.5)@2001-01-02]}
-SELECT minusValues(tpose '[Pose(Point(2 2), 0.3)@2001-01-01, 
-  Pose(Point(2 2), 0.7)@2001-01-03]', 'Pose(Point(2 2), 0.5)');
+SELECT asText(minusValues(tpose '[Pose(Point(2 2), 0.3)@2001-01-01, 
+  Pose(Point(2 2), 0.7)@2001-01-03]', pose 'Pose(Point(2 2), 0.5)'), 6);
 /* {[Pose(Point(2 2),0.3)@2001-01-01, Pose(Point(2 2),0.5)@2001-01-02),
    (Pose(Point(2 2),0.5)@2001-01-02, Pose(Point(2 2),0.7)@2001-01-03]} */
 </programlisting>
@@ -804,18 +804,17 @@ SELECT minusValues(tpose '[Pose(Point(2 2), 0.3)@2001-01-01,
 			<listitem xml:id="tpose_atGeometry">
 				<indexterm significance="normal"><primary><varname>atGeometry</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>minusGeometry</varname></primary></indexterm>
-				<para>TODO Restrict to (the complement of) a geometry</para>
+				<para>Restrict to (the complement of) a geometry</para>
 				<para><varname>atGeometry(tpose,geometry) → tpose</varname></para>
 				<para><varname>minusGeometry(tpose,geometry) → tpose</varname></para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
-SELECT atGeometry(tpose '[Pose(Point(2 2), 0.3)@2001-01-01, 
-  Pose(Point(2 2), 0.7)@2001-01-03]',
-  'Polygon((40 40,40 50,50 50,50 40,40 40))');
-SELECT minusGeometry(tpose '[Pose(Point(2 2), 0.3)@2001-01-01, 
-  Pose(Point(2 2), 0.7)@2001-01-03]',
-  'Polygon((40 40,40 50,50 50,50 40,40 40))');
-/* {(Pose(Point(2 2),0.342593)@2001-01-01 05:06:40.364673+01,
-   Pose(Point(2 2),0.7)@2001-01-03]} */
+SELECT asText(atGeometry(tpose '[Pose(Point(1 1), 0.3)@2001-01-01, 
+  Pose(Point(5 5), 0.7)@2001-01-05]', 'Polygon((2 2,2 3,3 3,3 2,2 2))'));
+-- {[Pose(POINT(2 2),0.4)@2001-01-02, Pose(POINT(3 3),0.5)@2001-01-03]}
+SELECT asText(minusGeometry(tpose '[Pose(Point(1 1), 0.3)@2001-01-01, 
+  Pose(Point(5 5), 0.7)@2001-01-05]', 'Polygon((2 2,2 3,3 3,3 2,2 2))'));
+/* {[Pose(POINT(1 1),0.3)@2001-01-01, Pose(POINT(2 2),0.4)@2001-01-02),
+   (Pose(POINT(3 3),0.5)@2001-01-03, Pose(POINT(5 5),0.7)@2001-01-05]} */
 </programlisting>
 			</listitem>
 		</itemizedlist>
@@ -1024,15 +1023,15 @@ SELECT eIntersects(
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT tContains(geometry 'Polygon((0 0,0 50,50 50,50 0,0 0))',
   tgeompoint(tpose '[Pose(Point(1 1),0.1)@2001-01-01, Pose(Point(1 1),0.3)@2001-01-03)'));
--- {[t@2001-01-01 00:00:00+01, t@2001-01-03 00:00:00+01)}
+-- {[t@2001-01-01, t@2001-01-03)}
 SELECT tDisjoint(geometry(pose 'Pose(Point(2 2), 0.0)'),
   tgeompoint(tpose '[Pose(Point(1 1),0.1)@2001-01-01, Pose(Point(1 1),0.3)@2001-01-03)'));
 -- [t@2001-01-01, t@2001-01-03)
 SELECT tDwithin(
  tpose '[Pose(Point(1 1),0.3)@2001-01-01,Pose(Point(1 1),0.5)@2001-01-03)'::tgeompoint, 
  tpose '[Pose(Point(1 1),0.5)@2001-01-01,Pose(Point(3 3),0.3)@2001-01-03)'::tgeompoint,1);
-/* {[t@2001-01-01 00:00:00+01, t@2001-01-01 16:58:14.025894+01],
-  (f@2001-01-01 16:58:14.025894+01, f@2001-01-03 00:00:00+01)} */
+/* {[t@2001-01-01 00:00:00, t@2001-01-01 16:58:14.025894],
+  (f@2001-01-01 16:58:14.025894, f@2001-01-03 00:00:00)} */
 </programlisting>
 			</listitem>
 		</itemizedlist>

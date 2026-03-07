@@ -131,7 +131,7 @@ extern double pose_rotation(const Pose *pose);
 /* Transformation functions */
 
 extern Pose *pose_round(const Pose *pose, int maxdd);
-extern Pose **posearr_round(const Pose **posearr, int count, int maxdd);
+extern Pose **posearr_round(Pose **posearr, int count, int maxdd);
 
 /* Spatial reference system functions */
 
@@ -174,7 +174,7 @@ extern char *poseset_out(const Set *s, int maxdd);
 
 /* Constructor functions */
 
-extern Set *poseset_make(const Pose **values, int count);
+extern Set *poseset_make(Pose **values, int count);
 
 /* Conversion functions */
 

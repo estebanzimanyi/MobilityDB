@@ -351,6 +351,52 @@ Tcbuffer_minus_cbuffer(PG_FUNCTION_ARGS)
 
 /*****************************************************************************/
 
+/**
+ * @brief Return a temporal circular buffer restricted to (the complement of)
+ * a circular buffer set
+ * @note Only 2D is supported
+ */
+static Datum
+Tcbuffer_restrict_cbufferset(FunctionCallInfo fcinfo, bool atfunc)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  Set *s = PG_GETARG_SET_P(1);
+  Temporal *result = tcbuffer_restrict_cbufferset(temp, s, atfunc);
+  PG_FREE_IF_COPY(temp, 0);
+  if (! result)
+    PG_RETURN_NULL();
+  PG_RETURN_TEMPORAL_P(result);
+}
+
+PGDLLEXPORT Datum Tcbuffer_at_cbufferset(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tcbuffer_at_cbufferset);
+/**
+ * @ingroup mobilitydb_geo_restrict
+ * @brief Return a temporal circular buffer restricted to a circular buffer
+ * @note Only 2D is supported
+ * @sqlfn atValues()
+ */
+inline Datum
+Tcbuffer_at_cbufferset(PG_FUNCTION_ARGS)
+{
+  return Tcbuffer_restrict_cbufferset(fcinfo, REST_AT);
+}
+
+PGDLLEXPORT Datum Tcbuffer_minus_cbufferset(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tcbuffer_minus_cbufferset);
+/**
+ * @ingroup mobilitydb_geo_restrict
+ * @brief Return a temporal circular buffer restricted to the complement of a
+ * circular buffer set
+ * @sqlfn minusValues()
+ */
+inline Datum
+Tcbuffer_minus_cbufferset(PG_FUNCTION_ARGS)
+{
+  return Tcbuffer_restrict_cbufferset(fcinfo, REST_MINUS);
+}
+
+/*****************************************************************************/
 
 /**
  * @brief Return a temporal circular buffer restricted to (the complement of)

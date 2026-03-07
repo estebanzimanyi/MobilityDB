@@ -118,7 +118,7 @@ extern Cbuffer *cbuffer_make(const GSERIALIZED *point, double radius);
 
 extern GSERIALIZED *cbuffer_to_geom(const Cbuffer *cb);
 extern STBox *cbuffer_to_stbox(const Cbuffer *cb);
-extern GSERIALIZED *cbufferarr_to_geom(const Cbuffer **cbarr, int count);
+extern GSERIALIZED *cbufferarr_to_geom(Cbuffer **cbarr, int count);
 extern Cbuffer *geom_to_cbuffer(const GSERIALIZED *gs);
 
 /* Accessor functions */
@@ -131,7 +131,7 @@ extern double cbuffer_radius(const Cbuffer *cb);
 /* Transformation functions */
 
 extern Cbuffer *cbuffer_round(const Cbuffer *cb, int maxdd);
-extern Cbuffer **cbufferarr_round(const Cbuffer **cbarr, int count, int maxdd);
+extern Cbuffer **cbufferarr_round(Cbuffer **cbarr, int count, int maxdd);
 
 /* Spatial reference system functions */
 
@@ -312,10 +312,12 @@ extern int acontains_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp);
 extern int acontains_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp);
 extern int acontains_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb);
 extern int acontains_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs);
+extern int acontains_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2);
 extern int acovers_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp);
 extern int acovers_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp);
 extern int acovers_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb);
 extern int acovers_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs);
+extern int acontains_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2);
 extern int adisjoint_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs);
 extern int adisjoint_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb);
 extern int adisjoint_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2);
@@ -328,13 +330,17 @@ extern int aintersects_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *
 extern int atouches_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs);
 extern int atouches_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb);
 extern int atouches_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2);
+
 extern int econtains_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp);
+extern int econtains_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp);
 extern int econtains_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb);
 extern int econtains_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs);
+extern int econtains_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2);
 extern int ecovers_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp);
+extern int ecovers_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp);
 extern int ecovers_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb);
 extern int ecovers_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs);
-extern int ecovers_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2);
+extern int econtains_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2);
 extern int edisjoint_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs);
 extern int edisjoint_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb);
 extern int edwithin_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs, double dist);

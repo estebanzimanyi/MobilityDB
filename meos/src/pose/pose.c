@@ -993,7 +993,7 @@ datum_pose_round(Datum pose, Datum size)
  * @csqlfn #Posearr_round()
  */
 Pose **
-posearr_round(const Pose **posearr, int count, int maxdd)
+posearr_round(Pose **posearr, int count, int maxdd)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(posearr, NULL);

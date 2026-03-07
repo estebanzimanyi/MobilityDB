@@ -199,10 +199,10 @@ int main(void)
   printf("cbuffer_to_stbox(%s): %s\n", cbuffer1_out, char_result);
   free(stbox_result); free(char_result);
 
-  /* GSERIALIZED *cbufferarr_to_geom(const Cbuffer **cbarr, int count); */
+  /* GSERIALIZED *cbufferarr_to_geom(Cbuffer **cbarr, int count); */
   cbufferarray[0] = cbuffer1;
   cbufferarray[1] = cbuffer2;
-  geom_result = cbufferarr_to_geom((const Cbuffer **) cbufferarray, 2);
+  geom_result = cbufferarr_to_geom(cbufferarray, 2);
   char_result = geo_as_text(geom_result, 6);
   printf("cbufferarr_to_geom({%s, %s}): %s\n", cbuffer1_out, cbuffer2_out, char_result);
   free(geom_result); free(char_result);
@@ -243,10 +243,10 @@ int main(void)
   printf("cbuffer_round(%s): %s\n", cbuffer1_out, char_result);
   free(cbuffer_result); free(char_result);
 
-  /* Cbuffer **cbufferarr_round(const Cbuffer **cbarr, int count, int maxdd); */
+  /* Cbuffer **cbufferarr_round(Cbuffer **cbarr, int count, int maxdd); */
   cbufferarray[0] = cbuffer1;
   cbufferarray[1] = cbuffer2;
-  cbufferarray_result = cbufferarr_round((const Cbuffer**) cbufferarray, 2, 6);
+  cbufferarray_result = cbufferarr_round(cbufferarray, 2, 6);
   printf("cbufferarr_round({%s, %s}): {", cbuffer1_out, cbuffer2_out);
   for (int i = 0; i < cbufferset1->count; i++)
   {
