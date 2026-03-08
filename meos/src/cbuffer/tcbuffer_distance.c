@@ -183,9 +183,19 @@ tcbuffer_cbuffer_distance_turnpt(Datum start, Datum end, Datum value,
     /* Check if the turning points are truly internal */
     if (t_in > lower && t_out < upper)
     {
-      *t1 = t_in;
-      *t2 = t_out;
-      return 2;
+      if (t_in == t_out)
+      {
+        /* Single turning point */
+        *t1 = *t2 = t_in;
+        return 1;
+      }
+      else
+      {
+        /* Two distinct turning points */
+        *t1 = t_in;
+        *t2 = t_out;
+        return 2;
+      }
     }
     else if (t_in > lower && t_out >= upper)
     {
