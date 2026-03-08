@@ -2,7 +2,6 @@ SET(LOCAL_FILES
   150_cbuffer
   151_cbufferset
   152_tcbuffer
-  # 153_tcbuffer_inout
   154_tcbuffer_compops
   155_tcbuffer_spatialfuncs
   158_tcbuffer_topops

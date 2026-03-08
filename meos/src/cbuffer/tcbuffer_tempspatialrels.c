@@ -1068,7 +1068,8 @@ inline Temporal *
 tintersects_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb,
   bool restr, bool atvalue)
 {
-  return tinterrel_tcbuffer_cbuffer(temp, cb, TDISJOINT, restr, atvalue);
+  return tspatialrel_tcbuffer_cbuffer(temp, cb, restr, atvalue, INVERT_NO,
+    &datum_cbuffer_intersects);
 }
 
 /**
@@ -1084,7 +1085,8 @@ inline Temporal *
 tintersects_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
   bool restr, bool atvalue)
 {
-  return tinterrel_tspatial_tspatial(temp1, temp2, TINTERSECTS, restr, atvalue);
+  return tspatialrel_tcbuffer_tcbuffer(temp1, temp2, restr, atvalue,
+    &datum_cbuffer_intersects);
 }
 
 /*****************************************************************************
