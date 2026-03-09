@@ -295,11 +295,22 @@ cbuffersegm_distance_turnpt(const Cbuffer *start1, const Cbuffer *end1,
     TimestampTz t_in = lower + (TimestampTz)(t_rel * alpha_in);
     TimestampTz t_out = lower + (TimestampTz)((t_rel + (duration - t_rel) * alpha_out));
 
+    /* Order the turning points */
+    if (t_in > t_out) {
+      TimestampTz t = t_in;
+      t_in = t_out;
+      t_out = t;
+    }
     /* Check if the turning points are truly internal */
     if (t_in > lower && t_out < upper) {
-      *t1 = t_in;
-      *t2 = t_out;
-      return 2;
+      if (t_in == t_out) { /* Single turning point */
+        *t1 = *t2 = t_in;
+        return 1;
+      } else { /* Two distinct turning points */
+        *t1 = t_in;
+        *t2 = t_out;
+        return 2;
+      }
     } else if (t_in > lower && t_out >= upper) {
       *t1 = *t2 = t_in;
       return 1;

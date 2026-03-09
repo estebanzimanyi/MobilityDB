@@ -245,24 +245,25 @@ tcbuffersegm_dwithin_turnpt(Datum start1, Datum end1, Datum start2, Datum end2,
       }
     }
   }
-  if (nroots == 0)
-  {
+  double valid[2];
+  int nvalid = 0;
+
+  for (int i = 0; i < nroots; i++){
+    TimestampTz t = lower + (TimestampTz) roots[i];
+    if (t > lower && t < upper){
+      if (nvalid == 0 || fabs(roots[i] - valid[nvalid - 1]) > FP_TOLERANCE) valid[nvalid++] = roots[i];
+    }
+  }
+
+  if (nvalid == 0) {
     *t1 = *t2 = (TimestampTz) 0;
     return 0;
-  }
-  else if (nroots == 1)
-  {
-    *t1 = *t2 = lower + (TimestampTz) roots[0];
+  } else if (nvalid == 1) {
+    *t1 = *t2 = lower + (TimestampTz) valid[0];
     return 1;
-  }
-  else
-  {
-    if (roots[0] > roots[1])
-    {
-      double tmp = roots[0]; roots[0] = roots[1]; roots[1] = tmp;
-    }
-    *t1 = lower + (TimestampTz) roots[0];
-    *t2 = lower + (TimestampTz) roots[1];
+  } else {
+    *t1 = lower + (TimestampTz) valid[0];
+    *t2 = lower + (TimestampTz) valid[1];
     return 2;
   }
 }
