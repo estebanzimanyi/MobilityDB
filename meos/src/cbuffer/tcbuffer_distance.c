@@ -46,131 +46,383 @@
  * Turning point functions
  *****************************************************************************/
 
+// /**
+//  * @brief Return 1 or 3 if a temporal circular buffer segment and a geometry
+//  * point are at the minimum distance during the period defined by the output
+//  * timestamps, return 0 otherwise
+//  * @details These are the turning points when computing the temporal distance.
+//  * @param[in] start,end Values defining the segment
+//  * @param[in] value Value to locate
+//  * @param[in] lower,upper Timestampts defining the segment
+//  * @param[out] t1,t2 Timestamps defining the resulting period, may be equal
+//  * @pre The segment is not constant.
+//  */
+// int
+// tcbuffer_cbuffer_distance_turnpt(Datum start, Datum end, Datum value,
+//   TimestampTz lower, TimestampTz upper, TimestampTz *t1, TimestampTz *t2)
+// {
+//   /* Extract the two CBUFFER values */
+//   const Cbuffer *ca1 = DatumGetCbufferP(start);
+//   const GSERIALIZED *gs1 = cbuffer_point_p(ca1);
+//   const POINT2D *p1 = GSERIALIZED_POINT2D_P(gs1);
+//   const Cbuffer *ca2 = DatumGetCbufferP(end);
+//   const GSERIALIZED *gs2 = cbuffer_point_p(ca2);
+//   const POINT2D *p2 = GSERIALIZED_POINT2D_P(gs2);
+
+//   /* Extract the circular buffer value */
+//   Cbuffer *cb = DatumGetCbufferP(value);
+//   const GSERIALIZED *gs = cbuffer_point_p(cb);
+//   const POINT2D *p = GSERIALIZED_POINT2D_P(gs);
+
+//   /* Extract coordinates and radius at the two instants */
+//   double xa1 = p1->x;
+//   double ya1 = p1->y;
+//   double ra1 = ca1->radius;
+//   double xa2 = p2->x;
+//   double ya2 = p2->y;
+//   double ra2 = ca2->radius;
+
+//   /* Extract static cbuffer coordinates */
+//   double xb = p->x;
+//   double yb = p->y;
+//   double rb = cb->radius;
+
+//   /* Compute total duration in seconds */
+//   double total_duration = (double) (upper - lower) / USECS_PER_SEC;
+
+//   /* Initial relative position and radius at lower */
+//   double dx0 = xa1 - xb;
+//   double dy0 = ya1 - yb;
+//   double dr0 = ra1 + rb;
+
+//   /* Compute relative velocities */
+//   double vx = (xa2 - xa1) / total_duration;
+//   double vy = (ya2 - ya1) / total_duration;
+//   double vr = (ra2 - ra1) / total_duration;
+
+//   /* Coefficients of the derivative of (distance - radius)^2 */
+//   double a = vx * vx + vy * vy - vr * vr;
+//   double b = dx0 * vx + dy0 * vy - dr0 * vr;
+
+//   /* Compute relative time (in seconds) where derivative is zero */
+//   double t_rel;
+//   if (a == 0.0 || b == 0.0)
+//     t_rel = 0.0;
+//   else
+//     t_rel = -b / a;
+
+//   /* Clamp t_rel within [0, total_duration] */
+//   if (t_rel < 0.0)
+//     t_rel = 0.0;
+//   else if (t_rel > total_duration)
+//     t_rel = total_duration;
+
+//   /* Compute the timestamp at the turning point */
+//   TimestampTz t_turn = lower + (TimestampTz) (t_rel * USECS_PER_SEC);
+
+//   /* Check if the turning point is truly internal */
+//   if (t_turn <= lower || t_turn >= upper)
+//   {
+//     /* No true internal turning point */
+//     *t1 = *t2 = (TimestampTz) 0;
+//     return 0;
+//   }
+
+//   /* Interpolate position and radius at the turning point */
+//   double x_turn = xa1 + vx * t_rel;
+//   double y_turn = ya1 + vy * t_rel;
+//   double r_turn = ra1 + vr * t_rel;
+
+//   /* Compute the distance to the static point minus the radius */
+//   double dx = x_turn - xb;
+//   double dy = y_turn - yb;
+//   double dist = sqrt(dx * dx + dy * dy) - r_turn - rb;
+
+//   /* Interpolate the distances at start and end */
+//   double dx_start = xa1 - xb;
+//   double dy_start = ya1 - yb;
+//   double dist_start = sqrt(dx_start * dx_start + dy_start * dy_start) - ra1 - rb;
+
+//   double dx_end = xa2 - xb;
+//   double dy_end = ya2 - yb;
+//   double dist_end = sqrt(dx_end * dx_end + dy_end * dy_end) - ra2 - rb;
+
+//   if (dist > 0.0)
+//   {
+//     /* Check if the turning point is truly internal */
+//     if (t_turn <= lower || t_turn >= upper)
+//     {
+//       /* No true internal turning point */
+//       *t1 = *t2 = (TimestampTz) 0;
+//       return 0;
+//     }
+//     /* Single turning point: return t1 and value1 */
+//     *t1 = *t2 = t_turn;
+//     return 1;
+//   }
+//   else
+//   {
+//     /* Crossing zero: compute entrance and exit times */
+//     double alpha_in = (0.0 - dist_start) / (dist - dist_start);
+//     double alpha_out = (0.0 - dist) / (dist_end - dist);
+
+//     double t_in_secs = 0.0 + t_rel * alpha_in;
+//     double t_out_secs = t_rel + (total_duration - t_rel) * alpha_out;
+
+//     TimestampTz t_in = lower + (TimestampTz) (t_in_secs * USECS_PER_SEC);
+//     TimestampTz t_out = lower + (TimestampTz) (t_out_secs * USECS_PER_SEC);
+
+//     /* Order the turning points */
+//     if (t_in > t_out)
+//     {
+//       TimestampTz t = t_in;
+//       t_in = t_out;
+//       t_out = t;
+//     }
+
+//     /* Check if the turning points are truly internal */
+//     if (t_in > lower && t_out < upper)
+//     {
+//       if (t_in == t_out)
+//       {
+//         /* Single turning point */
+//         *t1 = *t2 = t_in;
+//         return 1;
+//       }
+//       else
+//       {
+//         /* Two distinct turning points */
+//         *t1 = t_in;
+//         *t2 = t_out;
+//         return 2;
+//       }
+//     }
+//     else if (t_in > lower && t_out >= upper)
+//     {
+//       *t1 = *t2 = t_in;
+//       return 1;
+//     }
+//     else if (t_in <= lower && t_out < upper)
+//     {
+//       *t1 = *t2 = t_out;
+//       return 1;
+//     }
+//     else
+//     {
+//       /* No true internal turning point */
+//       *t1 = *t2 = (TimestampTz) 0;
+//       return 0;
+//     }
+//   }
+// }
+
+// /**
+//  * @brief Return 1 or 2 if two temporal circular buffers segments are at a
+//  * minimum distance during the period defined by the output timestamps, return
+//  * 0 otherwise
+//  * @details These are the turning points when computing the temporal distance.
+//  * @param[in] start1,end1 Circular buffers defining the first segment
+//  * @param[in] start2,end2 Circular buffers the second segment
+//  * @param[out] lower,upper Timestamps defining the segments
+//  * @param[out] t1,t2 Timestamps defining the resulting period, may be equal
+//  * @pre The segments are not constant.
+//  */
+// int
+// cbuffersegm_distance_turnpt(const Cbuffer *start1, const Cbuffer *end1,
+//   const Cbuffer *start2, const Cbuffer *end2, TimestampTz lower,
+//   TimestampTz upper, TimestampTz *t1, TimestampTz *t2)
+// {
+//   assert(start1); assert(end1); assert(start2); assert(end2); 
+//   assert(t1); assert(t2); assert(lower < upper);
+
+//   /* Extract the point values for the circular buffers */
+//   const POINT2D *spt1 = GSERIALIZED_POINT2D_P(cbuffer_point_p(start1));
+//   const POINT2D *ept1 = GSERIALIZED_POINT2D_P(cbuffer_point_p(end1));
+//   const POINT2D *spt2 = GSERIALIZED_POINT2D_P(cbuffer_point_p(start2));
+//   const POINT2D *ept2 = GSERIALIZED_POINT2D_P(cbuffer_point_p(end2));
+
+//   /* Compute the duration */
+//   double duration = (double) (upper - lower);
+
+//   /* Compute relative position and combined radius at lower */
+//   double dx0 = spt1->x - spt2->x;
+//   double dy0 = spt1->y - spt2->y;
+//   double r0 = start1->radius + start2->radius;
+
+//   double dx1 = ept1->x - ept2->x;
+//   double dy1 = ept1->y - ept2->y;
+//   double r1 = end1->radius + end2->radius;
+
+//   /* Compute relative velocities */
+//   double vx = (ept1->x - spt1->x) / duration - (ept2->x - spt2->x) / duration;
+//   double vy = (ept1->y - spt1->y) / duration - (ept2->y - spt2->y) / duration;
+//   double vr = (end1->radius - start1->radius + end2->radius - start2->radius) / duration;
+
+//   /* Compute coefficients of the derivative of (distance - combined_radius)^2 */
+//   double a = vx*vx + vy*vy - vr*vr;
+//   double b = dx0*vx + dy0*vy - r0*vr;
+
+//   /* Compute relative time where derivative is zero */
+//   double t_rel = (a == 0.0 || b == 0.0) ? 0.0 : -b / a;
+//   if (t_rel < 0.0) t_rel = 0.0;
+//   if (t_rel > duration) t_rel = duration;
+
+//   /* Interpolate position and radius at the turning point */
+//   double cx1 = spt1->x + ((ept1->x - spt1->x) / duration) * t_rel;
+//   double cy1 = spt1->y + ((ept1->y - spt1->y) / duration) * t_rel;
+//   double rbuf1 = start1->radius + (end1->radius - start1->radius) * t_rel / duration;
+
+//   double cx2 = spt2->x + ((ept2->x - spt2->x) / duration) * t_rel;
+//   double cy2 = spt2->y + ((ept2->y - spt2->y) / duration) * t_rel;
+//   double rbuf2 = start2->radius + (end2->radius - start2->radius) * t_rel / duration;
+
+//   double dx_turn = cx1 - cx2;
+//   double dy_turn = cy1 - cy2;
+//   double dist_turn = sqrt(dx_turn*dx_turn + dy_turn*dy_turn) - rbuf1 - rbuf2;
+
+//   double dist0 = sqrt(dx0*dx0 + dy0*dy0) - r0;
+//   double dist1 = sqrt(dx1*dx1 + dy1*dy1) - r1;
+
+//   /* Single turning point */
+//   if (dist_turn > 0.0) {
+//     TimestampTz t_turn = lower + (TimestampTz)(t_rel); 
+//     *t1 = *t2 = t_turn;
+//     return 1;
+//   } else { /* Crossing: compute entrance and exit times */
+//     double alpha_in = (dist_turn - dist0 == 0.0) ? (0.0 - dist0) : (0.0 - dist0) / (dist_turn - dist0);
+//     double alpha_out = (dist1 - dist_turn == 0.0) ? (0.0 - dist_turn) : (0.0 - dist_turn) / (dist1 - dist_turn);
+
+//     TimestampTz t_in = lower + (TimestampTz)(t_rel * alpha_in);
+//     TimestampTz t_out = lower + (TimestampTz)((t_rel + (duration - t_rel) * alpha_out));
+
+//     /* Order the turning points */
+//     if (t_in > t_out) {
+//       TimestampTz t = t_in;
+//       t_in = t_out;
+//       t_out = t;
+//     }
+//     /* Check if the turning points are truly internal */
+//     if (t_in > lower && t_out < upper) {
+//       if (t_in == t_out) { /* Single turning point */
+//         *t1 = *t2 = t_in;
+//         return 1;
+//       } else { /* Two distinct turning points */
+//         *t1 = t_in;
+//         *t2 = t_out;
+//         return 2;
+//       }
+//     } else if (t_in > lower && t_out >= upper) {
+//       *t1 = *t2 = t_in;
+//       return 1;
+//     } else if (t_in <= lower && t_out < upper) {
+//       *t1 = *t2 = t_out;
+//       return 1;
+//     } else { /* No true internal turning point */
+//       *t1 = *t2 = (TimestampTz) 0;
+//       return 0;
+//     }
+//   }
+// }
+
+
 /**
- * @brief Return 1 or 3 if a temporal circular buffer segment and a geometry
- * point are at the minimum distance during the period defined by the output
- * timestamps, return 0 otherwise
+ * @brief Return 1 or 2 if two temporal circular buffers segments are at a
+ * minimum distance during the period defined by the output timestamps, return
+ * 0 otherwise
  * @details These are the turning points when computing the temporal distance.
- * @param[in] start,end Values defining the segment
- * @param[in] value Value to locate
- * @param[in] lower,upper Timestampts defining the segment
+ * @param[in] start1,end1 Circular buffers defining the first segment
+ * @param[in] start2,end2 Circular buffers the second segment
+ * @param[out] lower,upper Timestamps defining the segments
  * @param[out] t1,t2 Timestamps defining the resulting period, may be equal
- * @pre The segment is not constant.
+ * @pre The segments are not constant.
  */
 int
-tcbuffer_cbuffer_distance_turnpt(Datum start, Datum end, Datum value,
-  TimestampTz lower, TimestampTz upper, TimestampTz *t1, TimestampTz *t2)
+cbuffersegm_distance_turnpt(const Cbuffer *start1, const Cbuffer *end1,
+  const Cbuffer *start2, const Cbuffer *end2, TimestampTz lower,
+  TimestampTz upper, TimestampTz *t1, TimestampTz *t2)
 {
-  /* Extract the two CBUFFER values */
-  const Cbuffer *ca1 = DatumGetCbufferP(start);
-  const GSERIALIZED *gs1 = cbuffer_point_p(ca1);
-  const POINT2D *p1 = GSERIALIZED_POINT2D_P(gs1);
-  const Cbuffer *ca2 = DatumGetCbufferP(end);
-  const GSERIALIZED *gs2 = cbuffer_point_p(ca2);
-  const POINT2D *p2 = GSERIALIZED_POINT2D_P(gs2);
+  assert(start1); assert(end1); assert(start2); assert(end2);
+  assert(t1); assert(t2); assert(lower < upper);
 
-  /* Extract the circular buffer value */
-  Cbuffer *cb = DatumGetCbufferP(value);
-  const GSERIALIZED *gs = cbuffer_point_p(cb);
-  const POINT2D *p = GSERIALIZED_POINT2D_P(gs);
+  /* Extract the point values for the circular buffers */
+  const POINT2D *spt1 = GSERIALIZED_POINT2D_P(cbuffer_point_p(start1));
+  const POINT2D *ept1 = GSERIALIZED_POINT2D_P(cbuffer_point_p(end1));
+  const POINT2D *spt2 = GSERIALIZED_POINT2D_P(cbuffer_point_p(start2));
+  const POINT2D *ept2 = GSERIALIZED_POINT2D_P(cbuffer_point_p(end2));
 
-  /* Extract coordinates and radius at the two instants */
-  double xa1 = p1->x;
-  double ya1 = p1->y;
-  double ra1 = ca1->radius;
-  double xa2 = p2->x;
-  double ya2 = p2->y;
-  double ra2 = ca2->radius;
+  /* Compute the duration */
+  double duration = (double) (upper - lower);
 
-  /* Extract static cbuffer coordinates */
-  double xb = p->x;
-  double yb = p->y;
-  double rb = cb->radius;
+  /* Compute relative position and combined radius at lower */
+  double dx0 = spt1->x - spt2->x;
+  double dy0 = spt1->y - spt2->y;
+  double r0 = start1->radius + start2->radius;
 
-  /* Compute total duration in seconds */
-  double total_duration = (double) (upper - lower) / USECS_PER_SEC;
-
-  /* Initial relative position and radius at lower */
-  double dx0 = xa1 - xb;
-  double dy0 = ya1 - yb;
-  double dr0 = ra1 + rb;
+  double dx1 = ept1->x - ept2->x;
+  double dy1 = ept1->y - ept2->y;
+  double r1 = end1->radius + end2->radius;
 
   /* Compute relative velocities */
-  double vx = (xa2 - xa1) / total_duration;
-  double vy = (ya2 - ya1) / total_duration;
-  double vr = (ra2 - ra1) / total_duration;
+  double vx = (ept1->x - spt1->x) / duration - (ept2->x - spt2->x) / duration;
+  double vy = (ept1->y - spt1->y) / duration - (ept2->y - spt2->y) / duration;
+  double vr = (end1->radius - start1->radius + end2->radius - start2->radius) /
+    duration;
 
-  /* Coefficients of the derivative of (distance - radius)^2 */
+  /* Compute coefficients of the derivative of (distance - combined_radius)^2 */
   double a = vx * vx + vy * vy - vr * vr;
-  double b = dx0 * vx + dy0 * vy - dr0 * vr;
+  double b = dx0 * vx + dy0 * vy - r0 * vr;
 
-  /* Compute relative time (in seconds) where derivative is zero */
-  double t_rel;
-  if (a == 0.0 || b == 0.0)
-    t_rel = 0.0;
-  else
-    t_rel = -b / a;
-
-  /* Clamp t_rel within [0, total_duration] */
+  /* Compute relative time where derivative is zero */
+  double t_rel = (a == 0.0 || b == 0.0) ? 0.0 : -b / a;
   if (t_rel < 0.0)
     t_rel = 0.0;
-  else if (t_rel > total_duration)
-    t_rel = total_duration;
-
-  /* Compute the timestamp at the turning point */
-  TimestampTz t_turn = lower + (TimestampTz) (t_rel * USECS_PER_SEC);
-
-  /* Check if the turning point is truly internal */
-  if (t_turn <= lower || t_turn >= upper)
-  {
-    /* No true internal turning point */
-    *t1 = *t2 = (TimestampTz) 0;
-    return 0;
-  }
+  if (t_rel > duration)
+    t_rel = duration;
 
   /* Interpolate position and radius at the turning point */
-  double x_turn = xa1 + vx * t_rel;
-  double y_turn = ya1 + vy * t_rel;
-  double r_turn = ra1 + vr * t_rel;
+  double cx1 = spt1->x + ((ept1->x - spt1->x) / duration) * t_rel;
+  double cy1 = spt1->y + ((ept1->y - spt1->y) / duration) * t_rel;
+  double rbuf1 = start1->radius + (end1->radius - start1->radius) * t_rel /
+    duration;
 
-  /* Compute the distance to the static point minus the radius */
-  double dx = x_turn - xb;
-  double dy = y_turn - yb;
-  double dist = sqrt(dx * dx + dy * dy) - r_turn - rb;
+  double cx2 = spt2->x + ((ept2->x - spt2->x) / duration) * t_rel;
+  double cy2 = spt2->y + ((ept2->y - spt2->y) / duration) * t_rel;
+  double rbuf2 = start2->radius + (end2->radius - start2->radius) * t_rel /
+    duration;
 
-  /* Interpolate the distances at start and end */
-  double dx_start = xa1 - xb;
-  double dy_start = ya1 - yb;
-  double dist_start = sqrt(dx_start * dx_start + dy_start * dy_start) - ra1 - rb;
+  double dx_turn = cx1 - cx2;
+  double dy_turn = cy1 - cy2;
+  double dist_turn = sqrt(dx_turn * dx_turn + dy_turn * dy_turn) - rbuf1 - rbuf2;
 
-  double dx_end = xa2 - xb;
-  double dy_end = ya2 - yb;
-  double dist_end = sqrt(dx_end * dx_end + dy_end * dy_end) - ra2 - rb;
+  double dist0 = sqrt(dx0 * dx0 + dy0 * dy0) - r0;
+  double dist1 = sqrt(dx1 * dx1 + dy1 * dy1) - r1;
 
-  if (dist > 0.0)
+  /* Single turning point */
+  if (dist_turn > 0.0)
   {
+    TimestampTz t_turn = lower + (TimestampTz) t_rel;
+
     /* Check if the turning point is truly internal */
     if (t_turn <= lower || t_turn >= upper)
     {
-      /* No true internal turning point */
       *t1 = *t2 = (TimestampTz) 0;
       return 0;
     }
-    /* Single turning point: return t1 and value1 */
+
     *t1 = *t2 = t_turn;
     return 1;
   }
   else
   {
-    /* Crossing zero: compute entrance and exit times */
-    double alpha_in = (0.0 - dist_start) / (dist - dist_start);
-    double alpha_out = (0.0 - dist) / (dist_end - dist);
+    /* Crossing: compute entrance and exit times */
+    double alpha_in = (dist_turn - dist0 == 0.0) ? (0.0 - dist0) :
+      (0.0 - dist0) / (dist_turn - dist0);
+    double alpha_out = (dist1 - dist_turn == 0.0) ? (0.0 - dist_turn) :
+      (0.0 - dist_turn) / (dist1 - dist_turn);
 
-    double t_in_secs = 0.0 + t_rel * alpha_in;
-    double t_out_secs = t_rel + (total_duration - t_rel) * alpha_out;
-
-    TimestampTz t_in = lower + (TimestampTz) (t_in_secs * USECS_PER_SEC);
-    TimestampTz t_out = lower + (TimestampTz) (t_out_secs * USECS_PER_SEC);
+    TimestampTz t_in = lower + (TimestampTz) (t_rel * alpha_in);
+    TimestampTz t_out = lower + (TimestampTz)
+      (t_rel + (duration - t_rel) * alpha_out);
 
     /* Order the turning points */
     if (t_in > t_out)
@@ -217,111 +469,24 @@ tcbuffer_cbuffer_distance_turnpt(Datum start, Datum end, Datum value,
 }
 
 /**
- * @brief Return 1 or 2 if two temporal circular buffers segments are at a
- * minimum distance during the period defined by the output timestamps, return
- * 0 otherwise
+ * @brief Return 1 or 2 if a temporal circular buffer segment and a geometry
+ * point are at the minimum distance during the period defined by the output
+ * timestamps, return 0 otherwise
  * @details These are the turning points when computing the temporal distance.
- * @param[in] start1,end1 Circular buffers defining the first segment
- * @param[in] start2,end2 Circular buffers the second segment
- * @param[out] lower,upper Timestamps defining the segments
+ * @param[in] start,end Values defining the segment
+ * @param[in] value Value to locate
+ * @param[in] lower,upper Timestampts defining the segment
  * @param[out] t1,t2 Timestamps defining the resulting period, may be equal
- * @pre The segments are not constant.
+ * @pre The segment is not constant.
  */
 int
-cbuffersegm_distance_turnpt(const Cbuffer *start1, const Cbuffer *end1,
-  const Cbuffer *start2, const Cbuffer *end2, TimestampTz lower,
-  TimestampTz upper, TimestampTz *t1, TimestampTz *t2)
+tcbuffer_cbuffer_distance_turnpt(Datum start, Datum end, Datum value,
+  TimestampTz lower, TimestampTz upper, TimestampTz *t1, TimestampTz *t2)
 {
-  assert(start1); assert(end1); assert(start2); assert(end2); 
-  assert(t1); assert(t2); assert(lower < upper);
-
-  /* Extract the point values for the circular buffers */
-  const POINT2D *spt1 = GSERIALIZED_POINT2D_P(cbuffer_point_p(start1));
-  const POINT2D *ept1 = GSERIALIZED_POINT2D_P(cbuffer_point_p(end1));
-  const POINT2D *spt2 = GSERIALIZED_POINT2D_P(cbuffer_point_p(start2));
-  const POINT2D *ept2 = GSERIALIZED_POINT2D_P(cbuffer_point_p(end2));
-
-  /* Compute the duration */
-  double duration = (double) (upper - lower);
-
-  /* Compute relative position and combined radius at lower */
-  double dx0 = spt1->x - spt2->x;
-  double dy0 = spt1->y - spt2->y;
-  double r0 = start1->radius + start2->radius;
-
-  double dx1 = ept1->x - ept2->x;
-  double dy1 = ept1->y - ept2->y;
-  double r1 = end1->radius + end2->radius;
-
-  /* Compute relative velocities */
-  double vx = (ept1->x - spt1->x) / duration - (ept2->x - spt2->x) / duration;
-  double vy = (ept1->y - spt1->y) / duration - (ept2->y - spt2->y) / duration;
-  double vr = (end1->radius - start1->radius + end2->radius - start2->radius) / duration;
-
-  /* Compute coefficients of the derivative of (distance - combined_radius)^2 */
-  double a = vx*vx + vy*vy - vr*vr;
-  double b = dx0*vx + dy0*vy - r0*vr;
-
-  /* Compute relative time where derivative is zero */
-  double t_rel = (a == 0.0 || b == 0.0) ? 0.0 : -b / a;
-  if (t_rel < 0.0) t_rel = 0.0;
-  if (t_rel > duration) t_rel = duration;
-
-  /* Interpolate position and radius at the turning point */
-  double cx1 = spt1->x + ((ept1->x - spt1->x) / duration) * t_rel;
-  double cy1 = spt1->y + ((ept1->y - spt1->y) / duration) * t_rel;
-  double rbuf1 = start1->radius + (end1->radius - start1->radius) * t_rel / duration;
-
-  double cx2 = spt2->x + ((ept2->x - spt2->x) / duration) * t_rel;
-  double cy2 = spt2->y + ((ept2->y - spt2->y) / duration) * t_rel;
-  double rbuf2 = start2->radius + (end2->radius - start2->radius) * t_rel / duration;
-
-  double dx_turn = cx1 - cx2;
-  double dy_turn = cy1 - cy2;
-  double dist_turn = sqrt(dx_turn*dx_turn + dy_turn*dy_turn) - rbuf1 - rbuf2;
-
-  double dist0 = sqrt(dx0*dx0 + dy0*dy0) - r0;
-  double dist1 = sqrt(dx1*dx1 + dy1*dy1) - r1;
-
-  /* Single turning point */
-  if (dist_turn > 0.0) {
-    TimestampTz t_turn = lower + (TimestampTz)(t_rel); 
-    *t1 = *t2 = t_turn;
-    return 1;
-  } else { /* Crossing: compute entrance and exit times */
-    double alpha_in = (dist_turn - dist0 == 0.0) ? (0.0 - dist0) : (0.0 - dist0) / (dist_turn - dist0);
-    double alpha_out = (dist1 - dist_turn == 0.0) ? (0.0 - dist_turn) : (0.0 - dist_turn) / (dist1 - dist_turn);
-
-    TimestampTz t_in = lower + (TimestampTz)(t_rel * alpha_in);
-    TimestampTz t_out = lower + (TimestampTz)((t_rel + (duration - t_rel) * alpha_out));
-
-    /* Order the turning points */
-    if (t_in > t_out) {
-      TimestampTz t = t_in;
-      t_in = t_out;
-      t_out = t;
-    }
-    /* Check if the turning points are truly internal */
-    if (t_in > lower && t_out < upper) {
-      if (t_in == t_out) { /* Single turning point */
-        *t1 = *t2 = t_in;
-        return 1;
-      } else { /* Two distinct turning points */
-        *t1 = t_in;
-        *t2 = t_out;
-        return 2;
-      }
-    } else if (t_in > lower && t_out >= upper) {
-      *t1 = *t2 = t_in;
-      return 1;
-    } else if (t_in <= lower && t_out < upper) {
-      *t1 = *t2 = t_out;
-      return 1;
-    } else { /* No true internal turning point */
-      *t1 = *t2 = (TimestampTz) 0;
-      return 0;
-    }
-  }
+  const Cbuffer *sv = DatumGetCbufferP(start);
+  const Cbuffer *ev = DatumGetCbufferP(end);
+  Cbuffer *cb = DatumGetCbufferP(value);
+  return cbuffersegm_distance_turnpt(sv, ev, cb, cb, lower, upper, t1, t2);
 }
 
 /**
@@ -342,10 +507,10 @@ tcbuffer_tcbuffer_distance_turnpt(Datum start1, Datum end1, Datum start2,
 {
   assert(lower < upper); assert(t1); assert(t2);
   /* Extract the circular buffer values */
-  Cbuffer *sv1 = DatumGetCbufferP(start1);
-  Cbuffer *ev1 = DatumGetCbufferP(end1);
-  Cbuffer *sv2 = DatumGetCbufferP(start2);
-  Cbuffer *ev2 = DatumGetCbufferP(end2);
+  const Cbuffer *sv1 = DatumGetCbufferP(start1);
+  const Cbuffer *ev1 = DatumGetCbufferP(end1);
+  const Cbuffer *sv2 = DatumGetCbufferP(start2);
+  const Cbuffer *ev2 = DatumGetCbufferP(end2);
   return cbuffersegm_distance_turnpt(sv1, ev1, sv2, ev2, lower, upper, t1, t2);
 }
 

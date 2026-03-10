@@ -354,7 +354,7 @@ tnpointseq_tgeompointseq_cont(const TSequence *seq)
     np = DatumGetNpointP(tinstant_value_p(inst));
     POINTARRAY *opa = lwline_interpolate_points(lwline, np->pos, 0);
     assert(opa->npoints <= 1);
-    LWGEOM *lwpoint = lwpoint_as_lwgeom(lwpoint_construct(srid, NULL, opa));
+    LWGEOM *lwpoint = (LWGEOM *) lwpoint_construct(srid, NULL, opa);
     Datum point = PointerGetDatum(geo_serialize(lwpoint));
     lwgeom_free(lwpoint);
     instants[i] = tinstant_make_free(point, T_TGEOMPOINT, inst->t);

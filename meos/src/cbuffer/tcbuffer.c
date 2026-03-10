@@ -171,10 +171,10 @@ tcbuffersegm_dwithin_turnpt(Datum start1, Datum end1, Datum start2, Datum end2,
 {
   assert(t1); assert(t2); assert(lower < upper);
   /* Extract the circular buffers and the distance */
-  Cbuffer *sv1 = DatumGetCbufferP(start1);
-  Cbuffer *ev1 = DatumGetCbufferP(end1);
-  Cbuffer *sv2 = DatumGetCbufferP(start2);
-  Cbuffer *ev2 = DatumGetCbufferP(end2);
+  const Cbuffer *sv1 = DatumGetCbufferP(start1);
+  const Cbuffer *ev1 = DatumGetCbufferP(end1);
+  const Cbuffer *sv2 = DatumGetCbufferP(start2);
+  const Cbuffer *ev2 = DatumGetCbufferP(end2);
   double d = DatumGetFloat8(dist);
 
   /* Extract the points */
@@ -235,13 +235,15 @@ tcbuffersegm_dwithin_turnpt(Datum start1, Datum end1, Datum start2, Datum end2,
       if (t_cand1 >= -FP_TOLERANCE && t_cand1 <= duration + FP_TOLERANCE)
       {
         d1 = tcbuffersegm_distance_at_time(dx0, dy0, vx, vy, r0, vr, t_cand1);
-        if (fabs(d1 - d) < FP_TOLERANCE) roots[nroots++] = t_cand1;
+        if (fabs(d1 - d) < FP_TOLERANCE)
+          roots[nroots++] = t_cand1;
       }
       if (fabs(t_cand2 - t_cand1) > FP_TOLERANCE && t_cand2 >= -FP_TOLERANCE &&
           t_cand2 <= duration + FP_TOLERANCE)
       {
         d1 = tcbuffersegm_distance_at_time(dx0, dy0, vx, vy, r0, vr, t_cand2);
-        if (fabs(d1 - d) < FP_TOLERANCE) roots[nroots++] = t_cand2;
+        if (fabs(d1 - d) < FP_TOLERANCE)
+          roots[nroots++] = t_cand2;
       }
     }
   }
@@ -250,18 +252,25 @@ tcbuffersegm_dwithin_turnpt(Datum start1, Datum end1, Datum start2, Datum end2,
 
   for (int i = 0; i < nroots; i++){
     TimestampTz t = lower + (TimestampTz) roots[i];
-    if (t > lower && t < upper){
-      if (nvalid == 0 || fabs(roots[i] - valid[nvalid - 1]) > FP_TOLERANCE) valid[nvalid++] = roots[i];
+    if (t > lower && t < upper)
+    {
+      if (nvalid == 0 || fabs(roots[i] - valid[nvalid - 1]) > FP_TOLERANCE)
+        valid[nvalid++] = roots[i];
     }
   }
 
-  if (nvalid == 0) {
+  if (nvalid == 0)
+  {
     *t1 = *t2 = (TimestampTz) 0;
     return 0;
-  } else if (nvalid == 1) {
+  }
+  else if (nvalid == 1)
+  {
     *t1 = *t2 = lower + (TimestampTz) valid[0];
     return 1;
-  } else {
+  }
+  else
+  {
     *t1 = lower + (TimestampTz) valid[0];
     *t2 = lower + (TimestampTz) valid[1];
     return 2;
@@ -639,15 +648,18 @@ TInstant *
 tgeominst_tcbufferinst(const TInstant *inst)
 {
   assert(inst); assert(tgeo_type_all(inst->temptype));
-  GSERIALIZED *value = (GSERIALIZED *) DatumGetGserializedP(
+  const GSERIALIZED *value = (GSERIALIZED *) DatumGetGserializedP(
     tinstant_value_p(inst));
   double radius = 0.0;
   uint32_t geotype = gserialized_get_type(value);
+  GSERIALIZED *value1 = NULL;
   if (geotype != POINTTYPE)
-    value = geom_min_bounding_radius(value, &radius);
-  Cbuffer *cb = cbuffer_make(value, radius);
+    value1 = geom_min_bounding_radius(value, &radius);
+  else
+    value1 = (GSERIALIZED *) value;
+  Cbuffer *cb = cbuffer_make(value1, radius);
   if (geotype != POINTTYPE)
-    pfree(value);
+    pfree(value1);
   if (cb == NULL)
     return NULL;
   return tinstant_make_free(PointerGetDatum(cb), T_TCBUFFER, inst->t);
@@ -803,7 +815,7 @@ tcbuffer_values(const Temporal *temp, int *count)
 static Set *
 tcbufferinst_members(const TInstant *inst, bool point)
 {
-  Cbuffer *cb = DatumGetCbufferP(tinstant_value_p(inst));
+  const Cbuffer *cb = DatumGetCbufferP(tinstant_value_p(inst));
   Datum value = point ?
     PointerGetDatum(&cb->point) : Float8GetDatum(cb->radius);
   return set_make_exp(&value, 1, 1, point ? T_GEOMETRY : T_TFLOAT, ORDER_NO);
@@ -826,12 +838,6 @@ tcbufferseq_members(const TSequence *seq, bool point)
   meosType basetype = point ? T_GEOMETRY : T_FLOAT8;
   datumarr_sort(values, seq->count, basetype);
   int count = datumarr_remove_duplicates(values, seq->count, basetype);
-  if (point)
-  {
-    /* Free the duplicate values that have been found */
-    for (int i = count; i < seq->count; i++)
-      pfree(DatumGetPointer(values[i]));
-  }
   return set_make_free(values, count, basetype, ORDER_NO);
 }
 
@@ -855,9 +861,6 @@ tcbufferseqset_members(const TSequenceSet *ss, bool point)
   meosType basetype = point ? T_GEOMETRY : T_TFLOAT;
   datumarr_sort(values, ss->count, basetype);
   int count = datumarr_remove_duplicates(values, ss->count, basetype);
-  /* Free the duplicate values that have been found */
-  for (int i = count; i < ss->count; i++)
-    pfree(DatumGetPointer(values[i]));
   return set_make_free(values, count, basetype, ORDER_NO);
 }
 
@@ -1057,6 +1060,7 @@ tcbuffer_restrict_cbufferset(const Temporal *temp, const Set *s, bool atfunc)
   Temporal *tfloat = tcbuffer_to_tfloat(temp);
   Cbuffer **values = (Cbuffer **) set_vals(s);
   GSERIALIZED *gs = cbufferarr_to_geom(values, s->count);
+  pfree(values);
   Temporal *tpoint_rest = tgeo_restrict_geom(tpoint, gs, NULL, atfunc);
   pfree(tpoint); pfree(gs);
   if (! tpoint_rest)

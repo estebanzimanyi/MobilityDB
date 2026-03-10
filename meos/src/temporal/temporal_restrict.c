@@ -466,9 +466,8 @@ temporal_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict,
     case TINSTANT:
       return tinstant_value_at_timestamptz((TInstant *) temp, t, result);
     case TSEQUENCE:
-      return MEOS_FLAGS_DISCRETE_INTERP(temp->flags) ?
-        tdiscseq_value_at_timestamptz((TSequence *) temp, t, result) :
-        tsequence_value_at_timestamptz((TSequence *) temp, t, strict, result);
+      return tsequence_value_at_timestamptz((TSequence *) temp, t, strict,
+        result);
     default: /* TSEQUENCESET */
       return tsequenceset_value_at_timestamptz((TSequenceSet *) temp, t,
         strict, result);
@@ -529,13 +528,13 @@ temporal_restrict_tstzspan(const Temporal *temp, const Span *s, bool atfunc)
   switch (temp->subtype)
   {
     case TINSTANT:
-      return (Temporal *) tinstant_restrict_tstzspan(
-        (TInstant *) temp, s, atfunc);
+      return (Temporal *) tinstant_restrict_tstzspan((TInstant *) temp, s,
+        atfunc);
     case TSEQUENCE:
       return tsequence_restrict_tstzspan((TSequence *) temp, s, atfunc);
     default: /* TSEQUENCESET */
-      return (Temporal *) tsequenceset_restrict_tstzspan(
-        (TSequenceSet *) temp, s, atfunc);
+      return (Temporal *) tsequenceset_restrict_tstzspan((TSequenceSet *) temp,
+        s, atfunc);
   }
 }
 
