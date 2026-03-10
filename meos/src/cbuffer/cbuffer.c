@@ -1417,8 +1417,8 @@ cbuffer_cmp(const Cbuffer *cb1, const Cbuffer *cb2)
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(cb1, false); VALIDATE_NOT_NULL(cb2, false);
 
-  GSERIALIZED *gs1 = (GSERIALIZED *) (&cb1->point);
-  GSERIALIZED *gs2 = (GSERIALIZED *) (&cb2->point);
+  const GSERIALIZED *gs1 = (GSERIALIZED *) (&cb1->point);
+  const GSERIALIZED *gs2 = (GSERIALIZED *) (&cb2->point);
   int32_t srid1 = gserialized_get_srid(gs1);
   int32_t srid2 = gserialized_get_srid(gs2);
   /* Compare SRID */
