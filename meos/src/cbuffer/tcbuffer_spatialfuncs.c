@@ -58,14 +58,14 @@ circle_type(const GSERIALIZED *gs)
   LWGEOM *geo = lwgeom_from_gserialized(gs);
   if (lwgeom_count_rings(geo) != 1)
   {
-    pfree(geo); 
+    lwgeom_free(geo); 
     return false;
   }
   LWCURVEPOLY *circle = (LWCURVEPOLY *) geo;
   LWCIRCSTRING *ring = (LWCIRCSTRING *) circle->rings[0];
   if (ring->points->npoints != 3 || ! ptarray_is_closed(ring->points))
   {
-    pfree(geo); 
+    lwgeom_free(geo); 
     return false;
   }
   return true;
@@ -106,14 +106,13 @@ lwcircle_make(double x, double y, double radius, int32_t srid)
   points[0] = points[2] = lwpoint_make2d(srid, x - radius, y);
   points[1] = lwpoint_make2d(srid, x + radius, y);
   /* Construct the circle */
-  LWGEOM *ring = lwcircstring_as_lwgeom(
-    lwcircstring_from_lwpointarray(srid, 3, points));
+  LWGEOM *ring = (LWGEOM *) lwcircstring_from_lwpointarray(srid, 3, points);
   LWCURVEPOLY *result = lwcurvepoly_construct_empty(srid, 0, 0);
   lwcurvepoly_add_ring(result, ring);
   /* Clean up and return */
   lwpoint_free(points[0]); lwpoint_free(points[1]);
   /* We cannot lwgeom_free(ring); */
-  return lwcurvepoly_as_lwgeom(result);
+  return (LWGEOM *) result;
 }
 
 /**
@@ -173,126 +172,171 @@ LWGEOM *
 trapezoid_make(const Cbuffer *c1, const Cbuffer *c2)
 {
   assert(c1); assert(c2); assert(cbuffer_srid(c1) == cbuffer_srid(c2));
+
   const GSERIALIZED *gs1 = cbuffer_point_p(c1);
   const GSERIALIZED *gs2 = cbuffer_point_p(c2);
   const POINT2D *p1 = GSERIALIZED_POINT2D_P(gs1);
   const POINT2D *p2 = GSERIALIZED_POINT2D_P(gs2);
   int32_t srid = cbuffer_srid(c1);
 
+  /* Frequently reused values */
+  double x1 = p1->x, y1 = p1->y;
+  double x2 = p2->x, y2 = p2->y;
+  double r1 = c1->radius, r2 = c2->radius;
+
   /* Compute the Euclidean distance between the centers of the circles */
-  double dx = p2->x - p1->x;
-  double dy = p2->y - p1->y;
+  double dx = x2 - x1;
+  double dy = y2 - y1;
   double d = sqrt(dx * dx + dy * dy);
 
-  /* Compute the angle θ between the line connecting the two centers and the
-   * x-axis */
-  double theta = atan2(p2->y - p1->y, p2->x - p1->x);
+  /* Compute the angles */
+  double theta = atan2(dy, dx);
+  double delta = acos((r1 - r2) / d);
 
-  /* Compute the angle δ between the line connecting the centers and the 
-   * external tangent line */
-  double delta = acos((c1->radius - c2->radius) / d);
-
-  /* The tangent points on the circles are obtained by rotating the vector that
-   * goes from the center of each circle towards the other center by an angle
-   * δ with respect to the direction θ */
-  double xT1a = p1->x + c1->radius * cos(theta + delta);
-  double yT1a = p1->y + c1->radius * sin(theta + delta);
-  double xT2a = p2->x + c2->radius * cos(theta + delta);
-  double yT2a = p2->y + c2->radius * sin(theta + delta);
-
-  double xT1b = p1->x + c1->radius * cos(theta - delta);
-  double yT1b = p1->y + c1->radius * sin(theta - delta);
-  double xT2b = p2->x + c2->radius * cos(theta - delta);
-  double yT2b = p2->y + c2->radius * sin(theta - delta);
+  /* Trigonometric values reused several times */
+  double theta_plus_delta = theta + delta;
+  double theta_minus_delta = theta - delta;
 
   double cos_theta = cos(theta);
   double sin_theta = sin(theta);
+  double cos_theta_plus_delta = cos(theta_plus_delta);
+  double sin_theta_plus_delta = sin(theta_plus_delta);
+  double cos_theta_minus_delta = cos(theta_minus_delta);
+  double sin_theta_minus_delta = sin(theta_minus_delta);
 
-  /* Compute the farthest points on the circles */
-  double dx1 = p1->x + c1->radius * cos_theta - p2->x - c2->radius * cos_theta;
-  double dy1 = p1->y + c1->radius * sin_theta - p2->y - c2->radius * sin_theta;
-  double dist1 = dx1 * dx1 + dy1 * dy1;
-  double dx2 = p1->x - c1->radius * cos_theta - p2->x + c2->radius * cos_theta;
-  double dy2 = p1->y - c1->radius * sin_theta - p2->y + c2->radius * sin_theta;
-  double dist2 = dx2 * dx2 + dy2 * dy2;
-  double dx3 = p1->x + c1->radius * cos_theta - p2->x + c2->radius * cos_theta;
-  double dy3 = p1->y + c1->radius * sin_theta - p2->y + c2->radius * sin_theta;
-  double dist3 = dx3 * dx3 + dy3 * dy3;
-  double dx4 = p1->x - c1->radius * cos_theta - p2->x - c2->radius * cos_theta;
-  double dy4 = p1->y - c1->radius * sin_theta - p2->y - c2->radius * sin_theta;
-  double dist4 = dx4 * dx4 + dy4 * dy4;
-  
-  /* Determine the farthest points on the circles based on the distances */
+  /* Reused products */
+  double r1_cos_theta = r1 * cos_theta;
+  double r1_sin_theta = r1 * sin_theta;
+  double r2_cos_theta = r2 * cos_theta;
+  double r2_sin_theta = r2 * sin_theta;
+
+  double r1_cos_theta_plus_delta = r1 * cos_theta_plus_delta;
+  double r1_sin_theta_plus_delta = r1 * sin_theta_plus_delta;
+  double r2_cos_theta_plus_delta = r2 * cos_theta_plus_delta;
+  double r2_sin_theta_plus_delta = r2 * sin_theta_plus_delta;
+
+  double r1_cos_theta_minus_delta = r1 * cos_theta_minus_delta;
+  double r1_sin_theta_minus_delta = r1 * sin_theta_minus_delta;
+  double r2_cos_theta_minus_delta = r2 * cos_theta_minus_delta;
+  double r2_sin_theta_minus_delta = r2 * sin_theta_minus_delta;
+
+  /* Tangent points */
+  double xT1a = x1 + r1_cos_theta_plus_delta;
+  double yT1a = y1 + r1_sin_theta_plus_delta;
+  double xT2a = x2 + r2_cos_theta_plus_delta;
+  double yT2a = y2 + r2_sin_theta_plus_delta;
+
+  double xT1b = x1 + r1_cos_theta_minus_delta;
+  double yT1b = y1 + r1_sin_theta_minus_delta;
+  double xT2b = x2 + r2_cos_theta_minus_delta;
+  double yT2b = y2 + r2_sin_theta_minus_delta;
+
+  /* Candidate farthest points on each circle */
+  double x1_plus = x1 + r1_cos_theta;
+  double y1_plus = y1 + r1_sin_theta;
+  double x1_minus = x1 - r1_cos_theta;
+  double y1_minus = y1 - r1_sin_theta;
+
+  double x2_plus = x2 + r2_cos_theta;
+  double y2_plus = y2 + r2_sin_theta;
+  double x2_minus = x2 - r2_cos_theta;
+  double y2_minus = y2 - r2_sin_theta;
+
+  /* Distances between the four candidate pairs */
+  double ddx1 = x1_plus - x2_plus;
+  double ddy1 = y1_plus - y2_plus;
+  double dist1 = ddx1 * ddx1 + ddy1 * ddy1;
+
+  double ddx2 = x1_minus - x2_minus;
+  double ddy2 = y1_minus - y2_minus;
+  double dist2 = ddx2 * ddx2 + ddy2 * ddy2;
+
+  double ddx3 = x1_plus - x2_minus;
+  double ddy3 = y1_plus - y2_minus;
+  double dist3 = ddx3 * ddx3 + ddy3 * ddy3;
+
+  double ddx4 = x1_minus - x2_plus;
+  double ddy4 = y1_minus - y2_plus;
+  double dist4 = ddx4 * ddx4 + ddy4 * ddy4;
+
+  /* Determine the farthest points on the circles */
   double xA1, yA1, xA2, yA2;
   if (dist1 > dist2 && dist1 > dist3 && dist1 > dist4)
   {
-    xA1 = p1->x + c1->radius * cos_theta;
-    yA1 = p1->y + c1->radius * sin_theta;
-    xA2 = p2->x + c2->radius * cos_theta;
-    yA2 = p2->y + c2->radius * sin_theta;
+    xA1 = x1_plus;  yA1 = y1_plus;
+    xA2 = x2_plus;  yA2 = y2_plus;
   }
   else if (dist2 > dist1 && dist2 > dist3 && dist2 > dist4)
   {
-    xA1 = p1->x - c1->radius * cos_theta;
-    yA1 = p1->y - c1->radius * sin_theta;
-    xA2 = p2->x - c2->radius * cos_theta;
-    yA2 = p2->y - c2->radius * sin_theta;
+    xA1 = x1_minus; yA1 = y1_minus;
+    xA2 = x2_minus; yA2 = y2_minus;
   }
   else if (dist3 > dist1 && dist3 > dist2 && dist3 > dist4)
   {
-    xA1 = p1->x + c1->radius * cos_theta;
-    yA1 = p1->y + c1->radius * sin_theta;
-    xA2 = p2->x - c2->radius * cos_theta;
-    yA2 = p2->y - c2->radius * sin_theta;
+    xA1 = x1_plus;  yA1 = y1_plus;
+    xA2 = x2_minus; yA2 = y2_minus;
   }
   else
   {
-    xA1 = p1->x - c1->radius * cos_theta;
-    yA1 = p1->y - c1->radius * sin_theta;
-    xA2 = p2->x + c2->radius * cos_theta;
-    yA2 = p2->y + c2->radius * sin_theta;
+    xA1 = x1_minus; yA1 = y1_minus;
+    xA2 = x2_plus;  yA2 = y2_plus;
   }
 
-  /* Construct the points for the ring components */
+  /* Construct each point */
+  LWPOINT *ptT2a = lwpoint_make2d(srid, xT2a, yT2a);
+  LWPOINT *ptA2  = lwpoint_make2d(srid, xA2, yA2);
+  LWPOINT *ptT2b = lwpoint_make2d(srid, xT2b, yT2b);
+  LWPOINT *ptT1b = lwpoint_make2d(srid, xT1b, yT1b);
+  LWPOINT *ptA1  = lwpoint_make2d(srid, xA1, yA1);
+  LWPOINT *ptT1a = lwpoint_make2d(srid, xT1a, yT1a);
+
+  /* Construct the point arrays for the ring components */
   LWPOINT *points1[3];
-  points1[0] = lwpoint_make2d(srid, xT2a, yT2a);
-  points1[1] = lwpoint_make2d(srid, xA2, yA2);
-  points1[2] = lwpoint_make2d(srid, xT2b, yT2b);
+  points1[0] = ptT2a;
+  points1[1] = ptA2;
+  points1[2] = ptT2b;
+
   LWPOINT *points2[2];
-  points2[0] = lwpoint_make2d(srid, xT2b, yT2b);
-  points2[1] = lwpoint_make2d(srid, xT1b, yT1b);
+  points2[0] = ptT2b;
+  points2[1] = ptT1b;
+
   LWPOINT *points3[3];
-  points3[0] = lwpoint_make2d(srid, xT1b, yT1b);
-  points3[1] = lwpoint_make2d(srid, xA1, yA1);
-  points3[2] = lwpoint_make2d(srid, xT1a, yT1a);
+  points3[0] = ptT1b;
+  points3[1] = ptA1;
+  points3[2] = ptT1a;
+
   LWPOINT *points4[2];
-  points4[0] = lwpoint_make2d(srid, xT1a, yT1a);
-  points4[1] = lwpoint_make2d(srid, xT2a, yT2a);
+  points4[0] = ptT1a;
+  points4[1] = ptT2a;
+
   /* Construct the ring components */
-  LWGEOM *circstr1 = lwcircstring_as_lwgeom(
-    lwcircstring_from_lwpointarray(srid, 3, points1));
-  LWGEOM *linestr1 = lwline_as_lwgeom(
-    lwline_from_ptarray(srid, 2, points2));
-  LWGEOM *circstr2 = lwcircstring_as_lwgeom(
-    lwcircstring_from_lwpointarray(srid, 3, points3));
-  LWGEOM *linestr2 = lwline_as_lwgeom(
-    lwline_from_ptarray(srid, 2, points4));
+  LWGEOM *circstr1 =
+    (LWGEOM *) lwcircstring_from_lwpointarray(srid, 3, points1);
+  LWGEOM *linestr1 = (LWGEOM *) lwline_from_ptarray(srid, 2, points2);
+  LWGEOM *circstr2 =
+    (LWGEOM *) lwcircstring_from_lwpointarray(srid, 3, points3);
+  LWGEOM *linestr2 = (LWGEOM *) lwline_from_ptarray(srid, 2, points4);
+
   /* Construct the ring */
   LWCOMPOUND *ring = lwcompound_construct_empty(srid, 0, 0);
   lwcompound_add_lwgeom(ring, circstr1);
   lwcompound_add_lwgeom(ring, linestr1);
   lwcompound_add_lwgeom(ring, circstr2);
   lwcompound_add_lwgeom(ring, linestr2);
+
   /* Construct the trapezoid */
   LWCURVEPOLY *result = lwcurvepoly_construct_empty(srid, 0, 0);
   lwcurvepoly_add_ring(result, (LWGEOM *) ring);
 
   /* Clean up and return */
-  lwpoint_free(points1[0]); lwpoint_free(points1[1]); lwpoint_free(points1[2]);
-  lwpoint_free(points2[0]); lwpoint_free(points2[1]); lwpoint_free(points3[0]);
-  lwpoint_free(points3[1]); lwpoint_free(points3[2]); lwpoint_free(points4[0]);
-  lwpoint_free(points4[1]);
-  return lwcurvepoly_as_lwgeom(result);
+  lwpoint_free(ptT2a);
+  lwpoint_free(ptA2);
+  lwpoint_free(ptT2b);
+  lwpoint_free(ptT1b);
+  lwpoint_free(ptA1);
+  lwpoint_free(ptT1a);
+
+  return (LWGEOM *) result;
 }
 
 /*****************************************************************************/
@@ -350,12 +394,11 @@ cbuffer_trav_area(const Cbuffer *cb)
   const GSERIALIZED *gs = cbuffer_point_p(cb);
   const POINT2D *p = GSERIALIZED_POINT2D_P(gs);
   int32_t srid = gserialized_get_srid(gs);
-  LWGEOM *lwgeom;
   GSERIALIZED *result;
   /* If radius is 0 construct a point */
   if (cb->radius == 0.0)
   {
-    lwgeom = (LWGEOM *) lwpoint_make2d(srid, p->x, p->y);
+    LWGEOM *lwgeom = (LWGEOM *) lwpoint_make2d(srid, p->x, p->y);
     result = geo_serialize(lwgeom);
     lwgeom_free(lwgeom);
     return result;
@@ -366,13 +409,10 @@ cbuffer_trav_area(const Cbuffer *cb)
   points[0] = points[2] = lwpoint_make2d(srid, p->x - cb->radius, p->y);
   points[1] = lwpoint_make2d(srid, p->x + cb->radius, p->y);
   /* Construct the circle */
-  LWGEOM *ring = lwcircstring_as_lwgeom(
-    lwcircstring_from_lwpointarray(srid, 3, points));
+  LWGEOM *ring = (LWGEOM *) lwcircstring_from_lwpointarray(srid, 3, points);
   LWCURVEPOLY *poly = lwcurvepoly_construct_empty(srid, 0, 0);
   lwcurvepoly_add_ring(poly, ring);
-  lwgeom = lwcurvepoly_as_lwgeom(poly);
-  result = geo_serialize(lwgeom);
-  lwgeom_free(lwgeom);
+  result = geo_serialize((LWGEOM *) poly);
   lwpoint_free(points[0]); lwpoint_free(points[1]);
   return result;
 }

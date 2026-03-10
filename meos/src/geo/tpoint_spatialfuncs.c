@@ -705,7 +705,7 @@ lwpointarr_make_trajectory(LWGEOM **points, int count, interpType interp)
 {
   assert(points); assert(count > 0);
   if (count == 1)
-    return lwpoint_as_lwgeom(lwpoint_clone(lwgeom_as_lwpoint(points[0])));
+    return (LWGEOM *) lwpoint_clone(lwgeom_as_lwpoint(points[0]));
 
   LWGEOM *result = (interp == LINEAR) ?
     (LWGEOM *) lwline_from_lwgeom_array(points[0]->srid, (uint32_t) count,

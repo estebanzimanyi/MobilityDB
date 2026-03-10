@@ -225,12 +225,11 @@ tinterrel_tcbufferseq_disc_geom(const TSequence *seq, const GSERIALIZED *gs,
   }
   pfree_array((void *) points, npoints);
   /* Compute the result */
-  Datum bool_true = tinter ? BoolGetDatum(true) : BoolGetDatum(false);
-  Datum bool_false = tinter ? BoolGetDatum(false) : BoolGetDatum(true);
+  Datum datum_true = tinter ? BoolGetDatum(true) : BoolGetDatum(false);
   /* If there is no intersection */
   if (! s)
-    return (Temporal *) tsequence_from_base_temp(bool_true, T_TBOOL, seq);
-  TSequence *res_true = tsequence_from_base_tstzset(bool_false, T_TBOOL, s);
+    return (Temporal *) tsequence_from_base_temp(datum_true, T_TBOOL, seq);
+  TSequence *res_true = tsequence_from_base_tstzset(datum_false, T_TBOOL, s);
   int count;
   TimestampTz *times = tsequence_timestamps(seq, &count);
   Datum *datumarr = palloc(sizeof(Datum) * count);
@@ -243,7 +242,7 @@ tinterrel_tcbufferseq_disc_geom(const TSequence *seq, const GSERIALIZED *gs,
   Temporal *result;
   if (s_minus)
   {
-    TSequence *res_false = tsequence_from_base_tstzset(bool_false, T_TBOOL,
+    TSequence *res_false = tsequence_from_base_tstzset(datum_false, T_TBOOL,
       s_minus);
     result = tsequence_merge(res_true, res_false);
     pfree(res_true); pfree(s_minus); pfree(res_false);
@@ -1051,7 +1050,7 @@ inline Temporal *
 tintersects_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp,
   bool restr, bool atvalue)
 {
-  return tinterrel_tcbuffer_cbuffer(temp, cb, TDISJOINT, restr, atvalue);
+  return tinterrel_tcbuffer_cbuffer(temp, cb, TINTERSECTS, restr, atvalue);
 }
 
 /**

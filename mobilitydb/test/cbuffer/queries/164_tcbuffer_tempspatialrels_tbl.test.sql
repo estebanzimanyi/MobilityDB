@@ -95,6 +95,9 @@ SELECT COUNT(*) FROM tbl_tcbuffer, tbl_geometry WHERE tIntersects(temp, g) ?= tr
 SELECT COUNT(*) FROM tbl_tcbuffer t1, tbl_tcbuffer t2
   WHERE tIntersects(t1.temp, t2.temp) ?= true <> eIntersects(t1.temp, t2.temp);
 
+-- Temporal intersects and temporal disjoint
+SELECT COUNT(*) FROM tbl_tcbuffer, tbl_geometry WHERE getTime(tIntersects(temp, g)) + getTime(tDisjoint(temp, g)) <> getTime(temp);
+
 -------------------------------------------------------------------------------
 -- tTouches
 -------------------------------------------------------------------------------
