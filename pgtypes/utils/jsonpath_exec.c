@@ -2966,9 +2966,6 @@ compareStrings(const char *mbstr1, int mblen1, const char *mbstr2, int mblen2)
 static JsonPathBool
 compareItems(int32 op, JsonbValue *jb1, JsonbValue *jb2, bool useTz)
 {
-  int cmp;
-  bool res;
-
   if (jb1->type != jb2->type)
   {
     if (jb1->type == jbvNull || jb2->type == jbvNull)
@@ -2980,6 +2977,7 @@ compareItems(int32 op, JsonbValue *jb1, JsonbValue *jb2, bool useTz)
     return jpbUnknown;
   }
 
+  int cmp = 0;
   switch (jb1->type)
   {
     case jbvNull:
@@ -3022,6 +3020,7 @@ compareItems(int32 op, JsonbValue *jb1, JsonbValue *jb2, bool useTz)
         "invalid jsonb value type %d", jb1->type);
   }
 
+  bool res = false;
   switch (op)
   {
     case jpiEqual:

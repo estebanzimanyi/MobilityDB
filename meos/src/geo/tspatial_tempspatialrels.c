@@ -679,8 +679,8 @@ tspatialrel_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
  *   where `&` and `~` are the temporal `and` and the temporal `or` operators.
  *   Notice that `tcontains(tpoint, geo)` is not defined, the `tintersects`
  *   function can be used instead.
- * - For temporal geometries, compute the relationship at each instant using
- *   the lifting infrastructure.
+ * - For temporal geometries, since they do not accept linear interpolation,
+ *   compute the relationship at each instant using the lifting infrastructure.
  * @param[in] gs Geometry
  * @param[in] temp Temporal geo
  * @param[in] restr True when the result is restricted to a value
@@ -1595,15 +1595,22 @@ tdwithin_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, double dist,
 /*****************************************************************************/
 
 /**
- * @brief Return a temporal boolean that states whether two temporal geos
- * are within a distance
- * @pre The spatiotemporal values are synchronized.
+ * @brief Return a temporal boolean that states whether two spatiotemporal
+ * values are within a distance
  */
 Temporal *
-tdwithin_tspatial_tspatial(const Temporal *sync1, const Temporal *sync2,
+tdwithin_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2,
   Datum dist, bool restr, bool atvalue, datum_func3 func, tpfunc_temp tpfn)
 {
-  assert(sync1); assert(sync2);
+  assert(temp1); assert(temp2);
+
+  Temporal *sync1, *sync2;
+  /* Return false if the temporal geos do not intersect in time
+   * The operation is synchronization without adding crossings */
+  if (! intersection_temporal_temporal(temp1, temp2, SYNCHRONIZE_NOCROSS,
+      &sync1, &sync2))
+    return NULL;
+
   Temporal *result;
   assert(temptype_subtype(sync1->subtype));
   switch (sync1->subtype)
@@ -1688,20 +1695,11 @@ tdwithin_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return NULL;
 
-  Temporal *sync1, *sync2;
-  /* Return false if the temporal geos do not intersect in time
-   * The operation is synchronization without adding crossings */
-  if (! intersection_temporal_temporal(temp1, temp2, SYNCHRONIZE_NOCROSS,
-      &sync1, &sync2))
-    return NULL;
-
   /* Call the generic function passing the distance and the turning point
    * functions to be applied */
-  datum_func3 func = geo_dwithin_fn(sync1->flags, sync2->flags);
-  Temporal *result = tdwithin_tspatial_tspatial(sync1, sync2,
-    Float8GetDatum(dist), restr, atvalue, func, &tpointsegm_tdwithin_turnpt);
-  pfree(sync1); pfree(sync2);
-  return result;
+  datum_func3 func = geo_dwithin_fn(temp1->flags, temp2->flags);
+  return tdwithin_tspatial_tspatial(temp1, temp2, Float8GetDatum(dist),
+    restr, atvalue, func, &tpointsegm_tdwithin_turnpt);
 }
 
 /*****************************************************************************/

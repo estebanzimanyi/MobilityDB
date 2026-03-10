@@ -1281,19 +1281,11 @@ tdwithin_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return NULL;
 
-  Temporal *sync1, *sync2;
-  /* Return false if the temporal circular buffers do not intersect in time
-   * The operation is synchronization without adding crossings */
-  if (! intersection_temporal_temporal(temp1, temp2, SYNCHRONIZE_NOCROSS,
-      &sync1, &sync2))
-    return NULL;
-
   /* Call the generic function passing the distance and the turning point
    * functions to be applied */
-  Temporal *result = tdwithin_tspatial_tspatial(sync1, sync2,
+  Temporal *result = tdwithin_tspatial_tspatial(temp1, temp2,
     Float8GetDatum(dist), restr, atvalue, &datum_cbuffer_dwithin,
     &tcbuffersegm_dwithin_turnpt);
-  pfree(sync1); pfree(sync2);
   return result;
 }
 

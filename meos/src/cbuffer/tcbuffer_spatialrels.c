@@ -199,8 +199,8 @@ ea_spatialrel_tcbufferseq_discstep_geo(const TSequence *seq,
   bool result;
   for (int i = 0; i < seq->count; i++)
   {
-    const TInstant *inst = TSEQUENCE_INST_N(seq, i);
-    const Cbuffer *cb = DatumGetCbufferP(tinstant_value_p(inst));
+    const Cbuffer *cb =
+      DatumGetCbufferP(tinstant_value_p(TSEQUENCE_INST_N(seq, i)));
     GSERIALIZED *trav = cbuffer_to_geom(cb);
     result = spatialrel_geo_geo(trav, gs, param, func, numparam, invert);
     pfree(trav);
