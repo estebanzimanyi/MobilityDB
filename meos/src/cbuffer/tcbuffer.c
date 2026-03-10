@@ -230,8 +230,8 @@ tcbuffersegm_dwithin_turnpt(Datum start1, Datum end1, Datum start2, Datum end2,
     else
     {
       double sqrt_delta = sqrt(fmax(0.0, delta));
-      t_cand1 = (-b - sqrt_delta) / (2*a);
-      t_cand2 = (-b + sqrt_delta) / (2*a);
+      t_cand1 = (-b - sqrt_delta) / (2 * a);
+      t_cand2 = (-b + sqrt_delta) / (2 * a);
       if (t_cand1 >= -FP_TOLERANCE && t_cand1 <= duration + FP_TOLERANCE)
       {
         d1 = tcbuffersegm_distance_at_time(dx0, dy0, vx, vy, r0, vr, t_cand1);
@@ -987,7 +987,7 @@ tcbuffer_restrict_cbuffer(const Temporal *temp, const Cbuffer *cb,
   Temporal *tfloat = tcbuffer_to_tfloat(temp);
   GSERIALIZED *gs = cbuffer_to_geom(cb);
   Temporal *tpoint_rest = tgeo_restrict_geom(tpoint, gs, NULL, atfunc);
-  pfree(tpoint);
+  pfree(tpoint); pfree(gs);
   if (! tpoint_rest)
   {
     pfree(tfloat);
@@ -1058,7 +1058,7 @@ tcbuffer_restrict_cbufferset(const Temporal *temp, const Set *s, bool atfunc)
   Cbuffer **values = (Cbuffer **) set_vals(s);
   GSERIALIZED *gs = cbufferarr_to_geom(values, s->count);
   Temporal *tpoint_rest = tgeo_restrict_geom(tpoint, gs, NULL, atfunc);
-  pfree(tpoint);
+  pfree(tpoint); pfree(gs);
   if (! tpoint_rest)
   {
     pfree(tfloat);

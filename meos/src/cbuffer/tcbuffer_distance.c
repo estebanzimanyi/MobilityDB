@@ -62,10 +62,10 @@ tcbuffer_cbuffer_distance_turnpt(Datum start, Datum end, Datum value,
   TimestampTz lower, TimestampTz upper, TimestampTz *t1, TimestampTz *t2)
 {
   /* Extract the two CBUFFER values */
-  Cbuffer *ca1 = DatumGetCbufferP(start);
+  const Cbuffer *ca1 = DatumGetCbufferP(start);
   const GSERIALIZED *gs1 = cbuffer_point_p(ca1);
   const POINT2D *p1 = GSERIALIZED_POINT2D_P(gs1);
-  Cbuffer *ca2 = DatumGetCbufferP(end);
+  const Cbuffer *ca2 = DatumGetCbufferP(end);
   const GSERIALIZED *gs2 = cbuffer_point_p(ca2);
   const POINT2D *p2 = GSERIALIZED_POINT2D_P(gs2);
 
