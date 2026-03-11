@@ -199,8 +199,8 @@ ea_spatialrel_tcbufferseq_discstep_geo(const TSequence *seq,
   bool result;
   for (int i = 0; i < seq->count; i++)
   {
-    const TInstant *inst = TSEQUENCE_INST_N(seq, i);
-    const Cbuffer *cb = DatumGetCbufferP(tinstant_value_p(inst));
+    const Cbuffer *cb = 
+      DatumGetCbufferP(tinstant_value_p(TSEQUENCE_INST_N(seq, i)));
     GSERIALIZED *trav = cbuffer_to_geom(cb);
     result = spatialrel_geo_geo(trav, gs, param, func, numparam, invert);
     pfree(trav);
@@ -249,6 +249,7 @@ ea_spatialrel_tcbufferseq_linear_geo(const TSequence *seq,
       return 1;
     else if (result != 1 && ! ever)
       return 0;
+    inst1 = inst2;
   }
   return ever ? 0 : 1;
 }
@@ -296,16 +297,15 @@ ea_spatialrel_tcbufferseqset_geo(const TSequenceSet *ss, const GSERIALIZED *gs,
     return ea_spatialrel_tcbufferseq_geo(TSEQUENCESET_SEQ_N(ss, 0), gs, 
       param, func, numparam, ever, invert);
 
-  int result;
   for (int i = 0; i < ss->count; i++)
   {
-    result = ea_spatialrel_tcbufferseq_geo(TSEQUENCESET_SEQ_N(ss, i), gs,
+    int result = ea_spatialrel_tcbufferseq_geo(TSEQUENCESET_SEQ_N(ss, i), gs,
       param, func, numparam, ever, invert);
     if (result == 1 && ever)
       return 1;
     else if (result != 1 && ! ever)
       return 0;
-}
+  }
   return ever ? 0 : 1;
 }
 
@@ -375,10 +375,11 @@ int
 ea_spatialrel_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb,
   Datum param, varfunc func, int numparam, bool ever, bool invert)
 {
-  VALIDATE_TCBUFFER(temp, -1); VALIDATE_NOT_NULL(cb, -1);
   /* Ensure the validity of the arguments */
+  VALIDATE_TCBUFFER(temp, -1); VALIDATE_NOT_NULL(cb, -1);
   if (! ensure_valid_tcbuffer_cbuffer(temp, cb))
     return -1;
+
   GSERIALIZED *gs = cbuffer_to_geom(cb);
   int result = ea_spatialrel_tcbuffer_geo(temp, gs, param, func, numparam,
     ever, invert);
@@ -404,8 +405,8 @@ int
 ea_spatialrel_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
   datum_func2 func, bool ever, bool bbox_test)
 {
-  VALIDATE_TCBUFFER(temp1, -1); VALIDATE_TCBUFFER(temp2, -1);
   /* Ensure the validity of the arguments */
+  VALIDATE_TCBUFFER(temp1, -1); VALIDATE_TCBUFFER(temp2, -1);
   if (! ensure_valid_tcbuffer_tcbuffer(temp1, temp2))
     return -1;
 
@@ -1107,7 +1108,6 @@ ea_intersects_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
 {
   return ea_spatialrel_tcbuffer_tcbuffer(temp1, temp2,
     &datum_cbuffer_intersects, ever, true);
-
 }
 
 #if MEOS
@@ -1326,11 +1326,6 @@ int
 ea_dwithin_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs,
   double dist, bool ever, bool invert)
 {
-  VALIDATE_TCBUFFER(temp, -1); VALIDATE_NOT_NULL(gs, -1);
-  /* Ensure the validity of the arguments */
-  if (! ensure_valid_tcbuffer_geo(temp, gs) || gserialized_is_empty(gs) ||
-      ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
-    return -1;
   return ea_spatialrel_tcbuffer_geo(temp, gs, Float8GetDatum(dist),
     (varfunc) &datum_geom_dwithin2d, 3, ever, invert);
 }
@@ -1380,11 +1375,12 @@ int
 edwithin_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb,
   double dist)
 {
-  VALIDATE_TCBUFFER(temp, -1); VALIDATE_NOT_NULL(cb, -1);
   /* Ensure the validity of the arguments */
+  VALIDATE_TCBUFFER(temp, -1); VALIDATE_NOT_NULL(cb, -1);
   if (! ensure_valid_tcbuffer_cbuffer(temp, cb) ||
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return -1;
+
   GSERIALIZED *trav = cbuffer_to_geom(cb);
   int result = ea_spatialrel_tcbuffer_geo(temp, trav, Float8GetDatum(dist),
     (varfunc) &datum_geom_dwithin2d, 3, EVER, INVERT_NO);
@@ -1405,11 +1401,12 @@ int
 adwithin_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb,
   double dist)
 {
-  VALIDATE_TCBUFFER(temp, -1); VALIDATE_NOT_NULL(cb, -1);
   /* Ensure the validity of the arguments */
+  VALIDATE_TCBUFFER(temp, -1); VALIDATE_NOT_NULL(cb, -1);
   if (! ensure_valid_tcbuffer_cbuffer(temp, cb) ||
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return -1;
+
   GSERIALIZED *trav = cbuffer_to_geom(cb);
   GSERIALIZED *buffer = geom_buffer(trav, dist, "");
   int result = ea_spatialrel_tcbuffer_geo(temp, buffer, (Datum) NULL,

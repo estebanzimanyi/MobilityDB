@@ -414,6 +414,7 @@ cbuffer_trav_area(const Cbuffer *cb)
   lwcurvepoly_add_ring(poly, ring);
   result = geo_serialize((LWGEOM *) poly);
   lwpoint_free(points[0]); lwpoint_free(points[1]);
+  lwgeom_free((LWGEOM *) poly);
   return result;
 }
 
@@ -426,9 +427,9 @@ cbuffer_trav_area(const Cbuffer *cb)
  * @return Number of elements in the output array
  */
 int
-cbufferarr_circles(TInstant **instants, int count, GSERIALIZED **result)
+cbufferarr_trav_area(TInstant **instants, int count, GSERIALIZED **result)
 {
-  assert(instants); assert(count > 1);
+  assert(instants); assert(count > 1); assert(result); 
   for (int i = 0; i < count; i++)
   {
     const Cbuffer *cb = DatumGetCbufferP(tinstant_value_p(instants[i]));
@@ -462,10 +463,10 @@ tcbufferinst_trav_area(const TInstant *inst)
 int
 tcbufferseq_discstep_trav_area(const TSequence *seq, GSERIALIZED **result)
 {
-  assert(seq); assert(seq->count > 1);
+  assert(seq); assert(seq->count > 1); assert(result); 
   assert(MEOS_FLAGS_GET_INTERP(seq->flags) != LINEAR);
   const TInstant **instants = tsequence_insts_p(seq);
-  int res = cbufferarr_circles((TInstant **) instants, seq->count, result);
+  int res = cbufferarr_trav_area((TInstant **) instants, seq->count, result);
   pfree(instants);
   return res;
 }
@@ -629,10 +630,10 @@ tcbufferseq_trav_area(const TSequence *seq, bool unary_union)
 int
 tcbufferseqset_step_trav_area(const TSequenceSet *ss, GSERIALIZED **result)
 {
-  assert(ss); assert(ss->count > 1);
+  assert(ss); assert(ss->count > 1); assert(result); 
   assert(MEOS_FLAGS_GET_INTERP(ss->flags) == STEP);
   const TInstant **instants = tsequenceset_insts_p(ss);
-  return cbufferarr_circles((TInstant **) instants, ss->count, result);
+  return cbufferarr_trav_area((TInstant **) instants, ss->count, result);
 }
 
 /**
@@ -647,7 +648,7 @@ tcbufferseqset_step_trav_area(const TSequenceSet *ss, GSERIALIZED **result)
 int
 tcbufferseqset_linear_trav_area(const TSequenceSet *ss, GSERIALIZED **result)
 {
-  assert(ss); assert(ss->count > 1);
+  assert(ss); assert(ss->count > 1); assert(result); 
   assert(MEOS_FLAGS_GET_INTERP(ss->flags) == LINEAR);
   int ngeoms = 0;
   for (int i = 0; i < ss->count; i++)
@@ -691,6 +692,9 @@ tcbufferseqset_trav_area(const TSequenceSet *ss, bool unary_union)
   /* Remove duplicate geometries constructed from the segments */
   geoarr_sort(geoms, count);
   int newcount = geoarr_remove_duplicates(geoms, count);
+  /* We cannot free the duplicate geometries */
+  // for (int i = newcount; i < count; i++)
+    // pfree(geoms[i]);
   GSERIALIZED *res = geo_collect_garray(geoms, newcount);
   if (unary_union)
   {
