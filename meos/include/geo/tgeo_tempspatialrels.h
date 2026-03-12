@@ -55,16 +55,13 @@ extern Temporal *tinterrel_tgeo_geo(const Temporal *temp,
   const GSERIALIZED *gs, bool tinter, bool restr, bool atvalue);
 extern Temporal *tinterrel_tspatial_base(const Temporal *temp, Datum base,
   bool tinter, bool restr, bool atvalue, datum_func2 func);
-
-extern Temporal *tinterrel_tspatial_base(const Temporal *temp,
-  Datum base, bool tinter, bool restr, bool atvalue, datum_func2 func);
 extern Temporal *tinterrel_tspatial_tspatial(const Temporal *temp1,
   const Temporal *temp2, bool tinter, bool restr, bool atvalue);
 
 extern int tdwithin_add_solutions(int solutions, TimestampTz lower,
   TimestampTz upper, bool lower_inc, bool upper_inc, bool upper_inc1,
   TimestampTz t1, TimestampTz t2, TInstant **instants, TSequence **result);
-extern Temporal *tdwithin_tspatial_spatial(const Temporal *temp, Datum base,
+extern Temporal *tdwithin_tspatial_base(const Temporal *temp, Datum base,
   Datum dist, bool restr, bool atvalue, datum_func3 func, tpfunc_temp tpfn);
 extern Temporal *tdwithin_tspatial_tspatial(const Temporal *temp1,
   const Temporal *temp2, Datum dist, bool restr, bool atvalue,

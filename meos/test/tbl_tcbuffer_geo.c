@@ -30,18 +30,22 @@
 /**
  * @file
  * @brief A simple program that reads two CSV files, the first one containing
- * temporal circular buffers and the second containing geometries and restricts
- * the temporal circular buffers to the geometries.
+ * temporal circular buffers and the second containing geometries and applies
+ * a function to the temporal circular buffer and the geometries.
  *
  * The corresponding SQL query would be
  * @code
- * SELECT numInstants(atGeometry(temp, g))
+ * SELECT numInstants(<FUNCTION>(temp, g))
  * FROM tbl_tcbuffer, tbl_geometry
  * @endcode
  *
  * The program can be build as follows
  * @code
- * gcc -Wall -g -I/usr/local/include -o tbl_tcbuffer_geometry tbl_tcbuffer_geometry.c -L/usr/local/lib -lmeos
+ * gcc -Wall -g -I/usr/local/include -o tbl_tcbuffer_geometry tbl_tcbuffer_geo.c -L/usr/local/lib -lmeos
+ * @endcode
+ * The following command can be used to test for memory leaks
+ * @code
+ * valgrind -s --leak-check=full --show-leak-kinds=all ./tbl_tcbuffer_geo
  * @endcode
  */
 
@@ -74,7 +78,7 @@ int main(void)
   meos_initialize_timezone("UTC");
 
   /* You may substitute the full file1 path in the first argument of fopen */
-  FILE *file1 = fopen("data/tbl_tcbuffer.csv", "r");
+  FILE *file1 = fopen("csv/tbl_tcbuffer.csv", "r");
 
   if (! file1)
   {
@@ -83,7 +87,7 @@ int main(void)
   }
 
   /* You may substitute the full file1 path in the first argument of fopen */
-  FILE *file2 = fopen("data/tbl_geometry.csv", "r");
+  FILE *file2 = fopen("csv/tbl_geometry.csv", "r");
 
   if (! file2)
   {
@@ -103,7 +107,7 @@ int main(void)
   do
   {
     int k1;
-    int read1 = fscanf(file1, "%d,\"%7500[^\"\n]\"\n", &k1, tcbuffer_buffer);
+    int read1 = fscanf(file1, "%d,%7500[^\n]\n", &k1, tcbuffer_buffer);
 
     if (ferror(file1) || read1 != 2)
     {
@@ -143,15 +147,44 @@ int main(void)
         /* Transform the string read into a geometry value */
         GSERIALIZED *gs = geom_in(geo_buffer, -1);
 
-        /* Compute the atGeometry function */
-        Temporal *rest = tintersects_tcbuffer_geo(temp, gs, false, false);
+        /* Compute the function */
+        bool result = econtains_tcbuffer_geo(temp, gs);
+        // bool result = ecovers_tcbuffer_geo(temp, gs);
+        // bool result = edisjoint_tcbuffer_geo(temp, gs);
+        // bool result = edwithin_tcbuffer_geo(temp, gs, 10);
+        // bool result = eintersects_tcbuffer_geo(temp, gs);
+        // bool result = etouches_tcbuffer_geo(temp, gs);
+        // bool result = acontains_tcbuffer_geo(temp, gs);
+        // bool result = acovers_tcbuffer_geo(temp, gs);
+        // bool result = adisjoint_tcbuffer_geo(temp, gs);
+        // bool result = adwithin_tcbuffer_geo(temp, gs, 10);
+        // bool result = aintersects_tcbuffer_geo(temp, gs);
+        // bool result = atouches_tcbuffer_geo(temp, gs);
+        // Temporal *result = tcontains_tcbuffer_geo(temp, gs, false, false);
+        // Temporal *result = tcovers_tcbuffer_geo(temp, gs, false, false);
+        // Temporal *result = tdisjoint_tcbuffer_geo(temp, gs, false, false);
+        // Temporal *result = tdwithin_tcbuffer_geo(temp, gs, 10, false, false);
+        // Temporal *result = tintersects_tcbuffer_geo(temp, gs, false, false);
+        // Temporal *result = ttouches_tcbuffer_geo(temp, gs, false, false);
+        // double result = nad_tcbuffer_geo(temp, gs);
+        // TInstant *result = nai_tcbuffer_geo(temp, gs);
+        // GSERIALIZED *result = shortestline_tcbuffer_geo(temp, gs);
+        // Temporal *result = tdistance_tcbuffer_geo(temp, gs);
         /* Get the number of instants of the result */
-        int count = rest ? temporal_num_instants(rest): 0;
-        free(rest);
+        // int count = result ? temporal_num_instants(result) : 0;
+        // char *result_out = geo_as_ewkt(result, 3);
+        // free(result);
         free(gs);
 
-        printf("k1: %d, k2: %d: Number of instants of the result: %d\n",
-          k1, k2, count);
+        printf("k1: %d, k2: %d: Result: %s\n",
+          k1, k2, result ? "true" : "false");
+        // printf("k1: %d, k2: %d: Number of instants of the result: %d\n",
+          // k1, k2, count);
+        // printf("k1: %d, k2: %d: Result: %lf\n",
+          // k1, k2, result);
+        // printf("k1: %d, k2: %d: Result: %s\n",
+          // k1, k2, result_out);
+        // free(result_out);
       }
     } while (! feof(file2));
     free(temp);

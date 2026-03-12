@@ -42,6 +42,9 @@
 #include "cbuffer/cbuffer.h"
 #include "cbuffer/tcbuffer.h"
 
+/* Defined in liblwgeom_internal.h */
+#define PGIS_FP_TOLERANCE 1e-12
+
 /*****************************************************************************
  * Turning point functions
  *****************************************************************************/
@@ -51,9 +54,9 @@
  * minimum distance during the period defined by the output timestamps, return
  * 0 otherwise
  * @details These are the turning points when computing the temporal distance.
- * @param[in] start1,end1 Circular buffers defining the first segment
- * @param[in] start2,end2 Circular buffers the second segment
- * @param[out] lower,upper Timestamps defining the segments
+ * @param[in] dx0,dy0,r0 Initial relative position and radius at lower
+ * @param[in] dx1,dy1,r1 Final relative position and radius at upper
+ * @param[in] lower,upper Timestamps defining the segments
  * @param[out] t1,t2 Timestamps defining the resulting period, may be equal
  * @pre The segments are not constant.
  */
@@ -77,10 +80,9 @@ cbuffersegm_distance_turnpt_internal(double dx0, double dy0, double r0,
   double b = dx0 * vx + dy0 * vy - r0 * vr;
 
   /* Compute relative time (in seconds) where derivative is zero */
-  const double EPS = 1e-12;
   const double EPS_TIME = 1e-6;
   double t_rel;
-  if (fabs(a) < EPS)
+  if (fabs(a) < PGIS_FP_TOLERANCE)
   {
     /* No true internal turning point */
     *t1 = *t2 = (TimestampTz) 0;
@@ -216,10 +218,10 @@ cbuffersegm_distance_turnpt(const Cbuffer *start1, const Cbuffer *end1,
   assert(t1); assert(t2); assert(lower < upper);
 
   /* Extract the point values for the circular buffers */
-  const POINT2D *spt1 = GSERIALIZED_POINT2D_P(cbuffer_point_p(start1));
-  const POINT2D *ept1 = GSERIALIZED_POINT2D_P(cbuffer_point_p(end1));
-  const POINT2D *spt2 = GSERIALIZED_POINT2D_P(cbuffer_point_p(start2));
-  const POINT2D *ept2 = GSERIALIZED_POINT2D_P(cbuffer_point_p(end2));
+  const POINT2D *spt1 = GSERIALIZED_POINT2D_P(CBUFFER_POINT_P(start1));
+  const POINT2D *ept1 = GSERIALIZED_POINT2D_P(CBUFFER_POINT_P(end1));
+  const POINT2D *spt2 = GSERIALIZED_POINT2D_P(CBUFFER_POINT_P(start2));
+  const POINT2D *ept2 = GSERIALIZED_POINT2D_P(CBUFFER_POINT_P(end2));
 
   /* Compute relative position and combined radius at lower */
   double dx0 = spt1->x - spt2->x;
@@ -252,15 +254,15 @@ tcbuffer_cbuffer_distance_turnpt(Datum start, Datum end, Datum value,
 {
   /* Extract the two CBUFFER values */
   const Cbuffer *ca1 = DatumGetCbufferP(start);
-  const GSERIALIZED *gs1 = cbuffer_point_p(ca1);
+  const GSERIALIZED *gs1 = CBUFFER_POINT_P(ca1);
   const POINT2D *p1 = GSERIALIZED_POINT2D_P(gs1);
   const Cbuffer *ca2 = DatumGetCbufferP(end);
-  const GSERIALIZED *gs2 = cbuffer_point_p(ca2);
+  const GSERIALIZED *gs2 = CBUFFER_POINT_P(ca2);
   const POINT2D *p2 = GSERIALIZED_POINT2D_P(gs2);
 
   /* Extract the circular buffer value */
   Cbuffer *cb = DatumGetCbufferP(value);
-  const GSERIALIZED *gs = cbuffer_point_p(cb);
+  const GSERIALIZED *gs = CBUFFER_POINT_P(cb);
   const POINT2D *p = GSERIALIZED_POINT2D_P(gs);
 
   /* Extract coordinates and radius at the two instants */

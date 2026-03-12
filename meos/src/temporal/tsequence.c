@@ -124,7 +124,9 @@ datum_collinear(Datum value1, Datum value2, Datum value3, meosType basetype,
     GSERIALIZED *gs = (GSERIALIZED *)DatumGetPointer(value1);
     bool hasz = (bool) FLAGS_GET_Z(gs->gflags);
     bool geodetic = (bool) FLAGS_GET_GEODETIC(gs->gflags);
-    return geopoint_collinear(value1, value2, value3, ratio, hasz, geodetic);
+    return geopoint_collinear(DatumGetGserializedP(value1),
+      DatumGetGserializedP(value2), DatumGetGserializedP(value3), ratio,
+      hasz, geodetic);
   }
   if (basetype == T_DOUBLE3)
     return double3_collinear(DatumGetDouble3P(value1), DatumGetDouble3P(value2),
@@ -203,7 +205,8 @@ datumsegm_locate(Datum value1, Datum value2, Datum value, meosType basetype)
     return floatsegm_locate(DatumGetFloat8(value1), DatumGetFloat8(value2),
       DatumGetFloat8(value));
   if (geo_basetype(basetype))
-    return pointsegm_locate(value1, value2, value, NULL);
+    return pointsegm_locate(DatumGetGserializedP(value1),
+      DatumGetGserializedP(value2), DatumGetGserializedP(value), NULL);
 #if CBUFFER
   if (basetype == T_CBUFFER)
     return cbuffersegm_locate(DatumGetCbufferP(value1),
@@ -273,7 +276,8 @@ datumsegm_interpolate(Datum start, Datum end, meosType temptype,
     return PointerGetDatum(double4segm_interpolate(DatumGetDouble4P(start),
       DatumGetDouble4P(end), ratio));
   else if (tpoint_type(temptype))
-    return pointsegm_interpolate(start, end, ratio);
+    return PointerGetDatum(pointsegm_interpolate(DatumGetGserializedP(start),
+      DatumGetGserializedP(end), ratio));
 #if CBUFFER
   else if (temptype == T_TCBUFFER)
     return PointerGetDatum(cbuffersegm_interpolate(DatumGetCbufferP(start),

@@ -40,6 +40,7 @@
 #include <meos_geo.h>
 #include <meos_internal.h>
 #include <meos_internal_geo.h>
+#include "temporal/type_util.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "cbuffer/cbuffer.h"
 
@@ -130,8 +131,8 @@ trapezoid_make(const Cbuffer *c1, const Cbuffer *c2)
 {
   assert(c1); assert(c2); assert(cbuffer_srid(c1) == cbuffer_srid(c2));
 
-  const GSERIALIZED *gs1 = cbuffer_point_p(c1);
-  const GSERIALIZED *gs2 = cbuffer_point_p(c2);
+  const GSERIALIZED *gs1 = CBUFFER_POINT_P(c1);
+  const GSERIALIZED *gs2 = CBUFFER_POINT_P(c2);
   const POINT2D *p1 = GSERIALIZED_POINT2D_P(gs1);
   const POINT2D *p2 = GSERIALIZED_POINT2D_P(gs2);
   int32_t srid = cbuffer_srid(c1);
@@ -348,7 +349,7 @@ GSERIALIZED *
 cbuffer_trav_area(const Cbuffer *cb)
 {
   assert(cb);
-  const GSERIALIZED *gs = cbuffer_point_p(cb);
+  const GSERIALIZED *gs = CBUFFER_POINT_P(cb);
   const POINT2D *p = GSERIALIZED_POINT2D_P(gs);
   int32_t srid = gserialized_get_srid(gs);
   GSERIALIZED *result;
@@ -453,8 +454,8 @@ tcbuffersegm_trav_area(const TInstant *inst1, const TInstant *inst2)
     cb_min = cb2;
     cb_max = cb1;
   }
-  const GSERIALIZED *gs1 = cbuffer_point_p(cb_min);
-  const GSERIALIZED *gs2 = cbuffer_point_p(cb_max);
+  const GSERIALIZED *gs1 = CBUFFER_POINT_P(cb_min);
+  const GSERIALIZED *gs2 = CBUFFER_POINT_P(cb_max);
   const POINT2D *p1 = GSERIALIZED_POINT2D_P(gs1);
   const POINT2D *p2 = GSERIALIZED_POINT2D_P(gs2);
   int32_t srid = gserialized_get_srid(gs1);
@@ -559,10 +560,13 @@ tcbufferseq_trav_area(const TSequence *seq, bool unary_union)
     pfree(geoms);
     return result;
   }
-  /* Remove duplicate geometries constructed from the segments */
-  geoarr_sort(geoms, count);
-  int newcount = geoarr_remove_duplicates(geoms, count);
-  GSERIALIZED *res = geo_collect_garray(geoms, newcount);
+  // WHEN PROFILING THIS FUNCTION, 9% of the total time is spent simply
+  // in the operation. We commented it out since it is NOT ESSENTIAL
+  // /* Remove duplicate geometries constructed from the segments */
+  // geoarr_sort(geoms, count);
+  // int newcount = geoarr_remove_duplicates(geoms, count);
+  // GSERIALIZED *res = geo_collect_garray(geoms, newcount);
+  GSERIALIZED *res = geo_collect_garray(geoms, count);
   if (unary_union)
   {
     result = geom_unary_union(res, -1);
@@ -570,7 +574,7 @@ tcbufferseq_trav_area(const TSequence *seq, bool unary_union)
   }
   else
     result = res;
-  pfree(geoms);
+  pfree_array((void **) geoms, count);
   return result;
 }
 
@@ -661,7 +665,7 @@ tcbufferseqset_trav_area(const TSequenceSet *ss, bool unary_union)
   }
   else
     result = res;
-  pfree(geoms);
+  pfree_array((void **) geoms, count);
   return result;
 }
 

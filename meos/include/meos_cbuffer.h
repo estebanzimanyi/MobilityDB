@@ -340,7 +340,7 @@ extern int ecovers_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp);
 extern int ecovers_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp);
 extern int ecovers_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb);
 extern int ecovers_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs);
-extern int econtains_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2);
+extern int ecovers_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2);
 extern int edisjoint_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs);
 extern int edisjoint_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb);
 extern int edwithin_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs, double dist);

@@ -193,8 +193,8 @@ ea_spatialrel_tcbufferseq_discstep_geo(const TSequence *seq,
   bool ever, bool invert)
 {
   assert(seq); assert(gs); assert(seq->temptype == T_TCBUFFER);
-  interpType interp = MEOS_FLAGS_GET_INTERP(seq->flags);
-  assert(interp == DISCRETE || interp == STEP);
+  assert(MEOS_FLAGS_GET_INTERP(seq->flags) == DISCRETE ||
+    MEOS_FLAGS_GET_INTERP(seq->flags) == STEP);
   bool result;
   for (int i = 0; i < seq->count; i++)
   {
@@ -427,11 +427,12 @@ ea_spatialrel_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
 
 /**
  * @ingroup meos_internal_cbuffer_rel_ever
- * @brief Return 1 if a temporal circular buffer ever contains a geometry,
+ * @brief Return 1 if a temporal circular buffer ever/always contains a geometry,
  * 0 if not, and -1 on error or if the geometry is empty
  * @param[in] temp Temporal circular buffer
  * @param[in] gs Geometry
  * @param[in] ever True for the ever semantics, false for the always semantics
+ * @csqlfn #Econtains_tcbuffer_geo(), #Acontains_tcbuffer_geo()
  */
 int
 ea_contains_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs,
@@ -442,26 +443,9 @@ ea_contains_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs,
 }
 
 /**
- * @ingroup meos_internal_cbuffer_rel_ever
+ * @ingroup meos_cbuffer_rel_ever
  * @brief Return 1 if a temporal circular buffer ever contains a geometry,
  * 0 if not, and -1 on error or if the geometry is empty
- * @param[in] temp Temporal circular buffer
- * @param[in] gs Geometry
- * @param[in] ever True for the ever semantics, false for the always semantics
- * @csqlfn #Econtains_tcbuffer_geo()
- */
-int
-ea_contains_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp,
-  bool ever)
-{
-  return ea_spatialrel_tcbuffer_geo(temp, gs, (Datum) NULL, 
-    (varfunc) &datum_geom_contains, 2, ever, INVERT);
-}
-
-/**
- * @ingroup meos_cbuffer_rel_ever
- * @brief Return 1 if a temporal circular buffer and a geometry are ever
- * contains, 0 if not, and -1 on error or if the geometry is empty
  * @param[in] temp Temporal circular buffer
  * @param[in] gs Geometry
  * @csqlfn #Econtains_tcbuffer_geo()
@@ -474,7 +458,7 @@ econtains_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 
 /**
  * @ingroup meos_cbuffer_rel_ever
- * @brief Return 1 if a temporal circular buffer and a geometry are always
+ * @brief Return 1 if a temporal circular buffer always contains a geometry,
  * 0 if not, and -1 on error or if the geometry is empty
  * @param[in] temp Temporal circular buffer
  * @param[in] gs Geometry
@@ -485,6 +469,53 @@ inline int
 acontains_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   return ea_contains_tcbuffer_geo(temp, gs, ALWAYS);
+}
+
+/*****************************************************************************/
+
+/**
+ * @ingroup meos_internal_cbuffer_rel_ever
+ * @brief Return 1 if a geometry ever/always contains a temporal circular
+ * buffer, 0 if not, and -1 on error or if the geometry is empty
+ * @param[in] temp Temporal circular buffer
+ * @param[in] gs Geometry
+ * @param[in] ever True for the ever semantics, false for the always semantics
+ * @csqlfn #Econtains_geo_tcbuffer(), #Acontains_geo_tcbuffer()
+ */
+int
+ea_contains_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp,
+  bool ever)
+{
+  return ea_spatialrel_tcbuffer_geo(temp, gs, (Datum) NULL, 
+    (varfunc) &datum_geom_contains, 2, ever, INVERT);
+}
+
+/**
+ * @ingroup meos_cbuffer_rel_ever
+ * @brief Return 1 if a geometry ever contains a temporal circular buffer,
+ * 0 if not, and -1 on error or if the geometry is empty
+ * @param[in] temp Temporal circular buffer
+ * @param[in] gs Geometry
+ * @csqlfn #Econtains_geo_tcbuffer()
+ */
+int
+econtains_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp)
+{
+  return ea_contains_geo_tcbuffer(gs, temp, ALWAYS);
+}
+
+/**
+ * @ingroup meos_cbuffer_rel_ever
+ * @brief Return 1 if a geometry always contains a temporal circular buffer,
+ * 0 if not, and -1 on error or if the geometry is empty
+ * @param[in] gs Geometry
+ * @param[in] temp Temporal circular buffer
+ * @csqlfn #Acontains_geo_tcbuffer()
+ */
+inline int
+acontains_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp)
+{
+  return ea_contains_geo_tcbuffer(gs, temp, ALWAYS);
 }
 
 /*****************************************************************************/
@@ -504,23 +535,6 @@ ea_contains_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb,
 {
   return ea_spatialrel_tcbuffer_cbuffer(temp, cb, (Datum) NULL,
     (varfunc) &datum_geom_contains, 2, ever, INVERT_NO);
-}
-
-/**
- * @ingroup meos_internal_cbuffer_rel_ever
- * @brief Return 1 if a temporal circular buffer and a circular buffer are ever
- * contains, 0 if not, and -1 on error
- * @param[in] temp Temporal circular buffer
- * @param[in] cb Circular buffer
- * @param[in] ever True for the ever semantics, false for the always semantics
- * @csqlfn #Econtains_tcbuffer_cbuffer() #Acontains_tcbuffer_cbuffer()
- */
-int
-ea_contains_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp,
-  bool ever)
-{
-  return ea_spatialrel_tcbuffer_cbuffer(temp, cb, (Datum) NULL,
-    (varfunc) &datum_geom_contains, 2, ever, INVERT);
 }
 
 /**
@@ -601,6 +615,52 @@ acontains_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
 }
 #endif /* MEOS */
 
+/*****************************************************************************/
+
+/**
+ * @ingroup meos_internal_cbuffer_rel_ever
+ * @brief Return 1 if a circular buffer ever/always contains a temporal
+ * circular buffer, 0 if not, and -1 on error
+ * @param[in] cb Circular buffer
+ * @param[in] temp Temporal circular buffer
+ * @param[in] ever True for the ever semantics, false for the always semantics
+ * @csqlfn #Econtains_cbuffer_tcbuffer() #Acontains_cbuffer_tcbuffer()
+ */
+int
+ea_contains_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp,
+  bool ever)
+{
+  return ea_spatialrel_tcbuffer_cbuffer(temp, cb, (Datum) NULL,
+    (varfunc) &datum_geom_contains, 2, ever, INVERT);
+}
+
+/**
+ * @ingroup meos_cbuffer_rel_ever
+ * @brief Return 1 if a circular buffer ever contains a temporal circular
+ * buffer, 0 if not, and -1 on error
+ * @param[in] cb Circular buffer
+ * @param[in] temp Temporal circular buffer
+ * @csqlfn #Econtains_cbuffer_tcbuffer()
+ */
+int
+econtains_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp)
+{
+  return ea_contains_cbuffer_tcbuffer(cb, temp, EVER);
+}
+
+/**
+ * @ingroup meos_cbuffer_rel_ever
+ * @brief Return 1 if a circular buffer always contains a temporal circular
+ * buffer, 0 if not, and -1 on error
+ * @param[in] cb Circular buffer
+ * @param[in] temp Temporal circular buffer
+ * @csqlfn #Acontains_cbuffer_tcbuffer()
+ */
+inline int
+acontains_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp)
+{
+  return ea_contains_cbuffer_tcbuffer(cb, temp, ALWAYS);
+}
 /*****************************************************************************
  * Ever/always covers
  *****************************************************************************/
@@ -620,23 +680,6 @@ ea_covers_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs,
 {
   return ea_spatialrel_tcbuffer_geo(temp, gs, (Datum) NULL, 
     (varfunc) &datum_geom_covers, 2, ever, INVERT_NO);
-}
-
-/**
- * @ingroup meos_internal_cbuffer_rel_ever
- * @brief Return 1 if a temporal circular buffer ever covers a geometry,
- * 0 if not, and -1 on error or if the geometry is empty
- * @param[in] temp Temporal circular buffer
- * @param[in] gs Geometry
- * @param[in] ever True for the ever semantics, false for the always semantics
- * @csqlfn #Ecovers_tcbuffer_geo()
- */
-int
-ea_covers_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp,
-  bool ever)
-{
-  return ea_spatialrel_tcbuffer_geo(temp, gs, (Datum) NULL, 
-    (varfunc) &datum_geom_covers, 2, ever, INVERT);
 }
 
 /**
@@ -672,6 +715,53 @@ acovers_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 
 /**
  * @ingroup meos_internal_cbuffer_rel_ever
+ * @brief Return 1 if a geometry ever/always covers a temporal circular
+ * buffer, 0 if not, and -1 on error or if the geometry is empty
+ * @param[in] temp Temporal circular buffer
+ * @param[in] gs Geometry
+ * @param[in] ever True for the ever semantics, false for the always semantics
+ * @csqlfn #Ecovers_geo_tcbuffer(), #Acovers_geo_tcbuffer()
+ */
+int
+ea_covers_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp,
+  bool ever)
+{
+  return ea_spatialrel_tcbuffer_geo(temp, gs, (Datum) NULL, 
+    (varfunc) &datum_geom_covers, 2, ever, INVERT);
+}
+
+/**
+ * @ingroup meos_cbuffer_rel_ever
+ * @brief Return 1 if a geometry ever covers a temporal circular buffer,
+ * 0 if not, and -1 on error or if the geometry is empty
+ * @param[in] temp Temporal circular buffer
+ * @param[in] gs Geometry
+ * @csqlfn #Ecovers_geo_tcbuffer()
+ */
+int
+ecovers_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp)
+{
+  return ea_covers_geo_tcbuffer(gs, temp, ALWAYS);
+}
+
+/**
+ * @ingroup meos_cbuffer_rel_ever
+ * @brief Return 1 if a geometry always covers a temporal circular buffer,
+ * 0 if not, and -1 on error or if the geometry is empty
+ * @param[in] gs Geometry
+ * @param[in] temp Temporal circular buffer
+ * @csqlfn #Acovers_geo_tcbuffer()
+ */
+inline int
+acovers_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp)
+{
+  return ea_covers_geo_tcbuffer(gs, temp, ALWAYS);
+}
+
+/*****************************************************************************/
+
+/**
+ * @ingroup meos_internal_cbuffer_rel_ever
  * @brief Return 1 if a temporal circular buffer and a circular buffer are ever
  * covers, 0 if not, and -1 on error
  * @param[in] temp Temporal circular buffer
@@ -685,23 +775,6 @@ ea_covers_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb,
 {
   return ea_spatialrel_tcbuffer_cbuffer(temp, cb, (Datum) NULL,
     (varfunc) &datum_geom_covers, 2, ever, INVERT_NO);
-}
-
-/**
- * @ingroup meos_internal_cbuffer_rel_ever
- * @brief Return 1 if a temporal circular buffer and a circular buffer are ever
- * covers, 0 if not, and -1 on error
- * @param[in] temp Temporal circular buffer
- * @param[in] cb Circular buffer
- * @param[in] ever True for the ever semantics, false for the always semantics
- * @csqlfn #Ecovers_tcbuffer_cbuffer() #Acovers_tcbuffer_cbuffer()
- */
-int
-ea_covers_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp,
-  bool ever)
-{
-  return ea_spatialrel_tcbuffer_cbuffer(temp, cb, (Datum) NULL,
-    (varfunc) &datum_geom_covers, 2, ever, INVERT);
 }
 
 /**
@@ -724,13 +797,59 @@ ecovers_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
  * covers, 0 if not, and -1 on error
  * @param[in] temp Temporal circular buffer
  * @param[in] cb Circular buffer
- * @note aDisjoint(a, b) is equivalent to NOT eIntersects(a, b)
  * @csqlfn #Acovers_tcbuffer_geo()
  */
 inline int
 acovers_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
 {
   return ea_covers_tcbuffer_cbuffer(temp, cb, ALWAYS);
+}
+
+/*****************************************************************************/
+
+/**
+ * @ingroup meos_internal_cbuffer_rel_ever
+ * @brief Return 1 if a circular buffer ever/always covers a temporal circular
+ * buffer, 0 if not, and -1 on error
+ * @param[in] cb Circular buffer
+ * @param[in] temp Temporal circular buffer
+ * @param[in] ever True for the ever semantics, false for the always semantics
+ * @csqlfn #Ecovers_cbuffer_tcbuffer() #Acovers_cbuffer_tcbuffer()
+ */
+int
+ea_covers_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp,
+  bool ever)
+{
+  return ea_spatialrel_tcbuffer_cbuffer(temp, cb, (Datum) NULL,
+    (varfunc) &datum_geom_covers, 2, ever, INVERT);
+}
+
+/**
+ * @ingroup meos_cbuffer_rel_ever
+ * @brief Return 1 if a circular buffer ever covers a temporal circular
+ * buffer, 0 if not, and -1 on error
+ * @param[in] cb Circular buffer
+ * @param[in] temp Temporal circular buffer
+ * @csqlfn #Ecovers_cbuffer_tcbuffer()
+ */
+int
+ecovers_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp)
+{
+  return ea_covers_cbuffer_tcbuffer(cb, temp, EVER);
+}
+
+/**
+ * @ingroup meos_cbuffer_rel_ever
+ * @brief Return 1 if a circular buffer always covers a temporal circular
+ * buffer, 0 if not, and -1 on error
+ * @param[in] cb Circular buffer
+ * @param[in] temp Temporal circular buffer
+ * @csqlfn #Acovers_cbuffer_tcbuffer()
+ */
+inline int
+acovers_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp)
+{
+  return ea_covers_cbuffer_tcbuffer(cb, temp, ALWAYS);
 }
 
 /*****************************************************************************/

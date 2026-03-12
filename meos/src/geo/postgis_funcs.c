@@ -1153,7 +1153,7 @@ geo_makeline_garray(GSERIALIZED **gsarr, int count)
       if (! ensure_same_srid(srid, geoms[ngeoms - 1]->srid))
       {
         for (int j = 0; j < ngeoms; j++)
-          lwgeom_free(geoms[i]);
+          lwgeom_free(geoms[j]);
         pfree(geoms);
         return NULL;
       }

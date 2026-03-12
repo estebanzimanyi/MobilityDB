@@ -130,8 +130,71 @@ Cbuffer_send(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************
- * Output in WKT and EWKT representation
+ * Input/output in (E)WKT, (E)WKB, and HexWKB representation
  *****************************************************************************/
+
+PGDLLEXPORT Datum Cbuffer_from_ewkt(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Cbuffer_from_ewkt);
+/**
+ * @ingroup mobilitydb_cbuffer_inout
+ * @brief Return a circular buffer from its Extended Well-Known Text (EWKT)
+ * representation
+ * @note This just does the same thing as the SQL function cbuffer_in, except it
+ * has to handle a 'text' input. First, unwrap the text into a cstring, then
+ * do as cbuffer_in
+ * @sqlfn poseFromEWKT(), poseFromEWKT()
+ */
+Datum
+Cbuffer_from_ewkt(PG_FUNCTION_ARGS)
+{
+  text *wkt_text = PG_GETARG_TEXT_P(0);
+  char *wkt = text2cstring(wkt_text);
+  /* Copy the pointer since it will be advanced during parsing */
+  const char *wkt_ptr = wkt;
+  Cbuffer *result = cbuffer_parse(&wkt_ptr, true);
+  pfree(wkt);
+  PG_FREE_IF_COPY(wkt_text, 0);
+  PG_RETURN_TEMPORAL_P(result);
+}
+
+PGDLLEXPORT Datum Cbuffer_from_wkb(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Cbuffer_from_wkb);
+/**
+ * @ingroup mobilitydb_cbuffer_base_inout
+ * @brief Return a circular buffer from its Well-Known Binary (WKB)
+ * representation
+ * @sqlfn cbufferFromBinary()
+ */
+Datum
+Cbuffer_from_wkb(PG_FUNCTION_ARGS)
+{
+  bytea *bytea_wkb = PG_GETARG_BYTEA_P(0);
+  uint8_t *wkb = (uint8_t *) VARDATA(bytea_wkb);
+  Cbuffer *result = cbuffer_from_wkb(wkb, VARSIZE(bytea_wkb) - VARHDRSZ);
+  PG_FREE_IF_COPY(bytea_wkb, 0);
+  PG_RETURN_CBUFFER_P(result);
+}
+
+PGDLLEXPORT Datum Cbuffer_from_hexwkb(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Cbuffer_from_hexwkb);
+/**
+ * @ingroup mobilitydb_cbuffer_base_inout
+ * @brief Return a circular buffer from its ASCII hex-encoded Well-Known Binary
+ * (HexWKB) representation
+ * @sqlfn cbufferFromHexWKB()
+ */
+Datum
+Cbuffer_from_hexwkb(PG_FUNCTION_ARGS)
+{
+  text *hexwkb_text = PG_GETARG_TEXT_P(0);
+  char *hexwkb = text2cstring(hexwkb_text);
+  Cbuffer *result = cbuffer_from_hexwkb(hexwkb);
+  pfree(hexwkb);
+  PG_FREE_IF_COPY(hexwkb_text, 0);
+  PG_RETURN_CBUFFER_P(result);
+}
+
+/*****************************************************************************/
 
 /**
  * @brief Return the (Extended) Well-Known Text (WKT or EWKT) representation of
@@ -183,45 +246,6 @@ Cbuffer_as_ewkt(PG_FUNCTION_ARGS)
 
 /*****************************************************************************/
 
-PGDLLEXPORT Datum Cbuffer_from_wkb(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Cbuffer_from_wkb);
-/**
- * @ingroup mobilitydb_cbuffer_base_inout
- * @brief Return a circular buffer from its Well-Known Binary (WKB)
- * representation
- * @sqlfn cbufferFromBinary()
- */
-Datum
-Cbuffer_from_wkb(PG_FUNCTION_ARGS)
-{
-  bytea *bytea_wkb = PG_GETARG_BYTEA_P(0);
-  uint8_t *wkb = (uint8_t *) VARDATA(bytea_wkb);
-  Cbuffer *result = cbuffer_from_wkb(wkb, VARSIZE(bytea_wkb) - VARHDRSZ);
-  PG_FREE_IF_COPY(bytea_wkb, 0);
-  PG_RETURN_CBUFFER_P(result);
-}
-
-PGDLLEXPORT Datum Cbuffer_from_hexwkb(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Cbuffer_from_hexwkb);
-/**
- * @ingroup mobilitydb_cbuffer_base_inout
- * @brief Return a circular buffer from its ASCII hex-encoded Well-Known Binary
- * (HexWKB) representation
- * @sqlfn cbufferFromHexWKB()
- */
-Datum
-Cbuffer_from_hexwkb(PG_FUNCTION_ARGS)
-{
-  text *hexwkb_text = PG_GETARG_TEXT_P(0);
-  char *hexwkb = text2cstring(hexwkb_text);
-  Cbuffer *result = cbuffer_from_hexwkb(hexwkb);
-  pfree(hexwkb);
-  PG_FREE_IF_COPY(hexwkb_text, 0);
-  PG_RETURN_CBUFFER_P(result);
-}
-
-/*****************************************************************************/
-
 PGDLLEXPORT Datum Cbuffer_as_wkb(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Cbuffer_as_wkb);
 /**
@@ -236,6 +260,22 @@ Cbuffer_as_wkb(PG_FUNCTION_ARGS)
   Cbuffer *cb = PG_GETARG_CBUFFER_P(0);
   PG_RETURN_BYTEA_P(Datum_as_wkb(fcinfo, PointerGetDatum(cb), T_CBUFFER,
     false));
+}
+
+PGDLLEXPORT Datum Cbuffer_as_ewkb(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Cbuffer_as_ewkb);
+/**
+ * @ingroup mobilitydb_pose_base_inout
+ * @brief Return the Well-Known Binary (WKB) representation of a circular
+ * buffer
+ * @sqlfn asEWKB()
+ */
+Datum
+Cbuffer_as_ewkb(PG_FUNCTION_ARGS)
+{
+  Cbuffer *cb = PG_GETARG_CBUFFER_P(0);
+  PG_RETURN_BYTEA_P(Datum_as_wkb(fcinfo, PointerGetDatum(cb), T_CBUFFER,
+    true));
 }
 
 PGDLLEXPORT Datum Cbuffer_as_hexwkb(PG_FUNCTION_ARGS);

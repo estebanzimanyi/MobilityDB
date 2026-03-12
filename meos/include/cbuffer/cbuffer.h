@@ -67,6 +67,12 @@ struct Cbuffer
 
 /*****************************************************************************/
 
+/* Macro for speeding up access to components of circular buffers */
+
+#define CBUFFER_POINT_P(cb) ( (const GSERIALIZED *) (&(cb)->point) )
+
+/*****************************************************************************/
+
 /* Validity functions */
 
 extern bool ensure_valid_cbuffer_cbuffer(const Cbuffer *cb1,

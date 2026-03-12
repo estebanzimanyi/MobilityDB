@@ -787,17 +787,9 @@ tcontains_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
  * @ingroup meos_geo_rel_temp
  * @brief Return a temporal Boolean that states whether a geometry covers a
  * temporal geometry
- * @details The temporal covers relationship is computed as follows:
- * - For temporal points
- * @code
- *     tcovers(geo, tpoint) = tintersects(geo, tpoint) &
- *     ~ tintersects(st_boundary(geo), tpoint)
- * @endcode
- *   where `&` and `~` are the temporal `and` and the temporal `or` operators.
- *   Notice that `tcovers(tpoint, geo)` is not defined, the `tintersects`
- *   function can be used instead.
- * - For temporal geometries, compute the relationship at each instant using
- *   the lifting infrastructure.
+ * @details The temporal covers relationship is computed for both temporal
+ * points and temporal geometries at each instant using the lifting
+ * infrastructure.
  * @param[in] gs Geometry
  * @param[in] temp Temporal geo
  * @param[in] restr True when the result is restricted to a value
@@ -974,8 +966,8 @@ tintersects_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
  * @details The temporal touches relationship is computed as follows:
  * - For temporal points
  *     ttouches(tpoint, geo) = tintersects(tpoint, st_boundary(geo))
- * - For temporal geometries, compute the relationship at each instant using
- *   the lifting infrastructure
+ * - For temporal geometries, since they do not accept linear interpolation,
+ * compute the relationship at each instant using the lifting infrastructure
  * @param[in] temp Temporal geo
  * @param[in] gs Geometry
  * @param[in] restr True when the result is restricted to a value
@@ -1031,11 +1023,6 @@ ttouches_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool restr,
  * @ingroup meos_geo_rel_temp
  * @brief Return a temporal Boolean that states whether a geometry touches
  * a temporal geo
- * @details The temporal touches relationship is computed as follows:
- * - For temporal points
- *     ttouches(tpoint, geo) = tintersects(tpoint, st_boundary(geo))
- * - For temporal geometries, compute the relationship at each instant using
- *   the lifting infrastructure
  * @param[in] temp Temporal geo
  * @param[in] gs Geometry
  * @param[in] restr True when the result is restricted to a value
@@ -1492,7 +1479,7 @@ tdwithin_tlinearseqset_base(const TSequenceSet *ss, Datum point, Datum dist,
  * @note The function assumes that all validity tests have been previously done
  */
 Temporal *
-tdwithin_tspatial_spatial(const Temporal *temp, Datum base, Datum dist,
+tdwithin_tspatial_base(const Temporal *temp, Datum base, Datum dist,
   bool restr, bool atvalue, datum_func3 func, tpfunc_temp tpfn)
 {
   assert(temp); assert(DatumGetPointer(base));
@@ -1551,8 +1538,8 @@ tdwithin_tspatial_spatial(const Temporal *temp, Datum base, Datum dist,
  * - For temporal points, compute the instants in which the temporal sequence
  *   has a distance `d` from the geometry, which amounts to solve the equation
  *   `distance(seg(t), geo) = d` for each segment `seg` of the sequence.
- * - For temporal geometries, compute the relationship at each instant using
- *   the lifting infrastructure.
+ * - For temporal geometries, since they do not accept linear interpolation,
+ *   compute the relationship at each instant using the lifting infrastructure.
  * @param[in] temp Temporal geo
  * @param[in] gs Geometry
  * @param[in] dist Distance
@@ -1582,7 +1569,7 @@ tdwithin_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, double dist,
     &datum_geom_dwithin3d : &datum_geom_dwithin2d;
   tpfunc_temp tpfn = &tpointsegm_tdwithin_turnpt;
   /* Call the generic function passing the two functions as arguments */
-  return tdwithin_tspatial_spatial(temp, PointerGetDatum(gs),
+  return tdwithin_tspatial_base(temp, PointerGetDatum(gs),
     Float8GetDatum(dist), restr, atvalue, func, tpfn);
 }
 
@@ -1675,8 +1662,8 @@ tdwithin_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2,
  *   have a distance `d` between each other, which amounts to solve the
  *   equation `distance(seg1(t), seg2(t)) = d` for each pair of synchronized
  *   segments `seg1`, `seg2`.
- * - For temporal geometries, compute the relationship at each instant with the
- *   lifting infrastructure.
+ * - For temporal geometries, since they do not accept linear interpolation,
+ *   compute the relationship at each instant with the lifting infrastructure.
  * @param[in] temp1,temp2 Temporal geos
  * @param[in] dist Distance
  * @param[in] restr True when the result is restricted to a value

@@ -336,7 +336,7 @@ spatialrel_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, Datum param,
       datum_func3 func3 = (datum_func3) func;
       result = invert ? func3(geo, dtrav, param) : func3(dtrav, geo, param);
     }
-    pfree(DatumGetPointer(dtrav));
+    pfree(trav);
     return result ? 1 : 0;
   }
 

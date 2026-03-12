@@ -127,23 +127,23 @@ geopoint_cmp(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 {
   if (FLAGS_GET_Z(gs1->gflags))
   {
-    const POINT3DZ *point1 = GSERIALIZED_POINT3DZ_P(gs1);
-    const POINT3DZ *point2 = GSERIALIZED_POINT3DZ_P(gs2);
-    if (float8_lt(point1->x, point2->x) || float8_lt(point1->y, point2->y) || 
-        float8_lt(point1->z, point2->z))
+    const POINT3DZ *p1 = GSERIALIZED_POINT3DZ_P(gs1);
+    const POINT3DZ *p2 = GSERIALIZED_POINT3DZ_P(gs2);
+    if (float8_lt(p1->x, p2->x) || float8_lt(p1->y, p2->y) ||
+        float8_lt(p1->z, p2->z))
       return -1;
-    if (float8_gt(point1->x, point2->x) || float8_gt(point1->y, point2->y) || 
-        float8_gt(point1->z, point2->z))
+    if (float8_gt(p1->x, p2->x) || float8_gt(p1->y, p2->y) ||
+        float8_gt(p1->z, p2->z))
       return 1;
     return 0;
   }
   else
   {
-    const POINT2D *point1 = GSERIALIZED_POINT2D_P(gs1);
-    const POINT2D *point2 = GSERIALIZED_POINT2D_P(gs2);
-    if (float8_lt(point1->x, point2->x) || float8_lt(point1->y, point2->y))
+    const POINT2D *p1 = GSERIALIZED_POINT2D_P(gs1);
+    const POINT2D *p2 = GSERIALIZED_POINT2D_P(gs2);
+    if (float8_lt(p1->x, p2->x) || float8_lt(p1->y, p2->y))
       return -1;
-    if (float8_gt(point1->x, point2->x) || float8_gt(point1->y, point2->y))
+    if (float8_gt(p1->x, p2->x) || float8_gt(p1->y, p2->y))
       return 1;
     return 0;
   }
@@ -164,16 +164,16 @@ geopoint_eq(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   // assert(FLAGS_GET_GEODETIC(gs1->gflags) == FLAGS_GET_GEODETIC(gs2->gflags));
   if (FLAGS_GET_Z(gs1->gflags) && FLAGS_GET_Z(gs2->gflags) )
   {
-    const POINT3DZ *point1 = GSERIALIZED_POINT3DZ_P(gs1);
-    const POINT3DZ *point2 = GSERIALIZED_POINT3DZ_P(gs2);
-    return float8_eq(point1->x, point2->x) &&
-      float8_eq(point1->y, point2->y) && float8_eq(point1->z, point2->z);
+    const POINT3DZ *p1 = GSERIALIZED_POINT3DZ_P(gs1);
+    const POINT3DZ *p2 = GSERIALIZED_POINT3DZ_P(gs2);
+    return float8_eq(p1->x, p2->x) &&
+      float8_eq(p1->y, p2->y) && float8_eq(p1->z, p2->z);
   }
   else
   {
-    const POINT2D *point1 = GSERIALIZED_POINT2D_P(gs1);
-    const POINT2D *point2 = GSERIALIZED_POINT2D_P(gs2);
-    return float8_eq(point1->x, point2->x) && float8_eq(point1->y, point2->y);
+    const POINT2D *p1 = GSERIALIZED_POINT2D_P(gs1);
+    const POINT2D *p2 = GSERIALIZED_POINT2D_P(gs2);
+    return float8_eq(p1->x, p2->x) && float8_eq(p1->y, p2->y);
   }
 }
 
@@ -221,7 +221,7 @@ geopoint_same(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 }
 
 /**
- * @brief Return true if the points are equal taking into account floating 
+ * @brief Return true if the points are equal taking into account floating
  * point imprecision
  */
 bool
@@ -402,7 +402,7 @@ cbuffer_flags(void)
   MEOS_FLAGS_SET_X(result, true);
   return result;
 }
-#endif /* CBUFFER */ 
+#endif /* CBUFFER */
 
 #if NPOINT
 /**
@@ -415,9 +415,9 @@ npoint_flags(void)
   MEOS_FLAGS_SET_X(result, true);
   return result;
 }
-#endif /* NPOINT */ 
+#endif /* NPOINT */
 
-#if POSE || RGEO 
+#if POSE || RGEO
 /**
  * @brief Get the MEOS flags from a pose
  */
@@ -429,7 +429,7 @@ pose_flags(Pose *pose)
   MEOS_FLAGS_SET_Z(result, MEOS_FLAGS_GET_Z(pose->flags));
   return result;
 }
-#endif /* POSE || RGEO */ 
+#endif /* POSE || RGEO */
 
 /**
  * @brief Get the MEOS flags from a spatial value
@@ -486,7 +486,7 @@ ensure_spatial_validity(const Temporal *temp1, const Temporal *temp2)
 bool
 ensure_not_geodetic(int16 flags)
 {
-  if ((MEOS_FLAGS_GET_X(flags) || MEOS_FLAGS_GET_Z(flags)) && 
+  if ((MEOS_FLAGS_GET_X(flags) || MEOS_FLAGS_GET_Z(flags)) &&
     ! MEOS_FLAGS_GET_GEODETIC(flags))
     return true;
   meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
@@ -658,7 +658,7 @@ same_dimensionality_tspatial_geo(const Temporal *temp, const GSERIALIZED *gs)
 }
 
 /**
- * @brief Ensure that a spatiotemporal value and a geometry/geography have 
+ * @brief Ensure that a spatiotemporal value and a geometry/geography have
  * the same dimensionality
  */
 bool
@@ -697,7 +697,7 @@ ensure_same_spatial_dimensionality_stbox_geo(const STBox *box,
 bool
 ensure_same_geodetic_stbox_geo(const STBox *box, const GSERIALIZED *gs)
 {
-  if (! MEOS_FLAGS_GET_X(box->flags) || 
+  if (! MEOS_FLAGS_GET_X(box->flags) ||
       (MEOS_FLAGS_GET_GEODETIC(box->flags) != FLAGS_GET_GEODETIC(gs->gflags)))
   {
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
@@ -840,7 +840,7 @@ ensure_valid_stbox_geo(const STBox *box, const GSERIALIZED *gs)
 }
 
 /**
- * @brief Ensure the validity of a spatiotemporal value and a 
+ * @brief Ensure the validity of a spatiotemporal value and a
  * geometry/geography
  * @note The geometry can be empty since some functions such atGeometry or
  * minusGeometry return different result on empty geometries.
@@ -885,7 +885,7 @@ ensure_valid_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 
 #if MEOS
 /**
- * @brief Ensure the validity of a spatiotemporal value and a 
+ * @brief Ensure the validity of a spatiotemporal value and a
  * geometry/geography
  * @note The geometry can be empty since some functions such atGeometry or
  * minusGeometry return different result on empty geometries.
@@ -984,7 +984,7 @@ tgeominst_tgeoginst(const TInstant *inst, bool oper)
  * @ingroup meos_internal_geo_conversion
  * @brief Return a temporal geometry/geography transformed from/to a temporal
  * geometry/geography
- * @param[in] seq Temporal geo sequence 
+ * @param[in] seq Temporal geo sequence
  * @param[in] oper True when transforming from geometry to geography,
  * false otherwise
  * @sqlop @p ::
@@ -1098,7 +1098,7 @@ ensure_tgeoinst_point_type(const TInstant *inst)
 
 /**
  * @brief Ensure that all geometries composing a temporal geo are points
- * @param[in] seq Temporal sequence 
+ * @param[in] seq Temporal sequence
 
  */
 bool
@@ -1179,7 +1179,7 @@ tgeoinst_tpointinst(const TInstant *inst, bool oper)
 /**
  * @ingroup meos_internal_geo_conversion
  * @brief Return a temporal geo transformed from/to a temporal point
- * @param[in] seq Temporal sequence 
+ * @param[in] seq Temporal sequence
  * @param[in] oper True when transforming from temporal geo to temporal point,
  * false otherwise
  * @sqlop @p ::
@@ -1486,13 +1486,13 @@ tgeoseqset_scale(const TSequenceSet *ss, const POINT4D *factors)
  * @csqlfn #Tgeo_scale()
  */
 Temporal *
-tgeo_scale(const Temporal *temp, const GSERIALIZED *scale, 
+tgeo_scale(const Temporal *temp, const GSERIALIZED *scale,
   const GSERIALIZED *sorigin)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_TGEO(temp, NULL); VALIDATE_NOT_NULL(scale, NULL);
   if (! ensure_point_type(scale) || gserialized_is_empty(scale) ||
-      (sorigin && 
+      (sorigin &&
         (gserialized_is_empty(sorigin) || ! ensure_point_type(sorigin))))
     return NULL;
 
@@ -1546,7 +1546,7 @@ tgeo_scale(const Temporal *temp, const GSERIALIZED *scale,
     default: /* TSEQUENCESET */
       temp2 = (Temporal *) tgeoseqset_scale((TSequenceSet *) temp, &factors);
   }
-  
+
   /* Return to original origin after scaling */
   Temporal *temp3;
   if (translate)
@@ -1627,7 +1627,7 @@ tgeo_traversed_area(const Temporal *temp, bool unary_union)
   if (! unary_union)
     return res;
   GSERIALIZED *result = geom_unary_union(res, -1);
-  pfree(res); 
+  pfree(res);
   return result;
 }
 
@@ -1646,7 +1646,7 @@ tgeo_centroid(const Temporal *temp)
   bool geodetic = MEOS_FLAGS_GET_GEODETIC(temp->flags);
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
-  lfinfo.func = (varfunc) 
+  lfinfo.func = (varfunc)
     (geodetic ? &datum2_geog_centroid : &datum2_geom_centroid);
   lfinfo.numparam = 0;
   lfinfo.argtype[0] = temp->temptype;
@@ -1774,7 +1774,7 @@ geo_cluster_dbscan(const GSERIALIZED **geoms, uint32_t ngeoms,
   * @param[out] count Number of elements in the output array
   * @note PostGIS function: @p ST_ClusterIntersectingWin(PG_FUNCTION_ARGS)
   */
-GSERIALIZED ** 
+GSERIALIZED **
 geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms,
   int *count)
 {

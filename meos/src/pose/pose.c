@@ -235,8 +235,7 @@ posesegm_locate(const Pose *start, const Pose *end, const Pose *value)
   long double result2 = -1.0;
   if (! geopoint_eq(gs1, gs2))
   {
-    result1 = pointsegm_locate(PointerGetDatum(gs1), PointerGetDatum(gs2),
-      PointerGetDatum(gs), NULL);
+    result1 = pointsegm_locate(gs1, gs2, gs, NULL);
     if (result1 < 0.0)
       return -1.0;
   }

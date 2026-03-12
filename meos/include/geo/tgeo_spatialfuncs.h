@@ -171,10 +171,10 @@ extern GSERIALIZED *geopoint_make(double x, double y, double z, bool hasz,
 extern LWGEOM *lwcircle_make(double x, double y, double radius, int32_t srid);
 extern GSERIALIZED *geocircle_make(double x, double y, double radius,
   int32_t srid);
-extern Datum pointsegm_interpolate(Datum start, Datum end,
-  long double ratio);
-extern long double pointsegm_locate(Datum start, Datum end, Datum point,
-  double *dist);
+extern GSERIALIZED *pointsegm_interpolate(const GSERIALIZED *start, 
+  const GSERIALIZED *end, long double ratio);
+extern long double pointsegm_locate(const GSERIALIZED *start,
+  const GSERIALIZED *end, const GSERIALIZED *point, double *dist);
 
 /* Intersection functions */
 
@@ -185,8 +185,9 @@ extern int tgeogpointsegm_intersection(Datum start1, Datum end1, Datum start2,
   Datum end2, TimestampTz lower, TimestampTz upper, TimestampTz *t1,
   TimestampTz *t2);
 
-extern bool geopoint_collinear(Datum value1, Datum value2, Datum value3,
-  double ratio, bool hasz, bool geodetic);
+extern bool geopoint_collinear(const GSERIALIZED *value1,
+  const GSERIALIZED *value2, const GSERIALIZED *value3, double ratio,
+  bool hasz, bool geodetic);
 
 /* Trajectory functions */
 

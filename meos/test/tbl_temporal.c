@@ -77,9 +77,9 @@ int main(void)
   // FILE *file = fopen("csv/tbl_ttext.csv", "r");
   // FILE *file = fopen("csv/tbl_tgeompoint.csv", "r");
   // FILE *file = fopen("csv/tbl_tgeogpoint.csv", "r");
-  FILE *file = fopen("csv/tbl_tgeometry.csv", "r");
+  // FILE *file = fopen("csv/tbl_tgeometry.csv", "r");
   // FILE *file = fopen("csv/tbl_tgeography.csv", "r");
-  // FILE *file = fopen("csv/tbl_tcbuffer.csv", "r");
+  FILE *file = fopen("csv/tbl_tcbuffer.csv", "r");
   // FILE *file = fopen("csv/tbl_tnpoint.csv", "r");
   // FILE *file = fopen("csv/tbl_tpose2d.csv", "r");
   // FILE *file = fopen("csv/tbl_trgeometry.csv", "r");
@@ -119,9 +119,9 @@ int main(void)
     // Temporal *temp = ttext_in(temporal_buffer);
     // Temporal *temp = tgeompoint_in(temporal_buffer);
     // Temporal *temp = tgeogpoint_in(temporal_buffer);
-    Temporal *temp = tgeometry_in(temporal_buffer);
+    // Temporal *temp = tgeometry_in(temporal_buffer);
     // Temporal *temp = tgeography_in(temporal_buffer);
-    // Temporal *temp = tcbuffer_in(temporal_buffer);
+    Temporal *temp = tcbuffer_in(temporal_buffer);
     // Temporal *temp = tnpoint_in(temporal_buffer);
     // Temporal *temp = tpose_in(temporal_buffer);
     // Temporal *temp = trgeometry_in(temporal_buffer);
@@ -131,16 +131,20 @@ int main(void)
     // TimestampTz start = temporal_start_timestamptz(temp);
 
     /* Uncomment the desired function to compute */
+    Temporal *rest = temporal_round(temp, 5);
     // Temporal *rest = temporal_simplify_dp(temp, 5, true);
     // Temporal *rest = temporal_tsample(temp, interv, start, "linear");
     // Temporal *rest = temporal_tprecision(temp, interv, start);
     // Temporal *rest = tfloat_shift_scale_value(temp, 5, 10);
-    Temporal *rest = tgeometry_to_tcbuffer(temp);
+    // Temporal *rest = tgeometry_to_tcbuffer(temp);
+    // GSERIALIZED *rest = tcbuffer_trav_area(temp, false);
     if (rest)
     {
       /* Get the number of instants of the result */
       int count = temporal_num_instants(rest);
+      // int count = geo_num_geos(rest);
       printf("k: %d, Number of instants: %d\n", k, count);
+      // printf("k: %d, Number of geometries of the result: %d\n", k, count);
       // int count1 = temporal_num_instants(temp);
       // int count2 = temporal_num_instants(rest);
       // printf("k: %d, Number of instants: %d -> %d\n", k, count1, count2);
