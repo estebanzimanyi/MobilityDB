@@ -400,7 +400,7 @@ tinterrel_tcbufferseq_linear_geo(const TSequence *seq, const GSERIALIZED *gs,
   {
     const TInstant *inst2 = TSEQUENCE_INST_N(seq, i);
     TimestampTz mint = DT_NOEND, maxt = DT_NOBEGIN;
-    bool upper_inc = (i == seq->count - 1) ? false : seq->period.upper_inc;
+    bool upper_inc = (i == seq->count - 1) ? seq->period.upper_inc : false;
     /* Loop for each point in the intersection */
     for (int j = 0; j < npoints; j++)
     {
@@ -426,7 +426,7 @@ tinterrel_tcbufferseq_linear_geo(const TSequence *seq, const GSERIALIZED *gs,
       Span *s = span_make(TimestampTzGetDatum(mint), TimestampTzGetDatum(maxt),
         lower_inc1, upper_inc1, T_TIMESTAMPTZ);
       if (! ss)
-        /* Initialize the spanset for the first time */
+      /* Initialize the spanset for the first time */
         ss = span_to_spanset(s);
       else
       {
@@ -442,7 +442,7 @@ tinterrel_tcbufferseq_linear_geo(const TSequence *seq, const GSERIALIZED *gs,
   pfree_array((void *) points, npoints);
   /* If there is no intersection */
   if (! ss)
-    return NULL;
+    return (Temporal *) tsequence_from_base_temp(datum_false, T_TBOOL, seq);
   Datum bool_true = tinter ? BoolGetDatum(true) : BoolGetDatum(false);
   Datum bool_false = tinter ? BoolGetDatum(false) : BoolGetDatum(true);
   TSequenceSet *res_true = tsequenceset_from_base_tstzspanset(bool_true,
@@ -460,7 +460,7 @@ tinterrel_tcbufferseq_linear_geo(const TSequence *seq, const GSERIALIZED *gs,
   }
   else
     result = res_true;
-  pfree(ss); pfree(ss_time); 
+  pfree(ss); pfree(ss_time);
   return (Temporal *) result;
 }
 
