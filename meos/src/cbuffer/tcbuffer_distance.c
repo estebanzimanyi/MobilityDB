@@ -79,42 +79,49 @@ cbuffersegm_distance_turnpt(const Cbuffer *start1, const Cbuffer *end1,
   double dy0 = spt1->y - spt2->y;
   double r0 = start1->radius + start2->radius;
 
+  /* Compute relative position and combined radius at upper */
   double dx1 = ept1->x - ept2->x;
   double dy1 = ept1->y - ept2->y;
   double r1 = end1->radius + end2->radius;
 
-  /* Factorize computations required several times */
-  double A = (ept1->x - spt1->x) / duration;
-  double B = (ept2->x - spt2->x) / duration;
-  double C = (ept1->y - spt1->y) / duration;
-  double D = (ept2->y - spt2->y) / duration;
-  double E = end1->radius - start1->radius;
-  double F = end2->radius - start2->radius;
+  /* Compute linear velocities of the centres */
+  double vel1_x = (ept1->x - spt1->x) / duration;
+  double vel1_y = (ept1->y - spt1->y) / duration;
+  double vel2_x = (ept2->x - spt2->x) / duration;
+  double vel2_y = (ept2->y - spt2->y) / duration;
+
+  /* Compute radius variation rates */
+  double radius_rate1 = (end1->radius - start1->radius) / duration;
+  double radius_rate2 = (end2->radius - start2->radius) / duration;
 
   /* Compute relative velocities */
-  double vx = A - B;
-  double vy = C - D;
-  double vr = (E + F) / duration;
+  double rel_vel_x = vel1_x - vel2_x;
+  double rel_vel_y = vel1_y - vel2_y;
+  double combined_radius_rate = radius_rate1 + radius_rate2;
 
   /* Compute coefficients of the derivative of (distance - combined_radius)^2 */
-  double a = vx * vx + vy * vy - vr * vr;
-  double b = dx0 * vx + dy0 * vy - r0 * vr;
+  double deriv_quad_coeff =
+    rel_vel_x * rel_vel_x + rel_vel_y * rel_vel_y -
+    combined_radius_rate * combined_radius_rate;
+  double deriv_lin_coeff =
+    dx0 * rel_vel_x + dy0 * rel_vel_y - r0 * combined_radius_rate;
 
   /* Compute relative time where derivative is zero */
-  double t_rel = (a == 0.0 || b == 0.0) ? 0.0 : -b / a;
+  double t_rel = (deriv_quad_coeff == 0.0 || deriv_lin_coeff == 0.0) ? 
+    0.0 : -deriv_lin_coeff / deriv_quad_coeff;
   if (t_rel < 0.0)
     t_rel = 0.0;
   if (t_rel > duration)
     t_rel = duration;
 
   /* Interpolate position and radius at the turning point */
-  double cx1 = spt1->x + A * t_rel;
-  double cy1 = spt1->y + C * t_rel;
-  double rbuf1 = start1->radius + E * t_rel / duration;
+  double cx1 = spt1->x + vel1_x * t_rel;
+  double cy1 = spt1->y + vel1_y * t_rel;
+  double rbuf1 = start1->radius + radius_rate1 * t_rel;
 
-  double cx2 = spt2->x + B * t_rel;
-  double cy2 = spt2->y + D * t_rel;
-  double rbuf2 = start2->radius + F * t_rel / duration;
+  double cx2 = spt2->x + vel2_x * t_rel;
+  double cy2 = spt2->y + vel2_y * t_rel;
+  double rbuf2 = start2->radius + radius_rate2 * t_rel;
 
   double dx_turn = cx1 - cx2;
   double dy_turn = cy1 - cy2;
