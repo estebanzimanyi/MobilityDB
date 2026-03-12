@@ -197,6 +197,7 @@ bool
 contains_set_cbuffer(const Set *s, Cbuffer *cb)
 {
   /* Ensure the validity of the arguments */
+  VALIDATE_CBUFFERSET(s, false); VALIDATE_NOT_NULL(cb, false);
   if (! ensure_valid_cbufferset_cbuffer(s, cb))
     return false;
   return contains_set_value(s, PointerGetDatum(cb));
@@ -213,6 +214,7 @@ bool
 contained_cbuffer_set(const Cbuffer *cb, const Set *s)
 {
   /* Ensure the validity of the arguments */
+  VALIDATE_CBUFFERSET(s, false); VALIDATE_NOT_NULL(cb, false);
   if (! ensure_valid_cbufferset_cbuffer(s, cb))
     return false;
   return contained_value_set(PointerGetDatum(cb), s);
@@ -229,6 +231,7 @@ Set *
 union_set_cbuffer(const Set *s, const Cbuffer *cb)
 {
   /* Ensure the validity of the arguments */
+  VALIDATE_CBUFFERSET(s, NULL); VALIDATE_NOT_NULL(cb, NULL);
   if (! ensure_valid_cbufferset_cbuffer(s, cb))
     return NULL;
   return union_set_value(s, PointerGetDatum(cb));
@@ -258,6 +261,7 @@ Set *
 intersection_set_cbuffer(const Set *s, const Cbuffer *cb)
 {
   /* Ensure the validity of the arguments */
+  VALIDATE_CBUFFERSET(s, NULL); VALIDATE_NOT_NULL(cb, NULL);
   if (! ensure_valid_cbufferset_cbuffer(s, cb))
     return NULL;
   return intersection_set_value(s, PointerGetDatum(cb));
@@ -287,6 +291,7 @@ Set *
 minus_cbuffer_set(const Cbuffer *cb, const Set *s)
 {
   /* Ensure the validity of the arguments */
+  VALIDATE_CBUFFERSET(s, NULL); VALIDATE_NOT_NULL(cb, NULL);
   if (! ensure_valid_cbufferset_cbuffer(s, cb))
     return NULL;
   return minus_value_set(PointerGetDatum(cb), s);
@@ -303,6 +308,7 @@ Set *
 minus_set_cbuffer(const Set *s, const Cbuffer *cb)
 {
   /* Ensure the validity of the arguments */
+  VALIDATE_CBUFFERSET(s, NULL); VALIDATE_NOT_NULL(cb, NULL);
   if (! ensure_valid_cbufferset_cbuffer(s, cb))
     return NULL;
   return minus_set_value(s, PointerGetDatum(cb));

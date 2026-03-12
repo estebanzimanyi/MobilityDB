@@ -290,12 +290,12 @@ tinterrel_tcbufferseq_step_geo(const TSequence *seq, const GSERIALIZED *gs,
       TSEQUENCE_INST_N(seq, i + 1) : inst;
     TimestampTz mint = DT_NOEND, maxt = DT_NOBEGIN;
     bool upper_inc = (i == seq->count - 1) ? false : seq->period.upper_inc;
-    GSERIALIZED *circle = tcbufferinst_trav_area(inst);
+    GSERIALIZED *trav = tcbufferinst_trav_area(inst);
     /* Loop for each point in the intersection */
     bool found = false;
     for (int j = 0; j < npoints; j++)
     {
-      found = geom_intersects2d(circle, points[j]);
+      found = geom_intersects2d(trav, points[j]);
       if (found)
       {
         if (timestamptz_cmp_internal(inst->t, mint) < 0)
@@ -338,7 +338,7 @@ tinterrel_tcbufferseq_step_geo(const TSequence *seq, const GSERIALIZED *gs,
       else
       {}
     }
-    pfree(circle);
+    pfree(trav);
     inst = next;
   }
   pfree_array((void *) points, npoints);
@@ -1285,19 +1285,11 @@ tdwithin_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return NULL;
 
-  Temporal *sync1, *sync2;
-  /* Return false if the temporal circular buffers do not intersect in time
-   * The operation is synchronization without adding crossings */
-  if (! intersection_temporal_temporal(temp1, temp2, SYNCHRONIZE_NOCROSS,
-      &sync1, &sync2))
-    return NULL;
-
   /* Call the generic function passing the distance and the turning point
    * functions to be applied */
-  Temporal *result = tdwithin_tspatial_tspatial(sync1, sync2,
+  Temporal *result = tdwithin_tspatial_tspatial(temp1, temp2,
     Float8GetDatum(dist), restr, atvalue, &datum_cbuffer_dwithin,
     &tcbuffersegm_dwithin_turnpt);
-  pfree(sync1); pfree(sync2);
   return result;
 }
 
