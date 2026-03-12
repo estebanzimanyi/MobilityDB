@@ -44,49 +44,6 @@
 #include "cbuffer/cbuffer.h"
 
 /*****************************************************************************
- * Utility functions
- *****************************************************************************/
-
-/**
- * @brief Return true if the geometry/geography is a circle
- */
-bool
-circle_type(const GSERIALIZED *gs)
-{
-  if (gserialized_get_type(gs) != CURVEPOLYTYPE)
-    return false;
-  LWGEOM *geo = lwgeom_from_gserialized(gs);
-  if (lwgeom_count_rings(geo) != 1)
-  {
-    lwgeom_free(geo); 
-    return false;
-  }
-  LWCURVEPOLY *circle = (LWCURVEPOLY *) geo;
-  LWCIRCSTRING *ring = (LWCIRCSTRING *) circle->rings[0];
-  if (ring->points->npoints != 3 || ! ptarray_is_closed(ring->points))
-  {
-    lwgeom_free(geo); 
-    return false;
-  }
-  return true;
-}
-
-/**
- * @brief Ensure that the geometry/geography is a circle
- */
-bool
-ensure_circle_type(const GSERIALIZED *gs)
-{
-  if (! circle_type(gs))
-  {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "Only circle polygons accepted");
-    return false;
-  }
-  return true;
-}
-
-/*****************************************************************************
  * Traversed area 
  *****************************************************************************/
 
@@ -530,10 +487,9 @@ tcbuffersegm_trav_area(const TInstant *inst1, const TInstant *inst2)
     res = trapezoid_make(cb_min, cb_max);
   else
   {
-    if (cb_min->radius > cb_max->radius)
-      res = lwcircle_make(p1->x, p1->y, cb_min->radius, srid);
-    else
-      res = lwcircle_make(p2->x, p2->y, cb_max->radius, srid);
+    res = (cb_min->radius > cb_max->radius) ?
+      lwcircle_make(p1->x, p1->y, cb_min->radius, srid) :
+      lwcircle_make(p2->x, p2->y, cb_max->radius, srid);
   }
   result = geo_serialize(res);
   lwgeom_free(res);
@@ -633,7 +589,9 @@ tcbufferseqset_step_trav_area(const TSequenceSet *ss, GSERIALIZED **result)
   assert(ss); assert(ss->count > 1); assert(result); 
   assert(MEOS_FLAGS_GET_INTERP(ss->flags) == STEP);
   const TInstant **instants = tsequenceset_insts_p(ss);
-  return cbufferarr_trav_area((TInstant **) instants, ss->count, result);
+  int res = cbufferarr_trav_area((TInstant **) instants, ss->count, result);
+  pfree(instants);
+  return res;
 }
 
 /**

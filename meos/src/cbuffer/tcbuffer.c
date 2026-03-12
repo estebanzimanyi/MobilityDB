@@ -314,9 +314,8 @@ tcbuffersegm_intersection_value(Datum start, Datum end, Datum value,
   TimestampTz lower, TimestampTz upper, TimestampTz *t1, TimestampTz *t2)
 {
   assert(lower < upper); assert(t1); assert(t2);
-  int result = tcbuffersegm_distance_turnpt(start, end, value, value,
+  return tcbuffersegm_distance_turnpt(start, end, value, value,
     (Datum) 0.0, lower, upper, t1, t2);
-  return result;
 }
 
 /**
@@ -648,8 +647,7 @@ TInstant *
 tgeominst_tcbufferinst(const TInstant *inst)
 {
   assert(inst); assert(tgeo_type_all(inst->temptype));
-  const GSERIALIZED *value = (GSERIALIZED *) DatumGetGserializedP(
-    tinstant_value_p(inst));
+  const GSERIALIZED *value = DatumGetGserializedP(tinstant_value_p(inst));
   double radius = 0.0;
   uint32_t geotype = gserialized_get_type(value);
   GSERIALIZED *value1 = NULL;
@@ -853,7 +851,8 @@ tcbufferseqset_members(const TSequenceSet *ss, bool point)
     const TSequence *seq = TSEQUENCESET_SEQ_N(ss, i);
     for (int j = 0; j < seq->count; j++)
     {
-      Cbuffer *cb = DatumGetCbufferP(tinstant_value_p(TSEQUENCE_INST_N(seq, j)));
+      Cbuffer *cb =
+        DatumGetCbufferP(tinstant_value_p(TSEQUENCE_INST_N(seq, j)));
       values[i] = point ?
         PointerGetDatum(&cb->point) : Float8GetDatum(cb->radius);
     }

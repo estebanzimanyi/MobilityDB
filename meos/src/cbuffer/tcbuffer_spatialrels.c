@@ -170,8 +170,7 @@ ea_spatialrel_tcbufferinst_geo(const TInstant *inst, const GSERIALIZED *gs,
   Datum param, varfunc func, int numparam, bool invert)
 {
   assert(inst); assert(gs); assert(inst->temptype == T_TCBUFFER);
-  const Cbuffer *cb = DatumGetCbufferP(tinstant_value_p(inst));
-  GSERIALIZED *trav = cbuffer_to_geom(cb);
+  GSERIALIZED *trav = cbuffer_to_geom(DatumGetCbufferP(tinstant_value_p(inst)));
   int result = spatialrel_geo_geo(trav, gs, param, func, numparam, invert);
   pfree(trav);
   return result ? 1 : 0;
@@ -199,9 +198,8 @@ ea_spatialrel_tcbufferseq_discstep_geo(const TSequence *seq,
   bool result;
   for (int i = 0; i < seq->count; i++)
   {
-    const Cbuffer *cb = 
-      DatumGetCbufferP(tinstant_value_p(TSEQUENCE_INST_N(seq, i)));
-    GSERIALIZED *trav = cbuffer_to_geom(cb);
+    GSERIALIZED *trav = cbuffer_to_geom(
+      DatumGetCbufferP(tinstant_value_p(TSEQUENCE_INST_N(seq, i))));
     result = spatialrel_geo_geo(trav, gs, param, func, numparam, invert);
     pfree(trav);
     if (result && ever)
