@@ -190,7 +190,7 @@ Npoint_send(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Npoint_from_ewkt(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Npoint_from_ewkt);
 /**
- * @ingroup mobilitydb_geo_inout
+ * @ingroup mobilitydb_npoint_inout
  * @brief Return a network point from its Extended Well-Known Text (EWKT)
  * representation
  * @note This just does the same thing as the SQL function npoint_in, except it
@@ -319,7 +319,7 @@ PG_FUNCTION_INFO_V1(Npoint_as_ewkb);
 /**
  * @ingroup mobilitydb_pose_base_inout
  * @brief Return the Well-Known Binary (WKB) representation of a network point
- * @sqlfn asBinary()
+ * @sqlfn asEWKB()
  */
 Datum
 Npoint_as_ewkb(PG_FUNCTION_ARGS)

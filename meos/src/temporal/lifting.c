@@ -450,6 +450,7 @@ tfunc_tlinearseq_base_discfn(const TSequence *seq, Datum value,
   {
     instants[0] = tinstant_make_free(startresult, lfinfo->restype, start->t);
     result[0] = tinstant_to_tsequence_free(instants[0], STEP);
+    pfree(instants);
     return 1;
   }
 

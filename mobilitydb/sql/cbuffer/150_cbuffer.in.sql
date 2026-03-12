@@ -70,7 +70,36 @@ CREATE TYPE cbuffer (
   alignment = double
 );
 
--- Input/output in WKT, WKB and HexWKB representation
+/*****************************************************************************
+ * Input/output from (E)WKT, (E)WKB and HexEWKB representation
+ *****************************************************************************/
+
+CREATE FUNCTION cbufferFromText(text)
+  RETURNS cbuffer
+  AS 'MODULE_PATHNAME', 'Cbuffer_from_ewkt'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION cbufferFromEWKT(text)
+  RETURNS cbuffer
+  AS 'MODULE_PATHNAME', 'Cbuffer_from_ewkt'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION cbufferFromBinary(bytea)
+  RETURNS cbuffer
+  AS 'MODULE_PATHNAME', 'Cbuffer_from_wkb'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION cbufferFromEWKB(bytea)
+  RETURNS cbuffer
+  AS 'MODULE_PATHNAME', 'Cbuffer_from_wkb'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION cbufferFromHexEWKB(text)
+  RETURNS cbuffer
+  AS 'MODULE_PATHNAME', 'Cbuffer_from_hexwkb'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/*****************************************************************************/
 
 CREATE FUNCTION asText(cbuffer, maxdecimaldigits int4 DEFAULT 15)
   RETURNS text
@@ -88,6 +117,21 @@ CREATE FUNCTION asEWKT(cbuffer, maxdecimaldigits int4 DEFAULT 15)
 CREATE FUNCTION asEWKT(cbuffer[], maxdecimaldigits int4 DEFAULT 15)
   RETURNS text[]
   AS 'MODULE_PATHNAME', 'Spatialarr_as_ewkt'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION asBinary(cbuffer, endianenconding text DEFAULT '')
+  RETURNS bytea
+  AS 'MODULE_PATHNAME', 'Cbuffer_as_wkb'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION asEWKB(cbuffer, endianenconding text DEFAULT '')
+  RETURNS bytea
+  AS 'MODULE_PATHNAME', 'Cbuffer_as_ewkb'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION asHexEWKB(cbuffer, endianenconding text DEFAULT '')
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Cbuffer_as_hexwkb'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************

@@ -40,6 +40,7 @@
 /* MEOS */
 #include <meos.h>
 #include <meos_internal_geo.h>
+#include "temporal/set.h"
 #include "temporal/tnumber_mathfuncs.h"
 #include "temporal/type_util.h"
 #include "geo/tgeo_spatialfuncs.h"
@@ -178,12 +179,12 @@ tcbuffersegm_dwithin_turnpt(Datum start1, Datum end1, Datum start2, Datum end2,
   double d = DatumGetFloat8(dist);
 
   /* Extract the points */
-  const POINT2D *spt1 = GSERIALIZED_POINT2D_P(cbuffer_point_p(sv1));
-  const POINT2D *ept1 = GSERIALIZED_POINT2D_P(cbuffer_point_p(ev1));
-  const POINT2D *spt2 = GSERIALIZED_POINT2D_P(cbuffer_point_p(sv2));
-  const POINT2D *ept2 = GSERIALIZED_POINT2D_P(cbuffer_point_p(ev2));
+  const POINT2D *spt1 = GSERIALIZED_POINT2D_P(CBUFFER_POINT_P(sv1));
+  const POINT2D *ept1 = GSERIALIZED_POINT2D_P(CBUFFER_POINT_P(ev1));
+  const POINT2D *spt2 = GSERIALIZED_POINT2D_P(CBUFFER_POINT_P(sv2));
+  const POINT2D *ept2 = GSERIALIZED_POINT2D_P(CBUFFER_POINT_P(ev2));
 
-  double duration = (double)(upper - lower);
+  double duration = (double) (upper - lower);
 
   /* Tolerance threshold for floating-point comparison */
   if (duration <= FP_TOLERANCE)
@@ -205,8 +206,8 @@ tcbuffersegm_dwithin_turnpt(Datum start1, Datum end1, Datum start2, Datum end2,
 
   /* Quadratic derivative coefficients of f(t) = (distance - d)^2 */
   double a = vx * vx + vy * vy - vr * vr;
-  double b = 2*(dx0 * vx + dy0 * vy - (r0 + d) * vr);
-  double c = dx0 * dx0 + dy0 * dy0 - (r0 + d) * (r0+d);
+  double b = 2 * (dx0 * vx + dy0 * vy - (r0 + d) * vr);
+  double c = dx0 * dx0 + dy0 * dy0 - (r0 + d) * (r0 + d);
   double delta = b * b - 4 * a * c;
 
   double roots[2];
@@ -223,7 +224,8 @@ tcbuffersegm_dwithin_turnpt(Datum start1, Datum end1, Datum start2, Datum end2,
       if (t_cand1 >= -FP_TOLERANCE && t_cand1 <= duration + FP_TOLERANCE)
       {
         d1 = tcbuffersegm_distance_at_time(dx0, dy0, vx, vy, r0, vr, t_cand1);
-        if (fabs(d1 - d) < FP_TOLERANCE) roots[nroots++] = t_cand1;
+        if (fabs(d1 - d) < FP_TOLERANCE)
+          roots[nroots++] = t_cand1;
       }
     }
     /* Quadratic case */
@@ -250,7 +252,8 @@ tcbuffersegm_dwithin_turnpt(Datum start1, Datum end1, Datum start2, Datum end2,
   double valid[2];
   int nvalid = 0;
 
-  for (int i = 0; i < nroots; i++){
+  for (int i = 0; i < nroots; i++)
+  {
     TimestampTz t = lower + (TimestampTz) roots[i];
     if (t > lower && t < upper)
     {
@@ -314,8 +317,8 @@ tcbuffersegm_intersection_value(Datum start, Datum end, Datum value,
   TimestampTz lower, TimestampTz upper, TimestampTz *t1, TimestampTz *t2)
 {
   assert(lower < upper); assert(t1); assert(t2);
-  return tcbuffersegm_distance_turnpt(start, end, value, value,
-    (Datum) 0.0, lower, upper, t1, t2);
+  return tcbuffersegm_distance_turnpt(start, end, value, value, (Datum) 0.0,
+    lower, upper, t1, t2);
 }
 
 /**
@@ -512,7 +515,7 @@ TInstant *
 tcbufferinst_tgeompointinst(const TInstant *inst)
 {
   assert(inst); assert(inst->temptype == T_TCBUFFER);
-  const GSERIALIZED *point = cbuffer_point_p(
+  const GSERIALIZED *point = CBUFFER_POINT_P(
     DatumGetCbufferP(tinstant_value_p(inst)));
   return tinstant_make(PointerGetDatum(point), T_TGEOMPOINT, inst->t);
 }

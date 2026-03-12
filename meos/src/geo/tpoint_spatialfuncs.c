@@ -130,9 +130,7 @@ ensure_valid_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
 static Datum
 point_get_x(Datum point)
 {
-  POINT4D p;
-  datum_point4d(point, &p);
-  return Float8GetDatum(p.x);
+  return Float8GetDatum(DATUM_POINT2D_P(point)->x);
 }
 
 /**
@@ -141,9 +139,7 @@ point_get_x(Datum point)
 static Datum
 point_get_y(Datum point)
 {
-  POINT4D p;
-  datum_point4d(point, &p);
-  return Float8GetDatum(p.y);
+  return Float8GetDatum(DATUM_POINT2D_P(point)->y);
 }
 
 /**
@@ -152,9 +148,7 @@ point_get_y(Datum point)
 static Datum
 point_get_z(Datum point)
 {
-  POINT4D p;
-  datum_point4d(point, &p);
-  return Float8GetDatum(p.z);
+  return Float8GetDatum(DATUM_POINT3DZ_P(point)->z);
 }
 
 /**
@@ -435,16 +429,16 @@ interpolate_point4d_spheroid(const POINT4D *p1, const POINT4D *p2,
  * @param[in] ratio Float between 0 and 1 representing the fraction of the
  * total length of the segment where the point must be located
  */
-Datum
-pointsegm_interpolate(Datum start, Datum end, long double ratio)
+GSERIALIZED *
+pointsegm_interpolate(const GSERIALIZED *start, const GSERIALIZED *end,
+  long double ratio)
 {
-  GSERIALIZED *gs = DatumGetGserializedP(start);
-  int32_t srid = gserialized_get_srid(gs);
+  int32_t srid = gserialized_get_srid(start);
   POINT4D p1, p2, p;
-  datum_point4d(start, &p1);
-  datum_point4d(end, &p2);
-  bool hasz = (bool) FLAGS_GET_Z(gs->gflags);
-  bool geodetic = (bool) FLAGS_GET_GEODETIC(gs->gflags);
+  datum_point4d(PointerGetDatum(start), &p1);
+  datum_point4d(PointerGetDatum(end), &p2);
+  bool hasz = (bool) FLAGS_GET_Z(start->gflags);
+  bool geodetic = (bool) FLAGS_GET_GEODETIC(start->gflags);
   if (geodetic)
     interpolate_point4d_spheroid(&p1, &p2, &p, NULL, (double) ratio);
   else
@@ -458,9 +452,7 @@ pointsegm_interpolate(Datum start, Datum end, long double ratio)
     p.m = 0.0;
   }
 
-  Datum result = PointerGetDatum(geopoint_make(p.x, p.y, p.z, hasz, geodetic,
-    srid));
-  return result;
+  return geopoint_make(p.x, p.y, p.z, hasz, geodetic, srid);
 }
 
 /**
@@ -477,17 +469,17 @@ pointsegm_interpolate(Datum start, Datum end, long double ratio)
  * bounds of the segment are not equal to the point.
  */
 long double
-pointsegm_locate(Datum start, Datum end, Datum point, double *dist)
+pointsegm_locate(const GSERIALIZED *start, const GSERIALIZED *end,
+  const GSERIALIZED *point, double *dist)
 {
-  GSERIALIZED *gs = DatumGetGserializedP(start);
   long double result;
   double dist1;
-  if (FLAGS_GET_GEODETIC(gs->gflags))
+  if (FLAGS_GET_GEODETIC(start->gflags))
   {
     POINT4D p1, p2, p, closest;
-    datum_point4d(start, &p1);
-    datum_point4d(end, &p2);
-    datum_point4d(point, &p);
+    datum_point4d(PointerGetDatum(start), &p1);
+    datum_point4d(PointerGetDatum(end), &p2);
+    datum_point4d(PointerGetDatum(point), &p);
     /* Get the closest point and the distance */
     result = closest_point_on_segment_sphere(&p, &p1, &p2, &closest, &dist1);
     if (fabs(dist1) >= MEOS_EPSILON || p4d_same(&p1, &closest) ||
@@ -498,18 +490,18 @@ pointsegm_locate(Datum start, Datum end, Datum point, double *dist)
     {
       dist1 = WGS84_RADIUS * dist1;
       /* Add to the distance the vertical displacement if we are in 3D */
-      if (FLAGS_GET_Z(gs->gflags))
+      if (FLAGS_GET_Z(start->gflags))
         dist1 = sqrt( (closest.z - p.z) * (closest.z - p.z) + dist1 * dist1 );
       *dist = dist1;
     }
   }
   else
   {
-    if (FLAGS_GET_Z(gs->gflags))
+    if (FLAGS_GET_Z(start->gflags))
     {
-      const POINT3DZ *p1 = DATUM_POINT3DZ_P(start);
-      const POINT3DZ *p2 = DATUM_POINT3DZ_P(end);
-      const POINT3DZ *p = DATUM_POINT3DZ_P(point);
+      const POINT3DZ *p1 = GSERIALIZED_POINT3DZ_P(start);
+      const POINT3DZ *p2 = GSERIALIZED_POINT3DZ_P(end);
+      const POINT3DZ *p = GSERIALIZED_POINT3DZ_P(point);
       POINT3DZ proj;
       result = closest_point3dz_on_segment_ratio(p, p1, p2, &proj);
       dist1 = distance3d_pt_pt((POINT3D *) p, (POINT3D *) &proj);
@@ -523,9 +515,9 @@ pointsegm_locate(Datum start, Datum end, Datum point, double *dist)
     }
     else
     {
-      const POINT2D *p1 = DATUM_POINT2D_P(start);
-      const POINT2D *p2 = DATUM_POINT2D_P(end);
-      const POINT2D *p = DATUM_POINT2D_P(point);
+      const POINT2D *p1 = GSERIALIZED_POINT2D_P(start);
+      const POINT2D *p2 = GSERIALIZED_POINT2D_P(end);
+      const POINT2D *p = GSERIALIZED_POINT2D_P(point);
       POINT2D proj;
       result = closest_point2d_on_segment_ratio(p, p1, p2, &proj);
       dist1 = distance2d_pt_pt((POINT2D *) p, &proj);
@@ -595,13 +587,13 @@ tgeogpointsegm_intersection(Datum start1, Datum end1, Datum start2, Datum end2,
  * @param[in] geodetic True for geography, false for geometry
  */
 bool
-geopoint_collinear(Datum value1, Datum value2, Datum value3,
-  double ratio, bool hasz, bool geodetic)
+geopoint_collinear(const GSERIALIZED *value1, const GSERIALIZED *value2,
+  const GSERIALIZED *value3, double ratio, bool hasz, bool geodetic)
 {
   POINT4D p1, p2, p3, p;
-  datum_point4d(value1, &p1);
-  datum_point4d(value2, &p2);
-  datum_point4d(value3, &p3);
+  datum_point4d(PointerGetDatum(value1), &p1);
+  datum_point4d(PointerGetDatum(value2), &p2);
+  datum_point4d(PointerGetDatum(value3), &p3);
   if (geodetic)
     interpolate_point4d_spheroid(&p1, &p3, &p, NULL, ratio);
   else
@@ -3026,7 +3018,8 @@ tpoint_geo_bearing_turnpt(Datum start, Datum end, Datum point,
     edge_intersection(&e, &e1, &inter);
     proj = PointerGetDatum(geopoint_make(rad2deg(inter.lon),
       rad2deg(inter.lat), 0, false, true, spatial_srid(start, T_GEOMETRY)));
-    fraction = pointsegm_locate(start, end, proj, NULL);
+    fraction = pointsegm_locate(DatumGetGserializedP(start),
+      DatumGetGserializedP(end), DatumGetGserializedP(proj), NULL);
     if (fraction < 0.0)
       return 0;
   }
@@ -3053,6 +3046,7 @@ tpoint_geo_bearing_turnpt(Datum start, Datum end, Datum point,
   pfree(DatumGetPointer(proj));
   return result;
 }
+
 
 /**
  * @brief Return 1 or 2 if two temporal point segments are at the minimum
@@ -3325,7 +3319,7 @@ multipoint_make(const TSequence *seq, int start, int end)
         tinstant_value_p(TSEQUENCE_INST_N(seq, start + i)));
 #if CBUFFER
     else if (seq->temptype == T_TCBUFFER)
-      gs = (GSERIALIZED *) cbuffer_point_p(DatumGetCbufferP(
+      gs = (GSERIALIZED *) CBUFFER_POINT_P(DatumGetCbufferP(
         tinstant_value_p(TSEQUENCE_INST_N(seq, start + i))));
 #endif
 #if NPOINT
@@ -3359,7 +3353,7 @@ multipoint_add_inst_free(GEOSGeometry *geom, const TInstant *inst)
     gs = DatumGetGserializedP(tinstant_value_p(inst));
 #if CBUFFER
   else if (inst->temptype == T_TCBUFFER)
-    gs = (GSERIALIZED *) cbuffer_point_p(DatumGetCbufferP(
+    gs = (GSERIALIZED *) CBUFFER_POINT_P(DatumGetCbufferP(
       tinstant_value_p(inst)));
 #endif
 #if NPOINT

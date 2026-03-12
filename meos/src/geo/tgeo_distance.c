@@ -168,12 +168,14 @@ tpoint_geo_distance_turnpt(Datum start, Datum end, Datum point,
   assert(lower < upper); assert(t1); assert(t2);
   long double duration = (long double) (upper - lower);
   double dist;
-  double fraction = (double) pointsegm_locate(start, end, point, &dist);
+  double fraction = (double) pointsegm_locate(DatumGetGserializedP(start),
+    DatumGetGserializedP(end), DatumGetGserializedP(point), &dist);
   if (fraction < 0.0)
     return 0;
   *t1 = *t2 = lower + (TimestampTz) (duration * fraction);
   return 1;
 }
+
 
 /**
  * @brief Compute d/dx (Euclidean distance) = 0 for two 2D segments

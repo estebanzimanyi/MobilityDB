@@ -40,6 +40,62 @@ SELECT cbuffer 'Cbuffer(Point(1 1),0.5)xxx';
 ERROR:  Could not parse cbuffer value: Extraneous characters at the end
 LINE 1: SELECT cbuffer 'Cbuffer(Point(1 1),0.5)xxx';
                        ^
+SELECT asText(cbuffer 'SRID=5676;Cbuffer(Point(1 1),0.5)');
+         astext          
+-------------------------
+ Cbuffer(POINT(1 1),0.5)
+(1 row)
+
+SELECT asEWKT(cbuffer 'SRID=5676;Cbuffer(Point(1 1),0.5)');
+              asewkt               
+-----------------------------------
+ SRID=5676;Cbuffer(POINT(1 1),0.5)
+(1 row)
+
+SELECT asBinary(cbuffer 'SRID=5676;Cbuffer(Point(1 1),0.5)');
+                        asbinary                        
+--------------------------------------------------------
+ \x0140000000000000f03f000000000000f03f000000000000e03f
+(1 row)
+
+SELECT asEWKB(cbuffer 'SRID=5676;Cbuffer(Point(1 1),0.5)');
+                             asewkb                             
+----------------------------------------------------------------
+ \x01402c160000000000000000f03f000000000000f03f000000000000e03f
+(1 row)
+
+SELECT asHexEWKB(cbuffer 'SRID=5676;Cbuffer(Point(1 1),0.5)');
+                          ashexewkb                           
+--------------------------------------------------------------
+ 01402C160000000000000000F03F000000000000F03F000000000000E03F
+(1 row)
+
+SELECT cbufferFromText(asText(cbuffer 'SRID=5676;Cbuffer(Point(1 1),0.5)'));
+                     cbufferfromtext                     
+---------------------------------------------------------
+ Cbuffer(0101000000000000000000F03F000000000000F03F,0.5)
+(1 row)
+
+SELECT cbufferFromEWKT(asEWKT(cbuffer 'SRID=5676;Cbuffer(Point(1 1),0.5)'));
+                         cbufferfromewkt                         
+-----------------------------------------------------------------
+ Cbuffer(01010000202C160000000000000000F03F000000000000F03F,0.5)
+(1 row)
+
+SELECT cbufferFromBinary(asBinary(cbuffer 'SRID=5676;Cbuffer(Point(1 1),0.5)'));
+ERROR:  WKB structure does not match expected size!
+SELECT cbufferFromEWKB(asEWKB(cbuffer 'SRID=5676;Cbuffer(Point(1 1),0.5)'));
+                         cbufferfromewkb                         
+-----------------------------------------------------------------
+ Cbuffer(01010000202C160000000000000000F03F000000000000F03F,0.5)
+(1 row)
+
+SELECT cbufferFromHexEWKB(asHexEWKB(cbuffer 'SRID=5676;Cbuffer(Point(1 1),0.5)'));
+                       cbufferfromhexewkb                        
+-----------------------------------------------------------------
+ Cbuffer(01010000202C160000000000000000F03F000000000000F03F,0.5)
+(1 row)
+
 SELECT asText(cbuffer('Point(1 1)', 0.5));
          astext          
 -------------------------

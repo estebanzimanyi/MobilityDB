@@ -117,20 +117,19 @@ ensure_valid_tpose_tpose(const Temporal *temp1, const Temporal *temp2)
  * @param[out] t1,t2 Timestamps defining the resulting period, may be equal
  */
 int
-tposesegm_intersection_value(Datum start, Datum end, Datum value,
-  TimestampTz lower, TimestampTz upper, TimestampTz *t1, TimestampTz *t2)
+tposesegm_intersection_value(const Pose *start, const Pose *end,
+  const Pose *value, TimestampTz lower, TimestampTz upper, TimestampTz *t1,
+  TimestampTz *t2)
 {
   assert(lower < upper); assert(t1); assert(t2);
   /* We are sure that the trajectory is a line */
-  Datum geom_start = datum_pose_point(start);
-  Datum geom_end = datum_pose_point(end);
-  Datum geom = datum_pose_point(value);
+  GSERIALIZED *gs_start = pose_to_point(start);
+  GSERIALIZED *gs_end = pose_to_point(end);
+  GSERIALIZED *gs = pose_to_point(value);
   double dist;
   /* Compute the value taking into account position only */
-  double fraction = (double) pointsegm_locate(geom_start, geom_end, geom,
-    &dist);
-  pfree(DatumGetPointer(geom_start)); pfree(DatumGetPointer(geom_end));
-  pfree(DatumGetPointer(geom));
+  double fraction = (double) pointsegm_locate(gs_start, gs_end, gs, &dist);
+  pfree(gs_start); pfree(gs_end); pfree(gs);
   if (fraction < 0.0)
     return 0;
   /* Compare value with interpolated pose to take into account orientation as

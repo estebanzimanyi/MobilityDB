@@ -214,7 +214,8 @@ tpointsegm_timestamp_at_value1_iter(const TInstant *inst1,
   else
   {
     double dist;
-    double fraction = (double) pointsegm_locate(value1, value2, value, &dist);
+    double fraction = (double) pointsegm_locate(DatumGetGserializedP(value1),
+      DatumGetGserializedP(value2), DatumGetGserializedP(value), &dist);
     if (fraction < 0 || fabs(dist) >= MEOS_EPSILON)
       result = false;
     else

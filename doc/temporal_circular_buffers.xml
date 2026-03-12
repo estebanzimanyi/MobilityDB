@@ -883,6 +883,8 @@ SELECT tcbuffer '[Cbuffer(Point(1 1), 0.3)@2001-01-01,
 				<para>Ever and always relationships</para>
 				<para><varname>eContains({geometry,cbuffer,tcbuffer},{geometry,cbuffer,tcbuffer}) → boolean</varname></para>
 				<para><varname>aContains({geometry,cbuffer,tcbuffer},{geometry,cbuffer,tcbuffer}) → boolean</varname></para>
+				<para><varname>eCovers({geometry,cbuffer,tcbuffer},{geometry,cbuffer,tcbuffer}) → boolean</varname></para>
+				<para><varname>aCovers({geometry,cbuffer,tcbuffer},{geometry,cbuffer,tcbuffer}) → boolean</varname></para>
 				<para><varname>eDisjoint({geometry,cbuffer,tcbuffer},{geometry,cbuffer,tcbuffer}) → boolean</varname></para>
 				<para><varname>aDisjoint({geometry,cbuffer,tcbuffer},{geometry,cbuffer,tcbuffer}) → boolean</varname></para>
 				<para><varname>eDwithin({geometry,cbuffer,tcbuffer},{geometry,cbuffer,tcbuffer},float) → boolean</varname></para>
@@ -913,6 +915,7 @@ SELECT eIntersects(tcbuffer '[Cbuffer(Point(1 1), 0.1)@2001-01-01,
 				<indexterm significance="normal"><primary><varname>tTouches</varname></primary></indexterm>
 				<para>Spatiotemporal relationships</para>
 				<para><varname>tContains({geometry,cbuffer,tcbuffer},{geometry,cbuffer,tcbuffer}) → boolean</varname></para>
+				<para><varname>tCovers({geometry,cbuffer,tcbuffer},{geometry,cbuffer,tcbuffer}) → boolean</varname></para>
 				<para><varname>tDisjoint({geometry,cbuffer,tcbuffer},{geometry,cbuffer,tcbuffer}) → boolean</varname></para>
 				<para><varname>tDwithin({geometry,cbuffer,tcbuffer},{geometry,cbuffer,tcbuffer},float) → boolean</varname></para>
 				<para><varname>tIntersects({geometry,cbuffer,tcbuffer},{geometry,cbuffer,tcbuffer}) → boolean</varname></para>

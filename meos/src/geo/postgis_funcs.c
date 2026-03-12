@@ -1153,7 +1153,7 @@ geo_makeline_garray(GSERIALIZED **gsarr, int count)
       if (! ensure_same_srid(srid, geoms[ngeoms - 1]->srid))
       {
         for (int j = 0; j < ngeoms; j++)
-          lwgeom_free(geoms[i]);
+          lwgeom_free(geoms[j]);
         pfree(geoms);
         return NULL;
       }
@@ -1166,8 +1166,6 @@ geo_makeline_garray(GSERIALIZED **gsarr, int count)
     /* TODO: should we return LINESTRING EMPTY here ? */
     meos_error(NOTICE, MEOS_ERR_INVALID_ARG_VALUE,
       "No points or linestrings in input array");
-    for (int i = 0; i < ngeoms; i++)
-      lwgeom_free(geoms[i]);
     return NULL;
   }
   LWGEOM *outlwg = (LWGEOM *) lwline_from_lwgeom_array(srid, ngeoms, geoms);
@@ -2179,18 +2177,17 @@ geom_intersection2d_coll(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   }
   /* Construct the result */
   GSERIALIZED *result = NULL;
-  if (count)
+  if (count == 0)
+    pfree(res);
+  else if (count == 1)
   {
-    if (count == 1)
-    {
-      result = res[0];
-      pfree(res);
-    }
-    else
-    {
-      result = geo_collect_garray(res, count);
-      pfree_array((void *) res, count);
-    }
+    result = res[0];
+    pfree(res);
+  }
+  else /* count > 1 */
+  {
+    result = geo_collect_garray(res, count);
+    pfree_array((void *) res, count);
   }
   /* Clean up and return */
   pfree_array((void *) elems1, count1);
