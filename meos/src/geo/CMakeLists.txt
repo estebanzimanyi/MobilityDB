@@ -8,6 +8,7 @@ set(GEO_SRCS
   tgeo_boxops.c
   tgeo_compops.c
   tgeo_distance.c
+  tgeo_fast_clip.c
   tgeo_restrict.c
   tgeo_spatialfuncs.c
   tgeo_spatialrels.c

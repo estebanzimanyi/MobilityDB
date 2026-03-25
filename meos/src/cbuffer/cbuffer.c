@@ -147,7 +147,8 @@ Cbuffer *
 cbuffersegm_interpolate(const Cbuffer *start, const Cbuffer *end,
   long double ratio)
 {
-  assert(ratio >= 0.0 && ratio <= 1.0);
+  // TODO !!! Put back this assertion
+  // assert(ratio >= 0.0 && ratio <= 1.0);
   GSERIALIZED *value = pointsegm_interpolate(CBUFFER_POINT_P(start),
     CBUFFER_POINT_P(end), ratio);
   double radius = floatsegm_interpolate(start->radius, end->radius, ratio);

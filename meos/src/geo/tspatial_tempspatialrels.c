@@ -1479,7 +1479,7 @@ tdwithin_tlinearseqset_base(const TSequenceSet *ss, Datum point, Datum dist,
  * @note The function assumes that all validity tests have been previously done
  */
 Temporal *
-tdwithin_tspatial_spatial(const Temporal *temp, Datum base, Datum dist,
+tdwithin_tspatial_base(const Temporal *temp, Datum base, Datum dist,
   bool restr, bool atvalue, datum_func3 func, tpfunc_temp tpfn)
 {
   assert(temp); assert(DatumGetPointer(base));
@@ -1569,7 +1569,7 @@ tdwithin_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, double dist,
     &datum_geom_dwithin3d : &datum_geom_dwithin2d;
   tpfunc_temp tpfn = &tpointsegm_tdwithin_turnpt;
   /* Call the generic function passing the two functions as arguments */
-  return tdwithin_tspatial_spatial(temp, PointerGetDatum(gs),
+  return tdwithin_tspatial_base(temp, PointerGetDatum(gs),
     Float8GetDatum(dist), restr, atvalue, func, tpfn);
 }
 

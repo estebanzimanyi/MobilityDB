@@ -1396,7 +1396,7 @@ tpoint_at_stbox_segm(const Temporal *temp, const STBox *box, bool border_inc)
 
 /**
  * @brief Return a temporal point instant restricted to (the complement of) a
- * spatiotemporal box (iterator function)
+ * geometry (iterator function)
  * @pre The arguments have the same SRID, the geometry is 2D and is not empty.
  * This is verified in #tgeo_restrict_geom
  */
@@ -1773,6 +1773,10 @@ tpointseq_linear_at_geom(const TSequence *seq, const GSERIALIZED *gs)
   if (! overlaps_stbox_stbox(&box1, &box2))
     return NULL;
 
+  /* Fast clipping for (multi)polygons */
+  uint32_t gs_type = gserialized_get_type(gs);
+  if (gs_type == POLYGONTYPE || gs_type == MULTIPOLYGONTYPE)
+
   /* Convert the point to 2D before computing the restriction to geometry */
   bool hasz = MEOS_FLAGS_GET_Z(seq->flags);
   TSequence *seq2d = hasz ?
@@ -2044,7 +2048,6 @@ tgeo_restrict_geom(const Temporal *temp, const GSERIALIZED *gs,
 {
   /* Ensure the validity of the arguments */
   VALIDATE_TGEO(temp, NULL); VALIDATE_NOT_NULL(gs, NULL); 
-  /* Ensure the validity of the arguments */
   if (! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)) ||
       ! ensure_has_not_Z_geo(gs) ||
       (zspan && ! ensure_has_Z(temp->temptype, temp->flags)) ||

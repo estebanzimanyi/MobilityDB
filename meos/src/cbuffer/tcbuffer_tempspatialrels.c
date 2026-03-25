@@ -1269,7 +1269,7 @@ tdwithin_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb, double dist,
 
   /* Call the generic function passing the distance and the turning point
    * functions to be applied */
-  return tdwithin_tspatial_spatial(temp, PointerGetDatum(cb),
+  return tdwithin_tspatial_base(temp, PointerGetDatum(cb),
     Float8GetDatum(dist), restr, atvalue, &datum_cbuffer_dwithin,
     &tcbuffersegm_dwithin_turnpt);
 }

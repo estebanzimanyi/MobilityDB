@@ -134,11 +134,8 @@ tposesegm_intersection_value(const Pose *start, const Pose *end,
     return 0;
   /* Compare value with interpolated pose to take into account orientation as
    * well */
-  const Pose *pose1 = DatumGetPoseP(start);
-  const Pose *pose2 = DatumGetPoseP(end);
-  Pose *pose_interp = posesegm_interpolate(pose1, pose2, fraction);
-  Pose *pose = DatumGetPoseP(value);
-  bool same = pose_same(pose, pose_interp);
+  Pose *pose_interp = posesegm_interpolate(start, end, fraction);
+  bool same = pose_same(value, pose_interp);
   /* Temporal rigid geometries have poses as base values but are restricted
    * to geometries */
   // bool same;

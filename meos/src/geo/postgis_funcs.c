@@ -4172,7 +4172,7 @@ mec_welzl(POINT2D *P, POINT2D *R, int n, int r)
     return D;
 
   R[r] = p;
-  return mec_welzl(P, R, n-1, r + 1);
+  return mec_welzl(P, R, n - 1, r + 1);
 }
 
 /**

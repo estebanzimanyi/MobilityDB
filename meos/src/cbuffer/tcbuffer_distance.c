@@ -42,6 +42,9 @@
 #include "cbuffer/cbuffer.h"
 #include "cbuffer/tcbuffer.h"
 
+/* Defined in liblwgeom_internal.h */
+#define PGIS_FP_TOLERANCE 1e-12
+
 /*****************************************************************************
  * Turning point functions
  *****************************************************************************/
@@ -77,10 +80,9 @@ cbuffersegm_distance_turnpt_internal(double dx0, double dy0, double r0,
   double b = dx0 * vx + dy0 * vy - r0 * vr;
 
   /* Compute relative time (in seconds) where derivative is zero */
-  const double EPS = 1e-12;
   const double EPS_TIME = 1e-6;
   double t_rel;
-  if (fabs(a) < EPS)
+  if (fabs(a) < PGIS_FP_TOLERANCE)
   {
     /* No true internal turning point */
     *t1 = *t2 = (TimestampTz) 0;
