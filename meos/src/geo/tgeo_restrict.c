@@ -56,6 +56,9 @@
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/tgeo_spatialrels.h"
 
+extern TSequenceSet *tpointseq_linear_at_poly(const TSequence *seq,
+  const GSERIALIZED *gs);
+
 /*****************************************************************************/
 
 #if MEOS
@@ -1395,7 +1398,7 @@ tpoint_at_stbox_segm(const Temporal *temp, const STBox *box, bool border_inc)
 
 /**
  * @brief Return a temporal point instant restricted to (the complement of) a
- * spatiotemporal box (iterator function)
+ * geometry (iterator function)
  * @pre The arguments have the same SRID, the geometry is 2D and is not empty.
  * This is verified in #tgeo_restrict_geom
  */
@@ -1877,11 +1880,12 @@ tpointseq_linear_restrict_geom(const TSequence *seq, const GSERIALIZED *gs,
   assert(MEOS_FLAGS_LINEAR_INTERP(seq->flags));
   assert(seq->count > 1);
 
-  /* Compute atGeometry for the sequence */
+  TSequenceSet *result_at = NULL;
+
+  /* Clip the temporal point to the geometry */
   TSequenceSet *at_xy = tpointseq_linear_at_geom(seq, gs);
 
   /* Restrict to the Z dimension */
-  TSequenceSet *result_at = NULL;
   if (at_xy)
   {
     if (zspan)
@@ -1890,14 +1894,15 @@ tpointseq_linear_restrict_geom(const TSequence *seq, const GSERIALIZED *gs,
       STBox box1;
       tspatialseqset_set_stbox(at_xy, &box1);
       Span zspan1;
-      span_set(Float8GetDatum(box1.zmin), Float8GetDatum(box1.zmax), true, true,
-        T_FLOAT8, T_FLOATSPAN, &zspan1);
+      span_set(Float8GetDatum(box1.zmin), Float8GetDatum(box1.zmax),
+        true, true, T_FLOAT8, T_FLOATSPAN, &zspan1);
       if (overlaps_span_span(&zspan1, zspan))
       {
         /* Get the Z coordinate values as a temporal float */
         Temporal *tfloat_z = tpoint_get_coord((Temporal *) at_xy, 2);
         /* Restrict to the zspan */
-        Temporal *tfloat_zspan = tnumber_restrict_span(tfloat_z, zspan, REST_AT);
+        Temporal *tfloat_zspan = tnumber_restrict_span(tfloat_z, zspan,
+          REST_AT);
         pfree(tfloat_z);
         if (tfloat_zspan)
         {
@@ -2043,7 +2048,6 @@ tgeo_restrict_geom(const Temporal *temp, const GSERIALIZED *gs,
 {
   /* Ensure the validity of the arguments */
   VALIDATE_TGEO(temp, NULL); VALIDATE_NOT_NULL(gs, NULL); 
-  /* Ensure the validity of the arguments */
   if (! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)) ||
       ! ensure_has_not_Z_geo(gs) ||
       (zspan && ! ensure_has_Z(temp->temptype, temp->flags)) ||
