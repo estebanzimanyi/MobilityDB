@@ -142,6 +142,7 @@ extract_point(const LWPOINT *pt, MeosArray *edges)
   e.ring_type = 0;
   e.delta = 0;
   meos_array_add(edges, &e);
+  return;
 }
 
 /**
@@ -155,6 +156,7 @@ extract_mpoint(const LWMPOINT *mp, MeosArray *edges)
   {
     extract_point((const LWPOINT *) mp->geoms[i], edges);
   }
+  return;
 }
 
 /**
@@ -167,6 +169,7 @@ extract_line(const LWLINE *line, MeosArray *edges)
 {
   const POINTARRAY *pa = line->points;
   emit_ring_edges(pa, 0, edges);
+  return;
 }
 
 /**
@@ -181,6 +184,7 @@ extract_mline(const LWMLINE *ml, MeosArray *edges)
     const LWLINE *line = (const LWLINE *) ml->geoms[i];
     extract_line(line, edges);
   }
+  return;
 }
 
 /**
@@ -307,42 +311,6 @@ geom_extract_edges(const LWGEOM *geom)
  *****************************************************************************/
 
 /**
- * @brief Return true if a segment defined by two points intersects a polygon
- * edge, 0 otherwise
- * @param[in] a,b Points defining the segment
- * @param[in] e Polygon edge
- * @param[out] t Fraction in [0,1] determining the intersection point 
- */
-static bool
-linesegm_intersect(POINT4D a, POINT4D b, Edge e, double *t)
-{
-  double dx = b.x - a.x;
-  double dy = b.y - a.y;
-
-  double ex = e.x2 - e.x1;
-  double ey = e.y2 - e.y1;
-
-  /* Compute the determinant */
-  double det = dx * (-ey) + dy * ex;
-  if (fabs(det) < POSTGIS_FP_TOLERANCE)
-    return false;
-
-  double cx = e.x1 - a.x;
-  double cy = e.y1 - a.y;
-
-  double t1 = (cx * (-ey) + cy * ex) / det;
-  if (t1 < 0 || t1 > 1)
-    return false;
-
-  *t = t1;
-  return true;
-}
-
-/*****************************************************************************
- * Events
- *****************************************************************************/
-
-/**
  * @brief Return the double obtained by clamping a double to [0,1]
  */
 static inline double
@@ -352,31 +320,144 @@ clamp01(double t)
 }
 
 /**
- * @brief Build the sweep events obtained by collecting the intersections
- * between a segment and an array of geometry edges
+ * @brief Return true if a segment defined by two points intersects an edge,
+ * false otherwise
+ * @param[in] a,b Points defining the segment
+ * @param[in] e Edge
+ * @param[out] t Fraction in [0,1] determining the intersection point 
+ */
+static int
+linesegm_intersect(TrajPoint a, TrajPoint b, const Edge *e, double *t0,
+  double *t1)
+{
+  double dx = b.x - a.x;
+  double dy = b.y - a.y;
+  double ex = e->x2 - e->x1;
+  double ey = e->y2 - e->y1;
+  /* Compute the determinant */
+  double det = dx * (-ey) + dy * ex;
+  double cx = e->x1 - a.x;
+  double cy = e->y1 - a.y;
+
+  /* Case 1: Parallel or collinear */
+  if (fabs(det) < POSTGIS_FP_TOLERANCE)
+  {
+    /* Check collinearity */
+    if (fabs(dx * cy - dy * cx) > POSTGIS_FP_TOLERANCE)
+      return 0;
+
+    /* Project onto dominant axis */
+    double tA0, tA1;
+    if (fabs(dx) > fabs(dy))
+    {
+      if (fabs(dx) < POSTGIS_FP_TOLERANCE)
+        return 0;
+      tA0 = (e->x1 - a.x) / dx;
+      tA1 = (e->x2 - a.x) / dx;
+    }
+    else
+    {
+      if (fabs(dy) < POSTGIS_FP_TOLERANCE)
+        return 0;
+      tA0 = (e->y1 - a.y) / dy;
+      tA1 = (e->y2 - a.y) / dy;
+    }
+
+    if (tA0 > tA1)
+    {
+      double tmp = tA0;
+      tA0 = tA1;
+      tA1 = tmp;
+    }
+
+    double lo = fmax(0.0, tA0);
+    double hi = fmin(1.0, tA1);
+    if (hi < lo)
+      return 0;
+
+    *t0 = clamp01(lo);
+    *t1 = clamp01(hi);
+    return 2; /* OVERLAP */
+  }
+
+  /* Case 2: Proper segment–segment intersection */
+  double t = (cx * (-ey) + cy * ex) / det;
+  double u = (cx * dy - cy * dx) / det;
+
+  /* Both parameters must be in [0,1] */
+  if (t < 0 || t > 1 || u < 0 || u > 1)
+    return 0;
+
+  *t0 = *t1 = clamp01(t);
+  return 1; /* POINT */
+}
+
+/*****************************************************************************
+ * Events
+ *****************************************************************************/
+
+/**
+ * @brief Build the events obtained by computing the intersections between a
+ * segment and an array of geometry edges
  * @param[in] a,b Points defining the segment
  * @param[in] e Array of geometry edges
  * @param[in] n Number of elements in the array
  * @param[inout] Dynamic array of the collected events 
  */
 static void
-build_events(POINT4D a, POINT4D b, const Edge *edges, int n, MeosArray *events)
+build_events(TrajPoint a, TrajPoint b, const Edge *edges, int n,
+  MeosArray *events)
 {
   for (int i = 0; i < n; i++)
   {
-    double t;
-    if (linesegm_intersect(a, b, edges[i], &t))
+    double t0, t1;
+    int type = linesegm_intersect(a, b, &edges[i], &t0, &t1);
+    if (! type)
+      continue;
+
+    if (type == 1)
     {
-      t = clamp01(t);
-      /* Signed contribution */
-      Event e = {t, edges[i].delta};
+      /* single intersection */
+      Event e = {t0, edges[i].delta};
       meos_array_add(events, &e);
     }
+    else /* type == 2 */
+    {
+      if (t0 > t1)
+      {
+        double tmp = t0;
+        t0 = t1;
+        t1 = tmp;
+      }
+
+      /* Skip degenerate overlaps ONLY here */
+      if (fabs(t1 - t0) < POSTGIS_FP_TOLERANCE)
+        continue;
+
+      /* Distinguish polygon vs line */
+      if (edges[i].ring_type == 0)
+      {
+        /* Linestring overlap -> always keep */
+        Event e1 = {t0, +1};
+        Event e2 = {t1, -1};
+        meos_array_add(events, &e1);
+        meos_array_add(events, &e2);
+      }
+      else
+      {
+        /* Polygon semantics */
+        Event e1 = {t0, edges[i].delta};
+        Event e2 = {t1, -edges[i].delta};
+        meos_array_add(events, &e1);
+        meos_array_add(events, &e2);
+      }
+    }
   }
+  return;
 }
 
 /**
- * @brief Comparator for sweep events
+ * @brief Comparator for intersecting events
  */
 static int
 event_cmp(const void *a, const void *b)
@@ -394,7 +475,9 @@ event_cmp(const void *a, const void *b)
  *****************************************************************************/
 
 /**
- * @brief Compute the intervals during which an intersecti
+ * @brief Compute the intervals during which an intersecting event occur
+ * @param[in]
+ * @param[inout]
  */
 static void
 sweep_xy(MeosArray *events, MeosArray *intervals, int initial_coverage)
@@ -406,34 +489,59 @@ sweep_xy(MeosArray *events, MeosArray *intervals, int initial_coverage)
 
   int coverage = initial_coverage;
   double start = 0.0;
-
-  /* already inside at t=0 */
-  if (coverage != 0)
+  bool inside = (coverage != 0);
+  if (inside)
     start = 0.0;
 
   for (int i = 0; i < n; i++)
   {
     int prev = coverage;
     coverage += ev[i].delta;
-
+    /* Entering region */
     if (prev == 0 && coverage != 0)
     {
       start = ev[i].t;
+      inside = true;
     }
+    /* Leaving region */
     else if (prev != 0 && coverage == 0)
     {
       ClipInterval in = {start, ev[i].t};
       meos_array_add(intervals, &in);
+      inside = false;
     }
   }
+  /* Close trailing interval if still inside */
+  if (inside)
+  {
+    ClipInterval in = {start, 1.0};
+    meos_array_add(intervals, &in);
+  }
+  return;
 }
+
 
 /*****************************************************************************
  * Clip a temporal sequence
  *****************************************************************************/
 
 /**
- * @brief Return the initial winding of a point wrt a set of polygon edges
+ * @brief Interpolate a trajectory point from two trajectory points and a
+ * factor in [0,1]
+ */
+TrajPoint
+trajpoint_interpolate(TrajPoint a, TrajPoint b, double u)
+{
+  TrajPoint p;
+  p.x = a.x + u * (b.x - a.x);
+  p.y = a.y + u * (b.y - a.y);
+  p.z = a.z + u * (b.z - a.z);
+  p.t = a.t + (TimestampTz) llround((b.t - a.t) * u);
+  return p;
+}
+
+/**
+ * @brief Return the initial winding of a 2D point wrt an array of edges
  */
 static int
 initial_winding(double x, double y, const Edge *edges, int nedges)
@@ -443,7 +551,7 @@ initial_winding(double x, double y, const Edge *edges, int nedges)
   {
     const Edge *e = &edges[i];
 
-    /* ignore horizontal edges (PostGIS standard rule) */
+    /* ignore horizontal edges as in PostGIS  */
     if (fabs(e->y1 - e->y2) < POSTGIS_FP_TOLERANCE)
       continue;
 
@@ -462,54 +570,131 @@ initial_winding(double x, double y, const Edge *edges, int nedges)
   return winding;
 }
 
+// /**
+ // * @brief Return in the dynamic array passed as last argument the clip events
+ // * found when looking for intersections between the segment defined by two
+ // * trajectory points with respect to the edges of a polygon 
+ // */
+// static int
+// linesegm_clip_xy(TrajPoint a, TrajPoint b, const Edge *edges, int nedges,
+  // MeosArray *events, MeosArray *intervals, MeosArray *result_points)
+// {
+  // events->count = 0;
+  // intervals->count = 0;
+
+  // /* XY clipping */
+  // build_events(a, b, edges, nedges, events);
+  // int init = initial_winding(a.x, a.y, edges, nedges);
+  // sweep_xy(events, intervals, init);
+  // if (intervals->count == 0)
+    // return 0;
+
+  // ClipInterval *arr = intervals->elems;
+  // int out_n = 0;
+
+  // for (int i = 0; i < (int) intervals->count; i++)
+  // {
+    // TrajPoint p0 = trajpoint_interpolate(a, b, arr[i].t0);
+    // TrajPoint p1 = trajpoint_interpolate(a, b, arr[i].t1);
+    // meos_array_add(result_points, &p0);
+    // meos_array_add(result_points, &p1);
+    // out_n += 2;
+  // }
+  // return out_n;
+// }
+
 /**
- * @brief Return the POINT4D obtained by interpolating two points with respect
- * to a fraction in [0,1]
+ * @brief Return true if two trajectory points are similar
  */
-static inline POINT4D
-point4d_interp(POINT4D a, POINT4D b, double t)
+static bool
+trajpoint_same(const TrajPoint *a, const TrajPoint *b)
 {
-  POINT4D p;
-  p.x = a.x + t * (b.x - a.x);
-  p.y = a.y + t * (b.y - a.y);
-  p.z = a.z + t * (b.z - a.z);
-  p.m = a.m + t * (b.m - a.m);
-  return p;
+  return fabs(a->x - b->x) < POSTGIS_FP_TOLERANCE &&
+         fabs(a->y - b->y) < POSTGIS_FP_TOLERANCE &&
+         fabs(a->z - b->z) < POSTGIS_FP_TOLERANCE &&
+         a->t == b->t;
 }
 
 /**
- * @brief Return in the dynamic array passed as last argument the clip events
- * found when looking for intersections between the segment defined by two
- * trajectory points with respect to the edges of a polygon 
+ * @brief Add a trajectory point to the dynamic array while avoiding to add
+ * duplicate points
  */
-int
-linesegm_clip_xy(POINT4D a, POINT4D b, const Edge *edges, int nedges,
-  MeosArray *events, MeosArray *intervals, MeosArray *result_points)
+static void
+add_new_point(MeosArray *arr, const TrajPoint *p)
 {
-  events->count = 0;
-  intervals->count = 0;
-
-  /* XY clipping */
-  build_events(a, b, edges, nedges, events);
-
-  int init = initial_winding(a.x, a.y, edges, nedges);
-  sweep_xy(events, intervals, init);
-
-  if (intervals->count == 0)
-    return 0;
-
-  ClipInterval *arr = intervals->elems;
-  int out_n = 0;
-
-  for (int i = 0; i < (int) intervals->count; i++)
+  if (arr->count == 0)
   {
-    POINT4D p0 = point4d_interp(a, b, arr[i].t0);
-    POINT4D p1 = point4d_interp(a, b, arr[i].t1);
-    meos_array_add(result_points, &p0);
-    meos_array_add(result_points, &p1);
-    out_n += 2;
+    meos_array_add(arr, (void *) p);
+    return;
   }
-  return out_n;
+
+  /* Skip duplicates, that is, same point + same timestamp*/
+  TrajPoint *last = &((TrajPoint *)arr->elems)[arr->count - 1];
+  if (trajpoint_same(last, (void *) p))
+    return;
+
+  /* Enforce strictly increasing timestamps */
+  if (p->t <= last->t)
+    return;
+
+  meos_array_add(arr, (void *) p);
+  return;
+}
+
+/**
+ * @brief Return a trajectory point from a 2D/3D temporal point
+ */
+static int
+trajpoint_time_cmp(const void *a, const void *b)
+{
+  const TrajPoint *p1 = a;
+  const TrajPoint *p2 = b;
+
+  if (p1->t < p2->t) return -1;
+  if (p1->t > p2->t) return 1;
+  return 0;
+}
+
+/**
+ * @brief Construct a temporal sequence from a sequence of trajectory points
+ */
+static TSequence *
+tsequence_from_trajpoints(TrajPoint *pts, int n, int32_t srid, bool hasz,
+  meosType temptype)
+{
+
+  TInstant **instants = palloc(sizeof(TInstant *) * n);
+  for (int i = 0; i < n; i++)
+  {
+    LWPOINT *pt = hasz ?
+      lwpoint_make3dz(srid, pts[i].x, pts[i].y, pts[i].z) :
+      lwpoint_make2d(srid, pts[i].x, pts[i].y);
+    GSERIALIZED *gs = geo_serialize((LWGEOM *) pt);
+    instants[i] = tinstant_make(PointerGetDatum(gs), temptype, pts[i].t);
+    lwpoint_free(pt);
+  }
+  return tsequence_make_free(instants, n, true, true, LINEAR, NORMALIZE);
+}
+
+/**
+ * @brief Construct a temporal sequence from a sequence of trajectory points
+ */
+static void
+sequence_flush(MeosArray *tpts, MeosArray *sequences, int32_t srid, bool hasz,
+  int temptype)
+{
+  if (tpts->count < 2)
+  {
+    tpts->count = 0;
+    return;
+  }
+  /* Sort the trajectory points */
+  qsort(tpts->elems, tpts->count, sizeof(TrajPoint), trajpoint_time_cmp);
+  /* Build the temporal sequence */
+  TSequence *s = tsequence_from_trajpoints(tpts->elems, tpts->count, srid,
+    hasz, temptype);
+  meos_array_add(sequences, &s);
+  tpts->count = 0;
 }
 
 /**
@@ -529,27 +714,11 @@ tinstant_to_trajpoint(const TInstant *inst)
 }
 
 /**
- * @brief Construct a temporal sequence from a sequence of trajectory points
- */
-static TSequence *
-tsequence_from_trajpoints(TrajPoint *pts, int n, int32_t srid, bool hasz,
-  meosType temptype)
-{
-  TInstant **instants = palloc(sizeof(TInstant *) * n);
-  for (int i = 0; i < n; i++)
-  {
-    LWPOINT *pt = hasz ?
-      lwpoint_make3dz(srid, pts[i].x, pts[i].y, pts[i].z) :
-      lwpoint_make2d(srid, pts[i].x, pts[i].y);
-    GSERIALIZED *gs = geo_serialize((LWGEOM *) pt);
-    instants[i] = tinstant_make(PointerGetDatum(gs), temptype, pts[i].t);
-    lwpoint_free(pt);
-  }
-  return tsequence_make_free(instants, n, true, true, LINEAR, NORMALIZE);
-}
-/**
  * @brief Clip a 2D/3D trajectory with linear interpolation with respect to a
  * geometry
+ * @param[in] seq Temporal sequence
+ * @param[in] edges Array of geometry edges
+ * @param[in] nedges Number of edges in the array
  */
 static TSequenceSet *
 tpointseq_clip(const TSequence *seq, const Edge *edges, int nedges)
@@ -557,98 +726,86 @@ tpointseq_clip(const TSequence *seq, const Edge *edges, int nedges)
   assert(MEOS_FLAGS_GET_INTERP(seq->flags) == LINEAR);
   assert(! MEOS_FLAGS_GET_GEODETIC(seq->flags));
 
+  /* Get spatial characteristics of the points */
   int32_t srid = tspatial_srid((Temporal *) seq);
   bool hasz = MEOS_FLAGS_GET_Z(seq->flags);
-
+  /* Initialize the dynamic arrays needed in the processing */
   MeosArray *sequences = meos_array_init(sizeof(TSequence *));
-  MeosArray *curr = meos_array_init(sizeof(POINT4D));
-  MeosArray *segpts = meos_array_init(sizeof(POINT4D));
-
-  /* reusable buffers */
-  MeosArray *events = meos_array_init(sizeof(Event));
+  MeosArray *tpts      = meos_array_init(sizeof(TrajPoint));
+  MeosArray *events    = meos_array_init(sizeof(Event));
   MeosArray *intervals = meos_array_init(sizeof(ClipInterval));
 
-  POINT4D a, b;
-  datum_point4d(tinstant_value_p(TSEQUENCE_INST_N(seq, 0)), &a);
+  /* Loop for all trajectory segments */
+  TrajPoint a = tinstant_to_trajpoint(TSEQUENCE_INST_N(seq, 0));
   for (int i = 1; i < seq->count; i++)
   {
-    datum_point4d(tinstant_value_p(TSEQUENCE_INST_N(seq, i)), &b);
+    TrajPoint b = tinstant_to_trajpoint(TSEQUENCE_INST_N(seq, i));
 
-    segpts->count = 0;
-    linesegm_clip_xy(a, b, edges, nedges, events, intervals, segpts);
+    /* Restart the arrays */
+    events->count = 0;
+    intervals->count = 0;
 
-    if (segpts->count == 0)
+    /* XY clipping */
+    build_events(a, b, edges, nedges, events);
+    int init = initial_winding(a.x, a.y, edges, nedges);
+    sweep_xy(events, intervals, init);
+    /* If no intersection */
+    if (intervals->count == 0)
     {
-      if (curr->count > 0)
-      {
-        TSequence *s = tsequence_from_trajpoints(
-          curr->elems, curr->count,
-          srid, hasz, seq->temptype);
-
-        meos_array_add(sequences, &s);
-        curr->count = 0;
-      }
+      sequence_flush(tpts, sequences, srid, hasz, seq->temptype);
       a = b;
       continue;
     }
 
-    POINT4D *pts = segpts->elems;
-
-    for (int j = 0; j < (int) segpts->count; j += 2)
+    ClipInterval *arr = intervals->elems;
+    for (int j = 0; j < (int) intervals->count; j++)
     {
-      POINT4D p0 = pts[j];
-      POINT4D p1 = pts[j + 1];
+      double t0 = arr[j].t0;
+      double t1 = arr[j].t1;
 
-      if (curr->count == 0)
+      /* Skip degenerate intervals */
+      if (fabs(t1 - t0) < POSTGIS_FP_TOLERANCE)
+        continue;
+
+      TrajPoint p0 = trajpoint_interpolate(a, b, t0);
+      TrajPoint p1 = trajpoint_interpolate(a, b, t1);
+
+      /* Start new sequence if needed  */
+      if (tpts->count == 0)
       {
-        meos_array_add(curr, &p0);
+        add_new_point(tpts, &p0);
       }
       else
       {
-        POINT4D *last = &((POINT4D *) curr->elems)[curr->count - 1];
-
-        if (fabs(last->x - p0.x) > 1e-9 ||
-            fabs(last->y - p0.y) > 1e-9 ||
-            fabs(last->z - p0.z) > 1e-9)
+        TrajPoint *last = &((TrajPoint *)tpts->elems)[tpts->count - 1];
+        /* Discontinuity -> flush */
+        if (! trajpoint_same(last, &p0))
         {
-          TSequence *s = tsequence_from_trajpoints(curr->elems, curr->count,
-            srid, hasz, seq->temptype);
-          meos_array_add(sequences, &s);
-          curr->count = 0;
-          meos_array_add(curr, &p0);
+          sequence_flush(tpts, sequences, srid, hasz, seq->temptype);
+          add_new_point(tpts, &p0);
         }
       }
-      meos_array_add(curr, &p1);
+      add_new_point(tpts, &p1);
     }
     a = b;
   }
 
-  /* final flush */
-  if (curr->count > 0)
-  {
-    TSequence *s = tsequence_from_trajpoints(
-      curr->elems, curr->count,
-      srid, hasz, seq->temptype);
-
-    meos_array_add(sequences, &s);
-  }
+  /* Final flush */
+  sequence_flush(tpts, sequences, srid, hasz, seq->temptype);
 
   if (sequences->count == 0)
   {
-    meos_array_destroy(curr, true);
-    meos_array_destroy(segpts, true);
+    meos_array_destroy(tpts, true);
     meos_array_destroy(events, true);
     meos_array_destroy(intervals, true);
     meos_array_destroy(sequences, true);
     return NULL;
   }
 
-  TSequenceSet *result =
-    tsequenceset_make_free(sequences->elems,
-      sequences->count, NORMALIZE);
+  TSequenceSet *result = tsequenceset_make_free(sequences->elems,
+    sequences->count, NORMALIZE);
 
-  meos_array_destroy(curr, true);
-  meos_array_destroy(segpts, true);
+  meos_array_destroy(tpts, true);
   meos_array_destroy(events, true);
   meos_array_destroy(intervals, true);
   meos_array_destroy(sequences, true);
@@ -667,7 +824,9 @@ tpointseq_clip(const TSequence *seq, const Edge *edges, int nedges)
 TSequenceSet *
 tpointseq_linear_at_geom(const TSequence *seq, const GSERIALIZED *gs)
 {
-   assert(MEOS_FLAGS_LINEAR_INTERP(seq->flags)); assert(seq->count > 1);
+  assert(MEOS_FLAGS_LINEAR_INTERP(seq->flags)); assert(seq->count > 1);
+  assert(! gserialized_is_empty(gs)); 
+  assert(! MEOS_FLAGS_GET_GEODETIC(seq->flags));
 
   /* Bounding box test */
   STBox box1, box2;
