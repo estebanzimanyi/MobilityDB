@@ -319,82 +319,200 @@ clamp01(double t)
   return t < 0 ? 0 : (t > 1 ? 1 : t);
 }
 
-/**
- * @brief Return true if a segment defined by two points intersects an edge,
- * false otherwise
- * @param[in] a,b Points defining the segment
- * @param[in] e Edge
- * @param[out] t Fraction in [0,1] determining the intersection point 
- */
-static int
-linesegm_intersect(TrajPoint a, TrajPoint b, const Edge *e, double *t0,
-  double *t1)
+// /**
+ // * @brief Return true if a segment defined by two points intersects an edge,
+ // * false otherwise
+ // * @param[in] a,b Points defining the segment
+ // * @param[in] e Edge
+ // * @param[out] t Fraction in [0,1] determining the intersection point 
+ // */
+// static int
+// linesegm_intersect_old(TrajPoint a, TrajPoint b, const Edge *e, double *t0,
+  // double *t1)
+// {
+  // double dx = b.x - a.x;
+  // double dy = b.y - a.y;
+  // double ex = e->x2 - e->x1;
+  // double ey = e->y2 - e->y1;
+  // double cx = e->x1 - a.x;
+  // double cy = e->y1 - a.y;
+
+  // /* Determinant */
+  // double det = dx * (-ey) + dy * ex;
+
+  // /* Case 1: Parallel or collinear */
+  // if (fabs(det) < POSTGIS_FP_TOLERANCE)
+  // {
+    // /* Not collinear -> reject */
+    // if (fabs(dx * cy - dy * cx) > POSTGIS_FP_TOLERANCE)
+      // return 0;
+
+    // /* Choose dominant axis for stability */
+    // double tA0, tA1;
+    // if (fabs(dx) >= fabs(dy))
+    // {
+      // if (fabs(dx) < POSTGIS_FP_TOLERANCE)
+        // return 0;
+      // tA0 = (e->x1 - a.x) / dx;
+      // tA1 = (e->x2 - a.x) / dx;
+    // }
+    // else
+    // {
+      // if (fabs(dy) < POSTGIS_FP_TOLERANCE)
+        // return 0;
+      // tA0 = (e->y1 - a.y) / dy;
+      // tA1 = (e->y2 - a.y) / dy;
+    // }
+
+    // if (tA0 > tA1)
+    // {
+      // double tmp = tA0;
+      // tA0 = tA1;
+      // tA1 = tmp;
+    // }
+
+    // /* Clamp BEFORE comparison to avoid FP noise */
+    // double lo = fmax(0.0, tA0);
+    // double hi = fmin(1.0, tA1);
+    // if (hi + POSTGIS_FP_TOLERANCE < lo)
+      // return 0;
+
+    // *t0 = clamp01(lo);
+    // *t1 = clamp01(hi);
+    // return (hi > lo) ? 2 : 1; /* OVERLAP : INTERSECT */
+  // }
+
+   // /* Case 2: Proper segment intersection */
+  // double inv_det = 1.0 / det;
+
+  // double t = (cx * (-ey) + cy * ex) * inv_det;
+  // double u = (cx * dy - cy * dx) * inv_det;
+
+  // /* Robust acceptance with tolerance */
+  // if (t < -POSTGIS_FP_TOLERANCE || t > 1.0 + POSTGIS_FP_TOLERANCE ||
+      // u < -POSTGIS_FP_TOLERANCE || u > 1.0 + POSTGIS_FP_TOLERANCE)
+    // return 0;
+
+  // /* Clamp to valid segment range */
+  // t = clamp01(t);
+  // u = clamp01(u);
+
+  // *t0 = t;
+  // *t1 = u;
+  // return 1;
+// }
+
+
+
+
+
+
+
+
+
+static inline int
+linesegm_intersect(double ax, double ay, double bx, double by,
+  double cx, double cy, double dx, double dy, double *t_out, double *u_out)
 {
-  double dx = b.x - a.x;
-  double dy = b.y - a.y;
-  double ex = e->x2 - e->x1;
-  double ey = e->y2 - e->y1;
-  /* Compute the determinant */
-  double det = dx * (-ey) + dy * ex;
-  double cx = e->x1 - a.x;
-  double cy = e->y1 - a.y;
+  /* --- vectors --- */
+  double r_x = bx - ax;
+  double r_y = by - ay;
+  double s_x = dx - cx;
+  double s_y = dy - cy;
 
-  /* Case 1: Parallel or collinear */
-  if (fabs(det) < POSTGIS_FP_TOLERANCE)
+  double qpx = cx - ax;
+  double qpy = cy - ay;
+
+  /* --- orientation / cross products --- */
+  double rxs = r_x * s_y - r_y * s_x;
+  double qpxr = qpx * r_y - qpy * r_x;
+
+  // double qpxs = qpx * s_y - qpy * s_x;
+
+  /* =========================================================
+   * CASE 1: COLLINEAR OR NEAR-COLLINEAR
+   * ========================================================= */
+  if (fabs(rxs) < POSTGIS_FP_TOLERANCE)
   {
-    /* Check collinearity */
-    if (fabs(dx * cy - dy * cx) > POSTGIS_FP_TOLERANCE)
+    /* Parallel case */
+    if (fabs(qpxr) > POSTGIS_FP_TOLERANCE)
+      return 0; /* not collinear → no intersection */
+
+    /* Collinear: project onto dominant axis */
+    double r2 = r_x * r_x + r_y * r_y;
+
+    if (r2 < POSTGIS_FP_TOLERANCE)
+      return 0; /* degenerate segment */
+
+    double t0 = (qpx * r_x + qpy * r_y) / r2;
+    double t1 = t0 + (s_x * r_x + s_y * r_y) / r2;
+
+    /* order */
+    if (t0 > t1)
+    {
+      double tmp = t0; t0 = t1; t1 = tmp;
+    }
+
+    /* intersection exists if overlap */
+    if (t1 < 0 || t0 > 1)
       return 0;
 
-    /* Project onto dominant axis */
-    double tA0, tA1;
-    if (fabs(dx) > fabs(dy))
-    {
-      if (fabs(dx) < POSTGIS_FP_TOLERANCE)
-        return 0;
-      tA0 = (e->x1 - a.x) / dx;
-      tA1 = (e->x2 - a.x) / dx;
-    }
-    else
-    {
-      if (fabs(dy) < POSTGIS_FP_TOLERANCE)
-        return 0;
-      tA0 = (e->y1 - a.y) / dy;
-      tA1 = (e->y2 - a.y) / dy;
-    }
+    /* clamp */
+    if (t_out) *t_out = t0 < 0 ? 0 : (t0 > 1 ? 1 : t0);
+    if (u_out) *u_out = 0; /* undefined in collinear case */
 
-    if (tA0 > tA1)
-    {
-      double tmp = tA0;
-      tA0 = tA1;
-      tA1 = tmp;
-    }
-
-    double lo = fmax(0.0, tA0);
-    double hi = fmin(1.0, tA1);
-    if (hi < lo)
-      return 0;
-
-    *t0 = clamp01(lo);
-    *t1 = clamp01(hi);
-    return 2; /* OVERLAP */
+    return 1;
   }
 
-  /* Case 2: Proper segment–segment intersection */
-  double t = (cx * (-ey) + cy * ex) / det;
-  double u = (cx * dy - cy * dx) / det;
+  /* =========================================================
+   * CASE 2: STANDARD INTERSECTION
+   * ========================================================= */
 
-  /* Both parameters must be in [0,1] */
+  double t = (qpx * s_y - qpy * s_x) / rxs;
+  double u = (qpxr) / rxs;
+
+  /* --- epsilon normalization --- */
+  if (fabs(t) < POSTGIS_FP_TOLERANCE) t = 0;
+  if (fabs(u) < POSTGIS_FP_TOLERANCE) u = 0;
+
+  if (fabs(t - 1.0) < POSTGIS_FP_TOLERANCE) t = 1;
+  if (fabs(u - 1.0) < POSTGIS_FP_TOLERANCE) u = 1;
+
+  /* --- rejection --- */
   if (t < 0 || t > 1 || u < 0 || u > 1)
     return 0;
 
-  *t0 = *t1 = clamp01(t);
-  return 1; /* POINT */
+  if (t_out) *t_out = t;
+  if (u_out) *u_out = u;
+
+  return 1;
 }
+
+
+
+
+
+
+
+
 
 /*****************************************************************************
  * Events
  *****************************************************************************/
+
+/**
+ * @brief Return true if the edges come from a polygon, false otherwise
+ */
+static bool
+edges_are_polygonal(const Edge *edges, int n)
+{
+  for (int i = 0; i < n; i++)
+  {
+    if (edges[i].ring_type != 0)
+      return true;
+  }
+  return false;
+}
 
 /**
  * @brief Build the events obtained by computing the intersections between a
@@ -404,57 +522,120 @@ linesegm_intersect(TrajPoint a, TrajPoint b, const Edge *e, double *t0,
  * @param[in] n Number of elements in the array
  * @param[inout] Dynamic array of the collected events 
  */
+// static void
+// build_events(TrajPoint a, TrajPoint b, const Edge *edges, int n,
+  // MeosArray *events)
+// {
+  // for (int i = 0; i < n; i++)
+  // {
+    // double t0, t1;
+    // int type = linesegm_intersect(a, b, &edges[i], &t0, &t1);
+    // if (! type)
+      // continue;
+    // if (type == 1)
+    // {
+      // /* single intersection */
+      // Event e = {t0, edges[i].delta};
+      // meos_array_add(events, &e);
+    // }
+    // else /* type == 2 */
+    // {
+      // if (t0 > t1)
+      // {
+        // double tmp = t0;
+        // t0 = t1;
+        // t1 = tmp;
+      // }
+
+      // /* Skip degenerate overlaps ONLY here */
+      // if (fabs(t1 - t0) < POSTGIS_FP_TOLERANCE)
+        // continue;
+
+      // /* Overlap: always use +1 / -1 */
+      // Event e1 = {t0, +1};
+      // Event e2 = {t1, -1};
+      // meos_array_add(events, &e1);
+      // meos_array_add(events, &e2);
+    // }
+  // }
+  // return;
+// }
+
 static void
-build_events(TrajPoint a, TrajPoint b, const Edge *edges, int n,
-  MeosArray *events)
+build_events(
+    TrajPoint a,
+    TrajPoint b,
+    const Edge *edges,
+    int n,
+    MeosArray *events)
 {
+  const double EPS = 1e-14;
+
   for (int i = 0; i < n; i++)
   {
-    double t0, t1;
-    int type = linesegm_intersect(a, b, &edges[i], &t0, &t1);
-    if (! type)
+    double t, u;
+
+    /* robust intersection kernel */
+    int ok = linesegm_intersect(
+        a.x, a.y,
+        b.x, b.y,
+        edges[i].x1, edges[i].y1,
+        edges[i].x2, edges[i].y2,
+        &t, &u);
+
+    if (!ok)
       continue;
 
-    if (type == 1)
+    /* normalize (CRITICAL for sweep stability) */
+    if (fabs(t) < EPS) t = 0;
+    if (fabs(u) < EPS) u = 0;
+    if (fabs(t - 1) < EPS) t = 1;
+    if (fabs(u - 1) < EPS) u = 1;
+
+    /* -----------------------------------------------------
+     * CASE 1: POINT INTERSECTION (t == u)
+     * ----------------------------------------------------- */
+    if (fabs(t - u) < EPS)
     {
-      /* single intersection */
+      Event e = {t, edges[i].delta};
+      meos_array_add(events, &e);
+      continue;
+    }
+
+    /* -----------------------------------------------------
+     * CASE 2: SEGMENT OVERLAP (interval on param axis)
+     * ----------------------------------------------------- */
+    double t0 = t;
+    double t1 = u;
+
+    if (t0 > t1)
+    {
+      double tmp = t0;
+      t0 = t1;
+      t1 = tmp;
+    }
+
+    /* skip degenerate overlaps */
+    if (fabs(t1 - t0) < EPS)
+    {
       Event e = {t0, edges[i].delta};
       meos_array_add(events, &e);
+      continue;
     }
-    else /* type == 2 */
-    {
-      if (t0 > t1)
-      {
-        double tmp = t0;
-        t0 = t1;
-        t1 = tmp;
-      }
 
-      /* Skip degenerate overlaps ONLY here */
-      if (fabs(t1 - t0) < POSTGIS_FP_TOLERANCE)
-        continue;
+    /* clamp for sweep stability */
+    if (t0 < 0) t0 = 0;
+    if (t1 > 1) t1 = 1;
 
-      /* Distinguish polygon vs line */
-      if (edges[i].ring_type == 0)
-      {
-        /* Linestring overlap -> always keep */
-        Event e1 = {t0, +1};
-        Event e2 = {t1, -1};
-        meos_array_add(events, &e1);
-        meos_array_add(events, &e2);
-      }
-      else
-      {
-        /* Polygon semantics */
-        Event e1 = {t0, edges[i].delta};
-        Event e2 = {t1, -edges[i].delta};
-        meos_array_add(events, &e1);
-        meos_array_add(events, &e2);
-      }
-    }
+    /* overlap becomes +1 / -1 event pair */
+    Event e1 = {t0, +1};
+    Event e2 = {t1, -1};
+
+    meos_array_add(events, &e1);
+    meos_array_add(events, &e2);
   }
-  return;
 }
+
 
 /**
  * @brief Comparator for intersecting events
@@ -468,6 +649,46 @@ event_cmp(const void *a, const void *b)
   if (e1->t < e2->t) return -1;
   if (e1->t > e2->t) return 1;
   return e2->delta - e1->delta;
+}
+
+/*****************************************************************************
+ * Sweep XY -> intervals (with initial winding)
+ *****************************************************************************/
+
+/**
+ * @brief Compute the intervals during which an intersecting event occur
+ * @param[in]
+ * @param[inout]
+ */
+static void
+sweep_line(MeosArray *events, MeosArray *intervals)
+{
+  Event *ev = events->elems;
+  int n = events->count;
+
+  if (n == 0)
+    return;
+
+  qsort(ev, n, sizeof(Event), event_cmp);
+
+  int coverage = 0;
+  double start = 0.0;
+
+  for (int i = 0; i < n; i++)
+  {
+    int prev = coverage;
+    coverage += ev[i].delta;
+
+    if (prev == 0 && coverage > 0)
+    {
+      start = ev[i].t;
+    }
+    else if (prev > 0 && coverage == 0)
+    {
+      ClipInterval in = {start, ev[i].t};
+      meos_array_add(intervals, &in);
+    }
+  }
 }
 
 /*****************************************************************************
@@ -569,39 +790,6 @@ initial_winding(double x, double y, const Edge *edges, int nedges)
   }
   return winding;
 }
-
-// /**
- // * @brief Return in the dynamic array passed as last argument the clip events
- // * found when looking for intersections between the segment defined by two
- // * trajectory points with respect to the edges of a polygon 
- // */
-// static int
-// linesegm_clip_xy(TrajPoint a, TrajPoint b, const Edge *edges, int nedges,
-  // MeosArray *events, MeosArray *intervals, MeosArray *result_points)
-// {
-  // events->count = 0;
-  // intervals->count = 0;
-
-  // /* XY clipping */
-  // build_events(a, b, edges, nedges, events);
-  // int init = initial_winding(a.x, a.y, edges, nedges);
-  // sweep_xy(events, intervals, init);
-  // if (intervals->count == 0)
-    // return 0;
-
-  // ClipInterval *arr = intervals->elems;
-  // int out_n = 0;
-
-  // for (int i = 0; i < (int) intervals->count; i++)
-  // {
-    // TrajPoint p0 = trajpoint_interpolate(a, b, arr[i].t0);
-    // TrajPoint p1 = trajpoint_interpolate(a, b, arr[i].t1);
-    // meos_array_add(result_points, &p0);
-    // meos_array_add(result_points, &p1);
-    // out_n += 2;
-  // }
-  // return out_n;
-// }
 
 /**
  * @brief Return true if two trajectory points are similar
@@ -747,8 +935,15 @@ tpointseq_clip(const TSequence *seq, const Edge *edges, int nedges)
 
     /* XY clipping */
     build_events(a, b, edges, nedges, events);
-    int init = initial_winding(a.x, a.y, edges, nedges);
-    sweep_xy(events, intervals, init);
+    if (edges_are_polygonal(edges, nedges))
+    {
+      int init = initial_winding(a.x, a.y, edges, nedges);
+      sweep_xy(events, intervals, init);
+    }
+    else
+    {
+      sweep_line(events, intervals);
+    }
     /* If no intersection */
     if (intervals->count == 0)
     {
@@ -795,20 +990,20 @@ tpointseq_clip(const TSequence *seq, const Edge *edges, int nedges)
 
   if (sequences->count == 0)
   {
-    meos_array_destroy(tpts, true);
-    meos_array_destroy(events, true);
-    meos_array_destroy(intervals, true);
-    meos_array_destroy(sequences, true);
+    meos_array_destroy(tpts, false);
+    meos_array_destroy(events, false);
+    meos_array_destroy(intervals, false);
+    meos_array_destroy(sequences, false);
     return NULL;
   }
 
   TSequenceSet *result = tsequenceset_make_free(sequences->elems,
     sequences->count, NORMALIZE);
 
-  meos_array_destroy(tpts, true);
-  meos_array_destroy(events, true);
-  meos_array_destroy(intervals, true);
-  meos_array_destroy(sequences, true);
+  meos_array_destroy(tpts, false);
+  meos_array_destroy(events, false);
+  meos_array_destroy(intervals, false);
+  meos_array_destroy(sequences, false);
 
   return result;
 }
