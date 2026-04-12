@@ -68,11 +68,12 @@
  */
 Datum
 EA_spatialrel_geo_tspatial(FunctionCallInfo fcinfo,
-  int (*func)(const GSERIALIZED *, const Temporal *, bool), bool ever)
+  int (*func)(const Temporal *, const GSERIALIZED *, bool, bool), 
+  bool ever)
 {
   GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
   Temporal *temp = PG_GETARG_TEMPORAL_P(1);
-  int result = func(gs, temp, ever);
+  int result = func(temp, gs, ever, INVERT);
   PG_FREE_IF_COPY(gs, 0);
   PG_FREE_IF_COPY(temp, 1);
   if (result < 0)
@@ -86,11 +87,12 @@ EA_spatialrel_geo_tspatial(FunctionCallInfo fcinfo,
  */
 Datum
 EA_spatialrel_tspatial_geo(FunctionCallInfo fcinfo,
-  int (*func)(const Temporal *, const GSERIALIZED *, bool), bool ever)
+  int (*func)(const Temporal *, const GSERIALIZED *, bool, bool), 
+  bool ever)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
-  int result = func(temp, gs, ever);
+  int result = func(temp, gs, ever, INVERT_NO);
   PG_FREE_IF_COPY(temp, 0);
   PG_FREE_IF_COPY(gs, 1);
   if (result < 0)
@@ -175,7 +177,7 @@ PG_FUNCTION_INFO_V1(Econtains_geo_tgeo);
 Datum
 Econtains_geo_tgeo(PG_FUNCTION_ARGS)
 {
-  return EA_spatialrel_geo_tspatial(fcinfo, &ea_contains_geo_tgeo, EVER);
+  return EA_spatialrel_geo_tspatial(fcinfo, &ea_contains_tgeo_geo, EVER);
 }
 
 PGDLLEXPORT Datum Acontains_geo_tgeo(PG_FUNCTION_ARGS);
@@ -188,7 +190,7 @@ PG_FUNCTION_INFO_V1(Acontains_geo_tgeo);
 Datum
 Acontains_geo_tgeo(PG_FUNCTION_ARGS)
 {
-  return EA_spatialrel_geo_tspatial(fcinfo, &ea_contains_geo_tgeo, ALWAYS);
+  return EA_spatialrel_geo_tspatial(fcinfo, &ea_contains_tgeo_geo, ALWAYS);
 }
 
 PGDLLEXPORT Datum Econtains_tgeo_geo(PG_FUNCTION_ARGS);
@@ -244,7 +246,7 @@ Acontains_tgeo_tgeo(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************
- * Ever covers
+ * Ever/always covers
  *****************************************************************************/
 
 PGDLLEXPORT Datum Ecovers_geo_tgeo(PG_FUNCTION_ARGS);
@@ -257,7 +259,7 @@ PG_FUNCTION_INFO_V1(Ecovers_geo_tgeo);
 Datum
 Ecovers_geo_tgeo(PG_FUNCTION_ARGS)
 {
-  return EA_spatialrel_geo_tspatial(fcinfo, &ea_covers_geo_tgeo, EVER);
+  return EA_spatialrel_geo_tspatial(fcinfo, &ea_covers_tgeo_geo, EVER);
 }
 
 PGDLLEXPORT Datum Acovers_geo_tgeo(PG_FUNCTION_ARGS);
@@ -270,7 +272,7 @@ PG_FUNCTION_INFO_V1(Acovers_geo_tgeo);
 Datum
 Acovers_geo_tgeo(PG_FUNCTION_ARGS)
 {
-  return EA_spatialrel_geo_tspatial(fcinfo, &ea_covers_geo_tgeo, ALWAYS);
+  return EA_spatialrel_geo_tspatial(fcinfo, &ea_covers_tgeo_geo, ALWAYS);
 }
 
 PGDLLEXPORT Datum Ecovers_tgeo_geo(PG_FUNCTION_ARGS);
@@ -326,7 +328,7 @@ Acovers_tgeo_tgeo(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************
- * Ever disjoint (for both geometry and geography)
+ * Ever/always disjoint (for both geometry and geography)
  *****************************************************************************/
 
 PGDLLEXPORT Datum Edisjoint_geo_tgeo(PG_FUNCTION_ARGS);
@@ -340,7 +342,7 @@ PG_FUNCTION_INFO_V1(Edisjoint_geo_tgeo);
 Datum
 Edisjoint_geo_tgeo(PG_FUNCTION_ARGS)
 {
-  return EA_spatialrel_geo_tspatial(fcinfo, &ea_disjoint_geo_tgeo, EVER);
+  return EA_spatialrel_geo_tspatial(fcinfo, &ea_disjoint_tgeo_geo, EVER);
 }
 
 PGDLLEXPORT Datum Adisjoint_geo_tgeo(PG_FUNCTION_ARGS);
@@ -354,7 +356,7 @@ PG_FUNCTION_INFO_V1(Adisjoint_geo_tgeo);
 Datum
 Adisjoint_geo_tgeo(PG_FUNCTION_ARGS)
 {
-  return EA_spatialrel_geo_tspatial(fcinfo, &ea_disjoint_geo_tgeo, ALWAYS);
+  return EA_spatialrel_geo_tspatial(fcinfo, &ea_disjoint_tgeo_geo, ALWAYS);
 }
 
 PGDLLEXPORT Datum Edisjoint_tgeo_geo(PG_FUNCTION_ARGS);
@@ -412,7 +414,7 @@ Adisjoint_tgeo_tgeo(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************
- * Ever intersects (for both geometry and geography)
+ * Ever/always intersects (for both geometry and geography)
  *****************************************************************************/
 
 PGDLLEXPORT Datum Eintersects_geo_tgeo(PG_FUNCTION_ARGS);
@@ -426,7 +428,7 @@ PG_FUNCTION_INFO_V1(Eintersects_geo_tgeo);
 Datum
 Eintersects_geo_tgeo(PG_FUNCTION_ARGS)
 {
-  return EA_spatialrel_geo_tspatial(fcinfo, &ea_intersects_geo_tgeo, EVER);
+  return EA_spatialrel_geo_tspatial(fcinfo, &ea_intersects_tgeo_geo, EVER);
 }
 
 PGDLLEXPORT Datum Aintersects_geo_tgeo(PG_FUNCTION_ARGS);
@@ -440,7 +442,7 @@ PG_FUNCTION_INFO_V1(Aintersects_geo_tgeo);
 Datum
 Aintersects_geo_tgeo(PG_FUNCTION_ARGS)
 {
-  return EA_spatialrel_geo_tspatial(fcinfo, &ea_intersects_geo_tgeo, ALWAYS);
+  return EA_spatialrel_geo_tspatial(fcinfo, &ea_intersects_tgeo_geo, ALWAYS);
 }
 
 PGDLLEXPORT Datum Eintersects_tgeo_geo(PG_FUNCTION_ARGS);
@@ -481,7 +483,8 @@ PG_FUNCTION_INFO_V1(Eintersects_tgeo_tgeo);
 Datum
 Eintersects_tgeo_tgeo(PG_FUNCTION_ARGS)
 {
-  return EA_spatialrel_tspatial_tspatial(fcinfo, &ea_intersects_tgeo_tgeo, EVER);
+  return EA_spatialrel_tspatial_tspatial(fcinfo, &ea_intersects_tgeo_tgeo,
+    EVER);
 }
 
 PGDLLEXPORT Datum Aintersects_tgeo_tgeo(PG_FUNCTION_ARGS);
@@ -494,7 +497,8 @@ PG_FUNCTION_INFO_V1(Aintersects_tgeo_tgeo);
 Datum
 Aintersects_tgeo_tgeo(PG_FUNCTION_ARGS)
 {
-  return EA_spatialrel_tspatial_tspatial(fcinfo, &ea_intersects_tgeo_tgeo, ALWAYS);
+  return EA_spatialrel_tspatial_tspatial(fcinfo, &ea_intersects_tgeo_tgeo,
+    ALWAYS);
 }
 
 /*****************************************************************************

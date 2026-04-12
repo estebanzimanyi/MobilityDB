@@ -351,7 +351,6 @@ Tcbuffer_minus_cbuffer(PG_FUNCTION_ARGS)
 
 /*****************************************************************************/
 
-
 /**
  * @brief Return a temporal circular buffer restricted to (the complement of)
  * a circular buffer

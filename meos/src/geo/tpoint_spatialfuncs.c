@@ -1713,6 +1713,7 @@ geomeas_tpointseq_linear(const LWGEOM *geom, bool hasz, bool geodetic)
   /* Verify that the trajectory is valid */
   if (! ensure_valid_trajectory(geom, hasz, false))
     return NULL;
+
   /* Geometry is a LINESTRING */
   LWLINE *lwline = lwgeom_as_lwline(geom);
   uint32_t npoints = lwline->points->npoints;

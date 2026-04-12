@@ -446,7 +446,7 @@ nai_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
   Temporal *tpoint = tcbuffer_to_tgeompoint(temp);
   TInstant *resultgeom = nai_tgeo_geo(tpoint, gs);
   /* We do not call the function tgeompointinst_tcbufferinst to avoid
-   * roundoff errors. The closest point may be at an exclusive bound. */
+   * roundoff errors. The closest point may be at an exclusive bound */
   Datum value;
   temporal_value_at_timestamptz(temp, resultgeom->t, false, &value);
   TInstant *result = tinstant_make_free(value, temp->temptype, resultgeom->t);
@@ -470,15 +470,27 @@ nai_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
   if (! ensure_valid_tcbuffer_cbuffer(temp, cb))
     return NULL;
 
-  GSERIALIZED *geom = cbuffer_to_geom(cb);
-  Temporal *tpoint = tcbuffer_to_tgeompoint(temp);
-  TInstant *resultgeom = nai_tgeo_geo(tpoint, geom);
-  /* We do not call the function tgeompointinst_tcbufferinst to avoid
-   * roundoff errors. The closest point may be at an exclusive bound. */
+  // GSERIALIZED *geom = cbuffer_to_geom(cb);
+  // Temporal *tpoint = tcbuffer_to_tgeompoint(temp);
+  // TInstant *resultgeom = nai_tgeo_geo(tpoint, geom);
+  // /* We do not call the function tgeompointinst_tcbufferinst to avoid
+   // * roundoff errors. The closest point may be at an exclusive bound */
+  // Datum value;
+  // temporal_value_at_timestamptz(temp, resultgeom->t, false, &value);
+  // TInstant *result = tinstant_make_free(value, temp->temptype, resultgeom->t);
+  // pfree(tpoint); pfree(resultgeom); pfree(geom);
+  // return result;
+
+  Temporal *dist = tdistance_tcbuffer_cbuffer(temp, cb);
+  if (dist == NULL)
+    return NULL;
+
+  const TInstant *min = temporal_min_inst_p((const Temporal *) dist);
+  /* The closest point may be at an exclusive bound */
   Datum value;
-  temporal_value_at_timestamptz(temp, resultgeom->t, false, &value);
-  TInstant *result = tinstant_make_free(value, temp->temptype, resultgeom->t);
-  pfree(tpoint); pfree(resultgeom); pfree(geom);
+  temporal_value_at_timestamptz(temp, min->t, false, &value);
+  TInstant *result = tinstant_make_free(value, temp->temptype, min->t);
+  pfree(dist);
   return result;
 }
 
@@ -487,7 +499,6 @@ nai_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
  * @brief Return the nearest approach instant of two temporal circular buffers
  * @param[in] temp1,temp2 Temporal circular buffers
  * @csqlfn #NAI_tcbuffer_tcbuffer()
- * @note This function needs to be implemented TODO
  */
 TInstant *
 nai_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
@@ -501,7 +512,7 @@ nai_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
     return NULL;
 
   const TInstant *min = temporal_min_inst_p((const Temporal *) dist);
-  /* The closest point may be at an exclusive bound. */
+  /* The closest point may be at an exclusive bound */
   Datum value;
   temporal_value_at_timestamptz(temp1, min->t, false, &value);
   TInstant *result = tinstant_make_free(value, temp1->temptype, min->t);
@@ -595,10 +606,17 @@ nad_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
   if (! ensure_valid_tcbuffer_cbuffer(temp, cb))
     return -1.0;
 
-  GSERIALIZED *geom = cbuffer_to_geom(cb);
-  GSERIALIZED *trav = tcbuffer_trav_area(temp, false);
-  double result = geom_distance2d(trav, geom);
-  pfree(trav); pfree(geom);
+  // GSERIALIZED *geom = cbuffer_to_geom(cb);
+  // GSERIALIZED *trav = tcbuffer_trav_area(temp, false);
+  // double result = geom_distance2d(trav, geom);
+  // pfree(trav); pfree(geom);
+  // return result;
+
+  Temporal *dist = tdistance_tcbuffer_cbuffer(temp, cb);
+  if (dist == NULL)
+    return -1.0;
+  double result = DatumGetFloat8(temporal_min_value(dist));
+  pfree(dist);
   return result;
 }
 
@@ -663,10 +681,23 @@ shortestline_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
   if (! ensure_valid_tcbuffer_cbuffer(temp, cb))
     return NULL;
 
-  GSERIALIZED *geom = cbuffer_to_geom(cb);
-  GSERIALIZED *trav = tcbuffer_trav_area(temp, false);
-  GSERIALIZED *result = geom_shortestline2d(trav, geom);
-  pfree(geom); pfree(trav);
+  // GSERIALIZED *geom = cbuffer_to_geom(cb);
+  // GSERIALIZED *trav = tcbuffer_trav_area(temp, false);
+  // GSERIALIZED *result = geom_shortestline2d(trav, geom);
+  // pfree(geom); pfree(trav);
+  // return result;
+
+  Temporal *dist = tdistance_tcbuffer_cbuffer(temp, cb);
+  if (dist == NULL)
+    return NULL;
+
+  const TInstant *min = temporal_min_inst_p((const Temporal *) dist);
+  /* The closest point may be at an exclusive bound */
+  Datum value;
+  temporal_value_at_timestamptz(temp, min->t, false, &value);
+  GSERIALIZED *gs = cbuffer_to_geom(cb);
+  GSERIALIZED *result = geom_shortestline2d(DatumGetGserializedP(value), gs);
+  pfree(dist); pfree(gs);
   return result;
 }
 
@@ -676,7 +707,6 @@ shortestline_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
  * temporal circular buffers
  * @param[in] temp1,temp2 Temporal circular buffers
  * @csqlfn #Shortestline_tcbuffer_tcbuffer()
- * @note This function needs to be implemented TODO
  */
 GSERIALIZED *
 shortestline_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
@@ -685,10 +715,24 @@ shortestline_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
   if (! ensure_valid_tcbuffer_tcbuffer(temp1, temp2))
     return NULL;
 
-  Temporal *tpoint1 = tcbuffer_to_tgeompoint(temp1);
-  Temporal *tpoint2 = tcbuffer_to_tgeompoint(temp2);
-  GSERIALIZED *result = shortestline_tgeo_tgeo(tpoint1, tpoint2);
-  pfree(tpoint1); pfree(tpoint2);
+  // GSERIALIZED *trav1 = tcbuffer_trav_area(temp1, false);
+  // GSERIALIZED *trav2 = tcbuffer_trav_area(temp2, false);
+  // GSERIALIZED *result = geom_shortestline2d(trav1, trav2);
+  // pfree(trav1); pfree(trav2);
+  // return result;
+
+  Temporal *dist = tdistance_tcbuffer_tcbuffer(temp1, temp2);
+  if (dist == NULL)
+    return NULL;
+
+  const TInstant *min = temporal_min_inst_p((const Temporal *) dist);
+  /* The closest point may be at an exclusive bound */
+  Datum value1, value2;
+  temporal_value_at_timestamptz(temp1, min->t, false, &value1);
+  temporal_value_at_timestamptz(temp2, min->t, false, &value2);
+  GSERIALIZED *result = geom_shortestline2d(DatumGetGserializedP(value1),
+    DatumGetGserializedP(value1));
+  pfree(dist);
   return result;
 }
 

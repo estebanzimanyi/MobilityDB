@@ -29,7 +29,7 @@
 
 /**
  * @file
- * @brief Ever/always spatial relationships for temporal geos
+ * @brief Ever/always spatial relationships for temporal geometries/geographies
  * @details These relationships compute the ever/always spatial relationship
  * between the arguments and return a Boolean. These functions may be used for
  * filtering purposes before applying the corresponding spatiotemporal
@@ -585,7 +585,7 @@ ea_spatialrel_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
  * for detailed explanations about the difference between both functions.
  */
 int
-ea_contains_tgeo_geo_common(const Temporal *temp, const GSERIALIZED *gs, bool ever,
+ea_contains_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever,
   bool invert)
 {
   VALIDATE_TGEO(temp, -1); VALIDATE_NOT_NULL(gs, -1);
@@ -594,35 +594,14 @@ ea_contains_tgeo_geo_common(const Temporal *temp, const GSERIALIZED *gs, bool ev
       ! ensure_not_geodetic_geo(gs) || ! ensure_has_not_Z_geo(gs) ||
       ! ensure_has_not_Z(temp->temptype, temp->flags))
     return -1;
-  char p[10] = "T********";
+
+  const char p[10] = "T********";
   int result = ever ?
     spatialrel_tgeo_geo(temp, gs, PointerGetDatum(&p),
       (varfunc) &datum_geom_relate_pattern, 3, invert) :
     spatialrel_tgeo_geo(temp, gs, (Datum) NULL,
       (varfunc) &datum_geom_contains, 2, invert);
   return result ? 1 : 0;
-}
-
-/**
- * @ingroup meos_internal_geo_rel_ever
- * @brief Return 1 if a temporal geometry ever/always contains a geo, 0 if not,
- * and -1 on error or if the geometry is empty
- */
-inline int
-ea_contains_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, bool ever)
-{
-  return ea_contains_tgeo_geo_common(temp, gs, ever, INVERT);
-}
-
-/**
- * @ingroup meos_internal_geo_rel_ever
- * @brief Return 1 if a temporal geometry ever/always contains a geo, 0 if not,
- * and -1 on error or if the geometry is empty
- */
-inline int
-ea_contains_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever)
-{
-  return ea_contains_tgeo_geo_common(temp, gs, ever, INVERT_NO);
 }
 
 #if MEOS
@@ -637,7 +616,7 @@ ea_contains_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever)
 int
 econtains_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp)
 {
-  return ea_contains_tgeo_geo_common(temp, gs, EVER, INVERT);
+  return ea_contains_tgeo_geo(temp, gs, EVER, INVERT);
 }
 
 /**
@@ -651,7 +630,7 @@ econtains_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp)
 int
 acontains_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp)
 {
-  return ea_contains_tgeo_geo_common(temp, gs, ALWAYS, INVERT);
+  return ea_contains_tgeo_geo(temp, gs, ALWAYS, INVERT);
 }
 
 /**
@@ -665,7 +644,7 @@ acontains_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp)
 int
 econtains_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
-  return ea_contains_tgeo_geo_common(temp, gs, EVER, INVERT_NO);
+  return ea_contains_tgeo_geo(temp, gs, EVER, INVERT_NO);
 }
 
 /**
@@ -679,7 +658,7 @@ econtains_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 int
 acontains_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
-  return ea_contains_tgeo_geo_common(temp, gs, ALWAYS, INVERT_NO);
+  return ea_contains_tgeo_geo(temp, gs, ALWAYS, INVERT_NO);
 }
 #endif /* MEOS */
 
@@ -761,7 +740,7 @@ acontains_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
  * for detailed explanations about the difference between both functions.
  */
 int
-ea_covers_tgeo_geo_int(const Temporal *temp, const GSERIALIZED *gs, bool ever,
+ea_covers_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever,
   bool invert)
 {
   VALIDATE_TGEO(temp, -1); VALIDATE_NOT_NULL(gs, -1);
@@ -770,6 +749,7 @@ ea_covers_tgeo_geo_int(const Temporal *temp, const GSERIALIZED *gs, bool ever,
       ! ensure_not_geodetic_geo(gs) || ! ensure_has_not_Z_geo(gs) ||
       ! ensure_has_not_Z(temp->temptype, temp->flags))
     return -1;
+
   int result = ever ?
     /* Iterate for each composing geometry */
     ea_spatialrel_tspatial_geo(temp, gs, &datum_geom_covers, EVER, invert) :
@@ -777,28 +757,6 @@ ea_covers_tgeo_geo_int(const Temporal *temp, const GSERIALIZED *gs, bool ever,
     spatialrel_tgeo_geo(temp, gs, (Datum) NULL, (varfunc) &datum_geom_covers,
       2, invert);
   return result ? 1 : 0;
-}
-
-/**
- * @ingroup meos_internal_geo_rel_ever
- * @brief Return 1 if a temporal geometry ever/always covers a geo, 0 if not,
- * and -1 on error or if the geometry is empty
- */
-inline int
-ea_covers_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, bool ever)
-{
-  return ea_covers_tgeo_geo_int(temp, gs, ever, INVERT);
-}
-
-/**
- * @ingroup meos_internal_geo_rel_ever
- * @brief Return 1 if a temporal geometry ever/always covers a geo, 0 if not,
- * and -1 on error or if the geometry is empty
- */
-inline int
-ea_covers_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever)
-{
-  return ea_covers_tgeo_geo_int(temp, gs, ever, INVERT_NO);
 }
 
 #if MEOS
@@ -813,7 +771,7 @@ ea_covers_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever)
 int
 ecovers_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp)
 {
-  return ea_covers_tgeo_geo_int(temp, gs, EVER, INVERT);
+  return ea_covers_tgeo_geo(temp, gs, EVER, INVERT);
 }
 
 /**
@@ -827,7 +785,7 @@ ecovers_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp)
 int
 acovers_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp)
 {
-  return ea_covers_tgeo_geo_int(temp, gs, ALWAYS, INVERT);
+  return ea_covers_tgeo_geo(temp, gs, ALWAYS, INVERT);
 }
 
 /**
@@ -841,7 +799,7 @@ acovers_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp)
 int
 ecovers_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
-  return ea_covers_tgeo_geo_int(temp, gs, EVER, INVERT_NO);
+  return ea_covers_tgeo_geo(temp, gs, EVER, INVERT_NO);
 }
 
 /**
@@ -855,7 +813,7 @@ ecovers_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 int
 acovers_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
-  return ea_covers_tgeo_geo_int(temp, gs, ALWAYS, INVERT_NO);
+  return ea_covers_tgeo_geo(temp, gs, ALWAYS, INVERT_NO);
 }
 #endif /* MEOS */
 
@@ -935,7 +893,8 @@ acovers_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
  * @csqlfn #Edisjoint_tgeo_geo()
  */
 int
-ea_disjoint_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever)
+ea_disjoint_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever,
+  bool invert)
 {
   VALIDATE_TGEO(temp, -1); VALIDATE_NOT_NULL(gs, -1);
   /* Ensure the validity of the arguments */
@@ -946,7 +905,7 @@ ea_disjoint_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever)
   /* ALWAYS */
   if (! ever)
   {
-    return INVERT_RESULT(ea_intersects_tgeo_geo(temp, gs, EVER));
+    return INVERT_RESULT(ea_intersects_tgeo_geo(temp, gs, EVER, invert));
   }
 
   /* EVER */
@@ -977,17 +936,6 @@ ea_disjoint_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever)
   return result;
 }
 
-/**
- * @ingroup meos_geo_rel_ever
- * @brief Return 1 if a temporal geometry and a geometry are ever disjoint,
- * 0 if not, and -1 on error or if the geometry is empty
- */
-inline int
-ea_disjoint_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, bool ever)
-{
-  return ea_disjoint_tgeo_geo(temp, gs, ever);
-}
-
 #if MEOS
 /**
  * @ingroup meos_geo_rel_ever
@@ -1000,7 +948,7 @@ ea_disjoint_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, bool ever)
 inline int
 edisjoint_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
-  return ea_disjoint_tgeo_geo(temp, gs, EVER);
+  return ea_disjoint_tgeo_geo(temp, gs, EVER, INVERT_NO);
 }
 
 /**
@@ -1014,7 +962,7 @@ edisjoint_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 inline int
 adisjoint_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
-  return ea_disjoint_tgeo_geo(temp, gs, ALWAYS);
+  return ea_disjoint_tgeo_geo(temp, gs, ALWAYS, INVERT_NO);
 }
 #endif /* MEOS */
 
@@ -1088,7 +1036,8 @@ adisjoint_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
  * @csqlfn #Eintersects_tgeo_geo()
  */
 int
-ea_intersects_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever)
+ea_intersects_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever,
+  bool invert)
 {
   VALIDATE_TGEO(temp, -1); VALIDATE_NOT_NULL(gs, -1);
   /* Ensure the validity of the arguments */
@@ -1097,24 +1046,14 @@ ea_intersects_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever)
 
   /* ALWAYS */
   if (! ever)
-    return INVERT_RESULT(ea_disjoint_tgeo_geo(temp, gs, EVER));
+    return INVERT_RESULT(ea_disjoint_tgeo_geo(temp, gs, EVER, INVERT_NO));
 
   /* EVER */
   datum_func2 func = geo_intersects_fn_geo(temp->flags, gs->gflags);
   return spatialrel_tgeo_geo(temp, gs, (Datum) NULL, (varfunc) func, 2,
-    INVERT_NO);
+    invert);
 }
 
-/**
- * @ingroup meos_geo_rel_ever
- * @brief Return 1 if a geometry intersects a temporal geometry, 0 if not,
- * and -1 on error or if the geometry is empty
- */
-inline int
-ea_intersects_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, bool ever)
-{
-  return ea_intersects_tgeo_geo(temp, gs, ever);
-}
 
 #if MEOS
 /**
@@ -1128,7 +1067,7 @@ ea_intersects_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, bool ever)
 inline int
 eintersects_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
-  return ea_intersects_tgeo_geo(temp, gs, EVER);
+  return ea_intersects_tgeo_geo(temp, gs, EVER, INVERT_NO);
 }
 
 /**
@@ -1142,7 +1081,7 @@ eintersects_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 inline int
 aintersects_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
-  return ea_intersects_tgeo_geo(temp, gs, ALWAYS);
+  return ea_intersects_tgeo_geo(temp, gs, ALWAYS, INVERT_NO);
 }
 #endif /* MEOS */
 
