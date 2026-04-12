@@ -143,12 +143,12 @@ linesegm_intersect(double ax, double ay, double rx, double ry,
 
   /* Are the two segments parallel?  */
   double rxs = rx * sy - ry * sx;
-  /* Is point C aligned with segment AB? */
-  double qpxr = qpx * ry - qpy * rx;
 
   /* Collinear / parallel */
   if (fabs(rxs) < FP_TOLERANCE)
   {
+    /* Is point C aligned with segment AB? */
+    double qpxr = qpx * ry - qpy * rx;
     /* If qpxr != 0: parallel, if qpxr == 0: collinear */
     if (fabs(qpxr) > FP_TOLERANCE)
       return res;

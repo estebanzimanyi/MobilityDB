@@ -663,8 +663,8 @@ tgeoseq_step_restrict_stbox(const TSequence *seq, const STBox *box,
  * @note The resulting timestamptz may be at an exclusive bound
  */
 static bool
-tpointsegm_timestamp_at_value(const TInstant *inst1,
-  const TInstant *inst2, Datum value, TimestampTz *t)
+tpointsegm_timestamp_at_value(const TInstant *inst1, const TInstant *inst2,
+  Datum value, TimestampTz *t)
 {
   Datum value1 = tinstant_value_p(inst1);
   Datum value2 = tinstant_value_p(inst2);

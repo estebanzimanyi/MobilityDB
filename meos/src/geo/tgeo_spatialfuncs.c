@@ -300,27 +300,23 @@ datum2_geog_centroid(Datum geo)
 /**
  * @brief Select the appropriate distance function
  */
-datum_func2
+inline datum_func2
 geo_distance_fn(int16 flags)
 {
-  if (MEOS_FLAGS_GET_GEODETIC(flags))
-    return &datum_geog_distance;
-  else
-    return MEOS_FLAGS_GET_Z(flags) ?
-      &datum_geom_distance3d : &datum_geom_distance2d;
+  return MEOS_FLAGS_GET_GEODETIC(flags) ? &datum_geog_distance :
+    ( MEOS_FLAGS_GET_Z(flags) ?
+      &datum_geom_distance3d : &datum_geom_distance2d );
 }
 
 /**
  * @brief Select the appropriate distance function
  */
-datum_func2
+inline datum_func2
 pt_distance_fn(int16 flags)
 {
-  if (MEOS_FLAGS_GET_GEODETIC(flags))
-    return &datum_geog_distance;
-  else
-    return MEOS_FLAGS_GET_Z(flags) ?
-      &datum_pt_distance3d : &datum_pt_distance2d;
+  return MEOS_FLAGS_GET_GEODETIC(flags) ?
+     &datum_geog_distance : ( MEOS_FLAGS_GET_Z(flags) ?
+      &datum_pt_distance3d : &datum_pt_distance2d );
 }
 
 /**
@@ -946,6 +942,69 @@ ensure_valid_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2)
   return true;
 }
 
+/*****************************************************************************/
+
+/**
+ * @brief Ensure that all geometries composing a temporal geo are points
+ * @param[in] inst Temporal instant
+ */
+bool
+ensure_tgeoinst_point_type(const TInstant *inst)
+{
+  assert(inst);
+  if (! ensure_point_type(DatumGetGserializedP(tinstant_value_p(inst))))
+    return false;
+  return true;
+}
+
+/**
+ * @brief Ensure that all geometries composing a temporal geo are points
+ * @param[in] seq Temporal sequence 
+
+ */
+bool
+ensure_tgeoseq_point_type(const TSequence *seq)
+{
+  assert(seq);
+  for (int i = 0; i < seq->count; i++)
+    if (! ensure_tgeoinst_point_type(TSEQUENCE_INST_N(seq, i)))
+      return false;
+  return true;
+}
+
+/**
+ * @brief Ensure that all geometries composing a temporal geo are points
+ * @param[in] ss Temporal sequence set
+
+ */
+bool
+ensure_tgeoseqset_point_type(const TSequenceSet *ss)
+{
+  assert(ss);
+  for (int i = 0; i < ss->count; i++)
+    if (! ensure_tgeoseq_point_type(TSEQUENCESET_SEQ_N(ss, i)))
+      return false;
+  return true;
+}
+
+/**
+ * @brief Ensure that all geometries composing a temporal geo are points
+ * @param[in] temp Temporal geo
+ */
+bool
+ensure_tgeo_point_type(const Temporal *temp)
+{
+  assert(temptype_subtype(temp->subtype));
+  switch (temp->subtype)
+  {
+    case TINSTANT:
+      return ensure_tgeoinst_point_type((TInstant *) temp);
+    case TSEQUENCE:
+      return ensure_tgeoseq_point_type((TSequence *) temp);
+    default: /* TSEQUENCESET */
+      return ensure_tgeoseqset_point_type((TSequenceSet *) temp);
+  }
+}
 
 /*****************************************************************************
  * Conversion functions
@@ -1080,70 +1139,6 @@ tgeography_to_tgeometry(const Temporal *temp)
   return tgeom_tgeog(temp, TGEOG_TO_TGEOM);
 }
 #endif /* MEOS */
-
-/*****************************************************************************/
-
-/**
- * @brief Ensure that all geometries composing a temporal geo are points
- * @param[in] inst Temporal instant
- */
-bool
-ensure_tgeoinst_point_type(const TInstant *inst)
-{
-  assert(inst);
-  if (! ensure_point_type(DatumGetGserializedP(tinstant_value_p(inst))))
-    return false;
-  return true;
-}
-
-/**
- * @brief Ensure that all geometries composing a temporal geo are points
- * @param[in] seq Temporal sequence 
-
- */
-bool
-ensure_tgeoseq_point_type(const TSequence *seq)
-{
-  assert(seq);
-  for (int i = 0; i < seq->count; i++)
-    if (! ensure_tgeoinst_point_type(TSEQUENCE_INST_N(seq, i)))
-      return false;
-  return true;
-}
-
-/**
- * @brief Ensure that all geometries composing a temporal geo are points
- * @param[in] ss Temporal sequence set
-
- */
-bool
-ensure_tgeoseqset_point_type(const TSequenceSet *ss)
-{
-  assert(ss);
-  for (int i = 0; i < ss->count; i++)
-    if (! ensure_tgeoseq_point_type(TSEQUENCESET_SEQ_N(ss, i)))
-      return false;
-  return true;
-}
-
-/**
- * @brief Ensure that all geometries composing a temporal geo are points
- * @param[in] temp Temporal geo
- */
-bool
-ensure_tgeo_point_type(const Temporal *temp)
-{
-  assert(temptype_subtype(temp->subtype));
-  switch (temp->subtype)
-  {
-    case TINSTANT:
-      return ensure_tgeoinst_point_type((TInstant *) temp);
-    case TSEQUENCE:
-      return ensure_tgeoseq_point_type((TSequence *) temp);
-    default: /* TSEQUENCESET */
-      return ensure_tgeoseqset_point_type((TSequenceSet *) temp);
-  }
-}
 
 /*****************************************************************************/
 
@@ -1859,7 +1854,6 @@ GSERIALIZED **
 geo_cluster_within(const GSERIALIZED **geoms, uint32_t ngeoms,
   double tolerance, int *count)
 {
-  /* Ensure validity of arguments */
   /* Ensure validity of arguments */
   if (! ensure_not_null(geoms) || ! ensure_not_null(count) || ngeoms == 0)
     return NULL;

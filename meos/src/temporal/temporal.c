@@ -2972,7 +2972,7 @@ tsequence_derivative(const TSequence *seq)
     const TInstant *inst2 = TSEQUENCE_INST_N(seq, i + 1);
     Datum value2 = tinstant_value_p(inst2);
     derivative = datum_eq(value1, value2, basetype) ? 0.0 :
-      datum_distance(value1, value2, basetype, seq->flags) / 
+      datum_distance(value1, value2, basetype, seq->temptype, seq->flags) / 
         ((double)(inst2->t - inst1->t) / 1000000);
     instants[i] = tinstant_make(Float8GetDatum(derivative), T_TFLOAT, inst1->t);
     inst1 = inst2;

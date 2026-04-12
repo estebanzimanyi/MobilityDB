@@ -171,21 +171,24 @@ tseqarr_normalize(TSequence **sequences, int count, int *newcount)
  * @return On error return -1.0
  */
 double
-datum_distance(Datum value1, Datum value2, meosType type, int16 flags)
+datum_distance(Datum value1, Datum value2, meosType basetype,
+  meosType temptype, int16 flags)
 {
-  if (tnumber_basetype(type))
-    return datum_double(distance_value_value(value1, value2, type), type);
-  if (geo_basetype(type))
+  if (tnumber_basetype(basetype))
+    return datum_double(distance_value_value(value1, value2, basetype),
+      basetype);
+  if (geo_basetype(basetype))
   {
-    datum_func2 point_distance = pt_distance_fn(flags);
-    return DatumGetFloat8(point_distance(value1, value2));
+    datum_func2 dist_fn = tpoint_type(temptype) ?
+      pt_distance_fn(flags) : geo_distance_fn(flags);
+    return DatumGetFloat8(dist_fn(value1, value2));
   }
 #if NPOINT
-  if (type == T_NPOINT)
+  if (basetype == T_NPOINT)
     return DatumGetFloat8(datum_npoint_distance(value1, value2));
 #endif
   meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
-    "Unknown types for distance between values: %s", meostype_name(type));
+    "Unknown types for distance between values: %s", meostype_name(basetype));
   return -1;
 }
 
@@ -453,7 +456,8 @@ int *
 ensure_valid_tinstarr_gaps(TInstant **instants, int count, bool merge,
   double maxdist, const Interval *maxt, int *nsplits)
 {
-  meosType basetype = temptype_basetype(instants[0]->temptype);
+  meosType temptype = instants[0]->temptype;
+  meosType basetype = temptype_basetype(temptype);
   /* Ensure that zero-fill is done */
   int *result = palloc0(sizeof(int) * count);
   Datum value1 = tinstant_value_p(instants[0]);
@@ -466,7 +470,7 @@ ensure_valid_tinstarr_gaps(TInstant **instants, int count, bool merge,
           (Temporal *) instants[i]))
       return NULL;
 #if NPOINT
-    if (instants[i]->temptype == T_TNPOINT &&
+    if (temptype == T_TNPOINT &&
         ! ensure_same_rid_tnpointinst(instants[i - 1], instants[i]))
       return NULL;
 #endif
@@ -475,7 +479,7 @@ ensure_valid_tinstarr_gaps(TInstant **instants, int count, bool merge,
     Datum value2 = tinstant_value_p(instants[i]);
     if (maxdist > 0.0 && ! datum_eq(value1, value2, basetype))
     {
-      double dist = datum_distance(value1, value2, basetype, flags);
+      double dist = datum_distance(value1, value2, basetype, temptype, flags);
       if (dist > maxdist)
         split = true;
     }

@@ -46,6 +46,7 @@
 #endif
 /* PostGIS */
 #include <liblwgeom.h>
+#include <liblwgeom_internal.h>
 #include <lwgeom_log.h>
 #include <intervaltree.h>
 #include <lwgeom_geos.h>
@@ -259,7 +260,6 @@ geom_centroid(const GSERIALIZED *gs)
 
   /* CURVEPOLYTYPE */
   GSERIALIZED *result;
-  double radius;
   if (type == POINTTYPE)
   {
     int32_t srid = gserialized_get_srid(gs);
@@ -273,7 +273,6 @@ geom_centroid(const GSERIALIZED *gs)
      * since it uses a double and not a long double for the interpolation */
     double x = p1.x + (double) ((long double) (p2.x - p1.x) * 0.5);
     double y = p1.y + (double) ((long double) (p2.y - p1.y) * 0.5);
-    radius = fabs(p2.x - p1.x) / 2;
     LWGEOM *center = (LWGEOM *) lwpoint_make2d(srid, x, y);
     result = geom_serialize(center);
     lwgeom_free((LWGEOM *) poly); lwgeom_free(center); 
@@ -281,6 +280,7 @@ geom_centroid(const GSERIALIZED *gs)
   else
   /* geotype != POINTTYPE && geotype != CURVEPOLYTYPE */
   {
+    double radius;
     result = geom_min_bounding_radius(gs, &radius);
   }
   return result;
@@ -3004,16 +3004,43 @@ geog_intersects(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
   return geog_dwithin(gs1, gs2, 0.0, use_spheroid);
 }
 
-/* Defined in liblwgeom_internal.h */
-#define PGIS_FP_TOLERANCE 1e-12
+/**
+ * @brief Return the distance between two geographies
+ * @param[in] lwgeom1,lwgeom2 Geographies
+ * @note Internal function used for iterating through instants
+ */
+double
+lwgeog_mindistance(const LWGEOM *lwgeom1, const LWGEOM *lwgeom2)
+{
+  assert(lwgeom1); assert(lwgeom2);
+  assert(lwgeom1->srid == lwgeom2->srid);
+
+  /* Initialize spheroid */
+  SPHEROID s;
+  spheroid_init_from_srid(lwgeom1->srid, &s);
+
+  /* Make sure we have boxes attached */
+  lwgeom_add_bbox_deep((LWGEOM *) lwgeom1, NULL);
+  lwgeom_add_bbox_deep((LWGEOM *) lwgeom2, NULL);
+
+  double tolerance = FP_TOLERANCE;
+  double distance = lwgeom_distance_spheroid(lwgeom1, lwgeom2, &s, tolerance);
+  /* Something went wrong, negative or infinite return... */
+  if (distance < 0.0 || distance == DBL_MAX)
+  {
+    meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
+      "geography_distance returned distance < 0.0");
+    return DBL_MAX;
+  }
+  return distance;
+}
 
 /**
  * @ingroup meos_geo_base_distance
  * @brief Return the distance between two geographies
  * @param[in] gs1,gs2 Geographies
  * @note PostGIS function: @p geography_distance_uncached(PG_FUNCTION_ARGS).
- * We set by default both @p tolerance and @p use_spheroid and initialize the
- * spheroid to WGS84
+ * We set by default @p tolerance and initialize the spheroid to WGS84
  * @return On error or empty geometries return DBL_MAX
  */
 double
@@ -3025,38 +3052,13 @@ geog_distance(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   if (gserialized_is_empty(gs1) || gserialized_is_empty(gs2) )
     return DBL_MAX;
 
-  double tolerance = PGIS_FP_TOLERANCE;
-  bool use_spheroid = true;
-
-  /* Initialize spheroid */
-  SPHEROID s;
-  spheroid_init_from_srid(gserialized_get_srid(gs1), &s);
-
-  /* Set to sphere if requested */
-  if (!  use_spheroid )
-    s.a = s.b = s.radius;
-
   LWGEOM *lwgeom1 = lwgeom_from_gserialized(gs1);
   LWGEOM *lwgeom2 = lwgeom_from_gserialized(gs2);
+  double distance = lwgeog_mindistance(lwgeom1, lwgeom2);
 
-  /* Make sure we have boxes attached */
-  lwgeom_add_bbox_deep(lwgeom1, NULL);
-  lwgeom_add_bbox_deep(lwgeom2, NULL);
-
-  double distance = lwgeom_distance_spheroid(lwgeom1, lwgeom2, &s, tolerance);
-
-  /* Clean up */
+  /* Clean up and return */
   lwgeom_free(lwgeom1);
   lwgeom_free(lwgeom2);
-
-  /* Something went wrong, negative or infinite return... */
-  if (distance < 0.0 || distance == DBL_MAX)
-  {
-    meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
-      "geography_distance returned distance < 0.0");
-    return DBL_MAX;
-  }
-
   return distance;
 }
 
@@ -4056,7 +4058,7 @@ line_substring(const GSERIALIZED *gs, double from, double to)
 GSERIALIZED *
 geom_min_bounding_radius(const GSERIALIZED *geom, double *radius)
 {
-  if (! geom)
+  if (! geom || ! radius)
     return NULL;
 
   LWGEOM *lwcenter = NULL;
