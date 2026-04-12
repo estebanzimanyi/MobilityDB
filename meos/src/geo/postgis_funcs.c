@@ -240,12 +240,8 @@ box3d_out(const BOX3D *box, int maxdd)
 /**
  * @ingroup meos_geo_base_spatial
  * @brief Return the centroid of a geometry
- * @note PostGIS function: @p centroid(PG_FUNCTION_ARGS). 
- */
-/**
- * @ingroup meos_geo_accessor
- * @brief Convert a geometry into a circular buffer
  * @param[in] gs Geometry
+ * @note PostGIS function: @p centroid(PG_FUNCTION_ARGS). 
  */
 GSERIALIZED *
 geom_centroid(const GSERIALIZED *gs)
@@ -260,7 +256,7 @@ geom_centroid(const GSERIALIZED *gs)
 
   /* CURVEPOLYTYPE */
   GSERIALIZED *result;
-  if (type == POINTTYPE)
+  if (type == CURVEPOLYTYPE)
   {
     int32_t srid = gserialized_get_srid(gs);
     LWCURVEPOLY *poly = (LWCURVEPOLY *) lwgeom_from_gserialized(gs);
@@ -297,7 +293,8 @@ geom_centroid(const GSERIALIZED *gs)
  * at least one fully contained member and no members
  * outside the polygon to be contained.
  */
-bool itree_pip_contains(const IntervalTree *itree, const LWGEOM *lwpoints)
+bool
+itree_pip_contains(const IntervalTree *itree, const LWGEOM *lwpoints)
 {
   if (lwgeom_get_type(lwpoints) == POINTTYPE)
   {
@@ -342,7 +339,8 @@ bool itree_pip_contains(const IntervalTree *itree, const LWGEOM *lwpoints)
  * If any point in the point/multipoint is outside
  * the polygon, then the polygon does not cover the point/multipoint.
  */
-bool itree_pip_covers(const IntervalTree *itree, const LWGEOM *lwpoints)
+bool
+itree_pip_covers(const IntervalTree *itree, const LWGEOM *lwpoints)
 {
   if (lwgeom_get_type(lwpoints) == POINTTYPE)
   {
@@ -375,7 +373,8 @@ bool itree_pip_covers(const IntervalTree *itree, const LWGEOM *lwpoints)
  * A.intersects(B) implies if any member of the point/multipoint
  * is not outside, then they intersect.
  */
-bool itree_pip_intersects(const IntervalTree *itree, const LWGEOM *lwpoints)
+bool
+itree_pip_intersects(const IntervalTree *itree, const LWGEOM *lwpoints)
 {
   if (lwgeom_get_type(lwpoints) == POINTTYPE)
   {
@@ -1515,7 +1514,7 @@ bool
 geom_spatialrel(const GSERIALIZED *gs1, const GSERIALIZED *gs2, spatialRel rel)
 {
   if (! ensure_valid_geo_geo(gs1, gs2))
-    return NULL;
+    return false;
 
   /* A.Intersects(Empty) == FALSE */
   if ( gserialized_is_empty(gs1) || gserialized_is_empty(gs2) )
@@ -2499,12 +2498,10 @@ geography_centroid_from_wpoints(const int32_t srid, const POINT3DM *points,
   double_t y_sum = 0;
   double_t z_sum = 0;
   double_t weight_sum = 0;
-  double_t weight = 1;
-  POINT3D* point;
   for (uint32_t i = 0; i < size; i++ )
   {
-    point = lonlat_to_cart(points[i].x, points[i].y);
-    weight = points[i].m;
+    POINT3D *point = lonlat_to_cart(points[i].x, points[i].y);
+    double_t weight = points[i].m;
     x_sum += point->x * weight;
     y_sum += point->y * weight;
     z_sum += point->z * weight;
@@ -3221,7 +3218,7 @@ geom_in(const char *str, int32 typmod)
     {
       meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
         "Could not parse geometry value: %s", str);
-      return false;
+      return NULL;
     }
 
     /* Check next character to see if we have WKB */

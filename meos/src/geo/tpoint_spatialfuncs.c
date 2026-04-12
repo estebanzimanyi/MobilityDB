@@ -237,6 +237,7 @@ tpoint_get_z(const Temporal *temp)
  * @param[in] p Reference point
  * @param[in] A,B Points defining the segment
  * @param[out] closest Closest point in the segment
+ * @param[out] dist Distance between the closest point and the argument point
  * @note Function derived from the PostGIS function @p closest_point_on_segment
  */
 long double
@@ -302,6 +303,7 @@ closest_point2d_ratio(const POINT2D *p, const POINT2D *A, const POINT2D *B,
  * @param[in] p Reference point
  * @param[in] A,B Points defining the segment
  * @param[out] closest Closest point in the segment
+ * @param[out] dist Distance between the closest point and the argument point
  * @note Function derived from the PostGIS function @p closest_point_on_segment
  * since PostGIS does not provide a 3D version
  */
@@ -368,144 +370,6 @@ closest_point3dz_ratio(const POINT3DZ *p, const POINT3DZ *A, const POINT3DZ *B,
  * @param[out] closest Closest point in the segment
  * @param[out] dist Distance between the closest point and the reference point
  */
-// long double
-// closest_point_sphere_ratio(const POINT4D *p, const POINT4D *A,
-  // const POINT4D *B, POINT4D *closest, double *dist)
-// {
-  // GEOGRAPHIC_POINT g, g1, g2, proj;
-  // geographic_point_init(p->x, p->y, &g);
-  // geographic_point_init(A->x, A->y, &g1);
-  // geographic_point_init(B->x, B->y, &g2);
-
-  // /* Distances */
-  // double dAB = sphere_distance(&g1, &g2);
-  // double dAP = sphere_distance(&g1, &g);
-
-  // /* Degenerate segment */
-  // if (dAB <= FP_TOLERANCE)
-  // {
-    // if (closest) *closest = *A;
-    // if (dist) *dist = dAP;
-    // return 0.0L;
-  // }
-
-  // /* Bearings */
-  // double azAB = sphere_direction(&g1, &g2, dAB);
-  // double azAP = sphere_direction(&g1, &g, dAP);
-
-  // if (!isfinite(azAB) || !isfinite(azAP))
-  // {
-    // /* fallback: treat as endpoint case */
-    // if (closest) *closest = *A;
-    // if (dist) *dist = dAP;
-    // return 0.0L;
-  // }
-
-  // /* normalize to [-pi, pi] */
-  // double dtheta = azAP - azAB;
-  // if (dtheta > M_PI) dtheta -= 2.0 * M_PI;
-  // if (dtheta < -M_PI) dtheta += 2.0 * M_PI;
-
-  // /* Projection length along AB */
-  // double projlen = dAP * cos(dtheta);
-
-  // /* Clamp projection */
-  // if (projlen <= 0.0)
-  // {
-    // if (closest) *closest = *A;
-    // if (dist) *dist = dAP;
-    // return 0.0L;
-  // }
-  // else if (projlen >= dAB)
-  // {
-    // if (closest) *closest = *B;
-    // if (dist) *dist = sphere_distance(&g, &g2);
-    // return 1.0L;
-  // }
-
-  // /* Ratio */
-  // long double r = projlen / dAB;
-
-  // /* Interpolate along great circle */
-  // sphere_project(&g1, projlen, azAB, &proj);
-
-  // if (closest)
-  // {
-    // closest->x = rad2deg(longitude_radians_normalize(proj.lon));
-    // closest->y = rad2deg(longitude_radians_normalize(proj.lat));
-    // closest->z = 0.0;
-    // closest->m = 0.0;
-  // }
-
-  // if (dist)
-    // *dist = sphere_distance(&g, &proj);
-
-  // return r;
-// }
-
-// long double
-// closest_point_sphere_ratio(const POINT4D *p, const POINT4D *A,
-  // const POINT4D *B, POINT4D *closest, double *dist)
-// {
-  // GEOGRAPHIC_POINT g, g1, g2, proj;
-  // geographic_point_init(p->x, p->y, &g);
-  // geographic_point_init(A->x, A->y, &g1);
-  // geographic_point_init(B->x, B->y, &g2);
-
-  // /* Distances */
-  // double dAB = sphere_distance(&g1, &g2);
-  // double dAP = sphere_distance(&g1, &g);
-
-  // if (dAB <= FP_TOLERANCE)
-  // {
-    // if (closest) *closest = *A;
-    // if (dist) *dist = dAP;
-    // return 0.0L;
-  // }
-
-  // /* --- Convert to 3D unit vectors --- */
-  // POINT3DZ A3, B3, P3;
-
-  // spheroid_to_cartesian(&g1, &A3);
-  // spheroid_to_cartesian(&g2, &B3);
-  // spheroid_to_cartesian(&g,  &P3);
-
-  // double ABx = B3.x - A3.x;
-  // double ABy = B3.y - A3.y;
-  // double ABz = B3.z - A3.z;
-
-  // double APx = P3.x - A3.x;
-  // double APy = P3.y - A3.y;
-  // double APz = P3.z - A3.z;
-
-  // double denom = ABx*ABx + ABy*ABy + ABz*ABz;
-
-  // long double r = (APx*ABx + APy*ABy + APz*ABz) / denom;
-
-  // /* Clamp */
-  // if (r < 0.0L) r = 0.0L;
-  // if (r > 1.0L) r = 1.0L;
-
-  // /* Project back on sphere using PostGIS */
-  // double projlen = r * dAB;
-  // double azAB = sphere_direction(&g1, &g2, dAB);
-  // sphere_project(&g1, projlen, azAB, &proj);
-
-  // if (closest)
-  // {
-    // closest->x = rad2deg(longitude_radians_normalize(proj.lon));
-    // closest->y = rad2deg(longitude_radians_normalize(proj.lat));
-    // closest->z = 0.0;
-    // closest->m = 0.0;
-  // }
-
-  // if (dist)
-    // *dist = sphere_distance(&g, &proj);
-
-  // return r;
-// }
-
-
 long double
 closest_point_sphere_ratio(const POINT4D *p, const POINT4D *A,
   const POINT4D *B, POINT4D *closest, double *dist)
@@ -754,26 +618,6 @@ pointsegm_locate(Datum start, Datum end, Datum point, double *dist)
 /*****************************************************************************
  * Intersection functions
  *****************************************************************************/
-
-/**
- * @brief Return 1 or 2 if two temporal geometry point segments intersect
- * during the period defined by the output timestamps, return 0 otherwise
- * @param[in] start1,end1 Values defining the first segment
- * @param[in] start2,end2 Values defining the second segment
- * @param[in] lower,upper Timestamps defining the segments
- * @param[out] t1,t2 Timestamps defining the resulting period, may be equal
- */
-int
-tgeompointsegm_intersection_value(Datum start1, Datum end1, Datum value,
-  TimestampTz lower, TimestampTz upper, TimestampTz *t1, TimestampTz *t2)
-{
-  return tgeompointsegm_distance_turnpt(start1, end1, value, value,
-    (Datum) 0.0, lower, upper, t1, t2);
-}
-
-
-
-
 
 /**
  * @brief Return 1 or 2 if two temporal geometry point segments intersect

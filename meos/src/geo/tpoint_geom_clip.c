@@ -579,7 +579,7 @@ point_inter_points_lines(const POINT2D *a, Edge **edges, int nedges)
 /**
  * @brief Clip a 2D/3D trajectory with linear interpolation with respect to a
  * geometry
- * @param[in] seq Temporal sequence
+ * @param[in] inst Temporal sequence
  * @param[in] edges Array of geometry edges
  * @param[in] nedges Number of edges in the array
  * @param[in] rtree R-tree for the edges, may be `NULL` if no index is used

@@ -745,20 +745,11 @@ geom_closestpoint3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 
 /**
  * @ingroup meos_geo_distance
- * @brief Return the line connecting the nearest approach point between a
- * temporal geo and a geometry/geography
+ * @brief Return the nearest approach instant between a temporal geo and a
+ * geometry/geography
  * @param[in] temp Temporal value
  * @param[in] gs Geometry/geography
- * @csqlfn #Shortestline_tgeo_geo()
- */
- 
-/**
- * @ingroup meos_geo_distance
- * @brief Return the line connecting the nearest approach point between a
- * temporal geo and a geometry/geography
- * @param[in] temp Temporal value
- * @param[in] gs Geometry/geography
- * @csqlfn #Shortestline_tgeo_geo()
+ * @csqlfn #NAI_tgeo_geo()
  */
 TInstant *
 nai_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
@@ -852,8 +843,8 @@ nai_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
 
 /**
  * @ingroup meos_geo_distance
- * @brief Return the nearest approach distance between a temporal geo
- * and a geometry/geography
+ * @brief Return the nearest approach distance between a temporal geo and a
+ * geometry/geography
  * @param[in] temp Temporal geo
  * @param[in] gs Geometry/geography
  * @csqlfn #NAD_tgeo_geo()

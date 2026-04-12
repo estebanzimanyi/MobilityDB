@@ -777,7 +777,7 @@ union_spanset_span(const SpanSet *ss, const Span *s)
 {
   /* Ensure the validity of the arguments */
   if (! ensure_valid_spanset_span(ss, s))
-    return false;
+    return NULL;
 
   /* Singleton span set */
   if (ss->count == 1)

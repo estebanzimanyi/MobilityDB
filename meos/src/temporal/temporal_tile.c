@@ -739,10 +739,6 @@ tbox_tile_state_get(TboxGridState *state, TBox *box)
 void
 tbox_tile_state_next(TboxGridState *state)
 {
-  assert(state);
-  assert(MEOS_FLAGS_GET_X(state->box.flags) ||
-    MEOS_FLAGS_GET_T(state->box.flags));
-
   if (! state || state->done)
     return;
   /* Move to the next tile */
