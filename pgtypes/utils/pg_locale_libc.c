@@ -13,6 +13,9 @@
 
 #include <limits.h>
 #include <wctype.h>
+#ifdef __APPLE__
+#include <xlocale.h>
+#endif
 
 // #include "catalog/pg_database.h"
 #include "catalog/pg_collation_d.h"
@@ -804,7 +807,8 @@ report_newlocale_failure(const char *localename)
  * POSIX doesn't define _l-variants of these functions, but several systems
  * have them.  We provide our own replacements here.
  */
-#ifndef HAVE_MBSTOWCS_L
+/* Apple declares these non-static in <xlocale.h>, so skip the fallback. */
+#if !defined(HAVE_MBSTOWCS_L) && !defined(__APPLE__)
 static size_t
 mbstowcs_l(wchar_t *dest, const char *src, size_t n, locale_t loc)
 {
@@ -820,7 +824,7 @@ mbstowcs_l(wchar_t *dest, const char *src, size_t n, locale_t loc)
 #endif
 }
 #endif
-#ifndef HAVE_WCSTOMBS_L
+#if !defined(HAVE_WCSTOMBS_L) && !defined(__APPLE__)
 static size_t
 wcstombs_l(char *dest, const wchar_t *src, size_t n, locale_t loc)
 {

@@ -191,6 +191,9 @@ cstring_to_text_with_len(const char *str, size_t len)
  * @param[in] str String
  * @note Function taken from PostGIS file `lwgeom_in_geojson.c`
  */
+#ifndef PG_EXT_WIN32_BUILD
+/* libpostgres exports these on Windows; use it there to keep memory
+ * allocation consistent with the backend. */
 text *
 cstring_to_text(const char *str)
 {
@@ -212,6 +215,7 @@ text_to_cstring(const text *txt)
   result[len] = '\0';
   return result;
 }
+#endif
 
 /*
  * text_to_cstring_buffer

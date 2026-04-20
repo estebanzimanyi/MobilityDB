@@ -16,24 +16,23 @@ set(UTILS_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/formatting.c
   # ${CMAKE_CURRENT_SOURCE_DIR}/levenshtein.c
   # ${CMAKE_CURRENT_SOURCE_DIR}/numeric.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/numutils.c
   ${CMAKE_CURRENT_SOURCE_DIR}/pg_locale.c
   ${CMAKE_CURRENT_SOURCE_DIR}/pg_locale_builtin.c
   ${CMAKE_CURRENT_SOURCE_DIR}/pg_locale_libc.c
   ${CMAKE_CURRENT_SOURCE_DIR}/pg_locale_icu.c
   ${CMAKE_CURRENT_SOURCE_DIR}/timestamp.c
   ${CMAKE_CURRENT_SOURCE_DIR}/varlena.c
-  # )
-
-# if(JSON)
-  # set(UTILS_SOURCES ${UTILS_SOURCES}
-    ${CMAKE_CURRENT_SOURCE_DIR}/json.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/jsonb.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/jsonb_op.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/jsonb_util.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/jsonfuncs.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/json.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/jsonb.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/jsonb_op.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/jsonb_util.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/jsonfuncs.c
 )
-# endif(JSON)
+
+# numutils.c fully duplicates symbols that libpostgres provides on Windows.
+if(NOT PGTYPES_EXT_WIN32)
+  list(APPEND UTILS_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/numutils.c)
+endif()
 
 # Aggregate with child contributions
 set(ALL_SOURCES

@@ -20,6 +20,9 @@
 #include <langinfo.h>
 #include <pthread.h>
 #endif
+#ifdef __APPLE__
+#include <xlocale.h>
+#endif
 
 #include <limits.h>
 

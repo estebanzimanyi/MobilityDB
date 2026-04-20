@@ -193,9 +193,12 @@ set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:libpgcommon>")
 # Build the library
 add_library(${MOBILITYDB_LIB_NAME} SHARED ${PROJECT_OBJECTS})
 if(APPLE)
+  # On macOS PG extensions are loaded as dylibs via dlopen. Let unresolved
+  # symbols (palloc, errmsg, etc.) be resolved at load time against the
+  # running postgres process. -bundle_loader is invalid with -dynamiclib.
   set_target_properties(${MOBILITYDB_LIB_NAME} PROPERTIES
     SUFFIX ".dylib"
-    LINK_FLAGS "-Wl,-undefined,dynamic_lookup -bundle_loader ${POSTGRESQL_BIN_DIR}/postgres"
+    LINK_FLAGS "-Wl,-undefined,dynamic_lookup"
   )
 endif()
 

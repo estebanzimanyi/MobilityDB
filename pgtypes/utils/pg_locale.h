@@ -12,6 +12,13 @@
 #ifndef _PG_LOCALE_
 #define _PG_LOCALE_
 
+/* On macOS 14 and earlier, locale_t is declared in <xlocale.h>.
+ * macOS 15 exposes it via <locale.h>. Include xlocale.h unconditionally
+ * on Apple so that the struct definition below compiles everywhere. */
+#ifdef __APPLE__
+#include <xlocale.h>
+#endif
+
 #ifdef USE_ICU
 /* only include the C APIs, to avoid errors in cpluspluscheck */
 #undef U_SHOW_CPLUSPLUS_API

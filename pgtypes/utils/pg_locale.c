@@ -29,6 +29,9 @@
  */
 
 #include <time.h>
+#ifdef __APPLE__
+#include <xlocale.h>
+#endif
 
 #include "postgres.h"
 #include "catalog/pg_collation_d.h"

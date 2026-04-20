@@ -17,6 +17,9 @@
 #ifndef WIN32
 #include <langinfo.h>
 #endif
+#ifdef __APPLE__
+#include <xlocale.h>
+#endif
 #include "utils/mb/pg_wchar.h"
 
 /*

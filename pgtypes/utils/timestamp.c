@@ -1760,11 +1760,14 @@ SetEpochTimestamp(void)
  *
  *    timestamp_relop - is timestamp1 relop timestamp2
  */
+#ifndef PG_EXT_WIN32_BUILD
+/* On Windows extension builds libpostgres exports this same symbol. */
 int
 timestamp_cmp_internal(Timestamp ts1, Timestamp ts2)
 {
   return (ts1 < ts2) ? -1 : ((ts1 > ts2) ? 1 : 0);
 }
+#endif
 
 /**
  * @ingroup meos_base_timestamp
