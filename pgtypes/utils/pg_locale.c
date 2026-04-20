@@ -875,7 +875,11 @@ cache_locale_time(void)
 
   /* We use times close to current time as data for strftime(). */
   timenow = time(NULL);
+#ifdef WIN32
+  timeinfo = (gmtime_s(&timeinfobuf, &timenow) == 0) ? &timeinfobuf : NULL;
+#else
   timeinfo = gmtime_r(&timenow, &timeinfobuf);
+#endif
 
   /* Store the strftime results in MAX_L10N_DATA-sized portions of buf[] */
   bufptr = buf;
