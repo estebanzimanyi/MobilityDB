@@ -1078,7 +1078,12 @@ search_locale_enum(LPWSTR pStr, DWORD dwFlags, LPARAM lparam)
       size_t    len;
 
       wcscat(test_locale, L"_");
-      len = wcslen(test_locale);
+      /* Bound the length scan to the fixed-size stack buffer to guard
+       * against a non-terminated string (CWE-126). test_locale is
+       * memset-zeroed above and only written via GetLocaleInfoEx +
+       * wcscat, so a terminator is expected to be present; wcsnlen
+       * makes the guarantee explicit for static analysis. */
+      len = wcsnlen(test_locale, LOCALE_NAME_MAX_LENGTH);
       if (GetLocaleInfoEx(pStr, LOCALE_SENGLISHCOUNTRYNAME,
                 test_locale + len,
                 LOCALE_NAME_MAX_LENGTH - len))

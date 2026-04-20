@@ -5553,8 +5553,11 @@ NUM_numpart_to_char(NUMProc *Np, int id)
         /*
          * Ora 'n' -- FM9.9 --> 'n.'
          */
-        else if (IS_FILLMODE(Np->Num) &&
-             Np->last_relevant && *Np->last_relevant == '.')
+        /* The outer `if` above guarantees Np->last_relevant is non-NULL
+         * and *Np->last_relevant == '.' in this else branch, so re-testing
+         * them would be dead code (CodeQL: redundant null check due to
+         * previous dereference). Only the FILLMODE flag matters here. */
+        else if (IS_FILLMODE(Np->Num))
         {
           strcpy(Np->inout_p, Np->decimal);  /* Write DEC/D */
           Np->inout_p += strlen(Np->inout_p);

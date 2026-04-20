@@ -936,8 +936,16 @@ pg_parse_json_incremental(JsonLexContext *lex, const JsonSemAction *sem,
                 return result;
             }
 
+            /* inc_lex_level only reports allocation failure when jsonapi is
+             * built with PQEXPBUFFER (frontend); the backend build uses
+             * repalloc which throws on OOM, so no return value check is
+             * needed (and Codacy flags it as dead code). */
+#ifdef JSONAPI_USE_PQEXPBUFFER
             if (!inc_lex_level(lex))
               return JSON_OUT_OF_MEMORY;
+#else
+            (void) inc_lex_level(lex);
+#endif
           }
           break;
         case JSON_SEM_OEND:
@@ -967,8 +975,12 @@ pg_parse_json_incremental(JsonLexContext *lex, const JsonSemAction *sem,
                 return result;
             }
 
+#ifdef JSONAPI_USE_PQEXPBUFFER
             if (!inc_lex_level(lex))
               return JSON_OUT_OF_MEMORY;
+#else
+            (void) inc_lex_level(lex);
+#endif
           }
           break;
         case JSON_SEM_AEND:

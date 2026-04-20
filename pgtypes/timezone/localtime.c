@@ -235,7 +235,10 @@ tzloadbody(char const *name, char *canonname, struct state *sp, bool doextend,
     return ENOENT;      /* pg_open_tzfile may not set errno */
 
   nread = read(fid, up->buf, sizeof up->buf);
-  if (nread < tzheadsize)
+  /* Belt-and-suspenders: read(2) cannot return more than the requested
+   * byte count per POSIX, but an explicit check silences static analysis
+   * and protects against buggy fs implementations. */
+  if (nread < 0 || (size_t) nread > sizeof up->buf || nread < tzheadsize)
   {
     int      err = nread < 0 ? errno : EINVAL;
 
