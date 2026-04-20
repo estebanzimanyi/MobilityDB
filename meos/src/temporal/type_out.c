@@ -98,23 +98,6 @@ extern bool string_escape(const char *str, int quotes, char **result);
  *****************************************************************************/
 
 /**
- * @ingroup meos_base_types
- * @brief Return the string representation of a text value
- * @param[in] txt Text
- */
-char *
-text_out(const text *txt)
-{
-  assert(txt);
-  char *str = text2cstring(txt);
-  size_t size = strlen(str) + 4;
-  char *result = palloc(size);
-  snprintf(result, size, "\"%s\"", str);
-  pfree(str);
-  return result;
-}
-
-/**
  * @brief Return the string representation of a base value
  * @return On error return @p NULL
  */

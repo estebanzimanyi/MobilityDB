@@ -54,7 +54,6 @@
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
-#include "temporal/postgres_types.h"
 #include "temporal/type_util.h"
 #include "geo/meos_transform.h"
 #include "geo/tgeo.h"
