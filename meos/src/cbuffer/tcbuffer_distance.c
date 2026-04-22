@@ -162,8 +162,19 @@ cbuffersegm_distance_turnpt_internal(double dx0, double dy0, double r0,
       t_out = t;
     }
 
-    /* Check if the turning points are truly internal */
-    if (t_in > lower && t_out < upper)
+    /* Check if the turning points are truly internal. Either t_in or
+     * t_out may fall OUTSIDE [lower, upper] - e.g. when both dist_start
+     * and dist_end are negative (the two cbuffers overlap throughout
+     * the sequence), the interpolation alphas go out of [0, 1] and the
+     * zero-crossings sit before lower or after upper. We must only
+     * return points that lie strictly inside (lower, upper); anything
+     * else is returned as "no true internal turning point" so the
+     * caller does not try to splice a timestamp that violates the
+     * strictly-increasing sequence invariant. */
+    bool in_internal  = (t_in  > lower && t_in  < upper);
+    bool out_internal = (t_out > lower && t_out < upper);
+
+    if (in_internal && out_internal)
     {
       if (t_in == t_out)
       {
@@ -179,12 +190,12 @@ cbuffersegm_distance_turnpt_internal(double dx0, double dy0, double r0,
         return 2;
       }
     }
-    else if (t_in > lower && t_out >= upper)
+    else if (in_internal)
     {
       *t1 = *t2 = t_in;
       return 1;
     }
-    else if (t_in <= lower && t_out < upper)
+    else if (out_internal)
     {
       *t1 = *t2 = t_out;
       return 1;
