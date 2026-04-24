@@ -15,6 +15,19 @@ Rationale: these two files contain ~600 lines of irreplaceable context from the 
 
 Read `~/.claude/projects/-home-esteban-src-MobilityDB/memory/MEMORY.md` (the index) and follow any pointer relevant to the user's ask. The `th3index` branch is 57 commits ahead of master with completed Phase 7 work; open items are on companion branches `doxygen-sql-stubs`, `xml-sql-linewrap-fix`, `cbufferset-xml-section`, and `claude-md-handoff` (the last one is the ancestor of the file you are reading).
 
+## 🔴 MANDATORY FIRST ACTION for any MobilityDuck work
+
+Read `~/.claude/projects/-home-esteban-src-MobilityDB/memory/project_mobilityduck.md` — contains the high-level context (DuckDB extension consuming MEOS; Phase 7N was explicitly motivated by MobilityDuck consumption) AND the explicit instruction that the detailed state was NOT captured. When the user says "restart the MobilityDuck work," the right first action is to **ask them to paste the prior Claude.ai conversation** that had the interrupted session. Do not guess at MobilityDuck's own repo state.
+
+## Active parallel tasks
+
+The user has **two independent multi-session efforts** currently interrupted:
+
+1. **Phase 8 / pgPointCloud** — scaffold landed on branch `phase-8a-pointcloud-import`. Detailed plan in `doc/drafts/PHASE_8_HANDOFF.md` + `project_pointcloud_integration.md` memory.
+2. **MobilityDuck** — high-level context only in `project_mobilityduck.md` memory; detailed state lives in the user's prior Claude.ai conversation.
+
+When the user asks "continue" without specifying which task, ask which one before acting.
+
 ## Current branch state (update this section after every merge)
 
 | Branch | Status | Commits ahead of master |
