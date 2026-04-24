@@ -7,6 +7,18 @@
 > which has the deeper design material (struct layouts, SQL surface,
 > PCL/PDAL stack). Both files should be loaded before any code action.
 
+> **Parallel active task: MobilityDuck.** The user also has an
+> interrupted MobilityDuck (DuckDB extension consuming MEOS) effort.
+> See `~/.claude/projects/-home-esteban-src-MobilityDB/memory/project_mobilityduck.md`
+> — that memory file intentionally does NOT capture MobilityDuck's own
+> repo state; it tells future Claude to ask the user to paste the
+> prior Claude.ai conversation when resuming. Phase 7N (th3index
+> MEOS-layer split) was explicitly motivated by MobilityDuck
+> consumption, so any pgpointcloud-phase work that adds MEOS-layer
+> functions should follow the same "business logic in MEOS, Datum
+> plumbing in MobilityDB" split to keep MobilityDuck consumption
+> viable without a second rewrite.
+
 ## Current state as of handoff
 
 ### What's done
