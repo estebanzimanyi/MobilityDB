@@ -132,9 +132,9 @@ pcpatch_passes_tpcbox(const Pcpatch *pa, TimestampTz t, const TPCBox *box,
     return false;
   if (! contains_span_timestamptz(&box->period, t))
     return false;
-  /* PCBOUNDS layout: bounds[0..3] = xmin, ymin, xmax, ymax. */
-  double pxmin = pa->bounds[0], pymin = pa->bounds[1];
-  double pxmax = pa->bounds[2], pymax = pa->bounds[3];
+  /* PCBOUNDS layout: {xmin, xmax, ymin, ymax} — see pc_api.h. */
+  double pxmin = pa->bounds[0], pxmax = pa->bounds[1];
+  double pymin = pa->bounds[2], pymax = pa->bounds[3];
   if (border_inc)
     return ! (pxmin > box->xmax || pxmax < box->xmin ||
               pymin > box->ymax || pymax < box->ymin);
