@@ -56,6 +56,7 @@
 #include "geo/stbox.h"              /* PG_RETURN_STBOX_P */
 /* MobilityDB */
 #include "pg_temporal/temporal.h"
+#include "pg_temporal/meos_catalog.h"  /* oid_meostype */
 #include "pg_temporal/tnumber_gist.h"
 
 /*****************************************************************************
@@ -326,6 +327,56 @@ Tpcbox_spgist_compress(PG_FUNCTION_ARGS)
   STBox *result = palloc(sizeof(STBox));
   tpcbox_set_stbox(box, result);
   PG_RETURN_STBOX_P(result);
+}
+
+/*****************************************************************************
+ * GiST distance — KNN ordering (strategy 25)
+ *****************************************************************************/
+
+PGDLLEXPORT Datum Tpcbox_gist_distance(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tpcbox_gist_distance);
+/**
+ * @ingroup mobilitydb_pointcloud_index
+ * @brief GiST distance method — minimum nearest-approach distance from
+ *   the index key (TPCBox) to the query (tpcbox / tpcpoint / tpcpatch).
+ * @details Returns DBL_MAX for null keys or pcid mismatches; the
+ *   recheck on leaf entries refines the distance to the actual leaf
+ *   values.
+ */
+Datum
+Tpcbox_gist_distance(PG_FUNCTION_ARGS)
+{
+  GISTENTRY *entry = (GISTENTRY *) PG_GETARG_POINTER(0);
+  Oid typid = PG_GETARG_OID(3);
+  bool *recheck = (bool *) PG_GETARG_POINTER(4);
+  TPCBox *key = (TPCBox *) DatumGetPointer(entry->key);
+  if (! key)
+    PG_RETURN_FLOAT8(DBL_MAX);
+
+  /* Index keys are bboxes; recheck on leaf levels refines against the
+   * actual leaf entry. */
+  if (GIST_LEAF(entry))
+    *recheck = true;
+
+  /* Derive a TPCBox from whatever query-type the user supplied. */
+  TPCBox query;
+  meosType qtype = oid_meostype(typid);
+  if (qtype == T_TPCBOX)
+  {
+    memcpy(&query, DatumGetTpcboxP(PG_GETARG_DATUM(1)), sizeof(TPCBox));
+  }
+  else if (qtype == T_TPCPOINT || qtype == T_TPCPATCH)
+  {
+    Temporal *temp = temporal_slice(PG_GETARG_DATUM(1));
+    temporal_set_bbox(temp, &query);
+  }
+  else
+    PG_RETURN_FLOAT8(DBL_MAX);
+
+  double distance = nad_tpcbox_tpcbox(key, &query);
+  if (distance < 0)
+    PG_RETURN_FLOAT8(DBL_MAX);
+  PG_RETURN_FLOAT8(distance);
 }
 
 /*****************************************************************************/

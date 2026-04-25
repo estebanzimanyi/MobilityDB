@@ -9,6 +9,7 @@ SET(LOCAL_FILES
   436_tpc_posops
   437_tpc_gist
   438_tpc_spgist
+  439_tpc_distance
   440_tpc_aggfuncs
   )
 
