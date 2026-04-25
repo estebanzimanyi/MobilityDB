@@ -2726,6 +2726,57 @@
 			</sect3>
 
 			<sect3>
+				<title>Topological operators</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcpoint_topo"><varname>&amp;&amp;</varname>, <varname>@&gt;</varname>, <varname>&lt;@</varname>, <varname>~=</varname>, <varname>-|-</varname></link>: Bbox topological predicates on tpcpoint</para>
+					</listitem>
+					<listitem>
+						<para><link linkend="tpcpatch_topo"><varname>&amp;&amp;</varname>, <varname>@&gt;</varname>, <varname>&lt;@</varname>, <varname>~=</varname>, <varname>-|-</varname></link>: Bbox topological predicates on tpcpatch</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Position operators</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcpoint_pos">Strict directional + overlap-or-X predicates</link>: tpcpoint vs tpcbox / tstzspan / tpcpoint on the X / Y / Z / time axes</para>
+					</listitem>
+					<listitem>
+						<para><link linkend="tpcpatch_pos">Strict directional + overlap-or-X predicates</link>: tpcpatch variants</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Distance / KNN</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcpoint_knn"><varname>|=|</varname></link>: Nearest-approach distance on tpcpoint, KNN-orderable through GiST</para>
+					</listitem>
+					<listitem>
+						<para><link linkend="tpcpatch_knn"><varname>|=|</varname></link>: Nearest-approach distance on tpcpatch, KNN-orderable through GiST</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Spatial relationships</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcpoint_intersects"><varname>eIntersects</varname>, <varname>aIntersects</varname></link>: Ever / always intersects (tpcpoint)</para>
+					</listitem>
+					<listitem>
+						<para><link linkend="tpcpoint_disjoint"><varname>eDisjoint</varname>, <varname>aDisjoint</varname></link>: Ever / always disjoint (tpcpoint)</para>
+					</listitem>
+					<listitem>
+						<para><link linkend="tpcpoint_dwithin"><varname>eDwithin</varname>, <varname>aDwithin</varname></link>: Ever / always within distance (tpcpoint)</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
 				<title>Aggregations</title>
 				<itemizedlist>
 					<listitem>
