@@ -4,6 +4,7 @@ SET(LOCAL_FILES
   411_tpcbox_gist
   420_tpcpoint
   430_tpcpatch
+  440_tpc_aggfuncs
   )
 
 foreach (f ${LOCAL_FILES})

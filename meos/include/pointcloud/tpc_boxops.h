@@ -26,4 +26,10 @@ extern void tpointcloudseq_expand_tpcbox(TSequence *seq, const TInstant *inst);
 extern void tpointcloudseqarr_set_tpcbox(TSequence **sequences, int count,
   TPCBox *box);
 
+/* Extent aggregation transition — folds @p temp's TPCBox into @p state.
+ * Returns @p state on hit, a freshly-palloc'd TPCBox on first non-null
+ * @p temp with NULL @p state, or @p NULL when both inputs are NULL.
+ * Mirrors @c tspatial_extent_transfn for stbox. */
+extern TPCBox *tpcbox_extent_transfn(TPCBox *state, const Temporal *temp);
+
 #endif /* __TPC_BOXOPS_H__ */
