@@ -100,3 +100,28 @@ SELECT bool_and(SRID(setSRID(b, 4326)) = 4326 AND pcid(setSRID(b, 4326)) = pcid(
 FROM tbl_tpcbox;
 
 -------------------------------------------------------------------------------
+-- SP-GiST quadtree + kd-tree opclasses on tpcbox
+-------------------------------------------------------------------------------
+
+CREATE INDEX tbl_tpcbox_quadtree_idx ON tbl_tpcbox USING spgist(b);
+SET enable_seqscan = on;
+SET enable_indexscan = off;
+SET enable_bitmapscan = off;
+SELECT COUNT(*) AS seq_count FROM tbl_tpcbox WHERE b @> tpcbox_zt(0, 0, 0,
+  10, 10, 10, tstzspan '[2001-01-01, 2001-12-31]', 1, 0);
+SET enable_seqscan = off;
+SET enable_indexscan = on;
+SET enable_bitmapscan = on;
+SELECT COUNT(*) AS quadtree_count FROM tbl_tpcbox WHERE b @> tpcbox_zt(0, 0, 0,
+  10, 10, 10, tstzspan '[2001-01-01, 2001-12-31]', 1, 0);
+DROP INDEX tbl_tpcbox_quadtree_idx;
+
+CREATE INDEX tbl_tpcbox_kdtree_idx ON tbl_tpcbox USING spgist(b tpcbox_kdtree_ops);
+SELECT COUNT(*) AS kdtree_count FROM tbl_tpcbox WHERE b @> tpcbox_zt(0, 0, 0,
+  10, 10, 10, tstzspan '[2001-01-01, 2001-12-31]', 1, 0);
+DROP INDEX tbl_tpcbox_kdtree_idx;
+RESET enable_seqscan;
+RESET enable_indexscan;
+RESET enable_bitmapscan;
+
+-------------------------------------------------------------------------------
