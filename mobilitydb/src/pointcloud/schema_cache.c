@@ -65,6 +65,8 @@
 #include <utils/syscache.h>
 /* pgpointcloud */
 #include "pc_api.h"
+/* MEOS */
+#include <meos_pointcloud.h>  /* meos_pc_schema_register_xml */
 /* MobilityDB */
 #include "pg_pointcloud/schema_cache.h"
 
@@ -145,6 +147,31 @@ fetch_schema_xml(uint32_t pcid)
  * @return Parsed @c PCSCHEMA pointer, or @p NULL if the pcid is
  *   unknown (caller decides whether that's an error).
  */
+/**
+ * @brief Parse pgPointCloud schema XML into a long-lived @c PCSCHEMA*.
+ *
+ * Installed at @c mobilitydb_init time as @c meos_pc_parse_xml_fn,
+ * this is invoked by the WKB decoder when an incoming WKB blob carries
+ * an embedded schema XML for a pcid not yet registered in the backend.
+ * Allocates the parsed schema in @c TopMemoryContext so it outlives
+ * the current query.
+ *
+ * @param[in] xml NUL-terminated schema XML
+ * @return Parsed @c PCSCHEMA pointer, or @p NULL on parse failure.
+ */
+PCSCHEMA *
+mobilitydb_pc_parse_xml(uint32_t pcid, const char *xml)
+{
+  if (! xml)
+    return NULL;
+  MemoryContext old_ctx = MemoryContextSwitchTo(TopMemoryContext);
+  PCSCHEMA *schema = pc_schema_from_xml(xml);
+  MemoryContextSwitchTo(old_ctx);
+  if (schema)
+    schema->pcid = pcid;
+  return schema;
+}
+
 PCSCHEMA *
 mobilitydb_pc_schema(uint32_t pcid)
 {
@@ -158,13 +185,19 @@ mobilitydb_pc_schema(uint32_t pcid)
   MemoryContext old_ctx = MemoryContextSwitchTo(TopMemoryContext);
   PCSCHEMA *schema = pc_schema_from_xml(xml);
   MemoryContextSwitchTo(old_ctx);
-  pfree(xml);
 
   if (schema == NULL)
+  {
+    pfree(xml);
     ereport(ERROR, (errcode(ERRCODE_INTERNAL_ERROR),
       errmsg("Failed to parse pgpointcloud schema XML for pcid=%u", pcid)));
+  }
 
   /* pc_schema_from_xml doesn't populate schema->pcid — wire it up. */
   schema->pcid = pcid;
+  /* Register both parsed schema AND XML — the MEOS WKB encoder needs
+   * the XML to embed in cross-cluster-portable WKB blobs. */
+  meos_pc_schema_register_xml(pcid, schema, xml);
+  pfree(xml);
   return schema;
 }

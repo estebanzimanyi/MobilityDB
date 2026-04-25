@@ -246,6 +246,7 @@ enum MEOS_WKB_TSUBTYPE
 #define MEOS_WKB_ZFLAG            0x10  // 16
 #define MEOS_WKB_GEODETICFLAG     0x20  // 32
 #define MEOS_WKB_SRIDFLAG         0x40  // 64
+#define MEOS_WKB_PCSCHEMAFLAG     0x80  // 128 — pgPointCloud schema XML embedded
 
 #define MEOS_WKB_GET_INTERP(flags) (((flags) & MEOS_WKB_INTERPFLAGS) >> 2)
 #define MEOS_WKB_SET_INTERP(flags, value) ((flags) = (((flags) & ~MEOS_WKB_INTERPFLAGS) | ((value & 0x0003) << 2)))
