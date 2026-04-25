@@ -338,27 +338,34 @@ PG_FUNCTION_INFO_V1(Tpcpoint_to_tgeompoint);
  *   from each instant's pcpoint via the schema cache.
  * @sqlfn tgeompoint()
  */
+/* Project a tpcpoint Temporal* to a fresh tgeompoint Temporal* by
+ * dispatching to the per-subtype static helpers. The schema must be
+ * resolved by the caller (typically via tpcpoint_schema). Returns
+ * NULL on dispatch error. Reusable from spatialrels and restriction
+ * code paths. */
+static Temporal *
+tpcpoint_project_tgeompoint(const Temporal *temp, const PCSCHEMA *schema)
+{
+  switch (temp->subtype)
+  {
+    case TINSTANT:
+      return (Temporal *) tpcpointinst_tgeompointinst((TInstant *) temp,
+        schema);
+    case TSEQUENCE:
+      return (Temporal *) tpcpointseq_tgeompointseq((TSequence *) temp,
+        schema);
+    default: /* TSEQUENCESET */
+      return (Temporal *) tpcpointseqset_tgeompointseqset(
+        (TSequenceSet *) temp, schema);
+  }
+}
+
 Datum
 Tpcpoint_to_tgeompoint(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  /* Hoist schema lookup to the top — see tpcpoint_schema rationale. */
   PCSCHEMA *schema = tpcpoint_schema(temp);
-  Temporal *result;
-  switch (temp->subtype)
-  {
-    case TINSTANT:
-      result = (Temporal *)
-        tpcpointinst_tgeompointinst((TInstant *) temp, schema);
-      break;
-    case TSEQUENCE:
-      result = (Temporal *)
-        tpcpointseq_tgeompointseq((TSequence *) temp, schema);
-      break;
-    default: /* TSEQUENCESET */
-      result = (Temporal *)
-        tpcpointseqset_tgeompointseqset((TSequenceSet *) temp, schema);
-  }
+  Temporal *result = tpcpoint_project_tgeompoint(temp, schema);
   PG_FREE_IF_COPY(temp, 0);
   if (! result) PG_RETURN_NULL();
   PG_RETURN_POINTER(result);
@@ -500,5 +507,208 @@ Tpcpoint_get_dim(PG_FUNCTION_ARGS)
   if (! result) PG_RETURN_NULL();
   PG_RETURN_POINTER(result);
 }
+
+/*****************************************************************************
+ * Spatial relationships — eIntersects / aIntersects / eDwithin / aDwithin
+ *
+ * Implemented by projecting the tpcpoint to a tgeompoint via the
+ * schema-aware static helpers, then delegating to the existing
+ * ea_intersects_tgeo_* and ea_dwithin_tgeo_* primitives in MEOS. This
+ * is exactly the same pattern as @c atTpcbox / @c minusTpcbox, just
+ * for boolean predicates instead of restriction.
+ *
+ * Pcid mismatches between two tpcpoint args yield false (the MEOS
+ * primitive returns -1 on validation failure; we coerce to false).
+ *****************************************************************************/
+
+#include "geo/tgeo_spatialrels.h"
+#include "pg_geo/postgis.h"  /* PG_GETARG_GSERIALIZED_P */
+
+/* Project @p temp to a fresh tgeompoint, taking ownership of the
+ * detoasted result on caller's behalf. Returns NULL on failure. */
+static Temporal *
+tpcpoint_to_tgeompoint_temp(const Temporal *temp)
+{
+  PCSCHEMA *schema = tpcpoint_schema(temp);
+  return tpcpoint_project_tgeompoint(temp, schema);
+}
+
+#define EA_INTERSECTS_TPC_GEO(NAME, EVER)                                      \
+PGDLLEXPORT Datum NAME##_tpcpoint_geo(PG_FUNCTION_ARGS);                       \
+PG_FUNCTION_INFO_V1(NAME##_tpcpoint_geo);                                      \
+Datum                                                                          \
+NAME##_tpcpoint_geo(PG_FUNCTION_ARGS)                                          \
+{                                                                              \
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);                                    \
+  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);                                \
+  Temporal *proj = tpcpoint_to_tgeompoint_temp(temp);                          \
+  PG_FREE_IF_COPY(temp, 0);                                                    \
+  if (! proj) { PG_FREE_IF_COPY(gs, 1); PG_RETURN_NULL(); }                    \
+  int r = ea_intersects_tgeo_geo(proj, gs, EVER);                              \
+  pfree(proj);                                                                 \
+  PG_FREE_IF_COPY(gs, 1);                                                      \
+  if (r < 0) PG_RETURN_NULL();                                                 \
+  PG_RETURN_BOOL(r == 1);                                                      \
+}                                                                              \
+PGDLLEXPORT Datum NAME##_geo_tpcpoint(PG_FUNCTION_ARGS);                       \
+PG_FUNCTION_INFO_V1(NAME##_geo_tpcpoint);                                      \
+Datum                                                                          \
+NAME##_geo_tpcpoint(PG_FUNCTION_ARGS)                                          \
+{                                                                              \
+  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);                                \
+  Temporal *temp = PG_GETARG_TEMPORAL_P(1);                                    \
+  Temporal *proj = tpcpoint_to_tgeompoint_temp(temp);                          \
+  PG_FREE_IF_COPY(temp, 1);                                                    \
+  if (! proj) { PG_FREE_IF_COPY(gs, 0); PG_RETURN_NULL(); }                    \
+  int r = ea_intersects_geo_tgeo(gs, proj, EVER);                              \
+  pfree(proj);                                                                 \
+  PG_FREE_IF_COPY(gs, 0);                                                      \
+  if (r < 0) PG_RETURN_NULL();                                                 \
+  PG_RETURN_BOOL(r == 1);                                                      \
+}                                                                              \
+PGDLLEXPORT Datum NAME##_tpcpoint_tpcpoint(PG_FUNCTION_ARGS);                  \
+PG_FUNCTION_INFO_V1(NAME##_tpcpoint_tpcpoint);                                 \
+Datum                                                                          \
+NAME##_tpcpoint_tpcpoint(PG_FUNCTION_ARGS)                                     \
+{                                                                              \
+  Temporal *temp1 = PG_GETARG_TEMPORAL_P(0);                                   \
+  Temporal *temp2 = PG_GETARG_TEMPORAL_P(1);                                   \
+  Temporal *proj1 = tpcpoint_to_tgeompoint_temp(temp1);                        \
+  Temporal *proj2 = tpcpoint_to_tgeompoint_temp(temp2);                        \
+  PG_FREE_IF_COPY(temp1, 0); PG_FREE_IF_COPY(temp2, 1);                        \
+  if (! proj1 || ! proj2) {                                                    \
+    if (proj1) pfree(proj1); if (proj2) pfree(proj2);                          \
+    PG_RETURN_NULL();                                                          \
+  }                                                                            \
+  int r = ea_intersects_tgeo_tgeo(proj1, proj2, EVER);                         \
+  pfree(proj1); pfree(proj2);                                                  \
+  if (r < 0) PG_RETURN_NULL();                                                 \
+  PG_RETURN_BOOL(r == 1);                                                      \
+}
+
+EA_INTERSECTS_TPC_GEO(Eintersects, EVER)
+EA_INTERSECTS_TPC_GEO(Aintersects, ALWAYS)
+
+#undef EA_INTERSECTS_TPC_GEO
+
+/* Disjoint: identical wiring to intersects, swapped underlying primitives. */
+#define EA_DISJOINT_TPC_GEO(NAME, EVER)                                        \
+PGDLLEXPORT Datum NAME##_tpcpoint_geo(PG_FUNCTION_ARGS);                       \
+PG_FUNCTION_INFO_V1(NAME##_tpcpoint_geo);                                      \
+Datum                                                                          \
+NAME##_tpcpoint_geo(PG_FUNCTION_ARGS)                                          \
+{                                                                              \
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);                                    \
+  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);                                \
+  Temporal *proj = tpcpoint_to_tgeompoint_temp(temp);                          \
+  PG_FREE_IF_COPY(temp, 0);                                                    \
+  if (! proj) { PG_FREE_IF_COPY(gs, 1); PG_RETURN_NULL(); }                    \
+  int r = ea_disjoint_tgeo_geo(proj, gs, EVER);                                \
+  pfree(proj);                                                                 \
+  PG_FREE_IF_COPY(gs, 1);                                                      \
+  if (r < 0) PG_RETURN_NULL();                                                 \
+  PG_RETURN_BOOL(r == 1);                                                      \
+}                                                                              \
+PGDLLEXPORT Datum NAME##_geo_tpcpoint(PG_FUNCTION_ARGS);                       \
+PG_FUNCTION_INFO_V1(NAME##_geo_tpcpoint);                                      \
+Datum                                                                          \
+NAME##_geo_tpcpoint(PG_FUNCTION_ARGS)                                          \
+{                                                                              \
+  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);                                \
+  Temporal *temp = PG_GETARG_TEMPORAL_P(1);                                    \
+  Temporal *proj = tpcpoint_to_tgeompoint_temp(temp);                          \
+  PG_FREE_IF_COPY(temp, 1);                                                    \
+  if (! proj) { PG_FREE_IF_COPY(gs, 0); PG_RETURN_NULL(); }                    \
+  int r = ea_disjoint_geo_tgeo(gs, proj, EVER);                                \
+  pfree(proj);                                                                 \
+  PG_FREE_IF_COPY(gs, 0);                                                      \
+  if (r < 0) PG_RETURN_NULL();                                                 \
+  PG_RETURN_BOOL(r == 1);                                                      \
+}                                                                              \
+PGDLLEXPORT Datum NAME##_tpcpoint_tpcpoint(PG_FUNCTION_ARGS);                  \
+PG_FUNCTION_INFO_V1(NAME##_tpcpoint_tpcpoint);                                 \
+Datum                                                                          \
+NAME##_tpcpoint_tpcpoint(PG_FUNCTION_ARGS)                                     \
+{                                                                              \
+  Temporal *temp1 = PG_GETARG_TEMPORAL_P(0);                                   \
+  Temporal *temp2 = PG_GETARG_TEMPORAL_P(1);                                   \
+  Temporal *proj1 = tpcpoint_to_tgeompoint_temp(temp1);                        \
+  Temporal *proj2 = tpcpoint_to_tgeompoint_temp(temp2);                        \
+  PG_FREE_IF_COPY(temp1, 0); PG_FREE_IF_COPY(temp2, 1);                        \
+  if (! proj1 || ! proj2) {                                                    \
+    if (proj1) pfree(proj1); if (proj2) pfree(proj2);                          \
+    PG_RETURN_NULL();                                                          \
+  }                                                                            \
+  int r = ea_disjoint_tgeo_tgeo(proj1, proj2, EVER);                           \
+  pfree(proj1); pfree(proj2);                                                  \
+  if (r < 0) PG_RETURN_NULL();                                                 \
+  PG_RETURN_BOOL(r == 1);                                                      \
+}
+
+EA_DISJOINT_TPC_GEO(Edisjoint, EVER)
+EA_DISJOINT_TPC_GEO(Adisjoint, ALWAYS)
+
+#undef EA_DISJOINT_TPC_GEO
+
+#define EA_DWITHIN_TPC_GEO(NAME, EVER)                                         \
+PGDLLEXPORT Datum NAME##_tpcpoint_geo(PG_FUNCTION_ARGS);                       \
+PG_FUNCTION_INFO_V1(NAME##_tpcpoint_geo);                                      \
+Datum                                                                          \
+NAME##_tpcpoint_geo(PG_FUNCTION_ARGS)                                          \
+{                                                                              \
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);                                    \
+  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);                                \
+  double dist = PG_GETARG_FLOAT8(2);                                           \
+  Temporal *proj = tpcpoint_to_tgeompoint_temp(temp);                          \
+  PG_FREE_IF_COPY(temp, 0);                                                    \
+  if (! proj) { PG_FREE_IF_COPY(gs, 1); PG_RETURN_NULL(); }                    \
+  int r = ea_dwithin_tgeo_geo(proj, gs, dist, EVER);                           \
+  pfree(proj);                                                                 \
+  PG_FREE_IF_COPY(gs, 1);                                                      \
+  if (r < 0) PG_RETURN_NULL();                                                 \
+  PG_RETURN_BOOL(r == 1);                                                      \
+}                                                                              \
+PGDLLEXPORT Datum NAME##_geo_tpcpoint(PG_FUNCTION_ARGS);                       \
+PG_FUNCTION_INFO_V1(NAME##_geo_tpcpoint);                                      \
+Datum                                                                          \
+NAME##_geo_tpcpoint(PG_FUNCTION_ARGS)                                          \
+{                                                                              \
+  GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);                                \
+  Temporal *temp = PG_GETARG_TEMPORAL_P(1);                                    \
+  double dist = PG_GETARG_FLOAT8(2);                                           \
+  Temporal *proj = tpcpoint_to_tgeompoint_temp(temp);                          \
+  PG_FREE_IF_COPY(temp, 1);                                                    \
+  if (! proj) { PG_FREE_IF_COPY(gs, 0); PG_RETURN_NULL(); }                    \
+  int r = ea_dwithin_tgeo_geo(proj, gs, dist, EVER);                           \
+  pfree(proj);                                                                 \
+  PG_FREE_IF_COPY(gs, 0);                                                      \
+  if (r < 0) PG_RETURN_NULL();                                                 \
+  PG_RETURN_BOOL(r == 1);                                                      \
+}                                                                              \
+PGDLLEXPORT Datum NAME##_tpcpoint_tpcpoint(PG_FUNCTION_ARGS);                  \
+PG_FUNCTION_INFO_V1(NAME##_tpcpoint_tpcpoint);                                 \
+Datum                                                                          \
+NAME##_tpcpoint_tpcpoint(PG_FUNCTION_ARGS)                                     \
+{                                                                              \
+  Temporal *temp1 = PG_GETARG_TEMPORAL_P(0);                                   \
+  Temporal *temp2 = PG_GETARG_TEMPORAL_P(1);                                   \
+  double dist = PG_GETARG_FLOAT8(2);                                           \
+  Temporal *proj1 = tpcpoint_to_tgeompoint_temp(temp1);                        \
+  Temporal *proj2 = tpcpoint_to_tgeompoint_temp(temp2);                        \
+  PG_FREE_IF_COPY(temp1, 0); PG_FREE_IF_COPY(temp2, 1);                        \
+  if (! proj1 || ! proj2) {                                                    \
+    if (proj1) pfree(proj1); if (proj2) pfree(proj2);                          \
+    PG_RETURN_NULL();                                                          \
+  }                                                                            \
+  int r = ea_dwithin_tgeo_tgeo(proj1, proj2, dist, EVER);                      \
+  pfree(proj1); pfree(proj2);                                                  \
+  if (r < 0) PG_RETURN_NULL();                                                 \
+  PG_RETURN_BOOL(r == 1);                                                      \
+}
+
+EA_DWITHIN_TPC_GEO(Edwithin, EVER)
+EA_DWITHIN_TPC_GEO(Adwithin, ALWAYS)
+
+#undef EA_DWITHIN_TPC_GEO
 
 /*****************************************************************************/
