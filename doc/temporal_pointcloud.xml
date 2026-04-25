@@ -21,10 +21,168 @@ CREATE EXTENSION pointcloud;
 CREATE EXTENSION mobilitydb CASCADE;
 </programlisting>
 
+	<sect1 xml:id="tpointcloud_quickstart">
+		<title>Quickstart</title>
+
+		<para>This section walks through a minimal end-to-end example: registering a schema, building values, lifting to a temporal type, querying with the bbox surface, and indexing. The goal is to make every later section in this chapter pin to a concrete usage. Follow the steps in order against a fresh database.</para>
+
+		<sect2 xml:id="tpointcloud_quickstart_setup">
+			<title>1. Register a schema</title>
+
+			<para>Every <varname>pcpoint</varname> and <varname>pcpatch</varname> value carries a <varname>pcid</varname> that resolves through <varname>pointcloud_formats</varname> to an XML schema. The schema declares the dimensions (X, Y, Z, …), their on-disk numeric type, and per-dimension scale. A minimal 3D schema with all dimensions stored as <varname>int32</varname> at unit scale:</para>
+			<programlisting language="sql" xml:space="preserve" format="linespecific">
+INSERT INTO pointcloud_formats (pcid, srid, schema) VALUES (1, 4326, '
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;pc:PointCloudSchema xmlns:pc="http://pointcloud.org/schemas/PC/1.1"&gt;
+  &lt;pc:dimension&gt;&lt;pc:position&gt;1&lt;/pc:position&gt;&lt;pc:size&gt;4&lt;/pc:size&gt;
+    &lt;pc:name&gt;X&lt;/pc:name&gt;&lt;pc:interpretation&gt;int32_t&lt;/pc:interpretation&gt;
+    &lt;pc:scale&gt;1&lt;/pc:scale&gt;&lt;/pc:dimension&gt;
+  &lt;pc:dimension&gt;&lt;pc:position&gt;2&lt;/pc:position&gt;&lt;pc:size&gt;4&lt;/pc:size&gt;
+    &lt;pc:name&gt;Y&lt;/pc:name&gt;&lt;pc:interpretation&gt;int32_t&lt;/pc:interpretation&gt;
+    &lt;pc:scale&gt;1&lt;/pc:scale&gt;&lt;/pc:dimension&gt;
+  &lt;pc:dimension&gt;&lt;pc:position&gt;3&lt;/pc:position&gt;&lt;pc:size&gt;4&lt;/pc:size&gt;
+    &lt;pc:name&gt;Z&lt;/pc:name&gt;&lt;pc:interpretation&gt;int32_t&lt;/pc:interpretation&gt;
+    &lt;pc:scale&gt;1&lt;/pc:scale&gt;&lt;/pc:dimension&gt;
+&lt;/pc:PointCloudSchema&gt;');
+</programlisting>
+			<para>Schemas are global to the database; you usually register them once at fixture-load time. SRID is per-schema and inherited by every value with that <varname>pcid</varname>.</para>
+		</sect2>
+
+		<sect2 xml:id="tpointcloud_quickstart_construct">
+			<title>2. Build base and temporal values</title>
+
+			<para>MobilityDB ships ergonomic constructors over pgPointCloud's <varname>PC_MakePoint</varname> / <varname>PC_Patch</varname>:</para>
+			<programlisting language="sql" xml:space="preserve" format="linespecific">
+-- a single point at (1, 2, 3) under pcid=1
+SELECT pcpoint(1, 1.0, 2.0, 3.0);
+
+-- a patch holding two points
+SELECT pcpatch(1, pcpoint(1, 1.0, 2.0, 3.0),
+                  pcpoint(1, 4.0, 5.0, 6.0));
+
+-- a single-instant tpcpoint at (10, 20, 30) at 2024-01-01
+SELECT tpcpoint(pcpoint(1, 10, 20, 30), '2024-01-01'::timestamptz);
+
+-- a 3-instant moving sensor track (step interpolation, the default for
+-- pointcloud temporals because dimensions like Intensity don't interpolate
+-- linearly the way coordinates do)
+SELECT tpcpointSeq(ARRAY[
+  tpcpoint(pcpoint(1, 0, 0, 0), '2024-01-01'::timestamptz),
+  tpcpoint(pcpoint(1, 1, 1, 1), '2024-01-02'::timestamptz),
+  tpcpoint(pcpoint(1, 2, 2, 2), '2024-01-03'::timestamptz)]);
+</programlisting>
+			<para>For long sessions, declare the column with a <emphasis>typmod</emphasis> so every row's pcid is enforced at INSERT time:</para>
+			<programlisting language="sql" xml:space="preserve" format="linespecific">
+CREATE TABLE scans (id int, traj tpcpoint(1), full_scan tpcpatch(1));
+INSERT INTO scans VALUES (1,
+  tpcpointSeq(ARRAY[
+    tpcpoint(pcpoint(1, 0, 0, 0), '2024-01-01'::timestamptz),
+    tpcpoint(pcpoint(1, 1, 1, 1), '2024-01-02'::timestamptz)]),
+  tpcpatch(pcpatch(1, pcpoint(1,1,1,1), pcpoint(1,2,2,2)),
+           '2024-01-01'::timestamptz));
+</programlisting>
+			<para>Inserting a value whose pcid disagrees with the column's typmod raises <varname>ERROR: Pcid of tpcpoint value (N) does not match column typmod pcid (M)</varname>; mixing pcids in an unconstrained column is also rejected at <varname>extent</varname> aggregation time.</para>
+		</sect2>
+
+		<sect2 xml:id="tpointcloud_quickstart_query">
+			<title>3. Query with the bbox surface</title>
+
+			<para>Every tpcpoint and tpcpatch carries a <varname>tpcbox</varname> (mirror of <varname>stbox</varname> + <varname>pcid</varname>) computed at construction time. The bbox-level operator surface — topological (<varname>&amp;&amp;</varname>, <varname>@&gt;</varname>, <varname>&lt;@</varname>, <varname>~=</varname>, <varname>-|-</varname>), directional on X/Y/Z/time, and KNN distance <varname>|=|</varname> — works between any pair of (<varname>tpcbox</varname>, <varname>tpcpoint</varname>, <varname>tpcpatch</varname>):</para>
+			<programlisting language="sql" xml:space="preserve" format="linespecific">
+-- rows whose track ever entered a 3D-temporal box
+SELECT id FROM scans
+WHERE traj &amp;&amp; tpcbox_zt(0, 0, 0, 1, 1, 1,
+  tstzspan '[2024-01-01, 2024-01-02]', 1, 4326);
+
+-- 5 nearest tracks to a query box (KNN, GiST-orderable)
+SELECT id, traj |=| my_box AS dist FROM scans
+ORDER BY traj |=| my_box LIMIT 5;
+</programlisting>
+			<para>Patch-level filtering (drop entire instants whose patch does not overlap a box) is provided by <varname>atTpcbox</varname> / <varname>minusTpcbox</varname>. See <link linkend="tpcpatch_perpoint_roadmap">Per-point operations</link> for the granularity scope.</para>
+		</sect2>
+
+		<sect2 xml:id="tpointcloud_quickstart_index">
+			<title>4. Index for bbox-driven scans</title>
+
+			<para>R-tree GiST and quadtree / kd-tree SP-GiST opclasses accelerate every bbox predicate. Pick GiST for general-purpose workloads (and for KNN ordering); SP-GiST kd-tree is competitive on read-heavy point-only data:</para>
+			<programlisting language="sql" xml:space="preserve" format="linespecific">
+CREATE INDEX scans_traj_gist ON scans USING gist(traj);
+CREATE INDEX scans_full_spgist ON scans USING spgist(full_scan);
+</programlisting>
+			<para>The SP-GiST opclasses store an <varname>stbox</varname> internally and recover the <varname>pcid</varname> filter at recheck time, so a column with mixed pcids returns a slightly larger candidate set for recheck — a non-issue when each table holds values of a single schema, which the typmod recipe in step 2 enforces.</para>
+		</sect2>
+
+		<sect2 xml:id="tpointcloud_quickstart_aggregate">
+			<title>5. Aggregate</title>
+
+			<programlisting language="sql" xml:space="preserve" format="linespecific">
+-- spatiotemporal extent of every track (one tpcbox)
+SELECT extent(traj) FROM scans;
+
+-- count of active tracks at each timestamp (tint)
+SELECT tcount(traj) FROM scans;
+
+-- merge per-source instants into a single tpcpoint
+SELECT id, merge(traj) FROM scans GROUP BY id;
+</programlisting>
+			<para><varname>extent</varname> rejects mixed pcids (the bbox dimensions would be uninterpretable across schemas); <varname>merge</varname> and <varname>tcount</varname> follow the same rules as their non-pointcloud counterparts.</para>
+		</sect2>
+
+		<sect2 xml:id="tpointcloud_quickstart_perpoint">
+			<title>6. Per-point access</title>
+
+			<para>The <link linkend="tpcpatch_points"><varname>points</varname></link> set-returning function explodes each instant's patch into individual pcpoints, useful for joins against per-point predicates that the bbox layer cannot express:</para>
+			<programlisting language="sql" xml:space="preserve" format="linespecific">
+-- explode every patch in the column into one row per (instant timestamp, point)
+SELECT id, t, point FROM scans, points(full_scan);
+
+-- total points across every instant of every track
+SELECT id, numPoints(full_scan) FROM scans;
+</programlisting>
+			<para>Per-point <emphasis>filtering</emphasis> — building a new patch from a subset of the original's points — is currently out of scope; see <link linkend="tpcpatch_perpoint_roadmap">Per-point operations</link> for the libpc surface gap that limits it.</para>
+		</sect2>
+
+		<sect2 xml:id="tpointcloud_quickstart_next">
+			<title>What's next</title>
+
+			<para>The rest of the chapter expands on each of the surfaces touched here: <link linkend="pcpoint_pcpatch_static">pcpoint / pcpatch accessors</link>, <link linkend="pcpointset_pcpatchset">pcpointset / pcpatchset</link>, <link linkend="tpcbox">the tpcbox bounding box</link>, <link linkend="tpcpoint">tpcpoint</link>, <link linkend="tpcpatch">tpcpatch</link>, <link linkend="tpointcloud_indexes">indexes</link>, and <link linkend="tpointcloud_aggregations">aggregations</link>.</para>
+		</sect2>
+	</sect1>
+
 	<sect1 xml:id="pcpoint_pcpatch_static">
 		<title>Static Types <varname>pcpoint</varname> and <varname>pcpatch</varname></title>
 
 		<para>The static types come from pgPointCloud. MobilityDB exposes the schema-aware coordinate accessors needed to project pgPointCloud values into the rest of the temporal-types ecosystem.</para>
+
+		<sect2 xml:id="pcpoint_pcpatch_constructors">
+			<title>Ergonomic constructors</title>
+
+			<para>pgPointCloud's <varname>pcpoint_in</varname> only accepts hex-WKB, so the canonical builder is <varname>PC_MakePoint(pcid, ARRAY[…]::float[])</varname>. MobilityDB ships two thin SQL overloads on top of it for shorter test literals and ad-hoc queries; the underlying schema-dimension validation still happens inside <varname>PC_MakePoint</varname>.</para>
+
+			<itemizedlist>
+				<listitem xml:id="pcpoint_xy_xyz">
+					<indexterm significance="normal"><primary><varname>pcpoint</varname></primary></indexterm>
+					<para>Build a 2D or 3D pcpoint directly from x/y(/z) coordinates</para>
+					<para><varname>pcpoint(pcid integer, x float, y float) → pcpoint</varname></para>
+					<para><varname>pcpoint(pcid integer, x float, y float, z float) → pcpoint</varname></para>
+					<programlisting language="sql" xml:space="preserve" format="linespecific">
+SELECT pcpoint(1, 10.0, 20.0, 30.0);
+-- equivalent to PC_MakePoint(1, ARRAY[10.0, 20.0, 30.0]::float[])
+</programlisting>
+				</listitem>
+
+				<listitem xml:id="pcpatch_variadic">
+					<indexterm significance="normal"><primary><varname>pcpatch</varname></primary></indexterm>
+					<para>Build a pcpatch from a variadic list of pcpoints sharing the same pcid</para>
+					<para><varname>pcpatch(pcid integer, VARIADIC points pcpoint[]) → pcpatch</varname></para>
+					<programlisting language="sql" xml:space="preserve" format="linespecific">
+SELECT pcpatch(1, pcpoint(1, 1.0, 1.0, 1.0), pcpoint(1, 2.0, 2.0, 2.0));
+-- equivalent to PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]::float[]),
+--                              PC_MakePoint(1, ARRAY[2.0, 2.0, 2.0]::float[])])
+</programlisting>
+				</listitem>
+			</itemizedlist>
+		</sect2>
 
 		<sect2 xml:id="pcpoint_accessors">
 			<title>Accessors</title>
@@ -412,6 +570,19 @@ SELECT tpcbox(0, 0, 5, 5, 1, 0) &amp;&amp; tpcbox(0, 0, 5, 5, 2, 0);  -- f (pcid
 
 		<para>The bounding box of a <varname>tpcpoint</varname> is a <varname>tpcbox</varname>, computed at construction time from the X/Y/Z dimensions of the underlying <varname>pcpoint</varname> values together with the timestamps of the instants.</para>
 
+		<para>A column or domain may pin the schema by adding the <varname>pcid</varname> as a single-integer typmod, exactly like PostGIS' <varname>geometry(Point, SRID)</varname>. Mixing schemas in such a column is rejected at INSERT or cast time. The same construct applies to <varname>tpcpatch</varname>.</para>
+		<programlisting language="sql" xml:space="preserve" format="linespecific">
+CREATE TABLE scans (id int, traj tpcpoint(1), full_scan tpcpatch(1));
+-- accepts pcid 1
+INSERT INTO scans VALUES (1,
+  tpcpoint(pcpoint(1, 1.0, 2.0, 3.0), '2024-01-01'::timestamptz),
+  tpcpatch(pcpatch(1, pcpoint(1, 1, 1, 1), pcpoint(1, 2, 2, 2)),
+           '2024-01-01'::timestamptz));
+-- rejects any other pcid:
+-- ERROR: Pcid of tpcpoint value (2) does not match column typmod pcid (1)
+</programlisting>
+		<para>Omitting the typmod (<varname>tpcpoint</varname> with no parenthesised pcid) leaves the column schema-agnostic. The runtime check in the <varname>extent</varname> aggregate still rejects mid-query mixed-pcid input even on unconstrained columns.</para>
+
 		<sect2 xml:id="tpcpoint_constructors">
 			<title>Constructors</title>
 			<itemizedlist>
@@ -593,6 +764,26 @@ SELECT ST_AsText(startValue(tpcpoint(PC_MakePoint(1, ARRAY[10.0, 20.0, 30.0]),
 			</itemizedlist>
 		</sect2>
 
+		<sect2 xml:id="tpcpoint_btree_ordering">
+			<title>B-tree ordering — what <varname>ORDER BY tpcpoint</varname> means</title>
+
+			<para>The <varname>tpcpoint_btree_ops</varname> opclass produces a total order over <varname>tpcpoint</varname> values, but the order is byte-wise on the underlying <varname>pcpoint</varname> serialisation, not geometric. The same caveats that apply to <link linkend="tpcpatch_btree"><varname>tpcpatch</varname>'s B-tree</link> apply here:</para>
+
+			<itemizedlist>
+				<listitem>
+					<para><emphasis role="bold"><varname>pcid</varname> is the primary discriminator.</emphasis> Points with smaller <varname>pcid</varname> sort before points with larger <varname>pcid</varname>, regardless of coordinates. Mixing pcids in a single column groups rows by schema first when ordering.</para>
+				</listitem>
+				<listitem>
+					<para><emphasis role="bold">Within a single <varname>pcid</varname>, ordering follows the schema's on-disk dimension layout</emphasis> — typically X, Y, Z encoded as int32 (after applying the schema's per-dimension scale). Two points whose Euclidean distance is small can sort far apart if their X dimensions differ, since X is compared first.</para>
+				</listitem>
+				<listitem>
+					<para><emphasis role="bold">Equality is exact-bytes equality.</emphasis> Two pcpoints with the same dimension values in the same schema are equal; the same coordinate set encoded in a schema with different scale or dimension order is not.</para>
+				</listitem>
+			</itemizedlist>
+
+			<para>For spatial-meaningful ordering, project to a <varname>tgeompoint</varname> via the schema-aware cast and use PostGIS' KNN <varname>&lt;-&gt;</varname> on the resulting geometry, or use the GiST KNN operator <link linkend="tpcpoint_knn"><varname>|=|</varname></link> directly on the tpcpoint. For time-meaningful ordering, project to <varname>startTimestamp</varname> or <varname>timespan</varname> and order on that.</para>
+		</sect2>
+
 		<sect2 xml:id="tpcpoint_spatialrels">
 			<title>Spatial relationships</title>
 			<para>Evaluated by projecting the tpcpoint to a <varname>tgeompoint</varname> via the schema cache and delegating to the corresponding tgeompoint relation. Each function is wired in three argument orders: <varname>(geometry, tpcpoint)</varname>, <varname>(tpcpoint, geometry)</varname>, and <varname>(tpcpoint, tpcpoint)</varname>. tpcpatch is intentionally out of scope — patch-level intersection would require per-point decompression and a different design.</para>
@@ -667,7 +858,37 @@ SELECT startNumPoints(tpcpatch(PC_Patch(PC_MakePoint(1, ARRAY[10.0, 20.0, 30.0])
 -- 1
 </programlisting>
 				</listitem>
+
+				<listitem xml:id="tpcpatch_total_numpoints">
+					<indexterm significance="normal"><primary><varname>numPoints</varname></primary></indexterm>
+					<para>Return the total number of points across every instant's patch. Read directly from each patch's header — no decompression.</para>
+					<para><varname>numPoints(tpcpatch) → bigint</varname></para>
+					<programlisting language="sql" xml:space="preserve" format="linespecific">
+SELECT numPoints(tpcpatchSeq(ARRAY[
+  tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]),
+                          PC_MakePoint(1, ARRAY[2.0, 2.0, 2.0])]),
+           '2024-01-01'::timestamptz),
+  tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[3.0, 3.0, 3.0])]),
+           '2024-01-02'::timestamptz)]));
+-- 3
+</programlisting>
+				</listitem>
+
+				<listitem xml:id="tpcpatch_points">
+					<indexterm significance="normal"><primary><varname>points</varname></primary></indexterm>
+					<para>Set-returning function: emits one row per (instant timestamp, point) by walking each instant's patch and decomposing it via pgPointCloud's <varname>PC_Explode</varname>. Useful for joining a tpcpatch column against per-point predicates that the bbox-level operators can't express; expect roughly the cost of <varname>numInstants</varname> calls to <varname>PC_Explode</varname>, so reach for it when correctness matters more than throughput.</para>
+					<para><varname>points(tpcpatch) → setof (t timestamptz, point pcpoint)</varname></para>
+					<programlisting language="sql" xml:space="preserve" format="linespecific">
+SELECT t, point FROM points(tpcpatch(
+  PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]),
+                 PC_MakePoint(1, ARRAY[2.0, 2.0, 2.0])]),
+  '2024-01-01'::timestamptz));
+-- ('2024-01-01', '01:0000000000000000000000F03F0000000000000000F03F00000000000000F03F'::pcpoint)
+-- ('2024-01-01', '01:0000000000000000000000004000000000000000400000000000000040'::pcpoint)
+</programlisting>
+				</listitem>
 			</itemizedlist>
+			<para>See <xref linkend="tpcpatch_perpoint_roadmap" /> for the limits of these accessors and what is and is not available at per-point granularity.</para>
 		</sect2>
 
 		<sect2 xml:id="tpcpatch_restrictions">
@@ -699,6 +920,51 @@ SELECT startNumPoints(tpcpatch(PC_Patch(PC_MakePoint(1, ARRAY[10.0, 20.0, 30.0])
 					<para><varname>nearestApproachDistance(tpcpatch,tpcpatch) → float</varname></para>
 				</listitem>
 			</itemizedlist>
+		</sect2>
+
+		<sect2 xml:id="tpcpatch_btree">
+			<title>B-tree ordering — what <varname>ORDER BY tpcpatch</varname> means</title>
+
+			<para>The <varname>tpcpatch_btree_ops</varname> opclass produces a total order over <varname>tpcpatch</varname> values, but the order is not spatial. The comparator on the underlying <varname>pcpatch</varname> is byte-wise (<function>memcmp</function> over the meaningful varlena bytes); the temporal-level comparator is the lexicographic combination of per-instant timestamps and per-instant <varname>pcpatch</varname> byte order. The observable consequences:</para>
+
+			<itemizedlist>
+				<listitem>
+					<para><emphasis role="bold"><varname>pcid</varname> is the primary discriminator.</emphasis> A patch with a smaller <varname>pcid</varname> sorts before one with a larger <varname>pcid</varname>, regardless of point coordinates, count, or compression. This makes <varname>ORDER BY</varname> on a mixed-pcid column group rows by schema first, which is sometimes useful as a coarse-grained "chunk by source schema" pass.</para>
+				</listitem>
+				<listitem>
+					<para><emphasis role="bold">Within a single <varname>pcid</varname>, ordering follows the on-disk byte layout</emphasis>: <varname>compression</varname> scheme, then <varname>npoints</varname>, then the 2D <varname>PCBOUNDS</varname> (xmin, xmax, ymin, ymax), then the compressed <varname>data</varname> payload. This is well-defined and stable for a given pgPointCloud release, but it is <emphasis>not</emphasis> a geometric or spatial ordering — two patches whose bounding boxes overlap in 3D space can sort arbitrarily relative to each other if their compression scheme or point count differs.</para>
+				</listitem>
+				<listitem>
+					<para><emphasis role="bold">Equality is exact-bytes equality</emphasis> over the meaningful bytes (the trailing zero-padding pgPointCloud's varlena reserves is excluded). Two patches built from the same point set in the same order, with the same compression, are equal; reordering the points or changing compression makes them unequal.</para>
+				</listitem>
+			</itemizedlist>
+
+			<para>For spatial-meaningful ordering, use the GiST KNN operator <varname>|=|</varname> (see <link linkend="tpcpatch_knn">nearest-approach distance on tpcpatch</link>); for time-meaningful ordering, project to <varname>startTimestamp</varname> or <varname>timespan</varname> and order on that.</para>
+		</sect2>
+
+		<sect2 xml:id="tpcpatch_perpoint_roadmap">
+			<title>Per-point operations: what is and is not available</title>
+
+			<para>Operations on <varname>tpcpatch</varname> values come at two granularities: <emphasis>patch-level</emphasis> and <emphasis>per-point</emphasis>. The split matters because pgPointCloud patches store their points in a compressed payload that the bbox layer cannot inspect.</para>
+
+			<itemizedlist>
+				<listitem>
+					<para><emphasis role="bold">Patch-level — supported.</emphasis> Each instant's patch is treated as opaque and is kept or dropped as a whole, using only the 4-double <varname>PCBOUNDS</varname> header (xmin / xmax / ymin / ymax) and the instant's timestamp. This is the granularity of <link linkend="tpcpatch_atTpcbox"><varname>atTpcbox</varname> / <varname>minusTpcbox</varname></link> and the bounding-box operators in <xref linkend="tpcpatch_bbox_ops" />, and of the bbox-driven <varname>tpcbox</varname> aggregate. No payload decompression happens; queries are O(number of instants).</para>
+					<para>Because <varname>PCBOUNDS</varname> is 2D, the Z dimension of any <varname>tpcbox</varname> argument is ignored at this granularity even when the underlying schema has a Z dimension.</para>
+				</listitem>
+
+				<listitem>
+					<para><emphasis role="bold">Per-point inspection — supported via SQL only.</emphasis> The <link linkend="tpcpatch_points"><varname>points</varname></link> set-returning function decomposes each instant's patch into individual <varname>pcpoint</varname>s using pgPointCloud's <varname>PC_Explode</varname>. Useful for joins against per-point predicates, but cost is roughly N calls to <varname>PC_Explode</varname> on dense patches.</para>
+				</listitem>
+
+				<listitem>
+					<para><emphasis role="bold">Per-point filtering / construction — not available.</emphasis> Operators that build a new patch from a subset of the original's points — e.g. an <varname>atTpcbox</varname> overload that drops individual points failing the box's xy/z extent, or <varname>eIntersects(tpcpatch, geometry)</varname> over actual point coordinates rather than just the patch bounding box — are not implemented. They would require C-side decompression and re-serialisation of patches inside MEOS, and the helper symbols pgPointCloud uses for that (<varname>pc_patch_deserialize</varname>, <varname>pc_point_serialize</varname>) are currently compiled only into the <varname>pointcloud-1.2.so</varname> extension and are not exported from <varname>libpc.a</varname>. MEOS, which is the cross-platform C library underneath MobilityDB, links the static library and therefore cannot reach them.</para>
+				</listitem>
+			</itemizedlist>
+
+			<para>The cleanest unblock is a small upstream change in pgPointCloud that promotes those helpers into <varname>lib/</varname> and declares them in <varname>pc_api.h</varname>. Once that lands, MEOS can decompose patches in C, the SQL <varname>points()</varname> wrapper can be replaced with a native code path roughly an order of magnitude faster on dense patches, and the per-point filtering / spatial-relationship operators become straightforward to add on top.</para>
+
+			<para>Until then, the recommended workflow for per-point predicates is: (a) prune at the patch level with <varname>atTpcbox</varname> or an SP-GiST/GiST index scan to drop entire instants whose <varname>PCBOUNDS</varname> doesn't overlap the area of interest, and (b) decompose the surviving rows with <varname>points()</varname> and apply the per-point predicate in SQL.</para>
 		</sect2>
 	</sect1>
 

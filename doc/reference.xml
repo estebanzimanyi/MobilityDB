@@ -2643,6 +2643,14 @@
 				<title>Constructors</title>
 				<itemizedlist>
 					<listitem>
+						<para><link linkend="pcpoint_xy_xyz"><varname>pcpoint</varname></link>: Build a pcpoint from raw x/y(/z) coordinates (ergonomic wrapper over PC_MakePoint)</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="pcpatch_variadic"><varname>pcpatch</varname></link>: Build a pcpatch from a variadic list of pcpoints (ergonomic wrapper over PC_Patch)</para>
+					</listitem>
+
+					<listitem>
 						<para><link linkend="tpcpoint_inst"><varname>tpcpoint</varname></link>: Construct a temporal pcpoint of instant subtype</para>
 					</listitem>
 
@@ -2690,6 +2698,18 @@
 
 					<listitem>
 						<para><link linkend="tpcpatch_numpoints"><varname>startNumPoints</varname>, <varname>endNumPoints</varname></link>: Return the number of points in a tpcpatch's first/last instant</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpatch_total_numpoints"><varname>numPoints</varname></link>: Return the total number of points across every instant's patch</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpatch_points"><varname>points</varname></link>: Set-returning function emitting one row per (instant timestamp, point) via PC_Explode</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpatch_perpoint_roadmap">Per-point operations</link>: scope of patch-level vs. per-point operators on tpcpatch and the libpc surface gap that limits the per-point side</para>
 					</listitem>
 				</itemizedlist>
 			</sect3>
@@ -2769,6 +2789,18 @@
 					</listitem>
 					<listitem>
 						<para><link linkend="tpcpatch_knn"><varname>|=|</varname></link>: Nearest-approach distance on tpcpatch, KNN-orderable through GiST</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>B-tree ordering</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcpoint_btree_ordering">B-tree ordering on tpcpoint</link>: byte-wise total order with pcid as primary discriminator — semantics + caveats</para>
+					</listitem>
+					<listitem>
+						<para><link linkend="tpcpatch_btree">B-tree ordering on tpcpatch</link>: byte-wise total order with pcid as primary discriminator — semantics + caveats</para>
 					</listitem>
 				</itemizedlist>
 			</sect3>

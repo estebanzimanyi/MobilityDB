@@ -38,6 +38,9 @@ set(POINTCLOUD_PG_SRCS
   # Extent (and other future) aggregate transition / combine functions
   # over tpcpoint / tpcpatch / tpcbox.
   tpc_aggfuncs.c
+  # Column-level pcid pinning via PG typmod. Mirrors the
+  # tgeompoint(Point, SRID) typmod pattern.
+  tpc_typmod.c
 )
 
 if(POINTCLOUD_PG_SRCS)

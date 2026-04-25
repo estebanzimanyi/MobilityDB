@@ -1,3 +1,17 @@
+SELECT pcpoint(1, 1.0, 1.0, 1.0)::text =
+  PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]::float[])::text;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT tpcpoint(pcpoint(1, 1.0, 1.0, 1.0), '2024-01-01'::timestamptz)::text =
+  (tpcpoint(PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]::float[]), '2024-01-01'::timestamptz))::text;
+ ?column? 
+----------
+ f
+(1 row)
+
 SELECT pcid(tpcpoint(PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]::float[]), '2024-01-01'::timestamptz));
  pcid 
 ------

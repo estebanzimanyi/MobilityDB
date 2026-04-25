@@ -1052,8 +1052,14 @@ EXCLUDE_SYMLINKS       = NO
 #
 # Note that the wildcards are matched against the file with absolute path, so to
 # exclude all test directories for example use the pattern */test/*
+#
+# Skip scratch / WIP files (tbox_master.c, load_test.sql) that
+# occasionally land in the working tree during local development. They
+# are untracked, not part of the CMake build, and otherwise produce
+# spurious "explicit link request could not be resolved" warnings.
 
-EXCLUDE_PATTERNS       =
+EXCLUDE_PATTERNS       = */src/*/tbox_master.c \
+                         */data/load_test.sql
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the

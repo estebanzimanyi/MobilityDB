@@ -28,8 +28,8 @@
   #include "varatt.h"
 #endif
 #include "common/hashfn.h"
-#include "utils/builtins.h"
 #include <stddef.h>          /* offsetof */
+#include <liblwgeom.h>       /* parse_hex, deparse_hex (PostGIS) */
 /* MEOS */
 #include <meos.h>
 
@@ -128,13 +128,8 @@ pcpatch_parse(const char **str, bool end)
   }
 
   Pcpatch *result = palloc(byte_len);
-  if (hex_decode(hex_start, hex_len, (char *) result) != byte_len)
-  {
-    pfree(result);
-    meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
-      "Could not parse %s value: hex decode failed", type_str);
-    return NULL;
-  }
+  for (size_t i = 0; i < byte_len; i++)
+    ((char *) result)[i] = (char) parse_hex((char *) hex_start + 2 * i);
   SET_VARSIZE(result, byte_len);
 
   *str = p;
@@ -185,7 +180,8 @@ pcpatch_hex_out(const Pcpatch *pa, int maxdd)
   size_t byte_len = VARSIZE(pa);
   size_t hex_len = byte_len * 2;
   char *result = palloc(hex_len + 1);
-  hex_encode((const char *) pa, byte_len, result);
+  for (size_t i = 0; i < byte_len; i++)
+    deparse_hex(((const uint8_t *) pa)[i], result + 2 * i);
   result[hex_len] = '\0';
   return result;
 }

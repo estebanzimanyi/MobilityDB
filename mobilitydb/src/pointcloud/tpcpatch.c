@@ -111,6 +111,57 @@ Tpcpatch_end_npoints(PG_FUNCTION_ARGS)
   PG_RETURN_INT32((int32) n);
 }
 
+PGDLLEXPORT Datum Tpcpatch_npoints(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tpcpatch_npoints);
+/**
+ * @ingroup mobilitydb_pointcloud_accessor
+ * @brief Return the total number of points across every instant's
+ *   pcpatch in a tpcpatch value.
+ * @details Per-instant @c pcpatch_npoints summed without decompressing
+ *   any payload (the count is in the patch header). bigint return type
+ *   because a long sequence of dense patches can blow past int32.
+ * @sqlfn numPoints()
+ */
+Datum
+Tpcpatch_npoints(PG_FUNCTION_ARGS)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  int64 total = 0;
+  if (temp->subtype == TINSTANT)
+  {
+    const TInstant *inst = (const TInstant *) temp;
+    const Pcpatch *pa = (const Pcpatch *) DatumGetPointer(tinstant_value_p(inst));
+    total = (int64) pcpatch_npoints(pa);
+  }
+  else if (temp->subtype == TSEQUENCE)
+  {
+    const TSequence *seq = (const TSequence *) temp;
+    for (int i = 0; i < seq->count; i++)
+    {
+      const TInstant *inst = TSEQUENCE_INST_N(seq, i);
+      const Pcpatch *pa = (const Pcpatch *) DatumGetPointer(tinstant_value_p(inst));
+      total += (int64) pcpatch_npoints(pa);
+    }
+  }
+  else /* TSEQUENCESET */
+  {
+    const TSequenceSet *ss = (const TSequenceSet *) temp;
+    for (int i = 0; i < ss->count; i++)
+    {
+      const TSequence *seq = TSEQUENCESET_SEQ_N(ss, i);
+      for (int j = 0; j < seq->count; j++)
+      {
+        const TInstant *inst = TSEQUENCE_INST_N(seq, j);
+        const Pcpatch *pa =
+          (const Pcpatch *) DatumGetPointer(tinstant_value_p(inst));
+        total += (int64) pcpatch_npoints(pa);
+      }
+    }
+  }
+  PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_INT64(total);
+}
+
 /*****************************************************************************
  * TPCBox-based restriction (patch-level / coarse)
  *
