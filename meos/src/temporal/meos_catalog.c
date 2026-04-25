@@ -1165,6 +1165,9 @@ temporal_basetype(meosType type)
 #if POSE || RGEO
     || type == T_POSE
 #endif
+#if POINTCLOUD
+    || type == T_PCPOINT || type == T_PCPATCH
+#endif
     );
 }
 #endif

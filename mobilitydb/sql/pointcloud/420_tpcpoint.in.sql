@@ -70,15 +70,34 @@ CREATE FUNCTION tpcpoint_send(tpcpoint)
   AS 'MODULE_PATHNAME', 'Temporal_send'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION tpc_typmod_in(cstring[])
+  RETURNS integer
+  AS 'MODULE_PATHNAME', 'Tpc_typmod_in'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tpc_typmod_out(integer)
+  RETURNS cstring
+  AS 'MODULE_PATHNAME', 'Tpc_typmod_out'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 CREATE TYPE tpcpoint (
   internallength = variable,
   input = tpcpoint_in,
   output = tpcpoint_out,
   receive = tpcpoint_recv,
   send = tpcpoint_send,
+  typmod_in = tpc_typmod_in,
+  typmod_out = tpc_typmod_out,
   storage = extended,
   alignment = double
 );
+
+-- Special cast for enforcing the typmod restriction on INSERT / cast.
+CREATE FUNCTION tpcpoint(tpcpoint, integer)
+  RETURNS tpcpoint
+  AS 'MODULE_PATHNAME', 'Tpc_enforce_typmod'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE CAST (tpcpoint AS tpcpoint)
+  WITH FUNCTION tpcpoint(tpcpoint, integer) AS IMPLICIT;
 
 /******************************************************************************
  * WKB / HexWKB helpers
@@ -105,6 +124,30 @@ CREATE FUNCTION asMFJSON(tpcpoint, options int4 DEFAULT 0,
   RETURNS text
   AS 'MODULE_PATHNAME', 'Temporal_as_mfjson'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/******************************************************************************
+ * Ergonomic pcpoint constructors
+ *
+ * pgPointCloud's `pcpoint_in` only accepts hex-WKB; the canonical
+ * builder is `PC_MakePoint(pcid, ARRAY[…]::float[])` whose argument
+ * shape is verbose at the test-literal level. These two-/three-arg
+ * overloads wrap that builder so tests and ad-hoc queries can write
+ * `pcpoint(1, 1.0, 1.0, 1.0)`. Pure SQL; no new C code.
+ *
+ * The schema dimension count is enforced downstream by PC_MakePoint
+ * — these wrappers inherit that behaviour.
+ ******************************************************************************/
+
+CREATE FUNCTION pcpoint(pcid integer, x double precision, y double precision)
+  RETURNS pcpoint
+  AS $$ SELECT PC_MakePoint($1, ARRAY[$2, $3]::float[]) $$
+  LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION pcpoint(pcid integer, x double precision, y double precision,
+    z double precision)
+  RETURNS pcpoint
+  AS $$ SELECT PC_MakePoint($1, ARRAY[$2, $3, $4]::float[]) $$
+  LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************
  * Constructors

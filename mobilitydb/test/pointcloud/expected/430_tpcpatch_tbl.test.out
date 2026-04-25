@@ -82,6 +82,32 @@ SELECT bool_and(endNumPoints(inst)   BETWEEN 1 AND 10) FROM tbl_tpcpatch_inst;
  t
 (1 row)
 
+SELECT bool_and(numPoints(inst) = startNumPoints(inst)) FROM tbl_tpcpatch_inst;
+ bool_and 
+----------
+ t
+(1 row)
+
+SELECT bool_and(numPoints(temp) >= 1) FROM tbl_tpcpatch;
+ bool_and 
+----------
+ t
+(1 row)
+
+SELECT bool_and(numPoints(temp) =
+  (SELECT COUNT(*) FROM points(temp))) FROM tbl_tpcpatch;
+ bool_and 
+----------
+ t
+(1 row)
+
+SELECT bool_and(numInstants(temp) =
+  (SELECT COUNT(DISTINCT t) FROM points(temp))) FROM tbl_tpcpatch;
+ bool_and 
+----------
+ t
+(1 row)
+
 SELECT COUNT(*) FROM tbl_tpcpatch t1, tbl_tpcpatch t2 WHERE t1.temp =  t2.temp;
  count 
 -------

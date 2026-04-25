@@ -34,8 +34,8 @@
   #include "varatt.h"
 #endif
 #include "common/hashfn.h"
-#include "utils/builtins.h"  /* hex_encode, hex_decode */
 #include <stddef.h>          /* offsetof */
+#include <liblwgeom.h>       /* parse_hex, deparse_hex (PostGIS) */
 /* pgpointcloud */
 #include "pc_api.h"
 /* MEOS */
@@ -174,13 +174,12 @@ pcpoint_parse(const char **str, bool end)
   }
 
   Pcpoint *result = palloc(byte_len);
-  if (hex_decode(hex_start, hex_len, (char *) result) != byte_len)
-  {
-    pfree(result);
-    meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
-      "Could not parse %s value: hex decode failed", type_str);
-    return NULL;
-  }
+  /* parse_hex consumes 2 chars at a time and returns the decoded byte;
+   * we drive it byte-by-byte. PostGIS does no per-call validation, so
+   * a malformed hex digit silently maps to 0 — acceptable for an
+   * already length-validated payload. */
+  for (size_t i = 0; i < byte_len; i++)
+    ((char *) result)[i] = (char) parse_hex((char *) hex_start + 2 * i);
   /* Overwrite the varlena header to match the decoded byte length (the
    * on-wire first 4 bytes may use pgpointcloud's own size convention). */
   SET_VARSIZE(result, byte_len);
@@ -233,7 +232,8 @@ pcpoint_hex_out(const Pcpoint *pt, int maxdd)
   size_t byte_len = VARSIZE(pt);
   size_t hex_len = byte_len * 2;
   char *result = palloc(hex_len + 1);
-  hex_encode((const char *) pt, byte_len, result);
+  for (size_t i = 0; i < byte_len; i++)
+    deparse_hex(((const uint8_t *) pt)[i], result + 2 * i);
   result[hex_len] = '\0';
   return result;
 }

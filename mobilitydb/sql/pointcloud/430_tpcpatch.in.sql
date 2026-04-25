@@ -75,9 +75,19 @@ CREATE TYPE tpcpatch (
   output = tpcpatch_out,
   receive = tpcpatch_recv,
   send = tpcpatch_send,
+  typmod_in = tpc_typmod_in,
+  typmod_out = tpc_typmod_out,
   storage = extended,
   alignment = double
 );
+
+-- Special cast for enforcing the typmod restriction on INSERT / cast.
+CREATE FUNCTION tpcpatch(tpcpatch, integer)
+  RETURNS tpcpatch
+  AS 'MODULE_PATHNAME', 'Tpc_enforce_typmod'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE CAST (tpcpatch AS tpcpatch)
+  WITH FUNCTION tpcpatch(tpcpatch, integer) AS IMPLICIT;
 
 /******************************************************************************
  * WKB / HexWKB helpers
@@ -104,6 +114,25 @@ CREATE FUNCTION asMFJSON(tpcpatch, options int4 DEFAULT 0,
   RETURNS text
   AS 'MODULE_PATHNAME', 'Temporal_as_mfjson'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/******************************************************************************
+ * Ergonomic pcpatch constructor
+ *
+ * Variadic wrapper around PC_Patch so test literals can write
+ * `pcpatch(1, pcpoint(1, 1, 1, 1), pcpoint(1, 2, 2, 2))` instead of
+ * `PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]::float[]),
+ *                 PC_MakePoint(1, ARRAY[2.0, 2.0, 2.0]::float[])])`.
+ *
+ * pcid is the first arg purely for readability — PC_Patch already
+ * validates that every input pcpoint shares the same pcid, so we
+ * pass the array straight through. (The pcid parameter is unused
+ * inside the body — it's there to hint to the reader.)
+ ******************************************************************************/
+
+CREATE FUNCTION pcpatch(pcid integer, VARIADIC points pcpoint[])
+  RETURNS pcpatch
+  AS $$ SELECT PC_Patch($2) $$
+  LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************
  * Constructors
@@ -236,6 +265,28 @@ CREATE FUNCTION endNumPoints(tpcpatch)
   RETURNS integer
   AS 'MODULE_PATHNAME', 'Tpcpatch_end_npoints'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION numPoints(tpcpatch)
+  RETURNS bigint
+  AS 'MODULE_PATHNAME', 'Tpcpatch_npoints'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+-- points(tpcpatch) — set-returning, one row per (instant timestamp, point)
+-- inside that instant's patch. Implemented as a SQL wrapper over
+-- pgPointCloud's PC_Explode (which takes a single pcpatch and returns
+-- its constituent pcpoints). Slow on dense patches because PC_Explode
+-- decompresses each call; reach for it when correctness matters more
+-- than throughput.
+CREATE FUNCTION points(tpcpatch)
+  RETURNS TABLE(t timestamptz, point pcpoint)
+  AS $$
+    SELECT @extschema@.timestampN($1, i),
+           p
+    FROM generate_series(1, @extschema@.numInstants($1)) AS i,
+         LATERAL PC_Explode(
+           @extschema@.startValue(@extschema@.instantN($1, i))) AS p
+  $$
+  LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************
  * Value-at-timestamp / restriction

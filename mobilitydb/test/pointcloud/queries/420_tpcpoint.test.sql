@@ -38,6 +38,17 @@
 \set inst3 'tpcpoint(PC_MakePoint(1, ARRAY[3.0, 3.0, 3.0]::float[]), ''2024-01-03''::timestamptz)'
 
 -------------------------------------------------------------------------------
+-- Ergonomic pcpoint constructors — same value as the verbose form.
+-------------------------------------------------------------------------------
+
+-- 3D form (pcid 1 is registered as a 3D schema in the test fixture).
+SELECT pcpoint(1, 1.0, 1.0, 1.0)::text =
+  PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]::float[])::text;
+-- inline use inside tpcpoint
+SELECT tpcpoint(pcpoint(1, 1.0, 1.0, 1.0), '2024-01-01'::timestamptz)::text =
+  (:inst1)::text;
+
+-------------------------------------------------------------------------------
 -- pcid + subtype size
 -------------------------------------------------------------------------------
 
