@@ -133,3 +133,50 @@ FROM tbl_tpcbox;
  t
 (1 row)
 
+CREATE INDEX tbl_tpcbox_quadtree_idx ON tbl_tpcbox USING spgist(b);
+CREATE INDEX
+SET enable_seqscan = on;
+SET
+SET enable_indexscan = off;
+SET
+SET enable_bitmapscan = off;
+SET
+SELECT COUNT(*) AS seq_count FROM tbl_tpcbox WHERE b @> tpcbox_zt(0, 0, 0,
+  10, 10, 10, tstzspan '[2001-01-01, 2001-12-31]', 1, 0);
+ seq_count 
+-----------
+         0
+(1 row)
+
+SET enable_seqscan = off;
+SET
+SET enable_indexscan = on;
+SET
+SET enable_bitmapscan = on;
+SET
+SELECT COUNT(*) AS quadtree_count FROM tbl_tpcbox WHERE b @> tpcbox_zt(0, 0, 0,
+  10, 10, 10, tstzspan '[2001-01-01, 2001-12-31]', 1, 0);
+ quadtree_count 
+----------------
+              0
+(1 row)
+
+DROP INDEX tbl_tpcbox_quadtree_idx;
+DROP INDEX
+CREATE INDEX tbl_tpcbox_kdtree_idx ON tbl_tpcbox USING spgist(b tpcbox_kdtree_ops);
+CREATE INDEX
+SELECT COUNT(*) AS kdtree_count FROM tbl_tpcbox WHERE b @> tpcbox_zt(0, 0, 0,
+  10, 10, 10, tstzspan '[2001-01-01, 2001-12-31]', 1, 0);
+ kdtree_count 
+--------------
+            0
+(1 row)
+
+DROP INDEX tbl_tpcbox_kdtree_idx;
+DROP INDEX
+RESET enable_seqscan;
+RESET
+RESET enable_indexscan;
+RESET
+RESET enable_bitmapscan;
+RESET
