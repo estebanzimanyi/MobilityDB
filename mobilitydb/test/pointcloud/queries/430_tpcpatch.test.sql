@@ -23,6 +23,19 @@
 
 \set inst1 'tpcpatch(:patch1, ''2024-01-01''::timestamptz)'
 \set inst2 'tpcpatch(:patch2, ''2024-01-02''::timestamptz)'
+\set inst3 'tpcpatch(:patch1, ''2024-01-03''::timestamptz)'
+\set inst4 'tpcpatch(:patch2, ''2024-01-04''::timestamptz)'
+
+-------------------------------------------------------------------------------
+-- Ergonomic pcpatch constructor — same value as the verbose form.
+-------------------------------------------------------------------------------
+
+SELECT pcpatch(1, pcpoint(1, 1.0, 1.0, 1.0), pcpoint(1, 2.0, 2.0, 2.0))::text =
+  (:patch1)::text;
+-- inline use inside tpcpatch + numPoints round-trip
+SELECT numPoints(tpcpatch(
+  pcpatch(1, pcpoint(1, 1.0, 1.0, 1.0), pcpoint(1, 2.0, 2.0, 2.0)),
+  '2024-01-01'::timestamptz)) = 2;
 
 -------------------------------------------------------------------------------
 -- pcid + per-instant point counts
@@ -33,6 +46,34 @@ SELECT startNumPoints(:inst1);
 SELECT endNumPoints(:inst1);
 SELECT numInstants(:inst1);
 SELECT numInstants(tpcpatchSeq(ARRAY[:inst1, :inst2]));
+
+-------------------------------------------------------------------------------
+-- numPoints(tpcpatch) — total points across every instant
+-------------------------------------------------------------------------------
+
+SELECT numPoints(:inst1);                                  -- 2 (one instant, two points)
+SELECT numPoints(tpcpatchSeq(ARRAY[:inst1, :inst2]));      -- 4 (two instants, two points each)
+SELECT numPoints(tpcpatchSeqSet(ARRAY[                     -- 8 (a 2-instant seq + two singletons, non-overlapping)
+  tpcpatchSeq(ARRAY[:inst1, :inst2]),
+  tpcpatchSeq(ARRAY[:inst3]),
+  tpcpatchSeq(ARRAY[:inst4])]));
+
+-------------------------------------------------------------------------------
+-- points(tpcpatch) — SRF: (timestamp, pcpoint) per point in each instant
+-------------------------------------------------------------------------------
+
+-- Row count = total number of points (matches numPoints).
+SELECT COUNT(*) FROM points(:inst1);                       -- 2
+SELECT COUNT(*) FROM points(tpcpatchSeq(ARRAY[:inst1, :inst2])); -- 4
+
+-- All emitted timestamps belong to the input's timestamps.
+SELECT bool_and(t IN ('2024-01-01'::timestamptz, '2024-01-02'::timestamptz))
+FROM points(tpcpatchSeq(ARRAY[:inst1, :inst2]));
+
+-- Per-instant grouping count matches per-instant numPoints.
+SELECT bool_and(c = 2)
+FROM (SELECT t, COUNT(*) c FROM points(tpcpatchSeq(ARRAY[:inst1, :inst2]))
+      GROUP BY t) x;
 
 -------------------------------------------------------------------------------
 -- Time accessors

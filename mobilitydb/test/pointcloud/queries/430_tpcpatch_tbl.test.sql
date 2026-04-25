@@ -71,6 +71,24 @@ SELECT bool_and(startNumPoints(inst) BETWEEN 1 AND 10) FROM tbl_tpcpatch_inst;
 SELECT bool_and(endNumPoints(inst)   BETWEEN 1 AND 10) FROM tbl_tpcpatch_inst;
 
 -------------------------------------------------------------------------------
+-- numPoints — total across every instant — and points(...) SRF
+--   numPoints(inst) is just startNumPoints(inst) when inst is a TInstant.
+--   For multi-instant subtypes the total must equal sum of per-instant
+--   counts, and the row count of points(...) must equal numPoints(...).
+-------------------------------------------------------------------------------
+
+SELECT bool_and(numPoints(inst) = startNumPoints(inst)) FROM tbl_tpcpatch_inst;
+SELECT bool_and(numPoints(temp) >= 1) FROM tbl_tpcpatch;
+SELECT bool_and(numPoints(temp) =
+  (SELECT COUNT(*) FROM points(temp))) FROM tbl_tpcpatch;
+
+-- The number of distinct timestamps emitted by points(...) equals the
+-- value's instant count. Avoids comparing against getTime(), which
+-- excludes the boundary timestamp of an upper_inc=false sequence.
+SELECT bool_and(numInstants(temp) =
+  (SELECT COUNT(DISTINCT t) FROM points(temp))) FROM tbl_tpcpatch;
+
+-------------------------------------------------------------------------------
 -- Comparison operators
 -------------------------------------------------------------------------------
 
