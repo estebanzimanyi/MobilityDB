@@ -633,6 +633,19 @@ CREATE INDEX ON my_table USING gist(my_tpcbox_column);
 </programlisting>
 	</sect1>
 
+	<sect1 xml:id="tpointcloud_aggregations">
+		<title>Aggregations</title>
+		<itemizedlist>
+			<listitem xml:id="tpcpoint_extent">
+				<indexterm significance="normal"><primary><varname>extent</varname></primary></indexterm>
+				<para>Bounding-box aggregate over a column of tpcpoint, tpcpatch, or tpcbox values. Returns the smallest tpcbox containing every input. Aggregating across distinct pcids raises an error — the bbox would be uninterpretable since dimensions are pcid-relative.</para>
+				<para><varname>extent(tpcpoint) → tpcbox</varname></para>
+				<para><varname>extent(tpcpatch) → tpcbox</varname></para>
+				<para><varname>extent(tpcbox) → tpcbox</varname></para>
+			</listitem>
+		</itemizedlist>
+	</sect1>
+
 	<sect1 xml:id="tpointcloud_wkb">
 		<title>Binary representation and portability</title>
 

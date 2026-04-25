@@ -32,6 +32,9 @@ set(POINTCLOUD_PG_SRCS
   # GiST opclass support (consistent / union / penalty / picksplit /
   # same) for TPCBox.
   tpcbox_gist.c
+  # Extent (and other future) aggregate transition / combine functions
+  # over tpcpoint / tpcpatch / tpcbox.
+  tpc_aggfuncs.c
 )
 
 if(POINTCLOUD_PG_SRCS)
