@@ -34,4 +34,11 @@
  */
 extern PCSCHEMA *mobilitydb_pc_schema(uint32_t pcid);
 
+/**
+ * @brief Parse a pgPointCloud schema XML string into a long-lived
+ *   @c PCSCHEMA*. Installed as @c meos_pc_parse_xml_fn so the WKB
+ *   decoder can absorb XML embedded in incoming WKB blobs.
+ */
+extern PCSCHEMA *mobilitydb_pc_parse_xml(uint32_t pcid, const char *xml);
+
 #endif /* __MOBILITYDB_PC_SCHEMA_CACHE_H__ */

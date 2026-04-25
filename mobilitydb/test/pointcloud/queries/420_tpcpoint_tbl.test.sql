@@ -42,6 +42,11 @@ COPY tbl_tpcpoint_tmp FROM '/tmp/tbl_tpcpoint' (FORMAT BINARY);
 SELECT COUNT(*) FROM tbl_tpcpoint t1, tbl_tpcpoint_tmp t2 WHERE t1.k = t2.k AND t1.temp <> t2.temp;
 DROP TABLE tbl_tpcpoint_tmp;
 
+-- asBinary / tpcpointFromBinary round-trip — exercises the WKB
+-- encoder + decoder directly (independent of COPY BINARY plumbing).
+SELECT COUNT(*) FROM tbl_tpcpoint
+  WHERE tpcpointFromBinary(asBinary(temp)) <> temp;
+
 -------------------------------------------------------------------------------
 -- pcid uniformity across each subtype
 -------------------------------------------------------------------------------

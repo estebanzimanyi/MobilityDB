@@ -153,6 +153,9 @@ extern TPCBox *pcpoint_to_tpcbox(const Pcpoint *pt, PCSCHEMA *schema);
 
 extern PCSCHEMA *meos_pc_schema(uint32_t pcid);
 extern void meos_pc_schema_register(uint32_t pcid, PCSCHEMA *schema);
+extern void meos_pc_schema_register_xml(uint32_t pcid, PCSCHEMA *schema,
+  const char *xml_text);
+extern const char *meos_pc_schema_xml(uint32_t pcid);
 extern void meos_pc_schema_clear(void);
 
 /* Comparison */
