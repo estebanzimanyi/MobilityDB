@@ -330,14 +330,6 @@ tpcpointseqset_tgeompointseqset(const TSequenceSet *ss, const PCSCHEMA *schema)
   return tsequenceset_make_free(seqs, n, NORMALIZE);
 }
 
-PGDLLEXPORT Datum Tpcpoint_to_tgeompoint(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Tpcpoint_to_tgeompoint);
-/**
- * @ingroup mobilitydb_pointcloud_conversion
- * @brief Project a tpcpoint onto a tgeompoint by extracting X/Y/[Z]
- *   from each instant's pcpoint via the schema cache.
- * @sqlfn tgeompoint()
- */
 /* Project a tpcpoint Temporal* to a fresh tgeompoint Temporal* by
  * dispatching to the per-subtype static helpers. The schema must be
  * resolved by the caller (typically via tpcpoint_schema). Returns
@@ -360,6 +352,14 @@ tpcpoint_project_tgeompoint(const Temporal *temp, const PCSCHEMA *schema)
   }
 }
 
+PGDLLEXPORT Datum Tpcpoint_to_tgeompoint(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tpcpoint_to_tgeompoint);
+/**
+ * @ingroup mobilitydb_pointcloud_conversion
+ * @brief Project a tpcpoint onto a tgeompoint by extracting X/Y/[Z]
+ *   from each instant's pcpoint via the schema cache.
+ * @sqlfn tgeompoint()
+ */
 Datum
 Tpcpoint_to_tgeompoint(PG_FUNCTION_ARGS)
 {

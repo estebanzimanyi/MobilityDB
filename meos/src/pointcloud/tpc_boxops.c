@@ -90,6 +90,11 @@ pcpatch_fill_tpcbox_spatial(const Pcpatch *pa, TPCBox *box)
   MEOS_FLAGS_SET_Z(box->flags, false);
 }
 
+/**
+ * @brief Set the bounding box of a temporal pointcloud instant
+ * @param[in] inst Temporal instant of type @p T_TPCPOINT or @p T_TPCPATCH
+ * @param[out] box Bounding box
+ */
 void
 tpointcloudinst_set_tpcbox(const TInstant *inst, TPCBox *box)
 {
@@ -119,6 +124,14 @@ tpointcloudinst_set_tpcbox(const TInstant *inst, TPCBox *box)
  * Array of instants → TPCBox (for TSequence construction)
  *****************************************************************************/
 
+/**
+ * @brief Set the bounding box from an array of temporal pointcloud instants
+ * @param[in] instants Array of temporal instants
+ * @param[in] count Number of instants
+ * @param[in] lower_inc,upper_inc Period bound inclusivity
+ * @param[in] interp Interpolation (unused — does not affect the union)
+ * @param[out] box Bounding box
+ */
 void
 tpointcloudinstarr_set_tpcbox(TInstant **instants, int count, bool lower_inc,
   bool upper_inc, interpType interp, TPCBox *box)
@@ -144,6 +157,12 @@ tpointcloudinstarr_set_tpcbox(TInstant **instants, int count, bool lower_inc,
  * Incremental bbox growth when appending an instant to a sequence
  *****************************************************************************/
 
+/**
+ * @brief Expand the bounding box of a temporal pointcloud sequence with a
+ *   newly-appended instant
+ * @param[in,out] seq Temporal sequence whose stored bbox is grown in place
+ * @param[in] inst Instant being appended
+ */
 void
 tpointcloudseq_expand_tpcbox(TSequence *seq, const TInstant *inst)
 {
@@ -161,6 +180,12 @@ tpointcloudseq_expand_tpcbox(TSequence *seq, const TInstant *inst)
  * Array of sequences → TPCBox (for TSequenceSet construction)
  *****************************************************************************/
 
+/**
+ * @brief Set the bounding box from an array of temporal pointcloud sequences
+ * @param[in] sequences Array of sequences whose bboxes are unioned
+ * @param[in] count Number of sequences
+ * @param[out] box Bounding box
+ */
 void
 tpointcloudseqarr_set_tpcbox(TSequence **sequences, int count, TPCBox *box)
 {
@@ -224,6 +249,14 @@ tpcbox_extent_transfn(TPCBox *state, const Temporal *temp)
  * adjacent — i.e. the MEOS primitives in meos_pointcloud.h).
  *****************************************************************************/
 
+/**
+ * @brief Generic bbox dispatcher between a temporal pointcloud value and a
+ *   TPCBox
+ * @param[in] temp Temporal pointcloud value
+ * @param[in] box Bounding box
+ * @param[in] func TPCBox-vs-TPCBox predicate to apply
+ * @param[in] inverted Swap argument order when @p true
+ */
 bool
 boxop_tpointcloud_tpcbox(const Temporal *temp, const TPCBox *box,
   bool (*func)(const TPCBox *, const TPCBox *), bool inverted)
@@ -233,6 +266,11 @@ boxop_tpointcloud_tpcbox(const Temporal *temp, const TPCBox *box,
   return inverted ? func(box, &box1) : func(&box1, box);
 }
 
+/**
+ * @brief Generic bbox dispatcher between two temporal pointcloud values
+ * @param[in] temp1,temp2 Temporal pointcloud values
+ * @param[in] func TPCBox-vs-TPCBox predicate to apply
+ */
 bool
 boxop_tpointcloud_tpointcloud(const Temporal *temp1, const Temporal *temp2,
   bool (*func)(const TPCBox *, const TPCBox *))
@@ -253,6 +291,13 @@ boxop_tpointcloud_tpointcloud(const Temporal *temp1, const Temporal *temp2,
  * cartesian).
  *****************************************************************************/
 
+/**
+ * @brief Lossy conversion from a TPCBox to an STBox
+ * @details Copies period, srid, X/Z/T flags and spatial bounds; drops the
+ *   pcid (the operator's recheck restores pcid filtering on the leaf
+ *   entry) and clears the GEODETIC flag since tpointcloud values are
+ *   cartesian.
+ */
 void
 tpcbox_set_stbox(const TPCBox *src, STBox *dst)
 {
@@ -276,6 +321,13 @@ tpcbox_set_stbox(const TPCBox *src, STBox *dst)
  * compatible for the dimensions to mean the same thing).
  *****************************************************************************/
 
+/**
+ * @ingroup meos_pointcloud_box_dist
+ * @brief Return the nearest-approach distance between two TPCBox values
+ * @param[in] box1,box2 Bounding boxes
+ * @return @p DBL_MAX on pcid mismatch
+ * @csqlfn #NAD_tpcbox_tpcbox()
+ */
 double
 nad_tpcbox_tpcbox(const TPCBox *box1, const TPCBox *box2)
 {
@@ -288,6 +340,14 @@ nad_tpcbox_tpcbox(const TPCBox *box1, const TPCBox *box2)
   return nad_stbox_stbox(&sbox1, &sbox2);
 }
 
+/**
+ * @ingroup meos_pointcloud_box_dist
+ * @brief Return the nearest-approach distance between a temporal pointcloud
+ *   value and a TPCBox
+ * @param[in] temp Temporal pointcloud value
+ * @param[in] box Bounding box
+ * @csqlfn #NAD_tpointcloud_tpcbox()
+ */
 double
 nad_tpointcloud_tpcbox(const Temporal *temp, const TPCBox *box)
 {
@@ -296,6 +356,13 @@ nad_tpointcloud_tpcbox(const Temporal *temp, const TPCBox *box)
   return nad_tpcbox_tpcbox(&tmp, box);
 }
 
+/**
+ * @ingroup meos_pointcloud_box_dist
+ * @brief Return the nearest-approach distance between two temporal
+ *   pointcloud values
+ * @param[in] temp1,temp2 Temporal pointcloud values
+ * @csqlfn #NAD_tpointcloud_tpointcloud()
+ */
 double
 nad_tpointcloud_tpointcloud(const Temporal *temp1, const Temporal *temp2)
 {
