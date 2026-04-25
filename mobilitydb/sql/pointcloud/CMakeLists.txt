@@ -8,6 +8,7 @@ SET(LOCAL_FILES
   435_tpc_topops
   436_tpc_gist
   437_tpc_spgist
+  438_tpc_posops
   440_tpc_aggfuncs
   )
 
