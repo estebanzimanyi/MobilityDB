@@ -107,7 +107,9 @@ tpc_typmod_in_array(ArrayType *arr)
 PGDLLEXPORT Datum Tpc_typmod_in(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpc_typmod_in);
 /**
- * @brief Input typmod for tpcpoint / tpcpatch (pcid as a single int).
+ * @ingroup mobilitydb_pointcloud_temp
+ * @brief Input typmod for tpcpoint / tpcpatch (pcid as a single int)
+ * @sqlfn tpc_typmod_in()
  */
 Datum
 Tpc_typmod_in(PG_FUNCTION_ARGS)
@@ -123,8 +125,10 @@ Tpc_typmod_in(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tpc_typmod_out(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpc_typmod_out);
 /**
+ * @ingroup mobilitydb_pointcloud_temp
  * @brief Output typmod for tpcpoint / tpcpatch as `(pcid)`. Returns an
  *   empty string when typmod is -1 (unconstrained).
+ * @sqlfn tpc_typmod_out()
  */
 Datum
 Tpc_typmod_out(PG_FUNCTION_ARGS)
@@ -159,11 +163,13 @@ tpc_pcid(const Temporal *temp)
 PGDLLEXPORT Datum Tpc_enforce_typmod(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpc_enforce_typmod);
 /**
- * @brief Enforce the typmod's pcid pinning on a tpcpoint/tpcpatch value.
+ * @ingroup mobilitydb_pointcloud_temp
+ * @brief Enforce the typmod's pcid pinning on a tpcpoint/tpcpatch value
  * @details Called by PG as the cast function bound to
  *   `CREATE CAST (tpcpoint AS tpcpoint) WITH FUNCTION tpcpoint(tpcpoint, integer)`.
  *   Returns the value unchanged if the column is unconstrained or the
  *   pcid matches; raises if the pcid disagrees.
+ * @sqlfn tpcpoint(), tpcpatch()
  */
 Datum
 Tpc_enforce_typmod(PG_FUNCTION_ARGS)

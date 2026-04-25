@@ -68,6 +68,7 @@ PG_FUNCTION_INFO_V1(Tpcbox_gist_consistent);
 /**
  * @ingroup mobilitydb_pointcloud_index
  * @brief GiST consistent method for TPCBox
+ * @sqlfn tpcbox_gist_consistent()
  */
 Datum
 Tpcbox_gist_consistent(PG_FUNCTION_ARGS)
@@ -125,7 +126,8 @@ PGDLLEXPORT Datum Tpcbox_gist_union(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpcbox_gist_union);
 /**
  * @ingroup mobilitydb_pointcloud_index
- * @brief GiST union method — minimum bounding TPCBox over an entry vector.
+ * @brief GiST union method — minimum bounding TPCBox over an entry vector
+ * @sqlfn tpcbox_gist_union()
  */
 Datum
 Tpcbox_gist_union(PG_FUNCTION_ARGS)
@@ -195,6 +197,7 @@ PG_FUNCTION_INFO_V1(Tpcbox_gist_penalty);
 /**
  * @ingroup mobilitydb_pointcloud_index
  * @brief GiST penalty method
+ * @sqlfn tpcbox_gist_penalty()
  */
 Datum
 Tpcbox_gist_penalty(PG_FUNCTION_ARGS)
@@ -216,8 +219,9 @@ PGDLLEXPORT Datum Tpcbox_gist_picksplit(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpcbox_gist_picksplit);
 /**
  * @ingroup mobilitydb_pointcloud_index
- * @brief GiST picksplit method — defers to the generic
- * double-sorting helper, which knows the TPCBox layout via T_TPCBOX.
+ * @brief GiST picksplit method — defers to the generic double-sorting
+ *   helper, which knows the TPCBox layout via T_TPCBOX
+ * @sqlfn tpcbox_gist_picksplit()
  */
 Datum
 Tpcbox_gist_picksplit(PG_FUNCTION_ARGS)
@@ -235,7 +239,8 @@ PG_FUNCTION_INFO_V1(Tpcbox_gist_same);
 /**
  * @ingroup mobilitydb_pointcloud_index
  * @brief GiST same method — exact equality, not the user-facing
- * @c same_tpcbox_tpcbox (which is fuzzy on the same-pcid front).
+ *   @c same_tpcbox_tpcbox (which is fuzzy on the same-pcid front)
+ * @sqlfn tpcbox_gist_same()
  */
 Datum
 Tpcbox_gist_same(PG_FUNCTION_ARGS)
@@ -269,7 +274,8 @@ PG_FUNCTION_INFO_V1(Tpc_gist_compress);
 /**
  * @ingroup mobilitydb_pointcloud_index
  * @brief GiST compress method for tpcpoint / tpcpatch — derives the
- *   TPCBox bbox of each leaf entry as its index key.
+ *   TPCBox bbox of each leaf entry as its index key
+ * @sqlfn tpc_gist_compress()
  */
 Datum
 Tpc_gist_compress(PG_FUNCTION_ARGS)
@@ -299,7 +305,8 @@ PG_FUNCTION_INFO_V1(Tpc_spgist_compress);
 /**
  * @ingroup mobilitydb_pointcloud_index
  * @brief SP-GiST compress method for tpcpoint / tpcpatch — derives a
- *   STBox by computing the leaf entry's TPCBox bbox and dropping pcid.
+ *   STBox by computing the leaf entry's TPCBox bbox and dropping pcid
+ * @sqlfn tpc_spgist_compress()
  */
 Datum
 Tpc_spgist_compress(PG_FUNCTION_ARGS)
@@ -318,7 +325,8 @@ PG_FUNCTION_INFO_V1(Tpcbox_spgist_compress);
 /**
  * @ingroup mobilitydb_pointcloud_index
  * @brief SP-GiST compress method for tpcbox — drops pcid, returns
- *   an STBox with the same bounds.
+ *   an STBox with the same bounds
+ * @sqlfn tpcbox_spgist_compress()
  */
 Datum
 Tpcbox_spgist_compress(PG_FUNCTION_ARGS)
@@ -338,10 +346,11 @@ PG_FUNCTION_INFO_V1(Tpcbox_gist_distance);
 /**
  * @ingroup mobilitydb_pointcloud_index
  * @brief GiST distance method — minimum nearest-approach distance from
- *   the index key (TPCBox) to the query (tpcbox / tpcpoint / tpcpatch).
+ *   the index key (TPCBox) to the query (tpcbox / tpcpoint / tpcpatch)
  * @details Returns DBL_MAX for null keys or pcid mismatches; the
  *   recheck on leaf entries refines the distance to the actual leaf
  *   values.
+ * @sqlfn tpcbox_gist_distance()
  */
 Datum
 Tpcbox_gist_distance(PG_FUNCTION_ARGS)
