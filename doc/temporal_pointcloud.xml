@@ -562,19 +562,63 @@ SELECT ST_AsText(startValue(tpcpoint(PC_MakePoint(1, ARRAY[10.0, 20.0, 30.0]),
 
 		<sect2 xml:id="tpcpoint_bbox_ops">
 			<title>Bounding-box operators</title>
-			<para>The full set of MobilityDB topological and directional bbox operators is wired up between <varname>tpcpoint</varname> and <varname>tpcbox</varname>, <varname>tstzspan</varname>, and <varname>tpcpoint</varname> itself: <varname>&amp;&amp;</varname>, <varname>@&gt;</varname>, <varname>&lt;@</varname>, <varname>~=</varname>, <varname>-|-</varname> (topological), <varname>&lt;&lt;</varname>, <varname>&amp;&lt;</varname>, <varname>&gt;&gt;</varname>, <varname>&amp;&gt;</varname>, <varname>&lt;&lt;|</varname>, <varname>&amp;&lt;|</varname>, <varname>|&gt;&gt;</varname>, <varname>|&amp;&gt;</varname>, <varname>&lt;&lt;/</varname>, <varname>&amp;&lt;/</varname>, <varname>/&gt;&gt;</varname>, <varname>/&amp;&gt;</varname> (spatial axes X/Y/Z), <varname>&lt;&lt;#</varname>, <varname>&amp;&lt;#</varname>, <varname>#&gt;&gt;</varname>, <varname>#&amp;&gt;</varname> (time axis). See <xref linkend="tpcbox_topo" /> and <xref linkend="tpcbox_pos" /> for the per-operator semantics; the meaning is the same when one or both arguments is a <varname>tpcpoint</varname> — the predicate evaluates against the value's <varname>tpcbox</varname> bounding box.</para>
-			<para>The <varname>|=|</varname> operator computes the nearest-approach distance between two values (<varname>tpcbox</varname>, <varname>tpcpoint</varname>, or <varname>tpcpatch</varname>) and supports KNN ordering through the GiST opclass: <varname>SELECT … ORDER BY temp |=| query LIMIT N</varname> is index-accelerated. Pcid mismatch yields infinity.</para>
+			<para>The bbox operators evaluate against the value's <varname>tpcbox</varname>; see <xref linkend="tpcbox_topo" /> and <xref linkend="tpcbox_pos" /> for the per-operator geometry. Each operator below is wired against <varname>tpcbox</varname>, <varname>tstzspan</varname>, and <varname>tpcpoint</varname> itself.</para>
+			<itemizedlist>
+				<listitem xml:id="tpcpoint_topo">
+					<indexterm significance="normal"><primary><varname>&amp;&amp;</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>@&gt;</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>&lt;@</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>~=</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>-|-</varname></primary></indexterm>
+					<para>Topological predicates: <varname>&amp;&amp;</varname> overlaps, <varname>@&gt;</varname> contains, <varname>&lt;@</varname> contained by, <varname>~=</varname> same, <varname>-|-</varname> adjacent.</para>
+				</listitem>
+				<listitem xml:id="tpcpoint_pos">
+					<indexterm significance="normal"><primary><varname>&lt;&lt;</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>&gt;&gt;</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>&lt;&lt;|</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>|&gt;&gt;</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>&lt;&lt;/</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>/&gt;&gt;</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>&lt;&lt;#</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>#&gt;&gt;</varname></primary></indexterm>
+					<para>Strict directional predicates on the X axis (<varname>&lt;&lt;</varname>, <varname>&gt;&gt;</varname>), Y axis (<varname>&lt;&lt;|</varname>, <varname>|&gt;&gt;</varname>), Z axis (<varname>&lt;&lt;/</varname>, <varname>/&gt;&gt;</varname>), and time axis (<varname>&lt;&lt;#</varname>, <varname>#&gt;&gt;</varname>), plus their "overlaps-or-X" variants <varname>&amp;&lt;</varname>, <varname>&amp;&gt;</varname>, <varname>&amp;&lt;|</varname>, <varname>|&amp;&gt;</varname>, <varname>&amp;&lt;/</varname>, <varname>/&amp;&gt;</varname>, <varname>&amp;&lt;#</varname>, <varname>#&amp;&gt;</varname>.</para>
+				</listitem>
+				<listitem xml:id="tpcpoint_knn">
+					<indexterm significance="normal"><primary><varname>|=|</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>nearestApproachDistance</varname></primary></indexterm>
+					<para>Nearest-approach distance, KNN-orderable through the GiST opclass: <varname>SELECT … ORDER BY temp |=| query LIMIT N</varname> is index-accelerated. Pcid mismatch yields infinity.</para>
+					<para><varname>nearestApproachDistance(tpcpoint,tpcbox) → float</varname></para>
+					<para><varname>nearestApproachDistance(tpcpoint,tpcpoint) → float</varname></para>
+				</listitem>
+			</itemizedlist>
 		</sect2>
 
 		<sect2 xml:id="tpcpoint_spatialrels">
 			<title>Spatial relationships</title>
-			<para>The <varname>tpcpoint</varname> type supports the standard MobilityDB ever / always spatial relationship functions, evaluated by projecting the tpcpoint to a <varname>tgeompoint</varname> via the schema cache and delegating to the corresponding tgeompoint relation. Each function is wired in three argument orders: <varname>(geometry, tpcpoint)</varname>, <varname>(tpcpoint, geometry)</varname>, and <varname>(tpcpoint, tpcpoint)</varname>.</para>
+			<para>Evaluated by projecting the tpcpoint to a <varname>tgeompoint</varname> via the schema cache and delegating to the corresponding tgeompoint relation. Each function is wired in three argument orders: <varname>(geometry, tpcpoint)</varname>, <varname>(tpcpoint, geometry)</varname>, and <varname>(tpcpoint, tpcpoint)</varname>. tpcpatch is intentionally out of scope — patch-level intersection would require per-point decompression and a different design.</para>
 			<itemizedlist>
-				<listitem><para><varname>eIntersects(…) → bool</varname>, <varname>aIntersects(…) → bool</varname></para></listitem>
-				<listitem><para><varname>eDisjoint(…) → bool</varname>, <varname>aDisjoint(…) → bool</varname></para></listitem>
-				<listitem><para><varname>eDwithin(…, dist float) → bool</varname>, <varname>aDwithin(…, dist float) → bool</varname></para></listitem>
+				<listitem xml:id="tpcpoint_intersects">
+					<indexterm significance="normal"><primary><varname>eIntersects</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>aIntersects</varname></primary></indexterm>
+					<para>Ever / always intersects.</para>
+					<para><varname>eIntersects(tpcpoint,geometry) → bool</varname>, <varname>aIntersects(tpcpoint,geometry) → bool</varname></para>
+					<para><varname>eIntersects(tpcpoint,tpcpoint) → bool</varname>, <varname>aIntersects(tpcpoint,tpcpoint) → bool</varname></para>
+				</listitem>
+				<listitem xml:id="tpcpoint_disjoint">
+					<indexterm significance="normal"><primary><varname>eDisjoint</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>aDisjoint</varname></primary></indexterm>
+					<para>Ever / always disjoint.</para>
+					<para><varname>eDisjoint(tpcpoint,geometry) → bool</varname>, <varname>aDisjoint(tpcpoint,geometry) → bool</varname></para>
+					<para><varname>eDisjoint(tpcpoint,tpcpoint) → bool</varname>, <varname>aDisjoint(tpcpoint,tpcpoint) → bool</varname></para>
+				</listitem>
+				<listitem xml:id="tpcpoint_dwithin">
+					<indexterm significance="normal"><primary><varname>eDwithin</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>aDwithin</varname></primary></indexterm>
+					<para>Ever / always within distance.</para>
+					<para><varname>eDwithin(tpcpoint,geometry,float) → bool</varname>, <varname>aDwithin(tpcpoint,geometry,float) → bool</varname></para>
+					<para><varname>eDwithin(tpcpoint,tpcpoint,float) → bool</varname>, <varname>aDwithin(tpcpoint,tpcpoint,float) → bool</varname></para>
+				</listitem>
 			</itemizedlist>
-			<para>tpcpatch is intentionally not in scope here — patch-level intersection would require per-point decompression and a different design.</para>
 		</sect2>
 	</sect1>
 
@@ -641,7 +685,20 @@ SELECT startNumPoints(tpcpatch(PC_Patch(PC_MakePoint(1, ARRAY[10.0, 20.0, 30.0])
 
 		<sect2 xml:id="tpcpatch_bbox_ops">
 			<title>Bounding-box operators</title>
-			<para>The same bbox topological and directional operator surface as <xref linkend="tpcpoint_bbox_ops" /> applies to <varname>tpcpatch</varname>: <varname>&amp;&amp;</varname>, <varname>@&gt;</varname>, <varname>&lt;@</varname>, <varname>~=</varname>, <varname>-|-</varname>, plus the directional family on the X / Y / Z / time axes, all paired against <varname>tpcbox</varname>, <varname>tstzspan</varname>, and <varname>tpcpatch</varname> itself. The predicate evaluates against the value's <varname>tpcbox</varname> bounding box (computed in O(1) per instant from the patch's embedded <varname>PCBOUNDS</varname>).</para>
+			<para>The same bbox operator surface as <xref linkend="tpcpoint_bbox_ops" /> applies to <varname>tpcpatch</varname>. The predicate evaluates against the value's <varname>tpcbox</varname>, computed in O(1) per instant from the patch's embedded <varname>PCBOUNDS</varname>.</para>
+			<itemizedlist>
+				<listitem xml:id="tpcpatch_topo">
+					<para>Topological predicates: <varname>&amp;&amp;</varname>, <varname>@&gt;</varname>, <varname>&lt;@</varname>, <varname>~=</varname>, <varname>-|-</varname>. See <xref linkend="tpcbox_topo" />.</para>
+				</listitem>
+				<listitem xml:id="tpcpatch_pos">
+					<para>Strict directional predicates on the X / Y / Z / time axes (<varname>&lt;&lt;</varname>, <varname>&gt;&gt;</varname>, <varname>&lt;&lt;|</varname>, <varname>|&gt;&gt;</varname>, <varname>&lt;&lt;/</varname>, <varname>/&gt;&gt;</varname>, <varname>&lt;&lt;#</varname>, <varname>#&gt;&gt;</varname>) and their "overlaps-or-X" variants (<varname>&amp;&lt;</varname>, <varname>&amp;&gt;</varname>, <varname>&amp;&lt;|</varname>, <varname>|&amp;&gt;</varname>, <varname>&amp;&lt;/</varname>, <varname>/&amp;&gt;</varname>, <varname>&amp;&lt;#</varname>, <varname>#&amp;&gt;</varname>). See <xref linkend="tpcbox_pos" />.</para>
+				</listitem>
+				<listitem xml:id="tpcpatch_knn">
+					<para>Nearest-approach distance (<varname>|=|</varname>) is KNN-orderable through the GiST opclass.</para>
+					<para><varname>nearestApproachDistance(tpcpatch,tpcbox) → float</varname></para>
+					<para><varname>nearestApproachDistance(tpcpatch,tpcpatch) → float</varname></para>
+				</listitem>
+			</itemizedlist>
 		</sect2>
 	</sect1>
 
