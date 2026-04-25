@@ -11,6 +11,7 @@ SET(LOCAL_FILES
   438_tpc_spgist
   439_tpc_distance
   440_tpc_aggfuncs
+  442_tpcpoint_spatialrels
   )
 
 foreach (f ${LOCAL_FILES})
