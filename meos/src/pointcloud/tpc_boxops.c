@@ -77,9 +77,11 @@ static void
 pcpatch_fill_tpcbox_spatial(const Pcpatch *pa, TPCBox *box)
 {
   PCSCHEMA *schema = meos_pc_schema(pa->pcid);
+  /* PCBOUNDS field order is {xmin, xmax, ymin, ymax} — see
+   * pointcloud-pg/lib/pc_api.h. Read by index, not by guess. */
   box->xmin = pa->bounds[0];
-  box->ymin = pa->bounds[1];
-  box->xmax = pa->bounds[2];
+  box->xmax = pa->bounds[1];
+  box->ymin = pa->bounds[2];
   box->ymax = pa->bounds[3];
   box->srid = (int32_t) schema->srid;
   box->pcid = pa->pcid;
