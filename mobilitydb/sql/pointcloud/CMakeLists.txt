@@ -4,6 +4,7 @@ SET(LOCAL_FILES
   411_tpcbox_gist
   420_tpcpoint
   430_tpcpatch
+  435_tpc_topops
   440_tpc_aggfuncs
   )
 

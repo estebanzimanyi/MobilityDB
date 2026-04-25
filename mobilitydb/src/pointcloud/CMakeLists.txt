@@ -32,6 +32,9 @@ set(POINTCLOUD_PG_SRCS
   # GiST opclass support (consistent / union / penalty / picksplit /
   # same) for TPCBox.
   tpcbox_gist.c
+  # Bounding-box operators (&&, @>, <@, ~=, -|-) on tpcpoint / tpcpatch
+  # paired with tpcbox or with each other.
+  tpc_boxops.c
   # Extent (and other future) aggregate transition / combine functions
   # over tpcpoint / tpcpatch / tpcbox.
   tpc_aggfuncs.c
