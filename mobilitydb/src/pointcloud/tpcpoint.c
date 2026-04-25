@@ -577,7 +577,8 @@ NAME##_tpcpoint_tpcpoint(PG_FUNCTION_ARGS)                                     \
   Temporal *proj2 = tpcpoint_to_tgeompoint_temp(temp2);                        \
   PG_FREE_IF_COPY(temp1, 0); PG_FREE_IF_COPY(temp2, 1);                        \
   if (! proj1 || ! proj2) {                                                    \
-    if (proj1) pfree(proj1); if (proj2) pfree(proj2);                          \
+    if (proj1) pfree(proj1);                                                   \
+    if (proj2) pfree(proj2);                                                   \
     PG_RETURN_NULL();                                                          \
   }                                                                            \
   int r = ea_intersects_tgeo_tgeo(proj1, proj2, EVER);                         \
@@ -636,7 +637,8 @@ NAME##_tpcpoint_tpcpoint(PG_FUNCTION_ARGS)                                     \
   Temporal *proj2 = tpcpoint_to_tgeompoint_temp(temp2);                        \
   PG_FREE_IF_COPY(temp1, 0); PG_FREE_IF_COPY(temp2, 1);                        \
   if (! proj1 || ! proj2) {                                                    \
-    if (proj1) pfree(proj1); if (proj2) pfree(proj2);                          \
+    if (proj1) pfree(proj1);                                                   \
+    if (proj2) pfree(proj2);                                                   \
     PG_RETURN_NULL();                                                          \
   }                                                                            \
   int r = ea_disjoint_tgeo_tgeo(proj1, proj2, EVER);                           \
@@ -697,7 +699,8 @@ NAME##_tpcpoint_tpcpoint(PG_FUNCTION_ARGS)                                     \
   Temporal *proj2 = tpcpoint_to_tgeompoint_temp(temp2);                        \
   PG_FREE_IF_COPY(temp1, 0); PG_FREE_IF_COPY(temp2, 1);                        \
   if (! proj1 || ! proj2) {                                                    \
-    if (proj1) pfree(proj1); if (proj2) pfree(proj2);                          \
+    if (proj1) pfree(proj1);                                                   \
+    if (proj2) pfree(proj2);                                                   \
     PG_RETURN_NULL();                                                          \
   }                                                                            \
   int r = ea_dwithin_tgeo_tgeo(proj1, proj2, dist, EVER);                      \
