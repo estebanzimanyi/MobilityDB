@@ -168,6 +168,28 @@ DEFINE_BOXOP3(Same, same_tpcbox_tpcbox)
  */
 DEFINE_BOXOP3(Adjacent, adjacent_tpcbox_tpcbox)
 
+/*****************************************************************************
+ * Position operators — strictly left / right / below / above / front /
+ * back / before / after, plus their "overlaps-or-X" variants.
+ *****************************************************************************/
+
+DEFINE_BOXOP3(Left,        left_tpcbox_tpcbox)
+DEFINE_BOXOP3(Overleft,    overleft_tpcbox_tpcbox)
+DEFINE_BOXOP3(Right,       right_tpcbox_tpcbox)
+DEFINE_BOXOP3(Overright,   overright_tpcbox_tpcbox)
+DEFINE_BOXOP3(Below,       below_tpcbox_tpcbox)
+DEFINE_BOXOP3(Overbelow,   overbelow_tpcbox_tpcbox)
+DEFINE_BOXOP3(Above,       above_tpcbox_tpcbox)
+DEFINE_BOXOP3(Overabove,   overabove_tpcbox_tpcbox)
+DEFINE_BOXOP3(Front,       front_tpcbox_tpcbox)
+DEFINE_BOXOP3(Overfront,   overfront_tpcbox_tpcbox)
+DEFINE_BOXOP3(Back,        back_tpcbox_tpcbox)
+DEFINE_BOXOP3(Overback,    overback_tpcbox_tpcbox)
+DEFINE_BOXOP3(Before,      before_tpcbox_tpcbox)
+DEFINE_BOXOP3(Overbefore,  overbefore_tpcbox_tpcbox)
+DEFINE_BOXOP3(After,       after_tpcbox_tpcbox)
+DEFINE_BOXOP3(Overafter,   overafter_tpcbox_tpcbox)
+
 #undef DEFINE_BOXOP3
 
 /*****************************************************************************/
