@@ -563,6 +563,18 @@ SELECT ST_AsText(startValue(tpcpoint(PC_MakePoint(1, ARRAY[10.0, 20.0, 30.0]),
 		<sect2 xml:id="tpcpoint_bbox_ops">
 			<title>Bounding-box operators</title>
 			<para>The full set of MobilityDB topological and directional bbox operators is wired up between <varname>tpcpoint</varname> and <varname>tpcbox</varname>, <varname>tstzspan</varname>, and <varname>tpcpoint</varname> itself: <varname>&amp;&amp;</varname>, <varname>@&gt;</varname>, <varname>&lt;@</varname>, <varname>~=</varname>, <varname>-|-</varname> (topological), <varname>&lt;&lt;</varname>, <varname>&amp;&lt;</varname>, <varname>&gt;&gt;</varname>, <varname>&amp;&gt;</varname>, <varname>&lt;&lt;|</varname>, <varname>&amp;&lt;|</varname>, <varname>|&gt;&gt;</varname>, <varname>|&amp;&gt;</varname>, <varname>&lt;&lt;/</varname>, <varname>&amp;&lt;/</varname>, <varname>/&gt;&gt;</varname>, <varname>/&amp;&gt;</varname> (spatial axes X/Y/Z), <varname>&lt;&lt;#</varname>, <varname>&amp;&lt;#</varname>, <varname>#&gt;&gt;</varname>, <varname>#&amp;&gt;</varname> (time axis). See <xref linkend="tpcbox_topo" /> and <xref linkend="tpcbox_pos" /> for the per-operator semantics; the meaning is the same when one or both arguments is a <varname>tpcpoint</varname> — the predicate evaluates against the value's <varname>tpcbox</varname> bounding box.</para>
+			<para>The <varname>|=|</varname> operator computes the nearest-approach distance between two values (<varname>tpcbox</varname>, <varname>tpcpoint</varname>, or <varname>tpcpatch</varname>) and supports KNN ordering through the GiST opclass: <varname>SELECT … ORDER BY temp |=| query LIMIT N</varname> is index-accelerated. Pcid mismatch yields infinity.</para>
+		</sect2>
+
+		<sect2 xml:id="tpcpoint_spatialrels">
+			<title>Spatial relationships</title>
+			<para>The <varname>tpcpoint</varname> type supports the standard MobilityDB ever / always spatial relationship functions, evaluated by projecting the tpcpoint to a <varname>tgeompoint</varname> via the schema cache and delegating to the corresponding tgeompoint relation. Each function is wired in three argument orders: <varname>(geometry, tpcpoint)</varname>, <varname>(tpcpoint, geometry)</varname>, and <varname>(tpcpoint, tpcpoint)</varname>.</para>
+			<itemizedlist>
+				<listitem><para><varname>eIntersects(…) → bool</varname>, <varname>aIntersects(…) → bool</varname></para></listitem>
+				<listitem><para><varname>eDisjoint(…) → bool</varname>, <varname>aDisjoint(…) → bool</varname></para></listitem>
+				<listitem><para><varname>eDwithin(…, dist float) → bool</varname>, <varname>aDwithin(…, dist float) → bool</varname></para></listitem>
+			</itemizedlist>
+			<para>tpcpatch is intentionally not in scope here — patch-level intersection would require per-point decompression and a different design.</para>
 		</sect2>
 	</sect1>
 
