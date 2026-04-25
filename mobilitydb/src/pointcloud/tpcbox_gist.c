@@ -312,4 +312,20 @@ Tpc_spgist_compress(PG_FUNCTION_ARGS)
   PG_RETURN_STBOX_P(result);
 }
 
+PGDLLEXPORT Datum Tpcbox_spgist_compress(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tpcbox_spgist_compress);
+/**
+ * @ingroup mobilitydb_pointcloud_index
+ * @brief SP-GiST compress method for tpcbox — drops pcid, returns
+ *   an STBox with the same bounds.
+ */
+Datum
+Tpcbox_spgist_compress(PG_FUNCTION_ARGS)
+{
+  TPCBox *box = PG_GETARG_TPCBOX_P(0);
+  STBox *result = palloc(sizeof(STBox));
+  tpcbox_set_stbox(box, result);
+  PG_RETURN_STBOX_P(result);
+}
+
 /*****************************************************************************/

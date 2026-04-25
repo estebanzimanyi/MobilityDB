@@ -2,6 +2,7 @@ SET(LOCAL_FILES
   400_pcset
   410_tpcbox
   411_tpcbox_gist
+  412_tpcbox_spgist
   420_tpcpoint
   430_tpcpatch
   435_tpc_topops
