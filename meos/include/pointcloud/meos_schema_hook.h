@@ -38,7 +38,11 @@
 #define __MEOS_SCHEMA_HOOK_H__
 
 #include <stdint.h>
-#include "pc_api.h"  /* PCSCHEMA */
+/* Forward decl — full PCSCHEMA layout lives in libpc.a's pc_api.h.
+ * Keeping this header pc_api-free lets it be safely included from
+ * MEOS TUs (e.g. type_in.c, type_out.c) that aren't on the libpc
+ * include path. */
+typedef struct PCSCHEMA PCSCHEMA;
 
 /** @brief Hook signature: resolve a PCSCHEMA by pcid via an external
  *    facility (typically a PG catalog scan).  Returns @p NULL on
@@ -50,6 +54,18 @@ typedef PCSCHEMA *(*meos_pc_schema_fn_t)(uint32_t pcid);
  *    @c pointcloud_formats catalog scan; standalone MEOS programs
  *    can leave it NULL and pre-populate via @ref meos_pc_schema_register. */
 extern meos_pc_schema_fn_t meos_pc_schema_fn;
+
+/** @brief Hook signature: parse a pgPointCloud schema XML string into
+ *    a long-lived @c PCSCHEMA* and stamp it with the given pcid (the
+ *    upstream parser doesn't populate the pcid field).  Returns @p NULL
+ *    on parse failure. */
+typedef PCSCHEMA *(*meos_pc_parse_xml_fn_t)(uint32_t pcid, const char *xml);
+
+/** @brief Process-global hook pointer for XML parsing.  Installed by
+ *    the PG extension's @c mobilitydb_init.  Used by the WKB decoder
+ *    when an incoming WKB blob carries an embedded schema XML for a
+ *    pcid not yet registered in this backend. */
+extern meos_pc_parse_xml_fn_t meos_pc_parse_xml_fn;
 
 /**
  * @brief Resolve a parsed PCSCHEMA by pcid.
@@ -71,6 +87,30 @@ extern PCSCHEMA *meos_pc_schema(uint32_t pcid);
  * directly — the hook impl handles registration.
  */
 extern void meos_pc_schema_register(uint32_t pcid, PCSCHEMA *schema);
+
+/**
+ * @brief Variant of @ref meos_pc_schema_register that also caches the
+ *   source XML text alongside the parsed schema.
+ *
+ * Required when the cache feeds the WKB encoder, which embeds schema
+ * XML in cross-cluster-portable WKB blobs. @p xml_text is copied
+ * (palloc'd in @c TopMemoryContext on PG, malloc'd in standalone
+ * MEOS) so the caller may free it after the call. Pass @p NULL for
+ * @p xml_text to register a parse-only entry — equivalent to
+ * @ref meos_pc_schema_register.
+ */
+extern void meos_pc_schema_register_xml(uint32_t pcid, PCSCHEMA *schema,
+  const char *xml_text);
+
+/**
+ * @brief Return the cached XML text for a registered pcid, or @p NULL
+ *   if no XML was registered with this pcid (cache miss, or registered
+ *   without XML via the older @ref meos_pc_schema_register).
+ *
+ * Callers must NOT free the returned pointer — it is owned by the
+ * cache.
+ */
+extern const char *meos_pc_schema_xml(uint32_t pcid);
 
 /**
  * @brief Drop every entry from the MEOS schema cache.

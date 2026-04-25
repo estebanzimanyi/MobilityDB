@@ -15,6 +15,13 @@ SELECT COUNT(*) FROM tbl_tpcpoint t1, tbl_tpcpoint_tmp t2 WHERE t1.k = t2.k AND 
 
 DROP TABLE tbl_tpcpoint_tmp;
 DROP TABLE
+SELECT COUNT(*) FROM tbl_tpcpoint
+  WHERE tpcpointFromBinary(asBinary(temp)) <> temp;
+ count 
+-------
+     0
+(1 row)
+
 SELECT bool_and(pcid(inst) = 1) FROM tbl_tpcpoint_inst;
  bool_and 
 ----------

@@ -27,6 +27,7 @@
 typedef struct schema_entry {
   uint32_t pcid;
   PCSCHEMA *schema;
+  char *xml_text;  /* NULL if registered without XML */
 } schema_entry;
 
 /* Small dynamic array; linear scan.  Workloads rarely exceed a handful
@@ -36,10 +37,58 @@ static int cache_count = 0;
 static int cache_cap = 0;
 
 meos_pc_schema_fn_t meos_pc_schema_fn = NULL;
+meos_pc_parse_xml_fn_t meos_pc_parse_xml_fn = NULL;
 
 /*****************************************************************************
  * Public API
  *****************************************************************************/
+
+/**
+ * @brief Internal helper — copy @p xml into long-lived memory.
+ * @return palloc'd cstring (TopMemoryContext on PG, malloc on standalone)
+ *   or NULL when @p xml is NULL.
+ */
+static char *
+copy_xml_long_lived(const char *xml)
+{
+  if (! xml)
+    return NULL;
+  size_t len = strlen(xml);
+#if ! MEOS
+  MemoryContext oldctx = MemoryContextSwitchTo(TopMemoryContext);
+#endif
+  char *out = palloc(len + 1);
+  memcpy(out, xml, len + 1);
+#if ! MEOS
+  MemoryContextSwitchTo(oldctx);
+#endif
+  return out;
+}
+
+/**
+ * @brief Internal helper — make room for one more cache entry.
+ */
+static void
+ensure_cache_capacity(void)
+{
+  if (cache_count < cache_cap)
+    return;
+  int new_cap = cache_cap ? cache_cap * 2 : 8;
+#if ! MEOS
+  MemoryContext oldctx = MemoryContextSwitchTo(TopMemoryContext);
+#endif
+  schema_entry *new_buf = palloc(sizeof(schema_entry) * new_cap);
+  if (cache_buf)
+  {
+    memcpy(new_buf, cache_buf, sizeof(schema_entry) * cache_count);
+    pfree(cache_buf);
+  }
+  cache_buf = new_buf;
+  cache_cap = new_cap;
+#if ! MEOS
+  MemoryContextSwitchTo(oldctx);
+#endif
+}
 
 /**
  * @ingroup meos_pointcloud_schema_cache
@@ -48,40 +97,56 @@ meos_pc_schema_fn_t meos_pc_schema_fn = NULL;
 void
 meos_pc_schema_register(uint32_t pcid, PCSCHEMA *schema)
 {
-  /* If already present, replace */
+  meos_pc_schema_register_xml(pcid, schema, NULL);
+}
+
+/**
+ * @ingroup meos_pointcloud_schema_cache
+ * @brief Register a parsed PCSCHEMA along with its source XML in the
+ *   MEOS-owned cache.
+ */
+void
+meos_pc_schema_register_xml(uint32_t pcid, PCSCHEMA *schema,
+  const char *xml_text)
+{
+  /* If already present, replace; preserve previously-cached XML when
+   * the new call passes NULL for xml_text (so a parse-only re-register
+   * doesn't accidentally drop a prior XML registration). */
   for (int i = 0; i < cache_count; i++)
   {
     if (cache_buf[i].pcid == pcid)
     {
       cache_buf[i].schema = schema;
+      if (xml_text)
+      {
+        if (cache_buf[i].xml_text)
+          pfree(cache_buf[i].xml_text);
+        cache_buf[i].xml_text = copy_xml_long_lived(xml_text);
+      }
       return;
     }
   }
-  /* Grow if needed.  Allocate in TopMemoryContext (PG backend) so the
-   * cache buffer outlives the per-statement context.  In MEOS standalone
-   * builds palloc maps to malloc and the explicit context switch is a
-   * no-op. */
-  if (cache_count == cache_cap)
-  {
-    int new_cap = cache_cap ? cache_cap * 2 : 8;
-#if ! MEOS
-    MemoryContext oldctx = MemoryContextSwitchTo(TopMemoryContext);
-#endif
-    schema_entry *new_buf = palloc(sizeof(schema_entry) * new_cap);
-    if (cache_buf)
-    {
-      memcpy(new_buf, cache_buf, sizeof(schema_entry) * cache_count);
-      pfree(cache_buf);
-    }
-    cache_buf = new_buf;
-    cache_cap = new_cap;
-#if ! MEOS
-    MemoryContextSwitchTo(oldctx);
-#endif
-  }
+  ensure_cache_capacity();
   cache_buf[cache_count].pcid = pcid;
   cache_buf[cache_count].schema = schema;
+  cache_buf[cache_count].xml_text = copy_xml_long_lived(xml_text);
   cache_count++;
+}
+
+/**
+ * @ingroup meos_pointcloud_schema_cache
+ * @brief Return the cached XML text for a registered pcid (NULL on miss
+ *   or parse-only registration).
+ */
+const char *
+meos_pc_schema_xml(uint32_t pcid)
+{
+  for (int i = 0; i < cache_count; i++)
+  {
+    if (cache_buf[i].pcid == pcid)
+      return cache_buf[i].xml_text;
+  }
+  return NULL;
 }
 
 /**
@@ -93,6 +158,11 @@ meos_pc_schema_clear(void)
 {
   if (cache_buf)
   {
+    for (int i = 0; i < cache_count; i++)
+    {
+      if (cache_buf[i].xml_text)
+        pfree(cache_buf[i].xml_text);
+    }
     pfree(cache_buf);
     cache_buf = NULL;
   }

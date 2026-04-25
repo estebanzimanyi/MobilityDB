@@ -40,6 +40,11 @@ COPY tbl_tpcpatch_tmp FROM '/tmp/tbl_tpcpatch' (FORMAT BINARY);
 SELECT COUNT(*) FROM tbl_tpcpatch t1, tbl_tpcpatch_tmp t2 WHERE t1.k = t2.k AND t1.temp <> t2.temp;
 DROP TABLE tbl_tpcpatch_tmp;
 
+-- asBinary / tpcpatchFromBinary round-trip — exercises the WKB
+-- encoder + decoder directly (independent of COPY BINARY plumbing).
+SELECT COUNT(*) FROM tbl_tpcpatch
+  WHERE tpcpatchFromBinary(asBinary(temp)) <> temp;
+
 -------------------------------------------------------------------------------
 -- pcid uniformity
 -------------------------------------------------------------------------------

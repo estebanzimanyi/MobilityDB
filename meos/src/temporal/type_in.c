@@ -54,6 +54,8 @@
   #include "cbuffer/cbuffer.h"
 #endif
 #if POINTCLOUD
+  #include <meos_pointcloud.h>
+  #include "pointcloud/meos_schema_hook.h"
   #include "pointcloud/pcpoint.h"
   #include "pointcloud/pcpatch.h"
 #endif
@@ -2032,6 +2034,50 @@ temporal_from_wkb_state(meos_wkb_parse_state *s)
     s->temptype = T_TPOSE;
   }
 #endif /* RGEO */
+
+#if POINTCLOUD
+  /* Absorb an embedded pgPointCloud schema (option-b WKB blobs).
+   * Layout: pcid (int32) + xml_len (int32) + xml_bytes.  When the
+   * receiving backend doesn't already know this pcid, register the
+   * parsed schema + XML so subsequent meos_pc_schema(pcid) lookups
+   * succeed without needing the pointcloud_formats catalog row. */
+  if ((s->temptype == T_TPCPOINT || s->temptype == T_TPCPATCH) &&
+      (wkb_flags & MEOS_WKB_PCSCHEMAFLAG))
+  {
+    int32_t pcid_in = int32_from_wkb_state(s);
+    int32_t xml_len = int32_from_wkb_state(s);
+    assert(xml_len >= 0);
+    wkb_parse_state_check(s, (size_t) xml_len);
+    /* Only parse + register if we don't already have it cached. */
+    if (meos_pc_schema((uint32_t) pcid_in) == NULL)
+    {
+      char *xml = palloc((size_t) xml_len + 1);
+      memcpy(xml, s->pos, (size_t) xml_len);
+      xml[xml_len] = '\0';
+      if (meos_pc_parse_xml_fn == NULL)
+      {
+        pfree(xml);
+        meos_error(ERROR, MEOS_ERR_WKB_INPUT,
+          "WKB blob carries an embedded pgPointCloud schema for pcid=%u "
+          "but no XML-parse hook is installed (call mobilitydb_init)",
+          (uint32_t) pcid_in);
+        return NULL;
+      }
+      PCSCHEMA *parsed = meos_pc_parse_xml_fn((uint32_t) pcid_in, xml);
+      if (! parsed)
+      {
+        pfree(xml);
+        meos_error(ERROR, MEOS_ERR_WKB_INPUT,
+          "Failed to parse embedded pgPointCloud schema XML for pcid=%u",
+          (uint32_t) pcid_in);
+        return NULL;
+      }
+      meos_pc_schema_register_xml((uint32_t) pcid_in, parsed, xml);
+      pfree(xml);
+    }
+    s->pos += xml_len;
+  }
+#endif /* POINTCLOUD */
 
   /* Read the temporal value */
   Temporal *res;

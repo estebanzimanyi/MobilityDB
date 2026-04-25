@@ -128,6 +128,9 @@ mobilitydb_init()
    * (tpointcloudinst_set_tpcbox and friends) can resolve a pcid to
    * its parsed schema without touching PG catalogs directly. */
   meos_pc_schema_fn = mobilitydb_pc_schema;
+  /* Install the XML-parse hook so the MEOS WKB decoder can absorb
+   * schema XML embedded in incoming cross-cluster WKB blobs. */
+  meos_pc_parse_xml_fn = mobilitydb_pc_parse_xml;
 #endif
   return;
 }
