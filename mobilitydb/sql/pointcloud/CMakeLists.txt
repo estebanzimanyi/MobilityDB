@@ -5,6 +5,7 @@ SET(LOCAL_FILES
   420_tpcpoint
   430_tpcpatch
   435_tpc_topops
+  436_tpc_gist
   440_tpc_aggfuncs
   )
 

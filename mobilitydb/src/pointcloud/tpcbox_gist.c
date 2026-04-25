@@ -252,4 +252,37 @@ Tpcbox_gist_same(PG_FUNCTION_ARGS)
   PG_RETURN_POINTER(result);
 }
 
+/*****************************************************************************
+ * GiST compress — for opclasses keyed on tpcpoint / tpcpatch
+ *
+ * The leaf key is a Temporal* (tpcpoint or tpcpatch); the GiST
+ * storage type is TPCBox. Compute the bbox via the generic
+ * temporal_set_bbox dispatcher (works for both temporal types) and
+ * emit it as the GiST entry key. Mirrors Tspatial_gist_compress.
+ *****************************************************************************/
+
+PGDLLEXPORT Datum Tpc_gist_compress(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tpc_gist_compress);
+/**
+ * @ingroup mobilitydb_pointcloud_index
+ * @brief GiST compress method for tpcpoint / tpcpatch — derives the
+ *   TPCBox bbox of each leaf entry as its index key.
+ */
+Datum
+Tpc_gist_compress(PG_FUNCTION_ARGS)
+{
+  GISTENTRY *entry = (GISTENTRY *) PG_GETARG_POINTER(0);
+  if (entry->leafkey)
+  {
+    GISTENTRY *retval = palloc(sizeof(GISTENTRY));
+    TPCBox *box = palloc(sizeof(TPCBox));
+    Temporal *temp = temporal_slice(entry->key);
+    temporal_set_bbox(temp, box);
+    gistentryinit(*retval, PointerGetDatum(box), entry->rel, entry->page,
+      entry->offset, false);
+    PG_RETURN_POINTER(retval);
+  }
+  PG_RETURN_POINTER(entry);
+}
+
 /*****************************************************************************/
