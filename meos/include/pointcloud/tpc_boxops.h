@@ -32,4 +32,13 @@ extern void tpointcloudseqarr_set_tpcbox(TSequence **sequences, int count,
  * Mirrors @c tspatial_extent_transfn for stbox. */
 extern TPCBox *tpcbox_extent_transfn(TPCBox *state, const Temporal *temp);
 
+/* Generic bbox dispatchers — apply a tpcbox-vs-tpcbox predicate to
+ * the bounding boxes of one or two temporal pointcloud values.
+ * Mirrors boxop_tspatial_{stbox,tspatial} from tgeo_boxops.c. */
+extern bool boxop_tpointcloud_tpcbox(const Temporal *temp, const TPCBox *box,
+  bool (*func)(const TPCBox *, const TPCBox *), bool inverted);
+extern bool boxop_tpointcloud_tpointcloud(const Temporal *temp1,
+  const Temporal *temp2,
+  bool (*func)(const TPCBox *, const TPCBox *));
+
 #endif /* __TPC_BOXOPS_H__ */
