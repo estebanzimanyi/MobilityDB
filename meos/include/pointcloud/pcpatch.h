@@ -39,7 +39,8 @@ struct Pcpatch
   uint32_t pcid;        /**< Schema id */
   uint32_t compression; /**< Compression scheme (0 = uncompressed) */
   uint32_t npoints;     /**< Number of points in this patch */
-  double bounds[4];     /**< xmin, ymin, xmax, ymax */
+  double bounds[4];     /**< Mirrors upstream PCBOUNDS:
+                             [0]=xmin, [1]=xmax, [2]=ymin, [3]=ymax */
   uint8_t data[FLEXIBLE_ARRAY_MEMBER]; /**< Compressed point data */
 };
 
