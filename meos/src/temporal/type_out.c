@@ -73,6 +73,10 @@
 #if RGEO
   #include "rgeo/trgeo_all.h"
 #endif
+#if POINTCLOUD
+  #include "pointcloud/pcpoint.h"
+  #include "pointcloud/pcpatch.h"
+#endif
 
 #define MEOS_WKT_BOOL_SIZE sizeof("false")
 #define MEOS_WKT_INT4_SIZE sizeof("+2147483647")
@@ -927,6 +931,37 @@ npoint_to_wkb_size(const Npoint *np, uint8_t variant, bool component)
 }
 #endif /* NPOINT */
 
+#if POINTCLOUD
+/**
+ * @brief Return the size in bytes of a pgPointCloud pcpoint / pcpatch
+ * in the Well-Known Binary (WKB) representation
+ *
+ * The encoding is intentionally minimal: the entire varlena body
+ * (i.e. pcid + payload) is written length-prefixed, with the
+ * trailing struct padding trimmed. The schema for the @c pcid is
+ * resolved out-of-band (pgpointcloud's @c pointcloud_formats catalog,
+ * via the @c meos_pc_schema_fn hook installed at backend startup),
+ * so it is not embedded in the WKB. This makes the encoding fine for
+ * @c COPY @c BINARY round-trips inside a database, but assumes the
+ * receiver can resolve @c pcid against the same catalog. Cross-cluster
+ * portability is a separate concern handled by an optional schema-
+ * embedding flag bit (not yet implemented).
+ */
+static size_t
+pcpoint_to_wkb_size(const Pcpoint *pt, uint8_t variant)
+{
+  (void) variant;
+  /* int32 body length + body bytes */
+  return MEOS_WKB_INT4_SIZE + (VARSIZE(pt) - VARHDRSZ);
+}
+static size_t
+pcpatch_to_wkb_size(const Pcpatch *pa, uint8_t variant)
+{
+  (void) variant;
+  return MEOS_WKB_INT4_SIZE + (VARSIZE(pa) - VARHDRSZ);
+}
+#endif /* POINTCLOUD */
+
 #if POSE || RGEO
 /**
  * @brief Return the size in bytes of a pose in the Well-Known Binary (WKB)
@@ -987,6 +1022,14 @@ base_to_wkb_size(Datum value, meosType basetype, uint8_t variant)
     case T_POSE:
       return pose_to_wkb_size(DatumGetPoseP(value), variant, true);
 #endif /* POSE || RGEO */
+#if POINTCLOUD
+    case T_PCPOINT:
+      return pcpoint_to_wkb_size((const Pcpoint *) DatumGetPointer(value),
+        variant);
+    case T_PCPATCH:
+      return pcpatch_to_wkb_size((const Pcpatch *) DatumGetPointer(value),
+        variant);
+#endif /* POINTCLOUD */
     default: /* Error! */
       meos_error(ERROR, MEOS_ERR_MFJSON_OUTPUT,
         "Unknown temporal base type in WKB output: %s",
@@ -1622,6 +1665,33 @@ pose_to_wkb_buf(const Pose *pose, uint8_t *buf, uint8_t variant,
 }
 #endif /* POSE */
 
+#if POINTCLOUD
+/**
+ * @brief Write into the buffer a pgPointCloud pcpoint in the Well-Known
+ * Binary (WKB) representation: int32 body length + body bytes.
+ *
+ * The body comprises everything after the varlena header: pcid +
+ * dimension payload, with the pgpointcloud tail padding trimmed.
+ */
+static uint8_t *
+pcpoint_to_wkb_buf(const Pcpoint *pt, uint8_t *buf, uint8_t variant)
+{
+  size_t body_len = VARSIZE(pt) - VARHDRSZ;
+  buf = int32_to_wkb_buf((int32) body_len, buf, variant);
+  /* Body bytes are an opaque varlena payload; emit verbatim, no swap. */
+  memcpy(buf, VARDATA(pt), body_len);
+  return buf + body_len;
+}
+static uint8_t *
+pcpatch_to_wkb_buf(const Pcpatch *pa, uint8_t *buf, uint8_t variant)
+{
+  size_t body_len = VARSIZE(pa) - VARHDRSZ;
+  buf = int32_to_wkb_buf((int32) body_len, buf, variant);
+  memcpy(buf, VARDATA(pa), body_len);
+  return buf + body_len;
+}
+#endif /* POINTCLOUD */
+
 /**
  * @brief Write into the buffer a temporal instant in the Well-Known Binary
  * (WKB) representation
@@ -1675,6 +1745,16 @@ base_to_wkb_buf(Datum value, meosType basetype, uint8_t *buf,
       buf = pose_to_wkb_buf(DatumGetPoseP(value), buf, variant, true);
       break;
 #endif /* POSE || RGEO */
+#if POINTCLOUD
+    case T_PCPOINT:
+      buf = pcpoint_to_wkb_buf((const Pcpoint *) DatumGetPointer(value),
+        buf, variant);
+      break;
+    case T_PCPATCH:
+      buf = pcpatch_to_wkb_buf((const Pcpatch *) DatumGetPointer(value),
+        buf, variant);
+      break;
+#endif /* POINTCLOUD */
     default: /* Error! */
       meos_error(ERROR, MEOS_ERR_WKB_OUTPUT,
         "Unknown basetype in WKB output: %s", meostype_name(basetype));

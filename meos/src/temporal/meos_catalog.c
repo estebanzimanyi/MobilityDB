@@ -1137,6 +1137,9 @@ temporal_type(meosType type)
 #if RGEO
     || type == T_TRGEOMETRY
 #endif
+#if POINTCLOUD
+    || type == T_TPCPOINT || type == T_TPCPATCH
+#endif
     );
 }
 

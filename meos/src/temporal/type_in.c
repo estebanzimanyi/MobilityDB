@@ -1325,6 +1325,28 @@ text_from_wkb_state(meos_wkb_parse_state *s)
   return result;
 }
 
+#if POINTCLOUD
+/**
+ * @brief Read a pgPointCloud pcpoint or pcpatch varlena and advance the
+ * parse state. The encoding is int32 body length + body bytes; we wrap
+ * the body in a varlena header.
+ */
+static void *
+pcvarlena_from_wkb_state(meos_wkb_parse_state *s)
+{
+  int32_t body_len = int32_from_wkb_state(s);
+  assert(body_len >= (int32_t) sizeof(uint32_t));  /* must include pcid */
+  wkb_parse_state_check(s, (size_t) body_len);
+  /* Allocate a varlena: header + body. */
+  size_t total = VARHDRSZ + (size_t) body_len;
+  void *vl = palloc(total);
+  SET_VARSIZE(vl, total);
+  memcpy(VARDATA(vl), s->pos, (size_t) body_len);
+  s->pos += body_len;
+  return vl;
+}
+#endif /* POINTCLOUD */
+
 /*****************************************************************************/
 
 /**
@@ -1570,6 +1592,11 @@ base_from_wkb_state(meos_wkb_parse_state *s)
     case T_POSE:
       return PointerGetDatum(pose_from_wkb_state(s));
 #endif /* POSE */
+#if POINTCLOUD
+    case T_PCPOINT:
+    case T_PCPATCH:
+      return PointerGetDatum(pcvarlena_from_wkb_state(s));
+#endif /* POINTCLOUD */
     default: /* Error! */
       meos_error(ERROR, MEOS_ERR_WKB_INPUT,
         "Unknown base type in WKB string: %s", meostype_name(s->basetype));
