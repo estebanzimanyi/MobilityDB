@@ -2628,6 +2628,18 @@
 			<title>Temporal Point Clouds</title>
 
 			<sect3>
+				<title>Input and output</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcpoint_mfjson"><varname>asMFJSON</varname></link>: MF-JSON output for tpcpoint with extracted X/Y/Z coordinates</para>
+					</listitem>
+					<listitem>
+						<para><link linkend="tpcpatch_mfjson"><varname>asMFJSON</varname></link>: MF-JSON output for tpcpatch with pcid + npoints + bounds</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
 				<title>Constructors</title>
 				<itemizedlist>
 					<listitem>

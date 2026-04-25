@@ -767,6 +767,23 @@ CREATE INDEX ON my_table USING spgist(my_tpcpoint_column tpcpoint_kdtree_ops);
 		<para>The receiver also needs <varname>mobilitydb_init</varname> to have run — automatic in any backend that has loaded the <varname>mobilitydb</varname> extension, since the function-info module installs the XML-parse hook there.</para>
 	</sect1>
 
+	<sect1 xml:id="tpointcloud_mfjson">
+		<title>MF-JSON output</title>
+		<itemizedlist>
+			<listitem xml:id="tpcpoint_mfjson">
+				<indexterm significance="normal"><primary><varname>asMFJSON</varname></primary></indexterm>
+				<para>For <varname>tpcpoint</varname>, the temporal type is emitted as <varname>{"type":"MovingPCPoint", … "coordinates":[[X,Y,Z], …], "datetimes":[…]}</varname>. X/Y/[Z] are extracted from each instant's <varname>pcpoint</varname> via the schema cache; if the schema lacks X/Y the coordinate array is empty for that instant.</para>
+				<para><varname>asMFJSON(tpcpoint, options int=0, flags int=0, maxdecimaldigits int=15) → text</varname></para>
+			</listitem>
+			<listitem xml:id="tpcpatch_mfjson">
+				<indexterm significance="normal"><primary><varname>asMFJSON</varname></primary></indexterm>
+				<para>For <varname>tpcpatch</varname>, the type tag is <varname>"MovingPCPatch"</varname> and each instant emits a small object <varname>{"pcid":N, "npoints":N, "bounds":[xmin,xmax,ymin,ymax]}</varname>. The compressed point payload is intentionally not in the JSON — use <varname>asBinary</varname> / <varname>asHexWKB</varname> for round-trip.</para>
+				<para><varname>asMFJSON(tpcpatch, options int=0, flags int=0, maxdecimaldigits int=15) → text</varname></para>
+			</listitem>
+		</itemizedlist>
+		<para>When <varname>options</varname> is set to 1 the output also includes a <varname>"bbox"</varname> key — for <varname>tpcpoint</varname> / <varname>tpcpatch</varname> this is a TPCBox JSON object that adds a <varname>"pcid"</varname> field next to the standard stbox-shaped <varname>"bbox"</varname> array.</para>
+	</sect1>
+
 	<sect1 xml:id="tpointcloud_caveats">
 		<title>Caveats</title>
 

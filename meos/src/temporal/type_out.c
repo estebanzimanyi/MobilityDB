@@ -253,6 +253,63 @@ coordinates_as_mfjson_sb(stringbuffer_t *sb, const TInstant *inst, int precision
   return;
 }
 
+#if POINTCLOUD
+/**
+ * @brief Write into the buffer a tpcpoint instant's coordinates in the
+ * MF-JSON representation. Resolves the schema by pcid and emits an
+ * `[X, Y]` or `[X, Y, Z]` array. Falls back to `[]` if the schema
+ * is unknown or has no X/Y dimensions.
+ */
+static void
+tpcpoint_coordinates_as_mfjson_sb(stringbuffer_t *sb, const TInstant *inst,
+  int precision)
+{
+  const Pcpoint *pt = (const Pcpoint *) DatumGetPointer(tinstant_value_p(inst));
+  PCSCHEMA *schema = meos_pc_schema(pt->pcid);
+  stringbuffer_append_char(sb, '[');
+  if (schema)
+  {
+    double x, y, z;
+    if (pcpoint_get_x(pt, schema, &x) && pcpoint_get_y(pt, schema, &y))
+    {
+      stringbuffer_append_double(sb, x, precision);
+      stringbuffer_append_char(sb, ',');
+      stringbuffer_append_double(sb, y, precision);
+      if (pcpoint_get_z(pt, schema, &z))
+      {
+        stringbuffer_append_char(sb, ',');
+        stringbuffer_append_double(sb, z, precision);
+      }
+    }
+  }
+  stringbuffer_append_char(sb, ']');
+}
+
+/**
+ * @brief Write into the buffer a tpcpatch instant in the MF-JSON
+ * representation. Patches don't decompose to a single coordinate, so
+ * we emit a small object with pcid, npoints, and the 2D PCBOUNDS.
+ * The compressed point payload is intentionally left out — JSON is
+ * not the right wire format for it; use asBinary for round-trip.
+ */
+static void
+tpcpatch_as_mfjson_sb(stringbuffer_t *sb, const TInstant *inst, int precision)
+{
+  const Pcpatch *pa = (const Pcpatch *) DatumGetPointer(tinstant_value_p(inst));
+  stringbuffer_aprintf(sb, "{\"pcid\":%u,\"npoints\":%u,\"bounds\":[",
+    pa->pcid, pa->npoints);
+  /* PCBOUNDS layout {xmin, xmax, ymin, ymax}. */
+  stringbuffer_append_double(sb, pa->bounds[0], precision);
+  stringbuffer_append_char(sb, ',');
+  stringbuffer_append_double(sb, pa->bounds[1], precision);
+  stringbuffer_append_char(sb, ',');
+  stringbuffer_append_double(sb, pa->bounds[2], precision);
+  stringbuffer_append_char(sb, ',');
+  stringbuffer_append_double(sb, pa->bounds[3], precision);
+  stringbuffer_append_len(sb, "]}", 2);
+}
+#endif /* POINTCLOUD */
+
 #if POSE || RGEO
 /**
  * @brief Write into the buffer a pose in the MF-JSON representation
@@ -434,6 +491,40 @@ stbox_as_mfjson_sb(stringbuffer_t *sb, const STBox *box, int precision)
   return;
 }
 
+#if POINTCLOUD
+/**
+ * @brief Write into the buffer a TPCBox in the MF-JSON representation.
+ * Same shape as stbox JSON plus a "pcid" field.
+ */
+static void
+tpcbox_as_mfjson_sb(stringbuffer_t *sb, const TPCBox *box, int precision)
+{
+  assert(precision <= OUT_MAX_DOUBLE_PRECISION);
+  stringbuffer_aprintf(sb, "\"pcid\":%u,", box->pcid);
+  stringbuffer_append_len(sb, "\"bbox\":[[", 9);
+  stringbuffer_append_double(sb, box->xmin, precision);
+  stringbuffer_append_char(sb, ',');
+  stringbuffer_append_double(sb, box->ymin, precision);
+  bool hasz = MEOS_FLAGS_GET_Z(box->flags);
+  if (hasz)
+  {
+    stringbuffer_append_char(sb, ',');
+    stringbuffer_append_double(sb, box->zmin, precision);
+  }
+  stringbuffer_append_len(sb, "],[", 3);
+  stringbuffer_append_double(sb, box->xmax, precision);
+  stringbuffer_append_char(sb, ',');
+  stringbuffer_append_double(sb, box->ymax, precision);
+  if (hasz)
+  {
+    stringbuffer_append_char(sb, ',');
+    stringbuffer_append_double(sb, box->zmax, precision);
+  }
+  stringbuffer_append_len(sb, "]],", 3);
+  tstzspan_as_mfjson_sb(sb, &box->period);
+}
+#endif /* POINTCLOUD */
+
 /**
  * @brief Write into the buffer a bounding box corresponding to the temporal
  * type in the MF-JSON representation
@@ -461,6 +552,12 @@ bbox_as_mfjson_sb(stringbuffer_t *sb, meosType temptype, const bboxunion *box,
     case T_TRGEOMETRY:
       stbox_as_mfjson_sb(sb, (STBox *) box, precision);
       break;
+#if POINTCLOUD
+    case T_TPCPOINT:
+    case T_TPCPATCH:
+      tpcbox_as_mfjson_sb(sb, (const TPCBox *) box, precision);
+      break;
+#endif
     default: /* Error! */
       meos_error(ERROR, MEOS_ERR_MFJSON_OUTPUT,
         "Unknown temporal type in MFJSON output: %s",
@@ -507,6 +604,14 @@ temptype_as_mfjson_sb(stringbuffer_t *sb, meosType temptype)
 #if RGEO
     case T_TRGEOMETRY:
       stringbuffer_append_len(sb, "{\"type\":\"MovingRigidGeometry\",", 30);
+      break;
+#endif
+#if POINTCLOUD
+    case T_TPCPOINT:
+      stringbuffer_append_len(sb, "{\"type\":\"MovingPCPoint\",", 24);
+      break;
+    case T_TPCPATCH:
+      stringbuffer_append_len(sb, "{\"type\":\"MovingPCPatch\",", 24);
       break;
 #endif
     default: /* Error! */
@@ -574,6 +679,18 @@ tinstant_as_mfjson_sb(stringbuffer_t *sb, const TInstant *inst,
     pose_as_json_sb(sb, DatumGetPoseP(tinstant_value_p(inst)), precision);
   }
 #endif /* RGEO */
+#if POINTCLOUD
+  else if (inst->temptype == T_TPCPOINT)
+  {
+    stringbuffer_append_len(sb, "\"coordinates\":[", 15);
+    tpcpoint_coordinates_as_mfjson_sb(sb, inst, precision);
+  }
+  else if (inst->temptype == T_TPCPATCH)
+  {
+    stringbuffer_append_len(sb, "\"values\":[", 10);
+    tpcpatch_as_mfjson_sb(sb, inst, precision);
+  }
+#endif /* POINTCLOUD */
   else
   {
     stringbuffer_append_len(sb, "\"values\":[", 10);
@@ -621,6 +738,10 @@ tsequence_as_mfjson_sb(stringbuffer_t *sb, const TSequence *seq,
     stringbuffer_aprintf(sb, "%s,\"values\":[", str);
   }
 #endif /* RGEO */
+#if POINTCLOUD
+  else if (seq->temptype == T_TPCPOINT)
+    stringbuffer_append_len(sb, "\"coordinates\":[", 15);
+#endif
   else
     stringbuffer_append_len(sb, "\"values\":[", 10);
   const TInstant *inst;
@@ -653,9 +774,15 @@ tsequence_as_mfjson_sb(stringbuffer_t *sb, const TSequence *seq,
       pose_as_json_sb(sb, DatumGetPoseP(tinstant_value_p(inst)), precision);
     }
 #endif /* RGEO */
+#if POINTCLOUD
+    else if (inst->temptype == T_TPCPOINT)
+      tpcpoint_coordinates_as_mfjson_sb(sb, inst, precision);
+    else if (inst->temptype == T_TPCPATCH)
+      tpcpatch_as_mfjson_sb(sb, inst, precision);
+#endif /* POINTCLOUD */
     else
     {
-      success = temporal_base_as_mfjson_sb(sb, tinstant_value_p(inst), 
+      success = temporal_base_as_mfjson_sb(sb, tinstant_value_p(inst),
         inst->temptype, precision);
       /* Propagate errors up */
       if (! success)
@@ -718,6 +845,10 @@ tsequenceset_as_mfjson_sb(stringbuffer_t *sb, const TSequenceSet *ss,
       stringbuffer_append_char(sb, ',');
     if (tpoint_type(seq->temptype))
       stringbuffer_append_len(sb, "{\"coordinates\":[", 16);
+#if POINTCLOUD
+    else if (seq->temptype == T_TPCPOINT)
+      stringbuffer_append_len(sb, "{\"coordinates\":[", 16);
+#endif
     else
       stringbuffer_append_len(sb, "{\"values\":[", 11);
     for (int j = 0; j < seq->count; j++)
@@ -732,7 +863,7 @@ tsequenceset_as_mfjson_sb(stringbuffer_t *sb, const TSequenceSet *ss,
         const GSERIALIZED *gs = DatumGetGserializedP(tinstant_value_p(inst));
         /* Do not repeat the crs for the composing geometries */
         char *str = geo_as_geojson(gs, 0, precision, NULL);
-        stringbuffer_aprintf(sb, "%s", str);      
+        stringbuffer_aprintf(sb, "%s", str);
         // pfree(str);
       }
 #if POSE
@@ -749,6 +880,12 @@ tsequenceset_as_mfjson_sb(stringbuffer_t *sb, const TSequenceSet *ss,
         pose_as_json_sb(sb, DatumGetPoseP(tinstant_value_p(inst)), precision);
       }
 #endif /* RGEO */
+#if POINTCLOUD
+      else if (inst->temptype == T_TPCPOINT)
+        tpcpoint_coordinates_as_mfjson_sb(sb, inst, precision);
+      else if (inst->temptype == T_TPCPATCH)
+        tpcpatch_as_mfjson_sb(sb, inst, precision);
+#endif /* POINTCLOUD */
       else
       {
         success = temporal_base_as_mfjson_sb(sb, tinstant_value_p(inst),
