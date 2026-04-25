@@ -192,4 +192,73 @@ DEFINE_BOXOP3(Overafter,   overafter_tpcbox_tpcbox)
 
 #undef DEFINE_BOXOP3
 
+/*****************************************************************************
+ * Nearest-approach distance (|=|)
+ *****************************************************************************/
+
+PGDLLEXPORT Datum NAD_tpcbox_tpcbox(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(NAD_tpcbox_tpcbox);
+/**
+ * @ingroup mobilitydb_pointcloud_temp
+ * @brief Nearest-approach distance between two TPCBox values.
+ * @sqlfn nearestApproachDistance()
+ * @sqlop @p |=|
+ */
+Datum
+NAD_tpcbox_tpcbox(PG_FUNCTION_ARGS)
+{
+  TPCBox *box1 = PG_GETARG_TPCBOX_P(0);
+  TPCBox *box2 = PG_GETARG_TPCBOX_P(1);
+  PG_RETURN_FLOAT8(nad_tpcbox_tpcbox(box1, box2));
+}
+
+PGDLLEXPORT Datum NAD_tpointcloud_tpcbox(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(NAD_tpointcloud_tpcbox);
+/**
+ * @ingroup mobilitydb_pointcloud_temp
+ * @brief Nearest-approach distance between a tpcpoint/tpcpatch and a TPCBox.
+ */
+Datum
+NAD_tpointcloud_tpcbox(PG_FUNCTION_ARGS)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  TPCBox *box = PG_GETARG_TPCBOX_P(1);
+  double result = nad_tpointcloud_tpcbox(temp, box);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_FLOAT8(result);
+}
+
+PGDLLEXPORT Datum NAD_tpcbox_tpointcloud(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(NAD_tpcbox_tpointcloud);
+/**
+ * @ingroup mobilitydb_pointcloud_temp
+ * @brief Nearest-approach distance between a TPCBox and a tpcpoint/tpcpatch.
+ */
+Datum
+NAD_tpcbox_tpointcloud(PG_FUNCTION_ARGS)
+{
+  TPCBox *box = PG_GETARG_TPCBOX_P(0);
+  Temporal *temp = PG_GETARG_TEMPORAL_P(1);
+  double result = nad_tpointcloud_tpcbox(temp, box);
+  PG_FREE_IF_COPY(temp, 1);
+  PG_RETURN_FLOAT8(result);
+}
+
+PGDLLEXPORT Datum NAD_tpointcloud_tpointcloud(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(NAD_tpointcloud_tpointcloud);
+/**
+ * @ingroup mobilitydb_pointcloud_temp
+ * @brief Nearest-approach distance between two temporal pointcloud values.
+ */
+Datum
+NAD_tpointcloud_tpointcloud(PG_FUNCTION_ARGS)
+{
+  Temporal *temp1 = PG_GETARG_TEMPORAL_P(0);
+  Temporal *temp2 = PG_GETARG_TEMPORAL_P(1);
+  double result = nad_tpointcloud_tpointcloud(temp1, temp2);
+  PG_FREE_IF_COPY(temp1, 0);
+  PG_FREE_IF_COPY(temp2, 1);
+  PG_RETURN_FLOAT8(result);
+}
+
 /*****************************************************************************/
