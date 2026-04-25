@@ -242,4 +242,29 @@ boxop_tpointcloud_tpointcloud(const Temporal *temp1, const Temporal *temp2,
   return func(&box1, &box2);
 }
 
+/*****************************************************************************
+ * Lossy TPCBox → STBox conversion
+ *
+ * Used by the SP-GiST opclasses where the index storage is STBox.
+ * Drops pcid; the operator's recheck restores pcid filtering on the
+ * actual leaf entry. Period, srid and the X/Z/T dimension flags are
+ * copied; GEODETIC is always cleared (tpointcloud values are
+ * cartesian).
+ *****************************************************************************/
+
+void
+tpcbox_set_stbox(const TPCBox *src, STBox *dst)
+{
+  assert(src); assert(dst);
+  memset(dst, 0, sizeof(STBox));
+  dst->period = src->period;
+  dst->xmin = src->xmin; dst->ymin = src->ymin; dst->zmin = src->zmin;
+  dst->xmax = src->xmax; dst->ymax = src->ymax; dst->zmax = src->zmax;
+  dst->srid = src->srid;
+  MEOS_FLAGS_SET_X(dst->flags, MEOS_FLAGS_GET_X(src->flags));
+  MEOS_FLAGS_SET_Z(dst->flags, MEOS_FLAGS_GET_Z(src->flags));
+  MEOS_FLAGS_SET_T(dst->flags, MEOS_FLAGS_GET_T(src->flags));
+  MEOS_FLAGS_SET_GEODETIC(dst->flags, false);
+}
+
 /*****************************************************************************/

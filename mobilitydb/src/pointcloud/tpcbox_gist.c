@@ -52,6 +52,8 @@
 #include "temporal/type_util.h"
 #include "pointcloud/tpcbox.h"
 #include "pointcloud/tpcbox_index.h"
+#include "pointcloud/tpc_boxops.h"  /* tpcbox_set_stbox */
+#include "geo/stbox.h"              /* PG_RETURN_STBOX_P */
 /* MobilityDB */
 #include "pg_temporal/temporal.h"
 #include "pg_temporal/tnumber_gist.h"
@@ -283,6 +285,31 @@ Tpc_gist_compress(PG_FUNCTION_ARGS)
     PG_RETURN_POINTER(retval);
   }
   PG_RETURN_POINTER(entry);
+}
+
+/*****************************************************************************
+ * SP-GiST compress — for opclasses keyed on tpcpoint / tpcpatch with
+ * STBox storage (lossy: pcid is dropped, recovered by recheck on the
+ * actual operator). Mirrors Tspatial_spgist_compress.
+ *****************************************************************************/
+
+PGDLLEXPORT Datum Tpc_spgist_compress(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tpc_spgist_compress);
+/**
+ * @ingroup mobilitydb_pointcloud_index
+ * @brief SP-GiST compress method for tpcpoint / tpcpatch — derives a
+ *   STBox by computing the leaf entry's TPCBox bbox and dropping pcid.
+ */
+Datum
+Tpc_spgist_compress(PG_FUNCTION_ARGS)
+{
+  Datum tempdatum = PG_GETARG_DATUM(0);
+  Temporal *temp = temporal_slice(tempdatum);
+  TPCBox tpcbox;
+  temporal_set_bbox(temp, &tpcbox);
+  STBox *result = palloc(sizeof(STBox));
+  tpcbox_set_stbox(&tpcbox, result);
+  PG_RETURN_STBOX_P(result);
 }
 
 /*****************************************************************************/
