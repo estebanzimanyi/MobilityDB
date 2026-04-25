@@ -214,4 +214,32 @@ tpcbox_extent_transfn(TPCBox *state, const Temporal *temp)
   return state;
 }
 
+/*****************************************************************************
+ * Generic bbox dispatchers
+ *
+ * Mirror boxop_tspatial_{stbox,tspatial} from tgeo_boxops.c.  Each
+ * computes the TPCBox of its temporal arg(s) and applies the supplied
+ * tpcbox-vs-tpcbox predicate (overlaps / contains / contained / same /
+ * adjacent — i.e. the MEOS primitives in meos_pointcloud.h).
+ *****************************************************************************/
+
+bool
+boxop_tpointcloud_tpcbox(const Temporal *temp, const TPCBox *box,
+  bool (*func)(const TPCBox *, const TPCBox *), bool inverted)
+{
+  TPCBox box1;
+  temporal_set_bbox(temp, &box1);
+  return inverted ? func(box, &box1) : func(&box1, box);
+}
+
+bool
+boxop_tpointcloud_tpointcloud(const Temporal *temp1, const Temporal *temp2,
+  bool (*func)(const TPCBox *, const TPCBox *))
+{
+  TPCBox box1, box2;
+  temporal_set_bbox(temp1, &box1);
+  temporal_set_bbox(temp2, &box2);
+  return func(&box1, &box2);
+}
+
 /*****************************************************************************/
