@@ -48,6 +48,11 @@
  * @ingroup mobilitydb_pointcloud
  * @brief GiST opclass support functions for the TPCBox type
  *
+ * @defgroup mobilitydb_pointcloud_agg Aggregate functions
+ * @ingroup mobilitydb_pointcloud
+ * @brief Aggregate functions for the pgpointcloud temporal types
+ *   (extent, tcount, wcount, merge, appendInstant, appendSequence).
+ *
  * @note pcpointset / pcpatchset have no type-specific PG wrappers: SQL
  *   bindings dispatch directly to the generic @c Set_* PG wrappers in
  *   @c mobilitydb/src/temporal/set.c.  Same-pcid uniformity is enforced
