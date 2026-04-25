@@ -56,3 +56,27 @@ SELECT bool_and(startTimestamp(temp) >= tmin(ext) AND endTimestamp(temp) <= tmax
 FROM tbl_tpcpatch, (SELECT extent(temp) AS ext FROM tbl_tpcpatch) e;
 
 -------------------------------------------------------------------------------
+-- tcount / wcount — count of overlapping rows at each timestamp.
+-- Aggregates require uniform subtype per group, so we sample on the
+-- per-subtype tables rather than the merged tbl_tpcpoint / tbl_tpcpatch.
+-------------------------------------------------------------------------------
+
+SELECT numInstants(tcount(inst)) > 0 FROM tbl_tpcpoint_inst;
+SELECT numInstants(tcount(seq))  > 0 FROM tbl_tpcpoint_seq;
+SELECT numInstants(tcount(inst)) > 0 FROM tbl_tpcpatch_inst;
+SELECT numInstants(tcount(seq))  > 0 FROM tbl_tpcpatch_seq;
+
+SELECT numInstants(wcount(inst, '1 day'::interval)) > 0 FROM tbl_tpcpoint_inst;
+SELECT numInstants(wcount(seq,  '1 day'::interval)) > 0 FROM tbl_tpcpoint_seq;
+SELECT numInstants(wcount(inst, '1 day'::interval)) > 0 FROM tbl_tpcpatch_inst;
+SELECT numInstants(wcount(seq,  '1 day'::interval)) > 0 FROM tbl_tpcpatch_seq;
+
+-------------------------------------------------------------------------------
+-- merge — combines instants across rows into one temporal value.
+-- pcid must propagate to the result.
+-------------------------------------------------------------------------------
+
+SELECT pcid(merge(inst)) FROM tbl_tpcpoint_inst;
+SELECT pcid(merge(inst)) FROM tbl_tpcpatch_inst;
+
+-------------------------------------------------------------------------------

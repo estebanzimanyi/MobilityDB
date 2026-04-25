@@ -2731,6 +2731,18 @@
 					<listitem>
 						<para><link linkend="tpcpoint_extent"><varname>extent</varname></link>: Bounding-box aggregate over tpcpoint, tpcpatch, or tpcbox values; rejects mixed pcids.</para>
 					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpoint_tcount"><varname>tcount</varname>, <varname>wcount</varname></link>: Temporal and window count over tpcpoint or tpcpatch.</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpoint_merge"><varname>merge</varname></link>: Combine multiple temporal values into one.</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpoint_append"><varname>appendInstant</varname>, <varname>appendSequence</varname></link>: Streaming construction aggregates.</para>
+					</listitem>
 				</itemizedlist>
 			</sect3>
 		</sect2>
