@@ -28,6 +28,7 @@
 #include <pc_api.h>
 
 #include <meos.h>
+#include <meos_geo.h>           /* nad_stbox_stbox */
 #include <meos_internal.h>
 #include "temporal/span.h"
 #include "temporal/temporal.h"
@@ -265,6 +266,43 @@ tpcbox_set_stbox(const TPCBox *src, STBox *dst)
   MEOS_FLAGS_SET_Z(dst->flags, MEOS_FLAGS_GET_Z(src->flags));
   MEOS_FLAGS_SET_T(dst->flags, MEOS_FLAGS_GET_T(src->flags));
   MEOS_FLAGS_SET_GEODETIC(dst->flags, false);
+}
+
+/*****************************************************************************
+ * Nearest-approach distance
+ *
+ * Reuses the stbox NAD machinery via the lossy tpcbox→stbox conversion.
+ * Returns DBL_MAX on pcid mismatch (the schemas would have to be
+ * compatible for the dimensions to mean the same thing).
+ *****************************************************************************/
+
+double
+nad_tpcbox_tpcbox(const TPCBox *box1, const TPCBox *box2)
+{
+  assert(box1); assert(box2);
+  if (box1->pcid != box2->pcid)
+    return DBL_MAX;
+  STBox sbox1, sbox2;
+  tpcbox_set_stbox(box1, &sbox1);
+  tpcbox_set_stbox(box2, &sbox2);
+  return nad_stbox_stbox(&sbox1, &sbox2);
+}
+
+double
+nad_tpointcloud_tpcbox(const Temporal *temp, const TPCBox *box)
+{
+  TPCBox tmp;
+  temporal_set_bbox(temp, &tmp);
+  return nad_tpcbox_tpcbox(&tmp, box);
+}
+
+double
+nad_tpointcloud_tpointcloud(const Temporal *temp1, const Temporal *temp2)
+{
+  TPCBox tmp1, tmp2;
+  temporal_set_bbox(temp1, &tmp1);
+  temporal_set_bbox(temp2, &tmp2);
+  return nad_tpcbox_tpcbox(&tmp1, &tmp2);
 }
 
 /*****************************************************************************/
