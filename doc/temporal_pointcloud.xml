@@ -633,6 +633,18 @@ CREATE INDEX ON my_table USING gist(my_tpcbox_column);
 </programlisting>
 	</sect1>
 
+	<sect1 xml:id="tpointcloud_wkb">
+		<title>Binary representation and portability</title>
+
+		<para>Both <varname>tpcpoint</varname> and <varname>tpcpatch</varname> support standard MobilityDB binary I/O through <varname>asBinary</varname> / <varname>tpcpointFromBinary</varname> / <varname>tpcpatchFromBinary</varname>, and through PostgreSQL's <varname>COPY ... (FORMAT BINARY)</varname>. The encoding embeds the <varname>pcid</varname> of each value alongside the dimension payload, so the binary blob is unambiguous about which schema the values were written under.</para>
+
+		<para>Whenever the encoding backend has the schema XML for a given <varname>pcid</varname> registered in its MEOS-level schema cache (which the PG extension populates lazily on first use, scanning <varname>pointcloud_formats</varname>), the encoder additionally embeds the schema XML in the WKB blob. The <varname>MEOS_WKB_PCSCHEMAFLAG</varname> bit (0x80) in the temporal-flags byte signals this. A receiver that does not yet know the <varname>pcid</varname> — for example, a different cluster after a <varname>pg_dump --format=binary</varname> — automatically parses and registers the embedded schema, so the import succeeds without an out-of-band schema preload step.</para>
+
+		<para>If the encoding backend has only a parsed <varname>PCSCHEMA</varname> (no source XML) for a <varname>pcid</varname>, the schema bit is left clear and the blob is portable only between backends that share the same <varname>pointcloud_formats</varname> catalog. This matches the behaviour of the prior, schema-less encoding and is the fallback path when the cache was populated by hand from a standalone-MEOS program.</para>
+
+		<para>The receiver also needs <varname>mobilitydb_init</varname> to have run — automatic in any backend that has loaded the <varname>mobilitydb</varname> extension, since the function-info module installs the XML-parse hook there.</para>
+	</sect1>
+
 	<sect1 xml:id="tpointcloud_caveats">
 		<title>Caveats</title>
 
