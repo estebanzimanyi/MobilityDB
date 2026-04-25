@@ -626,11 +626,19 @@ SELECT startNumPoints(tpcpatch(PC_Patch(PC_MakePoint(1, ARRAY[10.0, 20.0, 30.0])
 	<sect1 xml:id="tpointcloud_indexes">
 		<title>Indexes</title>
 
-		<para>B-tree (<varname>tpcpoint_btree_ops</varname>, <varname>tpcpatch_btree_ops</varname>, <varname>tpcbox_btree_ops</varname>) and hash (<varname>tpcpoint_hash_ops</varname>, <varname>tpcpatch_hash_ops</varname>) operator classes support equality and ordering predicates. A GiST operator class on the <varname>tpcbox</varname> type wires the topological and position operators to GiST indexes:</para>
+		<para>B-tree (<varname>tpcpoint_btree_ops</varname>, <varname>tpcpatch_btree_ops</varname>, <varname>tpcbox_btree_ops</varname>) and hash (<varname>tpcpoint_hash_ops</varname>, <varname>tpcpatch_hash_ops</varname>) operator classes support equality and ordering predicates. The R-tree GiST and quadtree / kd-tree SP-GiST operator classes accelerate the bbox-based predicates (<varname>&amp;&amp;</varname>, <varname>@&gt;</varname>, <varname>&lt;@</varname>, <varname>~=</varname>, <varname>-|-</varname>) on all three of <varname>tpcbox</varname>, <varname>tpcpoint</varname>, and <varname>tpcpatch</varname>:</para>
 
 		<programlisting language="sql" xml:space="preserve" format="linespecific">
-CREATE INDEX ON my_table USING gist(my_tpcbox_column);
+-- GiST (R-tree)
+CREATE INDEX ON my_table USING gist(my_tpcpoint_column);
+CREATE INDEX ON my_table USING gist(my_tpcpatch_column);
+
+-- SP-GiST quadtree (default) or kd-tree
+CREATE INDEX ON my_table USING spgist(my_tpcpoint_column);
+CREATE INDEX ON my_table USING spgist(my_tpcpoint_column tpcpoint_kdtree_ops);
 </programlisting>
+
+		<para>SP-GiST opclasses store an <varname>stbox</varname> internally (the <varname>pcid</varname> filter is recovered by the operator's recheck), so a query against an index on a column whose values mix multiple <varname>pcid</varname>s will return a slightly larger set of candidate rows for recheck — a non-issue when each table holds values of a single schema, which is the common case.</para>
 	</sect1>
 
 	<sect1 xml:id="tpointcloud_aggregations">
