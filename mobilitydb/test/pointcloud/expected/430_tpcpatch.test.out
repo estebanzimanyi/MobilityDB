@@ -1,0 +1,100 @@
+SELECT pcid(tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]::float[]), PC_MakePoint(1, ARRAY[2.0, 2.0, 2.0]::float[])]), '2024-01-01'::timestamptz));
+ pcid 
+------
+    1
+(1 row)
+
+SELECT startNumPoints(tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]::float[]), PC_MakePoint(1, ARRAY[2.0, 2.0, 2.0]::float[])]), '2024-01-01'::timestamptz));
+ startnumpoints 
+----------------
+              2
+(1 row)
+
+SELECT endNumPoints(tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]::float[]), PC_MakePoint(1, ARRAY[2.0, 2.0, 2.0]::float[])]), '2024-01-01'::timestamptz));
+ endnumpoints 
+--------------
+            2
+(1 row)
+
+SELECT numInstants(tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]::float[]), PC_MakePoint(1, ARRAY[2.0, 2.0, 2.0]::float[])]), '2024-01-01'::timestamptz));
+ numinstants 
+-------------
+           1
+(1 row)
+
+SELECT numInstants(tpcpatchSeq(ARRAY[tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]::float[]), PC_MakePoint(1, ARRAY[2.0, 2.0, 2.0]::float[])]), '2024-01-01'::timestamptz), tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[5.0, 5.0, 5.0]::float[]), PC_MakePoint(1, ARRAY[6.0, 6.0, 6.0]::float[])]), '2024-01-02'::timestamptz)]));
+ numinstants 
+-------------
+           2
+(1 row)
+
+SELECT startTimestamp(tpcpatchSeq(ARRAY[tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]::float[]), PC_MakePoint(1, ARRAY[2.0, 2.0, 2.0]::float[])]), '2024-01-01'::timestamptz), tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[5.0, 5.0, 5.0]::float[]), PC_MakePoint(1, ARRAY[6.0, 6.0, 6.0]::float[])]), '2024-01-02'::timestamptz)]));
+        starttimestamp        
+------------------------------
+ Mon Jan 01 00:00:00 2024 PST
+(1 row)
+
+SELECT endTimestamp(tpcpatchSeq(ARRAY[tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]::float[]), PC_MakePoint(1, ARRAY[2.0, 2.0, 2.0]::float[])]), '2024-01-01'::timestamptz), tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[5.0, 5.0, 5.0]::float[]), PC_MakePoint(1, ARRAY[6.0, 6.0, 6.0]::float[])]), '2024-01-02'::timestamptz)]));
+         endtimestamp         
+------------------------------
+ Tue Jan 02 00:00:00 2024 PST
+(1 row)
+
+SELECT pcid(tpcpatchSeq(ARRAY[tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]::float[]), PC_MakePoint(1, ARRAY[2.0, 2.0, 2.0]::float[])]), '2024-01-01'::timestamptz), tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[5.0, 5.0, 5.0]::float[]), PC_MakePoint(1, ARRAY[6.0, 6.0, 6.0]::float[])]), '2024-01-02'::timestamptz)]));
+ pcid 
+------
+    1
+(1 row)
+
+SELECT (tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]::float[]), PC_MakePoint(1, ARRAY[2.0, 2.0, 2.0]::float[])]), '2024-01-01'::timestamptz)) = (tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]::float[]), PC_MakePoint(1, ARRAY[2.0, 2.0, 2.0]::float[])]), '2024-01-01'::timestamptz));
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT (tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]::float[]), PC_MakePoint(1, ARRAY[2.0, 2.0, 2.0]::float[])]), '2024-01-01'::timestamptz)) = (tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[5.0, 5.0, 5.0]::float[]), PC_MakePoint(1, ARRAY[6.0, 6.0, 6.0]::float[])]), '2024-01-02'::timestamptz));
+ ?column? 
+----------
+ f
+(1 row)
+
+SELECT (tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]::float[]), PC_MakePoint(1, ARRAY[2.0, 2.0, 2.0]::float[])]), '2024-01-01'::timestamptz)) <> (tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[5.0, 5.0, 5.0]::float[]), PC_MakePoint(1, ARRAY[6.0, 6.0, 6.0]::float[])]), '2024-01-02'::timestamptz));
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT (tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]::float[]), PC_MakePoint(1, ARRAY[2.0, 2.0, 2.0]::float[])]), '2024-01-01'::timestamptz)) < (tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[5.0, 5.0, 5.0]::float[]), PC_MakePoint(1, ARRAY[6.0, 6.0, 6.0]::float[])]), '2024-01-02'::timestamptz));
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT atTime(tpcpatchSeq(ARRAY[tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]::float[]), PC_MakePoint(1, ARRAY[2.0, 2.0, 2.0]::float[])]), '2024-01-01'::timestamptz), tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[5.0, 5.0, 5.0]::float[]), PC_MakePoint(1, ARRAY[6.0, 6.0, 6.0]::float[])]), '2024-01-02'::timestamptz)]),
+  tstzspan '[2024-01-02, 2024-01-03]') IS NOT NULL;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT atTpcbox(tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]::float[]), PC_MakePoint(1, ARRAY[2.0, 2.0, 2.0]::float[])]), '2024-01-01'::timestamptz), tpcbox_zt(0, 0, 0, 10, 10, 10,
+  tstzspan '[2024-01-01, 2024-01-31]', 1, 0)) IS NOT NULL;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT minusTpcbox(tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]::float[]), PC_MakePoint(1, ARRAY[2.0, 2.0, 2.0]::float[])]), '2024-01-01'::timestamptz), tpcbox_zt(0, 0, 0, 10, 10, 10,
+  tstzspan '[2024-01-01, 2024-01-31]', 1, 0)) IS NULL;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT atTpcbox(tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]::float[]), PC_MakePoint(1, ARRAY[2.0, 2.0, 2.0]::float[])]), '2024-01-01'::timestamptz), tpcbox_zt(0, 0, 0, 10, 10, 10,
+  tstzspan '[2024-01-01, 2024-01-31]', 999, 0)) IS NULL;
+ ?column? 
+----------
+ t
+(1 row)
+
