@@ -27,7 +27,7 @@ CREATE EXTENSION mobilitydb CASCADE;
 		<para>This section walks through a minimal end-to-end example: registering a schema, building values, lifting to a temporal type, querying with the bbox surface, and indexing. The goal is to make every later section in this chapter pin to a concrete usage. Follow the steps in order against a fresh database.</para>
 
 		<sect2 xml:id="tpointcloud_quickstart_setup">
-			<title>1. Register a schema</title>
+			<title>Register a schema</title>
 
 			<para>Every <varname>pcpoint</varname> and <varname>pcpatch</varname> value carries a <varname>pcid</varname> that resolves through <varname>pointcloud_formats</varname> to an XML schema. The schema declares the dimensions (X, Y, Z, …), their on-disk numeric type, and per-dimension scale. A minimal 3D schema with all dimensions stored as <varname>int32</varname> at unit scale:</para>
 			<programlisting language="sql" xml:space="preserve" format="linespecific">
@@ -49,7 +49,7 @@ INSERT INTO pointcloud_formats (pcid, srid, schema) VALUES (1, 4326, '
 		</sect2>
 
 		<sect2 xml:id="tpointcloud_quickstart_construct">
-			<title>2. Build base and temporal values</title>
+			<title>Build base and temporal values</title>
 
 			<para>MobilityDB ships ergonomic constructors over pgPointCloud's <varname>PC_MakePoint</varname> / <varname>PC_Patch</varname>:</para>
 			<programlisting language="sql" xml:space="preserve" format="linespecific">
@@ -85,7 +85,7 @@ INSERT INTO scans VALUES (1,
 		</sect2>
 
 		<sect2 xml:id="tpointcloud_quickstart_query">
-			<title>3. Query with the bbox surface</title>
+			<title>Query with the bbox surface</title>
 
 			<para>Every tpcpoint and tpcpatch carries a <varname>tpcbox</varname> (mirror of <varname>stbox</varname> + <varname>pcid</varname>) computed at construction time. The bbox-level operator surface — topological (<varname>&amp;&amp;</varname>, <varname>@&gt;</varname>, <varname>&lt;@</varname>, <varname>~=</varname>, <varname>-|-</varname>), directional on X/Y/Z/time, and KNN distance <varname>|=|</varname> — works between any pair of (<varname>tpcbox</varname>, <varname>tpcpoint</varname>, <varname>tpcpatch</varname>):</para>
 			<programlisting language="sql" xml:space="preserve" format="linespecific">
@@ -102,18 +102,18 @@ ORDER BY traj |=| my_box LIMIT 5;
 		</sect2>
 
 		<sect2 xml:id="tpointcloud_quickstart_index">
-			<title>4. Index for bbox-driven scans</title>
+			<title>Index for bbox-driven scans</title>
 
 			<para>R-tree GiST and quadtree / kd-tree SP-GiST opclasses accelerate every bbox predicate. Pick GiST for general-purpose workloads (and for KNN ordering); SP-GiST kd-tree is competitive on read-heavy point-only data:</para>
 			<programlisting language="sql" xml:space="preserve" format="linespecific">
 CREATE INDEX scans_traj_gist ON scans USING gist(traj);
 CREATE INDEX scans_full_spgist ON scans USING spgist(full_scan);
 </programlisting>
-			<para>The SP-GiST opclasses store an <varname>stbox</varname> internally and recover the <varname>pcid</varname> filter at recheck time, so a column with mixed pcids returns a slightly larger candidate set for recheck — a non-issue when each table holds values of a single schema, which the typmod recipe in step 2 enforces.</para>
+			<para>The SP-GiST opclasses store an <varname>stbox</varname> internally and recover the <varname>pcid</varname> filter at recheck time, so a column with mixed pcids returns a slightly larger candidate set for recheck — a non-issue when each table holds values of a single schema, which the typmod recipe in <link linkend="tpointcloud_quickstart_construct">Build base and temporal values</link> enforces.</para>
 		</sect2>
 
 		<sect2 xml:id="tpointcloud_quickstart_aggregate">
-			<title>5. Aggregate</title>
+			<title>Aggregate</title>
 
 			<programlisting language="sql" xml:space="preserve" format="linespecific">
 -- spatiotemporal extent of every track (one tpcbox)
@@ -129,7 +129,7 @@ SELECT id, merge(traj) FROM scans GROUP BY id;
 		</sect2>
 
 		<sect2 xml:id="tpointcloud_quickstart_perpoint">
-			<title>6. Per-point access</title>
+			<title>Per-point access</title>
 
 			<para>The <link linkend="tpcpatch_points"><varname>points</varname></link> set-returning function explodes each instant's patch into individual pcpoints, useful for joins against per-point predicates that the bbox layer cannot express:</para>
 			<programlisting language="sql" xml:space="preserve" format="linespecific">
