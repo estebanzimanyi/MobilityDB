@@ -36,3 +36,63 @@ FROM tbl_tpcpatch, (SELECT extent(temp) AS ext FROM tbl_tpcpatch) e;
  t
 (1 row)
 
+SELECT numInstants(tcount(inst)) > 0 FROM tbl_tpcpoint_inst;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT numInstants(tcount(seq))  > 0 FROM tbl_tpcpoint_seq;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT numInstants(tcount(inst)) > 0 FROM tbl_tpcpatch_inst;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT numInstants(tcount(seq))  > 0 FROM tbl_tpcpatch_seq;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT numInstants(wcount(inst, '1 day'::interval)) > 0 FROM tbl_tpcpoint_inst;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT numInstants(wcount(seq,  '1 day'::interval)) > 0 FROM tbl_tpcpoint_seq;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT numInstants(wcount(inst, '1 day'::interval)) > 0 FROM tbl_tpcpatch_inst;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT numInstants(wcount(seq,  '1 day'::interval)) > 0 FROM tbl_tpcpatch_seq;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT pcid(merge(inst)) FROM tbl_tpcpoint_inst;
+ pcid 
+------
+    1
+(1 row)
+
+SELECT pcid(merge(inst)) FROM tbl_tpcpatch_inst;
+ pcid 
+------
+    1
+(1 row)
+
