@@ -16,6 +16,108 @@ SELECT asMFJSON(tpcpoint(PC_MakePoint(1, ARRAY[1.0, 2.0, 3.0]::float[]), '2024-0
  {"type":"MovingPCPoint","pcid":1,"bbox":[[1,2,3],[1,2,3]],"period":{"begin":"Mon Jan 01T00:00:00 2024 PST","end":"Mon Jan 01T00:00:00 2024 PST","lower_inc":true,"upper_inc":true},"coordinates":[[1,2,3]],"datetimes":["Mon Jan 01T00:00:00 2024 PST"],"interpolation":"None"}
 (1 row)
 
+SELECT asMFJSON(tpcpoint(PC_MakePoint(1, ARRAY[1.0, 2.0, 3.0]::float[]), '2024-01-01'::timestamptz))::jsonb ->> 'type' = 'MovingPCPoint';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT asMFJSON(tpcpointSeq(ARRAY[tpcpoint(PC_MakePoint(1, ARRAY[1.0, 2.0, 3.0]::float[]), '2024-01-01'::timestamptz), tpcpoint(PC_MakePoint(1, ARRAY[4.0, 5.0, 6.0]::float[]), '2024-01-02'::timestamptz)]))::jsonb ->> 'type' = 'MovingPCPoint';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT (asMFJSON(tpcpoint(PC_MakePoint(1, ARRAY[1.0, 2.0, 3.0]::float[]), '2024-01-01'::timestamptz))::jsonb -> 'coordinates' -> 0) = '[1, 2, 3]'::jsonb;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT jsonb_array_length(asMFJSON(tpcpoint(PC_MakePoint(1, ARRAY[1.0, 2.0, 3.0]::float[]), '2024-01-01'::timestamptz))::jsonb -> 'coordinates') = 1;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT jsonb_array_length(
+  asMFJSON(tpcpointSeq(ARRAY[tpcpoint(PC_MakePoint(1, ARRAY[1.0, 2.0, 3.0]::float[]), '2024-01-01'::timestamptz), tpcpoint(PC_MakePoint(1, ARRAY[4.0, 5.0, 6.0]::float[]), '2024-01-02'::timestamptz)]))::jsonb -> 'coordinates') = 2;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT (asMFJSON(tpcpointSeq(ARRAY[tpcpoint(PC_MakePoint(1, ARRAY[1.0, 2.0, 3.0]::float[]), '2024-01-01'::timestamptz), tpcpoint(PC_MakePoint(1, ARRAY[4.0, 5.0, 6.0]::float[]), '2024-01-02'::timestamptz)]))::jsonb
+  -> 'coordinates' -> 1) = '[4, 5, 6]'::jsonb;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT (asMFJSON(tpcpoint(PC_MakePoint(1, ARRAY[1.0, 2.0, 3.0]::float[]), '2024-01-01'::timestamptz), options := 1)::jsonb ->> 'pcid')::int = 1;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT asMFJSON(tpcpoint(PC_MakePoint(1, ARRAY[1.0, 2.0, 3.0]::float[]), '2024-01-01'::timestamptz), options := 1)::jsonb ? 'bbox';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT jsonb_array_length(asMFJSON(tpcpoint(PC_MakePoint(1, ARRAY[1.0, 2.0, 3.0]::float[]), '2024-01-01'::timestamptz), options := 1)::jsonb -> 'bbox') = 2;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT jsonb_array_length(
+  asMFJSON(tpcpoint(PC_MakePoint(1, ARRAY[1.0, 2.0, 3.0]::float[]), '2024-01-01'::timestamptz), options := 1)::jsonb -> 'bbox' -> 0) = 3;
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT asMFJSON(tpcpoint(PC_MakePoint(1, ARRAY[1.0, 2.0, 3.0]::float[]), '2024-01-01'::timestamptz), options := 1)::jsonb ? 'period';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT asMFJSON(tpcpoint(PC_MakePoint(1, ARRAY[1.0, 2.0, 3.0]::float[]), '2024-01-01'::timestamptz), options := 1)::jsonb -> 'period' ? 'begin';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT asMFJSON(tpcpoint(PC_MakePoint(1, ARRAY[1.0, 2.0, 3.0]::float[]), '2024-01-01'::timestamptz), options := 1)::jsonb -> 'period' ? 'end';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT asMFJSON(tpcpoint(PC_MakePoint(1, ARRAY[1.0, 2.0, 3.0]::float[]), '2024-01-01'::timestamptz))::jsonb ->> 'interpolation' = 'None';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT asMFJSON(tpcpointSeq(ARRAY[tpcpoint(PC_MakePoint(1, ARRAY[1.0, 2.0, 3.0]::float[]), '2024-01-01'::timestamptz), tpcpoint(PC_MakePoint(1, ARRAY[4.0, 5.0, 6.0]::float[]), '2024-01-02'::timestamptz)]))::jsonb ->> 'interpolation' = 'Step';
+ ?column? 
+----------
+ t
+(1 row)
+
+SELECT jsonb_array_length(
+  asMFJSON(tpcpointSeq(ARRAY[tpcpoint(PC_MakePoint(1, ARRAY[1.0, 2.0, 3.0]::float[]), '2024-01-01'::timestamptz), tpcpoint(PC_MakePoint(1, ARRAY[4.0, 5.0, 6.0]::float[]), '2024-01-02'::timestamptz)]))::jsonb -> 'datetimes') =
+  jsonb_array_length(
+  asMFJSON(tpcpointSeq(ARRAY[tpcpoint(PC_MakePoint(1, ARRAY[1.0, 2.0, 3.0]::float[]), '2024-01-01'::timestamptz), tpcpoint(PC_MakePoint(1, ARRAY[4.0, 5.0, 6.0]::float[]), '2024-01-02'::timestamptz)]))::jsonb -> 'coordinates');
+ ?column? 
+----------
+ t
+(1 row)
+
 SELECT asMFJSON(tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]::float[]), PC_MakePoint(1, ARRAY[2.0, 2.0, 2.0]::float[])]), '2024-01-01'::timestamptz));
                                                                      asmfjson                                                                      
 ---------------------------------------------------------------------------------------------------------------------------------------------------
