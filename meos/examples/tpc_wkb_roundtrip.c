@@ -17,14 +17,11 @@
 
 /**
  * @file
- * @brief Standalone-MEOS regression test for the WKB encoder / decoder of
- *   tpcpoint values. This is the path that broke earlier in the
- *   pgPointCloud integration: a debug-only assert helper omitted T_PCPOINT
- *   from its enumeration and Debug-build backends crashed on every
- *   `asBinary(tpcpoint)` call. The PG side eventually caught it through
- *   COPY BINARY tests; this example covers the same ground without the
- *   PostgreSQL roundtrip so MEOS-only consumers (and CI in MEOS=ON mode)
- *   pin the WKB surface independently.
+ * @brief Standalone-MEOS WKB round-trip test for tpcpoint values.
+ *   Builds a hand-coded SERIALIZED_POINT, wraps it in a TInstant,
+ *   encodes via @c temporal_as_wkb, decodes via @c temporal_from_wkb,
+ *   and asserts byte-equivalent recovery via @c temporal_eq. Pins the
+ *   MEOS-side WKB code path independently of the PG roundtrip.
  *
  *   Build:
  *   @code
