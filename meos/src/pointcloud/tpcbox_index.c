@@ -45,6 +45,14 @@
  * GiST / SP-GiST consistent methods
  *****************************************************************************/
 
+/**
+ * @brief Leaf consistency for temporal pointcloud GiST / SP-GiST indexes
+ * @param[in] key Element in the index
+ * @param[in] query Value being looked up
+ * @param[in] strategy Operator of the operator class being applied
+ * @note Mirrors stbox_index_leaf_consistent — applies the matching
+ *   tpcbox-vs-tpcbox predicate, which additionally enforces same-pcid.
+ */
 bool
 tpcbox_index_leaf_consistent(const TPCBox *key, const TPCBox *query,
   StrategyNumber strategy)
@@ -100,6 +108,12 @@ tpcbox_index_leaf_consistent(const TPCBox *key, const TPCBox *query,
   }
 }
 
+/**
+ * @brief Inner-node consistency for the temporal pointcloud GiST opclass
+ * @param[in] key Element in the index
+ * @param[in] query Value being looked up
+ * @param[in] strategy Operator of the operator class being applied
+ */
 bool
 tpcbox_gist_inner_consistent(const TPCBox *key, const TPCBox *query,
   StrategyNumber strategy)

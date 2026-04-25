@@ -280,7 +280,9 @@ pcpoint_copy(const Pcpoint *pt)
  *****************************************************************************/
 
 /**
+ * @ingroup meos_pointcloud_accessor
  * @brief Return the pcid (schema id) of a pcpoint
+ * @csqlfn #Pcpoint_pcid()
  */
 uint32_t
 pcpoint_get_pcid(const Pcpoint *pt)
@@ -290,6 +292,7 @@ pcpoint_get_pcid(const Pcpoint *pt)
 }
 
 /**
+ * @ingroup meos_pointcloud_accessor
  * @brief Return the 32-bit hash of a pcpoint
  * @note Hashes only the meaningful-prefix bytes — pgpointcloud's
  *   struct-tail padding is skipped because it holds uninitialized heap
@@ -304,6 +307,7 @@ pcpoint_hash(const Pcpoint *pt)
 }
 
 /**
+ * @ingroup meos_pointcloud_accessor
  * @brief Return the 64-bit seeded hash of a pcpoint
  */
 uint64
@@ -323,6 +327,7 @@ pcpoint_hash_extended(const Pcpoint *pt, uint64 seed)
  *****************************************************************************/
 
 /**
+ * @ingroup meos_pointcloud_comp
  * @brief Compare two pcpoints byte-wise
  * @return -1 / 0 / 1
  * @note Compares only the meaningful-prefix bytes — pgpointcloud's
@@ -343,16 +348,47 @@ pcpoint_cmp(const Pcpoint *pt1, const Pcpoint *pt2)
   return (sz1 < sz2) ? -1 : 1;
 }
 
+/**
+ * @ingroup meos_pointcloud_comp
+ * @brief Return true if two pcpoints are equal
+ */
 bool pcpoint_eq(const Pcpoint *pt1, const Pcpoint *pt2)
 { return pcpoint_cmp(pt1, pt2) == 0; }
+
+/**
+ * @ingroup meos_pointcloud_comp
+ * @brief Return true if two pcpoints differ
+ */
 bool pcpoint_ne(const Pcpoint *pt1, const Pcpoint *pt2)
 { return pcpoint_cmp(pt1, pt2) != 0; }
+
+/**
+ * @ingroup meos_pointcloud_comp
+ * @brief Return true if the first pcpoint precedes the second in total order
+ */
 bool pcpoint_lt(const Pcpoint *pt1, const Pcpoint *pt2)
 { return pcpoint_cmp(pt1, pt2) <  0; }
+
+/**
+ * @ingroup meos_pointcloud_comp
+ * @brief Return true if the first pcpoint precedes or equals the second
+ *   in total order
+ */
 bool pcpoint_le(const Pcpoint *pt1, const Pcpoint *pt2)
 { return pcpoint_cmp(pt1, pt2) <= 0; }
+
+/**
+ * @ingroup meos_pointcloud_comp
+ * @brief Return true if the first pcpoint follows the second in total order
+ */
 bool pcpoint_gt(const Pcpoint *pt1, const Pcpoint *pt2)
 { return pcpoint_cmp(pt1, pt2) >  0; }
+
+/**
+ * @ingroup meos_pointcloud_comp
+ * @brief Return true if the first pcpoint follows or equals the second
+ *   in total order
+ */
 bool pcpoint_ge(const Pcpoint *pt1, const Pcpoint *pt2)
 { return pcpoint_cmp(pt1, pt2) >= 0; }
 

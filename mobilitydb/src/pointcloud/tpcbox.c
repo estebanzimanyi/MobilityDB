@@ -231,8 +231,10 @@ Tpcbox_constructor_zt(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pcpatch_to_tpcbox(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pcpatch_to_tpcbox);
 /**
- * @brief SQL: tpcbox(pcpatch) — auto-fills SRID from the pgpointcloud
- *   schema via the per-backend schema cache.
+ * @ingroup mobilitydb_pointcloud_box_constructor
+ * @brief Return a TPCBox built from a pcpatch — auto-fills SRID from the
+ *   pgpointcloud schema via the per-backend schema cache
+ * @sqlfn tpcbox()
  */
 Datum
 Pcpatch_to_tpcbox(PG_FUNCTION_ARGS)
@@ -247,9 +249,11 @@ Pcpatch_to_tpcbox(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pcpatch_to_tpcbox_srid(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pcpatch_to_tpcbox_srid);
 /**
- * @brief SQL: tpcbox(pcpatch, srid) — explicit SRID override, skips the
- *   schema lookup. Useful when pointcloud_formats.srid = 0 and the
- *   caller knows the real SRID from a PostGIS context.
+ * @ingroup mobilitydb_pointcloud_box_constructor
+ * @brief Return a TPCBox built from a pcpatch with an explicit SRID override
+ * @details Skips the schema lookup. Useful when pointcloud_formats.srid = 0
+ *   and the caller knows the real SRID from a PostGIS context.
+ * @sqlfn tpcbox()
  */
 Datum
 Pcpatch_to_tpcbox_srid(PG_FUNCTION_ARGS)
@@ -264,11 +268,13 @@ Pcpatch_to_tpcbox_srid(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Pcpoint_to_tpcbox(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Pcpoint_to_tpcbox);
 /**
- * @brief SQL: tpcbox(pcpoint) — degenerate (single-point) bbox with
- *   spatial bounds equal to the point's X/Y/[Z]. SRID comes from the
- *   schema; pcid from the pcpoint itself. The per-backend schema
- *   cache makes this possible without dragging pgpointcloud's
- *   PG-layer API into MEOS.
+ * @ingroup mobilitydb_pointcloud_box_constructor
+ * @brief Return a degenerate (single-point) TPCBox built from a pcpoint
+ * @details Spatial bounds equal the point's X/Y/[Z]. SRID comes from the
+ *   schema; pcid from the pcpoint itself. The per-backend schema cache
+ *   makes this possible without dragging pgpointcloud's PG-layer API
+ *   into MEOS.
+ * @sqlfn tpcbox()
  */
 Datum
 Pcpoint_to_tpcbox(PG_FUNCTION_ARGS)
@@ -831,7 +837,9 @@ Datum Tpcbox_ge(PG_FUNCTION_ARGS) { TPCBOX_PRED_2_BODY(tpcbox_ge) }
 PGDLLEXPORT Datum Tpcbox_cmp(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpcbox_cmp);
 /**
- * @brief SQL: btree comparator for tpcbox
+ * @ingroup mobilitydb_pointcloud_box_comp
+ * @brief B-tree comparator for tpcbox
+ * @sqlfn tpcbox_cmp()
  */
 Datum
 Tpcbox_cmp(PG_FUNCTION_ARGS)

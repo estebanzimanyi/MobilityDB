@@ -72,6 +72,10 @@
  * @defgroup meos_pointcloud_accessor Accessor functions
  * @ingroup meos_pointcloud_base
  * @brief Schema-aware coordinate accessors and metadata for pcpoint / pcpatch
+ *
+ * @defgroup meos_pointcloud_comp Comparison functions
+ * @ingroup meos_pointcloud_base
+ * @brief Equality, ordering, and hashing for pcpoint and pcpatch
  */
 
 /*****************************************************************************
@@ -141,6 +145,10 @@
  * @defgroup meos_pointcloud_box_comp Comparison functions
  * @ingroup meos_pointcloud_box
  * @brief Equality, ordering, and hashing for the TPCBox type
+ *
+ * @defgroup meos_pointcloud_box_dist Distance functions
+ * @ingroup meos_pointcloud_box
+ * @brief Nearest-approach distance for TPCBox and temporal pointcloud types
  */
 
 /*****************************************************************************/
