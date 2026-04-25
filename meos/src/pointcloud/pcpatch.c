@@ -22,14 +22,15 @@
 /* C */
 #include <assert.h>
 #include <string.h>
+#include <stddef.h>          /* offsetof */
 /* PostgreSQL */
 #include <postgres.h>
 #if POSTGRESQL_VERSION_NUMBER >= 160000
   #include "varatt.h"
 #endif
 #include "common/hashfn.h"
-#include <stddef.h>          /* offsetof */
-#include <liblwgeom.h>       /* parse_hex, deparse_hex (PostGIS) */
+/* PostGIS */
+#include <liblwgeom.h>       /* parse_hex, deparse_hex */
 /* MEOS */
 #include <meos.h>
 
@@ -80,6 +81,9 @@ pcpatch_meaningful_size(const Pcpatch *pa)
  * Validity helpers
  *****************************************************************************/
 
+/**
+ * @brief Return true if two pcpatch values share the same schema (pcid)
+ */
 bool
 ensure_same_pcid_pcpatch(const Pcpatch *pa1, const Pcpatch *pa2)
 {
@@ -98,6 +102,9 @@ ensure_same_pcid_pcpatch(const Pcpatch *pa1, const Pcpatch *pa2)
  * Input/output
  *****************************************************************************/
 
+/**
+ * @brief Parse a pcpatch from its hex-encoded representation in a cursor
+ */
 Pcpatch *
 pcpatch_parse(const char **str, bool end)
 {
@@ -210,6 +217,9 @@ pcpatch_as_hexwkb(const Pcpatch *pa)
  * Constructor + accessors
  *****************************************************************************/
 
+/**
+ * @brief Return a palloc'd copy of a pcpatch
+ */
 Pcpatch *
 pcpatch_copy(const Pcpatch *pa)
 {
@@ -220,7 +230,17 @@ pcpatch_copy(const Pcpatch *pa)
   return result;
 }
 
+/**
+ * @ingroup meos_pointcloud_accessor
+ * @brief Return the pcid (schema id) of a pcpatch
+ * @csqlfn #Pcpatch_pcid()
+ */
 uint32_t pcpatch_get_pcid(const Pcpatch *pa)    { assert(pa); return pa->pcid; }
+
+/**
+ * @ingroup meos_pointcloud_accessor
+ * @brief Return the number of points stored in a pcpatch
+ */
 uint32_t pcpatch_npoints(const Pcpatch *pa) { assert(pa); return pa->npoints; }
 
 /**
@@ -251,6 +271,14 @@ pcpatch_hash_extended(const Pcpatch *pa, uint64 seed)
  * Comparison
  *****************************************************************************/
 
+/**
+ * @ingroup meos_pointcloud_comp
+ * @brief Compare two pcpatch values byte-wise
+ * @return -1 / 0 / 1
+ * @note Compares only the meaningful-prefix bytes — pgpointcloud's
+ *   struct-tail padding is skipped so two pcpatches that disagree only
+ *   on those padding bytes compare equal.
+ */
 int
 pcpatch_cmp(const Pcpatch *pa1, const Pcpatch *pa2)
 {
@@ -264,16 +292,47 @@ pcpatch_cmp(const Pcpatch *pa1, const Pcpatch *pa2)
   return (sz1 < sz2) ? -1 : 1;
 }
 
+/**
+ * @ingroup meos_pointcloud_comp
+ * @brief Return true if two pcpatch values are equal
+ */
 bool pcpatch_eq(const Pcpatch *pa1, const Pcpatch *pa2)
 { return pcpatch_cmp(pa1, pa2) == 0; }
+
+/**
+ * @ingroup meos_pointcloud_comp
+ * @brief Return true if two pcpatch values differ
+ */
 bool pcpatch_ne(const Pcpatch *pa1, const Pcpatch *pa2)
 { return pcpatch_cmp(pa1, pa2) != 0; }
+
+/**
+ * @ingroup meos_pointcloud_comp
+ * @brief Return true if the first pcpatch precedes the second in total order
+ */
 bool pcpatch_lt(const Pcpatch *pa1, const Pcpatch *pa2)
 { return pcpatch_cmp(pa1, pa2) <  0; }
+
+/**
+ * @ingroup meos_pointcloud_comp
+ * @brief Return true if the first pcpatch precedes or equals the second
+ *   in total order
+ */
 bool pcpatch_le(const Pcpatch *pa1, const Pcpatch *pa2)
 { return pcpatch_cmp(pa1, pa2) <= 0; }
+
+/**
+ * @ingroup meos_pointcloud_comp
+ * @brief Return true if the first pcpatch follows the second in total order
+ */
 bool pcpatch_gt(const Pcpatch *pa1, const Pcpatch *pa2)
 { return pcpatch_cmp(pa1, pa2) >  0; }
+
+/**
+ * @ingroup meos_pointcloud_comp
+ * @brief Return true if the first pcpatch follows or equals the second
+ *   in total order
+ */
 bool pcpatch_ge(const Pcpatch *pa1, const Pcpatch *pa2)
 { return pcpatch_cmp(pa1, pa2) >= 0; }
 
