@@ -41,4 +41,11 @@ extern bool boxop_tpointcloud_tpointcloud(const Temporal *temp1,
   const Temporal *temp2,
   bool (*func)(const TPCBox *, const TPCBox *));
 
+/* Lossy tpcbox → stbox conversion: copies bounds + period + srid + the
+ * X/Z/T dimension flags, drops pcid and never sets GEODETIC. Used by
+ * the SP-GiST opclasses where the index storage is stbox and pcid
+ * filtering is recovered by the operator's recheck. STBox is
+ * typedef'd via meos.h above. */
+extern void tpcbox_set_stbox(const TPCBox *src, STBox *dst);
+
 #endif /* __TPC_BOXOPS_H__ */
