@@ -40,6 +40,8 @@
 /* PostgreSQL */
 #include <postgres.h>
 #include <fmgr.h>
+#include <funcapi.h>
+#include <access/htup_details.h>
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
@@ -49,8 +51,12 @@
 #include "temporal/tsequenceset.h"
 #include "pointcloud/pcpatch.h"
 #include "pointcloud/pcpatch_decompose.h"
+#include "pointcloud/pgsql_compat.h"
+#include "pointcloud/meos_schema_hook.h"
 #include "pointcloud/tpcbox.h"
 #include "pg_geo/postgis.h"
+/* pgPointCloud */
+#include "pc_api.h"
 
 /*****************************************************************************
  * Per-type accessors
@@ -584,6 +590,120 @@ Tpcpatch_minus_tpcbox(PG_FUNCTION_ARGS)
   PG_FREE_IF_COPY(temp, 0);
   if (! result) PG_RETURN_NULL();
   PG_RETURN_POINTER(result);
+}
+
+/*****************************************************************************
+ * points(tpcpatch) — set-returning function emitting one row per
+ * (timestamp, pcpoint) pair. Native C path replacing the
+ * PC_Explode-based SQL wrapper used elsewhere in the codebase.
+ *****************************************************************************/
+
+typedef struct
+{
+  int n;             /* total emissions */
+  int i;             /* next emission index */
+  TimestampTz *ts;   /* parallel arrays */
+  Datum *pts;        /* serialized Pcpoint datums (Pointer) */
+} TpcpatchPointsState;
+
+static TpcpatchPointsState *
+tpcpatch_points_state_make(const Temporal *temp)
+{
+  /* Resolve schema once — every instant shares pcid by construction. */
+  const Pcpatch *first = (const Pcpatch *) DatumGetPointer(
+    temporal_start_value(temp));
+  PCSCHEMA *schema = meos_pc_schema(first->pcid);
+  if (! schema)
+  {
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      "points(tpcpatch): no schema registered for pcid %u", first->pcid);
+    return NULL;
+  }
+
+  int ninst = 0;
+  TInstant **instants = temporal_instants(temp, &ninst);
+
+  /* First pass: count points. */
+  uint64_t total = 0;
+  uint32_t *per_inst_n = palloc(sizeof(uint32_t) * ninst);
+  PCPATCH **patches = palloc(sizeof(PCPATCH *) * ninst);
+  PCPOINTLIST **lists = palloc(sizeof(PCPOINTLIST *) * ninst);
+  for (int i = 0; i < ninst; i++)
+  {
+    const Pcpatch *pa = (const Pcpatch *) DatumGetPointer(
+      tinstant_value_p(instants[i]));
+    patches[i] = MEOS_PC_PATCH_DESERIALIZE(
+      (const SERIALIZED_PATCH *) pa, schema);
+    lists[i] = patches[i] ? pc_pointlist_from_patch(patches[i]) : NULL;
+    per_inst_n[i] = lists[i] ? lists[i]->npoints : 0;
+    total += per_inst_n[i];
+  }
+
+  TpcpatchPointsState *s = palloc(sizeof(TpcpatchPointsState));
+  s->n = (int) total;
+  s->i = 0;
+  s->ts  = palloc(sizeof(TimestampTz) * (total ? total : 1));
+  s->pts = palloc(sizeof(Datum) * (total ? total : 1));
+
+  /* Second pass: serialize each point. */
+  uint64_t k = 0;
+  for (int i = 0; i < ninst; i++)
+  {
+    if (! lists[i]) continue;
+    TimestampTz t = instants[i]->t;
+    for (uint32_t j = 0; j < per_inst_n[i]; j++)
+    {
+      PCPOINT *pt = pc_pointlist_get_point(lists[i], j);
+      SERIALIZED_POINT *ser = MEOS_PC_POINT_SERIALIZE(pt);
+      s->ts[k]  = t;
+      s->pts[k] = PointerGetDatum(ser);
+      k++;
+    }
+    pc_pointlist_free(lists[i]);
+    pc_patch_free(patches[i]);
+  }
+  pfree(lists); pfree(patches); pfree(per_inst_n); pfree(instants);
+  return s;
+}
+
+PGDLLEXPORT Datum Tpcpatch_points(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tpcpatch_points);
+/**
+ * @ingroup mobilitydb_pointcloud_temp
+ * @brief Set-returning function emitting one (timestamptz, pcpoint) row
+ *   per point per instant of a tpcpatch.
+ * @sqlfn points()
+ */
+Datum
+Tpcpatch_points(PG_FUNCTION_ARGS)
+{
+  FuncCallContext *funcctx;
+
+  if (SRF_IS_FIRSTCALL())
+  {
+    funcctx = SRF_FIRSTCALL_INIT();
+    MemoryContext oldctx = MemoryContextSwitchTo(
+      funcctx->multi_call_memory_ctx);
+    Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+    funcctx->user_fctx = tpcpatch_points_state_make(temp);
+    get_call_result_type(fcinfo, 0, &funcctx->tuple_desc);
+    BlessTupleDesc(funcctx->tuple_desc);
+    MemoryContextSwitchTo(oldctx);
+  }
+
+  funcctx = SRF_PERCALL_SETUP();
+  TpcpatchPointsState *s = funcctx->user_fctx;
+  if (s->i >= s->n)
+  {
+    SRF_RETURN_DONE(funcctx);
+  }
+
+  Datum values[2] = { TimestampTzGetDatum(s->ts[s->i]), s->pts[s->i] };
+  bool isnull[2] = { false, false };
+  HeapTuple tuple = heap_form_tuple(funcctx->tuple_desc, values, isnull);
+  Datum result = HeapTupleGetDatum(tuple);
+  s->i++;
+  SRF_RETURN_NEXT(funcctx, result);
 }
 
 /*****************************************************************************/
