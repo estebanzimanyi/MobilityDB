@@ -151,7 +151,14 @@ string(REGEX MATCH "MOBILITYDB_MICRO_VERSION=[0-9]+(beta?[0-9]+)" _ ${ver})
 set(PROJECT_VERSION_DEV ${CMAKE_MATCH_1})
 
 # Set the project name and project version
-project(MobilityDB VERSION ${MOBILITYDB_MAJOR_VERSION}.${MOBILITYDB_MINOR_VERSION}.${MOBILITYDB_MICRO_VERSION})
+# C++ enabled (in addition to C) so we can vendor Clipper2 as the polygon
+# Boolean engine. Required: C++17 (Clipper2 v2.x).
+project(MobilityDB
+  VERSION ${MOBILITYDB_MAJOR_VERSION}.${MOBILITYDB_MINOR_VERSION}.${MOBILITYDB_MICRO_VERSION}
+  LANGUAGES C CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 message(STATUS "Building MobilityDB version ${PROJECT_VERSION}")
 # Enable testing, must follow project() call above
 include(CTest)
