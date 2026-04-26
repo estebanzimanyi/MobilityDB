@@ -123,7 +123,12 @@ contour_free(Contour *c)
 {
   /* We do not need to ptarray_free(c->points) since the point arrays are
    * passed to their polygons */
-  vector_free(c->holeIds);
+  /* TEMPORARILY DISABLED — vector_free(c->holeIds) crashes on the diamond+hole
+   * reproducer (078:65-66); investigating whether holeIds is being corrupted
+   * by connect_edges or whether the Vector implementation itself is buggy.
+   * Will be restored once the root cause is identified — likely needs
+   * migration to MeosArray. */
+  /* vector_free(c->holeIds); */
   pfree(c);
   return;
 }
@@ -927,73 +932,17 @@ subdivide_segments(PQueue *eventQueue, GBOX *sbbox, GBOX *clbox, ClipOper oper)
     swevent_print(event);
 #endif
 
-    /* Filter by leftbound of bounding boxes for intersection and difference */
-    if ((oper == CL_INTERSECTION && event->point.x < leftbound) ||
-        (oper == CL_DIFFERENCE   && event->point.x < sbbox->xmin))
-    {
-      if (event->left)
-      {
-        SweepEvent *other = event->otherEvent;
-        if ((oper == CL_INTERSECTION && other->point.x < leftbound) ||
-            (oper == CL_DIFFERENCE   && other->point.x < sbbox->xmin))
-        {
-          /* Mark the right event as deleted to do not add it to sortedEvents */
-          other->deleted = true;
-          pfree(event);
-#if DEBUG_BUILD
-          elog(WARNING, "Event deleted due to left bounding box test");
-#endif
-          continue;
-        }
-      }
-      else
-      {
-        /* If the event was marked as deleted when processing its left event */
-        if (event->deleted == true)
-        {
-          pfree(event);
-#if DEBUG_BUILD
-          elog(WARNING, "Right event deleted since its left event was previously deleted");
-#endif
-          continue;
-        }
-      }
-    }
-
-    /* Filter by rightbound of bounding boxes for intersection and difference */
-    if ((oper == CL_INTERSECTION && event->point.x > rightbound) ||
-        (oper == CL_DIFFERENCE   && event->point.x > sbbox->xmax))
-    {
-      if (! event->left && event->otherPos != - 1)
-      {
-        /* Remove the other event from sortedEvents */
-        vector_delete(sortedEvents, event->otherPos);
-        SweepEvent *other = event->otherEvent;
-        pfree(other);
-#if DEBUG_BUILD
-          elog(WARNING, "Other event of current event deleted due to right bounding box test");
-#endif
-      }
-      pfree(event);
-#if DEBUG_BUILD
-          elog(WARNING, "Event deleted due to right bounding box test");
-          elog(WARNING, "Removing remaining events in the status line due to right bounding box test");
-#endif
-      /* Remove the remaining points in the sweepline */
-      while (eventQueue->length > 0)
-      {
-        event = pqueue_dequeue(eventQueue);
-        if (! event->left && event->otherPos != - 1)
-        {
-          /* Remove the other event from sortedEvents */
-          vector_delete(sortedEvents, event->otherPos);
-          SweepEvent *other = event->otherEvent;
-          pfree(other);
-        }
-        pfree(event);
-      }
-      break;
-    }
+    /* Removed: C-only leftbound `deleted`-flag prune and rightbound prune
+     * that lived here. They `pfree`d events that were still referenced from
+     * the splay tree and from sortedEvents, producing a use-after-free that
+     * surfaced as a segfault inside connect_edges (audit + reproducer at
+     * 078_tpoint_clipping.test.sql:65-66 — Polygon hole + diamond clip).
+     * The bbox-disjoint shortcut in clip_poly_poly handles trivially-
+     * disjoint inputs; the JS upstream (w8r/martinez) does not have these
+     * prunes either. Re-introducing a prune in the future requires
+     * removing events from the splay tree and from sortedEvents *before*
+     * pfreeing them, not just marking flags. */
+    (void) leftbound; (void) rightbound;
 
     /* Insert the event into the output events */
     int pos = vector_append(sortedEvents, PointerGetDatum(event));
