@@ -43,9 +43,10 @@
 /* PostGIS */
 #include <liblwgeom.h>
 /* MEOS */
+#include <meos.h>            /* for MeosArray */
+#include <meos_internal.h>
 #include "temporal/temporal.h"
 #include "geo/tgeo.h"
-#include "geo/vector.h"
 
 /*****************************************************************************/
 
@@ -66,14 +67,14 @@ typedef enum
 } EdgeType;
 
 /*****************************************************************************
- * Vector data structure
+ * Contour data structure
  *****************************************************************************/
 
 typedef struct
 {
   POINTARRAY *points;  /**< Points conforming the contour */
-  /** Holes of the contour, stored as indexes of a vector of contours */
-  Vector *holeIds;
+  /** Holes of the contour, stored as int32 indexes into the contour array */
+  MeosArray *holeIds;
   int holeOf;
   int depth;     /**< Depth, i.e., number of enclosing contours */
   bool external; /**< is the contour an external contour (i.e., not a hole)? */
@@ -105,11 +106,6 @@ struct SweepEvent
 };
 
 /*****************************************************************************/
-
-/* Vector store Datums in order to differentiate elements passed by value and
- * by reference */
-#define DatumGetContourP(X)    ((Contour *) DatumGetPointer(X))
-#define DatumGetSweepEventP(X) ((SweepEvent *) DatumGetPointer(X))
 
 extern GSERIALIZED *clip_poly_poly(const GSERIALIZED *subj,
   const GSERIALIZED *clip, ClipOper operation);

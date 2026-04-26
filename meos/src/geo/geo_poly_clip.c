@@ -109,7 +109,7 @@ contour_make(void)
   Contour *result = palloc0(sizeof(Contour));
   result->points = ptarray_construct_empty(LW_FALSE, LW_FALSE,
     POINTARRAY_INITIAL_CAPACITY);
-  result->holeIds = vector_make(TYPE_BY_VALUE);
+  result->holeIds = meos_array_create(sizeof(int32));
   result->holeOf = -1;
   result->depth = -1;
   return result;
@@ -123,12 +123,7 @@ contour_free(Contour *c)
 {
   /* We do not need to ptarray_free(c->points) since the point arrays are
    * passed to their polygons */
-  /* TEMPORARILY DISABLED — vector_free(c->holeIds) crashes on the diamond+hole
-   * reproducer (078:65-66); investigating whether holeIds is being corrupted
-   * by connect_edges or whether the Vector implementation itself is buggy.
-   * Will be restored once the root cause is identified — likely needs
-   * migration to MeosArray. */
-  /* vector_free(c->holeIds); */
+  meos_array_destroy(c->holeIds);
   pfree(c);
   return;
 }
@@ -914,11 +909,11 @@ compute_fields(SweepEvent *event, SweepEvent *prev, ClipOper oper)
  * @brief Subdivide the segments of the event queue precomputing internal
  * fields needed for the second phase of the computation
  */
-static Vector *
+static MeosArray *
 subdivide_segments(PQueue *eventQueue, GBOX *sbbox, GBOX *clbox, ClipOper oper)
 {
   SplayTree sweepLine = splay_new(&segment_cmp);
-  Vector *sortedEvents = vector_make(TYPE_BY_REF);
+  MeosArray *sortedEvents = meos_array_create(-1);
   double leftbound = fmax(sbbox->xmin, clbox->xmin);
   double rightbound = fmin(sbbox->xmax, clbox->xmax);
   SweepEvent *event, *prev, *next, *begin = NULL;
@@ -945,7 +940,8 @@ subdivide_segments(PQueue *eventQueue, GBOX *sbbox, GBOX *clbox, ClipOper oper)
     (void) leftbound; (void) rightbound;
 
     /* Insert the event into the output events */
-    int pos = vector_append(sortedEvents, PointerGetDatum(event));
+    int pos = meos_array_count(sortedEvents);
+    meos_array_add(sortedEvents, event);
     /* Mark the position where this event is stored in the other event */
     event->otherEvent->otherPos = pos;
 
@@ -1033,22 +1029,21 @@ subdivide_segments(PQueue *eventQueue, GBOX *sbbox, GBOX *clbox, ClipOper oper)
 
 /**
  * @brief Select the events that are in the result and order them
- * @param[in] sortedEvents Vector of sorted sweepline events
+ * @param[in] sortedEvents Array of sorted sweepline events
  * @param[out] count Number of elements in the output array
  * @return Array of events
  */
 static SweepEvent **
-order_events(Vector *sortedEvents, int *count)
+order_events(MeosArray *sortedEvents, int *count)
 {
-  SweepEvent **resultEvents = palloc(sizeof(SweepEvent *) *
-    sortedEvents->length);
+  int n = meos_array_count(sortedEvents);
+  SweepEvent **resultEvents = palloc(sizeof(SweepEvent *) * n);
   int nevents = 0;
   SweepEvent *event, *next;
   int i;
-  for (i = 0; i < sortedEvents->length; i++)
+  for (i = 0; i < n; i++)
   {
-    event = DatumGetSweepEventP(vector_at(sortedEvents, i));
-    /* N.B. The event may have been deleted due to the bounding box test */
+    event = (SweepEvent *) meos_array_get(sortedEvents, i);
     if (! event)
       continue;
     if ((event->left && SWEVENT_IN_RESULT(event)) ||
@@ -1141,7 +1136,7 @@ next_position(SweepEvent **resultEvents, int count, bool *processed, int pos,
  * @brief Create a contour from the argument contours
  */
 static Contour *
-initialize_contour(SweepEvent *event, Vector *contours, int contourId)
+initialize_contour(SweepEvent *event, MeosArray *contours, int contourId)
 {
   Contour *c;
   Contour *contour = contour_make();
@@ -1158,32 +1153,35 @@ initialize_contour(SweepEvent *event, Vector *contours, int contourId)
     {
       /* We are inside. Now we have to check if the thing below us is another
        * hole or an exterior contour. */
-      Contour *lowerContour = DatumGetContourP(vector_at(contours, lowerContourId));
+      Contour *lowerContour =
+        (Contour *) meos_array_get(contours, lowerContourId);
       if (lowerContour->holeOf != -1)
       {
         /* The lower contour is a hole => Connect the new contour as a hole
          * to its parent, and use same depth. */
         int parentContourId = lowerContour->holeOf;
-        c = DatumGetContourP(vector_at(contours, parentContourId));
-        vector_append(c->holeIds, Int32GetDatum(contourId));
+        c = (Contour *) meos_array_get(contours, parentContourId);
+        meos_array_add(c->holeIds, &contourId);
         contour->holeOf = parentContourId;
-        contour->depth = DatumGetContourP(vector_at(contours, lowerContourId))->depth;
+        contour->depth = lowerContour->depth;
       }
       else
       {
         /* The lower contour is an exterior contour => Connect the new contour
          * as a hole,and increment depth. */
-        c = DatumGetContourP(vector_at(contours, lowerContourId));
-        vector_append(c->holeIds, Int32GetDatum(contourId));
+        c = lowerContour;
+        meos_array_add(c->holeIds, &contourId);
         contour->holeOf = lowerContourId;
-        contour->depth = DatumGetContourP(vector_at(contours, lowerContourId))->depth + 1;
+        contour->depth = lowerContour->depth + 1;
       }
     }
     else
     {
       /* We are outside => this contour is an exterior contour of same depth. */
+      Contour *lowerContour =
+        (Contour *) meos_array_get(contours, lowerContourId);
       contour->holeOf = -1;
-      contour->depth = DatumGetContourP(vector_at(contours, lowerContourId))->depth;
+      contour->depth = lowerContour->depth;
     }
   }
   else
@@ -1197,12 +1195,12 @@ initialize_contour(SweepEvent *event, Vector *contours, int contourId)
 }
 
 /**
- * @brief Connect the edges from the events into an vector of polygons
+ * @brief Connect the edges from the events into an array of polygons
  * @param resultEvents Array of result events
  * @param count Number of elements in the array
- * @return Vector of contours
+ * @return Array of contours
  */
-static Vector *
+static MeosArray *
 connect_edges(SweepEvent **resultEvents, int count)
 {
   /* false-filled vector */
@@ -1210,13 +1208,13 @@ connect_edges(SweepEvent **resultEvents, int count)
   for (int i = 0; i < count; i++)
     processed[i] = false;
 
-  Vector *contours = vector_make(TYPE_BY_REF);
+  MeosArray *contours = meos_array_create(-1);
   for (int i = 0; i < count; i++)
   {
     if (processed[i])
       continue;
 
-    int contourId = contours->length;
+    int contourId = meos_array_count(contours);
     SweepEvent *event = resultEvents[i];
     Contour *contour = initialize_contour(event, contours, contourId);
 
@@ -1245,7 +1243,7 @@ connect_edges(SweepEvent **resultEvents, int count)
       if (pos == origPos || pos >= count || ! event)
         break;
     }
-    vector_append(contours, PointerGetDatum(contour));
+    meos_array_add(contours, contour);
   }
   pfree(processed);
   return contours;
@@ -1255,15 +1253,15 @@ connect_edges(SweepEvent **resultEvents, int count)
  * @brief Convert contours to polygons
  */
 static GSERIALIZED *
-contours_to_geom(Vector *contours, int32_t srid)
+contours_to_geom(MeosArray *contours, int32_t srid)
 {
-  int ncontours = contours->length;
+  int ncontours = meos_array_count(contours);
   Contour *contour;
   LWGEOM **polygons = palloc(sizeof(LWGEOM *) * ncontours);
   int npoly = 0;
   for (int i = 0; i < ncontours; i++)
   {
-    contour = DatumGetContourP(vector_at(contours, i));
+    contour = (Contour *) meos_array_get(contours, i);
     if (contour->holeOf == -1)
     {
       /* Create a new polygon */
@@ -1271,12 +1269,12 @@ contours_to_geom(Vector *contours, int32_t srid)
       /* The exterior ring goes first */
       lwpoly_add_ring(poly, contour->points);
       /* Followed by holes if any */
-      int nholes = contour->holeIds->length;
+      int nholes = meos_array_count(contour->holeIds);
       for (int j = 0; j < nholes; j++)
       {
-        int holeId = DatumGetInt32(vector_at(contour->holeIds, j));
-        contour = DatumGetContourP(vector_at(contours, holeId));
-        lwpoly_add_ring(poly, contour->points);
+        int holeId = *(int32 *) meos_array_get(contour->holeIds, j);
+        Contour *hole = (Contour *) meos_array_get(contours, holeId);
+        lwpoly_add_ring(poly, hole->points);
       }
       /* Enforce PostGIS canonical orientation: exterior CW, interior CCW.
        * The Martinez sweep emits rings in whatever order falls out of the
@@ -1359,9 +1357,10 @@ clip_poly_poly(const GSERIALIZED *subj, const GSERIALIZED *clip, ClipOper oper)
   fill_queue(clipping, false, eventQueue);
 
   /* Subdivide edges */
-  Vector *sortedEvents = subdivide_segments(eventQueue, &sbbox, &clbox, oper);
-  /* The pqueue holds no events at this point — they were either pfreed during
-   * the bbox-prune path or transferred into sortedEvents. */
+  MeosArray *sortedEvents =
+    subdivide_segments(eventQueue, &sbbox, &clbox, oper);
+  /* The pqueue holds no events at this point — they were transferred into
+   * sortedEvents. */
   pqueue_free(eventQueue);
 
   /* Select the result events */
@@ -1369,31 +1368,24 @@ clip_poly_poly(const GSERIALIZED *subj, const GSERIALIZED *clip, ClipOper oper)
   SweepEvent **resultEvents = order_events(sortedEvents, &nevents);
 
   /* Connect vertices */
-  Vector *contours = connect_edges(resultEvents, nevents);
-  int ncontours = contours->length;
+  MeosArray *contours = connect_edges(resultEvents, nevents);
+  int ncontours = meos_array_count(contours);
 
   /* Convert contours to polygons */
   int32_t srid = gserialized_get_srid(subj);
   GSERIALIZED *result = contours_to_geom(contours, srid);
 
-  /* Free every surviving SweepEvent. They are owned by sortedEvents (slots
-   * NULLed by vector_delete during pruning are skipped). resultEvents only
-   * borrows the pointers, so we just free its backing array below. */
-  for (int i = 0; i < sortedEvents->length; i++)
-  {
-    SweepEvent *e = (SweepEvent *) DatumGetPointer(vector_at(sortedEvents, i));
-    if (e)
-      pfree(e);
-  }
-  vector_free(sortedEvents);
+  /* Free every SweepEvent in sortedEvents (it owns them). resultEvents
+   * only borrows the pointers; just free its backing array. */
+  meos_array_destroy_free(sortedEvents);
   pfree(resultEvents);
 
   for (int i = 0; i < ncontours; i++)
   {
-    Contour *contour = DatumGetContourP(vector_at(contours, i));
+    Contour *contour = (Contour *) meos_array_get(contours, i);
     contour_free(contour);
   }
-  vector_free(contours);
+  meos_array_destroy(contours);
   lwgeom_free(subject);
   lwgeom_free(clipping);
   return result;
