@@ -527,13 +527,38 @@ Tpcpatch_minus_geometry(PG_FUNCTION_ARGS)
  * Spatial relationships — eIntersects / aIntersects(tpcpatch, geometry)
  *****************************************************************************/
 
+/*
+ * Test whether any instant of @p temp has at least one point matching
+ * @p pred. Walks instants in subtype order, short-circuits on the
+ * first hit — never rebuilds a patch.
+ */
+static bool
+tpcpatch_any_point_matches(const Temporal *temp,
+  pcpatch_pointpred_fn pred, void *extra)
+{
+  int ninst = 0;
+  TInstant **instants = temporal_instants(temp, &ninst);
+  bool found = false;
+  for (int i = 0; i < ninst && ! found; i++)
+  {
+    const Pcpatch *pa = (const Pcpatch *) DatumGetPointer(
+      tinstant_value_p(instants[i]));
+    if (pcpatch_any_point_matches(pa, pred, extra))
+      found = true;
+  }
+  pfree(instants);
+  return found;
+}
+
 PGDLLEXPORT Datum Tpcpatch_eIntersects_geo(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tpcpatch_eIntersects_geo);
 /**
  * @ingroup mobilitydb_pointcloud_temp
  * @brief Return true iff at least one point in any of the tpcpatch's
  *   instants intersects the geometry.
- * @details Walks instants in order, short-circuiting on the first hit.
+ * @details Walks instants in order, short-circuiting on the first
+ *   hit. No patch rebuild, no allocations beyond the temporary
+ *   per-instant decompression.
  * @sqlfn eIntersects()
  */
 Datum
@@ -541,10 +566,8 @@ Tpcpatch_eIntersects_geo(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
-  Temporal *probe = tpcpatch_filter_temporal(temp, pcpoint_intersects_geometry,
-    (void *) gs, REST_AT);
-  bool result = (probe != NULL);
-  if (probe) pfree(probe);
+  bool result = tpcpatch_any_point_matches(temp,
+    pcpoint_intersects_geometry, (void *) gs);
   PG_FREE_IF_COPY(temp, 0);
   PG_FREE_IF_COPY(gs, 1);
   PG_RETURN_BOOL(result);

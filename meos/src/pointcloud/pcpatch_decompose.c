@@ -100,6 +100,41 @@ pcpatch_filter_per_point(const Pcpatch *pa, pcpatch_pointpred_fn pred,
 }
 
 /*****************************************************************************
+ * Existence walk (short-circuit, no rebuild)
+ *****************************************************************************/
+
+bool
+pcpatch_any_point_matches(const Pcpatch *pa, pcpatch_pointpred_fn pred,
+  void *extra)
+{
+  assert(pa); assert(pred);
+
+  PCSCHEMA *schema = meos_pc_schema(pa->pcid);
+  if (! schema)
+    return false;
+
+  PCPATCH *patch = MEOS_PC_PATCH_DESERIALIZE(
+    (const SERIALIZED_PATCH *) pa, schema);
+  if (! patch)
+    return false;
+
+  PCPOINTLIST *pl = pc_pointlist_from_patch(patch);
+  bool found = false;
+  if (pl)
+  {
+    for (uint32_t i = 0; i < pl->npoints && ! found; i++)
+    {
+      PCPOINT *pt = pc_pointlist_get_point(pl, i);
+      if (pred(pt, extra))
+        found = true;
+    }
+    pc_pointlist_free(pl);
+  }
+  pc_patch_free(patch);
+  return found;
+}
+
+/*****************************************************************************
  * Built-in predicates
  *****************************************************************************/
 

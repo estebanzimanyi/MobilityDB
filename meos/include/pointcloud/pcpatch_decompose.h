@@ -69,6 +69,20 @@ typedef bool (*pcpatch_pointpred_fn)(const PCPOINT *pt, void *extra);
 extern Pcpatch *pcpatch_filter_per_point(const Pcpatch *pa,
   pcpatch_pointpred_fn pred, void *extra, bool keep_when_true);
 
+/**
+ * @brief Test whether at least one point of @p pa satisfies @p pred.
+ *
+ * Walks the patch's points in order and returns @c true on the first
+ * match — no patch rebuild, no allocations beyond the temporary
+ * decompression. Useful for ever / any-style predicates that don't
+ * need the filtered output.
+ *
+ * @return @c true if at least one point matched, @c false if none did
+ *         or the schema cannot be resolved.
+ */
+extern bool pcpatch_any_point_matches(const Pcpatch *pa,
+  pcpatch_pointpred_fn pred, void *extra);
+
 /*****************************************************************************
  * Built-in predicates
  *
