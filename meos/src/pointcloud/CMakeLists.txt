@@ -37,6 +37,11 @@ if(POINTCLOUD)
     # libpc.a; this file self-empties (#if !PC_API_HAS_SERIALIZE) once
     # upstream's PR moves them into lib/. See pgsql_compat.h for details.
     pgsql_compat.c
+
+    # C-side decompose/filter/rebuild primitive for pcpatch. The
+    # foundation per-point operators (atTpcbox per-point, eIntersects,
+    # fast points(tpcpatch) SRF) delegate into.
+    pcpatch_decompose.c
   )
 
   # Probe whether the linked libpc.a already declares pc_patch_deserialize
