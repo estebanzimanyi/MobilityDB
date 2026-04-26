@@ -1,6 +1,8 @@
 set(GEO_SRCS
   geo_round.c
   postgis_funcs.c
+  pqueue.c
+  splay_tree.c
   stbox.c
   stbox_index.c
   tgeo.c
@@ -12,6 +14,7 @@ set(GEO_SRCS
   tgeo_spatialfuncs.c
   tgeo_spatialrels.c
   tgeo_tile.c
+  geo_poly_clip.c
   tpoint_datagen.c
   tpoint_spatialfuncs.c
   tspatial.c
