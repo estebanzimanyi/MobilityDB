@@ -56,6 +56,9 @@
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/tgeo_spatialrels.h"
 
+extern TSequenceSet *tpointseq_linear_at_poly(const TSequence *seq,
+  const GSERIALIZED *gs, const Span *zspan);
+
 /*****************************************************************************/
 
 #if MEOS
@@ -1873,44 +1876,53 @@ TSequenceSet *
 tpointseq_linear_restrict_geom(const TSequence *seq, const GSERIALIZED *gs,
   const Span *zspan, bool atfunc)
 {
-  VALIDATE_TPOINT(seq, NULL); VALIDATE_NOT_NULL(gs, NULL); 
+  VALIDATE_TPOINT(seq, NULL); VALIDATE_NOT_NULL(gs, NULL);
   assert(MEOS_FLAGS_LINEAR_INTERP(seq->flags));
   assert(seq->count > 1);
 
-  /* Compute atGeometry for the sequence */
-  TSequenceSet *at_xy = tpointseq_linear_at_geom(seq, gs);
-
-  /* Restrict to the Z dimension */
   TSequenceSet *result_at = NULL;
-  if (at_xy)
+
+  /* Fast clipping for (multi)polygons */
+  uint32_t gs_type = gserialized_get_type(gs);
+  if (gs_type == POLYGONTYPE || gs_type == MULTIPOLYGONTYPE)
+    result_at = tpointseq_linear_at_poly(seq, gs, zspan);
+  else
   {
-    if (zspan)
+    /* Compute atGeometry for the sequence */
+    TSequenceSet *at_xy = tpointseq_linear_at_geom(seq, gs);
+
+    /* Restrict to the Z dimension */
+    if (at_xy)
     {
-      /* Bounding box test for the Z dimension */
-      STBox box1;
-      tspatialseqset_set_stbox(at_xy, &box1);
-      Span zspan1;
-      span_set(Float8GetDatum(box1.zmin), Float8GetDatum(box1.zmax), true, true,
-        T_FLOAT8, T_FLOATSPAN, &zspan1);
-      if (overlaps_span_span(&zspan1, zspan))
+      if (zspan)
       {
-        /* Get the Z coordinate values as a temporal float */
-        Temporal *tfloat_z = tpoint_get_coord((Temporal *) at_xy, 2);
-        /* Restrict to the zspan */
-        Temporal *tfloat_zspan = tnumber_restrict_span(tfloat_z, zspan, REST_AT);
-        pfree(tfloat_z);
-        if (tfloat_zspan)
+        /* Bounding box test for the Z dimension */
+        STBox box1;
+        tspatialseqset_set_stbox(at_xy, &box1);
+        Span zspan1;
+        span_set(Float8GetDatum(box1.zmin), Float8GetDatum(box1.zmax),
+          true, true, T_FLOAT8, T_FLOATSPAN, &zspan1);
+        if (overlaps_span_span(&zspan1, zspan))
         {
-          SpanSet *ss = temporal_time(tfloat_zspan);
-          result_at = tsequenceset_restrict_tstzspanset(at_xy, ss, REST_AT);
-          pfree(tfloat_zspan);
-          pfree(ss);
+          /* Get the Z coordinate values as a temporal float */
+          Temporal *tfloat_z = tpoint_get_coord((Temporal *) at_xy, 2);
+          /* Restrict to the zspan */
+          Temporal *tfloat_zspan = tnumber_restrict_span(tfloat_z, zspan,
+            REST_AT);
+          pfree(tfloat_z);
+          if (tfloat_zspan)
+          {
+            SpanSet *ss = temporal_time(tfloat_zspan);
+            result_at = tsequenceset_restrict_tstzspanset(at_xy, ss, REST_AT);
+            pfree(tfloat_zspan);
+            pfree(ss);
+          }
         }
+        pfree(at_xy);
       }
-      pfree(at_xy);
+      else
+        result_at = at_xy;
     }
-    else
-      result_at = at_xy;
   }
 
   /* If "at" restriction, return */
