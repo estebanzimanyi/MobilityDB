@@ -537,7 +537,7 @@ tpcpatch_any_point_matches(const Temporal *temp,
   pcpatch_pointpred_fn pred, void *extra)
 {
   int ninst = 0;
-  TInstant **instants = temporal_instants(temp, &ninst);
+  const TInstant **instants = temporal_insts_p(temp, &ninst);
   bool found = false;
   for (int i = 0; i < ninst && ! found; i++)
   {
@@ -644,7 +644,7 @@ tpcpatch_points_state_make(const Temporal *temp)
   }
 
   int ninst = 0;
-  TInstant **instants = temporal_instants(temp, &ninst);
+  const TInstant **instants = temporal_insts_p(temp, &ninst);
 
   /* First pass: count points. */
   uint64_t total = 0;
