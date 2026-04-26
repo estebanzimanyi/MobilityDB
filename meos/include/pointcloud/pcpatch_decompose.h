@@ -38,7 +38,8 @@
 
 #include <stdbool.h>
 
-#include <meos_pointcloud.h>     /* for Pcpatch */
+#include <liblwgeom.h>           /* for GSERIALIZED (predicate args) */
+#include <meos_pointcloud.h>     /* for Pcpatch, TPCBox */
 #include "pc_api.h"              /* for PCPOINT */
 
 /**
@@ -64,5 +65,46 @@ typedef bool (*pcpatch_pointpred_fn)(const PCPOINT *pt, void *extra);
  */
 extern Pcpatch *pcpatch_filter_per_point(const Pcpatch *pa,
   pcpatch_pointpred_fn pred, void *extra);
+
+/*****************************************************************************
+ * Built-in predicates
+ *
+ * Predicate adapters that pcpatch_filter_per_point can use directly via
+ * its @c pred argument. Each pairs with a small @c *Args struct defining
+ * what to pass through @c extra.
+ *****************************************************************************/
+
+/**
+ * @brief Closure for #pcpoint_in_tpcbox.
+ *
+ * @c border_inc=true makes the bbox membership test inclusive on every
+ * face (the typical SQL semantics); @c false uses strict @c < / @c >.
+ */
+typedef struct
+{
+  const TPCBox *box;
+  bool border_inc;
+} PcpointInTpcboxArgs;
+
+/**
+ * @brief Predicate: keep points whose XY (and Z, if @c box->flags has Z)
+ *   coordinates fall inside the supplied @c TPCBox.
+ *
+ * @param pt    pcpoint under test.
+ * @param extra Pointer to a #PcpointInTpcboxArgs.
+ */
+extern bool pcpoint_in_tpcbox(const PCPOINT *pt, void *extra);
+
+/**
+ * @brief Predicate: keep points whose XY projection intersects the supplied
+ *   2D geometry (@c GSERIALIZED *).
+ *
+ * @param pt    pcpoint under test.
+ * @param extra Pointer to a @c GSERIALIZED * (the clipping geometry).
+ *              Its SRID is used when constructing the per-point probe;
+ *              MobilityDB-side wrappers should validate SRID
+ *              compatibility with the patch schema before calling.
+ */
+extern bool pcpoint_intersects_geometry(const PCPOINT *pt, void *extra);
 
 #endif /* __PCPATCH_DECOMPOSE_H__ */

@@ -25,15 +25,15 @@
  * pgPointCloud keeps `pc_(point|patch)_(de)serialize` in `pgsql/pc_pgsql.c`,
  * which is compiled into the PG extension `.so` only — they don't reach
  * `libpc.a` and so are unreachable from MEOS, which links the static
- * library. The upstream PR proposing to move them into `lib/` is filed at
- * `PGPOINTCLOUD_UPSTREAM_PR_DRAFT.md` (repo root).
+ * library. An upstream proposal to move these helpers into `lib/` so
+ * they land in `libpc.a` is pending against pgpointcloud/pointcloud.
  *
- * Until that PR lands and the subtree is bumped, this header declares
- * vendored copies under a `meos_pc_*` prefix and routes the call sites
- * via the MEOS_PC_* macros below. When the upstream change is in place,
- * the CMake probe sets @c PC_API_HAS_SERIALIZE=1 and the macros switch
- * to the upstream symbols; this file and its companion @c pgsql_compat.c
- * can then be deleted in one commit.
+ * Until that change is upstream and the subtree is bumped, this header
+ * declares vendored copies under a `meos_pc_*` prefix and routes call
+ * sites via the MEOS_PC_* macros below. When upstream catches up, the
+ * CMake probe sets @c PC_API_HAS_SERIALIZE=1 and the macros switch to
+ * the upstream symbols; this file and its companion @c pgsql_compat.c
+ * can then be removed.
  */
 
 #ifndef __PGSQL_COMPAT_H__

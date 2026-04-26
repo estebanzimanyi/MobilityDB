@@ -30,14 +30,13 @@
  *   All rights reserved. See @c pointcloud-pg/COPYRIGHT for the full
  *   BSD 3-clause text.
  *
- * This file is a transitional shim. The upstream PR drafted at
- * @c PGPOINTCLOUD_UPSTREAM_PR_DRAFT.md asks pgPointCloud to move these
- * symbols from @c pgsql/pc_pgsql.c into @c lib/, where they reach
- * @c libpc.a and become linkable from MEOS. Once that lands and the
- * subtree is bumped, the CMake probe sets @c PC_API_HAS_SERIALIZE=1,
- * this entire translation unit compiles to nothing, and the file can
- * be removed in one commit alongside the macro indirection in
- * @c pgsql_compat.h.
+ * This file is a transitional shim. An upstream proposal is pending
+ * against pgpointcloud/pointcloud to move these symbols from
+ * @c pgsql/pc_pgsql.c into @c lib/, where they reach @c libpc.a and
+ * become linkable from MEOS. Once that lands and the subtree is
+ * bumped, the CMake probe sets @c PC_API_HAS_SERIALIZE=1, this entire
+ * translation unit compiles to nothing, and the file can be removed
+ * alongside the macro indirection in @c pgsql_compat.h.
  *
  *****************************************************************************/
 
