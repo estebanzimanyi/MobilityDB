@@ -106,3 +106,54 @@ SELECT atTpcbox(:inst1, tpcbox_zt(0, 0, 0, 10, 10, 10,
   tstzspan '[2024-01-01, 2024-01-31]', 999, 0)) IS NULL;
 
 -------------------------------------------------------------------------------
+-- Per-point restrictions — atTpcboxFine / minusTpcboxFine.
+-- inst1 has points at (1,1,1) and (2,2,2). A box covering [0,3]^3
+-- keeps both; [0,1]^3 keeps only the first; [10,20]^3 keeps neither
+-- and the at-restriction returns NULL.
+-------------------------------------------------------------------------------
+
+SELECT numInstants(atTpcboxFine(:inst1, tpcbox_zt(0, 0, 0, 3, 3, 3,
+  tstzspan '[2024-01-01, 2024-01-31]', 1, 0)));
+SELECT startNumPoints(atTpcboxFine(:inst1, tpcbox_zt(0, 0, 0, 3, 3, 3,
+  tstzspan '[2024-01-01, 2024-01-31]', 1, 0)));
+SELECT startNumPoints(atTpcboxFine(:inst1, tpcbox_zt(0, 0, 0, 1, 1, 1,
+  tstzspan '[2024-01-01, 2024-01-31]', 1, 0)));
+SELECT atTpcboxFine(:inst1, tpcbox_zt(10, 10, 10, 20, 20, 20,
+  tstzspan '[2024-01-01, 2024-01-31]', 1, 0)) IS NULL;
+
+-- minus is the complement.
+SELECT minusTpcboxFine(:inst1, tpcbox_zt(0, 0, 0, 3, 3, 3,
+  tstzspan '[2024-01-01, 2024-01-31]', 1, 0)) IS NULL;
+SELECT startNumPoints(minusTpcboxFine(:inst1, tpcbox_zt(0, 0, 0, 1, 1, 1,
+  tstzspan '[2024-01-01, 2024-01-31]', 1, 0)));
+
+-------------------------------------------------------------------------------
+-- Per-point restrictions by geometry — atGeometry / minusGeometry.
+-------------------------------------------------------------------------------
+
+SELECT startNumPoints(atGeometry(:inst1,
+  geometry 'Polygon((0 0, 0 3, 3 3, 3 0, 0 0))'));
+SELECT atGeometry(:inst1,
+  geometry 'Polygon((10 10, 10 20, 20 20, 20 10, 10 10))') IS NULL;
+SELECT startNumPoints(minusGeometry(:inst1,
+  geometry 'Polygon((0 0, 0 1.5, 1.5 1.5, 1.5 0, 0 0))'));
+
+-------------------------------------------------------------------------------
+-- Spatial relationships — eIntersects(tpcpatch, geometry).
+-------------------------------------------------------------------------------
+
+SELECT eIntersects(:inst1,
+  geometry 'Polygon((0 0, 0 3, 3 3, 3 0, 0 0))');
+SELECT eIntersects(:inst1,
+  geometry 'Polygon((10 10, 10 20, 20 20, 20 10, 10 10))');
+
+-------------------------------------------------------------------------------
+-- points(tpcpatch) SRF — emits one row per (timestamp, pcpoint) pair.
+-------------------------------------------------------------------------------
+
+SELECT count(*) FROM points(:inst1);
+SELECT count(*) FROM points(tpcpatchSeq(ARRAY[:inst1, :inst2]));
+SELECT count(DISTINCT timestamp)
+  FROM points(tpcpatchSeq(ARRAY[:inst1, :inst2]));
+
+-------------------------------------------------------------------------------
