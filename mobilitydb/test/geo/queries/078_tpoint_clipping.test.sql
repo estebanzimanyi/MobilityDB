@@ -66,5 +66,46 @@ SELECT st_astext(_mdb_internal_clip_intersection(geometry 'Polygon((1 1,1 5,5 5,
 SELECT st_astext(_mdb_internal_clip_intersection(geometry 'Polygon((1 1,1 5,5 5,5 1,1 1),(2 2,4 2,4 4,2 4,2 2))',
   geometry 'Polygon((0 3,3 0,6 3,3 6,0 3))'));
 
+-------------------------------------------------------------------------------
+-- Operations beyond intersection (cover map_clip_op dispatch + Clipper2 ops)
+-------------------------------------------------------------------------------
+
+SELECT st_astext(_mdb_internal_clip_union(geometry 'Polygon((1 1,1 5,5 5,5 1,1 1))',
+  geometry 'Polygon((3 3,3 7,7 7,7 3,3 3))'));
+SELECT st_astext(_mdb_internal_clip_difference(geometry 'Polygon((1 1,1 5,5 5,5 1,1 1))',
+  geometry 'Polygon((3 3,3 7,7 7,7 3,3 3))'));
+SELECT st_astext(_mdb_internal_clip_sym_difference(geometry 'Polygon((1 1,1 5,5 5,5 1,1 1))',
+  geometry 'Polygon((3 3,3 7,7 7,7 3,3 3))'));
+
+-------------------------------------------------------------------------------
+-- MULTIPOLYGON input (cover the MULTIPOLYGONTYPE branch in lwgeom_to_paths64)
+-------------------------------------------------------------------------------
+
+SELECT st_astext(_mdb_internal_clip_intersection(
+  geometry 'MultiPolygon(((1 1,1 3,3 3,3 1,1 1)),((5 1,5 3,7 3,7 1,5 1)))',
+  geometry 'Polygon((0 0,0 4,8 4,8 0,0 0))'));
+
+-------------------------------------------------------------------------------
+-- Empty result (cover polys.empty() in polytree_to_lwgeom and NULL propagation)
+-------------------------------------------------------------------------------
+
+SELECT _mdb_internal_clip_intersection(geometry 'Polygon((1 1,1 2,2 2,2 1,1 1))',
+  geometry 'Polygon((10 10,10 11,11 11,11 10,10 10))') IS NULL;
+
+-------------------------------------------------------------------------------
+-- MULTIPOLYGON result (cover polys.size() > 1 LWMPOLY wrapping)
+-------------------------------------------------------------------------------
+
+SELECT st_astext(_mdb_internal_clip_intersection(
+  geometry 'Polygon((0 0,0 4,8 4,8 0,0 0))',
+  geometry 'MultiPolygon(((1 1,1 3,3 3,3 1,1 1)),((5 1,5 3,7 3,7 1,5 1)))'));
+
+-------------------------------------------------------------------------------
+-- Non-polygon input rejection (cover the elog(ERROR,...) defensive path)
+-------------------------------------------------------------------------------
+
+SELECT _mdb_internal_clip_intersection(geometry 'Point(0 0)',
+  geometry 'Polygon((1 1,1 5,5 5,5 1,1 1))');
+
 --------------------------------------------------------
 
