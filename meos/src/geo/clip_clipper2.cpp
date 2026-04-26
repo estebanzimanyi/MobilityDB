@@ -34,18 +34,22 @@
  * LWPOLY exterior — this is how Clipper2 represents nested polygon hierarchies.
  *****************************************************************************/
 
+/* C++ standard library and Clipper2 must come first: PostgreSQL's
+ * win32_port.h on MSYS2/MinGW redefines socket primitives like
+ * bind/socket/select as macros, which mangles std::bind and similar
+ * symbols if <functional> is parsed afterwards. */
+#include "clipper2/clipper.h"
+
+#include <cmath>
+#include <cstdint>
+#include <vector>
+
 extern "C" {
 #include "geo/clip_clipper2.h"
 #include <postgres.h>
 #include <liblwgeom.h>
 #include "geo/tgeo_spatialfuncs.h"  /* for geo_serialize */
 }
-
-#include "clipper2/clipper.h"
-
-#include <cmath>
-#include <cstdint>
-#include <vector>
 
 using Clipper2Lib::Clipper64;
 using Clipper2Lib::ClipType;
