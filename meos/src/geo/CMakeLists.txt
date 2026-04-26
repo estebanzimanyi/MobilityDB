@@ -33,4 +33,20 @@ endif()
 
 add_library(geo OBJECT ${GEO_SRCS})
 
+# Vendored Clipper2 + spike C++ adapter
+add_subdirectory(${CMAKE_SOURCE_DIR}/meos/vendor/clipper2
+  ${CMAKE_BINARY_DIR}/meos/vendor/clipper2)
+add_library(clip_clipper2_spike OBJECT clip_clipper2.cpp)
+target_include_directories(clip_clipper2_spike PRIVATE
+  ${CMAKE_SOURCE_DIR}/meos/include
+  ${CMAKE_SOURCE_DIR}/meos/vendor/clipper2/include
+  ${POSTGRESQL_INCLUDE_DIR}
+  ${POSTGIS_LIBLWGEOM_DIR}
+)
+set_target_properties(clip_clipper2_spike PROPERTIES
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED ON
+  POSITION_INDEPENDENT_CODE ON
+)
+
 
