@@ -1,0 +1,70 @@
+SELECT st_astext(cl_intersection(geometry 'Polygon((1 1,1 5,5 5,5 1,1 1))',
+  geometry 'Polygon((0 3,3 0,6 3,3 6,0 3))'));
+                   st_astext                    
+------------------------------------------------
+ POLYGON((1 2,2 1,4 1,5 2,5 4,4 5,2 5,1 4,1 2))
+(1 row)
+
+SELECT st_astext(cl_intersection(geometry 'Polygon((1 1,1 5,5 5,5 1,1 1))',
+  geometry 'Polygon((3 1,3 5,7 5,7 1,3 1))'));
+           st_astext            
+--------------------------------
+ POLYGON((3 1,5 1,5 5,3 5,3 1))
+(1 row)
+
+SELECT st_astext(cl_intersection(geometry 'Polygon((1 1,1 5,5 5,5 1,1 1))',
+  geometry 'Polygon((1 3,1 7,5 7,5 3,1 3))'));
+           st_astext            
+--------------------------------
+ POLYGON((1 3,5 3,5 5,1 5,1 3))
+(1 row)
+
+SELECT st_astext(cl_intersection(geometry 'Polygon((0 3,3 0,6 3,3 6,0 3))',
+  geometry 'Polygon((1 4,4 1,7 4,4 7,1 4))'));
+           st_astext            
+--------------------------------
+ POLYGON((1 4,4 1,6 3,3 6,1 4))
+(1 row)
+
+SELECT st_astext(cl_intersection(geometry 'Polygon((1 1,1 5,5 5,5 1,1 1))',
+  geometry 'Polygon((3 1,3 6,7 6,7 1,3 1))'));
+           st_astext            
+--------------------------------
+ POLYGON((3 1,5 1,5 5,3 5,3 1))
+(1 row)
+
+SELECT st_astext(cl_intersection(geometry 'Polygon((1 1,1 5,5 5,5 1,1 1))',
+  geometry 'Polygon((1 3,1 7,6 8,6 3,1 3))'));
+           st_astext            
+--------------------------------
+ POLYGON((1 3,5 3,5 5,1 5,1 3))
+(1 row)
+
+SELECT st_astext(cl_intersection(geometry 'Polygon((0 3,3 0,6 3,3 6,0 3))',
+  geometry 'Polygon((0 5,4 1,7 4,3 8,0 5))'));
+           st_astext            
+--------------------------------
+ POLYGON((1 4,4 1,6 3,3 6,1 4))
+(1 row)
+
+SELECT st_astext(cl_intersection(geometry 'Polygon((1 1,1 5,5 5,5 1,1 1),(2 2,2 4,3 4,3 2,2 2))',
+  geometry 'Polygon((4 1,4 5,8 5,8 1,4 1))'));
+           st_astext            
+--------------------------------
+ POLYGON((4 1,5 1,5 5,4 5,4 1))
+(1 row)
+
+SELECT st_astext(cl_intersection(geometry 'Polygon((1 1,1 5,5 5,5 1,1 1),(2 2,2 4,3 4,3 2,2 2))',
+  geometry 'Polygon((3 1,3 5,6 5,6 1,3 1))'));
+               st_astext                
+----------------------------------------
+ POLYGON((3 1,5 1,5 5,3 5,3 4,3 2,3 1))
+(1 row)
+
+SELECT st_astext(cl_intersection(geometry 'Polygon((1 1,1 5,5 5,5 1,1 1),(2 2,2 4,4 4,4 2,2 2))',
+  geometry 'Polygon((3 1,3 5,6 5,6 1,3 1))'));
+                   st_astext                    
+------------------------------------------------
+ POLYGON((3 1,5 1,5 5,3 5,3 4,4 4,4 2,3 2,3 1))
+(1 row)
+

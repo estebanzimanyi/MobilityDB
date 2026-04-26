@@ -50,6 +50,7 @@
 #include "geo/tspatial.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/stbox.h"
+#include "geo/tpoint_clipping.h"
 /* MobilityDB */
 #include "pg_temporal/temporal.h"
 #include "pg_temporal/type_util.h"
@@ -802,6 +803,62 @@ inline Datum
 Tgeo_minus_stbox(PG_FUNCTION_ARGS)
 {
   return Tgeo_restrict_stbox(fcinfo, REST_MINUS);
+}
+
+/*****************************************************************************
+ * Polygon clipping (Martinez-Rueda algorithm)
+ *****************************************************************************/
+
+static char
+is_poly(const GSERIALIZED *g)
+{
+  int type = gserialized_get_type(g);
+  return type == POLYGONTYPE || type == MULTIPOLYGONTYPE;
+}
+
+static Datum
+clip_ext(FunctionCallInfo fcinfo, ClipOper operation)
+{
+  GSERIALIZED *subj = PG_GETARG_GSERIALIZED_P(0);
+  GSERIALIZED *clip = PG_GETARG_GSERIALIZED_P(1);
+  gserialized_error_if_srid_mismatch(subj, clip, __func__);
+  if (! is_poly(subj) || ! is_poly(clip))
+    elog(ERROR, "The function only accepts (multi)polygons");
+
+  GSERIALIZED *result = clip_poly_poly(subj, clip, operation);
+  PG_FREE_IF_COPY(subj, 0);
+  PG_FREE_IF_COPY(clip, 1);
+  if (! result)
+    PG_RETURN_NULL();
+  PG_RETURN_POINTER(result);
+}
+
+PG_FUNCTION_INFO_V1(cl_intersection);
+Datum
+cl_intersection(PG_FUNCTION_ARGS)
+{
+  return clip_ext(fcinfo, CL_INTERSECTION);
+}
+
+PG_FUNCTION_INFO_V1(cl_union);
+Datum
+cl_union(PG_FUNCTION_ARGS)
+{
+  return clip_ext(fcinfo, CL_UNION);
+}
+
+PG_FUNCTION_INFO_V1(cl_difference);
+Datum
+cl_difference(PG_FUNCTION_ARGS)
+{
+  return clip_ext(fcinfo, CL_DIFFERENCE);
+}
+
+PG_FUNCTION_INFO_V1(cl_symDifference);
+Datum
+cl_symDifference(PG_FUNCTION_ARGS)
+{
+  return clip_ext(fcinfo, CL_XOR);
 }
 
 /*****************************************************************************/
