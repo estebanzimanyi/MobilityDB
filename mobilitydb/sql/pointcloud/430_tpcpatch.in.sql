@@ -395,6 +395,15 @@ CREATE FUNCTION eIntersects(tpcpatch, geometry)
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************
+ * Per-point access (SRF)
+ ******************************************************************************/
+
+CREATE FUNCTION points(tpcpatch)
+  RETURNS TABLE("timestamp" timestamptz, point pcpoint)
+  AS 'MODULE_PATHNAME', 'Tpcpatch_points'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/******************************************************************************
  * Ever / always
  ******************************************************************************/
 
