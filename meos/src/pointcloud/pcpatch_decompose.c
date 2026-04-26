@@ -31,9 +31,11 @@
 #include <postgres.h>
 /* MEOS */
 #include <meos.h>
+#include <meos_internal.h>             /* for MEOS_FLAGS_GET_Z */
 #include "pointcloud/pcpatch.h"
 #include "pointcloud/pgsql_compat.h"
 #include "pointcloud/meos_schema_hook.h"
+#include "geo/tgeo_spatialfuncs.h"     /* for geopoint_make */
 /* pgPointCloud */
 #include "pc_api.h"
 #include "pc_api_internal.h"   /* for pc_patch_uncompressed_make / _add_point */
@@ -94,6 +96,77 @@ pcpatch_filter_per_point(const Pcpatch *pa, pcpatch_pointpred_fn pred,
   pc_patch_free((PCPATCH *) out);
   pc_pointlist_free(pl);
   pc_patch_free(patch);
+  return result;
+}
+
+/*****************************************************************************
+ * Built-in predicates
+ *****************************************************************************/
+
+bool
+pcpoint_in_tpcbox(const PCPOINT *pt, void *extra)
+{
+  assert(pt); assert(extra);
+  const PcpointInTpcboxArgs *args = (const PcpointInTpcboxArgs *) extra;
+  const TPCBox *box = args->box;
+  bool inc = args->border_inc;
+
+  double x, y;
+  if (! pc_point_get_x(pt, &x) || ! pc_point_get_y(pt, &y))
+    return false;
+
+  /* x / y always present in a TPCBox with the X flag — pcpatch lift
+   * always produces one. The strict-vs-inclusive cases factor through
+   * the inc flag. */
+  if (inc)
+  {
+    if (x < box->xmin || x > box->xmax) return false;
+    if (y < box->ymin || y > box->ymax) return false;
+  }
+  else
+  {
+    if (x <= box->xmin || x >= box->xmax) return false;
+    if (y <= box->ymin || y >= box->ymax) return false;
+  }
+
+  /* Z dimension is optional — if the box carries it, the point's
+   * schema must be capable of yielding a Z value, otherwise the test
+   * cannot be made and we fail closed (drop the point). */
+  if (MEOS_FLAGS_GET_Z(box->flags))
+  {
+    double z;
+    if (! pc_point_get_z(pt, &z))
+      return false;
+    if (inc)
+    {
+      if (z < box->zmin || z > box->zmax) return false;
+    }
+    else
+    {
+      if (z <= box->zmin || z >= box->zmax) return false;
+    }
+  }
+
+  return true;
+}
+
+bool
+pcpoint_intersects_geometry(const PCPOINT *pt, void *extra)
+{
+  assert(pt); assert(extra);
+  const GSERIALIZED *gs = (const GSERIALIZED *) extra;
+
+  double x, y;
+  if (! pc_point_get_x(pt, &x) || ! pc_point_get_y(pt, &y))
+    return false;
+
+  /* Probe is a 2D point in the geometry's SRID; the wrapper layer is
+   * responsible for SRID-mismatch validation between patch schema and
+   * geometry before getting here. */
+  GSERIALIZED *probe = geopoint_make(x, y, 0.0, false, false,
+    gserialized_get_srid(gs));
+  bool result = geom_intersects2d(probe, gs);
+  pfree(probe);
   return result;
 }
 
