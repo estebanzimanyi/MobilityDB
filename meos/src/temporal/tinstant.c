@@ -164,9 +164,10 @@ tinstant_to_string(const TInstant *inst, int maxdd, outfunc base_out_fn)
   char *quoted = NULL;
   if (inst->temptype == T_TJSONB)
     quoted = string_escape(value, QUOTES);
-  size_t size = (quoted ? strlen(quoted) : strlen(value)) + strlen(t) + 2;
+  const char *out = quoted ? quoted : value;
+  size_t size = strlen(out) + strlen(t) + 2;
   char *result = palloc(size);
-  snprintf(result, size, "%s@%s", value, t);
+  snprintf(result, size, "%s@%s", out, t);
   pfree(t); pfree(value);
   if (quoted)
     pfree(quoted);

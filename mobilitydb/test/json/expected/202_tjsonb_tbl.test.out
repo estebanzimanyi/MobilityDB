@@ -18,22 +18,26 @@ DROP TABLE
 SELECT DISTINCT tempSubtype(tjsonbInst(inst)) FROM tbl_tjsonb_inst;
  tempsubtype 
 -------------
-(0 rows)
+ Instant
+(1 row)
 
 SELECT DISTINCT tempSubtype(setInterp(inst, 'discrete')) FROM tbl_tjsonb_inst;
  tempsubtype 
 -------------
-(0 rows)
+ Sequence
+(1 row)
 
 SELECT DISTINCT tempSubtype(tjsonbSeq(inst)) FROM tbl_tjsonb_inst;
  tempsubtype 
 -------------
-(0 rows)
+ Sequence
+(1 row)
 
 SELECT DISTINCT tempSubtype(tjsonbSeqSet(inst)) FROM tbl_tjsonb_inst;
  tempsubtype 
 -------------
-(0 rows)
+ SequenceSet
+(1 row)
 
 SELECT DISTINCT tempSubtype(tjsonbInst(seq)) FROM tbl_tjsonb_discseq WHERE numInstants(seq) = 1;
  tempsubtype 
@@ -139,7 +143,7 @@ SELECT MAX(lower(timeSpan(temp))) FROM tbl_tjsonb;
 SELECT MAX(length(getValue(inst)::text)) FROM tbl_tjsonb_inst;
  max 
 -----
-    
+ 134
 (1 row)
 
 SELECT MAX(numValues(getValues(temp))) FROM tbl_tjsonb;
@@ -167,9 +171,9 @@ SELECT MAX(length(valueN(temp, 1)::text)) FROM tbl_tjsonb;
 (1 row)
 
 SELECT MAX(getTimestamp(inst)) FROM tbl_tjsonb_inst;
- max 
------
- 
+             max              
+------------------------------
+ Fri Dec 28 14:29:00 2001 PST
 (1 row)
 
 SELECT MAX(duration(getTime(temp))) FROM tbl_tjsonb;
@@ -329,9 +333,9 @@ SELECT COUNT(shiftScaleTime(temp, i, i)) FROM tbl_tjsonb, tbl_interval;
 (1 row)
 
 SELECT MAX(startTimestamp(tsample(inst, '15 minutes'))) FROM tbl_tjsonb_inst;
- max 
------
- 
+             max              
+------------------------------
+ Mon Nov 26 20:15:00 2001 PST
 (1 row)
 
 SELECT MAX(startTimestamp(tsample(seq, '15 minutes'))) FROM tbl_tjsonb_discseq;
@@ -355,7 +359,7 @@ SELECT MAX(startTimestamp(tsample(ss, '15 minutes'))) FROM tbl_tjsonb_seqset;
 SELECT MAX(numInstants(tsample(inst, '15 minutes', interp := 'step'))) FROM tbl_tjsonb_inst;
  max 
 -----
-    
+   1
 (1 row)
 
 SELECT MAX(numInstants(tsample(seq, '15 minutes', interp := 'step'))) FROM tbl_tjsonb_discseq;

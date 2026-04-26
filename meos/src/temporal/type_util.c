@@ -793,12 +793,21 @@ string_escape(const char *str, int quotes)
 
   if (quotes == QUOTES)
   {
-    /* Construct the output string counting the pair of double quotes + '\0' */
-    result = (char *) palloc0(size + 3);
+    /* Always wrap in double quotes; backslash-escape internal '"' and '\' so
+     * the value can be re-parsed unambiguously. */
+    size_t extra = 0;
+    for (tmp = str; *tmp; tmp++)
+      if (*tmp == '"' || *tmp == '\\')
+        extra++;
+    result = (char *) palloc0(size + extra + 3);
     p = result;
     *p++ = '"';
     for (tmp = str; *tmp; tmp++)
+    {
+      if (*tmp == '"' || *tmp == '\\')
+        *p++ = '\\';
       *p++ = *tmp;
+    }
     *p++ = '"';
     *p = '\0';
     return result;
