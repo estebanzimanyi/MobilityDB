@@ -31,7 +31,31 @@ if(POINTCLOUD)
     # meos/src/geo/stbox_index.c.  Pure leaf/inner consistency
     # logic — the GiST support functions live in the PG layer.
     tpcbox_index.c
+
+    # Transitional vendoring of pgPointCloud's pc_(point|patch)_(de)serialize
+    # helpers. They live in upstream's pgsql/pc_pgsql.c so they don't reach
+    # libpc.a; this file self-empties (#if !PC_API_HAS_SERIALIZE) once
+    # upstream's PR moves them into lib/. See pgsql_compat.h for details.
+    pgsql_compat.c
   )
+
+  # Probe whether the linked libpc.a already declares pc_patch_deserialize
+  # at the lib/ level (i.e. upstream merged the move). Default OFF until
+  # the subtree is bumped to a release including the change.
+  include(CheckCSourceCompiles)
+  set(CMAKE_REQUIRED_INCLUDES ${CMAKE_SOURCE_DIR}/pointcloud-pg/lib)
+  check_c_source_compiles("
+    #include \"pc_api.h\"
+    int main(void) { (void)&pc_patch_deserialize; return 0; }
+  " PC_API_HAS_SERIALIZE)
+  unset(CMAKE_REQUIRED_INCLUDES)
+  if(PC_API_HAS_SERIALIZE)
+    add_definitions(-DPC_API_HAS_SERIALIZE=1)
+    message(STATUS "pgPointCloud serialize helpers found in lib/pc_api.h — vendored shim disabled")
+  else()
+    add_definitions(-DPC_API_HAS_SERIALIZE=0)
+    message(STATUS "pgPointCloud serialize helpers not in lib/pc_api.h — vendored shim active (pgsql_compat.c)")
+  endif()
 
   # Set types — `_meos.c` suffix → MEOS-only build. The PG extension
   # build reaches pcpointset / pcpatchset through the generic Set_*
