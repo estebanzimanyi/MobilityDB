@@ -62,8 +62,9 @@ SELECT st_astext(_mdb_internal_clip_intersection(geometry 'Polygon((1 1,1 5,5 5,
   geometry 'Polygon((3 1,3 5,6 5,6 1,3 1))'));
 
 -- Point intersections with a hole that does not interact with the other polygon
--- SELECT st_astext(_mdb_internal_clip_intersection(geometry 'Polygon((1 1,1 5,5 5,5 1,1 1),(2 2,4 2,4 4,2 4,2 2))',
-  -- geometry 'Polygon((0 3,3 0,6 3,3 6,0 3))'));
+-- (Re-enabled with the Clipper2 backend; Martinez wrong-answered this case.)
+SELECT st_astext(_mdb_internal_clip_intersection(geometry 'Polygon((1 1,1 5,5 5,5 1,1 1),(2 2,4 2,4 4,2 4,2 2))',
+  geometry 'Polygon((0 3,3 0,6 3,3 6,0 3))'));
 
 --------------------------------------------------------
 

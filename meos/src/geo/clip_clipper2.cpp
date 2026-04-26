@@ -37,7 +37,6 @@
 extern "C" {
 #include "geo/clip_clipper2.h"
 #include <postgres.h>
-#include <fmgr.h>
 #include <liblwgeom.h>
 #include "geo/tgeo_spatialfuncs.h"  /* for geo_serialize */
 }
@@ -324,34 +323,3 @@ clipper2_clip_poly_poly(const GSERIALIZED *subj_g, const GSERIALIZED *clip_g,
   return result;
 }
 
-/*****************************************************************************
- * SQL V1 wrapper for direct testing during the production migration.
- *
- * Once the production migration replaces the Martinez @c clip_poly_poly body
- * (Step 2 of the handoff), the existing @c _mdb_internal_clip_* SQL functions
- * are the canonical entry points and this wrapper becomes redundant. It is
- * kept in this file so the prod branch can be SQL-tested before the merge
- * with the Martinez wrapper code.
- *****************************************************************************/
-
-extern "C" {
-
-PGDLLEXPORT Datum clipper2_clip_poly_poly_v1(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(clipper2_clip_poly_poly_v1);
-
-Datum
-clipper2_clip_poly_poly_v1(PG_FUNCTION_ARGS)
-{
-  GSERIALIZED *subj =
-    (GSERIALIZED *) PG_DETOAST_DATUM_COPY(PG_GETARG_DATUM(0));
-  GSERIALIZED *clip =
-    (GSERIALIZED *) PG_DETOAST_DATUM_COPY(PG_GETARG_DATUM(1));
-  int op = PG_GETARG_INT32(2);
-  GSERIALIZED *result = clipper2_clip_poly_poly(subj, clip, op);
-  pfree(subj);
-  pfree(clip);
-  if (result == nullptr) PG_RETURN_NULL();
-  PG_RETURN_POINTER(result);
-}
-
-} /* extern "C" */
