@@ -346,6 +346,55 @@ CREATE FUNCTION minusTpcbox(tpcpatch, tpcbox, border_inc boolean DEFAULT TRUE)
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************
+ * TPCBox-based restrictions (per-point / fine)
+ *
+ * Same arguments as the patch-level variants, but each surviving instant
+ * carries a freshly-built pcpatch holding only the points inside (or
+ * outside, for minus) the box. Instants whose patches have zero
+ * surviving points are dropped.
+ ******************************************************************************/
+
+CREATE FUNCTION atTpcboxFine(tpcpatch, tpcbox,
+    border_inc boolean DEFAULT TRUE)
+  RETURNS tpcpatch
+  AS 'MODULE_PATHNAME', 'Tpcpatch_at_tpcbox_fine'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION minusTpcboxFine(tpcpatch, tpcbox,
+    border_inc boolean DEFAULT TRUE)
+  RETURNS tpcpatch
+  AS 'MODULE_PATHNAME', 'Tpcpatch_minus_tpcbox_fine'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/******************************************************************************
+ * Geometry-based restrictions (per-point)
+ *
+ * Keep the points whose XY projection intersects (or doesn't, for
+ * minus) the supplied geometry. Z is ignored. SRID compatibility
+ * between the patch schema and the geometry must be ensured by the
+ * caller.
+ ******************************************************************************/
+
+CREATE FUNCTION atGeometry(tpcpatch, geometry)
+  RETURNS tpcpatch
+  AS 'MODULE_PATHNAME', 'Tpcpatch_at_geometry'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION minusGeometry(tpcpatch, geometry)
+  RETURNS tpcpatch
+  AS 'MODULE_PATHNAME', 'Tpcpatch_minus_geometry'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/******************************************************************************
+ * Spatial relationships (tpcpatch ↔ geometry)
+ ******************************************************************************/
+
+CREATE FUNCTION eIntersects(tpcpatch, geometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Tpcpatch_eIntersects_geo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/******************************************************************************
  * Ever / always
  ******************************************************************************/
 

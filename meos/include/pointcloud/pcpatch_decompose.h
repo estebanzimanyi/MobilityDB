@@ -55,16 +55,19 @@ typedef bool (*pcpatch_pointpred_fn)(const PCPOINT *pt, void *extra);
 /**
  * @brief Decompose a pcpatch, apply a predicate per point, rebuild.
  *
- * @param pa     Source pcpatch (must not be NULL).
- * @param pred   Predicate. Returns true to keep, false to drop.
- * @param extra  Caller-supplied state passed verbatim to @c pred.
+ * @param pa              Source pcpatch (must not be NULL).
+ * @param pred            Predicate (must not be NULL).
+ * @param extra           Caller-supplied state passed verbatim to @c pred.
+ * @param keep_when_true  When @c true (atfunc semantics), keep points
+ *                        for which @c pred returns true; when @c false
+ *                        (minus semantics), keep the complement.
  * @return Newly allocated pcpatch holding only the surviving points
  *         (always uncompressed-form output), or @c NULL when every
  *         point was dropped or the schema for @c pa->pcid cannot be
  *         resolved via the schema hook. Caller owns the result.
  */
 extern Pcpatch *pcpatch_filter_per_point(const Pcpatch *pa,
-  pcpatch_pointpred_fn pred, void *extra);
+  pcpatch_pointpred_fn pred, void *extra, bool keep_when_true);
 
 /*****************************************************************************
  * Built-in predicates
