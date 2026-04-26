@@ -44,7 +44,7 @@
 
 Pcpatch *
 pcpatch_filter_per_point(const Pcpatch *pa, pcpatch_pointpred_fn pred,
-  void *extra)
+  void *extra, bool keep_when_true)
 {
   assert(pa); assert(pred);
 
@@ -78,7 +78,7 @@ pcpatch_filter_per_point(const Pcpatch *pa, pcpatch_pointpred_fn pred,
   for (uint32_t i = 0; i < pl->npoints; i++)
   {
     PCPOINT *pt = pc_pointlist_get_point(pl, i);
-    if (pred(pt, extra))
+    if (pred(pt, extra) == keep_when_true)
       pc_patch_uncompressed_add_point(out, pt);
   }
 
