@@ -1,8 +1,6 @@
 set(GEO_SRCS
   geo_round.c
   postgis_funcs.c
-  pqueue.c
-  splay_tree.c
   stbox.c
   stbox_index.c
   tgeo.c
@@ -36,17 +34,17 @@ endif()
 
 add_library(geo OBJECT ${GEO_SRCS})
 
-# Vendored Clipper2 + spike C++ adapter
+# Vendored Clipper2 + C++ polygon-Boolean adapter
 add_subdirectory(${CMAKE_SOURCE_DIR}/meos/vendor/clipper2
   ${CMAKE_BINARY_DIR}/meos/vendor/clipper2)
-add_library(clip_clipper2_spike OBJECT clip_clipper2.cpp)
-target_include_directories(clip_clipper2_spike PRIVATE
+add_library(clip_clipper2 OBJECT clip_clipper2.cpp)
+target_include_directories(clip_clipper2 PRIVATE
   ${CMAKE_SOURCE_DIR}/meos/include
   ${CMAKE_SOURCE_DIR}/meos/vendor/clipper2/include
   ${POSTGRESQL_INCLUDE_DIR}
   ${POSTGIS_LIBLWGEOM_DIR}
 )
-set_target_properties(clip_clipper2_spike PROPERTIES
+set_target_properties(clip_clipper2 PROPERTIES
   CXX_STANDARD 17
   CXX_STANDARD_REQUIRED ON
   POSITION_INDEPENDENT_CODE ON
