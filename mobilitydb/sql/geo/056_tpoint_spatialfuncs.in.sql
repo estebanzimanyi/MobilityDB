@@ -350,4 +350,25 @@ CREATE FUNCTION minusStbox(tgeogpoint, stbox, borderInc bool DEFAULT TRUE)
   AS 'MODULE_PATHNAME', 'Tgeo_minus_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+/*****************************************************************************
+ * Polygon clipping (Martinez-Rueda algorithm)
+ *****************************************************************************/
+
+CREATE FUNCTION cl_intersection(geometry, geometry)
+  RETURNS geometry
+  AS 'MODULE_PATHNAME', 'cl_intersection'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION cl_union(geometry, geometry)
+  RETURNS geometry
+  AS 'MODULE_PATHNAME', 'cl_union'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION cl_difference(geometry, geometry)
+  RETURNS geometry
+  AS 'MODULE_PATHNAME', 'cl_difference'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION cl_symDifference(geometry, geometry)
+  RETURNS geometry
+  AS 'MODULE_PATHNAME', 'cl_symDifference'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 /*****************************************************************************/
