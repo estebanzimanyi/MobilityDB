@@ -61,7 +61,9 @@ the priority queue and splay-tree support code) with vendored Clipper2 v2.0.1
 
 - MEOS now requires a C++17 compiler. `enable_language(CXX)` is set at the
   top-level `CMakeLists.txt`, and `CMAKE_CXX_STANDARD 17` / `_REQUIRED ON` /
-  `_EXTENSIONS OFF` apply project-wide.
+  `_EXTENSIONS OFF` apply project-wide. The README's `Requirements` section
+  is updated to list `A C++17 compiler (e.g. GCC >= 7, Clang >= 5,
+  MSVC >= 19.14)` so downstream packagers don't get caught out.
 - The final shared module is now linked as `Linking CXX shared module
   libMobilityDB-1.4.so` — `libstdc++` is auto-pulled in. Trivial on glibc
   systems; flagged here because it changes the library closure for downstream
@@ -87,9 +89,23 @@ the priority queue and splay-tree support code) with vendored Clipper2 v2.0.1
     - Area conservation `subj = inter + diff` holds.
     - `atStbox(tgeometry, stbox)`, `minusGeometry(tgeometry, polygon)` —
       both correct.
-- [ ] Cross-platform CI: not yet exercised on this branch. Expected to be a
-      no-op on macOS clang (libc++ also provides C++17). Windows MSVC needs
-      verification.
+- [x] Cross-platform CI green on this branch: Linux gcc + clang, macOS 14
+      and 15 × PG 17 + 18, Windows MSYS2 (UCRT64 / GCC), and the
+      `WITH_COVERAGE=1` matrix variant. Two portability fixes were needed
+      and are included on this branch:
+    - `clip_clipper2.cpp` includes are reordered so the C++ stdlib (via
+      `<clipper2/clipper.h>`) is parsed before `<postgres.h>`, avoiding
+      MSYS2's `win32_port.h:#define bind pgwin32_bind` mangling
+      `std::bind`.
+    - `WITH_COVERAGE` now passes `--coverage` on the module / shared / exe
+      linker flag families and mirrors `-fprofile-arcs -ftest-coverage`
+      into `CMAKE_CXX_FLAGS`, since the `.so` is now linked with the g++
+      driver and that does not auto-pull libgcov from compile flags.
+- [x] Coveralls measurement is meaningful: vendored Clipper2 sources are
+      excluded from the lcov capture (mirroring the existing PostGIS
+      exclusion), so the reported figure reflects MobilityDB's own
+      coverage rather than diluted by ~5000 LOC of upstream-tested
+      library code.
 
 ## Out of scope (intentionally)
 
@@ -99,9 +115,6 @@ the priority queue and splay-tree support code) with vendored Clipper2 v2.0.1
   follow-up is to rewrite it on top of Clipper2's open-path API; estimated
   ~6h of work, tracked separately. Until then, `atGeometry(tgeompoint, ...)`
   continues to use the existing PostGIS / GEOS path.
-- License headers on the new C++ files and a CHANGELOG entry mentioning the
-  C++17 build requirement are TODO before tagging a release; deferred so this
-  PR stays focused on code.
 
 ## Companion docs
 
