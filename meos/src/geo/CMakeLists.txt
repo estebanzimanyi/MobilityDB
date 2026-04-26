@@ -14,7 +14,7 @@ set(GEO_SRCS
   tgeo_spatialfuncs.c
   tgeo_spatialrels.c
   tgeo_tile.c
-  tpoint_clipping.c
+  geo_poly_clip.c
   tpoint_datagen.c
   tpoint_spatialfuncs.c
   tspatial.c

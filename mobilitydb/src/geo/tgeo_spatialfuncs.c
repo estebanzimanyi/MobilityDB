@@ -51,7 +51,7 @@
 #include "geo/tspatial.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/stbox.h"
-#include "geo/tpoint_clipping.h"
+#include "geo/geo_poly_clip.h"
 /* MobilityDB */
 #include "pg_temporal/temporal.h"
 #include "pg_temporal/type_util.h"

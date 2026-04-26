@@ -35,7 +35,7 @@
  * https://github.com/w8r/martinez
  */
 
-#include "geo/tpoint_clipping.h"
+#include "geo/geo_poly_clip.h"
 
 /* C */
 #include <assert.h>
