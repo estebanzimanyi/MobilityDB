@@ -39,6 +39,7 @@
 #include <funcapi.h>
 /* PostGIS */
 #include <liblwgeom.h>
+#include <lwgeom_pg.h>
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
@@ -824,6 +825,11 @@ clip_ext(FunctionCallInfo fcinfo, ClipOper operation)
   gserialized_error_if_srid_mismatch(subj, clip, __func__);
   if (! is_poly(subj) || ! is_poly(clip))
     elog(ERROR, "The function only accepts (multi)polygons");
+  /* The Martinez sweep is planar 2D — reject geography and Z so callers
+   * don't get silent miscomputation. */
+  if (! ensure_not_geodetic_geo(subj) || ! ensure_not_geodetic_geo(clip) ||
+      ! ensure_has_not_Z_geo(subj)    || ! ensure_has_not_Z_geo(clip))
+    PG_RETURN_NULL();
 
   GSERIALIZED *result = clip_poly_poly(subj, clip, operation);
   PG_FREE_IF_COPY(subj, 0);
