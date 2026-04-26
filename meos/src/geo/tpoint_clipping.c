@@ -47,6 +47,7 @@
 #endif /* ! MEOS */
 /* PostGIS */
 #include <liblwgeom.h>
+#include <liblwgeom_internal.h>
 /* MEOS */
 #include <meos_internal.h>
 #include "temporal/temporal.h"
@@ -122,7 +123,7 @@ contour_free(Contour *c)
 {
   /* We do not need to ptarray_free(c->points) since the point arrays are
    * passed to their polygons */
-  // vector_free(c->holeIds);
+  vector_free(c->holeIds);
   pfree(c);
   return;
 }
@@ -373,12 +374,14 @@ process_ring(POINTARRAY *contourOrHole, int depth, bool subject,
   {
     s1 = (POINT2D *) getPoint_internal(contourOrHole, i);
     s2 = (POINT2D *) getPoint_internal(contourOrHole, i + 1);
+
+    /* Skip collapsed edges before allocating events to avoid leaking them */
+    if (s1->x == s2->x && s1->y == s2->y)
+      continue;
+
     e1 = swevent_make(s1, false, NULL, subject, EDGE_NORMAL);
     e2 = swevent_make(s2, false, e1,   subject, EDGE_NORMAL);
     e1->otherEvent = e2;
-
-    if (s1->x == s2->x && s1->y == s2->y)
-      continue; /* skip collapsed edges, or it breaks */
 
     e1->contourId = e2->contourId = depth;
     if (! isExteriorRing)
@@ -1326,6 +1329,10 @@ contours_to_geom(Vector *contours, int32_t srid)
         contour = DatumGetContourP(vector_at(contours, holeId));
         lwpoly_add_ring(poly, contour->points);
       }
+      /* Enforce PostGIS canonical orientation: exterior CW, interior CCW.
+       * The Martinez sweep emits rings in whatever order falls out of the
+       * connect_edges chain, which can violate OGC validity. */
+      lwpoly_force_clockwise(poly);
       polygons[npoly++] = lwpoly_as_lwgeom(poly);
     }
   }
@@ -1404,16 +1411,13 @@ clip_poly_poly(const GSERIALIZED *subj, const GSERIALIZED *clip, ClipOper oper)
 
   /* Subdivide edges */
   Vector *sortedEvents = subdivide_segments(eventQueue, &sbbox, &clbox, oper);
-  /* Free the priority queue */
-  // TODO pfree(event) inside pqueue_free;
+  /* The pqueue holds no events at this point — they were either pfreed during
+   * the bbox-prune path or transferred into sortedEvents. */
   pqueue_free(eventQueue);
 
   /* Select the result events */
   int nevents;
   SweepEvent **resultEvents = order_events(sortedEvents, &nevents);
-  /* Free the sorted events */
-  // TODO pfree(event) inside vector_free;
-  vector_free(sortedEvents);
 
   /* Connect vertices */
   Vector *contours = connect_edges(resultEvents, nevents);
@@ -1422,6 +1426,18 @@ clip_poly_poly(const GSERIALIZED *subj, const GSERIALIZED *clip, ClipOper oper)
   /* Convert contours to polygons */
   int32_t srid = gserialized_get_srid(subj);
   GSERIALIZED *result = contours_to_geom(contours, srid);
+
+  /* Free every surviving SweepEvent. They are owned by sortedEvents (slots
+   * NULLed by vector_delete during pruning are skipped). resultEvents only
+   * borrows the pointers, so we just free its backing array below. */
+  for (int i = 0; i < sortedEvents->length; i++)
+  {
+    SweepEvent *e = (SweepEvent *) DatumGetPointer(vector_at(sortedEvents, i));
+    if (e)
+      pfree(e);
+  }
+  vector_free(sortedEvents);
+  pfree(resultEvents);
 
   for (int i = 0; i < ncontours; i++)
   {
