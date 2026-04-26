@@ -479,7 +479,10 @@ datum_jsonb_path_query_first(Datum jb, Datum jp, Datum vars, Datum silent,
 Datum
 datum_jsonb_to_text(Datum jb)
 {
-  return PointerGetDatum(pg_jsonb_out(DatumGetJsonbP(jb)));
+  char *str = pg_jsonb_out(DatumGetJsonbP(jb));
+  text *result = pg_cstring_to_text(str);
+  pfree(str);
+  return PointerGetDatum(result);
 }
 
 /**

@@ -34,15 +34,17 @@ SELECT COUNT(*) FROM tbl_jsonb WHERE jb::jsonbset IS NOT NULL;
 (1 row)
 
 SELECT MAX(memSize(s::textset)) FROM tbl_jsonbset;
- max 
------
- 744
+ max  
+------
+ 1544
 (1 row)
 
 SELECT COUNT(*) FROM tbl_jsonbset WHERE s = (s::textset)::jsonbset;
-ERROR:  invalid input syntax for type json
-DETAIL:  Expected end of input, but found ":".
-CONTEXT:  JSON data, line 1: "location":...
+ count 
+-------
+    99
+(1 row)
+
 SELECT MAX(memSize(set(jb))) FROM tbl_jsonb;
  max 
 -----
