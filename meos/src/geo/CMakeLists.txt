@@ -21,7 +21,6 @@ set(GEO_SRCS
   tspatial_parser.c
   tspatial_tempspatialrels.c
   tspatial_srid.c
-  vector.c
 )
 
 if(MEOS)
