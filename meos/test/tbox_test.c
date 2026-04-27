@@ -125,12 +125,12 @@ int main(void)
 
   /* char *tbox_as_hexwkb(const TBox *box, uint8_t variant, size_t *size); */
   char_result = tbox_as_hexwkb(tbox1, 1, &size);
-  printf("tbox_as_hexwkb(%s, 1, %ld): %s\n", tbox1_out, size, char_result);
+  printf("tbox_as_hexwkb(%s, 1, %zu): %s\n", tbox1_out, size, char_result);
   free(char_result);
 
   // /* uint8_t *tbox_as_wkb(const TBox *box, uint8_t variant, size_t *size_out); */
   // binchar_result = tbox_as_wkb(tbox1, 1, &size);
-  // printf("tbox_as_wkb(%s, 1, %ld): %s\n", tbox1_out, size, char_result);
+  // printf("tbox_as_wkb(%s, 1, %zu): %s\n", tbox1_out, size, char_result);
   // free(char_result);
 
   // /* TBox *tbox_from_hexwkb(const char *hexwkb); */
