@@ -1129,7 +1129,7 @@ tgeo_restrict_stbox(const Temporal *temp, const STBox *box, bool border_inc,
 
   /* Restrict to the time dimension */
   Temporal *temp1;
-  STBox *box2;
+  const STBox *box2;
   if (hast)
   {
     temp1 = temporal_restrict_tstzspan(temp, &box->period, atfunc);

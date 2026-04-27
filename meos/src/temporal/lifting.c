@@ -1635,7 +1635,7 @@ tfunc_temporal_temporal(const Temporal *temp1, const Temporal *temp2,
     }
     case TSEQUENCE:
     {
-      TSequence *seq1 = (TSequence *) temp1;
+      const TSequence *seq1 = (TSequence *) temp1;
       interpType interp1 = MEOS_FLAGS_GET_INTERP(seq1->flags);
       switch (subtype2)
       {
@@ -1647,7 +1647,7 @@ tfunc_temporal_temporal(const Temporal *temp1, const Temporal *temp2,
               (TSequence *) temp1, (TInstant *) temp2, lfinfo);
         case TSEQUENCE:
         {
-          TSequence *seq2 = (TSequence *) temp2;
+          const TSequence *seq2 = (TSequence *) temp2;
           interpType interp2 = MEOS_FLAGS_GET_INTERP(temp2->flags);
           if (interp1 == DISCRETE)
           {

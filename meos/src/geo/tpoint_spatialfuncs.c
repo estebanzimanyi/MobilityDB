@@ -1683,7 +1683,7 @@ geomeas_tpointseqset(const LWGEOM *geom, bool hasz, bool geodetic)
       int ngeoms1 = coll1->ngeoms;
       for (int j = 0; j < ngeoms1; j++)
       {
-        LWGEOM *geom2 = coll1->geoms[j];
+        const LWGEOM *geom2 = coll1->geoms[j];
         if (geom2->type == POINTTYPE)
         {
           TInstant *inst2 = geomeas_tpointinst(geom2);

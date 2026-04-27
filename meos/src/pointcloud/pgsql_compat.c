@@ -121,7 +121,7 @@ meos_pc_patch_serialized_size(const PCPATCH *patch)
   {
   case PC_NONE:
   {
-    PCPATCH_UNCOMPRESSED *pu = (PCPATCH_UNCOMPRESSED *)patch;
+    const PCPATCH_UNCOMPRESSED *pu = (PCPATCH_UNCOMPRESSED *)patch;
     return common_size + stats_size + pu->datasize;
   }
   case PC_DIMENSIONAL:
@@ -132,7 +132,7 @@ meos_pc_patch_serialized_size(const PCPATCH *patch)
   case PC_LAZPERF:
   {
     static size_t lazsize_size = 4;
-    PCPATCH_LAZPERF *pg = (PCPATCH_LAZPERF *)patch;
+    const PCPATCH_LAZPERF *pg = (PCPATCH_LAZPERF *)patch;
     return common_size + stats_size + lazsize_size + pg->lazperfsize;
   }
   default:
@@ -222,7 +222,7 @@ pc_patch_dimensional_serialize(const PCPATCH *patch_in)
   for (i = 0; i < patch->schema->ndims; i++)
   {
     size_t bsz;
-    PCBYTES *pcb = &(patch->bytes[i]);
+    const PCBYTES *pcb = &(patch->bytes[i]);
     pc_bytes_serialize(pcb, buf, &bsz);
     buf += bsz;
   }
@@ -471,7 +471,7 @@ pc_patch_dimensional_deserialize(const SERIALIZED_PATCH *serpatch,
   for (i = 0; i < ndims; i++)
   {
     PCBYTES *pcb = &(patch->bytes[i]);
-    PCDIMENSION *dim = schema->dims[i];
+    const PCDIMENSION *dim = schema->dims[i];
     pc_bytes_deserialize(buf, dim, pcb,
                          true /*readonly*/, false /*flipendian*/);
     pcb->npoints = npoints;

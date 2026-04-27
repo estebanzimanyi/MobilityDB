@@ -55,7 +55,7 @@ pcpatch_filter_per_point(const Pcpatch *pa, pcpatch_pointpred_fn pred,
   assert(pa); assert(pred);
 
   /* Schema is needed both for deserialize and for rebuilding. */
-  PCSCHEMA *schema = meos_pc_schema(pa->pcid);
+  const PCSCHEMA *schema = meos_pc_schema(pa->pcid);
   if (! schema)
   {
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
@@ -121,7 +121,7 @@ pcpatch_any_point_matches(const Pcpatch *pa, pcpatch_pointpred_fn pred,
 {
   assert(pa); assert(pred);
 
-  PCSCHEMA *schema = meos_pc_schema(pa->pcid);
+  const PCSCHEMA *schema = meos_pc_schema(pa->pcid);
   if (! schema)
     return false;
 
