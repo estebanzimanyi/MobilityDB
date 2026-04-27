@@ -271,23 +271,6 @@ CREATE FUNCTION numPoints(tpcpatch)
   AS 'MODULE_PATHNAME', 'Tpcpatch_npoints'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
--- points(tpcpatch) — set-returning, one row per (instant timestamp, point)
--- inside that instant's patch. Implemented as a SQL wrapper over
--- pgPointCloud's PC_Explode (which takes a single pcpatch and returns
--- its constituent pcpoints). Slow on dense patches because PC_Explode
--- decompresses each call; reach for it when correctness matters more
--- than throughput.
-CREATE FUNCTION points(tpcpatch)
-  RETURNS TABLE(t timestamptz, point pcpoint)
-  AS $$
-    SELECT @extschema@.timestampN($1, i),
-           p
-    FROM generate_series(1, @extschema@.numInstants($1)) AS i,
-         LATERAL PC_Explode(
-           @extschema@.startValue(@extschema@.instantN($1, i))) AS p
-  $$
-  LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
-
 /******************************************************************************
  * Value-at-timestamp / restriction
  ******************************************************************************/
@@ -399,7 +382,7 @@ CREATE FUNCTION eIntersects(tpcpatch, geometry)
  ******************************************************************************/
 
 CREATE FUNCTION points(tpcpatch)
-  RETURNS TABLE("timestamp" timestamptz, point pcpoint)
+  RETURNS TABLE(t timestamptz, point pcpoint)
   AS 'MODULE_PATHNAME', 'Tpcpatch_points'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 

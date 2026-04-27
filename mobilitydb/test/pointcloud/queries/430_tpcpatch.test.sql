@@ -153,7 +153,7 @@ SELECT eIntersects(:inst1,
 
 SELECT count(*) FROM points(:inst1);
 SELECT count(*) FROM points(tpcpatchSeq(ARRAY[:inst1, :inst2]));
-SELECT count(DISTINCT timestamp)
+SELECT count(DISTINCT t)
   FROM points(tpcpatchSeq(ARRAY[:inst1, :inst2]));
 
 -------------------------------------------------------------------------------
