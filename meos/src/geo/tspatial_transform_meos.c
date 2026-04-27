@@ -253,7 +253,8 @@ GetProjStringsSPI(int32_t srid)
   }
 
   /* Read the first line of the file with the headers */
-  int read = fscanf(file, "%1023s\n", header_buffer);
+  int read;
+  fscanf(file, "%1023s\n", header_buffer);
 
   /* Continue reading the file */
   bool found = false;
