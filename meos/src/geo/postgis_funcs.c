@@ -2496,7 +2496,7 @@ geography_centroid_from_wpoints(const int32_t srid, const POINT3DM *points,
   double_t y_sum = 0;
   double_t z_sum = 0;
   double_t weight_sum = 0;
-  double_t weight = 1;
+  double_t weight;  /* set later */
   POINT3D* point;
   for (uint32_t i = 0; i < size; i++ )
   {

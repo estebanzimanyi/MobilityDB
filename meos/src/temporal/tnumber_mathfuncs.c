@@ -289,6 +289,7 @@ tnumberseq_linear_abs(const TSequence *seq)
     }
     instants[ninsts++] = tnumberinst_abs(inst2);
     inst1 = inst2;
+    // cppcheck-suppress unreadVariable; loop tail
     value1 = value2;
     dvalue1 = dvalue2;
   }
@@ -515,6 +516,7 @@ tnumberseq_angular_difference_iter(const TSequence *seq, TInstant **result)
     Datum value2 = tinstant_value_p(inst2);
     angdiff = angular_difference(value1, value2);
     if (i != seq->count - 1 || seq->period.upper_inc)
+      // cppcheck-suppress unreadVariable; loop tail
       result[ninsts++] = tinstant_make(angdiff, seq->temptype, inst2->t);
     inst1 = inst2;
     value1 = value2;

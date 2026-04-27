@@ -200,7 +200,7 @@ tpcbox_in(const char *str)
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE, "Null input string");
     return NULL;
   }
-  size_t len = strlen(str);
+  size_t len;
   /* Skip leading whitespace */
   const char *p = str;
   while (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r') p++;

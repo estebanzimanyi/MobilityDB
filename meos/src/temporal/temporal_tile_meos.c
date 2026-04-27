@@ -568,6 +568,7 @@ tsequenceset_time_split(const TSequenceSet *ss, TimestampTz start,
         pfree(fragments[j]);
       nfrags = 0;
       lower += tunits;
+      // cppcheck-suppress unreadVariable; loop tail
       upper += tunits;
     }
     /* Number of time bins of the current sequence */
@@ -859,6 +860,7 @@ tnumberseq_step_value_split(const TSequence *seq, Datum start_bin,
     result[bin_no * numcols + seq_no] = tsequence_make(bounds, nfrags,
       lower_inc1, false, STEP, NORMALIZE);
     bounds[0] = bounds[1];
+    // cppcheck-suppress unreadVariable; loop tail
     inst1 = inst2;
     lower_inc1 = true;
   }

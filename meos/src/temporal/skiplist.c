@@ -230,6 +230,7 @@ skiplist_search(SkipList *list, void *key, void *value)
     }
   }
   cur = elem->next[0];
+  // cppcheck-suppress unreadVariable; loop tail
   elem = &list->elems[cur];
 
   /* If the element is found */

@@ -1419,6 +1419,7 @@ tdwithin_tlinearseq_base_iter(const TSequence *seq, Datum point, Datum dist,
       nseqs += tdwithin_add_solutions(solutions, lower, upper, lower_inc,
         upper_inc, upper_inc1, t1, t2, instants, &result[nseqs]);
     }
+    // cppcheck-suppress unreadVariable; loop tail
     start = end;
     startvalue = endvalue;
     lower = upper;
