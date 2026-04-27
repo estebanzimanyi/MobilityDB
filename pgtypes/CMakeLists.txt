@@ -30,19 +30,26 @@ endif()
 # `#define SIZEOF_LONG` lines and downstream `#if SIZEOF_LONG == 8`
 # checks fail to parse.
 # ---------------------------------------------------------------------------
-check_type_size("void *" SIZEOF_VOID_P)
-check_type_size("size_t" SIZEOF_SIZE_T)
-check_type_size("long"   SIZEOF_LONG)
+check_type_size("void *"    SIZEOF_VOID_P)
+check_type_size("size_t"    SIZEOF_SIZE_T)
+check_type_size("long"      SIZEOF_LONG)
+check_type_size("long long" SIZEOF_LONG_LONG)
 
 # Pick the canonical 64-bit type and printf modifier for the host ABI.
 #   * LP64 (Linux/macOS/*BSD x86_64, ARM64) — long is 64 bits, modifier "l".
 #   * LLP64 (Windows MSYS2/MinGW x86_64) — long is 32 bits; use long long.
+# Also set HAVE_LONG_INT_64 / HAVE_LONG_LONG_INT_64 so the matching
+# `#cmakedefine` lines in pg_config.h.in expand correctly (c.h's
+# `#if SIZEOF_LONG == 8 / #elif SIZEOF_LONG_LONG == 8` chain depends
+# on this for non-LP64 platforms).
 if(SIZEOF_LONG EQUAL 8)
   set(PG_INT64_TYPE "long int")
   set(INT64_MODIFIER "\"l\"")
+  set(HAVE_LONG_INT_64 1)
 else()
   set(PG_INT64_TYPE "long long int")
   set(INT64_MODIFIER "\"ll\"")
+  set(HAVE_LONG_LONG_INT_64 1)
 endif()
 
 # Standard alignments — identical across LP64 and LLP64 ABIs except ALIGNOF_LONG.
