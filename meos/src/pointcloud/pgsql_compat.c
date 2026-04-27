@@ -336,26 +336,33 @@ static PCPATCH *
 pc_patch_uncompressed_deserialize(const SERIALIZED_PATCH *serpatch,
                                   const PCSCHEMA *schema)
 {
-  PCPATCH_UNCOMPRESSED *patch;
+  uint8_t *buf;
   size_t stats_size = pc_stats_size(schema);
+  PCPATCH_UNCOMPRESSED *patch = palloc(sizeof(PCPATCH_UNCOMPRESSED));
 
-  patch = palloc(sizeof(PCPATCH_UNCOMPRESSED));
   patch->type = serpatch->compression;
-  patch->readonly = false;
   patch->schema = schema;
+  patch->readonly = true;
   patch->npoints = serpatch->npoints;
   patch->maxpoints = 0;
   patch->bounds = serpatch->bounds;
 
-  /* Set stats */
-  patch->stats = pc_patch_stats_deserialize(schema, serpatch->data);
+  buf = (uint8_t *) serpatch->data;
 
-  /* Point into the data area */
-  patch->datasize = VARSIZE(serpatch) - sizeof(SERIALIZED_PATCH) +
-                    1 - stats_size;
-  patch->data = (uint8_t *)serpatch->data + stats_size;
+  /* Point into the stats area */
+  patch->stats = pc_patch_stats_deserialize(schema, buf);
 
-  return (PCPATCH *)patch;
+  /* Advance data pointer past the stats serialization */
+  patch->data = buf + stats_size;
+
+  /* Calculate the point data buffer size */
+  patch->datasize = VARSIZE(serpatch) - BUFFERALIGN(sizeof(SERIALIZED_PATCH))
+                    + 1 - stats_size;
+  if (patch->datasize != patch->npoints * schema->size)
+    pcerror("%s: calculated patch data sizes don't match (%d != %d)", __func__,
+            patch->datasize, patch->npoints * schema->size);
+
+  return (PCPATCH *) patch;
 }
 
 static PCPATCH *
@@ -363,9 +370,10 @@ pc_patch_dimensional_deserialize(const SERIALIZED_PATCH *serpatch,
                                  const PCSCHEMA *schema)
 {
   PCPATCH_DIMENSIONAL *patch;
-  int ndims = schema->ndims;
   int i;
   const uint8_t *buf;
+  int ndims = schema->ndims;
+  int npoints = serpatch->npoints;
   size_t stats_size = pc_stats_size(schema);
 
   /* Reference the external data */
@@ -375,16 +383,15 @@ pc_patch_dimensional_deserialize(const SERIALIZED_PATCH *serpatch,
   patch->type = serpatch->compression;
   patch->schema = schema;
   patch->readonly = true;
-  patch->npoints = serpatch->npoints;
+  patch->npoints = npoints;
   patch->bounds = serpatch->bounds;
 
-  /* Set stats */
+  /* Point into the stats area */
   patch->stats = pc_patch_stats_deserialize(schema, serpatch->data);
 
   /* Set up dimensions */
   patch->bytes = palloc(ndims * sizeof(PCBYTES));
   memset(patch->bytes, 0, ndims * sizeof(PCBYTES));
-
   buf = serpatch->data + stats_size;
 
   for (i = 0; i < ndims; i++)
@@ -392,21 +399,23 @@ pc_patch_dimensional_deserialize(const SERIALIZED_PATCH *serpatch,
     PCBYTES *pcb = &(patch->bytes[i]);
     PCDIMENSION *dim = schema->dims[i];
     pc_bytes_deserialize(buf, dim, pcb,
-                         true /*readonly*/, false /*not flipped*/);
-    pcb->size = pc_bytes_serialized_size(pcb);
-    buf += pcb->size;
+                         true /*readonly*/, false /*flipendian*/);
+    pcb->npoints = npoints;
+    buf += pc_bytes_serialized_size(pcb);
   }
 
-  return (PCPATCH *)patch;
+  return (PCPATCH *) patch;
 }
 
 static PCPATCH *
 pc_patch_lazperf_deserialize(const SERIALIZED_PATCH *serpatch,
                              const PCSCHEMA *schema)
 {
-  static size_t lazsize_size = 4;
   PCPATCH_LAZPERF *patch;
+  uint32_t lazperfsize;
+  int npoints = serpatch->npoints;
   size_t stats_size = pc_stats_size(schema);
+  uint8_t *buf = (uint8_t *) serpatch->data + stats_size;
 
   /* Reference the external data */
   patch = palloc(sizeof(PCPATCH_LAZPERF));
@@ -415,16 +424,21 @@ pc_patch_lazperf_deserialize(const SERIALIZED_PATCH *serpatch,
   patch->type = serpatch->compression;
   patch->schema = schema;
   patch->readonly = true;
-  patch->npoints = serpatch->npoints;
+  patch->npoints = npoints;
   patch->bounds = serpatch->bounds;
 
-  /* Set stats */
+  /* Point into the stats area */
   patch->stats = pc_patch_stats_deserialize(schema, serpatch->data);
 
-  memcpy(&(patch->lazperfsize), serpatch->data + stats_size, lazsize_size);
-  patch->lazperf = (uint8_t *)serpatch->data + stats_size + lazsize_size;
+  /* Set up buffer */
+  memcpy(&lazperfsize, buf, 4);
+  patch->lazperfsize = lazperfsize;
+  buf += 4;
 
-  return (PCPATCH *)patch;
+  patch->lazperf = palloc(patch->lazperfsize);
+  memcpy(patch->lazperf, buf, patch->lazperfsize);
+
+  return (PCPATCH *) patch;
 }
 
 /*****************************************************************************
