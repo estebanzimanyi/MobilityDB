@@ -70,6 +70,11 @@ jobs:
         run: |
           set -x
           cppcheck --version
+          # Two pattern variants per directory: */dir/* matches cppcheck's
+          # absolute-path output, dir/* matches its relative-path output.
+          # cppcheck's `--suppress` glob is anchored to the start of the
+          # filename string, and which form it emits depends on how
+          # compile_commands.json paths are written.
           cppcheck \
             --project=build/compile_commands.json \
             --enable=warning,style,performance,portability \
@@ -77,6 +82,13 @@ jobs:
             --suppress='*:*/postgres/*' \
             --suppress='*:*/postgis/*' \
             --suppress='*:*/pgtypes/*' \
+            --suppress='*:*/meos/vendor/*' \
+            --suppress='*:*/pointcloud-pg/*' \
+            --suppress='*:postgres/*' \
+            --suppress='*:postgis/*' \
+            --suppress='*:pgtypes/*' \
+            --suppress='*:meos/vendor/*' \
+            --suppress='*:pointcloud-pg/*' \
             --suppress='missingIncludeSystem' \
             --suppress='unmatchedSuppression' \
             --xml --xml-version=2 \
