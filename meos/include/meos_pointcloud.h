@@ -34,7 +34,7 @@
  * and SERIALIZED_PATCH varlena layouts (see pointcloud-pg/pgsql/pc_pgsql.h).
  * At the MEOS layer they are handled as opaque byte blobs; dimension-level
  * access requires the pgpointcloud schema (looked up by pcid from the
- * pointcloud_formats PG catalog table) and is a later-phase concern.
+ * pointcloud_formats PG catalog table) and is not exposed here.
  *****************************************************************************/
 
 typedef struct Pcpoint Pcpoint;
