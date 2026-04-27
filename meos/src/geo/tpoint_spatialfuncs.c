@@ -2080,7 +2080,7 @@ tpoint_mvt(const Temporal *tpoint, const STBox *box, uint32_t extent,
  * @note The timestamps are returned in Unix epoch
  */
 static GSERIALIZED *
-tpointinst_decouple(const TInstant *inst, int64_t **timesarr, int *count)
+tpointinst_decouple(const TInstant *inst, TimestampTz **timesarr, int *count)
 {
   int64_t *times = palloc(sizeof(int64_t));
   times[0] = (inst->t / 1000000) + DELTA_UNIX_POSTGRES_EPOCH;
@@ -2130,7 +2130,7 @@ tpointseq_decouple_iter(const TSequence *seq, int64_t *times)
  * @note The timestamps are returned in Unix epoch
  */
 static GSERIALIZED *
-tpointseq_decouple(const TSequence *seq, int64_t **timesarr, int *count)
+tpointseq_decouple(const TSequence *seq, TimestampTz **timesarr, int *count)
 {
   assert(seq); assert(timesarr); assert(count);
   int64_t *times = palloc(sizeof(int64_t) * seq->count);
@@ -2152,7 +2152,7 @@ tpointseq_decouple(const TSequence *seq, int64_t **timesarr, int *count)
  * @note The timestamps are returned in Unix epoch
  */
 static GSERIALIZED *
-tpointseqset_decouple(const TSequenceSet *ss, int64_t **timesarr, int *count)
+tpointseqset_decouple(const TSequenceSet *ss, TimestampTz **timesarr, int *count)
 {
   assert(ss); assert(timesarr); assert(count);
   /* Singleton sequence set */
@@ -2197,7 +2197,7 @@ tpointseqset_decouple(const TSequenceSet *ss, int64_t **timesarr, int *count)
  * @note The timestamps are returned in Unix epoch
  */
 static GSERIALIZED *
-tpoint_decouple(const Temporal *temp, int64_t **timesarr, int *count)
+tpoint_decouple(const Temporal *temp, TimestampTz **timesarr, int *count)
 {
   assert(temp); assert(timesarr); assert(count);
   assert(tpoint_type(temp->temptype));
@@ -2230,7 +2230,7 @@ tpoint_decouple(const Temporal *temp, int64_t **timesarr, int *count)
  */
 bool
 tpoint_as_mvtgeom(const Temporal *temp, const STBox *bounds, int32_t extent,
-  int32_t buffer, bool clip_geom, GSERIALIZED **gsarr, int64_t **timesarr,
+  int32_t buffer, bool clip_geom, GSERIALIZED **gsarr, TimestampTz **timesarr,
   int *count)
 {
   /* Ensure the validity of the arguments */

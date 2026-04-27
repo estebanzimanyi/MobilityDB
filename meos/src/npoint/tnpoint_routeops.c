@@ -58,7 +58,7 @@
  * function
  */
 bool
-contains_rid_tnpoint_bigint(const Temporal *temp, int64_t rid,
+contains_rid_tnpoint_bigint(const Temporal *temp, int64 rid,
   bool invert UNUSED)
 {
   /* Ensure the validity of the arguments */
@@ -74,7 +74,7 @@ contains_rid_tnpoint_bigint(const Temporal *temp, int64_t rid,
  * function
  */
 inline bool
-contained_rid_tnpoint_bigint(const Temporal *temp, int64_t rid,
+contained_rid_tnpoint_bigint(const Temporal *temp, int64 rid,
   bool invert)
 {
   return contains_rid_tnpoint_bigint(temp, rid, invert);
@@ -85,7 +85,7 @@ contained_rid_tnpoint_bigint(const Temporal *temp, int64_t rid,
  * function
  */
 bool
-same_rid_tnpoint_bigint(const Temporal *temp, int64_t rid,
+same_rid_tnpoint_bigint(const Temporal *temp, int64 rid,
   bool invert UNUSED)
 {
   /* Ensure the validity of the arguments */

@@ -119,8 +119,8 @@ datespan_bins(const Span *sp, const Interval *duration, DateADT origin,
   int *count)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_DATESPAN(s, NULL);
-  return span_bins(s, PointerGetDatum(duration), DateADTGetDatum(origin),
+  VALIDATE_DATESPAN(sp, NULL);
+  return span_bins(sp, PointerGetDatum(duration), DateADTGetDatum(origin),
     count);
 }
 

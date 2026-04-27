@@ -97,7 +97,7 @@ int32_cmp(int32_t l, int32_t r)
  * equal to, or greater than the second one
  */
 int
-int64_cmp(int64_t l, int64_t r)
+int64_cmp(int64 l, int64 r)
 {
   return (l < r) ? -1 : ((l > r) ? 1 : 0);
 }

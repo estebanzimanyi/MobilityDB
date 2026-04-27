@@ -439,8 +439,8 @@ bool
 right_int_span(int i, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_INTSPAN(s, false);
-  return left_span_value(s, Int32GetDatum(i));
+  VALIDATE_INTSPAN(sp, false);
+  return left_span_value(sp, Int32GetDatum(i));
 }
 
 /**
@@ -454,8 +454,8 @@ bool
 right_bigint_span(int64_t i, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_BIGINTSPAN(s, false);
-  return left_span_value(s, Int64GetDatum(i));
+  VALIDATE_BIGINTSPAN(sp, false);
+  return left_span_value(sp, Int64GetDatum(i));
 }
 
 /**
@@ -469,8 +469,8 @@ bool
 right_float_span(double d, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_FLOATSPAN(s, false);
-  return left_span_value(s, Float8GetDatum(d));
+  VALIDATE_FLOATSPAN(sp, false);
+  return left_span_value(sp, Float8GetDatum(d));
 }
 
 /**
@@ -484,8 +484,8 @@ bool
 after_date_span(DateADT d, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_DATESPAN(s, false);
-  return left_span_value(s, DateADTGetDatum(d));
+  VALIDATE_DATESPAN(sp, false);
+  return left_span_value(sp, DateADTGetDatum(d));
 }
 
 /**
@@ -499,8 +499,8 @@ bool
 after_timestamptz_span(TimestampTz t, const Span *sp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_TSTZSPAN(s, false);
-  return left_span_value(s, TimestampTzGetDatum(t));
+  VALIDATE_TSTZSPAN(sp, false);
+  return left_span_value(sp, TimestampTzGetDatum(t));
 }
 
 /*****************************************************************************/
@@ -516,8 +516,8 @@ bool
 right_span_int(const Span *sp, int i)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_INTSPAN(s, false);
-  return left_value_span(Int32GetDatum(i), s);
+  VALIDATE_INTSPAN(sp, false);
+  return left_value_span(Int32GetDatum(i), sp);
 }
 
 /**
@@ -531,8 +531,8 @@ bool
 right_span_bigint(const Span *sp, int64_t i)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_BIGINTSPAN(s, false);
-  return left_value_span(Int64GetDatum(i), s);
+  VALIDATE_BIGINTSPAN(sp, false);
+  return left_value_span(Int64GetDatum(i), sp);
 }
 
 /**
@@ -546,8 +546,8 @@ bool
 right_span_float(const Span *sp, double d)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_FLOATSPAN(s, false);
-  return left_value_span(Float8GetDatum(d), s);
+  VALIDATE_FLOATSPAN(sp, false);
+  return left_value_span(Float8GetDatum(d), sp);
 }
 
 /**
@@ -561,8 +561,8 @@ bool
 after_span_date(const Span *sp, DateADT d)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_DATESPAN(s, false);
-  return left_value_span(DateADTGetDatum(d), s);
+  VALIDATE_DATESPAN(sp, false);
+  return left_value_span(DateADTGetDatum(d), sp);
 }
 
 /**
@@ -576,8 +576,8 @@ bool
 after_span_timestamptz(const Span *sp, TimestampTz t)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_TSTZSPAN(s, false);
-  return left_value_span(TimestampTzGetDatum(t), s);
+  VALIDATE_TSTZSPAN(sp, false);
+  return left_value_span(TimestampTzGetDatum(t), sp);
 }
 
 /*****************************************************************************
