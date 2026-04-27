@@ -89,6 +89,9 @@ jobs:
             --suppress='*:pgtypes/*' \
             --suppress='*:clipper2/*' \
             --suppress='*:pointcloud-pg/*' \
+            --suppress='*:lwin_wkt_lex.c' \
+            --suppress='*:lwin_wkt_lex.l' \
+            --suppress='*:lwin_wkt_parse.c' \
             --suppress='missingIncludeSystem' \
             --suppress='unmatchedSuppression' \
             --xml --xml-version=2 \
