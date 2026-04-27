@@ -183,6 +183,15 @@ Tpcpatch_npoints(PG_FUNCTION_ARGS)
  * strict overlap; the default is inclusive.
  *****************************************************************************/
 
+/**
+ * @brief Per-instant predicate: pcpatch's pcid + 2D @c PCBOUNDS +
+ *   timestamp all overlap the supplied @c TPCBox.
+ * @param pa          Source pcpatch.
+ * @param t           Instant timestamp.
+ * @param box         Filtering @c TPCBox.
+ * @param border_inc  Inclusive (@c true) or strict (@c false) overlap.
+ * @return @c true if the instant should be kept under at-semantics.
+ */
 static bool
 pcpatch_passes_tpcbox(const Pcpatch *pa, TimestampTz t, const TPCBox *box,
   bool border_inc)
@@ -201,10 +210,23 @@ pcpatch_passes_tpcbox(const Pcpatch *pa, TimestampTz t, const TPCBox *box,
             pymin >= box->ymax || pymax <= box->ymin);
 }
 
-/*
- * Walk every instant of @p temp, collect the timestamps where the
- * patch passes the predicate, then defer to temporal_restrict_tstzset
- * for the actual at/minus restriction.
+/**
+ * @brief Patch-level @c at / @c minus restriction by @c TPCBox.
+ *
+ * Walks every instant of @p temp, collects the timestamps whose
+ * patch passes the @c PCBOUNDS-overlap + timestamp-in-period
+ * predicate, then defers to @c temporal_restrict_tstzset for the
+ * actual restriction. Granularity is patch-level — surviving
+ * instants keep their pcpatch payload verbatim.
+ *
+ * @param temp        Source tpcpatch.
+ * @param box         Filtering @c TPCBox.
+ * @param border_inc  Inclusive (@c true) or strict (@c false) overlap.
+ * @param atfunc      @c REST_AT keeps passing instants; @c REST_MINUS
+ *                    keeps the complement.
+ * @return Newly allocated @c Temporal of the same subtype as @p temp,
+ *   or @c NULL when every instant is dropped (or every instant
+ *   survives in @c REST_MINUS).
  */
 static Temporal *
 tpcpatch_restrict_tpcbox(const Temporal *temp, const TPCBox *box,
@@ -297,9 +319,15 @@ tpcpatch_restrict_tpcbox(const Temporal *temp, const TPCBox *box,
  * minusTpcboxFine, atGeometry, minusGeometry on tpcpatch.
  *****************************************************************************/
 
-/*
- * Filter one instant. Returns a freshly-allocated TInstant whose value
- * is the filtered pcpatch, or NULL when no points survive.
+/**
+ * @brief Filter one instant of a tpcpatch through @p pred.
+ * @param inst             Source instant.
+ * @param pred             Per-point predicate.
+ * @param extra            Caller-supplied state for @p pred.
+ * @param keep_when_true   @c true for @c at semantics, @c false for
+ *                         @c minus.
+ * @return Newly allocated @c TInstant whose value is the filtered
+ *   pcpatch, or @c NULL when no points survive.
  */
 static TInstant *
 tpcpatch_inst_filter(const TInstant *inst, pcpatch_pointpred_fn pred,
@@ -315,11 +343,17 @@ tpcpatch_inst_filter(const TInstant *inst, pcpatch_pointpred_fn pred,
   return result;
 }
 
-/*
- * Walk a TSequence, filter every instant, emit one TSequence per
- * contiguous run of survivors. Returns the number of TSequences
- * appended to @p out_seqs (caller-owned output buffer, sized at most
- * seq->count).
+/**
+ * @brief Filter a @c TSequence's instants, emit one output TSequence
+ *   per contiguous run of survivors.
+ * @param seq              Source sequence.
+ * @param pred             Per-point predicate.
+ * @param extra            Caller-supplied state for @p pred.
+ * @param keep_when_true   @c true for @c at semantics, @c false for
+ *                         @c minus.
+ * @param out_seqs         Output buffer (caller-owned, capacity at
+ *                         least @c seq->count).
+ * @return Number of @c TSequences appended to @p out_seqs.
  */
 static int
 tpcpatch_seq_filter(const TSequence *seq, pcpatch_pointpred_fn pred,
@@ -359,9 +393,22 @@ tpcpatch_seq_filter(const TSequence *seq, pcpatch_pointpred_fn pred,
   return n_emitted;
 }
 
-/*
- * The shared driver behind atTpcboxFine / minusTpcboxFine / atGeometry
- * / minusGeometry on tpcpatch. Switches on subtype, builds the output.
+/**
+ * @brief Per-point @c at / @c minus restriction driver.
+ *
+ * Shared backend for atTpcboxFine, minusTpcboxFine, atGeometry, and
+ * minusGeometry on tpcpatch. Switches on subtype, calls
+ * @c tpcpatch_seq_filter where applicable, repackages survivors into
+ * a result of the same subtype shape (or a TSequenceSet when a
+ * TSequence input contains gaps).
+ *
+ * @param temp     Source tpcpatch.
+ * @param pred     Per-point predicate.
+ * @param extra    Caller-supplied state for @p pred.
+ * @param atfunc   @c REST_AT keeps points where @p pred is true,
+ *                 @c REST_MINUS keeps the complement.
+ * @return Newly allocated @c Temporal, or @c NULL when every instant
+ *   filters to empty.
  */
 static Temporal *
 tpcpatch_filter_temporal(const Temporal *temp, pcpatch_pointpred_fn pred,
@@ -527,10 +574,18 @@ Tpcpatch_minus_geometry(PG_FUNCTION_ARGS)
  * Spatial relationships — eIntersects / aIntersects(tpcpatch, geometry)
  *****************************************************************************/
 
-/*
- * Test whether any instant of @p temp has at least one point matching
- * @p pred. Walks instants in subtype order, short-circuits on the
- * first hit — never rebuilds a patch.
+/**
+ * @brief Test whether any instant of @p temp has at least one point
+ *   matching @p pred.
+ *
+ * Walks instants in subtype order, short-circuits on the first hit —
+ * never rebuilds a patch. Backs the @c eIntersects PG wrapper.
+ *
+ * @param temp   Source tpcpatch.
+ * @param pred   Per-point predicate.
+ * @param extra  Caller-supplied state for @p pred.
+ * @return @c true on the first matching point, @c false if none of
+ *   the instants' points matched.
  */
 static bool
 tpcpatch_any_point_matches(const Temporal *temp,
@@ -629,6 +684,21 @@ typedef struct
   Datum *pts;        /* serialized Pcpoint datums (Pointer) */
 } TpcpatchPointsState;
 
+/**
+ * @brief Build the materialized state backing the @c points(tpcpatch) SRF.
+ *
+ * Walks every instant of @p temp, decompresses each patch via
+ * @c MEOS_PC_PATCH_DESERIALIZE, materializes a flat array of
+ * (timestamp, serialized-Pcpoint) pairs in the SRF's
+ * @c multi_call_memory_ctx so subsequent @c SRF_PERCALL invocations
+ * just emit one entry at a time.
+ *
+ * @param temp Source tpcpatch.
+ * @return Newly allocated state (in the current memory context;
+ *   caller must invoke from inside the SRF's
+ *   @c multi_call_memory_ctx). Raises @c meos_error and returns
+ *   @c NULL when the schema for @c temp's pcid cannot be resolved.
+ */
 static TpcpatchPointsState *
 tpcpatch_points_state_make(const Temporal *temp)
 {

@@ -77,15 +77,24 @@ typedef struct
 
 #if !defined(PC_API_HAS_SERIALIZE) || !PC_API_HAS_SERIALIZE
 
+/** @brief Serialize a @c PCPOINT to a fresh varlena. See full contract
+ *   in @c pgsql_compat.c. */
 extern SERIALIZED_POINT *meos_pc_point_serialize(const PCPOINT *pcpt);
+/** @brief Deserialize a @c SERIALIZED_POINT to a fresh @c PCPOINT.
+ *   Returns @c NULL on schema/payload size mismatch. */
 extern PCPOINT          *meos_pc_point_deserialize(
                             const SERIALIZED_POINT *serpt,
                             const PCSCHEMA *schema);
+/** @brief Compute the @c SERIALIZED_PATCH size for an in-memory patch. */
 extern size_t            meos_pc_patch_serialized_size(const PCPATCH *patch);
+/** @brief Serialize a @c PCPATCH at its schema's target compression. */
 extern SERIALIZED_PATCH *meos_pc_patch_serialize(const PCPATCH *patch_in,
                             void *userdata);
+/** @brief Serialize a @c PCPATCH forced to uncompressed @c PC_NONE form. */
 extern SERIALIZED_PATCH *meos_pc_patch_serialize_to_uncompressed(
                             const PCPATCH *patch_in);
+/** @brief Deserialize a @c SERIALIZED_PATCH to a fresh @c PCPATCH
+ *   (compression-specific subtype). */
 extern PCPATCH          *meos_pc_patch_deserialize(
                             const SERIALIZED_PATCH *serpatch,
                             const PCSCHEMA *schema);
