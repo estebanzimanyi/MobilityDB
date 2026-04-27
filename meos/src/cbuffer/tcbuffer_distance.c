@@ -149,13 +149,6 @@ tcbuffer_cbuffer_distance_turnpt(Datum start, Datum end, Datum value,
 
   if (dist > 0.0)
   {
-    /* Check if the turning point is truly internal */
-    if (t_turn <= lower || t_turn >= upper)
-    {
-      /* No true internal turning point */
-      *t1 = *t2 = (TimestampTz) 0;
-      return 0;
-    }
     /* Single turning point: return t1 and value1 */
     *t1 = *t2 = t_turn;
     return 1;

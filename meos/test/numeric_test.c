@@ -65,9 +65,9 @@ int main(void)
   /* Create the result types for the functions of the API */
   Numeric numeric_result;
   bool bool_result;
-  uint16_t int16_result;
-  uint32_t int32_result;
-  uint64_t int64_result;
+  int16_t int16_result;
+  int32_t int32_result;
+  int64_t int64_result;
   uint32_t uint32_result;
   uint64_t uint64_result;
   float float4_result;

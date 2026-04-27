@@ -401,7 +401,7 @@ int main(void)
 
   /* uint32_t timestamptz_hash(TimestampTz tstz); */
   uint32_result = timestamptz_hash(tstz1);
-  printf("timestamptz_hash(%s): %d\n", tstz1_out, int32_result);
+  printf("timestamptz_hash(%s): %u\n", tstz1_out, uint32_result);
 
   /* uint64_t timestamptz_hash_extended(TimestampTz tstz, uint64_t seed); */
   uint64_result = timestamptz_hash_extended(tstz1, 1);

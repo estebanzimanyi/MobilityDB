@@ -175,6 +175,7 @@ spanset_find_value(const SpanSet *ss, Datum v, int *loc)
       first = middle + 1;
   }
   /* Loop ran at least once because ss->count > 0, so sp is non-NULL here */
+  assert(sp);
   if (datum_ge(v, sp->upper, sp->basetype))
     middle++;
   *loc = middle;
