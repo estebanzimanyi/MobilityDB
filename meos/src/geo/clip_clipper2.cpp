@@ -89,7 +89,8 @@ ring_to_path64(const POINTARRAY *pa)
   path.reserve(pa->npoints - 1);
   for (uint32_t i = 0; i < pa->npoints - 1; i++)
   {
-    const POINT2D *p = (const POINT2D *) getPoint_internal(pa, i);
+    const POINT2D *p = reinterpret_cast<const POINT2D *>(
+      getPoint_internal(pa, i));
     path.emplace_back(
       static_cast<int64_t>(std::llround(p->x * CLIP_SCALE)),
       static_cast<int64_t>(std::llround(p->y * CLIP_SCALE)));
