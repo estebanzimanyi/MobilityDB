@@ -286,7 +286,7 @@ int main(void)
 
   /* uint8_t *geo_as_ewkb(const GSERIALIZED *gs, const char *endian, size_t *size); */
   binchar_result = geo_as_ewkb(geom1, "XDR", &size);
-  printf("geo_as_ewkb(%s, \"XDR\", %ld): ", tfloat1_out, size);
+  printf("geo_as_ewkb(%s, \"XDR\", %zu): ", tfloat1_out, size);
   fwrite(binchar_result, size, 1, stdout);
   printf("\n");
   free(binchar_result);
@@ -316,7 +316,7 @@ int main(void)
   char_result = geo_as_ewkt(geom_result, 6);
   printf("geo_from_ewkb(");
   fwrite(geom1_wkb, geom_size_wkb, 1, stdout);
-  printf(", %ld): %s\n", size, char_result);
+  printf(", %zu): %s\n", size, char_result);
   free(geom_result); free(char_result);
 
   /* GSERIALIZED *geo_from_geojson(const char *geojson); */
@@ -339,7 +339,7 @@ int main(void)
   /* GSERIALIZED *geog_from_binary(const char *wkb_bytea); */
   geom_result = geo_from_ewkb(geog1_wkb, geog_size_wkb, 4326);
   char_result = geo_as_ewkt(geom_result, 6);
-  printf("geog_from_binary(%s, %ld): %s\n", geog1_wkb, geog_size_wkb, char_result);
+  printf("geog_from_binary(%s, %zu): %s\n", geog1_wkb, geog_size_wkb, char_result);
   free(geom_result); free(char_result);
 
   /* GSERIALIZED *geog_from_hexewkb(const char *wkt); */
@@ -965,7 +965,7 @@ int main(void)
 
   /* uint8_t *stbox_as_wkb(const STBox *box, uint8_t variant, size_t *size_out); */
   binchar_result = stbox_as_wkb(stbox1, 1, &size);
-  printf("tbox_as_wkb(%s, 1, %ld): ", stbox1_out, size);
+  printf("tbox_as_wkb(%s, 1, %zu): ", stbox1_out, size);
   fwrite(binchar_result, size, 1, stdout);
   printf("\n");
   free(binchar_result);
@@ -979,7 +979,7 @@ int main(void)
   /* STBox *stbox_from_wkb(const uint8_t *wkb, size_t size); */
   stbox_result = stbox_from_wkb(stbox1_wkb, stbox_size_wkb);
   char_result = stbox_out(stbox_result, 6);
-  printf("stbox_from_wkb(%s, %ld): %s\n", stbox1_wkb, stbox_size_wkb, char_result);
+  printf("stbox_from_wkb(%s, %zu): %s\n", stbox1_wkb, stbox_size_wkb, char_result);
   free(stbox_result); free(char_result);
 
   /* STBox *stbox_in(const char *str); */
@@ -2729,7 +2729,7 @@ int main(void)
   printf("geo_cluster_kmeans(%s, 2, 2): {", geom1_out);
   for (int i = 0; i < 2; i++)
   {
-    printf("%u", int32array_result[i]);
+    printf("%d", int32array_result[i]);
     if (i < count - 1)
       printf(", ");
     else
