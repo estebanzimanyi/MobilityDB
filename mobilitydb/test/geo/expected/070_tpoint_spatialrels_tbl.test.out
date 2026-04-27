@@ -94,16 +94,16 @@ SELECT COUNT(*) FROM tbl_tgeompoint3D t1, tbl_tgeompoint3D t2 WHERE aDisjoint(t1
     12
 (1 row)
 
-SELECT COUNT(*) FROM tbl_geog t1, tbl_tgeogpoint t2 WHERE t1.k % 3 = 0 AND aDisjoint(g, temp);
+SELECT COUNT(*) FROM tbl_geog t1, tbl_tgeogpoint t2 WHERE aDisjoint(g, temp);
  count 
 -------
-  2000
+  6098
 (1 row)
 
-SELECT COUNT(*) FROM tbl_tgeogpoint t1, tbl_geog t2 WHERE t2.k % 3 = 0 AND aDisjoint(temp, g);
+SELECT COUNT(*) FROM tbl_tgeogpoint t1, tbl_geog t2 WHERE aDisjoint(temp, g);
  count 
 -------
-  2000
+  6098
 (1 row)
 
 SELECT COUNT(*) FROM tbl_tgeogpoint t1, tbl_tgeogpoint t2 WHERE aDisjoint(t1.temp, t2.temp);
@@ -112,16 +112,16 @@ SELECT COUNT(*) FROM tbl_tgeogpoint t1, tbl_tgeogpoint t2 WHERE aDisjoint(t1.tem
     10
 (1 row)
 
-SELECT COUNT(*) FROM tbl_geog3D t1, tbl_tgeogpoint3D t2 WHERE t1.k % 3 = 0 AND t2.k % 3 = 0 AND aDisjoint(g, temp);
+SELECT COUNT(*) FROM tbl_geog3D t1, tbl_tgeogpoint3D t2 WHERE aDisjoint(g, temp);
  count 
 -------
-   751
+  6753
 (1 row)
 
-SELECT COUNT(*) FROM tbl_tgeogpoint3D t1, tbl_geog3D t2 WHERE t1.k % 3 = 0 AND t2.k % 3 = 0 AND aDisjoint(temp, g);
+SELECT COUNT(*) FROM tbl_tgeogpoint3D t1, tbl_geog3D t2 WHERE aDisjoint(temp, g);
  count 
 -------
-   751
+  6753
 (1 row)
 
 SELECT COUNT(*) FROM tbl_tgeogpoint3D t1, tbl_tgeogpoint3D t2 WHERE aDisjoint(t1.temp, t2.temp);
@@ -253,13 +253,13 @@ SELECT COUNT(*) FROM tbl_tgeompoint, tbl_geom WHERE eTouches(temp, g);
 SELECT COUNT(*) FROM tbl_geom, tbl_tgeompoint WHERE aTouches(g, temp);
  count 
 -------
-     0
+     3
 (1 row)
 
 SELECT COUNT(*) FROM tbl_tgeompoint, tbl_geom WHERE aTouches(temp, g);
  count 
 -------
-     0
+     1
 (1 row)
 
 SELECT COUNT(*) FROM tbl_geom_point, tbl_tgeompoint WHERE eDwithin(g, temp, 10);
