@@ -193,7 +193,7 @@ tpointcloudseqarr_set_tpcbox(TSequence **sequences, int count, TPCBox *box)
   memcpy(box, TSEQUENCE_BBOX_PTR(sequences[0]), sizeof(TPCBox));
   for (int i = 1; i < count; i++)
   {
-    TPCBox *box1 = (TPCBox *) TSEQUENCE_BBOX_PTR(sequences[i]);
+    const TPCBox *box1 = (TPCBox *) TSEQUENCE_BBOX_PTR(sequences[i]);
     tpcbox_expand(box1, box);
   }
 }
