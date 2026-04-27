@@ -2705,11 +2705,11 @@
 					</listitem>
 
 					<listitem>
-						<para><link linkend="tpcpatch_points"><varname>points</varname></link>: Set-returning function emitting one row per (instant timestamp, point) via PC_Explode</para>
+						<para><link linkend="tpcpatch_points"><varname>points</varname></link>: Set-returning function emitting one row per (instant timestamp, point), decomposed in C through pgPointCloud's in-memory API</para>
 					</listitem>
 
 					<listitem>
-						<para><link linkend="tpcpatch_perpoint_roadmap">Per-point operations</link>: scope of patch-level vs. per-point operators on tpcpatch and the libpc surface gap that limits the per-point side</para>
+						<para><link linkend="tpcpatch_perpoint_roadmap">Per-point operations</link>: granularity matrix of patch-level vs. per-point operators on tpcpatch</para>
 					</listitem>
 				</itemizedlist>
 			</sect3>
@@ -2740,6 +2740,23 @@
 
 					<listitem>
 						<para><link linkend="tpcpatch_atTpcbox"><varname>atTpcbox</varname>, <varname>minusTpcbox</varname></link>: Restrict a tpcpatch to a tpcbox by patch-level PCBOUNDS overlap, or remove it</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpatch_atTpcboxFine"><varname>atTpcboxFine</varname>, <varname>minusTpcboxFine</varname></link>: Per-point restrict — keep only the points inside (or outside) the tpcbox; surviving instants carry a freshly-built patch</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpatch_atGeometry"><varname>atGeometry</varname>, <varname>minusGeometry</varname></link>: Per-point restrict by 2D geometry intersection (XY only)</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Spatial Relationships</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcpatch_eIntersects"><varname>eIntersects(tpcpatch, geometry)</varname></link>: Return true iff at least one point of any instant's patch intersects the geometry</para>
 					</listitem>
 				</itemizedlist>
 			</sect3>

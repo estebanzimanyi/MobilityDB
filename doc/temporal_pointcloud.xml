@@ -139,7 +139,7 @@ SELECT id, t, point FROM scans, points(full_scan);
 -- total points across every instant of every track
 SELECT id, numPoints(full_scan) FROM scans;
 </programlisting>
-			<para>Per-point <emphasis>filtering</emphasis> — building a new patch from a subset of the original's points — is currently out of scope; see <link linkend="tpcpatch_perpoint_roadmap">Per-point operations</link> for the libpc surface gap that limits it.</para>
+			<para>Per-point <emphasis>filtering</emphasis> — building a new patch from a subset of the original's points — is provided by <link linkend="tpcpatch_atTpcboxFine"><varname>atTpcboxFine</varname></link> / <varname>minusTpcboxFine</varname> (against a <varname>tpcbox</varname>) and <link linkend="tpcpatch_atGeometry"><varname>atGeometry</varname></link> / <varname>minusGeometry</varname> (against a 2D geometry); see <link linkend="tpcpatch_perpoint_roadmap">Per-point operations</link> for the granularity matrix.</para>
 		</sect2>
 
 		<sect2 xml:id="tpointcloud_quickstart_next">
@@ -876,7 +876,7 @@ SELECT numPoints(tpcpatchSeq(ARRAY[
 
 				<listitem xml:id="tpcpatch_points">
 					<indexterm significance="normal"><primary><varname>points</varname></primary></indexterm>
-					<para>Set-returning function: emits one row per (instant timestamp, point) by walking each instant's patch and decomposing it via pgPointCloud's <varname>PC_Explode</varname>. Useful for joining a tpcpatch column against per-point predicates that the bbox-level operators can't express; expect roughly the cost of <varname>numInstants</varname> calls to <varname>PC_Explode</varname>, so reach for it when correctness matters more than throughput.</para>
+					<para>Set-returning function: emits one row per (instant timestamp, point) by walking each instant's patch and decomposing it through pgPointCloud's in-memory C API. Useful for joining a tpcpatch column against per-point predicates that the bbox-level operators can't express. Cost is O(total points) — one per-instant decompression plus one row emission per point.</para>
 					<para><varname>points(tpcpatch) → setof (t timestamptz, point pcpoint)</varname></para>
 					<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT t, point FROM points(tpcpatch(
@@ -925,17 +925,6 @@ SELECT t, point FROM points(tpcpatch(
 					<indexterm significance="normal"><primary><varname>eIntersects</varname></primary></indexterm>
 					<para>Return true iff at least one point in any of the tpcpatch's instants intersects the geometry (XY only).</para>
 					<para><varname>eIntersects(tpcpatch,geometry) → boolean</varname></para>
-				</listitem>
-			</itemizedlist>
-		</sect2>
-
-		<sect2 xml:id="tpcpatch_perpoint_access">
-			<title>Per-point access</title>
-			<itemizedlist>
-				<listitem xml:id="tpcpatch_points">
-					<indexterm significance="normal"><primary><varname>points</varname></primary></indexterm>
-					<para>Set-returning function emitting one row per (timestamp, pcpoint) pair. Each instant's patch is decomposed in C through pgPointCloud's in-memory API; the rows are produced lazily on demand from the SRF.</para>
-					<para><varname>points(tpcpatch) → setof (timestamp timestamptz, point pcpoint)</varname></para>
 				</listitem>
 			</itemizedlist>
 		</sect2>
@@ -990,17 +979,15 @@ SELECT t, point FROM points(tpcpatch(
 				</listitem>
 
 				<listitem>
-					<para><emphasis role="bold">Per-point inspection — supported via SQL only.</emphasis> The <link linkend="tpcpatch_points"><varname>points</varname></link> set-returning function decomposes each instant's patch into individual <varname>pcpoint</varname>s using pgPointCloud's <varname>PC_Explode</varname>. Useful for joins against per-point predicates, but cost is roughly N calls to <varname>PC_Explode</varname> on dense patches.</para>
+					<para><emphasis role="bold">Per-point inspection — supported.</emphasis> The <link linkend="tpcpatch_points"><varname>points</varname></link> set-returning function emits one row per (instant timestamp, point) by decomposing each instant's patch through pgPointCloud's in-memory C API. Cost is O(total points) — one per-instant decompression plus one row emission per point.</para>
 				</listitem>
 
 				<listitem>
-					<para><emphasis role="bold">Per-point filtering / construction — not available.</emphasis> Operators that build a new patch from a subset of the original's points — e.g. an <varname>atTpcbox</varname> overload that drops individual points failing the box's xy/z extent, or <varname>eIntersects(tpcpatch, geometry)</varname> over actual point coordinates rather than just the patch bounding box — are not implemented. They would require C-side decompression and re-serialisation of patches inside MEOS, and the helper symbols pgPointCloud uses for that (<varname>pc_patch_deserialize</varname>, <varname>pc_point_serialize</varname>) are currently compiled only into the <varname>pointcloud-1.2.so</varname> extension and are not exported from <varname>libpc.a</varname>. MEOS, which is the cross-platform C library underneath MobilityDB, links the static library and therefore cannot reach them.</para>
+					<para><emphasis role="bold">Per-point filtering / construction — supported.</emphasis> <link linkend="tpcpatch_atTpcboxFine"><varname>atTpcboxFine</varname> / <varname>minusTpcboxFine</varname></link>, <link linkend="tpcpatch_atGeometry"><varname>atGeometry</varname> / <varname>minusGeometry</varname></link>, and <link linkend="tpcpatch_eIntersects"><varname>eIntersects(tpcpatch, geometry)</varname></link> walk every point of every instant in C, applying their predicate against the actual point coordinates rather than just the patch bounding box. Surviving instants carry a freshly-built patch holding only the points that passed; instants whose patches filter to zero points are dropped.</para>
 				</listitem>
 			</itemizedlist>
 
-			<para>The cleanest unblock is a small upstream change in pgPointCloud that promotes those helpers into <varname>lib/</varname> and declares them in <varname>pc_api.h</varname>. Once that lands, MEOS can decompose patches in C, the SQL <varname>points()</varname> wrapper can be replaced with a native code path roughly an order of magnitude faster on dense patches, and the per-point filtering / spatial-relationship operators become straightforward to add on top.</para>
-
-			<para>Until then, the recommended workflow for per-point predicates is: (a) prune at the patch level with <varname>atTpcbox</varname> or an SP-GiST/GiST index scan to drop entire instants whose <varname>PCBOUNDS</varname> doesn't overlap the area of interest, and (b) decompose the surviving rows with <varname>points()</varname> and apply the per-point predicate in SQL.</para>
+			<para>The recommended workflow when both granularities are available is: (a) prune at the patch level with <varname>atTpcbox</varname> or an SP-GiST/GiST index scan to drop entire instants whose <varname>PCBOUNDS</varname> doesn't overlap the area of interest, and (b) refine on the survivors with <varname>atTpcboxFine</varname> / <varname>atGeometry</varname> when point-level fidelity is needed.</para>
 		</sect2>
 	</sect1>
 
