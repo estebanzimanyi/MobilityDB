@@ -77,6 +77,11 @@ jobs:
             --suppress='*:*/postgres/*' \
             --suppress='*:*/postgis/*' \
             --suppress='*:*/pgtypes/*' \
+            --suppress='*:*/clipper2/*' \
+            --suppress='*:postgres/*' \
+            --suppress='*:postgis/*' \
+            --suppress='*:pgtypes/*' \
+            --suppress='*:clipper2/*' \
             --suppress='missingIncludeSystem' \
             --suppress='unmatchedSuppression' \
             --xml --xml-version=2 \
