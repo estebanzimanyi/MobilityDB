@@ -1,5 +1,6 @@
 set(PORT_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/chklocale.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/pg_bitutils.c
   ${CMAKE_CURRENT_SOURCE_DIR}/pg_localeconv_r.c
   ${CMAKE_CURRENT_SOURCE_DIR}/qsort.c
   ${CMAKE_CURRENT_SOURCE_DIR}/qsort_arg.c
