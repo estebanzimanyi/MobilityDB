@@ -2830,9 +2830,11 @@ tsequence_segm_duration_iter(const TSequence *seq, int64 tunits, CompOper oper,
   int nseqs = 0;
   bool cmp;
   bool lower_inc = seq->period.lower_inc;
+  // cppcheck-suppress knownConditionTrueFalse; cppcheck cannot prove inductive bound
   for (int i = 0; i < seq->count - 1; i++)
   {
     const TInstant *inst2 = TSEQUENCE_INST_N(seq, i + 1);
+    // cppcheck-suppress knownConditionTrueFalse; cppcheck cannot prove inductive bound
     bool upper_inc = (i == seq->count - 1) ? seq->period.upper_inc : false;
     int64_t length = (int64)(inst2->t - inst1->t);
     switch(oper)

@@ -840,6 +840,7 @@ tnumberseq_step_value_split(const TSequence *seq, Datum start_bin,
   TInstant **tofree = palloc(sizeof(TInstant *) * seq->count * count);
   int nfree = 0;   /* counter for the instants to free */
   const TInstant *inst1 = TSEQUENCE_INST_N(seq, 0);
+  // cppcheck-suppress knownConditionTrueFalse; loop runs at least once by guard above
   for (int i = 1; i < seq->count; i++)
   {
     value = tinstant_value_p(inst1);
@@ -851,6 +852,7 @@ tnumberseq_step_value_split(const TSequence *seq, Datum start_bin,
     TInstant *bounds[2];
     bounds[0] = (TInstant *) inst1;
     int nfrags = 1;
+    // cppcheck-suppress knownConditionTrueFalse; loop runs at least once by guard above
     if (i < seq->count)
     {
       tofree[nfree++] = bounds[1] = tinstant_make(value, seq->temptype,
@@ -862,6 +864,7 @@ tnumberseq_step_value_split(const TSequence *seq, Datum start_bin,
     bounds[0] = bounds[1];
     // cppcheck-suppress unreadVariable; loop tail
     inst1 = inst2;
+    // cppcheck-suppress unreadVariable; loop tail
     lower_inc1 = true;
   }
   /* Last value if upper inclusive */

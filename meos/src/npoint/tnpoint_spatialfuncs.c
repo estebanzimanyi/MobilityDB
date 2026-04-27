@@ -374,6 +374,7 @@ tnpointseq_speed(const TSequence *seq)
   const TInstant *inst1 = TSEQUENCE_INST_N(seq, 0);
   Npoint *np1 = DatumGetNpointP(tinstant_value_p(inst1));
   double rlength = route_length(np1->rid);
+  // cppcheck-suppress nullPointer; count == 1 returned above; loop runs >=1 time
   const TInstant *inst2 = NULL; /* make the compiler quiet */
   double speed = 0; /* make the compiler quiet */
   /* count == 1 was returned above; loop runs at least once,
@@ -391,6 +392,7 @@ tnpointseq_speed(const TSequence *seq)
     np1 = np2;
   }
   instants[seq->count-1] = tinstant_make(Float8GetDatum(speed), T_TFLOAT,
+    // cppcheck-suppress nullPointer; count == 1 returned above; loop runs >=1 time
     inst2->t);
   /* The resulting sequence has step interpolation */
   return tsequence_make_free(instants, seq->count,

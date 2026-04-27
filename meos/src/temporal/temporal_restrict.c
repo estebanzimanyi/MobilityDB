@@ -3572,6 +3572,7 @@ tcontseq_after_timestamptz(const TSequence *seq, TimestampTz t, bool strict)
   TSequence *result = NULL;
   if (ninsts > 0)
   {
+    // cppcheck-suppress knownConditionTrueFalse; ninsts > 1 ensured by guard above
     if (ninsts == 1)
       lower_inc1 = true;
     else
@@ -3579,6 +3580,7 @@ tcontseq_after_timestamptz(const TSequence *seq, TimestampTz t, bool strict)
       /* The last two values of sequences with step interpolation and
          exclusive upper bound must be equal */
       meosType basetype = temptype_basetype(seq->temptype);
+      // cppcheck-suppress knownConditionTrueFalse; ninsts > 1 ensured by guard above
       if (ninsts > 1 && interp != LINEAR &&
           datum_ne(tinstant_value_p(instants[ninsts - 2]),
             tinstant_value_p(instants[ninsts - 1]), basetype))

@@ -511,9 +511,9 @@ tfunc_tlinearseq_base_discfn(const TSequence *seq, Datum value,
     {
       /* Determine whether there is a crossing and compute the value at the
        * crossing if there is one */
-       Datum startvalue = tinstant_value_p(start);
-       Datum endvalue = tinstant_value_p(end);
-      int cross = tsegment_intersection_value(startvalue, endvalue, value,
+       Datum startv = tinstant_value_p(start);
+       Datum endv = tinstant_value_p(end);
+      int cross = tsegment_intersection_value(startv, endv, value,
         start->temptype, start->t, end->t, &tpt1, &tpt2);
       if (! cross)
       {
@@ -988,7 +988,8 @@ tfunc_tcontseq_tcontseq_single(const TSequence *seq1, const TSequence *seq2,
   meosType basetype_res = temptype_basetype(lfinfo->restype);
   TInstant *inst1 = (TInstant *) TSEQUENCE_INST_N(seq1, 0);
   TInstant *inst2 = (TInstant *) TSEQUENCE_INST_N(seq2, 0);
-  TInstant *prev1 = NULL, *prev2 = NULL; /* make compiler quiet */
+  TInstant *prev1 = NULL; /* make compiler quiet */
+  const TInstant *prev2 = NULL; /* make compiler quiet */
   TimestampTz lower = DatumGetTimestampTz(inter->lower);
   TimestampTz upper = DatumGetTimestampTz(inter->upper);
   int i = 0, j = 0, ninsts = 0, nfree = 0;

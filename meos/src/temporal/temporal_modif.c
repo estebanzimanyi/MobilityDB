@@ -422,6 +422,7 @@ tcontseq_merge_array_iter(TSequence **sequences, int count, int *totalcount)
     const TInstant *inst1 = TSEQUENCE_INST_N(seq1, seq1->count - 1);
     const TSequence *seq2 = sequences[i];
     const TInstant *inst2 = TSEQUENCE_INST_N(seq2, 0);
+    // cppcheck-suppress variableScope; paired with str2 below
     char *str1;
     if (inst1->t > inst2->t)
     {
