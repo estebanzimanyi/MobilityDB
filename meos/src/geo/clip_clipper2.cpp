@@ -49,6 +49,12 @@ extern "C" {
 #include <postgres.h>
 #include <liblwgeom.h>
 #include "geo/tgeo_spatialfuncs.h"  /* for geo_serialize */
+#include "meos.h"
+#include "meos_internal.h"
+#include "meos_internal_geo.h"
+#include "temporal/temporal.h"
+#include "temporal/tsequence.h"
+#include "temporal/type_util.h"
 }
 
 using Clipper2Lib::Clipper64;
@@ -325,6 +331,177 @@ clipper2_clip_poly_poly(const GSERIALIZED *subj_g, const GSERIALIZED *clip_g,
     return nullptr;
   GSERIALIZED *result = geo_serialize(out_lw);
   lwgeom_free(out_lw);
+  return result;
+}
+
+/*****************************************************************************
+ * Trajectory-vs-polygon open-path clipping
+ *
+ * Clips an open polyline (the trajectory of a temporal point sequence)
+ * against a closed polygon and returns the time spans on the original
+ * sequence where the trajectory is inside the polygon. The caller assembles
+ * those spans into a SpanSet and feeds it to tcontseq_restrict_tstzspanset()
+ * to recover the at-restriction (preserving Z and other dimensions).
+ *
+ * Replaces the broken parity-sweep tpointseq_linear_at_poly on
+ * `tgeo-fast-clip-rebased`. See doc/drafts/FAST_CLIP_ANALYSIS.md (held on
+ * the original audit branch) for the bug analysis the rewrite addresses.
+ *****************************************************************************/
+
+/**
+ * @brief Locate a Clipper2-output vertex on the input trajectory and return
+ *        the interpolated timestamp.
+ *
+ * The output vertex either coincides exactly with one of the trajectory's
+ * input vertices (after CLIP_SCALE quantisation) or lies on a segment
+ * between two consecutive input vertices because Clipper2 generated it at
+ * a polygon-edge crossing. Both cases are exact in int128 arithmetic
+ * (the cross-product collinearity test and the dot-product parameter
+ * range check); the parameter f is converted to long double only for
+ * the final timestamp interpolation, which matches the precision used
+ * by tsegment_value_at_timestamptz elsewhere in MEOS.
+ *
+ * @param p   Output vertex (post-CLIP_SCALE int64 coordinates)
+ * @param xs  Input trajectory x coordinates (post-CLIP_SCALE), length n
+ * @param ys  Input trajectory y coordinates (post-CLIP_SCALE), length n
+ * @param ts  Input trajectory timestamps, length n
+ * @param n   Trajectory vertex count
+ * @return    Timestamp of @p p on the trajectory.
+ *
+ * @note If Clipper2 returns a vertex that is not on any input segment
+ * (which would indicate an internal bug), the function falls back to the
+ * sequence start timestamp. This cannot happen for well-formed input.
+ */
+static TimestampTz
+map_clipper_vertex_to_t(const Point64 &p,
+  const std::vector<int64_t> &xs, const std::vector<int64_t> &ys,
+  const std::vector<TimestampTz> &ts, size_t n)
+{
+  /* Fast path: exact match against an input vertex. */
+  for (size_t i = 0; i < n; i++)
+    if (xs[i] == p.x && ys[i] == p.y)
+      return ts[i];
+
+  /* Search for the segment that contains p. */
+  for (size_t i = 0; i + 1 < n; i++)
+  {
+    int64_t ax = xs[i], ay = ys[i];
+    int64_t bx = xs[i + 1], by = ys[i + 1];
+    int64_t dx = bx - ax, dy = by - ay;
+    if (dx == 0 && dy == 0)
+      continue;  /* zero-length segment */
+
+    __int128 px = static_cast<__int128>(p.x) - ax;
+    __int128 py = static_cast<__int128>(p.y) - ay;
+    __int128 cross = px * dy - py * dx;
+    if (cross != 0)
+      continue;  /* not collinear with [i, i+1] */
+
+    __int128 dot = px * dx + py * dy;
+    __int128 lensq = static_cast<__int128>(dx) * dx +
+      static_cast<__int128>(dy) * dy;
+    if (dot < 0 || dot > lensq)
+      continue;  /* outside [0, 1] parameter range */
+
+    long double f = static_cast<long double>(dot) /
+      static_cast<long double>(lensq);
+    long double dt = static_cast<long double>(ts[i + 1]) -
+      static_cast<long double>(ts[i]);
+    return static_cast<TimestampTz>(
+      static_cast<long double>(ts[i]) + f * dt);
+  }
+
+  /* Defensive fallback — should not be reached for well-formed input. */
+  return ts[0];
+}
+
+extern "C" Span *
+clipper2_traj_poly_periods(const TSequence *seq, const GSERIALIZED *gs,
+  int *out_count)
+{
+  *out_count = 0;
+  if (seq == nullptr || gs == nullptr || seq->count < 2)
+    return nullptr;
+
+  /* Build the trajectory's quantised (x, y) and timestamp arrays. The
+   * x/y are int64 post-CLIP_SCALE, exactly matching the polygon-side
+   * scaling so cross/dot products are exact under int128 arithmetic. */
+  size_t n = static_cast<size_t>(seq->count);
+  std::vector<int64_t> xs(n), ys(n);
+  std::vector<TimestampTz> ts(n);
+  Path64 traj;
+  traj.reserve(n);
+  for (size_t i = 0; i < n; i++)
+  {
+    const TInstant *inst = TSEQUENCE_INST_N(seq, static_cast<int>(i));
+    const GSERIALIZED *p_gs = DatumGetGserializedP(tinstant_value_p(inst));
+    const POINT2D *p = GSERIALIZED_POINT2D_P(p_gs);
+    xs[i] = static_cast<int64_t>(std::llround(p->x * CLIP_SCALE));
+    ys[i] = static_cast<int64_t>(std::llround(p->y * CLIP_SCALE));
+    ts[i] = inst->t;
+    traj.emplace_back(xs[i], ys[i]);
+  }
+
+  /* Build the polygon's Paths64 set. */
+  LWGEOM *clip_lw = lwgeom_from_gserialized(gs);
+  if (clip_lw == nullptr)
+    return nullptr;
+  if (clip_lw->type != POLYGONTYPE && clip_lw->type != MULTIPOLYGONTYPE)
+  {
+    lwgeom_free(clip_lw);
+    return nullptr;
+  }
+  Paths64 clip_paths;
+  lwgeom_to_paths64(clip_lw, clip_paths);
+  lwgeom_free(clip_lw);
+  if (clip_paths.empty())
+    return nullptr;
+
+  /* Open-path Intersection: subject is the open trajectory, clip is the
+   * closed polygon. EvenOdd matches LWGEOM's topological hole convention
+   * (same choice as clipper2_clip_poly_poly). */
+  Paths64 traj_paths = { traj };
+  Clipper64 clipper;
+  clipper.AddOpenSubject(traj_paths);
+  clipper.AddClip(clip_paths);
+  Paths64 closed_unused, open_solution;
+  if (! clipper.Execute(ClipType::Intersection, FillRule::EvenOdd,
+        closed_unused, open_solution))
+  {
+    elog(ERROR, "clipper2_traj_poly_periods: Clipper2 Execute failed");
+    return nullptr;
+  }
+  if (open_solution.empty())
+    return nullptr;
+
+  /* Convert each output open path to a Span(t_first, t_last). */
+  std::vector<Span> spans;
+  spans.reserve(open_solution.size());
+  for (const auto &out_path : open_solution)
+  {
+    if (out_path.size() < 2)
+      continue;  /* a single vertex represents a tangent touch — no span */
+    TimestampTz t_first = map_clipper_vertex_to_t(out_path.front(),
+      xs, ys, ts, n);
+    TimestampTz t_last = map_clipper_vertex_to_t(out_path.back(),
+      xs, ys, ts, n);
+    if (t_first > t_last)
+      std::swap(t_first, t_last);
+    if (t_first == t_last)
+      continue;  /* degenerate span at a single timestamp */
+
+    Span s;
+    span_set(TimestampTzGetDatum(t_first), TimestampTzGetDatum(t_last),
+      true, true, T_TIMESTAMPTZ, T_TSTZSPAN, &s);
+    spans.push_back(s);
+  }
+  if (spans.empty())
+    return nullptr;
+
+  Span *result = static_cast<Span *>(palloc(sizeof(Span) * spans.size()));
+  for (size_t i = 0; i < spans.size(); i++)
+    result[i] = spans[i];
+  *out_count = static_cast<int>(spans.size());
   return result;
 }
 
