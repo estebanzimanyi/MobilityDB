@@ -148,14 +148,13 @@ cbuffer_timestamptz_to_stbox(const Cbuffer *cb, TimestampTz t)
  * @param[in] sp Timestamptz span
  * @param[out] box Spatiotemporal box
  */
-bool
+void
 cbuffer_tstzspan_set_stbox(const Cbuffer *cb, const Span *sp, STBox *box)
 {
   if (! cbuffer_set_stbox(cb, box))
     return false;
   memcpy(&box->period, sp, sizeof(Span));
   MEOS_FLAGS_SET_T(box->flags, true);
-  return true;
 }
 
 /**
@@ -172,8 +171,7 @@ cbuffer_tstzspan_to_stbox(const Cbuffer *cb, const Span *sp)
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(cb, NULL); VALIDATE_TSTZSPAN(sp, NULL);
   STBox box;
-  if (! cbuffer_tstzspan_set_stbox(cb, sp, &box))
-    return NULL;
+  cbuffer_tstzspan_set_stbox(cb, sp, &box);
   return stbox_copy(&box);
 }
 

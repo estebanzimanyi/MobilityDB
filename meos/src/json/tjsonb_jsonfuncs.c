@@ -968,7 +968,12 @@ jsonb_to_alphanum(const Jsonb *jb, const char *key, meosType resbasetype,
     }
     if (null_handle == NULL_JSON_NULL)
       return PointerGetDatum(pg_jsonb_in("null"));
+    /* NULL_INVALID or any other unhandled case */
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      "Invalid null_handle value: %d", null_handle);
+    return (Datum) 0;
   }
+  /* v is non-NULL here */
   /* Transform the value */
   Datum val = (Datum) NULL;
   switch (v->type)

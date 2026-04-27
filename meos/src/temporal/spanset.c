@@ -155,10 +155,11 @@ ensure_valid_spanset_spanset(const SpanSet *ss1, const SpanSet *ss2)
 bool
 spanset_find_value(const SpanSet *ss, Datum v, int *loc)
 {
+  assert(ss->count > 0);
   int first = 0;
   int last = ss->count - 1;
-  int middle = 0; /* make compiler quiet */
-  const Span *sp = NULL; /* make compiler quiet */
+  int middle = 0;
+  const Span *sp = NULL;
   while (first <= last)
   {
     middle = (first + last)/2;
@@ -173,6 +174,7 @@ spanset_find_value(const SpanSet *ss, Datum v, int *loc)
     else
       first = middle + 1;
   }
+  /* Loop ran at least once because ss->count > 0, so sp is non-NULL here */
   if (datum_ge(v, sp->upper, sp->basetype))
     middle++;
   *loc = middle;

@@ -62,7 +62,7 @@ trgeoinst_parse(const char **str, meosType temptype, bool end,
 {
   Datum base;
   if (! spatial_parse_elem(str, temptype, "@", temp_srid, &base))
-    return false;
+    return NULL;
   Pose *pose = DatumGetPoseP(base);
 
   p_delimchar(str, '@');

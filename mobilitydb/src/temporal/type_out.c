@@ -212,9 +212,9 @@ get_endian_variant(const text *txt)
       pg_strncasecmp(endian, "xdr", 3) != 0)
     elog(ERROR, "Invalid value for endian flag");
   else if (pg_strncasecmp(endian, "ndr", 3) == 0)
-    variant = variant | (uint8_t) WKB_NDR;
+    variant = (uint8_t) WKB_NDR;
   else /* txt = XDR */
-    variant = variant | (uint8_t) WKB_XDR;
+    variant = (uint8_t) WKB_XDR;
   pfree(endian);
   return variant;
 }

@@ -780,14 +780,13 @@ nsegment_to_stbox(const Nsegment *ns)
  * @param[in] t Timestamp
  * @param[out] box Spatiotemporal box
  */
-bool
+void
 npoint_timestamptz_set_stbox(const Npoint *np, TimestampTz t, STBox *box)
 {
   npoint_set_stbox(np, box);
   span_set(TimestampTzGetDatum(t), TimestampTzGetDatum(t), true, true,
     T_TIMESTAMPTZ, T_TSTZSPAN, &box->period);
   MEOS_FLAGS_SET_T(box->flags, true);
-  return true;
 }
 
 /**
@@ -803,8 +802,7 @@ npoint_timestamptz_to_stbox(const Npoint *np, TimestampTz t)
 {
   VALIDATE_NOT_NULL(np, NULL);
   STBox box;
-  if (! npoint_timestamptz_set_stbox(np, t, &box))
-    return NULL;
+  npoint_timestamptz_set_stbox(np, t, &box);
   return stbox_copy(&box);
 }
 
@@ -815,13 +813,12 @@ npoint_timestamptz_to_stbox(const Npoint *np, TimestampTz t)
  * @param[in] sp Timestamptz span
  * @param[out] box Spatiotemporal box
  */
-bool
+void
 npoint_tstzspan_set_stbox(const Npoint *np, const Span *sp, STBox *box)
 {
   npoint_set_stbox(np, box);
   memcpy(&box->period, sp, sizeof(Span));
   MEOS_FLAGS_SET_T(box->flags, true);
-  return true;
 }
 
 /**
@@ -837,8 +834,7 @@ npoint_tstzspan_to_stbox(const Npoint *np, const Span *sp)
 {
   VALIDATE_NOT_NULL(np, NULL); VALIDATE_TSTZSPAN(sp, NULL);
   STBox box;
-  if (! npoint_tstzspan_set_stbox(np, sp, &box))
-    return NULL;
+  npoint_tstzspan_set_stbox(np, sp, &box);
   return stbox_copy(&box);
 }
 
