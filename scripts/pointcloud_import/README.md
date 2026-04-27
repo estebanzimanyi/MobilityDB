@@ -4,9 +4,8 @@ Maintainer tooling that imports functions from the embedded
 `pointcloud-pg/` subtree into MobilityDB's
 `meos/src/pointcloud/pc_generated.{c,h}`.
 
-Modeled directly on `scripts/h3pg_import/` (the h3-pg counterpart
-shipped on the `th3index` branch — see `doc/` or the `th3index`
-history for rationale and Phase-7 learnings).
+Modeled directly on `scripts/h3pg_import/`, the h3-pg counterpart;
+see its README for the rationale.
 
 pgpointcloud's PG-binding code is mechanically transformable
 (`PG_GETARG_PCPOINT_P` / `PG_GETARG_PCPATCH_P` + libpc call +

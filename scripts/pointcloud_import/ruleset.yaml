@@ -2,8 +2,8 @@
 # pgpointcloud's `Fname(PG_FUNCTION_ARGS)` bodies into MEOS-compatible C.
 #
 # Modeled on scripts/h3pg_import/ruleset.yaml. See
-# scripts/pointcloud_import/README.md for the four-phase rule-authoring
-# loop (run extractor, check failures, add rule OR opt-out, repeat).
+# scripts/pointcloud_import/README.md for the rule-authoring loop
+# (run extractor, check failures, add rule OR opt-out, repeat).
 #
 # Sections:
 #   arg_readers : match a line like "TYPE name = PG_GETARG_...(idx);"
