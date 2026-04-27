@@ -130,7 +130,7 @@ int main(void)
 
   /* int32 numeric_cmp(Numeric num1, Numeric num2); */
   int32_result = numeric_cmp(num1_in, num2_in);
-  printf("numeric_cmp(%s, %s): %d\n", num1_out, num2_out, int32_result);
+  printf("numeric_cmp(%s, %s): %u\n", num1_out, num2_out, int32_result);
 
   /* Numeric numeric_copy(Numeric num); */
   numeric_result = numeric_copy(num1_in);
@@ -234,7 +234,7 @@ int main(void)
 
   /* uint32 numeric_min_scale(Numeric num); */
   int32_result = numeric_min_scale(num1_in);
-  printf("numeric_min_scale(%s): %d\n", num1_out, int32_result);
+  printf("numeric_min_scale(%s): %u\n", num1_out, int32_result);
 
   /* Numeric numeric_minus(Numeric num1, Numeric num2); */
   numeric_result = numeric_minus(num1_in, num2_in);
@@ -272,7 +272,7 @@ int main(void)
 
   /* int32 numeric_scale(Numeric num); */
   int32_result = numeric_scale(num1_in);
-  printf("numeric_scale(%s): %d\n", num1_out, int32_result);
+  printf("numeric_scale(%s): %u\n", num1_out, int32_result);
 
   /* Numeric numeric_sign(Numeric num); */
   numeric_result = numeric_sign(num1_in);
@@ -306,11 +306,11 @@ int main(void)
 
   /* int32 numeric_to_int32(Numeric num); */
   int32_result = numeric_to_int32(num1_in);
-  printf("numeric_to_int32(%s): %d\n", num1_out, int32_result);
+  printf("numeric_to_int32(%s): %u\n", num1_out, int32_result);
 
   /* int64 numeric_to_int64(Numeric num); */
   int64_result = numeric_to_int64(num1_in);
-  printf("numeric_to_int64(%s): %ld\n", num1_out, int64_result);
+  printf("numeric_to_int64(%s): %lu\n", num1_out, int64_result);
 
   /* Numeric numeric_trim_scale(Numeric num); */
   numeric_result = numeric_trim_scale(num1_in);
@@ -342,7 +342,7 @@ int main(void)
   char *bound1_out = numeric_out(bound1);
   char *bound2_out = numeric_out(bound2);
   int32_result = numeric_width_bucket(num1_in, bound1, bound2, int32_in);
-  printf("numeric_width_bucket(%s, %s, %s, %d): %d\n", num1_out, bound1_out, bound2_out, int32_in, int32_result);
+  printf("numeric_width_bucket(%s, %s, %s, %d): %u\n", num1_out, bound1_out, bound2_out, int32_in, int32_result);
   free(bound1); free(bound2);
   free(bound1_out); free(bound2_out);
 

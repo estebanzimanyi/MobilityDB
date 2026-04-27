@@ -405,7 +405,7 @@ int main(void)
 
   /* uint64 timestamptz_hash_extended(TimestampTz tstz, uint64 seed); */
   uint64_result = timestamptz_hash_extended(tstz1, 1);
-  printf("timestamptz_hash_extended(%s, 1): %ld\n", tstz1_out, uint64_result);
+  printf("timestamptz_hash_extended(%s, 1): %lu\n", tstz1_out, uint64_result);
 
   /* TimestampTz timestamptz_in(const char *str, int32 typmod); */
   tstz_result = timestamptz_in("2025-03-01 08:00:00", -1);

@@ -147,7 +147,7 @@ int main(void)
 
   /* int text_cmp(const text *txt1, const text *txt2, Oid collid); */
   uint32_result = text_cmp(text1, text2, 100);
-  printf("text_cmp(%s, %s, 100): %d\n", text1_out, text2_out, uint32_result);
+  printf("text_cmp(%s, %s, 100): %u\n", text1_out, text2_out, uint32_result);
 
   /* text *text_concat(text **textarr, int count); */
   text *text_concat(text **textarr, int count);
@@ -185,7 +185,7 @@ int main(void)
 
   /* uint32 text_hash(const text *txt, Oid collid); */
   uint32_result = text_hash(text1, 100);
-  printf("text_hash(%s, 100): %d\n", text1_out, uint32_result);
+  printf("text_hash(%s, 100): %u\n", text1_out, uint32_result);
 
   /* uint64 text_hash_extended(const text *txt, uint64 seed, Oid collid); */
   uint64_result = text_hash_extended(text1, 1, 100);
