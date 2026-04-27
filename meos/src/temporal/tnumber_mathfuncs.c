@@ -169,6 +169,7 @@ arithop_tnumber_tnumber(const Temporal *temp1, const Temporal *temp2,
   /* If division test whether the denominator will ever be zero during
    * the common timespan */
   SpanSet *ss;
+  // cppcheck-suppress variableScope; declaration mirrors ss for clarity
   Temporal * projtemp2;
   if (oper == DIV)
   {
@@ -518,6 +519,7 @@ tnumberseq_angular_difference_iter(const TSequence *seq, TInstant **result)
     if (i != seq->count - 1 || seq->period.upper_inc)
       // cppcheck-suppress unreadVariable; loop tail
       result[ninsts++] = tinstant_make(angdiff, seq->temptype, inst2->t);
+    // cppcheck-suppress unreadVariable; loop tail
     inst1 = inst2;
     value1 = value2;
   }

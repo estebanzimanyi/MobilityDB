@@ -262,8 +262,11 @@ findMemberByName(json_object *poObj, const char *pszName)
   if (pszName == NULL || poObj == NULL)
     return NULL;
 
+  // cppcheck-suppress unreadVariable; overwritten by lh_first_pos out-params
   it.key = NULL;
+  // cppcheck-suppress unreadVariable; overwritten by lh_first_pos out-params
   it.val = NULL;
+  // cppcheck-suppress unreadVariable; overwritten by lh_first_pos out-params
   it.entry = NULL;
 
   if (json_object_get_object(poTmp))

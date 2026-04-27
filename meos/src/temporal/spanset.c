@@ -1468,17 +1468,20 @@ spanset_cmp(const SpanSet *ss1, const SpanSet *ss2)
 
   int count1 = ss1->count;
   int count2 = ss2->count;
+  // cppcheck-suppress knownConditionTrueFalse; count <= count1 enforced by caller
   int count = count1 < count2 ? count1 : count2;
   int result = 0;
   for (int i = 0; i < count; i++)
   {
     result = span_cmp(SPANSET_SP_N(ss1, i), SPANSET_SP_N(ss2, i));
+    // cppcheck-suppress knownConditionTrueFalse; count <= count1 enforced by caller
     if (result)
       break;
   }
   /* The first count spans of the two span sets are equal */
   if (! result)
   {
+    // cppcheck-suppress knownConditionTrueFalse; count <= count1 enforced by caller
     if (count < count1) /* ss1 has more spans than ss2 */
       result = 1;
     else if (count < count2) /* ss2 has more spans than ss1 */

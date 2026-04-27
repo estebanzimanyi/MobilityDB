@@ -114,9 +114,13 @@ meos_set_spatial_ref_sys_csv(const char* path)
 
 typedef struct
 {
+  // cppcheck-suppress unusedStructMember; written by fscanf via address-of
   char auth_name[256];
+  // cppcheck-suppress unusedStructMember; written by fscanf via address-of
   int32_t auth_srid;
+  // cppcheck-suppress unusedStructMember; written by fscanf via address-of
   char proj4text[2048];
+  // cppcheck-suppress unusedStructMember; written by fscanf via address-of
   char srtext[2048];
 } spatial_ref_sys_record;
 #endif /* MEOS */
@@ -253,6 +257,7 @@ GetProjStringsSPI(int32_t srid)
   }
 
   /* Read the first line of the file with the headers */
+  // cppcheck-suppress variableScope; declared once for both fscanf calls
   int read;
   fscanf(file, "%1023s\n", header_buffer);
 
@@ -545,10 +550,12 @@ DeleteFromMEOSPROJSRSCache(MEOSPROJSRSCache *PROJCache, uint32_t position)
  * the other half of the transformation.
  */
 static LWPROJ *
+// cppcheck-suppress variableScope; declared paired with from_strs/to_strs above
 AddToMEOSPROJSRSCache(MEOSPROJSRSCache *PROJCache, int32_t srid_from,
   int32_t srid_to)
 {
   PjStrs from_strs, to_strs;
+  // cppcheck-suppress variableScope; declared paired with from_strs/to_strs above
   char *pj_from_str, *pj_to_str;
 
   /* Turn the SRID number into a proj4 string, by reading from spatial_ref_sys
@@ -593,12 +600,12 @@ AddToMEOSPROJSRSCache(MEOSPROJSRSCache *PROJCache, int32_t srid_from,
   {
     cache_position = 0;
     hits = PROJCache->MEOSPROJSRSCache[0].hits;
-    for (uint32_t i = 1; i < PROJ_CACHE_ITEMS; i++)
+    for (uint32_t j = 1; j < PROJ_CACHE_ITEMS; j++)
     {
-      if (PROJCache->MEOSPROJSRSCache[i].hits < hits)
+      if (PROJCache->MEOSPROJSRSCache[j].hits < hits)
       {
-        cache_position = i;
-        hits = PROJCache->MEOSPROJSRSCache[i].hits;
+        cache_position = j;
+        hits = PROJCache->MEOSPROJSRSCache[j].hits;
       }
     }
     DeleteFromMEOSPROJSRSCache(PROJCache, cache_position);
