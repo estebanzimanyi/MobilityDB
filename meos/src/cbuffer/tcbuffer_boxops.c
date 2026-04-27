@@ -151,8 +151,7 @@ cbuffer_timestamptz_to_stbox(const Cbuffer *cb, TimestampTz t)
 void
 cbuffer_tstzspan_set_stbox(const Cbuffer *cb, const Span *sp, STBox *box)
 {
-  if (! cbuffer_set_stbox(cb, box))
-    return false;
+  cbuffer_set_stbox(cb, box);
   memcpy(&box->period, sp, sizeof(Span));
   MEOS_FLAGS_SET_T(box->flags, true);
 }
