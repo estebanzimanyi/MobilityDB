@@ -2110,10 +2110,11 @@ tpointseq_decouple_iter(const TSequence *seq, int64 *times)
   interpType interp = MEOS_FLAGS_GET_INTERP(seq->flags);
   LWGEOM *result = lwpointarr_make_trajectory(points, seq->count, interp);
   if (interp == LINEAR)
+  {
     for (int i = 0; i < seq->count; i++)
       lwpoint_free((LWPOINT *) points[i]);
-  if (interp == LINEAR)
     pfree(points);
+  }
   return result;
 }
 
