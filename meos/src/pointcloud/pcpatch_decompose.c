@@ -42,6 +42,12 @@
 
 /*****************************************************************************/
 
+/**
+ * @brief Decompose @p pa, apply @p pred per point, rebuild a survivor patch.
+ *
+ * See @ref pcpatch_filter_per_point in @c pcpatch_decompose.h for the
+ * full parameter and return-value contract.
+ */
 Pcpatch *
 pcpatch_filter_per_point(const Pcpatch *pa, pcpatch_pointpred_fn pred,
   void *extra, bool keep_when_true)
@@ -103,6 +109,12 @@ pcpatch_filter_per_point(const Pcpatch *pa, pcpatch_pointpred_fn pred,
  * Existence walk (short-circuit, no rebuild)
  *****************************************************************************/
 
+/**
+ * @brief Test whether at least one point of @p pa satisfies @p pred.
+ *
+ * See @ref pcpatch_any_point_matches in @c pcpatch_decompose.h for the
+ * full contract.
+ */
 bool
 pcpatch_any_point_matches(const Pcpatch *pa, pcpatch_pointpred_fn pred,
   void *extra)
@@ -138,6 +150,13 @@ pcpatch_any_point_matches(const Pcpatch *pa, pcpatch_pointpred_fn pred,
  * Built-in predicates
  *****************************************************************************/
 
+/**
+ * @brief Predicate: keep points inside a @c TPCBox.
+ *
+ * See @ref pcpoint_in_tpcbox in @c pcpatch_decompose.h for the
+ * @c extra argument shape and the strict-vs-inclusive border
+ * semantics.
+ */
 bool
 pcpoint_in_tpcbox(const PCPOINT *pt, void *extra)
 {
@@ -185,6 +204,13 @@ pcpoint_in_tpcbox(const PCPOINT *pt, void *extra)
   return true;
 }
 
+/**
+ * @brief Predicate: keep points whose XY projection intersects a 2D
+ *   geometry.
+ *
+ * See @ref pcpoint_intersects_geometry in @c pcpatch_decompose.h for
+ * the @c extra argument shape and SRID-handling notes.
+ */
 bool
 pcpoint_intersects_geometry(const PCPOINT *pt, void *extra)
 {
