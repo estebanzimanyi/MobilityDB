@@ -250,7 +250,7 @@ SELECT count(*) FROM points(tpcpatchSeq(ARRAY[tpcpatch(PC_Patch(ARRAY[PC_MakePoi
      4
 (1 row)
 
-SELECT count(DISTINCT timestamp)
+SELECT count(DISTINCT t)
   FROM points(tpcpatchSeq(ARRAY[tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[1.0, 1.0, 1.0]::float[]), PC_MakePoint(1, ARRAY[2.0, 2.0, 2.0]::float[])]), '2024-01-01'::timestamptz), tpcpatch(PC_Patch(ARRAY[PC_MakePoint(1, ARRAY[5.0, 5.0, 5.0]::float[]), PC_MakePoint(1, ARRAY[6.0, 6.0, 6.0]::float[])]), '2024-01-02'::timestamptz)]));
  count 
 -------
