@@ -6,7 +6,7 @@
 
 You're checked out on (or branching from) `clip-clipper2-spike`. The spike already proved:
 
-- Clipper2 v2.0.1 vendors cleanly into `meos/vendor/clipper2/`
+- Clipper2 v2.0.1 vendors cleanly into `clipper2/`
 - C++17 enabled at top-level CMakeLists works (no manual CXXFLAGS gymnastics)
 - `libstdc++` auto-pulls into the final `.so` (CMake detects the C++ TUs in the link set)
 - A C-callable `extern "C"` shim from C++ is loadable by PostgreSQL via `LOAD`
@@ -15,7 +15,7 @@ You're checked out on (or branching from) `clip-clipper2-spike`. The spike alrea
 Existing files on `clip-clipper2-spike`:
 
 ```
-meos/vendor/clipper2/
+clipper2/
   LICENSE                       # Boost Software License 1.0 (PostgreSQL-compatible)
   CMakeLists.txt                # OBJECT lib `clipper2`, C++17, PIC
   include/clipper2/
@@ -34,7 +34,7 @@ meos/src/geo/clip_clipper2.cpp     # ~110 LOC spike adapter + V1 wrapper
 
 CMake changes:
 - Top-level `CMakeLists.txt`: `project(... LANGUAGES C CXX)`, `set(CMAKE_CXX_STANDARD 17)`, `_REQUIRED ON`, `_EXTENSIONS OFF`.
-- `meos/src/geo/CMakeLists.txt`: `add_subdirectory(...vendor/clipper2)` and a separate `clip_clipper2_spike` OBJECT lib for the adapter.
+- `meos/src/geo/CMakeLists.txt`: `add_subdirectory(...clipper2)` and a separate `clip_clipper2_spike` OBJECT lib for the adapter.
 - `meos/CMakeLists.txt` and `mobilitydb/CMakeLists.txt`: both PROJECT_OBJECTS lists include `clip_clipper2_spike` and `clipper2`.
 
 ## Production work — concrete steps
@@ -213,7 +213,7 @@ Per the prior assessment: **~50-55 focused dev-hours** + **~15h contingency** = 
 ## Critical gotchas (from spike experience)
 
 - **Linker auto-promotes to C++ when ANY TU is C++**. You'll see `Linking CXX shared module ../libMobilityDB-1.4.so` in build output — that's correct, not a warning.
-- **`#include <clipper2/clipper.h>` from C++ requires the include path to point at `meos/vendor/clipper2/include/`**. The spike sets this in the OBJECT lib's `target_include_directories`. The production adapter needs the same.
+- **`#include <clipper2/clipper.h>` from C++ requires the include path to point at `clipper2/include/`**. The spike sets this in the OBJECT lib's `target_include_directories`. The production adapter needs the same.
 - **`extern "C"` blocks must NOT enclose `#include "clipper2/clipper.h"`** — that's a C++ header, would fail to parse as C. Wrap only the C-side includes (`<postgres.h>`, `<liblwgeom.h>`, `"geo/tgeo_spatialfuncs.h"`) in `extern "C"`.
 - **`PG_DETOAST_DATUM_COPY` returns a Datum that needs casting to `GSERIALIZED *`**. The spike does this; copy the pattern in the V1 wrapper.
 - **The V1 wrappers in `mobilitydb/src/geo/tgeo_spatialfuncs.c` (the `cl_intersection` etc. C functions)** stay in C — they call `clip_poly_poly` which now delegates internally to C++. No changes to that file.

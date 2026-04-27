@@ -35,12 +35,12 @@ endif()
 add_library(geo OBJECT ${GEO_SRCS})
 
 # Vendored Clipper2 + C++ polygon-Boolean adapter
-add_subdirectory(${CMAKE_SOURCE_DIR}/meos/vendor/clipper2
-  ${CMAKE_BINARY_DIR}/meos/vendor/clipper2)
+add_subdirectory(${CMAKE_SOURCE_DIR}/clipper2
+  ${CMAKE_BINARY_DIR}/clipper2)
 add_library(clip_clipper2 OBJECT clip_clipper2.cpp)
 target_include_directories(clip_clipper2 PRIVATE
   ${CMAKE_SOURCE_DIR}/meos/include
-  ${CMAKE_SOURCE_DIR}/meos/vendor/clipper2/include
+  ${CMAKE_SOURCE_DIR}/clipper2/include
   ${POSTGRESQL_INCLUDE_DIR}
   ${POSTGIS_LIBLWGEOM_DIR}
 )

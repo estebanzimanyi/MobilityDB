@@ -166,7 +166,7 @@ clipping.** Clipper2 supports clipping `Paths64` with `is_open=true` against a
 closed polygon (`AddOpenSubject(...) + AddClip(...) + Execute(ClipType,
 FillRule, closed_unused, open_solution)`), returning open paths that are
 exactly the trajectory-inside-polygon segments we want. Clipper2 is already
-vendored on `clip-clipper2-prod` (`meos/vendor/clipper2/`), already int64-robust
+vendored on `clip-clipper2-prod` (`clipper2/`), already int64-robust
 by construction, and the build pipeline already pulls in C++17.
 
 **Rough sketch:**
@@ -253,7 +253,7 @@ then `SET client_min_messages TO NOTICE` in psql.
   `f56a06776 feat(geo): port fast trajectory-vs-polygon clipper from tcbuffer_fix`
 - `clip-clipper2-prod` tip at audit time:
   `eadbab710 feat(clipper2): wire clip_poly_poly to Clipper2; route atGeometry through it`
-- Clipper2 vendor: `meos/vendor/clipper2/` (v2.0.1)
+- Clipper2 vendor: `clipper2/` (v2.0.1)
 - Clipper2 open-path API: `Clipper2Lib::Clipper64::AddOpenSubject`,
   `Execute(ClipType, FillRule, Paths64& closed, Paths64& open)`
 - Companion memory entry: `project_fast_clip_audit.md` (pointer summary
