@@ -376,12 +376,16 @@ tnpointseq_speed(const TSequence *seq)
   double rlength = route_length(np1->rid);
   const TInstant *inst2 = NULL; /* make the compiler quiet */
   double speed = 0; /* make the compiler quiet */
+  /* count == 1 was returned above; loop runs at least once,
+   * so inst2 is non-NULL after the loop. */
+  // cppcheck-suppress-begin nullPointer
   for (int i = 0; i < seq->count - 1; i++)
   {
     inst2 = TSEQUENCE_INST_N(seq, i + 1);
     Npoint *np2 = DatumGetNpointP(tinstant_value_p(inst2));
     double length = fabs(np2->pos - np1->pos) * rlength;
     speed = length / (((double)(inst2->t) - (double)(inst1->t)) / 1000000);
+  // cppcheck-suppress-end nullPointer
     instants[i] = tinstant_make(Float8GetDatum(speed), T_TFLOAT, inst1->t);
     inst1 = inst2;
     np1 = np2;

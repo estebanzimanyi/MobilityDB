@@ -1294,7 +1294,7 @@ tgeo_space_time_tile_init(const Temporal *temp, double xsize, double ysize,
   if (! xsize || temporal_num_instants(temp) == 1 || tgeo_type(temp->temptype))
       bitmatrix = false;
 
-  POINT3DZ pt;
+  POINT3DZ pt = {0.0, 0.0, 0.0};
   bool hasz = false;
   if (xsize)
   {

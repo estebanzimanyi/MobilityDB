@@ -2590,6 +2590,7 @@ datum_as_wkb(Datum value, meosType type, uint8_t variant, size_t *size_out)
   if (buf == NULL)
   {
     meos_error(ERROR, MEOS_ERR_WKB_OUTPUT, "Unable to allocate "
+      // cppcheck-suppress unknownMacro; UINT64_FORMAT is defined by PG headers
       UINT64_FORMAT " bytes for WKB output buffer.", buf_size);
     return NULL;
   }

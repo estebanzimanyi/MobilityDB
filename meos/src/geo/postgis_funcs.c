@@ -4106,6 +4106,8 @@ mec_circle3(POINT2D a, POINT2D b, POINT2D c)
   double G = 2.0 * (A * (c.y - b.y) - B * (c.x - b.x));
 
   Circle circ;
+  circ.center.x = 0.0;
+  circ.center.y = 0.0;
   if (fabs(G) < 1e-12)
   {
     circ.radius = -1;
