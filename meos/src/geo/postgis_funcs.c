@@ -4046,7 +4046,10 @@ mec_circle3(POINT2D a, POINT2D b, POINT2D c)
   double F = C * (a.x + c.x) + D * (a.y + c.y);
   double G = 2.0 * (A * (c.y - b.y) - B * (c.x - b.x));
 
-  Circle circ;
+  /* Zero-init so the early-exit return doesn't leave circ.center
+   * uninitialised — cppcheck flags this as `uninitvar`, and a downstream
+   * caller that ignored circ.radius == -1 would read garbage. */
+  Circle circ = { .center = {0.0, 0.0}, .radius = 0.0 };
   if (fabs(G) < 1e-12)
   {
     circ.radius = -1;
