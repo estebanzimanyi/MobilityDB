@@ -20,7 +20,7 @@
 /**
  * @file
  * @brief Polygon Boolean clipping for the temporal-point spatial functions.
- * @note Backed by Clipper2 v2.0.1 (vendored under @c meos/vendor/clipper2/).
+ * @note Backed by Clipper2 v2.0.1 (vendored under @c clipper2/).
  *       Replaces the prior Martinez-Rueda port; the legacy implementation
  *       remains available on the @c origin/martinez-rebased branch for
  *       reference.

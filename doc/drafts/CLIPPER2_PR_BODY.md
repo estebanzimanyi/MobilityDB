@@ -31,7 +31,7 @@ the priority queue and splay-tree support code) with vendored Clipper2 v2.0.1
   `minusGeometry(tgeometry, geometry)` to use the Clipper2 path transparently
   for 2D polygonal inputs (other types fall through to GEOS unchanged).
 - Net diff: **−2605 / +384 LOC** of MobilityDB code, plus the vendored
-  Clipper2 sources under `meos/vendor/clipper2/` (5 headers + 2 `.cpp`,
+  Clipper2 sources under `clipper2/` (5 headers + 2 `.cpp`,
   Boolean-clipping subset only).
 
 ## What changed
@@ -52,7 +52,7 @@ the priority queue and splay-tree support code) with vendored Clipper2 v2.0.1
 - Deleted `meos/src/geo/{pqueue,splay_tree}.{c,h}` (~1248 LOC, Martinez-only
   support structures with no other callers). The legacy implementation
   remains accessible on `origin/martinez-rebased` for historical reference.
-- Vendored `meos/vendor/clipper2/` (Clipper2 v2.0.1, BSL-1.0). Only the
+- Vendored `clipper2/` (Clipper2 v2.0.1, BSL-1.0). Only the
   Boolean-clipping subset (`clipper.{h,core.h,engine.h,rectclip.h}` +
   `clipper.{engine,rectclip}.cpp`); offset, Minkowski, and triangulation are
   not vendored.

@@ -82,12 +82,12 @@ jobs:
             --suppress='*:*/postgres/*' \
             --suppress='*:*/postgis/*' \
             --suppress='*:*/pgtypes/*' \
-            --suppress='*:*/meos/vendor/*' \
+            --suppress='*:*/clipper2/*' \
             --suppress='*:*/pointcloud-pg/*' \
             --suppress='*:postgres/*' \
             --suppress='*:postgis/*' \
             --suppress='*:pgtypes/*' \
-            --suppress='*:meos/vendor/*' \
+            --suppress='*:clipper2/*' \
             --suppress='*:pointcloud-pg/*' \
             --suppress='missingIncludeSystem' \
             --suppress='unmatchedSuppression' \
