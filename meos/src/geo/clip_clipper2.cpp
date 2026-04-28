@@ -431,11 +431,22 @@ clipper2_traj_poly_periods(const TSequence *seq, const GSERIALIZED *gs,
   std::vector<TimestampTz> ts(n);
   Path64 traj;
   traj.reserve(n);
+  const char *seq_base = reinterpret_cast<const char *>(&seq->period);
+  const size_t *offsets = reinterpret_cast<const size_t *>(
+    seq_base + seq->bboxsize);
+  const size_t inst_base_off = seq->bboxsize +
+    sizeof(size_t) * static_cast<size_t>(seq->maxcount);
   for (size_t i = 0; i < n; i++)
   {
-    const TInstant *inst = TSEQUENCE_INST_N(seq, static_cast<int>(i));
-    const GSERIALIZED *p_gs = DatumGetGserializedP(tinstant_value_p(inst));
-    const POINT2D *p = GSERIALIZED_POINT2D_P(p_gs);
+    const TInstant *inst = reinterpret_cast<const TInstant *>(
+      seq_base + inst_base_off + offsets[i]);
+    const GSERIALIZED *p_gs = reinterpret_cast<const GSERIALIZED *>(
+      tinstant_value_p(inst));
+    const uint8_t gflags = p_gs->gflags;
+    const uint8_t *p_bytes = p_gs->data + 8 +
+      FLAGS_GET_BBOX(gflags) * FLAGS_NDIMS_BOX(gflags) * 8 +
+      FLAGS_GET_VERSBIT2(gflags) * 8;
+    const POINT2D *p = reinterpret_cast<const POINT2D *>(p_bytes);
     xs[i] = static_cast<int64_t>(std::llround(p->x * CLIP_SCALE));
     ys[i] = static_cast<int64_t>(std::llround(p->y * CLIP_SCALE));
     ts[i] = inst->t;
