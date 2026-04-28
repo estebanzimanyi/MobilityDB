@@ -15,7 +15,6 @@
 #define JSONPATH_H
 
 // #include "executor/tablefunc.h"
-// #include "fmgr.h"
 #include "nodes/pg_list.h"
 #include "nodes/primnodes.h"
 #include "utils/jsonb.h"
@@ -31,26 +30,24 @@ typedef struct
 #define JSONPATH_LAX    (0x80000000)
 #define JSONPATH_HDRSZ    (offsetof(JsonPath, data))
 
+/* Mirror pgtypes/utils/jsonb.h: jsonpath values are not TOASTed in
+ * MobilityDB's usage (the values that flow through MEOS / the
+ * extension stay below the inline-toast threshold), so the simple
+ * pointer-cast form works for both MEOS and non-MEOS builds without
+ * needing fmgr.h's PG_DETOAST_DATUM (which isn't on the include path
+ * in the MSYS2/MinGW Windows extension build). */
 static inline JsonPath *
 DatumGetJsonPathP(Datum d)
 {
-#if MEOS
   return (JsonPath *) DatumGetPointer(d);
-#else
-  return (JsonPath *) PG_DETOAST_DATUM(d);
-#endif /* MEOS */
 }
 
 static inline JsonPath *
 DatumGetJsonPathPCopy(Datum d)
 {
-#if MEOS
   JsonPath *result = palloc(sizeof(JsonPath));
   memcpy(result, (JsonPath *) DatumGetPointer(d), sizeof(JsonPath));
   return result;
-#else
-  return (JsonPath *) PG_DETOAST_DATUM_COPY(d);
-#endif /* MEOS */
 }
 
 #define PG_GETARG_JSONPATH_P(x)      DatumGetJsonPathP(PG_GETARG_DATUM(x))
