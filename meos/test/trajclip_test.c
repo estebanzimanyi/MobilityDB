@@ -101,6 +101,33 @@ main(void)
     " POINT(55.752648 78.953813)@2000-01-02 00:00:00+00,"
     " POINT(50 77.980799)@2000-01-02 19:37:41.053145+00]}");
 
+  /* Multi-path open-path output where each output path is two crossings on
+   * the same segment (no input vertex inside the path). The earlier
+   * cross_sq * other_lensq cross-multiply trick overflowed __int128 when
+   * one candidate segment had a large cross product (~3.9e17), wrapping
+   * the comparison and picking a wrong-but-near-collinear segment for the
+   * boundary vertex — yielding a span_set with overlapping spans, which
+   * temporal_merge_array (used by the at/minus round-trip in
+   * 056_tpoint_spatialfuncs_tbl) rejects with "values cannot overlap on
+   * time". Coordinates from tbl_tgeompoint k=52 vs tbl_geom k=25 in the
+   * 056 fixture. */
+  fails += run_case("multi-path overlap (int128 cross-mult overflow)",
+    "[POINT(16.3546500261873 56.44954051822424)@2001-03-29 12:17:00+02,"
+    " POINT(45.61119144782424 95.10431154631078)@2001-03-29 12:22:00+02,"
+    " POINT(98.94688022322953 65.34966584295034)@2001-03-29 12:24:00+02,"
+    " POINT(80.89245427399874 5.186562286689878)@2001-03-29 12:27:00+02,"
+    " POINT(20.968852005898952 33.17127930931747)@2001-03-29 12:31:00+02]",
+    "POLYGON((56.72718310374483 50.53721809824145,"
+    "69.14995349943638 47.429162031039596,"
+    "85.17494197003543 6.433171266689897,"
+    "44.539342168718576 6.923481728881598,"
+    "29.645028244704008 36.87097877264023,"
+    "56.72718310374483 50.53721809824145))",
+    "{[POINT(82.963951 12.089449)@2001-03-29 10:26:39.347482+00,"
+    " POINT(81.280652 6.48016)@2001-03-29 10:26:56.129728+00],"
+    " [POINT(78.038715 6.519277)@2001-03-29 10:27:11.429509+00,"
+    " POINT(34.666556 26.774361)@2001-03-29 10:30:05.13933+00]}");
+
   meos_finalize();
   printf("\n%d failure(s)\n", fails);
   return fails == 0 ? 0 : 1;
