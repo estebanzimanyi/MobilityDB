@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Transform pgpointcloud's PG_FUNCTION_ARGS bodies into MEOS-compatible C.
+"""
+Transform pgpointcloud's PG_FUNCTION_ARGS bodies into MEOS-compatible C.
 
 Design summary: every `Datum fn(PG_FUNCTION_ARGS)` body in
 pgpointcloud's `pgsql/*.c` has a very regular shape — a handful of
@@ -171,10 +172,89 @@ def find_pg_functions(text: str) -> Iterable[tuple[str, str, str]]:
         yield m["comment"], m["name"], m["body"]
 
 
+_LOCAL_DECL_RE = re.compile(
+    r"^\s*(?:H3Index|LatLng|CellBoundary|int(?:32)?|int64(?:_t)?|double|float8|bool|size_t|Datum)"
+    r"\s+\*?\s*\w+\s*(?:=[^;]*)?;\s*$"
+)
+_DECL_FORBIDDEN_RE = re.compile(
+    r"\bPG_GETARG_\w*|\bPG_NARGS\b|\bSRF_\w+|\bh3_guc_\w+|\bpalloc\b|\btext_to_cstring\b"
+)
+_FORBIDDEN_TOKENS = (
+    "PG_GETARG_", "PG_RETURN_", "PG_NARGS", "SET_VARSIZE", "palloc(",
+    "palloc0(", "ereport(", "elog(", "H3_DEPRECATION", "ASSERT(",
+    "h3_guc_", "SRF_", "PG_FREE_IF_COPY",
+)
+
+
+def _consume_prefix_line(stripped, ruleset, args, args_extra, body_lines):
+    """
+    Try to interpret a line as part of the arg-reader prefix.
+
+    Returns True if the line was consumed (arg reader, blank line, or
+    benign local declaration); False if the line is past the prefix and
+    should fall through to body-rule handling. Mutates @p args /
+    @p args_extra / @p body_lines on consumption.
+    """
+    for rule in ruleset.arg_readers:
+        m = rule.pattern.match(stripped)
+        if m:
+            arg_name = m.group(1) if m.groups() else "arg"
+            args.append((rule.c_type, arg_name))
+            if rule.post_emit:
+                args_extra.append(rule.post_emit)
+            return True
+    # Blank line / plain local declaration → still prefix. Deliberately
+    # REJECT any line that mentions a forbidden PG token even when
+    # syntactically it looks like a local decl — otherwise `int r =
+    # PG_GETARG_OPTIONAL_RES(...)` would be swallowed as a decl and leave
+    # a literal PG_* token in the output.
+    if stripped.strip() == "":
+        body_lines.append(stripped)
+        return True
+    if _LOCAL_DECL_RE.match(stripped) and not _DECL_FORBIDDEN_RE.search(stripped):
+        body_lines.append(stripped)
+        return True
+    return False
+
+
+def _apply_return_rule(stripped, ruleset, body_lines):
+    """Return matched rule's c_type or None if no return-rule matches."""
+    for rule in ruleset.returns:
+        m = rule.pattern.match(stripped)
+        if m:
+            expr = m.group(1) if m.groups() else ""
+            body_lines.append(
+                re.sub(r"\{expr\}", expr, rule.emit).replace("{expr}", expr)
+            )
+            return rule.c_type
+    return None
+
+
+def _apply_rewrite_rule(stripped, ruleset, body_lines):
+    """Return True if some rewrite rule applied (and was appended)."""
+    for rule in ruleset.rewrites:
+        if rule.pattern.match(stripped):
+            body_lines.append(rule.pattern.sub(rule.replace, stripped))
+            return True
+    return False
+
+
+def _check_forbidden(stripped):
+    """Return the offending PG-only token in @p stripped, or None."""
+    for forbidden in _FORBIDDEN_TOKENS:
+        if forbidden in stripped:
+            return forbidden
+    return None
+
+
 def try_transform(ruleset: RuleSet, rel_path: str, doc: str, name: str, body: str
                   ) -> tuple[Extracted | None, str | None]:
-    """Return (extracted, None) on success, (None, reason) if a line
-    doesn't match any rule (i.e., the function needs opt-out)."""
+    """
+    Transform one PG_FUNCTION_ARGS body into a MEOS-shaped function.
+
+    Returns (extracted, None) on success, (None, reason) when a line
+    doesn't match any rule (i.e., the function needs opt-out).
+    """
     # Strip outer braces + trim.
     assert body.startswith("{") and body.endswith("}")
     inner = body[1:-1].strip("\n")
@@ -189,75 +269,23 @@ def try_transform(ruleset: RuleSet, rel_path: str, doc: str, name: str, body: st
     for line in lines:
         stripped = line.rstrip()
 
-        # 1. While we're still in the prefix, try to match an arg reader.
         if consumed_arg_prefix:
-            matched = False
-            for rule in ruleset.arg_readers:
-                m = rule.pattern.match(stripped)
-                if m:
-                    arg_name = m.group(1) if m.groups() else "arg"
-                    args.append((rule.c_type, arg_name))
-                    if rule.post_emit:
-                        args_extra.append(rule.post_emit)
-                    matched = True
-                    break
-            if matched:
+            if _consume_prefix_line(stripped, ruleset, args, args_extra, body_lines):
                 continue
-            # Empty / plain local declaration / blank line → still prefix.
-            # Deliberately REJECT any line that mentions a PG_GETARG_* or
-            # other forbidden token, even when syntactically it looks like
-            # a local decl — otherwise something like `int r =
-            # PG_GETARG_OPTIONAL_RES(...)` would be swallowed as a decl
-            # and leave a literal PG_* token in the output.
-            if stripped.strip() == "" or (
-                re.match(
-                    r"^\s*(?:H3Index|LatLng|CellBoundary|int(?:32)?|int64(?:_t)?|double|float8|bool|size_t|Datum)\s+\*?\s*\w+\s*(?:=[^;]*)?;\s*$",
-                    stripped,
-                )
-                and not re.search(
-                    r"\bPG_GETARG_\w*|\bPG_NARGS\b|\bSRF_\w+|\bh3_guc_\w+|\bpalloc\b|\btext_to_cstring\b",
-                    stripped,
-                )
-            ):
-                body_lines.append(stripped)
-                continue
-            # Otherwise, we've left the prefix.
             consumed_arg_prefix = False
 
-        # 2. Check for a return line.
-        handled = False
-        for rule in ruleset.returns:
-            m = rule.pattern.match(stripped)
-            if m:
-                expr = m.group(1) if m.groups() else ""
-                body_lines.append(
-                    re.sub(r"\{expr\}", expr, rule.emit).replace("{expr}", expr)
-                )
-                if return_c_type is None:
-                    return_c_type = rule.c_type
-                handled = True
-                break
-        if handled:
+        rule_c_type = _apply_return_rule(stripped, ruleset, body_lines)
+        if rule_c_type is not None:
+            if return_c_type is None:
+                return_c_type = rule_c_type
             continue
 
-        # 3. Apply literal rewrites.
-        for rule in ruleset.rewrites:
-            if rule.pattern.match(stripped):
-                repl = rule.pattern.sub(rule.replace, stripped)
-                body_lines.append(repl)
-                handled = True
-                break
-        if handled:
+        if _apply_rewrite_rule(stripped, ruleset, body_lines):
             continue
 
-        # 4. Any line that mentions a known PG-only token means we need opt-out.
-        for forbidden in (
-            "PG_GETARG_", "PG_RETURN_", "PG_NARGS", "SET_VARSIZE", "palloc(",
-            "palloc0(", "ereport(", "elog(", "H3_DEPRECATION", "ASSERT(",
-            "h3_guc_", "SRF_", "PG_FREE_IF_COPY",
-        ):
-            if forbidden in stripped:
-                return None, f"contains unsupported token `{forbidden}` at line: {stripped.strip()!r}"
+        forbidden = _check_forbidden(stripped)
+        if forbidden:
+            return None, f"contains unsupported token `{forbidden}` at line: {stripped.strip()!r}"
 
         # Benign line — pass through.
         body_lines.append(stripped)
@@ -336,10 +364,13 @@ def render_h(out: list[Extracted]) -> str:
 
 
 def _wrap_extern_decl(sig: str, max_width: int = 80) -> str:
-    """Emit `extern <sig>;`, wrapped onto two lines after the last
-    top-level parameter comma that keeps the first line within
-    max_width columns. MobilityDB keeps headers under 80 columns
-    wherever practical."""
+    """
+    Emit `extern <sig>;` wrapped onto two lines under max_width.
+
+    The wrap point is the last top-level parameter comma that keeps
+    the first line within max_width columns. MobilityDB keeps headers
+    under 80 columns wherever practical.
+    """
     line = f"extern {sig};"
     if len(line) <= max_width:
         return line
@@ -375,13 +406,17 @@ def _wrap_extern_decl(sig: str, max_width: int = 80) -> str:
 
 
 def iter_binding_files() -> Iterable[pathlib.Path]:
-    """pgpointcloud's PG-binding code lives in `pgsql/` (core PG
-    wrappers — pc_inout, pc_access, pc_pgsql, …). The lib/ directory
-    is the pure-libpc implementation and gets linked against, not
-    extracted from — those bodies don't have `PG_FUNCTION_ARGS`
-    signatures.  The optional `pgsql_postgis/` extension was dropped
-    from our subtree (PostGIS↔pgpointcloud convenience SQL we don't
-    consume); install it from upstream pgpointcloud if needed."""
+    """
+    Iterate over pgpointcloud's PG-binding source files.
+
+    Pgpointcloud's PG-binding code lives in `pgsql/` (core PG wrappers
+    — pc_inout, pc_access, pc_pgsql, …). The lib/ directory is the
+    pure-libpc implementation and gets linked against, not extracted
+    from — those bodies don't have `PG_FUNCTION_ARGS` signatures. The
+    optional `pgsql_postgis/` extension was dropped from our subtree
+    (PostGIS↔pgpointcloud convenience SQL we don't consume); install
+    it from upstream pgpointcloud if needed.
+    """
     root = PCPG_ROOT / "pgsql"
     if root.exists():
         yield from sorted(root.glob("*.c"))
