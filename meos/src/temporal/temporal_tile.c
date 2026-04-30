@@ -341,7 +341,7 @@ timestamptz_get_bin(TimestampTz t, const Interval *duration,
  * have a month component
  */
 Datum
-datum_bin(Datum value, Datum size, Datum origin, meosType type)
+datum_bin(Datum value, Datum size, Datum origin, MeosType type)
 {
   /* This function is called directly by the MobilityDB API */
   if (! ensure_positive_datum(size, type))
@@ -695,7 +695,7 @@ tbox_tile_state_make(const Temporal *temp, const TBox *box, Datum vsize,
  */
 void
 tbox_tile_state_set(Datum value, TimestampTz t, Datum vsize, int64 tunits,
-  meosType basetype, meosType spantype, TBox *box)
+  MeosType basetype, MeosType spantype, TBox *box)
 {
   assert(box);
 
@@ -748,7 +748,8 @@ tbox_tile_state_next(TboxGridState *state)
   assert(MEOS_FLAGS_GET_X(state->box.flags) ||
     MEOS_FLAGS_GET_T(state->box.flags));
 
-  if (! state || state->done)
+  /* state is non-NULL by the assert above; only the done check matters. */
+  if (state->done)
     return;
   /* Move to the next tile */
   state->i++;
@@ -819,7 +820,7 @@ tbox_tile_state_next(TboxGridState *state)
 TBox *
 tbox_get_value_time_tile(Datum value, TimestampTz t, Datum vsize,
   const Interval *duration, Datum vorigin, TimestampTz torigin,
-  meosType basetype, meosType spantype)
+  MeosType basetype, MeosType spantype)
 {
   /* Ensure the validity of the arguments */
   if (duration && ! ensure_positive_duration(duration))

@@ -75,7 +75,7 @@ temporal_const_to_tstzspan(Node *other, Span *s)
 {
   Oid consttype = ((Const *) other)->consttype;
   Datum constvalue = ((Const *) other)->constvalue;
-  meosType type = oid_meostype(consttype);
+  MeosType type = oid_meostype(consttype);
   if (time_type(type))
     span_const_to_span(other, s);
   else if (talpha_type(type))
@@ -92,7 +92,7 @@ bool
 tnumber_const_to_span_tstzspan(const Node *other, Span **s, Span **p)
 {
   Oid consttypid = ((Const *) other)->consttype;
-  meosType type = oid_meostype(consttypid);
+  MeosType type = oid_meostype(consttypid);
   Span *span;
   if (numspan_type(type))
   {
@@ -139,7 +139,7 @@ tspatial_const_to_stbox(Node *other, STBox *box)
 {
   Oid consttype = ((Const *) other)->consttype;
   Datum constvalue = ((Const *) other)->constvalue;
-  meosType type = oid_meostype(consttype);
+  MeosType type = oid_meostype(consttype);
   if (geo_basetype(type))
     geo_set_stbox(DatumGetGserializedP(constvalue), box);
   else if (type == T_TSTZSPAN)
@@ -165,7 +165,7 @@ tspatial_const_to_stbox(Node *other, STBox *box)
  * have statistics or cannot use them for some reason
  */
 static double
-temporal_sel_default(meosOper oper)
+temporal_sel_default(MeosOper oper)
 {
   switch (oper)
   {
@@ -202,7 +202,7 @@ temporal_sel_default(meosOper oper)
  * have statistics or cannot use them for some reason
  */
 float8
-tnumber_sel_default(meosOper operator)
+tnumber_sel_default(MeosOper operator)
 {
   switch (operator)
   {
@@ -243,7 +243,7 @@ tnumber_sel_default(meosOper operator)
  * operator, when we don't have statistics or cannot use them for some reason
  */
 static float8
-tspatial_sel_default(meosOper oper)
+tspatial_sel_default(MeosOper oper)
 {
   switch (oper)
   {
@@ -300,7 +300,7 @@ temporal_joinsel_default(Oid operid UNUSED)
  * we don't have statistics or cannot use them for some reason
  */
 float8
-tnumber_joinsel_default(meosOper oper UNUSED)
+tnumber_joinsel_default(MeosOper oper UNUSED)
 {
   // TODO take care of the operators
   return 0.001;
@@ -311,7 +311,7 @@ tnumber_joinsel_default(meosOper oper UNUSED)
  * when we don't have statistics or cannot use them for some reason
  */
 static float8
-tspatial_joinsel_default(meosOper oper)
+tspatial_joinsel_default(MeosOper oper)
 {
   switch (oper)
   {
@@ -356,8 +356,8 @@ tspatial_joinsel_default(meosOper oper)
  * @brief Return the enum value associated to the operator
  */
 static bool
-temporal_oper_sel(meosOper oper UNUSED, meosType ltype,
-  meosType rtype)
+temporal_oper_sel(MeosOper oper UNUSED, MeosType ltype,
+  MeosType rtype)
 {
   if ((timespan_basetype(ltype) || timeset_type(ltype) ||
         timespan_type(ltype) || timespanset_type(ltype) ||
@@ -373,8 +373,8 @@ temporal_oper_sel(meosOper oper UNUSED, meosType ltype,
  * @brief Return the enum value associated to the operator
  */
 bool
-tnumber_oper_sel(Oid operid UNUSED, meosType ltype,
-  meosType rtype)
+tnumber_oper_sel(Oid operid UNUSED, MeosType ltype,
+  MeosType rtype)
 {
   if ((timespan_basetype(ltype) || timeset_type(ltype) ||
         timespan_type(ltype) || timespanset_type(ltype) ||
@@ -390,8 +390,8 @@ tnumber_oper_sel(Oid operid UNUSED, meosType ltype,
  * @brief Get the enum value associated to the operator
  */
 static bool
-tspatial_oper_sel(Oid operid UNUSED, meosType ltype,
-  meosType rtype)
+tspatial_oper_sel(Oid operid UNUSED, MeosType ltype,
+  MeosType rtype)
 {
   if ((timespan_basetype(ltype) || timeset_type(ltype) ||
         timespan_type(ltype) || timespanset_type(ltype) ||
@@ -408,8 +408,8 @@ tspatial_oper_sel(Oid operid UNUSED, meosType ltype,
  * family
  */
 static bool
-temporal_oper_sel_family(meosOper oper UNUSED, meosType ltype,
-  meosType rtype, TemporalFamily tempfamily)
+temporal_oper_sel_family(MeosOper oper UNUSED, MeosType ltype,
+  MeosType rtype, TemporalFamily tempfamily)
 {
   /* Get enumeration value associated to the operator */
   assert(tempfamily == TEMPORALTYPE || tempfamily == TNUMBERTYPE ||
@@ -435,7 +435,7 @@ temporal_oper_sel_family(meosOper oper UNUSED, meosType ltype,
  * <> are eqsel and neqsel, respectively.
  */
 Selectivity
-temporal_sel_tstzspan(VariableStatData *vardata, Span *s, meosOper oper)
+temporal_sel_tstzspan(VariableStatData *vardata, Span *s, MeosOper oper)
 {
   Selectivity selec;
 
@@ -481,7 +481,7 @@ temporal_sel_tstzspan(VariableStatData *vardata, Span *s, meosOper oper)
  */
 Selectivity
 tnumber_sel_span_tstzspan(VariableStatData *vardata, Span *span, Span *period,
-  meosOper oper)
+  MeosOper oper)
 {
   /* Enable the multiplication of the selectivity of the value and time
    * dimensions since either may be missing */
@@ -563,8 +563,8 @@ temporal_sel(PlannerInfo *root, Oid operid, List *args, int varRelid,
   Selectivity selec;
 
   /* Determine whether we can estimate selectivity for the operator */
-  meosType ltype, rtype;
-  meosOper oper = oid_meosoper(operid, &ltype, &rtype);
+  MeosType ltype, rtype;
+  MeosOper oper = oid_meosoper(operid, &ltype, &rtype);
   if (! temporal_oper_sel_family(oper, ltype, rtype, tempfamily))
     /* In the case of unknown operator */
     return DEFAULT_TEMP_SEL;
@@ -768,11 +768,11 @@ Tspatial_sel(PG_FUNCTION_ARGS)
  * the join selectivity
  */
 static bool
-tnumber_joinsel_components(meosOper oper, meosType oprleft,
-  meosType oprright, bool *value, bool *time)
+tnumber_joinsel_components(MeosOper oper, MeosType oprleft,
+  MeosType oprright, bool *value, bool *time)
 {
   /* Get the argument which may not a temporal number */
-  meosType arg = tnumber_type(oprleft) ? oprright : oprleft;
+  MeosType arg = tnumber_type(oprleft) ? oprright : oprleft;
 
   /* Determine the components */
   if (tnumber_basetype(arg) || tnumber_spantype(arg) ||
@@ -811,11 +811,11 @@ tnumber_joinsel_components(meosOper oper, meosType oprleft,
  * join selectivity
  */
 static bool
-tspatial_joinsel_components(meosOper oper, meosType oprleft,
-  meosType oprright, bool *space, bool *time)
+tspatial_joinsel_components(MeosOper oper, MeosType oprleft,
+  MeosType oprright, bool *space, bool *time)
 {
   /* Get the argument which may not be a temporal point */
-  meosType arg = tspatial_type(oprleft) ? oprright : oprleft;
+  MeosType arg = tspatial_type(oprleft) ? oprright : oprleft;
 
   /* Determine the components */
   if (spatial_basetype(arg) ||
@@ -880,8 +880,8 @@ temporal_joinsel(PlannerInfo *root, Oid operid, List *args, JoinType jointype,
     return DEFAULT_TEMP_JOINSEL;
 
   /* Determine whether we can estimate selectivity for the operator */
-  meosType ltype, rtype;
-  meosOper oper = oid_meosoper(operid, &ltype, &rtype);
+  MeosType ltype, rtype;
+  MeosOper oper = oid_meosoper(operid, &ltype, &rtype);
   if (! temporal_oper_sel_family(oper, ltype, rtype, tempfamily))
     /* In the case of unknown operator */
     return DEFAULT_TEMP_SEL;
@@ -898,16 +898,16 @@ temporal_joinsel(PlannerInfo *root, Oid operid, List *args, JoinType jointype,
   }
   else if (tempfamily == TNUMBERTYPE)
   {
-    meosType oprleft = oid_meostype(var1->vartype);
-    meosType oprright = oid_meostype(var2->vartype);
+    MeosType oprleft = oid_meostype(var1->vartype);
+    MeosType oprright = oid_meostype(var2->vartype);
     if (! tnumber_joinsel_components(oper, oprleft, oprright, &value, &time))
       /* In the case of unknown arguments */
       return tnumber_joinsel_default(oper);
   }
   else /* tempfamily == TSPATIALTYPE */
   {
-    meosType oprleft = oid_meostype(var1->vartype);
-    meosType oprright = oid_meostype(var2->vartype);
+    MeosType oprleft = oid_meostype(var1->vartype);
+    MeosType oprright = oid_meostype(var2->vartype);
     if (! tspatial_joinsel_components(oper, oprleft, oprright, &space, &time))
       /* In the case of unknown arguments */
       return tspatial_joinsel_default(oper);

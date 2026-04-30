@@ -374,11 +374,15 @@ tnpointseq_speed(const TSequence *seq)
   const TInstant *inst1 = TSEQUENCE_INST_N(seq, 0);
   Npoint *np1 = DatumGetNpointP(tinstant_value_p(inst1));
   double rlength = route_length(np1->rid);
-  const TInstant *inst2 = NULL; /* make the compiler quiet */
-  double speed = 0; /* make the compiler quiet */
+  /* The early return for seq->count == 1 above guarantees seq->count >= 2,
+   * so this loop runs at least once, but cppcheck's flow analysis
+   * doesn't see that — read inst_last directly from the sequence
+   * instead of relying on the loop variable carrying out, which makes
+   * the post-loop access provably non-NULL. */
+  double speed = 0;
   for (int i = 0; i < seq->count - 1; i++)
   {
-    inst2 = TSEQUENCE_INST_N(seq, i + 1);
+    const TInstant *inst2 = TSEQUENCE_INST_N(seq, i + 1);
     Npoint *np2 = DatumGetNpointP(tinstant_value_p(inst2));
     double length = fabs(np2->pos - np1->pos) * rlength;
     speed = length / (((double)(inst2->t) - (double)(inst1->t)) / 1000000);
@@ -386,8 +390,9 @@ tnpointseq_speed(const TSequence *seq)
     inst1 = inst2;
     np1 = np2;
   }
+  const TInstant *inst_last = TSEQUENCE_INST_N(seq, seq->count - 1);
   instants[seq->count-1] = tinstant_make(Float8GetDatum(speed), T_TFLOAT,
-    inst2->t);
+    inst_last->t);
   /* The resulting sequence has step interpolation */
   return tsequence_make_free(instants, seq->count,
     seq->period.lower_inc, seq->period.upper_inc, STEP, true);
@@ -483,7 +488,7 @@ tnpoint_restrict_geom(const Temporal *temp, const GSERIALIZED *gs, bool atfunc)
     return atfunc ? NULL : temporal_copy(temp);
 
   Temporal *tpoint = tnpoint_to_tgeompoint(temp);
-  Temporal *res = tgeo_restrict_geom(tpoint, gs, NULL, atfunc);
+  Temporal *res = tgeo_restrict_geom(tpoint, gs, atfunc);
   Temporal *result = NULL;
   if (res)
   {

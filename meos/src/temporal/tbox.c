@@ -234,10 +234,10 @@ tbox_copy(const TBox *box)
  * @csqlfn #Number_timestamptz_to_tbox()
  */
 TBox *
-number_timestamptz_to_tbox(Datum value, meosType basetype, TimestampTz t)
+number_timestamptz_to_tbox(Datum value, MeosType basetype, TimestampTz t)
 {
   Span s, p;
-  meosType spantype = basetype_spantype(basetype);
+  MeosType spantype = basetype_spantype(basetype);
   span_set(value, value, true, true, basetype, spantype, &s);
   Datum dt = TimestampTzGetDatum(t);
   span_set(dt, dt, true, true, T_TIMESTAMPTZ, T_TSTZSPAN, &p);
@@ -281,10 +281,10 @@ float_timestamptz_to_tbox(double d, TimestampTz t)
  * @csqlfn #Number_tstzspan_to_tbox()
  */
 TBox *
-number_tstzspan_to_tbox(Datum value, meosType basetype, const Span *s)
+number_tstzspan_to_tbox(Datum value, MeosType basetype, const Span *s)
 {
   assert(s);
-  meosType spantype = basetype_spantype(basetype);
+  MeosType spantype = basetype_spantype(basetype);
   Span s1;
   span_set(value, value, true, true, basetype, spantype, &s1);
   return tbox_make(&s1, s);
@@ -369,11 +369,11 @@ numspan_tstzspan_to_tbox(const Span *s, const Span *p)
  * @param[out] box Result
  */
 void
-number_set_tbox(Datum value, meosType basetype, TBox *box)
+number_set_tbox(Datum value, MeosType basetype, TBox *box)
 {
   assert(box); assert(tnumber_basetype(basetype));
   Span s;
-  meosType spantype = basetype_spantype(basetype);
+  MeosType spantype = basetype_spantype(basetype);
   span_set(value, value, true, true, basetype, spantype, &s);
   tbox_set(&s, NULL, box);
   return;
@@ -387,7 +387,7 @@ number_set_tbox(Datum value, meosType basetype, TBox *box)
  * @csqlfn #Number_to_tbox()
  */
 TBox *
-number_tbox(Datum value, meosType basetype)
+number_tbox(Datum value, MeosType basetype)
 {
   if (! ensure_tnumber_basetype(basetype))
     return NULL;
@@ -1269,7 +1269,7 @@ tfloatbox_expand(const TBox *box, const double d)
  * @csqlfn #Tbox_expand_value()
  */
 TBox *
-tbox_expand_value(const TBox *box, Datum value, meosType basetype)
+tbox_expand_value(const TBox *box, Datum value, MeosType basetype)
 {
   /* Ensure the validity of the arguments */
   assert(box); assert(tnumber_basetype(basetype));
@@ -1605,7 +1605,7 @@ TBox *
 union_tbox_tbox(const TBox *box1, const TBox *box2, bool strict)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(box1, false); VALIDATE_NOT_NULL(box2, false);
+  VALIDATE_NOT_NULL(box1, NULL); VALIDATE_NOT_NULL(box2, NULL);
   if (! ensure_same_dimensionality_tbox(box1, box2) ||
       (MEOS_FLAGS_GET_X(box1->flags) && MEOS_FLAGS_GET_X(box2->flags) &&
         ! ensure_same_span_type(&box1->span, &box2->span)))
@@ -1670,7 +1670,7 @@ TBox *
 intersection_tbox_tbox(const TBox *box1, const TBox *box2)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(box1, false); VALIDATE_NOT_NULL(box2, false);
+  VALIDATE_NOT_NULL(box1, NULL); VALIDATE_NOT_NULL(box2, NULL);
   if (MEOS_FLAGS_GET_X(box1->flags) && MEOS_FLAGS_GET_X(box2->flags) &&
         ! ensure_same_span_type(&box1->span, &box2->span))
     return NULL;
