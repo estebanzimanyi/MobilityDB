@@ -126,7 +126,7 @@ git fetch origin master --quiet
 git checkout master
 git pull --ff-only
 
-if ! git am --keep-cr "$PATCH_DIR"/*.patch; then
+if ! git am --keep-cr -3 "$PATCH_DIR"/*.patch; then
   echo "ERROR: git am failed inside meos/. Resolve manually:" >&2
   echo "  cd $ROOT/meos" >&2
   echo "  # fix the failing patch, then:" >&2
