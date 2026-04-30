@@ -1495,7 +1495,7 @@ text_to_wkb_buf(const text *txt, uint8_t *buf, uint8_t variant)
    * This avoids the memory allocation of pg_text_to_cstring.
    */
   size_t size = VARSIZE_ANY_EXHDR(txt);
-  char *str = VARDATA(txt);
+  const char *str = VARDATA(txt);
 
   /* Write the size first (this gets proper endian handling) */
   buf = int64_to_wkb_buf(size, buf, variant);
