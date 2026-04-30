@@ -652,7 +652,7 @@ Jsonbset_insert(PG_FUNCTION_ARGS)
  * @sqlfn jsonbset_to_intset()
  */
 Datum
-Jsonbset_to_alphanumset(FunctionCallInfo fcinfo, meosType setbasetype)
+Jsonbset_to_alphanumset(FunctionCallInfo fcinfo, MeosType setbasetype)
 {
   /* Input arguments */
   Set *set = PG_GETARG_SET_P(0);

@@ -60,8 +60,8 @@
 
 extern Selectivity scalarineqsel(PlannerInfo *root, Oid operid, bool isgt,
   bool iseq, VariableStatData *vardata, Datum constval, Oid consttypid);
-extern Selectivity temporal_sel_tstzspan(VariableStatData *vardata, Span *sp,
-  meosOper oper);
+extern Selectivity temporal_sel_tstzspan(VariableStatData *vardata, Span *s,
+  MeosOper oper);
 
 /*****************************************************************************
  * Some other helper functions.

@@ -343,14 +343,14 @@ jsonbset_set(const Set *set, text **keys, int count, const Jsonb *newjb,
  * @note Supported JSONB types: boolean, numeric, string
  */
 Set *
-jsonbset_to_alphanumset(const Set *set, const char *key, meosType resbasetype,
+jsonbset_to_alphanumset(const Set *set, const char *key, MeosType resbasetype,
   nullHandleType null_handle)
 {
   /* Ensure the validity of the arguments */
   assert(set); assert(key); assert(set->settype == T_JSONBSET);
   assert(alphanum_basetype(resbasetype));
 
-  meosType restype = basetype_settype(resbasetype);
+  MeosType restype = basetype_settype(resbasetype);
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) &datum_jsonb_to_alphanum;

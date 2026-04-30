@@ -139,7 +139,7 @@ tnumberinst_double(const TInstant *inst)
  * @param[in] temptype Temporal type
  */
 TInstant *
-tinstant_in(const char *str, meosType temptype)
+tinstant_in(const char *str, MeosType temptype)
 {
   assert(str);
   return tinstant_parse(&str, temptype, true);
@@ -150,32 +150,20 @@ tinstant_in(const char *str, meosType temptype)
  * @brief Return the Well-Known Text (WKT) representation of a temporal instant
  * @param[in] inst Temporal instant
  * @param[in] maxdd Maximum number of decimal digits
- * @param[in] base_out_fn Function called to output the base value depending on
+ * @param[in] value_out Function called to output the base value depending on
  * its type
  */
 char *
-tinstant_to_string(const TInstant *inst, int maxdd, outfunc base_out_fn)
+tinstant_to_string(const TInstant *inst, int maxdd, outfunc value_out)
 {
   assert(inst); assert(maxdd >= 0);
   char *t = pg_timestamptz_out(inst->t);
-  meosType basetype = temptype_basetype(inst->temptype);
-  char *value = base_out_fn(tinstant_value_p(inst), basetype, maxdd);
-  /* Wrap the value in quotes when it contains characters that conflict with
-   * the temporal grammar so the output round-trips through the input parser.
-   * tjsonb values always need wrapping (start with '{'); ttext values may need
-   * it depending on content. */
-  char *quoted = NULL;
-  if (inst->temptype == T_TJSONB)
-    quoted = string_escape(value, QUOTES);
-  else if (inst->temptype == T_TTEXT)
-    quoted = string_escape(value, QUOTES_ESCAPE);
-  const char *out = quoted ? quoted : value;
-  size_t size = strlen(out) + strlen(t) + 2;
+  MeosType basetype = temptype_basetype(inst->temptype);
+  char *value = value_out(tinstant_value_p(inst), basetype, maxdd);
+  size_t size = strlen(value) + strlen(t) + 2;
   char *result = palloc(size);
-  snprintf(result, size, "%s@%s", out, t);
+  snprintf(result, size, "%s@%s", value, t);
   pfree(t); pfree(value);
-  if (quoted)
-    pfree(quoted);
   return result;
 }
 
@@ -214,14 +202,14 @@ tinstant_out(const TInstant *inst, int maxdd)
  * @param[in] t Timestamp
  */
 TInstant *
-tinstant_make(Datum value, meosType temptype, TimestampTz t)
+tinstant_make(Datum value, MeosType temptype, TimestampTz t)
 {
   /* Ensure validity of arguments */
   int32_t tspatial_srid;
   // TODO Should we bypass the tests on tnpoint ?
   if (tspatial_type(temptype) && temptype != T_TNPOINT)
   {
-    meosType basetype = temptype_basetype(temptype);
+    MeosType basetype = temptype_basetype(temptype);
     tspatial_srid = spatial_srid(value, basetype);
     /* Ensure that the SRID is geodetic for geography */
     if (tgeodetic_type(temptype) && tspatial_srid != SRID_UNKNOWN && 
@@ -238,7 +226,7 @@ tinstant_make(Datum value, meosType temptype, TimestampTz t)
   /* Create the temporal instant */
   size_t value_size;
   void *value_from;
-  meosType basetype = temptype_basetype(temptype);
+  MeosType basetype = temptype_basetype(temptype);
   bool typbyval = basetype_byvalue(basetype);
   /* Copy value */
   if (typbyval)
@@ -271,7 +259,7 @@ tinstant_make(Datum value, meosType temptype, TimestampTz t)
   // TODO Should we bypass the tests on tnpoint ?
   if (tspatial_type(temptype) && temptype != T_TNPOINT)
   {
-    int16_t flags = spatial_flags(value, basetype);
+    int16 flags = spatial_flags(value, basetype);
     MEOS_FLAGS_SET_Z(result->flags, MEOS_FLAGS_GET_Z(flags));
     MEOS_FLAGS_SET_GEODETIC(result->flags, MEOS_FLAGS_GET_GEODETIC(flags));
   }
@@ -286,7 +274,7 @@ tinstant_make(Datum value, meosType temptype, TimestampTz t)
  * @param[in] t Timestamp
  */
 TInstant *
-tinstant_make_free(Datum value, meosType temptype, TimestampTz t)
+tinstant_make_free(Datum value, MeosType temptype, TimestampTz t)
 {
   TInstant *result = tinstant_make(value, temptype, t);
   DATUM_FREE(value, temptype_basetype(temptype));
@@ -340,8 +328,8 @@ tnumberinst_valuespans(const TInstant *inst)
 {
   assert(inst);
   Datum value = tinstant_value_p(inst);
-  meosType basetype = temptype_basetype(inst->temptype);
-  meosType spantype = basetype_spantype(basetype);
+  MeosType basetype = temptype_basetype(inst->temptype);
+  MeosType spantype = basetype_spantype(basetype);
   Span s;
   span_set(value, value, true, true, basetype, spantype, &s);
   return span_to_spanset(&s);
@@ -364,14 +352,14 @@ tinstant_time(const TInstant *inst)
  * @ingroup meos_internal_temporal_accessor
  * @brief Return in the last argument the time span of a temporal instant
  * @param[in] inst Temporal instant
- * @param[out] result Result
+ * @param[out] s Result
  */
 void
-tinstant_set_tstzspan(const TInstant *inst, Span *result)
+tinstant_set_tstzspan(const TInstant *inst, Span *s)
 {
-  assert(inst); assert(result);
+  assert(inst); assert(s);
   span_set(TimestampTzGetDatum(inst->t), TimestampTzGetDatum(inst->t),
-    true, true, T_TIMESTAMPTZ, T_TSTZSPAN, result);
+    true, true, T_TIMESTAMPTZ, T_TSTZSPAN, s);
   return;
 }
 
@@ -528,7 +516,7 @@ tnumberinst_shift_value(const TInstant *inst, Datum shift)
   assert(inst);
   TInstant *result = tinstant_copy(inst);
   Datum value = tinstant_value_p(result);
-  meosType basetype = temptype_basetype(result->temptype);
+  MeosType basetype = temptype_basetype(result->temptype);
   value = datum_add(value, shift, basetype);
   tinstant_set(result, value, result->t);
   return result;
@@ -648,19 +636,19 @@ tinstant_cmp(const TInstant *inst1, const TInstant *inst2)
  * @return On error return @p INT_MAX
  * @csqlfn #Temporal_hash()
  */
-uint32_t
+uint32
 tinstant_hash(const TInstant *inst)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(inst, INT_MAX);
 
-  meosType basetype = temptype_basetype(inst->temptype);
+  MeosType basetype = temptype_basetype(inst->temptype);
   /* Apply the hash function to the base type */
-  uint32_t value_hash = datum_hash(tinstant_value_p(inst), basetype);
+  uint32 value_hash = datum_hash(tinstant_value_p(inst), basetype);
   /* Apply the hash function to the timestamp */
-  uint32_t time_hash = int64_hash(inst->t);
+  uint32 time_hash = int64_hash(inst->t);
   /* Merge hashes of value and timestamp */
-  uint32_t result = value_hash;
+  uint32 result = value_hash;
 #if POSTGRESQL_VERSION_NUMBER >= 150000
   result = pg_rotate_left32(result, 1);
 #else

@@ -85,7 +85,7 @@
  * @brief Ensure that a MEOS type has X dimension
  */
 bool
-ensure_has_X(meosType type, int16_t flags)
+ensure_has_X(MeosType type, int16 flags)
 {
   if (MEOS_FLAGS_GET_X(flags))
     return true;
@@ -98,7 +98,7 @@ ensure_has_X(meosType type, int16_t flags)
  * @brief Ensure that a MEOS type has Z dimension
  */
 bool
-ensure_has_Z(meosType type, int16_t flags)
+ensure_has_Z(MeosType type, int16 flags)
 {
   if (MEOS_FLAGS_GET_Z(flags))
     return true;
@@ -111,7 +111,7 @@ ensure_has_Z(meosType type, int16_t flags)
  * @brief Ensure that a MEOS type has not Z dimension
  */
 bool
-ensure_has_not_Z(meosType type, int16_t flags)
+ensure_has_not_Z(MeosType type, int16 flags)
 {
   if (! MEOS_FLAGS_GET_Z(flags))
     return true;
@@ -124,7 +124,7 @@ ensure_has_not_Z(meosType type, int16_t flags)
  * @brief Ensure that a MEOS type has Z dimension
  */
 bool
-ensure_has_T(meosType type, int16_t flags)
+ensure_has_T(MeosType type, int16 flags)
 {
   if (MEOS_FLAGS_GET_T(flags))
     return true;
@@ -176,7 +176,7 @@ ensure_one_true(bool hasshift, bool haswidth)
  * @note Used for the constructor functions
  */
 bool
-ensure_valid_interp(meosType temptype, interpType interp)
+ensure_valid_interp(MeosType temptype, interpType interp)
 {
   if (interp == LINEAR && ! temptype_continuous(temptype))
   {
@@ -221,7 +221,7 @@ ensure_same_interp(const Temporal *temp1, const Temporal *temp2)
  * interpolation
  */
 bool
-ensure_same_continuous_interp(int16_t flags1, int16_t flags2)
+ensure_same_continuous_interp(int16 flags1, int16 flags2)
 {
   if (MEOS_FLAGS_STEP_LINEAR_INTERP(flags1) &&
       MEOS_FLAGS_STEP_LINEAR_INTERP(flags2) &&
@@ -238,7 +238,7 @@ ensure_same_continuous_interp(int16_t flags1, int16_t flags2)
  * @brief Ensure that a temporal value has linear interpolation
  */
 bool
-ensure_linear_interp(int16_t flags)
+ensure_linear_interp(int16 flags)
 {
   if (MEOS_FLAGS_LINEAR_INTERP(flags))
     return true;
@@ -251,7 +251,7 @@ ensure_linear_interp(int16_t flags)
  * @brief Ensure that a temporal value does not have linear interpolation
  */
 bool
-ensure_nonlinear_interp(int16_t flags)
+ensure_nonlinear_interp(int16 flags)
 {
   if (! MEOS_FLAGS_LINEAR_INTERP(flags))
     return true;
@@ -264,7 +264,7 @@ ensure_nonlinear_interp(int16_t flags)
  * @brief Ensure that two temporal values have at least one common dimension
  */
 bool
-ensure_common_dimension(int16_t flags1, int16_t flags2)
+ensure_common_dimension(int16 flags1, int16 flags2)
 {
   if (MEOS_FLAGS_GET_X(flags1) == MEOS_FLAGS_GET_X(flags2) ||
       MEOS_FLAGS_GET_T(flags1) == MEOS_FLAGS_GET_T(flags2))
@@ -281,7 +281,7 @@ ensure_common_dimension(int16_t flags1, int16_t flags2)
  * @param[in] basetype Base type
  */
 bool
-ensure_temporal_isof_basetype(const Temporal *temp, meosType basetype)
+ensure_temporal_isof_basetype(const Temporal *temp, MeosType basetype)
 {
   if (temptype_basetype(temp->temptype) == basetype)
     return true;
@@ -295,7 +295,7 @@ ensure_temporal_isof_basetype(const Temporal *temp, meosType basetype)
  * @brief Ensure that a temporal value is of a temporal type
  */
 bool
-ensure_temporal_isof_type(const Temporal *temp, meosType temptype)
+ensure_temporal_isof_type(const Temporal *temp, MeosType temptype)
 {
   if (temp->temptype == temptype)
     return true;
@@ -337,17 +337,17 @@ ensure_temporal_isof_subtype(const Temporal *temp, tempSubtype subtype)
 /**
  * @brief Ensure that a temporal number and a span have the same span type
  * @param[in] temp Temporal value
- * @param[in] sp Span value
+ * @param[in] s Span value
  */
 bool
-ensure_valid_tnumber_numspan(const Temporal *temp, const Span *sp)
+ensure_valid_tnumber_numspan(const Temporal *temp, const Span *s)
 {
-  VALIDATE_TNUMBER(temp, false); VALIDATE_NOT_NULL(sp, false);
-  if (temptype_basetype(temp->temptype) == sp->basetype)
+  VALIDATE_TNUMBER(temp, false); VALIDATE_NOT_NULL(s, false);
+  if (temptype_basetype(temp->temptype) == s->basetype)
     return true;
   meos_error(ERROR, MEOS_ERR_INVALID_ARG_TYPE,
     "Operation on mixed temporal number and span types: %s, %s",
-    meostype_name(temp->temptype), meostype_name(sp->spantype));
+    meostype_name(temp->temptype), meostype_name(s->spantype));
   return false;
 }
 
@@ -393,17 +393,17 @@ ensure_valid_tnumber_tbox(const Temporal *temp, const TBox *box)
 /**
  * @brief Ensure that a temporal number and a set have the same span type
  * @param[in] temp Temporal value
- * @param[in] sp Span value
+ * @param[in] s Span value
  */
 bool
-ensure_valid_temporal_set(const Temporal *temp, const Set *sp)
+ensure_valid_temporal_set(const Temporal *temp, const Set *s)
 {
-  VALIDATE_NOT_NULL(temp, false); VALIDATE_NOT_NULL(sp, false);
-  if (temptype_basetype(temp->temptype) == sp->basetype)
+  VALIDATE_NOT_NULL(temp, false); VALIDATE_NOT_NULL(s, false);
+  if (temptype_basetype(temp->temptype) == s->basetype)
     return true;
   meos_error(ERROR, MEOS_ERR_INVALID_ARG_TYPE,
     "Operation on mixed temporal and set types: %s, %s",
-    meostype_name(temp->temptype), meostype_name(sp->settype));
+    meostype_name(temp->temptype), meostype_name(s->settype));
   return false;
 }
 
@@ -476,7 +476,7 @@ ensure_positive(int i)
  * @brief Return true if a number is not negative
  */
 bool
-not_negative_datum(Datum d, meosType basetype)
+not_negative_datum(Datum d, MeosType basetype)
 {
   assert(span_basetype(basetype));
   if (basetype == T_INT4 && DatumGetInt32(d) < 0)
@@ -493,7 +493,7 @@ not_negative_datum(Datum d, meosType basetype)
  * @brief Ensure that a number is not negative
  */
 bool
-ensure_not_negative_datum(Datum d, meosType basetype)
+ensure_not_negative_datum(Datum d, MeosType basetype)
 {
   if (not_negative_datum(d, basetype))
     return true;
@@ -515,7 +515,7 @@ ensure_not_negative_datum(Datum d, meosType basetype)
  * @brief Return true if a number is strictly positive
  */
 bool
-positive_datum(Datum d, meosType basetype)
+positive_datum(Datum d, MeosType basetype)
 {
   assert(basetype == T_INT4 || basetype == T_INT8 || basetype == T_FLOAT8 ||
     basetype == T_DATE || basetype == T_TIMESTAMPTZ);
@@ -538,7 +538,7 @@ positive_datum(Datum d, meosType basetype)
  * @brief Ensure that a number is strictly positive
  */
 bool
-ensure_positive_datum(Datum d, meosType basetype)
+ensure_positive_datum(Datum d, MeosType basetype)
 {
   if (positive_datum(d, basetype))
     return true;
@@ -579,8 +579,8 @@ ensure_valid_day_duration(const Interval *duration)
     return false;
 
   char *str;
-  int64_t day = USECS_PER_DAY;
-  int64_t tunits = interval_units(duration);
+  int64 day = USECS_PER_DAY;
+  int64 tunits = interval_units(duration);
   if (tunits < day)
   {
     str = pg_interval_out((Interval *) duration);
@@ -806,7 +806,7 @@ mobilitydb_full_version(void)
  * @param[in] temptype Temporal type
  */
 Temporal *
-temporal_in(const char *str, meosType temptype)
+temporal_in(const char *str, MeosType temptype)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(str, NULL);
@@ -883,7 +883,7 @@ temporal_copy(const Temporal *temp)
  * of another temporal discrete sequence
  */
 static TSequence *
-tdiscseq_from_base_temp(Datum value, meosType temptype, const TSequence *seq)
+tdiscseq_from_base_temp(Datum value, MeosType temptype, const TSequence *seq)
 {
   assert(seq); assert(MEOS_FLAGS_DISCRETE_INTERP(seq->flags));
   TInstant **instants = palloc(sizeof(TInstant *) * seq->count);
@@ -898,7 +898,7 @@ tdiscseq_from_base_temp(Datum value, meosType temptype, const TSequence *seq)
  * another temporal sequence
  */
 TSequence *
-tsequence_from_base_temp(Datum value, meosType temptype, const TSequence *seq)
+tsequence_from_base_temp(Datum value, MeosType temptype, const TSequence *seq)
 {
   assert(seq);
   return MEOS_FLAGS_DISCRETE_INTERP(seq->flags) ? 
@@ -917,7 +917,7 @@ tsequence_from_base_temp(Datum value, meosType temptype, const TSequence *seq)
  * the base type is continous or not.
  */
 TSequenceSet *
-tsequenceset_from_base_temp(Datum value, meosType temptype,
+tsequenceset_from_base_temp(Datum value, MeosType temptype,
   const TSequenceSet *ss)
 {
   assert(ss);
@@ -944,7 +944,7 @@ tsequenceset_from_base_temp(Datum value, meosType temptype,
  * @param[in] temp Temporal value
  */
 Temporal *
-temporal_from_base_temp(Datum value, meosType temptype, const Temporal *temp)
+temporal_from_base_temp(Datum value, MeosType temptype, const Temporal *temp)
 {
   assert(temp);
   assert(temptype_subtype(temp->subtype));
@@ -1014,6 +1014,7 @@ tbool_to_tint(const Temporal *temp)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) datum_bool_to_int;
+  lfinfo.numparam = 0;
   lfinfo.argtype[0] = T_TBOOL;
   lfinfo.restype = T_TINT;
   return tfunc_temporal(temp, &lfinfo);
@@ -1034,6 +1035,7 @@ tint_to_tfloat(const Temporal *temp)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) datum_int_to_float;
+  lfinfo.numparam = 0;
   lfinfo.argtype[0] = T_TINT;
   lfinfo.restype = T_TFLOAT;
   return tfunc_temporal(temp, &lfinfo);
@@ -1060,6 +1062,7 @@ tfloat_to_tint(const Temporal *temp)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) datum_float_to_int;
+  lfinfo.numparam = 0;
   lfinfo.argtype[0] = T_TFLOAT;
   lfinfo.restype = T_TINT;
   return tfunc_temporal(temp, &lfinfo);
@@ -1069,23 +1072,23 @@ tfloat_to_tint(const Temporal *temp)
  * @ingroup meos_internal_temporal_accessor
  * @brief Return in the last argument the time span of a temporal value
  * @param[in] temp Temporal value
- * @param[out] sp Span
+ * @param[out] s Span
  */
 void
-temporal_set_tstzspan(const Temporal *temp, Span *sp)
+temporal_set_tstzspan(const Temporal *temp, Span *s)
 {
-  assert(temp); assert(sp);
+  assert(temp); assert(s);
   assert(temptype_subtype(temp->subtype));
   switch (temp->subtype)
   {
     case TINSTANT:
-      tinstant_set_tstzspan((TInstant *) temp, sp);
+      tinstant_set_tstzspan((TInstant *) temp, s);
       break;
     case TSEQUENCE:
-      tsequence_set_tstzspan((TSequence *) temp, sp);
+      tsequence_set_tstzspan((TSequence *) temp, s);
       break;
     default: /* TSEQUENCESET */
-      tsequenceset_set_tstzspan((TSequenceSet *) temp, sp);
+      tsequenceset_set_tstzspan((TSequenceSet *) temp, s);
   }
   return;
 }
@@ -1112,25 +1115,25 @@ temporal_to_tstzspan(const Temporal *temp)
  * @ingroup meos_internal_temporal_accessor
  * @brief Return in the last argument the value span of a temporal number
  * @param[in] temp Temporal value
- * @param[out] sp Span
+ * @param[out] s Span
  */
 void
-tnumber_set_span(const Temporal *temp, Span *sp)
+tnumber_set_span(const Temporal *temp, Span *s)
 {
-  assert(temp); assert(sp); assert(tnumber_type(temp->temptype));
+  assert(temp); assert(s); assert(tnumber_type(temp->temptype));
   assert(temptype_subtype(temp->subtype));
 
-  meosType basetype = temptype_basetype(temp->temptype);
-  meosType spantype = basetype_spantype(basetype);
+  MeosType basetype = temptype_basetype(temp->temptype);
+  MeosType spantype = basetype_spantype(basetype);
   if (temp->subtype == TINSTANT)
   {
     Datum value = tinstant_value_p((TInstant *) temp);
-    span_set(value, value, true, true, basetype, spantype, sp);
+    span_set(value, value, true, true, basetype, spantype, s);
   }
   else
   {
     TBox *box = (TBox *) temporal_bbox_ptr(temp);
-    memcpy(sp, &box->span, sizeof(Span));
+    memcpy(s, &box->span, sizeof(Span));
   }
   return;
 }
@@ -1177,7 +1180,7 @@ tnumber_to_tbox(const Temporal *temp)
  * @brief Return the function for rounding a base type
  */
 datum_func2
-round_fn(meosType basetype)
+round_fn(MeosType basetype)
 {
   assert(meos_basetype(basetype));
   switch (basetype)
@@ -1221,11 +1224,10 @@ temporal_round(const Temporal *temp, int maxdd)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) round_fn(temptype_basetype(temp->temptype));
-  lfinfo.argtype[0] = temp->temptype;
   lfinfo.numparam = 1;
   lfinfo.param[0] = Int32GetDatum(maxdd);
+  lfinfo.argtype[0] = temp->temptype;
   lfinfo.restype = temp->temptype;
-  lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   return tfunc_temporal(temp, &lfinfo);
 }
 
@@ -1298,9 +1300,9 @@ tfloat_floor(const Temporal *temp)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) &datum_floor;
+  lfinfo.numparam = 0;
   lfinfo.argtype[0] = T_TFLOAT;
   lfinfo.restype = T_TFLOAT;
-  lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   return tfunc_temporal(temp, &lfinfo);
 }
 
@@ -1319,9 +1321,9 @@ tfloat_ceil(const Temporal *temp)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) &datum_ceil;
+  lfinfo.numparam = 0;
   lfinfo.argtype[0] = T_TFLOAT;
   lfinfo.restype = T_TFLOAT;
-  lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   return tfunc_temporal(temp, &lfinfo);
 }
 
@@ -1383,11 +1385,10 @@ tfloat_degrees(const Temporal *temp, bool normalize)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) &datum_degrees;
-  lfinfo.argtype[0] = T_TFLOAT;
   lfinfo.numparam = 1;
   lfinfo.param[0] = BoolGetDatum(normalize);
+  lfinfo.argtype[0] = T_TFLOAT;
   lfinfo.restype = T_TFLOAT;
-  lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   return tfunc_temporal(temp, &lfinfo);
 }
 
@@ -1406,9 +1407,9 @@ tfloat_radians(const Temporal *temp)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) &datum_radians;
+  lfinfo.numparam = 0;
   lfinfo.argtype[0] = T_TFLOAT;
   lfinfo.restype = T_TFLOAT;
-  lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   return tfunc_temporal(temp, &lfinfo);
 }
 
@@ -1655,7 +1656,7 @@ tnumber_shift_scale_value(const Temporal *temp, Datum shift, Datum width,
   bool hasshift, bool haswidth)
 {
   assert(temp);
-  meosType basetype = temptype_basetype(temp->temptype);
+  MeosType basetype = temptype_basetype(temp->temptype);
   /* Ensure the validity of the arguments */
   if (! ensure_one_true(hasshift, haswidth) ||
       (width && ! ensure_positive_datum(width, basetype)))
@@ -1824,7 +1825,7 @@ temporal_set_bbox(const Temporal *temp, void *box)
 
 /**
  * @ingroup meos_internal_temporal_accessor
- * @brief Return an array of pointers to the base values of a temporal
+ * @brief Return the array of **pointers** to the base values of a temporal
  * value
  * @param[in] temp Temporal value
  * @param[out] count Number of values in the output array
@@ -1848,8 +1849,8 @@ temporal_values_p(const Temporal *temp, int *count)
 
 /**
  * @ingroup meos_internal_temporal_accessor
- * @brief Return an array of copies of the distinct base values of a temporal
- * value
+ * @brief Return the array of **copies** of the **distinct** base values of a
+ * temporal value
  * @param[in] temp Temporal value
  * @param[out] count Number of values in the output array
  * @csqlfn #Temporal_valueset()
@@ -1861,7 +1862,7 @@ temporal_values(const Temporal *temp, int *count)
   assert(temp); assert(count);
   int count1;
   Datum *values = temporal_values_p(temp, &count1);
-  meosType basetype = temptype_basetype(temp->temptype);
+  MeosType basetype = temptype_basetype(temp->temptype);
   datumarr_sort(values, count1, basetype);
   int newcount = datumarr_remove_duplicates(values, count1, basetype);
   Datum *result = palloc(sizeof(Datum) * newcount);
@@ -1977,7 +1978,7 @@ Datum
 temporal_min_value(const Temporal *temp)
 {
   assert(temp);
-  meosType basetype = temptype_basetype(temp->temptype);
+  MeosType basetype = temptype_basetype(temp->temptype);
   assert(temptype_subtype(temp->subtype));
   Datum result;
   switch (temp->subtype)
@@ -2005,7 +2006,7 @@ Datum
 temporal_max_value(const Temporal *temp)
 {
   assert(temp);
-  meosType basetype = temptype_basetype(temp->temptype);
+  MeosType basetype = temptype_basetype(temp->temptype);
   assert(temptype_subtype(temp->subtype));
   Datum result;
   switch (temp->subtype)
@@ -2942,7 +2943,7 @@ tsequence_derivative(const TSequence *seq)
     return NULL;
 
   /* General case */
-  meosType basetype = temptype_basetype(seq->temptype);
+  MeosType basetype = temptype_basetype(seq->temptype);
   TInstant **instants = palloc(sizeof(TInstant *) * seq->count);
   const TInstant *inst1 = TSEQUENCE_INST_N(seq, 0);
   Datum value1 = tinstant_value_p(inst1);
@@ -3051,7 +3052,7 @@ mrr_distance_scalar(const TSequence *seq, int start, int end)
  * @param[out] result Resulting sequences
  */
 static int
-tfloatseq_stops_iter(const TSequence *seq, double maxdist, int64_t mintunits,
+tfloatseq_stops_iter(const TSequence *seq, double maxdist, int64 mintunits,
   TSequence **result)
 {
   assert(seq); assert(seq->count > 1); assert(seq->temptype == T_TFLOAT);
@@ -3067,7 +3068,7 @@ tfloatseq_stops_iter(const TSequence *seq, double maxdist, int64_t mintunits,
     inst2 = TSEQUENCE_INST_N(seq, end);
 
     while (! is_stopped && end - start > 1 &&
-      (int64_t)(inst2->t - inst1->t) >= mintunits)
+      (int64)(inst2->t - inst1->t) >= mintunits)
     {
       inst1 = TSEQUENCE_INST_N(seq, ++start);
     }
@@ -3079,7 +3080,7 @@ tfloatseq_stops_iter(const TSequence *seq, double maxdist, int64_t mintunits,
 
     inst2 = TSEQUENCE_INST_N(seq, end - 1);
     if (! is_stopped && previously_stopped &&
-      (int64_t)(inst2->t - inst1->t) >= mintunits) // Found a stop
+      (int64)(inst2->t - inst1->t) >= mintunits) // Found a stop
     {
       TInstant **instants = palloc(sizeof(TInstant *) * (end - start));
       for (int i = 0; i < end - start; ++i)
@@ -3092,7 +3093,7 @@ tfloatseq_stops_iter(const TSequence *seq, double maxdist, int64_t mintunits,
   }
 
   inst2 = TSEQUENCE_INST_N(seq, end - 1);
-  if (is_stopped && (int64_t)(inst2->t - inst1->t) >= mintunits)
+  if (is_stopped && (int64)(inst2->t - inst1->t) >= mintunits)
   {
     TInstant **instants = palloc(sizeof(TInstant *) * (end - start));
     for (int i = 0; i < end - start; ++i)
@@ -3112,7 +3113,7 @@ tfloatseq_stops_iter(const TSequence *seq, double maxdist, int64_t mintunits,
  * @param[in] mintunits Minimum duration
  */
 TSequenceSet *
-tsequence_stops(const TSequence *seq, double maxdist, int64_t mintunits)
+tsequence_stops(const TSequence *seq, double maxdist, int64 mintunits)
 {
   assert(seq); assert(MEOS_FLAGS_LINEAR_INTERP(seq->flags));
   /* Instantaneous sequence */
@@ -3136,7 +3137,7 @@ tsequence_stops(const TSequence *seq, double maxdist, int64_t mintunits)
  * @param[in] mintunits Minimum duration
  */
 TSequenceSet *
-tsequenceset_stops(const TSequenceSet *ss, double maxdist, int64_t mintunits)
+tsequenceset_stops(const TSequenceSet *ss, double maxdist, int64 mintunits)
 {
   assert(ss); assert(MEOS_FLAGS_LINEAR_INTERP(ss->flags));
   TSequence **sequences = palloc(sizeof(TSequence *) * ss->totalcount);
@@ -3183,7 +3184,7 @@ temporal_stops(const Temporal *temp, double maxdist,
       "The duration must be positive");
     return NULL;
   }
-  int64_t mintunits = interval_units(minduration);
+  int64 mintunits = interval_units(minduration);
 
   assert(temptype_subtype(temp->subtype));
   if (temp->subtype == TINSTANT || ! MEOS_FLAGS_LINEAR_INTERP(temp->flags))
@@ -3413,8 +3414,8 @@ temporal_cmp(const Temporal *temp1, const Temporal *temp2)
   }
 
   /* Use the hash comparison */
-  uint32_t hash1 = temporal_hash(temp1);
-  uint32_t hash2 = temporal_hash(temp2);
+  uint32 hash1 = temporal_hash(temp1);
+  uint32 hash2 = temporal_hash(temp2);
   if (hash1 < hash2)
     return -1;
   else if (hash1 > hash2)
@@ -3504,7 +3505,7 @@ temporal_gt(const Temporal *temp1, const Temporal *temp2)
  * @return On error return @p INT_MAX
  * @csqlfn #Temporal_hash()
  */
-uint32_t
+uint32
 temporal_hash(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */

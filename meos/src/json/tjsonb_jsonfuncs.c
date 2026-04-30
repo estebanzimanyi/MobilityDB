@@ -939,7 +939,7 @@ tjsonb_set(const Temporal *temp, text **keys, int count, const Jsonb *newjb,
  * @note Supported JSONB types: boolean, numeric, string
  */
 Datum
-jsonb_to_alphanum(const Jsonb *jb, const char *key, meosType resbasetype,
+jsonb_to_alphanum(const Jsonb *jb, const char *key, MeosType resbasetype,
   nullHandleType null_handle)
 {
   assert(jb); assert(key); assert(alphanum_basetype(resbasetype));
@@ -1087,7 +1087,7 @@ datum_jsonb_to_alphanum(Datum jb, Datum key, Datum resbasetype,
   Datum null_handle)
 {
   return jsonb_to_alphanum(DatumGetJsonbP(jb),
-    (const char *) DatumGetPointer(key), (meosType) DatumGetInt32(resbasetype),
+    (const char *) DatumGetPointer(key), (MeosType) DatumGetInt32(resbasetype),
     (nullHandleType) DatumGetInt32(null_handle));
 }
 
@@ -1103,13 +1103,13 @@ datum_jsonb_to_alphanum(Datum jb, Datum key, Datum resbasetype,
  */
 Temporal *
 tjsonb_to_talphanum(const Temporal *temp, const char *key,
-  meosType restype, interpType interp, nullHandleType null_handle)
+  MeosType restype, interpType interp, nullHandleType null_handle)
 {
   /* Ensure the validity of the arguments */
   assert(temp); assert(key); assert(temp->temptype == T_TJSONB);
   assert(talphanum_type(restype));
 
-  meosType resbasetype = temptype_basetype(restype);
+  MeosType resbasetype = temptype_basetype(restype);
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) &datum_jsonb_to_alphanum;

@@ -68,9 +68,9 @@
  * @brief Ensure that a span is of a given span type
  */
 bool
-ensure_span_isof_type(const Span *sp, meosType spantype)
+ensure_span_isof_type(const Span *s, MeosType spantype)
 {
-  if (sp->spantype == spantype)
+  if (s->spantype == spantype)
     return true;
   meos_error(ERROR, MEOS_ERR_INVALID_ARG_TYPE,
     "The span must be of type %s", meostype_name(spantype));
@@ -81,13 +81,13 @@ ensure_span_isof_type(const Span *sp, meosType spantype)
  * @brief Ensure that a span is of a given base type
  */
 bool
-ensure_span_isof_basetype(const Span *sp, meosType basetype)
+ensure_span_isof_basetype(const Span *s, MeosType basetype)
 {
-  if (sp->basetype == basetype)
+  if (s->basetype == basetype)
     return true;
   meos_error(ERROR, MEOS_ERR_INVALID_ARG_TYPE,
     "Operation on mixed span and base types: %s and %s",
-    meostype_name(sp->spantype), meostype_name(basetype));
+    meostype_name(s->spantype), meostype_name(basetype));
   return false;
 }
 
@@ -95,13 +95,13 @@ ensure_span_isof_basetype(const Span *sp, meosType basetype)
  * @brief Ensure that the spans have the same type
  */
 bool
-ensure_same_span_type(const Span *sp1, const Span *sp2)
+ensure_same_span_type(const Span *s1, const Span *s2)
 {
-  if (sp1->spantype == sp2->spantype)
+  if (s1->spantype == s2->spantype)
     return true;
   meos_error(ERROR, MEOS_ERR_INVALID_ARG_TYPE,
     "Operation on mixed span types: %s and %s",
-    meostype_name(sp1->spantype), meostype_name(sp2->spantype));
+    meostype_name(s1->spantype), meostype_name(s2->spantype));
   return false;
 }
 
@@ -109,10 +109,10 @@ ensure_same_span_type(const Span *sp1, const Span *sp2)
  * @brief Ensure that two span sets are of the same span type
  */
 bool
-ensure_valid_span_span(const Span *sp1, const Span *sp2)
+ensure_valid_span_span(const Span *s1, const Span *s2)
 {
-  VALIDATE_NOT_NULL(sp1, false); VALIDATE_NOT_NULL(sp2, false);
-  if (! ensure_same_span_type(sp1, sp2))
+  VALIDATE_NOT_NULL(s1, false); VALIDATE_NOT_NULL(s2, false);
+  if (! ensure_same_span_type(s1, s2))
     return false;
   return true;
 }
@@ -123,27 +123,27 @@ ensure_valid_span_span(const Span *sp1, const Span *sp2)
 
 /**
  * @brief Deconstruct a span
- * @param[in] sp Span value
+ * @param[in] s Span value
  * @param[out] lower,upper Bounds
  */
 void
-span_deserialize(const Span *sp, SpanBound *lower, SpanBound *upper)
+span_deserialize(const Span *s, SpanBound *lower, SpanBound *upper)
 {
   if (lower)
   {
-    lower->val = sp->lower;
-    lower->inclusive = sp->lower_inc;
+    lower->val = s->lower;
+    lower->inclusive = s->lower_inc;
     lower->lower = true;
-    lower->spantype = sp->spantype;
-    lower->basetype = sp->basetype;
+    lower->spantype = s->spantype;
+    lower->basetype = s->basetype;
   }
   if (upper)
   {
-    upper->val = sp->upper;
-    upper->inclusive = sp->upper_inc;
+    upper->val = s->upper;
+    upper->inclusive = s->upper_inc;
     upper->lower = false;
-    upper->spantype = sp->spantype;
-    upper->basetype = sp->basetype;
+    upper->spantype = s->spantype;
+    upper->basetype = s->basetype;
   }
   return;
 }
@@ -157,7 +157,7 @@ span_deserialize(const Span *sp, SpanBound *lower, SpanBound *upper)
  * The simple case is when b1 and b2 are both inclusive, in which
  * case the result is just a comparison of the values held in b1 and b2.
  *
- * If a bound is exclusive, then we need to know whether it is a lower bound,
+ * If a bound is exclusive, then we need to know whether it's a lower bound,
  * in which case we treat the boundary point as "just greater than" the held
  * value; or an upper bound, in which case we treat the boundary point as
  * "just less than" the held value.
@@ -171,7 +171,7 @@ span_bound_cmp(const SpanBound *b1, const SpanBound *b2)
 {
   assert(b1); assert(b2); assert(b1->basetype == b2->basetype);
   /* Compare the values */
-  int32_t result = datum_cmp(b1->val, b2->val, b1->basetype);
+  int32 result = datum_cmp(b1->val, b2->val, b1->basetype);
 
   /*
    * If the comparison is not equal and the bounds are both inclusive or
@@ -216,17 +216,17 @@ span_bound_qsort_cmp(const void *a1, const void *a2)
  * deserializing the spans into lower and upper bounds
  */
 int
-span_lower_cmp(const Span *sp1, const Span *sp2)
+span_lower_cmp(const Span *s1, const Span *s2)
 {
-  assert(sp1); assert(sp2); assert(sp1->basetype == sp2->basetype);
-  int result = datum_cmp(sp1->lower, sp2->lower, sp1->basetype);
+  assert(s1); assert(s2); assert(s1->basetype == s2->basetype);
+  int result = datum_cmp(s1->lower, s2->lower, s1->basetype);
   if (result != 0)
     return result;
   /* The bound values are equal */
-  if (sp1->lower_inc == sp2->lower_inc)
+  if (s1->lower_inc == s2->lower_inc)
     /* both are inclusive or exclusive */
     return 0;
-  else if (sp1->lower_inc)
+  else if (s1->lower_inc)
     /* first is inclusive and second is exclusive */
     return 1;
   else
@@ -242,17 +242,17 @@ span_lower_cmp(const Span *sp1, const Span *sp2)
  * deserializing the spans into lower and upper bounds
  */
 int
-span_upper_cmp(const Span *sp1, const Span *sp2)
+span_upper_cmp(const Span *s1, const Span *s2)
 {
-  assert(sp1); assert(sp2); assert(sp1->basetype == sp2->basetype);
-  int result = datum_cmp(sp1->upper, sp2->upper, sp1->basetype);
+  assert(s1); assert(s2); assert(s1->basetype == s2->basetype);
+  int result = datum_cmp(s1->upper, s2->upper, s1->basetype);
   if (result != 0)
     return result;
   /* The bound values are equal */
-  if (sp1->upper_inc == sp2->upper_inc)
+  if (s1->upper_inc == s2->upper_inc)
     /* both are inclusive or exclusive */
     return 0;
-  else if (sp1->upper_inc)
+  else if (s1->upper_inc)
     /* first is inclusive and second is exclusive */
     return 1;
   else
@@ -264,16 +264,16 @@ span_upper_cmp(const Span *sp1, const Span *sp2)
  * @brief Return the bound increased by 1 for accounting for canonicalized spans
  */
 Datum
-span_incr_bound(Datum lower, meosType basetype)
+span_incr_bound(Datum lower, MeosType basetype)
 {
   Datum result;
   switch (basetype)
   {
     case T_INT4:
-      result = Int32GetDatum(DatumGetInt32(lower) + (int32_t) 1);
+      result = Int32GetDatum(DatumGetInt32(lower) + (int32) 1);
       break;
     case T_INT8:
-      result = Int64GetDatum(DatumGetInt64(lower) + (int64_t) 1);
+      result = Int64GetDatum(DatumGetInt64(lower) + (int64) 1);
       break;
     case T_DATE:
       result = DateADTGetDatum(DatumGetDateADT(lower) + 1);
@@ -288,16 +288,16 @@ span_incr_bound(Datum lower, meosType basetype)
  * @brief Return the bound decreased by 1 for accounting for canonicalized spans
  */
 Datum
-span_decr_bound(Datum lower, meosType basetype)
+span_decr_bound(Datum lower, MeosType basetype)
 {
   Datum result;
   switch (basetype)
   {
     case T_INT4:
-      result = Int32GetDatum(DatumGetInt32(lower) - (int32_t) 1);
+      result = Int32GetDatum(DatumGetInt32(lower) - (int32) 1);
       break;
     case T_INT8:
-      result = Int64GetDatum(DatumGetInt64(lower) - (int64_t) 1);
+      result = Int64GetDatum(DatumGetInt64(lower) - (int64) 1);
       break;
     case T_DATE:
       result = DateADTGetDatum(DatumGetDateADT(lower) - 1);
@@ -357,7 +357,7 @@ spanarr_normalize(Span *spans, int count, bool order, int *newcount)
  * @param[in] spantype Span type
  */
 Span *
-span_in(const char *str, meosType spantype)
+span_in(const char *str, MeosType spantype)
 {
   assert(str);
   Span result;
@@ -389,21 +389,21 @@ unquote(char *str)
 /**
  * @ingroup meos_internal_setspan_inout
  * @brief Return the Well-Known Text (WKT) representation of a span
- * @param[in] sp Span
+ * @param[in] s Span
  * @param[in] maxdd Maximum number of decimal digits
  */
 char *
-span_out(const Span *sp, int maxdd)
+span_out(const Span *s, int maxdd)
 {
-  assert(sp);
+  assert(s);
   /* Ensure the validity of the arguments */
   if (! ensure_not_negative(maxdd))
     return NULL;
 
-  char *lower = unquote(basetype_out(sp->lower, sp->basetype, maxdd));
-  char *upper = unquote(basetype_out(sp->upper, sp->basetype, maxdd));
-  char open = sp->lower_inc ? (char) '[' : (char) '(';
-  char close = sp->upper_inc ? (char) ']' : (char) ')';
+  char *lower = unquote(basetype_out(s->lower, s->basetype, maxdd));
+  char *upper = unquote(basetype_out(s->upper, s->basetype, maxdd));
+  char open = s->lower_inc ? (char) '[' : (char) '(';
+  char close = s->upper_inc ? (char) ']' : (char) ')';
   size_t size = strlen(lower) + strlen(upper) + 5;
   char *result = palloc(size);
   snprintf(result, size, "%c%s, %s%c", open, lower, upper, close);
@@ -424,12 +424,12 @@ span_out(const Span *sp, int maxdd)
  */
 Span *
 span_make(Datum lower, Datum upper, bool lower_inc, bool upper_inc,
-  meosType basetype)
+  MeosType basetype)
 {
-  Span *sp = palloc(sizeof(Span));
-  meosType spantype = basetype_spantype(basetype);
-  span_set(lower, upper, lower_inc, upper_inc, basetype, spantype, sp);
-  return sp;
+  Span *s = palloc(sizeof(Span));
+  MeosType spantype = basetype_spantype(basetype);
+  span_set(lower, upper, lower_inc, upper_inc, basetype, spantype, s);
+  return s;
 }
 
 /**
@@ -440,14 +440,14 @@ span_make(Datum lower, Datum upper, bool lower_inc, bool upper_inc,
  * @param[in] lower_inc,upper_inc True when the bounds are inclusive
  * @param[in] basetype Base type
  * @param[in] spantype Span type
- * @param[out] result Result span
+ * @param[out] s Result span
  * @see #span_make()
  */
 void
 span_set(Datum lower, Datum upper, bool lower_inc, bool upper_inc,
-  meosType basetype, meosType spantype, Span *result)
+  MeosType basetype, MeosType spantype, Span *s)
 {
-  assert(result); assert(basetype_spantype(basetype) == spantype);
+  assert(s); assert(basetype_spantype(basetype) == spantype);
   /* Canonicalize */
   if (span_canon_basetype(basetype))
   {
@@ -480,29 +480,29 @@ span_set(Datum lower, Datum upper, bool lower_inc, bool upper_inc,
   }
 
   /* Note: zero-fill is required here, just as in heap tuples */
-  memset(result, 0, sizeof(Span));
+  memset(s, 0, sizeof(Span));
   /* Fill in the span */
-  result->lower = lower;
-  result->upper = upper;
-  result->lower_inc = lower_inc;
-  result->upper_inc = upper_inc;
-  result->spantype = spantype;
-  result->basetype = basetype;
+  s->lower = lower;
+  s->upper = upper;
+  s->lower_inc = lower_inc;
+  s->upper_inc = upper_inc;
+  s->spantype = spantype;
+  s->basetype = basetype;
   return;
 }
 
 /**
  * @ingroup meos_setspan_constructor
  * @brief Return a copy of a span
- * @param[in] sp Span
+ * @param[in] s Span
  */
 Span *
-span_copy(const Span *sp)
+span_copy(const Span *s)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(sp, NULL);
+  VALIDATE_NOT_NULL(s, NULL);
   Span *result = palloc(sizeof(Span));
-  memcpy((char *) result, (char *) sp, sizeof(Span));
+  memcpy((char *) result, (char *) s, sizeof(Span));
   return result;
 }
 
@@ -515,14 +515,14 @@ span_copy(const Span *sp)
  * @brief Return in the last argument a span constructed from a value
  * @param[in] value Value
  * @param[in] basetype Type of the value
- * @param[out] sp Result span
+ * @param[out] s Result span
 */
 void
-value_set_span(Datum value, meosType basetype, Span *sp)
+value_set_span(Datum value, MeosType basetype, Span *s)
 {
-  assert(sp); assert(span_basetype(basetype));
-  meosType spantype = basetype_spantype(basetype);
-  span_set(value, value, true, true, basetype, spantype, sp);
+  assert(s); assert(span_basetype(basetype));
+  MeosType spantype = basetype_spantype(basetype);
+  span_set(value, value, true, true, basetype, spantype, s);
   return;
 }
 
@@ -533,7 +533,7 @@ value_set_span(Datum value, meosType basetype, Span *sp)
  * @param[in] basetype Type of the value
  */
 Span *
-value_span(Datum value, meosType basetype)
+value_span(Datum value, MeosType basetype)
 {
   Span *result = palloc(sizeof(Span));
   value_set_span(value, basetype, result);
@@ -552,7 +552,7 @@ void
 set_set_subspan(const Set *s, int fromidx, int toidx, Span *result)
 {
   assert(s); assert(result);
-  meosType spantype = basetype_spantype(s->basetype);
+  MeosType spantype = basetype_spantype(s->basetype);
   span_set(SET_VAL_N(s, fromidx), SET_VAL_N(s, toidx), true, true,
     s->basetype, spantype, result);
   return;
@@ -609,31 +609,31 @@ set_to_span(const Set *s)
  * @ingroup meos_internal_setspan_conversion
  * @brief Return the second span initialized with the first one transformed to
  * a float span
- * @param[in] sp1,sp2 Spans
+ * @param[in] s1,s2 Spans
  */
 void
-intspan_set_floatspan(const Span *sp1, Span *sp2)
+intspan_set_floatspan(const Span *s1, Span *s2)
 {
-  assert(sp1); assert(sp2); assert(sp1->spantype == T_INTSPAN);
-  Datum lower = Float8GetDatum((double) DatumGetInt32(sp1->lower));
-  Datum upper = Float8GetDatum((double) (DatumGetInt32(sp1->upper) - 1));
-  span_set(lower, upper, true, true, T_FLOAT8, T_FLOATSPAN, sp2);
+  assert(s1); assert(s2); assert(s1->spantype == T_INTSPAN);
+  Datum lower = Float8GetDatum((double) DatumGetInt32(s1->lower));
+  Datum upper = Float8GetDatum((double) (DatumGetInt32(s1->upper) - 1));
+  span_set(lower, upper, true, true, T_FLOAT8, T_FLOATSPAN, s2);
   return;
 }
 
 /**
  * @ingroup meos_setspan_conversion
  * @brief Convert an integer span into a float span
- * @param[in] sp Span
+ * @param[in] s Span
  * @return On error return @p NULL
  */
 Span *
-intspan_to_floatspan(const Span *sp)
+intspan_to_floatspan(const Span *s)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_INTSPAN(sp, NULL);
+  VALIDATE_INTSPAN(s, NULL);
   Span *result = palloc(sizeof(Span));
-  intspan_set_floatspan(sp, result);
+  intspan_set_floatspan(s, result);
   return result;
 }
 
@@ -641,30 +641,30 @@ intspan_to_floatspan(const Span *sp)
  * @ingroup meos_internal_setspan_conversion
  * @brief Return the second span initialized with the first one transformed to
  * an integer span
- * @param[in] sp1,sp2 Spans
+ * @param[in] s1,s2 Spans
  */
 void
-floatspan_set_intspan(const Span *sp1, Span *sp2)
+floatspan_set_intspan(const Span *s1, Span *s2)
 {
-  assert(sp1); assert(sp2); assert(sp1->spantype == T_FLOATSPAN);
-  Datum lower = Int32GetDatum((int) DatumGetFloat8(sp1->lower));
-  Datum upper = Int32GetDatum((int) (DatumGetFloat8(sp1->upper)));
-  span_set(lower, upper, sp1->lower_inc, sp1->upper_inc, T_INT4, T_INTSPAN, sp2);
+  assert(s1); assert(s2); assert(s1->spantype == T_FLOATSPAN);
+  Datum lower = Int32GetDatum((int) DatumGetFloat8(s1->lower));
+  Datum upper = Int32GetDatum((int) (DatumGetFloat8(s1->upper)));
+  span_set(lower, upper, s1->lower_inc, s1->upper_inc, T_INT4, T_INTSPAN, s2);
   return;
 }
 
 /**
  * @ingroup meos_setspan_conversion
  * @brief Convert a float span into an integer span
- * @param[in] sp Span
+ * @param[in] s Span
  * @return On error return @p NULL
  */
 Span *
-floatspan_to_intspan(const Span *sp)
+floatspan_to_intspan(const Span *s)
 {
-  VALIDATE_FLOATSPAN(sp, NULL);
+  VALIDATE_FLOATSPAN(s, NULL);
   Span *result = palloc(sizeof(Span));
-  floatspan_set_intspan(sp, result);
+  floatspan_set_intspan(s, result);
   return result;
 }
 
@@ -672,34 +672,34 @@ floatspan_to_intspan(const Span *sp)
  * @ingroup meos_internal_setspan_conversion
  * @brief Return the second span initialized with the first one transformed to
  * a timetstamptz span
- * @param[in] sp1,sp2 Spans
+ * @param[in] s1,s2 Spans
  */
 void
-datespan_set_tstzspan(const Span *sp1, Span *sp2)
+datespan_set_tstzspan(const Span *s1, Span *s2)
 {
-  assert(sp1); assert(sp2); assert(sp1->spantype == T_DATESPAN);
+  assert(s1); assert(s2); assert(s1->spantype == T_DATESPAN);
   Datum lower =
-    TimestampTzGetDatum(date_to_timestamptz(DatumGetDateADT(sp1->lower)));
+    TimestampTzGetDatum(date_to_timestamptz(DatumGetDateADT(s1->lower)));
   Datum upper =
-    TimestampTzGetDatum(date_to_timestamptz(DatumGetDateADT(sp1->upper)));
+    TimestampTzGetDatum(date_to_timestamptz(DatumGetDateADT(s1->upper)));
   /* Date spans are always canonicalized */
-  span_set(lower, upper, true, false, T_TIMESTAMPTZ, T_TSTZSPAN, sp2);
+  span_set(lower, upper, true, false, T_TIMESTAMPTZ, T_TSTZSPAN, s2);
   return;
 }
 
 /**
  * @ingroup meos_setspan_conversion
  * @brief Convert a date span into a timestamptz span
- * @param[in] sp Span
+ * @param[in] s Span
  * @return On error return @p NULL
  */
 Span *
-datespan_to_tstzspan(const Span *sp)
+datespan_to_tstzspan(const Span *s)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_DATESPAN(sp, NULL);
+  VALIDATE_DATESPAN(s, NULL);
   Span *result = palloc(sizeof(Span));
-  datespan_set_tstzspan(sp, result);
+  datespan_set_tstzspan(s, result);
   return result;
 }
 
@@ -707,16 +707,16 @@ datespan_to_tstzspan(const Span *sp)
  * @ingroup meos_internal_setspan_conversion
  * @brief Return the last span initialized with the first one transformed to a
  * date span
- * @param[in] sp1,sp2 Spans
+ * @param[in] s1,s2 Spans
  */
 void
-tstzspan_set_datespan(const Span *sp1, Span *sp2)
+tstzspan_set_datespan(const Span *s1, Span *s2)
 {
-  assert(sp1); assert(sp2); assert(sp1->spantype == T_TSTZSPAN);
-  DateADT lower = timestamptz_to_date(DatumGetTimestampTz(sp1->lower));
-  DateADT upper = timestamptz_to_date(DatumGetTimestampTz(sp1->upper));
-  bool lower_inc = sp1->lower_inc;
-  bool upper_inc = sp1->upper_inc;
+  assert(s1); assert(s2); assert(s1->spantype == T_TSTZSPAN);
+  DateADT lower = timestamptz_to_date(DatumGetTimestampTz(s1->lower));
+  DateADT upper = timestamptz_to_date(DatumGetTimestampTz(s1->upper));
+  bool lower_inc = s1->lower_inc;
+  bool upper_inc = s1->upper_inc;
   /* Both bounds are set to true when the resulting dates are equal, e.g.,
    * (2001-10-18 19:46:00, 2001-10-18 19:50:00) -> [2001-10-18, 2001-10-18] */
   if (lower == upper)
@@ -725,23 +725,23 @@ tstzspan_set_datespan(const Span *sp1, Span *sp2)
   }
   /* Canonicalization takes place in the following function */
   span_set(DateADTGetDatum(lower), DateADTGetDatum(upper), lower_inc,
-    upper_inc, T_DATE, T_DATESPAN, sp2);
+    upper_inc, T_DATE, T_DATESPAN, s2);
   return;
 }
 
 /**
  * @ingroup meos_setspan_conversion
  * @brief Convert a timestamptz span into a date span
- * @param[in] sp Span
+ * @param[in] s Span
  * @return On error return @p NULL
  */
 Span *
-tstzspan_to_datespan(const Span *sp)
+tstzspan_to_datespan(const Span *s)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_TSTZSPAN(sp, NULL);
+  VALIDATE_TSTZSPAN(s, NULL);
   Span *result = palloc(sizeof(Span));
-  tstzspan_set_datespan(sp, result);
+  tstzspan_set_datespan(s, result);
   return result;
 }
 
@@ -752,44 +752,44 @@ tstzspan_to_datespan(const Span *sp)
 /**
  * @ingroup meos_internal_setspan_accessor
  * @brief Return the width of a span
- * @param[in] sp Span
+ * @param[in] s Span
  * @csqlfn #Numspan_width()
  */
 Datum
-numspan_width(const Span *sp)
+numspan_width(const Span *s)
 {
-  assert(sp);
-  return distance_value_value(sp->upper, sp->lower, sp->basetype);
+  assert(s);
+  return distance_value_value(s->upper, s->lower, s->basetype);
 }
 
 /**
  * @ingroup meos_setspan_accessor
  * @brief Return the duration of a date span as an interval
- * @param[in] sp Span
+ * @param[in] s Span
  * @csqlfn #Datespan_duration()
  */
 Interval *
-datespan_duration(const Span *sp)
+datespan_duration(const Span *s)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_DATESPAN(sp, NULL);
+  VALIDATE_DATESPAN(s, NULL);
   Interval *result = palloc0(sizeof(Interval));
-  result->day = DateADTGetDatum(sp->upper) - DateADTGetDatum(sp->lower);
+  result->day = DateADTGetDatum(s->upper) - DateADTGetDatum(s->lower);
   return result;
 }
 
 /**
  * @ingroup meos_setspan_accessor
  * @brief Return the duration of a timestamptz span as an interval
- * @param[in] sp Span
+ * @param[in] s Span
  * @csqlfn #Tstzspan_duration()
  */
 Interval *
-tstzspan_duration(const Span *sp)
+tstzspan_duration(const Span *s)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_TSTZSPAN(sp, NULL);
-  return minus_timestamptz_timestamptz(sp->upper, sp->lower);
+  VALIDATE_TSTZSPAN(s, NULL);
+  return minus_timestamptz_timestamptz(s->upper, s->lower);
 }
 
 /*****************************************************************************
@@ -800,17 +800,17 @@ tstzspan_duration(const Span *sp)
  * @ingroup meos_internal_setspan_transf
  * @brief Return in the last argument a float span with the precision set to a
  * number of decimal places
- * @param[in] sp Span
+ * @param[in] s Span
  * @param[in] maxdd Maximum number of decimal digits
  * @param[out] result Result span
  */
 void
-floatspan_round_set(const Span *sp, int maxdd, Span *result)
+floatspan_round_set(const Span *s, int maxdd, Span *result)
 {
-  assert(sp); assert(sp->spantype == T_FLOATSPAN); assert(result);
+  assert(s); assert(s->spantype == T_FLOATSPAN); assert(result);
   /* Set precision of bounds */
-  double lower = float8_round(DatumGetFloat8(sp->lower), maxdd);
-  double upper = float8_round(DatumGetFloat8(sp->upper), maxdd);
+  double lower = float8_round(DatumGetFloat8(s->lower), maxdd);
+  double upper = float8_round(DatumGetFloat8(s->upper), maxdd);
   /* Fix the bounds */
   bool lower_inc, upper_inc;
   if (float8_eq(lower, upper))
@@ -819,11 +819,11 @@ floatspan_round_set(const Span *sp, int maxdd, Span *result)
   }
   else
   {
-    lower_inc = sp->lower_inc; upper_inc = sp->upper_inc;
+    lower_inc = s->lower_inc; upper_inc = s->upper_inc;
   }
   /* Set resulting span */
   span_set(Float8GetDatum(lower), Float8GetDatum(upper), lower_inc, upper_inc,
-    sp->basetype, sp->spantype, result);
+    s->basetype, s->spantype, result);
   return;
 }
 
@@ -831,20 +831,20 @@ floatspan_round_set(const Span *sp, int maxdd, Span *result)
  * @ingroup meos_setspan_transf
  * @brief Return a float span with the precision of the bounds set to a
  * number of decimal places
- * @param[in] sp Span
+ * @param[in] s Span
  * @param[in] maxdd Maximum number of decimal digits
  * @return On error return @p NULL
  */
 Span *
-floatspan_round(const Span *sp, int maxdd)
+floatspan_round(const Span *s, int maxdd)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_FLOATSPAN(sp, NULL);
+  VALIDATE_FLOATSPAN(s, NULL);
   if (! ensure_not_negative(maxdd))
     return NULL;
 
   Span *result = palloc(sizeof(Span));
-  floatspan_round_set(sp, maxdd, result);
+  floatspan_round_set(s, maxdd, result);
   return result;
 }
 
@@ -854,16 +854,18 @@ floatspan_round(const Span *sp, int maxdd)
  * @brief Round down a span to the nearest integer
  */
 void
-floatspan_floor_ceil_iter(Span *sp, datum_func1 func)
+floatspan_floor_ceil_iter(Span *s, datum_func1 func)
 {
-  assert(sp);
-  Datum lower = func(sp->lower);
-  Datum upper = func(sp->upper);
-  bool lower_inc = sp->lower_inc;
-  bool upper_inc = sp->upper_inc;
-  if (datum_eq(lower, upper, sp->basetype))
+  assert(s);
+  Datum lower = func(s->lower);
+  Datum upper = func(s->upper);
+  bool lower_inc = s->lower_inc;
+  bool upper_inc = s->upper_inc;
+  if (datum_eq(lower, upper, s->basetype))
+  {
     lower_inc = upper_inc = true;
-  span_set(lower, upper, lower_inc, upper_inc, sp->basetype, sp->spantype, sp);
+  }
+  span_set(lower, upper, lower_inc, upper_inc, s->basetype, s->spantype, s);
   return;
 }
 
@@ -873,11 +875,11 @@ floatspan_floor_ceil_iter(Span *sp, datum_func1 func)
  * @csqlfn #Floatspan_floor()
  */
 Span *
-floatspan_floor(const Span *sp)
+floatspan_floor(const Span *s)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_FLOATSPAN(sp, NULL);
-  Span *result = span_copy(sp);
+  VALIDATE_FLOATSPAN(s, NULL);
+  Span *result = span_copy(s);
   floatspan_floor_ceil_iter(result, &datum_floor);
   return result;
 }
@@ -888,11 +890,11 @@ floatspan_floor(const Span *sp)
  * @csqlfn #Floatspan_ceil()
  */
 Span *
-floatspan_ceil(const Span *sp)
+floatspan_ceil(const Span *s)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_FLOATSPAN(sp, NULL);
-  Span *result = span_copy(sp);
+  VALIDATE_FLOATSPAN(s, NULL);
+  Span *result = span_copy(s);
   floatspan_floor_ceil_iter(result, &datum_ceil);
   return result;
 }
@@ -900,35 +902,35 @@ floatspan_ceil(const Span *sp)
 /**
  * @ingroup meos_setspan_transf
  * @brief Return a float span with the values converted to degrees
- * @param[in] sp Span
+ * @param[in] s Span
  * @param[in] normalize True when the result must be normalized
  * @csqlfn #Floatspan_degrees()
  */
 Span *
-floatspan_degrees(const Span *sp, bool normalize)
+floatspan_degrees(const Span *s, bool normalize)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_FLOATSPAN(sp, NULL);
-  Span *result = span_copy(sp);
-  result->lower = datum_degrees(sp->lower, normalize);
-  result->upper = datum_degrees(sp->upper, normalize);
+  VALIDATE_FLOATSPAN(s, NULL);
+  Span *result = span_copy(s);
+  result->lower = datum_degrees(s->lower, normalize);
+  result->upper = datum_degrees(s->upper, normalize);
   return result;
 }
 
 /**
  * @ingroup meos_setspan_transf
  * @brief Return a float span with the values converted to radians
- * @param[in] sp Span
+ * @param[in] s Span
  * @csqlfn #Floatspan_radians()
  */
 Span *
-floatspan_radians(const Span *sp)
+floatspan_radians(const Span *s)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_FLOATSPAN(sp, NULL);
-  Span *result = span_copy(sp);
-  result->lower = datum_radians(sp->lower);
-  result->upper = datum_radians(sp->upper);
+  VALIDATE_FLOATSPAN(s, NULL);
+  Span *result = span_copy(s);
+  result->lower = datum_radians(s->lower);
+  result->upper = datum_radians(s->upper);
   return result;
 }
 
@@ -937,21 +939,21 @@ floatspan_radians(const Span *sp)
 /**
  * @ingroup meos_internal_setspan_transf
  * @brief Return the second span expanded with the first one
- * @param[in] sp1,sp2 Spans
+ * @param[in] s1,s2 Spans
  */
 void
-span_expand(const Span *sp1, Span *sp2)
+span_expand(const Span *s1, Span *s2)
 {
-  assert(sp1); assert(sp2); assert(sp1->spantype == sp2->spantype);
+  assert(s1); assert(s2); assert(s1->spantype == s2->spantype);
 
-  int cmp1 = datum_cmp(sp2->lower, sp1->lower, sp1->basetype);
-  int cmp2 = datum_cmp(sp2->upper, sp1->upper, sp1->basetype);
-  bool lower1 = cmp1 < 0 || (cmp1 == 0 && (sp2->lower_inc || ! sp1->lower_inc));
-  bool upper1 = cmp2 > 0 || (cmp2 == 0 && (sp2->upper_inc || ! sp1->upper_inc));
-  sp2->lower = lower1 ? sp2->lower : sp1->lower;
-  sp2->lower_inc = lower1 ? sp2->lower_inc : sp1->lower_inc;
-  sp2->upper = upper1 ? sp2->upper : sp1->upper;
-  sp2->upper_inc = upper1 ? sp2->upper_inc : sp1->upper_inc;
+  int cmp1 = datum_cmp(s2->lower, s1->lower, s1->basetype);
+  int cmp2 = datum_cmp(s2->upper, s1->upper, s1->basetype);
+  bool lower1 = cmp1 < 0 || (cmp1 == 0 && (s2->lower_inc || ! s1->lower_inc));
+  bool upper1 = cmp2 > 0 || (cmp2 == 0 && (s2->upper_inc || ! s1->upper_inc));
+  s2->lower = lower1 ? s2->lower : s1->lower;
+  s2->lower_inc = lower1 ? s2->lower_inc : s1->lower_inc;
+  s2->upper = upper1 ? s2->upper : s1->upper;
+  s2->upper_inc = upper1 ? s2->upper_inc : s1->upper_inc;
   return;
 }
 
@@ -960,32 +962,32 @@ span_expand(const Span *sp1, Span *sp2)
 /**
  * @ingroup meos_internal_setspan_transf
  * @brief Return a number span with its bounds expanded/decreased by a value
- * @param[in] sp Span
+ * @param[in] s Span
  * @param[in] value Value
  * @csqlfn #Numspan_expand()
  * @note This function can be seen as a 1-dimensional version of the PostGIS
  * function `ST_Buffer`
  */
 Span *
-numspan_expand(const Span *sp, Datum value)
+numspan_expand(const Span *s, Datum value)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NUMSPAN(sp, NULL);
+  VALIDATE_NUMSPAN(s, NULL);
   /* When the value is negative, return NULL if the span resulting by
    * shifting the bounds with the value is empty */ 
-  if (datum_cmp(value, (Datum) 0, sp->basetype) <= 0)
+  if (datum_cmp(value, (Datum) 0, s->basetype) <= 0)
   {
-    Datum width = numspan_width(sp);
-    Datum value2 = datum_add(value, value, sp->basetype);
+    Datum width = numspan_width(s);
+    Datum value2 = datum_add(value, value, s->basetype);
     /* We avoid taking the absolute value by adding the two values */
-    Datum add = datum_add(value2, width, sp->basetype);
-    int cmp = datum_cmp(add, (Datum) 0, sp->basetype);
-    if (cmp < 0 || (cmp == 0 && (! sp->lower_inc || ! sp->upper_inc)))
+    Datum add = datum_add(value2, width, s->basetype);
+    int cmp = datum_cmp(add, (Datum) 0, s->basetype);
+    if (cmp < 0 || (cmp == 0 && (! s->lower_inc || ! s->upper_inc)))
       return NULL;
   }
-  Span *result = span_copy(sp);
-  result->lower = datum_sub(sp->lower, value, sp->basetype);
-  result->upper = datum_add(sp->upper, value, sp->basetype);
+  Span *result = span_copy(s);
+  result->lower = datum_sub(s->lower, value, s->basetype);
+  result->upper = datum_add(s->upper, value, s->basetype);
   return result;
 }
 
@@ -993,41 +995,41 @@ numspan_expand(const Span *sp, Datum value)
 /**
  * @ingroup meos_setspan_transf
  * @brief Return an integer span with its bounds expanded/decreased by a value
- * @param[in] sp Span
+ * @param[in] s Span
  * @param[in] i Value
  * @csqlfn #Numspan_expand()
  */
 Span *
-intspan_expand(const Span *sp, int i)
+intspan_expand(const Span *s, int i)
 {
-  return numspan_expand(sp, Int32GetDatum(i));
+  return numspan_expand(s, Int32GetDatum(i));
 }
 
 /**
  * @ingroup meos_setspan_transf
  * @brief Return a big integer span with its bounds expanded/decreased by a
  * value
- * @param[in] sp Span
+ * @param[in] s Span
  * @param[in] i Value
  * @csqlfn #Numspan_expand()
  */
 Span *
-bigintspan_expand(const Span *sp, int64_t i)
+bigintspan_expand(const Span *s, int64 i)
 {
-  return numspan_expand(sp, Int64GetDatum(i));
+  return numspan_expand(s, Int64GetDatum(i));
 }
 
 /**
  * @ingroup meos_setspan_transf
  * @brief Return a float span with its bounds expanded/decreased by a value
- * @param[in] sp Span
+ * @param[in] s Span
  * @param[in] d Value
  * @csqlfn #Numspan_expand()
  */
 Span *
-floatspan_expand(const Span *sp, double d)
+floatspan_expand(const Span *s, double d)
 {
-  return numspan_expand(sp, Float8GetDatum(d));
+  return numspan_expand(s, Float8GetDatum(d));
 }
 #endif /* MEOS */
 
@@ -1035,17 +1037,17 @@ floatspan_expand(const Span *sp, double d)
  * @ingroup meos_setspan_transf
  * @brief Return a timestamptz span with its bounds expanded/decreased by an
  * interval
- * @param[in] sp Span
+ * @param[in] s Span
  * @param[in] interv Interval
  * @csqlfn #Tstzspan_expand()
  * @note This function can be seen as a 1-dimensional version of the PostGIS
  * function `ST_Buffer`
  */
 Span *
-tstzspan_expand(const Span *sp, const Interval *interv)
+tstzspan_expand(const Span *s, const Interval *interv)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(sp, NULL); VALIDATE_NOT_NULL(interv, NULL);
+  VALIDATE_NOT_NULL(s, NULL); VALIDATE_NOT_NULL(interv, NULL);
   /* When the interval is negative, return NULL if the span resulting by
    * shifting the bounds with the interval is empty */ 
   Interval intervalzero;
@@ -1054,25 +1056,25 @@ tstzspan_expand(const Span *sp, const Interval *interv)
   Interval *interv_neg;
   if (negative)
   {
-    Interval *duration = tstzspan_duration(sp);
+    Interval *duration = tstzspan_duration(s);
     /* Negate the interval */
     interv_neg = interval_negate(interv);
     Interval *interv_neg2 = mul_interval_float8(interv_neg, 2.0);
     int cmp = pg_interval_cmp(duration, interv_neg2);
     pfree(duration); pfree(interv_neg2);
-    if (cmp < 0 || (cmp == 0 && (! sp->lower_inc || ! sp->upper_inc)))
+    if (cmp < 0 || (cmp == 0 && (! s->lower_inc || ! s->upper_inc)))
     {
       pfree(interv_neg);
       return NULL;
     }
   }
 
-  Span *result = span_copy(sp);
+  Span *result = span_copy(s);
   TimestampTz tmin = negative ?
-    add_timestamptz_interval(DatumGetTimestampTz(sp->lower), interv_neg) :
-    minus_timestamptz_interval(DatumGetTimestampTz(sp->lower),
+    add_timestamptz_interval(DatumGetTimestampTz(s->lower), interv_neg) :
+    minus_timestamptz_interval(DatumGetTimestampTz(s->lower),
       (Interval *) interv);
-  TimestampTz tmax = add_timestamptz_interval(DatumGetTimestampTz(sp->upper),
+  TimestampTz tmax = add_timestamptz_interval(DatumGetTimestampTz(s->upper),
     (Interval *) interv);
   result->lower = TimestampTzGetDatum(tmin);
   result->upper = TimestampTzGetDatum(tmax);
@@ -1093,7 +1095,7 @@ tstzspan_expand(const Span *sp, const Interval *interv)
  * @param[in,out] lower,upper Bounds of the period
  */
 void
-span_bounds_shift_scale_value(Datum shift, Datum width, meosType basetype,
+span_bounds_shift_scale_value(Datum shift, Datum width, MeosType basetype,
   bool hasshift, bool haswidth, Datum *lower, Datum *upper)
 {
   assert(hasshift || haswidth); assert(lower); assert(upper);
@@ -1149,40 +1151,40 @@ span_bounds_shift_scale_time(const Interval *shift, const Interval *duration,
  * @brief Shift and/or scale a span by a delta and a scale (iterator function)
  */
 void
-numspan_delta_scale_iter(Span *sp, Datum origin, Datum delta, bool hasdelta,
+numspan_delta_scale_iter(Span *s, Datum origin, Datum delta, bool hasdelta,
   double scale)
 {
-  assert(sp);
+  assert(s);
 
-  meosType type = sp->basetype;
+  MeosType type = s->basetype;
   /* The default value when shift is not given is 0 */
   if (hasdelta)
   {
-    sp->lower = datum_add(sp->lower, delta, type);
-    sp->upper = datum_add(sp->upper, delta, type);
+    s->lower = datum_add(s->lower, delta, type);
+    s->upper = datum_add(s->upper, delta, type);
   }
   /* Shifted lower and upper */
-  Datum lower = sp->lower;
-  Datum upper = sp->upper;
+  Datum lower = s->lower;
+  Datum upper = s->upper;
   /* The default value when scale is not given is 1.0 */
   if (scale != 1.0)
   {
     /* The potential shift has been already taken care in the previous if */
-    sp->lower = datum_add(origin, double_datum(
+    s->lower = datum_add(origin, double_datum(
       datum_double(datum_sub(lower, origin, type), type) * scale, type), type);
     if (datum_eq(lower, upper, type))
-      sp->upper = sp->lower;
+      s->upper = s->lower;
     else
     {
       /* Integer spans have exclusive upper bound */
-      Datum upper1 = span_decr_bound(sp->upper, sp->basetype);
-      sp->upper = datum_add(origin,
+      Datum upper1 = span_decr_bound(s->upper, s->basetype);
+      s->upper = datum_add(origin,
         double_datum(
           datum_double(datum_sub(upper1, origin, type), type) * scale,
           type), type);
       /* Integer spans have exclusive upper bound */
       if (span_canon_basetype(type))
-        sp->upper = datum_add(sp->upper, 1, type);
+        s->upper = datum_add(s->upper, 1, type);
     }
   }
   return;
@@ -1192,32 +1194,32 @@ numspan_delta_scale_iter(Span *sp, Datum origin, Datum delta, bool hasdelta,
  * @brief Shift and/or scale a timestamptz span by a delta and a scale
  */
 void
-tstzspan_delta_scale_iter(Span *sp, TimestampTz origin, TimestampTz delta,
+tstzspan_delta_scale_iter(Span *s, TimestampTz origin, TimestampTz delta,
   double scale)
 {
-  assert(sp);
+  assert(s);
 
-  TimestampTz lower = DatumGetTimestampTz(sp->lower);
-  TimestampTz upper = DatumGetTimestampTz(sp->upper);
+  TimestampTz lower = DatumGetTimestampTz(s->lower);
+  TimestampTz upper = DatumGetTimestampTz(s->upper);
   /* The default value when there is not shift is 0 */
   if (delta != 0)
   {
-    sp->lower = TimestampTzGetDatum(lower + delta);
-    sp->upper = TimestampTzGetDatum(upper + delta);
+    s->lower = TimestampTzGetDatum(lower + delta);
+    s->upper = TimestampTzGetDatum(upper + delta);
   }
   /* Shifted lower and upper */
-  lower = DatumGetTimestampTz(sp->lower);
-  upper = DatumGetTimestampTz(sp->upper);
+  lower = DatumGetTimestampTz(s->lower);
+  upper = DatumGetTimestampTz(s->upper);
   /* The default value when there is not scale is 1.0 */
   if (scale != 1.0)
   {
     /* The potential shift has been already taken care in the previous if */
-    sp->lower = TimestampTzGetDatum(
+    s->lower = TimestampTzGetDatum(
       origin + (TimestampTz) ((lower - origin) * scale));
     if (lower == upper)
-      sp->upper = sp->lower;
+      s->upper = s->lower;
     else
-      sp->upper = TimestampTzGetDatum(
+      s->upper = TimestampTzGetDatum(
         origin + (TimestampTz) ((upper - origin) * scale));
   }
   return;
@@ -1226,7 +1228,7 @@ tstzspan_delta_scale_iter(Span *sp, TimestampTz origin, TimestampTz delta,
 /**
  * @brief Return a number span shifted and/or scaled by two values (iterator
  * function)
- * @param[in] sp Span
+ * @param[in] s Span
  * @param[in] shift Value for shifting the bounds
  * @param[in] width Width of the result
  * @param[in] hasshift True when the shift argument is given
@@ -1234,73 +1236,73 @@ tstzspan_delta_scale_iter(Span *sp, TimestampTz origin, TimestampTz delta,
  * @param[out] delta,scale Delta and scale of the transformation
  */
 void
-numspan_shift_scale_iter(Span *sp, Datum shift, Datum width, bool hasshift,
+numspan_shift_scale_iter(Span *s, Datum shift, Datum width, bool hasshift,
   bool haswidth, Datum *delta, double *scale)
 {
-  assert(sp); assert(delta); assert(scale);
-  Datum lower = sp->lower;
-  Datum upper = sp->upper;
-  meosType type = sp->basetype;
+  assert(s); assert(delta); assert(scale);
+  Datum lower = s->lower;
+  Datum upper = s->upper;
+  MeosType type = s->basetype;
   span_bounds_shift_scale_value(shift, width, type, hasshift, haswidth,
     &lower, &upper);
-  /* Compute delta and scale before overwriting sp->lower and sp->upper */
+  /* Compute delta and scale before overwriting s->lower and s->upper */
   *delta = 0;   /* Default value when shift is not given */
   *scale = 1.0; /* Default value when width is not given */
   if (hasshift)
-    *delta = datum_sub(lower, sp->lower, type);
+    *delta = datum_sub(lower, s->lower, type);
   /* If the period is instantaneous we cannot scale */
-  if (haswidth && ! datum_eq(sp->lower, sp->upper, type))
+  if (haswidth && ! datum_eq(s->lower, s->upper, type))
   {
     /* Integer spans have exclusive upper bound */
     Datum upper1, upper2;
     if (span_canon_basetype(type))
     {
       upper1 = datum_sub(upper, 1, type);
-      upper2 = datum_sub(sp->upper, 1, type);
+      upper2 = datum_sub(s->upper, 1, type);
     }
     else
     {
       upper1 = upper;
-      upper2 = sp->upper;
+      upper2 = s->upper;
     }
     *scale = datum_double(datum_sub(upper1, lower, type), type) /
-      datum_double(datum_sub(upper2, sp->lower, type), type);
+      datum_double(datum_sub(upper2, s->lower, type), type);
   }
-  sp->lower = lower;
-  sp->upper = upper;
+  s->lower = lower;
+  s->upper = upper;
   return;
 }
 
 /**
  * @brief Return a timestamptz span shifted and/or scaled by two intervals
- * @note Return the delta and scale of the transformation
+ * @note Returns the delta and scale of the transformation
  */
 void
-tstzspan_shift_scale1(Span *sp, const Interval *shift, const Interval *duration,
+tstzspan_shift_scale1(Span *s, const Interval *shift, const Interval *duration,
   TimestampTz *delta, double *scale)
 {
-  assert(sp); assert(delta); assert(scale);
-  TimestampTz lower = DatumGetTimestampTz(sp->lower);
-  TimestampTz upper = DatumGetTimestampTz(sp->upper);
+  assert(s); assert(delta); assert(scale);
+  TimestampTz lower = DatumGetTimestampTz(s->lower);
+  TimestampTz upper = DatumGetTimestampTz(s->upper);
   span_bounds_shift_scale_time(shift, duration, &lower, &upper);
-  /* Compute delta and scale before overwriting sp->lower and sp->upper */
+  /* Compute delta and scale before overwriting s->lower and s->upper */
   *delta = 0;   /* Default value when shift == NULL */
   *scale = 1.0; /* Default value when duration == NULL */
   if (shift)
-    *delta = lower - DatumGetTimestampTz(sp->lower);
+    *delta = lower - DatumGetTimestampTz(s->lower);
   /* If the period is instantaneous we cannot scale */
-  if (duration && sp->lower != sp->upper)
+  if (duration && s->lower != s->upper)
     *scale = (double) (upper - lower) /
-      (double) (DatumGetTimestampTz(sp->upper) - DatumGetTimestampTz(sp->lower));
-  sp->lower = TimestampTzGetDatum(lower);
-  sp->upper = TimestampTzGetDatum(upper);
+      (double) (DatumGetTimestampTz(s->upper) - DatumGetTimestampTz(s->lower));
+  s->lower = TimestampTzGetDatum(lower);
+  s->upper = TimestampTzGetDatum(upper);
   return;
 }
 
 /**
  * @ingroup meos_internal_setspan_transf
  * @brief Return a number span shifted and/or scaled by two values
- * @param[in] sp Span
+ * @param[in] s Span
  * @param[in] shift Value for shifting the bounds
  * @param[in] width Width of the result
  * @param[in] hasshift True when the shift argument is given
@@ -1308,19 +1310,19 @@ tstzspan_shift_scale1(Span *sp, const Interval *shift, const Interval *duration,
  * @csqlfn #Numspan_shift(), #Numspan_scale(), #Numspan_shift_scale()
  */
 Span *
-numspan_shift_scale(const Span *sp, Datum shift, Datum width, bool hasshift,
+numspan_shift_scale(const Span *s, Datum shift, Datum width, bool hasshift,
   bool haswidth)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(sp, NULL);
+  VALIDATE_NOT_NULL(s, NULL);
   if (! ensure_one_true(hasshift, haswidth) ||
-      (haswidth && ! ensure_positive_datum(width, sp->basetype)))
+      (haswidth && ! ensure_positive_datum(width, s->basetype)))
     return NULL;
 
   /* Copy the input span to the result */
-  Span *result = span_copy(sp);
+  Span *result = span_copy(s);
   /* Shift and/or scale the resulting span */
-  span_bounds_shift_scale_value(shift, width, sp->basetype, hasshift, haswidth,
+  span_bounds_shift_scale_value(shift, width, s->basetype, hasshift, haswidth,
     &result->lower, &result->upper);
   return result;
 }
@@ -1344,26 +1346,26 @@ timestamptz_shift(TimestampTz t, const Interval *interv)
 /**
  * @ingroup meos_setspan_transf
  * @brief Return a timestamptz span shifted and/or scaled by two intervals
- * @param[in] sp Span
+ * @param[in] s Span
  * @param[in] shift Interval to shift the bounds, may be NULL
  * @param[in] duration Duation of the result, may be NULL
  * @csqlfn #Tstzspan_shift(), #Tstzspan_scale(), #Tstzspan_shift_scale()
  */
 Span *
-tstzspan_shift_scale(const Span *sp, const Interval *shift,
+tstzspan_shift_scale(const Span *s, const Interval *shift,
   const Interval *duration)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_TSTZSPAN(sp, NULL);
+  VALIDATE_TSTZSPAN(s, NULL);
   if (! ensure_one_not_null((void *) shift, (void *) duration) ||
       (duration && ! ensure_positive_duration(duration)))
     return NULL;
 
   /* Copy the input period to the result */
-  Span *result = span_copy(sp);
+  Span *result = span_copy(s);
   /* Shift and/or scale the resulting period */
-  TimestampTz lower = DatumGetTimestampTz(sp->lower);
-  TimestampTz upper = DatumGetTimestampTz(sp->upper);
+  TimestampTz lower = DatumGetTimestampTz(s->lower);
+  TimestampTz upper = DatumGetTimestampTz(s->upper);
   span_bounds_shift_scale_time(shift, duration, &lower, &upper);
   result->lower = TimestampTzGetDatum(lower);
   result->upper = TimestampTzGetDatum(upper);
@@ -1482,20 +1484,20 @@ set_split_each_n_spans(const Set *s, int elems_per_span, int *count)
 
 /**
  * @ingroup meos_setspan_comp
- * @brief Return true if two spans are equal
+ * @brief Return true if the two spans are equal
  * @note The function #span_cmp() is not used to increase efficiency
- * @param[in] sp1,sp2 Sets
+ * @param[in] s1,s2 Sets
  * @csqlfn #Span_eq()
  */
 bool
-span_eq(const Span *sp1, const Span *sp2)
+span_eq(const Span *s1, const Span *s2)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_span_span(sp1, sp2))
+  if (! ensure_valid_span_span(s1, s2))
     return false;
 
-  if (sp1->lower != sp2->lower || sp1->upper != sp2->upper ||
-    sp1->lower_inc != sp2->lower_inc || sp1->upper_inc != sp2->upper_inc)
+  if (s1->lower != s2->lower || s1->upper != s2->upper ||
+    s1->lower_inc != s2->lower_inc || s1->upper_inc != s2->upper_inc)
     return false;
   return true;
 }
@@ -1503,41 +1505,41 @@ span_eq(const Span *sp1, const Span *sp2)
 /**
  * @ingroup meos_setspan_comp
  * @brief Return true if the first span is different from the second one
- * @param[in] sp1,sp2 Sets
+ * @param[in] s1,s2 Sets
  * @csqlfn #Span_ne()
  */
 inline bool
-span_ne(const Span *sp1, const Span *sp2)
+span_ne(const Span *s1, const Span *s2)
 {
-  return (! span_eq(sp1, sp2));
+  return (! span_eq(s1, s2));
 }
 
 /**
  * @ingroup meos_setspan_comp
  * @brief Return -1, 0, or 1 depending on whether the first span is less than,
  * equal to, or greater than the second one
- * @param[in] sp1,sp2 Sets
+ * @param[in] s1,s2 Sets
  * @return On error return INT_MAX
  * @note Function used for B-tree comparison
  * @csqlfn #Span_cmp()
  */
 int
-span_cmp(const Span *sp1, const Span *sp2)
+span_cmp(const Span *s1, const Span *s2)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_span_span(sp1, sp2))
+  if (! ensure_valid_span_span(s1, s2))
     return INT_MAX;
 
-  int cmp = datum_cmp(sp1->lower, sp2->lower, sp1->basetype);
+  int cmp = datum_cmp(s1->lower, s2->lower, s1->basetype);
   if (cmp != 0)
     return cmp;
-  if (sp1->lower_inc != sp2->lower_inc)
-    return sp1->lower_inc ? -1 : 1;
-  cmp = datum_cmp(sp1->upper, sp2->upper, sp1->basetype);
+  if (s1->lower_inc != s2->lower_inc)
+    return s1->lower_inc ? -1 : 1;
+  cmp = datum_cmp(s1->upper, s2->upper, s1->basetype);
   if (cmp != 0)
     return cmp;
-  if (sp1->upper_inc != sp2->upper_inc)
-    return sp1->upper_inc ? 1 : -1;
+  if (s1->upper_inc != s2->upper_inc)
+    return s1->upper_inc ? 1 : -1;
   return 0;
 }
 
@@ -1546,50 +1548,50 @@ span_cmp(const Span *sp1, const Span *sp2)
 /**
  * @ingroup meos_setspan_comp
  * @brief Return true if the first span is less than the second one
- * @param[in] sp1,sp2 Sets
+ * @param[in] s1,s2 Sets
  * @csqlfn #Span_lt()
  */
 inline bool
-span_lt(const Span *sp1, const Span *sp2)
+span_lt(const Span *s1, const Span *s2)
 {
-  return span_cmp(sp1, sp2) < 0;
+  return span_cmp(s1, s2) < 0;
 }
 
 /**
  * @ingroup meos_setspan_comp
  * @brief Return true if the first span is less than or equal to the second one
- * @param[in] sp1,sp2 Sets
+ * @param[in] s1,s2 Sets
  * @csqlfn #Span_le()
  */
 inline bool
-span_le(const Span *sp1, const Span *sp2)
+span_le(const Span *s1, const Span *s2)
 {
-  return span_cmp(sp1, sp2) <= 0;
+  return span_cmp(s1, s2) <= 0;
 }
 
 /**
  * @ingroup meos_setspan_comp
  * @brief Return true if the first span is greater than or equal to the second
  * one
- * @param[in] sp1,sp2 Sets
+ * @param[in] s1,s2 Sets
  * @csqlfn #Span_gt()
  */
 inline bool
-span_ge(const Span *sp1, const Span *sp2)
+span_ge(const Span *s1, const Span *s2)
 {
-  return span_cmp(sp1, sp2) >= 0;
+  return span_cmp(s1, s2) >= 0;
 }
 
 /**
  * @ingroup meos_setspan_comp
  * @brief Return true if the first span is greater than the second one
- * @param[in] sp1,sp2 Sets
+ * @param[in] s1,s2 Sets
  * @csqlfn #Span_ge()
  */
 inline bool
-span_gt(const Span *sp1, const Span *sp2)
+span_gt(const Span *s1, const Span *s2)
 {
-  return span_cmp(sp1, sp2) > 0;
+  return span_cmp(s1, s2) > 0;
 }
 
 /*****************************************************************************
@@ -1599,33 +1601,33 @@ span_gt(const Span *sp1, const Span *sp2)
 /**
  * @ingroup meos_setspan_accessor
  * @brief Return the 32-bit hash of a span
- * @param[in] sp Span
+ * @param[in] s Span
  * @return On error return @p INT_MAX
  * @csqlfn #Span_hash()
  */
-uint32_t
-span_hash(const Span *sp)
+uint32
+span_hash(const Span *s)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(sp, INT_MAX);
+  VALIDATE_NOT_NULL(s, INT_MAX);
 
   /* Create flags from the lower_inc and upper_inc values */
   char flags = '\0';
-  if (sp->lower_inc)
+  if (s->lower_inc)
     flags |= 0x01;
-  if (sp->upper_inc)
+  if (s->upper_inc)
     flags |= 0x02;
 
   /* Create type from the spantype and basetype values */
-  uint16 type = ((uint16) (sp->spantype) << 8) | (uint16) (sp->basetype);
-  uint32_t type_hash = hash_bytes_uint32((int32_t) type);
+  uint16 type = ((uint16) (s->spantype) << 8) | (uint16) (s->basetype);
+  uint32 type_hash = hash_bytes_uint32((int32) type);
 
   /* Apply the hash function to each bound */
-  uint32_t lower_hash = datum_hash(sp->lower, sp->basetype);
-  uint32_t upper_hash = datum_hash(sp->upper, sp->basetype);
+  uint32 lower_hash = datum_hash(s->lower, s->basetype);
+  uint32 upper_hash = datum_hash(s->upper, s->basetype);
 
   /* Merge hashes of flags, type, and bounds */
-  uint32_t result = hash_bytes_uint32((uint32_t) flags);
+  uint32 result = hash_bytes_uint32((uint32) flags);
   result ^= type_hash;
 #if POSTGRESQL_VERSION_NUMBER >= 150000
   result = pg_rotate_left32(result, 1);
@@ -1646,34 +1648,34 @@ span_hash(const Span *sp)
 /**
  * @ingroup meos_setspan_accessor
  * @brief Return the 64-bit hash of a span using a seed
- * @param[in] sp Span
+ * @param[in] s Span
  * @param[in] seed Seed
  * @return On error return @p LONG_MAX
  * @csqlfn #Span_hash_extended()
  */
-uint64_t
-span_hash_extended(const Span *sp, uint64_t seed)
+uint64
+span_hash_extended(const Span *s, uint64 seed)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(sp, LONG_MAX);
+  VALIDATE_NOT_NULL(s, LONG_MAX);
 
   char flags = '\0';
   /* Create flags from the lower_inc and upper_inc values */
-  if (sp->lower_inc)
+  if (s->lower_inc)
     flags |= 0x01;
-  if (sp->upper_inc)
+  if (s->upper_inc)
     flags |= 0x02;
 
   /* Create type from the spantype and basetype values */
-  uint16 type = ((uint16) (sp->spantype) << 8) | (uint16) (sp->basetype);
-  uint64_t type_hash = hash_uint32_extended((uint32_t) type, seed);
+  uint16 type = ((uint16) (s->spantype) << 8) | (uint16) (s->basetype);
+  uint64 type_hash = hash_uint32_extended((uint32) type, seed);
 
   /* Apply the hash function to each bound */
-  uint64_t lower_hash = int64_hash_extended(sp->lower, seed);
-  uint64_t upper_hash = int64_hash_extended(sp->upper, seed);
+  uint64 lower_hash = int64_hash_extended(s->lower, seed);
+  uint64 upper_hash = int64_hash_extended(s->upper, seed);
 
   /* Merge hashes of flags and bounds */
-  uint64_t result = hash_uint32_extended((uint32_t) flags, seed);
+  uint64 result = hash_uint32_extended((uint32) flags, seed);
   result ^= type_hash;
   result = ROTATE_HIGH_AND_LOW_32BITS(result);
   result ^= lower_hash;

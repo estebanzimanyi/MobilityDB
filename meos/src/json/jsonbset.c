@@ -220,8 +220,8 @@ jsonbset_values(const Set *s)
  * @param[in] restype Result type 
  */
 Set *
-jsonbfunc_jsonbset(const Set *s, datum_func1 func, meosType settype UNUSED,
-  meosType restype)
+jsonbfunc_jsonbset(const Set *s, datum_func1 func, MeosType settype UNUSED,
+  MeosType restype)
 {
   assert(s); assert(s->settype == settype);
   Datum *values = palloc(sizeof(Datum) * s->count);

@@ -139,7 +139,7 @@ extern Set *jsonbset_delete_array(const Set *set, text **keys, int count);
 extern Set *jsonbset_exists(const Set *set, const text *key);
 extern Set *jsonbset_exists_array(const Set *set, text **keys, int count, bool any);
 extern Set *jsonbset_set(const Set *set, text **keys, int count, const Jsonb *newjb, bool create, const text *null_handle, bool lax);
-extern Set *jsonbset_to_alphanumset(const Set *set, const char *key, meosType settype, nullHandleType null_handle);
+extern Set *jsonbset_to_alphanumset(const Set *set, const char *key, MeosType settype, nullHandleType null_handle);
 extern Set *jsonbset_to_intset(const Set *set, const char *key, nullHandleType null_handle);
 extern Set *jsonbset_to_floatset(const Set *set, const char *key, nullHandleType null_handle);
 extern Set *jsonbset_to_textset_key(const Set *set, const char *key, nullHandleType null_handle);

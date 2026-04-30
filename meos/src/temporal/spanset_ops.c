@@ -88,43 +88,43 @@ contains_spanset_timestamptz(const SpanSet *ss, TimestampTz t)
  * @ingroup meos_setspan_topo
  * @brief Return true if a span set contains a span
  * @param[in] ss Span set
- * @param[in] sp Span
+ * @param[in] s Span
  * @csqlfn #Contains_spanset_span()
  */
 bool
-contains_spanset_span(const SpanSet *ss, const Span *sp)
+contains_spanset_span(const SpanSet *ss, const Span *s)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_spanset_span(ss, sp))
+  if (! ensure_valid_spanset_span(ss, s))
     return false;
 
   /* Singleton span set */
   if (ss->count == 1)
-    return contains_span_span(SPANSET_SP_N(ss, 0), sp);
+    return contains_span_span(SPANSET_SP_N(ss, 0), s);
 
   /* Bounding box test */
-  if (! contains_span_span(&ss->span, sp))
+  if (! contains_span_span(&ss->span, s))
     return false;
 
   int loc;
-  spanset_find_value(ss, sp->lower, &loc);
-  return contains_span_span(SPANSET_SP_N(ss, loc), sp);
+  spanset_find_value(ss, s->lower, &loc);
+  return contains_span_span(SPANSET_SP_N(ss, loc), s);
 }
 
 /**
  * @ingroup meos_setspan_topo
  * @brief Return true if a span contains a span set
- * @param[in] sp Span
+ * @param[in] s Span
  * @param[in] ss Span set
  * @csqlfn #Contains_span_spanset()
  */
 bool
-contains_span_spanset(const Span *sp, const SpanSet *ss)
+contains_span_spanset(const Span *s, const SpanSet *ss)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_spanset_span(ss, sp))
+  if (! ensure_valid_spanset_span(ss, s))
     return false;
-  return contains_span_span(sp, &ss->span);
+  return contains_span_span(s, &ss->span);
 }
 
 /**
@@ -153,18 +153,18 @@ contains_spanset_spanset(const SpanSet *ss1, const SpanSet *ss2)
   int i = 0, j = 0;
   while (i < ss1->count && j < ss2->count)
   {
-    const Span *sp1 = SPANSET_SP_N(ss1, i);
-    const Span *sp2 = SPANSET_SP_N(ss2, j);
-    if (left_span_span(sp1, sp2))
+    const Span *s1 = SPANSET_SP_N(ss1, i);
+    const Span *s2 = SPANSET_SP_N(ss2, j);
+    if (left_span_span(s1, s2))
       i++;
-    else if (left_span_span(sp2, sp1))
+    else if (left_span_span(s2, s1))
       return false;
     else
     {
-      /* sp1 and sp2 overlap */
-      if (contains_span_span(sp1, sp2))
+      /* s1 and s2 overlap */
+      if (contains_span_span(s1, s2))
       {
-        if (sp1->upper == sp2->upper)
+        if (s1->upper == s2->upper)
         {
           i++; j++;
         }
@@ -175,8 +175,8 @@ contains_spanset_spanset(const SpanSet *ss1, const SpanSet *ss2)
         return false;
     }
   }
-  /* If j == ss2->count every span in sp2 is contained in a span of sp1
-     but sp1 may have additional spans */
+  /* If j == ss2->count every span in s2 is contained in a span of s1
+     but s1 may have additional spans */
   return (j == ss2->count);
 }
 
@@ -199,27 +199,27 @@ contained_value_spanset(Datum value, const SpanSet *ss)
 /**
  * @ingroup meos_setspan_topo
  * @brief Return true if a span is contained in a span set
- * @param[in] sp Span
+ * @param[in] s Span
  * @param[in] ss Span set
  * @csqlfn #Contained_span_spanset()
  */
 inline bool
-contained_span_spanset(const Span *sp, const SpanSet *ss)
+contained_span_spanset(const Span *s, const SpanSet *ss)
 {
-  return contains_spanset_span(ss, sp);
+  return contains_spanset_span(ss, s);
 }
 
 /**
  * @ingroup meos_setspan_topo
  * @brief Return true if a span set is contained in a span set
  * @param[in] ss Span set
- * @param[in] sp Span
+ * @param[in] s Span
  * @csqlfn #Contained_spanset_span()
  */
 inline bool
-contained_spanset_span(const SpanSet *ss, const Span *sp)
+contained_spanset_span(const SpanSet *ss, const Span *s)
 {
-  return contains_span_spanset(sp, ss);
+  return contains_span_spanset(s, ss);
 }
 
 /**
@@ -242,33 +242,33 @@ contained_spanset_spanset(const SpanSet *ss1, const SpanSet *ss2)
  * @ingroup meos_setspan_topo
  * @brief Return true if a span set and a span overlap
  * @param[in] ss Span set
- * @param[in] sp Span
+ * @param[in] s Span
  * @csqlfn #Overlaps_spanset_span()
  */
 bool
-overlaps_spanset_span(const SpanSet *ss, const Span *sp)
+overlaps_spanset_span(const SpanSet *ss, const Span *s)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_spanset_span(ss, sp))
+  if (! ensure_valid_spanset_span(ss, s))
     return false;
 
   /* Singleton span set */
   if (ss->count == 1)
-    return overlaps_span_span(SPANSET_SP_N(ss, 0), sp);
+    return overlaps_span_span(SPANSET_SP_N(ss, 0), s);
 
   /* Bounding box test */
-  if (! overlaps_span_span(sp, &ss->span))
+  if (! overlaps_span_span(s, &ss->span))
     return false;
 
   /* Binary search of lower bound of span */
   int loc;
-  spanset_find_value(ss, sp->lower, &loc);
+  spanset_find_value(ss, s->lower, &loc);
   for (int i = loc; i < ss->count; i++)
   {
-    const Span *sp1 = SPANSET_SP_N(ss, i);
-    if (overlaps_span_span(sp1, sp))
+    const Span *s1 = SPANSET_SP_N(ss, i);
+    if (overlaps_span_span(s1, s))
       return true;
-    if (sp->upper < sp1->upper)
+    if (s->upper < s1->upper)
       break;
   }
   return false;
@@ -277,14 +277,14 @@ overlaps_spanset_span(const SpanSet *ss, const Span *sp)
 /**
  * @ingroup meos_setspan_topo
  * @brief Return true if a span and a span set overlap
- * @param[in] sp Span
+ * @param[in] s Span
  * @param[in] ss Span set
  * @csqlfn #Overlaps_span_spanset()
  */
 inline bool
-overlaps_span_spanset(const Span *sp, const SpanSet *ss)
+overlaps_span_spanset(const Span *s, const SpanSet *ss)
 {
-  return overlaps_spanset_span(ss, sp);
+  return overlaps_spanset_span(ss, s);
 }
 
 /**
@@ -313,11 +313,11 @@ overlaps_spanset_spanset(const SpanSet *ss1, const SpanSet *ss2)
   int i = 0, j = 0;
   while (i < ss1->count && j < ss2->count)
   {
-    const Span *sp1 = SPANSET_SP_N(ss1, i);
-    const Span *sp2 = SPANSET_SP_N(ss2, j);
-    if (overlaps_span_span(sp1, sp2))
+    const Span *s1 = SPANSET_SP_N(ss1, i);
+    const Span *s2 = SPANSET_SP_N(ss2, j);
+    if (overlaps_span_span(s1, s2))
       return true;
-    int cmp = datum_cmp(sp1->upper, sp2->upper, sp1->basetype);
+    int cmp = datum_cmp(s1->upper, s2->upper, s1->basetype);
     if (cmp == 0)
     {
       i++; j++;
@@ -367,41 +367,41 @@ adjacent_value_spanset(Datum value, const SpanSet *ss)
  * @ingroup meos_setspan_topo
  * @brief Return true if a span set and a span are adjacent
  * @param[in] ss Span set
- * @param[in] sp Span
+ * @param[in] s Span
  * @csqlfn #Adjacent_spanset_span()
  */
 bool
-adjacent_spanset_span(const SpanSet *ss, const Span *sp)
+adjacent_spanset_span(const SpanSet *ss, const Span *s)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_spanset_span(ss, sp))
+  if (! ensure_valid_spanset_span(ss, s))
     return false;
 
   /* Singleton span set */
   if (ss->count == 1)
-    return adjacent_span_span(SPANSET_SP_N(ss, 0), sp);
+    return adjacent_span_span(SPANSET_SP_N(ss, 0), s);
 
-  const Span *sp1 = SPANSET_SP_N(ss, 0);
-  const Span *sp2 = SPANSET_SP_N(ss, ss->count - 1);
+  const Span *s1 = SPANSET_SP_N(ss, 0);
+  const Span *s2 = SPANSET_SP_N(ss, ss->count - 1);
   /*
    * Two spans A..B and C..D are adjacent if and only if
    * B is adjacent to C, or D is adjacent to A.
    */
-  return (sp2->upper == sp->lower && sp2->upper_inc != sp->lower_inc) ||
-         (sp->upper == sp1->lower && sp->upper_inc != sp1->lower_inc);
+  return (s2->upper == s->lower && s2->upper_inc != s->lower_inc) ||
+         (s->upper == s1->lower && s->upper_inc != s1->lower_inc);
 }
 
 /**
  * @ingroup meos_setspan_topo
  * @brief Return true if a span and a span set are adjacent
- * @param[in] sp Span
+ * @param[in] s Span
  * @param[in] ss Span set
  * @csqlfn #Adjacent_span_spanset()
  */
 inline bool
-adjacent_span_spanset(const Span *sp, const SpanSet *ss)
+adjacent_span_spanset(const Span *s, const SpanSet *ss)
 {
-  return adjacent_spanset_span(ss, sp);
+  return adjacent_spanset_span(ss, s);
 }
 
 /**
@@ -454,17 +454,17 @@ left_value_spanset(Datum value, const SpanSet *ss)
 /**
  * @ingroup meos_setspan_pos
  * @brief Return true if a span is before a span set
- * @param[in] sp Span
+ * @param[in] s Span
  * @param[in] ss Span set
  * @csqlfn #Left_span_spanset()
  */
 bool
-left_span_spanset(const Span *sp, const SpanSet *ss)
+left_span_spanset(const Span *s, const SpanSet *ss)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_spanset_span(ss, sp))
+  if (! ensure_valid_spanset_span(ss, s))
     return false;
-  return left_span_span(sp, SPANSET_SP_N(ss, 0));
+  return left_span_span(s, SPANSET_SP_N(ss, 0));
 }
 
 /**
@@ -483,16 +483,16 @@ left_spanset_value(const SpanSet *ss, Datum value)
  * @ingroup meos_setspan_pos
  * @brief Return true if a span set is to the left a span
  * @param[in] ss Span set
- * @param[in] sp Span
+ * @param[in] s Span
  * @csqlfn #Left_spanset_span()
  */
 bool
-left_spanset_span(const SpanSet *ss, const Span *sp)
+left_spanset_span(const SpanSet *ss, const Span *s)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_spanset_span(ss, sp))
+  if (! ensure_valid_spanset_span(ss, s))
     return false;
-  return left_span_span(SPANSET_SP_N(ss, ss->count - 1), sp);
+  return left_span_span(SPANSET_SP_N(ss, ss->count - 1), s);
 }
 
 /**
@@ -530,14 +530,14 @@ right_value_spanset(Datum value, const SpanSet *ss)
 /**
  * @ingroup meos_setspan_pos
  * @brief Return true if a span is to the right of a span set
- * @param[in] sp Span
+ * @param[in] s Span
  * @param[in] ss Span set
  * @csqlfn #Right_span_spanset()
  */
 inline bool
-right_span_spanset(const Span *sp, const SpanSet *ss)
+right_span_spanset(const Span *s, const SpanSet *ss)
 {
-  return left_spanset_span(ss, sp);
+  return left_spanset_span(ss, s);
 }
 
 /**
@@ -556,13 +556,13 @@ right_spanset_value(const SpanSet *ss, Datum value)
  * @ingroup meos_setspan_pos
  * @brief Return true if a span set is to the right of a span
  * @param[in] ss Span set
- * @param[in] sp Span
+ * @param[in] s Span
  * @csqlfn #Right_spanset_span()
  */
 inline bool
-right_spanset_span(const SpanSet *ss, const Span *sp)
+right_spanset_span(const SpanSet *ss, const Span *s)
 {
-  return left_span_spanset(sp, ss);
+  return left_span_spanset(s, ss);
 }
 
 /**
@@ -610,33 +610,33 @@ overleft_value_spanset(Datum value, const SpanSet *ss)
 /**
  * @ingroup meos_setspan_pos
  * @brief Return true if a span does not extend to the right of a span set
- * @param[in] sp Span
+ * @param[in] s Span
  * @param[in] ss Span set
  * @csqlfn #Overleft_span_spanset()
  */
 bool
-overleft_span_spanset(const Span *sp, const SpanSet *ss)
+overleft_span_spanset(const Span *s, const SpanSet *ss)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_spanset_span(ss, sp))
+  if (! ensure_valid_spanset_span(ss, s))
     return false;
-  return overleft_span_span(sp, SPANSET_SP_N(ss, ss->count - 1));
+  return overleft_span_span(s, SPANSET_SP_N(ss, ss->count - 1));
 }
 
 /**
  * @ingroup meos_setspan_pos
  * @brief Return true if a span set does not extend to the right of a span
  * @param[in] ss Span set
- * @param[in] sp Span
+ * @param[in] s Span
  * @csqlfn #Overleft_spanset_span()
  */
 bool
-overleft_spanset_span(const SpanSet *ss, const Span *sp)
+overleft_spanset_span(const SpanSet *ss, const Span *s)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_spanset_span(ss, sp))
+  if (! ensure_valid_spanset_span(ss, s))
     return false;
-  return overleft_span_span(SPANSET_SP_N(ss, ss->count - 1), sp);
+  return overleft_span_span(SPANSET_SP_N(ss, ss->count - 1), s);
 }
 
 /**
@@ -676,17 +676,17 @@ overright_value_spanset(Datum value, const SpanSet *ss)
 /**
  * @ingroup meos_setspan_pos
  * @brief Return true if a span does not extend to the left of a span set
- * @param[in] sp Span
+ * @param[in] s Span
  * @param[in] ss Span set
  * @csqlfn #Overright_span_spanset()
  */
 bool
-overright_span_spanset(const Span *sp, const SpanSet *ss)
+overright_span_spanset(const Span *s, const SpanSet *ss)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_spanset_span(ss, sp))
+  if (! ensure_valid_spanset_span(ss, s))
     return false;
-  return overright_span_span(sp, SPANSET_SP_N(ss, 0));
+  return overright_span_span(s, SPANSET_SP_N(ss, 0));
 }
 
 /**
@@ -706,16 +706,16 @@ overright_spanset_value(const SpanSet *ss, Datum value)
  * @ingroup meos_setspan_pos
  * @brief Return true if a span set does not extend to the left of a span
  * @param[in] ss Span set
- * @param[in] sp Span
+ * @param[in] s Span
  * @csqlfn #Overright_spanset_span()
  */
 bool
-overright_spanset_span(const SpanSet *ss, const Span *sp)
+overright_spanset_span(const SpanSet *ss, const Span *s)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_spanset_span(ss, sp))
+  if (! ensure_valid_spanset_span(ss, s))
     return false;
-  return overright_span_span(SPANSET_SP_N(ss, 0), sp);
+  return overright_span_span(SPANSET_SP_N(ss, 0), s);
 }
 
 /**
@@ -748,9 +748,9 @@ SpanSet *
 union_spanset_value(const SpanSet *ss, Datum value)
 {
   assert(ss);
-  Span sp;
-  span_set(value, value, true, true, ss->basetype, ss->spantype, &sp);
-  return union_spanset_span(ss, &sp);
+  Span s;
+  span_set(value, value, true, true, ss->basetype, ss->spantype, &s);
+  return union_spanset_span(ss, &s);
 }
 
 /**
@@ -769,73 +769,73 @@ union_value_spanset(Datum value, const SpanSet *ss)
  * @ingroup meos_setspan_set
  * @brief Return the union of a span set and a span
  * @param[in] ss Span set
- * @param[in] sp Span
+ * @param[in] s Span
  * @csqlfn #Union_spanset_span()
  */
 SpanSet *
-union_spanset_span(const SpanSet *ss, const Span *sp)
+union_spanset_span(const SpanSet *ss, const Span *s)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_spanset_span(ss, sp))
-    return false;
+  if (! ensure_valid_spanset_span(ss, s))
+    return NULL;
 
   /* Singleton span set */
   if (ss->count == 1)
-    return union_span_span(SPANSET_SP_N(ss, 0), sp);
+    return union_span_span(SPANSET_SP_N(ss, 0), s);
 
   /* Is the span set fully contained in the span? */
-  if (contains_span_span(sp, &ss->span))
-    return span_to_spanset(sp);
+  if (contains_span_span(s, &ss->span))
+    return span_to_spanset(s);
 
   Span *spans = palloc(sizeof(Span) * (ss->count + 1));
   int i = 0, j = 0, nspans = 0;
   while (i < ss->count)
   {
-    const Span *sp1 = SPANSET_SP_N(ss, i);
+    const Span *s1 = SPANSET_SP_N(ss, i);
     /* If the i-th component span is to the left of the argument span */
-    if (lfnadj_span_span(sp1, sp))
+    if (lfnadj_span_span(s1, s))
     {
-      spans[nspans++] = *sp1;
+      spans[nspans++] = *s1;
       i++;
     }
     /* If the i-th component span is to the right of the argument span */
-    else if (lfnadj_span_span(sp, sp1))
+    else if (lfnadj_span_span(s, s1))
     {
-      spans[nspans++] = *sp;
+      spans[nspans++] = *s;
       j++;
       break;
     }
     /* The two spans overlap */
     else
     {
-      /* Find all spans in ss that overlap with sp
+      /* Find all spans in ss that overlap with s
        *      i           i
        *   |-----| |-| |-----|
        *       |---------|
-       *            sp
+       *            s
        */
-      Span sp2;
-      bbox_union_span_span(sp1, sp, &sp2);
+      Span s2;
+      bbox_union_span_span(s1, s, &s2);
       i++;
       while (i < ss->count)
       {
-        sp1 = SPANSET_SP_N(ss, i);
-        if (ovadj_span_span(sp1, &sp2))
+        s1 = SPANSET_SP_N(ss, i);
+        if (ovadj_span_span(s1, &s2))
         {
-          span_expand(sp1, &sp2);
+          span_expand(s1, &s2);
           i++;
         }
         else
           break;
       }
-      spans[nspans++] = sp2;
+      spans[nspans++] = s2;
       j++;
       break;
     }
   }
   /* Add the argument span if it is to rigth of the spanset */
   if (j == 0)
-    spans[nspans++] = *sp;
+    spans[nspans++] = *s;
   /* Add the remaining component spans if any are left */
   while (i < ss->count)
     spans[nspans++] = *SPANSET_SP_N(ss, i++);
@@ -846,13 +846,13 @@ union_spanset_span(const SpanSet *ss, const Span *sp)
  * @ingroup meos_setspan_set
  * @brief Return the union of a span and a span set
  * @param[in] ss Span set
- * @param[in] sp Span
+ * @param[in] s Span
  * @csqlfn #Union_span_spanset()
  */
 SpanSet *
-union_span_spanset(const Span *sp, const SpanSet *ss)
+union_span_spanset(const Span *s, const SpanSet *ss)
 {
-  return union_spanset_span(ss, sp);
+  return union_spanset_span(ss, s);
 }
 
 /**
@@ -878,17 +878,17 @@ union_spanset_spanset(const SpanSet *ss1, const SpanSet *ss2)
   int i = 0, j = 0, nspans = 0;
   while (i < ss1->count && j < ss2->count)
   {
-    const Span *sp1 = SPANSET_SP_N(ss1, i);
-    const Span *sp2 = SPANSET_SP_N(ss2, j);
+    const Span *s1 = SPANSET_SP_N(ss1, i);
+    const Span *s2 = SPANSET_SP_N(ss2, j);
     /* The spans do not overlap, copy the earliest span */
-    if (lfnadj_span_span(sp1, sp2))
+    if (lfnadj_span_span(s1, s2))
     {
-      spans[nspans++] = *sp1;
+      spans[nspans++] = *s1;
       i++;
     }
-    else if (lfnadj_span_span(sp2, sp1))
+    else if (lfnadj_span_span(s2, s1))
     {
-      spans[nspans++] = *sp2;
+      spans[nspans++] = *s2;
       j++;
     }
     /* The spans overlap */
@@ -900,8 +900,8 @@ union_spanset_spanset(const SpanSet *ss1, const SpanSet *ss2)
        *       |---------|  |-----|
        *            j          j
        */
-      Span sp;
-      bbox_union_span_span(sp1, sp2, &sp);
+      Span s;
+      bbox_union_span_span(s1, s2, &s);
       i++; j++;
       while (i < ss1->count || j < ss2->count)
       {
@@ -909,19 +909,19 @@ union_spanset_spanset(const SpanSet *ss1, const SpanSet *ss2)
         int k = 0;
         if (i < ss1->count)
         {
-          sp1 = SPANSET_SP_N(ss1, i);
-          if (ovadj_span_span(sp1, &sp))
+          s1 = SPANSET_SP_N(ss1, i);
+          if (ovadj_span_span(s1, &s))
           {
-            span_expand(sp1, &sp);
+            span_expand(s1, &s);
             i++; k++;
           }
         }
         if (j < ss2->count)
         {
-          sp2 = SPANSET_SP_N(ss2, j);
-          if (ovadj_span_span(sp2, &sp))
+          s2 = SPANSET_SP_N(ss2, j);
+          if (ovadj_span_span(s2, &s))
           {
-            span_expand(sp2, &sp);
+            span_expand(s2, &s);
             j++; k++;
           }
         }
@@ -929,7 +929,7 @@ union_spanset_spanset(const SpanSet *ss1, const SpanSet *ss2)
         if (k == 0)
           break;
       }
-      spans[nspans++] = sp;
+      spans[nspans++] = s;
     }
   }
   /* Only one of the following two while will be executed */
@@ -975,45 +975,45 @@ intersection_value_spanset(Datum value, const SpanSet *ss)
  * @ingroup meos_setspan_set
  * @brief Return the intersection of a span set and a span
  * @param[in] ss Span set
- * @param[in] sp Span
+ * @param[in] s Span
  * @csqlfn #Intersection_spanset_span()
  */
 SpanSet *
-intersection_spanset_span(const SpanSet *ss, const Span *sp)
+intersection_spanset_span(const SpanSet *ss, const Span *s)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_spanset_span(ss, sp))
-    return false;
+  if (! ensure_valid_spanset_span(ss, s))
+    return NULL;
 
   /* Singleton span set */
   if (ss->count == 1)
   {
-    Span sp1;
-    if (! inter_span_span(SPANSET_SP_N(ss, 0), sp, &sp1))
+    Span s1;
+    if (! inter_span_span(SPANSET_SP_N(ss, 0), s, &s1))
       return NULL;
-    return spanset_make_exp((Span *) &sp1, 1, 1, NORMALIZE_NO, ORDER_NO);
+    return spanset_make_exp((Span *) &s1, 1, 1, NORMALIZE_NO, ORDER_NO);
   }
 
   /* Bounding box test */
-  if (! overlaps_span_span(sp, &ss->span))
+  if (! overlaps_span_span(s, &ss->span))
     return NULL;
 
   /* Is the span set fully contained in the span? */
-  if (contains_span_span(sp, &ss->span))
+  if (contains_span_span(s, &ss->span))
     return spanset_copy(ss);
 
   /* General case */
   int loc;
-  spanset_find_value(ss, sp->lower, &loc);
+  spanset_find_value(ss, s->lower, &loc);
   Span *spans = palloc(sizeof(Span) * (ss->count - loc));
   int nspans = 0;
   for (int i = loc; i < ss->count; i++)
   {
-    const Span *sp1 = SPANSET_SP_N(ss, i);
-    Span sp2;
-    if (inter_span_span(sp1, sp, &sp2))
-      spans[nspans++] = sp2;
-    if (sp->upper < sp1->upper)
+    const Span *s1 = SPANSET_SP_N(ss, i);
+    Span s2;
+    if (inter_span_span(s1, s, &s2))
+      spans[nspans++] = s2;
+    if (s->upper < s1->upper)
       break;
   }
   return spanset_make_free(spans, nspans, NORMALIZE_NO, ORDER_NO);
@@ -1022,14 +1022,14 @@ intersection_spanset_span(const SpanSet *ss, const Span *sp)
 /**
  * @ingroup meos_setspan_set
  * @brief Return the intersection of a span and a span set
- * @param[in] sp Span
+ * @param[in] s Span
  * @param[in] ss Span set
  * @csqlfn #Intersection_span_spanset()
  */
 inline SpanSet *
-intersection_span_spanset(const Span *sp, const SpanSet *ss)
+intersection_span_spanset(const Span *s, const SpanSet *ss)
 {
-  return intersection_spanset_span(ss, sp);
+  return intersection_spanset_span(ss, s);
 }
 
 /**
@@ -1043,7 +1043,7 @@ intersection_spanset_spanset(const SpanSet *ss1, const SpanSet *ss2)
 {
   /* Ensure the validity of the arguments */
   if (! ensure_valid_spanset_spanset(ss1, ss2))
-    return false;
+    return NULL;
 
   /* Singleton span set */
   if (ss1->count == 1)
@@ -1052,28 +1052,28 @@ intersection_spanset_spanset(const SpanSet *ss1, const SpanSet *ss2)
     return intersection_spanset_span(ss1, SPANSET_SP_N(ss2, 0));
 
   /* Bounding box test */
-  Span sp;
-  if (! inter_span_span(&ss1->span, &ss2->span, &sp))
+  Span s;
+  if (! inter_span_span(&ss1->span, &ss2->span, &s))
     return NULL;
 
   int loc1, loc2;
-  spanset_find_value(ss1, sp.lower, &loc1);
-  spanset_find_value(ss2, sp.lower, &loc2);
+  spanset_find_value(ss1, s.lower, &loc1);
+  spanset_find_value(ss2, s.lower, &loc2);
   Span *spans = palloc(sizeof(Span) * (ss1->count + ss2->count - loc1 - loc2));
   int i = loc1, j = loc2, nspans = 0;
   while (i < ss1->count && j < ss2->count)
   {
-    const Span *sp1 = SPANSET_SP_N(ss1, i);
-    const Span *sp2 = SPANSET_SP_N(ss2, j);
+    const Span *s1 = SPANSET_SP_N(ss1, i);
+    const Span *s2 = SPANSET_SP_N(ss2, j);
     Span inter;
-    if (inter_span_span(sp1, sp2, &inter))
+    if (inter_span_span(s1, s2, &inter))
       spans[nspans++] = inter;
-    int cmp = datum_cmp(sp1->upper, sp2->upper, sp1->basetype);
-    if (cmp == 0 && sp1->upper_inc == sp2->upper_inc)
+    int cmp = datum_cmp(s1->upper, s2->upper, s1->basetype);
+    if (cmp == 0 && s1->upper_inc == s2->upper_inc)
     {
       i++; j++;
     }
-    else if (cmp < 0 || (cmp == 0 && ! sp1->upper_inc && sp2->upper_inc))
+    else if (cmp < 0 || (cmp == 0 && ! s1->upper_inc && s2->upper_inc))
       i++;
     else
       j++;
@@ -1105,26 +1105,26 @@ minus_value_spanset(Datum value, const SpanSet *ss)
  * @brief Return in the last argument the difference of a span and a span set
  */
 static int
-mi_span_spanset(const Span *sp, const SpanSet *ss, int from, int to,
+mi_span_spanset(const Span *s, const SpanSet *ss, int from, int to,
   Span *result)
 {
   /* The span can be split at most into (to - from + 1) spans
    *   |----------------------|
    *       |---| |---| |---|
    */
-  Span curr = *sp;
+  Span curr = *s;
   int nspans = 0;
   for (int i = from; i < to; i++)
   {
-    const Span *sp1 = SPANSET_SP_N(ss, i);
+    const Span *s1 = SPANSET_SP_N(ss, i);
     /* If the remaining spans are to the left of the current span */
-    if (lfnadj_span_span(&curr, sp1))
+    if (lfnadj_span_span(&curr, s1))
     {
       result[nspans++] = curr;
       break;
     }
     Span minus[2];
-    int nminus = mi_span_span(&curr, sp1, minus);
+    int nminus = mi_span_span(&curr, s1, minus);
     /* minus can have from 0 to 2 spans */
     if (nminus == 0)
       break;
@@ -1145,26 +1145,26 @@ mi_span_spanset(const Span *sp, const SpanSet *ss, int from, int to,
 /**
  * @ingroup meos_setspan_set
  * @brief Return the difference of a span and a span set
- * @param[in] sp Span
+ * @param[in] s Span
  * @param[in] ss Span set
  * @csqlfn #Minus_span_spanset()
  */
 SpanSet *
-minus_span_spanset(const Span *sp, const SpanSet *ss)
+minus_span_spanset(const Span *s, const SpanSet *ss)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_spanset_span(ss, sp))
-    return false;
+  if (! ensure_valid_spanset_span(ss, s))
+    return NULL;
   /* Singleton span set */
   if (ss->count == 1)
-    return minus_span_span(sp, SPANSET_SP_N(ss, 0));
+    return minus_span_span(s, SPANSET_SP_N(ss, 0));
 
   /* Bounding box test */
-  if (! overlaps_span_span(sp, &ss->span))
-    return span_to_spanset(sp);
+  if (! overlaps_span_span(s, &ss->span))
+    return span_to_spanset(s);
 
   Span *spans = palloc(sizeof(Span) * (ss->count + 1));
-  int count = mi_span_spanset(sp, ss, 0, ss->count, spans);
+  int count = mi_span_spanset(s, ss, 0, ss->count, spans);
   return spanset_make_free(spans, count, NORMALIZE_NO, ORDER_NO);
 }
 
@@ -1194,22 +1194,22 @@ minus_spanset_value(const SpanSet *ss, Datum value)
  * @ingroup meos_setspan_set
  * @brief Return the difference of a span set and a span
  * @param[in] ss Span set
- * @param[in] sp Span
+ * @param[in] s Span
  * @csqlfn #Minus_spanset_span()
  */
 SpanSet *
-minus_spanset_span(const SpanSet *ss, const Span *sp)
+minus_spanset_span(const SpanSet *ss, const Span *s)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_spanset_span(ss, sp))
-    return false;
+  if (! ensure_valid_spanset_span(ss, s))
+    return NULL;
 
   /* Singleton span set */
   if (ss->count == 1)
-    return minus_span_span(SPANSET_SP_N(ss, 0), sp);
+    return minus_span_span(SPANSET_SP_N(ss, 0), s);
 
   /* Bounding box test */
-  if (! overlaps_span_span(&ss->span, sp))
+  if (! overlaps_span_span(&ss->span, s))
     return spanset_copy(ss);
 
   /* At most one composing span can be split into two */
@@ -1217,8 +1217,8 @@ minus_spanset_span(const SpanSet *ss, const Span *sp)
   int nspans = 0;
   for (int i = 0; i < ss->count; i++)
   {
-    const Span *sp1 = SPANSET_SP_N(ss, i);
-    nspans += mi_span_span(sp1, sp, &spans[nspans]);
+    const Span *s1 = SPANSET_SP_N(ss, i);
+    nspans += mi_span_span(s1, s, &spans[nspans]);
   }
   return spanset_make_free(spans, nspans, NORMALIZE_NO, ORDER_NO);
 }
@@ -1234,7 +1234,7 @@ minus_spanset_spanset(const SpanSet *ss1, const SpanSet *ss2)
 {
   /* Ensure the validity of the arguments */
   if (! ensure_valid_spanset_spanset(ss1, ss2))
-    return false;
+    return NULL;
 
   /* Singleton span set */
   if (ss1->count == 1)
@@ -1250,17 +1250,17 @@ minus_spanset_spanset(const SpanSet *ss1, const SpanSet *ss2)
   int i = 0, j = 0, nspans = 0;
   while (i < ss1->count && j < ss2->count)
   {
-    const Span *sp1 = SPANSET_SP_N(ss1, i);
-    const Span *sp2 = SPANSET_SP_N(ss2, j);
+    const Span *s1 = SPANSET_SP_N(ss1, i);
+    const Span *s2 = SPANSET_SP_N(ss2, j);
     /* The spans do not overlap, copy the first span */
-    if (! overlaps_span_span(sp1, sp2))
+    if (! overlaps_span_span(s1, s2))
     {
-      spans[nspans++] = *sp1;
+      spans[nspans++] = *s1;
       i++;
     }
     else
     {
-      /* Find all spans in ss2 that overlap with sp1
+      /* Find all spans in ss2 that overlap with s1
        *                  i
        *    |------------------------|
        *      |-----|  |-----|          |---|
@@ -1270,12 +1270,12 @@ minus_spanset_spanset(const SpanSet *ss1, const SpanSet *ss2)
       for (k = j; k < ss2->count; k++)
       {
         const Span *s3 = SPANSET_SP_N(ss2, k);
-        if (! overlaps_span_span(sp1, s3))
+        if (! overlaps_span_span(s1, s3))
           break;
       }
       int to = Min(k, ss2->count);
       /* Compute the difference of the overlapping spans */
-      nspans += mi_span_spanset(sp1, ss2, j, to, &spans[nspans]);
+      nspans += mi_span_spanset(s1, ss2, j, to, &spans[nspans]);
       i++;
       j = k;
     }
@@ -1307,17 +1307,17 @@ distance_spanset_value(const SpanSet *ss, Datum value)
  * @ingroup meos_internal_setspan_dist
  * @brief Return the distance between a span set and a span
  * @param[in] ss Span set
- * @param[in] sp Span
+ * @param[in] s Span
  * @return On error return -1.0
  * @csqlfn #Distance_spanset_span()
  */
 Datum
-distance_spanset_span(const SpanSet *ss, const Span *sp)
+distance_spanset_span(const SpanSet *ss, const Span *s)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_spanset_span(ss, sp))
+  if (! ensure_valid_spanset_span(ss, s))
     return false;
-  return distance_span_span(&ss->span, sp);
+  return distance_span_span(&ss->span, s);
 }
 
 /**

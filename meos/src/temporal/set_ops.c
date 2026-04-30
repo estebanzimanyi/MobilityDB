@@ -104,7 +104,7 @@ setop_set_set(const Set *s1, const Set *s2, SetOper op)
 {
   /* Ensure the validity of the arguments */
   if (! ensure_valid_set_set(s1, s2))
-    return false;
+    return NULL;
 
   if (op == INTER || op == MINUS)
   {
@@ -124,7 +124,7 @@ setop_set_set(const Set *s1, const Set *s2, SetOper op)
   int i = 0, j = 0, nvals = 0;
   Datum value1 = SET_VAL_N(s1, 0);
   Datum value2 = SET_VAL_N(s2, 0);
-  meosType basetype = s1->basetype;
+  MeosType basetype = s1->basetype;
   while (i < s1->count && j < s2->count)
   {
     int cmp = datum_cmp(value1, value2, basetype);
@@ -530,7 +530,7 @@ union_set_set(const Set *s1, const Set *s2)
 {
   /* Ensure the validity of the arguments */
   if (! ensure_valid_set_set(s1, s2))
-    return false;
+    return NULL;
   return setop_set_set(s1, s2, UNION);
 }
 

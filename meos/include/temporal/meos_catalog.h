@@ -36,6 +36,10 @@
 
 /* C */
 #include <stdbool.h>
+/* PostgreSQL */
+#ifndef int16
+typedef signed short int16;
+#endif
 /* MEOS */
 #include <meos.h>
 
@@ -115,10 +119,10 @@ typedef enum
   T_JSONB          = 63,  /**< base type for PostgreSQL jsonb */
   T_JSONPATH       = 64,  /**< base type for PostgreSQL jsonpath */
   T_JSONBSET       = 65,  /**< static set of JSONB values */
-  T_TJSONB         = 66  /**< temporal JSONB value */
-} meosType;
-
-#define NO_MEOS_TYPES 67
+  T_TJSONB         = 66,  /**< temporal JSONB value */
+  NUM_MEOS_TYPES          /* Dummy value that determines the size of the
+                           * lookup array MeosType -> Oid */
+} MeosType;
 
 /**
  * Enumeration that defines the classes of Boolean operators used in
@@ -126,60 +130,58 @@ typedef enum
  */
 typedef enum
 {
-  UNKNOWN_OP       = 0,
-  EQ_OP            = 1,  /**< Equality `=` operator */
-  NE_OP            = 2,  /**< Distinct `!=` operator */
-  LT_OP            = 3,  /**< Less than `<` operator */
-  LE_OP            = 4,  /**< Less than or equal to `<=` operator */
-  GT_OP            = 5,  /**< Greater than `<` operator */
-  GE_OP            = 6,  /**< Greater than or equal to `>=` operator */
-  ADJACENT_OP      = 7,  /**< Adjacent `-|-` operator */
-  UNION_OP         = 8,  /**< Union `+` operator */
-  MINUS_OP         = 9,  /**< Minus `-` operator */
-  INTERSECT_OP     = 10, /**< Intersection `*` operator */
-  OVERLAPS_OP      = 11, /**< Overlaps `&&` operator */
-  CONTAINS_OP      = 12, /**< Contains `@>` operator */
-  CONTAINED_OP     = 13, /**< Contained `<@` operator */
-  SAME_OP          = 14, /**< Same `~=` operator */
-  LEFT_OP          = 15, /**< Left `<<` operator */
-  OVERLEFT_OP      = 16, /**< Overleft `&<` operator */
-  RIGHT_OP         = 17, /**< Right `>>` operator */
-  OVERRIGHT_OP     = 18, /**< Overright `&>` operator */
-  BELOW_OP         = 19, /**< Below `<<|` operator */
-  OVERBELOW_OP     = 20, /**< Overbelow `&<|` operator */
-  ABOVE_OP         = 21, /**< Above `|>>` operator */
-  OVERABOVE_OP     = 22, /**< Overbove `|&>` operator */
-  FRONT_OP         = 23, /**< Front `<</` operator */
-  OVERFRONT_OP     = 24, /**< Overfront `&</` operator */
-  BACK_OP          = 25, /**< Back `/>>` operator */
-  OVERBACK_OP      = 26, /**< Overback `/&>` operator */
-  BEFORE_OP        = 27, /**< Before `<<#` operator */
-  OVERBEFORE_OP    = 28, /**< Overbefore `&<#` operator */
-  AFTER_OP         = 29, /**< After `#>>` operator */
-  OVERAFTER_OP     = 30, /**< Overafter `#&>` operator */
-  EVEREQ_OP        = 31, /**< Evereq `?=` operator */
-  EVERNE_OP        = 32, /**< Everne `?<>` operator */
-  EVERLT_OP        = 33, /**< Everlt `?<` operator */
-  EVERLE_OP        = 34, /**< Everle `?<=` operator */
-  EVERGT_OP        = 35, /**< Evergt `?>` operator */
-  EVERGE_OP        = 36, /**< Everge `?>=` operator */
-  ALWAYSEQ_OP      = 37, /**< Alwayseq `%=` operator */
-  ALWAYSNE_OP      = 38, /**< Alwaysne `%<>` operator */
-  ALWAYSLT_OP      = 39, /**< Alwayslt `%<` operator */
-  ALWAYSLE_OP      = 40, /**< Alwaysle `%<=` operator */
-  ALWAYSGT_OP      = 41, /**< Alwaysgt `%>` operator */
-  ALWAYSGE_OP      = 42, /**< Alwaysge `%>=` operator */
-  TEMPCONTAINS_OP  = 43, /**< Contains `#@>` operator for JSON */
-  TEMPCONTAINED_OP = 44, /**< Contained `<@#` operator for JSON */
-} meosOper;
+  UNKNOWN_OP      = 0,
+  EQ_OP           = 1,  /**< Equality `=` operator */
+  NE_OP           = 2,  /**< Distinct `!=` operator */
+  LT_OP           = 3,  /**< Less than `<` operator */
+  LE_OP           = 4,  /**< Less than or equal to `<=` operator */
+  GT_OP           = 5,  /**< Greater than `<` operator */
+  GE_OP           = 6,  /**< Greater than or equal to `>=` operator */
+  ADJACENT_OP     = 7,  /**< Adjacent `-|-` operator */
+  UNION_OP        = 8,  /**< Union `+` operator */
+  MINUS_OP        = 9,  /**< Minus `-` operator */
+  INTERSECT_OP    = 10, /**< Intersection `*` operator */
+  OVERLAPS_OP     = 11, /**< Overlaps `&&` operator */
+  CONTAINS_OP     = 12, /**< Contains `@>` operator */
+  CONTAINED_OP    = 13, /**< Contained `<@` operator */
+  SAME_OP         = 14, /**< Same `~=` operator */
+  LEFT_OP         = 15, /**< Left `<<` operator */
+  OVERLEFT_OP     = 16, /**< Overleft `&<` operator */
+  RIGHT_OP        = 17, /**< Right `>>` operator */
+  OVERRIGHT_OP    = 18, /**< Overright `&>` operator */
+  BELOW_OP        = 19, /**< Below `<<|` operator */
+  OVERBELOW_OP    = 20, /**< Overbelow `&<|` operator */
+  ABOVE_OP        = 21, /**< Above `|>>` operator */
+  OVERABOVE_OP    = 22, /**< Overbove `|&>` operator */
+  FRONT_OP        = 23, /**< Front `<</` operator */
+  OVERFRONT_OP    = 24, /**< Overfront `&</` operator */
+  BACK_OP         = 25, /**< Back `/>>` operator */
+  OVERBACK_OP     = 26, /**< Overback `/&>` operator */
+  BEFORE_OP       = 27, /**< Before `<<#` operator */
+  OVERBEFORE_OP   = 28, /**< Overbefore `&<#` operator */
+  AFTER_OP        = 29, /**< After `#>>` operator */
+  OVERAFTER_OP    = 30, /**< Overafter `#&>` operator */
+  EVEREQ_OP       = 31, /**< Evereq `?=` operator */
+  EVERNE_OP       = 32, /**< Everne `?<>` operator */
+  EVERLT_OP       = 33, /**< Everlt `?<` operator */
+  EVERLE_OP       = 34, /**< Everle `?<=` operator */
+  EVERGT_OP       = 35, /**< Evergt `?>` operator */
+  EVERGE_OP       = 36, /**< Everge `?>=` operator */
+  ALWAYSEQ_OP     = 37, /**< Alwayseq `%=` operator */
+  ALWAYSNE_OP     = 38, /**< Alwaysne `%<>` operator */
+  ALWAYSLT_OP     = 39, /**< Alwayslt `%<` operator */
+  ALWAYSLE_OP     = 40, /**< Alwaysle `%<=` operator */
+  ALWAYSGT_OP     = 41, /**< Alwaysgt `%>` operator */
+  ALWAYSGE_OP     = 42, /**< Alwaysge `%>=` operator */
+} MeosOper;
 
 /**
  * Structure to represent the temporal type cache array.
  */
 typedef struct
 {
-  meosType temptype;    /**< Enum value of the temporal type */
-  meosType basetype;    /**< Enum value of the base type */
+  MeosType temptype;    /**< Enum value of the temporal type */
+  MeosType basetype;    /**< Enum value of the base type */
 } temptype_catalog_struct;
 
 /**
@@ -187,8 +189,8 @@ typedef struct
  */
 typedef struct
 {
-  meosType settype;     /**< Enum value of the set type */
-  meosType basetype;    /**< Enum value of the base type */
+  MeosType settype;     /**< Enum value of the set type */
+  MeosType basetype;    /**< Enum value of the base type */
 } settype_catalog_struct;
 
 /**
@@ -196,8 +198,8 @@ typedef struct
  */
 typedef struct
 {
-  meosType spantype;    /**< Enum value of the span type */
-  meosType basetype;    /**< Enum value of the base type */
+  MeosType spantype;    /**< Enum value of the span type */
+  MeosType basetype;    /**< Enum value of the base type */
 } spantype_catalog_struct;
 
 /**
@@ -205,8 +207,8 @@ typedef struct
  */
 typedef struct
 {
-  meosType spansettype;    /**< Enum value of the span type */
-  meosType spantype;       /**< Enum value of the base type */
+  MeosType spansettype;    /**< Enum value of the span type */
+  MeosType spantype;       /**< Enum value of the base type */
 } spansettype_catalog_struct;
 
 /*****************************************************************************/
@@ -216,98 +218,96 @@ extern bool temptype_subtype(tempSubtype subtype);
 extern bool temptype_subtype_all(tempSubtype subtype);
 #endif
 extern const char *tempsubtype_name(tempSubtype subtype);
-extern bool tempsubtype_from_string(const char *str, int16_t *subtype);
-extern const char *meosoper_name(meosOper oper);
-extern meosOper meosoper_from_string(const char *name);
+extern bool tempsubtype_from_string(const char *str, int16 *subtype);
+extern const char *meosoper_name(MeosOper oper);
+extern MeosOper meosoper_from_string(const char *name);
 extern const char *interptype_name(interpType interp);
 extern interpType interptype_from_string(const char *interp_str);
 
 /* Type conversion functions */
 
-extern const char *meostype_name(meosType type);
-extern meosType temptype_basetype(meosType type);
-extern meosType settype_basetype(meosType type);
-extern meosType spantype_basetype(meosType type);
-extern meosType spantype_spansettype(meosType type);
-extern meosType spansettype_spantype(meosType type);
-extern meosType basetype_spantype(meosType type);
-extern meosType basetype_settype(meosType type);
+extern const char *meostype_name(MeosType type);
+extern MeosType temptype_basetype(MeosType type);
+extern MeosType settype_basetype(MeosType type);
+extern MeosType spantype_basetype(MeosType type);
+extern MeosType spantype_spansettype(MeosType type);
+extern MeosType spansettype_spantype(MeosType type);
+extern MeosType basetype_spantype(MeosType type);
+extern MeosType basetype_settype(MeosType type);
 
 /* Catalog functions */
 
-extern bool tnumber_basetype(meosType type);
-extern bool geo_basetype(meosType type);
+extern bool tnumber_basetype(MeosType type);
+extern bool geo_basetype(MeosType type);
 #ifndef NDEBUG
-extern bool meos_basetype(meosType type);
-extern bool alphanum_basetype(meosType type);
-extern bool talphanum_temptype(meosType type);
+extern bool meos_basetype(MeosType type);
+extern bool alphanum_basetype(MeosType type);
+extern bool alphanum_temptype(MeosType type);
 #endif
 
-extern bool time_type(meosType type);
+extern bool time_type(MeosType type);
 #ifndef NDEBUG
-extern bool set_basetype(meosType type);
+extern bool set_basetype(MeosType type);
 #endif
 
-extern bool set_type(meosType type);
-extern bool numset_type(meosType type);
-extern bool timeset_type(meosType type);
-extern bool set_spantype(meosType type);
-extern bool alphanumset_type(meosType settype);
-extern bool geoset_type(meosType type);
-extern bool spatialset_type(meosType type);
-extern bool ensure_set_isof_type(const Set *s, meosType settype);
-extern bool ensure_set_spantype(meosType type);
-extern bool ensure_geoset_type(meosType type);
-extern bool ensure_numset_type(meosType type);
-extern bool ensure_spatialset_type(meosType type);
+extern bool set_type(MeosType type);
+extern bool numset_type(MeosType type);
+extern bool ensure_numset_type(MeosType type);
+extern bool timeset_type(MeosType type);
+extern bool set_spantype(MeosType type);
+extern bool ensure_set_spantype(MeosType type);
+extern bool alphanumset_type(MeosType settype);
+extern bool geoset_type(MeosType type);
+extern bool ensure_geoset_type(MeosType type);
+extern bool spatialset_type(MeosType type);
+extern bool ensure_spatialset_type(MeosType type);
 
-extern bool span_basetype(meosType type);
-extern bool span_canon_basetype(meosType type);
-extern bool span_type(meosType type);
-extern bool type_span_bbox(meosType type);
-extern bool span_tbox_type(meosType type);
-extern bool numspan_basetype(meosType type);
-extern bool numspan_type(meosType type);
-extern bool timespan_basetype(meosType type);
-extern bool timespan_type(meosType type);
-extern bool ensure_span_isof_type(const Span *sp, meosType spantype);
-extern bool ensure_span_tbox_type(meosType type);
-extern bool ensure_numspan_type(meosType type);
+extern bool span_basetype(MeosType type);
+extern bool span_canon_basetype(MeosType type);
+extern bool span_type(MeosType type);
+extern bool type_span_bbox(MeosType type);
+extern bool span_tbox_type(MeosType type);
+extern bool ensure_span_tbox_type(MeosType type);
+extern bool numspan_basetype(MeosType type);
+extern bool numspan_type(MeosType type);
+extern bool ensure_numspan_type(MeosType type);
+extern bool timespan_basetype(MeosType type);
+extern bool timespan_type(MeosType type);
 
-extern bool spanset_type(meosType type);
-extern bool timespanset_type(meosType type);
-extern bool ensure_spanset_isof_type(const SpanSet *ss, meosType spansettype);
-extern bool ensure_timespanset_type(meosType type);
+extern bool spanset_type(MeosType type);
+extern bool timespanset_type(MeosType type);
+extern bool ensure_timespanset_type(MeosType type);
 
-extern bool temporal_type(meosType type);
+extern bool temporal_type(MeosType type);
 #ifndef NDEBUG
-extern bool temporal_basetype(meosType type);
+extern bool temporal_basetype(MeosType type);
 #endif
-extern bool temptype_continuous(meosType type);
-extern bool basetype_byvalue(meosType type);
-extern bool basetype_varlength(meosType type);
-extern int16 meostype_length(meosType type);
-extern bool talphanum_type(meosType type);
-extern bool ensure_talphanum_type(meosType type);
-extern bool talpha_type(meosType type);
-extern bool tnumber_type(meosType type);
-extern bool ensure_tnumber_type(meosType type);
-extern bool ensure_tnumber_basetype(meosType type);
-extern bool tnumber_spantype(meosType type);
-extern bool spatial_basetype(meosType type);
-extern bool tspatial_type(meosType type);
-extern bool ensure_tspatial_type(meosType type);
-extern bool tpoint_type(meosType type);
-extern bool ensure_tpoint_type(meosType type);
-extern bool tgeo_type(meosType type);
-extern bool ensure_tgeo_type(meosType type);
-extern bool tgeo_type_all(meosType type);
-extern bool ensure_tgeo_type_all(meosType type);
-extern bool tgeometry_type(meosType type);
-extern bool ensure_tgeometry_type(meosType type);
-extern bool tgeodetic_type(meosType type);
-extern bool ensure_tgeodetic_type(meosType type);
-extern bool ensure_tnumber_tpoint_type(meosType type);
+extern bool temptype_continuous(MeosType type);
+extern bool basetype_byvalue(MeosType type);
+extern bool basetype_varlength(MeosType type);
+extern int16 meostype_length(MeosType type);
+#ifndef NDEBUG
+extern bool talphanum_type(MeosType type);
+#endif
+extern bool talpha_type(MeosType type);
+extern bool tnumber_type(MeosType type);
+extern bool ensure_tnumber_type(MeosType type);
+extern bool ensure_tnumber_basetype(MeosType type);
+extern bool tnumber_spantype(MeosType type);
+extern bool spatial_basetype(MeosType type);
+extern bool tspatial_type(MeosType type);
+extern bool ensure_tspatial_type(MeosType type);
+extern bool tpoint_type(MeosType type);
+extern bool ensure_tpoint_type(MeosType type);
+extern bool tgeo_type(MeosType type);
+extern bool ensure_tgeo_type(MeosType type);
+extern bool tgeo_type_all(MeosType type);
+extern bool ensure_tgeo_type_all(MeosType type);
+extern bool tgeometry_type(MeosType type);
+extern bool ensure_tgeometry_type(MeosType type);
+extern bool tgeodetic_type(MeosType type);
+extern bool ensure_tgeodetic_type(MeosType type);
+extern bool ensure_tnumber_tpoint_type(MeosType type);
 
 /*****************************************************************************/
 

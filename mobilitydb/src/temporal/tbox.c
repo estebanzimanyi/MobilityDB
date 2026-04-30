@@ -240,7 +240,7 @@ Number_timestamptz_to_tbox(PG_FUNCTION_ARGS)
 {
   Datum value = PG_GETARG_DATUM(0);
   TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
-  meosType basetype = oid_meostype(get_fn_expr_argtype(fcinfo->flinfo, 0));
+  MeosType basetype = oid_meostype(get_fn_expr_argtype(fcinfo->flinfo, 0));
   PG_RETURN_TBOX_P(number_timestamptz_to_tbox(value, basetype, t));
 }
 
@@ -256,7 +256,7 @@ Number_tstzspan_to_tbox(PG_FUNCTION_ARGS)
 {
   Datum value = PG_GETARG_DATUM(0);
   Span *s = PG_GETARG_SPAN_P(1);
-  meosType basetype = oid_meostype(get_fn_expr_argtype(fcinfo->flinfo, 0));
+  MeosType basetype = oid_meostype(get_fn_expr_argtype(fcinfo->flinfo, 0));
   PG_RETURN_TBOX_P(number_tstzspan_to_tbox(value, basetype, s));
 }
 
@@ -306,7 +306,7 @@ Datum
 Number_to_tbox(PG_FUNCTION_ARGS)
 {
   Datum value = PG_GETARG_DATUM(0);
-  meosType basetype = oid_meostype(get_fn_expr_argtype(fcinfo->flinfo, 0));
+  MeosType basetype = oid_meostype(get_fn_expr_argtype(fcinfo->flinfo, 0));
   PG_RETURN_TBOX_P(number_tbox(value, basetype));
 }
 
@@ -732,7 +732,7 @@ Tbox_expand_value(PG_FUNCTION_ARGS)
 {
   TBox *box = PG_GETARG_TBOX_P(0);
   Datum value = PG_GETARG_DATUM(1);
-  meosType basetype = oid_meostype(get_fn_expr_argtype(fcinfo->flinfo, 1));
+  MeosType basetype = oid_meostype(get_fn_expr_argtype(fcinfo->flinfo, 1));
   TBox *result = tbox_expand_value(box, value, basetype);
   if (! result)
     PG_RETURN_NULL();

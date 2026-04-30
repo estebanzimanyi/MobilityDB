@@ -158,14 +158,14 @@ extern Datum datum_jsonb_to_alphanum(Datum jb, Datum key, Datum temptype, Datum 
  *****************************************************************************/
 
 extern Temporal *tjsonb_to_talphanum(const Temporal *temp, const char *key,
-  meosType resbasetype, interpType interp, nullHandleType null_handle);
+  MeosType resbasetype, interpType interp, nullHandleType null_handle);
 
 /*****************************************************************************
  * Set wrappers for JSONB operations
  *****************************************************************************/
 
-extern Set *jsonbfunc_jsonbset(const Set *s, datum_func1 func, meosType intype,
-  meosType restype);
+extern Set *jsonbfunc_jsonbset(const Set *s, datum_func1 func, MeosType intype,
+  MeosType restype);
 extern Set *jsonbfunc_jsonbset_jsonb(const Set *s, const Jsonb *jb,
   datum_func2 func, bool invert);
 extern Set *jsonbfunc_jsonbset_text(const Set *s, const text *txt,

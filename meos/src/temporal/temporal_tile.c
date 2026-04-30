@@ -123,8 +123,8 @@ int_get_bin(int value, int size, int origin)
  * @param[in] origin Origin of the bins
  * @return On error return @p INT_MAX
  */
-int64_t
-bigint_get_bin(int64_t value, int64_t size, int64_t origin)
+int64
+bigint_get_bin(int64 value, int64 size, int64 origin)
 {
   /* Ensure the validity of the arguments */
   if (! ensure_positive_datum(size, T_INT8))
@@ -146,7 +146,7 @@ bigint_get_bin(int64_t value, int64_t size, int64_t origin)
     }
     value -= origin;
   }
-  int64_t result = (value / size) * size;
+  int64 result = (value / size) * size;
   if (value < 0 && value % size)
   {
     /*
@@ -211,7 +211,7 @@ float_get_bin(double value, double size, double origin)
 /**
  * @brief Return the interval in the same representation as Postgres timestamps
  */
-inline int64_t
+inline int64
 interval_units(const Interval *interval)
 {
   return interval->time + (interval->day * USECS_PER_DAY);
@@ -224,9 +224,9 @@ interval_units(const Interval *interval)
  * therefore only support bining by full months.
  */
 static DateADT
-date_bin_start(DateADT d, int32_t ndays, DateADT origin)
+date_bin_start(DateADT d, int32 ndays, DateADT origin)
 {
-  /* In PostgreSQL DateADT is defined as a typedef of int32_t */
+  /* In PostgreSQL DateADT is defined as a typedef of int32 */
   return (DateADT) int_get_bin((int) d, (int) ndays, (int) origin);
 }
 
@@ -249,7 +249,7 @@ date_get_bin(DateADT d, const Interval *duration, DateADT origin)
   if (DATE_NOT_FINITE(d))
     return d;
 
-  int32_t ndays = interval_units(duration) / USECS_PER_DAY;
+  int32 ndays = interval_units(duration) / USECS_PER_DAY;
   return date_bin_start(d, ndays, origin);
 }
 
@@ -262,7 +262,7 @@ date_get_bin(DateADT d, const Interval *duration, DateADT origin)
  * @return On error return DT_NOEND
  */
 TimestampTz
-timestamptz_bin_start(TimestampTz t, int64_t size, TimestampTz origin)
+timestamptz_bin_start(TimestampTz t, int64 size, TimestampTz origin)
 {
   if (TIMESTAMP_NOT_FINITE(t))
   {
@@ -322,7 +322,7 @@ timestamptz_get_bin(TimestampTz t, const Interval *duration,
   VALIDATE_NOT_NULL(duration, DT_NOEND);
   if (! ensure_positive_duration(duration))
     return DT_NOEND;
-  int64_t size = interval_units(duration);
+  int64 size = interval_units(duration);
   return timestamptz_bin_start(t, size, origin);
 }
 
@@ -341,7 +341,7 @@ timestamptz_get_bin(TimestampTz t, const Interval *duration,
  * have a month component
  */
 Datum
-datum_bin(Datum value, Datum size, Datum origin, meosType type)
+datum_bin(Datum value, Datum size, Datum origin, MeosType type)
 {
   /* This function is called directly by the MobilityDB API */
   if (! ensure_positive_datum(size, type))
@@ -375,7 +375,7 @@ datum_bin(Datum value, Datum size, Datum origin, meosType type)
 
 /**
  * @brief Get the time bins of a temporal value
- * @param[in] sp Span to tile
+ * @param[in] s Span to tile
  * @param[in] size Size of the bins
  * @param[in] origin Time origin of the tiles
  * @param[out] start_bin,end_bin Values of the start and end bins
@@ -385,17 +385,17 @@ datum_bin(Datum value, Datum size, Datum origin, meosType type)
  * have a month component
  */
 int
-span_num_bins(const Span *sp, Datum size, Datum origin, Datum *start_bin,
+span_num_bins(const Span *s, Datum size, Datum origin, Datum *start_bin,
   Datum *end_bin)
 {
-  assert(sp); assert(start_bin); assert(end_bin);
+  assert(s); assert(start_bin); assert(end_bin);
 
-  Datum start_value = sp->lower;
+  Datum start_value = s->lower;
   /* We need to add size to obtain the end value of the last bin */
-  Datum end_value = datum_add(sp->upper, size, sp->basetype);
-  *start_bin = datum_bin(start_value, size, origin, sp->basetype);
-  *end_bin = datum_bin(end_value, size, origin, sp->basetype);
-  switch (sp->basetype)
+  Datum end_value = datum_add(s->upper, size, s->basetype);
+  *start_bin = datum_bin(start_value, size, origin, s->basetype);
+  *end_bin = datum_bin(end_value, size, origin, s->basetype);
+  switch (s->basetype)
   {
     case T_INT4:
       return (DatumGetInt32(*end_bin) - DatumGetInt32(*start_bin)) /
@@ -415,7 +415,7 @@ span_num_bins(const Span *sp, Datum size, Datum origin, Datum *start_bin,
     default: /* Error! */
       meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
         "Unknown number of bins function for type: %s",
-        meostype_name(sp->basetype));
+        meostype_name(s->basetype));
       return 0;
   }
 }
@@ -425,28 +425,28 @@ span_num_bins(const Span *sp, Datum size, Datum origin, Datum *start_bin,
 /**
  * @ingroup meos_internal_setspan_bin
  * @brief Return the bins from a span
- * @param[in] sp ISpan to split
+ * @param[in] s ISpan to split
  * @param[in] size Bin size
  * @param[in] origin Origin of the bins
  * @param[out] count Number of elements in the output array
  */
 Span *
-span_bins(const Span *sp, Datum size, Datum origin, int *count)
+span_bins(const Span *s, Datum size, Datum origin, int *count)
 {
-  assert(sp); assert(count);
-  assert(numspan_type(sp->spantype) || timespan_type(sp->spantype));
-  if ((numspan_type(sp->spantype) && 
-        ! ensure_not_negative_datum(size, sp->basetype)) ||
-      (timespan_type(sp->spantype) && 
+  assert(s); assert(count);
+  assert(numspan_type(s->spantype) || timespan_type(s->spantype));
+  if ((numspan_type(s->spantype) && 
+        ! ensure_not_negative_datum(size, s->basetype)) ||
+      (timespan_type(s->spantype) && 
         ! ensure_positive_duration(DatumGetIntervalP(size))))
     return NULL;
 
   /* Convert an interval into time units */
   Datum size1;
-  if (timespan_type(sp->spantype))
+  if (timespan_type(s->spantype))
   {
-    if (sp->spantype == T_DATESPAN)
-      size1 = Int32GetDatum((int32_t) (interval_units(DatumGetIntervalP(size)) /
+    if (s->spantype == T_DATESPAN)
+      size1 = Int32GetDatum((int32) (interval_units(DatumGetIntervalP(size)) /
         USECS_PER_DAY));
     else
       size1 = Int64GetDatum(interval_units(DatumGetIntervalP(size)));
@@ -455,14 +455,14 @@ span_bins(const Span *sp, Datum size, Datum origin, int *count)
     size1 = size;
   /* Get the span bounds of the state */
   Datum start_bin, end_bin;
-  int nbins = span_num_bins(sp, size1, origin, &start_bin, &end_bin);
+  int nbins = span_num_bins(s, size1, origin, &start_bin, &end_bin);
   Span *bins = palloc0(sizeof(Span) * nbins);
   /* Iterate for each bin */
   Datum lower = start_bin;
   for (int i = 0; i < nbins; i++)
   {
-    Datum upper = datum_add(lower, size1, sp->basetype);
-    span_set(lower, upper, true, false, sp->basetype, sp->spantype, &bins[i]);
+    Datum upper = datum_add(lower, size1, s->basetype);
+    span_set(lower, upper, true, false, s->basetype, s->spantype, &bins[i]);
     lower = upper;
   }
   *count = nbins;
@@ -493,7 +493,7 @@ spanset_bins(const SpanSet *ss, Datum size, Datum origin, int *count)
   if (timespan_type(ss->spantype))
   {
     if (ss->spantype == T_DATESPAN)
-      size1 = Int32GetDatum((int32_t) (interval_units(DatumGetIntervalP(size)) /
+      size1 = Int32GetDatum((int32) (interval_units(DatumGetIntervalP(size)) /
         USECS_PER_DAY));
     else
       size1 = Int64GetDatum(interval_units(DatumGetIntervalP(size)));
@@ -694,8 +694,8 @@ tbox_tile_state_make(const Temporal *temp, const TBox *box, Datum vsize,
  * @param[out] box Output box
  */
 void
-tbox_tile_state_set(Datum value, TimestampTz t, Datum vsize, int64_t tunits,
-  meosType basetype, meosType spantype, TBox *box)
+tbox_tile_state_set(Datum value, TimestampTz t, Datum vsize, int64 tunits,
+  MeosType basetype, MeosType spantype, TBox *box)
 {
   assert(box);
 
@@ -748,7 +748,8 @@ tbox_tile_state_next(TboxGridState *state)
   assert(MEOS_FLAGS_GET_X(state->box.flags) ||
     MEOS_FLAGS_GET_T(state->box.flags));
 
-  if (! state || state->done)
+  /* state is non-NULL by the assert above; only the done check matters. */
+  if (state->done)
     return;
   /* Move to the next tile */
   state->i++;
@@ -819,7 +820,7 @@ tbox_tile_state_next(TboxGridState *state)
 TBox *
 tbox_get_value_time_tile(Datum value, TimestampTz t, Datum vsize,
   const Interval *duration, Datum vorigin, TimestampTz torigin,
-  meosType basetype, meosType spantype)
+  MeosType basetype, MeosType spantype)
 {
   /* Ensure the validity of the arguments */
   if (duration && ! ensure_positive_duration(duration))
@@ -830,7 +831,7 @@ tbox_get_value_time_tile(Datum value, TimestampTz t, Datum vsize,
   assert(valuetile || duration);
   /* Initialize to 0 missing arguments */
   Datum value_bin = (Datum) 0;
-  int64_t tunits = 0;
+  int64 tunits = 0;
   TimestampTz time_bin = 0;
   /* Determine the tile */
   if (valuetile)

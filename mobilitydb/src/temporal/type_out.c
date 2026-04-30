@@ -70,7 +70,7 @@ Temporal_as_text(PG_FUNCTION_ARGS)
   if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
     dbl_dig_for_wkt = PG_GETARG_INT32(1);
   char *str = temporal_out(temp, dbl_dig_for_wkt);
-  text *result = pg_cstring_to_text(str);
+  text *result = cstring_to_text(str);
   pfree(str);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_TEXT_P(result);
@@ -185,7 +185,7 @@ Temporal_as_mfjson(PG_FUNCTION_ARGS)
   }
 
   char *mfjson = temporal_as_mfjson(temp, with_bbox, flags, precision, srs);
-  text *result = pg_cstring_to_text(mfjson);
+  text *result = cstring2text(mfjson);
   pfree(mfjson);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_TEXT_P(result);
@@ -202,7 +202,7 @@ static uint8_t
 get_endian_variant(const text *txt)
 {
   uint8_t variant = 0;
-  char *endian = pg_text_to_cstring(txt);
+  char *endian = text_to_cstring(txt);
   /* When the endian is not given the default value is an empty text */
   if (strlen(endian) == 0)
     ;
@@ -210,9 +210,9 @@ get_endian_variant(const text *txt)
       pg_strncasecmp(endian, "xdr", 3) != 0)
     elog(ERROR, "Invalid value for endian flag");
   else if (pg_strncasecmp(endian, "ndr", 3) == 0)
-    variant = (uint8_t) WKB_NDR;
+    variant = variant | (uint8_t) WKB_NDR;
   else /* txt = XDR */
-    variant = (uint8_t) WKB_XDR;
+    variant = variant | (uint8_t) WKB_XDR;
   pfree(endian);
   return variant;
 }
@@ -222,7 +222,7 @@ get_endian_variant(const text *txt)
  * representation
  */
 bytea *
-Datum_as_wkb(FunctionCallInfo fcinfo, Datum value, meosType type,
+Datum_as_wkb(FunctionCallInfo fcinfo, Datum value, MeosType type,
   bool extended)
 {
   uint8_t variant = 0;
@@ -248,7 +248,7 @@ Datum_as_wkb(FunctionCallInfo fcinfo, Datum value, meosType type,
  * Binary (EWKB) representation in ASCII hex-encoded
  */
 text *
-Datum_as_hexwkb(FunctionCallInfo fcinfo, Datum value, meosType type)
+Datum_as_hexwkb(FunctionCallInfo fcinfo, Datum value, MeosType type)
 {
   uint8_t variant = 0;
   /* If user specified endianness, respect it */
@@ -261,7 +261,7 @@ Datum_as_hexwkb(FunctionCallInfo fcinfo, Datum value, meosType type)
   /* Create WKB hex string */
   size_t hexwkb_size;
   char *hexwkb = datum_as_hexwkb(value, type, variant, &hexwkb_size);
-  text *result = pg_cstring_to_text(hexwkb);
+  text *result = cstring_to_text(hexwkb);
   pfree(hexwkb);
   return result;
 }

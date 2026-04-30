@@ -70,7 +70,7 @@
  * @brief Ensure that a set is of a given set type
  */
 bool
-ensure_set_isof_type(const Set *s, meosType settype)
+ensure_set_isof_type(const Set *s, MeosType settype)
 {
   if (s->settype == settype)
     return true;
@@ -164,7 +164,7 @@ set_find_value(const Set *s, Datum d, int *loc)
  * @csqlfn #Set_in()
  */
 Set *
-set_in(const char *str, meosType settype)
+set_in(const char *str, MeosType settype)
 {
   assert(str);
   return set_parse(&str, settype);
@@ -173,15 +173,13 @@ set_in(const char *str, meosType settype)
 /**
  * @brief Return true if the base type value is output enclosed into quotes
  */
-static int
-set_basetype_quotes(meosType type)
+static bool
+set_basetype_quotes(MeosType type)
 {
   /* Text values are already output with quotes in the #basetype_out function */
-  if (type == T_TEXT || type == T_JSONB )
-    return QUOTES_ESCAPE;
- else if (type == T_TIMESTAMPTZ|| spatial_basetype(type))
-    return QUOTES;
-  return QUOTES_NO;
+  if (type == T_TIMESTAMPTZ || spatial_basetype(type))
+    return true;
+  return false;
 }
 
 /**
@@ -190,14 +188,21 @@ set_basetype_quotes(meosType type)
 char *
 set_out_fn(const Set *s, int maxdd, outfunc value_out)
 {
+  assert(s);
   /* Ensure the validity of the arguments */
-  assert(s); assert(maxdd >= 0);
+  if (! ensure_not_negative(maxdd))
+    return NULL;
 
-  char **strings = palloc(sizeof(void *) * s->count);
+  char **strings = palloc(sizeof(char *) * s->count);
+  size_t outlen = 0;
   for (int i = 0; i < s->count; i++)
+  {
     strings[i] = value_out(SET_VAL_N(s, i), s->basetype, maxdd);
-  char *result = stringarr_to_string(strings, s->count, "", '{', '}',
-    set_basetype_quotes(s->basetype), SPACES);
+    outlen += strlen(strings[i]) + 1;
+  }
+  bool quotes = set_basetype_quotes(s->basetype);
+  char *result = stringarr_to_string(strings, s->count, outlen, "", '{', '}',
+    quotes, SPACES);
   return result;
 }
 
@@ -227,7 +232,7 @@ set_out(const Set *s, int maxdd)
  * @return On error return SIZE_MAX
  */
 static size_t
-set_bbox_size(meosType settype)
+set_bbox_size(MeosType settype)
 {
   assert(alphanumset_type(settype) || spatialset_type(settype));
   if (alphanumset_type(settype))
@@ -317,7 +322,7 @@ SET_VAL_N(const Set *s, int index)
  * should be removed
  */
 Set *
-set_make_exp(const Datum *values, int count, int maxcount, meosType basetype,
+set_make_exp(const Datum *values, int count, int maxcount, MeosType basetype,
   bool order)
 {
   assert(values); assert(count > 0); assert(count <= maxcount);
@@ -328,7 +333,7 @@ set_make_exp(const Datum *values, int count, int maxcount, meosType basetype,
   {
     /* Ensure the spatial validity of the elements */
     int32_t srid = spatial_srid(values[0], basetype);
-    int16_t flags = spatial_flags(values[0], basetype);
+    int16 flags = spatial_flags(values[0], basetype);
     hasz = MEOS_FLAGS_GET_Z(flags);
     geodetic = MEOS_FLAGS_GET_GEODETIC(flags);
     /* Test the validity of the values */
@@ -362,11 +367,11 @@ set_make_exp(const Datum *values, int count, int maxcount, meosType basetype,
   }
 
   /* Get the bounding box size */
-  meosType settype = basetype_settype(basetype);
+  MeosType settype = basetype_settype(basetype);
   size_t bboxsize = DOUBLE_PAD(set_bbox_size(settype));
 
   /* Determine whether the values are passed by value or by reference  */
-  int16_t typlen;
+  int16 typlen;
   bool typbyval = basetype_byvalue(basetype);
   if (typbyval)
     /* For base values passed by value */
@@ -418,7 +423,7 @@ set_make_exp(const Datum *values, int count, int maxcount, meosType basetype,
   result->maxcount = maxcount;
   result->settype = settype;
   result->basetype = basetype;
-  result->bboxsize = (int16_t) bboxsize;
+  result->bboxsize = (int16) bboxsize;
   /* Copy the array of values */
   if (typbyval)
   {
@@ -435,7 +440,7 @@ set_make_exp(const Datum *values, int count, int maxcount, meosType basetype,
     {
       /* VARSIZE_ANY is used for oblivious data alignment, see postgres.h */
       size_t size_elem = (typlen == -1) ?
-        VARSIZE_ANY(newvalues[i]) : (uint32_t) typlen;
+        VARSIZE_ANY(newvalues[i]) : (uint32) typlen;
       memcpy(((char *) result) + pdata + pos, DatumGetPointer(newvalues[i]),
         size_elem);
       (SET_OFFSETS_PTR(result))[i] = pos;
@@ -463,7 +468,7 @@ set_make_exp(const Datum *values, int count, int maxcount, meosType basetype,
  * @csqlfn #Set_constructor()
  */
 Set *
-set_make(const Datum *values, int count, meosType basetype, bool order)
+set_make(const Datum *values, int count, MeosType basetype, bool order)
 {
   assert(values); assert(count > 0);
   return set_make_exp(values, count, count, basetype, order);
@@ -480,7 +485,7 @@ set_make(const Datum *values, int count, meosType basetype, bool order)
  * should be removed
  */
 Set *
-set_make_free(Datum *values, int count, meosType basetype, bool order)
+set_make_free(Datum *values, int count, MeosType basetype, bool order)
 {
   assert(values); assert(count >= 0);
   if (! count)
@@ -520,7 +525,7 @@ set_copy(const Set *s)
  * @csqlfn #Value_to_set()
  */
 Set *
-value_set(Datum value, meosType basetype)
+value_set(Datum value, MeosType basetype)
 {
   return set_make_exp(&value, 1, 1, basetype, ORDER_NO);
 }
@@ -683,7 +688,7 @@ set_value_n(const Set *s, int n, Datum *result)
 
 /**
  * @ingroup meos_internal_setspan_accessor
- * @brief Return an array of pointers to the values of a set
+ * @brief Return the array of (pointers to the) values of a set
  * @param[in] s Set
  * @csqlfn #Set_values()
  */
@@ -699,7 +704,7 @@ set_vals(const Set *s)
 
 /**
  * @ingroup meos_internal_setspan_accessor
- * @brief Return an array of copies of the values of a set
+ * @brief Return the array of (copies of) values of a set
  * @param[in] s Set
  * @csqlfn #Set_values()
  */
@@ -924,7 +929,7 @@ Set *
 numset_shift_scale(const Set *s, Datum shift, Datum width, bool hasshift,
   bool haswidth)
 {
-  meosType type = s->basetype;
+  MeosType type = s->basetype;
   /* Ensure the validity of the arguments */
   VALIDATE_NUMSET(s, NULL);
   if (! ensure_one_true(hasshift, haswidth) ||
@@ -1057,7 +1062,7 @@ set_unnest_state_next(SetUnnestState *state)
 
 /**
  * @ingroup meos_setspan_comp
- * @brief Return true if two sets are equal
+ * @brief Return true if the two sets are equal
  * @param[in] s1,s2 Sets
  * @note The function #set_cmp() is not used to increase efficiency
  * @csqlfn #Set_eq()
@@ -1187,15 +1192,15 @@ set_ge(const Set *s1, const Set *s2)
  * @param[in] s Set
  * @csqlfn #Set_hash
  */
-uint32_t
+uint32
 set_hash(const Set *s)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(s, INT_MAX);
-  uint32_t result = 1;
+  uint32 result = 1;
   for (int i = 0; i < s->count; i++)
   {
-    uint32_t value_hash = datum_hash(SET_VAL_N(s, i), s->basetype);
+    uint32 value_hash = datum_hash(SET_VAL_N(s, i), s->basetype);
     result = (result << 5) - result + value_hash;
   }
   return result;
@@ -1208,15 +1213,15 @@ set_hash(const Set *s)
  * @param[in] seed Seed
  * @csqlfn #Set_hash_extended
  */
-uint64_t
-set_hash_extended(const Set *s, uint64_t seed)
+uint64
+set_hash_extended(const Set *s, uint64 seed)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(s, LONG_MAX);
-  uint64_t result = 1;
+  uint64 result = 1;
   for (int i = 0; i < s->count; i++)
   {
-    uint64_t value_hash = datum_hash_extended(SET_VAL_N(s, i), s->basetype, seed);
+    uint64 value_hash = datum_hash_extended(SET_VAL_N(s, i), s->basetype, seed);
     result = (result << 5) - result + value_hash;
   }
   return result;

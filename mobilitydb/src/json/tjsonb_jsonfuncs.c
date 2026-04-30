@@ -916,7 +916,7 @@ Tjsonb_insert(PG_FUNCTION_ARGS)
  * @sqlfn tjsonb_to_tint()
  */
 Datum
-Tjsonb_to_talphanum(FunctionCallInfo fcinfo, meosType restype)
+Tjsonb_to_talphanum(FunctionCallInfo fcinfo, MeosType restype)
 {
   /* Input arguments */
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
