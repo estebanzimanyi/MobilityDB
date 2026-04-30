@@ -142,7 +142,7 @@ tjsonb_out(const Temporal *temp)
  * @param[in] mfjson MFJSON object
  */
 inline TInstant *
-tjsonbinst_from_mfjson(const json_object *mfjson)
+tjsonbinst_from_mfjson(json_object *mfjson)
 {
   /* false = not linear, 0 = unused */
   return tinstant_from_mfjson(mfjson, false, 0, T_TJSONB);
@@ -154,7 +154,7 @@ tjsonbinst_from_mfjson(const json_object *mfjson)
  * @param[in] mfjson MFJSON object
  */
 inline TSequence *
-tjsonbseq_from_mfjson(const json_object *mfjson)
+tjsonbseq_from_mfjson(json_object *mfjson)
 {
   /* false = not linear, 0 = unused */
   return tsequence_from_mfjson(mfjson, false, 0, T_TJSONB, STEP);
@@ -166,7 +166,7 @@ tjsonbseq_from_mfjson(const json_object *mfjson)
  * @param[in] mfjson MFJSON object
  */
 inline TSequenceSet *
-tjsonbseqset_from_mfjson(const json_object *mfjson)
+tjsonbseqset_from_mfjson(json_object *mfjson)
 {
   /* false = not linear, 0 = unused */
   return tsequenceset_from_mfjson(mfjson, false, 0, T_TJSONB, STEP);
