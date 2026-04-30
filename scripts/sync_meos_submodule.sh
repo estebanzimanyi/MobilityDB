@@ -6,8 +6,9 @@
 #   1. Fetch upstream master.
 #   2. Compute new master commits since the last sync (stored in
 #      .meos-sync-tag, a regular commit-marker file).
-#   3. For each new commit, format a patch scoped to the moved trees and
-#      apply it inside the meos/ submodule.
+#   3. For each new commit, format a patch scoped to the moved trees,
+#      strip the meos/ path prefix (MEOS uses a flat layout), and apply
+#      via `git am -3` inside the meos/ submodule.
 #   4. Push the submodule, bump the parent's submodule SHA, push the parent.
 #
 # Designed for a weekly cadence. Per-PR triggers are too noisy — most
@@ -15,8 +16,33 @@
 #
 # Required environment:
 #   - upstream remote pointing at MobilityDB/MobilityDB
-#   - meos/ submodule's origin pointing at MobilityDB/MEOS, write access
-#   - clean working tree on this branch
+#   - meos/ submodule's origin pointing at MobilityDB/MEOS via HTTPS
+#     (the .gitmodules SSH URL needs overriding once per clone)
+#   - mobilitydb remote inside the submodule pointing at the parent repo
+#     (needed for `git am -3` to find blobs referenced by patches)
+#   - clean parent working tree on this branch
+#
+# One-shot setup (do once after a fresh worktree checkout of this branch):
+#
+#   git submodule update --init meos
+#   cd meos
+#   git remote set-url origin https://github.com/MobilityDB/MEOS.git
+#   git remote add mobilitydb https://github.com/MobilityDB/MobilityDB.git
+#   git fetch mobilitydb master
+#   git branch --set-upstream-to=origin/master master
+#   cd ..
+#
+# After a `git am` conflict (occasional, when both master and MEOS have
+# edited the same file since the last sync — typically CMakeLists.txt):
+#
+#   cd meos
+#   # fix conflicting files, drop conflict markers
+#   git add <resolved-files>
+#   git am --continue
+#   cd ..
+#   git add meos .meos-sync-tag
+#   git commit -m "MEOS sync: replay N master commits"
+#   git push origin $(git branch --show-current)
 #
 # Usage:
 #   ./scripts/sync_meos_submodule.sh [--dry-run]
