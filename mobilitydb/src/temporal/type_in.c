@@ -103,7 +103,7 @@ Datum
 Temporal_from_mfjson(PG_FUNCTION_ARGS)
 {
   text *mfjson_txt = PG_GETARG_TEXT_P(0);
-  char *mfjson = text2cstring(mfjson_txt);
+  char *mfjson = text_to_cstring(mfjson_txt);
   MeosType temptype = oid_meostype(get_fn_expr_rettype(fcinfo->flinfo));
   Temporal *result = temporal_from_mfjson(mfjson, temptype);
   pfree(mfjson);
