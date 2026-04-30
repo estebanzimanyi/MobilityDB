@@ -164,7 +164,7 @@ basetype_in(const char *str, MeosType type, bool end UNUSED, Datum *result)
     }
     case T_TEXT:
     {
-      text *txt = cstring_to_text(str);
+      text *txt = pg_cstring_to_text(str);
       if (! txt)
         return false;
       *result = PointerGetDatum(txt);
@@ -383,7 +383,7 @@ parse_mfjson_values(json_object *mfjson, MeosType temptype, int *count)
             "Invalid string value in 'values' array in MFJSON string");
           return NULL;
         }
-        values[i] = PointerGetDatum(cstring_to_text(
+        values[i] = PointerGetDatum(pg_cstring_to_text(
           json_object_get_string(jvalue)));
         break;
       default: /* Error! */
@@ -1301,7 +1301,7 @@ text_from_wkb_state(meos_wkb_parse_state *s)
   str[size] = '\0';
   /* Advance the state and return */
   s->pos += size;
-  text *result = cstring_to_text(str);
+  text *result = pg_cstring_to_text(str);
   pfree(str);
   return result;
 }
