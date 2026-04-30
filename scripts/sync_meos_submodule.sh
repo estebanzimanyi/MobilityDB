@@ -77,10 +77,11 @@ echo "Replaying $N master commits into the MEOS submodule…"
 PATCH_DIR="$(mktemp -d /tmp/meos-sync.XXXXXX)"
 trap 'rm -rf "$PATCH_DIR"' EXIT
 
-# format-patch for each commit, restricted to the moved trees. The
-# --relative flag rewrites paths to be submodule-relative; since the
-# submodule keeps the same internal layout (meos/, postgis/, postgres/
-# at submodule root), the patches apply cleanly without further rewriting.
+# format-patch for each commit, restricted to the moved trees. The MEOS
+# submodule uses a FLAT layout: files that live at meos/X in MobilityDB
+# live at X (root) in MEOS, while postgis/X and postgres/X are preserved.
+# We post-process each patch to strip the leading meos/ prefix from the
+# diff headers so `git am` applies them at MEOS root.
 i=0
 while IFS= read -r SHA; do
   i=$((i + 1))
@@ -90,6 +91,17 @@ while IFS= read -r SHA; do
     -- "${MOVED_TREES[@]}" \
     >/dev/null
 done <<<"$COMMITS"
+
+# Strip leading meos/ from patch paths so they apply at the submodule's
+# flat root. Anchored on the `diff --git`, `---`, and `+++` header lines
+# so we don't accidentally rewrite content inside the diff body.
+for f in "$PATCH_DIR"/*.patch; do
+  sed -i \
+    -e 's|^\(diff --git \)a/meos/\(.*\) b/meos/|\1a/\2 b/|' \
+    -e 's|^--- a/meos/|--- a/|' \
+    -e 's|^+++ b/meos/|+++ b/|' \
+    "$f"
+done
 
 PATCH_COUNT=$(find "$PATCH_DIR" -maxdepth 1 -name '*.patch' | wc -l)
 if [ "$PATCH_COUNT" -eq 0 ]; then
