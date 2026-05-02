@@ -64,7 +64,7 @@
 static MeosArray *events = NULL;
 static MeosArray *intervals = NULL;
 static MeosArray *periods = NULL;
-static int *rtree_results = NULL;
+static MeosArray *rtree_results = NULL;
 
 /**
  * @brief Enumeration defining the edge types 
@@ -309,7 +309,7 @@ intervals_from_points(const POINT2D *a, const POINT2D *b, Edge **edges,
   /* Iterate through the points */
   for (int i = 0; i < nedges; i++)
   {
-    Edge *e = edges[i]; 
+    const Edge *e = edges[i];
     /* Iterate only for the points */
     if (e->etype != EDGE_POINT)
       continue;
@@ -363,7 +363,7 @@ intervals_from_lines(const POINT2D *a, const POINT2D *b, Edge **edges,
   /* Iterate through the lines */
   for (int i = 0; i < nedges; i++)
   {
-    Edge *e = edges[i];
+    const Edge *e = edges[i];
     /* Iterate only for the line edges */
     if (e->etype != EDGE_LINE)
       continue;
@@ -399,7 +399,7 @@ intervals_from_lines(const POINT2D *a, const POINT2D *b, Edge **edges,
     double my = (ay + by) * 0.5;
     for (int i = 0; i < nedges; i++)
     {
-      Edge *e = edges[i];
+      const Edge *e = edges[i];
       /* Iterate only for the lines edges */
       if (e->etype != EDGE_LINE)
         continue;
@@ -476,7 +476,7 @@ intervals_from_polygons(const POINT2D *a, const POINT2D *b, Edge **edges,
   /* Collect all intersection parameters from the (possibly filtered) edges */
   for (int i = 0; i < nedges; i++)
   {
-    Edge *e = edges[i];
+    const Edge *e = edges[i];
     /* Iterate only for the polygon edges */
     if (e->etype != EDGE_POLY)
       continue;
@@ -557,7 +557,7 @@ point_inter_points_lines(const POINT2D *a, Edge **edges, int nedges)
   /* Iterate only through the point and linear edges */
   for (int i = 0; i < nedges; i++)
   {
-    Edge *e = edges[i];
+    const Edge *e = edges[i];
     if (e->etype == EDGE_POINT)
     {
       if (fabs(e->x1 - ax) < FP_TOLERANCE && fabs(e->y1 - ay) < FP_TOLERANCE)
@@ -579,7 +579,7 @@ point_inter_points_lines(const POINT2D *a, Edge **edges, int nedges)
 /**
  * @brief Clip a 2D/3D trajectory with linear interpolation with respect to a
  * geometry
- * @param[in] inst Temporal sequence
+ * @param[in] seq Temporal sequence
  * @param[in] edges Array of geometry edges
  * @param[in] nedges Number of edges in the array
  * @param[in] rtree R-tree for the edges, may be `NULL` if no index is used
@@ -588,7 +588,7 @@ point_inter_points_lines(const POINT2D *a, Edge **edges, int nedges)
  */
 static void
 tpointinst_clip_edges(const TInstant *inst, Edge **edges, int nedges,
-  RTree *rtree, Edge **cand_edges)
+  const RTree *rtree, Edge **cand_edges)
 {
   assert(inst); assert(edges); assert(nedges > 0);
   assert(inst->temptype == T_TGEOMPOINT);
@@ -607,11 +607,11 @@ tpointinst_clip_edges(const TInstant *inst, Edge **edges, int nedges,
     stbox_set(true, false, false, srid, a->x, a->x, a->y, a->y, 0, 0, NULL,
       &query);
     /* Query the R-tree */
-    int cand_nedges = rtree_search(rtree, RTREE_OVERLAPS, &query, &rtree_results);
+    int cand_nedges = rtree_search(rtree, RTREE_OVERLAPS, &query, rtree_results);
 
     /* Convert the result of an R-tree look up into an edge pointer array */
     for (int j = 0; j < cand_nedges; j++)
-      cand_edges[j] = edges[rtree_results[j]];
+      cand_edges[j] = edges[*(int *) meos_array_get(rtree_results, j)];
     sel_edges = cand_edges;
     sel_nedges = cand_nedges;
   }
@@ -647,7 +647,7 @@ tpointinst_clip_edges(const TInstant *inst, Edge **edges, int nedges,
  */
 static void
 tpointseq_clip_edges(const TSequence *seq, Edge **edges, int nedges,
-  RTree *rtree, Edge **cand_edges)
+  const RTree *rtree, Edge **cand_edges)
 {
   assert(seq); assert(edges); assert(nedges > 0);
   assert(seq->temptype == T_TGEOMPOINT);
@@ -684,11 +684,11 @@ tpointseq_clip_edges(const TSequence *seq, Edge **edges, int nedges,
         FP_MAX(a->x, b->x), FP_MIN(a->y, b->y), FP_MAX(a->y, b->y),
         0, 0, NULL, &query);
       /* Query the R-tree */
-      int cand_nedges = rtree_search(rtree, RTREE_OVERLAPS, &query, &rtree_results);
+      int cand_nedges = rtree_search(rtree, RTREE_OVERLAPS, &query, rtree_results);
 
       /* Convert the result of an R-tree look up into an edge pointer array */
       for (int j = 0; j < cand_nedges; j++)
-        cand_edges[j] = edges[rtree_results[j]];
+        cand_edges[j] = edges[*(int *) meos_array_get(rtree_results, j)];
       sel_edges = cand_edges;
       sel_nedges = cand_nedges;
     }
@@ -1045,8 +1045,8 @@ tpoint_linear_inter_geom(const Temporal *temp, const GSERIALIZED *gs,
       rtree_free(rtree); 
       return NULL;
     }
-    /* Array of integer pointers for storing the results of an R-tree search */
-    rtree_results = palloc(sizeof(int) * edges->count);
+    /* MeosArray of int IDs for collecting R-tree search results */
+    rtree_results = meos_array_create(sizeof(int));
     if (! rtree_results)
     {
       meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
@@ -1124,12 +1124,12 @@ tpoint_linear_inter_geom(const Temporal *temp, const GSERIALIZED *gs,
 cleanup_return:
   if (edges->count > RTREE_MIN_NUMBER_ELEMS)
   {
-    rtree_free(rtree); pfree(cand_edges); pfree(rtree_results);
+    rtree_free(rtree); pfree(cand_edges); meos_array_destroy(rtree_results);
   }
-  meos_array_destroy(events, false);
-  meos_array_destroy(intervals, false);
-  meos_array_destroy(periods, false);
-  meos_array_destroy(edges, false); pfree(edge_ptrs);
+  meos_array_destroy(events);
+  meos_array_destroy(intervals);
+  meos_array_destroy(periods);
+  meos_array_destroy(edges); pfree(edge_ptrs);
   return result;  
 }
 

@@ -636,7 +636,7 @@ compute_turnpoints_tpoly_point(cfp_elem *cfp_s, cfp_elem *cfp_e,
   for (double i = 0; i < 4; ++i)
   {
     double tl = i / 4, tr = (i + 1) / 4, t0 = -1;
-    double vl, vr;
+    double vl, vr, v0;
     if (cfp_s->cf_1 % 2 == 0)
     {
       vl = f_turnpoints_v_v_tpoint_poly(p, q, cfp_s->pose_1, cfp_e->pose_1, tl);
@@ -654,7 +654,6 @@ compute_turnpoints_tpoly_point(cfp_elem *cfp_s, cfp_elem *cfp_e,
       uint8_t j = 0;
       while(fabs(tr - tl) >= MEOS_EPSILON && j < 100)
       {
-        double v0;
         ++j;
         t0 = (tl * vr - tr * vl) / (vr - vl);
         if (cfp_s->cf_1 % 2 == 0)
@@ -2002,7 +2001,7 @@ nad_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   /* Ensure the validity of the arguments */
   if (! ensure_valid_trgeo_geo(temp, gs) || gserialized_is_empty(gs))
-    return DBL_MAX;
+    return -1.0;
 
   Temporal *dist = tdistance_trgeo_geo(temp, gs);
   double result = DatumGetFloat8(temporal_min_value(dist));
@@ -2021,7 +2020,7 @@ nad_trgeo_stbox(const Temporal *temp, const STBox *box)
 {
   /* Ensure the validity of the arguments */
   if (! ensure_valid_trgeo_stbox(temp, box))
-    return DBL_MAX;
+    return -1.0;
 
   /* Project the temporal point to the timespan of the box */
   bool hast = MEOS_FLAGS_GET_T(box->flags);
@@ -2030,7 +2029,7 @@ nad_trgeo_stbox(const Temporal *temp, const STBox *box)
   {
     temporal_set_tstzspan(temp, &p);
     if (! inter_span_span(&p, &box->period, &inter))
-      return DBL_MAX;
+      return -1.0;
   }
   /* Convert the stbox to a geometry */
   GSERIALIZED *geo = stbox_geo(box);
@@ -2057,11 +2056,11 @@ nad_trgeo_tpoint(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure the validity of the arguments */
   if (! ensure_valid_trgeo_tpoint(temp2, temp2))
-    return DBL_MAX;
+    return -1.0;
 
   Temporal *dist = tdistance_trgeo_tpoint(temp1, temp2);
-  if (dist == NULL)
-    return DBL_MAX;
+  if (! dist)
+    return -1.0;
 
   double result = DatumGetFloat8(temporal_min_value(dist));
   pfree(dist);
@@ -2079,11 +2078,11 @@ nad_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure the validity of the arguments */
   if (! ensure_valid_trgeo_trgeo(temp2, temp2))
-    return DBL_MAX;
+    return -1.0;
 
   Temporal *dist = tdistance_trgeo_trgeo(temp1, temp2);
-  if (dist == NULL)
-    return DBL_MAX;
+  if (! dist)
+    return -1.0;
 
   double result = DatumGetFloat8(temporal_min_value(dist));
   pfree(dist);
@@ -2112,7 +2111,7 @@ shortestline_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
   /* Timestamp t may be at an exclusive bound */
   Datum value;
   trgeo_value_at_timestamptz(temp, inst->t, false, &value);
-  LWGEOM *line = (LWGEOM *) lwline_make(value, PointerGetDatum(gs));
+  LWGEOM *line = (LWGEOM *) datum_lwline_make(value, PointerGetDatum(gs));
   GSERIALIZED *result = geo_serialize(line);
   lwgeom_free(line);
   return result;
@@ -2132,14 +2131,14 @@ shortestline_trgeo_tpoint(const Temporal *temp1, const Temporal *temp2)
     return NULL;
 
   Temporal *dist = tdistance_trgeo_tpoint(temp1, temp2);
-  if (dist == NULL)
+  if (! dist)
     return NULL;
   const TInstant *inst = temporal_min_instant(dist);
   /* Timestamp t may be at an exclusive bound */
   Datum value1, value2;
   trgeo_value_at_timestamptz(temp1, inst->t, false, &value1);
   temporal_value_at_timestamptz(temp2, inst->t, false, &value2);
-  LWGEOM *line = (LWGEOM *) lwline_make(value1, value2);
+  LWGEOM *line = (LWGEOM *) datum_lwline_make(value1, value2);
   GSERIALIZED *result = geo_serialize(line);
   lwgeom_free(line);
   return result;
@@ -2159,14 +2158,14 @@ shortestline_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2)
     return NULL;
 
   Temporal *dist = tdistance_trgeo_trgeo(temp1, temp2);
-  if (dist == NULL)
+  if (! dist)
     return NULL;
   const TInstant *inst = temporal_min_instant(dist);
   /* Timestamp t may be at an exclusive bound */
   Datum value1, value2;
   trgeo_value_at_timestamptz(temp1, inst->t, false, &value1);
   trgeo_value_at_timestamptz(temp2, inst->t, false, &value2);
-  LWGEOM *line = (LWGEOM *) lwline_make(value1, value2);
+  LWGEOM *line = (LWGEOM *) datum_lwline_make(value1, value2);
   GSERIALIZED *result = geo_serialize(line);
   lwgeom_free(line);
   return result;

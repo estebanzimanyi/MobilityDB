@@ -177,7 +177,7 @@ nai_tpose_tpose(const Temporal *temp1, const Temporal *temp2)
     return NULL;
 
   Temporal *dist = tdistance_tpose_tpose(temp1, temp2);
-  if (dist == NULL)
+  if (! dist)
     return NULL;
 
   const TInstant *min = temporal_min_instant((const Temporal *) dist);
@@ -271,7 +271,7 @@ nad_tpose_tpose(const Temporal *temp1, const Temporal *temp2)
     return -1.0;
 
   Temporal *dist = tdistance_tpose_tpose(temp1, temp2);
-  if (dist == NULL)
+  if (! dist)
     return -1.0;
   return DatumGetFloat8(temporal_min_value(dist));
 }

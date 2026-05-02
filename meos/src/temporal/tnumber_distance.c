@@ -286,7 +286,7 @@ nad_tnumber_tnumber(const Temporal *temp1, const Temporal *temp2)
   assert(tnumber_type(temp1->temptype));
   Temporal *dist = tdistance_tnumber_tnumber(temp1, temp2);
   /* If the boxes do not intersect in the time dimension return infinity */
-  if (dist == NULL)
+  if (! dist)
     return DBL_MAX;
 
   Datum res = temporal_min_value(dist);

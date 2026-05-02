@@ -274,13 +274,15 @@ SELECT ST_CPAWithin(
 
 		<para>The temporal distance operator, denoted <varname>&lt;-&gt;</varname>, computes the distance at each instant of the intersection of the temporal extents of their arguments and results in a temporal float. Computing temporal distance is useful in many mobility applications. For example, a moving cluster (also known as convoy or flock) is defined as a set of objects that move close to each other for a long time interval. This requires to compute temporal distance between two moving objects.</para>
 
-		<para>The temporal distance operator accepts a geometry/geography restricted to a point or a temporal point as arguments. Notice that the temporal types only consider linear interpolation between values, while the distance is a root of a quadratic function. Therefore, the temporal distance operator gives a linear approximation of the actual distance value for temporal sequence points. In this case, the arguments are synchronized in the time dimension, and for each of the composing line segments of the arguments, the spatial distance between the start point, the end point, and the nearest point of approach is computed, as shown in the examples below.</para>
+		<para>Notice that the temporal types only consider linear interpolation between values, while the distance is a root of a quadratic function. Therefore, the temporal distance operator gives a linear approximation of the actual distance value for temporal sequence points. In this case, the arguments are synchronized in the time dimension, and for each of the composing line segments of the arguments, the spatial distance between the start point, the end point, and the nearest point of approach is computed, as shown in the examples below.</para>
 
 		<itemizedlist>
 			<listitem xml:id="tgeo_tdistance">
 				<indexterm significance="normal"><primary><varname>&lt;-&gt;</varname></primary></indexterm>
 				<para>Return the temporal distance &Z_support; &geography_support;</para>
 				<para><varname>{geo,tgeo} &lt;-&gt; {geo,tgeo} → tfloat</varname></para>
+				<para><varname>{point,tpoint} &lt;-&gt; {point,tpoint} → tfloat</varname></para>
+				<para>The temporal distance operator for temporal geometries/geographies accept arbitrary geometries/geographies as argument. On the other hand, the temporal distance operator for temporal points, which support linear interpolation, only accepts geometries/geographies restricted to a point as argument. </para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT tgeompoint '[Point(0 0)@2001-01-01, Point(1 1)@2001-01-03)' &lt;-&gt;
   geometry 'Point(0 1)';

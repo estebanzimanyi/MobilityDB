@@ -136,10 +136,8 @@ ensure_valid_poseset_pose(const Set *s, const Pose *pose)
 Pose *
 posesegm_interpolate(const Pose *start, const Pose *end, double ratio)
 {
-  assert(start); assert(end); assert(ratio >= 0.0 && ratio <= 1.0);
-  assert(pose_srid(start) == pose_srid(end));
-  assert(MEOS_FLAGS_GET_Z(start->flags) == MEOS_FLAGS_GET_Z(end->flags));
-
+  if (! ensure_valid_pose_pose(start, end))
+    return NULL; 
   Pose *result;
   if (! MEOS_FLAGS_GET_Z(start->flags))
   {
@@ -1057,7 +1055,7 @@ pose_srid(const Pose *pose)
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(pose, SRID_INVALID);
 
-  int32 srid = 0;
+  int32_t srid = 0;
   srid = srid | (pose->srid[0] << 16);
   srid = srid | (pose->srid[1] << 8);
   srid = srid | (pose->srid[2]);
@@ -1382,8 +1380,7 @@ pose_cmp(const Pose *pose1, const Pose *pose2)
   if (hasz1 != hasz2)
     return (hasz1 ? 1 : -1);
 
-  int32 srid1 = pose_srid(pose1),
-        srid2 = pose_srid(pose2);
+  int32_t srid1 = pose_srid(pose1), srid2 = pose_srid(pose2);
   if (srid1 < srid2)
     return -1;
   else if (srid1 > srid2)

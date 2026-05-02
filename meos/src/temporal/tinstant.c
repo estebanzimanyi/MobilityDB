@@ -67,15 +67,15 @@
  * @param[in] inst Temporal instant
  * @csqlfn #Tinstant_value()
  */
-Datum
+inline Datum
 tinstant_value_p(const TInstant *inst)
 {
   assert(inst);
-  /* For base types passed by value */
-  if (MEOS_FLAGS_GET_BYVAL(inst->flags))
-    return inst->value;
-  /* For base types passed by reference */
-  return PointerGetDatum(&inst->value);
+  return MEOS_FLAGS_GET_BYVAL(inst->flags) ?
+    /* For base types passed by value */
+    inst->value : 
+    /* For base types passed by reference */
+    PointerGetDatum(&inst->value);
 }
 
 /**
@@ -201,14 +201,16 @@ tinstant_out(const TInstant *inst, int maxdd)
 TInstant *
 tinstant_make(Datum value, MeosType temptype, TimestampTz t)
 {
+  /* Ensure validity of arguments */
+  int32_t tspatial_srid;
   // TODO Should we bypass the tests on tnpoint ?
   if (tspatial_type(temptype) && temptype != T_TNPOINT)
   {
     MeosType basetype = temptype_basetype(temptype);
-    int32_t value_srid = spatial_srid(value, basetype);
+    tspatial_srid = spatial_srid(value, basetype);
     /* Ensure that the SRID is geodetic for geography */
-    if (tgeodetic_type(temptype) && value_srid != SRID_UNKNOWN &&
-        ! ensure_srid_is_latlong(value_srid))
+    if (tgeodetic_type(temptype) && tspatial_srid != SRID_UNKNOWN && 
+        ! ensure_srid_is_latlong(tspatial_srid))
       return NULL;
     /* Ensure that a geometry/geography is not empty */
     if (tgeo_type_all(temptype) && 
