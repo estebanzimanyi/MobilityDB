@@ -213,6 +213,13 @@ CREATE FUNCTION tgeompoint(trgeometry)
 CREATE CAST (trgeometry AS tpose) WITH FUNCTION tpose(trgeometry);
 CREATE CAST (trgeometry AS tgeompoint) WITH FUNCTION tgeompoint(trgeometry);
 
+-- World-frame trajectory of an arbitrary body-frame point on a moving rigid
+-- geometry. The reference-point variant is the special case bodyPt=ORIGIN.
+CREATE FUNCTION bodyPointTrajectory(trgeometry, geometry)
+  RETURNS tgeompoint
+  AS 'MODULE_PATHNAME', 'Trgeometry_body_point_trajectory'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 CREATE FUNCTION stbox(trgeometry)
   RETURNS stbox
   AS 'MODULE_PATHNAME', 'Tspatial_to_stbox'

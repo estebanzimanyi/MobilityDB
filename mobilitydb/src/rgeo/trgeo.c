@@ -282,7 +282,7 @@ Datum
 Trgeometry_seq_constructor(PG_FUNCTION_ARGS)
 {
   ArrayType *array = PG_GETARG_ARRAYTYPE_P(0);
-  MeosType temptype = oid_meostype(get_fn_expr_rettype(fcinfo->flinfo));
+  meosType temptype = oid_meostype(get_fn_expr_rettype(fcinfo->flinfo));
   interpType interp = temptype_continuous(temptype) ? LINEAR : STEP;
   if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
   {
@@ -348,7 +348,7 @@ Trgeometry_seqset_constructor_gaps(PG_FUNCTION_ARGS)
   ensure_not_empty_array(array);
   double maxdist = -1.0;
   Interval *maxt = NULL;
-  MeosType temptype = oid_meostype(get_fn_expr_rettype(fcinfo->flinfo));
+  meosType temptype = oid_meostype(get_fn_expr_rettype(fcinfo->flinfo));
   interpType interp = temptype_continuous(temptype) ? LINEAR : STEP;
   if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
     maxt = PG_GETARG_INTERVAL_P(1);
@@ -429,6 +429,27 @@ Trgeometry_to_tpoint(PG_FUNCTION_ARGS)
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   Temporal *result = trgeo_to_tpoint(temp);
   PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_POINTER(result);
+}
+
+PGDLLEXPORT Datum Trgeometry_body_point_trajectory(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Trgeometry_body_point_trajectory);
+/**
+ * @ingroup mobilitydb_rgeo_conversion
+ * @brief Return the world-frame trajectory of a body-frame point on a
+ *        moving rigid geometry
+ * @sqlfn bodyPointTrajectory()
+ */
+Datum
+Trgeometry_body_point_trajectory(PG_FUNCTION_ARGS)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  GSERIALIZED *body_pt = PG_GETARG_GSERIALIZED_P(1);
+  Temporal *result = trgeo_body_point_trajectory(temp, body_pt);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_FREE_IF_COPY(body_pt, 1);
+  if (result == NULL)
+    PG_RETURN_NULL();
   PG_RETURN_POINTER(result);
 }
 

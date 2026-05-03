@@ -46,11 +46,9 @@ extern GSERIALIZED *tpose_trajectory(const Temporal *temp);
 /* Restriction functions */
 
 extern Temporal *tpose_restrict_geom(const Temporal *temp,
-  const GSERIALIZED *gs, bool atfunc);
+  const GSERIALIZED *gs, const Span *zspan, bool atfunc);
 extern Temporal *tpose_restrict_stbox(const Temporal *temp, const STBox *box,
   bool border_inc, bool atfunc);
-extern Temporal *tpose_restrict_elevation(const Temporal *temp, const Span *s,
-  bool atfunc);
 
 /*****************************************************************************/
 

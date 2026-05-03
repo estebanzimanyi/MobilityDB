@@ -395,7 +395,7 @@ spatialrel_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
   GSERIALIZED *trav2 = tpoint_type(temp2->temptype) ?
     tpoint_trajectory(temp2, UNARY_UNION_NO) :
     tgeo_traversed_area(temp2, UNARY_UNION_NO);
-  Datum dtrav1;
+  Datum dtrav1 = PointerGetDatum(trav1);
   Datum dtrav2 = PointerGetDatum(trav2);
   Datum result;
 
@@ -1263,7 +1263,7 @@ ea_touches_tpoint_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever)
   bool result = false;
   if (gsbound && ! gserialized_is_empty(gsbound))
   {
-    Temporal *temp1 = tgeo_restrict_geom(temp, gsbound, REST_MINUS);
+    Temporal *temp1 = tgeo_restrict_geom(temp, gsbound, NULL, REST_MINUS);
     result = (temp1 == NULL);
     if (temp1)
       pfree(temp1);

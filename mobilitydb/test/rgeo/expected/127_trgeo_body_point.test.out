@@ -1,0 +1,47 @@
+SELECT asText(round(bodyPointTrajectory(
+  trgeometry '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0));[Pose(Point(0 0),0)@2026-01-01, Pose(Point(10 0),1.5707963267948966)@2026-01-01 00:01:00]}',
+  'Point(0 0)'), 6));
+                                  astext                                 
+-------------------------------------------------------------------------
+ [POINT(0 0)@2026-01-01 00:00:00+00, POINT(10 0)@2026-01-01 00:01:00+00] 
+(1 row)
+
+SELECT asText((trgeometry '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0));[Pose(Point(0 0),0)@2026-01-01, Pose(Point(10 0),1.5707963267948966)@2026-01-01 00:01:00]}')::tgeompoint);
+                                  astext                                 
+-------------------------------------------------------------------------
+ [POINT(0 0)@2026-01-01 00:00:00+00, POINT(10 0)@2026-01-01 00:01:00+00] 
+(1 row)
+
+SELECT asText(round(bodyPointTrajectory(
+  trgeometry '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0));[Pose(Point(0 0),0)@2026-01-01, Pose(Point(10 0),1.5707963267948966)@2026-01-01 00:01:00]}',
+  'Point(1 0)'), 6));
+                                  astext                                 
+-------------------------------------------------------------------------
+ [POINT(1 0)@2026-01-01 00:00:00+00, POINT(10 1)@2026-01-01 00:01:00+00] 
+(1 row)
+
+SELECT asText(round(bodyPointTrajectory(
+  trgeometry '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0));[Pose(Point(0 0),0)@2026-01-01, Pose(Point(10 0),1.5707963267948966)@2026-01-01 00:01:00]}',
+  'Point(0 1)'), 6));
+                                 astext                                 
+------------------------------------------------------------------------
+ [POINT(0 1)@2026-01-01 00:00:00+00, POINT(9 0)@2026-01-01 00:01:00+00] 
+(1 row)
+
+SELECT asText(round(bodyPointTrajectory(
+  trgeometry '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0));[Pose(Point(5 5),0)@2026-01-01, Pose(Point(5 5),0)@2026-01-01 00:01:00]}',
+  'Point(2 3)'), 6));
+                                 astext                                 
+------------------------------------------------------------------------
+ [POINT(7 8)@2026-01-01 00:00:00+00, POINT(7 8)@2026-01-01 00:01:00+00] 
+(1 row)
+
+/* Errors */
+SELECT bodyPointTrajectory(
+  trgeometry '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0));[Pose(Point(0 0),0)@2026-01-01, Pose(Point(10 0),0)@2026-01-01 00:01:00]}',
+  'Linestring(0 0, 1 1)');
+ERROR:  Body-frame argument must be a Point, got Linestring
+SELECT bodyPointTrajectory(
+  trgeometry '{Polygon((0 0, 1 0, 1 1, 0 1, 0 0));[Pose(Point(0 0),0)@2026-01-01, Pose(Point(10 0),0)@2026-01-01 00:01:00]}',
+  'PointZ(0 0 1)');
+ERROR:  Body-point dimensionality (3D) must match trgeometry (2D)

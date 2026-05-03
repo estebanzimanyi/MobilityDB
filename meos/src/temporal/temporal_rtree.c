@@ -98,7 +98,7 @@ get_axis_tbox(const void *box, int axis, bool upper)
 static double
 get_axis_stbox(const void *box, int axis, bool upper)
 {
-  assert(box); assert(axis >= 0 && axis <= 3);
+  assert(box); assert(axis >= 0 || axis <= 3);
   STBox *stbox = (STBox *) box;
   if (axis == 0)
     return upper ? stbox->xmax : stbox->xmin;
@@ -484,15 +484,15 @@ static void
 node_qsort(const RTree *rtree, RTreeNode *node, int index, bool upper, int s,
   int e)
 {
-  int num_boxes = e - s;
-  if (num_boxes < 2)
+  int no_box = e - s;
+  if (no_box < 2)
     return;
 
   int left = 0;
-  int right = num_boxes - 1;
-  int pivot = num_boxes / 2;
+  int right = no_box - 1;
+  int pivot = no_box / 2;
   node_swap(rtree, node, s + pivot, s + right);
-  for (int i = 0; i < num_boxes; ++i)
+  for (int i = 0; i < no_box; ++i)
   {
     if (rtree->get_axis(RTREE_NODE_BBOX_N(node, right + s), index, upper) >
         rtree->get_axis(RTREE_NODE_BBOX_N(node, s + i), index, upper))
@@ -733,11 +733,11 @@ node_search(const RTree *rtree, const RTreeNode *node, RTreeSearchOp op,
 
 /**
  * @brief Creates an RTree index.
- * @param[in] bboxtype The MeosType of the elements to index.
+ * @param[in] bboxtype The meosType of the elements to index.
  * @return RTree initialized.
  */
 RTree *
-rtree_create(MeosType bboxtype)
+rtree_create(meosType bboxtype)
 {
   assert(span_type(bboxtype) || bboxtype == T_TBOX || bboxtype == T_STBOX);
   size_t bboxsize = bbox_get_size(bboxtype);
@@ -922,7 +922,7 @@ rtree_search(const RTree *rtree, RTreeSearchOp op, const void *query,
 static bool
 ensure_rtree_temporal_compatible(const RTree *rtree, const Temporal *temp)
 {
-  MeosType temptype = temp->temptype;
+  meosType temptype = temp->temptype;
   bool compatible =
     (talpha_type(temptype) && rtree->bboxtype == T_TSTZSPAN) ||
     (tnumber_type(temptype) && rtree->bboxtype == T_TBOX) ||

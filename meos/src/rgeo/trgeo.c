@@ -266,6 +266,80 @@ trgeo_to_tpose(const Temporal *temp)
 }
 
 /**
+ * @brief Apply a pose to a body-frame point and return the world-frame point.
+ * @details Two-arg lifting helper for `tfunc_temporal` (numparam=1):
+ *   `pose` is the per-instant value of the trgeo;
+ *   `body_pt_d` is the body-frame point passed via `lfinfo.param[0]`.
+ *   The result is a fresh GSERIALIZED point in the same SRID as the trgeo.
+ *   `lwgeom_apply_pose` mutates the LWGEOM in place; we copy first so the
+ *   caller-owned body point is untouched.
+ */
+static Datum
+datum_pose_apply_to_point(Datum pose_d, Datum body_pt_d)
+{
+  const Pose *pose = DatumGetPoseP(pose_d);
+  const GSERIALIZED *body_pt = DatumGetGserializedP(body_pt_d);
+  LWGEOM *lwg = lwgeom_clone_deep(lwgeom_from_gserialized(body_pt));
+  lwgeom_apply_pose(pose, lwg);
+  GSERIALIZED *result = geo_serialize(lwg);
+  lwgeom_free(lwg);
+  return PointerGetDatum(result);
+}
+
+/**
+ * @ingroup meos_rgeo_conversion
+ * @brief Return the world-frame trajectory of a body-frame point on a
+ *        moving rigid geometry
+ * @param[in] temp Temporal rigid geometry (the moving body's pose trajectory)
+ * @param[in] body_pt Point in the body's local reference frame
+ * @details Each instant of @p temp carries a pose `(translation, rotation)`;
+ * for each instant, this function returns
+ * `pose.translation + pose.rotation * body_pt`, i.e., the world-frame
+ * position of @p body_pt as it moves with the body. Useful for sampling
+ * sensor offsets (the lidar mount, an antenna, a wheel hub, …) on a
+ * tracked rigid body, or any other body-fixed point of interest.
+ *
+ * The reference-point variant `trgeo_to_tpoint` is the special case of this
+ * function with @p body_pt at the origin of the body frame (i.e., the
+ * pose's translation alone). Use this entry point when you need a
+ * non-origin body-frame point.
+ */
+Temporal *
+trgeo_body_point_trajectory(const Temporal *temp, const GSERIALIZED *body_pt)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_TRGEOMETRY(temp, NULL); VALIDATE_NOT_NULL(body_pt, NULL);
+  if (gserialized_get_type(body_pt) != POINTTYPE)
+  {
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      "Body-frame argument must be a Point, got %s",
+      lwtype_name(gserialized_get_type(body_pt)));
+    return NULL;
+  }
+  /* The body-frame point must match the trgeo's dimensionality so the
+   * pose can be applied verbatim — a 2D pose can't legitimately rotate
+   * a 3D body point and vice versa. */
+  bool trgeo_z = MEOS_FLAGS_GET_Z(temp->flags);
+  bool body_z  = (bool) FLAGS_GET_Z(body_pt->gflags);
+  if (trgeo_z != body_z)
+  {
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      "Body-point dimensionality (%dD) must match trgeometry (%dD)",
+      body_z ? 3 : 2, trgeo_z ? 3 : 2);
+    return NULL;
+  }
+
+  LiftedFunctionInfo lfinfo;
+  memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
+  lfinfo.func = (varfunc) &datum_pose_apply_to_point;
+  lfinfo.numparam = 1;
+  lfinfo.param[0] = PointerGetDatum(body_pt);
+  lfinfo.argtype[0] = temptype_basetype(temp->temptype);
+  lfinfo.restype = T_TGEOMPOINT;
+  return tfunc_temporal(temp, &lfinfo);
+}
+
+/**
  * @ingroup meos_rgeo_conversion
  * @brief Return a temporal point obtained from the points of the temporal
  * pose of a temporal rigid geometry

@@ -57,7 +57,7 @@
  * @param[in] geom Reference geometry
  */
 TInstant * 
-trgeoinst_parse(const char **str, MeosType temptype, bool end,
+trgeoinst_parse(const char **str, meosType temptype, bool end,
   int *temp_srid, const GSERIALIZED *geom)
 {
   Datum base;
@@ -89,7 +89,7 @@ trgeoinst_parse(const char **str, MeosType temptype, bool end,
  * @param[in] geom Reference geometry
  */
 TSequence *
-trgeoseq_disc_parse(const char **str, MeosType temptype, int *temp_srid,
+trgeoseq_disc_parse(const char **str, meosType temptype, int *temp_srid,
   GSERIALIZED *geom)
 {
   MeosArray *array = meos_array_create(meostype_length(temptype));
@@ -105,13 +105,11 @@ trgeoseq_disc_parse(const char **str, MeosType temptype, int *temp_srid,
   TInstant *inst = trgeoinst_parse(str, temptype, false, temp_srid, geom);
   if (! inst)
     goto error;
-  meos_array_add(array, inst);
   while (p_comma(str))
   {
     inst = trgeoinst_parse(str, temptype, false, temp_srid, geom);
     if (! inst)
       goto error;
-    meos_array_add(array, inst);
   }
   if (! ensure_cbrace(str, type_str) || ! ensure_end_input(str, type_str))
     goto error;
@@ -120,7 +118,7 @@ trgeoseq_disc_parse(const char **str, MeosType temptype, int *temp_srid,
   TInstant **instants = palloc(sizeof(TInstant *) * array->count);
   for (int i = 0; i < (int) array->count; i++)
     instants[i] = (TInstant *) meos_array_get(array, i);
-  result = trgeoseq_make(geom, instants, array->count, true, true,
+  result = trgeoseq_make_free(geom, instants, array->count, true, true,
     DISCRETE, NORMALIZE_NO);
   pfree(instants);
 
@@ -141,7 +139,7 @@ error:
  * @param[out] result New sequence, may be NULL
  */
 TSequence *
-trgeoseq_cont_parse(const char **str, MeosType temptype, interpType interp,
+trgeoseq_cont_parse(const char **str, meosType temptype, interpType interp, 
   bool end, int *temp_srid, const GSERIALIZED *geom)
 {
   MeosArray *array = meos_array_create(meostype_length(temptype));
@@ -190,7 +188,7 @@ trgeoseq_cont_parse(const char **str, MeosType temptype, interpType interp,
     instants[i] = (TInstant *) meos_array_get(array, i);
   p_cbracket(str);
   p_cparen(str);
-  result = trgeoseq_make(geom, instants, array->count, lower_inc,
+  result = trgeoseq_make_free(geom, instants, array->count, lower_inc,
     upper_inc, interp, NORMALIZE);
   pfree(instants);
 
@@ -208,7 +206,7 @@ error:
  * @param[in] geom Reference geometry
  */
 TSequenceSet *
-trgeoseqset_parse(const char **str, MeosType temptype, interpType interp,
+trgeoseqset_parse(const char **str, meosType temptype, interpType interp,
   int *temp_srid, const GSERIALIZED *geom)
 {
   MeosArray *array = meos_array_create(meostype_length(temptype));
@@ -240,7 +238,7 @@ trgeoseqset_parse(const char **str, MeosType temptype, interpType interp,
   for (int i = 0; i < (int) array->count; i++)
     sequences[i] = (TSequence *) meos_array_get(array, i);
   p_cbrace(str);
-  result = trgeoseqset_make(geom, sequences, array->count, NORMALIZE);
+  result = trgeoseqset_make_free(geom, sequences, array->count, NORMALIZE);
   pfree(sequences);
 
 error:
@@ -308,7 +306,7 @@ trgeo_parse_geom(const char **str, int32_t temp_srid)
  * @param[in] temptype Temporal type
  */
 Temporal *
-trgeo_parse(const char **str, MeosType temptype)
+trgeo_parse(const char **str, meosType temptype)
 {
   p_whitespace(str);
 
@@ -336,6 +334,7 @@ trgeo_parse(const char **str, MeosType temptype)
 
   p_whitespace(str);
 
+  const char *bak = *str;
   Temporal *result = NULL; /* keep compiler quiet */
   /* Determine the subtype of the temporal rigid geometry and call the
    * function corresponding to the subtype passing the SRID */
@@ -356,7 +355,7 @@ trgeo_parse(const char **str, MeosType temptype)
   }
   else if (**str == '{')
   {
-    const char *bak = *str;
+    bak = *str;
     p_obrace(str);
     p_whitespace(str);
     if (**str == '[' || **str == '(')

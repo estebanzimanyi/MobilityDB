@@ -62,7 +62,7 @@
  * @brief Ensure that a span set is of a given span set type
  */
 bool
-ensure_spanset_isof_type(const SpanSet *ss, MeosType spansettype)
+ensure_spanset_isof_type(const SpanSet *ss, meosType spansettype)
 {
   if (ss->spansettype == spansettype)
     return true;
@@ -170,7 +170,6 @@ spanset_find_value(const SpanSet *ss, Datum v, int *loc)
     else
       first = middle + 1;
   }
-  assert(s);
   if (datum_ge(v, s->upper, s->basetype))
     middle++;
   *loc = middle;
@@ -211,7 +210,7 @@ SPANSET_SP_N(const SpanSet *ss, int index)
  * @param[in] spansettype Span set type
  */
 SpanSet *
-spanset_in(const char *str, MeosType spansettype)
+spanset_in(const char *str, meosType spansettype)
 {
   assert(str);
   return spanset_parse(&str, spansettype);
@@ -389,10 +388,10 @@ spanset_copy(const SpanSet *ss)
  * @param[in] basetype Type of the value
  */
 SpanSet *
-value_spanset(Datum value, MeosType basetype)
+value_spanset(Datum value, meosType basetype)
 {
   assert(span_basetype(basetype));
-  MeosType spantype = basetype_spantype(basetype);
+  meosType spantype = basetype_spantype(basetype);
   Span s;
   span_set(value, value, true, true, basetype, spantype, &s);
   return spanset_make_exp(&s, 1, 1, NORMALIZE_NO, ORDER_NO);
@@ -409,7 +408,7 @@ set_spanset(const Set *s)
 {
   assert(s); assert(set_spantype(s->settype));
   Span *spans = palloc(sizeof(Span) * s->count);
-  MeosType spantype = basetype_spantype(s->basetype);
+  meosType spantype = basetype_spantype(s->basetype);
   for (int i = 0; i < s->count; i++)
   {
     Datum value = SET_VAL_N(s, i);
@@ -1480,9 +1479,9 @@ spanset_cmp(const SpanSet *ss1, const SpanSet *ss2)
   /* The first count spans of the two span sets are equal */
   if (! result)
   {
-    if (count1 > count2) /* ss1 has more spans than ss2 */
+    if (count < count1) /* ss1 has more spans than ss2 */
       result = 1;
-    else if (count2 > count1) /* ss2 has more spans than ss1 */
+    else if (count < count2) /* ss2 has more spans than ss1 */
       result = -1;
     else
       result = 0;

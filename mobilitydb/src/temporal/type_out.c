@@ -185,7 +185,9 @@ Temporal_as_mfjson(PG_FUNCTION_ARGS)
 
   char *mfjson = temporal_as_mfjson(temp, with_bbox, flags, precision, srs);
   text *result = cstring2text(mfjson);
-  pfree(mfjson);
+  // CURRENTLY we cannot pfree since we get the error message
+  // pfree called with invalid pointer
+  // pfree(mfjson);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_TEXT_P(result);
 }
@@ -221,7 +223,7 @@ get_endian_variant(const text *txt)
  * representation
  */
 bytea *
-Datum_as_wkb(FunctionCallInfo fcinfo, Datum value, MeosType type,
+Datum_as_wkb(FunctionCallInfo fcinfo, Datum value, meosType type,
   bool extended)
 {
   uint8_t variant = 0;
@@ -247,7 +249,7 @@ Datum_as_wkb(FunctionCallInfo fcinfo, Datum value, MeosType type,
  * Binary (EWKB) representation in ASCII hex-encoded
  */
 text *
-Datum_as_hexwkb(FunctionCallInfo fcinfo, Datum value, MeosType type)
+Datum_as_hexwkb(FunctionCallInfo fcinfo, Datum value, meosType type)
 {
   uint8_t variant = 0;
   /* If user specified endianness, respect it */

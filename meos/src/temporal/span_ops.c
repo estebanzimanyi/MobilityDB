@@ -54,7 +54,7 @@
  * @brief Return the minimum value of two span base values
  */
 Datum
-span_min_value(Datum l, Datum r, MeosType type)
+span_min_value(Datum l, Datum r, meosType type)
 {
   assert(span_basetype(type));
   switch (type)
@@ -82,7 +82,7 @@ span_min_value(Datum l, Datum r, MeosType type)
  * @brief Return the maximum value of two span base values
  */
 Datum
-span_max_value(Datum l, Datum r, MeosType type)
+span_max_value(Datum l, Datum r, meosType type)
 {
   assert(span_basetype(type));
   switch (type)
@@ -853,7 +853,7 @@ minus_span_span(const Span *s1, const Span *s2)
  * @return On error return -1
  */
 double
-dist_double_value_value(Datum l, Datum r, MeosType type)
+dist_double_value_value(Datum l, Datum r, meosType type)
 {
   assert(span_basetype(type));
   switch (type)
@@ -887,7 +887,7 @@ dist_double_value_value(Datum l, Datum r, MeosType type)
  * @return On error return -1
  */
 Datum
-distance_value_value(Datum l, Datum r, MeosType type)
+distance_value_value(Datum l, Datum r, meosType type)
 {
   assert(span_basetype(type));
   switch (type)
