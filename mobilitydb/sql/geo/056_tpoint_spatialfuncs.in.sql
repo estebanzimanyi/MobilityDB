@@ -318,16 +318,8 @@ CREATE FUNCTION atGeometry(tgeompoint, geometry)
   RETURNS tgeompoint
   AS 'MODULE_PATHNAME', 'Tgeo_at_geom'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION atGeometry(tgeompoint, geometry, floatspan)
-  RETURNS tgeompoint
-  AS 'MODULE_PATHNAME', 'Tgeo_at_geom'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION minusGeometry(tgeompoint, geometry)
-  RETURNS tgeompoint
-  AS 'MODULE_PATHNAME', 'Tgeo_minus_geom'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION minusGeometry(tgeompoint, geometry, floatspan)
   RETURNS tgeompoint
   AS 'MODULE_PATHNAME', 'Tgeo_minus_geom'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;

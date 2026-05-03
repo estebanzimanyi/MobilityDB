@@ -166,17 +166,14 @@ CREATE FUNCTION tTouches(tcbuffer, tcbuffer, atvalue bool DEFAULT NULL)
  * tDwithin
  *****************************************************************************/
 
--- ALL the following functions are not STRICT
-CREATE FUNCTION tDwithin(cbuffer, tcbuffer, dist float,
-   atvalue bool DEFAULT NULL)
+CREATE FUNCTION tDwithin(cbuffer, tcbuffer, dist float)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tdwithin_cbuffer_tcbuffer'
-  LANGUAGE C IMMUTABLE PARALLEL SAFE;
-CREATE FUNCTION tDwithin(tcbuffer, cbuffer, dist float,
-    atvalue bool DEFAULT NULL)
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tDwithin(tcbuffer, cbuffer, dist float)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tdwithin_tcbuffer_cbuffer'
-  LANGUAGE C IMMUTABLE  PARALLEL SAFE;
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 -- CREATE FUNCTION tDwithin(geometry, tcbuffer, dist float,
    -- atvalue bool DEFAULT NULL)
   -- RETURNS tbool

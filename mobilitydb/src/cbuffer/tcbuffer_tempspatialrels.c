@@ -504,14 +504,7 @@ Tdwithin_cbuffer_tcbuffer(PG_FUNCTION_ARGS)
   Cbuffer *cb = PG_GETARG_CBUFFER_P(0);
   Temporal *temp = PG_GETARG_TEMPORAL_P(1);
   double dist = PG_GETARG_FLOAT8(2);
-  bool restr = false;
-  bool atvalue = false;
-  if (PG_NARGS() > 3 && ! PG_ARGISNULL(3))
-  {
-    atvalue = PG_GETARG_BOOL(3);
-    restr = true;
-  }
-  Temporal *result = tdwithin_tcbuffer_cbuffer(temp, cb, dist, restr, atvalue);
+  Temporal *result = tdwithin_tcbuffer_cbuffer(temp, cb, dist);
   PG_FREE_IF_COPY(temp, 1);
   if (! result)
     PG_RETURN_NULL();
@@ -534,14 +527,7 @@ Tdwithin_tcbuffer_cbuffer(PG_FUNCTION_ARGS)
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   Cbuffer *cb = PG_GETARG_CBUFFER_P(1);
   double dist = PG_GETARG_FLOAT8(2);
-  bool restr = false;
-  bool atvalue = false;
-  if (PG_NARGS() > 3 && ! PG_ARGISNULL(3))
-  {
-    atvalue = PG_GETARG_BOOL(3);
-    restr = true;
-  }
-  Temporal *result = tdwithin_tcbuffer_cbuffer(temp, cb, dist, restr, atvalue);
+  Temporal *result = tdwithin_tcbuffer_cbuffer(temp, cb, dist);
   PG_FREE_IF_COPY(temp, 0);
   if (! result)
     PG_RETURN_NULL();

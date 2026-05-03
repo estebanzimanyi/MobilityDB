@@ -713,16 +713,9 @@ Tpoint_make_simple(PG_FUNCTION_ARGS)
 static Datum
 Tgeo_restrict_geom(FunctionCallInfo fcinfo, bool atfunc)
 {
-  /*
-  CREATE FUNCTION at/minusGeometry(tgeometry, geometry)
-  CREATE FUNCTION at/minusGeometry(tgeometry, geometry, floatspan)
-  */
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
-  Span *zspan = NULL;
-  if (PG_NARGS() == 3)
-    zspan = PG_GETARG_SPAN_P(2);
-  Temporal *result = tgeo_restrict_geom(temp, gs, zspan, atfunc);
+  Temporal *result = tgeo_restrict_geom(temp, gs, atfunc);
   PG_FREE_IF_COPY(temp, 0);
   PG_FREE_IF_COPY(gs, 1);
   if (! result)
