@@ -591,3 +591,15 @@ SELECT tpose '{[Pose(Point(1 1), 0.2)@2000-01-01, Pose(Point(1 1), 0.4)@2000-01-
 SELECT tpose '{[Pose(Point(1 1), 0.2)@2000-01-01, Pose(Point(1 1), 0.4)@2000-01-02, Pose(Point(1 1), 0.5)@2000-01-03], [Pose(Point(2 2), 0.6)@2000-01-04, Pose(Point(2 2), 0.6)@2000-01-05]}' >= tpose '{[Pose(Point(1 1), 0.2)@2000-01-01, Pose(Point(1 1), 0.4)@2000-01-02, Pose(Point(1 1), 0.5)@2000-01-03], [Pose(Point(2 2), 0.6)@2000-01-04, Pose(Point(2 2), 0.6)@2000-01-05]}';
 
 -------------------------------------------------------------------------------/
+
+-- SLERP edge cases. The SLERP implementation guards two known
+-- failure modes: catastrophic cancellation in acos(dot) when q1 and
+-- q2 are near-identical (LERP fallback at |dot| > 0.9995), and
+-- shortest-path ambiguity when q1 and q2 are near-antipodal (one
+-- quaternion is flipped when dot < 0). Without these guards the
+-- midpoint orientation is either NaN-poisoned or rotates through 358
+-- degrees instead of 2. These tests pin both guards by sampling the
+-- midpoint of a sequence whose endpoints exercise each case.
+SELECT round((orientation(valueAtTimestamp(tpose '[Pose(Point(0 0 0), 1, 0, 0, 0)@2000-01-01, Pose(Point(0 0 0), 0.99999999, 0.0001, 0, 0)@2000-01-02]', '2000-01-01 12:00'))).W::numeric, 6) AS slerp_near_identity_w;
+SELECT round((orientation(valueAtTimestamp(tpose '[Pose(Point(0 0 0), 1, 0, 0, 0)@2000-01-01, Pose(Point(0 0 0), -0.7071067811865476, 0, 0, -0.7071067811865475)@2000-01-02]', '2000-01-01 12:00'))).W::numeric, 6) AS slerp_negative_dot_flipped_w;
+SELECT round((orientation(valueAtTimestamp(tpose '[Pose(Point(0 0 0), 1, 0, 0, 0)@2000-01-01, Pose(Point(0 0 0), -0.7071067811865476, 0, 0, -0.7071067811865475)@2000-01-02]', '2000-01-01 12:00'))).Z::numeric, 6) AS slerp_negative_dot_flipped_z;

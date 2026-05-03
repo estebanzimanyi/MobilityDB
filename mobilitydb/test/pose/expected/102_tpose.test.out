@@ -2354,3 +2354,21 @@ SELECT tpose '{[Pose(Point(1 1), 0.2)@2000-01-01, Pose(Point(1 1), 0.4)@2000-01-
  t
 (1 row)
 
+SELECT round((orientation(valueAtTimestamp(tpose '[Pose(Point(0 0 0), 1, 0, 0, 0)@2000-01-01, Pose(Point(0 0 0), 0.99999999, 0.0001, 0, 0)@2000-01-02]', '2000-01-01 12:00'))).W::numeric, 6) AS slerp_near_identity_w;
+ slerp_near_identity_w 
+-----------------------
+              1.000000
+(1 row)
+
+SELECT round((orientation(valueAtTimestamp(tpose '[Pose(Point(0 0 0), 1, 0, 0, 0)@2000-01-01, Pose(Point(0 0 0), -0.7071067811865476, 0, 0, -0.7071067811865475)@2000-01-02]', '2000-01-01 12:00'))).W::numeric, 6) AS slerp_negative_dot_flipped_w;
+ slerp_negative_dot_flipped_w 
+------------------------------
+                     0.923880
+(1 row)
+
+SELECT round((orientation(valueAtTimestamp(tpose '[Pose(Point(0 0 0), 1, 0, 0, 0)@2000-01-01, Pose(Point(0 0 0), -0.7071067811865476, 0, 0, -0.7071067811865475)@2000-01-02]', '2000-01-01 12:00'))).Z::numeric, 6) AS slerp_negative_dot_flipped_z;
+ slerp_negative_dot_flipped_z 
+------------------------------
+                     0.382683
+(1 row)
+
