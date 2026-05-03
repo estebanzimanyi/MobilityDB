@@ -1354,6 +1354,31 @@ extern TSequenceSet *tsequenceset_compact(const TSequenceSet *ss);
 
 /* Aggregate functions for temporal types */
 
+/*
+ * KEYVALUE skiplist contract (the SKIPLIST_KEYVALUE mode of skiplist_splice):
+ *
+ *   * Supported pattern: search-then-splice-on-miss with count=1, where the
+ *     caller mutates the value in place after splicing the slot. The AIS
+ *     example at meos/examples/ais_expand_skiplist.c is the reference.
+ *   * keys[] passed to skiplist_splice MUST be sorted ascending under
+ *     comp_fn. The implementation does not enforce this; violations produce
+ *     silently wrong results.
+ *   * merge_fn must mutate its left operand in place and return left;
+ *     returning a fresh allocation is NOT supported (the surrounding
+ *     skiplist_splice machinery is wired for caller-managed in-place
+ *     mutation, not for fresh-alloc lifetimes).
+ *
+ * Production SQL aggregates use SKIPLIST_TEMPORAL exclusively. KEYVALUE is
+ * a MEOS-direct streaming utility; it is not exposed via SQL and the
+ * MobilityDB serialise / deserialise plumbing is temporal-only.
+ *
+ * The batch-merge code path inside keyval_skiplist_merge is unvalidated and
+ * carries known correctness bugs (1-4 in
+ * doc/drafts/keyval_skiplist_continuation_plan.md sections 4 and 10). The
+ * canonical streaming pattern bypasses that code path entirely. Do not
+ * call skiplist_splice with sktype=SKIPLIST_KEYVALUE and count > 1 until
+ * those bugs are repaired.
+ */
 extern SkipList *temporal_skiplist_make();
 extern SkipList *skiplist_make(size_t key_size, size_t value_size,
   int (*comp_fn)(void *, void *), void *(*merge_fn)(void *, void *));

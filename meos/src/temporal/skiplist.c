@@ -414,13 +414,20 @@ skiplist_print(const SkipList *list)
 /**
  * @brief Determine the segment of the list that overlaps with the new set of
  * key-value pairs
+ *
+ * @note Assumes `keys[]` is sorted ascending under the SkipList's `comp_fn`
+ *   (taking `keys[0]` as the minimum and `keys[count - 1]` as the maximum).
+ *   The contract is documented near `skiplist_make` in
+ *   `meos/include/meos_internal.h`. Violations produce silently wrong
+ *   results.
+ *
  * @param[in] list Skiplist
  * @param[in] keys Array of keys, may be `NULL` when the comparison is done
  * with the values
  * @param[in] values Array of values
  * @param[in] count Number of elements in the arrays
- * @param[out] lower Array index of the start of the segment 
- * @param[out] upper Array index of the end of the segment 
+ * @param[out] lower Array index of the start of the segment
+ * @param[out] upper Array index of the end of the segment
  * @param[out] update Array of indices keeping the levels of the elements to
  * insert
  * @return Number of elements in the list that will be merged with the new
@@ -475,15 +482,57 @@ keyval_skiplist_common(SkipList *list, void **keys, void **values, int count,
 }
 
 /**
- * @brief Generic aggregate function for temporal values
+ * @brief Batch-merge two `(key, value)` arrays into the skiplist's merge
+ *   pipeline
+ *
+ * @warning **UNVALIDATED — do not call from new code.** The function is
+ *   reachable from `skiplist_splice` when `count > 1` and `sktype ==
+ *   SKIPLIST_KEYVALUE`, but no in-tree consumer exercises it. Four
+ *   correctness bugs were identified during the 2026-05-03 audit and
+ *   remain unfixed because their intended behaviour cannot be recovered
+ *   from the implementation alone:
+ *
+ *     - Bug 1: `cmp = list->comp_fn(key1, key1)` in the main
+ *       loop is always 0, collapsing the unequal-key branches.
+ *     - Bug 2: the `j < count2` tail loop assigns
+ *       `result[count] = keys2[j]` — writes a key into the value array.
+ *     - Bug 3: the same tail loop never assigns into `newkeys1`; the
+ *       new-keys array has uninitialised slots while `*newcount`
+ *       claims they are valid.
+ *     - Bug 4: the symmetric `i < count1` tail loop is missing; the
+ *       `assert(i == count1)` after the main loop fires whenever
+ *       state1 is longer than state2 with no overlap.
+ *
+ *   Per-bug repair sketches and the test harness sketch are in
+ *   `doc/drafts/keyval_skiplist_continuation_plan.md` sections 9-10.
+ *   The intended invariants for the batch-merge path require user
+ *   judgment to define (see section 14.2 of that doc); without that,
+ *   any "fix" would just be the most plausible-looking diff.
+ *
+ *   The canonical streaming pattern (`skiplist_search` followed by
+ *   `skiplist_splice` with `count = 1`, demonstrated in
+ *   `meos/examples/ais_expand_skiplist.c`) bypasses this function
+ *   entirely. That is the only KEYVALUE pattern the project currently
+ *   supports.
+ *
+ * @note The `tofree` and `nfree` out-parameters are stale. They were
+ *   designed for fresh-allocation `merge_fn` semantics, but the
+ *   supported KEYVALUE convention is mutate-in-place (`merge_fn`
+ *   returns `left`, modifies `*left`). The `if (tofree)` guard around
+ *   the bookkeeping at line 524 below is a vestige that is never
+ *   exercised by any in-tree consumer. Tier-3 cleanup will drop both
+ *   parameters and rewrite the body for mutate-in-place; see
+ *   `doc/drafts/keyval_skiplist_continuation_plan.md` section 14.1.
+ *
  * @param[in] list Skiplist
- * @param[in] keys1,keys2 Arrays of keys and values
+ * @param[in] keys1,keys2 Arrays of keys (must be sorted ascending under
+ *   `list->comp_fn`)
  * @param[in] values1,values2 Arrays of values
  * @param[in] count1,count2 Number of values in the input arrays
  * @param[out] newcount Number of values in the output array
  * @param[out] newkeys Array of new keys
- * @param[out] tofree Array of values that must be freed
- * @param[out] nfree Number of values that must be freed
+ * @param[out] tofree Array of values that must be freed (stale, see note)
+ * @param[out] nfree Number of values that must be freed (stale, see note)
  */
 void **
 keyval_skiplist_merge(SkipList *list, void **keys1, void **values1,

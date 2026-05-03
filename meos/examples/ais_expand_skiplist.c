@@ -36,6 +36,12 @@
  * of records and instants used for contruct the temporal values, the distance
  * travelled and the time-weighted average of the SOG.
  *
+ * This example is also the **reference for the supported KEYVALUE skiplist
+ * pattern** in MEOS: per-key streaming insert-or-fetch with `count = 1` and
+ * caller-managed in-place mutation via `merge_fn`. See
+ * `doc/drafts/keyval_skiplist_continuation_plan.md` for the full contract
+ * and the unvalidated batch-merge surface that callers should avoid.
+ *
  * Please notice that the `data` directory DOES NOT contain the input CSV file,
  * you must download it from the website above.
  *
