@@ -27,38 +27,25 @@
 --
 -------------------------------------------------------------------------------
 
-SELECT round(MAX(maxValue(ST_SetSRID(g, 3812) <-> temp)), 6) FROM tbl_geom_point t1, tbl_tcbuffer t2
-WHERE ST_SetSRID(g, 3812) <-> temp IS NOT NULL;
-SELECT round(MAX(maxValue(temp <-> ST_SetSRID(g, 3812))), 6) FROM tbl_tcbuffer t1, tbl_geom_point t2
-WHERE temp <-> ST_SetSRID(g, 3812) IS NOT NULL;
-SELECT round(MAX(maxValue(t1.temp <-> t2.temp)), 6) FROM tbl_tcbuffer t1, tbl_tcbuffer t2
-WHERE t1.temp <-> t2.temp IS NOT NULL;
-
 -------------------------------------------------------------------------------
 
-SELECT COUNT(*) FROM tbl_tcbuffer, tbl_geom t
-WHERE NearestApproachInstant(temp, ST_SetSRID(g, 3812)) IS NOT NULL;
-SELECT COUNT(*) FROM tbl_tcbuffer t1, tbl_tcbuffer t2
-WHERE NearestApproachInstant(t1.temp, t2.temp) IS NOT NULL;
+-- extent(tcbuffer): mixed temporal subtypes folded together, NULLs filtered
+SELECT extent(temp) FROM ( VALUES
+  (NULL::tcbuffer),
+  ('Cbuffer(Point(1 1), 0.5)@2000-01-01'),
+  ('{Cbuffer(Point(1 1), 0.3)@2000-01-01, Cbuffer(Point(1 1), 0.5)@2000-01-02, Cbuffer(Point(1 1), 0.5)@2000-01-03}')) t(temp);
+SELECT extent(temp) FROM ( VALUES
+  (tcbuffer 'Cbuffer(Point(1 1), 0.5)@2000-01-01'),
+  ('{Cbuffer(Point(1 1), 0.3)@2000-01-01, Cbuffer(Point(1 1), 0.5)@2000-01-02, Cbuffer(Point(1 1), 0.5)@2000-01-03}'),
+  (NULL)) t(temp);
 
-SELECT COUNT(*) FROM tbl_tcbuffer, tbl_geom t
-WHERE NearestApproachDistance(temp, ST_SetSRID(g, 3812)) IS NOT NULL;
-SELECT COUNT(*) FROM tbl_tcbuffer t1, tbl_tcbuffer t2
-WHERE NearestApproachDistance(t1.temp, t2.temp) IS NOT NULL;
+-- extent(tcbuffer): linear sequence + step sequenceset over disjoint footprints
+SELECT extent(temp) FROM ( VALUES
+  (tcbuffer '[Cbuffer(Point(1 1), 0.2)@2000-01-01, Cbuffer(Point(1 1), 0.4)@2000-01-02, Cbuffer(Point(1 1), 0.5)@2000-01-03]'),
+  ('{[Cbuffer(Point(1 1), 0.2)@2000-01-01, Cbuffer(Point(1 1), 0.4)@2000-01-02, Cbuffer(Point(1 1), 0.5)@2000-01-03], [Cbuffer(Point(2 2), 0.6)@2000-01-04, Cbuffer(Point(2 2), 0.6)@2000-01-05]}')) t(temp);
 
-SELECT COUNT(*) FROM tbl_tcbuffer, tbl_geom t
-WHERE ST_SetSRID(g, 3812) |=| temp IS NOT NULL;
-SELECT COUNT(*) FROM tbl_tcbuffer t1, tbl_tcbuffer t2
-WHERE t1.temp |=| t2.temp IS NOT NULL;
-
-SELECT COUNT(*) FROM tbl_tcbuffer, tbl_geom t
-WHERE shortestLine(ST_SetSRID(g, 3812), temp) IS NOT NULL;
-SELECT COUNT(*) FROM tbl_tcbuffer t1, tbl_tcbuffer t2
-WHERE shortestLine(t1.temp, t2.temp) IS NOT NULL;
-
---------------------------------------------------------
-
--- set parallel_tuple_cost=100;
--- set parallel_setup_cost=100;
+-- extent(tcbuffer): single row degenerate cases
+SELECT extent(temp) FROM ( VALUES (tcbuffer 'Cbuffer(Point(1 1), 0.5)@2000-01-01')) t(temp);
+SELECT extent(temp) FROM ( VALUES (NULL::tcbuffer)) t(temp);
 
 -------------------------------------------------------------------------------
