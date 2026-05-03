@@ -350,6 +350,19 @@ CREATE OPERATOR #= (
   COMMUTATOR = #=
 );
 
+CREATE FUNCTION tgeo_teq(geometry, tgeompoint, atvalue bool)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Teq_geo_tgeo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tgeo_teq(tgeompoint, geometry, atvalue bool)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Teq_tgeo_geo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tgeo_teq(tgeompoint, tgeompoint, atvalue bool)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Teq_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 /*****************************************************************************/
 
 CREATE FUNCTION tgeo_teq(geography, tgeogpoint)
@@ -380,6 +393,19 @@ CREATE OPERATOR #= (
   LEFTARG = tgeogpoint, RIGHTARG = tgeogpoint,
   COMMUTATOR = #=
 );
+
+CREATE FUNCTION tgeo_teq(geography, tgeogpoint, atvalue bool)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Teq_geo_tgeo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tgeo_teq(tgeogpoint, geography, atvalue bool)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Teq_tgeo_geo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tgeo_teq(tgeogpoint, tgeogpoint, atvalue bool)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Teq_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************
  * Temporal not equal
@@ -414,6 +440,19 @@ CREATE OPERATOR #<> (
   COMMUTATOR = #<>
 );
 
+CREATE FUNCTION tgeo_tne(geometry, tgeompoint, atvalue bool)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Tne_geo_tgeo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tgeo_tne(tgeompoint, geometry, atvalue bool)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Tne_tgeo_geo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tgeo_tne(tgeompoint, tgeompoint, atvalue bool)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Tne_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 /*****************************************************************************/
 
 CREATE FUNCTION tgeo_tne(geography, tgeogpoint)
@@ -444,5 +483,18 @@ CREATE OPERATOR #<> (
   LEFTARG = tgeogpoint, RIGHTARG = tgeogpoint,
   COMMUTATOR = #<>
 );
+
+CREATE FUNCTION tgeo_tne(geography, tgeogpoint, atvalue bool)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Tne_geo_tgeo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tgeo_tne(tgeogpoint, geography, atvalue bool)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Tne_tgeo_geo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tgeo_tne(tgeogpoint, tgeogpoint, atvalue bool)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Tne_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************/

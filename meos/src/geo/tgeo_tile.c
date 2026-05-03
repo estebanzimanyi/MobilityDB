@@ -692,7 +692,7 @@ stbox_space_time_tiles(const STBox *bounds, double xsize, double ysize,
   memset(&pt, 0, sizeof(POINT3DZ));
   if (sorigin)
   {
-    if (FLAGS_GET_Z(sorigin->gflags))
+    if (sorigin && FLAGS_GET_Z(sorigin->gflags))
     {
       const POINT3DZ *p3d = GSERIALIZED_POINT3DZ_P(sorigin);
       pt.x = p3d->x;
@@ -1294,13 +1294,11 @@ tgeo_space_time_tile_init(const Temporal *temp, double xsize, double ysize,
   if (! xsize || temporal_num_instants(temp) == 1 || tgeo_type(temp->temptype))
       bitmatrix = false;
 
-  /* Zero-init at declaration: when xsize == 0 the if-block below is
-   * skipped, but pt is still passed to stbox_tile_state_make() further
-   * down — would otherwise be read uninitialised. */
-  POINT3DZ pt = { 0.0, 0.0, 0.0 };
+  POINT3DZ pt;
   bool hasz = false;
   if (xsize)
   {
+    memset(&pt, 0, sizeof(POINT3DZ));
     hasz = MEOS_FLAGS_GET_Z(temp->flags);
     if (hasz)
     {

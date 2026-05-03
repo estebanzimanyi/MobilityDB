@@ -136,7 +136,7 @@ tnumberinst_double(const TInstant *inst)
  * @param[in] temptype Temporal type
  */
 TInstant *
-tinstant_in(const char *str, MeosType temptype)
+tinstant_in(const char *str, meosType temptype)
 {
   assert(str);
   return tinstant_parse(&str, temptype, true);
@@ -155,7 +155,7 @@ tinstant_to_string(const TInstant *inst, int maxdd, outfunc value_out)
 {
   assert(inst); assert(maxdd >= 0);
   char *t = pg_timestamptz_out(inst->t);
-  MeosType basetype = temptype_basetype(inst->temptype);
+  meosType basetype = temptype_basetype(inst->temptype);
   char *value = value_out(tinstant_value_p(inst), basetype, maxdd);
   size_t size = strlen(value) + strlen(t) + 2;
   char *result = palloc(size);
@@ -199,7 +199,7 @@ tinstant_out(const TInstant *inst, int maxdd)
  * @param[in] t Timestamp
  */
 TInstant *
-tinstant_make(Datum value, MeosType temptype, TimestampTz t)
+tinstant_make(Datum value, meosType temptype, TimestampTz t)
 {
   /* Ensure validity of arguments */
   int32_t tspatial_srid;
@@ -223,7 +223,7 @@ tinstant_make(Datum value, MeosType temptype, TimestampTz t)
   /* Create the temporal instant */
   size_t value_size;
   void *value_from;
-  MeosType basetype = temptype_basetype(temptype);
+  meosType basetype = temptype_basetype(temptype);
   bool typbyval = basetype_byvalue(basetype);
   /* Copy value */
   if (typbyval)
@@ -271,7 +271,7 @@ tinstant_make(Datum value, MeosType temptype, TimestampTz t)
  * @param[in] t Timestamp
  */
 TInstant *
-tinstant_make_free(Datum value, MeosType temptype, TimestampTz t)
+tinstant_make_free(Datum value, meosType temptype, TimestampTz t)
 {
   TInstant *result = tinstant_make(value, temptype, t);
   DATUM_FREE(value, temptype_basetype(temptype));
@@ -325,8 +325,8 @@ tnumberinst_valuespans(const TInstant *inst)
 {
   assert(inst);
   Datum value = tinstant_value_p(inst);
-  MeosType basetype = temptype_basetype(inst->temptype);
-  MeosType spantype = basetype_spantype(basetype);
+  meosType basetype = temptype_basetype(inst->temptype);
+  meosType spantype = basetype_spantype(basetype);
   Span s;
   span_set(value, value, true, true, basetype, spantype, &s);
   return span_to_spanset(&s);
@@ -513,7 +513,7 @@ tnumberinst_shift_value(const TInstant *inst, Datum shift)
   assert(inst);
   TInstant *result = tinstant_copy(inst);
   Datum value = tinstant_value_p(result);
-  MeosType basetype = temptype_basetype(result->temptype);
+  meosType basetype = temptype_basetype(result->temptype);
   value = datum_add(value, shift, basetype);
   tinstant_set(result, value, result->t);
   return result;
@@ -639,7 +639,7 @@ tinstant_hash(const TInstant *inst)
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(inst, INT_MAX);
 
-  MeosType basetype = temptype_basetype(inst->temptype);
+  meosType basetype = temptype_basetype(inst->temptype);
   /* Apply the hash function to the base type */
   uint32 value_hash = datum_hash(tinstant_value_p(inst), basetype);
   /* Apply the hash function to the timestamp */

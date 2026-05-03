@@ -284,7 +284,7 @@ int main(void)
 
   /* uint8_t *geo_as_ewkb(const GSERIALIZED *gs, const char *endian, size_t *size); */
   binchar_result = geo_as_ewkb(geom1, "XDR", &size);
-  printf("geo_as_ewkb(%s, \"XDR\", %zu): ", tfloat1_out, size);
+  printf("geo_as_ewkb(%s, \"XDR\", %ld): ", tfloat1_out, size);
   fwrite(binchar_result, size, 1, stdout);
   printf("\n");
   free(binchar_result);
@@ -314,7 +314,7 @@ int main(void)
   char_result = geo_as_ewkt(geom_result, 6);
   printf("geo_from_ewkb(");
   fwrite(geom1_wkb, geom_size_wkb, 1, stdout);
-  printf(", %zu): %s\n", size, char_result);
+  printf(", %ld): %s\n", size, char_result);
   free(geom_result); free(char_result);
 
   /* GSERIALIZED *geo_from_geojson(const char *geojson); */
@@ -337,7 +337,7 @@ int main(void)
   /* GSERIALIZED *geog_from_binary(const char *wkb_bytea); */
   geom_result = geo_from_ewkb(geog1_wkb, geog_size_wkb, 4326);
   char_result = geo_as_ewkt(geom_result, 6);
-  printf("geog_from_binary(%s, %zu): %s\n", geog1_wkb, geog_size_wkb, char_result);
+  printf("geog_from_binary(%s, %ld): %s\n", geog1_wkb, geog_size_wkb, char_result);
   free(geom_result); free(char_result);
 
   /* GSERIALIZED *geog_from_hexewkb(const char *wkt); */
@@ -963,7 +963,7 @@ int main(void)
 
   /* uint8_t *stbox_as_wkb(const STBox *box, uint8_t variant, size_t *size_out); */
   binchar_result = stbox_as_wkb(stbox1, 1, &size);
-  printf("tbox_as_wkb(%s, 1, %zu): ", stbox1_out, size);
+  printf("tbox_as_wkb(%s, 1, %ld): ", stbox1_out, size);
   fwrite(binchar_result, size, 1, stdout);
   printf("\n");
   free(binchar_result);
@@ -977,7 +977,7 @@ int main(void)
   /* STBox *stbox_from_wkb(const uint8_t *wkb, size_t size); */
   stbox_result = stbox_from_wkb(stbox1_wkb, stbox_size_wkb);
   char_result = stbox_out(stbox_result, 6);
-  printf("stbox_from_wkb(%s, %zu): %s\n", stbox1_wkb, stbox_size_wkb, char_result);
+  printf("stbox_from_wkb(%s, %ld): %s\n", stbox1_wkb, stbox_size_wkb, char_result);
   free(stbox_result); free(char_result);
 
   /* STBox *stbox_in(const char *str); */
@@ -1852,16 +1852,8 @@ int main(void)
     free(tgeompt_result);
   free(char_result);
 
-  /* Temporal *tpoint_at_elevation(const Temporal *temp, const Span *s); */
-  tgeompt_result = tpoint_at_elevation(tgeompt3d1, fspan1);
-  char_result = tgeompt_result ? tspatial_as_ewkt(tgeompt_result, 6) : text_out(text_null);
-  printf("tpoint_at_geom(%s, %s): %s\n", tgeompt3d1_out, fspan1_out, char_result);
-  if (tgeompt_result)
-    free(tgeompt_result);
-  free(char_result);
-
-  /* Temporal *tpoint_at_geom(const Temporal *temp, const GSERIALIZED *gs); */
-  tgeompt_result = tpoint_at_geom(tgeompt3d1, geom1);
+  /* Temporal *tpoint_at_geom(const Temporal *temp, const GSERIALIZED *gs, const Span *zspan); */
+  tgeompt_result = tpoint_at_geom(tgeompt3d1, geom1, fspan1);
   char_result = tgeompt_result ? tspatial_as_ewkt(tgeompt_result, 6) : text_out(text_null);
   printf("tpoint_at_geom(%s, %s, %s): %s\n", tgeompt3d1_out, geom1_out, fspan1_out, char_result);
   if (tgeompt_result)
@@ -1876,22 +1868,14 @@ int main(void)
     free(tgeompt_result);
   free(char_result);
 
-  /* Temporal *tpoint_minus_geom(const Temporal *temp, const GSERIALIZED *gs); */
-  tgeompt_result = tpoint_minus_geom(tgeompt3d1, geom1);
+  /* Temporal *tpoint_minus_geom(const Temporal *temp, const GSERIALIZED *gs, const Span *zspan); */
+  tgeompt_result = tpoint_minus_geom(tgeompt3d1, geom1, fspan1);
   char_result = tgeompt_result ? tspatial_as_ewkt(tgeompt_result, 6) : text_out(text_null);
-  printf("tpoint_minus_geom(%s, %s): %s\n", tgeompt3d1_out, geom1_out, char_result);
+  printf("tpoint_minus_geom(%s, %s, %s): %s\n", tgeompt3d1_out, geom1_out, fspan1_out, char_result);
   if (tgeompt_result)
     free(tgeompt_result);
   free(char_result);
 
-  /* Temporal *tpoint_minus_elevation(const Temporal *temp, const Span *s); */
-  tgeompt_result = tpoint_minus_elevation(tgeompt3d1, fspan1);
-  char_result = tgeompt_result ? tspatial_as_ewkt(tgeompt_result, 6) : text_out(text_null);
-  printf("tpoint_minus_geom(%s, %s): %s\n", tgeompt3d1_out, fspan1_out, char_result);
-  if (tgeompt_result)
-    free(tgeompt_result);
-  free(char_result);
-  
   /* Temporal *tpoint_minus_value(const Temporal *temp, GSERIALIZED *gs); */
   tgeompt_result = tpoint_minus_value(tgeompt1, geom1);
   char_result = tgeompt_result ? tspatial_as_ewkt(tgeompt_result, 6) : text_out(text_null);
@@ -2427,114 +2411,114 @@ int main(void)
   /* Spatiotemporal relationships */
   printf("****************************************************************\n");
 
-  /* Temporal *tcontains_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp); */
-  tbool_result = tcontains_geo_tgeo(geom3, tgeompt1);
+  /* Temporal *tcontains_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, bool restr, bool atvalue); */
+  tbool_result = tcontains_geo_tgeo(geom3, tgeompt1, false, false);
   char_result = tbool_result ? tbool_out(tbool_result) : text_out(text_null);
   printf("tcontains_geo_tgeo(%s, %s): %s\n", geom3_out, tgeompt1_out, char_result);
   if (tbool_result)
     free(tbool_result);
   free(char_result);
 
-  /* Temporal *tcontains_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs); */
-  tbool_result = tcontains_tgeo_geo(tgeompt1, geom3);
+  /* Temporal *tcontains_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool restr, bool atvalue); */
+  tbool_result = tcontains_tgeo_geo(tgeompt1, geom3, false, false);
   char_result = tbool_result ? tbool_out(tbool_result) : text_out(text_null);
   printf("tcontains_tgeo_geo(%s, %s): %s\n", tgeompt1_out, geom3_out, char_result);
   if (tbool_result)
     free(tbool_result);
   free(char_result);
 
-  /* Temporal *tcontains_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2); */
-  tbool_result = tcontains_tgeo_tgeo(tgeompt1, tgeompt2);
+  /* Temporal *tcontains_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2, bool restr, bool atvalue); */
+  tbool_result = tcontains_tgeo_tgeo(tgeompt1, tgeompt2, false, false);
   char_result = tbool_out(tbool_result);
   printf("tcontains_tgeo_tgeo(%s, %s): %s\n", tgeompt1_out, tgeompt2_out, char_result);
   free(tbool_result); free(char_result);
 
-  /* Temporal *tcovers_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp); */
-  tbool_result = tcovers_geo_tgeo(geom1, tgeompt1);
+  /* Temporal *tcovers_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, bool restr, bool atvalue); */
+  tbool_result = tcovers_geo_tgeo(geom1, tgeompt1, false, false);
   char_result = tbool_out(tbool_result);
   printf("tcovers_geo_tgeo(%s, %s): %s\n", geom1_out, tgeompt1_out, char_result);
   free(tbool_result); free(char_result);
 
-  /* Temporal *tcovers_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs); */
-  tbool_result = tcovers_tgeo_geo(tgeompt1, geompt1);
+  /* Temporal *tcovers_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool restr, bool atvalue); */
+  tbool_result = tcovers_tgeo_geo(tgeompt1, geompt1, false, false);
   char_result = tbool_out(tbool_result);
   printf("tcovers_tgeo_geo(%s, %s): %s\n", tgeompt1_out, geom1_out, char_result);
   free(tbool_result); free(char_result);
 
-  /* Temporal *tcovers_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2); */
-  tbool_result = tcovers_tgeo_tgeo(tgeompt1, tgeompt2);
+  /* Temporal *tcovers_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2, bool restr, bool atvalue); */
+  tbool_result = tcovers_tgeo_tgeo(tgeompt1, tgeompt2, false, false);
   char_result = tbool_out(tbool_result);
   printf("tcovers_tgeo_tgeo(%s, %s): %s\n", tgeompt1_out, tgeompt2_out, char_result);
   free(tbool_result); free(char_result);
 
-  /* Temporal *tdisjoint_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp); */
-  tbool_result = tdisjoint_geo_tgeo(geom1, tgeompt1);
+  /* Temporal *tdisjoint_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, bool restr, bool atvalue); */
+  tbool_result = tdisjoint_geo_tgeo(geom1, tgeompt1, false, false);
   char_result = tbool_out(tbool_result);
   printf("tdisjoint_geo_tgeo(%s, %s): %s\n", geom1_out, tgeompt1_out, char_result);
   free(tbool_result); free(char_result);
 
-  /* Temporal *tdisjoint_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs); */
-  tbool_result = tdisjoint_tgeo_geo(tgeompt1, geompt1);
+  /* Temporal *tdisjoint_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool restr, bool atvalue); */
+  tbool_result = tdisjoint_tgeo_geo(tgeompt1, geompt1, false, false);
   char_result = tbool_out(tbool_result);
   printf("tdisjoint_tgeo_geo(%s, %s): %s\n", tgeompt1_out, geompt1_out, char_result);
   free(tbool_result); free(char_result);
 
-  /* Temporal *tdisjoint_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2); */
-  tbool_result = tdisjoint_tgeo_tgeo(tgeompt1, tgeompt2);
+  /* Temporal *tdisjoint_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2, bool restr, bool atvalue); */
+  tbool_result = tdisjoint_tgeo_tgeo(tgeompt1, tgeompt2, false, false);
   char_result = tbool_out(tbool_result);
   printf("tdisjoint_tgeo_tgeo(%s, %s): %s\n", tgeompt1_out, tgeompt2_out, char_result);
   free(tbool_result); free(char_result);
 
-  /* Temporal *tdwithin_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, double dist); */
-  tbool_result = tdwithin_geo_tgeo(geom1, tgeompt1, float8_in1);
+  /* Temporal *tdwithin_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, double dist, bool restr, bool atvalue); */
+  tbool_result = tdwithin_geo_tgeo(geom1, tgeompt1, float8_in1, false, false);
   char_result = tbool_out(tbool_result);
   printf("tdwithin_geo_tgeo(%s, %s): %s\n", geom1_out, tgeompt1_out, char_result);
   free(tbool_result); free(char_result);
 
-  /* Temporal *tdwithin_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, double dist); */
-  tbool_result = tdwithin_tgeo_geo(tgeompt1, geom1, float8_in1);
+  /* Temporal *tdwithin_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, double dist, bool restr, bool atvalue); */
+  tbool_result = tdwithin_tgeo_geo(tgeompt1, geom1, float8_in1, false, false);
   char_result = tbool_out(tbool_result);
   printf("tdwithin_tgeo_geo(%s, %s, %lf): %s\n", tgeompt1_out, geom1_out, float8_in1, char_result);
   free(tbool_result); free(char_result);
 
-  /* Temporal *tdwithin_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2, double dist); */
-  tbool_result = tdwithin_tgeo_tgeo(tgeompt1, tgeompt2, float8_in1);
+  /* Temporal *tdwithin_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2, double dist, bool restr, bool atvalue); */
+  tbool_result = tdwithin_tgeo_tgeo(tgeompt1, tgeompt2, float8_in1, false, false);
   char_result = tbool_out(tbool_result);
   printf("tdwithin_tgeo_tgeo(%s, %s): %s\n", tgeompt1_out, tgeompt2_out, char_result);
   free(tbool_result); free(char_result);
 
-  /* Temporal *tintersects_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp); */
-  tbool_result = tintersects_geo_tgeo(geom1, tgeompt1);
+  /* Temporal *tintersects_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, bool restr, bool atvalue); */
+  tbool_result = tintersects_geo_tgeo(geom1, tgeompt1, false, false);
   char_result = tbool_out(tbool_result);
   printf("tintersects_geo_tgeo(%s, %s): %s\n", geom1_out, tgeompt1_out, char_result);
   free(tbool_result); free(char_result);
 
-  /* Temporal *tintersects_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs); */
-  tbool_result = tintersects_tgeo_geo(tgeompt1, geompt1);
+  /* Temporal *tintersects_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool restr, bool atvalue); */
+  tbool_result = tintersects_tgeo_geo(tgeompt1, geompt1, false, false);
   char_result = tbool_out(tbool_result);
   printf("tintersects_tgeo_geo(%s, %s): %s\n", tgeompt1_out, geompt1_out, char_result);
   free(tbool_result); free(char_result);
 
-  /* Temporal *tintersects_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2); */
-  tbool_result = tintersects_tgeo_tgeo(tgeompt1, tgeompt2);
+  /* Temporal *tintersects_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2, bool restr, bool atvalue); */
+  tbool_result = tintersects_tgeo_tgeo(tgeompt1, tgeompt2, false, false);
   char_result = tbool_out(tbool_result);
   printf("tintersects_tgeo_tgeo(%s, %s): %s\n", tgeompt1_out, tgeompt2_out, char_result);
   free(tbool_result); free(char_result);
 
-  /* Temporal *ttouches_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp); */
-  tbool_result = ttouches_geo_tgeo(geom1, tgeompt1);
+  /* Temporal *ttouches_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, bool restr, bool atvalue); */
+  tbool_result = ttouches_geo_tgeo(geom1, tgeompt1, false, false);
   char_result = tbool_out(tbool_result);
   printf("ttouches_geo_tgeo(%s, %s): %s\n", geom1_out, tgeompt1_out, char_result);
   free(tbool_result); free(char_result);
 
-  /* Temporal *ttouches_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs); */
-  tbool_result = ttouches_tgeo_geo(tgeompt1, geompt1);
+  /* Temporal *ttouches_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool restr, bool atvalue); */
+  tbool_result = ttouches_tgeo_geo(tgeompt1, geompt1, false, false);
   char_result = tbool_out(tbool_result);
   printf("ttouches_tgeo_geo(%s, %s): %s\n", tgeompt1_out, geom1_out, char_result);
   free(tbool_result); free(char_result);
 
-  /* Temporal *ttouches_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2); */
-  tbool_result = ttouches_tgeo_tgeo(tgeompt1, tgeompt2);
+  /* Temporal *ttouches_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2, bool restr, bool atvalue); */
+  tbool_result = ttouches_tgeo_tgeo(tgeompt1, tgeompt2, false, false);
   char_result = tbool_out(tbool_result);
   printf("ttouches_tgeo_tgeo(%s, %s): %s\n", tgeom1_out, tgeom2_out, char_result);
   free(tbool_result); free(char_result);
@@ -2743,7 +2727,7 @@ int main(void)
   printf("geo_cluster_kmeans(%s, 2, 2): {", geom1_out);
   for (int i = 0; i < 2; i++)
   {
-    printf("%d", int32array_result[i]);
+    printf("%u", int32array_result[i]);
     if (i < count - 1)
       printf(", ");
     else

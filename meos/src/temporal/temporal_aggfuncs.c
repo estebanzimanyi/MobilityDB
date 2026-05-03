@@ -553,7 +553,6 @@ tsequence_tagg_iter(const TSequence *seq1, const TSequence *seq2,
     {
       Datum value = func(tinstant_value_p(inst1), tinstant_value_p(inst2));
       instants[i] = tinstant_make(value, seq1->temptype, inst1->t);
-      // DATUM_FREE(value, basetype); // TODO
     }
     else
     {
