@@ -1,0 +1,54 @@
+DROP INDEX IF EXISTS tbl_tpose2d_gist_idx;
+NOTICE:  index "tbl_tpose2d_gist_idx" does not exist, skipping
+DROP INDEX
+DROP INDEX IF EXISTS tbl_tpose3d_gist_idx;
+NOTICE:  index "tbl_tpose3d_gist_idx" does not exist, skipping
+DROP INDEX
+CREATE INDEX tbl_tpose2d_gist_idx ON tbl_tpose2d USING GIST(temp);
+CREATE INDEX
+CREATE INDEX tbl_tpose3d_gist_idx ON tbl_tpose3d USING GIST(temp);
+CREATE INDEX
+ANALYZE tbl_tpose2d;
+ANALYZE
+ANALYZE tbl_tpose3d;
+ANALYZE
+SELECT relname,
+       (SELECT bool_or(stakind1 >= 100 OR stakind2 >= 100 OR stakind3 >= 100 OR stakind4 >= 100 OR stakind5 >= 100)
+        FROM pg_statistic s WHERE s.starelid = c.oid AND s.staattnum = 2) AS has_mobilitydb_stats
+FROM pg_class c WHERE relname IN ('tbl_tpose2d', 'tbl_tpose3d') ORDER BY 1;
+   relname   | has_mobilitydb_stats 
+-------------+----------------------
+ tbl_tpose2d | t
+ tbl_tpose3d | t
+(2 rows)
+
+SET enable_seqscan = off;
+SET
+SELECT COUNT(*) AS idx_count FROM tbl_tpose2d WHERE temp && tstzspan '[2000-01-01, 2002-01-01]';
+ idx_count 
+-----------
+       100
+(1 row)
+
+SET enable_seqscan = on;
+SET
+SET enable_indexscan = off;
+SET
+SET enable_bitmapscan = off;
+SET
+SELECT COUNT(*) AS seq_count FROM tbl_tpose2d WHERE temp && tstzspan '[2000-01-01, 2002-01-01]';
+ seq_count 
+-----------
+       100
+(1 row)
+
+RESET enable_seqscan;
+RESET
+RESET enable_indexscan;
+RESET
+RESET enable_bitmapscan;
+RESET
+DROP INDEX tbl_tpose2d_gist_idx;
+DROP INDEX
+DROP INDEX tbl_tpose3d_gist_idx;
+DROP INDEX
