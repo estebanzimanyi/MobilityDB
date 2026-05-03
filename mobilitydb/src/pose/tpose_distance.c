@@ -33,6 +33,7 @@
  */
 
 /* MEOS */
+#include <float.h>
 #include <meos.h>
 #include <meos_pose.h>
 #include "geo/stbox.h"
