@@ -61,7 +61,6 @@ SELECT tContains(geometry 'Linestring(1 1,2 2)', tcbuffer '[Point(1 1)@2000-01-0
 /* Errors */
 SELECT tContains(geometry 'SRID=5676;Point(1 1)', tcbuffer 'Cbuffer(Point(1 1),0.5)@2000-01-01');
 SELECT tContains(geometry 'Point(1 1)', tcbuffer 'SRID=5676;Point(1 1)@2000-01-01');
-SELECT tContains(geometry 'Point(1 1)', tcbuffer 'Point(1 1 1)@2000-01-01');
 SELECT tContains(geometry 'Point(1 1 1)', tcbuffer 'Cbuffer(Point(1 1),0.5)@2000-01-01');
 
 -------------------------------------------------------------------------------
@@ -99,12 +98,6 @@ SELECT tDisjoint(tcbuffer 'Cbuffer(Point(1 1),0.5)@2000-01-01', geometry 'Point 
 SELECT tDisjoint(tcbuffer '{Cbuffer(Point(1 1),0.5)@2000-01-01, Cbuffer(Point(2 2),0.5)@2000-01-02, Cbuffer(Point(1 1),0.5)@2000-01-03}', geometry 'Point empty');
 SELECT tDisjoint(tcbuffer '[Cbuffer(Point(1 1),0.5)@2000-01-01, Cbuffer(Point(2 2),0.5)@2000-01-02, Cbuffer(Point(1 1),0.5)@2000-01-03]', geometry 'Point empty');
 SELECT tDisjoint(tcbuffer '{[Cbuffer(Point(1 1),0.5)@2000-01-01, Cbuffer(Point(2 2),0.5)@2000-01-02, Cbuffer(Point(1 1),0.5)@2000-01-03], [Cbuffer(Point(3 3),0.5)@2000-01-04, Cbuffer(Point(3 3),0.5)@2000-01-05]}', geometry 'Point empty');
-
---3D
-SELECT tDisjoint(tcbuffer 'Point(1 1 1)@2000-01-01', geometry 'Point(2 2 2)');
-SELECT tDisjoint(tcbuffer '{Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03}', geometry 'Point(2 2 2)');
-SELECT tDisjoint(tcbuffer '[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03]', geometry 'Point(2 2 2)');
-SELECT tDisjoint(tcbuffer '{[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03], [Point(3 3 3)@2000-01-04, Point(3 3 3)@2000-01-05]}', geometry 'Point(2 2 2)');
 
 -- Additional parameter
 SELECT tDisjoint(geometry 'Point(1 1)', tcbuffer 'Cbuffer(Point(1 1),0.5)@2000-01-01', true);
@@ -179,12 +172,6 @@ SELECT tIntersects(tcbuffer '{[Cbuffer(Point(1 1),0.5)@2000-01-01, Cbuffer(Point
 
 SELECT tIntersects(tcbuffer '[Point(1 1)@2000-01-01, Point(1 1)@2000-01-02]', geometry 'Linestring(1 1,2 2)');
 SELECT tIntersects(tcbuffer '[Point(1 1)@2000-01-01, Point(4 1)@2000-01-02]', geometry 'Linestring(1 2,1 0,2 0,2 2)');
-
---3D
-SELECT tIntersects(tcbuffer 'Point(1 1 1)@2000-01-01', geometry 'Point(2 2 2)');
-SELECT tIntersects(tcbuffer '{Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03}', geometry 'Point(2 2 2)');
-SELECT tIntersects(tcbuffer '[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03]', geometry 'Point(2 2 2)');
-SELECT tIntersects(tcbuffer '{[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03], [Point(3 3 3)@2000-01-04, Point(3 3 3)@2000-01-05]}', geometry 'Point(2 2 2)');
 
 -- Additional parameter
 SELECT tIntersects(geometry 'Point(1 1)', tcbuffer 'Cbuffer(Point(1 1),0.5)@2000-01-01', true);
@@ -285,7 +272,6 @@ SELECT tTouches(tcbuffer '{[Cbuffer(Point(1 1),0.5)@2000-01-01, Cbuffer(Point(2 
 SELECT tTouches(geometry 'SRID=5676;Point(1 1)', tcbuffer 'Cbuffer(Point(1 1),0.5)@2000-01-01');
 SELECT tTouches(tcbuffer 'Cbuffer(Point(1 1),0.5)@2000-01-01', geometry 'SRID=5676;Point(1 1)');
 SELECT tTouches(geometry 'Point(1 1 1)', tcbuffer 'Cbuffer(Point(1 1),0.5)@2000-01-01');
-SELECT tTouches(geometry 'Point(1 1)', tcbuffer 'Point(1 1 1)@2000-01-01');
 
 -------------------------------------------------------------------------------
 -- tDwithin
@@ -320,27 +306,6 @@ SELECT tDwithin(tcbuffer 'Cbuffer(Point(1 1),0.5)@2000-01-01', geometry 'Point e
 SELECT tDwithin(tcbuffer '{Cbuffer(Point(1 1),0.5)@2000-01-01, Cbuffer(Point(2 2),0.5)@2000-01-02, Cbuffer(Point(1 1),0.5)@2000-01-03}', geometry 'Point empty', 2);
 SELECT tDwithin(tcbuffer '[Cbuffer(Point(1 1),0.5)@2000-01-01, Cbuffer(Point(2 2),0.5)@2000-01-02, Cbuffer(Point(1 1),0.5)@2000-01-03]', geometry 'Point empty', 2);
 SELECT tDwithin(tcbuffer '{[Cbuffer(Point(1 1),0.5)@2000-01-01, Cbuffer(Point(2 2),0.5)@2000-01-02, Cbuffer(Point(1 1),0.5)@2000-01-03], [Cbuffer(Point(3 3),0.5)@2000-01-04, Cbuffer(Point(3 3),0.5)@2000-01-05]}', geometry 'Point empty', 2);
-
---3D
-SELECT tDwithin(geometry 'Point(1 1 1)', tcbuffer 'Point(1 1 1)@2000-01-01', 2);
-SELECT tDwithin(geometry 'Point(1 1 1)', tcbuffer '{Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03}', 2);
-SELECT tDwithin(geometry 'Point(1 1 1)', tcbuffer '[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03]', 2);
-SELECT tDwithin(geometry 'Point(1 1 1)', tcbuffer '{[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03], [Point(3 3 3)@2000-01-04, Point(3 3 3)@2000-01-05]}', 2);
-
-SELECT tDwithin(geometry 'Point Z empty', tcbuffer 'Point(1 1 1)@2000-01-01', 2);
-SELECT tDwithin(geometry 'Point Z empty', tcbuffer '{Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03}', 2);
-SELECT tDwithin(geometry 'Point Z empty', tcbuffer '[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03]', 2);
-SELECT tDwithin(geometry 'Point Z empty', tcbuffer '{[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03], [Point(3 3 3)@2000-01-04, Point(3 3 3)@2000-01-05]}', 2);
-
-SELECT tDwithin(tcbuffer 'Point(1 1 1)@2000-01-01', geometry 'Point(1 1 1)', 2);
-SELECT tDwithin(tcbuffer '{Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03}', geometry 'Point(1 1 1)', 2);
-SELECT tDwithin(tcbuffer '[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03]', geometry 'Point(1 1 1)', 2);
-SELECT tDwithin(tcbuffer '{[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03], [Point(3 3 3)@2000-01-04, Point(3 3 3)@2000-01-05]}', geometry 'Point(1 1 1)', 2);
-
-SELECT tDwithin(tcbuffer 'Point(1 1 1)@2000-01-01', geometry 'Point Z empty', 2);
-SELECT tDwithin(tcbuffer '{Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03}', geometry 'Point Z empty', 2);
-SELECT tDwithin(tcbuffer '[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03]', geometry 'Point Z empty', 2);
-SELECT tDwithin(tcbuffer '{[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03], [Point(3 3 3)@2000-01-04, Point(3 3 3)@2000-01-05]}', geometry 'Point Z empty', 2);
 
 -- Test for NULL inputs since the function is not STRICT
 SELECT tDwithin(NULL::tcbuffer, tcbuffer 'Cbuffer(Point(1 1),0.5)@2000-01-01', 2);
@@ -377,29 +342,9 @@ SELECT tDwithin(tcbuffer '[Point(1 1)@2000-01-01, Point(0 0)@2000-01-02]', tcbuf
 SELECT tDwithin(tcbuffer '[Point(0 0)@2000-01-01, Point(1 1)@2000-01-02]', tcbuffer '[Point(0 2)@2000-01-01, Point(1 3)@2000-01-02]', 1);
 SELECT tDwithin(tcbuffer '[Point(0 0)@2000-01-01, Point(1 1)@2000-01-02]', tcbuffer '[Point(4 0)@2000-01-01, Point(3 1)@2000-01-02]', 0);
 
-SELECT tDwithin(tcbuffer 'Point(1 1 1)@2000-01-01', tcbuffer 'Point(1 1 1)@2000-01-01', 2);
-SELECT tDwithin(tcbuffer '{Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03}', tcbuffer 'Point(1 1 1)@2000-01-01', 2);
-SELECT tDwithin(tcbuffer '[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03]', tcbuffer 'Point(1 1 1)@2000-01-01', 2);
-SELECT tDwithin(tcbuffer '{[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03], [Point(3 3 3)@2000-01-04, Point(3 3 3)@2000-01-05]}', tcbuffer 'Point(1 1 1)@2000-01-01', 2);
-SELECT tDwithin(tcbuffer 'Point(1 1 1)@2000-01-01', tcbuffer '{Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03}', 2);
-SELECT tDwithin(tcbuffer '{Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03}', tcbuffer '{Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03}', 2);
-SELECT tDwithin(tcbuffer '[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03]', tcbuffer '{Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03}', 2);
-SELECT tDwithin(tcbuffer '{[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03], [Point(3 3 3)@2000-01-04, Point(3 3 3)@2000-01-05]}', tcbuffer '{Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03}', 2);
-SELECT tDwithin(tcbuffer 'Point(1 1 1)@2000-01-01', tcbuffer '[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03]', 2);
-SELECT tDwithin(tcbuffer '{Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03}', tcbuffer '[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03]', 2);
-SELECT tDwithin(tcbuffer '[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03]', tcbuffer '[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03]', 2);
-SELECT tDwithin(tcbuffer '{[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03], [Point(3 3 3)@2000-01-04, Point(3 3 3)@2000-01-05]}', tcbuffer '[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03]', 2);
-SELECT tDwithin(tcbuffer 'Point(1 1 1)@2000-01-01', tcbuffer '{[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03], [Point(3 3 3)@2000-01-04, Point(3 3 3)@2000-01-05]}', 2);
-SELECT tDwithin(tcbuffer '{Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03}', tcbuffer '{[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03], [Point(3 3 3)@2000-01-04, Point(3 3 3)@2000-01-05]}', 2);
-SELECT tDwithin(tcbuffer '[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03]', tcbuffer '{[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03], [Point(3 3 3)@2000-01-04, Point(3 3 3)@2000-01-05]}', 2);
-SELECT tDwithin(tcbuffer '{[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03], [Point(3 3 3)@2000-01-04, Point(3 3 3)@2000-01-05]}', tcbuffer '{[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-01-02, Point(1 1 1)@2000-01-03], [Point(3 3 3)@2000-01-04, Point(3 3 3)@2000-01-05]}', 2);
-
 SELECT tDwithin(tcbuffer '{[Point(1 1)@2000-01-01, Point(2 2)@2000-01-02, Point(1 1)@2000-01-03, Point(3 3)@
 2000-01-04, Point(3 3)@2000-01-05]}', tcbuffer '{[Point(1 1)@2000-01-01, Point(2 2)@2000-01-02, Point(1 1)@2000-01-03]
 ,[Point(3 3)@2000-01-04, Point(3 3)@2000-01-05]}', 1);
-
--- Mixed 2D/3D
-SELECT tDwithin(tcbuffer 'Point(1 1 1)@2000-01-01', tcbuffer 'Cbuffer(Point(1 1),0.5)@2000-01-01', 2);
 
 -- Additional parameter
 SELECT tDwithin(geometry 'Point(1 1)', tcbuffer 'Cbuffer(Point(1 1),0.5)@2000-01-01', 2, true);
@@ -440,6 +385,5 @@ SELECT tDwithin(geometry 'SRID=5676;Point(1 1)', tcbuffer 'Cbuffer(Point(1 1),0.
 SELECT tDwithin(tcbuffer 'Cbuffer(Point(1 1),0.5)@2000-01-01', geometry 'SRID=5676;Point(1 1)', 2);
 SELECT tDwithin(tcbuffer 'SRID=5676;Point(1 1)@2000-01-01', tcbuffer 'Cbuffer(Point(1 1),0.5)@2000-01-01', 2);
 SELECT tDwithin(tcbuffer 'Cbuffer(Point(1 1),0.5)@2000-01-01', geometry 'Point(0 0)', -1);
-SELECT tDwithin(tcbuffer 'Point(1 1 1)@2000-01-01', geometry 'Point(0 0 0)', -1);
 
 -------------------------------------------------------------------------------

@@ -110,6 +110,11 @@ CREATE FUNCTION tcbufferFromHexEWKB(text)
   AS 'MODULE_PATHNAME', 'Temporal_from_hexwkb'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION tcbufferFromMFJSON(text)
+  RETURNS tcbuffer
+  AS 'MODULE_PATHNAME', 'Temporal_from_mfjson'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 /*****************************************************************************/
 
 CREATE FUNCTION asText(tcbuffer, maxdecimaldigits int4 DEFAULT 15)
@@ -143,6 +148,12 @@ CREATE FUNCTION asEWKB(tcbuffer, endianenconding text DEFAULT '')
 CREATE FUNCTION asHexEWKB(tcbuffer, endianenconding text DEFAULT '')
   RETURNS text
   AS 'MODULE_PATHNAME', 'Temporal_as_hexwkb'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION asMFJSON(tcbuffer, options int4 DEFAULT 0,
+    flags int4 DEFAULT 0, maxdecimaldigits int4 DEFAULT 15)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Temporal_as_mfjson'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************
