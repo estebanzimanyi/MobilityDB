@@ -19,19 +19,24 @@ set(SOURCE_DIR "@CMAKE_SOURCE_DIR@")
 set(POSTGRESQL_BIN_DIR "@POSTGRESQL_BIN_DIR@")
 set(POSTGIS_LIBRARY "@POSTGIS_LIBRARY@")
 set(XZCAT_EXECUTABLE "@XZCAT_EXECUTABLE@")
+set(TEST_DIR "@MOBILITYDB_TEST_TMPDIR@")
 
-# Test directories
-set(TEST_DIR "${CMAKE_BINARY_DIR}/tmptest")
+# The Unix-domain socket path PostgreSQL listens on is TEST_DIR/lock plus
+# "/.s.PGSQL.5432" — 15 chars. Linux caps the full sun_path at 108 (107
+# usable). When the build directory sits under a deep worktree path, the
+# default ${CMAKE_BINARY_DIR}/tmptest can blow that limit and pg_ctl
+# silently fails to start the server. Override at configure time with
+# -DMOBILITYDB_TEST_TMPDIR=/tmp/mdb-test in that case.
 set(TEST_DIR_DB "${TEST_DIR}/db")
 set(TEST_DIR_LOCK "${TEST_DIR}/lock")
 set(TEST_DIR_LOG "${TEST_DIR}/log")
 set(TEST_DIR_OUT "${TEST_DIR}/out")
 
-message(STATUS "TEST_DIR: ${CMAKE_BINARY_DIR}/tmptest")
-message(STATUS "TEST_DIR_DB: ${TEST_DIR}/db")
-message(STATUS "TEST_DIR_LOCK: ${TEST_DIR}/lock")
-message(STATUS "TEST_DIR_LOG: ${TEST_DIR}/log")
-message(STATUS "TEST_DIR_OUT: ${TEST_DIR}/out")
+message(STATUS "TEST_DIR: ${TEST_DIR}")
+message(STATUS "TEST_DIR_DB: ${TEST_DIR_DB}")
+message(STATUS "TEST_DIR_LOCK: ${TEST_DIR_LOCK}")
+message(STATUS "TEST_DIR_LOG: ${TEST_DIR_LOG}")
+message(STATUS "TEST_DIR_OUT: ${TEST_DIR_OUT}")
 
 #-------------------------------------------------------------------------------
 # Test setup

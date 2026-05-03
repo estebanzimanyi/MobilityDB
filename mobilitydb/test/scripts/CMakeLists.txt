@@ -2,6 +2,9 @@ set(CTEST_PARALLEL_LEVEL 1)
 
 find_package(Xz REQUIRED)
 
+set(MOBILITYDB_TEST_TMPDIR "${CMAKE_BINARY_DIR}/tmptest" CACHE PATH
+  "Directory for the per-run temporary PostgreSQL cluster. Override when the build directory is too deep for the Unix-socket path limit (108 chars).")
+
 configure_file(test.cmake test.cmake @ONLY)
 
 add_test(
