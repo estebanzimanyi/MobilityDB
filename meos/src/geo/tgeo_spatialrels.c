@@ -402,7 +402,6 @@ spatialrel_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
   /* Call the GEOS function if the traversed area is not a collection */
   if (gserialized_get_type(trav1) != COLLECTIONTYPE)
   {
-    dtrav1 = PointerGetDatum(trav1);
     if (numparam == 2)
     {
       datum_func2 func2 = (datum_func2) func;
