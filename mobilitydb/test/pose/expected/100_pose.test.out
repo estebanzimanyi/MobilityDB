@@ -251,3 +251,29 @@ SELECT pose 'Pose(Point(1 1),0.5)' >= pose 'Pose(Point(2 2),0.5)';
  t
 (1 row)
 
+SELECT numValues(setUnion(p)) AS setunion_collapses
+  FROM (VALUES (pose 'Pose(Point(0 0 0), 0.5, 0.5, 0.5, 0.5)'),
+               (pose 'Pose(Point(0 0 0), -0.5, -0.5, -0.5, -0.5)')) AS v(p);
+ setunion_collapses 
+--------------------
+                  1
+(1 row)
+
+SELECT COUNT(DISTINCT p) AS count_distinct_collapses
+  FROM (VALUES (pose 'Pose(Point(0 0 0), 0.5, 0.5, 0.5, 0.5)'),
+               (pose 'Pose(Point(0 0 0), -0.5, -0.5, -0.5, -0.5)')) AS v(p);
+ count_distinct_collapses 
+--------------------------
+                        1
+(1 row)
+
+SELECT COUNT(*) AS group_by_collapses_to_one_group FROM (
+  SELECT p FROM (VALUES (pose 'Pose(Point(0 0 0), 0.5, 0.5, 0.5, 0.5)'),
+                        (pose 'Pose(Point(0 0 0), -0.5, -0.5, -0.5, -0.5)')) AS v(p)
+  GROUP BY p
+) g;
+ group_by_collapses_to_one_group 
+---------------------------------
+                               1
+(1 row)
+

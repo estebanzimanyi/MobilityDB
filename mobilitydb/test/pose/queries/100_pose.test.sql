@@ -121,3 +121,24 @@ SELECT pose 'Pose(Point(1 1),0.5)' >= pose 'Pose(Point(1 1),0.7)';
 SELECT pose 'Pose(Point(1 1),0.5)' >= pose 'Pose(Point(2 2),0.5)';
 
 -------------------------------------------------------------------------------/
+
+-- Aggregate / set-semantics audit on the existing q vs -q
+-- canonicalisation in pose_make_3d. Master already canonicalises to
+-- W >= 0 in the constructor, but the aggregate paths -- setUnion,
+-- COUNT DISTINCT, GROUP BY -- are not separately covered: setUnion
+-- uses pose_cmp, COUNT DISTINCT uses the hash opclass, GROUP BY uses
+-- both. Each query below feeds a 2-row VALUES list of (q, -q) and
+-- must collapse to a single distinct value; if a future refactor
+-- broke any of pose_cmp / pose_hash this would catch it before the
+-- corruption silently propagated to poseset / GROUP BY semantics.
+SELECT numValues(setUnion(p)) AS setunion_collapses
+  FROM (VALUES (pose 'Pose(Point(0 0 0), 0.5, 0.5, 0.5, 0.5)'),
+               (pose 'Pose(Point(0 0 0), -0.5, -0.5, -0.5, -0.5)')) AS v(p);
+SELECT COUNT(DISTINCT p) AS count_distinct_collapses
+  FROM (VALUES (pose 'Pose(Point(0 0 0), 0.5, 0.5, 0.5, 0.5)'),
+               (pose 'Pose(Point(0 0 0), -0.5, -0.5, -0.5, -0.5)')) AS v(p);
+SELECT COUNT(*) AS group_by_collapses_to_one_group FROM (
+  SELECT p FROM (VALUES (pose 'Pose(Point(0 0 0), 0.5, 0.5, 0.5, 0.5)'),
+                        (pose 'Pose(Point(0 0 0), -0.5, -0.5, -0.5, -0.5)')) AS v(p)
+  GROUP BY p
+) g;
