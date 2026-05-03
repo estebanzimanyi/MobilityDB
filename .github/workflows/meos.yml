@@ -67,6 +67,8 @@ jobs:
           ./npoint_test
           gcc -Wall -g -I/usr/local/include -o cbuffer_test cbuffer_test.c -L/usr/local/lib -lmeos
           ./cbuffer_test
+          gcc -Wall -g -I/usr/local/include -o keyval_skiplist_test keyval_skiplist_test.c -L/usr/local/lib -lmeos
+          ./keyval_skiplist_test
 
   threaded:
     name: Thread-safety (TSan)
