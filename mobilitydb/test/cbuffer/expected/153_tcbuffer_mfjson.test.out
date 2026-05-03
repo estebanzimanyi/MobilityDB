@@ -1,0 +1,63 @@
+SELECT asEWKT(tcbufferFromMFJSON(asMFJSON(tcbuffer 'Cbuffer(Point(1 1), 0.5)@2000-01-01')));
+                        asewkt                        
+------------------------------------------------------
+ Cbuffer(POINT(1 1),0.5)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asEWKT(tcbufferFromMFJSON(asMFJSON(tcbuffer '{Cbuffer(Point(1 1), 0.3)@2000-01-01, Cbuffer(Point(1 1), 0.5)@2000-01-02, Cbuffer(Point(1 1), 0.5)@2000-01-03}')));
+                                                                               asewkt                                                                               
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {Cbuffer(POINT(1 1),0.3)@Sat Jan 01 00:00:00 2000 PST, Cbuffer(POINT(1 1),0.5)@Sun Jan 02 00:00:00 2000 PST, Cbuffer(POINT(1 1),0.5)@Mon Jan 03 00:00:00 2000 PST}
+(1 row)
+
+SELECT asEWKT(tcbufferFromMFJSON(asMFJSON(tcbuffer '[Cbuffer(Point(1 1), 0.2)@2000-01-01, Cbuffer(Point(1 1), 0.4)@2000-01-02, Cbuffer(Point(1 1), 0.5)@2000-01-03]')));
+                                                                               asewkt                                                                               
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ [Cbuffer(POINT(1 1),0.2)@Sat Jan 01 00:00:00 2000 PST, Cbuffer(POINT(1 1),0.4)@Sun Jan 02 00:00:00 2000 PST, Cbuffer(POINT(1 1),0.5)@Mon Jan 03 00:00:00 2000 PST]
+(1 row)
+
+SELECT asEWKT(tcbufferFromMFJSON(asMFJSON(tcbuffer '{[Cbuffer(Point(1 1), 0.2)@2000-01-01, Cbuffer(Point(1 1), 0.4)@2000-01-02, Cbuffer(Point(1 1), 0.5)@2000-01-03], [Cbuffer(Point(2 2), 0.6)@2000-01-04, Cbuffer(Point(2 2), 0.6)@2000-01-05]}')));
+                                                                                                                                       asewkt                                                                                                                                       
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[Cbuffer(POINT(1 1),0.2)@Sat Jan 01 00:00:00 2000 PST, Cbuffer(POINT(1 1),0.4)@Sun Jan 02 00:00:00 2000 PST, Cbuffer(POINT(1 1),0.5)@Mon Jan 03 00:00:00 2000 PST], [Cbuffer(POINT(2 2),0.6)@Tue Jan 04 00:00:00 2000 PST, Cbuffer(POINT(2 2),0.6)@Wed Jan 05 00:00:00 2000 PST]}
+(1 row)
+
+SELECT asEWKT(tcbufferFromMFJSON(asMFJSON(tcbuffer 'Interp=Step;[Cbuffer(Point(1 1), 0.2)@2000-01-01, Cbuffer(Point(1 1), 0.4)@2000-01-02, Cbuffer(Point(1 1), 0.5)@2000-01-03]')));
+                                                                                     asewkt                                                                                     
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Interp=Step;[Cbuffer(POINT(1 1),0.2)@Sat Jan 01 00:00:00 2000 PST, Cbuffer(POINT(1 1),0.4)@Sun Jan 02 00:00:00 2000 PST, Cbuffer(POINT(1 1),0.5)@Mon Jan 03 00:00:00 2000 PST]
+(1 row)
+
+SELECT asEWKT(tcbufferFromMFJSON(asMFJSON(tcbuffer 'SRID=4326;Cbuffer(Point(1.123456 2.654321), 0.5)@2000-01-01', 1, 0, 2)));
+                                asewkt                                
+----------------------------------------------------------------------
+ SRID=4326;Cbuffer(POINT(1.12 2.65),0.5)@Sat Jan 01 00:00:00 2000 PST
+(1 row)
+
+SELECT asEWKT(tcbufferFromMFJSON(asMFJSON(tcbuffer 'SRID=3812;[Cbuffer(Point(1 1), 0.2)@2000-01-01, Cbuffer(Point(1 1), 0.4)@2000-01-02]', 1, 1, 6)));
+                                                         asewkt                                                         
+------------------------------------------------------------------------------------------------------------------------
+ SRID=3812;[Cbuffer(POINT(1 1),0.2)@Sat Jan 01 00:00:00 2000 PST, Cbuffer(POINT(1 1),0.4)@Sun Jan 02 00:00:00 2000 PST]
+(1 row)
+
+/* Errors */
+-------------------------------------------------------------------------------
+-- Malformed JSON
+SELECT tcbufferFromMFJSON('ABC');
+ERROR:  Error while processing MFJSON string unexpected character (at offset 0)
+SELECT tcbufferFromMFJSON('{"type":"MovingPoint","coordinates":[1,1],"datetimes":["2000-01-01T00:00:00+01"],"interpolation":"None"}');
+ERROR:  Invalid 'type' value in MFJSON string, expected: tcbuffer, received: tgeompoint
+SELECT tcbufferFromMFJSON('{"type":"XXX","values":[{"point":[1,1],"radius":0.5}],"datetimes":["2000-01-01T00:00:00+01"],"interpolation":"None"}');
+ERROR:  Invalid 'type' value in MFJSON string: XXX
+SELECT tcbufferFromMFJSON('{"type":"MovingCircularBuffer","values":[{"point":[1,1,1],"radius":0.5}],"datetimes":["2000-01-01T00:00:00+01"],"interpolation":"None"}');
+ERROR:  Circular buffers are 2D-only; expected 2 elements in 'point' array, got 3
+SELECT tcbufferFromMFJSON('{"type":"MovingCircularBuffer","values":[{"point":[1,1],"radius":-0.5}],"datetimes":["2000-01-01T00:00:00+01"],"interpolation":"None"}');
+ERROR:  The value cannot be negative: -0.500000
+SELECT tcbufferFromMFJSON('{"type":"MovingCircularBuffer","values":[{"point":[1,1]}],"datetimes":["2000-01-01T00:00:00+01"],"interpolation":"None"}');
+ERROR:  Unable to find 'radius' in MFJSON string
+SELECT tcbufferFromMFJSON('{"type":"MovingCircularBuffer","values":[{"radius":0.5}],"datetimes":["2000-01-01T00:00:00+01"],"interpolation":"None"}');
+ERROR:  Unable to find 'point' in MFJSON string
+SELECT tcbufferFromMFJSON('{"type":"MovingCircularBuffer","values":[{"point":[1,1],"radius":0.5}],"datetimes":["2000-01-01T00:00:00+01"]}');
+ERROR:  Unable to find 'interpolation' in MFJSON string
+SELECT tcbufferFromMFJSON('{"type":"MovingCircularBuffer","values":[{"point":[1,1],"radius":0.5}],"datetimes":["2000-01-01T00:00:00+01"],"interpolation":"XXX"}');
+ERROR:  Invalid 'interpolation' value in MFJSON string

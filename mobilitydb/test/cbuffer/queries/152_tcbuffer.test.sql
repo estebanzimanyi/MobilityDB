@@ -105,6 +105,16 @@ SELECT asText(tcbufferFromHexEWKB(asHexEWKB(tcbuffer '{[Cbuffer(Point(1 1), 0.2)
 SELECT asText(tcbufferFromHexEWKB(asHexEWKB(tcbuffer 'Interp=Step;[Cbuffer(Point(1 1), 0.2)@2000-01-01, Cbuffer(Point(1 1), 0.4)@2000-01-02, Cbuffer(Point(1 1), 0.5)@2000-01-03]', 'XDR')));
 SELECT asText(tcbufferFromHexEWKB(asHexEWKB(tcbuffer 'Interp=Step;{[Cbuffer(Point(1 1), 0.2)@2000-01-01, Cbuffer(Point(1 1), 0.4)@2000-01-02, Cbuffer(Point(1 1), 0.5)@2000-01-03], [Cbuffer(Point(2 2), 0.6)@2000-01-04, Cbuffer(Point(2 2), 0.6)@2000-01-05] }', 'XDR')));
 
+-- asMFJSON output across all temporal subtypes (instant, discrete, sequence, sequenceset, step)
+SELECT asMFJSON(tcbuffer 'Cbuffer(Point(1 1), 0.5)@2000-01-01');
+SELECT asMFJSON(tcbuffer '{Cbuffer(Point(1 1), 0.3)@2000-01-01, Cbuffer(Point(1 1), 0.5)@2000-01-02, Cbuffer(Point(1 1), 0.5)@2000-01-03}');
+SELECT asMFJSON(tcbuffer '[Cbuffer(Point(1 1), 0.2)@2000-01-01, Cbuffer(Point(1 1), 0.4)@2000-01-02, Cbuffer(Point(1 1), 0.5)@2000-01-03]');
+SELECT asMFJSON(tcbuffer '{[Cbuffer(Point(1 1), 0.2)@2000-01-01, Cbuffer(Point(1 1), 0.4)@2000-01-02, Cbuffer(Point(1 1), 0.5)@2000-01-03], [Cbuffer(Point(2 2), 0.6)@2000-01-04, Cbuffer(Point(2 2), 0.6)@2000-01-05]}');
+SELECT asMFJSON(tcbuffer 'Interp=Step;[Cbuffer(Point(1 1), 0.2)@2000-01-01, Cbuffer(Point(1 1), 0.4)@2000-01-02, Cbuffer(Point(1 1), 0.5)@2000-01-03]');
+-- Bbox + custom precision/SRS variants
+SELECT asMFJSON(tcbuffer 'SRID=4326;Cbuffer(Point(1.123456 2.654321), 0.5)@2000-01-01', 1, 0, 2);
+SELECT asMFJSON(tcbuffer 'SRID=3812;[Cbuffer(Point(1 1), 0.2)@2000-01-01, Cbuffer(Point(1 1), 0.4)@2000-01-02]', 1, 1, 6);
+
 -------------------------------------------------------------------------------
 -- Constructors
 -------------------------------------------------------------------------------
