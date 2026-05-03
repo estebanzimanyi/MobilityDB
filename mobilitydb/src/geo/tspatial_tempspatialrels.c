@@ -63,11 +63,20 @@
  */
 Datum
 Tspatialrel_geo_tspatial(FunctionCallInfo fcinfo,
-  Temporal * (*func)(const GSERIALIZED *, const Temporal *))
+  Temporal * (*func)(const GSERIALIZED *, const Temporal *, bool, bool))
 {
+  if (PG_ARGISNULL(0) || PG_ARGISNULL(1))
+    PG_RETURN_NULL();
   GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
   Temporal *temp = PG_GETARG_TEMPORAL_P(1);
-  Temporal *result = func(gs, temp);
+  bool restr = false;
+  bool atvalue = false;
+  if (PG_NARGS() > 2 && ! PG_ARGISNULL(2))
+  {
+    atvalue = PG_GETARG_BOOL(2);
+    restr = true;
+  }
+  Temporal *result = func(gs, temp, restr, atvalue);
   PG_FREE_IF_COPY(gs, 0);
   PG_FREE_IF_COPY(temp, 1);
   if (! result)
@@ -81,11 +90,20 @@ Tspatialrel_geo_tspatial(FunctionCallInfo fcinfo,
  */
 Datum
 Tspatialrel_tspatial_geo(FunctionCallInfo fcinfo,
-  Temporal * (*func)(const Temporal *, const GSERIALIZED *))
+  Temporal * (*func)(const Temporal *, const GSERIALIZED *, bool, bool))
 {
+  if (PG_ARGISNULL(0) || PG_ARGISNULL(1))
+    PG_RETURN_NULL();
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
-  Temporal *result = func(temp, gs);
+  bool restr = false;
+  bool atvalue = false;
+  if (PG_NARGS() > 2 && ! PG_ARGISNULL(2))
+  {
+    atvalue = PG_GETARG_BOOL(2);
+    restr = true;
+  }
+  Temporal *result = func(temp, gs, restr, atvalue);
   PG_FREE_IF_COPY(temp, 0);
   PG_FREE_IF_COPY(gs, 1);
   if (! result)
@@ -99,12 +117,21 @@ Tspatialrel_tspatial_geo(FunctionCallInfo fcinfo,
  */
 Datum
 Tspatialrel_tspatial_tspatial(FunctionCallInfo fcinfo,
-  Temporal * (*func)(const Temporal *, const Temporal *))
+  Temporal * (*func)(const Temporal *, const Temporal *, bool, bool))
 {
+  if (PG_ARGISNULL(0) || PG_ARGISNULL(1))
+    PG_RETURN_NULL();
   Temporal *temp1 = PG_GETARG_TEMPORAL_P(0);
   Temporal *temp2 = PG_GETARG_TEMPORAL_P(1);
+  bool restr = false;
+  bool atvalue = false;
+  if (PG_NARGS() > 2 && ! PG_ARGISNULL(2))
+  {
+    atvalue = PG_GETARG_BOOL(2);
+    restr = true;
+  }
   /* Result depends on whether we are computing tintersects or tdisjoint */
-  Temporal *result = func(temp1, temp2);
+  Temporal *result = func(temp1, temp2, restr, atvalue);
   PG_FREE_IF_COPY(temp1, 0);
   PG_FREE_IF_COPY(temp2, 1);
   if (! result)
@@ -120,12 +147,21 @@ Tspatialrel_tspatial_tspatial(FunctionCallInfo fcinfo,
  */
 Datum
 Tdwithin_geo_tspatial(FunctionCallInfo fcinfo,
-  Temporal * (*func)(const GSERIALIZED *, const Temporal *, double))
+  Temporal * (*func)(const GSERIALIZED *, const Temporal *, double, bool, bool))
 {
+  if (PG_ARGISNULL(0) || PG_ARGISNULL(1) || PG_ARGISNULL(2))
+    PG_RETURN_NULL();
   GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
   Temporal *temp = PG_GETARG_TEMPORAL_P(1);
   double dist = PG_GETARG_FLOAT8(2);
-  Temporal *result = func(gs, temp, dist);
+  bool restr = false;
+  bool atvalue = false;
+  if (PG_NARGS() > 3 && ! PG_ARGISNULL(3))
+  {
+    atvalue = PG_GETARG_BOOL(3);
+    restr = true;
+  }
+  Temporal *result = func(gs, temp, dist, restr, atvalue);
   PG_FREE_IF_COPY(gs, 0);
   PG_FREE_IF_COPY(temp, 1);
   if (! result)
@@ -139,12 +175,21 @@ Tdwithin_geo_tspatial(FunctionCallInfo fcinfo,
  */
 Datum
 Tdwithin_tspatial_geo(FunctionCallInfo fcinfo,
-  Temporal * (*func)(const Temporal *, const GSERIALIZED *, double))
+  Temporal * (*func)(const Temporal *, const GSERIALIZED *, double, bool, bool))
 {
+  if (PG_ARGISNULL(0) || PG_ARGISNULL(1) || PG_ARGISNULL(2))
+    PG_RETURN_NULL();
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
   double dist = PG_GETARG_FLOAT8(2);
-  Temporal *result = func(temp, gs, dist);
+  bool restr = false;
+  bool atvalue = false;
+  if (PG_NARGS() > 3 && ! PG_ARGISNULL(3))
+  {
+    atvalue = PG_GETARG_BOOL(3);
+    restr = true;
+  }
+  Temporal *result = func(temp, gs, dist, restr, atvalue);
   PG_FREE_IF_COPY(temp, 0);
   PG_FREE_IF_COPY(gs, 1);
   if (! result)
@@ -158,12 +203,21 @@ Tdwithin_tspatial_geo(FunctionCallInfo fcinfo,
  */
 Datum
 Tdwithin_tspatial_tspatial(FunctionCallInfo fcinfo,
-  Temporal * (*func)(const Temporal *, const Temporal *, double))
+  Temporal * (*func)(const Temporal *, const Temporal *, double, bool, bool))
 {
+  if (PG_ARGISNULL(0) || PG_ARGISNULL(1) || PG_ARGISNULL(2))
+    PG_RETURN_NULL();
   Temporal *temp1 = PG_GETARG_TEMPORAL_P(0);
   Temporal *temp2 = PG_GETARG_TEMPORAL_P(1);
   double dist = PG_GETARG_FLOAT8(2);
-  Temporal *result = func(temp1, temp2, dist);
+  bool restr = false;
+  bool atvalue = false;
+  if (PG_NARGS() > 3 && ! PG_ARGISNULL(3))
+  {
+    atvalue = PG_GETARG_BOOL(3);
+    restr = true;
+  }
+  Temporal *result = func(temp1, temp2, dist, restr, atvalue);
   PG_FREE_IF_COPY(temp1, 0);
   PG_FREE_IF_COPY(temp2, 1);
   if (! result)

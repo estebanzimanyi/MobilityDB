@@ -237,7 +237,7 @@ Number_timestamptz_to_tbox(PG_FUNCTION_ARGS)
 {
   Datum value = PG_GETARG_DATUM(0);
   TimestampTz t = PG_GETARG_TIMESTAMPTZ(1);
-  MeosType basetype = oid_meostype(get_fn_expr_argtype(fcinfo->flinfo, 0));
+  meosType basetype = oid_meostype(get_fn_expr_argtype(fcinfo->flinfo, 0));
   PG_RETURN_TBOX_P(number_timestamptz_to_tbox(value, basetype, t));
 }
 
@@ -253,7 +253,7 @@ Number_tstzspan_to_tbox(PG_FUNCTION_ARGS)
 {
   Datum value = PG_GETARG_DATUM(0);
   Span *s = PG_GETARG_SPAN_P(1);
-  MeosType basetype = oid_meostype(get_fn_expr_argtype(fcinfo->flinfo, 0));
+  meosType basetype = oid_meostype(get_fn_expr_argtype(fcinfo->flinfo, 0));
   PG_RETURN_TBOX_P(number_tstzspan_to_tbox(value, basetype, s));
 }
 
@@ -303,7 +303,7 @@ Datum
 Number_to_tbox(PG_FUNCTION_ARGS)
 {
   Datum value = PG_GETARG_DATUM(0);
-  MeosType basetype = oid_meostype(get_fn_expr_argtype(fcinfo->flinfo, 0));
+  meosType basetype = oid_meostype(get_fn_expr_argtype(fcinfo->flinfo, 0));
   PG_RETURN_TBOX_P(number_tbox(value, basetype));
 }
 
@@ -729,7 +729,7 @@ Tbox_expand_value(PG_FUNCTION_ARGS)
 {
   TBox *box = PG_GETARG_TBOX_P(0);
   Datum value = PG_GETARG_DATUM(1);
-  MeosType basetype = oid_meostype(get_fn_expr_argtype(fcinfo->flinfo, 1));
+  meosType basetype = oid_meostype(get_fn_expr_argtype(fcinfo->flinfo, 1));
   TBox *result = tbox_expand_value(box, value, basetype);
   if (! result)
     PG_RETURN_NULL();
@@ -1033,18 +1033,22 @@ Tbox_extent_transfn(PG_FUNCTION_ARGS)
   TBox *box2 = PG_ARGISNULL(1) ? NULL : PG_GETARG_TBOX_P(1);
 
   /* Can't do anything with null inputs */
-  if (! box1 || ! box2)
+  if (! box1 && ! box2)
+    PG_RETURN_NULL();
+  TBox *result = palloc(sizeof(TBox));
+  /* One of the boxes is null, return the other one */
+  if (! box1)
   {
-    if (! box1 && ! box2)
-      PG_RETURN_NULL();
-    if (! box1)
-      PG_RETURN_TBOX_P(tbox_copy(box2));
-    else
-      PG_RETURN_TBOX_P(tbox_copy(box1));
+    memcpy(result, box2, sizeof(TBox));
+    PG_RETURN_TBOX_P(result);
+  }
+  if (! box2)
+  {
+    memcpy(result, box1, sizeof(TBox));
+    PG_RETURN_TBOX_P(result);
   }
 
   /* Both boxes are not null */
-  TBox *result = palloc(sizeof(TBox));
   memcpy(result, box1, sizeof(TBox));
   tbox_expand(box2, result);
   PG_RETURN_TBOX_P(result);

@@ -82,8 +82,8 @@ int main(void)
   }
 
   AIS_record rec;
-  int num_records = 0;
-  int num_nulls = 0;
+  int no_records = 0;
+  int no_nulls = 0;
   char header_buffer[MAX_LEN_HEADER];
   char timestamp_buffer[MAX_LEN_TIMESTAMP];
 
@@ -105,17 +105,17 @@ int main(void)
     if (read != 5)
     {
       printf("Record with missing values ignored\n");
-      num_nulls++;
+      no_nulls++;
       continue;
     }
 
-    num_records++;
+    no_records++;
 
     /* Transform the string representing the timestamp into a timestamp value */
     rec.T = timestamp_in(timestamp_buffer, -1);
 
     /* Print only 1 out of 1000 records */
-    if (num_records % 1000 == 0)
+    if (no_records % 1000 == 0)
     {
       /* See above the assumptions made wrt the input data in the file */
       GSERIALIZED *gs = geogpoint_make2d(4326, rec.Longitude, rec.Latitude);
@@ -137,8 +137,8 @@ int main(void)
   /* Close the file */
   fclose(file);
 
-  printf("\n%d num_records read.\n%d incomplete records ignored.\n",
-    num_records, num_nulls);
+  printf("\n%d no_records read.\n%d incomplete records ignored.\n",
+    no_records, no_nulls);
 
   /* Finalize MEOS */
   meos_finalize();

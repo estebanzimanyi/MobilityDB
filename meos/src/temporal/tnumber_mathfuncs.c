@@ -110,10 +110,10 @@ tfloat_arithop_turnpt(Datum start1, Datum end1, Datum start2, Datum end2,
  */
 Temporal *
 arithop_tnumber_number(const Temporal *temp, Datum value, TArithmetic oper,
-  Datum (*func)(Datum, Datum, MeosType), bool invert)
+  Datum (*func)(Datum, Datum, meosType), bool invert)
 {
   assert(tnumber_type(temp->temptype));
-  MeosType basetype = temptype_basetype(temp->temptype);
+  meosType basetype = temptype_basetype(temp->temptype);
   /* If division test whether the denominator is zero */
   if (oper == DIV)
   {
@@ -159,7 +159,7 @@ arithop_tnumber_number(const Temporal *temp, Datum value, TArithmetic oper,
  */
 Temporal *
 arithop_tnumber_tnumber(const Temporal *temp1, const Temporal *temp2,
-  TArithmetic oper, Datum (*func)(Datum, Datum, MeosType), tpfunc_temp tpfunc)
+  TArithmetic oper, Datum (*func)(Datum, Datum, meosType), tpfunc_temp tpfunc)
 {
   assert(tnumber_type(temp1->temptype));
   assert(temp1->temptype == temp2->temptype);
@@ -168,10 +168,12 @@ arithop_tnumber_tnumber(const Temporal *temp1, const Temporal *temp2,
 
   /* If division test whether the denominator will ever be zero during
    * the common timespan */
+  SpanSet *ss;
+  Temporal * projtemp2;
   if (oper == DIV)
   {
-    SpanSet *ss = temporal_time(temp1);
-    Temporal *projtemp2 = temporal_restrict_tstzspanset(temp2, ss, REST_AT);
+    ss = temporal_time(temp1);
+    projtemp2 = temporal_restrict_tstzspanset(temp2, ss, REST_AT);
     if (! projtemp2)
     {
       pfree(ss);
@@ -189,7 +191,7 @@ arithop_tnumber_tnumber(const Temporal *temp1, const Temporal *temp2,
   }
 
   /* Fill the lifted structure */
-  MeosType basetype = temptype_basetype(temp1->temptype);
+  meosType basetype = temptype_basetype(temp1->temptype);
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) func;
@@ -219,7 +221,7 @@ TInstant *
 tnumberinst_abs(const TInstant *inst)
 {
   assert(inst); assert(tnumber_type(inst->temptype));
-  MeosType basetype = temptype_basetype(inst->temptype);
+  meosType basetype = temptype_basetype(inst->temptype);
   assert(tnumber_basetype(basetype));
   Datum value = tinstant_value_p(inst);
   Datum absvalue;
@@ -254,7 +256,7 @@ tnumberseq_linear_abs(const TSequence *seq)
   assert(seq);
   assert(tnumber_type(seq->temptype));
   const TInstant *inst1;
-  MeosType basetype = temptype_basetype(seq->temptype);
+  meosType basetype = temptype_basetype(seq->temptype);
 
   /* Instantaneous sequence */
   if (seq->count == 1)
@@ -362,7 +364,7 @@ tnumber_abs(const Temporal *temp)
  * @brief Return the delta value of two numbers
  */
 static Datum
-delta_value(Datum value1, Datum value2, MeosType basetype)
+delta_value(Datum value1, Datum value2, meosType basetype)
 {
   assert(basetype == T_INT4 || basetype == T_FLOAT8);
   if (basetype == T_INT4)
@@ -388,7 +390,7 @@ tnumberseq_delta_value(const TSequence *seq)
   TInstant **instants = palloc(sizeof(TInstant *) * seq->count);
   const TInstant *inst1 = TSEQUENCE_INST_N(seq, 0);
   Datum value1 = tinstant_value_p(inst1);
-  MeosType basetype = temptype_basetype(seq->temptype);
+  meosType basetype = temptype_basetype(seq->temptype);
   Datum delta = 0; /* make compiler quiet */
   for (int i = 1; i < seq->count; i++)
   {
@@ -609,7 +611,7 @@ tnumberseq_trend(const TSequence *seq)
     return NULL;
 
   /* General case */
-  MeosType basetype = temptype_basetype(seq->temptype);
+  meosType basetype = temptype_basetype(seq->temptype);
   TInstant **instants = palloc(sizeof(TInstant *) * seq->count);
   const TInstant *inst1 = TSEQUENCE_INST_N(seq, 0);
   Datum value1 = tinstant_value_p(inst1);

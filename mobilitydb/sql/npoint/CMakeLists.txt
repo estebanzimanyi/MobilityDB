@@ -12,6 +12,7 @@ SET(LOCAL_FILES
   092_tnpoint_gin
   093_tnpoint_distance
   095_tnpoint_aggfuncs
+  096_aggregate_renames
   098_tnpoint_indexes
   )
 

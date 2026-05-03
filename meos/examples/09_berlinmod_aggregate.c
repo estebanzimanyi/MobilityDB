@@ -101,7 +101,7 @@ int main(void)
     return EXIT_FAILURE;
   }
 
-  int num_records = 0, i;
+  int no_records = 0, i;
 
   /* Read the first line of the file with the headers */
   fscanf(file, "%1023s\n", header_buffer);
@@ -134,7 +134,7 @@ int main(void)
       return EXIT_FAILURE;
     }
 
-    num_records++;
+    no_records++;
     
     /* Transform the string representing the date into a date value */
     DateADT day = date_in(date_buffer);
@@ -156,7 +156,7 @@ int main(void)
   /* Close the input file */
   fclose(file);
 
-  printf("\n%d trip records read\n\n", num_records);
+  printf("\n%d trip records read\n\n", no_records);
 
   char *out_str;
 

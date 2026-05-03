@@ -57,7 +57,7 @@
 
 /**
  * @brief Global constant array containing the type names corresponding to the
- * enumeration MeosType defined in file `meos_catalog.h`
+ * enumeration meosType defined in file `meos_catalog.h`
  */
 static const char *MEOS_TYPE_NAMES[] =
 {
@@ -286,7 +286,7 @@ static const temptype_catalog_struct MEOS_TEMPTYPE_CATALOG[] =
  * @brief Return the string representation of the MEOS type
  */
 inline const char *
-meostype_name(MeosType type)
+meostype_name(meosType type)
 {
   return MEOS_TYPE_NAMES[type];
 }
@@ -446,8 +446,8 @@ interptype_from_string(const char *str)
 /**
  * @brief Return the base type from the temporal type
  */
-MeosType
-temptype_basetype(MeosType type)
+meosType
+temptype_basetype(meosType type)
 {
   int n = sizeof(MEOS_TEMPTYPE_CATALOG) / sizeof(temptype_catalog_struct);
   for (int i = 0; i < n; i++)
@@ -468,8 +468,8 @@ temptype_basetype(MeosType type)
 /**
  * @brief Return the base type from a set type
  */
-MeosType
-settype_basetype(MeosType type)
+meosType
+settype_basetype(meosType type)
 {
   int n = sizeof(MEOS_SETTYPE_CATALOG) / sizeof(settype_catalog_struct);
   for (int i = 0; i < n; i++)
@@ -486,8 +486,8 @@ settype_basetype(MeosType type)
 /**
  * @brief Return the base type from the set type
  */
-MeosType
-basetype_settype(MeosType type)
+meosType
+basetype_settype(meosType type)
 {
   int n = sizeof(MEOS_SETTYPE_CATALOG) / sizeof(settype_catalog_struct);
   for (int i = 0; i < n; i++)
@@ -504,8 +504,8 @@ basetype_settype(MeosType type)
 /**
  * @brief Return the base type from the span type
  */
-MeosType
-spantype_basetype(MeosType type)
+meosType
+spantype_basetype(meosType type)
 {
   int n = sizeof(MEOS_SPANTYPE_CATALOG) / sizeof(spantype_catalog_struct);
   for (int i = 0; i < n; i++)
@@ -522,8 +522,8 @@ spantype_basetype(MeosType type)
 /**
  * @brief Return the span type from the span set type
  */
-MeosType
-spansettype_spantype(MeosType type)
+meosType
+spansettype_spantype(meosType type)
 {
   int n = sizeof(MEOS_SPANSETTYPE_CATALOG) / sizeof(spansettype_catalog_struct);
   for (int i = 0; i < n; i++)
@@ -540,8 +540,8 @@ spansettype_spantype(MeosType type)
 /**
  * @brief Return the span type of a base type
  */
-MeosType
-basetype_spantype(MeosType type)
+meosType
+basetype_spantype(meosType type)
 {
   int n = sizeof(MEOS_SPANTYPE_CATALOG) / sizeof(spantype_catalog_struct);
   for (int i = 0; i < n; i++)
@@ -558,8 +558,8 @@ basetype_spantype(MeosType type)
 /**
  * @brief Return the span type from the span set type
  */
-MeosType
-spantype_spansettype(MeosType type)
+meosType
+spantype_spansettype(meosType type)
 {
   int n = sizeof(MEOS_SPANSETTYPE_CATALOG) / sizeof(spansettype_catalog_struct);
   for (int i = 0; i < n; i++)
@@ -582,7 +582,7 @@ spantype_spansettype(MeosType type)
  * @note This function is only used in the asserts
  */
 inline bool
-meos_basetype(MeosType type)
+meos_basetype(meosType type)
 {
   return (type == T_BOOL || type == T_INT4 || type == T_INT8 || type == T_FLOAT8 ||
     type == T_TEXT || type == T_DATE || type == T_TIMESTAMPTZ ||
@@ -606,7 +606,7 @@ meos_basetype(MeosType type)
  * @brief Return true if the values of the base type are passed by value
  */
 inline bool
-basetype_byvalue(MeosType type)
+basetype_byvalue(meosType type)
 {
   return (type == T_BOOL || type == T_INT4 || type == T_INT8 || type == T_FLOAT8 ||
     type == T_DATE || type == T_TIMESTAMPTZ);
@@ -616,7 +616,7 @@ basetype_byvalue(MeosType type)
  * @brief Return true if the values of the base type are of variable length
  */
 inline bool
-basetype_varlength(MeosType type)
+basetype_varlength(meosType type)
 {
   return (type == T_TEXT || type == T_GEOMETRY || type == T_GEOGRAPHY
 #if POSE || RGEO
@@ -630,7 +630,7 @@ basetype_varlength(MeosType type)
  * @return On error return SHRT_MAX
  */
 int16
-meostype_length(MeosType type)
+meostype_length(meosType type)
 {
   if (basetype_byvalue(type))
     return sizeof(Datum);
@@ -671,7 +671,7 @@ meostype_length(MeosType type)
  * @note This function is only used in the asserts
  */
 inline bool
-alphanum_basetype(MeosType type)
+alphanum_basetype(meosType type)
 {
   return (type == T_BOOL || type == T_INT4 || type == T_INT8 ||
     type == T_FLOAT8 || type == T_TEXT || type == T_DATE ||
@@ -683,7 +683,7 @@ alphanum_basetype(MeosType type)
  * @note This function is only used in the asserts
  */
 inline bool
-alphanum_temptype(MeosType type)
+alphanum_temptype(meosType type)
 {
   return (type == T_TBOOL || type == T_TINT || type == T_TFLOAT ||
     type == T_TTEXT);
@@ -694,7 +694,7 @@ alphanum_temptype(MeosType type)
  * @brief Return true if the type is a geo base type
  */
 inline bool
-geo_basetype(MeosType type)
+geo_basetype(meosType type)
 {
   return (type == T_GEOMETRY || type == T_GEOGRAPHY);
 }
@@ -703,7 +703,7 @@ geo_basetype(MeosType type)
  * @brief Return true if the type is a spatial base type
  */
 inline bool
-spatial_basetype(MeosType type)
+spatial_basetype(meosType type)
 {
   return (type == T_GEOMETRY || type == T_GEOGRAPHY 
 #if CBUFFER
@@ -724,7 +724,7 @@ spatial_basetype(MeosType type)
  * @brief Return true if the type is a time type
  */
 inline bool
-time_type(MeosType type)
+time_type(meosType type)
 {
   return (type == T_DATE || type == T_DATESET || type == T_DATESPAN ||
     type == T_DATESPANSET || type == T_TIMESTAMPTZ || type == T_TSTZSET ||
@@ -739,7 +739,7 @@ time_type(MeosType type)
  * @note This function is only used in the asserts
  */
 inline bool
-set_basetype(MeosType type)
+set_basetype(meosType type)
 {
   return (type == T_TIMESTAMPTZ || type == T_DATE || type == T_INT4 ||
       type == T_INT8 || type == T_FLOAT8 || type == T_TEXT ||
@@ -761,7 +761,7 @@ set_basetype(MeosType type)
  * @brief Return true if the type is a set type
  */
 inline bool
-set_type(MeosType type)
+set_type(meosType type)
 {
   return (type == T_TSTZSET || type == T_DATESET || type == T_INTSET ||
       type == T_BIGINTSET || type == T_FLOATSET || type == T_TEXTSET ||
@@ -782,7 +782,7 @@ set_type(MeosType type)
  * @brief Return true if the type is a number set type
  */
 inline bool
-numset_type(MeosType type)
+numset_type(meosType type)
 {
   return (type == T_INTSET || type == T_BIGINTSET || type == T_FLOATSET ||
     /* Dates are represented as integers */
@@ -794,7 +794,7 @@ numset_type(MeosType type)
  * @brief Ensure that the type is a number set type
  */
 bool
-ensure_numset_type(MeosType type)
+ensure_numset_type(meosType type)
 {
   if (numset_type(type))
     return true;
@@ -808,7 +808,7 @@ ensure_numset_type(MeosType type)
  * @brief Return true if the type is a time set type
  */
 inline bool
-timeset_type(MeosType type)
+timeset_type(meosType type)
 {
   return (type == T_DATESET || type == T_TSTZSET);
 }
@@ -817,7 +817,7 @@ timeset_type(MeosType type)
  * @brief Return true if the type is a set type with a span as a bounding box
  */
 inline bool
-set_spantype(MeosType type)
+set_spantype(meosType type)
 {
   return (type == T_INTSET || type == T_BIGINTSET || type == T_FLOATSET ||
     type == T_DATESET || type == T_TSTZSET);
@@ -827,7 +827,7 @@ set_spantype(MeosType type)
  * @brief Ensure that a set value is a set type with a span as a bounding box
  */
 bool
-ensure_set_spantype(MeosType type)
+ensure_set_spantype(meosType type)
 {
   if (set_spantype(type))
     return true;
@@ -840,7 +840,7 @@ ensure_set_spantype(MeosType type)
  * @brief Return true if the type is a set type
  */
 inline bool
-alphanumset_type(MeosType type)
+alphanumset_type(meosType type)
 {
   return (type == T_TSTZSET || type == T_DATESET || type == T_INTSET ||
     type == T_BIGINTSET || type == T_FLOATSET || type == T_TEXTSET);
@@ -851,7 +851,7 @@ alphanumset_type(MeosType type)
  * @brief Return true if the type is a geo set type
  */
 inline bool
-geoset_type(MeosType type)
+geoset_type(meosType type)
 {
   return (type == T_GEOMSET || type == T_GEOGSET);
 }
@@ -860,7 +860,7 @@ geoset_type(MeosType type)
  * @brief Ensure that a set value is a geo set
  */
 bool
-ensure_geoset_type(MeosType type)
+ensure_geoset_type(meosType type)
 {
   if (geoset_type(type))
     return true;
@@ -874,7 +874,7 @@ ensure_geoset_type(MeosType type)
  * @brief Return true if the type is a geo set type
  */
 inline bool
-spatialset_type(MeosType type)
+spatialset_type(meosType type)
 {
   return (type == T_GEOMSET || type == T_GEOGSET
 #if CBUFFER
@@ -894,7 +894,7 @@ spatialset_type(MeosType type)
  * @brief Ensure that a temporal value is a temporal number
  */
 bool
-ensure_spatialset_type(MeosType type)
+ensure_spatialset_type(meosType type)
 {
   if (spatialset_type(type))
     return true;
@@ -910,7 +910,7 @@ ensure_spatialset_type(MeosType type)
  * @brief Return true if the type is a span base type
  */
 inline bool
-span_basetype(MeosType type)
+span_basetype(meosType type)
 {
   return (type == T_TIMESTAMPTZ || type == T_DATE || type == T_INT4 ||
     type == T_INT8 || type == T_FLOAT8);
@@ -920,7 +920,7 @@ span_basetype(MeosType type)
  * @brief Return true if the type is a canonical base type of a span type
  */
 inline bool
-span_canon_basetype(MeosType type)
+span_canon_basetype(meosType type)
 {
   return (type == T_DATE || type == T_INT4 || type == T_INT8);
 }
@@ -929,7 +929,7 @@ span_canon_basetype(MeosType type)
  * @brief Return true if the type is a span type
  */
 bool
-span_type(MeosType type)
+span_type(meosType type)
 {
   return (type == T_TSTZSPAN || type == T_DATESPAN || type == T_INTSPAN ||
     type == T_BIGINTSPAN || type == T_FLOATSPAN);
@@ -940,7 +940,7 @@ span_type(MeosType type)
  * @note This function is only used in the asserts
  */
 inline bool
-type_span_bbox(MeosType type)
+type_span_bbox(meosType type)
 {
   return (set_spantype(type) || span_type(type) || spanset_type(type) ||
     talpha_type(type));
@@ -951,7 +951,7 @@ type_span_bbox(MeosType type)
  * @note This function is only used in the asserts
  */
 inline bool
-span_tbox_type(MeosType type)
+span_tbox_type(meosType type)
 {
   return (type == T_INTSPAN || type == T_FLOATSPAN || type == T_TSTZSPAN);
 }
@@ -961,7 +961,7 @@ span_tbox_type(MeosType type)
  * @note This function is only used in the asserts
  */
 bool
-ensure_span_tbox_type(MeosType type)
+ensure_span_tbox_type(meosType type)
 {
   if (span_tbox_type(type))
     return true;
@@ -974,7 +974,7 @@ ensure_span_tbox_type(MeosType type)
  * @brief Return true if the type is a number span type
  */
 inline bool
-numspan_basetype(MeosType type)
+numspan_basetype(meosType type)
 {
   return (type == T_INT4 || type == T_INT8 || type == T_FLOAT8 ||
     /* Dates are represented as integers */
@@ -985,7 +985,7 @@ numspan_basetype(MeosType type)
  * @brief Return true if the type is a number span type
  */
 inline bool
-numspan_type(MeosType type)
+numspan_type(meosType type)
 {
   return (type == T_INTSPAN || type == T_BIGINTSPAN || type == T_FLOATSPAN ||
     type == T_DATESPAN);
@@ -995,7 +995,7 @@ numspan_type(MeosType type)
  * @brief Ensure that a span is a number span type
  */
 bool
-ensure_numspan_type(MeosType type)
+ensure_numspan_type(meosType type)
 {
   if (numspan_type(type))
     return true;
@@ -1008,7 +1008,7 @@ ensure_numspan_type(MeosType type)
  * @brief Return true if the type is a time span type
  */
 inline bool
-timespan_basetype(MeosType type)
+timespan_basetype(meosType type)
 {
   return (type == T_TIMESTAMPTZ || type == T_DATE);
 }
@@ -1017,7 +1017,7 @@ timespan_basetype(MeosType type)
  * @brief Return true if the type is a time span type
  */
 inline bool
-timespan_type(MeosType type)
+timespan_type(meosType type)
 {
   return (type == T_TSTZSPAN || type == T_DATESPAN);
 }
@@ -1028,7 +1028,7 @@ timespan_type(MeosType type)
  * @brief Return true if the type is a span set type
  */
 inline bool
-spanset_type(MeosType type)
+spanset_type(meosType type)
 {
   return (type == T_TSTZSPANSET || type == T_DATESPANSET ||
     type == T_INTSPANSET || type == T_BIGINTSPANSET || type == T_FLOATSPANSET);
@@ -1038,7 +1038,7 @@ spanset_type(MeosType type)
  * @brief Return true if the type is a time span type
  */
 inline bool
-timespanset_type(MeosType type)
+timespanset_type(meosType type)
 {
   return (type == T_TSTZSPANSET || type == T_DATESPANSET);
 }
@@ -1048,7 +1048,7 @@ timespanset_type(MeosType type)
  * @brief Ensure that a span is a time span type
  */
 bool
-ensure_timespanset_type(MeosType type)
+ensure_timespanset_type(meosType type)
 {
   if (timespanset_type(type))
     return true;
@@ -1065,7 +1065,7 @@ ensure_timespanset_type(MeosType type)
  * @note Function used in particular in the indexes
  */
 inline bool
-temporal_type(MeosType type)
+temporal_type(meosType type)
 {
   return (type == T_TBOOL || type == T_TINT || type == T_TFLOAT ||
     type == T_TTEXT || type == T_TGEOMPOINT || type == T_TGEOGPOINT ||
@@ -1093,7 +1093,7 @@ temporal_type(MeosType type)
  * @note This function is only used in the asserts
  */
 inline bool
-temporal_basetype(MeosType type)
+temporal_basetype(meosType type)
 {
   return (type == T_BOOL || type == T_INT4 || type == T_FLOAT8 ||
     type == T_TEXT ||
@@ -1117,7 +1117,7 @@ temporal_basetype(MeosType type)
  * @brief Return true if the type is a temporal continuous type
  */
 inline bool
-temptype_continuous(MeosType type)
+temptype_continuous(meosType type)
 {
   return (type == T_TFLOAT || type == T_TDOUBLE2 || type == T_TDOUBLE3 ||
       type == T_TDOUBLE4 || type == T_TGEOMPOINT || type == T_TGEOGPOINT
@@ -1142,7 +1142,7 @@ temptype_continuous(MeosType type)
  * @note This function is only used in the asserts
  */
 inline bool
-talphanum_type(MeosType type)
+talphanum_type(meosType type)
 {
   return (type == T_TBOOL || type == T_TINT || type == T_TFLOAT ||
     type == T_TTEXT);
@@ -1154,7 +1154,7 @@ talphanum_type(MeosType type)
  * bounding box is a timestamptz span)
  */
 inline bool
-talpha_type(MeosType type)
+talpha_type(meosType type)
 {
   return (type == T_TBOOL || type == T_TTEXT || type == T_TDOUBLE2 ||
     type == T_TDOUBLE3 || type == T_TDOUBLE4);
@@ -1164,7 +1164,7 @@ talpha_type(MeosType type)
  * @brief Return true if the type is a temporal number type
  */
 inline bool
-tnumber_type(MeosType type)
+tnumber_type(meosType type)
 {
   return (type == T_TINT || type == T_TFLOAT);
 }
@@ -1173,7 +1173,7 @@ tnumber_type(MeosType type)
  * @brief Ensure that a type is a temporal number
  */
 bool
-ensure_tnumber_type(MeosType type)
+ensure_tnumber_type(meosType type)
 {
   if (tnumber_type(type))
     return true;
@@ -1186,7 +1186,7 @@ ensure_tnumber_type(MeosType type)
  * @brief Return true if the type is a temporal number base type
  */
 bool
-tnumber_basetype(MeosType type)
+tnumber_basetype(meosType type)
 {
   return (type == T_INT4 || type == T_FLOAT8);
 }
@@ -1195,7 +1195,7 @@ tnumber_basetype(MeosType type)
  * @brief Ensure that a type is a temporal number base type
  */
 bool
-ensure_tnumber_basetype(MeosType type)
+ensure_tnumber_basetype(meosType type)
 {
   if (tnumber_basetype(type))
     return true;
@@ -1210,7 +1210,7 @@ ensure_tnumber_basetype(MeosType type)
  * @note Function used in particular in the indexes
  */
 bool
-tnumber_spantype(MeosType type)
+tnumber_spantype(meosType type)
 {
   return (type == T_INTSPAN || type == T_FLOATSPAN);
 }
@@ -1226,7 +1226,7 @@ tnumber_spantype(MeosType type)
  * Therefore, it is used for the indexes and selectivity functions.
  */
 inline bool
-tspatial_type(MeosType type)
+tspatial_type(meosType type)
 {
   return (type == T_TGEOMPOINT || type == T_TGEOGPOINT || 
     type == T_TGEOMETRY || type == T_TGEOGRAPHY
@@ -1250,7 +1250,7 @@ tspatial_type(MeosType type)
  * @brief Ensure that attype is a spatiotemporal type
  */
 bool
-ensure_tspatial_type(MeosType type)
+ensure_tspatial_type(meosType type)
 {
   if (tspatial_type(type))
     return true;
@@ -1264,7 +1264,7 @@ ensure_tspatial_type(MeosType type)
  * @brief Return true if a type is a temporal point type
  */
 inline bool
-tpoint_type(MeosType type)
+tpoint_type(meosType type)
 {
   return (type == T_TGEOMPOINT || type == T_TGEOGPOINT);
 }
@@ -1273,7 +1273,7 @@ tpoint_type(MeosType type)
  * @brief Ensure that a type is a temporal point type
  */
 bool
-ensure_tpoint_type(MeosType type)
+ensure_tpoint_type(meosType type)
 {
   if (tpoint_type(type))
     return true;
@@ -1286,7 +1286,7 @@ ensure_tpoint_type(MeosType type)
  * @brief Return true if a type is a temporal geo type
  */
 inline bool
-tgeo_type(MeosType type)
+tgeo_type(meosType type)
 {
   return (type == T_TGEOMETRY || type == T_TGEOGRAPHY);
 }
@@ -1296,7 +1296,7 @@ tgeo_type(MeosType type)
  * @brief Ensure that a type is a temporal geo type
  */
 bool
-ensure_tgeo_type(MeosType type)
+ensure_tgeo_type(meosType type)
 {
   if (tgeo_type(type))
     return true;
@@ -1311,7 +1311,7 @@ ensure_tgeo_type(MeosType type)
  * base type
  */
 inline bool
-tgeo_type_all(MeosType type)
+tgeo_type_all(meosType type)
 {
   return (type == T_TGEOMETRY || type == T_TGEOGRAPHY ||
     type == T_TGEOMPOINT || type == T_TGEOGPOINT);
@@ -1322,7 +1322,7 @@ tgeo_type_all(MeosType type)
  * base type
  */
 bool
-ensure_tgeo_type_all(MeosType type)
+ensure_tgeo_type_all(meosType type)
 {
   if (tgeo_type_all(type))
     return true;
@@ -1336,7 +1336,7 @@ ensure_tgeo_type_all(MeosType type)
  * @brief Return true if a type is a temporal geometry type
  */
 inline bool
-tgeometry_type(MeosType type)
+tgeometry_type(meosType type)
 {
   return (type == T_TGEOMPOINT || type == T_TGEOMETRY);
 }
@@ -1345,7 +1345,7 @@ tgeometry_type(MeosType type)
  * @brief Ensure that a type is a temporal geometry type
  */
 bool
-ensure_tgeometry_type(MeosType type)
+ensure_tgeometry_type(meosType type)
 {
   if (tgeometry_type(type))
     return true;
@@ -1359,7 +1359,7 @@ ensure_tgeometry_type(MeosType type)
  * @brief Return true if a type is a temporal geodetic type
  */
 inline bool
-tgeodetic_type(MeosType type)
+tgeodetic_type(meosType type)
 {
   return (type == T_TGEOGPOINT || type == T_TGEOGRAPHY);
 }
@@ -1369,7 +1369,7 @@ tgeodetic_type(MeosType type)
  * @brief Ensure that a type is a temporal geodetic type
  */
 bool
-ensure_tgeodetic_type(MeosType type)
+ensure_tgeodetic_type(meosType type)
 {
   if (tgeodetic_type(type))
     return true;
@@ -1384,7 +1384,7 @@ ensure_tgeodetic_type(MeosType type)
  * type
  */
 bool
-ensure_tnumber_tpoint_type(MeosType type)
+ensure_tnumber_tpoint_type(meosType type)
 {
   if (tnumber_type(type) || tpoint_type(type))
     return true;

@@ -7,6 +7,7 @@ SET(LOCAL_FILES
   108_tpose_topops
   109_tpose_posops
   111_tpose_aggfuncs
+  112_aggregate_renames
   113_tpose_distance
   114_tpose_indexes
   )

@@ -242,8 +242,7 @@ box3d_out(const BOX3D *box, int maxdd)
  * at least one fully contained member and no members
  * outside the polygon to be contained.
  */
-bool
-itree_pip_contains(const IntervalTree *itree, const LWGEOM *lwpoints)
+bool itree_pip_contains(const IntervalTree *itree, const LWGEOM *lwpoints)
 {
   if (lwgeom_get_type(lwpoints) == POINTTYPE)
   {
@@ -288,8 +287,7 @@ itree_pip_contains(const IntervalTree *itree, const LWGEOM *lwpoints)
  * If any point in the point/multipoint is outside
  * the polygon, then the polygon does not cover the point/multipoint.
  */
-bool
-itree_pip_covers(const IntervalTree *itree, const LWGEOM *lwpoints)
+bool itree_pip_covers(const IntervalTree *itree, const LWGEOM *lwpoints)
 {
   if (lwgeom_get_type(lwpoints) == POINTTYPE)
   {
@@ -322,8 +320,7 @@ itree_pip_covers(const IntervalTree *itree, const LWGEOM *lwpoints)
  * A.intersects(B) implies if any member of the point/multipoint
  * is not outside, then they intersect.
  */
-bool
-itree_pip_intersects(const IntervalTree *itree, const LWGEOM *lwpoints)
+bool itree_pip_intersects(const IntervalTree *itree, const LWGEOM *lwpoints)
 {
   if (lwgeom_get_type(lwpoints) == POINTTYPE)
   {
@@ -1482,7 +1479,7 @@ bool
 geom_spatialrel(const GSERIALIZED *gs1, const GSERIALIZED *gs2, spatialRel rel)
 {
   if (! ensure_valid_geo_geo(gs1, gs2))
-    return false;
+    return NULL;
 
   /* A.Intersects(Empty) == FALSE */
   if ( gserialized_is_empty(gs1) || gserialized_is_empty(gs2) )
@@ -2468,10 +2465,12 @@ geography_centroid_from_wpoints(const int32_t srid, const POINT3DM *points,
   double_t y_sum = 0;
   double_t z_sum = 0;
   double_t weight_sum = 0;
+  double_t weight = 1;
+  POINT3D* point;
   for (uint32_t i = 0; i < size; i++ )
   {
-    POINT3D *point = lonlat_to_cart(points[i].x, points[i].y);
-    double_t weight = points[i].m;
+    point = lonlat_to_cart(points[i].x, points[i].y);
+    weight = points[i].m;
     x_sum += point->x * weight;
     y_sum += point->y * weight;
     z_sum += point->z * weight;
@@ -3186,7 +3185,7 @@ geom_in(const char *str, int32 typmod)
     {
       meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
         "Could not parse geometry value: %s", str);
-      return NULL;
+      return false;
     }
 
     /* Check next character to see if we have WKB */
@@ -3272,7 +3271,7 @@ char *
 geo_out(const GSERIALIZED *gs)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(gs, NULL);
+  VALIDATE_NOT_NULL(gs, false);
 
   LWGEOM *geom = lwgeom_from_gserialized(gs);
   char *result = lwgeom_to_hexwkb_buffer(geom, WKB_EXTENDED);
@@ -3421,7 +3420,7 @@ char *
 geo_as_hexewkb(const GSERIALIZED *gs, const char *endian)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(gs, NULL);
+  VALIDATE_NOT_NULL(gs, false);
 
   uint8_t variant = 0;
   /* If user specified endianness, respect it */
@@ -3487,7 +3486,7 @@ uint8_t *
 geo_as_ewkb(const GSERIALIZED *gs, const char *endian, size_t *size)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(gs, NULL);
+  VALIDATE_NOT_NULL(gs, false);
 
   uint8_t variant = 0;
 
@@ -3564,7 +3563,7 @@ geo_as_geojson(const GSERIALIZED *gs, int option, int precision,
   const char *srs)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(gs, NULL);
+  VALIDATE_NOT_NULL(gs, false);
 
   // int precision = OUT_DEFAULT_DECIMAL_DIGITS;
   int output_bbox = LW_FALSE;
@@ -4075,10 +4074,7 @@ mec_circle3(POINT2D a, POINT2D b, POINT2D c)
   double F = C * (a.x + c.x) + D * (a.y + c.y);
   double G = 2.0 * (A * (c.y - b.y) - B * (c.x - b.x));
 
-  /* Zero-init so the early-exit return doesn't leave circ.center
-   * uninitialised — same fix pattern as the sibling at the top of
-   * this file (mec_circle3 around line 4040). */
-  Circle circ = { .center = {0.0, 0.0}, .radius = 0.0 };
+  Circle circ;
   if (fabs(G) < 1e-12)
   {
     circ.radius = -1;

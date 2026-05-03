@@ -44,22 +44,22 @@
 /*****************************************************************************/
 
 extern bool srid_parse(const char **str, int *srid);
-extern bool spatial_parse_elem(const char **str, MeosType temptype, char delim,
+extern bool spatial_parse_elem(const char **str, meosType temptype, char delim,
   int *temp_srid, Datum *result);
-extern bool geo_parse(const char **str, MeosType basetype, char delim, 
+extern bool geo_parse(const char **str, meosType basetype, char delim, 
   int *srid, GSERIALIZED **result);
 extern STBox *stbox_parse(const char **str);
-extern Temporal *tpoint_parse(const char **str, MeosType temptype);
+extern Temporal *tpoint_parse(const char **str, meosType temptype);
 
-extern TInstant *tspatialinst_parse(const char **str, MeosType temptype,
+extern TInstant *tspatialinst_parse(const char **str, meosType temptype,
   bool end, int *temp_srid);
-extern TSequence *tspatialseq_disc_parse(const char **str, MeosType temptype,
+extern TSequence *tspatialseq_disc_parse(const char **str, meosType temptype,
   int *temp_srid);
-extern TSequence *tspatialseq_cont_parse(const char **str, MeosType temptype,
+extern TSequence *tspatialseq_cont_parse(const char **str, meosType temptype,
   interpType interp, bool end, int *temp_srid);
-extern TSequenceSet *tspatialseqset_parse(const char **str, MeosType temptype,
+extern TSequenceSet *tspatialseqset_parse(const char **str, meosType temptype,
   interpType interp, int *temp_srid);
-extern Temporal *tspatial_parse(const char **str, MeosType temptype);
+extern Temporal *tspatial_parse(const char **str, meosType temptype);
 
 /*****************************************************************************/
 

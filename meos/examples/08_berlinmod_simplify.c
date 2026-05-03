@@ -68,7 +68,7 @@
 /* Epsilon distance used for the simplification */
 #define DELTA_DISTANCE 2
 /* Maximum number of trips */
-#define MAX_NUM_TRIPS 256
+#define MAX_NO_TRIPS 256
 
 typedef struct
 {
@@ -87,11 +87,11 @@ int main(void)
   char header_buffer[MAX_LEN_HEADER];
   char date_buffer[MAX_LEN_DATE];
   /* Allocate space for the trips and their simplified versions */
-  trip_record trips[MAX_NUM_TRIPS];
-  Temporal *trips_dp[MAX_NUM_TRIPS];
-  Temporal *trips_sed[MAX_NUM_TRIPS];
+  trip_record trips[MAX_NO_TRIPS];
+  Temporal *trips_dp[MAX_NO_TRIPS];
+  Temporal *trips_sed[MAX_NO_TRIPS];
   /* Number of records and records with null values */
-  int num_records = 0;
+  int no_records = 0;
   int nulls = 0;
   /* Iterator variables */
   int i = 0, j;
@@ -148,12 +148,12 @@ int main(void)
   /* Close the file */
   fclose(file);
 
-  num_records = i;
+  no_records = i;
   printf("\n%d records read.\n%d incomplete records ignored.\n",
-    num_records, nulls);
+    no_records, nulls);
 
   /* Simplify the trips */
-  for (i = 0; i < num_records; i++)
+  for (i = 0; i < no_records; i++)
   {
     trips_dp[i] = temporal_simplify_dp(trips[i].trip, DELTA_DISTANCE, false);
     trips_sed[i] = temporal_simplify_dp(trips[i].trip, DELTA_DISTANCE, true);
@@ -168,7 +168,7 @@ int main(void)
   }
 
   /* Free memory */
-  for (i = 0; i < num_records; i++)
+  for (i = 0; i < no_records; i++)
   {
     free(trips[i].trip);
     free(trips_dp[i]);

@@ -45,9 +45,9 @@
 #include <meos.h>
 #include <meos_npoint.h>
 
-#define MAX_NUM_INSTS 100000
+#define MAX_NO_INSTS 100000
 /* Number of instants in a batch for printing a marker */
-#define NUM_INSTS_BATCH 1000
+#define NO_INSTS_BATCH 1000
 /* Maximum length in characters of the input instant */
 #define MAX_LEN_INST 64
 /* Maximum length in characters of the text values in the instants */
@@ -64,20 +64,20 @@ int main(void)
   tm = clock();
 
   /* Input instants that are accumulated */
-  TInstant *instants[MAX_NUM_INSTS] = {0};
+  TInstant *instants[MAX_NO_INSTS] = {0};
   /* Iterator variable */
   int i;
   /* Seed the random number generator with the current time in seconds. */
   srandom (time (0));
 
   printf("Generating the instants (one '*' marker every %d instants)\n",
-    NUM_INSTS_BATCH);
+    NO_INSTS_BATCH);
 
   TimestampTz t = timestamptz_in("1999-12-31", -1);
-  for (i = 0; i < MAX_NUM_INSTS; i++)
+  for (i = 0; i < MAX_NO_INSTS; i++)
   {
     /* Generate the instant */
-    if (i % NUM_INSTS_BATCH == 0)
+    if (i % NO_INSTS_BATCH == 0)
     {
       printf("*");
       fflush(stdout);
@@ -91,13 +91,13 @@ int main(void)
   }
 
   /* Print information about the instants */
-  char *str = tnpoint_out((Temporal *) instants[MAX_NUM_INSTS - 1], 0);
+  char *str = tnpoint_out((Temporal *) instants[MAX_NO_INSTS - 1], 0);
   printf("\nNumber of instants: %d, Last value : %s\n",
-    MAX_NUM_INSTS, str);
+    MAX_NO_INSTS, str);
 
   /* Free memory */
   free(str);
-  for (i = 0; i < MAX_NUM_INSTS; i++)
+  for (i = 0; i < MAX_NO_INSTS; i++)
     free(instants[i]);
 
   /* Calculate the elapsed time */

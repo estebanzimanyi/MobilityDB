@@ -75,9 +75,11 @@ tpose_trajectory(const Temporal *temp)
 /**
  * @ingroup meos_internal_pose_restrict
  * @brief Return a temporal pose restricted to (the complement of) a geometry
+ * @note `zspan` may be `NULL`
  */
 Temporal *
-tpose_restrict_geom(const Temporal *temp, const GSERIALIZED *gs, bool atfunc)
+tpose_restrict_geom(const Temporal *temp, const GSERIALIZED *gs,
+  const Span *zspan, bool atfunc)
 {
   /* Ensure the validity of the arguments */
   if (! ensure_valid_tpose_geo(temp, gs) || ! ensure_has_not_Z_geo(gs))
@@ -88,7 +90,7 @@ tpose_restrict_geom(const Temporal *temp, const GSERIALIZED *gs, bool atfunc)
     return atfunc ? NULL : temporal_copy(temp);
 
   Temporal *tpoint = tpose_to_tpoint(temp);
-  Temporal *res = tgeo_restrict_geom(tpoint, gs, atfunc);
+  Temporal *res = tgeo_restrict_geom(tpoint, gs, zspan, atfunc);
   Temporal *result = NULL;
   if (res)
   {
@@ -107,12 +109,14 @@ tpose_restrict_geom(const Temporal *temp, const GSERIALIZED *gs, bool atfunc)
  * @brief Return a temporal pose restricted to a geometry
  * @param[in] temp Temporal pose
  * @param[in] gs Geometry
+ * @param[in] zspan Span of values to restrict the Z dimension
  * @csqlfn #Tpose_at_geom()
  */
 inline Temporal *
-tpose_at_geom(const Temporal *temp, const GSERIALIZED *gs)
+tpose_at_geom(const Temporal *temp, const GSERIALIZED *gs,
+  const Span *zspan)
 {
-  return tpose_restrict_geom(temp, gs, REST_AT);
+  return tpose_restrict_geom(temp, gs, zspan, REST_AT);
 }
 
 /**
@@ -120,12 +124,14 @@ tpose_at_geom(const Temporal *temp, const GSERIALIZED *gs)
  * @brief Return a temporal point restricted to (the complement of) a geometry
  * @param[in] temp Temporal pose
  * @param[in] gs Geometry
+ * @param[in] zspan Span of values to restrict the Z dimension
  * @csqlfn #Tpose_minus_geom()
  */
 inline Temporal *
-tpose_minus_geom(const Temporal *temp, const GSERIALIZED *gs)
+tpose_minus_geom(const Temporal *temp, const GSERIALIZED *gs,
+  const Span *zspan)
 {
-  return tpose_restrict_geom(temp, gs, REST_MINUS);
+  return tpose_restrict_geom(temp, gs, zspan, REST_MINUS);
 }
 #endif /* MEOS */
 
