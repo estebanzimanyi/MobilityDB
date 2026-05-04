@@ -44,6 +44,21 @@ SELECT asText(round(tcentroid(temp), 6)) FROM ( VALUES
 
 -------------------------------------------------------------------------------
 
+-- extent(tnpoint): bulk aggregation across the per-subtype tables.
+-- Compare per-subtype to whole-table to verify the combine function folds
+-- partial states correctly (matters for parallel aggregation).
+SELECT extent(inst) FROM tbl_tnpoint_inst;
+SELECT extent(ti) FROM tbl_tnpoint_discseq;
+SELECT extent(seq) FROM tbl_tnpoint_seq;
+SELECT extent(ss) FROM tbl_tnpoint_seqset;
+SELECT extent(temp) FROM tbl_tnpoint;
+
+-- Group-by aggregation (ensures the combine path runs across partial states)
+SELECT k%10, extent(inst) FROM tbl_tnpoint_inst GROUP BY k%10 ORDER BY k%10;
+SELECT k%10, extent(temp) FROM tbl_tnpoint GROUP BY k%10 ORDER BY k%10;
+
+-------------------------------------------------------------------------------
+
 SELECT numInstants(tcount(inst)) FROM tbl_tnpoint_inst;
 SELECT numInstants(wcount(inst, '1 hour')) FROM tbl_tnpoint_inst;
 SELECT numInstants(tcentroid(inst)) FROM tbl_tnpoint_inst;
