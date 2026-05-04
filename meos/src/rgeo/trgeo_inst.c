@@ -101,6 +101,12 @@ trgeoinst_tposeinst(const TInstant *inst)
   memcpy(((char *)result), ((char *)inst), inst_size);
   MEOS_FLAGS_SET_GEOM(result->flags, false);
   result->temptype = T_TPOSE;
+  /* The memcpy copied inst_size bytes but the source VARSIZE still
+   * encodes the full trgeo length including the embedded reference
+   * geometry. Without this fix, downstream code that reads VARSIZE
+   * (e.g. tsequence_make_exp1 sizing the sequence buffer) walks past
+   * the end of the freshly-allocated buffer. */
+  SET_VARSIZE(result, inst_size);
   return result;
 }
 

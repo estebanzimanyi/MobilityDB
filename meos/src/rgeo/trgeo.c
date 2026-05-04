@@ -770,6 +770,136 @@ trgeo_sequences(const Temporal *temp, int *count)
   return result;
 }
 
+/**
+ * @ingroup meos_rgeo_accessor
+ * @brief Return the set of distinct points seen along a temporal rigid
+ * geometry's antenna trajectory
+ * @param[in] temp Temporal rigid geometry
+ * @csqlfn #Trgeometry_points()
+ */
+Set *
+trgeo_points(const Temporal *temp)
+{
+  VALIDATE_TRGEOMETRY(temp, NULL);
+  Temporal *tpose = trgeo_to_tpose(temp);
+  if (! tpose)
+    return NULL;
+  Set *result = tpose_points(tpose);
+  pfree(tpose);
+  return result;
+}
+
+/**
+ * @ingroup meos_rgeo_accessor
+ * @brief Return the rotation of a temporal rigid geometry as a temporal float
+ * @param[in] temp Temporal rigid geometry
+ * @csqlfn #Trgeometry_rotation()
+ */
+Temporal *
+trgeo_rotation(const Temporal *temp)
+{
+  VALIDATE_TRGEOMETRY(temp, NULL);
+  Temporal *tpose = trgeo_to_tpose(temp);
+  if (! tpose)
+    return NULL;
+  Temporal *result = tpose_rotation(tpose);
+  pfree(tpose);
+  return result;
+}
+
+/**
+ * @ingroup meos_rgeo_accessor
+ * @brief Return the union of every materialised polygon of a temporal rigid
+ * geometry over its time domain
+ * @param[in] temp Temporal rigid geometry
+ * @param[in] unary_union True to apply a unary spatial union to the per-
+ * instant polygons; false to return the raw GeometryCollection
+ * @csqlfn #Trgeometry_traversed_area()
+ *
+ * @note The traversed area is approximated by sampling at each input
+ * instant. Pure-translation segments are exact; for a rotation between
+ * two instants the swept ribbon between consecutive samples is not
+ * captured. Adding intermediate samples is a follow-up refinement.
+ */
+GSERIALIZED *
+trgeo_traversed_area(const Temporal *temp, bool unary_union)
+{
+  VALIDATE_TRGEOMETRY(temp, NULL);
+  int count = 0;
+  /*
+   * Use temporal_insts_p (read-only pointer view, available in both
+   * MEOS and PG builds) rather than temporal_instants (which copies and
+   * is gated on #if MEOS — referencing it from PG-side code triggers an
+   * undefined-symbol error at extension load). The instants here are
+   * read for pose extraction only; we don't need to own them.
+   */
+  const TInstant **insts = temporal_insts_p(temp, &count);
+  if (! insts || count <= 0)
+    return NULL;
+  const GSERIALIZED *refgeom = trgeo_geom_p(temp);
+  GSERIALIZED **geoms = palloc(sizeof(GSERIALIZED *) * count);
+  for (int i = 0; i < count; i++)
+  {
+    Pose *pose = DatumGetPoseP(tinstant_value_p(insts[i]));
+    geoms[i] = geom_apply_pose(refgeom, pose);
+  }
+  GSERIALIZED *result;
+  if (count == 1)
+  {
+    result = geoms[0];
+  }
+  else
+  {
+    GSERIALIZED *coll = geo_collect_garray(geoms, count);
+    for (int i = 0; i < count; i++)
+      pfree(geoms[i]);
+    if (unary_union)
+    {
+      result = geom_unary_union(coll, -1);
+      pfree(coll);
+    }
+    else
+      result = coll;
+  }
+  pfree(geoms);
+  /* The TInstant pointers in `insts` are owned by `temp`; only the
+   * array itself is ours to free. */
+  pfree(insts);
+  return result;
+}
+
+/**
+ * @ingroup meos_rgeo_accessor
+ * @brief Return the array of inter-instant segments of a temporal rigid
+ * geometry — one TSequence per consecutive pair of instants
+ * @param[in] temp Temporal rigid geometry
+ * @param[out] count Number of resulting segments
+ * @csqlfn #Trgeometry_segments()
+ */
+TSequence **
+trgeo_segments(const Temporal *temp, int *count)
+{
+  VALIDATE_TRGEOMETRY(temp, NULL); VALIDATE_NOT_NULL(count, NULL);
+  if (! ensure_continuous(temp))
+    return NULL;
+  const GSERIALIZED *geo = trgeo_geom_p(temp);
+  Temporal *tpose = trgeo_to_tpose(temp);
+  if (! tpose)
+    return NULL;
+  TSequence **segs = temporal_segments(tpose, count);
+  pfree(tpose);
+  if (! segs)
+    return NULL;
+  TSequence **result = palloc(sizeof(TSequence *) * (*count));
+  for (int i = 0; i < *count; i++)
+  {
+    result[i] = geo_tposeseq_to_trgeo(geo, segs[i]);
+    pfree(segs[i]);
+  }
+  pfree(segs);
+  return result;
+}
+
 /*****************************************************************************
  * Transformation functions
  *****************************************************************************/
