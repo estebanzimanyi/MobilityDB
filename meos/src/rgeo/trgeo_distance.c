@@ -814,7 +814,7 @@ dist2d_trgeoseq_point(const TSequence *seq, const GSERIALIZED *gs)
   Pose *pose1, *pose2;
 
   inst1 = TSEQUENCE_INST_N(seq, 0);
-  pose1 = DatumGetPoseP(tinstant_value(inst1));
+  pose1 = DatumGetPoseP(tinstant_value_p(inst1));
 
   /* Compute the initial closest features */
   cfp_array cfpa;
@@ -830,8 +830,8 @@ dist2d_trgeoseq_point(const TSequence *seq, const GSERIALIZED *gs)
      */
     inst1 = TSEQUENCE_INST_N(seq, i);
     inst2 = TSEQUENCE_INST_N(seq, i + 1);
-    pose1 = DatumGetPoseP(tinstant_value(inst1));
-    pose2 = DatumGetPoseP(tinstant_value(inst2));
+    pose1 = DatumGetPoseP(tinstant_value_p(inst1));
+    pose2 = DatumGetPoseP(tinstant_value_p(inst2));
     double ratio = 0.0;
     int loop = 0, state, direction = MEOS_ANY;
     /* Compute the evolution of closest features for this segment */
@@ -1664,7 +1664,7 @@ dist2d_trgeoseq_poly(const TSequence *seq, const GSERIALIZED *gs)
   Pose *pose1, *pose2;
 
   inst1 = TSEQUENCE_INST_N(seq, 0);
-  pose1 = DatumGetPoseP(tinstant_value(inst1));
+  pose1 = DatumGetPoseP(tinstant_value_p(inst1));
 
   /* Compute the initial closest features */
   cfp_array cfpa;
@@ -1682,8 +1682,8 @@ dist2d_trgeoseq_poly(const TSequence *seq, const GSERIALIZED *gs)
      */
     inst1 = TSEQUENCE_INST_N(seq, i);
     inst2 = TSEQUENCE_INST_N(seq, i + 1);
-    pose1 = DatumGetPoseP(tinstant_value(inst1));
-    pose2 = DatumGetPoseP(tinstant_value(inst2));
+    pose1 = DatumGetPoseP(tinstant_value_p(inst1));
+    pose2 = DatumGetPoseP(tinstant_value_p(inst2));
     double ratio = 0.0;
     int loop = 0, state, dir1 = MEOS_ANY, dir2 = MEOS_ANY;
     /* Compute the evolution of closest features for this segment */
@@ -1919,11 +1919,11 @@ nai_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
     Temporal *dist = tdistance_trgeo_geo(temp, gs);
     if (dist != NULL)
     {
-      const TInstant *min = temporal_min_instant(dist);
+      const TInstant *min = temporal_min_inst_p(dist);
       /* The closest point may be at an exclusive bound. */
       Datum value;
       temporal_value_at_timestamptz(temp, min->t, false, &value);
-      result = trgeoinst_make(trgeo_geom_p(temp), DatumGetPoseP(value), 
+      result = trgeoinst_make(trgeo_geom_p(temp), DatumGetPoseP(value),
         min->t);
       pfree(dist); pfree(DatumGetPointer(value));
     }
@@ -1948,7 +1948,7 @@ nai_trgeo_tpoint(const Temporal *temp1, const Temporal *temp2)
   Temporal *dist = tdistance_trgeo_tpoint(temp1, temp2);
   if (dist != NULL)
   {
-    const TInstant *min = temporal_min_instant(dist);
+    const TInstant *min = temporal_min_inst_p(dist);
     /* The closest point may be at an exclusive bound */
     Datum value;
     temporal_value_at_timestamptz(temp1, min->t, false, &value);
@@ -2012,6 +2012,18 @@ nad_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 
 /**
  * @ingroup meos_rgeo_dist
+ * @brief Return the nearest approach distance between a spatiotemporal box
+ * and a temporal rigid geometry
+ * @sqlop @p |=|
+ */
+double
+nad_stbox_trgeo(const STBox *box, const Temporal *temp)
+{
+  return nad_trgeo_stbox(temp, box);
+}
+
+/**
+ * @ingroup meos_rgeo_dist
  * @brief Return the nearest approach distance between a temporal rigid
  * geometry and a spatiotemporal box
  * @sqlop @p |=|
@@ -2041,6 +2053,7 @@ nad_trgeo_stbox(const Temporal *temp, const STBox *box)
   Temporal *dist = tdistance_trgeo_geo(temp, geo);
   double result = DatumGetFloat8(temporal_min_value(dist));
   pfree(geo);
+  pfree(dist);
   if (hast)
     pfree(temp1);
   return result;
@@ -2108,13 +2121,15 @@ shortestline_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
     return NULL;
   
   Temporal *dist = tdistance_trgeo_geo(temp, gs);
-  const TInstant *inst = temporal_min_instant(dist);
+  const TInstant *inst = temporal_min_inst_p(dist);
   /* Timestamp t may be at an exclusive bound */
   Datum value;
   trgeo_value_at_timestamptz(temp, inst->t, false, &value);
   LWGEOM *line = (LWGEOM *) lwline_make(value, PointerGetDatum(gs));
   GSERIALIZED *result = geo_serialize(line);
   lwgeom_free(line);
+  pfree(DatumGetPointer(value));
+  pfree(dist);
   return result;
 }
 
@@ -2134,7 +2149,7 @@ shortestline_trgeo_tpoint(const Temporal *temp1, const Temporal *temp2)
   Temporal *dist = tdistance_trgeo_tpoint(temp1, temp2);
   if (dist == NULL)
     return NULL;
-  const TInstant *inst = temporal_min_instant(dist);
+  const TInstant *inst = temporal_min_inst_p(dist);
   /* Timestamp t may be at an exclusive bound */
   Datum value1, value2;
   trgeo_value_at_timestamptz(temp1, inst->t, false, &value1);
@@ -2142,6 +2157,9 @@ shortestline_trgeo_tpoint(const Temporal *temp1, const Temporal *temp2)
   LWGEOM *line = (LWGEOM *) lwline_make(value1, value2);
   GSERIALIZED *result = geo_serialize(line);
   lwgeom_free(line);
+  pfree(DatumGetPointer(value1));
+  pfree(DatumGetPointer(value2));
+  pfree(dist);
   return result;
 }
 
@@ -2161,7 +2179,7 @@ shortestline_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2)
   Temporal *dist = tdistance_trgeo_trgeo(temp1, temp2);
   if (dist == NULL)
     return NULL;
-  const TInstant *inst = temporal_min_instant(dist);
+  const TInstant *inst = temporal_min_inst_p(dist);
   /* Timestamp t may be at an exclusive bound */
   Datum value1, value2;
   trgeo_value_at_timestamptz(temp1, inst->t, false, &value1);
@@ -2169,6 +2187,9 @@ shortestline_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2)
   LWGEOM *line = (LWGEOM *) lwline_make(value1, value2);
   GSERIALIZED *result = geo_serialize(line);
   lwgeom_free(line);
+  pfree(DatumGetPointer(value1));
+  pfree(DatumGetPointer(value2));
+  pfree(dist);
   return result;
 }
 
