@@ -450,12 +450,13 @@ float8_in(const char *num, const char *type_name, const char *orig_string)
   return float8_in_opt_error((char *) num, type_name, orig_string);
 }
 
-/*
- * This function uses the PostGIS function lwprint_double to print an ordinate
- * value using at most **maxdd** number of decimal digits. The actual number
- * of printed decimal digits may be less than the requested ones if out of
- * significant digits.
- *
+/**
+ * @ingroup meos_base_types
+ * @brief Return the string representation of a float8 number
+ * @details This function uses the PostGIS function lwprint_double to print an
+ * ordinate value using at most **maxdd** number of decimal digits. The actual 
+ * number of printed decimal digits may be less than the requested ones if out 
+ * of significant digits. 
  * The function will write at most OUT_DOUBLE_BUFFER_SIZE bytes, including the
  * terminating NULL.
  */
@@ -463,9 +464,9 @@ char *
 float8_out(double num, int maxdd)
 {
   assert(maxdd >= 0);
-  char *ascii = palloc(OUT_DOUBLE_BUFFER_SIZE);
-  lwprint_double(num, maxdd, ascii);
-  return ascii;
+  char *str = palloc(OUT_DOUBLE_BUFFER_SIZE);
+  lwprint_double(num, maxdd, str);
+  return str;
 }
 
 /**
@@ -2259,7 +2260,8 @@ cstring2text(const char *str)
   VALIDATE_NOT_NULL(str, NULL);
 
   size_t len = strlen(str);
-  text *result = palloc(len + VARHDRSZ);
+  size_t totlen = len + VARHDRSZ;
+  text *result = (text *) palloc0(totlen);
   SET_VARSIZE(result, len + VARHDRSZ);
   memcpy(VARDATA(result), str, len);
   return result;

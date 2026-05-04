@@ -102,11 +102,12 @@ char *
 text_out(const text *txt)
 {
   assert(txt);
-  char *str = text2cstring(txt);
-  size_t size = strlen(str) + 4;
-  char *result = palloc(size);
-  snprintf(result, size, "\"%s\"", str);
-  pfree(str);
+  char *res = text2cstring(txt);
+  char *result;
+  if (string_escape(res, QUOTES_ESCAPE, &result))
+    pfree(res);
+  else
+    result = res;
   return result;
 }
 

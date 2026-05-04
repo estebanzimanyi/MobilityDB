@@ -50,6 +50,9 @@
 // #include <utils/numeric.h>
 // #include <pgtypes.h>
 
+/* Function defined in formatting.c */
+extern bool scanner_isspace(char ch);
+
 /*****************************************************************************
  * Parsing functions
  *****************************************************************************/
@@ -283,6 +286,141 @@ double_parse(const char **str, double *result)
 }
 
 /**
+ * @brief Return an unescaped (sub)string obtained from an input string
+ * enclosed between quotes
+ * @details Notice that the string may be encoded twice as e.g.
+ * `"\"{\\\"a\\\": \\\"a1\\\"}\"@2001-01-01 00:00:00+01"` in which case the
+ * result should be 
+ * `"{\"a\": \"a1\"}\"@2001-01-01 00:00:00+01"`
+ * @param[in] str String
+ * @param[out] result Unquoted string
+ * @return Return the number of characters of the input string consumed, 0 if
+ * error
+ * @note This function is the inverse of function #string_escape, which escapes
+ * the string values.
+ */
+size_t
+string_parse_quoted(const char *str, char **result)
+{
+  assert(str); assert(str[0] == '"');
+
+  /* Initialize at the begining of the string */
+  const char *start = str, *p = str;
+  /* Consume the double quote */
+  p++;
+  /* Output is at most the input length (we only ever drop chars) */
+  char *buf = palloc(strlen(str) + 1);
+  size_t pos = 0;
+  for (;;)
+  {
+    switch (*p)
+    {
+      case '\0':
+        break;
+      case '\\':
+        /* Skip backslash, copy next character as-is if it */
+        p++;
+        if (*p == '\0')
+          goto ending_error;
+        buf[pos++] = *p++;
+        break;
+      case '"':
+        /* Incorrect quoting if the next non-whitespace is not delim */
+        while (*(++p) != '\0')
+        {
+          if (! scanner_isspace(*p))
+            goto ending_error;
+        }
+        break;
+      default:
+        buf[pos++] = *p++;
+        break;
+    }
+    if (*p == '\0')
+      break;
+  }
+
+  buf[pos] = '\0';
+  *result = pstrdup(buf);
+  pfree(buf);
+  return p - start;
+
+ending_error:
+  meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+    "malformed array literal: \"%s\"", str);
+  pfree(buf);
+  return 0;
+}
+
+/**
+ * @brief Return an unescaped (sub)string obtained from an input string
+ * enclosed between quotes
+ * @param[in] str String
+ * @param[in] delim Delimiter character after the closing double quote, if it 
+ * is '\0' the entire string (not the substring until the delimiter) is
+ * unescaped
+ * @param[out] result Unquoted string
+ * @return Return the number of characters of the input string consumed, 0 if
+ * error
+ * @note This function is the inverse of function #string_escape, which escapes
+ * the string values
+ */
+size_t
+basetype_parse_quoted(const char *str, char delim, char **result)
+{
+  assert(str); assert(str[0] == '"');
+
+  /* Initialize at the begining of the string */
+  const char *start = str, *p = str;
+  /* Consume the double quote */
+  p++;
+  /* Output is at most the input length (we only ever drop chars) */
+  char *buf = palloc(strlen(str) + 1);
+  size_t pos = 0;
+  for (;;)
+  {
+    switch (*p)
+    {
+      case '\0':
+        goto ending_error;
+      case '\\':
+        /* Skip backslash, copy next character as-is. */
+        p++;
+        if (*p == '\0')
+          goto ending_error;
+        buf[pos++] = *p++;
+        break;
+      case '"':
+        /* Incorrect quoting if the next non-whitespace is not delim */
+        while (*(++p) != '\0')
+        {
+          if (*p == delim)
+            goto done;
+          if (! scanner_isspace(*p))
+            goto ending_error;
+        }
+        /* Reached '\0' without finding delim -> malformed */
+        goto ending_error;
+      default:
+        buf[pos++] = *p++;
+        break;
+    }
+  }
+
+done:
+  buf[pos] = '\0';
+  *result = pstrdup(buf);
+  pfree(buf);
+  return p - start;
+
+ending_error:
+  meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+    "malformed array literal: \"%s\"", str);
+  pfree(buf);
+  return 0;
+}
+
+/**
  * @brief Parse a base value from the buffer
  * @return On error return false
  */
@@ -290,33 +428,34 @@ bool
 basetype_parse(const char **str, MeosType basetype, char delim, Datum *result)
 {
   p_whitespace(str);
-  int pos = 0;
+  size_t pos = 0;
   /* Save the original string for error handling */
   char *origstr = (char *) *str;
+  char *str1;
 
   /* ttext values must be enclosed between double quotes */
   if (**str == '"')
   {
-    /* Consume the double quote */
-    *str += 1;
-    while ( ( (*str)[pos] != '"' || (*str)[pos - 1] == '\\' )  &&
-      (*str)[pos] != '\0' )
-      pos++;
+    size_t pos1 = basetype_parse_quoted(*str, delim, &str1);
+    if (! pos1)
+      return false;
+    pos += pos1;
   }
   else
   {
     while ((*str)[pos] != delim && (*str)[pos] != '\0')
       pos++;
+    if ((*str)[pos] == '\0')
+    {
+      meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
+        "Missing delimeter character '%c': %s", delim, origstr);
+      return false;
+    }
+    str1 = (char *) palloc(sizeof(char) * (pos + 1));
+    for (size_t i = 0; i < pos; i++)
+      str1[i] = (*str)[i];
+    str1[pos] = '\0';
   }
-  if ((*str)[pos] == '\0')
-  {
-    meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
-      "Missing delimeter character '%c': %s", delim, origstr);
-    return false;
-  }
-  char *str1 = palloc(sizeof(char) * (pos + 1));
-  strncpy(str1, *str, pos);
-  str1[pos] = '\0';
   bool success = basetype_in(str1, basetype, false, result);
   pfree(str1);
   if (! success)

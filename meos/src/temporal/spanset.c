@@ -170,7 +170,6 @@ spanset_find_value(const SpanSet *ss, Datum v, int *loc)
     else
       first = middle + 1;
   }
-  assert(s);
   if (datum_ge(v, s->upper, s->basetype))
     middle++;
   *loc = middle;
@@ -233,13 +232,9 @@ spanset_out(const SpanSet *ss, int maxdd)
     return NULL;
 
   char **strings = palloc(sizeof(char *) * ss->count);
-  size_t outlen = 0;
   for (int i = 0; i < ss->count; i++)
-  {
     strings[i] = span_out(SPANSET_SP_N(ss, i), maxdd);
-    outlen += strlen(strings[i]) + 1;
-  }
-  return stringarr_to_string(strings, ss->count, outlen, "", '{', '}',
+  return stringarr_to_string(strings, ss->count, "", '{', '}',
     QUOTES_NO, SPACES);
 }
 

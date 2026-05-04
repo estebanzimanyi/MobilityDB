@@ -166,8 +166,7 @@ tseqarr_normalize(TSequence **sequences, int count, int *newcount)
 /**
  * @brief Return the distance between two datums
  * @param[in] value1,value2 Values
- * @param[in] basetype Base type of the values
- * @param[in] temptype Temporal type of the values
+ * @param[in] type Type of the values
  * @param[in] flags Flags
  * @return On error return -1.0
  */
@@ -2016,7 +2015,6 @@ tsequenceset_to_string(const TSequenceSet *ss, int maxdd, outfunc value_out)
   assert(ss); assert(maxdd >= 0);
 
   char **strings = palloc(sizeof(char *) * ss->count);
-  size_t outlen = 0;
   char prefix[13];
   if (MEOS_FLAGS_GET_CONTINUOUS(ss->flags) &&
       ! MEOS_FLAGS_LINEAR_INTERP(ss->flags))
@@ -2024,12 +2022,9 @@ tsequenceset_to_string(const TSequenceSet *ss, int maxdd, outfunc value_out)
   else
     prefix[0] = '\0';
   for (int i = 0; i < ss->count; i++)
-  {
     strings[i] = tsequence_to_string(TSEQUENCESET_SEQ_N(ss, i), maxdd, true,
       value_out);
-    outlen += strlen(strings[i]) + 1;
-  }
-  return stringarr_to_string(strings, ss->count, outlen, prefix, '{', '}',
+  return stringarr_to_string(strings, ss->count, prefix, '{', '}',
     QUOTES_NO, SPACES);
 }
 

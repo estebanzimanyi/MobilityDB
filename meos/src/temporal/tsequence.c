@@ -685,7 +685,6 @@ tsequence_to_string(const TSequence *seq, int maxdd, bool component,
   assert(maxdd >= 0);
 
   char **strings = palloc(sizeof(char *) * seq->count);
-  size_t outlen = 0;
   char prefix[13];
   interpType interp = MEOS_FLAGS_GET_INTERP(seq->flags);
   if (! component && MEOS_FLAGS_GET_CONTINUOUS(seq->flags) &&
@@ -694,11 +693,8 @@ tsequence_to_string(const TSequence *seq, int maxdd, bool component,
   else
     prefix[0] = '\0';
   for (int i = 0; i < seq->count; i++)
-  {
     strings[i] = tinstant_to_string(TSEQUENCE_INST_N(seq, i), maxdd,
       value_out);
-    outlen += strlen(strings[i]) + 1;
-  }
   char open, close;
   if (MEOS_FLAGS_DISCRETE_INTERP(seq->flags))
   {
@@ -710,7 +706,7 @@ tsequence_to_string(const TSequence *seq, int maxdd, bool component,
     open = seq->period.lower_inc ? (char) '[' : (char) '(';
     close = seq->period.upper_inc ? (char) ']' : (char) ')';
   }
-  return stringarr_to_string(strings, seq->count, outlen, prefix, open, close,
+  return stringarr_to_string(strings, seq->count, prefix, open, close,
     QUOTES_NO, SPACES);
 }
 
