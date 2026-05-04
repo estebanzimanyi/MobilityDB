@@ -174,6 +174,22 @@ SELECT round(tpose '{Pose(Point(1 1), 0.3)@2000-01-01, Pose(Point(1 1), 0.5)@200
 SELECT round(tpose '[Pose(Point(1 1), 0.2)@2000-01-01, Pose(Point(1 1), 0.4)@2000-01-02, Pose(Point(1 1), 0.5)@2000-01-03]'::tfloat, 6);
 SELECT round(tpose '{[Pose(Point(1 1), 0.2)@2000-01-01, Pose(Point(1 1), 0.4)@2000-01-02, Pose(Point(1 1), 0.5)@2000-01-03], [Pose(Point(2 2), 0.6)@2000-01-04, Pose(Point(2 2), 0.6)@2000-01-05] }'::tfloat, 6);
 
+-- Cast-to-tgeompoint position-projection consistency. Workloads that
+-- derive a tgeompoint trajectory from a tpose (to feed downstream
+-- spatial code that does not understand orientation) must see the
+-- same position at any sampled timestamp as if they had sampled the
+-- tpose directly. The cast is therefore not just a textual rewrite
+-- but a temporal-projection contract: point(p(t)) == (p::tgeompoint)(t)
+-- for every t in the trajectory's time range, interpolated midpoints
+-- included. The samples below cover an instant, a sequence endpoint,
+-- and a sequence midpoint (where SLERP/LERP both apply).
+SELECT ST_AsText(point(valueAtTimestamp(tpose 'Pose(Point(1 1), 0.5)@2000-01-01', '2000-01-01')))
+     = ST_AsText(valueAtTimestamp(tpose 'Pose(Point(1 1), 0.5)@2000-01-01'::tgeompoint, '2000-01-01')) AS instant_position_matches;
+SELECT ST_AsText(point(valueAtTimestamp(tpose '[Pose(Point(0 0), 0.0)@2000-01-01, Pose(Point(2 2), 0.5)@2000-01-03]', '2000-01-02')))
+     = ST_AsText(valueAtTimestamp(tpose '[Pose(Point(0 0), 0.0)@2000-01-01, Pose(Point(2 2), 0.5)@2000-01-03]'::tgeompoint, '2000-01-02')) AS midpoint_position_matches;
+SELECT ST_AsText(point(valueAtTimestamp(tpose '[Pose(Point(0 0 0), 1, 0, 0, 0)@2000-01-01, Pose(Point(2 2 2), 0.7071067811865476, 0, 0, 0.7071067811865475)@2000-01-03]', '2000-01-02')))
+     = ST_AsText(valueAtTimestamp(tpose '[Pose(Point(0 0 0), 1, 0, 0, 0)@2000-01-01, Pose(Point(2 2 2), 0.7071067811865476, 0, 0, 0.7071067811865475)@2000-01-03]'::tgeompoint, '2000-01-02')) AS midpoint_3d_position_matches;
+
 -- SELECT asText(round((tpose 'Pose(Point(1 1), 0.5)@2000-01-01'::tgeompoint)::tpose, 6));
 -- SELECT asText(round((tpose '{Pose(Point(1 1), 0.3)@2000-01-01, Pose(Point(1 1), 0.5)@2000-01-02, Pose(Point(1 1), 0.5)@2000-01-03}'::tgeompoint)::tpose, 6));
 -- SELECT asText(round((tpose '[Pose(Point(1 1), 0.2)@2000-01-01, Pose(Point(1 1), 0.4)@2000-01-02, Pose(Point(1 1), 0.5)@2000-01-03]'::tgeompoint)::tpose, 6));
