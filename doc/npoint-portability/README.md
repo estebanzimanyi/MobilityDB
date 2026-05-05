@@ -1,6 +1,6 @@
 # RFC: npoint Portability — Stable Network Location Identifiers Across Map Versions
 
-> **Discussion:** [MobilityDB/MobilityDB#863](https://github.com/MobilityDB/MobilityDB/discussions/863)
+> **Discussion [#863](https://github.com/MobilityDB/MobilityDB/discussions/863)** — community discussion and sign-off
 
 ## The Problem
 
@@ -25,7 +25,7 @@ You cannot ship a `.csv` of `tnpoint` trajectories to a collaborator, store them
 or query them after a map update — without a lossy coordinate fallback. This has always limited
 the type's usability in production.
 
-## Analogies with Existing Solutions
+## Why Now
 
 ### The pgPointCloud analogy — partial fit
 
@@ -52,7 +52,7 @@ leads directly to the proposed solution.
 
 ---
 
-## Three Approaches
+## Proposal
 
 ### Option A — `nwid` catalog (pcid-style, local portability)
 
@@ -176,7 +176,7 @@ surface while Option B (or the current scheme) is used for storage.
 
 ---
 
-## Comparison
+## Alternatives Considered
 
 | | Option A | Option B | Option C |
 |---|---|---|---|
