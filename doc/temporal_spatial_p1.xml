@@ -38,6 +38,21 @@
 		</figure>
 	</sect1>
 
+	<sect1 xml:id="tgeo_validity">
+		<title>Validity of Temporal Geometry Types</title>
+
+		<para>Temporal geometry and geography values must satisfy the constraints specified in <xref linkend="ttype_validity"/> so that they are well defined. An error is raised whenever one of these constraints is not satisfied. Examples of incorrect values are as follows.</para>
+		<programlisting language="sql" xml:space="preserve" format="linespecific">
+-- Linear interpolation is not allowed for tgeometry (step interpolation only)
+SELECT tgeometry 'Interp=Linear;[Point(0 0)@2001-01-01, Point(1 1)@2001-01-02]';
+-- Timestamps in a sequence must be distinct
+SELECT tgeometry '[Point(0 0)@2001-01-01, Point(1 1)@2001-01-01]';
+-- All instants must have the same SRID
+SELECT tgeometry '[SRID=3812;Point(0 0)@2001-01-01, SRID=4326;Point(1 1)@2001-01-02]';
+</programlisting>
+		<para>We give next the functions and operators for temporal geometries and geographies. Most functions and operators for temporal types described in the previous chapters can be applied to <varname>tgeometry</varname>, <varname>tgeography</varname>, <varname>tgeompoint</varname>, and <varname>tgeogpoint</varname>. In the signatures of the functions, the notations <varname>tspatial</varname>, <varname>tgeo</varname>, <varname>tgeom</varname>, and <varname>tpoint</varname> represent these types as defined below. To avoid redundancy, we present next only those functions specific to these types and some brief examples of the inherited functions.</para>
+	</sect1>
+
 	<sect1 xml:id="tgeo_notation">
 		<title>Notation</title>
 		<para>We presented in <xref linkend="ttype_notation"/> and in <xref linkend="talpha_notation"/> the notation used for defining the signature of the functions and operators for temporal types. We extend next this notations for spatiotemporal types.</para>
@@ -235,6 +250,73 @@ SELECT asEWKT(tgeogpointFromEWKB(
 SELECT asEWKT(tgeompointFromHexEWKB(
   '012E0051E40E0000000000000000F03F00000000000000400000000000000840009C57D3C11C0000'));
 -- SRID=3812;POINT(1 2 3)@2001-01-01
+</programlisting>
+			</listitem>
+		</itemizedlist>
+	</sect1>
+
+	<sect1 xml:id="tgeo_constructors">
+		<title>Constructors</title>
+
+		<itemizedlist>
+			<listitem xml:id="tgeo_const">
+				<indexterm significance="normal"><primary><varname>tgeometry</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>tgeography</varname></primary></indexterm>
+				<para>Construct a temporal geometry/geography having a constant value &Z_support; &geography_support;</para>
+				<para><varname>tgeometry(geometry,timestamptz) → tgeometryInst</varname></para>
+				<para><varname>tgeometry(geometry,tstzset) → tgeometryDiscSeq</varname></para>
+				<para><varname>tgeometry(geometry,tstzspan,interp='step') → tgeometryContSeq</varname></para>
+				<para><varname>tgeometry(geometry,tstzspanset,interp='step') → tgeometrySeqSet</varname></para>
+				<programlisting language="sql" xml:space="preserve" format="linespecific">
+SELECT asText(tgeometry(geometry 'Point(1 1)', timestamptz '2001-01-01'));
+-- POINT(1 1)@2001-01-01
+SELECT asText(tgeometry(geometry 'Linestring(0 0,1 1)',
+  tstzset '{2001-01-01, 2001-01-02, 2001-01-03}'));
+-- {LINESTRING(0 0,1 1)@2001-01-01, LINESTRING(0 0,1 1)@2001-01-02, LINESTRING(0 0,1 1)@2001-01-03}
+SELECT asText(tgeometry(geometry 'Polygon((0 0,1 0,1 1,0 1,0 0))',
+  tstzspan '[2001-01-01, 2001-01-03]'));
+-- Interp=Step;[POLYGON((0 0,1 0,1 1,0 1,0 0))@2001-01-01, POLYGON((0 0,1 0,1 1,0 1,0 0))@2001-01-03]
+SELECT asText(tgeometry(geometry 'Point(1 1)',
+  tstzspanset '{[2001-01-01, 2001-01-02], [2001-01-04, 2001-01-05]}'));
+/* Interp=Step;{[POINT(1 1)@2001-01-01, POINT(1 1)@2001-01-02],
+   [POINT(1 1)@2001-01-04, POINT(1 1)@2001-01-05]} */
+</programlisting>
+			</listitem>
+
+			<listitem xml:id="tgeometrySeq">
+				<indexterm significance="normal"><primary><varname>tgeometrySeq</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>tgeographySeq</varname></primary></indexterm>
+				<para>Construct a temporal geometry/geography sequence &Z_support; &geography_support;</para>
+				<para><varname>tgeometrySeq(tgeometryInst[],interp='step',lower_inc bool=true,</varname></para>
+				<para><varname>  upper_inc bool=true) → tgeometrySeq</varname></para>
+				<programlisting language="sql" xml:space="preserve" format="linespecific">
+SELECT asText(tgeometrySeq(ARRAY[tgeometry 'Point(0 0)@2001-01-01',
+  'Linestring(0 0,1 1)@2001-01-02', 'Polygon((0 0,1 0,1 1,0 1,0 0))@2001-01-03']));
+/* Interp=Step;[POINT(0 0)@2001-01-01, LINESTRING(0 0,1 1)@2001-01-02,
+   POLYGON((0 0,1 0,1 1,0 1,0 0))@2001-01-03] */
+SELECT asText(tgeometrySeq(ARRAY[tgeometry 'Point(0 0)@2001-01-01',
+  'Point(1 1)@2001-01-02'], 'discrete'));
+-- {POINT(0 0)@2001-01-01, POINT(1 1)@2001-01-02}
+</programlisting>
+			</listitem>
+
+			<listitem xml:id="tgeometrySeqSet">
+				<indexterm significance="normal"><primary><varname>tgeometrySeqSet</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>tgeographySeqSet</varname></primary></indexterm>
+				<para>Construct a temporal geometry/geography sequence set &Z_support; &geography_support;</para>
+				<para><varname>tgeometrySeqSet(tgeometrySeq[]) → tgeometrySeqSet</varname></para>
+				<para><varname>tgeometrySeqSetGaps(tgeometryInst[],maxt=NULL,maxdist=NULL,</varname></para>
+				<para><varname>  interp='step') → tgeometrySeqSet</varname></para>
+				<programlisting language="sql" xml:space="preserve" format="linespecific">
+SELECT asText(tgeometrySeqSet(ARRAY[tgeometry
+  'Interp=Step;[Point(0 0)@2001-01-01, Linestring(0 0,1 1)@2001-01-02]',
+  'Interp=Step;[Point(2 2)@2001-01-03, Point(3 3)@2001-01-04]']));
+/* Interp=Step;{[POINT(0 0)@2001-01-01, LINESTRING(0 0,1 1)@2001-01-02],
+   [POINT(2 2)@2001-01-03, POINT(3 3)@2001-01-04]} */
+SELECT asText(tgeometrySeqSetGaps(ARRAY[tgeometry 'Point(0 0)@2001-01-01',
+  'Point(1 1)@2001-01-03', 'Point(2 2)@2001-01-05'], '1 day'));
+/* Interp=Step;{[POINT(0 0)@2001-01-01], [POINT(1 1)@2001-01-03],
+   [POINT(2 2)@2001-01-05]} */
 </programlisting>
 			</listitem>
 		</itemizedlist>
