@@ -110,14 +110,14 @@ Legend: ✓ complete · ≈ partial (see notes) · ✗ missing · — not applic
 |---|---|---|---|---|---|---|
 | 1. Constructors | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | 2. Comparison ops | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| 3. Spatial functions | ✓ | ✓ | ✓ | ✓ | ≈ | ✓ |
+| 3. Spatial functions | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | 4a. Box operators | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | 4b. Box accessors | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | 5. Position operators | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| 6. Distance | ✓ | ✓ | ✓ | ✓ | ✗ | ≈ |
+| 6. Distance | ✓ | ✓ | ✓ | ✓ | ✓ | ≈ |
 | 7. Aggregates | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| 8. Ever/always rels | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ |
-| 9. Temporal rels | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ |
+| 8. Ever/always rels | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| 9. Temporal rels | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | 10. GiST | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | 11. SP-GiST | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | 12. Analytics | ✓ | ✓ | ✓ | ✓ | — | ✓ |
@@ -237,38 +237,41 @@ It uses **STEP interpolation**: the cell does not change continuously — it swi
 discretely.  This makes analytics (simplify) and cartesian tile functions inapplicable by
 design.  th3index has a rich set of **H3-specific bonus functions** instead.
 
-**Category 1 — Constructors (missing):**
+**Category 1 — Constructors (complete):**
 `th3index(h3index, timestamptz)`, `th3index(h3index, tstzset)`,
-`th3indexSeq(th3index[], ...)`, `th3indexSeqSet(th3index[])`.  Without these, users must
-rely on the text cast (`'[cell@ts]'::th3index`).
+`th3indexSeq(th3index[], ...)`, `th3indexSeqSet(th3index[])` — all using generic
+`Tinstant_constructor` / `Tsequence_constructor` dispatch.
 
-**Category 3 — Spatial functions (partial):**
-- Done: `SRID(th3index) → integer` — returns constant 4326.
-- Done: `centroid(th3index) → tgeogpoint` — SQL alias for `h3_cell_to_latlng(th3index)`.
-- Missing (C required): `traversedArea(th3index) → geography` — union of all H3 cell
-  polygons over time using `h3_cell_to_boundary` for each distinct cell.
-- Missing (C required): `convexHull(th3index) → geography` — convex hull of traversedArea.
-- Missing (C required): `atGeometry(th3index, geography)` / `minusGeometry` — restrict to
-  cell instants whose polygon intersects the geography argument.
-- Missing (C required): `atStbox(th3index, stbox)` / `minusStbox`.
+**Category 3 — Spatial functions (complete):**
+- `SRID(th3index) → integer` — via generic `Tspatial_srid`; `spatial_srid()` dispatches on
+  `T_H3INDEX` and returns `SRID_DEFAULT` (4326) since H3 cells are always WGS84 geodetic.
+- `centroid(th3index) → tgeogpoint` — SQL alias for `h3_cell_to_latlng(th3index)`.
+- `traversedArea(th3index) → geography` — union of distinct H3 cell boundary polygons
+  using `h3_cell_to_gs_boundary()` per instant; C implementation in `th3index_spatialfuncs.c`.
+- `convexHull(th3index) → geography` — convex hull of traversedArea.
+- `atGeography(th3index, geography)` / `minusGeography` — retain instants whose cell
+  polygon intersects the geography argument.
+- `atStbox(th3index, stbox)` / `minusStbox` — spatial-temporal restriction.
 
 **Category 4b — Box accessors (complete):**
 `expandSpace`, `spans`, `stboxes`, `splitNSpans`, `splitEachNSpans`, `splitNStboxes`,
 `splitEachNStboxes` — all implemented as SQL wrappers using generic `Temporal_*`/`Tgeo_*`
 C dispatch symbols.
 
-**Category 6 — Distance (missing):**
-`tdistance(geography, th3index)` — temporal geodetic distance from a point to cell center.
-`nearestApproachDistance(th3index, th3index)` — minimum geodetic distance between two cell
-center trajectories.  `nearestApproachInstant`, `shortestLine`.
+**Category 6 — Distance (complete):**
+`tdistance(geography, th3index)` — temporal geodetic distance from a point to cell center,
+lifting `geog_distance` over cell centres via `th3index_distance.c`.
+`nearestApproachDistance(th3index, th3index)` with `|=|`, `nearestApproachInstant`,
+`shortestLine` — all implemented using cell-centre lifting.
 
 **Category 7 — Aggregates (complete):**
 `tcount`, `wcount`, `extent`, `merge`, `appendInstant`, `appendSequence` — implemented
 as SQL wrappers using generic `Temporal_*` / `Tspatial_extent_transfn` dispatch.
 
-**Categories 8 & 9 — Spatial / temporal rels (missing, C required):**
-`eIntersects(geography, th3index)`, `eDisjoint`, `eDwithin`, and temporal equivalents.
-Semantics: does the H3 cell polygon ever intersect the argument geometry?
+**Categories 8 & 9 — Spatial / temporal rels (complete):**
+`eIntersects(geography, th3index)`, `eDisjoint`, `eDwithin`, and temporal equivalents
+`tIntersects`, `tDisjoint`, `tDwithin` — implemented in `th3index_spatialrels.c` and
+`th3index_tempspatialrels.c`.  Semantics: does the H3 cell polygon intersect the argument?
 
 **Categories 12 & 13 — Analytics and tile (not applicable by design):**
 STEP interpolation means there is no continuous path to simplify.  H3 has its own
@@ -296,9 +299,12 @@ point-like type and should be audited against `tgeompoint` (not `tgeometry`) as 
 Full B-tree (`<`, `<=`, `=`, `<>`, `>=`, `>`) and hash operator classes, plus ever/always
 equality predicates (`?=`, `%=`), all using generic `Temporal_*` dispatch.
 
-**Category 3 — Spatial functions (missing):**
-`SRID(tpcpoint)`, `setSRID`, `transform`, `trajectory(tpcpoint) → geometry`,
-`centroid(tpcpoint)`.  The spatial component of a pcpoint is an (X, Y, Z) triple.
+**Category 3 — Spatial functions (complete):**
+`SRID(tpcpoint)` — via generic `Tspatial_srid`; `spatial_srid()` dispatches on `T_PCPOINT`
+and reads the SRID from the pcpoint's schema via `meos_pc_schema(pcid)`.
+`centroid(tpcpoint) → tgeompoint` — SQL alias for `$1::tgeompoint`.
+`trajectory(tpcpoint) → geometry` — SQL wrapper delegating to `trajectory(tgeompoint)`.
+The spatial component of a pcpoint is an (X, Y, Z) triple accessible via the tgeompoint cast.
 
 **Category 6 — Distance (partial):**
 `nearestApproachDistance` with `|=|` operator is present.
