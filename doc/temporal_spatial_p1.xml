@@ -263,10 +263,10 @@ SELECT asEWKT(tgeompointFromHexEWKB(
 				<indexterm significance="normal"><primary><varname>tgeometry</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>tgeography</varname></primary></indexterm>
 				<para>Construct a temporal geometry/geography having a constant value &Z_support; &geography_support;</para>
-				<para><varname>tgeometry(geometry,timestamptz) → tgeometryInst</varname></para>
-				<para><varname>tgeometry(geometry,tstzset) → tgeometryDiscSeq</varname></para>
-				<para><varname>tgeometry(geometry,tstzspan,interp='step') → tgeometryContSeq</varname></para>
-				<para><varname>tgeometry(geometry,tstzspanset,interp='step') → tgeometrySeqSet</varname></para>
+				<para><varname>tgeo(geo,timestamptz) → tgeoInst</varname></para>
+				<para><varname>tgeo(geo,tstzset) → tgeoDiscSeq</varname></para>
+				<para><varname>tgeo(geo,tstzspan,interp='step') → tgeoContSeq</varname></para>
+				<para><varname>tgeo(geo,tstzspanset,interp='step') → tgeoSeqSet</varname></para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT asText(tgeometry(geometry 'Point(1 1)', timestamptz '2001-01-01'));
 -- POINT(1 1)@2001-01-01
@@ -287,8 +287,8 @@ SELECT asText(tgeometry(geometry 'Point(1 1)',
 				<indexterm significance="normal"><primary><varname>tgeometrySeq</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>tgeographySeq</varname></primary></indexterm>
 				<para>Construct a temporal geometry/geography sequence &Z_support; &geography_support;</para>
-				<para><varname>tgeometrySeq(tgeometryInst[],interp='step',lower_inc bool=true,</varname></para>
-				<para><varname>  upper_inc bool=true) → tgeometrySeq</varname></para>
+				<para><varname>tgeoSeq(tgeoInst[],interp='step',lower_inc bool=true,</varname></para>
+				<para><varname>  upper_inc bool=true) → tgeoSeq</varname></para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT asText(tgeometrySeq(ARRAY[tgeometry 'Point(0 0)@2001-01-01',
   'Linestring(0 0,1 1)@2001-01-02', 'Polygon((0 0,1 0,1 1,0 1,0 0))@2001-01-03']));
@@ -304,9 +304,9 @@ SELECT asText(tgeometrySeq(ARRAY[tgeometry 'Point(0 0)@2001-01-01',
 				<indexterm significance="normal"><primary><varname>tgeometrySeqSet</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>tgeographySeqSet</varname></primary></indexterm>
 				<para>Construct a temporal geometry/geography sequence set &Z_support; &geography_support;</para>
-				<para><varname>tgeometrySeqSet(tgeometrySeq[]) → tgeometrySeqSet</varname></para>
-				<para><varname>tgeometrySeqSetGaps(tgeometryInst[],maxt=NULL,maxdist=NULL,</varname></para>
-				<para><varname>  interp='step') → tgeometrySeqSet</varname></para>
+				<para><varname>tgeoSeqSet(tgeoSeq[]) → tgeoSeqSet</varname></para>
+				<para><varname>tgeoSeqSetGaps(tgeoInst[],maxt=NULL,maxdist=NULL,</varname></para>
+				<para><varname>  interp='step') → tgeoSeqSet</varname></para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT asText(tgeometrySeqSet(ARRAY[tgeometry
   'Interp=Step;[Point(0 0)@2001-01-01, Linestring(0 0,1 1)@2001-01-02]',
