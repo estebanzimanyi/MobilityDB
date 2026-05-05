@@ -10,7 +10,7 @@ C2  C → SQL      Every PG_FUNCTION_INFO_V1(Name) is wired in at least one .in.
 C3  C @ingroup   Every PG wrapper has an @ingroup tag in its Doxygen block
 C4  C @sqlfn     Every PG wrapper has a @sqlfn tag  (weaker: warns, not errors)
 C5  group valid  Every @ingroup value is declared as @defgroup somewhere
-C6  SQL → doc    Every public SQL function name appears in a DocBook <indexterm>
+C6  SQL → doc    Every public SQL function name appears in a DocBook <indexterm> or <refname>
 C7  STRICT       SQL STRICT function whose C body calls PG_ARGISNULL (dead guard)
                  Only flagged when ALL SQL callers of the C function are STRICT.
 
@@ -71,6 +71,8 @@ RE_ARGISNULL   = re.compile(r'\bPG_ARGISNULL\b')
 
 RE_INDEXTERM   = re.compile(
     r'<primary>\s*<varname>(.*?)</varname>\s*</primary>')
+# PostGIS-style refentry: <refname> elements also serve as index anchors
+RE_REFNAME     = re.compile(r'<refname>\s*(.*?)\s*</refname>')
 
 
 # ---------------------------------------------------------------------------
@@ -205,7 +207,12 @@ def parse_defgroups(root: Path):
 # ---------------------------------------------------------------------------
 
 def parse_docbook(doc_dir: Path):
-    """Returns set of all <indexterm><primary><varname> values (lowercased)."""
+    """Return set of documented SQL names (lowercased).
+
+    Recognises two authoring styles:
+    - Legacy MobilityDB: <indexterm><primary><varname>name</varname></primary></indexterm>
+    - PostGIS refentry:  <refname>name</refname>
+    """
     documented = set()
     for path in doc_dir.glob('*.xml'):
         if _skip(path):
@@ -215,6 +222,8 @@ def parse_docbook(doc_dir: Path):
         except OSError:
             continue
         for m in RE_INDEXTERM.finditer(text):
+            documented.add(m.group(1).strip().lower())
+        for m in RE_REFNAME.finditer(text):
             documented.add(m.group(1).strip().lower())
     return documented
 
@@ -444,9 +453,9 @@ def run_checks(sql_fns, pg_wrappers, def_groups, documented,
         elif report != 'summary':
             ok(f"All @ingroup values resolve to declared @defgroup")
 
-    # ── C6  SQL → DocBook indexterm ───────────────────────────────────────
+    # ── C6  SQL → DocBook indexterm or refname ───────────────────────────
     if 'C6' in checks:
-        head("C6  Public SQL function → DocBook <indexterm>")
+        head("C6  Public SQL function → DocBook <indexterm> or <refname>")
         undoc = [
             name
             for name in sorted(sql_fns)
@@ -454,10 +463,10 @@ def run_checks(sql_fns, pg_wrappers, def_groups, documented,
         ]
         if undoc:
             for name in undoc:
-                warn(f"'{name}' — no <indexterm> in any DocBook XML file")
+                warn(f"'{name}' — no <indexterm>/<refname> in any DocBook XML file")
                 warnings += 1
         elif report != 'summary':
-            ok("All public SQL function names appear in DocBook indexterms")
+            ok("All public SQL function names appear in DocBook indexterms or refnames")
 
     # ── C7  STRICT / PG_ARGISNULL heuristic ──────────────────────────────
     if 'C7' in checks:

@@ -70,43 +70,63 @@ SELECT trgeometry 'SRID=4326;Polygon((0 0,1 0,1 1,0 1,0 0));SRID=5676;Pose(Point
 	<sect1 xml:id="trgeo_inout">
 		<title>Input and Output</title>
 
-		<itemizedlist>
-			<listitem xml:id="trgeo_asText">
-				<indexterm significance="normal"><primary><varname>asText</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>asEWKT</varname></primary></indexterm>
-				<para>Return the Well-Known Text (WKT) or the Extended Well-Known Text (EWKT) representation</para>
-				<para><varname>asText({trgeometry,trgeometry[]}) → {text,text[]}</varname></para>
-				<para><varname>asEWKT({trgeometry,trgeometry[]}) → {text,text[]}</varname></para>
+		<refentry xml:id="trgeo_asText">
+			<refnamediv>
+				<refname>asText</refname>
+				<refname>asEWKT</refname>
+				<refpurpose>Return the Well-Known Text (WKT) or Extended Well-Known Text (EWKT) representation</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>asText({trgeometry,trgeometry[]}) → {text,text[]}</synopsis>
+				<synopsis>asEWKT({trgeometry,trgeometry[]}) → {text,text[]}</synopsis>
+			</refsynopsisdiv>
+			<refsection>
+				<title>Examples</title>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT asText(trgeometry 'Polygon((1 1,2 2,3 1,1 1));Pose(Point(1 1),0.5)@2001-01-01');
 -- POLYGON((1 1,2 2,3 1,1 1));Pose(POINT(1 1),0.5)@2001-01-01
 SELECT asEWKT(trgeometry 'SRID=5676;Polygon((1 1,2 2,3 1,1 1));Pose(Point(1 1),0.5)@2001-01-01');
 -- SRID=5676;POLYGON((1 1,2 2,3 1,1 1));Pose(POINT(1 1),0.5)@2001-01-01
 </programlisting>
-			</listitem>
+			</refsection>
+		</refentry>
 
-			<listitem xml:id="trgeo_asBinary">
-				<indexterm significance="normal"><primary><varname>asBinary</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>asEWKB</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>asHexEWKB</varname></primary></indexterm>
-				<para>Return the Well-Known Binary (WKB), Extended Well-Known Binary (EWKB), or Hexadecimal Extended Well-Known Binary (HexEWKB) representation</para>
-				<para><varname>asBinary(trgeometry,endian text='') → bytea</varname></para>
-				<para><varname>asEWKB(trgeometry,endian text='') → bytea</varname></para>
-				<para><varname>asHexEWKB(trgeometry,endian text='') → text</varname></para>
-			</listitem>
+		<refentry xml:id="trgeo_asBinary">
+			<refnamediv>
+				<refname>asBinary</refname>
+				<refname>asEWKB</refname>
+				<refname>asHexEWKB</refname>
+				<refpurpose>Return the Well-Known Binary (WKB), Extended Well-Known Binary (EWKB), or Hexadecimal Extended Well-Known Binary (HexEWKB) representation</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>asBinary(trgeometry, endian text='') → bytea</synopsis>
+				<synopsis>asEWKB(trgeometry, endian text='') → bytea</synopsis>
+				<synopsis>asHexEWKB(trgeometry, endian text='') → text</synopsis>
+			</refsynopsisdiv>
+		</refentry>
 
-			<listitem xml:id="trgeo_asMFJSON">
-				<indexterm significance="normal"><primary><varname>asMFJSON</varname></primary></indexterm>
-				<para>Return the Moving Features JSON (MF-JSON) representation</para>
-				<para><varname>asMFJSON(trgeometry,maxdecdigits int=15,flags int=0) → text</varname></para>
-			</listitem>
+		<refentry xml:id="trgeo_asMFJSON">
+			<refnamediv>
+				<refname>asMFJSON</refname>
+				<refpurpose>Return the Moving Features JSON (MF-JSON) representation</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>asMFJSON(trgeometry, maxdecdigits int=15, flags int=0) → text</synopsis>
+			</refsynopsisdiv>
+		</refentry>
 
-			<listitem xml:id="trgeometryFromText">
-				<indexterm significance="normal"><primary><varname>trgeometryFromText</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>trgeometryFromEWKT</varname></primary></indexterm>
-				<para>Input from the WKT or EWKT representation</para>
-				<para><varname>trgeometryFromText(text) → trgeometry</varname></para>
-				<para><varname>trgeometryFromEWKT(text) → trgeometry</varname></para>
+		<refentry xml:id="trgeometryFromText">
+			<refnamediv>
+				<refname>trgeometryFromText</refname>
+				<refname>trgeometryFromEWKT</refname>
+				<refpurpose>Input from the WKT or EWKT text representation</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>trgeometryFromText(text) → trgeometry</synopsis>
+				<synopsis>trgeometryFromEWKT(text) → trgeometry</synopsis>
+			</refsynopsisdiv>
+			<refsection>
+				<title>Examples</title>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT asText(trgeometryFromText(
   'Polygon((1 1,2 2,3 1,1 1));[Pose(Point(0 0),0.0)@2001-01-01,
@@ -114,114 +134,186 @@ SELECT asText(trgeometryFromText(
 /* POLYGON((1 1,2 2,3 1,1 1));[Pose(POINT(0 0),0)@2001-01-01,
    Pose(POINT(2 0),0)@2001-01-02] */
 </programlisting>
-			</listitem>
-		</itemizedlist>
+			</refsection>
+		</refentry>
+
+		<refentry xml:id="trgeometryFromBinary">
+			<refnamediv>
+				<refname>trgeometryFromBinary</refname>
+				<refname>trgeometryFromEWKB</refname>
+				<refname>trgeometryFromHexEWKB</refname>
+				<refpurpose>Input from the binary (WKB, EWKB, or HexEWKB) representation</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>trgeometryFromBinary(bytea) → trgeometry</synopsis>
+				<synopsis>trgeometryFromEWKB(bytea) → trgeometry</synopsis>
+				<synopsis>trgeometryFromHexEWKB(text) → trgeometry</synopsis>
+			</refsynopsisdiv>
+			<refsection>
+				<title>Description</title>
+				<para>These functions are the inverse of <varname>asBinary</varname>, <varname>asEWKB</varname>, and <varname>asHexEWKB</varname> respectively. They accept the binary representation produced by those output functions and reconstruct the original <varname>trgeometry</varname> value.</para>
+			</refsection>
+		</refentry>
+
+		<refentry xml:id="trgeometryFromMFJSON">
+			<refnamediv>
+				<refname>trgeometryFromMFJSON</refname>
+				<refpurpose>Input from the Moving Features JSON (MF-JSON) representation</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>trgeometryFromMFJSON(text) → trgeometry</synopsis>
+			</refsynopsisdiv>
+			<refsection>
+				<title>Description</title>
+				<para>Inverse of <varname>asMFJSON</varname>. Accepts the MF-JSON text produced by that function and reconstructs the original <varname>trgeometry</varname> value.</para>
+			</refsection>
+		</refentry>
 	</sect1>
 
 	<sect1 xml:id="trgeo_constructors">
 		<title>Constructors</title>
 
-		<itemizedlist>
-			<listitem xml:id="trgeo_const">
-				<indexterm significance="normal"><primary><varname>trgeometry</varname></primary></indexterm>
-				<para>Construct a temporal rigid geometry from a reference geometry and a temporal pose</para>
-				<para><varname>trgeometry(geometry,tpose) → trgeometry</varname></para>
+		<refentry xml:id="trgeo_const">
+			<refnamediv>
+				<refname>trgeometry</refname>
+				<refpurpose>Construct a temporal rigid geometry from a reference geometry and a temporal pose</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>trgeometry(geometry, tpose) → trgeometry</synopsis>
+			</refsynopsisdiv>
+			<refsection>
+				<title>Examples</title>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT asText(trgeometry(geometry 'Polygon((0 0,1 0,1 1,0 1,0 0))',
   tpose '[Pose(Point(0 0),0.0)@2001-01-01, Pose(Point(2 0),0.0)@2001-01-02]'));
 /* POLYGON((0 0,1 0,1 1,0 1,0 0));[Pose(POINT(0 0),0)@2001-01-01,
    Pose(POINT(2 0),0)@2001-01-02] */
 </programlisting>
-			</listitem>
+			</refsection>
+		</refentry>
 
-			<listitem xml:id="trgeometrySeq">
-				<indexterm significance="normal"><primary><varname>trgeometrySeq</varname></primary></indexterm>
-				<para>Constructor for temporal rigid geometries of sequence subtype</para>
-				<para><varname>trgeometrySeq(trgeometry[],interp='linear',leftInc bool=true,</varname></para>
-				<para><varname>  rightInc bool=true) → trgeometrySeq</varname></para>
-			</listitem>
+		<refentry xml:id="trgeometrySeq">
+			<refnamediv>
+				<refname>trgeometrySeq</refname>
+				<refpurpose>Constructor for temporal rigid geometries of sequence subtype</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>trgeometrySeq(trgeometry[], interp='linear', leftInc bool=true, rightInc bool=true) → trgeometrySeq</synopsis>
+			</refsynopsisdiv>
+		</refentry>
 
-			<listitem xml:id="trgeometrySeqSet">
-				<indexterm significance="normal"><primary><varname>trgeometrySeqSet</varname></primary></indexterm>
-				<para>Constructor for temporal rigid geometries of sequence set subtype</para>
-				<para><varname>trgeometrySeqSet(trgeometry[]) → trgeometrySeqSet</varname></para>
-				<para><varname>trgeometrySeqSetGaps(trgeometry[],maxt=NULL,maxdist=NULL,interp='linear') →</varname></para>
-				<para><varname>  trgeometrySeqSet</varname></para>
-			</listitem>
-		</itemizedlist>
+		<refentry xml:id="trgeometrySeqSet">
+			<refnamediv>
+				<refname>trgeometrySeqSet</refname>
+				<refname>trgeometrySeqSetGaps</refname>
+				<refpurpose>Constructor for temporal rigid geometries of sequence set subtype</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>trgeometrySeqSet(trgeometry[]) → trgeometrySeqSet</synopsis>
+				<synopsis>trgeometrySeqSetGaps(trgeometry[], maxt=NULL, maxdist=NULL, interp='linear') → trgeometrySeqSet</synopsis>
+			</refsynopsisdiv>
+		</refentry>
 	</sect1>
 
 	<sect1 xml:id="trgeo_conversions">
 		<title>Conversions</title>
 
-		<itemizedlist>
-			<listitem xml:id="trgeo_tgeompoint">
-				<indexterm significance="normal"><primary><varname>::</varname></primary></indexterm>
-				<para>Convert a temporal rigid geometry to a temporal geometry point (the trajectory of the pose reference point)</para>
-				<para><varname>trgeometry::tgeompoint</varname></para>
+		<refentry xml:id="trgeo_tgeompoint">
+			<refnamediv>
+				<refname>::</refname>
+				<refpurpose>Convert a temporal rigid geometry to a temporal geometry point (the trajectory of the pose reference point)</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>trgeometry::tgeompoint</synopsis>
+			</refsynopsisdiv>
+			<refsection>
+				<title>Examples</title>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT asText((trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));[Pose(Point(0 0),0.0)@2001-01-01,
   Pose(Point(2 0),0.0)@2001-01-02]')::tgeompoint);
 -- [POINT(0 0)@2001-01-01, POINT(2 0)@2001-01-02]
 </programlisting>
-			</listitem>
+			</refsection>
+		</refentry>
 
-			<listitem xml:id="trgeo_stbox">
-				<indexterm significance="normal"><primary><varname>stbox</varname></primary></indexterm>
-				<para>Convert a temporal rigid geometry to a spatiotemporal box</para>
-				<para><varname>stbox(trgeometry) → stbox</varname></para>
+		<refentry xml:id="trgeo_stbox">
+			<refnamediv>
+				<refname>stbox</refname>
+				<refpurpose>Convert a temporal rigid geometry to a spatiotemporal box</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>stbox(trgeometry) → stbox</synopsis>
+			</refsynopsisdiv>
+			<refsection>
+				<title>Examples</title>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT stbox(trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));[Pose(Point(0 0),0.0)@2001-01-01,
   Pose(Point(2 0),0.0)@2001-01-02]');
 -- STBOX XT(((-0,-0),(3,1)),[2001-01-01, 2001-01-02])
 </programlisting>
-			</listitem>
-		</itemizedlist>
+			</refsection>
+		</refentry>
 	</sect1>
 
 	<sect1 xml:id="trgeo_transformations">
 		<title>Transformations</title>
 
-		<itemizedlist>
-			<listitem xml:id="trgeo_subtype">
-				<indexterm significance="normal"><primary><varname>trgeometryInst</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>trgeometrySeq</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>trgeometrySeqSet</varname></primary></indexterm>
-				<para>Transform a temporal rigid geometry to another subtype</para>
-				<para><varname>trgeometryInst(trgeometry) → trgeometryInst</varname></para>
-				<para><varname>trgeometrySeq(trgeometry) → trgeometrySeq</varname></para>
-				<para><varname>trgeometrySeqSet(trgeometry) → trgeometrySeqSet</varname></para>
-			</listitem>
+		<refentry xml:id="trgeo_subtype">
+			<refnamediv>
+				<refname>trgeometryInst</refname>
+				<refname>trgeometrySeq</refname>
+				<refname>trgeometrySeqSet</refname>
+				<refpurpose>Transform a temporal rigid geometry to another subtype</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>trgeometryInst(trgeometry) → trgeometryInst</synopsis>
+				<synopsis>trgeometrySeq(trgeometry) → trgeometrySeq</synopsis>
+				<synopsis>trgeometrySeqSet(trgeometry) → trgeometrySeqSet</synopsis>
+			</refsynopsisdiv>
+		</refentry>
 
-			<listitem xml:id="trgeo_SRID">
-				<indexterm significance="normal"><primary><varname>SRID</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>setSRID</varname></primary></indexterm>
-				<para>Return or set the spatial reference identifier</para>
-				<para><varname>SRID(trgeometry) → integer</varname></para>
-				<para><varname>setSRID(trgeometry,integer) → trgeometry</varname></para>
-			</listitem>
+		<refentry xml:id="trgeo_SRID">
+			<refnamediv>
+				<refname>SRID</refname>
+				<refname>setSRID</refname>
+				<refpurpose>Return or set the spatial reference identifier</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>SRID(trgeometry) → integer</synopsis>
+				<synopsis>setSRID(trgeometry, integer) → trgeometry</synopsis>
+			</refsynopsisdiv>
+		</refentry>
 
-			<listitem xml:id="trgeo_transform">
-				<indexterm significance="normal"><primary><varname>transform</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>transformPipeline</varname></primary></indexterm>
-				<para>Transform to a spatial reference identifier</para>
-				<para><varname>transform(trgeometry,integer) → trgeometry</varname></para>
-				<para><varname>transformPipeline(trgeometry,pipeline text,to_srid integer,is_forward bool=true) →</varname></para>
-				<para><varname>  trgeometry</varname></para>
-			</listitem>
+		<refentry xml:id="trgeo_transform">
+			<refnamediv>
+				<refname>transform</refname>
+				<refname>transformPipeline</refname>
+				<refpurpose>Transform to a spatial reference identifier</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>transform(trgeometry, integer) → trgeometry</synopsis>
+				<synopsis>transformPipeline(trgeometry, pipeline text, to_srid integer, is_forward bool=true) → trgeometry</synopsis>
+			</refsynopsisdiv>
+		</refentry>
 
-			<listitem xml:id="trgeo_round">
-				<indexterm significance="normal"><primary><varname>round</varname></primary></indexterm>
-				<para>Round the coordinates of the reference geometry and pose values to the number of decimal places</para>
-				<para><varname>round(trgeometry,integer) → trgeometry</varname></para>
-				<para><varname>round(trgeometry[],integer) → trgeometry[]</varname></para>
+		<refentry xml:id="trgeo_round">
+			<refnamediv>
+				<refname>round</refname>
+				<refpurpose>Round the coordinates of the reference geometry and pose values to the number of decimal places</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>round(trgeometry, integer) → trgeometry</synopsis>
+				<synopsis>round(trgeometry[], integer) → trgeometry[]</synopsis>
+			</refsynopsisdiv>
+			<refsection>
+				<title>Examples</title>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT asText(round(trgeometry
   'Polygon((0 0,1 0,1 1,0 1,0 0));Pose(Point(1.123456 2.123456),1.123456)@2001-01-01', 3));
 -- POLYGON((0 0,1 0,1 1,0 1,0 0));Pose(POINT(1.123 2.123),1.123)@2001-01-01
 </programlisting>
-			</listitem>
-		</itemizedlist>
+			</refsection>
+		</refentry>
 	</sect1>
 
 	<sect1 xml:id="trgeo_spatial">
@@ -229,12 +321,20 @@ SELECT asText(round(trgeometry
 
 		<para>The following spatial operations are specific to temporal rigid geometries and exploit the rigid body structure.</para>
 
-		<itemizedlist>
-			<listitem xml:id="trgeo_traversedArea">
-				<indexterm significance="normal"><primary><varname>traversedArea</varname></primary></indexterm>
-				<para>Return the area traversed by the temporal rigid geometry</para>
-				<para><varname>traversedArea(trgeometry,bool=true) → geometry</varname></para>
+		<refentry xml:id="trgeo_traversedArea">
+			<refnamediv>
+				<refname>traversedArea</refname>
+				<refpurpose>Return the area traversed by the temporal rigid geometry</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>traversedArea(trgeometry, bool=true) → geometry</synopsis>
+			</refsynopsisdiv>
+			<refsection>
+				<title>Description</title>
 				<para>When the boolean argument is <varname>true</varname> (the default), the traversed area is an outer approximation of the exact swept area computed by applying the pose transformation at each instant and taking the union of all instantaneous footprints together with the linear interpolation between consecutive poses. When <varname>false</varname>, the result is the union of the instantaneous footprints at the sequence endpoints only.</para>
+			</refsection>
+			<refsection>
+				<title>Examples</title>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 -- Instant: traversed area equals the instantaneous footprint
 SELECT ST_AsText(traversedArea(
@@ -252,13 +352,23 @@ SELECT ST_AsText(traversedArea(
   Pose(Point(4 0),0.0)@2001-01-05]}'));
 -- MULTIPOLYGON(((0 0,0 1,2 1,2 0,0 0)),((3 0,3 1,5 1,5 0,3 0)))
 </programlisting>
-			</listitem>
+			</refsection>
+		</refentry>
 
-			<listitem xml:id="trgeo_convexHull">
-				<indexterm significance="normal"><primary><varname>convexHull</varname></primary></indexterm>
-				<para>Return the convex hull of the traversed area</para>
-				<para><varname>convexHull(trgeometry) → geometry</varname></para>
+		<refentry xml:id="trgeo_convexHull">
+			<refnamediv>
+				<refname>convexHull</refname>
+				<refpurpose>Return the convex hull of the traversed area</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>convexHull(trgeometry) → geometry</synopsis>
+			</refsynopsisdiv>
+			<refsection>
+				<title>Description</title>
 				<para>This function computes the convex hull of the result of <varname>traversedArea</varname>. It is faster than computing the full traversed area when only the bounding convex shape is needed.</para>
+			</refsection>
+			<refsection>
+				<title>Examples</title>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT ST_AsText(convexHull(
   trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));[Pose(Point(0 0),0.0)@2001-01-01,
@@ -270,13 +380,23 @@ SELECT ST_AsText(convexHull(
   Pose(Point(2 0),1.5708)@2001-01-02]'));
 -- POLYGON((0 0,0 1,...))
 </programlisting>
-			</listitem>
+			</refsection>
+		</refentry>
 
-			<listitem xml:id="trgeo_centroid">
-				<indexterm significance="normal"><primary><varname>centroid</varname></primary></indexterm>
-				<para>Return the temporal centroid of the rigid body</para>
-				<para><varname>centroid(trgeometry) → tgeompoint</varname></para>
+		<refentry xml:id="trgeo_centroid">
+			<refnamediv>
+				<refname>centroid</refname>
+				<refpurpose>Return the temporal centroid of the rigid body</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>centroid(trgeometry) → tgeompoint</synopsis>
+			</refsynopsisdiv>
+			<refsection>
+				<title>Description</title>
 				<para>At each instant, the centroid of the reference geometry is rotated and translated by the corresponding pose, yielding a temporal point that tracks the geometric centre of the moving body.</para>
+			</refsection>
+			<refsection>
+				<title>Examples</title>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 -- Instant
 SELECT asText(centroid(
@@ -288,15 +408,25 @@ SELECT asText(centroid(
   Pose(Point(2 0),0.0)@2001-01-02]'));
 -- [POINT(0.5 0.5)@2001-01-01, POINT(2.5 0.5)@2001-01-02]
 </programlisting>
-			</listitem>
+			</refsection>
+		</refentry>
 
-			<listitem xml:id="trgeo_atGeometry">
-				<indexterm significance="normal"><primary><varname>atGeometry</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>minusGeometry</varname></primary></indexterm>
-				<para>Restrict to (the complement of) a geometry</para>
-				<para><varname>atGeometry(trgeometry,geometry) → trgeometry</varname></para>
-				<para><varname>minusGeometry(trgeometry,geometry) → trgeometry</varname></para>
+		<refentry xml:id="trgeo_atGeometry">
+			<refnamediv>
+				<refname>atGeometry</refname>
+				<refname>minusGeometry</refname>
+				<refpurpose>Restrict to (the complement of) a geometry</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>atGeometry(trgeometry, geometry) → trgeometry</synopsis>
+				<synopsis>minusGeometry(trgeometry, geometry) → trgeometry</synopsis>
+			</refsynopsisdiv>
+			<refsection>
+				<title>Description</title>
 				<para>Restriction is computed by testing the centroid path of the rigid body against the geometry. The temporal rigid geometry is restricted to the time instants at which the centroid lies inside (or outside for <varname>minusGeometry</varname>) the given geometry.</para>
+			</refsection>
+			<refsection>
+				<title>Examples</title>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 -- Instant inside the restriction geometry: returns the instant unchanged
 SELECT asText(atGeometry(
@@ -315,14 +445,21 @@ SELECT getTime(minusGeometry(
   geometry 'Polygon((1 -1,3 -1,3 1,1 1,1 -1))'));
 -- {[2001-01-01, 2001-01-02), (2001-01-04, 2001-01-05]}
 </programlisting>
-			</listitem>
+			</refsection>
+		</refentry>
 
-			<listitem xml:id="trgeo_atStbox">
-				<indexterm significance="normal"><primary><varname>atStbox</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>minusStbox</varname></primary></indexterm>
-				<para>Restrict to (the complement of) a spatiotemporal box</para>
-				<para><varname>atStbox(trgeometry,stbox) → trgeometry</varname></para>
-				<para><varname>minusStbox(trgeometry,stbox) → trgeometry</varname></para>
+		<refentry xml:id="trgeo_atStbox">
+			<refnamediv>
+				<refname>atStbox</refname>
+				<refname>minusStbox</refname>
+				<refpurpose>Restrict to (the complement of) a spatiotemporal box</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>atStbox(trgeometry, stbox) → trgeometry</synopsis>
+				<synopsis>minusStbox(trgeometry, stbox) → trgeometry</synopsis>
+			</refsynopsisdiv>
+			<refsection>
+				<title>Examples</title>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT getTime(atStbox(
   trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));[Pose(Point(0 0),0.0)@2001-01-01,
@@ -335,8 +472,8 @@ SELECT getTime(minusStbox(
   stbox 'STBOX X((1,-1),(3,1))'));
 -- {[2001-01-01, 2001-01-02), (2001-01-04, 2001-01-05]}
 </programlisting>
-			</listitem>
-		</itemizedlist>
+			</refsection>
+		</refentry>
 	</sect1>
 
 	<sect1 xml:id="trgeo_distance">
@@ -344,12 +481,20 @@ SELECT getTime(minusStbox(
 
 		<para>Distance operations for temporal rigid geometries compute the distance between the spatial footprint of the rigid body and a geometry or another rigid body at each instant.</para>
 
-		<itemizedlist>
-			<listitem xml:id="trgeo_nearestApproachDistance">
-				<indexterm significance="normal"><primary><varname>|=|</varname></primary></indexterm>
-				<para>Return the smallest distance ever between the temporal rigid geometry and the given argument</para>
-				<para><varname>{geo,trgeometry} |=| {geo,trgeometry} → float</varname></para>
+		<refentry xml:id="trgeo_nearestApproachDistance">
+			<refnamediv>
+				<refname>|=|</refname>
+				<refpurpose>Return the smallest distance ever between the temporal rigid geometry and the given argument</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>{geo,trgeometry} |=| {geo,trgeometry} → float</synopsis>
+			</refsynopsisdiv>
+			<refsection>
+				<title>Description</title>
 				<para>The operator <varname>|=|</varname> can be used for nearest-neighbour searches with a GiST or SP-GiST index (see <xref linkend="trgeo_indexing"/>).</para>
+			</refsection>
+			<refsection>
+				<title>Examples</title>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 -- Body reaches the target point at day 5: nearest distance is 0
 SELECT trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));[Pose(Point(0 0),0.0)@2001-01-01,
@@ -360,12 +505,19 @@ SELECT trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));[Pose(Point(0 0),0.0)@2001-01-
   Pose(Point(2 0),0.0)@2001-01-02]' |=| geometry 'Point(0 5)';
 -- 4
 </programlisting>
-			</listitem>
+			</refsection>
+		</refentry>
 
-			<listitem xml:id="trgeo_nearestApproachInstant">
-				<indexterm significance="normal"><primary><varname>nearestApproachInstant</varname></primary></indexterm>
-				<para>Return the instant of the temporal rigid geometry at which the two arguments are at the nearest distance</para>
-				<para><varname>nearestApproachInstant({geo,trgeometry},{geo,trgeometry}) → trgeometry</varname></para>
+		<refentry xml:id="trgeo_nearestApproachInstant">
+			<refnamediv>
+				<refname>nearestApproachInstant</refname>
+				<refpurpose>Return the instant of the temporal rigid geometry at which the two arguments are at the nearest distance</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>nearestApproachInstant({geo,trgeometry}, {geo,trgeometry}) → trgeometry</synopsis>
+			</refsynopsisdiv>
+			<refsection>
+				<title>Examples</title>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT asText(nearestApproachInstant(
   trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));[Pose(Point(0 0),0.0)@2001-01-01,
@@ -373,12 +525,19 @@ SELECT asText(nearestApproachInstant(
   geometry 'Point(5 0)'));
 /* POLYGON((0 0,1 0,1 1,0 1,0 0));Pose(POINT(4 0),0)@Fri Jan 05 00:00:00 2001 PST */
 </programlisting>
-			</listitem>
+			</refsection>
+		</refentry>
 
-			<listitem xml:id="trgeo_shortestLine">
-				<indexterm significance="normal"><primary><varname>shortestLine</varname></primary></indexterm>
-				<para>Return the line connecting the nearest approach point between the two arguments</para>
-				<para><varname>shortestLine({geo,trgeometry},{geo,trgeometry}) → geometry</varname></para>
+		<refentry xml:id="trgeo_shortestLine">
+			<refnamediv>
+				<refname>shortestLine</refname>
+				<refpurpose>Return the line connecting the nearest approach point between the two arguments</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>shortestLine({geo,trgeometry}, {geo,trgeometry}) → geometry</synopsis>
+			</refsynopsisdiv>
+			<refsection>
+				<title>Examples</title>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT ST_AsText(shortestLine(
   trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));[Pose(Point(0 0),0.0)@2001-01-01,
@@ -386,20 +545,51 @@ SELECT ST_AsText(shortestLine(
   geometry 'Point(5 0)'));
 -- LINESTRING(5 0,5 0)
 </programlisting>
-			</listitem>
+			</refsection>
+		</refentry>
 
-			<listitem xml:id="trgeo_tdistance">
-				<indexterm significance="normal"><primary><varname>&lt;-&gt;</varname></primary></indexterm>
-				<para>Return the temporal distance between the temporal rigid geometry and the given argument at each instant</para>
-				<para><varname>{geo,trgeometry} &lt;-&gt; {geo,trgeometry} → tfloat</varname></para>
+		<refentry xml:id="trgeo_tdistance">
+			<refnamediv>
+				<refname>&lt;-&gt;</refname>
+				<refpurpose>Return the temporal distance between the temporal rigid geometry and the given argument at each instant</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>{geo,trgeometry} &lt;-&gt; {geo,trgeometry} → tfloat</synopsis>
+			</refsynopsisdiv>
+			<refsection>
+				<title>Examples</title>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 -- Distance decreases linearly from 4 to 0 as the body approaches the point
 SELECT asText(trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));[Pose(Point(0 0),0.0)@2001-01-01,
   Pose(Point(4 0),0.0)@2001-01-05]' &lt;-&gt; geometry 'Point(5 0)');
 -- {4@2001-01-01, 0@2001-01-05}
 </programlisting>
-			</listitem>
-		</itemizedlist>
+			</refsection>
+		</refentry>
+
+		<refentry xml:id="trgeo_vclip">
+			<refnamediv>
+				<refname>v_clip_poly_point</refname>
+				<refname>v_clip_poly_poly</refname>
+				<refname>v_clip_tpoly_point</refname>
+				<refname>v_clip_tpoly_poly</refname>
+				<refname>v_clip_tpoly_tpoint</refname>
+				<refname>v_clip_tpoly_tpoly</refname>
+				<refpurpose>V-clip distance primitives between polygon/temporal-rigid-geometry pairs</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>v_clip_poly_point(geometry(Polygon), geometry(Point)) → float</synopsis>
+				<synopsis>v_clip_poly_poly(geometry(Polygon), geometry(Polygon)) → float</synopsis>
+				<synopsis>v_clip_tpoly_point(trgeometry, geometry(Point), timestamptz) → float</synopsis>
+				<synopsis>v_clip_tpoly_poly(trgeometry, geometry(Polygon), timestamptz) → float</synopsis>
+				<synopsis>v_clip_tpoly_tpoint(trgeometry, tgeompoint, timestamptz) → float</synopsis>
+				<synopsis>v_clip_tpoly_tpoly(trgeometry, trgeometry, timestamptz) → float</synopsis>
+			</refsynopsisdiv>
+			<refsection>
+				<title>Description</title>
+				<para>Low-level V-clip distance primitives exposed for debugging and testing. Each function evaluates the V-clip distance between its two geometric arguments — the temporal variants take an additional <varname>timestamptz</varname> at which the temporal value is sampled before the computation.</para>
+			</refsection>
+		</refentry>
 	</sect1>
 
 	<sect1 xml:id="trgeo_spatial_rels">
@@ -407,29 +597,34 @@ SELECT asText(trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));[Pose(Point(0 0),0.0)@2
 
 		<para>Ever and always spatial relationships for <varname>trgeometry</varname> are evaluated over the traversed area of the temporal rigid geometry (see <xref linkend="trgeo_traversedArea"/>). A brief example for each function is given below; for full semantics see <xref linkend="tgeo_espatialrels"/>.</para>
 
-		<itemizedlist>
-			<listitem xml:id="trgeo_espatialrels">
-				<indexterm significance="normal"><primary><varname>eContains</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>aContains</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>eDisjoint</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>aDisjoint</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>eDwithin</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>aDwithin</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>eIntersects</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>aIntersects</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>eTouches</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>aTouches</varname></primary></indexterm>
-				<para>Ever and always spatial relationships</para>
-				<para><varname>eContains(geometry,trgeometry) → boolean</varname></para>
-				<para><varname>aContains(geometry,trgeometry) → boolean</varname></para>
-				<para><varname>eDisjoint({geometry,trgeometry},{geometry,trgeometry}) → boolean</varname></para>
-				<para><varname>aDisjoint({geometry,trgeometry},{geometry,trgeometry}) → boolean</varname></para>
-				<para><varname>eDwithin({geometry,trgeometry},{geometry,trgeometry},float) → boolean</varname></para>
-				<para><varname>aDwithin({geometry,trgeometry},{geometry,trgeometry},float) → boolean</varname></para>
-				<para><varname>eIntersects({geometry,trgeometry},{geometry,trgeometry}) → boolean</varname></para>
-				<para><varname>aIntersects({geometry,trgeometry},{geometry,trgeometry}) → boolean</varname></para>
-				<para><varname>eTouches({geometry,trgeometry},{geometry,trgeometry}) → boolean</varname></para>
-				<para><varname>aTouches({geometry,trgeometry},{geometry,trgeometry}) → boolean</varname></para>
+		<refentry xml:id="trgeo_espatialrels">
+			<refnamediv>
+				<refname>eContains</refname>
+				<refname>aContains</refname>
+				<refname>eDisjoint</refname>
+				<refname>aDisjoint</refname>
+				<refname>eDwithin</refname>
+				<refname>aDwithin</refname>
+				<refname>eIntersects</refname>
+				<refname>aIntersects</refname>
+				<refname>eTouches</refname>
+				<refname>aTouches</refname>
+				<refpurpose>Ever and always spatial relationships</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>eContains(geometry, trgeometry) → boolean</synopsis>
+				<synopsis>aContains(geometry, trgeometry) → boolean</synopsis>
+				<synopsis>eDisjoint({geometry,trgeometry}, {geometry,trgeometry}) → boolean</synopsis>
+				<synopsis>aDisjoint({geometry,trgeometry}, {geometry,trgeometry}) → boolean</synopsis>
+				<synopsis>eDwithin({geometry,trgeometry}, {geometry,trgeometry}, float) → boolean</synopsis>
+				<synopsis>aDwithin({geometry,trgeometry}, {geometry,trgeometry}, float) → boolean</synopsis>
+				<synopsis>eIntersects({geometry,trgeometry}, {geometry,trgeometry}) → boolean</synopsis>
+				<synopsis>aIntersects({geometry,trgeometry}, {geometry,trgeometry}) → boolean</synopsis>
+				<synopsis>eTouches({geometry,trgeometry}, {geometry,trgeometry}) → boolean</synopsis>
+				<synopsis>aTouches({geometry,trgeometry}, {geometry,trgeometry}) → boolean</synopsis>
+			</refsynopsisdiv>
+			<refsection>
+				<title>Examples</title>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT eIntersects(
   geometry 'Polygon((0.5 0.5,2 0.5,2 2,0.5 2,0.5 0.5))',
@@ -439,8 +634,8 @@ SELECT eContains(geometry 'Polygon((0 0,0 50,50 50,50 0,0 0))',
   trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));Pose(Point(5 5),0.0)@2001-01-01');
 -- true
 </programlisting>
-			</listitem>
-		</itemizedlist>
+			</refsection>
+		</refentry>
 	</sect1>
 
 	<sect1 xml:id="trgeo_tspatial_rels">
@@ -448,19 +643,24 @@ SELECT eContains(geometry 'Polygon((0 0,0 50,50 50,50 0,0 0))',
 
 		<para>Temporal spatial relationships for <varname>trgeometry</varname> return a <varname>tbool</varname> indicating whether the relationship holds at each instant. For full semantics see <xref linkend="tgeo_tspatialrels"/>.</para>
 
-		<itemizedlist>
-			<listitem xml:id="trgeo_tspatialrels">
-				<indexterm significance="normal"><primary><varname>tContains</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>tDisjoint</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>tDwithin</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>tIntersects</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>tTouches</varname></primary></indexterm>
-				<para>Temporal spatial relationships</para>
-				<para><varname>tContains({geometry,trgeometry},{geometry,trgeometry}) → tbool</varname></para>
-				<para><varname>tDisjoint({geometry,trgeometry},{geometry,trgeometry}) → tbool</varname></para>
-				<para><varname>tDwithin({geometry,trgeometry},{geometry,trgeometry},float) → tbool</varname></para>
-				<para><varname>tIntersects({geometry,trgeometry},{geometry,trgeometry}) → tbool</varname></para>
-				<para><varname>tTouches({geometry,trgeometry},{geometry,trgeometry}) → tbool</varname></para>
+		<refentry xml:id="trgeo_tspatialrels">
+			<refnamediv>
+				<refname>tContains</refname>
+				<refname>tDisjoint</refname>
+				<refname>tDwithin</refname>
+				<refname>tIntersects</refname>
+				<refname>tTouches</refname>
+				<refpurpose>Temporal spatial relationships</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>tContains({geometry,trgeometry}, {geometry,trgeometry}) → tbool</synopsis>
+				<synopsis>tDisjoint({geometry,trgeometry}, {geometry,trgeometry}) → tbool</synopsis>
+				<synopsis>tDwithin({geometry,trgeometry}, {geometry,trgeometry}, float) → tbool</synopsis>
+				<synopsis>tIntersects({geometry,trgeometry}, {geometry,trgeometry}) → tbool</synopsis>
+				<synopsis>tTouches({geometry,trgeometry}, {geometry,trgeometry}) → tbool</synopsis>
+			</refsynopsisdiv>
+			<refsection>
+				<title>Examples</title>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT tIntersects(
   trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));[Pose(Point(0 0),0.0)@2001-01-01,
@@ -468,81 +668,106 @@ SELECT tIntersects(
   geometry 'Polygon((1 -1,3 -1,3 1,1 1,1 -1))');
 -- {[f@2001-01-01, t@2001-01-02, t@2001-01-04], (f@2001-01-04, f@2001-01-05]}
 </programlisting>
-			</listitem>
-		</itemizedlist>
+			</refsection>
+		</refentry>
 	</sect1>
 
 	<sect1 xml:id="trgeo_comparisons">
 		<title>Comparisons</title>
 
-		<itemizedlist>
-			<listitem xml:id="trgeo_comp">
-				<indexterm significance="normal"><primary><varname>=</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>&lt;&gt;</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>&lt;</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>&gt;</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>&lt;=</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>&gt;=</varname></primary></indexterm>
-				<para>Traditional comparisons</para>
-				<para><varname>trgeometry {=, &lt;&gt;, &lt;, &gt;, &lt;=, &gt;=} trgeometry → boolean</varname></para>
-			</listitem>
+		<refentry xml:id="trgeo_comp">
+			<refnamediv>
+				<refname>=</refname>
+				<refname>&lt;&gt;</refname>
+				<refname>&lt;</refname>
+				<refname>&gt;</refname>
+				<refname>&lt;=</refname>
+				<refname>&gt;=</refname>
+				<refpurpose>Traditional comparisons</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>trgeometry {=, &lt;&gt;, &lt;, &gt;, &lt;=, &gt;=} trgeometry → boolean</synopsis>
+			</refsynopsisdiv>
+		</refentry>
 
-			<listitem xml:id="trgeo_ever_always">
-				<indexterm significance="normal"><primary><varname>?=</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>%=</varname></primary></indexterm>
-				<para>Ever and always comparisons</para>
-				<para><varname>trgeometry {?=, %=} trgeometry → boolean</varname></para>
-			</listitem>
-		</itemizedlist>
+		<refentry xml:id="trgeo_ever_always">
+			<refnamediv>
+				<refname>?=</refname>
+				<refname>%=</refname>
+				<refpurpose>Ever and always comparisons</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>trgeometry {?=, %=} trgeometry → boolean</synopsis>
+			</refsynopsisdiv>
+		</refentry>
 	</sect1>
 
 	<sect1 xml:id="trgeo_bbox_ops">
 		<title>Bounding Box Operations</title>
 
-		<itemizedlist>
-			<listitem xml:id="trgeo_topo">
-				<indexterm significance="normal"><primary><varname>&amp;&amp;</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>&lt;@</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>@&gt;</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>~=</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>-|-</varname></primary></indexterm>
-				<para>Topological operators</para>
-				<para><varname>{tstzspan,stbox,trgeometry} {&amp;&amp;, &lt;@, @&gt;, ~=, -|-} {tstzspan,stbox,trgeometry} → boolean</varname></para>
-			</listitem>
+		<refentry xml:id="trgeo_topo">
+			<refnamediv>
+				<refname>&amp;&amp;</refname>
+				<refname>&lt;@</refname>
+				<refname>@&gt;</refname>
+				<refname>~=</refname>
+				<refname>-|-</refname>
+				<refpurpose>Topological operators</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>{tstzspan,stbox,trgeometry} {&amp;&amp;, &lt;@, @&gt;, ~=, -|-} {tstzspan,stbox,trgeometry} → boolean</synopsis>
+			</refsynopsisdiv>
+		</refentry>
 
-			<listitem xml:id="trgeo_pos">
-				<indexterm significance="normal"><primary><varname>&lt;&lt;</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>&gt;&gt;</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>&amp;&lt;</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>&amp;&gt;</varname></primary></indexterm>
-				<para>Position operators</para>
-				<para><varname>{stbox,trgeometry} {&lt;&lt;, &amp;&lt;, &gt;&gt;, &amp;&gt;} {stbox,trgeometry} → boolean</varname></para>
-				<para><varname>{stbox,trgeometry} {&lt;&lt;|, &amp;&lt;|, |&gt;&gt;, |&amp;&gt;} {stbox,trgeometry} → boolean</varname></para>
-				<para><varname>{tstzspan,stbox,trgeometry} {&lt;&lt;#, &amp;&lt;#, #&gt;&gt;, #&amp;&gt;} {tstzspan,stbox,trgeometry} → boolean</varname></para>
-			</listitem>
-		</itemizedlist>
+		<refentry xml:id="trgeo_pos">
+			<refnamediv>
+				<refname>&lt;&lt;</refname>
+				<refname>&gt;&gt;</refname>
+				<refname>&amp;&lt;</refname>
+				<refname>&amp;&gt;</refname>
+				<refpurpose>Position operators</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>{stbox,trgeometry} {&lt;&lt;, &amp;&lt;, &gt;&gt;, &amp;&gt;} {stbox,trgeometry} → boolean</synopsis>
+				<synopsis>{stbox,trgeometry} {&lt;&lt;|, &amp;&lt;|, |&gt;&gt;, |&amp;&gt;} {stbox,trgeometry} → boolean</synopsis>
+				<synopsis>{tstzspan,stbox,trgeometry} {&lt;&lt;#, &amp;&lt;#, #&gt;&gt;, #&amp;&gt;} {tstzspan,stbox,trgeometry} → boolean</synopsis>
+			</refsynopsisdiv>
+		</refentry>
 	</sect1>
 
 	<sect1 xml:id="trgeo_aggregations">
 		<title>Aggregations</title>
 
-		<itemizedlist>
-			<listitem xml:id="trgeo_tCount">
-				<indexterm significance="normal"><primary><varname>tCount</varname></primary></indexterm>
-				<para>Temporal count</para>
-				<para><varname>tCount(trgeometry) → {tintSeq,tintSeqSet}</varname></para>
-			</listitem>
+		<refentry xml:id="trgeo_tCount">
+			<refnamediv>
+				<refname>tCount</refname>
+				<refpurpose>Temporal count</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>tCount(trgeometry) → {tintSeq,tintSeqSet}</synopsis>
+			</refsynopsisdiv>
+		</refentry>
 
-			<listitem xml:id="trgeo_wCount">
-				<indexterm significance="normal"><primary><varname>wCount</varname></primary></indexterm>
-				<para>Window count</para>
-				<para><varname>wCount(trgeometry,interval) → {tintSeq,tintSeqSet}</varname></para>
-			</listitem>
+		<refentry xml:id="trgeo_wCount">
+			<refnamediv>
+				<refname>wCount</refname>
+				<refpurpose>Window count</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>wCount(trgeometry, interval) → {tintSeq,tintSeqSet}</synopsis>
+			</refsynopsisdiv>
+		</refentry>
 
-			<listitem xml:id="trgeo_extent">
-				<indexterm significance="normal"><primary><varname>extent</varname></primary></indexterm>
-				<para>Return the spatiotemporal extent</para>
-				<para><varname>extent(trgeometry) → stbox</varname></para>
+		<refentry xml:id="trgeo_extent">
+			<refnamediv>
+				<refname>extent</refname>
+				<refpurpose>Return the spatiotemporal extent</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>extent(trgeometry) → stbox</synopsis>
+			</refsynopsisdiv>
+			<refsection>
+				<title>Examples</title>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 WITH Temp(temp) AS (
   SELECT trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));[Pose(Point(0 0),0.0)@2001-01-01,
@@ -552,38 +777,52 @@ WITH Temp(temp) AS (
 SELECT extent(temp) FROM Temp;
 -- STBOX XT(((-0,-0),(4,1)),[2001-01-01, 2001-01-04])
 </programlisting>
-			</listitem>
-		</itemizedlist>
+			</refsection>
+		</refentry>
 	</sect1>
 
 	<sect1 xml:id="trgeo_analytics">
 		<title>Analytics</title>
 
-		<itemizedlist>
-			<listitem xml:id="trgeo_minTimeDeltaSimplify">
-				<indexterm significance="normal"><primary><varname>minTimeDeltaSimplify</varname></primary></indexterm>
-				<para>Simplify a temporal rigid geometry sequence using the minimum time delta criterion</para>
-				<para><varname>minTimeDeltaSimplify(trgeometry,interval) → trgeometry</varname></para>
-			</listitem>
+		<refentry xml:id="trgeo_minTimeDeltaSimplify">
+			<refnamediv>
+				<refname>minTimeDeltaSimplify</refname>
+				<refpurpose>Simplify a temporal rigid geometry sequence using the minimum time delta criterion</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>minTimeDeltaSimplify(trgeometry, interval) → trgeometry</synopsis>
+			</refsynopsisdiv>
+		</refentry>
 
-			<listitem xml:id="trgeo_minDistSimplify">
-				<indexterm significance="normal"><primary><varname>minDistSimplify</varname></primary></indexterm>
-				<para>Simplify a temporal rigid geometry sequence using the minimum distance criterion</para>
-				<para><varname>minDistSimplify(trgeometry,float) → trgeometry</varname></para>
-			</listitem>
+		<refentry xml:id="trgeo_minDistSimplify">
+			<refnamediv>
+				<refname>minDistSimplify</refname>
+				<refpurpose>Simplify a temporal rigid geometry sequence using the minimum distance criterion</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>minDistSimplify(trgeometry, float) → trgeometry</synopsis>
+			</refsynopsisdiv>
+		</refentry>
 
-			<listitem xml:id="trgeo_maxDistSimplify">
-				<indexterm significance="normal"><primary><varname>maxDistSimplify</varname></primary></indexterm>
-				<para>Simplify a temporal rigid geometry sequence using the maximum distance criterion (synchronised Euclidean distance)</para>
-				<para><varname>maxDistSimplify(trgeometry,float,syncdist bool=true) → trgeometry</varname></para>
-			</listitem>
+		<refentry xml:id="trgeo_maxDistSimplify">
+			<refnamediv>
+				<refname>maxDistSimplify</refname>
+				<refpurpose>Simplify a temporal rigid geometry sequence using the maximum distance criterion (synchronised Euclidean distance)</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>maxDistSimplify(trgeometry, float, syncdist bool=true) → trgeometry</synopsis>
+			</refsynopsisdiv>
+		</refentry>
 
-			<listitem xml:id="trgeo_douglasPeuckerSimplify">
-				<indexterm significance="normal"><primary><varname>douglasPeuckerSimplify</varname></primary></indexterm>
-				<para>Simplify a temporal rigid geometry sequence using the Douglas-Peucker algorithm</para>
-				<para><varname>douglasPeuckerSimplify(trgeometry,float,syncdist bool=true) → trgeometry</varname></para>
-			</listitem>
-		</itemizedlist>
+		<refentry xml:id="trgeo_douglasPeuckerSimplify">
+			<refnamediv>
+				<refname>douglasPeuckerSimplify</refname>
+				<refpurpose>Simplify a temporal rigid geometry sequence using the Douglas-Peucker algorithm</refpurpose>
+			</refnamediv>
+			<refsynopsisdiv>
+				<synopsis>douglasPeuckerSimplify(trgeometry, float, syncdist bool=true) → trgeometry</synopsis>
+			</refsynopsisdiv>
+		</refentry>
 	</sect1>
 
 	<sect1 xml:id="trgeo_indexing">
