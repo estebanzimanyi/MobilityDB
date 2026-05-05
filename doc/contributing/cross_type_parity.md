@@ -110,7 +110,7 @@ Legend: ✓ complete · ≈ partial (see notes) · ✗ missing · — not applic
 |---|---|---|---|---|---|---|
 | 1. Constructors | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | 2. Comparison ops | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| 3. Spatial functions | ✓ | ✓ | ✓ | ✓ | ≈ | ≈ |
+| 3. Spatial functions | ✓ | ✓ | ✓ | ✓ | ≈ | ✓ |
 | 4a. Box operators | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | 4b. Box accessors | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | 5. Position operators | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |

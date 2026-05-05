@@ -335,6 +335,12 @@ def _is_infra_c_wrapper(c_name: str) -> bool:
     return False
 
 
+def _all_sql_internal(c_name: str, c_to_sql) -> bool:
+    """Return True if every SQL caller of this C function has a leading '_' (internal)."""
+    callers = c_to_sql.get(c_name, [])
+    return bool(callers) and all(s.startswith('_') for s in callers)
+
+
 # ---------------------------------------------------------------------------
 # Checks
 # ---------------------------------------------------------------------------
@@ -393,7 +399,9 @@ def run_checks(sql_fns, pg_wrappers, def_groups, documented,
         no_group = [
             (c, d['file'], d['line'])
             for c, d in sorted(pg_wrappers.items())
-            if d['ingroup'] is None and not _is_infra_c_wrapper(c)
+            if d['ingroup'] is None
+            and not _is_infra_c_wrapper(c)
+            and not _all_sql_internal(c, c_to_sql)
         ]
         if no_group:
             for c, f, ln in no_group:
@@ -409,6 +417,8 @@ def run_checks(sql_fns, pg_wrappers, def_groups, documented,
             (c, d['file'], d['line'])
             for c, d in sorted(pg_wrappers.items())
             if d['sqlfn'] is None
+            and not _is_infra_c_wrapper(c)
+            and not _all_sql_internal(c, c_to_sql)
         ]
         if no_sqlfn:
             for c, f, ln in no_sqlfn:
