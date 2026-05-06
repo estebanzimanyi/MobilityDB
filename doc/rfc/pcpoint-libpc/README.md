@@ -1,6 +1,6 @@
 # RFC: pcpoint libpc exposure — serialize/deserialize without PostgreSQL
 
-> **Discussion [#TBD](https://github.com/MobilityDB/MobilityDB/discussions)** — MobilityDB community context  
+> **Discussion [#869](https://github.com/MobilityDB/MobilityDB/discussions/869)** — MobilityDB community context  
 > **Upstream PR** — to be filed against [`pgpointcloud/pointcloud`](https://github.com/pgpointcloud/pointcloud)
 
 ## The Problem
@@ -194,7 +194,7 @@ SPI round-trip entirely.
 
 ## Related
 
-- MobilityDB Discussion [#TBD] — MobilityDB community context for this upstream ask
+- MobilityDB Discussion [#869](https://github.com/MobilityDB/MobilityDB/discussions/869) — MobilityDB community context for this upstream ask
 - MobilityDB PR [#818](https://github.com/MobilityDB/MobilityDB/pull/818) — pgPointCloud temporal types (`tpcpoint`/`tpcpatch`)
 - RFC [#863](https://github.com/MobilityDB/MobilityDB/discussions/863) — npoint portability (analogous upstream-dependency problem)
 - RFC [#830](https://github.com/MobilityDB/MobilityDB/issues/830) — TemporalParquet (uses `tpcpatch` in type coverage table)

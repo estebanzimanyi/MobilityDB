@@ -7,9 +7,9 @@ containing the proposal document.
 | RFC | Topic | Discussion | Branch | Status |
 |-----|-------|-----------|--------|--------|
 | npoint portability | Stable network location identifiers across OSM/pgRouting versions | [#863](https://github.com/MobilityDB/MobilityDB/discussions/863) | `rfc/npoint-portability` | Open |
-| TemporalParquet | Parquet footer convention for MobilityDB temporal types | [#830](https://github.com/MobilityDB/MobilityDB/issues/830) · PR [#831](https://github.com/MobilityDB/MobilityDB/pull/831) | `rfc/temporal-parquet` | Open |
+| TemporalParquet | Parquet footer convention for MobilityDB temporal types | [#870](https://github.com/MobilityDB/MobilityDB/discussions/870) · Issue [#830](https://github.com/MobilityDB/MobilityDB/issues/830) · PR [#831](https://github.com/MobilityDB/MobilityDB/pull/831) | `rfc/temporal-parquet` | Open |
 | MEOS-API | Versioned JSON catalog for MEOS's C-library public API | [#836](https://github.com/MobilityDB/MobilityDB/issues/836) · PR [#845](https://github.com/MobilityDB/MobilityDB/pull/845) | `rfc/meos-api` | Open |
-| pcpoint libpc exposure | Expose serialize/deserialize in `libpc.a` for non-PG consumers | TBD | `rfc/pcpoint-libpc` | Draft |
+| pcpoint libpc exposure | Expose serialize/deserialize in `libpc.a` for non-PG consumers | [#869](https://github.com/MobilityDB/MobilityDB/discussions/869) | `rfc/pcpoint-libpc` | Draft |
 
 ## RFC documents
 
