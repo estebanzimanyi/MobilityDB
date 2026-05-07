@@ -223,7 +223,7 @@ tinstant_make(Datum value, MeosType temptype, TimestampTz t)
 
   /* Create the temporal instant */
   size_t value_size;
-  size_t actual_size;  /* actual bytes to copy (differs from value_size for varlena) */
+  size_t value_copy_size;
   void *value_from;
   MeosType basetype = temptype_basetype(temptype);
   bool typbyval = basetype_byvalue(basetype);
@@ -232,29 +232,32 @@ tinstant_make(Datum value, MeosType temptype, TimestampTz t)
   {
     /* For base types passed by value */
     value_size = DOUBLE_PAD(sizeof(Datum));
-    actual_size = value_size;
+    value_copy_size = sizeof(Datum);
     value_from = &value;
   }
   else
   {
+    /* For base types passed by reference */
     int16 typlen = meostype_length(basetype);
     value_from = DatumGetPointer(value);
     if (typlen != -1)
     {
       value_size = DOUBLE_PAD((unsigned int) typlen);
-      actual_size = value_size;
+      value_copy_size = (unsigned int) typlen;
     }
     else
     {
-      actual_size = VARSIZE_ANY(value_from);   /* actual bytes to copy */
-      value_size = DOUBLE_PAD(actual_size);    /* padded for allocation */
+      value_copy_size = VARSIZE(value_from);
+      value_size = DOUBLE_PAD(value_copy_size);
     }
   }
   size += value_size;
   TInstant *result = palloc0(size);
   void *value_to = ((char *) result) + value_offset;
-  memcpy(value_to, value_from, actual_size);  /* ← use actual_size, not value_size */
-
+  /* Copy only the actual value bytes; palloc0 already zeroed any DOUBLE_PAD
+   * trailing bytes in the destination, so reading past the source object
+   * (which may be a tightly-allocated varlena) is unnecessary and unsafe. */
+  memcpy(value_to, value_from, value_copy_size);
   /* Initialize fixed-size values */
   result->temptype = temptype;
   result->subtype = TINSTANT;
