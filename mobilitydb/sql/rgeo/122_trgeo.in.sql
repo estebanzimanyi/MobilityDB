@@ -701,4 +701,11 @@ CREATE OPERATOR CLASS trgeometry_hash_ops
     OPERATOR    1   = ,
     FUNCTION    1   temporal_hash(trgeometry);
 
+-- World-frame trajectory of an arbitrary body-frame point on a moving rigid
+-- geometry. The reference-point variant is the special case bodyPt=ORIGIN.
+CREATE FUNCTION bodyPointTrajectory(trgeometry, geometry)
+  RETURNS tgeompoint
+  AS 'MODULE_PATHNAME', 'Trgeometry_body_point_trajectory'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 /******************************************************************************/
