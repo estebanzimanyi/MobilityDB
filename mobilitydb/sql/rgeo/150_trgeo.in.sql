@@ -207,7 +207,7 @@ CREATE FUNCTION tpose(trgeometry)
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tgeompoint(trgeometry)
   RETURNS tgeompoint
-  AS 'MODULE_PATHNAME', 'Trgeometry_to_tpoint'
+  AS 'MODULE_PATHNAME', 'Trgeometry_to_tgeompoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tgeometry(trgeometry)
   RETURNS tgeometry

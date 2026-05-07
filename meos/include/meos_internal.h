@@ -764,7 +764,7 @@ struct SkipList
  * supported pattern is search-then-splice-on-miss with caller-managed
  * in-place mutation via the user-supplied merge_fn. The batch-merge code
  * path inside keyval_skiplist_merge is unvalidated and contains known
- * correctness bugs.
+ * correctness bugs (1-4 in doc/drafts/keyval_skiplist_continuation_plan.md).
  */
 typedef enum
 {
