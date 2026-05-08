@@ -23,12 +23,7 @@ set_tests_properties(load_pointcloud_tables PROPERTIES
 file(GLOB testfiles "queries/*.sql")
 list(SORT testfiles)
 
-# Tests whose expected output is stale relative to the current behaviour
-# of the underlying functions. Re-enable once the expected output is
-# regenerated.
-set(SKIP_TESTS
-  437_tpc_gist_tbl  # GiST result-count drift (seq_count/idx_count agree but differ from expected)
-)
+set(SKIP_TESTS)
 
 foreach(file ${testfiles})
   get_filename_component(TESTNAME ${file} NAME_WE)
