@@ -405,6 +405,7 @@ temporal_base_as_mfjson_sb(stringbuffer_t *sb, Datum value, MeosType temptype,
       char *str = geo_as_geojson(DatumGetGserializedP(value), 0, precision,
         NULL);
       stringbuffer_aprintf(sb, "%s,", str);
+      pfree(str);
       break;
     }
     default: /* Error! */
@@ -705,6 +706,7 @@ tinstant_as_mfjson_sb(stringbuffer_t *sb, const TInstant *inst,
     const GSERIALIZED *gs = trgeoinst_geom_p(inst);
     char *str = geo_as_geojson(gs, 0, precision, NULL);
     stringbuffer_aprintf(sb, "%s,", str);
+    pfree(str);
     stringbuffer_append_len(sb, "\"values\":[", 10);
     pose_as_json_sb(sb, DatumGetPoseP(tinstant_value_p(inst)), precision);
   }
@@ -766,6 +768,7 @@ tsequence_as_mfjson_sb(stringbuffer_t *sb, const TSequence *seq,
     const GSERIALIZED *gs = trgeoseq_geom_p(seq);
     char *str = geo_as_geojson(gs, 0, precision, NULL);
     stringbuffer_aprintf(sb, "%s,\"values\":[", str);
+    pfree(str);
   }
 #endif /* RGEO */
 #if POINTCLOUD
@@ -863,6 +866,7 @@ tsequenceset_as_mfjson_sb(stringbuffer_t *sb, const TSequenceSet *ss,
     stringbuffer_append_len(sb, "\"geometry\":", 11);
     char *str = geo_as_geojson(trgeoseqset_geom_p(ss), 0, precision, NULL);
     stringbuffer_aprintf(sb, "%s,", str);
+    pfree(str);
   }
 #endif /* RGEO */
 
@@ -894,7 +898,7 @@ tsequenceset_as_mfjson_sb(stringbuffer_t *sb, const TSequenceSet *ss,
         /* Do not repeat the crs for the composing geometries */
         char *str = geo_as_geojson(gs, 0, precision, NULL);
         stringbuffer_aprintf(sb, "%s", str);
-        // pfree(str);
+        pfree(str);
       }
 #if POSE
       else if (inst->temptype == T_TPOSE)
