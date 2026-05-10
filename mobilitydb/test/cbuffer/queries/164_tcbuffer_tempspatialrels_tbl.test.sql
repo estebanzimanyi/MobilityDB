@@ -41,8 +41,7 @@ SELECT COUNT(*) FROM tbl_tcbuffer t1, tbl_tcbuffer t2 WHERE tContains(t1.temp, t
 -------------------------------------------------------------------------------
 -- Robustness test
 
-SELECT COUNT(*) FROM tbl_geometry, tbl_tcbuffer WHERE tContains(g, temp) ?= true <> eContains(g, temp);
-
+-- eContains(geometry, tcbuffer) is not supported
 SELECT COUNT(*) FROM tbl_cbuffer, tbl_tcbuffer WHERE tContains(cb, temp) ?= true <> eContains(cb, temp);
 -- SELECT COUNT(*) FROM tbl_tcbuffer t1, tbl_tcbuffer t2 WHERE tContains(t1.temp, t2.temp) ?= true <> eContains(t1.temp, t2.temp);
 
@@ -57,7 +56,7 @@ SELECT COUNT(*) FROM tbl_tcbuffer t1, tbl_tcbuffer t2 WHERE tCovers(t1.temp, t2.
 -------------------------------------------------------------------------------
 -- Robustness test
 
-SELECT COUNT(*) FROM tbl_geometry, tbl_tcbuffer WHERE tCovers(g, temp) ?= true <> eCovers(g, temp);
+-- eCovers(geometry, tcbuffer) is not supported
 
 -------------------------------------------------------------------------------
 -- tDisjoint
