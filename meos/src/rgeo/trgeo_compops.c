@@ -1,7 +1,7 @@
 /***********************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -39,6 +39,7 @@
 #include <meos_internal.h>
 #include <meos_rgeo.h>
 #include "temporal/postgres_types.h"
+#include "temporal/lifting.h"
 #include "temporal/temporal.h"
 #include "temporal/temporal_compops.h"
 #include "temporal/type_util.h"
@@ -49,31 +50,12 @@
  *****************************************************************************/
 
 /**
- * @brief Evaluate a comparison function against a materialized instant
- * @returns true if func(materialized_geom, gs) holds
- */
-static bool
-eacomp_trgeo_geo_inst(const Temporal *temp, TimestampTz t,
-  const GSERIALIZED *gs, Datum (*func)(Datum, Datum, MeosType))
-{
-  Datum mat;
-  if (! trgeo_value_at_timestamptz(temp, t, false, &mat))
-    return false;
-  bool result = DatumGetBool(func(mat, PointerGetDatum(gs), T_GEOMETRY));
-  pfree(DatumGetPointer(mat));
-  return result;
-}
-
-/**
  * @brief Return true if a temporal rigid geometry and a geometry satisfy the
  * ever/always comparison
  * @param[in] temp Temporal value
  * @param[in] gs Geometry
  * @param[in] ever True for the ever semantics, false for the always semantics
  * @param[in] func Comparison function
- * @note The generic lifting infrastructure cannot be used here because the
- * base type of T_TRGEOMETRY is T_POSE, not T_GEOMETRY. Instead, we iterate
- * over all instants and compare the materialized geometry at each one.
  */
 static int
 eacomp_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs,
@@ -83,38 +65,7 @@ eacomp_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs,
   if (! ensure_valid_trgeo_geo(temp, gs) || gserialized_is_empty(gs))
     return -1;
   assert(func);
-
-  if (temp->subtype == TINSTANT)
-  {
-    bool val = eacomp_trgeo_geo_inst(temp, ((TInstant *) temp)->t, gs, func);
-    return (int) val;
-  }
-  if (temp->subtype == TSEQUENCE)
-  {
-    const TSequence *seq = (const TSequence *) temp;
-    for (int i = 0; i < seq->count; i++)
-    {
-      bool val = eacomp_trgeo_geo_inst(temp,
-        TSEQUENCE_INST_N(seq, i)->t, gs, func);
-      if (ever && val)   return 1;
-      if (! ever && ! val) return 0;
-    }
-    return ever ? 0 : 1;
-  }
-  /* TSEQUENCESET */
-  const TSequenceSet *ss = (const TSequenceSet *) temp;
-  for (int i = 0; i < ss->count; i++)
-  {
-    const TSequence *seq = TSEQUENCESET_SEQ_N(ss, i);
-    for (int j = 0; j < seq->count; j++)
-    {
-      bool val = eacomp_trgeo_geo_inst(temp,
-        TSEQUENCE_INST_N(seq, j)->t, gs, func);
-      if (ever && val)   return 1;
-      if (! ever && ! val) return 0;
-    }
-  }
-  return ever ? 0 : 1;
+  return eacomp_temporal_base(temp, PointerGetDatum(gs), func, ever);
 }
 
 /**
@@ -142,10 +93,10 @@ eacomp_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2,
  * @brief Return true if a geometry is ever equal to a temporal rigid geometry
  * @param[in] gs Geometry
  * @param[in] temp Temporal value
- * @csqlfn #Ever_eq_geo_trgeometry()
+ * @csqlfn #Ever_eq_geo_trgeo()
  */
-inline int
-ever_eq_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp)
+int
+ever_eq_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp)
 {
   return eacomp_trgeo_geo(temp, gs, &datum2_eq, EVER);
 }
@@ -156,10 +107,10 @@ ever_eq_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp)
  * geometry
  * @param[in] temp Temporal value
  * @param[in] gs Geometry
- * @csqlfn #Ever_eq_trgeometry_geo()
+ * @csqlfn #Ever_eq_trgeo_geo()
  */
-inline int
-ever_eq_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
+int
+ever_eq_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   return eacomp_trgeo_geo(temp, gs, &datum2_eq, EVER);
 }
@@ -170,10 +121,10 @@ ever_eq_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
  * geometry
  * @param[in] gs Geometry
  * @param[in] temp Temporal value
- * @csqlfn #Ever_ne_geo_trgeometry()
+ * @csqlfn #Ever_ne_geo_trgeo()
  */
-inline int
-ever_ne_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp)
+int
+ever_ne_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp)
 {
   return eacomp_trgeo_geo(temp, gs, &datum2_ne, EVER);
 }
@@ -184,10 +135,10 @@ ever_ne_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp)
  * geometry
  * @param[in] temp Temporal value
  * @param[in] gs Geometry
- * @csqlfn #Ever_ne_trgeometry_geo()
+ * @csqlfn #Ever_ne_trgeo_geo()
  */
-inline int
-ever_ne_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
+int
+ever_ne_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   return eacomp_trgeo_geo(temp, gs, &datum2_ne, EVER);
 }
@@ -198,10 +149,10 @@ ever_ne_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
  * geometry
  * @param[in] gs Geometry
  * @param[in] temp Temporal value
- * @csqlfn #Always_eq_geo_trgeometry()
+ * @csqlfn #Always_eq_geo_trgeo()
  */
-inline int
-always_eq_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp)
+int
+always_eq_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp)
 {
   return eacomp_trgeo_geo(temp, gs, &datum2_eq, ALWAYS);
 }
@@ -212,10 +163,10 @@ always_eq_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp)
  * geometry
  * @param[in] temp Temporal value
  * @param[in] gs Geometry
- * @csqlfn #Always_eq_trgeometry_geo()
+ * @csqlfn #Always_eq_trgeo_geo()
  */
-inline int
-always_eq_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
+int
+always_eq_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   return eacomp_trgeo_geo(temp, gs, &datum2_eq, ALWAYS);
 }
@@ -226,10 +177,10 @@ always_eq_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
  * geometry
  * @param[in] gs Geometry
  * @param[in] temp Temporal value
- * @csqlfn #Always_ne_geo_trgeometry()
+ * @csqlfn #Always_ne_geo_trgeo()
  */
-inline int
-always_ne_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp)
+int
+always_ne_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp)
 {
   return eacomp_trgeo_geo(temp, gs, &datum2_ne, ALWAYS);
 }
@@ -240,10 +191,10 @@ always_ne_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp)
  * geometry
  * @param[in] temp Temporal value
  * @param[in] gs Geometry
- * @csqlfn #Always_ne_trgeometry_geo()
+ * @csqlfn #Always_ne_trgeo_geo()
  */
-inline int
-always_ne_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
+int
+always_ne_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   return eacomp_trgeo_geo(temp, gs, &datum2_ne, ALWAYS);
 }
@@ -254,10 +205,10 @@ always_ne_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
  * @ingroup meos_rgeo_comp_ever
  * @brief Return true if two temporal rigid geometries are ever equal
  * @param[in] temp1,temp2 Temporal rigid geometries
- * @csqlfn #Ever_eq_trgeometry_trgeometry()
+ * @csqlfn #Ever_eq_trgeo_trgeo()
  */
-inline int
-ever_eq_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2)
+int
+ever_eq_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2)
 {
   return eacomp_trgeo_trgeo(temp1, temp2, &datum2_eq, EVER);
 }
@@ -266,10 +217,10 @@ ever_eq_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2)
  * @ingroup meos_rgeo_comp_ever
  * @brief Return true if two temporal rigid geometries are ever different
  * @param[in] temp1,temp2 Temporal rigid geometries
- * @csqlfn #Ever_ne_trgeometry_trgeometry()
+ * @csqlfn #Ever_ne_trgeo_trgeo()
  */
-inline int
-ever_ne_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2)
+int
+ever_ne_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2)
 {
   return eacomp_trgeo_trgeo(temp1, temp2, &datum2_ne, EVER);
 }
@@ -278,10 +229,10 @@ ever_ne_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2)
  * @ingroup meos_rgeo_comp_ever
  * @brief Return true if two temporal rigid geometries are always equal
  * @param[in] temp1,temp2 Temporal rigid geometries
- * @csqlfn #Always_eq_trgeometry_trgeometry()
+ * @csqlfn #Always_eq_trgeo_trgeo()
  */
-inline int
-always_eq_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2)
+int
+always_eq_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2)
 {
   return eacomp_trgeo_trgeo(temp1, temp2, &datum2_eq, ALWAYS);
 }
@@ -290,10 +241,10 @@ always_eq_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2)
  * @ingroup meos_rgeo_comp_ever
  * @brief Return true if two temporal rigid geometries are always different
  * @param[in] temp1,temp2 Temporal rigid geometries
- * @csqlfn #Always_ne_trgeometry_trgeometry()
+ * @csqlfn #Always_ne_trgeo_trgeo()
  */
-inline int
-always_ne_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2)
+int
+always_ne_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2)
 {
   return eacomp_trgeo_trgeo(temp1, temp2, &datum2_ne, ALWAYS);
 }
@@ -303,14 +254,29 @@ always_ne_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2)
  *****************************************************************************/
 
 /**
+ * @brief Return the temporal comparison of a geometry and a temporal rigid
+ * geometry
+ * @param[in] temp Temporal value
+ * @param[in] gs Geometry
+ * @param[in] func Comparison function
+ */
+static Temporal *
+tcomp_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp,
+  Datum (*func)(Datum, Datum, MeosType))
+{
+  /* Ensure the validity of the arguments */
+  if (! ensure_valid_trgeo_geo(temp, gs) || gserialized_is_empty(gs))
+    return NULL;
+  assert(func);
+  return tcomp_base_temporal(PointerGetDatum(gs), temp, func);
+}
+
+/**
  * @brief Return the temporal comparison of a temporal rigid geometry and a
  * geometry
  * @param[in] temp Temporal value
  * @param[in] gs Geometry
  * @param[in] func Comparison function
- * @note The generic lifting infrastructure cannot be used here because the
- * base type of T_TRGEOMETRY is T_POSE, not T_GEOMETRY. We iterate over all
- * instants, materializing each one, and build a STEP-interpolated TBool.
  */
 static Temporal *
 tcomp_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs,
@@ -320,82 +286,7 @@ tcomp_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs,
   if (! ensure_valid_trgeo_geo(temp, gs) || gserialized_is_empty(gs))
     return NULL;
   assert(func);
-
-  Datum gsdat = PointerGetDatum(gs);
-
-  if (temp->subtype == TINSTANT)
-  {
-    const TInstant *inst = (const TInstant *) temp;
-    Datum mat;
-    trgeo_value_at_timestamptz(temp, inst->t, false, &mat);
-    bool val = DatumGetBool(func(mat, gsdat, T_GEOMETRY));
-    pfree(DatumGetPointer(mat));
-    return (Temporal *) tinstant_make(BoolGetDatum(val), T_TBOOL, inst->t);
-  }
-
-  if (temp->subtype == TSEQUENCE)
-  {
-    const TSequence *seq = (const TSequence *) temp;
-    interpType interp = MEOS_FLAGS_GET_INTERP(seq->flags);
-    TInstant **instants = palloc(sizeof(TInstant *) * seq->count);
-    for (int i = 0; i < seq->count; i++)
-    {
-      const TInstant *inst = TSEQUENCE_INST_N(seq, i);
-      Datum mat;
-      trgeo_value_at_timestamptz(temp, inst->t, false, &mat);
-      bool val = DatumGetBool(func(mat, gsdat, T_GEOMETRY));
-      pfree(DatumGetPointer(mat));
-      instants[i] = tinstant_make(BoolGetDatum(val), T_TBOOL, inst->t);
-    }
-    if (interp == DISCRETE)
-      return (Temporal *) tsequence_make_free(instants, seq->count,
-        seq->period.lower_inc, seq->period.upper_inc, DISCRETE, NORMALIZE);
-    if (interp == STEP)
-      return (Temporal *) tsequence_make_free(instants, seq->count,
-        seq->period.lower_inc, seq->period.upper_inc, STEP, NORMALIZE);
-    /* LINEAR: wrap in TSequenceSet to match generic lifting infrastructure */
-    TSequence *seq_bool = tsequence_make_free(instants, seq->count,
-      seq->period.lower_inc, seq->period.upper_inc, STEP, NORMALIZE);
-    TSequence **seqs = palloc(sizeof(TSequence *));
-    seqs[0] = seq_bool;
-    return (Temporal *) tsequenceset_make_free(seqs, 1, NORMALIZE);
-  }
-
-  /* TSEQUENCESET: each inner linear sequence becomes a STEP TSequence */
-  const TSequenceSet *ss = (const TSequenceSet *) temp;
-  TSequence **sequences = palloc(sizeof(TSequence *) * ss->count);
-  for (int i = 0; i < ss->count; i++)
-  {
-    const TSequence *seq = TSEQUENCESET_SEQ_N(ss, i);
-    TInstant **instants = palloc(sizeof(TInstant *) * seq->count);
-    for (int j = 0; j < seq->count; j++)
-    {
-      const TInstant *inst = TSEQUENCE_INST_N(seq, j);
-      Datum mat;
-      trgeo_value_at_timestamptz(temp, inst->t, false, &mat);
-      bool val = DatumGetBool(func(mat, gsdat, T_GEOMETRY));
-      pfree(DatumGetPointer(mat));
-      instants[j] = tinstant_make(BoolGetDatum(val), T_TBOOL, inst->t);
-    }
-    sequences[i] = tsequence_make_free(instants, seq->count,
-      seq->period.lower_inc, seq->period.upper_inc, STEP, NORMALIZE);
-  }
-  return (Temporal *) tsequenceset_make_free(sequences, ss->count, NORMALIZE);
-}
-
-/**
- * @brief Return the temporal comparison of a geometry and a temporal rigid
- * geometry
- * @param[in] gs Geometry
- * @param[in] temp Temporal value
- * @param[in] func Comparison function
- */
-static Temporal *
-tcomp_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp,
-  Datum (*func)(Datum, Datum, MeosType))
-{
-  /* datum2_eq/datum2_ne are commutative, so geo #= trgeo = trgeo #= geo */
-  return tcomp_trgeo_geo(temp, gs, func);
+  return tcomp_temporal_base(temp, PointerGetDatum(gs), func);
 }
 
 /*****************************************************************************/
@@ -406,10 +297,10 @@ tcomp_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp,
  * geometry
  * @param[in] gs Geometry
  * @param[in] temp Temporal value
- * @csqlfn #Teq_geo_trgeometry()
+ * @csqlfn #Teq_geo_trgeo()
  */
-inline Temporal *
-teq_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp)
+Temporal *
+teq_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp)
 {
   return tcomp_geo_trgeo(gs, temp, &datum2_eq);
 }
@@ -420,10 +311,10 @@ teq_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp)
  * geometry
  * @param[in] gs Geometry
  * @param[in] temp Temporal value
- * @csqlfn #Tne_geo_trgeometry()
+ * @csqlfn #Tne_geo_trgeo()
  */
-inline Temporal *
-tne_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp)
+Temporal *
+tne_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp)
 {
   return tcomp_geo_trgeo(gs, temp, &datum2_ne);
 }
@@ -436,10 +327,10 @@ tne_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp)
  * geometry
  * @param[in] temp Temporal value
  * @param[in] gs Geometry
- * @csqlfn #Teq_trgeometry_geo()
+ * @csqlfn #Teq_trgeo_geo()
  */
-inline Temporal *
-teq_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
+Temporal *
+teq_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   return tcomp_trgeo_geo(temp, gs, &datum2_eq);
 }
@@ -450,10 +341,10 @@ teq_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
  * geometry
  * @param[in] temp Temporal value
  * @param[in] gs Geometry
- * @csqlfn #Tne_trgeometry_geo()
+ * @csqlfn #Tne_trgeo_geo()
  */
-inline Temporal *
-tne_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
+Temporal *
+tne_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   return tcomp_trgeo_geo(temp, gs, &datum2_ne);
 }

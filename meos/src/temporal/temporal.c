@@ -3541,7 +3541,7 @@ temporal_eq(const Temporal *temp1, const Temporal *temp2)
  * @param[in] temp1,temp2 Temporal values
  * @csqlfn #Temporal_ne()
  */
-inline bool
+bool
 temporal_ne(const Temporal *temp1, const Temporal *temp2)
 {
   return ! temporal_eq(temp1, temp2);
@@ -3631,7 +3631,7 @@ temporal_cmp(const Temporal *temp1, const Temporal *temp2)
  * @param[in] temp1,temp2 Temporal values
  * @csqlfn #Temporal_lt()
  */
-inline bool
+bool
 temporal_lt(const Temporal *temp1, const Temporal *temp2)
 {
   return temporal_cmp(temp1, temp2) < 0;
@@ -3644,7 +3644,7 @@ temporal_lt(const Temporal *temp1, const Temporal *temp2)
  * @param[in] temp1,temp2 Temporal values
  * @csqlfn #Temporal_le()
  */
-inline bool
+bool
 temporal_le(const Temporal *temp1, const Temporal *temp2)
 {
   return temporal_cmp(temp1, temp2) <= 0;
@@ -3657,7 +3657,7 @@ temporal_le(const Temporal *temp1, const Temporal *temp2)
  * @param[in] temp1,temp2 Temporal values
  * @csqlfn #Temporal_gt()
  */
-inline bool
+bool
 temporal_ge(const Temporal *temp1, const Temporal *temp2)
 {
   return temporal_cmp(temp1, temp2) >= 0;
@@ -3669,7 +3669,7 @@ temporal_ge(const Temporal *temp1, const Temporal *temp2)
  * @param[in] temp1,temp2 Temporal values
  * @csqlfn #Temporal_ge()
  */
-inline bool
+bool
 temporal_gt(const Temporal *temp1, const Temporal *temp2)
 {
   return temporal_cmp(temp1, temp2) > 0;

@@ -552,7 +552,7 @@ ea_contains_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp,
  * geometry
  * @csqlfn #Acontains_geo_tcbuffer()
  */
-inline int
+int
 acontains_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp)
 {
   return ea_contains_geo_tcbuffer(gs, temp, ALWAYS);
@@ -591,7 +591,7 @@ ea_contains_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs,
  * geometry
  * @csqlfn #Econtains_tcbuffer_geo()
  */
-inline int
+int
 econtains_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   return ea_contains_tcbuffer_geo(temp, gs, EVER);
@@ -607,7 +607,7 @@ econtains_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
  * geometry
  * @csqlfn #Acontains_tcbuffer_geo()
  */
-inline int
+int
 acontains_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   return ea_contains_tcbuffer_geo(temp, gs, ALWAYS);
@@ -643,7 +643,7 @@ ea_contains_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp,
  * @param[in] temp Temporal circular buffer
  * @csqlfn #Econtains_cbuffer_tcbuffer()
  */
-inline int
+int
 econtains_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp)
 {
   return ea_contains_cbuffer_tcbuffer(cb, temp, EVER);
@@ -657,7 +657,7 @@ econtains_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp)
  * @param[in] temp Temporal circular buffer
  * @csqlfn #Acontains_cbuffer_tcbuffer()
  */
-inline int
+int
 acontains_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp)
 {
   return ea_contains_cbuffer_tcbuffer(cb, temp, ALWAYS);
@@ -693,7 +693,7 @@ ea_contains_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb,
  * @param[in] cb Circular buffer
  * @csqlfn #Econtains_tcbuffer_cbuffer()
  */
-inline int
+int
 econtains_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
 {
   return ea_contains_tcbuffer_cbuffer(temp, cb, EVER);
@@ -707,7 +707,7 @@ econtains_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
  * @param[in] cb Circular buffer
  * @csqlfn #Acontains_tcbuffer_cbuffer()
  */
-inline int
+int
 acontains_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
 {
   return ea_contains_tcbuffer_cbuffer(temp, cb, ALWAYS);
@@ -745,7 +745,7 @@ ea_covers_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp, bool ever)
  * geometry
  * @csqlfn #Acovers_geo_tcbuffer()
  */
-inline int
+int
 acovers_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp)
 {
   return ea_covers_geo_tcbuffer(gs, temp, ALWAYS);
@@ -780,7 +780,7 @@ ea_covers_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever)
  * geometry
  * @csqlfn #Ecovers_tcbuffer_geo()
  */
-inline int
+int
 ecovers_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   return ea_covers_tcbuffer_geo(temp, gs, EVER);
@@ -796,7 +796,7 @@ ecovers_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
  * geometry
  * @csqlfn #Acovers_tcbuffer_geo()
  */
-inline int
+int
 acovers_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   return ea_covers_tcbuffer_geo(temp, gs, ALWAYS);
@@ -827,7 +827,7 @@ ea_covers_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp,
  * @param[in] temp Temporal circular buffer
  * @csqlfn #Ecovers_cbuffer_tcbuffer()
  */
-inline int
+int
 ecovers_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp)
 {
   return ea_covers_cbuffer_tcbuffer(cb, temp, EVER);
@@ -841,7 +841,7 @@ ecovers_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp)
  * @param[in] temp Temporal circular buffer
  * @csqlfn #Acovers_cbuffer_tcbuffer()
  */
-inline int
+int
 acovers_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp)
 {
   return ea_covers_cbuffer_tcbuffer(cb, temp, ALWAYS);
@@ -872,7 +872,7 @@ ea_covers_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb,
  * @param[in] cb Circular buffer
  * @csqlfn #Ecovers_tcbuffer_cbuffer()
  */
-inline int
+int
 ecovers_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
 {
   return ea_covers_tcbuffer_cbuffer(temp, cb, EVER);
@@ -886,7 +886,7 @@ ecovers_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
  * @param[in] cb Circular buffer
  * @csqlfn #Acovers_tcbuffer_cbuffer()
  */
-inline int
+int
 acovers_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
 {
   return ea_covers_tcbuffer_cbuffer(temp, cb, ALWAYS);
@@ -996,7 +996,7 @@ edisjoint_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
  * @note aDisjoint(a, b) is equivalent to NOT eIntersects(a, b)
  * @csqlfn #Adisjoint_tcbuffer_geo()
  */
-inline int
+int
 adisjoint_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   return ea_disjoint_tcbuffer_geo(temp, gs, ALWAYS);
@@ -1058,7 +1058,7 @@ edisjoint_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
  * @note aDisjoint(a, b) is equivalent to NOT eIntersects(a, b)
  * @csqlfn #Adisjoint_tcbuffer_geo()
  */
-inline int
+int
 adisjoint_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
 {
   return ea_disjoint_tcbuffer_cbuffer(temp, cb, ALWAYS);
@@ -1091,7 +1091,7 @@ ea_disjoint_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
  * @param[in] temp1,temp2 Temporal circular buffers
  * @csqlfn #Edisjoint_tcbuffer_tcbuffer()
  */
-inline int
+int
 edisjoint_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
 {
   return ea_disjoint_tcbuffer_tcbuffer(temp1, temp2, EVER);
@@ -1105,7 +1105,7 @@ edisjoint_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
  * @param[in] temp1,temp2 Temporal circular buffers
  * @csqlfn #Adisjoint_tcbuffer_tcbuffer()
  */
-inline int
+int
 adisjoint_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
 {
   return ea_disjoint_tcbuffer_tcbuffer(temp1, temp2, ALWAYS);
@@ -1172,7 +1172,7 @@ eintersects_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
  * @note aIntersects(tcbuffer, geo) is equivalent to NOT eDisjoint(tcbuffer, geo)
  * @csqlfn #Aintersects_tcbuffer_geo()
  */
-inline int
+int
 aintersects_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   return ea_intersects_tcbuffer_geo(temp, gs, ALWAYS);
@@ -1221,7 +1221,7 @@ ea_intersects_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp,
  * @param[in] cb Circular buffer
  * @csqlfn #Eintersects_tcbuffer_cbuffer()
  */
-inline int
+int
 eintersects_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
 {
   return ea_intersects_tcbuffer_cbuffer(temp, cb, EVER);
@@ -1237,7 +1237,7 @@ eintersects_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
  * NOT eDisjoint(tcbuffer, cbuffer)
  * @csqlfn #Aintersects_tcbuffer_cbuffer()
  */
-inline int
+int
 aintersects_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
 {
   return ea_intersects_tcbuffer_cbuffer(temp, cb, ALWAYS);
@@ -1270,7 +1270,7 @@ ea_intersects_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
  * @param[in] temp1,temp2 Temporal circular buffers
  * @csqlfn #Eintersects_tcbuffer_tcbuffer()
  */
-inline int
+int
 eintersects_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
 {
   return ea_intersects_tcbuffer_tcbuffer(temp1, temp2, EVER);
@@ -1283,7 +1283,7 @@ eintersects_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
  * @param[in] temp1,temp2 Temporal circular buffers
  * @csqlfn #Aintersects_tcbuffer_tcbuffer()
  */
-inline int
+int
 aintersects_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
 {
   return ea_intersects_tcbuffer_tcbuffer(temp1, temp2, ALWAYS);
@@ -1405,7 +1405,7 @@ ea_touches_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp, bool ever)
  * @param[in] cb Circular buffer
  * @csqlfn #Atouches_tcbuffer_cbuffer()
  */
-inline int
+int
 etouches_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
 {
   return ea_touches_tcbuffer_cbuffer(temp, cb, EVER); 
@@ -1419,7 +1419,7 @@ etouches_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
  * @param[in] cb Circular buffer
  * @csqlfn #Atouches_tcbuffer_cbuffer()
  */
-inline int
+int
 atouches_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
 {
   return ea_touches_tcbuffer_cbuffer(temp, cb, ALWAYS); 
@@ -1642,7 +1642,7 @@ ea_dwithin_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
  * @param[in] dist Distance
  * @csqlfn #Edwithin_tcbuffer_tcbuffer()
  */
-inline int
+int
 edwithin_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
   double dist)
 {
@@ -1658,7 +1658,7 @@ edwithin_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
  * @param[in] dist Distance
  * @csqlfn #Adwithin_tcbuffer_tcbuffer()
  */
-inline int
+int
 adwithin_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
   double dist)
 {
