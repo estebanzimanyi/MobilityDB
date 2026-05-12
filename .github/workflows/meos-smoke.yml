@@ -46,17 +46,6 @@ jobs:
           sudo ldconfig
 
       - name: Regenerate smoke suites and run under valgrind
-        # FIXME(smoke-harness-leaks): the smoke harness has ~40+ pre-existing
-        # "definitely lost" leaks at canned-input setup sites
-        # (tcbuffer_inst1, tnpoint_inst1, tpose_inst1, trgeo_inst1, etc.).
-        # The original author left these unfreed with a comment that freeing
-        # them "triggers tcache double-free" — meaning some downstream call
-        # consumes the input. Per-suite ownership tracking is needed to
-        # surface the consumer and either rebuild the input or change the
-        # contract. Until that work lands, mark the smoke step as
-        # non-blocking so the rest of CI gates on real failures. Once the
-        # harness leaks are fixed, drop this continue-on-error: line.
-        continue-on-error: true
         run: |
           export MEOS_INCLUDE_DIR=/usr/local/include
           export MEOS_BUILD_DIR=/usr/local/lib

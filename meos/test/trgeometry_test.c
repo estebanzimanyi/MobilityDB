@@ -94,7 +94,7 @@ main(void)
     LINEAR, 0.0, NULL, false);
   TSequence    *trgeo_tseq1    = (TSequence *) trgeo_seq1;
   TSequenceSet *trgeo_tseqset1 = NULL;
-  Temporal *tpoint1 = trgeo_to_tgeompoint(trgeo_seq1);
+  Temporal *tpoint1 = trgeo_to_tpoint(trgeo_seq1);
   Temporal *tpose1 = trgeo_to_tpose(trgeo_seq1);
   int n_out = 0;
 
@@ -115,8 +115,8 @@ main(void)
   { Temporal * r = trgeo_to_tpose(trgeo_seq1);
     printf("trgeo_to_tpose: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = trgeo_to_tgeompoint(trgeo_seq1);
-    printf("trgeo_to_tgeompoint: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = trgeo_to_tpoint(trgeo_seq1);
+    printf("trgeo_to_tpoint: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
   { TInstant * r = trgeo_end_instant(trgeo_seq1);
     printf("trgeo_end_instant: %s\n", r ? "OK" : "NULL");
