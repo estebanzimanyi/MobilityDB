@@ -1732,7 +1732,7 @@ geo_cluster_dbscan(const GSERIALIZED **geoms, uint32_t ngeoms,
 
   uint32_t i;
   char *is_in_cluster = NULL;
-  initGEOS(lwnotice, lwgeom_geos_error);
+  GEOSContextHandle_t ctx = geos_get_context();
   LWGEOM **lwgeoms = lwalloc(ngeoms * sizeof(LWGEOM *));
   UNIONFIND *uf = UF_create(ngeoms);
   for (i = 0; i < ngeoms; i++)
@@ -1756,7 +1756,6 @@ geo_cluster_dbscan(const GSERIALIZED **geoms, uint32_t ngeoms,
 
   uint32_t *result_ids = UF_get_collapsed_cluster_ids(uf, is_in_cluster);
   *count = uf->N;
-  finishGEOS();
   UF_destroy(uf);
   if (is_in_cluster)
     lwfree(is_in_cluster);
@@ -1790,7 +1789,7 @@ geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms,
   /* TODO short-circuit for one element? */
 
   /* Ok, we really need geos now ;) */
-  initGEOS(lwnotice, lwgeom_geos_error);
+  GEOSContextHandle_t ctx = geos_get_context();
   GEOSGeometry **geos_inputs = palloc(ngeoms * sizeof(GEOSGeometry *));
   for (i = 0; i < ngeoms; i++)
   {
@@ -1800,7 +1799,7 @@ geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms,
     {
       lwerror("Geometry could not be converted to GEOS");
       for (j = 0; j < i; j++)
-        GEOSGeom_destroy(geos_inputs[j]);
+        GEOSGeom_destroy_r(ctx, geos_inputs[j]);
       return NULL;
     }
 
@@ -1812,7 +1811,7 @@ geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms,
     else if (! ensure_same_srid(srid, gserialized_get_srid(geoms[i])))
     {
       for (j = 0; j <= i; j++)
-        GEOSGeom_destroy(geos_inputs[j]);
+        GEOSGeom_destroy_r(ctx, geos_inputs[j]);
       return NULL;
     }
   }
@@ -1836,11 +1835,10 @@ geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms,
   for (i = 0; i < nclusters; ++i)
   {
     result[i] = GEOS2POSTGIS(geos_results[i], is3d);
-    GEOSGeom_destroy(geos_results[i]);
+    GEOSGeom_destroy_r(ctx, geos_results[i]);
   }
   lwfree(geos_results);
   *count = nclusters;
-  finishGEOS();
   return result;
 }
 
@@ -1871,7 +1869,7 @@ geo_cluster_within(const GSERIALIZED **geoms, uint32_t ngeoms,
   }
 
   uint32_t i;
-  initGEOS(lwnotice, lwgeom_geos_error);
+  GEOSContextHandle_t ctx = geos_get_context();
   LWGEOM **lwgeoms = lwalloc(ngeoms * sizeof(LWGEOM *));
   for (i = 0; i < ngeoms; i++)
     lwgeoms[i] = lwgeom_from_gserialized(geoms[i]);
@@ -1898,7 +1896,6 @@ geo_cluster_within(const GSERIALIZED **geoms, uint32_t ngeoms,
     lwgeom_free(lw_results[i]);
   }
   lwfree(lw_results);
-  finishGEOS();
   *count = nclusters;
   return result;
 }
