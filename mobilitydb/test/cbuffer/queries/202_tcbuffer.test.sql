@@ -657,3 +657,10 @@ SELECT tcbuffer '{[Cbuffer(Point(1 1), 0.2)@2000-01-01, Cbuffer(Point(1 1), 0.4)
 
 -- tprecision
 SELECT asText(tprecision(tcbuffer '[Cbuffer(Point(0 0),1)@2001-01-01, Cbuffer(Point(4 0),3)@2001-01-01 00:00:04]', interval '2 secs'));
+SELECT numSequences(tcbufferSeqSetGaps(ARRAY[
+  tcbuffer 'Cbuffer(Point(1 1), 0.5)@2000-01-01',
+  tcbuffer 'Cbuffer(Point(2 2), 0.5)@2000-01-02',
+  tcbuffer 'Cbuffer(Point(3 3), 0.5)@2000-01-03'
+]::tcbuffer[], '5 minutes'::interval));
+
+-------------------------------------------------------------------------------/
