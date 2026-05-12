@@ -180,12 +180,13 @@ nai_tpose_tpose(const Temporal *temp1, const Temporal *temp2)
   if (dist == NULL)
     return NULL;
 
-  const TInstant *min = temporal_min_instant((const Temporal *) dist);
+  const TInstant *min = temporal_min_inst_p((const Temporal *) dist);
+  TimestampTz t = min->t;
   pfree(dist);
   /* The closest point may be at an exclusive bound. */
   Datum value;
-  temporal_value_at_timestamptz(temp1, min->t, false, &value);
-  return tinstant_make_free(value, temp1->temptype, min->t);
+  temporal_value_at_timestamptz(temp1, t, false, &value);
+  return tinstant_make_free(value, temp1->temptype, t);
 }
 
 /*****************************************************************************

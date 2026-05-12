@@ -153,14 +153,14 @@ main(void)
   { TInstant * * r = trgeo_instants(trgeo_seq1, &n_out);
     printf("trgeo_instants: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Set * r = trgeo_points(trgeo_seq1);
-    printf("trgeo_points: %s\n", r ? "OK" : "NULL");
+  { Set * r = trgeometry_points(trgeo_seq1);
+    printf("trgeometry_points: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = trgeo_rotation(trgeo_seq1);
-    printf("trgeo_rotation: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = trgeometry_rotation(trgeo_seq1);
+    printf("trgeometry_rotation: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { TSequence * * r = trgeo_segments(trgeo_seq1, &n_out);
-    printf("trgeo_segments: %s\n", r ? "OK" : "NULL");
+  { TSequence * * r = trgeometry_segments(trgeo_seq1, &n_out);
+    printf("trgeometry_segments: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
   { TSequence * r = trgeo_sequence_n(trgeo_seq1, 1);
     printf("trgeo_sequence_n: %s\n", r ? "OK" : "NULL");
@@ -178,7 +178,7 @@ main(void)
     printf("trgeo_start_value: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
   /* SKIP trgeo_value_n: out-param GSERIALIZED ** is exercised manually below */
-  /* SKIP trgeo_traversed_area: pending union-of-swept-polygons implementation */
+  /* SKIP trgeometry_traversed_area: pending union-of-swept-polygons implementation */
   { Temporal * r = trgeo_append_tinstant(trgeo_seq1, trgeo_inst1, LINEAR, 1.0, interv1, true);
     printf("trgeo_append_tinstant: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }

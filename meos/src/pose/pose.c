@@ -603,7 +603,7 @@ pose_wkt_out(const Pose *pose, bool extended, int maxdd)
     snprintf(result, len, "Pose(%s,%s)", wkt_point, theta);
     pfree(theta);
   }
-  lwgeom_free(geom); pfree(wkt_point);
+  lwgeom_free(geom); pfree(gs); pfree(wkt_point);
   return result;
 }
 
