@@ -3293,8 +3293,8 @@ mrr_distance_geos(GEOSGeometry *geom, bool geodetic)
           GEOSGeomGetLength_r(ctx, mrr_geom, &result);
         break;
       case GEOS_POLYGON: /* compute length of diagonal */
-        pt1 = GEOSGeomGetPointN(GEOSGetExteriorRing_r(ctx, mrr_geom), 0);
-        pt2 = GEOSGeomGetPointN(GEOSGetExteriorRing_r(ctx, mrr_geom), 2);
+        pt1 = GEOSGeomGetPointN_r(ctx, GEOSGetExteriorRing_r(ctx, mrr_geom), 0);
+        pt2 = GEOSGeomGetPointN_r(ctx, GEOSGetExteriorRing_r(ctx, mrr_geom), 2);
         if (geodetic)
           result = geog_distance_geos(pt1, pt2);
         else
