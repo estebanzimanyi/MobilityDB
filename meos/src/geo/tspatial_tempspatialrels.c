@@ -62,6 +62,7 @@
 #include "temporal/tinstant.h"
 #include "temporal/tsequence.h"
 #include "temporal/type_util.h"
+#include "geo/clip_clipper2.h"
 #include "geo/postgis_funcs.h"
 #include "geo/tgeo_restrict.h"
 #include "geo/tgeo_spatialfuncs.h"
@@ -196,46 +197,66 @@ tinterrel_tpointseq_simple_geo(const TSequence *seq, const GSERIALIZED *gs,
     return result;
   }
 
-  GSERIALIZED *traj = tpointseq_linear_trajectory(seq, UNARY_UNION_NO);
-  GSERIALIZED *inter = geom_intersection2d(traj, gs);
-  pfree(traj);
-  if (gserialized_is_empty(inter))
-  {
-    result = palloc(sizeof(TSequence *));
-    result[0] = tsequence_from_base_tstzspan(datum_no, T_TBOOL, &seq->period,
-      STEP);
-    *count = 1;
-    pfree(inter);
-    return result;
-  }
-
   const TInstant *start = TSEQUENCE_INST_N(seq, 0);
   const TInstant *end = TSEQUENCE_INST_N(seq, seq->count - 1);
-  /* If the trajectory is a point the result is true due to the
-   * non-empty intersection test above */
-  if (seq->count == 2 &&
-    datum_point_eq(tinstant_value_p(start), tinstant_value_p(end)))
+  bool stationary = (seq->count == 2 &&
+    datum_point_eq(tinstant_value_p(start), tinstant_value_p(end)));
+
+  /* Fast path for (multi)polygon inputs: Clipper2 open-path clipping returns
+   * inside time spans directly, avoiding GEOS + tpointseq_interperiods.
+   * Stationary trajectories fall through to GEOS (a degenerate open path
+   * cannot produce a non-zero-duration span in Clipper2). */
+  int npers;
+  Span *periods;
+  uint32_t gs_type = gserialized_get_type(gs);
+  if ((gs_type == POLYGONTYPE || gs_type == MULTIPOLYGONTYPE) && !stationary)
   {
-    result = palloc(sizeof(TSequence *));
-    result[0] = tsequence_from_base_tstzspan(datum_yes, T_TBOOL, &seq->period,
-      STEP);
-    *count = 1;
+    periods = clipper2_traj_poly_periods(seq, gs, &npers);
+    if (npers == 0)
+    {
+      result = palloc(sizeof(TSequence *));
+      result[0] = tsequence_from_base_tstzspan(datum_no, T_TBOOL,
+        &seq->period, STEP);
+      *count = 1;
+      return result;
+    }
+  }
+  else
+  {
+    GSERIALIZED *traj = tpointseq_linear_trajectory(seq, UNARY_UNION_NO);
+    GSERIALIZED *inter = geom_intersection2d(traj, gs);
+    pfree(traj);
+    if (gserialized_is_empty(inter))
+    {
+      result = palloc(sizeof(TSequence *));
+      result[0] = tsequence_from_base_tstzspan(datum_no, T_TBOOL,
+        &seq->period, STEP);
+      *count = 1;
+      pfree(inter);
+      return result;
+    }
+    if (stationary)
+    {
+      result = palloc(sizeof(TSequence *));
+      result[0] = tsequence_from_base_tstzspan(datum_yes, T_TBOOL,
+        &seq->period, STEP);
+      *count = 1;
+      pfree(inter);
+      return result;
+    }
+    periods = tpointseq_interperiods(seq, inter, &npers);
     pfree(inter);
-    return result;
+    if (npers == 0)
+    {
+      result = palloc(sizeof(TSequence *));
+      result[0] = tsequence_from_base_tstzspan(datum_no, T_TBOOL,
+        &seq->period, STEP);
+      *count = 1;
+      return result;
+    }
   }
 
-  /* Get the periods at which the temporal point intersects the geometry */
-  int npers;
-  Span *periods = tpointseq_interperiods(seq, inter, &npers);
-  pfree(inter);
-  if (npers == 0)
-  {
-    result = palloc(sizeof(TSequence *));
-    result[0] = tsequence_from_base_tstzspan(datum_no, T_TBOOL, &seq->period,
-      STEP);
-    *count = 1;
-    return result;
-  }
+  /* Build the boolean result: datum_yes for inside spans, datum_no for gaps */
   SpanSet *ss;
   if (npers == 1)
     ss = minus_span_span(&seq->period, &periods[0]);
