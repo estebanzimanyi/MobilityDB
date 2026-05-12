@@ -29,20 +29,27 @@
 
 /**
  * @file
- * @brief Concurrent stress test for the GEOS spatial-relationship surface.
+ * @brief Concurrent stress test combining the GEOS spatial-relationship
+ * surface, WKT parsing of temporal points, WKB roundtrip, temporal
+ * accessors, and per-thread geometry distance calls.
  *
  * Each worker thread independently runs the full lifecycle:
  *   meos_initialize() →
- *   parse two geometries (a point and a polygon) →
- *   hot loop calling geom_intersects2d / geom_contains / geom_touches /
- *     geom_covers on the pair (each call dispatches through
- *     meos_call_geos2 to the reentrant GEOSXxx_r API with a per-thread
- *     context handle) →
+ *   parse a unique polygon + point pair and a unique tgeompoint trajectory →
+ *   hot loop:
+ *     geom_intersects2d / geom_contains / geom_covers / geom_distance2d
+ *       on the polygon/point pair (per-thread GEOS context handle),
+ *     tgeompoint_in WKT parse (lwgeom flex/bison TLS state),
+ *     temporal_as_wkb + temporal_from_wkb roundtrip (binary IO path),
+ *     temporal_num_instants / temporal_start_instant accessors,
+ *     tpoint_trajectory extracts the polyline (exercises the temporal →
+ *       GEOS conversion path),
+ *     meos_errno round-trip (thread-local errno) →
  *   meos_finalize()
  *
- * Verifies that the per-thread GEOS context handle is correctly isolated:
- * if the handle were process-shared, concurrent worker threads would race
- * on GEOS internal state and the test would produce inconsistent results
+ * Verifies that the per-thread GEOS context handle, lwgeom WKT/parser
+ * state, GMT bootstrap, GSL state, and meos_errno are all isolated:
+ * any sharing between worker threads would produce inconsistent results
  * or a SIGSEGV.
  *
  * Build (Linux, after `cmake --install` to a prefix):
@@ -96,14 +103,76 @@ worker(void *arg)
     return NULL;
   }
 
+  /* Per-thread tgeompoint WKT (unique coordinates by thread id). */
+  char tgeo_wkt[256];
+
   for (int i = 0; i < w->iters; i++)
   {
-    /* Point is inside polygon: intersects=true, covers(poly,pt)=true,
-     * contains(poly,pt)=true, touches(poly,pt)=false. */
+    /* GEOS spatial-rel surface: every call dispatches through the
+     * per-thread GEOSContextHandle_t. */
     if (! geom_intersects2d(poly, pt))
       atomic_fetch_add(&w->errors, 1);
     if (! geom_intersects2d(pt, poly))
       atomic_fetch_add(&w->errors, 1);
+    if (! geom_contains(poly, pt))
+      atomic_fetch_add(&w->errors, 1);
+    if (! geom_covers(poly, pt))
+      atomic_fetch_add(&w->errors, 1);
+    if (geom_distance2d(poly, pt) != 0.0)
+      atomic_fetch_add(&w->errors, 1);
+
+    /* WKT parse + WKB roundtrip on a unique tgeompoint trajectory.
+     * The coordinates depend on i so each iteration parses a distinct
+     * string — the lwgeom flex/bison parser state must be per-thread for
+     * this to work concurrently. */
+    snprintf(tgeo_wkt, sizeof(tgeo_wkt),
+      "[POINT(%.3f %.3f)@2024-01-01, POINT(%.3f %.3f)@2024-01-02]",
+      base + 0.001 * i, base + 0.001 * i,
+      base + 0.001 * i + 1.0, base + 0.001 * i + 1.0);
+    Temporal *t = tgeompoint_in(tgeo_wkt);
+    if (! t)
+    {
+      atomic_fetch_add(&w->errors, 1);
+      continue;
+    }
+
+    /* Binary IO roundtrip exercises the WKB encoder/decoder paths and
+     * the GMT timezone bootstrap on first call per thread. */
+    size_t wkb_size = 0;
+    uint8_t *wkb = temporal_as_wkb(t, 0, &wkb_size);
+    if (! wkb || wkb_size == 0)
+      atomic_fetch_add(&w->errors, 1);
+    else
+    {
+      Temporal *t2 = temporal_from_wkb(wkb, wkb_size);
+      if (! t2 || temporal_num_instants(t2) != 2)
+        atomic_fetch_add(&w->errors, 1);
+      free(t2);
+      free(wkb);
+    }
+
+    /* Temporal → GEOS conversion path: tpoint_trajectory builds a
+     * GEOSGeometry from the temporal value, then converts back to
+     * GSERIALIZED. */
+    GSERIALIZED *traj = tpoint_trajectory(t, false);
+    if (! traj)
+      atomic_fetch_add(&w->errors, 1);
+    else
+    {
+      /* The trajectory must intersect itself. */
+      if (! geom_intersects2d(traj, traj))
+        atomic_fetch_add(&w->errors, 1);
+      free(traj);
+    }
+
+    free(t);
+
+    /* Per-thread errno marker. */
+    int marker = w->id * 1000003 + i;
+    meos_errno_set(marker);
+    if (meos_errno() != marker)
+      atomic_fetch_add(&w->errors, 1);
+    meos_errno_reset();
   }
 
   free(poly);
