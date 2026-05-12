@@ -1732,7 +1732,6 @@ geo_cluster_dbscan(const GSERIALIZED **geoms, uint32_t ngeoms,
 
   uint32_t i;
   char *is_in_cluster = NULL;
-  GEOSContextHandle_t ctx = geos_get_context();
   LWGEOM **lwgeoms = lwalloc(ngeoms * sizeof(LWGEOM *));
   UNIONFIND *uf = UF_create(ngeoms);
   for (i = 0; i < ngeoms; i++)
@@ -1869,7 +1868,6 @@ geo_cluster_within(const GSERIALIZED **geoms, uint32_t ngeoms,
   }
 
   uint32_t i;
-  GEOSContextHandle_t ctx = geos_get_context();
   LWGEOM **lwgeoms = lwalloc(ngeoms * sizeof(LWGEOM *));
   for (i = 0; i < ngeoms; i++)
     lwgeoms[i] = lwgeom_from_gserialized(geoms[i]);
