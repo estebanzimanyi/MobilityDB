@@ -52,6 +52,12 @@ POINTARRAY* ptarray_from_GEOSCoordSeq(const GEOSCoordSequence* cs, uint8_t want3
 extern char lwgeom_geos_errmsg[];
 extern void lwgeom_geos_error(const char* fmt, ...) __attribute__ ((format (printf, 1, 2)));
 
+/* MEOS: per-thread GEOS context.  Every liblwgeom GEOS helper retrieves the
+ * thread-local handle via lwgeom_geos_context() and uses the reentrant
+ * GEOSXxx_r API. */
+/* MEOS */ extern GEOSContextHandle_t lwgeom_geos_context(void);
+/* MEOS */ extern void lwgeom_geos_finalize(void);
+
 
 /*
  * Debug macros
