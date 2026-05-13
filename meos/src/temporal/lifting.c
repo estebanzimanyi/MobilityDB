@@ -1069,7 +1069,8 @@ tfunc_tcontseq_tcontseq_single(const TSequence *seq1, const TSequence *seq2,
   MeosType basetype_res = temptype_basetype(lfinfo->restype);
   TInstant *inst1 = (TInstant *) TSEQUENCE_INST_N(seq1, 0);
   TInstant *inst2 = (TInstant *) TSEQUENCE_INST_N(seq2, 0);
-  TInstant *prev1 = NULL, *prev2 = NULL; /* make compiler quiet */
+  TInstant *prev1 = NULL;
+  const TInstant *prev2 = NULL; /* make compiler quiet */
   TimestampTz lower = DatumGetTimestampTz(inter->lower);
   TimestampTz upper = DatumGetTimestampTz(inter->upper);
   int i = 0, j = 0, ninsts = 0, nfree = 0;
@@ -1731,7 +1732,7 @@ tfunc_temporal_temporal(const Temporal *temp1, const Temporal *temp2,
     }
     case TSEQUENCE:
     {
-      TSequence *seq1 = (TSequence *) temp1;
+      const TSequence *seq1 = (TSequence *) temp1;
       interpType interp1 = MEOS_FLAGS_GET_INTERP(seq1->flags);
       switch (subtype2)
       {
@@ -1743,7 +1744,7 @@ tfunc_temporal_temporal(const Temporal *temp1, const Temporal *temp2,
               (TSequence *) temp1, (TInstant *) temp2, lfinfo);
         case TSEQUENCE:
         {
-          TSequence *seq2 = (TSequence *) temp2;
+          const TSequence *seq2 = (TSequence *) temp2;
           interpType interp2 = MEOS_FLAGS_GET_INTERP(temp2->flags);
           if (interp1 == DISCRETE)
           {
