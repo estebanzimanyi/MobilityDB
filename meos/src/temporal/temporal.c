@@ -1271,7 +1271,7 @@ tnumber_set_span(const Temporal *temp, Span *result)
   }
   else
   {
-    TBox *box = (TBox *) temporal_bbox_ptr(temp);
+    const TBox *box = (TBox *) temporal_bbox_ptr(temp);
     memcpy(result, &box->span, sizeof(Span));
   }
   return;
@@ -3014,7 +3014,7 @@ tsequence_segm_duration_iter(const TSequence *seq, int64 tunits, CompOper oper,
   for (int i = 0; i < seq->count - 1; i++)
   {
     const TInstant *inst2 = TSEQUENCE_INST_N(seq, i + 1);
-    bool upper_inc = (i == seq->count - 1) ? seq->period.upper_inc : false;
+    bool upper_inc = (i == seq->count - 2) ? seq->period.upper_inc : false;
     int64_t length = (int64)(inst2->t - inst1->t);
     switch(oper)
     {
