@@ -290,6 +290,10 @@ trgeo_to_tpoint(const Temporal *temp)
   return result;
 }
 
+/* Forward declaration; the definition is below trgeo_to_tgeometry which
+ * is its first caller. */
+extern GSERIALIZED *geom_apply_pose(const GSERIALIZED *gs, const Pose *pose);
+
 /**
  * @ingroup meos_rgeo_conversion
  * @brief Materialise the moving polygon of a temporal rigid geometry as a
