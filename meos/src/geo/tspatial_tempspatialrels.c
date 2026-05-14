@@ -1467,6 +1467,27 @@ tdwithin_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, double dist)
    * behaviour to before), mirroring how Tdistance_tgeo_geo selects its
    * distance function. */
   datum_func3 func = geo_dwithin_fn_geo(temp->flags, gs->gflags);
+      (tpoint_type(temp->temptype) && ! ensure_not_geodetic_geo(gs)) ||
+      ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
+    return NULL;
+
+  /* For a temporal point against a non-point geometry, route through
+   * tIntersects on a polygonal d-expanded buffer of gs. This mirrors the
+   * polygonal approximation that the always-quantifier branch of
+   * ea_dwithin_tgeo_geo already uses internally via geom_buffer. */
+  if (tpoint_type(temp->temptype) && gserialized_get_type(gs) != POINTTYPE)
+  {
+    GSERIALIZED *buffer = geom_buffer(gs, dist, "");
+    Temporal *result = tinterrel_tgeo_geo(temp, buffer, TINTERSECTS);
+    pfree(buffer);
+    return result;
+  }
+
+  /* Determine the distance and the turning point functions to be applied */
+  datum_func3 func =
+    /* 3D only if both arguments are 3D */
+    MEOS_FLAGS_GET_Z(temp->flags) && FLAGS_GET_Z(gs->gflags) ?
+    &datum_geom_dwithin3d : &datum_geom_dwithin2d;
   tpfunc_temp tpfn = &tpointsegm_tdwithin_turnpt;
   /* Call the generic function passing the two functions as arguments */
   return tdwithin_tspatial_spatial(temp, PointerGetDatum(gs),
