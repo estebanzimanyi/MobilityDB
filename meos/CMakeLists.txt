@@ -188,6 +188,7 @@ if(RGEO)
   set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:rgeo>")
 endif()
 if(H3)
+  message(STATUS "Including temporal H3 index objects")
   set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:h3>")
 endif()
 
@@ -217,6 +218,9 @@ target_link_libraries(${MEOS_LIB_NAME} ${GEOS_LIBRARY})
 target_link_libraries(${MEOS_LIB_NAME} ${PROJ_LIBRARIES})
 target_link_libraries(${MEOS_LIB_NAME} ${GSL_LIBRARY})
 target_link_libraries(${MEOS_LIB_NAME} ${GSL_CBLAS_LIBRARY})
+if(H3)
+  target_link_libraries(${MEOS_LIB_NAME} ${H3_LIBRARY})
+endif()
 
 #--------------------------------
 # Belongs to MEOS
@@ -267,6 +271,11 @@ endif()
 if(RGEO)
   install(
     FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_rgeo.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+endif()
+if(H3)
+  install(
+    FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_h3.h"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 endif()
 
