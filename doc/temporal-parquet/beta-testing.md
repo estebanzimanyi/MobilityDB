@@ -218,7 +218,7 @@ Please include:
 
 | PR | Repo | Content |
 |---|---|---|
-| [#911](https://github.com/MobilityDB/MobilityDB/pull/911) | MobilityDB | RFC spec document (`doc/temporal-parquet/README.md`) |
+| [`doc/temporal-parquet/README.md`](README.md) | MobilityDB | TemporalParquet RFC spec document (carried in #912) |
 | [#831](https://github.com/MobilityDB/MobilityDB/pull/831) | MobilityDB | Python PoC — export / import / inspect scripts + regression test |
 | [#912](https://github.com/MobilityDB/MobilityDB/pull/912) | MobilityDB | Temporal Data Lake umbrella RFC (uses TemporalParquet as the file-format substrate) |
 | [#113](https://github.com/MobilityDB/MobilityDuck/pull/113) | MobilityDuck | `temporalFooter()` scalar function + `tgeogpoint` + SRID/geodetic fix |
@@ -278,6 +278,6 @@ Until both land, the `trip_h3` column should be treated as a candidate-filter (u
 
 - [ ] `poc_export.py` / `poc_import.py` / `poc_inspect.py` are readable and installable without root
 - [ ] Regression test passes: `psql -d <db> < mobilitydb/test/io/queries/090_temporalparquet_roundtrip.test.sql`
-- [ ] Footer schema is consistent with the spec in PR #911
+- [ ] Footer schema is consistent with the spec in `doc/temporal-parquet/README.md`
 - [ ] Cross-platform round-trip (Scenario B above) succeeds end-to-end
 - [ ] No `Co-Authored-By` or internal planning references in commit messages

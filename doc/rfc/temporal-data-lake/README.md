@@ -6,57 +6,13 @@ Creative Commons Attribution-Share Alike 3.0 License
 https://creativecommons.org/licenses/by-sa/3.0/
 -->
 
-# RFC: Temporal Data Lake — an edge-to-cloud architecture for MobilityDB temporal data
+# Temporal Data Lake — an edge-to-cloud architecture for MobilityDB temporal data
 
-> **Discussion [#913](https://github.com/MobilityDB/MobilityDB/discussions/913)** — community discussion and sign-off
-
-## Status (2026-05-07)
-
-| Item | State | Pointer |
-|---|---|---|
-| Architecture spec | **this document** | open for sign-off |
-| Wire format (TemporalParquet) | open for sign-off | [PR #911](https://github.com/MobilityDB/MobilityDB/pull/911) / [doc/temporal-parquet/](../temporal-parquet/README.md) |
-| Portable SQL naming | open for sign-off | [Discussion #861](https://github.com/MobilityDB/MobilityDB/discussions/861) / [doc/edge-to-cloud/](../edge-to-cloud/README.md) |
-| Zero-data quickstart | **done** | [`examples/quickstart/quickstart.sql`](https://github.com/MobilityDB/MobilityDuck/blob/feat/edge-to-cloud-quickstart/examples/quickstart/quickstart.sql) in MobilityDuck (`feat/edge-to-cloud-quickstart`) — 5 synthetic vessels, no CSV needed |
-| PostgreSQL companion quickstart | **done** | [`examples/quickstart/quickstart_mobilitydb.sql`](https://github.com/MobilityDB/MobilityDuck/blob/feat/edge-to-cloud-quickstart/examples/quickstart/quickstart_mobilitydb.sql) — same 3 queries on MobilityDB |
-| Generic CSV ingest template | **done** | [`examples/generic-ingest/generic_ingest.sql`](https://github.com/MobilityDB/MobilityDuck/blob/feat/edge-to-cloud-quickstart/examples/generic-ingest/generic_ingest.sql) — parameterised, replace CSV path and column names |
-| Reference AIS implementation | **done** | [`examples/ais-data-lake/`](https://github.com/MobilityDB/MobilityDuck/blob/main/examples/ais-data-lake/ais_data_lake.sql) in MobilityDuck |
-| Python annotation tool | **done** | [`tools/temporal_parquet.py`](https://github.com/MobilityDB/MobilityDuck/blob/main/tools/temporal_parquet.py) in MobilityDuck |
-| BerlinMOD portable SQL benchmark | **done** | [`berlinmod/`](https://github.com/MobilityDB/MobilitySpark/tree/feat/jmeos-1.3-berlinmod-poc/berlinmod) in MobilitySpark (`feat/jmeos-1.3-berlinmod-poc`) — 18/18 queries pass identically on MobilityDuck and MobilityDB |
-
-## The Problem
-
-Temporal and spatiotemporal data is generated continuously at the edge — AIS ship transponders,
-IoT sensors, GPS fleet trackers, mobile network probes. Today the lifecycle is fragmented:
-
-1. **Ingest**: raw events arrive as CSV, MQTT payloads, or database rows with no typed temporal
-   structure; trajectory reconstruction happens ad-hoc in application code.
-2. **Storage**: there is no portable binary format for temporal sequences that is readable by
-   DuckDB, Spark, and PostgreSQL without a MobilityDB installation.
-3. **Query**: SQL queries written for MobilityDB use PostgreSQL-specific operator syntax
-   (`&&`, `@>`, `<<#`, `<->`, …) that does not run on DuckDB or Spark.
-
-The result: teams that collect data at the edge, stage it in a data lake, and analyse it at
-cloud scale must write three different codebases — one per platform — even though the
-underlying MEOS library is the same.
-
-## Why Now
-
-Three pieces that were missing are now ready simultaneously:
-
-| Piece | What it provides | Where |
-|---|---|---|
-| **TemporalParquet** | Standard Parquet footer convention for MEOS-WKB columns | [PR #911](https://github.com/MobilityDB/MobilityDB/pull/911) |
-| **Edge-to-Cloud SQL** | Portable named-function dialect; one query file runs on all platforms | [Discussion #861](https://github.com/MobilityDB/MobilityDB/discussions/861) |
-| **MobilityDuck** | Lightweight DuckDB runtime — reads/writes TemporalParquet natively | [MobilityDuck](https://github.com/MobilityDB/MobilityDuck) |
-| **MobilitySpark** | Spark UDFs backed by JMEOS — cloud-scale batch analytics | [MobilitySpark](https://github.com/MobilityDB/MobilitySpark) |
-| **TGEOGPOINT** | Geodetic (spheroidal-metre) type available uniformly across all platforms | MobilityDuck ≥ v0.3 |
+Temporal and spatiotemporal data is generated continuously at the edge: AIS ship transponders, IoT sensors, GPS fleet trackers, mobile network probes. Without a shared substrate the lifecycle fragments three ways: ingest arrives as CSV, MQTT, or database rows with no typed temporal structure and trajectory reconstruction happens ad hoc in application code; there is no portable binary format for temporal sequences readable by DuckDB, Spark, and PostgreSQL without a MobilityDB installation; and SQL written for MobilityDB uses PostgreSQL-specific operator syntax that does not run on DuckDB or Spark. The Temporal Data Lake removes all three: MEOS is the single semantic substrate, TemporalParquet is the portable storage format, and a named-function SQL profile runs unchanged on every platform.
 
 ## Architecture
 
-A **Temporal Data Lake** is a set of TemporalParquet-annotated Parquet files on object storage
-(S3, GCS, Azure Blob, or local filesystem), combined with a portable query dialect that makes
-those files queryable on any MobilityDB-ecosystem platform without conversion.
+A Temporal Data Lake is a set of TemporalParquet-annotated Parquet files on object storage (S3, GCS, Azure Blob, or local filesystem), combined with a portable query dialect that makes those files queryable on any MobilityDB-ecosystem platform without conversion.
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -97,7 +53,7 @@ those files queryable on any MobilityDB-ecosystem platform without conversion.
 │  └────────────────┘  └────────────────┘  └────────────────────────────────┘ │
 │                                                                              │
 │  All three platforms run the same portable SQL — named functions only,      │
-│  no operator symbols.  See edge-to-cloud RFC (Discussion #861).             │
+│  no operator symbols.                                                        │
 └──────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -105,18 +61,15 @@ those files queryable on any MobilityDB-ecosystem platform without conversion.
 
 ### Shard format
 
-Each shard is a Parquet file conforming to the **TemporalParquet** convention
-([PR #911](https://github.com/MobilityDB/MobilityDB/pull/911)):
+Each shard is a Parquet file conforming to the TemporalParquet convention ([`doc/temporal-parquet/README.md`](../../temporal-parquet/README.md)):
 
 - Temporal columns are `BYTE_ARRAY` carrying MEOS-WKB values.
-- The file's `key_value_metadata` contains a `temporal` key whose value is a JSON object
-  describing each temporal column (`base_type`, `encoding`, `srid`, `geodetic`, `subtype`,
-  `interpolation`).
+- The file's `key_value_metadata` contains a `temporal` key whose value is a JSON object describing each temporal column (`base_type`, `encoding`, `srid`, `geodetic`, `subtype`, `interpolation`).
 - Non-temporal columns (entity IDs, ping counts, partition keys) are plain Parquet types.
 
 ### Directory layout
 
-Shards are organised in a **Hive-style partition tree**:
+Shards are organised in a Hive-style partition tree:
 
 ```
 lake/
@@ -138,24 +91,11 @@ Partitions may be nested: `year=2026/month=02/h3cell=832830fffffffff/`.
 
 ### Relationship to MEOS multidimensional tiling
 
-MEOS provides a **4-dimensional (X, Y, Z, T) grid tiling engine** (`STboxGridState`,
-`tgeo_space_time_tile_init`, `tpoint_at_tile`, `tpoint_set_tiles`) that is the natural
-primitive for space-time shard partitioning.  Its interaction with the data lake is across
-four axes:
+MEOS provides a 4-dimensional (X, Y, Z, T) grid tiling engine (`STboxGridState`, `tgeo_space_time_tile_init`, `tpoint_at_tile`, `tpoint_set_tiles`) that is the natural primitive for space-time shard partitioning. Its interaction with the data lake spans five points.
 
-**1. Complementary — tiling as a spatial-query-optimal partition key.**
-Hive-style `year/month/day` partitioning enables time pruning only; a spatial query must
-still read all files for the time range and post-filter by geometry.  MEOS space-time tiles
-act as a partition key in all four dimensions: DuckDB's Hive partition pruning skips any
-shard file whose tile does not intersect the query's `STBox`.  This is predicate push-down
-at the file level — the strongest form of spatial index available to a flat file store.
+Tiling as a spatial-query-optimal partition key. Hive-style `year/month/day` partitioning enables time pruning only; a spatial query must still read all files for the time range and post-filter by geometry. MEOS space-time tiles act as a partition key in all four dimensions: Hive partition pruning skips any shard file whose tile does not intersect the query's `STBox`. This is predicate push-down at the file level, the strongest form of spatial index available to a flat file store.
 
-**2. All spatiotemporal types covered — not just tgeompoint.**
-MobilityDuck's parity work (PRs #102 + #110) exposes `spaceTimeSplit`, `spaceSplit`,
-`timeSplit`, and `valueSplit` as SQL TableFunctions for *all* spatiotemporal types —
-`tgeompoint`, `tgeogpoint`, `tgeometry`, `tgeography`, `tint`, `tfloat`, and all
-sequence/sequence-set subtypes.  This means tile-based shard writing is available for
-any column type, not just point trajectories.
+All spatiotemporal types covered, not just `tgeompoint`. `spaceTimeSplit`, `spaceSplit`, `timeSplit`, and `valueSplit` are SQL TableFunctions for all spatiotemporal types (`tgeompoint`, `tgeogpoint`, `tgeometry`, `tgeography`, `tint`, `tfloat`, and all sequence and sequence-set subtypes), so tile-based shard writing is available for any column type, not just point trajectories.
 
 ```sql
 -- Write one shard per space-time tile — works for tgeompoint, tgeogpoint, tgeometry, …
@@ -173,35 +113,18 @@ FROM (
 ) AS t(traj_fragment, tile_x, tile_y, tile_t);
 ```
 
-**3. Leverages — BitMatrix as a Parquet spatial bloom filter.**
-`tpoint_set_tiles(traj, grid_state, bitmatrix)` fills a `BitMatrix` of which tiles a
-trajectory passes through *without clipping it*.  This BitMatrix can be stored in the
-Parquet shard footer alongside the `temporal` metadata key.  A reader can skip an entire
-file by checking whether *any* cell in the BitMatrix intersects the query region, at a cost
-of a single footer read — zero row-group scans.
+BitMatrix as a Parquet spatial bloom filter. `tpoint_set_tiles(traj, grid_state, bitmatrix)` fills a `BitMatrix` of which tiles a trajectory passes through without clipping it. This BitMatrix can be stored in the Parquet shard footer alongside the `temporal` metadata key. A reader can skip an entire file by checking whether any cell in the BitMatrix intersects the query region, at the cost of a single footer read and zero row-group scans.
 
-**4. Inconsistency — fragmentation breaks the one-row-per-trajectory assumption.**
-`spaceTimeSplit` clips a trajectory to a tile's spatial-temporal extent.  If shards are
-written one row per tile per entity (fragmented layout), `*FromBinary` returns a fragment,
-not the full trajectory.  Queries that need the full sequence (total `length`, `speed`
-profile, `eIntersects` over the whole path) must reassemble fragments with a
-`tgeogpointSeqSet(list(...))` aggregate.  The present RFC assumes the
-**unfragmented layout** (one row per entity, full trajectory stored once) as the default,
-because it is simpler and sufficient for most analytical workloads.  Fragmented layout is
-an advanced option for workloads where spatial pruning dominates.
+Fragmentation breaks the one-row-per-trajectory assumption. `spaceTimeSplit` clips a trajectory to a tile's spatial-temporal extent. If shards are written one row per tile per entity (fragmented layout), `*FromBinary` returns a fragment, not the full trajectory. Queries that need the full sequence (total `length`, `speed` profile, `eIntersects` over the whole path) must reassemble fragments with a `tgeogpointSeqSet(list(...))` aggregate. The unfragmented layout (one row per entity, full trajectory stored once) is the default because it is simpler and sufficient for most analytical workloads. Fragmented layout is an advanced option for workloads where spatial pruning dominates.
 
-**5. H3 vs MEOS tiles — choose by CRS.**
-H3 uses a discrete global hexagonal grid that distributes area uniformly on the sphere —
-the natural choice for WGS-84 lon/lat `tgeogpoint` data.  MEOS tiles are axis-aligned
-rectangles — the natural choice for projected CRS (UTM zones, local coordinate systems).
+H3 versus MEOS tiles, chosen by CRS. H3 uses a discrete global hexagonal grid that distributes area uniformly on the sphere, the natural choice for WGS-84 lon/lat `tgeogpoint` data. MEOS tiles are axis-aligned rectangles, the natural choice for projected CRS (UTM zones, local coordinate systems).
 
 | Data type | CRS | Recommended partition grid |
 |---|---|---|
 | `tgeogpoint` | WGS-84 lon/lat | H3 cells (`th3index`) |
 | `tgeompoint` | Projected (UTM, etc.) | MEOS space-time tiles (`spaceTimeSplit`) |
 
-Combining both: a two-level partition (`h3cell=.../year=.../month=...`) gives spatial and
-temporal pruning without fragmentation.
+A two-level partition (`h3cell=.../year=.../month=...`) gives spatial and temporal pruning without fragmentation.
 
 ### Ingest recipe (MobilityDuck)
 
@@ -248,8 +171,7 @@ TO 'lake/year=2026/month=02/day=26/shard_000.parquet'
 
 ### Portable query recipe
 
-The following SQL runs unchanged on MobilityDuck, MobilityDB, and MobilitySpark
-(portable dialect — named functions, no operator symbols):
+The following SQL runs unchanged on MobilityDuck, MobilityDB, and MobilitySpark (portable dialect: named functions, no operator symbols):
 
 ```sql
 -- Top 10 entities by total trajectory length (metres, geodetic)
@@ -281,225 +203,29 @@ WHERE eIntersects(
 );
 ```
 
-### Platform capability matrix
-
-| Operation | MobilityDuck | MobilityDB | MobilitySpark |
-|---|:---:|:---:|:---:|
-| Write TemporalParquet (`asBinary` + COPY TO) | ✓ | ✓ | ✓ (via PyMEOS/JMEOS) |
-| Read TemporalParquet (`*FromBinary`) | ✓ | ✓ | ✓ |
-| `length()` — geodetic metres | ✓ | ✓ | ✓ |
-| `speed()`, `maxValue()` | ✓ | ✓ | ✓ |
-| `eIntersects(geom, tpoint)` | ✓ | ✓ | ✓ |
-| `eContains(geom, tpoint)` | ✓ | ✓ | partial |
-| `nearestApproachDistance(tpoint, tpoint)` | ✓ | ✓ | planned |
-| `&&(tpoint, tpoint)` — STBox overlap pre-filter | ✓ | ✓ | planned |
-| `expandSpace(tpoint, float)` → stbox | ✓ | ✓ | planned |
-| `tDwithin(tpoint, tpoint, float)` → tbool | ✓ | ✓ | planned |
-| `whenTrue(tbool)` → tstzspanset | ✓ | ✓ | planned |
-| `valueAtTimestamp(tpoint, timestamptz)` | ✓ | ✓ | planned |
-| `atGeometry(tpoint, geom)` | ✓ | ✓ | planned |
-| `timeSplit(temp, interval)` — all types | ✓ (PR #110) | ✓ | planned |
-| `spaceSplit(tpoint, xsize, ysize)` — all spatial types | ✓ (PR #102) | ✓ | planned |
-| `spaceTimeSplit(tpoint, x, y, duration)` — all spatial types | ✓ (PR #102) | ✓ | planned |
-| `valueSplit(tnumber, size)` | ✓ (PR #110) | ✓ | planned |
-| Hive-partition pruning | ✓ (DuckDB native) | via COPY + partitioned tables | ✓ (Spark native) |
-| GiST / SP-GiST index | — | ✓ | — |
-| `th3index` spatial partitioning | ✓ | ✓ | planned |
-
 ### Geodetic note
 
-Use `tgeogpoint` (not `tgeompoint`) for any column where distance or speed will be computed.
-`tgeogpoint` stores the geodetic flag in the MEOS-WKB type tag; the flag is preserved through
-the Parquet round-trip and is self-describing on every platform.  `length(tgeogpoint)` returns
-**metres** uniformly across MobilityDuck, MobilityDB, and PyMEOS/MobilitySpark.
-
-See [TGEOGPOINT design note](https://github.com/MobilityDB/MobilityDuck/blob/main/docs/tgeogpoint-design.md).
-
-## Reference Implementations
-
-### Zero-data quickstart (no external data required)
-
-[`examples/quickstart/quickstart.sql`](https://github.com/MobilityDB/MobilityDuck/blob/feat/edge-to-cloud-quickstart/examples/quickstart/quickstart.sql)
-generates 5 synthetic vessels in the North Sea from inline `VALUES` — no CSV, no download,
-no configuration.  Clone MobilityDuck, check out `feat/edge-to-cloud-quickstart`, and run
-in under 1 second:
-
-```bash
-# Install MobilityDuck (community extension):
-duckdb :memory: -s "INSTALL mobilitydb FROM community; LOAD mobilitydb;"
-
-# Or with a local build, from the MobilityDuck repo root:
-cd examples/quickstart
-duckdb :memory: -s "$(cat quickstart.sql)"
-```
-
-It demonstrates the full pipeline:
-
-1. Generate pings from `VALUES` + `generate_series`
-2. Build `tgeogpointSeq` trajectories — geodetic WGS-84, metres
-3. Write a TemporalParquet shard with `asBinary()` + `temporalFooter()` KV_METADATA
-4. Query: geodetic length/speed; region intersection; trip duration
-
-[`examples/quickstart/quickstart_mobilitydb.sql`](https://github.com/MobilityDB/MobilityDuck/blob/feat/edge-to-cloud-quickstart/examples/quickstart/quickstart_mobilitydb.sql)
-runs the same three analytics queries on PostgreSQL/MobilityDB and produces
-**bit-identical results** — the two-platform proof that the portable named-function
-SQL dialect works across the ecosystem.
-
-To use with **your own data**, replace the `VALUES` block with a `read_csv()` call:
-[`examples/generic-ingest/generic_ingest.sql`](https://github.com/MobilityDB/MobilityDuck/blob/feat/edge-to-cloud-quickstart/examples/generic-ingest/generic_ingest.sql)
-is a parameterised template — configure `csv_path`, `col_entity_id`, `col_lon`, `col_lat`,
-`col_ts`, and the pipeline runs end-to-end on any GPS CSV.
-
-### BerlinMOD cross-platform benchmark (18/18 queries, identical output)
-
-[`berlinmod/`](https://github.com/MobilityDB/MobilitySpark/tree/feat/jmeos-1.3-berlinmod-poc/berlinmod)
-in MobilitySpark contains the complete
-[BerlinMOD](https://github.com/MobilityDB/MobilityDB-BerlinMOD) benchmark in the
-portable SQL dialect — all 18 queries in one SQL file each, running unchanged on
-MobilityDB, MobilityDuck, and MobilitySpark.
-
-Every query produces **byte-identical output** across platforms
-(hex-WKB for binary return, text for all other columns).
-The suite is the definitive cross-platform validation of the portable dialect:
-it exercises every major category of temporal operation (restriction, projection,
-distance, proximity, region intersection, instant lookup, aggregation) on
-real-world-scale trajectory data.
-
-To run on **your own BerlinMOD dataset** (clone `estebanzimanyi/MobilitySpark`,
-branch `feat/jmeos-1.3-berlinmod-poc`):
-
-```bash
-# Step 1 — generate your dataset with MobilityDB-BerlinMOD:
-#   psql -c "SELECT berlinmod_portability_export('/path/to/output/');"
-cp /path/to/output/*.csv berlinmod/data/
-
-# Step 2 — capture MobilityDB ground truth for each query:
-createdb berlinmod_portability
-psql -d berlinmod_portability -f berlinmod/load_mbdb.sql
-for q in q01 q02 q03 q04 q05 q06 q07 q08 q09 q10 q11 q12 q13 q14 q15 q16 q17 qrt; do
-  SQL=$(grep -v '^\s*--' berlinmod/${q}.sql | tr '\n' ' ' | sed 's/;[[:space:]]*$//')
-  psql -d berlinmod_portability -c "\copy ($SQL) TO 'berlinmod/expected/${q}.csv' CSV HEADER"
-done
-
-# Step 3 — verify MobilityDuck produces identical output:
-./berlinmod/run_mduck.sh
-# Reports PASS/FAIL per query; all 18 should PASS.
-```
-
-All 18 pass on the reference dataset; output is byte-identical to MobilityDB's.
-
-### AIS data-lake demo (real-world scale)
-
-[`examples/ais-data-lake/`](https://github.com/MobilityDB/MobilityDuck/blob/main/examples/ais-data-lake/ais_data_lake.sql)
-ingests Danish AIS data (588k raw pings from CSV):
-
-- Deduplicates and filters to Class A vessels over a 1-hour window
-- Builds `tgeogpointSeq` trajectories per vessel (1627 vessels)
-- Writes a TemporalParquet shard
-- Queries: top 10 by geodetic length; vessels near Copenhagen
-
-Wall time: ~2.5 s on a laptop for the full pipeline (ingest + build + write + query).
-
-## Alternatives Considered
-
-1. **Raw Parquet (no temporal structure)** — store one row per ping (`lat`, `lon`, `ts`).
-   Simple to write; requires reconstruction at query time on every platform; no temporal
-   predicates possible without re-building sequences.
-
-2. **MF-JSON columns** — store temporal sequences as JSON strings.  Human-readable; 3–10×
-   larger than MEOS-WKB; no native spatial-tooling hooks; slow to parse.
-
-3. **Delta Lake / Iceberg temporal tables** — row-level update semantics are designed for
-   transaction workloads, not trajectory analytics.  Time-travel in Delta/Iceberg is about
-   schema versions, not moving-object time.  TemporalParquet is complementary, not competing.
-
-4. **Apache Arrow Flight** — a streaming transport, not a storage format.  Could be used for
-   the ingest leg (raw events → edge node) but does not replace Parquet as the shard format.
-
-## Open Questions
-
-1. **Partition granularity**: is `year/month/day` the right default, or should the spec
-   recommend finer (`year/month/day/hour`) or coarser (`year/month`) partitioning?  The
-   right answer depends on query access patterns and shard count.
-
-2. **Footer annotation tooling**: the current Python CLI (`temporal_parquet.py`) is a
-   separate post-processing step.  Should MobilityDuck inject the `temporal` footer
-   automatically on `COPY … TO '*.parquet'`?  If yes, what triggers type detection —
-   column name conventions, explicit `TEMPORAL_COLUMN` hint, or inspection of the output
-   type?
-
-3. **Cross-platform `*FromBinary`**: MobilityDB reads TemporalParquet shards by first
-   COPYing the BLOB column into a staging table, then calling `tgeogpoint(blob)`.
-   MobilityDuck uses `tgeogpointFromBinary(blob)`.  Should there be a single canonical
-   function name here, or is `fromBinary` vs. cast-constructor acceptable divergence?
-
-4. **MobilitySpark ingest**: the Spark side currently uses JMEOS to build sequences in
-   Java/Python UDFs and Kryo-serialises them.  Should MobilitySpark adopt `asBinary`
-   as its standard output path to align with TemporalParquet?
-
-5. **Spatial partitioning with th3index**: H3 cell partitioning (`h3cell=...` directory)
-   would enable efficient spatial pruning using MobilityDuck's native `th3index` type.
-   What is the recommended resolution for the partition key?
-
-6. **Fragmented vs unfragmented layout**: this RFC defaults to one row per entity (full
-   trajectory, unfragmented).  Should the spec also define a fragmented layout using MEOS
-   `tpoint_at_tile` clipping, where each row is a trajectory fragment clipped to a
-   space-time tile?  Fragmented layout enables stronger spatial pruning but requires
-   fragment reassembly at query time.
-
-7. **BitMatrix footer metadata**: should the BitMatrix from `tpoint_set_tiles` be a
-   standard optional field in the TemporalParquet footer, enabling file-level spatial bloom
-   filtering without reading any row groups?  If yes, what is the serialisation format
-   (raw bytes, base64, RLE)?
+Use `tgeogpoint`, not `tgeompoint`, for any column where distance or speed will be computed. `tgeogpoint` stores the geodetic flag in the MEOS-WKB type tag; the flag is preserved through the Parquet round-trip and is self-describing on every platform. `length(tgeogpoint)` returns metres uniformly across MobilityDuck, MobilityDB, and PyMEOS/MobilitySpark. See the [TGEOGPOINT design note](https://github.com/MobilityDB/MobilityDuck/blob/main/docs/tgeogpoint-design.md).
 
 ## The data-interchange spec stack
 
-The Temporal Data Lake architecture rests on three normative specifications
-plus a portable-SQL profile. Each spec is a stand-alone document; this
-RFC defines how they compose into the edge-to-cloud workflow.
+The architecture rests on three normative specifications plus a portable-SQL profile. Each spec is a stand-alone document; this document defines how they compose into the edge-to-cloud workflow.
 
-### Layer 1 — wire format
+Layer 1, wire format: [`doc/specs/meos-wkb-0.9.md`](../../specs/meos-wkb-0.9.md), MEOS-WKB. The byte-level encoding for every MobilityDB temporal value (TInstant / TSequence / TSequenceSet across all base types). Every MEOS binding, every TemporalParquet payload column, and every WKB-flavoured I/O path inside MobilityDB serialises to and deserialises from this format.
 
-[`doc/specs/meos-wkb-0.9.md`](../../specs/meos-wkb-0.9.md) — **MEOS-WKB**.
-The byte-level encoding for every MobilityDB temporal value (TInstant /
-TSequence / TSequenceSet across all base types). Every MEOS binding,
-every TemporalParquet payload column, every WKB-flavoured I/O path
-inside MobilityDB serialises to / deserialises from this format.
+Layer 2, file format: [`doc/temporal-parquet/README.md`](../../temporal-parquet/README.md) and the matching DocBook chapter [`doc/temporal_parquet.xml`](../../temporal_parquet.xml), TemporalParquet. Standardises the Parquet footer convention, the payload column (MEOS-WKB `BYTE_ARRAY`), and the spatial and temporal min-max statistics needed for predicate pushdown.
 
-### Layer 2 — file format
+Layer 3, function registry: [`doc/specs/meos-api-0.1-draft.md`](../../specs/meos-api-0.1-draft.md), MEOS-API. The cross-binding contract: every MobilityDB function name, signature, and JSON-schema-validated argument set that PyMEOS, JMEOS, MobilityDuck, and MobilitySpark are expected to expose. The portable-SQL named-function dialect sources its function set from this registry.
 
-[`doc/temporal-parquet/README.md`](../../temporal-parquet/README.md) and the
-matching DocBook chapter [`doc/temporal_parquet.xml`](../../temporal_parquet.xml)
-— **TemporalParquet**. Standardises the Parquet footer convention, the
-payload column (MEOS-WKB BYTE_ARRAY), and the spatial / temporal min-max
-statistics needed for predicate pushdown.
+Layer 4, query dialect: [Discussion #861](https://github.com/MobilityDB/MobilityDB/discussions/861), Edge-to-Cloud portable SQL. The named-function SQL profile (used in the Portable query recipe above) that runs unchanged on DuckDB, PostgreSQL, and Spark by binding to MEOS-API function names rather than dialect-specific operators.
 
-### Layer 3 — function registry
+The four layers compose: a MobilityDuck `COPY trips TO '...' (FORMAT PARQUET)` writes MEOS-WKB-encoded rows under the TemporalParquet footer convention; a portable-SQL `SELECT eIntersects(region, trip_h3) FROM ...` binds via MEOS-API to the same kernel on whichever platform reads the shard.
 
-[`doc/specs/meos-api-0.1-draft.md`](../../specs/meos-api-0.1-draft.md) —
-**MEOS-API**. The cross-binding contract: every MobilityDB function name
-+ signature + JSON-schema-validated argument set that PyMEOS, JMEOS,
-MobilityDuck, and MobilitySpark are expected to expose. The portable-SQL
-named-function dialect sources its function set from this registry.
+## Related
 
-### Layer 4 — query dialect
-
-[Discussion #861](https://github.com/MobilityDB/MobilityDB/discussions/861)
-— **Edge-to-Cloud portable SQL**. The named-function SQL profile (covered
-above in the *Portable query recipe* section) that runs unchanged on
-DuckDB, PostgreSQL, and Spark by binding to MEOS-API function names
-rather than dialect-specific operators.
-
-The four layers compose: a MobilityDuck `COPY trips TO '...' (FORMAT
-PARQUET)` writes MEOS-WKB-encoded rows under the TemporalParquet footer
-convention; a portable-SQL `SELECT eIntersects(region, trip_h3) FROM ...`
-binds via MEOS-API to the same kernel on whichever platform reads the
-shard.
-
-## Related — implementations and supporting docs
-
-- [doc/edge-to-cloud/](../edge-to-cloud/README.md) — portable SQL operator mapping
-- [MobilityDuck](https://github.com/MobilityDB/MobilityDuck) — DuckDB ingest/query engine
-- [MobilitySpark](https://github.com/MobilityDB/MobilitySpark) — Apache Spark analytics engine
-- [MEOS-API repo](https://github.com/MobilityDB/MEOS-API) — function-registry implementation (parsed from MEOS headers; consumed by all bindings)
+- [Discussion #913](https://github.com/MobilityDB/MobilityDB/discussions/913) — Temporal Data Lake community discussion thread
+- [Discussion #861](https://github.com/MobilityDB/MobilityDB/discussions/861) — Edge-to-Cloud portable SQL profile
+- [MobilityDuck](https://github.com/MobilityDB/MobilityDuck) — DuckDB ingest and query engine, primary TemporalParquet consumer; carries the quickstart, generic-ingest, and AIS data-lake examples and the `temporal_parquet.py` annotation tool
+- [MobilitySpark](https://github.com/MobilityDB/MobilitySpark) — Apache Spark analytics engine; carries the BerlinMOD portable-SQL benchmark
+- [MEOS-API repo](https://github.com/MobilityDB/MEOS-API) — function-registry implementation, parsed from MEOS headers and consumed by all bindings
 - AIS reference dataset: Danish Maritime Authority open data

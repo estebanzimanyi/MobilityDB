@@ -218,13 +218,13 @@ WHERE  everEqTh3IndexTh3Index(t1.trip_h3, t2.trip_h3)
 		<title>Related</title>
 		<itemizedlist>
 			<listitem>
-				<para>RFC <ulink url="https://github.com/MobilityDB/MobilityDB/pull/911">#911</ulink> — TemporalParquet convention (this appendix's source).</para>
+				<para>TemporalParquet convention — see <filename>doc/temporal-parquet/README.md</filename> (this appendix's source).</para>
 			</listitem>
 			<listitem>
-				<para>RFC <ulink url="https://github.com/MobilityDB/MobilityDB/pull/912">#912</ulink> — Temporal Data Lake (edge-to-cloud architecture; this convention is the file-format substrate).</para>
+				<para>Temporal Data Lake architecture — see <filename>doc/rfc/temporal-data-lake/README.md</filename> (this convention is its file-format substrate).</para>
 			</listitem>
 			<listitem>
-				<para>PR <ulink url="https://github.com/MobilityDB/MobilityDB/pull/833">#833</ulink> — MEOS-WKB byte-format specification.</para>
+				<para>MEOS-WKB byte-format specification — see <filename>doc/specs/meos-wkb-0.9.md</filename>.</para>
 			</listitem>
 			<listitem>
 				<para><ulink url="https://geoparquet.org/">GeoParquet specification</ulink> — the spatial-Parquet standard this convention is modelled on.</para>
