@@ -688,12 +688,13 @@ cbufsegm_edge_crit_in_t(double e, double q, double v, double dr2, double r_sum,
     if (t <= 0.0 || t >= 1.0)
       continue;
     double h = e - 2.0 * t * q + t * t * v;
-    if (h <= 0.0)
+    /* h is the squared centerline distance at t.  h <= 0 means the centers
+     * coincide there, so the swept discs overlap and f is negative; do not
+     * skip it (skipping misses the true minimum), and skip the sign-
+     * consistency check which only qualifies a strictly-positive root. */
+    if (h > 0.0 && dr2 * (v * t - q) < 0.0)
       continue;
-    /* Sign consistency: (vt - q) and dr2 must agree. */
-    if (dr2 * (v * t - q) < 0.0)
-      continue;
-    double f = sqrt(h) - r_sum - t * dr2;
+    double f = sqrt(h > 0.0 ? h : 0.0) - r_sum - t * dr2;
     if (f < *best)
       *best = f;
   }
@@ -728,12 +729,11 @@ cbufsegm_edge_crit_in_s(double e, double p, double u, double dr1, double r_sum,
     if (s <= 0.0 || s >= 1.0)
       continue;
     double h = e + 2.0 * s * p + s * s * u;
-    if (h <= 0.0)
+    /* h <= 0 means centers coincide at s, swept discs overlap, f negative;
+     * keep it (skipping misses the minimum) and bypass the sign check. */
+    if (h > 0.0 && dr1 * (u * s + p) < 0.0)
       continue;
-    /* Sign consistency: (us + p) and dr1 must agree. */
-    if (dr1 * (u * s + p) < 0.0)
-      continue;
-    double f = sqrt(h) - r_sum - s * dr1;
+    double f = sqrt(h > 0.0 ? h : 0.0) - r_sum - s * dr1;
     if (f < *best)
       *best = f;
   }
