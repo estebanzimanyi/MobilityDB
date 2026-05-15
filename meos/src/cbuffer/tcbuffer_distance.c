@@ -937,9 +937,10 @@ nad_tcbuffer_stbox(const Temporal *temp, const STBox *box)
   if (! ensure_valid_tcbuffer_stbox(temp, box))
     return DBL_MAX;
 
+  GSERIALIZED *trav = tcbuffer_trav_area(temp, false);
   GSERIALIZED *geo = stbox_geo(box);
-  double result = tcbuffer_geo_nad_analytic(temp, geo);
-  pfree(geo);
+  double result = geom_distance2d(trav, geo);
+  pfree(trav); pfree(geo);
   return result;
 }
 
@@ -959,8 +960,9 @@ nad_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
     return DBL_MAX;
 
   GSERIALIZED *geom = cbuffer_to_geom(cb);
-  double result = tcbuffer_geo_nad_analytic(temp, geom);
-  pfree(geom);
+  GSERIALIZED *trav = tcbuffer_trav_area(temp, false);
+  double result = geom_distance2d(trav, geom);
+  pfree(trav); pfree(geom);
   return result;
 }
 
