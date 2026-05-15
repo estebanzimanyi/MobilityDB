@@ -64,9 +64,24 @@ SELECT h3_get_resolution(h3_latlng_to_cell(
  9@Mon Jan 01 00:00:00 2001 PST
 (1 row)
 
+SELECT startValue(h3_get_resolution(h3_latlng_to_cell(
+  tgeompoint 'SRID=4326;[POINT(-73.96 40.78)@2001-01-01, POINT(-73.90 40.80)@2001-01-02]',
+  7))) = 7
+   AND endValue(h3_get_resolution(h3_latlng_to_cell(
+  tgeompoint 'SRID=4326;[POINT(-73.96 40.78)@2001-01-01, POINT(-73.90 40.80)@2001-01-02]',
+  7))) = 7 AS densify_endpoints_at_requested_resolution;
+ densify_endpoints_at_requested_resolution 
+-------------------------------------------
+ t
+(1 row)
+
 /* Errors */
 SELECT h3_latlng_to_cell(
   tgeompoint 'SRID=3857;POINT(-73.96 40.78)@2001-01-01', 9);
+ERROR:  Only lon/lat coordinate systems are supported in geography
+/* Errors */
+SELECT h3_latlng_to_cell(
+  tgeompoint 'SRID=3857;[POINT(-73.96 40.78)@2001-01-01, POINT(-73.90 40.80)@2001-01-02]', 7);
 ERROR:  Only lon/lat coordinate systems are supported in geography
 SELECT h3_cell_to_boundary(th3index '590464338553208831@2001-01-01') IS NOT NULL;
  ?column? 
