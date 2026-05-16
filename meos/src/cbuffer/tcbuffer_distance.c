@@ -1055,11 +1055,16 @@ tcbuffer_geo_shortestline_analytic(const Temporal *temp,
     return NULL;
 
   int32_t srid = gserialized_get_srid(gs);
-  GSERIALIZED *pts[2];
-  pts[0] = geompoint_make2d(srid, w.px, w.py);
-  pts[1] = geompoint_make2d(srid, w.qx, w.qy);
-  GSERIALIZED *line = geo_makeline_garray(pts, 2);
-  pfree(pts[0]); pfree(pts[1]);
+  POINTARRAY *pa = ptarray_construct(0, 0, 2);
+  POINT4D p4;
+  p4.z = 0.0; p4.m = 0.0;
+  p4.x = w.px; p4.y = w.py;
+  ptarray_set_point4d(pa, 0, &p4);
+  p4.x = w.qx; p4.y = w.qy;
+  ptarray_set_point4d(pa, 1, &p4);
+  LWLINE *ln = lwline_construct(srid, NULL, pa);
+  GSERIALIZED *line = geo_serialize(lwline_as_lwgeom(ln));
+  lwline_free(ln);
   return line;
 }
 
