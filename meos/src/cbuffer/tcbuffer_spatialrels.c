@@ -54,6 +54,7 @@
 #include "cbuffer/cbuffer.h"
 #include "cbuffer/tcbuffer.h"
 #include "cbuffer/tcbuffer_spatialfuncs.h"
+#include <meos_cbuffer.h>
 
 /*****************************************************************************
  * Some GEOS versions cannot handle spatial relationships where one of the
@@ -339,6 +340,13 @@ ea_spatialrel_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs,
     if (! overlaps_stbox_stbox(&box1, &box2))
       return 0;
   }
+
+  /* Touch requires the temporal value and the geometry to be at distance
+   * zero; a strictly positive exact nearest-approach distance means they
+   * are disjoint, so they cannot touch under either quantifier */
+  if (func == (varfunc) (&datum_geom_touches) &&
+      nad_tcbuffer_geo(temp, gs) > 1e-6)
+    return 0;
 
   assert(temptype_subtype(temp->subtype));
   switch (temp->subtype)
