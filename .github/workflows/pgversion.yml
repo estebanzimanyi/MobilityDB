@@ -95,7 +95,7 @@ jobs:
           # Coverage build enables all opt-in subsystems so their sources get instrumented.
           cmake -DCMAKE_BUILD_TYPE=Release \
             -DWITH_COVERAGE=${{ matrix.coverage }} \
-            ${{ matrix.coverage == '1' && '-DCBUFFER=ON -DPOSE=ON -DRGEO=ON' || '' }} \
+            ${{ matrix.coverage == '1' && '-DCBUFFER=ON -DPOSE=ON -DRGEO=ON -DNPOINT=ON' || '' }} \
             ..
 
       - name: Build
