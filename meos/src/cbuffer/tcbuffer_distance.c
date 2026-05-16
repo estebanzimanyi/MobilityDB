@@ -1065,11 +1065,16 @@ tcbuffer_geo_shortestline_analytic(const Temporal *temp,
     return NULL;
 
   int32_t srid = gserialized_get_srid(gs);
-  GSERIALIZED *pts[2];
-  pts[0] = geompoint_make2d(srid, w.px, w.py);
-  pts[1] = geompoint_make2d(srid, w.qx, w.qy);
-  GSERIALIZED *line = geo_makeline_garray(pts, 2);
-  pfree(pts[0]); pfree(pts[1]);
+  POINTARRAY *pa = ptarray_construct(0, 0, 2);
+  POINT4D p4;
+  p4.z = 0.0; p4.m = 0.0;
+  p4.x = w.px; p4.y = w.py;
+  ptarray_set_point4d(pa, 0, &p4);
+  p4.x = w.qx; p4.y = w.qy;
+  ptarray_set_point4d(pa, 1, &p4);
+  LWLINE *ln = lwline_construct(srid, NULL, pa);
+  GSERIALIZED *line = geo_serialize(lwline_as_lwgeom(ln));
+  lwline_free(ln);
   return line;
 }
 
@@ -1162,7 +1167,7 @@ tcbuffer_geo_nad_analytic(const Temporal *temp, const GSERIALIZED *gs)
   if (! ok || n == 0)
   {
     if (segs) pfree(segs);
-    GSERIALIZED *trav = tcbuffer_trav_area(temp, false);
+    GSERIALIZED *trav = tcbuffer_traversed_area(temp, false);
     double result = geom_distance2d(trav, gs);
     pfree(trav);
     return result;
@@ -1251,7 +1256,7 @@ nad_tcbuffer_stbox(const Temporal *temp, const STBox *box)
   if (! ensure_valid_tcbuffer_stbox(temp, box))
     return DBL_MAX;
 
-  GSERIALIZED *trav = tcbuffer_trav_area(temp, false);
+  GSERIALIZED *trav = tcbuffer_traversed_area(temp, false);
   GSERIALIZED *geo = stbox_geo(box);
   double result = geom_distance2d(trav, geo);
   pfree(trav); pfree(geo);
@@ -1274,7 +1279,7 @@ nad_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
     return DBL_MAX;
 
   GSERIALIZED *geom = cbuffer_to_geom(cb);
-  GSERIALIZED *trav = tcbuffer_trav_area(temp, false);
+  GSERIALIZED *trav = tcbuffer_traversed_area(temp, false);
   double result = geom_distance2d(trav, geom);
   pfree(trav); pfree(geom);
   return result;
@@ -1324,7 +1329,7 @@ shortestline_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
   if (result)
     return result;
   /* Curved or unsupported geometry: exact traversed-area shortest line */
-  GSERIALIZED *trav = tcbuffer_trav_area(temp, false);
+  GSERIALIZED *trav = tcbuffer_traversed_area(temp, false);
   result = geom_shortestline2d(trav, gs);
   pfree(trav);
   return result;
