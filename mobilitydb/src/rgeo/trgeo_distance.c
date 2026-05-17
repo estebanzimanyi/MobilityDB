@@ -80,7 +80,7 @@ Tdistance_trgeo_geo(PG_FUNCTION_ARGS)
   GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
   /* Store fcinfo into a global variable */
   store_fcinfo(fcinfo);
-  Temporal *result = tdistance_trgeo_geo(temp, gs);
+  Temporal *result = tdistance_trgeometry_geo(temp, gs);
   PG_FREE_IF_COPY(temp, 0);
   PG_FREE_IF_COPY(gs, 1);
   if (! result)
@@ -103,7 +103,7 @@ Tdistance_geo_trgeo(PG_FUNCTION_ARGS)
   Temporal *temp = PG_GETARG_TEMPORAL_P(1);
   /* Store fcinfo into a global variable */
   store_fcinfo(fcinfo);
-  Temporal *result = tdistance_trgeo_geo(temp, gs);
+  Temporal *result = tdistance_trgeometry_geo(temp, gs);
   PG_FREE_IF_COPY(gs, 0);
   PG_FREE_IF_COPY(temp, 1);
   if (! result)
@@ -125,7 +125,7 @@ Tdistance_trgeo_tpoint(PG_FUNCTION_ARGS)
   Temporal *temp2 = PG_GETARG_TEMPORAL_P(1);
   /* Store fcinfo into a global variable */
   store_fcinfo(fcinfo);
-  Temporal *result = tdistance_trgeo_tpoint(temp1, temp2);
+  Temporal *result = tdistance_trgeometry_tpoint(temp1, temp2);
   PG_FREE_IF_COPY(temp1, 0);
   PG_FREE_IF_COPY(temp2, 1);
   if (! result)
@@ -147,7 +147,7 @@ Tdistance_tpoint_trgeo(PG_FUNCTION_ARGS)
   Temporal *temp2 = PG_GETARG_TEMPORAL_P(1);
   /* Store fcinfo into a global variable */
   store_fcinfo(fcinfo);
-  Temporal *result = tdistance_trgeo_tpoint(temp2, temp1);
+  Temporal *result = tdistance_trgeometry_tpoint(temp2, temp1);
   PG_FREE_IF_COPY(temp1, 0);
   PG_FREE_IF_COPY(temp2, 1);
   if (! result)
@@ -169,7 +169,7 @@ Tdistance_trgeo_trgeo(PG_FUNCTION_ARGS)
   Temporal *temp2 = PG_GETARG_TEMPORAL_P(1);
   /* Store fcinfo into a global variable */
   store_fcinfo(fcinfo);
-  Temporal *result = tdistance_trgeo_trgeo(temp1, temp2);
+  Temporal *result = tdistance_trgeometry_trgeometry(temp1, temp2);
   PG_FREE_IF_COPY(temp1, 0);
   PG_FREE_IF_COPY(temp2, 1);
   if (! result)
@@ -195,7 +195,7 @@ NAI_trgeo_geo(PG_FUNCTION_ARGS)
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   /* Store fcinfo into a global variable */
   store_fcinfo(fcinfo);
-  TInstant *result = nai_trgeo_geo(temp, gs);
+  TInstant *result = nai_trgeometry_geo(temp, gs);
   PG_FREE_IF_COPY(temp, 0);
   PG_FREE_IF_COPY(gs, 1);
   if (! result)
@@ -217,7 +217,7 @@ NAI_geo_trgeo(PG_FUNCTION_ARGS)
   Temporal *temp = PG_GETARG_TEMPORAL_P(1);
   /* Store fcinfo into a global variable */
   store_fcinfo(fcinfo);
-  TInstant *result = nai_trgeo_geo(temp, gs);
+  TInstant *result = nai_trgeometry_geo(temp, gs);
   PG_FREE_IF_COPY(gs, 0);
   PG_FREE_IF_COPY(temp, 1);
   if (! result)
@@ -239,7 +239,7 @@ NAI_trgeo_tpoint(PG_FUNCTION_ARGS)
   Temporal *temp2 = PG_GETARG_TEMPORAL_P(1);
   /* Store fcinfo into a global variable */
   store_fcinfo(fcinfo);
-  TInstant *result = nai_trgeo_tpoint(temp1, temp2);
+  TInstant *result = nai_trgeometry_tpoint(temp1, temp2);
   PG_FREE_IF_COPY(temp1, 0);
   PG_FREE_IF_COPY(temp2, 1);
   if (! result)
@@ -261,7 +261,7 @@ NAI_tpoint_trgeo(PG_FUNCTION_ARGS)
   Temporal *temp2 = PG_GETARG_TEMPORAL_P(1);
   /* Store fcinfo into a global variable */
   store_fcinfo(fcinfo);
-  TInstant *result = nai_trgeo_tpoint(temp2, temp1);
+  TInstant *result = nai_trgeometry_tpoint(temp2, temp1);
   PG_FREE_IF_COPY(temp1, 0);
   PG_FREE_IF_COPY(temp2, 1);
   if (! result)
@@ -283,7 +283,7 @@ NAI_trgeo_trgeo(PG_FUNCTION_ARGS)
   Temporal *temp2 = PG_GETARG_TEMPORAL_P(1);
   /* Store fcinfo into a global variable */
   store_fcinfo(fcinfo);
-  TInstant *result = nai_trgeo_trgeo(temp1, temp2);
+  TInstant *result = nai_trgeometry_trgeometry(temp1, temp2);
   PG_FREE_IF_COPY(temp1, 0);
   PG_FREE_IF_COPY(temp2, 1);
   if (! result)
@@ -310,7 +310,7 @@ NAD_trgeo_geo(PG_FUNCTION_ARGS)
   GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
   /* Store fcinfo into a global variable */
   store_fcinfo(fcinfo);
-  double result = nad_trgeo_geo(temp, gs);
+  double result = nad_trgeometry_geo(temp, gs);
   PG_FREE_IF_COPY(temp, 0);
   PG_FREE_IF_COPY(gs, 1);
   if (result == DBL_MAX)
@@ -333,7 +333,7 @@ NAD_geo_trgeo(PG_FUNCTION_ARGS)
   Temporal *temp = PG_GETARG_TEMPORAL_P(1);
   /* Store fcinfo into a global variable */
   store_fcinfo(fcinfo);
-  double result = nad_trgeo_geo(temp, gs);
+  double result = nad_trgeometry_geo(temp, gs);
   PG_FREE_IF_COPY(gs, 0);
   PG_FREE_IF_COPY(temp, 1);
   if (result == DBL_MAX)
@@ -356,7 +356,7 @@ NAD_trgeo_stbox(PG_FUNCTION_ARGS)
   STBox *box = PG_GETARG_STBOX_P(1);
   /* Store fcinfo into a global variable */
   store_fcinfo(fcinfo);
-  double result = nad_trgeo_stbox(temp, box);
+  double result = nad_trgeometry_stbox(temp, box);
   PG_FREE_IF_COPY(temp, 0);
   if (result == DBL_MAX)
     PG_RETURN_NULL();
@@ -378,7 +378,7 @@ NAD_stbox_trgeo(PG_FUNCTION_ARGS)
   Temporal *temp = PG_GETARG_TEMPORAL_P(1);
   /* Store fcinfo into a global variable */
   store_fcinfo(fcinfo);
-  double result = nad_trgeo_stbox(temp, box);
+  double result = nad_trgeometry_stbox(temp, box);
   PG_FREE_IF_COPY(temp, 1);
   if (result == DBL_MAX)
     PG_RETURN_NULL();
@@ -400,7 +400,7 @@ NAD_trgeo_tpoint(PG_FUNCTION_ARGS)
   Temporal *temp2 = PG_GETARG_TEMPORAL_P(1);
   /* Store fcinfo into a global variable */
   store_fcinfo(fcinfo);
-  double result = nad_trgeo_tpoint(temp1, temp2);
+  double result = nad_trgeometry_tpoint(temp1, temp2);
   PG_FREE_IF_COPY(temp1, 0);
   PG_FREE_IF_COPY(temp2, 1);
   if (result == DBL_MAX)
@@ -423,7 +423,7 @@ NAD_tpoint_trgeo(PG_FUNCTION_ARGS)
   Temporal *temp2 = PG_GETARG_TEMPORAL_P(1);
   /* Store fcinfo into a global variable */
   store_fcinfo(fcinfo);
-  double result = nad_trgeo_tpoint(temp2, temp1);
+  double result = nad_trgeometry_tpoint(temp2, temp1);
   PG_FREE_IF_COPY(temp1, 0);
   PG_FREE_IF_COPY(temp2, 1);
   if (result == DBL_MAX)
@@ -446,7 +446,7 @@ NAD_trgeo_trgeo(PG_FUNCTION_ARGS)
   Temporal *temp2 = PG_GETARG_TEMPORAL_P(1);
   /* Store fcinfo into a global variable */
   store_fcinfo(fcinfo);
-  double result = nad_trgeo_trgeo(temp1, temp2);
+  double result = nad_trgeometry_trgeometry(temp1, temp2);
   PG_FREE_IF_COPY(temp1, 0);
   PG_FREE_IF_COPY(temp2, 1);
   if (result == DBL_MAX)
@@ -470,7 +470,7 @@ Shortestline_trgeo_geo(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
-  GSERIALIZED *result = shortestline_trgeo_geo(temp, gs);
+  GSERIALIZED *result = shortestline_trgeometry_geo(temp, gs);
   PG_FREE_IF_COPY(temp, 0);
   PG_FREE_IF_COPY(gs, 1);
   if (! result)
@@ -490,7 +490,7 @@ Shortestline_geo_trgeo(PG_FUNCTION_ARGS)
 {
   GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
   Temporal *temp = PG_GETARG_TEMPORAL_P(1);
-  GSERIALIZED *result = shortestline_trgeo_geo(temp, gs);
+  GSERIALIZED *result = shortestline_trgeometry_geo(temp, gs);
   PG_FREE_IF_COPY(gs, 0);
   PG_FREE_IF_COPY(temp, 1);
   if (! result)
@@ -512,7 +512,7 @@ Shortestline_trgeo_tpoint(PG_FUNCTION_ARGS)
   Temporal *temp2 = PG_GETARG_TEMPORAL_P(1);
   /* Store fcinfo into a global variable */
   store_fcinfo(fcinfo);
-  GSERIALIZED *result = shortestline_trgeo_tpoint(temp1, temp2);
+  GSERIALIZED *result = shortestline_trgeometry_tpoint(temp1, temp2);
   PG_FREE_IF_COPY(temp1, 0);
   PG_FREE_IF_COPY(temp2, 1);
   if (! result)
@@ -534,7 +534,7 @@ Shortestline_tpoint_trgeo(PG_FUNCTION_ARGS)
   Temporal *temp2 = PG_GETARG_TEMPORAL_P(1);
   /* Store fcinfo into a global variable */
   store_fcinfo(fcinfo);
-  GSERIALIZED *result = shortestline_trgeo_tpoint(temp2, temp1);
+  GSERIALIZED *result = shortestline_trgeometry_tpoint(temp2, temp1);
   PG_FREE_IF_COPY(temp1, 0);
   PG_FREE_IF_COPY(temp2, 1);
   if (! result)
@@ -556,7 +556,7 @@ Shortestline_trgeo_trgeo(PG_FUNCTION_ARGS)
   Temporal *temp2 = PG_GETARG_TEMPORAL_P(1);
   /* Store fcinfo into a global variable */
   store_fcinfo(fcinfo);
-  GSERIALIZED *result = shortestline_trgeo_trgeo(temp1, temp2);
+  GSERIALIZED *result = shortestline_trgeometry_trgeometry(temp1, temp2);
   PG_FREE_IF_COPY(temp1, 0);
   PG_FREE_IF_COPY(temp2, 1);
   if (! result)
