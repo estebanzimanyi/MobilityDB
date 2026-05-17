@@ -64,7 +64,7 @@ PG_FUNCTION_INFO_V1(Ever_eq_geo_trgeo);
 inline Datum
 Ever_eq_geo_trgeo(PG_FUNCTION_ARGS)
 {
-  return EAcomp_geo_tspatial(fcinfo, &ever_eq_geo_trgeo);
+  return EAcomp_geo_tspatial(fcinfo, &ever_eq_geo_trgeometry);
 }
 
 PGDLLEXPORT Datum Always_eq_geo_trgeo(PG_FUNCTION_ARGS);
@@ -79,7 +79,7 @@ PG_FUNCTION_INFO_V1(Always_eq_geo_trgeo);
 inline Datum
 Always_eq_geo_trgeo(PG_FUNCTION_ARGS)
 {
-  return EAcomp_geo_tspatial(fcinfo, &always_eq_geo_trgeo);
+  return EAcomp_geo_tspatial(fcinfo, &always_eq_geo_trgeometry);
 }
 
 PGDLLEXPORT Datum Ever_ne_geo_trgeo(PG_FUNCTION_ARGS);
@@ -94,7 +94,7 @@ PG_FUNCTION_INFO_V1(Ever_ne_geo_trgeo);
 inline Datum
 Ever_ne_geo_trgeo(PG_FUNCTION_ARGS)
 {
-  return EAcomp_geo_tspatial(fcinfo, &ever_ne_geo_trgeo);
+  return EAcomp_geo_tspatial(fcinfo, &ever_ne_geo_trgeometry);
 }
 
 PGDLLEXPORT Datum Always_ne_geo_trgeo(PG_FUNCTION_ARGS);
@@ -109,7 +109,7 @@ PG_FUNCTION_INFO_V1(Always_ne_geo_trgeo);
 inline Datum
 Always_ne_geo_trgeo(PG_FUNCTION_ARGS)
 {
-  return EAcomp_geo_tspatial(fcinfo, &always_ne_geo_trgeo);
+  return EAcomp_geo_tspatial(fcinfo, &always_ne_geo_trgeometry);
 }
 
 /*****************************************************************************/
@@ -125,7 +125,7 @@ PG_FUNCTION_INFO_V1(Ever_eq_trgeo_geo);
 inline Datum
 Ever_eq_trgeo_geo(PG_FUNCTION_ARGS)
 {
-  return EAcomp_tspatial_geo(fcinfo, &ever_eq_trgeo_geo);
+  return EAcomp_tspatial_geo(fcinfo, &ever_eq_trgeometry_geo);
 }
 
 PGDLLEXPORT Datum Always_eq_trgeo_geo(PG_FUNCTION_ARGS);
@@ -140,7 +140,7 @@ PG_FUNCTION_INFO_V1(Always_eq_trgeo_geo);
 inline Datum
 Always_eq_trgeo_geo(PG_FUNCTION_ARGS)
 {
-  return EAcomp_tspatial_geo(fcinfo, &always_eq_trgeo_geo);
+  return EAcomp_tspatial_geo(fcinfo, &always_eq_trgeometry_geo);
 }
 
 PGDLLEXPORT Datum Ever_ne_trgeo_geo(PG_FUNCTION_ARGS);
@@ -155,7 +155,7 @@ PG_FUNCTION_INFO_V1(Ever_ne_trgeo_geo);
 inline Datum
 Ever_ne_trgeo_geo(PG_FUNCTION_ARGS)
 {
-  return EAcomp_tspatial_geo(fcinfo, &ever_ne_trgeo_geo);
+  return EAcomp_tspatial_geo(fcinfo, &ever_ne_trgeometry_geo);
 }
 
 PGDLLEXPORT Datum Always_ne_trgeo_geo(PG_FUNCTION_ARGS);
@@ -170,7 +170,7 @@ PG_FUNCTION_INFO_V1(Always_ne_trgeo_geo);
 inline Datum
 Always_ne_trgeo_geo(PG_FUNCTION_ARGS)
 {
-  return EAcomp_tspatial_geo(fcinfo, &always_ne_trgeo_geo);
+  return EAcomp_tspatial_geo(fcinfo, &always_ne_trgeometry_geo);
 }
 
 /*****************************************************************************/
@@ -186,7 +186,7 @@ PG_FUNCTION_INFO_V1(Ever_eq_trgeo_trgeo);
 inline Datum
 Ever_eq_trgeo_trgeo(PG_FUNCTION_ARGS)
 {
-  return EAcomp_temporal_temporal(fcinfo, &ever_eq_trgeo_trgeo);
+  return EAcomp_temporal_temporal(fcinfo, &ever_eq_trgeometry_trgeometry);
 }
 
 PGDLLEXPORT Datum Always_eq_trgeo_trgeo(PG_FUNCTION_ARGS);
@@ -200,7 +200,7 @@ PG_FUNCTION_INFO_V1(Always_eq_trgeo_trgeo);
 inline Datum
 Always_eq_trgeo_trgeo(PG_FUNCTION_ARGS)
 {
-  return EAcomp_temporal_temporal(fcinfo, &always_eq_trgeo_trgeo);
+  return EAcomp_temporal_temporal(fcinfo, &always_eq_trgeometry_trgeometry);
 }
 
 PGDLLEXPORT Datum Ever_ne_trgeo_trgeo(PG_FUNCTION_ARGS);
@@ -214,7 +214,7 @@ PG_FUNCTION_INFO_V1(Ever_ne_trgeo_trgeo);
 inline Datum
 Ever_ne_trgeo_trgeo(PG_FUNCTION_ARGS)
 {
-  return EAcomp_temporal_temporal(fcinfo, &ever_ne_trgeo_trgeo);
+  return EAcomp_temporal_temporal(fcinfo, &ever_ne_trgeometry_trgeometry);
 }
 
 PGDLLEXPORT Datum Always_ne_trgeo_trgeo(PG_FUNCTION_ARGS);
@@ -228,7 +228,7 @@ PG_FUNCTION_INFO_V1(Always_ne_trgeo_trgeo);
 inline Datum
 Always_ne_trgeo_trgeo(PG_FUNCTION_ARGS)
 {
-  return EAcomp_temporal_temporal(fcinfo, &always_ne_trgeo_trgeo);
+  return EAcomp_temporal_temporal(fcinfo, &always_ne_trgeometry_trgeometry);
 }
 
 /*****************************************************************************
@@ -246,7 +246,7 @@ PG_FUNCTION_INFO_V1(Teq_geo_trgeo);
 inline Datum
 Teq_geo_trgeo(PG_FUNCTION_ARGS)
 {
-  return Tcomp_geo_tspatial(fcinfo, &teq_geo_trgeo);
+  return Tcomp_geo_tspatial(fcinfo, &teq_geo_trgeometry);
 }
 
 PGDLLEXPORT Datum Tne_geo_trgeo(PG_FUNCTION_ARGS);
@@ -261,7 +261,7 @@ PG_FUNCTION_INFO_V1(Tne_geo_trgeo);
 inline Datum
 Tne_geo_trgeo(PG_FUNCTION_ARGS)
 {
-  return Tcomp_geo_tspatial(fcinfo, &tne_geo_trgeo);
+  return Tcomp_geo_tspatial(fcinfo, &tne_geo_trgeometry);
 }
 
 /*****************************************************************************/
@@ -277,7 +277,7 @@ PG_FUNCTION_INFO_V1(Teq_trgeo_geo);
 inline Datum
 Teq_trgeo_geo(PG_FUNCTION_ARGS)
 {
-  return Tcomp_tspatial_geo(fcinfo, &teq_trgeo_geo);
+  return Tcomp_tspatial_geo(fcinfo, &teq_trgeometry_geo);
 }
 
 PGDLLEXPORT Datum Tne_trgeo_geo(PG_FUNCTION_ARGS);
@@ -292,7 +292,7 @@ PG_FUNCTION_INFO_V1(Tne_trgeo_geo);
 inline Datum
 Tne_trgeo_geo(PG_FUNCTION_ARGS)
 {
-  return Tcomp_tspatial_geo(fcinfo, &tne_trgeo_geo);
+  return Tcomp_tspatial_geo(fcinfo, &tne_trgeometry_geo);
 }
 
 /*****************************************************************************/
