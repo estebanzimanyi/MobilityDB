@@ -85,11 +85,16 @@ jobs:
       - name: Install coverall dependencies
         if: matrix.coverage == '1'
         run: |
-          # libh3-dev so the coverage build can compile -DH3=ON; without
-          # it, meos/src/h3/* is invisible to gcov and shows as 404 on
-          # Coveralls (the actual cause of the apparent coverage gap on
-          # h3-introducing PRs, not a real test deficit).
-          sudo apt-get -y install lcov libh3-dev
+          # libh3-dev so the coverage build can compile -DH3=ON, and
+          # postgresql-N-pointcloud so it can compile -DPOINTCLOUD=ON;
+          # without each, the corresponding meos/src/{h3,pointcloud}/*
+          # and the cross-cutting #if H3 / #if POINTCLOUD blocks are
+          # stripped at preprocess time and show as 404/missed on
+          # Coveralls (not a real test deficit). The runtime tests also
+          # need the 'pointcloud' PG extension available (CREATE
+          # EXTENSION mobilitydb CASCADE pulls it in).
+          sudo apt-get -y install lcov libh3-dev \
+            postgresql-${{ matrix.psql }}-pointcloud
 
       - name: Locate libh3 on disk and pin its paths
         if: matrix.coverage == '1'
@@ -115,6 +120,29 @@ jobs:
           echo "Found libh3 headers at: $H3_INC_DIR"
           echo "Found libh3 library at: $H3_LIB"
 
+      - name: Build pgPointCloud from source (for libpc.a)
+        if: matrix.coverage == '1'
+        run: |
+          # MobilityDB's POINTCLOUD=ON build links against pgPointCloud's
+          # static lib (pointcloud-pg/lib/libpc.a, produced as a side-
+          # effect of the upstream autotools build). The runtime extension
+          # we installed above does NOT ship that static archive — only
+          # the .so. So clone + build pgPointCloud here just to harvest
+          # the libpc.a that meos/src/pointcloud/CMakeLists.txt:114
+          # checks for.
+          sudo apt-get -y install autoconf automake libtool \
+            libxml2-dev pkg-config
+          # The pgPointCloud source is vendored at pointcloud-pg/ (tracked
+          # in the branch); we just need to run its autotools build to
+          # produce the static archive.
+          cd pointcloud-pg
+          ./autogen.sh
+          ./configure \
+            --with-pgconfig=/usr/lib/postgresql/${{ matrix.psql }}/bin/pg_config
+          make -j $(nproc)
+          # Sanity: libpc.a must land where MobilityDB's CMake will look.
+          ls -la lib/libpc.a
+
       - name: Configure for gcc
         run: |
           export PATH=/usr/lib/postgresql/${{ matrix.psql }}/bin:$PATH
@@ -128,9 +156,11 @@ jobs:
           # When matrix.coverage=1, env.H3_INCLUDE_DIR/H3_LIBRARY were
           # populated by the 'Locate libh3' step; pin them via -D so the
           # find_path / find_library defaults can't miss the layout.
+          # POINTCLOUD=ON requires the pgPointCloud build step earlier in
+          # this job.
           cmake -DCMAKE_BUILD_TYPE=Release \
             -DWITH_COVERAGE=${{ matrix.coverage }} \
-            ${{ matrix.coverage == '1' && format('-DCBUFFER=ON -DPOSE=ON -DRGEO=ON -DNPOINT=ON -DH3=ON -DH3_INCLUDE_DIR={0} -DH3_LIBRARY={1}', env.H3_INCLUDE_DIR, env.H3_LIBRARY) || '' }} \
+            ${{ matrix.coverage == '1' && format('-DCBUFFER=ON -DPOSE=ON -DRGEO=ON -DNPOINT=ON -DPOINTCLOUD=ON -DH3=ON -DH3_INCLUDE_DIR={0} -DH3_LIBRARY={1}', env.H3_INCLUDE_DIR, env.H3_LIBRARY) || '' }} \
             ..
 
       - name: Build
