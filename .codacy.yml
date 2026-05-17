@@ -41,6 +41,8 @@ engines:
       - "postgres/**"
       - "pgtypes/**"
       - "h3-pg/**"
+      - "arrow/**"
+      - "nanoarrow/**"
       - "pointcloud-pg/**"
       - "arrow/**"
       - "contrib/**"
@@ -62,12 +64,23 @@ engines:
 #                                           "use of assert" warning is
 #                                           a non-issue for a dev script
 #                                           that runs once).
+#   * arrow/**                            - vendored Apache-2.0 Arrow C
+#                                           Data Interface ABI header;
+#                                           provenance-reviewed, not
+#                                           style-reviewed.
+#   * nanoarrow/**                        - vendored Apache-2.0 nanoarrow
+#                                           amalgamation used only by the
+#                                           standalone Arrow conformance
+#                                           validators; provenance-reviewed,
+#                                           not style-reviewed.
 exclude_paths:
   - "postgis/**"
   - "postgres/**"
   - "pgtypes/**"
   - "h3-pg/**"
   - "scripts/h3pg_import/**"
+  - "arrow/**"
+  - "nanoarrow/**"
   - "pointcloud-pg/**"
   - "arrow/**"
   - "clipper2/**"
