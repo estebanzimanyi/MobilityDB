@@ -13,6 +13,19 @@ SET(LOCAL_FILES
   312_tnpoint_distance
   314_tnpoint_aggfuncs
   317_tnpoint_indexes
+  081_npoint
+  082_npointset
+  083_tnpoint
+  085_tnpoint_compops
+  087_tnpoint_spatialfuncs
+  089_tnpoint_topops
+  090_tnpoint_posops
+  091_tnpoint_routeops
+  092_tnpoint_gin
+  093_tnpoint_distance
+  095_tnpoint_aggfuncs
+  098_tnpoint_indexes
+  099_portable_aliases
   )
 
 foreach (f ${LOCAL_FILES})
