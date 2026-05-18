@@ -256,7 +256,7 @@ extern Temporal *tpose_speed(const Temporal *temp);
 extern Temporal *tpose_angular_speed(const Temporal *temp);
 extern Pose *tpose_start_value(const Temporal *temp);
 extern GSERIALIZED *tpose_trajectory(const Temporal *temp);
-extern bool tpose_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict, Pose **value);
+extern bool tpose_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict, Pose **result);
 extern bool tpose_value_n(const Temporal *temp, int n, Pose **result);
 extern Pose **tpose_values(const Temporal *temp, int *count);
 
