@@ -53,7 +53,7 @@ CREATE FUNCTION tDisjoint(tgeompoint, geometry)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tdisjoint_tgeo_geo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
--- Alias for temporal not equals, that is, tgeo_tne or #<>
+-- Alias for temporal not equals, that is, tempNe or #<>
 CREATE FUNCTION tDisjoint(tgeompoint, tgeompoint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tdisjoint_tgeo_tgeo'
@@ -75,7 +75,7 @@ CREATE FUNCTION tIntersects(tgeompoint, geometry)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tintersects_tgeo_geo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
--- Alias for temporal equals, that is, tgeo_teq or #=
+-- Alias for temporal equals, that is, tempEq or #=
 CREATE FUNCTION tIntersects(tgeompoint, tgeompoint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tintersects_tgeo_tgeo'

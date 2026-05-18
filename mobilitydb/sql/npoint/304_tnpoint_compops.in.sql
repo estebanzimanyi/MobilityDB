@@ -36,132 +36,132 @@
  * Ever/Always comparisons
  *****************************************************************************/
 
-CREATE FUNCTION ever_eq(npoint, tnpoint)
+CREATE FUNCTION everEq(npoint, tnpoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_eq_npoint_tnpoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION ever_eq(tnpoint, npoint)
+CREATE FUNCTION everEq(tnpoint, npoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_eq_tnpoint_npoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION ever_eq(tnpoint, tnpoint)
+CREATE FUNCTION everEq(tnpoint, tnpoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_eq_tnpoint_tnpoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ?= (
   LEFTARG = npoint, RIGHTARG = tnpoint,
-  PROCEDURE = ever_eq,
+  PROCEDURE = everEq,
   NEGATOR = %<>,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR ?= (
   LEFTARG = tnpoint, RIGHTARG = npoint,
-  PROCEDURE = ever_eq,
+  PROCEDURE = everEq,
   NEGATOR = %<>,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR ?= (
   LEFTARG = tnpoint, RIGHTARG = tnpoint,
-  PROCEDURE = ever_eq,
+  PROCEDURE = everEq,
   NEGATOR = %<>,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
-CREATE FUNCTION ever_ne(npoint, tnpoint)
+CREATE FUNCTION everNe(npoint, tnpoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_ne_npoint_tnpoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION ever_ne(tnpoint, npoint)
+CREATE FUNCTION everNe(tnpoint, npoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_ne_tnpoint_npoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION ever_ne(tnpoint, tnpoint)
+CREATE FUNCTION everNe(tnpoint, tnpoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_ne_tnpoint_tnpoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ?<> (
   LEFTARG = npoint, RIGHTARG = tnpoint,
-  PROCEDURE = ever_ne,
+  PROCEDURE = everNe,
   NEGATOR = %=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR ?<> (
   LEFTARG = tnpoint, RIGHTARG = npoint,
-  PROCEDURE = ever_ne,
+  PROCEDURE = everNe,
   NEGATOR = %=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR ?<> (
   LEFTARG = tnpoint, RIGHTARG = tnpoint,
-  PROCEDURE = ever_ne,
+  PROCEDURE = everNe,
   NEGATOR = %=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 /*****************************************************************************/
 
-CREATE FUNCTION always_eq(npoint, tnpoint)
+CREATE FUNCTION alwaysEq(npoint, tnpoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_eq_npoint_tnpoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION always_eq(tnpoint, npoint)
+CREATE FUNCTION alwaysEq(tnpoint, npoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_eq_tnpoint_npoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION always_eq(tnpoint, tnpoint)
+CREATE FUNCTION alwaysEq(tnpoint, tnpoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_eq_tnpoint_tnpoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR %= (
   LEFTARG = npoint, RIGHTARG = tnpoint,
-  PROCEDURE = always_eq,
+  PROCEDURE = alwaysEq,
   NEGATOR = ?<>,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %= (
   LEFTARG = tnpoint, RIGHTARG = npoint,
-  PROCEDURE = always_eq,
+  PROCEDURE = alwaysEq,
   NEGATOR = ?<>,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %= (
   LEFTARG = tnpoint, RIGHTARG = tnpoint,
-  PROCEDURE = always_eq,
+  PROCEDURE = alwaysEq,
   NEGATOR = ?<>,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
-CREATE FUNCTION always_ne(npoint, tnpoint)
+CREATE FUNCTION alwaysNe(npoint, tnpoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_ne_npoint_tnpoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION always_ne(tnpoint, npoint)
+CREATE FUNCTION alwaysNe(tnpoint, npoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_ne_tnpoint_npoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION always_ne(tnpoint, tnpoint)
+CREATE FUNCTION alwaysNe(tnpoint, tnpoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_ne_tnpoint_tnpoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR %<> (
   LEFTARG = npoint, RIGHTARG = tnpoint,
-  PROCEDURE = always_ne,
+  PROCEDURE = alwaysNe,
   NEGATOR = ?=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %<> (
   LEFTARG = tnpoint, RIGHTARG = npoint,
-  PROCEDURE = always_ne,
+  PROCEDURE = alwaysNe,
   NEGATOR = ?=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %<> (
   LEFTARG = tnpoint, RIGHTARG = tnpoint,
-  PROCEDURE = always_ne,
+  PROCEDURE = alwaysNe,
   NEGATOR = ?=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
@@ -170,62 +170,62 @@ CREATE OPERATOR %<> (
  * Temporal comparisons
  *****************************************************************************/
 
-CREATE FUNCTION temporal_teq(npoint, tnpoint)
+CREATE FUNCTION tempEq(npoint, tnpoint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_npoint_tnpoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_teq(tnpoint, npoint)
+CREATE FUNCTION tempEq(tnpoint, npoint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_tnpoint_npoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_teq(tnpoint, tnpoint)
+CREATE FUNCTION tempEq(tnpoint, tnpoint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_tnpoint_tnpoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR #= (
-  PROCEDURE = temporal_teq,
+  PROCEDURE = tempEq,
   LEFTARG = npoint, RIGHTARG = tnpoint,
   COMMUTATOR = #=
 );
 CREATE OPERATOR #= (
-  PROCEDURE = temporal_teq,
+  PROCEDURE = tempEq,
   LEFTARG = tnpoint, RIGHTARG = npoint,
   COMMUTATOR = #=
 );
 CREATE OPERATOR #= (
-  PROCEDURE = temporal_teq,
+  PROCEDURE = tempEq,
   LEFTARG = tnpoint, RIGHTARG = tnpoint,
   COMMUTATOR = #=
 );
 
 /*****************************************************************************/
 
-CREATE FUNCTION temporal_tne(npoint, tnpoint)
+CREATE FUNCTION tempNe(npoint, tnpoint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_npoint_tnpoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_tne(tnpoint, npoint)
+CREATE FUNCTION tempNe(tnpoint, npoint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_tnpoint_npoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_tne(tnpoint, tnpoint)
+CREATE FUNCTION tempNe(tnpoint, tnpoint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_tnpoint_tnpoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR #<> (
-  PROCEDURE = temporal_tne,
+  PROCEDURE = tempNe,
   LEFTARG = npoint, RIGHTARG = tnpoint,
   COMMUTATOR = #<>
 );
 CREATE OPERATOR #<> (
-  PROCEDURE = temporal_tne,
+  PROCEDURE = tempNe,
   LEFTARG = tnpoint, RIGHTARG = npoint,
   COMMUTATOR = #<>
 );
 CREATE OPERATOR #<> (
-  PROCEDURE = temporal_tne,
+  PROCEDURE = tempNe,
   LEFTARG = tnpoint, RIGHTARG = tnpoint,
   COMMUTATOR = #<>
 );
