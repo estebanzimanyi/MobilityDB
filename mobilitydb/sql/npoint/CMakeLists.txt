@@ -14,6 +14,7 @@ SET(LOCAL_FILES
   093_tnpoint_distance
   095_tnpoint_aggfuncs
   096_tnpoint_analytics
+  097_tnpoint_conversion
   098_tnpoint_indexes
   )
 
