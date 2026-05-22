@@ -15,6 +15,7 @@ SET(LOCAL_FILES
   095_tnpoint_aggfuncs
   096_tnpoint_analytics
   097_tnpoint_conversion
+  099_tnpoint_tile
   098_tnpoint_indexes
   )
 
