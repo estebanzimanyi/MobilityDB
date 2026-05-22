@@ -1,0 +1,2 @@
+SELECT ttext '{[{"unit": "km", "speed": 10}@2001-01-01,
+{"unit": "km", "speed": 20}@2001-01-02]}' -> text 'speed';
