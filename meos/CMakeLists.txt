@@ -217,6 +217,9 @@ target_link_libraries(${MEOS_LIB_NAME} ${GEOS_LIBRARY})
 target_link_libraries(${MEOS_LIB_NAME} ${PROJ_LIBRARIES})
 target_link_libraries(${MEOS_LIB_NAME} ${GSL_LIBRARY})
 target_link_libraries(${MEOS_LIB_NAME} ${GSL_CBLAS_LIBRARY})
+if(H3)
+  target_link_libraries(${MEOS_LIB_NAME} ${H3_LIBRARY})
+endif()
 
 #--------------------------------
 # Belongs to MEOS
