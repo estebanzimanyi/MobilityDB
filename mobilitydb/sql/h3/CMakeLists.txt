@@ -17,6 +17,7 @@ SET(LOCAL_FILES
   286_th3index_metrics
   287_th3index_casts
   288_th3index_compops
+  289_h3_geo
   )
 
 foreach (f ${LOCAL_FILES})

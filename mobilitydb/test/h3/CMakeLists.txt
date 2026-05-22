@@ -22,6 +22,7 @@ set(SKIP_TESTS
   286_th3index_metrics_tbl   # adapter not yet implemented
   287_th3index_casts         # adapter not yet implemented
   287_th3index_casts_tbl     # adapter not yet implemented
+  289_h3_geo                 # shares the th3index test adapter (deferred with siblings)
 )
 
 foreach(file ${testfiles})
