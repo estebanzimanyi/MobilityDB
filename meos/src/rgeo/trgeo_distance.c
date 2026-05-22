@@ -1945,7 +1945,7 @@ nai_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
       /* The closest point may be at an exclusive bound. */
       Datum value;
       temporal_value_at_timestamptz(temp, min->t, false, &value);
-      result = trgeoinst_make(trgeo_geom_p(temp), DatumGetPoseP(value), 
+      result = trgeometryinst_make(trgeo_geom_p(temp), DatumGetPoseP(value), 
         min->t);
       pfree(dist); pfree(DatumGetPointer(value));
     }
@@ -1974,7 +1974,7 @@ nai_trgeo_tpoint(const Temporal *temp1, const Temporal *temp2)
     /* The closest point may be at an exclusive bound */
     Datum value;
     temporal_value_at_timestamptz(temp1, min->t, false, &value);
-    result = trgeoinst_make(trgeo_geom_p(temp1), DatumGetPoseP(value),
+    result = trgeometryinst_make(trgeo_geom_p(temp1), DatumGetPoseP(value),
       min->t);
     pfree(dist); pfree(DatumGetPointer(value));
   }
@@ -2002,7 +2002,7 @@ nai_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2)
     /* The closest point may be at an exclusive bound. */
     Datum value;
     temporal_value_at_timestamptz(temp1, min->t, false, &value);
-      result = trgeoinst_make(trgeo_geom_p(temp1), DatumGetPoseP(value),
+      result = trgeometryinst_make(trgeo_geom_p(temp1), DatumGetPoseP(value),
         min->t);
     pfree(dist); pfree(DatumGetPointer(value));
   }

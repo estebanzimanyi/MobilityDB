@@ -77,7 +77,7 @@ spatialrel_trgeo_trav_geo(const Temporal *temp, const GSERIALIZED *gs,
 
   assert(numparam == 2 || numparam == 3);
   Datum geo = PointerGetDatum(gs);
-  Datum trav = PointerGetDatum(trgeo_traversed_area(temp, UNARY_UNION_NO));
+  Datum trav = PointerGetDatum(trgeometry_traversed_area(temp, UNARY_UNION_NO));
   Datum result;
   if (numparam == 2)
   {
@@ -116,7 +116,7 @@ spatialrel_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs,
 
   assert(numparam == 2 || numparam == 3);
   Datum dgeo = PointerGetDatum(gs);
-  Datum dtrav = PointerGetDatum(trgeo_traversed_area(temp, UNARY_UNION_NO));
+  Datum dtrav = PointerGetDatum(trgeometry_traversed_area(temp, UNARY_UNION_NO));
   Datum result;
   if (numparam == 2)
   {
@@ -154,7 +154,7 @@ ea_contains_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp, bool ever)
   /* Ensure the validity of the arguments */
   if (! ensure_valid_trgeo_geo(temp, gs) || gserialized_is_empty(gs))
     return -1;
-  GSERIALIZED *trav = trgeo_traversed_area(temp, UNARY_UNION_NO);
+  GSERIALIZED *trav = trgeometry_traversed_area(temp, UNARY_UNION_NO);
   bool result = ever ? geom_relate_pattern(gs, trav, "T********") :
     geom_contains(gs, trav);
   pfree(trav);
@@ -500,7 +500,7 @@ etouches_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
     return 0;
 
   datum_func2 func = geo_intersects_fn_geo(temp->flags, gs->gflags);
-  GSERIALIZED *trav = trgeo_traversed_area(temp, UNARY_UNION_NO);
+  GSERIALIZED *trav = trgeometry_traversed_area(temp, UNARY_UNION_NO);
   GSERIALIZED *geobound = geom_boundary(gs);
   bool result = false;
   if (geobound && ! gserialized_is_empty(geobound))
