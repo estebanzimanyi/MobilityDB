@@ -62,6 +62,15 @@ CREATE FUNCTION timeBoxes(tgeometry, interval,
   AS 'MODULE_PATHNAME', 'Tgeo_time_boxes'
   LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
 
+-- timeBoxes fragments along the time dimension, so it is defined for every
+-- temporal type, including the geodetic tgeography (geodetic STBox tiles)
+CREATE FUNCTION timeBoxes(tgeography, interval,
+    torigin timestamptz DEFAULT '2000-01-03', bitmatrix boolean DEFAULT TRUE,
+    borderInc boolean DEFAULT TRUE)
+  RETURNS stbox[]
+  AS 'MODULE_PATHNAME', 'Tgeo_time_boxes'
+  LANGUAGE C IMMUTABLE PARALLEL SAFE STRICT;
+
 CREATE FUNCTION spaceTimeBoxes(tgeometry, xsize float, ysize float,
     zsize float, interval, sorigin geometry DEFAULT 'Point(0 0 0)',
     torigin timestamptz DEFAULT '2000-01-03', bitmatrix boolean DEFAULT TRUE,

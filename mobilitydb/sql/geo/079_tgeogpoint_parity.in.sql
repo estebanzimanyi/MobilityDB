@@ -96,4 +96,12 @@ CREATE FUNCTION timeBoxes(tgeogpoint, interval,
   AS 'MODULE_PATHNAME', 'Tgeo_time_boxes'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+/* NOTE: the SPATIAL grid family (spaceBoxes/spaceTimeBoxes/spaceSplit/
+ * spaceTimeSplit) is not yet exposed for tgeogpoint. The geodetic-flag fix in
+ * stbox_tile_state_set() makes time-dimension binning (timeBoxes above) work,
+ * but the spatial grid kernels still fail with "The value must be strictly
+ * positive" on geodetic input (the planar grid-sizing path does not yet handle
+ * a geodetic origin). This is a real gap pending a kernel fix, NOT a semantic
+ * exception. */
+
 /*****************************************************************************/
