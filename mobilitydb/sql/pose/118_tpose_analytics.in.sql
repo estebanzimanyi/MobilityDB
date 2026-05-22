@@ -70,4 +70,23 @@ CREATE FUNCTION douglasPeuckerSimplify(tpose, float, boolean DEFAULT TRUE)
     )
   $$;
 
+/*****************************************************************************
+ * spans and splitN/splitEachN spans (pure time-dimension)
+ *****************************************************************************/
+
+CREATE FUNCTION spans(tpose)
+  RETURNS tstzspan[]
+  AS 'MODULE_PATHNAME', 'Temporal_spans'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION splitNSpans(tpose, integer)
+  RETURNS tstzspan[]
+  AS 'MODULE_PATHNAME', 'Temporal_split_n_spans'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION splitEachNSpans(tpose, integer)
+  RETURNS tstzspan[]
+  AS 'MODULE_PATHNAME', 'Temporal_split_each_n_spans'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 /*****************************************************************************/
