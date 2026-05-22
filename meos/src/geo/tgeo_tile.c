@@ -495,13 +495,14 @@ stbox_tile_state_make(const Temporal *temp, const STBox *box, double xsize,
  * @param[in] hasx True when the tile has spatial dimension
  * @param[in] hasz True when the tile has Z dimension
  * @param[in] hast True when the tile has T dimension
+ * @param[in] geodetic True when the tile has geodetic coordinates
  * @param[in] srid SRID of the spatial dimension
  * @param[out] result Box representing the tile
  */
 void
 stbox_tile_state_set(double x, double y, double z, TimestampTz t, double xsize,
   double ysize, double zsize, int64 tunits, bool hasx, bool hasz, bool hast,
-  int32 srid, STBox *result)
+  bool geodetic, int32 srid, STBox *result)
 {
   assert(hasx || hast);
 
@@ -525,7 +526,7 @@ stbox_tile_state_set(double x, double y, double z, TimestampTz t, double xsize,
     span_set(TimestampTzGetDatum(t), TimestampTzGetDatum(t + tunits), true,
       false, T_TIMESTAMPTZ, T_TSTZSPAN, &p);
   }
-  stbox_set(hasx, hasz, false, srid, xmin, xmax, ymin, ymax, zmin, zmax,
+  stbox_set(hasx, hasz, geodetic, srid, xmin, xmax, ymin, ymax, zmin, zmax,
     hast ? &p : NULL, result);
   return;
 }
@@ -639,7 +640,8 @@ stbox_tile_state_get(STboxGridState *state, STBox *box)
   }
   stbox_tile_state_set(state->x, state->y, state->z, state->t, state->xsize,
     state->ysize, state->zsize, state->tunits, state->hasx, state->hasz,
-    state->hast, state->box.srid, box);
+    state->hast, MEOS_FLAGS_GET_GEODETIC(state->box.flags), state->box.srid,
+    box);
   return true;
 }
 
@@ -749,7 +751,7 @@ stbox_space_time_tiles(const STBox *bounds, double xsize, double ysize,
   {
     stbox_tile_state_set(state->x, state->y, state->z, state->t, state->xsize,
       state->ysize, state->zsize, state->tunits, hasx, hasz, hast,
-      state->box.srid, &result[i]);
+      MEOS_FLAGS_GET_GEODETIC(state->box.flags), state->box.srid, &result[i]);
     stbox_tile_state_next(state);
   }
   *count = count1;
@@ -872,9 +874,10 @@ stbox_space_time_tile(const GSERIALIZED *point, TimestampTz t,
     zmin = float_get_bin(pt.z, zsize, ptorig.z);
   }
   TimestampTz tmin = hast ? timestamptz_bin_start(t, tunits, torigin) : 0;
+  bool geodetic = hasx ? (bool) FLAGS_GET_GEODETIC(point->gflags) : false;
   STBox *result = palloc0(sizeof(STBox));
   stbox_tile_state_set(xmin, ymin, zmin, tmin, xsize, ysize, zsize, tunits,
-    hasx, hasz, hast, srid, result);
+    hasx, hasz, hast, geodetic, srid, result);
   return result;
 }
 

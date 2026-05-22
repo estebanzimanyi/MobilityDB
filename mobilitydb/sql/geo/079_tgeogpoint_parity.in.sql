@@ -85,10 +85,15 @@ CREATE FUNCTION tDwithin(tgeogpoint, tgeogpoint, dist float)
   AS 'MODULE_PATHNAME', 'Tdwithin_tgeo_tgeo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-/* NOTE: timeBoxes/spaceBoxes and the planar tiling family are intentionally
- * NOT exposed for tgeogpoint: the box-tiling kernels build a planar STBox and
- * raise "Operation on mixed planar and geodetic coordinates". Planar spatial
- * tiling, Gauss-Krüger projection (transform_gk), and AsMVTGeom are geodetic
- * exceptions (planar-only), reason-marked in the parity methodology. */
+/*****************************************************************************
+ * timeBoxes (time-dimension binning — defined for every temporal type)
+ *****************************************************************************/
+
+CREATE FUNCTION timeBoxes(tgeogpoint, interval,
+    torigin timestamptz DEFAULT '2000-01-03', bitmatrix boolean DEFAULT TRUE,
+    borderInc boolean DEFAULT TRUE)
+  RETURNS stbox[]
+  AS 'MODULE_PATHNAME', 'Tgeo_time_boxes'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************/
