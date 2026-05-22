@@ -76,10 +76,24 @@ SELECT startValue(h3_get_resolution(h3_latlng_to_cell(
 SELECT h3_get_resolution(h3_latlng_to_cell(
   tgeompoint 'SRID=4326;POINT(-73.96 40.78)@2001-01-01', 9));
 
+-- Sequence input exercises the densify walker; the resolution is
+-- constant across every cell the segment crosses
+SELECT startValue(h3_get_resolution(h3_latlng_to_cell(
+  tgeompoint 'SRID=4326;[POINT(-73.96 40.78)@2001-01-01, POINT(-73.90 40.80)@2001-01-02]',
+  7))) = 7
+   AND endValue(h3_get_resolution(h3_latlng_to_cell(
+  tgeompoint 'SRID=4326;[POINT(-73.96 40.78)@2001-01-01, POINT(-73.90 40.80)@2001-01-02]',
+  7))) = 7 AS densify_endpoints_at_requested_resolution;
+
 -- Mismatched SRID — must error once the adapter validates
 /* Errors */
 SELECT h3_latlng_to_cell(
   tgeompoint 'SRID=3857;POINT(-73.96 40.78)@2001-01-01', 9);
+
+-- Mismatched SRID on the densify (sequence) path must error too
+/* Errors */
+SELECT h3_latlng_to_cell(
+  tgeompoint 'SRID=3857;[POINT(-73.96 40.78)@2001-01-01, POINT(-73.90 40.80)@2001-01-02]', 7);
 
 -------------------------------------------------------------------------------
 -- h3_cell_to_boundary — per-instant polygon as tgeography
