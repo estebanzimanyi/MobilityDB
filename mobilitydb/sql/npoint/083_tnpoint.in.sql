@@ -275,6 +275,10 @@ CREATE FUNCTION getValues(tnpoint)
   RETURNS npointset
   AS 'MODULE_PATHNAME', 'Temporal_valueset'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION valueSet(tnpoint)
+  RETURNS npointset
+  AS 'MODULE_PATHNAME', 'Temporal_valueset'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION positions(tnpoint)
   RETURNS nsegment[]

@@ -270,6 +270,10 @@ CREATE FUNCTION getValues(trgeometry)
   RETURNS poseset
   AS 'MODULE_PATHNAME', 'Temporal_valueset'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION valueSet(trgeometry)
+  RETURNS poseset
+  AS 'MODULE_PATHNAME', 'Temporal_valueset'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 -- time is a reserved word in SQL
 CREATE FUNCTION getTime(trgeometry)
