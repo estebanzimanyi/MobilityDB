@@ -106,4 +106,31 @@ CREATE FUNCTION dynTimeWarpPath(tnpoint, tnpoint)
   RETURNS SETOF warp LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE
   AS $$ SELECT * FROM @extschema@.dynTimeWarpPath($1::@extschema@.tgeompoint, $2::@extschema@.tgeompoint) $$;
 
+/*****************************************************************************
+ * Spatiotemporal boxes, simplicity, MVT and measure
+ *****************************************************************************/
+
+CREATE FUNCTION stboxes(tnpoint)
+  RETURNS stbox[] LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE
+  AS $$ SELECT @extschema@.stboxes($1::@extschema@.tgeompoint) $$;
+CREATE FUNCTION splitNStboxes(tnpoint, integer)
+  RETURNS stbox[] LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE
+  AS $$ SELECT @extschema@.splitNStboxes($1::@extschema@.tgeompoint, $2) $$;
+CREATE FUNCTION splitEachNStboxes(tnpoint, integer)
+  RETURNS stbox[] LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE
+  AS $$ SELECT @extschema@.splitEachNStboxes($1::@extschema@.tgeompoint, $2) $$;
+
+CREATE FUNCTION isSimple(tnpoint)
+  RETURNS boolean LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE
+  AS $$ SELECT @extschema@.isSimple($1::@extschema@.tgeompoint) $$;
+
+CREATE FUNCTION asMVTGeom(tnpoint, bounds stbox, extent integer DEFAULT 4096,
+    buffer integer DEFAULT 256, clip boolean DEFAULT true)
+  RETURNS geom_times LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE
+  AS $$ SELECT @extschema@.asMVTGeom($1::@extschema@.tgeompoint, $2, $3, $4, $5) $$;
+
+CREATE FUNCTION geoMeasure(tnpoint, tfloat, boolean DEFAULT false)
+  RETURNS geometry LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE
+  AS $$ SELECT @extschema@.geoMeasure($1::@extschema@.tgeompoint, $2, $3) $$;
+
 /*****************************************************************************/
