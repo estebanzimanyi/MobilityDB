@@ -2041,7 +2041,7 @@ nad_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
 double
 nad_stbox_trgeo(const STBox *box, const Temporal *temp)
 {
-  return nad_trgeo_stbox(temp, box);
+  return nad_trgeometry_stbox(temp, box);
 }
 
 /**

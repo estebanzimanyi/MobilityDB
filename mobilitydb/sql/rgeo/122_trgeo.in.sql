@@ -392,11 +392,6 @@ CREATE FUNCTION segments(trgeometry)
   AS 'MODULE_PATHNAME', 'Temporal_segments'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION traversedArea(trgeometry, bool DEFAULT FALSE)
-  RETURNS geometry
-  AS 'MODULE_PATHNAME', 'Trgeometry_traversed_area'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
 CREATE FUNCTION centroid(trgeometry)
   RETURNS tgeompoint
   AS 'MODULE_PATHNAME', 'Trgeometry_centroid'
@@ -544,26 +539,6 @@ CREATE FUNCTION beforeTimestamp(trgeometry, timestamptz, strict bool DEFAULT TRU
 CREATE FUNCTION afterTimestamp(trgeometry, timestamptz, strict bool DEFAULT TRUE)
   RETURNS trgeometry
   AS 'MODULE_PATHNAME', 'Temporal_after_timestamptz'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION atGeometry(trgeometry, geometry)
-  RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Trgeometry_at_geom'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION minusGeometry(trgeometry, geometry)
-  RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Trgeometry_minus_geom'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION atStbox(trgeometry, stbox, borderInc bool DEFAULT TRUE)
-  RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Trgeometry_at_stbox'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION minusStbox(trgeometry, stbox, borderInc bool DEFAULT TRUE)
-  RETURNS trgeometry
-  AS 'MODULE_PATHNAME', 'Trgeometry_minus_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************
