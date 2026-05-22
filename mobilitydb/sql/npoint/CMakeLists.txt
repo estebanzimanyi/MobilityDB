@@ -6,6 +6,7 @@ SET(LOCAL_FILES
   083_tnpoint
   085_tnpoint_compops
   087_tnpoint_spatialfuncs
+  088_tnpoint_spatialrels
   089_tnpoint_topops
   090_tnpoint_posops
   091_tnpoint_routeops
