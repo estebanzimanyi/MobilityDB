@@ -4,10 +4,14 @@ SET(LOCAL_FILES
   122_trgeo
   124_trgeo_compops
   125_trgeo_spatialfuncs
+  126_trgeo_tile
+  127_trgeo_boxops
   127_trgeo_spatialrels
   131_trgeo_tempspatialrels
   128_trgeo_topops
   129_trgeo_posops
+  131_trgeo_aggfuncs
+  132_trgeo_similarity
   133_trgeo_distance
   133_trgeo_vclip
   134_trgeo_indexes

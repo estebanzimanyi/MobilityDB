@@ -21,7 +21,7 @@
  *
  * UNIVERSITE LIBRE DE BRUXELLES SPECIFICALLY DISCLAIMS ANY WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS FOR A PARTICULAR PURRGEO. THE SOFTWARE PROVIDED HEREUNDER IS ON
+ * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS ON
  * AN "AS IS" BASIS, AND UNIVERSITE LIBRE DE BRUXELLES HAS NO OBLIGATIONS TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *
@@ -113,6 +113,9 @@ extern TSequence *trgeometry_start_sequence(const Temporal *temp);
 extern GSERIALIZED *trgeometry_start_value(const Temporal *temp);
 extern bool trgeometry_value_n(const Temporal *temp, int n, GSERIALIZED **result);
 extern GSERIALIZED *trgeometry_traversed_area(const Temporal *temp, bool unary_union);
+extern Temporal *trgeometry_centroid(const Temporal *temp);
+extern GSERIALIZED *trgeometry_convex_hull(const Temporal *temp);
+extern Temporal *trgeometry_body_point_trajectory(const Temporal *temp, const GSERIALIZED *gs);
 
 /*****************************************************************************
  * Transformation functions
@@ -170,6 +173,16 @@ extern TInstant *nai_trgeometry_trgeometry(const Temporal *temp1, const Temporal
 extern GSERIALIZED *shortestline_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs);
 extern GSERIALIZED *shortestline_trgeometry_tpoint(const Temporal *temp1, const Temporal *temp2);
 extern GSERIALIZED *shortestline_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2);
+
+/*****************************************************************************
+ * Similarity distance functions
+ *****************************************************************************/
+
+extern double trgeometry_hausdorff_distance(const Temporal *temp1, const Temporal *temp2);
+extern double trgeometry_frechet_distance(const Temporal *temp1, const Temporal *temp2);
+extern double trgeometry_dyntimewarp_distance(const Temporal *temp1, const Temporal *temp2);
+extern Match *trgeometry_frechet_path(const Temporal *temp1, const Temporal *temp2, int *count);
+extern Match *trgeometry_dyntimewarp_path(const Temporal *temp1, const Temporal *temp2, int *count);
 
 /*****************************************************************************
  * Comparison functions

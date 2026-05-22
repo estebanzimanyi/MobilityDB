@@ -27,26 +27,30 @@
 --
 -------------------------------------------------------------------------------
 
--- Spatial accessor functions for trgeometry:
---   traversedArea(trgeometry, bool) → geometry
---   centroid(trgeometry) → tgeompoint
---   convexHull(trgeometry) → geometry
+-- Tile functions for trgeometry:
+--   spaceTiles, timeTiles, spaceTimeTiles
 
--- A unit square translating from (0,0) to (2,0) with no rotation.
--- traversedArea collects the geometry at every pose instant.
-SELECT ST_AsText(round(traversedArea(
-  trgeometry 'Polygon((0 0, 1 0, 1 1, 0 1, 0 0));[Pose(Point(0 0),0)@2026-01-01, Pose(Point(2 0),0)@2026-01-02]'), 6));
+-- A unit square translating from (0,0) to (10,0).
+-- spaceTiles: 2-unit spatial grid
+SELECT COUNT(*) FROM spaceTiles(
+  trgeometry 'Polygon((0 0, 1 0, 1 1, 0 1, 0 0));[Pose(Point(0 0),0)@2026-01-01, Pose(Point(10 0),0)@2026-01-02]',
+  2.0) t(index, tile);
 
--- traversedArea with unary union collapses the collection into one geometry.
-SELECT ST_AsText(round(traversedArea(
-  trgeometry 'Polygon((0 0, 1 0, 1 1, 0 1, 0 0));[Pose(Point(0 0),0)@2026-01-01, Pose(Point(2 0),0)@2026-01-02]', TRUE), 6));
+-- timeTiles: 6-hour time bins
+SELECT COUNT(*) FROM timeTiles(
+  trgeometry 'Polygon((0 0, 1 0, 1 1, 0 1, 0 0));[Pose(Point(0 0),0)@2026-01-01, Pose(Point(10 0),0)@2026-01-02]',
+  interval '6 hours') t(index, tile);
 
--- centroid: trajectory of the polygon centroid under rigid-body motion.
-SELECT asText(round(centroid(
-  trgeometry 'Polygon((0 0, 1 0, 1 1, 0 1, 0 0));[Pose(Point(0 0),0)@2026-01-01, Pose(Point(2 0),0)@2026-01-02]'), 6));
+-- spaceTimeTiles: 4-unit spatial and 12-hour time grid
+SELECT COUNT(*) FROM spaceTimeTiles(
+  trgeometry 'Polygon((0 0, 1 0, 1 1, 0 1, 0 0));[Pose(Point(0 0),0)@2026-01-01, Pose(Point(10 0),0)@2026-01-02]',
+  4.0, interval '12 hours') t(index, tile);
 
--- convexHull: convex hull of the traversed area.
-SELECT ST_AsText(round(convexHull(
-  trgeometry 'Polygon((0 0, 1 0, 1 1, 0 1, 0 0));[Pose(Point(0 0),0)@2026-01-01, Pose(Point(2 0),0)@2026-01-02]'), 6));
+-- Table tests
+SELECT COUNT(*) FROM tbl_trgeometry2d,
+  LATERAL spaceTiles(temp, 2.0) t WHERE tile IS NOT NULL;
+
+SELECT COUNT(*) FROM tbl_trgeometry2d,
+  LATERAL timeTiles(temp, interval '1 day') t WHERE tile IS NOT NULL;
 
 -------------------------------------------------------------------------------

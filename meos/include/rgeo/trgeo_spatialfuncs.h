@@ -1,12 +1,12 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2026, PostGIS contributors
+ * Copyright (c) 2001-2025, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -28,21 +28,52 @@
  *****************************************************************************/
 
 /**
- * @brief Spatial restriction functions for temporal rigid geometries.
+ * @brief Spatial functions for temporal rigid geometries.
  */
 
 #ifndef __TRGEO_SPATIALFUNCS_H__
 #define __TRGEO_SPATIALFUNCS_H__
 
+#include <meos.h>
 #include "temporal/temporal.h"
-#include "geo/stbox.h"
+#include "pose/pose.h"
 
 /*****************************************************************************/
+
+/* Accessor functions */
+
+extern GSERIALIZED *trgeometry_traversed_area(const Temporal *temp,
+  bool unary_union);
+extern Temporal *trgeometry_centroid(const Temporal *temp);
+extern GSERIALIZED *trgeometry_convex_hull(const Temporal *temp);
+
+/* Body-frame trajectory functions */
+
+extern Temporal *trgeometry_body_point_trajectory(const Temporal *temp,
+  const GSERIALIZED *gs);
+
+/* Restriction functions */
 
 extern Temporal *trgeo_restrict_geom(const Temporal *temp,
   const GSERIALIZED *gs, bool atfunc);
 extern Temporal *trgeo_restrict_stbox(const Temporal *temp, const STBox *box,
   bool border_inc, bool atfunc);
+
+/* Similarity distance functions */
+
+extern double trgeometry_hausdorff_distance(const Temporal *temp1,
+  const Temporal *temp2);
+
+#if MEOS
+extern double trgeometry_frechet_distance(const Temporal *temp1,
+  const Temporal *temp2);
+extern double trgeometry_dyntimewarp_distance(const Temporal *temp1,
+  const Temporal *temp2);
+extern Match *trgeometry_frechet_path(const Temporal *temp1, const Temporal *temp2,
+  int *count);
+extern Match *trgeometry_dyntimewarp_path(const Temporal *temp1,
+  const Temporal *temp2, int *count);
+#endif /* MEOS */
 
 /*****************************************************************************/
 
