@@ -557,7 +557,7 @@ Tsequence_constructor(PG_FUNCTION_ARGS)
   ArrayType *array = PG_GETARG_ARRAYTYPE_P(0);
   ensure_not_empty_array(array);
   MeosType temptype = oid_meostype(get_fn_expr_rettype(fcinfo->flinfo));
-  interpType interp = temptype_supports_linear(temptype) ? LINEAR : STEP;
+  interpType interp = temptype_continuous(temptype) ? LINEAR : STEP;
   if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
     interp = input_interp_string(fcinfo, 1);
   bool lower_inc = true, upper_inc = true;
@@ -614,7 +614,7 @@ Tsequenceset_constructor_gaps(PG_FUNCTION_ARGS)
   double maxdist = -1.0;
   Interval *maxt = NULL;
   MeosType temptype = oid_meostype(get_fn_expr_rettype(fcinfo->flinfo));
-  interpType interp = temptype_supports_linear(temptype) ? LINEAR : STEP;
+  interpType interp = temptype_continuous(temptype) ? LINEAR : STEP;
   if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
     maxt = PG_GETARG_INTERVAL_P(1);
   if (PG_NARGS() > 2 && ! PG_ARGISNULL(2))
@@ -669,7 +669,7 @@ Tsequence_from_base_tstzspan(PG_FUNCTION_ARGS)
   Datum value = PG_GETARG_ANYDATUM(0);
   Span *s = PG_GETARG_SPAN_P(1);
   MeosType temptype = oid_meostype(get_fn_expr_rettype(fcinfo->flinfo));
-  interpType interp = temptype_supports_linear(temptype) ? LINEAR : STEP;
+  interpType interp = temptype_continuous(temptype) ? LINEAR : STEP;
   if (PG_NARGS() > 2 && !PG_ARGISNULL(2))
     interp = input_interp_string(fcinfo, 2);
   PG_RETURN_TSEQUENCE_P(tsequence_from_base_tstzspan(value, temptype, s,
@@ -690,7 +690,7 @@ Tsequenceset_from_base_tstzspanset(PG_FUNCTION_ARGS)
   Datum value = PG_GETARG_ANYDATUM(0);
   SpanSet *ss = PG_GETARG_SPANSET_P(1);
   MeosType temptype = oid_meostype(get_fn_expr_rettype(fcinfo->flinfo));
-  interpType interp = temptype_supports_linear(temptype) ? LINEAR : STEP;
+  interpType interp = temptype_continuous(temptype) ? LINEAR : STEP;
   if (PG_NARGS() > 2 && !PG_ARGISNULL(2))
     interp = input_interp_string(fcinfo, 2);
 
@@ -721,6 +721,23 @@ Tbool_to_tint(PG_FUNCTION_ARGS)
   PG_RETURN_TEMPORAL_P(result);
 }
 
+PGDLLEXPORT Datum Tint_to_tbigint(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tint_to_tbigint);
+/**
+ * @ingroup mobilitydb_temporal_conversion
+ * @brief Convert a temporal integer into a temporal big integer
+ * @sqlfn tbigint()
+ * @sqlop @p ::
+ */
+Datum
+Tint_to_tbigint(PG_FUNCTION_ARGS)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  Temporal *result = tint_to_tbigint(temp);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_TEMPORAL_P(result);
+}
+
 PGDLLEXPORT Datum Tint_to_tfloat(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tint_to_tfloat);
 /**
@@ -738,6 +755,40 @@ Tint_to_tfloat(PG_FUNCTION_ARGS)
   PG_RETURN_TEMPORAL_P(result);
 }
 
+PGDLLEXPORT Datum Tbigint_to_tint(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tbigint_to_tint);
+/**
+ * @ingroup mobilitydb_temporal_conversion
+ * @brief Convert a temporal big integer into a temporal integer
+ * @sqlfn tfloat()
+ * @sqlop @p ::
+ */
+Datum
+Tbigint_to_tint(PG_FUNCTION_ARGS)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  Temporal *result = tbigint_to_tint(temp);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_TEMPORAL_P(result);
+}
+
+PGDLLEXPORT Datum Tbigint_to_tfloat(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tbigint_to_tfloat);
+/**
+ * @ingroup mobilitydb_temporal_conversion
+ * @brief Convert a temporal integer into a temporal float
+ * @sqlfn tfloat()
+ * @sqlop @p ::
+ */
+Datum
+Tbigint_to_tfloat(PG_FUNCTION_ARGS)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  Temporal *result = tbigint_to_tfloat(temp);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_TEMPORAL_P(result);
+}
+
 PGDLLEXPORT Datum Tfloat_to_tint(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tfloat_to_tint);
 /**
@@ -751,6 +802,23 @@ Tfloat_to_tint(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   Temporal *result = tfloat_to_tint(temp);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_TEMPORAL_P(result);
+}
+
+PGDLLEXPORT Datum Tfloat_to_tbigint(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tfloat_to_tbigint);
+/**
+ * @ingroup mobilitydb_temporal_conversion
+ * @brief Convert a temporal float into a temporal big integer
+ * @sqlfn tint()
+ * @sqlop @p ::
+ */
+Datum
+Tfloat_to_tbigint(PG_FUNCTION_ARGS)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  Temporal *result = tfloat_to_tbigint(temp);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_TEMPORAL_P(result);
 }
@@ -1877,7 +1945,7 @@ Temporal_append_tinstant(PG_FUNCTION_ARGS)
   {
     /* Set default interpolation according to the base type */
     MeosType temptype = oid_meostype(get_fn_expr_argtype(fcinfo->flinfo, 1));
-    interp = temptype_supports_linear(temptype) ? LINEAR : STEP;
+    interp = temptype_continuous(temptype) ? LINEAR : STEP;
   }
   else
     interp = input_interp_string(fcinfo, 2);

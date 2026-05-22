@@ -138,7 +138,6 @@ error:
  * no moreinput after the sequence
  * @param[in,out] temp_srid SRID of the temporal rigid geometry
  * @param[in] geom Reference geometry
- * @param[out] result New sequence, may be NULL
  */
 TSequence *
 trgeoseq_cont_parse(const char **str, MeosType temptype, interpType interp,
@@ -316,7 +315,7 @@ trgeo_parse(const char **str, MeosType temptype)
   int temp_srid = SRID_UNKNOWN;
   srid_parse(str, &temp_srid);
 
-  interpType interp = temptype_supports_linear(temptype) ? LINEAR : STEP;
+  interpType interp = temptype_continuous(temptype) ? LINEAR : STEP;
   /* Starts with "Interp=Step" */
   if (strncasecmp(*str, "Interp=Step;", 12) == 0)
   {

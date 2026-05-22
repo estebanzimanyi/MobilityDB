@@ -349,8 +349,15 @@ tbox_parse(const char **str)
     *str += 7;
     p_whitespace(str);
   }
+  else if (pg_strncasecmp(*str, "TBOXBIGINT", 10) == 0)
+  {
+    spantype = T_BIGINTSPAN;
+    *str += 10;
+    p_whitespace(str);
+  }
   else if (pg_strncasecmp(*str, "TBOXFLOAT", 9) == 0)
   {
+    spantype = T_FLOATSPAN;
     *str += 9;
     p_whitespace(str);
   }
@@ -740,7 +747,6 @@ error:
  * @param[in] interp Interpolation
  * @param[in] end Set to true when reading a single sequence to ensure there is
  * no more input after the sequence
- * @param[out] result New sequence, may be NULL
  * @return On error return false
  */
 TSequence *
@@ -857,7 +863,7 @@ temporal_parse(const char **str, MeosType temptype)
 {
   p_whitespace(str);
   Temporal *result = NULL;  /* keep compiler quiet */
-  interpType interp = temptype_supports_linear(temptype) ? LINEAR : STEP;
+  interpType interp = temptype_continuous(temptype) ? LINEAR : STEP;
   /* Starts with "Interp=Step;" */
   if (pg_strncasecmp(*str, "Interp=Step;", 12) == 0)
   {

@@ -67,7 +67,10 @@
   #include "rgeo/trgeo.h"
   #include "rgeo/trgeo_inst.h"
   #include "rgeo/trgeo_boxops.h"
-#endif 
+#endif
+#if H3
+  #include "h3/th3index_boxops.h"
+#endif
 
 /*****************************************************************************
  * Input/output functions
@@ -293,7 +296,7 @@ tspatial_as_ewkt(const Temporal *temp, int maxdd)
   char str1[18];
   /* Determine whether an interpolation prefix must follow the SRID prefix */
   interpType interp = MEOS_FLAGS_GET_INTERP(temp->flags);
-  bool interp_prefix = temptype_supports_linear(temp->temptype) && interp == STEP;
+  bool interp_prefix = temptype_continuous(temp->temptype) && interp == STEP;
   if (srid > 0)
     /* SRID_MAXIMUM is defined by PostGIS as 999999 */
     snprintf(str1, sizeof(str1), "SRID=%d%c", srid, interp_prefix ? ',' : ';');
@@ -447,6 +450,10 @@ tspatial_set_stbox(const Temporal *temp, STBox *box)
       else if (temp->temptype == T_TRGEOMETRY)
         trgeoinst_set_stbox(trgeoinst_geom_p((TInstant *) temp),
           (TInstant *) temp, box);
+#endif
+#if H3
+      else if (temp->temptype == T_TH3INDEX)
+        th3indexinst_set_stbox((TInstant *) temp, box);
 #endif
       else
         meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,

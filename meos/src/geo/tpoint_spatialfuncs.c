@@ -179,10 +179,9 @@ tpoint_get_coord(const Temporal *temp, int coord)
     lfinfo.func = (varfunc) &point_get_y;
   else /* coord == 2 */
     lfinfo.func = (varfunc) &point_get_z;
+  lfinfo.numparam = 0;
   lfinfo.argtype[0] = temp->temptype;
   lfinfo.restype = T_TFLOAT;
-  /* Coordinate projection is affine: linear input -> linear output */
-  lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   return tfunc_temporal(temp, &lfinfo);
 }
 
@@ -2435,7 +2434,7 @@ tpointseq_cumulative_length(const TSequence *seq, double prevlength)
 
   /* General case */
   TInstant **instants = palloc(sizeof(TInstant *) * seq->count);
-  datum_func2 func = pt_distance_fn(seq->flags);
+  datum_func2 func = point_distance_fn(seq->flags);
   const TInstant *inst1 = TSEQUENCE_INST_N(seq, 0);
   Datum value1 = tinstant_value_p(inst1);
   double length = prevlength;
@@ -3170,6 +3169,7 @@ bearing_tpoint_point(const Temporal *temp, const GSERIALIZED *gs, bool invert)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) geo_bearing_fn(temp->flags);
+  lfinfo.numparam = 0;
   lfinfo.argtype[0] = temp->temptype;
   lfinfo.argtype[1] = temptype_basetype(temp->temptype);
   lfinfo.restype = T_TFLOAT;
@@ -3198,6 +3198,7 @@ bearing_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) geo_bearing_fn(temp1->flags);
+  lfinfo.numparam = 0;
   lfinfo.argtype[0] = lfinfo.argtype[1] = temp1->temptype;
   lfinfo.restype = T_TFLOAT;
   lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp1->flags) ||

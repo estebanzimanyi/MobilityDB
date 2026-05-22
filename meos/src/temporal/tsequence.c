@@ -438,7 +438,7 @@ tsequence_join_test(const TSequence *seq1, const TSequence *seq2,
     /* If float/point sequences and collinear last/first segments having the same duration
        ..., 1@t1, 2@t2) [2@t2, 3@t3, ... -> ..., 1@t1, 3@t3, ...
     */
-    (temptype_supports_linear(seq1->temptype) && eq_last1_first1 &&
+    (temptype_continuous(seq1->temptype) && eq_last1_first1 &&
       datum_collinear(last2value, first1value, first2value, basetype,
         last2->t, first1->t, first2->t))
     ))
@@ -1845,6 +1845,8 @@ tsequence_max_val(const TSequence *seq)
     MeosType basetype = temptype_basetype(seq->temptype);
     if (basetype == T_INT4)
       max = Int32GetDatum(DatumGetInt32(max) - 1);
+    else if (basetype == T_INT8)
+      max = Int64GetDatum(DatumGetInt64(max) - 1);
     return max;
   }
 
