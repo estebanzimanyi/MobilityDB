@@ -79,6 +79,10 @@
  * @defgroup mobilitydb_h3 Functions for temporal H3 cell indices
  * @ingroup mobilitydb_api
  * @brief Functions for temporal H3 cell indices
+ * @defgroup mobilitydb_pointcloud Functions for temporal pgpointcloud types
+ * @ingroup mobilitydb_api
+ * @brief Functions for static, set, box, and temporal pgpointcloud types
+ *   (pcpoint, pcpatch, pcpointset, pcpatchset, tpcbox, tpcpoint, tpcpatch)
  *
  * @defgroup mobilitydb_misc Miscellaneous functions
  * @ingroup mobilitydb_api

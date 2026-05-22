@@ -1,3 +1,10 @@
 build/
 .cache
 .vscode
+
+# pgpointcloud vendored build artifacts
+pointcloud-pg/**/*.a
+pointcloud-pg/**/*.o
+pointcloud-pg/**/*.lo
+pointcloud-pg/config.status
+pointcloud-pg/config.mk
