@@ -74,4 +74,25 @@ CREATE FUNCTION douglasPeuckerSimplify(tcbuffer, float, boolean DEFAULT TRUE)
         @extschema@.douglasPeuckerSimplify($1::@extschema@.tgeompoint, $2, $3))))
   $$;
 
+/*****************************************************************************
+ * spans and splitN/splitEachN spans
+ * (pure time-dimension operations — the generic temporal kernels apply
+ * directly to tcbuffer with no spatial component)
+ *****************************************************************************/
+
+CREATE FUNCTION spans(tcbuffer)
+  RETURNS tstzspan[]
+  AS 'MODULE_PATHNAME', 'Temporal_spans'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION splitNSpans(tcbuffer, integer)
+  RETURNS tstzspan[]
+  AS 'MODULE_PATHNAME', 'Temporal_split_n_spans'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION splitEachNSpans(tcbuffer, integer)
+  RETURNS tstzspan[]
+  AS 'MODULE_PATHNAME', 'Temporal_split_each_n_spans'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 /*****************************************************************************/
