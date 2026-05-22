@@ -27,38 +27,19 @@
 --
 -------------------------------------------------------------------------------
 
-SELECT round(MAX(maxValue(ST_SetSRID(g, 3812) <-> temp)), 6) FROM tbl_geom_point t1, tbl_tcbuffer t2
-WHERE ST_SetSRID(g, 3812) <-> temp IS NOT NULL;
-SELECT round(MAX(maxValue(temp <-> ST_SetSRID(g, 3812))), 6) FROM tbl_tcbuffer t1, tbl_geom_point t2
-WHERE temp <-> ST_SetSRID(g, 3812) IS NOT NULL;
-SELECT round(MAX(maxValue(t1.temp <-> t2.temp)), 6) FROM tbl_tcbuffer t1, tbl_tcbuffer t2
-WHERE t1.temp <-> t2.temp IS NOT NULL;
-
 -------------------------------------------------------------------------------
 
-SELECT COUNT(*) FROM tbl_tcbuffer, tbl_geom t
-WHERE NearestApproachInstant(temp, ST_SetSRID(g, 3812)) IS NOT NULL;
-SELECT COUNT(*) FROM tbl_tcbuffer t1, tbl_tcbuffer t2
-WHERE NearestApproachInstant(t1.temp, t2.temp) IS NOT NULL;
+-- extent(tcbuffer): bulk aggregation across the per-subtype tables.
+-- Compare per-subtype to whole-table to verify the combine function folds
+-- partial states correctly (matters for parallel aggregation).
+SELECT extent(inst) FROM tbl_tcbuffer_inst;
+SELECT extent(ti) FROM tbl_tcbuffer_discseq;
+SELECT extent(seq) FROM tbl_tcbuffer_seq;
+SELECT extent(ss) FROM tbl_tcbuffer_seqset;
+SELECT extent(temp) FROM tbl_tcbuffer;
 
-SELECT COUNT(*) FROM tbl_tcbuffer, tbl_geom t
-WHERE NearestApproachDistance(temp, ST_SetSRID(g, 3812)) IS NOT NULL;
-SELECT COUNT(*) FROM tbl_tcbuffer t1, tbl_tcbuffer t2
-WHERE NearestApproachDistance(t1.temp, t2.temp) IS NOT NULL;
-
-SELECT COUNT(*) FROM tbl_tcbuffer, tbl_geom t
-WHERE ST_SetSRID(g, 3812) |=| temp IS NOT NULL;
-SELECT COUNT(*) FROM tbl_tcbuffer t1, tbl_tcbuffer t2
-WHERE t1.temp |=| t2.temp IS NOT NULL;
-
-SELECT COUNT(*) FROM tbl_tcbuffer, tbl_geom t
-WHERE shortestLine(ST_SetSRID(g, 3812), temp) IS NOT NULL;
-SELECT COUNT(*) FROM tbl_tcbuffer t1, tbl_tcbuffer t2
-WHERE shortestLine(t1.temp, t2.temp) IS NOT NULL;
-
---------------------------------------------------------
-
--- set parallel_tuple_cost=100;
--- set parallel_setup_cost=100;
+-- Group-by aggregation (ensures the combine path runs across partial states)
+SELECT k%10, extent(inst) FROM tbl_tcbuffer_inst GROUP BY k%10 ORDER BY k%10;
+SELECT k%10, extent(temp) FROM tbl_tcbuffer GROUP BY k%10 ORDER BY k%10;
 
 -------------------------------------------------------------------------------

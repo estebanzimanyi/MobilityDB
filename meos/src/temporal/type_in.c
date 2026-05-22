@@ -710,40 +710,59 @@ parse_mfjson_poses(json_object *mfjson, int32_t srid, int *count)
 }
 #endif /* POSE */
 
-/*****************************************************************************/
-
 #if CBUFFER
 /**
- * @brief Return a circular buffer from its MF-JSON representation
- * @details A circular buffer value is a JSON object with a `point` member
- * (a planar 2D `[x, y]` coordinate array, as for a temporal point) and a
- * numeric `radius` member, e.g. `{"point":[1,2],"radius":3}`. The member
- * names mirror the @p point and @p radius accessors. Circular buffers are
- * always planar 2D, so there is no Z/geodetic handling as for poses.
+ * @brief Return a circular buffer from its MF-JSON value
+ *
+ * The expected payload shape (matching the asMFJSON output side) is
+ * @code {"point":[x,y],"radius":r} @endcode. Circular buffers are 2D-only
+ * by design, so payloads carrying a Z coordinate are rejected at parse time.
  */
 static Cbuffer *
 parse_mfjson_cbuffer(json_object *mfjson, int32_t srid)
 {
   assert(mfjson);
-  json_object *point = findMemberByName(mfjson, "point");
-  if (point == NULL)
+  /* Get the point array */
+  json_object *point_json = findMemberByName(mfjson, "point");
+  if (point_json == NULL)
   {
     meos_error(ERROR, MEOS_ERR_MFJSON_INPUT,
       "Unable to find 'point' in MFJSON string");
     return NULL;
   }
-  json_object *radius = findMemberByName(mfjson, "radius");
-  if (radius == NULL)
+  if (json_object_get_type(point_json) != json_type_array)
+  {
+    meos_error(ERROR, MEOS_ERR_MFJSON_INPUT,
+      "Invalid 'point' array in MFJSON string");
+    return NULL;
+  }
+  int ncoord = (int) json_object_array_length(point_json);
+  if (ncoord != 2)
+  {
+    meos_error(ERROR, MEOS_ERR_MFJSON_INPUT,
+      "Circular buffers are 2D-only; expected 2 elements in 'point' array, "
+      "got %d", ncoord);
+    return NULL;
+  }
+  double x = json_object_get_double(json_object_array_get_idx(point_json, 0));
+  double y = json_object_get_double(json_object_array_get_idx(point_json, 1));
+
+  /* Get the radius */
+  json_object *radius_json = findMemberByName(mfjson, "radius");
+  if (radius_json == NULL)
   {
     meos_error(ERROR, MEOS_ERR_MFJSON_INPUT,
       "Unable to find 'radius' in MFJSON string");
     return NULL;
   }
-  Datum ptdatum = parse_mfjson_coord(point, srid, false);
-  if (! ptdatum)
-    return NULL;
-  GSERIALIZED *gs = DatumGetGserializedP(ptdatum);
-  Cbuffer *result = cbuffer_make(gs, json_object_get_double(radius));
+  double radius = json_object_get_double(radius_json);
+
+  /* Build the GSERIALIZED point and the resulting circular buffer.
+   * cbuffer_make enforces non-negative radius and 2D-only geometry. */
+  LWPOINT *point = lwpoint_make2d(srid, x, y);
+  GSERIALIZED *gs = geo_serialize((LWGEOM *) point);
+  lwpoint_free(point);
+  Cbuffer *result = cbuffer_make(gs, radius);
   pfree(gs);
   return result;
 }
@@ -754,8 +773,7 @@ parse_mfjson_cbuffer(json_object *mfjson, int32_t srid)
 static Datum *
 parse_mfjson_cbuffers(json_object *mfjson, int32_t srid, int *count)
 {
-  json_object *mfjsonTmp = mfjson;
-  json_object *values_json = findMemberByName(mfjsonTmp, "values");
+  json_object *values_json = findMemberByName(mfjson, "values");
   if (values_json == NULL)
   {
     meos_error(ERROR, MEOS_ERR_MFJSON_INPUT,
@@ -768,20 +786,21 @@ parse_mfjson_cbuffers(json_object *mfjson, int32_t srid, int *count)
       "Invalid 'values' array in MFJSON string");
     return NULL;
   }
-  int nvalues = (int) json_object_array_length(values_json);
-  if (nvalues < 1)
+  int ncbuffers = (int) json_object_array_length(values_json);
+  if (ncbuffers < 1)
   {
     meos_error(ERROR, MEOS_ERR_MFJSON_INPUT,
       "Invalid value of 'values' array in MFJSON string");
     return NULL;
   }
-  Datum *values = palloc(sizeof(Datum) * nvalues);
-  for (int i = 0; i < nvalues; ++i)
+
+  Datum *values = palloc(sizeof(Datum) * ncbuffers);
+  for (int i = 0; i < ncbuffers; ++i)
   {
     json_object *cb = json_object_array_get_idx(values_json, i);
     values[i] = PointerGetDatum(parse_mfjson_cbuffer(cb, srid));
   }
-  *count = nvalues;
+  *count = ncbuffers;
   return values;
 }
 #endif /* CBUFFER */
@@ -875,7 +894,7 @@ tinstant_from_mfjson(json_object *mfjson, bool spatial, int32_t srid,
     else
     {
       meos_error(ERROR, MEOS_ERR_MFJSON_INPUT,
-        "Unknown spatial type for MF-JSON input function: %s", 
+        "Unknown spatial type for MF-JSON input function: %s",
         meostype_name(temptype));
       return NULL;
     }
@@ -926,7 +945,7 @@ tinstarr_from_mfjson(json_object *mfjson, bool isgeo, int32_t srid,
    else
     {
       meos_error(ERROR, MEOS_ERR_MFJSON_INPUT,
-        "Unknown spatial type for MF-JSON input function: %s", 
+        "Unknown spatial type for MF-JSON input function: %s",
         meostype_name(temptype));
       return NULL;
     }
