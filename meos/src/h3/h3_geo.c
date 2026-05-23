@@ -45,6 +45,7 @@
 #include <meos_internal_geo.h>
 
 #include "h3/h3index.h"
+#include "geo/tgeo_spatialfuncs.h"  /* ensure_srid_is_latlong */
 #include "temporal/temporal.h"  /* ORDER macro for set_make_free */
 
 /*****************************************************************************
