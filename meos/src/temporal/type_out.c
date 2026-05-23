@@ -678,6 +678,7 @@ temptype_as_mfjson_sb(stringbuffer_t *sb, MeosType temptype)
 #if NPOINT
     case T_TNPOINT:
       stringbuffer_append_len(sb, "{\"type\":\"MovingNetworkPoint\",", 29);
+      break;
 #endif
 #if POINTCLOUD
     case T_TPCPOINT:
