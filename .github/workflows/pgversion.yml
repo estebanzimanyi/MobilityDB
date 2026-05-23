@@ -163,15 +163,12 @@ jobs:
           # When matrix.coverage=1, env.H3_INCLUDE_DIR/H3_LIBRARY were
           # populated by the 'Locate libh3' step; pin them via -D so the
           # find_path / find_library defaults can't miss the layout.
+          # POINTCLOUD=ON requires the pgPointCloud build step earlier in
+          # this job; H3=ON requires the libh3 paths pinned above. Both are
+          # enabled together on the coverage entry in a single invocation.
           cmake -DCMAKE_BUILD_TYPE=Release \
             -DWITH_COVERAGE=${{ matrix.coverage }} \
-            ${{ matrix.coverage == '1' && format('-DCBUFFER=ON -DPOSE=ON -DRGEO=ON -DH3=ON -DH3_INCLUDE_DIR={0} -DH3_LIBRARY={1}', env.H3_INCLUDE_DIR, env.H3_LIBRARY) || '' }} \
-          # build. Non-coverage entries keep the lean default to verify
-          # the gating still works. POINTCLOUD=ON requires the
-          # pgPointCloud build step earlier in this job.
-          cmake -DCMAKE_BUILD_TYPE=Release \
-            -DWITH_COVERAGE=${{ matrix.coverage }} \
-            ${{ matrix.coverage == '1' && '-DCBUFFER=ON -DPOSE=ON -DRGEO=ON -DPOINTCLOUD=ON' || '' }} \
+            ${{ matrix.coverage == '1' && format('-DCBUFFER=ON -DPOSE=ON -DRGEO=ON -DH3=ON -DH3_INCLUDE_DIR={0} -DH3_LIBRARY={1} -DPOINTCLOUD=ON', env.H3_INCLUDE_DIR, env.H3_LIBRARY) || '' }} \
             ..
 
       - name: Build
