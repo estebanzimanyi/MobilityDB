@@ -26,13 +26,15 @@
 #   python3 tools/check_meos_error_returns.py --rebaseline   # regen
 #
 # Run from the repo root.
-"""Check `meos_error(ERROR, ...)` callsites follow the return-after-error
-contract."""
+"""Check that `meos_error(ERROR, ...)` callsites return after the error.
+
+Scans `meos/src/**.c` and compares findings against a baseline whitelist;
+any new non-control-transfer follow-up fails the check (a ratchet).
+"""
 
 from __future__ import annotations
 
 import argparse
-import os
 import re
 import sys
 from pathlib import Path
@@ -65,11 +67,12 @@ SENTINEL_PATTERNS = (
 
 
 def _strip_comments_for_scan(src: str) -> str:
-    """Return a copy of `src` with /* ... */ block comments and `// ...`
-    line comments blanked out (preserved length, so line/column offsets
-    are stable). Strings and char literals are left intact -- a stray
-    "//" inside a string is rare in MEOS source, and the worst case is
-    a spurious finding that the operator can baseline."""
+    """Blank out /* ... */ and // comments in `src`, preserving length.
+
+    Line/column offsets stay stable. Strings and char literals are left
+    intact -- a stray "//" inside a string is rare in MEOS source, and the
+    worst case is a spurious finding that the operator can baseline.
+    """
     out = list(src)
     i, n = 0, len(src)
     while i < n:
@@ -96,9 +99,10 @@ def _strip_comments_for_scan(src: str) -> str:
 
 
 def _meos_error_calls(lines: list[str]):
-    """Yield (start_line_idx, end_line_idx) of each `meos_error(ERROR, ...)`
-    callsite, plus the wrapper macros that expand to one. Line indices
-    are 0-based. Comments are stripped before matching so commented-out
+    """Yield (start, end) line indices of each meos_error(ERROR, ...) callsite.
+
+    Also matches wrapper macros that expand to one. Line indices are
+    0-based. Comments are stripped before matching so commented-out
     callsites are not flagged.
 
     Wrapper macros recognised:
@@ -139,9 +143,11 @@ def _meos_error_calls(lines: list[str]):
 
 
 def _next_statement(lines: list[str], after: int) -> tuple[int, str] | None:
-    """Return (line_idx, stripped_line) of the next statement after
-    `lines[after]`, skipping blank lines, line comments, block-comment
-    bodies, and preprocessor directives. `None` if EOF."""
+    """Return (line_idx, stripped_line) of the next statement after `after`.
+
+    Skips blank lines, line comments, block-comment bodies, and
+    preprocessor directives. Returns None at EOF.
+    """
     k = after + 1
     in_block = False
     while k < len(lines):
@@ -210,12 +216,14 @@ def _is_cleanup_call(stmt: str) -> bool:
 def _block_reaches_control_transfer(
     lines: list[str], after: int
 ) -> tuple[bool, int, str]:
-    """Walk forward from `lines[after]`, skipping known-pure cleanup-helper
-    calls (`pfree`, `finishGEOS`, ...), and check whether the FIRST
-    non-cleanup statement is a control transfer (return / goto / break
-    / exit / continue / `}` / sentinel-assignment).
+    """Check whether the first non-cleanup statement after `after` transfers control.
 
-    Returns (is_safe, line_idx_of_first_non_cleanup, stripped_line)."""
+    Walks forward from `lines[after]`, skipping known-pure cleanup-helper
+    calls (pfree, finishGEOS, ...). A control transfer is return / goto /
+    break / exit / continue / `}` / sentinel-assignment.
+
+    Returns (is_safe, line_idx_of_first_non_cleanup, stripped_line).
+    """
     k = after + 1
     nxt = _next_statement(lines, after)
     if nxt is None:
@@ -238,8 +246,10 @@ def _block_reaches_control_transfer(
 
 
 def _scan_file(path: Path) -> list[tuple[Path, int, int, str]]:
-    """Return list of (path, start_line_1based, next_line_1based, next_stripped)
-    for sites that look like potential fall-through violations."""
+    """Return potential fall-through violation sites in `path`.
+
+    Each item is (path, start_line_1based, next_line_1based, next_stripped).
+    """
     with path.open() as f:
         lines = f.readlines()
     # Tolerate trailing backslash continuations inside macros: a
