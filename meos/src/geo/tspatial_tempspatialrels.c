@@ -1459,15 +1459,34 @@ tdwithin_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, double dist)
    * same geodetic flag, so geodetic coordinates are supported here the
    * same way as in #Tdistance_tgeo_geo (no ensure_not_geodetic_geo). */
   if (! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs) ||
-      (tpoint_type(temp->temptype) && ! ensure_point_type(gs)) ||
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return NULL;
 
+  /* Planar temporal point against a non-point geometry: route through
+   * tIntersects on a polygonal d-expanded buffer of gs (the planar dwithin
+   * datum function handles point/point only). Mirrors the polygonal
+   * approximation the always-quantifier branch of ea_dwithin_tgeo_geo uses
+   * via geom_buffer. The geography dwithin handles non-point arguments
+   * natively, so this buffer route is restricted to planar inputs. */
+  if (! MEOS_FLAGS_GET_GEODETIC(temp->flags) &&
+      tpoint_type(temp->temptype) && gserialized_get_type(gs) != POINTTYPE)
+  {
+    GSERIALIZED *buffer = geom_buffer(gs, dist, "");
+    Temporal *result = tinterrel_tgeo_geo(temp, buffer, TINTERSECTS);
+    pfree(buffer);
+    return result;
+  }
+
+  /* The geodetic dwithin turning-point machinery assumes a point geometry
+   * reference; non-point geodetic arguments are not yet handled. */
+  if (MEOS_FLAGS_GET_GEODETIC(temp->flags) && tpoint_type(temp->temptype) &&
+      ! ensure_point_type(gs))
+    return NULL;
+
   /* Determine the distance and the turning point functions to be applied.
-   * geo_dwithin_fn_geo selects the geodetic dwithin for geodetic
-   * coordinates and the 2D/3D planar dwithin otherwise (identical planar
-   * behaviour to before), mirroring how Tdistance_tgeo_geo selects its
-   * distance function. */
+   * geo_dwithin_fn_geo selects the geodetic dwithin for geodetic coordinates
+   * and the 2D/3D planar dwithin otherwise, mirroring how Tdistance_tgeo_geo
+   * selects its distance function. */
   datum_func3 func = geo_dwithin_fn_geo(temp->flags, gs->gflags);
   tpfunc_temp tpfn = &tpointsegm_tdwithin_turnpt;
   /* Call the generic function passing the two functions as arguments */
