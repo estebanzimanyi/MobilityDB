@@ -74,6 +74,10 @@
   #include "pointcloud/pcpoint.h"
   #include "pointcloud/pcpatch.h"
 #endif
+#if H3
+  #include <h3api.h>
+  #include "h3/h3index.h"
+#endif
 
 #define MEOS_WKT_BOOL_SIZE sizeof("false")
 #define MEOS_WKT_INT4_SIZE sizeof("+2147483647")
@@ -136,6 +140,10 @@ basetype_out(Datum value, MeosType type, int maxdd)
       return int4_out(DatumGetInt32(value));
     case T_INT8:
       return int8_out(DatumGetInt64(value));
+#if H3
+    case T_H3INDEX:
+      return h3index_to_string((H3Index) DatumGetInt64(value));
+#endif
     case T_FLOAT8:
       return float8_out(DatumGetFloat8(value), maxdd);
     case T_TEXT:
@@ -423,6 +431,7 @@ temporal_base_as_mfjson_sb(stringbuffer_t *sb, Datum value, MeosType temptype,
       int32_as_mfjson_sb(sb, DatumGetInt32(value));
       break;
     case T_TBIGINT:
+    case T_TH3INDEX:
       int64_as_mfjson_sb(sb, DatumGetInt64(value));
       break;
     case T_TFLOAT:
@@ -595,6 +604,7 @@ bbox_as_mfjson_sb(stringbuffer_t *sb, MeosType temptype, const bboxunion *box,
       tstzspan_as_mfjson_sb(sb, (Span *) box);
       break;
     case T_TBIGINT:
+    case T_TH3INDEX:
     case T_TINT:
     case T_TFLOAT:
       tbox_as_mfjson_sb(sb, (TBox *) box, precision);
@@ -645,6 +655,9 @@ temptype_as_mfjson_sb(stringbuffer_t *sb, MeosType temptype)
       break;
     case T_TBIGINT:
       stringbuffer_append_len(sb, "{\"type\":\"MovingBigInteger\",", 27);
+      break;
+    case T_TH3INDEX:
+      stringbuffer_append_len(sb, "{\"type\":\"MovingH3Index\",", 24);
       break;
     case T_TFLOAT:
       stringbuffer_append_len(sb, "{\"type\":\"MovingFloat\",", 22);
@@ -1280,6 +1293,11 @@ base_to_wkb_size(Datum value, MeosType basetype, uint8_t variant)
       return pcpatch_to_wkb_size((const Pcpatch *) DatumGetPointer(value),
         variant);
 #endif /* POINTCLOUD */
+#if H3
+    case T_H3INDEX:
+      /* h3index is a uint64 cell id, wire-format identical to int8. */
+      return MEOS_WKB_INT8_SIZE;
+#endif /* H3 */
     default: /* Error! */
       meos_error(ERROR, MEOS_ERR_MFJSON_OUTPUT,
         "Unknown temporal base type in WKB output: %s",
@@ -2034,6 +2052,12 @@ base_to_wkb_buf(Datum value, MeosType basetype, uint8_t *buf,
         buf, variant);
       break;
 #endif /* POINTCLOUD */
+#if H3
+    case T_H3INDEX:
+      /* h3index is a uint64 cell id; wire it as int8. */
+      buf = int64_to_wkb_buf((int64) DatumGetInt64(value), buf, variant);
+      break;
+#endif /* H3 */
     default: /* Error! */
       meos_error(ERROR, MEOS_ERR_WKB_OUTPUT,
         "Unknown basetype in WKB output: %s", meostype_name(basetype));
