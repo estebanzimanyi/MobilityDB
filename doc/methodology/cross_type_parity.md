@@ -84,6 +84,8 @@ The following functions are deliberately absent from the listed types and are **
 
 **No CRS reprojection on tnpoint.** `transform`, `transform_gk`, `transformPipeline`, and `setSRID` are absent on tnpoint: a network point inherits its CRS from the underlying road network (the `ways` table, read via `get_srid_ways()`), so the SRID is a property of the network, not of an individual value. Reprojection is performed on the network, not per tnpoint.
 
+**No `tprecision` on tnpoint.** `tprecision` replaces each time bin with the time-weighted average of its values; the average of network points is not network-valid (it would leave the edge). `tsample`, which only resamples positions that remain on the network, is provided instead.
+
 **No planar position or planar space tiling on tgeogpoint.** The relative-position operators (`<<`, `>>`, `&<`, `<<|`, … and their bare-name aliases `left`/`right`/`above`/`below`/`front`/`back` and the `over*` variants), the fixed planar-grid space tiling (`spaceTiles`/`spaceBoxes`/`spaceSplit` and the space-time combinations), `asMVTGeom`, and the Gauss-Krüger projection (`transform_gk`) are undefined on the sphere. Geodetic space-binning uses the H3 family (`geoToH3Cell`, `h3_latlng_to_cell`); generic reprojection uses `transform()`/`transformPipeline()`.
 
 **No spherical centroid aggregate on tgeogpoint.** `tcentroid` and `twcentroid` compute a planar coordinate average; a geodetic centroid is not that average and no spherical equivalent is defined.

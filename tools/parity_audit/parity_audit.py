@@ -91,6 +91,10 @@ RULES = [
      "strictly 2D type — no elevation dimension"),
     (["tnpoint"], TNPOINT_CRS, "structural",
      "CRS is inherited from the road network (ways table); not set or reprojected per value"),
+    (["tnpoint"], {"tprecision"}, "structural",
+     "tprecision averages the values within each time bin; the average of network "
+     "points is not network-valid (it would leave the edge). tsample, which only "
+     "resamples on-network, is provided"),
     (["tnpoint"], {"makesimple"}, "semantic",
      "makeSimple removes self-intersections of a free trajectory; a network point "
      "follows network edges"),
