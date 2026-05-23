@@ -47,6 +47,7 @@
 #include <meos_internal.h>
 #include "temporal/lifting.h"
 #include "geo/postgis_funcs.h"
+#include "geo/tgeo.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/tgeo_spatialrels.h"
 #include "rgeo/trgeo.h"
