@@ -23,6 +23,7 @@ import os
 import re
 import sys
 from collections import defaultdict
+from types import SimpleNamespace
 
 # RFC operator -> portable bare name (doc/rfc/sql-portability/README.md).
 OP_TO_NAME = {
@@ -111,8 +112,62 @@ def arglist(raw):
     return tuple(argtype(a) for a in raw.split(",")) if raw.strip() else ()
 
 
-def main():
-    """Parse args, emit the bare-name alias SQL, run the coverage audit."""
+def _operator_binding(match):
+    """Return (op, proc, larg, rarg) for a binary CREATE OPERATOR, else None."""
+    op, body = match.group(1).strip(), match.group(2)
+    if op not in OP_TO_NAME:
+        return None
+    pm = re.search(r"(?:PROCEDURE|FUNCTION)\s*=\s*(\w+)", body, re.I)
+    lm = re.search(r"LEFTARG\s*=\s*([\w ]+)", body, re.I)
+    rm = re.search(r"RIGHTARG\s*=\s*([\w ]+)", body, re.I)
+    if not (pm and lm and rm):
+        return None       # unary / malformed -> not in scope
+    return op, pm.group(1).lower(), norm(lm.group(1)), norm(rm.group(1))
+
+
+def _new_alias_state():
+    """Return a fresh accumulator for the operator-to-alias scan."""
+    return SimpleNamespace(
+        aliases=defaultdict(list),                       # group -> list[CREATE FUNCTION]
+        seen=set(),                                      # (name, L, R) dedupe
+        collisions=[],
+        unresolved=[],
+        collapse=defaultdict(lambda: defaultdict(int)),  # name -> {proc: count}
+        alias_syms=set(),                                # C symbols referenced by aliases
+        nops=0,                                          # in-scope operator overloads parsed
+    )
+
+
+def _add_operator(state, fp, group, funcs, match):
+    """Resolve one CREATE OPERATOR match into an alias on `state`, or record a gap."""
+    binding = _operator_binding(match)
+    if binding is None:
+        return
+    op, proc, larg, rarg = binding
+    state.nops += 1
+    name = OP_TO_NAME[op]
+    backing = funcs.get((proc, (larg, rarg)))
+    if backing is None:
+        state.unresolved.append((op, proc, larg, rarg, fp))
+        return
+    if (name, (larg, rarg)) in funcs:
+        state.collisions.append((name, larg, rarg, "pre-existing CREATE FUNCTION"))
+        return
+    if (name, larg, rarg) in state.seen:
+        return
+    state.seen.add((name, larg, rarg))
+    state.collapse[name][proc] += 1
+    ret, asbody, _ = backing
+    sm = SYM_RE.search(asbody)
+    if sm:
+        state.alias_syms.add(sm.group(1))
+    state.aliases[group].append(
+        f"CREATE FUNCTION {name}({larg}, {rarg})\n"
+        f"  RETURNS {ret}\n  {asbody}\n")
+
+
+def parse_args():
+    """Return the parsed command-line arguments."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--sqldir", default="mobilitydb/sql")
     ap.add_argument("--outdir", default="build/portable_aliases")
@@ -121,25 +176,35 @@ def main():
     ap.add_argument("--insrc", action="store_true",
                     help="write committed mobilitydb/sql/<grp>/<NNN>_portable_"
                          "aliases.in.sql + an equivalence test, in place")
-    args = ap.parse_args()
+    return ap.parse_args()
 
-    # (funcname, argtypes) -> (returns, as_clause_body, source_file)
-    funcs = {}
+
+def is_alias(path):
+    """Return True for our own generated alias files (never re-ingested)."""
+    return path.endswith("_portable_aliases.in.sql")
+
+
+def collect_in_sql_files(sqldir):
+    """Return the sorted list of .in.sql source files under `sqldir`."""
     files = []
-    for root, _, names in os.walk(args.sqldir):
+    for root, _, names in os.walk(sqldir):
         for n in sorted(names):
             if n.endswith(".in.sql"):
                 files.append(os.path.join(root, n))
     files.sort()
+    return files
 
-    core_syms = set()             # C symbols used by non-alias CREATE FUNCTIONs
 
-    def is_alias(p):
-        return p.endswith("_portable_aliases.in.sql")
+def parse_core_functions(files):
+    """Map (funcname, argtypes) -> (returns, AS-clause, source) for core funcs.
 
+    Also returns the set of C symbols those non-alias CREATE FUNCTIONs use.
+    """
+    funcs = {}
+    core_syms = set()
     for fp in files:
         if is_alias(fp):
-            continue  # never ingest our own generated output (idempotency)
+            continue          # never ingest our own generated output (idempotency)
         text = read_text(fp)
         for m in FUNC_RE.finditer(text):
             fname, fargs, fret, fbody = m.groups()
@@ -148,57 +213,27 @@ def main():
             sm = SYM_RE.search(fbody)
             if sm:
                 core_syms.add(sm.group(1))
+    return funcs, core_syms
 
-    aliases = defaultdict(list)   # group -> list[(name,L,R,line)]
-    seen = set()                  # (name,L,R) dedupe
-    collisions, unresolved = [], []
-    collapse = defaultdict(lambda: defaultdict(int))  # name -> {proc: count}
-    nops = 0
 
-    alias_syms = set()            # C symbols referenced by generated aliases
+def build_aliases(files, funcs, sqldir):
+    """Resolve every in-scope operator into a bare-name alias backed by its C symbol."""
+    state = _new_alias_state()
     for fp in files:
         if is_alias(fp):
             continue
-        group = os.path.relpath(fp, args.sqldir).split(os.sep)[0]
+        group = os.path.relpath(fp, sqldir).split(os.sep, maxsplit=1)[0]
         if group.endswith(".in.sql"):
             group = "temporal"
-        text = read_text(fp)
-        for m in OPER_RE.finditer(text):
-            op, body = m.group(1).strip(), m.group(2)
-            if op not in OP_TO_NAME:
-                continue
-            pm = re.search(r"(?:PROCEDURE|FUNCTION)\s*=\s*(\w+)", body, re.I)
-            lm = re.search(r"LEFTARG\s*=\s*([\w ]+)", body, re.I)
-            rm = re.search(r"RIGHTARG\s*=\s*([\w ]+)", body, re.I)
-            if not (pm and lm and rm):
-                continue  # unary / malformed -> not in scope
-            nops += 1
-            proc, larg, rarg = pm.group(1).lower(), norm(lm.group(1)), norm(rm.group(1))
-            name = OP_TO_NAME[op]
-            key = (name, larg, rarg)
-            backing = funcs.get((proc, (larg, rarg)))
-            if backing is None:
-                unresolved.append((op, proc, larg, rarg, fp))
-                continue
-            if (name, (larg, rarg)) in funcs:
-                collisions.append((name, larg, rarg, "pre-existing CREATE FUNCTION"))
-                continue
-            if key in seen:
-                continue
-            seen.add(key)
-            collapse[name][proc] += 1
-            ret, asbody, _ = backing
-            sm = SYM_RE.search(asbody)
-            if sm:
-                alias_syms.add(sm.group(1))
-            aliases[group].append(
-                f"CREATE FUNCTION {name}({larg}, {rarg})\n"
-                f"  RETURNS {ret}\n  {asbody}\n")
+        for m in OPER_RE.finditer(read_text(fp)):
+            _add_operator(state, fp, group, funcs, m)
+    return state
 
+
+def write_alias_sql(args, state):
+    """Write per-group .gen.sql (and committed .in.sql with --insrc)."""
     os.makedirs(args.outdir, exist_ok=True)
-    total = 0
-    for group, items in sorted(aliases.items()):
-        total += len(items)
+    for group, items in sorted(state.aliases.items()):
         body = HEADER + "\n".join(items) + "\n"
         with open(os.path.join(args.outdir, f"{group}_portable_aliases.gen.sql"),
                   "w", encoding="utf-8") as fh:
@@ -209,61 +244,71 @@ def main():
             with open(dest, "w", encoding="utf-8") as fh:
                 fh.write(body)
 
-    if args.insrc:
-        # Structural-equivalence verifier: every alias must resolve to the
-        # exact same C symbol (pg_proc.prosrc) as the operator it aliases.
-        # The query is a single static template; only the canonical
-        # name/operator lists (no SQL keywords, no external input) are
-        # substituted via str.replace -- no dynamic SQL construction.
-        # Emitted as discrete writes: static SQL chunks (plain string
-        # literals, never concatenated/formatted) interleaved with the
-        # canonical name/operator lists (plain identifiers, no SQL, no
-        # external input) -- no dynamic SQL construction anywhere.
-        names_csv = ", ".join(sorted(repr(n) for n in OP_TO_NAME.values()))
-        ops_csv = ", ".join(sorted(repr(o) for o in OP_TO_NAME))
-        with open(os.path.join("tools", "portable_aliases",
-                               "verify_equivalence.sql"), "w",
-                  encoding="utf-8") as fh:
-            fh.write("-- Generated by tools/portable_aliases/generate.py.\n")
-            fh.write("-- Proves each portable alias shares the operator's "
-                     "exact C\n")
-            fh.write("-- implementation.  Expected output: "
-                     "'PORTABLE ALIASES OK'.\n")
-            fh.write("WITH mismatch AS (\n")
-            fh.write("  SELECT a.proname, a.oid\n")
-            fh.write("  FROM pg_proc a JOIN pg_proc b "
-                     "ON a.prosrc <> b.prosrc\n")
-            fh.write("  JOIN pg_operator o ON o.oprcode = b.oid\n")
-            fh.write("  WHERE a.proname IN (")
-            fh.write(names_csv)
-            fh.write(")\n  AND a.proargtypes = b.proargtypes\n")
-            fh.write("  AND o.oprname = ANY (ARRAY[")
-            fh.write(ops_csv)
-            fh.write("])\n)\n")
-            fh.write("SELECT CASE WHEN count(*) = 0 "
-                     "THEN 'PORTABLE ALIASES OK'\n")
-            fh.write("  ELSE 'MISMATCH: '||count(*)||' alias(es) differ "
-                     "from operator impl' END AS result\n")
-            fh.write("FROM mismatch;\n")
 
+def write_verify_sql():
+    """Emit the structural-equivalence verifier SQL (--insrc only).
+
+    Every alias must resolve to the same C symbol (pg_proc.prosrc) as the
+    operator it aliases. The query is a single static template; only the
+    canonical name/operator lists (no SQL keywords, no external input) are
+    substituted -- no dynamic SQL construction.
+    """
+    # Emitted as discrete writes: static SQL chunks (plain string literals,
+    # never concatenated/formatted) interleaved with the canonical
+    # name/operator lists (plain identifiers, no SQL, no external input) --
+    # no dynamic SQL construction anywhere.
+    names_csv = ", ".join(sorted(repr(n) for n in OP_TO_NAME.values()))
+    ops_csv = ", ".join(sorted(repr(o) for o in OP_TO_NAME))
+    with open(os.path.join("tools", "portable_aliases",
+                           "verify_equivalence.sql"), "w",
+              encoding="utf-8") as fh:
+        fh.write("-- Generated by tools/portable_aliases/generate.py.\n")
+        fh.write("-- Proves each portable alias shares the operator's "
+                 "exact C\n")
+        fh.write("-- implementation.  Expected output: "
+                 "'PORTABLE ALIASES OK'.\n")
+        fh.write("WITH mismatch AS (\n")
+        fh.write("  SELECT a.proname, a.oid\n")
+        fh.write("  FROM pg_proc a JOIN pg_proc b "
+                 "ON a.prosrc <> b.prosrc\n")
+        fh.write("  JOIN pg_operator o ON o.oprcode = b.oid\n")
+        fh.write("  WHERE a.proname IN (")
+        fh.write(names_csv)
+        fh.write(")\n  AND a.proargtypes = b.proargtypes\n")
+        fh.write("  AND o.oprname = ANY (ARRAY[")
+        fh.write(ops_csv)
+        fh.write("])\n)\n")
+        fh.write("SELECT CASE WHEN count(*) = 0 "
+                 "THEN 'PORTABLE ALIASES OK'\n")
+        fh.write("  ELSE 'MISMATCH: '||count(*)||' alias(es) differ "
+                 "from operator impl' END AS result\n")
+        fh.write("FROM mismatch;\n")
+
+
+def write_report(args, state, total):
+    """Write the human-readable REPORT.txt summary (counts + any problems)."""
     with open(os.path.join(args.outdir, "REPORT.txt"), "w",
               encoding="utf-8") as fh:
-        fh.write(f"in-scope operator overloads parsed : {nops}\n")
+        fh.write(f"in-scope operator overloads parsed : {state.nops}\n")
         fh.write(f"alias functions generated          : {total}\n")
-        fh.write(f"collisions (skipped)               : {len(collisions)}\n")
-        fh.write(f"unresolved backing function        : {len(unresolved)}\n\n")
-        if collisions:
+        fh.write(f"collisions (skipped)               : {len(state.collisions)}\n")
+        fh.write(f"unresolved backing function        : {len(state.unresolved)}\n\n")
+        if state.collisions:
             fh.write("== COLLISIONS ==\n")
-            for c in collisions:
+            for c in state.collisions:
                 fh.write(f"  {c}\n")
-        if unresolved:
+        if state.unresolved:
             fh.write("\n== UNRESOLVED (operator PROCEDURE not matched to a "
                      "CREATE FUNCTION by (LEFTARG,RIGHTARG)) ==\n")
-            for u in unresolved:
+            for u in state.unresolved:
                 fh.write(f"  op={u[0]} proc={u[1]} ({u[2]}, {u[3]})  {u[4]}\n")
 
-    # ---- 100% coverage audit: classify EVERY CREATE OPERATOR symbol ----
-    # so parity is provable, with documented exceptions (never silently dropped).
+
+def build_audit(files):
+    """Classify every CREATE OPERATOR symbol for the 100%-coverage audit.
+
+    Parity is provable, with documented exceptions (never silently dropped).
+    """
     allops = {}
     for fp in files:
         for m in OPER_RE.finditer(read_text(fp)):
@@ -284,6 +329,11 @@ def main():
         else:
             cls = "!!! UNCLASSIFIED — REVIEW (potential parity gap)"
         audit.append((s, cnt, cls))
+    return audit
+
+
+def write_audit(args, audit):
+    """Write the operator-coverage audit table to AUDIT.txt."""
     with open(os.path.join(args.outdir, "AUDIT.txt"), "w",
               encoding="utf-8") as fh:
         gap = [a for a in audit if a[2].startswith("!!!")]
@@ -292,10 +342,10 @@ def main():
         fh.write(f"UNCLASSIFIED (gaps)       : {len(gap)}\n\n")
         for s, cnt, cls in audit:
             fh.write(f"  {s:<6} x{cnt:<4} {cls}\n")
-    # ---- translation / inheritance-collapse table ----
-    # For each portable bare name, the distinct backing prefixed functions it
-    # aggregates = the MEOS object-model classes (superclass + late-bound
-    # overrides) flattened into one overloaded SQL name.
+
+
+def write_mapping(args, collapse):
+    """Write the inheritance-collapse table (bare name <= backing funcs) to MAPPING.txt."""
     with open(os.path.join(args.outdir, "MAPPING.txt"), "w",
               encoding="utf-8") as fh:
         fh.write("Portable name  <=  backing prefixed functions "
@@ -306,34 +356,61 @@ def main():
             tot = sum(procs.values())
             parts = ", ".join(f"{p}:{c}" for p, c in sorted(procs.items()))
             fh.write(f"\n{name:<12} (op {op}, {tot} overloads)\n    {parts}\n")
-    # ---- source-level equivalence proof (.so-independent) ----
-    # Every C symbol an alias references must already be used by a non-alias
-    # core CREATE FUNCTION: the alias reuses an existing implementation, never
-    # invents one, so it is equivalent to the operator by construction.
+
+
+def append_equivalence_proof(args, alias_syms, core_syms):
+    """Append the source-level equivalence proof to REPORT.txt; return invented syms.
+
+    Every C symbol an alias references must already be used by a non-alias
+    core CREATE FUNCTION: the alias reuses an existing implementation, never
+    invents one, so it is equivalent to the operator by construction.
+    """
     invented = sorted(alias_syms - core_syms)
-    unclassified = len([a for a in audit if a[2].startswith("!!!")])
     with open(os.path.join(args.outdir, "REPORT.txt"), "a",
               encoding="utf-8") as fh:
         fh.write(f"\nalias C symbols                    : {len(alias_syms)}\n")
         fh.write(f"invented symbols (not in core SQL) : {len(invented)}\n")
         for s in invented:
             fh.write(f"  INVENTED: {s}\n")
+    return invented
 
+
+def print_summary(args, state, total, audit, invented):
+    """Print the run summary and the --check verdict; return the exit code."""
+    unclassified = len([a for a in audit if a[2].startswith("!!!")])
     print(f"coverage audit     : {len(audit)} operator symbols, "
           f"{unclassified} unclassified")
-    print(f"operators in scope : {nops}")
-    print(f"aliases generated  : {total}  (across {len(aliases)} groups)")
-    print(f"collisions         : {len(collisions)}")
-    print(f"unresolved         : {len(unresolved)}")
+    print(f"operators in scope : {state.nops}")
+    print(f"aliases generated  : {total}  (across {len(state.aliases)} groups)")
+    print(f"collisions         : {len(state.collisions)}")
+    print(f"unresolved         : {len(state.unresolved)}")
     print(f"invented symbols   : {len(invented)}  (alias reuses core C symbol)")
     print(f"output             : {args.outdir}/")
 
-    fail = bool(collisions or unresolved or invented or unclassified)
+    fail = bool(state.collisions or state.unresolved or invented or unclassified)
     if args.check:
         print("CHECK: " + ("FAIL" if fail else
               "PASS - 0 collisions, 0 unresolved, 0 invented, 0 unclassified"))
         return 1 if fail else 0
     return 0
+
+
+def main():
+    """Parse args, emit the bare-name alias SQL, run the coverage audit."""
+    args = parse_args()
+    files = collect_in_sql_files(args.sqldir)
+    funcs, core_syms = parse_core_functions(files)
+    state = build_aliases(files, funcs, args.sqldir)
+    write_alias_sql(args, state)
+    if args.insrc:
+        write_verify_sql()
+    total = sum(len(items) for items in state.aliases.values())
+    write_report(args, state, total)
+    audit = build_audit(files)
+    write_audit(args, audit)
+    write_mapping(args, state.collapse)
+    invented = append_equivalence_proof(args, state.alias_syms, core_syms)
+    return print_summary(args, state, total, audit, invented)
 
 
 if __name__ == "__main__":
