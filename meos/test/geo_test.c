@@ -107,8 +107,8 @@ int main(void)
   char *geom1_in = "SRID=5676;Point(1 1)";
   GSERIALIZED *geom1 = geom_in(geom1_in, -1);
   char *geom1_out = geo_as_ewkt(geom1, 6);
-  char *geom1_hexwkb = geo_as_hexewkb(geom1, NULL);
-  uint8_t *geom1_wkb = geo_as_ewkb(geom1, NULL, &geom_size_wkb);
+  char *geom1_hexwkb = geo_as_hexwkb(geom1, WKB_EXTENDED);
+  uint8_t *geom1_wkb = geo_as_wkb(geom1, WKB_EXTENDED, &geom_size_wkb);
   char *geom1_geojson = geo_as_geojson(geom1, 0, 6, "EPSG:4326");
   char *geom2_in = "SRID=5676;Linestring(1 1,2 2)";
   GSERIALIZED *geom2 = geom_in(geom2_in, -1);
@@ -138,8 +138,8 @@ int main(void)
   char *geog1_in = "SRID=4326;Linestring(1 1,2 2)";
   GSERIALIZED *geog1 = geog_in(geog1_in, -1);
   char *geog1_out = geo_as_ewkt(geog1, 6);
-  char *geog1_hexwkb = geo_as_hexewkb(geog1, NULL);
-  uint8_t *geog1_wkb = geo_as_ewkb(geog1, NULL, &geog_size_wkb);
+  char *geog1_hexwkb = geo_as_hexwkb(geog1, WKB_EXTENDED);
+  uint8_t *geog1_wkb = geo_as_wkb(geog1, WKB_EXTENDED, &geog_size_wkb);
   char *geog2_in = "SRID=4326;Polygon((1 1,1 2,2 2,2 1,1 1))";
   GSERIALIZED *geog2 = geog_in(geog2_in, -1);
   char *geog2_out = geo_as_ewkt(geog2, 6);
@@ -282,9 +282,9 @@ int main(void)
 
   /* Input and output functions */
 
-  /* uint8_t *geo_as_ewkb(const GSERIALIZED *gs, const char *endian, size_t *size); */
-  binchar_result = geo_as_ewkb(geom1, "XDR", &size);
-  printf("geo_as_ewkb(%s, \"XDR\", %zu): ", tfloat1_out, size);
+  /* uint8_t *geo_as_wkb(const GSERIALIZED *gs, uint8_t variant, size_t *size); */
+  binchar_result = geo_as_wkb(geom1, WKB_EXTENDED | WKB_XDR, &size);
+  printf("geo_as_wkb(%s, WKB_EXTENDED | WKB_XDR, %zu): ", tfloat1_out, size);
   fwrite(binchar_result, size, 1, stdout);
   printf("\n");
   free(binchar_result);
@@ -299,9 +299,9 @@ int main(void)
   printf("geo_as_geojson(%s): %s\n", geom1_out, char_result);
   free(char_result);
 
-  /* char *geo_as_hexewkb(const GSERIALIZED *gs, const char *endian); */
-  char_result = geo_as_hexewkb(geom1, "XDR");
-  printf("geo_as_hexewkb(%s, \"XDR\"): %s\n", geom1_out, char_result);
+  /* char *geo_as_hexwkb(const GSERIALIZED *gs, uint8_t variant); */
+  char_result = geo_as_hexwkb(geom1, WKB_EXTENDED | WKB_XDR);
+  printf("geo_as_hexwkb(%s, WKB_EXTENDED | WKB_XDR): %s\n", geom1_out, char_result);
   free(char_result);
 
   /* char *geo_as_text(const GSERIALIZED *gs, int precision); */

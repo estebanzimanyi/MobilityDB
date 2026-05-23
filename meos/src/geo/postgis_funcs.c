@@ -3403,27 +3403,19 @@ geog_from_hexewkb(const char *wkt)
  * @brief Return the ASCII hex-encoded Well-Known Binary (HexWKB)
  * representation of a geometry/geography
  * @param[in] gs Geometry/geography
- * @param[in] endian Endianness
+ * @param[in] variant Bitmask of WKB output options: #WKB_EXTENDED for EWKB,
+ * #WKB_NDR / #WKB_XDR for endianness
  * @note PostGIS function: @p AsHEXEWKB(gs, string)
  */
 char *
-geo_as_hexewkb(const GSERIALIZED *gs, const char *endian)
+geo_as_hexwkb(const GSERIALIZED *gs, uint8_t variant)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(gs, NULL);
 
-  uint8_t variant = 0;
-  /* If user specified endianness, respect it */
-  if (endian)
-  {
-    if  (! strncmp(endian, "xdr", 3) || ! strncmp(endian, "XDR", 3))
-      variant = variant | WKB_XDR;
-    else
-      variant = variant | WKB_NDR;
-  }
   /* Create WKB hex string */
   LWGEOM *geom = lwgeom_from_gserialized(gs);
-  char *result = lwgeom_to_hexwkb_buffer(geom, variant | WKB_EXTENDED);
+  char *result = lwgeom_to_hexwkb_buffer(geom, variant);
   lwgeom_free(geom);
   return result;
 }
@@ -3465,33 +3457,23 @@ geo_from_ewkb(const uint8_t *wkb, size_t wkb_size, int32 srid)
 
 /**
  * @ingroup meos_geo_base_inout
- * @brief Return the Extended Well-Known Binary (EWKB) representation of a
+ * @brief Return the Well-Known Binary (WKB) representation of a
  * geometry/geography
  * @param[in] gs Geometry/geography
- * @param[in] endian Endianness
+ * @param[in] variant Bitmask of WKB output options: #WKB_EXTENDED for EWKB,
+ * #WKB_NDR / #WKB_XDR for endianness
  * @param[in] size Size of result
  * @note PostGIS function: @p WKBFromLWGEOM(PG_FUNCTION_ARGS)
  */
 uint8_t *
-geo_as_ewkb(const GSERIALIZED *gs, const char *endian, size_t *size)
+geo_as_wkb(const GSERIALIZED *gs, uint8_t variant, size_t *size)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(gs, NULL);
 
-  uint8_t variant = 0;
-
-  /* If user specified endianness, respect it */
-  if (endian)
-  {
-    if (! strncmp(endian, "xdr", 3) || ! strncmp(endian, "XDR", 3))
-      variant = variant | WKB_XDR;
-    else
-      variant = variant | WKB_NDR;
-  }
-
-  /* Create WKB hex string */
+  /* Create WKB representation */
   LWGEOM *geom = lwgeom_from_gserialized(gs);
-  lwvarlena_t *wkb = lwgeom_to_wkb_varlena(geom, variant | WKB_EXTENDED);
+  lwvarlena_t *wkb = lwgeom_to_wkb_varlena(geom, variant);
 
   size_t data_size = VARSIZE(wkb) - LWVARHDRSZ;
   uint8_t *result = palloc(data_size);

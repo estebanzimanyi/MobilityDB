@@ -102,9 +102,9 @@ int main()
       polygon_wkt, polygon_geojson);
 
   /* Convert geometries to HexEWKB */
-  char *point_hexwkb = geo_as_hexewkb(point, "XDR");
-  char *linestring_hexwkb = geo_as_hexewkb(linestring, "XDR");
-  char *polygon_hexwkb = geo_as_hexewkb(polygon, "XDR");
+  char *point_hexwkb = geo_as_hexwkb(point, WKB_EXTENDED | WKB_XDR);
+  char *linestring_hexwkb = geo_as_hexwkb(linestring, WKB_EXTENDED | WKB_XDR);
+  char *polygon_hexwkb = geo_as_hexwkb(polygon, WKB_EXTENDED | WKB_XDR);
 
   /* Revert generated GeoJSON strings into geometries */
   GSERIALIZED *point3 = geom_from_hexewkb(point_hexwkb);

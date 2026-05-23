@@ -701,12 +701,11 @@ meostype_length(MeosType type)
   return SHRT_MAX;
 }
 
-#ifndef NDEBUG
 /**
  * @brief Return true if the type is an alphanumeric base type
  * @note This function is only used in the asserts
  */
-inline bool
+bool
 alphanum_basetype(MeosType type)
 {
   return (type == T_BOOL || type == T_INT4 || type == T_INT8 ||
@@ -722,13 +721,12 @@ alphanum_basetype(MeosType type)
  * @brief Return true if the type is an alphanumeric base type
  * @note This function is only used in the asserts
  */
-inline bool
+bool
 alphanum_temptype(MeosType type)
 {
   return (type == T_TBOOL || type == T_TINT || type == T_TBIGINT ||
     type == T_TH3INDEX || type == T_TFLOAT || type == T_TTEXT);
 }
-#endif
 
 /**
  * @brief Return true if the type is a geo base type
@@ -776,12 +774,11 @@ time_type(MeosType type)
 
 /*****************************************************************************/
 
-#ifndef NDEBUG
 /**
  * @brief Return true if the type is a base type of a set type
  * @note This function is only used in the asserts
  */
-inline bool
+bool
 set_basetype(MeosType type)
 {
   return (type == T_TIMESTAMPTZ || type == T_DATE || type == T_INT4 ||
@@ -804,7 +801,6 @@ set_basetype(MeosType type)
 #endif
       );
 }
-#endif
 
 /**
  * @brief Return true if the type is a set type
@@ -1179,12 +1175,11 @@ temporal_type(MeosType type)
     );
 }
 
-#ifndef NDEBUG
 /**
  * @brief Return true if the type is a temporal base type
  * @note This function is only used in the asserts
  */
-inline bool
+bool
 temporal_basetype(MeosType type)
 {
   return (type == T_BOOL || type == T_INT4 || type == T_INT8 ||
@@ -1206,7 +1201,6 @@ temporal_basetype(MeosType type)
 #endif
     );
 }
-#endif
 
 /**
  * @brief Return true if the type is a temporal continuous type
@@ -1231,18 +1225,16 @@ temptype_continuous(MeosType type)
     );
 }
 
-#ifndef NDEBUG
 /**
  * @brief Return true if the type is a temporal alphanumeric type
  * @note This function is only used in the asserts
  */
-inline bool
+bool
 talphanum_type(MeosType type)
 {
   return (type == T_TBOOL || type == T_TINT || type == T_TBIGINT ||
     type == T_TFLOAT || type == T_TTEXT);
 }
-#endif
 
 /**
  * @brief Return true if the type is a temporal alpha type (i.e., those whose
