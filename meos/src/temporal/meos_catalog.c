@@ -1199,6 +1199,9 @@ temporal_basetype(MeosType type)
 #if POINTCLOUD
     || type == T_PCPOINT || type == T_PCPATCH
 #endif
+#if H3
+    || type == T_H3INDEX
+#endif
     );
 }
 
