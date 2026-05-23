@@ -80,9 +80,17 @@ The following functions are deliberately absent from the listed types and are **
 
 **No linear interpolation for `tgeometry` / `tgeography`.** These types support only the **discrete** and **step** interpolations, never **linear** — otherwise there would need to be a "morphing" function that interpolates between two arbitrary geometries at two timestamps, which does not exist. Types whose per-instant payload is parameterised do interpolate linearly: `tcbuffer` via center + radius, `trgeometry` / `tpose` via the pose (position lerp + orientation slerp), and the point types via the coordinate.
 
-**No planar position operators on geodetic points.** The relative-position operators (`<<`, `>>`, `&<`, and the temporal `temporal_left/right/above/below/front/back` family) are undefined on the sphere, so they are absent on `tgeogpoint`; affine transforms likewise have no geodetic action.
-
 **No touches / contains / covers predicates on geodetic types.** `eTouches`, `eContains`, `eCovers` (and their always-`a*` and temporal-output `t*` forms) are computed through the GEOS DE-9IM relate matrix, which is planar-only, and PostGIS geography exposes no `ST_Touches`, `ST_Contains`, or `ST_Relate`. They are therefore absent on `tgeogpoint` (and on geodetic geometry generally). `eIntersects`, `eDwithin`, and `eDisjoint` *do* work geodetically (via `ST_Intersects` / `ST_DWithin` / `ST_Distance`) — only the DE-9IM relate-based predicates are excluded.
+
+**No CRS reprojection on tnpoint.** `transform`, `transform_gk`, `transformPipeline`, and `setSRID` are absent on tnpoint: a network point inherits its CRS from the underlying road network (the `ways` table, read via `get_srid_ways()`), so the SRID is a property of the network, not of an individual value. Reprojection is performed on the network, not per tnpoint.
+
+**No planar position or planar space tiling on tgeogpoint.** The relative-position operators (`<<`, `>>`, `&<`, `<<|`, … and their bare-name aliases `left`/`right`/`above`/`below`/`front`/`back` and the `over*` variants), the fixed planar-grid space tiling (`spaceTiles`/`spaceBoxes`/`spaceSplit` and the space-time combinations), `asMVTGeom`, and the Gauss-Krüger projection (`transform_gk`) are undefined on the sphere. Geodetic space-binning uses the H3 family (`geoToH3Cell`, `h3_latlng_to_cell`); generic reprojection uses `transform()`/`transformPipeline()`.
+
+**No spherical centroid aggregate on tgeogpoint.** `tcentroid` and `twcentroid` compute a planar coordinate average; a geodetic centroid is not that average and no spherical equivalent is defined.
+
+**No Z-axis position on the strictly-2D types.** tnpoint and tcbuffer carry no Z dimension, so the front/back position operators (`<</`, `/>>`, `&</`, `/&>`, the `temporal_front`/`temporal_back`/`temporal_overfront`/`temporal_overback` operators and their bare aliases) are absent, as are `atElevation` and `minusElevation` on tnpoint.
+
+**No `makeSimple` or H3 lat/lng mapping on tnpoint.** `makeSimple` removes self-intersections of a free trajectory and `h3_latlng_to_cell` maps a free geographic point to an H3 cell; a network point follows network edges and is addressed by route plus fraction.
 
 ## Relationship to Cross-Platform Parity
 

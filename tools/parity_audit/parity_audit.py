@@ -37,6 +37,24 @@ POSITION = {"temporal_left", "temporal_right", "temporal_above", "temporal_below
 # ST_Touches/ST_Contains/ST_Relate => undefined for geodetic types.
 RELATE = {"etouches", "atouches", "ttouches", "econtains", "acontains",
           "tcontains", "ecovers", "acovers", "tcovers"}
+# Bare portable-alias position names (PR #1075) mirror the temporal_* operators.
+BARE_POSITION = {"left", "right", "above", "below", "front", "back",
+                 "overleft", "overright", "overabove", "overbelow",
+                 "overfront", "overback"}
+# Z-axis position (operators + their bare aliases) — absent on strictly-2D types.
+POSITION_Z = {"temporal_front", "temporal_back", "temporal_overfront",
+              "temporal_overback", "front", "back", "overfront", "overback"}
+ELEVATION = {"atelevation", "minuselevation"}
+# Planar fixed-grid space tiling: a uniform grid (and the Gauss-Krüger planar
+# projection) is undefined on the sphere; geodetic space-binning lives in the
+# H3 family (geoToH3Cell / h3_latlng_to_cell), reprojection uses transform().
+PLANAR_SPACE_TILING = {"asmvtgeom", "spacetiles", "spaceboxes", "spacesplit",
+                       "spacetimetiles", "spacetimeboxes", "spacetimesplit",
+                       "transform_gk"}
+CENTROID_AGG = {"tcentroid", "twcentroid"}
+# tnpoint inherits its CRS from the road network (ways table, get_srid_ways());
+# there is no per-value reprojection or SRID assignment.
+TNPOINT_CRS = {"transform", "setsrid", "transformpipeline", "transform_gk"}
 
 # Per-op exclusion rules: (types, ops, category, reason).
 RULES = [
@@ -59,6 +77,26 @@ RULES = [
     (["tgeogpoint"], RELATE, "structural",
      "touches/contains/covers use the GEOS DE-9IM relate matrix (planar-only); "
      "PostGIS geography has no ST_Touches/ST_Contains/ST_Relate"),
+    (["tgeogpoint"], BARE_POSITION, "structural",
+     "planar relative-position operators (<<,>>,&<) are undefined on the sphere"),
+    (["tgeogpoint"], PLANAR_SPACE_TILING, "structural",
+     "uniform planar grids and the Gauss-Krüger projection are undefined on the "
+     "sphere; geodetic space-binning uses the H3 family, reprojection uses transform()"),
+    (["tgeogpoint"], CENTROID_AGG, "structural",
+     "a geodetic centroid is not the planar coordinate average; there is no "
+     "spherical centroid aggregate"),
+    (["tnpoint", "tcbuffer"], POSITION_Z, "structural",
+     "strictly 2D type — no Z dimension, so front/back position operators are absent"),
+    (["tnpoint"], ELEVATION, "structural",
+     "strictly 2D type — no elevation dimension"),
+    (["tnpoint"], TNPOINT_CRS, "structural",
+     "CRS is inherited from the road network (ways table); not set or reprojected per value"),
+    (["tnpoint"], {"makesimple"}, "semantic",
+     "makeSimple removes self-intersections of a free trajectory; a network point "
+     "follows network edges"),
+    (["tnpoint"], {"h3_latlng_to_cell"}, "semantic",
+     "H3 lat/lng cell mapping addresses free geographic points; network points are "
+     "addressed by route+fraction"),
 ]
 
 # Type-level structural facts (documentation; not tied to one op name).
@@ -73,7 +111,8 @@ TYPE_STRUCTURAL = {
                   "no-morphing-function limitation as tgeometry, plus geodetic",
 }
 
-ALIASES = {"tgeo_teq": "temporal_teq", "tgeo_tne": "temporal_tne"}
+ALIASES = {"tgeo_teq": "temporal_teq", "tgeo_tne": "temporal_tne",
+           "trgeometry_out": "temporal_out", "trgeometry_send": "temporal_send"}
 _CONSTRUCTOR = re.compile(r"^t\w+(inst|seq|seqset)$")
 
 
