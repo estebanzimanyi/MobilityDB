@@ -1049,11 +1049,14 @@ tbox_expand_value(const TBox *box, Datum value, MeosType basetype)
     if (basetype == T_INT4)
       return tintbox_expand(box, DatumGetInt32(value));
     if (basetype == T_INT8)
+    {
       meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
         "Invalid value to expand box: %ld", DatumGetInt64(value));
-    else /* basetype == T_FLOAT8 */
-      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-        "Invalid value to expand box: %lf", DatumGetFloat8(value));
+      return NULL;
+    }
+    /* basetype == T_FLOAT8 */
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      "Invalid value to expand box: %lf", DatumGetFloat8(value));
     return NULL;
   }
   else
