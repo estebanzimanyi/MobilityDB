@@ -13,6 +13,7 @@ SET(LOCAL_FILES
   166_tcbuffer_indexes
   167_tcbuffer_analytics
   168_tcbuffer_tile
+  167_portable_aliases
   )
 
 foreach (f ${LOCAL_FILES})

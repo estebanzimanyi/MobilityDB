@@ -18,6 +18,7 @@ SET(LOCAL_FILES
   135_trgeo_geom_clip
   136_trgeo_analytics
   137_trgeo_tile
+  135_portable_aliases
   )
 
 foreach (f ${LOCAL_FILES})

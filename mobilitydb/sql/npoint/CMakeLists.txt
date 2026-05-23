@@ -17,6 +17,7 @@ SET(LOCAL_FILES
   097_tnpoint_conversion
   099_tnpoint_tile
   098_tnpoint_indexes
+  099_portable_aliases
   )
 
 foreach (f ${LOCAL_FILES})

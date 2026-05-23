@@ -37,6 +37,7 @@ list(APPEND LOCAL_FILES
   074_tgeo_spgist
   076_tgeo_analytics
   079_tgeogpoint_parity
+  079_portable_aliases
   )
 
 foreach (f ${LOCAL_FILES})
