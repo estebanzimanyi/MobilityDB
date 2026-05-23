@@ -116,11 +116,6 @@ typedef enum
   T_TGEOMETRY      = 60,  /**< temporal geometry type */
   T_TGEOGRAPHY     = 61,  /**< temporal geography type */
   T_TRGEOMETRY     = 62,  /**< temporal rigid geometry type */
-  /* 63..69 reserved for pgPointCloud temporal types (PR #818) */
-  T_TBIGINT        = 70,  /**< temporal big integer type */
-  T_H3INDEX        = 71,  /**< static H3 cell index type (uint64) */
-  T_H3INDEXSET     = 72,  /**< h3index set type */
-  T_TH3INDEX       = 73,  /**< temporal H3 index type (libh3 cell index over time) */
   T_PCPOINT        = 63,  /**< pgpointcloud point type */
   T_PCPOINTSET     = 64,  /**< pgpointcloud point set type */
   T_TPCPOINT       = 65,  /**< temporal pgpointcloud point type */
@@ -128,8 +123,13 @@ typedef enum
   T_PCPATCHSET     = 67,  /**< pgpointcloud patch set type */
   T_TPCPATCH       = 68,  /**< temporal pgpointcloud patch type */
   T_TPCBOX         = 69,  /**< temporal pgpointcloud bounding box type */
-  /* 70 reserved for T_TBIGINT  (PR #788) — kept adjacent to T_TH3INDEX */
-  /* 71 reserved for T_TH3INDEX (PR #807) — kept adjacent to T_TBIGINT */
+  T_TBIGINT        = 70,  /**< temporal big integer type */
+  T_H3INDEX        = 71,  /**< static H3 cell index type (uint64) */
+  T_H3INDEXSET     = 72,  /**< h3index set type */
+  T_TH3INDEX       = 73,  /**< temporal H3 index type (libh3 cell index over time) */
+  /* Keep enumerators in ascending value order so that NUM_MEOS_TYPES stays
+   * the last (highest-valued) one: it sizes the MeosType -> Oid lookup
+   * arrays, so any type at or above it is silently dropped from the cache. */
   NUM_MEOS_TYPES          /* Dummy value that determines the size of the
                            * lookup array MeosType -> Oid */
 } MeosType;
