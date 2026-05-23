@@ -78,6 +78,16 @@ The following functions are deliberately absent from the listed types and are no
 
 **No `routeops` outside tnpoint.** Route-membership operators (`@>`, `<@` over `nset`) are specific to the network-point representation.
 
+**No CRS reprojection on tnpoint.** `transform`, `transform_gk`, `transformPipeline`, and `setSRID` are absent on tnpoint: a network point inherits its CRS from the underlying road network (the `ways` table, read via `get_srid_ways()`), so the SRID is a property of the network, not of an individual value. Reprojection is performed on the network, not per tnpoint.
+
+**No planar position or planar space tiling on tgeogpoint.** The relative-position operators (`<<`, `>>`, `&<`, `<<|`, … and their bare-name aliases `left`/`right`/`above`/`below`/`front`/`back` and the `over*` variants), the fixed planar-grid space tiling (`spaceTiles`/`spaceBoxes`/`spaceSplit` and the space-time combinations), `asMVTGeom`, and the Gauss-Krüger projection (`transform_gk`) are undefined on the sphere. Geodetic space-binning uses the H3 family (`geoToH3Cell`, `h3_latlng_to_cell`); generic reprojection uses `transform()`/`transformPipeline()`.
+
+**No spherical centroid aggregate on tgeogpoint.** `tcentroid` and `twcentroid` compute a planar coordinate average; a geodetic centroid is not that average and no spherical equivalent is defined.
+
+**No Z-axis position on the strictly-2D types.** tnpoint and tcbuffer carry no Z dimension, so the front/back position operators (`<</`, `/>>`, `&</`, `/&>`, the `temporal_front`/`temporal_back`/`temporal_overfront`/`temporal_overback` operators and their bare aliases) are absent, as are `atElevation` and `minusElevation` on tnpoint.
+
+**No `makeSimple` or H3 lat/lng mapping on tnpoint.** `makeSimple` removes self-intersections of a free trajectory and `h3_latlng_to_cell` maps a free geographic point to an H3 cell; a network point follows network edges and is addressed by route plus fraction.
+
 ## Relationship to Cross-Platform Parity
 
 Once a function exists for a given type in MobilityDB (cross-type parity achieved), it becomes a candidate for the cross-platform parity registry. The MEOS C library is the source of truth; bindings (MobilityDuck, MobilitySpark via JMEOS) are generated from `meos-api.json`. In practice:
