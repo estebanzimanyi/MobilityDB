@@ -461,6 +461,11 @@ CREATE FUNCTION tsample(tcbuffer, duration interval,
   RETURNS tcbuffer
   AS 'MODULE_PATHNAME', 'Temporal_tsample'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tprecision(tcbuffer, duration interval,
+  origin timestamptz DEFAULT '2000-01-03')
+  RETURNS tcbuffer
+  AS 'MODULE_PATHNAME', 'Temporal_tprecision'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION shiftTime(tcbuffer, interval)
   RETURNS tcbuffer

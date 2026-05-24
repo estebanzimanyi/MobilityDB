@@ -478,6 +478,11 @@ CREATE FUNCTION tsample(tpose, duration interval,
   RETURNS tpose
   AS 'MODULE_PATHNAME', 'Temporal_tsample'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tprecision(tpose, duration interval,
+  origin timestamptz DEFAULT '2000-01-03')
+  RETURNS tpose
+  AS 'MODULE_PATHNAME', 'Temporal_tprecision'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION shiftTime(tpose, interval)
   RETURNS tpose
