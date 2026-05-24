@@ -17,8 +17,8 @@ import sys
 from collections import defaultdict
 
 FAMILIES = {
-    "Point":          ("tgeompoint", ["tgeogpoint", "tnpoint"]),
-    "Extended-shape": ("tgeometry",  ["trgeometry", "tcbuffer", "tpose"]),
+    "Point":    ("tgeompoint", ["tgeogpoint", "tnpoint"]),
+    "Geometry": ("tgeometry",  ["trgeometry", "tcbuffer", "tpose"]),
 }
 TEMPORAL_TYPES = {"tgeompoint", "tgeogpoint", "tnpoint", "tgeometry",
                   "tgeography", "trgeometry", "tcbuffer", "tpose",

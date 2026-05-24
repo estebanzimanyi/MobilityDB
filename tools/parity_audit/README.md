@@ -20,7 +20,7 @@ only when it is actually present, never because a wrapper or alias names it.
 ## What it computes
 
 Each temporal spatial type is measured against its **family reference**
-(Point → `tgeompoint`; Extended-shape → `tgeometry`): a member is expected to
+(Point → `tgeompoint`; Geometry → `tgeometry`): a member is expected to
 cover the reference's operators **minus** that type's documented exceptions.
 Absences are split into three reason-marked buckets so none is ever
 "implemented" by mistake:

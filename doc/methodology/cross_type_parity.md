@@ -28,14 +28,16 @@ Each temporal spatial type's parity surface is determined by what it carries at 
 | `tgeompoint` | A 0-D Euclidean point | Point |
 | `tgeogpoint` | A 0-D geodetic point on WGS84 | Point |
 | `tnpoint` | A network point (route id + fraction along the edge) | Point |
-| `tgeometry` | An arbitrary geometry (point, line, polygon, multi-geom) | Extended-shape |
-| `trgeometry` | A pose plus a reference geometry held rigid | Extended-shape |
-| `tcbuffer` | A circle parameterised by center and radius | Extended-shape |
-| `tpose` | A frame (position plus orientation), no shape | Extended-shape |
+| `tgeometry` | An arbitrary geometry (point, line, polygon, multi-geom) | Geometry |
+| `trgeometry` | A pose plus a reference geometry held rigid | Geometry |
+| `tcbuffer` | A circle parameterised by center and radius | Geometry |
+| `tpose` | A frame (position plus orientation), no shape | Geometry |
 
 The **Point** family uses `tgeompoint` as its reference: any function defined on `tgeompoint` is expected on every other point-payload type unless its semantics break under the constrained representation.
 
-The **Extended-shape** family uses `tgeometry` as its reference: any function defined on `tgeometry` is expected on every other extended-payload type unless the operation would bypass that type's internal invariants (the rigid-body pose for trgeometry, the center+radius parameterisation for tcbuffer, the shape-less frame for tpose).
+The **Geometry** family uses `tgeometry` as its reference: any function defined on `tgeometry` is expected on every other geometry-payload type unless the operation would bypass that type's internal invariants (the rigid-body pose for trgeometry, the center+radius parameterisation for tcbuffer, the shape-less frame for tpose).
+
+Conceptually, this split mirrors the one-dimensional distinction between **points and ranges**: a point type models a moving *location* — a single position at each instant — while a geometry type models a moving object that carries spatial *extent* (and, for some types, orientation). A geometry type is to a point type what a range is to a point in 1-D: it occupies a region rather than marking a single value.
 
 ## Function Categories
 
@@ -56,7 +58,7 @@ Each temporal spatial type provides the following categories of operations where
 13. Index support (GiST, SP-GiST operator classes)
 14. Analytics (simplify variants)
 
-Category 4 (spatial functions) carries different content per family. On the extended-shape family it includes `traversedArea`, `centroid`, `convexHull`, `atGeometry`, and `minusGeometry`. On the point family it reduces to `trajectory`, `length`, `cumulativeLength`, and `azimuth`. Category 9 (trajectory similarity) applies only to point trajectories.
+Category 4 (spatial functions) carries different content per family. On the geometry family it includes `traversedArea`, `centroid`, `convexHull`, `atGeometry`, and `minusGeometry`. On the point family it reduces to `trajectory`, `length`, `cumulativeLength`, and `azimuth`. Category 9 (trajectory similarity) applies only to point trajectories.
 
 `tpose` carries no shape, so the category 4 functions that depend on a swept footprint (`traversedArea`, `convexHull`, `centroid`) reduce to position-only computations or are absent. `atGeometry` and `minusGeometry` against an external geometry test the position alone.
 
@@ -68,7 +70,7 @@ The following functions are deliberately absent from the listed types and are no
 
 **No affine transforms for structured types.** `affine`, `rotate`, `rotateX/Y/Z`, `translate`, `transscale`, `scale` are PostGIS compatibility wrappers that modify the geometry at each instant. For types with structured internal geometry, trgeometry (pose + reference geometry), tcbuffer (center + radius), tnpoint (route + fraction), raw affine transforms would bypass the type invariants. The correct way to move a rigid body is to modify the pose sequence; the correct way to resize a buffer is to modify the radius; network points have no affine action.
 
-**No trajectory similarity outside the point family.** `frechetDistance` and `dynamicTimeWarp` are defined on point trajectories. Extended-shape types have no canonical pointwise representation against which a similarity metric is well-defined.
+**No trajectory similarity outside the point family.** `frechetDistance` and `dynamicTimeWarp` are defined on point trajectories. Geometry types have no canonical pointwise representation against which a similarity metric is well-defined.
 
 **No `atGeometry` / `minusGeometry` for tnpoint.** A network point is constrained to a 1-D network edge; use route filtering instead.
 
