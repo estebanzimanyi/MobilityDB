@@ -78,7 +78,7 @@ The following functions are deliberately absent from the listed types and are no
 
 **No `routeops` outside tnpoint.** Route-membership operators (`@>`, `<@` over `nset`) are specific to the network-point representation.
 
-**No CRS reprojection on tnpoint.** `transform`, `transform_gk`, `transformPipeline`, and `setSRID` are absent on tnpoint: a network point inherits its CRS from the underlying road network (the `ways` table, read via `get_srid_ways()`), so the SRID is a property of the network, not of an individual value. Reprojection is performed on the network, not per tnpoint.
+**tnpoint supports SRID; only per-value CRS change is excluded.** A network point fully supports SRID for reading and I/O — `srid(tnpoint)`, `asEWKT`, `asEWKB`, and `asHexEWKB` retain and output its SRID (e.g. `npoint 'SRID=5676;Npoint(1,0.5)'` round-trips as `SRID=5676;NPoint(1,0.5)`). What is absent is the per-value CRS *mutation*: `transform`, `transform_gk`, `transformPipeline` (reproject) and `setSRID` (relabel). A network point inherits its CRS from the underlying road network (the `ways` table, read via `get_srid_ways()`), so the SRID is a property of the network, not of an individual value; reprojection is performed on the network, not per tnpoint.
 
 **No `tprecision` on tnpoint.** `tprecision` replaces each time bin with the time-weighted average of its values; the average of network points is not network-valid (it would leave the edge). `tsample`, which only resamples positions that remain on the network, is provided instead.
 

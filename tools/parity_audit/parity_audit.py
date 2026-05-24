@@ -52,8 +52,10 @@ PLANAR_SPACE_TILING = {"asmvtgeom", "spacetiles", "spaceboxes", "spacesplit",
                        "spacetimetiles", "spacetimeboxes", "spacetimesplit",
                        "transform_gk"}
 CENTROID_AGG = {"tcentroid", "twcentroid"}
-# tnpoint inherits its CRS from the road network (ways table, get_srid_ways());
-# there is no per-value reprojection or SRID assignment.
+# tnpoint inherits its CRS from the road network (ways table, get_srid_ways()):
+# SRID READ + I/O (srid, asewkt, asewkb, ashexewkb) ARE supported and are
+# deliberately NOT excluded below. Only the per-value CRS MUTATION is absent
+# (reproject / relabel) -- there is no per-value reprojection or SRID assignment.
 TNPOINT_CRS = {"transform", "setsrid", "transformpipeline", "transform_gk"}
 
 # Per-op exclusion rules: (types, ops, category, reason).
