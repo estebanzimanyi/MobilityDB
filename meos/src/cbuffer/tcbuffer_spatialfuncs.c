@@ -673,7 +673,7 @@ tcbufferseqset_trav_area(const TSequenceSet *ss, bool unary_union)
  * @csqlfn #Tcbuffer_traversed_area()
  */
 GSERIALIZED *
-tcbuffer_trav_area(const Temporal *temp, bool unary_union)
+tcbuffer_traversed_area(const Temporal *temp, bool merge_union)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_TCBUFFER(temp, NULL);
@@ -685,11 +685,27 @@ tcbuffer_trav_area(const Temporal *temp, bool unary_union)
       return tcbufferinst_trav_area((TInstant *) temp);
       break;
     case TSEQUENCE:
-      return tcbufferseq_trav_area((TSequence *) temp, unary_union);
+      return tcbufferseq_trav_area((TSequence *) temp, merge_union);
       break;
     default: /* TSEQUENCESET */
-      return tcbufferseqset_trav_area((TSequenceSet *) temp, unary_union);
+      return tcbufferseqset_trav_area((TSequenceSet *) temp, merge_union);
   }
+}
+
+/**
+ * @ingroup meos_cbuffer_accessor
+ * @brief Return the convex hull of a temporal circular buffer
+ * @param[in] temp Temporal circular buffer
+ * @csqlfn #Tcbuffer_convex_hull()
+ */
+GSERIALIZED *
+tcbuffer_convex_hull(const Temporal *temp)
+{
+  VALIDATE_TCBUFFER(temp, NULL);
+  GSERIALIZED *area = tcbuffer_traversed_area(temp, true);
+  GSERIALIZED *result = geom_convex_hull(area);
+  pfree(area);
+  return result;
 }
 
 /*****************************************************************************/
