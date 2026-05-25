@@ -530,6 +530,9 @@ cbuffer_to_geom(const Cbuffer *cb)
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(cb, NULL);
   const GSERIALIZED *gs = DatumGetGserializedP(PointerGetDatum(&cb->point));
+  /* A zero-radius circular buffer degenerates to its centre point */
+  if (cb->radius == 0)
+    return geo_copy(gs);
   const POINT2D *p = (POINT2D *) GS_POINT_PTR(gs);
   int32_t srid = gserialized_get_srid(gs);
   return geocircle_make(p->x, p->y, cb->radius, srid);
