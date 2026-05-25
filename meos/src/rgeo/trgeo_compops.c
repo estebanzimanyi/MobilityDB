@@ -149,7 +149,7 @@ eacomp_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2,
  * @brief Return true if a geometry is ever equal to a temporal rigid geometry
  * @param[in] gs Geometry
  * @param[in] temp Temporal value
- * @csqlfn #Ever_eq_geo_trgeo()
+ * @csqlfn #Ever_eq_geo_trgeometry()
  */
 inline int
 ever_eq_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp)
@@ -163,7 +163,7 @@ ever_eq_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp)
  * geometry
  * @param[in] temp Temporal value
  * @param[in] gs Geometry
- * @csqlfn #Ever_eq_trgeo_geo()
+ * @csqlfn #Ever_eq_trgeometry_geo()
  */
 inline int
 ever_eq_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
@@ -177,7 +177,7 @@ ever_eq_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
  * geometry
  * @param[in] gs Geometry
  * @param[in] temp Temporal value
- * @csqlfn #Ever_ne_geo_trgeo()
+ * @csqlfn #Ever_ne_geo_trgeometry()
  */
 inline int
 ever_ne_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp)
@@ -191,7 +191,7 @@ ever_ne_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp)
  * geometry
  * @param[in] temp Temporal value
  * @param[in] gs Geometry
- * @csqlfn #Ever_ne_trgeo_geo()
+ * @csqlfn #Ever_ne_trgeometry_geo()
  */
 inline int
 ever_ne_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
@@ -205,7 +205,7 @@ ever_ne_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
  * geometry
  * @param[in] gs Geometry
  * @param[in] temp Temporal value
- * @csqlfn #Always_eq_geo_trgeo()
+ * @csqlfn #Always_eq_geo_trgeometry()
  */
 inline int
 always_eq_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp)
@@ -219,7 +219,7 @@ always_eq_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp)
  * geometry
  * @param[in] temp Temporal value
  * @param[in] gs Geometry
- * @csqlfn #Always_eq_trgeo_geo()
+ * @csqlfn #Always_eq_trgeometry_geo()
  */
 inline int
 always_eq_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
@@ -233,7 +233,7 @@ always_eq_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
  * geometry
  * @param[in] gs Geometry
  * @param[in] temp Temporal value
- * @csqlfn #Always_ne_geo_trgeo()
+ * @csqlfn #Always_ne_geo_trgeometry()
  */
 inline int
 always_ne_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp)
@@ -247,7 +247,7 @@ always_ne_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp)
  * geometry
  * @param[in] temp Temporal value
  * @param[in] gs Geometry
- * @csqlfn #Always_ne_trgeo_geo()
+ * @csqlfn #Always_ne_trgeometry_geo()
  */
 inline int
 always_ne_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
@@ -261,7 +261,7 @@ always_ne_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
  * @ingroup meos_rgeo_comp_ever
  * @brief Return true if two temporal rigid geometries are ever equal
  * @param[in] temp1,temp2 Temporal rigid geometries
- * @csqlfn #Ever_eq_trgeo_trgeo()
+ * @csqlfn #Ever_eq_trgeometry_trgeometry()
  */
 inline int
 ever_eq_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2)
@@ -273,7 +273,7 @@ ever_eq_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2)
  * @ingroup meos_rgeo_comp_ever
  * @brief Return true if two temporal rigid geometries are ever different
  * @param[in] temp1,temp2 Temporal rigid geometries
- * @csqlfn #Ever_ne_trgeo_trgeo()
+ * @csqlfn #Ever_ne_trgeometry_trgeometry()
  */
 inline int
 ever_ne_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2)
@@ -285,7 +285,7 @@ ever_ne_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2)
  * @ingroup meos_rgeo_comp_ever
  * @brief Return true if two temporal rigid geometries are always equal
  * @param[in] temp1,temp2 Temporal rigid geometries
- * @csqlfn #Always_eq_trgeo_trgeo()
+ * @csqlfn #Always_eq_trgeometry_trgeometry()
  */
 inline int
 always_eq_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2)
@@ -297,7 +297,7 @@ always_eq_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2)
  * @ingroup meos_rgeo_comp_ever
  * @brief Return true if two temporal rigid geometries are always different
  * @param[in] temp1,temp2 Temporal rigid geometries
- * @csqlfn #Always_ne_trgeo_trgeo()
+ * @csqlfn #Always_ne_trgeometry_trgeometry()
  */
 inline int
 always_ne_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2)
@@ -414,7 +414,7 @@ tcomp_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp,
  * geometry
  * @param[in] gs Geometry
  * @param[in] temp Temporal value
- * @csqlfn #Teq_geo_trgeo()
+ * @csqlfn #Teq_geo_trgeometry()
  */
 inline Temporal *
 teq_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp)
@@ -428,7 +428,7 @@ teq_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp)
  * geometry
  * @param[in] gs Geometry
  * @param[in] temp Temporal value
- * @csqlfn #Tne_geo_trgeo()
+ * @csqlfn #Tne_geo_trgeometry()
  */
 inline Temporal *
 tne_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp)
@@ -444,7 +444,7 @@ tne_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp)
  * geometry
  * @param[in] temp Temporal value
  * @param[in] gs Geometry
- * @csqlfn #Teq_trgeo_geo()
+ * @csqlfn #Teq_trgeometry_geo()
  */
 inline Temporal *
 teq_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
@@ -458,7 +458,7 @@ teq_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
  * geometry
  * @param[in] temp Temporal value
  * @param[in] gs Geometry
- * @csqlfn #Tne_trgeo_geo()
+ * @csqlfn #Tne_trgeometry_geo()
  */
 inline Temporal *
 tne_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)

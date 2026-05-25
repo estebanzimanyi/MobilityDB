@@ -2039,7 +2039,7 @@ nad_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
  * @sqlop @p |=|
  */
 double
-nad_stbox_trgeo(const STBox *box, const Temporal *temp)
+nad_stbox_trgeometry(const STBox *box, const Temporal *temp)
 {
   return nad_trgeometry_stbox(temp, box);
 }
