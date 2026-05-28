@@ -8,3 +8,4 @@ build/
 # the trgeo_distance / ais_*_full tutorials — keep them out of the repo.
 meos/examples/data/aisdk-*.csv
 meos/examples/data/aisdk-*.csv:Zone.Identifier
+build-meos/
