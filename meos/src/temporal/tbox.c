@@ -136,12 +136,8 @@ tbox_out(const TBox *box, int maxdd)
   MeosType basetype = box->span.basetype;
   if (hasx)
   {
-<<<<<<< HEAD
-    const char *spantype = (box->span.basetype == T_INT4) ? "INT" : "FLOAT";
-=======
     const char *spantype = (basetype == T_INT4) ? "INT" :
       (basetype == T_INT8) ? "BIGINT" : "FLOAT";
->>>>>>> refs/pr/1044
     if (hast)
       snprintf(result, size, "TBOX%s XT(%s,%s)", spantype, span, period);
     else
