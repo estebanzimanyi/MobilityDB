@@ -10,6 +10,7 @@ on:
       - 'meos/**'
       - 'mobilitydb/**'
       - 'postgis/**'
+      - 'tools/**'
       - 'LICENSE.txt'
     branches-ignore:
       - gh-pages
@@ -28,9 +29,16 @@ jobs:
 
   int64_check:
     name: int64 vs int64_t header convention
+  portable_aliases_check:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Reject int64_t / uint64_t in MobilityDB public headers
         run: ./tools/scripts/check_int64_in_headers.sh
+      - name: Portable-alias invariants (0 collisions / unresolved / invented / unclassified)
+        run: python3 tools/portable_aliases/generate.py --check
+      - name: Generated alias SQL is up to date (idempotent)
+        run: |
+          python3 tools/portable_aliases/generate.py --insrc
+          git diff --exit-code -- mobilitydb/sql tools/portable_aliases/verify_equivalence.sql
