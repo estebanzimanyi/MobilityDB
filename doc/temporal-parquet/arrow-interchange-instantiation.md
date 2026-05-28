@@ -10,14 +10,14 @@ https://creativecommons.org/licenses/by-sa/3.0/
 
 ## What this instantiation demonstrates
 
-The Temporal Data Lake RFC describes three layers: the MEOS-WKB byte-format
-specification, the ratified-v1 TemporalParquet substrate (an opaque MEOS-WKB
+The [Temporal Data Lake RFC](https://github.com/MobilityDB/MobilityDB/discussions/913) describes three layers: the MEOS-WKB byte-format
+specification, the ratified-v1 [TemporalParquet](https://github.com/MobilityDB/MobilityDB/discussions/870) substrate (an opaque MEOS-WKB
 `BYTE_ARRAY` column plus a self-describing footer), and an optional columnar
 Arrow interchange. This document is the instantiation trust artifact for the
 **optional Arrow interchange layer only**. It records, grounded in
 independently verified facts, that the optional Arrow encoding is realized as
 an explicit, closed type algebra that a process holding no MEOS library can
-consume bit-exactly through commodity Apache Arrow and Parquet tooling, and it
+consume bit-exactly through commodity [Apache Arrow](https://arrow.apache.org/) and [Parquet](https://parquet.apache.org/) tooling, and it
 gives the exact recipe a reader runs locally, with zero merges, to reproduce
 that result.
 
@@ -28,7 +28,7 @@ value produced by the named reproduction artifact, not an estimate.
 ## The RFC claim this instantiates
 
 The optional Arrow layer's claim is that a MEOS value can be exported through
-the Arrow C Data Interface into a vectorized columnar form that any Arrow or
+the [Arrow C Data Interface](https://arrow.apache.org/docs/format/CDataInterface.html) into a vectorized columnar form that any Arrow or
 Parquet engine reads without a MobilityDB or MEOS installation, losslessly, and
 that this holds for the whole MEOS type algebra rather than a temporal subset.
 The MEOS type algebra is closed: every argument and result of a MEOS function
@@ -46,7 +46,7 @@ conformance proof:
 
 | Algebra family | What it is | Arrow conversion | External-consumer proof |
 |---|---|---|---|
-| Temporal types | functions time to base domain | `meos_temporal_to_arrow` / `meos_temporal_from_arrow`, full base-type surface | nanoarrow FULL-validate per type; bit-exact zero-MEOS round-trip |
+| Temporal types | functions time to base domain | `meos_temporal_to_arrow` / `meos_temporal_from_arrow`, full base-type surface | [nanoarrow](https://github.com/apache/arrow-nanoarrow) FULL-validate per type; bit-exact zero-MEOS round-trip |
 | Set, span, spanset | finite subsets of one infinite domain | one shared span Struct used by span-as-value | nanoarrow FULL-validate; zero-MEOS round-trip |
 | tbox, stbox | finite subsets of a product domain | the same span Struct composed for the product domain | nanoarrow FULL-validate; zero-MEOS round-trip |
 
@@ -74,13 +74,13 @@ re-derive, or absorb the ratified-v1 substrate.
 The ratified-v1 data-lake substrate is the opaque MEOS-WKB `BYTE_ARRAY` column
 plus the self-describing TemporalParquet footer, with native-scalar sidecar
 columns the consumer writer emits for row-group pruning. That substrate is
-delivered and exercised in the parallel MobilityDuck consumer lane (the
-`temporalFooter()` footer convention and the native-scalar sidecar quickstart
-recipe). This document cross-references that lane; it does not prove it here.
+delivered and exercised in the parallel [MobilityDuck](https://github.com/MobilityDB/MobilityDuck) consumer lane (the
+[`temporalFooter()` footer convention](https://github.com/MobilityDB/MobilityDuck/pull/146) and the [native-scalar sidecar quickstart
+recipe](https://github.com/MobilityDB/MobilityDuck/pull/147)). This document cross-references that lane; it does not prove it here.
 The components that lane and this layer build on are issued as open pull
 requests; issued is not merged, and nothing in this document asserts otherwise.
 
-MEOS-WKB is the unchanged zero-copy base: in MobilityDB the on-disk varlena is
+MEOS-WKB is the unchanged zero-copy base: in [MobilityDB](https://github.com/MobilityDB/MobilityDB) the on-disk [varlena](https://www.postgresql.org/docs/current/storage-toast.html) is
 the in-memory image, so MEOS-WKB already is the portable zero-copy form. The
 optional Arrow layer is strictly additive and does not change it.
 
@@ -117,13 +117,13 @@ tooling.
 
 A MEOS-linked producer builds values across the full temporal base-type
 surface and exports each through `meos_temporal_to_arrow`. A bridge that links
-no MEOS imports every array through `pyarrow.Array._import_from_c` (the exact
+no MEOS imports every array through [`pyarrow.Array._import_from_c`](https://arrow.apache.org/docs/python/) (the exact
 code path that previously failed against the unfixed export, and that now
 imports every array with no error) and writes real multi-row-group Parquet with
 per-row-group statistics. A fully separate process, proven to map no libmeos or
 producer object by inspecting its own process memory map, reads the Parquet
-back with pyarrow and duckdb and compares every value field-exact against the
-MEOS-emitted decomposed ground truth (IEEE-754 exact for floats, exact for
+back with pyarrow and [duckdb](https://duckdb.org/) and compares every value field-exact against the
+MEOS-emitted decomposed ground truth ([IEEE-754](https://en.wikipedia.org/wiki/IEEE_754) exact for floats, exact for
 integers, byte-exact for the opaque binary leaves).
 
 The verified result on the demonstrated head is that all 13600 produced rows
@@ -164,15 +164,15 @@ running one script from a MobilityDB checkout:
 meos/examples/temporal_arrow_parquet_demo.sh [BUILD_PREFIX]
 ```
 
-The script builds the vendored pgPointCloud static library, builds MEOS over
+The script builds the vendored [pgPointCloud](https://github.com/pgpointcloud/pointcloud) static library, builds MEOS over
 the full base-type surface into a private prefix (the system prefix is never
 written), builds the MEOS-linked Arrow producer, runs the zero-MEOS bridge that
 writes per-type multi-row-group Parquet through
 `pyarrow.Array._import_from_c`, and runs the fully separate zero-MEOS consumer
 that verifies every row field-exact and measures the per-type row-group
-pruning. Requirements are commodity: a C toolchain, cmake, the MEOS build
-dependencies, libh3, the autotools and libxml2 development packages, any
-PostgreSQL `pg_config`, and Python with pyarrow and duckdb (a virtual
+pruning. Requirements are commodity: a C toolchain, [cmake](https://cmake.org/), the MEOS build
+dependencies, [libh3](https://h3geo.org/), the autotools and [libxml2](http://xmlsoft.org/) development packages, any
+[PostgreSQL](https://www.postgresql.org/) `pg_config`, and Python with pyarrow and duckdb (a virtual
 environment is created if the system Python is externally managed).
 
 The same two jobs run in continuous integration on the demonstration branch:
@@ -183,9 +183,13 @@ The same two jobs run in continuous integration on the demonstration branch:
   bridge, and separate-process consumer described in Section 2.
 
 The conversion kernels and conformance proofs this instantiation relies on are
-open pull requests: the temporal full-surface conversion and the end-to-end
-demonstration, the set, span, and spanset conversion, and the tbox and stbox
-conversion, together with the per-type external-consumer validators. The
+open pull requests: the [vendored Arrow C Data Interface ABI](https://github.com/MobilityDB/MobilityDB/pull/1034), the temporal
+full-surface conversion (per base type: [tfloat](https://github.com/MobilityDB/MobilityDB/pull/1035), [tint](https://github.com/MobilityDB/MobilityDB/pull/1037), [tbool](https://github.com/MobilityDB/MobilityDB/pull/1038),
+[ttext](https://github.com/MobilityDB/MobilityDB/pull/1039), [tgeompoint/tgeogpoint](https://github.com/MobilityDB/MobilityDB/pull/1040), [tpose](https://github.com/MobilityDB/MobilityDB/pull/1042)) and the
+[end-to-end zero-MEOS demonstration](https://github.com/MobilityDB/MobilityDB/pull/1070), the [set, span, and spanset
+conversion](https://github.com/MobilityDB/MobilityDB/pull/1071), and the [tbox and stbox conversion](https://github.com/MobilityDB/MobilityDB/pull/1072), together with the
+per-type external-consumer validators ([shared schema-children arena fix](https://github.com/MobilityDB/MobilityDB/pull/1057),
+[opaque and rigid geometry conformance](https://github.com/MobilityDB/MobilityDB/pull/1058), [H3 index validator](https://github.com/MobilityDB/MobilityDB/pull/1065)). The
 ratified-v1 substrate and its native-scalar sidecar pruning live in the
 parallel MobilityDuck consumer lane and are cross-referenced, not reproduced
 here.
