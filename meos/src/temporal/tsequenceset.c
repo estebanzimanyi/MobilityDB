@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -166,7 +166,8 @@ tseqarr_normalize(TSequence **sequences, int count, int *newcount)
 /**
  * @brief Return the distance between two datums
  * @param[in] value1,value2 Values
- * @param[in] type Type of the values
+ * @param[in] basetype Base type of the values
+ * @param[in] temptype Temporal type of the values
  * @param[in] flags Flags
  * @return On error return -1.0
  */
@@ -177,7 +178,7 @@ datum_distance(Datum value1, Datum value2, MeosType type, int16 flags)
     return datum_double(distance_value_value(value1, value2, type), type);
   if (geo_basetype(type))
   {
-    datum_func2 point_distance = point_distance_fn(flags);
+    datum_func2 point_distance = pt_distance_fn(flags);
     return DatumGetFloat8(point_distance(value1, value2));
   }
 #if NPOINT
@@ -248,7 +249,6 @@ ensure_valid_tseqarr(TSequence **sequences, int count)
         char *t2 = pg_timestamptz_out(lower2);
         meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
           "Timestamps for temporal value must be increasing: %s, %s", t1, t2);
-        pfree(t1); pfree(t2);
         return false;
       }
       if (! ensure_spatial_validity((Temporal *) sequences[i - 1],
@@ -381,7 +381,8 @@ tsequenceset_make_exp(TSequence **sequences, int count, int maxcount,
   size_t pos = 0;
   for (int i = 0; i < newcount; i++)
   {
-    memcpy(((char *) result) + pdata + pos, normseqs[i], VARSIZE(normseqs[i]));
+    memcpy(((char *) result) + pdata + pos, normseqs[i],
+      VARSIZE(normseqs[i]));
     (TSEQUENCESET_OFFSETS_PTR(result))[i] = pos;
     pos += DOUBLE_PAD(VARSIZE(normseqs[i]));
   }
@@ -445,7 +446,7 @@ tsequenceset_make_free(TSequence **sequences, int count, bool normalize)
  * @param[in] merge True if a merge operation, which implies that the two
  *   consecutive instants may be equal
  * @param[in] maxdist Maximum distance to split the temporal sequence
- * @param[in] maxt Maximum time interval to split the temporal sequence, may be `NULL`
+ * @param[in] maxt Maximum time interval to split the temporal sequence
  * @param[out] nsplits Number of splits
  * @return Array of indices at which the temporal sequence is split
  */
@@ -464,17 +465,11 @@ ensure_valid_tinstarr_gaps(TInstant **instants, int count, bool merge,
     if (! ensure_increasing_timestamps(instants[i - 1], instants[i], merge) ||
         ! ensure_spatial_validity((Temporal *) instants[i - 1],
           (Temporal *) instants[i]))
-    {
-      pfree(result);
       return NULL;
-    }
 #if NPOINT
     if (instants[i]->temptype == T_TNPOINT &&
         ! ensure_same_rid_tnpointinst(instants[i - 1], instants[i]))
-    {
-      pfree(result);
       return NULL;
-    }
 #endif
     /* Determine if there should be a split */
     bool split = false;
@@ -529,7 +524,7 @@ tsequenceset_make_gaps_valid(TInstant **instants, int count, bool lower_inc,
  * @param[in] count Number of elements in the array
  * @param[in] interp Interpolation
  * @param[in] maxdist Maximum distance for defining a gap
- * @param[in] maxt Maximum time interval for defining a gap, may be `NULL`
+ * @param[in] maxt Maximum time interval for defining a gap
  * @csqlfn #Tsequenceset_constructor_gaps()
  */
 TSequenceSet *
@@ -723,7 +718,7 @@ tnumberseqset_valuespans(const TSequenceSet *ss)
     spans = palloc(sizeof(Span) * ss->count);
     for (i = 0; i < ss->count; i++)
     {
-      const TBox *box = TSEQUENCE_BBOX_PTR(TSEQUENCESET_SEQ_N(ss, i));
+      TBox *box = TSEQUENCE_BBOX_PTR(TSEQUENCESET_SEQ_N(ss, i));
       memcpy(&spans[i], &box->span, sizeof(Span));
     }
     return spanset_make_free(spans, ss->count, NORMALIZE, ORDER);
@@ -852,8 +847,6 @@ tsequenceset_max_val(const TSequenceSet *ss)
     MeosType basetype = temptype_basetype(ss->temptype);
     if (basetype == T_INT4)
       max = Int32GetDatum(DatumGetInt32(max) - 1);
-    else if (basetype == T_INT8)
-      max = Int64GetDatum(DatumGetInt64(max) - 1);
     return max;
   }
 
@@ -891,6 +884,7 @@ tnumberseqset_avg_val(const TSequenceSet *ss)
  * @param[in] ss Temporal sequence set
  * @param[in] n Number
  * @param[out] result Value
+ * @csqlfn #Temporal_value_n()
  */
 bool
 tsequenceset_value_n(const TSequenceSet *ss, int n, Datum *result)
@@ -1279,6 +1273,7 @@ tsequenceset_timestamps(const TSequenceSet *ss, int *count)
  * @param[out] result Base value
  * @return Return true if the timestamp is contained in the temporal sequence set
  * @pre A bounding box test has been done before by the calling function
+ * @csqlfn #Temporal_value_at_timestamptz()
  */
 bool
 tsequenceset_value_at_timestamptz(const TSequenceSet *ss, TimestampTz t,
@@ -2021,6 +2016,7 @@ tsequenceset_to_string(const TSequenceSet *ss, int maxdd, outfunc value_out)
   assert(ss); assert(maxdd >= 0);
 
   char **strings = palloc(sizeof(char *) * ss->count);
+  size_t outlen = 0;
   char prefix[13];
   if (MEOS_FLAGS_GET_CONTINUOUS(ss->flags) &&
       ! MEOS_FLAGS_LINEAR_INTERP(ss->flags))
@@ -2028,9 +2024,12 @@ tsequenceset_to_string(const TSequenceSet *ss, int maxdd, outfunc value_out)
   else
     prefix[0] = '\0';
   for (int i = 0; i < ss->count; i++)
+  {
     strings[i] = tsequence_to_string(TSEQUENCESET_SEQ_N(ss, i), maxdd, true,
       value_out);
-  return stringarr_to_string(strings, ss->count, prefix, '{', '}',
+    outlen += strlen(strings[i]) + 1;
+  }
+  return stringarr_to_string(strings, ss->count, outlen, prefix, '{', '}',
     QUOTES_NO, SPACES);
 }
 

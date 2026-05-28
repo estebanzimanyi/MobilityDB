@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -49,9 +49,6 @@
 #include <meos.h>
 #include <meos_internal.h>
 #include <meos_internal_geo.h>
-#if POINTCLOUD
-  #include <meos_pointcloud.h>
-#endif
 #include "temporal/doublen.h"
 #include "temporal/postgres_types.h"
 #include "temporal/set.h"
@@ -407,7 +404,7 @@ tsequence_join_test(const TSequence *seq1, const TSequence *seq2,
   TInstant *last2 = (seq1->count == 1 || interp == DISCRETE) ? NULL :
     (TInstant *) TSEQUENCE_INST_N(seq1, seq1->count - 2);
   Datum last2value = ! last2 ? 0 : tinstant_value_p(last2);
-  const TInstant *last1 = (TInstant *) TSEQUENCE_INST_N(seq1, seq1->count - 1);
+  TInstant *last1 = (TInstant *) TSEQUENCE_INST_N(seq1, seq1->count - 1);
   Datum last1value = tinstant_value_p(last1);
   TInstant *first1 = (TInstant *) TSEQUENCE_INST_N(seq2, 0);
   Datum first1value = tinstant_value_p(first1);
@@ -688,6 +685,7 @@ tsequence_to_string(const TSequence *seq, int maxdd, bool component,
   assert(maxdd >= 0);
 
   char **strings = palloc(sizeof(char *) * seq->count);
+  size_t outlen = 0;
   char prefix[13];
   interpType interp = MEOS_FLAGS_GET_INTERP(seq->flags);
   if (! component && MEOS_FLAGS_GET_CONTINUOUS(seq->flags) &&
@@ -696,8 +694,11 @@ tsequence_to_string(const TSequence *seq, int maxdd, bool component,
   else
     prefix[0] = '\0';
   for (int i = 0; i < seq->count; i++)
+  {
     strings[i] = tinstant_to_string(TSEQUENCE_INST_N(seq, i), maxdd,
       value_out);
+    outlen += strlen(strings[i]) + 1;
+  }
   char open, close;
   if (MEOS_FLAGS_DISCRETE_INTERP(seq->flags))
   {
@@ -709,7 +710,7 @@ tsequence_to_string(const TSequence *seq, int maxdd, bool component,
     open = seq->period.lower_inc ? (char) '[' : (char) '(';
     close = seq->period.upper_inc ? (char) ']' : (char) ')';
   }
-  return stringarr_to_string(strings, seq->count, prefix, open, close,
+  return stringarr_to_string(strings, seq->count, outlen, prefix, open, close,
     QUOTES_NO, SPACES);
 }
 
@@ -801,7 +802,7 @@ TSEQUENCE_INST_N(const TSequence *seq, int i)
 TSequence *
 tsequence_make_exp1(TInstant **instants, int count, int maxcount,
   bool lower_inc, bool upper_inc, interpType interp, bool normalize,
-  const void *bbox)
+  void *bbox)
 {
   assert(instants); assert(maxcount >= count);
   /* Normalize the array of instants */
@@ -891,7 +892,6 @@ ensure_increasing_timestamps(const TInstant *inst1, const TInstant *inst2,
     char *t2 = pg_timestamptz_out(inst2->t);
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "Timestamps for temporal value must be increasing: %s, %s", t1, t2);
-    pfree(t1); pfree(t2);
     return false;
   }
   if (merge && inst1->t == inst2->t &&
@@ -902,7 +902,6 @@ ensure_increasing_timestamps(const TInstant *inst1, const TInstant *inst2,
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "The temporal values have different value at their overlapping instant %s",
       t1);
-    pfree(t1);
     return false;
   }
   return true;
@@ -916,14 +915,11 @@ bbox_expand(const void *box1, void *box2, MeosType temptype)
 {
   assert(box1); assert(box2);
   assert(temporal_type(temptype));
+  /* There are only 3 types of bounding boxes: span, tbox, and stbox */
   if (talpha_type(temptype))
     span_expand((Span *) box1, (Span *) box2);
   else if (tnumber_type(temptype))
     tbox_expand((TBox *) box1, (TBox *) box2);
-#if POINTCLOUD
-  else if (tpointcloud_temptype(temptype))
-    tpcbox_expand((TPCBox *) box1, (TPCBox *) box2);
-#endif
   else /* tspatial_type(temptype) */
     stbox_expand((STBox *) box1, (STBox *) box2);
   return;
@@ -1601,6 +1597,8 @@ tsequence_shift_scale_time_iter(TSequence *seq, TimestampTz delta,
  * @param[in] hasshift True when the shift argument is given
  * @param[in] haswidth True when the width argument is given
  * @pre The width is greater than 0 if it is not NULL // TODO
+ * @csqlfn #Tnumber_shift_value(), #Tnumber_scale_value(),
+ * #Tnumber_shift_scale_value()
  */
 TSequence *
 tnumberseq_shift_scale_value(const TSequence *seq, Datum shift, Datum width,
@@ -1847,8 +1845,6 @@ tsequence_max_val(const TSequence *seq)
     MeosType basetype = temptype_basetype(seq->temptype);
     if (basetype == T_INT4)
       max = Int32GetDatum(DatumGetInt32(max) - 1);
-    else if (basetype == T_INT8)
-      max = Int64GetDatum(DatumGetInt64(max) - 1);
     return max;
   }
 
@@ -2154,6 +2150,7 @@ tsegment_value_at_timestamptz(Datum start, Datum end, MeosType temptype,
  * @param[in] strict True if inclusive/exclusive bounds are taken into account
  * @param[out] result Result
  * @return Return true if the timestamp is contained in the temporal sequence
+ * @csqlfn #Temporal_value_at_timestamptz()
  */
 bool
 tcontseq_value_at_timestamptz(const TSequence *seq, TimestampTz t, bool strict,
@@ -2218,6 +2215,7 @@ tcontseq_value_at_timestamptz(const TSequence *seq, TimestampTz t, bool strict,
  * @param[in] strict True if inclusive/exclusive bounds are taken into account
  * @param[out] result Result
  * @return Return true if the timestamp is contained in the temporal sequence
+ * @csqlfn #Temporal_value_at_timestamptz()
  */
 bool
 tsequence_value_at_timestamptz(const TSequence *seq, TimestampTz t,
