@@ -71,3 +71,4 @@ exclude_paths:
   # prevent style issues in helper scripts from blocking PR analysis.
   - "scripts/**"
   - "tools/**"
+  - "tools/parity_audit/**"
