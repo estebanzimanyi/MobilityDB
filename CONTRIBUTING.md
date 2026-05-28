@@ -55,6 +55,9 @@ The "CI green before push" convention has two documented exceptions:
 * **Coverage / Codacy thresholds** — `ACTION_REQUIRED` from Codacy on large refactors, where the maintainer has reviewed and accepted the metric drift. Document the override in the PR description.
 
 Anything outside these two exceptions is a real failure and must be resolved before the next push.
+Adding a New Temporal Type
+--------------------------
+Adding a new external base type and lifting it into a temporal type (the way `tcbuffer`, `tpose`, `tnpoint`, `trgeometry` were added) is a multi-week effort that touches the catalog, the bbox dispatch, the indexes, the datagen, the regression suite, and the DocBook chapter. A dedicated guide walks through the design decisions, the day-by-day milestones, the parity checklist every type must satisfy, and the production-readiness pass that turns a working type into one production workloads can rely on. Read it before opening any code: [doc/contributing/new_temporal_type.md](doc/contributing/new_temporal_type.md).
 
 Contribution Agreement
 ----------------------
