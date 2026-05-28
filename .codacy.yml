@@ -32,6 +32,7 @@ engines:
       - "pgtypes/**"
       - "h3-pg/**"
       - "pointcloud-pg/**"
+      - "arrow/**"
     config:
       languages:
         - "c"
@@ -41,6 +42,9 @@ engines:
 #                                           we don't own its style
 #                                           guidelines, and edits would
 #                                           be clobbered by re-vendoring.
+#   * pointcloud-pg/**                    - vendored pgPointCloud project.
+#   * arrow/**                            - vendored Apache-2.0 Arrow C
+#                                           Data Interface ABI header.
 #   * scripts/h3pg_import/**              - one-shot import tooling, not
 #                                           production code (Bandit's
 #                                           "use of assert" warning is
@@ -53,5 +57,6 @@ exclude_paths:
   - "h3-pg/**"
   - "scripts/h3pg_import/**"
   - "pointcloud-pg/**"
+  - "arrow/**"
   - "meos/test/**"
   - "meos/examples/**"
