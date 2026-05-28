@@ -2821,6 +2821,7 @@ temporal_instants(const Temporal *temp, int *count)
     instants[i] = tinstant_copy(instants[i]);
   return instants;
 }
+#endif /* MEOS */
 
 /**
  * @ingroup meos_temporal_accessor
