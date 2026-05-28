@@ -94,7 +94,7 @@ main(void)
   TInstant *tpose_inst1 = (TInstant *) temporal_start_instant(tpose1);
   TSequence    *tpose_tseq1    = (TSequence *) tpose1;
   TSequenceSet *tpose_tseqset1 = NULL;
-  Temporal *tpoint1 = tpose_to_tpoint(tpose1);
+  Temporal *tpoint1 = tpose_to_tgeompoint(tpose1);
   int n_out = 0;
 
 
@@ -232,8 +232,8 @@ main(void)
   { Temporal * r = tpose_make(tpose1, tpose1);
     printf("tpose_make: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = tpose_to_tpoint(tpose1);
-    printf("tpose_to_tpoint: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = tpose_to_tgeompoint(tpose1);
+    printf("tpose_to_tgeompoint: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
   { Pose * r = tpose_end_value(tpose1);
     printf("tpose_end_value: %s\n", r ? "OK" : "NULL");

@@ -1428,10 +1428,10 @@ temporal_from_mfjson(const char *mfjson, MeosType temptype)
 #if RGEO
   if (temptype_orig == T_TRGEOMETRY && temptype == T_TPOSE)
   {
-    /* @ref geo_tpose_to_trgeo copies @p gs and the temporal pose into the
+    /* @ref geo_tpose_to_trgeometry copies @p gs and the temporal pose into the
      * new value; release the originals here regardless of whether
      * construction succeeded. Same pattern as the trgeo.c callers. */
-    Temporal *trgeo = geo_tpose_to_trgeo(gs, result);
+    Temporal *trgeo = geo_tpose_to_trgeometry(gs, result);
     if (gs)
       pfree(gs);
     if (result)

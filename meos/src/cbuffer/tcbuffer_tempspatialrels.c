@@ -131,7 +131,7 @@ tinterrel_tcbufferinst_geom(const TInstant *inst, const GSERIALIZED *gs,
 {
   assert(inst); assert(gs); assert(! gserialized_is_empty(gs));
   assert(inst->temptype == T_TCBUFFER);
-  GSERIALIZED *trav = tcbufferinst_traversed_area(inst);
+  GSERIALIZED *trav = tcbufferinst_trav_area(inst);
   GSERIALIZED *inter = geom_intersection2d_coll(trav, gs);
   pfree(trav);
   Datum datum_true = tinter ? BoolGetDatum(true) : BoolGetDatum(false);
@@ -176,7 +176,7 @@ tinterrel_tcbufferseq_disc_geom(const TSequence *seq, const GSERIALIZED *gs,
   for (int i = 0; i < seq->count; i++)
   {
     const TInstant *inst = TSEQUENCE_INST_N(seq, i);
-    GSERIALIZED *circle = tcbufferinst_traversed_area(inst);
+    GSERIALIZED *circle = tcbufferinst_trav_area(inst);
     /* Loop for each point in the intersection */
     bool found = false;
     for (int j = 0; j < npoints; j++)
@@ -269,7 +269,7 @@ tinterrel_tcbufferseq_step_geom(const TSequence *seq, const GSERIALIZED *gs,
       TSEQUENCE_INST_N(seq, i + 1) : inst;
     TimestampTz mint = DT_NOEND, maxt = DT_NOBEGIN;
     bool upper_inc = (i == seq->count - 1) ? false : seq->period.upper_inc;
-    GSERIALIZED *circle = tcbufferinst_traversed_area(inst);
+    GSERIALIZED *circle = tcbufferinst_trav_area(inst);
     /* Loop for each point in the intersection */
     bool found = false;
     for (int j = 0; j < npoints; j++)

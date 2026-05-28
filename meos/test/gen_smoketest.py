@@ -276,8 +276,8 @@ TRGEO_CONFIG = dict(
         "Datum":               "geom1_datum",
     },
     override_args={
-        "geo_tpose_to_trgeo":          {1: "tpose1"},
-        "tdistance_trgeo_tpoint":      {1: "tpoint1"},
+        "geo_tpose_to_trgeometry":          {1: "tpose1"},
+        "tdistance_trgeometry_tpoint":      {1: "tpoint1"},
         "nad_trgeo_tpoint":            {1: "tpoint1"},
         "nai_trgeo_tpoint":            {1: "tpoint1"},
         "shortestline_trgeo_tpoint":   {1: "tpoint1"},

@@ -901,6 +901,35 @@ tbox_expand(const TBox *box1, TBox *box2)
 
 /**
  * @ingroup meos_box_transf
+ * @brief Return a temporal box with the value span expanded/decreased by a big
+ * integer
+ * @param[in] box Temporal box
+ * @param[in] i Value
+ * @csqlfn #Tbox_expand_value()
+ */
+TBox *
+tbigintbox_expand(const TBox *box, const int64 i)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(box, NULL);
+  if (! ensure_has_X(T_TBOX, box->flags) ||
+      ! ensure_span_isof_type(&box->span, T_BIGINTSPAN))
+    return NULL;
+  /* When the value is negative, ensure that its absolute value is less than
+   * the width of the span */
+  if (i < 0 && llabs(i) >=
+        /* Integer spans are always canonicalized */
+        (DatumGetInt64(box->span.upper) - DatumGetInt64(box->span.lower) - 1))
+    return NULL;
+
+  TBox *result = tbox_copy(box);
+  result->span.lower = Int64GetDatum(DatumGetInt64(result->span.lower) - i);
+  result->span.upper = Int64GetDatum(DatumGetInt64(result->span.upper) + i);
+  return result;
+}
+
+/**
+ * @ingroup meos_box_transf
  * @brief Return a temporal box with the value span expanded/decreased by an
  * integer
  * @param[in] box Temporal box

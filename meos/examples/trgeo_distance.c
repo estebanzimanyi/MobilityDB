@@ -36,7 +36,7 @@
  * the AIS antenna offsets (A, B, C, D) and the pose path is the projected
  * antenna position plus the heading.
  *
- * The program then computes the temporal distance `tdistance_trgeo_trgeo`
+ * The program then computes the temporal distance `tdistance_trgeometry_trgeometry`
  * between every pair of temporally-overlapping trips and prints, for each
  * pair, the moment of closest approach (timestamp + distance in metres).
  *
@@ -354,7 +354,7 @@ main(int argc, char **argv)
 
     struct timespec t0, t1;
     clock_gettime(CLOCK_MONOTONIC, &t0);
-    Temporal *d = tdistance_trgeo_trgeo(trips[i].trgeo, trips[j].trgeo);
+    Temporal *d = tdistance_trgeometry_trgeometry(trips[i].trgeo, trips[j].trgeo);
     clock_gettime(CLOCK_MONOTONIC, &t1);
     double secs = (t1.tv_sec - t0.tv_sec) + (t1.tv_nsec - t0.tv_nsec) / 1e9;
 

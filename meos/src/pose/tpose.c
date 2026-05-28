@@ -590,7 +590,7 @@ Temporal *
 tpose_speed(const Temporal *temp)
 {
   VALIDATE_TPOSE(temp, NULL);
-  Temporal *traj = tpose_to_tpoint(temp);
+  Temporal *traj = tpose_to_tgeompoint(temp);
   if (! traj)
     return NULL;
   Temporal *result = tpoint_speed(traj);

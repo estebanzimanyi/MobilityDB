@@ -252,8 +252,8 @@ main(void)
   { Set * r = tcbuffer_radius(tcbuffer1);
     printf("tcbuffer_radius: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { GSERIALIZED * r = tcbuffer_trav_area(tcbuffer1, true);
-    printf("tcbuffer_trav_area: %s\n", r ? "OK" : "NULL");
+  { GSERIALIZED * r = tcbuffer_traversed_area(tcbuffer1, true);
+    printf("tcbuffer_traversed_area: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
   { Temporal * r = tcbuffer_to_tfloat(tcbuffer1);
     printf("tcbuffer_to_tfloat: %s\n", r ? "OK" : "NULL");

@@ -68,6 +68,9 @@
 #include <meos_rgeo.h>
 #include "rgeo/trgeo_seq.h"
 #endif
+#if CBUFFER
+#include <meos_cbuffer.h>
+#endif
 
 
 /*****************************************************************************
@@ -744,6 +747,108 @@ tsequence_tprecision(const TSequence *seq, const Interval *duration,
     pfree(start);
   return result;
 }
+
+#if POSE
+/**
+ * @brief Accumulate the duration-weighted position and circular-angle sums of
+ * a 2D pose-valued sequence into the running totals
+ */
+static void
+poseseq_tprecision_accum(const TSequence *seq, double *sum_x, double *sum_y,
+  double *sum_sin, double *sum_cos, double *total_dur)
+{
+  for (int i = 0; i < seq->count - 1; i++)
+  {
+    const TInstant *inst = TSEQUENCE_INST_N(seq, i);
+    const TInstant *next = TSEQUENCE_INST_N(seq, i + 1);
+    const Pose *p = DatumGetPoseP(tinstant_value_p(inst));
+    double dur = (double) (next->t - inst->t);
+    *sum_x += p->data[0] * dur;
+    *sum_y += p->data[1] * dur;
+    *sum_sin += sin(p->data[2]) * dur;
+    *sum_cos += cos(p->data[2]) * dur;
+    *total_dur += dur;
+  }
+}
+
+/**
+ * @brief Return the time-weighted average pose of a pose-valued temporal
+ * (tpose or trgeometry), over a sequence or a sequence set
+ * @details For a LINEAR (or any 3D) sequence the time-weighted average of both
+ * position and orientation equals the pose at the midpoint timestamp. For a 2D
+ * STEP sequence the position is the step-weighted average and the angle is a
+ * circular mean. A sequence set combines the step-weighted sums over its
+ * component sequences. 3D orientation averaging (quaternions) is deferred to
+ * the midpoint strategy.
+ */
+static Datum
+pose_tprecision_value(const Temporal *temp)
+{
+  assert(temp->temptype == T_TPOSE
+#if RGEO
+    || temp->temptype == T_TRGEOMETRY
+#endif
+    );
+  if (temp->subtype == TSEQUENCE)
+  {
+    const TSequence *seq = (const TSequence *) temp;
+    if (seq->count == 1)
+      return datum_copy(tinstant_value(TSEQUENCE_INST_N(seq, 0)), T_POSE);
+    const Pose *p0 = DatumGetPoseP(tinstant_value_p(TSEQUENCE_INST_N(seq, 0)));
+    if (MEOS_FLAGS_GET_INTERP(seq->flags) == LINEAR ||
+        MEOS_FLAGS_GET_Z(p0->flags))
+    {
+      TimestampTz lower = DatumGetTimestampTz(seq->period.lower);
+      TimestampTz upper = DatumGetTimestampTz(seq->period.upper);
+      Datum value;
+      tsequence_value_at_timestamptz(seq, lower + (upper - lower) / 2, false,
+        &value);
+      return datum_copy(value, T_POSE);
+    }
+    int32_t srid = pose_srid(p0);
+    double sx = 0, sy = 0, ssin = 0, scos = 0, td = 0;
+    poseseq_tprecision_accum(seq, &sx, &sy, &ssin, &scos, &td);
+    if (td <= 0)
+      return datum_copy(tinstant_value(TSEQUENCE_INST_N(seq, 0)), T_POSE);
+    return PointerGetDatum(pose_make_2d(sx / td, sy / td,
+      atan2(ssin / td, scos / td), srid));
+  }
+  /* TSEQUENCESET: combine the step-weighted sums over component sequences */
+  const TSequenceSet *ss = (const TSequenceSet *) temp;
+  const TInstant *first = TSEQUENCE_INST_N(TSEQUENCESET_SEQ_N(ss, 0), 0);
+  int32_t srid = pose_srid(DatumGetPoseP(tinstant_value_p(first)));
+  double sx = 0, sy = 0, ssin = 0, scos = 0, td = 0;
+  for (int i = 0; i < ss->count; i++)
+    poseseq_tprecision_accum(TSEQUENCESET_SEQ_N(ss, i), &sx, &sy, &ssin, &scos,
+      &td);
+  if (td <= 0)
+    return datum_copy(tinstant_value(first), T_POSE);
+  return PointerGetDatum(pose_make_2d(sx / td, sy / td,
+    atan2(ssin / td, scos / td), srid));
+}
+#endif /* POSE */
+
+#if CBUFFER
+/**
+ * @brief Return the time-weighted average circular buffer of a tcbuffer
+ * temporal, over a sequence or a sequence set
+ * @details The center is the time-weighted centroid of the center trajectory
+ * and the radius is the time-weighted average of the radius; both reuse the
+ * number/point machinery on the decomposed parts.
+ */
+static Datum
+tcbuffer_tprecision_value(const Temporal *temp)
+{
+  assert(temp->temptype == T_TCBUFFER);
+  Temporal *tpoint = tcbuffer_to_tgeompoint(temp);
+  Temporal *tfloat = tcbuffer_to_tfloat(temp);
+  GSERIALIZED *center = tpoint_twcentroid(tpoint);
+  double radius = tnumber_twavg(tfloat);
+  Cbuffer *result = cbuffer_make(center, radius);
+  pfree(tpoint); pfree(tfloat); pfree(center);
+  return PointerGetDatum(result);
+}
+#endif /* CBUFFER */
 
 /**
  * @brief Return a temporal sequence set with the precision set to a time bin
@@ -2366,7 +2471,7 @@ tinstarr_average_hausdorff_distance(const TInstant **instants1, int count1,
    const TInstant **instants2, int count2)
  {
 
-  datum_func2 func = pt_distance_fn(instants1[0]->flags);
+  datum_func2 func = point_distance_fn(instants1[0]->flags);
   const TInstant *inst1, *inst2;
 
   double sum1 = 0.0, sum2 = 0.0;
@@ -2478,7 +2583,7 @@ tinstarr_lcss_distance(const TInstant **A, int count1,
   int *curr = palloc0(sizeof(int) * (count2 + 1));
   
   
-  datum_func2 func = pt_distance_fn(A[0]->flags);
+  datum_func2 func = point_distance_fn(A[0]->flags);
 
   for (int i = 1; i <= count1; i++) {
     for (int j = 1; j <= count2; j++) {

@@ -126,8 +126,8 @@ main(void)
   { TInstant * r = trgeoinst_make(geom1, pose1, tstz1);
     printf("trgeoinst_make: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = geo_tpose_to_trgeo(geom1, tpose1);
-    printf("geo_tpose_to_trgeo: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = geo_tpose_to_trgeometry(geom1, tpose1);
+    printf("geo_tpose_to_trgeometry: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
   { Temporal * r = trgeo_to_tpose(trgeo_seq1);
     printf("trgeo_to_tpose: %s\n", r ? "OK" : "NULL");
@@ -233,11 +233,11 @@ main(void)
   { Temporal * r = tdistance_trgeo_geo(trgeo_seq1, geom1);
     printf("tdistance_trgeo_geo: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = tdistance_trgeo_tpoint(trgeo_seq1, tpoint1);
-    printf("tdistance_trgeo_tpoint: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = tdistance_trgeometry_tpoint(trgeo_seq1, tpoint1);
+    printf("tdistance_trgeometry_tpoint: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = tdistance_trgeo_trgeo(trgeo_seq1, trgeo_seq1);
-    printf("tdistance_trgeo_trgeo: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = tdistance_trgeometry_trgeometry(trgeo_seq1, trgeo_seq1);
+    printf("tdistance_trgeometry_trgeometry: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
   { double r = nad_stbox_trgeo(stbox1, trgeo_seq1);
     printf("nad_stbox_trgeo: %.6f\n", r); }

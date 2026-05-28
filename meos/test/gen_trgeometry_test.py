@@ -53,14 +53,14 @@ ARG_VAR = {
 }
 
 TPOINT_PAIRS = {
-    "tdistance_trgeo_tpoint", "nad_trgeo_tpoint",
+    "tdistance_trgeometry_tpoint", "nad_trgeo_tpoint",
     "nai_trgeo_tpoint", "shortestline_trgeo_tpoint",
 }
 
 # Functions that take a tpose at a specific argument index. Map keyed by
 # function name → set of arg indices that should use tpose1.
 TPOSE_ARGS = {
-    "geo_tpose_to_trgeo": {1},  # (gs, tpose) → trgeo
+    "geo_tpose_to_trgeometry": {1},  # (gs, tpose) → trgeo
 }
 
 SKIP_REASON = {

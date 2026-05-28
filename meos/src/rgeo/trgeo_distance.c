@@ -2036,7 +2036,7 @@ dist2d_trgeoseq_tpointseq(const Temporal *full1,
  * @sqlop @p <->
  */
 Temporal *
-tdistance_trgeo_tpoint(const Temporal *temp1, const Temporal *temp2)
+tdistance_trgeometry_tpoint(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure the validity of the arguments */
   if (! ensure_valid_trgeo_tpoint(temp1, temp2))
@@ -2114,7 +2114,7 @@ tdistance_trgeo_tpoint(const Temporal *temp1, const Temporal *temp2)
  * @sqlop @p <->
  */
 Temporal *
-tdistance_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2)
+tdistance_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure the validity of the arguments */
   if (! ensure_valid_trgeo_trgeo(temp1, temp2))
@@ -2215,7 +2215,7 @@ nai_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
       /* The closest point may be at an exclusive bound. */
       Datum value;
       temporal_value_at_timestamptz(temp, min->t, false, &value);
-      result = trgeoinst_make(trgeo_geom_p(temp), DatumGetPoseP(value),
+      result = trgeometryinst_make(trgeo_geom_p(temp), DatumGetPoseP(value),
         min->t);
       pfree(dist); pfree(DatumGetPointer(value));
     }
@@ -2311,7 +2311,7 @@ nad_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
 double
 nad_stbox_trgeo(const STBox *box, const Temporal *temp)
 {
-  return nad_trgeo_stbox(temp, box);
+  return nad_trgeometry_stbox(temp, box);
 }
 
 /**
@@ -2412,7 +2412,7 @@ shortestline_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
   if (! ensure_valid_trgeo_geo(temp, gs) || gserialized_is_empty(gs))
     return NULL;
 
-  Temporal *dist = tdistance_trgeo_geo(temp, gs);
+  Temporal *dist = tdistance_trgeometry_geo(temp, gs);
   const TInstant *inst = temporal_min_inst_p(dist);
   /* Timestamp t may be at an exclusive bound */
   Datum value;
@@ -2438,7 +2438,7 @@ shortestline_trgeometry_tpoint(const Temporal *temp1, const Temporal *temp2)
   if (! ensure_valid_trgeo_tpoint(temp1, temp2))
     return NULL;
 
-  Temporal *dist = tdistance_trgeo_tpoint(temp1, temp2);
+  Temporal *dist = tdistance_trgeometry_tpoint(temp1, temp2);
   if (dist == NULL)
     return NULL;
   const TInstant *inst = temporal_min_inst_p(dist);
@@ -2468,7 +2468,7 @@ shortestline_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2)
   if (! ensure_valid_trgeo_trgeo(temp1, temp2))
     return NULL;
 
-  Temporal *dist = tdistance_trgeo_trgeo(temp1, temp2);
+  Temporal *dist = tdistance_trgeometry_trgeometry(temp1, temp2);
   if (dist == NULL)
     return NULL;
   const TInstant *inst = temporal_min_inst_p(dist);

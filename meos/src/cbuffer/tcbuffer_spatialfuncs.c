@@ -405,7 +405,7 @@ cbufferarr_circles(TInstant **instants, int count, GSERIALIZED **result)
  * @csqlfn #Tcbuffer_traversed_area()
  */
 GSERIALIZED *
-tcbufferinst_traversed_area(const TInstant *inst)
+tcbufferinst_trav_area(const TInstant *inst)
 {
   assert(inst);
   return cbuffer_traversed_area(DatumGetCbufferP(tinstant_value_p(inst)));
@@ -438,7 +438,7 @@ tcbufferseq_discstep_traversed_area(const TSequence *seq, GSERIALIZED **result)
  * @param[in] inst1,inst2 Temporal instants
  */
 GSERIALIZED *
-tcbuffersegm_traversed_area(const TInstant *inst1, const TInstant *inst2)
+tcbuffersegm_trav_area(const TInstant *inst1, const TInstant *inst2)
 {
   assert(inst1); assert(inst2); assert(inst1->temptype == T_TCBUFFER);
   assert(inst2->temptype == T_TCBUFFER);
@@ -517,7 +517,7 @@ tcbufferseq_linear_traversed_area(const TSequence *seq, GSERIALIZED **result)
   /* Instantaneous sequence */
   if (seq->count == 1)
   {
-    result[0] = tcbufferinst_traversed_area(TSEQUENCE_INST_N(seq, 0));
+    result[0] = tcbufferinst_trav_area(TSEQUENCE_INST_N(seq, 0));
     return 1;
   }
 
@@ -526,7 +526,7 @@ tcbufferseq_linear_traversed_area(const TSequence *seq, GSERIALIZED **result)
   for (int i = 1; i < seq->count; i++)
   {
     const TInstant *inst2 = TSEQUENCE_INST_N(seq, i);
-    result[i - 1] = tcbuffersegm_traversed_area(inst1, inst2);
+    result[i - 1] = tcbuffersegm_trav_area(inst1, inst2);
     inst1 = inst2;
   }
   return (seq->count > 2) ? seq->count - 1 : 1;
@@ -547,7 +547,7 @@ tcbufferseq_traversed_area(const TSequence *seq, bool unary_union)
 
   /* Instantaneous sequence */
   if (seq->count == 1)
-    return tcbufferinst_traversed_area(TSEQUENCE_INST_N(seq, 0));
+    return tcbufferinst_trav_area(TSEQUENCE_INST_N(seq, 0));
 
   /* General case */
   GSERIALIZED **geoms = palloc(sizeof(GSERIALIZED *) * seq->count);
@@ -682,7 +682,7 @@ tcbuffer_traversed_area(const Temporal *temp, bool unary_union)
   switch (temp->subtype)
   {
     case TINSTANT:
-      return tcbufferinst_traversed_area((TInstant *) temp);
+      return tcbufferinst_trav_area((TInstant *) temp);
       break;
     case TSEQUENCE:
       return tcbufferseq_traversed_area((TSequence *) temp, unary_union);
@@ -703,7 +703,7 @@ GSERIALIZED *
 tcbuffer_convex_hull(const Temporal *temp)
 {
   VALIDATE_TCBUFFER(temp, NULL);
-  GSERIALIZED *trav = tcbuffer_trav_area(temp, UNARY_UNION_NO);
+  GSERIALIZED *trav = tcbuffer_traversed_area(temp, UNARY_UNION_NO);
   if (! trav)
     return NULL;
   GSERIALIZED *result = geom_convex_hull(trav);
