@@ -48,6 +48,17 @@ jobs:
           make -j $(nproc)
           sudo make install
 
+      - name: Run MEOS C-level CTest suite
+        # All *_test.c harnesses in meos/test/ are now wired into
+        # CMakeLists.txt and run uniformly via CTest. Each test is a
+        # self-contained MEOS-API exercise; CTest treats a non-zero
+        # return (or segfault) as failure, catching crashes and
+        # link-level breakage. Output-drift detection (baseline diff)
+        # is a tracked follow-up.
+        run: |
+          cd build
+          ctest --output-on-failure
+
       - name: Compile and run 01_hello_world.c
         run: |
           cd meos/examples

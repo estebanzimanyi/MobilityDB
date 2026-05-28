@@ -77,7 +77,7 @@ jobs:
             --suppress='*:*/postgres/*' \
             --suppress='*:*/postgis/*' \
             --suppress='*:*/pgtypes/*' \
-            --suppress='*:*/h3-pg/*' \
+            --suppress='*:*/clipper2/*' \
             --suppress='*:postgres/*' \
             --suppress='*:postgis/*' \
             --suppress='*:pgtypes/*' \
@@ -90,6 +90,7 @@ jobs:
             --suppress='*:lwin_wkt_lex.l' \
             --suppress='*:lwin_wkt_parse.c' \
             --suppress='*:lwin_wkt_parse.y' \
+            --suppress='*:clipper2/*' \
             --suppress='missingIncludeSystem' \
             --suppress='unmatchedSuppression' \
             --xml --xml-version=2 \
