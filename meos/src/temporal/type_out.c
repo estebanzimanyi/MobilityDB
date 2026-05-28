@@ -785,7 +785,8 @@ temporal_as_mfjson(const Temporal *temp, bool with_bbox, int flags,
   VALIDATE_NOT_NULL(temp, NULL);
 
   /* Get bounding box if needed */
-  bboxunion *box = NULL, tmp;
+  const bboxunion *box = NULL;
+  bboxunion tmp;
   if (with_bbox)
   {
     temporal_set_bbox(temp, &tmp);
@@ -1292,7 +1293,7 @@ endian_to_wkb_buf(uint8_t *buf, uint8_t variant)
  * (WKB) representation
  */
 static uint8_t *
-bytes_to_wkb_buf(uint8_t *valptr, size_t size, uint8_t *buf, uint8_t variant)
+bytes_to_wkb_buf(const uint8_t *valptr, size_t size, uint8_t *buf, uint8_t variant)
 {
   if (variant & WKB_HEX)
   {
@@ -1444,7 +1445,7 @@ text_to_wkb_buf(const text *txt, uint8_t *buf, uint8_t variant)
    * This avoids the memory allocation of text2cstring.
    */
   size_t size = VARSIZE_ANY_EXHDR(txt);
-  char *str = VARDATA(txt);
+  const char *str = VARDATA(txt);
 
   /* Write the size first (this gets proper endian handling) */
   buf = int64_to_wkb_buf(size, buf, variant);

@@ -367,7 +367,7 @@ tsequenceset_tprecision(const TSequenceSet *ss, const Interval *duration,
   upper = lower_bin + tunits;
   interpType interp = MEOS_FLAGS_GET_INTERP(ss->flags);
   MeosType temptype_out = (ss->temptype == T_TINT) ? T_TFLOAT : ss->temptype;
-  MeosType basetype_out = temptype_basetype(temptype_out);
+  MeosType basetype_o = temptype_basetype(temptype_out);
   /* Determine whether we are computing the twAvg or the twCentroid */
   bool twavg = tnumber_type(ss->temptype);
   int ninsts = 0;
@@ -386,7 +386,7 @@ tsequenceset_tprecision(const TSequenceSet *ss, const Interval *duration,
       /* We keep only the first instant since the tprecision operation amounts
        * to a granularity change */
       instants[ninsts++] = tinstant_make(value, temptype_out, lower);
-      DATUM_FREE(value, basetype_out);
+      DATUM_FREE(value, basetype_o);
       pfree(proj);
     }
     else
@@ -1469,7 +1469,7 @@ tfloatseq_findsplit(const TSequence *seq, int i1, int i2, int *split,
  * @brief Return the 2D distance between the points
  */
 static inline double
-dist2d_pt_pt(POINT2D *p1, POINT2D *p2)
+dist2d_pt_pt(const POINT2D *p1, const POINT2D *p2)
 {
   return hypot(p2->x - p1->x, p2->y - p1->y);
 }
@@ -1478,7 +1478,7 @@ dist2d_pt_pt(POINT2D *p1, POINT2D *p2)
  * @brief Return the 3D distance between the points
  */
 static inline double
-dist3d_pt_pt(POINT3DZ *p1, POINT3DZ *p2)
+dist3d_pt_pt(const POINT3DZ *p1, const POINT3DZ *p2)
 {
   return hypot3d(p2->x - p1->x, p2->y - p1->y, p2->z - p1->z);
 }
