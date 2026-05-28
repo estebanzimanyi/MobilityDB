@@ -76,11 +76,8 @@ typedef struct struct_MEOSPROJSRSCache
  */
 #define PROJ_BACKEND_HASH_SIZE 256
 
-/* Per-thread PROJ object cache. Each entry owns LWPROJ structures created
- * inside the per-thread PJ_CONTEXT; the cache must therefore live in the
- * same thread as the context, otherwise PROJ objects from one context
- * would leak across into another. */
-static MEOS_TLS MEOSPROJSRSCache *MEOS_PROJ_CACHE = NULL;
+/* Global variable to hold the Proj object cache */
+MEOSPROJSRSCache *MEOS_PROJ_CACHE = NULL;
 
 /**
  * @brief Utility structure to get many potential string representations
@@ -261,10 +258,11 @@ GetProjStringsSPI(int32_t srid)
 
   /* Continue reading the file */
   bool found = false;
+  int read;
   do
   {
     /* Read each line from the file */
-    int read = fscanf(file, "%255[^,^\n],%d,%2047[^,^\n],%2047[^\n]\n",
+    read = fscanf(file, "%255[^,^\n],%d,%2047[^,^\n],%2047[^\n]\n",
       auth_name, &auth_srid, proj4text, srtext);
 
     if (ferror(file))
@@ -560,9 +558,11 @@ static LWPROJ *
 AddToMEOSPROJSRSCache(MEOSPROJSRSCache *PROJCache, int32_t srid_from,
   int32_t srid_to)
 {
+  PjStrs from_strs, to_strs;
+
   /* Turn the SRID number into a proj4 string, by reading from spatial_ref_sys
    * or instantiating a magical value from a negative srid */
-  PjStrs from_strs = GetProjStrings(srid_from);
+  from_strs = GetProjStrings(srid_from);
   if (! pjstrs_has_entry(&from_strs))
   {
     /* See doc-comment on meos_error in meos/include/meos.h: handler is

@@ -243,8 +243,7 @@ box3d_out(const BOX3D *box, int maxdd)
  * at least one fully contained member and no members
  * outside the polygon to be contained.
  */
-bool
-itree_pip_contains(const IntervalTree *itree, const LWGEOM *lwpoints)
+bool itree_pip_contains(const IntervalTree *itree, const LWGEOM *lwpoints)
 {
   if (lwgeom_get_type(lwpoints) == POINTTYPE)
   {
@@ -289,8 +288,7 @@ itree_pip_contains(const IntervalTree *itree, const LWGEOM *lwpoints)
  * If any point in the point/multipoint is outside
  * the polygon, then the polygon does not cover the point/multipoint.
  */
-bool
-itree_pip_covers(const IntervalTree *itree, const LWGEOM *lwpoints)
+bool itree_pip_covers(const IntervalTree *itree, const LWGEOM *lwpoints)
 {
   if (lwgeom_get_type(lwpoints) == POINTTYPE)
   {
@@ -323,8 +321,7 @@ itree_pip_covers(const IntervalTree *itree, const LWGEOM *lwpoints)
  * A.intersects(B) implies if any member of the point/multipoint
  * is not outside, then they intersect.
  */
-bool
-itree_pip_intersects(const IntervalTree *itree, const LWGEOM *lwpoints)
+bool itree_pip_intersects(const IntervalTree *itree, const LWGEOM *lwpoints)
 {
   if (lwgeom_get_type(lwpoints) == POINTTYPE)
   {
@@ -1484,7 +1481,7 @@ bool
 geom_spatialrel(const GSERIALIZED *gs1, const GSERIALIZED *gs2, spatialRel rel)
 {
   if (! ensure_valid_geo_geo(gs1, gs2))
-    return false;
+    return NULL;
 
   /* A.Intersects(Empty) == FALSE */
   if ( gserialized_is_empty(gs1) || gserialized_is_empty(gs2) )

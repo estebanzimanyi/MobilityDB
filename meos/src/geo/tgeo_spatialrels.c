@@ -412,14 +412,13 @@ spatialrel_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
   GSERIALIZED *trav2 = tpoint_type(temp2->temptype) ?
     tpoint_trajectory(temp2, UNARY_UNION_NO) :
     tgeo_traversed_area(temp2, UNARY_UNION_NO);
-  Datum dtrav1;
+  Datum dtrav1 = PointerGetDatum(trav1);
   Datum dtrav2 = PointerGetDatum(trav2);
   Datum result;
 
   /* Call the GEOS function if the traversed area is not a collection */
   if (gserialized_get_type(trav1) != COLLECTIONTYPE)
   {
-    dtrav1 = PointerGetDatum(trav1);
     if (numparam == 2)
     {
       datum_func2 func2 = (datum_func2) func;
