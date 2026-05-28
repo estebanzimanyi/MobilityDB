@@ -38,6 +38,9 @@
 /* C */
 #include <stdbool.h>
 #include <stdint.h>
+/* Thread-local storage qualifier (MEOS_TLS) for thread-safe MEOS in
+ * JVM/multi-threaded hosts (e.g. MobilitySpark). */
+#include "meos_tls.h"
 /* PostgreSQL */
 #if MEOS
 #include "postgres_int_defs.h"
