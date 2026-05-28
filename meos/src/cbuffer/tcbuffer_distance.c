@@ -521,7 +521,7 @@ nad_cbuffer_stbox(const Cbuffer *cb, const STBox *box)
 {
   /* Ensure the validity of the arguments */
   if (! ensure_valid_cbuffer_stbox(cb, box))
-    return -1.0;
+    return DBL_MAX;
 
   Datum geocbuf = PointerGetDatum(cbuffer_to_geom(cb));
   Datum geobox = PointerGetDatum(stbox_geo(box));
@@ -703,7 +703,7 @@ nad_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   /* Ensure the validity of the arguments */
   if (! ensure_valid_tcbuffer_geo(temp, gs) || gserialized_is_empty(gs))
-    return -1.0;
+    return DBL_MAX;
 
   return tcbuffer_geo_nad(temp, gs, false, NULL);
 }
@@ -721,7 +721,7 @@ nad_tcbuffer_stbox(const Temporal *temp, const STBox *box)
 {
   /* Ensure the validity of the arguments */
   if (! ensure_valid_tcbuffer_stbox(temp, box))
-    return -1.0;
+    return DBL_MAX;
 
   GSERIALIZED *geo = stbox_geo(box);
   double result = tcbuffer_geo_nad(temp, geo, false, NULL);
@@ -742,7 +742,7 @@ nad_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
 {
   /* Ensure the validity of the arguments */
   if (! ensure_valid_tcbuffer_cbuffer(temp, cb))
-    return -1.0;
+    return DBL_MAX;
 
   GSERIALIZED *geom = cbuffer_to_geom(cb);
   double result = tcbuffer_geo_nad(temp, geom, false, NULL);
@@ -761,11 +761,11 @@ nad_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure the validity of the arguments */
   if (! ensure_valid_tcbuffer_tcbuffer(temp1, temp2))
-    return -1.0;
+    return DBL_MAX;
 
   Temporal *dist = tdistance_tcbuffer_tcbuffer(temp1, temp2);
   if (dist == NULL)
-    return -1.0;
+    return DBL_MAX;
   double result = DatumGetFloat8(temporal_min_value(dist));
   pfree(dist);
   return result;
