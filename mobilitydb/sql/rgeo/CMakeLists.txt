@@ -9,14 +9,6 @@ SET(LOCAL_FILES
   161_trgeo_distance
   161_trgeo_vclip
   162_trgeo_indexes
-  122_trgeo
-  124_trgeo_compops
-  125_trgeo_spatialfuncs
-  128_trgeo_topops
-  129_trgeo_posops
-  133_trgeo_distance
-  133_trgeo_vclip
-  134_trgeo_indexes
   135_portable_aliases
   )
 
