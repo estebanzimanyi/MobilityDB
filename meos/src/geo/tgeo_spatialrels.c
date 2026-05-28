@@ -928,7 +928,7 @@ acovers_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
  *****************************************************************************/
 
 /**
- * @ingroup meos_geo_rel_ever
+ * @ingroup meos_internal_geo_rel_ever
  * @brief Return 1 if a temporal geometry and a geometry are ever disjoint,
  * 0 if not, and -1 on error or if the geometry is empty
  * @details
@@ -998,7 +998,7 @@ ea_disjoint_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever)
 }
 
 /**
- * @ingroup meos_geo_rel_ever
+ * @ingroup meos_internal_geo_rel_ever
  * @brief Return 1 if a temporal geometry and a geometry are ever disjoint,
  * 0 if not, and -1 on error or if the geometry is empty
  */
@@ -1093,7 +1093,7 @@ adisjoint_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
  *****************************************************************************/
 
 /**
- * @ingroup meos_geo_rel_ever
+ * @ingroup meos_internal_geo_rel_ever
  * @brief Return 1 if a temporal geometry ever/always intersects a geometry,
  * 0 if not, and -1 on error or if the geometry is empty
  * @details
@@ -1135,7 +1135,7 @@ ea_intersects_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever)
 }
 
 /**
- * @ingroup meos_geo_rel_ever
+ * @ingroup meos_internal_geo_rel_ever
  * @brief Return 1 if a geometry intersects a temporal geometry, 0 if not,
  * and -1 on error or if the geometry is empty
  */
@@ -1231,7 +1231,7 @@ aintersects_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
  *****************************************************************************/
 
 /**
- * @ingroup meos_temporal_spatial_rel_ever
+ * @ingroup meos_internal_temporal_spatial_rel_ever
  * @brief Return 1 if a temporal point ever/always touches a geometry,
  * 0 if not, and -1 on error or if the geometry is empty
  * @details
@@ -1338,7 +1338,7 @@ atouches_tpoint_geo(const Temporal *temp, const GSERIALIZED *gs)
 /*****************************************************************************/
 
 /**
- * @ingroup meos_geo_rel_ever
+ * @ingroup meos_internal_geo_rel_ever
  * @brief Return 1 if a temporal geometry ever/always touches a geometry,
  * 0 if not, and -1 on error or if the geometry is empty
  * @details
@@ -1478,7 +1478,7 @@ atouches_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
  *****************************************************************************/
 
 /**
- * @ingroup meos_geo_rel_ever
+ * @ingroup meos_internal_geo_rel_ever
  * @brief Return 1 if a geometry and a temporal geo are ever within the
  * given distance, 0 if not, -1 on error or if the geometry is empty
  * @param[in] temp Temporal geo

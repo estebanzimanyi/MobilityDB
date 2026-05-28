@@ -185,7 +185,7 @@ typedef enum
 } interpType;
 
 /**
- * Structure to represent the common structure of temporal values of
+ * @brief Structure to represent the common structure of temporal values of
  * any temporal subtype
  */
 typedef struct
@@ -198,7 +198,7 @@ typedef struct
 } Temporal;
 
 /**
- * Structure to represent temporal values of instant subtype
+ * @brief Structure to represent temporal values of instant subtype
  */
 typedef struct
 {
@@ -215,7 +215,7 @@ typedef struct
 } TInstant;
 
 /**
- * Structure to represent temporal values of sequence subtype
+ * @brief Structure to represent temporal values of sequence subtype
  */
 typedef struct
 {
@@ -237,7 +237,7 @@ typedef struct
 #define TSEQUENCE_BBOX_PTR(seq)      ((void *)(&(seq)->period))
 
 /**
- * Structure to represent temporal values of sequence set subtype
+ * @brief Structure to represent temporal values of sequence set subtype
  */
 typedef struct
 {
@@ -261,7 +261,7 @@ typedef struct
 #define TSEQUENCESET_BBOX_PTR(ss)      ((void *)(&(ss)->period))
 
 /**
- * Struct for storing a similarity match
+ * @brief Structure for storing a similarity match
  */
 typedef struct
 {
@@ -307,7 +307,7 @@ typedef enum
 } RTreeSearchOp;
 
 /**
- * Structure for the in-memory Rtree index
+ * @brief Structure for the in-memory Rtree index
  */
 typedef struct RTree RTree;
 
