@@ -193,9 +193,13 @@ set_out_fn(const Set *s, int maxdd, outfunc value_out)
   assert(s); assert(maxdd >= 0);
 
   char **strings = palloc(sizeof(void *) * s->count);
+  size_t outlen = 0;
   for (int i = 0; i < s->count; i++)
+  {
     strings[i] = value_out(SET_VAL_N(s, i), s->basetype, maxdd);
-  char *result = stringarr_to_string(strings, s->count, "", '{', '}',
+    outlen += strlen(strings[i]) + 1;
+  }
+  char *result = stringarr_to_string(strings, s->count, outlen, "", '{', '}',
     set_basetype_quotes(s->basetype), SPACES);
   return result;
 }
