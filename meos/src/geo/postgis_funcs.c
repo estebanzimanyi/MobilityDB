@@ -2474,10 +2474,12 @@ geography_centroid_from_wpoints(const int32_t srid, const POINT3DM *points,
   double_t y_sum = 0;
   double_t z_sum = 0;
   double_t weight_sum = 0;
+  double_t weight = 1;
+  POINT3D* point;
   for (uint32_t i = 0; i < size; i++ )
   {
-    POINT3D *point = lonlat_to_cart(points[i].x, points[i].y);
-    double_t weight = points[i].m;
+    point = lonlat_to_cart(points[i].x, points[i].y);
+    weight = points[i].m;
     x_sum += point->x * weight;
     y_sum += point->y * weight;
     z_sum += point->z * weight;

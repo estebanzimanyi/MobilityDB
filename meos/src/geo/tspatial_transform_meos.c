@@ -254,7 +254,7 @@ GetProjStringsSPI(int32_t srid)
   }
 
   /* Read the first line of the file with the headers */
-  (void) fscanf(file, "%1023s\n", header_buffer);
+  int read = fscanf(file, "%1023s\n", header_buffer);
 
   /* Continue reading the file */
   bool found = false;
@@ -591,8 +591,8 @@ AddToMEOSPROJSRSCache(MEOSPROJSRSCache *PROJCache, int32_t srid_from,
   uint32_t i;
   for (i = 0; i < 9; i++)
   {
-    char *pj_from_str = pgstrs_get_entry(&from_strs, i / 3);
-    char *pj_to_str = pgstrs_get_entry(&to_strs, i % 3);
+    pj_from_str = pgstrs_get_entry(&from_strs, i / 3);
+    pj_to_str = pgstrs_get_entry(&to_strs, i % 3);
     if (! (pj_from_str && pj_to_str))
       continue;
 
