@@ -154,16 +154,10 @@ extern int eacomp_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs,
 
 /* Functions derived from PostGIS to increase floating-point precision */
 
-extern LWGEOM *geopoint_to_lwpoint(GSERIALIZED *gs);
-
-extern long double closest_point2d_ratio(const POINT2D *p,
-  const POINT2D *A, const POINT2D *B, POINT2D *closest, double *dist);
-extern long double closest_point3dz_ratio(const POINT3DZ *p,
-  const POINT3DZ *A, const POINT3DZ *B, POINT3DZ *closest, double *dist);
-extern long double closest_point_sphere_ratio(const POINT4D *p,
-  const POINT4D *A, const POINT4D *B, POINT4D *closest, double *dist);
-extern double lwgeog_mindistance(const LWGEOM *lwgeom1, const LWGEOM *lwgeom2);
-
+extern long double closest_point2d_on_segment_ratio(const POINT2D *p,
+  const POINT2D *A, const POINT2D *B, POINT2D *closest);
+extern long double closest_point3dz_on_segment_ratio(const POINT3DZ *p,
+  const POINT3DZ *A, const POINT3DZ *B, POINT3DZ *closest);
 extern long double closest_point_on_segment_sphere(const POINT4D *p,
   const POINT4D *A, const POINT4D *B, POINT4D *closest, double *dist);
 extern void interpolate_point4d_spheroid(const POINT4D *p1, const POINT4D *p2,
@@ -184,9 +178,6 @@ extern long double pointsegm_locate(Datum start, Datum end, Datum point,
 
 /* Intersection functions */
 
-extern int tgeompointsegm_intersection_value(Datum start1, Datum end1,
-  Datum value, TimestampTz lower, TimestampTz upper, TimestampTz *t1,
-  TimestampTz *t2);
 extern int tgeompointsegm_intersection(Datum start1, Datum end1, Datum start2,
   Datum end2, TimestampTz lower, TimestampTz upper, TimestampTz *t1,
   TimestampTz *t2);
@@ -199,12 +190,11 @@ extern bool geopoint_collinear(Datum value1, Datum value2, Datum value3,
 
 /* Trajectory functions */
 
-extern LWLINE *datum_lwline_make(Datum value1, Datum value2);
-
 extern LWGEOM **lwpointarr_remove_duplicates(LWGEOM **points, int count,
   int *newcount);
 extern LWGEOM *lwpointarr_make_trajectory(LWGEOM **points, int count,
   interpType interp);
+extern LWLINE *lwline_make(Datum value1, Datum value2);
 extern LWGEOM *lwcoll_from_points_lines(LWGEOM **points, LWGEOM **lines,
   int npoints, int nlines);
 

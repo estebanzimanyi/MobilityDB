@@ -1222,7 +1222,6 @@ temporal_set_tstzspan(const Temporal *temp, Span *s)
   return;
 }
 
-#if MEOS
 /**
  * @ingroup meos_temporal_conversion
  * @brief Return the bounding period of a temporal value
@@ -1239,7 +1238,7 @@ temporal_to_tstzspan(const Temporal *temp)
   temporal_set_tstzspan(temp, result);
   return result;
 }
-#endif /* MEOS */
+
 /**
  * @ingroup meos_internal_temporal_accessor
  * @brief Return in the last argument the value span of a temporal number
@@ -3132,7 +3131,7 @@ tsequence_derivative(const TSequence *seq)
     const TInstant *inst2 = TSEQUENCE_INST_N(seq, i + 1);
     Datum value2 = tinstant_value_p(inst2);
     derivative = datum_eq(value1, value2, basetype) ? 0.0 :
-      datum_distance(value1, value2, basetype, seq->flags) /
+      datum_distance(value1, value2, basetype, seq->flags) / 
         ((double)(inst2->t - inst1->t) / 1000000);
     instants[i] = tinstant_make(Float8GetDatum(derivative), T_TFLOAT, inst1->t);
     inst1 = inst2;

@@ -60,9 +60,9 @@ extern Datum Tcomp_tspatial_geo(FunctionCallInfo fcinfo,
   Temporal * (*func)(const Temporal *, const GSERIALIZED *));
 
 extern Datum EA_spatialrel_geo_tspatial(FunctionCallInfo fcinfo,
-  int (*func)(const Temporal *, const GSERIALIZED *, bool, bool), bool ever);
+  int (*func)(const GSERIALIZED *, const Temporal *, bool), bool ever);
 extern Datum EA_spatialrel_tspatial_geo(FunctionCallInfo fcinfo,
-  int (*func)(const Temporal *, const GSERIALIZED *, bool, bool), bool ever);
+  int (*func)(const Temporal *, const GSERIALIZED *, bool), bool ever);
 extern Datum EA_spatialrel_tspatial_tspatial(FunctionCallInfo fcinfo,
   int (*func)(const Temporal *, const Temporal *, bool), bool ever);
 

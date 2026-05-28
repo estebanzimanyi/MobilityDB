@@ -475,8 +475,7 @@ tcbuffersegm_traversed_area(const TInstant *inst1, const TInstant *inst2)
   GSERIALIZED *result;
   if (cb_min->radius == 0.0 && cb_max->radius == 0.0)
   {
-    res = (LWGEOM *) datum_lwline_make(PointerGetDatum(gs1),
-      PointerGetDatum(gs2));
+    res = (LWGEOM *) lwline_make(PointerGetDatum(gs1), PointerGetDatum(gs2));
     result = geo_serialize(res);
     lwgeom_free(res);
     return result;

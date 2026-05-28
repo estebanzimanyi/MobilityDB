@@ -152,7 +152,7 @@ meos_array_destroy_free(MeosArray *array)
  * value is copied. For varlength arrays, the pointer itself is stored.
  */
 void
-meos_array_add(MeosArray *array, const void *value)
+meos_array_add(MeosArray *array, void *value)
 {
   assert(array);
   /* Enlarge the values array if necessary */

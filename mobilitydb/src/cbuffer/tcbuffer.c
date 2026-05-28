@@ -68,7 +68,7 @@
 static Temporal *
 tcbuffer_valid_typmod(Temporal *temp, int32_t typmod)
 {
-  int32_t srid = tspatial_srid(temp);
+  int32 srid = tspatial_srid(temp);
   uint8 subtype = temp->subtype;
   uint8 typmod_subtype = TYPMOD_GET_TEMPSUBTYPE(typmod);
   int32 typmod_srid = TYPMOD_GET_SRID(typmod);
@@ -347,7 +347,7 @@ PG_FUNCTION_INFO_V1(Tcbuffer_at_cbuffer);
  * @note Only 2D is supported
  * @sqlfn atValue()
  */
-Datum
+inline Datum
 Tcbuffer_at_cbuffer(PG_FUNCTION_ARGS)
 {
   return Tcbuffer_restrict_cbuffer(fcinfo, REST_AT);
@@ -361,7 +361,7 @@ PG_FUNCTION_INFO_V1(Tcbuffer_minus_cbuffer);
  * circular buffer
  * @sqlfn minusValue()
  */
-Datum
+inline Datum
 Tcbuffer_minus_cbuffer(PG_FUNCTION_ARGS)
 {
   return Tcbuffer_restrict_cbuffer(fcinfo, REST_MINUS);
@@ -395,7 +395,7 @@ PG_FUNCTION_INFO_V1(Tcbuffer_at_stbox);
  * @brief Return a temporal circular buffer restricted to a spatiotemporal box
  * @sqlfn atStbox()
  */
-Datum
+inline Datum
 Tcbuffer_at_stbox(PG_FUNCTION_ARGS)
 {
   return Tcbuffer_restrict_stbox(fcinfo, REST_AT);
@@ -409,7 +409,7 @@ PG_FUNCTION_INFO_V1(Tcbuffer_minus_stbox);
  * spatiotemporal box
  * @sqlfn minusStbox()
  */
-Datum
+inline Datum
 Tcbuffer_minus_stbox(PG_FUNCTION_ARGS)
 {
   return Tcbuffer_restrict_stbox(fcinfo, REST_MINUS);
@@ -443,7 +443,7 @@ PG_FUNCTION_INFO_V1(Tcbuffer_at_geom);
  * @note Only 2D is supported
  * @sqlfn atGeometry()
  */
-Datum
+inline Datum
 Tcbuffer_at_geom(PG_FUNCTION_ARGS)
 {
   return Tcbuffer_restrict_geom(fcinfo, REST_AT);
@@ -458,7 +458,7 @@ PG_FUNCTION_INFO_V1(Tcbuffer_minus_geom);
  * @note Only 2D is supported
  * @sqlfn minusGeometry()
  */
-Datum
+inline Datum
 Tcbuffer_minus_geom(PG_FUNCTION_ARGS)
 {
   return Tcbuffer_restrict_geom(fcinfo, REST_MINUS);

@@ -29,7 +29,7 @@
 
 /**
  * @file
- * @brief Distance functions for temporal geos
+ * @brief Temporal distance functions for temporal geos
  */
 
 #include "geo/tgeo_distance.h"
@@ -69,12 +69,12 @@ extern double circ_tree_distance_tree_internal(const CIRC_NODE* n1,
  * from measures.c
  */
 static double
-lw_distance(const LWGEOM *geo1, const LWGEOM *geo2, int mode)
+lw_distance_fraction(const LWGEOM *geom1, const LWGEOM *geom2, int mode,
+  double *fraction)
 {
   double result;
-  if (FLAGS_GET_GEODETIC(geo1->flags))
+  if (FLAGS_GET_GEODETIC(geom1->flags))
   {
-    GEOGRAPHIC_POINT closest1, closest2;
     double min_dist = FLT_MAX;
     double max_dist = FLT_MAX;
     GEOGRAPHIC_POINT closest1, closest2;
@@ -84,17 +84,44 @@ lw_distance(const LWGEOM *geo1, const LWGEOM *geo2, int mode)
     circ_tree_distance_tree_internal(circ_tree1, circ_tree2, FP_TOLERANCE,
       &min_dist, &max_dist, &closest1, &closest2);
     result = sphere_distance(&closest1, &closest2);
+    if (fraction)
+    {
+      assert(geom1->type == LINETYPE);
+      LWLINE *lwline = lwgeom_as_lwline(geom1);
+      /* Initialize edge */
+      POINT4D a, b;
+      GEOGRAPHIC_POINT proj;
+      getPoint4d_p(lwline->points, 0, &a);
+      getPoint4d_p(lwline->points, 1, &b);
+      geographic_point_init(a.x, a.y, &(e.start));
+      geographic_point_init(b.x, b.y, &(e.end));
+      /* Get the spherical distance between point and edge */
+      edge_distance_to_point(&e, &closest1, &proj);
+      /* Compute distance from beginning of the segment to closest point */
+      double seglength = sphere_distance(&(e.start), &(e.end));
+      double length = sphere_distance(&(e.start), &proj);
+      *fraction = length / seglength;
+    }
   }
   else
   {
-    if (FLAGS_GET_Z(geo1->flags))
+    if (FLAGS_GET_Z(geom1->flags))
     {
       DISTPTS3D dl;
       dl.mode = mode;
       dl.distance= FLT_MAX;
       dl.tolerance = 0;
-      lw_dist3d_recursive(geo1, geo2, &dl);
+      lw_dist3d_recursive(geom1, geom2, &dl);
       result = dl.distance;
+      if (fraction)
+      {
+        assert(geom1->type == LINETYPE);
+        LWLINE *lwline = lwgeom_as_lwline(geom1);
+        POINT3DZ a, b, closest;
+        getPoint3dz_p(lwline->points, 0, &a);
+        getPoint3dz_p(lwline->points, 1, &b);
+        *fraction = closest_point3dz_on_segment_ratio(&dl.p1, &a, &b, &closest);
+      }
     }
     else
     {
@@ -102,58 +129,17 @@ lw_distance(const LWGEOM *geo1, const LWGEOM *geo2, int mode)
       dl.mode = mode;
       dl.distance= FLT_MAX;
       dl.tolerance = 0;
-      lw_dist2d_recursive(geo1, geo2, &dl);
+      lw_dist2d_recursive(geom1, geom2, &dl);
       result = dl.distance;
-    }
-  }
-  return result;
-}
-
-/**
- * @brief Return the distance between two geometries
- * @details When the first geometry is a segment it also computes a value
- * between 0 and 1 that represents the location in the segment of the closest
- * point to the second geometry, as a fraction of total segment length.
- * @note Function inspired by PostGIS function lw_dist2d_distancepoint
- * from measures.c
- */
-static double
-lw_distance_fraction(const LWGEOM *geo1, const LWGEOM *geo2, const LWGEOM *geo,
-  double *fraction)
-{
-  assert(geo1); assert(geo2); assert(geo); assert(fraction);
-  assert(geo1->type == POINTTYPE); assert(geo2->type == POINTTYPE);
-  assert(geo->type == POINTTYPE);
-  const LWPOINT *point1 = (LWPOINT *) geo1;
-  const LWPOINT *point2 = (LWPOINT *) geo2;
-  const LWPOINT *point = (LWPOINT *) geo;
-  
-  double result;
-  if (FLAGS_GET_GEODETIC(point1->flags))
-  {
-    POINT4D a, b, p, closest;
-    getPoint4d_p(point1->point, 0, &a);
-    getPoint4d_p(point2->point, 0, &b);
-    getPoint4d_p(point->point, 0, &p);
-    *fraction = closest_point_sphere_ratio(&p, &a, &b, &closest, &result);
-  }
-  else
-  {
-    if (FLAGS_GET_Z(point1->flags))
-    {
-      POINT3DZ a, b, p, closest;
-      getPoint3dz_p(point1->point, 0, &a);
-      getPoint3dz_p(point2->point, 0, &b);
-      getPoint3dz_p(point->point, 0, &p);
-      *fraction = closest_point3dz_ratio(&p, &a, &b, &closest, &result);
-    }
-    else
-    {
-      POINT2D a, b, p, closest;
-      getPoint2d_p(point1->point, 0, &a);
-      getPoint2d_p(point2->point, 0, &b);
-      getPoint2d_p(point->point, 0, &p);
-      *fraction = closest_point2d_ratio(&p, &a, &b, &closest, &result);
+      if (fraction)
+      {
+        assert(geom1->type == LINETYPE);
+        LWLINE *lwline = lwgeom_as_lwline(geom1);
+        POINT2D a, b, closest;
+        getPoint2d_p(lwline->points, 0, &a);
+        getPoint2d_p(lwline->points, 1, &b);
+        *fraction = closest_point2d_on_segment_ratio(&dl.p1, &a, &b, &closest);
+      }
     }
   }
   return result;
@@ -176,14 +162,14 @@ lw_distance_fraction(const LWGEOM *geo1, const LWGEOM *geo2, const LWGEOM *geo,
  * @post As there is a single turning point, `t2` is set to `t1`
  */
 static int
-tpoint_point_distance_turnpt(Datum start, Datum end, Datum point, 
+tpoint_geo_distance_turnpt(Datum start, Datum end, Datum point, 
   TimestampTz lower, TimestampTz upper, TimestampTz *t1, TimestampTz *t2)
 {
   assert(lower < upper); assert(t1); assert(t2);
   long double duration = (long double) (upper - lower);
   double dist;
   double fraction = (double) pointsegm_locate(start, end, point, &dist);
-  if (fraction <= MEOS_EPSILON || fraction >= (1.0 - MEOS_EPSILON))
+  if (fraction < 0.0)
     return 0;
   *t1 = *t2 = lower + (TimestampTz) (duration * fraction);
   return 1;
@@ -399,8 +385,8 @@ tdistance_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
   if (! ensure_same_srid(tspatial_srid(temp), gserialized_get_srid(gs)) ||
       ! ensure_same_dimensionality_tspatial_geo(temp, gs) ||
       ! ensure_same_geodetic_tspatial_geo(temp, gs) ||
-      gserialized_is_empty(gs) ||
-      (tpoint_type(temp->temptype) && ! ensure_point_type(gs)))
+      (tpoint_type(temp->temptype) && ! ensure_point_type(gs)) ||
+      gserialized_is_empty(gs))
     return NULL;
 
   LiftedFunctionInfo lfinfo;
@@ -412,7 +398,7 @@ tdistance_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
   lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   lfinfo.invert = INVERT_NO;
   lfinfo.discont = CONTINUOUS;
-  lfinfo.tpfn_base = lfinfo.reslinear ? &tpoint_point_distance_turnpt : NULL;
+  lfinfo.tpfn_base = lfinfo.reslinear ? &tpoint_geo_distance_turnpt : NULL;
   return tfunc_temporal_base(temp, PointerGetDatum(gs), &lfinfo);
 }
 
@@ -465,22 +451,18 @@ static double
 nai_tgeoseq_discstep_geo_iter(const TSequence *seq, const LWGEOM *geo,
   double mindist, const TInstant **result)
 {
-  double (*dist_fn)(const LWGEOM *, const LWGEOM *) = 
-    (MEOS_FLAGS_GET_GEODETIC(seq->flags)) ? &lwgeog_mindistance :
-    ( (MEOS_FLAGS_GET_Z(seq->flags)) ?
-      &lwgeom_mindistance3d : &lwgeom_mindistance2d );
   for (int i = 0; i < seq->count; i++)
   {
     const TInstant *inst = TSEQUENCE_INST_N(seq, i);
-    Datum value = tinstant_value_p(inst);
-    LWGEOM *lwgeom = lwgeom_from_gserialized(DatumGetGserializedP(value));
-    double dist = DatumGetFloat8(dist_fn(lwgeom, geo));
+    const GSERIALIZED *gs = DatumGetGserializedP(tinstant_value_p(inst));
+    LWGEOM *point = lwgeom_from_gserialized(gs);
+    double dist = lw_distance_fraction(point, geo, DIST_MIN, NULL);
     if (dist < mindist)
     {
       mindist = dist;
       *result = inst;
     }
-    lwgeom_free(lwgeom);
+    lwgeom_free(point);
   }
   return mindist;
 }
@@ -521,15 +503,15 @@ nai_tgeoseqset_step_geo(const TSequenceSet *ss, const LWGEOM *geo)
 
 /**
  * @brief Return the distance and the timestamp of the nearest approach instant
- * between a temporal point segment with linear interpolation and a
+ * between a temporal point sequence with linear interpolation and a
  * geometry/geography
  * @param[in] inst1,inst2 Temporal segment
- * @param[in] point Geometry/geography point
+ * @param[in] geo Geometry/geography
  * @param[out] t Timestamp
  */
 static double
-nai_tpointsegm_linear_geo(const TInstant *inst1, const TInstant *inst2,
-  const LWGEOM *point, TimestampTz *t)
+nai_tpointsegm_linear_geo1(const TInstant *inst1, const TInstant *inst2,
+  const LWGEOM *geo, TimestampTz *t)
 {
   Datum value1 = tinstant_value_p(inst1);
   Datum value2 = tinstant_value_p(inst2);
@@ -539,18 +521,18 @@ nai_tpointsegm_linear_geo(const TInstant *inst1, const TInstant *inst2,
   /* Constant segment */
   if (datum_point_eq(value1, value2))
   {
-    LWGEOM *point1 = geopoint_to_lwpoint(DatumGetGserializedP(value1));
-    dist = lw_distance(point1, point, DIST_MIN);
-    lwgeom_free(point1);
+    GSERIALIZED *gs = DatumGetGserializedP(value1);
+    LWGEOM *point = lwgeom_from_gserialized(gs);
+    dist = lw_distance_fraction(point, geo, DIST_MIN, NULL);
+    lwgeom_free(point);
     *t = inst1->t;
     return dist;
   }
 
   /* The trajectory is a line */
-  LWGEOM *point1 = geopoint_to_lwpoint(DatumGetGserializedP(value1));
-  LWGEOM *point2 = geopoint_to_lwpoint(DatumGetGserializedP(value2));
-  dist = lw_distance_fraction(point1, point2, point, &fraction);
-  lwgeom_free(point1); lwgeom_free(point2);
+  LWGEOM *line = (LWGEOM *) lwline_make(value1, value2);
+  dist = lw_distance_fraction(line, geo, DIST_MIN, &fraction);
+  lwgeom_free(line);
 
   if (fabsl(fraction) < MEOS_EPSILON)
     *t = inst1->t;
@@ -586,7 +568,7 @@ nai_tpointseq_linear_geo_iter(const TSequence *seq, const LWGEOM *geo,
     Datum value1 = tinstant_value_p(inst1);
     GSERIALIZED *gs = DatumGetGserializedP(value1);
     LWGEOM *point = lwgeom_from_gserialized(gs);
-    dist = lw_distance(point, geo, DIST_MIN);
+    dist = lw_distance_fraction(point, geo, DIST_MIN, NULL);
     if (dist < mindist)
     {
       mindist = dist;
@@ -601,7 +583,7 @@ nai_tpointseq_linear_geo_iter(const TSequence *seq, const LWGEOM *geo,
     for (int i = 0; i < seq->count - 1; i++)
     {
       const TInstant *inst2 = TSEQUENCE_INST_N(seq, i + 1);
-      dist = nai_tpointsegm_linear_geo(inst1, inst2, geo, &t1);
+      dist = nai_tpointsegm_linear_geo1(inst1, inst2, geo, &t1);
       if (dist < mindist)
       {
         mindist = dist;
@@ -661,102 +643,12 @@ nai_tpointseqset_linear_geo(const TSequenceSet *ss, const LWGEOM *geo)
 /*****************************************************************************/
 
 /**
- * ST_ClosestPoint(geography line, geography point)
- * Return the point in first input geography that is closest to the
- * second input geography in 2d
- */
-GSERIALIZED *
-geography_closestpoint_internal(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
-  bool use_spheroid)
-{
-  assert(gserialized_get_srid(gs1) == gserialized_get_srid(gs2));
-
-  /* Return NULL on empty arguments. */
-  if ( gserialized_is_empty(gs1) || gserialized_is_empty(gs2) )
-    return NULL;
-
-  /* Initialize spheroid */
-  SPHEROID s;
-  spheroid_init_from_srid(gserialized_get_srid(gs1), &s);
-  
-  /* Set to sphere if requested */
-  if ( ! use_spheroid )
-    s.a = s.b = s.radius;
-
-  LWGEOM *geo1 = lwgeom_from_gserialized(gs1);
-  LWGEOM *geo2 = lwgeom_from_gserialized(gs2);
-  LWGEOM *line = geography_tree_shortestline(geo1, geo2, FP_TOLERANCE, &s);
-  int has_z = lwgeom_has_z(line);
-  int has_m = lwgeom_has_m((LWGEOM *) line);
-  POINT4D pt;
-  getPoint4d_p(((LWLINE *) line)->points, 0, &pt);
-  LWGEOM *point = (LWGEOM *) lwpoint_make(line->srid, has_z, has_m, &pt);
-  GSERIALIZED *result = geo_serialize(point);
-  lwgeom_free(line); lwgeom_free(point); lwgeom_free(geo1); lwgeom_free(geo2);
-  return result;
-}
-
-/**
- * @ingroup meos_geo_base_spatial
- * @brief Return the 2D point in the first geometry that is closest to the
- * second geometry
- * @param[in] gs1,gs2 Geometries
- */
-GSERIALIZED *
-geom_closestpoint2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
-{
-  assert(gs1); assert(gs2);
-  assert(gserialized_get_srid(gs1) == gserialized_get_srid(gs2));
-  LWGEOM *geom1 = lwgeom_from_gserialized(gs1);
-  LWGEOM *geom2 = lwgeom_from_gserialized(gs2);
-  LWGEOM *line = lwgeom_closest_point(geom1, geom2);
-  lwgeom_free(geom1); lwgeom_free(geom2);
-  GSERIALIZED *result = NULL;
-  if (! lwgeom_is_empty(line))
-    result = geo_serialize(line);
-  lwgeom_free(line);
-  return result;
-}
-
-/**
- * @ingroup meos_geo_base_spatial
- * @brief Return the 3D point in the first geometry that is closest to the
- * second geometry
- * @param[in] gs1,gs2 Geometries
- */
-GSERIALIZED *
-geom_closestpoint3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
-{
-  assert(gs1); assert(gs2);
-  assert(gserialized_get_srid(gs1) == gserialized_get_srid(gs2));
-
-  LWGEOM *geom1 = lwgeom_from_gserialized(gs1);
-  LWGEOM *geom2 = lwgeom_from_gserialized(gs2);
-  LWGEOM *line = lwgeom_closest_point_3d(geom1, geom2);
-  if (lwgeom_is_empty(line))
-    return NULL;
-
-  GSERIALIZED *result = geo_serialize(line);
-  lwgeom_free(line); lwgeom_free(geom1); lwgeom_free(geom2);
-  return result;
-}
-
-/**
  * @ingroup meos_geo_distance
- * @brief Return the line connecting the nearest approach point between a
- * temporal geo and a geometry/geography
- * @param[in] temp Temporal value
+ * @brief Return the nearest approach instant between a temporal geo and
+ * a geometry/geography
+ * @param[in] temp Temporal geo
  * @param[in] gs Geometry/geography
- * @csqlfn #Shortestline_tgeo_geo()
- */
- 
-/**
- * @ingroup meos_geo_distance
- * @brief Return the line connecting the nearest approach point between a
- * temporal geo and a geometry/geography
- * @param[in] temp Temporal value
- * @param[in] gs Geometry/geography
- * @csqlfn #Shortestline_tgeo_geo()
+ * @csqlfn #NAI_tgeo_geo()
  */
 TInstant *
 nai_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
@@ -768,19 +660,8 @@ nai_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
       ! ensure_same_geodetic_tspatial_geo(temp, gs) ||
       gserialized_is_empty(gs))
     return NULL;
-  bool geodetic = MEOS_FLAGS_GET_GEODETIC(temp->flags);
 
-  const GSERIALIZED *traj = tpoint_type(temp->temptype) ?
-    tpoint_trajectory(temp, UNARY_UNION_NO) :
-    tgeo_traversed_area(temp, UNARY_UNION_NO);
-  GSERIALIZED *closest;
-  if (geodetic)
-    closest = geography_closestpoint_internal(traj, gs, true);
-  else
-    closest = MEOS_FLAGS_GET_Z(temp->flags) ?
-      geom_closestpoint3d(traj, gs) : geom_closestpoint2d(traj, gs);
-
-  LWGEOM *point = lwgeom_from_gserialized(closest);
+  LWGEOM *geo = lwgeom_from_gserialized(gs);
   TInstant *result;
   assert(temptype_subtype(temp->subtype));
   switch (temp->subtype)
@@ -790,15 +671,15 @@ nai_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
       break;
     case TSEQUENCE:
       result = MEOS_FLAGS_LINEAR_INTERP(temp->flags) ?
-        nai_tpointseq_linear_geo((TSequence *) temp, point) :
-        nai_tgeoseq_discstep_geo((TSequence *) temp, point);
+        nai_tpointseq_linear_geo((TSequence *) temp, geo) :
+        nai_tgeoseq_discstep_geo((TSequence *) temp, geo);
       break;
     default: /* TSEQUENCESET */
       result = MEOS_FLAGS_LINEAR_INTERP(temp->flags) ?
-        nai_tpointseqset_linear_geo((TSequenceSet *) temp, point) :
-        nai_tgeoseqset_step_geo((TSequenceSet *) temp, point);
+        nai_tpointseqset_linear_geo((TSequenceSet *) temp, geo) :
+        nai_tgeoseqset_step_geo((TSequenceSet *) temp, geo);
   }
-  lwgeom_free(point);
+  lwgeom_free(geo);
   return result;
 }
 
@@ -821,7 +702,7 @@ nai_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
   /* Compute the temporal distance, it may be NULL if the points do not
    * intersect on time */
   Temporal *dist = tdistance_tgeo_tgeo(temp1, temp2);
-  if (! dist)
+  if (dist == NULL)
     return NULL;
 
   const TInstant *min = temporal_min_inst_p(dist);
@@ -833,25 +714,14 @@ nai_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
   return tinstant_make_free(value, temp1->temptype, t);
 }
 
-/*****************************************************************************/
-
-/**
- * @ingroup meos_geo_distance
- * @brief Return the nearest approach instant between a temporal geo and
- * a geometry/geography
- * @param[in] temp Temporal geo
- * @param[in] gs Geometry/geography
- * @csqlfn #NAI_tgeo_geo()
- */
-
 /*****************************************************************************
  * Nearest approach distance (NAD)
  *****************************************************************************/
 
 /**
  * @ingroup meos_geo_distance
- * @brief Return the nearest approach distance between a temporal geo
- * and a geometry/geography
+ * @brief Return the nearest approach distance between a temporal geo and a
+ * geometry/geography
  * @param[in] temp Temporal geo
  * @param[in] gs Geometry/geography
  * @csqlfn #NAD_tgeo_geo()
@@ -872,8 +742,8 @@ nad_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
   GSERIALIZED *traj = tpoint_type(temp->temptype) ? 
     tpoint_trajectory(temp, UNARY_UNION_NO) :
     tgeo_traversed_area(temp, UNARY_UNION_NO);
-  double result = DatumGetFloat8(func(PointerGetDatum(traj),
-    PointerGetDatum(gs)));
+  double result = DatumGetFloat8(
+    func(PointerGetDatum(traj), PointerGetDatum(gs)));
   pfree(traj);
   return result;
 }
@@ -1006,7 +876,7 @@ nad_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
     return DBL_MAX;
 
   Temporal *dist = tdistance_tgeo_tgeo(temp1, temp2);
-  if (! dist)
+  if (dist == NULL)
     return DBL_MAX;
 
   double result = DatumGetFloat8(temporal_min_value(dist));
@@ -1105,14 +975,14 @@ shortestline_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
     return NULL;
 
   Temporal *dist = tdistance_tgeo_tgeo(temp1, temp2);
-  if (! dist)
+  if (dist == NULL)
     return NULL;
   const TInstant *inst = temporal_min_inst_p(dist);
   /* Timestamp t may be at an exclusive bound */
   Datum value1, value2;
   temporal_value_at_timestamptz(temp1, inst->t, false, &value1);
   temporal_value_at_timestamptz(temp2, inst->t, false, &value2);
-  LWGEOM *line = (LWGEOM *) datum_lwline_make(value1, value2);
+  LWGEOM *line = (LWGEOM *) lwline_make(value1, value2);
   GSERIALIZED *result = geo_serialize(line);
   pfree(DatumGetPointer(value1)); pfree(DatumGetPointer(value2)); 
   pfree(dist); lwgeom_free(line);

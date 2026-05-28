@@ -290,7 +290,7 @@ PG_FUNCTION_INFO_V1(Stbox_constructor_x);
  * @brief Return a spatiotemporal box constructed from the arguments
  * @sqlfn stbox()
  */
-Datum
+inline Datum
 Stbox_constructor_x(PG_FUNCTION_ARGS)
 {
   return Stbox_constructor(fcinfo, true, false, false, false);
@@ -303,7 +303,7 @@ PG_FUNCTION_INFO_V1(Stbox_constructor_z);
  * @brief Return a spatiotemporal box constructed from the arguments
  * @sqlfn stbox_z()
  */
-Datum
+inline Datum
 Stbox_constructor_z(PG_FUNCTION_ARGS)
 {
   return Stbox_constructor(fcinfo, true, true, false, false);
@@ -316,7 +316,7 @@ PG_FUNCTION_INFO_V1(Stbox_constructor_t);
  * @brief Return a spatiotemporal box constructed from the arguments
  * @sqlfn stbox_t()
  */
-Datum
+inline Datum
 Stbox_constructor_t(PG_FUNCTION_ARGS)
 {
   return Stbox_constructor(fcinfo, false, false, true, false);
@@ -329,7 +329,7 @@ PG_FUNCTION_INFO_V1(Stbox_constructor_xt);
  * @brief Return a spatiotemporal box constructed from the arguments
  * @sqlfn stbox_xt()
  */
-Datum
+inline Datum
 Stbox_constructor_xt(PG_FUNCTION_ARGS)
 {
   return Stbox_constructor(fcinfo, true, false, true, false);
@@ -342,7 +342,7 @@ PG_FUNCTION_INFO_V1(Stbox_constructor_zt);
  * @brief Return a spatiotemporal box constructed from the arguments
  * @sqlfn stbox_zt()
  */
-Datum
+inline Datum
 Stbox_constructor_zt(PG_FUNCTION_ARGS)
 {
   return Stbox_constructor(fcinfo, true, true, true, false);
@@ -358,7 +358,7 @@ PG_FUNCTION_INFO_V1(Geodstbox_constructor_z);
  * @brief Return a spatiotemporal box constructed from the arguments
  * @sqlfn geodstbox_z()
  */
-Datum
+inline Datum
 Geodstbox_constructor_z(PG_FUNCTION_ARGS)
 {
   return Stbox_constructor(fcinfo, true, true, false, true);
@@ -371,7 +371,7 @@ PG_FUNCTION_INFO_V1(Geodstbox_constructor_t);
  * @brief Return a spatiotemporal box constructed from the arguments
  * @sqlfn geodstbox_t()
  */
-Datum
+inline Datum
 Geodstbox_constructor_t(PG_FUNCTION_ARGS)
 {
   return Stbox_constructor(fcinfo, false, false, true, true);
@@ -384,7 +384,7 @@ PG_FUNCTION_INFO_V1(Geodstbox_constructor_zt);
  * @brief Return a spatiotemporal box constructed from the arguments
  * @sqlfn geodstbox_zt()
  */
-Datum
+inline Datum
 Geodstbox_constructor_zt(PG_FUNCTION_ARGS)
 {
   return Stbox_constructor(fcinfo, true, true, true, true);
@@ -1113,7 +1113,7 @@ Datum
 Stbox_set_srid(PG_FUNCTION_ARGS)
 {
   STBox *box = PG_GETARG_STBOX_P(0);
-  int32_t srid = PG_GETARG_INT32(1);
+  int32 srid = PG_GETARG_INT32(1);
   PG_RETURN_STBOX_P(stbox_set_srid(box, srid));
 }
 
@@ -1128,7 +1128,7 @@ Datum
 Stbox_transform(PG_FUNCTION_ARGS)
 {
   STBox *box = PG_GETARG_STBOX_P(0);
-  int32_t srid = PG_GETARG_INT32(1);
+  int32 srid = PG_GETARG_INT32(1);
   STBox *result = stbox_transform(box, srid);
   if (! result)
     PG_RETURN_NULL();
@@ -1593,13 +1593,15 @@ Stbox_extent_transfn(PG_FUNCTION_ARGS)
   STBox *box2 = PG_ARGISNULL(1) ? NULL : PG_GETARG_STBOX_P(1);
 
   /* Can't do anything with null inputs */
-  if (! box1 && ! box2)
-    PG_RETURN_NULL();
-  /* One of the boxes is null, return the other one */
-  if (! box1)
-    PG_RETURN_STBOX_P(stbox_copy(box2));
-  if (! box2)
-    PG_RETURN_STBOX_P(stbox_copy(box1));
+  if (! box1 || ! box2)
+  {
+    if (! box1 && ! box2)
+      PG_RETURN_NULL();
+    if (! box1)
+      PG_RETURN_STBOX_P(stbox_copy(box2));
+    else
+      PG_RETURN_STBOX_P(stbox_copy(box1));
+  }
 
   /* Both boxes are not null */
   ensure_same_dimensionality(box1->flags, box2->flags);

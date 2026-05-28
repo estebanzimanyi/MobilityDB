@@ -198,7 +198,7 @@ nai_tnpoint_tnpoint(const Temporal *temp1, const Temporal *temp2)
     return NULL;
 
   Temporal *dist = tdistance_tnpoint_tnpoint(temp1, temp2);
-  if (! dist)
+  if (dist == NULL)
     return NULL;
 
   const TInstant *min = temporal_min_inst_p((const Temporal *) dist);
@@ -294,7 +294,7 @@ nad_tnpoint_tnpoint(const Temporal *temp1, const Temporal *temp2)
     return DBL_MAX;
 
   Temporal *dist = tdistance_tnpoint_tnpoint(temp1, temp2);
-  if (! dist)
+  if (dist == NULL)
     return DBL_MAX;
   double result = DatumGetFloat8(temporal_min_value(dist));
   pfree(dist);

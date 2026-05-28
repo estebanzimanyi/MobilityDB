@@ -125,7 +125,7 @@ spatialbase_as_ewkt(Datum value, MeosType type, int maxdd)
   /* Get the SRID */
   char srid_str[18];
   srid_str[0] = '\0';
-  int32_t srid = spatial_srid(value, type);
+  int32 srid = spatial_srid(value, type);
   if (srid <= 0)
     return base_str;
 
@@ -163,7 +163,7 @@ spatialset_out_fn(const Set *s, int maxdd, outfunc wkt_out, bool extended)
   /* Get the SRID if extended */
   char srid_str[18];
   srid_str[0] = '\0';
-  int32_t srid = spatialset_srid(s);
+  int32 srid = spatialset_srid(s);
   if (srid <= 0)
     return set_str;
 

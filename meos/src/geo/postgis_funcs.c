@@ -46,7 +46,6 @@
 #endif
 /* PostGIS */
 #include <liblwgeom.h>
-#include <liblwgeom_internal.h>
 #include <lwgeom_log.h>
 #include <intervaltree.h>
 #include <lwgeom_geos.h>
@@ -170,7 +169,7 @@ gbox_out(const GBOX *box, int maxdd)
  */
 BOX3D *
 box3d_make(double xmin, double xmax, double ymin, double ymax,
-  double zmin, double zmax, int32_t srid)
+  double zmin, double zmax, int32 srid)
 {
   /* Note: zero-fill is required here, just as in heap tuples */
   BOX3D *result = palloc0(sizeof(BOX3D));
@@ -234,60 +233,6 @@ box3d_out(const BOX3D *box, int maxdd)
 #endif /* MEOS */
 
 /*****************************************************************************
- * Centroid function
- * Original MEOS functions for a more efficient implementation
- *****************************************************************************/
-
-/**
- * @ingroup meos_geo_base_spatial
- * @brief Return the centroid of a geometry
- * @note PostGIS function: @p centroid(PG_FUNCTION_ARGS). 
- */
-/**
- * @ingroup meos_geo_accessor
- * @brief Convert a geometry into a circular buffer
- * @param[in] gs Geometry
- */
-GSERIALIZED *
-geom_centroid(const GSERIALIZED *gs)
-{
-  /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(gs, NULL);
-  uint32_t type = gserialized_get_type(gs);
-
-  /* POINTTYPE */
-  if (type == POINTTYPE)
-    return geo_copy(gs);
-
-  /* CURVEPOLYTYPE */
-  GSERIALIZED *result;
-  if (type == CURVEPOLYTYPE)
-  {
-    int32_t srid = gserialized_get_srid(gs);
-    LWCURVEPOLY *poly = (LWCURVEPOLY *) lwgeom_from_gserialized(gs);
-    LWLINE *ring = (LWLINE *) poly->rings[0];
-    POINT4D p1, p2;
-    getPoint4d_p(ring->points, 0, &p1);
-    getPoint4d_p(ring->points, 1, &p2);
-    /* Compute the radius. We cannot call the PostGIS function
-     * interpolate_point4d(&p1, &p2, &p, ratio);
-     * since it uses a double and not a long double for the interpolation */
-    double x = p1.x + (double) ((long double) (p2.x - p1.x) * 0.5);
-    double y = p1.y + (double) ((long double) (p2.y - p1.y) * 0.5);
-    LWGEOM *center = (LWGEOM *) lwpoint_make2d(srid, x, y);
-    result = geom_serialize(center);
-    lwgeom_free((LWGEOM *) poly); lwgeom_free(center); 
-  }
-  else
-  /* geotype != POINTTYPE && geotype != CURVEPOLYTYPE */
-  {
-    double radius;
-    result = geom_min_bounding_radius(gs, &radius);
-  }
-  return result;
-}
-
-/*****************************************************************************
  * Interval tree functions
  * Functions copied from /postgis/lwgeom_itree.c
  *****************************************************************************/
@@ -298,7 +243,8 @@ geom_centroid(const GSERIALIZED *gs)
  * at least one fully contained member and no members
  * outside the polygon to be contained.
  */
-bool itree_pip_contains(const IntervalTree *itree, const LWGEOM *lwpoints)
+bool
+itree_pip_contains(const IntervalTree *itree, const LWGEOM *lwpoints)
 {
   if (lwgeom_get_type(lwpoints) == POINTTYPE)
   {
@@ -343,7 +289,8 @@ bool itree_pip_contains(const IntervalTree *itree, const LWGEOM *lwpoints)
  * If any point in the point/multipoint is outside
  * the polygon, then the polygon does not cover the point/multipoint.
  */
-bool itree_pip_covers(const IntervalTree *itree, const LWGEOM *lwpoints)
+bool
+itree_pip_covers(const IntervalTree *itree, const LWGEOM *lwpoints)
 {
   if (lwgeom_get_type(lwpoints) == POINTTYPE)
   {
@@ -376,7 +323,8 @@ bool itree_pip_covers(const IntervalTree *itree, const LWGEOM *lwpoints)
  * A.intersects(B) implies if any member of the point/multipoint
  * is not outside, then they intersect.
  */
-bool itree_pip_intersects(const IntervalTree *itree, const LWGEOM *lwpoints)
+bool
+itree_pip_intersects(const IntervalTree *itree, const LWGEOM *lwpoints)
 {
   if (lwgeom_get_type(lwpoints) == POINTTYPE)
   {
@@ -1382,6 +1330,25 @@ geo_geo_n(const GSERIALIZED *gs, int n)
  *****************************************************************************/
 
 /**
+ * @ingroup meos_geo_base_spatial
+ * @brief Return the centroid of a geometry
+ * @note PostGIS function: @p centroid(PG_FUNCTION_ARGS). 
+ */
+GSERIALIZED *
+geom_centroid(const GSERIALIZED *gs)
+{
+  assert(gs);
+  LWGEOM *lwgeom = lwgeom_from_gserialized(gs);
+  LWGEOM *lwresult = lwgeom_centroid(lwgeom);
+  lwgeom_free(lwgeom);
+  if (! lwresult)
+    return NULL;
+  GSERIALIZED *result = geo_serialize(lwresult);
+  lwgeom_free(lwresult);
+  return result;
+}
+
+/**
  * @brief Return true if a geometry is a point
  */
 static char
@@ -1517,7 +1484,7 @@ bool
 geom_spatialrel(const GSERIALIZED *gs1, const GSERIALIZED *gs2, spatialRel rel)
 {
   if (! ensure_valid_geo_geo(gs1, gs2))
-    return NULL;
+    return false;
 
   /* A.Intersects(Empty) == FALSE */
   if ( gserialized_is_empty(gs1) || gserialized_is_empty(gs2) )
@@ -2510,12 +2477,10 @@ geography_centroid_from_wpoints(const int32_t srid, const POINT3DM *points,
   double_t y_sum = 0;
   double_t z_sum = 0;
   double_t weight_sum = 0;
-  double_t weight = 1;
-  POINT3D* point;
   for (uint32_t i = 0; i < size; i++ )
   {
-    point = lonlat_to_cart(points[i].x, points[i].y);
-    weight = points[i].m;
+    POINT3D *point = lonlat_to_cart(points[i].x, points[i].y);
+    double_t weight = points[i].m;
     x_sum += point->x * weight;
     y_sum += point->y * weight;
     z_sum += point->z * weight;
@@ -2930,12 +2895,13 @@ geog_length(const GSERIALIZED *gs, bool use_spheroid)
   /* Get our geometry object loaded into memory. */
   LWGEOM *geom = lwgeom_from_gserialized(gs);
 
-  /* Initialize spheroid. The only caller of this function passes
-   * use_spheroid=true (cppcheck knownConditionTrueFalse), so the
-   * "turn the spheroid into a sphere" branch is dead and removed. */
-  (void) use_spheroid;
+  /* Initialize spheroid */
   SPHEROID s;
   spheroid_init_from_srid(gserialized_get_srid(gs), &s);
+
+  /* User requests spherical calculation, turn our spheroid into a sphere */
+  if (!  use_spheroid )
+    s.a = s.b = s.radius;
 
   /* Calculate the length */
   double length = lwgeom_length_spheroid(geom, &s);
@@ -3014,43 +2980,16 @@ geog_intersects(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
   return geog_dwithin(gs1, gs2, 0.0, use_spheroid);
 }
 
-/**
- * @brief Return the distance between two geographies
- * @param[in] lwgeom1,lwgeom2 Geographies
- * @note Internal function used for iterating through instants
- */
-double
-lwgeog_mindistance(const LWGEOM *lwgeom1, const LWGEOM *lwgeom2)
-{
-  assert(lwgeom1); assert(lwgeom2);
-  assert(lwgeom1->srid == lwgeom2->srid);
-
-  /* Initialize spheroid */
-  SPHEROID s;
-  spheroid_init_from_srid(lwgeom1->srid, &s);
-
-  /* Make sure we have boxes attached */
-  lwgeom_add_bbox_deep((LWGEOM *) lwgeom1, NULL);
-  lwgeom_add_bbox_deep((LWGEOM *) lwgeom2, NULL);
-
-  double tolerance = FP_TOLERANCE;
-  double distance = lwgeom_distance_spheroid(lwgeom1, lwgeom2, &s, tolerance);
-  /* Something went wrong, negative or infinite return... */
-  if (distance < 0.0 || distance == DBL_MAX)
-  {
-    meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
-      "geography_distance returned distance < 0.0");
-    return DBL_MAX;
-  }
-  return distance;
-}
+/* Defined in liblwgeom_internal.h */
+#define PGIS_FP_TOLERANCE 1e-12
 
 /**
  * @ingroup meos_geo_base_distance
  * @brief Return the distance between two geographies
  * @param[in] gs1,gs2 Geographies
  * @note PostGIS function: @p geography_distance_uncached(PG_FUNCTION_ARGS).
- * We set by default @p tolerance and initialize the spheroid to WGS84
+ * We set by default both @p tolerance and @p use_spheroid and initialize the
+ * spheroid to WGS84
  * @return On error or empty geometries return DBL_MAX
  */
 double
@@ -3062,13 +3001,38 @@ geog_distance(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   if (gserialized_is_empty(gs1) || gserialized_is_empty(gs2) )
     return DBL_MAX;
 
+  double tolerance = PGIS_FP_TOLERANCE;
+  bool use_spheroid = true;
+
+  /* Initialize spheroid */
+  SPHEROID s;
+  spheroid_init_from_srid(gserialized_get_srid(gs1), &s);
+
+  /* Set to sphere if requested */
+  if (!  use_spheroid )
+    s.a = s.b = s.radius;
+
   LWGEOM *lwgeom1 = lwgeom_from_gserialized(gs1);
   LWGEOM *lwgeom2 = lwgeom_from_gserialized(gs2);
-  double distance = lwgeog_mindistance(lwgeom1, lwgeom2);
 
-  /* Clean up and return */
+  /* Make sure we have boxes attached */
+  lwgeom_add_bbox_deep(lwgeom1, NULL);
+  lwgeom_add_bbox_deep(lwgeom2, NULL);
+
+  double distance = lwgeom_distance_spheroid(lwgeom1, lwgeom2, &s, tolerance);
+
+  /* Clean up */
   lwgeom_free(lwgeom1);
   lwgeom_free(lwgeom2);
+
+  /* Something went wrong, negative or infinite return... */
+  if (distance < 0.0 || distance == DBL_MAX)
+  {
+    meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
+      "geography_distance returned distance < 0.0");
+    return DBL_MAX;
+  }
+
   return distance;
 }
 
@@ -3507,7 +3471,7 @@ geo_as_hexewkb(const GSERIALIZED *gs, const char *endian)
  * @note wkb is in *binary* not hex form
  */
 GSERIALIZED *
-geo_from_ewkb(const uint8_t *wkb, size_t wkb_size, int32_t srid)
+geo_from_ewkb(const uint8_t *wkb, size_t wkb_size, int32 srid)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(wkb, NULL);
@@ -4349,7 +4313,7 @@ lwgeom_mec_supported_type(const LWGEOM *geom)
 GSERIALIZED *
 geom_min_bounding_radius(const GSERIALIZED *geom, double *radius)
 {
-  if (! geom || ! radius)
+  if (! geom)
     return NULL;
 
   LWGEOM *input = lwgeom_from_gserialized(geom);

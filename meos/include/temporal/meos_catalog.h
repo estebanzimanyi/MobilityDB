@@ -180,7 +180,7 @@ typedef enum
   ALWAYSLE_OP     = 40, /**< Alwaysle `%<=` operator */
   ALWAYSGT_OP     = 41, /**< Alwaysgt `%>` operator */
   ALWAYSGE_OP     = 42, /**< Alwaysge `%>=` operator */
-} MeosOper;
+} meosOper;
 
 /**
  * Structure to represent the temporal type cache array.
@@ -226,8 +226,8 @@ extern bool temptype_subtype_all(tempSubtype subtype);
 #endif
 extern const char *tempsubtype_name(tempSubtype subtype);
 extern bool tempsubtype_from_string(const char *str, int16 *subtype);
-extern const char *meosoper_name(MeosOper oper);
-extern MeosOper meosoper_from_string(const char *name);
+extern const char *meosoper_name(meosOper oper);
+extern meosOper meosoper_from_string(const char *name);
 extern const char *interptype_name(interpType interp);
 extern interpType interptype_from_string(const char *interp_str);
 

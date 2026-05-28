@@ -251,7 +251,7 @@ PG_FUNCTION_INFO_V1(Tnpoint_at_npointset);
  * @brief Return a temporal network point restricted to a set of network points
  * @sqlfn atValues()
  */
-Datum
+inline Datum
 Tnpoint_at_npointset(PG_FUNCTION_ARGS)
 {
   return Tnpoint_restrict_npointset(fcinfo, REST_AT);
@@ -265,7 +265,7 @@ PG_FUNCTION_INFO_V1(Tnpoint_minus_npointset);
  * of network points
  * @sqlfn minusValues()
  */
-Datum
+inline Datum
 Tnpoint_minus_npointset(PG_FUNCTION_ARGS)
 {
   return Tnpoint_restrict_npointset(fcinfo, REST_MINUS);

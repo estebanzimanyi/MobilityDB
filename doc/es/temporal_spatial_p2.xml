@@ -275,15 +275,13 @@ SELECT ST_CPAWithin(
 
 		<para>El operador de distancia temporal, denotado <varname>&lt;-&gt;</varname>, calcula la distancia en cada instante de la intersección de las extensiones temporales de sus argumentos y da como resultado un número flotante temporal. Calcular la distancia temporal es útil en muchas aplicaciones de movilidad. Por ejemplo, un grupo en movimiento (también conocido como convoy o bandada) se define como un conjunto de objetos que se mueven cerca unos de otros durante un intervalo de tiempo prolongado. Esto requiere calcular la distancia temporal entre dos objetos en movimiento.</para>
 
-		<para>Observe que los tipos temporales sólo consideran la interpolación lineal entre valores, mientras que la distancia es una raíz de una función cuadrática. Por lo tanto, el operador de distancia temporal proporciona una aproximación lineal del valor de distancia real para los puntos de secuencia temporal. En este caso, los argumentos se sincronizan en la dimensión de tiempo y para cada uno de los segmentos de línea que componen los argumentos, se calcula la distancia espacial entre el punto inicial, el punto final y el punto de aproximación más cercano, como se muestra en los ejemplos a continuación.</para>
+		<para>El operador de distancia temporal acepta una geometría/geografía restringida a un punto o un punto temporal como argumentos. Observe que los tipos temporales sólo consideran la interpolación lineal entre valores, mientras que la distancia es una raíz de una función cuadrática. Por lo tanto, el operador de distancia temporal proporciona una aproximación lineal del valor de distancia real para los puntos de secuencia temporal. En este caso, los argumentos se sincronizan en la dimensión de tiempo y para cada uno de los segmentos de línea que componen los argumentos, se calcula la distancia espacial entre el punto inicial, el punto final y el punto de aproximación más cercano, como se muestra en los ejemplos a continuación.</para>
 
 		<itemizedlist>
 			<listitem xml:id="tgeo_tdistance">
 				<indexterm significance="normal"><primary><varname>&lt;-&gt;</varname></primary></indexterm>
 				<para>Devuelve la distancia temporal &Z_support; &geography_support;</para>
 				<para><varname>{geo,tgeo} &lt;-&gt; {geo,tgeo} → tfloat</varname></para>
-				<para><varname>{point,tpoint} &lt;-&gt; {point,tpoint} → tfloat</varname></para>
-				<para>El operador de distancia temporal para geometrías temporales acepta geometrías arbitrarias como argumento. Por otro lado, el operador de distancia temporal para puntos temporales, que admiten interpolación lineal, solo acepta geometrías restringidas a un punto como argumento. </para>
 				<programlisting language="sql" xml:space="preserve">
 SELECT tgeompoint '[Point(0 0)@2001-01-01, Point(1 1)@2001-01-03)' &lt;-&gt;
   geometry 'Point(0 1)';

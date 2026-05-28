@@ -1281,7 +1281,7 @@ closest_point_on_segment(const POINT4D *p, const POINT4D *A, const POINT4D *B, P
 {
 	double r;
 
-	if ( FP_EQUALS(A->x, B->x) && FP_EQUALS(A->y, B->y) )
+	if (  FP_EQUALS(A->x, B->x) && FP_EQUALS(A->y, B->y) )
 	{
 		*ret = *A;
 		return;
