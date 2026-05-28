@@ -32,7 +32,18 @@
  * @brief Aggregate functions for temporal network points
  */
 
--- The function is not strict
+CREATE FUNCTION tspatial_extent_transfn(stbox, tnpoint)
+  RETURNS stbox
+  AS 'MODULE_PATHNAME', 'Tspatial_extent_transfn'
+  LANGUAGE C IMMUTABLE PARALLEL SAFE;
+
+CREATE AGGREGATE extent(tnpoint) (
+  SFUNC = tspatial_extent_transfn,
+  STYPE = stbox,
+  COMBINEFUNC = stbox_extent_combinefn,
+  PARALLEL = safe
+);
+
 CREATE FUNCTION tcount_transfn(internal, tnpoint)
   RETURNS internal
   AS 'MODULE_PATHNAME', 'Temporal_tcount_transfn'
@@ -48,7 +59,6 @@ CREATE AGGREGATE tcount(tnpoint) (
   PARALLEL = SAFE
 );
 
--- The function is not strict
 CREATE FUNCTION wcount_transfn(internal, tnpoint, interval)
   RETURNS internal
   AS 'MODULE_PATHNAME', 'Temporal_wcount_transfn'
@@ -64,7 +74,6 @@ CREATE AGGREGATE wcount(tnpoint, interval) (
   PARALLEL = SAFE
 );
 
--- The function is not strict
 CREATE FUNCTION tcentroid_transfn(internal, tnpoint)
   RETURNS internal
   AS 'MODULE_PATHNAME', 'Tnpoint_tcentroid_transfn'
@@ -82,7 +91,6 @@ CREATE AGGREGATE tcentroid(tnpoint) (
 
 /*****************************************************************************/
 
--- The function is not strict
 CREATE FUNCTION temporal_merge_transfn(internal, tnpoint)
   RETURNS internal
   AS 'MODULE_PATHNAME', 'Temporal_merge_transfn'
