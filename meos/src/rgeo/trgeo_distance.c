@@ -851,7 +851,7 @@ dist2d_trgeoseq_point(const TSequence *seq, const GSERIALIZED *gs)
     pose1 = DatumGetPoseP(tinstant_value_p(inst1));
     pose2 = DatumGetPoseP(tinstant_value_p(inst2));
     double ratio = 0.0;
-    int loop = 0, state, direction = MEOS_ANY;
+    int loop = 0, state = 0, direction = MEOS_ANY;
     /* Compute the evolution of closest features for this segment */
     do
     {
@@ -1703,7 +1703,7 @@ dist2d_trgeoseq_poly(const TSequence *seq, const GSERIALIZED *gs)
     pose1 = DatumGetPoseP(tinstant_value_p(inst1));
     pose2 = DatumGetPoseP(tinstant_value_p(inst2));
     double ratio = 0.0;
-    int loop = 0, state, dir1 = MEOS_ANY, dir2 = MEOS_ANY;
+    int loop = 0, state = 0, dir1 = MEOS_ANY, dir2 = MEOS_ANY;
     /* Compute the evolution of closest features for this segment */
     do
     {
