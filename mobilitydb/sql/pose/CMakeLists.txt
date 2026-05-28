@@ -15,6 +15,7 @@ SET(LOCAL_FILES
   119_tpose_tile
   120_geopose_frames
   115_portable_aliases
+  112_aggregate_renames
   )
 
 foreach (f ${LOCAL_FILES})
