@@ -4,6 +4,7 @@ set(GEO_SRCS
   postgis_funcs.c
   stbox.c
   stbox_index.c
+  tspatial_spgist.c
   tgeo.c
   tgeo_aggfuncs.c
   tgeo_boxops.c
