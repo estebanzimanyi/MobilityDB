@@ -235,54 +235,64 @@ tpoint_get_z(const Temporal *temp)
  * @brief Return a long double between 0 and 1 representing the location of the
  * closest point on the 2D segment to the given point, as a fraction of total
  * segment length
+ * @param[in] p Reference point
+ * @param[in] A,B Points defining the segment
+ * @param[out] closest Closest point in the segment
  * @note Function derived from the PostGIS function @p closest_point_on_segment
  */
 long double
-closest_point2d_on_segment_ratio(const POINT2D *p, const POINT2D *A,
-  const POINT2D *B, POINT2D *closest)
+closest_point2d_ratio(const POINT2D *p, const POINT2D *A, const POINT2D *B,
+  POINT2D *closest, double *dist)
 {
-  if (FP_EQUALS(A->x, B->x) && FP_EQUALS(A->y, B->y))
+  double dx = B->x - A->x;
+  double dy = B->y - A->y;
+  double dAB2 = dx * dx + dy * dy;
+
+  if (dAB2 <= FP_TOLERANCE)
   {
     if (closest)
       *closest = *A;
-    return 0.0;
+    if (dist)
+    {
+      double px = p->x - A->x;
+      double py = p->y - A->y;
+      *dist = sqrt(px * px + py * py);
+    }
+    return 0.0L;
   }
 
-  /*
-   * We use comp.graphics.algorithms Frequently Asked Questions method
-   *
-   * (1)          AC dot AB
-   *         r = ----------
-   *              ||AB||^2
-   *  r has the following meaning:
-   *  r=0 P = A
-   *  r=1 P = B
-   *  r<0 P is on the backward extension of AB
-   *  r>1 P is on the forward extension of AB
-   *  0<r<1 P is interior to AB
-   *
-   */
-  long double r = ( (p->x-A->x) * (B->x-A->x) + (p->y-A->y) * (B->y-A->y) ) /
-    ( (B->x-A->x) * (B->x-A->x) + (B->y-A->y) * (B->y-A->y) );
+  POINT4D p1 = {p->x, p->y, 0.0, 0.0};
+  POINT4D A1 = {A->x, A->y, 0.0, 0.0};
+  POINT4D B1 = {B->x, B->y, 0.0, 0.0};
+  POINT4D proj;
 
-  if (r < 0)
-  {
-    if (closest)
-      *closest = *A;
-    return 0.0;
-  }
-  if (r > 1)
-  {
-    if (closest)
-      *closest = *B;
-    return 1.0;
-  }
+  /* PostGIS projection */
+  closest_point_on_segment(&p1, &A1, &B1, &proj);
 
   if (closest)
   {
-    closest->x = (double) (A->x + ( (B->x - A->x) * r ));
-    closest->y = (double) (A->y + ( (B->y - A->y) * r ));
+    closest->x = proj.x;
+    closest->y = proj.y;
   }
+
+  /* Correct ratio */
+  double apx = proj.x - A->x;
+  double apy = proj.y - A->y;
+
+  long double r = (apx * dx + apy * dy) / dAB2;
+
+  /* Clamp */
+  if (r < 0.0L) r = 0.0L;
+  if (r > 1.0L) r = 1.0L;
+
+  /* Distance */
+  if (dist)
+  {
+    double vx = p->x - proj.x;
+    double vy = p->y - proj.y;
+    *dist = sqrt(vx * vx + vy * vy);
+  }
+
   return r;
 }
 
@@ -290,38 +300,63 @@ closest_point2d_on_segment_ratio(const POINT2D *p, const POINT2D *A,
  * @brief Return a long double between 0 and 1 representing the location of the
  * closest point on the 3D segment to the given point, as a fraction of total
  * segment length
+ * @param[in] p Reference point
+ * @param[in] A,B Points defining the segment
+ * @param[out] closest Closest point in the segment
  * @note Function derived from the PostGIS function @p closest_point_on_segment
+ * since PostGIS does not provide a 3D version
  */
 long double
-closest_point3dz_on_segment_ratio(const POINT3DZ *p, const POINT3DZ *A,
-  const POINT3DZ *B, POINT3DZ *closest)
+closest_point3dz_ratio(const POINT3DZ *p, const POINT3DZ *A, const POINT3DZ *B,
+  POINT3DZ *closest, double *dist)
 {
-  if (FP_EQUALS(A->x, B->x) && FP_EQUALS(A->y, B->y) && FP_EQUALS(A->z, B->z))
+  double dx = B->x - A->x;
+  double dy = B->y - A->y;
+  double dz = B->z - A->z;
+  double len2 = dx * dx + dy * dy + dz * dz;
+
+  if (len2 <= FP_TOLERANCE)
   {
-    *closest = *A;
-    return 0.0;
+    if (closest)
+      *closest = *A;
+    if (dist)
+    {
+      double px = p->x - A->x;
+      double py = p->y - A->y;
+      double pz = p->z - A->z;
+      *dist = sqrt(px * px + py * py + pz * pz);
+    }
+    return 0.0L;
   }
 
-  /* Function #closest_point2d_on_segment_ratio explains how r is computed */
-  long double r = ( (p->x-A->x) * (B->x-A->x) + (p->y-A->y) * (B->y-A->y) +
-      (p->z-A->z) * (B->z-A->z) ) /
-    ( (B->x-A->x) * (B->x-A->x) + (B->y-A->y) * (B->y-A->y) +
-      (B->z-A->z) * (B->z-A->z) );
+  double apx = p->x - A->x;
+  double apy = p->y - A->y;
+  double apz = p->z - A->z;
+  long double r = (apx * dx + apy * dy + apz * dz) / len2;
 
-  if (r < 0)
+  /* Clamp */
+  if (r < 0.0) r = 0.0;
+  else if (r > 1.0) r = 1.0;
+
+  /* Compute closest point */
+  double cx = A->x + r * dx;
+  double cy = A->y + r * dy;
+  double cz = A->z + r * dz;
+    
+  if (closest)
   {
-    *closest = *A;
-    return 0.0;
+    closest->x = cx;
+    closest->y = cy;
+    closest->z = cz;
   }
-  if (r > 1)
+  if (dist)
   {
-    *closest = *B;
-    return 1.0;
+    double vx = p->x - cx;
+    double vy = p->y - cy;
+    double vz = p->z - cz;
+    *dist = sqrt(vx * vx + vy * vy + vz * vz);
   }
 
-  closest->x = (double) (A->x + ( (B->x - A->x) * r ));
-  closest->y = (double) (A->y + ( (B->y - A->y) * r ));
-  closest->z = (double) (A->z + ( (B->z - A->z) * r ));
   return r;
 }
 
@@ -334,42 +369,220 @@ closest_point3dz_on_segment_ratio(const POINT3DZ *p, const POINT3DZ *A,
  * @param[out] closest Closest point in the segment
  * @param[out] dist Distance between the closest point and the reference point
  */
+// long double
+// closest_point_sphere_ratio(const POINT4D *p, const POINT4D *A,
+  // const POINT4D *B, POINT4D *closest, double *dist)
+// {
+  // GEOGRAPHIC_POINT g, g1, g2, proj;
+  // geographic_point_init(p->x, p->y, &g);
+  // geographic_point_init(A->x, A->y, &g1);
+  // geographic_point_init(B->x, B->y, &g2);
+
+  // /* Distances */
+  // double dAB = sphere_distance(&g1, &g2);
+  // double dAP = sphere_distance(&g1, &g);
+
+  // /* Degenerate segment */
+  // if (dAB <= FP_TOLERANCE)
+  // {
+    // if (closest) *closest = *A;
+    // if (dist) *dist = dAP;
+    // return 0.0L;
+  // }
+
+  // /* Bearings */
+  // double azAB = sphere_direction(&g1, &g2, dAB);
+  // double azAP = sphere_direction(&g1, &g, dAP);
+
+  // if (!isfinite(azAB) || !isfinite(azAP))
+  // {
+    // /* fallback: treat as endpoint case */
+    // if (closest) *closest = *A;
+    // if (dist) *dist = dAP;
+    // return 0.0L;
+  // }
+
+  // /* normalize to [-pi, pi] */
+  // double dtheta = azAP - azAB;
+  // if (dtheta > M_PI) dtheta -= 2.0 * M_PI;
+  // if (dtheta < -M_PI) dtheta += 2.0 * M_PI;
+
+  // /* Projection length along AB */
+  // double projlen = dAP * cos(dtheta);
+
+  // /* Clamp projection */
+  // if (projlen <= 0.0)
+  // {
+    // if (closest) *closest = *A;
+    // if (dist) *dist = dAP;
+    // return 0.0L;
+  // }
+  // else if (projlen >= dAB)
+  // {
+    // if (closest) *closest = *B;
+    // if (dist) *dist = sphere_distance(&g, &g2);
+    // return 1.0L;
+  // }
+
+  // /* Ratio */
+  // long double r = projlen / dAB;
+
+  // /* Interpolate along great circle */
+  // sphere_project(&g1, projlen, azAB, &proj);
+
+  // if (closest)
+  // {
+    // closest->x = rad2deg(longitude_radians_normalize(proj.lon));
+    // closest->y = rad2deg(longitude_radians_normalize(proj.lat));
+    // closest->z = 0.0;
+    // closest->m = 0.0;
+  // }
+
+  // if (dist)
+    // *dist = sphere_distance(&g, &proj);
+
+  // return r;
+// }
+
+// long double
+// closest_point_sphere_ratio(const POINT4D *p, const POINT4D *A,
+  // const POINT4D *B, POINT4D *closest, double *dist)
+// {
+  // GEOGRAPHIC_POINT g, g1, g2, proj;
+  // geographic_point_init(p->x, p->y, &g);
+  // geographic_point_init(A->x, A->y, &g1);
+  // geographic_point_init(B->x, B->y, &g2);
+
+  // /* Distances */
+  // double dAB = sphere_distance(&g1, &g2);
+  // double dAP = sphere_distance(&g1, &g);
+
+  // if (dAB <= FP_TOLERANCE)
+  // {
+    // if (closest) *closest = *A;
+    // if (dist) *dist = dAP;
+    // return 0.0L;
+  // }
+
+  // /* --- Convert to 3D unit vectors --- */
+  // POINT3DZ A3, B3, P3;
+
+  // spheroid_to_cartesian(&g1, &A3);
+  // spheroid_to_cartesian(&g2, &B3);
+  // spheroid_to_cartesian(&g,  &P3);
+
+  // double ABx = B3.x - A3.x;
+  // double ABy = B3.y - A3.y;
+  // double ABz = B3.z - A3.z;
+
+  // double APx = P3.x - A3.x;
+  // double APy = P3.y - A3.y;
+  // double APz = P3.z - A3.z;
+
+  // double denom = ABx*ABx + ABy*ABy + ABz*ABz;
+
+  // long double r = (APx*ABx + APy*ABy + APz*ABz) / denom;
+
+  // /* Clamp */
+  // if (r < 0.0L) r = 0.0L;
+  // if (r > 1.0L) r = 1.0L;
+
+  // /* Project back on sphere using PostGIS */
+  // double projlen = r * dAB;
+  // double azAB = sphere_direction(&g1, &g2, dAB);
+  // sphere_project(&g1, projlen, azAB, &proj);
+
+  // if (closest)
+  // {
+    // closest->x = rad2deg(longitude_radians_normalize(proj.lon));
+    // closest->y = rad2deg(longitude_radians_normalize(proj.lat));
+    // closest->z = 0.0;
+    // closest->m = 0.0;
+  // }
+
+  // if (dist)
+    // *dist = sphere_distance(&g, &proj);
+
+  // return r;
+// }
+
+
 long double
-closest_point_on_segment_sphere(const POINT4D *p, const POINT4D *A,
+closest_point_sphere_ratio(const POINT4D *p, const POINT4D *A,
   const POINT4D *B, POINT4D *closest, double *dist)
 {
-  GEOGRAPHIC_EDGE e;
-  GEOGRAPHIC_POINT gp, proj;
-  long double length, /* length from A to the closest point */
-    seglength; /* length of the segment AB */
-  long double result; /* ratio */
+  /* Convert degrees → radians */
+  double lonA = deg2rad(A->x), latA = deg2rad(A->y);
+  double lonB = deg2rad(B->x), latB = deg2rad(B->y);
+  double lonP = deg2rad(p->x), latP = deg2rad(p->y);
 
-  /* Initialize target point */
-  geographic_point_init(p->x, p->y, &gp);
+  /* Reference latitude for projection (A) */
+  double coslat = cos(latA);
 
-  /* Initialize edge */
-  geographic_point_init(A->x, A->y, &(e.start));
-  geographic_point_init(B->x, B->y, &(e.end));
+  /* Project to local tangent plane */
+  double Ax = 0.0;
+  double Ay = 0.0;
 
-  /* Get the spherical distance between point and edge */
-  *dist = edge_distance_to_point(&e, &gp, &proj);
+  double Bx = (lonB - lonA) * coslat;
+  double By = (latB - latA);
 
-  /* Compute distance from beginning of the segment to closest point */
-  seglength = (long double) sphere_distance(&(e.start), &(e.end));
-  length = (long double) sphere_distance(&(e.start), &proj);
-  result = length / seglength;
+  double Px = (lonP - lonA) * coslat;
+  double Py = (latP - latA);
+
+  double dx = Bx - Ax;
+  double dy = By - Ay;
+  double len2 = dx*dx + dy*dy;
+
+  /* Degenerate segment */
+  if (len2 <= FP_TOLERANCE)
+  {
+    if (closest) *closest = *A;
+    if (dist)
+    {
+      GEOGRAPHIC_POINT g, gA;
+      geographic_point_init(p->x, p->y, &g);
+      geographic_point_init(A->x, A->y, &gA);
+      *dist = sphere_distance(&g, &gA);
+    }
+    return 0.0L;
+  }
+
+  /* Dot product projection (KEY) */
+  double apx = Px - Ax;
+  double apy = Py - Ay;
+
+  long double r = (apx * dx + apy * dy) / len2;
+
+  /* Clamp */
+  if (r < 0.0L) r = 0.0L;
+  if (r > 1.0L) r = 1.0L;
+
+  /* Closest point in projected plane */
+  double Cx = Ax + r * dx;
+  double Cy = Ay + r * dy;
+
+  /* Convert back to lon/lat */
+  double lonC = lonA + Cx / coslat;
+  double latC = latA + Cy;
 
   if (closest)
   {
-    /* Copy nearest into returning argument */
-    closest->x = rad2deg(proj.lon);
-    closest->y = rad2deg(proj.lat);
-
-    /* Compute Z and M values for closest point */
-    closest->z = (double) (A->z + ((B->z - A->z) * result));
-    closest->m = (double) (A->m + ((B->m - A->m) * result));
+    closest->x = rad2deg(lonC);
+    closest->y = rad2deg(latC);
+    closest->z = 0.0;
+    closest->m = 0.0;
   }
-  return result;
+
+  /* Distance (true spherical) */
+  if (dist)
+  {
+    GEOGRAPHIC_POINT g, gC;
+    geographic_point_init(p->x, p->y, &g);
+    geographic_point_init(rad2deg(lonC), rad2deg(latC), &gC);
+    *dist = sphere_distance(&g, &gC);
+  }
+
+  return r;
 }
 
 /**
@@ -490,7 +703,7 @@ pointsegm_locate(Datum start, Datum end, Datum point, double *dist)
     datum_point4d(end, &p2);
     datum_point4d(point, &p);
     /* Get the closest point and the distance */
-    result = closest_point_on_segment_sphere(&p, &p1, &p2, &closest, &dist1);
+    result = closest_point_sphere_ratio(&p, &p1, &p2, &closest, &dist1);
     if (fabs(dist1) >= MEOS_EPSILON || p4d_same(&p1, &closest) ||
         p4d_same(&p2, &closest))
       return -1.0;
@@ -512,15 +725,14 @@ pointsegm_locate(Datum start, Datum end, Datum point, double *dist)
       const POINT3DZ *p2 = DATUM_POINT3DZ_P(end);
       const POINT3DZ *p = DATUM_POINT3DZ_P(point);
       POINT3DZ proj;
-      result = closest_point3dz_on_segment_ratio(p, p1, p2, &proj);
-      dist1 = distance3d_pt_pt((POINT3D *) p, (POINT3D *) &proj);
+      result = closest_point3dz_ratio(p, p1, p2, &proj, &dist1);
       if (fabs(dist1) >= MEOS_EPSILON ||
           p3d_same((POINT3D *) p1, (POINT3D *) &proj) ||
           p3d_same((POINT3D *) p2, (POINT3D *) &proj))
         return -1.0;
       /* Return the distance between the closest point and the point */
       if (dist)
-        *dist = distance3d_pt_pt((POINT3D *) p, (POINT3D *) &proj);
+        *dist = dist1;
     }
     else
     {
@@ -528,8 +740,7 @@ pointsegm_locate(Datum start, Datum end, Datum point, double *dist)
       const POINT2D *p2 = DATUM_POINT2D_P(end);
       const POINT2D *p = DATUM_POINT2D_P(point);
       POINT2D proj;
-      result = closest_point2d_on_segment_ratio(p, p1, p2, &proj);
-      dist1 = distance2d_pt_pt((POINT2D *) p, &proj);
+      result = closest_point2d_ratio(p, p1, p2, &proj, &dist1);
       if (fabs(dist1) >= MEOS_EPSILON || p2d_same(p1, &proj) ||
           p2d_same(p2, &proj))
         return -1.0;
@@ -543,12 +754,27 @@ pointsegm_locate(Datum start, Datum end, Datum point, double *dist)
 
 /*****************************************************************************
  * Intersection functions
- * N.B. There is no function `tpointsegm_intersection_value` since the
- * function tinterrel_tgeo_geo for computing e.g., tintersects(tpoint, point)
- * is computed by a single call to PostGIS by (1) splitting the temporal point
- * sequence into an array of non self-intersecting fragments and (2) computing
- * the intersection of the trajectory of the fragment and the point.
  *****************************************************************************/
+
+/**
+ * @brief Return 1 or 2 if two temporal geometry point segments intersect
+ * during the period defined by the output timestamps, return 0 otherwise
+ * @param[in] start1,end1 Values defining the first segment
+ * @param[in] start2,end2 Values defining the second segment
+ * @param[in] lower,upper Timestamps defining the segments
+ * @param[out] t1,t2 Timestamps defining the resulting period, may be equal
+ */
+int
+tgeompointsegm_intersection_value(Datum start1, Datum end1, Datum value,
+  TimestampTz lower, TimestampTz upper, TimestampTz *t1, TimestampTz *t2)
+{
+  return tgeompointsegm_distance_turnpt(start1, end1, value, value,
+    (Datum) 0.0, lower, upper, t1, t2);
+}
+
+
+
+
 
 /**
  * @brief Return 1 or 2 if two temporal geometry point segments intersect
@@ -723,7 +949,7 @@ lwpointarr_make_trajectory(LWGEOM **points, int count, interpType interp)
  * @param[in] value1,value2 Points
  */
 LWLINE *
-lwline_make(Datum value1, Datum value2)
+datum_lwline_make(Datum value1, Datum value2)
 {
   /* Obtain the flags and the SRID from the first value */
   GSERIALIZED *gs = DatumGetGserializedP(value1);
@@ -874,6 +1100,31 @@ geopointlinearr_make_trajectory(GSERIALIZED **points, int npoints,
 /*****************************************************************************/
 
 /**
+ * @brief Return a GSERIALIZED point into an LWPOINT
+ */
+LWGEOM *
+geopoint_to_lwpoint(GSERIALIZED *gs)
+{
+  int32_t srid = gserialized_get_srid(gs);
+  int hasz = FLAGS_GET_Z(gs->gflags);
+  int geodetic = FLAGS_GET_GEODETIC(gs->gflags);
+  LWPOINT *lwresult;
+  if (hasz)
+  {
+    const POINT3DZ *pt = GSERIALIZED_POINT3DZ_P(gs);
+    lwresult = lwpoint_make3dz(srid, pt->x, pt->y, pt->z);
+  }
+  else
+  {
+    const POINT2D *pt = GSERIALIZED_POINT2D_P(gs);
+    lwresult = lwpoint_make2d(srid, pt->x, pt->y);
+  }
+  FLAGS_SET_Z(lwresult->flags, hasz);
+  FLAGS_SET_GEODETIC(lwresult->flags, geodetic);
+  return (LWGEOM *) lwresult;
+}
+
+/**
  * @ingroup meos_internal_geo_accessor
  * @brief Return the trajectory of a temporal point sequence
  * @param[in] seq Temporal sequence
@@ -898,25 +1149,31 @@ tpointseq_linear_trajectory(const TSequence *seq, bool unary_union)
     return DatumGetGserializedP(tinstant_value(TSEQUENCE_INST_N(seq, 0)));
 
   /* General case */
-  GSERIALIZED **points = palloc(sizeof(GSERIALIZED *) * seq->count);
-  points[0] = DatumGetGserializedP(tinstant_value_p(TSEQUENCE_INST_N(seq, 0)));
+  LWGEOM **points = palloc(sizeof(LWGEOM *) * seq->count);
+  GSERIALIZED *point1 = DatumGetGserializedP(
+    tinstant_value_p(TSEQUENCE_INST_N(seq, 0)));
+  int32_t srid = gserialized_get_srid(point1);
+  points[0] = geopoint_to_lwpoint(point1);
   int npoints = 1;
   for (int i = 1; i < seq->count; i++)
   {
-    GSERIALIZED *gs =
-      DatumGetGserializedP(tinstant_value_p(TSEQUENCE_INST_N(seq, i)));
-    /* If linear interpolation, remove two equal consecutive points */
-    if (unary_union || ! geopoint_same(gs, points[npoints - 1]))
-      points[npoints++] = gs;
+    GSERIALIZED *point2 = DatumGetGserializedP(
+      tinstant_value_p(TSEQUENCE_INST_N(seq, i)));
+    /* If unary union, remove two equal consecutive points */
+    if (! unary_union || ! geopoint_same(point1, point2))
+      points[npoints++] = geopoint_to_lwpoint(point2);
+    point1 = point2;
   }
-  GSERIALIZED *res = geopointarr_make_trajectory(points, npoints, LINEAR);
-  pfree(points);
-  if (! unary_union)
-    return res;
-  GSERIALIZED *result = geom_unary_union(res, -1);
-  pfree(res);
+
+  LWGEOM *traj = (LWGEOM *) lwline_from_lwgeom_array(srid, npoints, points);
+  GSERIALIZED *result = geo_serialize(traj);
+  /* Clean up and return */
+  for (int i = 0; i < npoints; i++)
+    lwgeom_free(points[i]);
+  pfree(points); lwgeom_free(traj);
   return result;
 }
+
 
 /**
  * @ingroup meos_internal_geo_accessor
@@ -3701,6 +3958,9 @@ tpointseq_discstep_find_splits(const TSequence *seq, int *count)
   return bitarr;
 }
 
+/**
+ * @brief Merge a POINT2D and a GBOX
+ */
 static void gbox_merge_point2d(const POINT2D *p, GBOX *gbox)
 {
   if ( gbox->xmin > p->x ) gbox->xmin = p->x;
@@ -3709,6 +3969,9 @@ static void gbox_merge_point2d(const POINT2D *p, GBOX *gbox)
   if ( gbox->ymax < p->y ) gbox->ymax = p->y;
 }
 
+/**
+ * @brief Initialize a GBOX with a POINT2D
+ */
 static void gbox_init_point2d(const POINT2D *p, GBOX *gbox)
 {
   gbox->xmin = gbox->xmax = p->x;

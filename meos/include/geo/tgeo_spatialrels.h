@@ -77,38 +77,30 @@ extern int spatialrel_geo_geo(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
 extern int spatialrel_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
   Datum param, varfunc func, int numparam);
 
-extern int ea_contains_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, 
-  bool ever);
 extern int ea_contains_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs,
-  bool ever);
+  bool ever, bool invert);
 extern int ea_contains_tgeo_tgeo(const Temporal *temp, const Temporal *temp2,
   bool ever);
-  
-extern int ea_covers_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp,
-  bool ever);
+
 extern int ea_covers_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs,
-  bool ever);
+  bool ever, bool invert);
 extern int ea_covers_tgeo_tgeo(const Temporal *temp, const Temporal *temp2,
   bool ever);
 
-extern int ea_disjoint_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, 
-  bool ever);
 extern int ea_disjoint_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs,
-  bool ever);
+  bool ever, bool invert);
 extern int ea_disjoint_tgeo_tgeo(const Temporal *temp, const Temporal *temp2,
   bool ever);
 
-extern int ea_intersects_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp, 
-  bool ever);
 extern int ea_intersects_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs,
-  bool ever);
+  bool ever, bool invert);
 extern int ea_intersects_tgeo_tgeo(const Temporal *temp, const Temporal *temp2,
   bool ever);
 
 extern int ea_touches_tpoint_geo(const Temporal *temp, const GSERIALIZED *gs,
-  bool ever);
+  bool ever, bool invert);
 extern int ea_touches_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs,
-  bool ever);
+  bool ever, bool invert);
 extern int ea_touches_tgeo_tgeo(const Temporal *temp, const Temporal *temp2,
   bool ever);
 

@@ -149,7 +149,7 @@ trgeoinst_make_valid(const GSERIALIZED *gs, const Pose *pose)
 TInstant *
 trgeoinst_make1(const GSERIALIZED *geom, const Pose *pose, TimestampTz t)
 {
-  size_t value_offset = offsetof(TInstant, value);
+  size_t value_offset = sizeof(TInstant) - sizeof(Datum);
   size_t size = value_offset;
   /* Create the temporal instant */
   void *value_from = (void *) pose;

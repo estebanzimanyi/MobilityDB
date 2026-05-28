@@ -110,9 +110,10 @@ Stbox_space_time_tiles_common(FunctionCallInfo fcinfo, bool spacetiles,
         ensure_same_spatial_dimensionality_stbox_geo(bounds, sorigin);
       else
         zsize = 0;
+      int32_t srid = bounds->srid;
       int32_t gs_srid = gserialized_get_srid(sorigin);
       if (gs_srid != SRID_UNKNOWN)
-        ensure_same_srid(bounds->srid, gs_srid);
+        ensure_same_srid(srid, gs_srid);
       memset(&pt, 0, sizeof(POINT3DZ));
       if (FLAGS_GET_Z(sorigin->gflags))
       {
@@ -193,7 +194,7 @@ PG_FUNCTION_INFO_V1(Stbox_space_tiles);
  * @brief Return the spatial grid of a spatiotemporal box
  * @sqlfn spaceTiles()
  */
-inline Datum
+Datum
 Stbox_space_tiles(PG_FUNCTION_ARGS)
 {
   return Stbox_space_time_tiles_common(fcinfo, true, false);
@@ -206,7 +207,7 @@ PG_FUNCTION_INFO_V1(Stbox_time_tiles);
  * @brief Return the temporal grid of a spatiotemporal box
  * @sqlfn timeTiles()
  */
-inline Datum
+Datum
 Stbox_time_tiles(PG_FUNCTION_ARGS)
 {
   return Stbox_space_time_tiles_common(fcinfo, false, true);
@@ -219,7 +220,7 @@ PG_FUNCTION_INFO_V1(Stbox_space_time_tiles);
  * @brief Return the spatiotemporal grid of a spatiotemporal box
  * @sqlfn spaceTimeTiles()
  */
-inline Datum
+Datum
 Stbox_space_time_tiles(PG_FUNCTION_ARGS)
 {
   return Stbox_space_time_tiles_common(fcinfo, true, true);
@@ -285,7 +286,7 @@ PG_FUNCTION_INFO_V1(Stbox_get_space_tile);
  * @brief Return a tile in the spatial grid of a spatiotemporal box
  * @sqlfn getSpaceTile()
  */
-inline Datum
+Datum
 Stbox_get_space_tile(PG_FUNCTION_ARGS)
 {
   return Stbox_get_space_time_tile_common(fcinfo, true, false);
@@ -298,7 +299,7 @@ PG_FUNCTION_INFO_V1(Stbox_get_time_tile);
  * @brief Return a tile in the temporal grid of a spatiotemporal box
  * @sqlfn getTimeTile()
  */
-inline Datum
+Datum
 Stbox_get_time_tile(PG_FUNCTION_ARGS)
 {
   return Stbox_get_space_time_tile_common(fcinfo, false, true);
@@ -311,7 +312,7 @@ PG_FUNCTION_INFO_V1(Stbox_get_space_time_tile);
  * @brief Return a tile in the spatiotemporal grid of a spatiotemporal box
  * @sqlfn getSpaceTimeTile()
  */
-inline Datum
+Datum
 Stbox_get_space_time_tile(PG_FUNCTION_ARGS)
 {
   return Stbox_get_space_time_tile_common(fcinfo, true, true);
@@ -365,7 +366,7 @@ PG_FUNCTION_INFO_V1(Tgeo_space_boxes);
  * to a spatial grid
  * @sqlfn spaceBoxes()
  */
-inline Datum
+Datum
 Tgeo_space_boxes(PG_FUNCTION_ARGS)
 {
   return Tgeo_space_time_boxes_common(fcinfo, true, false);
@@ -379,7 +380,7 @@ PG_FUNCTION_INFO_V1(Tgeo_time_boxes);
  * to time bins
  * @sqlfn timeBoxes()
  */
-inline Datum
+Datum
 Tgeo_time_boxes(PG_FUNCTION_ARGS)
 {
   return Tgeo_space_time_boxes_common(fcinfo, false, true);
@@ -393,7 +394,7 @@ PG_FUNCTION_INFO_V1(Tgeo_space_time_boxes);
  * respect to a spatiotemporal grid
  * @sqlfn spaceTimeBoxes()
  */
-inline Datum
+Datum
 Tgeo_space_time_boxes(PG_FUNCTION_ARGS)
 {
   return Tgeo_space_time_boxes_common(fcinfo, true, true);
@@ -515,7 +516,7 @@ PG_FUNCTION_INFO_V1(Tgeo_space_split);
  * @brief Return a temporal geo split with respect to a spatial grid
  * @sqlfn spaceSplit()
  */
-inline Datum
+Datum
 Tgeo_space_split(PG_FUNCTION_ARGS)
 {
   return Tgeo_space_time_split_common(fcinfo, false);
@@ -528,7 +529,7 @@ PG_FUNCTION_INFO_V1(Tgeo_space_time_split);
  * @brief Return a temporal geo split with respect to a spatiotemporal grid
  * @sqlfn spaceTimeSplit()
  */
-inline Datum
+Datum
 Tgeo_space_time_split(PG_FUNCTION_ARGS)
 {
   return Tgeo_space_time_split_common(fcinfo, true);

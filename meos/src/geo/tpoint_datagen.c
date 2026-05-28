@@ -205,6 +205,7 @@ create_trip(LWLINE **lines, const double *maxSpeeds, const int *categories,
         "      Edge %d", i + 1);
     /* Get the information about the current edge */
     double maxSpeedEdge = maxSpeeds[i];
+    int category = categories[i];
     noPoints = lines[i]->points->npoints;
     /* Loop for every segment of the current edge */
     for (j = 1; j < noPoints; j++)
@@ -379,7 +380,6 @@ create_trip(LWLINE **lines, const double *maxSpeeds, const int *categories,
      * current edge and the next one */
     if (curSpeed > P_EPSILON_SPEED && i < noEdges - 1)
     {
-      int category = categories[i];
       int nextCategory = categories[i + 1];
       if (gsl_rng_uniform(gsl_get_generation_rng()) <= 
         P_DEST_STOPPROB[category][nextCategory])
@@ -426,7 +426,7 @@ create_trip(LWLINE **lines, const double *maxSpeeds, const int *categories,
   }
 
   for (i = 0; i < noEdges; i++)
-    lwgeom_free(lwline_as_lwgeom(lines[i]));
+    lwgeom_free((LWGEOM *) lines[i]);
   pfree(lines);
   return result;
 }
