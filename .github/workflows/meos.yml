@@ -44,7 +44,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Debug -DMEOS=on ..
+          cmake -DCMAKE_BUILD_TYPE=Debug -DMEOS=on -DCBUFFER=on ..
           make -j $(nproc)
           sudo make install
 

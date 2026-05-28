@@ -471,11 +471,11 @@ tposeseqset_from_base_tstzspanset(const Pose *pose, const SpanSet *ss,
 
 /**
  * @ingroup meos_pose_conversion
- * @brief Return a geometry point from a temporal pose
+ * @brief Return a temporal geometry point from a temporal pose
  * @param[in] temp Temporal pose
  */
 Temporal *
-tpose_to_tpoint(const Temporal *temp)
+tpose_to_tgeompoint(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_TPOSE(temp, NULL);

@@ -2411,7 +2411,7 @@ shortestline_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
   /* Ensure the validity of the arguments */
   if (! ensure_valid_trgeo_geo(temp, gs) || gserialized_is_empty(gs))
     return NULL;
-  
+
   Temporal *dist = tdistance_trgeo_geo(temp, gs);
   const TInstant *inst = temporal_min_inst_p(dist);
   /* Timestamp t may be at an exclusive bound */
