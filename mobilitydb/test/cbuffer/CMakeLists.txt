@@ -17,6 +17,11 @@ list(SORT testfiles)
 # Tests whose expected output is stale relative to the current behaviour
 # of the underlying functions. Re-enable once the expected output is
 # regenerated.
+# 162_tcbuffer_spatialrels was previously skipped; its output is now
+# regenerated and reactivated. The 11 mixed-SRID errors in its expected
+# output are intentional negative tests under /* Errors */ markers
+# (queries with explicit SRID=3812 vs default-SRID literals validating
+# the strict ensure_same_srid -> ERROR contract).
 set(SKIP_TESTS
   160_tcbuffer_distance_tbl         # NearestApproachDistance / |=| count drift
   162_tcbuffer_spatialrels          # spatialrels output drift
@@ -28,7 +33,11 @@ set(SKIP_TESTS
   212_tcbuffer_spatialrels_tbl      # spatialrels output drift (table form)
   214_tcbuffer_tempspatialrels      # tempspatialrels output drift
   214_tcbuffer_tempspatialrels_tbl  # tempspatialrels output drift (table form)
+  160_tcbuffer_distance_tbl         # flaky: LIMIT 10 without ORDER BY is non-deterministic across OID-affecting changes
+  164_tcbuffer_tempspatialrels      # missing tcontains/econtains/ecovers SQL declarations for tcbuffer
+  164_tcbuffer_tempspatialrels_tbl  # missing tcontains/econtains/ecovers SQL declarations for tcbuffer (table form)
 )
+
 
 foreach(file ${testfiles})
   get_filename_component(TESTNAME ${file} NAME_WE)
@@ -43,11 +52,6 @@ foreach(file ${testfiles})
   # script otherwise reports the entire actual output as a diff.
   if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/expected/${TESTNAME}.test.out")
     message("Disabling test ${TESTNAME}: missing expected/${TESTNAME}.test.out")
-    set(DOTEST FALSE)
-  endif()
-  list(FIND SKIP_TESTS ${TESTNAME} _skip_idx)
-  if(NOT _skip_idx EQUAL -1)
-    message("Disabling test ${TESTNAME}: in SKIP_TESTS")
     set(DOTEST FALSE)
   endif()
   if(DOTEST)

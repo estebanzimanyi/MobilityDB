@@ -243,6 +243,7 @@ extern GSERIALIZED *tcbuffer_trav_area(const Temporal *temp, bool merge_union);
 extern bool tcbuffer_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict, Cbuffer **value);
 extern bool tcbuffer_value_n(const Temporal *temp, int n, Cbuffer **result);
 extern Cbuffer **tcbuffer_values(const Temporal *temp, int *count);
+extern GSERIALIZED *tcbuffer_traversed_area(const Temporal *temp, bool unary_union);
 
 /*****************************************************************************
  * Conversion functions

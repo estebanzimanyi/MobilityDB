@@ -327,6 +327,27 @@ tpcpatch_as_mfjson_sb(stringbuffer_t *sb, const TInstant *inst, int precision)
   stringbuffer_append_len(sb, "]}", 2);
 }
 #endif /* POINTCLOUD */
+#if CBUFFER
+/**
+ * @brief Write into the buffer a circular buffer in the MF-JSON representation
+ */
+static void
+cbuffer_as_json_sb(stringbuffer_t *sb, const Cbuffer *cb, int precision)
+{
+  assert(precision <= OUT_MAX_DOUBLE_PRECISION);
+  GSERIALIZED *gs = cbuffer_point(cb);
+  const POINT2D *pt = GSERIALIZED_POINT2D_P(gs);
+  stringbuffer_append_len(sb, "{\"point\":[", 10);
+  stringbuffer_append_double(sb, pt->x, precision);
+  stringbuffer_append_char(sb, ',');
+  stringbuffer_append_double(sb, pt->y, precision);
+  stringbuffer_append_len(sb, "],\"radius\":", 11);
+  stringbuffer_append_double(sb, cbuffer_radius(cb), precision);
+  stringbuffer_append_char(sb, '}');
+  pfree(gs);
+  return;
+}
+#endif /* CBUFFER */
 
 #if POSE || RGEO
 /**
@@ -602,7 +623,9 @@ bbox_as_mfjson_sb(stringbuffer_t *sb, MeosType temptype, const bboxunion *box,
     case T_TGEOGRAPHY:
     case T_TPOSE:
     case T_TRGEOMETRY:
+#if CBUFFER
     case T_TCBUFFER:
+#endif
       stbox_as_mfjson_sb(sb, (STBox *) box, precision);
       break;
 #if POINTCLOUD
