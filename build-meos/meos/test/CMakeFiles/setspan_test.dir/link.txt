@@ -1,1 +1,0 @@
-/usr/lib/ccache/cc -O3 -DNDEBUG -O3 CMakeFiles/setspan_test.dir/setspan_test.c.o -o setspan_test  -Wl,-rpath,/home/esteban/src/MobilityDB-accumulate/build-meos ../../libmeos.so /usr/lib/x86_64-linux-gnu/libjson-c.so /usr/lib/x86_64-linux-gnu/libgeos_c.so /usr/lib/x86_64-linux-gnu/libproj.so /usr/lib/x86_64-linux-gnu/libgsl.so /usr/lib/x86_64-linux-gnu/libgslcblas.so 
