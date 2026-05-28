@@ -92,10 +92,6 @@ jobs:
             --suppress='*:lwin_wkt_parse.y' \
             --suppress='missingIncludeSystem' \
             --suppress='unmatchedSuppression' \
-            --suppress='preprocessorErrorDirective:*/postgres/*' \
-            --suppress='preprocessorErrorDirective:postgres/*' \
-            -DUINT64_FORMAT='"%llu"' \
-            -DINT64_FORMAT='"%lld"' \
             --xml --xml-version=2 \
             -j "$(nproc)" \
             2> cppcheck.xml || true
