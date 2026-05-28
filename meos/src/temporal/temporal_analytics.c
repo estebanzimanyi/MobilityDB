@@ -486,8 +486,19 @@ tsequenceset_tprecision(const TSequenceSet *ss, const Interval *duration,
     TSequenceSet *proj = tsequenceset_restrict_tstzspan(ss, &p, REST_AT);
     if (proj)
     {
-      Datum value = twavg ? Float8GetDatum(tnumber_twavg((Temporal *) proj)) :
-        PointerGetDatum(tpoint_twcentroid((Temporal *) proj));
+      Datum value;
+#if POSE
+      if (ss->temptype == T_TPOSE)
+        value = pose_tprecision_value((const Temporal *) proj);
+      else
+#endif
+#if CBUFFER
+      if (ss->temptype == T_TCBUFFER)
+        value = tcbuffer_tprecision_value((const Temporal *) proj);
+      else
+#endif
+        value = twavg ? Float8GetDatum(tnumber_twavg((Temporal *) proj)) :
+          PointerGetDatum(tpoint_twcentroid((Temporal *) proj));
       /* We keep only the first instant since the tprecision operation amounts
        * to a granularity change */
       instants[ninsts++] = tinstant_make(value, temptype_out, lower);
