@@ -577,7 +577,7 @@ pose_wkt_out(const Pose *pose, bool extended, int maxdd)
     snprintf(result, len, "Pose(%s,%s)", wkt_point, theta);
     pfree(theta);
   }
-  lwgeom_free(geom); pfree(wkt_point);
+  lwgeom_free(geom); pfree(gs); pfree(wkt_point);
   return result;
 }
 
@@ -1202,9 +1202,11 @@ pose_transform_pipeline(const Pose *pose, const char *pipeline,
 Datum
 pose_distance(Datum pose1, Datum pose2)
 {
-  Datum geom1 = PosePGetDatum(pose_to_point(DatumGetPoseP(pose1)));
-  Datum geom2 = PosePGetDatum(pose_to_point(DatumGetPoseP(pose2)));
-  return datum_pt_distance2d(geom1, geom2);
+  GSERIALIZED *gs1 = pose_to_point(DatumGetPoseP(pose1));
+  GSERIALIZED *gs2 = pose_to_point(DatumGetPoseP(pose2));
+  Datum result = datum_pt_distance2d(PosePGetDatum(gs1), PosePGetDatum(gs2));
+  pfree(gs1); pfree(gs2);
+  return result;
 }
 
 /**

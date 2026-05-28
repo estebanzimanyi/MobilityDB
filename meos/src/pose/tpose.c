@@ -605,8 +605,11 @@ Set *
 tposeinst_points(const TInstant *inst)
 {
   Pose *pose = DatumGetPoseP(tinstant_value_p(inst));
-  Datum value = PointerGetDatum(pose_to_point(pose));
-  return set_make_exp(&value, 1, 1, T_GEOMETRY, ORDER_NO);
+  GSERIALIZED *gs = pose_to_point(pose);
+  Datum value = PointerGetDatum(gs);
+  Set *result = set_make_exp(&value, 1, 1, T_GEOMETRY, ORDER_NO);
+  pfree(gs);
+  return result;
 }
 
 /**
@@ -623,7 +626,11 @@ tposeseq_points(const TSequence *seq)
   }
   datumarr_sort(values, seq->count, T_GEOMETRY);
   int count = datumarr_remove_duplicates(values, seq->count, T_GEOMETRY);
-  return set_make_free(values, count, T_GEOMETRY, ORDER_NO);
+  Set *result = set_make_exp(values, count, count, T_GEOMETRY, ORDER_NO);
+  for (int i = 0; i < seq->count; i++)
+    pfree(DatumGetPointer(values[i]));
+  pfree(values);
+  return result;
 }
 
 /**
@@ -646,7 +653,11 @@ tposeseqset_points(const TSequenceSet *ss)
   }
   datumarr_sort(values, ss->totalcount, T_GEOMETRY);
   int count = datumarr_remove_duplicates(values, ss->totalcount, T_GEOMETRY);
-  return set_make_free(values, count, T_GEOMETRY, ORDER_NO);
+  Set *result = set_make_exp(values, count, count, T_GEOMETRY, ORDER_NO);
+  for (int i = 0; i < ss->totalcount; i++)
+    pfree(DatumGetPointer(values[i]));
+  pfree(values);
+  return result;
 }
 
 /**

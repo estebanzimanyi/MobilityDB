@@ -62,7 +62,7 @@
 void
 trgeoinst_set_stbox(const GSERIALIZED *geom, const TInstant *inst, STBox *box)
 {
-  const Pose *pose = DatumGetPoseP(tinstant_value(inst));
+  const Pose *pose = DatumGetPoseP(tinstant_value_p(inst));
 
   /* Note: zero-fill is required here, just as in heap tuples */
   memset(box, 0, sizeof(STBox));
@@ -127,7 +127,7 @@ trgeoinstarr_static_stbox(const GSERIALIZED *geom, TInstant **instants,
 static void
 trgeoinst_make_pose_stbox(const TInstant *inst, STBox *box)
 {
-  Pose *pose = DatumGetPoseP(tinstant_value(inst));
+  const Pose *pose = DatumGetPoseP(tinstant_value_p(inst));
   box->xmin = box->xmax = pose->data[0];
   box->ymin = box->ymax = pose->data[1];
   if (MEOS_FLAGS_GET_Z(pose->flags))
