@@ -169,7 +169,13 @@ SELECT asEWKT(poseFromHexEWKB(
 </programlisting>
 				</listitem>
 			</itemizedlist>
-		</sect2>
+						<!-- Function names for the operators above -->
+				<indexterm significance="normal"><primary><varname>posesetfrombinary</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>posesetfromewkb</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>posesetfromewkt</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>posesetfromhexwkb</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>posesetfromtext</varname></primary></indexterm>
+</sect2>
 
 		<sect2 xml:id="pose_constructors">
 			<title>Constructors</title>
@@ -754,7 +760,11 @@ SELECT asEWKT(tposeFromHexEWKB(
 </programlisting>
 			</listitem>
 		</itemizedlist>
-	</sect1>
+					<!-- Function names for the operators above -->
+				<indexterm significance="normal"><primary><varname>tposefrombinary</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>tposefromhexwkb</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>tposefrommfjson</varname></primary></indexterm>
+</sect1>
 
 	<sect1 xml:id="tpose_constructors">
 		<title>Constructors</title>
@@ -833,7 +843,9 @@ SELECT asText(tpose(tgeompoint '[POINT(1 1)@2001-01-01, POINT(2 2)@2001-01-02)',
 </programlisting>
 			</listitem>
 		</itemizedlist>
-	</sect1>
+					<!-- Function names for the operators above -->
+				<indexterm significance="normal"><primary><varname>tposeseqsetgaps</varname></primary></indexterm>
+</sect1>
 
 	<sect1 xml:id="tpose_conversions">
 		<title>Conversions</title>
