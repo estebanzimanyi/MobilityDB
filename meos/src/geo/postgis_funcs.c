@@ -1478,14 +1478,13 @@ static char
 meos_call_geos2(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
   char (*func)(const GEOSGeometry *geos1, const GEOSGeometry *geos2))
 {
-  initGEOS(lwnotice, lwgeom_geos_error);
+  meos_initialize_geos();
 
   GEOSGeometry *geos1 = POSTGIS2GEOS(gs1);
   if (! geos1)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "First argument geometry could not be converted to GEOS");
-    finishGEOS();
     return 2;
   }
   GEOSGeometry *geos2 = POSTGIS2GEOS(gs2);
@@ -1494,7 +1493,6 @@ meos_call_geos2(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
     GEOSGeom_destroy(geos1);
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "Second argument geometry could not be converted to GEOS");
-    finishGEOS();
     return 2;
   }
 
@@ -1504,7 +1502,6 @@ meos_call_geos2(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
   if (result == 2)
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "GEOS returned error");
-  finishGEOS();
   return result;
 }
 
@@ -1643,14 +1640,13 @@ geom_relate_pattern(const GSERIALIZED *gs1, const GSERIALIZED *gs2, char *p)
 
   /* TODO handle empty */
 
-  initGEOS(lwnotice, lwgeom_geos_error);
+  meos_initialize_geos();
 
   GEOSGeometry *geos1 = POSTGIS2GEOS(gs1);
   if (!geos1)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "First argument geometry could not be converted to GEOS");
-    finishGEOS();
     return false;
   }
   GEOSGeometry *geos2 = POSTGIS2GEOS(gs2);
@@ -1659,7 +1655,6 @@ geom_relate_pattern(const GSERIALIZED *gs1, const GSERIALIZED *gs2, char *p)
     GEOSGeom_destroy(geos1);
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "Second argument geometry could not be converted to GEOS");
-    finishGEOS();
     return false;
   }
 
@@ -1679,7 +1674,6 @@ geom_relate_pattern(const GSERIALIZED *gs1, const GSERIALIZED *gs2, char *p)
   if (result == 2)
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "GEOSRelatePattern returned error");
-  finishGEOS();
   return (bool) result;
 }
 
@@ -1780,7 +1774,7 @@ geom_array_union(GSERIALIZED **gsarr, int count)
   GEOSGeometry *g = NULL;
   GEOSGeometry *g_union = NULL;
 
-  initGEOS(lwnotice, lwgeom_geos_error);
+  meos_initialize_geos();
 
   /* Collect the non-empty inputs and stuff them into a GEOS collection */
   GEOSGeometry **geoms = palloc(sizeof(GEOSGeometry *) * count);
@@ -1818,7 +1812,6 @@ geom_array_union(GSERIALIZED **gsarr, int count)
       {
         meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
           "One of the geometries in the set could not be converted to GEOS");
-        finishGEOS();
         return NULL;
       }
 
@@ -1837,7 +1830,6 @@ geom_array_union(GSERIALIZED **gsarr, int count)
     {
       meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
         "Could not create GEOS COLLECTION from geometry array");
-      finishGEOS();
       return NULL;
     }
 
@@ -1846,7 +1838,6 @@ geom_array_union(GSERIALIZED **gsarr, int count)
     if (! g_union)
     {
       meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR, "GEOSUnaryUnion");
-      finishGEOS();
       return NULL;
     }
 
@@ -1859,7 +1850,6 @@ geom_array_union(GSERIALIZED **gsarr, int count)
   /* No real geometries in our array, any empties? */
   else
   {
-    finishGEOS();
     /* If it was only empties, we'll return the largest type number */
     if (empty_type > 0)
     {
@@ -1874,7 +1864,6 @@ geom_array_union(GSERIALIZED **gsarr, int count)
   }
 
   pfree(geoms);
-  finishGEOS();
   if (! result)
     /* Union returned a NULL geometry */
     return NULL;
@@ -1916,14 +1905,13 @@ geom_convex_hull(const GSERIALIZED *gs)
 
   int32_t srid = gserialized_get_srid(gs);
 
-  initGEOS(lwnotice, lwgeom_geos_error);
+  meos_initialize_geos();
 
   GEOSGeometry *geos1 = POSTGIS2GEOS(gs);
   if (!geos1)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "First argument geometry could not be converted to GEOS");
-    finishGEOS();
     return NULL;
   }
 
@@ -1934,7 +1922,6 @@ geom_convex_hull(const GSERIALIZED *gs)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "GEOS convexhull() threw an error !");
-    finishGEOS();
     return NULL;
   }
 
@@ -1947,7 +1934,6 @@ geom_convex_hull(const GSERIALIZED *gs)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "convexhull() failed to convert GEOS geometry to LWGEOM");
-    finishGEOS();
     return NULL;
   }
 
@@ -1962,7 +1948,6 @@ geom_convex_hull(const GSERIALIZED *gs)
 
   GSERIALIZED *result = geo_serialize(lwout);
   lwgeom_free(lwout);
-  finishGEOS();
   if (! result)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
@@ -2124,14 +2109,13 @@ geom_buffer(const GSERIALIZED *gs, double size, const char *params)
 
   lwgeom_free(lwg);
 
-  initGEOS(lwnotice, lwgeom_geos_error);
+  meos_initialize_geos();
 
   g1 = POSTGIS2GEOS(gs);
   if (! g1)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "First argument geometry could not be converted to GEOS");
-    finishGEOS();
     return NULL;
   }
 
@@ -2165,7 +2149,6 @@ geom_buffer(const GSERIALIZED *gs, double size, const char *params)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "GEOSBuffer returned error");
-    finishGEOS();
     return NULL;
   }
 
@@ -2173,7 +2156,6 @@ geom_buffer(const GSERIALIZED *gs, double size, const char *params)
 
   GSERIALIZED *result = GEOS2POSTGIS(g3, gserialized_has_z(gs));
   GEOSGeom_destroy(g3);
-  finishGEOS();
   if (! result)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
@@ -2304,7 +2286,7 @@ geo_equals(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   if (VARSIZE(gs1) == VARSIZE(gs2) && ! memcmp(gs1, gs2, VARSIZE(gs1)))
       return 1;
 
-  initGEOS(lwnotice, lwgeom_geos_error);
+  meos_initialize_geos();
 
   GEOSGeometry *geos1 = POSTGIS2GEOS(gs1);
   if (! geos1)
@@ -2312,7 +2294,6 @@ geo_equals(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "First argument geometry could not be converted to GEOS");
     /* Clean up the global context */
-    finishGEOS();
     return -1;
   }
 
@@ -2322,7 +2303,6 @@ geo_equals(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "First argument geometry could not be converted to GEOS");
     GEOSGeom_destroy(geos1);
-    finishGEOS();
     return -1;
   }
 
@@ -2334,11 +2314,9 @@ geo_equals(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "GEOS equals() threw an error !");
-    finishGEOS();
     return -1;
   }
 
-  finishGEOS();
   return result;
 }
 
