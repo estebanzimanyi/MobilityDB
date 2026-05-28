@@ -178,7 +178,7 @@ spanset_find_value(const SpanSet *ss, Datum v, int *loc)
 }
 
 #if MEOS
-bool
+inline bool
 tstzspanset_find_timestamptz(const SpanSet *ss, TimestampTz t, int *loc)
 {
   return spanset_find_value(ss, TimestampTzGetDatum(t), loc);
@@ -1439,7 +1439,7 @@ spanset_eq(const SpanSet *ss1, const SpanSet *ss2)
  * @param[in] ss1,ss2 Span sets
  * @csqlfn #Spanset_ne()
  */
-bool
+inline bool
 spanset_ne(const SpanSet *ss1, const SpanSet *ss2)
 {
   return ! spanset_eq(ss1, ss2);
@@ -1490,7 +1490,7 @@ spanset_cmp(const SpanSet *ss1, const SpanSet *ss2)
  * @param[in] ss1,ss2 Span sets
  * @csqlfn #Spanset_lt()
  */
-bool
+inline bool
 spanset_lt(const SpanSet *ss1, const SpanSet *ss2)
 {
   return spanset_cmp(ss1, ss2) < 0;
@@ -1503,7 +1503,7 @@ spanset_lt(const SpanSet *ss1, const SpanSet *ss2)
  * @param[in] ss1,ss2 Span sets
  * @csqlfn #Spanset_le()
  */
-bool
+inline bool
 spanset_le(const SpanSet *ss1, const SpanSet *ss2)
 {
   return spanset_cmp(ss1, ss2) <= 0;
@@ -1516,7 +1516,7 @@ spanset_le(const SpanSet *ss1, const SpanSet *ss2)
  * @param[in] ss1,ss2 Span sets
  * @csqlfn #Spanset_ge()
  */
-bool
+inline bool
 spanset_ge(const SpanSet *ss1, const SpanSet *ss2)
 {
   return spanset_cmp(ss1, ss2) >= 0;
@@ -1528,7 +1528,7 @@ spanset_ge(const SpanSet *ss1, const SpanSet *ss2)
  * @param[in] ss1,ss2 Span sets
  * @csqlfn #Spanset_gt()
  */
-bool
+inline bool
 spanset_gt(const SpanSet *ss1, const SpanSet *ss2)
 {
   return spanset_cmp(ss1, ss2) > 0;

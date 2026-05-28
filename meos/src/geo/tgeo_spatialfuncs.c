@@ -1813,7 +1813,7 @@ geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms,
     {
       lwerror("Geometry could not be converted to GEOS");
       for (j = 0; j < i; j++)
-        GEOSGeom_destroy_r(ctx, geos_inputs[j]);
+        GEOSGeom_destroy(geos_inputs[j]);
       return NULL;
     }
 
@@ -1825,7 +1825,7 @@ geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms,
     else if (! ensure_same_srid(srid, gserialized_get_srid(geoms[i])))
     {
       for (j = 0; j <= i; j++)
-        GEOSGeom_destroy_r(ctx, geos_inputs[j]);
+        GEOSGeom_destroy(geos_inputs[j]);
       return NULL;
     }
   }
@@ -1849,7 +1849,7 @@ geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms,
   for (i = 0; i < nclusters; ++i)
   {
     result[i] = GEOS2POSTGIS(geos_results[i], is3d);
-    GEOSGeom_destroy_r(ctx, geos_results[i]);
+    GEOSGeom_destroy(geos_results[i]);
   }
   lwfree(geos_results);
   *count = nclusters;

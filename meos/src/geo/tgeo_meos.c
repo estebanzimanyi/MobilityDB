@@ -271,7 +271,7 @@ tgeographyseqset_in(const char *str)
  * @param[in] srid SRID
  * @csqlfn #Temporal_from_mfjson()
  */
-TInstant *
+inline TInstant *
 tgeompointinst_from_mfjson(json_object *mfjson, int32_t srid)
 {
   return tinstant_from_mfjson(mfjson, true, srid, T_TGEOMPOINT);
@@ -285,7 +285,7 @@ tgeompointinst_from_mfjson(json_object *mfjson, int32_t srid)
  * @param[in] srid SRID
  * @csqlfn #Temporal_from_mfjson()
  */
-TInstant *
+inline TInstant *
 tgeogpointinst_from_mfjson(json_object *mfjson, int32_t srid)
 {
   return tinstant_from_mfjson(mfjson, true, srid, T_TGEOGPOINT);
@@ -298,7 +298,7 @@ tgeogpointinst_from_mfjson(json_object *mfjson, int32_t srid)
  * @param[in] srid SRID
  * @csqlfn #Temporal_from_mfjson()
  */
-TInstant *
+inline TInstant *
 tgeometryinst_from_mfjson(json_object *mfjson, int32_t srid)
 {
   return tinstant_from_mfjson(mfjson, true, srid, T_TGEOMETRY);
@@ -311,7 +311,7 @@ tgeometryinst_from_mfjson(json_object *mfjson, int32_t srid)
  * @param[in] srid SRID
  * @csqlfn #Temporal_from_mfjson()
  */
-TInstant *
+inline TInstant *
 tgeographyinst_from_mfjson(json_object *mfjson, int32_t srid)
 {
   return tinstant_from_mfjson(mfjson, true, srid, T_TGEOGRAPHY);
@@ -328,7 +328,7 @@ tgeographyinst_from_mfjson(json_object *mfjson, int32_t srid)
  * @param[in] interp Interpolation
  * @csqlfn #Temporal_from_mfjson()
  */
-TSequence *
+inline TSequence *
 tgeompointseq_from_mfjson(json_object *mfjson, int32_t srid, interpType interp)
 {
   return tsequence_from_mfjson(mfjson, true, srid, T_TGEOMPOINT, interp);
@@ -343,7 +343,7 @@ tgeompointseq_from_mfjson(json_object *mfjson, int32_t srid, interpType interp)
  * @param[in] interp Interpolation
  * @csqlfn #Temporal_from_mfjson()
  */
-TSequence *
+inline TSequence *
 tgeogpointseq_from_mfjson(json_object *mfjson, int32_t srid, interpType interp)
 {
   return tsequence_from_mfjson(mfjson, true, srid, T_TGEOGPOINT, interp);
@@ -357,7 +357,7 @@ tgeogpointseq_from_mfjson(json_object *mfjson, int32_t srid, interpType interp)
  * @param[in] interp Interpolation
  * @csqlfn #Temporal_from_mfjson()
  */
-TSequence *
+inline TSequence *
 tgeometryseq_from_mfjson(json_object *mfjson, int32_t srid, interpType interp)
 {
   return tsequence_from_mfjson(mfjson, true, srid, T_TGEOMETRY, interp);
@@ -371,7 +371,7 @@ tgeometryseq_from_mfjson(json_object *mfjson, int32_t srid, interpType interp)
  * @param[in] interp Interpolation
  * @csqlfn #Temporal_from_mfjson()
  */
-TSequence *
+inline TSequence *
 tgeographyseq_from_mfjson(json_object *mfjson, int32_t srid, interpType interp)
 {
   return tsequence_from_mfjson(mfjson, true, srid, T_TGEOGRAPHY, interp);
@@ -388,7 +388,7 @@ tgeographyseq_from_mfjson(json_object *mfjson, int32_t srid, interpType interp)
  * @param[in] interp Interpolation
  * @csqlfn #Temporal_from_mfjson()
  */
-TSequenceSet *
+inline TSequenceSet *
 tgeompointseqset_from_mfjson(json_object *mfjson, int32_t srid, interpType interp)
 {
   return tsequenceset_from_mfjson(mfjson, true, srid, T_TGEOMPOINT, interp);
@@ -403,7 +403,7 @@ tgeompointseqset_from_mfjson(json_object *mfjson, int32_t srid, interpType inter
  * @param[in] interp Interpolation
  * @csqlfn #Temporal_from_mfjson()
  */
-TSequenceSet *
+inline TSequenceSet *
 tgeogpointseqset_from_mfjson(json_object *mfjson, int32_t srid, interpType interp)
 {
   return tsequenceset_from_mfjson(mfjson, true, srid, T_TGEOGPOINT, interp);
@@ -418,7 +418,7 @@ tgeogpointseqset_from_mfjson(json_object *mfjson, int32_t srid, interpType inter
  * @param[in] interp Interpolation
  * @csqlfn #Temporal_from_mfjson()
  */
-TSequenceSet *
+inline TSequenceSet *
 tgeometryseqset_from_mfjson(json_object *mfjson, int32_t srid, interpType interp)
 {
   return tsequenceset_from_mfjson(mfjson, true, srid, T_TGEOMETRY, interp);
@@ -433,7 +433,7 @@ tgeometryseqset_from_mfjson(json_object *mfjson, int32_t srid, interpType interp
  * @param[in] interp Interpolation
  * @csqlfn #Temporal_from_mfjson()
  */
-TSequenceSet *
+inline TSequenceSet *
 tgeographyseqset_from_mfjson(json_object *mfjson, int32_t srid, interpType interp)
 {
   return tsequenceset_from_mfjson(mfjson, true, srid, T_TGEOGRAPHY, interp);
@@ -448,7 +448,7 @@ tgeographyseqset_from_mfjson(json_object *mfjson, int32_t srid, interpType inter
  * @return On error return @p NULL
  * @see #temporal_from_mfjson()
  */
-Temporal *
+inline Temporal *
 tgeompoint_from_mfjson(const char *mfjson)
 {
   return temporal_from_mfjson(mfjson, T_TGEOMPOINT);
@@ -461,7 +461,7 @@ tgeompoint_from_mfjson(const char *mfjson)
  * @return On error return @p NULL
  * @see #temporal_from_mfjson()
  */
-Temporal *
+inline Temporal *
 tgeogpoint_from_mfjson(const char *mfjson)
 {
   return temporal_from_mfjson(mfjson, T_TGEOGPOINT);
@@ -473,7 +473,7 @@ tgeogpoint_from_mfjson(const char *mfjson)
  * @return On error return @p NULL
  * @see #temporal_from_mfjson()
  */
-Temporal *
+inline Temporal *
 tgeometry_from_mfjson(const char *mfjson)
 {
   return temporal_from_mfjson(mfjson, T_TGEOMETRY);
@@ -486,7 +486,7 @@ tgeometry_from_mfjson(const char *mfjson)
  * @return On error return @p NULL
  * @see #temporal_from_mfjson()
  */
-Temporal *
+inline Temporal *
 tgeography_from_mfjson(const char *mfjson)
 {
   return temporal_from_mfjson(mfjson, T_TGEOGRAPHY);
@@ -679,7 +679,7 @@ tgeo_from_base_temp_int(const GSERIALIZED *gs, const Temporal *temp,
  * @param[in] gs Value
  * @param[in] temp Temporal value
  */
-Temporal *
+inline Temporal *
 tpoint_from_base_temp(const GSERIALIZED *gs, const Temporal *temp)
 {
   return tgeo_from_base_temp_int(gs, temp, true);
@@ -692,7 +692,7 @@ tpoint_from_base_temp(const GSERIALIZED *gs, const Temporal *temp)
  * @param[in] gs Value
  * @param[in] temp Temporal value
  */
-Temporal *
+inline Temporal *
 tgeo_from_base_temp(const GSERIALIZED *gs, const Temporal *temp)
 {
   return tgeo_from_base_temp_int(gs, temp, false);

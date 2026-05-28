@@ -71,16 +71,15 @@ extern void meos_initialize_geos(void);
 
 /* Display a notice and a WKT representation of a geometry
  * at the given debug level */
-/* MEOS */ #define LWDEBUGGEOS(level, geom, msg) \
-/* MEOS */   if (POSTGIS_DEBUG_LEVEL >= level) \
-/* MEOS */   do { \
-/* MEOS */ 		GEOSContextHandle_t _ctx = lwgeom_geos_context(); \
-/* MEOS */ 		GEOSWKTWriter *wktwriter = GEOSWKTWriter_create_r(_ctx); \
-/* MEOS */ 		char *wkt = GEOSWKTWriter_write_r(_ctx, wktwriter, (geom)); \
-/* MEOS */ 		LWDEBUGF(1, msg " (GEOS): %s", wkt); \
-/* MEOS */ 		GEOSFree_r(_ctx, wkt); \
-/* MEOS */ 		GEOSWKTWriter_destroy_r(_ctx, wktwriter); \
-/* MEOS */   } while (0);
+#define LWDEBUGGEOS(level, geom, msg) \
+  if (POSTGIS_DEBUG_LEVEL >= level) \
+  do { \
+		GEOSWKTWriter *wktwriter = GEOSWKTWriter_create(); \
+		char *wkt = GEOSWKTWriter_write(wktwriter, (geom)); \
+		LWDEBUGF(1, msg " (GEOS): %s", wkt); \
+		GEOSFree(wkt); \
+		GEOSWKTWriter_destroy(wktwriter); \
+  } while (0);
 
 #else /* POSTGIS_DEBUG_LEVEL <= 0 */
 

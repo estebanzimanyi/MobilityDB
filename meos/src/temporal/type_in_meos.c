@@ -69,7 +69,7 @@ tbigintinst_from_mfjson(json_object *mfjson)
  * @param[in] mfjson MFJSON object
  * @csqlfn #Temporal_from_mfjson()
  */
-TInstant *
+inline TInstant *
 tboolinst_from_mfjson(json_object *mfjson)
 {
   return tinstant_from_mfjson(mfjson, false, 0, T_TBOOL);
@@ -81,7 +81,7 @@ tboolinst_from_mfjson(json_object *mfjson)
  * @param[in] mfjson MFJSON object
  * @csqlfn #Temporal_from_mfjson()
  */
-TInstant *
+inline TInstant *
 tintinst_from_mfjson(json_object *mfjson)
 {
   return tinstant_from_mfjson(mfjson, false, 0, T_TINT);
@@ -93,7 +93,7 @@ tintinst_from_mfjson(json_object *mfjson)
  * @param[in] mfjson MFJSON object
  * @csqlfn #Temporal_from_mfjson()
  */
-TInstant *
+inline TInstant *
 tfloatinst_from_mfjson(json_object *mfjson)
 {
   return tinstant_from_mfjson(mfjson, false, 0, T_TFLOAT);
@@ -105,7 +105,7 @@ tfloatinst_from_mfjson(json_object *mfjson)
  * @param[in] mfjson MFJSON object
  * @csqlfn #Temporal_from_mfjson()
  */
-TInstant *
+inline TInstant *
 ttextinst_from_mfjson(json_object *mfjson)
 {
   return tinstant_from_mfjson(mfjson, false, 0, T_TTEXT);
@@ -132,7 +132,7 @@ tbigintseq_from_mfjson(json_object *mfjson)
  * @param[in] mfjson MFJSON object
  * @csqlfn #Temporal_from_mfjson()
  */
-TSequence *
+inline TSequence *
 tboolseq_from_mfjson(json_object *mfjson)
 {
   return tsequence_from_mfjson(mfjson, false, 0, T_TBOOL, STEP);
@@ -144,7 +144,7 @@ tboolseq_from_mfjson(json_object *mfjson)
  * @param[in] mfjson MFJSON object
  * @csqlfn #Temporal_from_mfjson()
  */
-TSequence *
+inline TSequence *
 tintseq_from_mfjson(json_object *mfjson)
 {
   return tsequence_from_mfjson(mfjson, false, 0, T_TINT, STEP);
@@ -157,7 +157,7 @@ tintseq_from_mfjson(json_object *mfjson)
  * @param[in] interp Interpolation
  * @csqlfn #Temporal_from_mfjson()
  */
-TSequence *
+inline TSequence *
 tfloatseq_from_mfjson(json_object *mfjson, interpType interp)
 {
   return tsequence_from_mfjson(mfjson, false, 0, T_TFLOAT, interp);
@@ -169,7 +169,7 @@ tfloatseq_from_mfjson(json_object *mfjson, interpType interp)
  * @param[in] mfjson MFJSON object
  * @csqlfn #Temporal_from_mfjson()
  */
-TSequence *
+inline TSequence *
 ttextseq_from_mfjson(json_object *mfjson)
 {
   return tsequence_from_mfjson(mfjson, false, 0, T_TTEXT, STEP);
@@ -184,7 +184,7 @@ ttextseq_from_mfjson(json_object *mfjson)
  * @param[in] mfjson MFJSON object
  * @csqlfn #Temporal_from_mfjson()
  */
-TSequenceSet *
+inline TSequenceSet *
 tboolseqset_from_mfjson(json_object *mfjson)
 {
   return tsequenceset_from_mfjson(mfjson, false, 0, T_TBOOL, STEP);
@@ -197,7 +197,7 @@ tboolseqset_from_mfjson(json_object *mfjson)
  * @param[in] mfjson MFJSON object
  * @csqlfn #Temporal_from_mfjson()
  */
-TSequenceSet *
+inline TSequenceSet *
 tintseqset_from_mfjson(json_object *mfjson)
 {
   return tsequenceset_from_mfjson(mfjson, false, 0, T_TINT, STEP);
@@ -223,7 +223,7 @@ tbigintseqset_from_mfjson(json_object *mfjson)
  * @param[in] interp Interpolation
  * @csqlfn #Temporal_from_mfjson()
  */
-TSequenceSet *
+inline TSequenceSet *
 tfloatseqset_from_mfjson(json_object *mfjson, interpType interp)
 {
   return tsequenceset_from_mfjson(mfjson, false, 0, T_TFLOAT, interp);
@@ -235,7 +235,7 @@ tfloatseqset_from_mfjson(json_object *mfjson, interpType interp)
  * @param[in] mfjson MFJSON object
  * @csqlfn #Temporal_from_mfjson()
  */
-TSequenceSet *
+inline TSequenceSet *
 ttextseqset_from_mfjson(json_object *mfjson)
 {
   return tsequenceset_from_mfjson(mfjson, false, 0, T_TTEXT, STEP);
@@ -250,7 +250,7 @@ ttextseqset_from_mfjson(json_object *mfjson)
  * @return On error return @p NULL
  * @see #temporal_from_mfjson()
  */
-Temporal *
+inline Temporal *
 tbool_from_mfjson(const char *mfjson)
 {
   return temporal_from_mfjson(mfjson, T_TBOOL);
@@ -263,7 +263,7 @@ tbool_from_mfjson(const char *mfjson)
  * @return On error return @p NULL
  * @see #temporal_from_mfjson()
  */
-Temporal *
+inline Temporal *
 tint_from_mfjson(const char *mfjson)
 {
   return temporal_from_mfjson(mfjson, T_TINT);

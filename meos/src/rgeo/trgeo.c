@@ -220,7 +220,7 @@ trgeo_wkt_out(const Temporal *temp, int maxdd, bool extended)
  * @param[in] temp Temporal rigid geometry
  * @param[in] maxdd Maximum number of decimal digits
  */
-char *
+inline char *
 trgeo_as_text(const Temporal *temp, int maxdd)
 {
   return trgeo_wkt_out(temp, maxdd, false);
@@ -233,7 +233,7 @@ trgeo_as_text(const Temporal *temp, int maxdd)
  * @param[in] temp Temporal rigid geometry
  * @param[in] maxdd Maximum number of decimal digits
  */
-char *
+inline char *
 trgeo_as_ewkt(const Temporal *temp, int maxdd)
 {
   return trgeo_wkt_out(temp, maxdd, true);
@@ -1154,7 +1154,7 @@ trgeometry_restrict_values(const Temporal *temp, const Set *s, bool atfunc)
  * @param[in] s Set of values
  * @csqlfn #Temporal_at_values()
  */
-Temporal *
+inline Temporal *
 trgeo_at_values(const Temporal *temp, const Set *s)
 {
   return trgeometry_restrict_values(temp, s, REST_AT);
@@ -1168,7 +1168,7 @@ trgeo_at_values(const Temporal *temp, const Set *s)
  * @csqlfn #Temporal_minus_values()
  * @param[in] s Set of values
  */
-Temporal *
+inline Temporal *
 trgeo_minus_values(const Temporal *temp, const Set *s)
 {
   return trgeometry_restrict_values(temp, s, REST_MINUS);
@@ -1208,7 +1208,7 @@ trgeometry_restrict_timestamptz(const Temporal *temp, TimestampTz t, bool atfunc
  * @param[in] t Timestamptz
  * @csqlfn #Temporal_at_timestamptz()
  */
-Temporal *
+inline Temporal *
 trgeo_at_timestamptz(const Temporal *temp, TimestampTz t)
 {
   return trgeometry_restrict_timestamptz(temp, t, REST_AT);
@@ -1222,7 +1222,7 @@ trgeo_at_timestamptz(const Temporal *temp, TimestampTz t)
  * @param[in] t Timestamptz
  * @csqlfn #Temporal_minus_timestamptz()
  */
-Temporal *
+inline Temporal *
 trgeo_minus_timestamptz(const Temporal *temp, TimestampTz t)
 {
   return trgeometry_restrict_timestamptz(temp, t, REST_MINUS);
@@ -1261,7 +1261,7 @@ trgeometry_restrict_tstzset(const Temporal *temp, const Set *s, bool atfunc)
  * @param[in] s Set
  * @csqlfn #Temporal_at_tstzspanset()
  */
-Temporal *
+inline Temporal *
 trgeo_at_tstzset(const Temporal *temp, const Set *s)
 {
   return trgeometry_restrict_tstzset(temp, s, REST_AT);
@@ -1275,7 +1275,7 @@ trgeo_at_tstzset(const Temporal *temp, const Set *s)
  * @param[in] s Set
  * @csqlfn #Temporal_minus_tstzspanset()
  */
-Temporal *
+inline Temporal *
 trgeo_minus_tstzset(const Temporal *temp, const Set *s)
 {
   return trgeometry_restrict_tstzset(temp, s, REST_MINUS);
@@ -1314,7 +1314,7 @@ trgeometry_restrict_tstzspan(const Temporal *temp, const Span *s, bool atfunc)
  * @param[in] s Span
  * @csqlfn #Temporal_at_tstzspan()
  */
-Temporal *
+inline Temporal *
 trgeo_at_tstzspan(const Temporal *temp, const Span *s)
 {
   return trgeometry_restrict_tstzspan(temp, s, REST_AT);
@@ -1328,7 +1328,7 @@ trgeo_at_tstzspan(const Temporal *temp, const Span *s)
  * @param[in] s Span
  * @csqlfn #Temporal_minus_tstzspan()
  */
-Temporal *
+inline Temporal *
 trgeo_minus_tstzspan(const Temporal *temp, const Span *s)
 {
   return trgeometry_restrict_tstzspan(temp, s, REST_MINUS);
@@ -1368,7 +1368,7 @@ trgeometry_restrict_tstzspanset(const Temporal *temp, const SpanSet *ss,
  * @param[in] ss Span set
  * @csqlfn #Temporal_at_tstzspanset()
  */
-Temporal *
+inline Temporal *
 trgeo_at_tstzspanset(const Temporal *temp, const SpanSet *ss)
 {
   return trgeometry_restrict_tstzspanset(temp, ss, REST_AT);
@@ -1382,7 +1382,7 @@ trgeo_at_tstzspanset(const Temporal *temp, const SpanSet *ss)
  * @param[in] ss Span set
  * @csqlfn #Temporal_minus_tstzspanset()
  */
-Temporal *
+inline Temporal *
 trgeo_minus_tstzspanset(const Temporal *temp, const SpanSet *ss)
 {
   return trgeometry_restrict_tstzspanset(temp, ss, REST_MINUS);

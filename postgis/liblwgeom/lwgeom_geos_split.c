@@ -64,7 +64,7 @@ lwline_split_by_line(const LWLINE* lwline_in, const LWGEOM* blade_in)
 	 *      -> Return a collection of all elements resulting from the split
 	 */
 
-	GEOSContextHandle_t ctx = lwgeom_geos_context(); /* MEOS */
+	initGEOS(lwgeom_geos_error, lwgeom_geos_error);
 
 	g1 = LWGEOM2GEOS((LWGEOM*)lwline_in, 0);
 	if ( ! g1 )
@@ -75,7 +75,7 @@ lwline_split_by_line(const LWLINE* lwline_in, const LWGEOM* blade_in)
 	g2 = LWGEOM2GEOS(blade_in, 0);
 	if ( ! g2 )
 	{
-		GEOSGeom_destroy_r(ctx, g1);
+		GEOSGeom_destroy(g1);
 		lwerror("LWGEOM2GEOS: %s", lwgeom_geos_errmsg);
 		return NULL;
 	}
@@ -83,11 +83,11 @@ lwline_split_by_line(const LWLINE* lwline_in, const LWGEOM* blade_in)
 	/* If blade is a polygon, pick its boundary */
 	if ( blade_in->type == POLYGONTYPE || blade_in->type == MULTIPOLYGONTYPE )
 	{
-		gdiff = GEOSBoundary_r(ctx, g2);
-		GEOSGeom_destroy_r(ctx, g2);
+		gdiff = GEOSBoundary(g2);
+		GEOSGeom_destroy(g2);
 		if ( ! gdiff )
 		{
-			GEOSGeom_destroy_r(ctx, g1);
+			GEOSGeom_destroy(g1);
 			lwerror("GEOSBoundary: %s", lwgeom_geos_errmsg);
 			return NULL;
 		}
@@ -95,26 +95,26 @@ lwline_split_by_line(const LWLINE* lwline_in, const LWGEOM* blade_in)
 	}
 
 	/* If interior intersection is linear we can't split */
-	ret = GEOSRelatePattern_r(ctx, g1, g2, "1********");
+	ret = GEOSRelatePattern(g1, g2, "1********");
 	if ( 2 == ret )
 	{
 		lwerror("GEOSRelatePattern: %s", lwgeom_geos_errmsg);
-		GEOSGeom_destroy_r(ctx, g1);
-		GEOSGeom_destroy_r(ctx, g2);
+		GEOSGeom_destroy(g1);
+		GEOSGeom_destroy(g2);
 		return NULL;
 	}
 	if ( ret )
 	{
-		GEOSGeom_destroy_r(ctx, g1);
-		GEOSGeom_destroy_r(ctx, g2);
+		GEOSGeom_destroy(g1);
+		GEOSGeom_destroy(g2);
 		lwerror("Splitter line has linear intersection with input");
 		return NULL;
 	}
 
 
-	gdiff = GEOSDifference_r(ctx, g1,g2);
-	GEOSGeom_destroy_r(ctx, g1);
-	GEOSGeom_destroy_r(ctx, g2);
+	gdiff = GEOSDifference(g1,g2);
+	GEOSGeom_destroy(g1);
+	GEOSGeom_destroy(g2);
 	if (gdiff == NULL)
 	{
 		lwerror("GEOSDifference: %s", lwgeom_geos_errmsg);
@@ -122,7 +122,7 @@ lwline_split_by_line(const LWLINE* lwline_in, const LWGEOM* blade_in)
 	}
 
 	diff = GEOS2LWGEOM(gdiff, FLAGS_GET_Z(lwline_in->flags));
-	GEOSGeom_destroy_r(ctx, gdiff);
+	GEOSGeom_destroy(gdiff);
 	if (NULL == diff)
 	{
 		lwerror("GEOS2LWGEOM: %s", lwgeom_geos_errmsg);
@@ -368,7 +368,7 @@ lwpoly_split_by_line(const LWPOLY* lwpoly_in, const LWGEOM* blade_in)
 	 *      -> Return a collection of all elements resulting from the split
 	 */
 
-	GEOSContextHandle_t ctx = lwgeom_geos_context(); /* MEOS */
+	initGEOS(lwgeom_geos_error, lwgeom_geos_error);
 
 	g1 = LWGEOM2GEOS((LWGEOM*)lwpoly_in, 0);
 	if ( NULL == g1 )
@@ -376,10 +376,10 @@ lwpoly_split_by_line(const LWPOLY* lwpoly_in, const LWGEOM* blade_in)
 		lwerror("LWGEOM2GEOS: %s", lwgeom_geos_errmsg);
 		return NULL;
 	}
-	g1_bounds = GEOSBoundary_r(ctx, g1);
+	g1_bounds = GEOSBoundary(g1);
 	if ( NULL == g1_bounds )
 	{
-		GEOSGeom_destroy_r(ctx, g1);
+		GEOSGeom_destroy(g1);
 		lwerror("GEOSBoundary: %s", lwgeom_geos_errmsg);
 		return NULL;
 	}
@@ -387,41 +387,41 @@ lwpoly_split_by_line(const LWPOLY* lwpoly_in, const LWGEOM* blade_in)
 	g2 = LWGEOM2GEOS(blade_in, 0);
 	if ( NULL == g2 )
 	{
-		GEOSGeom_destroy_r(ctx, g1);
-		GEOSGeom_destroy_r(ctx, g1_bounds);
+		GEOSGeom_destroy(g1);
+		GEOSGeom_destroy(g1_bounds);
 		lwerror("LWGEOM2GEOS: %s", lwgeom_geos_errmsg);
 		return NULL;
 	}
 
-	vgeoms[0] = GEOSUnion_r(ctx, g1_bounds, g2);
+	vgeoms[0] = GEOSUnion(g1_bounds, g2);
 	if ( NULL == vgeoms[0] )
 	{
-		GEOSGeom_destroy_r(ctx, g1);
-		GEOSGeom_destroy_r(ctx, g2);
-		GEOSGeom_destroy_r(ctx, g1_bounds);
+		GEOSGeom_destroy(g1);
+		GEOSGeom_destroy(g2);
+		GEOSGeom_destroy(g1_bounds);
 		lwerror("GEOSUnion: %s", lwgeom_geos_errmsg);
 		return NULL;
 	}
 
-	polygons = GEOSPolygonize_r(ctx, vgeoms, 1);
+	polygons = GEOSPolygonize(vgeoms, 1);
 	if ( NULL == polygons )
 	{
-		GEOSGeom_destroy_r(ctx, g1);
-		GEOSGeom_destroy_r(ctx, g2);
-		GEOSGeom_destroy_r(ctx, g1_bounds);
-		GEOSGeom_destroy_r(ctx, (GEOSGeometry*)vgeoms[0]);
+		GEOSGeom_destroy(g1);
+		GEOSGeom_destroy(g2);
+		GEOSGeom_destroy(g1_bounds);
+		GEOSGeom_destroy((GEOSGeometry*)vgeoms[0]);
 		lwerror("GEOSPolygonize: %s", lwgeom_geos_errmsg);
 		return NULL;
 	}
 
 #ifndef NDEBUG
-	if ( GEOSGeomTypeId_r(ctx, polygons) != COLLECTIONTYPE )
+	if ( GEOSGeomTypeId(polygons) != COLLECTIONTYPE )
 	{
-		GEOSGeom_destroy_r(ctx, g1);
-		GEOSGeom_destroy_r(ctx, g2);
-		GEOSGeom_destroy_r(ctx, g1_bounds);
-		GEOSGeom_destroy_r(ctx, (GEOSGeometry*)vgeoms[0]);
-		GEOSGeom_destroy_r(ctx, polygons);
+		GEOSGeom_destroy(g1);
+		GEOSGeom_destroy(g2);
+		GEOSGeom_destroy(g1_bounds);
+		GEOSGeom_destroy((GEOSGeometry*)vgeoms[0]);
+		GEOSGeom_destroy(polygons);
 		lwerror("%s [%d] Unexpected return from GEOSpolygonize", __FILE__, __LINE__);
 		return 0;
 	}
@@ -431,7 +431,7 @@ lwpoly_split_by_line(const LWPOLY* lwpoly_in, const LWGEOM* blade_in)
 	 * the ones which are in holes of the original
 	 * geometries and return the rest in a collection
 	 */
-	n = GEOSGetNumGeometries_r(ctx, polygons);
+	n = GEOSGetNumGeometries(polygons);
 	out = lwcollection_construct_empty(COLLECTIONTYPE, lwpoly_in->srid,
 				     hasZ, 0);
 	/* Allocate space for all polys */
@@ -440,35 +440,35 @@ lwpoly_split_by_line(const LWPOLY* lwpoly_in, const LWGEOM* blade_in)
 	for (i=0; i<n; ++i)
 	{
 		GEOSGeometry* pos; /* point on surface */
-		const GEOSGeometry* p = GEOSGetGeometryN_r(ctx, polygons, i);
+		const GEOSGeometry* p = GEOSGetGeometryN(polygons, i);
 		int contains;
 
-		pos = GEOSPointOnSurface_r(ctx, p);
+		pos = GEOSPointOnSurface(p);
 		if ( ! pos )
 		{
-			GEOSGeom_destroy_r(ctx, g1);
-			GEOSGeom_destroy_r(ctx, g2);
-			GEOSGeom_destroy_r(ctx, g1_bounds);
-			GEOSGeom_destroy_r(ctx, (GEOSGeometry*)vgeoms[0]);
-			GEOSGeom_destroy_r(ctx, polygons);
+			GEOSGeom_destroy(g1);
+			GEOSGeom_destroy(g2);
+			GEOSGeom_destroy(g1_bounds);
+			GEOSGeom_destroy((GEOSGeometry*)vgeoms[0]);
+			GEOSGeom_destroy(polygons);
 			lwerror("GEOSPointOnSurface: %s", lwgeom_geos_errmsg);
 			return NULL;
 		}
 
-		contains = GEOSContains_r(ctx, g1, pos);
+		contains = GEOSContains(g1, pos);
 		if ( 2 == contains )
 		{
-			GEOSGeom_destroy_r(ctx, g1);
-			GEOSGeom_destroy_r(ctx, g2);
-			GEOSGeom_destroy_r(ctx, g1_bounds);
-			GEOSGeom_destroy_r(ctx, (GEOSGeometry*)vgeoms[0]);
-			GEOSGeom_destroy_r(ctx, polygons);
-			GEOSGeom_destroy_r(ctx, pos);
+			GEOSGeom_destroy(g1);
+			GEOSGeom_destroy(g2);
+			GEOSGeom_destroy(g1_bounds);
+			GEOSGeom_destroy((GEOSGeometry*)vgeoms[0]);
+			GEOSGeom_destroy(polygons);
+			GEOSGeom_destroy(pos);
 			lwerror("GEOSContains: %s", lwgeom_geos_errmsg);
 			return NULL;
 		}
 
-		GEOSGeom_destroy_r(ctx, pos);
+		GEOSGeom_destroy(pos);
 
 		if ( 0 == contains )
 		{
@@ -481,11 +481,11 @@ lwpoly_split_by_line(const LWPOLY* lwpoly_in, const LWGEOM* blade_in)
 		out->geoms[out->ngeoms++] = GEOS2LWGEOM(p, hasZ);
 	}
 
-	GEOSGeom_destroy_r(ctx, g1);
-	GEOSGeom_destroy_r(ctx, g2);
-	GEOSGeom_destroy_r(ctx, g1_bounds);
-	GEOSGeom_destroy_r(ctx, (GEOSGeometry*)vgeoms[0]);
-	GEOSGeom_destroy_r(ctx, polygons);
+	GEOSGeom_destroy(g1);
+	GEOSGeom_destroy(g2);
+	GEOSGeom_destroy(g1_bounds);
+	GEOSGeom_destroy((GEOSGeometry*)vgeoms[0]);
+	GEOSGeom_destroy(polygons);
 
 	return (LWGEOM*)out;
 }
