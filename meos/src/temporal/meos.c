@@ -42,6 +42,8 @@
 #include <gsl/gsl_randist.h>
 /* Proj */
 #include <proj.h>
+/* PostGIS */
+#include <lwgeom_geos.h>
 /* MEOS */
 #include <meos.h>
 
@@ -593,6 +595,8 @@ meos_initialize(void)
    * NULL handler (symmetric with the PG backend's mobilitydb_init). */
   meos_initialize_pointcloud();
 #endif
+  /* Initialize GEOS — exactly once per process via pthread_once */
+  meos_initialize_geos();
   return;
 }
 
