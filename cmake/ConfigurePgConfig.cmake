@@ -25,6 +25,11 @@ check_type_size("long"            SIZEOF_LONG             BUILTIN_TYPES_ONLY)
 check_type_size("size_t"          SIZEOF_SIZE_T)
 check_type_size("long long int"   SIZEOF_LONG_LONG_INT    BUILTIN_TYPES_ONLY)
 
+# postgres/port/pg_bitutils.h selects __builtin_clzll/ctzll via SIZEOF_LONG_LONG
+# when SIZEOF_LONG != 8 (e.g. wasm32-emscripten / ILP32 targets); mirror PG's own
+# configure. On LP64 hosts the SIZEOF_LONG == 8 branch wins first.
+set(SIZEOF_LONG_LONG "${SIZEOF_LONG_LONG_INT}")
+
 #-----------------------------------------------------------------------
 # 2. Alignment (no native CMake check; use offsetof trick via CHECK_C_SOURCE_RUNS)
 #-----------------------------------------------------------------------
