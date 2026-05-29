@@ -611,3 +611,6 @@ SELECT trgeometry 'Polygon((1 1,2 2,3 1,1 1));{[Pose(Point(1 1), 0.2)@2000-01-01
 SELECT trgeometry 'Polygon((1 1,2 2,3 1,1 1));{[Pose(Point(1 1), 0.2)@2000-01-01, Pose(Point(1 1), 0.4)@2000-01-02, Pose(Point(1 1), 0.5)@2000-01-03], [Pose(Point(2 2), 0.6)@2000-01-04, Pose(Point(2 2), 0.6)@2000-01-05]}' >= trgeometry 'Polygon((1 1,2 2,3 1,1 1));{[Pose(Point(1 1), 0.2)@2000-01-01, Pose(Point(1 1), 0.4)@2000-01-02, Pose(Point(1 1), 0.5)@2000-01-03], [Pose(Point(2 2), 0.6)@2000-01-04, Pose(Point(2 2), 0.6)@2000-01-05]}';
 
 -------------------------------------------------------------------------------
+
+-- tprecision (extended-shape seqset)
+SELECT asText(tprecision(trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));{[Pose(Point(0 0),0)@2001-01-01, Pose(Point(4 0),0)@2001-01-01 00:00:04],[Pose(Point(0 0),0)@2001-01-01 00:00:06, Pose(Point(2 0),0)@2001-01-01 00:00:08]}', interval '2 secs'));
