@@ -60,6 +60,12 @@ pep257:
 pylint:
   options:
     max-line-length: 120
+pydocstyle:
+  run: true
+  disable:
+    - D213
+
+pylint:
   disable:
     - too-many-locals
     - too-many-branches
