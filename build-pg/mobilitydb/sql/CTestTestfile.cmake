@@ -1,0 +1,12 @@
+# CMake generated Testfile for 
+# Source directory: /tmp/mdb-equiv/mobilitydb/sql
+# Build directory: /tmp/mdb-equiv/build-pg/mobilitydb/sql
+# 
+# This file includes the relevant testing commands required for 
+# testing this directory and lists subdirectories to be tested as well.
+subdirs("temporal")
+subdirs("geo")
+subdirs("cbuffer")
+subdirs("npoint")
+subdirs("pose")
+subdirs("rgeo")

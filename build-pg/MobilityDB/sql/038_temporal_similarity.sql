@@ -1,0 +1,135 @@
+/*****************************************************************************
+ *
+ * This MobilityDB code is provided under The PostgreSQL License.
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
+ * contributors
+ *
+ * MobilityDB includes portions of PostGIS version 3 source code released
+ * under the GNU General Public License (GPLv2 or later).
+ * Copyright (c) 2001-2025, PostGIS contributors
+ *
+ * Permission to use, copy, modify, and distribute this software and its
+ * documentation for any purpose, without fee, and without a written
+ * agreement is hereby granted, provided that the above copyright notice and
+ * this paragraph and the following two paragraphs appear in all copies.
+ *
+ * IN NO EVENT SHALL UNIVERSITE LIBRE DE BRUXELLES BE LIABLE TO ANY PARTY FOR
+ * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING
+ * LOST PROFITS, ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION,
+ * EVEN IF UNIVERSITE LIBRE DE BRUXELLES HAS BEEN ADVISED OF THE POSSIBILITY
+ * OF SUCH DAMAGE.
+ *
+ * UNIVERSITE LIBRE DE BRUXELLES SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS ON
+ * AN "AS IS" BASIS, AND UNIVERSITE LIBRE DE BRUXELLES HAS NO OBLIGATIONS TO
+ * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+ *
+ *****************************************************************************/
+
+/**
+ * @file
+ * @brief Similarity distance for temporal values
+ * @note Currently, the discrete Frechet distance, the Dynamic Time Warping
+ * (DTW) distance, and the Hausdorff distance are implemented
+ */
+
+CREATE FUNCTION frechetDistance(tint, tint)
+  RETURNS float
+  AS 'MODULE_PATHNAME', 'Temporal_frechet_distance'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION frechetDistance(tbigint, tbigint)
+  RETURNS float
+  AS 'MODULE_PATHNAME', 'Temporal_frechet_distance'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION frechetDistance(tfloat, tfloat)
+  RETURNS float
+  AS 'MODULE_PATHNAME', 'Temporal_frechet_distance'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION dynTimeWarpDistance(tint, tint)
+  RETURNS float
+  AS 'MODULE_PATHNAME', 'Temporal_dyntimewarp_distance'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION dynTimeWarpDistance(tbigint, tbigint)
+  RETURNS float
+  AS 'MODULE_PATHNAME', 'Temporal_dyntimewarp_distance'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION dynTimeWarpDistance(tfloat, tfloat)
+  RETURNS float
+  AS 'MODULE_PATHNAME', 'Temporal_dyntimewarp_distance'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION hausdorffDistance(tint, tint)
+  RETURNS float
+  AS 'MODULE_PATHNAME', 'Temporal_hausdorff_distance'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION hausdorffDistance(tbigint, tbigint)
+  RETURNS float
+  AS 'MODULE_PATHNAME', 'Temporal_hausdorff_distance'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION hausdorffDistance(tfloat, tfloat)
+  RETURNS float
+  AS 'MODULE_PATHNAME', 'Temporal_hausdorff_distance'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/* 
+@note Functions written by Ossama BENAISSA 
+*/
+  CREATE FUNCTION averageHausdorffDistance(tint, tint)
+  RETURNS float
+AS 'MODULE_PATHNAME', 'Temporal_average_hausdorff_distance'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION averageHausdorffDistance(tfloat, tfloat)
+  RETURNS float
+AS 'MODULE_PATHNAME', 'Temporal_average_hausdorff_distance'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+/* 
+@note Functions written by Ossama BENAISSA 
+*/
+CREATE FUNCTION lcssDistance(tint, tint, float)
+  RETURNS float
+AS 'MODULE_PATHNAME', 'Temporal_lcss_distance'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION lcssDistance(tfloat, tfloat, float)
+  RETURNS float
+AS 'MODULE_PATHNAME', 'Temporal_lcss_distance'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+
+/*****************************************************************************/
+
+CREATE TYPE warp AS (
+  i integer,
+  j integer
+);
+
+CREATE FUNCTION frechetDistancePath(tint, tint)
+  RETURNS SETOF warp
+  AS 'MODULE_PATHNAME', 'Temporal_frechet_path'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION frechetDistancePath(tbigint, tbigint)
+  RETURNS SETOF warp
+  AS 'MODULE_PATHNAME', 'Temporal_frechet_path'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION frechetDistancePath(tfloat, tfloat)
+  RETURNS SETOF warp
+  AS 'MODULE_PATHNAME', 'Temporal_frechet_path'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION dynTimeWarpPath(tint, tint)
+  RETURNS SETOF warp
+  AS 'MODULE_PATHNAME', 'Temporal_dyntimewarp_path'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION dynTimeWarpPath(tbigint, tbigint)
+  RETURNS SETOF warp
+  AS 'MODULE_PATHNAME', 'Temporal_dyntimewarp_path'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION dynTimeWarpPath(tfloat, tfloat)
+  RETURNS SETOF warp
+  AS 'MODULE_PATHNAME', 'Temporal_dyntimewarp_path'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/*****************************************************************************/
+
+
