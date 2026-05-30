@@ -37,7 +37,7 @@
  * Each th3index value carries one H3 cell per instant. The spatial
  * relations defined here operate on the cell's BOUNDARY POLYGON (not
  * the cell's centre point), matching the prefilter semantics in
- * `geoToH3IndexSet` / `everIntersectsH3IndexSet_Th3Index` and the user
+ * `geoToH3IndexSet` / `eIntersects` and the user
  * intuition that "the cell occupies its tessellation footprint".
  *
  * Implementation: each function delegates to the tgeometry spatial-rel

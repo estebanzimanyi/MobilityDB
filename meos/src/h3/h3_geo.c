@@ -27,7 +27,7 @@
  *   MULTIPOLYGON      — union of per-component POLYGONs.
  *   GEOMETRYCOLLECTION — recursive union of per-component geometries.
  *
- * The companion `ever_eq_anyof_h3indexset_th3index` predicate enables the
+ * The companion `ever_eq_h3indexset_th3index` predicate enables the
  * cross-platform spatial prefilter: a th3index trip path ever-touches a
  * cell in the given set iff (for any common instant) the trip is in one
  * of those cells.
@@ -443,7 +443,7 @@ geo_to_h3index_set(const GSERIALIZED *gs, int32 resolution)
  *        sequence of @p th3idx, 0 if none, -1 on error.
  *
  * The cross-platform spatial prefilter consumed by
- * `everIntersectsH3IndexSet_Th3Index` SQL wrappers / Spark UDFs.
+ * `eIntersects` SQL wrappers / Spark UDFs.
  * Iterates the th3index value sequence (one entry per distinct
  * instant) and tests Set membership.
  *
@@ -451,7 +451,7 @@ geo_to_h3index_set(const GSERIALIZED *gs, int32 resolution)
  * @param[in] th3idx  The th3index temporal value.
  */
 int
-ever_eq_anyof_h3indexset_th3index(const Set *cells, const Temporal *th3idx)
+ever_eq_h3indexset_th3index(const Set *cells, const Temporal *th3idx)
 {
   if (cells == NULL || th3idx == NULL)
     return -1;

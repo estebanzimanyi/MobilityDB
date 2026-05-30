@@ -11,7 +11,7 @@
  * @brief PostgreSQL wrappers for the static-geometry → H3 cell helpers
  * declared in meos/include/meos_h3.h.
  *
- * Calls geo_to_h3index_set() and ever_eq_anyof_h3indexset_th3index() in
+ * Calls geo_to_h3index_set() and ever_eq_h3indexset_th3index() in
  * the MEOS core; thin shims for argument extraction and result return.
  */
 
@@ -68,25 +68,25 @@ Geo_to_h3indexset(PG_FUNCTION_ARGS)
   PG_RETURN_SET_P(result);
 }
 
-PGDLLEXPORT Datum Ever_eq_anyof_h3indexset_th3index(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Ever_eq_anyof_h3indexset_th3index);
+PGDLLEXPORT Datum Ever_eq_h3indexset_th3index(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Ever_eq_h3indexset_th3index);
 /**
  * @ingroup mobilitydb_h3_comp
  * @brief True iff the th3index value sequence ever lies in any cell of
  *        the candidate set
  *
  * Cross-platform spatial prefilter consumer: typical use is
- * `everIntersectsH3IndexSet_Th3Index(geoToH3IndexSet(p.geom, 7), t.trip_h3)`
+ * `eIntersects(geoToH3IndexSet(p.geom, 7), t.trip_h3)`
  * before the exact spatial predicate.
  *
- * @sqlfn everIntersectsH3IndexSet_Th3Index(h3indexset, th3index)
+ * @sqlfn eIntersects(h3indexset, th3index)
  */
 Datum
-Ever_eq_anyof_h3indexset_th3index(PG_FUNCTION_ARGS)
+Ever_eq_h3indexset_th3index(PG_FUNCTION_ARGS)
 {
   Set *cells = PG_GETARG_SET_P(0);
   Temporal *th3idx = PG_GETARG_TEMPORAL_P(1);
-  int r = ever_eq_anyof_h3indexset_th3index(cells, th3idx);
+  int r = ever_eq_h3indexset_th3index(cells, th3idx);
   PG_FREE_IF_COPY(cells, 0);
   PG_FREE_IF_COPY(th3idx, 1);
   if (r < 0)

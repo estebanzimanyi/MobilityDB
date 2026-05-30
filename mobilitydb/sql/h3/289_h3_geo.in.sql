@@ -12,7 +12,7 @@
  *
  * Covers POINT, LINESTRING, POLYGON, and MULTI* / GEOMETRYCOLLECTION
  * combinations.  The cell-set output (`geoToH3IndexSet`) plus the
- * Set ever-intersects predicate (`everIntersectsH3IndexSet_Th3Index`)
+ * Set ever-intersects predicate (`eIntersects`)
  * are the cross-platform spatial prefilter consumed by the portable
  * BerlinMOD SQL.
  *
@@ -38,7 +38,7 @@ CREATE FUNCTION geoToH3IndexSet(geometry, integer)
  * h3indexset × th3index — ever-intersects predicate (spatial prefilter)
  ******************************************************************************/
 
-CREATE FUNCTION everIntersectsH3IndexSet_Th3Index(h3indexset, th3index)
+CREATE FUNCTION eIntersects(h3indexset, th3index)
   RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Ever_eq_anyof_h3indexset_th3index'
+  AS 'MODULE_PATHNAME', 'Ever_eq_h3indexset_th3index'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
