@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------
 --
 -- This MobilityDB code is provided under The PostgreSQL License.
--- Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+-- Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
 -- contributors
 --
 -- MobilityDB includes portions of PostGIS version 3 source code released
@@ -180,8 +180,7 @@ SELECT DISTINCT merge(makeSimple(temp)) = temp from tbl_tgeompoint;
 SELECT DISTINCT merge(makeSimple(temp)) = temp from tbl_tgeompoint3D;
 
 -------------------------------------------------------------------------------
--- Modulo used to reduce time needed for the tests
-SELECT COUNT(*) FROM tbl_tgeompoint t1, tbl_geom t2 WHERE t1.k % 2 = 0 AND temp != merge(atGeometry(temp, g), minusGeometry(temp, g));
+SELECT COUNT(*) FROM tbl_tgeompoint t1, tbl_geom t2 WHERE temp != merge(atGeometry(temp, g), minusGeometry(temp, g));
 
 SELECT COUNT(*) FROM tbl_tgeompoint t1, tbl_stbox t2 WHERE temp != merge(atStbox(temp, b), minusStbox(temp, b));
 SELECT COUNT(*) FROM tbl_tgeompoint3d t1, tbl_stbox3d t2 WHERE temp != merge(atStbox(temp, b), minusStbox(temp, b));

@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -160,7 +160,7 @@ tinterrel_tcbufferseq_disc_geom(const TSequence *seq, const GSERIALIZED *gs,
   assert(MEOS_FLAGS_GET_INTERP(seq->flags) == DISCRETE);
   /* Compute the intersection of the traversed area of a temporal circular
    * buffer and the geometry */
-  GSERIALIZED *trav = tcbufferseq_trav_area(seq);
+  GSERIALIZED *trav = tcbufferseq_traversed_area(seq, false);
   GSERIALIZED *inter = geom_intersection2d_coll(trav, gs);
   pfree(trav);
   /* If there is no intersection */
@@ -205,10 +205,10 @@ tinterrel_tcbufferseq_disc_geom(const TSequence *seq, const GSERIALIZED *gs,
   /* Compute the result */
   Datum bool_true = tinter ? BoolGetDatum(true) : BoolGetDatum(false);
   Datum bool_false = tinter ? BoolGetDatum(false) : BoolGetDatum(true);
-  /* If there is no intersection */
+  /* If no individual instant intersects */
   if (! s)
-    return (Temporal *) tsequence_from_base_temp(bool_true, T_TBOOL, seq);
-  TSequence *res_true = tsequence_from_base_tstzset(bool_false, T_TBOOL, s);
+    return (Temporal *) tsequence_from_base_temp(bool_false, T_TBOOL, seq);
+  TSequence *res_true = tsequence_from_base_tstzset(bool_true, T_TBOOL, s);
   int count;
   TimestampTz *times = tsequence_timestamps(seq, &count);
   Datum *datumarr = palloc(sizeof(Datum) * count);
@@ -249,7 +249,7 @@ tinterrel_tcbufferseq_step_geom(const TSequence *seq, const GSERIALIZED *gs,
   assert(MEOS_FLAGS_GET_INTERP(seq->flags) == STEP);
   /* Compute the intersection of the traversed area of a temporal circular
    * buffer and the geometry */
-  GSERIALIZED *trav = tcbufferseq_trav_area(seq);
+  GSERIALIZED *trav = tcbufferseq_traversed_area(seq, false);
   GSERIALIZED *inter = geom_intersection2d_coll(trav, gs);
   pfree(trav);
   /* If there is no intersection */
@@ -271,9 +271,10 @@ tinterrel_tcbufferseq_step_geom(const TSequence *seq, const GSERIALIZED *gs,
     bool upper_inc = (i == seq->count - 1) ? false : seq->period.upper_inc;
     GSERIALIZED *circle = tcbufferinst_trav_area(inst);
     /* Loop for each point in the intersection */
+    bool found = false;
     for (int j = 0; j < npoints; j++)
     {
-      bool found = geom_intersects2d(circle, points[j]);
+      found = geom_intersects2d(circle, points[j]);
       if (found)
       {
         if (timestamptz_cmp_internal(inst->t, mint) < 0)
@@ -360,7 +361,7 @@ tinterrel_tcbufferseq_linear_geom(const TSequence *seq, const GSERIALIZED *gs,
   assert(MEOS_FLAGS_LINEAR_INTERP(seq->flags));
   /* Compute the intersection of the traversed area of a temporal circular
    * buffer and the geometry */
-  GSERIALIZED *trav = tcbufferseq_trav_area(seq);
+  GSERIALIZED *trav = tcbufferseq_traversed_area(seq, false);
   GSERIALIZED *inter = geom_intersection2d_coll(trav, gs);
   pfree(trav);
   /* If there is no intersection */
@@ -378,21 +379,59 @@ tinterrel_tcbufferseq_linear_geom(const TSequence *seq, const GSERIALIZED *gs,
   {
     const TInstant *inst2 = TSEQUENCE_INST_N(seq, i);
     TimestampTz mint = DT_NOEND, maxt = DT_NOBEGIN;
-    bool upper_inc = (i == seq->count - 1) ? false : seq->period.upper_inc;
+    bool upper_inc = seq->period.upper_inc;
     /* Loop for each point in the intersection */
+    const Cbuffer *cb1_start = DatumGetCbufferP(tinstant_value_p(inst1));
+    const Cbuffer *cb1_end   = DatumGetCbufferP(tinstant_value_p(inst2));
     for (int j = 0; j < npoints; j++)
     {
       Cbuffer *cb = cbuffer_make(points[j], 0.0);
+      /* Check whether the segment endpoints already satisfy the condition */
+      bool start_in = (cbuffer_distance(cb1_start, cb) <= 0.0);
+      bool end_in   = (cbuffer_distance(cb1_end,   cb) <= 0.0);
       TimestampTz t1, t2;
       int found = tcbuffersegm_intersection_value(tinstant_value_p(inst1),
         tinstant_value_p(inst2), PointerGetDatum(cb), inst1->t, inst2->t,
         &t1, &t2);
-      if (found)
+      TimestampTz seg_t1 = DT_NOEND, seg_t2 = DT_NOBEGIN;
+      if (found == 0)
       {
-        if (timestamptz_cmp_internal(t1, mint) < 0)
-          mint = t1;
-        if (timestamptz_cmp_internal(t2, maxt) > 0)
-          maxt = t2;
+        /* No crossing root: wholly inside or wholly outside */
+        if (start_in)
+        {
+          seg_t1 = inst1->t;
+          seg_t2 = inst2->t;
+        }
+      }
+      else if (found == 1)
+      {
+        /* One crossing: either entry or exit */
+        if (start_in)
+        {
+          seg_t1 = inst1->t; /* start is inside → root is exit */
+          seg_t2 = t1;
+        }
+        else
+        {
+          seg_t1 = t1;       /* start is outside → root is entry */
+          seg_t2 = inst2->t;
+        }
+      }
+      else /* found == 2 */
+      {
+        seg_t1 = t1;
+        seg_t2 = t2;
+      }
+      /* Suppress: if end is outside and start is also outside but we set
+       * seg_t2 = inst2->t above, verify the end condition */
+      if (found == 1 && ! start_in && ! end_in)
+        seg_t2 = t1; /* tangent touch: point span */
+      if (seg_t1 != DT_NOEND && seg_t2 != DT_NOBEGIN)
+      {
+        if (timestamptz_cmp_internal(seg_t1, mint) < 0)
+          mint = seg_t1;
+        if (timestamptz_cmp_internal(seg_t2, maxt) > 0)
+          maxt = seg_t2;
       }
       pfree(cb);
     }
@@ -820,7 +859,7 @@ tcovers_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
  * @param[in] gs Geometry
  * @csqlfn #Tdisjoint_tcbuffer_geo()
  */
-inline Temporal *
+Temporal *
 tdisjoint_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp)
 {
   return tinterrel_tcbuffer_geo(temp, gs, TDISJOINT);
@@ -834,7 +873,7 @@ tdisjoint_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp)
  * @param[in] gs Geometry
  * @csqlfn #Tdisjoint_tcbuffer_geo()
  */
-inline Temporal *
+Temporal *
 tdisjoint_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   return tinterrel_tcbuffer_geo(temp, gs, TDISJOINT);
@@ -848,7 +887,7 @@ tdisjoint_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
  * @param[in] cb Circular buffer
  * @csqlfn #Tdisjoint_tcbuffer_geo()
  */
-inline Temporal *
+Temporal *
 tdisjoint_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp)
 {
   return tinterrel_tcbuffer_cbuffer(temp, cb, TDISJOINT);
@@ -862,7 +901,7 @@ tdisjoint_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp)
  * @param[in] cb Circular buffer
  * @csqlfn #Tdisjoint_tcbuffer_geo()
  */
-inline Temporal *
+Temporal *
 tdisjoint_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
 {
   return tinterrel_tcbuffer_cbuffer(temp, cb, TDISJOINT);
@@ -875,10 +914,10 @@ tdisjoint_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
  * @param[in] temp1,temp2 Temporal circular buffers
  * @csqlfn #Tdisjoint_tcbuffer_tcbuffer()
  */
-inline Temporal *
+Temporal *
 tdisjoint_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
 {
-  return tinterrel_tspatial_tspatial(temp1, temp2, TDISJOINT);
+  return tspatialrel_tcbuffer_tcbuffer(temp1, temp2, &datum_cbuffer_disjoint);
 }
 
 /*****************************************************************************
@@ -893,7 +932,7 @@ tdisjoint_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
  * @param[in] gs Geometry
  * @csqlfn #Tintersects_tcbuffer_geo()
  */
-inline Temporal *
+Temporal *
 tintersects_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   return tinterrel_tcbuffer_geo(temp, gs, TINTERSECTS);
@@ -907,7 +946,7 @@ tintersects_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
  * @param[in] gs Geometry
  * @csqlfn #Tintersects_tcbuffer_geo()
  */
-inline Temporal *
+Temporal *
 tintersects_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp)
 {
   return tinterrel_tcbuffer_geo(temp, gs, TINTERSECTS);
@@ -921,7 +960,7 @@ tintersects_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp)
  * @param[in] cb Circular buffer
  * @csqlfn #Tdisjoint_tcbuffer_geo()
  */
-inline Temporal *
+Temporal *
 tintersects_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp)
 {
   return tinterrel_tcbuffer_cbuffer(temp, cb, TDISJOINT);
@@ -935,7 +974,7 @@ tintersects_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp)
  * @param[in] cb Circular buffer
  * @csqlfn #Tdisjoint_tcbuffer_geo()
  */
-inline Temporal *
+Temporal *
 tintersects_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
 {
   return tinterrel_tcbuffer_cbuffer(temp, cb, TDISJOINT);
@@ -948,10 +987,10 @@ tintersects_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
  * @param[in] temp1,temp2 Temporal circular buffers
  * @csqlfn #Tintersects_tcbuffer_tcbuffer()
  */
-inline Temporal *
+Temporal *
 tintersects_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
 {
-  return tinterrel_tspatial_tspatial(temp1, temp2, TINTERSECTS);
+  return tspatialrel_tcbuffer_tcbuffer(temp1, temp2, &datum_cbuffer_intersects);
 }
 
 /*****************************************************************************

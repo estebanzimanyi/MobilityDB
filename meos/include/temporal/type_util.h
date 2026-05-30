@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -67,7 +67,7 @@ extern char *basetype_out(Datum value, MeosType type, int maxdd);
 
 extern void pfree_array(void **array, int count);
 extern char *stringarr_to_string(char **strings, int count, size_t outlen,
-  char *prefix, char open, char close, bool quotes, bool spaces);
+  const char *prefix, char open, char close, bool quotes, bool spaces);
 
 /* Sort functions */
 

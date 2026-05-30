@@ -107,6 +107,25 @@ CMAKE_DEPENDENT_OPTION(RGEO
   OFF
   )
 
+# Option for including temporal H3 index (`th3index`), which depends
+# on libh3 and the embedded h3-pg subtree under `h3-pg/`.
+option(H3
+  "Set ON|OFF (default=OFF) to include the temporal H3 index type
+  (th3index). Requires libh3 on the build path."
+  OFF
+  )
+
+# Option for including pgpointcloud temporal types (tpcpoint, tpcpatch).
+# Requires pgpointcloud (libpointcloud-dev on Debian/Ubuntu) installed
+# alongside PostGIS on the user's machine. The embedded
+# `pointcloud-pg/` subtree provides the source MEOS imports a minimal
+# subset of, but the runtime still links against the system library.
+option(POINTCLOUD
+  "Set ON|OFF (default=OFF) to include pgpointcloud temporal types
+  "
+  OFF
+  )
+
 if(CBUFFER)
   message(STATUS "Including circular buffers")
   add_definitions(-DCBUFFER=1)
@@ -139,6 +158,46 @@ else()
   add_definitions(-DRGEO=0)
 endif()
 
+if(H3)
+  message(STATUS "Including temporal H3 index (th3index)")
+  find_library(H3_LIBRARY NAMES h3)
+  # PATH_SUFFIXES h3 — pgdg's libh3-dev installs to /usr/include/h3/h3api.h
+  # (subdirectory) rather than /usr/include/h3api.h. Add the suffix so
+  # find_path catches both layouts.
+  find_path(H3_INCLUDE_DIR NAMES h3api.h PATH_SUFFIXES h3)
+  if(NOT H3_LIBRARY OR NOT H3_INCLUDE_DIR)
+    message(FATAL_ERROR
+      "H3=ON was requested but libh3 was not found.\n"
+      "Install libh3 (https://github.com/uber/h3) or pass\n"
+      "  -DH3_LIBRARY=/path/to/libh3.so -DH3_INCLUDE_DIR=/path/to/h3api.h\n"
+      "to cmake.")
+  endif()
+  add_definitions(-DH3=1)
+  include_directories(${H3_INCLUDE_DIR})
+else()
+  message(STATUS "Excluding temporal H3 index")
+  add_definitions(-DH3=0)
+endif()
+
+if(POINTCLOUD)
+  message(STATUS "Including pgpointcloud types")
+  add_definitions(-DPOINTCLOUD=1)
+else()
+  message(STATUS "Excluding pgpointcloud types")
+  add_definitions(-DPOINTCLOUD=0)
+endif()
+
+# Build the 'requires =' clause for the generated mobilitydb.control file
+# from the same flags that gate C compilation and SQL inclusion. PostGIS
+# is always required; pgPointCloud is required only when POINTCLOUD=ON,
+# because that is the only flag that maps to an external extension.
+# CBUFFER / NPOINT / POSE / RGEO add internal types that live inside
+# libMobilityDB itself with no extra CREATE EXTENSION dependency.
+set(MOBILITYDB_REQUIRES "postgis")
+if(POINTCLOUD)
+  set(MOBILITYDB_REQUIRES "${MOBILITYDB_REQUIRES}, pointcloud")
+endif()
+
 # Get the MobilityDB major/minor/micro versions from the text file
 file(READ mobdb_version.txt ver)
 string(REGEX MATCH "MOBILITYDB_MAJOR_VERSION=([0-9]+)" _ ${ver})
@@ -151,7 +210,14 @@ string(REGEX MATCH "MOBILITYDB_MICRO_VERSION=[0-9]+(beta?[0-9]+)" _ ${ver})
 set(PROJECT_VERSION_DEV ${CMAKE_MATCH_1})
 
 # Set the project name and project version
-project(MobilityDB VERSION ${MOBILITYDB_MAJOR_VERSION}.${MOBILITYDB_MINOR_VERSION}.${MOBILITYDB_MICRO_VERSION})
+# C++ enabled (in addition to C) so we can vendor Clipper2 as the polygon
+# Boolean engine. Required: C++17 (Clipper2 v2.x).
+project(MobilityDB
+  VERSION ${MOBILITYDB_MAJOR_VERSION}.${MOBILITYDB_MINOR_VERSION}.${MOBILITYDB_MICRO_VERSION}
+  LANGUAGES C CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 message(STATUS "Building MobilityDB version ${PROJECT_VERSION}")
 # Enable testing, must follow project() call above
 include(CTest)
@@ -213,11 +279,18 @@ if(CMAKE_COMPILER_IS_GNUCC)
     message(STATUS "Generating code coverage")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fprofile-arcs -ftest-coverage")
+    # The .so is linked with the g++ driver (CXX shared module), which does
+    # not auto-pull libgcov from compile flags — pass --coverage at link time.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fprofile-arcs -ftest-coverage")
+    set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} --coverage")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --coverage")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
   endif()
 endif()
 
 # Set compiler optimizations for release
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2")
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3")
 # Disable compiler optimizations for debugging
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
 
@@ -252,6 +325,11 @@ int main() {
 # Other dependencies
 #--------------------------------
 
+# POSIX threads — needed for pthread_once in meos_initialize_geos()
+# On Linux ≥ glibc 2.34 pthreads are in libc; on older systems and MinGW
+# CMake's Threads::Threads target adds the correct -lpthread / -lwinpthread.
+find_package(Threads REQUIRED)
+
 # GEOS geometry library
 find_package(GEOS REQUIRED)
 include_directories(SYSTEM ${GEOS_INCLUDE_DIR})
@@ -275,6 +353,10 @@ find_package(GSL REQUIRED)
 include_directories(SYSTEM ${GSL_INCLUDE_DIRS})
 message(STATUS "GSL_VERSION: ${GSL_VERSION}")
 add_definitions(-DGSL_VERSION_STRING="${GSL_VERSION}")
+
+# Apache Arrow C Data Interface (vendored, header-only; no libarrow link).
+# Set at the top level so both the MEOS and the MobilityDB builds find it.
+include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/arrow")
 
 #----------------------------------------------
 # Configure PostGIS with optional dependencies

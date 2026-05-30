@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -71,6 +71,12 @@
  * @defgroup meos_pose_distance Distance functions
  * @ingroup meos_pose
  * @brief Distance functions for temporal poses
+ *
+ * @defgroup meos_pose_geopose_accessor OGC GeoPose Euler-angle accessors
+ * @ingroup meos_pose
+ * @brief Yaw / pitch / roll accessors lifted through @p tpose, returning
+ * @p tfloat under the ZYX intrinsic Tait-Bryan convention required by
+ * the OGC GeoPose Basic-YPR conformance class.
  */
 
 /*****************************************************************************/
@@ -107,6 +113,13 @@
  * @defgroup meos_pose_base_comp Comparison functions
  * @ingroup meos_pose_base
  * @brief Comparison functions for static poses
+ *
+ * @defgroup meos_pose_base_geopose OGC GeoPose v1.0 support
+ * @ingroup meos_pose_base
+ * @brief Functions implementing the OGC GeoPose v1.0 standard surface for
+ * static poses — JSON I/O for the Basic conformance classes, quaternion
+ * renormalisation, and Euler-angle (yaw / pitch / roll) accessors using
+ * the ZYX intrinsic Tait-Bryan convention required by the standard.
  */
 
 /*****************************************************************************/

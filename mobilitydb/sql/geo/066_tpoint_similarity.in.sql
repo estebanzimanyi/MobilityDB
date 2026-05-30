@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -84,5 +84,29 @@ CREATE FUNCTION hausdorffDistance(tgeogpoint, tgeogpoint)
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************/
+/* 
+@note Functions written by Ossama BENAISSA 
+*/
+  CREATE FUNCTION averageHausdorffDistance(tgeompoint, tgeompoint)
+  RETURNS float
+AS 'MODULE_PATHNAME', 'Temporal_average_hausdorff_distance'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION averageHausdorffDistance(tgeogpoint, tgeogpoint)
+  RETURNS float
+AS 'MODULE_PATHNAME', 'Temporal_average_hausdorff_distance'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+/*****************************************************************************/
+/* 
+@note Functions written by Ossama BENAISSA 
+*/
+CREATE FUNCTION lcssDistance(tgeompoint, tgeompoint, float)
+  RETURNS float
+AS 'MODULE_PATHNAME', 'Temporal_lcss_distance'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION lcssDistance(tgeogpoint, tgeogpoint, float)
+  RETURNS float
+AS 'MODULE_PATHNAME', 'Temporal_lcss_distance'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+/*****************************************************************************/

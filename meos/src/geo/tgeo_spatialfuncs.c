@@ -1,7 +1,7 @@
 /***********************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -86,14 +86,14 @@ datum_point4d(Datum value, POINT4D *p)
   memset(p, 0, sizeof(POINT4D));
   if (FLAGS_GET_Z(gs->gflags))
   {
-    POINT3DZ *point = (POINT3DZ *) GS_POINT_PTR(gs);
+    const POINT3DZ *point = (POINT3DZ *) GS_POINT_PTR(gs);
     p->x = point->x;
     p->y = point->y;
     p->z = point->z;
   }
   else
   {
-    POINT2D *point = (POINT2D *) GS_POINT_PTR(gs);
+    const POINT2D *point = (POINT2D *) GS_POINT_PTR(gs);
     p->x = point->x;
     p->y = point->y;
   }
@@ -314,7 +314,7 @@ geo_distance_fn(int16 flags)
  * @brief Select the appropriate distance function
  */
 datum_func2
-pt_distance_fn(int16 flags)
+point_distance_fn(int16 flags)
 {
   if (MEOS_FLAGS_GET_GEODETIC(flags))
     return &datum_geog_distance;
@@ -417,7 +417,7 @@ npoint_flags(void)
 }
 #endif /* NPOINT */ 
 
-#if POSE || RGEO 
+#if POSE || RGEO
 /**
  * @brief Get the MEOS flags from a pose
  */
@@ -429,7 +429,21 @@ pose_flags(Pose *pose)
   MEOS_FLAGS_SET_Z(result, MEOS_FLAGS_GET_Z(pose->flags));
   return result;
 }
-#endif /* POSE || RGEO */ 
+#endif /* POSE || RGEO */
+
+#if H3
+/**
+ * @brief Get the MEOS flags from an H3 cell index
+ */
+static int16
+h3index_flags(void)
+{
+  int16 result = 0; /* Set all flags to false */
+  MEOS_FLAGS_SET_X(result, true);
+  MEOS_FLAGS_SET_GEODETIC(result, true);
+  return result;
+}
+#endif /* H3 */
 
 /**
  * @brief Get the MEOS flags from a spatial value
@@ -454,6 +468,11 @@ spatial_flags(Datum d, MeosType basetype)
 #if POSE || RGEO
     case T_POSE:
       return pose_flags(DatumGetPoseP(d));
+#endif
+#if H3
+    case T_H3INDEX:
+      (void) d;
+      return h3index_flags();
 #endif
     default: /* Error! */
       meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
@@ -1015,8 +1034,7 @@ tgeomseqset_tgeogseqset(const TSequenceSet *ss, bool oper)
   assert(ss); assert(tgeo_type_all(ss->temptype));
   TSequence **sequences = palloc(sizeof(TSequence *) * ss->count);
   for (int i = 0; i < ss->count; i++)
-    sequences[i] = tgeomseq_tgeogseq(TSEQUENCESET_SEQ_N(ss, i),
-      oper);
+    sequences[i] = tgeomseq_tgeogseq(TSEQUENCESET_SEQ_N(ss, i), oper);
   return tsequenceset_make_free(sequences, ss->count, NORMALIZE_NO);
 }
 
@@ -1733,7 +1751,6 @@ geo_cluster_dbscan(const GSERIALIZED **geoms, uint32_t ngeoms,
 
   uint32_t i;
   char *is_in_cluster = NULL;
-  initGEOS(lwnotice, lwgeom_geos_error);
   LWGEOM **lwgeoms = lwalloc(ngeoms * sizeof(LWGEOM *));
   UNIONFIND *uf = UF_create(ngeoms);
   for (i = 0; i < ngeoms; i++)
@@ -1757,7 +1774,6 @@ geo_cluster_dbscan(const GSERIALIZED **geoms, uint32_t ngeoms,
 
   uint32_t *result_ids = UF_get_collapsed_cluster_ids(uf, is_in_cluster);
   *count = uf->N;
-  finishGEOS();
   UF_destroy(uf);
   if (is_in_cluster)
     lwfree(is_in_cluster);
@@ -1791,7 +1807,7 @@ geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms,
   /* TODO short-circuit for one element? */
 
   /* Ok, we really need geos now ;) */
-  initGEOS(lwnotice, lwgeom_geos_error);
+  GEOSContextHandle_t ctx = geos_get_context();
   GEOSGeometry **geos_inputs = palloc(ngeoms * sizeof(GEOSGeometry *));
   for (i = 0; i < ngeoms; i++)
   {
@@ -1801,7 +1817,7 @@ geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms,
     {
       lwerror("Geometry could not be converted to GEOS");
       for (j = 0; j < i; j++)
-        GEOSGeom_destroy(geos_inputs[j]);
+        GEOSGeom_destroy_r(ctx, geos_inputs[j]);
       return NULL;
     }
 
@@ -1813,7 +1829,7 @@ geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms,
     else if (! ensure_same_srid(srid, gserialized_get_srid(geoms[i])))
     {
       for (j = 0; j <= i; j++)
-        GEOSGeom_destroy(geos_inputs[j]);
+        GEOSGeom_destroy_r(ctx, geos_inputs[j]);
       return NULL;
     }
   }
@@ -1837,13 +1853,13 @@ geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms,
   for (i = 0; i < nclusters; ++i)
   {
     result[i] = GEOS2POSTGIS(geos_results[i], is3d);
-    GEOSGeom_destroy(geos_results[i]);
+    GEOSGeom_destroy_r(ctx, geos_results[i]);
   }
   lwfree(geos_results);
   *count = nclusters;
-  finishGEOS();
   return result;
 }
+#endif /* MEOS */
 
 /**
  * @ingroup meos_geo_base_spatial
@@ -1852,35 +1868,29 @@ geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms,
   * distance of at least one other geometry in the same cluster.
  * @param[in] geoms Geometries
  * @param[in] ngeoms Number of elements in the input array
- * @param[in] tolerance Tolerance
+ * @param[in] dist Distance
   * @param[out] count Number of elements in the output array
  * @note PostGIS function: @p ST_ClusterWithin(PG_FUNCTION_ARGS)
  */
 GSERIALIZED **
 geo_cluster_within(const GSERIALIZED **geoms, uint32_t ngeoms,
-  double tolerance, int *count)
+  double dist, uint32_t *count)
 {
   /* Ensure validity of arguments */
-  /* Ensure validity of arguments */
-  if (! ensure_not_null(geoms) || ! ensure_not_null(count) || ngeoms == 0)
+  VALIDATE_NOT_NULL(geoms, NULL); VALIDATE_NOT_NULL(count, NULL);
+  if (! ensure_positive(ngeoms) || 
+      ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return NULL;
-  if (tolerance < 0)
-  {
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "Tolerance must be a positive number, got %g", tolerance);
-    return NULL;
-  }
 
   uint32_t i;
-  initGEOS(lwnotice, lwgeom_geos_error);
   LWGEOM **lwgeoms = lwalloc(ngeoms * sizeof(LWGEOM *));
   for (i = 0; i < ngeoms; i++)
     lwgeoms[i] = lwgeom_from_gserialized(geoms[i]);
 
   LWGEOM **lw_results;
-  uint32_t nclusters;
-  bool success = cluster_within_distance(lwgeoms, ngeoms, tolerance,
-    &lw_results, &nclusters);
+  uint32_t nclusters = 0;
+  bool success = cluster_within_distance(lwgeoms, ngeoms, dist, &lw_results,
+    &nclusters);
   /* don't need to destroy items because GeometryCollections have taken ownership */
   pfree(lwgeoms);
 
@@ -1899,10 +1909,8 @@ geo_cluster_within(const GSERIALIZED **geoms, uint32_t ngeoms,
     lwgeom_free(lw_results[i]);
   }
   lwfree(lw_results);
-  finishGEOS();
   *count = nclusters;
   return result;
 }
-#endif /* MEOS */
 
 /*****************************************************************************/

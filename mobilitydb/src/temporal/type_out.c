@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -209,9 +209,9 @@ get_endian_variant(const text *txt)
       pg_strncasecmp(endian, "xdr", 3) != 0)
     elog(ERROR, "Invalid value for endian flag");
   else if (pg_strncasecmp(endian, "ndr", 3) == 0)
-    variant = variant | (uint8_t) WKB_NDR;
+    variant = (uint8_t) WKB_NDR;
   else /* txt = XDR */
-    variant = variant | (uint8_t) WKB_XDR;
+    variant = (uint8_t) WKB_XDR;
   pfree(endian);
   return variant;
 }
@@ -247,7 +247,8 @@ Datum_as_wkb(FunctionCallInfo fcinfo, Datum value, MeosType type,
  * Binary (EWKB) representation in ASCII hex-encoded
  */
 text *
-Datum_as_hexwkb(FunctionCallInfo fcinfo, Datum value, MeosType type)
+Datum_as_hexwkb(FunctionCallInfo fcinfo, Datum value, MeosType type,
+  bool extended)
 {
   uint8_t variant = 0;
   /* If user specified endianness, respect it */
@@ -256,6 +257,8 @@ Datum_as_hexwkb(FunctionCallInfo fcinfo, Datum value, MeosType type)
     text *txt = PG_GETARG_TEXT_P(1);
     variant = get_endian_variant(txt);
   }
+  if (extended)
+    variant |= (uint8_t) WKB_EXTENDED;
 
   /* Create WKB hex string */
   size_t hexwkb_size;
@@ -291,17 +294,15 @@ PG_FUNCTION_INFO_V1(Temporal_as_hexwkb);
 /**
  * @ingroup mobilitydb_temporal_inout
  * @brief Return the ASCII hex-encoded Well-Known Binary (HexWKB)
- * representation of a temporal value
- * @note This will have 'SRID=#;' for temporal points
+ * representation of a temporal value (base WKB, no SRID flag)
  * @sqlfn asHexWKB()
  */
 Datum
 Temporal_as_hexwkb(PG_FUNCTION_ARGS)
 {
-  /* Ensure that the value is detoasted if necessary */
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   text *result = Datum_as_hexwkb(fcinfo, PointerGetDatum(temp),
-    temp->temptype);
+    temp->temptype, false);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_TEXT_P(result);
 }

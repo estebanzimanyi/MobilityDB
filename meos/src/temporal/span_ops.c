@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -177,7 +177,7 @@ contains_span_span(const Span *s1, const Span *s2)
  * @param[in] value Value
  * @param[in] s Span
  */
-inline bool
+bool
 contained_value_span(Datum value, const Span *s)
 {
   return contains_span_value(s, value);
@@ -189,7 +189,7 @@ contained_value_span(Datum value, const Span *s)
  * @param[in] s1,s2 Spans
  * @csqlfn #Contained_value_span()
  */
-inline bool
+bool
 contained_span_span(const Span *s1, const Span *s2)
 {
   return contains_span_span(s2, s1);
@@ -273,33 +273,22 @@ adjacent_span_span(const Span *s1, const Span *s2)
     return false;
 
   /*
-   * Canonical span-adjacency rule (issue #821). Two spans are adjacent iff
-   * they meet at a single boundary value that EXACTLY ONE of them contains;
-   * equal bounds that are both inclusive is an OVERLAP, not adjacency. The
-   * inclusive/exclusive bits are therefore decisive:
-   *
-   *   adjacent  <=>  (upper1 == lower2 && upper_inc1 != lower_inc2)
-   *              ||  (upper2 == lower1 && upper_inc2 != lower_inc1)
-   *
-   * This single predicate is correct for BOTH base-type families because the
-   * integer-vs-float difference lives in how the span is STORED, not here:
-   *   - Discrete (int, bigint, date): canonicalized at construction to
-   *     half-open [lower, upper+1) (see span_set), so consecutive values are
-   *     adjacent, e.g. intspan '[1,5]' -|- '[6,10]' = true.
-   *   - Continuous (float, timestamptz): bounds kept, so a shared inclusive
-   *     endpoint overlaps, e.g. floatspan '[1,5]' -|- '[5,9]' = false, while
-   *     '[1,5)' -|- '[5,9]' = true.
-   * Do NOT "simplify" this to a bare share-a-boundary test (upper == lower,
-   * ignoring the bits) to match the bounding-box dispatch: that regresses the
-   * continuous case (it makes floatspan '[1,5]' -|- '[5,9]' return true).
-   * Bounding-box adjacency is a conservative index pre-filter that THIS exact
-   * predicate re-checks, so the box side does not need this precision.
+   * Canonical span-adjacency rule (issue #821): set-theoretic share-a-boundary.
+   * Two spans are adjacent iff their closures meet at a single boundary value
+   * (upper1 == lower2 or upper2 == lower1); the inclusive/exclusive bits are
+   * NOT consulted. This is the geometric/topological adjacency -- a shared
+   * boundary value is a measure-zero touch, not an overlap -- and the only
+   * notion definable uniformly across the bounding-box families: TBox/STBox
+   * spatial dimensions are closed continuous ranges with no inc/exc to carry,
+   * so every span + bbox path shares this one definition. Discrete base types
+   * (int, bigint, date) stay correct because they are canonicalized to
+   * half-open [lower, upper+1) at construction (see span_set), so consecutive
+   * values test as adjacent, e.g. intspan '[1,5]' -|- '[6,10]' = true; for a
+   * continuous type a shared boundary is adjacency, e.g. floatspan
+   * '[1,5]' -|- '[5,9]' = true.
    */
-  return (
-    (datum_eq(s1->upper, s2->lower, s1->basetype) &&
-      s1->upper_inc != s2->lower_inc) ||
-    (datum_eq(s2->upper, s1->lower, s1->basetype) &&
-      s2->upper_inc != s1->lower_inc) );
+  return (datum_eq(s1->upper, s2->lower, s1->basetype) ||
+          datum_eq(s2->upper, s1->lower, s1->basetype));
 }
 
 /*****************************************************************************
@@ -376,7 +365,7 @@ lfnadj_span_span(const Span *s1, const Span *s2)
  * @param[in] value Value
  * @param[in] s Span
  */
-inline bool
+bool
 right_value_span(Datum value, const Span *s)
 {
   return left_span_value(s, value);
@@ -388,7 +377,7 @@ right_value_span(Datum value, const Span *s)
  * @param[in] s Span
  * @param[in] value Value
  */
-inline bool
+bool
 right_span_value(const Span *s, Datum value)
 {
   return left_value_span(value, s);
@@ -400,7 +389,7 @@ right_span_value(const Span *s, Datum value)
  * @param[in] s1,s2 Spans
  * @csqlfn #Right_span_span()
  */
-inline bool
+bool
 right_span_span(const Span *s1, const Span *s2)
 {
   return left_span_span(s2, s1);
@@ -533,15 +522,25 @@ bbox_union_span_span(const Span *s1, const Span *s2, Span *result)
  * @ingroup meos_internal_setspan_set
  * @brief Return the bounding union of two spans
  * @param[in] s1,s2 Spans
+ * @param[in] strict True when the spans must be contiguous (a gapped union then
+ * raises an error, mirroring #union_tbox_tbox and #union_stbox_stbox); when
+ * false the result is always a span, spanning any gap
  * @note The result of the function is always a span even if the spans do not
  * overlap
  * @note This function is similar to #bbox_union_span_span **with** memory
  * allocation
  */
 Span *
-super_union_span_span(const Span *s1, const Span *s2)
+super_union_span_span(const Span *s1, const Span *s2, bool strict)
 {
   assert(s1); assert(s2); assert(s1->spantype == s2->spantype);
+  /* The union of spans that are not contiguous cannot be a single span */
+  if (strict && ! ovadj_span_span(s1, s2))
+  {
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      "Result of span union would not be contiguous");
+    return NULL;
+  }
   Span *result = span_copy(s1);
   span_expand(s2, result);
   return result;

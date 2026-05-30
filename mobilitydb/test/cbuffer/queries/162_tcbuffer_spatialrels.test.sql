@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------
 --
 -- This MobilityDB code is provided under The PostgreSQL License.
--- Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+-- Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
 -- contributors
 --
 -- MobilityDB includes portions of PostGIS version 3 source code released
@@ -48,6 +48,26 @@ SELECT eContains(tcbuffer '[Cbuffer(Point(1 4),0.5)@2000-01-01, Cbuffer(Point(4 
 
 /* Errors */
 SELECT eContains(tcbuffer 'Cbuffer(Point(1 1),0.5)@2000-01-01', geometry 'SRID=3812;Point(1 1)');
+
+-------------------------------------------------------------------------------
+-- eCovers
+-------------------------------------------------------------------------------
+
+SELECT eCovers(cbuffer 'Cbuffer(Point(1 1),1)', tcbuffer 'Cbuffer(Point(1 1),0.5)@2000-01-01');
+SELECT eCovers(cbuffer 'Cbuffer(Point(1 1),1)', tcbuffer '{Cbuffer(Point(1 1),0.5)@2000-01-01, Cbuffer(Point(2 2),0.5)@2000-01-02, Cbuffer(Point(1 1),0.5)@2000-01-03}');
+SELECT eCovers(cbuffer 'Cbuffer(Point(1 1),1)', tcbuffer '[Cbuffer(Point(1 1),0.5)@2000-01-01, Cbuffer(Point(2 2),0.5)@2000-01-02, Cbuffer(Point(1 1),0.5)@2000-01-03]');
+SELECT eCovers(cbuffer 'Cbuffer(Point(1 1),1)', tcbuffer '{[Cbuffer(Point(1 1),0.5)@2000-01-01, Cbuffer(Point(2 2),0.5)@2000-01-02, Cbuffer(Point(1 1),0.5)@2000-01-03],[Cbuffer(Point(3 3),0.5)@2000-01-04, Cbuffer(Point(3 3),0.5)@2000-01-05]}');
+
+SELECT eCovers(tcbuffer 'Cbuffer(Point(1 1),1)@2000-01-01', cbuffer 'Cbuffer(Point(1 1),0.5)');
+SELECT eCovers(tcbuffer '{Cbuffer(Point(1 1),1)@2000-01-01, Cbuffer(Point(2 2),1)@2000-01-02, Cbuffer(Point(1 1),1)@2000-01-03}', cbuffer 'Cbuffer(Point(1 1),0.5)');
+SELECT eCovers(tcbuffer '[Cbuffer(Point(1 1),1)@2000-01-01, Cbuffer(Point(2 2),1)@2000-01-02, Cbuffer(Point(1 1),1)@2000-01-03]', cbuffer 'Cbuffer(Point(1 1),0.5)');
+SELECT eCovers(tcbuffer '{[Cbuffer(Point(1 1),1)@2000-01-01, Cbuffer(Point(2 2),1)@2000-01-02, Cbuffer(Point(1 1),1)@2000-01-03],[Cbuffer(Point(3 3),1)@2000-01-04, Cbuffer(Point(3 3),1)@2000-01-05]}', cbuffer 'Cbuffer(Point(1 1),0.5)');
+
+SELECT eCovers(tcbuffer 'Cbuffer(Point(1 1),1)@2000-01-01', tcbuffer 'Cbuffer(Point(1 1),0.5)@2000-01-01');
+SELECT eCovers(tcbuffer '[Cbuffer(Point(1 1),1)@2000-01-01, Cbuffer(Point(2 2),1)@2000-01-02]', tcbuffer '[Cbuffer(Point(1 1),0.5)@2000-01-01, Cbuffer(Point(2 2),0.5)@2000-01-02]');
+
+/* Errors */
+SELECT eCovers(tcbuffer 'Cbuffer(Point(1 1),1)@2000-01-01', geometry 'SRID=3812;Point(1 1)');
 
 -------------------------------------------------------------------------------
 -- eDisjoint
@@ -134,6 +154,10 @@ SELECT eTouches(tcbuffer '{[Cbuffer(Point(1 1),0.5)@2000-01-01, Cbuffer(Point(2 
 SELECT eTouches(cbuffer 'Cbuffer(Point(1 1),0.5)', tcbuffer '{[Cbuffer(Point(1 1),0.5)@2000-01-01, Cbuffer(Point(2 2),0.5)@2000-01-02, Cbuffer(Point(1 1),0.5)@2000-01-03],[Cbuffer(Point(3 3),0.5)@2000-01-04, Cbuffer(Point(3 3),0.5)@2000-01-05]}');
 SELECT eTouches(cbuffer 'Cbuffer(Point(1 1),0.5)', tcbuffer '{[Cbuffer(Point(1 1),0.5)@2000-01-01, Cbuffer(Point(2 2),0.5)@2000-01-02, Cbuffer(Point(1 1),0.5)@2000-01-03],[Cbuffer(Point(3 3),0.5)@2000-01-04, Cbuffer(Point(3 3),0.5)@2000-01-05]}');
 SELECT eTouches(tcbuffer '{[Cbuffer(Point(1 1),0.5)@2000-01-01, Cbuffer(Point(2 2),0.5)@2000-01-02, Cbuffer(Point(1 1),0.5)@2000-01-03],[Cbuffer(Point(3 3),0.5)@2000-01-04, Cbuffer(Point(3 3),0.5)@2000-01-05]}',  cbuffer 'Cbuffer(Point(1 1),0.5)');
+
+-- tcbuffer x tcbuffer (circles touch when distance between centers = sum of radii)
+SELECT eTouches(tcbuffer 'Cbuffer(Point(0 0),0.5)@2000-01-01', tcbuffer 'Cbuffer(Point(1 0),0.5)@2000-01-01');
+SELECT eTouches(tcbuffer '[Cbuffer(Point(0 0),0.5)@2000-01-01, Cbuffer(Point(1 0),0.5)@2000-01-02]', tcbuffer '[Cbuffer(Point(1 0),0.5)@2000-01-01, Cbuffer(Point(2 0),0.5)@2000-01-02]');
 
 /* Errors */
 SELECT eTouches(geometry 'SRID=3812;Point(1 1)', tcbuffer 'Cbuffer(Point(1 1),0.5)@2000-01-01');

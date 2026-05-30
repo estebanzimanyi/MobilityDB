@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -38,12 +38,20 @@ CREATE FUNCTION frechetDistance(tint, tint)
   RETURNS float
   AS 'MODULE_PATHNAME', 'Temporal_frechet_distance'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION frechetDistance(tbigint, tbigint)
+  RETURNS float
+  AS 'MODULE_PATHNAME', 'Temporal_frechet_distance'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION frechetDistance(tfloat, tfloat)
   RETURNS float
   AS 'MODULE_PATHNAME', 'Temporal_frechet_distance'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION dynTimeWarpDistance(tint, tint)
+  RETURNS float
+  AS 'MODULE_PATHNAME', 'Temporal_dyntimewarp_distance'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION dynTimeWarpDistance(tbigint, tbigint)
   RETURNS float
   AS 'MODULE_PATHNAME', 'Temporal_dyntimewarp_distance'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
@@ -56,10 +64,38 @@ CREATE FUNCTION hausdorffDistance(tint, tint)
   RETURNS float
   AS 'MODULE_PATHNAME', 'Temporal_hausdorff_distance'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION hausdorffDistance(tbigint, tbigint)
+  RETURNS float
+  AS 'MODULE_PATHNAME', 'Temporal_hausdorff_distance'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION hausdorffDistance(tfloat, tfloat)
   RETURNS float
   AS 'MODULE_PATHNAME', 'Temporal_hausdorff_distance'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/* 
+@note Functions written by Ossama BENAISSA 
+*/
+  CREATE FUNCTION averageHausdorffDistance(tint, tint)
+  RETURNS float
+AS 'MODULE_PATHNAME', 'Temporal_average_hausdorff_distance'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION averageHausdorffDistance(tfloat, tfloat)
+  RETURNS float
+AS 'MODULE_PATHNAME', 'Temporal_average_hausdorff_distance'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+/* 
+@note Functions written by Ossama BENAISSA 
+*/
+CREATE FUNCTION lcssDistance(tint, tint, float)
+  RETURNS float
+AS 'MODULE_PATHNAME', 'Temporal_lcss_distance'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION lcssDistance(tfloat, tfloat, float)
+  RETURNS float
+AS 'MODULE_PATHNAME', 'Temporal_lcss_distance'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 
 /*****************************************************************************/
 
@@ -72,6 +108,10 @@ CREATE FUNCTION frechetDistancePath(tint, tint)
   RETURNS SETOF warp
   AS 'MODULE_PATHNAME', 'Temporal_frechet_path'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION frechetDistancePath(tbigint, tbigint)
+  RETURNS SETOF warp
+  AS 'MODULE_PATHNAME', 'Temporal_frechet_path'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION frechetDistancePath(tfloat, tfloat)
   RETURNS SETOF warp
   AS 'MODULE_PATHNAME', 'Temporal_frechet_path'
@@ -81,9 +121,15 @@ CREATE FUNCTION dynTimeWarpPath(tint, tint)
   RETURNS SETOF warp
   AS 'MODULE_PATHNAME', 'Temporal_dyntimewarp_path'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION dynTimeWarpPath(tbigint, tbigint)
+  RETURNS SETOF warp
+  AS 'MODULE_PATHNAME', 'Temporal_dyntimewarp_path'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION dynTimeWarpPath(tfloat, tfloat)
   RETURNS SETOF warp
   AS 'MODULE_PATHNAME', 'Temporal_dyntimewarp_path'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************/
+
+

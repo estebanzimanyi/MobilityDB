@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -70,6 +70,7 @@ PG_FUNCTION_INFO_V1(Trgeometry_in);
 /**
  * @ingroup mobilitydb_rgeo_inout
  * @brief Generic input function for temporal rigid geometries
+ * @sqlfn trgeometry_in()
  * @details Examples of input for the various temporal types:
  * - Instant
  * @code
@@ -106,6 +107,7 @@ PG_FUNCTION_INFO_V1(Trgeometry_out);
 /**
  * @ingroup mobilitydb_rgeo_inout
  * @brief Generic output function for temporal rigid geometries
+ * @sqlfn trgeometry_out()
  */
 Datum
 Trgeometry_out(PG_FUNCTION_ARGS)
@@ -156,7 +158,9 @@ Trgeometry_send(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Trgeometry_typmod_in(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Trgeometry_typmod_in);
 /**
+ * @ingroup mobilitydb_rgeo_inout
  * @brief Input typmod information for temporal rigid geometries
+ * @sqlfn trgeo_typmod_in()
  */
 Datum
 Trgeometry_typmod_in(PG_FUNCTION_ARGS)
@@ -416,15 +420,15 @@ Trgeometry_to_tpose(PG_FUNCTION_ARGS)
   PG_RETURN_POINTER(result);
 }
 
-PGDLLEXPORT Datum Trgeometry_to_tpoint(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Trgeometry_to_tpoint);
+PGDLLEXPORT Datum Trgeometry_to_tgeompoint(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Trgeometry_to_tgeompoint);
 /**
  * @ingroup mobilitydb_rgeo_conversion
- * @brief Convert a temporal rigid geometry into a temporal point 
+ * @brief Convert a temporal rigid geometry into a temporal point
  * @sqlfn tgeompoint()
  */
 Datum
-Trgeometry_to_tpoint(PG_FUNCTION_ARGS)
+Trgeometry_to_tgeompoint(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   Temporal *result = trgeometry_to_tpoint(temp);

@@ -1,7 +1,7 @@
 ﻿-------------------------------------------------------------------------------
 --
 -- This MobilityDB code is provided under The PostgreSQL License.
--- Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+-- Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
 -- contributors
 --
 -- MobilityDB includes portions of PostGIS version 3 source code released
@@ -448,6 +448,20 @@ SELECT trgeometry 'SRID=5676;Polygon((1 1,2 2,3 1,1 1));Pose(Point(1 1),0.5)@200
 SELECT trgeometry 'SRID=5676;Polygon((1 1,2 2,3 1,1 1));Pose(Point(1 1),0.5)@2000-01-01' &<# stbox 'STBOX X((1.0,1.0),(2.0,2.0))';
 SELECT trgeometry 'SRID=5676;Polygon((1 1,2 2,3 1,1 1));Pose(Point(1 1),0.5)@2000-01-01' #>> stbox 'STBOX X((1.0,1.0),(2.0,2.0))';
 SELECT trgeometry 'SRID=5676;Polygon((1 1,2 2,3 1,1 1));Pose(Point(1 1),0.5)@2000-01-01' #&> stbox 'STBOX X((1.0,1.0),(2.0,2.0))';
+
+-- Z-axis position operators (front/back)
+SELECT stbox 'STBOX Z((0,0,0),(1,1,1))' <</ trgeometry 'Polygon Z((0 0 0,1 0 0,1 1 0,0 1 0,0 0 0));[Pose(Point(10 10 10),1.0,0.0,0.0,0.0)@2000-01-01,Pose(Point(10 10 10),1.0,0.0,0.0,0.0)@2000-01-02]';
+SELECT stbox 'STBOX Z((0,0,0),(1,1,1))' &</ trgeometry 'Polygon Z((0 0 0,1 0 0,1 1 0,0 1 0,0 0 0));[Pose(Point(10 10 10),1.0,0.0,0.0,0.0)@2000-01-01,Pose(Point(10 10 10),1.0,0.0,0.0,0.0)@2000-01-02]';
+SELECT stbox 'STBOX Z((0,0,0),(1,1,1))' />> trgeometry 'Polygon Z((0 0 0,1 0 0,1 1 0,0 1 0,0 0 0));[Pose(Point(10 10 10),1.0,0.0,0.0,0.0)@2000-01-01,Pose(Point(10 10 10),1.0,0.0,0.0,0.0)@2000-01-02]';
+SELECT stbox 'STBOX Z((0,0,0),(1,1,1))' /&> trgeometry 'Polygon Z((0 0 0,1 0 0,1 1 0,0 1 0,0 0 0));[Pose(Point(10 10 10),1.0,0.0,0.0,0.0)@2000-01-01,Pose(Point(10 10 10),1.0,0.0,0.0,0.0)@2000-01-02]';
+SELECT trgeometry 'Polygon Z((0 0 0,1 0 0,1 1 0,0 1 0,0 0 0));[Pose(Point(10 10 10),1.0,0.0,0.0,0.0)@2000-01-01,Pose(Point(10 10 10),1.0,0.0,0.0,0.0)@2000-01-02]' <</ stbox 'STBOX Z((0,0,0),(1,1,1))';
+SELECT trgeometry 'Polygon Z((0 0 0,1 0 0,1 1 0,0 1 0,0 0 0));[Pose(Point(10 10 10),1.0,0.0,0.0,0.0)@2000-01-01,Pose(Point(10 10 10),1.0,0.0,0.0,0.0)@2000-01-02]' &</ stbox 'STBOX Z((0,0,0),(1,1,1))';
+SELECT trgeometry 'Polygon Z((0 0 0,1 0 0,1 1 0,0 1 0,0 0 0));[Pose(Point(10 10 10),1.0,0.0,0.0,0.0)@2000-01-01,Pose(Point(10 10 10),1.0,0.0,0.0,0.0)@2000-01-02]' />> stbox 'STBOX Z((0,0,0),(1,1,1))';
+SELECT trgeometry 'Polygon Z((0 0 0,1 0 0,1 1 0,0 1 0,0 0 0));[Pose(Point(10 10 10),1.0,0.0,0.0,0.0)@2000-01-01,Pose(Point(10 10 10),1.0,0.0,0.0,0.0)@2000-01-02]' /&> stbox 'STBOX Z((0,0,0),(1,1,1))';
+SELECT trgeometry 'Polygon Z((0 0 0,1 0 0,1 1 0,0 1 0,0 0 0));[Pose(Point(0 0 0),1.0,0.0,0.0,0.0)@2000-01-01,Pose(Point(0 0 0),1.0,0.0,0.0,0.0)@2000-01-02]' <</ trgeometry 'Polygon Z((0 0 0,1 0 0,1 1 0,0 1 0,0 0 0));[Pose(Point(10 10 10),1.0,0.0,0.0,0.0)@2000-01-01,Pose(Point(10 10 10),1.0,0.0,0.0,0.0)@2000-01-02]';
+SELECT trgeometry 'Polygon Z((0 0 0,1 0 0,1 1 0,0 1 0,0 0 0));[Pose(Point(0 0 0),1.0,0.0,0.0,0.0)@2000-01-01,Pose(Point(0 0 0),1.0,0.0,0.0,0.0)@2000-01-02]' &</ trgeometry 'Polygon Z((0 0 0,1 0 0,1 1 0,0 1 0,0 0 0));[Pose(Point(10 10 10),1.0,0.0,0.0,0.0)@2000-01-01,Pose(Point(10 10 10),1.0,0.0,0.0,0.0)@2000-01-02]';
+SELECT trgeometry 'Polygon Z((0 0 0,1 0 0,1 1 0,0 1 0,0 0 0));[Pose(Point(0 0 0),1.0,0.0,0.0,0.0)@2000-01-01,Pose(Point(0 0 0),1.0,0.0,0.0,0.0)@2000-01-02]' />> trgeometry 'Polygon Z((0 0 0,1 0 0,1 1 0,0 1 0,0 0 0));[Pose(Point(10 10 10),1.0,0.0,0.0,0.0)@2000-01-01,Pose(Point(10 10 10),1.0,0.0,0.0,0.0)@2000-01-02]';
+SELECT trgeometry 'Polygon Z((0 0 0,1 0 0,1 1 0,0 1 0,0 0 0));[Pose(Point(0 0 0),1.0,0.0,0.0,0.0)@2000-01-01,Pose(Point(0 0 0),1.0,0.0,0.0,0.0)@2000-01-02]' /&> trgeometry 'Polygon Z((0 0 0,1 0 0,1 1 0,0 1 0,0 0 0));[Pose(Point(10 10 10),1.0,0.0,0.0,0.0)@2000-01-01,Pose(Point(10 10 10),1.0,0.0,0.0,0.0)@2000-01-02]';
 
 -------------------------------------------------------------------------------
 

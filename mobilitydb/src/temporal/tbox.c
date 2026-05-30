@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -218,7 +218,7 @@ Datum
 Tbox_as_hexwkb(PG_FUNCTION_ARGS)
 {
   Datum box = PG_GETARG_DATUM(0);
-  PG_RETURN_TEXT_P(Datum_as_hexwkb(fcinfo, box, T_TBOX));
+  PG_RETURN_TEXT_P(Datum_as_hexwkb(fcinfo, box, T_TBOX, false));
 }
 
 /*****************************************************************************
@@ -404,6 +404,20 @@ Spanset_to_tbox(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************/
+
+PGDLLEXPORT Datum Tbox_to_bigintspan(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tbox_to_bigintspan);
+/**
+ * @ingroup mobilitydb_box_conversion
+ * @brief Convert a temporal box into a big integer span
+ * @sqlfn floatspan()
+ */
+Datum
+Tbox_to_bigintspan(PG_FUNCTION_ARGS)
+{
+  TBox *box = PG_GETARG_TBOX_P(0);
+  PG_RETURN_SPAN_P(tbox_to_bigintspan(box));
+}
 
 PGDLLEXPORT Datum Tbox_to_intspan(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tbox_to_intspan);
@@ -1033,18 +1047,22 @@ Tbox_extent_transfn(PG_FUNCTION_ARGS)
   TBox *box2 = PG_ARGISNULL(1) ? NULL : PG_GETARG_TBOX_P(1);
 
   /* Can't do anything with null inputs */
-  if (! box1 || ! box2)
+  if (! box1 && ! box2)
+    PG_RETURN_NULL();
+  TBox *result = palloc(sizeof(TBox));
+  /* One of the boxes is null, return the other one */
+  if (! box1)
   {
-    if (! box1 && ! box2)
-      PG_RETURN_NULL();
-    if (! box1)
-      PG_RETURN_TBOX_P(tbox_copy(box2));
-    else
-      PG_RETURN_TBOX_P(tbox_copy(box1));
+    memcpy(result, box2, sizeof(TBox));
+    PG_RETURN_TBOX_P(result);
+  }
+  if (! box2)
+  {
+    memcpy(result, box1, sizeof(TBox));
+    PG_RETURN_TBOX_P(result);
   }
 
   /* Both boxes are not null */
-  TBox *result = palloc(sizeof(TBox));
   memcpy(result, box1, sizeof(TBox));
   tbox_expand(box2, result);
   PG_RETURN_TBOX_P(result);
@@ -1196,7 +1214,7 @@ Tbox_ne(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tbox_hash(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tbox_hash);
 /**
- * @ingroup mobilitydb_temporal_box_comp
+ * @ingroup mobilitydb_box_comp
  * @brief Return the hash value of a temporal box
  * @sqlfn tbox_hash()
  */
@@ -1210,7 +1228,7 @@ Tbox_hash(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tbox_hash_extended(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tbox_hash_extended);
 /**
- * @ingroup mobilitydb_temporal_box_comp
+ * @ingroup mobilitydb_box_comp
  * @brief Return the hash value of a temporal box
  * @sqlfn tbox_hash_extended()
  */
@@ -1220,6 +1238,24 @@ Tbox_hash_extended(PG_FUNCTION_ARGS)
   TBox *box = PG_GETARG_TBOX_P(0);
   uint64 seed = PG_GETARG_INT64(1);
   PG_RETURN_UINT64(tbox_hash_extended(box, seed));
+}
+
+/*****************************************************************************/
+
+PGDLLEXPORT Datum Tbox_arrow_roundtrip(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tbox_arrow_roundtrip);
+/**
+ * @ingroup mobilitydb_box_conversion
+ * @brief Round-trip a temporal box through the Arrow C Data Interface,
+ * returning the reconstructed value
+ * @sqlfn arrowRoundtrip()
+ */
+Datum
+Tbox_arrow_roundtrip(PG_FUNCTION_ARGS)
+{
+  TBox *box = PG_GETARG_TBOX_P(0);
+  TBox *result = meos_tbox_arrow_roundtrip(box);
+  PG_RETURN_TBOX_P(result);
 }
 
 /*****************************************************************************/

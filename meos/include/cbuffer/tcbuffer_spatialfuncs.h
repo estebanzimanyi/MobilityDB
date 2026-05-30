@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -45,10 +45,16 @@
 /* Traversed area functions */
 
 extern GSERIALIZED *tcbufferinst_trav_area(const TInstant *inst);
-extern GSERIALIZED *tcbufferseq_trav_area(const TSequence *seq);
-extern GSERIALIZED *tcbufferseqset_trav_area(const TSequenceSet *ss);
+extern GSERIALIZED *tcbufferseq_traversed_area(const TSequence *seq,
+  bool unary_union);
+extern GSERIALIZED *tcbufferseqset_traversed_area(const TSequenceSet *ss,
+  bool unary_union);
 extern GSERIALIZED *tcbuffersegm_trav_area(const TInstant *inst1,
   const TInstant *inst2);
+
+/* Spatial accessor functions */
+
+extern GSERIALIZED *tcbuffer_convex_hull(const Temporal *temp);
 
 /* Restriction functions */
 

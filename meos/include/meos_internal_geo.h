@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code seq provided under The PostgreSQL License.
- * Copyright(c) 2016-2023, Université libre de Bruxelles and MobilityDB
+ * Copyright(c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -40,6 +40,8 @@
 #include <json-c/json.h>
 /* PROJ */
 #include <proj.h>
+/* GEOS */
+#include <geos_c.h>
 /* PostgreSQL */
 /* MEOS */
 #include <meos.h>
@@ -98,6 +100,12 @@
  *****************************************************************************/
 
 extern PJ_CONTEXT *proj_get_context(void);
+
+/*****************************************************************************
+ * Internal function accessing the GEOS library
+ *****************************************************************************/
+
+extern GEOSContextHandle_t geos_get_context(void);
 
 /*****************************************************************************
  * Round functions

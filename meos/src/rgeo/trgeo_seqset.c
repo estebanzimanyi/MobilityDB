@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -241,7 +241,7 @@ trgeoseqset_make_exp(const GSERIALIZED *geom, TSequence **sequences,
  * temporal sequence sets before applying an operation to them.
  * @sqlfn tbool_seqset(), tint_seqset(), tfloat_seqset(), ttext_seqset(), etc.
  */
-inline TSequenceSet *
+TSequenceSet *
 trgeoseqset_make(const GSERIALIZED *geom, TSequence **sequences, int count,
   bool normalize)
 {

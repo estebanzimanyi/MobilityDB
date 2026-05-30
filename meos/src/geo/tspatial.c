@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -67,7 +67,10 @@
   #include "rgeo/trgeo.h"
   #include "rgeo/trgeo_inst.h"
   #include "rgeo/trgeo_boxops.h"
-#endif 
+#endif
+#if H3
+  #include "h3/th3index_boxops.h"
+#endif
 
 /*****************************************************************************
  * Input/output functions
@@ -180,7 +183,7 @@ spatialset_out_fn(const Set *s, int maxdd, outfunc wkt_out, bool extended)
  * @brief Return the Well-Known Text (WKT) representation of a spatial set
  * @csqlfn #Spatialset_as_text()
  */
-inline char *
+char *
 spatialset_as_text(const Set *s, int maxdd)
 {
   return spatialset_out_fn(s, maxdd, &spatialbase_as_text, false);
@@ -193,7 +196,7 @@ spatialset_as_text(const Set *s, int maxdd)
  * @param[in] maxdd Maximum number of decimal digits
  * @csqlfn #Spatialset_as_ewkt()
  */
-inline char *
+char *
 spatialset_as_ewkt(const Set *s, int maxdd)
 {
   /* The SRID will be output as prefix, the elements will output the SRID*/
@@ -353,7 +356,7 @@ spatialarr_wkt_out(const Datum *spatialarr, MeosType elemtype, int count,
  * @param[in] count Number of elements in the input array
  * @param[in] maxdd Maximum number of decimal digits to output
  */
-inline char **
+char **
 spatialarr_as_text(const Datum *spatialarr, MeosType elemtype, int count, 
   int maxdd)
 {
@@ -369,7 +372,7 @@ spatialarr_as_text(const Datum *spatialarr, MeosType elemtype, int count,
  * @param[in] count Number of elements in the input array
  * @param[in] maxdd Maximum number of decimal digits to output
  */
-inline char **
+char **
 spatialarr_as_ewkt(const Datum *spatialarr, MeosType elemtype, int count, 
   int maxdd)
 {
@@ -447,6 +450,10 @@ tspatial_set_stbox(const Temporal *temp, STBox *box)
       else if (temp->temptype == T_TRGEOMETRY)
         trgeoinst_set_stbox(trgeoinst_geom_p((TInstant *) temp),
           (TInstant *) temp, box);
+#endif
+#if H3
+      else if (temp->temptype == T_TH3INDEX)
+        th3indexinst_set_stbox((TInstant *) temp, box);
 #endif
       else
         meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,

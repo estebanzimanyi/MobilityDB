@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -52,6 +52,7 @@
 #include "geo/tgeo_tile.h"
 /* MobilityDB */
 #include "pg_temporal/type_util.h"
+#include "pg_temporal/temporal.h"
 #include "pg_geo/postgis.h"
 
 /*****************************************************************************/
@@ -110,9 +111,10 @@ Stbox_space_time_tiles_common(FunctionCallInfo fcinfo, bool spacetiles,
         ensure_same_spatial_dimensionality_stbox_geo(bounds, sorigin);
       else
         zsize = 0;
+      int32_t srid = bounds->srid;
       int32_t gs_srid = gserialized_get_srid(sorigin);
       if (gs_srid != SRID_UNKNOWN)
-        ensure_same_srid(bounds->srid, gs_srid);
+        ensure_same_srid(srid, gs_srid);
       memset(&pt, 0, sizeof(POINT3DZ));
       if (FLAGS_GET_Z(sorigin->gflags))
       {

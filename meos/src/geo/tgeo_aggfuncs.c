@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -60,7 +60,7 @@ ensure_geoaggstate(const SkipList *state, int32_t srid, bool hasz)
 {
   if (! state)
     return true;
-  struct GeoAggregateState *extra = state->extra;
+  const struct GeoAggregateState *extra = state->extra;
   if (extra && extra->srid != srid)
   {
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
@@ -84,7 +84,7 @@ ensure_geoaggstate_state(const SkipList *state1, const SkipList *state2)
 {
   if(! state2)
     return true;
-  struct GeoAggregateState *extra2 = state2->extra;
+  const struct GeoAggregateState *extra2 = state2->extra;
   if (extra2)
     return ensure_geoaggstate(state1, extra2->srid, extra2->hasz);
   return true;
@@ -208,7 +208,7 @@ tpoint_transform_tcentroid(const Temporal *temp, int *count)
  * @csqlfn #Tpoint_tcentroid_transfn()
  */
 SkipList *
-tpoint_tcentroid_transfn(SkipList *state, Temporal *temp)
+tpoint_tcentroid_transfn(SkipList *state, const Temporal *temp)
 {
   /* Null temporal: return state */
   if (! temp)
@@ -255,14 +255,19 @@ STBox *
 tspatial_extent_transfn(STBox *state, const Temporal *temp)
 {
   /* Can't do anything with null inputs */
-  if (! state || ! temp)
+  if (! state && ! temp)
+    return NULL;
+  /* Null state and non-null temporal, return the bbox of the temporal */
+  if (! state )
   {
-    if (! state && ! temp)
-      return NULL;
-    if (! state)
-      return tspatial_to_stbox(temp);
-    else
-      return state;
+    STBox *result = palloc0(sizeof(STBox));
+    tspatial_set_stbox(temp, result);
+    return result;
+  }
+  /* Non-null state and null temporal, return the state */
+  if (! temp)
+  {
+    return state;
   }
 
   /* Ensure the validity of the arguments */
@@ -291,7 +296,7 @@ doublen_to_point(const TInstant *inst, int32_t srid)
   LWPOINT *point;
   if (inst->temptype == T_TDOUBLE3)
   {
-    double3 *value3 = (double3 *) DatumGetPointer(tinstant_value_p(inst));
+    const double3 *value3 = (double3 *) DatumGetPointer(tinstant_value_p(inst));
     assert(value3->c != 0);
     double valuea = value3->a / value3->c;
     double valueb = value3->b / value3->c;
@@ -299,7 +304,7 @@ doublen_to_point(const TInstant *inst, int32_t srid)
   }
   else /* inst->temptype == T_TDOUBLE4 */
   {
-    double4 *value4 = (double4 *) DatumGetPointer(tinstant_value_p(inst));
+    const double4 *value4 = (double4 *) DatumGetPointer(tinstant_value_p(inst));
     assert(value4->d != 0);
     double valuea = value4->a / value4->d;
     double valueb = value4->b / value4->d;

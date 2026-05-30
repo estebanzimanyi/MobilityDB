@@ -1,7 +1,7 @@
 /***********************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -63,6 +63,9 @@
 #if RGEO
   #include "rgeo/trgeo.h"
 #endif
+#if H3
+  #include <h3api.h>
+#endif
 
 /*
  * Maximum length of an ESPG string to lookup
@@ -98,6 +101,12 @@ spatial_srid(Datum d, MeosType basetype)
     case T_POSE:
       return pose_srid(DatumGetPoseP(d));
 #endif
+#if H3
+    case T_H3INDEX:
+      /* H3 cells are inherently WGS84 (EPSG:4326) */
+      (void) d;
+      return SRID_DEFAULT;
+#endif
     default: /* Error! */
       meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
         "Unknown SRID function for type: %s", meostype_name(basetype));
@@ -128,6 +137,12 @@ spatial_set_srid(Datum d, MeosType basetype, int32_t srid)
     case T_POSE:
       pose_set_srid(DatumGetPoseP(d), srid);
       return true;
+#endif
+#if H3
+    case T_H3INDEX:
+      /* H3 cells are inherently WGS84; only SRID 4326 is accepted */
+      (void) d;
+      return (srid == SRID_DEFAULT);
 #endif
     default: /* Error! */
       meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
@@ -279,10 +294,7 @@ tspatialseqset_set_srid(TSequenceSet *ss, int32_t srid)
   assert(ss); assert(tspatial_type(ss->temptype));
   /* Loop for every composing sequence */
   for (int i = 0; i < ss->count; i++)
-  {
-    TSequence *seq = (TSequence *) TSEQUENCESET_SEQ_N(ss, i);
-    tspatialseq_set_srid(seq, srid);
-  }
+    tspatialseq_set_srid((TSequence *) TSEQUENCESET_SEQ_N(ss, i), srid);
   /* Set the SRID of the bounding box */
   STBox *box = TSEQUENCESET_BBOX_PTR(ss);
   box->srid = srid;
@@ -452,11 +464,13 @@ Datum
     case T_GEOMETRY:
     case T_GEOGRAPHY:
     {
-      /* TODO This DOES NOT transform the geometry, it should be fixed */
       LWGEOM *geo = lwgeom_from_gserialized(DatumGetGserializedP(d));
       if (! lwgeom_transform(geo, (LWPROJ *) pj))
         return PointerGetDatum(NULL);
       geo->srid = srid_to;
+      /* Re-compute bbox if input had one (COMPUTE_BBOX TAINTING) */
+      if (geo->bbox)
+        lwgeom_refresh_bbox(geo);
       Datum result = PointerGetDatum(geo_serialize(geo));
       lwgeom_free(geo);
       return result;
@@ -715,11 +729,9 @@ tspatial_transform_pipeline(const Temporal *temp, const char *pipeline,
 {
   /* Ensure the validity of the arguments */
   VALIDATE_TSPATIAL(temp, NULL); VALIDATE_NOT_NULL(pipeline, NULL);
-  // TODO The following lines currently break the tests, this should be fixed
-  // if (! ensure_srid_known(srid_to))
-    // return NULL;
-
-  /* There is NO test verifying whether the input and output SRIDs are equal */
+  /* srid_to may legitimately be SRID_UNKNOWN for pipeline transformations:
+   * the pipeline string itself encodes the destination CRS. So unlike the
+   * sibling tspatial_transform path, we do NOT call ensure_srid_known here. */
 
   /* Get the structure with information about the projection */
   LWPROJ *pj = lwproj_from_str_pipeline(pipeline, is_forward);

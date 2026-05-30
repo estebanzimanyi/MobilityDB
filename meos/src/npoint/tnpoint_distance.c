@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -56,7 +56,9 @@ datum_npoint_distance(Datum np1, Datum np2)
 {
   Datum geom1 = PointerGetDatum(npoint_to_geompoint(DatumGetNpointP(np1)));
   Datum geom2 = PointerGetDatum(npoint_to_geompoint(DatumGetNpointP(np2)));
-  return datum_pt_distance2d(geom1, geom2);
+  Datum result = datum_pt_distance2d(geom1, geom2);
+  pfree(DatumGetPointer(geom1)); pfree(DatumGetPointer(geom2));
+  return result;
 }
 
 /*****************************************************************************

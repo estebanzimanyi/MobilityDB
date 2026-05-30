@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -116,6 +116,15 @@
  * @defgroup meos_rgeo Functions for temporal rigid geometries
  * @ingroup meos_api
  * @brief Functions for temporal rigid geometries
+ *
+ * @defgroup meos_h3 Functions for temporal H3 cell indices
+ * @ingroup meos_api
+ * @brief Functions for temporal H3 cell indices
+ *
+ * @defgroup meos_pointcloud Functions for temporal pgpointcloud types
+ * @ingroup meos_api
+ * @brief Functions for static, set, box, and temporal pgpointcloud types
+ *   (pcpoint, pcpatch, pcpointset, pcpatchset, tpcbox, tpcpoint, tpcpatch)
  *
  * @defgroup meos_misc Miscellaneous functions
  * @ingroup meos_api
@@ -269,17 +278,17 @@
  * @ingroup meos_temporal
  * @brief Comparison functions for temporal types
  *
- * @defgroup meos_temporal_comp_trad Traditional comparison functions
- * @ingroup meos_temporal_comp
- * @brief Traditional comparison functions for temporal types
+ *   @defgroup meos_temporal_comp_trad Traditional comparison functions
+ *   @ingroup meos_temporal_comp
+ *   @brief Traditional comparison functions for temporal types
  *
- * @defgroup meos_temporal_comp_ever Ever and always comparison functions
- * @ingroup meos_temporal_comp
- * @brief Ever and always comparison functions for temporal types
+ *   @defgroup meos_temporal_comp_ever Ever and always comparison functions
+ *   @ingroup meos_temporal_comp
+ *   @brief Ever and always comparison functions for temporal types
  *
- * @defgroup meos_temporal_comp_temp Temporal comparison functions
- * @ingroup meos_temporal_comp
- * @brief Temporal comparison functions for temporal types
+ *   @defgroup meos_temporal_comp_temp Temporal comparison functions
+ *   @ingroup meos_temporal_comp
+ *   @brief Temporal comparison functions for temporal types
  *
  * @defgroup meos_temporal_bbox Bounding box functions
  * @ingroup meos_temporal
@@ -321,21 +330,25 @@
  * @ingroup meos_temporal
  * @brief Analytics functions for temporal types
  *
- * @defgroup meos_temporal_analytics_simplify Simplification functions
- * @ingroup meos_temporal_analytics
- * @brief Simplification functions for temporal types
+ *   @defgroup meos_temporal_analytics_simplify Simplification functions
+ *   @ingroup meos_temporal_analytics
+ *   @brief Simplification functions for temporal types
  *
- * @defgroup meos_temporal_analytics_reduction Reduction functions
- * @ingroup meos_temporal_analytics
- * @brief Reduction functions for temporal types
+ *   @defgroup meos_temporal_analytics_reduction Reduction functions
+ *   @ingroup meos_temporal_analytics
+ *   @brief Reduction functions for temporal types
  *
- * @defgroup meos_temporal_analytics_similarity Similarity functions
- * @ingroup meos_temporal_analytics
- * @brief Similarity functions for temporal types
+ *   @defgroup meos_temporal_analytics_outlier Outlier detection functions
+ *   @ingroup meos_temporal_analytics
+ *   @brief Outlier detection functions for temporal types
  *
- * @defgroup meos_temporal_analytics_tile Tile functions
- * @ingroup meos_temporal_analytics
- * @brief Tile functions for temporal types
+ *   @defgroup meos_temporal_analytics_similarity Similarity functions
+ *   @ingroup meos_temporal_analytics
+ *   @brief Similarity functions for temporal types
+ *
+ *   @defgroup meos_temporal_analytics_tile Tile functions
+ *   @ingroup meos_temporal_analytics
+ *   @brief Tile functions for temporal types
  */
 
 /*****************************************************************************/

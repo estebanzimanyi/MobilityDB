@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -178,7 +178,7 @@ stbox_out(const STBox *box, int maxdd)
     snprintf(srid, sizeof(srid), "SRID=%d;", box->srid);
   else
     srid[0] = '\0';
-  char *boxtype = geodetic ? "GEODSTBOX" : "STBOX";
+  const char *boxtype = geodetic ? "GEODSTBOX" : "STBOX";
   if (hast)
     /* The second argument is not used for periods */
     period = span_out(&box->period, maxdd);
@@ -1804,7 +1804,7 @@ contains_stbox_stbox(const STBox *box1, const STBox *box2)
  * @param[in] box1,box2 Spatiotemporal boxes
  * @csqlfn #Contained_stbox_stbox()
  */
-inline bool
+bool
 contained_stbox_stbox(const STBox *box1, const STBox *box2)
 {
   return contains_stbox_stbox(box2, box1);
@@ -1875,32 +1875,47 @@ adjacent_stbox_stbox(const STBox *box1, const STBox *box2)
   if (! topo_stbox_stbox_init(box1, box2, &hasx, &hasz, &hast, &geodetic))
     return false;
 
-  STBox inter;
-  if (! inter_stbox_stbox(box1, box2, &inter))
-    return false;
+  /* Set-theoretic share-a-boundary adjacency: the boxes are adjacent iff
+   * no axis is fully disjoint AND at least one axis touches at a shared
+   * boundary value (box1.max == box2.min or box2.max == box1.min on that
+   * axis). The previous formula used "intersection has any degenerate
+   * axis", which over-reported adjacency when one input was already
+   * degenerate on an axis whose value happened to land inside the other
+   * box's interior (e.g. a TInstant key inside a tstzspan query). */
+  bool boundary_touch = false;
 
-  /* Boxes are adjacent if they share n dimensions and their intersection is
-   * at most of n-1 dimensions */
-  if (! hasx && hast)
-    return (inter.period.lower == inter.period.upper);
-  if (hasx && ! hast)
+  if (hasx)
   {
+    if (box1->xmax < box2->xmin || box2->xmax < box1->xmin)
+      return false;
+    if (box1->xmax == box2->xmin || box2->xmax == box1->xmin)
+      boundary_touch = true;
+    if (box1->ymax < box2->ymin || box2->ymax < box1->ymin)
+      return false;
+    if (box1->ymax == box2->ymin || box2->ymax == box1->ymin)
+      boundary_touch = true;
     if (hasz)
-      return (inter.xmin == inter.xmax || inter.ymin == inter.ymax ||
-           inter.zmin == inter.zmax);
-    else
-      return (inter.xmin == inter.xmax || inter.ymin == inter.ymax);
+    {
+      if (box1->zmax < box2->zmin || box2->zmax < box1->zmin)
+        return false;
+      if (box1->zmax == box2->zmin || box2->zmax == box1->zmin)
+        boundary_touch = true;
+    }
   }
-  else
+
+  if (hast)
   {
-    if (hasz)
-      return (inter.xmin == inter.xmax || inter.ymin == inter.ymax ||
-           inter.zmin == inter.zmax ||
-           inter.period.lower == inter.period.upper);
-    else
-      return (inter.xmin == inter.xmax || inter.ymin == inter.ymax ||
-           inter.period.lower == inter.period.upper);
+    TimestampTz t1lo = DatumGetTimestampTz(box1->period.lower);
+    TimestampTz t1hi = DatumGetTimestampTz(box1->period.upper);
+    TimestampTz t2lo = DatumGetTimestampTz(box2->period.lower);
+    TimestampTz t2hi = DatumGetTimestampTz(box2->period.upper);
+    if (t1hi < t2lo || t2hi < t1lo)
+      return false;
+    if (t1hi == t2lo || t2hi == t1lo)
+      boundary_touch = true;
   }
+
+  return boundary_touch;
 }
 
 /*****************************************************************************
@@ -2354,7 +2369,7 @@ stbox_quad_split(const STBox *box, int *count)
   bool hasz = MEOS_FLAGS_GET_Z(box->flags);
   bool hast = MEOS_FLAGS_GET_T(box->flags);
   bool geodetic = MEOS_FLAGS_GET_GEODETIC(box->flags);
-  Span *period = hast ? (Span *) &box->period : NULL;
+  const Span *period = hast ? &box->period : NULL;
   *count = hasz ? 8 : 4;
   STBox *result = palloc(sizeof(STBox) * (*count));
   double deltax = (box->xmax - box->xmin) / 2.0;
@@ -2435,7 +2450,7 @@ stbox_eq(const STBox *box1, const STBox *box2)
  * @param[in] box1,box2 Spatiotemporal boxes
  * @csqlfn #Stbox_ne()
  */
-inline bool
+bool
 stbox_ne(const STBox *box1, const STBox *box2)
 {
   return ! stbox_eq(box1, box2);
@@ -2520,7 +2535,7 @@ stbox_cmp(const STBox *box1, const STBox *box2)
  * @param[in] box1,box2 Spatiotemporal boxes
  * @csqlfn #Stbox_lt()
  */
-inline bool
+bool
 stbox_lt(const STBox *box1, const STBox *box2)
 {
   return stbox_cmp(box1, box2) < 0;
@@ -2533,7 +2548,7 @@ stbox_lt(const STBox *box1, const STBox *box2)
  * @param[in] box1,box2 Spatiotemporal boxes
  * @csqlfn #Stbox_le()
  */
-inline bool
+bool
 stbox_le(const STBox *box1, const STBox *box2)
 {
   return stbox_cmp(box1, box2) <= 0;
@@ -2546,7 +2561,7 @@ stbox_le(const STBox *box1, const STBox *box2)
  * @param[in] box1,box2 Spatiotemporal boxes
  * @csqlfn #Stbox_ge()
  */
-inline bool
+bool
 stbox_ge(const STBox *box1, const STBox *box2)
 {
   return stbox_cmp(box1, box2) >= 0;
@@ -2559,7 +2574,7 @@ stbox_ge(const STBox *box1, const STBox *box2)
  * @param[in] box1,box2 Spatiotemporal boxes
  * @csqlfn #Stbox_gt()
  */
-inline bool
+bool
 stbox_gt(const STBox *box1, const STBox *box2)
 {
   return stbox_cmp(box1, box2) > 0;
@@ -2595,13 +2610,13 @@ stbox_hash(const STBox *box)
 #if POSTGRESQL_VERSION_NUMBER >= 150000
     result = pg_rotate_left32(result, 1);
 #else
-    result =  (result << 1) | (result >> 31);
+    result = (result << 1) | (result >> 31);
 #endif
     result ^= pg_hashfloat8(box->ymin);
 #if POSTGRESQL_VERSION_NUMBER >= 150000
     result = pg_rotate_left32(result, 1);
 #else
-    result =  (result << 1) | (result >> 31);
+    result = (result << 1) | (result >> 31);
 #endif
     if (hasz)
     {
@@ -2609,20 +2624,20 @@ stbox_hash(const STBox *box)
 #if POSTGRESQL_VERSION_NUMBER >= 150000
       result = pg_rotate_left32(result, 1);
 #else
-      result =  (result << 1) | (result >> 31);
+      result = (result << 1) | (result >> 31);
 #endif
     }
     result ^= pg_hashfloat8(box->xmax);
 #if POSTGRESQL_VERSION_NUMBER >= 150000
     result = pg_rotate_left32(result, 1);
 #else
-    result =  (result << 1) | (result >> 31);
+    result = (result << 1) | (result >> 31);
 #endif
     result ^= pg_hashfloat8(box->ymax);
 #if POSTGRESQL_VERSION_NUMBER >= 150000
     result = pg_rotate_left32(result, 1);
 #else
-    result =  (result << 1) | (result >> 31);
+    result = (result << 1) | (result >> 31);
 #endif
     if (hasz)
     {
@@ -2630,21 +2645,21 @@ stbox_hash(const STBox *box)
 #if POSTGRESQL_VERSION_NUMBER >= 150000
       result = pg_rotate_left32(result, 1);
 #else
-      result =  (result << 1) | (result >> 31);
+      result = (result << 1) | (result >> 31);
 #endif
     }
     result ^= hash_uint32(box->srid);
 #if POSTGRESQL_VERSION_NUMBER >= 150000
     result = pg_rotate_left32(result, 1);
 #else
-    result =  (result << 1) | (result >> 31);
+    result = (result << 1) | (result >> 31);
 #endif
   }
   result ^= hash_uint32((uint32) box->flags);
 #if POSTGRESQL_VERSION_NUMBER >= 150000
     result = pg_rotate_left32(result, 1);
 #else
-    result =  (result << 1) | (result >> 31);
+    result = (result << 1) | (result >> 31);
 #endif
   return result;
 }

@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -53,7 +53,7 @@
 
 extern bool ensure_same_skiplist_subtype(SkipList *state, uint8 subtype);
 
-extern void skiplist_set_extra(SkipList *state, void *data, size_t size);
+extern void skiplist_set_extra(SkipList *state, const void *data, size_t size);
 extern void *skiplist_headval(SkipList *list);
 
 

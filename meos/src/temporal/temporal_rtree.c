@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -41,6 +41,9 @@
 #include <meos_geo.h>
 #include <meos_internal.h>
 #include <meos_internal_geo.h>
+#if POINTCLOUD
+  #include <meos_pointcloud.h>
+#endif
 #include "temporal/temporal.h"
 #include "temporal/temporal_rtree.h"
 
@@ -111,6 +114,23 @@ get_axis_stbox(const void *box, int axis, bool upper)
     return upper ? stbox->zmax : stbox->zmin;
 }
 
+#if POINTCLOUD
+/**
+ * @brief Return the lower or upper bound of a given axis from a TPCBox
+ *   as a double.
+ * @details Same axis convention as @ref get_axis_stbox (TPCBox shares
+ *   the STBox prefix layout) — the cast is binary-compatible.
+ */
+static double
+get_axis_tpcbox(const void *box, int axis, bool upper)
+{
+  /* TPCBox struct is binary-compatible with STBox in the prefix
+   * (Span period + xyz min/max + srid + flags); axis dispatch is
+   * identical. */
+  return get_axis_stbox(box, axis, upper);
+}
+#endif
+
 /*****************************************************************************/
 
 /**
@@ -142,6 +162,17 @@ bbox_expand_stbox(const void *box1, void *box2)
 {
   return stbox_expand((STBox *) box1, (STBox *) box2);
 }
+
+#if POINTCLOUD
+/**
+ * @brief Expand the second TPCBox with the first one.
+ */
+static inline void
+bbox_expand_tpcbox(const void *box1, void *box2)
+{
+  return tpcbox_expand((TPCBox *) box1, (TPCBox *) box2);
+}
+#endif
 
 /*****************************************************************************/
 
@@ -178,6 +209,17 @@ bbox_contains_stbox(const void *box1, const void *box2)
   return contains_stbox_stbox((STBox *) box1, (STBox *) box2);
 }
 
+#if POINTCLOUD
+/**
+ * @brief Return `true` if the first TPCBox contains the second.
+ */
+static inline bool
+bbox_contains_tpcbox(const void *box1, const void *box2)
+{
+  return contains_tpcbox_tpcbox((TPCBox *) box1, (TPCBox *) box2);
+}
+#endif
+
 /*****************************************************************************/
 
 /**
@@ -210,6 +252,17 @@ bbox_overlaps_stbox(const void *box1, const void *box2)
 {
   return overlaps_stbox_stbox((STBox *) box1, (STBox *) box2);
 }
+
+#if POINTCLOUD
+/**
+ * @brief Return `true` if two TPCBox values overlap.
+ */
+static inline bool
+bbox_overlaps_tpcbox(const void *box1, const void *box2)
+{
+  return overlaps_tpcbox_tpcbox((TPCBox *) box1, (TPCBox *) box2);
+}
+#endif
 
 /*****************************************************************************
  * Rtree functions
@@ -277,11 +330,14 @@ box_area(const RTree *rtree, const void *box)
 static double
 unioned_area(const RTree *rtree, const void *box1, const void *box2)
 {
-  /* Use a stack buffer large enough for any MEOS bounding box type */
-  char union_buf[sizeof(STBox)];
-  memcpy(union_buf, box1, rtree->bboxsize);
-  rtree->bbox_expand(box2, union_buf);
-  return box_area(rtree, union_buf);
+  /* Use a stack buffer large enough for the largest MEOS bounding box.
+   * TPCBox (88 B with @c POINTCLOUD=ON) is currently the largest;
+   * STBox (80 B) is next.  Sizing to bboxunion future-proofs against
+   * adding a new bigger box type. */
+  bboxunion union_buf;
+  memcpy(&union_buf, box1, rtree->bboxsize);
+  rtree->bbox_expand(box2, &union_buf);
+  return box_area(rtree, &union_buf);
 }
 
 /**
@@ -720,7 +776,7 @@ node_search(const RTree *rtree, const RTreeNode *node, RTreeSearchOp op,
     if (node->node_type == RTREE_LEAF)
     {
       if (leaf_consistent(rtree, RTREE_NODE_BBOX_N(node, i), query, op))
-        meos_array_add(result, &node->ids[i]);
+        meos_array_add(result, (void *) (&node->ids[i]));
     }
     else
     {
@@ -739,7 +795,11 @@ node_search(const RTree *rtree, const RTreeNode *node, RTreeSearchOp op,
 RTree *
 rtree_create(MeosType bboxtype)
 {
-  assert(span_type(bboxtype) || bboxtype == T_TBOX || bboxtype == T_STBOX);
+  assert(span_type(bboxtype) || bboxtype == T_TBOX || bboxtype == T_STBOX
+#if POINTCLOUD
+    || bboxtype == T_TPCBOX
+#endif
+    );
   size_t bboxsize = bbox_get_size(bboxtype);
   RTree *rtree = palloc0(sizeof(RTree) + bboxsize);
   if (span_type(bboxtype))
@@ -758,6 +818,18 @@ rtree_create(MeosType bboxtype)
     rtree->bbox_contains = &bbox_contains_tbox;
     rtree->bbox_overlaps = &bbox_overlaps_tbox;
   }
+#if POINTCLOUD
+  else if (bboxtype == T_TPCBOX)
+  {
+    /* dims set at first-insert time, like STBox (Z presence
+     * determined dynamically) */
+    rtree->dims = -1;
+    rtree->get_axis = &get_axis_tpcbox;
+    rtree->bbox_expand = &bbox_expand_tpcbox;
+    rtree->bbox_contains = &bbox_contains_tpcbox;
+    rtree->bbox_overlaps = &bbox_overlaps_tpcbox;
+  }
+#endif
   else /* bboxtype == T_STBOX */
   {
     /* To be set when the first node is created since it is not known yet
@@ -843,6 +915,21 @@ rtree_create_stbox()
   return rtree_create(T_STBOX);
 }
 
+#if POINTCLOUD
+/**
+ * @ingroup meos_pointcloud_box
+ * @brief Create an in-memory RTree index for the @c tpcbox bounding-box
+ *   type.  Pair with @ref rtree_insert / @ref rtree_insert_temporal to
+ *   populate, @ref rtree_search / @ref rtree_search_temporal to query.
+ * @return RTree initialized.
+ */
+RTree *
+rtree_create_tpcbox()
+{
+  return rtree_create(T_TPCBOX);
+}
+#endif
+
 /**
  * @ingroup meos_geo_box_index
  * @brief Insert a bounding box into the RTree index.
@@ -926,7 +1013,11 @@ ensure_rtree_temporal_compatible(const RTree *rtree, const Temporal *temp)
   bool compatible =
     (talpha_type(temptype) && rtree->bboxtype == T_TSTZSPAN) ||
     (tnumber_type(temptype) && rtree->bboxtype == T_TBOX) ||
-    (tspatial_type(temptype) && rtree->bboxtype == T_STBOX);
+    (tspatial_type(temptype) && rtree->bboxtype == T_STBOX)
+#if POINTCLOUD
+    || (tpointcloud_temptype(temptype) && rtree->bboxtype == T_TPCBOX)
+#endif
+    ;
   if (! compatible)
   {
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_TYPE,
@@ -954,11 +1045,13 @@ rtree_insert_temporal(RTree *rtree, const Temporal *temp, int id)
 {
   if (! ensure_rtree_temporal_compatible(rtree, temp))
     return;
-  /* Use a stack buffer large enough for any MEOS bounding box type */
-  char buf[sizeof(STBox)];
-  memset(buf, 0, sizeof(buf));
-  temporal_set_bbox(temp, buf);
-  rtree_insert(rtree, buf, id);
+  /* bboxunion is the union of all MEOS bbox layouts (Span / TBox /
+   * STBox / TPCBox), sized for the largest member.  Future bbox types
+   * just need to extend bboxunion to keep this safe. */
+  bboxunion buf;
+  memset(&buf, 0, sizeof(buf));
+  temporal_set_bbox(temp, &buf);
+  rtree_insert(rtree, &buf, id);
   return;
 }
 
@@ -983,11 +1076,197 @@ rtree_search_temporal(const RTree *rtree, RTreeSearchOp op,
     meos_array_reset(result);
     return 0;
   }
-  /* Use a stack buffer large enough for any MEOS bounding box type */
-  char buf[sizeof(STBox)];
-  memset(buf, 0, sizeof(buf));
-  temporal_set_bbox(temp, buf);
-  return rtree_search(rtree, op, buf, result);
+  bboxunion buf;
+  memset(&buf, 0, sizeof(buf));
+  temporal_set_bbox(temp, &buf);
+  return rtree_search(rtree, op, &buf, result);
+}
+
+/*****************************************************************************
+ * Multi-entry (MEST) temporal functions
+ *
+ * These functions implement a multi-entry-per-id indexing pattern: a single
+ * temporal value is decomposed into several tight per-segment bounding boxes
+ * that are all inserted under the same id. The tree, split and search
+ * algorithms are unchanged; only the build-side decomposition and a
+ * search-time deduplication of repeated ids are added. They are strictly
+ * additive: #rtree_insert, #rtree_insert_temporal, #rtree_search and
+ * #rtree_search_temporal keep their exact semantics.
+ *****************************************************************************/
+
+/**
+ * @brief Decompose a temporal value into an array of tight per-segment
+ * bounding boxes whose element type matches the RTree's bounding box type
+ * @details The decomposition reuses the same per-segment bounding box
+ * machinery as the single-box path: temporal alphas are split with
+ * #temporal_split_n_spans, temporal numbers with #tnumber_split_n_tboxes, and
+ * temporal geos with #tgeo_split_n_stboxes. These already handle the TINSTANT,
+ * TSEQUENCE and TSEQUENCESET subtypes, the discrete, step and linear
+ * interpolations, and the Z, geodetic and SRID flags through the same
+ * `tspatialinst_set_stbox` / `tnumberinst_set_tbox` / span machinery used by
+ * #temporal_set_bbox, and coarsen by merging adjacent segment boxes
+ * (deterministic chunking) down to at most `maxboxes` boxes. When
+ * `maxboxes <= 1`, the temporal value is an instant, or the spatial type is
+ * not a temporal geo (e.g. tcbuffer, tnpoint, tpose), the function degenerates
+ * to the single minimum bounding box, byte-identical to the result of
+ * #temporal_set_bbox used by #rtree_insert_temporal.
+ * @param[in] rtree The RTree whose bounding box type drives the element type
+ * @param[in] temp The temporal value to decompose
+ * @param[in] maxboxes Maximum number of boxes produced for `temp`
+ * @param[out] count Number of boxes in the returned array
+ * @return Newly allocated array of `*count` bounding boxes, each of
+ * `rtree->bboxsize` bytes, or @p NULL on error
+ * @pre `temp` is compatible with `rtree` (verified by the callers)
+ */
+static void *
+rtree_temporal_split_boxes(const RTree *rtree, const Temporal *temp,
+  int maxboxes, int *count)
+{
+  assert(rtree); assert(temp); assert(count);
+
+  /* Degenerate single minimum bounding box: identical to the behaviour of
+   * rtree_insert_temporal / rtree_search_temporal */
+  if (maxboxes <= 1 || temp->subtype == TINSTANT)
+  {
+    void *result = palloc0(rtree->bboxsize);
+    temporal_set_bbox(temp, result);
+    *count = 1;
+    return result;
+  }
+
+  /* Multi-box decomposition reusing the existing per-type splitters */
+  MeosType temptype = temp->temptype;
+  if (talpha_type(temptype))
+    return temporal_split_n_spans(temp, maxboxes, count);
+  if (tnumber_type(temptype))
+    return tnumber_split_n_tboxes(temp, maxboxes, count);
+  if (tgeo_type_all(temptype))
+    return tgeo_split_n_stboxes(temp, maxboxes, count);
+
+  /* Spatial types without a per-segment STBox splitter (e.g. tcbuffer,
+   * tnpoint, tpose): fall back to the single minimum bounding box */
+  void *result = palloc0(rtree->bboxsize);
+  temporal_set_bbox(temp, result);
+  *count = 1;
+  return result;
+}
+
+/**
+ * @ingroup meos_temporal_box_index
+ * @brief Insert a temporal value into the RTree index as several tight
+ * per-segment bounding boxes sharing the same id (multi-entry indexing)
+ * @details The temporal value is decomposed into at most `maxboxes` tight
+ * per-segment bounding boxes, all inserted under `id`. This yields a more
+ * selective index than #rtree_insert_temporal for wiggly or high-extent
+ * temporal values, at the cost of more leaf entries. The temporal type must
+ * be compatible with the RTree's bounding box type: temporal alphas (tbool,
+ * ttext) require a span-based RTree, temporal numbers (tint, tfloat) require a
+ * TBox-based RTree, and spatiotemporal types (tgeompoint, tgeogpoint) require
+ * an STBox-based RTree. When `maxboxes <= 1`, the temporal value is an
+ * instant, or the spatial type has no per-segment STBox decomposition, the
+ * behaviour is identical to #rtree_insert_temporal (a single minimum bounding
+ * box). The tree, split and insertion algorithms are unchanged; this only
+ * inserts several boxes under the same id, which the parallel ids/boxes leaf
+ * layout already supports. Search results may contain the same id several
+ * times; use #rtree_search_temporal_dedup to collapse them.
+ * @param[in] rtree The RTree previously initialized
+ * @param[in] temp The temporal value to be inserted
+ * @param[in] id The id of the temporal value being inserted, shared by every
+ * box produced for `temp`
+ * @param[in] maxboxes Maximum number of bounding boxes produced for `temp`;
+ * values `<= 1` degenerate to the single minimum bounding box
+ * @see rtree_insert_temporal
+ */
+void
+rtree_insert_temporal_split(RTree *rtree, const Temporal *temp, int id,
+  int maxboxes)
+{
+  if (! ensure_rtree_temporal_compatible(rtree, temp))
+    return;
+  int count;
+  void *boxes = rtree_temporal_split_boxes(rtree, temp, maxboxes, &count);
+  if (! boxes)
+    return;
+  for (int i = 0; i < count; i++)
+    rtree_insert(rtree, (char *) boxes + (size_t) i * rtree->bboxsize, id);
+  pfree(boxes);
+  return;
+}
+
+/**
+ * @ingroup meos_temporal_box_index
+ * @brief Search an RTree built with #rtree_insert_temporal_split using a
+ * temporal value, returning each matching id exactly once
+ * @details The query temporal value is decomposed into the same tight
+ * per-segment bounding boxes as #rtree_insert_temporal_split, the existing
+ * #rtree_search is run for every query box, and the union of matching ids is
+ * deduplicated so that each surviving id appears exactly once. This is the
+ * search counterpart of #rtree_insert_temporal_split; it never produces false
+ * negatives with respect to a single-box search and is typically more
+ * selective. The result array is reset before the search. The underlying
+ * #rtree_search and #rtree_search_temporal semantics are unchanged.
+ * @param[in] rtree The RTree to query
+ * @param[in] op The search operation
+ * @param[in] temp The temporal value whose per-segment bounding boxes serve as
+ * queries
+ * @param[in] maxboxes Maximum number of query boxes derived from `temp`;
+ * values `<= 1` degenerate to a single minimum bounding box query
+ * @param[out] result MeosArray of int to collect the deduplicated matching ids
+ * @return Number of distinct matching ids
+ * @see rtree_search_temporal
+ */
+int
+rtree_search_temporal_dedup(const RTree *rtree, RTreeSearchOp op,
+  const Temporal *temp, int maxboxes, MeosArray *result)
+{
+  meos_array_reset(result);
+  if (! ensure_rtree_temporal_compatible(rtree, temp))
+    return 0;
+
+  int count;
+  void *boxes = rtree_temporal_split_boxes(rtree, temp, maxboxes, &count);
+  if (! boxes)
+    return 0;
+
+  /* Accumulate the raw (possibly duplicated) candidate ids of every query
+   * box, tracking the maximum id seen to size the dedup bitset */
+  MeosArray *raw = meos_array_create(sizeof(int));
+  MeosArray *hits = meos_array_create(sizeof(int));
+  int maxid = -1;
+  for (int i = 0; i < count; i++)
+  {
+    int nhits = rtree_search(rtree, op,
+      (char *) boxes + (size_t) i * rtree->bboxsize, hits);
+    for (int j = 0; j < nhits; j++)
+    {
+      int id = *(int *) meos_array_get(hits, j);
+      if (id > maxid)
+        maxid = id;
+      meos_array_add(raw, &id);
+    }
+  }
+  pfree(boxes);
+  meos_array_destroy(hits);
+
+  /* Collapse duplicates with a seen-set sized to the maximum id, mirroring
+   * the bool indexed[] idiom of the rtree example */
+  int nraw = meos_array_count(raw);
+  if (maxid >= 0 && nraw > 0)
+  {
+    bool *seen = palloc0((size_t) (maxid + 1) * sizeof(bool));
+    for (int i = 0; i < nraw; i++)
+    {
+      int id = *(int *) meos_array_get(raw, i);
+      if (! seen[id])
+      {
+        seen[id] = true;
+        meos_array_add(result, &id);
+      }
+    }
+    pfree(seen);
+  }
+  meos_array_destroy(raw);
+  return meos_array_count(result);
 }
 
 /**

@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -184,7 +184,7 @@ Datum
 Stbox_as_hexwkb(PG_FUNCTION_ARGS)
 {
   Datum box = PG_GETARG_DATUM(0);
-  PG_RETURN_TEXT_P(Datum_as_hexwkb(fcinfo, box, T_STBOX));
+  PG_RETURN_TEXT_P(Datum_as_hexwkb(fcinfo, box, T_STBOX, true));
 }
 
 /*****************************************************************************/
@@ -1593,15 +1593,13 @@ Stbox_extent_transfn(PG_FUNCTION_ARGS)
   STBox *box2 = PG_ARGISNULL(1) ? NULL : PG_GETARG_STBOX_P(1);
 
   /* Can't do anything with null inputs */
-  if (! box1 || ! box2)
-  {
-    if (! box1 && ! box2)
-      PG_RETURN_NULL();
-    if (! box1)
-      PG_RETURN_STBOX_P(stbox_copy(box2));
-    else
-      PG_RETURN_STBOX_P(stbox_copy(box1));
-  }
+  if (! box1 && ! box2)
+    PG_RETURN_NULL();
+  /* One of the boxes is null, return the other one */
+  if (! box1)
+    PG_RETURN_STBOX_P(stbox_copy(box2));
+  if (! box2)
+    PG_RETURN_STBOX_P(stbox_copy(box1));
 
   /* Both boxes are not null */
   ensure_same_dimensionality(box1->flags, box2->flags);
@@ -1788,6 +1786,24 @@ Stbox_hash_extended(PG_FUNCTION_ARGS)
   STBox *box = PG_GETARG_STBOX_P(0);
   uint64 seed = PG_GETARG_INT64(1);
   PG_RETURN_UINT64(stbox_hash_extended(box, seed));
+}
+
+/*****************************************************************************/
+
+PGDLLEXPORT Datum Stbox_arrow_roundtrip(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Stbox_arrow_roundtrip);
+/**
+ * @ingroup mobilitydb_geo_box_conversion
+ * @brief Round-trip a spatiotemporal box through the Arrow C Data Interface,
+ * returning the reconstructed value
+ * @sqlfn arrowRoundtrip()
+ */
+Datum
+Stbox_arrow_roundtrip(PG_FUNCTION_ARGS)
+{
+  STBox *box = PG_GETARG_STBOX_P(0);
+  STBox *result = meos_stbox_arrow_roundtrip(box);
+  PG_RETURN_STBOX_P(result);
 }
 
 /*****************************************************************************/

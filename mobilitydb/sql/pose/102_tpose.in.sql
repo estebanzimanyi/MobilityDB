@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -98,6 +98,24 @@ CREATE FUNCTION tposeFromEWKT(text)
 CREATE FUNCTION tposeFromMFJSON(text)
   RETURNS tpose
   AS 'MODULE_PATHNAME', 'Temporal_from_mfjson'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tposeFromGeoPose(text)
+  RETURNS tpose
+  AS 'MODULE_PATHNAME', 'Tpose_from_geopose'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+-- conformance:      0 = Basic-Quaternion (default), 1 = Basic-YPR
+-- maxdecimaldigits: significant digits to keep; -1 = lossless
+CREATE FUNCTION asGeoPose(tpose, conformance int4 DEFAULT 0,
+    maxdecimaldigits int4 DEFAULT -1)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Tpose_as_geopose'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION applyPose(geometry, tpose)
+  RETURNS tgeompoint
+  AS 'MODULE_PATHNAME', 'Tpose_apply_geo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION tposeFromBinary(bytea)
@@ -229,6 +247,31 @@ CREATE FUNCTION points(tpose)
 CREATE FUNCTION rotation(tpose)
   RETURNS tfloat
   AS 'MODULE_PATHNAME', 'Tpose_rotation'
+  LANGUAGE C IMMUTABLE STRICT;
+
+CREATE FUNCTION yaw(tpose)
+  RETURNS tfloat
+  AS 'MODULE_PATHNAME', 'Tpose_yaw'
+  LANGUAGE C IMMUTABLE STRICT;
+
+CREATE FUNCTION pitch(tpose)
+  RETURNS tfloat
+  AS 'MODULE_PATHNAME', 'Tpose_pitch'
+  LANGUAGE C IMMUTABLE STRICT;
+
+CREATE FUNCTION roll(tpose)
+  RETURNS tfloat
+  AS 'MODULE_PATHNAME', 'Tpose_roll'
+  LANGUAGE C IMMUTABLE STRICT;
+
+CREATE FUNCTION speed(tpose)
+  RETURNS tfloat
+  AS 'MODULE_PATHNAME', 'Tpose_speed'
+  LANGUAGE C IMMUTABLE STRICT;
+
+CREATE FUNCTION angularSpeed(tpose)
+  RETURNS tfloat
+  AS 'MODULE_PATHNAME', 'Tpose_angular_speed'
   LANGUAGE C IMMUTABLE STRICT;
 
 -- CREATE FUNCTION orientation(tpose)
@@ -424,6 +467,12 @@ CREATE FUNCTION round(tpose, integer DEFAULT 0)
 CREATE FUNCTION round(tpose[], integer DEFAULT 0)
   RETURNS tpose[]
   AS 'MODULE_PATHNAME', 'Temporalarr_round'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tsample(tpose, duration interval,
+  origin timestamptz DEFAULT '2000-01-03', interp text DEFAULT 'discrete')
+  RETURNS tpose
+  AS 'MODULE_PATHNAME', 'Temporal_tsample'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION shiftTime(tpose, interval)
@@ -699,5 +748,12 @@ CREATE OPERATOR CLASS tpose_hash_ops
   DEFAULT FOR TYPE tpose USING hash AS
     OPERATOR    1   = ,
     FUNCTION    1   temporal_hash(tpose);
+
+/******************************************************************************/
+
+CREATE FUNCTION arrowRoundtrip(tpose)
+  RETURNS tpose
+  AS 'MODULE_PATHNAME', 'Temporal_arrow_roundtrip'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************/

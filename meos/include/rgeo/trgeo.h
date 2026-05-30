@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -39,6 +39,7 @@
 #include <postgres.h>
 /* MEOS */
 #include "temporal/temporal.h"
+#include "pose/pose.h"
 
 /** Symbolic constants for the temporal instant geometry constuctor */
 #define WITH_GEOM       true
@@ -76,6 +77,8 @@ extern TSequenceSet *geo_tposeseqset_to_trgeo(const GSERIALIZED *gs,
 
 
 /* Accessor functions */
+
+extern GSERIALIZED *geom_apply_pose(const GSERIALIZED *gs, const Pose *pose);
 
 extern bool trgeo_value_at_timestamptz(const Temporal *temp, TimestampTz t,
   bool strict, Datum *result);

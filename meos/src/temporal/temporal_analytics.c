@@ -1,7 +1,7 @@
 /***********************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -34,6 +34,10 @@
 
 #include "temporal/temporal_analytics.h"
 
+#define _float_t double
+#define EKF_N 6 /* [x,vx,y,vy,z,vz] */
+#define EKF_M 3 /* measure positions [x,y,t] */
+
 /* C */
 #include <assert.h>
 #include <math.h>
@@ -54,8 +58,317 @@
 #include "temporal/temporal_tile.h"
 #include "temporal/tsequence.h"
 #include "temporal/type_util.h"
+#include "temporal/tinyekf_meos.h"
 #include "geo/tgeo_distance.h"
 #include "geo/tgeo_spatialfuncs.h"
+#if POSE || RGEO
+#include "pose/pose.h"
+#endif
+#if RGEO
+#include <meos_rgeo.h>
+#include "rgeo/trgeo_seq.h"
+#endif
+#if CBUFFER
+#include <meos_cbuffer.h>
+#endif
+
+
+/*****************************************************************************
+ * Extended Kalman Filter (EKF) outlier filtering, adapting tinyEKF to MEOS
+ *****************************************************************************/
+
+/* Build constant-velocity F matrix for given dt (seconds), Jacobian of state-transition function */
+static inline void
+ekf_build_F(_float_t F[EKF_N*EKF_N], double dt, int dims)
+{
+  memset(F, 0, sizeof(_float_t) * EKF_N * EKF_N);
+  for (int i = 0; i < EKF_N; i++) F[i*EKF_N + i] = 1.0;
+  if (dims >= 1) F[0*EKF_N + 1] = (_float_t) dt; /* x += vx*dt */
+  if (dims >= 2) F[2*EKF_N + 3] = (_float_t) dt; /* y += vy*dt */
+  if (dims >= 3) F[4*EKF_N + 5] = (_float_t) dt; /* z += vz*dt */
+}
+
+/* Build process noise Q for each used axis, process noise matrix */
+static inline void
+ekf_build_Q(_float_t Q[EKF_N*EKF_N], double dt, double q, int dims)
+{
+  memset(Q, 0, sizeof(_float_t) * EKF_N * EKF_N);
+  double dt2 = dt * dt, dt3 = dt2 * dt, dt4 = dt2 * dt2;
+  for (int ax = 0; ax < dims; ax++) {
+    int p = ax * 2;     /* pos index: 0,2,4 */
+    int v = ax * 2 + 1; /* vel index: 1,3,5 */
+    Q[p*EKF_N + p] = (_float_t) (q * dt4 / 4.0);
+    Q[p*EKF_N + v] = (_float_t) (q * dt3 / 2.0);
+    Q[v*EKF_N + p] = (_float_t) (q * dt3 / 2.0);
+    Q[v*EKF_N + v] = (_float_t) (q * dt2);
+  }
+}
+
+/* Build H and hx given predicted state fx; only first dims are measured, sensor-function Jacobian matrix */
+static inline void
+ekf_build_H_hx(_float_t H[EKF_M*EKF_N], _float_t hx[EKF_M], const _float_t fx[EKF_N], int dims)
+{
+  memset(H, 0, sizeof(_float_t) * EKF_M * EKF_N);
+  for (int i = 0; i < EKF_M; i++) hx[i] = 0.0;
+  for (int ax = 0; ax < dims; ax++) {
+    int row = ax; /* 0..dims-1 */
+    int pos = ax * 2;
+    H[row*EKF_N + pos] = 1.0; /* measure position */
+    hx[row] = fx[pos];
+  }
+}
+
+/* Build R, measurement covariance */
+static inline void
+ekf_build_R(_float_t R[EKF_M*EKF_M], double variance, int dims)
+{
+  memset(R, 0, sizeof(_float_t) * EKF_M * EKF_M);
+  for (int i = 0; i < dims; i++) R[i*EKF_M + i] = (_float_t) variance;
+  /* Unused measurement rows get identity to keep inversion stable */
+  for (int i = dims; i < EKF_M; i++) R[i*EKF_M + i] = 1.0;
+}
+
+/* Compute sqrt(Mahalanobis^2) for innovation v and S^{-1} */
+static inline double
+innovation_distance(const _float_t v[EKF_M], const _float_t Sinv[EKF_M*EKF_M])
+{
+  double d2 = 0.0;
+  for (int i = 0; i < EKF_M; i++) {
+    double s = 0.0;
+    for (int j = 0; j < EKF_M; j++) s += v[j] * Sinv[j*EKF_M + i];
+    d2 += v[i] * s;
+  }
+  return sqrt(d2);
+}
+
+/* Filter a TSequence */
+static TSequence * tsequence_ext_kalman_filter(const TSequence *seq, MeosType temptype,double gate, double q, double variance, bool to_drop)
+{
+  if (seq->count < 2)
+    return tsequence_copy(seq);
+
+  const TInstant *inst0 = TSEQUENCE_INST_N(seq, 0);
+
+  /* Determine dimensionality */
+  int dims = 1;
+  bool hasz = false;
+  int srid = 0;
+
+  double x0 = 0.0, y0 = 0.0, z0 = 0.0;
+
+  if (temptype == T_TFLOAT)
+  {
+    dims = 1;
+    x0 = DatumGetFloat8(tinstant_value_p(inst0));
+  }
+  else if (temptype == T_TGEOMPOINT)
+  {
+    MeosType basetype = temptype_basetype(seq->temptype);
+    int16 flags = spatial_flags(tinstant_value_p(inst0), basetype);
+    hasz = FLAGS_GET_Z(flags);
+    bool geodetic = FLAGS_GET_GEODETIC(flags);
+    if (geodetic)
+      return tsequence_copy(seq); /* v1: not supported on geodetic */
+
+    dims = hasz ? 3 : 2;
+
+    if (hasz)
+    {
+      const POINT3DZ *p0 = DATUM_POINT3DZ_P(tinstant_value_p(inst0));
+      x0 = p0->x;
+      y0 = p0->y;
+      z0 = p0->z;
+    }
+    else
+    {
+      const POINT2D *p0 = DATUM_POINT2D_P(tinstant_value_p(inst0));
+      x0 = p0->x;
+      y0 = p0->y;
+    }
+    srid = spatial_srid(tinstant_value_p(inst0), basetype);
+  }
+  else
+  {
+    /* Not a supported type, just copy */
+    return tsequence_copy(seq);
+  }
+
+  /* Initialize EKF - state vector + covariance */
+  ekf_t ekf = {0};
+  _float_t pdiag[EKF_N] = {0};
+  for (int i = 0; i < EKF_N; i++) pdiag[i] = 1e3; /* broad initial covariance */
+  ekf_initialize(&ekf, pdiag);
+
+  /* Initial state: position in used dimensions, zero velocity, x is state vector */
+  ekf.x[0] = (_float_t) x0; ekf.x[1] = 0;
+  ekf.x[2] = (_float_t) (dims >= 2 ? y0 : 0.0); ekf.x[3] = 0;
+  ekf.x[4] = (_float_t) (dims == 3 ? z0 : 0.0); ekf.x[5] = 0;
+
+  TInstant **outinsts = palloc(sizeof(TInstant *) * seq->count);
+  int outcount = 0;
+
+  /* First output instant is the initial observation */
+  if (temptype == T_TFLOAT)
+  {
+    outinsts[outcount++] = tinstant_make(Float8GetDatum(x0), T_TFLOAT, inst0->t);
+  }
+  else /* T_TGEOMPOINT */
+  {
+    GSERIALIZED *gsp = geopoint_make(x0, y0, z0, hasz, false, srid);
+    outinsts[outcount++] = tinstant_make_free(PointerGetDatum(gsp),
+      T_TGEOMPOINT, inst0->t);
+  }
+
+  TimestampTz prev_t = inst0->t;
+
+  /* Loop for each subsequent instant */
+  for (int i = 1; i < seq->count; i++)
+  {
+    const TInstant *inst = TSEQUENCE_INST_N(seq, i);
+
+    double dt = (double) (inst->t - prev_t) / 1000000.0; /* seconds */
+    if (dt < 0) dt = 0;
+
+    /* Build F transition matrix*/
+    _float_t F[EKF_N*EKF_N];
+    /* Build Q process noise matrix */
+    _float_t Q[EKF_N*EKF_N];
+    ekf_build_F(F, dt, dims);
+    ekf_build_Q(Q, dt, q, dims);
+
+    /* Predict state: fx = F * x */
+    _float_t fx[EKF_N] = {0};
+    _mulvec(F, ekf.x, fx, EKF_N, EKF_N);
+    ekf_predict(&ekf, fx, F, Q);
+
+    _float_t H[EKF_M*EKF_N];
+    _float_t hx[EKF_M];
+    ekf_build_H_hx(H, hx, fx, dims);
+
+    _float_t z[EKF_M] = {0};
+    if (temptype == T_TFLOAT)
+    {
+      double zval = DatumGetFloat8(tinstant_value_p(inst));
+      z[0] = (_float_t) zval;
+    }
+    else /* T_TGEOMPOINT */
+    {
+      if (hasz)
+      {
+        const POINT3DZ *p = DATUM_POINT3DZ_P(tinstant_value_p(inst));
+        z[0] = (_float_t) p->x;
+        if (dims >= 2) z[1] = (_float_t) p->y;
+        if (dims == 3) z[2] = (_float_t) p->z;
+      }
+      else
+      {
+        const POINT2D *p = DATUM_POINT2D_P(tinstant_value_p(inst));
+        z[0] = (_float_t) p->x;
+        if (dims >= 2) z[1] = (_float_t) p->y;
+      }
+    }
+
+    _float_t Rm[EKF_M*EKF_M];
+    ekf_build_R(Rm, variance, dims);
+
+    /* Gating: compute innovation and S^{-1} */
+    _float_t Ht[EKF_N*EKF_M]; _transpose(H, Ht, EKF_M, EKF_N);
+    _float_t PHt[EKF_N*EKF_M]; _mulmat(ekf.P, Ht, PHt, EKF_N, EKF_N, EKF_M);
+    _float_t HP[EKF_M*EKF_N]; _mulmat(H, ekf.P, HP, EKF_M, EKF_N, EKF_N);
+    _float_t HpHt[EKF_M*EKF_M]; _mulmat(HP, Ht, HpHt, EKF_M, EKF_N, EKF_M);
+    _float_t S[EKF_M*EKF_M]; _addmat(HpHt, Rm, S, EKF_M, EKF_M);
+    _float_t Sinv[EKF_M*EKF_M]; bool ok = invert(S, Sinv);
+    _float_t v[EKF_M]; _sub(z, hx, v, EKF_M);
+    double mdist = ok ? innovation_distance(v, Sinv) : 0.0;
+
+    if (ok && mdist > gate)
+    {
+      if (!to_drop)
+      {
+        /* Keep predicted value without updating the state */
+        if (temptype == T_TFLOAT)
+        {
+          outinsts[outcount++] = tinstant_make(
+            Float8GetDatum((double) fx[0]), T_TFLOAT, inst->t);
+        }
+        else /* T_TGEOMPOINT */
+        {
+          double x = fx[0];
+          double y = fx[2];
+          double zpos = fx[4];
+          GSERIALIZED *gs = geopoint_make(x, y, zpos, hasz, false, srid);
+          outinsts[outcount++] = tinstant_make_free(PointerGetDatum(gs),
+            T_TGEOMPOINT, inst->t);
+        }
+      }
+      /* Skip update to avoid contaminating state */
+      prev_t = inst->t;
+      continue;
+    }
+
+    /* Inlier: update and emit filtered value */
+    (void) ekf_update(&ekf, z, hx, H, Rm);
+
+    if (temptype == T_TFLOAT)
+    {
+      outinsts[outcount++] = tinstant_make(
+        Float8GetDatum((double) ekf.x[0]), T_TFLOAT, inst->t);
+    }
+    else /* T_TGEOMPOINT */
+    {
+      double x = ekf.x[0], y = ekf.x[2], zpos = ekf.x[4];
+      GSERIALIZED *gs = geopoint_make(x, y, zpos, hasz, false, srid);
+      outinsts[outcount++] = tinstant_make_free(PointerGetDatum(gs),
+        T_TGEOMPOINT, inst->t);
+    }
+    prev_t = inst->t;
+  }
+
+  TSequence *result = tsequence_make((TInstant **) outinsts, outcount,
+    seq->period.lower_inc, seq->period.upper_inc,
+    MEOS_FLAGS_GET_INTERP(seq->flags), NORMALIZE_NO);
+  pfree(outinsts);
+  return result;
+}
+
+/**
+ * @ingroup meos_temporal_analytics_simplify
+ * @brief EKF-based outlier filtering for temporal floats/points.
+ */
+Temporal *
+temporal_ext_kalman_filter(const Temporal *temp, double gate, double q, double variance, bool to_drop)
+{
+  /* Validate input */
+  VALIDATE_NOT_NULL(temp, NULL);
+  if (! ensure_positive_datum(Float8GetDatum(gate), T_FLOAT8) ||
+      ! ensure_positive_datum(Float8GetDatum(variance), T_FLOAT8) ||
+      q < 0)
+    return NULL;
+  if (! (tnumber_type(temp->temptype) || temp->temptype == T_TGEOMPOINT))
+    return temporal_copy(temp);
+
+  switch (temp->subtype) {
+    case TINSTANT:
+      return temporal_copy(temp);
+    case TSEQUENCE:
+    {
+      const TSequence *seq = (const TSequence *) temp;
+      return (Temporal *) tsequence_ext_kalman_filter(seq, temp->temptype,
+        gate, q, variance, to_drop);
+    }
+    default: /* TSEQUENCESET */
+    {
+      const TSequenceSet *ss = (const TSequenceSet *) temp;
+      TSequence **seqs = palloc(sizeof(TSequence *) * ss->count);
+      for (int i = 0; i < ss->count; i++) {
+        const TSequence *seq = TSEQUENCESET_SEQ_N(ss, i);
+        seqs[i] = tsequence_ext_kalman_filter(seq, temp->temptype,
+          gate, q, variance, to_drop);
+      }
+      return (Temporal *) tsequenceset_make_free(seqs, ss->count, NORMALIZE_NO);
+    }
+  }
+}
 
 /*****************************************************************************
  * Time precision functions for time values
@@ -190,6 +503,61 @@ tinstant_tprecision(const TInstant *inst, const Interval *duration,
   return tinstant_make(tinstant_value_p(inst), inst->temptype, lower);
 }
 
+#if RGEO
+/**
+ * @brief Return the time-weighted centroid pose of a trgeometry sequence
+ * @details For LINEAR interpolation, the TWC of both position and orientation
+ * equals the pose at the midpoint timestamp.  For STEP 2D sequences the
+ * position is the step-weighted average and the angle uses a circular mean.
+ * 3D STEP falls back to the midpoint strategy (quaternion averaging is
+ * deferred).
+ */
+static Datum
+trgeoSeq_tprecision_pose(const TSequence *seq)
+{
+  assert(seq->temptype == T_TRGEOMETRY);
+  if (seq->count == 1)
+    return datum_copy(tinstant_value(TSEQUENCE_INST_N(seq, 0)), T_POSE);
+
+  interpType interp = MEOS_FLAGS_GET_INTERP(seq->flags);
+  const TInstant *first = TSEQUENCE_INST_N(seq, 0);
+  const Pose *p0 = DatumGetPoseP(tinstant_value_p(first));
+  bool hasz = MEOS_FLAGS_GET_Z(p0->flags);
+
+  if (interp == LINEAR || hasz)
+  {
+    TimestampTz lower = DatumGetTimestampTz(seq->period.lower);
+    TimestampTz upper = DatumGetTimestampTz(seq->period.upper);
+    TimestampTz mid = lower + (upper - lower) / 2;
+    Datum value;
+    tsequence_value_at_timestamptz(seq, mid, false, &value);
+    return datum_copy(value, T_POSE);
+  }
+
+  /* 2D STEP: step-weighted average position + circular mean angle */
+  int32_t srid = pose_srid(p0);
+  double sum_x = 0, sum_y = 0, sum_sin_theta = 0, sum_cos_theta = 0;
+  double total_dur = 0;
+  for (int i = 0; i < seq->count - 1; i++)
+  {
+    const TInstant *inst = TSEQUENCE_INST_N(seq, i);
+    const TInstant *next = TSEQUENCE_INST_N(seq, i + 1);
+    const Pose *p = DatumGetPoseP(tinstant_value_p(inst));
+    double dur = (double)(next->t - inst->t);
+    sum_x += p->data[0] * dur;
+    sum_y += p->data[1] * dur;
+    sum_sin_theta += sin(p->data[2]) * dur;
+    sum_cos_theta += cos(p->data[2]) * dur;
+    total_dur += dur;
+  }
+  if (total_dur <= 0)
+    return datum_copy(tinstant_value(first), T_POSE);
+  Pose *result = pose_make_2d(sum_x / total_dur, sum_y / total_dur,
+    atan2(sum_sin_theta / total_dur, sum_cos_theta / total_dur), srid);
+  return PointerGetDatum(result);
+}
+#endif /* RGEO */
+
 /**
  * @brief Return a temporal sequence with the precision set to a time bin
  * @param[in] seq Temporal value
@@ -201,9 +569,14 @@ tsequence_tprecision(const TSequence *seq, const Interval *duration,
   TimestampTz torigin)
 {
   assert(seq); assert(duration); assert(positive_duration(duration));
-  assert(seq->temptype == T_TINT || seq->temptype == T_TFLOAT ||
+  assert(seq->temptype == T_TINT || seq->temptype == T_TBIGINT ||
+    seq->temptype == T_TFLOAT ||
     seq->temptype == T_TGEOMPOINT || seq->temptype == T_TGEOGPOINT ||
-    seq->temptype == T_TGEOMETRY || seq->temptype == T_TGEOGRAPHY );
+    seq->temptype == T_TGEOMETRY || seq->temptype == T_TGEOGRAPHY
+#if RGEO
+    || seq->temptype == T_TRGEOMETRY
+#endif
+    );
 
   int64 tunits = interval_units(duration);
   TimestampTz lower = DatumGetTimestampTz(seq->period.lower);
@@ -222,6 +595,12 @@ tsequence_tprecision(const TSequence *seq, const Interval *duration,
   MeosType temptype_out = (seq->temptype == T_TINT) ? T_TFLOAT : seq->temptype;
   /* Determine whether we are computing the twAvg or the twCentroid */
   bool twavg = tnumber_type(seq->temptype);
+#if RGEO
+  /* For trgeometry, cache the reference geometry once — it is shared across
+   * all output instants and the result sequence */
+  const GSERIALIZED *trgeo_ref_geom = (seq->temptype == T_TRGEOMETRY) ?
+    trgeoseq_geom_p(seq) : NULL;
+#endif
   /* New instants computing the value at the beginning/end of the bin */
   TInstant *start = NULL, *end = NULL;
   /* Sequence for computing the twAvg/twCentroid of each bin */
@@ -270,12 +649,25 @@ tsequence_tprecision(const TSequence *seq, const Interval *duration,
         seq1 = tsequence_make(ininsts, k, true, (k == 1) ? true : false,
           interp, NORMALIZE);
         /* Compute the twAvg/twCentroid for the bin */
-        value = twavg ? Float8GetDatum(tnumberseq_twavg(seq1)) :
-          PointerGetDatum(tpointseq_twcentroid(seq1));
-        outinsts[l++] = tinstant_make(value, temptype_out, lower);
-        pfree(seq1);
-        if (! twavg)
+#if RGEO
+        if (seq->temptype == T_TRGEOMETRY)
+        {
+          value = trgeoSeq_tprecision_pose(seq1);
+          outinsts[l++] = trgeoinst_make(trgeo_ref_geom,
+            DatumGetPoseP(value), lower);
+          pfree(seq1);
           pfree(DatumGetPointer(value));
+        }
+        else
+#endif /* RGEO */
+        {
+          value = twavg ? Float8GetDatum(tnumberseq_twavg(seq1)) :
+            PointerGetDatum(tpointseq_twcentroid(seq1));
+          outinsts[l++] = tinstant_make(value, temptype_out, lower);
+          pfree(seq1);
+          if (! twavg)
+            pfree(DatumGetPointer(value));
+        }
       }
       /* Free the instant at the beginning of the bin if it was generated */
       if (start)
@@ -321,22 +713,142 @@ tsequence_tprecision(const TSequence *seq, const Interval *duration,
   {
     seq1 = tsequence_make(ininsts, k, true,
       (k == 1) ? true : seq->period.upper_inc, interp, NORMALIZE);
-    value = twavg ? Float8GetDatum(tnumberseq_twavg(seq1)) :
-      PointerGetDatum(tpointseq_twcentroid(seq1));
-    outinsts[l++] = tinstant_make(value, temptype_out, lower);
-    if (! twavg)
+#if RGEO
+    if (seq->temptype == T_TRGEOMETRY)
+    {
+      value = trgeoSeq_tprecision_pose(seq1);
+      outinsts[l++] = trgeoinst_make(trgeo_ref_geom,
+        DatumGetPoseP(value), lower);
       pfree(DatumGetPointer(value));
+    }
+    else
+#endif /* RGEO */
+    {
+      value = twavg ? Float8GetDatum(tnumberseq_twavg(seq1)) :
+        PointerGetDatum(tpointseq_twcentroid(seq1));
+      outinsts[l++] = tinstant_make(value, temptype_out, lower);
+      if (! twavg)
+        pfree(DatumGetPointer(value));
+    }
     pfree(seq1);
   }
-  /* The lower and upper bounds of the result are both true since the 
+  /* The lower and upper bounds of the result are both true since the
    * tprecision operation amounts to a granularity change */
-   TSequence *result = tsequence_make_free(outinsts, l, true, true, interp,
+#if RGEO
+  TSequence *result = (seq->temptype == T_TRGEOMETRY) ?
+    trgeoseq_make_free(trgeo_ref_geom, outinsts, l, true, true, interp, NORMALIZE) :
+    tsequence_make_free(outinsts, l, true, true, interp, NORMALIZE);
+#else
+  TSequence *result = tsequence_make_free(outinsts, l, true, true, interp,
     NORMALIZE);
+#endif
   pfree(ininsts);
   if (start)
     pfree(start);
   return result;
 }
+
+#if POSE
+/**
+ * @brief Accumulate the duration-weighted position and circular-angle sums of
+ * a 2D pose-valued sequence into the running totals
+ */
+static void
+poseseq_tprecision_accum(const TSequence *seq, double *sum_x, double *sum_y,
+  double *sum_sin, double *sum_cos, double *total_dur)
+{
+  for (int i = 0; i < seq->count - 1; i++)
+  {
+    const TInstant *inst = TSEQUENCE_INST_N(seq, i);
+    const TInstant *next = TSEQUENCE_INST_N(seq, i + 1);
+    const Pose *p = DatumGetPoseP(tinstant_value_p(inst));
+    double dur = (double) (next->t - inst->t);
+    *sum_x += p->data[0] * dur;
+    *sum_y += p->data[1] * dur;
+    *sum_sin += sin(p->data[2]) * dur;
+    *sum_cos += cos(p->data[2]) * dur;
+    *total_dur += dur;
+  }
+}
+
+/**
+ * @brief Return the time-weighted average pose of a pose-valued temporal
+ * (tpose or trgeometry), over a sequence or a sequence set
+ * @details For a LINEAR (or any 3D) sequence the time-weighted average of both
+ * position and orientation equals the pose at the midpoint timestamp. For a 2D
+ * STEP sequence the position is the step-weighted average and the angle is a
+ * circular mean. A sequence set combines the step-weighted sums over its
+ * component sequences. 3D orientation averaging (quaternions) is deferred to
+ * the midpoint strategy.
+ */
+static Datum
+pose_tprecision_value(const Temporal *temp)
+{
+  assert(temp->temptype == T_TPOSE
+#if RGEO
+    || temp->temptype == T_TRGEOMETRY
+#endif
+    );
+  if (temp->subtype == TSEQUENCE)
+  {
+    const TSequence *seq = (const TSequence *) temp;
+    if (seq->count == 1)
+      return datum_copy(tinstant_value(TSEQUENCE_INST_N(seq, 0)), T_POSE);
+    const Pose *p0 = DatumGetPoseP(tinstant_value_p(TSEQUENCE_INST_N(seq, 0)));
+    if (MEOS_FLAGS_GET_INTERP(seq->flags) == LINEAR ||
+        MEOS_FLAGS_GET_Z(p0->flags))
+    {
+      TimestampTz lower = DatumGetTimestampTz(seq->period.lower);
+      TimestampTz upper = DatumGetTimestampTz(seq->period.upper);
+      Datum value;
+      tsequence_value_at_timestamptz(seq, lower + (upper - lower) / 2, false,
+        &value);
+      return datum_copy(value, T_POSE);
+    }
+    int32_t srid = pose_srid(p0);
+    double sx = 0, sy = 0, ssin = 0, scos = 0, td = 0;
+    poseseq_tprecision_accum(seq, &sx, &sy, &ssin, &scos, &td);
+    if (td <= 0)
+      return datum_copy(tinstant_value(TSEQUENCE_INST_N(seq, 0)), T_POSE);
+    return PointerGetDatum(pose_make_2d(sx / td, sy / td,
+      atan2(ssin / td, scos / td), srid));
+  }
+  /* TSEQUENCESET: combine the step-weighted sums over component sequences */
+  const TSequenceSet *ss = (const TSequenceSet *) temp;
+  const TInstant *first = TSEQUENCE_INST_N(TSEQUENCESET_SEQ_N(ss, 0), 0);
+  int32_t srid = pose_srid(DatumGetPoseP(tinstant_value_p(first)));
+  double sx = 0, sy = 0, ssin = 0, scos = 0, td = 0;
+  for (int i = 0; i < ss->count; i++)
+    poseseq_tprecision_accum(TSEQUENCESET_SEQ_N(ss, i), &sx, &sy, &ssin, &scos,
+      &td);
+  if (td <= 0)
+    return datum_copy(tinstant_value(first), T_POSE);
+  return PointerGetDatum(pose_make_2d(sx / td, sy / td,
+    atan2(ssin / td, scos / td), srid));
+}
+#endif /* POSE */
+
+#if CBUFFER
+/**
+ * @brief Return the time-weighted average circular buffer of a tcbuffer
+ * temporal, over a sequence or a sequence set
+ * @details The center is the time-weighted centroid of the center trajectory
+ * and the radius is the time-weighted average of the radius; both reuse the
+ * number/point machinery on the decomposed parts.
+ */
+static Datum
+tcbuffer_tprecision_value(const Temporal *temp)
+{
+  assert(temp->temptype == T_TCBUFFER);
+  Temporal *tpoint = tcbuffer_to_tgeompoint(temp);
+  Temporal *tfloat = tcbuffer_to_tfloat(temp);
+  GSERIALIZED *center = tpoint_twcentroid(tpoint);
+  double radius = tnumber_twavg(tfloat);
+  Cbuffer *result = cbuffer_make(center, radius);
+  pfree(tpoint); pfree(tfloat); pfree(center);
+  return PointerGetDatum(result);
+}
+#endif /* CBUFFER */
 
 /**
  * @brief Return a temporal sequence set with the precision set to a time bin
@@ -349,7 +861,8 @@ tsequenceset_tprecision(const TSequenceSet *ss, const Interval *duration,
   TimestampTz torigin)
 {
   assert(ss); assert(duration); assert(positive_duration(duration));
-  assert(ss->temptype == T_TINT || ss->temptype == T_TFLOAT ||
+  assert(ss->temptype == T_TINT || ss->temptype == T_TBIGINT || 
+    ss->temptype == T_TFLOAT ||
     ss->temptype == T_TGEOMPOINT || ss->temptype == T_TGEOGPOINT );
 
   int64 tunits = interval_units(duration);
@@ -367,7 +880,7 @@ tsequenceset_tprecision(const TSequenceSet *ss, const Interval *duration,
   upper = lower_bin + tunits;
   interpType interp = MEOS_FLAGS_GET_INTERP(ss->flags);
   MeosType temptype_out = (ss->temptype == T_TINT) ? T_TFLOAT : ss->temptype;
-  MeosType basetype_out = temptype_basetype(temptype_out);
+  MeosType basetype_o = temptype_basetype(temptype_out);
   /* Determine whether we are computing the twAvg or the twCentroid */
   bool twavg = tnumber_type(ss->temptype);
   int ninsts = 0;
@@ -381,12 +894,23 @@ tsequenceset_tprecision(const TSequenceSet *ss, const Interval *duration,
     TSequenceSet *proj = tsequenceset_restrict_tstzspan(ss, &p, REST_AT);
     if (proj)
     {
-      Datum value = twavg ? Float8GetDatum(tnumber_twavg((Temporal *) proj)) :
-        PointerGetDatum(tpoint_twcentroid((Temporal *) proj));
+      Datum value;
+#if POSE
+      if (ss->temptype == T_TPOSE)
+        value = pose_tprecision_value((const Temporal *) proj);
+      else
+#endif
+#if CBUFFER
+      if (ss->temptype == T_TCBUFFER)
+        value = tcbuffer_tprecision_value((const Temporal *) proj);
+      else
+#endif
+        value = twavg ? Float8GetDatum(tnumber_twavg((Temporal *) proj)) :
+          PointerGetDatum(tpoint_twcentroid((Temporal *) proj));
       /* We keep only the first instant since the tprecision operation amounts
        * to a granularity change */
       instants[ninsts++] = tinstant_make(value, temptype_out, lower);
-      DATUM_FREE(value, basetype_out);
+      DATUM_FREE(value, basetype_o);
       pfree(proj);
     }
     else
@@ -589,6 +1113,21 @@ tsequence_tsample(const TSequence *seq, const Interval *duration,
   TInstant **instants = palloc(sizeof(TInstant *) * count);
   int ninsts = tsequence_tsample_iter(seq, lower_bin, upper_bin, tunits,
     &instants[0]);
+#if RGEO
+  if (seq->temptype == T_TRGEOMETRY)
+  {
+    const GSERIALIZED *geom = trgeoseq_geom_p(seq);
+    for (int j = 0; j < ninsts; j++)
+    {
+      TInstant *broken = instants[j];
+      instants[j] = trgeoinst_make(geom,
+        DatumGetPoseP(tinstant_value_p(broken)), broken->t);
+      pfree(broken);
+    }
+    return (TSequence *) trgeoseq_make_free(geom, instants, ninsts,
+      true, true, interp, NORMALIZE);
+  }
+#endif
   return tsequence_make_free(instants, ninsts, true, true, interp, NORMALIZE);
 }
 
@@ -741,7 +1280,7 @@ static double
 tinstarr_similarity1(double *dist, TInstant **instants1, int count1,
   TInstant **instants2, int count2, SimFunc simfunc)
 {
-  datum_func2 func = pt_distance_fn(instants1[0]->flags);
+  datum_func2 func = point_distance_fn(instants1[0]->flags);
   for (int i = 0; i < count1; i++)
   {
     for (int j = 0; j < count2; j++)
@@ -997,7 +1536,11 @@ static void
 tinstarr_similarity_matrix1(TInstant **instants1, int count1,
   TInstant **instants2, int count2, SimFunc simfunc, double *dist)
 {
-  datum_func2 func = pt_distance_fn(instants1[0]->flags);
+  /* The flags are needed to select the spatial distance function */
+  MeosType temptype = instants1[0]->temptype;
+  datum_func2 func = tgeo_type(temptype) ?
+    geo_distance_fn(instants1[0]->flags) : ( tpoint_type(temptype) ? 
+    point_distance_fn(instants1[0]->flags) : NULL );
   for (int i = 0; i < count1; i++)
   {
     for (int j = 0; j < count2; j++)
@@ -1151,7 +1694,7 @@ static double
 tinstarr_hausdorff_distance(TInstant **instants1, int count1,
   TInstant **instants2, int count2)
 {
-  datum_func2 func = pt_distance_fn(instants1[0]->flags);
+  datum_func2 func = point_distance_fn(instants1[0]->flags);
   const TInstant *inst1, *inst2;
   double cmax = 0.0, cmin;
   double d;
@@ -1230,7 +1773,7 @@ temporal_hausdorff_distance(const Temporal *temp1, const Temporal *temp2)
 TSequence *
 tsequence_simplify_min_dist(const TSequence *seq, double dist)
 {
-  datum_func2 func = pt_distance_fn(seq->flags);
+  datum_func2 func = point_distance_fn(seq->flags);
   const TInstant *inst1 = TSEQUENCE_INST_N(seq, 0);
   /* Add first instant to the output sequence */
   TInstant **instants = palloc(sizeof(TInstant *) * seq->count);
@@ -1368,7 +1911,8 @@ tsequenceset_simplify_min_tdelta(const TSequenceSet *ss, const Interval *mint)
 {
   TSequence **sequences = palloc(sizeof(TSequence *) * ss->count);
   for (int i = 0; i < ss->count; i++)
-    sequences[i] = tsequence_simplify_min_tdelta(TSEQUENCESET_SEQ_N(ss, i), mint);
+    sequences[i] = tsequence_simplify_min_tdelta(TSEQUENCESET_SEQ_N(ss, i),
+      mint);
   return tsequenceset_make_free(sequences, ss->count, NORMALIZE);
 }
 
@@ -1469,7 +2013,7 @@ tfloatseq_findsplit(const TSequence *seq, int i1, int i2, int *split,
  * @brief Return the 2D distance between the points
  */
 static inline double
-dist2d_pt_pt(POINT2D *p1, POINT2D *p2)
+dist2d_pt_pt(const POINT2D *p1, const POINT2D *p2)
 {
   return hypot(p2->x - p1->x, p2->y - p1->y);
 }
@@ -1478,7 +2022,7 @@ dist2d_pt_pt(POINT2D *p1, POINT2D *p2)
  * @brief Return the 3D distance between the points
  */
 static inline double
-dist3d_pt_pt(POINT3DZ *p1, POINT3DZ *p2)
+dist3d_pt_pt(const POINT3DZ *p1, const POINT3DZ *p2)
 {
   return hypot3d(p2->x - p1->x, p2->y - p1->y, p2->z - p1->z);
 }
@@ -1903,3 +2447,207 @@ temporal_simplify_dp(const Temporal *temp, double dist, bool syncdist)
 }
 
 /*****************************************************************************/
+
+
+
+/**
+ * @brief Computes the average Hausdorff distance between two arrays of temporal instants.
+ * 
+ * This function calculates the average Hausdorff distance between the temporal values
+ * represented by two arrays of TInstant pointers. The Hausdorff distance is a measure
+ * of the similarity between two sets of points, and in this context, it quantifies
+ * the difference between two temporal sequences.
+ * 
+ * @note Function written by Ossama BENAISSA ossama.benaissa.96@gmail.com
+ * 
+ * @param[in] instants1 Array of pointers to the first set of temporal instants.
+ * @param[in] count1 Number of elements in the first array.
+ * @param[in] instants2 Array of pointers to the second set of temporal instants.
+ * @param[in] count2 Number of elements in the second array.
+ * @return The average Hausdorff distance between the two sets of temporal instants.
+ */
+static double
+tinstarr_average_hausdorff_distance(const TInstant **instants1, int count1,
+   const TInstant **instants2, int count2)
+ {
+
+  datum_func2 func = point_distance_fn(instants1[0]->flags);
+  const TInstant *inst1, *inst2;
+
+  double sum1 = 0.0, sum2 = 0.0;
+
+  double cmax = 0.0, cmin;
+  double d;
+  int i, j;
+  for (i = 0; i < count1; i++)
+  {
+    inst1 = instants1[i];
+    cmin = DBL_MAX;
+    for (j = 0; j < count2; j++)
+    {
+      inst2 = instants2[j];
+      d = tinstant_distance(inst1, inst2, func);
+      if (d < cmin)
+        cmin = d;
+      /*if (cmin < cmax)
+        break;*/
+    }
+    if (cmax < cmin && cmin < DBL_MAX){
+      cmax = cmin;
+    }
+    sum1 += cmin;
+    
+  }
+  for (j = 0; j < count2; j++)
+  {
+    cmin = DBL_MAX;
+    inst2 = instants2[j];
+    for (i = 0; i < count1; i++)
+    {
+      inst1 = instants1[i];
+      d = tinstant_distance(inst1, inst2, func);
+      if (d < cmin)
+        cmin = d;
+      /*if (cmin < cmax)
+        break;*/
+    }
+    if (cmax < cmin && cmin < DBL_MAX){
+      cmax = cmin;
+    }
+    sum2 += cmin;
+  }
+  
+  return 0.5 * ((sum1 / (double) count1) +(sum2 / (double) count2));
+  
+ }
+ 
+ 
+ 
+/**
+ * @brief Computes the average Hausdorff distance between two temporal objects.
+ *
+ * This function calculates the average Hausdorff distance between the temporal
+ * values represented by `temp1` and `temp2`. The Hausdorff distance is a measure
+ * of the similarity between two sets of points, and in this context, it is used
+ * to quantify the difference between two temporal objects over their respective
+ * time spans.
+ * 
+ * @note Function written by Ossama BENAISSA ossama.benaissa.96@gmail.com
+ * 
+ * @param temp1 Pointer to the first Temporal object.
+ * @param temp2 Pointer to the second Temporal object.
+ * @return The average Hausdorff distance as a double.
+ */
+ double
+ temporal_average_hausdorff_distance(const Temporal * temp1, const Temporal * temp2) {
+ 
+ 
+    // Ensure validity of the arguments
+    if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2) ||
+        ! ensure_same_temporal_type(temp1, temp2))
+      return -1.0;
+
+    double result;
+    int count1, count2;
+    const TInstant **instants1 = temporal_instants_p(temp1, &count1);
+    const TInstant **instants2 = temporal_instants_p(temp2, &count2);
+    result = tinstarr_average_hausdorff_distance(instants1, count1, instants2, count2);
+    // Free memory
+    pfree(instants1); pfree(instants2);
+    return result;
+ }
+
+ 
+
+/**
+ * @brief Computes the Longest Common Subsequence (LCSS) distance between two arrays of temporal instants.
+ *
+ * This function calculates the LCSS distance between two arrays of temporal instants,
+ * allowing for some tolerance (epsilon) in the matching of values.
+ *
+ * @note Function written by Ossama BENAISSA ossama.benaissa.96@gmail.com
+ *
+ * @param A        Pointer to the first array of temporal instants.
+ * @param count1   Number of elements in the first array.
+ * @param B        Pointer to the second array of temporal instants.
+ * @param count2   Number of elements in the second array.
+ * @param epsilon  Tolerance value for matching temporal values.
+ * @return         The LCSS distance as a double value.
+ */
+static double
+tinstarr_lcss_distance(const TInstant **A, int count1,
+            const TInstant **B, int count2, double epsilon)
+{
+  
+  int *prev = palloc0(sizeof(int) * (count2 + 1)); // on remplie la mémoire de 0
+  int *curr = palloc0(sizeof(int) * (count2 + 1));
+  
+  
+  datum_func2 func = point_distance_fn(A[0]->flags);
+
+  for (int i = 1; i <= count1; i++) {
+    for (int j = 1; j <= count2; j++) {
+      double dist = tinstant_distance(A[i-1], B[j-1], func);
+
+
+      if (dist <= epsilon) {
+        curr[j] = prev[j-1] + 1;      
+      }
+      else{
+        curr[j] = Max(prev[j], curr[j-1]); 
+      }
+      
+    }
+  
+    int *tmp = prev;
+    prev = curr;
+    curr = tmp;
+  }
+  
+  double lcss = prev[count2];
+  pfree(prev);
+  pfree(curr);
+  
+  return lcss;
+}
+
+
+
+
+/**
+ * @brief Computes the Longest Common Subsequence (LCSS) distance between two temporal objects.
+ *
+ * The LCSS distance is a similarity measure that finds the longest subsequence common to both temporal sequences,
+ * allowing for some tolerance (epsilon) in the matching of values. This function is useful for comparing temporal
+ * sequences where exact matches are not required, and small differences can be ignored.
+ *
+ * @note Function written by Ossama BENAISSA ossama.benaissa.96@gmail.com
+ * 
+ * @param temp1    Pointer to the first temporal object.
+ * @param temp2    Pointer to the second temporal object.
+ * @param epsilon  Tolerance value for matching temporal values.
+ * @return         The LCSS distance as a double.
+ */
+double
+temporal_lcss_distance(const Temporal *temp1, const Temporal *temp2, double epsilon)
+{
+  if (! ensure_not_null((void *) temp1) || ! ensure_not_null((void *) temp2) ||
+      ! ensure_same_temporal_type(temp1, temp2) || epsilon < 0)
+    return -1.0;
+
+  double result;
+  int count1, count2;
+  const TInstant **instants1 = temporal_instants_p(temp1, &count1);
+  const TInstant **instants2 = temporal_instants_p(temp2, &count2);
+  
+  // Normalisation : distance =  (lcss / max(len1, len2)) REFERENCE 0 - 1 100% similar
+
+  result = count1 > count2 ?
+    tinstarr_lcss_distance(instants1, count1, instants2, count2, epsilon) :
+    tinstarr_lcss_distance(instants2, count2, instants1, count1, epsilon);
+  pfree(instants1);
+  pfree(instants2);
+
+  return result;
+}
+

@@ -1,7 +1,7 @@
 /***********************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -79,8 +79,8 @@ lw_distance_fraction(const LWGEOM *geom1, const LWGEOM *geom2, int mode,
     double max_dist = FLT_MAX;
     GEOGRAPHIC_POINT closest1, closest2;
     GEOGRAPHIC_EDGE e;
-    CIRC_NODE *circ_tree1 = lwgeom_calculate_circ_tree(geom1);
-    CIRC_NODE *circ_tree2 = lwgeom_calculate_circ_tree(geom2);
+    const CIRC_NODE *circ_tree1 = lwgeom_calculate_circ_tree(geom1);
+    const CIRC_NODE *circ_tree2 = lwgeom_calculate_circ_tree(geom2);
     circ_tree_distance_tree_internal(circ_tree1, circ_tree2, FP_TOLERANCE,
       &min_dist, &max_dist, &closest1, &closest2);
     result = sphere_distance(&closest1, &closest2);
@@ -720,8 +720,8 @@ nai_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
 
 /**
  * @ingroup meos_geo_distance
- * @brief Return the nearest approach distance between a temporal geo and a
- * geometry/geography
+ * @brief Return the nearest approach distance between a temporal geo
+ * and a geometry/geography
  * @param[in] temp Temporal geo
  * @param[in] gs Geometry/geography
  * @csqlfn #NAD_tgeo_geo()
@@ -984,7 +984,7 @@ shortestline_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
   temporal_value_at_timestamptz(temp2, inst->t, false, &value2);
   LWGEOM *line = (LWGEOM *) lwline_make(value1, value2);
   GSERIALIZED *result = geo_serialize(line);
-  pfree(DatumGetPointer(value1)); pfree(DatumGetPointer(value2));
+  pfree(DatumGetPointer(value1)); pfree(DatumGetPointer(value2)); 
   pfree(dist); lwgeom_free(line);
   return result;
 }
@@ -994,7 +994,7 @@ shortestline_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
  *****************************************************************************/
 
 /* Spatial-only distance between two STBoxes; ignores time entirely. */
-static double
+double
 stbox_spatial_distance(const STBox *box1, const STBox *box2)
 {
   /* Spatial extents overlap → exact minimum is 0 (some pair of points
@@ -1210,6 +1210,21 @@ mindistance_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,
       ! ensure_same_dimensionality(temp1->flags, temp2->flags) ||
       ! ensure_same_geodetic(temp1->flags, temp2->flags))
     return DBL_MAX;
+  /* Outer STBox prune: every pair of points on the two trajectories is
+   * contained in the respective STBoxes, so the minimum spatial distance
+   * is bounded below by the spatial distance between the STBoxes. If
+   * that lower bound already meets or exceeds the running threshold the
+   * caller cannot improve, so short-circuit without entering the
+   * segment kernel. Critical for cross-join aggregations where most
+   * pairs are far apart relative to the running min. */
+  if (! MEOS_FLAGS_GET_GEODETIC(temp1->flags))
+  {
+    const STBox *bbox1 = (const STBox *) temporal_bbox_ptr(temp1);
+    const STBox *bbox2 = (const STBox *) temporal_bbox_ptr(temp2);
+    double bbox_dist = stbox_spatial_distance(bbox1, bbox2);
+    if (bbox_dist >= threshold)
+      return threshold;
+  }
   bool inline_eligible =
     ! MEOS_FLAGS_GET_Z(temp1->flags) &&
     ! MEOS_FLAGS_GET_GEODETIC(temp1->flags) &&

@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -1360,5 +1360,28 @@ CREATE OPERATOR CLASS tstzspanset_hash_ops
     FUNCTION    1   spanset_hash(tstzspanset),
     FUNCTION    2   spanset_hash_extended(tstzspanset, bigint);
 
+
+/******************************************************************************/
+
+CREATE FUNCTION arrowRoundtrip(intspanset)
+  RETURNS intspanset
+  AS 'MODULE_PATHNAME', 'Spanset_arrow_roundtrip'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION arrowRoundtrip(bigintspanset)
+  RETURNS bigintspanset
+  AS 'MODULE_PATHNAME', 'Spanset_arrow_roundtrip'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION arrowRoundtrip(floatspanset)
+  RETURNS floatspanset
+  AS 'MODULE_PATHNAME', 'Spanset_arrow_roundtrip'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION arrowRoundtrip(datespanset)
+  RETURNS datespanset
+  AS 'MODULE_PATHNAME', 'Spanset_arrow_roundtrip'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION arrowRoundtrip(tstzspanset)
+  RETURNS tstzspanset
+  AS 'MODULE_PATHNAME', 'Spanset_arrow_roundtrip'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************/

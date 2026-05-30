@@ -1,7 +1,7 @@
 ﻿-------------------------------------------------------------------------------
 --
 -- This MobilityDB code is provided under The PostgreSQL License.
--- Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+-- Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
 -- contributors
 --
 -- MobilityDB includes portions of PostGIS version 3 source code released
@@ -42,7 +42,7 @@ DROP TABLE tbl_pose2d_tmp;
 -- Accessing values
 -------------------------------------------------------------------------------
 
-SELECT ST_AsEWKT(MAX(point(pose)), 6) FROM tbl_pose2d;
+SELECT MAX(ST_X(point(pose))) FROM tbl_pose2d;
 SELECT MAX(rotation(pose)) FROM tbl_pose2d;
 
 -------------------------------------------------------------------------------

@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -89,6 +89,11 @@ CREATE FUNCTION asBinary(stbox, endianenconding text DEFAULT '')
 CREATE FUNCTION asHexWKB(stbox, endianenconding text DEFAULT '')
   RETURNS text
   AS 'MODULE_PATHNAME', 'Stbox_as_hexwkb'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION arrowRoundtrip(stbox)
+  RETURNS stbox
+  AS 'MODULE_PATHNAME', 'Stbox_arrow_roundtrip'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************

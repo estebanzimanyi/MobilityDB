@@ -5,7 +5,26 @@
 # MobilityDB runs its own cppcheck in .github/workflows/cppcheck.yml
 # instead: it feeds cppcheck the real compile_commands.json (so include
 # resolution works) and publishes SARIF to GitHub Code Scanning (inline
-# PR annotations, Security tab). Turn Codacy's copy off.
+# PR annotations, Security tab).
+#
+# Note: modern Codacy ignores the `engines:` block below for tool
+# enablement (see https://docs.codacy.com/repositories-configure/) —
+# Cppcheck and TSQLLint are also disabled at the repository level via
+# the Codacy UI / Account API. This YAML keeps the legacy directives
+# as documentation; the UI/API settings are the load-bearing ones.
+# TSQLLint targets Microsoft SQL Server T-SQL and is irrelevant for
+# PostgreSQL — disabled to silence ~25 spurious findings on the
+# project's `.sql` test files.
+# Cppcheck and TSQLLint are disabled at the repository-settings level
+# on **both** the upstream `MobilityDB/MobilityDB` and the
+# `estebanzimanyi/MobilityDB` Codacy installs via the Account API:
+#     PATCH /api/v3/.../tools/{toolUuid}  body {"enabled": false}
+#     Cppcheck uuid = 02eb6a1c-757f-4324-81bf-094835a1578b
+#     TSQLLint uuid = 35cf97c2-6548-483e-baf9-549433891295
+# This YAML keeps the legacy directives as documentation; the UI/API
+# settings are the load-bearing ones. TSQLLint targets Microsoft SQL
+# Server T-SQL (SET NOCOUNT ON, SET QUOTED_IDENTIFIER ON, T-SQL
+# keyword capitalisation, …) — irrelevant for PostgreSQL.
 engines:
   cppcheck:
     # Belt-and-braces: `enabled: false` is the documented kill switch
@@ -14,17 +33,67 @@ engines:
     enabled: false
     exclude_paths:
       - "**"
+  tsqllint:
+    enabled: false
   duplication:
     exclude_paths:
       - "postgis/**"
       - "postgres/**"
       - "pgtypes/**"
+      - "h3-pg/**"
+      - "arrow/**"
+      - "nanoarrow/**"
+      - "pointcloud-pg/**"
+      - "arrow/**"
+      - "contrib/**"
+      - "clipper2/**"
     config:
       languages:
         - "c"
+# Exclusions:
+#   * postgis/**, postgres/**, pgtypes/** - verbatim upstream source.
+#   * h3-pg/**                            - vendored Apache-2.0 project;
+#                                           we don't own its style
+#                                           guidelines, and edits would
+#                                           be clobbered by re-vendoring.
+#   * pointcloud-pg/**                    - vendored pgPointCloud project.
+#   * arrow/**                            - vendored Apache-2.0 Arrow C
+#                                           Data Interface ABI header.
+#   * scripts/h3pg_import/**              - one-shot import tooling, not
+#                                           production code (Bandit's
+#                                           "use of assert" warning is
+#                                           a non-issue for a dev script
+#                                           that runs once).
+#   * arrow/**                            - vendored Apache-2.0 Arrow C
+#                                           Data Interface ABI header;
+#                                           provenance-reviewed, not
+#                                           style-reviewed.
+#   * nanoarrow/**                        - vendored Apache-2.0 nanoarrow
+#                                           amalgamation used only by the
+#                                           standalone Arrow conformance
+#                                           validators; provenance-reviewed,
+#                                           not style-reviewed.
 exclude_paths:
   - "postgis/**"
   - "postgres/**"
   - "pgtypes/**"
+  - "h3-pg/**"
+  - "scripts/h3pg_import/**"
+  - "arrow/**"
+  - "nanoarrow/**"
+  - "pointcloud-pg/**"
+  - "arrow/**"
+  - "clipper2/**"
   - "meos/test/**"
   - "meos/examples/**"
+  # h3-pg is a vendored copy of the Apache-2.0 h3-pg project; its
+  # cyclomatic complexity should not count against MobilityDB's gate.
+  - "h3-pg/**"
+  # contrib/ contains optional PCL/PDAL integration plugins; they are
+  # not part of the core codebase and pull in large generated files.
+  - "contrib/**"
+  # scripts/ and tools/ hold developer utilities (Python); exclude to
+  # prevent style issues in helper scripts from blocking PR analysis.
+  - "scripts/**"
+  - "tools/**"
+  - "tools/parity_audit/**"

@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -60,7 +60,7 @@
  * @brief Create a bit matrix
  */
 BitMatrix *
-bitmatrix_make(int *count, int ndims)
+bitmatrix_make(const int *count, int ndims)
 {
   /* Calculate the needed number of bits and bytes */
   int i, bitCount = 1;
@@ -85,7 +85,7 @@ bitmatrix_make(int *count, int ndims)
  * @brief Get the value of the bit in the bit matrix
  */
 static bool
-bitmatrix_get(const BitMatrix *bm, int *coords)
+bitmatrix_get(const BitMatrix *bm, const int *coords)
 {
   int i, j;
   for (i = 0; i < bm->ndims; i++)
@@ -109,7 +109,7 @@ bitmatrix_get(const BitMatrix *bm, int *coords)
  * @brief Set the value of the bit in the bit matrix
  */
 static void
-bitmatrix_set_cell(BitMatrix *bm, int *coords, bool value)
+bitmatrix_set_cell(BitMatrix *bm, const int *coords, bool value)
 {
   int i, j, pos = 0;
   for (i = 0; i < bm->ndims; i++)
@@ -275,7 +275,7 @@ bitmatrix_print(const BitMatrix *bm)
  * @return Number of tiles set
  */
 static int
-fastvoxel_bm(int *coords1, double *eps1, int *coords2, double *eps2,
+fastvoxel_bm(int *coords1, const double *eps1, int *coords2, const double *eps2,
   int ndims, BitMatrix *bm)
 {
   int i, k, coords[MAXDIMS], next[MAXDIMS], result = 0;
@@ -770,7 +770,7 @@ stbox_space_time_tiles(const STBox *bounds, double xsize, double ysize,
  * @param[out] count Number of values in the output array
  * @csqlfn #Stbox_space_tiles()
  */
-inline STBox *
+STBox *
 stbox_space_tiles(const STBox *bounds, double xsize, double ysize, double zsize,
   const GSERIALIZED *sorigin,  bool border_inc, int *count)
 {
@@ -789,7 +789,7 @@ stbox_space_tiles(const STBox *bounds, double xsize, double ysize, double zsize,
  * @param[out] count Number of values in the output array
  * @csqlfn #Stbox_time_tiles()
  */
-inline STBox *
+STBox *
 stbox_time_tiles(const STBox *bounds, const Interval *duration,
   TimestampTz torigin, bool border_inc, int *count)
 {
@@ -890,7 +890,7 @@ stbox_space_time_tile(const GSERIALIZED *point, TimestampTz t,
  * @param[in] torigin Origin for the time dimension
  * @csqlfn Stbox_get_space_time_tile()
  */
-inline STBox *
+STBox *
 stbox_get_space_time_tile(const GSERIALIZED *point, TimestampTz t,
   double xsize, double ysize, double zsize, const Interval *duration,
   const GSERIALIZED *sorigin, TimestampTz torigin)
@@ -907,7 +907,7 @@ stbox_get_space_time_tile(const GSERIALIZED *point, TimestampTz t,
  * @param[in] sorigin Origin for the space dimension
  * @csqlfn Stbox_get_space_tile()
  */
-inline STBox *
+STBox *
 stbox_get_space_tile(const GSERIALIZED *point, double xsize, double ysize,
   double zsize, const GSERIALIZED *sorigin)
 {
@@ -923,7 +923,7 @@ stbox_get_space_tile(const GSERIALIZED *point, double xsize, double ysize,
  * @param[in] torigin Origin for the time dimension
  * @csqlfn Stbox_get_time_tile()
  */
-inline STBox *
+STBox *
 stbox_get_time_tile(TimestampTz t, const Interval *duration,
   TimestampTz torigin)
 {
@@ -1034,7 +1034,7 @@ tgeo_space_time_boxes(const Temporal *temp, double xsize, double ysize,
  * the upper border is assumed as outside of the box.
  * @param[out] count Number of elements in the output array
  */
-inline STBox *
+STBox *
 tgeo_space_boxes(const Temporal *temp, double xsize, double ysize,
   double zsize, const GSERIALIZED *sorigin, bool bitmatrix, bool border_inc,
   int *count)
@@ -1458,7 +1458,7 @@ tgeo_space_time_split(const Temporal *temp, double xsize, double ysize,
  * @param[out] space_bins Array of space bins
  * @param[out] count Number of elements in the output arrays
  */
-inline Temporal **
+Temporal **
 tgeo_space_split(const Temporal *temp, double xsize, double ysize,
   double zsize, const GSERIALIZED *sorigin, bool bitmatrix, bool border_inc,
   GSERIALIZED ***space_bins, int *count)

@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -133,7 +133,7 @@ ensure_has_T(MeosType type, int16 flags)
  * @brief Ensure that the pointer is not null
  */
 bool
-ensure_not_null(void *ptr)
+ensure_not_null(const void *ptr)
 {
   if (ptr)
     return true;
@@ -145,7 +145,7 @@ ensure_not_null(void *ptr)
  * @brief Ensure that at least one of the pointers is not null
  */
 bool
-ensure_one_not_null(void *ptr1, void *ptr2)
+ensure_one_not_null(const void *ptr1, const void *ptr2)
 {
   if (ptr1 || ptr2)
     return true;
@@ -270,7 +270,6 @@ ensure_common_dimension(int16 flags1, int16 flags2)
   return false;
 }
 
-#if MEOS
 /**
  * @brief Ensure that a temporal value has a given base type
  * @param[in] temp Temporal value
@@ -299,7 +298,6 @@ ensure_temporal_isof_type(const Temporal *temp, MeosType temptype)
     "The temporal value must be of type %s", meostype_name(temptype));
   return false;
 }
-#endif /* MEOS */
 
 /**
  * @brief Ensure that two temporal values have the same temporal type
@@ -477,7 +475,9 @@ not_negative_datum(Datum d, MeosType basetype)
   assert(span_basetype(basetype));
   if (basetype == T_INT4 && DatumGetInt32(d) < 0)
     return false;
-  else if (basetype == T_FLOAT8 && DatumGetFloat8(d) < 0.0)
+  if (basetype == T_INT8 && DatumGetInt64(d) < 0)
+    return false;
+  if (basetype == T_FLOAT8 && DatumGetFloat8(d) < 0.0)
     return false;
   /* basetype == T_TIMESTAMPTZ */
   else if (DatumGetInt64(d) < 0)
@@ -494,10 +494,12 @@ ensure_not_negative_datum(Datum d, MeosType basetype)
   if (not_negative_datum(d, basetype))
     return true;
   char str[256];
-  assert(basetype == T_INT4 || basetype == T_FLOAT8 || basetype == T_DATE ||
-    basetype == T_TIMESTAMPTZ);
+  assert(basetype == T_INT4 || basetype == T_INT8 || basetype == T_FLOAT8 ||
+    basetype == T_DATE || basetype == T_TIMESTAMPTZ);
   if (basetype == T_INT4)
     snprintf(str, sizeof(str), "%d", DatumGetInt32(d));
+  else if (basetype == T_INT8)
+    snprintf(str, sizeof(str), "%ld", DatumGetInt64(d));
   else if (basetype == T_FLOAT8)
     snprintf(str, sizeof(str), "%f", DatumGetFloat8(d));
   else /* basetype == T_TIMESTAMPTZ */
@@ -541,6 +543,8 @@ ensure_positive_datum(Datum d, MeosType basetype)
   char str[256];
   if (basetype == T_INT4)
     snprintf(str, sizeof(str), "%d", DatumGetInt32(d));
+  else if (basetype == T_INT8)
+    snprintf(str, sizeof(str), "%ld", DatumGetInt64(d));
   else if (basetype == T_FLOAT8)
     snprintf(str, sizeof(str), "%f", DatumGetFloat8(d));
   meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
@@ -974,6 +978,17 @@ datum_bool_to_int(Datum d)
 }
 
 /**
+ * @brief Convert an integer into a big integer
+ * @param[in] d Value
+ * @note Function used for lifting
+ */
+static Datum
+datum_int_to_bigint(Datum d)
+{
+  return Int64GetDatum((int64) DatumGetInt32(d));
+}
+
+/**
  * @brief Convert an integer into a float
  * @param[in] d Value
  * @note Function used for lifting
@@ -985,6 +1000,17 @@ datum_int_to_float(Datum d)
 }
 
 /**
+ * @brief Convert an integer into a float
+ * @param[in] d Value
+ * @note Function used for lifting
+ */
+static Datum
+datum_bigint_to_float(Datum d)
+{
+  return Float8GetDatum((double) DatumGetInt64(d));
+}
+
+/**
  * @brief Convert a float into an integer
  * @param[in] d Value
  * @note Function used for lifting
@@ -993,6 +1019,17 @@ static Datum
 datum_float_to_int(Datum d)
 {
   return Int32GetDatum((int) DatumGetFloat8(d));
+}
+
+/**
+ * @brief Convert a float into a big integer
+ * @param[in] d Value
+ * @note Function used for lifting
+ */
+static Datum
+datum_float_to_bigint(Datum d)
+{
+  return Int64GetDatum((int64) DatumGetFloat8(d));
 }
 
 /**
@@ -1017,6 +1054,27 @@ tbool_to_tint(const Temporal *temp)
 
 /**
  * @ingroup meos_temporal_conversion
+ * @brief Convert a temporal integer into a temporal big integer
+ * @param[in] temp Temporal value
+ * @csqlfn #Tint_to_tbigint()
+ */
+Temporal *
+tint_to_tbigint(const Temporal *temp)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_TINT(temp, NULL);
+
+  LiftedFunctionInfo lfinfo;
+  memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
+  lfinfo.func = (varfunc) datum_int_to_bigint;
+  lfinfo.numparam = 0;
+  lfinfo.argtype[0] = T_TINT;
+  lfinfo.restype = T_TBIGINT;
+  return tfunc_temporal(temp, &lfinfo);
+}
+
+/**
+ * @ingroup meos_temporal_conversion
  * @brief Convert a temporal integer into a temporal float
  * @param[in] temp Temporal value
  * @csqlfn #Tint_to_tfloat()
@@ -1031,6 +1089,57 @@ tint_to_tfloat(const Temporal *temp)
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) datum_int_to_float;
   lfinfo.argtype[0] = T_TINT;
+  lfinfo.restype = T_TFLOAT;
+  return tfunc_temporal(temp, &lfinfo);
+}
+
+/**
+ * @ingroup meos_temporal_conversion
+ * @brief Convert a temporal big integer into a temporal integer
+ * @param[in] temp Temporal value
+ * @csqlfn #Tbigint_to_tint()
+ */
+Temporal *
+tbigint_to_tint(const Temporal *temp)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_TBIGINT(temp, NULL);
+
+  /* Return NULL if there is overflow */
+  if (ever_gt_temporal_base(temp, INT_MAX) ||
+      ever_lt_temporal_base(temp, INT_MIN))
+  {
+    meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
+      "Integer out of range");
+    return NULL;
+  }
+
+  LiftedFunctionInfo lfinfo;
+  memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
+  lfinfo.func = (varfunc) datum_bigint_to_float;
+  lfinfo.numparam = 0;
+  lfinfo.argtype[0] = T_TBIGINT;
+  lfinfo.restype = T_TINT;
+  return tfunc_temporal(temp, &lfinfo);
+}
+
+/**
+ * @ingroup meos_temporal_conversion
+ * @brief Convert a temporal big integer into a temporal float
+ * @param[in] temp Temporal value
+ * @csqlfn #Tbigint_to_tfloat()
+ */
+Temporal *
+tbigint_to_tfloat(const Temporal *temp)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_TBIGINT(temp, NULL);
+
+  LiftedFunctionInfo lfinfo;
+  memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
+  lfinfo.func = (varfunc) datum_bigint_to_float;
+  lfinfo.numparam = 0;
+  lfinfo.argtype[0] = T_TBIGINT;
   lfinfo.restype = T_TFLOAT;
   return tfunc_temporal(temp, &lfinfo);
 }
@@ -1062,6 +1171,33 @@ tfloat_to_tint(const Temporal *temp)
 }
 
 /**
+ * @ingroup meos_temporal_conversion
+ * @brief Convert a temporal float into a temporal big integer
+ * @param[in] temp Temporal value
+ * @csqlfn #Tfloat_to_tbigint()
+ */
+Temporal *
+tfloat_to_tbigint(const Temporal *temp)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_TFLOAT(temp, NULL);
+  if (MEOS_FLAGS_LINEAR_INTERP(temp->flags))
+  {
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      "Cannot cast temporal float with linear interpolation to temporal big integer");
+    return NULL;
+  }
+
+  LiftedFunctionInfo lfinfo;
+  memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
+  lfinfo.func = (varfunc) datum_float_to_bigint;
+  lfinfo.numparam = 0;
+  lfinfo.argtype[0] = T_TFLOAT;
+  lfinfo.restype = T_TBIGINT;
+  return tfunc_temporal(temp, &lfinfo);
+}
+
+/**
  * @ingroup meos_internal_temporal_accessor
  * @brief Return in the last argument the time span of a temporal value
  * @param[in] temp Temporal value
@@ -1086,6 +1222,7 @@ temporal_set_tstzspan(const Temporal *temp, Span *s)
   return;
 }
 
+#if MEOS
 /**
  * @ingroup meos_temporal_conversion
  * @brief Return the bounding period of a temporal value
@@ -1102,7 +1239,7 @@ temporal_to_tstzspan(const Temporal *temp)
   temporal_set_tstzspan(temp, result);
   return result;
 }
-
+#endif /* MEOS */
 /**
  * @ingroup meos_internal_temporal_accessor
  * @brief Return in the last argument the value span of a temporal number
@@ -1124,7 +1261,7 @@ tnumber_set_span(const Temporal *temp, Span *s)
   }
   else
   {
-    TBox *box = (TBox *) temporal_bbox_ptr(temp);
+    const TBox *box = (const TBox *) temporal_bbox_ptr(temp);
     memcpy(s, &box->span, sizeof(Span));
   }
   return;
@@ -2642,6 +2779,30 @@ temporal_insts_p(const Temporal *temp, int *count)
   }
 }
 
+/**
+ * @ingroup meos_temporal_accessor
+ * @brief Return an array of pointers to the distinct instants of a temporal
+ * value (no copy)
+ * @details This is the user-facing variant of #temporal_insts_p: it performs
+ * full input validation, while #temporal_insts_p is the fast loop helper used
+ * inside sequence/sequence-set internals where the surrounding container has
+ * already validated its arguments.
+ * @param[in] temp Temporal value
+ * @param[out] count Number of values in the output array
+ * @return On error return @p NULL
+ */
+const TInstant **
+temporal_instants_p(const Temporal *temp, int *count)
+{
+  VALIDATE_NOT_NULL(temp, NULL); VALIDATE_NOT_NULL(count, NULL);
+  /* Inline the temptype_subtype() check because that helper is compiled
+   * only in DEBUG builds (wrapped in #ifndef NDEBUG in meos_catalog.c) */
+  if (temp->subtype != TINSTANT && temp->subtype != TSEQUENCE &&
+      temp->subtype != TSEQUENCESET)
+    return NULL;
+  return temporal_insts_p(temp, count);
+}
+
 #if MEOS
 /**
  * @ingroup meos_temporal_accessor
@@ -2833,7 +2994,7 @@ tsequence_segm_duration_iter(const TSequence *seq, int64 tunits, CompOper oper,
   for (int i = 0; i < seq->count - 1; i++)
   {
     const TInstant *inst2 = TSEQUENCE_INST_N(seq, i + 1);
-    bool upper_inc = (i == seq->count - 1) ? seq->period.upper_inc : false;
+    bool upper_inc = false;
     int64_t length = (int64)(inst2->t - inst1->t);
     switch(oper)
     {
@@ -3055,7 +3216,8 @@ mrr_distance_scalar(const TSequence *seq, int start, int end)
   max_value = min_value;
   for (int i = start + 1; i < end + 1; ++i)
   {
-    double curr_value = DatumGetFloat8(tinstant_value_p(TSEQUENCE_INST_N(seq, i)));
+    double curr_value = DatumGetFloat8(tinstant_value_p(
+      TSEQUENCE_INST_N(seq, i)));
     min_value = fmin(min_value, curr_value);
     max_value = fmax(max_value, curr_value);
   }
@@ -3379,7 +3541,7 @@ temporal_eq(const Temporal *temp1, const Temporal *temp2)
  * @param[in] temp1,temp2 Temporal values
  * @csqlfn #Temporal_ne()
  */
-inline bool
+bool
 temporal_ne(const Temporal *temp1, const Temporal *temp2)
 {
   return ! temporal_eq(temp1, temp2);
@@ -3469,7 +3631,7 @@ temporal_cmp(const Temporal *temp1, const Temporal *temp2)
  * @param[in] temp1,temp2 Temporal values
  * @csqlfn #Temporal_lt()
  */
-inline bool
+bool
 temporal_lt(const Temporal *temp1, const Temporal *temp2)
 {
   return temporal_cmp(temp1, temp2) < 0;
@@ -3482,7 +3644,7 @@ temporal_lt(const Temporal *temp1, const Temporal *temp2)
  * @param[in] temp1,temp2 Temporal values
  * @csqlfn #Temporal_le()
  */
-inline bool
+bool
 temporal_le(const Temporal *temp1, const Temporal *temp2)
 {
   return temporal_cmp(temp1, temp2) <= 0;
@@ -3495,7 +3657,7 @@ temporal_le(const Temporal *temp1, const Temporal *temp2)
  * @param[in] temp1,temp2 Temporal values
  * @csqlfn #Temporal_gt()
  */
-inline bool
+bool
 temporal_ge(const Temporal *temp1, const Temporal *temp2)
 {
   return temporal_cmp(temp1, temp2) >= 0;
@@ -3507,7 +3669,7 @@ temporal_ge(const Temporal *temp1, const Temporal *temp2)
  * @param[in] temp1,temp2 Temporal values
  * @csqlfn #Temporal_ge()
  */
-inline bool
+bool
 temporal_gt(const Temporal *temp1, const Temporal *temp2)
 {
   return temporal_cmp(temp1, temp2) > 0;

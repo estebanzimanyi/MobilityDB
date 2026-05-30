@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -91,13 +91,26 @@ CREATE FUNCTION asHexWKB(tbox, endianenconding text DEFAULT '')
   AS 'MODULE_PATHNAME', 'Tbox_as_hexwkb'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION arrowRoundtrip(tbox)
+  RETURNS tbox
+  AS 'MODULE_PATHNAME', 'Tbox_arrow_roundtrip'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 /******************************************************************************
  * Constructor functions
  ******************************************************************************/
 
+CREATE FUNCTION tbox(bigint, timestamptz)
+  RETURNS tbox
+  AS 'MODULE_PATHNAME', 'Number_timestamptz_to_tbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tbox(integer, timestamptz)
   RETURNS tbox
   AS 'MODULE_PATHNAME', 'Number_timestamptz_to_tbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tbox(bigintspan, timestamptz)
+  RETURNS tbox
+  AS 'MODULE_PATHNAME', 'Numspan_timestamptz_to_tbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tbox(intspan, timestamptz)
   RETURNS tbox
@@ -111,9 +124,18 @@ CREATE FUNCTION tbox(floatspan, timestamptz)
   RETURNS tbox
   AS 'MODULE_PATHNAME', 'Numspan_timestamptz_to_tbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tbox(bigint, tstzspan)
+  RETURNS tbox
+  AS 'MODULE_PATHNAME', 'Number_tstzspan_to_tbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tbox(integer, tstzspan)
   RETURNS tbox
   AS 'MODULE_PATHNAME', 'Number_tstzspan_to_tbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tbox(bigintspan, tstzspan)
+  RETURNS tbox
+  AS 'MODULE_PATHNAME', 'Numspan_tstzspan_to_tbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tbox(intspan, tstzspan)
   RETURNS tbox
@@ -132,6 +154,10 @@ CREATE FUNCTION tbox(floatspan, tstzspan)
  * Conversion functions
  *****************************************************************************/
 
+CREATE FUNCTION tbox(bigint)
+  RETURNS tbox
+  AS 'MODULE_PATHNAME', 'Number_to_tbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tbox(integer)
   RETURNS tbox
   AS 'MODULE_PATHNAME', 'Number_to_tbox'
@@ -149,6 +175,10 @@ CREATE FUNCTION tbox(timestamptz)
   AS 'MODULE_PATHNAME', 'Timestamptz_to_tbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION tbox(bigintset)
+  RETURNS tbox
+  AS 'MODULE_PATHNAME', 'Set_to_tbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tbox(intset)
   RETURNS tbox
   AS 'MODULE_PATHNAME', 'Set_to_tbox'
@@ -162,6 +192,10 @@ CREATE FUNCTION tbox(tstzset)
   AS 'MODULE_PATHNAME', 'Set_to_tbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION tbox(bigintspan)
+  RETURNS tbox
+  AS 'MODULE_PATHNAME', 'Span_to_tbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tbox(intspan)
   RETURNS tbox
   AS 'MODULE_PATHNAME', 'Span_to_tbox'
@@ -175,6 +209,10 @@ CREATE FUNCTION tbox(tstzspan)
   AS 'MODULE_PATHNAME', 'Span_to_tbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION tbox(bigintspanset)
+  RETURNS tbox
+  AS 'MODULE_PATHNAME', 'Spanset_to_tbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tbox(intspanset)
   RETURNS tbox
   AS 'MODULE_PATHNAME', 'Spanset_to_tbox'
@@ -188,23 +226,31 @@ CREATE FUNCTION tbox(tstzspanset)
   AS 'MODULE_PATHNAME', 'Spanset_to_tbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE CAST (bigint AS tbox) WITH FUNCTION tbox(bigint);
 CREATE CAST (integer AS tbox) WITH FUNCTION tbox(integer);
 CREATE CAST (float AS tbox) WITH FUNCTION tbox(float);
 CREATE CAST (numeric AS tbox) WITH FUNCTION tbox(numeric);
 CREATE CAST (timestamptz AS tbox) WITH FUNCTION tbox(timestamptz);
 
+CREATE CAST (bigintset AS tbox) WITH FUNCTION tbox(bigintset);
 CREATE CAST (intset AS tbox) WITH FUNCTION tbox(intset);
 CREATE CAST (floatset AS tbox) WITH FUNCTION tbox(floatset);
 CREATE CAST (tstzset AS tbox) WITH FUNCTION tbox(tstzset);
 
+CREATE CAST (bigintspan AS tbox) WITH FUNCTION tbox(bigintspan);
 CREATE CAST (intspan AS tbox) WITH FUNCTION tbox(intspan);
 CREATE CAST (floatspan AS tbox) WITH FUNCTION tbox(floatspan);
 CREATE CAST (tstzspan AS tbox) WITH FUNCTION tbox(tstzspan);
 
+CREATE CAST (bigintspanset AS tbox) WITH FUNCTION tbox(bigintspanset);
 CREATE CAST (intspanset AS tbox) WITH FUNCTION tbox(intspanset);
 CREATE CAST (floatspanset AS tbox) WITH FUNCTION tbox(floatspanset);
 CREATE CAST (tstzspanset AS tbox) WITH FUNCTION tbox(tstzspanset);
 
+CREATE FUNCTION bigintspan(tbox)
+  RETURNS bigintspan
+  AS 'MODULE_PATHNAME', 'Tbox_to_bigintspan'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION intspan(tbox)
   RETURNS intspan
   AS 'MODULE_PATHNAME', 'Tbox_to_intspan'
@@ -218,6 +264,7 @@ CREATE FUNCTION timeSpan(tbox)
   AS 'MODULE_PATHNAME', 'Tbox_to_tstzspan'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE CAST (tbox AS bigintspan) WITH FUNCTION bigintspan(tbox);
 CREATE CAST (tbox AS intspan) WITH FUNCTION intspan(tbox);
 CREATE CAST (tbox AS floatspan) WITH FUNCTION floatspan(tbox);
 CREATE CAST (tbox AS tstzspan) WITH FUNCTION timeSpan(tbox);
@@ -272,6 +319,10 @@ CREATE FUNCTION TmaxInc(tbox)
  * Transformation functions
  *****************************************************************************/
 
+CREATE FUNCTION shiftValue(tbox, bigint)
+  RETURNS tbox
+  AS 'MODULE_PATHNAME', 'Tbox_shift_value'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION shiftValue(tbox, integer)
   RETURNS tbox
   AS 'MODULE_PATHNAME', 'Tbox_shift_value'
@@ -285,6 +336,10 @@ CREATE FUNCTION shiftTime(tbox, interval)
   AS 'MODULE_PATHNAME', 'Tbox_shift_time'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION scaleValue(tbox, bigint)
+  RETURNS tbox
+  AS 'MODULE_PATHNAME', 'Tbox_scale_value'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION scaleValue(tbox, integer)
   RETURNS tbox
   AS 'MODULE_PATHNAME', 'Tbox_scale_value'
@@ -298,6 +353,10 @@ CREATE FUNCTION scaleTime(tbox, interval)
   AS 'MODULE_PATHNAME', 'Tbox_scale_time'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION shiftScaleValue(tbox, bigint, bigint)
+  RETURNS tbox
+  AS 'MODULE_PATHNAME', 'Tbox_shift_scale_value'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION shiftScaleValue(tbox, integer, integer)
   RETURNS tbox
   AS 'MODULE_PATHNAME', 'Tbox_shift_scale_value'
@@ -311,6 +370,10 @@ CREATE FUNCTION shiftScaleTime(tbox, interval, interval)
   AS 'MODULE_PATHNAME', 'Tbox_shift_scale_time'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION expandValue(tbox, bigint)
+  RETURNS tbox
+  AS 'MODULE_PATHNAME', 'Tbox_expand_value'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION expandValue(tbox, integer)
   RETURNS tbox
   AS 'MODULE_PATHNAME', 'Tbox_expand_value'

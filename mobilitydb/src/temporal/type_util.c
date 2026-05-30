@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -266,6 +266,18 @@ spanarr_extract(ArrayType *array, int *count)
   for (int i = 0; i < *count; i++)
     result[i] = *spans[i];
   pfree(spans);
+  return result;
+}
+
+/**
+ * @brief Extract a C array from a PostgreSQL array containing geometries
+ */
+GSERIALIZED **
+geoarr_extract(ArrayType *array, int *count)
+{
+  GSERIALIZED **result;
+  deconstruct_array(array, array->elemtype, -1, false, 'd', (Datum **) &result,
+    NULL, count);
   return result;
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -84,8 +84,9 @@
 #define ORDER_NO        false
 
 /** Symbolic constants for the output of string elements */
-#define QUOTES          true
-#define QUOTES_NO       false
+#define QUOTES_ESCAPE   2
+#define QUOTES          1
+#define QUOTES_NO       0
 
 /** Symbolic constants for the output of string elements */
 #define SPACES          true
@@ -246,6 +247,7 @@ enum MEOS_WKB_TSUBTYPE
 #define MEOS_WKB_ZFLAG            0x10  // 16
 #define MEOS_WKB_GEODETICFLAG     0x20  // 32
 #define MEOS_WKB_SRIDFLAG         0x40  // 64
+#define MEOS_WKB_PCSCHEMAFLAG     0x80  // 128 — pgPointCloud schema XML embedded
 
 #define MEOS_WKB_GET_INTERP(flags) (((flags) & MEOS_WKB_INTERPFLAGS) >> 2)
 #define MEOS_WKB_SET_INTERP(flags, value) ((flags) = (((flags) & ~MEOS_WKB_INTERPFLAGS) | ((value & 0x0003) << 2)))
@@ -279,6 +281,10 @@ typedef union bboxunion
   Span p;      /**< Span */
   TBox b;      /**< Temporal box */
   STBox g;     /**< Spatiotemporal box */
+#if POINTCLOUD
+  /* TPCBox is 88 bytes (vs STBox 80) — shares Span+xyz prefix layout */
+  char tpc[88];
+#endif
 } bboxunion;
 
 /*****************************************************************************
@@ -384,8 +390,8 @@ extern bool ensure_has_X(MeosType type, int16 flags);
 extern bool ensure_has_Z(MeosType type, int16 flags);
 extern bool ensure_has_T(MeosType type, int16 flags);
 extern bool ensure_has_not_Z(MeosType type, int16 flags);
-extern bool ensure_not_null(void *ptr);
-extern bool ensure_one_not_null(void *ptr1, void *ptr2);
+extern bool ensure_not_null(const void *ptr);
+extern bool ensure_one_not_null(const void *ptr1, const void *ptr2);
 extern bool ensure_one_true(bool hasshift, bool haswidth);
 extern bool ensure_valid_interp(MeosType temptype, interpType interp);
 extern bool ensure_continuous(const Temporal *temp);

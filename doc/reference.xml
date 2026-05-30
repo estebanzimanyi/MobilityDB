@@ -59,11 +59,11 @@
 					<entry><varname>tint</varname></entry>
 				</row>
 				<row>
-						<entry><emphasis role="bold"><varname>bigint</varname></emphasis></entry>
-						<entry><varname>bigintset</varname></entry>
-						<entry><varname>bigintspan</varname></entry>
-						<entry><varname>bigintspanset</varname></entry>
-						<entry><varname/></entry>
+					<entry><emphasis role="bold"><varname>bigint</varname></emphasis></entry>
+					<entry><varname>bigintset</varname></entry>
+					<entry><varname>bigintspan</varname></entry>
+					<entry><varname>bigintspanset</varname></entry>
+					<entry><varname>tbigint</varname></entry>
 				</row>
 				<row>
 					<entry><emphasis role="bold"><varname>float</varname></emphasis></entry>
@@ -120,6 +120,27 @@
 					<entry><varname/></entry>
 					<entry><varname/></entry>
 					<entry><varname>tcbuffer</varname></entry>
+				</row>
+				<row>
+					<entry><emphasis role="bold"><varname>h3index</varname></emphasis></entry>
+					<entry><varname>h3indexset</varname></entry>
+					<entry><varname/></entry>
+					<entry><varname/></entry>
+					<entry><varname>th3index</varname></entry>
+				</row>
+				<row>
+					<entry><emphasis role="bold"><varname>pcpoint</varname></emphasis></entry>
+					<entry><varname>pcpointset</varname></entry>
+					<entry><varname/></entry>
+					<entry><varname/></entry>
+					<entry><varname>tpcpoint</varname></entry>
+				</row>
+				<row>
+					<entry><emphasis role="bold"><varname>pcpatch</varname></emphasis></entry>
+					<entry><varname>pcpatchset</varname></entry>
+					<entry><varname/></entry>
+					<entry><varname/></entry>
+					<entry><varname>tpcpatch</varname></entry>
 				</row>
 			</tbody>
 			</tgroup>
@@ -740,15 +761,15 @@
 				</listitem>
 
 				<listitem>
-					<para><link linkend="numSequences"><varname>numSequences</varname>, <varname>sequences</varname></link>: Return the (number of) sequences</para>
+					<para><link linkend="ttype_numSequences"><varname>numSequences</varname>, <varname>sequences</varname></link>: Return the (number of) sequences</para>
 				</listitem>
 
 				<listitem>
-					<para><link linkend="startSequence"><varname>startSequence</varname>, <varname>endSequence</varname>, <varname>sequenceN</varname></link>: Return the start, end, or n-th sequence</para>
+					<para><link linkend="ttype_startSequence"><varname>startSequence</varname>, <varname>endSequence</varname>, <varname>sequenceN</varname></link>: Return the start, end, or n-th sequence</para>
 				</listitem>
 
 				<listitem>
-					<para><link linkend="segments"><varname>segments</varname></link>: Return the segments</para>
+					<para><link linkend="ttype_segments"><varname>segments</varname></link>: Return the segments</para>
 				</listitem>
 			</itemizedlist>
 		</sect2>
@@ -868,7 +889,7 @@
 				</listitem>
 
 				<listitem>
-					<para><link linkend="tint_tfloat"><varname>tint::tfloat</varname>, <varname>tfloat::tint</varname>, <varname>tfloat(tint)</varname>, <varname>tint(tfloat)</varname></link>: Convert between a temporal integer and a temporal float</para>
+					<para><link linkend="tint_tfloat"><varname>tnumber::tnumber</varname>, <varname>tnumber(tnumber)</varname></link>: Convert between temporal integers, temporal big integers, and temporal floats</para>
 				</listitem>
 			</itemizedlist>
 		</sect2>
@@ -1174,10 +1195,6 @@
 				</listitem>
 
 				<listitem>
-					<para><link linkend="tgeo_minDistance"><varname>minDistance</varname></link>: Return the minimum spatial distance between two temporal geometries over the union of their temporal extents</para>
-				</listitem>
-
-				<listitem>
 					<para><link linkend="tgeo_nearestApproachInstant"><varname>nearestApproachInstant</varname></link>: Return the instant of the first temporal point at which the two arguments are at the nearest distance</para>
 				</listitem>
 
@@ -1224,23 +1241,23 @@
 
 				<itemizedlist>
 					<listitem>
-						<para><link linkend="tContains"><varname>tContains</varname></link>: Temporal contains</para>
+						<para><link linkend="tgeo_tContains"><varname>tContains</varname></link>: Temporal contains</para>
 					</listitem>
 
 					<listitem>
-						<para><link linkend="tDisjoint"><varname>tDisjoint</varname></link>: Temporal disjoint</para>
+						<para><link linkend="tgeo_tDisjoint"><varname>tDisjoint</varname></link>: Temporal disjoint</para>
 					</listitem>
 
 					<listitem>
-						<para><link linkend="tDwithin"><varname>tDwithin</varname></link>: Temporal distance within</para>
+						<para><link linkend="tgeo_tDwithin"><varname>tDwithin</varname></link>: Temporal distance within</para>
 					</listitem>
 
 					<listitem>
-						<para><link linkend="tIntersects"><varname>tIntersects</varname></link>: Temporal intersects</para>
+						<para><link linkend="tgeo_tIntersects"><varname>tIntersects</varname></link>: Temporal intersects</para>
 					</listitem>
 
 					<listitem>
-						<para><link linkend="tTouches"><varname>tTouches</varname></link>: Temporal touches</para>
+						<para><link linkend="tgeo_tTouches"><varname>tTouches</varname></link>: Temporal touches</para>
 					</listitem>
 				</itemizedlist>
 			</sect3>
@@ -1288,6 +1305,15 @@
 
 				<listitem>
 					<para><link linkend="ttype_similarityPath"><varname>frechetDistancePath</varname>, <varname>dynTimeWarpPath</varname></link>: Return the correspondence pairs between two temporal values with respect to the discrete Fréchet distance or the Dynamic Time Warp distance</para>
+				</listitem>
+			</itemizedlist>
+		</sect2>
+
+		<sect2>
+			<title>Outlier Detection</title>
+			<itemizedlist>
+				<listitem>
+					<para><link linkend="geo_wlof"><varname>wlocalOutlierFactor</varname></link>: Return the weighted local outlier factor (WLOF) of an array of geometries</para>
 				</listitem>
 			</itemizedlist>
 		</sect2>
@@ -1526,7 +1552,7 @@
 				<title>Comparisons</title>
 				<itemizedlist>
 					<listitem>
-						<para><link linkend="pose_eq"><varname>=</varname>, <varname>&lt;&gt;</varname>, <varname>&lt;</varname>, <varname>&gt;</varname>, <varname>&lt;=</varname>, <varname>&gt;=</varname></link>: Traditional comparisons</para>
+						<para><link linkend="pose_comp"><varname>=</varname>, <varname>&lt;&gt;</varname>, <varname>&lt;</varname>, <varname>&gt;</varname>, <varname>&lt;=</varname>, <varname>&gt;=</varname></link>: Traditional comparisons</para>
 						</listitem>
 				</itemizedlist>
 			</sect3>
@@ -2066,6 +2092,10 @@
 					<listitem>
 						<para><link linkend="tcbuffer_asText"><varname>asText</varname>, <varname>asEWKT</varname></link>: Return the Well-Known Text (WKT) or the Extended Well-Known Text (EWKT) representation</para>
 					</listitem>
+
+						<listitem>
+						<para><link linkend="tcbuffer_asMFJSON"><varname>asMFJSON</varname></link>: Return the Moving Features JSON (MF-JSON) representation</para>
+					</listitem>
           
 					<listitem>
 						<para><link linkend="tcbuffer_asBinary"><varname>asBinary</varname>, <varname>asEWKB</varname></link>: Return the Well-Known Binary (WKB), the Extended Well-Known Binary (EWKB), or the Hexadecimal Extended Well-Known Binary (HexEWKB) representation as text</para>
@@ -2073,6 +2103,10 @@
           
 					<listitem>
 						<para><link linkend="tcbufferFromText"><varname>tcbufferFromText</varname>, <varname>tcbufferFromEWKT</varname></link>: Input from the Well-Known Text (WKT) or from the Extended Well-Known Text (EWKT) representation</para>
+					</listitem>
+
+						<listitem>
+						<para><link linkend="tcbufferFromMFJSON"><varname>tcbufferFromMFJSON</varname></link>: Input from the Moving Features JSON (MF-JSON) representation</para>
 					</listitem>
           
 					<listitem>
@@ -2179,6 +2213,10 @@
 					<listitem>
 						<para><link linkend="tcbuffer_tdistance"><varname>&lt;-&gt;</varname></link>: Return the temporal distance</para>
 					</listitem>
+
+					<listitem>
+						<para><link linkend="tcbuffer_minDistance"><varname>minDistance</varname></link>: Return the minimum spatial distance, ignoring time</para>
+					</listitem>
 				</itemizedlist>
 			</sect3>
 
@@ -2255,6 +2293,239 @@
 
 					<listitem>
 						<para><link linkend="tcbuffer_tCentroid"><varname>tCentroid</varname></link>: Temporal centroid</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+		</sect2>
+	</sect1>
+
+	<sect1>
+		<title>Temporal H3 Cell Indices</title>
+
+		<sect2>
+			<title>Temporal H3 Cell Indices</title>
+
+			<sect3>
+				<title>Input and Output</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="th3index_inout"><varname>th3index</varname></link>: Literal input syntax for the four temporal subtypes (instant, discrete sequence, sequence, sequence set) and the typmod-restricted column variants</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Conversions</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="th3index_tbigint"><varname>th3index::tbigint</varname>, <varname>tbigint::th3index</varname></link>: Convert between a temporal H3 cell and a temporal big integer (explicit, zero-cost binary coercion)</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_tgeogpoint"><varname>th3index::tgeogpoint</varname>, <varname>th3index::tgeompoint</varname></link>: Cast a temporal H3 cell to its centroid trajectory in the geodetic or planar (SRID 4326) form</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Accessors</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="th3index_startValue"><varname>startValue</varname>, <varname>endValue</varname></link>: Return the first or last H3 cell identifier</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_valueN"><varname>valueN</varname></link>: Return the n-th distinct H3 cell identifier</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_getValues"><varname>getValues</varname></link>: Return the set of distinct H3 cell identifiers</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_valueAtTimestamp"><varname>valueAtTimestamp</varname></link>: Return the H3 cell identifier at a timestamp</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Index Inspection</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="th3index_h3_get_resolution"><varname>h3_get_resolution</varname></link>: Return the temporal resolution level (0–15)</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_h3_get_base_cell_number"><varname>h3_get_base_cell_number</varname></link>: Return the temporal base-cell number (0–121)</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_h3_is_valid_cell"><varname>h3_is_valid_cell</varname></link>: Return true at each instant when the underlying payload encodes a valid H3 cell</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_h3_is_res_class_iii"><varname>h3_is_res_class_iii</varname></link>: Return true at each instant when the cell has Class-III orientation</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_h3_is_pentagon"><varname>h3_is_pentagon</varname></link>: Return true at each instant when the cell is a pentagon</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Hierarchy</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="th3index_h3_cell_to_parent"><varname>h3_cell_to_parent</varname></link>: Return the temporal parent cell at the given resolution (or the next-coarser resolution)</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_h3_cell_to_center_child"><varname>h3_cell_to_center_child</varname></link>: Return the temporal center-child cell at the given resolution (or the next-finer resolution)</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_h3_cell_to_child_pos"><varname>h3_cell_to_child_pos</varname></link>: Return the ordinal position of each cell among the children of its parent</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_h3_child_pos_to_cell"><varname>h3_child_pos_to_cell</varname></link>: Return the temporal child cell at a given ordinal position (two synchronised temporal operands)</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Lat/Lng Conversions</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="th3index_h3_latlng_to_cell"><varname>h3_latlng_to_cell</varname></link>: Return the temporal H3 cell at the given resolution that contains each point in a temporal point trajectory</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_h3_cell_to_latlng"><varname>h3_cell_to_latlng</varname>, <varname>h3_cell_to_latlng_tgeompoint</varname></link>: Return the temporal centroid trajectory of a temporal H3 cell</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_h3_cell_to_boundary"><varname>h3_cell_to_boundary</varname></link>: Return the temporal polygon boundary of a temporal H3 cell as a temporal geography</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Directed Edges</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="th3index_h3_are_neighbor_cells"><varname>h3_are_neighbor_cells</varname></link>: Return true at each shared instant when two temporal cells are grid neighbours</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_h3_cells_to_directed_edge"><varname>h3_cells_to_directed_edge</varname></link>: Return the temporal directed-edge identifier from an origin/destination pair</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_h3_is_valid_directed_edge"><varname>h3_is_valid_directed_edge</varname></link>: Return true at each instant when the payload encodes a valid directed edge</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_h3_get_directed_edge_origin"><varname>h3_get_directed_edge_origin</varname>, <varname>h3_get_directed_edge_destination</varname></link>: Return the temporal origin or destination cell of a temporal directed edge</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_h3_directed_edge_to_boundary"><varname>h3_directed_edge_to_boundary</varname></link>: Return the temporal polygon boundary of each directed edge as a temporal geography</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Vertices</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="th3index_h3_cell_to_vertex"><varname>h3_cell_to_vertex</varname></link>: Return the temporal H3 vertex at the given vertex number</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_h3_vertex_to_latlng"><varname>h3_vertex_to_latlng</varname></link>: Return the temporal geodetic coordinates of each vertex</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_h3_is_valid_vertex"><varname>h3_is_valid_vertex</varname></link>: Return true at each instant when the payload encodes a valid H3 vertex</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Grid Traversal</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="th3index_h3_grid_distance"><varname>h3_grid_distance</varname>, <varname>&lt;-&gt;</varname></link>: Return the temporal grid-hop distance between two temporal cells</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_h3_cell_to_local_ij"><varname>h3_cell_to_local_ij</varname>, <varname>h3_local_ij_to_cell</varname></link>: Convert between a temporal cell and a temporal local (I, J) coordinate pair</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Metrics</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="th3index_h3_cell_area"><varname>h3_cell_area</varname></link>: Return the temporal area of each cell in the requested unit (km², m², or rads²)</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_h3_edge_length"><varname>h3_edge_length</varname></link>: Return the temporal length of each directed edge in the requested unit (km, m, or rads)</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_h3_great_circle_distance"><varname>h3_great_circle_distance</varname></link>: Return the temporal great-circle distance between two temporal geodetic points</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Comparisons</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="th3index_ever_eq"><varname>?=</varname>, <varname>?&lt;&gt;</varname></link>: Ever-equal and ever-not-equal comparisons</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_always_eq"><varname>%=</varname>, <varname>%&lt;&gt;</varname></link>: Always-equal and always-not-equal comparisons</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_temporal_teq"><varname>#=</varname>, <varname>#&lt;&gt;</varname></link>: Temporal equality and inequality returning a tbool</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Bounding Box Operations</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="th3index_overlaps"><varname>&amp;&amp;</varname>, <varname>@&gt;</varname>, <varname>&lt;@</varname>, <varname>~=</varname>, <varname>-|-</varname></link>: Topological operators (note: <varname>@&gt;</varname> tests bounding-box containment, not H3 hierarchical containment — use <varname>h3_cell_to_parent</varname> for the latter)</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_relative_position"><varname>&lt;&lt;</varname>, <varname>&amp;&lt;</varname>, <varname>&gt;&gt;</varname>, <varname>&amp;&gt;</varname></link>: Position operators on the underlying int64 value axis</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_time_position"><varname>&lt;&lt;#</varname>, <varname>&amp;&lt;#</varname>, <varname>#&gt;&gt;</varname>, <varname>#&amp;&gt;</varname></link>: Position operators on the time axis</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Indexing</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="th3index_rtree_ops"><varname>th3index_rtree_ops</varname></link>: GiST operator class (default)</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="th3index_quadtree_ops"><varname>th3index_quadtree_ops</varname>, <varname>th3index_kdtree_ops</varname></link>: SP-GiST operator classes (quadtree default + k-d tree variant)</para>
 					</listitem>
 				</itemizedlist>
 			</sect3>
@@ -2446,6 +2717,411 @@
 					<para><link linkend="tjsonb_wCount"><varname>wCount</varname></link>: Window count</para>
 				</listitem>
 			</itemizedlist>
+		</sect2>
+	</sect1>
+
+	<sect1>
+		<title>Temporal Point Clouds</title>
+
+		<sect2>
+			<title>Static Point Clouds</title>
+
+			<sect3>
+				<title>Accessors</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="pcpoint_pcid"><varname>pcid</varname></link>: Return the schema id of a pcpoint or pcpatch</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="pcpoint_getXYZ"><varname>getX</varname>, <varname>getY</varname>, <varname>getZ</varname></link>: Return a coordinate of a pcpoint</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="pcpoint_getDim"><varname>getDim</varname></link>: Return any named dimension of a pcpoint</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="pcpoint_SRID"><varname>SRID</varname></link>: Return the spatial reference identifier</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+		</sect2>
+
+		<sect2>
+			<title>Point Cloud Sets</title>
+
+			<sect3>
+				<title>Constructors</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="pcpointset_set"><varname>set</varname></link>: Construct a pcpointset / pcpatchset from an array of values</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+		</sect2>
+
+		<sect2>
+			<title>TPCBox</title>
+
+			<sect3>
+				<title>Constructors</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcbox_const"><varname>tpcbox</varname>, <varname>tpcbox_z</varname>, <varname>tpcbox_t</varname>, <varname>tpcbox_xt</varname>, <varname>tpcbox_zt</varname></link>: Construct a tpcbox from explicit X/Y/Z/T bounds and a pcid</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Conversions</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcbox_pcpoint_to_tpcbox"><varname>tpcbox</varname></link>: Convert a pcpoint to a degenerate tpcbox</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcbox_pcpatch_to_tpcbox"><varname>tpcbox</varname></link>: Convert a pcpatch to a tpcbox using the embedded PCBOUNDS</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Accessors</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcbox_hasXZT"><varname>hasX</varname>, <varname>hasZ</varname>, <varname>hasT</varname></link>: Return whether a tpcbox has the X/Y, Z, or T dimensions set</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcbox_xyzminmax"><varname>xmin</varname>, <varname>xmax</varname>, <varname>ymin</varname>, <varname>ymax</varname>, <varname>zmin</varname>, <varname>zmax</varname></link>: Return a coordinate bound</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcbox_tminmax"><varname>tmin</varname>, <varname>tmax</varname></link>: Return a temporal bound</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcbox_pcid_srid"><varname>pcid</varname>, <varname>SRID</varname></link>: Return the schema id and SRID</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Transformations</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcbox_round"><varname>round</varname></link>: Round coordinates to a number of decimal digits</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcbox_setSRID"><varname>setSRID</varname></link>: Overwrite the SRID</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Set Operations</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcbox_union"><varname>tpcbox_union</varname>, <varname>+</varname></link>: Union of two tpcboxes</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcbox_intersection"><varname>tpcbox_intersection</varname>, <varname>*</varname></link>: Intersection of two tpcboxes</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Topological Operations</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcbox_contains"><varname>@&gt;</varname></link>: Contains</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcbox_contained"><varname>&lt;@</varname></link>: Contained</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcbox_overlaps"><varname>&amp;&amp;</varname></link>: Overlaps</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcbox_same"><varname>~=</varname></link>: Same</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcbox_adjacent"><varname>-|-</varname></link>: Adjacent</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Position Operations</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcbox_left_right"><varname>&lt;&lt;</varname>, <varname>&amp;&lt;</varname>, <varname>&gt;&gt;</varname>, <varname>&amp;&gt;</varname></link>: X-axis ordering</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcbox_below_above"><varname>&lt;&lt;|</varname>, <varname>&amp;&lt;|</varname>, <varname>|&gt;&gt;</varname>, <varname>|&amp;&gt;</varname></link>: Y-axis ordering</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcbox_front_back"><varname>&lt;&lt;/</varname>, <varname>&amp;&lt;/</varname>, <varname>/&gt;&gt;</varname>, <varname>/&amp;&gt;</varname></link>: Z-axis ordering</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcbox_before_after"><varname>&lt;&lt;#</varname>, <varname>&amp;&lt;#</varname>, <varname>#&gt;&gt;</varname>, <varname>#&amp;&gt;</varname></link>: Time-axis ordering</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Comparisons</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcbox_btree"><varname>=</varname>, <varname>&lt;&gt;</varname>, <varname>&lt;</varname>, <varname>&lt;=</varname>, <varname>&gt;</varname>, <varname>&gt;=</varname></link>: Traditional comparisons</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+		</sect2>
+
+		<sect2>
+			<title>Temporal Point Clouds</title>
+
+			<sect3>
+				<title>Input and output</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcpoint_mfjson"><varname>asMFJSON</varname></link>: MF-JSON output for tpcpoint with extracted X/Y/Z coordinates</para>
+					</listitem>
+					<listitem>
+						<para><link linkend="tpcpatch_mfjson"><varname>asMFJSON</varname></link>: MF-JSON output for tpcpatch with pcid + npoints + bounds</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Constructors</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="pcpoint_xy_xyz"><varname>pcpoint</varname></link>: Build a pcpoint from raw x/y(/z) coordinates (ergonomic wrapper over PC_MakePoint)</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="pcpatch_variadic"><varname>pcpatch</varname></link>: Build a pcpatch from a variadic list of pcpoints (ergonomic wrapper over PC_Patch)</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpoint_inst"><varname>tpcpoint</varname></link>: Construct a temporal pcpoint of instant subtype</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpoint_seq"><varname>tpcpointSeq</varname></link>: Construct a temporal pcpoint of sequence subtype</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpoint_seqset"><varname>tpcpointSeqSet</varname></link>: Construct a temporal pcpoint of sequence-set subtype</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpatch_inst"><varname>tpcpatch</varname></link>: Construct a temporal pcpatch of instant subtype</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpatch_seq"><varname>tpcpatchSeq</varname></link>: Construct a temporal pcpatch of sequence subtype</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpatch_seqset"><varname>tpcpatchSeqSet</varname></link>: Construct a temporal pcpatch of sequence-set subtype</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Conversions</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcpoint_tgeompoint"><varname>tpcpoint::tgeompoint</varname></link>: Cast a tpcpoint to a temporal geometry point</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Accessors</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcpoint_pcid"><varname>pcid</varname></link>: Return the pgPointCloud schema id</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpoint_SRID"><varname>SRID</varname></link>: Return the SRID inherited from the schema</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpatch_numpoints"><varname>startNumPoints</varname>, <varname>endNumPoints</varname></link>: Return the number of points in a tpcpatch's first/last instant</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpatch_total_numpoints"><varname>numPoints</varname></link>: Return the total number of points across every instant's patch</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpatch_points"><varname>points</varname></link>: Set-returning function emitting one row per (instant timestamp, point), decomposed in C through pgPointCloud's in-memory API</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpatch_perpoint_roadmap">Per-point operations</link>: granularity matrix of patch-level vs. per-point operators on tpcpatch</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Per-Dimension Projections</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcpoint_getXYZ"><varname>getX</varname>, <varname>getY</varname>, <varname>getZ</varname></link>: Project a tpcpoint onto a spatial dimension as a tfloat</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpoint_getDim"><varname>getDim</varname></link>: Project a tpcpoint onto any named schema dimension as a tfloat</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Restrictions</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcpoint_atTime"><varname>atTime</varname>, <varname>minusTime</varname></link>: Restrict a tpcpoint to a time selector or remove it</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpoint_atTpcbox"><varname>atTpcbox</varname>, <varname>minusTpcbox</varname></link>: Restrict a tpcpoint to a tpcbox or remove it</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpatch_atTpcbox"><varname>atTpcbox</varname>, <varname>minusTpcbox</varname></link>: Restrict a tpcpatch to a tpcbox by patch-level PCBOUNDS overlap, or remove it</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpatch_atTpcboxFine"><varname>atTpcboxFine</varname>, <varname>minusTpcboxFine</varname></link>: Per-point restrict — keep only the points inside (or outside) the tpcbox; surviving instants carry a freshly-built patch</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpatch_atGeometry"><varname>atGeometry</varname>, <varname>minusGeometry</varname></link>: Per-point restrict by 2D geometry intersection (XY only)</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Spatial Relationships</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcpatch_eIntersects"><varname>eIntersects(tpcpatch, geometry)</varname></link>: Return true iff at least one point of any instant's patch intersects the geometry</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Comparisons</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcpoint_btree"><varname>=</varname>, <varname>&lt;&gt;</varname>, <varname>&lt;</varname>, <varname>&lt;=</varname>, <varname>&gt;</varname>, <varname>&gt;=</varname></link>: Traditional comparisons</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpoint_ever_eq"><varname>?=</varname>, <varname>%=</varname></link>: Ever and always equal</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Topological operators</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcpoint_topo"><varname>&amp;&amp;</varname>, <varname>@&gt;</varname>, <varname>&lt;@</varname>, <varname>~=</varname>, <varname>-|-</varname></link>: Bbox topological predicates on tpcpoint</para>
+					</listitem>
+					<listitem>
+						<para><link linkend="tpcpatch_topo"><varname>&amp;&amp;</varname>, <varname>@&gt;</varname>, <varname>&lt;@</varname>, <varname>~=</varname>, <varname>-|-</varname></link>: Bbox topological predicates on tpcpatch</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Position operators</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcpoint_pos">Strict directional + overlap-or-X predicates</link>: tpcpoint vs tpcbox / tstzspan / tpcpoint on the X / Y / Z / time axes</para>
+					</listitem>
+					<listitem>
+						<para><link linkend="tpcpatch_pos">Strict directional + overlap-or-X predicates</link>: tpcpatch variants</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Distance / KNN</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcpoint_knn"><varname>|=|</varname></link>: Nearest-approach distance on tpcpoint, KNN-orderable through GiST</para>
+					</listitem>
+					<listitem>
+						<para><link linkend="tpcpatch_knn"><varname>|=|</varname></link>: Nearest-approach distance on tpcpatch, KNN-orderable through GiST</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>B-tree ordering</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcpoint_btree_ordering">B-tree ordering on tpcpoint</link>: byte-wise total order with pcid as primary discriminator — semantics + caveats</para>
+					</listitem>
+					<listitem>
+						<para><link linkend="tpcpatch_btree">B-tree ordering on tpcpatch</link>: byte-wise total order with pcid as primary discriminator — semantics + caveats</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Spatial relationships</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcpoint_intersects"><varname>eIntersects</varname>, <varname>aIntersects</varname></link>: Ever / always intersects (tpcpoint)</para>
+					</listitem>
+					<listitem>
+						<para><link linkend="tpcpoint_disjoint"><varname>eDisjoint</varname>, <varname>aDisjoint</varname></link>: Ever / always disjoint (tpcpoint)</para>
+					</listitem>
+					<listitem>
+						<para><link linkend="tpcpoint_dwithin"><varname>eDwithin</varname>, <varname>aDwithin</varname></link>: Ever / always within distance (tpcpoint)</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
+
+			<sect3>
+				<title>Aggregations</title>
+				<itemizedlist>
+					<listitem>
+						<para><link linkend="tpcpoint_extent"><varname>extent</varname></link>: Bounding-box aggregate over tpcpoint, tpcpatch, or tpcbox values; rejects mixed pcids.</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpoint_tcount"><varname>tcount</varname>, <varname>wcount</varname></link>: Temporal and window count over tpcpoint or tpcpatch.</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpoint_merge"><varname>merge</varname></link>: Combine multiple temporal values into one.</para>
+					</listitem>
+
+					<listitem>
+						<para><link linkend="tpcpoint_append"><varname>appendInstant</varname>, <varname>appendSequence</varname></link>: Streaming construction aggregates.</para>
+					</listitem>
+				</itemizedlist>
+			</sect3>
 		</sect2>
 	</sect1>
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -54,6 +54,15 @@ extern void trgeoinstarr_rotating_stbox(const GSERIALIZED *geom,
   TInstant **instants, int count, STBox *box);
 extern void trgeoinstarr_compute_bbox(const GSERIALIZED *geom,
   TInstant **instants, int count, interpType interp, void *box);
+
+/* Functions decomposing a temporal rigid geometry into per-instant or
+ * per-segment spatiotemporal boxes */
+
+extern STBox *trgeo_stboxes(const Temporal *temp, int *count);
+extern STBox *trgeo_split_n_stboxes(const Temporal *temp, int box_count,
+  int *count);
+extern STBox *trgeo_split_each_n_stboxes(const Temporal *temp,
+  int elems_per_box, int *count);
 
 /*****************************************************************************/
 

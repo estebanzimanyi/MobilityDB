@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -36,6 +36,7 @@
 /* C */
 #include <assert.h>
 #include <float.h>
+#include <string.h>
 /* PostgreSQL */
 #include <postgres.h>
 /* PostGIS */
@@ -53,9 +54,24 @@
 /* Maximum length in characters of a geometry string in the input data */
 #define MAX_LEN_GEOM 100001
 
-/* Location of the ways CSV file */
-// #define WAYS_CSV "/usr/local/share/ways.csv"
-#define WAYS_CSV "/usr/local/share/ways1000.csv"
+/* Default location of the ways CSV file. Overridable at run time with
+ * `meos_set_ways_csv()`, mirroring `meos_set_spatial_ref_sys_csv()`. This
+ * lets MEOS embedders (which cannot rely on a fixed install prefix) point
+ * at a deployment-specific network file. */
+char *WAYS_CSV = "/usr/local/share/ways1000.csv";
+
+/**
+ * @ingroup meos_setup
+ * @brief Set the location of the ways CSV file used to resolve npoint route
+ * geometries
+ * @param[in] path Full path to the ways CSV file
+ */
+void
+meos_set_ways_csv(const char *path)
+{
+  WAYS_CSV = malloc(strlen(path) + 1);
+  strcpy(WAYS_CSV, path);
+}
 
 /**
  * @brief Structure to represent a record in the ways CSV file
@@ -93,10 +109,8 @@ typedef struct struct_WaysCache
   uint32_t count;
 } WaysCache;
 
-/* Per-thread ways cache. Each thread that uses npoint queries gets its
- * own copy of the recently-touched ways routes; the cost is one CSV
- * re-read per thread on first miss, in exchange for race-free access. */
-static MEOS_TLS WaysCache *MEOS_WAYS_CACHE = NULL;
+/* Global variable to hold the ways cache */
+WaysCache *MEOS_WAYS_CACHE = NULL;
 
 /*****************************************************************************
  * Cache management functions
@@ -150,7 +164,13 @@ GetWaysCache()
 void
 meos_finalize_ways(void)
 {
+  /* Idempotency: only destroy a live cache, and null the slot so a
+   * second finalize call does not double-free the cache and its
+   * stored geometries. */
+  if (! MEOS_WAYS_CACHE)
+    return;
   DestroyWaysCache(MEOS_WAYS_CACHE);
+  MEOS_WAYS_CACHE = NULL;
 }
 
 /**
@@ -240,7 +260,8 @@ get_ways_record(int64 rid, ways_record *rec)
   if (! file)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
-      "Cannot open the ways CSV file");
+      "Cannot open the ways CSV file (reading from %s); set its location with "
+      "meos_set_ways_csv()", WAYS_CSV);
     return false;
   }
 
@@ -299,7 +320,7 @@ route_lookup(int64 gid, bool any_gid, ways_record *rec)
   {
     if (! get_ways_record(gid, rec))
       return false;
-    ways_entry = AddRouteToWaysCache(ways_cache, rec);
+    AddRouteToWaysCache(ways_cache, rec);
     return true;
   }
   /* The route was found in the cache */
@@ -394,7 +415,8 @@ geompoint_to_npoint(const GSERIALIZED *gs)
   if (! file)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
-      "Cannot open the ways CSV file");
+      "Cannot open the ways CSV file (reading from %s); set its location with "
+      "meos_set_ways_csv()", WAYS_CSV);
     return NULL;
   }
 

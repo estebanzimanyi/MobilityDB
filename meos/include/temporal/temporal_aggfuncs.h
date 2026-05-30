@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -44,9 +44,12 @@
 
 extern Datum datum_min_int32(Datum l, Datum r);
 extern Datum datum_max_int32(Datum l, Datum r);
+extern Datum datum_min_int64(Datum l, Datum r);
+extern Datum datum_max_int64(Datum l, Datum r);
 extern Datum datum_min_float8(Datum l, Datum r);
 extern Datum datum_max_float8(Datum l, Datum r);
 extern Datum datum_sum_int32(Datum l, Datum r);
+extern Datum datum_sum_int64(Datum l, Datum r);
 extern Datum datum_sum_float8(Datum l, Datum r);
 extern Datum datum_min_text(Datum l, Datum r);
 extern Datum datum_max_text(Datum l, Datum r);

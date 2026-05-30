@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -345,7 +345,7 @@ geoarr_remove_duplicates(GSERIALIZED **geoms, int count)
  * @param[in] cb Circular buffer
  */
 GSERIALIZED *
-cbuffer_trav_area(const Cbuffer *cb)
+cbuffer_traversed_area(const Cbuffer *cb)
 {
   assert(cb);
   const GSERIALIZED *gs = cbuffer_point_p(cb);
@@ -393,7 +393,7 @@ cbufferarr_circles(TInstant **instants, int count, GSERIALIZED **result)
   for (int i = 0; i < count; i++)
   {
     const Cbuffer *cb = DatumGetCbufferP(tinstant_value_p(instants[i]));
-    result[i] = cbuffer_trav_area(cb);
+    result[i] = cbuffer_traversed_area(cb);
   }
   return count;
 }
@@ -408,11 +408,11 @@ GSERIALIZED *
 tcbufferinst_trav_area(const TInstant *inst)
 {
   assert(inst);
-  return cbuffer_trav_area(DatumGetCbufferP(tinstant_value_p(inst)));
+  return cbuffer_traversed_area(DatumGetCbufferP(tinstant_value_p(inst)));
 }
 
 /**
- * @ingroup meos_interal_cbuffer_spatial_accessor
+ * @ingroup meos_internal_cbuffer_spatial_accessor
  * @brief Return the traversed area of a temporal circular buffer sequence with
  * discrete or step interpolation
  * @param[in] seq Temporal circular buffer
@@ -421,7 +421,7 @@ tcbufferinst_trav_area(const TInstant *inst)
  * @csqlfn #Tcbuffer_traversed_area()
  */
 int
-tcbufferseq_discstep_trav_area(const TSequence *seq, GSERIALIZED **result)
+tcbufferseq_discstep_traversed_area(const TSequence *seq, GSERIALIZED **result)
 {
   assert(seq); assert(seq->count > 1);
   assert(MEOS_FLAGS_GET_INTERP(seq->flags) != LINEAR);
@@ -467,7 +467,7 @@ tcbuffersegm_trav_area(const TInstant *inst1, const TInstant *inst2)
   if (p1->x == p2->x && p1->y == p2->y)
   {
     return (cb_min->radius <= cb_max->radius) ?
-      cbuffer_trav_area(cb_min) : cbuffer_trav_area(cb_max);
+      cbuffer_traversed_area(cb_min) : cbuffer_traversed_area(cb_max);
   }
 
   /* If the two radius are equal to 0 construct a line segment */
@@ -509,7 +509,7 @@ tcbuffersegm_trav_area(const TInstant *inst1, const TInstant *inst2)
  * @csqlfn #Tcbuffer_traversed_area()
  */
 int
-tcbufferseq_linear_trav_area(const TSequence *seq, GSERIALIZED **result)
+tcbufferseq_linear_traversed_area(const TSequence *seq, GSERIALIZED **result)
 {
   assert(seq); assert(result);
   assert(MEOS_FLAGS_GET_INTERP(seq->flags) == LINEAR);
@@ -541,7 +541,7 @@ tcbufferseq_linear_trav_area(const TSequence *seq, GSERIALIZED **result)
  * @csqlfn #Tcbuffer_traversed_area()
  */
 GSERIALIZED *
-tcbufferseq_trav_area(const TSequence *seq, bool unary_union)
+tcbufferseq_traversed_area(const TSequence *seq, bool unary_union)
 {
   assert(seq);
 
@@ -552,8 +552,8 @@ tcbufferseq_trav_area(const TSequence *seq, bool unary_union)
   /* General case */
   GSERIALIZED **geoms = palloc(sizeof(GSERIALIZED *) * seq->count);
   int count = (MEOS_FLAGS_GET_INTERP(seq->flags) == LINEAR) ?
-    tcbufferseq_linear_trav_area(seq, geoms) :
-    tcbufferseq_discstep_trav_area(seq, geoms);
+    tcbufferseq_linear_traversed_area(seq, geoms) :
+    tcbufferseq_discstep_traversed_area(seq, geoms);
 
   /* Construct the result */
   GSERIALIZED *result;
@@ -588,7 +588,7 @@ tcbufferseq_trav_area(const TSequence *seq, bool unary_union)
  * @csqlfn #Tcbuffer_traversed_area()
  */
 int
-tcbufferseqset_step_trav_area(const TSequenceSet *ss, GSERIALIZED **result)
+tcbufferseqset_step_traversed_area(const TSequenceSet *ss, GSERIALIZED **result)
 {
   assert(ss); assert(ss->count > 1);
   assert(MEOS_FLAGS_GET_INTERP(ss->flags) == STEP);
@@ -606,14 +606,14 @@ tcbufferseqset_step_trav_area(const TSequenceSet *ss, GSERIALIZED **result)
  * @csqlfn #Tcbuffer_traversed_area()
  */
 int
-tcbufferseqset_linear_trav_area(const TSequenceSet *ss, GSERIALIZED **result)
+tcbufferseqset_linear_traversed_area(const TSequenceSet *ss, GSERIALIZED **result)
 {
   assert(ss); assert(ss->count > 1);
   assert(MEOS_FLAGS_GET_INTERP(ss->flags) == LINEAR);
   int ngeoms = 0;
   for (int i = 0; i < ss->count; i++)
     /* Get the traversed area of the sequence */
-    ngeoms += tcbufferseq_linear_trav_area(TSEQUENCESET_SEQ_N(ss, i),
+    ngeoms += tcbufferseq_linear_traversed_area(TSEQUENCESET_SEQ_N(ss, i),
       &result[ngeoms]);
   return ngeoms;
 }
@@ -627,19 +627,19 @@ tcbufferseqset_linear_trav_area(const TSequenceSet *ss, GSERIALIZED **result)
  * @csqlfn #Tcbuffer_traversed_area()
  */
 GSERIALIZED *
-tcbufferseqset_trav_area(const TSequenceSet *ss, bool unary_union)
+tcbufferseqset_traversed_area(const TSequenceSet *ss, bool unary_union)
 {
   assert(ss); assert(MEOS_FLAGS_GET_INTERP(ss->flags) == LINEAR);
   
   /* Singleton sequence set */
   if (ss->count == 1)
-    return tcbufferseq_trav_area(TSEQUENCESET_SEQ_N(ss, 0), unary_union);
+    return tcbufferseq_traversed_area(TSEQUENCESET_SEQ_N(ss, 0), unary_union);
 
   /* General case */
   GSERIALIZED **geoms = palloc(sizeof(GSERIALIZED *) * ss->totalcount);
   int count = (MEOS_FLAGS_GET_INTERP(ss->flags) == LINEAR) ?
-    tcbufferseqset_linear_trav_area(ss, geoms) :
-    tcbufferseqset_step_trav_area(ss, geoms);
+    tcbufferseqset_linear_traversed_area(ss, geoms) :
+    tcbufferseqset_step_traversed_area(ss, geoms);
 
   /* Construct the result */
   GSERIALIZED *result;
@@ -673,7 +673,7 @@ tcbufferseqset_trav_area(const TSequenceSet *ss, bool unary_union)
  * @csqlfn #Tcbuffer_traversed_area()
  */
 GSERIALIZED *
-tcbuffer_trav_area(const Temporal *temp, bool unary_union)
+tcbuffer_traversed_area(const Temporal *temp, bool unary_union)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_TCBUFFER(temp, NULL);
@@ -685,11 +685,30 @@ tcbuffer_trav_area(const Temporal *temp, bool unary_union)
       return tcbufferinst_trav_area((TInstant *) temp);
       break;
     case TSEQUENCE:
-      return tcbufferseq_trav_area((TSequence *) temp, unary_union);
+      return tcbufferseq_traversed_area((TSequence *) temp, unary_union);
       break;
     default: /* TSEQUENCESET */
-      return tcbufferseqset_trav_area((TSequenceSet *) temp, unary_union);
+      return tcbufferseqset_traversed_area((TSequenceSet *) temp, unary_union);
   }
+}
+
+/**
+ * @ingroup meos_cbuffer_spatial_accessor
+ * @brief Return the convex hull of the traversed area of a temporal circular buffer
+ * @param[in] temp Temporal circular buffer
+ * @return On error return NULL
+ * @csqlfn #Tcbuffer_convex_hull()
+ */
+GSERIALIZED *
+tcbuffer_convex_hull(const Temporal *temp)
+{
+  VALIDATE_TCBUFFER(temp, NULL);
+  GSERIALIZED *trav = tcbuffer_traversed_area(temp, UNARY_UNION_NO);
+  if (! trav)
+    return NULL;
+  GSERIALIZED *result = geom_convex_hull(trav);
+  pfree(trav);
+  return result;
 }
 
 /*****************************************************************************/

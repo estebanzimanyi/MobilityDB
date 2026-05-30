@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -295,9 +295,27 @@ Tcbuffer_traversed_area(PG_FUNCTION_ARGS)
   bool unary_union = false;
   if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
     unary_union = PG_GETARG_BOOL(1);
-  GSERIALIZED *result = tcbuffer_trav_area(temp, unary_union);
+  GSERIALIZED *result = tcbuffer_traversed_area(temp, unary_union);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_TEMPORAL_P(result);
+}
+
+PGDLLEXPORT Datum Tcbuffer_convex_hull(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tcbuffer_convex_hull);
+/**
+ * @ingroup mobilitydb_cbuffer_accessor
+ * @brief Return the convex hull of the traversed area of a temporal circular buffer
+ * @sqlfn convexHull()
+ */
+Datum
+Tcbuffer_convex_hull(PG_FUNCTION_ARGS)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  GSERIALIZED *result = tcbuffer_convex_hull(temp);
+  PG_FREE_IF_COPY(temp, 0);
+  if (! result)
+    PG_RETURN_NULL();
+  PG_RETURN_POINTER(result);
 }
 
 /*****************************************************************************
@@ -362,7 +380,8 @@ Tcbuffer_restrict_stbox(FunctionCallInfo fcinfo, bool atfunc)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   STBox *box = PG_GETARG_STBOX_P(1);
-  Temporal *result = tcbuffer_restrict_stbox(temp, box, false, atfunc);
+  bool border_inc = PG_GETARG_BOOL(2);
+  Temporal *result = tcbuffer_restrict_stbox(temp, box, border_inc, atfunc);
   PG_FREE_IF_COPY(temp, 0);
   if (! result)
     PG_RETURN_NULL();
@@ -372,10 +391,9 @@ Tcbuffer_restrict_stbox(FunctionCallInfo fcinfo, bool atfunc)
 PGDLLEXPORT Datum Tcbuffer_at_stbox(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tcbuffer_at_stbox);
 /**
- * @ingroup mobilitydb_geo_restrict
- * @brief Return a temporal circular buffer restricted to a circular buffer
- * @note Only 2D is supported
- * @sqlfn atValue()
+ * @ingroup mobilitydb_cbuffer_restrict
+ * @brief Return a temporal circular buffer restricted to a spatiotemporal box
+ * @sqlfn atStbox()
  */
 inline Datum
 Tcbuffer_at_stbox(PG_FUNCTION_ARGS)
@@ -386,10 +404,10 @@ Tcbuffer_at_stbox(PG_FUNCTION_ARGS)
 PGDLLEXPORT Datum Tcbuffer_minus_stbox(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tcbuffer_minus_stbox);
 /**
- * @ingroup mobilitydb_geo_restrict
+ * @ingroup mobilitydb_cbuffer_restrict
  * @brief Return a temporal circular buffer restricted to the complement of a
- * circular buffer
- * @sqlfn minusValue()
+ * spatiotemporal box
+ * @sqlfn minusStbox()
  */
 inline Datum
 Tcbuffer_minus_stbox(PG_FUNCTION_ARGS)

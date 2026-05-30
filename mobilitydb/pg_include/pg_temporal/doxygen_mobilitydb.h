@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -75,6 +75,15 @@
  * @defgroup mobilitydb_rgeo Functions for temporal rigid geometries
  * @ingroup mobilitydb_api
  * @brief Functions for temporal rigid geometries
+ *
+ * @defgroup mobilitydb_h3 Functions for temporal H3 cell indices
+ * @ingroup mobilitydb_api
+ * @brief Functions for temporal H3 cell indices
+ *
+ * @defgroup mobilitydb_pointcloud Functions for temporal pgpointcloud types
+ * @ingroup mobilitydb_api
+ * @brief Functions for static, set, box, and temporal pgpointcloud types
+ *   (pcpoint, pcpatch, pcpointset, pcpatchset, tpcbox, tpcpoint, tpcpatch)
  *
  * @defgroup mobilitydb_misc Miscellaneous functions
  * @ingroup mobilitydb_api
@@ -212,17 +221,17 @@
  * @ingroup mobilitydb_temporal
  * @brief Bounding box functions for temporal types
  *
- * @defgroup mobilitydb_temporal_bbox_topo Topological functions
- * @ingroup mobilitydb_temporal_bbox
- * @brief Topological functions for temporal types
+ *   @defgroup mobilitydb_temporal_bbox_topo Topological functions
+ *   @ingroup mobilitydb_temporal_bbox
+ *   @brief Topological functions for temporal types
  *
- * @defgroup mobilitydb_temporal_bbox_pos Position functions
- * @ingroup mobilitydb_temporal_bbox
- * @brief Position functions for temporal types
+ *   @defgroup mobilitydb_temporal_bbox_pos Position functions
+ *   @ingroup mobilitydb_temporal_bbox
+ *   @brief Position functions for temporal types
  *
- * @defgroup mobilitydb_temporal_bbox_split Splitting functions
- * @ingroup mobilitydb_temporal_bbox
- * @brief Splitting functions for temporal type types
+ *   @defgroup mobilitydb_temporal_bbox_split Splitting functions
+ *   @ingroup mobilitydb_temporal_bbox
+ *   @brief Splitting functions for temporal type types
  *
  * @defgroup mobilitydb_temporal_bool Boolean functions
  * @ingroup mobilitydb_temporal
@@ -244,17 +253,17 @@
  * @ingroup mobilitydb_temporal
  * @brief Comparison functions for temporal types
  *
- * @defgroup mobilitydb_temporal_comp_trad Traditional comparison functions
- * @ingroup mobilitydb_temporal_comp
- * @brief Traditional comparison functions for temporal types
+ *   @defgroup mobilitydb_temporal_comp_trad Traditional comparison functions
+ *   @ingroup mobilitydb_temporal_comp
+ *   @brief Traditional comparison functions for temporal types
  *
- * @defgroup mobilitydb_temporal_comp_ever Ever and always comparison functions
- * @ingroup mobilitydb_temporal_comp
- * @brief Ever and always comparison functions for temporal types
+ *   @defgroup mobilitydb_temporal_comp_ever Ever and always comparison functions
+ *   @ingroup mobilitydb_temporal_comp
+ *   @brief Ever and always comparison functions for temporal types
  *
- * @defgroup mobilitydb_temporal_comp_temp Temporal comparison functions
- * @ingroup mobilitydb_temporal_comp
- * @brief Comparison functions for temporal types
+ *   @defgroup mobilitydb_temporal_comp_temp Temporal comparison functions
+ *   @ingroup mobilitydb_temporal_comp
+ *   @brief Comparison functions for temporal types
  *
  * @defgroup mobilitydb_temporal_agg Aggregate functions
  * @ingroup mobilitydb_temporal
@@ -264,21 +273,25 @@
  * @ingroup mobilitydb_temporal
  * @brief Analytics functions for temporal types
  *
- * @defgroup mobilitydb_temporal_analytics_simplify Simplification functions
- * @ingroup mobilitydb_temporal_analytics
- * @brief Simplification functions for temporal types
+ *   @defgroup mobilitydb_temporal_analytics_simplify Simplification functions
+ *   @ingroup mobilitydb_temporal_analytics
+ *   @brief Simplification functions for temporal types
  *
- * @defgroup mobilitydb_temporal_analytics_reduction Reduction functions
- * @ingroup mobilitydb_temporal_analytics
- * @brief Reduction functions for temporal types
+ *   @defgroup mobilitydb_temporal_analytics_reduction Reduction functions
+ *   @ingroup mobilitydb_temporal_analytics
+ *   @brief Reduction functions for temporal types
  *
- * @defgroup mobilitydb_temporal_analytics_similarity Similarity functions
- * @ingroup mobilitydb_temporal_analytics
- * @brief Similarity functions for temporal types
+ *   @defgroup mobilitydb_temporal_analytics_outlier Outlier detection functions
+ *   @ingroup mobilitydb_temporal_analytics
+ *   @brief Outlier detection functions for temporal types
  *
- * @defgroup mobilitydb_temporal_analytics_tile Tile functions
- * @ingroup mobilitydb_temporal_analytics
- * @brief Tile functions for temporal types
+ *   @defgroup mobilitydb_temporal_analytics_similarity Similarity functions
+ *   @ingroup mobilitydb_temporal_analytics
+ *   @brief Similarity functions for temporal types
+ *
+ *   @defgroup mobilitydb_temporal_analytics_tile Tile functions
+ *   @ingroup mobilitydb_temporal_analytics
+ *   @brief Tile functions for temporal types
  */
 
 /*****************************************************************************/

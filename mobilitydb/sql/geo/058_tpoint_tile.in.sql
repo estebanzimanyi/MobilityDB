@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -105,6 +105,11 @@ CREATE FUNCTION spaceTiles(tgeompoint, xsize float, ysize float,
   LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION timeTiles(tgeompoint, duration interval,
+  torigin timestamptz DEFAULT '2000-01-03', borderInc boolean DEFAULT TRUE)
+  RETURNS SETOF index_stbox
+  AS 'SELECT @extschema@.timeTiles(@extschema@.stbox($1), $2, $3, $4)'
+  LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION timeTiles(tgeogpoint, duration interval,
   torigin timestamptz DEFAULT '2000-01-03', borderInc boolean DEFAULT TRUE)
   RETURNS SETOF index_stbox
   AS 'SELECT @extschema@.timeTiles(@extschema@.stbox($1), $2, $3, $4)'

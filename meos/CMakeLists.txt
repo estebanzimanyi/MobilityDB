@@ -19,9 +19,44 @@ set(MEOS_LIB_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
 set(MEOS_LIB_NAME "meos")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-# Set the location of the directory of the time zone database
-add_definitions(-DSYSTEMTZDIR="/usr/share/zoneinfo")
-message(STATUS "Directory of the time zone database: /usr/share/zoneinfo")
+# Set the location of the IANA timezone database directory.  pgtz.c uses the
+# SYSTEMTZDIR macro to avoid calling get_share_path() (a PostgreSQL-internal
+# function not available in the MEOS standalone build).
+#
+# Override at cmake time with -DMEOS_TZDATA_DIR=<path>.  The path must be a
+# native OS path that fopen() can open (i.e. a Windows path such as
+# C:/msys64/ucrt64/share/zoneinfo on Windows, not an MSYS2 POSIX path).
+if(NOT DEFINED MEOS_TZDATA_DIR)
+  if(NOT WIN32)
+    set(MEOS_TZDATA_DIR "/usr/share/zoneinfo")
+  else()
+    # Auto-discover from the MSYS2 environment: MSYSTEM_PREFIX is set by the
+    # MSYS2 shell (e.g. /ucrt64).  cygpath -m converts the POSIX path to a
+    # Windows-native path (e.g. C:/msys64/ucrt64/share/zoneinfo) that the
+    # compiled DLL — a native Windows binary — can open with fopen().
+    if(DEFINED ENV{MSYSTEM_PREFIX})
+      execute_process(
+        COMMAND cygpath -m "$ENV{MSYSTEM_PREFIX}/share/zoneinfo"
+        OUTPUT_VARIABLE MEOS_TZDATA_DIR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+        RESULT_VARIABLE _cygpath_rc
+      )
+      if(NOT _cygpath_rc EQUAL 0 OR NOT MEOS_TZDATA_DIR)
+        set(MEOS_TZDATA_DIR "C:/msys64/ucrt64/share/zoneinfo")
+        message(WARNING "cygpath failed; falling back to ${MEOS_TZDATA_DIR}")
+      endif()
+    else()
+      # Outside MSYS2 (e.g. MSVC developer command prompt): caller must pass
+      # -DMEOS_TZDATA_DIR=... or install tzdata to this default location.
+      set(MEOS_TZDATA_DIR "C:/msys64/ucrt64/share/zoneinfo")
+      message(WARNING "MEOS_TZDATA_DIR not set and MSYSTEM_PREFIX not found; "
+                      "defaulting to ${MEOS_TZDATA_DIR}")
+    endif()
+  endif()
+endif()
+add_definitions(-DSYSTEMTZDIR="${MEOS_TZDATA_DIR}")
+message(STATUS "Directory of the time zone database: ${MEOS_TZDATA_DIR}")
 
 # Option to build MEOS as a shared or static library
 option(BUILD_SHARED_LIBS
@@ -168,9 +203,61 @@ file(WRITE "${CMAKE_BINARY_DIR}/meos_internal_export.h" "${MEOS_INTERNAL_EXP_H}"
 string(REGEX REPLACE "#include <liblwgeom.h>" "${POSTGIS_EXT_DEFS_IN_H}" MEOS_GEO_EXP_H "${MEOS_GEO_H}")
 file(WRITE "${CMAKE_BINARY_DIR}/meos_geo_export.h" "${MEOS_GEO_EXP_H}")
 
+# Stage the exported headers under canonical install names in
+# ${CMAKE_BINARY_DIR}/meos_export_include so the C-level CTest targets
+# in meos/test/ can compile against the same public API the installed
+# headers expose. The harnesses use unprefixed names like
+# `interval_in()` which only exist in the *_export.h variants — without
+# this staging they would compile against the in-tree headers (which
+# only declare `pg_interval_in()`), miss the prototype, and have the
+# returned pointer truncated to 32 bits → segfault on first call.
+# Mirrors the install() rules below: both transformed *_export.h files
+# and raw headers that the install step flattens (meos_catalog.h is
+# under temporal/ in the source tree but installed at top level).
+file(WRITE "${CMAKE_BINARY_DIR}/meos_export_include/meos.h"
+  "${MEOS_EXP_H}")
+file(WRITE "${CMAKE_BINARY_DIR}/meos_export_include/meos_internal.h"
+  "${MEOS_INTERNAL_EXP_H}")
+file(WRITE "${CMAKE_BINARY_DIR}/meos_export_include/meos_geo.h"
+  "${MEOS_GEO_EXP_H}")
+configure_file(
+  "${CMAKE_SOURCE_DIR}/meos/include/temporal/meos_catalog.h"
+  "${CMAKE_BINARY_DIR}/meos_export_include/meos_catalog.h"
+  COPYONLY)
+configure_file(
+  "${CMAKE_SOURCE_DIR}/meos/include/meos_internal_geo.h"
+  "${CMAKE_BINARY_DIR}/meos_export_include/meos_internal_geo.h"
+  COPYONLY)
+if(NPOINT)
+  configure_file(
+    "${CMAKE_SOURCE_DIR}/meos/include/meos_npoint.h"
+    "${CMAKE_BINARY_DIR}/meos_export_include/meos_npoint.h"
+    COPYONLY)
+endif()
+if(CBUFFER)
+  configure_file(
+    "${CMAKE_SOURCE_DIR}/meos/include/meos_cbuffer.h"
+    "${CMAKE_BINARY_DIR}/meos_export_include/meos_cbuffer.h"
+    COPYONLY)
+endif()
+if(POSE)
+  configure_file(
+    "${CMAKE_SOURCE_DIR}/meos/include/meos_pose.h"
+    "${CMAKE_BINARY_DIR}/meos_export_include/meos_pose.h"
+    COPYONLY)
+endif()
+if(RGEO)
+  configure_file(
+    "${CMAKE_SOURCE_DIR}/meos/include/meos_rgeo.h"
+    "${CMAKE_BINARY_DIR}/meos_export_include/meos_rgeo.h"
+    COPYONLY)
+endif()
+
 # MEOS
 set(PROJECT_OBJECTS "$<TARGET_OBJECTS:temporal>")
 set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:geo>")
+set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:clip_clipper2>")
+set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:clipper2>")
 if(CBUFFER)
   message(STATUS "Including circular buffers")
   set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:cbuffer>")
@@ -186,6 +273,14 @@ endif()
 if(RGEO)
   message(STATUS "Including rigid geometries")
   set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:rgeo>")
+endif()
+if(H3)
+  message(STATUS "Including temporal H3 index objects")
+  set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:h3>")
+endif()
+if(POINTCLOUD)
+  message(STATUS "Including pgpointcloud temporal types")
+  set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:pointcloud>")
 endif()
 
 # PostgreSQL
@@ -214,6 +309,9 @@ target_link_libraries(${MEOS_LIB_NAME} ${GEOS_LIBRARY})
 target_link_libraries(${MEOS_LIB_NAME} ${PROJ_LIBRARIES})
 target_link_libraries(${MEOS_LIB_NAME} ${GSL_LIBRARY})
 target_link_libraries(${MEOS_LIB_NAME} ${GSL_CBLAS_LIBRARY})
+if(H3)
+  target_link_libraries(${MEOS_LIB_NAME} ${H3_LIBRARY})
+endif()
 
 #--------------------------------
 # Belongs to MEOS
@@ -235,6 +333,9 @@ install(
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 install(
   FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_tls.h"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+install(
+  FILES "${CMAKE_SOURCE_DIR}/arrow/arrow_c_data_interface.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 install(
   FILES "${CMAKE_SOURCE_DIR}/meos/src/geo/spatial_ref_sys.csv"
@@ -264,6 +365,11 @@ endif()
 if(RGEO)
   install(
     FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_rgeo.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+endif()
+if(H3)
+  install(
+    FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_h3.h"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 endif()
 
@@ -303,6 +409,14 @@ configure_file(
 install(
   FILES ${CMAKE_BINARY_DIR}/meos.pc
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
+
+#-----------------------------------------------------------------------------
+# C-level tests (CTest)
+#-----------------------------------------------------------------------------
+
+if(BUILD_TESTING)
+  add_subdirectory(test)
+endif()
 
 #-----------------------------------------------------------------------------
 # The End

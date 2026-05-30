@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -201,7 +201,7 @@ extern void temporal_write(const Temporal *temp, StringInfo buf);
 extern bytea *Datum_as_wkb(FunctionCallInfo fcinfo, Datum value, MeosType type,
   bool extended);
 extern text *Datum_as_hexwkb(FunctionCallInfo fcinfo, Datum value,
-  MeosType type);
+  MeosType type, bool extended);
 
 /* Parameter tests */
 

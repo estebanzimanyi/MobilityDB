@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -132,6 +132,7 @@ Datum
 Taggstate_serialize(PG_FUNCTION_ARGS)
 {
   SkipList *state = (SkipList *) PG_GETARG_POINTER(0);
+  store_fcinfo(fcinfo);
   StringInfoData buf;
   pq_begintypsend(&buf);
   aggstate_write(state, &buf);
@@ -146,6 +147,7 @@ PG_FUNCTION_INFO_V1(Taggstate_deserialize);
 Datum
 Taggstate_deserialize(PG_FUNCTION_ARGS)
 {
+  store_fcinfo(fcinfo);
   bytea *data = PG_GETARG_BYTEA_P(0);
   StringInfoData buf =
   {
@@ -154,7 +156,9 @@ Taggstate_deserialize(PG_FUNCTION_ARGS)
     .len = VARSIZE(data),
     .maxlen = VARSIZE(data)
   };
+  MemoryContext ctx = set_aggregation_context(fcinfo);
   SkipList *result = aggstate_read(&buf);
+  unset_aggregation_context(ctx);
   PG_RETURN_SKIPLIST_P(result);
 }
 

@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -44,6 +44,7 @@
 
 /* C */
 #include <assert.h>
+#include <math.h>
 /* MEOS */
 #include <meos.h>
 #include <meos_internal_geo.h>
@@ -53,7 +54,9 @@
 #include "geo/tgeo_spatialrels.h"
 #include "cbuffer/cbuffer.h"
 #include "cbuffer/tcbuffer.h"
+#include "cbuffer/tcbuffer_boxops.h"
 #include "cbuffer/tcbuffer_spatialfuncs.h"
+#include <meos_cbuffer.h>
 
 /*****************************************************************************
  * Some GEOS versions cannot handle spatial relationships where one of the
@@ -154,6 +157,66 @@ spatialrel_geo_geo(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
  *****************************************************************************/
 
 /**
+ * @brief Return the 2D distance between two axis-aligned bounding boxes,
+ * 0 when they overlap
+ */
+static double
+box2d_distance(double axmin, double aymin, double axmax, double aymax,
+  double bxmin, double bymin, double bxmax, double bymax)
+{
+  double dx = fmax(fmax(axmin - bxmax, bxmin - axmax), 0.0);
+  double dy = fmax(fmax(aymin - bymax, bymin - aymax), 0.0);
+  return sqrt(dx * dx + dy * dy);
+}
+
+/**
+ * @brief Set the 2D bounding box of the circular buffer value of a temporal
+ * instant (the buffer centre expanded by its radius)
+ */
+static void
+tcbufferinst_xybox(const TInstant *inst, double *xmin, double *ymin,
+  double *xmax, double *ymax)
+{
+  const Cbuffer *cb = DatumGetCbufferP(tinstant_value_p(inst));
+  const POINT2D *p = GSERIALIZED_POINT2D_P(cbuffer_point_p(cb));
+  double r = cb->radius;
+  *xmin = p->x - r; *xmax = p->x + r;
+  *ymin = p->y - r; *ymax = p->y + r;
+}
+
+/**
+ * @brief Decide a per-segment spatial relationship from bounding boxes alone
+ * @details When the swept-capsule box of a segment is disjoint from the
+ * geometry box, the two geometries are disjoint, so every supported
+ * predicate has a constant result and the swept area need not be built. For
+ * `dwithin` the result is only decided when the boxes are farther apart than
+ * the distance. Returns true and sets @p result when the predicate is
+ * decided, false when the segment must be evaluated exactly.
+ */
+static bool
+tcbuffer_geo_box_decided(varfunc func, Datum param, int numparam,
+  double sxmin, double symin, double sxmax, double symax,
+  double gxmin, double gymin, double gxmax, double gymax, int *result)
+{
+  double bd = box2d_distance(sxmin, symin, sxmax, symax, gxmin, gymin,
+    gxmax, gymax);
+  if (func == (varfunc) (&datum_geom_dwithin2d) && numparam == 3)
+  {
+    if (bd > DatumGetFloat8(param))
+    {
+      *result = 0;
+      return true;
+    }
+    return false;
+  }
+  if (bd <= 0.0)
+    return false;
+  /* The segment box and the geometry are disjoint */
+  *result = (func == (varfunc) (&datum_geom_disjoint2d)) ? 1 : 0;
+  return true;
+}
+
+/**
  * @brief Return 1 if a temporal circular buffer instant and a geometry 
  * ever/always satisfy a spatial relationship
  * @param[in] inst Temporal instant
@@ -170,6 +233,14 @@ ea_spatialrel_tcbufferinst_geo(const TInstant *inst, const GSERIALIZED *gs,
   Datum param, varfunc func, int numparam, bool invert)
 {
   assert(inst); assert(gs); assert(inst->temptype == T_TCBUFFER);
+  STBox gbox;
+  geo_set_stbox(gs, &gbox);
+  double ixmin, iymin, ixmax, iymax;
+  tcbufferinst_xybox(inst, &ixmin, &iymin, &ixmax, &iymax);
+  int decided;
+  if (tcbuffer_geo_box_decided(func, param, numparam, ixmin, iymin, ixmax,
+      iymax, gbox.xmin, gbox.ymin, gbox.xmax, gbox.ymax, &decided))
+    return decided;
   const Cbuffer *cb = DatumGetCbufferP(tinstant_value_p(inst));
   GSERIALIZED *trav = cbuffer_to_geom(cb);
   int result = spatialrel_geo_geo(trav, gs, param, func, numparam, invert);
@@ -196,16 +267,26 @@ ea_spatialrel_tcbufferseq_discstep_geo(const TSequence *seq,
   assert(seq); assert(gs); assert(seq->temptype == T_TCBUFFER);
   assert(MEOS_FLAGS_GET_INTERP(seq->flags) == DISCRETE ||
     MEOS_FLAGS_GET_INTERP(seq->flags) == STEP);
+  STBox gbox;
+  geo_set_stbox(gs, &gbox);
   for (int i = 0; i < seq->count; i++)
   {
     const TInstant *inst = TSEQUENCE_INST_N(seq, i);
-    const Cbuffer *cb = DatumGetCbufferP(tinstant_value_p(inst));
-    GSERIALIZED *trav = cbuffer_to_geom(cb);
-    bool result = spatialrel_geo_geo(trav, gs, param, func, numparam, invert);
-    pfree(trav);
-    if (result && ever)
+    double ixmin, iymin, ixmax, iymax;
+    tcbufferinst_xybox(inst, &ixmin, &iymin, &ixmax, &iymax);
+    int result;
+    if (! tcbuffer_geo_box_decided(func, param, numparam, ixmin, iymin,
+        ixmax, iymax, gbox.xmin, gbox.ymin, gbox.xmax, gbox.ymax, &result))
+    {
+      const Cbuffer *cb = DatumGetCbufferP(tinstant_value_p(inst));
+      GSERIALIZED *trav = cbuffer_to_geom(cb);
+      result = spatialrel_geo_geo(trav, gs, param, func, numparam, invert) ?
+        1 : 0;
+      pfree(trav);
+    }
+    if (result == 1 && ever)
       return 1;
-    else if (! result && ! ever)
+    else if (result != 1 && ! ever)
       return 0;
   }
   return ever ? 0 : 1;
@@ -235,14 +316,30 @@ ea_spatialrel_tcbufferseq_linear_geo(const TSequence *seq,
     return ea_spatialrel_tcbufferinst_geo(TSEQUENCE_INST_N(seq, 0), gs,
       param, func, numparam, invert);
 
-  /* General case */
+  /* General case (segment from the first instant to each later instant,
+   * matching the exact baseline traversal) */
+  STBox gbox;
+  geo_set_stbox(gs, &gbox);
   const TInstant *inst1 = TSEQUENCE_INST_N(seq, 0);
+  double b1xmin, b1ymin, b1xmax, b1ymax;
+  tcbufferinst_xybox(inst1, &b1xmin, &b1ymin, &b1xmax, &b1ymax);
   for (int i = 1; i < seq->count; i++)
   {
     const TInstant *inst2 = TSEQUENCE_INST_N(seq, i);
-    GSERIALIZED *trav = tcbuffersegm_trav_area(inst1, inst2);
-    int result = spatialrel_geo_geo(trav, gs, param, func, numparam, invert);
-    pfree(trav);
+    double b2xmin, b2ymin, b2xmax, b2ymax;
+    tcbufferinst_xybox(inst2, &b2xmin, &b2ymin, &b2xmax, &b2ymax);
+    /* The swept capsule of a linearly moving, linearly resized disk is
+     * contained in the union of the two endpoint disk boxes */
+    double sxmin = fmin(b1xmin, b2xmin), symin = fmin(b1ymin, b2ymin);
+    double sxmax = fmax(b1xmax, b2xmax), symax = fmax(b1ymax, b2ymax);
+    int result;
+    if (! tcbuffer_geo_box_decided(func, param, numparam, sxmin, symin,
+        sxmax, symax, gbox.xmin, gbox.ymin, gbox.xmax, gbox.ymax, &result))
+    {
+      GSERIALIZED *trav = tcbuffersegm_trav_area(inst1, inst2);
+      result = spatialrel_geo_geo(trav, gs, param, func, numparam, invert);
+      pfree(trav);
+    }
     if (result == 1 && ever)
       return 1;
     else if (result != 1 && ! ever)
@@ -329,15 +426,17 @@ ea_spatialrel_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs,
   if (! ensure_valid_tcbuffer_geo(temp, gs) || gserialized_is_empty(gs))
     return -1;
 
-  /* Bounding box test */ 
-  if (func != (varfunc) (&datum_geom_disjoint2d))
+  /* Bounding box test. When the whole value box and the geometry box do
+   * not overlap the temporal value is disjoint from the geometry at every
+   * instant, so a non-disjoint relationship is always false and disjoint
+   * is always true. */
   {
     STBox box1, box2;
     tspatial_set_stbox(temp, &box1);
     /* Non-empty geometries have a bounding box */
     geo_set_stbox(gs, &box2);
     if (! overlaps_stbox_stbox(&box1, &box2))
-      return 0;
+      return (func == (varfunc) (&datum_geom_disjoint2d)) ? 1 : 0;
   }
 
   assert(temptype_subtype(temp->subtype));
@@ -453,7 +552,7 @@ ea_contains_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp,
  * geometry
  * @csqlfn #Acontains_geo_tcbuffer()
  */
-inline int
+int
 acontains_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp)
 {
   return ea_contains_geo_tcbuffer(gs, temp, ALWAYS);
@@ -492,7 +591,7 @@ ea_contains_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs,
  * geometry
  * @csqlfn #Econtains_tcbuffer_geo()
  */
-inline int
+int
 econtains_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   return ea_contains_tcbuffer_geo(temp, gs, EVER);
@@ -508,7 +607,7 @@ econtains_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
  * geometry
  * @csqlfn #Acontains_tcbuffer_geo()
  */
-inline int
+int
 acontains_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   return ea_contains_tcbuffer_geo(temp, gs, ALWAYS);
@@ -544,7 +643,7 @@ ea_contains_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp,
  * @param[in] temp Temporal circular buffer
  * @csqlfn #Econtains_cbuffer_tcbuffer()
  */
-inline int
+int
 econtains_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp)
 {
   return ea_contains_cbuffer_tcbuffer(cb, temp, EVER);
@@ -558,7 +657,7 @@ econtains_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp)
  * @param[in] temp Temporal circular buffer
  * @csqlfn #Acontains_cbuffer_tcbuffer()
  */
-inline int
+int
 acontains_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp)
 {
   return ea_contains_cbuffer_tcbuffer(cb, temp, ALWAYS);
@@ -594,7 +693,7 @@ ea_contains_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb,
  * @param[in] cb Circular buffer
  * @csqlfn #Econtains_tcbuffer_cbuffer()
  */
-inline int
+int
 econtains_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
 {
   return ea_contains_tcbuffer_cbuffer(temp, cb, EVER);
@@ -608,7 +707,7 @@ econtains_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
  * @param[in] cb Circular buffer
  * @csqlfn #Acontains_tcbuffer_cbuffer()
  */
-inline int
+int
 acontains_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
 {
   return ea_contains_tcbuffer_cbuffer(temp, cb, ALWAYS);
@@ -646,7 +745,7 @@ ea_covers_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp, bool ever)
  * geometry
  * @csqlfn #Acovers_geo_tcbuffer()
  */
-inline int
+int
 acovers_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp)
 {
   return ea_covers_geo_tcbuffer(gs, temp, ALWAYS);
@@ -681,7 +780,7 @@ ea_covers_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever)
  * geometry
  * @csqlfn #Ecovers_tcbuffer_geo()
  */
-inline int
+int
 ecovers_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   return ea_covers_tcbuffer_geo(temp, gs, EVER);
@@ -697,7 +796,7 @@ ecovers_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
  * geometry
  * @csqlfn #Acovers_tcbuffer_geo()
  */
-inline int
+int
 acovers_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   return ea_covers_tcbuffer_geo(temp, gs, ALWAYS);
@@ -728,7 +827,7 @@ ea_covers_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp,
  * @param[in] temp Temporal circular buffer
  * @csqlfn #Ecovers_cbuffer_tcbuffer()
  */
-inline int
+int
 ecovers_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp)
 {
   return ea_covers_cbuffer_tcbuffer(cb, temp, EVER);
@@ -742,7 +841,7 @@ ecovers_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp)
  * @param[in] temp Temporal circular buffer
  * @csqlfn #Acovers_cbuffer_tcbuffer()
  */
-inline int
+int
 acovers_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp)
 {
   return ea_covers_cbuffer_tcbuffer(cb, temp, ALWAYS);
@@ -773,7 +872,7 @@ ea_covers_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb,
  * @param[in] cb Circular buffer
  * @csqlfn #Ecovers_tcbuffer_cbuffer()
  */
-inline int
+int
 ecovers_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
 {
   return ea_covers_tcbuffer_cbuffer(temp, cb, EVER);
@@ -787,7 +886,7 @@ ecovers_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
  * @param[in] cb Circular buffer
  * @csqlfn #Acovers_tcbuffer_cbuffer()
  */
-inline int
+int
 acovers_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
 {
   return ea_covers_tcbuffer_cbuffer(temp, cb, ALWAYS);
@@ -897,7 +996,7 @@ edisjoint_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
  * @note aDisjoint(a, b) is equivalent to NOT eIntersects(a, b)
  * @csqlfn #Adisjoint_tcbuffer_geo()
  */
-inline int
+int
 adisjoint_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   return ea_disjoint_tcbuffer_geo(temp, gs, ALWAYS);
@@ -959,7 +1058,7 @@ edisjoint_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
  * @note aDisjoint(a, b) is equivalent to NOT eIntersects(a, b)
  * @csqlfn #Adisjoint_tcbuffer_geo()
  */
-inline int
+int
 adisjoint_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
 {
   return ea_disjoint_tcbuffer_cbuffer(temp, cb, ALWAYS);
@@ -992,7 +1091,7 @@ ea_disjoint_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
  * @param[in] temp1,temp2 Temporal circular buffers
  * @csqlfn #Edisjoint_tcbuffer_tcbuffer()
  */
-inline int
+int
 edisjoint_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
 {
   return ea_disjoint_tcbuffer_tcbuffer(temp1, temp2, EVER);
@@ -1006,7 +1105,7 @@ edisjoint_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
  * @param[in] temp1,temp2 Temporal circular buffers
  * @csqlfn #Adisjoint_tcbuffer_tcbuffer()
  */
-inline int
+int
 adisjoint_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
 {
   return ea_disjoint_tcbuffer_tcbuffer(temp1, temp2, ALWAYS);
@@ -1073,7 +1172,7 @@ eintersects_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
  * @note aIntersects(tcbuffer, geo) is equivalent to NOT eDisjoint(tcbuffer, geo)
  * @csqlfn #Aintersects_tcbuffer_geo()
  */
-inline int
+int
 aintersects_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   return ea_intersects_tcbuffer_geo(temp, gs, ALWAYS);
@@ -1122,7 +1221,7 @@ ea_intersects_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp,
  * @param[in] cb Circular buffer
  * @csqlfn #Eintersects_tcbuffer_cbuffer()
  */
-inline int
+int
 eintersects_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
 {
   return ea_intersects_tcbuffer_cbuffer(temp, cb, EVER);
@@ -1138,7 +1237,7 @@ eintersects_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
  * NOT eDisjoint(tcbuffer, cbuffer)
  * @csqlfn #Aintersects_tcbuffer_cbuffer()
  */
-inline int
+int
 aintersects_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
 {
   return ea_intersects_tcbuffer_cbuffer(temp, cb, ALWAYS);
@@ -1171,7 +1270,7 @@ ea_intersects_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
  * @param[in] temp1,temp2 Temporal circular buffers
  * @csqlfn #Eintersects_tcbuffer_tcbuffer()
  */
-inline int
+int
 eintersects_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
 {
   return ea_intersects_tcbuffer_tcbuffer(temp1, temp2, EVER);
@@ -1184,7 +1283,7 @@ eintersects_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
  * @param[in] temp1,temp2 Temporal circular buffers
  * @csqlfn #Aintersects_tcbuffer_tcbuffer()
  */
-inline int
+int
 aintersects_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
 {
   return ea_intersects_tcbuffer_tcbuffer(temp1, temp2, ALWAYS);
@@ -1207,7 +1306,17 @@ aintersects_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
 int
 ea_touches_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever)
 {
-  return ea_spatialrel_tcbuffer_geo(temp, gs, (Datum) NULL, 
+  VALIDATE_TCBUFFER(temp, -1); VALIDATE_NOT_NULL(gs, -1);
+  if (! ensure_valid_tcbuffer_geo(temp, gs) || gserialized_is_empty(gs))
+    return -1;
+  /* Touch requires the temporal value and the geometry to be at distance
+   * zero; a strictly positive exact nearest-approach distance means they
+   * are disjoint, so they cannot touch under either quantifier. This is
+   * applied only on the geometry path: the cbuffer path turns into a
+   * many-vertex disk for which the analytic distance is not a win. */
+  if (nad_tcbuffer_geo(temp, gs) > 1e-6)
+    return 0;
+  return ea_spatialrel_tcbuffer_geo(temp, gs, (Datum) NULL,
     (varfunc) &datum_geom_touches, 2, ever, INVERT_NO);
 }
 
@@ -1296,7 +1405,7 @@ ea_touches_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp, bool ever)
  * @param[in] cb Circular buffer
  * @csqlfn #Atouches_tcbuffer_cbuffer()
  */
-inline int
+int
 etouches_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
 {
   return ea_touches_tcbuffer_cbuffer(temp, cb, EVER); 
@@ -1310,7 +1419,7 @@ etouches_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
  * @param[in] cb Circular buffer
  * @csqlfn #Atouches_tcbuffer_cbuffer()
  */
-inline int
+int
 atouches_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb)
 {
   return ea_touches_tcbuffer_cbuffer(temp, cb, ALWAYS); 
@@ -1464,6 +1573,20 @@ adwithin_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb,
   if (! ensure_valid_tcbuffer_cbuffer(temp, cb) ||
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return -1;
+  /* Bbox prefilter: short-circuit the expensive geom_buffer call when
+   * temp's bbox is clearly outside the static cbuffer's d-expanded
+   * bbox. Mirrors the sibling tgeo prefilter pattern. tcbuffer is
+   * planar by construction (cbuffer_make rejects geodetic input
+   * points and tcbuffer_make requires tgeompoint, not tgeogpoint),
+   * so no geodetic branch is needed here. */
+  STBox box_temp, box_cb;
+  tspatial_set_stbox(temp, &box_temp);
+  cbuffer_set_stbox(cb, &box_cb);
+  STBox *box_cb_exp = stbox_expand_space(&box_cb, dist);
+  bool pass = overlaps_stbox_stbox(&box_temp, box_cb_exp);
+  pfree(box_cb_exp);
+  if (! pass)
+    return 0;
   GSERIALIZED *trav = cbuffer_to_geom(cb);
   GSERIALIZED *buffer = geom_buffer(trav, dist, "");
   int result = ea_spatialrel_tcbuffer_geo(temp, buffer, (Datum) NULL,
@@ -1519,7 +1642,7 @@ ea_dwithin_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
  * @param[in] dist Distance
  * @csqlfn #Edwithin_tcbuffer_tcbuffer()
  */
-inline int
+int
 edwithin_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
   double dist)
 {
@@ -1535,7 +1658,7 @@ edwithin_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
  * @param[in] dist Distance
  * @csqlfn #Adwithin_tcbuffer_tcbuffer()
  */
-inline int
+int
 adwithin_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
   double dist)
 {

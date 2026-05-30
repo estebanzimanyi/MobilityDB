@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -222,7 +222,7 @@ Spanset_as_hexwkb(PG_FUNCTION_ARGS)
 {
   /* Ensure that the value is detoasted if necessary */
   SpanSet *ss = PG_GETARG_SPANSET_P(0);
-  text *result = Datum_as_hexwkb(fcinfo, PointerGetDatum(ss), ss->spansettype);
+  text *result = Datum_as_hexwkb(fcinfo, PointerGetDatum(ss), ss->spansettype, false);
   PG_FREE_IF_COPY(ss, 0);
   PG_RETURN_TEXT_P(result);
 }
@@ -1262,6 +1262,25 @@ Spanset_hash_extended(PG_FUNCTION_ARGS)
   uint64 result = spanset_hash_extended(ss, seed);
   PG_FREE_IF_COPY(ss, 0);
   PG_RETURN_UINT64(result);
+}
+
+/*****************************************************************************/
+
+PGDLLEXPORT Datum Spanset_arrow_roundtrip(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Spanset_arrow_roundtrip);
+/**
+ * @ingroup mobilitydb_setspan_transf
+ * @brief Round-trip a span set through the Arrow C Data Interface,
+ * returning the reconstructed value
+ * @sqlfn arrowRoundtrip()
+ */
+Datum
+Spanset_arrow_roundtrip(PG_FUNCTION_ARGS)
+{
+  SpanSet *ss = PG_GETARG_SPANSET_P(0);
+  SpanSet *result = meos_spanset_arrow_roundtrip(ss);
+  PG_FREE_IF_COPY(ss, 0);
+  PG_RETURN_SPANSET_P(result);
 }
 
 /*****************************************************************************/

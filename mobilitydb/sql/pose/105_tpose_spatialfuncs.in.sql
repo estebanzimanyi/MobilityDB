@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -80,5 +80,24 @@ CREATE FUNCTION minusStbox(tpose, stbox, bool DEFAULT TRUE)
   RETURNS tpose
   AS 'MODULE_PATHNAME', 'Tpose_minus_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/*****************************************************************************
+ * traversedArea, centroid, convexHull
+ *****************************************************************************/
+
+CREATE FUNCTION traversedArea(tpose, bool DEFAULT FALSE)
+  RETURNS geometry
+  LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE AS
+  $$ SELECT @extschema@.traversedArea($1::@extschema@.tgeompoint::@extschema@.tgeometry, $2) $$;
+
+CREATE FUNCTION centroid(tpose)
+  RETURNS tgeompoint
+  AS 'MODULE_PATHNAME', 'Tpose_to_tgeompoint'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION convexHull(tpose)
+  RETURNS geometry
+  LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE AS
+  $$ SELECT @extschema@.convexHull($1::@extschema@.tgeompoint) $$;
 
 /*****************************************************************************/

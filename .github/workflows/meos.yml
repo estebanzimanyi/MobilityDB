@@ -10,7 +10,8 @@ on:
       - 'mobilitydb/**'
       - 'postgis/**'
       - 'CMakeLists.txt'
-    branch_ignore: gh-pages
+    branches-ignore:
+      - gh-pages
   pull_request:
     paths:
       - '.github/workflows/meos.yml'
@@ -19,7 +20,8 @@ on:
       - 'mobilitydb/**'
       - 'postgis/**'
       - 'CMakeLists.txt'
-    branch_ignore: gh-pages
+    branches-ignore:
+      - gh-pages
 
 jobs:
   build:
@@ -42,9 +44,20 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Debug -DMEOS=on ..
+          cmake -DCMAKE_BUILD_TYPE=Debug -DMEOS=on -DCBUFFER=on ..
           make -j $(nproc)
           sudo make install
+
+      - name: Run MEOS C-level CTest suite
+        # All *_test.c harnesses in meos/test/ are now wired into
+        # CMakeLists.txt and run uniformly via CTest. Each test is a
+        # self-contained MEOS-API exercise; CTest treats a non-zero
+        # return (or segfault) as failure, catching crashes and
+        # link-level breakage. Output-drift detection (baseline diff)
+        # is a tracked follow-up.
+        run: |
+          cd build
+          ctest --output-on-failure
 
       - name: Compile and run 01_hello_world.c
         run: |
@@ -65,6 +78,8 @@ jobs:
           ./geo_test
           gcc -Wall -g -I/usr/local/include -o npoint_test npoint_test.c -L/usr/local/lib -lmeos
           ./npoint_test
+          gcc -Wall -g -I/usr/local/include -o rtree_mest_test rtree_mest_test.c -L/usr/local/lib -lmeos -lm
+          ./rtree_mest_test
 
   threaded:
     name: Thread-safety (TSan)
@@ -112,3 +127,46 @@ jobs:
           export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
           export TSAN_OPTIONS="halt_on_error=1 second_deadlock_stack=1"
           ./threaded_test 8 5000
+
+  setspan_arrow_conformance:
+    name: Closure-type Arrow C Data Interface conformance
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgeos-dev \
+            libproj-dev \
+            libjson-c-dev \
+            libgsl-dev
+
+      # The set, span, span set, tbox and stbox Arrow export needs only the
+      # always-built core; the geometry and geography set base types and the
+      # spatiotemporal box use the geo subsystem, which is always compiled.
+      - name: Build MEOS
+        run: |
+          mkdir build
+          cd build
+          cmake -DCMAKE_BUILD_TYPE=Debug -DMEOS=on ..
+          make -j $(nproc)
+          sudo make install
+
+      # Compile the validator with the vendored dependency-free nanoarrow
+      # amalgamation and run it. nanoarrow imports the MEOS-produced
+      # ArrowSchema/ArrowArray with no MEOS knowledge and runs full Arrow
+      # C Data Interface validation over the whole nested tree of every set,
+      # span, span set, temporal box and spatiotemporal box variant, proving
+      # the closure-type export is consumable by an external Arrow engine.
+      - name: Validate the closure-type Arrow export with nanoarrow
+        run: |
+          cd meos/examples
+          export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+          gcc -Wall -g -I/usr/local/include -I"$GITHUB_WORKSPACE" \
+            -o setspan_arrow_validate setspan_arrow_validate.c \
+            "$GITHUB_WORKSPACE/nanoarrow/nanoarrow.c" \
+            -L/usr/local/lib -lmeos
+          ./setspan_arrow_validate

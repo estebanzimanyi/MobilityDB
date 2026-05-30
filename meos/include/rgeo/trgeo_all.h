@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -38,6 +38,8 @@
 /* MEOS */
 #include "rgeo/trgeo.h"
 #include "rgeo/trgeo_inst.h"
+#include "rgeo/trgeo_spatialfuncs.h"
+#include "rgeo/trgeo_spatialrels.h"
 #include "rgeo/trgeo_seq.h"
 #include "rgeo/trgeo_seqset.h"
 

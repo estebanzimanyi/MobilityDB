@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -940,5 +940,16 @@ CREATE OPERATOR <-> (
   LEFTARG = geogset, RIGHTARG = geogset,
   COMMUTATOR = <->
 );
+
+/*****************************************************************************/
+
+CREATE FUNCTION arrowRoundtrip(geomset)
+  RETURNS geomset
+  AS 'MODULE_PATHNAME', 'Set_arrow_roundtrip'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION arrowRoundtrip(geogset)
+  RETURNS geogset
+  AS 'MODULE_PATHNAME', 'Set_arrow_roundtrip'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************/

@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -56,6 +56,7 @@
 #include <meos.h>
 #include <meos_internal.h>
 #include <meos_internal_geo.h>
+#include "temporal/span.h"
 #include "temporal/lifting.h"
 #include "temporal/tbool_ops.h"
 #include "temporal/temporal_compops.h"
@@ -67,6 +68,7 @@
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/tgeo_spatialrels.h"
 #include "cbuffer/tcbuffer_spatialrels.h"
+#include "geo/clip_clipper2.h"
 
 /*****************************************************************************
  * Generic functions for computing the spatiotemporal relationships
@@ -103,9 +105,9 @@ geometry 'polygon((0 0,1 1,2 0.5,3 1,4 1,4 0,0 0))'))
 -- "GEOMETRYCOLLECTION(POINT(1 1),LINESTRING(3 1,4 1))"
 */
 
-/******************************************************************************
+/*****************************************************************************
  * `tintersects` and `tdisjoint` functions
- * The case for a temporal point and a geometry allows a fast implementation by
+ * The case for a temporal point and a geometry allow a fast implementation by
  * (1) using bounding box tests, and (2) splitting temporal point sequences
  * into an array of simple (that is, not self-intersecting) fragments where
  * the answer is computed for each fragment with a single call to PostGIS.
@@ -186,7 +188,7 @@ tinterrel_tpointseq_simple_geo(const TSequence *seq, const GSERIALIZED *gs,
   Datum datum_no = tinter ? BoolGetDatum(false) : BoolGetDatum(true);
 
   /* Bounding box test */
-  STBox *box1 = TSEQUENCE_BBOX_PTR(seq);
+  const STBox *box1 = TSEQUENCE_BBOX_PTR(seq);
   if (! overlaps_stbox_stbox(box1, box))
   {
     result = palloc(sizeof(TSequence *));
@@ -196,46 +198,93 @@ tinterrel_tpointseq_simple_geo(const TSequence *seq, const GSERIALIZED *gs,
     return result;
   }
 
-  GSERIALIZED *traj = tpointseq_linear_trajectory(seq, UNARY_UNION_NO);
-  GSERIALIZED *inter = geom_intersection2d(traj, gs);
-  pfree(traj);
-  if (gserialized_is_empty(inter))
-  {
-    result = palloc(sizeof(TSequence *));
-    result[0] = tsequence_from_base_tstzspan(datum_no, T_TBOOL, &seq->period,
-      STEP);
-    *count = 1;
-    pfree(inter);
-    return result;
-  }
-
   const TInstant *start = TSEQUENCE_INST_N(seq, 0);
   const TInstant *end = TSEQUENCE_INST_N(seq, seq->count - 1);
-  /* If the trajectory is a point the result is true due to the
-   * non-empty intersection test above */
-  if (seq->count == 2 &&
-    datum_point_eq(tinstant_value_p(start), tinstant_value_p(end)))
+  bool stationary = (seq->count == 2 &&
+    datum_point_eq(tinstant_value_p(start), tinstant_value_p(end)));
+
+  /* Fast path for (multi)polygon inputs: Clipper2 open-path clipping returns
+   * inside time spans directly, avoiding GEOS + tpointseq_interperiods. */
+  int npers;
+  Span *periods;
+  uint32_t gs_type = gserialized_get_type(gs);
+  if ((gs_type == POLYGONTYPE || gs_type == MULTIPOLYGONTYPE) && !stationary)
   {
-    result = palloc(sizeof(TSequence *));
-    result[0] = tsequence_from_base_tstzspan(datum_yes, T_TBOOL, &seq->period,
-      STEP);
-    *count = 1;
+    periods = clipper2_traj_poly_periods(seq, gs, &npers);
+    if (npers == 0)
+    {
+      result = palloc(sizeof(TSequence *));
+      result[0] = tsequence_from_base_tstzspan(datum_no, T_TBOOL,
+        &seq->period, STEP);
+      *count = 1;
+      return result;
+    }
+    /* Clipper2 always returns closed [T1,T2] bounds.  Clip each period against
+     * seq->period so that open bounds at the sequence endpoints are inherited.
+     * This prevents duplicate-timestamp errors when the sequence is one of
+     * several in a TSequenceSet whose adjacent boundaries share a timestamp. */
+    int k = 0;
+    for (int i = 0; i < npers; i++)
+    {
+      Span clipped;
+      if (inter_span_span(&periods[i], &seq->period, &clipped))
+        periods[k++] = clipped;
+    }
+    npers = k;
+    if (npers == 0)
+    {
+      result = palloc(sizeof(TSequence *));
+      result[0] = tsequence_from_base_tstzspan(datum_no, T_TBOOL,
+        &seq->period, STEP);
+      *count = 1;
+      return result;
+    }
+    /* Merge adjacent/overlapping clips that may now touch after bound
+     * adjustment, mirroring tpointseq_interperiods behaviour. */
+    if (npers > 1)
+    {
+      int npers2;
+      Span *norm = spanarr_normalize(periods, npers, ORDER, &npers2);
+      pfree(periods);
+      periods = norm;
+      npers = npers2;
+    }
+  }
+  else
+  {
+    GSERIALIZED *traj = tpointseq_linear_trajectory(seq, UNARY_UNION_NO);
+    GSERIALIZED *inter = geom_intersection2d(traj, gs);
+    pfree(traj);
+    if (gserialized_is_empty(inter))
+    {
+      result = palloc(sizeof(TSequence *));
+      result[0] = tsequence_from_base_tstzspan(datum_no, T_TBOOL,
+        &seq->period, STEP);
+      *count = 1;
+      pfree(inter);
+      return result;
+    }
+    if (stationary)
+    {
+      result = palloc(sizeof(TSequence *));
+      result[0] = tsequence_from_base_tstzspan(datum_yes, T_TBOOL,
+        &seq->period, STEP);
+      *count = 1;
+      pfree(inter);
+      return result;
+    }
+    periods = tpointseq_interperiods(seq, inter, &npers);
     pfree(inter);
-    return result;
+    if (npers == 0)
+    {
+      result = palloc(sizeof(TSequence *));
+      result[0] = tsequence_from_base_tstzspan(datum_no, T_TBOOL,
+        &seq->period, STEP);
+      *count = 1;
+      return result;
+    }
   }
 
-  /* Get the periods at which the temporal point intersects the geometry */
-  int npers;
-  Span *periods = tpointseq_interperiods(seq, inter, &npers);
-  pfree(inter);
-  if (npers == 0)
-  {
-    result = palloc(sizeof(TSequence *));
-    result[0] = tsequence_from_base_tstzspan(datum_no, T_TBOOL, &seq->period,
-      STEP);
-    *count = 1;
-    return result;
-  }
   SpanSet *ss;
   if (npers == 1)
     ss = minus_span_span(&seq->period, &periods[0]);
@@ -384,7 +433,7 @@ tinterrel_tspatialseqset_base(const TSequenceSet *ss, Datum base,
     {
       sequences[i] = tinterrel_tpointseq_linear_geo_iter(
         TSEQUENCESET_SEQ_N(ss, i), DatumGetGserializedP(base), box, tinter,
-          func, &countseqs[i]);
+        func, &countseqs[i]);
       totalcount += countseqs[i];
     }
     allseqs = tseqarr2_to_tseqarr(sequences, countseqs, ss->count, totalcount);
@@ -465,6 +514,21 @@ tinterrel_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool tinter)
     /* Ensure the validity of the arguments */
   if (! ensure_valid_tgeo_geo(temp, gs) || gserialized_is_empty(gs))
     return NULL;
+
+  /* tintersects is tdwithin with a zero distance and tdisjoint is its
+   * negation (as in the static case, geog_intersects =
+   * geog_dwithin(., ., 0.0)). For geodetic coordinates the planar
+   * intersects below is not applicable; route through the
+   * geodetic-capable tdwithin kernel. */
+  if (MEOS_FLAGS_GET_GEODETIC(temp->flags))
+  {
+    Temporal *dw = tdwithin_tgeo_geo(temp, gs, 0.0);
+    if (! dw || tinter)
+      return dw;
+    Temporal *result = tnot_tbool(dw);
+    pfree(dw);
+    return result;
+  }
 
   /* 3D only if both arguments are 3D */
   datum_func2 func = MEOS_FLAGS_GET_Z(temp->flags) && FLAGS_GET_Z(gs->gflags) ?
@@ -811,7 +875,7 @@ tdisjoint_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
  * @param[in] temp1,temp2 Temporal geos
  * @csqlfn #Tdisjoint_tgeo_tgeo()
  */
-inline Temporal *
+Temporal *
 tdisjoint_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
 {
   return tinterrel_tspatial_tspatial(temp1, temp2, TDISJOINT);
@@ -856,7 +920,7 @@ tintersects_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp)
  * @param[in] temp1,temp2 Temporal geos
  * @csqlfn #Tintersects_tgeo_tgeo()
  */
-inline Temporal *
+Temporal *
 tintersects_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
 {
   return tinterrel_tspatial_tspatial(temp1, temp2, TINTERSECTS);
@@ -1301,7 +1365,6 @@ tdwithin_tlinearseq_base_iter(const TSequence *seq, Datum point, Datum dist,
       nseqs += tdwithin_add_solutions(solutions, lower, upper, lower_inc,
         upper_inc, upper_inc1, t1, t2, instants, &result[nseqs]);
     }
-    start = end;
     startvalue = endvalue;
     lower = upper;
     lower_inc = true;
@@ -1438,18 +1501,21 @@ Temporal *
 tdwithin_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, double dist)
 {
   VALIDATE_TSPATIAL(temp, NULL); VALIDATE_NOT_NULL(gs, NULL);
-  /* Ensure the validity of the arguments */
+  /* Ensure the validity of the arguments. ensure_valid_tspatial_geo
+   * already enforces that the temporal geo and the geometry have the
+   * same geodetic flag, so geodetic coordinates are supported here the
+   * same way as in #Tdistance_tgeo_geo (no ensure_not_geodetic_geo). */
   if (! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs) ||
-      (tpoint_type(temp->temptype) &&
-        (! ensure_point_type(gs) || ! ensure_not_geodetic_geo(gs))) ||
+      (tpoint_type(temp->temptype) && ! ensure_point_type(gs)) ||
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return NULL;
 
-  /* Determine the distance and the turning point functions to be applied */
-  datum_func3 func =
-    /* 3D only if both arguments are 3D */
-    MEOS_FLAGS_GET_Z(temp->flags) && FLAGS_GET_Z(gs->gflags) ?
-    &datum_geom_dwithin3d : &datum_geom_dwithin2d;
+  /* Determine the distance and the turning point functions to be applied.
+   * geo_dwithin_fn_geo selects the geodetic dwithin for geodetic
+   * coordinates and the 2D/3D planar dwithin otherwise (identical planar
+   * behaviour to before), mirroring how Tdistance_tgeo_geo selects its
+   * distance function. */
+  datum_func3 func = geo_dwithin_fn_geo(temp->flags, gs->gflags);
   tpfunc_temp tpfn = &tpointsegm_tdwithin_turnpt;
   /* Call the generic function passing the two functions as arguments */
   return tdwithin_tspatial_spatial(temp, PointerGetDatum(gs),

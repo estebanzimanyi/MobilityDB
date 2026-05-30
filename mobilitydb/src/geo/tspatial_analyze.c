@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -447,7 +447,7 @@ nd_box_array_distribution(const ND_BOX **nd_boxes, int num_boxes,
     for (int i = 0; i < num_boxes; i++)
     {
       double minoffset, maxoffset;
-      int   bmin, bmax;   /* Bin min, bin max */
+      int bmin, bmax;   /* Bin min, bin max */
       const ND_BOX *ndb;
 
       /* Skip null entries */

@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -62,7 +62,7 @@ tpose_trajectory(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_TPOSE(temp, NULL);
-  Temporal *tpoint = tpose_to_tpoint(temp);
+  Temporal *tpoint = tpose_to_tgeompoint(temp);
   GSERIALIZED *result = tpoint_trajectory(tpoint, UNARY_UNION_NO);
   pfree(tpoint);
   return result;
@@ -87,7 +87,7 @@ tpose_restrict_geom(const Temporal *temp, const GSERIALIZED *gs, bool atfunc)
   if (gserialized_is_empty(gs))
     return atfunc ? NULL : temporal_copy(temp);
 
-  Temporal *tpoint = tpose_to_tpoint(temp);
+  Temporal *tpoint = tpose_to_tgeompoint(temp);
   Temporal *res = tgeo_restrict_geom(tpoint, gs, atfunc);
   Temporal *result = NULL;
   if (res)
@@ -109,7 +109,7 @@ tpose_restrict_geom(const Temporal *temp, const GSERIALIZED *gs, bool atfunc)
  * @param[in] gs Geometry
  * @csqlfn #Tpose_at_geom()
  */
-inline Temporal *
+Temporal *
 tpose_at_geom(const Temporal *temp, const GSERIALIZED *gs)
 {
   return tpose_restrict_geom(temp, gs, REST_AT);
@@ -122,7 +122,7 @@ tpose_at_geom(const Temporal *temp, const GSERIALIZED *gs)
  * @param[in] gs Geometry
  * @csqlfn #Tpose_minus_geom()
  */
-inline Temporal *
+Temporal *
 tpose_minus_geom(const Temporal *temp, const GSERIALIZED *gs)
 {
   return tpose_restrict_geom(temp, gs, REST_MINUS);
@@ -148,7 +148,7 @@ tpose_restrict_stbox(const Temporal *temp, const STBox *box, bool border_inc,
   if (! ensure_valid_tpose_stbox(temp, box))
     return NULL;
 
-  Temporal *tgeom = tpose_to_tpoint(temp);
+  Temporal *tgeom = tpose_to_tgeompoint(temp);
   Temporal *tgeomres = tgeo_restrict_stbox(tgeom, box, border_inc, atfunc);
   Temporal *result = NULL;
   if (tgeomres)
@@ -173,7 +173,7 @@ tpose_restrict_stbox(const Temporal *temp, const STBox *box, bool border_inc,
  * @param[in] border_inc True when the box contains the upper border
  * @sqlfn #Tpose_at_stbox()
  */
-inline Temporal *
+Temporal *
 tpose_at_stbox(const Temporal *temp, const STBox *box, bool border_inc)
 {
   return tpose_restrict_stbox(temp, box, border_inc, REST_AT);
@@ -187,7 +187,7 @@ tpose_at_stbox(const Temporal *temp, const STBox *box, bool border_inc)
  * @param[in] border_inc True when the box contains the upper border
  * @sqlfn #Tpose_minus_stbox()
  */
-inline Temporal *
+Temporal *
 tpose_minus_stbox(const Temporal *temp, const STBox *box, bool border_inc)
 {
   return tpose_restrict_stbox(temp, box, border_inc, REST_MINUS);

@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -196,9 +196,10 @@ tcbuffersegm_dwithin_turnpt(Datum start1, Datum end1, Datum start2, Datum end2,
   int nroots = 0;
 
   /* Linear case */
+  double d1;
   if (delta >= -FP_TOLERANCE)
   {
-    double t_cand1, d1;
+    double t_cand1, t_cand2;
     if (a == 0 && fabs(b) >= FP_TOLERANCE)
     {
       t_cand1 = -c / b;
@@ -213,7 +214,7 @@ tcbuffersegm_dwithin_turnpt(Datum start1, Datum end1, Datum start2, Datum end2,
     {
       double sqrt_delta = sqrt(fmax(0.0, delta));
       t_cand1 = (-b - sqrt_delta) / (2*a);
-      double t_cand2 = (-b + sqrt_delta) / (2*a);
+      t_cand2 = (-b + sqrt_delta) / (2*a);
       if (t_cand1 >= -FP_TOLERANCE && t_cand1 <= duration + FP_TOLERANCE)
       {
         d1 = tcbuffersegm_distance_at_time(dx0, dy0, vx, vy, r0, vr, t_cand1);
@@ -227,24 +228,35 @@ tcbuffersegm_dwithin_turnpt(Datum start1, Datum end1, Datum start2, Datum end2,
       }
     }
   }
-  if (nroots == 0)
+  /* Filter to only strictly internal timestamps: t ∈ (lower, upper).
+   * Boundary roots (t == lower or t == upper) are not "crossings" the
+   * caller needs to splice; they are handled by the surrounding sequence
+   * construction logic. Returning them causes duplicate-timestamp errors. */
+  double valid[2];
+  int nvalid = 0;
+  for (int i = 0; i < nroots; i++)
+  {
+    TimestampTz t = lower + (TimestampTz) roots[i];
+    if (t > lower && t < upper)
+    {
+      if (nvalid == 0 || fabs(roots[i] - valid[nvalid - 1]) > FP_TOLERANCE)
+        valid[nvalid++] = roots[i];
+    }
+  }
+  if (nvalid == 0)
   {
     *t1 = *t2 = (TimestampTz) 0;
     return 0;
   }
-  else if (nroots == 1)
+  else if (nvalid == 1)
   {
-    *t1 = *t2 = lower + (TimestampTz) roots[0];
+    *t1 = *t2 = lower + (TimestampTz) valid[0];
     return 1;
   }
   else
   {
-    if (roots[0] > roots[1])
-    {
-      double tmp = roots[0]; roots[0] = roots[1]; roots[1] = tmp;
-    }
-    *t1 = lower + (TimestampTz) roots[0];
-    *t2 = lower + (TimestampTz) roots[1];
+    *t1 = lower + (TimestampTz) valid[0];
+    *t2 = lower + (TimestampTz) valid[1];
     return 2;
   }
 }
@@ -327,6 +339,20 @@ tcbuffer_in(const char *str)
 }
 
 /**
+ * @ingroup meos_cbuffer_inout
+ * @brief Return a temporal circular buffer from its MF-JSON representation
+ * @param[in] mfjson MFJSON string
+ * @return On error return @p NULL
+ * @see #temporal_from_mfjson()
+ */
+Temporal *
+tcbuffer_from_mfjson(const char *mfjson)
+{
+  VALIDATE_NOT_NULL(mfjson, NULL);
+  return temporal_from_mfjson(mfjson, T_TCBUFFER);
+}
+
+/**
  * @ingroup meos_internal_cbuffer_inout
  * @brief Return a temporal circular buffer instant from its Well-Known Text
  * (WKT) representation
@@ -385,7 +411,7 @@ tcbufferseqset_in(const char *str)
  * #tcbuffer_make
  */
 TInstant *
-tcbufferinst_make(const TInstant *inst1, const TInstant *inst2)
+tpointfloat_to_tcbufferinst(const TInstant *inst1, const TInstant *inst2)
 {
   assert(inst1); assert(inst1->temptype == T_TGEOMPOINT);
   assert(inst2); assert(inst2->temptype == T_TFLOAT);
@@ -409,7 +435,7 @@ tcbufferseq_make(const TSequence *seq1, const TSequence *seq2)
   assert(seq1->count == seq2->count);
   TInstant **instants = palloc(sizeof(TInstant *) * seq1->count);
   for (int i = 0; i < seq1->count; i++)
-    instants[i] = tcbufferinst_make(TSEQUENCE_INST_N(seq1, i),
+    instants[i] = tpointfloat_to_tcbufferinst(TSEQUENCE_INST_N(seq1, i),
       TSEQUENCE_INST_N(seq2, i));
   return tsequence_make_free(instants, seq1->count, seq1->period.lower_inc,
     seq1->period.upper_inc, MEOS_FLAGS_GET_INTERP(seq1->flags), NORMALIZE_NO);
@@ -458,7 +484,7 @@ tcbuffer_make(const Temporal *tpoint, const Temporal *tfloat)
   switch (sync1->subtype)
   {
     case TINSTANT:
-      result = (Temporal *) tcbufferinst_make((TInstant *) sync1,
+      result = (Temporal *) tpointfloat_to_tcbufferinst((TInstant *) sync1,
         (TInstant *) sync2);
       break;
     case TSEQUENCE:
@@ -471,6 +497,88 @@ tcbuffer_make(const Temporal *tpoint, const Temporal *tfloat)
   }
   pfree(sync1); pfree(sync2);
   return result;
+}
+
+/**
+ * @ingroup meos_cbuffer_constructor
+ * @brief Return a temporal circular buffer instant from a circular buffer and
+ * a timestamptz
+ * @param[in] cb Value
+ * @param[in] t Timestamp
+ * @csqlfn #Tinstant_constructor()
+ */
+TInstant *
+tcbufferinst_make(const Cbuffer *cb, TimestampTz t)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(cb, NULL);
+  return tinstant_make(PointerGetDatum(cb), T_TCBUFFER, t);
+}
+
+/**
+ * @ingroup meos_cbuffer_constructor
+ * @brief Return a temporal circular buffer from a circular buffer and the time
+ * frame of another temporal value
+ * @param[in] cb Value
+ * @param[in] temp Temporal value
+ */
+Temporal *
+tcbuffer_from_base_temp(const Cbuffer *cb, const Temporal *temp)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(cb, NULL); VALIDATE_NOT_NULL(temp, NULL);
+  return temporal_from_base_temp(PointerGetDatum(cb), T_TCBUFFER, temp);
+}
+
+/**
+ * @ingroup meos_cbuffer_constructor
+ * @brief Return a temporal circular buffer discrete sequence from a circular
+ * buffer and a timestamptz set
+ * @param[in] cb Value
+ * @param[in] s Set
+ */
+TSequence *
+tcbufferseq_from_base_tstzset(const Cbuffer *cb, const Set *s)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(cb, NULL); VALIDATE_TSTZSET(s, NULL);
+  return tsequence_from_base_tstzset(PointerGetDatum(cb), T_TCBUFFER, s);
+}
+
+/**
+ * @ingroup meos_cbuffer_constructor
+ * @brief Return a temporal circular buffer sequence from a circular buffer and
+ * a timestamptz span
+ * @param[in] cb Value
+ * @param[in] s Span
+ * @param[in] interp Interpolation
+ */
+TSequence *
+tcbufferseq_from_base_tstzspan(const Cbuffer *cb, const Span *s,
+  interpType interp)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(cb, NULL); VALIDATE_TSTZSPAN(s, NULL);
+  return tsequence_from_base_tstzspan(PointerGetDatum(cb), T_TCBUFFER, s,
+    interp);
+}
+
+/**
+ * @ingroup meos_cbuffer_constructor
+ * @brief Return a temporal circular buffer sequence set from a circular buffer
+ * and a timestamptz span set
+ * @param[in] cb Value
+ * @param[in] ss Span set
+ * @param[in] interp Interpolation
+ */
+TSequenceSet *
+tcbufferseqset_from_base_tstzspanset(const Cbuffer *cb, const SpanSet *ss,
+  interpType interp)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(cb, NULL); VALIDATE_TSTZSPANSET(ss, NULL);
+  return tsequenceset_from_base_tstzspanset(PointerGetDatum(cb), T_TCBUFFER,
+    ss, interp);
 }
 
 /*****************************************************************************
@@ -870,7 +978,7 @@ tcbuffer_members(const Temporal *temp, bool point)
  * @brief Return the array of points or radius of a temporal circular buffer
  * @csqlfn #Tcbuffer_points()
  */
-inline Set *
+Set *
 tcbuffer_points(const Temporal *temp)
 {
   return tcbuffer_members(temp, true);
@@ -881,7 +989,7 @@ tcbuffer_points(const Temporal *temp)
  * @brief Return the array of radii of a temporal circular buffer
  * @csqlfn #Tcbuffer_points()
  */
-inline Set *
+Set *
 tcbuffer_radius(const Temporal *temp)
 {
   return tcbuffer_members(temp, false);

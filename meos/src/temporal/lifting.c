@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -588,7 +588,13 @@ tfunc_tlinearseq_base_discfn(const TSequence *seq, Datum value,
        * crossing if there is one */
        Datum startvalue = tinstant_value_p(start);
        Datum endvalue = tinstant_value_p(end);
-      int cross = tsegment_intersection_value(startvalue, endvalue, value,
+      /* See cross_type comment in eafunc_tlinearseq_base — when the
+       * right-hand value is a different type from the temporal's
+       * basetype, datumsegm_locate would reinterpret its bytes and
+       * trip a garbage SRID-equality check. Skip the intersection
+       * search and treat the segment as having no crossing. */
+      int cross = lfinfo->cross_type ? 0 :
+        tsegment_intersection_value(startvalue, endvalue, value,
         start->temptype, start->t, end->t, &tpt1, &tpt2);
       if (! cross)
       {
@@ -1063,7 +1069,8 @@ tfunc_tcontseq_tcontseq_single(const TSequence *seq1, const TSequence *seq2,
   MeosType basetype_res = temptype_basetype(lfinfo->restype);
   TInstant *inst1 = (TInstant *) TSEQUENCE_INST_N(seq1, 0);
   TInstant *inst2 = (TInstant *) TSEQUENCE_INST_N(seq2, 0);
-  TInstant *prev1 = NULL, *prev2 = NULL; /* make compiler quiet */
+  TInstant *prev1 = NULL;
+  const TInstant *prev2 = NULL; /* make compiler quiet */
   TimestampTz lower = DatumGetTimestampTz(inter->lower);
   TimestampTz upper = DatumGetTimestampTz(inter->upper);
   int i = 0, j = 0, ninsts = 0, nfree = 0;
@@ -1725,7 +1732,7 @@ tfunc_temporal_temporal(const Temporal *temp1, const Temporal *temp2,
     }
     case TSEQUENCE:
     {
-      TSequence *seq1 = (TSequence *) temp1;
+      const TSequence *seq1 = (TSequence *) temp1;
       interpType interp1 = MEOS_FLAGS_GET_INTERP(seq1->flags);
       switch (subtype2)
       {
@@ -1737,7 +1744,7 @@ tfunc_temporal_temporal(const Temporal *temp1, const Temporal *temp2,
               (TSequence *) temp1, (TInstant *) temp2, lfinfo);
         case TSEQUENCE:
         {
-          TSequence *seq2 = (TSequence *) temp2;
+          const TSequence *seq2 = (TSequence *) temp2;
           interpType interp2 = MEOS_FLAGS_GET_INTERP(temp2->flags);
           if (interp1 == DISCRETE)
           {
@@ -1882,6 +1889,20 @@ eafunc_tlinearseq_base(const TSequence *seq, Datum value,
     /* Continue if the segment is constant */
     if (datum_eq(startvalue, endvalue, basetype))
       continue;
+    /* Cross-type comparison (e.g. trgeometry vs geometry): skip the
+     * segment-locate intersection finder. datumsegm_locate dispatches
+     * by the temporal type's basetype (Pose for trgeometry), but the
+     * right-hand `value` is a different type (a GSERIALIZED), so the
+     * dispatcher would reinterpret the bytes through the wrong base
+     * type and trip the SRID-equality check on garbage SRID bits.
+     * The bounds-only checks above already cover the common case;
+     * mid-segment crossings are conservatively missed for ?= / ?<>. */
+    if (lfinfo->cross_type)
+    {
+      start = end;
+      lower_inc = true;
+      continue;
+    }
     TimestampTz tpt1, tpt2;
     /* To avoid floating point imprecission, if the lifted function to
      * apply is datum2_eq or datum_point_eq, the equality test is computed in

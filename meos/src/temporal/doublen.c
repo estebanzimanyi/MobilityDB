@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -352,7 +352,7 @@ double2 *
 double2segm_interpolate(const double2 *start, const double2 *end,
   long double ratio)
 {
-  assert(start); assert(end); assert(ratio >= 0.0 && ratio <= 1.0);
+  assert(ratio >= 0.0 && ratio <= 1.0);
   double2 *result = palloc(sizeof(double2));
   result->a = start->a + (double) ((long double)(end->a - start->a) * ratio);
   result->b = start->b + (double) ((long double)(end->b - start->b) * ratio);
@@ -371,7 +371,7 @@ double3 *
 double3segm_interpolate(const double3 *start, const double3 *end,
   long double ratio)
 {
-  assert(start); assert(end); assert(ratio >= 0.0 && ratio <= 1.0);
+  assert(ratio >= 0.0 && ratio <= 1.0);
   double3 *result = palloc(sizeof(double3));
   result->a = start->a + (double) ((long double)(end->a - start->a) * ratio);
   result->b = start->b + (double) ((long double)(end->b - start->b) * ratio);
@@ -391,7 +391,7 @@ double4 *
 double4segm_interpolate(const double4 *start, const double4 *end,
   long double ratio)
 {
-  assert(start); assert(end); assert(ratio >= 0.0 && ratio <= 1.0);
+  assert(ratio >= 0.0 && ratio <= 1.0);
   double4 *result = palloc(sizeof(double4));
   result->a = start->a + (double) ((long double)(end->a - start->a) * ratio);
   result->b = start->b + (double) ((long double)(end->b - start->b) * ratio);

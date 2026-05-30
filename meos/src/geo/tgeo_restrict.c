@@ -1,7 +1,7 @@
 /***********************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -51,6 +51,7 @@
 #include "temporal/temporal_restrict.h"
 #include "temporal/tsequence.h"
 #include "temporal/type_util.h"
+#include "geo/clip_clipper2.h"
 #include "geo/postgis_funcs.h"
 #include "geo/tgeo.h"
 #include "geo/tgeo_spatialfuncs.h"
@@ -187,6 +188,70 @@ tpoint_force2d(const Temporal *temp)
 }
 
 /*****************************************************************************/
+
+/**
+ * @brief Return the timestamp at which a segment of a geodetic temporal point
+ * is equal to a 2D point, using planar (lon/lat-as-Cartesian) arithmetic
+ * @details GEOS intersection is computed in 2D planar space; the resulting
+ * point lies on the planar straight line but deviates from the geodetic
+ * great-circle arc by up to a few microradians, which exceeds MEOS_EPSILON
+ * when using spherical distance. This function uses 2D Cartesian arithmetic
+ * matching GEOS's computation, so the residual distance is essentially zero.
+ * @param[in] inst1,inst2 Temporal values
+ * @param[in] gs Intersection point (GSERIALIZED, may be geodetic or planar)
+ * @param[out] t Timestamp
+ * @return Return true if the point is found within the segment
+ */
+static bool
+tpointsegm_timestamp_at_value_2d_iter(const TInstant *inst1,
+  const TInstant *inst2, const GSERIALIZED *gs, TimestampTz *t)
+{
+  const POINT2D *p1 = DATUM_POINT2D_P(tinstant_value_p(inst1));
+  const POINT2D *p2 = DATUM_POINT2D_P(tinstant_value_p(inst2));
+  const POINT2D *p  = GSERIALIZED_POINT2D_P(gs);
+  if (MEOS_FP_EQ(p->x, p1->x) && MEOS_FP_EQ(p->y, p1->y))
+  {
+    *t = inst1->t;
+    return true;
+  }
+  if (MEOS_FP_EQ(p->x, p2->x) && MEOS_FP_EQ(p->y, p2->y))
+  {
+    *t = inst2->t;
+    return true;
+  }
+  POINT2D proj;
+  double fraction = (double) closest_point2d_on_segment_ratio(p, p1, p2, &proj);
+  double dist = distance2d_pt_pt(p, &proj);
+  if (fraction < 0.0 || fraction > 1.0 || fabs(dist) >= MEOS_EPSILON)
+    return false;
+  double duration = (double) (inst2->t - inst1->t);
+  *t = inst1->t + (TimestampTz) (duration * fraction);
+  return true;
+}
+
+/**
+ * @brief Return the timestamp at which a geodetic temporal point sequence
+ * is equal to a point, using planar (lon/lat-as-Cartesian) arithmetic
+ * @param[in] seq Temporal point sequence
+ * @param[in] gs Intersection point (serialized, may be geodetic or planar)
+ * @param[out] t Timestamp
+ */
+static bool
+tpointseq_timestamp_at_value_2d(const TSequence *seq, const GSERIALIZED *gs,
+  TimestampTz *t)
+{
+  const TInstant *inst1 = TSEQUENCE_INST_N(seq, 0);
+  for (int i = 1; i < seq->count; i++)
+  {
+    const TInstant *inst2 = TSEQUENCE_INST_N(seq, i);
+    if (tpointsegm_timestamp_at_value_2d_iter(inst1, inst2, gs, t))
+      return true;
+    inst1 = inst2;
+  }
+  meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
+    "The value has not been found due to roundoff errors");
+  return false;
+}
 
 /**
  * @brief Return the timestamp at which a segment of a temporal point takes a
@@ -755,7 +820,7 @@ tpointseq_linear_at_stbox_xyz(const TSequence *seq, const STBox *box,
   const TInstant *inst1 = TSEQUENCE_INST_N(seq, 0);
   const GSERIALIZED *p1 = DatumGetGserializedP(tinstant_value_p(inst1));
   bool lower_inc = seq->period.lower_inc;
-  bool upper_inc;
+  bool upper_inc = false;
   int ninsts = 0, nseqs = 0, nfree = 0;
   for (int i = 1; i < seq->count; i++)
   {
@@ -1131,7 +1196,7 @@ tgeo_restrict_stbox(const Temporal *temp, const STBox *box, bool border_inc,
 
   /* Restrict to the time dimension */
   Temporal *temp1;
-  STBox *box2;
+  const STBox *box2;
   if (hast)
   {
     temp1 = temporal_restrict_tstzspan(temp, &box->period, atfunc);
@@ -1144,7 +1209,7 @@ tgeo_restrict_stbox(const Temporal *temp, const STBox *box, bool border_inc,
   else
   {
     temp1 = (Temporal *) temp;
-    box2 = (STBox *) box;
+    box2 = box;
   }
 
   assert(temptype_subtype(temp1->subtype));
@@ -1177,7 +1242,7 @@ tgeo_restrict_stbox(const Temporal *temp, const STBox *box, bool border_inc,
  * @param[in] border_inc True when the box contains the upper border
  * @csqlfn #Tgeo_at_stbox()
  */
-inline Temporal *
+Temporal *
 tgeo_at_stbox(const Temporal *temp, const STBox *box, bool border_inc)
 {
   return tgeo_restrict_stbox(temp, box, border_inc, REST_AT);
@@ -1192,7 +1257,7 @@ tgeo_at_stbox(const Temporal *temp, const STBox *box, bool border_inc)
  * @param[in] border_inc True when the box contains the upper border
  * @csqlfn #Tgeo_minus_stbox()
  */
-inline Temporal *
+Temporal *
 tgeo_minus_stbox(const Temporal *temp, const STBox *box, bool border_inc)
 {
   return tgeo_restrict_stbox(temp, box, border_inc, REST_MINUS);
@@ -1542,12 +1607,15 @@ tgeoseq_step_restrict_geom(const TSequence *seq, const GSERIALIZED *gs,
       {
         /* Continue the last instant of the sequence until the time of inst2 */
         Datum value = tinstant_value_p(instants[ninsts - 1]);
+        bool tofree = false;
         bool upper_inc = false;
         instants[ninsts++] = tinstant_make(value, seq->temptype, inst->t);
+        tofree = true;
         lower_inc = (instants[0]->t == start) ? seq->period.lower_inc : true;
         sequences[nseqs++] = tsequence_make(instants, ninsts, lower_inc,
           upper_inc, STEP, NORMALIZE_NO);
-        pfree(instants[ninsts - 1]);
+        if (tofree)
+          pfree(instants[ninsts - 1]);
         ninsts = 0;
       }
     }
@@ -1661,13 +1729,17 @@ tpointseq_interperiods(const TSequence *seq, const GSERIALIZED *gsinter,
         line_inter = lwgeom_as_lwline(subgeom);
       type = subgeom->type;
     }
+    bool geodetic = MEOS_FLAGS_GET_GEODETIC(seq->flags);
     TimestampTz t1, t2;
     GSERIALIZED *gspoint;
     /* Each intersection is either a point or a linestring */
     if (type == POINTTYPE)
     {
       gspoint = geo_serialize((LWGEOM *) point_inter);
-      tpointseq_timestamp_at_value(seq, PointerGetDatum(gspoint), &t1);
+      if (geodetic)
+        tpointseq_timestamp_at_value_2d(seq, gspoint, &t1);
+      else
+        tpointseq_timestamp_at_value(seq, PointerGetDatum(gspoint), &t1);
       pfree(gspoint);
       /* If the intersection is not at an exclusive bound */
       if ((seq->period.lower_inc || t1 > start->t) &&
@@ -1681,13 +1753,19 @@ tpointseq_interperiods(const TSequence *seq, const GSERIALIZED *gsinter,
       LWPOINT *point = lwline_get_lwpoint(line_inter, 0);
       gspoint = geo_serialize((LWGEOM *) point);
       lwpoint_free(point);
-      tpointseq_timestamp_at_value(seq, PointerGetDatum(gspoint), &t1);
+      if (geodetic)
+        tpointseq_timestamp_at_value_2d(seq, gspoint, &t1);
+      else
+        tpointseq_timestamp_at_value(seq, PointerGetDatum(gspoint), &t1);
       pfree(gspoint);
       /* Get the fraction of the end point of the intersecting line */
       point = lwline_get_lwpoint(line_inter, line_inter->points->npoints - 1);
       gspoint = geo_serialize((LWGEOM *) point);
       lwpoint_free(point);
-      tpointseq_timestamp_at_value(seq, PointerGetDatum(gspoint), &t2);
+      if (geodetic)
+        tpointseq_timestamp_at_value_2d(seq, gspoint, &t2);
+      else
+        tpointseq_timestamp_at_value(seq, PointerGetDatum(gspoint), &t2);
       pfree(gspoint);
       /* If t1 == t2 and the intersection is not at an exclusive bound */
       if (t1 == t2)
@@ -1754,6 +1832,24 @@ tpointseq_linear_at_geom(const TSequence *seq, const GSERIALIZED *gs)
   geo_set_stbox(gs, &box2);
   if (! overlaps_stbox_stbox(&box1, &box2))
     return NULL;
+
+  /* Fast path for (multi)polygon clip: route through Clipper2's open-path
+   * intersection. Returns the inside-polygon time spans directly, which we
+   * feed back through tcontseq_restrict_tstzspanset to inherit Z and other
+   * dimensions from the original sequence (matching the GEOS path
+   * structurally). Falls through to the GEOS path on Clipper2 failure. */
+  uint32_t gs_type = gserialized_get_type(gs);
+  if (gs_type == POLYGONTYPE || gs_type == MULTIPOLYGONTYPE)
+  {
+    int nperiods = 0;
+    Span *periods = clipper2_traj_poly_periods(seq, gs, &nperiods);
+    if (nperiods == 0)
+      return NULL;
+    SpanSet *ss = spanset_make_free(periods, nperiods, NORMALIZE, ORDER);
+    TSequenceSet *result = tcontseq_restrict_tstzspanset(seq, ss, REST_AT);
+    pfree(ss);
+    return result;
+  }
 
   /* Convert the point to 2D before computing the restriction to geometry */
   bool hasz = MEOS_FLAGS_GET_Z(seq->flags);
@@ -2051,7 +2147,7 @@ tgeo_restrict_geom(const Temporal *temp, const GSERIALIZED *gs,
  * @note This function has a last parameter for the Z dimension which is not
  * available for temporal geometries
  */
-inline Temporal *
+Temporal *
 tpoint_at_geom(const Temporal *temp, const GSERIALIZED *gs)
 {
   return tgeo_restrict_geom(temp, gs, REST_AT);
@@ -2064,7 +2160,7 @@ tpoint_at_geom(const Temporal *temp, const GSERIALIZED *gs)
  * @param[in] gs Geometry
  * @csqlfn #Tgeo_at_geom()
  */
-inline Temporal *
+Temporal *
 tgeo_at_geom(const Temporal *temp, const GSERIALIZED *gs)
 {
   return tgeo_restrict_geom(temp, gs, REST_AT);
@@ -2079,7 +2175,7 @@ tgeo_at_geom(const Temporal *temp, const GSERIALIZED *gs)
  * @note This function has a last parameter for the Z dimension which is not
  * available for temporal geometries
  */
-inline Temporal *
+Temporal *
 tpoint_minus_geom(const Temporal *temp, const GSERIALIZED *gs)
 {
   return tgeo_restrict_geom(temp, gs, REST_MINUS);
@@ -2092,7 +2188,7 @@ tpoint_minus_geom(const Temporal *temp, const GSERIALIZED *gs)
  * @param[in] gs Geometry
  * @csqlfn #Tgeo_minus_geom()
  */
-inline Temporal *
+Temporal *
 tgeo_minus_geom(const Temporal *temp, const GSERIALIZED *gs)
 {
   return tgeo_restrict_geom(temp, gs, REST_MINUS);
@@ -2154,7 +2250,7 @@ tgeo_restrict_elevation(const Temporal *temp, const Span *s, bool atfunc)
  * @param[in] s Elevation span
  * @csqlfn #Tgeo_at_elevation()
  */
-inline Temporal *
+Temporal *
 tpoint_at_elevation(const Temporal *temp, const Span *s)
 {
   return tgeo_restrict_elevation(temp, s, REST_AT);
@@ -2167,7 +2263,7 @@ tpoint_at_elevation(const Temporal *temp, const Span *s)
  * @param[in] s Elevation span
  * @csqlfn #Tgeo_at_elevation()
  */
-inline Temporal *
+Temporal *
 tgeo_at_elevation(const Temporal *temp, const Span *s)
 {
   return tgeo_restrict_elevation(temp, s, REST_AT);
@@ -2182,7 +2278,7 @@ tgeo_at_elevation(const Temporal *temp, const Span *s)
  * @note This function has a last parameter for the Z dimension which is not
  * available for temporal geometries
  */
-inline Temporal *
+Temporal *
 tpoint_minus_elevation(const Temporal *temp, const Span *s)
 {
   return tgeo_restrict_elevation(temp, s, REST_MINUS);
@@ -2195,7 +2291,7 @@ tpoint_minus_elevation(const Temporal *temp, const Span *s)
  * @param[in] s Elevation span
  * @csqlfn #Tgeo_minus_elevation()
  */
-inline Temporal *
+Temporal *
 tgeo_minus_elevation(const Temporal *temp, const Span *s)
 {
   return tgeo_restrict_elevation(temp, s, REST_MINUS);

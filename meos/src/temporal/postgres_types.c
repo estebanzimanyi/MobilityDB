@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -39,6 +39,11 @@
 #include <float.h>
 #include <math.h>
 #include <limits.h>
+/* <locale.h> (locale_t, setlocale, newlocale) and <string.h> (strcmp,
+ * strlen) are pulled in transitively via <postgres.h> below; including
+ * them again here would be redundant and would trip Codacy's cppcheck
+ * wrapper with cppcheck_missingIncludeSystem on every PR (it doesn't
+ * see compile_commands.json). */
 /* PostgreSQL */
 #include <postgres.h>
 #include <common/int.h>
@@ -62,6 +67,20 @@
 #include <meos_geo.h>
 #include <meos_internal.h>
 #include "temporal/temporal.h"
+
+/* On Windows, <postgres.h> transitively pulls in port/win32_port.h
+ * which redefines setlocale() to pgwin32_setlocale() — a PostgreSQL-
+ * internal helper provided by libpgport. MEOS standalone builds do
+ * not link libpgport, so the macro causes an undefined-reference link
+ * error in meos_strtod(). Undefine it so the libc setlocale prototype
+ * pulled in transitively via <locale.h> remains the call target. The
+ * non-MEOS in-extension build keeps the macro and its libpgport
+ * linkage (the server backend statically links libpgport). */
+#if defined(_WIN32) && defined(MEOS)
+  #ifdef setlocale
+    #undef setlocale
+  #endif
+#endif
 
 #if ! MEOS
   extern Datum call_function1(PGFunction func, Datum arg1);
@@ -310,6 +329,83 @@ int8_out(int64 val)
  * Functions adapted from float.c
  *****************************************************************************/
 
+/*
+ * Locale-safe wrapper for strtod(). MEOS reads doubles back from text in
+ * many parsers (WKT, sets, spans, temporal constants, ...). The libc
+ * strtod() honors LC_NUMERIC, so under e.g. de_DE.UTF-8 it expects a
+ * comma decimal separator and would silently mis-parse "1.5" — breaking
+ * the entire WKT round-trip.
+ *
+ * MEOS pins numeric I/O to the C locale regardless of the process locale.
+ * Two implementation strategies are tried in order:
+ *
+ *   1. POSIX 2008 strtod_l() against a private, lazily-initialised
+ *      locale_t. This is thread-safe.
+ *   2. Save / setlocale(LC_NUMERIC,"C") / strtod / restore. Portable
+ *      everywhere strtod_l is unavailable, but not thread-safe (the
+ *      restore window is observable to other threads). MEOS is not
+ *      yet thread-safe overall (see #404 / PR #815) so this is
+ *      acceptable as a fallback today.
+ *
+ * We do NOT call setlocale() at MEOS init time because downstream
+ * consumers (PyMEOS, JMEOS, ...) can legitimately want a non-C locale
+ * for their own code (display, message catalogs, ...).
+ *
+ * Issue #425 — see meos.h for the documented locale contract.
+ */
+#if defined(LC_NUMERIC_MASK) && defined(__GLIBC__)
+  #define MEOS_HAVE_STRTOD_L 1
+#elif defined(LC_NUMERIC_MASK) && (defined(__APPLE__) || defined(__FreeBSD__))
+  #define MEOS_HAVE_STRTOD_L 1
+#endif
+
+#if MEOS_HAVE_STRTOD_L
+/* Explicit forward declarations: strtod_l/newlocale require POSIX 2008
+ * feature test macros to appear in <stdlib.h>/<locale.h>, and the MEOS
+ * build doesn't set those globally (the postgres headers manage their
+ * own feature macros). Without a visible prototype the compiler treats
+ * strtod_l as returning int, which silently truncates the double — see
+ * #425 for the bug story. */
+extern double strtod_l(const char *str, char **endptr, locale_t loc);
+extern locale_t newlocale(int category_mask, const char *locale,
+  locale_t base);
+/* Note: freelocale's return type differs across platforms (POSIX/macOS
+ * declare it as int, glibc < 2.32 as void), so we don't forward-declare
+ * it. We never call it anyway: the C-locale handle lives for the
+ * process lifetime. */
+static locale_t meos_c_locale = (locale_t) 0;
+#endif
+
+double
+meos_strtod(const char *str, char **endptr)
+{
+#if MEOS_HAVE_STRTOD_L
+  if (meos_c_locale == (locale_t) 0)
+    meos_c_locale = newlocale(LC_NUMERIC_MASK, "C", (locale_t) 0);
+  if (meos_c_locale != (locale_t) 0)
+    return strtod_l(str, endptr, meos_c_locale);
+#endif
+  /* Portable fallback: save the current LC_NUMERIC, switch to "C" for
+   * the parse, restore it. Not thread-safe (other threads could see the
+   * "C" value during the parse), but always correct.
+   *
+   * Skip the dance if we are already in a C-equivalent locale, which
+   * avoids two strdup/free pairs on the hot path. */
+  const char *cur = setlocale(LC_NUMERIC, NULL);
+  if (cur == NULL || strcmp(cur, "C") == 0 || strcmp(cur, "POSIX") == 0)
+    return strtod(str, endptr);
+  char *saved = strdup(cur);
+  setlocale(LC_NUMERIC, "C");
+  double val = strtod(str, endptr);
+  if (saved != NULL)
+  {
+    setlocale(LC_NUMERIC, saved);
+    free(saved);
+  }
+  return val;
+}
+
+
 /**
  * float8in_internal_opt_error - guts of float8in()
  * @return On error return @p DBL_MAX
@@ -351,7 +447,7 @@ float8_in_opt_error(char *num, const char *type_name, const char *orig_string)
   }
 
   errno = 0;
-  val = strtod(num, &endptr);
+  val = meos_strtod(num, &endptr);
 
   /* did we not see anything that looks like a double? */
   if (endptr == num || errno != 0)
@@ -450,12 +546,13 @@ float8_in(const char *num, const char *type_name, const char *orig_string)
   return float8_in_opt_error((char *) num, type_name, orig_string);
 }
 
-/*
- * This function uses the PostGIS function lwprint_double to print an ordinate
- * value using at most **maxdd** number of decimal digits. The actual number
- * of printed decimal digits may be less than the requested ones if out of
- * significant digits.
- *
+/**
+ * @ingroup meos_base_types
+ * @brief Return the string representation of a float8 number
+ * @details This function uses the PostGIS function lwprint_double to print an
+ * ordinate value using at most **maxdd** number of decimal digits. The actual 
+ * number of printed decimal digits may be less than the requested ones if out 
+ * of significant digits. 
  * The function will write at most OUT_DOUBLE_BUFFER_SIZE bytes, including the
  * terminating NULL.
  */
@@ -463,9 +560,9 @@ char *
 float8_out(double num, int maxdd)
 {
   assert(maxdd >= 0);
-  char *ascii = palloc(OUT_DOUBLE_BUFFER_SIZE);
-  lwprint_double(num, maxdd, ascii);
-  return ascii;
+  char *str = palloc(OUT_DOUBLE_BUFFER_SIZE);
+  lwprint_double(num, maxdd, str);
+  return str;
 }
 
 /**
@@ -825,7 +922,7 @@ date2timestamptz_opt_overflow(DateADT dateVal, int *overflow)
  * @param[in] d Date
  * @note PostgreSQL function: @p date_timestamptz(PG_FUNCTION_ARGS)
  */
-inline TimestampTz
+TimestampTz
 date_to_timestamptz(DateADT d)
 {
   return date2timestamptz_opt_overflow(d, NULL);
@@ -1426,7 +1523,7 @@ timestamptz_out(TimestampTz t)
 {
   return timestamp_out_common(t, true);
 }
-inline char *
+char *
 pg_timestamptz_out(TimestampTz t)
 {
   return timestamp_out_common(t, true);
@@ -2259,7 +2356,8 @@ cstring2text(const char *str)
   VALIDATE_NOT_NULL(str, NULL);
 
   size_t len = strlen(str);
-  text *result = palloc(len + VARHDRSZ);
+  size_t totlen = len + VARHDRSZ;
+  text *result = (text *) palloc0(totlen);
   SET_VARSIZE(result, len + VARHDRSZ);
   memcpy(VARDATA(result), str, len);
   return result;
@@ -2323,8 +2421,8 @@ varstr_cmp(const char *arg1, int len1, const char *arg2, int len2,
 int
 text_cmp(const text *txt1, const text *txt2)
 {
-  char *t1p = VARDATA_ANY(txt1);
-  char *t2p = VARDATA_ANY(txt2);
+  const char *t1p = VARDATA_ANY(txt1);
+  const char *t2p = VARDATA_ANY(txt2);
   int len1 = (int) VARSIZE_ANY_EXHDR(txt1);
   int len2 = (int) VARSIZE_ANY_EXHDR(txt2);
   return varstr_cmp(t1p, len1, t2p, len2, DEFAULT_COLLATION_OID);

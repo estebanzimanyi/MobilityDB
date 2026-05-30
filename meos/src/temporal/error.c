@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -47,12 +47,9 @@
  *****************************************************************************/
 
 /**
- * @brief Per-thread variable that keeps the last error number.
- * Mirrors the libc errno convention: each thread sees its own value, so
- * concurrent MEOS calls from multiple threads do not race on the error
- * status.
+ * @brief Global variable that keeps the last error number
  */
-static MEOS_TLS int MEOS_ERR_NO = 0;
+static int MEOS_ERR_NO = 0;
 
 /**
  * @brief Read an error number
@@ -135,23 +132,10 @@ int meos_errno_reset(void)
 /*****************************************************************************/
 
 /**
- * @brief Process-global error handler function. Reads and writes use
- * the GCC/Clang __atomic_* builtins so that multiple threads calling
- * meos_initialize() (which transitively calls
- * meos_initialize_error_handler) do not race on the same word. Reads
- * in meos_error() use __ATOMIC_ACQUIRE; writes in
- * meos_initialize_error_handler() use __ATOMIC_RELEASE. The value
- * installed is identical across threads in normal usage
- * (default_error_handler), so this is a benign-race fix that lets
- * existing call patterns continue working unchanged.
- *
- * Builtins are used in preference to <stdatomic.h> _Atomic + atomic_*
- * functions because the latter triggers spurious
- * cppcheck-missingIncludeSystem alerts on Codacy's wrapper, which
- * doesn't see the project's compile_commands.json.
+ * @brief Global variable that keeps the error handler function
  */
 typedef void (*meos_error_handler_t)(int, int, const char *);
-static meos_error_handler_t MEOS_ERROR_HANDLER = NULL;
+void (*MEOS_ERROR_HANDLER)(int, int, const char *) = NULL;
 
 #if MEOS
 /**
@@ -172,7 +156,7 @@ default_error_handler(int errlevel, int errcode, const char *errmsg)
  * @brief Error handler function that sets the errcode and the error message
  */
 void
-error_handler_errno(int errlevel __attribute__((__unused__)), int errcode,
+error_handler_errno(int errlevel pg_attribute_unused(), int errcode,
   const char *errmsg)
 {
   perror(errmsg);
@@ -186,8 +170,49 @@ error_handler_errno(int errlevel __attribute__((__unused__)), int errcode,
 void
 meos_initialize_error_handler(error_handler_fn err_handler)
 {
-  meos_error_handler_t h = err_handler ? err_handler : &default_error_handler;
-  __atomic_store_n(&MEOS_ERROR_HANDLER, h, __ATOMIC_RELEASE);
+  if (err_handler)
+    MEOS_ERROR_HANDLER = err_handler;
+  else
+    MEOS_ERROR_HANDLER = &default_error_handler;
+  return;
+}
+
+/**
+ * @brief Error handler that records the errno without writing to stderr
+ * and without calling exit()
+ * @details The default error handler writes every error message to stderr
+ * and calls exit() at the ERROR level.  Both side effects are harmful in
+ * embedded contexts:
+ *
+ *   - exit() from a foreign thread in a JVM (JNR-FFI on Spark / JMEOS)
+ *     tears the host process down with SIGSEGV in libc.
+ *   - Unconditional stderr writes serialise per-row errors inside
+ *     cross-join queries (BerlinMOD Q10 / Q11 on mixed-SRID input emit
+ *     one stderr line per pair, dominating wall-clock at scale).
+ *
+ * This handler reports errors via meos_errno() only — the canonical
+ * library-style mechanism.  Callers that want a per-error log line should
+ * read meos_errno() after each MEOS call and route the message to the
+ * host's logging framework.
+ */
+static void
+noexit_error_handler(int errlevel __attribute__((__unused__)), int errcode,
+  const char *errmsg __attribute__((__unused__)))
+{
+  meos_errno_set(errcode);
+  return;
+}
+
+/**
+ * @brief Install the no-exit error handler
+ * @details Safe to call from multiple threads — the underlying atomic
+ * store is idempotent and always sets the same function pointer.
+ */
+void
+meos_initialize_noexit_error_handler(void)
+{
+  __atomic_store_n(&MEOS_ERROR_HANDLER,
+    (meos_error_handler_t) noexit_error_handler, __ATOMIC_RELEASE);
   return;
 }
 #endif /* MEOS */
@@ -196,6 +221,18 @@ meos_initialize_error_handler(error_handler_fn err_handler)
 
 /**
  * @brief Function handling error messages
+ *
+ * @note Return-or-not contract is *undefined*: depending on the
+ * installed handler this function MAY return to the caller. The
+ * default handler `exit(EXIT_FAILURE)`s on `ERROR` (safe for one-shot
+ * CLI use); any custom handler installed via
+ * `meos_initialize_error_handler` may return. Code in MEOS that calls
+ * `meos_error(ERROR, ...)` MUST be immediately followed by a `return`,
+ * `goto`, `break`, or sentinel assignment -- NEVER let execution fall
+ * through. Historic fall-through bugs caused by relying on the
+ * exit-on-ERROR path: MobilityDB#1089 (closed by PR #1090), #1093
+ * (wider audit). See the corresponding doc comment on the public
+ * declaration of `meos_error` in `meos/include/meos.h`.
  */
 void
 meos_error(int errlevel, int errcode, const char *format, ...)
@@ -207,10 +244,8 @@ meos_error(int errlevel, int errcode, const char *format, ...)
   vsnprintf(buffer, sizeof(buffer), format, args);
   va_end(args);
   /* Execute the error handler function */
-  meos_error_handler_t handler =
-    __atomic_load_n(&MEOS_ERROR_HANDLER, __ATOMIC_ACQUIRE);
-  if (handler)
-    handler(errlevel, errcode, buffer);
+  if (MEOS_ERROR_HANDLER)
+    MEOS_ERROR_HANDLER(errlevel, errcode, buffer);
   else
 #if ! MEOS
     elog(errlevel, "%s", buffer);

@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -81,7 +81,7 @@ extern bool ensure_valid_tinstarr_common(TInstant **instants, int count,
   bool lower_inc, bool upper_inc, interpType interp);
 extern TSequence *tsequence_make_exp1(TInstant **instants, int count,
   int maxcount, bool lower_inc, bool upper_inc, interpType interp,
-  bool normalize, void *bbox);
+  bool normalize, const void *bbox);
 
 /* Synchronization functions */
 

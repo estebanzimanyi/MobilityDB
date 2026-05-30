@@ -1,14 +1,18 @@
 # No Postgres version dependant files
 
 SET(LOCAL_FILES
-  122_trgeo
-  124_trgeo_compops
-  125_trgeo_spatialfuncs
-  128_trgeo_topops
-  129_trgeo_posops
-  133_trgeo_distance
-  133_trgeo_vclip
-  134_trgeo_indexes
+  150_trgeo
+  152_trgeo_compops
+  153_trgeo_spatialfuncs
+  156_trgeo_topops
+  157_trgeo_posops
+  161_trgeo_distance
+  161_trgeo_vclip
+  162_trgeo_indexes
+  135_portable_aliases
+  127_trgeo_spatialrels
+  131_trgeo_tempspatialrels
+  135_trgeo_geom_clip
   )
 
 foreach (f ${LOCAL_FILES})

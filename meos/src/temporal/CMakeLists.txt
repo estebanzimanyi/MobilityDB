@@ -13,6 +13,7 @@ set(TEMPORAL_SRCS
   span_aggfuncs.c
   span_index.c
   span_ops.c
+  span_spgist.c
   spanset.c
   spanset_ops.c
   tbool_ops.c
@@ -21,6 +22,7 @@ set(TEMPORAL_SRCS
   temporal.c
   temporal_aggfuncs.c
   temporal_analytics.c
+  temporal_arrow.c
   temporal_boxops.c
   temporal_compops.c
   temporal_modif.c
@@ -30,6 +32,7 @@ set(TEMPORAL_SRCS
   tinstant.c
   tnumber_distance.c
   tnumber_mathfuncs.c
+  tnumber_spgist.c
   tsequence.c
   tsequenceset.c
   ttext_funcs.c
@@ -50,6 +53,7 @@ if(MEOS)
     span_ops_meos.c
     spanset_meos.c
     spanset_ops_meos.c
+    tbox_meos.c
     tbool_ops_meos.c
     temporal_aggfuncs_meos.c
     temporal_boxops_meos.c

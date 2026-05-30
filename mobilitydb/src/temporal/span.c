@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -217,7 +217,7 @@ Datum
 Span_as_hexwkb(PG_FUNCTION_ARGS)
 {
   Span *s = PG_GETARG_SPAN_P(0);
-  PG_RETURN_TEXT_P(Datum_as_hexwkb(fcinfo, PointerGetDatum(s), s->spantype));
+  PG_RETURN_TEXT_P(Datum_as_hexwkb(fcinfo, PointerGetDatum(s), s->spantype, false));
 }
 
 /*****************************************************************************
@@ -978,6 +978,24 @@ Span_hash_extended(PG_FUNCTION_ARGS)
   Span *s = PG_GETARG_SPAN_P(0);
   uint64 seed = PG_GETARG_INT64(1);
   PG_RETURN_UINT64(span_hash_extended(s, seed));
+}
+
+/******************************************************************************/
+
+PGDLLEXPORT Datum Span_arrow_roundtrip(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Span_arrow_roundtrip);
+/**
+ * @ingroup mobilitydb_setspan_transf
+ * @brief Round-trip a span through the Arrow C Data Interface, returning
+ * the reconstructed value
+ * @sqlfn arrowRoundtrip()
+ */
+Datum
+Span_arrow_roundtrip(PG_FUNCTION_ARGS)
+{
+  Span *s = PG_GETARG_SPAN_P(0);
+  Span *result = meos_span_arrow_roundtrip(s);
+  PG_RETURN_SPAN_P(result);
 }
 
 /******************************************************************************/

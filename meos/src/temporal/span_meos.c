@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -326,7 +326,7 @@ int_to_span(int i)
  * @csqlfn #Value_to_span()
  */
 Span *
-bigint_to_span(int i)
+bigint_to_span(int64 i)
 {
   Span *result = palloc(sizeof(Span));
   /* Account for canonicalized spans */

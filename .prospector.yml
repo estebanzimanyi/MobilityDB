@@ -1,0 +1,28 @@
+strictness: medium
+
+ignore-paths:
+  - postgis
+  - postgres
+  - pgtypes
+  - h3-pg
+  - meos/examples
+  - meos/test
+  - mobilitydb/test
+
+pydocstyle:
+  run: true
+  options:
+    add-ignore: D212
+
+pep257:
+  run: true
+  options:
+    add-ignore: D212
+
+pylint:
+  options:
+    max-line-length: 120
+
+pep8:
+  options:
+    max-line-length: 120

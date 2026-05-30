@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -56,6 +56,22 @@
 /*****************************************************************************
  * Constructor functions
  *****************************************************************************/
+
+/**
+ * @ingroup meos_temporal_constructor
+ * @brief Return a temporal big integer sequence set from a big integer and a
+ * timestamptz span set
+ * @param[in] i Value
+ * @param[in] ss Span set
+ */
+TSequenceSet *
+tbigintseqset_from_base_tstzspanset(int64 i, const SpanSet *ss)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_TSTZSPANSET(ss, NULL);
+  return tsequenceset_from_base_tstzspanset(Int64GetDatum(i), T_TBIGINT, ss,
+    STEP);
+}
 
 /**
  * @ingroup meos_temporal_constructor
@@ -127,6 +143,19 @@ ttextseqset_from_base_tstzspanset(const text *txt, const SpanSet *ss)
 /*****************************************************************************
  * Input/output functions
  *****************************************************************************/
+
+/**
+ * @ingroup meos_internal_temporal_inout
+ * @brief Return a temporal big integer sequence set from its Well-Known Text
+ * (WKT) representation
+ * @param[in] str String
+ */
+TSequenceSet *
+tbigintseqset_in(const char *str)
+{
+  assert(str);
+  return tsequenceset_parse(&str, T_TBIGINT, true);
+}
 
 /**
  * @ingroup meos_internal_temporal_inout

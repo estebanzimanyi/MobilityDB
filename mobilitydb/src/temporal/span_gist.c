@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -243,7 +243,7 @@ Span_gist_penalty(PG_FUNCTION_ARGS)
 #define PLACE_LEFT(span, off)          \
   do {                    \
     if (v->spl_nleft > 0)          \
-      left_span = super_union_span_span(left_span, span); \
+      left_span = super_union_span_span(left_span, span, false); \
     else                  \
       left_span = (span);        \
     v->spl_left[v->spl_nleft++] = (off);  \
@@ -252,7 +252,7 @@ Span_gist_penalty(PG_FUNCTION_ARGS)
 #define PLACE_RIGHT(span, off)        \
   do {                    \
     if (v->spl_nright > 0)          \
-      right_span = super_union_span_span(right_span, span); \
+      right_span = super_union_span_span(right_span, span, false); \
     else                  \
       right_span = (span);      \
     v->spl_right[v->spl_nright++] = (off);  \

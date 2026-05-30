@@ -42,6 +42,11 @@
 #include <gsl/gsl_randist.h>
 /* Proj */
 #include <proj.h>
+/* GEOS */
+#include <geos_c.h>
+/* PostGIS */
+#include <lwgeom_log.h>
+#include <lwgeom_geos.h>
 /* MEOS */
 #include <meos.h>
 
@@ -49,14 +54,11 @@
  * Functions for the Gnu Scientific Library (GSL)
  ***************************************************************************/
 
-/* Per-thread state: each thread gets its own RNG to avoid races on the GSL
- * generators (which are not internally synchronised). Random streams are
- * therefore per-thread; callers seeding for reproducibility should seed
- * each thread explicitly. */
+/* Global variables */
 
-static MEOS_TLS bool MEOS_GSL_INITIALIZED = false;
-static MEOS_TLS gsl_rng *MEOS_GENERATION_RNG = NULL;
-static MEOS_TLS gsl_rng *MEOS_AGGREGATION_RNG = NULL;
+static bool MEOS_GSL_INITIALIZED = false;
+static gsl_rng *MEOS_GENERATION_RNG = NULL;
+static gsl_rng *MEOS_AGGREGATION_RNG = NULL;
 
 /**
  * @brief Initialize the Gnu Scientific Library
@@ -114,11 +116,9 @@ gsl_get_aggregation_rng(void)
  * Functions for the PROJ library
  ***************************************************************************/
 
-/* Per-thread PROJ context. PROJ explicitly documents PJ_CONTEXT as not
- * thread-safe; the official guidance is one context per thread, which is
- * exactly what TLS gives us. */
+/* Global variables keeping Proj context */
 
-static MEOS_TLS PJ_CONTEXT *MEOS_PJ_CONTEXT = NULL;
+PJ_CONTEXT *MEOS_PJ_CONTEXT = NULL;
 
 /**
  * @brief Initialize the PROJ library
@@ -153,6 +153,59 @@ proj_get_context(void)
   if (! MEOS_PJ_CONTEXT)
     proj_initialize();
   return MEOS_PJ_CONTEXT;
+}
+
+/***************************************************************************
+ * Functions for the GEOS library
+ ***************************************************************************/
+
+/* Per-thread GEOS context.  Each thread owns its own handle so concurrent
+ * callers do not share GEOS state.  MEOS spatial helpers retrieve the
+ * handle via geos_get_context() and use the reentrant GEOSXxx_r API. */
+
+static MEOS_TLS GEOSContextHandle_t MEOS_GEOS_CONTEXT = NULL;
+
+/**
+ * @brief Initialize the GEOS library
+ */
+static void
+geos_initialize(void)
+{
+  if (! MEOS_GEOS_CONTEXT)
+  {
+    MEOS_GEOS_CONTEXT = GEOS_init_r();
+    GEOSContext_setNoticeHandler_r(MEOS_GEOS_CONTEXT, lwnotice);
+    GEOSContext_setErrorHandler_r(MEOS_GEOS_CONTEXT, lwgeom_geos_error);
+  }
+  return;
+}
+
+#if MEOS
+/**
+ * @brief Finalize the GEOS library
+ */
+static void
+geos_finalize(void)
+{
+  if (MEOS_GEOS_CONTEXT)
+  {
+    GEOS_finish_r(MEOS_GEOS_CONTEXT);
+    MEOS_GEOS_CONTEXT = NULL;
+  }
+  lwgeom_geos_finalize();
+  return;
+}
+#endif /* MEOS */
+
+/**
+ * @brief Return the per-thread GEOS context handle
+ */
+GEOSContextHandle_t
+geos_get_context(void)
+{
+  if (! MEOS_GEOS_CONTEXT)
+    geos_initialize();
+  return MEOS_GEOS_CONTEXT;
 }
 
 /*****************************************************************************/
@@ -570,6 +623,8 @@ meos_initialize(void)
   meos_initialize_timezone(NULL);
   /* Initialize PROJ */
   proj_initialize();
+  /* Initialize GEOS */
+  geos_initialize();
   /* Initialize GSL */
   gsl_initialize();
   return;
@@ -590,6 +645,8 @@ meos_finalize(void)
 #endif
   /* Finalize PROJ */
   proj_finalize();
+  /* Finalize GEOS */
+  geos_finalize();
   /* Finalize GSL */
   gsl_finalize();
   return;

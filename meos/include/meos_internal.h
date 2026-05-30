@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code seq provided under The PostgreSQL License.
- * Copyright(c) 2016-2023, Université libre de Bruxelles and MobilityDB
+ * Copyright(c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -455,6 +455,26 @@
 #endif /* MEOS */
 
 /**
+ * @brief Macro for ensuring that the temporal value is a temporal big integer
+ * @note The macro works for the Temporal type and its subtypes TInstant,
+ * TSequence, and TSequenceSet
+ */
+#if MEOS
+  #define VALIDATE_TBIGINT(temp, ret) \
+    do { \
+          if (! ensure_not_null((void *) (temp)) || \
+              ! ensure_temporal_isof_type((Temporal *) (temp), T_TBIGINT) ) \
+           return (ret); \
+    } while (0)
+#else
+  #define VALIDATE_TBIGINT(temp, ret) \
+    do { \
+      assert(temp); \
+      assert(((Temporal *) (temp))->temptype == T_TBIGINT); \
+    } while (0)
+#endif /* MEOS */
+
+/**
  * @brief Macro for ensuring that the temporal value is a temporal float
  * @note The macro works for the Temporal type and its subtypes TInstant,
  * TSequence, and TSequenceSet
@@ -733,13 +753,23 @@ struct SkipList
 };
 
 /**
- * @brief Enumeration for the relative position of a given element into a
- * skiplist
+ * @brief Skiplist mode discriminator
+ *
+ * SKIPLIST_TEMPORAL is the legacy mode used by every production aggregate
+ * (temporal_aggfuncs.c, tgeo_aggfuncs.c, tnpoint_aggfuncs.c); elements are
+ * Temporal* values and merging routes through tsequence_tagg.
+ *
+ * SKIPLIST_KEYVALUE is the (key, value)-pair mode used by MEOS-direct
+ * streaming consumers (see meos/examples/ais_expand_skiplist.c). The
+ * supported pattern is search-then-splice-on-miss with caller-managed
+ * in-place mutation via the user-supplied merge_fn. The batch-merge code
+ * path inside keyval_skiplist_merge is unvalidated and contains known
+ * correctness bugs (1-4 in doc/drafts/keyval_skiplist_continuation_plan.md).
  */
 typedef enum
 {
-  TEMPORAL,
-  KEYVALUE
+  SKIPLIST_TEMPORAL,
+  SKIPLIST_KEYVALUE
 } SkipListType;
 
 /*****************************************************************************
@@ -835,8 +865,12 @@ extern Datum spanset_upper(const SpanSet *ss);
 
 /* Transformation functions for set and span types */
 
+extern void bigintspan_set_floatspan(const Span *s1, Span *s2);
+extern void bigintspan_set_intspan(const Span *s1, Span *s2);
 extern void datespan_set_tstzspan(const Span *s1, Span *s2);
+extern void floatspan_set_bigintspan(const Span *s1, Span *s2);
 extern void floatspan_set_intspan(const Span *s1, Span *s2);
+extern void intspan_set_bigintspan(const Span *s1, Span *s2);
 extern void intspan_set_floatspan(const Span *s1, Span *s2);
 extern Set *numset_shift_scale(const Set *s, Datum shift, Datum width, bool hasshift, bool haswidth);
 extern Span *numspan_expand(const Span *s, Datum value);
@@ -930,7 +964,6 @@ extern SpanSet *minus_spanset_value(const SpanSet *ss, Datum value);
 extern Set *minus_value_set(Datum value, const Set *s);
 extern SpanSet *minus_value_span(Datum value, const Span *s);
 extern SpanSet *minus_value_spanset(Datum value, const SpanSet *ss);
-extern Span *super_union_span_span(const Span *s1, const Span *s2);
 extern Set *union_set_value(const Set *s, Datum value);
 extern SpanSet *union_span_value(const Span *s, Datum value);
 extern SpanSet *union_spanset_value(const SpanSet *ss, Datum value);
@@ -1317,11 +1350,13 @@ extern TSequenceSet *tnumberseqset_delta_value(const TSequenceSet *ss);
 
 /* Distance functions for temporal types */
 
-extern Temporal *tdistance_tnumber_number(const Temporal *temp, Datum value);
+extern double distance_span_span_double(const Span *s1, const Span *s2);
 extern double nad_tbox_tbox(const TBox *box1, const TBox *box2);
 extern double nad_tnumber_number(const Temporal *temp, Datum value);
 extern double nad_tnumber_tbox(const Temporal *temp, const TBox *box);
 extern double nad_tnumber_tnumber(const Temporal *temp1, const Temporal *temp2);
+extern Temporal *tdistance_tnumber_number(const Temporal *temp, Datum value);
+extern double tnumberinst_distance(const TInstant *inst1, const TInstant *inst2);
 
 /*****************************************************************************/
 

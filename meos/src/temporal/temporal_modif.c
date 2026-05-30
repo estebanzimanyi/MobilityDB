@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2023, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -339,10 +339,12 @@ tcontseq_merge_array_iter(TSequence **sequences, int count, int *totalcount)
     const TInstant *inst1 = TSEQUENCE_INST_N(seq1, seq1->count - 1);
     const TSequence *seq2 = sequences[i];
     const TInstant *inst2 = TSEQUENCE_INST_N(seq2, 0);
+    char *str1;
     if (inst1->t > inst2->t)
     {
-      char *str1 = pg_timestamptz_out(inst1->t);
-      char *str2 = pg_timestamptz_out(inst2->t);
+      char *str2;
+      str1 = pg_timestamptz_out(inst1->t);
+      str2 = pg_timestamptz_out(inst2->t);
       meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
         "The temporal values cannot overlap on time: %s, %s", str1, str2);
       pfree(str1); pfree(str2);
@@ -909,7 +911,10 @@ tcontseq_delete_tstzset(const TSequence *seq, const Set *s)
       instants[ninsts++] = (TInstant *) TSEQUENCE_INST_N(seq, j);
   }
   if (ninsts == 0)
+  {
+    pfree(instants);
     return NULL;
+  }
   else if (ninsts == 1)
     lower_inc1 = upper_inc1 = true;
   interpType interp = MEOS_FLAGS_GET_INTERP(seq->flags);
@@ -976,7 +981,10 @@ tcontseq_delete_tstzspan(const TSequence *seq, const Span *s)
     }
   }
   if (ninsts == 0)
+  {
+    pfree(instants);
     return NULL;
+  }
   else if (ninsts == 1)
     lower_inc1 = upper_inc1 = true;
   interpType interp = MEOS_FLAGS_GET_INTERP(seq->flags);
@@ -1051,7 +1059,10 @@ tcontseq_delete_tstzspanset(const TSequence *seq, const SpanSet *ss)
     }
   }
   if (ninsts == 0)
+  {
+    pfree(instants);
     return NULL;
+  }
   else if (ninsts == 1)
     lower_inc1 = upper_inc1 = true;
   interpType interp = MEOS_FLAGS_GET_INTERP(seq->flags);

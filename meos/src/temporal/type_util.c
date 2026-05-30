@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -56,6 +56,11 @@
   #include <meos_cbuffer.h>
   #include "cbuffer/cbuffer.h"
 #endif
+#if POINTCLOUD
+  #include <meos_pointcloud.h>
+  #include "pointcloud/pcpoint.h"
+  #include "pointcloud/pcpatch.h"
+#endif
 #if NPOINT
   // #include <meos_npoint.h>
   #include "npoint/tnpoint.h"
@@ -66,6 +71,9 @@
 #if RGEO
   #include "rgeo/trgeo.h"
 #endif
+
+/* Function defined in formatting.c */
+extern bool scanner_isspace(char ch);
 
 /*****************************************************************************
  * Comparison functions on datums
@@ -115,6 +123,9 @@ datum_cmp(Datum l, Datum r, MeosType type)
     case T_INT4:
       return (DatumGetInt32(l) < DatumGetInt32(r)) ? -1 :
         ((DatumGetInt32(l) > DatumGetInt32(r)) ? 1 : 0);
+#if H3
+    case T_H3INDEX:
+#endif
     case T_INT8:
       return (DatumGetInt64(l) < DatumGetInt64(r)) ? -1 :
         ((DatumGetInt64(l) > DatumGetInt64(r)) ? 1 : 0);
@@ -125,6 +136,14 @@ datum_cmp(Datum l, Datum r, MeosType type)
     case T_GEOMETRY:
     case T_GEOGRAPHY:
       return gserialized_cmp(DatumGetGserializedP(l), DatumGetGserializedP(r));
+#if POINTCLOUD
+    case T_PCPOINT:
+      return pcpoint_cmp((const Pcpoint *) DatumGetPointer(l),
+        (const Pcpoint *) DatumGetPointer(r));
+    case T_PCPATCH:
+      return pcpatch_cmp((const Pcpatch *) DatumGetPointer(l),
+        (const Pcpatch *) DatumGetPointer(r));
+#endif
 #if CBUFFER
     case T_CBUFFER:
       return cbuffer_cmp(DatumGetCbufferP(l), DatumGetCbufferP(r));
@@ -197,6 +216,9 @@ datum_eq(Datum l, Datum r, MeosType type)
     case T_DATE:
     case T_BOOL:
     case T_INT4:
+#if H3
+    case T_H3INDEX:
+#endif
     case T_INT8:
       return l == r;
     case T_FLOAT8:
@@ -221,6 +243,14 @@ datum_eq(Datum l, Datum r, MeosType type)
       else
         return geo_same(gs1, gs2);
     }
+#if POINTCLOUD
+    case T_PCPOINT:
+      return pcpoint_eq((const Pcpoint *) DatumGetPointer(l),
+        (const Pcpoint *) DatumGetPointer(r));
+    case T_PCPATCH:
+      return pcpatch_eq((const Pcpatch *) DatumGetPointer(l),
+        (const Pcpatch *) DatumGetPointer(r));
+#endif
 #if CBUFFER
     case T_CBUFFER:
       return cbuffer_eq(DatumGetCbufferP(l), DatumGetCbufferP(r));
@@ -323,6 +353,9 @@ datum_add(Datum l, Datum r, MeosType type)
   {
     case T_INT4:
       return Int32GetDatum(DatumGetInt32(l) + DatumGetInt32(r));
+#if H3
+    case T_H3INDEX:
+#endif
     case T_INT8:
       return Int64GetDatum(DatumGetInt64(l) + DatumGetInt64(r));
     case T_FLOAT8:
@@ -350,6 +383,9 @@ datum_sub(Datum l, Datum r, MeosType type)
   {
     case T_INT4:
       return Int32GetDatum(DatumGetInt32(l) - DatumGetInt32(r));
+#if H3
+    case T_H3INDEX:
+#endif
     case T_INT8:
       return Int64GetDatum(DatumGetInt64(l) - DatumGetInt64(r));
     case T_FLOAT8:
@@ -374,6 +410,9 @@ datum_mul(Datum l, Datum r, MeosType type)
   {
     case T_INT4:
       return Int32GetDatum(DatumGetInt32(l) * DatumGetInt32(r));
+#if H3
+    case T_H3INDEX:
+#endif
     case T_INT8:
       return Int64GetDatum(DatumGetInt64(l) * DatumGetInt64(r));
     case T_FLOAT8:
@@ -395,6 +434,9 @@ datum_div(Datum l, Datum r, MeosType type)
   {
     case T_INT4:
       return Int32GetDatum(DatumGetInt32(l) / DatumGetInt32(r));
+#if H3
+    case T_H3INDEX:
+#endif
     case T_INT8:
       return Int64GetDatum(DatumGetInt64(l) / DatumGetInt64(r));
     case T_FLOAT8:
@@ -430,6 +472,9 @@ datum_hash(Datum d, MeosType type)
       return hash_bytes_uint32((int32) DatumGetBool(d));
     case T_INT4:
       return hash_bytes_uint32(DatumGetInt32(d));
+#if H3
+    case T_H3INDEX:
+#endif
     case T_INT8:
       return pg_hashint8(DatumGetInt64(d));
     case T_FLOAT8:
@@ -439,6 +484,12 @@ datum_hash(Datum d, MeosType type)
     case T_GEOMETRY:
     case T_GEOGRAPHY:
       return gserialized_hash(DatumGetGserializedP(d));
+#if POINTCLOUD
+    case T_PCPOINT:
+      return pcpoint_hash((const Pcpoint *) DatumGetPointer(d));
+    case T_PCPATCH:
+      return pcpatch_hash((const Pcpatch *) DatumGetPointer(d));
+#endif
 #if CBUFFER
     case T_CBUFFER:
       return cbuffer_hash(DatumGetCbufferP(d));
@@ -479,6 +530,9 @@ datum_hash_extended(Datum d, MeosType type, uint64 seed)
       return hash_bytes_uint32_extended((int32) DatumGetBool(d), seed);
     case T_INT4:
       return hash_bytes_uint32_extended(DatumGetInt32(d), seed);
+#if H3
+    case T_H3INDEX:
+#endif
     case T_INT8:
       return pg_hashint8extended(DatumGetInt64(d), seed);
     case T_FLOAT8:
@@ -489,6 +543,12 @@ datum_hash_extended(Datum d, MeosType type, uint64 seed)
     // case T_GEOMETRY:
     // case T_GEOGRAPHY:
       // return gserialized_hash_extended(DatumGetGserializedP(d), seed);
+#if POINTCLOUD
+    case T_PCPOINT:
+      return pcpoint_hash_extended((const Pcpoint *) DatumGetPointer(d), seed);
+    case T_PCPATCH:
+      return pcpatch_hash_extended((const Pcpatch *) DatumGetPointer(d), seed);
+#endif
 #if NPOINT
     case T_NPOINT:
       return npoint_hash_extended(DatumGetNpointP(d), seed);
@@ -538,6 +598,9 @@ datum_double(Datum d, MeosType type)
   {
     case T_INT4:
       return (double) DatumGetInt32(d);
+#if H3
+    case T_H3INDEX:
+#endif
     case T_INT8:
       return (double) DatumGetInt64(d);
     case T_FLOAT8:
@@ -563,6 +626,9 @@ double_datum(double d, MeosType type)
   {
     case T_INT4:
       return Int32GetDatum((int) d);
+#if H3
+    case T_H3INDEX:
+#endif
     case T_INT8:
       return Int64GetDatum((int64) d);
     case T_FLOAT8:
@@ -753,54 +819,158 @@ pfree_array(void **array, int count)
 }
 
 /**
+ * @brief Return the string resulting from escaping the input string
+ * @param[in] str String
+ * @param[in] quotes True when elements should be enclosed into quotes
+ * @param[out] result True when elements should be enclosed into quotes
+ * @result True when the string was escaped, false otherwise
+ * @note The function is derived from the PostgreSQL array_out() function
+ */
+bool
+string_escape(const char *str, int quotes, char **result)
+{
+  /* Count total space needed (including any overhead such as escaping
+     backslashes), and detect whether the string needs double quotes */
+  bool needquotes = false;
+  const char *tmp;
+  /* Size of the input string + '\0' */
+  size_t size = strlen(str) + 1;
+    if (quotes == QUOTES)
+      needquotes = true;
+  else if (quotes == QUOTES_ESCAPE)
+  {
+    /* count data plus backslashes; detect chars needing quotes */
+    for (tmp = str; *tmp != '\0'; tmp++)
+    {
+      char ch = *tmp;
+      size += 1;
+      if (ch == '"' || ch == '\\')
+      {
+        needquotes = true;
+        size += 1;
+      }
+      else if (ch == '{' || ch == '}' || ch == ',' || scanner_isspace(ch))
+        needquotes = true;
+    }
+  }
+  /* Return if no quotes are needed */
+  if (! needquotes)
+    return false;
+
+  /* Count the pair of double quotes */
+  size += 2;
+
+  /* Construct the output string */
+  *result = (char *) palloc0(size);
+  char *p = *result;
+
+  /* Add the prefix, if any */
+  *p++ = '"';
+  for (tmp = str; *tmp; tmp++)
+  {
+    char ch = *tmp;
+    if (ch == '"' || ch == '\\')
+      *p++ = '\\';
+    *p++ = ch;
+  }
+  *p++ = '"';
+  *p = '\0';
+  return needquotes;
+}
+
+/**
  * @brief Return the string resulting from assembling an array of strings
  * @param[in] strings Array of strings to ouput
  * @param[in] count Number of elements in the input array
- * @param[in] outlen Total length of the elements and the additional ','
  * @param[in] prefix Prefix to add to the string (e.g., for interpolation)
  * @param[in] open, close Starting/ending character (e.g., '{' and '}')
  * @param[in] quotes True when elements should be enclosed into quotes
  * @param[in] spaces True when elements should be separated by spaces
- * @note The function frees the memory of the input strings after finishing
+ * @note The function frees the memory of the input strings after finishing.
+ * @note The functin is derived from the PostgreSQL array_out() function
  */
 char *
-stringarr_to_string(char **strings, int count, size_t outlen, char *prefix,
+stringarr_to_string(char **strings, int count, size_t outlen, const char *prefix,
   char open, char close, bool quotes, bool spaces)
 {
-  size_t size = strlen(prefix) + outlen + 3;
-  if (quotes)
-    size += count * 4;
-  if (spaces)
-    size += count;
-  char *result = palloc(size);
-  size_t pos = 0;
-  strcpy(result, prefix);
-  pos += strlen(prefix);
-  result[pos++] = open;
+  /* Count total space needed (including any overhead such as escaping
+     backslashes), and detect whether each item needs double quotes */
+  char **escaped = (char **) palloc0(sizeof(char *) * count);
+  bool *needquotes = (bool *) palloc0(sizeof(bool) * count);
+  /* Prefix size + opening and closing characters */
+  size_t prefix_size = strlen(prefix);
+  size_t size = prefix_size + 2;
+
+  /* Iterate through the values */
   for (int i = 0; i < count; i++)
   {
-    if (quotes)
-      result[pos++] = '"';
-    strcpy(result + pos, strings[i]);
-    pos += strlen(strings[i]);
-    if (quotes)
-      result[pos++] = '"';
-    result[pos++] = ',';
-    if (spaces)
-      result[pos++] = ' ';
-    pfree(strings[i]);
+    if (quotes == QUOTES)
+      needquotes[i] = true;
+    else if (quotes == QUOTES_ESCAPE)
+      needquotes[i] = string_escape(strings[i], quotes, &escaped[i]);
+
+    if (escaped[i])
+      /* The escaped representation already includes the wrapping quotes */
+      size += strlen(escaped[i]);
+    else if (needquotes[i])
+      /* Raw string + opening and closing quotes */
+      size += strlen(strings[i]) + 2;
+    else
+      size += strlen(strings[i]);
+    /* and the comma delimiter */
+    size += 1;
   }
+  /* The last element doesn't have a comma delimiter after it but that's OK,
+   * that space is needed for the trailing '\0'.
+   * Add in addition the spaces between elements if requested. */
   if (spaces)
+    size += count;
+
+  /* Construct the output string */
+  char *result = (char *) palloc0(size);
+  char *p = result;
+
+  /* Add the prefix, if any */
+  if (prefix_size)
   {
-    result[pos - 2] = close;
-    result[pos - 1] = '\0';
+    for (char *tmp = prefix; *tmp; tmp++)
+      *p++ = *tmp;
   }
-  else
+
+  *p++ = open;
+  for (int i = 0; i < count; i++)
   {
-    result[pos - 1] = close;
-    result[pos] = '\0';
+    if (escaped[i])
+    {
+      /* QUOTES_ESCAPE path: escaped[i] already includes wrapping quotes */
+      strcpy(p, escaped[i]);
+      p += strlen(p);
+      pfree(escaped[i]);
+    }
+    else if (needquotes[i])
+    {
+      /* QUOTES path: wrap raw string in double quotes */
+      *p++ = '"';
+      strcpy(p, strings[i]);
+      p += strlen(p);
+      *p++ = '"';
+    }
+    else
+    {
+      strcpy(p, strings[i]);
+      p += strlen(p);
+    }
+    if (i < count - 1)
+    {
+      *p++ = ',';
+      if (spaces)
+        *p++ = ' ';
+    }
   }
-  pfree(strings);
+  *p++ = close;
+  *p = '\0';
+
+  pfree(escaped); pfree(needquotes); pfree(strings);
   return result;
 }
 

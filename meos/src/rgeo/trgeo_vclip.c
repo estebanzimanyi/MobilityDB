@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -269,6 +269,7 @@ edge_vertex_tpoly_point(const LWPOLY *poly, POINT4D point,
     {
       /* Find edge with the largest positive distance
          to the given point */
+      double distance = -1;
       getPoint4d_p(poly->rings[0], i + 1, &v_end);
       if (pose)
         apply_pose_point4d(&v_end, pose);
@@ -276,7 +277,7 @@ edge_vertex_tpoly_point(const LWPOLY *poly, POINT4D point,
       if ((ccw_poly && angle > 0)
         || (!ccw_poly && angle < 0))
       {
-        double distance = compute_dist2(point, v_start, v_end);
+        distance = compute_dist2(point, v_start, v_end);
         if (distance > dmax)
         {
           dmax = distance;
@@ -321,8 +322,14 @@ v_clip_tpoly_point(const LWPOLY *poly, const LWPOINT *point,
   } while (result == MEOS_CONTINUE);
 
   if (loop > MEOS_MAX_ITERS)
-    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE, 
+  {
+    /* See doc-comment on meos_error in meos/include/meos.h: handler is
+     * not guaranteed to abort. Bail explicitly so we don't compute a
+     * distance from cycle-detected (i.e. unconverged) feature state. */
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "V-clip: Cycle detected, current feature: %d", *poly_feature);
+    return MEOS_DISJOINT;
+  }
 
   if (dist && result == MEOS_DISJOINT)
   {

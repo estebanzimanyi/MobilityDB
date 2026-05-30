@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -230,7 +230,7 @@ int_to_spanset(int i)
  * @csqlfn #Value_to_spanset()
  */
 SpanSet *
-bigint_to_spanset(int i)
+bigint_to_spanset(int64 i)
 {
   return value_spanset(i, T_INT8);
 }

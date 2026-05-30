@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -21,7 +21,7 @@
  *
  * UNIVERSITE LIBRE DE BRUXELLES SPECIFICALLY DISCLAIMS ANY WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS FOR A PARTICULAR PURRGEO. THE SOFTWARE PROVIDED HEREUNDER IS ON
+ * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS ON
  * AN "AS IS" BASIS, AND UNIVERSITE LIBRE DE BRUXELLES HAS NO OBLIGATIONS TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *
@@ -74,6 +74,8 @@
  * Input/output functions
  *****************************************************************************/
 
+extern Temporal *trgeometry_in(const char *str);
+extern Temporal *trgeometry_from_mfjson(const char *mfjson);
 extern char *trgeometry_out(const Temporal *temp);
 
 /*****************************************************************************
@@ -110,6 +112,9 @@ extern TSequence *trgeometry_start_sequence(const Temporal *temp);
 extern GSERIALIZED *trgeometry_start_value(const Temporal *temp);
 extern bool trgeometry_value_n(const Temporal *temp, int n, GSERIALIZED **result);
 extern GSERIALIZED *trgeometry_traversed_area(const Temporal *temp, bool unary_union);
+extern Temporal *trgeometry_centroid(const Temporal *temp);
+extern GSERIALIZED *trgeometry_convex_hull(const Temporal *temp);
+extern Temporal *trgeometry_body_point_trajectory(const Temporal *temp, const GSERIALIZED *gs);
 
 /*****************************************************************************
  * Transformation functions
@@ -140,11 +145,21 @@ extern Temporal *trgeometry_restrict_tstzset(const Temporal *temp, const Set *s,
 extern Temporal *trgeometry_restrict_tstzspan(const Temporal *temp, const Span *s, bool atfunc);
 extern Temporal *trgeometry_restrict_tstzspanset(const Temporal *temp, const SpanSet *ss, bool atfunc);
 
-// extern Temporal *trgeometry_at_geom(const Temporal *temp, const GSERIALIZED *gs);
-// extern Temporal *trgeometry_at_stbox(const Temporal *temp, const STBox *box, bool border_inc);
+extern Temporal *trgeometry_at_geom(const Temporal *temp, const GSERIALIZED *gs);
+extern Temporal *trgeometry_minus_geom(const Temporal *temp, const GSERIALIZED *gs);
+extern Temporal *trgeometry_at_stbox(const Temporal *temp, const STBox *box, bool border_inc);
+extern Temporal *trgeometry_minus_stbox(const Temporal *temp, const STBox *box, bool border_inc);
+// extern Temporal *trgeo_at_geo(const Temporal *temp, const GSERIALIZED *gs);
 // extern Temporal *trgeometry_at_elevation(const Temporal *temp, const Span *s);
-// extern Temporal *trgeometry_minus_geom(const Temporal *temp, const GSERIALIZED *gs);
+// extern Temporal *trgeo_minus_geo(const Temporal *temp, const GSERIALIZED *gs);
 // extern Temporal *trgeometry_minus_stbox(const Temporal *temp, const STBox *box, bool border_inc);
+extern Temporal *trgeometry_at_geom(const Temporal *temp, const GSERIALIZED *gs);
+extern Temporal *trgeometry_minus_geom(const Temporal *temp, const GSERIALIZED *gs);
+extern Temporal *trgeometry_at_stbox(const Temporal *temp, const STBox *box, bool border_inc);
+extern Temporal *trgeometry_minus_stbox(const Temporal *temp, const STBox *box, bool border_inc);
+// extern Temporal *trgeo_at_geo(const Temporal *temp, const GSERIALIZED *gs);
+// extern Temporal *trgeometry_at_elevation(const Temporal *temp, const Span *s);
+// extern Temporal *trgeo_minus_geo(const Temporal *temp, const GSERIALIZED *gs);
 // extern Temporal *trgeometry_minus_elevation(const Temporal *temp, const Span *s);
 
 /*****************************************************************************
@@ -165,6 +180,16 @@ extern TInstant *nai_trgeometry_trgeometry(const Temporal *temp1, const Temporal
 extern GSERIALIZED *shortestline_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs);
 extern GSERIALIZED *shortestline_trgeometry_tpoint(const Temporal *temp1, const Temporal *temp2);
 extern GSERIALIZED *shortestline_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2);
+
+/*****************************************************************************
+ * Similarity distance functions
+ *****************************************************************************/
+
+extern double trgeometry_hausdorff_distance(const Temporal *temp1, const Temporal *temp2);
+extern double trgeometry_frechet_distance(const Temporal *temp1, const Temporal *temp2);
+extern double trgeometry_dyntimewarp_distance(const Temporal *temp1, const Temporal *temp2);
+extern Match *trgeometry_frechet_path(const Temporal *temp1, const Temporal *temp2, int *count);
+extern Match *trgeometry_dyntimewarp_path(const Temporal *temp1, const Temporal *temp2, int *count);
 
 /*****************************************************************************
  * Comparison functions
@@ -193,6 +218,50 @@ extern Temporal *tne_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
 
 /* Ever and always spatial relationship functions */
 
+extern int econtains_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp);
+extern int acontains_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp);
+extern int econtains_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs);
+extern int acontains_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs);
+extern int econtains_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2);
+extern int acontains_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2);
+extern int ecovers_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp);
+extern int acovers_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp);
+extern int ecovers_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs);
+extern int acovers_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs);
+extern int ecovers_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2);
+extern int acovers_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2);
+extern int edisjoint_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp);
+extern int adisjoint_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp);
+extern int edisjoint_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs);
+extern int adisjoint_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs);
+extern int eintersects_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp);
+extern int aintersects_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp);
+extern int eintersects_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs);
+extern int aintersects_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs);
+extern int etouches_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp);
+extern int atouches_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp);
+extern int etouches_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs);
+extern int atouches_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs);
+extern int etouches_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2);
+extern int atouches_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2);
+extern int edwithin_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp,
+  double dist);
+extern int adwithin_geo_trgeometry(const GSERIALIZED *gs, const Temporal *temp,
+  double dist);
+extern int edwithin_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs,
+  double dist);
+extern int adwithin_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs,
+  double dist);
+extern int edisjoint_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2);
+extern int adisjoint_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2);
+extern int eintersects_trgeometry_trgeometry(const Temporal *temp1,
+  const Temporal *temp2);
+extern int aintersects_trgeometry_trgeometry(const Temporal *temp1,
+  const Temporal *temp2);
+extern int edwithin_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2,
+  double dist);
+extern int adwithin_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2,
+  double dist);
 
 /*****************************************************************************/
 

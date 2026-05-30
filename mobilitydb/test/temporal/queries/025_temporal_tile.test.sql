@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------
 --
 -- This MobilityDB code is provided under The PostgreSQL License.
--- Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+-- Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
 -- contributors
 --
 -- MobilityDB includes portions of PostGIS version 3 source code released
@@ -88,6 +88,9 @@ SELECT bins(tstzspanset '{[2000-01-01, 2000-01-10]}', '1 week', '2020-06-15') LI
 
 SELECT valueBins(tint '[15@2000-01-15, 25@2000-01-25]', 2);
 SELECT valueBins(tint '[15@2000-01-15, 25@2000-01-25]', 2, 15);
+
+SELECT valueBins(tbigint '[15@2000-01-15, 25@2000-01-25]', 2);
+SELECT valueBins(tbigint '[15@2000-01-15, 25@2000-01-25]', 2, 15);
 
 SELECT valueBins(tfloat '[15@2000-01-15, 25@2000-01-25]', 2.5);
 SELECT valueBins(tfloat '[15@2000-01-15, 25@2000-01-25]', 2.5, 15.5);

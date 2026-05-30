@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -308,7 +308,7 @@ int main(void)
     if (pos < 0)
     {
       skiplist_splice(list, NULL, (void **) &newrec_p, 1, NULL, false,
-        KEYVALUE);
+        SKIPLIST_KEYVALUE);
       pos = skiplist_search(list, NULL, (void *)(&newrec));
     }
     SkipListElem *e = (SkipListElem *) &list->elems[pos];

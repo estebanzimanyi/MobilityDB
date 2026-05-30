@@ -52,6 +52,7 @@
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
+#include <meos_internal_geo.h>
 #include "temporal/postgres_types.h"
 #include "temporal/type_util.h"
 #include "geo/meos_transform.h"
@@ -242,8 +243,7 @@ box3d_out(const BOX3D *box, int maxdd)
  * at least one fully contained member and no members
  * outside the polygon to be contained.
  */
-bool
-itree_pip_contains(const IntervalTree *itree, const LWGEOM *lwpoints)
+bool itree_pip_contains(const IntervalTree *itree, const LWGEOM *lwpoints)
 {
   if (lwgeom_get_type(lwpoints) == POINTTYPE)
   {
@@ -288,8 +288,7 @@ itree_pip_contains(const IntervalTree *itree, const LWGEOM *lwpoints)
  * If any point in the point/multipoint is outside
  * the polygon, then the polygon does not cover the point/multipoint.
  */
-bool
-itree_pip_covers(const IntervalTree *itree, const LWGEOM *lwpoints)
+bool itree_pip_covers(const IntervalTree *itree, const LWGEOM *lwpoints)
 {
   if (lwgeom_get_type(lwpoints) == POINTTYPE)
   {
@@ -322,8 +321,7 @@ itree_pip_covers(const IntervalTree *itree, const LWGEOM *lwpoints)
  * A.intersects(B) implies if any member of the point/multipoint
  * is not outside, then they intersect.
  */
-bool
-itree_pip_intersects(const IntervalTree *itree, const LWGEOM *lwpoints)
+bool itree_pip_intersects(const IntervalTree *itree, const LWGEOM *lwpoints)
 {
   if (lwgeom_get_type(lwpoints) == POINTTYPE)
   {
@@ -1225,7 +1223,7 @@ geo_pointarr(const GSERIALIZED *gs, int *count)
  * @ingroup meos_geo_base_spatial
  * @brief Return the number of points of a geometry
  * @param[in] gs Geometry/geography
- * @note PostGIS function: @p ST_Points(PG_FUNCTION_ARGS)
+ * @note PostGIS function: @p ST_NumPoints(PG_FUNCTION_ARGS)
  */
 int
 geo_num_points(const GSERIALIZED *gs)
@@ -1235,6 +1233,7 @@ geo_num_points(const GSERIALIZED *gs)
   lwgeom_free(lwgeom);
   return(npoints);
 }
+#endif /* MEOS */
 
 /**
  * @ingroup meos_geo_base_spatial
@@ -1318,7 +1317,6 @@ geo_geo_n(const GSERIALIZED *gs, int n)
   lwgeom_free(lwgeom);
   return result;
 }
-#endif /* MEOS */
 
 /*****************************************************************************
  * Functions adapted from lwgeom_geos.c
@@ -1438,35 +1436,33 @@ GEOS2POSTGIS(GEOSGeom geom, char want3d)
  */
 static char
 meos_call_geos2(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
-  char (*func)(const GEOSGeometry *geos1, const GEOSGeometry *geos2))
+  char (*func)(GEOSContextHandle_t ctx, const GEOSGeometry *geos1,
+    const GEOSGeometry *geos2))
 {
-  initGEOS(lwnotice, lwgeom_geos_error);
+  GEOSContextHandle_t ctx = geos_get_context();
 
   GEOSGeometry *geos1 = POSTGIS2GEOS(gs1);
   if (! geos1)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "First argument geometry could not be converted to GEOS");
-    finishGEOS();
     return 2;
   }
   GEOSGeometry *geos2 = POSTGIS2GEOS(gs2);
   if (! geos2)
   {
-    GEOSGeom_destroy(geos1);
+    GEOSGeom_destroy_r(ctx, geos1);
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "Second argument geometry could not be converted to GEOS");
-    finishGEOS();
     return 2;
   }
 
-  char result = func(geos1, geos2);
+  char result = func(ctx, geos1, geos2);
 
-  GEOSGeom_destroy(geos1); GEOSGeom_destroy(geos2);
+  GEOSGeom_destroy_r(ctx, geos1); GEOSGeom_destroy_r(ctx, geos2);
   if (result == 2)
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "GEOS returned error");
-  finishGEOS();
   return result;
 }
 
@@ -1482,7 +1478,7 @@ bool
 geom_spatialrel(const GSERIALIZED *gs1, const GSERIALIZED *gs2, spatialRel rel)
 {
   if (! ensure_valid_geo_geo(gs1, gs2))
-    return false;
+    return NULL;
 
   /* A.Intersects(Empty) == FALSE */
   if ( gserialized_is_empty(gs1) || gserialized_is_empty(gs2) )
@@ -1515,13 +1511,13 @@ geom_spatialrel(const GSERIALIZED *gs1, const GSERIALIZED *gs2, spatialRel rel)
   switch (rel)
   {
     case INTERSECTS:
-      return (bool) meos_call_geos2(gs1, gs2, &GEOSIntersects);
+      return (bool) meos_call_geos2(gs1, gs2, &GEOSIntersects_r);
     case CONTAINS:
-      return (bool) meos_call_geos2(gs1, gs2, &GEOSContains);
+      return (bool) meos_call_geos2(gs1, gs2, &GEOSContains_r);
     case TOUCHES:
-      return (bool) meos_call_geos2(gs1, gs2, &GEOSTouches);
+      return (bool) meos_call_geos2(gs1, gs2, &GEOSTouches_r);
     case COVERS:
-      return (bool) meos_call_geos2(gs1, gs2, &GEOSCovers);
+      return (bool) meos_call_geos2(gs1, gs2, &GEOSCovers_r);
     default:
       /* keep compiler quiet */
       return false;
@@ -1534,25 +1530,23 @@ geom_spatialrel(const GSERIALIZED *gs1, const GSERIALIZED *gs2, spatialRel rel)
  * @param[in] gs1,gs2 Geometries
  * @note PostGIS functions: @p ST_Intersects(PG_FUNCTION_ARGS)
  */
-inline bool
+bool
 geom_intersects2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 {
   return geom_spatialrel(gs1, gs2, INTERSECTS);
 }
 
-#if MEOS
 /**
  * @ingroup meos_geo_base_rel
  * @brief Return true if the first geometry contains the second one
  * @param[in] gs1,gs2 Geometries
  * @note PostGIS functions: @p contains(PG_FUNCTION_ARGS)
  */
-inline bool
+bool
 geom_contains(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 {
   return geom_spatialrel(gs1, gs2, CONTAINS);
 }
-#endif /* MEOS */
 
 /**
  * @ingroup meos_geo_base_rel
@@ -1560,20 +1554,19 @@ geom_contains(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
  * @param[in] gs1,gs2 Geometries
  * @note PostGIS function: @p touches(PG_FUNCTION_ARGS)
  */
-inline bool
+bool
 geom_touches(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 {
   return geom_spatialrel(gs1, gs2, TOUCHES);
 }
 
-#if MEOS
 /**
  * @ingroup meos_geo_base_rel
  * @brief Return true if the first geometry covers the second one
  * @param[in] gs1,gs2 Geometries
  * @note PostGIS function: @p ST_Covers(PG_FUNCTION_ARGS)
  */
-inline bool
+bool
 geom_covers(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 {
   return geom_spatialrel(gs1, gs2, COVERS);
@@ -1585,12 +1578,11 @@ geom_covers(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
  * @param[in] gs1,gs2 Geometries
  * @note PostGIS function: @p ST_Disjoint(PG_FUNCTION_ARGS)
  */
-inline bool
+bool
 geom_disjoint2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
 {
   return ! geom_spatialrel(gs1, gs2, INTERSECTS);
 }
-#endif /* MEOS */
 
 /**
  * @ingroup meos_geo_base_rel
@@ -1609,23 +1601,21 @@ geom_relate_pattern(const GSERIALIZED *gs1, const GSERIALIZED *gs2, char *p)
 
   /* TODO handle empty */
 
-  initGEOS(lwnotice, lwgeom_geos_error);
+  GEOSContextHandle_t ctx = geos_get_context();
 
   GEOSGeometry *geos1 = POSTGIS2GEOS(gs1);
   if (!geos1)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "First argument geometry could not be converted to GEOS");
-    finishGEOS();
     return false;
   }
   GEOSGeometry *geos2 = POSTGIS2GEOS(gs2);
   if (!geos2)
   {
-    GEOSGeom_destroy(geos1);
+    GEOSGeom_destroy_r(ctx, geos1);
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "Second argument geometry could not be converted to GEOS");
-    finishGEOS();
     return false;
   }
 
@@ -1638,14 +1628,13 @@ geom_relate_pattern(const GSERIALIZED *gs1, const GSERIALIZED *gs2, char *p)
     if ( p[i] == 'f' ) p[i] = 'F';
   }
 
-  char result = GEOSRelatePattern(geos1, geos2, p);
-  GEOSGeom_destroy(geos1);
-  GEOSGeom_destroy(geos2);
+  char result = GEOSRelatePattern_r(ctx, geos1, geos2, p);
+  GEOSGeom_destroy_r(ctx, geos1);
+  GEOSGeom_destroy_r(ctx, geos2);
 
   if (result == 2)
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "GEOSRelatePattern returned error");
-  finishGEOS();
   return (bool) result;
 }
 
@@ -1716,7 +1705,7 @@ geom_array_union(GSERIALIZED **gsarr, int count)
   GEOSGeometry *g = NULL;
   GEOSGeometry *g_union = NULL;
 
-  initGEOS(lwnotice, lwgeom_geos_error);
+  GEOSContextHandle_t ctx = geos_get_context();
 
   /* Collect the non-empty inputs and stuff them into a GEOS collection */
   GEOSGeometry **geoms = palloc(sizeof(GEOSGeometry *) * count);
@@ -1754,7 +1743,6 @@ geom_array_union(GSERIALIZED **gsarr, int count)
       {
         meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
           "One of the geometries in the set could not be converted to GEOS");
-        finishGEOS();
         return NULL;
       }
 
@@ -1768,34 +1756,31 @@ geom_array_union(GSERIALIZED **gsarr, int count)
   */
   if (curgeom > 0)
   {
-    g = GEOSGeom_createCollection(GEOS_GEOMETRYCOLLECTION, geoms, curgeom);
+    g = GEOSGeom_createCollection_r(ctx, GEOS_GEOMETRYCOLLECTION, geoms, curgeom);
     if (! g)
     {
       meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
         "Could not create GEOS COLLECTION from geometry array");
-      finishGEOS();
       return NULL;
     }
 
-    g_union = GEOSUnaryUnion(g);
-    GEOSGeom_destroy(g);
+    g_union = GEOSUnaryUnion_r(ctx, g);
+    GEOSGeom_destroy_r(ctx, g);
     if (! g_union)
     {
       meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR, "GEOSUnaryUnion");
-      finishGEOS();
       return NULL;
     }
 
-    GEOSSetSRID(g_union, srid);
+    GEOSSetSRID_r(ctx, g_union, srid);
     result = GEOS2POSTGIS(g_union, is3d);
     /* MEOS: GEOS DOES NOT SET THE GEODETIC FLAG */
     FLAGS_SET_GEODETIC(result->gflags, FLAGS_GET_GEODETIC(gsarr[0]->gflags));
-    GEOSGeom_destroy(g_union);
+    GEOSGeom_destroy_r(ctx, g_union);
   }
   /* No real geometries in our array, any empties? */
   else
   {
-    finishGEOS();
     /* If it was only empties, we'll return the largest type number */
     if (empty_type > 0)
     {
@@ -1810,7 +1795,6 @@ geom_array_union(GSERIALIZED **gsarr, int count)
   }
 
   pfree(geoms);
-  finishGEOS();
   if (! result)
     /* Union returned a NULL geometry */
     return NULL;
@@ -1852,38 +1836,35 @@ geom_convex_hull(const GSERIALIZED *gs)
 
   int32_t srid = gserialized_get_srid(gs);
 
-  initGEOS(lwnotice, lwgeom_geos_error);
+  GEOSContextHandle_t ctx = geos_get_context();
 
   GEOSGeometry *geos1 = POSTGIS2GEOS(gs);
   if (!geos1)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "First argument geometry could not be converted to GEOS");
-    finishGEOS();
     return NULL;
   }
 
-  GEOSGeometry *geos2 = GEOSConvexHull(geos1);
-  GEOSGeom_destroy(geos1);
+  GEOSGeometry *geos2 = GEOSConvexHull_r(ctx, geos1);
+  GEOSGeom_destroy_r(ctx, geos1);
 
   if (! geos2)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "GEOS convexhull() threw an error !");
-    finishGEOS();
     return NULL;
   }
 
-  GEOSSetSRID(geos2, srid);
+  GEOSSetSRID_r(ctx, geos2, srid);
 
   LWGEOM *lwout = GEOS2LWGEOM(geos2, (uint8_t) gserialized_has_z(gs));
-  GEOSGeom_destroy(geos2);
+  GEOSGeom_destroy_r(ctx, geos2);
 
   if (!lwout)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "convexhull() failed to convert GEOS geometry to LWGEOM");
-    finishGEOS();
     return NULL;
   }
 
@@ -1898,7 +1879,6 @@ geom_convex_hull(const GSERIALIZED *gs)
 
   GSERIALIZED *result = geo_serialize(lwout);
   lwgeom_free(lwout);
-  finishGEOS();
   if (! result)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
@@ -2060,34 +2040,33 @@ geom_buffer(const GSERIALIZED *gs, double size, const char *params)
 
   lwgeom_free(lwg);
 
-  initGEOS(lwnotice, lwgeom_geos_error);
+  GEOSContextHandle_t ctx = geos_get_context();
 
   g1 = POSTGIS2GEOS(gs);
   if (! g1)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "First argument geometry could not be converted to GEOS");
-    finishGEOS();
     return NULL;
   }
 
-  bufferparams = GEOSBufferParams_create();
+  bufferparams = GEOSBufferParams_create_r(ctx);
   if (bufferparams)
   {
-    if (GEOSBufferParams_setEndCapStyle(bufferparams, endCapStyle) &&
-      GEOSBufferParams_setJoinStyle(bufferparams, joinStyle) &&
-      GEOSBufferParams_setMitreLimit(bufferparams, mitreLimit) &&
-      GEOSBufferParams_setQuadrantSegments(bufferparams, quadsegs) &&
-      GEOSBufferParams_setSingleSided(bufferparams, singleside))
+    if (GEOSBufferParams_setEndCapStyle_r(ctx, bufferparams, endCapStyle) &&
+      GEOSBufferParams_setJoinStyle_r(ctx, bufferparams, joinStyle) &&
+      GEOSBufferParams_setMitreLimit_r(ctx, bufferparams, mitreLimit) &&
+      GEOSBufferParams_setQuadrantSegments_r(ctx, bufferparams, quadsegs) &&
+      GEOSBufferParams_setSingleSided_r(ctx, bufferparams, singleside))
     {
-      g3 = GEOSBufferWithParams(g1, bufferparams, size);
+      g3 = GEOSBufferWithParams_r(ctx, g1, bufferparams, size);
     }
     else
     {
       meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
         "Error setting buffer parameters.");
     }
-    GEOSBufferParams_destroy(bufferparams);
+    GEOSBufferParams_destroy_r(ctx, bufferparams);
   }
   else
   {
@@ -2095,21 +2074,19 @@ geom_buffer(const GSERIALIZED *gs, double size, const char *params)
       "Error setting buffer parameters.");
   }
 
-  GEOSGeom_destroy(g1);
+  GEOSGeom_destroy_r(ctx, g1);
 
   if (! g3)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "GEOSBuffer returned error");
-    finishGEOS();
     return NULL;
   }
 
-  GEOSSetSRID(g3, gserialized_get_srid(gs));
+  GEOSSetSRID_r(ctx, g3, gserialized_get_srid(gs));
 
   GSERIALIZED *result = GEOS2POSTGIS(g3, gserialized_has_z(gs));
-  GEOSGeom_destroy(g3);
-  finishGEOS();
+  GEOSGeom_destroy_r(ctx, g3);
   if (! result)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
@@ -2240,7 +2217,7 @@ geo_equals(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   if (VARSIZE(gs1) == VARSIZE(gs2) && ! memcmp(gs1, gs2, VARSIZE(gs1)))
       return 1;
 
-  initGEOS(lwnotice, lwgeom_geos_error);
+  GEOSContextHandle_t ctx = geos_get_context();
 
   GEOSGeometry *geos1 = POSTGIS2GEOS(gs1);
   if (! geos1)
@@ -2248,7 +2225,6 @@ geo_equals(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "First argument geometry could not be converted to GEOS");
     /* Clean up the global context */
-    finishGEOS();
     return -1;
   }
 
@@ -2257,24 +2233,21 @@ geo_equals(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "First argument geometry could not be converted to GEOS");
-    GEOSGeom_destroy(geos1);
-    finishGEOS();
+    GEOSGeom_destroy_r(ctx, geos1);
     return -1;
   }
 
-  int result = GEOSEquals(geos1, geos2);
-  GEOSGeom_destroy(geos1);
-  GEOSGeom_destroy(geos2);
+  int result = GEOSEquals_r(ctx, geos1, geos2);
+  GEOSGeom_destroy_r(ctx, geos1);
+  GEOSGeom_destroy_r(ctx, geos2);
 
   if (result == 2)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "GEOS equals() threw an error !");
-    finishGEOS();
     return -1;
   }
 
-  finishGEOS();
   return result;
 }
 
@@ -2468,10 +2441,12 @@ geography_centroid_from_wpoints(const int32_t srid, const POINT3DM *points,
   double_t y_sum = 0;
   double_t z_sum = 0;
   double_t weight_sum = 0;
+  double_t weight = 1;
+  POINT3D* point;
   for (uint32_t i = 0; i < size; i++ )
   {
-    POINT3D *point = lonlat_to_cart(points[i].x, points[i].y);
-    double_t weight = points[i].m;
+    point = lonlat_to_cart(points[i].x, points[i].y);
+    weight = points[i].m;
     x_sum += point->x * weight;
     y_sum += point->y * weight;
     z_sum += point->z * weight;
@@ -2964,7 +2939,7 @@ geog_dwithin(const GSERIALIZED *gs1, const GSERIALIZED *gs2, double tolerance,
  * @param[in] use_spheroid True when using a spheroid
  * @note PostGIS function: @p geography_intersects(PG_FUNCTION_ARGS)
  */
-inline bool
+bool
 geog_intersects(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
   bool use_spheroid)
 {
@@ -3300,7 +3275,10 @@ geo_from_text(const char *wkt, int32_t srid)
 
   if (lwgeom_parse_wkt(&lwg_parser_result, (char *) wkt,
       LW_PARSER_CHECK_ALL) == LW_FAILURE )
+  {
     PG_PARSER_ERROR(lwg_parser_result);
+    return NULL;
+  }
 
   lwgeom = lwg_parser_result.geom;
 
@@ -3354,7 +3332,7 @@ geo_as_wkt(const GSERIALIZED *gs, int precision, bool extended)
  * @param[in] precision Maximum number of decimal digits
  * @note PostGIS function: @p LWGEOM_asText(PG_FUNCTION_ARGS)
  */
-inline char *
+char *
 geo_as_text(const GSERIALIZED *gs, int precision)
 {
   return geo_as_wkt(gs, precision, false);
@@ -3371,7 +3349,7 @@ geo_as_text(const GSERIALIZED *gs, int precision)
  * accept (HEX)WKB or EWKT.
  * @note PostGIS function: @p LWGEOM_asEWKT(PG_FUNCTION_ARGS)
  */
-inline char *
+char *
 geo_as_ewkt(const GSERIALIZED *gs, int precision)
 {
   return geo_as_wkt(gs, precision, true);
@@ -3388,7 +3366,7 @@ geo_as_ewkt(const GSERIALIZED *gs, int precision)
  * accept (HEX)WKB or EWKT.
  * @note PostGIS function: @p LWGEOM_from_text(PG_FUNCTION_ARGS)
  */
-inline GSERIALIZED *
+GSERIALIZED *
 geom_from_hexewkb(const char *wkt)
 {
   return geom_in(wkt, -1);
@@ -3403,7 +3381,7 @@ geom_from_hexewkb(const char *wkt)
  * accept (HEX)WKB or EWKT.
  * @note PostGIS function: @p LWGEOM_from_text(PG_FUNCTION_ARGS)
  */
-inline GSERIALIZED *
+GSERIALIZED *
 geog_from_hexewkb(const char *wkt)
 {
   return geog_in(wkt, -1);
@@ -3556,7 +3534,7 @@ geo_from_geojson(const char *geojson)
  * @param[in] gs Geometry/geography
  * @param[in] option Option
  * @param[in] precision Maximum number of decimal digits
- * @param[in] srs Spatial reference system, may be `NULL`
+ * @param[in] srs Spatial reference system
  * @note PostGIS function: @p LWGEOM_asGeoJson(PG_FUNCTION_ARGS)
  */
 char *
@@ -3730,10 +3708,13 @@ geog_in(const char *str, int32 typmod)
   /* WKT then. */
   else
   {
-    if ( lwgeom_parse_wkt(&lwg_parser_result, (char *) str, 
+    if ( lwgeom_parse_wkt(&lwg_parser_result, (char *) str,
         LW_PARSER_CHECK_ALL) == LW_FAILURE )
+    {
       PG_PARSER_ERROR(lwg_parser_result);
-      lwgeom = lwg_parser_result.geom;
+      return NULL;
+    }
+    lwgeom = lwg_parser_result.geom;
   }
 
   GSERIALIZED *result = NULL;
@@ -4453,7 +4434,7 @@ line_point_n(const GSERIALIZED *gs, int n)
  * @return On error return -1
 */
 int
-line_numpoints(const GSERIALIZED *gs)
+line_num_points(const GSERIALIZED *gs)
 {
   LWGEOM *geom = lwgeom_from_gserialized(gs);
   int count = -1;

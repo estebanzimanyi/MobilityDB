@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -1442,5 +1442,32 @@ CREATE OPERATOR CLASS tstzset_hash_ops
     OPERATOR    1   = ,
     FUNCTION    1   set_hash(tstzset),
     FUNCTION    2   set_hash_extended(tstzset, bigint);
+
+/******************************************************************************/
+
+CREATE FUNCTION arrowRoundtrip(intset)
+  RETURNS intset
+  AS 'MODULE_PATHNAME', 'Set_arrow_roundtrip'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION arrowRoundtrip(bigintset)
+  RETURNS bigintset
+  AS 'MODULE_PATHNAME', 'Set_arrow_roundtrip'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION arrowRoundtrip(floatset)
+  RETURNS floatset
+  AS 'MODULE_PATHNAME', 'Set_arrow_roundtrip'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION arrowRoundtrip(textset)
+  RETURNS textset
+  AS 'MODULE_PATHNAME', 'Set_arrow_roundtrip'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION arrowRoundtrip(dateset)
+  RETURNS dateset
+  AS 'MODULE_PATHNAME', 'Set_arrow_roundtrip'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION arrowRoundtrip(tstzset)
+  RETURNS tstzset
+  AS 'MODULE_PATHNAME', 'Set_arrow_roundtrip'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************/

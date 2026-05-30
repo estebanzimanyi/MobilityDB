@@ -2,7 +2,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -98,7 +98,7 @@ Arithop_tnumber_tnumber(FunctionCallInfo fcinfo, TArithmetic oper,
   Temporal *temp1 = PG_GETARG_TEMPORAL_P(0);
   Temporal *temp2 = PG_GETARG_TEMPORAL_P(1);
   MeosType basetype = temptype_basetype(temp1->temptype);
-  assert(basetype == T_INT4 || basetype == T_FLOAT8);
+  assert(basetype == T_INT4 || basetype == T_INT8 || basetype == T_FLOAT8);
   Temporal *result;
   if (basetype == T_FLOAT8 && (oper == MUL || oper == DIV))
     result = arithop_tnumber_tnumber(temp1, temp2, oper, func,

@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -250,7 +250,7 @@ temporal_restrict_values(const Temporal *temp, const Set *s, bool atfunc)
 
   /* Singleton set */
   if (s->count == 1)
-    temporal_restrict_value(temp, SET_VAL_N(s, 0), atfunc);
+    return temporal_restrict_value(temp, SET_VAL_N(s, 0), atfunc);
 
   /* Bounding box test */
   interpType interp = MEOS_FLAGS_GET_INTERP(temp->flags);
@@ -3119,11 +3119,8 @@ tsequenceset_restrict_tstzset(const TSequenceSet *ss, const Set *s,
       (ss->count + s->count + 1));
     int nseqs = 0;
     for (int i = 0; i < ss->count; i++)
-    {
-      seq = TSEQUENCESET_SEQ_N(ss, i);
-      nseqs += tcontseq_minus_tstzset_iter(seq, s, &sequences[nseqs]);
-
-    }
+      nseqs += tcontseq_minus_tstzset_iter(TSEQUENCESET_SEQ_N(ss, i), s,
+        &sequences[nseqs]);
     return (Temporal *) tsequenceset_make_free(sequences, nseqs, NORMALIZE);
   }
 }

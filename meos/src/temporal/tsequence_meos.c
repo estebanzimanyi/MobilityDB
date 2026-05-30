@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -69,7 +69,7 @@
  * @param[in] str String
  * @param[in] interp Interpolation
  */
-inline TSequence *
+TSequence *
 tboolseq_in(const char *str, interpType interp)
 {
   return tsequence_in(str, T_TBOOL, interp);
@@ -82,7 +82,7 @@ tboolseq_in(const char *str, interpType interp)
  * @param[in] str String
  * @param[in] interp Interpolation
  */
-inline TSequence *
+TSequence *
 tintseq_in(const char *str, interpType interp)
 {
   return tsequence_in(str, T_TINT, interp);
@@ -95,7 +95,7 @@ tintseq_in(const char *str, interpType interp)
  * @param[in] str String
  * @param[in] interp Interpolation
  */
-inline TSequence *
+TSequence *
 tfloatseq_in(const char *str, interpType interp)
 {
   return tsequence_in(str, T_TFLOAT, interp);
@@ -108,13 +108,28 @@ tfloatseq_in(const char *str, interpType interp)
  * @param[in] str String
  * @param[in] interp Interpolation
  */
-inline TSequence *
+TSequence *
 ttextseq_in(const char *str, interpType interp)
 {
   return tsequence_in(str, T_TTEXT, interp);
 }
 
 /*****************************************************************************/
+
+/**
+ * @ingroup meos_temporal_constructor
+ * @brief Return a temporal big integer discrete sequence from a big integer
+ * and a timestamptz set
+ * @param[in] i Value
+ * @param[in] s Set
+ */
+TSequence *
+tbigintseq_from_base_tstzset(int64 i, const Set *s)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_TSTZSET(s, NULL);
+  return tsequence_from_base_tstzset(Int64GetDatum(i), T_TBIGINT, s);
+}
 
 /**
  * @ingroup meos_temporal_constructor
@@ -177,6 +192,21 @@ ttextseq_from_base_tstzset(const text *txt, const Set *s)
 }
 
 /*****************************************************************************/
+
+/**
+ * @ingroup meos_temporal_constructor
+ * @brief Return a temporal big integer sequence from a big integer and a
+ * timestamptz span
+ * @param[in] i Value
+ * @param[in] s Span
+ */
+TSequence *
+tbigintseq_from_base_tstzspan(int64 i, const Span *s)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_TSTZSPAN(s, NULL);
+  return tsequence_from_base_tstzspan(Int64GetDatum(i), T_TBIGINT, s, STEP);
+}
 
 /**
  * @ingroup meos_temporal_constructor

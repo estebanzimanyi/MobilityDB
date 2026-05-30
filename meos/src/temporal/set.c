@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -57,6 +57,9 @@
 #include "temporal/type_util.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/tspatial_boxops.h"
+#if POINTCLOUD
+  #include <meos_pointcloud.h>
+#endif
 
 /*****************************************************************************
  * Parameter tests
@@ -169,13 +172,15 @@ set_in(const char *str, MeosType settype)
 /**
  * @brief Return true if the base type value is output enclosed into quotes
  */
-static bool
+static int
 set_basetype_quotes(MeosType type)
 {
   /* Text values are already output with quotes in the #basetype_out function */
-  if (type == T_TIMESTAMPTZ || spatial_basetype(type))
-    return true;
-  return false;
+  if (type == T_TEXT)
+    return QUOTES_ESCAPE;
+  else if (type == T_TIMESTAMPTZ || spatial_basetype(type))
+    return QUOTES;
+  return QUOTES_NO;
 }
 
 /**
@@ -184,21 +189,18 @@ set_basetype_quotes(MeosType type)
 char *
 set_out_fn(const Set *s, int maxdd, outfunc value_out)
 {
-  assert(s);
   /* Ensure the validity of the arguments */
-  if (! ensure_not_negative(maxdd))
-    return NULL;
+  assert(s); assert(maxdd >= 0);
 
-  char **strings = palloc(sizeof(char *) * s->count);
+  char **strings = palloc(sizeof(void *) * s->count);
   size_t outlen = 0;
   for (int i = 0; i < s->count; i++)
   {
     strings[i] = value_out(SET_VAL_N(s, i), s->basetype, maxdd);
     outlen += strlen(strings[i]) + 1;
   }
-  bool quotes = set_basetype_quotes(s->basetype);
   char *result = stringarr_to_string(strings, s->count, outlen, "", '{', '}',
-    quotes, SPACES);
+    set_basetype_quotes(s->basetype), SPACES);
   return result;
 }
 
@@ -230,9 +232,20 @@ set_out(const Set *s, int maxdd)
 static size_t
 set_bbox_size(MeosType settype)
 {
-  assert(alphanumset_type(settype) || spatialset_type(settype));
+  assert(alphanumset_type(settype) || spatialset_type(settype)
+#if POINTCLOUD
+    || pointcloudset_type(settype)
+#endif
+    );
   if (alphanumset_type(settype))
     return 0;
+#if POINTCLOUD
+  /* pcpointset/pcpatchset carry no bbox — schema-dependent dimensions
+   * cannot be extracted at the MEOS layer. TPCBox is the separate
+   * type that carries pointcloud spatial bounds. */
+  if (pointcloudset_type(settype))
+    return 0;
+#endif
   return sizeof(STBox);
 }
 
@@ -324,6 +337,47 @@ set_make_exp(const Datum *values, int count, int maxcount, MeosType basetype,
   assert(values); assert(count > 0); assert(count <= maxcount);
   bool hasz = false;
   bool geodetic = false;
+#if POINTCLOUD
+  /* Enforce schema (pcid) uniformity across the elements of a pcpoint /
+   * pcpatch set. This is the pgpointcloud analogue of the same-SRID check
+   * performed by the spatial branch below — two values with different
+   * schemas cannot live in the same set because their byte layouts are
+   * incomparable. */
+  if (basetype == T_PCPOINT)
+  {
+    uint32_t pcid0 =
+      pcpoint_get_pcid((const Pcpoint *) DatumGetPointer(values[0]));
+    for (int i = 1; i < count; i++)
+    {
+      uint32_t pcid_i =
+        pcpoint_get_pcid((const Pcpoint *) DatumGetPointer(values[i]));
+      if (pcid_i != pcid0)
+      {
+        meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+          "Set elements have different pcpoint schemas: %u vs %u",
+          pcid0, pcid_i);
+        return NULL;
+      }
+    }
+  }
+  else if (basetype == T_PCPATCH)
+  {
+    uint32_t pcid0 =
+      pcpatch_get_pcid((const Pcpatch *) DatumGetPointer(values[0]));
+    for (int i = 1; i < count; i++)
+    {
+      uint32_t pcid_i =
+        pcpatch_get_pcid((const Pcpatch *) DatumGetPointer(values[i]));
+      if (pcid_i != pcid0)
+      {
+        meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+          "Set elements have different pcpatch schemas: %u vs %u",
+          pcid0, pcid_i);
+        return NULL;
+      }
+    }
+  }
+#endif /* POINTCLOUD */
   // TODO Should we bypass the tests on tnpoint ?
   if (spatial_basetype(basetype) && basetype != T_NPOINT)
   {
@@ -1083,7 +1137,7 @@ set_eq(const Set *s1, const Set *s2)
  * @param[in] s1,s2 Sets
  * @csqlfn #Set_ne()
  */
-inline bool
+bool
 set_ne(const Set *s1, const Set *s2)
 {
   return ! set_eq(s1, s2);
@@ -1131,7 +1185,7 @@ set_cmp(const Set *s1, const Set *s2)
  * @param[in] s1,s2 Sets
  * @csqlfn #Set_lt()
  */
-inline bool
+bool
 set_lt(const Set *s1, const Set *s2)
 {
   return set_cmp(s1, s2) < 0;
@@ -1143,7 +1197,7 @@ set_lt(const Set *s1, const Set *s2)
  * @param[in] s1,s2 Sets
  * @csqlfn #Set_le()
  */
-inline bool
+bool
 set_le(const Set *s1, const Set *s2)
 {
   return set_cmp(s1, s2) <= 0;
@@ -1155,7 +1209,7 @@ set_le(const Set *s1, const Set *s2)
  * @param[in] s1,s2 Sets
  * @csqlfn #Set_gt()
  */
-inline bool
+bool
 set_gt(const Set *s1, const Set *s2)
 {
   return set_cmp(s1, s2) > 0;
@@ -1167,7 +1221,7 @@ set_gt(const Set *s1, const Set *s2)
  * @param[in] s1,s2 Sets
  * @csqlfn #Set_ge()
  */
-inline bool
+bool
 set_ge(const Set *s1, const Set *s2)
 {
   return set_cmp(s1, s2) >= 0;

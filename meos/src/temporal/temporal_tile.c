@@ -1,7 +1,7 @@
 /***********************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -206,7 +206,7 @@ float_get_bin(double value, double size, double origin)
 /**
  * @brief Return the interval in the same representation as Postgres timestamps
  */
-inline int64
+int64
 interval_units(const Interval *interval)
 {
   return interval->time + (interval->day * USECS_PER_DAY);

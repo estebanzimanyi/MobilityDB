@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -99,6 +99,7 @@ trgeoinst_tposeinst(const TInstant *inst)
   size_t inst_size = trgeoinst_pose_varsize(inst);
   TInstant *result = palloc(inst_size);
   memcpy(((char *)result), ((char *)inst), inst_size);
+  SET_VARSIZE(result, inst_size);
   MEOS_FLAGS_SET_GEOM(result->flags, false);
   result->temptype = T_TPOSE;
   return result;

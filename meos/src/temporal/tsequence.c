@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -49,6 +49,9 @@
 #include <meos.h>
 #include <meos_internal.h>
 #include <meos_internal_geo.h>
+#if POINTCLOUD
+  #include <meos_pointcloud.h>
+#endif
 #include "temporal/doublen.h"
 #include "temporal/postgres_types.h"
 #include "temporal/set.h"
@@ -404,7 +407,7 @@ tsequence_join_test(const TSequence *seq1, const TSequence *seq2,
   TInstant *last2 = (seq1->count == 1 || interp == DISCRETE) ? NULL :
     (TInstant *) TSEQUENCE_INST_N(seq1, seq1->count - 2);
   Datum last2value = ! last2 ? 0 : tinstant_value_p(last2);
-  TInstant *last1 = (TInstant *) TSEQUENCE_INST_N(seq1, seq1->count - 1);
+  const TInstant *last1 = (TInstant *) TSEQUENCE_INST_N(seq1, seq1->count - 1);
   Datum last1value = tinstant_value_p(last1);
   TInstant *first1 = (TInstant *) TSEQUENCE_INST_N(seq2, 0);
   Datum first1value = tinstant_value_p(first1);
@@ -802,7 +805,7 @@ TSEQUENCE_INST_N(const TSequence *seq, int i)
 TSequence *
 tsequence_make_exp1(TInstant **instants, int count, int maxcount,
   bool lower_inc, bool upper_inc, interpType interp, bool normalize,
-  void *bbox)
+  const void *bbox)
 {
   assert(instants); assert(maxcount >= count);
   /* Normalize the array of instants */
@@ -892,6 +895,7 @@ ensure_increasing_timestamps(const TInstant *inst1, const TInstant *inst2,
     char *t2 = pg_timestamptz_out(inst2->t);
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "Timestamps for temporal value must be increasing: %s, %s", t1, t2);
+    pfree(t1); pfree(t2);
     return false;
   }
   if (merge && inst1->t == inst2->t &&
@@ -902,6 +906,7 @@ ensure_increasing_timestamps(const TInstant *inst1, const TInstant *inst2,
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "The temporal values have different value at their overlapping instant %s",
       t1);
+    pfree(t1);
     return false;
   }
   return true;
@@ -915,11 +920,14 @@ bbox_expand(const void *box1, void *box2, MeosType temptype)
 {
   assert(box1); assert(box2);
   assert(temporal_type(temptype));
-  /* There are only 3 types of bounding boxes: span, tbox, and stbox */
   if (talpha_type(temptype))
     span_expand((Span *) box1, (Span *) box2);
   else if (tnumber_type(temptype))
     tbox_expand((TBox *) box1, (TBox *) box2);
+#if POINTCLOUD
+  else if (tpointcloud_temptype(temptype))
+    tpcbox_expand((TPCBox *) box1, (TPCBox *) box2);
+#endif
   else /* tspatial_type(temptype) */
     stbox_expand((STBox *) box1, (STBox *) box2);
   return;
@@ -1075,7 +1083,7 @@ tsequence_make(TInstant **instants, int count, bool lower_inc, bool upper_inc,
  * @param[in] normalize True if the resulting value should be normalized
  * @see #tsequence_make
  */
-inline TSequence *
+TSequence *
 tsequence_make_free(TInstant **instants, int count, bool lower_inc,
   bool upper_inc, interpType interp, bool normalize)
 {
@@ -1843,6 +1851,8 @@ tsequence_max_val(const TSequence *seq)
     MeosType basetype = temptype_basetype(seq->temptype);
     if (basetype == T_INT4)
       max = Int32GetDatum(DatumGetInt32(max) - 1);
+    else if (basetype == T_INT8)
+      max = Int64GetDatum(DatumGetInt64(max) - 1);
     return max;
   }
 
@@ -2472,7 +2482,7 @@ intersection_tcontseq_tdiscseq(const TSequence *seq1, const TSequence *seq2,
  * @param[out] inter1,inter2 Output values
  * @return Return false if the input values do not overlap on time.
  */
-inline bool
+bool
 intersection_tdiscseq_tcontseq(const TSequence *seq1, const TSequence *seq2,
   TSequence **inter1, TSequence **inter2)
 {
@@ -2734,7 +2744,7 @@ intersection_tsequence_tinstant(const TSequence *seq, const TInstant *inst,
  * @param[out] inter1, inter2 Output values
  * @return Return false if the input values do not overlap on time.
  */
-inline bool
+bool
 intersection_tinstant_tsequence(const TInstant *inst, const TSequence *seq,
   TInstant **inter1, TInstant **inter2)
 {

@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------
 --
 -- This MobilityDB code is provided under The PostgreSQL License.
--- Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+-- Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
 -- contributors
 --
 -- MobilityDB includes portions of PostGIS version 3 source code released
@@ -49,24 +49,24 @@ SELECT extent(getSpaceTile(g, 2.5, geometry 'Point(10 10 10)')) FROM
 
 -- Time
 SELECT extent(getStboxTimeTile(t, interval '2 days')) FROM
-(SELECT * FROM tbl_timestamptz WHERE t IS NOT NULL LIMIT 10) t2;
+(SELECT * FROM tbl_timestamptz WHERE t IS NOT NULL) t2;
 SELECT extent(getStboxTimeTile(t, interval '2 days', '2001-06-01')) FROM
-(SELECT * FROM tbl_timestamptz WHERE t IS NOT NULL LIMIT 10) t2;
+(SELECT * FROM tbl_timestamptz WHERE t IS NOT NULL) t2;
 
 -- 2D
 SELECT extent(getSpaceTimeTile(g, t, 2.5, interval '2 days')) FROM
 (SELECT * FROM tbl_geom_point WHERE g IS NOT NULL AND NOT ST_IsEmpty(g) LIMIT 10 OFFSET 10) t1,
-(SELECT * FROM tbl_timestamptz WHERE t IS NOT NULL LIMIT 10) t2;
+(SELECT * FROM tbl_timestamptz WHERE t IS NOT NULL) t2;
 SELECT extent(getSpaceTimeTile(g, t, 2.5, interval '2 days', geometry 'Point(10 10)', '2001-06-01')) FROM
 (SELECT * FROM tbl_geom_point WHERE g IS NOT NULL AND NOT ST_IsEmpty(g) LIMIT 10 OFFSET 10) t1,
-(SELECT * FROM tbl_timestamptz WHERE t IS NOT NULL LIMIT 10) t2;
+(SELECT * FROM tbl_timestamptz WHERE t IS NOT NULL) t2;
 -- 3D
 SELECT extent(getSpaceTimeTile(g, t, 2.5, interval '2 days')) FROM
 (SELECT * FROM tbl_geom_point3D WHERE g IS NOT NULL AND NOT ST_IsEmpty(g) LIMIT 10 OFFSET 10) t1,
-(SELECT * FROM tbl_timestamptz WHERE t IS NOT NULL LIMIT 10) t2;
+(SELECT * FROM tbl_timestamptz WHERE t IS NOT NULL) t2;
 SELECT extent(getSpaceTimeTile(g, t, 2.5, interval '2 days', geometry 'Point(10 10 10)', '2001-06-01')) FROM
 (SELECT * FROM tbl_geom_point3D WHERE g IS NOT NULL AND NOT ST_IsEmpty(g) LIMIT 10 OFFSET 10) t1,
-(SELECT * FROM tbl_timestamptz WHERE t IS NOT NULL LIMIT 10) t2;
+(SELECT * FROM tbl_timestamptz WHERE t IS NOT NULL) t2;
 
 -------------------------------------------------------------------------------
 
