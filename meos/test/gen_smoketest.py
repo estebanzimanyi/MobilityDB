@@ -278,13 +278,13 @@ TRGEO_CONFIG = dict(
     override_args={
         "geo_tpose_to_trgeometry":          {1: "tpose1"},
         "tdistance_trgeometry_tpoint":      {1: "tpoint1"},
-        "nad_trgeo_tpoint":            {1: "tpoint1"},
-        "nai_trgeo_tpoint":            {1: "tpoint1"},
-        "shortestline_trgeo_tpoint":   {1: "tpoint1"},
+        "nad_trgeometry_tpoint":            {1: "tpoint1"},
+        "nai_trgeometry_tpoint":            {1: "tpoint1"},
+        "shortestline_trgeometry_tpoint":   {1: "tpoint1"},
     },
     skip={
-        "trgeo_value_n":         "out-param GSERIALIZED ** is exercised manually below",
-        "trgeo_traversed_area":  "pending union-of-swept-polygons implementation",
+        "trgeometry_value_n":         "out-param GSERIALIZED ** is exercised manually below",
+        "trgeometry_traversed_area":  "pending union-of-swept-polygons implementation",
     },
     common_inputs="""\
   TimestampTz tstz1 = pg_timestamptz_in("2001-01-02", -1);
@@ -302,20 +302,20 @@ TRGEO_CONFIG = dict(
   TInstant *trgeo_inst2 = trgeoinst_make(geom1, pose1,
     pg_timestamptz_in("2001-01-03", -1));
   Temporal *trgeo_seq1 = (Temporal *) trgeo_inst1;
-  trgeo_seq1 = trgeo_append_tinstant(trgeo_seq1, trgeo_inst2,
+  trgeo_seq1 = trgeometry_append_tinstant(trgeo_seq1, trgeo_inst2,
     LINEAR, 0.0, NULL, false);
   TSequence    *trgeo_tseq1    = (TSequence *) trgeo_seq1;
   TSequenceSet *trgeo_tseqset1 = NULL;
   Temporal *tpoint1 = trgeo_to_tgeompoint(trgeo_seq1);
-  Temporal *tpose1 = trgeo_to_tpose(trgeo_seq1);
+  Temporal *tpose1 = trgeometry_to_tpose(trgeo_seq1);
   int n_out = 0;
 """,
     cleanup="""\
-  /* Manually exercise trgeo_value_n (out-param GSERIALIZED **). */
+  /* Manually exercise trgeometry_value_n (out-param GSERIALIZED **). */
   {
     GSERIALIZED *out_geom = NULL;
-    bool ok = trgeo_value_n(trgeo_seq1, 1, &out_geom);
-    printf("trgeo_value_n: ok=%d ptr=%s\\n", (int) ok, out_geom ? "OK" : "NULL");
+    bool ok = trgeometry_value_n(trgeo_seq1, 1, &out_geom);
+    printf("trgeometry_value_n: ok=%d ptr=%s\\n", (int) ok, out_geom ? "OK" : "NULL");
     if (out_geom) free(out_geom);
   }
 

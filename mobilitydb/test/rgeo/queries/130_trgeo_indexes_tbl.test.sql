@@ -111,7 +111,7 @@ SELECT COUNT(*) FROM tbl_trgeometry2d WHERE temp ~= trgeometry :'TRG_LIT';
 -- DEFERRED: The trgeometry KNN ordered-search path is not yet wired up
 -- on master. Local probe with all three column-vs-literal variants
 -- (trgeometry, geometry, stbox) reports either:
---   ERROR:  Function tdistance_trgeo_trgeo not implemented yet.
+--   ERROR:  Function tdistance_trgeometry_trgeometry not implemented yet.
 -- or
 --   ERROR:  type 11 is not a temporal type
 -- The C-side dispatchers in meos/src/rgeo/trgeo_distance.c need

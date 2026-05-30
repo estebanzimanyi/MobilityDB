@@ -42,14 +42,14 @@
 
 /* Accessor functions */
 
-extern GSERIALIZED *trgeo_traversed_area(const Temporal *temp,
+extern GSERIALIZED *trgeometry_traversed_area(const Temporal *temp,
   bool unary_union);
-extern Temporal *trgeo_centroid(const Temporal *temp);
-extern GSERIALIZED *trgeo_convex_hull(const Temporal *temp);
+extern Temporal *trgeometry_centroid(const Temporal *temp);
+extern GSERIALIZED *trgeometry_convex_hull(const Temporal *temp);
 
 /* Body-frame trajectory functions */
 
-extern Temporal *trgeo_body_point_trajectory(const Temporal *temp,
+extern Temporal *trgeometry_body_point_trajectory(const Temporal *temp,
   const GSERIALIZED *gs);
 
 /* Restriction functions */
@@ -61,17 +61,17 @@ extern Temporal *trgeo_restrict_stbox(const Temporal *temp, const STBox *box,
 
 /* Similarity distance functions */
 
-extern double trgeo_hausdorff_distance(const Temporal *temp1,
+extern double trgeometry_hausdorff_distance(const Temporal *temp1,
   const Temporal *temp2);
 
 #if MEOS
-extern double trgeo_frechet_distance(const Temporal *temp1,
+extern double trgeometry_frechet_distance(const Temporal *temp1,
   const Temporal *temp2);
-extern double trgeo_dyntimewarp_distance(const Temporal *temp1,
+extern double trgeometry_dyntimewarp_distance(const Temporal *temp1,
   const Temporal *temp2);
-extern Match *trgeo_frechet_path(const Temporal *temp1, const Temporal *temp2,
+extern Match *trgeometry_frechet_path(const Temporal *temp1, const Temporal *temp2,
   int *count);
-extern Match *trgeo_dyntimewarp_path(const Temporal *temp1,
+extern Match *trgeometry_dyntimewarp_path(const Temporal *temp1,
   const Temporal *temp2, int *count);
 #endif /* MEOS */
 

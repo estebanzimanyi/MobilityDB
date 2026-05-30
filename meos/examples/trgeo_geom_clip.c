@@ -30,7 +30,7 @@
  *     trgeo_geom_clip.c -L/usr/local/lib -lmeos -lm
  *
  * The composition pattern shown here is what a future
- * `trgeo_at_geom` / `trgeo_traversed_area` migration would use
+ * `trgeometry_at_geom` / `trgeometry_traversed_area` migration would use
  * internally: walk segments, walk body edges, accumulate parameter
  * intervals, map back to time. It also serves as the template for the
  * cbuffer counterpart (`tcbuffer_geom_clip`) when that lands — same

@@ -53,8 +53,8 @@ ARG_VAR = {
 }
 
 TPOINT_PAIRS = {
-    "tdistance_trgeometry_tpoint", "nad_trgeo_tpoint",
-    "nai_trgeo_tpoint", "shortestline_trgeo_tpoint",
+    "tdistance_trgeometry_tpoint", "nad_trgeometry_tpoint",
+    "nai_trgeometry_tpoint", "shortestline_trgeometry_tpoint",
 }
 
 # Functions that take a tpose at a specific argument index. Map keyed by
@@ -66,10 +66,10 @@ TPOSE_ARGS = {
 SKIP_REASON = {
     # 'GSERIALIZED **' as an out-parameter is awkward in this generator;
     # cover it manually instead.
-    "trgeo_value_n":         "out-param GSERIALIZED ** is exercised manually below",
+    "trgeometry_value_n":         "out-param GSERIALIZED ** is exercised manually below",
     # Pending: union-of-materialised-polygons is non-trivial; the symbol
     # is referenced internally but not yet exported.
-    "trgeo_traversed_area":  "pending union-of-swept-polygons implementation",
+    "trgeometry_traversed_area":  "pending union-of-swept-polygons implementation",
 }
 
 
@@ -272,7 +272,7 @@ main(void)
   GSERIALIZED *geom_out_param = NULL;
   Pose *pose1 = pose_in("Pose(Point(0 0), 0.0)");
   STBox *stbox1 = stbox_in("STBOX X((0, 0), (10, 10))");
-  /* trgeo_restrict_value's Datum carries a GSERIALIZED — pack via
+  /* trgeometry_restrict_value's Datum carries a GSERIALIZED — pack via
    * PointerGetDatum equivalent (cast). The function never dereferences
    * the pointer it doesn't recognise, so a bogus value still smoke-tests. */
   Datum geom1_datum = (Datum) geom1;
@@ -281,14 +281,14 @@ main(void)
   TInstant *trgeo_inst2 = trgeoinst_make(geom1, pose1,
     pg_timestamptz_in("2001-01-03", -1));
   Temporal *trgeo_seq1 = (Temporal *) trgeo_inst1;
-  trgeo_seq1 = trgeo_append_tinstant(trgeo_seq1, trgeo_inst2,
+  trgeo_seq1 = trgeometry_append_tinstant(trgeo_seq1, trgeo_inst2,
     LINEAR, 0.0, NULL, false);
   /* The append above promoted the TINSTANT to a TSEQUENCE. */
   TSequence    *trgeo_tseq1    = (TSequence *) trgeo_seq1;
   TSequenceSet *trgeo_tseqset1 = NULL;  /* no public string parser */
 
-  Temporal *tpoint1 = trgeo_to_tpoint(trgeo_seq1);
-  Temporal *tpose1 = trgeo_to_tpose(trgeo_seq1);
+  Temporal *tpoint1 = trgeometry_to_tpoint(trgeo_seq1);
+  Temporal *tpose1 = trgeometry_to_tpose(trgeo_seq1);
 
   int n_out = 0;
 
@@ -300,11 +300,11 @@ main(void)
         for name, ret, args in decls:
             f.write(emit_call(name, ret, args))
         f.write("""
-  /* Manually exercise trgeo_value_n (out-param GSERIALIZED **). */
+  /* Manually exercise trgeometry_value_n (out-param GSERIALIZED **). */
   {
     GSERIALIZED *out_geom = NULL;
-    bool ok = trgeo_value_n(trgeo_seq1, 1, &out_geom);
-    printf("trgeo_value_n: ok=%d ptr=%s\\n", (int) ok, out_geom ? "OK" : "NULL");
+    bool ok = trgeometry_value_n(trgeo_seq1, 1, &out_geom);
+    printf("trgeometry_value_n: ok=%d ptr=%s\\n", (int) ok, out_geom ? "OK" : "NULL");
     if (out_geom) free(out_geom);
   }
 

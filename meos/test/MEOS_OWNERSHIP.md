@@ -5,7 +5,7 @@
 `temporal_start_instant(temp)` → returns an owned copy via `tinstant_copy`.
 Caller must `free()` the result.
 
-All `trgeo_start_instant`, `trgeo_end_instant`, `trgeo_instant_n` similarly
+All `trgeometry_start_instant`, `trgeometry_end_instant`, `trgeometry_instant_n` similarly
 return fresh copies.  Callers must free them.
 
 ## Internal API: view-returning functions (`meos_internal.h`)
@@ -24,9 +24,9 @@ into the temporal struct.  **Do not free them.**
 
 | Function | Element ownership | How to free |
 |---|---|---|
-| `trgeo_instants(temp, &n)` | COPIES (`geo_tposeinst_to_trgeo`) | free each element AND the array |
-| `trgeo_sequences(temp, &n)` | COPIES (`geo_tposeseq_to_trgeo`) | free each element AND the array |
-| `trgeo_segments(temp, &n)` | COPIES | free each element AND the array |
+| `trgeometry_instants(temp, &n)` | COPIES (`geo_tposeinst_to_trgeo`) | free each element AND the array |
+| `trgeometry_sequences(temp, &n)` | COPIES (`geo_tposeseq_to_trgeo`) | free each element AND the array |
+| `trgeometry_segments(temp, &n)` | COPIES | free each element AND the array |
 | `cbufferset_values(s)` | COPIES (`datum_copy`) | free each element AND the array |
 | `temporal_instants(temp, &n)` | COPIES (`tinstant_copy`) | free each element AND the array |
 
@@ -49,7 +49,7 @@ responsibility to free before returning NULL.
 |---|---|---|
 | `trgeo_inst1` | `trgeoinst_make(...)` | YES |
 | `trgeo_inst2` | `trgeoinst_make(...)` | YES |
-| `trgeo_seq1` | `trgeo_append_tinstant(inst1, ...)` | YES (returned sequence owns storage) |
+| `trgeo_seq1` | `trgeometry_append_tinstant(inst1, ...)` | YES (returned sequence owns storage) |
 | `tcbuffer_inst1` | `temporal_start_inst(tcbuffer1)` (view) | NO |
 | `tcbuffer_tseq1` | cast of `tcbuffer1` | NO (alias) |
 | `tnpoint_inst1` | `temporal_start_inst(tnpoint1)` (view) | NO |

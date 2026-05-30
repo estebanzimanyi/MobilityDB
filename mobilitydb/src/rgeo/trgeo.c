@@ -448,7 +448,7 @@ Datum
 Trgeometry_to_tgeometry(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  Temporal *result = trgeo_to_tgeometry(temp);
+  Temporal *result = trgeometry_to_tgeometry(temp);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_POINTER(result);
 }
