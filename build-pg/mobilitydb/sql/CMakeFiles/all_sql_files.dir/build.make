@@ -93,7 +93,6 @@ mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/040_temporal_aggfuncs.sq
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/042_temporal_waggfuncs.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/043_temporal_gist.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/044_temporal_spgist.sql
-mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/045_aggregate_renames.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/046_temporal_analytics.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/048_portable_aliases.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/050_geoset.sql
@@ -117,7 +116,6 @@ mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/064_tpoint_distance.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/066_tpoint_similarity.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/068_tgeo_aggfuncs.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/068_tpoint_aggfuncs.sql
-mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/069_aggregate_renames.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/070_tgeo_spatialrels.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/070_tpoint_spatialrels.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/072_tgeo_tempspatialrels.sql
@@ -130,7 +128,6 @@ mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/076_tgeo_analytics.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/076_tpoint_analytics.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/078_tpoint_datagen.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/079_portable_aliases.sql
-mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/096_aggregate_renames.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/099_portable_aliases.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/100_pose.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/101_poseset.sql
@@ -140,7 +137,6 @@ mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/105_tpose_spatialfuncs.s
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/108_tpose_topops.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/109_tpose_posops.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/111_tpose_aggfuncs.sql
-mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/112_aggregate_renames.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/113_tpose_distance.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/114_tpose_indexes.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/115_portable_aliases.sql
@@ -161,7 +157,6 @@ mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/157_trgeo_posops.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/161_trgeo_distance.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/161_trgeo_vclip.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/162_trgeo_indexes.sql
-mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/167_aggregate_renames.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/167_portable_aliases.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/167_tcbuffer_analytics.sql
 mobilitydb/sql/CMakeFiles/all_sql_files: MobilityDB/sql/168_tcbuffer_tile.sql

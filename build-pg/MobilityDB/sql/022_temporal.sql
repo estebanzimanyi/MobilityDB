@@ -534,6 +534,27 @@ CREATE FUNCTION tempSubtype(ttext)
   AS 'MODULE_PATHNAME', 'Temporal_subtype'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION tempBasetype(tbool)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Temporal_basetype_name'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tempBasetype(tint)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Temporal_basetype_name'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tempBasetype(tbigint)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Temporal_basetype_name'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tempBasetype(tfloat)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Temporal_basetype_name'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tempBasetype(ttext)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Temporal_basetype_name'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 CREATE FUNCTION interp(tbool)
   RETURNS text
   AS 'MODULE_PATHNAME', 'Temporal_interp'

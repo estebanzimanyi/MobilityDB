@@ -14,7 +14,6 @@ SET(LOCAL_FILES
   314_tnpoint_aggfuncs
   317_tnpoint_indexes
   099_portable_aliases
-  096_aggregate_renames
   )
 
 foreach (f ${LOCAL_FILES})

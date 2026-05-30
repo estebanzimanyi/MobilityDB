@@ -28,7 +28,6 @@ SET(LOCAL_FILES
   044_temporal_spgist
   046_temporal_analytics
   048_portable_aliases
-  045_aggregate_renames
   999_oid_cache
   )
 

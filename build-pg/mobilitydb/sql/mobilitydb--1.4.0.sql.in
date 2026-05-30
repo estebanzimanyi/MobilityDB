@@ -14541,6 +14541,27 @@ CREATE FUNCTION tempSubtype(ttext)
   AS 'MODULE_PATHNAME', 'Temporal_subtype'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION tempBasetype(tbool)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Temporal_basetype_name'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tempBasetype(tint)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Temporal_basetype_name'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tempBasetype(tbigint)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Temporal_basetype_name'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tempBasetype(tfloat)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Temporal_basetype_name'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tempBasetype(ttext)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Temporal_basetype_name'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 CREATE FUNCTION interp(tbool)
   RETURNS text
   AS 'MODULE_PATHNAME', 'Temporal_interp'
@@ -24950,7 +24971,7 @@ CREATE AGGREGATE tcount(tint) (
   PARALLEL = SAFE
 );
 
-CREATE AGGREGATE tmin(tint) (
+CREATE AGGREGATE tminAgg(tint) (
   SFUNC = tint_tmin_transfn,
   STYPE = internal,
   COMBINEFUNC = tint_tmin_combinefn,
@@ -24959,7 +24980,7 @@ CREATE AGGREGATE tmin(tint) (
   DESERIALFUNC = taggstate_deserialize,
   PARALLEL = SAFE
 );
-CREATE AGGREGATE tmax(tint) (
+CREATE AGGREGATE tmaxAgg(tint) (
   SFUNC = tint_tmax_transfn,
   STYPE = internal,
   COMBINEFUNC = tint_tmax_combinefn,
@@ -25034,7 +25055,7 @@ CREATE AGGREGATE tcount(tbigint) (
   PARALLEL = SAFE
 );
 
-CREATE AGGREGATE tmin(tbigint) (
+CREATE AGGREGATE tminAgg(tbigint) (
   SFUNC = tbigint_tmin_transfn,
   STYPE = internal,
   COMBINEFUNC = tbigint_tmin_combinefn,
@@ -25043,7 +25064,7 @@ CREATE AGGREGATE tmin(tbigint) (
   DESERIALFUNC = taggstate_deserialize,
   PARALLEL = SAFE
 );
-CREATE AGGREGATE tmax(tbigint) (
+CREATE AGGREGATE tmaxAgg(tbigint) (
   SFUNC = tbigint_tmax_transfn,
   STYPE = internal,
   COMBINEFUNC = tbigint_tmax_combinefn,
@@ -25121,7 +25142,7 @@ CREATE AGGREGATE tcount(tfloat) (
   PARALLEL = SAFE
 );
 
-CREATE AGGREGATE tmin(tfloat) (
+CREATE AGGREGATE tminAgg(tfloat) (
   SFUNC = tfloat_tmin_transfn,
   STYPE = internal,
   COMBINEFUNC = tfloat_tmin_combinefn,
@@ -25130,7 +25151,7 @@ CREATE AGGREGATE tmin(tfloat) (
   DESERIALFUNC = taggstate_deserialize,
   PARALLEL = SAFE
 );
-CREATE AGGREGATE tmax(tfloat) (
+CREATE AGGREGATE tmaxAgg(tfloat) (
   SFUNC = tfloat_tmax_transfn,
   STYPE = internal,
   COMBINEFUNC = tfloat_tmax_combinefn,
@@ -25196,7 +25217,7 @@ CREATE AGGREGATE tcount(ttext) (
   PARALLEL = SAFE
 );
 
-CREATE AGGREGATE tmin(ttext) (
+CREATE AGGREGATE tminAgg(ttext) (
   SFUNC = ttext_tmin_transfn,
   STYPE = internal,
   COMBINEFUNC = ttext_tmin_combinefn,
@@ -25205,7 +25226,7 @@ CREATE AGGREGATE tmin(ttext) (
   DESERIALFUNC = taggstate_deserialize,
   PARALLEL = SAFE
 );
-CREATE AGGREGATE tmax(ttext) (
+CREATE AGGREGATE tmaxAgg(ttext) (
   SFUNC = ttext_tmax_transfn,
   STYPE = internal,
   COMBINEFUNC = ttext_tmax_combinefn,
@@ -25243,7 +25264,7 @@ CREATE FUNCTION temporal_merge_combinefn(internal, internal)
   AS 'MODULE_PATHNAME', 'Temporal_merge_combinefn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE merge(tbool) (
+CREATE AGGREGATE mergeAgg(tbool) (
   SFUNC = temporal_merge_transfn,
   STYPE = internal,
   COMBINEFUNC = temporal_merge_combinefn,
@@ -25252,7 +25273,7 @@ CREATE AGGREGATE merge(tbool) (
   DESERIALFUNC = taggstate_deserialize,
   PARALLEL = safe
 );
-CREATE AGGREGATE merge(tint) (
+CREATE AGGREGATE mergeAgg(tint) (
   SFUNC = temporal_merge_transfn,
   STYPE = internal,
   COMBINEFUNC = temporal_merge_combinefn,
@@ -25261,7 +25282,7 @@ CREATE AGGREGATE merge(tint) (
   DESERIALFUNC = taggstate_deserialize,
   PARALLEL = safe
 );
-CREATE AGGREGATE merge(tbigint) (
+CREATE AGGREGATE mergeAgg(tbigint) (
   SFUNC = temporal_merge_transfn,
   STYPE = internal,
   COMBINEFUNC = temporal_merge_combinefn,
@@ -25270,7 +25291,7 @@ CREATE AGGREGATE merge(tbigint) (
   DESERIALFUNC = taggstate_deserialize,
   PARALLEL = safe
 );
-CREATE AGGREGATE merge(tfloat) (
+CREATE AGGREGATE mergeAgg(tfloat) (
   SFUNC = temporal_merge_transfn,
   STYPE = internal,
   COMBINEFUNC = temporal_merge_combinefn,
@@ -25279,7 +25300,7 @@ CREATE AGGREGATE merge(tfloat) (
   DESERIALFUNC = taggstate_deserialize,
   PARALLEL = safe
 );
-CREATE AGGREGATE merge(ttext) (
+CREATE AGGREGATE mergeAgg(ttext) (
   SFUNC = temporal_merge_transfn,
   STYPE = internal,
   COMBINEFUNC = temporal_merge_combinefn,
@@ -25385,38 +25406,38 @@ CREATE FUNCTION temporal_append_finalfn(ttext)
   AS 'MODULE_PATHNAME', 'Temporal_append_finalfn'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE AGGREGATE appendInstant(tbool) (
+CREATE AGGREGATE appendInstantAgg(tbool) (
   SFUNC = temporal_app_tinst_transfn(tbool, tbool),
   STYPE = tbool,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(tbool, interp text) (
+CREATE AGGREGATE appendInstantAgg(tbool, interp text) (
   SFUNC = temporal_app_tinst_transfn(tbool, tbool, text),
   STYPE = tbool,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(tbool, interp text, maxt interval) (
+CREATE AGGREGATE appendInstantAgg(tbool, interp text, maxt interval) (
   SFUNC = temporal_app_tinst_transfn(tbool, tbool, text, maxt),
   STYPE = tbool,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
 
-CREATE AGGREGATE appendInstant(tint) (
+CREATE AGGREGATE appendInstantAgg(tint) (
   SFUNC = temporal_app_tinst_transfn(tint, tint),
   STYPE = tint,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(tint, interp text) (
+CREATE AGGREGATE appendInstantAgg(tint, interp text) (
   SFUNC = temporal_app_tinst_transfn(tint, tint, text),
   STYPE = tint,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(tint, interp text, maxdist float, 
+CREATE AGGREGATE appendInstantAgg(tint, interp text, maxdist float, 
     maxt interval) (
   SFUNC = temporal_app_tinst_transfn(tint, tint, text, maxdist, maxt),
   STYPE = tint,
@@ -25424,19 +25445,19 @@ CREATE AGGREGATE appendInstant(tint, interp text, maxdist float,
   PARALLEL = safe
 );
 
-CREATE AGGREGATE appendInstant(tbigint) (
+CREATE AGGREGATE appendInstantAgg(tbigint) (
   SFUNC = temporal_app_tinst_transfn(tbigint, tbigint),
   STYPE = tbigint,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(tbigint, interp text) (
+CREATE AGGREGATE appendInstantAgg(tbigint, interp text) (
   SFUNC = temporal_app_tinst_transfn(tbigint, tbigint, text),
   STYPE = tbigint,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(tbigint, interp text, maxdist float, 
+CREATE AGGREGATE appendInstantAgg(tbigint, interp text, maxdist float, 
     maxt interval) (
   SFUNC = temporal_app_tinst_transfn(tbigint, tbigint, text, maxdist, maxt),
   STYPE = tbigint,
@@ -25444,19 +25465,19 @@ CREATE AGGREGATE appendInstant(tbigint, interp text, maxdist float,
   PARALLEL = safe
 );
 
-CREATE AGGREGATE appendInstant(tfloat) (
+CREATE AGGREGATE appendInstantAgg(tfloat) (
   SFUNC = temporal_app_tinst_transfn(tfloat, tfloat),
   STYPE = tfloat,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(tfloat, interp text) (
+CREATE AGGREGATE appendInstantAgg(tfloat, interp text) (
   SFUNC = temporal_app_tinst_transfn(tfloat, tfloat, text),
   STYPE = tfloat,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(tfloat, interp text, maxdist float, 
+CREATE AGGREGATE appendInstantAgg(tfloat, interp text, maxdist float, 
     maxt interval) (
   SFUNC = temporal_app_tinst_transfn(tfloat, tfloat, text, maxdist, maxt),
   STYPE = tfloat,
@@ -25464,19 +25485,19 @@ CREATE AGGREGATE appendInstant(tfloat, interp text, maxdist float,
   PARALLEL = safe
 );
 
-CREATE AGGREGATE appendInstant(ttext) (
+CREATE AGGREGATE appendInstantAgg(ttext) (
   SFUNC = temporal_app_tinst_transfn(ttext, ttext),
   STYPE = ttext,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(ttext, interp text) (
+CREATE AGGREGATE appendInstantAgg(ttext, interp text) (
   SFUNC = temporal_app_tinst_transfn(ttext, ttext, text),
   STYPE = ttext,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(ttext, interp text, maxt interval) (
+CREATE AGGREGATE appendInstantAgg(ttext, interp text, maxt interval) (
   SFUNC = temporal_app_tinst_transfn(ttext, ttext, text, maxt),
   STYPE = ttext,
   FINALFUNC = temporal_append_finalfn,
@@ -25507,31 +25528,31 @@ CREATE FUNCTION temporal_app_tseq_transfn(ttext, ttext)
   AS 'MODULE_PATHNAME', 'Temporal_app_tseq_transfn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE appendSequence(tbool) (
+CREATE AGGREGATE appendSequenceAgg(tbool) (
   SFUNC = temporal_app_tseq_transfn,
   STYPE = tbool,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendSequence(tint) (
+CREATE AGGREGATE appendSequenceAgg(tint) (
   SFUNC = temporal_app_tseq_transfn,
   STYPE = tint,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendSequence(tbigint) (
+CREATE AGGREGATE appendSequenceAgg(tbigint) (
   SFUNC = temporal_app_tseq_transfn,
   STYPE = tbigint,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendSequence(tfloat) (
+CREATE AGGREGATE appendSequenceAgg(tfloat) (
   SFUNC = temporal_app_tseq_transfn,
   STYPE = tfloat,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendSequence(ttext) (
+CREATE AGGREGATE appendSequenceAgg(ttext) (
   SFUNC = temporal_app_tseq_transfn,
   STYPE = ttext,
   FINALFUNC = temporal_append_finalfn,
@@ -27091,720 +27112,6 @@ CREATE OPERATOR CLASS ttext_kdtree_ops
   FUNCTION  6  temporal_spgist_compress(internal);
 
 /******************************************************************************/
-/*****************************************************************************
- *
- * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
- * contributors
- *
- * MobilityDB includes portions of PostGIS version 3 source code released
- * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
- *
- * Permission to use, copy, modify, and distribute this software and its
- * documentation for any purpose, without fee, and without a written
- * agreement is hereby granted, provided that the above copyright notice and
- * this paragraph and the following two paragraphs appear in all copies.
- *
- * IN NO EVENT SHALL UNIVERSITE LIBRE DE BRUXELLES BE LIABLE TO ANY PARTY FOR
- * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING
- * LOST PROFITS, ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION,
- * EVEN IF UNIVERSITE LIBRE DE BRUXELLES HAS BEEN ADVISED OF THE POSSIBILITY
- * OF SUCH DAMAGE.
- *
- * UNIVERSITE LIBRE DE BRUXELLES SPECIFICALLY DISCLAIMS ANY WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS
- * ON AN "AS IS" BASIS, AND UNIVERSITE LIBRE DE BRUXELLES HAS NO OBLIGATIONS
- * TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
- *
- *****************************************************************************/
-
-/**
- * @file
- * @brief Forward-compatible aggregate aliases per RFC #827.
- *
- * Each aggregate registered by the previous SQL files is exposed under a
- * Pascal-cased *Agg name in addition to its original lowercase or
- * camelCase name. This eliminates the case-folding collision between the
- * scalar accessors `Tmin(tbox|stbox)` / `Tmax(tbox|stbox)` and the
- * temporal-min / temporal-max aggregates, which previously differed only
- * in the casing of their first letter and so collapsed to the same
- * canonical name in catalogs that are case-insensitive but key on
- * `(name, kind)` rather than `(name, argtypes, kind)` (DuckDB, BigQuery,
- * Snowflake, Trino, ...).
- *
- * The original names remain valid for backward compatibility. Once
- * downstream tools have migrated, a future major version may drop the
- * un-suffixed aliases.
- *
- * The new aggregates share the same internal C transition functions as
- * the originals, so the only runtime cost is one extra row in
- * `pg_aggregate` per aggregate.
- */
-
--- From 015_span_aggfuncs.in.sql
-CREATE AGGREGATE SpanUnionAgg(intspan) (
-  SFUNC = array_agg_transfn,
-  STYPE = internal,
--- if POSTGRESQL_VERSION_NUMBER >= 160000
-  COMBINEFUNC = array_agg_combine,
-  SERIALFUNC = array_agg_serialize,
-  DESERIALFUNC = array_agg_deserialize,
--- endif POSTGRESQL_VERSION_NUMBER >= 160000
-  FINALFUNC = intspan_union_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE SpanUnionAgg(bigintspan) (
-  SFUNC = array_agg_transfn,
-  STYPE = internal,
--- if POSTGRESQL_VERSION_NUMBER >= 160000
-  COMBINEFUNC = array_agg_combine,
-  SERIALFUNC = array_agg_serialize,
-  DESERIALFUNC = array_agg_deserialize,
--- endif POSTGRESQL_VERSION_NUMBER >= 160000
-  FINALFUNC = bigintspan_union_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE SpanUnionAgg(floatspan) (
-  SFUNC = array_agg_transfn,
-  STYPE = internal,
--- if POSTGRESQL_VERSION_NUMBER >= 160000
-  COMBINEFUNC = array_agg_combine,
-  SERIALFUNC = array_agg_serialize,
-  DESERIALFUNC = array_agg_deserialize,
--- endif POSTGRESQL_VERSION_NUMBER >= 160000
-  FINALFUNC = floatspan_union_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE SpanUnionAgg(datespan) (
-  SFUNC = array_agg_transfn,
-  STYPE = internal,
--- if POSTGRESQL_VERSION_NUMBER >= 160000
-  COMBINEFUNC = array_agg_combine,
-  SERIALFUNC = array_agg_serialize,
-  DESERIALFUNC = array_agg_deserialize,
--- endif POSTGRESQL_VERSION_NUMBER >= 160000
-  FINALFUNC = datespan_union_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE SpanUnionAgg(tstzspan) (
-  SFUNC = array_agg_transfn,
-  STYPE = internal,
--- if POSTGRESQL_VERSION_NUMBER >= 160000
-  COMBINEFUNC = array_agg_combine,
-  SERIALFUNC = array_agg_serialize,
-  DESERIALFUNC = array_agg_deserialize,
--- endif POSTGRESQL_VERSION_NUMBER >= 160000
-  FINALFUNC = tstzspan_union_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE SpanUnionAgg(intspanset) (
-  SFUNC = spanset_union_transfn,
-  STYPE = internal,
--- if POSTGRESQL_VERSION_NUMBER >= 160000
-  COMBINEFUNC = array_agg_combine,
-  SERIALFUNC = array_agg_serialize,
-  DESERIALFUNC = array_agg_deserialize,
--- endif POSTGRESQL_VERSION_NUMBER >= 160000
-  FINALFUNC = intspan_union_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE SpanUnionAgg(bigintspanset) (
-  SFUNC = spanset_union_transfn,
-  STYPE = internal,
--- if POSTGRESQL_VERSION_NUMBER >= 160000
-  COMBINEFUNC = array_agg_combine,
-  SERIALFUNC = array_agg_serialize,
-  DESERIALFUNC = array_agg_deserialize,
--- endif POSTGRESQL_VERSION_NUMBER >= 160000
-  FINALFUNC = bigintspan_union_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE SpanUnionAgg(floatspanset) (
-  SFUNC = spanset_union_transfn,
-  STYPE = internal,
--- if POSTGRESQL_VERSION_NUMBER >= 160000
-  COMBINEFUNC = array_agg_combine,
-  SERIALFUNC = array_agg_serialize,
-  DESERIALFUNC = array_agg_deserialize,
--- endif POSTGRESQL_VERSION_NUMBER >= 160000
-  FINALFUNC = floatspan_union_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE SpanUnionAgg(datespanset) (
-  SFUNC = spanset_union_transfn,
-  STYPE = internal,
--- if POSTGRESQL_VERSION_NUMBER >= 160000
-  COMBINEFUNC = array_agg_combine,
-  SERIALFUNC = array_agg_serialize,
-  DESERIALFUNC = array_agg_deserialize,
--- endif POSTGRESQL_VERSION_NUMBER >= 160000
-  FINALFUNC = datespan_union_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE SpanUnionAgg(tstzspanset) (
-  SFUNC = spanset_union_transfn,
-  STYPE = internal,
--- if POSTGRESQL_VERSION_NUMBER >= 160000
-  COMBINEFUNC = array_agg_combine,
-  SERIALFUNC = array_agg_serialize,
-  DESERIALFUNC = array_agg_deserialize,
--- endif POSTGRESQL_VERSION_NUMBER >= 160000
-  FINALFUNC = tstzspan_union_finalfn,
-  PARALLEL = safe
-);
-
--- From 001_set.in.sql
-CREATE AGGREGATE SetUnionAgg(integer) (
-  SFUNC = set_union_transfn,
-  STYPE = internal,
-  FINALFUNC = intset_union_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE SetUnionAgg(bigint) (
-  SFUNC = set_union_transfn,
-  STYPE = internal,
-  FINALFUNC = bigintset_union_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE SetUnionAgg(float) (
-  SFUNC = set_union_transfn,
-  STYPE = internal,
-  FINALFUNC = floatset_union_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE SetUnionAgg(text) (
-  SFUNC = set_union_transfn,
-  STYPE = internal,
-  FINALFUNC = textset_union_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE SetUnionAgg(date) (
-  SFUNC = set_union_transfn,
-  STYPE = internal,
-  FINALFUNC = dateset_union_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE SetUnionAgg(timestamptz) (
-  SFUNC = set_union_transfn,
-  STYPE = internal,
-  FINALFUNC = tstzset_union_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE SetUnionAgg(intset) (
-  SFUNC = set_union_transfn,
-  STYPE = internal,
-  FINALFUNC = intset_union_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE SetUnionAgg(bigintset) (
-  SFUNC = set_union_transfn,
-  STYPE = internal,
-  FINALFUNC = bigintset_union_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE SetUnionAgg(floatset) (
-  SFUNC = set_union_transfn,
-  STYPE = internal,
-  FINALFUNC = floatset_union_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE SetUnionAgg(textset) (
-  SFUNC = set_union_transfn,
-  STYPE = internal,
-  FINALFUNC = textset_union_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE SetUnionAgg(dateset) (
-  SFUNC = set_union_transfn,
-  STYPE = internal,
-  FINALFUNC = dateset_union_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE SetUnionAgg(tstzset) (
-  SFUNC = set_union_transfn,
-  STYPE = internal,
-  FINALFUNC = tstzset_union_finalfn,
-  PARALLEL = safe
-);
-
--- From 040_temporal_aggfuncs.in.sql
-CREATE AGGREGATE TcountAgg(timestamptz) (
-  SFUNC = tcount_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tcount_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE TcountAgg(tstzset) (
-  SFUNC = tcount_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tcount_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE TcountAgg(tstzspan) (
-  SFUNC = tcount_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tcount_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE TcountAgg(tstzspanset) (
-  SFUNC = tcount_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tcount_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE TcountAgg(tbool) (
-  SFUNC = tcount_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tcount_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE TandAgg(tbool) (
-  SFUNC = tbool_tand_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tbool_tand_combinefn,
-  FINALFUNC = tbool_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE TorAgg(tbool) (
-  SFUNC = tbool_tor_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tbool_tor_combinefn,
-  FINALFUNC = tbool_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE TcountAgg(tint) (
-  SFUNC = tcount_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tcount_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE TminAgg(tint) (
-  SFUNC = tint_tmin_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tint_tmin_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE TmaxAgg(tint) (
-  SFUNC = tint_tmax_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tint_tmax_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE TsumAgg(tint) (
-  SFUNC = tint_tsum_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tint_tsum_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE TavgAgg(tint) (
-  SFUNC = tavg_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tavg_combinefn,
-  FINALFUNC = tavg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE TcountAgg(tfloat) (
-  SFUNC = tcount_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tcount_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE TminAgg(tfloat) (
-  SFUNC = tfloat_tmin_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tfloat_tmin_combinefn,
-  FINALFUNC = tfloat_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE TmaxAgg(tfloat) (
-  SFUNC = tfloat_tmax_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tfloat_tmax_combinefn,
-  FINALFUNC = tfloat_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE TsumAgg(tfloat) (
-  SFUNC = tfloat_tsum_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tfloat_tsum_combinefn,
-  FINALFUNC = tfloat_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE TavgAgg(tfloat) (
-  SFUNC = tavg_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tavg_combinefn,
-  FINALFUNC = tavg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE TcountAgg(ttext) (
-  SFUNC = tcount_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tcount_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE TminAgg(ttext) (
-  SFUNC = ttext_tmin_transfn,
-  STYPE = internal,
-  COMBINEFUNC = ttext_tmin_combinefn,
-  FINALFUNC = ttext_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE TmaxAgg(ttext) (
-  SFUNC = ttext_tmax_transfn,
-  STYPE = internal,
-  COMBINEFUNC = ttext_tmax_combinefn,
-  FINALFUNC = ttext_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE MergeAgg(tbool) (
-  SFUNC = temporal_merge_transfn,
-  STYPE = internal,
-  COMBINEFUNC = temporal_merge_combinefn,
-  FINALFUNC = tbool_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE MergeAgg(tint) (
-  SFUNC = temporal_merge_transfn,
-  STYPE = internal,
-  COMBINEFUNC = temporal_merge_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE MergeAgg(tfloat) (
-  SFUNC = temporal_merge_transfn,
-  STYPE = internal,
-  COMBINEFUNC = temporal_merge_combinefn,
-  FINALFUNC = tfloat_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE MergeAgg(ttext) (
-  SFUNC = temporal_merge_transfn,
-  STYPE = internal,
-  COMBINEFUNC = temporal_merge_combinefn,
-  FINALFUNC = ttext_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tbool) (
-  SFUNC = temporal_app_tinst_transfn(tbool, tbool),
-  STYPE = tbool,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tbool, interp text) (
-  SFUNC = temporal_app_tinst_transfn(tbool, tbool, text),
-  STYPE = tbool,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tbool, interp text, maxt interval) (
-  SFUNC = temporal_app_tinst_transfn(tbool, tbool, text, maxt),
-  STYPE = tbool,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tint) (
-  SFUNC = temporal_app_tinst_transfn(tint, tint),
-  STYPE = tint,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tint, interp text) (
-  SFUNC = temporal_app_tinst_transfn(tint, tint, text),
-  STYPE = tint,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tint, interp text, maxdist float, 
-    maxt interval) (
-  SFUNC = temporal_app_tinst_transfn(tint, tint, text, maxdist, maxt),
-  STYPE = tint,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tfloat) (
-  SFUNC = temporal_app_tinst_transfn(tfloat, tfloat),
-  STYPE = tfloat,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tfloat, interp text) (
-  SFUNC = temporal_app_tinst_transfn(tfloat, tfloat, text),
-  STYPE = tfloat,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tfloat, interp text, maxdist float, 
-    maxt interval) (
-  SFUNC = temporal_app_tinst_transfn(tfloat, tfloat, text, maxdist, maxt),
-  STYPE = tfloat,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(ttext) (
-  SFUNC = temporal_app_tinst_transfn(ttext, ttext),
-  STYPE = ttext,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(ttext, interp text) (
-  SFUNC = temporal_app_tinst_transfn(ttext, ttext, text),
-  STYPE = ttext,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(ttext, interp text, maxt interval) (
-  SFUNC = temporal_app_tinst_transfn(ttext, ttext, text, maxt),
-  STYPE = ttext,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendSequenceAgg(tbool) (
-  SFUNC = temporal_app_tseq_transfn,
-  STYPE = tbool,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendSequenceAgg(tint) (
-  SFUNC = temporal_app_tseq_transfn,
-  STYPE = tint,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendSequenceAgg(tfloat) (
-  SFUNC = temporal_app_tseq_transfn,
-  STYPE = tfloat,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendSequenceAgg(ttext) (
-  SFUNC = temporal_app_tseq_transfn,
-  STYPE = ttext,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
--- From 042_temporal_waggfuncs.in.sql
-CREATE AGGREGATE WminAgg(tint, interval) (
-  SFUNC = tint_wmin_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tint_tmin_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE WmaxAgg(tint, interval) (
-  SFUNC = tint_wmax_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tint_tmax_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE WsumAgg(tint, interval) (
-  SFUNC = tint_wsum_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tint_tsum_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE WcountAgg(tint, interval) (
-  SFUNC = wcount_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tint_tsum_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE WavgAgg(tint, interval) (
-  SFUNC = wavg_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tavg_combinefn,
-  FINALFUNC = tavg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE WminAgg(tfloat, interval) (
-  SFUNC = tfloat_wmin_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tfloat_tmin_combinefn,
-  FINALFUNC = tfloat_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE WmaxAgg(tfloat, interval) (
-  SFUNC = tfloat_wmax_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tfloat_tmax_combinefn,
-  FINALFUNC = tfloat_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE WsumAgg(tfloat, interval) (
-  SFUNC = tfloat_wsum_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tfloat_tsum_combinefn,
-  FINALFUNC = tfloat_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE WcountAgg(tfloat, interval) (
-  SFUNC = wcount_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tint_tsum_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE WavgAgg(tfloat, interval) (
-  SFUNC = wavg_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tavg_combinefn,
-  FINALFUNC = tavg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
@@ -33272,9 +32579,17 @@ CREATE FUNCTION tempSubtype(tgeometry)
   RETURNS text
   AS 'MODULE_PATHNAME', 'Temporal_subtype'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tempBasetype(tgeometry)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Temporal_basetype_name'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tempSubtype(tgeography)
   RETURNS text
   AS 'MODULE_PATHNAME', 'Temporal_subtype'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tempBasetype(tgeography)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Temporal_basetype_name'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION interp(tgeometry)
@@ -34345,9 +33660,17 @@ CREATE FUNCTION tempSubtype(tgeompoint)
   RETURNS text
   AS 'MODULE_PATHNAME', 'Temporal_subtype'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tempBasetype(tgeompoint)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Temporal_basetype_name'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tempSubtype(tgeogpoint)
   RETURNS text
   AS 'MODULE_PATHNAME', 'Temporal_subtype'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tempBasetype(tgeogpoint)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Temporal_basetype_name'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION interp(tgeompoint)
@@ -40808,13 +40131,13 @@ CREATE FUNCTION minDistance_transfn(float, tgeometry, tgeometry)
   AS 'MODULE_PATHNAME', 'Mindistance_transfn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE minDistance(tgeompoint, tgeompoint) (
+CREATE AGGREGATE minDistanceAgg(tgeompoint, tgeompoint) (
   SFUNC = minDistance_transfn,
   STYPE = float,
   COMBINEFUNC = float8smaller,
   PARALLEL = SAFE
 );
-CREATE AGGREGATE minDistance(tgeometry, tgeometry) (
+CREATE AGGREGATE minDistanceAgg(tgeometry, tgeometry) (
   SFUNC = minDistance_transfn,
   STYPE = float,
   COMBINEFUNC = float8smaller,
@@ -41368,7 +40691,7 @@ CREATE FUNCTION tgeography_tagg_finalfn(internal)
   AS 'MODULE_PATHNAME', 'Temporal_tagg_finalfn'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE AGGREGATE merge(tgeometry) (
+CREATE AGGREGATE mergeAgg(tgeometry) (
   SFUNC = temporal_merge_transfn,
   STYPE = internal,
   COMBINEFUNC = temporal_merge_combinefn,
@@ -41377,7 +40700,7 @@ CREATE AGGREGATE merge(tgeometry) (
   DESERIALFUNC = taggstate_deserialize,
   PARALLEL = safe
 );
-CREATE AGGREGATE merge(tgeography) (
+CREATE AGGREGATE mergeAgg(tgeography) (
   SFUNC = temporal_merge_transfn,
   STYPE = internal,
   COMBINEFUNC = temporal_merge_combinefn,
@@ -41436,39 +40759,39 @@ CREATE FUNCTION temporal_append_finalfn(tgeography)
   AS 'MODULE_PATHNAME', 'Temporal_append_finalfn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE appendInstant(tgeometry) (
+CREATE AGGREGATE appendInstantAgg(tgeometry) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tgeometry,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(tgeography) (
+CREATE AGGREGATE appendInstantAgg(tgeography) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tgeography,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
 
-CREATE AGGREGATE appendInstant(tgeometry, text) (
+CREATE AGGREGATE appendInstantAgg(tgeometry, text) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tgeometry,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(tgeography, text) (
+CREATE AGGREGATE appendInstantAgg(tgeography, text) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tgeography,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
 
-CREATE AGGREGATE appendInstant(tgeometry, text, float, interval) (
+CREATE AGGREGATE appendInstantAgg(tgeometry, text, float, interval) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tgeometry,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(tgeography, text, float, interval) (
+CREATE AGGREGATE appendInstantAgg(tgeography, text, float, interval) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tgeography,
   FINALFUNC = temporal_append_finalfn,
@@ -41487,13 +40810,13 @@ CREATE FUNCTION temporal_app_tseq_transfn(tgeography, tgeography)
   AS 'MODULE_PATHNAME', 'Temporal_app_tseq_transfn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE appendSequence(tgeometry) (
+CREATE AGGREGATE appendSequenceAgg(tgeometry) (
   SFUNC = temporal_app_tseq_transfn,
   STYPE = tgeometry,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendSequence(tgeography) (
+CREATE AGGREGATE appendSequenceAgg(tgeography) (
   SFUNC = temporal_app_tseq_transfn,
   STYPE = tgeography,
   FINALFUNC = temporal_append_finalfn,
@@ -41665,7 +40988,7 @@ CREATE FUNCTION tgeogpoint_tagg_finalfn(internal)
   AS 'MODULE_PATHNAME', 'Temporal_tagg_finalfn'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE AGGREGATE merge(tgeompoint) (
+CREATE AGGREGATE mergeAgg(tgeompoint) (
   SFUNC = temporal_merge_transfn,
   STYPE = internal,
   COMBINEFUNC = temporal_merge_combinefn,
@@ -41674,7 +40997,7 @@ CREATE AGGREGATE merge(tgeompoint) (
   DESERIALFUNC = taggstate_deserialize,
   PARALLEL = safe
 );
-CREATE AGGREGATE merge(tgeogpoint) (
+CREATE AGGREGATE mergeAgg(tgeogpoint) (
   SFUNC = temporal_merge_transfn,
   STYPE = internal,
   COMBINEFUNC = temporal_merge_combinefn,
@@ -41733,39 +41056,39 @@ CREATE FUNCTION temporal_append_finalfn(tgeogpoint)
   AS 'MODULE_PATHNAME', 'Temporal_append_finalfn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE appendInstant(tgeompoint) (
+CREATE AGGREGATE appendInstantAgg(tgeompoint) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tgeompoint,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(tgeogpoint) (
+CREATE AGGREGATE appendInstantAgg(tgeogpoint) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tgeogpoint,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
 
-CREATE AGGREGATE appendInstant(tgeompoint, text) (
+CREATE AGGREGATE appendInstantAgg(tgeompoint, text) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tgeompoint,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(tgeogpoint, text) (
+CREATE AGGREGATE appendInstantAgg(tgeogpoint, text) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tgeogpoint,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
 
-CREATE AGGREGATE appendInstant(tgeompoint, text, float, interval) (
+CREATE AGGREGATE appendInstantAgg(tgeompoint, text, float, interval) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tgeompoint,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(tgeogpoint, text, float, interval) (
+CREATE AGGREGATE appendInstantAgg(tgeogpoint, text, float, interval) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tgeogpoint,
   FINALFUNC = temporal_append_finalfn,
@@ -41784,13 +41107,13 @@ CREATE FUNCTION temporal_app_tseq_transfn(tgeogpoint, tgeogpoint)
   AS 'MODULE_PATHNAME', 'Temporal_app_tseq_transfn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE appendSequence(tgeompoint) (
+CREATE AGGREGATE appendSequenceAgg(tgeompoint) (
   SFUNC = temporal_app_tseq_transfn,
   STYPE = tgeompoint,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendSequence(tgeogpoint) (
+CREATE AGGREGATE appendSequenceAgg(tgeogpoint) (
   SFUNC = temporal_app_tseq_transfn,
   STYPE = tgeogpoint,
   FINALFUNC = temporal_append_finalfn,
@@ -41798,327 +41121,6 @@ CREATE AGGREGATE appendSequence(tgeogpoint) (
 );
 
 /*****************************************************************************/
-/*****************************************************************************
- *
- * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
- * contributors
- *
- * MobilityDB includes portions of PostGIS version 3 source code released
- * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
- *
- * Permission to use, copy, modify, and distribute this software and its
- * documentation for any purpose, without fee, and without a written
- * agreement is hereby granted, provided that the above copyright notice and
- * this paragraph and the following two paragraphs appear in all copies.
- *
- * IN NO EVENT SHALL UNIVERSITE LIBRE DE BRUXELLES BE LIABLE TO ANY PARTY FOR
- * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING
- * LOST PROFITS, ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION,
- * EVEN IF UNIVERSITE LIBRE DE BRUXELLES HAS BEEN ADVISED OF THE POSSIBILITY
- * OF SUCH DAMAGE.
- *
- * UNIVERSITE LIBRE DE BRUXELLES SPECIFICALLY DISCLAIMS ANY WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS
- * ON AN "AS IS" BASIS, AND UNIVERSITE LIBRE DE BRUXELLES HAS NO OBLIGATIONS
- * TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
- *
- *****************************************************************************/
-
-/**
- * @file
- * @brief Forward-compatible aggregate aliases per RFC #827.
- *
- * Each aggregate registered by the previous SQL files is exposed under a
- * Pascal-cased *Agg name in addition to its original lowercase or
- * camelCase name. This eliminates the case-folding collision between the
- * scalar accessors `Tmin(tbox|stbox)` / `Tmax(tbox|stbox)` and the
- * temporal-min / temporal-max aggregates, which previously differed only
- * in the casing of their first letter and so collapsed to the same
- * canonical name in catalogs that are case-insensitive but key on
- * `(name, kind)` rather than `(name, argtypes, kind)` (DuckDB, BigQuery,
- * Snowflake, Trino, ...).
- *
- * The original names remain valid for backward compatibility. Once
- * downstream tools have migrated, a future major version may drop the
- * un-suffixed aliases.
- *
- * The new aggregates share the same internal C transition functions as
- * the originals, so the only runtime cost is one extra row in
- * `pg_aggregate` per aggregate.
- */
-
--- From 050_geoset.in.sql
-CREATE AGGREGATE SetUnionAgg(geometry) (
-  SFUNC = set_union_transfn,
-  STYPE = internal,
-  FINALFUNC = geomset_union_finalfn
-);
-
-CREATE AGGREGATE SetUnionAgg(geography) (
-  SFUNC = set_union_transfn,
-  STYPE = internal,
-  FINALFUNC = geogset_union_finalfn
-);
-
-CREATE AGGREGATE SetUnionAgg(geomset) (
-  SFUNC = set_union_transfn,
-  STYPE = internal,
-  FINALFUNC = geomset_union_finalfn
-);
-
-CREATE AGGREGATE SetUnionAgg(geogset) (
-  SFUNC = set_union_transfn,
-  STYPE = internal,
-  FINALFUNC = geogset_union_finalfn
-);
-
--- From 068_tpoint_aggfuncs.in.sql
-CREATE AGGREGATE TcountAgg(tgeompoint) (
-  SFUNC = tcount_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tcount_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE TcountAgg(tgeogpoint) (
-  SFUNC = tcount_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tcount_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE WcountAgg(tgeompoint, interval) (
-  SFUNC = wcount_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tint_tsum_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE WcountAgg(tgeogpoint, interval) (
-  SFUNC = wcount_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tint_tsum_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE TcentroidAgg(tgeompoint) (
-  SFUNC = tcentroid_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tcentroid_combinefn,
-  FINALFUNC = tcentroid_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE MergeAgg(tgeompoint) (
-  SFUNC = temporal_merge_transfn,
-  STYPE = internal,
-  COMBINEFUNC = temporal_merge_combinefn,
-  FINALFUNC = tgeompoint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE MergeAgg(tgeogpoint) (
-  SFUNC = temporal_merge_transfn,
-  STYPE = internal,
-  COMBINEFUNC = temporal_merge_combinefn,
-  FINALFUNC = tgeogpoint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tgeompoint) (
-  SFUNC = temporal_app_tinst_transfn,
-  STYPE = tgeompoint,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tgeogpoint) (
-  SFUNC = temporal_app_tinst_transfn,
-  STYPE = tgeogpoint,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tgeompoint, text) (
-  SFUNC = temporal_app_tinst_transfn,
-  STYPE = tgeompoint,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tgeogpoint, text) (
-  SFUNC = temporal_app_tinst_transfn,
-  STYPE = tgeogpoint,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tgeompoint, text, float, interval) (
-  SFUNC = temporal_app_tinst_transfn,
-  STYPE = tgeompoint,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tgeogpoint, text, float, interval) (
-  SFUNC = temporal_app_tinst_transfn,
-  STYPE = tgeogpoint,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendSequenceAgg(tgeompoint) (
-  SFUNC = temporal_app_tseq_transfn,
-  STYPE = tgeompoint,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendSequenceAgg(tgeogpoint) (
-  SFUNC = temporal_app_tseq_transfn,
-  STYPE = tgeogpoint,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
--- From 068_tgeo_aggfuncs.in.sql
-CREATE AGGREGATE TcountAgg(tgeometry) (
-  SFUNC = tcount_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tcount_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE TcountAgg(tgeography) (
-  SFUNC = tcount_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tcount_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE WcountAgg(tgeometry, interval) (
-  SFUNC = wcount_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tint_tsum_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE WcountAgg(tgeography, interval) (
-  SFUNC = wcount_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tint_tsum_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE MergeAgg(tgeometry) (
-  SFUNC = temporal_merge_transfn,
-  STYPE = internal,
-  COMBINEFUNC = temporal_merge_combinefn,
-  FINALFUNC = tgeometry_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE MergeAgg(tgeography) (
-  SFUNC = temporal_merge_transfn,
-  STYPE = internal,
-  COMBINEFUNC = temporal_merge_combinefn,
-  FINALFUNC = tgeography_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tgeometry) (
-  SFUNC = temporal_app_tinst_transfn,
-  STYPE = tgeometry,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tgeography) (
-  SFUNC = temporal_app_tinst_transfn,
-  STYPE = tgeography,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tgeometry, text) (
-  SFUNC = temporal_app_tinst_transfn,
-  STYPE = tgeometry,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tgeography, text) (
-  SFUNC = temporal_app_tinst_transfn,
-  STYPE = tgeography,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tgeometry, text, float, interval) (
-  SFUNC = temporal_app_tinst_transfn,
-  STYPE = tgeometry,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tgeography, text, float, interval) (
-  SFUNC = temporal_app_tinst_transfn,
-  STYPE = tgeography,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendSequenceAgg(tgeometry) (
-  SFUNC = temporal_app_tseq_transfn,
-  STYPE = tgeometry,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendSequenceAgg(tgeography) (
-  SFUNC = temporal_app_tseq_transfn,
-  STYPE = tgeography,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
@@ -46409,140 +45411,6 @@ CREATE FUNCTION overafter(tgeogpoint, tgeogpoint)
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
- * contributors
- *
- * MobilityDB includes portions of PostGIS version 3 source code released
- * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
- *
- * Permission to use, copy, modify, and distribute this software and its
- * documentation for any purpose, without fee, and without a written
- * agreement is hereby granted, provided that the above copyright notice and
- * this paragraph and the following two paragraphs appear in all copies.
- *
- * IN NO EVENT SHALL UNIVERSITE LIBRE DE BRUXELLES BE LIABLE TO ANY PARTY FOR
- * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING
- * LOST PROFITS, ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION,
- * EVEN IF UNIVERSITE LIBRE DE BRUXELLES HAS BEEN ADVISED OF THE POSSIBILITY
- * OF SUCH DAMAGE.
- *
- * UNIVERSITE LIBRE DE BRUXELLES SPECIFICALLY DISCLAIMS ANY WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS
- * ON AN "AS IS" BASIS, AND UNIVERSITE LIBRE DE BRUXELLES HAS NO OBLIGATIONS
- * TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
- *
- *****************************************************************************/
-
-/**
- * @file
- * @brief Forward-compatible aggregate aliases per RFC #827.
- *
- * Each aggregate registered by the previous SQL files is exposed under a
- * Pascal-cased *Agg name in addition to its original lowercase or
- * camelCase name. This eliminates the case-folding collision between the
- * scalar accessors `Tmin(tbox|stbox)` / `Tmax(tbox|stbox)` and the
- * temporal-min / temporal-max aggregates, which previously differed only
- * in the casing of their first letter and so collapsed to the same
- * canonical name in catalogs that are case-insensitive but key on
- * `(name, kind)` rather than `(name, argtypes, kind)` (DuckDB, BigQuery,
- * Snowflake, Trino, ...).
- *
- * The original names remain valid for backward compatibility. Once
- * downstream tools have migrated, a future major version may drop the
- * un-suffixed aliases.
- *
- * The new aggregates share the same internal C transition functions as
- * the originals, so the only runtime cost is one extra row in
- * `pg_aggregate` per aggregate.
- */
-
--- From 082_npointset.in.sql
-CREATE AGGREGATE SetUnionAgg(npoint) (
-  SFUNC = set_union_transfn,
-  STYPE = internal,
-  FINALFUNC = npointset_union_finalfn
-);
-
-CREATE AGGREGATE SetUnionAgg(npointset) (
-  SFUNC = set_union_transfn,
-  STYPE = internal,
-  FINALFUNC = npointset_union_finalfn
-);
-
--- From 095_tnpoint_aggfuncs.in.sql
-CREATE AGGREGATE TcountAgg(tnpoint) (
-  SFUNC = tcount_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tcount_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE WcountAgg(tnpoint, interval) (
-  SFUNC = wcount_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tint_tsum_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE TcentroidAgg(tnpoint) (
-  SFUNC = tcentroid_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tcentroid_combinefn,
-  FINALFUNC = tcentroid_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE MergeAgg(tnpoint) (
-  SFUNC = temporal_merge_transfn,
-  STYPE = internal,
-  COMBINEFUNC = temporal_merge_combinefn,
-  FINALFUNC = tnpoint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tnpoint) (
-  SFUNC = temporal_app_tinst_transfn,
-  STYPE = tnpoint,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tnpoint, text) (
-  SFUNC = temporal_app_tinst_transfn,
-  STYPE = tnpoint,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tnpoint, text, float, interval) (
-  SFUNC = temporal_app_tinst_transfn,
-  STYPE = tnpoint,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendSequenceAgg(tnpoint) (
-  SFUNC = temporal_app_tseq_transfn,
-  STYPE = tnpoint,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-/*****************************************************************************
- *
- * This MobilityDB code is provided under The PostgreSQL License.
  * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
@@ -48161,6 +47029,10 @@ CREATE FUNCTION angularSpeed(tpose)
 CREATE FUNCTION tempSubtype(tpose)
   RETURNS text
   AS 'MODULE_PATHNAME', 'Temporal_subtype'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tempBasetype(tpose)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Temporal_basetype_name'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION interp(tpose)
@@ -50059,7 +48931,7 @@ CREATE FUNCTION tpose_tagg_finalfn(internal)
   AS 'MODULE_PATHNAME', 'Temporal_tagg_finalfn'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE AGGREGATE merge(tpose) (
+CREATE AGGREGATE mergeAgg(tpose) (
   SFUNC = temporal_merge_transfn,
   STYPE = internal,
   COMBINEFUNC = temporal_merge_combinefn,
@@ -50099,21 +48971,21 @@ CREATE FUNCTION temporal_append_finalfn(tpose)
   AS 'MODULE_PATHNAME', 'Temporal_append_finalfn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE appendInstant(tpose) (
+CREATE AGGREGATE appendInstantAgg(tpose) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tpose,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
 
-CREATE AGGREGATE appendInstant(tpose, text) (
+CREATE AGGREGATE appendInstantAgg(tpose, text) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tpose,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
 
-CREATE AGGREGATE appendInstant(tpose, text, float, interval) (
+CREATE AGGREGATE appendInstantAgg(tpose, text, float, interval) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tpose,
   FINALFUNC = temporal_append_finalfn,
@@ -50128,7 +49000,7 @@ CREATE FUNCTION temporal_app_tseq_transfn(tpose, tpose)
   AS 'MODULE_PATHNAME', 'Temporal_app_tseq_transfn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE appendSequence(tpose) (
+CREATE AGGREGATE appendSequenceAgg(tpose) (
   SFUNC = temporal_app_tseq_transfn,
   STYPE = tpose,
   FINALFUNC = temporal_append_finalfn,
@@ -50136,130 +49008,6 @@ CREATE AGGREGATE appendSequence(tpose) (
 );
 
 /*****************************************************************************/
-/*****************************************************************************
- *
- * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
- * contributors
- *
- * MobilityDB includes portions of PostGIS version 3 source code released
- * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
- *
- * Permission to use, copy, modify, and distribute this software and its
- * documentation for any purpose, without fee, and without a written
- * agreement is hereby granted, provided that the above copyright notice and
- * this paragraph and the following two paragraphs appear in all copies.
- *
- * IN NO EVENT SHALL UNIVERSITE LIBRE DE BRUXELLES BE LIABLE TO ANY PARTY FOR
- * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING
- * LOST PROFITS, ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION,
- * EVEN IF UNIVERSITE LIBRE DE BRUXELLES HAS BEEN ADVISED OF THE POSSIBILITY
- * OF SUCH DAMAGE.
- *
- * UNIVERSITE LIBRE DE BRUXELLES SPECIFICALLY DISCLAIMS ANY WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS
- * ON AN "AS IS" BASIS, AND UNIVERSITE LIBRE DE BRUXELLES HAS NO OBLIGATIONS
- * TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
- *
- *****************************************************************************/
-
-/**
- * @file
- * @brief Forward-compatible aggregate aliases per RFC #827.
- *
- * Each aggregate registered by the previous SQL files is exposed under a
- * Pascal-cased *Agg name in addition to its original lowercase or
- * camelCase name. This eliminates the case-folding collision between the
- * scalar accessors `Tmin(tbox|stbox)` / `Tmax(tbox|stbox)` and the
- * temporal-min / temporal-max aggregates, which previously differed only
- * in the casing of their first letter and so collapsed to the same
- * canonical name in catalogs that are case-insensitive but key on
- * `(name, kind)` rather than `(name, argtypes, kind)` (DuckDB, BigQuery,
- * Snowflake, Trino, ...).
- *
- * The original names remain valid for backward compatibility. Once
- * downstream tools have migrated, a future major version may drop the
- * un-suffixed aliases.
- *
- * The new aggregates share the same internal C transition functions as
- * the originals, so the only runtime cost is one extra row in
- * `pg_aggregate` per aggregate.
- */
-
--- From 101_poseset.in.sql
-CREATE AGGREGATE SetUnionAgg(pose) (
-  SFUNC = set_union_transfn,
-  STYPE = internal,
-  FINALFUNC = poseset_union_finalfn
-);
-
-CREATE AGGREGATE SetUnionAgg(poseset) (
-  SFUNC = set_union_transfn,
-  STYPE = internal,
-  FINALFUNC = poseset_union_finalfn
-);
-
--- From 111_tpose_aggfuncs.in.sql
-CREATE AGGREGATE TcountAgg(tpose) (
-  SFUNC = tcount_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tcount_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE WcountAgg(tpose, interval) (
-  SFUNC = wcount_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tint_tsum_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE MergeAgg(tpose) (
-  SFUNC = temporal_merge_transfn,
-  STYPE = internal,
-  COMBINEFUNC = temporal_merge_combinefn,
-  FINALFUNC = tpose_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tpose) (
-  SFUNC = temporal_app_tinst_transfn,
-  STYPE = tpose,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tpose, text) (
-  SFUNC = temporal_app_tinst_transfn,
-  STYPE = tpose,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tpose, text, float, interval) (
-  SFUNC = temporal_app_tinst_transfn,
-  STYPE = tpose,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendSequenceAgg(tpose) (
-  SFUNC = temporal_app_tseq_transfn,
-  STYPE = tpose,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
@@ -53034,6 +51782,10 @@ CREATE FUNCTION tempSubtype(trgeometry)
   RETURNS text
   AS 'MODULE_PATHNAME', 'Temporal_subtype'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tempBasetype(trgeometry)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Temporal_basetype_name'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION interp(trgeometry)
   RETURNS text
@@ -55397,130 +54149,6 @@ CREATE OPERATOR CLASS trgeometry_kdtree_ops
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
- * contributors
- *
- * MobilityDB includes portions of PostGIS version 3 source code released
- * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
- *
- * Permission to use, copy, modify, and distribute this software and its
- * documentation for any purpose, without fee, and without a written
- * agreement is hereby granted, provided that the above copyright notice and
- * this paragraph and the following two paragraphs appear in all copies.
- *
- * IN NO EVENT SHALL UNIVERSITE LIBRE DE BRUXELLES BE LIABLE TO ANY PARTY FOR
- * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING
- * LOST PROFITS, ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION,
- * EVEN IF UNIVERSITE LIBRE DE BRUXELLES HAS BEEN ADVISED OF THE POSSIBILITY
- * OF SUCH DAMAGE.
- *
- * UNIVERSITE LIBRE DE BRUXELLES SPECIFICALLY DISCLAIMS ANY WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS
- * ON AN "AS IS" BASIS, AND UNIVERSITE LIBRE DE BRUXELLES HAS NO OBLIGATIONS
- * TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
- *
- *****************************************************************************/
-
-/**
- * @file
- * @brief Forward-compatible aggregate aliases per RFC #827.
- *
- * Each aggregate registered by the previous SQL files is exposed under a
- * Pascal-cased *Agg name in addition to its original lowercase or
- * camelCase name. This eliminates the case-folding collision between the
- * scalar accessors `Tmin(tbox|stbox)` / `Tmax(tbox|stbox)` and the
- * temporal-min / temporal-max aggregates, which previously differed only
- * in the casing of their first letter and so collapsed to the same
- * canonical name in catalogs that are case-insensitive but key on
- * `(name, kind)` rather than `(name, argtypes, kind)` (DuckDB, BigQuery,
- * Snowflake, Trino, ...).
- *
- * The original names remain valid for backward compatibility. Once
- * downstream tools have migrated, a future major version may drop the
- * un-suffixed aliases.
- *
- * The new aggregates share the same internal C transition functions as
- * the originals, so the only runtime cost is one extra row in
- * `pg_aggregate` per aggregate.
- */
-
--- From 151_cbufferset.in.sql
-CREATE AGGREGATE SetUnionAgg(cbuffer) (
-  SFUNC = set_union_transfn,
-  STYPE = internal,
-  FINALFUNC = cbufferset_union_finalfn
-);
-
-CREATE AGGREGATE SetUnionAgg(cbufferset) (
-  SFUNC = set_union_transfn,
-  STYPE = internal,
-  FINALFUNC = cbufferset_union_finalfn
-);
-
--- From 161_tcbuffer_aggfuncs.in.sql
-CREATE AGGREGATE TcountAgg(tcbuffer) (
-  SFUNC = tcount_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tcount_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE WcountAgg(tcbuffer, interval) (
-  SFUNC = wcount_transfn,
-  STYPE = internal,
-  COMBINEFUNC = tint_tsum_combinefn,
-  FINALFUNC = tint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = SAFE
-);
-
-CREATE AGGREGATE MergeAgg(tcbuffer) (
-  SFUNC = temporal_merge_transfn,
-  STYPE = internal,
-  COMBINEFUNC = temporal_merge_combinefn,
-  FINALFUNC = tcbuffer_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tcbuffer) (
-  SFUNC = temporal_app_tinst_transfn,
-  STYPE = tcbuffer,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tcbuffer, text) (
-  SFUNC = temporal_app_tinst_transfn,
-  STYPE = tcbuffer,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendInstantAgg(tcbuffer, text, float, interval) (
-  SFUNC = temporal_app_tinst_transfn,
-  STYPE = tcbuffer,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-CREATE AGGREGATE AppendSequenceAgg(tcbuffer) (
-  SFUNC = temporal_app_tseq_transfn,
-  STYPE = tcbuffer,
-  FINALFUNC = temporal_append_finalfn,
-  PARALLEL = safe
-);
-
-/*****************************************************************************
- *
- * This MobilityDB code is provided under The PostgreSQL License.
  * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
@@ -57281,6 +55909,10 @@ CREATE FUNCTION radius(tcbuffer)
 CREATE FUNCTION tempSubtype(tcbuffer)
   RETURNS text
   AS 'MODULE_PATHNAME', 'Temporal_subtype'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tempBasetype(tcbuffer)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Temporal_basetype_name'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION interp(tcbuffer)
@@ -59319,7 +57951,7 @@ CREATE FUNCTION minDistance_transfn(float, tcbuffer, tcbuffer)
   AS 'MODULE_PATHNAME', 'Mindistance_transfn_tcbuffer'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE minDistance(tcbuffer, tcbuffer) (
+CREATE AGGREGATE minDistanceAgg(tcbuffer, tcbuffer) (
   SFUNC = minDistance_transfn,
   STYPE = float,
   COMBINEFUNC = float8smaller,
@@ -59414,7 +58046,7 @@ CREATE FUNCTION tcbuffer_tagg_finalfn(internal)
   AS 'MODULE_PATHNAME', 'Temporal_tagg_finalfn'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE AGGREGATE merge(tcbuffer) (
+CREATE AGGREGATE mergeAgg(tcbuffer) (
   SFUNC = temporal_merge_transfn,
   STYPE = internal,
   COMBINEFUNC = temporal_merge_combinefn,
@@ -59454,21 +58086,21 @@ CREATE FUNCTION temporal_append_finalfn(tcbuffer)
   AS 'MODULE_PATHNAME', 'Temporal_append_finalfn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE appendInstant(tcbuffer) (
+CREATE AGGREGATE appendInstantAgg(tcbuffer) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tcbuffer,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
 
-CREATE AGGREGATE appendInstant(tcbuffer, text) (
+CREATE AGGREGATE appendInstantAgg(tcbuffer, text) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tcbuffer,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
 
-CREATE AGGREGATE appendInstant(tcbuffer, text, float, interval) (
+CREATE AGGREGATE appendInstantAgg(tcbuffer, text, float, interval) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tcbuffer,
   FINALFUNC = temporal_append_finalfn,
@@ -59483,7 +58115,7 @@ CREATE FUNCTION temporal_app_tseq_transfn(tcbuffer, tcbuffer)
   AS 'MODULE_PATHNAME', 'Temporal_app_tseq_transfn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE appendSequence(tcbuffer) (
+CREATE AGGREGATE appendSequenceAgg(tcbuffer) (
   SFUNC = temporal_app_tseq_transfn,
   STYPE = tcbuffer,
   FINALFUNC = temporal_append_finalfn,
@@ -61518,6 +60150,10 @@ CREATE FUNCTION merge(tnpoint[])
 CREATE FUNCTION tempSubtype(tnpoint)
   RETURNS text
   AS 'MODULE_PATHNAME', 'Temporal_subtype'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tempBasetype(tnpoint)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Temporal_basetype_name'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION interp(tnpoint)
@@ -63835,7 +62471,7 @@ CREATE FUNCTION tnpoint_tagg_finalfn(internal)
   AS 'MODULE_PATHNAME', 'Temporal_tagg_finalfn'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE AGGREGATE merge(tnpoint) (
+CREATE AGGREGATE mergeAgg(tnpoint) (
   SFUNC = temporal_merge_transfn,
   STYPE = internal,
   COMBINEFUNC = temporal_merge_combinefn,
@@ -63875,21 +62511,21 @@ CREATE FUNCTION temporal_append_finalfn(tnpoint)
   AS 'MODULE_PATHNAME', 'Temporal_append_finalfn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE appendInstant(tnpoint) (
+CREATE AGGREGATE appendInstantAgg(tnpoint) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tnpoint,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
 
-CREATE AGGREGATE appendInstant(tnpoint, text) (
+CREATE AGGREGATE appendInstantAgg(tnpoint, text) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tnpoint,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
 
-CREATE AGGREGATE appendInstant(tnpoint, text, float, interval) (
+CREATE AGGREGATE appendInstantAgg(tnpoint, text, float, interval) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tnpoint,
   FINALFUNC = temporal_append_finalfn,
@@ -63904,7 +62540,7 @@ CREATE FUNCTION temporal_app_tseq_transfn(tnpoint, tnpoint)
   AS 'MODULE_PATHNAME', 'Temporal_app_tseq_transfn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE appendSequence(tnpoint) (
+CREATE AGGREGATE appendSequenceAgg(tnpoint) (
   SFUNC = temporal_app_tseq_transfn,
   STYPE = tnpoint,
   FINALFUNC = temporal_append_finalfn,

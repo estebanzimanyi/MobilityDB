@@ -314,7 +314,7 @@ CREATE FUNCTION minDistance_transfn(float, tcbuffer, tcbuffer)
   AS 'MODULE_PATHNAME', 'Mindistance_transfn_tcbuffer'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE minDistance(tcbuffer, tcbuffer) (
+CREATE AGGREGATE minDistanceAgg(tcbuffer, tcbuffer) (
   SFUNC = minDistance_transfn,
   STYPE = float,
   COMBINEFUNC = float8smaller,

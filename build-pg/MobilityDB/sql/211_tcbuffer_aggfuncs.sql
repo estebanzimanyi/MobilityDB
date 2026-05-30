@@ -85,7 +85,7 @@ CREATE FUNCTION tcbuffer_tagg_finalfn(internal)
   AS 'MODULE_PATHNAME', 'Temporal_tagg_finalfn'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE AGGREGATE merge(tcbuffer) (
+CREATE AGGREGATE mergeAgg(tcbuffer) (
   SFUNC = temporal_merge_transfn,
   STYPE = internal,
   COMBINEFUNC = temporal_merge_combinefn,
@@ -125,21 +125,21 @@ CREATE FUNCTION temporal_append_finalfn(tcbuffer)
   AS 'MODULE_PATHNAME', 'Temporal_append_finalfn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE appendInstant(tcbuffer) (
+CREATE AGGREGATE appendInstantAgg(tcbuffer) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tcbuffer,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
 
-CREATE AGGREGATE appendInstant(tcbuffer, text) (
+CREATE AGGREGATE appendInstantAgg(tcbuffer, text) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tcbuffer,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
 
-CREATE AGGREGATE appendInstant(tcbuffer, text, float, interval) (
+CREATE AGGREGATE appendInstantAgg(tcbuffer, text, float, interval) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tcbuffer,
   FINALFUNC = temporal_append_finalfn,
@@ -154,7 +154,7 @@ CREATE FUNCTION temporal_app_tseq_transfn(tcbuffer, tcbuffer)
   AS 'MODULE_PATHNAME', 'Temporal_app_tseq_transfn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE appendSequence(tcbuffer) (
+CREATE AGGREGATE appendSequenceAgg(tcbuffer) (
   SFUNC = temporal_app_tseq_transfn,
   STYPE = tcbuffer,
   FINALFUNC = temporal_append_finalfn,

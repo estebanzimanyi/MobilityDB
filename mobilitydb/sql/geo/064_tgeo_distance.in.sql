@@ -314,13 +314,13 @@ CREATE FUNCTION minDistance_transfn(float, tgeometry, tgeometry)
   AS 'MODULE_PATHNAME', 'Mindistance_transfn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE minDistance(tgeompoint, tgeompoint) (
+CREATE AGGREGATE minDistanceAgg(tgeompoint, tgeompoint) (
   SFUNC = minDistance_transfn,
   STYPE = float,
   COMBINEFUNC = float8smaller,
   PARALLEL = SAFE
 );
-CREATE AGGREGATE minDistance(tgeometry, tgeometry) (
+CREATE AGGREGATE minDistanceAgg(tgeometry, tgeometry) (
   SFUNC = minDistance_transfn,
   STYPE = float,
   COMBINEFUNC = float8smaller,

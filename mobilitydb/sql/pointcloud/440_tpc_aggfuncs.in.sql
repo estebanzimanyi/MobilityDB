@@ -177,7 +177,7 @@ CREATE FUNCTION tpcpatch_tagg_finalfn(internal)
   AS 'MODULE_PATHNAME', 'Temporal_tagg_finalfn'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE AGGREGATE merge(tpcpoint) (
+CREATE AGGREGATE mergeAgg(tpcpoint) (
   SFUNC = temporal_merge_transfn,
   STYPE = internal,
   COMBINEFUNC = temporal_merge_combinefn,
@@ -187,7 +187,7 @@ CREATE AGGREGATE merge(tpcpoint) (
   PARALLEL = safe
 );
 
-CREATE AGGREGATE merge(tpcpatch) (
+CREATE AGGREGATE mergeAgg(tpcpatch) (
   SFUNC = temporal_merge_transfn,
   STYPE = internal,
   COMBINEFUNC = temporal_merge_combinefn,
@@ -218,14 +218,14 @@ CREATE FUNCTION temporal_append_finalfn(tpcpoint)
   AS 'MODULE_PATHNAME', 'Temporal_append_finalfn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE appendInstant(tpcpoint) (
+CREATE AGGREGATE appendInstantAgg(tpcpoint) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tpcpoint,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
 
-CREATE AGGREGATE appendInstant(tpcpoint, text, interval) (
+CREATE AGGREGATE appendInstantAgg(tpcpoint, text, interval) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tpcpoint,
   FINALFUNC = temporal_append_finalfn,
@@ -244,7 +244,7 @@ CREATE FUNCTION temporal_append_finalfn(tpcpatch)
   AS 'MODULE_PATHNAME', 'Temporal_append_finalfn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE appendInstant(tpcpatch) (
+CREATE AGGREGATE appendInstantAgg(tpcpatch) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tpcpatch,
   FINALFUNC = temporal_append_finalfn,
@@ -265,14 +265,14 @@ CREATE FUNCTION temporal_app_tseq_transfn(tpcpatch, tpcpatch)
   AS 'MODULE_PATHNAME', 'Temporal_app_tseq_transfn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE appendSequence(tpcpoint) (
+CREATE AGGREGATE appendSequenceAgg(tpcpoint) (
   SFUNC = temporal_app_tseq_transfn,
   STYPE = tpcpoint,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
 
-CREATE AGGREGATE appendSequence(tpcpatch) (
+CREATE AGGREGATE appendSequenceAgg(tpcpatch) (
   SFUNC = temporal_app_tseq_transfn,
   STYPE = tpcpatch,
   FINALFUNC = temporal_append_finalfn,

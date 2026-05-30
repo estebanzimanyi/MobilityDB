@@ -290,7 +290,7 @@ CREATE AGGREGATE tcount(tint) (
   PARALLEL = SAFE
 );
 
-CREATE AGGREGATE tmin(tint) (
+CREATE AGGREGATE tminAgg(tint) (
   SFUNC = tint_tmin_transfn,
   STYPE = internal,
   COMBINEFUNC = tint_tmin_combinefn,
@@ -299,7 +299,7 @@ CREATE AGGREGATE tmin(tint) (
   DESERIALFUNC = taggstate_deserialize,
   PARALLEL = SAFE
 );
-CREATE AGGREGATE tmax(tint) (
+CREATE AGGREGATE tmaxAgg(tint) (
   SFUNC = tint_tmax_transfn,
   STYPE = internal,
   COMBINEFUNC = tint_tmax_combinefn,
@@ -374,7 +374,7 @@ CREATE AGGREGATE tcount(tbigint) (
   PARALLEL = SAFE
 );
 
-CREATE AGGREGATE tmin(tbigint) (
+CREATE AGGREGATE tminAgg(tbigint) (
   SFUNC = tbigint_tmin_transfn,
   STYPE = internal,
   COMBINEFUNC = tbigint_tmin_combinefn,
@@ -383,7 +383,7 @@ CREATE AGGREGATE tmin(tbigint) (
   DESERIALFUNC = taggstate_deserialize,
   PARALLEL = SAFE
 );
-CREATE AGGREGATE tmax(tbigint) (
+CREATE AGGREGATE tmaxAgg(tbigint) (
   SFUNC = tbigint_tmax_transfn,
   STYPE = internal,
   COMBINEFUNC = tbigint_tmax_combinefn,
@@ -461,7 +461,7 @@ CREATE AGGREGATE tcount(tfloat) (
   PARALLEL = SAFE
 );
 
-CREATE AGGREGATE tmin(tfloat) (
+CREATE AGGREGATE tminAgg(tfloat) (
   SFUNC = tfloat_tmin_transfn,
   STYPE = internal,
   COMBINEFUNC = tfloat_tmin_combinefn,
@@ -470,7 +470,7 @@ CREATE AGGREGATE tmin(tfloat) (
   DESERIALFUNC = taggstate_deserialize,
   PARALLEL = SAFE
 );
-CREATE AGGREGATE tmax(tfloat) (
+CREATE AGGREGATE tmaxAgg(tfloat) (
   SFUNC = tfloat_tmax_transfn,
   STYPE = internal,
   COMBINEFUNC = tfloat_tmax_combinefn,
@@ -536,7 +536,7 @@ CREATE AGGREGATE tcount(ttext) (
   PARALLEL = SAFE
 );
 
-CREATE AGGREGATE tmin(ttext) (
+CREATE AGGREGATE tminAgg(ttext) (
   SFUNC = ttext_tmin_transfn,
   STYPE = internal,
   COMBINEFUNC = ttext_tmin_combinefn,
@@ -545,7 +545,7 @@ CREATE AGGREGATE tmin(ttext) (
   DESERIALFUNC = taggstate_deserialize,
   PARALLEL = SAFE
 );
-CREATE AGGREGATE tmax(ttext) (
+CREATE AGGREGATE tmaxAgg(ttext) (
   SFUNC = ttext_tmax_transfn,
   STYPE = internal,
   COMBINEFUNC = ttext_tmax_combinefn,
@@ -583,7 +583,7 @@ CREATE FUNCTION temporal_merge_combinefn(internal, internal)
   AS 'MODULE_PATHNAME', 'Temporal_merge_combinefn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE merge(tbool) (
+CREATE AGGREGATE mergeAgg(tbool) (
   SFUNC = temporal_merge_transfn,
   STYPE = internal,
   COMBINEFUNC = temporal_merge_combinefn,
@@ -592,7 +592,7 @@ CREATE AGGREGATE merge(tbool) (
   DESERIALFUNC = taggstate_deserialize,
   PARALLEL = safe
 );
-CREATE AGGREGATE merge(tint) (
+CREATE AGGREGATE mergeAgg(tint) (
   SFUNC = temporal_merge_transfn,
   STYPE = internal,
   COMBINEFUNC = temporal_merge_combinefn,
@@ -601,7 +601,7 @@ CREATE AGGREGATE merge(tint) (
   DESERIALFUNC = taggstate_deserialize,
   PARALLEL = safe
 );
-CREATE AGGREGATE merge(tbigint) (
+CREATE AGGREGATE mergeAgg(tbigint) (
   SFUNC = temporal_merge_transfn,
   STYPE = internal,
   COMBINEFUNC = temporal_merge_combinefn,
@@ -610,7 +610,7 @@ CREATE AGGREGATE merge(tbigint) (
   DESERIALFUNC = taggstate_deserialize,
   PARALLEL = safe
 );
-CREATE AGGREGATE merge(tfloat) (
+CREATE AGGREGATE mergeAgg(tfloat) (
   SFUNC = temporal_merge_transfn,
   STYPE = internal,
   COMBINEFUNC = temporal_merge_combinefn,
@@ -619,7 +619,7 @@ CREATE AGGREGATE merge(tfloat) (
   DESERIALFUNC = taggstate_deserialize,
   PARALLEL = safe
 );
-CREATE AGGREGATE merge(ttext) (
+CREATE AGGREGATE mergeAgg(ttext) (
   SFUNC = temporal_merge_transfn,
   STYPE = internal,
   COMBINEFUNC = temporal_merge_combinefn,
@@ -725,38 +725,38 @@ CREATE FUNCTION temporal_append_finalfn(ttext)
   AS 'MODULE_PATHNAME', 'Temporal_append_finalfn'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE AGGREGATE appendInstant(tbool) (
+CREATE AGGREGATE appendInstantAgg(tbool) (
   SFUNC = temporal_app_tinst_transfn(tbool, tbool),
   STYPE = tbool,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(tbool, interp text) (
+CREATE AGGREGATE appendInstantAgg(tbool, interp text) (
   SFUNC = temporal_app_tinst_transfn(tbool, tbool, text),
   STYPE = tbool,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(tbool, interp text, maxt interval) (
+CREATE AGGREGATE appendInstantAgg(tbool, interp text, maxt interval) (
   SFUNC = temporal_app_tinst_transfn(tbool, tbool, text, maxt),
   STYPE = tbool,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
 
-CREATE AGGREGATE appendInstant(tint) (
+CREATE AGGREGATE appendInstantAgg(tint) (
   SFUNC = temporal_app_tinst_transfn(tint, tint),
   STYPE = tint,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(tint, interp text) (
+CREATE AGGREGATE appendInstantAgg(tint, interp text) (
   SFUNC = temporal_app_tinst_transfn(tint, tint, text),
   STYPE = tint,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(tint, interp text, maxdist float, 
+CREATE AGGREGATE appendInstantAgg(tint, interp text, maxdist float, 
     maxt interval) (
   SFUNC = temporal_app_tinst_transfn(tint, tint, text, maxdist, maxt),
   STYPE = tint,
@@ -764,19 +764,19 @@ CREATE AGGREGATE appendInstant(tint, interp text, maxdist float,
   PARALLEL = safe
 );
 
-CREATE AGGREGATE appendInstant(tbigint) (
+CREATE AGGREGATE appendInstantAgg(tbigint) (
   SFUNC = temporal_app_tinst_transfn(tbigint, tbigint),
   STYPE = tbigint,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(tbigint, interp text) (
+CREATE AGGREGATE appendInstantAgg(tbigint, interp text) (
   SFUNC = temporal_app_tinst_transfn(tbigint, tbigint, text),
   STYPE = tbigint,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(tbigint, interp text, maxdist float, 
+CREATE AGGREGATE appendInstantAgg(tbigint, interp text, maxdist float, 
     maxt interval) (
   SFUNC = temporal_app_tinst_transfn(tbigint, tbigint, text, maxdist, maxt),
   STYPE = tbigint,
@@ -784,19 +784,19 @@ CREATE AGGREGATE appendInstant(tbigint, interp text, maxdist float,
   PARALLEL = safe
 );
 
-CREATE AGGREGATE appendInstant(tfloat) (
+CREATE AGGREGATE appendInstantAgg(tfloat) (
   SFUNC = temporal_app_tinst_transfn(tfloat, tfloat),
   STYPE = tfloat,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(tfloat, interp text) (
+CREATE AGGREGATE appendInstantAgg(tfloat, interp text) (
   SFUNC = temporal_app_tinst_transfn(tfloat, tfloat, text),
   STYPE = tfloat,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(tfloat, interp text, maxdist float, 
+CREATE AGGREGATE appendInstantAgg(tfloat, interp text, maxdist float, 
     maxt interval) (
   SFUNC = temporal_app_tinst_transfn(tfloat, tfloat, text, maxdist, maxt),
   STYPE = tfloat,
@@ -804,19 +804,19 @@ CREATE AGGREGATE appendInstant(tfloat, interp text, maxdist float,
   PARALLEL = safe
 );
 
-CREATE AGGREGATE appendInstant(ttext) (
+CREATE AGGREGATE appendInstantAgg(ttext) (
   SFUNC = temporal_app_tinst_transfn(ttext, ttext),
   STYPE = ttext,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(ttext, interp text) (
+CREATE AGGREGATE appendInstantAgg(ttext, interp text) (
   SFUNC = temporal_app_tinst_transfn(ttext, ttext, text),
   STYPE = ttext,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(ttext, interp text, maxt interval) (
+CREATE AGGREGATE appendInstantAgg(ttext, interp text, maxt interval) (
   SFUNC = temporal_app_tinst_transfn(ttext, ttext, text, maxt),
   STYPE = ttext,
   FINALFUNC = temporal_append_finalfn,
@@ -847,31 +847,31 @@ CREATE FUNCTION temporal_app_tseq_transfn(ttext, ttext)
   AS 'MODULE_PATHNAME', 'Temporal_app_tseq_transfn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE appendSequence(tbool) (
+CREATE AGGREGATE appendSequenceAgg(tbool) (
   SFUNC = temporal_app_tseq_transfn,
   STYPE = tbool,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendSequence(tint) (
+CREATE AGGREGATE appendSequenceAgg(tint) (
   SFUNC = temporal_app_tseq_transfn,
   STYPE = tint,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendSequence(tbigint) (
+CREATE AGGREGATE appendSequenceAgg(tbigint) (
   SFUNC = temporal_app_tseq_transfn,
   STYPE = tbigint,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendSequence(tfloat) (
+CREATE AGGREGATE appendSequenceAgg(tfloat) (
   SFUNC = temporal_app_tseq_transfn,
   STYPE = tfloat,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendSequence(ttext) (
+CREATE AGGREGATE appendSequenceAgg(ttext) (
   SFUNC = temporal_app_tseq_transfn,
   STYPE = ttext,
   FINALFUNC = temporal_append_finalfn,

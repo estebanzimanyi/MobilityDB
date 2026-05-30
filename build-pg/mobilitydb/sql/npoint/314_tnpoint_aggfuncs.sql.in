@@ -100,7 +100,7 @@ CREATE FUNCTION tnpoint_tagg_finalfn(internal)
   AS 'MODULE_PATHNAME', 'Temporal_tagg_finalfn'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE AGGREGATE merge(tnpoint) (
+CREATE AGGREGATE mergeAgg(tnpoint) (
   SFUNC = temporal_merge_transfn,
   STYPE = internal,
   COMBINEFUNC = temporal_merge_combinefn,
@@ -140,21 +140,21 @@ CREATE FUNCTION temporal_append_finalfn(tnpoint)
   AS 'MODULE_PATHNAME', 'Temporal_append_finalfn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE appendInstant(tnpoint) (
+CREATE AGGREGATE appendInstantAgg(tnpoint) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tnpoint,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
 
-CREATE AGGREGATE appendInstant(tnpoint, text) (
+CREATE AGGREGATE appendInstantAgg(tnpoint, text) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tnpoint,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
 
-CREATE AGGREGATE appendInstant(tnpoint, text, float, interval) (
+CREATE AGGREGATE appendInstantAgg(tnpoint, text, float, interval) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tnpoint,
   FINALFUNC = temporal_append_finalfn,
@@ -169,7 +169,7 @@ CREATE FUNCTION temporal_app_tseq_transfn(tnpoint, tnpoint)
   AS 'MODULE_PATHNAME', 'Temporal_app_tseq_transfn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE appendSequence(tnpoint) (
+CREATE AGGREGATE appendSequenceAgg(tnpoint) (
   SFUNC = temporal_app_tseq_transfn,
   STYPE = tnpoint,
   FINALFUNC = temporal_append_finalfn,

@@ -138,7 +138,7 @@ CREATE FUNCTION tgeography_tagg_finalfn(internal)
   AS 'MODULE_PATHNAME', 'Temporal_tagg_finalfn'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE AGGREGATE merge(tgeometry) (
+CREATE AGGREGATE mergeAgg(tgeometry) (
   SFUNC = temporal_merge_transfn,
   STYPE = internal,
   COMBINEFUNC = temporal_merge_combinefn,
@@ -147,7 +147,7 @@ CREATE AGGREGATE merge(tgeometry) (
   DESERIALFUNC = taggstate_deserialize,
   PARALLEL = safe
 );
-CREATE AGGREGATE merge(tgeography) (
+CREATE AGGREGATE mergeAgg(tgeography) (
   SFUNC = temporal_merge_transfn,
   STYPE = internal,
   COMBINEFUNC = temporal_merge_combinefn,
@@ -206,39 +206,39 @@ CREATE FUNCTION temporal_append_finalfn(tgeography)
   AS 'MODULE_PATHNAME', 'Temporal_append_finalfn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE appendInstant(tgeometry) (
+CREATE AGGREGATE appendInstantAgg(tgeometry) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tgeometry,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(tgeography) (
+CREATE AGGREGATE appendInstantAgg(tgeography) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tgeography,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
 
-CREATE AGGREGATE appendInstant(tgeometry, text) (
+CREATE AGGREGATE appendInstantAgg(tgeometry, text) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tgeometry,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(tgeography, text) (
+CREATE AGGREGATE appendInstantAgg(tgeography, text) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tgeography,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
 
-CREATE AGGREGATE appendInstant(tgeometry, text, float, interval) (
+CREATE AGGREGATE appendInstantAgg(tgeometry, text, float, interval) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tgeometry,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendInstant(tgeography, text, float, interval) (
+CREATE AGGREGATE appendInstantAgg(tgeography, text, float, interval) (
   SFUNC = temporal_app_tinst_transfn,
   STYPE = tgeography,
   FINALFUNC = temporal_append_finalfn,
@@ -257,13 +257,13 @@ CREATE FUNCTION temporal_app_tseq_transfn(tgeography, tgeography)
   AS 'MODULE_PATHNAME', 'Temporal_app_tseq_transfn'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
-CREATE AGGREGATE appendSequence(tgeometry) (
+CREATE AGGREGATE appendSequenceAgg(tgeometry) (
   SFUNC = temporal_app_tseq_transfn,
   STYPE = tgeometry,
   FINALFUNC = temporal_append_finalfn,
   PARALLEL = safe
 );
-CREATE AGGREGATE appendSequence(tgeography) (
+CREATE AGGREGATE appendSequenceAgg(tgeography) (
   SFUNC = temporal_app_tseq_transfn,
   STYPE = tgeography,
   FINALFUNC = temporal_append_finalfn,

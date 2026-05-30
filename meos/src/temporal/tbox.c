@@ -511,6 +511,26 @@ tbox_intspan(const TBox *box)
 }
 
 /**
+ * @ingroup meos_internal_box_conversion
+ * @brief Return a temporal box converted to a big integer span
+ * @param[in] box Temporal box
+ */
+Span *
+tbox_bigintspan(const TBox *box)
+{
+  assert(box); assert(MEOS_FLAGS_GET_X(box->flags));
+  MeosType basetype = box->span.basetype;
+  if (basetype == T_INT8)
+    return span_copy(&box->span);
+  Span *result = palloc(sizeof(Span));
+  if (basetype == T_INT4)
+    intspan_set_bigintspan(&box->span, result);
+  else /* basetype == T_FLOAT8 */
+    floatspan_set_intspan(&box->span, result);
+  return result;
+}
+
+/**
  * @ingroup meos_box_conversion
  * @brief Convert a temporal box into an integer span
  * @param[in] box Temporal box
@@ -558,6 +578,22 @@ tbox_to_floatspan(const TBox *box)
   if (! ensure_has_X(T_TBOX, box->flags))
     return NULL;
   return tbox_floatspan(box);
+}
+
+/**
+ * @ingroup meos_box_conversion
+ * @brief Return a temporal box converted to a big integer span
+ * @param[in] box Temporal box
+ * @csqlfn #Tbox_to_bigintspan()
+ */
+Span *
+tbox_to_bigintspan(const TBox *box)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(box, NULL);
+  if (! ensure_has_X(T_TBOX, box->flags))
+    return NULL;
+  return tbox_bigintspan(box);
 }
 
 /**
