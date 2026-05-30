@@ -296,7 +296,7 @@ trgeometry_to_tpoint(const Temporal *temp)
  * reference geometry and emits the resulting polygon. The returned
  * `tgeometry` has the same temporal structure as the input and the same
  * SRID as the reference geometry.
- * @note Unlike `trgeo_to_tpoint` (which gives the antenna point trajectory),
+ * @note Unlike `trgeometry_to_tpoint` (which gives the antenna point trajectory),
  * this preserves the body's footprint at each instant — the natural input
  * for compositional spatial-rel queries against `tgeometry`'s full surface.
  * @param[in] temp Temporal rigid geometry
@@ -854,7 +854,7 @@ Set *
 trgeo_points(const Temporal *temp)
 {
   VALIDATE_TRGEOMETRY(temp, NULL);
-  Temporal *tpose = trgeo_to_tpose(temp);
+  Temporal *tpose = trgeometry_to_tpose(temp);
   if (! tpose)
     return NULL;
   Set *result = tpose_points(tpose);
@@ -872,7 +872,7 @@ Temporal *
 trgeo_rotation(const Temporal *temp)
 {
   VALIDATE_TRGEOMETRY(temp, NULL);
-  Temporal *tpose = trgeo_to_tpose(temp);
+  Temporal *tpose = trgeometry_to_tpose(temp);
   if (! tpose)
     return NULL;
   Temporal *result = tpose_rotation(tpose);
@@ -895,7 +895,7 @@ trgeo_segments(const Temporal *temp, int *count)
   if (! ensure_continuous(temp))
     return NULL;
   const GSERIALIZED *geo = trgeo_geom_p(temp);
-  Temporal *tpose = trgeo_to_tpose(temp);
+  Temporal *tpose = trgeometry_to_tpose(temp);
   if (! tpose)
     return NULL;
   TSequence **segs = temporal_segments(tpose, count);
@@ -913,7 +913,7 @@ trgeo_segments(const Temporal *temp, int *count)
 }
 
 /*
- * @brief Adaptive sub-sampling tolerances for trgeo_traversed_area.
+ * @brief Adaptive sub-sampling tolerances for trgeometry_traversed_area.
  *
  * Mirrors TRGEO_TDISTANCE_ADAPTIVE_TOL / TRGEO_TDISTANCE_ADAPTIVE_MAX_DEPTH
  * in the trgeometry distance kernel (see meos/src/rgeo/trgeo_distance.c).
@@ -947,7 +947,7 @@ trgeo_trav_emit_at(const Temporal *temp, TimestampTz t,
 }
 
 /**
- * @brief Recursive bisection for trgeo_traversed_area: append samples on
+ * @brief Recursive bisection for trgeometry_traversed_area: append samples on
  * (t_a, t_b] where the rotation magnitude exceeds the tolerance. Models
  * the same depth-bounded recursion as `trgeo_pair_dist_adaptive` in the
  * distance kernel; the convergence test here is the rotation magnitude
@@ -987,7 +987,7 @@ trgeo_trav_adaptive(const Temporal *temp, const TInstant *inst_a,
    * sub-segment. Read it via the public tpose accessor.
    */
   Datum dpose_m;
-  Temporal *tpose_t = trgeo_to_tpose(temp);
+  Temporal *tpose_t = trgeometry_to_tpose(temp);
   bool ok = tpose_t &&
     temporal_value_at_timestamptz(tpose_t, t_m, false, &dpose_m);
   if (tpose_t) pfree(tpose_t);
@@ -1026,7 +1026,7 @@ trgeo_trav_adaptive(const Temporal *temp, const TInstant *inst_a,
  * union dissolves any redundant overlap between samples.
  */
 GSERIALIZED *
-trgeo_traversed_area(const Temporal *temp, bool unary_union)
+trgeometry_traversed_area(const Temporal *temp, bool unary_union)
 {
   VALIDATE_TRGEOMETRY(temp, NULL);
   int n_insts = 0;

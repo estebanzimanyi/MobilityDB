@@ -32,7 +32,7 @@
  * @brief Spatial restriction functions for temporal rigid geometries
  *
  * The restriction is evaluated on the temporal centroid trajectory
- * (`trgeo_to_tpoint`): a `trgeometry` is "in" a geometry / STBox at time
+ * (`trgeometry_to_tpoint`): a `trgeometry` is "in" a geometry / STBox at time
  * `t` iff its antenna position at `t` lies in that geometry / STBox.
  * This matches the tpose convention and uses the existing tgeompoint
  * restriction kernels.
@@ -73,7 +73,7 @@ trgeo_restrict_geom(const Temporal *temp, const GSERIALIZED *gs, bool atfunc)
   if (gserialized_is_empty(gs))
     return atfunc ? NULL : temporal_copy(temp);
 
-  Temporal *tpoint = trgeo_to_tpoint(temp);
+  Temporal *tpoint = trgeometry_to_tpoint(temp);
   Temporal *res = tgeo_restrict_geom(tpoint, gs, atfunc);
   Temporal *result = NULL;
   if (res)
@@ -137,7 +137,7 @@ trgeo_restrict_stbox(const Temporal *temp, const STBox *box, bool border_inc,
   if (! ensure_valid_trgeo_stbox(temp, box))
     return NULL;
 
-  Temporal *tpoint = trgeo_to_tpoint(temp);
+  Temporal *tpoint = trgeometry_to_tpoint(temp);
   Temporal *res = tgeo_restrict_stbox(tpoint, box, border_inc, atfunc);
   Temporal *result = NULL;
   if (res)

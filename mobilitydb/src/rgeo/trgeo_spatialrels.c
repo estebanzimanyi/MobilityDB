@@ -596,7 +596,7 @@ PG_FUNCTION_INFO_V1(Adwithin_trgeometry_trgeometry);
 inline Datum
 Adwithin_trgeometry_trgeometry(PG_FUNCTION_ARGS)
 {
-  return EA_dwithin_trgeo_trgeo(fcinfo, ALWAYS);
+  return EA_dwithin_trgeometry_trgeometry(fcinfo, ALWAYS);
 }
 
 /*****************************************************************************/
