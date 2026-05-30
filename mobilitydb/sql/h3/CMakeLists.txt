@@ -3,6 +3,7 @@ SET(LOCAL_FILES
   251_h3indexset
   254_h3indexset_ops
   260_h3index_sets
+  289_h3_geo
   270_th3index
   271_th3index_ops
   272_th3index_gist
@@ -17,6 +18,7 @@ SET(LOCAL_FILES
   286_th3index_metrics
   287_th3index_casts
   288_th3index_compops
+  290_th3index_spatialrels
   )
 
 foreach (f ${LOCAL_FILES})
