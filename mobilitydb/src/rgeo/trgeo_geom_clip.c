@@ -46,15 +46,15 @@
 #include "pg_temporal/temporal.h"
 #include "pg_geo/postgis.h"
 
-PGDLLEXPORT Datum Trgeo_geom_clip_polygon(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Trgeo_geom_clip_polygon);
+PGDLLEXPORT Datum Trgeometry_geom_clip_polygon(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Trgeometry_geom_clip_polygon);
 /**
  * @brief Return the time-parameter intervals during which a moving
  * segment under pure translation intersects a polygon.
  * @sqlfn _trgeo_geom_clip_polygon()
  */
 Datum
-Trgeo_geom_clip_polygon(PG_FUNCTION_ARGS)
+Trgeometry_geom_clip_polygon(PG_FUNCTION_ARGS)
 {
   GSERIALIZED *gs_a1 = PG_GETARG_GSERIALIZED_P(0);
   GSERIALIZED *gs_b1 = PG_GETARG_GSERIALIZED_P(1);
@@ -97,15 +97,15 @@ Trgeo_geom_clip_polygon(PG_FUNCTION_ARGS)
   PG_RETURN_SPANSET_P(result);
 }
 
-PGDLLEXPORT Datum Trgeo_geom_clip_polygon_posed(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Trgeo_geom_clip_polygon_posed);
+PGDLLEXPORT Datum Trgeometry_geom_clip_polygon_posed(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Trgeometry_geom_clip_polygon_posed);
 /**
  * @brief Return the time-parameter intervals during which a moving
  * body's edge under interpolated 2D pose intersects a polygon.
  * @sqlfn _trgeo_geom_clip_polygon_posed()
  */
 Datum
-Trgeo_geom_clip_polygon_posed(PG_FUNCTION_ARGS)
+Trgeometry_geom_clip_polygon_posed(PG_FUNCTION_ARGS)
 {
   GSERIALIZED *gs_pa = PG_GETARG_GSERIALIZED_P(0);
   GSERIALIZED *gs_pb = PG_GETARG_GSERIALIZED_P(1);

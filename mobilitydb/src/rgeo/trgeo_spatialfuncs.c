@@ -52,14 +52,17 @@ PGDLLEXPORT Datum Trgeometry_traversed_area(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Trgeometry_traversed_area);
 /**
  * @ingroup mobilitydb_rgeo_accessor
- * @brief Return a temporal rigid geometry restricted to a geometry
- * @sqlfn atGeometry()
+ * @brief Return the area traversed by a temporal rigid geometry
+ * @sqlfn traversedArea()
  */
 inline Datum
 Trgeometry_traversed_area(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  GSERIALIZED *result = trgeometry_traversed_area(temp);
+  bool unary_union = false;
+  if (PG_NARGS() > 1 && ! PG_ARGISNULL(1))
+    unary_union = PG_GETARG_BOOL(1);
+  GSERIALIZED *result = trgeometry_traversed_area(temp, unary_union);
   PG_FREE_IF_COPY(temp, 0);
   if (! result)
     PG_RETURN_NULL();
@@ -79,7 +82,7 @@ Trgeometry_restrict_geom(FunctionCallInfo fcinfo, bool atfunc)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
-  Temporal *result = trgeo_restrict_geom(temp, gs, NULL, atfunc);
+  Temporal *result = trgeo_restrict_geom(temp, gs, atfunc);
   PG_FREE_IF_COPY(temp, 0);
   PG_FREE_IF_COPY(gs, 1);
   if (! result)

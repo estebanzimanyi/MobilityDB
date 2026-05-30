@@ -30,7 +30,7 @@
  *****************************************************************************/
 
 /*
- * 131_trgeo_tempspatialrels.in.sql
+ * 131_trgeometry_tempspatialrels.in.sql
  *
  * Temporal spatial relationships for temporal rigid geometries.
  *
@@ -39,7 +39,7 @@
  *
  * Implementation: SQL composition through the materialised polygon
  * trajectory, exposed by the `tgeometry(trgeometry)` cast added in
- * `122_trgeo.in.sql`. The cast walks the trgeo's instants, applies
+ * `122_trgeometry.in.sql`. The cast walks the trgeo's instants, applies
  * each pose to the reference geometry, and emits a `tgeometry`
  * polygon-per-instant; tgeometry's full temporal-rel surface
  * (tContains, tCovers, tDisjoint, tIntersects, tTouches, tDwithin)

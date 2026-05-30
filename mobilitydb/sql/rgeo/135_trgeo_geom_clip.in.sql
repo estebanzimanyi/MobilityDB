@@ -32,7 +32,7 @@
  * @brief Swept-edge-polygon clip primitive for trgeometry (M1 + M2)
  *
  * Internal helper exposed for testing the kernel from SQL.
- * Builds on top will wire `trgeo_at_geom`, `trgeo_traversed_area`,
+ * Builds on top will wire `trgeometry_at_geom`, `trgeometry_traversed_area`,
  * and `tgeo_restrict_stbox` through this primitive once M2
  * (rotational case) lands.
  */
@@ -54,10 +54,10 @@
  *               caller supplies one edge at a time.
  * @return floatspanset of normalised parameter intervals in [0, 1]
  */
-CREATE FUNCTION _trgeo_geom_clip_polygon(geometry, geometry, geometry,
+CREATE FUNCTION _trgeometry_geom_clip_polygon(geometry, geometry, geometry,
     geometry, geometry)
   RETURNS floatspanset
-  AS 'MODULE_PATHNAME', 'Trgeo_geom_clip_polygon'
+  AS 'MODULE_PATHNAME', 'Trgeometry_geom_clip_polygon'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /**
@@ -78,10 +78,10 @@ CREATE FUNCTION _trgeo_geom_clip_polygon(geometry, geometry, geometry,
  *               are silently skipped.
  * @return floatspanset of normalised parameter intervals in [0, 1]
  */
-CREATE FUNCTION _trgeo_geom_clip_polygon_posed(geometry, geometry,
+CREATE FUNCTION _trgeometry_geom_clip_polygon_posed(geometry, geometry,
     pose, pose, geometry)
   RETURNS floatspanset
-  AS 'MODULE_PATHNAME', 'Trgeo_geom_clip_polygon_posed'
+  AS 'MODULE_PATHNAME', 'Trgeometry_geom_clip_polygon_posed'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************/

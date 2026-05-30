@@ -146,82 +146,82 @@ Acovers_trgeometry_geo(PG_FUNCTION_ARGS)
 
 /*****************************************************************************/
 
-PGDLLEXPORT Datum Econtains_trgeo_geo(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Econtains_trgeo_geo);
+PGDLLEXPORT Datum Econtains_trgeometry_geo(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Econtains_trgeometry_geo);
 /**
  * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if a temporal rigid geometry ever contains a geometry
  * @sqlfn eContains()
  */
 inline Datum
-Econtains_trgeo_geo(PG_FUNCTION_ARGS)
+Econtains_trgeometry_geo(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_tspatial_geo(fcinfo, &ea_contains_trgeo_geo, EVER);
 }
 
-PGDLLEXPORT Datum Acontains_trgeo_geo(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Acontains_trgeo_geo);
+PGDLLEXPORT Datum Acontains_trgeometry_geo(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Acontains_trgeometry_geo);
 /**
  * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if a temporal rigid geometry always contains a geometry
  * @sqlfn aContains()
  */
 inline Datum
-Acontains_trgeo_geo(PG_FUNCTION_ARGS)
+Acontains_trgeometry_geo(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_tspatial_geo(fcinfo, &ea_contains_trgeo_geo, ALWAYS);
 }
 
-PGDLLEXPORT Datum Econtains_trgeo_trgeo(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Econtains_trgeo_trgeo);
+PGDLLEXPORT Datum Econtains_trgeometry_trgeometry(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Econtains_trgeometry_trgeometry);
 /**
  * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if a temporal rigid geometry ever contains another one
  * @sqlfn eContains()
  */
 inline Datum
-Econtains_trgeo_trgeo(PG_FUNCTION_ARGS)
+Econtains_trgeometry_trgeometry(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_tspatial_tspatial(fcinfo, &ea_contains_trgeo_trgeo,
     EVER);
 }
 
-PGDLLEXPORT Datum Acontains_trgeo_trgeo(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Acontains_trgeo_trgeo);
+PGDLLEXPORT Datum Acontains_trgeometry_trgeometry(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Acontains_trgeometry_trgeometry);
 /**
  * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if a temporal rigid geometry always contains another one
  * @sqlfn aContains()
  */
 inline Datum
-Acontains_trgeo_trgeo(PG_FUNCTION_ARGS)
+Acontains_trgeometry_trgeometry(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_tspatial_tspatial(fcinfo, &ea_contains_trgeo_trgeo,
     ALWAYS);
 }
 
-PGDLLEXPORT Datum Ecovers_trgeo_trgeo(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Ecovers_trgeo_trgeo);
+PGDLLEXPORT Datum Ecovers_trgeometry_trgeometry(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Ecovers_trgeometry_trgeometry);
 /**
  * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if a temporal rigid geometry ever covers another one
  * @sqlfn eCovers()
  */
 inline Datum
-Ecovers_trgeo_trgeo(PG_FUNCTION_ARGS)
+Ecovers_trgeometry_trgeometry(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_tspatial_tspatial(fcinfo, &ea_covers_trgeo_trgeo, EVER);
 }
 
-PGDLLEXPORT Datum Acovers_trgeo_trgeo(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Acovers_trgeo_trgeo);
+PGDLLEXPORT Datum Acovers_trgeometry_trgeometry(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Acovers_trgeometry_trgeometry);
 /**
  * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if a temporal rigid geometry always covers another one
  * @sqlfn aCovers()
  */
 inline Datum
-Acovers_trgeo_trgeo(PG_FUNCTION_ARGS)
+Acovers_trgeometry_trgeometry(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_tspatial_tspatial(fcinfo, &ea_covers_trgeo_trgeo,
     ALWAYS);
@@ -463,29 +463,29 @@ Atouches_trgeometry_geo(PG_FUNCTION_ARGS)
 
 /*****************************************************************************/
 
-PGDLLEXPORT Datum Etouches_trgeo_trgeo(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Etouches_trgeo_trgeo);
+PGDLLEXPORT Datum Etouches_trgeometry_trgeometry(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Etouches_trgeometry_trgeometry);
 /**
  * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if two temporal rigid geometries ever touch
  * @sqlfn eTouches()
  */
 inline Datum
-Etouches_trgeo_trgeo(PG_FUNCTION_ARGS)
+Etouches_trgeometry_trgeometry(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_tspatial_tspatial(fcinfo, &ea_touches_trgeo_trgeo,
     EVER);
 }
 
-PGDLLEXPORT Datum Atouches_trgeo_trgeo(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Atouches_trgeo_trgeo);
+PGDLLEXPORT Datum Atouches_trgeometry_trgeometry(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Atouches_trgeometry_trgeometry);
 /**
  * @ingroup mobilitydb_geo_rel_ever
  * @brief Return true if two temporal rigid geometries always touch
  * @sqlfn aTouches()
  */
 inline Datum
-Atouches_trgeo_trgeo(PG_FUNCTION_ARGS)
+Atouches_trgeometry_trgeometry(PG_FUNCTION_ARGS)
 {
   return EA_spatialrel_tspatial_tspatial(fcinfo, &ea_touches_trgeo_trgeo,
     ALWAYS);

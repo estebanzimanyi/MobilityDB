@@ -303,7 +303,7 @@ trgeometry_to_tpoint(const Temporal *temp)
  * @csqlfn #Trgeometry_to_tgeometry()
  */
 Temporal *
-trgeo_to_tgeometry(const Temporal *temp)
+trgeometry_to_tgeometry(const Temporal *temp)
 {
   VALIDATE_TRGEOMETRY(temp, NULL);
   if (! ensure_has_geom(temp->flags))
