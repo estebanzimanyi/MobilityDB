@@ -124,6 +124,17 @@ static const char *MEOS_TYPE_NAMES[] =
   [T_TGEOMETRY] = "tgeometry",
   [T_TGEOGRAPHY] = "tgeography",
   [T_TRGEOMETRY] = "trgeometry",
+  [T_PCPOINT] = "pcpoint",
+  [T_PCPOINTSET] = "pcpointset",
+  [T_TPCPOINT] = "tpcpoint",
+  [T_PCPATCH] = "pcpatch",
+  [T_PCPATCHSET] = "pcpatchset",
+  [T_TPCPATCH] = "tpcpatch",
+  [T_TPCBOX] = "tpcbox",
+  [T_TBIGINT] = "tbigint",
+  [T_TH3INDEX] = "th3index",
+  [T_H3INDEX] = "h3index",
+  [T_H3INDEXSET] = "h3indexset",
 };
 
 /**
@@ -226,6 +237,9 @@ static const settype_catalog_struct MEOS_SETTYPE_CATALOG[] =
   {T_POSESET,       T_POSE},
   {T_NPOINTSET,     T_NPOINT},
   {T_CBUFFERSET,    T_CBUFFER},
+  {T_PCPOINTSET,    T_PCPOINT},
+  {T_PCPATCHSET,    T_PCPATCH},
+  {T_H3INDEXSET,    T_H3INDEX},
 };
 
 /**
@@ -267,6 +281,8 @@ static const temptype_catalog_struct MEOS_TEMPTYPE_CATALOG[] =
   {T_TDOUBLE3,   T_DOUBLE3},
   {T_TDOUBLE4,   T_DOUBLE4},
   {T_TBOOL,      T_BOOL},
+  {T_TBIGINT,    T_INT8},
+  {T_TH3INDEX,   T_H3INDEX},
   {T_TINT,       T_INT4},
   {T_TFLOAT,     T_FLOAT8},
   {T_TTEXT,      T_TEXT},
@@ -278,6 +294,8 @@ static const temptype_catalog_struct MEOS_TEMPTYPE_CATALOG[] =
   {T_TRGEOMETRY, T_POSE},
   {T_TNPOINT,    T_NPOINT},
   {T_TCBUFFER,   T_CBUFFER},
+  {T_TPCPOINT,   T_PCPOINT},
+  {T_TPCPATCH,   T_PCPATCH},
 };
 
 /*****************************************************************************/
@@ -584,8 +602,9 @@ spantype_spansettype(MeosType type)
 inline bool
 meos_basetype(MeosType type)
 {
-  return (type == T_BOOL || type == T_INT4 || type == T_INT8 || type == T_FLOAT8 ||
-    type == T_TEXT || type == T_DATE || type == T_TIMESTAMPTZ ||
+  return (type == T_BOOL || type == T_INT4 || type == T_INT8 ||
+    type == T_FLOAT8 || type == T_TEXT || type == T_DATE ||
+    type == T_TIMESTAMPTZ ||
     /* The doubleX are internal types used for temporal aggregation */
     type == T_DOUBLE2 || type == T_DOUBLE3 || type == T_DOUBLE4 ||
     type == T_GEOMETRY || type == T_GEOGRAPHY
@@ -598,6 +617,12 @@ meos_basetype(MeosType type)
 #if POSE || RGEO
     || type == T_POSE
 #endif
+#if POINTCLOUD
+    || type == T_PCPOINT || type == T_PCPATCH
+#endif
+#if H3
+    || type == T_H3INDEX
+#endif
     );
 }
 #endif
@@ -608,8 +633,12 @@ meos_basetype(MeosType type)
 inline bool
 basetype_byvalue(MeosType type)
 {
-  return (type == T_BOOL || type == T_INT4 || type == T_INT8 || type == T_FLOAT8 ||
-    type == T_DATE || type == T_TIMESTAMPTZ);
+  return (type == T_BOOL || type == T_INT4 || type == T_INT8 ||
+    type == T_FLOAT8 || type == T_DATE || type == T_TIMESTAMPTZ
+#if H3
+    || type == T_H3INDEX
+#endif
+    );
 }
 
 /**
@@ -621,6 +650,9 @@ basetype_varlength(MeosType type)
   return (type == T_TEXT || type == T_GEOMETRY || type == T_GEOGRAPHY
 #if POSE || RGEO
     || type == T_POSE
+#endif
+#if POINTCLOUD
+    || type == T_PCPOINT || type == T_PCPATCH
 #endif
     );
 }
@@ -660,6 +692,10 @@ meostype_length(MeosType type)
   if (type == T_POSE)
     return -1;
 #endif
+#if POINTCLOUD
+  if (type == T_PCPOINT || type == T_PCPATCH)
+    return -1;
+#endif
   meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
     "Unknown base type: %s", meostype_name(type));
   return SHRT_MAX;
@@ -675,7 +711,11 @@ alphanum_basetype(MeosType type)
 {
   return (type == T_BOOL || type == T_INT4 || type == T_INT8 ||
     type == T_FLOAT8 || type == T_TEXT || type == T_DATE ||
-    type == T_TIMESTAMPTZ);
+    type == T_TIMESTAMPTZ
+#if H3
+    || type == T_H3INDEX
+#endif
+    );
 }
 
 /**
@@ -685,8 +725,8 @@ alphanum_basetype(MeosType type)
 inline bool
 alphanum_temptype(MeosType type)
 {
-  return (type == T_TBOOL || type == T_TINT || type == T_TFLOAT ||
-    type == T_TTEXT);
+  return (type == T_TBOOL || type == T_TINT || type == T_TBIGINT ||
+    type == T_TH3INDEX || type == T_TFLOAT || type == T_TTEXT);
 }
 #endif
 
@@ -715,6 +755,9 @@ spatial_basetype(MeosType type)
 #if POSE || RGEO
     || type == T_POSE
 #endif
+#if H3
+    || type == T_H3INDEX
+#endif
     );
 }
 
@@ -742,18 +785,21 @@ inline bool
 set_basetype(MeosType type)
 {
   return (type == T_TIMESTAMPTZ || type == T_DATE || type == T_INT4 ||
-      type == T_INT8 || type == T_FLOAT8 || type == T_TEXT ||
-      type == T_GEOMETRY || type == T_GEOGRAPHY
+    type == T_INT8 || type == T_FLOAT8 || type == T_TEXT ||
+    type == T_GEOMETRY || type == T_GEOGRAPHY
 #if CBUFFER
-      || type == T_CBUFFER
+    || type == T_CBUFFER
 #endif
 #if NPOINT
-      || type == T_NPOINT
+    || type == T_NPOINT
 #endif
 #if POSE || RGEO
-      || type == T_POSE
+    || type == T_POSE
 #endif
-      );
+#if POINTCLOUD
+    || type == T_PCPOINT || type == T_PCPATCH
+#endif
+    );
 }
 #endif
 
@@ -764,18 +810,24 @@ inline bool
 set_type(MeosType type)
 {
   return (type == T_TSTZSET || type == T_DATESET || type == T_INTSET ||
-      type == T_BIGINTSET || type == T_FLOATSET || type == T_TEXTSET ||
-      type == T_GEOMSET || type == T_GEOGSET
+    type == T_BIGINTSET || type == T_FLOATSET || type == T_TEXTSET ||
+    type == T_GEOMSET || type == T_GEOGSET
 #if CBUFFER
-      || type == T_CBUFFERSET
+    || type == T_CBUFFERSET
 #endif
 #if NPOINT
-      || type == T_NPOINTSET
+    || type == T_NPOINTSET
 #endif
 #if POSE || RGEO
-      || type == T_POSESET
+    || type == T_POSESET
 #endif
-      );
+#if POINTCLOUD
+    || type == T_PCPOINTSET || type == T_PCPATCHSET
+#endif
+#if H3
+    || type == T_H3INDEXSET
+#endif
+    );
 }
 
 /**
@@ -843,7 +895,11 @@ inline bool
 alphanumset_type(MeosType type)
 {
   return (type == T_TSTZSET || type == T_DATESET || type == T_INTSET ||
-    type == T_BIGINTSET || type == T_FLOATSET || type == T_TEXTSET);
+    type == T_BIGINTSET || type == T_FLOATSET || type == T_TEXTSET
+#if H3
+    || type == T_H3INDEXSET
+#endif
+    );
 }
 
 #if MEOS
@@ -904,6 +960,32 @@ ensure_spatialset_type(MeosType type)
 }
 #endif /* MEOS */
 
+#if POINTCLOUD
+/**
+ * @brief Return true if the type is a pgpointcloud base type (pcpoint, pcpatch)
+ */
+inline bool
+pointcloud_basetype(MeosType type)
+{
+  return (type == T_PCPOINT || type == T_PCPATCH);
+}
+
+/**
+ * @brief Return true if the type is a pgpointcloud set type
+ * (pcpointset, pcpatchset)
+ * @note Unlike @p spatialset_type, pointcloud sets carry no bounding box —
+ * dimension-level access requires loading the schema XML keyed by pcid
+ * from the pgpointcloud @p pointcloud_formats PG catalog table, which
+ * MEOS cannot do — the TPCBox bbox type is the separate structure that
+ * carries pointcloud spatial bounds.
+ */
+inline bool
+pointcloudset_type(MeosType type)
+{
+  return (type == T_PCPOINTSET || type == T_PCPATCHSET);
+}
+#endif /* POINTCLOUD */
+
 /*****************************************************************************/
 
 /**
@@ -953,7 +1035,8 @@ type_span_bbox(MeosType type)
 inline bool
 span_tbox_type(MeosType type)
 {
-  return (type == T_INTSPAN || type == T_FLOATSPAN || type == T_TSTZSPAN);
+  return (type == T_INTSPAN || type == T_BIGINTSPAN || type == T_FLOATSPAN ||
+    type == T_TSTZSPAN);
 }
 
 /**
@@ -1067,9 +1150,9 @@ ensure_timespanset_type(MeosType type)
 inline bool
 temporal_type(MeosType type)
 {
-  return (type == T_TBOOL || type == T_TINT || type == T_TFLOAT ||
-    type == T_TTEXT || type == T_TGEOMPOINT || type == T_TGEOGPOINT ||
-    type == T_TGEOMETRY || type == T_TGEOGRAPHY ||
+  return (type == T_TBOOL || type == T_TINT || type == T_TBIGINT ||
+    type == T_TFLOAT || type == T_TTEXT || type == T_TGEOMPOINT ||
+    type == T_TGEOGPOINT || type == T_TGEOMETRY || type == T_TGEOGRAPHY ||
     /* The doubleX are internal types used for temporal aggregation */
     type == T_TDOUBLE2 || type == T_TDOUBLE3 || type == T_TDOUBLE4
 #if CBUFFER
@@ -1084,6 +1167,12 @@ temporal_type(MeosType type)
 #if RGEO
     || type == T_TRGEOMETRY
 #endif
+#if POINTCLOUD
+    || type == T_TPCPOINT || type == T_TPCPATCH
+#endif
+#if H3
+    || type == T_TH3INDEX
+#endif
     );
 }
 
@@ -1095,8 +1184,8 @@ temporal_type(MeosType type)
 inline bool
 temporal_basetype(MeosType type)
 {
-  return (type == T_BOOL || type == T_INT4 || type == T_FLOAT8 ||
-    type == T_TEXT ||
+  return (type == T_BOOL || type == T_INT4 || type == T_INT8 ||
+    type == T_FLOAT8 || type == T_TEXT ||
     /* The doubleX are internal types used for temporal aggregation */
     type == T_DOUBLE2 || type == T_DOUBLE3 || type == T_DOUBLE4 ||
     type == T_GEOMETRY || type == T_GEOGRAPHY
@@ -1108,6 +1197,9 @@ temporal_basetype(MeosType type)
 #endif
 #if POSE || RGEO
     || type == T_POSE
+#endif
+#if POINTCLOUD
+    || type == T_PCPOINT || type == T_PCPATCH
 #endif
     );
 }
@@ -1149,8 +1241,8 @@ temptype_supports_linear(MeosType type)
 inline bool
 talphanum_type(MeosType type)
 {
-  return (type == T_TBOOL || type == T_TINT || type == T_TFLOAT ||
-    type == T_TTEXT);
+  return (type == T_TBOOL || type == T_TINT ||  type == T_TBIGINT ||
+    type == T_TFLOAT || type == T_TTEXT);
 }
 #endif
 
@@ -1165,13 +1257,25 @@ talpha_type(MeosType type)
     type == T_TDOUBLE3 || type == T_TDOUBLE4);
 }
 
+#if POINTCLOUD
+/**
+ * @brief Return true if the type is a temporal pgpointcloud type
+ *   (tpcpoint, tpcpatch) — its bounding box is a TPCBox.
+ */
+inline bool
+tpointcloud_temptype(MeosType type)
+{
+  return (type == T_TPCPOINT || type == T_TPCPATCH);
+}
+#endif
+
 /**
  * @brief Return true if the type is a temporal number type
  */
 inline bool
 tnumber_type(MeosType type)
 {
-  return (type == T_TINT || type == T_TFLOAT);
+  return (type == T_TINT || type == T_TBIGINT || type == T_TFLOAT);
 }
 
 /**
@@ -1193,7 +1297,7 @@ ensure_tnumber_type(MeosType type)
 bool
 tnumber_basetype(MeosType type)
 {
-  return (type == T_INT4 || type == T_FLOAT8);
+  return (type == T_INT4 || type == T_INT8 || type == T_FLOAT8);
 }
 
 /**
@@ -1217,7 +1321,7 @@ ensure_tnumber_basetype(MeosType type)
 bool
 tnumber_spantype(MeosType type)
 {
-  return (type == T_INTSPAN || type == T_FLOATSPAN);
+  return (type == T_INTSPAN || type == T_BIGINTSPAN || type == T_FLOATSPAN);
 }
 
 /*****************************************************************************
@@ -1246,6 +1350,9 @@ tspatial_type(MeosType type)
 #endif
 #if RGEO
     || type == T_TRGEOMETRY
+#endif
+#if H3
+    || type == T_TH3INDEX
 #endif
     );
 }
@@ -1366,7 +1473,11 @@ ensure_tgeometry_type(MeosType type)
 inline bool
 tgeodetic_type(MeosType type)
 {
-  return (type == T_TGEOGPOINT || type == T_TGEOGRAPHY);
+  return (type == T_TGEOGPOINT || type == T_TGEOGRAPHY
+#if H3
+    || type == T_TH3INDEX
+#endif
+    );
 }
 
 #if MEOS
