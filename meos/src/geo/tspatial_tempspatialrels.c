@@ -1455,18 +1455,10 @@ tdwithin_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, double dist)
   /* Ensure the validity of the arguments. ensure_valid_tspatial_geo
    * already enforces that the temporal geo and the geometry have the
    * same geodetic flag, so geodetic coordinates are supported here the
-   * same way as in #Tdistance_tgeo_geo (no ensure_not_geodetic_geo). */
+   * same way as in #Tdistance_tgeo_geo. A temporal point against a
+   * geodetic geometry is rejected; non-point geometries are routed
+   * through the polygonal buffer below. */
   if (! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs) ||
-      (tpoint_type(temp->temptype) && ! ensure_point_type(gs)) ||
-      ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
-    return NULL;
-
-  /* Determine the distance and the turning point functions to be applied.
-   * geo_dwithin_fn_geo selects the geodetic dwithin for geodetic
-   * coordinates and the 2D/3D planar dwithin otherwise (identical planar
-   * behaviour to before), mirroring how Tdistance_tgeo_geo selects its
-   * distance function. */
-  datum_func3 func = geo_dwithin_fn_geo(temp->flags, gs->gflags);
       (tpoint_type(temp->temptype) && ! ensure_not_geodetic_geo(gs)) ||
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return NULL;
@@ -1483,11 +1475,11 @@ tdwithin_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, double dist)
     return result;
   }
 
-  /* Determine the distance and the turning point functions to be applied */
-  datum_func3 func =
-    /* 3D only if both arguments are 3D */
-    MEOS_FLAGS_GET_Z(temp->flags) && FLAGS_GET_Z(gs->gflags) ?
-    &datum_geom_dwithin3d : &datum_geom_dwithin2d;
+  /* Determine the distance and the turning point functions to be applied.
+   * geo_dwithin_fn_geo selects the geodetic dwithin for geodetic
+   * coordinates and the 2D/3D planar dwithin otherwise, mirroring how
+   * Tdistance_tgeo_geo selects its distance function. */
+  datum_func3 func = geo_dwithin_fn_geo(temp->flags, gs->gflags);
   tpfunc_temp tpfn = &tpointsegm_tdwithin_turnpt;
   /* Call the generic function passing the two functions as arguments */
   return tdwithin_tspatial_spatial(temp, PointerGetDatum(gs),
