@@ -77,6 +77,7 @@
 #include <meos_pose.h>
 #include <meos_internal.h>
 #include "temporal/temporal.h"      /* ensure_not_null */
+#include "temporal/type_util.h"     /* pfree_array */
 #include "pose/pose.h"
 #include "pose/pose_geopose.h"
 
