@@ -118,11 +118,31 @@ jobs:
   setspan_arrow_conformance:
     name: Closure-type Arrow C Data Interface conformance
   arrow_conformance:
-    name: Arrow C Data Interface conformance (opaque and rigid geometry types)
+    name: Arrow C Data Interface conformance (all temporal types)
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
+
+      # Mirror pgversion.yml: prefer apt.postgresql.org over the runner's
+      # preinstalled PostgreSQL so the postgresql-server-dev package
+      # resolves cleanly (the runner ships a conflicting
+      # postgresql-common). Only pg_config is needed here — pgPointCloud
+      # produces a static libpc.a, no running server.
+      - name: Remove existing PostgreSQL installations [prefer apt.postgresql.org]
+        run: |
+          sudo service postgresql stop || true
+          sudo apt-get --purge remove postgresql* -y || true
+          sudo rm -rf /var/lib/postgresql/ /etc/postgresql/ \
+            /var/log/postgresql/ || true
+
+      - name: Add PostgreSQL APT repository
+        run: |
+          sudo apt-get install -y curl ca-certificates gnupg
+          curl https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+            | sudo apt-key add -
+          sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ \
+            $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
 
       - name: Install dependencies
         run: |
@@ -131,7 +151,10 @@ jobs:
             libgeos-dev \
             libproj-dev \
             libjson-c-dev \
-            libgsl-dev
+            libgsl-dev \
+            libh3-dev \
+            autoconf automake libtool libxml2-dev pkg-config \
+            postgresql-17 postgresql-server-dev-17
 
       # The set, span, span set, tbox and stbox Arrow export needs only the
       # always-built core; the geometry and geography set base types and the
@@ -147,11 +170,64 @@ jobs:
       # Struct{ref:LargeBinary, pose} value leaf are exercised. The
       # decomposed circular buffer cases are kept as a regression guard.
       - name: Build MEOS with circular buffers, poses and rigid geometries
+      # The pgdg libh3-dev package's layout differs between releases —
+      # h3api.h has been seen at /usr/include/h3api.h,
+      # /usr/include/h3/h3api.h, and (rarely) /usr/include/h3-3/h3api.h.
+      # Find both the header and the library at runtime and export them so
+      # the cmake step can pin -DH3_INCLUDE_DIR / -DH3_LIBRARY explicitly,
+      # sidestepping CMake's find_path / find_library defaults entirely.
+      # This mirrors the canonical recipe in pgversion.yml's coverage leg.
+      - name: Locate libh3 on disk and pin its paths
+        run: |
+          dpkg -L libh3-dev || true
+          H3_INC=$(dpkg -L libh3-dev | grep -E 'h3api\.h$' | head -1)
+          H3_LIB=$(dpkg -L libh3-dev libh3-1 2>/dev/null | grep -E 'libh3\.so$' | head -1)
+          if [ -z "$H3_INC" ] || [ -z "$H3_LIB" ]; then
+            find /usr -name 'h3api.h' 2>/dev/null
+            find /usr -name 'libh3*' 2>/dev/null
+            echo "::error::could not locate libh3 headers/library"
+            exit 1
+          fi
+          H3_INC_DIR=$(dirname "$H3_INC")
+          echo "H3_INCLUDE_DIR=$H3_INC_DIR" >> $GITHUB_ENV
+          echo "H3_LIBRARY=$H3_LIB" >> $GITHUB_ENV
+          echo "Found libh3 headers at: $H3_INC_DIR"
+          echo "Found libh3 library at: $H3_LIB"
+
+      # MEOS's POINTCLOUD=ON build links against pgPointCloud's static
+      # libpc.a, produced as a side-effect of the upstream autotools
+      # build. The pgPointCloud source is vendored at pointcloud-pg/;
+      # run its autotools build here just to harvest libpc.a, exactly
+      # as the pgversion.yml coverage axis does.
+      - name: Build pgPointCloud from source (for libpc.a)
+        run: |
+          cd pointcloud-pg
+          ./autogen.sh
+          ./configure \
+            --with-pgconfig=/usr/lib/postgresql/17/bin/pg_config
+          make -j $(nproc)
+          ls -la lib/libpc.a
+
+      # Build MEOS over the full temporal type surface the validator
+      # covers: the decomposed nested-Struct value leaf (circular buffer,
+      # pose and network point), the opaque LargeBinary "Z" leaf (temporal
+      # geometry and geography, both core; temporal point cloud point and
+      # patch), the rigid geometry Struct{ref:LargeBinary, pose} value
+      # leaf, and the scalar fixed-width leaf (the core big integer Int64
+      # "l" leaf and the H3 index UInt64 "L" leaf). -DCBUFFER -DPOSE -DRGEO
+      # -DNPOINT add the decomposed extended tier (NPOINT also installs the
+      # ways1000.csv route data the standalone build reads); -DH3 adds the
+      # H3 index; -DPOINTCLOUD adds the point cloud types. The decomposed
+      # circular buffer cases are kept as a regression guard.
+      - name: Build MEOS over the full temporal type surface
         run: |
           mkdir build
           cd build
           cmake -DCMAKE_BUILD_TYPE=Debug -DMEOS=on \
-            -DCBUFFER=on -DPOSE=on -DRGEO=on ..
+            -DCBUFFER=on -DPOSE=on -DRGEO=on -DNPOINT=on \
+            -DH3=on -DH3_INCLUDE_DIR="$H3_INCLUDE_DIR" \
+            -DH3_LIBRARY="$H3_LIBRARY" \
+            -DPOINTCLOUD=on ..
           make -j $(nproc)
           sudo make install
 
@@ -163,8 +239,15 @@ jobs:
       # the closure-type export is consumable by an external Arrow engine.
       - name: Validate the closure-type Arrow export with nanoarrow
       # C Data Interface validation over the whole nested tree, proving the
-      # opaque and rigid geometry exports are consumable by an external
-      # Arrow engine.
+      # exports for every temporal type are consumable by an external Arrow
+      # engine. meos.h, meos_pointcloud.h and pointcloud/pgsql_compat.h are
+      # picked up from the install prefix; the installed meos_h3.h includes
+      # <h3api.h>, so the pinned H3 include directory is on the compile
+      # line; the vendored pgPointCloud pc_api.h / pc_api_internal.h come
+      # from pointcloud-pg/lib, exactly as meos/examples/tpcbox_rtree.c
+      # builds. The source meos/include is intentionally not on the path so
+      # the generated install meos.h is used, not the un-preprocessed
+      # source.
       - name: Validate the Arrow export with nanoarrow
         run: |
           cd meos/examples
@@ -174,6 +257,9 @@ jobs:
             "$GITHUB_WORKSPACE/nanoarrow/nanoarrow.c" \
             -L/usr/local/lib -lmeos
           ./setspan_arrow_validate
+          gcc -Wall -g -I/usr/local/include -I"$H3_INCLUDE_DIR" \
+            -I"$GITHUB_WORKSPACE" \
+            -I"$GITHUB_WORKSPACE/pointcloud-pg/lib" \
             -o temporal_arrow_validate temporal_arrow_validate.c \
             "$GITHUB_WORKSPACE/nanoarrow/nanoarrow.c" \
             -L/usr/local/lib -lmeos
