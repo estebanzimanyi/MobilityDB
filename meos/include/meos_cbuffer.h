@@ -230,10 +230,15 @@ extern Temporal *tcbuffer_make(const Temporal *tpoint, const Temporal *tfloat);
  * Accessor functions
  *****************************************************************************/
 
+extern Cbuffer *tcbuffer_end_value(const Temporal *temp);
 extern Set *tcbuffer_points(const Temporal *temp);
 extern Set *tcbuffer_radius(const Temporal *temp);
 extern GSERIALIZED *tcbuffer_traversed_area(const Temporal *temp, bool unary_union);
 extern GSERIALIZED *tcbuffer_convex_hull(const Temporal *temp);
+extern Cbuffer *tcbuffer_start_value(const Temporal *temp);
+extern bool tcbuffer_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict, Cbuffer **value);
+extern bool tcbuffer_value_n(const Temporal *temp, int n, Cbuffer **result);
+extern Cbuffer **tcbuffer_values(const Temporal *temp, int *count);
 
 /*****************************************************************************
  * Conversion functions
