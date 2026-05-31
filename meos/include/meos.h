@@ -2110,6 +2110,13 @@ extern double temporal_lcss_distance(const Temporal *temp1, const Temporal *temp
 
 /*****************************************************************************/
 
+/* Extended Kalman Filter (EKF) outlier filtering */
+
+extern Temporal *temporal_ext_kalman_filter(const Temporal *temp, double gate,
+  double q, double variance, bool to_drop);
+
+/*****************************************************************************/
+
 /* Tile functions for temporal types */
 
 /**
