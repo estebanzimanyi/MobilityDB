@@ -82,7 +82,7 @@ Trgeometry_traversed_area(PG_FUNCTION_ARGS)
  * geometry
  */
 static Datum
-Trgeo_restrict_geom(FunctionCallInfo fcinfo, bool atfunc)
+Trgeometry_restrict_geom(FunctionCallInfo fcinfo, bool atfunc)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(1);
@@ -94,21 +94,21 @@ Trgeo_restrict_geom(FunctionCallInfo fcinfo, bool atfunc)
   PG_RETURN_TEMPORAL_P(result);
 }
 
-PGDLLEXPORT Datum Trgeo_at_geom(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Trgeo_at_geom);
+PGDLLEXPORT Datum Trgeometry_at_geom(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Trgeometry_at_geom);
 /**
  * @ingroup mobilitydb_rgeo_restrict
  * @brief Return a temporal rigid geometry restricted to a geometry
  * @sqlfn atGeometry()
  */
 inline Datum
-Trgeo_at_geom(PG_FUNCTION_ARGS)
+Trgeometry_at_geom(PG_FUNCTION_ARGS)
 {
-  return Trgeo_restrict_geom(fcinfo, REST_AT);
+  return Trgeometry_restrict_geom(fcinfo, REST_AT);
 }
 
-PGDLLEXPORT Datum Trgeo_minus_geom(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Trgeo_minus_geom);
+PGDLLEXPORT Datum Trgeometry_minus_geom(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Trgeometry_minus_geom);
 /**
  * @ingroup mobilitydb_rgeo_restrict
  * @brief Return a temporal rigid geometry restricted to the complement of a
@@ -116,9 +116,9 @@ PG_FUNCTION_INFO_V1(Trgeo_minus_geom);
  * @sqlfn minusGeometry()
  */
 inline Datum
-Trgeo_minus_geom(PG_FUNCTION_ARGS)
+Trgeometry_minus_geom(PG_FUNCTION_ARGS)
 {
-  return Trgeo_restrict_geom(fcinfo, REST_MINUS);
+  return Trgeometry_restrict_geom(fcinfo, REST_MINUS);
 }
 
 /*****************************************************************************/
@@ -127,7 +127,7 @@ Trgeo_minus_geom(PG_FUNCTION_ARGS)
  * @brief Return a temporal rigid geometry restricted to a spatiotemporal box
  */
 static Datum
-Trgeo_restrict_stbox(FunctionCallInfo fcinfo, bool atfunc)
+Trgeometry_restrict_stbox(FunctionCallInfo fcinfo, bool atfunc)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   STBox *box = PG_GETARG_STBOX_P(1);
@@ -139,21 +139,21 @@ Trgeo_restrict_stbox(FunctionCallInfo fcinfo, bool atfunc)
   PG_RETURN_TEMPORAL_P(result);
 }
 
-PGDLLEXPORT Datum Trgeo_at_stbox(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Trgeo_at_stbox);
+PGDLLEXPORT Datum Trgeometry_at_stbox(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Trgeometry_at_stbox);
 /**
  * @ingroup mobilitydb_rgeo_restrict
  * @brief Return a temporal rigid geometry restricted to a spatiotemporal box
  * @sqlfn atStbox()
  */
 inline Datum
-Trgeo_at_stbox(PG_FUNCTION_ARGS)
+Trgeometry_at_stbox(PG_FUNCTION_ARGS)
 {
-  return Trgeo_restrict_stbox(fcinfo, REST_AT);
+  return Trgeometry_restrict_stbox(fcinfo, REST_AT);
 }
 
-PGDLLEXPORT Datum Trgeo_minus_stbox(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Trgeo_minus_stbox);
+PGDLLEXPORT Datum Trgeometry_minus_stbox(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Trgeometry_minus_stbox);
 /**
  * @ingroup mobilitydb_rgeo_restrict
  * @brief Return a temporal rigid geometry restricted to the complement of a
@@ -161,9 +161,9 @@ PG_FUNCTION_INFO_V1(Trgeo_minus_stbox);
  * @sqlfn minusStbox()
  */
 inline Datum
-Trgeo_minus_stbox(PG_FUNCTION_ARGS)
+Trgeometry_minus_stbox(PG_FUNCTION_ARGS)
 {
-  return Trgeo_restrict_stbox(fcinfo, REST_MINUS);
+  return Trgeometry_restrict_stbox(fcinfo, REST_MINUS);
 }
 
 

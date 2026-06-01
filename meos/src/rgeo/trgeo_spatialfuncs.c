@@ -100,10 +100,10 @@ trgeo_restrict_geom(const Temporal *temp, const GSERIALIZED *gs, bool atfunc)
  * @brief Return a temporal rigid geometry restricted to a geometry
  * @param[in] temp Temporal rigid geometry
  * @param[in] gs Geometry
- * @csqlfn #Trgeo_at_geom()
+ * @csqlfn #Trgeometry_at_geom()
  */
 inline Temporal *
-trgeo_at_geom(const Temporal *temp, const GSERIALIZED *gs)
+trgeometry_at_geom(const Temporal *temp, const GSERIALIZED *gs)
 {
   return trgeo_restrict_geom(temp, gs, REST_AT);
 }
@@ -114,10 +114,10 @@ trgeo_at_geom(const Temporal *temp, const GSERIALIZED *gs)
  * geometry
  * @param[in] temp Temporal rigid geometry
  * @param[in] gs Geometry
- * @csqlfn #Trgeo_minus_geom()
+ * @csqlfn #Trgeometry_minus_geom()
  */
 inline Temporal *
-trgeo_minus_geom(const Temporal *temp, const GSERIALIZED *gs)
+trgeometry_minus_geom(const Temporal *temp, const GSERIALIZED *gs)
 {
   return trgeo_restrict_geom(temp, gs, REST_MINUS);
 }
@@ -165,10 +165,10 @@ trgeo_restrict_stbox(const Temporal *temp, const STBox *box, bool border_inc,
  * @param[in] temp Temporal rigid geometry
  * @param[in] box Spatiotemporal box
  * @param[in] border_inc True when the box contains the upper border
- * @csqlfn #Trgeo_at_stbox()
+ * @csqlfn #Trgeometry_at_stbox()
  */
 inline Temporal *
-trgeo_at_stbox(const Temporal *temp, const STBox *box, bool border_inc)
+trgeometry_at_stbox(const Temporal *temp, const STBox *box, bool border_inc)
 {
   return trgeo_restrict_stbox(temp, box, border_inc, REST_AT);
 }
@@ -180,10 +180,10 @@ trgeo_at_stbox(const Temporal *temp, const STBox *box, bool border_inc)
  * @param[in] temp Temporal rigid geometry
  * @param[in] box Spatiotemporal box
  * @param[in] border_inc True when the box contains the upper border
- * @csqlfn #Trgeo_minus_stbox()
+ * @csqlfn #Trgeometry_minus_stbox()
  */
 inline Temporal *
-trgeo_minus_stbox(const Temporal *temp, const STBox *box, bool border_inc)
+trgeometry_minus_stbox(const Temporal *temp, const STBox *box, bool border_inc)
 {
   return trgeo_restrict_stbox(temp, box, border_inc, REST_MINUS);
 }

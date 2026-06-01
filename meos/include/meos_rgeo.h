@@ -101,9 +101,9 @@ extern GSERIALIZED *trgeometry_end_value(const Temporal *temp);
 extern GSERIALIZED *trgeometry_geom(const Temporal *temp);
 extern TInstant *trgeometry_instant_n(const Temporal *temp, int n);
 extern TInstant **trgeometry_instants(const Temporal *temp, int *count);
-extern Set *trgeo_points(const Temporal *temp);
-extern Temporal *trgeo_rotation(const Temporal *temp);
-extern TSequence **trgeo_segments(const Temporal *temp, int *count);
+extern Set *trgeometry_points(const Temporal *temp);
+extern Temporal *trgeometry_rotation(const Temporal *temp);
+extern TSequence **trgeometry_segments(const Temporal *temp, int *count);
 extern TSequence *trgeometry_sequence_n(const Temporal *temp, int i);
 extern TSequence **trgeometry_sequences(const Temporal *temp, int *count);
 extern TInstant *trgeometry_start_instant(const Temporal *temp);
@@ -158,14 +158,14 @@ extern Temporal *trgeometry_restrict_tstzset(const Temporal *temp, const Set *s,
 extern Temporal *trgeometry_restrict_tstzspan(const Temporal *temp, const Span *s, bool atfunc);
 extern Temporal *trgeometry_restrict_tstzspanset(const Temporal *temp, const SpanSet *ss, bool atfunc);
 
-extern Temporal *trgeo_at_geom(const Temporal *temp, const GSERIALIZED *gs);
-extern Temporal *trgeo_minus_geom(const Temporal *temp, const GSERIALIZED *gs);
-extern Temporal *trgeo_at_stbox(const Temporal *temp, const STBox *box, bool border_inc);
-extern Temporal *trgeo_minus_stbox(const Temporal *temp, const STBox *box, bool border_inc);
-// extern Temporal *trgeo_at_geo(const Temporal *temp, const GSERIALIZED *gs);
-// extern Temporal *trgeo_at_elevation(const Temporal *temp, const Span *s);
-// extern Temporal *trgeo_minus_geo(const Temporal *temp, const GSERIALIZED *gs);
-// extern Temporal *trgeo_minus_elevation(const Temporal *temp, const Span *s);
+extern Temporal *trgeometry_at_geom(const Temporal *temp, const GSERIALIZED *gs);
+extern Temporal *trgeometry_minus_geom(const Temporal *temp, const GSERIALIZED *gs);
+extern Temporal *trgeometry_at_stbox(const Temporal *temp, const STBox *box, bool border_inc);
+extern Temporal *trgeometry_minus_stbox(const Temporal *temp, const STBox *box, bool border_inc);
+// extern Temporal *trgeometry_at_geo(const Temporal *temp, const GSERIALIZED *gs);
+// extern Temporal *trgeometry_at_elevation(const Temporal *temp, const Span *s);
+// extern Temporal *trgeometry_minus_geo(const Temporal *temp, const GSERIALIZED *gs);
+// extern Temporal *trgeometry_minus_elevation(const Temporal *temp, const Span *s);
 
 /*****************************************************************************
  * Distance functions
