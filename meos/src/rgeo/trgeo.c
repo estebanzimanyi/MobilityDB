@@ -267,7 +267,9 @@ trgeometry_to_tpose(const Temporal *temp)
 
 /**
  * @ingroup meos_rgeo_conversion
- * @brief Return a temporal geometry point from a temporal rigid geometry
+ * @brief Return a temporal point from a temporal rigid geometry
+ * @details The result is a temporal geometry point for a planar rigid geometry
+ * and a temporal geography point for a geodetic rigid geometry
  * @param[in] temp Temporal rigid geometry
  */
 Temporal *
@@ -280,7 +282,8 @@ trgeometry_to_tpoint(const Temporal *temp)
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) &datum_pose_point;
   lfinfo.argtype[0] = temptype_basetype(temp->temptype);
-  lfinfo.restype = T_TGEOMPOINT;
+  lfinfo.restype = MEOS_FLAGS_GET_GEODETIC(temp->flags) ?
+    T_TGEOGPOINT : T_TGEOMPOINT;
   /* Extracting the anchor point of a rigid geometry is affine */
   lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   Temporal *result = tfunc_temporal(temp, &lfinfo);
