@@ -737,6 +737,22 @@ ea_covers_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp, bool ever)
 
 /**
  * @ingroup meos_cbuffer_rel_ever
+ * @brief Return 1 if a geometry ever covers a temporal circular buffer,
+ * 0 if not, and -1 on error or if the geometry is empty
+ * @param[in] gs Geometry
+ * @param[in] temp Temporal circular buffer
+ * @note The function tests whether the traversed area is covered in the
+ * geometry
+ * @csqlfn #Ecovers_geo_tcbuffer()
+ */
+inline int
+ecovers_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp)
+{
+  return ea_covers_geo_tcbuffer(gs, temp, EVER);
+}
+
+/**
+ * @ingroup meos_cbuffer_rel_ever
  * @brief Return 1 if a geometry always covers a temporal circular buffer,
  * 0 if not, and -1 on error or if the geometry is empty
  * @param[in] gs Geometry
