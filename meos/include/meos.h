@@ -1436,7 +1436,7 @@ extern int64 tbigint_end_value(const Temporal *temp);
 extern int64 tbigint_max_value(const Temporal *temp);
 extern int64 tbigint_min_value(const Temporal *temp);
 extern int64 tbigint_start_value(const Temporal *temp);
-extern bool tbigint_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict, int64 *value);
+// extern bool tbigint_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict, int64 *value);
 extern bool tbigint_value_n(const Temporal *temp, int64 n, int64 *result);
 extern int64 *tbigint_values(const Temporal *temp, int32 *count);
 extern bool tbool_end_value(const Temporal *temp);
@@ -1472,7 +1472,7 @@ extern SpanSet *temporal_time(const Temporal *temp);
 extern TimestampTz *temporal_timestamps(const Temporal *temp, int *count);
 extern bool temporal_timestamptz_n(const Temporal *temp, int n, TimestampTz *result);
 extern bool temporal_upper_inc(const Temporal *temp);
-extern double tfloat_avg_value(const Temporal *temp);
+// extern double tfloat_avg_value(const Temporal *temp);
 extern double tfloat_end_value(const Temporal *temp);
 extern double tfloat_min_value(const Temporal *temp);
 extern double tfloat_max_value(const Temporal *temp);
@@ -1546,8 +1546,8 @@ extern Temporal *temporal_update(const Temporal *temp1, const Temporal *temp2, b
  * Restriction functions for temporal types
  *****************************************************************************/
 
-extern Temporal *tbigint_at_value(const Temporal *temp, int64 i);
-extern Temporal *tbigint_minus_value(const Temporal *temp, int64 i);
+// extern Temporal *tbigint_at_value(const Temporal *temp, int64 i);
+// extern Temporal *tbigint_minus_value(const Temporal *temp, int64 i);
 extern Temporal *tbool_at_value(const Temporal *temp, bool b);
 extern Temporal *tbool_minus_value(const Temporal *temp, bool b);
 extern Temporal *temporal_after_timestamptz(const Temporal *temp, TimestampTz t, bool strict);

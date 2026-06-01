@@ -49,8 +49,8 @@
  * static-cbuffer section.
  *****************************************************************************/
 
-extern H3Index h3index_in(const char *str);
-extern char *h3index_out(H3Index cell);
+// extern H3Index h3index_in(const char *str);
+// extern char *h3index_out(H3Index cell);
 
 /*****************************************************************************
  * Type inheritance (analogue of meos_cbuffer.h's tcbuffer section)

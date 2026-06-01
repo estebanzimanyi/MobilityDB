@@ -215,34 +215,34 @@ extern Temporal *tne_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
 
 extern int econtains_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp);
 extern int acontains_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp);
-extern int econtains_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs);
-extern int acontains_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs);
-extern int econtains_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2);
-extern int acontains_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2);
+// extern int econtains_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs);
+// extern int acontains_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs);
+// extern int econtains_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2);
+// extern int acontains_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2);
 extern int ecovers_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp);
 extern int acovers_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp);
 extern int ecovers_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs);
 extern int acovers_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs);
-extern int ecovers_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2);
-extern int acovers_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2);
-extern int edisjoint_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp);
-extern int adisjoint_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp);
+// extern int ecovers_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2);
+// extern int acovers_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2);
+// extern int edisjoint_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp);
+// extern int adisjoint_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp);
 extern int edisjoint_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs);
 extern int adisjoint_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs);
-extern int eintersects_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp);
-extern int aintersects_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp);
+// extern int eintersects_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp);
+// extern int aintersects_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp);
 extern int eintersects_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs);
 extern int aintersects_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs);
-extern int etouches_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp);
-extern int atouches_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp);
+// extern int etouches_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp);
+// extern int atouches_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp);
 extern int etouches_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs);
 extern int atouches_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs);
-extern int etouches_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2);
-extern int atouches_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2);
-extern int edwithin_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp,
-  double dist);
-extern int adwithin_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp,
-  double dist);
+// extern int etouches_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2);
+// extern int atouches_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2);
+// extern int edwithin_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp,
+//   double dist);
+// extern int adwithin_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp,
+//   double dist);
 extern int edwithin_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs,
   double dist);
 extern int adwithin_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs,

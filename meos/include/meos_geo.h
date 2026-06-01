@@ -334,7 +334,7 @@ extern GSERIALIZED *geo_from_ewkb(const uint8_t *wkb, size_t wkb_size, int32 sri
 extern GSERIALIZED *geo_from_geojson(const char *geojson);
 extern GSERIALIZED *geo_from_text(const char *wkt, int32_t srid);
 extern char *geo_out(const GSERIALIZED *gs);
-extern GSERIALIZED *geog_from_binary(const char *wkb_bytea);
+// extern GSERIALIZED *geog_from_binary(const char *wkb_bytea);
 extern GSERIALIZED *geog_from_hexewkb(const char *wkt);
 extern GSERIALIZED *geog_in(const char *str, int32 typmod);
 extern GSERIALIZED *geom_from_hexewkb(const char *wkt);
