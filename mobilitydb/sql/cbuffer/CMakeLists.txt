@@ -15,7 +15,7 @@ SET(LOCAL_FILES
   217_tcbuffer_analytics
   218_tcbuffer_tile
   # 153_tcbuffer_inout
-  167_portable_aliases
+  299_portable_aliases
   )
 
 foreach (f ${LOCAL_FILES})
