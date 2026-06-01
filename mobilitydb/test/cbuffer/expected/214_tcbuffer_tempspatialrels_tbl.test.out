@@ -204,6 +204,6 @@ SELECT COUNT(*) FROM tbl_tcbuffer t1, tbl_tcbuffer t2
   WHERE tDwithin(t1.temp, t2.temp, 10) ?= true <> edwithin(t1.temp, t2.temp, 10);
  count 
 -------
-    34
+     0
 (1 row)
 
