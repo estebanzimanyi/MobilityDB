@@ -474,11 +474,13 @@ tposeseqset_from_base_tstzspanset(const Pose *pose, const SpanSet *ss,
 
 /**
  * @ingroup meos_pose_conversion
- * @brief Return a temporal geometry point from a temporal pose
+ * @brief Return a temporal point from a temporal pose
+ * @details The result is a temporal geometry point for a planar pose and a
+ * temporal geography point for a geodetic pose
  * @param[in] temp Temporal pose
  */
 Temporal *
-tpose_to_tgeompoint(const Temporal *temp)
+tpose_to_tpoint(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_TPOSE(temp, NULL);
@@ -487,7 +489,8 @@ tpose_to_tgeompoint(const Temporal *temp)
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) &datum_pose_point;
   lfinfo.argtype[0] = temptype_basetype(temp->temptype);
-  lfinfo.restype = T_TGEOMPOINT;
+  lfinfo.restype = MEOS_FLAGS_GET_GEODETIC(temp->flags) ?
+    T_TGEOGPOINT : T_TGEOMPOINT;
   /* Position projection is affine: linear input -> linear output */
   lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
   Temporal *result = tfunc_temporal(temp, &lfinfo);
@@ -593,7 +596,7 @@ Temporal *
 tpose_speed(const Temporal *temp)
 {
   VALIDATE_TPOSE(temp, NULL);
-  Temporal *traj = tpose_to_tgeompoint(temp);
+  Temporal *traj = tpose_to_tpoint(temp);
   if (! traj)
     return NULL;
   Temporal *result = tpoint_speed(traj);

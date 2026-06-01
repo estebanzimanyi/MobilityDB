@@ -92,7 +92,7 @@ CREATE FUNCTION traversedArea(tpose, bool DEFAULT FALSE)
 
 CREATE FUNCTION centroid(tpose)
   RETURNS tgeompoint
-  AS 'MODULE_PATHNAME', 'Tpose_to_tgeompoint'
+  AS 'MODULE_PATHNAME', 'Tpose_to_tpoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION convexHull(tpose)
