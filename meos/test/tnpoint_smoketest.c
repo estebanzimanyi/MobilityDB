@@ -272,7 +272,7 @@ main(void)
     if (r) free(r); }
   /* SKIP tnpoint_minus_stbox: needs ways cache */
   /* SKIP tdistance_tnpoint_npoint: needs ways cache */
-  /* SKIP tdistance_tnpoint_point: needs ways cache */
+  /* SKIP tdistance_tnpoint_geo: needs ways cache */
   /* SKIP tdistance_tnpoint_tnpoint: needs ways cache */
   /* SKIP nad_tnpoint_geo: needs ways cache */
   /* SKIP nad_tnpoint_npoint: needs ways cache */
