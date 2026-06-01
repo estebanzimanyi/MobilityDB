@@ -331,6 +331,7 @@ extern int acovers_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp);
 extern int acovers_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp);
 extern int acovers_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb);
 extern int acovers_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs);
+extern int acovers_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2);
 extern int adisjoint_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs);
 extern int adisjoint_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb);
 extern int adisjoint_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2);
