@@ -1376,10 +1376,10 @@ typedef intptr_t sigjmp_buf[5];
 #define NON_EXEC_STATIC static
 #endif
 
-/* /port compatibility functions: port.h is included AFTER the symbol-collision
- * shim below, so that its pg_* prototypes are renamed to the meos_pg_* names
- * used at the call sites and definitions (otherwise the prototypes stay pg_*
- * while the calls become meos_pg_*, an implicit declaration). */
+/* /port compatibility functions */
+
+#include "port.h"
+
 
 /* === MEOS pg-vendored symbol-collision shim =============================
  *
@@ -1497,10 +1497,6 @@ typedef intptr_t sigjmp_buf[5];
 #define tzload                                   meos_tzload
 #define tzparse                                  meos_tzparse
 #define uint32_hash                              meos_uint32_hash
-
-/* /port compatibility functions, included with the shim active so the pg_*
- * prototypes match the meos_pg_* call sites and definitions */
-#include "port.h"
 
 
 #endif							/* PG_C_H */

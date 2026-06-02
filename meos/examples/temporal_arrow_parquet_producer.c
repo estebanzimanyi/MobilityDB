@@ -101,23 +101,23 @@
 #if CBUFFER
   #include <meos_cbuffer.h>
 #endif
-#if NPOINT
-  #include <meos_npoint.h>
-#endif
-#if POSE
-  #include <meos_pose.h>
-#endif
-#if RGEO
-  #include <meos_rgeo.h>
-#endif
 #if H3
   #include <meos_h3.h>
+#endif
+#if NPOINT
+  #include <meos_npoint.h>
 #endif
 #if POINTCLOUD
   #include <meos_pointcloud.h>
   #include <pointcloud/pgsql_compat.h>
   #include "pc_api.h"
   #include "pc_api_internal.h"
+#endif
+#if POSE
+  #include <meos_pose.h>
+#endif
+#if RGEO
+  #include <meos_rgeo.h>
 #endif
 
 /* Opaque MEOS value-object pointers reached from a Datum. DatumGetPointer
@@ -131,12 +131,12 @@
 #if NPOINT
   #define ProdGetNpointP(d)   ((const Npoint *)  DatumGetPointer(d))
 #endif
-#if POSE
-  #define ProdGetPoseP(d)     ((const Pose *)    DatumGetPointer(d))
-#endif
 #if POINTCLOUD
   #define ProdGetPcpointP(d)  ((const Pcpoint *) DatumGetPointer(d))
   #define ProdGetPcpatchP(d)  ((const Pcpatch *) DatumGetPointer(d))
+#endif
+#if POSE
+  #define ProdGetPoseP(d)     ((const Pose *)    DatumGetPointer(d))
 #endif
 
 /* Population size per type. A few hundred rows per type so that, written

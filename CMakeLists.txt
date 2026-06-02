@@ -85,34 +85,19 @@ option(CBUFFER
   OFF
   )
 
-# Option for including network points
-option(NPOINT
-  "Set ON|OFF (default=ON) to include network points
-  "
-  ON
-  )
-
-# Option for including geoposes
-option(POSE
-  "Set ON|OFF (default=OFF) to include geoposes
-  "
-  OFF
-  )
-
-# Option for including rigid geometries, which depend on geoposes
-CMAKE_DEPENDENT_OPTION(RGEO
-  "Set ON|OFF (default=OFF) to include rigid geometries
-  "
-  ON "POSE"
-  OFF
-  )
-
 # Option for including temporal H3 index (`th3index`), which depends
 # on libh3 and the embedded h3-pg subtree under `h3-pg/`.
 option(H3
   "Set ON|OFF (default=OFF) to include the temporal H3 index type
   (th3index). Requires libh3 on the build path."
   OFF
+  )
+
+# Option for including network points
+option(NPOINT
+  "Set ON|OFF (default=ON) to include network points
+  "
+  ON
   )
 
 # Option for including pgpointcloud temporal types (tpcpoint, tpcpatch).
@@ -126,36 +111,37 @@ option(POINTCLOUD
   OFF
   )
 
+# Option for including geoposes
+option(POSE
+  "Set ON|OFF (default=OFF) to include geoposes
+  "
+  OFF
+  )
+
+# Option for including the temporal CARTO QUADBIN index type (`tquadbin`).
+# Unlike H3, quadbin has no external dependency: its cell algebra is
+# implemented first-party in meos/src/quadbin/ (libm only), so no
+# find_library / vendored subtree is needed.
+option(QUADBIN
+  "Set ON|OFF (default=OFF) to include the temporal QUADBIN index type
+  (tquadbin). First-party, no external library required."
+  OFF
+  )
+
+# Option for including rigid geometries, which depend on geoposes
+CMAKE_DEPENDENT_OPTION(RGEO
+  "Set ON|OFF (default=OFF) to include rigid geometries
+  "
+  ON "POSE"
+  OFF
+  )
+
 if(CBUFFER)
   message(STATUS "Including circular buffers")
   add_definitions(-DCBUFFER=1)
 else()
   message(STATUS "Excluding circular buffers")
   add_definitions(-DCBUFFER=0)
-endif()
-
-if(NPOINT)
-  message(STATUS "Including network points")
-  add_definitions(-DNPOINT=1)
-else()
-  message(STATUS "Excluding network points")
-  add_definitions(-DNPOINT=0)
-endif()
-
-if(POSE)
-  message(STATUS "Including geoposes")
-  add_definitions(-DPOSE=1)
-else()
-  message(STATUS "Excluding geoposes")
-  add_definitions(-DPOSE=0)
-endif()
-
-if(RGEO)
-  message(STATUS "Including rigid geometries")
-  add_definitions(-DRGEO=1)
-else()
-  message(STATUS "Excluding rigid geometries")
-  add_definitions(-DRGEO=0)
 endif()
 
 if(H3)
@@ -179,12 +165,44 @@ else()
   add_definitions(-DH3=0)
 endif()
 
+if(NPOINT)
+  message(STATUS "Including network points")
+  add_definitions(-DNPOINT=1)
+else()
+  message(STATUS "Excluding network points")
+  add_definitions(-DNPOINT=0)
+endif()
+
 if(POINTCLOUD)
   message(STATUS "Including pgpointcloud types")
   add_definitions(-DPOINTCLOUD=1)
 else()
   message(STATUS "Excluding pgpointcloud types")
   add_definitions(-DPOINTCLOUD=0)
+endif()
+
+if(POSE)
+  message(STATUS "Including geoposes")
+  add_definitions(-DPOSE=1)
+else()
+  message(STATUS "Excluding geoposes")
+  add_definitions(-DPOSE=0)
+endif()
+
+if(QUADBIN)
+  message(STATUS "Including temporal QUADBIN index (tquadbin)")
+  add_definitions(-DQUADBIN=1)
+else()
+  message(STATUS "Excluding temporal QUADBIN index")
+  add_definitions(-DQUADBIN=0)
+endif()
+
+if(RGEO)
+  message(STATUS "Including rigid geometries")
+  add_definitions(-DRGEO=1)
+else()
+  message(STATUS "Excluding rigid geometries")
+  add_definitions(-DRGEO=0)
 endif()
 
 # Build the 'requires =' clause for the generated mobilitydb.control file

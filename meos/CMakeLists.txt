@@ -210,25 +210,29 @@ if(CBUFFER)
   message(STATUS "Including circular buffers")
   set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:cbuffer>")
 endif()
+if(H3)
+  message(STATUS "Including temporal H3 index objects")
+  set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:h3>")
+endif()
 if(NPOINT)
   message(STATUS "Including network points")
   set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:npoint>")
+endif()
+if(POINTCLOUD)
+  message(STATUS "Including pgpointcloud temporal types")
+  set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:pointcloud>")
 endif()
 if(POSE)
   message(STATUS "Including geoposes")
   set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:pose>")
 endif()
+if(QUADBIN)
+  message(STATUS "Including temporal QUADBIN index objects")
+  set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:quadbin>")
+endif()
 if(RGEO)
   message(STATUS "Including rigid geometries")
   set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:rgeo>")
-endif()
-if(H3)
-  message(STATUS "Including temporal H3 index objects")
-  set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:h3>")
-endif()
-if(POINTCLOUD)
-  message(STATUS "Including pgpointcloud temporal types")
-  set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:pointcloud>")
 endif()
 
 # PostgreSQL
@@ -322,6 +326,11 @@ if(CBUFFER)
     FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_cbuffer.h"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 endif()
+if(H3)
+  install(
+    FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_h3.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+endif()
 if(NPOINT)
   install(
     FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_npoint.h"
@@ -332,21 +341,6 @@ if(NPOINT)
   install(
     FILES "${CMAKE_SOURCE_DIR}/meos/examples/data/ways1000.csv"
     DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}")
-endif()
-if(POSE)
-  install(
-    FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_pose.h"
-    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-endif()
-if(RGEO)
-  install(
-    FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_rgeo.h"
-    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-endif()
-if(H3)
-  install(
-    FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_h3.h"
-    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 endif()
 if(POINTCLOUD)
   install(
@@ -360,6 +354,21 @@ if(POINTCLOUD)
   install(
     FILES "${CMAKE_SOURCE_DIR}/meos/include/pointcloud/pgsql_compat.h"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/pointcloud")
+endif()
+if(POSE)
+  install(
+    FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_pose.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+endif()
+if(QUADBIN)
+  install(
+    FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_quadbin.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+endif()
+if(RGEO)
+  install(
+    FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_rgeo.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 endif()
 
 install(

@@ -446,8 +446,13 @@ tinstant_tagg(TInstant **instants1, int count1, TInstant **instants2,
     {
       if (func)
       {
+        /* All @p datum_func2 implementations passed here return a freshly
+         * allocated Datum (or by-value); aliasing variants are wrapped at
+         * source. @p tinstant_make copies the value, so the result Datum can
+         * be released right after construction. */
         Datum value = func(tinstant_value_p(inst1), tinstant_value_p(inst2));
         result[count++] = tinstant_make(value, inst1->temptype, inst1->t);
+        DATUM_FREE(value, temptype_basetype(inst1->temptype));
         if (tofree)
           tofree1[nfree1++] = result[count - 1];
         /* Free freshly-allocated by-reference results. Callbacks like

@@ -60,6 +60,9 @@
 #if CBUFFER
   #include "cbuffer/tcbuffer_boxops.h"
 #endif
+#if H3
+  #include "h3/th3index_boxops.h"
+#endif
 #if NPOINT
   #include "npoint/tnpoint_boxops.h"
 #endif
@@ -67,12 +70,12 @@
   #include "pose/pose.h"
   #include "pose/tpose_boxops.h"
 #endif
+#if QUADBIN
+  #include "quadbin/tquadbin_boxops.h"
+#endif
 #if RGEO
   #include "rgeo/trgeo.h"
   #include "rgeo/trgeo_boxops.h"
-#endif
-#if H3
-  #include "h3/th3index_boxops.h"
 #endif
 
 extern void ll2cart(const POINT2D *g, POINT3D *p);
@@ -133,6 +136,10 @@ tspatialinst_set_stbox(const TInstant *inst, STBox *box)
 #if H3
   else if (inst->temptype == T_TH3INDEX)
     th3indexinst_set_stbox(inst, (STBox *) box);
+#endif
+#if QUADBIN
+  else if (inst->temptype == T_TQUADBIN)
+    tquadbininst_set_stbox(inst, (STBox *) box);
 #endif
   else
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
@@ -253,6 +260,10 @@ tspatialinstarr_set_stbox(TInstant **instants, int count, bool lower_inc,
   else if (temptype == T_TH3INDEX)
     th3indexinstarr_set_stbox(instants, count, (STBox *) box);
 #endif
+#if QUADBIN
+  else if (temptype == T_TQUADBIN)
+    tquadbininstarr_set_stbox(instants, count, (STBox *) box);
+#endif
   else
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
@@ -315,6 +326,10 @@ tspatialseq_expand_stbox(TSequence *seq, const TInstant *inst)
 #if H3
   else if (seq->temptype == T_TH3INDEX)
     th3indexseq_expand_stbox(seq, inst);
+#endif
+#if QUADBIN
+  else if (seq->temptype == T_TQUADBIN)
+    tquadbinseq_expand_stbox(seq, inst);
 #endif
   else
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
