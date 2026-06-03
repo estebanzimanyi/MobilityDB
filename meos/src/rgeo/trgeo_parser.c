@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -135,10 +135,10 @@ error:
  * @param[in] temptype Temporal type
  * @param[in] interp Interpolation
  * @param[in] end Set to true when reading a single instant to ensure there is
- * no moreinput after the sequence
+ * no more input after the sequence
  * @param[in,out] temp_srid SRID of the temporal rigid geometry
  * @param[in] geom Reference geometry
- * @param[out] result New sequence, may be NULL
+ * @return Newly-allocated TSequence on success, NULL on parse error
  */
 TSequence *
 trgeoseq_cont_parse(const char **str, MeosType temptype, interpType interp,
@@ -318,7 +318,7 @@ trgeo_parse(const char **str, MeosType temptype)
 
   interpType interp = temptype_supports_linear(temptype) ? LINEAR : STEP;
   /* Starts with "Interp=Step" */
-  if (strncasecmp(*str, "Interp=Step;", 12) == 0)
+  if (pg_strncasecmp(*str, "Interp=Step;", 12) == 0)
   {
     /* Move str after the semicolon */
     *str += 12;

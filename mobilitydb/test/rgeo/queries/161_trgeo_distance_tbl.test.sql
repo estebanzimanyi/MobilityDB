@@ -1,4 +1,4 @@
-  -------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 --
 -- This MobilityDB code is provided under The PostgreSQL License.
 -- Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
@@ -28,28 +28,34 @@
 -------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------
+-- tdistance(trgeometry, tgeompoint) / nearestApproachDistance
+-- setSRID sets the coordinate reference system without reprojecting
+-------------------------------------------------------------------------------
 
-SELECT asText(round(temp, 6)) FROM tbl_trgeometry2d LIMIT 10;
+SELECT round(MAX(maxValue(t1.temp <-> setSRID(t2.temp, 5676))), 6)
+FROM tbl_trgeometry2d t1, tbl_tgeompoint t2
+WHERE t1.temp <-> setSRID(t2.temp, 5676) IS NOT NULL;
 
-SELECT asEWKT(round(temp, 6)) FROM tbl_trgeometry2d LIMIT 10;
+SELECT round(MAX(nearestApproachDistance(t1.temp, setSRID(t2.temp, 5676))), 6)
+FROM tbl_trgeometry2d t1, tbl_tgeompoint t2;
 
-SELECT asEWKT(array_agg(round(inst, 6) ORDER BY k)) FROM tbl_trgeometry2d_inst WHERE inst IS NOT NULL AND k % 10 = 1;
+SELECT COUNT(*) FROM tbl_trgeometry2d t1,
+  (SELECT * FROM tbl_tgeompoint LIMIT 10) t2
+WHERE nearestApproachInstant(t1.temp, setSRID(t2.temp, 5676)) IS NOT NULL;
 
 -------------------------------------------------------------------------------
--- Combination of input/output functions
--- We need to add asText/asEWKT to avoid problems due to floating point precision
--- The binary and MFJSON formats does not output the SRID
-
-SELECT DISTINCT asText(trgeometryFromText(asText(temp))) = asText(temp) FROM tbl_trgeometry2d;
-
-SELECT DISTINCT asEWKT(trgeometryFromEWKT(asEWKT(temp))) = asEWKT(temp) FROM tbl_trgeometry2d;
-
-SELECT DISTINCT asText(trgeometryFromMFJSON(asMFJSON(temp))) = asText(temp) FROM tbl_trgeometry2d;
-
-SELECT DISTINCT setSRID(trgeometryFromBinary(asBinary(temp)), 5676) = temp FROM tbl_trgeometry2d;
-
-SELECT DISTINCT trgeometryFromEWKB(asEWKB(temp)) = temp FROM tbl_trgeometry2d;
-
-SELECT DISTINCT trgeometryFromHexEWKB(asHexEWKB(temp)) = temp FROM tbl_trgeometry2d;
-
+-- tdistance(trgeometry, trgeometry) / nearestApproachDistance / NAI
 -------------------------------------------------------------------------------
+
+SELECT round(MAX(maxValue(t1.temp <-> t2.temp)), 6)
+FROM tbl_trgeometry2d t1, tbl_trgeometry2d t2
+WHERE t1.temp <-> t2.temp IS NOT NULL;
+
+SELECT round(MAX(nearestApproachDistance(t1.temp, t2.temp)), 6)
+FROM tbl_trgeometry2d t1, tbl_trgeometry2d t2;
+
+SELECT COUNT(*) FROM tbl_trgeometry2d t1,
+  (SELECT * FROM tbl_trgeometry2d LIMIT 10) t2
+WHERE nearestApproachInstant(t1.temp, t2.temp) IS NOT NULL;
+
+/*****************************************************************************/
