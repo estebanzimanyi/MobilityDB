@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -275,5 +275,50 @@ CREATE FUNCTION shortestLine(tcbuffer, tcbuffer)
   RETURNS geometry
   AS 'MODULE_PATHNAME', 'Shortestline_tcbuffer_tcbuffer'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/*****************************************************************************
+ * Set-set spatial minimum distance
+ *****************************************************************************/
+
+/*
+ * Scalar minDistance overloads where one side is a static geometry or
+ * cbuffer: spatial-min reduces to NAD whenever one argument has no time
+ * dimension.
+ */
+CREATE FUNCTION minDistance(tcbuffer, geometry)
+  RETURNS float
+  AS 'MODULE_PATHNAME', 'NAD_tcbuffer_geo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION minDistance(geometry, tcbuffer)
+  RETURNS float
+  AS 'MODULE_PATHNAME', 'NAD_geo_tcbuffer'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION minDistance(tcbuffer, cbuffer)
+  RETURNS float
+  AS 'MODULE_PATHNAME', 'NAD_tcbuffer_cbuffer'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION minDistance(cbuffer, tcbuffer)
+  RETURNS float
+  AS 'MODULE_PATHNAME', 'NAD_cbuffer_tcbuffer'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/*
+ * 2-ary aggregate minDistance over pairs of temporal circular buffers.
+ * On a one-row group the aggregate degenerates to the per-pair value,
+ * so any "scalar" use case is naturally covered. The transition
+ * function threads the running minimum into the per-pair STBox-pruned
+ * kernel, so cross-join aggregations skip far-apart pairs cheaply.
+ */
+CREATE FUNCTION minDistance_transfn(float, tcbuffer, tcbuffer)
+  RETURNS float
+  AS 'MODULE_PATHNAME', 'Mindistance_transfn_tcbuffer'
+  LANGUAGE C IMMUTABLE PARALLEL SAFE;
+
+CREATE AGGREGATE minDistance(tcbuffer, tcbuffer) (
+  SFUNC = minDistance_transfn,
+  STYPE = float,
+  COMBINEFUNC = float8smaller,
+  PARALLEL = SAFE
+);
 
 /*****************************************************************************/

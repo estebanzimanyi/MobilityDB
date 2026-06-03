@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -63,6 +63,9 @@ extern int tcbuffersegm_intersection(Datum start1, Datum end1, Datum start2,
   TimestampTz *t2);
 
 extern int tcbuffersegm_dwithin_turnpt(Datum start1, Datum end1, Datum start2,
+  Datum end2, Datum dist, TimestampTz lower, TimestampTz upper,
+  TimestampTz *t1, TimestampTz *t2);
+extern int tcbuffersegm_tdwithin_turnpt(Datum start1, Datum end1, Datum start2,
   Datum end2, Datum dist, TimestampTz lower, TimestampTz upper,
   TimestampTz *t1, TimestampTz *t2);
 extern int tcbuffersegm_distance_turnpt(Datum start1, Datum end1, Datum start2,

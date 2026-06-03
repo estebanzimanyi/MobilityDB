@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------------
 --
 -- This MobilityDB code is provided under The PostgreSQL License.
--- Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+-- Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
 -- contributors
 --
 -- MobilityDB includes portions of PostGIS version 3 source code released
@@ -37,31 +37,31 @@ WHERE t1.temp <-> t2.temp IS NOT NULL;
 -------------------------------------------------------------------------------
 
 SELECT COUNT(*) FROM tbl_tcbuffer,
-( SELECT * FROM tbl_geom LIMIT 10 ) t
+( SELECT * FROM tbl_geom ORDER BY k LIMIT 10 ) t
 WHERE NearestApproachInstant(temp, ST_SetSRID(g, 3812)) IS NOT NULL;
 SELECT COUNT(*) FROM tbl_tcbuffer t1,
-( SELECT * FROM tbl_tcbuffer t2 LIMIT 10 ) t2
+( SELECT * FROM tbl_tcbuffer t2 ORDER BY k LIMIT 10 ) t2
 WHERE NearestApproachInstant(t1.temp, t2.temp) IS NOT NULL;
 
 SELECT COUNT(*) FROM tbl_tcbuffer,
-( SELECT * FROM tbl_geom LIMIT 10 ) t
+( SELECT * FROM tbl_geom ORDER BY k LIMIT 10 ) t
 WHERE NearestApproachDistance(temp, ST_SetSRID(g, 3812)) IS NOT NULL;
 SELECT COUNT(*) FROM tbl_tcbuffer t1,
-( SELECT * FROM tbl_tcbuffer t2 LIMIT 10 ) t2
+( SELECT * FROM tbl_tcbuffer t2 ORDER BY k LIMIT 10 ) t2
 WHERE NearestApproachDistance(t1.temp, t2.temp) IS NOT NULL;
 
 SELECT COUNT(*) FROM tbl_tcbuffer,
-( SELECT * FROM tbl_geom LIMIT 10 ) t
+( SELECT * FROM tbl_geom ORDER BY k LIMIT 10 ) t
 WHERE ST_SetSRID(g, 3812) |=| temp IS NOT NULL;
 SELECT COUNT(*) FROM tbl_tcbuffer t1,
-( SELECT * FROM tbl_tcbuffer t2 LIMIT 10 ) t2
+( SELECT * FROM tbl_tcbuffer t2 ORDER BY k LIMIT 10 ) t2
 WHERE t1.temp |=| t2.temp IS NOT NULL;
 
 SELECT COUNT(*) FROM tbl_tcbuffer,
-( SELECT * FROM tbl_geom LIMIT 10 ) t
+( SELECT * FROM tbl_geom ORDER BY k LIMIT 10 ) t
 WHERE shortestLine(ST_SetSRID(g, 3812), temp) IS NOT NULL;
 SELECT COUNT(*) FROM tbl_tcbuffer t1,
-( SELECT * FROM tbl_tcbuffer t2 LIMIT 10 ) t2
+( SELECT * FROM tbl_tcbuffer t2 ORDER BY k LIMIT 10 ) t2
 WHERE shortestLine(t1.temp, t2.temp) IS NOT NULL;
 
 --------------------------------------------------------

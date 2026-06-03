@@ -1,7 +1,7 @@
-﻿-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 --
 -- This MobilityDB code is provided under The PostgreSQL License.
--- Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
+-- Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
 -- contributors
 --
 -- MobilityDB includes portions of PostGIS version 3 source code released
@@ -28,46 +28,28 @@
 -------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------
--- Send/receive functions
+-- Traversed area
 -------------------------------------------------------------------------------
 
-COPY tbl_cbuffer TO '/tmp/tbl_cbuffer' (FORMAT BINARY);
-DROP TABLE IF EXISTS tbl_cbuffer_tmp;
-CREATE TABLE tbl_cbuffer_tmp AS TABLE tbl_cbuffer WITH NO DATA;
-COPY tbl_cbuffer_tmp FROM '/tmp/tbl_cbuffer' (FORMAT BINARY);
-SELECT COUNT(*) FROM tbl_cbuffer t1, tbl_cbuffer_tmp t2 WHERE t1.k = t2.k AND t1.cb <> t2.cb;
-DROP TABLE tbl_cbuffer_tmp;
+SELECT traversedArea(NULL::tcbuffer);
+SELECT ST_AsText(traversedArea(tcbuffer 'Cbuffer(Point(1 1),0.5)@2000-01-01'));
+SELECT ST_AsText(traversedArea(tcbuffer '[Cbuffer(Point(1 1),0.3)@2000-01-01, Cbuffer(Point(1 1),0.5)@2000-01-02]'));
 
 -------------------------------------------------------------------------------
--- Accessing values
+-- Centroid
 -------------------------------------------------------------------------------
 
-SELECT MAX(ST_X(point(cb))) FROM tbl_cbuffer;
-SELECT MAX(radius(cb)) FROM tbl_cbuffer;
+SELECT centroid(NULL::tcbuffer);
+SELECT asText(centroid(tcbuffer 'Cbuffer(Point(1 1),0.5)@2000-01-01'));
+SELECT asText(centroid(tcbuffer '{Cbuffer(Point(1 1),0.5)@2000-01-01, Cbuffer(Point(2 2),0.5)@2000-01-02, Cbuffer(Point(1 1),0.5)@2000-01-03}'));
+SELECT asText(centroid(tcbuffer '[Cbuffer(Point(1 1),0.5)@2000-01-01, Cbuffer(Point(3 3),0.5)@2000-01-03]'));
 
 -------------------------------------------------------------------------------
--- Cast functions
+-- Convex hull
 -------------------------------------------------------------------------------
 
-SELECT COUNT(*) FROM tbl_cbuffer WHERE cb::geometry IS NOT NULL;
-
-SELECT COUNT(*) FROM tbl_cbuffer WHERE cb ~= (cb::geometry)::cbuffer;
-
--------------------------------------------------------------------------------
--- Transformations
--------------------------------------------------------------------------------
-
-SELECT COUNT(*) FROM tbl_tcbuffer WHERE expand(temp, 1) IS NOT NULL;
+SELECT convexHull(NULL::tcbuffer);
+SELECT ST_GeometryType(convexHull(tcbuffer 'Cbuffer(Point(1 1),0.5)@2000-01-01'));
+SELECT ST_GeometryType(convexHull(tcbuffer '[Cbuffer(Point(1 1),0.5)@2000-01-01, Cbuffer(Point(3 3),0.5)@2000-01-03]'));
 
 -------------------------------------------------------------------------------
--- Comparisons
--------------------------------------------------------------------------------
-
-SELECT COUNT(*) FROM tbl_cbuffer t1, tbl_cbuffer t2 WHERE t1.cb = t2.cb;
-SELECT COUNT(*) FROM tbl_cbuffer t1, tbl_cbuffer t2 WHERE t1.cb != t2.cb;
-SELECT COUNT(*) FROM tbl_cbuffer t1, tbl_cbuffer t2 WHERE t1.cb < t2.cb;
-SELECT COUNT(*) FROM tbl_cbuffer t1, tbl_cbuffer t2 WHERE t1.cb <= t2.cb;
-SELECT COUNT(*) FROM tbl_cbuffer t1, tbl_cbuffer t2 WHERE t1.cb > t2.cb;
-SELECT COUNT(*) FROM tbl_cbuffer t1, tbl_cbuffer t2 WHERE t1.cb >= t2.cb;
-
--------------------------------------------------------------------------------/
