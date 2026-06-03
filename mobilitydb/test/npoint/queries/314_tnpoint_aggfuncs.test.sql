@@ -1,7 +1,7 @@
-﻿-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 --
 -- This MobilityDB code is provided under The PostgreSQL License.
--- Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
+-- Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
 -- contributors
 --
 -- MobilityDB includes portions of PostGIS version 3 source code released
@@ -28,19 +28,25 @@
 -------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------
--- Temporal equal
--------------------------------------------------------------------------------
 
-SELECT COUNT(*) FROM tbl_npoint t1, tbl_tnpoint t2 WHERE t1.np #= t2.temp IS NOT NULL;
-SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_npoint t2 WHERE t1.temp #= t2.np IS NOT NULL;
-SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp #= t2.temp IS NOT NULL;
+-- extent(tnpoint): mixed temporal subtypes folded together, NULLs filtered
+-- round to 10 decimal places to suppress platform floating-point ULP differences
+SELECT round(extent(temp), 10) FROM ( VALUES
+  (NULL::tnpoint),
+  ('Npoint(1, 0.5)@2000-01-01'),
+  ('{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}')) t(temp);
+SELECT round(extent(temp), 10) FROM ( VALUES
+  (tnpoint 'Npoint(1, 0.5)@2000-01-01'),
+  ('{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}'),
+  (NULL)) t(temp);
 
--------------------------------------------------------------------------------
--- Temporal not equal
--------------------------------------------------------------------------------
+-- extent(tnpoint): linear sequence + step sequenceset over disjoint footprints
+SELECT round(extent(temp), 10) FROM ( VALUES
+  (tnpoint '[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]'),
+  ('{[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03], [Npoint(2, 0.1)@2000-01-04, Npoint(2, 0.2)@2000-01-05]}')) t(temp);
 
-SELECT COUNT(*) FROM tbl_npoint t1, tbl_tnpoint t2 WHERE t1.np #<> t2.temp IS NOT NULL;
-SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_npoint t2 WHERE t1.temp #<> t2.np IS NOT NULL;
-SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp #<> t2.temp IS NOT NULL;
+-- extent(tnpoint): single row degenerate cases
+SELECT round(extent(temp), 10) FROM ( VALUES (tnpoint 'Npoint(1, 0.5)@2000-01-01')) t(temp);
+SELECT round(extent(temp), 10) FROM ( VALUES (NULL::tnpoint)) t(temp);
 
 -------------------------------------------------------------------------------

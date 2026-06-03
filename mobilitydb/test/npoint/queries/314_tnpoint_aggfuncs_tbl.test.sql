@@ -1,7 +1,7 @@
 ﻿-------------------------------------------------------------------------------
 --
 -- This MobilityDB code is provided under The PostgreSQL License.
--- Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+-- Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
 -- contributors
 --
 -- MobilityDB includes portions of PostGIS version 3 source code released
@@ -41,6 +41,20 @@ SELECT asText(round(tcentroid(temp), 6)) FROM ( VALUES
 SELECT asText(round(tcentroid(temp), 6)) FROM ( VALUES
   (tnpoint '{Npoint(1, 0.3)@2000-01-01, Npoint(1, 0.5)@2000-01-02, Npoint(1, 0.5)@2000-01-03}'),
   ('[Npoint(1, 0.2)@2000-01-01, Npoint(1, 0.4)@2000-01-02, Npoint(1, 0.5)@2000-01-03]')) t(temp);
+
+-------------------------------------------------------------------------------
+
+-- extent(tnpoint): bulk aggregation across the per-subtype tables.
+-- round to 10 decimal places to suppress platform floating-point ULP differences
+SELECT round(extent(inst), 10) FROM tbl_tnpoint_inst;
+SELECT round(extent(ti), 10) FROM tbl_tnpoint_discseq;
+SELECT round(extent(seq), 10) FROM tbl_tnpoint_seq;
+SELECT round(extent(ss), 10) FROM tbl_tnpoint_seqset;
+SELECT round(extent(temp), 10) FROM tbl_tnpoint;
+
+-- Group-by aggregation (ensures the combine path runs across partial states)
+SELECT k%10, round(extent(inst), 10) FROM tbl_tnpoint_inst GROUP BY k%10 ORDER BY k%10;
+SELECT k%10, round(extent(temp), 10) FROM tbl_tnpoint GROUP BY k%10 ORDER BY k%10;
 
 -------------------------------------------------------------------------------
 

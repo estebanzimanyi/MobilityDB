@@ -1,7 +1,7 @@
-﻿-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 --
 -- This MobilityDB code is provided under The PostgreSQL License.
--- Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
+-- Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
 -- contributors
 --
 -- MobilityDB includes portions of PostGIS version 3 source code released
@@ -28,19 +28,47 @@
 -------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------
--- Temporal equal
+-- Boundary-condition coverage for npoint position clamping at [0, 1].
+-- Documented contract: 0.0 (start of route) and 1.0 (end of route) are
+-- valid; values outside [0, 1] are rejected at the constructor.
 -------------------------------------------------------------------------------
 
-SELECT COUNT(*) FROM tbl_npoint t1, tbl_tnpoint t2 WHERE t1.np #= t2.temp IS NOT NULL;
-SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_npoint t2 WHERE t1.temp #= t2.np IS NOT NULL;
-SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp #= t2.temp IS NOT NULL;
+-- Endpoints are valid
+SELECT npoint(1, 0.0);
+SELECT npoint(1, 1.0);
 
--------------------------------------------------------------------------------
--- Temporal not equal
--------------------------------------------------------------------------------
+-- Just-inside values are valid
+SELECT npoint(1, 0.0001);
+SELECT npoint(1, 0.9999);
 
-SELECT COUNT(*) FROM tbl_npoint t1, tbl_tnpoint t2 WHERE t1.np #<> t2.temp IS NOT NULL;
-SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_npoint t2 WHERE t1.temp #<> t2.np IS NOT NULL;
-SELECT COUNT(*) FROM tbl_tnpoint t1, tbl_tnpoint t2 WHERE t1.temp #<> t2.temp IS NOT NULL;
+-- Interpolating to geometry at the endpoints lands on the route's start
+-- and end points respectively; both are well-defined.
+SELECT round(geometry(npoint(1, 0.0))::geometry, 6);
+SELECT round(geometry(npoint(1, 1.0))::geometry, 6);
+
+-- Position parameter outside [0, 1] is rejected at construction
+/* Errors */
+SELECT npoint(1, -0.0001);
+SELECT npoint(1, 1.0001);
+SELECT npoint(1, -1);
+SELECT npoint(1, 2);
+
+-- Same boundary contract on the WKT input path
+SELECT npoint 'Npoint(1, 0.0)';
+SELECT npoint 'Npoint(1, 1.0)';
+/* Errors */
+SELECT npoint 'Npoint(1, -0.0001)';
+SELECT npoint 'Npoint(1, 1.0001)';
+
+-- nsegment endpoints: nsegment_set normalises (pos1, pos2) via Min / Max,
+-- so a constructor call with the positions reversed returns a normalised
+-- segment rather than an error.
+SELECT nsegment(1, 1.0, 0.0);
+SELECT nsegment(1, 0.0, 1.0);
+
+-- nsegment also rejects out-of-range positions at construction
+/* Errors */
+SELECT nsegment(1, -0.0001, 1.0);
+SELECT nsegment(1, 0.0, 1.0001);
 
 -------------------------------------------------------------------------------

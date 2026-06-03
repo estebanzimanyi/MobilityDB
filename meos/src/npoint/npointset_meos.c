@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -183,17 +183,19 @@ npointset_value_n(const Set *s, int n, Npoint **result)
  * @ingroup meos_npoint_set_accessor
  * @brief Return the array of copies of the values of a network point set
  * @param[in] s Set
+ * @param[out] count Number of elements in the output array
  * @return On error return @p NULL
  * @csqlfn #Set_values()
  */
 Npoint **
-npointset_values(const Set *s)
+npointset_values(const Set *s, int *count)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NPOINTSET(s, NULL);
   Npoint **result = palloc(sizeof(Npoint *) * s->count);
   for (int i = 0; i < s->count; i++)
     result[i] = DatumGetNpointP(datum_copy(SET_VAL_N(s, i), s->basetype));
+  *count = s->count;
   return result;
 }
 
