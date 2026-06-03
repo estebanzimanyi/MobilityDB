@@ -19,12 +19,23 @@ engines:
       - "postgis/**"
       - "postgres/**"
       - "pgtypes/**"
+      - "pointcloud-pg/**"
+      - "contrib/**"
     config:
       languages:
         - "c"
+# Vendored third-party trees are provenance-reviewed, not style-reviewed:
+#   * postgis/**, postgres/**, pgtypes/** - verbatim upstream source.
+#   * pointcloud-pg/**                    - vendored pgPointCloud project.
+#   * contrib/**                          - optional PCL/PDAL integration
+#                                           plugins; not part of the core
+#                                           codebase and pull in large
+#                                           generated files.
 exclude_paths:
   - "postgis/**"
   - "postgres/**"
   - "pgtypes/**"
+  - "pointcloud-pg/**"
+  - "contrib/**"
   - "meos/test/**"
   - "meos/examples/**"
