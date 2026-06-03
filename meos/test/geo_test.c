@@ -616,9 +616,8 @@ int main(void)
     free(geom_result);
   free(char_result);
 
-  /* MinBoundingCircle geom_min_bounding_radius(const GSERIALIZED *geom); */
-  { MinBoundingCircle _s = geom_min_bounding_radius(geom1);
-    geom_result = _s.center; float8_result = _s.radius; }
+  /* GSERIALIZED *geom_min_bounding_radius(const GSERIALIZED *geom, double *radius); */
+  geom_result = geom_min_bounding_radius(geom1, &float8_result);
   char_result = geo_as_ewkt(geom_result, 6);
   printf("geom_min_bounding_radius(%s, %lf): %s\n", geom1_out, float8_result, char_result);
   free(geom_result); free(char_result);
@@ -848,8 +847,8 @@ int main(void)
   printf("geoset_value_n(%s, 1, %s): %c\n", geomset1_out, char_result, bool_result ? 't' : 'n');
   free(geom_result); free(char_result);
 
-  /* GSERIALIZED **geoset_values(const Set *s); */
-  geomarray_result = geoset_values(geomset1);
+  /* GSERIALIZED **geoset_values(const Set *s, int *count); */
+  geomarray_result = geoset_values(geomset1, &count);
   printf("geoset_values(%s): {", geom1_out);
   for (int i = 0; i < geomset1->count; i++)
   {
@@ -1569,8 +1568,10 @@ int main(void)
   printf("tgeompoint_to_tgeometry(%s): %s\n", tgeompt1_step_out, char_result);
   free(tgeompt_result); free(char_result);
 
-  /* bool tpoint_as_mvtgeom(const Temporal *temp, const STBox *bounds, int32_t extent, int32_t buffer, bool clip_geom, GSERIALIZED **gsarr, int64 **timesarr, int *count); */
-  bool_result = tpoint_as_mvtgeom(tgeompt1, stbox1, int32_in1, int32_in2, true, &geom_result, &int64array_result, &count);
+  /* MvtGeom tpoint_as_mvtgeom(const Temporal *temp, const STBox *bounds, int32_t extent, int32_t buffer, bool clip_geom); */
+  { MvtGeom _s = tpoint_as_mvtgeom(tgeompt1, stbox1, int32_in1, int32_in2, true);
+    geom_result = _s.geom; int64array_result = _s.times; count = _s.count; }
+  bool_result = (geom_result != NULL);
   printf("tpoint_as_mvtgeom(%s, %s, %d, %d, true): %c\n", tgeompt1_out, stbox1_out, int32_in1, int32_in2, bool_result ? 't' : 'n');
   char_result = geo_as_ewkt(geom_result, 6);
   printf("%s: {", char_result);
@@ -2691,8 +2692,9 @@ int main(void)
   }
   free(stboxarray_result);
 
-  /* Temporal **tgeo_space_split(const Temporal *temp, double xsize, double ysize, double zsize, const GSERIALIZED *sorigin, bool bitmatrix, bool border_inc, GSERIALIZED ***space_bins, int *count); */
-  tgeomptarray_result = tgeo_space_split(tgeompt1, 1, 1, 1, geompt1, false, true, &geomarray_result, &count);
+  /* SpaceSplit tgeo_space_split(const Temporal *temp, double xsize, double ysize, double zsize, const GSERIALIZED *sorigin, bool bitmatrix, bool border_inc); */
+  { SpaceSplit _s = tgeo_space_split(tgeompt1, 1, 1, 1, geompt1, false, true);
+    tgeomptarray_result = _s.fragments; geomarray_result = _s.bins; count = _s.count; }
   printf("tgeo_space_split(%s, 1, 1, 1, %s, false, true, &geomarray_result, %d): {", tgeompt1_out, geompt1_out, count);
   for (int i = 0; i < count; i++)
   {
@@ -2711,8 +2713,9 @@ int main(void)
   free(tgeomptarray_result);
   free(geomarray_result);
 
-  /* Temporal **tgeo_space_time_split(const Temporal *temp, double xsize, double ysize, double zsize, const Interval *duration, const GSERIALIZED *sorigin, TimestampTz torigin, bool bitmatrix, bool border_inc, GSERIALIZED ***space_bins, TimestampTz **time_bins, int *count); */
-  tgeomptarray_result = tgeo_space_time_split(tgeompt1, 1, 1, 1, interv1, geompt1, tstz1, false, true, &geomarray_result, &tstzarray_result, &count);
+  /* SpaceTimeSplit tgeo_space_time_split(const Temporal *temp, double xsize, double ysize, double zsize, const Interval *duration, const GSERIALIZED *sorigin, TimestampTz torigin, bool bitmatrix, bool border_inc); */
+  { SpaceTimeSplit _s = tgeo_space_time_split(tgeompt1, 1, 1, 1, interv1, geompt1, tstz1, false, true);
+    tgeomptarray_result = _s.fragments; geomarray_result = _s.space_bins; tstzarray_result = _s.time_bins; count = _s.count; }
   printf("tgeo_space_time_split(%s, 1, 1, 1, %s, %s, %s, false, true, &geomarray_result, &tstzarray_result, %d): {", tgeompt1_out, interv1_out, geompt1_out, tstz1_out, count);
   for (int i = 0; i < count; i++)
   {
@@ -2737,10 +2740,10 @@ int main(void)
   /* Clustering functions */
   printf("****************************************************************\n");
 
-  /* int *geo_cluster_kmeans(const GSERIALIZED **geoms, uint32_t ngeoms, uint32_t k); */
+  /* int *geo_cluster_kmeans(const GSERIALIZED **geoms, uint32_t ngeoms, uint32_t k, int *count); */
   geomarray[0] = geom1;
   geomarray[1] = geom2;
-  int32array_result = geo_cluster_kmeans((const GSERIALIZED **) geomarray, 2, 2);
+  int32array_result = geo_cluster_kmeans((const GSERIALIZED **) geomarray, 2, 2, &count);
   printf("geo_cluster_kmeans(%s, 2, 2): {", geom1_out);
   for (int i = 0; i < 2; i++)
   {
