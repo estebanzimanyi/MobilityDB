@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -42,7 +42,7 @@ CREATE FUNCTION tDistance(pose, tpose)
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tDistance(tpose, geometry(Point))
   RETURNS tfloat
-  AS 'MODULE_PATHNAME', 'Tdistance_tpose_point'
+  AS 'MODULE_PATHNAME', 'Tdistance_tpose_geo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tDistance(tpose, pose)
   RETURNS tfloat

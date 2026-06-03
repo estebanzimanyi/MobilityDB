@@ -1,7 +1,7 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -28,34 +28,46 @@
  *****************************************************************************/
 
 /**
- * @brief General functions for temporal pose objects.
+ * @file
+ * @brief Analytic functions for temporal poses
  */
 
-#ifndef __TPOSE_H__
-#define __TPOSE_H__
-
-#include "temporal/temporal.h"
-#include "pose/pose.h"
-
 /*****************************************************************************/
 
-/* Validity functions */
+CREATE FUNCTION minDistSimplify(tpose, float)
+  RETURNS tpose
+  LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE AS $$
+    SELECT @extschema@.atTime(
+      $1,
+      @extschema@.set(@extschema@.timestamps(@extschema@.minDistSimplify($1::@extschema@.tgeompoint, $2)))
+    )
+  $$;
 
-extern bool ensure_valid_tpose_geo(const Temporal *temp,
-  const GSERIALIZED *gs);
-extern bool ensure_valid_tpose_pose(const Temporal *temp, const Pose *pose);
-extern bool ensure_valid_tpose_stbox(const Temporal *temp, const STBox *box);
-extern bool ensure_valid_tpose_tpose(const Temporal *temp1,
-  const Temporal *temp2);
+CREATE FUNCTION minTimeDeltaSimplify(tpose, interval)
+  RETURNS tpose
+  LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE AS $$
+    SELECT @extschema@.atTime(
+      $1,
+      @extschema@.set(@extschema@.timestamps(@extschema@.minTimeDeltaSimplify($1::@extschema@.tgeompoint, $2)))
+    )
+  $$;
 
-/* Interpolation functions */
+CREATE FUNCTION maxDistSimplify(tpose, float, boolean DEFAULT TRUE)
+  RETURNS tpose
+  LANGUAGE SQL IMMUTABLE PARALLEL SAFE AS $$
+    SELECT @extschema@.atTime(
+      $1,
+      @extschema@.set(@extschema@.timestamps(@extschema@.maxDistSimplify($1::@extschema@.tgeompoint, $2, $3)))
+    )
+  $$;
 
-extern int tposesegm_intersection_value(Datum start, Datum end, Datum value,
-  TimestampTz lower, TimestampTz upper, TimestampTz *t1, TimestampTz *t2);
-extern int tposesegm_intersection(Datum start1, Datum end1, Datum start2,
-  Datum end2, TimestampTz lower, TimestampTz upper, TimestampTz *t1,
-  TimestampTz *t2);
+CREATE FUNCTION douglasPeuckerSimplify(tpose, float, boolean DEFAULT TRUE)
+  RETURNS tpose
+  LANGUAGE SQL IMMUTABLE PARALLEL SAFE AS $$
+    SELECT @extschema@.atTime(
+      $1,
+      @extschema@.set(@extschema@.timestamps(@extschema@.douglasPeuckerSimplify($1::@extschema@.tgeompoint, $2, $3)))
+    )
+  $$;
 
 /*****************************************************************************/
-
-#endif /* __TPOSE_H__ */
