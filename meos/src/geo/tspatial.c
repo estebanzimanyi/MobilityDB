@@ -455,10 +455,6 @@ tspatial_set_stbox(const Temporal *temp, STBox *result)
       else if (temp->temptype == T_TH3INDEX)
         th3indexinst_set_stbox((TInstant *) temp, result);
 #endif
-#if H3
-      else if (temp->temptype == T_TH3INDEX)
-        th3indexinst_set_stbox((TInstant *) temp, box);
-#endif
       else
         meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
           "Unknown spatiotemporal type: %s", meostype_name(temp->temptype));

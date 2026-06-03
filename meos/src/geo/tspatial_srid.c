@@ -113,7 +113,7 @@ spatial_srid(Datum d, MeosType basetype)
 #endif
 #if POINTCLOUD
     case T_PCPOINT: {
-      const Pcpoint *pt = DatumGetPcpointP(d);
+      const Pcpoint *pt = (const Pcpoint *) DatumGetPointer(d);
       return meos_pc_schema_get_srid(pcpoint_get_pcid(pt));
     }
 #endif
