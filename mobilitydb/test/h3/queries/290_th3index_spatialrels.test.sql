@@ -61,7 +61,6 @@ SELECT
   aIntersects(big_region, cell_seq)  AS ai_big,
   aDisjoint  (far_region, cell_seq)  AS adj_far,
   aContains  (big_region, cell_seq)  AS ac_big,
-  aCovers    (big_region, cell_seq)  AS acv_big,
   aDwithin   (big_region, cell_seq, 0.001) AS adw_close
 FROM t;
 
