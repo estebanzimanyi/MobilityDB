@@ -461,7 +461,7 @@ pose_parse(const char **str, bool end)
     p_whitespace(str); p_comma(str); p_whitespace(str);
     if (! double_parse(str, &theta) || ! ensure_valid_rotation(theta))
       return NULL;
-    POINT4D *p = (POINT4D *) GS_POINT_PTR(point);
+    const POINT4D *p = (const POINT4D *) GS_POINT_PTR(point);
     result = pose_make_2d(p->x, p->y, theta, srid);
   }
   else
@@ -481,7 +481,7 @@ pose_parse(const char **str, bool end)
       return NULL;
     if (! ensure_unit_norm(W, X, Y, Z))
       return NULL;
-    POINT4D *p = (POINT4D *) GS_POINT_PTR(point);
+    const POINT4D *p = (const POINT4D *) GS_POINT_PTR(point);
     result = pose_make_3d(p->x, p->y, p->z, W, X, Y, Z, srid);
   }
   pfree(point);
@@ -759,7 +759,7 @@ pose_make_point2d(const GSERIALIZED *gs, double theta)
   if (theta == -M_PI)
     theta = M_PI;
 
-  POINT4D *p = (POINT4D *) GS_POINT_PTR(gs);
+  const POINT4D *p = (const POINT4D *) GS_POINT_PTR(gs);
   const double *coordarr = (const double *) p;
   size_t memsize = DOUBLE_PAD(sizeof(Pose)) + 3 * sizeof(double);
   Pose *result = palloc0(memsize);
@@ -845,7 +845,7 @@ pose_make_point3d(const GSERIALIZED *gs, double W, double X, double Y,
     Z = -Z;
   }
 
-  POINT4D *p = (POINT4D *) GS_POINT_PTR(gs);
+  const POINT4D *p = (const POINT4D *) GS_POINT_PTR(gs);
   const double * coordarr = (const double *) p;
   size_t memsize = DOUBLE_PAD(sizeof(Pose)) + 7 * sizeof(double);
   Pose *result = palloc0(memsize);
@@ -1383,7 +1383,7 @@ pose_srid(const Pose *pose)
   VALIDATE_NOT_NULL(pose, SRID_INVALID);
 
   int32 srid = 0;
-  srid = srid | (pose->srid[0] << 16);
+  srid = (pose->srid[0] << 16);
   srid = srid | (pose->srid[1] << 8);
   srid = srid | (pose->srid[2]);
   /* Only the first 21 bits are set. Slide up and back to pull
@@ -1567,7 +1567,7 @@ pose_transf_pj(const Pose *pose, int32_t srid_to, const LWPROJ *pj)
     pfree(result);
     return NULL;
   }
-  POINT4D *p = (POINT4D *) GS_POINT_PTR(gs);
+  const POINT4D *p = (const POINT4D *) GS_POINT_PTR(gs);
   const double * coordarr = (const double *) p;
 
   int32_t srid_from = pose_srid(pose);
@@ -1968,7 +1968,7 @@ pose_hash(const Pose *pose)
   int32_t pb = 0, pc = 0;
   /* Point to just the type/coordinate part of buffer */
   size_t hsz1 = 8; /* varsize (4) + flags (1) + srid(3) */
-  uint8_t *b1 = (uint8_t *) pose + hsz1;
+  const uint8_t *b1 = (const uint8_t *) pose + hsz1;
   /* Calculate size of type/coordinate buffer */
   size_t sz1 = VARSIZE(pose);
   size_t bsz1 = sz1 - hsz1;
