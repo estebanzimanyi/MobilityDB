@@ -1061,12 +1061,13 @@ tbox_expand_value(const TBox *box, Datum value, MeosType basetype)
     /* If it is a temporal big integer box */
     if (basetype == T_INT8)
       return tbigintbox_expand(box, DatumGetInt64(value));
+    if (basetype == T_INT4)
+      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+        "Invalid value to expand box: %d", DatumGetInt32(value));
     else /* basetype == T_FLOAT8 */
-    {
       meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
         "Invalid value to expand box: %lf", DatumGetFloat8(value));
-      return NULL;
-    }
+    return NULL;
   }
   else
   {

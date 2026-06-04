@@ -64,6 +64,12 @@ SELECT COUNT(*) FROM tbl_tgeometry t1, tbl_tgeometry t2 WHERE eCovers(t1.temp, t
    100
 (1 row)
 
+SELECT COUNT(*) FROM tbl_tgeometry t1, tbl_tgeometry t2 WHERE aCovers(t1.temp, t2.temp);
+ count 
+-------
+    33
+(1 row)
+
 SELECT COUNT(*) FROM tbl_geometry, tbl_tgeometry WHERE eDisjoint(g, temp);
  count 
 -------

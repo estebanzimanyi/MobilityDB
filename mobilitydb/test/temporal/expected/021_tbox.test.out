@@ -713,7 +713,7 @@ SELECT expandValue(tbox 'TBOXINT XT([1,2],[2000-01-01,2000-01-02])', 2);
 (1 row)
 
 SELECT expandValue(tbox 'TBOXBIGINT XT([1,2],[2000-01-01,2000-01-02])', 2);
-ERROR:  The span must be of type floatspan
+ERROR:  Invalid value to expand box: 2
 SELECT expandValue(tbox 'TBOXFLOAT XT([1.0,2.0],[2000-01-01,2000-01-02])', 2.0);
                                     expandvalue                                     
 ------------------------------------------------------------------------------------
@@ -739,7 +739,7 @@ SELECT expandValue(tbox 'TBOXINT XT([1,2],[2000-01-01,2000-01-02])', -1);
 (1 row)
 
 SELECT expandValue(tbox 'TBOXBIGINT XT([1,2],[2000-01-01,2000-01-02])', -1);
-ERROR:  The span must be of type floatspan
+ERROR:  Invalid value to expand box: -1
 SELECT expandValue(tbox 'TBOXFLOAT XT([1.0,2.0],[2000-01-01,2000-01-02])', -1);
  expandvalue 
 -------------
@@ -776,7 +776,7 @@ ERROR:  The value cannot be negative: -1
 SELECT expandValue(tbox 'TBOXINT XT([1,2],[2000-01-01,2000-01-02])', -1.0);
 ERROR:  Invalid value to expand box: -1.000000
 SELECT expandValue(tbox 'TBOXBIGINT XT([1,2],[2000-01-01,2000-01-02])', -1.0);
-ERROR:  The span must be of type floatspan
+ERROR:  Invalid value to expand box: -1.000000
 SELECT expandValue(tbox 'TBOX T([2000-01-01,2000-01-02])', 2);
 ERROR:  The tbox must have X dimension
 SELECT expandTime(tbox 'TBOXFLOAT X([1,2])', interval '1 day');
