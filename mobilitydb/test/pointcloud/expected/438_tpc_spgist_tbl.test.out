@@ -94,3 +94,13 @@ RESET enable_indexscan;
 RESET
 RESET enable_bitmapscan;
 RESET
+CREATE TABLE tbl_tpcpoint_big_allthesame AS
+  SELECT k, tpcpoint(PC_MakePoint(1, ARRAY[5.0, 5.0, 5.0]::float[]), timeSpan(temp)) AS temp
+  FROM tbl_tpcpoint WHERE temp IS NOT NULL;
+SELECT 100
+CREATE INDEX tbl_tpcpoint_big_allthesame_quadtree_idx ON tbl_tpcpoint_big_allthesame USING spgist(temp);
+CREATE INDEX
+ANALYZE tbl_tpcpoint_big_allthesame;
+ANALYZE
+DROP TABLE tbl_tpcpoint_big_allthesame;
+DROP TABLE

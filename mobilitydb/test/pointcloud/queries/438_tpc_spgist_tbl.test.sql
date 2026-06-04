@@ -102,3 +102,16 @@ RESET enable_indexscan;
 RESET enable_bitmapscan;
 
 -------------------------------------------------------------------------------
+-- Coverage of all the same and order by logic in SP-GiST indexes
+
+CREATE TABLE tbl_tpcpoint_big_allthesame AS
+  SELECT k, tpcpoint(PC_MakePoint(1, ARRAY[5.0, 5.0, 5.0]::float[]), timeSpan(temp)) AS temp
+  FROM tbl_tpcpoint WHERE temp IS NOT NULL;
+CREATE INDEX tbl_tpcpoint_big_allthesame_quadtree_idx ON tbl_tpcpoint_big_allthesame USING spgist(temp);
+ANALYZE tbl_tpcpoint_big_allthesame;
+
+-- EXPLAIN ANALYZE
+
+DROP TABLE tbl_tpcpoint_big_allthesame;
+
+-------------------------------------------------------------------------------
