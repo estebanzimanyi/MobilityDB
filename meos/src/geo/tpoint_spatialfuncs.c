@@ -2433,7 +2433,7 @@ tpointseq_cumulative_length(const TSequence *seq, double prevlength)
 
   /* General case */
   TInstant **instants = palloc(sizeof(TInstant *) * seq->count);
-  datum_func2 func = pt_distance_fn(seq->flags);
+  datum_func2 func = point_distance_fn(seq->flags);
   const TInstant *inst1 = TSEQUENCE_INST_N(seq, 0);
   Datum value1 = tinstant_value_p(inst1);
   double length = prevlength;
@@ -3405,7 +3405,7 @@ tpointseq_stops_iter(const TSequence *seq, double maxdist, int64 mintunits,
   /* Use GEOS only for non-scalar input */
   bool geodetic = MEOS_FLAGS_GET_GEODETIC(seq->flags);
   GEOSGeometry *geom = NULL;
-  initGEOS(lwnotice, lwgeom_geos_error);
+  meos_initialize_geos();
   geom = GEOSGeom_createEmptyCollection(GEOS_MULTIPOINT);
 
   const TInstant *inst1 = NULL, *inst2 = NULL; /* make compiler quiet */

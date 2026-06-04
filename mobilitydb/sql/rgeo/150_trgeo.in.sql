@@ -247,6 +247,10 @@ CREATE FUNCTION tempSubtype(trgeometry)
   RETURNS text
   AS 'MODULE_PATHNAME', 'Temporal_subtype'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tempBasetype(trgeometry)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Temporal_basetype_name'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION interp(trgeometry)
   RETURNS text
@@ -444,6 +448,18 @@ CREATE FUNCTION shiftScaleTime(trgeometry, interval, interval)
   RETURNS trgeometry
   AS 'MODULE_PATHNAME', 'Temporal_shift_scale_time'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tprecision(trgeometry, duration interval,
+  origin timestamptz DEFAULT '2000-01-03')
+  RETURNS trgeometry
+  AS 'MODULE_PATHNAME', 'Temporal_tprecision'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+-- CREATE FUNCTION tsample(trgeometry, duration interval,
+--   origin timestamptz DEFAULT '2000-01-03')
+--   RETURNS trgeometry
+--   AS 'MODULE_PATHNAME', 'Temporal_tsample'
+--   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************
  * Restriction Functions
@@ -698,5 +714,12 @@ CREATE OPERATOR CLASS trgeometry_hash_ops
   DEFAULT FOR TYPE trgeometry USING hash AS
     OPERATOR    1   = ,
     FUNCTION    1   temporal_hash(trgeometry);
+
+/******************************************************************************/
+
+CREATE FUNCTION arrowRoundtrip(trgeometry)
+  RETURNS trgeometry
+  AS 'MODULE_PATHNAME', 'Temporal_arrow_roundtrip'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************/

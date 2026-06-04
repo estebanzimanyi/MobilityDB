@@ -89,6 +89,11 @@ CREATE FUNCTION tnpointFromHexWKB(text)
   AS 'MODULE_PATHNAME', 'Temporal_from_hexwkb'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION tnpointFromMFJSON(text)
+  RETURNS tnpoint
+  AS 'MODULE_PATHNAME', 'Temporal_from_mfjson'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 /*****************************************************************************/
 
 CREATE FUNCTION asText(tnpoint, maxdecimaldigits int4 DEFAULT 15)
@@ -108,6 +113,12 @@ CREATE FUNCTION asBinary(tnpoint, endianenconding text DEFAULT '')
 CREATE FUNCTION asHexWKB(tnpoint, endianenconding text DEFAULT '')
   RETURNS text
   AS 'MODULE_PATHNAME', 'Temporal_as_hexwkb'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION asMFJSON(tnpoint, options int4 DEFAULT 0,
+    flags int4 DEFAULT 0, maxdecimaldigits int4 DEFAULT 15)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Temporal_as_mfjson'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************
@@ -213,6 +224,12 @@ CREATE FUNCTION round(tnpoint[], integer DEFAULT 0)
   AS 'MODULE_PATHNAME', 'Temporalarr_round'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION tsample(tnpoint, duration interval,
+  origin timestamptz DEFAULT '2000-01-03', interp text DEFAULT 'discrete')
+  RETURNS tnpoint
+  AS 'MODULE_PATHNAME', 'Temporal_tsample'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 /******************************************************************************
  * Append functions
  ******************************************************************************/
@@ -241,6 +258,10 @@ CREATE FUNCTION merge(tnpoint[])
 CREATE FUNCTION tempSubtype(tnpoint)
   RETURNS text
   AS 'MODULE_PATHNAME', 'Temporal_subtype'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tempBasetype(tnpoint)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Temporal_basetype_name'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION interp(tnpoint)
@@ -660,5 +681,12 @@ CREATE OPERATOR CLASS tnpoint_hash_ops
   DEFAULT FOR TYPE tnpoint USING hash AS
     OPERATOR    1   = ,
     FUNCTION    1   temporal_hash(tnpoint);
+
+/******************************************************************************/
+
+CREATE FUNCTION arrowRoundtrip(tnpoint)
+  RETURNS tnpoint
+  AS 'MODULE_PATHNAME', 'Temporal_arrow_roundtrip'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************/

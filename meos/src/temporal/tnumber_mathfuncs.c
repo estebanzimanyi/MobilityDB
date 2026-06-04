@@ -287,7 +287,6 @@ tnumberseq_linear_abs(const TSequence *seq)
     }
     instants[ninsts++] = tnumberinst_abs(inst2);
     inst1 = inst2;
-    value1 = value2;
     dvalue1 = dvalue2;
   }
   /* We are sure that ninsts > 0 */
@@ -514,7 +513,6 @@ tnumberseq_angular_difference_iter(const TSequence *seq, TInstant **result)
     angdiff = angular_difference(value1, value2);
     if (i != seq->count - 1 || seq->period.upper_inc)
       result[ninsts++] = tinstant_make(angdiff, seq->temptype, inst2->t);
-    inst1 = inst2;
     value1 = value2;
   }
   return ninsts;
@@ -641,7 +639,7 @@ tnumberseq_trend(const TSequence *seq)
 TSequenceSet *
 tnumberseqset_trend(const TSequenceSet *ss)
 {
-  assert(ss); assert(MEOS_FLAGS_LINEAR_INTERP(ss->flags));
+  assert(ss);
   TSequence **sequences = palloc(sizeof(TSequence *) * ss->count);
   int nseqs = 0;
   for (int i = 0; i < ss->count; i++)
@@ -667,8 +665,8 @@ tnumber_trend(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(temp, NULL);
-  if (! ensure_linear_interp(temp->flags))
-    return NULL;
+  /* trend is defined for both step and linear interpolation */
+  VALIDATE_TNUMBER(temp, NULL);
 
   assert(temptype_subtype(temp->subtype));
   switch (temp->subtype)
@@ -815,11 +813,20 @@ float_ln(double d)
    * SQL standard.
    */
   if (d == 0.0)
+  {
+    /* See doc-comment on meos_error in meos/include/meos.h: handler is
+     * not guaranteed to abort. Return NaN explicitly so log(0) does not
+     * fall through and end up returning -inf as a "valid" result. */
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "cannot take logarithm of zero");
+    return get_float8_nan();
+  }
   if (d < 0)
+  {
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "cannot take logarithm of a negative number");
+    return get_float8_nan();
+  }
 
   result = log(d);
   if (unlikely(isinf(result)) && !isinf(d))
@@ -919,11 +926,20 @@ float_log10(double d)
    * same error code for an analogous error condition.
    */
   if (d == 0.0)
+  {
+    /* See doc-comment on meos_error in meos/include/meos.h: handler is
+     * not guaranteed to abort. Return NaN explicitly so log10(0) does
+     * not fall through and end up returning -inf as a "valid" result. */
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "Cannot take logarithm of zero");
+    return get_float8_nan();
+  }
   if (d < 0)
+  {
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "Cannot take logarithm of a negative number");
+    return get_float8_nan();
+  }
 
   result = log10(d);
   if (unlikely(isinf(result)) && !isinf(d))

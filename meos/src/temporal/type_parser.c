@@ -42,6 +42,7 @@
 #include <meos.h>
 #include <meos_internal.h>
 #include <meos_internal_geo.h>
+#include "temporal/postgres_types.h"  /* meos_strtod */
 #include "temporal/temporal.h"
 #include "temporal/type_util.h"
 #include "geo/tspatial_parser.h"
@@ -271,7 +272,8 @@ bool
 double_parse(const char **str, double *result)
 {
   char *nextstr = (char *) *str;
-  *result = strtod(*str, &nextstr);
+  /* Locale-safe: see meos_strtod() in postgres_types.c (issue #425). */
+  *result = meos_strtod(*str, &nextstr);
   if (*str == nextstr)
   {
     meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
@@ -355,8 +357,15 @@ tbox_parse(const char **str)
     *str += 7;
     p_whitespace(str);
   }
+  else if (pg_strncasecmp(*str, "TBOXBIGINT", 10) == 0)
+  {
+    spantype = T_BIGINTSPAN;
+    *str += 10;
+    p_whitespace(str);
+  }
   else if (pg_strncasecmp(*str, "TBOXFLOAT", 9) == 0)
   {
+    spantype = T_FLOATSPAN;
     *str += 9;
     p_whitespace(str);
   }
@@ -540,7 +549,7 @@ set_parse(const char **str, MeosType settype)
       spatial_set_srid(values[i], basetype, set_srid);
   }
   result = set_make(values, array->count, basetype, ORDER);
-  if (meostype_length(basetype) < 0)
+  if (! basetype_byvalue(basetype))
     pfree_array((void **) values, array->count);
   else
     pfree(values);
@@ -746,8 +755,7 @@ error:
  * @param[in] interp Interpolation
  * @param[in] end Set to true when reading a single sequence to ensure there is
  * no more input after the sequence
- * @param[out] result New sequence, may be NULL
- * @return On error return false
+ * @return Newly-allocated TSequence on success, NULL on parse error
  */
 TSequence *
 tcontseq_parse(const char **str, MeosType temptype, interpType interp,

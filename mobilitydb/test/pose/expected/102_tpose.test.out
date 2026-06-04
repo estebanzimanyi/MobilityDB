@@ -542,6 +542,12 @@ SELECT tempSubtype(tpose 'Pose(Point(1 1), 0.5)@2000-01-01');
  Instant
 (1 row)
 
+SELECT tempBasetype(tpose 'Pose(Point(1 1), 0.5)@2000-01-01');
+ tempbasetype 
+--------------
+ pose
+(1 row)
+
 SELECT tempSubtype(tpose '{Pose(Point(1 1), 0.3)@2000-01-01, Pose(Point(1 1), 0.5)@2000-01-02, Pose(Point(1 1), 0.5)@2000-01-03}');
  tempsubtype 
 -------------
@@ -2362,5 +2368,9 @@ SELECT numSequences(tposeSeqSetGaps(ARRAY[
  numsequences 
 --------------
             3
+SELECT asText(tprecision(tpose '[Pose(Point(0 0),0)@2001-01-01, Pose(Point(4 0),0)@2001-01-01 00:00:04]', interval '2 secs'));
+                                                                       astext                                                                        
+-----------------------------------------------------------------------------------------------------------------------------------------------------
+ [Pose(POINT(1 0),0)@Mon Jan 01 00:00:00 2001 PST, Pose(POINT(3 0),0)@Mon Jan 01 00:00:02 2001 PST, Pose(POINT(4 0),0)@Mon Jan 01 00:00:04 2001 PST]
 (1 row)
 

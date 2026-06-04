@@ -753,13 +753,23 @@ struct SkipList
 };
 
 /**
- * @brief Enumeration for the relative position of a given element into a
- * skiplist
+ * @brief Skiplist mode discriminator
+ *
+ * SKIPLIST_TEMPORAL is the legacy mode used by every production aggregate
+ * (temporal_aggfuncs.c, tgeo_aggfuncs.c, tnpoint_aggfuncs.c); elements are
+ * Temporal* values and merging routes through tsequence_tagg.
+ *
+ * SKIPLIST_KEYVALUE is the (key, value)-pair mode used by MEOS-direct
+ * streaming consumers (see meos/examples/ais_expand_skiplist.c). The
+ * supported pattern is search-then-splice-on-miss with caller-managed
+ * in-place mutation via the user-supplied merge_fn. The batch-merge code
+ * path inside keyval_skiplist_merge is unvalidated and contains known
+ * correctness bugs (1-4 in doc/drafts/keyval_skiplist_continuation_plan.md).
  */
 typedef enum
 {
-  TEMPORAL,
-  KEYVALUE
+  SKIPLIST_TEMPORAL,
+  SKIPLIST_KEYVALUE
 } SkipListType;
 
 /*****************************************************************************
@@ -817,7 +827,7 @@ extern Set *set_make(const Datum *values, int count, MeosType basetype, bool ord
 extern Set *set_make_exp(const Datum *values, int count, int maxcount, MeosType basetype, bool order);
 extern Set *set_make_free(Datum *values, int count, MeosType basetype, bool order);
 extern Span *span_make(Datum lower, Datum upper, bool lower_inc, bool upper_inc, MeosType basetype);
-extern void span_set(Datum lower, Datum upper, bool lower_inc, bool upper_inc, MeosType basetype, MeosType spantype, Span *s);
+extern void span_set(Datum lower, Datum upper, bool lower_inc, bool upper_inc, MeosType basetype, MeosType spantype, Span *result);
 extern SpanSet *spanset_make_exp(Span *spans, int count, int maxcount, bool normalize, bool order);
 extern SpanSet *spanset_make_free(Span *spans, int count, bool normalize, bool order);
 
@@ -827,7 +837,7 @@ extern SpanSet *spanset_make_free(Span *spans, int count, bool normalize, bool o
 
 extern Span *set_span(const Set *s);
 extern SpanSet *set_spanset(const Set *s);
-extern void value_set_span(Datum value, MeosType basetype, Span *s);
+extern void value_set_span(Datum value, MeosType basetype, Span *result);
 extern Set *value_set(Datum d, MeosType basetype);
 extern Span *value_span(Datum d, MeosType basetype);
 extern SpanSet *value_spanset(Datum d, MeosType basetype);
@@ -844,20 +854,20 @@ extern void set_set_subspan(const Set *s, int minidx, int maxidx, Span *result);
 extern void set_set_span(const Set *s, Span *result);
 extern Datum set_start_value(const Set *s);
 extern bool set_value_n(const Set *s, int n, Datum *result);
-extern Datum *set_vals(const Set *s);
+extern Datum *set_vals(const Set *s, int *count);
 extern Datum *set_values(const Set *s, int *count);
 extern Datum spanset_lower(const SpanSet *ss);
 extern int spanset_mem_size(const SpanSet *ss);
-extern const Span **spanset_sps(const SpanSet *ss);
+extern const Span **spanset_sps(const SpanSet *ss, int *count);
 extern Datum spanset_upper(const SpanSet *ss);
 
 /*****************************************************************************/
 
 /* Transformation functions for set and span types */
 
-extern void datespan_set_tstzspan(const Span *s1, Span *s2);
 extern void bigintspan_set_floatspan(const Span *s1, Span *s2);
 extern void bigintspan_set_intspan(const Span *s1, Span *s2);
+extern void datespan_set_tstzspan(const Span *s1, Span *s2);
 extern void floatspan_set_bigintspan(const Span *s1, Span *s2);
 extern void floatspan_set_intspan(const Span *s1, Span *s2);
 extern void intspan_set_bigintspan(const Span *s1, Span *s2);
@@ -954,7 +964,6 @@ extern SpanSet *minus_spanset_value(const SpanSet *ss, Datum value);
 extern Set *minus_value_set(Datum value, const Set *s);
 extern SpanSet *minus_value_span(Datum value, const Span *s);
 extern SpanSet *minus_value_spanset(Datum value, const SpanSet *ss);
-extern Span *super_union_span_span(const Span *s1, const Span *s2);
 extern Set *union_set_value(const Set *s, Datum value);
 extern SpanSet *union_span_value(const Span *s, Datum value);
 extern SpanSet *union_spanset_value(const SpanSet *ss, Datum value);
@@ -990,21 +999,21 @@ extern Set *value_union_transfn(Set *state, Datum value, MeosType basetype);
 
 extern TBox *number_tstzspan_to_tbox(Datum d, MeosType basetype, const Span *s);
 extern TBox *number_timestamptz_to_tbox(Datum d, MeosType basetype, TimestampTz t);
-extern void tbox_set(const Span *s, const Span *p, TBox *box);
+extern void tbox_set(const Span *s, const Span *p, TBox *result);
 
 /*****************************************************************************/
 
 /* Conversion functions for box types */
 
-extern void float_set_tbox(double d, TBox *box);
-extern void int_set_tbox(int i, TBox *box);
-extern void number_set_tbox(Datum d, MeosType basetype, TBox *box);
+extern void float_set_tbox(double d, TBox *result);
+extern void int_set_tbox(int i, TBox *result);
+extern void number_set_tbox(Datum d, MeosType basetype, TBox *result);
 extern TBox *number_tbox(Datum value, MeosType basetype);
-extern void numset_set_tbox(const Set *s, TBox *box);
-extern void numspan_set_tbox(const Span *span, TBox *box);
-extern void timestamptz_set_tbox(TimestampTz t, TBox *box);
-extern void tstzset_set_tbox(const Set *s, TBox *box);
-extern void tstzspan_set_tbox(const Span *s, TBox *box);
+extern void numset_set_tbox(const Set *s, TBox *result);
+extern void numspan_set_tbox(const Span *span, TBox *result);
+extern void timestamptz_set_tbox(TimestampTz t, TBox *result);
+extern void tstzset_set_tbox(const Set *s, TBox *result);
+extern void tstzspan_set_tbox(const Span *s, TBox *result);
 
 /*****************************************************************************/
 
@@ -1098,14 +1107,14 @@ extern TSequenceSet *tsequenceset_make_free(TSequence **sequences, int count, bo
 
 /* Conversion functions for temporal types */
 
-extern void temporal_set_tstzspan(const Temporal *temp, Span *s);
-extern void tinstant_set_tstzspan(const TInstant *inst, Span *s);
-extern void tnumber_set_tbox(const Temporal *temp, TBox *box);
-extern void tnumberinst_set_tbox(const TInstant *inst, TBox *box);
-extern void tnumberseq_set_tbox(const TSequence *seq, TBox *box);
-extern void tnumberseqset_set_tbox(const TSequenceSet *ss, TBox *box);
-extern void tsequence_set_tstzspan(const TSequence *seq, Span *s);
-extern void tsequenceset_set_tstzspan(const TSequenceSet *ss, Span *s);
+extern void temporal_set_tstzspan(const Temporal *temp, Span *result);
+extern void tinstant_set_tstzspan(const TInstant *inst, Span *result);
+extern void tnumber_set_tbox(const Temporal *temp, TBox *result);
+extern void tnumberinst_set_tbox(const TInstant *inst, TBox *result);
+extern void tnumberseq_set_tbox(const TSequence *seq, TBox *result);
+extern void tnumberseqset_set_tbox(const TSequenceSet *ss, TBox *result);
+extern void tsequence_set_tstzspan(const TSequence *seq, Span *result);
+extern void tsequenceset_set_tstzspan(const TSequenceSet *ss, Span *result);
 
 /*****************************************************************************/
 
@@ -1121,7 +1130,7 @@ extern size_t temporal_mem_size(const Temporal *temp);
 extern const TInstant *temporal_min_inst_p(const Temporal *temp);
 extern Datum temporal_min_value(const Temporal *temp);
 extern const TSequence **temporal_sequences_p(const Temporal *temp, int *count);
-extern void temporal_set_bbox(const Temporal *temp, void *box);
+extern void temporal_set_bbox(const Temporal *temp, void *result);
 extern const TInstant *temporal_start_inst(const Temporal *temp);
 extern Datum temporal_start_value(const Temporal *temp);
 extern Datum *temporal_values_p(const Temporal *temp, int *count);
@@ -1129,14 +1138,14 @@ extern bool temporal_value_n(const Temporal *temp, int n, Datum *result);
 extern Datum *temporal_values(const Temporal *temp, int *count);
 extern uint32 tinstant_hash(const TInstant *inst);
 extern const TInstant **tinstant_insts(const TInstant *inst, int *count);
-extern void tinstant_set_bbox(const TInstant *inst, void *box);
+extern void tinstant_set_bbox(const TInstant *inst, void *result);
 extern SpanSet *tinstant_time(const TInstant *inst);
 extern TimestampTz *tinstant_timestamps(const TInstant *inst, int *count);
 extern Datum tinstant_value_p(const TInstant *inst);
 extern Datum tinstant_value(const TInstant *inst);
 extern bool tinstant_value_at_timestamptz(const TInstant *inst, TimestampTz t, Datum *result);
 extern Datum *tinstant_values_p(const TInstant *inst, int *count);
-extern void tnumber_set_span(const Temporal *temp, Span *span);
+extern void tnumber_set_span(const Temporal *temp, Span *result);
 extern SpanSet *tnumberinst_valuespans(const TInstant *inst);
 extern double tnumberseq_avg_val(const TSequence *seq);
 extern SpanSet *tnumberseq_valuespans(const TSequence *seq);
@@ -1169,7 +1178,7 @@ extern Datum tsequenceset_min_val(const TSequenceSet *ss);
 extern int tsequenceset_num_instants(const TSequenceSet *ss);
 extern int tsequenceset_num_timestamps(const TSequenceSet *ss);
 extern TSequence **tsequenceset_segments(const TSequenceSet *ss, int *count);
-extern const TSequence **tsequenceset_sequences_p(const TSequenceSet *ss);
+extern const TSequence **tsequenceset_sequences_p(const TSequenceSet *ss, int *count);
 extern TimestampTz tsequenceset_start_timestamptz(const TSequenceSet *ss);
 extern SpanSet *tsequenceset_time(const TSequenceSet *ss);
 extern bool tsequenceset_timestamptz_n(const TSequenceSet *ss, int n, TimestampTz *result);
@@ -1240,9 +1249,9 @@ extern TSequenceSet *tsequenceset_merge_array(TSequenceSet **seqsets, int count)
 /* Bounding box functions for temporal types */
 
 extern void tsequence_expand_bbox(TSequence *seq, const TInstant *inst);
-extern void tsequence_set_bbox(const TSequence *seq, void *box);
+extern void tsequence_set_bbox(const TSequence *seq, void *result);
 extern void tsequenceset_expand_bbox(TSequenceSet *ss, const TSequence *seq);
-extern void tsequenceset_set_bbox(const TSequenceSet *ss, void *box);
+extern void tsequenceset_set_bbox(const TSequenceSet *ss, void *result);
 
 /*****************************************************************************/
 
@@ -1347,11 +1356,13 @@ extern TSequenceSet *tnumberseqset_delta_value(const TSequenceSet *ss);
 
 /* Distance functions for temporal types */
 
-extern Temporal *tdistance_tnumber_number(const Temporal *temp, Datum value);
+extern double distance_span_span_double(const Span *s1, const Span *s2);
 extern double nad_tbox_tbox(const TBox *box1, const TBox *box2);
 extern double nad_tnumber_number(const Temporal *temp, Datum value);
 extern double nad_tnumber_tbox(const Temporal *temp, const TBox *box);
 extern double nad_tnumber_tnumber(const Temporal *temp1, const Temporal *temp2);
+extern Temporal *tdistance_tnumber_number(const Temporal *temp, Datum value);
+extern double tnumberinst_distance(const TInstant *inst1, const TInstant *inst2);
 
 /*****************************************************************************/
 
@@ -1395,7 +1406,14 @@ extern Span *span_bins(const Span *s, Datum size, Datum origin, int *count);
 extern Span *spanset_bins(const SpanSet *ss, Datum size, Datum origin, int *count);
 extern Span *tnumber_value_bins(const Temporal *temp, Datum size, Datum origin, int *count);
 extern TBox *tnumber_value_time_boxes(const Temporal *temp, Datum vsize, const Interval *duration, Datum vorigin, TimestampTz torigin, int *count);
-extern Temporal **tnumber_value_split(const Temporal *temp, Datum vsize, Datum vorigin, Datum **bins, int *count);
+typedef struct
+{
+  Temporal **fragments;   /**< Array of count temporal fragments */
+  Datum      *bins;       /**< Parallel array of count value bins */
+  int         count;      /**< Number of fragments */
+} DatumSplit;
+
+extern DatumSplit tnumber_value_split(const Temporal *temp, Datum vsize, Datum vorigin);
 extern TBox *tbox_get_value_time_tile(Datum value, TimestampTz t, Datum vsize, const Interval *duration, Datum vorigin, TimestampTz torigin, MeosType basetype, MeosType spantype);
 extern Temporal **tnumber_value_time_split(const Temporal *temp, Datum size, const Interval *duration, Datum vorigin, TimestampTz torigin, Datum **value_bins, TimestampTz **time_bins, int *count);
 

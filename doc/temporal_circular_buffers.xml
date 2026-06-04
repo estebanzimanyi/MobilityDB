@@ -292,6 +292,30 @@ SELECT asEWKT(ARRAY[cbuffer 'Cbuffer(SRID=5676;Point(0 0),1)',
 </programlisting>
 			</listitem>
 
+			<listitem xml:id="tcbuffer_asMFJSON">
+				<indexterm significance="normal"><primary><varname>asMFJSON</varname></primary></indexterm>
+				<para>Return the Moving Features JSON (MF-JSON) representation</para>
+				<para><varname>asMFJSON(tcbuffer) → text</varname></para>
+				<para>A circular buffer is always planar 2D. Each value is an object with a <varname>point</varname> member, an <varname>[x, y]</varname> coordinate array, and a numeric <varname>radius</varname> member, mirroring the <varname>point</varname> and <varname>radius</varname> accessors.</para>
+				<programlisting language="sql" xml:space="preserve" format="linespecific">
+SELECT asMFJSON(tcbuffer 'Cbuffer(Point(1 2),0.5)@2001-01-01', 3);
+/* {"type":"MovingCircularBuffer","bbox":[[0.5,1.5],[1.5,2.5]],
+  "period":{"begin":"2001-01-01T00:00:00+01","end":"2001-01-01T00:00:00+01",
+  "lower_inc":true,"upper_inc":true},
+  "values":[{"point":[1,2],"radius":0.5}],
+  "datetimes":["2001-01-01T00:00:00+01"],"interpolation":"None"} */
+SELECT asMFJSON(tcbuffer 'SRID=4326;[Cbuffer(Point(1 1),0.2)@2001-01-01,
+  Cbuffer(Point(2 2),0.4)@2001-01-02)', 3);
+/* {"type":"MovingCircularBuffer","crs":{"type":"Name",
+  "properties":{"name":"EPSG:4326"}},"bbox":[[0.8,0.8],[2.4,2.4]],
+  "period":{"begin":"2001-01-01T00:00:00+01","end":"2001-01-02T00:00:00+01",
+  "lower_inc":true,"upper_inc":false},
+  "values":[{"point":[1,1],"radius":0.2},{"point":[2,2],"radius":0.4}],
+  "datetimes":["2001-01-01T00:00:00+01","2001-01-02T00:00:00+01"],
+  "lower_inc":true,"upper_inc":false,"interpolation":"Linear"} */
+</programlisting>
+			</listitem>
+
 			<listitem xml:id="tcbuffer_asBinary">
 				<indexterm significance="normal"><primary><varname>asBinary</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>asEWKB</varname></primary></indexterm>
@@ -311,6 +335,17 @@ SELECT asHexEWKB(tcbuffer 'SRID=3812;Cbuffer(Point(1 2),1)@2001-01-01');
 </programlisting>
 			</listitem>
 
+			<listitem xml:id="tcbuffer_arrowRoundtrip">
+				<indexterm significance="normal"><primary><varname>arrowRoundtrip</varname></primary></indexterm>
+				<para>Convert a temporal circular buffer to the Arrow C Data Interface and back, returning the reconstructed value</para>
+				<para><varname>arrowRoundtrip(tcbuffer) → tcbuffer</varname></para>
+				<para>The Arrow C Data Interface is an in-process columnar ABI; this function validates the lossless correspondence and is the interop self-check reused by the language bindings. The circular buffer decomposes to a Struct of the centre x, y and the radius r, and the spatial reference identifier is preserved. The result is equal to the input.</para>
+				<programlisting language="sql" xml:space="preserve" format="linespecific">
+SELECT arrowRoundtrip(tcbuffer 'Cbuffer(Point(1 2),1)@2001-01-01');
+-- Cbuffer(POINT(1 2),1)@2001-01-01
+</programlisting>
+			</listitem>
+
 			<listitem xml:id="tcbufferFromText">
 				<indexterm significance="normal"><primary><varname>tcbufferFromText</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>tcbufferFromEWKT</varname></primary></indexterm>
@@ -324,6 +359,20 @@ SELECT asEWKT(tcbufferFromText(text '[Cbuffer(Point(1 2),1)@2001-01-01,
 SELECT asEWKT(tcbufferFromEWKT(text 'SRID=3812;[Cbuffer(Point(1 2),1)@2001-01-01,
   Cbuffer(Point(3 4),2)@2001-01-02]'));
 -- SRID=3812;[Cbuffer(Point(1 2),1)@2001-01-01, Cbuffer(Point(3 4),2)@2001-01-02]
+</programlisting>
+			</listitem>
+
+			<listitem xml:id="tcbufferFromMFJSON">
+				<indexterm significance="normal"><primary><varname>tcbufferFromMFJSON</varname></primary></indexterm>
+				<para>Input from the Moving Features JSON (MF-JSON) representation</para>
+				<para><varname>tcbufferFromMFJSON(text) → tcbuffer</varname></para>
+				<programlisting language="sql" xml:space="preserve" format="linespecific">
+SELECT asEWKT(tcbufferFromMFJSON(asMFJSON(tcbuffer
+  'SRID=3812;Cbuffer(Point(1 2),0.5)@2001-01-01', 3)));
+-- SRID=3812;Cbuffer(POINT(1 2),0.5)@2001-01-01
+SELECT asEWKT(tcbufferFromMFJSON(asMFJSON(tcbuffer
+  'SRID=5676;[Cbuffer(Point(1 2),1)@2001-01-01, Cbuffer(Point(3 4),2)@2001-01-02]', 3)));
+-- SRID=5676;[Cbuffer(POINT(1 2),1)@2001-01-01, Cbuffer(POINT(3 4),2)@2001-01-02]
 </programlisting>
 			</listitem>
 
@@ -1028,6 +1077,36 @@ SELECT asText(douglasPeuckerSimplify(tcbuffer '[Cbuffer(Point(1 1),0.5)@2000-01-
   Cbuffer(Point(4 4),0.5)@2000-01-04]', 2.0));
 -- {Cbuffer(POINT(1 1),0.5)@2000-01-01 00:00:00+01, Cbuffer(POINT(4 4),0.5)@2000-01-04 00:00:00+01}
 </programlisting>
+			</listitem>
+		</itemizedlist>
+	</sect1>
+
+	<sect1 xml:id="tcbuffer_tile">
+		<title>Tile</title>
+		<para>The tile functions tile the center trajectory of a temporal circular buffer. The radius is not taken into account in the resulting boxes; the split functions preserve the radius in the temporal circular buffer fragments they return.</para>
+		<itemizedlist>
+			<listitem xml:id="tcbuffer_boxes">
+				<indexterm significance="normal"><primary><varname>spaceBoxes</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>timeBoxes</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>spaceTimeBoxes</varname></primary></indexterm>
+				<para>Return the array of spatial, temporal, or spatiotemporal boxes covering the center trajectory of a temporal circular buffer with respect to a tiling of the space and/or the time dimensions</para>
+				<para><varname>spaceBoxes(tcbuffer,xsize float,ysize float,zsize float,sorigin geometry='Point(0 0 0)',bitmatrix bool=true,borderInc bool=true) → stbox[]</varname></para>
+				<para><varname>timeBoxes(tcbuffer,interval,torigin timestamptz='2000-01-03',bitmatrix bool=true,borderInc bool=true) → stbox[]</varname></para>
+				<para><varname>spaceTimeBoxes(tcbuffer,xsize float,ysize float,zsize float,interval,sorigin geometry='Point(0 0 0)',torigin timestamptz='2000-01-03',bitmatrix bool=true,borderInc bool=true) → stbox[]</varname></para>
+				<programlisting language="sql" xml:space="preserve" format="linespecific">
+SELECT spaceBoxes(tcbuffer '[Cbuffer(Point(1 1),0.5)@2000-01-01,
+  Cbuffer(Point(3 3),0.5)@2000-01-03]', 2.0);
+-- {"STBOX XT(((1,1),(2,2)),[2000-01-01 00:00:00+01, 2000-01-02 00:00:00+01))",
+--  "STBOX XT(((2,2),(3,3)),[2000-01-02 00:00:00+01, 2000-01-03 00:00:00+01])"}
+</programlisting>
+			</listitem>
+
+			<listitem xml:id="tcbuffer_split">
+				<indexterm significance="normal"><primary><varname>spaceSplit</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>spaceTimeSplit</varname></primary></indexterm>
+				<para>Split a temporal circular buffer with respect to a tiling of the space or the space and time dimensions of its center trajectory, returning for each tile the tile point and the temporal circular buffer fragment restricted to the tile</para>
+				<para><varname>spaceSplit(tcbuffer,xsize float,ysize float,zsize float,sorigin geometry='Point(0 0 0)',bitmatrix bool=true,borderInc bool=true) → setof (point geometry, tcbuffer tcbuffer)</varname></para>
+				<para><varname>spaceTimeSplit(tcbuffer,xsize float,ysize float,zsize float,interval,sorigin geometry='Point(0 0 0)',torigin timestamptz='2000-01-03',bitmatrix bool=true,borderInc bool=true) → setof (point geometry, time timestamptz, tcbuffer tcbuffer)</varname></para>
 			</listitem>
 		</itemizedlist>
 	</sect1>

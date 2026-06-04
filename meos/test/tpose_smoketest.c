@@ -143,7 +143,7 @@ main(void)
     if (r) free(r); }
   /* SKIP pose_hash: unmapped return type 'uint32' */
   /* SKIP pose_hash_extended: unmapped arg type 'uint64' */
-  { int count; double * r = pose_orientation(pose1, &count);
+  { double * r = pose_orientation(pose1);
     printf("pose_orientation: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
   { double r = pose_rotation(pose1);
@@ -203,7 +203,7 @@ main(void)
     printf("poseset_start_value: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
   /* SKIP poseset_value_n: unmapped arg type 'Pose * *' */
-  { int count; Pose * * r = poseset_values(tstzset1, &count);
+  { Pose * * r = poseset_values(tstzset1);
     printf("poseset_values: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
   { bool r = contained_pose_set(pose1, tstzset1);
@@ -279,8 +279,8 @@ main(void)
   { Temporal * r = tdistance_tpose_pose(tpose1, pose1);
     printf("tdistance_tpose_pose: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = tdistance_tpose_geo(tpose1, geom1);
-    printf("tdistance_tpose_geo: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = tdistance_tpose_point(tpose1, geom1);
+    printf("tdistance_tpose_point: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
   { Temporal * r = tdistance_tpose_tpose(tpose1, tpose1);
     printf("tdistance_tpose_tpose: %s\n", r ? "OK" : "NULL");

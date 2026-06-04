@@ -106,6 +106,44 @@ SELECT asText(tcbufferFromHexEWKB(asHexEWKB(tcbuffer 'Interp=Step;[Cbuffer(Point
 SELECT asText(tcbufferFromHexEWKB(asHexEWKB(tcbuffer 'Interp=Step;{[Cbuffer(Point(1 1), 0.2)@2000-01-01, Cbuffer(Point(1 1), 0.4)@2000-01-02, Cbuffer(Point(1 1), 0.5)@2000-01-03], [Cbuffer(Point(2 2), 0.6)@2000-01-04, Cbuffer(Point(2 2), 0.6)@2000-01-05] }', 'XDR')));
 
 -------------------------------------------------------------------------------
+-- Input/output in MF-JSON format
+-------------------------------------------------------------------------------
+
+SELECT asMFJSON(tcbuffer 'Cbuffer(Point(1 1), 0.5)@2000-01-01');
+SELECT asMFJSON(tcbuffer '{Cbuffer(Point(1 1), 0.3)@2000-01-01, Cbuffer(Point(2 2), 0.5)@2000-01-02, Cbuffer(Point(1 1), 0.3)@2000-01-03}');
+SELECT asMFJSON(tcbuffer '[Cbuffer(Point(1 1), 0.2)@2000-01-01, Cbuffer(Point(2 2), 0.4)@2000-01-02, Cbuffer(Point(3 3), 0.5)@2000-01-03]');
+SELECT asMFJSON(tcbuffer 'Interp=Step;[Cbuffer(Point(1 1), 0.2)@2000-01-01, Cbuffer(Point(2 2), 0.4)@2000-01-02, Cbuffer(Point(3 3), 0.5)@2000-01-03]');
+SELECT asMFJSON(tcbuffer '{[Cbuffer(Point(1 1), 0.2)@2000-01-01, Cbuffer(Point(2 2), 0.4)@2000-01-02, Cbuffer(Point(1 1), 0.2)@2000-01-03],[Cbuffer(Point(3 3), 0.6)@2000-01-04, Cbuffer(Point(3 3), 0.6)@2000-01-05]}');
+
+SELECT asMFJSON(tcbuffer 'Cbuffer(Point(1 1), 0.123456789)@2000-01-01', 0, 0, 6);
+SELECT asMFJSON(tcbuffer 'Cbuffer(Point(1 1), 0.5)@2000-01-01', 0, 0, 20);
+SELECT asMFJSON(tcbuffer 'Cbuffer(Point(1 1), 0.5)@2000-01-01', 0, 0, -1);
+SELECT asMFJSON(tcbuffer 'SRID=4326;Cbuffer(Point(1 2), 0.5)@2019-01-01 18:00:00.15+02', 1, 0, 2);
+SELECT asMFJSON(tcbuffer 'SRID=4326;Cbuffer(Point(1 2), 0.5)@2019-01-01 18:00:00.15+02', 2, 0, 2);
+SELECT asMFJSON(tcbuffer 'SRID=4326;Cbuffer(Point(1 2), 0.5)@2019-01-01 18:00:00.15+02', 3, 0, 2);
+SELECT asMFJSON(tcbuffer 'SRID=4326;Cbuffer(Point(1 2), 0.5)@2019-01-01 18:00:00.15+02', 4, 0, 2);
+
+SELECT asEWKT(tcbufferFromMFJSON(asMFJSON(tcbuffer 'Cbuffer(Point(1 1), 0.5)@2000-01-01')));
+SELECT asEWKT(tcbufferFromMFJSON(asMFJSON(tcbuffer '{Cbuffer(Point(1 1), 0.3)@2000-01-01, Cbuffer(Point(2 2), 0.5)@2000-01-02}')));
+SELECT asEWKT(tcbufferFromMFJSON(asMFJSON(tcbuffer '[Cbuffer(Point(1 1), 0.2)@2000-01-01, Cbuffer(Point(2 2), 0.4)@2000-01-02]')));
+SELECT asEWKT(tcbufferFromMFJSON(asMFJSON(tcbuffer '[Cbuffer(Point(1 1), 0.2)@2000-01-01, Cbuffer(Point(1 1), 0.2)@2000-01-02)')));
+SELECT asEWKT(tcbufferFromMFJSON(asMFJSON(tcbuffer 'Interp=Step;[Cbuffer(Point(1 1), 0.2)@2000-01-01, Cbuffer(Point(2 2), 0.4)@2000-01-02]')));
+SELECT asEWKT(tcbufferFromMFJSON(asMFJSON(tcbuffer '{[Cbuffer(Point(1 1), 0.2)@2000-01-01, Cbuffer(Point(2 2), 0.4)@2000-01-02],[Cbuffer(Point(3 3), 0.6)@2000-01-03, Cbuffer(Point(3 3), 0.6)@2000-01-04]}')));
+
+SELECT asEWKT(tcbufferFromMFJSON(asMFJSON(tcbuffer 'SRID=3812;Cbuffer(Point(1 2), 0.5)@2000-01-01', 3)));
+SELECT asEWKT(tcbufferFromMFJSON(asMFJSON(tcbuffer 'SRID=5676;[Cbuffer(Point(1 2), 1)@2000-01-01, Cbuffer(Point(3 4), 2)@2000-01-02]', 3)));
+
+-- Errors
+SELECT tcbufferFromMFJSON('ABC');
+SELECT tcbufferFromMFJSON('{"type":"XXX","values":[{"point":[1,1],"radius":0.5}],"datetimes":["2000-01-01T00:00:00+01"],"interpolation":"None"}');
+SELECT tcbufferFromMFJSON('{"type":"MovingCircularBuffer","valuesxxx":[{"point":[1,1],"radius":0.5}],"datetimes":["2000-01-01T00:00:00+01"],"interpolation":"None"}');
+SELECT tcbufferFromMFJSON('{"type":"MovingCircularBuffer","values":[{"pointxxx":[1,1],"radius":0.5}],"datetimes":["2000-01-01T00:00:00+01"],"interpolation":"None"}');
+SELECT tcbufferFromMFJSON('{"type":"MovingCircularBuffer","values":[{"point":[1,1],"radiusxxx":0.5}],"datetimes":["2000-01-01T00:00:00+01"],"interpolation":"None"}');
+SELECT tcbufferFromMFJSON('{"type":"MovingCircularBuffer","values":[{"point":[1,1],"radius":0.5}],"datetimess":["2000-01-01T00:00:00+01"],"interpolation":"None"}');
+SELECT tcbufferFromMFJSON('{"type":"MovingCircularBuffer","values":[{"point":[1,1],"radius":0.5}],"datetimes":["XXXX"],"interpolation":"None"}');
+SELECT tcbufferFromMFJSON('{"type":"MovingCircularBuffer","values":[{"point":[1,1],"radius":0.5}],"datetimes":["2000-01-01T00:00:00+01"],"interpolation":"XXX"}');
+
+-------------------------------------------------------------------------------
 -- Constructors
 -------------------------------------------------------------------------------
 
@@ -189,6 +227,7 @@ SELECT round(tcbuffer '{[Cbuffer(Point(1 1), 0.2)@2000-01-01, Cbuffer(Point(1 1)
 -------------------------------------------------------------------------------
 
 SELECT tempSubtype(tcbuffer 'Cbuffer(Point(1 1), 0.5)@2000-01-01');
+SELECT tempBasetype(tcbuffer 'Cbuffer(Point(1 1), 0.5)@2000-01-01');
 SELECT tempSubtype(tcbuffer '{Cbuffer(Point(1 1), 0.3)@2000-01-01, Cbuffer(Point(1 1), 0.5)@2000-01-02, Cbuffer(Point(1 1), 0.5)@2000-01-03}');
 SELECT tempSubtype(tcbuffer '[Cbuffer(Point(1 1), 0.2)@2000-01-01, Cbuffer(Point(1 1), 0.4)@2000-01-02, Cbuffer(Point(1 1), 0.5)@2000-01-03]');
 SELECT tempSubtype(tcbuffer '{[Cbuffer(Point(1 1), 0.2)@2000-01-01, Cbuffer(Point(1 1), 0.4)@2000-01-02, Cbuffer(Point(1 1), 0.5)@2000-01-03], [Cbuffer(Point(2 2), 0.6)@2000-01-04, Cbuffer(Point(2 2), 0.6)@2000-01-05]}');
@@ -617,6 +656,8 @@ SELECT tcbuffer '{[Cbuffer(Point(1 1), 0.2)@2000-01-01, Cbuffer(Point(1 1), 0.4)
 
 -------------------------------------------------------------------------------/
 
+-- tprecision
+SELECT asText(tprecision(tcbuffer '[Cbuffer(Point(0 0),1)@2001-01-01, Cbuffer(Point(4 0),3)@2001-01-01 00:00:04]', interval '2 secs'));
 SELECT numSequences(tcbufferSeqSetGaps(ARRAY[
   tcbuffer 'Cbuffer(Point(1 1), 0.5)@2000-01-01',
   tcbuffer 'Cbuffer(Point(2 2), 0.5)@2000-01-02',

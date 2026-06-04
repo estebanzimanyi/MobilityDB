@@ -68,7 +68,7 @@ Set_gin_extract_value(PG_FUNCTION_ARGS)
   bool **nullFlags = (bool **) PG_GETARG_POINTER(2);
   int count;
   Datum *result = set_values(s, &count);
-  *nkeys = s->count;
+  *nkeys = count;
   *nullFlags = NULL;
   PG_FREE_IF_COPY(s, 0);
   PG_RETURN_POINTER(result);
@@ -105,7 +105,7 @@ Set_gin_extract_query(PG_FUNCTION_ARGS)
     case GinEqualStrategySetSet:
       s = PG_GETARG_SET_P(0);
       result = set_values(s, &count);
-      *nkeys = s->count;
+      *nkeys = count;
       PG_FREE_IF_COPY(s, 0);
       break;
     default:

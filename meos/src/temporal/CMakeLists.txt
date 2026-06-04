@@ -21,6 +21,7 @@ set(TEMPORAL_SRCS
   temporal.c
   temporal_aggfuncs.c
   temporal_analytics.c
+  temporal_arrow.c
   temporal_boxops.c
   temporal_compops.c
   temporal_modif.c
@@ -50,6 +51,7 @@ if(MEOS)
     span_ops_meos.c
     spanset_meos.c
     spanset_ops_meos.c
+    tbox_meos.c
     tbool_ops_meos.c
     temporal_aggfuncs_meos.c
     temporal_boxops_meos.c

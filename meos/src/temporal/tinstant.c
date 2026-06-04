@@ -220,8 +220,10 @@ tinstant_make(Datum value, MeosType temptype, TimestampTz t)
 
   size_t value_offset = offsetof(TInstant, value);
   size_t size = value_offset;
+
   /* Create the temporal instant */
   size_t value_size;
+  size_t value_copy_size;
   void *value_from;
   MeosType basetype = temptype_basetype(temptype);
   bool typbyval = basetype_byvalue(basetype);
@@ -230,6 +232,7 @@ tinstant_make(Datum value, MeosType temptype, TimestampTz t)
   {
     /* For base types passed by value */
     value_size = DOUBLE_PAD(sizeof(Datum));
+    value_copy_size = sizeof(Datum);
     value_from = &value;
   }
   else
@@ -237,13 +240,24 @@ tinstant_make(Datum value, MeosType temptype, TimestampTz t)
     /* For base types passed by reference */
     int16 typlen = meostype_length(basetype);
     value_from = DatumGetPointer(value);
-    value_size = (typlen != -1) ? DOUBLE_PAD((unsigned int) typlen) :
-      DOUBLE_PAD(VARSIZE(value_from));
+    if (typlen != -1)
+    {
+      value_size = DOUBLE_PAD((unsigned int) typlen);
+      value_copy_size = (unsigned int) typlen;
+    }
+    else
+    {
+      value_copy_size = VARSIZE(value_from);
+      value_size = DOUBLE_PAD(value_copy_size);
+    }
   }
   size += value_size;
   TInstant *result = palloc0(size);
   void *value_to = ((char *) result) + value_offset;
-  memcpy(value_to, value_from, value_size);
+  /* Copy only the actual value bytes; palloc0 already zeroed any DOUBLE_PAD
+   * trailing bytes in the destination, so reading past the source object
+   * (which may be a tightly-allocated varlena) is unnecessary and unsafe. */
+  memcpy(value_to, value_from, value_copy_size);
   /* Initialize fixed-size values */
   result->temptype = temptype;
   result->subtype = TINSTANT;
@@ -349,14 +363,14 @@ tinstant_time(const TInstant *inst)
  * @ingroup meos_internal_temporal_accessor
  * @brief Return in the last argument the time span of a temporal instant
  * @param[in] inst Temporal instant
- * @param[out] s Result
+ * @param[out] result Result
  */
 void
-tinstant_set_tstzspan(const TInstant *inst, Span *s)
+tinstant_set_tstzspan(const TInstant *inst, Span *result)
 {
-  assert(inst); assert(s);
+  assert(inst); assert(result);
   span_set(TimestampTzGetDatum(inst->t), TimestampTzGetDatum(inst->t),
-    true, true, T_TIMESTAMPTZ, T_TSTZSPAN, s);
+    true, true, T_TIMESTAMPTZ, T_TSTZSPAN, result);
   return;
 }
 

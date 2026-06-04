@@ -13,6 +13,9 @@ SET(LOCAL_FILES
   214_tcbuffer_tempspatialrels
   216_tcbuffer_indexes
   217_tcbuffer_analytics
+  218_tcbuffer_tile
+  # 153_tcbuffer_inout
+  299_portable_aliases
   )
 
 foreach (f ${LOCAL_FILES})

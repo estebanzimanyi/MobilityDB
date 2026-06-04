@@ -19,9 +19,44 @@ set(MEOS_LIB_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}")
 set(MEOS_LIB_NAME "meos")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-# Set the location of the directory of the time zone database
-add_definitions(-DSYSTEMTZDIR="/usr/share/zoneinfo")
-message(STATUS "Directory of the time zone database: /usr/share/zoneinfo")
+# Set the location of the IANA timezone database directory.  pgtz.c uses the
+# SYSTEMTZDIR macro to avoid calling get_share_path() (a PostgreSQL-internal
+# function not available in the MEOS standalone build).
+#
+# Override at cmake time with -DMEOS_TZDATA_DIR=<path>.  The path must be a
+# native OS path that fopen() can open (i.e. a Windows path such as
+# C:/msys64/ucrt64/share/zoneinfo on Windows, not an MSYS2 POSIX path).
+if(NOT DEFINED MEOS_TZDATA_DIR)
+  if(NOT WIN32)
+    set(MEOS_TZDATA_DIR "/usr/share/zoneinfo")
+  else()
+    # Auto-discover from the MSYS2 environment: MSYSTEM_PREFIX is set by the
+    # MSYS2 shell (e.g. /ucrt64).  cygpath -m converts the POSIX path to a
+    # Windows-native path (e.g. C:/msys64/ucrt64/share/zoneinfo) that the
+    # compiled DLL — a native Windows binary — can open with fopen().
+    if(DEFINED ENV{MSYSTEM_PREFIX})
+      execute_process(
+        COMMAND cygpath -m "$ENV{MSYSTEM_PREFIX}/share/zoneinfo"
+        OUTPUT_VARIABLE MEOS_TZDATA_DIR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+        RESULT_VARIABLE _cygpath_rc
+      )
+      if(NOT _cygpath_rc EQUAL 0 OR NOT MEOS_TZDATA_DIR)
+        set(MEOS_TZDATA_DIR "C:/msys64/ucrt64/share/zoneinfo")
+        message(WARNING "cygpath failed; falling back to ${MEOS_TZDATA_DIR}")
+      endif()
+    else()
+      # Outside MSYS2 (e.g. MSVC developer command prompt): caller must pass
+      # -DMEOS_TZDATA_DIR=... or install tzdata to this default location.
+      set(MEOS_TZDATA_DIR "C:/msys64/ucrt64/share/zoneinfo")
+      message(WARNING "MEOS_TZDATA_DIR not set and MSYSTEM_PREFIX not found; "
+                      "defaulting to ${MEOS_TZDATA_DIR}")
+    endif()
+  endif()
+endif()
+add_definitions(-DSYSTEMTZDIR="${MEOS_TZDATA_DIR}")
+message(STATUS "Directory of the time zone database: ${MEOS_TZDATA_DIR}")
 
 # Option to build MEOS as a shared or static library
 option(BUILD_SHARED_LIBS
@@ -198,6 +233,14 @@ if(RGEO)
   message(STATUS "Including rigid geometries")
   set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:rgeo>")
 endif()
+if(H3)
+  message(STATUS "Including temporal H3 index objects")
+  set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:h3>")
+endif()
+if(POINTCLOUD)
+  message(STATUS "Including pgpointcloud temporal types")
+  set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:pointcloud>")
+endif()
 
 # PostgreSQL
 set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:common>")
@@ -279,6 +322,9 @@ install(
   FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_tls.h"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 install(
+  FILES "${CMAKE_SOURCE_DIR}/arrow/arrow_c_data_interface.h"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+install(
   FILES "${CMAKE_SOURCE_DIR}/meos/src/geo/spatial_ref_sys.csv"
   DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}")
 
@@ -311,6 +357,11 @@ endif()
 if(RGEO)
   install(
     FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_rgeo.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+endif()
+if(H3)
+  install(
+    FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_h3.h"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 endif()
 if(POINTCLOUD)

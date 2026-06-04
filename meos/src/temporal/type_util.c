@@ -56,6 +56,11 @@
   #include <meos_cbuffer.h>
   #include "cbuffer/cbuffer.h"
 #endif
+#if POINTCLOUD
+  #include <meos_pointcloud.h>
+  #include "pointcloud/pcpoint.h"
+  #include "pointcloud/pcpatch.h"
+#endif
 #if NPOINT
   // #include <meos_npoint.h>
   #include "npoint/tnpoint.h"
@@ -133,6 +138,14 @@ datum_cmp(Datum l, Datum r, MeosType type)
     case T_GEOMETRY:
     case T_GEOGRAPHY:
       return gserialized_cmp(DatumGetGserializedP(l), DatumGetGserializedP(r));
+#if POINTCLOUD
+    case T_PCPOINT:
+      return pcpoint_cmp((const Pcpoint *) DatumGetPointer(l),
+        (const Pcpoint *) DatumGetPointer(r));
+    case T_PCPATCH:
+      return pcpatch_cmp((const Pcpatch *) DatumGetPointer(l),
+        (const Pcpatch *) DatumGetPointer(r));
+#endif
 #if CBUFFER
     case T_CBUFFER:
       return cbuffer_cmp(DatumGetCbufferP(l), DatumGetCbufferP(r));
@@ -240,6 +253,14 @@ datum_eq(Datum l, Datum r, MeosType type)
       else
         return geo_same(gs1, gs2);
     }
+#if POINTCLOUD
+    case T_PCPOINT:
+      return pcpoint_eq((const Pcpoint *) DatumGetPointer(l),
+        (const Pcpoint *) DatumGetPointer(r));
+    case T_PCPATCH:
+      return pcpatch_eq((const Pcpatch *) DatumGetPointer(l),
+        (const Pcpatch *) DatumGetPointer(r));
+#endif
 #if CBUFFER
     case T_CBUFFER:
       return cbuffer_eq(DatumGetCbufferP(l), DatumGetCbufferP(r));
@@ -481,6 +502,12 @@ datum_hash(Datum d, MeosType type)
     case T_GEOMETRY:
     case T_GEOGRAPHY:
       return gserialized_hash(DatumGetGserializedP(d));
+#if POINTCLOUD
+    case T_PCPOINT:
+      return pcpoint_hash((const Pcpoint *) DatumGetPointer(d));
+    case T_PCPATCH:
+      return pcpatch_hash((const Pcpatch *) DatumGetPointer(d));
+#endif
 #if CBUFFER
     case T_CBUFFER:
       return cbuffer_hash(DatumGetCbufferP(d));
@@ -540,6 +567,12 @@ datum_hash_extended(Datum d, MeosType type, uint64 seed)
     // case T_GEOMETRY:
     // case T_GEOGRAPHY:
       // return gserialized_hash_extended(DatumGetGserializedP(d), seed);
+#if POINTCLOUD
+    case T_PCPOINT:
+      return pcpoint_hash_extended((const Pcpoint *) DatumGetPointer(d), seed);
+    case T_PCPATCH:
+      return pcpatch_hash_extended((const Pcpatch *) DatumGetPointer(d), seed);
+#endif
 #if NPOINT
     case T_NPOINT:
       return npoint_hash_extended(DatumGetNpointP(d), seed);
@@ -827,7 +860,7 @@ pfree_array(void **array, int count)
  * @note The function frees the memory of the input strings after finishing
  */
 char *
-stringarr_to_string(char **strings, int count, size_t outlen, char *prefix,
+stringarr_to_string(char **strings, int count, size_t outlen, const char *prefix,
   char open, char close, bool quotes, bool spaces)
 {
   size_t size = strlen(prefix) + outlen + 3;

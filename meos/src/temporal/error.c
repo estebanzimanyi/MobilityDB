@@ -172,7 +172,7 @@ default_error_handler(int errlevel, int errcode, const char *errmsg)
  * @brief Error handler function that sets the errcode and the error message
  */
 void
-error_handler_errno(int errlevel __attribute__((__unused__)), int errcode,
+error_handler_errno(int errlevel pg_attribute_unused(), int errcode,
   const char *errmsg)
 {
   perror(errmsg);
@@ -190,12 +190,51 @@ meos_initialize_error_handler(error_handler_fn err_handler)
   __atomic_store_n(&MEOS_ERROR_HANDLER, h, __ATOMIC_RELEASE);
   return;
 }
+
+/**
+ * @brief No-exit error handler reporting via meos_errno() only
+ * @details Never calls exit(); safe to invoke from a foreign thread in a
+ * JVM (JNR-FFI on Spark / JMEOS) where exit() would tear the host process
+ * down. Errors are reported through meos_errno() only.
+ */
+static void
+noexit_error_handler(int errlevel __attribute__((__unused__)), int errcode,
+  const char *errmsg __attribute__((__unused__)))
+{
+  meos_errno_set(errcode);
+  return;
+}
+
+/**
+ * @brief Install the no-exit error handler
+ * @details Safe to call from multiple threads -- the underlying atomic
+ * store is idempotent and always sets the same function pointer.
+ */
+void
+meos_initialize_noexit_error_handler(void)
+{
+  __atomic_store_n(&MEOS_ERROR_HANDLER,
+    (meos_error_handler_t) noexit_error_handler, __ATOMIC_RELEASE);
+  return;
+}
 #endif /* MEOS */
 
 /*****************************************************************************/
 
 /**
  * @brief Function handling error messages
+ *
+ * @note Return-or-not contract is *undefined*: depending on the
+ * installed handler this function MAY return to the caller. The
+ * default handler `exit(EXIT_FAILURE)`s on `ERROR` (safe for one-shot
+ * CLI use); any custom handler installed via
+ * `meos_initialize_error_handler` may return. Code in MEOS that calls
+ * `meos_error(ERROR, ...)` MUST be immediately followed by a `return`,
+ * `goto`, `break`, or sentinel assignment -- NEVER let execution fall
+ * through. Historic fall-through bugs caused by relying on the
+ * exit-on-ERROR path: MobilityDB#1089 (closed by PR #1090), #1093
+ * (wider audit). See the corresponding doc comment on the public
+ * declaration of `meos_error` in `meos/include/meos.h`.
  */
 void
 meos_error(int errlevel, int errcode, const char *format, ...)

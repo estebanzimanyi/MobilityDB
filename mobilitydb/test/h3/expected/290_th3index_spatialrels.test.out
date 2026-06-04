@@ -33,11 +33,12 @@ SELECT
   aIntersects(big_region, cell_seq)  AS ai_big,
   aDisjoint  (far_region, cell_seq)  AS adj_far,
   aContains  (big_region, cell_seq)  AS ac_big,
+  aCovers    (big_region, cell_seq)  AS acv_big,
   aDwithin   (big_region, cell_seq, 0.001) AS adw_close
 FROM t;
- ai_big | adj_far | ac_big | adw_close 
---------+---------+--------+-----------
- t      | t       | f      | f
+ ai_big | adj_far | ac_big | acv_big | adw_close 
+--------+---------+--------+---------+-----------
+ t      | t       | f      | f       | f
 (1 row)
 
 WITH t AS (

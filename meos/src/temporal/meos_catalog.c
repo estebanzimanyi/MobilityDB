@@ -306,6 +306,15 @@ static const temptype_catalog_struct MEOS_TEMPTYPE_CATALOG[] =
 inline const char *
 meostype_name(MeosType type)
 {
+  /* Defensive: an out-of-range or unmapped MeosType returns NULL from
+   * the designated-initializer array, and propagating that through to
+   * meos_error's %s segfaults inside __strlen_avx2. The smoke suite
+   * surfaced this when a tcbuffer spatial-rels path passed a type that
+   * had no spantype mapping. Return a sentinel string instead so the
+   * caller's error message survives. */
+  const int n = (int) (sizeof(MEOS_TYPE_NAMES) / sizeof(MEOS_TYPE_NAMES[0]));
+  if ((int) type < 0 || (int) type >= n || MEOS_TYPE_NAMES[type] == NULL)
+    return "unknown";
   return MEOS_TYPE_NAMES[type];
 }
 
@@ -602,8 +611,9 @@ spantype_spansettype(MeosType type)
 inline bool
 meos_basetype(MeosType type)
 {
-  return (type == T_BOOL || type == T_INT4 || type == T_INT8 || type == T_FLOAT8 ||
-    type == T_TEXT || type == T_DATE || type == T_TIMESTAMPTZ ||
+  return (type == T_BOOL || type == T_INT4 || type == T_INT8 ||
+    type == T_FLOAT8 || type == T_TEXT || type == T_DATE ||
+    type == T_TIMESTAMPTZ ||
     /* The doubleX are internal types used for temporal aggregation */
     type == T_DOUBLE2 || type == T_DOUBLE3 || type == T_DOUBLE4 ||
     type == T_GEOMETRY || type == T_GEOGRAPHY
@@ -787,16 +797,16 @@ inline bool
 set_basetype(MeosType type)
 {
   return (type == T_TIMESTAMPTZ || type == T_DATE || type == T_INT4 ||
-      type == T_INT8 || type == T_FLOAT8 || type == T_TEXT ||
-      type == T_GEOMETRY || type == T_GEOGRAPHY
+    type == T_INT8 || type == T_FLOAT8 || type == T_TEXT ||
+    type == T_GEOMETRY || type == T_GEOGRAPHY
 #if CBUFFER
-      || type == T_CBUFFER
+    || type == T_CBUFFER
 #endif
 #if NPOINT
-      || type == T_NPOINT
+    || type == T_NPOINT
 #endif
 #if POSE || RGEO
-      || type == T_POSE
+    || type == T_POSE
 #endif
 #if H3
       || type == T_H3INDEX
@@ -815,16 +825,16 @@ inline bool
 set_type(MeosType type)
 {
   return (type == T_TSTZSET || type == T_DATESET || type == T_INTSET ||
-      type == T_BIGINTSET || type == T_FLOATSET || type == T_TEXTSET ||
-      type == T_GEOMSET || type == T_GEOGSET
+    type == T_BIGINTSET || type == T_FLOATSET || type == T_TEXTSET ||
+    type == T_GEOMSET || type == T_GEOGSET
 #if CBUFFER
-      || type == T_CBUFFERSET
+    || type == T_CBUFFERSET
 #endif
 #if NPOINT
-      || type == T_NPOINTSET
+    || type == T_NPOINTSET
 #endif
 #if POSE || RGEO
-      || type == T_POSESET
+    || type == T_POSESET
 #endif
 #if H3
       || type == T_H3INDEXSET

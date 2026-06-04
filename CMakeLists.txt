@@ -312,6 +312,11 @@ int main() {
 # Other dependencies
 #--------------------------------
 
+# POSIX threads — needed for pthread_once in meos_initialize_geos()
+# On Linux ≥ glibc 2.34 pthreads are in libc; on older systems and MinGW
+# CMake's Threads::Threads target adds the correct -lpthread / -lwinpthread.
+find_package(Threads REQUIRED)
+
 # GEOS geometry library
 find_package(GEOS REQUIRED)
 include_directories(SYSTEM ${GEOS_INCLUDE_DIR})
@@ -335,6 +340,10 @@ find_package(GSL REQUIRED)
 include_directories(SYSTEM ${GSL_INCLUDE_DIRS})
 message(STATUS "GSL_VERSION: ${GSL_VERSION}")
 add_definitions(-DGSL_VERSION_STRING="${GSL_VERSION}")
+
+# Apache Arrow C Data Interface (vendored, header-only; no libarrow link).
+# Set at the top level so both the MEOS and the MobilityDB builds find it.
+include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/arrow")
 
 #----------------------------------------------
 # Configure PostGIS with optional dependencies

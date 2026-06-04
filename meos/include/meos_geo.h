@@ -820,6 +820,9 @@ extern bool right_tspatial_tspatial(const Temporal *temp1, const Temporal *temp2
 extern int acontains_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp);
 extern int acontains_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs);
 extern int acontains_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2);
+extern int acovers_geo_tgeo(const GSERIALIZED *gs, const Temporal *temp);
+extern int acovers_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs);
+extern int acovers_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2);
 extern int adisjoint_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs);
 extern int adisjoint_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2);
 extern int adwithin_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, double dist);
@@ -881,11 +884,14 @@ extern GSERIALIZED *shortestline_tgeo_geo(const Temporal *temp, const GSERIALIZE
 extern GSERIALIZED *shortestline_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2);
 extern double mindistance_tgeoarr_tgeoarr(const Temporal **arr1, int count1, const Temporal **arr2, int count2);
 extern double mindistance_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2, double threshold);
+extern int *edwithin_tgeoarr_tgeoarr(const Temporal **arr1, int count1, const Temporal **arr2, int count2, double dist, int *count);
+extern int *tdwithin_tgeoarr_tgeoarr(const Temporal **arr1, int count1, const Temporal **arr2, int count2, double dist, int *count, SpanSet ***periods);
+extern int *adisjoint_tgeoarr_tgeoarr(const Temporal **arr1, int count1, const Temporal **arr2, int count2, int *count);
 
 /* Aggregates */
 
 extern Temporal *tpoint_tcentroid_finalfn(SkipList *state);
-extern SkipList *tpoint_tcentroid_transfn(SkipList *state, Temporal *temp);
+extern SkipList *tpoint_tcentroid_transfn(SkipList *state, const Temporal *temp);
 extern STBox *tspatial_extent_transfn(STBox *box, const Temporal *temp);
 
 /* Tile functions */

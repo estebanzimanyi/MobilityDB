@@ -1036,8 +1036,9 @@ Datum
 Spanset_spans(PG_FUNCTION_ARGS)
 {
   SpanSet *ss = PG_GETARG_SPANSET_P(0);
-  Span *spans = spanset_spans(ss);
-  ArrayType *result = spanarr_to_array(spans, ss->count);
+  int count;
+  Span *spans = spanset_spans(ss, &count);
+  ArrayType *result = spanarr_to_array(spans, count);
   pfree(spans);
   PG_FREE_IF_COPY(ss, 0);
   PG_RETURN_ARRAYTYPE_P(result);
@@ -1262,6 +1263,25 @@ Spanset_hash_extended(PG_FUNCTION_ARGS)
   uint64 result = spanset_hash_extended(ss, seed);
   PG_FREE_IF_COPY(ss, 0);
   PG_RETURN_UINT64(result);
+}
+
+/*****************************************************************************/
+
+PGDLLEXPORT Datum Spanset_arrow_roundtrip(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Spanset_arrow_roundtrip);
+/**
+ * @ingroup mobilitydb_setspan_transf
+ * @brief Round-trip a span set through the Arrow C Data Interface,
+ * returning the reconstructed value
+ * @sqlfn arrowRoundtrip()
+ */
+Datum
+Spanset_arrow_roundtrip(PG_FUNCTION_ARGS)
+{
+  SpanSet *ss = PG_GETARG_SPANSET_P(0);
+  SpanSet *result = meos_spanset_arrow_roundtrip(ss);
+  PG_FREE_IF_COPY(ss, 0);
+  PG_RETURN_SPANSET_P(result);
 }
 
 /*****************************************************************************/

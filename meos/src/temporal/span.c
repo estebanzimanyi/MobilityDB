@@ -200,8 +200,8 @@ span_bound_cmp(const SpanBound *b1, const SpanBound *b2)
 int
 span_bound_qsort_cmp(const void *a1, const void *a2)
 {
-  SpanBound *b1 = (SpanBound *) a1;
-  SpanBound *b2 = (SpanBound *) a2;
+  const SpanBound *b1 = (SpanBound *) a1;
+  const SpanBound *b2 = (SpanBound *) a2;
   return span_bound_cmp(b1, b2);
 }
 
@@ -436,14 +436,14 @@ span_make(Datum lower, Datum upper, bool lower_inc, bool upper_inc,
  * @param[in] lower_inc,upper_inc True when the bounds are inclusive
  * @param[in] basetype Base type
  * @param[in] spantype Span type
- * @param[out] s Result span
+ * @param[out] result Result span
  * @see #span_make()
  */
 void
 span_set(Datum lower, Datum upper, bool lower_inc, bool upper_inc,
-  MeosType basetype, MeosType spantype, Span *s)
+  MeosType basetype, MeosType spantype, Span *result)
 {
-  assert(s); assert(basetype_spantype(basetype) == spantype);
+  assert(result); assert(basetype_spantype(basetype) == spantype);
   /* Canonicalize */
   if (span_canon_basetype(basetype))
   {
@@ -460,7 +460,7 @@ span_set(Datum lower, Datum upper, bool lower_inc, bool upper_inc,
   }
 
   int cmp = datum_cmp(lower, upper, basetype);
-  /* error check: if lower bound value is above upper, it's wrong */
+  /* error check: if lower bound value is above upper, it'result wrong */
   if (cmp > 0)
   {
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
@@ -476,14 +476,14 @@ span_set(Datum lower, Datum upper, bool lower_inc, bool upper_inc,
   }
 
   /* Note: zero-fill is required here, just as in heap tuples */
-  memset(s, 0, sizeof(Span));
+  memset(result, 0, sizeof(Span));
   /* Fill in the span */
-  s->lower = lower;
-  s->upper = upper;
-  s->lower_inc = lower_inc;
-  s->upper_inc = upper_inc;
-  s->spantype = spantype;
-  s->basetype = basetype;
+  result->lower = lower;
+  result->upper = upper;
+  result->lower_inc = lower_inc;
+  result->upper_inc = upper_inc;
+  result->spantype = spantype;
+  result->basetype = basetype;
   return;
 }
 
@@ -511,14 +511,14 @@ span_copy(const Span *s)
  * @brief Return in the last argument a span constructed from a value
  * @param[in] value Value
  * @param[in] basetype Type of the value
- * @param[out] s Result span
+ * @param[out] result Result span
 */
 void
-value_set_span(Datum value, MeosType basetype, Span *s)
+value_set_span(Datum value, MeosType basetype, Span *result)
 {
-  assert(s); assert(span_basetype(basetype));
+  assert(result); assert(span_basetype(basetype));
   MeosType spantype = basetype_spantype(basetype);
-  span_set(value, value, true, true, basetype, spantype, s);
+  span_set(value, value, true, true, basetype, spantype, result);
   return;
 }
 
@@ -1501,11 +1501,12 @@ tstzspan_shift_scale(const Span *s, const Interval *shift,
  * @ingroup meos_setspan_bbox_split
  * @brief Return an array of spans from the values of a set
  * @param[in] s Set
+ * @param[out] count Number of elements in the output array
  * @return On error return @p NULL
  * @csqlfn #Set_spans()
  */
 Span *
-set_spans(const Set *s)
+set_spans(const Set *s, int *count)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(s, NULL);
@@ -1513,6 +1514,7 @@ set_spans(const Set *s)
   Span *result = palloc(sizeof(Span) * s->count);
   for (int i = 0; i < s->count; i++)
     set_set_subspan(s, i, i, &result[i]);
+  *count = s->count;
   return result;
 }
 

@@ -291,6 +291,10 @@ CREATE FUNCTION tempSubtype(tpose)
   RETURNS text
   AS 'MODULE_PATHNAME', 'Temporal_subtype'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tempBasetype(tpose)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Temporal_basetype_name'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION interp(tpose)
   RETURNS text
@@ -473,6 +477,18 @@ CREATE FUNCTION round(tpose[], integer DEFAULT 0)
   RETURNS tpose[]
   AS 'MODULE_PATHNAME', 'Temporalarr_round'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tprecision(tpose, duration interval,
+  origin timestamptz DEFAULT '2000-01-03')
+  RETURNS tpose
+  AS 'MODULE_PATHNAME', 'Temporal_tprecision'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tsample(tpose, duration interval,
+  origin timestamptz DEFAULT '2000-01-03', interp text DEFAULT 'discrete')
+  RETURNS tpose
+  AS 'MODULE_PATHNAME', 'Temporal_tsample'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 CREATE FUNCTION shiftTime(tpose, interval)
   RETURNS tpose
   AS 'MODULE_PATHNAME', 'Temporal_shift_time'
@@ -746,5 +762,12 @@ CREATE OPERATOR CLASS tpose_hash_ops
   DEFAULT FOR TYPE tpose USING hash AS
     OPERATOR    1   = ,
     FUNCTION    1   temporal_hash(tpose);
+
+/******************************************************************************/
+
+CREATE FUNCTION arrowRoundtrip(tpose)
+  RETURNS tpose
+  AS 'MODULE_PATHNAME', 'Temporal_arrow_roundtrip'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************/

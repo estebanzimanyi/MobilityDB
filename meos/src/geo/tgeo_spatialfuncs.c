@@ -312,7 +312,7 @@ geo_distance_fn(int16 flags)
  * @brief Select the appropriate distance function
  */
 datum_func2
-pt_distance_fn(int16 flags)
+point_distance_fn(int16 flags)
 {
   if (MEOS_FLAGS_GET_GEODETIC(flags))
     return &datum_geog_distance;
@@ -1752,7 +1752,7 @@ geo_cluster_dbscan(const GSERIALIZED **geoms, uint32_t ngeoms,
 
   uint32_t i;
   char *is_in_cluster = NULL;
-  initGEOS(lwnotice, lwgeom_geos_error);
+  meos_initialize_geos();
   LWGEOM **lwgeoms = lwalloc(ngeoms * sizeof(LWGEOM *));
   UNIONFIND *uf = UF_create(ngeoms);
   for (i = 0; i < ngeoms; i++)
@@ -1809,7 +1809,7 @@ geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms,
   /* TODO short-circuit for one element? */
 
   /* Ok, we really need geos now ;) */
-  initGEOS(lwnotice, lwgeom_geos_error);
+  meos_initialize_geos();
   GEOSGeometry **geos_inputs = palloc(ngeoms * sizeof(GEOSGeometry *));
   for (i = 0; i < ngeoms; i++)
   {
@@ -1889,7 +1889,7 @@ geo_cluster_within(const GSERIALIZED **geoms, uint32_t ngeoms,
   }
 
   uint32_t i;
-  initGEOS(lwnotice, lwgeom_geos_error);
+  meos_initialize_geos();
   LWGEOM **lwgeoms = lwalloc(ngeoms * sizeof(LWGEOM *));
   for (i = 0; i < ngeoms; i++)
     lwgeoms[i] = lwgeom_from_gserialized(geoms[i]);

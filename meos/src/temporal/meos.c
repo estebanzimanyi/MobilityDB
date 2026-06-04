@@ -42,6 +42,8 @@
 #include <gsl/gsl_randist.h>
 /* Proj */
 #include <proj.h>
+/* PostGIS */
+#include <lwgeom_geos.h>
 /* MEOS */
 #include <meos.h>
 
@@ -81,8 +83,18 @@ gsl_initialize(void)
 static void
 gsl_finalize(void)
 {
-  gsl_rng_free(MEOS_GENERATION_RNG);
-  gsl_rng_free(MEOS_AGGREGATION_RNG);
+  /* Idempotency: only free live generators, and null the slots so a
+   * second finalize call does not double-free. */
+  if (MEOS_GENERATION_RNG)
+  {
+    gsl_rng_free(MEOS_GENERATION_RNG);
+    MEOS_GENERATION_RNG = NULL;
+  }
+  if (MEOS_AGGREGATION_RNG)
+  {
+    gsl_rng_free(MEOS_AGGREGATION_RNG);
+    MEOS_AGGREGATION_RNG = NULL;
+  }
   MEOS_GSL_INITIALIZED = false;
   return;
 }
@@ -138,6 +150,11 @@ proj_initialize(void)
 static void
 proj_finalize(void)
 {
+  /* Idempotency: skip when the per-thread context is already gone. PROJ
+   * documents proj_context_destroy(NULL) as destroying the *default* PROJ
+   * context, which is not what we want on a second finalize call. */
+  if (! MEOS_PJ_CONTEXT)
+    return;
   proj_context_destroy(MEOS_PJ_CONTEXT);
   MEOS_PJ_CONTEXT = NULL;
   return;
@@ -245,7 +262,7 @@ static void
 split_to_stringlist(const char *s, const char *delim, _stringlist **listhead)
 {
   char *sc = pstrdup(s);
-  char *token = strtok(sc, delim);
+  const char *token = strtok(sc, delim);
 
   while (token)
   {
@@ -481,7 +498,7 @@ meos_set_datestyle(const char *newval, void *extra)
   if (! check_datestyle(&newval, &extra))
     return false;
 
-  int *myextra = (int *) extra;
+  const int *myextra = (int *) extra;
   DateStyle = myextra[0];
   DateOrder = myextra[1];
   return true;
@@ -578,6 +595,8 @@ meos_initialize(void)
    * NULL handler (symmetric with the PG backend's mobilitydb_init). */
   meos_initialize_pointcloud();
 #endif
+  /* Initialize GEOS — exactly once per process via pthread_once */
+  meos_initialize_geos();
   return;
 }
 

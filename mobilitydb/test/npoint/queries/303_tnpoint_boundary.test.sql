@@ -60,6 +60,10 @@ SELECT npoint 'Npoint(1, 1.0)';
 SELECT npoint 'Npoint(1, -0.0001)';
 SELECT npoint 'Npoint(1, 1.0001)';
 
+-- Same boundary contract on the MFJSON input path
+SELECT asText(tnpointFromMFJSON('{"type":"MovingNetworkPoint","values":[{"route":1,"position":0.0}],"datetimes":["2000-01-01T00:00:00+01"],"interpolation":"None"}'));
+SELECT asText(tnpointFromMFJSON('{"type":"MovingNetworkPoint","values":[{"route":1,"position":1.0}],"datetimes":["2000-01-01T00:00:00+01"],"interpolation":"None"}'));
+
 -- nsegment endpoints: nsegment_set normalises (pos1, pos2) via Min / Max,
 -- so a constructor call with the positions reversed returns a normalised
 -- segment rather than an error.
