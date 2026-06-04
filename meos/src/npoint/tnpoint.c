@@ -664,14 +664,14 @@ tnpoint_values(const Temporal *temp, int *count)
  */
 bool
 tnpoint_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict,
-  Npoint **value)
+  Npoint **result)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(value, false); VALIDATE_TNPOINT(temp, false);
+  VALIDATE_NOT_NULL(result, false); VALIDATE_TNPOINT(temp, false);
   Datum res;
-  bool result = temporal_value_at_timestamptz(temp, t, strict, &res);
-  *value = DatumGetNpointP(res);
-  return result;
+  bool found = temporal_value_at_timestamptz(temp, t, strict, &res);
+  *result = DatumGetNpointP(res);
+  return found;
 }
 #endif /* MEOS */
 

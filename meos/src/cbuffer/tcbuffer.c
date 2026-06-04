@@ -1149,14 +1149,14 @@ tcbuffer_radius(const Temporal *temp)
  */
 bool
 tcbuffer_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict,
-  Cbuffer **value)
+  Cbuffer **result)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_TCBUFFER(temp, false); VALIDATE_NOT_NULL(value, false);
+  VALIDATE_TCBUFFER(temp, false); VALIDATE_NOT_NULL(result, false);
   Datum res;
-  bool result = temporal_value_at_timestamptz(temp, t, strict, &res);
-  *value = DatumGetCbufferP(res);
-  return result;
+  bool found = temporal_value_at_timestamptz(temp, t, strict, &res);
+  *result = DatumGetCbufferP(res);
+  return found;
 }
 
 /*****************************************************************************
