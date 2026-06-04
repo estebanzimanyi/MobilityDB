@@ -239,7 +239,7 @@ extern TSequenceSet *tposeseqset_from_base_tstzspanset(const Pose *pose, const S
  *****************************************************************************/
 
 extern Temporal *tpose_make(const Temporal *tpoint, const Temporal *tradius);
-extern Temporal *tpose_to_tpoint(const Temporal *temp);
+extern Temporal *tpose_to_tgeompoint(const Temporal *temp);
 
 /*****************************************************************************
  * Accessor functions

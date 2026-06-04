@@ -480,7 +480,7 @@ tposeseqset_from_base_tstzspanset(const Pose *pose, const SpanSet *ss,
  * @param[in] temp Temporal pose
  */
 Temporal *
-tpose_to_tpoint(const Temporal *temp)
+tpose_to_tgeompoint(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_TPOSE(temp, NULL);
@@ -596,7 +596,7 @@ Temporal *
 tpose_speed(const Temporal *temp)
 {
   VALIDATE_TPOSE(temp, NULL);
-  Temporal *traj = tpose_to_tpoint(temp);
+  Temporal *traj = tpose_to_tgeompoint(temp);
   if (! traj)
     return NULL;
   Temporal *result = tpoint_speed(traj);
