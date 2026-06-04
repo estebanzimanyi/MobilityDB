@@ -69,10 +69,10 @@ tfloat_arithop_turnpt(Datum start1, Datum end1, Datum start2, Datum end2,
   TimestampTz *t1, TimestampTz *t2)
 {
   assert(lower < upper); assert(t1); assert(t2);
-  double x1 = Float8GetDatum(start1);
-  double x2 = Float8GetDatum(end1);
-  double x3 = Float8GetDatum(start2);
-  double x4 = Float8GetDatum(end2);
+  double x1 = DatumGetFloat8(start1);
+  double x2 = DatumGetFloat8(end1);
+  double x3 = DatumGetFloat8(start2);
+  double x4 = DatumGetFloat8(end2);
   /* Compute the instants t1 and t2 at which the linear functions of the two
    * segments take the value 0: at1 + b = 0, ct2 + d = 0. There is a
    * minimum/maximum exactly at the middle between t1 and t2.
@@ -760,11 +760,12 @@ tfloat_exp_turnpt(Datum start, Datum end,
   double a = DatumGetFloat8(start);
   double b = DatumGetFloat8(end);
   if (a == b) return 0;
-  long double duration = (long double) (upper - lower);
-  long double slope = (expl((long double) b) - expl((long double) a))
-                    / ((long double) b - (long double) a);
-  long double fraction = (logl(slope) - (long double) a)
-                       / ((long double) b - (long double) a);
+  /* Compute in IEEE-754 double (not long double): long double is 80-bit on
+   * x86 but 128-bit on aarch64, so it makes the turning point platform-
+   * dependent.  double is identical across platforms. */
+  double duration = (double) (upper - lower);
+  double slope = (exp(b) - exp(a)) / (b - a);
+  double fraction = (log(slope) - a) / (b - a);
   if (fraction <= MEOS_EPSILON || fraction >= 1.0 - MEOS_EPSILON)
     return 0;
   *t1 = *t2 = lower + (TimestampTz) (duration * fraction);
@@ -867,11 +868,12 @@ tfloat_ln_turnpt(Datum start, Datum end,
   double a = DatumGetFloat8(start);
   double b = DatumGetFloat8(end);
   if (a == b) return 0;
-  long double duration = (long double) (upper - lower);
-  long double xstar = ((long double) b - (long double) a)
-                    / (logl((long double) b) - logl((long double) a));
-  long double fraction = (xstar - (long double) a)
-                       / ((long double) b - (long double) a);
+  /* Compute in IEEE-754 double (not long double): long double is 80-bit on
+   * x86 but 128-bit on aarch64, so it makes the turning point platform-
+   * dependent.  double is identical across platforms. */
+  double duration = (double) (upper - lower);
+  double xstar = (b - a) / (log(b) - log(a));
+  double fraction = (xstar - a) / (b - a);
   if (fraction <= MEOS_EPSILON || fraction >= 1.0 - MEOS_EPSILON)
     return 0;
   *t1 = *t2 = lower + (TimestampTz) (duration * fraction);
