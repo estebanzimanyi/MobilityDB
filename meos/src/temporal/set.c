@@ -175,9 +175,10 @@ set_in(const char *str, MeosType settype)
 static int
 set_basetype_quotes(MeosType type)
 {
-  /* Text values are already output with quotes in the #basetype_out function */
+  /* Text values are already wrapped in quotes and escaped by the #basetype_out
+   * function, so the set assembly must not re-quote them */
   if (type == T_TEXT)
-    return QUOTES_ESCAPE;
+    return QUOTES_NO;
   else if (type == T_TIMESTAMPTZ || spatial_basetype(type))
     return QUOTES;
   return QUOTES_NO;

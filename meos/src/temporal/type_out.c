@@ -118,7 +118,10 @@ text_out(const text *txt)
   assert(txt);
   char *res = text2cstring(txt);
   char *result;
-  if (string_escape(res, QUOTES_ESCAPE, &result))
+  /* Text values are structurally quoted: always wrap in double quotes and
+   * escape any embedded quotes and backslashes (QUOTES), never the PG-array
+   * style conditional quoting (QUOTES_ESCAPE) used for set elements */
+  if (string_escape(res, QUOTES, &result))
     pfree(res);
   else
     result = res;

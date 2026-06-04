@@ -663,32 +663,32 @@ SELECT radians(floatset '{0, 45, 90}');
 (1 row)
 
 SELECT lower(textset '{"AAA", "BBB", "CCC"}');
-      lower      
------------------
- {aaa, bbb, ccc}
+         lower         
+-----------------------
+ {"aaa", "bbb", "ccc"}
 (1 row)
 
 SELECT upper(textset '{"aaa", "bbb", "ccc"}');
-      upper      
------------------
- {AAA, BBB, CCC}
+         upper         
+-----------------------
+ {"AAA", "BBB", "CCC"}
 (1 row)
 
 SELECT initcap(textset '{"aaa", "bbb", "ccc"}');
-     initcap     
------------------
- {Aaa, Bbb, Ccc}
+        initcap        
+-----------------------
+ {"Aaa", "Bbb", "Ccc"}
 (1 row)
 
 SELECT textset '{"aaa", "bbb", "ccc"}' || text 'XXX';
-         ?column?         
---------------------------
- {aaaXXX, bbbXXX, cccXXX}
+            ?column?            
+--------------------------------
+ {"aaaXXX", "bbbXXX", "cccXXX"}
 (1 row)
 
 SELECT text 'XXX' || textset '{"aaa", "bbb", "ccc"}';
-         ?column?         
---------------------------
- {XXXaaa, XXXbbb, XXXccc}
+            ?column?            
+--------------------------------
+ {"XXXaaa", "XXXbbb", "XXXccc"}
 (1 row)
 
