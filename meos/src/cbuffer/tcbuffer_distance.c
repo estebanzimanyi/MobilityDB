@@ -70,15 +70,15 @@ tcbuffer_cbuffer_distance_turnpt(Datum start, Datum end, Datum value,
   TimestampTz lower, TimestampTz upper, TimestampTz *t1, TimestampTz *t2)
 {
   /* Extract the two CBUFFER values */
-  Cbuffer *ca1 = DatumGetCbufferP(start);
+  const Cbuffer *ca1 = DatumGetCbufferP(start);
   const GSERIALIZED *gs1 = cbuffer_point_p(ca1);
   const POINT2D *p1 = GSERIALIZED_POINT2D_P(gs1);
-  Cbuffer *ca2 = DatumGetCbufferP(end);
+  const Cbuffer *ca2 = DatumGetCbufferP(end);
   const GSERIALIZED *gs2 = cbuffer_point_p(ca2);
   const POINT2D *p2 = GSERIALIZED_POINT2D_P(gs2);
 
   /* Extract the circular buffer value */
-  Cbuffer *cb = DatumGetCbufferP(value);
+  const Cbuffer *cb = DatumGetCbufferP(value);
   const GSERIALIZED *gs = cbuffer_point_p(cb);
   const POINT2D *p = GSERIALIZED_POINT2D_P(gs);
 
@@ -338,10 +338,10 @@ tcbuffer_tcbuffer_distance_turnpt(Datum start1, Datum end1, Datum start2,
 {
   assert(lower < upper); assert(t1); assert(t2);
   /* Extract the circular buffer values */
-  Cbuffer *sv1 = DatumGetCbufferP(start1);
-  Cbuffer *ev1 = DatumGetCbufferP(end1);
-  Cbuffer *sv2 = DatumGetCbufferP(start2);
-  Cbuffer *ev2 = DatumGetCbufferP(end2);
+  const Cbuffer *sv1 = DatumGetCbufferP(start1);
+  const Cbuffer *ev1 = DatumGetCbufferP(end1);
+  const Cbuffer *sv2 = DatumGetCbufferP(start2);
+  const Cbuffer *ev2 = DatumGetCbufferP(end2);
   return cbuffersegm_distance_turnpt(sv1, ev1, sv2, ev2, lower, upper, t1, t2);
 }
 
@@ -1089,7 +1089,6 @@ typedef struct
 typedef struct
 {
   const TcbSeg *segs;
-  int n;
   bool has_poly;
   double xmin, ymin, xmax, ymax; /**< Overall geometry bounding box */
   const TcbBucket *bks;
@@ -1342,7 +1341,7 @@ tcbuffer_geo_nad_analytic(const Temporal *temp, const GSERIALIZED *gs)
    * segs along a Morton curve) and assemble the geometry context */
   int nbk = 0;
   TcbBucket *bks = tcb_build_buckets(segs, n, gxmin, gymin, gxmax, gymax, &nbk);
-  TcbGeom g = { segs, n, has_poly, gxmin, gymin, gxmax, gymax, bks, nbk };
+  TcbGeom g = { segs, has_poly, gxmin, gymin, gxmax, gymax, bks, nbk };
 
   double best = DBL_MAX;
   assert(temptype_subtype(temp->subtype));
