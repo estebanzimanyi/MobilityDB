@@ -3112,13 +3112,13 @@ SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_tbool t1, tbl_tstzsp
 SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_tint t1, tbl_tstzspan t2;
   sum  
 -------
- 78293
+ 78313
 (1 row)
 
 SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_tbigint t1, tbl_tstzspan t2;
   sum   
 --------
- 180074
+ 180080
 (1 row)
 
 SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_tfloat t1, tbl_tstzspan t2;
@@ -3172,19 +3172,19 @@ SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_tbool t1, tbl_tstzsp
 SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_tint t1, tbl_tstzspanset t2;
   sum  
 -------
- 78287
+ 78302
 (1 row)
 
 SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_tbigint t1, tbl_tstzspanset t2;
   sum   
 --------
- 180062
+ 180077
 (1 row)
 
 SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_tfloat t1, tbl_tstzspanset t2;
   sum  
 -------
- 94925
+ 94939
 (1 row)
 
 SELECT SUM(numInstants(deleteTime(t1.temp, t2.t))) FROM tbl_ttext t1, tbl_tstzspanset t2;
