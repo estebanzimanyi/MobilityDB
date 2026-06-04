@@ -52,6 +52,7 @@
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
+#include <meos_internal_geo.h>
 #include "temporal/postgres_types.h"
 #include "temporal/type_util.h"
 #include "geo/geo_poly_clip.h"  /* clip_poly_poly fast-path for polygon ∩/− polygon */
@@ -1443,9 +1444,10 @@ GEOS2POSTGIS(GEOSGeom geom, char want3d)
  */
 static char
 meos_call_geos2(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
-  char (*func)(const GEOSGeometry *geos1, const GEOSGeometry *geos2))
+  char (*func)(GEOSContextHandle_t ctx, const GEOSGeometry *geos1,
+    const GEOSGeometry *geos2))
 {
-  meos_initialize_geos();
+  GEOSContextHandle_t ctx = geos_get_context();
 
   GEOSGeometry *geos1 = POSTGIS2GEOS(gs1);
   if (! geos1)
@@ -1457,15 +1459,15 @@ meos_call_geos2(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
   GEOSGeometry *geos2 = POSTGIS2GEOS(gs2);
   if (! geos2)
   {
-    GEOSGeom_destroy(geos1);
+    GEOSGeom_destroy_r(ctx, geos1);
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "Second argument geometry could not be converted to GEOS");
     return 2;
   }
 
-  char result = func(geos1, geos2);
+  char result = func(ctx, geos1, geos2);
 
-  GEOSGeom_destroy(geos1); GEOSGeom_destroy(geos2);
+  GEOSGeom_destroy_r(ctx, geos1); GEOSGeom_destroy_r(ctx, geos2);
   if (result == 2)
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "GEOS returned error");
@@ -1517,13 +1519,13 @@ geom_spatialrel(const GSERIALIZED *gs1, const GSERIALIZED *gs2, spatialRel rel)
   switch (rel)
   {
     case INTERSECTS:
-      return (bool) meos_call_geos2(gs1, gs2, &GEOSIntersects);
+      return (bool) meos_call_geos2(gs1, gs2, &GEOSIntersects_r);
     case CONTAINS:
-      return (bool) meos_call_geos2(gs1, gs2, &GEOSContains);
+      return (bool) meos_call_geos2(gs1, gs2, &GEOSContains_r);
     case TOUCHES:
-      return (bool) meos_call_geos2(gs1, gs2, &GEOSTouches);
+      return (bool) meos_call_geos2(gs1, gs2, &GEOSTouches_r);
     case COVERS:
-      return (bool) meos_call_geos2(gs1, gs2, &GEOSCovers);
+      return (bool) meos_call_geos2(gs1, gs2, &GEOSCovers_r);
     default:
       /* keep compiler quiet */
       return false;
@@ -1607,7 +1609,7 @@ geom_relate_pattern(const GSERIALIZED *gs1, const GSERIALIZED *gs2, char *p)
 
   /* TODO handle empty */
 
-  meos_initialize_geos();
+  GEOSContextHandle_t ctx = geos_get_context();
 
   GEOSGeometry *geos1 = POSTGIS2GEOS(gs1);
   if (!geos1)
@@ -1619,7 +1621,7 @@ geom_relate_pattern(const GSERIALIZED *gs1, const GSERIALIZED *gs2, char *p)
   GEOSGeometry *geos2 = POSTGIS2GEOS(gs2);
   if (!geos2)
   {
-    GEOSGeom_destroy(geos1);
+    GEOSGeom_destroy_r(ctx, geos1);
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "Second argument geometry could not be converted to GEOS");
     return false;
@@ -1634,9 +1636,9 @@ geom_relate_pattern(const GSERIALIZED *gs1, const GSERIALIZED *gs2, char *p)
     if ( p[i] == 'f' ) p[i] = 'F';
   }
 
-  char result = GEOSRelatePattern(geos1, geos2, p);
-  GEOSGeom_destroy(geos1);
-  GEOSGeom_destroy(geos2);
+  char result = GEOSRelatePattern_r(ctx, geos1, geos2, p);
+  GEOSGeom_destroy_r(ctx, geos1);
+  GEOSGeom_destroy_r(ctx, geos2);
 
   if (result == 2)
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
@@ -1741,7 +1743,7 @@ geom_array_union(GSERIALIZED **gsarr, int count)
   GEOSGeometry *g = NULL;
   GEOSGeometry *g_union = NULL;
 
-  meos_initialize_geos();
+  GEOSContextHandle_t ctx = geos_get_context();
 
   /* Collect the non-empty inputs and stuff them into a GEOS collection */
   GEOSGeometry **geoms = palloc(sizeof(GEOSGeometry *) * count);
@@ -1792,7 +1794,7 @@ geom_array_union(GSERIALIZED **gsarr, int count)
   */
   if (curgeom > 0)
   {
-    g = GEOSGeom_createCollection(GEOS_GEOMETRYCOLLECTION, geoms, curgeom);
+    g = GEOSGeom_createCollection_r(ctx, GEOS_GEOMETRYCOLLECTION, geoms, curgeom);
     if (! g)
     {
       meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
@@ -1800,19 +1802,19 @@ geom_array_union(GSERIALIZED **gsarr, int count)
       return NULL;
     }
 
-    g_union = GEOSUnaryUnion(g);
-    GEOSGeom_destroy(g);
+    g_union = GEOSUnaryUnion_r(ctx, g);
+    GEOSGeom_destroy_r(ctx, g);
     if (! g_union)
     {
       meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR, "GEOSUnaryUnion");
       return NULL;
     }
 
-    GEOSSetSRID(g_union, srid);
+    GEOSSetSRID_r(ctx, g_union, srid);
     result = GEOS2POSTGIS(g_union, is3d);
     /* MEOS: GEOS DOES NOT SET THE GEODETIC FLAG */
     FLAGS_SET_GEODETIC(result->gflags, FLAGS_GET_GEODETIC(gsarr[0]->gflags));
-    GEOSGeom_destroy(g_union);
+    GEOSGeom_destroy_r(ctx, g_union);
   }
   /* No real geometries in our array, any empties? */
   else
@@ -1872,7 +1874,7 @@ geom_convex_hull(const GSERIALIZED *gs)
 
   int32_t srid = gserialized_get_srid(gs);
 
-  meos_initialize_geos();
+  GEOSContextHandle_t ctx = geos_get_context();
 
   GEOSGeometry *geos1 = POSTGIS2GEOS(gs);
   if (!geos1)
@@ -1882,8 +1884,8 @@ geom_convex_hull(const GSERIALIZED *gs)
     return NULL;
   }
 
-  GEOSGeometry *geos2 = GEOSConvexHull(geos1);
-  GEOSGeom_destroy(geos1);
+  GEOSGeometry *geos2 = GEOSConvexHull_r(ctx, geos1);
+  GEOSGeom_destroy_r(ctx, geos1);
 
   if (! geos2)
   {
@@ -1892,10 +1894,10 @@ geom_convex_hull(const GSERIALIZED *gs)
     return NULL;
   }
 
-  GEOSSetSRID(geos2, srid);
+  GEOSSetSRID_r(ctx, geos2, srid);
 
   LWGEOM *lwout = GEOS2LWGEOM(geos2, (uint8_t) gserialized_has_z(gs));
-  GEOSGeom_destroy(geos2);
+  GEOSGeom_destroy_r(ctx, geos2);
 
   if (!lwout)
   {
@@ -2076,7 +2078,7 @@ geom_buffer(const GSERIALIZED *gs, double size, const char *params)
 
   lwgeom_free(lwg);
 
-  meos_initialize_geos();
+  GEOSContextHandle_t ctx = geos_get_context();
 
   g1 = POSTGIS2GEOS(gs);
   if (! g1)
@@ -2086,23 +2088,23 @@ geom_buffer(const GSERIALIZED *gs, double size, const char *params)
     return NULL;
   }
 
-  bufferparams = GEOSBufferParams_create();
+  bufferparams = GEOSBufferParams_create_r(ctx);
   if (bufferparams)
   {
-    if (GEOSBufferParams_setEndCapStyle(bufferparams, endCapStyle) &&
-      GEOSBufferParams_setJoinStyle(bufferparams, joinStyle) &&
-      GEOSBufferParams_setMitreLimit(bufferparams, mitreLimit) &&
-      GEOSBufferParams_setQuadrantSegments(bufferparams, quadsegs) &&
-      GEOSBufferParams_setSingleSided(bufferparams, singleside))
+    if (GEOSBufferParams_setEndCapStyle_r(ctx, bufferparams, endCapStyle) &&
+      GEOSBufferParams_setJoinStyle_r(ctx, bufferparams, joinStyle) &&
+      GEOSBufferParams_setMitreLimit_r(ctx, bufferparams, mitreLimit) &&
+      GEOSBufferParams_setQuadrantSegments_r(ctx, bufferparams, quadsegs) &&
+      GEOSBufferParams_setSingleSided_r(ctx, bufferparams, singleside))
     {
-      g3 = GEOSBufferWithParams(g1, bufferparams, size);
+      g3 = GEOSBufferWithParams_r(ctx, g1, bufferparams, size);
     }
     else
     {
       meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
         "Error setting buffer parameters.");
     }
-    GEOSBufferParams_destroy(bufferparams);
+    GEOSBufferParams_destroy_r(ctx, bufferparams);
   }
   else
   {
@@ -2110,7 +2112,7 @@ geom_buffer(const GSERIALIZED *gs, double size, const char *params)
       "Error setting buffer parameters.");
   }
 
-  GEOSGeom_destroy(g1);
+  GEOSGeom_destroy_r(ctx, g1);
 
   if (! g3)
   {
@@ -2119,10 +2121,10 @@ geom_buffer(const GSERIALIZED *gs, double size, const char *params)
     return NULL;
   }
 
-  GEOSSetSRID(g3, gserialized_get_srid(gs));
+  GEOSSetSRID_r(ctx, g3, gserialized_get_srid(gs));
 
   GSERIALIZED *result = GEOS2POSTGIS(g3, gserialized_has_z(gs));
-  GEOSGeom_destroy(g3);
+  GEOSGeom_destroy_r(ctx, g3);
   if (! result)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
@@ -2253,7 +2255,7 @@ geo_equals(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   if (VARSIZE(gs1) == VARSIZE(gs2) && ! memcmp(gs1, gs2, VARSIZE(gs1)))
       return 1;
 
-  meos_initialize_geos();
+  GEOSContextHandle_t ctx = geos_get_context();
 
   GEOSGeometry *geos1 = POSTGIS2GEOS(gs1);
   if (! geos1)
@@ -2269,13 +2271,13 @@ geo_equals(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "First argument geometry could not be converted to GEOS");
-    GEOSGeom_destroy(geos1);
+    GEOSGeom_destroy_r(ctx, geos1);
     return -1;
   }
 
-  int result = GEOSEquals(geos1, geos2);
-  GEOSGeom_destroy(geos1);
-  GEOSGeom_destroy(geos2);
+  int result = GEOSEquals_r(ctx, geos1, geos2);
+  GEOSGeom_destroy_r(ctx, geos1);
+  GEOSGeom_destroy_r(ctx, geos2);
 
   if (result == 2)
   {

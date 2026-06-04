@@ -42,7 +42,10 @@
 #include <gsl/gsl_randist.h>
 /* Proj */
 #include <proj.h>
+/* GEOS */
+#include <geos_c.h>
 /* PostGIS */
+#include <lwgeom_log.h>
 #include <lwgeom_geos.h>
 /* MEOS */
 #include <meos.h>
@@ -170,6 +173,59 @@ proj_get_context(void)
   if (! MEOS_PJ_CONTEXT)
     proj_initialize();
   return MEOS_PJ_CONTEXT;
+}
+
+/***************************************************************************
+ * Functions for the GEOS library
+ ***************************************************************************/
+
+/* Per-thread GEOS context.  Each thread owns its own handle so concurrent
+ * callers do not share GEOS state.  MEOS spatial helpers retrieve the
+ * handle via geos_get_context() and use the reentrant GEOSXxx_r API. */
+
+static MEOS_TLS GEOSContextHandle_t MEOS_GEOS_CONTEXT = NULL;
+
+/**
+ * @brief Initialize the GEOS library
+ */
+static void
+geos_initialize(void)
+{
+  if (! MEOS_GEOS_CONTEXT)
+  {
+    MEOS_GEOS_CONTEXT = GEOS_init_r();
+    GEOSContext_setNoticeHandler_r(MEOS_GEOS_CONTEXT, lwnotice);
+    GEOSContext_setErrorHandler_r(MEOS_GEOS_CONTEXT, lwgeom_geos_error);
+  }
+  return;
+}
+
+#if MEOS
+/**
+ * @brief Finalize the GEOS library
+ */
+static void
+geos_finalize(void)
+{
+  if (MEOS_GEOS_CONTEXT)
+  {
+    GEOS_finish_r(MEOS_GEOS_CONTEXT);
+    MEOS_GEOS_CONTEXT = NULL;
+  }
+  lwgeom_geos_finalize();
+  return;
+}
+#endif /* MEOS */
+
+/**
+ * @brief Return the per-thread GEOS context handle
+ */
+GEOSContextHandle_t
+geos_get_context(void)
+{
+  if (! MEOS_GEOS_CONTEXT)
+    geos_initialize();
+  return MEOS_GEOS_CONTEXT;
 }
 
 /*****************************************************************************/
@@ -587,6 +643,8 @@ meos_initialize(void)
   meos_initialize_timezone(NULL);
   /* Initialize PROJ */
   proj_initialize();
+  /* Initialize GEOS */
+  geos_initialize();
   /* Initialize GSL */
   gsl_initialize();
 #if POINTCLOUD
@@ -595,8 +653,6 @@ meos_initialize(void)
    * NULL handler (symmetric with the PG backend's mobilitydb_init). */
   meos_initialize_pointcloud();
 #endif
-  /* Initialize GEOS — exactly once per process via pthread_once */
-  meos_initialize_geos();
   return;
 }
 
@@ -615,6 +671,8 @@ meos_finalize(void)
 #endif
   /* Finalize PROJ */
   proj_finalize();
+  /* Finalize GEOS */
+  geos_finalize();
   /* Finalize GSL */
   gsl_finalize();
   return;
