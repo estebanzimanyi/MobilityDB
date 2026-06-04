@@ -17,9 +17,9 @@ SELECT arrowRoundtrip(floatset '{1.5, -3.25, 7, 42.125}');
 (1 row)
 
 SELECT arrowRoundtrip(textset '{"alpha", "beta", "gamma"}');
-       arrowroundtrip       
-----------------------------
- {"alpha", "beta", "gamma"}
+    arrowroundtrip    
+----------------------
+ {alpha, beta, gamma}
 (1 row)
 
 SELECT arrowRoundtrip(dateset '{2000-01-01, 2000-06-15, 2001-12-31}');
