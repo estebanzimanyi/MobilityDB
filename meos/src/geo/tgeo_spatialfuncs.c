@@ -1860,6 +1860,7 @@ geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms,
   *count = nclusters;
   return result;
 }
+#endif /* MEOS */
 
 /**
  * @ingroup meos_geo_base_spatial
@@ -1917,6 +1918,5 @@ geo_cluster_within(const GSERIALIZED **geoms, uint32_t ngeoms,
   *count = nclusters;
   return result;
 }
-#endif /* MEOS */
 
 /*****************************************************************************/

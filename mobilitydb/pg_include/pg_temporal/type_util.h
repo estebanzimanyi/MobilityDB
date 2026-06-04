@@ -89,6 +89,7 @@ extern RangeType *range_make(Datum from, Datum to, bool lower_inc,
 
 extern Datum *datumarr_extract(ArrayType *array, int *count);
 extern TimestampTz *timestamparr_extract(ArrayType *array, int *count);
+extern GSERIALIZED **geoarr_extract(ArrayType *array, int *count);
 #if CBUFFER
 extern Cbuffer **cbufferarr_extract(ArrayType *array, int *count);
 extern ArrayType *cbufferarr_to_array(const Cbuffer **cbarr, int count);
