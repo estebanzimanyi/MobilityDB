@@ -439,8 +439,9 @@ int main(void)
   printf("cbufferset_value_n(%s, 1, %s): %c\n", cbufferset1_out, cbuffer1_out, bool_result ? 't' : 'n');
   free(cbuffer_result); free(char_result);
 
-  /* Cbuffer **cbufferset_values(const Set *s); */
-  cbufferarray_result = cbufferset_values(cbufferset1);
+  /* Cbuffer **cbufferset_values(const Set *s, int *count); */
+  int cbufferset_values_count;
+  cbufferarray_result = cbufferset_values(cbufferset1, &cbufferset_values_count);
   printf("cbufferset_values(%s): {", cbufferset1_out);
   for (int i = 0; i < cbufferset1->count; i++)
   {
