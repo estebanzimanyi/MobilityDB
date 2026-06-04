@@ -2084,6 +2084,8 @@ tbox_flags_from_wkb_state(meos_wkb_parse_state *s, uint8_t wkb_flags)
 static TBox *
 tbox_from_wkb_state(meos_wkb_parse_state *s)
 {
+  /* Read the type number (the dispatch type is already known) */
+  int16_from_wkb_state(s);
   /* Read the temporal flags */
   uint8_t wkb_flags = (uint8_t) byte_from_wkb_state(s);
   tbox_flags_from_wkb_state(s, wkb_flags);
@@ -2134,6 +2136,8 @@ stbox_flags_from_wkb_state(meos_wkb_parse_state *s, uint8_t wkb_flags)
 static STBox *
 stbox_from_wkb_state(meos_wkb_parse_state *s)
 {
+  /* Read the type number (the dispatch type is already known) */
+  int16_from_wkb_state(s);
   /* Read the temporal flags */
   uint8_t wkb_flags = (uint8_t) byte_from_wkb_state(s);
   stbox_flags_from_wkb_state(s, wkb_flags);
@@ -2486,11 +2490,10 @@ type_from_hexwkb(const char *hexwkb, size_t size, MeosType type)
  * @ingroup meos_setspan_inout
  * @brief Return the MEOS type tag encoded in the header of a hex-encoded
  * Well-Known Binary (WKB) string, without parsing the whole value
- * @details Sets, spans, span sets, and temporal values write their concrete
- * @p MeosType as a 16-bit tag immediately after the endian flag; this function
- * peeks that tag so a caller can dispatch on the concrete type at runtime.
- * Temporal boxes (@p tbox, @p stbox) carry no in-band type tag in their WKB
- * header, so they are not supported by this function.
+ * @details Sets, spans, span sets, temporal boxes, and temporal values write
+ * their concrete @p MeosType as a 16-bit tag immediately after the endian flag;
+ * this function peeks that tag so a caller can dispatch on the concrete type at
+ * runtime.
  * @param[in] hexwkb HexWKB string
  * @return The concrete @p MeosType, or @p T_UNKNOWN when @p hexwkb is null,
  * shorter than a header, has an invalid endian flag, or encodes a value out of

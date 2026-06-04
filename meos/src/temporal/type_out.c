@@ -1388,8 +1388,8 @@ spanset_to_wkb_size(const SpanSet *ss)
 static size_t
 tbox_to_wkb_size(const TBox *box)
 {
-  /* Endian flag + temporal flag */
-  size_t size = MEOS_WKB_BYTE_SIZE * 2;
+  /* Endian flag + type number (int16) + temporal flag */
+  size_t size = MEOS_WKB_BYTE_SIZE * 2 + MEOS_WKB_INT2_SIZE;
   /* If there is a value dimension */
   if (MEOS_FLAGS_GET_X(box->flags))
     size += span_to_wkb_size(&box->span, true);
@@ -1408,8 +1408,8 @@ tbox_to_wkb_size(const TBox *box)
 static size_t
 stbox_to_wkb_size(const STBox *box, uint8_t variant)
 {
-  /* Endian flag + temporal flag */
-  size_t size = MEOS_WKB_BYTE_SIZE * 2;
+  /* Endian flag + type number (int16) + temporal flag */
+  size_t size = MEOS_WKB_BYTE_SIZE * 2 + MEOS_WKB_INT2_SIZE;
   /* If there is a time dimension */
   if (MEOS_FLAGS_GET_T(box->flags))
     size += span_to_wkb_size(&box->period, true);
@@ -2328,6 +2328,8 @@ tbox_to_wkb_buf(const TBox *box, uint8_t *buf, uint8_t variant)
 {
   /* Write the endian flag (byte) */
   buf = endian_to_wkb_buf(buf, variant);
+  /* Write the type number */
+  buf = int16_to_wkb_buf(T_TBOX, buf, variant);
   /* Write the temporal flags */
   buf = tbox_to_wkb_flags_buf(box, buf, variant);
   /* Write the temporal dimension if any */
@@ -2385,6 +2387,8 @@ stbox_to_wkb_buf(const STBox *box, uint8_t *buf, uint8_t variant)
 {
   /* Write the endian flag (byte) */
   buf = endian_to_wkb_buf(buf, variant);
+  /* Write the type number */
+  buf = int16_to_wkb_buf(T_STBOX, buf, variant);
   /* Write the temporal flags */
   buf = stbox_flags_to_wkb_buf(box, buf, variant);
   /* Write the optional SRID for extended variant */
