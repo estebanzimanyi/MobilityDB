@@ -173,20 +173,6 @@ tbigint_out(const Temporal *temp)
 
 /**
  * @ingroup meos_temporal_inout
- * @brief Return the Well-Known Text (WKT) representation of a temporal big
- * integer
- * @param[in] temp Temporal big integer
- */
-char *
-tbigint_out(const Temporal *temp)
-{
-  /* Ensure the validity of the arguments */
-  VALIDATE_TBIGINT(temp, NULL);
-  return temporal_out(temp, 0);
-}
-
-/**
- * @ingroup meos_temporal_inout
  * @brief Return the Well-Known Text (WKT) representation of a temporal float
  * @param[in] temp Temporal float
  * @param[in] maxdd Maximum number of decimal digits

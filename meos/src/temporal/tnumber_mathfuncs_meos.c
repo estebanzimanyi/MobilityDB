@@ -342,23 +342,6 @@ mul_tbigint_bigint(const Temporal *temp, int64 i)
 
 /**
  * @ingroup meos_temporal_math
- * @brief Return the temporal multiplication of a temporal integer and an
- * integer
- * @param[in] temp Temporal value
- * @param[in] i Value
- * @csqlfn #Mul_tnumber_number()
- */
-Temporal *
-mul_tbigint_bigint(const Temporal *temp, int64 i)
-{
-  /* Ensure the validity of the arguments */
-  VALIDATE_TBIGINT(temp, NULL);
-  return arithop_tnumber_number(temp, Int64GetDatum(i), MUL, &datum_mul,
-    INVERT_NO);
-}
-
-/**
- * @ingroup meos_temporal_math
  * @brief Return the multiplication of a temporal big integer and a big integer
  * @param[in] temp Temporal value
  * @param[in] i Value

@@ -165,12 +165,6 @@ basetype_out(Datum value, MeosType type, int maxdd)
     case T_GEOGRAPHY:
       /* Hex-encoded ASCII Well-Known Binary (HexWKB) representation */
       return geo_out(DatumGetGserializedP(value));
-#if POINTCLOUD
-    case T_PCPOINT:
-      return pcpoint_hex_out((const Pcpoint *) DatumGetPointer(value), maxdd);
-    case T_PCPATCH:
-      return pcpatch_hex_out((const Pcpatch *) DatumGetPointer(value), maxdd);
-#endif
 #if CBUFFER
     case T_CBUFFER:
       return cbuffer_out(DatumGetCbufferP(value), maxdd);

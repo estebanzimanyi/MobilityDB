@@ -210,24 +210,6 @@ basetype_in(const char *str, MeosType type,
       *result = PointerGetDatum(gs);
       return true;
     }
-#if POINTCLOUD
-    case T_PCPOINT:
-    {
-      Pcpoint *pt = pcpoint_parse(&str, end);
-      if (! pt)
-        return false;
-      *result = PointerGetDatum(pt);
-      return true;
-    }
-    case T_PCPATCH:
-    {
-      Pcpatch *pa = pcpatch_parse(&str, end);
-      if (! pa)
-        return false;
-      *result = PointerGetDatum(pa);
-      return true;
-    }
-#endif
 #if CBUFFER
     case T_CBUFFER:
     {

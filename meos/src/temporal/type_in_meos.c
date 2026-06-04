@@ -89,18 +89,6 @@ tintinst_from_mfjson(json_object *mfjson)
 
 /**
  * @ingroup meos_internal_temporal_inout
- * @brief Return a temporal big integer instant from its MF-JSON representation
- * @param[in] mfjson MFJSON object
- * @csqlfn #Temporal_from_mfjson()
- */
-inline TInstant *
-tbigintinst_from_mfjson(json_object *mfjson)
-{
-  return tinstant_from_mfjson(mfjson, false, 0, T_TBIGINT);
-}
-
-/**
- * @ingroup meos_internal_temporal_inout
  * @brief Return a temporal float instant from its MF-JSON representation
  * @param[in] mfjson MFJSON object
  * @csqlfn #Temporal_from_mfjson()
@@ -160,19 +148,6 @@ inline TSequence *
 tintseq_from_mfjson(json_object *mfjson)
 {
   return tsequence_from_mfjson(mfjson, false, 0, T_TINT, STEP);
-}
-
-/**
- * @ingroup meos_internal_temporal_inout
- * @brief Return a temporal big integer sequence from its MF-JSON
- * representation
- * @param[in] mfjson MFJSON object
- * @csqlfn #Temporal_from_mfjson()
- */
-inline TSequence *
-tbigintseq_from_mfjson(json_object *mfjson)
-{
-  return tsequence_from_mfjson(mfjson, false, 0, T_TBIGINT, STEP);
 }
 
 /**
