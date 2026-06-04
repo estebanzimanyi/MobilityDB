@@ -737,15 +737,6 @@ CREATE AGGREGATE mergeAgg(tbigint) (
   DESERIALFUNC = taggstate_deserialize,
   PARALLEL = safe
 );
-CREATE AGGREGATE merge(tbigint) (
-  SFUNC = temporal_merge_transfn,
-  STYPE = internal,
-  COMBINEFUNC = temporal_merge_combinefn,
-  FINALFUNC = tbigint_tagg_finalfn,
-  SERIALFUNC = taggstate_serialize,
-  DESERIALFUNC = taggstate_deserialize,
-  PARALLEL = safe
-);
 CREATE AGGREGATE merge(tfloat) (
   SFUNC = temporal_merge_transfn,
   STYPE = internal,
