@@ -347,7 +347,7 @@ tpoint_to_th3index_dense(const Temporal *temp, int32 resolution)
 }
 
 /*****************************************************************************
- * h3_latlng_to_cell(tgeompoint, integer) — densifying conversion
+ * tgeompoint_to_th3index(tgeompoint, integer) — densifying conversion
  *
  * The adapter `h3_gs_point_to_cell` (called from `tpointinst_to_th3index`)
  * verifies SRID 4326 and raises on mismatch.
@@ -367,7 +367,7 @@ tgeompoint_to_th3index(const Temporal *temp, int32 resolution)
 }
 
 /*****************************************************************************
- * h3_latlng_to_cell(tgeogpoint, integer) — densifying conversion
+ * tgeogpoint_to_th3index(tgeogpoint, integer) — densifying conversion
  *****************************************************************************/
 
 /**

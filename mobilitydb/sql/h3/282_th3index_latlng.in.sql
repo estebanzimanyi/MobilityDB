@@ -42,17 +42,17 @@
  */
 
 /******************************************************************************
- * h3_latlng_to_cell
+ * tgeompoint_to_th3index / tgeogpoint_to_th3index
  ******************************************************************************/
 
-CREATE FUNCTION h3_latlng_to_cell(tgeompoint, integer)
+CREATE FUNCTION tgeompoint_to_th3index(tgeompoint, integer)
   RETURNS th3index
-  AS 'MODULE_PATHNAME', 'Th3index_latlng_to_cell_tgeompoint'
+  AS 'MODULE_PATHNAME', 'Tgeompoint_to_th3index'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION h3_latlng_to_cell(tgeogpoint, integer)
+CREATE FUNCTION tgeogpoint_to_th3index(tgeogpoint, integer)
   RETURNS th3index
-  AS 'MODULE_PATHNAME', 'Th3index_latlng_to_cell_tgeogpoint'
+  AS 'MODULE_PATHNAME', 'Tgeogpoint_to_th3index'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************

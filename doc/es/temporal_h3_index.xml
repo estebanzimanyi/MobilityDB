@@ -252,11 +252,12 @@ SELECT h3_is_valid_cell(th3index '0@2001-01-01');
 	<sect1 xml:id="th3index_latlng">
 		<title>Conversiones de Latitud/Longitud</title>
 		<itemizedlist>
-			<listitem xml:id="th3index_h3_latlng_to_cell">
-				<indexterm significance="normal"><primary><varname>h3_latlng_to_cell</varname></primary></indexterm>
+			<listitem xml:id="th3index_tgeompoint_to_th3index">
+				<indexterm significance="normal"><primary><varname>tgeompoint_to_th3index</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>tgeogpoint_to_th3index</varname></primary></indexterm>
 				<para>Devolver la celda H3 temporal en la resolución dada que contiene cada punto de un punto temporal geodésico o planar (el SRID debe ser 4326 para la sobrecarga de <varname>tgeompoint</varname>)</para>
-				<para><varname>h3_latlng_to_cell(tgeogpoint,integer) → th3index</varname></para>
-				<para><varname>h3_latlng_to_cell(tgeompoint,integer) → th3index</varname></para>
+				<para><varname>tgeogpoint_to_th3index(tgeogpoint,integer) → th3index</varname></para>
+				<para><varname>tgeompoint_to_th3index(tgeompoint,integer) → th3index</varname></para>
 			</listitem>
 
 			<listitem xml:id="th3index_h3_cell_to_latlng">

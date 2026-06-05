@@ -276,13 +276,14 @@ SELECT h3_get_resolution(
 	<sect1 xml:id="th3index_latlng">
 		<title>Lat/Lng Conversions</title>
 		<itemizedlist>
-			<listitem xml:id="th3index_h3_latlng_to_cell">
-				<indexterm significance="normal"><primary><varname>h3_latlng_to_cell</varname></primary></indexterm>
+			<listitem xml:id="th3index_tgeompoint_to_th3index">
+				<indexterm significance="normal"><primary><varname>tgeompoint_to_th3index</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>tgeogpoint_to_th3index</varname></primary></indexterm>
 				<para>Return the temporal H3 cell at the given resolution that contains each point in a temporal geodetic or planar point (SRID must be 4326 for the <varname>tgeompoint</varname> overload)</para>
-				<para><varname>h3_latlng_to_cell(tgeogpoint,integer) → th3index</varname></para>
-				<para><varname>h3_latlng_to_cell(tgeompoint,integer) → th3index</varname></para>
+				<para><varname>tgeogpoint_to_th3index(tgeogpoint,integer) → th3index</varname></para>
+				<para><varname>tgeompoint_to_th3index(tgeompoint,integer) → th3index</varname></para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
-SELECT h3_get_resolution(h3_latlng_to_cell(
+SELECT h3_get_resolution(tgeogpoint_to_th3index(
   tgeogpoint 'POINT(-73.96 40.78)@2001-01-01', 9));
 -- 9@2001-01-01
 </programlisting>

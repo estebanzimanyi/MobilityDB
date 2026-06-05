@@ -46,8 +46,8 @@
  * h3_latlng_to_cell
  *****************************************************************************/
 
-PGDLLEXPORT Datum Th3index_latlng_to_cell_tgeompoint(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Th3index_latlng_to_cell_tgeompoint);
+PGDLLEXPORT Datum Tgeompoint_to_th3index(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tgeompoint_to_th3index);
 /**
  * @ingroup mobilitydb_h3_latlng
  * @brief Return the temporal H3 cell index of a temporal planar point at
@@ -55,7 +55,7 @@ PG_FUNCTION_INFO_V1(Th3index_latlng_to_cell_tgeompoint);
  * @sqlfn h3_latlng_to_cell()
  */
 Datum
-Th3index_latlng_to_cell_tgeompoint(PG_FUNCTION_ARGS)
+Tgeompoint_to_th3index(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   int32 resolution = PG_GETARG_INT32(1);
@@ -64,8 +64,8 @@ Th3index_latlng_to_cell_tgeompoint(PG_FUNCTION_ARGS)
   PG_RETURN_TEMPORAL_P(result);
 }
 
-PGDLLEXPORT Datum Th3index_latlng_to_cell_tgeogpoint(PG_FUNCTION_ARGS);
-PG_FUNCTION_INFO_V1(Th3index_latlng_to_cell_tgeogpoint);
+PGDLLEXPORT Datum Tgeogpoint_to_th3index(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Tgeogpoint_to_th3index);
 /**
  * @ingroup mobilitydb_h3_latlng
  * @brief Return the temporal H3 cell index of a temporal geodetic point at
@@ -73,7 +73,7 @@ PG_FUNCTION_INFO_V1(Th3index_latlng_to_cell_tgeogpoint);
  * @sqlfn h3_latlng_to_cell()
  */
 Datum
-Th3index_latlng_to_cell_tgeogpoint(PG_FUNCTION_ARGS)
+Tgeogpoint_to_th3index(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   int32 resolution = PG_GETARG_INT32(1);
