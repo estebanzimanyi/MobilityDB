@@ -638,7 +638,7 @@ tposeseq_angular_speed(const TSequence *seq)
    * step-interpolated tfloat is well-defined on the closed interval. */
   instants[seq->count - 1] = tinstant_make(Float8GetDatum(angspeed),
     T_TFLOAT, seq->period.upper);
-  TSequence *result = tsequence_make((const TInstant **) instants, seq->count,
+  TSequence *result = tsequence_make(instants, seq->count,
     seq->period.lower_inc, seq->period.upper_inc, STEP, NORMALIZE);
   pfree_array((void **) instants, seq->count);
   return result;
