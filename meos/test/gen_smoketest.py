@@ -395,7 +395,7 @@ TPOSE_CONFIG = dict(
   TInstant *tpose_inst1 = (TInstant *) temporal_start_instant(tpose1);
   TSequence    *tpose_tseq1    = (TSequence *) tpose1;
   TSequenceSet *tpose_tseqset1 = NULL;
-  Temporal *tpoint1 = tpose_to_tgeompoint(tpose1);
+  Temporal *tpoint1 = tpose_to_tpoint(tpose1);
   int n_out = 0;
 """,
     cleanup="""\
