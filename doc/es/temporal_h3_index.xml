@@ -41,6 +41,12 @@ SELECT th3index(Sequence) '831c02fffffffff@2001-01-01';
 SELECT arrowRoundtrip(th3index '831c02fffffffff@2001-01-01');
 -- 831c02fffffffff@2001-01-01
 </programlisting>
+		<para>Las funciones <varname>asText</varname>, <varname>asBinary</varname> y <varname>asHexWKB</varname> serializan un valor <varname>th3index</varname>, y <varname>th3indexFromBinary</varname> y <varname>th3indexFromHexWKB</varname> lo reconstruyen. La forma hexadecimal WKB permite que una columna de índice H3 temporal se transfiera de ida y vuelta mediante un <varname>COPY</varname> basado en texto.</para>
+		<programlisting language="sql" xml:space="preserve" format="linespecific">
+SELECT asHexWKB(th3index '831c02fffffffff@2001-01-01');
+SELECT th3indexFromHexWKB(asHexWKB(th3index '831c02fffffffff@2001-01-01'));
+-- 831c02fffffffff@2001-01-01
+</programlisting>
 	</sect1>
 
 	<sect1 xml:id="th3index_conversions">

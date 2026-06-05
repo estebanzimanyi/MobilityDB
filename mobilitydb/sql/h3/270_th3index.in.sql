@@ -89,6 +89,35 @@ CREATE TYPE th3index (
 );
 
 /******************************************************************************
+ * Text and (Hex)WKB I/O (mirrors the tcbuffer / tnpoint / tpose plug-in types)
+ ******************************************************************************/
+
+CREATE FUNCTION asText(th3index)
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Temporal_as_text'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION asBinary(th3index, endianenconding text DEFAULT '')
+  RETURNS bytea
+  AS 'MODULE_PATHNAME', 'Temporal_as_wkb'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION asHexWKB(th3index, endianenconding text DEFAULT '')
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Temporal_as_hexwkb'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION th3indexFromBinary(bytea)
+  RETURNS th3index
+  AS 'MODULE_PATHNAME', 'Temporal_from_wkb'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION th3indexFromHexWKB(text)
+  RETURNS th3index
+  AS 'MODULE_PATHNAME', 'Temporal_from_hexwkb'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/******************************************************************************
  * Typmod enforcer + self-cast (mirrors tbigint / tint / tfloat / ttext)
  ******************************************************************************/
 
