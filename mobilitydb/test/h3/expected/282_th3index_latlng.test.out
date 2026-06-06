@@ -41,9 +41,9 @@ SELECT h3_cell_to_latlng_tgeompoint(th3index
 
 SELECT h3_get_resolution(tgeogpoint_to_th3index(
   tgeogpoint 'POINT(-73.96 40.78)@2001-01-01', 9));
-    h3_get_resolution     
---------------------------
- 9@2001-01-01 00:00:00+01
+       h3_get_resolution        
+--------------------------------
+ 9@Mon Jan 01 00:00:00 2001 PST
 (1 row)
 
 WITH densified AS (
@@ -62,9 +62,9 @@ FROM densified;
 
 SELECT h3_get_resolution(tgeompoint_to_th3index(
   tgeompoint 'SRID=4326;POINT(-73.96 40.78)@2001-01-01', 9));
-    h3_get_resolution     
---------------------------
- 9@2001-01-01 00:00:00+01
+       h3_get_resolution        
+--------------------------------
+ 9@Mon Jan 01 00:00:00 2001 PST
 (1 row)
 
 WITH d AS (
