@@ -26,9 +26,9 @@ INSERT INTO tbl_th3index_known VALUES
 SELECT COUNT(*) FROM tbl_th3index_known
   WHERE h3_cell_to_latlng(temp) IS NOT NULL;
 
--- Round trip via h3_latlng_to_cell at the original resolution: identity
+-- Round trip via tgeogpoint_to_th3index at the original resolution: identity
 SELECT COUNT(*) FROM tbl_th3index_known
-  WHERE h3_latlng_to_cell(h3_cell_to_latlng(temp),
+  WHERE tgeogpoint_to_th3index(h3_cell_to_latlng(temp),
           startValue(h3_get_resolution(temp))) <> temp;
 
 -------------------------------------------------------------------------------
@@ -39,11 +39,11 @@ SELECT COUNT(*) FROM tbl_th3index_known
   WHERE h3_cell_to_latlng_tgeompoint(temp) IS NOT NULL;
 
 -------------------------------------------------------------------------------
--- h3_latlng_to_cell(tgeogpoint, integer)
+-- tgeogpoint_to_th3index(tgeogpoint, integer)
 -------------------------------------------------------------------------------
 
 -- A canonical NYC point at resolution 9 yields a cell at res 9
-SELECT startValue(h3_get_resolution(h3_latlng_to_cell(
+SELECT startValue(h3_get_resolution(tgeogpoint_to_th3index(
     tgeogpoint 'POINT(-73.96 40.78)@2001-01-01', 9))) = 9;
 
 -- All eight Cartesian-quadrant lat/lng pairs index successfully at res 5
@@ -58,13 +58,13 @@ SELECT COUNT(*) FROM (
     (tgeogpoint 'POINT(-120 -30)@2001-01-01'),
     (tgeogpoint 'POINT(180 0)@2001-01-01')
   ) AS pts(p)
-  WHERE h3_latlng_to_cell(p, 5) IS NOT NULL;
+  WHERE tgeogpoint_to_th3index(p, 5) IS NOT NULL;
 
 -------------------------------------------------------------------------------
--- h3_latlng_to_cell(tgeompoint, integer)  — SRID 4326
+-- tgeompoint_to_th3index(tgeompoint, integer)  — SRID 4326
 -------------------------------------------------------------------------------
 
-SELECT startValue(h3_get_resolution(h3_latlng_to_cell(
+SELECT startValue(h3_get_resolution(tgeompoint_to_th3index(
     tgeompoint 'SRID=4326;POINT(-73.96 40.78)@2001-01-01', 9))) = 9;
 
 -------------------------------------------------------------------------------

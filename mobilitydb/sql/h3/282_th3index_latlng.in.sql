@@ -31,10 +31,10 @@
  * @file
  * @brief Lat/Lng conversion functions for `th3index`.
  *
- * Two overloads of `h3_latlng_to_cell` are provided: the geodetic
- * `tgeogpoint` form is the canonical one; the `tgeompoint` form is a
- * convenience wrapper that requires SRID 4326 and is verified at
- * bind time.
+ * Two overloads of the point-to-cell conversion are provided: the geodetic
+ * `tgeogpoint_to_th3index` form is the canonical one; the
+ * `tgeompoint_to_th3index` form is a convenience wrapper that requires
+ * SRID 4326 and is verified at bind time.
  *
  * The reverse direction emits `tgeogpoint` (canonical) and the
  * `tgeompoint` overload is a companion via explicit cast. The
