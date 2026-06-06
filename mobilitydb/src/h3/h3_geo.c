@@ -97,10 +97,11 @@ PG_FUNCTION_INFO_V1(Ever_eq_h3indexset_th3index);
  *        the candidate set
  *
  * Cross-platform spatial prefilter consumer: typical use is
- * `eIntersects(geoToH3IndexSet(p.geom, 7), t.trip_h3)`
+ * `geoToH3IndexSet(p.geom, 7) ?= t.trip_h3`
  * before the exact spatial predicate.
  *
- * @sqlfn eIntersects(h3indexset, th3index)
+ * @sqlfn ever_eq(h3indexset, th3index)
+ * @sqlop @p ?=
  */
 Datum
 Ever_eq_h3indexset_th3index(PG_FUNCTION_ARGS)

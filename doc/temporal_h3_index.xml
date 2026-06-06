@@ -108,14 +108,14 @@ SELECT geoToH3IndexSet(geometry 'SRID=4326;Point(4.35 50.85)', 7);
 </programlisting>
 			</listitem>
 
-			<listitem xml:id="th3index_eIntersects">
-				<indexterm significance="normal"><primary><varname>eIntersects</varname></primary></indexterm>
-				<para>Return whether a temporal H3 trajectory ever takes one of the cells in a cell set. Combined with <varname>geoToH3IndexSet</varname> it answers whether a trip ever passes through a region, without materialising the trajectory geometry.</para>
-				<para><varname>eIntersects(h3indexset,th3index) → boolean</varname></para>
+			<listitem xml:id="th3index_ever_eq_set">
+				<indexterm significance="normal"><primary><varname>ever_eq</varname></primary></indexterm>
+				<para>Return whether a temporal H3 trajectory ever takes one of the cells in a cell set. Combined with <varname>geoToH3IndexSet</varname> it answers whether a trip ever passes through a region, without materialising the trajectory geometry — the sound, conservative prefilter for the exact <varname>eIntersects(geometry,th3index)</varname>.</para>
+				<para><varname>ever_eq(h3indexset,th3index) → boolean</varname></para>
+				<para><varname>h3indexset ?= th3index → boolean</varname></para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
-SELECT eIntersects(
-  geoToH3IndexSet(geometry 'SRID=4326;Point(4.35 50.85)', 7),
-  th3index '871fa4418ffffff@2001-01-01');
+SELECT geoToH3IndexSet(geometry 'SRID=4326;Point(4.35 50.85)', 7) ?=
+  th3index '871fa4418ffffff@2001-01-01';
 -- true
 </programlisting>
 			</listitem>
