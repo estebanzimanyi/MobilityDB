@@ -568,7 +568,7 @@ pose_tprecision_value(const Temporal *temp)
     if (td <= 0)
       return datum_copy(tinstant_value(TSEQUENCE_INST_N(seq, 0)), T_POSE);
     return PointerGetDatum(pose_make_2d(sx / td, sy / td,
-      atan2(ssin / td, scos / td), srid));
+      atan2(ssin / td, scos / td), MEOS_FLAGS_GET_GEODETIC(p0->flags), srid));
   }
   /* TSEQUENCESET: combine the step-weighted sums over component sequences */
   const TSequenceSet *ss = (const TSequenceSet *) temp;
@@ -581,7 +581,8 @@ pose_tprecision_value(const Temporal *temp)
   if (td <= 0)
     return datum_copy(tinstant_value(first), T_POSE);
   return PointerGetDatum(pose_make_2d(sx / td, sy / td,
-    atan2(ssin / td, scos / td), srid));
+    atan2(ssin / td, scos / td),
+    MEOS_FLAGS_GET_GEODETIC(DatumGetPoseP(tinstant_value_p(first))->flags), srid));
 }
 #endif /* POSE */
 

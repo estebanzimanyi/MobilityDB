@@ -1320,7 +1320,7 @@ pose_normalise(const Pose *pose)
     return NULL;
   }
   return pose_make_3d(pose->data[0], pose->data[1], pose->data[2],
-    W / norm, X / norm, Y / norm, Z / norm, pose_srid(pose));
+    W / norm, X / norm, Y / norm, Z / norm, MEOS_FLAGS_GET_GEODETIC(pose->flags), pose_srid(pose));
 }
 
 /**

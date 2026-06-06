@@ -469,8 +469,8 @@ aw_make_instant(const char *vfmt, MeosType vt, const void *vvals,
     {
       Pose *po = pqw ?
         pose_make_3d(px[idx], py[idx], pz[idx], pqw[idx], pqx[idx],
-          pqy[idx], pqz[idx], srid) :
-        pose_make_2d(px[idx], py[idx], pth[idx], srid);
+          pqy[idx], pqz[idx], false, srid) :
+        pose_make_2d(px[idx], py[idx], pth[idx], false, srid);
       TInstant *r = tinstant_make(PosePGetDatum(po), T_TPOSE, t);
       pfree(po);
       return r;
