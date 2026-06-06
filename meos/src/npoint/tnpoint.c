@@ -966,7 +966,6 @@ npointset_routes(const Set *s)
  * @note This function does a bounding box test for the temporal types
  * different from instant. The singleton tests are done in the functions for
  * the specific temporal types.
- * @csqlfn #Tnpoint_restrict_npoint()
  */
 Temporal *
 tnpoint_restrict_npoint(const Temporal *temp, const Npoint *np, bool atfunc)
@@ -1017,7 +1016,6 @@ tnpoint_minus_npoint(const Temporal *temp, const Npoint *np)
  * @param[in] temp Temporal network point
  * @param[in] s Set of network points
  * @param[in] atfunc True if the restriction is `at`, false for `minus`
- * @csqlfn #Tnpoint_restrict_npointset()
  */
 Temporal *
 tnpoint_restrict_npointset(const Temporal *temp, const Set *s, bool atfunc)
