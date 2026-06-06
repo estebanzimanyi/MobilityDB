@@ -2399,7 +2399,7 @@ tpoint_length(const Temporal *temp)
  * @brief Return the speed of a temporal point sequence (set)
  * @param[in] temp Temporal point
  * @return On error return -1.0
- * @csqlfn #Temporal_derivative()
+ * @csqlfn #Tpoint_speed()
  */
 Temporal *
 tpoint_speed(const Temporal *temp)
