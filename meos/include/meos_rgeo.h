@@ -150,7 +150,6 @@ extern TInstant *trgeometry_to_tinstant(const Temporal *temp);
 extern Temporal *trgeometry_after_timestamptz(const Temporal *temp, TimestampTz t, bool strict);
 extern Temporal *trgeometry_before_timestamptz(const Temporal *temp, TimestampTz t, bool strict);
 
-extern Temporal *trgeometry_restrict_value(const Temporal *temp, Datum value, bool atfunc);
 extern Temporal *trgeometry_restrict_values(const Temporal *temp, const Set *s, bool atfunc);
 
 extern Temporal *trgeometry_restrict_timestamptz(const Temporal *temp, TimestampTz t, bool atfunc);

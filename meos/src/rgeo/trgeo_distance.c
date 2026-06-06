@@ -2341,7 +2341,7 @@ double
 nad_trgeometry_tpoint(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_trgeo_tpoint(temp2, temp2))
+  if (! ensure_valid_trgeo_tpoint(temp1, temp2))
     return DBL_MAX;
 
   Temporal *dist = tdistance_trgeometry_tpoint(temp1, temp2);
