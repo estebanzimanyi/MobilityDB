@@ -1196,7 +1196,7 @@ mindist_tpoint_tpoint_threshold(const Temporal *temp1, const Temporal *temp2,
  * @return Minimum spatial distance; falls back to `geom_distance2d` for
  *   subtype combinations the inline kernel does not handle (e.g.
  *   `TInstant`).
- * @csqlfn #Mindistance_tgeo_tgeo()
+ * @csqlfn #NAD_tgeo_tgeo()
  */
 double
 mindistance_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2,

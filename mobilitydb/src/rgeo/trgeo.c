@@ -521,6 +521,38 @@ Trgeometry_value_n(PG_FUNCTION_ARGS)
   PG_RETURN_POINTER(result);
 }
 
+PGDLLEXPORT Datum Trgeometry_points(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Trgeometry_points);
+/**
+ * @ingroup mobilitydb_rgeo_accessor
+ * @brief Return the set of distinct points of a temporal rigid geometry
+ * @sqlfn points()
+ */
+Datum
+Trgeometry_points(PG_FUNCTION_ARGS)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  Set *result = trgeometry_points(temp);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_SET_P(result);
+}
+
+PGDLLEXPORT Datum Trgeometry_rotation(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Trgeometry_rotation);
+/**
+ * @ingroup mobilitydb_rgeo_accessor
+ * @brief Return the rotation of a temporal rigid geometry as a temporal float
+ * @sqlfn rotation()
+ */
+Datum
+Trgeometry_rotation(PG_FUNCTION_ARGS)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  Temporal *result = trgeometry_rotation(temp);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_TEMPORAL_P(result);
+}
+
 /*****************************************************************************/
 
 PGDLLEXPORT Datum Trgeometry_value_at_timestamptz(PG_FUNCTION_ARGS);

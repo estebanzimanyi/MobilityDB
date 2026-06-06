@@ -251,7 +251,6 @@ ea_contains_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever)
  * ST_Relate functions
  * https://postgis.net/docs/ST_Relate.html
  * https://postgis.net/docs/ST_Contains.html
- * @csqlfn #EA_spatialrel_geo_tspatial()
  */
 int
 ea_covers_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp, bool ever)
@@ -315,7 +314,6 @@ acovers_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp)
  * ST_Relate functions
  * https://postgis.net/docs/ST_Relate.html
  * https://postgis.net/docs/ST_Contains.html
- * @csqlfn #EA_spatialrel_tspatial_geo()
  */
 int
 ea_covers_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever)
@@ -692,7 +690,7 @@ ea_touches_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2, bool ever)
  * @param[in] temp Temporal rigid geometry
  * @param[in] gs Geometry
  * @param[in] dist Distance
- * @csqlfn #EA_dwithin_tspatial_geo()
+ * @csqlfn #Edwithin_trgeometry_geo()
  */
 int
 edwithin_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs, double dist)
@@ -954,7 +952,6 @@ ea_dwithin_trgeo_trgeo_sync(const Temporal *sync1, const Temporal *sync2,
  * @param[in] temp1,temp2 Temporal rigid geometries
  * @param[in] dist Distance
  * @param[in] ever True for the ever semantics, false for the always semantics
- * @csqlfn #EA_dwithin_trgeometry_trgeometry()
  */
 int
 ea_dwithin_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2,
@@ -984,7 +981,7 @@ ea_dwithin_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2,
  * on time
  * @param[in] temp1,temp2 Temporal rigid geometries
  * @param[in] dist Distance
- * @csqlfn #EA_dwithin_trgeometry_trgeometry()
+ * @csqlfn #Edwithin_trgeometry_trgeometry()
  */
 inline int
 edwithin_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2, double dist)

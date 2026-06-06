@@ -888,7 +888,7 @@ trgeometry_rotation(const Temporal *temp)
  * geometry — one TSequence per consecutive pair of instants
  * @param[in] temp Temporal rigid geometry
  * @param[out] count Number of resulting segments
- * @csqlfn #Trgeometry_segments()
+ * @csqlfn #Temporal_segments()
  */
 TSequence **
 trgeometry_segments(const Temporal *temp, int *count)

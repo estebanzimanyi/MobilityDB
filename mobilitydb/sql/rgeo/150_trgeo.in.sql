@@ -301,6 +301,16 @@ CREATE FUNCTION valueN(trgeometry, int)
   AS 'MODULE_PATHNAME', 'Trgeometry_value_n'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION points(trgeometry)
+  RETURNS geomset
+  AS 'MODULE_PATHNAME', 'Trgeometry_points'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION rotation(trgeometry)
+  RETURNS tfloat
+  AS 'MODULE_PATHNAME', 'Trgeometry_rotation'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 CREATE FUNCTION valueAtTimestamp(trgeometry, timestamptz)
   RETURNS geometry
   AS 'MODULE_PATHNAME', 'Trgeometry_value_at_timestamptz'

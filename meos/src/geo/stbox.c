@@ -323,7 +323,6 @@ stbox_as_hexwkb(const STBox *box, uint8_t variant, size_t *size_out)
  * @param[in] xmin,ymin,zmin Minimum bounds for the spatial dimension
  * @param[in] xmax,ymax,zmax Maximum bounds for the spatial dimension
  * @param[in] s Span, may be `NULL`
- * @csqlfn #Stbox_constructor()
  */
 STBox *
 stbox_make(bool hasx, bool hasz, bool geodetic, int32 srid, double xmin,
@@ -418,7 +417,7 @@ stbox_copy(const STBox *box)
  * timestamptz
  * @param[in] gs Geometry/geography
  * @param[in] t Timestamp
- * @csqlfn #Stbox_constructor()
+ * @csqlfn #Geo_timestamptz_to_stbox()
  */
 STBox *
 geo_timestamptz_to_stbox(const GSERIALIZED *gs, TimestampTz t)
@@ -442,7 +441,7 @@ geo_timestamptz_to_stbox(const GSERIALIZED *gs, TimestampTz t)
  * timestamptz span
  * @param[in] gs Geometry/geography
  * @param[in] s Span
- * @csqlfn #Stbox_constructor()
+ * @csqlfn #Geo_tstzspan_to_stbox()
  */
 STBox *
 geo_tstzspan_to_stbox(const GSERIALIZED *gs, const Span *s)

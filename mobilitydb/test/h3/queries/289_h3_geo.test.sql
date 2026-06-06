@@ -133,7 +133,7 @@ SELECT geoToH3IndexSet(geometry 'SRID=4326;POINT(4.35 50.85)', 16);
 
 -- Build a th3index covering Brussels at resolution 7
 WITH t AS (
-  SELECT h3_latlng_to_cell(
+  SELECT tgeompoint_to_th3index(
     tgeompoint 'SRID=4326;[POINT(4.35 50.85)@2024-01-01,
                  POINT(4.40 50.90)@2024-01-02]', 7) AS th3idx
 )
@@ -146,7 +146,7 @@ SELECT eIntersects(
 
 -- Set covering a polygon that contains neither endpoint → prefilter false
 WITH t AS (
-  SELECT h3_latlng_to_cell(
+  SELECT tgeompoint_to_th3index(
     tgeompoint 'SRID=4326;[POINT(4.35 50.85)@2024-01-01,
                  POINT(4.40 50.90)@2024-01-02]', 7) AS th3idx
 )
@@ -155,8 +155,3 @@ SELECT eIntersects(
                                                      10.5 50.5, 10.0 50.5,
                                                      10.0 50.0))', 7),
          t.th3idx) FROM t;
-
--- NOTE: The two h3_latlng_to_cell-based queries above currently error with
--- "Unknown SRID function for type: h3index" — a pre-existing th3index
--- catalog gap (the h3index basetype's SRID resolver is not registered).
--- Will pass automatically once the th3index branch wires up the resolver.
