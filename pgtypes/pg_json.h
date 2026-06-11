@@ -36,21 +36,14 @@
 #ifndef __PG_JSON_H__
 #define __PG_JSON_H__
 
-typedef struct varlena;
-typedef struct varlena text __attribute__((aligned(8)));
-
-typedef uint32 JEntry;
-typedef struct JsonbContainer
-{
-  uint32 header; /* number of elements or key/value pairs, and flags */
-  JEntry children[];
-  /* the data for each child node follows. */
-} JsonbContainer;
-typedef struct
-{
-  int32 vl_len_;    /* varlena header (do not touch directly!) */
-  JsonbContainer root;
-} Jsonb;
+/* Pull the canonical type definitions (Jsonb/JsonbContainer/JEntry and
+ * JsonPath) from their owning headers rather than redefining them here, so
+ * this header can be included together with pgtypes.h / meos_json.h without
+ * a struct-redefinition clash. This makes the full base json/jsonb/jsonpath
+ * API publicly usable by every binding over the base types. */
+#include <postgres.h>
+#include <utils/jsonb.h>
+#include <utils/jsonpath.h>
 
 /*****************************************************************************/
 

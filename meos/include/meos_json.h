@@ -43,6 +43,11 @@
 #include <meos.h>
 #include <meos_internal.h>
 #include <pgtypes.h>
+/* Expose the full base json/jsonb/jsonpath API (jsonb_in/jsonb_out, the json
+ * accessors, jsonpath query, ...) publicly alongside the temporal tjsonb and
+ * jsonbset surface, so every binding can apply the complete API over the base
+ * jsonb type, not only the temporal wrapper. */
+#include <pg_json.h>
 
 /*****************************************************************************
  * Type definitions

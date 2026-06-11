@@ -1271,6 +1271,15 @@ varstr_cmp(const char *txt1, int len1, const char *txt2, int len2, Oid collid)
 int
 text_cmp(const text *txt1, const text *txt2, Oid collid)
 {
+  /* Guard the public comparison entry: a NULL argument would otherwise be
+   * dereferenced as a varlena and fault deep inside varstr_cmp. Raise a
+   * clean MEOS error so bindings get an exception rather than a SIGSEGV. */
+  if (txt1 == NULL || txt2 == NULL)
+  {
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      "text_cmp: NULL text argument");
+    return 0;
+  }
   char *a1p = VARDATA_ANY(txt1);
   char *a2p = VARDATA_ANY(txt2);
   int len1 = VARSIZE_ANY_EXHDR(txt1);
