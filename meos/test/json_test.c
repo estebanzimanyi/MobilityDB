@@ -41,10 +41,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <meos.h>
+/* meos_json.h carries the public base json/jsonb/jsonpath API; pg_bool.h /
+ * pg_text.h supply the bool_in / text_in helpers used to build test inputs. */
 #include <meos_json.h>
 #include <pg_bool.h>
 #include <pg_text.h>
-#include <pg_json.h>
 
 /* Main program */
 int main(void)
