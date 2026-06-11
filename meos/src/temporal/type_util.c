@@ -787,32 +787,33 @@ string_escape(const char *str, int quotes, char **result)
 {
   /* Count total space needed (including any overhead such as escaping
      backslashes), and detect whether the string needs double quotes */
-  bool needquotes = false;
+  /* In QUOTES mode the value is always enclosed in double quotes */
+  bool needquotes = (quotes == QUOTES);
   const char *tmp;
   /* Size of the input string + '\0' */
   size_t size = strlen(str) + 1;
-    if (quotes == QUOTES)
-      needquotes = true;
-  else if (quotes == QUOTES_ESCAPE)
+  /* As in the traditional PostgreSQL array output, in QUOTES_ESCAPE mode an
+   * empty string and a value equal (case-insensitively) to "NULL" must be
+   * quoted so that the output is unambiguous and round-trips through the
+   * parser */
+  if (quotes == QUOTES_ESCAPE &&
+      (str[0] == '\0' || pg_strcasecmp(str, "NULL") == 0))
+    needquotes = true;
+  /* Count the backslashes needed to escape embedded double quotes and
+   * backslashes (the escaping is performed in both quoting modes) and, in
+   * QUOTES_ESCAPE mode, detect the characters that require the value to be
+   * quoted */
+  for (tmp = str; *tmp != '\0'; tmp++)
   {
-    /* As in the traditional PostgreSQL array output, an empty string and a
-     * value equal (case-insensitively) to "NULL" must be quoted so that the
-     * output is unambiguous and round-trips through the parser */
-    if (str[0] == '\0' || pg_strcasecmp(str, "NULL") == 0)
-      needquotes = true;
-    /* count data plus backslashes; detect chars needing quotes */
-    for (tmp = str; *tmp != '\0'; tmp++)
+    char ch = *tmp;
+    if (ch == '"' || ch == '\\')
     {
-      char ch = *tmp;
+      needquotes = true;
       size += 1;
-      if (ch == '"' || ch == '\\')
-      {
-        needquotes = true;
-        size += 1;
-      }
-      else if (ch == '{' || ch == '}' || ch == ',' || scanner_isspace(ch))
-        needquotes = true;
     }
+    else if (quotes == QUOTES_ESCAPE &&
+        (ch == '{' || ch == '}' || ch == ',' || scanner_isspace(ch)))
+      needquotes = true;
   }
   /* Return if no quotes are needed */
   if (! needquotes)

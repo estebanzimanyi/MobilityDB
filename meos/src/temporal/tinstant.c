@@ -168,7 +168,7 @@ tinstant_to_string(const TInstant *inst, int maxdd, outfunc value_out)
    * input parser. ttext values are already escaped by the base type output
    * function #basetype_out. */
   char *quoted = NULL;
-  if (inst->temptype == T_TJSONB && string_escape(value, QUOTES_ESCAPE, &quoted))
+  if (inst->temptype == T_TJSONB && string_escape(value, QUOTES, &quoted))
     out = quoted;
 #endif /* JSON */
   size_t size = strlen(out) + strlen(t) + 2;

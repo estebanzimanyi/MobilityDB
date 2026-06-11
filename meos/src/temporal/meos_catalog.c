@@ -709,7 +709,7 @@ alphanum_basetype(MeosType type)
  * @note This function is only used in the asserts
  */
 inline bool
-talphanum_temptype(MeosType type)
+alphanum_temptype(MeosType type)
 {
   return (type == T_TBOOL || type == T_TINT || type == T_TFLOAT ||
     type == T_TTEXT

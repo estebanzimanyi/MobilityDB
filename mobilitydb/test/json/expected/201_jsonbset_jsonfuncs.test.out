@@ -105,7 +105,7 @@ ERROR:  The lifted operation returned NULL
 SELECT jsonbset_extract_path(jsonbset '{"{\"units\": \"km/h\"}", "{\"speed\": 20, \"units\": \"km/h\"}", "{\"speed\": 10, \"units\": \"km/h\"}"}', ARRAY['speed'],'use_json_null');
  jsonbset_extract_path 
 -----------------------
- {20, 10, null}
+ {20, 10, "null"}
 (1 row)
 
 SELECT jsonbset_extract_path(jsonbset '{"{\"units\": \"km/h\"}", "{\"speed\": 20, \"units\": \"km/h\"}", "{\"speed\": 10, \"units\": \"km/h\"}"}', ARRAY['speed'],'delete_key');
@@ -134,9 +134,9 @@ SELECT jsonbset '{"{\"speed\": 10, \"units\": \"km/h\"}", "{\"speed\": 20, \"uni
 
 /* Null handling */
 SELECT jsonbset '{"{\"units\": \"km/h\"}", "{\"speed\": 20, \"units\": \"km/h\"}", "{\"speed\": 10, \"units\": \"km/h\"}"}' #> ARRAY['speed'];
-    ?column?    
-----------------
- {20, 10, null}
+     ?column?     
+------------------
+ {20, 10, "null"}
 (1 row)
 
 SELECT jsonbset_extract_path_text(jsonbset '{"{\"speed\": 10, \"units\": \"km/h\"}"}', ARRAY['speed']);
@@ -157,7 +157,7 @@ ERROR:  The lifted operation returned NULL
 SELECT jsonbset_extract_path_text(jsonbset '{"{\"speed\": 10}", "{\"speed\": 20, \"units\": \"km/h\"}", "{\"speed\": 10, \"units\": \"km/h\"}"}', ARRAY['units'], 'use_json_null');
  jsonbset_extract_path_text 
 ----------------------------
- {km/h, null}
+ {km/h, "null"}
 (1 row)
 
 SELECT jsonbset_extract_path_text(jsonbset '{"{\"speed\": 10}", "{\"speed\": 20, \"units\": \"km/h\"}", "{\"speed\": 10, \"units\": \"km/h\"}"}', ARRAY['units'], 'delete_key');
@@ -186,9 +186,9 @@ SELECT jsonbset '{"{\"speed\": 10, \"units\": \"km/h\"}", "{\"speed\": 20, \"uni
 
 /* Null handling: 'use_json_null' by default */
 SELECT jsonbset '{"{\"units\": \"km/h\"}", "{\"speed\": 20, \"units\": \"km/h\"}", "{\"speed\": 10, \"units\": \"km/h\"}"}' #>> ARRAY['speed'];
-    ?column?    
-----------------
- {10, 20, null}
+     ?column?     
+------------------
+ {10, 20, "null"}
 (1 row)
 
 SELECT jsonbset_extract_path_text('{"{\"units\": \"km/h\"}", "{\"speed\": 20, \"units\": \"km/h\"}", "{\"speed\": 10, \"units\": \"km/h\"}"}',
@@ -198,7 +198,7 @@ SELECT jsonbset_extract_path_text('{"{\"units\": \"km/h\"}", "{\"speed\": 20, \"
   ARRAY['speed'], 'use_json_null');
  jsonbset_extract_path_text 
 ----------------------------
- {10, 20, null}
+ {10, 20, "null"}
 (1 row)
 
 SELECT jsonbset_extract_path_text('{"{\"units\": \"km/h\"}", "{\"speed\": 20, \"units\": \"km/h\"}", "{\"speed\": 10, \"units\": \"km/h\"}"}',
