@@ -1,0 +1,64 @@
+Determining if the strlcat exist failed with the following output:
+Change Dir: /home/esteban/src/_md_json_wt/build-json/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_1234a/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_1234a.dir/build.make CMakeFiles/cmTC_1234a.dir/build
+gmake[1]: Entering directory '/home/esteban/src/_md_json_wt/build-json/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_1234a.dir/CheckSymbolExists.c.o
+/usr/bin/cc    -o CMakeFiles/cmTC_1234a.dir/CheckSymbolExists.c.o -c /home/esteban/src/_md_json_wt/build-json/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+/home/esteban/src/_md_json_wt/build-json/CMakeFiles/CMakeTmp/CheckSymbolExists.c: In function ‘main’:
+/home/esteban/src/_md_json_wt/build-json/CMakeFiles/CMakeTmp/CheckSymbolExists.c:8:19: error: ‘strlcat’ undeclared (first use in this function); did you mean ‘strncat’?
+    8 |   return ((int*)(&strlcat))[argc];
+      |                   ^~~~~~~
+      |                   strncat
+/home/esteban/src/_md_json_wt/build-json/CMakeFiles/CMakeTmp/CheckSymbolExists.c:8:19: note: each undeclared identifier is reported only once for each function it appears in
+gmake[1]: *** [CMakeFiles/cmTC_1234a.dir/build.make:78: CMakeFiles/cmTC_1234a.dir/CheckSymbolExists.c.o] Error 1
+gmake[1]: Leaving directory '/home/esteban/src/_md_json_wt/build-json/CMakeFiles/CMakeTmp'
+gmake: *** [Makefile:127: cmTC_1234a/fast] Error 2
+
+
+File /home/esteban/src/_md_json_wt/build-json/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <string.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef strlcat
+  return ((int*)(&strlcat))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+Determining if the strlcpy exist failed with the following output:
+Change Dir: /home/esteban/src/_md_json_wt/build-json/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_da64a/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_da64a.dir/build.make CMakeFiles/cmTC_da64a.dir/build
+gmake[1]: Entering directory '/home/esteban/src/_md_json_wt/build-json/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_da64a.dir/CheckSymbolExists.c.o
+/usr/bin/cc    -o CMakeFiles/cmTC_da64a.dir/CheckSymbolExists.c.o -c /home/esteban/src/_md_json_wt/build-json/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+/home/esteban/src/_md_json_wt/build-json/CMakeFiles/CMakeTmp/CheckSymbolExists.c: In function ‘main’:
+/home/esteban/src/_md_json_wt/build-json/CMakeFiles/CMakeTmp/CheckSymbolExists.c:8:19: error: ‘strlcpy’ undeclared (first use in this function); did you mean ‘strncpy’?
+    8 |   return ((int*)(&strlcpy))[argc];
+      |                   ^~~~~~~
+      |                   strncpy
+/home/esteban/src/_md_json_wt/build-json/CMakeFiles/CMakeTmp/CheckSymbolExists.c:8:19: note: each undeclared identifier is reported only once for each function it appears in
+gmake[1]: *** [CMakeFiles/cmTC_da64a.dir/build.make:78: CMakeFiles/cmTC_da64a.dir/CheckSymbolExists.c.o] Error 1
+gmake[1]: Leaving directory '/home/esteban/src/_md_json_wt/build-json/CMakeFiles/CMakeTmp'
+gmake: *** [Makefile:127: cmTC_da64a/fast] Error 2
+
+
+File /home/esteban/src/_md_json_wt/build-json/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <string.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef strlcpy
+  return ((int*)(&strlcpy))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}

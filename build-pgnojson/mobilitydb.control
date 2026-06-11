@@ -1,0 +1,5 @@
+comment = 'MobilityDB geospatial trajectory data management & analysis platform'
+default_version = '1.4.0'
+module_pathname = '$libdir/libMobilityDB-1.4'
+relocatable = false
+requires = 'postgis'
