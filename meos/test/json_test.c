@@ -576,6 +576,24 @@ int main(void)
     exit(1);
   }
 
+  /* Same for the public jsonb comparison/containment operators: a NULL
+   * argument must raise a clean error at the external entry, not fault when
+   * its container is iterated (the internal compare loop only asserts). */
+  meos_errno_reset();
+  (void) jsonb_cmp(NULL, jb1);
+  if (meos_errno() == 0)
+  {
+    fprintf(stderr, "jsonb_cmp(NULL, jb) did not raise a MEOS error\n");
+    exit(1);
+  }
+  meos_errno_reset();
+  (void) jsonb_contains(jb1, NULL);
+  if (meos_errno() == 0)
+  {
+    fprintf(stderr, "jsonb_contains(jb, NULL) did not raise a MEOS error\n");
+    exit(1);
+  }
+
   /* Finalize MEOS */
   meos_finalize();
 

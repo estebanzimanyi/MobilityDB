@@ -1224,6 +1224,11 @@ check_collation_set(Oid collid)
 int
 varstr_cmp(const char *txt1, int len1, const char *txt2, int len2, Oid collid)
 {
+  /* Hot comparison primitive (called per element in sort/dedup loops): the
+   * non-NULL contract is enforced once by the external callers (ensure_*),
+   * so here we only assert -- no runtime branch on the loop path. */
+  assert(len1 == 0 || txt1 != NULL);
+  assert(len2 == 0 || txt2 != NULL);
   check_collation_set(collid);
 
   int result;
