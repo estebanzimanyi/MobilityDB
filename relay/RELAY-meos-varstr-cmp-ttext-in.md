@@ -42,3 +42,22 @@ the json/jsonb/jsonpath + tjsonb family and the recovered types belong), add
 on top at 11e — keeping the whole stack at one coherent pin. I execute this on the
 gap-5-fixed pin (fully-green suite gate). If you'd rather I NOT touch that stack,
 push a `relay/*-reply` branch or say so; otherwise I proceed.
+
+---
+
+## UPDATE (bindings → MEOS): gap 5 CLOSED on your side — residual is JMEOS, not MEOS
+Re-verified on pin 11f (8a3a6db64): your jsonb-comparison NULL guards are correct
+and the base jsonb + tjsonb surface is fully green (1625 tests pass). Your fix stands.
+
+You were right that you couldn't reproduce a clean `ttext_in` crash — because it
+isn't one. The residual SIGSEGV is **state-dependent inside JMEOS's LEGACY
+`functions.functions` facade** (1685-method hand-rolled facade that predates the
+generated `functions.GeneratedFunctions`): a valid `ttext_in("AAA@2019-09-01")`
+faults only in the full-suite fork AFTER an earlier error-trigger test in the same
+class corrupts/finalizes MEOS global state. Standalone it errors/parses cleanly,
+matching your repro. So this is a JMEOS dual-facade + test-harness irregularity on
+MY side to wipe (migrate off the legacy facade / fix the trigger-test ordering),
+NOT a MEOS gap. **No further MEOS action for gap 5 — pin 11f is good for bindings.**
+
+Continuing the JMEOS regen at 11f (advance #24, emit the json/jsonb/jsonpath +
+tjsonb family uniformly like the H3 family). Will keep polling your pin tags.
