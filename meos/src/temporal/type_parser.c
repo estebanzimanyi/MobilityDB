@@ -42,14 +42,17 @@
 #include <meos.h>
 #include <meos_internal.h>
 #include <meos_internal_geo.h>
-#include "temporal/postgres_types.h"  /* meos_strtod */
 #include "temporal/temporal.h"
 #include "temporal/type_util.h"
 #include "geo/tspatial_parser.h"
 
-// #include <utils/jsonb.h>
-// #include <utils/numeric.h>
-// #include <pgtypes.h>
+#include <utils/jsonb.h>
+#include <utils/numeric.h>
+#include <pgtypes.h>
+
+/*****************************************************************************/
+/* Function defined in formatting.c */
+extern bool scanner_isspace(char ch);
 
 /* Function defined in formatting.c */
 extern bool scanner_isspace(char ch);
@@ -438,10 +441,22 @@ basetype_parse(const char **str, MeosType basetype, char delim, Datum *result)
   /* ttext values must be enclosed between double quotes */
   if (**str == '"')
   {
-    size_t pos1 = basetype_parse_quoted(*str, delim, &str1);
-    if (! pos1)
+    /* Unescape the quoted value (inverse of #string_escape) and require the
+     * delimiter to follow it, possibly after some whitespace */
+    size_t consumed = string_unescape(*str, &str1);
+    if (! consumed)
       return false;
-    pos += pos1;
+    pos += consumed;
+    while ((*str)[pos] != '\0' && (*str)[pos] != delim &&
+        scanner_isspace((*str)[pos]))
+      pos++;
+    if ((*str)[pos] != delim)
+    {
+      pfree(str1);
+      meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
+        "Missing delimeter character '%c': %s", delim, origstr);
+      return false;
+    }
   }
   else
   {
@@ -611,31 +626,33 @@ bool
 elem_parse(const char **str, MeosType basetype, Datum *result)
 {
   p_whitespace(str);
-  int pos = 0, dquote = 0;
+  char *str1;
+  size_t consumed;
   /* ttext and geometry/geography values must be enclosed between double quotes */
   if (**str == '"')
   {
-    /* Consume the double quote */
-    *str += 1;
-    while ( ( (*str)[pos] != '"' || (*str)[pos - 1] == '\\' )  &&
-      (*str)[pos] != '\0' )
-      pos++;
-    dquote = 1;
+    /* Unescape the quoted value (inverse of #string_escape); the set parser
+     * consumes the delimiter (',' or '}') that follows */
+    consumed = string_unescape(*str, &str1);
+    if (! consumed)
+      return false;
   }
   else
   {
-    while ((*str)[pos] != ',' && (*str)[pos] != '}' && 
+    size_t pos = 0;
+    while ((*str)[pos] != ',' && (*str)[pos] != '}' &&
         (*str)[pos] != '\0')
       pos++;
+    str1 = palloc(sizeof(char) * (pos + 1));
+    strncpy(str1, *str, pos);
+    str1[pos] = '\0';
+    consumed = pos;
   }
-  char *str1 = palloc(sizeof(char) * (pos + 1));
-  strncpy(str1, *str, pos);
-  str1[pos] = '\0';
   bool success = basetype_in(str1, basetype, false, result);
   pfree(str1);
   if (! success)
     return false;
-  *str += pos + dquote;
+  *str += consumed;
   return true;
 }
 

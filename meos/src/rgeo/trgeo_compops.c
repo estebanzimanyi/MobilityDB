@@ -38,7 +38,8 @@
 #include <meos.h>
 #include <meos_internal.h>
 #include <meos_rgeo.h>
-#include "temporal/postgres_types.h"
+#include <pgtypes.h>
+#include "temporal/lifting.h"
 #include "temporal/temporal.h"
 #include "temporal/temporal_compops.h"
 #include "temporal/type_util.h"

@@ -67,6 +67,8 @@
 #include <utils/date.h>
 #include <utils/float.h>
 #include <utils/timestamp.h>
+#include "utils/varlena.h"
+#include <pgtypes.h>
 /* PostGIS */
 #include <liblwgeom.h>
 /* MEOS */
@@ -491,7 +493,7 @@ aw_make_instant(const char *vfmt, MeosType vt, const void *vvals,
     if (len)
       memcpy(cs, sdata + soff[idx], (size_t) len);
     cs[len] = '\0';
-    text *txt = cstring2text(cs);
+    text *txt = cstring_to_text(cs);
     TInstant *r = tinstant_make(PointerGetDatum(txt), T_TTEXT, t);
     pfree(cs);
     pfree(txt);
@@ -894,7 +896,7 @@ meos_temporal_to_arrow(const Temporal *temp, struct ArrowSchema *out_schema,
 #endif
       }
       else if (is_ttext)
-        svals[k] = text2cstring(DatumGetTextP(tinstant_value_p(single)));
+        svals[k] = text_to_cstring(DatumGetTextP(tinstant_value_p(single)));
       else if (is_tbool)
       {
         if (DatumGetBool(tinstant_value_p(single)))
@@ -992,7 +994,7 @@ meos_temporal_to_arrow(const Temporal *temp, struct ArrowSchema *out_schema,
 #endif
         }
         else if (is_ttext)
-          svals[k] = text2cstring(DatumGetTextP(tinstant_value_p(inst)));
+          svals[k] = text_to_cstring(DatumGetTextP(tinstant_value_p(inst)));
         else if (is_tbool)
         {
           if (DatumGetBool(tinstant_value_p(inst)))
@@ -1620,7 +1622,7 @@ aw_put_value(const char *vfmt, MeosType basetype, Datum value, int idx,
      * exactly as the temporal t leaf does */
     ((int64_t *) vvals)[idx] = (int64_t) DatumGetTimestampTz(value);
   else if (vfmt[0] == 'u')
-    svals[idx] = text2cstring(DatumGetTextP(value));
+    svals[idx] = text_to_cstring(DatumGetTextP(value));
   else /* 'Z' : a geometry or geography, carried as extended WKB */
     gbufs[idx] = aw_geo_to_wkb(value, &glens[idx]);
 }
@@ -1653,7 +1655,7 @@ aw_get_value(const char *vfmt, MeosType basetype, const void *vvals,
     if (len)
       memcpy(cs, sdata + soff[idx], (size_t) len);
     cs[len] = '\0';
-    text *txt = cstring2text(cs);
+    text *txt = cstring_to_text(cs);
     pfree(cs);
     return PointerGetDatum(txt);
   }
@@ -1944,7 +1946,7 @@ aw_one_value_array(ArrowArena *arena, const char *vfmt, MeosType basetype,
 {
   if (vfmt[0] == 'u')
   {
-    char *cs = text2cstring(DatumGetTextP(value));
+    char *cs = text_to_cstring(DatumGetTextP(value));
     int32_t n = (int32_t) strlen(cs);
     int32_t *off = arena_alloc(arena, sizeof(int32_t) * 2);
     off[0] = 0; off[1] = n;

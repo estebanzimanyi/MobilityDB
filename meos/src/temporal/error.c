@@ -39,6 +39,9 @@
 #include <stdarg.h>
 /* Postgres */
 #include <postgres.h>
+#if ! MEOS
+  #include "utils/elog.h"
+#endif /* ! MEOS */
 /* MEOS */
 #include <meos.h>
 

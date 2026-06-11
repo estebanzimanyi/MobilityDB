@@ -34,6 +34,7 @@
 
 /* PostgreSQL */
 #include <postgres.h>
+#include <pgtypes.h>
 #include <utils/array.h>
 /* MEOS */
 #include <meos.h>
@@ -280,7 +281,7 @@ Datum
 Tpose_from_geopose(PG_FUNCTION_ARGS)
 {
   text *json_text = PG_GETARG_TEXT_P(0);
-  char *json = text2cstring(json_text);
+  char *json = text_to_cstring(json_text);
   Temporal *result = tpose_from_geopose(json);
   pfree(json);
   PG_FREE_IF_COPY(json_text, 0);
@@ -304,7 +305,7 @@ Tpose_as_geopose(PG_FUNCTION_ARGS)
   char *result = tpose_as_geopose(temp, conformance, precision);
   PG_FREE_IF_COPY(temp, 0);
   if (result == NULL) PG_RETURN_NULL();
-  text *result_text = cstring2text(result);
+  text *result_text = cstring_to_text(result);
   pfree(result);
   PG_RETURN_TEXT_P(result_text);
 }

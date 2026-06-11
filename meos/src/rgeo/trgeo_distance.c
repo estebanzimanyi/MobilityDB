@@ -654,7 +654,7 @@ compute_turnpoints_tpoly_point(cfp_elem *cfp_s, cfp_elem *cfp_e,
   for (double i = 0; i < 4; ++i)
   {
     double tl = i / 4, tr = (i + 1) / 4, t0 = -1;
-    double vl, vr;
+    double vl, vr, v0;
     if (cfp_s->cf_1 % 2 == 0)
     {
       vl = f_turnpoints_v_v_tpoint_poly(p, q, cfp_s->pose_1, cfp_e->pose_1, tl);
@@ -672,7 +672,6 @@ compute_turnpoints_tpoly_point(cfp_elem *cfp_s, cfp_elem *cfp_e,
       uint8_t j = 0;
       while(fabs(tr - tl) >= MEOS_EPSILON && j < 100)
       {
-        double v0;
         ++j;
         t0 = (tl * vr - tr * vl) / (vr - vl);
         if (cfp_s->cf_1 % 2 == 0)
@@ -2275,7 +2274,7 @@ nad_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
 {
   /* Ensure the validity of the arguments */
   if (! ensure_valid_trgeo_geo(temp, gs) || gserialized_is_empty(gs))
-    return DBL_MAX;
+    return -1.0;
 
   Temporal *dist = tdistance_trgeometry_geo(temp, gs);
   double result = DatumGetFloat8(temporal_min_value(dist));
@@ -2306,7 +2305,7 @@ nad_trgeometry_stbox(const Temporal *temp, const STBox *box)
 {
   /* Ensure the validity of the arguments */
   if (! ensure_valid_trgeo_stbox(temp, box))
-    return DBL_MAX;
+    return -1.0;
 
   /* Project the temporal point to the timespan of the box */
   bool hast = MEOS_FLAGS_GET_T(box->flags);
@@ -2315,7 +2314,7 @@ nad_trgeometry_stbox(const Temporal *temp, const STBox *box)
   {
     temporal_set_tstzspan(temp, &p);
     if (! inter_span_span(&p, &box->period, &inter))
-      return DBL_MAX;
+      return -1.0;
   }
   /* Convert the stbox to a geometry */
   GSERIALIZED *geo = stbox_geo(box);
@@ -2343,10 +2342,12 @@ nad_trgeometry_tpoint(const Temporal *temp1, const Temporal *temp2)
   /* Ensure the validity of the arguments */
   if (! ensure_valid_trgeo_tpoint(temp1, temp2))
     return DBL_MAX;
+  if (! ensure_valid_trgeo_tpoint(temp2, temp2))
+    return -1.0;
 
   Temporal *dist = tdistance_trgeometry_tpoint(temp1, temp2);
   if (dist == NULL)
-    return DBL_MAX;
+    return -1.0;
 
   double result = DatumGetFloat8(temporal_min_value(dist));
   pfree(dist);
@@ -2364,11 +2365,11 @@ nad_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2)
 {
   /* Ensure the validity of the arguments */
   if (! ensure_valid_trgeo_trgeo(temp2, temp2))
-    return DBL_MAX;
+    return -1.0;
 
   Temporal *dist = tdistance_trgeometry_trgeometry(temp1, temp2);
   if (dist == NULL)
-    return DBL_MAX;
+    return -1.0;
 
   double result = DatumGetFloat8(temporal_min_value(dist));
   pfree(dist);

@@ -47,6 +47,7 @@
 extern "C" {
 #include "geo/clip_clipper2.h"
 #include <postgres.h>
+#include <utils/timestamp.h>
 #include <liblwgeom.h>
 #include "geo/tgeo_spatialfuncs.h"  /* for geo_serialize */
 #include "meos.h"
@@ -281,7 +282,7 @@ clipper2_clip_poly_poly(const GSERIALIZED *subj_g, const GSERIALIZED *clip_g,
   ClipType ct;
   if (! map_clip_op(op, &ct))
   {
-    elog(ERROR, "clipper2_clip_poly_poly: unknown clip operation %d", op);
+    meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR, "clipper2_clip_poly_poly: unknown clip operation %d", op);
     return nullptr;
   }
 
@@ -298,7 +299,7 @@ clipper2_clip_poly_poly(const GSERIALIZED *subj_g, const GSERIALIZED *clip_g,
       (clip_lw->type != POLYGONTYPE && clip_lw->type != MULTIPOLYGONTYPE))
   {
     lwgeom_free(subj_lw); lwgeom_free(clip_lw);
-    elog(ERROR,
+    meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
       "clipper2_clip_poly_poly: inputs must be POLYGON or MULTIPOLYGON");
     return nullptr;
   }
@@ -322,7 +323,7 @@ clipper2_clip_poly_poly(const GSERIALIZED *subj_g, const GSERIALIZED *clip_g,
   bool ok = clipper.Execute(ct, FillRule::EvenOdd, polytree);
   if (! ok)
   {
-    elog(ERROR, "clipper2_clip_poly_poly: Clipper2 Execute failed");
+    meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR, "clipper2_clip_poly_poly: Clipper2 Execute failed");
     return nullptr;
   }
 
@@ -589,7 +590,7 @@ clipper2_traj_poly_periods(const TSequence *seq, const GSERIALIZED *gs,
   if (! clipper.Execute(ClipType::Intersection, FillRule::EvenOdd,
         closed_unused, open_solution))
   {
-    elog(ERROR, "clipper2_traj_poly_periods: Clipper2 Execute failed");
+    meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR, "clipper2_traj_poly_periods: Clipper2 Execute failed");
     return nullptr;
   }
   if (open_solution.empty())

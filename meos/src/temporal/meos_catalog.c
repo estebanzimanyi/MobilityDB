@@ -135,6 +135,12 @@ static const char *MEOS_TYPE_NAMES[] =
   [T_PCPATCHSET] = "pcpatchset",
   [T_TPCPATCH] = "tpcpatch",
   [T_TPCBOX] = "tpcbox",
+#if JSON
+  [T_JSONB]      = "jsonb",      /**< PostgreSQL jsonb base type */
+  [T_JSONPATH]   = "jsonpath",   /**< PostgreSQL json path */
+  [T_JSONBSET]   = "jsonbset",   /**< static set of JSONB values */
+  [T_TJSONB]     = "tjsonb",     /**< temporal JSONB trajectory */
+#endif /* JSON */
 };
 
 /**
@@ -186,6 +192,10 @@ static const char *MEOS_OPER_NAMES[] =
   [ALWAYSLE_OP] = "%<=",
   [ALWAYSGT_OP] = "%>",
   [ALWAYSGE_OP] = "%>=",
+#if JSON
+  [TEMPCONTAINS_OP] = "#@>",
+  [TEMPCONTAINED_OP] = "<@#",
+#endif /* JSON */
 };
 
 #define TEMPSUBTYPE_STR_MAXLEN 12
@@ -240,6 +250,9 @@ static const settype_catalog_struct MEOS_SETTYPE_CATALOG[] =
   {T_H3INDEXSET,    T_H3INDEX},
   {T_PCPOINTSET,    T_PCPOINT},
   {T_PCPATCHSET,    T_PCPATCH},
+#if JSON
+  {T_JSONBSET,      T_JSONB},
+#endif /* JSON */
 };
 
 /**
@@ -296,6 +309,9 @@ static const temptype_catalog_struct MEOS_TEMPTYPE_CATALOG[] =
   {T_TCBUFFER,   T_CBUFFER},
   {T_TPCPOINT,   T_PCPOINT},
   {T_TPCPATCH,   T_PCPATCH},
+#if JSON
+  {T_TJSONB,     T_JSONB},
+#endif /* JSON */
 };
 
 /*****************************************************************************/
@@ -335,7 +351,7 @@ tempsubtype_name(tempSubtype subtype)
  * of the concrete subtype of a temporal type
  */
 bool
-tempsubtype_from_string(const char *str, int16 *subtype)
+tempsubtype_from_string(const char *str, int16_t *subtype)
 {
   char *tmpstr;
   size_t tmpstartpos, tmpendpos;
@@ -456,8 +472,7 @@ interptype_from_string(const char *str)
   int n = sizeof(MEOS_INTERPTYPE_NAMES) / sizeof(char *);
   for (int i = 0; i < n; i++)
   {
-    if (pg_strncasecmp(str, MEOS_INTERPTYPE_NAMES[i],
-      INTERP_STR_MAXLEN) == 0)
+    if (pg_strncasecmp(str, MEOS_INTERPTYPE_NAMES[i], INTERP_STR_MAXLEN) == 0)
       return i;
   }
   /* Error */
@@ -620,6 +635,9 @@ meos_basetype(MeosType type)
 #if CBUFFER
     || type == T_CBUFFER
 #endif
+#if JSON
+    || type == T_JSONB
+#endif
 #if NPOINT
     || type == T_NPOINT
 #endif
@@ -693,6 +711,10 @@ meostype_length(MeosType type)
   if (type == T_CBUFFER)
     return -1;
 #endif
+#if JSON
+  if (type == T_JSONB)
+    return -1;
+#endif
 #if NPOINT
   if (type == T_NPOINT)
     return sizeof(Npoint);
@@ -724,6 +746,9 @@ alphanum_basetype(MeosType type)
 #if H3
     || type == T_H3INDEX
 #endif
+#if JSON
+      || type == T_JSONB
+#endif
     );
 }
 
@@ -739,6 +764,12 @@ alphanum_temptype(MeosType type)
     type == T_TH3INDEX ||
 #endif
     type == T_TFLOAT || type == T_TTEXT);
+  return (type == T_TBOOL || type == T_TINT || type == T_TFLOAT ||
+    type == T_TTEXT
+#if JSON
+  || type == T_TJSONB
+#endif
+  );
 }
 #endif
 
@@ -802,6 +833,9 @@ set_basetype(MeosType type)
 #if CBUFFER
     || type == T_CBUFFER
 #endif
+#if JSON
+      || type == T_JSONB
+#endif
 #if NPOINT
     || type == T_NPOINT
 #endif
@@ -829,6 +863,9 @@ set_type(MeosType type)
     type == T_GEOMSET || type == T_GEOGSET
 #if CBUFFER
     || type == T_CBUFFERSET
+#endif
+#if JSON
+      || type == T_JSONBSET
 #endif
 #if NPOINT
     || type == T_NPOINTSET
@@ -913,6 +950,9 @@ alphanumset_type(MeosType type)
     type == T_BIGINTSET || type == T_FLOATSET || type == T_TEXTSET
 #if H3
     || type == T_H3INDEXSET
+#endif
+#if JSON
+    || type == T_JSONBSET
 #endif
     );
 }
@@ -1173,6 +1213,9 @@ temporal_type(MeosType type)
 #if CBUFFER
     || type == T_TCBUFFER
 #endif
+#if JSON
+    || type == T_TJSONB
+#endif
 #if NPOINT
     || type == T_TNPOINT
 #endif
@@ -1207,6 +1250,9 @@ temporal_basetype(MeosType type)
 #if CBUFFER
     || type == T_CBUFFER
 #endif
+#if JSON
+    || type == T_JSONB
+#endif
 #if NPOINT
     || type == T_NPOINT
 #endif
@@ -1231,7 +1277,7 @@ temporal_basetype(MeosType type)
 inline bool
 temptype_supports_linear(MeosType type)
 {
-  return (type == T_TFLOAT || type == T_TDOUBLE2 || type == T_TDOUBLE3 ||
+  bool result = (type == T_TFLOAT || type == T_TDOUBLE2 || type == T_TDOUBLE3 ||
       type == T_TDOUBLE4 || type == T_TGEOMPOINT || type == T_TGEOGPOINT
 #if CBUFFER
     || type == T_TCBUFFER
@@ -1246,9 +1292,9 @@ temptype_supports_linear(MeosType type)
     || type == T_TRGEOMETRY
 #endif
     );
+  return result;
 }
 
-#ifndef NDEBUG
 /**
  * @brief Return true if the type is a temporal alphanumeric type
  * @note This function is only used in the asserts
@@ -1258,8 +1304,26 @@ talphanum_type(MeosType type)
 {
   return (type == T_TBOOL || type == T_TINT || type == T_TBIGINT ||
     type == T_TFLOAT || type == T_TTEXT);
+  return (type == T_TBOOL || type == T_TINT || type == T_TFLOAT ||
+    type == T_TTEXT
+// #if JSON
+    // || type == T_TJSONB
+// #endif
+    );
 }
-#endif
+
+/**
+ * @brief Ensure that a type is a temporal alphanumeric type
+ */
+bool
+ensure_talphanum_type(MeosType type)
+{
+  if (talphanum_type(type))
+    return true;
+  meos_error(ERROR, MEOS_ERR_INVALID_ARG_TYPE,
+    "The temporal value must be a temporal alphanumeric type");
+  return false;
+}
 
 /**
  * @brief Return true if the type is a temporal alpha type (i.e., those whose
@@ -1269,7 +1333,11 @@ inline bool
 talpha_type(MeosType type)
 {
   return (type == T_TBOOL || type == T_TTEXT || type == T_TDOUBLE2 ||
-    type == T_TDOUBLE3 || type == T_TDOUBLE4);
+    type == T_TDOUBLE3 || type == T_TDOUBLE4
+#if JSON
+    || type == T_TJSONB
+#endif
+    );
 }
 
 #if POINTCLOUD

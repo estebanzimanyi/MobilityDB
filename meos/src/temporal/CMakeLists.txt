@@ -1,4 +1,4 @@
-set(TEMPORAL_SRCS
+set(TEMPORAL_SOURCES
   doublen.c
   error.c
   lifting.c
@@ -43,7 +43,7 @@ set(TEMPORAL_SRCS
 )
 
 if(MEOS)
-  list(APPEND TEMPORAL_SRCS
+  list(APPEND TEMPORAL_SOURCES
     set_aggfuncs_meos.c
     set_meos.c
     set_ops_meos.c
@@ -73,4 +73,4 @@ if(MEOS)
 )
 endif()
 
-add_library(temporal OBJECT ${TEMPORAL_SRCS})
+add_library(temporal OBJECT ${TEMPORAL_SOURCES})

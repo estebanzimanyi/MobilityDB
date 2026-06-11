@@ -47,6 +47,7 @@
 /* PostgreSQL */
 #include <postgres.h>
 #include <float.h>
+#include <utils/timestamp.h>
 /* MEOS */
 #include <meos.h>
 #include <meos_geo.h>

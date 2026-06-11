@@ -127,6 +127,12 @@ typedef enum
   T_PCPATCHSET     = 71,  /**< pgpointcloud patch set type */
   T_TPCPATCH       = 72,  /**< temporal pgpointcloud patch type */
   T_TPCBOX         = 73,  /**< temporal pgpointcloud bounding box type */
+#if JSON
+  T_JSONB          = 74,  /**< base type for PostgreSQL jsonb */
+  T_JSONPATH       = 75,  /**< base type for PostgreSQL jsonpath */
+  T_JSONBSET       = 76,  /**< static set of JSONB values */
+  T_TJSONB         = 77,  /**< temporal JSONB value */
+#endif /* JSON */
   NUM_MEOS_TYPES          /* Dummy value that determines the size of the
                            * lookup array MeosType -> Oid */
 } MeosType;
@@ -180,6 +186,10 @@ typedef enum
   ALWAYSLE_OP     = 40, /**< Alwaysle `%<=` operator */
   ALWAYSGT_OP     = 41, /**< Alwaysgt `%>` operator */
   ALWAYSGE_OP     = 42, /**< Alwaysge `%>=` operator */
+#if JSON
+  TEMPCONTAINS_OP  = 43, /**< Contains `#@>` operator for JSON */
+  TEMPCONTAINED_OP = 44, /**< Contained `<@#` operator for JSON */
+#endif /* JSON */
 } MeosOper;
 
 /**

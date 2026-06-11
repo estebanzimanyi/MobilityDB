@@ -53,7 +53,6 @@
 #include <meos.h>
 #include <meos_internal.h>
 #include <meos_internal_geo.h>
-#include "temporal/postgres_types.h"
 #include "temporal/type_util.h"
 #include "geo/geo_poly_clip.h"  /* clip_poly_poly fast-path for polygon ∩/− polygon */
 #include "geo/meos_transform.h"

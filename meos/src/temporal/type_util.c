@@ -32,8 +32,6 @@
  * @brief General utility functions for temporal types
  */
 
-#include "temporal/type_util.h"
-
 /* C */
 #include <assert.h>
 #include <float.h>
@@ -45,12 +43,13 @@
 #if POSTGRESQL_VERSION_NUMBER >= 160000
   #include "varatt.h"
 #endif
+#include "utils/varlena.h"
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
 #include <meos_internal_geo.h>
-#include "temporal/postgres_types.h"
 #include "temporal/span.h"
+#include "temporal/type_util.h"
 #include "geo/tgeo_spatialfuncs.h"
 #if CBUFFER
   #include <meos_cbuffer.h>
@@ -77,15 +76,23 @@
   #include "rgeo/trgeo.h"
 #endif
 
+#include <utils/jsonb.h>
+#include <utils/numeric.h>
+#include <pgtypes.h>
 /* Function defined in formatting.c */
 extern bool scanner_isspace(char ch);
+
+#if JSON
+  #include <utils/jsonb.h>
+  #include "json/tjsonb.h"
+#endif /* JSON */
 
 /*****************************************************************************
  * Comparison functions on datums
  *****************************************************************************/
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_int
  * @brief Return -1, 0, or 1 depending on whether the first value is less than, 
  * equal to, or greater than the second one
  */
@@ -96,7 +103,7 @@ int32_cmp(int32 l, int32 r)
 }
 
 /**
- * @ingroup meos_base_types
+ * @ingroup meos_base_int
  * @brief Return -1, 0, or 1 depending on whether the first value is less than, 
  * equal to, or greater than the second one
  */
@@ -135,9 +142,9 @@ datum_cmp(Datum l, Datum r, MeosType type)
       return (DatumGetInt64(l) < DatumGetInt64(r)) ? -1 :
         ((DatumGetInt64(l) > DatumGetInt64(r)) ? 1 : 0);
     case T_FLOAT8:
-      return float8_cmp_internal(DatumGetFloat8(l), DatumGetFloat8(r));
+      return pg_float8_cmp(DatumGetFloat8(l), DatumGetFloat8(r));
     case T_TEXT:
-      return text_cmp(DatumGetTextP(l), DatumGetTextP(r));
+      return text_cmp(DatumGetTextP(l), DatumGetTextP(r), DEFAULT_COLLATION_OID);
     case T_GEOMETRY:
     case T_GEOGRAPHY:
       return gserialized_cmp(DatumGetGserializedP(l), DatumGetGserializedP(r));
@@ -145,6 +152,10 @@ datum_cmp(Datum l, Datum r, MeosType type)
     case T_CBUFFER:
       return cbuffer_cmp(DatumGetCbufferP(l), DatumGetCbufferP(r));
 #endif
+#if JSON
+    case T_JSONB:
+      return pg_jsonb_cmp((Jsonb *) l, (Jsonb *) r);
+#endif /* JSON */
 #if NPOINT
     case T_NPOINT:
       return npoint_cmp(DatumGetNpointP(l), DatumGetNpointP(r));
@@ -229,7 +240,7 @@ datum_eq(Datum l, Datum r, MeosType type)
     case T_FLOAT8:
       return float8_eq(DatumGetFloat8(l), DatumGetFloat8(r));
     case T_TEXT:
-      return text_cmp(DatumGetTextP(l), DatumGetTextP(r)) == 0;
+      return text_cmp(DatumGetTextP(l), DatumGetTextP(r), DEFAULT_COLLATION_OID) == 0;
     case T_DOUBLE2:
       return double2_eq(DatumGetDouble2P(l), DatumGetDouble2P(r));
     case T_DOUBLE3:
@@ -252,6 +263,10 @@ datum_eq(Datum l, Datum r, MeosType type)
     case T_CBUFFER:
       return cbuffer_eq(DatumGetCbufferP(l), DatumGetCbufferP(r));
 #endif
+#if JSON
+    case T_JSONB:
+      return pg_jsonb_eq(DatumGetJsonbP(l), DatumGetJsonbP(r));
+#endif /* JSON */
 #if NPOINT
     case T_NPOINT:
       return npoint_eq(DatumGetNpointP(l), DatumGetNpointP(r));
@@ -470,22 +485,22 @@ datum_hash(Datum d, MeosType type)
   switch (type)
   {
     case T_TIMESTAMPTZ:
-      return pg_hashint8(TimestampTzGetDatum(d));
+      return int64_hash(TimestampTzGetDatum(d));
     case T_DATE:
-      return hash_bytes_uint32(DateADTGetDatum(d));
+      return int32_hash(DateADTGetDatum(d));
     case T_BOOL:
-      return hash_bytes_uint32((int32) DatumGetBool(d));
+      return char_hash((int32) DatumGetBool(d));
     case T_INT4:
-      return hash_bytes_uint32(DatumGetInt32(d));
+      return int32_hash(DatumGetInt32(d));
 #if H3
     case T_H3INDEX:
 #endif
     case T_INT8:
-      return pg_hashint8(DatumGetInt64(d));
+      return int64_hash(DatumGetInt64(d));
     case T_FLOAT8:
-      return pg_hashfloat8(DatumGetFloat8(d));
+      return float8_hash(DatumGetFloat8(d));
     case T_TEXT:
-      return pg_hashtext(DatumGetTextP(d));
+      return text_hash(DatumGetTextP(d), DEFAULT_COLLATION_OID);
     case T_GEOMETRY:
     case T_GEOGRAPHY:
       return gserialized_hash(DatumGetGserializedP(d));
@@ -493,6 +508,10 @@ datum_hash(Datum d, MeosType type)
     case T_CBUFFER:
       return cbuffer_hash(DatumGetCbufferP(d));
 #endif
+#if JSON
+    case T_JSONB:
+      return pg_jsonb_hash(DatumGetJsonbP(d));
+#endif /* JSON */
 #if NPOINT
     case T_NPOINT:
       return npoint_hash(DatumGetNpointP(d));
@@ -528,22 +547,22 @@ datum_hash_extended(Datum d, MeosType type, uint64 seed)
   switch (type)
   {
     case T_TIMESTAMPTZ:
-      return pg_hashint8extended(DatumGetTimestampTz(d), seed);
+      return int64_hash_extended(DatumGetTimestampTz(d), seed);
     case T_DATE:
-      return hash_bytes_uint32_extended((int32) DatumGetDateADT(d), seed);
+      return int32_hash_extended((int32) DatumGetDateADT(d), seed);
     case T_BOOL:
-      return hash_bytes_uint32_extended((int32) DatumGetBool(d), seed);
+      return char_hash_extended((int32) DatumGetBool(d), seed);
     case T_INT4:
-      return hash_bytes_uint32_extended(DatumGetInt32(d), seed);
+      return int32_hash_extended(DatumGetInt32(d), seed);
 #if H3
     case T_H3INDEX:
 #endif
     case T_INT8:
-      return pg_hashint8extended(DatumGetInt64(d), seed);
+      return int64_hash_extended(DatumGetInt64(d), seed);
     case T_FLOAT8:
-      return pg_hashfloat8extended(DatumGetFloat8(d), seed);
+      return float8_hash_extended(DatumGetFloat8(d), seed);
     case T_TEXT:
-      return pg_hashtextextended(DatumGetTextP(d), seed);
+      return text_hash_extended(DatumGetTextP(d), seed, DEFAULT_COLLATION_OID);
     // PostGIS currently does not provide an extended hash function
     // case T_GEOMETRY:
     // case T_GEOGRAPHY:
@@ -836,27 +855,33 @@ string_escape(const char *str, int quotes, char **result)
 {
   /* Count total space needed (including any overhead such as escaping
      backslashes), and detect whether the string needs double quotes */
-  bool needquotes = false;
+  /* In QUOTES mode the value is always enclosed in double quotes */
+  bool needquotes = (quotes == QUOTES);
   const char *tmp;
   /* Size of the input string + '\0' */
   size_t size = strlen(str) + 1;
-    if (quotes == QUOTES)
-      needquotes = true;
-  else if (quotes == QUOTES_ESCAPE)
+  /* As in the traditional PostgreSQL array output, in QUOTES_ESCAPE mode an
+   * empty string and a value equal (case-insensitively) to "NULL" must be
+   * quoted so that the output is unambiguous and round-trips through the
+   * parser */
+  if (quotes == QUOTES_ESCAPE &&
+      (str[0] == '\0' || pg_strcasecmp(str, "NULL") == 0))
+    needquotes = true;
+  /* Count the backslashes needed to escape embedded double quotes and
+   * backslashes (the escaping is performed in both quoting modes) and, in
+   * QUOTES_ESCAPE mode, detect the characters that require the value to be
+   * quoted */
+  for (tmp = str; *tmp != '\0'; tmp++)
   {
-    /* count data plus backslashes; detect chars needing quotes */
-    for (tmp = str; *tmp != '\0'; tmp++)
+    char ch = *tmp;
+    if (ch == '"' || ch == '\\')
     {
-      char ch = *tmp;
+      needquotes = true;
       size += 1;
-      if (ch == '"' || ch == '\\')
-      {
-        needquotes = true;
-        size += 1;
-      }
-      else if (ch == '{' || ch == '}' || ch == ',' || scanner_isspace(ch))
-        needquotes = true;
     }
+    else if (quotes == QUOTES_ESCAPE &&
+        (ch == '{' || ch == '}' || ch == ',' || scanner_isspace(ch)))
+      needquotes = true;
   }
   /* Return if no quotes are needed */
   if (! needquotes)
@@ -884,6 +909,63 @@ string_escape(const char *str, int quotes, char **result)
 }
 
 /**
+ * @brief Return the unescaped value of a double-quoted string
+ * @details This function is the exact inverse of function #string_escape: the
+ * input must start with a double quote, every backslash is dropped and the
+ * character following it is copied verbatim, and parsing stops at the first
+ * unescaped double quote. It is used by all the input functions that read a
+ * quoted base value (e.g., text, geometry) both for sets and for temporal
+ * values, so that the input is symmetric with the output for every binding.
+ * @param[in] str Input string, which must start with a double quote
+ * @param[out] result Newly allocated unescaped string
+ * @return Number of input characters consumed, including both double quotes,
+ * or 0 on error (unterminated quoted string)
+ * @note The function is derived from the PostgreSQL array input function
+ */
+size_t
+string_unescape(const char *str, char **result)
+{
+  assert(str); assert(result); assert(str[0] == '"');
+  /* Consume the opening double quote */
+  const char *p = str + 1;
+  /* The output is at most as long as the input (we only ever drop characters) */
+  char *buf = palloc(strlen(str) + 1);
+  size_t pos = 0;
+  bool closed = false;
+  while (*p != '\0')
+  {
+    if (*p == '\\')
+    {
+      /* Drop the backslash and copy the next character verbatim */
+      p++;
+      if (*p == '\0')
+        break;
+      buf[pos++] = *p++;
+    }
+    else if (*p == '"')
+    {
+      /* Unescaped double quote closes the value */
+      p++;
+      closed = true;
+      break;
+    }
+    else
+      buf[pos++] = *p++;
+  }
+  if (! closed)
+  {
+    pfree(buf);
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      "Malformed quoted string: %s", str);
+    return 0;
+  }
+  buf[pos] = '\0';
+  *result = pstrdup(buf);
+  pfree(buf);
+  return (size_t) (p - str);
+}
+
+/**
  * @brief Return the string resulting from assembling an array of strings
  * @param[in] strings Array of strings to ouput
  * @param[in] count Number of elements in the input array
@@ -895,7 +977,7 @@ string_escape(const char *str, int quotes, char **result)
  * @note The functin is derived from the PostgreSQL array_out() function
  */
 char *
-stringarr_to_string(char **strings, int count, const char *prefix, char open,
+stringarr_to_string(char **strings, int count, char *prefix, char open,
   char close, int quotes, bool spaces)
 {
   /* Count total space needed (including any overhead such as escaping
@@ -938,7 +1020,7 @@ stringarr_to_string(char **strings, int count, const char *prefix, char open,
   /* Add the prefix, if any */
   if (prefix_size)
   {
-    for (const char *tmp = prefix; *tmp; tmp++)
+    for (char *tmp = prefix; *tmp; tmp++)
       *p++ = *tmp;
   }
 

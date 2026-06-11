@@ -1,9 +1,7 @@
-build-asan/
-build/
-build/
+# Out-of-source build trees (all variants)
+build*/
 .cache
 .vscode
-build-ext/
 
 # Large AIS daily archives downloaded from https://web.ais.dk/aisdata/ for
 # the trgeo_distance / ais_*_full tutorials — keep them out of the repo.

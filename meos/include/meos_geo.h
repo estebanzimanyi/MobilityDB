@@ -325,12 +325,19 @@ typedef enum
 
 /* Input and output functions */
 
+extern BOX3D *box3d_from_gbox(const GBOX *box);
+extern BOX3D *box3d_make(double xmin, double xmax, double ymin, double ymax,
+  double zmin, double zmax, int32_t srid);
+extern char *box3d_out(const BOX3D *box, int maxdd);
+extern GBOX *gbox_make(bool hasz, double xmin, double xmax, double ymin,
+  double ymax, double zmin, double zmax);
+extern char *gbox_out(const GBOX *box, int maxdd);
 extern uint8_t *geo_as_ewkb(const GSERIALIZED *gs, const char *endian, size_t *size);
 extern char *geo_as_ewkt(const GSERIALIZED *gs, int precision);
 extern char *geo_as_geojson(const GSERIALIZED *gs, int option, int precision, const char *srs);
 extern char *geo_as_hexewkb(const GSERIALIZED *gs, const char *endian);
 extern char *geo_as_text(const GSERIALIZED *gs, int precision);
-extern GSERIALIZED *geo_from_ewkb(const uint8_t *wkb, size_t wkb_size, int32 srid);
+extern GSERIALIZED *geo_from_ewkb(const uint8_t *wkb, size_t wkb_size, int32_t srid);
 extern GSERIALIZED *geo_from_geojson(const char *geojson);
 extern GSERIALIZED *geo_from_text(const char *wkt, int32_t srid);
 extern char *geo_out(const GSERIALIZED *gs);
@@ -351,7 +358,7 @@ extern char *gbox_out(const GBOX *box, int maxdd);
 
 /* Constructor functions */
 
-extern GSERIALIZED *geo_copy(const GSERIALIZED *g);
+extern GSERIALIZED *geo_copy(const GSERIALIZED *gs);
 extern GSERIALIZED *geogpoint_make2d(int32_t srid, double x, double y);
 extern GSERIALIZED *geogpoint_make3dz(int32_t srid, double x, double y, double z);
 extern GSERIALIZED *geompoint_make2d(int32_t srid, double x, double y);
@@ -364,13 +371,13 @@ extern GSERIALIZED *geog_to_geom(const GSERIALIZED *geog);
 
 /* Accessor functions */
 
-extern bool geo_is_empty(const GSERIALIZED *g);
+extern bool geo_is_empty(const GSERIALIZED *gs);
 extern bool geo_is_unitary(const GSERIALIZED *gs);
 extern const char *geo_typename(int type);
-extern double geog_area(const GSERIALIZED *g, bool use_spheroid);
-extern GSERIALIZED *geog_centroid(const GSERIALIZED *g, bool use_spheroid);
-extern double geog_length(const GSERIALIZED *g, bool use_spheroid);
-extern double geog_perimeter(const GSERIALIZED *g, bool use_spheroid);
+extern double geog_area(const GSERIALIZED *gs, bool use_spheroid);
+extern GSERIALIZED *geog_centroid(const GSERIALIZED *gs, bool use_spheroid);
+extern double geog_length(const GSERIALIZED *gs, bool use_spheroid);
+extern double geog_perimeter(const GSERIALIZED *gs, bool use_spheroid);
 extern bool geom_azimuth(const GSERIALIZED *gs1, const GSERIALIZED *gs2, double *result);
 extern double geom_length(const GSERIALIZED *gs);
 extern double geom_perimeter(const GSERIALIZED *gs);
@@ -459,6 +466,7 @@ extern bool geo_same(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
 
 extern Set *geogset_in(const char *str);
 extern Set *geomset_in(const char *str);
+extern char *spatialset_out(const Set *s, int maxdd);
 extern char *spatialset_as_text(const Set *set, int maxdd);
 extern char *spatialset_as_ewkt(const Set *set, int maxdd);
 
@@ -514,7 +522,7 @@ extern char *stbox_out(const STBox *box, int maxdd);
 extern STBox *geo_timestamptz_to_stbox(const GSERIALIZED *gs, TimestampTz t);
 extern STBox *geo_tstzspan_to_stbox(const GSERIALIZED *gs, const Span *s);
 extern STBox *stbox_copy(const STBox *box);
-extern STBox *stbox_make(bool hasx, bool hasz, bool geodetic, int32 srid, double xmin, double xmax, double ymin, double ymax, double zmin, double zmax, const Span *s);
+extern STBox *stbox_make(bool hasx, bool hasz, bool geodetic, int32_t srid, double xmin, double xmax, double ymin, double ymax, double zmin, double zmax, const Span *s);
 
 /* Conversion functions */
 
@@ -616,6 +624,7 @@ extern bool stbox_ne(const STBox *box1, const STBox *box2);
 
 /* Input and output functions */
 
+extern char *tspatial_out(const Temporal *temp, int maxdd);
 extern Temporal *tgeogpoint_from_mfjson(const char *str);
 extern Temporal *tgeogpoint_in(const char *str);
 extern Temporal *tgeography_from_mfjson(const char *mfjson);
@@ -639,7 +648,7 @@ extern Temporal *tpoint_from_base_temp(const GSERIALIZED *gs, const Temporal *te
 extern TInstant *tpointinst_make(const GSERIALIZED *gs, TimestampTz t);
 extern TSequence *tpointseq_from_base_tstzset(const GSERIALIZED *gs, const Set *s);
 extern TSequence *tpointseq_from_base_tstzspan(const GSERIALIZED *gs, const Span *s, interpType interp);
-extern TSequence *tpointseq_make_coords(const double *xcoords, const double *ycoords, const double *zcoords, const TimestampTz *times, int count, int32 srid, bool geodetic, bool lower_inc, bool upper_inc, interpType interp, bool normalize);
+extern TSequence *tpointseq_make_coords(const double *xcoords, const double *ycoords, const double *zcoords, const TimestampTz *times, int count, int32_t srid, bool geodetic, bool lower_inc, bool upper_inc, interpType interp, bool normalize);
 extern TSequenceSet *tpointseqset_from_base_tstzspanset(const GSERIALIZED *gs, const SpanSet *ss, interpType interp);
 
 /* Conversion functions */

@@ -42,6 +42,11 @@ endif()
 if(CBUFFER)
   list(APPEND _meos_tests cbuffer_test)
 endif()
+if(JSON)
+  # Guards the standalone vendored-jsonb writer (convertToJsonb), which the
+  # in-extension pg_regress suite never exercises (it uses PostgreSQL jsonb).
+  list(APPEND _meos_tests json_test)
+endif()
 
 foreach(_t IN LISTS _meos_tests)
   add_executable(${_t} ${_t}.c)

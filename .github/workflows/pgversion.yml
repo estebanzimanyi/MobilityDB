@@ -168,6 +168,7 @@ jobs:
             -DWITH_COVERAGE=${{ matrix.coverage }} \
             ${{ matrix.coverage == '1' && format('-DCBUFFER=ON -DPOSE=ON -DRGEO=ON -DNPOINT=ON -DH3=ON -DH3_INCLUDE_DIR={0} -DH3_LIBRARY={1} -DPOINTCLOUD=ON', env.H3_INCLUDE_DIR, env.H3_LIBRARY) || '' }} \
             ..
+          cmake -DCMAKE_BUILD_TYPE=Release -DWITH_COVERAGE=${{ matrix.coverage }} ..
 
       - name: Build
         run: |
@@ -191,7 +192,7 @@ jobs:
         run: |
           cd build
           # Excluding MEOS-specific and other miscellaneous files
-          lcov --capture --directory . --include */mobilitydb/* --include */meos/* --exclude */mobilitydb/postgis/* --exclude */geo_constructors.c --exclude */tpoint_datagen.c --output-file=lcov.info
+          lcov --capture --directory . --include "*/meos/*" --include "*/mobilitydb/*" --exclude "*/pgtypes/*" --exclude "*/postgis/*" --exclude "*/geo_constructors.c" --exclude "*/tpoint_datagen.c" --output-file=lcov.info
 
       - name: Coveralls
         if: matrix.coverage == '1'
