@@ -663,32 +663,77 @@ SELECT radians(floatset '{0, 45, 90}');
 (1 row)
 
 SELECT lower(textset '{"AAA", "BBB", "CCC"}');
-         lower         
------------------------
- {"aaa", "bbb", "ccc"}
+      lower      
+-----------------
+ {aaa, bbb, ccc}
 (1 row)
 
 SELECT upper(textset '{"aaa", "bbb", "ccc"}');
-         upper         
------------------------
- {"AAA", "BBB", "CCC"}
+      upper      
+-----------------
+ {AAA, BBB, CCC}
 (1 row)
 
 SELECT initcap(textset '{"aaa", "bbb", "ccc"}');
-        initcap        
------------------------
- {"Aaa", "Bbb", "Ccc"}
+     initcap     
+-----------------
+ {Aaa, Bbb, Ccc}
 (1 row)
 
 SELECT textset '{"aaa", "bbb", "ccc"}' || text 'XXX';
-            ?column?            
---------------------------------
- {"aaaXXX", "bbbXXX", "cccXXX"}
+         ?column?         
+--------------------------
+ {aaaXXX, bbbXXX, cccXXX}
 (1 row)
 
 SELECT text 'XXX' || textset '{"aaa", "bbb", "ccc"}';
-            ?column?            
---------------------------------
- {"XXXaaa", "XXXbbb", "XXXccc"}
+         ?column?         
+--------------------------
+ {XXXaaa, XXXbbb, XXXccc}
+(1 row)
+
+SELECT asText(set(ARRAY['aaa', 'bbb']));
+   astext   
+------------
+ {aaa, bbb}
+(1 row)
+
+SELECT asText(set(ARRAY['a b', 'a,b', 'a{b', 'a}b']));
+            astext            
+------------------------------
+ {"a b", "a,b", "a{b", "a}b"}
+(1 row)
+
+SELECT asText(set(ARRAY['a"b', E'a\\b']));
+      astext      
+------------------
+ {"a\"b", "a\\b"}
+(1 row)
+
+SELECT asText(set(ARRAY['', 'NULL', 'null']));
+        astext        
+----------------------
+ {"", "NULL", "null"}
+(1 row)
+
+SELECT bool_and((ARRAY[v]::text) = asText(set(ARRAY[v]))) AS matches_pg_array
+FROM (VALUES ('plain'), ('a b'), ('a,b'), ('a{b'), ('a}b'), ('a"b'),
+  (E'a\\b'), (' ab'), ('ab '), (E'a\tb'), (''), ('NULL'), ('null')) t(v);
+ matches_pg_array 
+------------------
+ t
+(1 row)
+
+SELECT textset '{"a b", "a,b", "a\"b", "a\\b", "", "NULL", plain}' =
+  set(ARRAY['a b', 'a,b', 'a"b', E'a\\b', '', 'NULL', 'plain']) AS roundtrip;
+ roundtrip 
+-----------
+ t
+(1 row)
+
+SELECT tstzset '{"2000-01-01", "2000-01-02"}' = tstzset '{2000-01-01, 2000-01-02}' AS tstz_roundtrip;
+ tstz_roundtrip 
+----------------
+ t
 (1 row)
 

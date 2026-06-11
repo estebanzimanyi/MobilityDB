@@ -212,3 +212,30 @@ SELECT textset '{"aaa", "bbb", "ccc"}' || text 'XXX';
 SELECT text 'XXX' || textset '{"aaa", "bbb", "ccc"}';
 
 -------------------------------------------------------------------------------
+-- Escaping of set elements
+-- The text output of a set follows the same quoting and backslash-escaping
+-- rules as the traditional PostgreSQL array output and round-trips through the
+-- input function
+-------------------------------------------------------------------------------
+
+-- Plain alphanumeric text is not quoted
+SELECT asText(set(ARRAY['aaa', 'bbb']));
+-- Whitespace, set delimiters and quoting characters force quoting; the
+-- double-quote and backslash characters are backslash-escaped
+SELECT asText(set(ARRAY['a b', 'a,b', 'a{b', 'a}b']));
+SELECT asText(set(ARRAY['a"b', E'a\\b']));
+-- Empty strings and values equal (case-insensitively) to NULL are quoted
+SELECT asText(set(ARRAY['', 'NULL', 'null']));
+-- The text output of a set is identical to the output of the equivalent
+-- PostgreSQL text[] array for every value
+SELECT bool_and((ARRAY[v]::text) = asText(set(ARRAY[v]))) AS matches_pg_array
+FROM (VALUES ('plain'), ('a b'), ('a,b'), ('a{b'), ('a}b'), ('a"b'),
+  (E'a\\b'), (' ab'), ('ab '), (E'a\tb'), (''), ('NULL'), ('null')) t(v);
+-- The escaped output re-parses to the original set (round-trip)
+SELECT textset '{"a b", "a,b", "a\"b", "a\\b", "", "NULL", plain}' =
+  set(ARRAY['a b', 'a,b', 'a"b', E'a\\b', '', 'NULL', 'plain']) AS roundtrip;
+-- Timestamp set elements are quoted (they contain whitespace) and the input
+-- accepts both the quoted and the unquoted forms
+SELECT tstzset '{"2000-01-01", "2000-01-02"}' = tstzset '{2000-01-01, 2000-01-02}' AS tstz_roundtrip;
+
+-------------------------------------------------------------------------------

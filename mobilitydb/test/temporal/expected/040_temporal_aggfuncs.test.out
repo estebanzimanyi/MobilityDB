@@ -224,9 +224,9 @@ SELECT tmin(temp) FROM (VALUES
 
 SELECT tmin(temp) FROM (VALUES
 (NULL::ttext),('AAAA@2000-01-01'::ttext)) t(temp);
-                 tmin                  
----------------------------------------
- {"AAAA"@Sat Jan 01 00:00:00 2000 PST}
+                tmin                 
+-------------------------------------
+ {AAAA@Sat Jan 01 00:00:00 2000 PST}
 (1 row)
 
 SELECT tmax(temp) FROM (VALUES
@@ -238,9 +238,9 @@ SELECT tmax(temp) FROM (VALUES
 
 SELECT tmax(temp) FROM (VALUES
 (NULL::ttext),('AAAA@2000-01-01'::ttext)) t(temp);
-                 tmax                  
----------------------------------------
- {"AAAA"@Sat Jan 01 00:00:00 2000 PST}
+                tmax                 
+-------------------------------------
+ {AAAA@Sat Jan 01 00:00:00 2000 PST}
 (1 row)
 
 SELECT tcount(temp) FROM (VALUES
@@ -504,9 +504,9 @@ WITH temp(inst) AS (
   SELECT ttext 'DD@2000-01-04' UNION
   SELECT ttext 'EE@2000-01-05' )
 SELECT appendInstant(inst ORDER BY inst) FROM temp;
-                                                                                  appendinstant                                                                                  
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
- ["AA"@Sat Jan 01 00:00:00 2000 PST, "BB"@Sun Jan 02 00:00:00 2000 PST, "CC"@Mon Jan 03 00:00:00 2000 PST, "DD"@Tue Jan 04 00:00:00 2000 PST, "EE"@Wed Jan 05 00:00:00 2000 PST]
+                                                                             appendinstant                                                                             
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ [AA@Sat Jan 01 00:00:00 2000 PST, BB@Sun Jan 02 00:00:00 2000 PST, CC@Mon Jan 03 00:00:00 2000 PST, DD@Tue Jan 04 00:00:00 2000 PST, EE@Wed Jan 05 00:00:00 2000 PST]
 (1 row)
 
 WITH temp(inst) AS (
@@ -593,9 +593,9 @@ WITH temp(inst) AS (
   SELECT ttext 'DD@2000-01-04' UNION
   SELECT ttext 'EE@2000-01-05' )
 SELECT appendInstant(inst, 'discrete' ORDER BY inst) FROM temp;
-                                                                                  appendinstant                                                                                  
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
- {"AA"@Sat Jan 01 00:00:00 2000 PST, "BB"@Sun Jan 02 00:00:00 2000 PST, "CC"@Mon Jan 03 00:00:00 2000 PST, "DD"@Tue Jan 04 00:00:00 2000 PST, "EE"@Wed Jan 05 00:00:00 2000 PST}
+                                                                             appendinstant                                                                             
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {AA@Sat Jan 01 00:00:00 2000 PST, BB@Sun Jan 02 00:00:00 2000 PST, CC@Mon Jan 03 00:00:00 2000 PST, DD@Tue Jan 04 00:00:00 2000 PST, EE@Wed Jan 05 00:00:00 2000 PST}
 (1 row)
 
 WITH temp(inst) AS (
@@ -671,9 +671,9 @@ WITH temp(inst) AS (
   SELECT ttext 'DD@2000-01-05' UNION
   SELECT ttext 'EE@2000-01-07' )
 SELECT appendInstant(inst, NULL, interval '1 day' ORDER BY inst) FROM temp;
-                                                                                     appendinstant                                                                                     
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
- {["AA"@Sat Jan 01 00:00:00 2000 PST, "BB"@Sun Jan 02 00:00:00 2000 PST], ["CC"@Tue Jan 04 00:00:00 2000 PST, "DD"@Wed Jan 05 00:00:00 2000 PST], ["EE"@Fri Jan 07 00:00:00 2000 PST]}
+                                                                                appendinstant                                                                                
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[AA@Sat Jan 01 00:00:00 2000 PST, BB@Sun Jan 02 00:00:00 2000 PST], [CC@Tue Jan 04 00:00:00 2000 PST, DD@Wed Jan 05 00:00:00 2000 PST], [EE@Fri Jan 07 00:00:00 2000 PST]}
 (1 row)
 
 WITH temp(k, seq) AS (
@@ -743,9 +743,9 @@ WITH temp(k, seq) AS (
   SELECT 4, ttext '[DD@2000-01-04, EE@2000-01-05]' UNION
   SELECT 5, ttext '[EE@2000-01-05, FF@2000-01-06]' )
 SELECT appendSequence(seq ORDER BY k) FROM temp;
-                                                                                                    appendsequence                                                                                                    
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
- {["AA"@Sat Jan 01 00:00:00 2000 PST, "BB"@Sun Jan 02 00:00:00 2000 PST, "CC"@Mon Jan 03 00:00:00 2000 PST, "DD"@Tue Jan 04 00:00:00 2000 PST, "EE"@Wed Jan 05 00:00:00 2000 PST, "FF"@Thu Jan 06 00:00:00 2000 PST]}
+                                                                                              appendsequence                                                                                              
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {[AA@Sat Jan 01 00:00:00 2000 PST, BB@Sun Jan 02 00:00:00 2000 PST, CC@Mon Jan 03 00:00:00 2000 PST, DD@Tue Jan 04 00:00:00 2000 PST, EE@Wed Jan 05 00:00:00 2000 PST, FF@Thu Jan 06 00:00:00 2000 PST]}
 (1 row)
 
 WITH temp(seq) AS (
