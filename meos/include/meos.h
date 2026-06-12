@@ -618,6 +618,7 @@ extern SpanSet *bigintspanset_shift_scale(const SpanSet *ss, int64_t shift, int6
 extern Set *dateset_shift_scale(const Set *s, int shift, int width, bool hasshift, bool haswidth);
 extern Span *datespan_shift_scale(const Span *sp, int shift, int width, bool hasshift, bool haswidth);
 extern SpanSet *datespanset_shift_scale(const SpanSet *ss, int shift, int width, bool hasshift, bool haswidth);
+extern double float_round(double d, int maxdd);
 extern Set *floatset_ceil(const Set *s);
 extern Set *floatset_degrees(const Set *s, bool normalize);
 extern Set *floatset_floor(const Set *s);
