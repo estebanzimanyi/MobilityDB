@@ -45,7 +45,11 @@
 
 set -euo pipefail
 
+# postgres_ext_defs.in.h is the standalone PG-compat type shim: it is the one
+# place that legitimately DEFINES int64/uint64 via `typedef int64_t int64;`, so
+# it is excluded for the same reason the vendored pgtypes/ tree is.
 violations=$(grep -rEn '\bu?int64_t\b' \
+  --exclude=postgres_ext_defs.in.h \
   meos/include \
   mobilitydb/pg_include \
   2>/dev/null || true)
