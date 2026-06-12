@@ -58,6 +58,7 @@ extern double datum_double(Datum d, MeosType type);
 extern Datum double_datum(double d, MeosType type);
 extern bytea *bstring2bytea(const uint8_t *wkb, size_t size);
 extern double meos_strtod(const char *str, char **endptr);
+extern float meos_strtof(const char *str, char **endptr);
 
 /* Input/output functions */
 

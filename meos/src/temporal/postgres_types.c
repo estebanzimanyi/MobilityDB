@@ -108,6 +108,7 @@
  * strtod_l as returning int, which silently truncates the double — see
  * #425 for the bug story. */
 extern double strtod_l(const char *str, char **endptr, locale_t loc);
+extern float strtof_l(const char *str, char **endptr, locale_t loc);
 extern locale_t newlocale(int category_mask, const char *locale,
   locale_t base);
 /* Note: freelocale's return type differs across platforms (POSIX/macOS
@@ -142,6 +143,35 @@ meos_strtod(const char *str, char **endptr)
   char *saved = strdup(cur);
   setlocale(LC_NUMERIC, "C");
   double val = strtod(str, endptr);
+  if (saved != NULL)
+  {
+    setlocale(LC_NUMERIC, saved);
+    free(saved);
+  }
+  return val;
+}
+
+/**
+ * @brief Parse a float from a string using the C locale (decimal point '.'),
+ * independent of the process LC_NUMERIC setting. The float4 analogue of
+ * meos_strtod; using strtof (not strtod+cast) preserves the single-rounding
+ * behaviour pg_float4in_internal relies on.
+ */
+float
+meos_strtof(const char *str, char **endptr)
+{
+#if MEOS_HAVE_STRTOD_L
+  if (meos_c_locale == (locale_t) 0)
+    meos_c_locale = newlocale(LC_NUMERIC_MASK, "C", (locale_t) 0);
+  if (meos_c_locale != (locale_t) 0)
+    return strtof_l(str, endptr, meos_c_locale);
+#endif
+  const char *cur = setlocale(LC_NUMERIC, NULL);
+  if (cur == NULL || strcmp(cur, "C") == 0 || strcmp(cur, "POSIX") == 0)
+    return strtof(str, endptr);
+  char *saved = strdup(cur);
+  setlocale(LC_NUMERIC, "C");
+  float val = strtof(str, endptr);
   if (saved != NULL)
   {
     setlocale(LC_NUMERIC, saved);

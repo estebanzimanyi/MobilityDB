@@ -31,6 +31,12 @@
 
 #include "pgtypes.h"
 #include "../../meos/include/meos_error.h"
+/* MEOS: parse doubles/floats in the C locale (issue #425) so '.' is always the
+ * decimal separator regardless of the process LC_NUMERIC; plain strtod/strtof
+ * are locale-aware and reject "1.5" under e.g. de_DE. Defined in
+ * meos/src/temporal/postgres_types.c, declared in temporal/type_util.h. */
+extern double meos_strtod(const char *str, char **endptr);
+extern float meos_strtof(const char *str, char **endptr);
 
 /*****************************************************************************
  * Definitions taken from the file liblwgeom_internal.h
@@ -193,7 +199,7 @@ pg_float4in_internal(char *num, char **endptr_p, const char *type_name,
   }
 
   errno = 0;
-  val = strtof(num, &endptr);
+  val = meos_strtof(num, &endptr); /* MEOS: C-locale parse, issue #425 */
 
   /* did we not see anything that looks like a double? */
   if (endptr == num || errno != 0)
@@ -370,7 +376,7 @@ pg_float8in_internal(char *num, char **endptr_p, const char *type_name,
   }
 
   errno = 0;
-  val = strtod(num, &endptr);
+  val = meos_strtod(num, &endptr); /* MEOS: C-locale parse, issue #425 */
 
   /* did we not see anything that looks like a double? */
   if (endptr == num || errno != 0)
