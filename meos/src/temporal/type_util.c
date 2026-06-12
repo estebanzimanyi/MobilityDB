@@ -1047,6 +1047,10 @@ stringarr_to_string(char **strings, int count, char *prefix, char open,
       strcpy(p, strings[i]);
       p += strlen(p);
     }
+    /* The element content has been copied into the result (directly or via
+     * its escaped form); free the per-element string built by the caller.
+     * All callers pass freshly allocated, non-reused strings. */
+    pfree(strings[i]);
     if (i < count - 1)
     {
       *p++ = ',';
