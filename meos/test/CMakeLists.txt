@@ -30,6 +30,7 @@ set(_meos_test_includes
 # Always built (only depend on core MEOS).
 set(_meos_tests
   geo_test
+  parse_test
   setspan_test
   temporal_test
   trajclip_test
