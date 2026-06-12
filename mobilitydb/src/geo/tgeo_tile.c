@@ -75,7 +75,7 @@ Stbox_space_time_tiles_common(FunctionCallInfo fcinfo, bool spacetiles,
     Interval *duration = NULL;
     TimestampTz torigin = 0;
     bool border_inc = false;
-    POINT3DZ pt;
+    POINT3DZ pt = {0};
     int i = 1;
     /* Get input parameters */
     STBox *bounds = PG_GETARG_STBOX_P(0);

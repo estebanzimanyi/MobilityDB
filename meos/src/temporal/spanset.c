@@ -158,7 +158,9 @@ spanset_find_value(const SpanSet *ss, Datum v, int *loc)
   int first = 0;
   int last = ss->count - 1;
   int middle = 0; /* make compiler quiet */
-  const Span *s = NULL; /* make compiler quiet */
+  /* A span set always holds at least one span; seed s with the first span so
+   * it is never NULL at the post-loop dereference (the loop overwrites it). */
+  const Span *s = SPANSET_SP_N(ss, 0);
   while (first <= last)
   {
     middle = (first + last)/2;
