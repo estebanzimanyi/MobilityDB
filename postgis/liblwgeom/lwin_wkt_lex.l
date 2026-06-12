@@ -8,18 +8,17 @@
 #include "lwin_wkt_parse.h"
 #include "lwgeom_log.h"
 
+static YY_BUFFER_STATE wkt_yy_buf_state;
+
 /*
 * Handle errors due to unexpected junk in WKT strings.
-* MEOS: reentrant scanner — the location comes from the scanner's yylloc and
-* the error is recorded into the calling thread's global_parser_result
-* (which is MEOS_TLS, i.e. per-thread).
 */
-static void wkt_lexer_unknown(YYLTYPE *llocp)
+static void wkt_lexer_unknown()
 {
-	/* Set the (per-thread) error state */
+	/* Set the global error state */
 	global_parser_result.errcode = PARSER_ERROR_OTHER;
 	global_parser_result.message = parser_error_messages[PARSER_ERROR_OTHER];
-	global_parser_result.errlocation = llocp->last_column;
+	global_parser_result.errlocation = wkt_yylloc.last_column;
 }
 
 /*
@@ -27,13 +26,12 @@ static void wkt_lexer_unknown(YYLTYPE *llocp)
 * action is run. We use it to update the parse location information
 * so we can report on where things fail. Also optionally to dump
 * debugging info.
-* MEOS: reentrant scanner — location/text/length come through the scanner.
 */
 #define YY_USER_ACTION do { \
-	yylloc->first_line = yylloc->last_line = yyget_lineno(yyscanner); \
-	yylloc->first_column = yylloc->last_column; \
-	yylloc->last_column += yyget_leng(yyscanner); \
-	LWDEBUGF(5,"lex: %s", yyget_text(yyscanner)); \
+	wkt_yylloc.first_line = wkt_yylloc.last_line = yylineno; \
+	wkt_yylloc.first_column = wkt_yylloc.last_column; \
+	wkt_yylloc.last_column += yyleng; \
+	LWDEBUGF(5,"lex: %s", wkt_yytext); \
 	} while (0);
 
 /*
@@ -51,9 +49,6 @@ static void wkt_lexer_unknown(YYLTYPE *llocp)
 %}
 
 %option prefix="wkt_yy"
-/* MEOS: reentrant scanner so concurrent WKT parses do not share lexer state.
- * bison-bridge/bison-locations pass yylval/yylloc through the scanner. */
-%option reentrant bison-bridge bison-locations
 %option nounput
 %option noinput
 %option never-interactive
@@ -66,21 +61,21 @@ static void wkt_lexer_unknown(YYLTYPE *llocp)
 
 -?(([0-9]+\.?)|([0-9]*\.?[0-9]+)([eE][-+]?[0-9]+)?)[ \,\)\t\n\r] {
 	LWDEBUG(5,"DOUBLE");
-	yylval->doublevalue = atof(yytext);
-	yyless(yyleng-1);
+	wkt_yylval.doublevalue = atof(wkt_yytext);
+	yyless(wkt_yyleng-1);
 	return DOUBLE_TOK;
 	}
 
 ([Nn][Aa][Nn])[ \,\)\t\n\r] {
 	LWDEBUG(5,"DOUBLE NAN");
-	yylval->doublevalue = NAN;
-	yyless(yyleng-1);
+	wkt_yylval.doublevalue = NAN;
+	yyless(wkt_yyleng-1);
 	return DOUBLE_TOK;
 }
 
 SRID=-?[0-9]+ {
 	LWDEBUG(5,"SRID");
-	yylval->integervalue = wkt_lexer_read_srid(yytext);
+	wkt_yylval.integervalue = wkt_lexer_read_srid(wkt_yytext);
 	return SRID_TOK;
 	}
 
@@ -103,7 +98,7 @@ EMPTY { return EMPTY_TOK; }
 
 Z|M|ZM {
 	LWDEBUG(5,"DIMENSIONALITY");
-	yylval->stringvalue = yytext;
+	wkt_yylval.stringvalue = wkt_yytext;
 	return DIMENSIONALITY_TOK;
 	}
 
@@ -116,27 +111,41 @@ Z|M|ZM {
 
 . { /* Error out and stop parsing on unknown/unexpected characters */
 	LWDEBUG(5,"UNKNOWN");
-	wkt_lexer_unknown(yylloc);
+	wkt_lexer_unknown();
 	yyterminate();
 	}
 
 %%
 
-/* MEOS: reentrant allocators receive the scanner handle. */
-void *wkt_yyalloc (yy_size_t  size , void *yyscanner)
+void *wkt_yyalloc (yy_size_t  size )
 {
-	(void) yyscanner;
 	return (void *) lwalloc( size );
 }
 
-void *wkt_yyrealloc  (void * ptr, yy_size_t  size , void *yyscanner)
+void *wkt_yyrealloc  (void * ptr, yy_size_t  size )
 {
-	(void) yyscanner;
 	return (void *) lwrealloc( (char *) ptr, size );
 }
 
-void wkt_yyfree (void * ptr , void *yyscanner)
+void wkt_yyfree (void * ptr )
 {
-	(void) yyscanner;
 	lwfree( (char *) ptr );	/* see wkt_yyrealloc() for (char *) cast */
 }
+
+/*
+* Set up the lexer!
+*/
+void wkt_lexer_init(char *src)
+{
+	yy_init_globals();
+	wkt_yy_buf_state = wkt_yy_scan_string(src);
+}
+
+/*
+* Clean up the lexer!
+*/
+void wkt_lexer_close()
+{
+	wkt_yy_delete_buffer(wkt_yy_buf_state);
+}
+

@@ -7,26 +7,16 @@
 #include "lwin_wkt.h"
 #include "lwin_wkt_parse.h"
 #include "lwgeom_log.h"
-#include "../../meos/include/meos_tls.h"  /* MEOS: MEOS_TLS */
-
-/* MEOS: reentrant scanner API provided by the flex-generated lexer. Declared
- * here (rather than via a generated header) to avoid changing the build. */
-typedef void *yyscan_t;
-int wkt_yylex_init(yyscan_t *scanner);
-int wkt_yylex_destroy(yyscan_t scanner);
-void *wkt_yy_scan_string(const char *str, yyscan_t scanner);
-
-/* Prototypes to quiet the compiler (reentrant/pure-parser signatures) */
-int wkt_yyparse(yyscan_t scanner);
-void wkt_yyerror(YYLTYPE *llocp, yyscan_t scanner, const char *str);
-int wkt_yylex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param, yyscan_t scanner);
 
 
-/* Declare the parser result variable. MEOS: MEOS_TLS (per-thread) so
- * concurrent WKT parses on a host worker-thread pool each own their result;
- * the grammar actions and lwin_wkt.c helpers reference it by name unchanged.
- * The PG-extension build keeps the shared global (single-threaded backend). */
-MEOS_TLS LWGEOM_PARSER_RESULT global_parser_result;
+/* Prototypes to quiet the compiler */
+int wkt_yyparse(void);
+void wkt_yyerror(const char *str);
+int wkt_yylex(void);
+
+
+/* Declare the global parser variable */
+LWGEOM_PARSER_RESULT global_parser_result;
 
 /* Turn on/off verbose parsing (turn off for production) */
 int wkt_yydebug = 0;
@@ -37,15 +27,14 @@ int wkt_yydebug = 0;
 * from WKT_ERROR in the grammar, but we keep this one
 * around just in case.
 */
-void wkt_yyerror(YYLTYPE *llocp, __attribute__((__unused__)) yyscan_t scanner,
-	__attribute__((__unused__)) const char *str)
+void wkt_yyerror(__attribute__((__unused__)) const char *str)
 {
 	/* If we haven't already set a message and location, let's set one now. */
 	if ( ! global_parser_result.message )
 	{
 		global_parser_result.message = parser_error_messages[PARSER_ERROR_OTHER];
 		global_parser_result.errcode = PARSER_ERROR_OTHER;
-		global_parser_result.errlocation = llocp ? llocp->last_column : 0;
+		global_parser_result.errlocation = wkt_yylloc.last_column;
 	}
 	LWDEBUGF(4,"%s", str);
 }
@@ -59,26 +48,26 @@ void wkt_yyerror(YYLTYPE *llocp, __attribute__((__unused__)) yyscan_t scanner,
 int lwgeom_parse_wkt(LWGEOM_PARSER_RESULT *parser_result, char *wktstr, int parser_check_flags)
 {
 	int parse_rv = 0;
-	yyscan_t scanner; /* MEOS: per-thread reentrant scanner */
 
-	/* Clean up our (per-thread) parser result. */
+	/* Clean up our global parser result. */
 	lwgeom_parser_result_init(&global_parser_result);
+	/* Work-around possible bug in GNU Bison 3.0.2 resulting in wkt_yylloc
+	 * members not being initialized on yyparse() as documented here:
+	 * https://www.gnu.org/software/bison/manual/html_node/Location-Type.html
+	 * See discussion here:
+	 * http://lists.osgeo.org/pipermail/postgis-devel/2014-September/024506.html
+	 */
+	wkt_yylloc.last_column = wkt_yylloc.last_line = \
+		wkt_yylloc.first_column = wkt_yylloc.first_line = 1;
 
 	/* Set the input text string, and parse checks. */
 	global_parser_result.wkinput = wktstr;
 	global_parser_result.parser_check_flags = parser_check_flags;
 
-	if ( wkt_yylex_init(&scanner) != 0 ) /* Per-thread lexer state */
-	{
-		global_parser_result.errcode = PARSER_ERROR_OTHER;
-		global_parser_result.message = parser_error_messages[PARSER_ERROR_OTHER];
-		*parser_result = global_parser_result;
-		return LW_FAILURE;
-	}
-	wkt_yy_scan_string(wktstr, scanner); /* Lexer ready */
-	parse_rv = wkt_yyparse(scanner); /* Run the parse */
+	wkt_lexer_init(wktstr); /* Lexer ready */
+	parse_rv = wkt_yyparse(); /* Run the parse */
 	LWDEBUGF(4,"wkt_yyparse returned %d", parse_rv);
-	wkt_yylex_destroy(scanner); /* Clean up lexer + scanner */
+	wkt_lexer_close(); /* Clean up lexer */
 
 	/* A non-zero parser return is an error. */
 	if ( parse_rv || global_parser_result.errcode )
@@ -87,9 +76,7 @@ int lwgeom_parse_wkt(LWGEOM_PARSER_RESULT *parser_result, char *wktstr, int pars
 		{
 			global_parser_result.errcode = PARSER_ERROR_OTHER;
 			global_parser_result.message = parser_error_messages[PARSER_ERROR_OTHER];
-			/* MEOS: the precise column was already recorded by the lexer/
-			 * yyerror via the reentrant location; no global yylloc here. */
-			global_parser_result.errlocation = 0;
+			global_parser_result.errlocation = wkt_yylloc.last_column;
 		}
 		else if (global_parser_result.geom)
 		{
@@ -102,13 +89,15 @@ int lwgeom_parse_wkt(LWGEOM_PARSER_RESULT *parser_result, char *wktstr, int pars
 		            global_parser_result.errcode,
 		            global_parser_result.message);
 
-		/* Copy the (per-thread) values into the return pointer */
+		/* Copy the global values into the return pointer */
 		*parser_result = global_parser_result;
+		wkt_yylex_destroy();
 		return LW_FAILURE;
 	}
 
-	/* Copy the (per-thread) value into the return pointer */
+	/* Copy the global value into the return pointer */
 	*parser_result = global_parser_result;
+	wkt_yylex_destroy();
 	return LW_SUCCESS;
 }
 
@@ -119,12 +108,6 @@ int lwgeom_parse_wkt(LWGEOM_PARSER_RESULT *parser_result, char *wktstr, int pars
 
 %locations
 %define parse.error verbose
-/* MEOS: reentrant/pure parser — no global yylval/yylloc; thread the
- * per-thread flex scanner through yyparse()/yylex() so concurrent WKT parses
- * do not share parser state. */
-%define api.pure full
-%lex-param   {void *scanner}
-%parse-param {void *scanner}
 
 %union {
 	int integervalue;
