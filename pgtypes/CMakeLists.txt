@@ -122,14 +122,45 @@ else()
   set(PGTYPES_EXT_WIN32 FALSE)
 endif()
 
-# Set the location of the directory of the time zone database. macOS may also
-# have /var/db/timezone/zoneinfo but /usr/share/zoneinfo is the standard
-# fallback; Windows has no such path so leave SYSTEMTZDIR undefined and let
-# pgtypes use its bundled lookup, or, in extension mode, defer to the
-# postgres backend's own timezone resolution.
-if(NOT WIN32)
-  add_definitions(-DSYSTEMTZDIR="/usr/share/zoneinfo")
-  message(STATUS "Directory of the time zone database: /usr/share/zoneinfo")
+# Set the location of the IANA time zone database directory. pgtz.c uses the
+# SYSTEMTZDIR macro to avoid calling get_share_path() (a PostgreSQL-internal
+# function not available in the MEOS standalone build).
+#
+# Override at cmake time with -DMEOS_TZDATA_DIR=<native OS path> — the path must
+# be one fopen() can open (e.g. C:/msys64/ucrt64/share/zoneinfo on Windows, not
+# an MSYS2 POSIX path). This is a no-op for Linux/macOS (defaults to the
+# standard /usr/share/zoneinfo). On Windows it is resolved only for the
+# standalone MEOS build (so Windows can build libmeos uniformly from the
+# ecosystem pin); the PG extension still leaves SYSTEMTZDIR undefined and
+# defers to the backend's own time zone resolution, as before.
+if(NOT DEFINED MEOS_TZDATA_DIR)
+  if(NOT WIN32)
+    set(MEOS_TZDATA_DIR "/usr/share/zoneinfo")
+  elseif(MEOS)
+    # Auto-discover from the MSYS2 environment: MSYSTEM_PREFIX (e.g. /ucrt64)
+    # is set by the MSYS2 shell; cygpath -m converts it to a Windows-native
+    # path the compiled DLL can open with fopen().
+    if(DEFINED ENV{MSYSTEM_PREFIX})
+      execute_process(
+        COMMAND cygpath -m "$ENV{MSYSTEM_PREFIX}/share/zoneinfo"
+        OUTPUT_VARIABLE MEOS_TZDATA_DIR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+        RESULT_VARIABLE _cygpath_rc)
+      if(NOT _cygpath_rc EQUAL 0 OR NOT MEOS_TZDATA_DIR)
+        set(MEOS_TZDATA_DIR "C:/msys64/ucrt64/share/zoneinfo")
+        message(WARNING "cygpath failed; falling back to ${MEOS_TZDATA_DIR}")
+      endif()
+    else()
+      set(MEOS_TZDATA_DIR "C:/msys64/ucrt64/share/zoneinfo")
+      message(WARNING "MEOS_TZDATA_DIR not set and MSYSTEM_PREFIX not found; "
+                      "defaulting to ${MEOS_TZDATA_DIR}")
+    endif()
+  endif()
+endif()
+if(DEFINED MEOS_TZDATA_DIR)
+  add_definitions(-DSYSTEMTZDIR="${MEOS_TZDATA_DIR}")
+  message(STATUS "Directory of the time zone database: ${MEOS_TZDATA_DIR}")
 endif()
 
 # Create an empty list that contains the source files of the pgtypes library.
