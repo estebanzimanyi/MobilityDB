@@ -57,6 +57,15 @@
 
 static int failures = 0;
 
+/* A non-exiting error handler so a deliberately malformed WKT makes
+ * geom_in() return NULL instead of aborting the process. Installed via
+ * meos_initialize_error_handler(), which is available on every MEOS base. */
+static void
+quiet_error_handler(int errlevel, int errcode, const char *errmsg)
+{
+  (void) errlevel; (void) errcode; (void) errmsg;
+}
+
 #define CHECK(cond, msg) \
   do { \
     if (! (cond)) { \
@@ -156,9 +165,7 @@ main(void)
 {
   meos_initialize();
   meos_initialize_timezone("UTC");
-  /* Use the non-exiting error handler so a deliberately malformed WKT
-   * makes geom_in() return NULL instead of aborting the process. */
-  meos_initialize_noexit_error_handler();
+  meos_initialize_error_handler(quiet_error_handler);
 
   printf("****************************************************************\n");
   printf("* WKT parser correctness gate *\n");
