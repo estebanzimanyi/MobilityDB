@@ -403,9 +403,14 @@ extern FILE *pgwin32_popen(const char *command, const char *type);
 #endif
 
 #ifndef HAVE_GETPEEREID
+/* MEOS: getpeereid() and the uid_t/gid_t it uses are POSIX-only; MSYS2/Windows
+ * does not declare them, and this Unix-socket peer-credential call is never
+ * used in the standalone MEOS build, so skip the declaration on Windows. */
+#ifndef WIN32
 /* On Windows, Perl might have incompatible definitions of uid_t and gid_t. */
 #ifndef PLPERL_HAVE_UID_GID
 extern int	getpeereid(int sock, uid_t *uid, gid_t *gid);
+#endif
 #endif
 #endif
 
