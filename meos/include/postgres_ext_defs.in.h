@@ -45,6 +45,8 @@ typedef struct varlena bytea;
 
 extern text *cstring_to_text(const char *str);
 extern char *text_to_cstring(const text *txt);
+extern text *text_in(const char *str);
+extern char *text_out(const text *txt);
 extern DateADT add_date_int(DateADT date, int32 days);
 extern Timestamp add_timestamptz_interval(TimestampTz tstz, const Interval *interv);
 extern DateADT date_in(const char *str);
