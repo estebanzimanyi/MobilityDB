@@ -76,7 +76,7 @@
  * input shapes.
  */
 H3Index
-h3index_parse(const char *str)
+h3index_in(const char *str)
 {
   if (str == NULL)
   {
@@ -154,7 +154,7 @@ h3index_parse(const char *str)
  * leading zeros.
  */
 char *
-h3index_to_string(H3Index cell)
+h3index_out(H3Index cell)
 {
   /* Maximum 16 hex chars for 64 bits + null terminator. */
   char *buf = palloc(17);
