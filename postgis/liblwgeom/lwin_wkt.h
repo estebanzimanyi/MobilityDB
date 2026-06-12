@@ -47,11 +47,7 @@ POINT;
  * parses on a host worker-thread pool each own their result; must match the
  * definition in lwin_wkt_parse.y. The PG-extension build keeps the shared
  * global (single-threaded backend). */
-#if MEOS
 extern MEOS_TLS LWGEOM_PARSER_RESULT global_parser_result;
-#else
-extern LWGEOM_PARSER_RESULT global_parser_result;
-#endif
 extern const char *parser_error_messages[];
 
 /* MEOS: the WKT lexer/parser is reentrant (per-thread yyscan_t); the scanner

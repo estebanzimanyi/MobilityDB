@@ -26,11 +26,7 @@ int wkt_yylex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param, yyscan_t scanner);
  * concurrent WKT parses on a host worker-thread pool each own their result;
  * the grammar actions and lwin_wkt.c helpers reference it by name unchanged.
  * The PG-extension build keeps the shared global (single-threaded backend). */
-#if MEOS
 MEOS_TLS LWGEOM_PARSER_RESULT global_parser_result;
-#else
-LWGEOM_PARSER_RESULT global_parser_result;
-#endif
 
 /* Turn on/off verbose parsing (turn off for production) */
 int wkt_yydebug = 0;

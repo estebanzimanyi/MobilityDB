@@ -64,11 +64,7 @@ extern const char *select_default_timezone(const char *share_path);
  * in the spatial dimension. Each thread owns its own so concurrent
  * meos_initialize_timezone() calls cannot race on (or double-free) a shared
  * global. Mirrors the per-thread GEOS/PROJ/GSL contexts in meos.c. */
-#if MEOS
 MEOS_TLS pg_tz *session_timezone = NULL;
-#else
-pg_tz *session_timezone = NULL;
-#endif
 
 /* Current log timezone (controlled by log_timezone GUC) */
 // pg_tz *log_timezone = NULL; /* MEOS */
@@ -99,11 +95,7 @@ hash_string_pointer(const char *s)
 
 /* Per-thread (MEOS_TLS) to match session_timezone: each thread loads and
  * caches its own time-zone definitions, so pg_tzset() never races. */
-#if MEOS
 static MEOS_TLS tzcache_hash *timezone_cache = NULL;
-#else
-static tzcache_hash *timezone_cache = NULL;
-#endif
 
 static bool
 init_timezone_hashtable(void)

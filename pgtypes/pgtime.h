@@ -75,16 +75,13 @@ extern size_t pg_strftime(char *s, size_t maxsize, const char *format,
 
 /* these functions and variables are in pgtz.c */
 
-/* MEOS: in the standalone build session_timezone is per-thread (MEOS_TLS) —
- * the temporal-dimension reference frame, the analogue of a geometry's SRID
- * in the spatial dimension. The declaration must match the definition in
- * pgtz.c. The PostgreSQL-extension build keeps the backend's shared global. */
-#if MEOS
+/* MEOS: session_timezone is the temporal-dimension reference frame (the
+ * analogue of a geometry's SRID in the spatial dimension). MEOS_TLS makes it
+ * per-thread in the standalone build and expands to nothing in the
+ * PostgreSQL-extension build (keeping the backend's shared global), matching
+ * the definition in pgtz.c. */
 #include "../meos/include/meos_tls.h"
-extern MEOS_TLS pg_tz *session_timezone;
-#else
-extern PGDLLIMPORT pg_tz *session_timezone;
-#endif
+extern MEOS_TLS PGDLLIMPORT pg_tz *session_timezone;
 extern PGDLLIMPORT pg_tz *log_timezone;
 
 extern void pg_timezone_initialize(void);
