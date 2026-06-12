@@ -276,6 +276,7 @@ FindCollation(Oid collid)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
       "Error reading the pg_collation.csv file");
+    fclose(file); /* MEOS: close the open fd before bailing on a read error */
     return NULL;
   }
 
@@ -291,6 +292,7 @@ FindCollation(Oid collid)
     {
       meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
         "Error reading the pg_collation.csv file");
+      fclose(file); /* MEOS: close the open fd before bailing on a read error */
       return NULL;
     }
 
