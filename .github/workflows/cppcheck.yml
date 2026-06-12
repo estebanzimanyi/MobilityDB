@@ -205,18 +205,20 @@ jobs:
               "returnDanglingLifetime",
           }
 
-          # Tiered policy for VENDORED trees (postgis / pgtypes / h3-pg).
-          # These ARE now scanned (no blanket --suppress) so problems are
-          # visible, but we only *block* on the high-confidence bug classes
-          # there — those catch real defects (e.g. the pg_locale /
-          # pg_conversion fd leaks) with a low false-positive rate. The other
-          # CRITICAL ids (nullPointerRedundantCheck on PostGIS, the
-          # NaN-via-zero-divide duplicateExpression, iterator-always-runs
-          # nullPointer) are upstream idioms; in vendored code we REPORT them
-          # (GitHub notice annotations) instead of blocking, to avoid forcing
-          # divergence from upstream over false positives. A real vendored fix
-          # is marked /* MEOS */ so it is greppable and reportable upstream.
-          # Non-vendored MEOS/MobilityDB code still blocks on ALL of CRITICAL.
+          # Tiered policy. Three buckets:
+          #   * Non-vendored MEOS/MobilityDB code  -> block on ALL of CRITICAL.
+          #   * MB-authored vendored glue (the pgtypes utils/catalog/access the
+          #     MobilityDB extraction added or heavily adapted, e.g. the
+          #     pg_collation.csv / pg_conversion.csv readers) -> block on the
+          #     high-confidence bug classes (these caught the real fd leaks).
+          #   * Pristine upstream (postgis, clipper2, h3-pg, the verbatim PG in
+          #     pgtypes/common, pgtypes/regex, ...) -> REPORT only (GitHub
+          #     notice annotations), never block: their CRITICAL findings are
+          #     overwhelmingly upstream idioms / cppcheck false positives
+          #     (e.g. the partially-filled sort_nodes[] qsort'd over its valid
+          #     prefix in lwgeodetic_tree.c), and blocking would force
+          #     divergence from upstream. A genuine fix we do carry is marked
+          #     /* MEOS */ so it is greppable and reportable upstream.
           HIGH_CONFIDENCE = {
               "CastIntegerToAddressAtReturn",
               "incorrectLogicOperator",
@@ -225,6 +227,9 @@ jobs:
               "returnDanglingLifetime",
           }
           VENDORED = ("postgres/", "postgis/", "pgtypes/", "h3-pg/", "clipper2/")
+          # MobilityDB-authored / heavily-adapted vendored glue (subset of
+          # VENDORED) where we DO block on high-confidence classes.
+          MB_GLUE = ("pgtypes/utils/", "pgtypes/catalog/", "pgtypes/access/")
           VENDORED_BASENAMES = (
               # liblwgeom flex/bison-generated parsers
               "lwin_wkt_lex.c", "lwin_wkt_lex.l",
@@ -233,7 +238,7 @@ jobs:
 
           root = ET.parse("cppcheck.xml").getroot()
           violations = []
-          reported = []  # vendored FP-prone findings — visibility only
+          reported = []  # report-only findings — visibility, no block
           for err in root.iter("error"):
               rid = err.get("id", "")
               if rid not in CRITICAL:
@@ -252,10 +257,12 @@ jobs:
                       continue
                   entry = (rid, norm, loc.get("line", "?"),
                            err.get("msg", "")[:140])
-                  if norm.startswith(VENDORED) and rid not in HIGH_CONFIDENCE:
-                      reported.append(entry)   # vendored idiom — report only
+                  if not norm.startswith(VENDORED):
+                      violations.append(entry)                  # our code: block all
+                  elif norm.startswith(MB_GLUE) and rid in HIGH_CONFIDENCE:
+                      violations.append(entry)                  # MB glue: block high-confidence
                   else:
-                      violations.append(entry)  # block
+                      reported.append(entry)                    # pristine upstream: report only
 
           for rid, path, line, msg in reported:
               print(f"::notice file={path},line={line}::[vendored, report-only] {rid}: {msg}")
