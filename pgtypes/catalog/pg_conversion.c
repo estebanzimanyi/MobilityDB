@@ -340,6 +340,7 @@ FindDefaultConversion(int32 for_encoding, int32 to_encoding)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
       "Error reading the pg_conversion.csv file");
+    fclose(file); /* MEOS: close the open fd before bailing on a read error */
     return NULL;
   }
 
@@ -354,6 +355,7 @@ FindDefaultConversion(int32 for_encoding, int32 to_encoding)
     {
       meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
         "Error reading the pg_conversion.csv file");
+      fclose(file); /* MEOS: close the open fd before bailing on a read error */
       return NULL;
     }
 
