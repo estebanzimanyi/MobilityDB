@@ -95,7 +95,11 @@ jobs:
             printf("OK\n"); return 0;
           }
           EOF
-          gcc -I meos-install/include -L meos-install/lib \
+          # Fail at compile time on a call to a MEOS function lacking a public
+          # prototype (exported symbol missing from the cataloged headers),
+          # rather than at runtime via an int-vs-pointer ABI mismatch.
+          gcc -Werror=implicit-function-declaration -Werror=implicit-int \
+            -I meos-install/include -L meos-install/lib \
             -o /tmp/locale_smoke /tmp/locale_smoke.c -lmeos
 
       - name: Run locale smoke test under LC_NUMERIC=de_DE.UTF-8

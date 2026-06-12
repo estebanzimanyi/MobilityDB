@@ -173,7 +173,13 @@ jobs:
             return 0;
           }
           EOF
-          gcc -I meos-install/include -L meos-install/lib \
+          # -Werror=implicit-function-declaration / -Werror=implicit-int turn a
+          # call to a MEOS function that lacks a public prototype (an exported
+          # symbol missing from the cataloged headers, e.g. text_upper) into a
+          # compile error here, instead of an int-vs-pointer ABI mismatch that
+          # only surfaces as a runtime SIGSEGV.
+          gcc -Werror=implicit-function-declaration -Werror=implicit-int \
+            -I meos-install/include -L meos-install/lib \
             -o /tmp/utf8_smoke /tmp/utf8_smoke.c -lmeos
 
       - name: Run UTF-8 smoke test
