@@ -104,5 +104,28 @@ int main(void){
      || { cat /tmp/pf_selfcontained.log; false; }
   LD_LIBRARY_PATH="$pfx/lib" "$pfx/t" || { echo "self-contained smoke crashed at runtime"; false; }'
 
+# --- Extension pg_regress smoke (pgversion.yml Build matrix) ---
+# The pin CI only BUILDS the PG extension, never RUNS pg_regress, so
+# extension-only runtime crashes the MEOS-side tests cannot see slip through
+# -- e.g. the reentrant WKT parser's pfree(NULL) in wkt_yyfree() (free(NULL)
+# is a no-op for MEOS, pfree(NULL) segfaults the backend), which crashed every
+# tgeompoint/tgeo parse yet passed all MEOS tests (pin 12j). Install the
+# just-built extension into the local PostgreSQL and run the geometry/temporal
+# parse regression subset that exercises the WKT and type parsers. NOTE: this
+# installs into the live PG (CREATE EXTENSION needs it in the cluster's
+# lib/share, not a temp prefix). Skipped if there is no PostgreSQL dev env.
+if command -v pg_config >/dev/null 2>&1; then
+  run "extension pg_regress smoke (parser/temporal)" bash -c '
+    export PATH="$(pg_config --bindir):$PATH"
+    cmake --install build-preflight-pg >/tmp/pf_extinst.log 2>&1 \
+      || sudo cmake --install build-preflight-pg >/tmp/pf_extinst.log 2>&1 \
+      || { tail -15 /tmp/pf_extinst.log; false; }
+    ( cd build-preflight-pg && ctest --output-on-failure \
+        -R "^(051_stbox|052_tgeo|052_tpoint|053_tgeo_inout|053_tpoint_inout)$" ) \
+      >/tmp/pf_pgregress.log 2>&1 || { tail -50 /tmp/pf_pgregress.log; false; }'
+else
+  echo "SKIP: extension pg_regress smoke (no pg_config / PostgreSQL dev env)"
+fi
+
 echo; echo "==== PREFLIGHT: $fails gate(s) failed ===="
 exit $fails
