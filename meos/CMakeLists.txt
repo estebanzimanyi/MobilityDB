@@ -204,14 +204,12 @@ target_include_directories(meos PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 # Specify libraries to link
 #--------------------------------
 
-target_link_libraries(${MEOS_LIB_NAME} ${JSON-C_LIBRARIES})
-target_link_libraries(${MEOS_LIB_NAME} ${GEOS_LIBRARY})
-target_link_libraries(${MEOS_LIB_NAME} ${PROJ_LIBRARIES})
-target_link_libraries(${MEOS_LIB_NAME} ${GSL_LIBRARY})
-target_link_libraries(${MEOS_LIB_NAME} ${GSL_CBLAS_LIBRARY})
-if(H3)
-  target_link_libraries(${MEOS_LIB_NAME} ${H3_LIBRARY})
-endif()
+# The external geometry libraries (json-c, geos, proj, gsl) are linked AFTER
+# the in-tree static archives (pgtypes, postgis) that reference them — see the
+# block below. On Windows those externals are DLL import archives (.dll.a) and
+# GNU ld only pulls archive members satisfying an already-seen reference, so
+# listing them before postgis leaves postgis's GEOS/PROJ calls unresolved. On
+# other platforms they are shared objects and order is irrelevant.
 if(POINTCLOUD)
   # The pointcloud OBJECT library can't propagate its link requirements
   # directly through $<TARGET_OBJECTS:…>, so we duplicate the libpc.a
@@ -244,6 +242,17 @@ endif()
 # Link the application to pgtypes and postgis
 target_link_libraries(${MEOS_LIB_NAME} pgtypes)
 target_link_libraries(${MEOS_LIB_NAME} postgis)
+
+# External geometry libraries, after the in-tree archives that reference them
+# (required for the native Windows link; harmless elsewhere)
+target_link_libraries(${MEOS_LIB_NAME} ${JSON-C_LIBRARIES})
+target_link_libraries(${MEOS_LIB_NAME} ${GEOS_LIBRARY})
+target_link_libraries(${MEOS_LIB_NAME} ${PROJ_LIBRARIES})
+target_link_libraries(${MEOS_LIB_NAME} ${GSL_LIBRARY})
+target_link_libraries(${MEOS_LIB_NAME} ${GSL_CBLAS_LIBRARY})
+if(H3)
+  target_link_libraries(${MEOS_LIB_NAME} ${H3_LIBRARY})
+endif()
 
 #--------------------------------
 # Belongs to MEOS

@@ -45,6 +45,10 @@ typedef struct varlena bytea;
 
 extern text *cstring_to_text(const char *str);
 extern char *text_to_cstring(const text *txt);
+extern bool bool_in(const char *str);
+extern char *bool_out(bool b);
+extern double float8_in(const char *str);
+extern char *float8_out(double num, int maxdd);
 extern text *text_in(const char *str);
 extern char *text_out(const text *txt);
 extern text *text_upper(const text *txt);
