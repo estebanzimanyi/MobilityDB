@@ -143,7 +143,7 @@ main(void)
     if (r) free(r); }
   /* SKIP pose_hash: unmapped return type 'uint32' */
   /* SKIP pose_hash_extended: unmapped arg type 'uint64' */
-  { double * r = pose_orientation(pose1);
+  { int n_or; double * r = pose_orientation(pose1, &n_or);
     printf("pose_orientation: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
   { double r = pose_rotation(pose1);
@@ -203,7 +203,7 @@ main(void)
     printf("poseset_start_value: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
   /* SKIP poseset_value_n: unmapped arg type 'Pose * *' */
-  { Pose * * r = poseset_values(tstzset1);
+  { int n_pv; Pose * * r = poseset_values(tstzset1, &n_pv);
     printf("poseset_values: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
   { bool r = contained_pose_set(pose1, tstzset1);

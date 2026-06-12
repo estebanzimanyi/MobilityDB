@@ -212,7 +212,7 @@ main(void)
     printf("cbufferset_start_value: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
   /* SKIP cbufferset_value_n: unmapped arg type 'Cbuffer * *' */
-  { Cbuffer * * r = cbufferset_values(cbufferset1);
+  { int n_cv; Cbuffer * * r = cbufferset_values(cbufferset1, &n_cv);
     printf("cbufferset_values: %s\n", r ? "OK" : "NULL");
     if (r) {
       int _n = set_num_values(cbufferset1);
