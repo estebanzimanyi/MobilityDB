@@ -160,7 +160,7 @@ main(void)
     if (r) free(r); }
   { TInstant * * r = trgeometry_instants(trgeometry_seq1, &n_out);
     printf("trgeometry_instants: %s\n", r ? "OK" : "NULL");
-    if (r) free(r); }
+    if (r) { for (int i = 0; i < n_out; i++) free(r[i]); free(r); } }
   { Set * r = trgeometry_points(trgeometry_seq1);
     printf("trgeometry_points: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
@@ -169,13 +169,13 @@ main(void)
     if (r) free(r); }
   { TSequence * * r = trgeometry_segments(trgeometry_seq1, &n_out);
     printf("trgeometry_segments: %s\n", r ? "OK" : "NULL");
-    if (r) free(r); }
+    if (r) { for (int i = 0; i < n_out; i++) free(r[i]); free(r); } }
   { TSequence * r = trgeometry_sequence_n(trgeometry_seq1, 1);
     printf("trgeometry_sequence_n: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
   { TSequence * * r = trgeometry_sequences(trgeometry_seq1, &n_out);
     printf("trgeometry_sequences: %s\n", r ? "OK" : "NULL");
-    if (r) free(r); }
+    if (r) { for (int i = 0; i < n_out; i++) free(r[i]); free(r); } }
   { TInstant * r = trgeometry_start_instant(trgeometry_seq1);
     printf("trgeometry_start_instant: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
@@ -321,6 +321,7 @@ main(void)
   }
 
   /* Cleanup. */
+  free(trgeometry_inst1);
   free(trgeometry_inst2);
   if (trgeometry_seq1) free(trgeometry_seq1);
   if (tpoint1) free(tpoint1);

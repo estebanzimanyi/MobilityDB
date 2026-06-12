@@ -286,10 +286,9 @@ main(void)
     printf("geoset_start_value: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
   /* SKIP geoset_value_n: unmapped arg type 'GSERIALIZED * *' */
-  { GSERIALIZED * * r = geoset_values(geomset1);
+  { int _n = 0; GSERIALIZED * * r = geoset_values(geomset1, &_n);
     printf("geoset_values: %s\n", r ? "OK" : "NULL");
     if (r) {
-      int _n = set_num_values(geomset1);
       for (int _i = 0; _i < _n; _i++) if (r[_i]) free(r[_i]);
       free(r);
     } }
