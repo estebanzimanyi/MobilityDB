@@ -441,14 +441,56 @@ pg_tzset_offset(long gmtoffset)
 }
 
 /*
+ * MEOS: memoised operating-system default timezone.
+ *
+ * select_default_timezone() probes the OS timezone through the C library's
+ * tzset()/localtime(), which mutate process-global state and therefore race
+ * when several host worker threads run meos_initialize() concurrently (e.g.
+ * a Spark local[N>1] pool). The OS default zone is a process-global,
+ * run-invariant property, so identify it exactly once: the first thread to
+ * arrive runs the probe while any concurrent threads wait for the result,
+ * which is then cached for every later call. No lock is used -- a small
+ * atomic state machine (0 unset, 1 in progress, 2 ready) mirrors the
+ * lock-free idiom already used for MEOS_ERROR_HANDLER.
+ */
+static char meos_default_tz_name[TZ_STRLEN_MAX + 1];  /* MEOS */
+static int meos_default_tz_state;                     /* MEOS: 0 unset / 1 busy / 2 ready */
+
+static const char *
+meos_default_timezone(void)  /* MEOS: probe the OS default zone once, process-wide */
+{
+  if (__atomic_load_n(&meos_default_tz_state, __ATOMIC_ACQUIRE) != 2)
+  {
+    int expected = 0;
+    if (__atomic_compare_exchange_n(&meos_default_tz_state, &expected, 1,
+          false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))
+    {
+      /* This thread owns the one-time probe; concurrent threads wait below. */
+      const char *tz = select_default_timezone(NULL);
+      if (tz)
+        strlcpy(meos_default_tz_name, tz, sizeof(meos_default_tz_name));
+      else
+        meos_default_tz_name[0] = '\0';
+      __atomic_store_n(&meos_default_tz_state, 2, __ATOMIC_RELEASE);
+    }
+    else
+      /* Another thread is probing; spin briefly until it publishes (the
+       * probe is a one-time, bounded scan, so this loop is short-lived). */
+      while (__atomic_load_n(&meos_default_tz_state, __ATOMIC_ACQUIRE) != 2)
+        ;
+  }
+  return meos_default_tz_name[0] ? meos_default_tz_name : NULL;
+}
+
+/*
  * Initialize timezone cache
  */
 void
 meos_initialize_timezone(const char *tz_str)
 {
   if (tz_str == NULL || strlen(tz_str) == 0)
-    /* fetch local timezone */
-    tz_str = select_default_timezone(NULL);
+    /* fetch local timezone (probed once, process-wide -- MEOS) */
+    tz_str = meos_default_timezone();
   if (tz_str == NULL)
     /* default timezone */
     tz_str = "GMT";
