@@ -328,6 +328,7 @@ stbox_as_hexwkb(const STBox *box, uint8_t variant, size_t *size_out)
  * @param[in] xmin,ymin,zmin Minimum bounds for the spatial dimension
  * @param[in] xmax,ymax,zmax Maximum bounds for the spatial dimension
  * @param[in] s Span, may be `NULL`
+ * @csqlfn #Stbox_constructor_x()
  */
 STBox *
 stbox_make(bool hasx, bool hasz, bool geodetic, int32 srid, double xmin,
