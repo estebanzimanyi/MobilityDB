@@ -405,8 +405,11 @@ extern FILE *pgwin32_popen(const char *command, const char *type);
 #ifndef HAVE_GETPEEREID
 /* MEOS: getpeereid() and the uid_t/gid_t it uses are POSIX-only; MSYS2/Windows
  * does not declare them, and this Unix-socket peer-credential call is never
- * used in the standalone MEOS build, so skip the declaration on Windows. */
-#ifndef WIN32
+ * used in the standalone MEOS build, so skip the declaration on Windows. Test
+ * both WIN32 (PG convention) and _WIN32 (compiler builtin) — the latter is set
+ * in every TU on MSYS2/UCRT64, including the C++ clipper2 units where the PG
+ * WIN32 macro is not yet established. */
+#if !defined(WIN32) && !defined(_WIN32)
 /* On Windows, Perl might have incompatible definitions of uid_t and gid_t. */
 #ifndef PLPERL_HAVE_UID_GID
 extern int	getpeereid(int sock, uid_t *uid, gid_t *gid);
