@@ -60,7 +60,10 @@ static void
 ensure_same_rings_lwpoly(const LWPOLY *poly1, const LWPOLY *poly2)
 {
   if (poly1->nrings != poly2->nrings)
+  {
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE, "Operation on different reference geometries");
+    return;
+  }
   for (int i = 0; i < (int) poly1->nrings; ++i)
     if (poly1->rings[i]->npoints != poly2->rings[i]->npoints)
       meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE, "Operation on different reference geometries");
@@ -74,8 +77,11 @@ ensure_same_geoms_lwpsurface(const LWPSURFACE *psurface1,
   const LWPSURFACE *psurface2)
 {
   if (psurface1->ngeoms != psurface2->ngeoms)
+  {
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "Operation on different reference geometries");
+    return;
+  }
   for (int i = 0; i < (int) psurface1->ngeoms; ++i)
     ensure_same_rings_lwpoly(psurface1->geoms[i], psurface2->geoms[i]);
 }
