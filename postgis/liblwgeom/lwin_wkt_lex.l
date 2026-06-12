@@ -143,5 +143,11 @@ void *wkt_yyrealloc  (void * ptr, yy_size_t  size , void *yyscanner)
 void wkt_yyfree (void * ptr , void *yyscanner)
 {
 	(void) yyscanner;
-	lwfree( (char *) ptr );	/* see wkt_yyrealloc() for (char *) cast */
+	/* MEOS: the reentrant yylex_destroy() frees the (possibly NULL) buffer
+	 * stack through this hook. In the PostgreSQL-extension build lwfree() is
+	 * pfree(), and pfree(NULL) dereferences NULL and crashes the backend
+	 * (unlike free(NULL), which is a no-op — why the MEOS-only tests passed).
+	 * Guard against NULL so freeing an unused buffer is safe in both builds. */
+	if ( ptr )
+		lwfree( (char *) ptr );	/* see wkt_yyrealloc() for (char *) cast */
 }
