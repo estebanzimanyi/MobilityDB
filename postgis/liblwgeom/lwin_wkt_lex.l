@@ -49,6 +49,11 @@ static void wkt_lexer_unknown()
 %}
 
 %option prefix="wkt_yy"
+/* MEOS: the keyword rules are written in uppercase but WKT is
+ * case-insensitive (POINT/Point/point all parse); the committed lexer was
+ * generated with this option, so it must stay in the source or a regenerate
+ * silently produces a case-sensitive lexer that rejects mixed-case input. */
+%option case-insensitive
 %option nounput
 %option noinput
 %option never-interactive
