@@ -321,9 +321,14 @@ pose_interpolate_2d(Pose *pose1, Pose *pose2, double ratio, double *x,
   *y = pose1->data[1] * (1 - ratio) + pose2->data[1] * ratio;
   double theta_delta = pose2->data[2] - pose1->data[2];
   /* If fabs(theta_delta) == M_PI: Always turn counter-clockwise */
+  /* Default-initialise *theta so it is unconditionally assigned before the
+   * read below; the branch chain then refines it (the chain is exhaustive,
+   * but cppcheck cannot prove the float-comparison coverage). */
+  *theta = pose1->data[2];
   if (fabs(theta_delta) < MEOS_EPSILON)
     *theta = pose1->data[2];
   else if (theta_delta > 0 && fabs(theta_delta) <= M_PI)
+    /* cppcheck-suppress uninitvar */
     *theta = pose1->data[2] + theta_delta*ratio;
   else if (theta_delta > 0 && fabs(theta_delta) > M_PI)
     *theta = pose2->data[2] + (2*M_PI - theta_delta)*(1 - ratio);
@@ -345,9 +350,13 @@ pose_diff_2d(Pose *pose1, Pose *pose2, double *x, double *y, double *theta)
   *y = pose2->data[1] - pose1->data[1];
   double theta_delta = pose2->data[2] - pose1->data[2];
   /* If fabs(theta_delta) == M_PI: Always turn counter-clockwise */
+  /* Default-initialise *theta (exhaustive chain below; cppcheck cannot prove
+   * the float-comparison coverage). */
+  *theta = theta_delta;
   if (fabs(theta_delta) < MEOS_EPSILON)
     *theta = theta_delta;
   else if (theta_delta > 0 && fabs(theta_delta) <= M_PI)
+    /* cppcheck-suppress uninitvar */
     *theta = theta_delta;
   else if (theta_delta > 0 && fabs(theta_delta) > M_PI)
     *theta = 2*M_PI - theta_delta;

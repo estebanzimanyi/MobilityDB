@@ -1631,7 +1631,8 @@ Stbox_extent_combinefn(PG_FUNCTION_ARGS)
     PG_RETURN_STBOX_P(box1);
   if (!box1 && box2)
     PG_RETURN_STBOX_P(box2);
-  /* Both boxes are not null */
+  /* Both boxes are not null (guaranteed by the three guards above) */
+  assert(box1 && box2);
   ensure_same_dimensionality(box1->flags, box2->flags);
   STBox *result = stbox_copy(box1);
   stbox_expand(box2, result);

@@ -14,4 +14,4 @@ meos/src/temporal/lifting.c:3027
 meos/src/temporal/tbox.c:1055
 meos/src/temporal/tbox.c:1068
 meos/src/temporal/temporal_aggfuncs.c:479
-meos/src/temporal/temporal_aggfuncs.c:657
+meos/src/temporal/temporal_aggfuncs.c:660

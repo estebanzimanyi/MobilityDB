@@ -526,8 +526,11 @@ tinstant_tagg(TInstant **instants1, int count1, TInstant **instants2,
     if (tofree)
       tofree1[nfree1++] = result[count - 1];
   }
-  /* Set the output parameters and return */
+  /* Set the output parameters and return. tofree/newcount/nfree are required
+   * (always non-null) out-params, dereferenced unconditionally here; the
+   * earlier `if (tofree)` only gates optional bookkeeping. */
   *newcount = count;
+  /* cppcheck-suppress nullPointerRedundantCheck */
   *tofree = tofree1;
   *nfree = nfree1;
   return result;
