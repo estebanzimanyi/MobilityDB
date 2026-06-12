@@ -11,6 +11,9 @@
 -- Temporal operations used:
 --   atTime(tgeompoint, tstzspan) → tgeompoint   (restrict to period)
 --   length(tgeompoint) → float8                  (Euclidean path length)
+--   round(float, integer) → float                (MobilityDB Float_round; the
+--     double round(double,int) DuckDB/Spark have natively, returning a double
+--     like them -- not PG core round(numeric,int), which pads to a numeric)
 
 WITH Distances AS (
   SELECT p.periodId, p.period, t.vehId,
@@ -19,7 +22,7 @@ WITH Distances AS (
   WHERE  overlaps(timeSpan(t.trip), p.period)
   GROUP  BY p.periodId, p.period, t.vehId
 )
-SELECT periodId, period, ROUND(MAX(dist)::numeric, 3) AS maxDist
+SELECT periodId, period, round(MAX(dist), 3) AS maxDist
 FROM   Distances
 GROUP  BY periodId, period
 ORDER  BY periodId;
