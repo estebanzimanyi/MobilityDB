@@ -52,6 +52,10 @@
 #include <float.h>
 #include <string.h>
 
+/* PostgreSQL */
+#include <postgres.h>
+#include <utils/timestamp.h>
+
 /* H3 */
 #include <h3api.h>
 

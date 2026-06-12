@@ -367,12 +367,12 @@ if(MEOS)
   message(STATUS "  Library file: '${CMAKE_INSTALL_LIBDIR}'")
   message(STATUS "  Include file: '${CMAKE_INSTALL_INCLUDEDIR}'")
 endif()
-if(H3)
+if(MEOS AND H3)
   install(
     FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_h3.h"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 endif()
-if(POINTCLOUD)
+if(MEOS AND POINTCLOUD)
   install(
     FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_pointcloud.h"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
