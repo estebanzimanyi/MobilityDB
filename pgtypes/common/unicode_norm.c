@@ -95,6 +95,10 @@ get_code_entry(pg_wchar code)
 		return NULL;
 
 	/* Success! */
+	/* cppcheck-suppress returnDanglingLifetime */
+	/* MEOS: decompinfo.decomps is a pointer copied from the static const
+	 * UnicodeDecompInfo table, so this addresses static storage, not the
+	 * local struct; the lifetime is the program's. */
 	return &decompinfo.decomps[h];
 #else
 	return bsearch(&(code),

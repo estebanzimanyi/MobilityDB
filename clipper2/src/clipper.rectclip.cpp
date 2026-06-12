@@ -334,6 +334,10 @@ namespace Clipper2Lib {
       --curr_idx;
       OutPt2* prevOp = results_[curr_idx];
       if (prevOp->pt == pt)  return prevOp;
+      /* cppcheck-suppress returnDanglingLifetime */
+      /* MEOS: result points into op_container_, a RectClip64 member with
+       * pointer-stable storage, so it outlives this call (not a dangling
+       * reference to a local). */
       result = &op_container_.emplace_back(OutPt2());
       result->owner_idx = curr_idx;
       result->pt = pt;
@@ -343,6 +347,9 @@ namespace Clipper2Lib {
       result->prev = prevOp;
       results_[curr_idx] = result;
     }
+    /* cppcheck-suppress returnDanglingLifetime */
+    /* MEOS: result points into the pointer-stable member containers
+     * op_container_ / results_, so it outlives this call. */
     return result;
   }
 
