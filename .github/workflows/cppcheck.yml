@@ -74,13 +74,6 @@ jobs:
             --project=build/compile_commands.json \
             --enable=warning,style,performance,portability \
             --inline-suppr \
-            --suppress='*:*/postgres/*' \
-            --suppress='*:postgres/*' \
-            --suppress='*:*/postgis/*' \
-            --suppress='*:postgis/*' \
-            --suppress='*:*/pgtypes/*' \
-            --suppress='*:pgtypes/*' \
-            --suppress='*:h3-pg/*' \
             --suppress='*:*lwin_wkt_lex.c' \
             --suppress='*:*lwin_wkt_lex.l' \
             --suppress='*:*lwin_wkt_parse.c' \
@@ -212,12 +205,26 @@ jobs:
               "returnDanglingLifetime",
           }
 
-          # Vendored upstream — already excluded from cppcheck via the
-          # --suppress flags, but defence-in-depth here in case a path
-          # slips the suppress glob. Cppcheck sometimes reports paths
-          # by basename (especially flex/bison-generated files), so we
-          # also match a list of vendored basenames.
-          VENDORED = ("postgres/", "postgis/", "pgtypes/", "h3-pg/")
+          # Tiered policy for VENDORED trees (postgis / pgtypes / h3-pg).
+          # These ARE now scanned (no blanket --suppress) so problems are
+          # visible, but we only *block* on the high-confidence bug classes
+          # there — those catch real defects (e.g. the pg_locale /
+          # pg_conversion fd leaks) with a low false-positive rate. The other
+          # CRITICAL ids (nullPointerRedundantCheck on PostGIS, the
+          # NaN-via-zero-divide duplicateExpression, iterator-always-runs
+          # nullPointer) are upstream idioms; in vendored code we REPORT them
+          # (GitHub notice annotations) instead of blocking, to avoid forcing
+          # divergence from upstream over false positives. A real vendored fix
+          # is marked /* MEOS */ so it is greppable and reportable upstream.
+          # Non-vendored MEOS/MobilityDB code still blocks on ALL of CRITICAL.
+          HIGH_CONFIDENCE = {
+              "CastIntegerToAddressAtReturn",
+              "incorrectLogicOperator",
+              "uninitvar",
+              "resourceLeak",
+              "returnDanglingLifetime",
+          }
+          VENDORED = ("postgres/", "postgis/", "pgtypes/", "h3-pg/", "clipper2/")
           VENDORED_BASENAMES = (
               # liblwgeom flex/bison-generated parsers
               "lwin_wkt_lex.c", "lwin_wkt_lex.l",
@@ -226,6 +233,7 @@ jobs:
 
           root = ET.parse("cppcheck.xml").getroot()
           violations = []
+          reported = []  # vendored FP-prone findings — visibility only
           for err in root.iter("error"):
               rid = err.get("id", "")
               if rid not in CRITICAL:
@@ -239,22 +247,25 @@ jobs:
                       if norm.startswith(prefix):
                           norm = norm[len(prefix):]
                           break
-                  if norm.startswith(VENDORED):
-                      continue
-                  # Also check basename in case cppcheck stripped path
-                  # (happens for flex/bison-generated postgis files).
+                  # flex/bison-generated parsers: never block or report.
                   if norm.split("/")[-1] in VENDORED_BASENAMES:
                       continue
-                  violations.append((
-                      rid, norm, loc.get("line", "?"),
-                      err.get("msg", "")[:140]))
+                  entry = (rid, norm, loc.get("line", "?"),
+                           err.get("msg", "")[:140])
+                  if norm.startswith(VENDORED) and rid not in HIGH_CONFIDENCE:
+                      reported.append(entry)   # vendored idiom — report only
+                  else:
+                      violations.append(entry)  # block
 
+          for rid, path, line, msg in reported:
+              print(f"::notice file={path},line={line}::[vendored, report-only] {rid}: {msg}")
           if violations:
-              print(f"::error::cppcheck found {len(violations)} critical-pattern violations:")
+              print(f"::error::cppcheck found {len(violations)} blocking critical-pattern violations:")
               for rid, path, line, msg in violations:
                   print(f"::error file={path},line={line}::{rid}: {msg}")
               sys.exit(1)
-          print(f"cppcheck: no critical-pattern violations in MEOS/MobilityDB code.")
+          print(f"cppcheck: no blocking critical-pattern violations "
+                f"({len(reported)} vendored report-only).")
           PYEOF
 
       - name: Upload SARIF to GitHub Code Scanning
