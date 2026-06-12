@@ -53,13 +53,16 @@ extern DateADT date_in(const char *str);
 extern char *date_out(DateADT date);
 extern int interval_cmp(const Interval *interv1, const Interval *interv2);
 extern Interval *interval_in(const char *str, int32 typmod);
+extern Interval *pg_interval_in(const char *str, int32 typmod);
 extern Interval *interval_make(int32 years, int32 months, int32 weeks, int32 days, int32 hours, int32 mins, double secs);
 extern char *interval_out(const Interval *interv);
+extern char *pg_interval_out(const Interval *interv);
 extern TimeADT time_in(const char *str, int32 typmod);
 extern char *time_out(TimeADT time);
 extern Timestamp timestamp_in(const char *str, int32 typmod);
 extern char *timestamp_out(Timestamp ts);
 extern TimestampTz timestamptz_in(const char *str, int32 typmod);
+extern TimestampTz pg_timestamptz_in(const char *str, int32 typmod);
 extern char *timestamptz_out(TimestampTz tstz);
 
 #endif /* POSTGRES_H */
