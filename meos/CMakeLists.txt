@@ -256,6 +256,7 @@ if(MEOS)
   file(READ "${CMAKE_SOURCE_DIR}/meos/include/meos.h" MEOS_H)
   file(READ "${CMAKE_SOURCE_DIR}/meos/include/meos_internal.h" MEOS_INTERNAL_H)
   file(READ "${CMAKE_SOURCE_DIR}/meos/include/meos_error.h" MEOS_ERROR_H)
+  file(READ "${CMAKE_SOURCE_DIR}/meos/include/meos_tls.h" MEOS_TLS_H)
   file(READ "${CMAKE_SOURCE_DIR}/meos/include/meos_geo.h" MEOS_GEO_H)
   file(READ "${CMAKE_SOURCE_DIR}/meos/include/meos_json.h" MEOS_JSON_H)
   file(READ "${CMAKE_SOURCE_DIR}/meos/include/postgres_ext_defs.in.h" POSTGRES_EXT_DEFS_IN_H)
@@ -264,7 +265,10 @@ if(MEOS)
   # Generate meos_export.h
   string(REPLACE "#if MEOS\n#include \"postgres_int_defs.h\"\n#else\n#include <postgres.h>\n#include <utils/date.h>\n#include <utils/timestamp.h>\n#endif" "${POSTGRES_EXT_DEFS_IN_H}" MEOS_EXP_H1 "${MEOS_H}")
   string(REPLACE "#ifndef __MEOS_ERROR_H__\n#define __MEOS_ERROR_H__\n" "" MEOS_EXP_H2 "${MEOS_EXP_H1}")
-  string(REPLACE "#include \"meos_error.h\"\n" "${MEOS_ERROR_H}" MEOS_EXP_H "${MEOS_EXP_H2}")
+  string(REPLACE "#include \"meos_error.h\"\n" "${MEOS_ERROR_H}" MEOS_EXP_H3 "${MEOS_EXP_H2}")
+  # Inline meos_tls.h too so the installed/standalone meos.h is self-contained
+  # (it is #included by meos.h but, like meos_error.h, never installed).
+  string(REPLACE "#include \"meos_tls.h\"\n" "${MEOS_TLS_H}" MEOS_EXP_H "${MEOS_EXP_H3}")
   file(WRITE "${CMAKE_BINARY_DIR}/meos_export.h" "${MEOS_EXP_H}")
 
   # Generate meos_internal_export.h
