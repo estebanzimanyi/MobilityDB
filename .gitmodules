@@ -1,0 +1,3 @@
+[submodule "doc/rfc/sql-portability/berlinmod"]
+	path = doc/rfc/sql-portability/berlinmod
+	url = https://github.com/estebanzimanyi/berlinmod-portability.git
