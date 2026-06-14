@@ -170,122 +170,386 @@ CREATE FUNCTION overafter(stbox, stbox)
   AS 'MODULE_PATHNAME', 'Overafter_stbox_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(geometry, tgeometry)
+CREATE FUNCTION everEq(geometry, tgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_geo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(geography, tgeography)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_geo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(geometry, tgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_geo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(geography, tgeography)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_geo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(geometry, tgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_geo_tgeo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(geography, tgeography)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_geo_tgeo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(geometry, tgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_geo_tgeo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(geography, tgeography)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_geo_tgeo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(tgeometry, geometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_tgeo_geo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(tgeography, geography)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_tgeo_geo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(tgeometry, geometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_tgeo_geo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(tgeography, geography)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_tgeo_geo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(tgeometry, geometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_tgeo_geo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(tgeography, geography)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_tgeo_geo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(tgeometry, geometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_tgeo_geo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(tgeography, geography)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_tgeo_geo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(tgeometry, tgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_tgeo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(tgeography, tgeography)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_tgeo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(tgeography, tgeography)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_tgeo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(tgeometry, tgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_tgeo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(tgeometry, tgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_tgeo_tgeo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(tgeography, tgeography)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_tgeo_tgeo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(tgeometry, tgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_tgeo_tgeo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(tgeography, tgeography)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_tgeo_tgeo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tempEq(geometry, tgeometry)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_geo_tgeo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(tgeometry, geometry)
+CREATE FUNCTION tempEq(tgeometry, geometry)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_tgeo_geo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(tgeometry, tgeometry)
+CREATE FUNCTION tempEq(tgeometry, tgeometry)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(geography, tgeography)
+CREATE FUNCTION tempEq(geography, tgeography)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_geo_tgeo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(tgeography, geography)
+CREATE FUNCTION tempEq(tgeography, geography)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_tgeo_geo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(tgeography, tgeography)
+CREATE FUNCTION tempEq(tgeography, tgeography)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(geometry, tgeometry)
+CREATE FUNCTION tempNe(geometry, tgeometry)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_geo_tgeo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(tgeometry, geometry)
+CREATE FUNCTION tempNe(tgeometry, geometry)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_tgeo_geo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(tgeometry, tgeometry)
+CREATE FUNCTION tempNe(tgeometry, tgeometry)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(geography, tgeography)
+CREATE FUNCTION tempNe(geography, tgeography)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_geo_tgeo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(tgeography, geography)
+CREATE FUNCTION tempNe(tgeography, geography)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_tgeo_geo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(tgeography, tgeography)
+CREATE FUNCTION tempNe(tgeography, tgeography)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(geometry, tgeompoint)
+CREATE FUNCTION everEq(geometry, tgeompoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_geo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(geography, tgeogpoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_geo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(geography, tgeogpoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_geo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(geometry, tgeompoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_geo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(geometry, tgeompoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_geo_tgeo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(geography, tgeogpoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_geo_tgeo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(geometry, tgeompoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_geo_tgeo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(geography, tgeogpoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_geo_tgeo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(tgeompoint, geometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_tgeo_geo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(tgeogpoint, geography)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_tgeo_geo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(tgeogpoint, geography)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_tgeo_geo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(tgeompoint, geometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_tgeo_geo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(tgeompoint, geometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_tgeo_geo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(tgeogpoint, geography)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_tgeo_geo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(tgeompoint, geometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_tgeo_geo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(tgeogpoint, geography)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_tgeo_geo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(tgeompoint, tgeompoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_tgeo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(tgeogpoint, tgeogpoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_tgeo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(tgeogpoint, tgeogpoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_tgeo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(tgeompoint, tgeompoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_tgeo_tgeo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(tgeompoint, tgeompoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_tgeo_tgeo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(tgeogpoint, tgeogpoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_tgeo_tgeo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(tgeompoint, tgeompoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_tgeo_tgeo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(tgeogpoint, tgeogpoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_tgeo_tgeo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tempEq(geometry, tgeompoint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_geo_tgeo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(tgeompoint, geometry)
+CREATE FUNCTION tempEq(tgeompoint, geometry)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_tgeo_geo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(tgeompoint, tgeompoint)
+CREATE FUNCTION tempEq(tgeompoint, tgeompoint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(geography, tgeogpoint)
+CREATE FUNCTION tempEq(geography, tgeogpoint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_geo_tgeo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(tgeogpoint, geography)
+CREATE FUNCTION tempEq(tgeogpoint, geography)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_tgeo_geo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(tgeogpoint, tgeogpoint)
+CREATE FUNCTION tempEq(tgeogpoint, tgeogpoint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(geometry, tgeompoint)
+CREATE FUNCTION tempNe(geometry, tgeompoint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_geo_tgeo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(tgeompoint, geometry)
+CREATE FUNCTION tempNe(tgeompoint, geometry)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_tgeo_geo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(tgeompoint, tgeompoint)
+CREATE FUNCTION tempNe(tgeompoint, tgeompoint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(geography, tgeogpoint)
+CREATE FUNCTION tempNe(geography, tgeogpoint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_geo_tgeo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(tgeogpoint, geography)
+CREATE FUNCTION tempNe(tgeogpoint, geography)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_tgeo_geo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(tgeogpoint, tgeogpoint)
+CREATE FUNCTION tempNe(tgeogpoint, tgeogpoint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;

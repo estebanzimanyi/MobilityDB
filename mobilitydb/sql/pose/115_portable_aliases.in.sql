@@ -45,32 +45,98 @@ CREATE FUNCTION overlaps(poseset, poseset)
   AS 'MODULE_PATHNAME', 'Overlaps_set_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(pose, tpose)
+CREATE FUNCTION everEq(pose, tpose)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_pose_tpose'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(pose, tpose)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_pose_tpose'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(pose, tpose)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_pose_tpose'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(pose, tpose)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_pose_tpose'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(tpose, pose)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_tpose_pose'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(tpose, pose)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_tpose_pose'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(tpose, pose)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_tpose_pose'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(tpose, pose)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_tpose_pose'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(tpose, tpose)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_temporal_temporal'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(tpose, tpose)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_temporal_temporal'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(tpose, tpose)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(tpose, tpose)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tempEq(pose, tpose)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_pose_tpose'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(tpose, pose)
+CREATE FUNCTION tempEq(tpose, pose)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_tpose_pose'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(tpose, tpose)
+CREATE FUNCTION tempEq(tpose, tpose)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(pose, tpose)
+CREATE FUNCTION tempNe(pose, tpose)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_pose_tpose'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(tpose, pose)
+CREATE FUNCTION tempNe(tpose, pose)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_tpose_pose'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(tpose, tpose)
+CREATE FUNCTION tempNe(tpose, tpose)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;

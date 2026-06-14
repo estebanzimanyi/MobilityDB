@@ -140,6 +140,15 @@ CREATE FUNCTION asEWKT(tgeogpoint[], maxdecimaldigits int4 DEFAULT 15)
   AS 'MODULE_PATHNAME', 'Spatialarr_as_ewkt'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION asEWKT(geometry, maxdecimaldigits int4 DEFAULT 15)
+  RETURNS text
+  AS 'SELECT @extschema@.ST_AsEWKT($1, $2)'
+  LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION asEWKT(geography, maxdecimaldigits int4 DEFAULT 15)
+  RETURNS text
+  AS 'SELECT @extschema@.ST_AsEWKT($1, $2)'
+  LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
+
 CREATE FUNCTION asEWKT(geometry[], maxdecimaldigits int4 DEFAULT 15)
   RETURNS text[]
   AS 'MODULE_PATHNAME', 'Spatialarr_as_ewkt'

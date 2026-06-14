@@ -15,32 +15,98 @@
  * behaviour is identical to the operator (RFC: doc/rfc/sql-portability).
  */
 
-CREATE FUNCTION teq(geometry, trgeometry)
+CREATE FUNCTION everEq(geometry, trgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_geo_trgeometry'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(geometry, trgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_geo_trgeometry'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(geometry, trgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_geo_trgeometry'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(geometry, trgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_geo_trgeometry'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(trgeometry, geometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_trgeometry_geo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(trgeometry, geometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_trgeometry_geo'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(trgeometry, geometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_trgeometry_geo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(trgeometry, geometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_trgeometry_geo'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(trgeometry, trgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_trgeometry_trgeometry'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(trgeometry, trgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_trgeometry_trgeometry'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(trgeometry, trgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_trgeometry_trgeometry'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(trgeometry, trgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_trgeometry_trgeometry'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tempEq(geometry, trgeometry)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_geo_trgeometry'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(trgeometry, geometry)
+CREATE FUNCTION tempEq(trgeometry, geometry)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_trgeometry_geo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(trgeometry, trgeometry)
+CREATE FUNCTION tempEq(trgeometry, trgeometry)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(geometry, trgeometry)
+CREATE FUNCTION tempNe(geometry, trgeometry)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_geo_trgeometry'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(trgeometry, geometry)
+CREATE FUNCTION tempNe(trgeometry, geometry)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_trgeometry_geo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(trgeometry, trgeometry)
+CREATE FUNCTION tempNe(trgeometry, trgeometry)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
@@ -230,6 +296,26 @@ CREATE FUNCTION overabove(stbox, trgeometry)
   AS 'MODULE_PATHNAME', 'Overabove_stbox_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION front(stbox, trgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Front_stbox_tspatial'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overfront(stbox, trgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overfront_stbox_tspatial'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION back(stbox, trgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Back_stbox_tspatial'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overback(stbox, trgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overback_stbox_tspatial'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 CREATE FUNCTION before(stbox, trgeometry)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Before_stbox_tspatial'
@@ -310,6 +396,26 @@ CREATE FUNCTION overabove(trgeometry, stbox)
   AS 'MODULE_PATHNAME', 'Overabove_tspatial_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION front(trgeometry, stbox)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Front_tspatial_stbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overfront(trgeometry, stbox)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overfront_tspatial_stbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION back(trgeometry, stbox)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Back_tspatial_stbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overback(trgeometry, stbox)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overback_tspatial_stbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 CREATE FUNCTION before(trgeometry, stbox)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Before_tspatial_stbox'
@@ -368,6 +474,26 @@ CREATE FUNCTION above(trgeometry, trgeometry)
 CREATE FUNCTION overabove(trgeometry, trgeometry)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Overabove_tspatial_tspatial'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION front(trgeometry, trgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Front_tspatial_tspatial'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overfront(trgeometry, trgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overfront_tspatial_tspatial'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION back(trgeometry, trgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Back_tspatial_tspatial'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overback(trgeometry, trgeometry)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overback_tspatial_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION before(trgeometry, trgeometry)

@@ -61,6 +61,15 @@ CREATE FUNCTION setSRID(stbox, integer)
   RETURNS stbox
   AS 'MODULE_PATHNAME', 'Stbox_set_srid'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION transform(geometry, integer)
+  RETURNS geometry
+  AS 'SELECT @extschema@.ST_Transform($1, $2)'
+  LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION transform(geography, integer)
+  RETURNS geography
+  AS 'SELECT @extschema@.ST_Transform($1::geometry, $2)::geography'
+  LANGUAGE SQL IMMUTABLE STRICT PARALLEL SAFE;
+
 CREATE FUNCTION transform(stbox, integer)
   RETURNS stbox
   AS 'MODULE_PATHNAME', 'Stbox_transform'

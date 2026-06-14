@@ -36,8 +36,9 @@ list(APPEND LOCAL_FILES
   073_tgeo_gist
   074_tgeo_spgist
   076_tgeo_analytics
-  079_portable_aliases
   )
+
+append_portable_aliases()
 
 foreach (f ${LOCAL_FILES})
   process_file(${f} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})

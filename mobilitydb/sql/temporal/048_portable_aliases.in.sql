@@ -1990,302 +1990,1190 @@ CREATE FUNCTION overafter(tbox, tbox)
   AS 'MODULE_PATHNAME', 'Overafter_tbox_tbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(boolean, tbool)
+CREATE FUNCTION everEq(boolean, tbool)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(integer, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_base_temporal'
+  SUPPORT tnumber_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(bigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_base_temporal'
+  SUPPORT tnumber_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(float, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_base_temporal'
+  SUPPORT tnumber_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(text, ttext)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(tbool, boolean)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(tint, integer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_temporal_base'
+  SUPPORT tnumber_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(tbigint, bigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_temporal_base'
+  SUPPORT tnumber_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(tfloat, float)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_temporal_base'
+  SUPPORT tnumber_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(ttext, text)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(boolean, tbool)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(integer, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(bigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(float, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(text, ttext)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(tbool, boolean)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(tint, integer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(tbigint, bigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(tfloat, float)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(ttext, text)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(boolean, tbool)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(integer, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_base_temporal'
+  SUPPORT tnumber_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(bigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_base_temporal'
+  SUPPORT tnumber_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(float, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_base_temporal'
+  SUPPORT tnumber_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(text, ttext)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(tbool, boolean)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(tint, integer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_temporal_base'
+  SUPPORT tnumber_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(tbigint, bigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_temporal_base'
+  SUPPORT tnumber_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(tfloat, float)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_temporal_base'
+  SUPPORT tnumber_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(ttext, text)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(boolean, tbool)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(integer, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(bigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(float, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(text, ttext)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(tbool, boolean)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(tint, integer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(tbigint, bigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(tfloat, float)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(ttext, text)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everLt(integer, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_lt_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everLt(bigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_lt_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everLt(float, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_lt_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everLt(text, ttext)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_lt_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everLt(tint, integer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_lt_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everLt(tbigint, bigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_lt_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everLt(tfloat, float)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_lt_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everLt(ttext, text)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_lt_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everLe(integer, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_le_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everLe(bigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_le_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everLe(float, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_le_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everLe(text, ttext)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_le_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everLe(tint, integer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_le_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everLe(tbigint, bigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_le_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everLe(tfloat, float)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_le_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everLe(ttext, text)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_le_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everGt(integer, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_gt_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everGt(bigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_gt_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everGt(float, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_gt_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everGt(text, ttext)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_gt_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everGt(tint, integer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_gt_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everGt(tbigint, bigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_gt_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everGt(tfloat, float)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_gt_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everGt(ttext, text)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_gt_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everGe(integer, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ge_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everGe(bigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ge_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everGe(float, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ge_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everGe(text, ttext)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ge_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everGe(tint, integer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ge_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everGe(tbigint, bigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ge_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everGe(tfloat, float)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ge_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everGe(ttext, text)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ge_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysLt(integer, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_lt_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysLt(bigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_lt_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysLt(float, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_lt_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysLt(text, ttext)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_lt_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysLt(tint, integer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_lt_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysLt(tbigint, bigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_lt_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysLt(tfloat, float)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_lt_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysLt(ttext, text)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_lt_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysLe(integer, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_le_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysLe(bigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_le_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysLe(float, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_le_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysLe(text, ttext)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_le_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysLe(tint, integer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_le_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysLe(tbigint, bigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_le_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysLe(tfloat, float)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_le_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysLe(ttext, text)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_le_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysGt(integer, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_gt_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysGt(bigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_gt_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysGt(float, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_gt_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysGt(text, ttext)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_gt_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysGt(tint, integer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_gt_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysGt(tbigint, bigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_gt_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysGt(tfloat, float)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_gt_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysGt(ttext, text)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_gt_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysGe(integer, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ge_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysGe(bigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ge_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysGe(float, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ge_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysGe(text, ttext)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ge_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysGe(tint, integer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ge_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysGe(tbigint, bigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ge_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysGe(tfloat, float)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ge_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysGe(ttext, text)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ge_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(tbool, tbool)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(tint, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_temporal_temporal'
+  SUPPORT tnumber_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(tbigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_temporal_temporal'
+  SUPPORT tnumber_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(tfloat, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_temporal_temporal'
+  SUPPORT tnumber_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(ttext, ttext)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(tbool, tbool)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(tint, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_temporal_temporal'
+  SUPPORT tnumber_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(tbigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_temporal_temporal'
+  SUPPORT tnumber_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(tfloat, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_temporal_temporal'
+  SUPPORT tnumber_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(ttext, ttext)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(tbool, tbool)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(tint, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(tbigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(tfloat, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(ttext, ttext)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(tbool, tbool)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(tint, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(tbigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(tfloat, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(ttext, ttext)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everLt(tint, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_lt_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everLt(tbigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_lt_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everLt(tfloat, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_lt_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everLt(ttext, ttext)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_lt_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everLe(tint, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_le_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everLe(tbigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_le_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everLe(tfloat, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_le_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everLe(ttext, ttext)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_le_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysLt(tint, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_lt_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysLt(tbigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_lt_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysLt(tfloat, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_lt_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysLt(ttext, ttext)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_lt_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysLe(tint, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_le_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysLe(tbigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_le_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysLe(tfloat, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_le_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysLe(ttext, ttext)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_le_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everGt(tint, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_gt_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everGt(tbigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_gt_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everGt(tfloat, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_gt_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everGt(ttext, ttext)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_gt_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everGe(tint, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ge_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everGe(tbigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ge_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everGe(tfloat, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ge_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everGe(ttext, ttext)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ge_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysGt(tint, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_gt_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysGt(tbigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_gt_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysGt(tfloat, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_gt_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysGt(ttext, ttext)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_gt_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysGe(tint, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ge_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysGe(tbigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ge_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysGe(tfloat, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ge_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysGe(ttext, ttext)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ge_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tempEq(boolean, tbool)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_base_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(tbool, boolean)
+CREATE FUNCTION tempEq(tbool, boolean)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_temporal_base'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(tbool, tbool)
+CREATE FUNCTION tempEq(tbool, tbool)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(integer, tint)
+CREATE FUNCTION tempEq(integer, tint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_base_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(tint, integer)
+CREATE FUNCTION tempEq(tint, integer)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_temporal_base'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(tint, tint)
+CREATE FUNCTION tempEq(tint, tint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(float, tfloat)
+CREATE FUNCTION tempEq(bigint, tbigint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_base_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(tfloat, float)
+CREATE FUNCTION tempEq(tbigint, bigint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_temporal_base'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(tfloat, tfloat)
+CREATE FUNCTION tempEq(tbigint, tbigint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(text, ttext)
+CREATE FUNCTION tempEq(float, tfloat)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_base_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(ttext, text)
+CREATE FUNCTION tempEq(tfloat, float)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_temporal_base'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(ttext, ttext)
+CREATE FUNCTION tempEq(tfloat, tfloat)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(boolean, tbool)
+CREATE FUNCTION tempEq(text, ttext)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Teq_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tempEq(ttext, text)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Teq_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tempEq(ttext, ttext)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Teq_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tempNe(boolean, tbool)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_base_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(tbool, boolean)
+CREATE FUNCTION tempNe(tbool, boolean)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_temporal_base'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(tbool, tbool)
+CREATE FUNCTION tempNe(tbool, tbool)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(integer, tint)
+CREATE FUNCTION tempNe(integer, tint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_base_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(tint, integer)
+CREATE FUNCTION tempNe(tint, integer)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_temporal_base'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(tint, tint)
+CREATE FUNCTION tempNe(tint, tint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(float, tfloat)
+CREATE FUNCTION tempNe(bigint, tbigint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_base_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(tfloat, float)
+CREATE FUNCTION tempNe(tbigint, bigint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_temporal_base'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(tfloat, tfloat)
+CREATE FUNCTION tempNe(tbigint, tbigint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(text, ttext)
+CREATE FUNCTION tempNe(float, tfloat)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_base_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(ttext, text)
+CREATE FUNCTION tempNe(tfloat, float)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_temporal_base'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(ttext, ttext)
+CREATE FUNCTION tempNe(tfloat, tfloat)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tlt(integer, tint)
+CREATE FUNCTION tempNe(text, ttext)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Tne_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tempNe(ttext, text)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Tne_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tempNe(ttext, ttext)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Tne_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tempLt(integer, tint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tlt_base_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tlt(tint, integer)
+CREATE FUNCTION tempLt(tint, integer)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tlt_temporal_base'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tlt(tint, tint)
+CREATE FUNCTION tempLt(tint, tint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tlt_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tlt(float, tfloat)
+CREATE FUNCTION tempLt(bigint, tbigint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tlt_base_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tlt(tfloat, float)
+CREATE FUNCTION tempLt(tbigint, bigint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tlt_temporal_base'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tlt(tfloat, tfloat)
+CREATE FUNCTION tempLt(tbigint, tbigint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tlt_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tlt(text, ttext)
+CREATE FUNCTION tempLt(float, tfloat)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tlt_base_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tlt(ttext, text)
+CREATE FUNCTION tempLt(tfloat, float)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tlt_temporal_base'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tlt(ttext, ttext)
+CREATE FUNCTION tempLt(tfloat, tfloat)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tlt_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tgt(integer, tint)
+CREATE FUNCTION tempLt(text, ttext)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Tlt_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tempLt(ttext, text)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Tlt_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tempLt(ttext, ttext)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Tlt_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tempGt(integer, tint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tgt_base_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tgt(tint, integer)
+CREATE FUNCTION tempGt(tint, integer)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tgt_temporal_base'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tgt(tint, tint)
+CREATE FUNCTION tempGt(tint, tint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tgt_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tgt(float, tfloat)
+CREATE FUNCTION tempGt(bigint, tbigint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tgt_base_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tgt(tfloat, float)
+CREATE FUNCTION tempGt(tbigint, bigint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tgt_temporal_base'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tgt(tfloat, tfloat)
+CREATE FUNCTION tempGt(tbigint, tbigint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tgt_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tgt(text, ttext)
+CREATE FUNCTION tempGt(float, tfloat)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tgt_base_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tgt(ttext, text)
+CREATE FUNCTION tempGt(tfloat, float)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tgt_temporal_base'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tgt(ttext, ttext)
+CREATE FUNCTION tempGt(tfloat, tfloat)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tgt_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tle(integer, tint)
+CREATE FUNCTION tempGt(text, ttext)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Tgt_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tempGt(ttext, text)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Tgt_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tempGt(ttext, ttext)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Tgt_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tempLe(integer, tint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tle_base_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tle(tint, integer)
+CREATE FUNCTION tempLe(tint, integer)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tle_temporal_base'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tle(tint, tint)
+CREATE FUNCTION tempLe(tint, tint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tle_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tle(float, tfloat)
+CREATE FUNCTION tempLe(bigint, tbigint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tle_base_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tle(tfloat, float)
+CREATE FUNCTION tempLe(tbigint, bigint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tle_temporal_base'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tle(tfloat, tfloat)
+CREATE FUNCTION tempLe(tbigint, tbigint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tle_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tle(text, ttext)
+CREATE FUNCTION tempLe(float, tfloat)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tle_base_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tle(ttext, text)
+CREATE FUNCTION tempLe(tfloat, float)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tle_temporal_base'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tle(ttext, ttext)
+CREATE FUNCTION tempLe(tfloat, tfloat)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tle_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tge(integer, tint)
+CREATE FUNCTION tempLe(text, ttext)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Tle_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tempLe(ttext, text)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Tle_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tempLe(ttext, ttext)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Tle_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tempGe(integer, tint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tge_base_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tge(tint, integer)
+CREATE FUNCTION tempGe(tint, integer)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tge_temporal_base'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tge(tint, tint)
+CREATE FUNCTION tempGe(tint, tint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tge_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tge(float, tfloat)
+CREATE FUNCTION tempGe(bigint, tbigint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tge_base_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tge(tfloat, float)
+CREATE FUNCTION tempGe(tbigint, bigint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tge_temporal_base'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tge(tfloat, tfloat)
+CREATE FUNCTION tempGe(tbigint, tbigint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tge_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tge(text, ttext)
+CREATE FUNCTION tempGe(float, tfloat)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tge_base_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tge(ttext, text)
+CREATE FUNCTION tempGe(tfloat, float)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tge_temporal_base'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tge(ttext, ttext)
+CREATE FUNCTION tempGe(tfloat, tfloat)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Tge_temporal_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tempGe(text, ttext)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Tge_base_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tempGe(ttext, text)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Tge_temporal_base'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tempGe(ttext, ttext)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tge_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
@@ -2536,6 +3424,181 @@ CREATE FUNCTION adjacent(tint, tbox)
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION adjacent(tint, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Adjacent_tnumber_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overlaps(tstzspan, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overlaps_tstzspan_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overlaps(tbigint, tstzspan)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overlaps_temporal_tstzspan'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overlaps(bigintspan, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overlaps_numspan_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overlaps(tbigint, bigintspan)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overlaps_tnumber_numspan'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overlaps(tbox, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overlaps_tbox_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overlaps(tbigint, tbox)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overlaps_tnumber_tbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overlaps(tbigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overlaps_tnumber_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION contains(tstzspan, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Contains_tstzspan_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION contains(tbigint, tstzspan)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Contains_temporal_tstzspan'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION contains(bigintspan, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Contains_numspan_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION contains(tbigint, bigintspan)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Contains_tnumber_numspan'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION contains(tbox, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Contains_tbox_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION contains(tbigint, tbox)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Contains_tnumber_tbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION contains(tbigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Contains_tnumber_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION contained(tstzspan, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Contained_tstzspan_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION contained(tbigint, tstzspan)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Contained_temporal_tstzspan'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION contained(bigintspan, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Contained_numspan_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION contained(tbigint, bigintspan)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Contained_tnumber_numspan'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION contained(tbox, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Contained_tbox_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION contained(tbigint, tbox)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Contained_tnumber_tbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION contained(tbigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Contained_tnumber_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION same(tstzspan, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Same_tstzspan_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION same(tbigint, tstzspan)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Same_temporal_tstzspan'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION same(bigintspan, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Same_numspan_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION same(tbigint, bigintspan)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Same_tnumber_numspan'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION same(tbox, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Same_tbox_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION same(tbigint, tbox)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Same_tnumber_tbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION same(tbigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Same_tnumber_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION adjacent(tstzspan, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Adjacent_tstzspan_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION adjacent(tbigint, tstzspan)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Adjacent_temporal_tstzspan'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION adjacent(bigintspan, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Adjacent_numspan_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION adjacent(tbigint, bigintspan)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Adjacent_tnumber_numspan'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION adjacent(tbox, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Adjacent_tbox_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION adjacent(tbigint, tbox)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Adjacent_tnumber_tbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION adjacent(tbigint, tbigint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Adjacent_tnumber_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
@@ -2830,6 +3893,26 @@ CREATE FUNCTION overafter(tstzspan, tint)
   AS 'MODULE_PATHNAME', 'Overafter_tstzspan_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION before(tstzspan, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Before_tstzspan_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overbefore(tstzspan, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overbefore_tstzspan_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION after(tstzspan, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'After_tstzspan_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overafter(tstzspan, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overafter_tstzspan_temporal'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 CREATE FUNCTION before(tstzspan, tfloat)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Before_tstzspan_temporal'
@@ -2890,6 +3973,26 @@ CREATE FUNCTION overright(intspan, tint)
   AS 'MODULE_PATHNAME', 'Overright_numspan_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION left(intspan, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Left_numspan_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overleft(intspan, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overleft_numspan_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION right(intspan, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Right_numspan_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overright(intspan, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overright_numspan_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 CREATE FUNCTION left(intspan, tfloat)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Left_numspan_tnumber'
@@ -2910,6 +4013,66 @@ CREATE FUNCTION overright(intspan, tfloat)
   AS 'MODULE_PATHNAME', 'Overright_numspan_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
+CREATE FUNCTION left(bigintspan, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Left_numspan_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overleft(bigintspan, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overleft_numspan_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION right(bigintspan, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Right_numspan_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overright(bigintspan, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overright_numspan_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION left(bigintspan, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Left_numspan_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overleft(bigintspan, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overleft_numspan_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION right(bigintspan, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Right_numspan_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overright(bigintspan, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overright_numspan_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION left(bigintspan, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Left_numspan_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overleft(bigintspan, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overleft_numspan_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION right(bigintspan, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Right_numspan_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overright(bigintspan, tfloat)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overright_numspan_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 CREATE FUNCTION left(floatspan, tint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Left_numspan_tnumber'
@@ -2926,6 +4089,26 @@ CREATE FUNCTION right(floatspan, tint)
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION overright(floatspan, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overright_numspan_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION left(floatspan, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Left_numspan_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overleft(floatspan, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overleft_numspan_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION right(floatspan, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Right_numspan_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overright(floatspan, tbigint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Overright_numspan_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
@@ -2986,6 +4169,46 @@ CREATE FUNCTION after(tbox, tint)
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION overafter(tbox, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overafter_tbox_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION left(tbox, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Left_tbox_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overleft(tbox, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overleft_tbox_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION right(tbox, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Right_tbox_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overright(tbox, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overright_tbox_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION before(tbox, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Before_tbox_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overbefore(tbox, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overbefore_tbox_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION after(tbox, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'After_tbox_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overafter(tbox, tbigint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Overafter_tbox_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
@@ -3186,6 +4409,126 @@ CREATE FUNCTION after(tint, tint)
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION overafter(tint, tint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overafter_tnumber_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION before(tbigint, tstzspan)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Before_temporal_tstzspan'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overbefore(tbigint, tstzspan)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overbefore_temporal_tstzspan'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION after(tbigint, tstzspan)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'After_temporal_tstzspan'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overafter(tbigint, tstzspan)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overafter_temporal_tstzspan'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION left(tbigint, bigintspan)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Left_tnumber_numspan'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overleft(tbigint, bigintspan)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overleft_tnumber_numspan'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION right(tbigint, bigintspan)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Right_tnumber_numspan'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overright(tbigint, bigintspan)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overright_tnumber_numspan'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION left(tbigint, tbox)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Left_tnumber_tbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overleft(tbigint, tbox)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overleft_tnumber_tbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION right(tbigint, tbox)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Right_tnumber_tbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overright(tbigint, tbox)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overright_tnumber_tbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION before(tbigint, tbox)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Before_tnumber_tbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overbefore(tbigint, tbox)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overbefore_tnumber_tbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION after(tbigint, tbox)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'After_tnumber_tbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overafter(tbigint, tbox)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overafter_tnumber_tbox'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION left(tbigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Left_tnumber_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overleft(tbigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overleft_tnumber_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION right(tbigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Right_tnumber_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overright(tbigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overright_tnumber_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION before(tbigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Before_tnumber_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overbefore(tbigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Overbefore_tnumber_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION after(tbigint, tbigint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'After_tnumber_tnumber'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION overafter(tbigint, tbigint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Overafter_tnumber_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;

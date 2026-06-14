@@ -13,8 +13,9 @@ SET(LOCAL_FILES
   312_tnpoint_distance
   314_tnpoint_aggfuncs
   317_tnpoint_indexes
-  399_portable_aliases
   )
+
+append_portable_aliases()
 
 foreach (f ${LOCAL_FILES})
   process_file(${f} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})

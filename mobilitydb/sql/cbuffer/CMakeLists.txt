@@ -15,8 +15,9 @@ SET(LOCAL_FILES
   217_tcbuffer_analytics
   218_tcbuffer_tile
   # 153_tcbuffer_inout
-  299_portable_aliases
   )
+
+append_portable_aliases()
 
 foreach (f ${LOCAL_FILES})
   process_file(${f} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})

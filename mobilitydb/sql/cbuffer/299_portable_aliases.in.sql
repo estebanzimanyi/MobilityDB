@@ -45,32 +45,98 @@ CREATE FUNCTION overlaps(cbufferset, cbufferset)
   AS 'MODULE_PATHNAME', 'Overlaps_set_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(cbuffer, tcbuffer)
+CREATE FUNCTION everEq(cbuffer, tcbuffer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_cbuffer_tcbuffer'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(cbuffer, tcbuffer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_cbuffer_tcbuffer'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(cbuffer, tcbuffer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_cbuffer_tcbuffer'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(cbuffer, tcbuffer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_cbuffer_tcbuffer'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(tcbuffer, cbuffer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_tcbuffer_cbuffer'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(tcbuffer, cbuffer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_tcbuffer_cbuffer'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(tcbuffer, cbuffer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_tcbuffer_cbuffer'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(tcbuffer, cbuffer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_tcbuffer_cbuffer'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(tcbuffer, tcbuffer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_tcbuffer_tcbuffer'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(tcbuffer, tcbuffer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_tcbuffer_tcbuffer'
+  SUPPORT tspatial_supportfn
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(tcbuffer, tcbuffer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_tcbuffer_tcbuffer'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(tcbuffer, tcbuffer)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_tcbuffer_tcbuffer'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tempEq(cbuffer, tcbuffer)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_cbuffer_tcbuffer'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(tcbuffer, cbuffer)
+CREATE FUNCTION tempEq(tcbuffer, cbuffer)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_tcbuffer_cbuffer'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(tcbuffer, tcbuffer)
+CREATE FUNCTION tempEq(tcbuffer, tcbuffer)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(cbuffer, tcbuffer)
+CREATE FUNCTION tempNe(cbuffer, tcbuffer)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_cbuffer_tcbuffer'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(tcbuffer, cbuffer)
+CREATE FUNCTION tempNe(tcbuffer, cbuffer)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_tcbuffer_cbuffer'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(tcbuffer, tcbuffer)
+CREATE FUNCTION tempNe(tcbuffer, tcbuffer)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;

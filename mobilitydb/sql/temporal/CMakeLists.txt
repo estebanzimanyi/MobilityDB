@@ -27,9 +27,10 @@ SET(LOCAL_FILES
   043_temporal_gist
   044_temporal_spgist
   046_temporal_analytics
-  048_portable_aliases
   999_oid_cache
   )
+
+append_portable_aliases()
 
 foreach (f ${LOCAL_FILES})
   process_file(${f} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})

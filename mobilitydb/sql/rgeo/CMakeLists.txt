@@ -15,8 +15,9 @@ SET(LOCAL_FILES
   161_trgeo_vclip
   162_trgeo_indexes
   163_trgeo_geom_clip
-  199_portable_aliases
   )
+
+append_portable_aliases()
 
 foreach (f ${LOCAL_FILES})
   process_file(${f} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})

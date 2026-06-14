@@ -31,9 +31,17 @@ OP_TO_NAME = {
     "<<": "left", ">>": "right", "&<": "overleft", "&>": "overright",
     "<<|": "below", "|>>": "above", "&<|": "overbelow", "|&>": "overabove",
     "<</": "front", "/>>": "back", "&</": "overfront", "/&>": "overback",
-    # Extends the RFC #861 table (which omits these) — required for 100% parity:
-    "#=": "teq", "#<>": "tne", "#<": "tlt", "#<=": "tle", "#>": "tgt",
-    "#>=": "tge", "~=": "same",
+    # The three comparison families — temp / ever / always — use one consistent
+    # camelCase shape: <prefix>{Eq,Ne,Lt,Le,Gt,Ge}. temporal #= (lifted, returns a
+    # temporal bool) is tempEq…; ever ?= and always %= (reduced, return bool) are
+    # everEq…/alwaysEq…. This replaces the older lowercase teq/tne and the snake
+    # ever_*/always_* exclusion so the dialect is uniform across all engines.
+    "#=": "tempEq", "#<>": "tempNe", "#<": "tempLt", "#<=": "tempLe",
+    "#>": "tempGt", "#>=": "tempGe", "~=": "same",
+    "?=": "everEq", "?<>": "everNe", "?<": "everLt", "?<=": "everLe",
+    "?>": "everGt", "?>=": "everGe",
+    "%=": "alwaysEq", "%<>": "alwaysNe", "%<": "alwaysLt", "%<=": "alwaysLe",
+    "%>": "alwaysGt", "%>=": "alwaysGe",
 }
 
 # Operators whose backing PROCEDURE is itself a callable named function
@@ -65,8 +73,9 @@ SYM_RE = re.compile(r"'MODULE_PATHNAME',\s*'([A-Za-z0-9_]+)'")
 
 # Numeric prefix per subdir: sorts AFTER that group's type/operator defs
 # under the top-level list(SORT) (aliases depend only on argument types).
-GROUP_PREFIX = {"temporal": "048", "geo": "079", "npoint": "099",
-                "pose": "115", "rgeo": "135", "cbuffer": "167"}
+GROUP_PREFIX = {"temporal": "048", "geo": "079", "npoint": "399",
+                "pose": "115", "rgeo": "199", "cbuffer": "299",
+                "h3": "298"}
 
 HEADER = (
     "/*****************************************************************************\n"

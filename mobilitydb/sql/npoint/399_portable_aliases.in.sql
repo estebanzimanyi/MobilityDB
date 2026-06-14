@@ -40,32 +40,92 @@ CREATE FUNCTION overlaps(npointset, npointset)
   AS 'MODULE_PATHNAME', 'Overlaps_set_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(npoint, tnpoint)
+CREATE FUNCTION everEq(npoint, tnpoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_npoint_tnpoint'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(tnpoint, npoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_tnpoint_npoint'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everEq(tnpoint, tnpoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_eq_tnpoint_tnpoint'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(npoint, tnpoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_npoint_tnpoint'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(tnpoint, npoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_tnpoint_npoint'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION everNe(tnpoint, tnpoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Ever_ne_tnpoint_tnpoint'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(npoint, tnpoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_npoint_tnpoint'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(tnpoint, npoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_tnpoint_npoint'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysEq(tnpoint, tnpoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_eq_tnpoint_tnpoint'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(npoint, tnpoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_npoint_tnpoint'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(tnpoint, npoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_tnpoint_npoint'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION alwaysNe(tnpoint, tnpoint)
+  RETURNS boolean
+  AS 'MODULE_PATHNAME', 'Always_ne_tnpoint_tnpoint'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tempEq(npoint, tnpoint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_npoint_tnpoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(tnpoint, npoint)
+CREATE FUNCTION tempEq(tnpoint, npoint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_tnpoint_npoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION teq(tnpoint, tnpoint)
+CREATE FUNCTION tempEq(tnpoint, tnpoint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_tnpoint_tnpoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(npoint, tnpoint)
+CREATE FUNCTION tempNe(npoint, tnpoint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_npoint_tnpoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(tnpoint, npoint)
+CREATE FUNCTION tempNe(tnpoint, npoint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_tnpoint_npoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tne(tnpoint, tnpoint)
+CREATE FUNCTION tempNe(tnpoint, tnpoint)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_tnpoint_tnpoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
