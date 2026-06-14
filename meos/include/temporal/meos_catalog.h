@@ -116,11 +116,12 @@ typedef enum
   T_TGEOMETRY      = 60,  /**< temporal geometry type */
   T_TGEOGRAPHY     = 61,  /**< temporal geography type */
   T_TRGEOMETRY     = 62,  /**< temporal rigid geometry type */
+  T_TBIGINT        = 63,  /**< temporal big integer type */
 #if JSON
-  T_JSONB          = 63,  /**< base type for PostgreSQL jsonb */
-  T_JSONPATH       = 64,  /**< base type for PostgreSQL jsonpath */
-  T_JSONBSET       = 65,  /**< static set of JSONB values */
-  T_TJSONB         = 66,  /**< temporal JSONB value */
+  T_JSONB          = 74,  /**< base type for PostgreSQL jsonb */
+  T_JSONPATH       = 75,  /**< base type for PostgreSQL jsonpath */
+  T_JSONBSET       = 76,  /**< static set of JSONB values */
+  T_TJSONB         = 77,  /**< temporal JSONB value */
 #endif /* JSON */
   NUM_MEOS_TYPES          /* Dummy value that determines the size of the
                            * lookup array MeosType -> Oid */
