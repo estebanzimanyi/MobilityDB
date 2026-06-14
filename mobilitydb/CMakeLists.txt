@@ -44,6 +44,9 @@ endif()
 # Find PostgreSQL
 set(PG_MIN_MAJOR_VERSION "14")
 set(PG_MAX_MAJOR_VERSION "18")
+# Minimum supported version is 14. Build fails clearly here rather than letting
+# the host pretend to be supported and crashing later in fixtures.
+set(PG_MIN_MAJOR_VERSION "14")
 find_package(POSTGRESQL ${PG_MIN_MAJOR_VERSION} REQUIRED)
 if(NOT POSTGRES_VERSION VERSION_LESS PG_MAX_MAJOR_VERSION)
   message(FATAL_ERROR "Not supporting PostgreSQL ${POSTGRESQL_VERSION}")
