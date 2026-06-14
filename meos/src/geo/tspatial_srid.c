@@ -70,13 +70,6 @@
 #if RGEO
   #include "rgeo/trgeo.h"
 #endif
-#if H3
-  #include <h3api.h>
-#endif
-#if POINTCLOUD
-  #include "pointcloud/pcpoint.h"
-  #include "pointcloud/meos_schema_hook.h"
-#endif
 
 /*
  * Maximum length of an ESPG string to lookup
@@ -496,11 +489,13 @@ Datum
     case T_GEOMETRY:
     case T_GEOGRAPHY:
     {
-      /* TODO This DOES NOT transform the geometry, it should be fixed */
       LWGEOM *geo = lwgeom_from_gserialized(DatumGetGserializedP(d));
       if (! lwgeom_transform(geo, (LWPROJ *) pj))
         return PointerGetDatum(NULL);
       geo->srid = srid_to;
+      /* Re-compute bbox if input had one (COMPUTE_BBOX TAINTING) */
+      if (geo->bbox)
+        lwgeom_refresh_bbox(geo);
       Datum result = PointerGetDatum(geo_serialize(geo));
       lwgeom_free(geo);
       return result;
@@ -717,7 +712,6 @@ tspatial_transf_pj(const Temporal *temp, int32_t srid_to, const LWPROJ *pj)
  * @brief Return a spatiotemporal value transformed to another SRID
  * @param[in] temp Spatiotemporal value
  * @param[in] srid_to Target SRID
- * @csqlfn #Tspatial_transform()
  */
 Temporal *
 tspatial_transform(const Temporal *temp, int32_t srid_to)
@@ -753,7 +747,6 @@ tspatial_transform(const Temporal *temp, int32_t srid_to)
  * @param[in] pipeline Pipeline string
  * @param[in] srid_to Target SRID, may be @p SRID_UNKNOWN
  * @param[in] is_forward True when the transformation is forward
- * @csqlfn #Tspatial_transform_pipeline()
  */
 Temporal *
 tspatial_transform_pipeline(const Temporal *temp, const char *pipeline,
@@ -761,11 +754,9 @@ tspatial_transform_pipeline(const Temporal *temp, const char *pipeline,
 {
   /* Ensure the validity of the arguments */
   VALIDATE_TSPATIAL(temp, NULL); VALIDATE_NOT_NULL(pipeline, NULL);
-  // TODO The following lines currently break the tests, this should be fixed
-  // if (! ensure_srid_known(srid_to))
-    // return NULL;
-
-  /* There is NO test verifying whether the input and output SRIDs are equal */
+  /* srid_to may legitimately be SRID_UNKNOWN for pipeline transformations:
+   * the pipeline string itself encodes the destination CRS. So unlike the
+   * sibling tspatial_transform path, we do NOT call ensure_srid_known here. */
 
   /* Get the structure with information about the projection */
   LWPROJ *pj = lwproj_from_str_pipeline(pipeline, is_forward);

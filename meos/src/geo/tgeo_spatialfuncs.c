@@ -89,14 +89,14 @@ datum_point4d(Datum value, POINT4D *p)
   memset(p, 0, sizeof(POINT4D));
   if (FLAGS_GET_Z(gs->gflags))
   {
-    POINT3DZ *point = (POINT3DZ *) GS_POINT_PTR(gs);
+    const POINT3DZ *point = (POINT3DZ *) GS_POINT_PTR(gs);
     p->x = point->x;
     p->y = point->y;
     p->z = point->z;
   }
   else
   {
-    POINT2D *point = (POINT2D *) GS_POINT_PTR(gs);
+    const POINT2D *point = (POINT2D *) GS_POINT_PTR(gs);
     p->x = point->x;
     p->y = point->y;
   }
@@ -248,7 +248,6 @@ datum2_point_eq(Datum point1, Datum point2)
   return BoolGetDatum(datum_point_eq(point1, point2));
 }
 
-#if CBUFFER
 /**
  * @brief Return true if the points are equal
  */
@@ -275,7 +274,6 @@ datum2_point_nsame(Datum point1, Datum point2)
 {
   return BoolGetDatum(! datum_point_same(point1, point2));
 }
-#endif /* CBUFFER */
 
 /**
  * @brief Return the centroid of a geometry
@@ -317,7 +315,7 @@ geo_distance_fn(int16 flags)
  * @brief Select the appropriate distance function
  */
 datum_func2
-pt_distance_fn(int16 flags)
+point_distance_fn(int16 flags)
 {
   if (MEOS_FLAGS_GET_GEODETIC(flags))
     return &datum_geog_distance;
@@ -1707,10 +1705,11 @@ tgeo_centroid(const Temporal *temp)
  * @param[in] geoms Geometries
  * @param[in] n Number of elements in the input array
  * @param[in] k Number of clusters
+ * @param[out] count Number of elements in the output array
  * @note PostGIS function: @p ST_ClusterKMeans(PG_FUNCTION_ARGS)
  */
 int *
-geo_cluster_kmeans(const GSERIALIZED **geoms, uint32_t n, uint32_t k)
+geo_cluster_kmeans(const GSERIALIZED **geoms, uint32_t n, uint32_t k, int *count)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(geoms, NULL);
@@ -1737,6 +1736,7 @@ geo_cluster_kmeans(const GSERIALIZED **geoms, uint32_t n, uint32_t k)
     if (lwgeoms[i])
       lwgeom_free(lwgeoms[i]);
   pfree(lwgeoms);
+  *count = (int) n;
   return result;
 }
 
@@ -1774,7 +1774,6 @@ geo_cluster_dbscan(const GSERIALIZED **geoms, uint32_t ngeoms,
 
   uint32_t i;
   char *is_in_cluster = NULL;
-  initGEOS(lwnotice, lwgeom_geos_error);
   LWGEOM **lwgeoms = lwalloc(ngeoms * sizeof(LWGEOM *));
   UNIONFIND *uf = UF_create(ngeoms);
   for (i = 0; i < ngeoms; i++)
@@ -1798,7 +1797,6 @@ geo_cluster_dbscan(const GSERIALIZED **geoms, uint32_t ngeoms,
 
   uint32_t *result_ids = UF_get_collapsed_cluster_ids(uf, is_in_cluster);
   *count = uf->N;
-  finishGEOS();
   UF_destroy(uf);
   if (is_in_cluster)
     lwfree(is_in_cluster);
@@ -1832,7 +1830,7 @@ geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms,
   /* TODO short-circuit for one element? */
 
   /* Ok, we really need geos now ;) */
-  initGEOS(lwnotice, lwgeom_geos_error);
+  GEOSContextHandle_t ctx = geos_get_context();
   GEOSGeometry **geos_inputs = palloc(ngeoms * sizeof(GEOSGeometry *));
   for (i = 0; i < ngeoms; i++)
   {
@@ -1842,7 +1840,7 @@ geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms,
     {
       lwerror("Geometry could not be converted to GEOS");
       for (j = 0; j < i; j++)
-        GEOSGeom_destroy(geos_inputs[j]);
+        GEOSGeom_destroy_r(ctx, geos_inputs[j]);
       return NULL;
     }
 
@@ -1854,7 +1852,7 @@ geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms,
     else if (! ensure_same_srid(srid, gserialized_get_srid(geoms[i])))
     {
       for (j = 0; j <= i; j++)
-        GEOSGeom_destroy(geos_inputs[j]);
+        GEOSGeom_destroy_r(ctx, geos_inputs[j]);
       return NULL;
     }
   }
@@ -1878,13 +1876,13 @@ geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms,
   for (i = 0; i < nclusters; ++i)
   {
     result[i] = GEOS2POSTGIS(geos_results[i], is3d);
-    GEOSGeom_destroy(geos_results[i]);
+    GEOSGeom_destroy_r(ctx, geos_results[i]);
   }
   lwfree(geos_results);
   *count = nclusters;
-  finishGEOS();
   return result;
 }
+#endif /* MEOS */
 
 /**
  * @ingroup meos_geo_base_spatial
@@ -1913,7 +1911,6 @@ geo_cluster_within(const GSERIALIZED **geoms, uint32_t ngeoms,
   }
 
   uint32_t i;
-  initGEOS(lwnotice, lwgeom_geos_error);
   LWGEOM **lwgeoms = lwalloc(ngeoms * sizeof(LWGEOM *));
   for (i = 0; i < ngeoms; i++)
     lwgeoms[i] = lwgeom_from_gserialized(geoms[i]);
@@ -1940,10 +1937,8 @@ geo_cluster_within(const GSERIALIZED **geoms, uint32_t ngeoms,
     lwgeom_free(lw_results[i]);
   }
   lwfree(lw_results);
-  finishGEOS();
   *count = nclusters;
   return result;
 }
-#endif /* MEOS */
 
 /*****************************************************************************/
