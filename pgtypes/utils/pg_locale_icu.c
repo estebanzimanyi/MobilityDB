@@ -12,7 +12,7 @@
 #include "postgres.h"
 #include "utils/pg_locale.h"
 
-#include "../../meos/include/meos_error.h"
+#include "meos_error.h"
 
 #ifdef USE_ICU
 #include <unicode/ucnv.h>

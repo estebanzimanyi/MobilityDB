@@ -33,7 +33,7 @@
 #include <utils/date.h>
 
 #include <pgtypes.h>
-#include "../../meos/include/meos_error.h"
+#include "meos_error.h"
 
 extern int GetDatabaseEncoding(void);
 

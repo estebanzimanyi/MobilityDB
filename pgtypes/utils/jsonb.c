@@ -32,7 +32,7 @@
 #include "utils/varlena.h" /* For DatumGetTextP */
 
 #include <pgtypes.h>
-#include "../../meos/include/meos_error.h"
+#include "meos_error.h"
 
 extern void escape_json_with_len(StringInfo buf, const char *str, int len);
 

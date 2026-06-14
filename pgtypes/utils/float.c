@@ -30,7 +30,7 @@
 #include "utils/float.h"
 
 #include "pgtypes.h"
-#include "../../meos/include/meos_error.h"
+#include "meos_error.h"
 /* MEOS: parse doubles/floats in the C locale (issue #425) so '.' is always the
  * decimal separator regardless of the process LC_NUMERIC; plain strtod/strtof
  * are locale-aware and reject "1.5" under e.g. de_DE. Defined in

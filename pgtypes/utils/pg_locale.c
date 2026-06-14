@@ -44,8 +44,8 @@
 #include "utils/memutils.h"
 #include "utils/pg_locale.h"
 
-#include "../../meos/include/meos_error.h"
-#include "../../meos/include/meos_tls.h"  /* MEOS: MEOS_TLS */
+#include "meos_error.h"
+#include "meos_tls.h"  /* MEOS: MEOS_TLS */
 
 // #include "postgres.h"
 // #include <time.h>

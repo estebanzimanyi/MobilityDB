@@ -24,11 +24,11 @@
 #include "parser/scansup.h"
 #include "utils/builtins.h"
 #include "utils/date.h"
-#include "../../meos/include/meos.h"
+#include "meos.h"
 #include "utils/datetime.h"
 #include "utils/tzparser.h"
 
-#include "../../meos/include/meos_error.h"
+#include "meos_error.h"
 
 // #include "access/htup_details.h"
 // #include "access/xact.h"

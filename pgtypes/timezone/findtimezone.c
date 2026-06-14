@@ -21,7 +21,7 @@
 #include <unistd.h>
 
 #include "pgtz.h"
-#include "../../meos/include/meos_tls.h"  /* MEOS: MEOS_TLS */
+#include "meos_tls.h"  /* MEOS: MEOS_TLS */
 
 /* Ideally this would be in a .h file, but it hardly seems worth the trouble */
 extern const char *select_default_timezone(const char *share_path);

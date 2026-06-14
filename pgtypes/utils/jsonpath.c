@@ -76,7 +76,7 @@
 
 #include "nodes/value.h"
 #include <pgtypes.h>
-#include "../../meos/include/meos_error.h"
+#include "meos_error.h"
 
 
 static JsonPath *jsonPathFromCstring(char *jp, int len, struct Node *escontext);

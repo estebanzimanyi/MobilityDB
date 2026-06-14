@@ -37,7 +37,7 @@
 #include "utils/varlena.h" /* For DatumGetTextP */
 
 #include <pgtypes.h>
-#include "../../meos/include/meos_error.h"
+#include "meos_error.h"
 
 // #include "postgres.h"
 // #include "catalog/pg_proc.h"

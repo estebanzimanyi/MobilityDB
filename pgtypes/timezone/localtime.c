@@ -20,7 +20,7 @@
 
 #include "datatype/timestamp.h"
 #include "pgtz.h"
-#include "../../meos/include/meos_tls.h"  /* MEOS: MEOS_TLS */
+#include "meos_tls.h"  /* MEOS: MEOS_TLS */
 
 #include "private.h"
 #include "tzfile.h"

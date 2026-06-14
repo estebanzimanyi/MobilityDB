@@ -199,4 +199,11 @@ add_library(pgtypes STATIC ${PGTYPES_SOURCES})
 
 target_include_directories(pgtypes PUBLIC "${CMAKE_SOURCE_DIR}/pgtypes")
 target_include_directories(pgtypes PUBLIC "${CMAKE_BINARY_DIR}/pgtypes")
+# The pgtypes sources include the MEOS public headers (meos.h, meos_error.h,
+# meos_tls.h) by bare name; make them resolvable from any pgtypes subdirectory
+# depth (the sources live at depths 1..4 under pgtypes/, so a relative
+# ../../meos/include path only resolved for the depth-2 files and broke the
+# standalone -DMEOS build of the depth-1/3/4 ones). A target include directory
+# is depth-independent.
+target_include_directories(pgtypes PUBLIC "${CMAKE_SOURCE_DIR}/meos/include")
 

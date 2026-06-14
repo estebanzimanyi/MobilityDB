@@ -40,7 +40,7 @@
 #include <utils/jsonb.h>
 
 #include <pgtypes.h>
-#include "../../meos/include/meos_error.h"
+#include "meos_error.h"
 
 #if POSTGRESQL_VERSION_NUMBER < 160000
 /*

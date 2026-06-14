@@ -20,7 +20,7 @@
 #include "common/hashfn.h"
 #include "utils/builtins.h"
 
-#include "../../meos/include/meos_error.h"
+#include "meos_error.h"
 
 /*****************************************************************************/
 bool

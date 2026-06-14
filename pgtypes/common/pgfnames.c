@@ -16,7 +16,7 @@
 
 #include <dirent.h>
 
-#include "../../meos/include/meos_error.h"
+#include "meos_error.h"
 
 /*
  * pgfnames

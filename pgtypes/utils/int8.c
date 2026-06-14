@@ -21,7 +21,7 @@
 #include "common/int.h"
 #include "utils/builtins.h"
 
-#include "../../meos/include/meos_error.h"
+#include "meos_error.h"
 
 /* Sign + the most decimal digits an 8-byte number could have */
 #define MAXINT8LEN 20

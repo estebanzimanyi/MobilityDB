@@ -50,7 +50,7 @@
 // #include "utils/fmgrprotos.h"
 
 // MEOS
-#include "../../meos/include/meos_error.h"
+#include "meos_error.h"
 
 /*-------------------------------------------------------------------------
  * datumGetSize
