@@ -29,24 +29,22 @@
 
 /**
  * @file
- * @brief Public Jsonb / JsonPath type composition for the JSON family.
+ * @brief Type composition for the JSON family.
  *
- * This header exposes @p Jsonb and @p JsonPath as opaque varlena-based types
- * (as @p text / @p bytea are exposed in postgres_ext_defs.in.h) so it is a
- * self-contained PUBLIC header: external consumers and the exported
- * meos_json.h get the types without any internal pgtypes header. The full
- * @p JsonbContainer / @p JEntry layout lives in the internal pgtypes sources,
- * which the library compiles against directly; this header is never included
- * by the library build. The public base json/jsonb/jsonpath function
- * prototypes are declared in meos/include/meos_json.h so that they live under
- * the public scan root and are catalogued by the MEOS-API generator for every
- * binding.
+ * This header only pulls in the canonical Jsonb / JsonbContainer / JEntry and
+ * JsonPath type definitions from their owning headers. The public base
+ * json/jsonb/jsonpath function prototypes are declared in the public
+ * meos/include/meos_json.h so that they live under the public scan root and
+ * are catalogued by the MEOS-API generator for every binding. This file is
+ * what the exported meos_json.h pulls in for those types (in place of the
+ * full internal pgtypes.h umbrella).
  */
 
 #ifndef __PG_JSON_H__
 #define __PG_JSON_H__
 
-typedef struct varlena Jsonb;
-typedef struct varlena JsonPath;
+#include <postgres.h>
+#include <utils/jsonb.h>
+#include <utils/jsonpath.h>
 
 #endif /* __PG_JSON_H__ */

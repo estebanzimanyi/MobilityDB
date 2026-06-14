@@ -76,7 +76,7 @@ extern GSERIALIZED *geo_serialize(const LWGEOM *geom);
 /* Generic functions */
 
 extern datum_func2 geo_distance_fn(int16 flags);
-extern datum_func2 pt_distance_fn(int16 flags);
+extern datum_func2 point_distance_fn(int16 flags);
 extern Datum datum_geom_distance2d(Datum geom1, Datum geom2);
 extern Datum datum_geom_distance3d(Datum geom1, Datum geom2);
 extern Datum datum_geog_distance(Datum geog1, Datum geog2);
@@ -100,7 +100,6 @@ extern bool ensure_same_geodetic_tspatial_base(const Temporal *temp,
   Datum base);
 extern bool ensure_srid_known(int32_t srid);
 extern bool ensure_same_srid(int32_t srid1, int32_t srid2);
-extern bool ensure_srid_reconcile(int32_t srid1, int32_t srid2, int32_t *result);
 extern bool ensure_same_dimensionality(int16 flags1, int16 flags2);
 extern bool same_spatial_dimensionality(int16 flags1, int16 flags2);
 extern bool ensure_same_spatial_dimensionality(int16 flags1, int16 flags2);

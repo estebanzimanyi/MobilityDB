@@ -90,55 +90,12 @@ endif()
 
 # Options for including the various optional types
 option(CBUFFER "Set ON|OFF (default=OFF) to include circular buffers" OFF)
+option(H3 "Set ON|OFF (default=OFF) to include H3 cell index types" OFF)
+option(QUADBIN "Set ON|OFF (default=OFF) to include the temporal CARTO QUADBIN index type (tquadbin)" OFF)
 option(JSON "Set ON|OFF (default=ON) to include json types" OFF)
 option(NPOINT "Set ON|OFF (default=ON) to include network points" ON)
 option(POSE "Set ON|OFF (default=OFF) to include geoposes" OFF)
 CMAKE_DEPENDENT_OPTION(RGEO "Set ON|OFF (default=OFF) to include rigid geometries" ON "POSE" OFF)
-# Option for including the temporal H3 index (`th3index`), which depends
-# on libh3.
-option(H3
-  "Set ON|OFF (default=OFF) to include the temporal H3 index type
-  (th3index). Requires libh3 on the build path."
-  OFF
-  )
-
-option(QUADBIN
-  "Set ON|OFF (default=OFF) to include the temporal QUADBIN index type
-  (tquadbin). First-party, no external library required."
-  OFF
-  )
-
-# Option for including network points
-option(NPOINT
-  "Set ON|OFF (default=ON) to include network points
-  "
-  ON
-  )
-
-# Option for including pgpointcloud temporal types (tpcpoint, tpcpatch).
-# Requires pgpointcloud (libpointcloud-dev on Debian/Ubuntu) installed; the
-# `pointcloud-pg/` subtree provides the source MEOS imports a minimal libpc.a
-# from.
-option(POINTCLOUD
-  "Set ON|OFF (default=OFF) to include pgpointcloud temporal types
-  "
-  OFF
-  )
-
-# Option for including geoposes
-option(POSE
-  "Set ON|OFF (default=OFF) to include geoposes
-  "
-  OFF
-  )
-
-# Option for including rigid geometries, which depend on geoposes
-CMAKE_DEPENDENT_OPTION(RGEO
-  "Set ON|OFF (default=OFF) to include rigid geometries
-  "
-  ON "POSE"
-  OFF
-  )
 
 # Set the compilation flags when including the various optional types
 if(CBUFFER)
@@ -148,6 +105,20 @@ else()
   message(STATUS "Excluding circular buffers")
   add_definitions(-DCBUFFER=0)
 endif()
+if(H3)
+  message(STATUS "Including H3 cell index types")
+  add_definitions(-DH3=1)
+else()
+  message(STATUS "Excluding H3 cell index types")
+  add_definitions(-DH3=0)
+endif()
+if(QUADBIN)
+  message(STATUS "Including temporal CARTO QUADBIN index (tquadbin)")
+  add_definitions(-DQUADBIN=1)
+else()
+  message(STATUS "Excluding temporal CARTO QUADBIN index")
+  add_definitions(-DQUADBIN=0)
+endif()
 if(JSON)
   message(STATUS "Including JSON types")
   add_definitions(-DJSON=1)
@@ -155,23 +126,6 @@ else()
   message(STATUS "Excluding JSON types")
   add_definitions(-DJSON=0)
 endif()
-
-if(H3)
-  message(STATUS "Including temporal H3 index (th3index)")
-  add_definitions(-DH3=1)
-else()
-  message(STATUS "Excluding temporal H3 index")
-  add_definitions(-DH3=0)
-endif()
-
-if(QUADBIN)
-  message(STATUS "Including temporal QUADBIN index (tquadbin)")
-  add_definitions(-DQUADBIN=1)
-else()
-  message(STATUS "Excluding temporal QUADBIN index")
-  add_definitions(-DQUADBIN=0)
-endif()
-
 if(NPOINT)
   message(STATUS "Including network points")
   add_definitions(-DNPOINT=1)
@@ -179,15 +133,6 @@ else()
   message(STATUS "Excluding network points")
   add_definitions(-DNPOINT=0)
 endif()
-
-if(POINTCLOUD)
-  message(STATUS "Including pgpointcloud types")
-  add_definitions(-DPOINTCLOUD=1)
-else()
-  message(STATUS "Excluding pgpointcloud types")
-  add_definitions(-DPOINTCLOUD=0)
-endif()
-
 if(POSE)
   message(STATUS "Including geoposes")
   add_definitions(-DPOSE=1)
@@ -215,7 +160,14 @@ string(REGEX MATCH "MOBILITYDB_MICRO_VERSION=[0-9]+(beta?[0-9]+)" _ ${ver})
 set(PROJECT_VERSION_DEV ${CMAKE_MATCH_1})
 
 # Set the project name and project version
-project(MobilityDB VERSION ${MOBILITYDB_MAJOR_VERSION}.${MOBILITYDB_MINOR_VERSION}.${MOBILITYDB_MICRO_VERSION})
+# C++ enabled (in addition to C) so we can vendor Clipper2 as the polygon
+# Boolean engine. Required: C++17 (Clipper2 v2.x).
+project(MobilityDB
+  VERSION ${MOBILITYDB_MAJOR_VERSION}.${MOBILITYDB_MINOR_VERSION}.${MOBILITYDB_MICRO_VERSION}
+  LANGUAGES C CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 message(STATUS "Building MobilityDB version ${PROJECT_VERSION}")
 # Enable testing, must follow project() call above
 include(CTest)
@@ -293,8 +245,17 @@ add_compile_definitions(_USE_MATH_DEFINES)
 
 # Set default compile flags and code coverage for GCC
 if(CMAKE_COMPILER_IS_GNUCC)
-  # MobilityDB compiler flags
-  add_definitions(-Wall -Wextra -std=gnu1x -Wunused-parameter -Wno-strict-aliasing)
+  # MobilityDB compiler flags. The C-dialect and C-only diagnostic flags are
+  # scoped to the C language so the vendored Clipper2 C++ sources compile
+  # without spurious "valid for C/ObjC but not for C++" warnings.
+  add_compile_options(-Wall -Wextra -Wno-strict-aliasing)
+  add_compile_options($<$<COMPILE_LANGUAGE:C>:-std=gnu1x>)
+  add_compile_options($<$<COMPILE_LANGUAGE:C>:-Wunused-parameter>)
+  # Treat an implicit function declaration as an error: it silently assumes an
+  # int return, truncating any 64-bit pointer the callee actually returns and
+  # producing a hard-to-trace crash at runtime rather than at build time.
+  add_compile_options($<$<COMPILE_LANGUAGE:C>:-Werror=implicit-function-declaration>)
+  add_compile_options($<$<COMPILE_LANGUAGE:C>:-Werror=implicit-int>)
   # -Wno-strict-aliasing was removed to access directly PostGIS points
   # See file tpoint_spatialfuncs.h
   # add_definitions(-Wall -Wextra -std=gnu1x -Wno-unused-parameter)
@@ -303,6 +264,13 @@ if(CMAKE_COMPILER_IS_GNUCC)
     message(STATUS "Generating code coverage")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fprofile-arcs -ftest-coverage")
+    # The .so is linked with the g++ driver (CXX shared module), which does
+    # not auto-pull libgcov from compile flags — pass --coverage at link time.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fprofile-arcs -ftest-coverage")
+    set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} --coverage")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --coverage")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
   endif()
 endif()
 
@@ -341,6 +309,11 @@ int main() {
 #--------------------------------
 # Other dependencies
 #--------------------------------
+
+# POSIX threads — needed for pthread_once in meos_initialize_geos()
+# On Linux ≥ glibc 2.34 pthreads are in libc; on older systems and MinGW
+# CMake's Threads::Threads target adds the correct -lpthread / -lwinpthread.
+find_package(Threads REQUIRED)
 
 # GEOS geometry library
 find_package(GEOS REQUIRED)

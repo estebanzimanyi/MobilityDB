@@ -67,6 +67,8 @@
 #include <utils/date.h>
 #include <utils/float.h>
 #include <utils/timestamp.h>
+#include "utils/varlena.h"
+#include <pgtypes.h>
 /* PostGIS */
 #include <liblwgeom.h>
 /* MEOS */
@@ -556,6 +558,7 @@ meos_temporal_to_arrow(const Temporal *temp, struct ArrowSchema *out_schema,
 #endif
   bool is_pc = is_pcpoint || is_pcpatch;
   if (temp->temptype != T_TFLOAT && temp->temptype != T_TINT &&
+      temp->temptype != T_TBIGINT &&
       temp->temptype != T_TBOOL && temp->temptype != T_TTEXT &&
       temp->temptype != T_TGEOMPOINT && temp->temptype != T_TGEOGPOINT &&
       ! is_cbuffer && ! is_pose && ! is_npoint && ! is_geo && ! is_trgeo &&
@@ -569,6 +572,7 @@ meos_temporal_to_arrow(const Temporal *temp, struct ArrowSchema *out_schema,
     return false;
   }
   bool is_tint = (temp->temptype == T_TINT);
+  bool is_tbigint = (temp->temptype == T_TBIGINT);
   bool is_tbool = (temp->temptype == T_TBOOL);
   bool is_ttext = (temp->temptype == T_TTEXT);
   bool is_point = (temp->temptype == T_TGEOMPOINT ||
@@ -590,8 +594,8 @@ meos_temporal_to_arrow(const Temporal *temp, struct ArrowSchema *out_schema,
    * single primitive leaf. */
   const char *vfmt = (is_point || is_cbuffer || is_pose || is_npoint ||
     is_trgeo) ? "+s" : ((is_geo || is_pc) ? "Z" : (is_ttext ? "u" :
-    (is_tbool ? "b" : (is_tint ? "i" :
-    (is_th3index ? "L" : "g")))));
+    (is_tbool ? "b" : (is_tint ? "i" : (is_tbigint ? "l" :
+    (is_th3index ? "L" : "g"))))));
 
   /* Separate arenas: the schema and the array are independently released
    * by the consumer, so each must own (and free) its own allocations. */
@@ -763,7 +767,7 @@ meos_temporal_to_arrow(const Temporal *temp, struct ArrowSchema *out_schema,
   int vn = total ? total : 1;
   size_t vsz = (is_ttext || is_point || is_cbuffer || is_pose || is_geo ||
     is_trgeo || is_pc) ? 1 : (is_tbool ? (size_t) ((vn + 7) / 8) :
-    (is_tint ? sizeof(int32_t) : ((is_th3index) ?
+    (is_tint ? sizeof(int32_t) : ((is_tbigint || is_th3index) ?
     sizeof(int64_t) : sizeof(double))) * (size_t) vn);
   void *vvals = arena_alloc(arena_a, vsz);
   /* Temporal text decomposes to a variable-length utf8 column: collect the
@@ -900,7 +904,7 @@ meos_temporal_to_arrow(const Temporal *temp, struct ArrowSchema *out_schema,
       }
       else if (is_tint)
         ((int32_t *) vvals)[k] = DatumGetInt32(tinstant_value_p(single));
-      else if (is_th3index)
+      else if (is_tbigint || is_th3index)
         /* The H3 cell index is a uint64 binary-identical to int8, so the
          * raw 64 bits move through the same path as a big integer. */
         ((int64_t *) vvals)[k] = DatumGetInt64(tinstant_value_p(single));
@@ -998,7 +1002,7 @@ meos_temporal_to_arrow(const Temporal *temp, struct ArrowSchema *out_schema,
         }
         else if (is_tint)
           ((int32_t *) vvals)[k] = DatumGetInt32(tinstant_value_p(inst));
-        else if (is_th3index)
+        else if (is_tbigint || is_th3index)
           ((int64_t *) vvals)[k] = DatumGetInt64(tinstant_value_p(inst));
         else
           ((double *) vvals)[k] = DatumGetFloat8(tinstant_value_p(inst));
@@ -1324,29 +1328,15 @@ meos_temporal_from_arrow(const struct ArrowSchema *schema,
    * the shared reference geometry; the inner build uses the pose path. A
    * point cloud value reconstructs directly from its serialized varlena
    * body, the leaf name selecting the temporal point cloud type. */
-  MeosType vt;
-  if (v_is_trgeo)
-    vt = T_TPOSE;
-#if POINTCLOUD
-  else if (v_is_pcpoint)
-    vt = T_TPCPOINT;
-  else if (v_is_pcpatch)
-    vt = T_TPCPATCH;
-#endif
-  else if (v_is_geo)
-    vt = MEOS_FLAGS_GET_GEODETIC(flags) ? T_TGEOGRAPHY : T_TGEOMETRY;
-  else if (v_sc->format[0] == 'u')
-    vt = T_TTEXT;
-  else if (v_sc->format[0] == 'b')
-    vt = T_TBOOL;
-  else if (v_sc->format[0] == 'i')
-    vt = T_TINT;
-#if H3
-  else if (v_sc->format[0] == 'L')
-    vt = T_TH3INDEX;
-#endif
-  else
-    vt = T_TFLOAT;
+  MeosType vt = v_is_trgeo ? T_TPOSE :
+    (v_is_pcpoint ? T_TPCPOINT : (v_is_pcpatch ? T_TPCPATCH :
+    (v_is_geo ?
+    (MEOS_FLAGS_GET_GEODETIC(flags) ? T_TGEOGRAPHY : T_TGEOMETRY) :
+    ((v_sc->format[0] == 'u') ? T_TTEXT :
+    ((v_sc->format[0] == 'b') ? T_TBOOL :
+    ((v_sc->format[0] == 'i') ? T_TINT :
+    ((v_sc->format[0] == 'l') ? T_TBIGINT :
+    ((v_sc->format[0] == 'L') ? T_TH3INDEX : T_TFLOAT))))))));
   bool geodetic = v_is_point && MEOS_FLAGS_GET_GEODETIC(flags);
 
   const struct ArrowArray *seq_st_a = array->children[4]->children[0];

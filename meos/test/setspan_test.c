@@ -41,8 +41,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <meos.h>
-#include <pg_bool.h>
-#include <pg_text.h>
 
 /* Main program */
 int main(void)
@@ -622,7 +620,7 @@ int main(void)
   tstzarray[1] = tstz2;
   tstzset_result = tstzset_make(tstzarray, 2);
   char_result = tstzset_out(tstzset_result);
-  printf("tstzset_make({%s, %s}): %s\n", tstz1_out, tstz2_out, char_result);
+printf("tstzset_make({%s, %s}): %s\n", tstz1_out, tstz2_out, char_result);
   free(tstzset_result); free(char_result);
 
   /* Span *tstzspan_make(TimestampTz lower, TimestampTz upper, bool lower_inc, bool upper_inc); */
@@ -1122,7 +1120,7 @@ int main(void)
   free(ispan_result); free(char_result);
 
   /* Span **spanset_spanarr(const SpanSet *ss); */
-  ispanarray_result = spanset_spanarr(ispanset1);
+  ispanarray_result = spanset_spanarr(ispanset1, &count);
   printf("spanset_spanarr(%s): {", ispanset1_out);
   for (int i = 0; i < ispanset1->count; i++)
   {
@@ -1638,7 +1636,7 @@ int main(void)
   /* Split functions */
 
   /* Span *set_spans(const Set *s); */
-  ispanvector_result = set_spans(iset1);
+  ispanvector_result = set_spans(iset1, &count);
   printf("set_spans(%s): {", iset1_out);
   for (int i = 0; i < iset1->count; i++)
   {
@@ -1683,7 +1681,7 @@ int main(void)
   free(ispanvector_result);
 
   /* Span *spanset_spans(const SpanSet *ss); */
-  ispanvector_result = spanset_spans(ispanset1);
+  ispanvector_result = spanset_spans(ispanset1, &count);
   printf("spanset_spans(%s, &count): {", ispanset1_out);
   for (int i = 0; i < ispanset1->count; i++)
   {
@@ -2577,7 +2575,8 @@ int main(void)
   /* Set *intersection_bigint_set(int64 i, const Set *s); */
   bset_result = intersection_bigint_set(int64_in1, bset1);
   char_result = bset_result ? bigintset_out(bset_result) : text_out(text_null);
-  printf("intersection_bigint_set(%ld, %s): %s\n", int64_in1, bset1_out, char_result);  if (bset_result)
+  printf("intersection_bigint_set(%ld, %s): %s\n", int64_in1, bset1_out, char_result);
+  if (bset_result)
     free(bset_result);
   free(char_result);
 

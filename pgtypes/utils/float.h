@@ -21,7 +21,7 @@
 #include <postgres.h>
 #include "nodes/nodes.h"
 
-#include "../../meos/include/meos_error.h"
+#include "meos_error.h"
 
 /* X/Open (XSI) requires <math.h> to provide M_PI, but core POSIX does not */
 #ifndef M_PI
@@ -143,6 +143,20 @@ get_float8_nan(void)
  * different, e.g. on x86, '1e-45'::float4 == '2e-45'::float4 ==
  * 1.4013e-45.
  */
+
+static inline void
+float_overflow_error(void)
+{
+  meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+    "value out of range: overflow");
+}
+
+static inline void
+float_underflow_error(void)
+{
+  meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
+    "value out of range: underflow");
+}
 
 static inline float4
 float4_pl(const float4 val1, const float4 val2)

@@ -39,22 +39,35 @@
 #define __MEOS_TLS_H__
 
 /*
- * Thread-local storage qualifier. C11 _Thread_local is supported by GCC,
- * Clang, and MSVC 2019 16.10+; older compilers fall back to vendor
- * extensions. If none of these is available the macro expands to
- * nothing and MEOS state remains process-global (legacy behaviour).
+ * Thread-local storage qualifier, build-dependent in the same spirit as
+ * PostgreSQL's PGDLLEXPORT: a single macro that expands to the right thing
+ * for the build, so call sites write `MEOS_TLS x;` uniformly with no #if.
+ *
+ *   - Standalone MEOS library (MEOS=1): the compiler's thread-local qualifier,
+ *     so per-thread state is isolated across a host worker-thread pool (e.g. a
+ *     Spark/JVM task pool). C11 _Thread_local is supported by GCC, Clang, and
+ *     MSVC 2019 16.10+; older compilers fall back to vendor extensions.
+ *   - PostgreSQL-extension build (MEOS=0): expands to nothing. The backend is
+ *     single-threaded per process, so the state stays a plain backend global,
+ *     matching PostgreSQL's own globals (e.g. session_timezone).
+ *   - If no thread-local qualifier is available, expands to nothing and state
+ *     remains process-global (legacy, non-thread-safe behaviour).
  */
-#if defined(__cplusplus) && __cplusplus >= 201103L
-#define MEOS_TLS thread_local
-#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && \
-    !defined(__STDC_NO_THREADS__)
-#define MEOS_TLS _Thread_local
-#elif defined(_MSC_VER)
-#define MEOS_TLS __declspec(thread)
-#elif defined(__GNUC__) || defined(__clang__) || defined(__INTEL_COMPILER)
-#define MEOS_TLS __thread
+#if defined(MEOS) && MEOS
+  #if defined(__cplusplus) && __cplusplus >= 201103L
+  #define MEOS_TLS thread_local
+  #elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && \
+      !defined(__STDC_NO_THREADS__)
+  #define MEOS_TLS _Thread_local
+  #elif defined(_MSC_VER)
+  #define MEOS_TLS __declspec(thread)
+  #elif defined(__GNUC__) || defined(__clang__) || defined(__INTEL_COMPILER)
+  #define MEOS_TLS __thread
+  #else
+  #define MEOS_TLS  /* not supported; falls back to non-thread-safe globals */
+  #endif
 #else
-#define MEOS_TLS  /* not supported; falls back to non-thread-safe globals */
+  #define MEOS_TLS  /* PostgreSQL-extension build: single-threaded backend */
 #endif
 
 #endif /* __MEOS_TLS_H__ */

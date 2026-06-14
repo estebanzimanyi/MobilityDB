@@ -48,6 +48,52 @@
 #endif
 
 /*****************************************************************************
+ * Locale contract (issue #425)
+ *
+ * MEOS pins all numeric I/O to the C locale: textual representations of
+ * doubles always use '.' as the decimal separator, regardless of the
+ * calling process's LC_NUMERIC setting. This guarantees that WKT, set,
+ * span, and temporal-constant parsing produces stable results across
+ * environments (CI, downstream bindings such as PyMEOS / JMEOS, ...).
+ *
+ * MEOS does NOT call setlocale() at initialization; downstream consumers
+ * remain free to set whatever process locale they need for *their own*
+ * code (display, message catalogs, ...). Locale-aware text collation is
+ * intentionally not yet wired up; varstr_cmp() falls back to byte-wise
+ * memcmp pending the full collation work tracked in issue #425.
+ *****************************************************************************/
+
+/*****************************************************************************
+ * UTF-8 / character encoding contract (issue #403)
+ *
+ * MEOS treats `text` values and the textual representations parsed by
+ * `*_in()` / `*_out()` as opaque byte sequences. The library is encoding-
+ * agnostic at I/O: any encoding with the property that ASCII characters
+ * (`,`, `}`, `]`, `"`, `\\`, whitespace, etc.) round-trip as their
+ * single-byte form is preserved verbatim. UTF-8 satisfies this property,
+ * so callers can pass UTF-8 text through `text_in`/`text_out`, set/array
+ * constructors, and `ttext`/`textset` parsers and get the same bytes
+ * back. Multi-byte UTF-8 continuation bytes (>= 0x80) never collide with
+ * ASCII delimiters, so the parsers are correct on UTF-8 input.
+ *
+ * What MEOS does NOT do today:
+ *   - Locale-aware text collation (`text_cmp` is byte-wise `memcmp`,
+ *     intentionally — see issue #425).
+ *   - Unicode-aware case folding. `text_upper`, `text_lower`, and
+ *     `text_initcap` (and the temporal variants `ttext_upper`, ...)
+ *     fold ASCII letters only; bytes >= 0x80 (the body of any
+ *     multi-byte UTF-8 sequence) are passed through unchanged. So
+ *     `text_upper("Zürich")` returns `"Zürich"`, not `"ZÜRICH"`. This
+ *     is documented behaviour and a tracked follow-up under #403.
+ *   - Character-count APIs (`text_length`, `text_substring`, ...).
+ *     None are exposed; if added, byte-vs-codepoint semantics will
+ *     have to be specified explicitly.
+ *
+ * Round-tripping UTF-8 through MEOS is exercised by the
+ * `meos_utf8_smoke` CI workflow.
+ *****************************************************************************/
+
+/*****************************************************************************
  * Toolchain dependent definitions
  *****************************************************************************/
 
@@ -69,6 +115,15 @@
  *****************************************************************************/
 
 #include "meos_error.h"
+
+/*
+ * Thread-local storage qualifier (MEOS_TLS) used internally by MEOS to
+ * make per-thread state (last-error number, PROJ context, SRS cache,
+ * ways cache, RNG, session timezone) safe under multithreading. Defined
+ * in a stand-alone header so that vendored PostgreSQL files can pick it
+ * up without pulling in the full meos.h.
+ */
+#include "meos_tls.h"
 
 /*****************************************************************************
  * Type definitions
@@ -326,6 +381,7 @@ extern int rtree_search_temporal_dedup(const RTree *rtree, RTreeSearchOp op, con
 typedef void (*error_handler_fn)(int, int, const char *);
 
 extern void meos_initialize_error_handler(error_handler_fn err_handler);
+extern void meos_initialize_noexit_error_handler(void);
 extern void meos_initialize_timezone(const char *name);
 extern void meos_initialize_collation(void);
 extern void meos_finalize_timezone(void);
@@ -342,6 +398,7 @@ extern char *meos_get_datestyle(void);
 extern char *meos_get_intervalstyle(void);
 
 extern void meos_set_spatial_ref_sys_csv(const char* path);
+extern void meos_set_ways_csv(const char* path);
 
 extern void meos_initialize(void);
 extern void meos_finalize(void);
@@ -427,8 +484,10 @@ extern Span *tstzspan_make(TimestampTz lower, TimestampTz upper, bool lower_inc,
  *****************************************************************************/
 
 extern Set *bigint_to_set(int64 i);
-extern Span *bigint_to_span(int i);
-extern SpanSet *bigint_to_spanset(int i);
+extern Span *bigint_to_span(int64 i);
+extern SpanSet *bigint_to_spanset(int64 i);
+extern Span *bigintspan_to_intspan(const Span *s);
+extern Span *bigintspan_to_floatspan(const Span *s);
 extern Set *date_to_set(DateADT d);
 extern Span *date_to_span(DateADT d);
 extern SpanSet *date_to_spanset(DateADT d);
@@ -439,6 +498,7 @@ extern Set *float_to_set(double d);
 extern Span *float_to_span(double d);
 extern SpanSet *float_to_spanset(double d);
 extern Set *floatset_to_intset(const Set *s);
+extern Span *floatspan_to_bigintspan(const Span *s);
 extern Span *floatspan_to_intspan(const Span *s);
 extern Span *floatspan_to_bigintspan(const Span *s);
 extern SpanSet *floatspanset_to_intspanset(const SpanSet *ss);
@@ -446,6 +506,7 @@ extern Set *int_to_set(int i);
 extern Span *int_to_span(int i);
 extern SpanSet *int_to_spanset(int i);
 extern Set *intset_to_floatset(const Set *s);
+extern Span *intspan_to_bigintspan(const Span *s);
 extern Span *intspan_to_floatspan(const Span *s);
 extern Span *intspan_to_bigintspan(const Span *s);
 extern Span *bigintspan_to_intspan(const Span *s);
@@ -510,15 +571,15 @@ extern int intspanset_lower(const SpanSet *ss);
 extern int intspanset_upper(const SpanSet *ss);
 extern int intspanset_width(const SpanSet *ss, bool boundspan);
 extern uint32_t set_hash(const Set *s);
-extern uint64_t set_hash_extended(const Set *s, uint64_t seed);
+extern uint64 set_hash_extended(const Set *s, uint64 seed);
 extern int set_num_values(const Set *s);
 extern uint32_t span_hash(const Span *sp);
-extern uint64_t span_hash_extended(const Span *sp, uint64_t seed);
+extern uint64 span_hash_extended(const Span *sp, uint64 seed);
 extern bool span_lower_inc(const Span *sp);
 extern bool span_upper_inc(const Span *sp);
 extern Span *spanset_end_span(const SpanSet *ss);
 extern uint32_t spanset_hash(const SpanSet *ss);
-extern uint64_t spanset_hash_extended(const SpanSet *ss, uint64_t seed);
+extern uint64 spanset_hash_extended(const SpanSet *ss, uint64 seed);
 extern bool spanset_lower_inc(const SpanSet *ss);
 extern int spanset_num_spans(const SpanSet *ss);
 extern Span *spanset_span(const SpanSet *ss);
@@ -557,6 +618,7 @@ extern SpanSet *bigintspanset_shift_scale(const SpanSet *ss, int64 shift, int64 
 extern Set *dateset_shift_scale(const Set *s, int shift, int width, bool hasshift, bool haswidth);
 extern Span *datespan_shift_scale(const Span *sp, int shift, int width, bool hasshift, bool haswidth);
 extern SpanSet *datespanset_shift_scale(const SpanSet *ss, int shift, int width, bool hasshift, bool haswidth);
+extern double float_round(double d, int maxdd);
 extern Set *floatset_ceil(const Set *s);
 extern Set *floatset_degrees(const Set *s, bool normalize);
 extern Set *floatset_floor(const Set *s);
@@ -938,13 +1000,6 @@ extern Set *union_set_int(const Set *s, int i);
 extern Set *union_set_set(const Set *s1, const Set *s2);
 extern Set *union_set_text(const Set *s, const text *txt);
 extern Set *union_set_timestamptz(const Set *s, TimestampTz t);
-extern SpanSet *union_span_bigint(const Span *sp, int64 i);
-extern SpanSet *union_span_date(const Span *sp, DateADT d);
-extern SpanSet *union_span_float(const Span *sp, double d);
-extern SpanSet *union_span_int(const Span *sp, int i);
-extern SpanSet *union_span_span(const Span *sp1, const Span *sp2);
-extern SpanSet *union_span_spanset(const Span *sp, const SpanSet *ss);
-extern SpanSet *union_span_timestamptz(const Span *sp, TimestampTz t);
 extern SpanSet *union_span_bigint(const Span *s, int64 i);
 extern SpanSet *union_span_date(const Span *s, DateADT d);
 extern SpanSet *union_span_float(const Span *s, double d);
@@ -1074,7 +1129,7 @@ extern TBox *int_timestamptz_to_tbox(int i, TimestampTz t);
 extern TBox *bigint_timestamptz_to_tbox(int64 i, TimestampTz t);
 extern TBox *int_tstzspan_to_tbox(int i, const Span *s);
 extern TBox *bigint_tstzspan_to_tbox(int64 i, const Span *s);
-extern TBox *numspan_tstzspan_to_tbox(const Span *span, const Span *s);
+extern TBox *numspan_tstzspan_to_tbox(const Span *s, const Span *p);
 extern TBox *numspan_timestamptz_to_tbox(const Span *span, TimestampTz t);
 extern TBox *tbox_copy(const TBox *box);
 extern TBox *tbox_make(const Span *sp1, const Span *sp2);
@@ -1089,6 +1144,7 @@ extern TBox *bigint_to_tbox(int64 i);
 extern TBox *set_to_tbox(const Set *s);
 extern TBox *span_to_tbox(const Span *sp);
 extern TBox *spanset_to_tbox(const SpanSet *ss);
+extern Span *tbox_to_bigintspan(const TBox *box);
 extern Span *tbox_to_intspan(const TBox *box);
 extern Span *tbox_to_bigintspan(const TBox *box);
 extern Span *tbox_to_floatspan(const TBox *box);
@@ -1100,7 +1156,7 @@ extern TBox *timestamptz_to_tbox(TimestampTz t);
  *****************************************************************************/
 
 extern uint32_t tbox_hash(const TBox *box);
-extern uint64_t tbox_hash_extended(const TBox *box, uint64_t seed);
+extern uint64 tbox_hash_extended(const TBox *box, uint64 seed);
 extern bool tbox_hast(const TBox *box);
 extern bool tbox_hasx(const TBox *box);
 extern bool tbox_tmax(const TBox *box, TimestampTz *result);
@@ -1122,8 +1178,8 @@ extern bool tboxbigint_xmin(const TBox *box, int64 *result);
  * Transformation functions for box types
  *****************************************************************************/
 
-extern TBox *tfloatbox_expand(const TBox *box, double d);
-extern TBox *tintbox_expand(const TBox *box, int i);
+extern TBox *tbigintbox_expand(const TBox *box, int64 i);
+extern TBox *tbigintbox_shift_scale(const TBox *box, int64 shift, int64 width, bool hasshift, bool haswidth);
 extern TBox *tbox_expand_time(const TBox *box, const Interval *interv);
 extern TBox *tbox_round(const TBox *box, int maxdd);
 extern TBox *tfloatbox_shift_scale(const TBox *box, double shift, double width, bool hasshift, bool haswidth);
@@ -1188,6 +1244,9 @@ extern bool tbox_ne(const TBox *box1, const TBox *box2);
  * Input and output functions for temporal types
  *****************************************************************************/
 
+extern Temporal *tbigint_from_mfjson(const char *str);
+extern Temporal *tbigint_in(const char *str);
+extern char *tbigint_out(const Temporal *temp);
 extern Temporal *tbool_from_mfjson(const char *str);
 extern Temporal *tbool_in(const char *str);
 extern char *tbool_out(const Temporal *temp);
@@ -1235,6 +1294,11 @@ extern char *ttext_out(const Temporal *temp);
  * Constructor functions for temporal types
  *****************************************************************************/
 
+extern Temporal *tbigint_from_base_temp(int64 i, const Temporal *temp);
+extern TInstant *tbigintinst_make(int64 i, TimestampTz t);
+extern TSequence *tbigintseq_from_base_tstzset(int64 i, const Set *s);
+extern TSequence *tbigintseq_from_base_tstzspan(int64 i, const Span *s);
+extern TSequenceSet *tbigintseqset_from_base_tstzspanset(int64 i, const SpanSet *ss);
 extern Temporal *tbool_from_base_temp(bool b, const Temporal *temp);
 extern TInstant *tboolinst_make(bool b, TimestampTz t);
 extern TSequence *tboolseq_from_base_tstzset(bool b, const Set *s);
@@ -1269,8 +1333,11 @@ extern TSequenceSet *ttextseqset_from_base_tstzspanset(const text *txt, const Sp
  * Conversion functions for temporal types
  *****************************************************************************/
 
+extern Temporal *tbigint_to_tfloat(const Temporal *temp);
+extern Temporal *tbigint_to_tint(const Temporal *temp);
 extern Temporal *tbool_to_tint(const Temporal *temp);
 extern Span *temporal_to_tstzspan(const Temporal *temp);
+extern Temporal *tfloat_to_tbigint(const Temporal *temp);
 extern Temporal *tfloat_to_tint(const Temporal *temp);
 extern Temporal *tfloat_to_tbigint(const Temporal *temp);
 extern Temporal *tint_to_tfloat(const Temporal *temp);
@@ -1284,9 +1351,16 @@ extern TBox *tnumber_to_tbox (const Temporal *temp);
  * Accessor functions for temporal types
  *****************************************************************************/
 
+extern int64 tbigint_end_value(const Temporal *temp);
+extern int64 tbigint_max_value(const Temporal *temp);
+extern int64 tbigint_min_value(const Temporal *temp);
+extern int64 tbigint_start_value(const Temporal *temp);
+// extern bool tbigint_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict, int64 *result);
+extern bool tbigint_value_n(const Temporal *temp, int64 n, int64 *result);
+extern int64 *tbigint_values(const Temporal *temp, int32 *count);
 extern bool tbool_end_value(const Temporal *temp);
 extern bool tbool_start_value(const Temporal *temp);
-extern bool tbool_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict, bool *value);
+extern bool tbool_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict, bool *result);
 extern bool tbool_value_n(const Temporal *temp, int n, bool *result);
 extern bool *tbool_values(const Temporal *temp, int *count);
 extern Interval *temporal_duration(const Temporal *temp, bool boundspan);
@@ -1318,11 +1392,12 @@ extern SpanSet *temporal_time(const Temporal *temp);
 extern TimestampTz *temporal_timestamps(const Temporal *temp, int *count);
 extern bool temporal_timestamptz_n(const Temporal *temp, int n, TimestampTz *result);
 extern bool temporal_upper_inc(const Temporal *temp);
+// extern double tfloat_avg_value(const Temporal *temp);
 extern double tfloat_end_value(const Temporal *temp);
 extern double tfloat_min_value(const Temporal *temp);
 extern double tfloat_max_value(const Temporal *temp);
 extern double tfloat_start_value(const Temporal *temp);
-extern bool tfloat_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict, double *value);
+extern bool tfloat_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict, double *result);
 extern bool tfloat_value_n(const Temporal *temp, int n, double *result);
 extern double *tfloat_values(const Temporal *temp, int *count);
 extern int tint_end_value(const Temporal *temp);
@@ -1333,7 +1408,7 @@ extern int tint_min_value(const Temporal *temp);
 extern int64 tbigint_min_value(const Temporal *temp);
 extern int tint_start_value(const Temporal *temp);
 extern int64 tbigint_start_value(const Temporal *temp);
-extern bool tint_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict, int *value);
+extern bool tint_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict, int *result);
 extern bool tint_value_n(const Temporal *temp, int n, int *result);
 extern bool tbigint_value_n(const Temporal *temp, int64 n, int64 *result);
 extern int *tint_values(const Temporal *temp, int *count);
@@ -1346,7 +1421,7 @@ extern text *ttext_end_value(const Temporal *temp);
 extern text *ttext_max_value(const Temporal *temp);
 extern text *ttext_min_value(const Temporal *temp);
 extern text *ttext_start_value(const Temporal *temp);
-extern bool ttext_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict, text **value);
+extern bool ttext_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict, text **result);
 extern bool ttext_value_n(const Temporal *temp, int n, text **result);
 extern text **ttext_values(const Temporal *temp, int *count);
 
@@ -1355,6 +1430,9 @@ extern text **ttext_values(const Temporal *temp, int *count);
  *****************************************************************************/
 
 extern double float_degrees(double value, bool normalize);
+extern Temporal *tbigint_scale_value(const Temporal *temp, int64 width);
+extern Temporal *tbigint_shift_scale_value(const Temporal *temp, int64 shift, int64 width);
+extern Temporal *tbigint_shift_value(const Temporal *temp, int64 shift);
 extern Temporal **temparr_round(Temporal **temp, int count, int maxdd);
 extern Temporal *temporal_round(const Temporal *temp, int maxdd);
 extern Temporal *temporal_scale_time(const Temporal *temp, const Interval *duration);
@@ -1397,6 +1475,8 @@ extern Temporal *temporal_update(const Temporal *temp1, const Temporal *temp2, b
  * Restriction functions for temporal types
  *****************************************************************************/
 
+// extern Temporal *tbigint_at_value(const Temporal *temp, int64 i);
+// extern Temporal *tbigint_minus_value(const Temporal *temp, int64 i);
 extern Temporal *tbool_at_value(const Temporal *temp, bool b);
 extern Temporal *tbool_minus_value(const Temporal *temp, bool b);
 extern Temporal *temporal_after_timestamptz(const Temporal *temp, TimestampTz t, bool strict);
@@ -1446,19 +1526,24 @@ extern bool temporal_ne(const Temporal *temp1, const Temporal *temp2);
 
 /* Ever and always comparison functions for temporal types */
 
+extern int always_eq_bigint_tbigint(int64 i, const Temporal *temp);
 extern int always_eq_bool_tbool(bool b, const Temporal *temp);
 extern int always_eq_float_tfloat(double d, const Temporal *temp);
 extern int always_eq_int_tint(int i, const Temporal *temp);
 extern int always_eq_tbool_bool(const Temporal *temp, bool b);
 extern int always_eq_temporal_temporal(const Temporal *temp1, const Temporal *temp2);
 extern int always_eq_text_ttext(const text *txt, const Temporal *temp);
+extern int always_eq_tbigint_bigint(const Temporal *temp, int64 i);
 extern int always_eq_tfloat_float(const Temporal *temp, double d);
 extern int always_eq_tint_int(const Temporal *temp, int i);
 extern int always_eq_bigint_tbigint(int64 i, const Temporal *temp);
 extern int always_eq_tbigint_bigint(const Temporal *temp, int64 i);
 extern int always_eq_ttext_text(const Temporal *temp, const text *txt);
+
+extern int always_ge_bigint_tbigint(int64 i, const Temporal *temp);
 extern int always_ge_float_tfloat(double d, const Temporal *temp);
 extern int always_ge_int_tint(int i, const Temporal *temp);
+extern int always_ge_tbigint_bigint(const Temporal *temp, int64 i);
 extern int always_ge_temporal_temporal(const Temporal *temp1, const Temporal *temp2);
 extern int always_ge_text_ttext(const text *txt, const Temporal *temp);
 extern int always_ge_tfloat_float(const Temporal *temp, double d);
@@ -1466,8 +1551,11 @@ extern int always_ge_tint_int(const Temporal *temp, int i);
 extern int always_ge_bigint_tbigint(int64 i, const Temporal *temp);
 extern int always_ge_tbigint_bigint(const Temporal *temp, int64 i);
 extern int always_ge_ttext_text(const Temporal *temp, const text *txt);
+
+extern int always_gt_bigint_tbigint(int64 i, const Temporal *temp);
 extern int always_gt_float_tfloat(double d, const Temporal *temp);
 extern int always_gt_int_tint(int i, const Temporal *temp);
+extern int always_gt_tbigint_bigint(const Temporal *temp, int64 i);
 extern int always_gt_temporal_temporal(const Temporal *temp1, const Temporal *temp2);
 extern int always_gt_text_ttext(const text *txt, const Temporal *temp);
 extern int always_gt_tfloat_float(const Temporal *temp, double d);
@@ -1475,8 +1563,11 @@ extern int always_gt_tint_int(const Temporal *temp, int i);
 extern int always_gt_bigint_tbigint(int64 i, const Temporal *temp);
 extern int always_gt_tbigint_bigint(const Temporal *temp, int64 i);
 extern int always_gt_ttext_text(const Temporal *temp, const text *txt);
+
+extern int always_le_bigint_tbigint(int64 i, const Temporal *temp);
 extern int always_le_float_tfloat(double d, const Temporal *temp);
 extern int always_le_int_tint(int i, const Temporal *temp);
+extern int always_le_tbigint_bigint(const Temporal *temp, int64 i);
 extern int always_le_temporal_temporal(const Temporal *temp1, const Temporal *temp2);
 extern int always_le_text_ttext(const text *txt, const Temporal *temp);
 extern int always_le_tfloat_float(const Temporal *temp, double d);
@@ -1484,6 +1575,8 @@ extern int always_le_tint_int(const Temporal *temp, int i);
 extern int always_le_bigint_tbigint(int64 i, const Temporal *temp);
 extern int always_le_tbigint_bigint(const Temporal *temp, int64 i);
 extern int always_le_ttext_text(const Temporal *temp, const text *txt);
+
+extern int always_lt_bigint_tbigint(int64 i, const Temporal *temp);
 extern int always_lt_float_tfloat(double d, const Temporal *temp);
 extern int always_lt_int_tint(int i, const Temporal *temp);
 extern int always_lt_temporal_temporal(const Temporal *temp1, const Temporal *temp2);
@@ -1496,7 +1589,11 @@ extern int always_lt_ttext_text(const Temporal *temp, const text *txt);
 extern int always_ne_bool_tbool(bool b, const Temporal *temp);
 extern int always_ne_float_tfloat(double d, const Temporal *temp);
 extern int always_ne_int_tint(int i, const Temporal *temp);
+extern int always_lt_tbigint_bigint(const Temporal *temp, int64 i);
+
+extern int always_ne_bigint_tbigint(int64 i, const Temporal *temp);
 extern int always_ne_tbool_bool(const Temporal *temp, bool b);
+extern int always_ne_tbigint_bigint(const Temporal *temp, int64 i);
 extern int always_ne_temporal_temporal(const Temporal *temp1, const Temporal *temp2);
 extern int always_ne_text_ttext(const text *txt, const Temporal *temp);
 extern int always_ne_tfloat_float(const Temporal *temp, double d);
@@ -1504,9 +1601,12 @@ extern int always_ne_tint_int(const Temporal *temp, int i);
 extern int always_ne_bigint_tbigint(int64 i, const Temporal *temp);
 extern int always_ne_tbigint_bigint(const Temporal *temp, int64 i);
 extern int always_ne_ttext_text(const Temporal *temp, const text *txt);
+
+extern int ever_eq_bigint_tbigint(int64 i, const Temporal *temp);
 extern int ever_eq_bool_tbool(bool b, const Temporal *temp);
 extern int ever_eq_float_tfloat(double d, const Temporal *temp);
 extern int ever_eq_int_tint(int i, const Temporal *temp);
+extern int ever_eq_tbigint_bigint(const Temporal *temp, int64 i);
 extern int ever_eq_tbool_bool(const Temporal *temp, bool b);
 extern int ever_eq_temporal_temporal(const Temporal *temp1, const Temporal *temp2);
 extern int ever_eq_text_ttext(const text *txt, const Temporal *temp);
@@ -1515,8 +1615,11 @@ extern int ever_eq_tint_int(const Temporal *temp, int i);
 extern int ever_eq_bigint_tbigint(int64 i, const Temporal *temp);
 extern int ever_eq_tbigint_bigint(const Temporal *temp, int64 i);
 extern int ever_eq_ttext_text(const Temporal *temp, const text *txt);
+
+extern int ever_ge_bigint_tbigint(int64 i, const Temporal *temp);
 extern int ever_ge_float_tfloat(double d, const Temporal *temp);
 extern int ever_ge_int_tint(int i, const Temporal *temp);
+extern int ever_ge_tbigint_bigint(const Temporal *temp, int64 i);
 extern int ever_ge_temporal_temporal(const Temporal *temp1, const Temporal *temp2);
 extern int ever_ge_text_ttext(const text *txt, const Temporal *temp);
 extern int ever_ge_tfloat_float(const Temporal *temp, double d);
@@ -1524,8 +1627,11 @@ extern int ever_ge_tint_int(const Temporal *temp, int i);
 extern int ever_ge_bigint_tbigint(int64 i, const Temporal *temp);
 extern int ever_ge_tbigint_bigint(const Temporal *temp, int64 i);
 extern int ever_ge_ttext_text(const Temporal *temp, const text *txt);
+
+extern int ever_gt_bigint_tbigint(int64 i, const Temporal *temp);
 extern int ever_gt_float_tfloat(double d, const Temporal *temp);
 extern int ever_gt_int_tint(int i, const Temporal *temp);
+extern int ever_gt_tbigint_bigint(const Temporal *temp, int64 i);
 extern int ever_gt_temporal_temporal(const Temporal *temp1, const Temporal *temp2);
 extern int ever_gt_text_ttext(const text *txt, const Temporal *temp);
 extern int ever_gt_tfloat_float(const Temporal *temp, double d);
@@ -1533,8 +1639,11 @@ extern int ever_gt_tint_int(const Temporal *temp, int i);
 extern int ever_gt_bigint_tbigint(int64 i, const Temporal *temp);
 extern int ever_gt_tbigint_bigint(const Temporal *temp, int64 i);
 extern int ever_gt_ttext_text(const Temporal *temp, const text *txt);
+
+extern int ever_le_bigint_tbigint(int64 i, const Temporal *temp);
 extern int ever_le_float_tfloat(double d, const Temporal *temp);
 extern int ever_le_int_tint(int i, const Temporal *temp);
+extern int ever_le_tbigint_bigint(const Temporal *temp, int64 i);
 extern int ever_le_temporal_temporal(const Temporal *temp1, const Temporal *temp2);
 extern int ever_le_text_ttext(const text *txt, const Temporal *temp);
 extern int ever_le_tfloat_float(const Temporal *temp, double d);
@@ -1542,8 +1651,11 @@ extern int ever_le_tint_int(const Temporal *temp, int i);
 extern int ever_le_bigint_tbigint(int64 i, const Temporal *temp);
 extern int ever_le_tbigint_bigint(const Temporal *temp, int64 i);
 extern int ever_le_ttext_text(const Temporal *temp, const text *txt);
+
+extern int ever_lt_bigint_tbigint(int64 i, const Temporal *temp);
 extern int ever_lt_float_tfloat(double d, const Temporal *temp);
 extern int ever_lt_int_tint(int i, const Temporal *temp);
+extern int ever_lt_tbigint_bigint(const Temporal *temp, int64 i);
 extern int ever_lt_temporal_temporal(const Temporal *temp1, const Temporal *temp2);
 extern int ever_lt_text_ttext(const text *txt, const Temporal *temp);
 extern int ever_lt_tfloat_float(const Temporal *temp, double d);
@@ -1551,9 +1663,12 @@ extern int ever_lt_tint_int(const Temporal *temp, int i);
 extern int ever_lt_bigint_tbigint(int64 i, const Temporal *temp);
 extern int ever_lt_tbigint_bigint(const Temporal *temp, int64 i);
 extern int ever_lt_ttext_text(const Temporal *temp, const text *txt);
+
+extern int ever_ne_bigint_tbigint(int64 i, const Temporal *temp);
 extern int ever_ne_bool_tbool(bool b, const Temporal *temp);
 extern int ever_ne_float_tfloat(double d, const Temporal *temp);
 extern int ever_ne_int_tint(int i, const Temporal *temp);
+extern int ever_ne_tbigint_bigint(const Temporal *temp, int64 i);
 extern int ever_ne_tbool_bool(const Temporal *temp, bool b);
 extern int ever_ne_temporal_temporal(const Temporal *temp1, const Temporal *temp2);
 extern int ever_ne_text_ttext(const text *txt, const Temporal *temp);
@@ -1736,29 +1851,37 @@ extern Temporal *tor_tbool_tbool(const Temporal *temp1, const Temporal *temp2);
  * Mathematical functions for temporal types
  *****************************************************************************/
 
+extern Temporal *add_bigint_tbigint(int64 i, const Temporal *tnumber);
 extern Temporal *add_float_tfloat(double d, const Temporal *tnumber);
 extern Temporal *add_int_tint(int i, const Temporal *tnumber);
+extern Temporal *add_tbigint_bigint(const Temporal *tnumber, int64 i);
 extern Temporal *add_tfloat_float(const Temporal *tnumber, double d);
 extern Temporal *add_tint_int(const Temporal *tnumber, int i);
 extern Temporal *add_bigint_tbigint(int64 i, const Temporal *tnumber);
 extern Temporal *add_tbigint_bigint(const Temporal *tnumber, int64 i);
 extern Temporal *add_tnumber_tnumber(const Temporal *tnumber1, const Temporal *tnumber2);
+extern Temporal *div_bigint_tbigint(int64 i, const Temporal *tnumber);
 extern Temporal *div_float_tfloat(double d, const Temporal *tnumber);
 extern Temporal *div_int_tint(int i, const Temporal *tnumber);
+extern Temporal *div_tbigint_bigint(const Temporal *tnumber, int64 i);
 extern Temporal *div_tfloat_float(const Temporal *tnumber, double d);
 extern Temporal *div_tint_int(const Temporal *tnumber, int i);
 extern Temporal *div_bigint_tbigint(int64 i, const Temporal *tnumber);
 extern Temporal *div_tbigint_bigint(const Temporal *tnumber, int64 i);
 extern Temporal *div_tnumber_tnumber(const Temporal *tnumber1, const Temporal *tnumber2);
+extern Temporal *mul_bigint_tbigint(int64 i, const Temporal *tnumber);
 extern Temporal *mul_float_tfloat(double d, const Temporal *tnumber);
 extern Temporal *mul_int_tint(int i, const Temporal *tnumber);
+extern Temporal *mul_tbigint_bigint(const Temporal *tnumber, int64 i);
 extern Temporal *mul_tfloat_float(const Temporal *tnumber, double d);
 extern Temporal *mul_tint_int(const Temporal *tnumber, int i);
 extern Temporal *mul_bigint_tbigint(int64 i, const Temporal *tnumber);
 extern Temporal *mul_tbigint_bigint(const Temporal *tnumber, int64 i);
 extern Temporal *mul_tnumber_tnumber(const Temporal *tnumber1, const Temporal *tnumber2);
+extern Temporal *sub_bigint_tbigint(int64 i, const Temporal *tnumber);
 extern Temporal *sub_float_tfloat(double d, const Temporal *tnumber);
 extern Temporal *sub_int_tint(int i, const Temporal *tnumber);
+extern Temporal *sub_tbigint_bigint(const Temporal *tnumber, int64 i);
 extern Temporal *sub_tfloat_float(const Temporal *tnumber, double d);
 extern Temporal *sub_tint_int(const Temporal *tnumber, int i);
 extern Temporal *sub_bigint_tbigint(int64 i, const Temporal *tnumber);
@@ -1811,7 +1934,6 @@ extern int nad_tint_tint(const Temporal *temp1, const Temporal *temp2);
 extern SkipList *tbool_tand_transfn(SkipList *state, const Temporal *temp);
 extern SkipList *tbool_tand_combinefn(SkipList *state1, SkipList *state2);
 extern SkipList *tbool_tor_transfn(SkipList *state, const Temporal *temp);
-extern Span *temporal_extent_transfn(Span *sp, const Temporal *temp);
 extern SkipList *tbool_tor_combinefn(SkipList *state1, SkipList *state2);
 extern Span *temporal_extent_transfn(Span *s, const Temporal *temp);
 extern SkipList *temporal_merge_transfn(SkipList *state, const Temporal *temp);

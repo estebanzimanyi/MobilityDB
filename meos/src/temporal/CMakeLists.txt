@@ -54,6 +54,7 @@ if(MEOS)
     span_ops_meos.c
     spanset_meos.c
     spanset_ops_meos.c
+    tbox_meos.c
     tbool_ops_meos.c
     temporal_aggfuncs_meos.c
     temporal_boxops_meos.c

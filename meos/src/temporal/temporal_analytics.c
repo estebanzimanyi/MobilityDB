@@ -73,10 +73,6 @@
 #include <meos_cbuffer.h>
 #endif
 
-#include <utils/jsonb.h>
-#include <utils/numeric.h>
-#include <pgtypes.h>
-
 
 /*****************************************************************************
  * Extended Kalman Filter (EKF) outlier filtering, adapting tinyEKF to MEOS
@@ -375,6 +371,10 @@ temporal_ext_kalman_filter(const Temporal *temp, double gate, double q, double v
   }
 }
 
+#include <utils/jsonb.h>
+#include <utils/numeric.h>
+#include <pgtypes.h>
+
 /*****************************************************************************
  * Time precision functions for time values
  *****************************************************************************/
@@ -385,7 +385,6 @@ temporal_ext_kalman_filter(const Temporal *temp, double gate, double q, double v
  * @param[in] t Time value
  * @param[in] duration Size of the time bins
  * @param[in] torigin Time origin of the bins
- * @csqlfn #Timestamptz_tprecision()
  */
 TimestampTz
 timestamptz_tprecision(TimestampTz t, const Interval *duration,
@@ -404,7 +403,6 @@ timestamptz_tprecision(TimestampTz t, const Interval *duration,
  * @param[in] s Timestamptz set
  * @param[in] duration Size of the time bins
  * @param[in] torigin Time origin of the bins
- * @csqlfn #Tstzset_tprecision()
  */
 Set *
 tstzset_tprecision(const Set *s, const Interval *duration, TimestampTz torigin)
@@ -427,7 +425,6 @@ tstzset_tprecision(const Set *s, const Interval *duration, TimestampTz torigin)
  * @param[in] s Time value
  * @param[in] duration Size of the time bins
  * @param[in] torigin Time origin of the bins
- * @csqlfn #Tstzspan_tprecision()
  */
 Span *
 tstzspan_tprecision(const Span *s, const Interval *duration,
@@ -455,7 +452,6 @@ tstzspan_tprecision(const Span *s, const Interval *duration,
  * @param[in] ss Time value
  * @param[in] duration Size of the time bins
  * @param[in] torigin Time origin of the bins
- * @csqlfn #Tstzspanset_tprecision()
  */
 SpanSet *
 tstzspanset_tprecision(const SpanSet *ss, const Interval *duration,
@@ -861,8 +857,6 @@ tsequenceset_tprecision(const TSequenceSet *ss, const Interval *duration,
   assert(ss); assert(duration); assert(positive_duration(duration));
   assert(ss->temptype == T_TINT || ss->temptype == T_TBIGINT ||
     ss->temptype == T_TFLOAT ||
-    ss->temptype == T_TGEOMPOINT || ss->temptype == T_TGEOGPOINT );
-  assert(ss->temptype == T_TINT || ss->temptype == T_TFLOAT ||
     ss->temptype == T_TGEOMPOINT || ss->temptype == T_TGEOGPOINT ||
     ss->temptype == T_TGEOMETRY || ss->temptype == T_TGEOGRAPHY
 #if POSE
@@ -888,7 +882,7 @@ tsequenceset_tprecision(const TSequenceSet *ss, const Interval *duration,
   upper = lower_bin + tunits;
   interpType interp = MEOS_FLAGS_GET_INTERP(ss->flags);
   MeosType temptype_out = (ss->temptype == T_TINT) ? T_TFLOAT : ss->temptype;
-  MeosType basetype_out = temptype_basetype(temptype_out);
+  MeosType basetype_o = temptype_basetype(temptype_out);
   /* Determine whether we are computing the twAvg or the twCentroid */
   bool twavg = tnumber_type(ss->temptype);
   int ninsts = 0;
@@ -918,7 +912,7 @@ tsequenceset_tprecision(const TSequenceSet *ss, const Interval *duration,
       /* We keep only the first instant since the tprecision operation amounts
        * to a granularity change */
       instants[ninsts++] = tinstant_make(value, temptype_out, lower);
-      DATUM_FREE(value, basetype_out);
+      DATUM_FREE(value, basetype_o);
       pfree(proj);
     }
     else
@@ -1303,7 +1297,7 @@ static double
 tinstarr_similarity1(double *dist, TInstant **instants1, int count1,
   TInstant **instants2, int count2, SimFunc simfunc)
 {
-  datum_func2 func = pt_distance_fn(instants1[0]->flags);
+  datum_func2 func = point_distance_fn(instants1[0]->flags);
   for (int i = 0; i < count1; i++)
   {
     for (int j = 0; j < count2; j++)
@@ -1563,7 +1557,7 @@ tinstarr_similarity_matrix1(TInstant **instants1, int count1,
   MeosType temptype = instants1[0]->temptype;
   datum_func2 func = tgeo_type(temptype) ?
     geo_distance_fn(instants1[0]->flags) : ( tpoint_type(temptype) ?
-    pt_distance_fn(instants1[0]->flags) : NULL );
+    point_distance_fn(instants1[0]->flags) : NULL );
   for (int i = 0; i < count1; i++)
   {
     for (int j = 0; j < count2; j++)
@@ -1717,7 +1711,7 @@ static double
 tinstarr_hausdorff_distance(TInstant **instants1, int count1,
   TInstant **instants2, int count2)
 {
-  datum_func2 func = pt_distance_fn(instants1[0]->flags);
+  datum_func2 func = point_distance_fn(instants1[0]->flags);
   const TInstant *inst1, *inst2;
   double cmax = 0.0, cmin;
   double d;
@@ -1762,7 +1756,6 @@ tinstarr_hausdorff_distance(TInstant **instants1, int count1,
  * @brief Return the Hausdorf distance between two temporal values
  * @param[in] temp1,temp2 Temporal values
  * @return On error return `DBL_MAX`
- * @csqlfn #Temporal_hausdorff_distance()
  */
 double
 temporal_hausdorff_distance(const Temporal *temp1, const Temporal *temp2)
@@ -1797,7 +1790,7 @@ temporal_hausdorff_distance(const Temporal *temp1, const Temporal *temp2)
 TSequence *
 tsequence_simplify_min_dist(const TSequence *seq, double dist)
 {
-  datum_func2 func = pt_distance_fn(seq->flags);
+  datum_func2 func = point_distance_fn(seq->flags);
   const TInstant *inst1 = TSEQUENCE_INST_N(seq, 0);
   /* Add first instant to the output sequence */
   TInstant **instants = palloc(sizeof(TInstant *) * seq->count);
@@ -2036,7 +2029,7 @@ tfloatseq_findsplit(const TSequence *seq, int i1, int i2, int *split,
  * @brief Return the 2D distance between the points
  */
 static inline double
-dist2d_pt_pt(POINT2D *p1, POINT2D *p2)
+dist2d_pt_pt(const POINT2D *p1, const POINT2D *p2)
 {
   return hypot(p2->x - p1->x, p2->y - p1->y);
 }
@@ -2045,7 +2038,7 @@ dist2d_pt_pt(POINT2D *p1, POINT2D *p2)
  * @brief Return the 3D distance between the points
  */
 static inline double
-dist3d_pt_pt(POINT3DZ *p1, POINT3DZ *p2)
+dist3d_pt_pt(const POINT3DZ *p1, const POINT3DZ *p2)
 {
   return hypot3d(p2->x - p1->x, p2->y - p1->y, p2->z - p1->z);
 }
@@ -2494,7 +2487,7 @@ tinstarr_average_hausdorff_distance(const TInstant **instants1, int count1,
    const TInstant **instants2, int count2)
  {
 
-  datum_func2 func = pt_distance_fn(instants1[0]->flags);
+  datum_func2 func = point_distance_fn(instants1[0]->flags);
   const TInstant *inst1, *inst2;
 
   double sum1 = 0.0, sum2 = 0.0;
@@ -2606,7 +2599,7 @@ tinstarr_lcss_distance(const TInstant **A, int count1,
   int *curr = palloc0(sizeof(int) * (count2 + 1));
   
   
-  datum_func2 func = pt_distance_fn(A[0]->flags);
+  datum_func2 func = point_distance_fn(A[0]->flags);
 
   for (int i = 1; i <= count1; i++) {
     for (int j = 1; j <= count2; j++) {

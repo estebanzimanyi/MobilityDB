@@ -49,25 +49,8 @@
  * static-cbuffer section.
  *****************************************************************************/
 
-/* Input and output */
 extern H3Index h3index_in(const char *str);
 extern char *h3index_out(H3Index cell);
-
-/* Comparisons */
-extern bool h3index_eq(H3Index a, H3Index b);
-extern bool h3index_ne(H3Index a, H3Index b);
-extern bool h3index_lt(H3Index a, H3Index b);
-extern bool h3index_le(H3Index a, H3Index b);
-extern bool h3index_gt(H3Index a, H3Index b);
-extern bool h3index_ge(H3Index a, H3Index b);
-extern int h3index_cmp(H3Index a, H3Index b);
-extern uint32 h3index_hash(H3Index cell);
-
-/* Cell operations */
-extern Set *h3_grid_disk(H3Index origin, int k);
-extern Set *h3_cell_to_children(H3Index origin, int childRes);
-extern Set *h3_compact_cells(const Set *cells);
-extern Set *h3_uncompact_cells(const Set *cells, int res);
 
 /*****************************************************************************
  * Type inheritance (analogue of meos_cbuffer.h's tcbuffer section)

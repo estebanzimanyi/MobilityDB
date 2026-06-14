@@ -1,20 +1,22 @@
 #ifndef POSTGRES_H
 #define POSTGRES_H
 
+#include <stdint.h>
+
 #define DatumGetPointer(X) ((Pointer) (X))
 
 typedef char *Pointer;
 typedef uintptr_t Datum;
 
-typedef signed char int8;
-typedef signed short int16;
-typedef signed int int32;
-typedef long int int64;
+typedef int8_t  int8;
+typedef int16_t int16;
+typedef int32_t int32;
+typedef int64_t int64;
 
-typedef unsigned char uint8;
-typedef unsigned short uint16;
-typedef unsigned int uint32;
-typedef unsigned long int uint64;
+typedef uint8_t  uint8;
+typedef uint16_t uint16;
+typedef uint32_t uint32;
+typedef uint64_t uint64;
 
 typedef int32 DateADT;
 typedef int64 TimeADT;
@@ -41,16 +43,33 @@ typedef struct varlena bytea;
 
 /* The following functions have the same name as external PostgreSQL functions */
 
+extern text *cstring_to_text(const char *str);
+extern char *text_to_cstring(const text *txt);
+extern bool bool_in(const char *str);
+extern char *bool_out(bool b);
+extern double float8_in(const char *str);
+extern char *float8_out(double num, int maxdd);
+extern text *text_in(const char *str);
+extern char *text_out(const text *txt);
+extern text *text_upper(const text *txt);
+extern text *text_lower(const text *txt);
+extern text *text_initcap(const text *txt);
+extern DateADT add_date_int(DateADT date, int32 days);
+extern Timestamp add_timestamptz_interval(TimestampTz tstz, const Interval *interv);
 extern DateADT date_in(const char *str);
 extern char *date_out(DateADT date);
 extern int interval_cmp(const Interval *interv1, const Interval *interv2);
 extern Interval *interval_in(const char *str, int32 typmod);
+extern Interval *pg_interval_in(const char *str, int32 typmod);
+extern Interval *interval_make(int32 years, int32 months, int32 weeks, int32 days, int32 hours, int32 mins, double secs);
 extern char *interval_out(const Interval *interv);
+extern char *pg_interval_out(const Interval *interv);
 extern TimeADT time_in(const char *str, int32 typmod);
 extern char *time_out(TimeADT time);
 extern Timestamp timestamp_in(const char *str, int32 typmod);
 extern char *timestamp_out(Timestamp ts);
 extern TimestampTz timestamptz_in(const char *str, int32 typmod);
+extern TimestampTz pg_timestamptz_in(const char *str, int32 typmod);
 extern char *timestamptz_out(TimestampTz tstz);
 /* Base-type operations (comparison, arithmetic, math, conversion) — the public
  * MEOS API must provide all operations over the base types; impls in pgtypes/ */
