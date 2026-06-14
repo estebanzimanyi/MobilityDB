@@ -67,6 +67,13 @@ jobs:
           gcc -Wall -Werror=implicit-function-declaration -g -I/usr/local/include -o float_test float_test.c -L/usr/local/lib -lmeos
           ./float_test
           gcc -Wall -Werror=implicit-function-declaration -g -I/usr/local/include -o geo_test geo_test.c -L/usr/local/lib -lmeos
+          gcc -Wall -g -I/usr/local/include -o setspan_test setspan_test.c -L/usr/local/lib -lmeos
+          ./setspan_test
+          gcc -Wall -g -I/usr/local/include -o typeof_test typeof_test.c -L/usr/local/lib -lmeos
+          ./typeof_test
+          gcc -Wall -g -I/usr/local/include -o temporal_test temporal_test.c -L/usr/local/lib -lmeos
+          ./temporal_test
+          gcc -Wall -g -I/usr/local/include -o geo_test geo_test.c -L/usr/local/lib -lmeos
           ./geo_test
           gcc -Wall -Werror=implicit-function-declaration -g -I/usr/local/include -o json_test json_test.c -L/usr/local/lib -lmeos
           ./json_test
