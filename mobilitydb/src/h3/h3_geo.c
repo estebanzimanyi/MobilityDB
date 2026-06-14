@@ -100,7 +100,7 @@ PG_FUNCTION_INFO_V1(Ever_eq_h3indexset_th3index);
  * `eIntersects(geoToH3IndexSet(p.geom, 7), t.trip_h3)`
  * before the exact spatial predicate.
  *
- * @sqlfn eIntersects(h3indexset, th3index)
+ * @sqlfn ever_eq(h3indexset, th3index)
  */
 Datum
 Ever_eq_h3indexset_th3index(PG_FUNCTION_ARGS)

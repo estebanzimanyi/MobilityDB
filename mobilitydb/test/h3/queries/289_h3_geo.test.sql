@@ -7,7 +7,7 @@
 -------------------------------------------------------------------------------
 
 -- Static-geometry → H3 cell / cell set: geoToH3Cell, geoToH3IndexSet,
--- eIntersects.  Covers every WKT/GSERIALIZED
+-- and the ever_eq cell-set prefilter.  Covers every WKT/GSERIALIZED
 -- geometry type the kernel supports.
 
 -------------------------------------------------------------------------------
@@ -128,7 +128,7 @@ SELECT geoToH3IndexSet(geometry 'SRID=4326;POINT(4.35 50.85)', -1);
 SELECT geoToH3IndexSet(geometry 'SRID=4326;POINT(4.35 50.85)', 16);
 
 -------------------------------------------------------------------------------
--- eIntersects — set vs th3index prefilter
+-- ever_eq / ?= — set vs th3index prefilter
 -------------------------------------------------------------------------------
 
 -- Build a th3index covering Brussels at resolution 7
@@ -138,11 +138,10 @@ WITH t AS (
                  POINT(4.40 50.90)@2024-01-02]', 7) AS th3idx
 )
 -- Set covering a polygon that contains both endpoints → prefilter true
-SELECT eIntersects(
-         geoToH3IndexSet(geometry 'SRID=4326;POLYGON((4.30 50.80, 4.45 50.80,
-                                                     4.45 50.95, 4.30 50.95,
-                                                     4.30 50.80))', 7),
-         t.th3idx) FROM t;
+SELECT geoToH3IndexSet(geometry 'SRID=4326;POLYGON((4.30 50.80, 4.45 50.80,
+                                                   4.45 50.95, 4.30 50.95,
+                                                   4.30 50.80))', 7) ?= t.th3idx
+  FROM t;
 
 -- Set covering a polygon that contains neither endpoint → prefilter false
 WITH t AS (
@@ -150,7 +149,7 @@ WITH t AS (
     tgeompoint 'SRID=4326;[POINT(4.35 50.85)@2024-01-01,
                  POINT(4.40 50.90)@2024-01-02]', 7) AS th3idx
 )
-SELECT eIntersects(
+SELECT ever_eq(
          geoToH3IndexSet(geometry 'SRID=4326;POLYGON((10.0 50.0, 10.5 50.0,
                                                      10.5 50.5, 10.0 50.5,
                                                      10.0 50.0))', 7),
