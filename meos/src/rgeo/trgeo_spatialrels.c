@@ -180,7 +180,7 @@ econtains_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp)
 }
 
 /**
- * @ingroup meos_rgeo_rel_ever
+ * @ingroup meos_internal_rgeo_rel_ever
  * @brief Return 1 if a geometry always contains a temporal rigid geometry,
  * 0 if not, and -1 on error or if the geometry is empty
  * @param[in] gs Geometry
@@ -284,7 +284,7 @@ ecovers_geo_trgeo(const GSERIALIZED *gs, const Temporal *temp)
 }
 
 /**
- * @ingroup meos_rgeo_rel_ever
+ * @ingroup meos_internal_rgeo_rel_ever
  * @brief Return 1 if a geometry always covers a temporal geometry,
  * 0 if not, and -1 on error or if the geometry is empty
  * @param[in] gs Geometry
@@ -347,7 +347,7 @@ ecovers_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_rgeo_rel_ever
+ * @ingroup meos_internal_rgeo_rel_ever
  * @brief Return 1 if a temporal geometry always covers a geometry, 0 if not,
  * and -1 on error or if the geometry is empty
  * @param[in] temp Temporal geometry
@@ -421,7 +421,7 @@ edisjoint_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_rgeo_rel_ever
+ * @ingroup meos_internal_rgeo_rel_ever
  * @brief Return 1 if a temporal rigid geometry and a geometry are always 
  * disjoint,0 if not, and -1 on error or if the geometry is empty
  * @param[in] temp Temporal rigid geometry
@@ -476,7 +476,7 @@ edisjoint_trgeo_trgeo(const Temporal *temp1, const Temporal *temp2)
 }
 
 /**
- * @ingroup meos_rgeo_rel_ever
+ * @ingroup meos_internal_rgeo_rel_ever
  * @brief Return 1 if the temporal rigid geometries are always disjoint, 0 if
  * not, and -1 on error or if the temporal rigid geometries do not intersect
  * in time
@@ -531,7 +531,7 @@ eintersects_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_rgeo_rel_ever
+ * @ingroup meos_internal_rgeo_rel_ever
  * @brief Return 1 if a geometry and a temporal rigid geometry always
  * intersect, 0 if not, and -1 on error or if the geometry is empty
  * @param[in] temp Temporal rigid geometry
@@ -620,7 +620,7 @@ etouches_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs)
 }
 
 /**
- * @ingroup meos_rgeo_rel_ever
+ * @ingroup meos_internal_rgeo_rel_ever
  * @brief Return 1 if a temporal rigid geometry and a geometry always touch, 
  * 0 if not, and -1 on error or if the geometry is empty
  * @param[in] temp Temporal rigid geometry
@@ -704,7 +704,7 @@ edwithin_trgeo_geo(const Temporal *temp, const GSERIALIZED *gs, double dist)
 }
 
 /**
- * @ingroup meos_rgeo_rel_ever
+ * @ingroup meos_internal_rgeo_rel_ever
  * @brief Return 1 if a geometry and a temporal rigid geometry are always 
  * within a distance, 0 if not, -1 on error or if the geometry is empty
  * @param[in] temp Temporal rigid geometry
