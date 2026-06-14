@@ -102,6 +102,12 @@ option(H3
   OFF
   )
 
+option(QUADBIN
+  "Set ON|OFF (default=OFF) to include the temporal QUADBIN index type
+  (tquadbin). First-party, no external library required."
+  OFF
+  )
+
 # Option for including network points
 option(NPOINT
   "Set ON|OFF (default=ON) to include network points
@@ -156,6 +162,14 @@ if(H3)
 else()
   message(STATUS "Excluding temporal H3 index")
   add_definitions(-DH3=0)
+endif()
+
+if(QUADBIN)
+  message(STATUS "Including temporal QUADBIN index (tquadbin)")
+  add_definitions(-DQUADBIN=1)
+else()
+  message(STATUS "Excluding temporal QUADBIN index")
+  add_definitions(-DQUADBIN=0)
 endif()
 
 if(NPOINT)

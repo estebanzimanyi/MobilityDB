@@ -87,6 +87,9 @@ endif()
 if(POSE)
   add_subdirectory(pose)
 endif()
+if(QUADBIN)
+  add_subdirectory(quadbin)
+endif()
 if(RGEO)
   add_subdirectory(rgeo)
 endif()
@@ -114,7 +117,6 @@ configure_file(${CMAKE_CURRENT_BINARY_DIR}/${MOBILITYDB_EXTENSION_FILE}.in ${CMA
 
 # Set the library name extension according to the platform
 if(WIN32)
-  set(LIB_NAME_EXT ".dll")
 else()
   set(LIB_NAME_EXT ".so")
 endif()
