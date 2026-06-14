@@ -63,10 +63,6 @@
 #if JSON
   #include <utils/jsonb.h>
 #endif
-#if H3
-  #include <h3api.h>
-  #include "h3/h3index.h"
-#endif
 #if QUADBIN
   #include <meos_quadbin.h>
 #endif
@@ -87,6 +83,11 @@
 #if H3
   #include <h3api.h>
   #include "h3/h3index.h"
+#endif
+#if POINTCLOUD
+  #include <meos_pointcloud.h>
+  #include "pointcloud/pcpoint.h"
+  #include "pointcloud/pcpatch.h"
 #endif
 
 #include <utils/jsonb.h>
@@ -116,6 +117,7 @@ extern bool string_escape(const char *str, int quotes, char **result);
  * Output of base types
  *****************************************************************************/
 
+
 /**
  * @brief Return the string representation of a base value
  * @return On error return @p NULL
@@ -137,7 +139,6 @@ basetype_out(Datum value, MeosType type, int maxdd)
       return int32_out(DatumGetInt32(value));
     case T_INT8:
       return int64_out(DatumGetInt64(value));
-      return int8_out(DatumGetInt64(value));
 #if H3
     case T_H3INDEX:
       return h3index_out((H3Index) DatumGetInt64(value));
@@ -361,6 +362,26 @@ tpcpatch_as_mfjson_sb(stringbuffer_t *sb, const TInstant *inst, int precision)
   stringbuffer_append_len(sb, "]}", 2);
 }
 #endif /* POINTCLOUD */
+#if NPOINT
+/**
+ * @brief Write into the buffer a network point in the MF-JSON representation
+ *
+ * The payload shape is @code {"route":<route>,"position":<position>} @endcode,
+ * using the natural-language descriptors that match the SQL accessor surface
+ * (@c route(npoint) / @c getPosition(npoint)).  The position is a relative
+ * coordinate in [0, 1]; the route id is a 64-bit integer, so it is rendered
+ * with INT64_FORMAT to avoid loss of precision in the JSON payload.
+ */
+static void
+npoint_as_json_sb(stringbuffer_t *sb, const Npoint *np, int precision)
+{
+  assert(precision <= OUT_MAX_DOUBLE_PRECISION);
+  stringbuffer_aprintf(sb, "{\"route\":" INT64_FORMAT ",\"position\":", np->rid);
+  stringbuffer_append_double(sb, np->pos, precision);
+  stringbuffer_append_char(sb, '}');
+  return;
+}
+#endif /* NPOINT */
 
 #if POSE || RGEO
 /**
@@ -467,6 +488,7 @@ temporal_base_as_mfjson_sb(stringbuffer_t *sb, Datum value, MeosType temptype,
       char *str = geo_as_geojson(DatumGetGserializedP(value), 0, precision,
         NULL);
       stringbuffer_aprintf(sb, "%s,", str);
+      pfree(str);
       break;
     }
 #if JSON
@@ -642,6 +664,9 @@ bbox_as_mfjson_sb(stringbuffer_t *sb, MeosType temptype, const bboxunion *box,
     case T_TPOSE:
     case T_TRGEOMETRY:
     case T_TCBUFFER:
+#if NPOINT
+    case T_TNPOINT:
+#endif
       stbox_as_mfjson_sb(sb, (STBox *) box, precision);
       break;
 #if POINTCLOUD
@@ -698,11 +723,6 @@ temptype_as_mfjson_sb(stringbuffer_t *sb, MeosType temptype)
     case T_TJSONB:
       stringbuffer_append_len(sb, "{\"type\":\"MovingJsonb\",", 22);
       break;
-#if POSE
-    case T_TPOSE:
-      stringbuffer_append_len(sb, "{\"type\":\"MovingPose\",", 21);
-      break;
-#endif
 #endif
 #if POSE
     case T_TPOSE:
@@ -714,6 +734,11 @@ temptype_as_mfjson_sb(stringbuffer_t *sb, MeosType temptype)
       stringbuffer_append_len(sb, "{\"type\":\"MovingRigidGeometry\",", 30);
       break;
 #endif
+#if CBUFFER
+    case T_TCBUFFER:
+      stringbuffer_append_len(sb, "{\"type\":\"MovingCircularBuffer\",", 31);
+      break;
+#endif
 #if POINTCLOUD
     case T_TPCPOINT:
       stringbuffer_append_len(sb, "{\"type\":\"MovingPCPoint\",", 24);
@@ -722,14 +747,9 @@ temptype_as_mfjson_sb(stringbuffer_t *sb, MeosType temptype)
       stringbuffer_append_len(sb, "{\"type\":\"MovingPCPatch\",", 24);
       break;
 #endif
-
-#if CBUFFER
-    case T_TCBUFFER:
-      stringbuffer_append_len(sb, "{\"type\":\"MovingCircularBuffer\",", 31);
-      break;
-#endif
-#if POINTCLOUD
-      break;
+#if NPOINT
+    case T_TNPOINT:
+      stringbuffer_append_len(sb, "{\"type\":\"MovingNetworkPoint\",", 29);
       break;
 #endif
     default: /* Error! */
@@ -793,10 +813,18 @@ tinstant_as_mfjson_sb(stringbuffer_t *sb, const TInstant *inst,
     const GSERIALIZED *gs = trgeoinst_geom_p(inst);
     char *str = geo_as_geojson(gs, 0, precision, NULL);
     stringbuffer_aprintf(sb, "%s,", str);
+    pfree(str);
     stringbuffer_append_len(sb, "\"values\":[", 10);
     pose_as_json_sb(sb, DatumGetPoseP(tinstant_value_p(inst)), precision);
   }
 #endif /* RGEO */
+#if CBUFFER
+  else if (inst->temptype == T_TCBUFFER)
+  {
+    stringbuffer_append_len(sb, "\"values\":[", 10);
+    cbuffer_as_json_sb(sb, DatumGetCbufferP(tinstant_value_p(inst)), precision);
+  }
+#endif /* CBUFFER */
 #if POINTCLOUD
   else if (inst->temptype == T_TPCPOINT)
   {
@@ -809,24 +837,13 @@ tinstant_as_mfjson_sb(stringbuffer_t *sb, const TInstant *inst,
     tpcpatch_as_mfjson_sb(sb, inst, precision);
   }
 #endif /* POINTCLOUD */
-
-#if CBUFFER
-  else if (inst->temptype == T_TCBUFFER)
+#if NPOINT
+  else if (inst->temptype == T_TNPOINT)
   {
     stringbuffer_append_len(sb, "\"values\":[", 10);
-    cbuffer_as_json_sb(sb, DatumGetCbufferP(tinstant_value_p(inst)), precision);
+    npoint_as_json_sb(sb, DatumGetNpointP(tinstant_value_p(inst)), precision);
   }
-#endif /* CBUFFER */
-#if POINTCLOUD
-  {
-    stringbuffer_append_len(sb, "\"coordinates\":[", 15);
-    tpcpoint_coordinates_as_mfjson_sb(sb, inst, precision);
-  }
-  {
-    stringbuffer_append_len(sb, "\"values\":[", 10);
-    tpcpatch_as_mfjson_sb(sb, inst, precision);
-  }
-#endif /* POINTCLOUD */
+#endif /* NPOINT */
   else
   {
     stringbuffer_append_len(sb, "\"values\":[", 10);
@@ -872,6 +889,7 @@ tsequence_as_mfjson_sb(stringbuffer_t *sb, const TSequence *seq,
     const GSERIALIZED *gs = trgeoseq_geom_p(seq);
     char *str = geo_as_geojson(gs, 0, precision, NULL);
     stringbuffer_aprintf(sb, "%s,\"values\":[", str);
+    pfree(str);
   }
 #endif /* RGEO */
 #if POINTCLOUD
@@ -910,13 +928,6 @@ tsequence_as_mfjson_sb(stringbuffer_t *sb, const TSequence *seq,
       pose_as_json_sb(sb, DatumGetPoseP(tinstant_value_p(inst)), precision);
     }
 #endif /* RGEO */
-#if POINTCLOUD
-    else if (inst->temptype == T_TPCPOINT)
-      tpcpoint_coordinates_as_mfjson_sb(sb, inst, precision);
-    else if (inst->temptype == T_TPCPATCH)
-      tpcpatch_as_mfjson_sb(sb, inst, precision);
-#endif /* POINTCLOUD */
-
 #if CBUFFER
     else if (inst->temptype == T_TCBUFFER)
     {
@@ -924,9 +935,17 @@ tsequence_as_mfjson_sb(stringbuffer_t *sb, const TSequence *seq,
     }
 #endif /* CBUFFER */
 #if POINTCLOUD
+    else if (inst->temptype == T_TPCPOINT)
       tpcpoint_coordinates_as_mfjson_sb(sb, inst, precision);
+    else if (inst->temptype == T_TPCPATCH)
       tpcpatch_as_mfjson_sb(sb, inst, precision);
 #endif /* POINTCLOUD */
+#if NPOINT
+    else if (inst->temptype == T_TNPOINT)
+    {
+      npoint_as_json_sb(sb, DatumGetNpointP(tinstant_value_p(inst)), precision);
+    }
+#endif /* NPOINT */
     else
     {
       success = temporal_base_as_mfjson_sb(sb, tinstant_value_p(inst),
@@ -980,6 +999,7 @@ tsequenceset_as_mfjson_sb(stringbuffer_t *sb, const TSequenceSet *ss,
     stringbuffer_append_len(sb, "\"geometry\":", 11);
     char *str = geo_as_geojson(trgeoseqset_geom_p(ss), 0, precision, NULL);
     stringbuffer_aprintf(sb, "%s,", str);
+    pfree(str);
   }
 #endif /* RGEO */
 
@@ -1010,8 +1030,8 @@ tsequenceset_as_mfjson_sb(stringbuffer_t *sb, const TSequenceSet *ss,
         const GSERIALIZED *gs = DatumGetGserializedP(tinstant_value_p(inst));
         /* Do not repeat the crs for the composing geometries */
         char *str = geo_as_geojson(gs, 0, precision, NULL);
-        stringbuffer_aprintf(sb, "%s", str);      
-        // pfree(str);
+        stringbuffer_aprintf(sb, "%s", str);
+        pfree(str);
       }
 #if POSE
       else if (inst->temptype == T_TPOSE)
@@ -1027,13 +1047,6 @@ tsequenceset_as_mfjson_sb(stringbuffer_t *sb, const TSequenceSet *ss,
         pose_as_json_sb(sb, DatumGetPoseP(tinstant_value_p(inst)), precision);
       }
 #endif /* RGEO */
-#if POINTCLOUD
-      else if (inst->temptype == T_TPCPOINT)
-        tpcpoint_coordinates_as_mfjson_sb(sb, inst, precision);
-      else if (inst->temptype == T_TPCPATCH)
-        tpcpatch_as_mfjson_sb(sb, inst, precision);
-#endif /* POINTCLOUD */
-
 #if CBUFFER
       else if (inst->temptype == T_TCBUFFER)
       {
@@ -1041,9 +1054,17 @@ tsequenceset_as_mfjson_sb(stringbuffer_t *sb, const TSequenceSet *ss,
       }
 #endif /* CBUFFER */
 #if POINTCLOUD
+      else if (inst->temptype == T_TPCPOINT)
         tpcpoint_coordinates_as_mfjson_sb(sb, inst, precision);
+      else if (inst->temptype == T_TPCPATCH)
         tpcpatch_as_mfjson_sb(sb, inst, precision);
 #endif /* POINTCLOUD */
+#if NPOINT
+      else if (inst->temptype == T_TNPOINT)
+      {
+        npoint_as_json_sb(sb, DatumGetNpointP(tinstant_value_p(inst)), precision);
+      }
+#endif /* NPOINT */
       else
       {
         success = temporal_base_as_mfjson_sb(sb, tinstant_value_p(inst),
@@ -1091,7 +1112,8 @@ temporal_as_mfjson(const Temporal *temp, bool with_bbox, int flags,
   VALIDATE_NOT_NULL(temp, NULL);
 
   /* Get bounding box if needed */
-  bboxunion *box = NULL, tmp;
+  const bboxunion *box = NULL;
+  bboxunion tmp;
   if (with_bbox)
   {
     temporal_set_bbox(temp, &tmp);
@@ -1342,6 +1364,11 @@ base_to_wkb_size(Datum value, MeosType basetype, uint8_t variant)
       /* h3index is a uint64 cell id, wire-format identical to int8. */
       return MEOS_WKB_INT8_SIZE;
 #endif /* H3 */
+#if QUADBIN
+    case T_QUADBIN:
+      /* quadbin is a uint64 cell id, wire-format identical to int8. */
+      return MEOS_WKB_INT8_SIZE;
+#endif /* QUADBIN */
 #if POINTCLOUD
     case T_PCPOINT:
       return pcpoint_to_wkb_size((const Pcpoint *) DatumGetPointer(value),
@@ -1350,11 +1377,6 @@ base_to_wkb_size(Datum value, MeosType basetype, uint8_t variant)
       return pcpatch_to_wkb_size((const Pcpatch *) DatumGetPointer(value),
         variant);
 #endif /* POINTCLOUD */
-#if QUADBIN
-    case T_QUADBIN:
-      /* quadbin is a uint64 cell id, wire-format identical to int8. */
-      return MEOS_WKB_INT8_SIZE;
-#endif /* QUADBIN */
     default: /* Error! */
       meos_error(ERROR, MEOS_ERR_MFJSON_OUTPUT,
         "Unknown temporal base type in WKB output: %s",
@@ -1429,8 +1451,8 @@ spanset_to_wkb_size(const SpanSet *ss)
 static size_t
 tbox_to_wkb_size(const TBox *box)
 {
-  /* Endian flag + temporal flag */
-  size_t size = MEOS_WKB_BYTE_SIZE * 2;
+  /* Endian flag + type number (int16) + temporal flag */
+  size_t size = MEOS_WKB_BYTE_SIZE * 2 + MEOS_WKB_INT2_SIZE;
   /* If there is a value dimension */
   if (MEOS_FLAGS_GET_X(box->flags))
     size += span_to_wkb_size(&box->span, true);
@@ -1449,8 +1471,8 @@ tbox_to_wkb_size(const TBox *box)
 static size_t
 stbox_to_wkb_size(const STBox *box, uint8_t variant)
 {
-  /* Endian flag + temporal flag */
-  size_t size = MEOS_WKB_BYTE_SIZE * 2;
+  /* Endian flag + type number (int16) + temporal flag */
+  size_t size = MEOS_WKB_BYTE_SIZE * 2 + MEOS_WKB_INT2_SIZE;
   /* If there is a time dimension */
   if (MEOS_FLAGS_GET_T(box->flags))
     size += span_to_wkb_size(&box->period, true);
@@ -1679,7 +1701,7 @@ endian_to_wkb_buf(uint8_t *buf, uint8_t variant)
  * (WKB) representation
  */
 static uint8_t *
-bytes_to_wkb_buf(uint8_t *valptr, size_t size, uint8_t *buf, uint8_t variant)
+bytes_to_wkb_buf(const uint8_t *valptr, size_t size, uint8_t *buf, uint8_t variant)
 {
   if (variant & WKB_HEX)
   {
@@ -1831,7 +1853,7 @@ text_to_wkb_buf(const text *txt, uint8_t *buf, uint8_t variant)
    * This avoids the memory allocation of text_to_cstring.
    */
   size_t size = VARSIZE_ANY_EXHDR(txt);
-  char *str = VARDATA(txt);
+  const char *str = VARDATA(txt);
 
   /* Write the size first (this gets proper endian handling) */
   buf = int64_to_wkb_buf(size, buf, variant);
@@ -2026,6 +2048,13 @@ pose_to_wkb_buf(const Pose *pose, uint8_t *buf, uint8_t variant,
 
 #if POINTCLOUD
 /**
+ * @brief Write into the buffer a pgPointCloud pcpoint in the Well-Known
+ * Binary (WKB) representation: int32 body length + body bytes.
+ *
+ * The body comprises everything after the varlena header: pcid +
+ * dimension payload, with the pgpointcloud tail padding trimmed.
+ */
+/**
  * @brief Emit @p body_len bytes from @p src into @p buf, hex-encoding when
  * @c WKB_HEX is requested. Used for the opaque varlena payload of
  * pcpoint / pcpatch where each byte must be preserved verbatim (no
@@ -2048,13 +2077,6 @@ opaque_bytes_to_wkb_buf(const uint8_t *src, size_t body_len, uint8_t *buf,
   return buf + body_len;
 }
 
-/**
- * @brief Write into the buffer a pgPointCloud pcpoint in the Well-Known
- * Binary (WKB) representation: int32 body length + body bytes.
- *
- * The body comprises everything after the varlena header: pcid +
- * dimension payload, with the pgpointcloud tail padding trimmed.
- */
 static uint8_t *
 pcpoint_to_wkb_buf(const Pcpoint *pt, uint8_t *buf, uint8_t variant)
 {
@@ -2137,6 +2159,12 @@ base_to_wkb_buf(Datum value, MeosType basetype, uint8_t *buf,
       buf = int64_to_wkb_buf((int64) DatumGetInt64(value), buf, variant);
       break;
 #endif /* H3 */
+#if QUADBIN
+    case T_QUADBIN:
+      /* quadbin is a uint64 cell id; wire it as int8. */
+      buf = int64_to_wkb_buf((int64) DatumGetInt64(value), buf, variant);
+      break;
+#endif /* QUADBIN */
 #if POINTCLOUD
     case T_PCPOINT:
       buf = pcpoint_to_wkb_buf((const Pcpoint *) DatumGetPointer(value),
@@ -2147,12 +2175,6 @@ base_to_wkb_buf(Datum value, MeosType basetype, uint8_t *buf,
         buf, variant);
       break;
 #endif /* POINTCLOUD */
-#if QUADBIN
-    case T_QUADBIN:
-      /* quadbin is a uint64 cell id; wire it as int8. */
-      buf = int64_to_wkb_buf((int64) DatumGetInt64(value), buf, variant);
-      break;
-#endif /* QUADBIN */
     default: /* Error! */
       meos_error(ERROR, MEOS_ERR_WKB_OUTPUT,
         "Unknown basetype in WKB output: %s", meostype_name(basetype));
@@ -2405,6 +2427,8 @@ tbox_to_wkb_buf(const TBox *box, uint8_t *buf, uint8_t variant)
 {
   /* Write the endian flag (byte) */
   buf = endian_to_wkb_buf(buf, variant);
+  /* Write the type number */
+  buf = int16_to_wkb_buf(T_TBOX, buf, variant);
   /* Write the temporal flags */
   buf = tbox_to_wkb_flags_buf(box, buf, variant);
   /* Write the temporal dimension if any */
@@ -2462,6 +2486,8 @@ stbox_to_wkb_buf(const STBox *box, uint8_t *buf, uint8_t variant)
 {
   /* Write the endian flag (byte) */
   buf = endian_to_wkb_buf(buf, variant);
+  /* Write the type number */
+  buf = int16_to_wkb_buf(T_STBOX, buf, variant);
   /* Write the temporal flags */
   buf = stbox_flags_to_wkb_buf(box, buf, variant);
   /* Write the optional SRID for extended variant */

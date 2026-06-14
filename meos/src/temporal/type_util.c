@@ -64,6 +64,15 @@
   #include "pointcloud/pcpoint.h"
   #include "pointcloud/pcpatch.h"
 #endif
+#if NPOINT
+  // #include <meos_npoint.h>
+  #include "npoint/tnpoint.h"
+#endif
+#if POINTCLOUD
+  #include <meos_pointcloud.h>
+  #include "pointcloud/pcpoint.h"
+  #include "pointcloud/pcpatch.h"
+#endif
 #if POSE
   #include "pose/pose.h"
 #endif
@@ -505,7 +514,6 @@ datum_hash(Datum d, MeosType type)
       return char_hash((int32) DatumGetBool(d));
     case T_INT4:
       return int32_hash(DatumGetInt32(d));
-      return hash_bytes_uint32(DatumGetInt32(d));
 #if H3
     case T_H3INDEX:
 #endif
@@ -571,7 +579,6 @@ datum_hash_extended(Datum d, MeosType type, uint64 seed)
       return char_hash_extended((int32) DatumGetBool(d), seed);
     case T_INT4:
       return int32_hash_extended(DatumGetInt32(d), seed);
-      return hash_bytes_uint32_extended(DatumGetInt32(d), seed);
 #if H3
     case T_H3INDEX:
 #endif
@@ -1074,6 +1081,10 @@ stringarr_to_string(char **strings, int count, char *prefix, char open,
       strcpy(p, strings[i]);
       p += strlen(p);
     }
+    /* The element content has been copied into the result (directly or via
+     * its escaped form); free the per-element string built by the caller.
+     * All callers pass freshly allocated, non-reused strings. */
+    pfree(strings[i]);
     if (i < count - 1)
     {
       *p++ = ',';
@@ -1084,11 +1095,6 @@ stringarr_to_string(char **strings, int count, char *prefix, char open,
   *p++ = close;
   *p = '\0';
 
-  /* Free the input strings (the contract documented above), not only the
-   * arrays -- otherwise every set/spanset/tsequence(set) _out leaks the
-   * element strings in standalone MEOS (no memory-context reclaim). */
-  for (int i = 0; i < count; i++)
-    pfree(strings[i]);
   pfree(escaped); pfree(needquotes); pfree(strings);
   return result;
 }
