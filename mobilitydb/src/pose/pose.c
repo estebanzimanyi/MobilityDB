@@ -357,6 +357,7 @@ Pose_apply_geo(PG_FUNCTION_ARGS)
   PG_FREE_IF_COPY(pose, 1);
   if (! result) PG_RETURN_NULL();
   PG_RETURN_GSERIALIZED_P(result);
+  PG_RETURN_TEXT_P(Datum_as_hexwkb(fcinfo, PointerGetDatum(pose), T_POSE, true));
 }
 
 /*****************************************************************************
