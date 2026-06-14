@@ -264,6 +264,29 @@ target_link_libraries(${MEOS_LIB_NAME} postgis)
 
 if(MEOS)
   # Customize the meos.in.h and meos_internal.in.h files for external include with MEOS library
+install(FILES "${CMAKE_BINARY_DIR}/meos_export.h"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+  RENAME "meos.h")
+install(
+  FILES "${CMAKE_BINARY_DIR}/meos_internal_export.h"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+  RENAME "meos_internal.h")
+install(
+  FILES "${CMAKE_BINARY_DIR}/meos_geo_export.h"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+  RENAME "meos_geo.h")
+install(
+  FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_internal_geo.h"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+install(
+  FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_tls.h"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+install(
+  FILES "${CMAKE_SOURCE_DIR}/arrow/arrow_c_data_interface.h"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+install(
+  FILES "${CMAKE_SOURCE_DIR}/meos/src/geo/spatial_ref_sys.csv"
+  DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}")
 
   # Read files
   file(READ "${CMAKE_SOURCE_DIR}/meos/include/meos.h" MEOS_H)
