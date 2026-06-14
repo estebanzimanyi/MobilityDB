@@ -128,6 +128,9 @@ elseif(CMAKE_GENERATOR STREQUAL "Visual Studio 17 2022")
   if(JSON)
     target_compile_options(json PRIVATE "/W4")
   endif()
+  if(H3)
+    target_compile_options(h3 PRIVATE "/W4")
+  endif()
   if(NPOINT)
     target_compile_options(npoint PRIVATE "/W4")
   endif()
@@ -153,6 +156,10 @@ endif()
 if(JSON)
   message(STATUS "Including JSON types")
   set(MEOS_OBJECTS ${MEOS_OBJECTS} "$<TARGET_OBJECTS:json>")
+endif()
+if(H3)
+  message(STATUS "Including temporal H3 index objects")
+  set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:h3>")
 endif()
 if(NPOINT)
   message(STATUS "Including network points")
@@ -199,6 +206,9 @@ target_link_libraries(${MEOS_LIB_NAME} ${GEOS_LIBRARY})
 target_link_libraries(${MEOS_LIB_NAME} ${PROJ_LIBRARIES})
 target_link_libraries(${MEOS_LIB_NAME} ${GSL_LIBRARY})
 target_link_libraries(${MEOS_LIB_NAME} ${GSL_CBLAS_LIBRARY})
+if(H3)
+  target_link_libraries(${MEOS_LIB_NAME} ${H3_LIBRARY})
+endif()
 
 # Link the application to pgtypes and postgis
 target_link_libraries(${MEOS_LIB_NAME} pgtypes)
@@ -219,6 +229,37 @@ if(MEOS)
   file(READ "${CMAKE_SOURCE_DIR}/meos/include/meos_json.h" MEOS_JSON_H)
   file(READ "${CMAKE_SOURCE_DIR}/meos/include/postgres_ext_defs.in.h" POSTGRES_EXT_DEFS_IN_H)
   file(READ "${CMAKE_SOURCE_DIR}/meos/include/postgis_ext_defs.in.h" POSTGIS_EXT_DEFS_IN_H)
+if(CBUFFER)
+  install(
+    FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_cbuffer.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+endif()
+if(H3)
+  install(
+    FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_h3.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+endif()
+if(NPOINT)
+  install(
+    FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_npoint.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+  install(
+    FILES "${CMAKE_SOURCE_DIR}/meos/examples/data/ways.csv"
+    DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}")
+  install(
+    FILES "${CMAKE_SOURCE_DIR}/meos/examples/data/ways1000.csv"
+    DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}")
+endif()
+if(POSE)
+  install(
+    FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_pose.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+endif()
+if(RGEO)
+  install(
+    FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_rgeo.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+endif()
 
   # Generate meos_export.h
   string(REPLACE "#if MEOS\n#include \"postgres_int_defs.h\"\n#else\n#include <postgres.h>\n#include <utils/date.h>\n#include <utils/timestamp.h>\n#endif" "${POSTGRES_EXT_DEFS_IN_H}" MEOS_EXP_H1 "${MEOS_H}")
