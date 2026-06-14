@@ -54,6 +54,9 @@
 /* Function defined in formatting.c */
 extern bool scanner_isspace(char ch);
 
+/* Function defined in formatting.c */
+extern bool scanner_isspace(char ch);
+
 /*****************************************************************************
  * Parsing functions
  *****************************************************************************/
