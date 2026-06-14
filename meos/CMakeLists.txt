@@ -160,6 +160,10 @@ if(H3)
   message(STATUS "Including temporal H3 index objects")
   set(MEOS_OBJECTS ${MEOS_OBJECTS} "$<TARGET_OBJECTS:h3>")
 endif()
+if(QUADBIN)
+  message(STATUS "Including temporal QUADBIN index objects")
+  set(MEOS_OBJECTS ${MEOS_OBJECTS} "$<TARGET_OBJECTS:quadbin>")
+endif()
 if(NPOINT)
   message(STATUS "Including network points")
   set(MEOS_OBJECTS ${MEOS_OBJECTS} "$<TARGET_OBJECTS:npoint>")
@@ -383,6 +387,11 @@ endif()
 if(MEOS AND H3)
   install(
     FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_h3.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+endif()
+if(MEOS AND QUADBIN)
+  install(
+    FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_quadbin.h"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 endif()
 if(MEOS AND POINTCLOUD)

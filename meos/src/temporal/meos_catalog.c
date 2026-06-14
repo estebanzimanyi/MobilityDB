@@ -50,6 +50,9 @@
 #if CBUFFER
   #include <meos_cbuffer.h>
 #endif
+#if NPOINT
+  #include "npoint/tnpoint.h"
+#endif
 
 /*****************************************************************************
  * Global constants
@@ -141,6 +144,9 @@ static const char *MEOS_TYPE_NAMES[] =
   [T_JSONBSET]   = "jsonbset",   /**< static set of JSONB values */
   [T_TJSONB]     = "tjsonb",     /**< temporal JSONB trajectory */
 #endif /* JSON */
+  [T_TQUADBIN] = "tquadbin",
+  [T_QUADBIN] = "quadbin",
+  [T_QUADBINSET] = "quadbinset",
 };
 
 /**
@@ -253,6 +259,9 @@ static const settype_catalog_struct MEOS_SETTYPE_CATALOG[] =
 #if JSON
   {T_JSONBSET,      T_JSONB},
 #endif /* JSON */
+#if QUADBIN
+  {T_QUADBINSET,    T_QUADBIN},
+#endif
 };
 
 /**
@@ -296,6 +305,9 @@ static const temptype_catalog_struct MEOS_TEMPTYPE_CATALOG[] =
   {T_TBOOL,      T_BOOL},
   {T_TBIGINT,    T_INT8},
   {T_TH3INDEX,   T_H3INDEX},
+#if QUADBIN
+  {T_TQUADBIN,   T_QUADBIN},
+#endif
   {T_TINT,       T_INT4},
   {T_TFLOAT,     T_FLOAT8},
   {T_TTEXT,      T_TEXT},
@@ -650,6 +662,9 @@ meos_basetype(MeosType type)
 #if POINTCLOUD
     || type == T_PCPOINT || type == T_PCPATCH
 #endif
+#if QUADBIN
+    || type == T_QUADBIN
+#endif
     );
 }
 #endif
@@ -664,6 +679,9 @@ basetype_byvalue(MeosType type)
     type == T_DATE || type == T_TIMESTAMPTZ
 #if H3
     || type == T_H3INDEX
+#endif
+#if QUADBIN
+    || type == T_QUADBIN
 #endif
     );
 }
@@ -749,6 +767,9 @@ alphanum_basetype(MeosType type)
 #if JSON
       || type == T_JSONB
 #endif
+#if QUADBIN
+    || type == T_QUADBIN
+#endif
     );
 }
 
@@ -768,6 +789,9 @@ alphanum_temptype(MeosType type)
     type == T_TTEXT
 #if JSON
   || type == T_TJSONB
+#endif
+#if QUADBIN
+    type == T_TQUADBIN ||
 #endif
   );
 }
@@ -800,6 +824,9 @@ spatial_basetype(MeosType type)
 #endif
 #if H3
     || type == T_H3INDEX
+#endif
+#if QUADBIN
+    || type == T_QUADBIN
 #endif
     );
 }
@@ -879,6 +906,9 @@ set_type(MeosType type)
 #if POINTCLOUD
       || type == T_PCPOINTSET || type == T_PCPATCHSET
 #endif
+#if QUADBIN
+    || type == T_QUADBINSET
+#endif
       );
 }
 
@@ -953,6 +983,9 @@ alphanumset_type(MeosType type)
 #endif
 #if JSON
     || type == T_JSONBSET
+#endif
+#if QUADBIN
+    || type == T_QUADBINSET
 #endif
     );
 }
@@ -1231,6 +1264,9 @@ temporal_type(MeosType type)
 #if POINTCLOUD
     || type == T_TPCPOINT || type == T_TPCPATCH
 #endif
+#if QUADBIN
+    || type == T_TQUADBIN
+#endif
     );
 }
 
@@ -1436,6 +1472,9 @@ tspatial_type(MeosType type)
 #endif
 #if H3
     || type == T_TH3INDEX
+#endif
+#if QUADBIN
+    || type == T_TQUADBIN
 #endif
     );
 }

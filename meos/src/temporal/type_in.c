@@ -47,6 +47,9 @@
 #include <h3api.h>
 #include "h3/h3index.h"
 #endif
+#if QUADBIN
+#include "quadbin/quadbin_meos.h"
+#endif
 #include "temporal/set.h"
 #include "temporal/span.h"
 #include "temporal/tbox.h"
@@ -55,6 +58,10 @@
 #include "geo/tgeo_spatialfuncs.h"
 #if CBUFFER
   #include "cbuffer/cbuffer.h"
+#endif
+#if NPOINT
+  #include "npoint/tnpoint.h"
+  #include "npoint/tnpoint_parser.h"
 #endif
 #if POINTCLOUD
   #include <meos_pointcloud.h>
@@ -179,6 +186,16 @@ basetype_in(const char *str, MeosType type, bool end UNUSED, Datum *result)
     {
       H3Index cell = h3index_in(str);
       if (cell == (H3Index) 0)
+        return false;
+      *result = Int64GetDatum((int64) cell);
+      return true;
+    }
+#endif
+#if QUADBIN
+    case T_QUADBIN:
+    {
+      Quadbin cell = quadbin_parse(str);
+      if (cell == (Quadbin) 0)
         return false;
       *result = Int64GetDatum((int64) cell);
       return true;
@@ -1962,6 +1979,11 @@ base_from_wkb_state(meos_wkb_parse_state *s)
       /* h3index is a uint64 cell id, wire-format identical to int8. */
       return Int64GetDatum(int64_from_wkb_state(s));
 #endif /* H3 */
+#if QUADBIN
+    case T_QUADBIN:
+      /* quadbin is a uint64 cell id, wire-format identical to int8. */
+      return Int64GetDatum(int64_from_wkb_state(s));
+#endif /* QUADBIN */
 #if POINTCLOUD
     case T_PCPOINT:
     case T_PCPATCH:
