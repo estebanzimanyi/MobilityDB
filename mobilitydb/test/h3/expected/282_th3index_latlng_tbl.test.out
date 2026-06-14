@@ -19,7 +19,7 @@ SELECT COUNT(*) FROM tbl_th3index_known
 (1 row)
 
 SELECT COUNT(*) FROM tbl_th3index_known
-  WHERE h3_latlng_to_cell(h3_cell_to_latlng(temp),
+  WHERE th3index(h3_cell_to_latlng(temp),
           startValue(h3_get_resolution(temp))) <> temp;
  count 
 -------
@@ -33,7 +33,7 @@ SELECT COUNT(*) FROM tbl_th3index_known
      6
 (1 row)
 
-SELECT startValue(h3_get_resolution(h3_latlng_to_cell(
+SELECT startValue(h3_get_resolution(th3index(
     tgeogpoint 'POINT(-73.96 40.78)@2001-01-01', 9))) = 9;
  ?column? 
 ----------
@@ -51,13 +51,13 @@ SELECT COUNT(*) FROM (
     (tgeogpoint 'POINT(-120 -30)@2001-01-01'),
     (tgeogpoint 'POINT(180 0)@2001-01-01')
   ) AS pts(p)
-  WHERE h3_latlng_to_cell(p, 5) IS NOT NULL;
+  WHERE th3index(p, 5) IS NOT NULL;
  count 
 -------
      8
 (1 row)
 
-SELECT startValue(h3_get_resolution(h3_latlng_to_cell(
+SELECT startValue(h3_get_resolution(th3index(
     tgeompoint 'SRID=4326;POINT(-73.96 40.78)@2001-01-01', 9))) = 9;
  ?column? 
 ----------

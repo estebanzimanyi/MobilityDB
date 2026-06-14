@@ -31,7 +31,7 @@
  * @file
  * @brief Lat/Lng conversion functions for `th3index`.
  *
- * Two overloads of `h3_latlng_to_cell` are provided: the geodetic
+ * Two overloads of `th3index` are provided: the geodetic
  * `tgeogpoint` form is the canonical one; the `tgeompoint` form is a
  * convenience wrapper that requires SRID 4326 and is verified at
  * bind time.
@@ -42,15 +42,15 @@
  */
 
 /******************************************************************************
- * h3_latlng_to_cell (tgeompoint / tgeogpoint overloads)
+ * th3index (tgeompoint / tgeogpoint overloads)
  ******************************************************************************/
 
-CREATE FUNCTION h3_latlng_to_cell(tgeompoint, integer)
+CREATE FUNCTION th3index(tgeompoint, integer)
   RETURNS th3index
   AS 'MODULE_PATHNAME', 'Tgeompoint_to_th3index'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION h3_latlng_to_cell(tgeogpoint, integer)
+CREATE FUNCTION th3index(tgeogpoint, integer)
   RETURNS th3index
   AS 'MODULE_PATHNAME', 'Tgeogpoint_to_th3index'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
