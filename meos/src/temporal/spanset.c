@@ -158,7 +158,9 @@ spanset_find_value(const SpanSet *ss, Datum v, int *loc)
   int first = 0;
   int last = ss->count - 1;
   int middle = 0; /* make compiler quiet */
-  const Span *s = NULL; /* make compiler quiet */
+  /* A span set always holds at least one span; seed s with the first span so
+   * it is never NULL at the post-loop dereference (the loop overwrites it). */
+  const Span *s = SPANSET_SP_N(ss, 0);
   while (first <= last)
   {
     middle = (first + last)/2;
@@ -203,7 +205,6 @@ SPANSET_SP_N(const SpanSet *ss, int index)
  * @brief Return a span set from its Well-Known Text (WKT) representation
  * @param[in] str String
  * @param[in] spansettype Span set type
- * @csqlfn #Spanset_in()
  */
 SpanSet *
 spanset_in(const char *str, MeosType spansettype)
@@ -1013,16 +1014,18 @@ spanset_span_n(const SpanSet *ss, int n)
  * @ingroup meos_internal_setspan_accessor
  * @brief Return an array of pointers to the spans of a span set
  * @param[in] ss Span set
+ * @param[out] count Number of elements in the output array
  * @return On error return @p NULL
  */
 const Span **
-spanset_sps(const SpanSet *ss)
+spanset_sps(const SpanSet *ss, int *count)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(ss, NULL);
   const Span **spans = palloc(sizeof(Span *) * ss->count);
   for (int i = 0; i < ss->count; i++)
     spans[i] = SPANSET_SP_N(ss, i);
+  *count = ss->count;
   return spans;
 }
 
@@ -1030,16 +1033,18 @@ spanset_sps(const SpanSet *ss)
  * @ingroup meos_setspan_accessor
  * @brief Return a C array with copies of the spans of a span set
  * @param[in] ss Span set
+ * @param[out] count Number of elements in the output array
  * @return On error return @p NULL
  */
 Span **
-spanset_spanarr(const SpanSet *ss)
+spanset_spanarr(const SpanSet *ss, int *count)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(ss, NULL);
   Span **spans = palloc(sizeof(Span *) * ss->count);
   for (int i = 0; i < ss->count; i++)
     spans[i] = span_copy(SPANSET_SP_N(ss, i));
+  *count = ss->count;
   return spans;
 }
 #endif /* MEOS */
@@ -1259,11 +1264,12 @@ tstzspanset_shift_scale(const SpanSet *ss, const Interval *shift,
  * @ingroup meos_setspan_bbox_split
  * @brief Return the array of spans of a spanset
  * @param[in] ss Span set
+ * @param[out] count Number of elements in the output array
  * @return On error return @p NULL
  * @csqlfn #Spanset_spans()
  */
 Span *
-spanset_spans(const SpanSet *ss)
+spanset_spans(const SpanSet *ss, int *count)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(ss, NULL);
@@ -1272,6 +1278,7 @@ spanset_spans(const SpanSet *ss)
   /* Output the composing spans */
   for (int i = 0; i < ss->count; i++)
     memcpy(&result[i], SPANSET_SP_N(ss, i), sizeof(Span));
+  *count = ss->count;
   return result;
 }
 
@@ -1335,10 +1342,7 @@ spanset_split_n_spans(const SpanSet *ss, int span_count, int *count)
 
   /* Output the composing spans */
   if (ss->count <= span_count)
-  {
-    *count = ss->count;
-    return spanset_spans(ss);
-  }
+    return spanset_spans(ss, count);
 
   /* Merge consecutive sequences having the smallest gap */
   Span *result = palloc(sizeof(Span) * span_count);

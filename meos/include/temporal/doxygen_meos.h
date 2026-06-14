@@ -161,6 +161,10 @@
  * @ingroup meos_api
  * @brief Functions for temporal rigid geometries
  *
+ * @defgroup meos_h3 Functions for temporal H3 cell indices
+ * @ingroup meos_api
+ * @brief Functions for temporal H3 cell indices
+ *
  * @defgroup meos_pointcloud Functions for temporal pgpointcloud types
  * @ingroup meos_api
  * @brief Functions for static, set, box, and temporal pgpointcloud types
@@ -381,6 +385,10 @@
  * @defgroup meos_temporal_analytics_similarity Similarity functions
  * @ingroup meos_temporal_analytics
  * @brief Similarity functions for temporal types
+ *
+ * @defgroup meos_temporal_analytics_outlier Outlier detection functions
+ * @ingroup meos_temporal_analytics
+ * @brief Outlier detection functions for temporal types
  *
  * @defgroup meos_temporal_analytics_tile Tile functions
  * @ingroup meos_temporal_analytics

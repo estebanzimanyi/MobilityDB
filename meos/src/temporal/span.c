@@ -204,8 +204,8 @@ span_bound_cmp(const SpanBound *b1, const SpanBound *b2)
 int
 span_bound_qsort_cmp(const void *a1, const void *a2)
 {
-  SpanBound *b1 = (SpanBound *) a1;
-  SpanBound *b2 = (SpanBound *) a2;
+  const SpanBound *b1 = (SpanBound *) a1;
+  const SpanBound *b2 = (SpanBound *) a2;
   return span_bound_cmp(b1, b2);
 }
 
@@ -355,7 +355,6 @@ spanarr_normalize(Span *spans, int count, bool order, int *newcount)
  * @brief Return a span from its Well-Known Text (WKT) representation
  * @param[in] str String
  * @param[in] spantype Span type
- * @csqlfn #Span_in()
  */
 Span *
 span_in(const char *str, MeosType spantype)
@@ -392,7 +391,6 @@ unquote(char *str)
  * @brief Return the Well-Known Text (WKT) representation of a span
  * @param[in] s Span
  * @param[in] maxdd Maximum number of decimal digits
- * @csqlfn #Span_out()
  */
 char *
 span_out(const Span *s, int maxdd)
@@ -442,14 +440,14 @@ span_make(Datum lower, Datum upper, bool lower_inc, bool upper_inc,
  * @param[in] lower_inc,upper_inc True when the bounds are inclusive
  * @param[in] basetype Base type
  * @param[in] spantype Span type
- * @param[out] s Result span
+ * @param[out] result Result span
  * @see #span_make()
  */
 void
 span_set(Datum lower, Datum upper, bool lower_inc, bool upper_inc,
-  MeosType basetype, MeosType spantype, Span *s)
+  MeosType basetype, MeosType spantype, Span *result)
 {
-  assert(s); assert(basetype_spantype(basetype) == spantype);
+  assert(result); assert(basetype_spantype(basetype) == spantype);
   /* Canonicalize */
   if (span_canon_basetype(basetype))
   {
@@ -466,7 +464,7 @@ span_set(Datum lower, Datum upper, bool lower_inc, bool upper_inc,
   }
 
   int cmp = datum_cmp(lower, upper, basetype);
-  /* error check: if lower bound value is above upper, it's wrong */
+  /* error check: if lower bound value is above upper, it'result wrong */
   if (cmp > 0)
   {
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
@@ -482,14 +480,14 @@ span_set(Datum lower, Datum upper, bool lower_inc, bool upper_inc,
   }
 
   /* Note: zero-fill is required here, just as in heap tuples */
-  memset(s, 0, sizeof(Span));
+  memset(result, 0, sizeof(Span));
   /* Fill in the span */
-  s->lower = lower;
-  s->upper = upper;
-  s->lower_inc = lower_inc;
-  s->upper_inc = upper_inc;
-  s->spantype = spantype;
-  s->basetype = basetype;
+  result->lower = lower;
+  result->upper = upper;
+  result->lower_inc = lower_inc;
+  result->upper_inc = upper_inc;
+  result->spantype = spantype;
+  result->basetype = basetype;
   return;
 }
 
@@ -517,14 +515,14 @@ span_copy(const Span *s)
  * @brief Return in the last argument a span constructed from a value
  * @param[in] value Value
  * @param[in] basetype Type of the value
- * @param[out] s Result span
+ * @param[out] result Result span
 */
 void
-value_set_span(Datum value, MeosType basetype, Span *s)
+value_set_span(Datum value, MeosType basetype, Span *result)
 {
-  assert(s); assert(span_basetype(basetype));
+  assert(result); assert(span_basetype(basetype));
   MeosType spantype = basetype_spantype(basetype);
-  span_set(value, value, true, true, basetype, spantype, s);
+  span_set(value, value, true, true, basetype, spantype, result);
   return;
 }
 
@@ -691,7 +689,6 @@ intspan_set_floatspan(const Span *s1, Span *s2)
  * @brief Convert an integer span into a float span
  * @param[in] s Span
  * @return On error return @p NULL
- * @csqlfn #Intspan_to_floatspan()
  */
 Span *
 intspan_to_floatspan(const Span *s)
@@ -787,7 +784,6 @@ floatspan_set_intspan(const Span *s1, Span *s2)
  * @brief Convert a float span into an integer span
  * @param[in] s Span
  * @return On error return @p NULL
- * @csqlfn #Floatspan_to_intspan()
  */
 Span *
 floatspan_to_intspan(const Span *s)
@@ -822,7 +818,6 @@ datespan_set_tstzspan(const Span *s1, Span *s2)
  * @brief Convert a date span into a timestamptz span
  * @param[in] s Span
  * @return On error return @p NULL
- * @csqlfn #Datespan_to_tstzspan()
  */
 Span *
 datespan_to_tstzspan(const Span *s)
@@ -865,7 +860,6 @@ tstzspan_set_datespan(const Span *s1, Span *s2)
  * @brief Convert a timestamptz span into a date span
  * @param[in] s Span
  * @return On error return @p NULL
- * @csqlfn #Tstzspan_to_datespan()
  */
 Span *
 tstzspan_to_datespan(const Span *s)
@@ -966,7 +960,6 @@ floatspan_round_set(const Span *s, int maxdd, Span *result)
  * @param[in] s Span
  * @param[in] maxdd Maximum number of decimal digits
  * @return On error return @p NULL
- * @csqlfn #Floatspan_round()
  */
 Span *
 floatspan_round(const Span *s, int maxdd)
@@ -1512,11 +1505,12 @@ tstzspan_shift_scale(const Span *s, const Interval *shift,
  * @ingroup meos_setspan_bbox_split
  * @brief Return an array of spans from the values of a set
  * @param[in] s Set
+ * @param[out] count Number of elements in the output array
  * @return On error return @p NULL
  * @csqlfn #Set_spans()
  */
 Span *
-set_spans(const Set *s)
+set_spans(const Set *s, int *count)
 {
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(s, NULL);
@@ -1524,6 +1518,7 @@ set_spans(const Set *s)
   Span *result = palloc(sizeof(Span) * s->count);
   for (int i = 0; i < s->count; i++)
     set_set_subspan(s, i, i, &result[i]);
+  *count = s->count;
   return result;
 }
 

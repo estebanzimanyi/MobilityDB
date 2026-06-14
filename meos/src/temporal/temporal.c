@@ -133,7 +133,7 @@ ensure_has_T(MeosType type, int16 flags)
  * @brief Ensure that the pointer is not null
  */
 bool
-ensure_not_null(void *ptr)
+ensure_not_null(const void *ptr)
 {
   if (ptr)
     return true;
@@ -145,7 +145,7 @@ ensure_not_null(void *ptr)
  * @brief Ensure that at least one of the pointers is not null
  */
 bool
-ensure_one_not_null(void *ptr1, void *ptr2)
+ensure_one_not_null(const void *ptr1, const void *ptr2)
 {
   if (ptr1 || ptr2)
     return true;
@@ -761,7 +761,6 @@ intersection_temporal_temporal(const Temporal *temp1, const Temporal *temp2,
 /**
  * @ingroup meos_misc
  * @brief Return the version of the MobilityDB extension
- * @csqlfn #Mobilitydb_version()
  */
 char *
 mobilitydb_version(void)
@@ -772,7 +771,6 @@ mobilitydb_version(void)
 /**
  * @ingroup meos_misc
  * @brief Return the versions of the MobilityDB extension and its dependencies
- * @csqlfn #Mobilitydb_full_version()
  */
 char *
 mobilitydb_full_version(void)
@@ -806,7 +804,6 @@ mobilitydb_full_version(void)
  * @brief Return a temporal value from its Well-Known Text (WKT) representation
  * @param[in] str String
  * @param[in] temptype Temporal type
- * @csqlfn #Temporal_in()
  */
 Temporal *
 temporal_in(const char *str, MeosType temptype)
@@ -821,7 +818,6 @@ temporal_in(const char *str, MeosType temptype)
  * @brief Return the Well-Known Text (WKT) representation of a temporal value
  * @param[in] temp Temporal value
  * @param[in] maxdd Maximum number of decimal digits
- * @csqlfn #Temporal_out()
  */
 char *
 temporal_out(const Temporal *temp, int maxdd)
@@ -1216,23 +1212,23 @@ tfloat_to_tbigint(const Temporal *temp)
  * @ingroup meos_internal_temporal_accessor
  * @brief Return in the last argument the time span of a temporal value
  * @param[in] temp Temporal value
- * @param[out] s Span
+ * @param[out] result Span
  */
 void
-temporal_set_tstzspan(const Temporal *temp, Span *s)
+temporal_set_tstzspan(const Temporal *temp, Span *result)
 {
-  assert(temp); assert(s);
+  assert(temp); assert(result);
   assert(temptype_subtype(temp->subtype));
   switch (temp->subtype)
   {
     case TINSTANT:
-      tinstant_set_tstzspan((TInstant *) temp, s);
+      tinstant_set_tstzspan((TInstant *) temp, result);
       break;
     case TSEQUENCE:
-      tsequence_set_tstzspan((TSequence *) temp, s);
+      tsequence_set_tstzspan((TSequence *) temp, result);
       break;
     default: /* TSEQUENCESET */
-      tsequenceset_set_tstzspan((TSequenceSet *) temp, s);
+      tsequenceset_set_tstzspan((TSequenceSet *) temp, result);
   }
   return;
 }
@@ -1258,12 +1254,12 @@ temporal_to_tstzspan(const Temporal *temp)
  * @ingroup meos_internal_temporal_accessor
  * @brief Return in the last argument the value span of a temporal number
  * @param[in] temp Temporal value
- * @param[out] s Span
+ * @param[out] result Span
  */
 void
-tnumber_set_span(const Temporal *temp, Span *s)
+tnumber_set_span(const Temporal *temp, Span *result)
 {
-  assert(temp); assert(s); assert(tnumber_type(temp->temptype));
+  assert(temp); assert(result); assert(tnumber_type(temp->temptype));
   assert(temptype_subtype(temp->subtype));
 
   MeosType basetype = temptype_basetype(temp->temptype);
@@ -1271,12 +1267,12 @@ tnumber_set_span(const Temporal *temp, Span *s)
   if (temp->subtype == TINSTANT)
   {
     Datum value = tinstant_value_p((TInstant *) temp);
-    span_set(value, value, true, true, basetype, spantype, s);
+    span_set(value, value, true, true, basetype, spantype, result);
   }
   else
   {
-    TBox *box = (TBox *) temporal_bbox_ptr(temp);
-    memcpy(s, &box->span, sizeof(Span));
+    const TBox *box = (TBox *) temporal_bbox_ptr(temp);
+    memcpy(result, &box->span, sizeof(Span));
   }
   return;
 }
@@ -1357,7 +1353,6 @@ round_fn(MeosType basetype)
  * @brief Return a temporal value rounded to a given number of decimal places
  * @param[in] temp Temporal value
  * @param[in] maxdd Maximum number of decimal digits to output
- * @csqlfn #Temporal_round()
  */
 Temporal *
 temporal_round(const Temporal *temp, int maxdd)
@@ -1406,7 +1401,6 @@ temparr_round(Temporal **temparr, int count, int maxdd)
 /**
  * @ingroup meos_base_types
  * @brief Return a float number rounded to a given number of decimal places
- * @csqlfn #Float_round()
  */
 double
 float_round(double d, int maxdd)
@@ -1987,25 +1981,25 @@ temporal_interp(const Temporal *temp)
  * @ingroup meos_internal_temporal_accessor
  * @brief Return in the last argument the bounding box of a temporal value
  * @param[in] temp Temporal value
- * @param[out] box Boundind box
+ * @param[out] result Boundind box
  * @note For temporal instants the bounding box must be computed. For the
  * other subtypes, a copy of the precomputed bounding box is made.
  */
 void
-temporal_set_bbox(const Temporal *temp, void *box)
+temporal_set_bbox(const Temporal *temp, void *result)
 {
-  assert(temp); assert(box);
+  assert(temp); assert(result);
   assert(temptype_subtype(temp->subtype));
   switch (temp->subtype)
   {
     case TINSTANT:
-      tinstant_set_bbox((TInstant *) temp, box);
+      tinstant_set_bbox((TInstant *) temp, result);
       return;
     case TSEQUENCE:
-      tsequence_set_bbox((TSequence *) temp, box);
+      tsequence_set_bbox((TSequence *) temp, result);
       return;
     default: /* TSEQUENCESET */
-      tsequenceset_set_bbox((TSequenceSet *) temp, box);
+      tsequenceset_set_bbox((TSequenceSet *) temp, result);
       return;
   }
 }
@@ -2135,7 +2129,6 @@ temporal_start_value(const Temporal *temp)
  * @ingroup meos_internal_temporal_accessor
  * @brief Return a copy of the end base value of a temporal value
  * @param[in] temp Temporal value
- * @csqlfn #Temporal_end_value()
  */
 Datum
 temporal_end_value(const Temporal *temp)
@@ -2161,7 +2154,6 @@ temporal_end_value(const Temporal *temp)
  * @ingroup meos_internal_temporal_accessor
  * @brief Return a copy of the minimum base value of a temporal value
  * @param[in] temp Temporal value
- * @csqlfn #Temporal_min_value()
  */
 Datum
 temporal_min_value(const Temporal *temp)
@@ -2518,8 +2510,7 @@ temporal_sequences_p(const Temporal *temp, int *count)
   }
   else /* temp->subtype == TSEQUENCE */
   {
-    *count = ((TSequenceSet *) temp)->count;
-    return tsequenceset_sequences_p((TSequenceSet *) temp);
+    return tsequenceset_sequences_p((TSequenceSet *) temp, count);
   }
 }
 
@@ -2834,8 +2825,6 @@ temporal_instants_p(const Temporal *temp, int *count)
     return NULL;
   return temporal_insts_p(temp, count);
 }
-
-#if MEOS
 /**
  * @ingroup meos_temporal_accessor
  * @brief Return a copy of the distinct instants of a temporal value
@@ -2854,7 +2843,6 @@ temporal_instants(const Temporal *temp, int *count)
     instants[i] = tinstant_copy(instants[i]);
   return instants;
 }
-#endif /* MEOS */
 
 /**
  * @ingroup meos_temporal_accessor
@@ -3026,7 +3014,7 @@ tsequence_segm_duration_iter(const TSequence *seq, int64 tunits, CompOper oper,
   for (int i = 0; i < seq->count - 1; i++)
   {
     const TInstant *inst2 = TSEQUENCE_INST_N(seq, i + 1);
-    bool upper_inc = (i == seq->count - 1) ? seq->period.upper_inc : false;
+    bool upper_inc = false;
     int64_t length = (int64)(inst2->t - inst1->t);
     switch(oper)
     {
@@ -3376,7 +3364,6 @@ tsequenceset_stops(const TSequenceSet *ss, double maxdist, int64 mintunits)
  * @param[in] temp Temporal value
  * @param[in] maxdist Maximum distance
  * @param[in] minduration Minimum duration
- * @csqlfn #Temporal_stops()
  */
 TSequenceSet *
 temporal_stops(const Temporal *temp, double maxdist,
@@ -3421,7 +3408,6 @@ temporal_stops(const Temporal *temp, double maxdist,
  * @brief Return the integral (area under the curve) of a temporal number
  * @param[in] temp Temporal value
  * @return On error return -1.0
- * @csqlfn #Tnumber_integral()
  */
 double
 tnumber_integral(const Temporal *temp)

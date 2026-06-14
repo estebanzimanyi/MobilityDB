@@ -410,7 +410,7 @@ tsequence_join_test(const TSequence *seq1, const TSequence *seq2,
   TInstant *last2 = (seq1->count == 1 || interp == DISCRETE) ? NULL :
     (TInstant *) TSEQUENCE_INST_N(seq1, seq1->count - 2);
   Datum last2value = ! last2 ? 0 : tinstant_value_p(last2);
-  TInstant *last1 = (TInstant *) TSEQUENCE_INST_N(seq1, seq1->count - 1);
+  const TInstant *last1 = (TInstant *) TSEQUENCE_INST_N(seq1, seq1->count - 1);
   Datum last1value = tinstant_value_p(last1);
   TInstant *first1 = (TInstant *) TSEQUENCE_INST_N(seq2, 0);
   Datum first1value = tinstant_value_p(first1);
@@ -699,10 +699,8 @@ tsequence_to_string(const TSequence *seq, int maxdd, bool component,
   else
     prefix[0] = '\0';
   for (int i = 0; i < seq->count; i++)
-  {
     strings[i] = tinstant_to_string(TSEQUENCE_INST_N(seq, i), maxdd,
       value_out);
-  }
   char open, close;
   if (MEOS_FLAGS_DISCRETE_INTERP(seq->flags))
   {
@@ -806,7 +804,7 @@ TSEQUENCE_INST_N(const TSequence *seq, int i)
 TSequence *
 tsequence_make_exp1(TInstant **instants, int count, int maxcount,
   bool lower_inc, bool upper_inc, interpType interp, bool normalize,
-  void *bbox)
+  const void *bbox)
 {
   assert(instants); assert(maxcount >= count);
   /* Normalize the array of instants */
@@ -896,6 +894,7 @@ ensure_increasing_timestamps(const TInstant *inst1, const TInstant *inst2,
     char *t2 = pg_timestamptz_out(inst2->t);
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "Timestamps for temporal value must be increasing: %s, %s", t1, t2);
+    pfree(t1); pfree(t2);
     return false;
   }
   if (merge && inst1->t == inst2->t &&
@@ -906,6 +905,7 @@ ensure_increasing_timestamps(const TInstant *inst1, const TInstant *inst2,
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "The temporal values have different value at their overlapping instant %s",
       t1);
+    pfree(t1);
     return false;
   }
   return true;
@@ -919,7 +919,6 @@ bbox_expand(const void *box1, void *box2, MeosType temptype)
 {
   assert(box1); assert(box2);
   assert(temporal_type(temptype));
-  /* There are only 3 types of bounding boxes: span, tbox, and stbox */
   if (talpha_type(temptype))
     span_expand((Span *) box1, (Span *) box2);
   else if (tnumber_type(temptype))
@@ -1900,13 +1899,13 @@ tsequence_duration(const TSequence *seq)
  * @ingroup meos_internal_temporal_accessor
  * @brief Return in the last argument the time span of a temporal sequence
  * @param[in] seq Temporal sequence
- * @param[out] s Span
+ * @param[out] result Span
  */
 void
-tsequence_set_tstzspan(const TSequence *seq, Span *s)
+tsequence_set_tstzspan(const TSequence *seq, Span *result)
 {
-  assert(seq); assert(s);
-  memcpy(s, &seq->period, sizeof(Span));
+  assert(seq); assert(result);
+  memcpy(result, &seq->period, sizeof(Span));
   return;
 }
 

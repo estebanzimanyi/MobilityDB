@@ -180,7 +180,7 @@ datum_distance(Datum value1, Datum value2, MeosType type, int16 flags)
     return datum_double(distance_value_value(value1, value2, type), type);
   if (geo_basetype(type))
   {
-    datum_func2 point_distance = pt_distance_fn(flags);
+    datum_func2 point_distance = point_distance_fn(flags);
     return DatumGetFloat8(point_distance(value1, value2));
   }
 #if NPOINT
@@ -251,6 +251,7 @@ ensure_valid_tseqarr(TSequence **sequences, int count)
         char *t2 = pg_timestamptz_out(lower2);
         meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
           "Timestamps for temporal value must be increasing: %s, %s", t1, t2);
+        pfree(t1); pfree(t2);
         return false;
       }
       if (! ensure_spatial_validity((Temporal *) sequences[i - 1],
@@ -467,11 +468,17 @@ ensure_valid_tinstarr_gaps(TInstant **instants, int count, bool merge,
     if (! ensure_increasing_timestamps(instants[i - 1], instants[i], merge) ||
         ! ensure_spatial_validity((Temporal *) instants[i - 1],
           (Temporal *) instants[i]))
+    {
+      pfree(result);
       return NULL;
+    }
 #if NPOINT
     if (instants[i]->temptype == T_TNPOINT &&
         ! ensure_same_rid_tnpointinst(instants[i - 1], instants[i]))
+    {
+      pfree(result);
       return NULL;
+    }
 #endif
     /* Determine if there should be a split */
     bool split = false;
@@ -720,7 +727,7 @@ tnumberseqset_valuespans(const TSequenceSet *ss)
     spans = palloc(sizeof(Span) * ss->count);
     for (i = 0; i < ss->count; i++)
     {
-      TBox *box = TSEQUENCE_BBOX_PTR(TSEQUENCESET_SEQ_N(ss, i));
+      const TBox *box = TSEQUENCE_BBOX_PTR(TSEQUENCESET_SEQ_N(ss, i));
       memcpy(&spans[i], &box->span, sizeof(Span));
     }
     return spanset_make_free(spans, ss->count, NORMALIZE, ORDER);
@@ -973,13 +980,13 @@ tsequenceset_duration(const TSequenceSet *ss, bool boundspan)
  * @ingroup meos_internal_temporal_accessor
  * @brief Return in the last argument the time span of a temporal sequence set
  * @param[in] ss Temporal sequence set
- * @param[out] s Span
+ * @param[out] result Span
  */
 void
-tsequenceset_set_tstzspan(const TSequenceSet *ss, Span *s)
+tsequenceset_set_tstzspan(const TSequenceSet *ss, Span *result)
 {
-  assert(ss); assert(s);
-  memcpy(s, &ss->period, sizeof(Span));
+  assert(ss); assert(result);
+  memcpy(result, &ss->period, sizeof(Span));
   return;
 }
 
@@ -988,14 +995,16 @@ tsequenceset_set_tstzspan(const TSequenceSet *ss, Span *s)
  * @brief Return an array of pointers to the sequences of a temporal sequence
  * set
  * @param[in] ss Temporal sequence set
+ * @param[out] count Number of elements in the output array
  */
 const TSequence **
-tsequenceset_sequences_p(const TSequenceSet *ss)
+tsequenceset_sequences_p(const TSequenceSet *ss, int *count)
 {
   assert(ss);
   const TSequence **result = palloc(sizeof(TSequence *) * ss->count);
   for (int i = 0; i < ss->count; i++)
     result[i] = TSEQUENCESET_SEQ_N(ss, i);
+  *count = ss->count;
   return result;
 }
 
@@ -2015,10 +2024,8 @@ tsequenceset_to_string(const TSequenceSet *ss, int maxdd, outfunc value_out)
   else
     prefix[0] = '\0';
   for (int i = 0; i < ss->count; i++)
-  {
     strings[i] = tsequence_to_string(TSEQUENCESET_SEQ_N(ss, i), maxdd, true,
       value_out);
-  }
   return stringarr_to_string(strings, ss->count, prefix, '{', '}',
     QUOTES_NO, SPACES);
 }

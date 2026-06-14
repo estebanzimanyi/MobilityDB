@@ -117,12 +117,6 @@ typedef enum
   T_TGEOGRAPHY     = 61,  /**< temporal geography type */
   T_TRGEOMETRY     = 62,  /**< temporal rigid geometry type */
   T_TBIGINT        = 63,  /**< temporal big integer type */
-#if JSON
-  T_JSONB          = 74,  /**< base type for PostgreSQL jsonb */
-  T_JSONPATH       = 75,  /**< base type for PostgreSQL jsonpath */
-  T_JSONBSET       = 76,  /**< static set of JSONB values */
-  T_TJSONB         = 77,  /**< temporal JSONB value */
-#endif /* JSON */
   T_H3INDEX        = 64,  /**< static H3 cell index type (uint64) */
   T_H3INDEXSET     = 65,  /**< h3index set type */
   T_TH3INDEX       = 66,  /**< temporal H3 index type (libh3 cell index over time) */
@@ -133,6 +127,12 @@ typedef enum
   T_PCPATCHSET     = 71,  /**< pgpointcloud patch set type */
   T_TPCPATCH       = 72,  /**< temporal pgpointcloud patch type */
   T_TPCBOX         = 73,  /**< temporal pgpointcloud bounding box type */
+#if JSON
+  T_JSONB          = 74,  /**< base type for PostgreSQL jsonb */
+  T_JSONPATH       = 75,  /**< base type for PostgreSQL jsonpath */
+  T_JSONBSET       = 76,  /**< static set of JSONB values */
+  T_TJSONB         = 77,  /**< temporal JSONB value */
+#endif /* JSON */
   T_QUADBIN        = 78,  /**< static CARTO quadbin cell index type (uint64) */
   T_QUADBINSET     = 79,  /**< quadbin set type */
   T_TQUADBIN       = 80,  /**< temporal quadbin index type (cell index over time) */

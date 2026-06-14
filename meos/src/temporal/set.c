@@ -197,10 +197,8 @@ set_basetype_quotes(MeosType type)
 char *
 set_out_fn(const Set *s, int maxdd, outfunc value_out)
 {
-  assert(s);
   /* Ensure the validity of the arguments */
-  if (! ensure_not_negative(maxdd))
-    return NULL;
+  assert(s); assert(maxdd >= 0);
 
   char **strings = palloc(sizeof(char *) * s->count);
   for (int i = 0; i < s->count; i++)
@@ -698,7 +696,6 @@ set_num_values(const Set *s)
  * @ingroup meos_internal_setspan_accessor
  * @brief Return a copy of the start value of a set
  * @param[in] s Set
- * @csqlfn #Set_start_value()
  */
 Datum
 set_start_value(const Set *s)
@@ -712,7 +709,6 @@ set_start_value(const Set *s)
  * @ingroup meos_internal_setspan_accessor
  * @brief Return a copy of the end value of a set
  * @param[in] s Set
- * @csqlfn #Set_end_value()
  */
 Datum
 set_end_value(const Set *s)
@@ -745,15 +741,17 @@ set_value_n(const Set *s, int n, Datum *result)
  * @ingroup meos_internal_setspan_accessor
  * @brief Return the array of (pointers to the) values of a set
  * @param[in] s Set
+ * @param[out] count Number of elements in the output array
  * @csqlfn #Set_values()
  */
 Datum *
-set_vals(const Set *s)
+set_vals(const Set *s, int *count)
 {
   assert(s);
   Datum *result = palloc(sizeof(Datum) * s->count);
   for (int i = 0; i < s->count; i++)
     result[i] = SET_VAL_N(s, i);
+  *count = s->count;
   return result;
 }
 
@@ -761,6 +759,7 @@ set_vals(const Set *s)
  * @ingroup meos_internal_setspan_accessor
  * @brief Return the array of (copies of) values of a set
  * @param[in] s Set
+ * @param[out] count Number of elements in the output array
  * @csqlfn #Set_values()
  */
 Datum *
@@ -786,7 +785,6 @@ set_values(const Set *s, int *count)
  * decimal places
  * @param[in] s Set
  * @param[in] maxdd Maximum number of decimal digits
- * @csqlfn #Set_round()
  */
 Set *
 set_round(const Set *s, int maxdd)
