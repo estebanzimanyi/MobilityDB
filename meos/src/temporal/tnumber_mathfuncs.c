@@ -986,9 +986,10 @@ datum_sin(Datum d)
  * @ingroup meos_temporal_math
  * @brief Return the sine of a temporal float
  * @param[in] temp Temporal value (in radians)
- * @note sin/cos are oscillatory; a general turning-point function for
- * arbitrary [a,b] intervals would require detecting all kπ/2 crossings —
- * omitted for simplicity; the caller should sample at sufficient rate.
+ * @note sin is oscillatory and can have more than two turning points within a
+ * single linear segment, so the closed-form two-point densification does not
+ * apply. The result is densified by adaptive recursive bisection (the method
+ * the trgeometry distance kernel uses); see #tfunc_tlinearseq_adaptive.
  * @csqlfn #Tfloat_sin()
  */
 Temporal *
@@ -1003,7 +1004,7 @@ tfloat_sin(const Temporal *temp)
   lfinfo.argtype[0] = T_TFLOAT;
   lfinfo.restype = T_TFLOAT;
   lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
-  lfinfo.tpfn_unary = NULL;
+  lfinfo.tpfn_adaptive = true;
   return tfunc_temporal(temp, &lfinfo);
 }
 
@@ -1023,9 +1024,10 @@ datum_cos(Datum d)
  * @ingroup meos_temporal_math
  * @brief Return the cosine of a temporal float
  * @param[in] temp Temporal value (in radians)
- * @note sin/cos are oscillatory; a general turning-point function for
- * arbitrary [a,b] intervals would require detecting all kπ/2 crossings —
- * omitted for simplicity; the caller should sample at sufficient rate.
+ * @note cos is oscillatory and can have more than two turning points within a
+ * single linear segment, so the closed-form two-point densification does not
+ * apply. The result is densified by adaptive recursive bisection (the method
+ * the trgeometry distance kernel uses); see #tfunc_tlinearseq_adaptive.
  * @csqlfn #Tfloat_cos()
  */
 Temporal *
@@ -1040,7 +1042,7 @@ tfloat_cos(const Temporal *temp)
   lfinfo.argtype[0] = T_TFLOAT;
   lfinfo.restype = T_TFLOAT;
   lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
-  lfinfo.tpfn_unary = NULL;
+  lfinfo.tpfn_adaptive = true;
   return tfunc_temporal(temp, &lfinfo);
 }
 
@@ -1063,10 +1065,12 @@ datum_tan(Datum d)
  * @ingroup meos_temporal_math
  * @brief Return the tangent of a temporal float
  * @param[in] temp Temporal value (in radians)
- * @note tan is oscillatory with poles at π/2 + kπ; a general turning-point
- * function for arbitrary [a,b] intervals would require detecting all kπ/2
- * crossings — omitted for simplicity; the caller should sample at sufficient
- * rate.
+ * @note tan is monotone within each branch (π/2 + kπ poles) but its curvature
+ * grows without bound near a pole, so it is densified by the same adaptive
+ * recursive bisection as sin/cos (see #tfunc_tlinearseq_adaptive): the
+ * bisection refines the steep near-pole regions, and the C library yields
+ * ±Inf for an argument landing exactly on a pole (see #datum_tan). No bespoke
+ * pole detection is needed.
  * @csqlfn #Tfloat_tan()
  */
 Temporal *
@@ -1081,7 +1085,7 @@ tfloat_tan(const Temporal *temp)
   lfinfo.argtype[0] = T_TFLOAT;
   lfinfo.restype = T_TFLOAT;
   lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
-  lfinfo.tpfn_unary = NULL;
+  lfinfo.tpfn_adaptive = true;
   return tfunc_temporal(temp, &lfinfo);
 }
 
