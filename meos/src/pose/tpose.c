@@ -174,7 +174,6 @@ tposesegm_intersection(Datum start1, Datum end1, Datum start2, Datum end2,
  * @ingroup meos_pose_inout
  * @brief Return a temporal pose from its Well-Known Text (WKT) representation
  * @param[in] str String
- * @csqlfn #Tpose_in()
  */
 Temporal *
 tpose_in(const char *str)
@@ -506,7 +505,6 @@ tpose_to_tpoint(const Temporal *temp)
  * @ingroup meos_pose_accessor
  * @brief Return a the rotation of a temporal pose as a temporal float
  * @param[in] temp Temporal pose
- * @csqlfn #Tpose_rotation()
  */
 Temporal *
 tpose_rotation(const Temporal *temp)

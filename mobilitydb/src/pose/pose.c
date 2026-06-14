@@ -285,7 +285,7 @@ Datum
 Pose_as_hexwkb(PG_FUNCTION_ARGS)
 {
   Pose *pose = PG_GETARG_POSE_P(0);
-  PG_RETURN_TEXT_P(Datum_as_hexwkb(fcinfo, PointerGetDatum(pose), T_POSE));
+  PG_RETURN_TEXT_P(Datum_as_hexwkb(fcinfo, PointerGetDatum(pose), T_POSE, true));
 }
 
 /*****************************************************************************
@@ -773,6 +773,7 @@ PG_FUNCTION_INFO_V1(Pose_same);
  * @brief Return true if two poses are approximately equal with respect to an
  * epsilon value
  * @sqlfn same()
+ * @sqlop @p ~=
  */
 Datum
 Pose_same(PG_FUNCTION_ARGS)

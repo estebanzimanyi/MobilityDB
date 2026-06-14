@@ -69,6 +69,7 @@
 #include <json-c/json.h>
 /* PostgreSQL */
 #include <postgres.h>
+#include <pgtypes.h>
 #if POSTGRESQL_VERSION_NUMBER >= 160000
   #include "varatt.h"
 #endif

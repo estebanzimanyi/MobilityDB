@@ -583,7 +583,7 @@ pose_wkt_out(const Pose *pose, bool extended, int maxdd)
     X = float8_out(pose->data[4], maxdd);
     Y = float8_out(pose->data[5], maxdd);
     Z = float8_out(pose->data[6], maxdd);
-    len += strlen(W) + strlen(X) + strlen(Y) + strlen(Z) + 4; // Four ','
+    len += strlen(W) + strlen(X) + strlen(Y) + strlen(Z) + 3; // Three ','
   }
   else
   {
@@ -885,7 +885,6 @@ pose_copy(const Pose *pose)
  * @ingroup meos_pose_base_conversion
  * @brief Convert a pose into a geometry point
  * @param[in] pose Pose
- * @csqlfn #Pose_to_point()
  */
 GSERIALIZED *
 pose_to_point(const Pose *pose)
@@ -955,7 +954,6 @@ posearr_points(Pose **posearr, int count)
  * @brief Return the rotation of a 2D pose
  * @param[in] pose Pose
  * @return On error return @p DBL_MAX
- * @csqlfn #Pose_rotation()
  */
 double
 pose_rotation(const Pose *pose)
@@ -1005,7 +1003,6 @@ datum_pose_roll(Datum pose)
  * @param[in] pose Pose
  * @param[out] count Number of elements in the output array
  * @return On error return @p NULL
- * @csqlfn #Pose_orientation()
  */
 double *
 pose_orientation(const Pose *pose, int *count)
@@ -1377,7 +1374,6 @@ posearr_round(const Pose **posearr, int count, int maxdd)
  * @ingroup meos_pose_base_srid
  * @brief Return the SRID
  * @param[in] pose Pose
- * @csqlfn #Pose_srid()
  */
 int32_t
 pose_srid(const Pose *pose)
@@ -1405,7 +1401,6 @@ pose_srid(const Pose *pose)
  * @brief Set the SRID
  * @param[in] pose Pose
  * @param[in] srid SRID
- * @csqlfn #Pose_set_srid()
  */
 void
 pose_set_srid(Pose *pose, int32_t srid)
@@ -1636,7 +1631,6 @@ pose_transf_pj(const Pose *pose, int32_t srid_to, const LWPROJ *pj)
  * @brief Return a pose transformed to another SRID
  * @param[in] pose Pose
  * @param[in] srid_to Target SRID
- * @csqlfn #Pose_transform()
  */
 Pose *
 pose_transform(const Pose *pose, int32_t srid_to)
@@ -1669,7 +1663,6 @@ pose_transform(const Pose *pose, int32_t srid_to)
  * @param[in] pipeline Pipeline string
  * @param[in] srid_to Target SRID, may be @p SRID_UNKNOWN
  * @param[in] is_forward True when the transformation is forward
- * @csqlfn #Pose_transform_pipeline()
  */
 Pose *
 pose_transform_pipeline(const Pose *pose, const char *pipeline,
@@ -1792,7 +1785,6 @@ distance_pose_stbox(const Pose *pose, const STBox *box)
  * @ingroup meos_pose_base_comp
  * @brief Return true if the first pose is equal to the second one
  * @param[in] pose1,pose2 Poses
- * @csqlfn #Pose_eq()
  */
 bool
 pose_eq(const Pose *pose1, const Pose *pose2)
@@ -1822,7 +1814,6 @@ pose_eq(const Pose *pose1, const Pose *pose2)
  * @ingroup meos_pose_base_comp
  * @brief Return true if the first pose is not equal to the second one
  * @param[in] pose1,pose2 Poses
- * @csqlfn #Pose_ne()
  */
 inline bool
 pose_ne(const Pose *pose1, const Pose *pose2)
@@ -1834,7 +1825,6 @@ pose_ne(const Pose *pose1, const Pose *pose2)
  * @ingroup meos_pose_base_comp
  * @brief Return true if the first pose is equal to the second one
  * @param[in] pose1,pose2 Poses
- * @csqlfn #Pose_same()
  */
 bool
 pose_same(const Pose *pose1, const Pose *pose2)
@@ -1876,7 +1866,6 @@ pose_nsame(const Pose *pose1, const Pose *pose2)
  * @brief Return -1, 0, or 1 depending on whether the first pose
  * is less than, equal to, or greater than the second one
  * @param[in] pose1,pose2 Poses
- * @csqlfn #Pose_cmp()
  */
 int
 pose_cmp(const Pose *pose1, const Pose *pose2)
@@ -1908,7 +1897,6 @@ pose_cmp(const Pose *pose1, const Pose *pose2)
  * @ingroup meos_pose_base_comp
  * @brief Return true if the first pose is less than the second one
  * @param[in] pose1,pose2 Poses
- * @csqlfn #Pose_lt()
  */
 inline bool
 pose_lt(const Pose *pose1, const Pose *pose2)
@@ -1920,7 +1908,6 @@ pose_lt(const Pose *pose1, const Pose *pose2)
  * @ingroup meos_pose_base_comp
  * @brief Return true if the first pose is less than or equal to the second one
  * @param[in] pose1,pose2 Poses
- * @csqlfn #Pose_le()
  */
 inline bool
 pose_le(const Pose *pose1, const Pose *pose2)
@@ -1932,7 +1919,6 @@ pose_le(const Pose *pose1, const Pose *pose2)
  * @ingroup meos_pose_base_comp
  * @brief Return true if the first pose is greater than the second one
  * @param[in] pose1,pose2 Poses
- * @csqlfn #Pose_gt()
  */
 inline bool
 pose_gt(const Pose *pose1, const Pose *pose2)
@@ -1945,7 +1931,6 @@ pose_gt(const Pose *pose1, const Pose *pose2)
  * @brief Return true if the first pose is greater than or equal to the second
  * one
  * @param[in] pose1,pose2 Poses
- * @csqlfn #Pose_ge()
  */
 inline bool
 pose_ge(const Pose *pose1, const Pose *pose2)
@@ -1970,7 +1955,6 @@ void hashlittle2(const void *key, size_t length, uint32_t *pc, uint32_t *pb);
  * @ingroup meos_pose_base_accessor
  * @brief Return the 32-bit hash value of a pose
  * @param[in] pose Pose
- * @csqlfn #Pose_hash()
  */
 uint32
 pose_hash(const Pose *pose)
@@ -2008,7 +1992,6 @@ pose_hash(const Pose *pose)
  * @param[in] pose Pose
  * @param[in] seed Seed
  * csqlfn hash_extended
- * @csqlfn #Pose_hash_extended()
  */
 uint64
 pose_hash_extended(const Pose *pose, uint64 seed)
