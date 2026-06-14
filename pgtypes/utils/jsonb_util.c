@@ -28,6 +28,7 @@
 #include "utils/varlena.h"
 
 #include "pgtypes.h"
+#include "../../meos/include/meos_error.h"
 
 /*****************************************************************************/
 
@@ -35,7 +36,7 @@
  * @brief Global variable that keeps the elements to free after a JSON parsing
  */
 
-json_to_free *JSON_TO_FREE = NULL;
+static json_to_free *JSON_TO_FREE = NULL;
 
 /**
  * @brief Get the global variable that keeps the elements to free after
@@ -43,13 +44,12 @@ json_to_free *JSON_TO_FREE = NULL;
  * @details If the list empty, it is initialized with a fix number of elements
  * but it expands when adding elements and the list is full
  */
-
 json_to_free *
 json_get_tofree(void)
 {
   if (! JSON_TO_FREE)
   {
-    JSON_TO_FREE = (json_to_free *) palloc(sizeof(json_to_free));
+    JSON_TO_FREE = (json_to_free *) palloc0(sizeof(json_to_free));
     JSON_TO_FREE->tofree_size = JSON_TO_FREE_INITIAL_SIZE;
     JSON_TO_FREE->tofree_count = 0;
     JSON_TO_FREE->tofree = (void **) palloc0(JSON_TO_FREE_INITIAL_SIZE * 
@@ -65,16 +65,16 @@ void
 json_add_tofree(void *value)
 {
   /* Get the global variable that keeps the items to free after a JSON parsing */
-  json_to_free *st = json_get_tofree();
+  json_to_free *list = json_get_tofree();
     /* enlarge tofree array if necessary */
-  if (st->tofree_count >= st->tofree_size)
+  if (list->tofree_count >= list->tofree_size)
   {
-    st->tofree_size *= 2;
-    st->tofree = (void **) repalloc(st->tofree, sizeof(void *) * 
-      st->tofree_size);
+    list->tofree_size *= 2;
+    list->tofree = (void **) repalloc(list->tofree, sizeof(void *) * 
+      list->tofree_size);
   }
   /* save the value */
-  st->tofree[st->tofree_count++] = (void *) value;
+  list->tofree[list->tofree_count++] = (void *) value;
   return;
 }
 
@@ -86,12 +86,12 @@ void
 json_reset_tofree(void)
 {
   /* Get Global variable that keeps the items to free after a JSONB parsing */
-  json_to_free *st = json_get_tofree();
-  if (! st || ! st->tofree_count)
+  json_to_free *list = JSON_TO_FREE;
+  if (! list || ! list->tofree_count)
     return;
-  for (int i = 0; i < st->tofree_count; i++)
-    pfree(st->tofree[i]);
-  st->tofree_count = 0;
+  for (int i = 0; i < list->tofree_count; i++)
+    pfree(list->tofree[i]);
+  list->tofree_count = 0;
   return;
 }
 
@@ -103,14 +103,21 @@ void
 json_destroy_tofree(void)
 {
   /* Get Global variable that keeps the items to free after a JSONB parsing */
-  json_to_free *st = json_get_tofree();
-  for (int i = 0; i < st->tofree_count; ++i)
-    pfree(st->tofree[i]);
-  pfree(st->tofree);
-  pfree(st);
-  st = NULL;
+  json_to_free *list = json_get_tofree();
+  if (! list)
+    return;
+  if (list->tofree)
+  {
+    for (int i = 0; i < list->tofree_count; ++i)
+      pfree(list->tofree[i]);
+    pfree(list->tofree);
+  }
+  pfree(list);
+  list = NULL;
   return;
 }
+
+/*****************************************************************************/
 
 /*
  * Maximum number of elements in an array (or key/value pairs in an object).
@@ -1221,7 +1228,11 @@ JsonbDeepContains(JsonbIterator **val, JsonbIterator **mContained)
          * of containment (plus of course the mapped nodes must be
          * equal).
          */
-        if (!JsonbDeepContains(&nestval, &nestContained))
+        bool nc = JsonbDeepContains(&nestval, &nestContained);
+        /* free whatever remains of the nested iterator chains (no context) */
+        while (nestval) { JsonbIterator *p = nestval->parent; pfree(nestval); nestval = p; }
+        while (nestContained) { JsonbIterator *p = nestContained->parent; pfree(nestContained); nestContained = p; }
+        if (! nc)
           return false;
       }
     }
@@ -1264,9 +1275,11 @@ JsonbDeepContains(JsonbIterator **val, JsonbIterator **mContained)
 
       if (IsAJsonbScalar(&vcontained))
       {
-        if (!findJsonbValueFromContainer((*val)->container, JB_FARRAY,
-            &vcontained))
+        JsonbValue *fv = findJsonbValueFromContainer((*val)->container,
+          JB_FARRAY, &vcontained);
+        if (! fv)
           return false;
+        pfree(fv); /* palloc'd by findJsonbValueFromContainer */
       }
       else
       {
@@ -1310,10 +1323,8 @@ JsonbDeepContains(JsonbIterator **val, JsonbIterator **mContained)
           JsonbIterator *nestContained = 
             JsonbIteratorInit(vcontained.val.binary.data);
           bool contains = JsonbDeepContains(&nestval, &nestContained);
-          if (nestval)
-            pfree(nestval);
-          if (nestContained)
-            pfree(nestContained);
+          while (nestval) { JsonbIterator *p = nestval->parent; pfree(nestval); nestval = p; }
+          while (nestContained) { JsonbIterator *p = nestContained->parent; pfree(nestContained); nestContained = p; }
           if (contains)
             break;
         }
@@ -1568,8 +1579,14 @@ convertToJsonb(JsonbValue *val)
    * JsonbContainer struct must contain enough information to tell what kind
    * of value it is.
    */
-  Jsonb *res = (Jsonb *) buffer.data;
+  /* The buffer is binary (the reserved VARHDRSZ header is zero-filled and
+   * the serialized container contains embedded NUL bytes), so it must be
+   * copied by length, not as a NUL-terminated string -- pstrdup() would
+   * stop at the first zero byte and leave the result uninitialised. */
+  Jsonb *res = (Jsonb *) palloc(buffer.len);
+  memcpy(res, buffer.data, buffer.len);
   SET_VARSIZE(res, buffer.len);
+  pfree(buffer.data);
   return res;
 }
 
