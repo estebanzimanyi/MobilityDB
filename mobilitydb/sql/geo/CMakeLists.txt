@@ -39,6 +39,7 @@ list(APPEND LOCAL_FILES
   )
 
 append_portable_aliases()
+append_arrow_roundtrip()
 
 foreach (f ${LOCAL_FILES})
   process_file(${f} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})

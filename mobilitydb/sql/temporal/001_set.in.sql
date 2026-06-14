@@ -1445,29 +1445,5 @@ CREATE OPERATOR CLASS tstzset_hash_ops
 
 /******************************************************************************/
 
-CREATE FUNCTION arrowRoundtrip(intset)
-  RETURNS intset
-  AS 'MODULE_PATHNAME', 'Set_arrow_roundtrip'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION arrowRoundtrip(bigintset)
-  RETURNS bigintset
-  AS 'MODULE_PATHNAME', 'Set_arrow_roundtrip'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION arrowRoundtrip(floatset)
-  RETURNS floatset
-  AS 'MODULE_PATHNAME', 'Set_arrow_roundtrip'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION arrowRoundtrip(textset)
-  RETURNS textset
-  AS 'MODULE_PATHNAME', 'Set_arrow_roundtrip'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION arrowRoundtrip(dateset)
-  RETURNS dateset
-  AS 'MODULE_PATHNAME', 'Set_arrow_roundtrip'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION arrowRoundtrip(tstzset)
-  RETURNS tstzset
-  AS 'MODULE_PATHNAME', 'Set_arrow_roundtrip'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************/

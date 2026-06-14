@@ -252,9 +252,5 @@ CREATE OPERATOR CLASS th3index_hash_ops
 
 /******************************************************************************/
 
-CREATE FUNCTION arrowRoundtrip(th3index)
-  RETURNS th3index
-  AS 'MODULE_PATHNAME', 'Temporal_arrow_roundtrip'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /******************************************************************************/

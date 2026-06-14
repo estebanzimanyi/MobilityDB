@@ -67,6 +67,18 @@ macro(append_portable_aliases)
   endforeach()
 endmacro()
 
+# Auto-register a family's generated Arrow round-trip SQL (tools/arrow_roundtrip/
+# generate.py emits <NNN>_arrow_roundtrip.in.sql per family). Same self-registering
+# pattern as append_portable_aliases: no manifest edit, feature-gated by directory.
+macro(append_arrow_roundtrip)
+  file(GLOB _arrow RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/*_arrow_roundtrip.in.sql)
+  foreach (_ar ${_arrow})
+    string(REGEX REPLACE "\\.in\\.sql$" "" _ar "${_ar}")
+    list(APPEND LOCAL_FILES ${_ar})
+  endforeach()
+endmacro()
+
 add_subdirectory(temporal)
 add_subdirectory(geo)
 if(CBUFFER)
