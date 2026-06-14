@@ -318,7 +318,6 @@ tinterrel_tcbufferseq_step_geom(const TSequence *seq, const GSERIALIZED *gs,
       {}
     }
     pfree(circle);
-    inst = next;
   }
   pfree_array((void *) points, npoints);
   /* If there is no intersection */
@@ -1138,7 +1137,7 @@ tdwithin_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb, double dist)
    * functions to be applied */
   return tdwithin_tspatial_spatial(temp, PointerGetDatum(cb),
     Float8GetDatum(dist), &datum_cbuffer_dwithin,
-    &tcbuffersegm_tdwithin_turnpt);
+    &tcbuffersegm_dwithin_turnpt);
 }
 
 /*****************************************************************************/
@@ -1172,7 +1171,7 @@ tdwithin_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
    * functions to be applied */
   Temporal *result = tdwithin_tspatial_tspatial(sync1, sync2,
     Float8GetDatum(dist), &datum_cbuffer_dwithin,
-    &tcbuffersegm_tdwithin_turnpt);
+    &tcbuffersegm_dwithin_turnpt);
   pfree(sync1); pfree(sync2);
   return result;
 }

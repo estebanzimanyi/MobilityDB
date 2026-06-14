@@ -251,7 +251,7 @@ Datum
 Cbuffer_as_hexwkb(PG_FUNCTION_ARGS)
 {
   Cbuffer *cb = PG_GETARG_CBUFFER_P(0);
-  PG_RETURN_TEXT_P(Datum_as_hexwkb(fcinfo, PointerGetDatum(cb), T_CBUFFER));
+  PG_RETURN_TEXT_P(Datum_as_hexwkb(fcinfo, PointerGetDatum(cb), T_CBUFFER, true));
 }
 
 /*****************************************************************************
@@ -647,6 +647,7 @@ PG_FUNCTION_INFO_V1(Cbuffer_same);
  * @brief Return true if two circular buffers are approximately equal with 
  * respect to an epsilon value
  * @sqlfn same()
+ * @sqlop @p ~=
  */
 Datum
 Cbuffer_same(PG_FUNCTION_ARGS)

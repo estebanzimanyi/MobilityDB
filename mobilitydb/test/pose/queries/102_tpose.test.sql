@@ -617,3 +617,14 @@ SELECT pg_typeof(tgeompoint(tpose '[Pose(Point(1 1),0.1)@2000-01-01]'));
 SELECT pg_typeof(tgeogpoint(tpose '[GeodPose(Point(1 1),0.1)@2000-01-01]'));
 
 -------------------------------------------------------------------------------/
+
+SELECT numSequences(tposeSeqSetGaps(ARRAY[
+  tpose 'Pose(Point(1 1), 0.0)@2000-01-01',
+  tpose 'Pose(Point(2 2), 0.5)@2000-01-02',
+  tpose 'Pose(Point(3 3), 1.0)@2000-01-03'
+]::tpose[], '5 minutes'::interval));
+
+-------------------------------------------------------------------------------/
+
+-- tprecision
+SELECT asText(tprecision(tpose '[Pose(Point(0 0),0)@2001-01-01, Pose(Point(4 0),0)@2001-01-01 00:00:04]', interval '2 secs'));
