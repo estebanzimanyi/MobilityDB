@@ -13,6 +13,7 @@ SET(LOCAL_FILES
   116_tpose_tempspatialrels
   118_tpose_analytics
   120_geopose_frames
+  119_tpose_tile
   )
 
 append_portable_aliases()
