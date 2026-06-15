@@ -1215,7 +1215,7 @@ PG_FUNCTION_INFO_V1(Same_stbox_stbox);
  * @ingroup mobilitydb_geo_box_topo
  * @brief Return true if two spatiotemporal boxes are equal in the common
  * dimensions
- * @sqlfn stbox_same()
+ * @sqlfn same()
  * @sqlop @p ~=
  */
 Datum

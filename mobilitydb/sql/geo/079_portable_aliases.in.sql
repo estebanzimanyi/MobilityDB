@@ -15,11 +15,6 @@
  * behaviour is identical to the operator (RFC: doc/rfc/sql-portability).
  */
 
-CREATE FUNCTION same(stbox, stbox)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_stbox_stbox'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
 CREATE FUNCTION left(stbox, stbox)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Left_stbox_stbox'
@@ -98,106 +93,6 @@ CREATE FUNCTION after(stbox, stbox)
 CREATE FUNCTION overafter(stbox, stbox)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Overafter_stbox_stbox'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tstzspan, tgeometry)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tstzspan_temporal'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tgeometry, tstzspan)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_temporal_tstzspan'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(stbox, tgeometry)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_stbox_tspatial'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tgeometry, stbox)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tspatial_stbox'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tgeometry, tgeometry)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tspatial_tspatial'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tstzspan, tgeography)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tstzspan_temporal'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tgeography, tstzspan)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_temporal_tstzspan'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(stbox, tgeography)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_stbox_tspatial'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tgeography, stbox)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tspatial_stbox'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tgeography, tgeography)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tspatial_tspatial'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tstzspan, tgeompoint)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tstzspan_temporal'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tgeompoint, tstzspan)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_temporal_tstzspan'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(stbox, tgeompoint)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_stbox_tspatial'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tgeompoint, stbox)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tspatial_stbox'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tgeompoint, tgeompoint)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tspatial_tspatial'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tstzspan, tgeogpoint)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tstzspan_temporal'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tgeogpoint, tstzspan)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_temporal_tstzspan'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(stbox, tgeogpoint)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_stbox_tspatial'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tgeogpoint, stbox)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tspatial_stbox'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tgeogpoint, tgeogpoint)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tspatial_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION before(tstzspan, tgeometry)

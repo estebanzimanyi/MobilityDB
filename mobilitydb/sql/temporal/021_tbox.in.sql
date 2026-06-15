@@ -358,7 +358,7 @@ CREATE FUNCTION overlaps(tbox, tbox)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Overlaps_tbox_tbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tbox_same(tbox, tbox)
+CREATE FUNCTION same(tbox, tbox)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_tbox_tbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
@@ -386,7 +386,7 @@ CREATE OPERATOR && (
   RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
 );
 CREATE OPERATOR ~= (
-  PROCEDURE = tbox_same,
+  PROCEDURE = same,
   LEFTARG = tbox, RIGHTARG = tbox,
   COMMUTATOR = ~=,
   RESTRICT = tnumber_sel, JOIN = tnumber_joinsel

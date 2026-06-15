@@ -35,7 +35,6 @@ OP_TO_NAME = {
     # temporal bool) is tempEq…; ever ?= and always %= (reduced, return bool) are
     # everEq…/alwaysEq…. This replaces the older lowercase teq/tne and the snake
     # ever_*/always_* exclusion so the dialect is uniform across all engines.
-    "~=": "same",
 }
 
 # Operators whose backing PROCEDURE is itself a callable named function
@@ -50,10 +49,12 @@ ALREADY_NAMED = {
 # operators, the ever/always families, the distance family).
 SCALAR_SQL = {"+", "-", "*", "/", "=", "<>", "<", "<=", ">", ">=", "@"}
 # Topological operators whose backing functions are themselves named directly
-# by the portable bare name (overlaps/contains/contained/adjacent): a one-to-one
-# rename, so no generated alias is needed (unlike the positional operators where
-# one backing function, e.g. span_left, serves both a value-op and a time-op).
-TOPO = {"&&", "@>", "<@", "-|-"}
+# by the portable bare name (overlaps/contains/contained/adjacent/same): a
+# one-to-one rename, so no generated alias is needed (unlike the positional
+# operators where one backing function, e.g. span_left, serves both a value-op
+# and a time-op). ~= bases (temporal_same/tbox_same/...) were unified to the bare
+# name same(), so ~= is named directly like the other topological operators.
+TOPO = {"&&", "@>", "<@", "-|-", "~="}
 TEMP = {"#=", "#<>", "#<", "#<=", "#>", "#>="}
 EVER = {"?=", "?<>", "?<", "?<=", "?>", "?>="}
 ALWAYS = {"%=", "%<>", "%<", "%<=", "%>", "%>="}

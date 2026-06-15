@@ -15,36 +15,6 @@
  * behaviour is identical to the operator (RFC: doc/rfc/sql-portability).
  */
 
-CREATE FUNCTION same(cbuffer, cbuffer)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Cbuffer_same'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tstzspan, tcbuffer)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tstzspan_temporal'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tcbuffer, tstzspan)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_temporal_tstzspan'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(stbox, tcbuffer)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_stbox_tspatial'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tcbuffer, stbox)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tspatial_stbox'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tcbuffer, tcbuffer)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tspatial_tspatial'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
 CREATE FUNCTION before(tstzspan, tcbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Before_tstzspan_temporal'

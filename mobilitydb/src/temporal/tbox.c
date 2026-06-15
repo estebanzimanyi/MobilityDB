@@ -825,7 +825,7 @@ PG_FUNCTION_INFO_V1(Same_tbox_tbox);
 /**
  * @ingroup mobilitydb_box_topo
  * @brief Return true if two temporal boxes are equal on the common dimensions
- * @sqlfn tbox_same()
+ * @sqlfn same()
  */
 Datum
 Same_tbox_tbox(PG_FUNCTION_ARGS)

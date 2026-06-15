@@ -262,23 +262,23 @@ CREATE OPERATOR && (
  * Same
  *****************************************************************************/
 
-CREATE FUNCTION temporal_same(tstzspan, tnpoint)
+CREATE FUNCTION same(tstzspan, tnpoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_tstzspan_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_same(tnpoint, tstzspan)
+CREATE FUNCTION same(tnpoint, tstzspan)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_temporal_tstzspan'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tstzspan, RIGHTARG = tnpoint,
   COMMUTATOR = ~=,
   RESTRICT = temporal_sel, JOIN = temporal_joinsel
 );
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tnpoint, RIGHTARG = tstzspan,
   COMMUTATOR = ~=,
   RESTRICT = temporal_sel, JOIN = temporal_joinsel
@@ -286,35 +286,35 @@ CREATE OPERATOR ~= (
 
 /*****************************************************************************/
 
-CREATE FUNCTION temporal_same(stbox, tnpoint)
+CREATE FUNCTION same(stbox, tnpoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_stbox_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = stbox, RIGHTARG = tnpoint,
   COMMUTATOR = ~=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
-CREATE FUNCTION temporal_same(tnpoint, stbox)
+CREATE FUNCTION same(tnpoint, stbox)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_tspatial_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_same(tnpoint, tnpoint)
+CREATE FUNCTION same(tnpoint, tnpoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_tspatial_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tnpoint, RIGHTARG = stbox,
   COMMUTATOR = ~=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tnpoint, RIGHTARG = tnpoint,
   COMMUTATOR = ~=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel

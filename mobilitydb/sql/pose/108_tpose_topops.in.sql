@@ -256,23 +256,23 @@ CREATE OPERATOR && (
  * Same
  *****************************************************************************/
 
-CREATE FUNCTION temporal_same(tstzspan, tpose)
+CREATE FUNCTION same(tstzspan, tpose)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_tstzspan_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_same(tpose, tstzspan)
+CREATE FUNCTION same(tpose, tstzspan)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_temporal_tstzspan'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tstzspan, RIGHTARG = tpose,
   COMMUTATOR = ~=,
   RESTRICT = temporal_sel, JOIN = temporal_joinsel
 );
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tpose, RIGHTARG = tstzspan,
   COMMUTATOR = ~=,
   RESTRICT = temporal_sel, JOIN = temporal_joinsel
@@ -280,35 +280,35 @@ CREATE OPERATOR ~= (
 
 /*****************************************************************************/
 
-CREATE FUNCTION temporal_same(stbox, tpose)
+CREATE FUNCTION same(stbox, tpose)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_stbox_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = stbox, RIGHTARG = tpose,
   COMMUTATOR = ~=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
-CREATE FUNCTION temporal_same(tpose, stbox)
+CREATE FUNCTION same(tpose, stbox)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_tspatial_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_same(tpose, tpose)
+CREATE FUNCTION same(tpose, tpose)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_tspatial_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tpose, RIGHTARG = stbox,
   COMMUTATOR = ~=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tpose, RIGHTARG = tpose,
   COMMUTATOR = ~=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel

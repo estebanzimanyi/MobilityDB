@@ -408,7 +408,7 @@ PG_FUNCTION_INFO_V1(Same_stbox_tspatial);
  * @ingroup mobilitydb_geo_bbox_topo
  * @brief Return true if a spatiotemporal box and the spatiotemporal box of a
  * spatiotemporal value are equal in the common dimensions
- * @sqlfn same_bbox()
+ * @sqlfn same()
  * @sqlop @p ~=
  */
 inline Datum
@@ -423,7 +423,7 @@ PG_FUNCTION_INFO_V1(Same_tspatial_stbox);
  * @ingroup mobilitydb_geo_bbox_topo
  * @brief Return true if the spatiotemporal box of a spatiotemporal value and
  * a spatiotemporal box are equal in the common dimensions
- * @sqlfn same_bbox()
+ * @sqlfn same()
  * @sqlop @p ~=
  */
 inline Datum
@@ -438,7 +438,7 @@ PG_FUNCTION_INFO_V1(Same_tspatial_tspatial);
  * @ingroup mobilitydb_geo_bbox_topo
  * @brief Return true if the spatiotemporal boxes of two spatiotemporal
  * values are equal in the common dimensions
- * @sqlfn same_bbox()
+ * @sqlfn same()
  * @sqlop @p ~=
  */
 inline Datum

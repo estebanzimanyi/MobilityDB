@@ -411,7 +411,7 @@ CREATE FUNCTION overlaps(stbox, stbox)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Overlaps_stbox_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION stbox_same(stbox, stbox)
+CREATE FUNCTION same(stbox, stbox)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_stbox_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
@@ -439,7 +439,7 @@ CREATE OPERATOR && (
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR ~= (
-  PROCEDURE = stbox_same,
+  PROCEDURE = same,
   LEFTARG = stbox, RIGHTARG = stbox,
   COMMUTATOR = ~=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel

@@ -1175,11 +1175,6 @@ CREATE FUNCTION overafter(tstzspanset, tstzspanset)
   AS 'MODULE_PATHNAME', 'Overright_spanset_spanset'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION same(tbox, tbox)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tbox_tbox'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
 CREATE FUNCTION left(tbox, tbox)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Left_tbox_tbox'
@@ -1218,106 +1213,6 @@ CREATE FUNCTION after(tbox, tbox)
 CREATE FUNCTION overafter(tbox, tbox)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Overafter_tbox_tbox'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tstzspan, tbool)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tstzspan_temporal'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tbool, tstzspan)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_temporal_tstzspan'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tbool, tbool)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_temporal_temporal'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tstzspan, tint)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tstzspan_temporal'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tint, tstzspan)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_temporal_tstzspan'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(intspan, tint)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_numspan_tnumber'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tint, intspan)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tnumber_numspan'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tbox, tint)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tbox_tnumber'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tint, tbox)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tnumber_tbox'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tint, tint)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tnumber_tnumber'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tstzspan, tfloat)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tstzspan_temporal'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tfloat, tstzspan)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_temporal_tstzspan'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(floatspan, tfloat)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_numspan_tnumber'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tfloat, floatspan)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tnumber_numspan'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tbox, tfloat)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tbox_tnumber'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tfloat, tbox)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tnumber_tbox'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tfloat, tfloat)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tnumber_tnumber'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(tstzspan, ttext)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_tstzspan_temporal'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(ttext, tstzspan)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_temporal_tstzspan'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION same(ttext, ttext)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Same_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION before(tstzspan, tbool)

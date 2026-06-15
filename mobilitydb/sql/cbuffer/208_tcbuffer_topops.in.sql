@@ -256,23 +256,23 @@ CREATE OPERATOR && (
  * Same
  *****************************************************************************/
 
-CREATE FUNCTION temporal_same(tstzspan, tcbuffer)
+CREATE FUNCTION same(tstzspan, tcbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_tstzspan_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_same(tcbuffer, tstzspan)
+CREATE FUNCTION same(tcbuffer, tstzspan)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_temporal_tstzspan'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tstzspan, RIGHTARG = tcbuffer,
   COMMUTATOR = ~=,
   RESTRICT = temporal_sel, JOIN = temporal_joinsel
 );
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tcbuffer, RIGHTARG = tstzspan,
   COMMUTATOR = ~=,
   RESTRICT = temporal_sel, JOIN = temporal_joinsel
@@ -280,35 +280,35 @@ CREATE OPERATOR ~= (
 
 /*****************************************************************************/
 
-CREATE FUNCTION temporal_same(stbox, tcbuffer)
+CREATE FUNCTION same(stbox, tcbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_stbox_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = stbox, RIGHTARG = tcbuffer,
   COMMUTATOR = ~=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
-CREATE FUNCTION temporal_same(tcbuffer, stbox)
+CREATE FUNCTION same(tcbuffer, stbox)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_tspatial_stbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_same(tcbuffer, tcbuffer)
+CREATE FUNCTION same(tcbuffer, tcbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_tspatial_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tcbuffer, RIGHTARG = stbox,
   COMMUTATOR = ~=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tcbuffer, RIGHTARG = tcbuffer,
   COMMUTATOR = ~=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel

@@ -397,7 +397,7 @@ PG_FUNCTION_INFO_V1(Same_tstzspan_temporal);
  * @ingroup mobilitydb_temporal_bbox_topo
  * @brief Return true if a timestamptz span and the time span of a
  * temporal value are equal
- * @sqlfn same_bbox()
+ * @sqlfn same()
  * @sqlop @p ~=
  */
 inline Datum
@@ -412,7 +412,7 @@ PG_FUNCTION_INFO_V1(Same_temporal_tstzspan);
  * @ingroup mobilitydb_temporal_bbox_topo
  * @brief Return true if the time span of a temporal value and a
  * timestamptz span are equal
- * @sqlfn same_bbox()
+ * @sqlfn same()
  * @sqlop @p ~=
  */
 inline Datum
@@ -426,7 +426,7 @@ PG_FUNCTION_INFO_V1(Same_temporal_temporal);
 /**
  * @ingroup mobilitydb_temporal_bbox_topo
  * @brief Return true if the time spans of two temporal values are equal
- * @sqlfn same_bbox()
+ * @sqlfn same()
  * @sqlop @p ~=
  */
 inline Datum
@@ -810,7 +810,7 @@ PG_FUNCTION_INFO_V1(Same_numspan_tnumber);
  * @ingroup mobilitydb_temporal_bbox_topo
  * @brief Return true if a number span and the value span of a
  * temporal number are equal
- * @sqlfn same_bbox()
+ * @sqlfn same()
  * @sqlop @p ~=
  */
 inline Datum
@@ -825,7 +825,7 @@ PG_FUNCTION_INFO_V1(Same_tnumber_numspan);
  * @ingroup mobilitydb_temporal_bbox_topo
  * @brief Return true if the value span of a temporal number and a
  * number span are equal
- * @sqlfn same_bbox()
+ * @sqlfn same()
  * @sqlop @p ~=
  */
 inline Datum
@@ -840,7 +840,7 @@ PG_FUNCTION_INFO_V1(Same_tbox_tnumber);
  * @ingroup mobilitydb_temporal_bbox_topo
  * @brief Return true if a temporal box and the bounding box of a temporal
  * number are equal in the common dimensions
- * @sqlfn same_bbox()
+ * @sqlfn same()
  * @sqlop @p ~=
  */
 inline Datum
@@ -855,7 +855,7 @@ PG_FUNCTION_INFO_V1(Same_tnumber_tbox);
  * @ingroup mobilitydb_temporal_bbox_topo
  * @brief Return true if the bounding box of a temporal number and a
  * temporal box are equal in the common dimensions
- * @sqlfn same_bbox()
+ * @sqlfn same()
  * @sqlop @p ~=
  */
 inline Datum
@@ -869,7 +869,7 @@ PG_FUNCTION_INFO_V1(Same_tnumber_tnumber);
 /**
  * @ingroup mobilitydb_temporal_bbox_topo
  * @brief Return true if the bounding boxes of two temporal numbers are equal
- * @sqlfn same_bbox()
+ * @sqlfn same()
  * @sqlop @p ~=
  */
 inline Datum

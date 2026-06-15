@@ -220,33 +220,33 @@ CREATE OPERATOR <@ (
 
 /*****************************************************************************/
 
-CREATE FUNCTION temporal_same(tstzspan, tbool)
+CREATE FUNCTION same(tstzspan, tbool)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_tstzspan_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_same(tbool, tstzspan)
+CREATE FUNCTION same(tbool, tstzspan)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_temporal_tstzspan'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_same(tbool, tbool)
+CREATE FUNCTION same(tbool, tbool)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tstzspan, RIGHTARG = tbool,
   COMMUTATOR = ~=,
   RESTRICT = temporal_sel, JOIN = temporal_joinsel
 );
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tbool, RIGHTARG = tstzspan,
   COMMUTATOR = ~=,
   RESTRICT = temporal_sel, JOIN = temporal_joinsel
 );
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tbool, RIGHTARG = tbool,
   COMMUTATOR = ~=,
   RESTRICT = temporal_sel, JOIN = temporal_joinsel
@@ -524,23 +524,23 @@ CREATE OPERATOR <@ (
 
 /*****************************************************************************/
 
-CREATE FUNCTION temporal_same(tstzspan, tint)
+CREATE FUNCTION same(tstzspan, tint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_tstzspan_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_same(tint, tstzspan)
+CREATE FUNCTION same(tint, tstzspan)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_temporal_tstzspan'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tstzspan, RIGHTARG = tint,
   COMMUTATOR = ~=,
   RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
 );
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tint, RIGHTARG = tstzspan,
   COMMUTATOR = ~=,
   RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
@@ -548,53 +548,53 @@ CREATE OPERATOR ~= (
 
 /*****************************************************************************/
 
-CREATE FUNCTION temporal_same(intspan, tint)
+CREATE FUNCTION same(intspan, tint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_numspan_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_same(tint, intspan)
+CREATE FUNCTION same(tint, intspan)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_tnumber_numspan'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_same(tbox, tint)
+CREATE FUNCTION same(tbox, tint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_tbox_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_same(tint, tbox)
+CREATE FUNCTION same(tint, tbox)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_tnumber_tbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_same(tint, tint)
+CREATE FUNCTION same(tint, tint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_tnumber_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = intspan, RIGHTARG = tint,
   COMMUTATOR = ~=,
   RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
 );
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tint, RIGHTARG = intspan,
   COMMUTATOR = ~=,
   RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
 );
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tbox, RIGHTARG = tint,
   COMMUTATOR = ~=,
   RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
 );
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tint, RIGHTARG = tbox,
   COMMUTATOR = ~=,
   RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
 );
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tint, RIGHTARG = tint,
   COMMUTATOR = ~=,
   RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
@@ -917,23 +917,23 @@ CREATE OPERATOR <@ (
 
 /*****************************************************************************/
 
-CREATE FUNCTION temporal_same(tstzspan, tfloat)
+CREATE FUNCTION same(tstzspan, tfloat)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_tstzspan_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_same(tfloat, tstzspan)
+CREATE FUNCTION same(tfloat, tstzspan)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_temporal_tstzspan'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tstzspan, RIGHTARG = tfloat,
   COMMUTATOR = ~=,
   RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
 );
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tfloat, RIGHTARG = tstzspan,
   COMMUTATOR = ~=,
   RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
@@ -941,53 +941,53 @@ CREATE OPERATOR ~= (
 
 /*****************************************************************************/
 
-CREATE FUNCTION temporal_same(floatspan, tfloat)
+CREATE FUNCTION same(floatspan, tfloat)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_numspan_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_same(tfloat, floatspan)
+CREATE FUNCTION same(tfloat, floatspan)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_tnumber_numspan'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_same(tbox, tfloat)
+CREATE FUNCTION same(tbox, tfloat)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_tbox_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_same(tfloat, tbox)
+CREATE FUNCTION same(tfloat, tbox)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_tnumber_tbox'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_same(tfloat, tfloat)
+CREATE FUNCTION same(tfloat, tfloat)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_tnumber_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = floatspan, RIGHTARG = tfloat,
   COMMUTATOR = ~=,
   RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
 );
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tfloat, RIGHTARG = floatspan,
   COMMUTATOR = ~=,
   RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
 );
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tbox, RIGHTARG = tfloat,
   COMMUTATOR = ~=,
   RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
 );
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tfloat, RIGHTARG = tbox,
   COMMUTATOR = ~=,
   RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
 );
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tfloat, RIGHTARG = tfloat,
   COMMUTATOR = ~=,
   RESTRICT = tnumber_sel, JOIN = tnumber_joinsel
@@ -1177,33 +1177,33 @@ CREATE OPERATOR <@ (
 
 /*****************************************************************************/
 
-CREATE FUNCTION temporal_same(tstzspan, ttext)
+CREATE FUNCTION same(tstzspan, ttext)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_tstzspan_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_same(ttext, tstzspan)
+CREATE FUNCTION same(ttext, tstzspan)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_temporal_tstzspan'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_same(ttext, ttext)
+CREATE FUNCTION same(ttext, ttext)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = tstzspan, RIGHTARG = ttext,
   COMMUTATOR = ~=,
   RESTRICT = temporal_sel, JOIN = temporal_joinsel
 );
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = ttext, RIGHTARG = tstzspan,
   COMMUTATOR = ~=,
   RESTRICT = temporal_sel, JOIN = temporal_joinsel
 );
 CREATE OPERATOR ~= (
-  PROCEDURE = temporal_same,
+  PROCEDURE = same,
   LEFTARG = ttext, RIGHTARG = ttext,
   COMMUTATOR = ~=,
   RESTRICT = temporal_sel, JOIN = temporal_joinsel

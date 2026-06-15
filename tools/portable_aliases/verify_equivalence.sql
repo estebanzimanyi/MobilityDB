@@ -5,9 +5,9 @@ WITH mismatch AS (
   SELECT a.proname, a.oid
   FROM pg_proc a JOIN pg_proc b ON a.prosrc <> b.prosrc
   JOIN pg_operator o ON o.oprcode = b.oid
-  WHERE a.proname IN ('above', 'after', 'back', 'before', 'below', 'front', 'left', 'overabove', 'overafter', 'overback', 'overbefore', 'overbelow', 'overfront', 'overleft', 'overright', 'right', 'same')
+  WHERE a.proname IN ('above', 'after', 'back', 'before', 'below', 'front', 'left', 'overabove', 'overafter', 'overback', 'overbefore', 'overbelow', 'overfront', 'overleft', 'overright', 'right')
   AND a.proargtypes = b.proargtypes
-  AND o.oprname = ANY (ARRAY['#&>', '#>>', '&<#', '&<', '&</', '&<|', '&>', '/&>', '/>>', '<<#', '<<', '<</', '<<|', '>>', '|&>', '|>>', '~='])
+  AND o.oprname = ANY (ARRAY['#&>', '#>>', '&<#', '&<', '&</', '&<|', '&>', '/&>', '/>>', '<<#', '<<', '<</', '<<|', '>>', '|&>', '|>>'])
 )
 SELECT CASE WHEN count(*) = 0 THEN 'PORTABLE ALIASES OK'
   ELSE 'MISMATCH: '||count(*)||' alias(es) differ from operator impl' END AS result
