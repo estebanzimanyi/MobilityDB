@@ -780,7 +780,7 @@ PG_FUNCTION_INFO_V1(Contains_tbox_tbox);
 /**
  * @ingroup mobilitydb_box_topo
  * @brief Return true if the first temporal box contains the second one
- * @sqlfn tbox_contains()
+ * @sqlfn contains()
  */
 Datum
 Contains_tbox_tbox(PG_FUNCTION_ARGS)
@@ -795,7 +795,7 @@ PG_FUNCTION_INFO_V1(Contained_tbox_tbox);
 /**
  * @ingroup mobilitydb_box_topo
  * @brief Return true if the first temporal box is contained in the second one
- * @sqlfn tbox_contained()
+ * @sqlfn contained()
  */
 Datum
 Contained_tbox_tbox(PG_FUNCTION_ARGS)
@@ -810,7 +810,7 @@ PG_FUNCTION_INFO_V1(Overlaps_tbox_tbox);
 /**
  * @ingroup mobilitydb_box_topo
  * @brief Return true if two temporal boxes overlap
- * @sqlfn tbox_overlaps()
+ * @sqlfn overlaps()
  */
 Datum
 Overlaps_tbox_tbox(PG_FUNCTION_ARGS)
@@ -840,7 +840,7 @@ PG_FUNCTION_INFO_V1(Adjacent_tbox_tbox);
 /**
  * @ingroup mobilitydb_box_topo
  * @brief Return true if two temporal boxes are adjacent
- * @sqlfn tbox_adjacent()
+ * @sqlfn adjacent()
  */
 Datum
 Adjacent_tbox_tbox(PG_FUNCTION_ARGS)

@@ -26,7 +26,6 @@ from collections import defaultdict
 
 # RFC operator -> portable bare name (doc/rfc/sql-portability/README.md).
 OP_TO_NAME = {
-    "&&": "overlaps", "@>": "contains", "<@": "contained", "-|-": "adjacent",
     "<<#": "before", "#>>": "after", "&<#": "overbefore", "#&>": "overafter",
     "<<": "left", ">>": "right", "&<": "overleft", "&>": "overright",
     "<<|": "below", "|>>": "above", "&<|": "overbelow", "|&>": "overabove",
@@ -50,6 +49,11 @@ ALREADY_NAMED = {
 # Coverage-audit buckets: operators that need no bare alias (standard SQL
 # operators, the ever/always families, the distance family).
 SCALAR_SQL = {"+", "-", "*", "/", "=", "<>", "<", "<=", ">", ">=", "@"}
+# Topological operators whose backing functions are themselves named directly
+# by the portable bare name (overlaps/contains/contained/adjacent): a one-to-one
+# rename, so no generated alias is needed (unlike the positional operators where
+# one backing function, e.g. span_left, serves both a value-op and a time-op).
+TOPO = {"&&", "@>", "<@", "-|-"}
 TEMP = {"#=", "#<>", "#<", "#<=", "#>", "#>="}
 EVER = {"?=", "?<>", "?<", "?<=", "?>", "?>="}
 ALWAYS = {"%=", "%<>", "%<", "%<=", "%>", "%>="}
@@ -277,6 +281,8 @@ def main():
     for s, cnt in sorted(allops.items()):
         if s in OP_TO_NAME:
             cls = f"ALIASED -> {OP_TO_NAME[s]}()"
+        elif s in TOPO:
+            cls = "ALREADY BARE (overlaps/contains/contained/adjacent functions named directly)"
         elif s in TEMP or s in EVER or s in ALWAYS:
             cls = "ALREADY BARE (temp/ever/always comparison functions named directly)"
         elif s in DIST:

@@ -20,106 +20,6 @@ CREATE FUNCTION same(cbuffer, cbuffer)
   AS 'MODULE_PATHNAME', 'Cbuffer_same'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION contains(cbufferset, cbuffer)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contains_set_value'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION contains(cbufferset, cbufferset)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contains_set_set'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION contained(cbuffer, cbufferset)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contained_value_set'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION contained(cbufferset, cbufferset)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contained_set_set'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION overlaps(cbufferset, cbufferset)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overlaps_set_set'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION contains(tstzspan, tcbuffer)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contains_tstzspan_temporal'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION contains(tcbuffer, tstzspan)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contains_temporal_tstzspan'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION contains(stbox, tcbuffer)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contains_stbox_tspatial'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION contains(tcbuffer, stbox)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contains_tspatial_stbox'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION contains(tcbuffer, tcbuffer)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contains_tspatial_tspatial'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION contained(tstzspan, tcbuffer)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contained_tstzspan_temporal'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION contained(tcbuffer, tstzspan)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contained_temporal_tstzspan'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION contained(stbox, tcbuffer)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contained_stbox_tspatial'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION contained(tcbuffer, stbox)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contained_tspatial_stbox'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION contained(tcbuffer, tcbuffer)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contained_tspatial_tspatial'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION overlaps(tstzspan, tcbuffer)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overlaps_tstzspan_temporal'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION overlaps(tcbuffer, tstzspan)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overlaps_temporal_tstzspan'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION overlaps(stbox, tcbuffer)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overlaps_stbox_tspatial'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION overlaps(tcbuffer, stbox)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overlaps_tspatial_stbox'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION overlaps(tcbuffer, tcbuffer)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overlaps_tspatial_tspatial'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
 CREATE FUNCTION same(tstzspan, tcbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_tstzspan_temporal'
@@ -143,31 +43,6 @@ CREATE FUNCTION same(tcbuffer, stbox)
 CREATE FUNCTION same(tcbuffer, tcbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_tspatial_tspatial'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION adjacent(tstzspan, tcbuffer)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Adjacent_tstzspan_temporal'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION adjacent(tcbuffer, tstzspan)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Adjacent_temporal_tstzspan'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION adjacent(stbox, tcbuffer)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Adjacent_stbox_tspatial'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION adjacent(tcbuffer, stbox)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Adjacent_tspatial_stbox'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION adjacent(tcbuffer, tcbuffer)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Adjacent_tspatial_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION before(tstzspan, tcbuffer)

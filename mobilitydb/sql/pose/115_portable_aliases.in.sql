@@ -20,106 +20,6 @@ CREATE FUNCTION same(pose, pose)
   AS 'MODULE_PATHNAME', 'Pose_same'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION contains(poseset, pose)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contains_set_value'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION contains(poseset, poseset)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contains_set_set'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION contained(pose, poseset)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contained_value_set'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION contained(poseset, poseset)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contained_set_set'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION overlaps(poseset, poseset)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overlaps_set_set'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION contains(tstzspan, tpose)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contains_tstzspan_temporal'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION contains(tpose, tstzspan)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contains_temporal_tstzspan'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION contains(stbox, tpose)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contains_stbox_tspatial'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION contains(tpose, stbox)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contains_tspatial_stbox'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION contains(tpose, tpose)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contains_tspatial_tspatial'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION contained(tstzspan, tpose)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contained_tstzspan_temporal'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION contained(tpose, tstzspan)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contained_temporal_tstzspan'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION contained(stbox, tpose)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contained_stbox_tspatial'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION contained(tpose, stbox)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contained_tspatial_stbox'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION contained(tpose, tpose)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Contained_tspatial_tspatial'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION overlaps(tstzspan, tpose)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overlaps_tstzspan_temporal'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION overlaps(tpose, tstzspan)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overlaps_temporal_tstzspan'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION overlaps(stbox, tpose)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overlaps_stbox_tspatial'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION overlaps(tpose, stbox)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overlaps_tspatial_stbox'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION overlaps(tpose, tpose)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Overlaps_tspatial_tspatial'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
 CREATE FUNCTION same(tstzspan, tpose)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_tstzspan_temporal'
@@ -143,31 +43,6 @@ CREATE FUNCTION same(tpose, stbox)
 CREATE FUNCTION same(tpose, tpose)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Same_tspatial_tspatial'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION adjacent(tstzspan, tpose)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Adjacent_tstzspan_temporal'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION adjacent(tpose, tstzspan)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Adjacent_temporal_tstzspan'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION adjacent(stbox, tpose)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Adjacent_stbox_tspatial'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION adjacent(tpose, stbox)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Adjacent_tspatial_stbox'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION adjacent(tpose, tpose)
-  RETURNS boolean
-  AS 'MODULE_PATHNAME', 'Adjacent_tspatial_tspatial'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION before(tstzspan, tpose)
