@@ -37,12 +37,12 @@
  * Ever/Always Comparison Functions
  *****************************************************************************/
 
-CREATE FUNCTION ever_eq(jsonb, tjsonb)
+CREATE FUNCTION eEq(jsonb, tjsonb)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_eq_jsonb_tjsonb'
   SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION always_eq(jsonb, tjsonb)
+CREATE FUNCTION aEq(jsonb, tjsonb)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_eq_jsonb_tjsonb'
   SUPPORT tspatial_supportfn
@@ -50,47 +50,47 @@ CREATE FUNCTION always_eq(jsonb, tjsonb)
 
 CREATE OPERATOR ?= (
   LEFTARG = jsonb, RIGHTARG = tjsonb,
-  PROCEDURE = ever_eq,
+  PROCEDURE = eEq,
   NEGATOR = %<>,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %= (
   LEFTARG = jsonb, RIGHTARG = tjsonb,
-  PROCEDURE = always_eq,
+  PROCEDURE = aEq,
   NEGATOR = ?<>,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
-CREATE FUNCTION ever_ne(jsonb, tjsonb)
+CREATE FUNCTION eNe(jsonb, tjsonb)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_ne_jsonb_tjsonb'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION always_ne(jsonb, tjsonb)
+CREATE FUNCTION aNe(jsonb, tjsonb)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_ne_jsonb_tjsonb'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ?<> (
   LEFTARG = jsonb, RIGHTARG = tjsonb,
-  PROCEDURE = ever_ne,
+  PROCEDURE = eNe,
   NEGATOR = %=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %<> (
   LEFTARG = jsonb, RIGHTARG = tjsonb,
-  PROCEDURE = always_ne,
+  PROCEDURE = aNe,
   NEGATOR = ?=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 /*****************************************************************************/
 
-CREATE FUNCTION ever_eq(tjsonb, jsonb)
+CREATE FUNCTION eEq(tjsonb, jsonb)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_eq_tjsonb_jsonb'
   SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION always_eq(tjsonb, jsonb)
+CREATE FUNCTION aEq(tjsonb, jsonb)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_eq_tjsonb_jsonb'
   SUPPORT tspatial_supportfn
@@ -98,47 +98,47 @@ CREATE FUNCTION always_eq(tjsonb, jsonb)
 
 CREATE OPERATOR ?= (
   LEFTARG = tjsonb, RIGHTARG = jsonb,
-  PROCEDURE = ever_eq,
+  PROCEDURE = eEq,
   NEGATOR = %<>,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %= (
   LEFTARG = tjsonb, RIGHTARG = jsonb,
-  PROCEDURE = always_eq,
+  PROCEDURE = aEq,
   NEGATOR = ?<>,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
-CREATE FUNCTION ever_ne(tjsonb, jsonb)
+CREATE FUNCTION eNe(tjsonb, jsonb)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_ne_tjsonb_jsonb'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION always_ne(tjsonb, jsonb)
+CREATE FUNCTION aNe(tjsonb, jsonb)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_ne_tjsonb_jsonb'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ?<> (
   LEFTARG = tjsonb, RIGHTARG = jsonb,
-  PROCEDURE = ever_ne,
+  PROCEDURE = eNe,
   NEGATOR = %=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %<> (
   LEFTARG = tjsonb, RIGHTARG = jsonb,
-  PROCEDURE = always_ne,
+  PROCEDURE = aNe,
   NEGATOR = ?=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 /*****************************************************************************/
 
-CREATE FUNCTION ever_eq(tjsonb, tjsonb)
+CREATE FUNCTION eEq(tjsonb, tjsonb)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_eq_tjsonb_tjsonb'
   SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION always_eq(tjsonb, tjsonb)
+CREATE FUNCTION aEq(tjsonb, tjsonb)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_eq_tjsonb_tjsonb'
   SUPPORT tspatial_supportfn
@@ -146,35 +146,35 @@ CREATE FUNCTION always_eq(tjsonb, tjsonb)
 
 CREATE OPERATOR ?= (
   LEFTARG = tjsonb, RIGHTARG = tjsonb,
-  PROCEDURE = ever_eq,
+  PROCEDURE = eEq,
   NEGATOR = %<>,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %= (
   LEFTARG = tjsonb, RIGHTARG = tjsonb,
-  PROCEDURE = always_eq,
+  PROCEDURE = aEq,
   NEGATOR = ?<>,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
-CREATE FUNCTION ever_ne(tjsonb, tjsonb)
+CREATE FUNCTION eNe(tjsonb, tjsonb)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_ne_tjsonb_tjsonb'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION always_ne(tjsonb, tjsonb)
+CREATE FUNCTION aNe(tjsonb, tjsonb)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_ne_tjsonb_tjsonb'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ?<> (
   LEFTARG = tjsonb, RIGHTARG = tjsonb,
-  PROCEDURE = ever_ne,
+  PROCEDURE = eNe,
   NEGATOR = %=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %<> (
   LEFTARG = tjsonb, RIGHTARG = tjsonb,
-  PROCEDURE = always_ne,
+  PROCEDURE = aNe,
   NEGATOR = ?=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
@@ -183,31 +183,31 @@ CREATE OPERATOR %<> (
  * Temporal equal
  *****************************************************************************/
 
-CREATE FUNCTION temporal_teq(jsonb, tjsonb)
+CREATE FUNCTION tEq(jsonb, tjsonb)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_jsonb_tjsonb'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_teq(tjsonb, jsonb)
+CREATE FUNCTION tEq(tjsonb, jsonb)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_tjsonb_jsonb'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_teq(tjsonb, tjsonb)
+CREATE FUNCTION tEq(tjsonb, tjsonb)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR #= (
-  PROCEDURE = temporal_teq,
+  PROCEDURE = tEq,
   LEFTARG = jsonb, RIGHTARG = tjsonb,
   COMMUTATOR = #=
 );
 CREATE OPERATOR #= (
-  PROCEDURE = temporal_teq,
+  PROCEDURE = tEq,
   LEFTARG = tjsonb, RIGHTARG = jsonb,
   COMMUTATOR = #=
 );
 CREATE OPERATOR #= (
-  PROCEDURE = temporal_teq,
+  PROCEDURE = tEq,
   LEFTARG = tjsonb, RIGHTARG = tjsonb,
   COMMUTATOR = #=
 );
@@ -216,31 +216,31 @@ CREATE OPERATOR #= (
  * Temporal not equal
  *****************************************************************************/
 
-CREATE FUNCTION temporal_tne(jsonb, tjsonb)
+CREATE FUNCTION tNe(jsonb, tjsonb)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_jsonb_tjsonb'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_tne(tjsonb, jsonb)
+CREATE FUNCTION tNe(tjsonb, jsonb)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_tjsonb_jsonb'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION temporal_tne(tjsonb, tjsonb)
+CREATE FUNCTION tNe(tjsonb, tjsonb)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR #<> (
-  PROCEDURE = temporal_tne,
+  PROCEDURE = tNe,
   LEFTARG = jsonb, RIGHTARG = tjsonb,
   COMMUTATOR = #<>
 );
 CREATE OPERATOR #<> (
-  PROCEDURE = temporal_tne,
+  PROCEDURE = tNe,
   LEFTARG = tjsonb, RIGHTARG = jsonb,
   COMMUTATOR = #<>
 );
 CREATE OPERATOR #<> (
-  PROCEDURE = temporal_tne,
+  PROCEDURE = tNe,
   LEFTARG = tjsonb, RIGHTARG = tjsonb,
   COMMUTATOR = #<>
 );
