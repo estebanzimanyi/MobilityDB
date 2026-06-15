@@ -254,23 +254,29 @@ pose_tprecision_value(const Temporal *temp)
   {
     const TSequence *seq = (const TSequence *) temp;
     if (seq->count == 1)
-      return datum_copy(tinstant_value(TSEQUENCE_INST_N(seq, 0)), T_POSE);
+      return datum_copy(tinstant_value_p(TSEQUENCE_INST_N(seq, 0)), T_POSE);
     const Pose *p0 = DatumGetPoseP(tinstant_value_p(TSEQUENCE_INST_N(seq, 0)));
     if (MEOS_FLAGS_GET_INTERP(seq->flags) == LINEAR ||
         MEOS_FLAGS_GET_Z(p0->flags))
     {
       TimestampTz lower = DatumGetTimestampTz(seq->period.lower);
       TimestampTz upper = DatumGetTimestampTz(seq->period.upper);
+      /* The midpoint is strictly interior to the sequence period, so the value
+       * is always defined; fall back to the first instant otherwise to avoid
+       * reading an uninitialized value */
       Datum value;
-      tsequence_value_at_timestamptz(seq, lower + (upper - lower) / 2, false,
-        &value);
-      return datum_copy(value, T_POSE);
+      if (! tsequence_value_at_timestamptz(seq, lower + (upper - lower) / 2,
+          false, &value))
+        return datum_copy(tinstant_value_p(TSEQUENCE_INST_N(seq, 0)), T_POSE);
+      Datum result = datum_copy(value, T_POSE);
+      pfree(DatumGetPointer(value));
+      return result;
     }
     int32_t srid = pose_srid(p0);
     double sx = 0, sy = 0, ssin = 0, scos = 0, td = 0;
     poseseq_tprecision_accum(seq, &sx, &sy, &ssin, &scos, &td);
     if (td <= 0)
-      return datum_copy(tinstant_value(TSEQUENCE_INST_N(seq, 0)), T_POSE);
+      return datum_copy(tinstant_value_p(TSEQUENCE_INST_N(seq, 0)), T_POSE);
     return PointerGetDatum(pose_make_2d(sx / td, sy / td,
       atan2(ssin / td, scos / td), srid));
   }
@@ -283,7 +289,7 @@ pose_tprecision_value(const Temporal *temp)
     poseseq_tprecision_accum(TSEQUENCESET_SEQ_N(ss, i), &sx, &sy, &ssin, &scos,
       &td);
   if (td <= 0)
-    return datum_copy(tinstant_value(first), T_POSE);
+    return datum_copy(tinstant_value_p(first), T_POSE);
   return PointerGetDatum(pose_make_2d(sx / td, sy / td,
     atan2(ssin / td, scos / td), srid));
 }
