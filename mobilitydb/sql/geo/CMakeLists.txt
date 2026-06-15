@@ -36,6 +36,7 @@ list(APPEND LOCAL_FILES
   073_tgeo_gist
   074_tgeo_spgist
   076_tgeo_analytics
+  079_portable_aliases
   )
 
 append_portable_aliases()
