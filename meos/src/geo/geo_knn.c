@@ -456,8 +456,9 @@ geo_wlof(const GSERIALIZED **geoarr, uint32_t count, uint32_t k,
     {
       destination = knn[i].neighbors[j];
       knn[i].distances[j] = Max(knn[i].distances[j],
-        /* Third distance of destination point */
-        knn[destination].distances[2]);
+        /* k-distance of the destination point, that is, the distance to its
+         * k-th (farthest) nearest neighbor, stored last in the ascending list */
+        knn[destination].distances[k - 1]);
     }
   }
 
