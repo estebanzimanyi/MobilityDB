@@ -25,6 +25,20 @@ command -v licensecheck >/dev/null && run "license headers" bash tools/scripts/t
 [ -f tools/portable_aliases/generate.py ] && \
   run "portable aliases up to date" bash -c 'python3 tools/portable_aliases/generate.py --check 2>/dev/null || python3 tools/portable_aliases/generate.py'
 
+# One main() per MEOS test — a bad pin merge can CONCATENATE two copies of a test
+# (e.g. #803's stale npoint_test.c onto 14m's current one) => duplicate main() =>
+# the binding-CI full build goes red while the library-only build below stays
+# green. Fast static catch. (tpose_smoketest.c is a pre-existing unbuilt 2-main
+# file; excluded until its own fix lands.)
+run "one main() per meos test" bash -c '
+  bad=0
+  for f in meos/test/*.c; do
+    case "$f" in */tpose_smoketest.c) continue;; esac
+    n=$(grep -cE "^(int[[:space:]]+)?main[[:space:]]*\(" "$f")
+    [ "$n" -le 1 ] || { echo "DUPLICATE main ($n): $f"; bad=1; }
+  done
+  [ $bad -eq 0 ]'
+
 if [ "${1:-}" = "--static-only" ]; then
   echo; echo "==== STATIC PREFLIGHT: $fails gate(s) failed ===="; exit $fails
 fi
@@ -48,6 +62,35 @@ run "build MEOS standalone DEBUG (asserts on, families ON)" bash -c \
 
 run "build PG extension (families ON)" bash -c \
   "cmake -B build-preflight-pg -DMEOS=OFF $FAMILIES -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON >/tmp/pf_pg.log 2>&1 && cmake --build build-preflight-pg -j\$(nproc) >>/tmp/pf_pg.log 2>&1 || { tail -20 /tmp/pf_pg.log; false; }"
+
+# Build the FULL MEOS tree INCLUDING the test executables. The MEOS gates above
+# use `--target meos -DBUILD_TESTING=OFF` => the LIBRARY only, so meos/test/* is
+# NEVER compiled; a test that fails to compile (duplicate main(), stale API call)
+# passes them yet breaks the binding CIs which build the whole tree. -Werror here
+# fails on it. (This is the gap that let #803's duplicate-main npoint_test.c ship
+# in pins 15a/15c/15d red on every binding CI.)
+run "build MEOS tests (full tree, BUILD_TESTING=ON)" bash -c \
+  "cmake -B build-preflight-meos-test -DMEOS=ON $FAMILIES -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON >/tmp/pf_meos_test.log 2>&1 && cmake --build build-preflight-meos-test -j\$(nproc) >>/tmp/pf_meos_test.log 2>&1 || { tail -30 /tmp/pf_meos_test.log; false; }"
+
+# POINTCLOUD build leg — omitted from $FAMILIES because it needs
+# pointcloud-pg/lib/libpc.a (an autogen+configure side-effect). Without it the
+# whole pointcloud surface (incl the tpcpoint W124 funcs) is UNGATED and a
+# pointcloud-only break ships green (caught manually at pin 15c). Real gate when
+# the pgPointCloud toolchain is present; loud SKIP otherwise (keeps preflight
+# portable to envs without it).
+if [ -d pointcloud-pg ]; then
+  if [ ! -f pointcloud-pg/lib/libpc.a ]; then
+    ( cd pointcloud-pg && ./autogen.sh && ./configure ) >/tmp/pf_libpc.log 2>&1 || true
+  fi
+  if [ -f pointcloud-pg/lib/libpc.a ]; then
+    run "build MEOS POINTCLOUD (families + pointcloud + tests)" bash -c \
+      "cmake -B build-preflight-meos-pc -DMEOS=ON $FAMILIES -DPOINTCLOUD=ON -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON >/tmp/pf_meos_pc.log 2>&1 && cmake --build build-preflight-meos-pc -j\$(nproc) >>/tmp/pf_meos_pc.log 2>&1 || { tail -30 /tmp/pf_meos_pc.log; false; }"
+  else
+    echo "SKIP: POINTCLOUD build (libpc.a unbuildable here — pgPointCloud/autotools deps missing)"
+  fi
+else
+  echo "SKIP: POINTCLOUD build (no pointcloud-pg/ in tree)"
+fi
 
 # --- cppcheck tiered gate (cppcheck.yml) — MUST use the SAME cppcheck version
 # as CI (ubuntu-24.04 => 2.13.0); a divergent local version misses findings CI
