@@ -31,10 +31,11 @@ OP_TO_NAME = {
     "<<|": "below", "|>>": "above", "&<|": "overbelow", "|&>": "overabove",
     "<</": "front", "/>>": "back", "&</": "overfront", "/&>": "overback",
     # The three comparison families — temp / ever / always — use one consistent
-    # camelCase shape: <prefix>{Eq,Ne,Lt,Le,Gt,Ge}. temporal #= (lifted, returns a
-    # temporal bool) is tempEq…; ever ?= and always %= (reduced, return bool) are
-    # everEq…/alwaysEq…. This replaces the older lowercase teq/tne and the snake
-    # ever_*/always_* exclusion so the dialect is uniform across all engines.
+    # camelCase shape: <prefix>{Eq,Ne,Lt,Le,Gt,Ge} with a single-letter prefix.
+    # temporal #= (lifted, returns a temporal bool) is tEq…; ever ?= and always
+    # %= (reduced, return bool) are eEq…/aEq…. This replaces the older lowercase
+    # teq/tne and the snake ever_*/always_* exclusion so the dialect is uniform
+    # across all engines.
 }
 
 # Operators whose backing PROCEDURE is itself a callable named function
