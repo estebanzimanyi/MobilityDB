@@ -774,15 +774,15 @@ alphanum_temptype(MeosType type)
   return (type == T_TBOOL || type == T_TINT || type == T_TBIGINT ||
     type == T_TFLOAT || type == T_TTEXT
 #if JSON
-  || type == T_TJSONB
+    || type == T_TJSONB
 #endif
 #if H3
-    type == T_TH3INDEX ||
+    || type == T_TH3INDEX
 #endif
 #if QUADBIN
-    type == T_TQUADBIN ||
+    || type == T_TQUADBIN
 #endif
-    type == T_TFLOAT || type == T_TTEXT);
+    );
 }
 #endif
 
