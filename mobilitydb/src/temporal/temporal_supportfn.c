@@ -123,16 +123,18 @@ static const IndexableFunction TemporalIndexableFunctions[] =
 };
 
 static const IndexableFunction TNumberIndexableFunctions[] = {
-  /* Ever/always comparison functions */
-  {"eEq", EVER_EQ_IDX, 2, 0},
-  {"aEq", ALWAYS_EQ_IDX, 2, 0},
+  /* Ever/always comparison functions. The names are compared against the
+   * lower-cased pg_proc.proname returned by get_func_name(); PostgreSQL folds
+   * unquoted identifiers, so the SQL functions eEq/aEq register as eeq/aeq. */
+  {"eeq", EVER_EQ_IDX, 2, 0},
+  {"aeq", ALWAYS_EQ_IDX, 2, 0},
   {NULL, 0, 0, 0}
 };
 
 static const IndexableFunction TSpatialIndexableFunctions[] = {
-  /* Ever/always comparison functions */
-  {"eEq", EVER_EQ_IDX, 2, 0},
-  {"aEq", ALWAYS_EQ_IDX, 2, 0},
+  /* Ever/always comparison functions (lower-cased proname, see above) */
+  {"eeq", EVER_EQ_IDX, 2, 0},
+  {"aeq", ALWAYS_EQ_IDX, 2, 0},
   /* Ever spatial relationships */
   {"econtains", ECONTAINS_IDX, 2, 0},
   {"edisjoint", EDISJOINT_IDX, 2, 0},
