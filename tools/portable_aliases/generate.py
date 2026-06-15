@@ -138,7 +138,11 @@ def main():
     files = []
     for root, _, names in os.walk(args.sqldir):
         for n in sorted(names):
-            if n.endswith(".in.sql"):
+            # Never ingest our own generated output: a stale-prefix alias file
+            # must not be scanned (it has no operator defs) and must not be in
+            # this list when the --insrc purge below removes it.
+            if n.endswith(".in.sql") and not n.endswith(
+                    "_portable_aliases.in.sql"):
                 files.append(os.path.join(root, n))
     files.sort()
 
@@ -214,8 +218,18 @@ def main():
                   "w", encoding="utf-8") as fh:
             fh.write(body)
         if args.insrc and group in GROUP_PREFIX:
-            dest = os.path.join(args.sqldir, group,
-                                f"{GROUP_PREFIX[group]}_portable_aliases.in.sql")
+            group_dir = os.path.join(args.sqldir, group)
+            # Idempotent: purge any existing alias file in this family dir
+            # before writing the canonical one.  append_portable_aliases() in
+            # CMake GLOBs *_portable_aliases.in.sql, so a file left from a
+            # previous GROUP_PREFIX value would be double-loaded ("function
+            # left already exists with same argument types").  This makes a
+            # GROUP_PREFIX change orphan-proof.
+            for stale in os.listdir(group_dir):
+                if stale.endswith("_portable_aliases.in.sql"):
+                    os.remove(os.path.join(group_dir, stale))
+            dest = os.path.join(
+                group_dir, f"{GROUP_PREFIX[group]}_portable_aliases.in.sql")
             with open(dest, "w", encoding="utf-8") as fh:
                 fh.write(body)
 
