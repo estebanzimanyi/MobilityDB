@@ -42,7 +42,7 @@ OP_TO_NAME = {
 ALREADY_NAMED = {
     "@=": "same_rid", "?@": "contained_rid", "@?": "contains_rid",
     "@@": "overlaps_rid", "&": "tbool_and", "|": "tbool_or",
-    "~": "tbool_not", "||": "ttext_cat",
+    "~": "tbool_not", "||": "tConcat",
 }
 
 # Coverage-audit buckets: operators that need no bare alias (standard SQL
