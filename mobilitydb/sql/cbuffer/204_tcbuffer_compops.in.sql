@@ -37,12 +37,12 @@
  * Ever/Always Comparison Functions
  *****************************************************************************/
 
-CREATE FUNCTION everEq(cbuffer, tcbuffer)
+CREATE FUNCTION eEq(cbuffer, tcbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_eq_cbuffer_tcbuffer'
   SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION alwaysEq(cbuffer, tcbuffer)
+CREATE FUNCTION aEq(cbuffer, tcbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_eq_cbuffer_tcbuffer'
   SUPPORT tspatial_supportfn
@@ -50,47 +50,47 @@ CREATE FUNCTION alwaysEq(cbuffer, tcbuffer)
 
 CREATE OPERATOR ?= (
   LEFTARG = cbuffer, RIGHTARG = tcbuffer,
-  PROCEDURE = everEq,
+  PROCEDURE = eEq,
   NEGATOR = %<>,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %= (
   LEFTARG = cbuffer, RIGHTARG = tcbuffer,
-  PROCEDURE = alwaysEq,
+  PROCEDURE = aEq,
   NEGATOR = ?<>,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
-CREATE FUNCTION everNe(cbuffer, tcbuffer)
+CREATE FUNCTION eNe(cbuffer, tcbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_ne_cbuffer_tcbuffer'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION alwaysNe(cbuffer, tcbuffer)
+CREATE FUNCTION aNe(cbuffer, tcbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_ne_cbuffer_tcbuffer'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ?<> (
   LEFTARG = cbuffer, RIGHTARG = tcbuffer,
-  PROCEDURE = everNe,
+  PROCEDURE = eNe,
   NEGATOR = %=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %<> (
   LEFTARG = cbuffer, RIGHTARG = tcbuffer,
-  PROCEDURE = alwaysNe,
+  PROCEDURE = aNe,
   NEGATOR = ?=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 /*****************************************************************************/
 
-CREATE FUNCTION everEq(tcbuffer, cbuffer)
+CREATE FUNCTION eEq(tcbuffer, cbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_eq_tcbuffer_cbuffer'
   SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION alwaysEq(tcbuffer, cbuffer)
+CREATE FUNCTION aEq(tcbuffer, cbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_eq_tcbuffer_cbuffer'
   SUPPORT tspatial_supportfn
@@ -98,47 +98,47 @@ CREATE FUNCTION alwaysEq(tcbuffer, cbuffer)
 
 CREATE OPERATOR ?= (
   LEFTARG = tcbuffer, RIGHTARG = cbuffer,
-  PROCEDURE = everEq,
+  PROCEDURE = eEq,
   NEGATOR = %<>,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %= (
   LEFTARG = tcbuffer, RIGHTARG = cbuffer,
-  PROCEDURE = alwaysEq,
+  PROCEDURE = aEq,
   NEGATOR = ?<>,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
-CREATE FUNCTION everNe(tcbuffer, cbuffer)
+CREATE FUNCTION eNe(tcbuffer, cbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_ne_tcbuffer_cbuffer'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION alwaysNe(tcbuffer, cbuffer)
+CREATE FUNCTION aNe(tcbuffer, cbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_ne_tcbuffer_cbuffer'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ?<> (
   LEFTARG = tcbuffer, RIGHTARG = cbuffer,
-  PROCEDURE = everNe,
+  PROCEDURE = eNe,
   NEGATOR = %=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %<> (
   LEFTARG = tcbuffer, RIGHTARG = cbuffer,
-  PROCEDURE = alwaysNe,
+  PROCEDURE = aNe,
   NEGATOR = ?=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 /*****************************************************************************/
 
-CREATE FUNCTION everEq(tcbuffer, tcbuffer)
+CREATE FUNCTION eEq(tcbuffer, tcbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_eq_tcbuffer_tcbuffer'
   SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION alwaysEq(tcbuffer, tcbuffer)
+CREATE FUNCTION aEq(tcbuffer, tcbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_eq_tcbuffer_tcbuffer'
   SUPPORT tspatial_supportfn
@@ -146,35 +146,35 @@ CREATE FUNCTION alwaysEq(tcbuffer, tcbuffer)
 
 CREATE OPERATOR ?= (
   LEFTARG = tcbuffer, RIGHTARG = tcbuffer,
-  PROCEDURE = everEq,
+  PROCEDURE = eEq,
   NEGATOR = %<>,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %= (
   LEFTARG = tcbuffer, RIGHTARG = tcbuffer,
-  PROCEDURE = alwaysEq,
+  PROCEDURE = aEq,
   NEGATOR = ?<>,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
-CREATE FUNCTION everNe(tcbuffer, tcbuffer)
+CREATE FUNCTION eNe(tcbuffer, tcbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_ne_tcbuffer_tcbuffer'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION alwaysNe(tcbuffer, tcbuffer)
+CREATE FUNCTION aNe(tcbuffer, tcbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_ne_tcbuffer_tcbuffer'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ?<> (
   LEFTARG = tcbuffer, RIGHTARG = tcbuffer,
-  PROCEDURE = everNe,
+  PROCEDURE = eNe,
   NEGATOR = %=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %<> (
   LEFTARG = tcbuffer, RIGHTARG = tcbuffer,
-  PROCEDURE = alwaysNe,
+  PROCEDURE = aNe,
   NEGATOR = ?=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
@@ -183,31 +183,31 @@ CREATE OPERATOR %<> (
  * Temporal equal
  *****************************************************************************/
 
-CREATE FUNCTION tempEq(cbuffer, tcbuffer)
+CREATE FUNCTION tEq(cbuffer, tcbuffer)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_cbuffer_tcbuffer'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tempEq(tcbuffer, cbuffer)
+CREATE FUNCTION tEq(tcbuffer, cbuffer)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_tcbuffer_cbuffer'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tempEq(tcbuffer, tcbuffer)
+CREATE FUNCTION tEq(tcbuffer, tcbuffer)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR #= (
-  PROCEDURE = tempEq,
+  PROCEDURE = tEq,
   LEFTARG = cbuffer, RIGHTARG = tcbuffer,
   COMMUTATOR = #=
 );
 CREATE OPERATOR #= (
-  PROCEDURE = tempEq,
+  PROCEDURE = tEq,
   LEFTARG = tcbuffer, RIGHTARG = cbuffer,
   COMMUTATOR = #=
 );
 CREATE OPERATOR #= (
-  PROCEDURE = tempEq,
+  PROCEDURE = tEq,
   LEFTARG = tcbuffer, RIGHTARG = tcbuffer,
   COMMUTATOR = #=
 );
@@ -216,31 +216,31 @@ CREATE OPERATOR #= (
  * Temporal not equal
  *****************************************************************************/
 
-CREATE FUNCTION tempNe(cbuffer, tcbuffer)
+CREATE FUNCTION tNe(cbuffer, tcbuffer)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_cbuffer_tcbuffer'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tempNe(tcbuffer, cbuffer)
+CREATE FUNCTION tNe(tcbuffer, cbuffer)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_tcbuffer_cbuffer'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tempNe(tcbuffer, tcbuffer)
+CREATE FUNCTION tNe(tcbuffer, tcbuffer)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR #<> (
-  PROCEDURE = tempNe,
+  PROCEDURE = tNe,
   LEFTARG = cbuffer, RIGHTARG = tcbuffer,
   COMMUTATOR = #<>
 );
 CREATE OPERATOR #<> (
-  PROCEDURE = tempNe,
+  PROCEDURE = tNe,
   LEFTARG = tcbuffer, RIGHTARG = cbuffer,
   COMMUTATOR = #<>
 );
 CREATE OPERATOR #<> (
-  PROCEDURE = tempNe,
+  PROCEDURE = tNe,
   LEFTARG = tcbuffer, RIGHTARG = tcbuffer,
   COMMUTATOR = #<>
 );

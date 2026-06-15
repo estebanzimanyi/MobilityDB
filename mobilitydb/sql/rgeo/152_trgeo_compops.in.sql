@@ -36,12 +36,12 @@
  * Ever/Always Comparison Functions
  *****************************************************************************/
 
-CREATE FUNCTION everEq(geometry, trgeometry)
+CREATE FUNCTION eEq(geometry, trgeometry)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_eq_geo_trgeometry'
   SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION alwaysEq(geometry, trgeometry)
+CREATE FUNCTION aEq(geometry, trgeometry)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_eq_geo_trgeometry'
   SUPPORT tspatial_supportfn
@@ -49,47 +49,47 @@ CREATE FUNCTION alwaysEq(geometry, trgeometry)
 
 CREATE OPERATOR ?= (
   LEFTARG = geometry, RIGHTARG = trgeometry,
-  PROCEDURE = everEq,
+  PROCEDURE = eEq,
   NEGATOR = %<>,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %= (
   LEFTARG = geometry, RIGHTARG = trgeometry,
-  PROCEDURE = alwaysEq,
+  PROCEDURE = aEq,
   NEGATOR = ?<>,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
-CREATE FUNCTION everNe(geometry, trgeometry)
+CREATE FUNCTION eNe(geometry, trgeometry)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_ne_geo_trgeometry'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION alwaysNe(geometry, trgeometry)
+CREATE FUNCTION aNe(geometry, trgeometry)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_ne_geo_trgeometry'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ?<> (
   LEFTARG = geometry, RIGHTARG = trgeometry,
-  PROCEDURE = everNe,
+  PROCEDURE = eNe,
   NEGATOR = %=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %<> (
   LEFTARG = geometry, RIGHTARG = trgeometry,
-  PROCEDURE = alwaysNe,
+  PROCEDURE = aNe,
   NEGATOR = ?=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 /*****************************************************************************/
 
-CREATE FUNCTION everEq(trgeometry, geometry)
+CREATE FUNCTION eEq(trgeometry, geometry)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_eq_trgeometry_geo'
   SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION alwaysEq(trgeometry, geometry)
+CREATE FUNCTION aEq(trgeometry, geometry)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_eq_trgeometry_geo'
   SUPPORT tspatial_supportfn
@@ -97,47 +97,47 @@ CREATE FUNCTION alwaysEq(trgeometry, geometry)
 
 CREATE OPERATOR ?= (
   LEFTARG = trgeometry, RIGHTARG = geometry,
-  PROCEDURE = everEq,
+  PROCEDURE = eEq,
   NEGATOR = %<>,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %= (
   LEFTARG = trgeometry, RIGHTARG = geometry,
-  PROCEDURE = alwaysEq,
+  PROCEDURE = aEq,
   NEGATOR = ?<>,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
-CREATE FUNCTION everNe(trgeometry, geometry)
+CREATE FUNCTION eNe(trgeometry, geometry)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_ne_trgeometry_geo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION alwaysNe(trgeometry, geometry)
+CREATE FUNCTION aNe(trgeometry, geometry)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_ne_trgeometry_geo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ?<> (
   LEFTARG = trgeometry, RIGHTARG = geometry,
-  PROCEDURE = everNe,
+  PROCEDURE = eNe,
   NEGATOR = %=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %<> (
   LEFTARG = trgeometry, RIGHTARG = geometry,
-  PROCEDURE = alwaysNe,
+  PROCEDURE = aNe,
   NEGATOR = ?=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
 /*****************************************************************************/
 
-CREATE FUNCTION everEq(trgeometry, trgeometry)
+CREATE FUNCTION eEq(trgeometry, trgeometry)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_eq_trgeometry_trgeometry'
   SUPPORT tspatial_supportfn
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION alwaysEq(trgeometry, trgeometry)
+CREATE FUNCTION aEq(trgeometry, trgeometry)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_eq_trgeometry_trgeometry'
   SUPPORT tspatial_supportfn
@@ -145,35 +145,35 @@ CREATE FUNCTION alwaysEq(trgeometry, trgeometry)
 
 CREATE OPERATOR ?= (
   LEFTARG = trgeometry, RIGHTARG = trgeometry,
-  PROCEDURE = everEq,
+  PROCEDURE = eEq,
   NEGATOR = %<>,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %= (
   LEFTARG = trgeometry, RIGHTARG = trgeometry,
-  PROCEDURE = alwaysEq,
+  PROCEDURE = aEq,
   NEGATOR = ?<>,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 
-CREATE FUNCTION everNe(trgeometry, trgeometry)
+CREATE FUNCTION eNe(trgeometry, trgeometry)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Ever_ne_trgeometry_trgeometry'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION alwaysNe(trgeometry, trgeometry)
+CREATE FUNCTION aNe(trgeometry, trgeometry)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Always_ne_trgeometry_trgeometry'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR ?<> (
   LEFTARG = trgeometry, RIGHTARG = trgeometry,
-  PROCEDURE = everNe,
+  PROCEDURE = eNe,
   NEGATOR = %=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
 CREATE OPERATOR %<> (
   LEFTARG = trgeometry, RIGHTARG = trgeometry,
-  PROCEDURE = alwaysNe,
+  PROCEDURE = aNe,
   NEGATOR = ?=,
   RESTRICT = tspatial_sel, JOIN = tspatial_joinsel
 );
@@ -182,31 +182,31 @@ CREATE OPERATOR %<> (
  * Temporal equal
  *****************************************************************************/
 
-CREATE FUNCTION tempEq(geometry, trgeometry)
+CREATE FUNCTION tEq(geometry, trgeometry)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_geo_trgeometry'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tempEq(trgeometry, geometry)
+CREATE FUNCTION tEq(trgeometry, geometry)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_trgeometry_geo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tempEq(trgeometry, trgeometry)
+CREATE FUNCTION tEq(trgeometry, trgeometry)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Teq_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR #= (
-  PROCEDURE = tempEq,
+  PROCEDURE = tEq,
   LEFTARG = geometry, RIGHTARG = trgeometry,
   COMMUTATOR = #=
 );
 CREATE OPERATOR #= (
-  PROCEDURE = tempEq,
+  PROCEDURE = tEq,
   LEFTARG = trgeometry, RIGHTARG = geometry,
   COMMUTATOR = #=
 );
 CREATE OPERATOR #= (
-  PROCEDURE = tempEq,
+  PROCEDURE = tEq,
   LEFTARG = trgeometry, RIGHTARG = trgeometry,
   COMMUTATOR = #=
 );
@@ -215,31 +215,31 @@ CREATE OPERATOR #= (
  * Temporal not equal
  *****************************************************************************/
 
-CREATE FUNCTION tempNe(geometry, trgeometry)
+CREATE FUNCTION tNe(geometry, trgeometry)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_geo_trgeometry'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tempNe(trgeometry, geometry)
+CREATE FUNCTION tNe(trgeometry, geometry)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_trgeometry_geo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tempNe(trgeometry, trgeometry)
+CREATE FUNCTION tNe(trgeometry, trgeometry)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tne_temporal_temporal'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR #<> (
-  PROCEDURE = tempNe,
+  PROCEDURE = tNe,
   LEFTARG = geometry, RIGHTARG = trgeometry,
   COMMUTATOR = #<>
 );
 CREATE OPERATOR #<> (
-  PROCEDURE = tempNe,
+  PROCEDURE = tNe,
   LEFTARG = trgeometry, RIGHTARG = geometry,
   COMMUTATOR = #<>
 );
 CREATE OPERATOR #<> (
-  PROCEDURE = tempNe,
+  PROCEDURE = tNe,
   LEFTARG = trgeometry, RIGHTARG = trgeometry,
   COMMUTATOR = #<>
 );

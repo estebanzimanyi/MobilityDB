@@ -96,7 +96,7 @@ PG_FUNCTION_INFO_V1(Ever_eq_pose_tpose);
 /**
  * @ingroup mobilitydb_pose_comp_ever
  * @brief Return true if a temporal pose is ever equal to a pose
- * @sqlfn everEq()
+ * @sqlfn eEq()
  * @sqlop @p ?=
  */
 inline Datum
@@ -111,7 +111,7 @@ PG_FUNCTION_INFO_V1(Always_eq_pose_tpose);
  * @ingroup mobilitydb_pose_comp_ever
  * @brief Return true if a temporal pose is always equal to a
  * pose
- * @sqlfn alwaysEq()
+ * @sqlfn aEq()
  * @sqlop @p %=
  */
 inline Datum
@@ -126,7 +126,7 @@ PG_FUNCTION_INFO_V1(Ever_ne_pose_tpose);
  * @ingroup mobilitydb_pose_comp_ever
  * @brief Return true if a temporal pose is ever different from a
  * pose
- * @sqlfn everNe()
+ * @sqlfn eNe()
  * @sqlop @p ?<>
  */
 inline Datum
@@ -141,7 +141,7 @@ PG_FUNCTION_INFO_V1(Always_ne_pose_tpose);
  * @ingroup mobilitydb_pose_comp_ever
  * @brief Return true if a temporal pose is always different from a
  * pose
- * @sqlfn alwaysNe()
+ * @sqlfn aNe()
  * @sqlop @p %<>
  */
 inline Datum
@@ -157,7 +157,7 @@ PG_FUNCTION_INFO_V1(Ever_eq_tpose_pose);
 /**
  * @ingroup mobilitydb_pose_comp_ever
  * @brief Return true if a temporal pose is ever equal to a pose
- * @sqlfn everEq()
+ * @sqlfn eEq()
  * @sqlop @p ?=
  */
 inline Datum
@@ -172,7 +172,7 @@ PG_FUNCTION_INFO_V1(Always_eq_tpose_pose);
  * @ingroup mobilitydb_pose_comp_ever
  * @brief Return true if a temporal pose is always equal to a
  * pose
- * @sqlfn alwaysEq()
+ * @sqlfn aEq()
  * @sqlop @p %=
  */
 inline Datum
@@ -187,7 +187,7 @@ PG_FUNCTION_INFO_V1(Ever_ne_tpose_pose);
  * @ingroup mobilitydb_pose_comp_ever
  * @brief Return true if a temporal pose is ever different from a
  * pose
- * @sqlfn everNe()
+ * @sqlfn eNe()
  * @sqlop @p ?<>
  */
 inline Datum
@@ -202,7 +202,7 @@ PG_FUNCTION_INFO_V1(Always_ne_tpose_pose);
  * @ingroup mobilitydb_pose_comp_ever
  * @brief Return true if a temporal pose is always different from a
  * pose
- * @sqlfn alwaysNe()
+ * @sqlfn aNe()
  * @sqlop @p %<>
  */
 inline Datum
@@ -218,7 +218,7 @@ PG_FUNCTION_INFO_V1(Ever_eq_tpose_tpose);
 /**
  * @ingroup mobilitydb_pose_comp_ever
  * @brief Return true if two temporal poses are ever equal
- * @sqlfn everEq()
+ * @sqlfn eEq()
  * @sqlop @p ?=
  */
 inline Datum
@@ -232,7 +232,7 @@ PG_FUNCTION_INFO_V1(Always_eq_tpose_tpose);
 /**
  * @ingroup mobilitydb_pose_comp_ever
  * @brief Return true if two temporal poses are always equal
- * @sqlfn alwaysEq()
+ * @sqlfn aEq()
  * @sqlop @p %=
  */
 inline Datum
@@ -246,7 +246,7 @@ PG_FUNCTION_INFO_V1(Ever_ne_tpose_tpose);
 /**
  * @ingroup mobilitydb_pose_comp_ever
  * @brief Return true if two temporal poses are ever different
- * @sqlfn everNe()
+ * @sqlfn eNe()
  * @sqlop @p ?<>
  */
 inline Datum
@@ -260,7 +260,7 @@ PG_FUNCTION_INFO_V1(Always_ne_tpose_tpose);
 /**
  * @ingroup mobilitydb_pose_comp_ever
  * @brief Return true if two temporal poses are always different
- * @sqlfn alwaysNe()
+ * @sqlfn aNe()
  * @sqlop @p %<>
  */
 inline Datum
@@ -320,7 +320,7 @@ PG_FUNCTION_INFO_V1(Teq_pose_tpose);
  * @brief Return a temporal Boolean that states whether a pose is equal to a
  * temporal pose
  * @brief Return true if a temporal pose is ever equal to a pose
- * @sqlfn tempEq()
+ * @sqlfn tEq()
  * @sqlop @p #=
  */
 inline Datum
@@ -335,7 +335,7 @@ PG_FUNCTION_INFO_V1(Tne_pose_tpose);
  * @ingroup mobilitydb_pose_comp_temp
  * @brief Return a temporal Boolean that states whether a pose is different
  * from a temporal pose
- * @sqlfn tempNe()
+ * @sqlfn tNe()
  * @sqlop @p #<>
  */
 inline Datum
@@ -352,7 +352,7 @@ PG_FUNCTION_INFO_V1(Teq_tpose_pose);
  * @ingroup mobilitydb_pose_comp_temp
  * @brief Return a temporal Boolean that states whether a temporal pose is
  * equal to a pose
- * @sqlfn tempEq()
+ * @sqlfn tEq()
  * @sqlop @p #=
  */
 inline Datum
@@ -367,7 +367,7 @@ PG_FUNCTION_INFO_V1(Tne_tpose_pose);
  * @ingroup mobilitydb_pose_comp_temp
  * @brief Return a temporal Boolean that states whether a temporal pose is
  * different from a pose
- * @sqlfn tempNe()
+ * @sqlfn tNe()
  * @sqlop @p #<>
  */
 inline Datum
@@ -384,7 +384,7 @@ PG_FUNCTION_INFO_V1(Teq_tpose_tpose);
  * @ingroup mobilitydb_pose_comp_temp
  * @brief Return a temporal Boolean that states whether two temporal poses
  * are equal
- * @sqlfn tempEq()
+ * @sqlfn tEq()
  * @sqlop @p #=
  */
 inline Datum
@@ -399,7 +399,7 @@ PG_FUNCTION_INFO_V1(Tne_tpose_tpose);
  * @ingroup mobilitydb_pose_comp_temp
  * @brief Return a temporal Boolean that states whether two temporal poses
  * are different
- * @sqlfn tempNe()
+ * @sqlfn tNe()
  * @sqlop @p #<>
  */
 inline Datum
