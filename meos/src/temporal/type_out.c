@@ -519,11 +519,6 @@ temptype_as_mfjson_sb(stringbuffer_t *sb, MeosType temptype)
     case T_TJSONB:
       stringbuffer_append_len(sb, "{\"type\":\"MovingJsonb\",", 22);
       break;
-#if POSE
-    case T_TPOSE:
-      stringbuffer_append_len(sb, "{\"type\":\"MovingPose\",", 21);
-      break;
-#endif
 #endif
 #if POSE
     case T_TPOSE:
