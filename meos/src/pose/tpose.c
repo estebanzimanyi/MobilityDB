@@ -335,11 +335,8 @@ tposeseqset_make(const TSequenceSet *ss1, const TSequenceSet *ss2)
   /* General case */
   TSequence **sequences = palloc(sizeof(TSequence *) * ss1->count);
   for (int i = 0; i < ss1->count; i++)
-  {
-    seq1 = TSEQUENCESET_SEQ_N(ss1, i);
-    seq2 = TSEQUENCESET_SEQ_N(ss2, i);
-    sequences[i] = tposeseq_make(seq1, seq2);
-  }
+    sequences[i] = tposeseq_make(TSEQUENCESET_SEQ_N(ss1, i),
+      TSEQUENCESET_SEQ_N(ss2, i));
   TSequenceSet *result = tsequenceset_make(sequences, ss1->count, NORMALIZE);
   return result;
 }
