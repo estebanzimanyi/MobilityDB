@@ -475,31 +475,31 @@ CREATE OPERATOR * (
 
 /*****************************************************************************/
 
-CREATE FUNCTION set_distance(npoint, npointset)
+CREATE FUNCTION distance(npoint, npointset)
   RETURNS float
   AS 'MODULE_PATHNAME', 'Distance_value_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_distance(npointset, npoint)
+CREATE FUNCTION distance(npointset, npoint)
   RETURNS float
   AS 'MODULE_PATHNAME', 'Distance_set_value'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_distance(npointset, npointset)
+CREATE FUNCTION distance(npointset, npointset)
   RETURNS float
   AS 'MODULE_PATHNAME', 'Distance_set_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR <-> (
-  PROCEDURE = set_distance,
+  PROCEDURE = distance,
   LEFTARG = npoint, RIGHTARG = npointset,
   COMMUTATOR = <->
 );
 CREATE OPERATOR <-> (
-  PROCEDURE = set_distance,
+  PROCEDURE = distance,
   LEFTARG = npointset, RIGHTARG = npoint,
   COMMUTATOR = <->
 );
 CREATE OPERATOR <-> (
-  PROCEDURE = set_distance,
+  PROCEDURE = distance,
   LEFTARG = npointset, RIGHTARG = npointset,
   COMMUTATOR = <->
 );

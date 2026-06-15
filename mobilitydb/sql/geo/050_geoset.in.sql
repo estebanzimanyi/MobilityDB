@@ -883,60 +883,60 @@ CREATE OPERATOR * (
 
 /*****************************************************************************/
 
-CREATE FUNCTION set_distance(geometry, geomset)
+CREATE FUNCTION distance(geometry, geomset)
   RETURNS float
   AS 'MODULE_PATHNAME', 'Distance_value_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_distance(geomset, geometry)
+CREATE FUNCTION distance(geomset, geometry)
   RETURNS float
   AS 'MODULE_PATHNAME', 'Distance_set_value'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_distance(geomset, geomset)
+CREATE FUNCTION distance(geomset, geomset)
   RETURNS float
   AS 'MODULE_PATHNAME', 'Distance_set_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION set_distance(geography, geogset)
+CREATE FUNCTION distance(geography, geogset)
   RETURNS float
   AS 'MODULE_PATHNAME', 'Distance_value_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_distance(geogset, geography)
+CREATE FUNCTION distance(geogset, geography)
   RETURNS float
   AS 'MODULE_PATHNAME', 'Distance_set_value'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_distance(geogset, geogset)
+CREATE FUNCTION distance(geogset, geogset)
   RETURNS float
   AS 'MODULE_PATHNAME', 'Distance_set_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR <-> (
-  PROCEDURE = set_distance,
+  PROCEDURE = distance,
   LEFTARG = geometry, RIGHTARG = geomset,
   COMMUTATOR = <->
 );
 CREATE OPERATOR <-> (
-  PROCEDURE = set_distance,
+  PROCEDURE = distance,
   LEFTARG = geomset, RIGHTARG = geometry,
   COMMUTATOR = <->
 );
 CREATE OPERATOR <-> (
-  PROCEDURE = set_distance,
+  PROCEDURE = distance,
   LEFTARG = geomset, RIGHTARG = geomset,
   COMMUTATOR = <->
 );
 
 CREATE OPERATOR <-> (
-  PROCEDURE = set_distance,
+  PROCEDURE = distance,
   LEFTARG = geography, RIGHTARG = geogset,
   COMMUTATOR = <->
 );
 CREATE OPERATOR <-> (
-  PROCEDURE = set_distance,
+  PROCEDURE = distance,
   LEFTARG = geogset, RIGHTARG = geography,
   COMMUTATOR = <->
 );
 CREATE OPERATOR <-> (
-  PROCEDURE = set_distance,
+  PROCEDURE = distance,
   LEFTARG = geogset, RIGHTARG = geogset,
   COMMUTATOR = <->
 );
