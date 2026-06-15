@@ -435,7 +435,7 @@ newhicolorrow(struct colormap *cm,
 			return 0;
 		}
 		newarray = (color *) REALLOC(cm->hicolormap,
-									 cm->maxarrayrows * 2 *
+									 (size_t) cm->maxarrayrows * 2 * /* MEOS: widen to size_t before the int multiply (overflow already guarded above) */
 									 cm->hiarraycols * sizeof(color));
 		if (newarray == NULL)
 		{
@@ -478,7 +478,7 @@ newhicolorcols(struct colormap *cm)
 		return;
 	}
 	newarray = (color *) REALLOC(cm->hicolormap,
-								 cm->maxarrayrows *
+								 (size_t) cm->maxarrayrows * /* MEOS: widen to size_t before the int multiply (overflow already guarded above) */
 								 cm->hiarraycols * 2 * sizeof(color));
 	if (newarray == NULL)
 	{
