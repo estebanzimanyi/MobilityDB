@@ -152,7 +152,7 @@ Spanset_extent_transfn(PG_FUNCTION_ARGS)
 /*****************************************************************************/
 
 /*
- * The transition and combine functions for span_union are, respectively,
+ * The transition and combine functions for spanUnion are, respectively,
  * PostgreSQL's array_agg_transfn and array_agg_combinefn. Similarly, the
  * combine function for spanset_union is PostgreSQL's array_agg_combinefn.
  * The idea is that all the component spans are simply appened to an array
