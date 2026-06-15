@@ -323,23 +323,23 @@ CREATE OPERATOR CLASS npointset_hash_ops
  * Operators
  ******************************************************************************/
 
-CREATE FUNCTION set_contains(npointset, npoint)
+CREATE FUNCTION contains(npointset, npoint)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Contains_set_value'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_contains(npointset, npointset)
+CREATE FUNCTION contains(npointset, npointset)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Contains_set_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR @> (
-  PROCEDURE = set_contains,
+  PROCEDURE = contains,
   LEFTARG = npointset, RIGHTARG = npoint,
   COMMUTATOR = <@
   -- RESTRICT = span_sel, JOIN = span_joinsel
 );
 CREATE OPERATOR @> (
-  PROCEDURE = set_contains,
+  PROCEDURE = contains,
   LEFTARG = npointset, RIGHTARG = npointset,
   COMMUTATOR = <@
   -- RESTRICT = span_sel, JOIN = span_joinsel
@@ -347,23 +347,23 @@ CREATE OPERATOR @> (
 
 /******************************************************************************/
 
-CREATE FUNCTION set_contained(npoint, npointset)
+CREATE FUNCTION contained(npoint, npointset)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Contained_value_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_contained(npointset, npointset)
+CREATE FUNCTION contained(npointset, npointset)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Contained_set_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR <@ (
-  PROCEDURE = set_contained,
+  PROCEDURE = contained,
   LEFTARG = npoint, RIGHTARG = npointset,
   COMMUTATOR = @>
   -- RESTRICT = span_sel, JOIN = span_joinsel
 );
 CREATE OPERATOR <@ (
-  PROCEDURE = set_contained,
+  PROCEDURE = contained,
   LEFTARG = npointset, RIGHTARG = npointset,
   COMMUTATOR = @>
   -- RESTRICT = span_sel, JOIN = span_joinsel
@@ -371,13 +371,13 @@ CREATE OPERATOR <@ (
 
 /******************************************************************************/
 
-CREATE FUNCTION set_overlaps(npointset, npointset)
+CREATE FUNCTION overlaps(npointset, npointset)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Overlaps_set_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR && (
-  PROCEDURE = set_overlaps,
+  PROCEDURE = overlaps,
   LEFTARG = npointset, RIGHTARG = npointset,
   COMMUTATOR = &&
   -- RESTRICT = span_sel, JOIN = span_joinsel
@@ -385,121 +385,121 @@ CREATE OPERATOR && (
 
 /*****************************************************************************/
 
-CREATE FUNCTION set_union(npoint, npointset)
+CREATE FUNCTION setUnion(npoint, npointset)
   RETURNS npointset
   AS 'MODULE_PATHNAME', 'Union_value_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_union(npointset, npoint)
+CREATE FUNCTION setUnion(npointset, npoint)
   RETURNS npointset
   AS 'MODULE_PATHNAME', 'Union_set_value'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_union(npointset, npointset)
+CREATE FUNCTION setUnion(npointset, npointset)
   RETURNS npointset
   AS 'MODULE_PATHNAME', 'Union_set_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR + (
-  PROCEDURE = set_union,
+  PROCEDURE = setUnion,
   LEFTARG = npoint, RIGHTARG = npointset,
   COMMUTATOR = +
 );
 CREATE OPERATOR + (
-  PROCEDURE = set_union,
+  PROCEDURE = setUnion,
   LEFTARG = npointset, RIGHTARG = npoint,
   COMMUTATOR = +
 );
 CREATE OPERATOR + (
-  PROCEDURE = set_union,
+  PROCEDURE = setUnion,
   LEFTARG = npointset, RIGHTARG = npointset,
   COMMUTATOR = +
 );
 
 /*****************************************************************************/
 
-CREATE FUNCTION set_minus(npoint, npointset)
+CREATE FUNCTION setMinus(npoint, npointset)
   RETURNS npoint
   AS 'MODULE_PATHNAME', 'Minus_value_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_minus(npointset, npoint)
+CREATE FUNCTION setMinus(npointset, npoint)
   RETURNS npointset
   AS 'MODULE_PATHNAME', 'Minus_set_value'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_minus(npointset, npointset)
+CREATE FUNCTION setMinus(npointset, npointset)
   RETURNS npointset
   AS 'MODULE_PATHNAME', 'Minus_set_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR - (
-  PROCEDURE = set_minus,
+  PROCEDURE = setMinus,
   LEFTARG = npoint, RIGHTARG = npointset
 );
 CREATE OPERATOR - (
-  PROCEDURE = set_minus,
+  PROCEDURE = setMinus,
   LEFTARG = npointset, RIGHTARG = npoint
 );
 CREATE OPERATOR - (
-  PROCEDURE = set_minus,
+  PROCEDURE = setMinus,
   LEFTARG = npointset, RIGHTARG = npointset
 );
 
 /*****************************************************************************/
 
-CREATE FUNCTION set_intersection(npoint, npointset)
+CREATE FUNCTION setIntersection(npoint, npointset)
   RETURNS npoint
   AS 'MODULE_PATHNAME', 'Intersection_value_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_intersection(npointset, npoint)
+CREATE FUNCTION setIntersection(npointset, npoint)
   RETURNS npoint
   AS 'MODULE_PATHNAME', 'Intersection_set_value'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_intersection(npointset, npointset)
+CREATE FUNCTION setIntersection(npointset, npointset)
   RETURNS npointset
   AS 'MODULE_PATHNAME', 'Intersection_set_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR * (
-  PROCEDURE = set_intersection,
+  PROCEDURE = setIntersection,
   LEFTARG = npoint, RIGHTARG = npointset,
   COMMUTATOR = *
 );
 CREATE OPERATOR * (
-  PROCEDURE = set_intersection,
+  PROCEDURE = setIntersection,
   LEFTARG = npointset, RIGHTARG = npoint,
   COMMUTATOR = *
 );
 CREATE OPERATOR * (
-  PROCEDURE = set_intersection,
+  PROCEDURE = setIntersection,
   LEFTARG = npointset, RIGHTARG = npointset,
   COMMUTATOR = *
 );
 
 /*****************************************************************************/
 
-CREATE FUNCTION set_distance(npoint, npointset)
+CREATE FUNCTION distance(npoint, npointset)
   RETURNS float
   AS 'MODULE_PATHNAME', 'Distance_value_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_distance(npointset, npoint)
+CREATE FUNCTION distance(npointset, npoint)
   RETURNS float
   AS 'MODULE_PATHNAME', 'Distance_set_value'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_distance(npointset, npointset)
+CREATE FUNCTION distance(npointset, npointset)
   RETURNS float
   AS 'MODULE_PATHNAME', 'Distance_set_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR <-> (
-  PROCEDURE = set_distance,
+  PROCEDURE = distance,
   LEFTARG = npoint, RIGHTARG = npointset,
   COMMUTATOR = <->
 );
 CREATE OPERATOR <-> (
-  PROCEDURE = set_distance,
+  PROCEDURE = distance,
   LEFTARG = npointset, RIGHTARG = npoint,
   COMMUTATOR = <->
 );
 CREATE OPERATOR <-> (
-  PROCEDURE = set_distance,
+  PROCEDURE = distance,
   LEFTARG = npointset, RIGHTARG = npointset,
   COMMUTATOR = <->
 );

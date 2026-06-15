@@ -38,22 +38,22 @@
 
 /* integer + <TYPE> */
 
-CREATE FUNCTION tnumber_add(bigint, tbigint)
+CREATE FUNCTION tAdd(bigint, tbigint)
   RETURNS tbigint
   AS 'MODULE_PATHNAME', 'Add_number_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tnumber_add(integer, tint)
+CREATE FUNCTION tAdd(integer, tint)
   RETURNS tint
   AS 'MODULE_PATHNAME', 'Add_number_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR + (
-  PROCEDURE = tnumber_add,
+  PROCEDURE = tAdd,
   LEFTARG = bigint, RIGHTARG = tbigint,
   COMMUTATOR = +
 );
 CREATE OPERATOR + (
-  PROCEDURE = tnumber_add,
+  PROCEDURE = tAdd,
   LEFTARG = integer, RIGHTARG = tint,
   COMMUTATOR = +
 );
@@ -62,13 +62,13 @@ CREATE OPERATOR + (
 
 /* float + <TYPE> */
 
-CREATE FUNCTION tnumber_add(float, tfloat)
+CREATE FUNCTION tAdd(float, tfloat)
   RETURNS tfloat
   AS 'MODULE_PATHNAME', 'Add_number_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR + (
-  PROCEDURE = tnumber_add,
+  PROCEDURE = tAdd,
   LEFTARG = float, RIGHTARG = tfloat,
   COMMUTATOR = +
 );
@@ -76,42 +76,42 @@ CREATE OPERATOR + (
 /*****************************************************************************/
 /* tint + <TYPE> */
 
-CREATE FUNCTION tnumber_add(tbigint, bigint)
+CREATE FUNCTION tAdd(tbigint, bigint)
   RETURNS tbigint
   AS 'MODULE_PATHNAME', 'Add_tnumber_number'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tnumber_add(tbigint, tbigint)
+CREATE FUNCTION tAdd(tbigint, tbigint)
   RETURNS tbigint
   AS 'MODULE_PATHNAME', 'Add_tnumber_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR + (
-  PROCEDURE = tnumber_add,
+  PROCEDURE = tAdd,
   LEFTARG = tbigint, RIGHTARG = bigint,
   COMMUTATOR = +
 );
 CREATE OPERATOR + (
-  PROCEDURE = tnumber_add,
+  PROCEDURE = tAdd,
   LEFTARG = tbigint, RIGHTARG = tbigint,
   COMMUTATOR = +
 );
 
-CREATE FUNCTION tnumber_add(tint, integer)
+CREATE FUNCTION tAdd(tint, integer)
   RETURNS tint
   AS 'MODULE_PATHNAME', 'Add_tnumber_number'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tnumber_add(tint, tint)
+CREATE FUNCTION tAdd(tint, tint)
   RETURNS tint
   AS 'MODULE_PATHNAME', 'Add_tnumber_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR + (
-  PROCEDURE = tnumber_add,
+  PROCEDURE = tAdd,
   LEFTARG = tint, RIGHTARG = integer,
   COMMUTATOR = +
 );
 CREATE OPERATOR + (
-  PROCEDURE = tnumber_add,
+  PROCEDURE = tAdd,
   LEFTARG = tint, RIGHTARG = tint,
   COMMUTATOR = +
 );
@@ -119,22 +119,22 @@ CREATE OPERATOR + (
 /*****************************************************************************/
 /* tfloat + <TYPE> */
 
-CREATE FUNCTION tnumber_add(tfloat, float)
+CREATE FUNCTION tAdd(tfloat, float)
   RETURNS tfloat
   AS 'MODULE_PATHNAME', 'Add_tnumber_number'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tnumber_add(tfloat, tfloat)
+CREATE FUNCTION tAdd(tfloat, tfloat)
   RETURNS tfloat
   AS 'MODULE_PATHNAME', 'Add_tnumber_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR + (
-  PROCEDURE = tnumber_add,
+  PROCEDURE = tAdd,
   LEFTARG = tfloat, RIGHTARG = float,
   COMMUTATOR = +
 );
 CREATE OPERATOR + (
-  PROCEDURE = tnumber_add,
+  PROCEDURE = tAdd,
   LEFTARG = tfloat, RIGHTARG = tfloat,
   COMMUTATOR = +
 );
@@ -145,21 +145,21 @@ CREATE OPERATOR + (
 
 /* integer - <TYPE> */
 
-CREATE FUNCTION tnumber_sub(bigint, tbigint)
+CREATE FUNCTION tSub(bigint, tbigint)
   RETURNS tbigint
   AS 'MODULE_PATHNAME', 'Sub_number_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tnumber_sub(integer, tint)
+CREATE FUNCTION tSub(integer, tint)
   RETURNS tint
   AS 'MODULE_PATHNAME', 'Sub_number_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR - (
-  PROCEDURE = tnumber_sub,
+  PROCEDURE = tSub,
   LEFTARG = bigint, RIGHTARG = tbigint
 );
 CREATE OPERATOR - (
-  PROCEDURE = tnumber_sub,
+  PROCEDURE = tSub,
   LEFTARG = integer, RIGHTARG = tint
 );
 
@@ -167,39 +167,39 @@ CREATE OPERATOR - (
 
 /* tint - <TYPE> */
 
-CREATE FUNCTION tnumber_sub(tbigint, bigint)
+CREATE FUNCTION tSub(tbigint, bigint)
   RETURNS tbigint
   AS 'MODULE_PATHNAME', 'Sub_tnumber_number'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tnumber_sub(tbigint, tbigint)
+CREATE FUNCTION tSub(tbigint, tbigint)
   RETURNS tbigint
   AS 'MODULE_PATHNAME', 'Sub_tnumber_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR - (
-  PROCEDURE = tnumber_sub,
+  PROCEDURE = tSub,
   LEFTARG = tbigint, RIGHTARG = bigint
 );
 CREATE OPERATOR - (
-  PROCEDURE = tnumber_sub,
+  PROCEDURE = tSub,
   LEFTARG = tbigint, RIGHTARG = tbigint
 );
 
-CREATE FUNCTION tnumber_sub(tint, integer)
+CREATE FUNCTION tSub(tint, integer)
   RETURNS tint
   AS 'MODULE_PATHNAME', 'Sub_tnumber_number'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tnumber_sub(tint, tint)
+CREATE FUNCTION tSub(tint, tint)
   RETURNS tint
   AS 'MODULE_PATHNAME', 'Sub_tnumber_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR - (
-  PROCEDURE = tnumber_sub,
+  PROCEDURE = tSub,
   LEFTARG = tint, RIGHTARG = integer
 );
 CREATE OPERATOR - (
-  PROCEDURE = tnumber_sub,
+  PROCEDURE = tSub,
   LEFTARG = tint, RIGHTARG = tint
 );
 
@@ -207,13 +207,13 @@ CREATE OPERATOR - (
 
 /* float - <TYPE> */
 
-CREATE FUNCTION tnumber_sub(float, tfloat)
+CREATE FUNCTION tSub(float, tfloat)
   RETURNS tfloat
   AS 'MODULE_PATHNAME', 'Sub_number_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR - (
-  PROCEDURE = tnumber_sub,
+  PROCEDURE = tSub,
   LEFTARG = float, RIGHTARG = tfloat
 );
 
@@ -221,21 +221,21 @@ CREATE OPERATOR - (
 
 /* tfloat - <TYPE> */
 
-CREATE FUNCTION tnumber_sub(tfloat, float)
+CREATE FUNCTION tSub(tfloat, float)
   RETURNS tfloat
   AS 'MODULE_PATHNAME', 'Sub_tnumber_number'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tnumber_sub(tfloat, tfloat)
+CREATE FUNCTION tSub(tfloat, tfloat)
   RETURNS tfloat
   AS 'MODULE_PATHNAME', 'Sub_tnumber_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR - (
-  PROCEDURE = tnumber_sub,
+  PROCEDURE = tSub,
   LEFTARG = tfloat, RIGHTARG = float
 );
 CREATE OPERATOR - (
-  PROCEDURE = tnumber_sub,
+  PROCEDURE = tSub,
   LEFTARG = tfloat, RIGHTARG = tfloat
 );
 
@@ -245,22 +245,22 @@ CREATE OPERATOR - (
 
 /* integer * <TYPE> */
 
-CREATE FUNCTION tnumber_mul(bigint, tbigint)
+CREATE FUNCTION tMul(bigint, tbigint)
   RETURNS tbigint
   AS 'MODULE_PATHNAME', 'Mul_number_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tnumber_mul(integer, tint)
+CREATE FUNCTION tMul(integer, tint)
   RETURNS tint
   AS 'MODULE_PATHNAME', 'Mul_number_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR * (
-  PROCEDURE = tnumber_mul,
+  PROCEDURE = tMul,
   LEFTARG = integer, RIGHTARG = tint,
   COMMUTATOR = *
 );
 CREATE OPERATOR * (
-  PROCEDURE = tnumber_mul,
+  PROCEDURE = tMul,
   LEFTARG = bigint, RIGHTARG = tbigint,
   COMMUTATOR = *
 );
@@ -268,42 +268,42 @@ CREATE OPERATOR * (
 /*****************************************************************************/
 /* tint * <TYPE> */
 
-CREATE FUNCTION tnumber_mul(tbigint, bigint)
+CREATE FUNCTION tMul(tbigint, bigint)
   RETURNS tbigint
   AS 'MODULE_PATHNAME', 'Mul_tnumber_number'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tnumber_mul(tbigint, tbigint)
+CREATE FUNCTION tMul(tbigint, tbigint)
   RETURNS tbigint
   AS 'MODULE_PATHNAME', 'Mul_tnumber_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR * (
-  PROCEDURE = tnumber_mul,
+  PROCEDURE = tMul,
   LEFTARG = tbigint, RIGHTARG = bigint,
   COMMUTATOR = *
 );
 CREATE OPERATOR * (
-  PROCEDURE = tnumber_mul,
+  PROCEDURE = tMul,
   LEFTARG = tbigint, RIGHTARG = tbigint,
   COMMUTATOR = *
 );
 
-CREATE FUNCTION tnumber_mul(tint, integer)
+CREATE FUNCTION tMul(tint, integer)
   RETURNS tint
   AS 'MODULE_PATHNAME', 'Mul_tnumber_number'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tnumber_mul(tint, tint)
+CREATE FUNCTION tMul(tint, tint)
   RETURNS tint
   AS 'MODULE_PATHNAME', 'Mul_tnumber_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR * (
-  PROCEDURE = tnumber_mul,
+  PROCEDURE = tMul,
   LEFTARG = tint, RIGHTARG = integer,
   COMMUTATOR = *
 );
 CREATE OPERATOR * (
-  PROCEDURE = tnumber_mul,
+  PROCEDURE = tMul,
   LEFTARG = tint, RIGHTARG = tint,
   COMMUTATOR = *
 );
@@ -312,13 +312,13 @@ CREATE OPERATOR * (
 
 /* float * <TYPE> */
 
-CREATE FUNCTION tnumber_mul(float, tfloat)
+CREATE FUNCTION tMul(float, tfloat)
   RETURNS tfloat
   AS 'MODULE_PATHNAME', 'Mul_number_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR * (
-  PROCEDURE = tnumber_mul,
+  PROCEDURE = tMul,
   LEFTARG = float, RIGHTARG = tfloat,
   COMMUTATOR = *
 );
@@ -326,22 +326,22 @@ CREATE OPERATOR * (
 /*****************************************************************************/
 /* tfloat * <TYPE> */
 
-CREATE FUNCTION tnumber_mul(tfloat, float)
+CREATE FUNCTION tMul(tfloat, float)
   RETURNS tfloat
   AS 'MODULE_PATHNAME', 'Mul_tnumber_number'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tnumber_mul(tfloat, tfloat)
+CREATE FUNCTION tMul(tfloat, tfloat)
   RETURNS tfloat
   AS 'MODULE_PATHNAME', 'Mul_tnumber_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR * (
-  PROCEDURE = tnumber_mul,
+  PROCEDURE = tMul,
   LEFTARG = tfloat, RIGHTARG = float,
   COMMUTATOR = *
 );
 CREATE OPERATOR * (
-  PROCEDURE = tnumber_mul,
+  PROCEDURE = tMul,
   LEFTARG = tfloat, RIGHTARG = tfloat,
   COMMUTATOR = *
 );
@@ -352,60 +352,60 @@ CREATE OPERATOR * (
 
 /* integer / <TYPE> */
 
-CREATE FUNCTION tnumber_div(bigint, tbigint)
+CREATE FUNCTION tDiv(bigint, tbigint)
   RETURNS tbigint
   AS 'MODULE_PATHNAME', 'Div_number_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tnumber_div(integer, tint)
+CREATE FUNCTION tDiv(integer, tint)
   RETURNS tint
   AS 'MODULE_PATHNAME', 'Div_number_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR / (
-  PROCEDURE = tnumber_div,
+  PROCEDURE = tDiv,
   LEFTARG = bigint, RIGHTARG = tbigint
 );
 CREATE OPERATOR / (
-  PROCEDURE = tnumber_div,
+  PROCEDURE = tDiv,
   LEFTARG = integer, RIGHTARG = tint
 );
 
 /*****************************************************************************/
 /* tint / <TYPE> */
 
-CREATE FUNCTION tnumber_div(tbigint, bigint)
+CREATE FUNCTION tDiv(tbigint, bigint)
   RETURNS tbigint
   AS 'MODULE_PATHNAME', 'Div_tnumber_number'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tnumber_div(tbigint, tbigint)
+CREATE FUNCTION tDiv(tbigint, tbigint)
   RETURNS tbigint
   AS 'MODULE_PATHNAME', 'Div_tnumber_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR / (
-  PROCEDURE = tnumber_div,
+  PROCEDURE = tDiv,
   LEFTARG = tbigint, RIGHTARG = bigint
 );
 CREATE OPERATOR / (
-  PROCEDURE = tnumber_div,
+  PROCEDURE = tDiv,
   LEFTARG = tbigint, RIGHTARG = tbigint
 );
 
-CREATE FUNCTION tnumber_div(tint, integer)
+CREATE FUNCTION tDiv(tint, integer)
   RETURNS tint
   AS 'MODULE_PATHNAME', 'Div_tnumber_number'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tnumber_div(tint, tint)
+CREATE FUNCTION tDiv(tint, tint)
   RETURNS tint
   AS 'MODULE_PATHNAME', 'Div_tnumber_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR / (
-  PROCEDURE = tnumber_div,
+  PROCEDURE = tDiv,
   LEFTARG = tint, RIGHTARG = integer
 );
 CREATE OPERATOR / (
-  PROCEDURE = tnumber_div,
+  PROCEDURE = tDiv,
   LEFTARG = tint, RIGHTARG = tint
 );
 
@@ -413,33 +413,33 @@ CREATE OPERATOR / (
 
 /* float / <TYPE> */
 
-CREATE FUNCTION tnumber_div(float, tfloat)
+CREATE FUNCTION tDiv(float, tfloat)
   RETURNS tfloat
   AS 'MODULE_PATHNAME', 'Div_number_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR / (
-  PROCEDURE = tnumber_div,
+  PROCEDURE = tDiv,
   LEFTARG = float, RIGHTARG = tfloat
 );
 
 /*****************************************************************************/
 
-CREATE FUNCTION tnumber_div(tfloat, float)
+CREATE FUNCTION tDiv(tfloat, float)
   RETURNS tfloat
   AS 'MODULE_PATHNAME', 'Div_tnumber_number'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tnumber_div(tfloat, tfloat)
+CREATE FUNCTION tDiv(tfloat, tfloat)
   RETURNS tfloat
   AS 'MODULE_PATHNAME', 'Div_tnumber_tnumber'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR / (
-  PROCEDURE = tnumber_div,
+  PROCEDURE = tDiv,
   LEFTARG = tfloat, RIGHTARG = float
 );
 CREATE OPERATOR / (
-  PROCEDURE = tnumber_div,
+  PROCEDURE = tDiv,
   LEFTARG = tfloat, RIGHTARG = tfloat
 );
 

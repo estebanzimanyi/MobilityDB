@@ -422,90 +422,90 @@ CREATE OPERATOR >> (
 
 /*****************************************************************************/
 
-CREATE FUNCTION set_union(jsonb, jsonbset)
+CREATE FUNCTION setUnion(jsonb, jsonbset)
   RETURNS jsonbset
   AS 'MODULE_PATHNAME', 'Union_value_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_union(jsonbset, jsonb)
+CREATE FUNCTION setUnion(jsonbset, jsonb)
   RETURNS jsonbset
   AS 'MODULE_PATHNAME', 'Union_set_value'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_union(jsonbset, jsonbset)
+CREATE FUNCTION setUnion(jsonbset, jsonbset)
   RETURNS jsonbset
   AS 'MODULE_PATHNAME', 'Union_set_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR + (
-  PROCEDURE = set_union,
+  PROCEDURE = setUnion,
   LEFTARG = jsonb, RIGHTARG = jsonbset,
   COMMUTATOR = +
 );
 CREATE OPERATOR + (
-  PROCEDURE = set_union,
+  PROCEDURE = setUnion,
   LEFTARG = jsonbset, RIGHTARG = jsonb,
   COMMUTATOR = +
 );
 CREATE OPERATOR + (
-  PROCEDURE = set_union,
+  PROCEDURE = setUnion,
   LEFTARG = jsonbset, RIGHTARG = jsonbset,
   COMMUTATOR = +
 );
 
 /*****************************************************************************/
 
-CREATE FUNCTION set_minus(jsonb, jsonbset)
+CREATE FUNCTION setMinus(jsonb, jsonbset)
   RETURNS jsonb
   AS 'MODULE_PATHNAME', 'Minus_value_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_minus(jsonbset, jsonb)
+CREATE FUNCTION setMinus(jsonbset, jsonb)
   RETURNS jsonbset
   AS 'MODULE_PATHNAME', 'Minus_set_value'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_minus(jsonbset, jsonbset)
+CREATE FUNCTION setMinus(jsonbset, jsonbset)
   RETURNS jsonbset
   AS 'MODULE_PATHNAME', 'Minus_set_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR - (
-  PROCEDURE = set_minus,
+  PROCEDURE = setMinus,
   LEFTARG = jsonb, RIGHTARG = jsonbset
 );
 CREATE OPERATOR - (
-  PROCEDURE = set_minus,
+  PROCEDURE = setMinus,
   LEFTARG = jsonbset, RIGHTARG = jsonb
 );
 CREATE OPERATOR - (
-  PROCEDURE = set_minus,
+  PROCEDURE = setMinus,
   LEFTARG = jsonbset, RIGHTARG = jsonbset
 );
 
 /*****************************************************************************/
 
-CREATE FUNCTION set_intersection(jsonb, jsonbset)
+CREATE FUNCTION setIntersection(jsonb, jsonbset)
   RETURNS jsonb
   AS 'MODULE_PATHNAME', 'Intersection_value_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_intersection(jsonbset, jsonb)
+CREATE FUNCTION setIntersection(jsonbset, jsonb)
   RETURNS jsonb
   AS 'MODULE_PATHNAME', 'Intersection_set_value'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_intersection(jsonbset, jsonbset)
+CREATE FUNCTION setIntersection(jsonbset, jsonbset)
   RETURNS jsonbset
   AS 'MODULE_PATHNAME', 'Intersection_set_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR * (
-  PROCEDURE = set_intersection,
+  PROCEDURE = setIntersection,
   LEFTARG = jsonb, RIGHTARG = jsonbset,
   COMMUTATOR = *
 );
 CREATE OPERATOR * (
-  PROCEDURE = set_intersection,
+  PROCEDURE = setIntersection,
   LEFTARG = jsonbset, RIGHTARG = jsonb,
   COMMUTATOR = *
 );
 CREATE OPERATOR * (
-  PROCEDURE = set_intersection,
+  PROCEDURE = setIntersection,
   LEFTARG = jsonbset, RIGHTARG = jsonbset,
   COMMUTATOR = *
 );
