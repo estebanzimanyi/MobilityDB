@@ -254,9 +254,13 @@ pose_tprecision_value(const Temporal *temp)
     {
       TimestampTz lower = DatumGetTimestampTz(seq->period.lower);
       TimestampTz upper = DatumGetTimestampTz(seq->period.upper);
+      /* The midpoint is strictly interior to the sequence period, so the value
+       * is always defined; fall back to the first instant otherwise to avoid
+       * reading an uninitialized value */
       Datum value;
-      tsequence_value_at_timestamptz(seq, lower + (upper - lower) / 2, false,
-        &value);
+      if (! tsequence_value_at_timestamptz(seq, lower + (upper - lower) / 2,
+          false, &value))
+        return datum_copy(tinstant_value(TSEQUENCE_INST_N(seq, 0)), T_POSE);
       return datum_copy(value, T_POSE);
     }
     int32_t srid = pose_srid(p0);
