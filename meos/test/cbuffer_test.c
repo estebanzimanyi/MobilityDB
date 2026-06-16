@@ -439,14 +439,15 @@ int main(void)
   printf("cbufferset_value_n(%s, 1, %s): %c\n", cbufferset1_out, cbuffer1_out, bool_result ? 't' : 'n');
   free(cbuffer_result); free(char_result);
 
-  /* Cbuffer **cbufferset_values(const Set *s); */
-  cbufferarray_result = cbufferset_values(cbufferset1);
+  /* Cbuffer **cbufferset_values(const Set *s, int *count); */
+  int cbufferset_count;
+  cbufferarray_result = cbufferset_values(cbufferset1, &cbufferset_count);
   printf("cbufferset_values(%s): {", cbufferset1_out);
-  for (int i = 0; i < cbufferset1->count; i++)
+  for (int i = 0; i < cbufferset_count; i++)
   {
     char_result = cbuffer_as_text(cbufferarray_result[i], 6);
     printf("%s", char_result);
-    if (i < cbufferset1->count - 1)
+    if (i < cbufferset_count - 1)
       printf(", ");
     else
       printf("}\n");
