@@ -405,9 +405,16 @@ extern GSERIALIZED *geom_convex_hull(const GSERIALIZED *gs);
 extern GSERIALIZED *geom_difference2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
 extern GSERIALIZED *geom_intersection2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
 extern GSERIALIZED *geom_intersection2d_coll(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
-extern GSERIALIZED *geom_min_bounding_radius(const GSERIALIZED *geom, double *radius);
+typedef struct
+{
+  GSERIALIZED *center;   /**< Center of the minimum bounding circle */
+  double       radius;   /**< Radius of the minimum bounding circle */
+} MinBoundingCircle;
+
+extern MinBoundingCircle geom_min_bounding_radius(const GSERIALIZED *geom);
 extern GSERIALIZED *geom_shortestline2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
 extern GSERIALIZED *geom_shortestline3d(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
+
 extern GSERIALIZED *geom_unary_union(const GSERIALIZED *gs, double prec);
 extern GSERIALIZED *line_interpolate_point(const GSERIALIZED *gs, double distance_fraction, bool repeat);
 extern double line_locate_point(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
@@ -623,7 +630,6 @@ extern Temporal *tgeompoint_from_mfjson(const char *str);
 extern Temporal *tgeompoint_in(const char *str);
 extern char *tspatial_as_ewkt(const Temporal *temp, int maxdd);
 extern char *tspatial_as_text(const Temporal *temp, int maxdd);
-extern char *tspatial_out(const Temporal *temp, int maxdd);
 
 /* Constructor functions */
 

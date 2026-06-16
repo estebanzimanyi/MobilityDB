@@ -195,7 +195,7 @@ extern Set *cbuffer_to_set(const Cbuffer *cb);
 extern Cbuffer *cbufferset_end_value(const Set *s);
 extern Cbuffer *cbufferset_start_value(const Set *s);
 extern bool cbufferset_value_n(const Set *s, int n, Cbuffer **result);
-extern Cbuffer **cbufferset_values(const Set *s);
+extern Cbuffer **cbufferset_values(const Set *s, int *count);
 
 /* Set operations */
 
@@ -218,6 +218,7 @@ extern Set *union_set_cbuffer(const Set *s, const Cbuffer *cb);
  *****************************************************************************/
 
 extern Temporal *tcbuffer_in(const char *str);
+extern Temporal *tcbuffer_from_mfjson(const char *mfjson);
 
 /*****************************************************************************
  * Constructor functions
@@ -237,8 +238,9 @@ extern TSequenceSet *tcbufferseqset_from_base_tstzspanset(const Cbuffer *cb, con
 extern Cbuffer *tcbuffer_end_value(const Temporal *temp);
 extern Set *tcbuffer_points(const Temporal *temp);
 extern Set *tcbuffer_radius(const Temporal *temp);
+extern GSERIALIZED *tcbuffer_traversed_area(const Temporal *temp, bool unary_union);
+extern GSERIALIZED *tcbuffer_convex_hull(const Temporal *temp);
 extern Cbuffer *tcbuffer_start_value(const Temporal *temp);
-extern GSERIALIZED *tcbuffer_trav_area(const Temporal *temp, bool merge_union);
 extern bool tcbuffer_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict, Cbuffer **value);
 extern bool tcbuffer_value_n(const Temporal *temp, int n, Cbuffer **result);
 extern Cbuffer **tcbuffer_values(const Temporal *temp, int *count);
@@ -279,6 +281,7 @@ extern double nad_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb);
 extern double nad_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs);
 extern double nad_tcbuffer_stbox(const Temporal *temp, const STBox *box);
 extern double nad_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2);
+extern double mindistance_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2, double threshold);
 extern TInstant *nai_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb);
 extern TInstant *nai_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs);
 extern TInstant *nai_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2);
@@ -326,6 +329,7 @@ extern int acovers_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp);
 extern int acovers_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp);
 extern int acovers_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb);
 extern int acovers_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs);
+extern int acovers_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2);
 extern int adisjoint_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs);
 extern int adisjoint_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb);
 extern int adisjoint_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2);
@@ -342,6 +346,7 @@ extern int econtains_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp);
 extern int econtains_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb);
 extern int econtains_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs);
 extern int ecovers_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp);
+extern int ecovers_geo_tcbuffer(const GSERIALIZED *gs, const Temporal *temp);
 extern int ecovers_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb);
 extern int ecovers_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs);
 extern int ecovers_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2);
