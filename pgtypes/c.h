@@ -1512,6 +1512,25 @@ typedef intptr_t sigjmp_buf[5];
 #undef pg_tolower
 #undef pg_ascii_toupper
 #undef pg_ascii_tolower
+
+/* MEOS
+ * Same problem for the integer/timestamp/timezone helpers: their pgtypes
+ * definitions are dropped on the Windows/macOS extension build because the
+ * PostgreSQL backend already exports them (numutils.c and pgtz.c are excluded
+ * from compilation, and timestamp_cmp_internal / pg_open_tzfile are guarded
+ * out in timestamp.c / localtime.c).  Their call sites, however, were rewritten
+ * to meos_pg_* / meos_timestamp_cmp_internal by the shim above, which the
+ * backend does not export -> "undefined reference to meos_pg_ltoa" etc.  Undo
+ * the rename for exactly those symbols so the call sites bind to the backend's
+ * own pg_* / un-prefixed exports (confirmed present in libpostgres.a). */
+#undef pg_lltoa
+#undef pg_ltoa
+#undef pg_ultostr
+#undef pg_ultostr_zeropad
+#undef pg_open_tzfile
+#undef pg_tzset
+#undef pg_tzset_offset
+#undef timestamp_cmp_internal
 #endif /* PG_EXT_NO_BACKEND_DUPS */
 
 /* /port compatibility functions, included with the shim active so the pg_*
