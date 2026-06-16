@@ -17,10 +17,19 @@
 /*
  * Within this file, "strerror" means the platform's function not pg_strerror,
  * and likewise for "strerror_r"
+ *
+ * These #undefs are essential: port.h (pulled in via c.h) does
+ *   #define strerror   pg_strerror
+ *   #define strerror_r pg_strerror_r
+ * so without undef-ing them here, gnuish_strerror_r()'s call to strerror_r()
+ * expands to pg_strerror_r() -> gnuish_strerror_r() -> ... infinite recursion
+ * (a stack-overflow SIGSEGV on the first error-string lookup; manifested as a
+ * temporal_test.exe crash inside meos_initialize on Windows/UCRT). MEOS had
+ * commented them out when vendoring the pgtypes port; restore PostgreSQL's
+ * original behaviour so the platform's real strerror[_r] is used here.
  */
-// MEOS
-// #undef strerror
-// #undef strerror_r
+#undef strerror
+#undef strerror_r
 
 static char *gnuish_strerror_r(int errnum, char *buf, size_t buflen);
 static char *get_errno_symbol(int errnum);
