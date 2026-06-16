@@ -62,9 +62,10 @@
 
 #include <meos.h>
 #include <h3api.h>
+#include <pgtypes.h>
 #include "h3/h3_generated.h"
 #include "h3/th3index_internal.h"
-#include "temporal/postgres_types.h"
+#include "temporal/type_util.h"
 
 /*****************************************************************************
  * Parsing
@@ -262,7 +263,7 @@ h3index_cmp(H3Index a, H3Index b)
 uint32
 h3index_hash(H3Index cell)
 {
-  return pg_hashint8((int64) cell);
+  return int64_hash((int64) cell);
 }
 
 /*****************************************************************************

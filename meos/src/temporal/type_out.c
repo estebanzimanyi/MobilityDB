@@ -137,7 +137,6 @@ basetype_out(Datum value, MeosType type, int maxdd)
       return int32_out(DatumGetInt32(value));
     case T_INT8:
       return int64_out(DatumGetInt64(value));
-      return int8_out(DatumGetInt64(value));
 #if H3
     case T_H3INDEX:
       return h3index_out((H3Index) DatumGetInt64(value));

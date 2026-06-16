@@ -76,6 +76,7 @@
 #include <meos.h>
 #include <meos_pose.h>
 #include <meos_internal.h>
+#include <pgtypes.h>                 /* pg_timestamptz_in / pg_timestamptz_out */
 #include "temporal/temporal.h"      /* ensure_not_null */
 #include "temporal/type_util.h"     /* pfree_array */
 #include "pose/pose.h"

@@ -261,10 +261,11 @@ gbox_in(const char *str)
   double xmin, ymin, zmin, xmax, ymax, zmax;
   if (sscanf(str, " GBOX Z((%lf,%lf,%lf),(%lf,%lf,%lf))",
       &xmin, &ymin, &zmin, &xmax, &ymax, &zmax) == 6)
-    return gbox_make(true, xmin, xmax, ymin, ymax, zmin, zmax);
+    return gbox_make(true, false, false, xmin, xmax, ymin, ymax, zmin, zmax,
+      0, 0);
   if (sscanf(str, " GBOX X((%lf,%lf),(%lf,%lf))",
       &xmin, &ymin, &xmax, &ymax) == 4)
-    return gbox_make(false, xmin, xmax, ymin, ymax, 0, 0);
+    return gbox_make(false, false, false, xmin, xmax, ymin, ymax, 0, 0, 0, 0);
   meos_error(ERROR, MEOS_ERR_TEXT_INPUT,
     "Could not parse GBOX value: %s", str);
   return NULL;

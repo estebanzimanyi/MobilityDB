@@ -189,7 +189,7 @@ quadbin_cmp(Quadbin a, Quadbin b)
 uint32
 quadbin_hash(Quadbin cell)
 {
-  return pg_hashint8((int64) cell);
+  return int64_hash((int64) cell);
 }
 
 /*****************************************************************************/
