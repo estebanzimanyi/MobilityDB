@@ -307,7 +307,7 @@ Datum
 Pose_from_geopose(PG_FUNCTION_ARGS)
 {
   text *json_text = PG_GETARG_TEXT_P(0);
-  char *json = text2cstring(json_text);
+  char *json = text_to_cstring(json_text);
   Pose *result = pose_from_geopose(json);
   pfree(json);
   PG_FREE_IF_COPY(json_text, 0);
@@ -336,7 +336,7 @@ Pose_as_geopose(PG_FUNCTION_ARGS)
   PG_FREE_IF_COPY(pose, 0);
   if (result == NULL)
     PG_RETURN_NULL();
-  PG_RETURN_TEXT_P(cstring2text(result));
+  PG_RETURN_TEXT_P(cstring_to_text(result));
 }
 
 PGDLLEXPORT Datum Pose_apply_geo(PG_FUNCTION_ARGS);
