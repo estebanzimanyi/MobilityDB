@@ -76,8 +76,13 @@ typedef struct struct_MEOSPROJSRSCache
  */
 #define PROJ_BACKEND_HASH_SIZE 256
 
-/* Global variable to hold the Proj object cache */
-MEOSPROJSRSCache *MEOS_PROJ_CACHE = NULL;
+/* Per-thread PROJ object cache. Each entry owns LWPROJ structures created
+ * inside the per-thread PJ_CONTEXT; the cache must therefore live in the
+ * same thread as the context, otherwise PROJ objects from one context
+ * would leak across into another. (A pin-merge artifact had dropped
+ * MEOS_TLS here, reintroducing the #404/#815 data race that the TSan job
+ * catches in GetMEOSPROJSRSCache.) */
+static MEOS_TLS MEOSPROJSRSCache *MEOS_PROJ_CACHE = NULL;
 
 /**
  * @brief Utility structure to get many potential string representations

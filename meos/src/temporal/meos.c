@@ -57,11 +57,13 @@ extern void json_destroy_tofree();
  * Functions for the Gnu Scientific Library (GSL)
  ***************************************************************************/
 
-/* Global variables */
+/* Per-thread GSL state. The gsl_rng generators are not safe to share across
+ * threads; each thread initializes and owns its own. (A pin-merge artifact
+ * had dropped MEOS_TLS here, reintroducing the #404/#815 data race.) */
 
-static bool MEOS_GSL_INITIALIZED = false;
-static gsl_rng *MEOS_GENERATION_RNG = NULL;
-static gsl_rng *MEOS_AGGREGATION_RNG = NULL;
+static MEOS_TLS bool MEOS_GSL_INITIALIZED = false;
+static MEOS_TLS gsl_rng *MEOS_GENERATION_RNG = NULL;
+static MEOS_TLS gsl_rng *MEOS_AGGREGATION_RNG = NULL;
 
 /**
  * @brief Initialize the Gnu Scientific Library
@@ -129,9 +131,13 @@ gsl_get_aggregation_rng(void)
  * Functions for the PROJ library
  ***************************************************************************/
 
-/* Global variables keeping Proj context */
+/* Per-thread PROJ context. PROJ explicitly documents PJ_CONTEXT as not
+ * thread-safe; the official guidance is one context per thread, which is
+ * exactly what TLS gives us. (A pin-merge artifact had reverted this to a
+ * plain shared global, reintroducing the #404/#815 data race that the TSan
+ * job catches in proj_initialize.) */
 
-PJ_CONTEXT *MEOS_PJ_CONTEXT = NULL;
+static MEOS_TLS PJ_CONTEXT *MEOS_PJ_CONTEXT = NULL;
 
 /**
  * @brief Initialize the PROJ library
