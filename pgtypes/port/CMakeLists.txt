@@ -22,6 +22,14 @@ if(NOT PGTYPES_EXT_WIN32)
   )
 endif()
 
+# Native Windows MSVC has no <dirent.h>; MEOS timezone code (pgtypes/timezone/
+# pgtz.c) includes it. Add the vendored shim (BSD-licensed from PostgreSQL
+# upstream). MinGW already provides its own <dirent.h>, so the .c body is
+# itself guarded against MinGW.
+if(WIN32)
+  list(APPEND PORT_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/dirent.c)
+endif()
+
 set(PGTYPES_SOURCES ${PGTYPES_SOURCES} ${PORT_SOURCES}
   # Mandatory so that the variable update is visible in the parent directory's scope
   PARENT_SCOPE
