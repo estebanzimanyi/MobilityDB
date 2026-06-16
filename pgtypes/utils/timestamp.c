@@ -171,6 +171,8 @@ pg_timestamp_in(const char *str, int32 typmod)
   char workbuf[MAXDATELEN + MAXDATEFIELDS];
   DateTimeErrorExtra extra;
 
+  /* pg_DecodeDateTime dereferences session_timezone for unqualified inputs */
+  meos_ensure_timezone();
   dterr = pg_ParseDateTime(str, workbuf, sizeof(workbuf), field, ftype,
     MAXDATEFIELDS, &nf);
   if (dterr == 0)
@@ -364,6 +366,8 @@ pg_timestamptz_in(const char *str, int32 typmod)
   char workbuf[MAXDATELEN + MAXDATEFIELDS];
   DateTimeErrorExtra extra;
 
+  /* pg_DecodeDateTime dereferences session_timezone for unqualified inputs */
+  meos_ensure_timezone();
   dterr = pg_ParseDateTime(str, workbuf, sizeof(workbuf), field, ftype,
     MAXDATEFIELDS, &nf);
   if (dterr == 0)
@@ -1517,7 +1521,10 @@ timestamp2tm(Timestamp dt, int *tzp, struct pg_tm *tm, fsec_t *fsec,
 {
   /* Use session timezone if caller asks for default */
   if (attimezone == NULL)
+  {
+    meos_ensure_timezone();
     attimezone = session_timezone;
+  }
 
   Timestamp time = dt;
   Timestamp date;
