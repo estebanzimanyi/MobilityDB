@@ -212,7 +212,7 @@ extern Npoint *npointset_end_value(const Set *s);
 extern Set *npointset_routes(const Set *s);
 extern Npoint *npointset_start_value(const Set *s);
 extern bool npointset_value_n(const Set *s, int n, Npoint **result);
-extern Npoint **npointset_values(const Set *s);
+extern Npoint **npointset_values(const Set *s, int *count);
 
 /* Set operations */
 
@@ -235,6 +235,7 @@ extern Set *union_set_npoint(const Set *s, const Npoint *np);
  *****************************************************************************/
 
 extern Temporal *tnpoint_in(const char *str);
+extern Temporal *tnpoint_from_mfjson(const char *mfjson);
 extern char *tnpoint_out(const Temporal *temp, int maxdd);
 
 /*****************************************************************************
@@ -290,7 +291,7 @@ extern Temporal *tnpoint_minus_stbox(const Temporal *temp, const STBox *box, boo
  *****************************************************************************/
 
 extern Temporal *tdistance_tnpoint_npoint(const Temporal *temp, const Npoint *np);
-extern Temporal *tdistance_tnpoint_point(const Temporal *temp, const GSERIALIZED *gs);
+extern Temporal *tdistance_tnpoint_geo(const Temporal *temp, const GSERIALIZED *gs);
 extern Temporal *tdistance_tnpoint_tnpoint(const Temporal *temp1, const Temporal *temp2);
 extern double nad_tnpoint_geo(const Temporal *temp, const GSERIALIZED *gs);
 extern double nad_tnpoint_npoint(const Temporal *temp, const Npoint *np);
@@ -307,7 +308,7 @@ extern GSERIALIZED *shortestline_tnpoint_tnpoint(const Temporal *temp1, const Te
  * Aggregate functions
  *****************************************************************************/
 
-extern SkipList *tnpoint_tcentroid_transfn(SkipList *state, Temporal *temp);
+extern SkipList *tnpoint_tcentroid_transfn(SkipList *state, const Temporal *temp);
 
 /*****************************************************************************
  * Comparison functions

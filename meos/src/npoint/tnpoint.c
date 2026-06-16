@@ -241,6 +241,20 @@ tnpoint_out(const Temporal *temp, int maxdd)
 }
 
 /**
+ * @ingroup meos_npoint_inout
+ * @brief Return a temporal network point from its MF-JSON representation
+ * @param[in] mfjson MFJSON string
+ * @return On error return @p NULL
+ * @see #temporal_from_mfjson()
+ */
+Temporal *
+tnpoint_from_mfjson(const char *mfjson)
+{
+  VALIDATE_NOT_NULL(mfjson, NULL);
+  return temporal_from_mfjson(mfjson, T_TNPOINT);
+}
+
+/**
  * @ingroup meos_internal_npoint_inout
  * @brief Return a temporal network point instant from its Well-Known Text 
  * (WKT) representation
@@ -809,7 +823,7 @@ tnpoint_positions(const Temporal *temp, int *count)
 int64
 tnpointinst_route(const TInstant *inst)
 {
-  Npoint *np = DatumGetNpointP(tinstant_value_p(inst));
+  const Npoint *np = DatumGetNpointP(tinstant_value_p(inst));
   return np->rid;
 }
 
@@ -884,7 +898,7 @@ tnpointseqset_routes(const TSequenceSet *ss)
   for (int i = 0; i < ss->count; i++)
   {
     const TInstant *inst = TSEQUENCE_INST_N(TSEQUENCESET_SEQ_N(ss, i), 0);
-    Npoint *np = DatumGetNpointP(tinstant_value_p(inst));
+    const Npoint *np = DatumGetNpointP(tinstant_value_p(inst));
     values[i] = np->rid;
   }
   datumarr_sort(values, ss->count, T_INT8);
@@ -953,7 +967,6 @@ npointset_routes(const Set *s)
  * @note This function does a bounding box test for the temporal types
  * different from instant. The singleton tests are done in the functions for
  * the specific temporal types.
- * @csqlfn #Tnpoint_restrict_npoint()
  */
 Temporal *
 tnpoint_restrict_npoint(const Temporal *temp, const Npoint *np, bool atfunc)
@@ -1004,7 +1017,6 @@ tnpoint_minus_npoint(const Temporal *temp, const Npoint *np)
  * @param[in] temp Temporal network point
  * @param[in] s Set of network points
  * @param[in] atfunc True if the restriction is `at`, false for `minus`
- * @csqlfn #Tnpoint_restrict_npointset()
  */
 Temporal *
 tnpoint_restrict_npointset(const Temporal *temp, const Set *s, bool atfunc)
