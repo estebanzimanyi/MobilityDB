@@ -70,7 +70,9 @@ pcpoint_to_geompoint2d(const Pcpoint *pt)
   double x = 0.0, y = 0.0;
   if (!pcpoint_get_x(pt, schema, &x) || !pcpoint_get_y(pt, schema, &y))
     return NULL;
-  return geompoint_make2d((int32_t) schema->srid, x, y);
+  /* Planar 2D point; geopoint_make is available in the MEOS=OFF extension
+   * build, unlike the MEOS-only geompoint_make2d. */
+  return geopoint_make(x, y, 0.0, false, false, (int32_t) schema->srid);
 }
 
 /**
