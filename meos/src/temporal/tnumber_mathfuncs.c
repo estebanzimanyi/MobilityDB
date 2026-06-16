@@ -761,6 +761,46 @@ tfloat_exp(const Temporal *temp)
  *****************************************************************************/
 
 /**
+ * @ingroup meos_base_types
+ * @brief Return the natural logarithm of a double
+ * @param[in] d Value
+ * @note PostgreSQL function: dlog1(PG_FUNCTION_ARGS)
+ */
+double
+float_ln(double d)
+{
+  double result;
+
+  /*
+   * Emit particular SQLSTATE error codes for ln(). This is required by the
+   * SQL standard.
+   */
+  if (d == 0.0)
+  {
+    /* See doc-comment on meos_error in meos/include/meos.h: handler is
+     * not guaranteed to abort. Return NaN explicitly so log(0) does not
+     * fall through and end up returning -inf as a "valid" result. */
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      "cannot take logarithm of zero");
+    return get_float8_nan();
+  }
+  if (d < 0)
+  {
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      "cannot take logarithm of a negative number");
+    return get_float8_nan();
+  }
+
+  result = log(d);
+  if (unlikely(isinf(result)) && !isinf(d))
+    float_overflow_error();
+  if (unlikely(result == 0.0) && d != 1.0)
+    float_underflow_error();
+
+  return result;
+}
+
+/**
  * @brief Return the natural logarithm of a double
  * @param[in] d Value
  * @note Function used for lifting
@@ -831,6 +871,47 @@ tfloat_ln(const Temporal *temp)
 }
 
 /*****************************************************************************/
+
+/**
+ * @ingroup meos_base_types
+ * @brief Return the logarithm base 10 of a double
+ * @param[in] d Value
+ * @note PostgreSQL function: dlog10(PG_FUNCTION_ARGS)
+ */
+double
+float_log10(double d)
+{
+  double result;
+
+  /*
+   * Emit particular SQLSTATE error codes for log(). The SQL spec doesn't
+   * define log(), but it does define ln(), so it makes sense to emit the
+   * same error code for an analogous error condition.
+   */
+  if (d == 0.0)
+  {
+    /* See doc-comment on meos_error in meos/include/meos.h: handler is
+     * not guaranteed to abort. Return NaN explicitly so log10(0) does
+     * not fall through and end up returning -inf as a "valid" result. */
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      "Cannot take logarithm of zero");
+    return get_float8_nan();
+  }
+  if (d < 0)
+  {
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      "Cannot take logarithm of a negative number");
+    return get_float8_nan();
+  }
+
+  result = log10(d);
+  if (unlikely(isinf(result)) && !isinf(d))
+    float_overflow_error();
+  if (unlikely(result == 0.0) && d != 1.0)
+    float_underflow_error();
+
+  return result;
+}
 
 /**
  * @brief Return the logarithm base 10 of a double
