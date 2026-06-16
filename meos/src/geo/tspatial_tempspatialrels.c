@@ -186,7 +186,7 @@ tinterrel_tpointseq_simple_geo(const TSequence *seq, const GSERIALIZED *gs,
   Datum datum_no = tinter ? BoolGetDatum(false) : BoolGetDatum(true);
 
   /* Bounding box test */
-  STBox *box1 = TSEQUENCE_BBOX_PTR(seq);
+  const STBox *box1 = TSEQUENCE_BBOX_PTR(seq);
   if (! overlaps_stbox_stbox(box1, box))
   {
     result = palloc(sizeof(TSequence *));
@@ -1318,7 +1318,6 @@ tdwithin_tlinearseq_base_iter(const TSequence *seq, Datum point, Datum dist,
       nseqs += tdwithin_add_solutions(solutions, lower, upper, lower_inc,
         upper_inc, upper_inc1, t1, t2, instants, &result[nseqs]);
     }
-    start = end;
     startvalue = endvalue;
     lower = upper;
     lower_inc = true;
@@ -1458,17 +1457,30 @@ tdwithin_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, double dist)
   /* Ensure the validity of the arguments. ensure_valid_tspatial_geo
    * already enforces that the temporal geo and the geometry have the
    * same geodetic flag, so geodetic coordinates are supported here the
-   * same way as in #Tdistance_tgeo_geo (no ensure_not_geodetic_geo). */
+   * same way as in #Tdistance_tgeo_geo. A temporal point against a
+   * geodetic geometry is rejected; non-point geometries are routed
+   * through the polygonal buffer below. */
   if (! ensure_valid_tspatial_geo(temp, gs) || gserialized_is_empty(gs) ||
-      (tpoint_type(temp->temptype) && ! ensure_point_type(gs)) ||
+      (tpoint_type(temp->temptype) && ! ensure_not_geodetic_geo(gs)) ||
       ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return NULL;
 
+  /* For a temporal point against a non-point geometry, route through
+   * tIntersects on a polygonal d-expanded buffer of gs. This mirrors the
+   * polygonal approximation that the always-quantifier branch of
+   * ea_dwithin_tgeo_geo already uses internally via geom_buffer. */
+  if (tpoint_type(temp->temptype) && gserialized_get_type(gs) != POINTTYPE)
+  {
+    GSERIALIZED *buffer = geom_buffer(gs, dist, "");
+    Temporal *result = tinterrel_tgeo_geo(temp, buffer, TINTERSECTS);
+    pfree(buffer);
+    return result;
+  }
+
   /* Determine the distance and the turning point functions to be applied.
    * geo_dwithin_fn_geo selects the geodetic dwithin for geodetic
-   * coordinates and the 2D/3D planar dwithin otherwise (identical planar
-   * behaviour to before), mirroring how Tdistance_tgeo_geo selects its
-   * distance function. */
+   * coordinates and the 2D/3D planar dwithin otherwise, mirroring how
+   * Tdistance_tgeo_geo selects its distance function. */
   datum_func3 func = geo_dwithin_fn_geo(temp->flags, gs->gflags);
   tpfunc_temp tpfn = &tpointsegm_tdwithin_turnpt;
   /* Call the generic function passing the two functions as arguments */
