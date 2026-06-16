@@ -100,24 +100,6 @@ CREATE FUNCTION tposeFromMFJSON(text)
   AS 'MODULE_PATHNAME', 'Temporal_from_mfjson'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tposeFromGeoPose(text)
-  RETURNS tpose
-  AS 'MODULE_PATHNAME', 'Tpose_from_geopose'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
--- conformance:      0 = Basic-Quaternion (default), 1 = Basic-YPR
--- maxdecimaldigits: significant digits to keep; -1 = lossless
-CREATE FUNCTION asGeoPose(tpose, conformance int4 DEFAULT 0,
-    maxdecimaldigits int4 DEFAULT -1)
-  RETURNS text
-  AS 'MODULE_PATHNAME', 'Tpose_as_geopose'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION applyPose(geometry, tpose)
-  RETURNS tgeompoint
-  AS 'MODULE_PATHNAME', 'Tpose_apply_geo'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
 CREATE FUNCTION tposeFromBinary(bytea)
   RETURNS tpose
   AS 'MODULE_PATHNAME', 'Temporal_from_wkb'
@@ -228,16 +210,11 @@ CREATE FUNCTION timeSpan(tpose)
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tgeompoint(tpose)
   RETURNS tgeompoint
-  AS 'MODULE_PATHNAME', 'Tpose_to_tpoint'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tgeogpoint(tpose)
-  RETURNS tgeogpoint
-  AS 'MODULE_PATHNAME', 'Tpose_to_tpoint'
+  AS 'MODULE_PATHNAME', 'Tpose_to_tgeompoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE CAST (tpose AS tstzspan) WITH FUNCTION timeSpan(tpose);
 CREATE CAST (tpose AS tgeompoint) WITH FUNCTION tgeompoint(tpose);
-CREATE CAST (tpose AS tgeogpoint) WITH FUNCTION tgeogpoint(tpose);
 
 /******************************************************************************
  * Accessor functions
@@ -254,31 +231,6 @@ CREATE FUNCTION rotation(tpose)
   AS 'MODULE_PATHNAME', 'Tpose_rotation'
   LANGUAGE C IMMUTABLE STRICT;
 
-CREATE FUNCTION yaw(tpose)
-  RETURNS tfloat
-  AS 'MODULE_PATHNAME', 'Tpose_yaw'
-  LANGUAGE C IMMUTABLE STRICT;
-
-CREATE FUNCTION pitch(tpose)
-  RETURNS tfloat
-  AS 'MODULE_PATHNAME', 'Tpose_pitch'
-  LANGUAGE C IMMUTABLE STRICT;
-
-CREATE FUNCTION roll(tpose)
-  RETURNS tfloat
-  AS 'MODULE_PATHNAME', 'Tpose_roll'
-  LANGUAGE C IMMUTABLE STRICT;
-
-CREATE FUNCTION speed(tpose)
-  RETURNS tfloat
-  AS 'MODULE_PATHNAME', 'Tpose_speed'
-  LANGUAGE C IMMUTABLE STRICT;
-
-CREATE FUNCTION angularSpeed(tpose)
-  RETURNS tfloat
-  AS 'MODULE_PATHNAME', 'Tpose_angular_speed'
-  LANGUAGE C IMMUTABLE STRICT;
-
 -- CREATE FUNCTION orientation(tpose)
   -- RETURNS quaternion[]
   -- AS 'MODULE_PATHNAME', 'Tpose_orientation'
@@ -290,10 +242,6 @@ CREATE FUNCTION angularSpeed(tpose)
 CREATE FUNCTION tempSubtype(tpose)
   RETURNS text
   AS 'MODULE_PATHNAME', 'Temporal_subtype'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tempBasetype(tpose)
-  RETURNS text
-  AS 'MODULE_PATHNAME', 'Temporal_basetype_name'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION interp(tpose)
@@ -477,11 +425,7 @@ CREATE FUNCTION round(tpose[], integer DEFAULT 0)
   RETURNS tpose[]
   AS 'MODULE_PATHNAME', 'Temporalarr_round'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tprecision(tpose, duration interval,
-  origin timestamptz DEFAULT '2000-01-03')
-  RETURNS tpose
-  AS 'MODULE_PATHNAME', 'Temporal_tprecision'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
 CREATE FUNCTION shiftTime(tpose, interval)
   RETURNS tpose
   AS 'MODULE_PATHNAME', 'Temporal_shift_time'
@@ -762,3 +706,5 @@ CREATE FUNCTION arrowRoundtrip(tpose)
   RETURNS tpose
   AS 'MODULE_PATHNAME', 'Temporal_arrow_roundtrip'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/******************************************************************************/

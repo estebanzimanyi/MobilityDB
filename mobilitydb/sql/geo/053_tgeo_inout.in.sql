@@ -190,3 +190,14 @@ CREATE FUNCTION arrowRoundtrip(tgeography)
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 /*****************************************************************************/
+
+CREATE FUNCTION arrowRoundtrip(tgeometry)
+  RETURNS tgeometry
+  AS 'MODULE_PATHNAME', 'Temporal_arrow_roundtrip'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION arrowRoundtrip(tgeography)
+  RETURNS tgeography
+  AS 'MODULE_PATHNAME', 'Temporal_arrow_roundtrip'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/*****************************************************************************/

@@ -82,7 +82,7 @@ CREATE FUNCTION tcbuffer(tcbuffer, integer)
 CREATE CAST (tcbuffer AS tcbuffer) WITH FUNCTION tcbuffer(tcbuffer, integer) AS IMPLICIT;
 
 /*****************************************************************************
- * Input/output from (E)WKT, (E)WKB, and HexEWKB representation
+ * Input/output from (E)WKT, (E)WKB, HexEWKB, and MFJSON representation
  *****************************************************************************/
 
 CREATE FUNCTION tcbufferFromText(text)
@@ -110,11 +110,6 @@ CREATE FUNCTION tcbufferFromHexEWKB(text)
   AS 'MODULE_PATHNAME', 'Temporal_from_hexwkb'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
-CREATE FUNCTION tcbufferFromMFJSON(text)
-  RETURNS tcbuffer
-  AS 'MODULE_PATHNAME', 'Temporal_from_mfjson'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
 /*****************************************************************************/
 
 CREATE FUNCTION asText(tcbuffer, maxdecimaldigits int4 DEFAULT 15)
@@ -133,12 +128,6 @@ CREATE FUNCTION asEWKT(tcbuffer, maxdecimaldigits int4 DEFAULT 15)
 CREATE FUNCTION asEWKT(tcbuffer[], maxdecimaldigits int4 DEFAULT 15)
   RETURNS text[]
   AS 'MODULE_PATHNAME', 'Spatialarr_as_ewkt'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION asMFJSON(tcbuffer, options int4 DEFAULT 0,
-    flags int4 DEFAULT 0, maxdecimaldigits int4 DEFAULT 15)
-  RETURNS text
-  AS 'MODULE_PATHNAME', 'Temporal_as_mfjson'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION asBinary(tcbuffer, endianenconding text DEFAULT '')
@@ -260,10 +249,6 @@ CREATE FUNCTION radius(tcbuffer)
 CREATE FUNCTION tempSubtype(tcbuffer)
   RETURNS text
   AS 'MODULE_PATHNAME', 'Temporal_subtype'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION tempBasetype(tcbuffer)
-  RETURNS text
-  AS 'MODULE_PATHNAME', 'Temporal_basetype_name'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION interp(tcbuffer)
@@ -454,12 +439,6 @@ CREATE FUNCTION round(tcbuffer, integer DEFAULT 0)
 CREATE FUNCTION round(tcbuffer[], integer DEFAULT 0)
   RETURNS tcbuffer[]
   AS 'MODULE_PATHNAME', 'Temporalarr_round'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-
-CREATE FUNCTION tprecision(tcbuffer, duration interval,
-  origin timestamptz DEFAULT '2000-01-03')
-  RETURNS tcbuffer
-  AS 'MODULE_PATHNAME', 'Temporal_tprecision'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION shiftTime(tcbuffer, interval)
@@ -739,3 +718,5 @@ CREATE FUNCTION arrowRoundtrip(tcbuffer)
   RETURNS tcbuffer
   AS 'MODULE_PATHNAME', 'Temporal_arrow_roundtrip'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/*****************************************************************************/

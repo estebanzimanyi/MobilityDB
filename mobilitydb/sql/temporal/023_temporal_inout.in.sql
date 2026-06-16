@@ -228,7 +228,12 @@ CREATE FUNCTION arrowRoundtrip(tbool)
 CREATE FUNCTION arrowRoundtrip(tint)
   RETURNS tint
   AS 'MODULE_PATHNAME', 'Temporal_arrow_roundtrip'
-  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;CREATE FUNCTION arrowRoundtrip(tfloat)
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION arrowRoundtrip(tbigint)
+  RETURNS tbigint
+  AS 'MODULE_PATHNAME', 'Temporal_arrow_roundtrip'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION arrowRoundtrip(tfloat)
   RETURNS tfloat
   AS 'MODULE_PATHNAME', 'Temporal_arrow_roundtrip'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
