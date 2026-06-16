@@ -69,6 +69,13 @@
 #include <utils/jsonb.h>
 #include <utils/numeric.h>
 #include <pgtypes.h>
+/* Function defined in formatting.c */
+extern bool scanner_isspace(char ch);
+
+#if JSON
+  #include <utils/jsonb.h>
+  #include "json/tjsonb.h"
+#endif /* JSON */
 
 /* Function defined in formatting.c */
 extern bool scanner_isspace(char ch);
@@ -135,6 +142,10 @@ datum_cmp(Datum l, Datum r, MeosType type)
     case T_CBUFFER:
       return cbuffer_cmp(DatumGetCbufferP(l), DatumGetCbufferP(r));
 #endif
+#if JSON
+    case T_JSONB:
+      return pg_jsonb_cmp((Jsonb *) l, (Jsonb *) r);
+#endif /* JSON */
 #if NPOINT
     case T_NPOINT:
       return npoint_cmp(DatumGetNpointP(l), DatumGetNpointP(r));
@@ -231,6 +242,10 @@ datum_eq(Datum l, Datum r, MeosType type)
     case T_CBUFFER:
       return cbuffer_eq(DatumGetCbufferP(l), DatumGetCbufferP(r));
 #endif
+#if JSON
+    case T_JSONB:
+      return pg_jsonb_eq(DatumGetJsonbP(l), DatumGetJsonbP(r));
+#endif /* JSON */
 #if NPOINT
     case T_NPOINT:
       return npoint_eq(DatumGetNpointP(l), DatumGetNpointP(r));
@@ -449,6 +464,10 @@ datum_hash(Datum d, MeosType type)
     case T_CBUFFER:
       return cbuffer_hash(DatumGetCbufferP(d));
 #endif
+#if JSON
+    case T_JSONB:
+      return pg_jsonb_hash(DatumGetJsonbP(d));
+#endif /* JSON */
 #if NPOINT
     case T_NPOINT:
       return npoint_hash(DatumGetNpointP(d));
@@ -973,6 +992,11 @@ stringarr_to_string(char **strings, int count, char *prefix, char open,
   *p++ = close;
   *p = '\0';
 
+  /* Free the input strings (the contract documented above), not only the
+   * arrays -- otherwise every set/spanset/tsequence(set) _out leaks the
+   * element strings in standalone MEOS (no memory-context reclaim). */
+  for (int i = 0; i < count; i++)
+    pfree(strings[i]);
   pfree(escaped); pfree(needquotes); pfree(strings);
   return result;
 }
