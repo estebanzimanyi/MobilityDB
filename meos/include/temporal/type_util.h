@@ -64,6 +64,7 @@ extern bytea *bstring2bytea(const uint8_t *wkb, size_t size);
  * See issue #425 and the comment in postgres_types.c for context.
  */
 extern double meos_strtod(const char *str, char **endptr);
+extern float meos_strtof(const char *str, char **endptr);
 
 /* Input/output functions */
 

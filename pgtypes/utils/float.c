@@ -32,6 +32,16 @@
 #include "pgtypes.h"
 #include "../../meos/include/meos_error.h"
 
+/* MEOS
+ * Locale-safe C-locale numeric parsers (issue #425). float8in/float4in must
+ * parse with '.' as the decimal separator regardless of the process
+ * LC_NUMERIC, otherwise a temporal-value literal like "[1.5@...]" fails to
+ * parse under e.g. de_DE.UTF-8. These are defined in MEOS
+ * (meos/src/temporal/postgres_types.c); declared here to avoid pulling a MEOS
+ * internal header into the vendored pgtypes tree. */
+extern double meos_strtod(const char *str, char **endptr);
+extern float meos_strtof(const char *str, char **endptr);
+
 /*****************************************************************************
  * Definitions taken from the file liblwgeom_internal.h
  *****************************************************************************/
@@ -219,7 +229,7 @@ pg_float4in_internal(char *num, char **endptr_p, const char *type_name,
   }
 
   errno = 0;
-  val = strtof(num, &endptr);
+  val = meos_strtof(num, &endptr); /* MEOS: C-locale parse (#425) */
 
   /* did we not see anything that looks like a double? */
   if (endptr == num || errno != 0)
@@ -396,7 +406,7 @@ pg_float8in_internal(char *num, char **endptr_p, const char *type_name,
   }
 
   errno = 0;
-  val = strtod(num, &endptr);
+  val = meos_strtod(num, &endptr); /* MEOS: C-locale parse (#425) */
 
   /* did we not see anything that looks like a double? */
   if (endptr == num || errno != 0)
