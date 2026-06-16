@@ -124,7 +124,6 @@ static const char *MEOS_TYPE_NAMES[] =
   [T_TGEOMETRY] = "tgeometry",
   [T_TGEOGRAPHY] = "tgeography",
   [T_TRGEOMETRY] = "trgeometry",
-  [T_TBIGINT]    = "tbigint",    /**< temporal big integer type */
 #if JSON
   [T_JSONB]      = "jsonb",      /**< PostgreSQL jsonb base type */
   [T_JSONPATH]   = "jsonpath",   /**< PostgreSQL json path */
