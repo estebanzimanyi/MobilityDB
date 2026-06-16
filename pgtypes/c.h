@@ -1494,6 +1494,26 @@ typedef intptr_t sigjmp_buf[5];
 #define tzparse                                  meos_tzparse
 #define uint32_hash                              meos_uint32_hash
 
+#ifdef PG_EXT_NO_BACKEND_DUPS
+/* MEOS
+ * Windows/macOS MobilityDB extension build: pgtypes/port/pgstrcasecmp.c --
+ * which defines pg_strcasecmp, pg_strncasecmp, pg_toupper, pg_tolower,
+ * pg_ascii_toupper and pg_ascii_tolower -- is NOT compiled here, because the
+ * PostgreSQL backend the extension links against already exports those
+ * symbols (compiling our copy would multiply-define them on Windows).  But
+ * the symbol-collision shim above rewrites every pg_* call site to meos_pg_*,
+ * and no meos_pg_strncasecmp is produced in this build, so the link fails
+ * with "undefined reference to meos_pg_strncasecmp" (pgtypes/utils/bool.c).
+ * Undo the rename for exactly the symbols pgstrcasecmp.c would have provided
+ * so those call sites bind to the backend's own pg_* exports. */
+#undef pg_strcasecmp
+#undef pg_strncasecmp
+#undef pg_toupper
+#undef pg_tolower
+#undef pg_ascii_toupper
+#undef pg_ascii_tolower
+#endif /* PG_EXT_NO_BACKEND_DUPS */
+
 /* /port compatibility functions, included with the shim active so the pg_*
  * prototypes match the meos_pg_* call sites and definitions */
 #include "port.h"

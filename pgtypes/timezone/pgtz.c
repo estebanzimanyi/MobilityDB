@@ -139,9 +139,27 @@ pg_TZDIR(void)
   if (done_tzdir)
     return tzdir;
 
+#if defined(MEOS) && MEOS
+  /* MEOS
+   * Standalone MEOS library: there is no PostgreSQL backend, hence no
+   * `my_exec_path` global to derive a share directory from, and platforms
+   * that leave SYSTEMTZDIR undefined (notably the MSYS2/UCRT64 Windows
+   * build) provide no system zoneinfo path either.  Reading my_exec_path
+   * here would not even compile ('my_exec_path' undeclared).  Resolve the
+   * zoneinfo directory from the TZDIR environment variable (the standard
+   * tzcode convention); if it is unset, fall back to a "share/timezone"
+   * directory relative to the process so a consumer that ships a bundled
+   * zoneinfo can still load it. */
+  const char *tzdir_env = getenv("TZDIR");
+  if (tzdir_env && tzdir_env[0])
+    strlcpy(tzdir, tzdir_env, sizeof(tzdir));
+  else
+    strlcpy(tzdir, "share/timezone", sizeof(tzdir));
+#else
   get_share_path(my_exec_path, tzdir);
   // strlcpy(tzdir + strlen(tzdir), "/timezone", MAXPGPATH - strlen(tzdir));
   strncpy(tzdir + strlen(tzdir), "/timezone", MAXPGPATH - strlen(tzdir));
+#endif /* MEOS */
 
   done_tzdir = true;
   return tzdir;
