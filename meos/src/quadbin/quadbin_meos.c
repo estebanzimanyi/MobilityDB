@@ -57,7 +57,7 @@
 #include <postgres.h>
 
 #include <meos.h>
-#include "temporal/postgres_types.h"
+#include <pgtypes.h>
 
 /*****************************************************************************
  * Parsing

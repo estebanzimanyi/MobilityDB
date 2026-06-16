@@ -54,7 +54,7 @@
 #include <meos_quadbin.h>
 #include "geo/tgeo_spatialfuncs.h"
 #include "temporal/meos_catalog.h"
-#include "temporal/postgres_types.h"
+#include <pgtypes.h>
 #include "temporal/tcellindex.h"
 #include "temporal/temporal.h"
 #include "temporal/lifting.h"
