@@ -125,21 +125,30 @@ datum_max_float8(Datum l, Datum r)
 }
 
 /**
- * @brief Return the minimum value of the two arguments
+ * @brief Return a fresh copy of the minimum value of the two arguments
+ * @note Returns a freshly-allocated Datum so that callers can always free the
+ * result without aliasing into one of the inputs. Required by the @p tagg
+ * paths, which free the per-element result Datum after copying it into a
+ * @p TInstant.
  */
  Datum
 datum_min_text(Datum l, Datum r)
 {
-  return text_cmp(DatumGetTextP(l), DatumGetTextP(r), DEFAULT_COLLATION_OID) < 0 ? l : r;
+  Datum chosen = text_cmp(DatumGetTextP(l), DatumGetTextP(r),
+    DEFAULT_COLLATION_OID) < 0 ? l : r;
+  return datum_copy(chosen, T_TEXT);
 }
 
 /**
- * @brief Return the maximum value of the two arguments
+ * @brief Return a fresh copy of the maximum value of the two arguments
+ * @note See @ref datum_min_text for the always-fresh ownership contract.
  */
 Datum
 datum_max_text(Datum l, Datum r)
 {
-  return text_cmp(DatumGetTextP(l), DatumGetTextP(r), DEFAULT_COLLATION_OID) > 0 ? l : r;
+  Datum chosen = text_cmp(DatumGetTextP(l), DatumGetTextP(r),
+    DEFAULT_COLLATION_OID) > 0 ? l : r;
+  return datum_copy(chosen, T_TEXT);
 }
 
 /**
@@ -317,7 +326,7 @@ temporal_skiplist_common(SkipList *list, void **values, int count,
   }
 
   /* Find the list values that are strictly before the span of new values */
-  memset(update, 0, sizeof(&update));
+  memset(update, 0, sizeof(int) * SKIPLIST_MAXLEVEL);
   int height = list->elems[0].height;
   SkipListElem *elem = &list->elems[0];
   int cur = 0;
@@ -370,6 +379,10 @@ temporal_skiplist_merge(void **spliced, int spliced_count, void **values,
   int count, datum_func2 func, bool crossings, int *newcount, void ***tofree,
   int *nfree)
 {
+  /* Convention: *tofree must be a distinct allocation from the returned
+   * newvalues shell. The caller (skiplist_splice) frees the elements + the
+   * tofree shell via pfree_array, then frees the newvalues shell separately.
+   * Aliasing the two would cause skiplist_splice to either leak or double-free. */
   *newcount = 0;
   void **newvalues;
   uint8 subtype = ((Temporal *) values[0])->subtype;
@@ -380,7 +393,12 @@ temporal_skiplist_merge(void **spliced, int spliced_count, void **values,
   {
     newvalues = (void **) tsequence_tagg((TSequence **) spliced, spliced_count,
       (TSequence **) values, count, func, crossings, newcount);
-    *tofree = newvalues;
+    /* Duplicate the pointer-array shell so *tofree is distinct from
+     * newvalues; both shells then hold the same TSequence* element pointers,
+     * which the elements-free pass in skiplist_splice will release exactly once. */
+    void **tofree1 = palloc(sizeof(TSequence *) * (*newcount));
+    memcpy(tofree1, newvalues, sizeof(TSequence *) * (*newcount));
+    *tofree = tofree1;
     *nfree = *newcount;
   }
   return newvalues;
@@ -419,7 +437,10 @@ tinstant_tagg(TInstant **instants1, int count1, TInstant **instants2,
   int count2, datum_func2 func, int *newcount, void ***tofree, int *nfree)
 {
   TInstant **result = palloc(sizeof(TInstant *) * (count1 + count2));
-  void **tofree1 = palloc(sizeof(TInstant *) * Max(count1, count2));
+  /* Every result entry is a freshly-allocated copy/make and is owned by this
+   * function (the skiplist insertion at the call site makes its own copy via
+   * temporal_copy). Size tofree1 to the worst case: count1 + count2. */
+  void **tofree1 = palloc(sizeof(TInstant *) * (count1 + count2));
   int i = 0, j = 0, count = 0, nfree1 = 0;
   while (i < count1 && j < count2)
   {
@@ -449,6 +470,8 @@ tinstant_tagg(TInstant **instants1, int count1, TInstant **instants2,
         if (tinstant_eq(inst1, inst2))
         {
           result[count++] = tinstant_copy(inst1);
+          if (tofree)
+            tofree1[nfree1++] = result[count - 1];
         }
         else
         {
@@ -456,6 +479,22 @@ tinstant_tagg(TInstant **instants1, int count1, TInstant **instants2,
           meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
             "The temporal values have different value at their common timestamp %s",
             t1);
+          /* Mirror the caller's pfree_array teardown: when tofree was
+           * requested, every result[] entry was tracked in tofree1; otherwise
+           * walk result[] directly. Either way, release the partially built
+           * TInstants and both pointer-array shells before bailing. */
+          if (tofree)
+          {
+            for (int k = 0; k < nfree1; k++)
+              pfree(tofree1[k]);
+          }
+          else
+          {
+            for (int k = 0; k < count; k++)
+              pfree(result[k]);
+          }
+          pfree(tofree1);
+          pfree(result);
           return NULL;
         }
       }
@@ -465,6 +504,8 @@ tinstant_tagg(TInstant **instants1, int count1, TInstant **instants2,
     else if (cmp < 0)
     {
       result[count++] = tinstant_copy(inst1);
+      if (tofree)
+        tofree1[nfree1++] = result[count - 1];
       i++;
     }
     else
@@ -583,16 +624,20 @@ tsequence_tagg_iter(const TSequence *seq1, const TSequence *seq2,
   TSequence *syncseq1, *syncseq2;
   synchronize_tsequence_tsequence(seq1, seq2, &syncseq1, &syncseq2, crossings);
   TInstant **instants = palloc(sizeof(TInstant *) * syncseq1->count);
-  // MeosType basetype = temptype_basetype(seq1->temptype);
+  MeosType basetype = temptype_basetype(seq1->temptype);
   for (int i = 0; i < syncseq1->count; i++)
   {
     const TInstant *inst1 = TSEQUENCE_INST_N(syncseq1, i);
     const TInstant *inst2 = TSEQUENCE_INST_N(syncseq2, i);
     if (func)
     {
+      /* All @p datum_func2 implementations passed here return a freshly
+       * allocated Datum (or by-value); aliasing variants are wrapped at
+       * source. @p tinstant_make copies the value, so the result Datum can
+       * be released right after construction. */
       Datum value = func(tinstant_value_p(inst1), tinstant_value_p(inst2));
       instants[i] = tinstant_make(value, seq1->temptype, inst1->t);
-      // DATUM_FREE(value, basetype); // TODO
+      DATUM_FREE(value, basetype);
     }
     else
     {
@@ -605,12 +650,17 @@ tsequence_tagg_iter(const TSequence *seq1, const TSequence *seq2,
           "The temporal values have different value at their common timestamp %s",
           t1);
         pfree(t1);
-        /* Typo: the loop was freeing instants[i] (same pointer) every
-         * iteration -- a double-free on the second iteration and a leak
-         * of instants[0..i-1].  Use the loop index. */
+        /* Free the instants built so far in this loop (use the loop var j, not
+         * i -- freeing instants[i] every iteration was a double-free on the
+         * second iteration and a leak of instants[0..i-1]) plus the synced
+         * sequences and any "before intersection" sequence already in
+         * sequences[0..nseqs-1]. */
         for (int j = 0; j < i; j++)
           pfree(instants[j]);
         pfree(instants);
+        pfree(syncseq1); pfree(syncseq2);
+        for (int j = 0; j < nseqs; j++)
+          pfree(sequences[j]);
         return -1;
       }
     }
@@ -1250,14 +1300,13 @@ temporal_transform_tcount(const Temporal *temp, int *count)
 SkipList *
 timestamptz_tcount_transfn(SkipList *state, TimestampTz t)
 {
+  /* Validate the existing skiplist's subtype *before* allocating instants,
+   * otherwise the early-return on subtype mismatch leaks the transform. */
+  if (state && ! ensure_same_skiplist_subtype(state, TINSTANT))
+    return NULL;
   TInstant **instants = timestamp_transform_tcount(t);
   if (! state)
     state = temporal_skiplist_make();
-  else
-  {
-    if (! ensure_same_skiplist_subtype(state, TINSTANT))
-      return NULL;
-  }
   temporal_skiplist_splice(state, (void **) instants, 1, &datum_sum_int32,
     CROSSINGS_NO);
   pfree_array((void **) instants, 1);
@@ -1281,14 +1330,13 @@ tstzset_tcount_transfn(SkipList *state, const Set *s)
   if (! ensure_set_isof_type(s, T_TSTZSET))
     return NULL;
 
+  /* Validate the existing skiplist's subtype *before* allocating instants,
+   * otherwise the early-return on subtype mismatch leaks the transform. */
+  if (state && ! ensure_same_skiplist_subtype(state, TINSTANT))
+    return NULL;
   TInstant **instants = tstzset_transform_tcount(s);
   if (! state)
     state = temporal_skiplist_make();
-  else
-  {
-    if (! ensure_same_skiplist_subtype(state, TINSTANT))
-      return NULL;
-  }
   temporal_skiplist_splice(state, (void **) instants, s->count, &datum_sum_int32,
     CROSSINGS_NO);
   pfree_array((void **) instants, s->count);
@@ -1312,14 +1360,13 @@ tstzspan_tcount_transfn(SkipList *state, const Span *s)
   if (! ensure_span_isof_type(s, T_TSTZSPAN))
     return NULL;
 
+  /* Validate the existing skiplist's subtype *before* allocating the
+   * transform, otherwise the early-return on subtype mismatch leaks it. */
+  if (state && ! ensure_same_skiplist_subtype(state, TSEQUENCE))
+    return NULL;
   TSequence *seq = tstzspan_transform_tcount(s);
   if (! state)
     state = temporal_skiplist_make();
-  else
-  {
-    if (! ensure_same_skiplist_subtype(state, TSEQUENCE))
-      return NULL;
-  }
   temporal_skiplist_splice(state, (void **) &seq, 1, &datum_sum_int32,
     CROSSINGS_NO);
   pfree(seq);
@@ -1344,14 +1391,13 @@ tstzspanset_tcount_transfn(SkipList *state, const SpanSet *ss)
   if (! ensure_spanset_isof_type(ss, T_TSTZSPANSET))
     return NULL;
 
+  /* Validate the existing skiplist's subtype *before* allocating the
+   * transform, otherwise the early-return on subtype mismatch leaks it. */
+  if (state && ! ensure_same_skiplist_subtype(state, TSEQUENCE))
+    return NULL;
   TSequence **sequences = tstzspanset_transform_tcount(ss);
   if (! state)
     state = temporal_skiplist_make();
-  else
-  {
-    if (! ensure_same_skiplist_subtype(state, TSEQUENCE))
-      return NULL;
-  }
   for (int i = 0; i < ss->count; i++)
   {
     temporal_skiplist_splice(state, (void **) &sequences[i], 1,
