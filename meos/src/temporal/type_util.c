@@ -44,6 +44,7 @@
   #include "varatt.h"
 #endif
 #include "utils/varlena.h"
+#include <common/hashfn.h>
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
