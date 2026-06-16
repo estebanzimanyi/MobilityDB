@@ -66,6 +66,32 @@ extern int lwprint_double(double d, int maxdd, char *buf);
  */
 int extra_float_digits = 1;
 
+/*
+ * We use these out-of-line error calls to report float overflow, underflow,
+ * and zero-divide, because following our usual practice of repeating them at
+ * each call site would lead to a lot of code bloat.
+ */
+pg_noinline void
+float_overflow_error(void)
+{
+  meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
+    "value out of range: overflow");
+}
+
+pg_noinline void
+float_underflow_error(void)
+{
+  meos_error(ERROR, MEOS_ERR_VALUE_OUT_OF_RANGE,
+    "value out of range: underflow");
+}
+
+pg_noinline void
+float_zero_divide_error(void)
+{
+  meos_error(ERROR, MEOS_ERR_DIVISION_BY_ZERO,
+    "division by zero");
+}
+
 /* Cached constants for degree-based trig functions */
 static bool degree_consts_set = false;
 static float8 sin_30 = 0;
