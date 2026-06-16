@@ -101,8 +101,8 @@ main(void)
    * the pointer it doesn't recognise, so a bogus value still smoke-tests. */
   Datum geom1_datum = (Datum) geom1;
 
-  TInstant *trgeo_inst1 = trgeoinst_make(geom1, pose1, tstz1);
-  TInstant *trgeo_inst2 = trgeoinst_make(geom1, pose1,
+  TInstant *trgeo_inst1 = trgeometryinst_make(geom1, pose1, tstz1);
+  TInstant *trgeo_inst2 = trgeometryinst_make(geom1, pose1,
     pg_timestamptz_in("2001-01-03", -1));
   Temporal *trgeo_seq1 = (Temporal *) trgeo_inst1;
   trgeo_seq1 = trgeo_append_tinstant(trgeo_seq1, trgeo_inst2,
@@ -123,7 +123,7 @@ main(void)
   { char *r = trgeo_out(trgeo_seq1);
     printf("trgeo_out: %s\n", r ? r : "NULL");
     if (r) free(r); }
-  { TInstant * r = trgeoinst_make(geom1, pose1, tstz1);
+  { TInstant * r = trgeometryinst_make(geom1, pose1, tstz1);
     printf("trgeoinst_make: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
   { Temporal * r = geo_tpose_to_trgeo(geom1, tpose1);

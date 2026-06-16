@@ -292,7 +292,7 @@ main(int argc, char **argv)
     if (! refgeom) continue;
     Pose *pose = make_pose_from_ais(lon, lat, heading_deg);
     if (! pose) { free(refgeom); continue; }
-    TInstant *inst = trgeoinst_make(refgeom, pose, t);
+    TInstant *inst = trgeometryinst_make(refgeom, pose, t);
     free(refgeom); free(pose);
     if (! inst) continue;
 
