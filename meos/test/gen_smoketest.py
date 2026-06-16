@@ -862,6 +862,17 @@ def write_test(name, cfg):
     label = cfg["type_label"]
     pad = max(0, 60 - len(label) - len(" MEOS smoke test"))
 
+    # A config's header is only installed when its feature was compiled in
+    # (e.g. meos_json.h needs -DJSON=on). The valgrind smoke job builds MEOS
+    # WITHOUT JSON, so meos_json.h is absent there; skip the config instead of
+    # crashing the whole regeneration with FileNotFoundError. The suite list in
+    # run_smoketests.sh only runs the always-present families, so a skipped
+    # tjsonb here is harmless.
+    if not os.path.exists(header_path):
+        print(f"Skipping {name}: {header_path} not installed "
+              "(feature not compiled in)")
+        return
+
     with open(header_path) as f:
         src = f.read()
 
