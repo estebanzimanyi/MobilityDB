@@ -47,6 +47,7 @@
 
 /* PostgreSQL */
 #include <postgres.h>
+#include <pgtypes.h>
 #include <fmgr.h>
 #include <utils/array.h>
 #include <catalog/pg_type_d.h>

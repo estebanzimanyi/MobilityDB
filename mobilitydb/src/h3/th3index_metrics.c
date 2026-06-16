@@ -34,6 +34,7 @@
 
 /* PostgreSQL */
 #include <postgres.h>
+#include <pgtypes.h>
 #include <fmgr.h>
 /* MEOS */
 #include <meos.h>
