@@ -945,11 +945,7 @@ static int
 stbox_level_cmp(STBox *centroid, STBox *query, int level)
 {
   bool hasz = MEOS_FLAGS_GET_Z(centroid->flags);
-  bool hast = MEOS_FLAGS_GET_T(centroid->flags);
-  int dims = 4 + (hasz ? 2 : 0) + (hast ? 2 : 0);
-  int zdim = 4;
-  int tdim = 4 + (hasz ? 2 : 0);
-  int mod = level % dims;
+  int mod = hasz ? level % 8 : level % 6;
   if (mod == 0)
     return stbox_xmin_cmp(query, centroid);
   else if (mod == 1)
@@ -958,16 +954,14 @@ stbox_level_cmp(STBox *centroid, STBox *query, int level)
     return stbox_ymin_cmp(query, centroid);
   else if (mod == 3)
     return stbox_ymax_cmp(query, centroid);
-  else if (hasz && mod == zdim)
+  else if (hasz && mod == 4)
     return stbox_zmin_cmp(query, centroid);
-  else if (hasz && mod == zdim + 1)
+  else if (hasz && mod == 5)
     return stbox_zmax_cmp(query, centroid);
-  else if (hast && mod == tdim)
+  else if ((hasz && mod == 6) || (! hasz && mod == 4))
     return stbox_tmin_cmp(query, centroid);
-  else if (hast && mod == tdim + 1)
+  else /* (hasz && mod == 7) || (! hasz && mod == 5) */
     return stbox_tmax_cmp(query, centroid);
-  /* We should never arrive here */
-  elog(ERROR, "stbox_level_cmp: unexpected error");
 }
 
 PGDLLEXPORT Datum Stbox_kdtree_choose(PG_FUNCTION_ARGS);
@@ -1011,8 +1005,6 @@ Stbox_quadtree_picksplit(PG_FUNCTION_ARGS)
   spgPickSplitOut *out = (spgPickSplitOut *) PG_GETARG_POINTER(1);
   STBox *box = DatumGetSTboxP(in->datums[0]);
   bool hasz = MEOS_FLAGS_GET_Z(box->flags);
-  bool hast = MEOS_FLAGS_GET_T(box->flags);
-  int dims = 4 + (hasz ? 2 : 0) + (hast ? 2 : 0);
   STBox *centroid = palloc0(sizeof(STBox));
   centroid->srid = box->srid;
   centroid->flags = box->flags;
@@ -1027,14 +1019,10 @@ Stbox_quadtree_picksplit(PG_FUNCTION_ARGS)
     lowZs = palloc(sizeof(double) * in->nTuples);
     highZs = palloc(sizeof(double) * in->nTuples);
   }
-  TimestampTz *lowTs = NULL, *highTs = NULL; /* make compiler quiet */
-  if (hast)
-  {
-    lowTs = palloc(sizeof(TimestampTz) * in->nTuples);
-    highTs = palloc(sizeof(TimestampTz) * in->nTuples);
-  }
+  TimestampTz *lowTs = palloc(sizeof(TimestampTz) * in->nTuples);
+  TimestampTz *highTs = palloc(sizeof(TimestampTz) * in->nTuples);
 
-  /* Calculate median of all coordinates */
+  /* Calculate median of all 8D coordinates */
   for (i = 0; i < in->nTuples; i++)
   {
     box = DatumGetSTboxP(in->datums[i]);
@@ -1047,11 +1035,8 @@ Stbox_quadtree_picksplit(PG_FUNCTION_ARGS)
       lowZs[i] = box->zmin;
       highZs[i] = box->zmax;
     }
-    if (hast)
-    {
-      lowTs[i] = DatumGetTimestampTz(box->period.lower);
-      highTs[i] = DatumGetTimestampTz(box->period.upper);
-    }
+    lowTs[i] = DatumGetTimestampTz(box->period.lower);
+    highTs[i] = DatumGetTimestampTz(box->period.upper);
   }
 
   qsort(lowXs, (size_t) in->nTuples, sizeof(double), compareFloat8);
@@ -1063,13 +1048,8 @@ Stbox_quadtree_picksplit(PG_FUNCTION_ARGS)
     qsort(lowZs, (size_t) in->nTuples, sizeof(double), compareFloat8);
     qsort(highZs, (size_t) in->nTuples, sizeof(double), compareFloat8);
   }
-  if (hast)
-  {
-    qsort(lowTs, (size_t) in->nTuples, sizeof(TimestampTz),
-      compareTimestampTz);
-    qsort(highTs, (size_t) in->nTuples, sizeof(TimestampTz),
-      compareTimestampTz);
-  }
+  qsort(lowTs, (size_t) in->nTuples, sizeof(TimestampTz), compareTimestampTz);
+  qsort(highTs, (size_t) in->nTuples, sizeof(TimestampTz), compareTimestampTz);
 
   median = in->nTuples / 2;
 
@@ -1082,16 +1062,13 @@ Stbox_quadtree_picksplit(PG_FUNCTION_ARGS)
     centroid->zmin = lowZs[median];
     centroid->zmax = highZs[median];
   }
-  if (hast)
-  {
-    centroid->period.lower = TimestampTzGetDatum(lowTs[median]);
-    centroid->period.upper = TimestampTzGetDatum(highTs[median]);
-  }
+  centroid->period.lower = TimestampTzGetDatum(lowTs[median]);
+  centroid->period.upper = TimestampTzGetDatum(highTs[median]);
 
-  /* getQuadrant8D packs bits contiguously into [0, 1 << dims). */
+  /* Fill the output */
   out->hasPrefix = true;
   out->prefixDatum = STboxPGetDatum(centroid);
-  out->nNodes = 1 << dims;
+  out->nNodes = hasz ? 256 : 128;
   out->nodeLabels = NULL;    /* We don't need node labels. */
   out->mapTuplesToNodes = palloc(sizeof(int) * in->nTuples);
   out->leafTupleDatums = palloc(sizeof(Datum) * in->nTuples);
@@ -1114,10 +1091,7 @@ Stbox_quadtree_picksplit(PG_FUNCTION_ARGS)
   {
     pfree(lowZs); pfree(highZs);
   }
-  if (hast)
-  {
-    pfree(lowTs); pfree(highTs);
-  }
+  pfree(lowTs); pfree(highTs);
 
   PG_RETURN_VOID();
 }
@@ -1144,11 +1118,7 @@ Stbox_kdtree_picksplit(PG_FUNCTION_ARGS)
     sorted[i].i = i;
   }
   bool hasz = MEOS_FLAGS_GET_Z(sorted[0].box.flags);
-  bool hast = MEOS_FLAGS_GET_T(sorted[0].box.flags);
-  int dims = 4 + (hasz ? 2 : 0) + (hast ? 2 : 0);
-  int zdim = 4;
-  int tdim = 4 + (hasz ? 2 : 0);
-  int mod = in->level % dims;
+  int mod = hasz ? in->level % 8 : in->level % 6;
   qsort_comparator qsortfn;
   if (mod == 0)
     qsortfn = (qsort_comparator) &stbox_xmin_cmp;
@@ -1158,13 +1128,13 @@ Stbox_kdtree_picksplit(PG_FUNCTION_ARGS)
     qsortfn = (qsort_comparator) &stbox_ymin_cmp;
   else if (mod == 3)
     qsortfn = (qsort_comparator) &stbox_ymax_cmp;
-  else if (hasz && mod == zdim)
+  else if (hasz && mod == 4)
     qsortfn = (qsort_comparator) &stbox_zmin_cmp;
-  else if (hasz && mod == zdim + 1)
+  else if (hasz && mod == 5)
     qsortfn = (qsort_comparator) &stbox_zmax_cmp;
-  else if (hast && mod == tdim)
+  else if ((hasz && mod == 6) || (! hasz && mod == 4))
     qsortfn = (qsort_comparator) &stbox_tmin_cmp;
-  else /* hast && mod == tdim + 1 */
+  else /* (hasz && mod == 7) || (! hasz && mod == 5) */
     qsortfn = (qsort_comparator) &stbox_tmax_cmp;
   qsort(sorted, in->nTuples, sizeof(SortedSTbox), qsortfn);
   int median = in->nTuples >> 1;
@@ -1237,8 +1207,13 @@ stbox_spgist_inner_consistent(FunctionCallInfo fcinfo, SPGistIndexType idxtype)
   {
     orderbys = palloc0(sizeof(STBox) * in->norderbys);
     for (i = 0; i < in->norderbys; i++)
+    {
       /* If the argument is an empty geometry the following call will do nothing */
-      tspatial_spgist_get_stbox(&in->orderbys[i], &orderbys[i]);
+      const ScanKeyData *scankey = &in->orderbys[i];
+      Datum value = scankey->sk_argument;
+      MeosType type = oid_meostype(scankey->sk_subtype);
+      tspatial_spgist_get_stbox(value, type, &orderbys[i]);
+    }
   }
 
   if (in->allTheSame)
@@ -1284,8 +1259,13 @@ stbox_spgist_inner_consistent(FunctionCallInfo fcinfo, SPGistIndexType idxtype)
   {
     queries = palloc0(sizeof(STBox) * in->nkeys);
     for (i = 0; i < in->nkeys; i++)
+    {
       /* The following call will do nothing for an empty geometry */
-      tspatial_spgist_get_stbox(&in->scankeys[i], &queries[i]);
+      const ScanKeyData *scankey = &in->scankeys[i];
+      Datum value = scankey->sk_argument;
+      MeosType type = oid_meostype(scankey->sk_subtype);
+      tspatial_spgist_get_stbox(value, type, &queries[i]);
+    }
   }
 
   /* Allocate enough memory for nodes */
@@ -1470,10 +1450,12 @@ Stbox_spgist_leaf_consistent(PG_FUNCTION_ARGS)
     /* Update the recheck flag according to the strategy */
     out->recheck |= stbox_index_recheck(strategy);
 
-    if (tspatial_spgist_get_stbox(&in->scankeys[i], &box))
-      result = stbox_index_leaf_consistent(key, &box, strategy);
-    else
-      result = false;
+    const ScanKeyData *scankey = &in->scankeys[i];
+    Datum value = scankey->sk_argument;
+    MeosType type = oid_meostype(scankey->sk_subtype);
+    tspatial_spgist_get_stbox(value, type, &box);
+    result = stbox_index_leaf_consistent(key, &box, strategy);
+
     /* If any check is failed, we have found our answer. */
     if (! result)
       break;
@@ -1488,11 +1470,11 @@ Stbox_spgist_leaf_consistent(PG_FUNCTION_ARGS)
     for (i = 0; i < in->norderbys; i++)
     {
       /* Convert the order by argument to a box and perform the test */
-      if (tspatial_spgist_get_stbox(&in->orderbys[i], &box))
-        distances[i] = nad_stbox_stbox(&box, key);
-      else
-        /* If empty geometry */
-        distances[i] = DBL_MAX;
+      const ScanKeyData *scankey = &in->orderbys[i];
+      Datum value = scankey->sk_argument;
+      MeosType type = oid_meostype(scankey->sk_subtype);
+      tspatial_spgist_get_stbox(value, type, &box);
+      distances[i] = nad_stbox_stbox(&box, key);
     }
   }
 
