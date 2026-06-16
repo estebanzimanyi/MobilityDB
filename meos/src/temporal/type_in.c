@@ -1513,17 +1513,6 @@ temporal_from_mfjson(const char *mfjson, MeosType temptype)
       pfree(result);
     return trgeo;
   }
-  {
-    /* geo_tpose_to_trgeometry copies @p gs and the temporal pose into the
-     * new value; release the originals here regardless of whether
-     * construction succeeded. */
-    Temporal *trgeo = geo_tpose_to_trgeometry(gs, result);
-    if (gs)
-      pfree(gs);
-    if (result)
-      pfree(result);
-    return trgeo;
-  }
 #endif /* RGEO */
   return result;
 }
