@@ -412,7 +412,8 @@ void
 temporal_skiplist_splice(SkipList *list, void **values, int count,
   datum_func2 func, bool crossings)
 {
-  return skiplist_splice(list, NULL, values, count, func, crossings, TEMPORAL);
+  return skiplist_splice(list, NULL, values, count, func, crossings,
+    SKIPLIST_TEMPORAL);
 }
 
 /*****************************************************************************
@@ -479,6 +480,7 @@ tinstant_tagg(TInstant **instants1, int count1, TInstant **instants2,
           meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
             "The temporal values have different value at their common timestamp %s",
             t1);
+          pfree(t1);
           /* Mirror the caller's pfree_array teardown: when tofree was
            * requested, every result[] entry was tracked in tofree1; otherwise
            * walk result[] directly. Either way, release the partially built
@@ -637,7 +639,14 @@ tsequence_tagg_iter(const TSequence *seq1, const TSequence *seq2,
        * be released right after construction. */
       Datum value = func(tinstant_value_p(inst1), tinstant_value_p(inst2));
       instants[i] = tinstant_make(value, seq1->temptype, inst1->t);
-      DATUM_FREE(value, basetype);
+      /* Free freshly-allocated by-reference results. Callbacks like
+       * datum_min_text return one of their inputs verbatim; those
+       * pointers are still owned by the syncseqs and must not be freed
+       * here. */
+      if (! basetype_byvalue(basetype) &&
+          DatumGetPointer(value) != DatumGetPointer(tinstant_value_p(inst1)) &&
+          DatumGetPointer(value) != DatumGetPointer(tinstant_value_p(inst2)))
+        pfree(DatumGetPointer(value));
     }
     else
     {
