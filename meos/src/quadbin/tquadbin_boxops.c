@@ -49,7 +49,8 @@
 
 /* C */
 #include <string.h>
-
+/* PostgreSQL */
+#include <utils/timestamp.h>
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
