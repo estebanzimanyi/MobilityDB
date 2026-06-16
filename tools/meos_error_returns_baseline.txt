@@ -2,7 +2,7 @@
 # Each line: <relative path>:<line of meos_error call>  -- next stmt summary
 # Regenerate with: python3 tools/check_meos_error_returns.py --rebaseline
 # See tools/check_meos_error_returns.py docstring + MobilityDB#1091, #1093.
-meos/src/geo/postgis_funcs.c:2310
+meos/src/geo/postgis_funcs.c:2340
 meos/src/geo/tpoint_datagen.c:184
 meos/src/json/tjsonb_jsonfuncs.c:961
 meos/src/json/tjsonb_jsonfuncs.c:1009
@@ -15,4 +15,4 @@ meos/src/temporal/lifting.c:3087
 meos/src/temporal/lifting.c:3200
 meos/src/temporal/temporal_aggfuncs.c:480
 meos/src/temporal/temporal_aggfuncs.c:658
-meos/src/temporal/type_in.c:2080
+meos/src/temporal/type_in.c:2069
