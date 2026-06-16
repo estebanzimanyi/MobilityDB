@@ -210,7 +210,7 @@ CREATE FUNCTION timeSpan(tpose)
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 CREATE FUNCTION tgeompoint(tpose)
   RETURNS tgeompoint
-  AS 'MODULE_PATHNAME', 'Tpose_to_tgeompoint'
+  AS 'MODULE_PATHNAME', 'Tpose_to_tpoint'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE CAST (tpose AS tstzspan) WITH FUNCTION timeSpan(tpose);
