@@ -71,6 +71,18 @@
 #include "meos_error.h"
 
 /*****************************************************************************
+ * Thread-local storage qualifier
+ *
+ * MEOS_TLS expands to the platform thread-local storage qualifier used to
+ * make per-thread state (last-error number, PROJ context, SRS cache,
+ * ways cache, RNG, session timezone) safe under multithreading. Defined
+ * in a stand-alone header so that vendored PostgreSQL files can pick it
+ * up without pulling in the full meos.h.
+ *****************************************************************************/
+
+#include "meos_tls.h"
+
+/*****************************************************************************
  * Type definitions
  *****************************************************************************/
 

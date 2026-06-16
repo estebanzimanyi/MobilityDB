@@ -556,12 +556,11 @@ static LWPROJ *
 AddToMEOSPROJSRSCache(MEOSPROJSRSCache *PROJCache, int32_t srid_from,
   int32_t srid_to)
 {
-  PjStrs from_strs, to_strs;
   char *pj_from_str, *pj_to_str;
 
   /* Turn the SRID number into a proj4 string, by reading from spatial_ref_sys
    * or instantiating a magical value from a negative srid */
-  from_strs = GetProjStrings(srid_from);
+  PjStrs from_strs = GetProjStrings(srid_from);
   if (! pjstrs_has_entry(&from_strs))
   {
     /* See doc-comment on meos_error in meos/include/meos.h: handler is
@@ -570,7 +569,6 @@ AddToMEOSPROJSRSCache(MEOSPROJSRSCache *PROJCache, int32_t srid_from,
     pjstrs_pfree(&from_strs);
     meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
       "got NULL for SRID (%d)", srid_from);
-  to_strs = GetProjStrings(srid_to);
     return NULL;
   }
   PjStrs to_strs = GetProjStrings(srid_to);

@@ -1501,5 +1501,3 @@ typedef intptr_t sigjmp_buf[5];
 /* IWYU pragma: end_exports */
 
 #endif							/* C_H */
-
-#endif							/* PG_C_H */
