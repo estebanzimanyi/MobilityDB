@@ -33,9 +33,9 @@ OP_TO_NAME = {
     # The three comparison families — temp / ever / always — use one consistent
     # camelCase shape: <prefix>{Eq,Ne,Lt,Le,Gt,Ge} with a single-letter prefix.
     # temporal #= (lifted, returns a temporal bool) is tEq…; ever ?= and always
-    # %= (reduced, return bool) are eEq…/aEq…. This replaces the older lowercase
-    # teq/tne and the snake ever_*/always_* exclusion so the dialect is uniform
-    # across all engines.
+    # %= (reduced, return bool) are eEq…/aEq…. These are renamed directly on the
+    # operator's backing CREATE FUNCTION (PG-only names), so no generated alias
+    # is needed — they are excluded here and audited via TEMP/EVER/ALWAYS below.
 }
 
 # Operators whose backing PROCEDURE is itself a callable named function
@@ -43,18 +43,19 @@ OP_TO_NAME = {
 ALREADY_NAMED = {
     "@=": "same_rid", "?@": "contained_rid", "@?": "contains_rid",
     "@@": "overlaps_rid", "&": "tbool_and", "|": "tbool_or",
-    "~": "tbool_not", "||": "tConcat",
+    "~": "tbool_not", "||": "ttext_cat",
 }
 
 # Coverage-audit buckets: operators that need no bare alias (standard SQL
-# operators, the ever/always families, the distance family).
+# operators, the topological / temp / ever / always comparison families named
+# directly, the distance family).
 SCALAR_SQL = {"+", "-", "*", "/", "=", "<>", "<", "<=", ">", ">=", "@"}
 # Topological operators whose backing functions are themselves named directly
 # by the portable bare name (overlaps/contains/contained/adjacent/same): a
 # one-to-one rename, so no generated alias is needed (unlike the positional
 # operators where one backing function, e.g. span_left, serves both a value-op
-# and a time-op). ~= bases (temporal_same/tbox_same/...) were unified to the bare
-# name same(), so ~= is named directly like the other topological operators.
+# and a time-op). ~= bases (temporal_same/...) were unified to the bare name
+# same(), so ~= is named directly like the other topological operators.
 TOPO = {"&&", "@>", "<@", "-|-", "~="}
 TEMP = {"#=", "#<>", "#<", "#<=", "#>", "#>="}
 EVER = {"?=", "?<>", "?<", "?<=", "?>", "?>="}
@@ -76,7 +77,8 @@ SYM_RE = re.compile(r"'MODULE_PATHNAME',\s*'([A-Za-z0-9_]+)'")
 # Numeric prefix per subdir: sorts AFTER that group's type/operator defs
 # under the top-level list(SORT) (aliases depend only on argument types).
 GROUP_PREFIX = {"temporal": "048", "geo": "079", "npoint": "399",
-                "pose": "115", "rgeo": "199", "cbuffer": "299"}
+                "pose": "115", "rgeo": "199", "cbuffer": "299",
+                "h3": "298"}
 
 HEADER = (
     "/*****************************************************************************\n"
@@ -138,11 +140,7 @@ def main():
     files = []
     for root, _, names in os.walk(args.sqldir):
         for n in sorted(names):
-            # Never ingest our own generated output: a stale-prefix alias file
-            # must not be scanned (it has no operator defs) and must not be in
-            # this list when the --insrc purge below removes it.
-            if n.endswith(".in.sql") and not n.endswith(
-                    "_portable_aliases.in.sql"):
+            if n.endswith(".in.sql"):
                 files.append(os.path.join(root, n))
     files.sort()
 
@@ -218,18 +216,8 @@ def main():
                   "w", encoding="utf-8") as fh:
             fh.write(body)
         if args.insrc and group in GROUP_PREFIX:
-            group_dir = os.path.join(args.sqldir, group)
-            # Idempotent: purge any existing alias file in this family dir
-            # before writing the canonical one.  append_portable_aliases() in
-            # CMake GLOBs *_portable_aliases.in.sql, so a file left from a
-            # previous GROUP_PREFIX value would be double-loaded ("function
-            # left already exists with same argument types").  This makes a
-            # GROUP_PREFIX change orphan-proof.
-            for stale in os.listdir(group_dir):
-                if stale.endswith("_portable_aliases.in.sql"):
-                    os.remove(os.path.join(group_dir, stale))
-            dest = os.path.join(
-                group_dir, f"{GROUP_PREFIX[group]}_portable_aliases.in.sql")
+            dest = os.path.join(args.sqldir, group,
+                                f"{GROUP_PREFIX[group]}_portable_aliases.in.sql")
             with open(dest, "w", encoding="utf-8") as fh:
                 fh.write(body)
 
@@ -298,7 +286,7 @@ def main():
         if s in OP_TO_NAME:
             cls = f"ALIASED -> {OP_TO_NAME[s]}()"
         elif s in TOPO:
-            cls = "ALREADY BARE (overlaps/contains/contained/adjacent functions named directly)"
+            cls = "ALREADY BARE (overlaps/contains/contained/adjacent/same functions named directly)"
         elif s in TEMP or s in EVER or s in ALWAYS:
             cls = "ALREADY BARE (temp/ever/always comparison functions named directly)"
         elif s in DIST:
