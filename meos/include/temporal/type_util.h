@@ -58,6 +58,13 @@ extern double datum_double(Datum d, MeosType type);
 extern Datum double_datum(double d, MeosType type);
 extern bytea *bstring2bytea(const uint8_t *wkb, size_t size);
 
+/*
+ * Locale-safe strtod(). Pins numeric I/O to the C locale (decimal point
+ * is always '.') regardless of the calling process's LC_NUMERIC setting.
+ * See issue #425 and the comment in postgres_types.c for context.
+ */
+extern double meos_strtod(const char *str, char **endptr);
+
 /* Input/output functions */
 
 extern bool basetype_in(const char *str, MeosType type, bool end, Datum *result);
