@@ -133,7 +133,37 @@ gbox_out(const GBOX *box, int maxdd)
   if (! ensure_not_negative(maxdd))
     return NULL;
 
-  return gbox_to_string(box);
+  /* Emit the `GBOX X((...))` / `GBOX Z((...))` form that is the exact inverse
+   * of #gbox_in. The liblwgeom gbox_to_string() output omits the dimension
+   * marker, so it does NOT round-trip through gbox_in. */
+  static size_t size = MAX_LEN_BOX3D + 1;
+  char buf[MAX_LEN_BOX3D + 1];
+  char *xmin = NULL, *xmax = NULL, *ymin = NULL, *ymax = NULL, *zmin = NULL,
+    *zmax = NULL;
+  bool hasz = FLAGS_GET_Z(box->flags);
+
+  xmin = float8_out(box->xmin, maxdd);
+  xmax = float8_out(box->xmax, maxdd);
+  ymin = float8_out(box->ymin, maxdd);
+  ymax = float8_out(box->ymax, maxdd);
+  if (hasz)
+  {
+    zmin = float8_out(box->zmin, maxdd);
+    zmax = float8_out(box->zmax, maxdd);
+    snprintf(buf, size, "GBOX Z((%s,%s,%s),(%s,%s,%s))",
+      xmin, ymin, zmin, xmax, ymax, zmax);
+  }
+  else
+    snprintf(buf, size, "GBOX X((%s,%s),(%s,%s))",
+      xmin, ymin, xmax, ymax);
+
+  pfree(xmin); pfree(xmax);
+  pfree(ymin); pfree(ymax);
+  if (hasz)
+  {
+    pfree(zmin); pfree(zmax);
+  }
+  return strdup(buf);
 }
 
 /**

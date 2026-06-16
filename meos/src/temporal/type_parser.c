@@ -563,7 +563,12 @@ set_parse(const char **str, MeosType settype)
       spatial_set_srid(values[i], basetype, set_srid);
   }
   result = set_make(values, array->count, basetype, ORDER);
-  if (meostype_length(basetype) < 0)
+  /* The parsed elements are owned copies that #set_make has duplicated into
+   * the result. Free them for every by-reference basetype — not only the
+   * variable-length ones: a fixed-length but by-reference type (e.g. npoint,
+   * sizeof(Npoint) > sizeof(Datum)) is passed as a pointer that must be freed
+   * too, otherwise each element leaks. */
+  if (! basetype_byvalue(basetype))
     pfree_array((void **) values, array->count);
   else
     pfree(values);
