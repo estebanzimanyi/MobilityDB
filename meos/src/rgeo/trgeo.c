@@ -320,7 +320,7 @@ trgeometry_to_tgeometry(const Temporal *temp)
   {
     const TInstant *inst = (const TInstant *) temp;
     GSERIALIZED *poly = geom_apply_pose(ref,
-      DatumGetPoseP(tinstant_value(inst)));
+      DatumGetPoseP(tinstant_value_p(inst)));
     TInstant *res = tinstant_make(PointerGetDatum(poly), T_TGEOMETRY,
       inst->t);
     pfree(poly);
@@ -334,7 +334,7 @@ trgeometry_to_tgeometry(const Temporal *temp)
     {
       const TInstant *inst = TSEQUENCE_INST_N(seq, i);
       GSERIALIZED *poly = geom_apply_pose(ref,
-        DatumGetPoseP(tinstant_value(inst)));
+        DatumGetPoseP(tinstant_value_p(inst)));
       insts[i] = tinstant_make(PointerGetDatum(poly), T_TGEOMETRY,
         inst->t);
       pfree(poly);
@@ -354,7 +354,7 @@ trgeometry_to_tgeometry(const Temporal *temp)
     {
       const TInstant *inst = TSEQUENCE_INST_N(seq, i);
       GSERIALIZED *poly = geom_apply_pose(ref,
-        DatumGetPoseP(tinstant_value(inst)));
+        DatumGetPoseP(tinstant_value_p(inst)));
       insts[i] = tinstant_make(PointerGetDatum(poly), T_TGEOMETRY,
         inst->t);
       pfree(poly);

@@ -53,23 +53,23 @@ ARG_VAR = {
 }
 
 TPOINT_PAIRS = {
-    "tdistance_trgeo_tpoint", "nad_trgeo_tpoint",
-    "nai_trgeo_tpoint", "shortestline_trgeo_tpoint",
+    "tdistance_trgeometry_tpoint", "nad_trgeometry_tpoint",
+    "nai_trgeometry_tpoint", "shortestline_trgeometry_tpoint",
 }
 
 # Functions that take a tpose at a specific argument index. Map keyed by
 # function name → set of arg indices that should use tpose1.
 TPOSE_ARGS = {
-    "geo_tpose_to_trgeo": {1},  # (gs, tpose) → trgeo
+    "geo_tpose_to_trgeometry": {1},  # (gs, tpose) → trgeometry
 }
 
 SKIP_REASON = {
     # 'GSERIALIZED **' as an out-parameter is awkward in this generator;
     # cover it manually instead.
-    "trgeo_value_n":         "out-param GSERIALIZED ** is exercised manually below",
+    "trgeometry_value_n":         "out-param GSERIALIZED ** is exercised manually below",
     # Pending: union-of-materialised-polygons is non-trivial; the symbol
     # is referenced internally but not yet exported.
-    "trgeo_traversed_area":  "pending union-of-swept-polygons implementation",
+    "trgeometry_traversed_area":  "pending union-of-swept-polygons implementation",
 }
 
 
@@ -150,6 +150,18 @@ def emit_call(fname: str, ret: str, args):
         return (
             f"  {{ double r = {call};\n"
             f"    printf(\"{fname}: %.6f\\n\", r); }}\n")
+    # Double-pointer returns (T **) are arrays whose cardinality is returned
+    # through the function's `int *` out-argument (mapped to &n_out). Free the
+    # elements as well as the array so the suite stays valgrind-clean.
+    has_count_out = any(t == "int *" for (t, _n) in args)
+    if ret.count("*") == 2 and has_count_out:
+        return (
+            f"  {{ {ret} r = {call};\n"
+            f"    printf(\"{fname}: %s n=%d\\n\", r ? \"OK\" : \"NULL\", n_out);\n"
+            f"    if (r) {{\n"
+            f"      for (int _i = 0; _i < n_out; _i++) if (r[_i]) free(r[_i]);\n"
+            f"      free(r);\n"
+            f"    }} }}\n")
     if "*" in ret:
         return (
             f"  {{ {ret} r = {call};\n"
@@ -277,18 +289,20 @@ main(void)
    * the pointer it doesn't recognise, so a bogus value still smoke-tests. */
   Datum geom1_datum = (Datum) geom1;
 
-  TInstant *trgeo_inst1 = trgeoinst_make(geom1, pose1, tstz1);
-  TInstant *trgeo_inst2 = trgeoinst_make(geom1, pose1,
+  TInstant *trgeo_inst1 = trgeometryinst_make(geom1, pose1, tstz1);
+  TInstant *trgeo_inst2 = trgeometryinst_make(geom1, pose1,
     pg_timestamptz_in("2001-01-03", -1));
-  Temporal *trgeo_seq1 = (Temporal *) trgeo_inst1;
-  trgeo_seq1 = trgeo_append_tinstant(trgeo_seq1, trgeo_inst2,
-    LINEAR, 0.0, NULL, false);
+  /* trgeometry_append_tinstant does NOT consume its `temp` input; it builds a
+   * fresh sequence. Keep the original instant in its own pointer so it can be
+   * freed at cleanup (the suite must stay valgrind-clean). */
+  Temporal *trgeo_seq1 = trgeometry_append_tinstant((Temporal *) trgeo_inst1,
+    trgeo_inst2, LINEAR, 0.0, NULL, false);
   /* The append above promoted the TINSTANT to a TSEQUENCE. */
   TSequence    *trgeo_tseq1    = (TSequence *) trgeo_seq1;
   TSequenceSet *trgeo_tseqset1 = NULL;  /* no public string parser */
 
-  Temporal *tpoint1 = trgeo_to_tpoint(trgeo_seq1);
-  Temporal *tpose1 = trgeo_to_tpose(trgeo_seq1);
+  Temporal *tpoint1 = trgeometry_to_tpoint(trgeo_seq1);
+  Temporal *tpose1 = trgeometry_to_tpose(trgeo_seq1);
 
   int n_out = 0;
 
@@ -303,12 +317,13 @@ main(void)
   /* Manually exercise trgeo_value_n (out-param GSERIALIZED **). */
   {
     GSERIALIZED *out_geom = NULL;
-    bool ok = trgeo_value_n(trgeo_seq1, 1, &out_geom);
-    printf("trgeo_value_n: ok=%d ptr=%s\\n", (int) ok, out_geom ? "OK" : "NULL");
+    bool ok = trgeometry_value_n(trgeo_seq1, 1, &out_geom);
+    printf("trgeometry_value_n: ok=%d ptr=%s\\n", (int) ok, out_geom ? "OK" : "NULL");
     if (out_geom) free(out_geom);
   }
 
   /* Cleanup. */
+  free(trgeo_inst1);
   free(trgeo_inst2);
   if (trgeo_seq1) free(trgeo_seq1);
   if (tpoint1) free(tpoint1);

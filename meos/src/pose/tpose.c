@@ -715,8 +715,10 @@ tposeseq_apply_geo(const TSequence *seq, const GSERIALIZED *body)
       pfree(instants);
       return NULL;
     }
+    /* tinstant_make copies the geometry into its own block */
     instants[i] = tinstant_make(GserializedPGetDatum(world), T_TGEOMPOINT,
       inst->t);
+    pfree(world);
   }
   TSequence *result = tsequence_make(instants, seq->count,
     seq->period.lower_inc, seq->period.upper_inc,
@@ -756,8 +758,11 @@ tpose_apply_geo(const Temporal *temp, const GSERIALIZED *body)
       const Pose *pose = DatumGetPoseP(tinstant_value_p(inst));
       GSERIALIZED *world = pose_apply_geo(pose, body);
       if (world == NULL) return NULL;
-      return (Temporal *) tinstant_make(GserializedPGetDatum(world),
-        T_TGEOMPOINT, inst->t);
+      /* tinstant_make copies the geometry into its own block */
+      Temporal *result = (Temporal *) tinstant_make(
+        GserializedPGetDatum(world), T_TGEOMPOINT, inst->t);
+      pfree(world);
+      return result;
     }
     case TSEQUENCE:
       return (Temporal *) tposeseq_apply_geo((const TSequence *) temp, body);

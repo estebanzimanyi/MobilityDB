@@ -290,15 +290,15 @@ TRGEO_CONFIG = dict(
         "Datum":               "geom1_datum",
     },
     override_args={
-        "geo_tpose_to_trgeo":          {1: "tpose1"},
-        "tdistance_trgeo_tpoint":      {1: "tpoint1"},
-        "nad_trgeo_tpoint":            {1: "tpoint1"},
-        "nai_trgeo_tpoint":            {1: "tpoint1"},
-        "shortestline_trgeo_tpoint":   {1: "tpoint1"},
+        "geo_tpose_to_trgeometry":          {1: "tpose1"},
+        "tdistance_trgeometry_tpoint":      {1: "tpoint1"},
+        "nad_trgeometry_tpoint":            {1: "tpoint1"},
+        "nai_trgeometry_tpoint":            {1: "tpoint1"},
+        "shortestline_trgeometry_tpoint":   {1: "tpoint1"},
     },
     skip={
-        "trgeo_value_n":         "out-param GSERIALIZED ** is exercised manually below",
-        "trgeo_traversed_area":  "pending union-of-swept-polygons implementation",
+        "trgeometry_value_n":         "out-param GSERIALIZED ** is exercised manually below",
+        "trgeometry_traversed_area":  "pending union-of-swept-polygons implementation",
     },
     common_inputs="""\
   TimestampTz tstz1 = pg_timestamptz_in("2001-01-02", -1);
@@ -312,24 +312,24 @@ TRGEO_CONFIG = dict(
   STBox *stbox1 = stbox_in("STBOX X((0, 0), (10, 10))");
   Datum geom1_datum = (Datum) geom1;
 
-  TInstant *trgeo_inst1 = trgeoinst_make(geom1, pose1, tstz1);
-  TInstant *trgeo_inst2 = trgeoinst_make(geom1, pose1,
+  TInstant *trgeo_inst1 = trgeometryinst_make(geom1, pose1, tstz1);
+  TInstant *trgeo_inst2 = trgeometryinst_make(geom1, pose1,
     pg_timestamptz_in("2001-01-03", -1));
   Temporal *trgeo_seq1 = (Temporal *) trgeo_inst1;
-  trgeo_seq1 = trgeo_append_tinstant(trgeo_seq1, trgeo_inst2,
+  trgeo_seq1 = trgeometry_append_tinstant(trgeo_seq1, trgeo_inst2,
     LINEAR, 0.0, NULL, false);
   TSequence    *trgeo_tseq1    = (TSequence *) trgeo_seq1;
   TSequenceSet *trgeo_tseqset1 = NULL;
-  Temporal *tpoint1 = trgeo_to_tgeompoint(trgeo_seq1);
-  Temporal *tpose1 = trgeo_to_tpose(trgeo_seq1);
+  Temporal *tpoint1 = trgeometry_to_tpoint(trgeo_seq1);
+  Temporal *tpose1 = trgeometry_to_tpose(trgeo_seq1);
   int n_out = 0;
 """,
     cleanup="""\
   /* Manually exercise trgeo_value_n (out-param GSERIALIZED **). */
   {
     GSERIALIZED *out_geom = NULL;
-    bool ok = trgeo_value_n(trgeo_seq1, 1, &out_geom);
-    printf("trgeo_value_n: ok=%d ptr=%s\\n", (int) ok, out_geom ? "OK" : "NULL");
+    bool ok = trgeometry_value_n(trgeo_seq1, 1, &out_geom);
+    printf("trgeometry_value_n: ok=%d ptr=%s\\n", (int) ok, out_geom ? "OK" : "NULL");
     if (out_geom) free(out_geom);
   }
 

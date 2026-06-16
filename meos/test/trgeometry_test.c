@@ -104,15 +104,17 @@ main(void)
   TInstant *trgeo_inst1 = trgeometryinst_make(geom1, pose1, tstz1);
   TInstant *trgeo_inst2 = trgeometryinst_make(geom1, pose1,
     pg_timestamptz_in("2001-01-03", -1));
-  Temporal *trgeo_seq1 = (Temporal *) trgeo_inst1;
-  trgeo_seq1 = trgeo_append_tinstant(trgeo_seq1, trgeo_inst2,
-    LINEAR, 0.0, NULL, false);
+  /* trgeometry_append_tinstant does NOT consume its `temp` input; it builds a
+   * fresh sequence. Keep the original instant in its own pointer so it can be
+   * freed at cleanup (the suite must stay valgrind-clean). */
+  Temporal *trgeo_seq1 = trgeometry_append_tinstant((Temporal *) trgeo_inst1,
+    trgeo_inst2, LINEAR, 0.0, NULL, false);
   /* The append above promoted the TINSTANT to a TSEQUENCE. */
   TSequence    *trgeo_tseq1    = (TSequence *) trgeo_seq1;
   TSequenceSet *trgeo_tseqset1 = NULL;  /* no public string parser */
 
-  Temporal *tpoint1 = trgeo_to_tpoint(trgeo_seq1);
-  Temporal *tpose1 = trgeo_to_tpose(trgeo_seq1);
+  Temporal *tpoint1 = trgeometry_to_tpoint(trgeo_seq1);
+  Temporal *tpose1 = trgeometry_to_tpose(trgeo_seq1);
 
   int n_out = 0;
 
@@ -120,39 +122,45 @@ main(void)
   printf("* trgeometry MEOS smoke test                                  *\n");
   printf("****************************************************************\n");
 
-  { char *r = trgeo_out(trgeo_seq1);
-    printf("trgeo_out: %s\n", r ? r : "NULL");
+  { char *r = trgeometry_out(trgeo_seq1);
+    printf("trgeometry_out: %s\n", r ? r : "NULL");
     if (r) free(r); }
   { TInstant * r = trgeometryinst_make(geom1, pose1, tstz1);
-    printf("trgeoinst_make: %s\n", r ? "OK" : "NULL");
+    printf("trgeometryinst_make: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = geo_tpose_to_trgeo(geom1, tpose1);
-    printf("geo_tpose_to_trgeo: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = geo_tpose_to_trgeometry(geom1, tpose1);
+    printf("geo_tpose_to_trgeometry: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = trgeo_to_tpose(trgeo_seq1);
-    printf("trgeo_to_tpose: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = trgeometry_to_tpose(trgeo_seq1);
+    printf("trgeometry_to_tpose: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = trgeo_to_tpoint(trgeo_seq1);
-    printf("trgeo_to_tpoint: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = trgeometry_to_tpoint(trgeo_seq1);
+    printf("trgeometry_to_tpoint: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { TInstant * r = trgeo_end_instant(trgeo_seq1);
-    printf("trgeo_end_instant: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = trgeometry_to_tgeometry(trgeo_seq1);
+    printf("trgeometry_to_tgeometry: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { TSequence * r = trgeo_end_sequence(trgeo_seq1);
-    printf("trgeo_end_sequence: %s\n", r ? "OK" : "NULL");
+  { TInstant * r = trgeometry_end_instant(trgeo_seq1);
+    printf("trgeometry_end_instant: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { GSERIALIZED * r = trgeo_end_value(trgeo_seq1);
-    printf("trgeo_end_value: %s\n", r ? "OK" : "NULL");
+  { TSequence * r = trgeometry_end_sequence(trgeo_seq1);
+    printf("trgeometry_end_sequence: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { GSERIALIZED * r = trgeo_geom(trgeo_seq1);
-    printf("trgeo_geom: %s\n", r ? "OK" : "NULL");
+  { GSERIALIZED * r = trgeometry_end_value(trgeo_seq1);
+    printf("trgeometry_end_value: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { TInstant * r = trgeo_instant_n(trgeo_seq1, 1);
-    printf("trgeo_instant_n: %s\n", r ? "OK" : "NULL");
+  { GSERIALIZED * r = trgeometry_geom(trgeo_seq1);
+    printf("trgeometry_geom: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { TInstant * * r = trgeo_instants(trgeo_seq1, &n_out);
-    printf("trgeo_instants: %s\n", r ? "OK" : "NULL");
+  { TInstant * r = trgeometry_instant_n(trgeo_seq1, 1);
+    printf("trgeometry_instant_n: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
+  { TInstant * * r = trgeometry_instants(trgeo_seq1, &n_out);
+    printf("trgeometry_instants: %s n=%d\n", r ? "OK" : "NULL", n_out);
+    if (r) {
+      for (int _i = 0; _i < n_out; _i++) if (r[_i]) free(r[_i]);
+      free(r);
+    } }
   { Set * r = trgeometry_points(trgeo_seq1);
     printf("trgeometry_points: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
@@ -160,159 +168,262 @@ main(void)
     printf("trgeometry_rotation: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
   { TSequence * * r = trgeometry_segments(trgeo_seq1, &n_out);
-    printf("trgeometry_segments: %s\n", r ? "OK" : "NULL");
+    printf("trgeometry_segments: %s n=%d\n", r ? "OK" : "NULL", n_out);
+    if (r) {
+      for (int _i = 0; _i < n_out; _i++) if (r[_i]) free(r[_i]);
+      free(r);
+    } }
+  { TSequence * r = trgeometry_sequence_n(trgeo_seq1, 1);
+    printf("trgeometry_sequence_n: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { TSequence * r = trgeo_sequence_n(trgeo_seq1, 1);
-    printf("trgeo_sequence_n: %s\n", r ? "OK" : "NULL");
+  { TSequence * * r = trgeometry_sequences(trgeo_seq1, &n_out);
+    printf("trgeometry_sequences: %s n=%d\n", r ? "OK" : "NULL", n_out);
+    if (r) {
+      for (int _i = 0; _i < n_out; _i++) if (r[_i]) free(r[_i]);
+      free(r);
+    } }
+  { TInstant * r = trgeometry_start_instant(trgeo_seq1);
+    printf("trgeometry_start_instant: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { TSequence * * r = trgeo_sequences(trgeo_seq1, &n_out);
-    printf("trgeo_sequences: %s\n", r ? "OK" : "NULL");
+  { TSequence * r = trgeometry_start_sequence(trgeo_seq1);
+    printf("trgeometry_start_sequence: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { TInstant * r = trgeo_start_instant(trgeo_seq1);
-    printf("trgeo_start_instant: %s\n", r ? "OK" : "NULL");
+  { GSERIALIZED * r = trgeometry_start_value(trgeo_seq1);
+    printf("trgeometry_start_value: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { TSequence * r = trgeo_start_sequence(trgeo_seq1);
-    printf("trgeo_start_sequence: %s\n", r ? "OK" : "NULL");
-    if (r) free(r); }
-  { GSERIALIZED * r = trgeo_start_value(trgeo_seq1);
-    printf("trgeo_start_value: %s\n", r ? "OK" : "NULL");
-    if (r) free(r); }
-  /* SKIP trgeo_value_n: out-param GSERIALIZED ** is exercised manually below */
+  /* SKIP trgeometry_value_n: out-param GSERIALIZED ** is exercised manually below */
   /* SKIP trgeometry_traversed_area: pending union-of-swept-polygons implementation */
-  { Temporal * r = trgeo_append_tinstant(trgeo_seq1, trgeo_inst1, LINEAR, 1.0, interv1, true);
-    printf("trgeo_append_tinstant: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = trgeometry_centroid(trgeo_seq1);
+    printf("trgeometry_centroid: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = trgeo_append_tsequence(trgeo_seq1, trgeo_tseq1, true);
-    printf("trgeo_append_tsequence: %s\n", r ? "OK" : "NULL");
+  { GSERIALIZED * r = trgeometry_convex_hull(trgeo_seq1);
+    printf("trgeometry_convex_hull: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = trgeo_delete_timestamptz(trgeo_seq1, tstz1, true);
-    printf("trgeo_delete_timestamptz: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = trgeometry_body_point_trajectory(trgeo_seq1, geom1);
+    printf("trgeometry_body_point_trajectory: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = trgeo_delete_tstzset(trgeo_seq1, tstzset1, true);
-    printf("trgeo_delete_tstzset: %s\n", r ? "OK" : "NULL");
+  { STBox * r = trgeometry_space_boxes(trgeo_seq1, 1.0, 1.0, 1.0, geom1, true, true, &n_out);
+    printf("trgeometry_space_boxes: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = trgeo_delete_tstzspan(trgeo_seq1, tstzspan1, true);
-    printf("trgeo_delete_tstzspan: %s\n", r ? "OK" : "NULL");
+  { STBox * r = trgeometry_space_time_boxes(trgeo_seq1, 1.0, 1.0, 1.0, interv1, geom1, tstz1, true, true, &n_out);
+    printf("trgeometry_space_time_boxes: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = trgeo_delete_tstzspanset(trgeo_seq1, tstzspanset1, true);
-    printf("trgeo_delete_tstzspanset: %s\n", r ? "OK" : "NULL");
+  { STBox * r = trgeometry_stboxes(trgeo_seq1, &n_out);
+    printf("trgeometry_stboxes: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = trgeo_round(trgeo_seq1, 1);
-    printf("trgeo_round: %s\n", r ? "OK" : "NULL");
+  { STBox * r = trgeometry_split_n_stboxes(trgeo_seq1, 1, &n_out);
+    printf("trgeometry_split_n_stboxes: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = trgeo_set_interp(trgeo_seq1, LINEAR);
-    printf("trgeo_set_interp: %s\n", r ? "OK" : "NULL");
+  { STBox * r = trgeometry_split_each_n_stboxes(trgeo_seq1, 1, &n_out);
+    printf("trgeometry_split_each_n_stboxes: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { TInstant * r = trgeo_to_tinstant(trgeo_seq1);
-    printf("trgeo_to_tinstant: %s\n", r ? "OK" : "NULL");
+  { double r = trgeometry_hausdorff_distance(trgeo_seq1, trgeo_seq1);
+    printf("trgeometry_hausdorff_distance: %.6f\n", r); }
+  { double r = trgeometry_frechet_distance(trgeo_seq1, trgeo_seq1);
+    printf("trgeometry_frechet_distance: %.6f\n", r); }
+  { double r = trgeometry_dyntimewarp_distance(trgeo_seq1, trgeo_seq1);
+    printf("trgeometry_dyntimewarp_distance: %.6f\n", r); }
+  { Match * r = trgeometry_frechet_path(trgeo_seq1, trgeo_seq1, &n_out);
+    printf("trgeometry_frechet_path: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = trgeo_after_timestamptz(trgeo_seq1, tstz1, true);
-    printf("trgeo_after_timestamptz: %s\n", r ? "OK" : "NULL");
+  { Match * r = trgeometry_dyntimewarp_path(trgeo_seq1, trgeo_seq1, &n_out);
+    printf("trgeometry_dyntimewarp_path: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = trgeo_before_timestamptz(trgeo_seq1, tstz1, true);
-    printf("trgeo_before_timestamptz: %s\n", r ? "OK" : "NULL");
+  { double r = trgeometry_length(trgeo_seq1);
+    printf("trgeometry_length: %.6f\n", r); }
+  { Temporal * r = trgeometry_cumulative_length(trgeo_seq1);
+    printf("trgeometry_cumulative_length: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = trgeo_restrict_value(trgeo_seq1, geom1_datum, true);
-    printf("trgeo_restrict_value: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = trgeometry_speed(trgeo_seq1);
+    printf("trgeometry_speed: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = trgeo_restrict_values(trgeo_seq1, tstzset1, true);
-    printf("trgeo_restrict_values: %s\n", r ? "OK" : "NULL");
+  { GSERIALIZED * r = trgeometry_twcentroid(trgeo_seq1);
+    printf("trgeometry_twcentroid: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = trgeo_restrict_timestamptz(trgeo_seq1, tstz1, true);
-    printf("trgeo_restrict_timestamptz: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = trgeometry_append_tinstant(trgeo_seq1, trgeo_inst1, LINEAR, 1.0, interv1, true);
+    printf("trgeometry_append_tinstant: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = trgeo_restrict_tstzset(trgeo_seq1, tstzset1, true);
-    printf("trgeo_restrict_tstzset: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = trgeometry_append_tsequence(trgeo_seq1, trgeo_tseq1, true);
+    printf("trgeometry_append_tsequence: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = trgeo_restrict_tstzspan(trgeo_seq1, tstzspan1, true);
-    printf("trgeo_restrict_tstzspan: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = trgeometry_delete_timestamptz(trgeo_seq1, tstz1, true);
+    printf("trgeometry_delete_timestamptz: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = trgeo_restrict_tstzspanset(trgeo_seq1, tstzspanset1, true);
-    printf("trgeo_restrict_tstzspanset: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = trgeometry_delete_tstzset(trgeo_seq1, tstzset1, true);
+    printf("trgeometry_delete_tstzset: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = tdistance_trgeo_geo(trgeo_seq1, geom1);
-    printf("tdistance_trgeo_geo: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = trgeometry_delete_tstzspan(trgeo_seq1, tstzspan1, true);
+    printf("trgeometry_delete_tstzspan: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = tdistance_trgeo_tpoint(trgeo_seq1, tpoint1);
-    printf("tdistance_trgeo_tpoint: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = trgeometry_delete_tstzspanset(trgeo_seq1, tstzspanset1, true);
+    printf("trgeometry_delete_tstzspanset: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = tdistance_trgeo_trgeo(trgeo_seq1, trgeo_seq1);
-    printf("tdistance_trgeo_trgeo: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = trgeometry_round(trgeo_seq1, 1);
+    printf("trgeometry_round: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { double r = nad_stbox_trgeo(stbox1, trgeo_seq1);
-    printf("nad_stbox_trgeo: %.6f\n", r); }
-  { double r = nad_trgeo_geo(trgeo_seq1, geom1);
-    printf("nad_trgeo_geo: %.6f\n", r); }
-  { double r = nad_trgeo_stbox(trgeo_seq1, stbox1);
-    printf("nad_trgeo_stbox: %.6f\n", r); }
-  { double r = nad_trgeo_tpoint(trgeo_seq1, tpoint1);
-    printf("nad_trgeo_tpoint: %.6f\n", r); }
-  { double r = nad_trgeo_trgeo(trgeo_seq1, trgeo_seq1);
-    printf("nad_trgeo_trgeo: %.6f\n", r); }
-  { TInstant * r = nai_trgeo_geo(trgeo_seq1, geom1);
-    printf("nai_trgeo_geo: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = trgeometry_set_interp(trgeo_seq1, LINEAR);
+    printf("trgeometry_set_interp: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { TInstant * r = nai_trgeo_tpoint(trgeo_seq1, tpoint1);
-    printf("nai_trgeo_tpoint: %s\n", r ? "OK" : "NULL");
+  { TInstant * r = trgeometry_to_tinstant(trgeo_seq1);
+    printf("trgeometry_to_tinstant: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { TInstant * r = nai_trgeo_trgeo(trgeo_seq1, trgeo_seq1);
-    printf("nai_trgeo_trgeo: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = trgeometry_after_timestamptz(trgeo_seq1, tstz1, true);
+    printf("trgeometry_after_timestamptz: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { GSERIALIZED * r = shortestline_trgeo_geo(trgeo_seq1, geom1);
-    printf("shortestline_trgeo_geo: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = trgeometry_before_timestamptz(trgeo_seq1, tstz1, true);
+    printf("trgeometry_before_timestamptz: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { GSERIALIZED * r = shortestline_trgeo_tpoint(trgeo_seq1, tpoint1);
-    printf("shortestline_trgeo_tpoint: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = trgeometry_restrict_values(trgeo_seq1, tstzset1, true);
+    printf("trgeometry_restrict_values: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { GSERIALIZED * r = shortestline_trgeo_trgeo(trgeo_seq1, trgeo_seq1);
-    printf("shortestline_trgeo_trgeo: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = trgeometry_restrict_timestamptz(trgeo_seq1, tstz1, true);
+    printf("trgeometry_restrict_timestamptz: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { int r = always_eq_geo_trgeo(geom1, trgeo_seq1);
-    printf("always_eq_geo_trgeo: %d\n", r); }
-  { int r = always_eq_trgeo_geo(trgeo_seq1, geom1);
-    printf("always_eq_trgeo_geo: %d\n", r); }
-  { int r = always_eq_trgeo_trgeo(trgeo_seq1, trgeo_seq1);
-    printf("always_eq_trgeo_trgeo: %d\n", r); }
-  { int r = always_ne_geo_trgeo(geom1, trgeo_seq1);
-    printf("always_ne_geo_trgeo: %d\n", r); }
-  { int r = always_ne_trgeo_geo(trgeo_seq1, geom1);
-    printf("always_ne_trgeo_geo: %d\n", r); }
-  { int r = always_ne_trgeo_trgeo(trgeo_seq1, trgeo_seq1);
-    printf("always_ne_trgeo_trgeo: %d\n", r); }
-  { int r = ever_eq_geo_trgeo(geom1, trgeo_seq1);
-    printf("ever_eq_geo_trgeo: %d\n", r); }
-  { int r = ever_eq_trgeo_geo(trgeo_seq1, geom1);
-    printf("ever_eq_trgeo_geo: %d\n", r); }
-  { int r = ever_eq_trgeo_trgeo(trgeo_seq1, trgeo_seq1);
-    printf("ever_eq_trgeo_trgeo: %d\n", r); }
-  { int r = ever_ne_geo_trgeo(geom1, trgeo_seq1);
-    printf("ever_ne_geo_trgeo: %d\n", r); }
-  { int r = ever_ne_trgeo_geo(trgeo_seq1, geom1);
-    printf("ever_ne_trgeo_geo: %d\n", r); }
-  { int r = ever_ne_trgeo_trgeo(trgeo_seq1, trgeo_seq1);
-    printf("ever_ne_trgeo_trgeo: %d\n", r); }
-  { Temporal * r = teq_geo_trgeo(geom1, trgeo_seq1);
-    printf("teq_geo_trgeo: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = trgeometry_restrict_tstzset(trgeo_seq1, tstzset1, true);
+    printf("trgeometry_restrict_tstzset: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = teq_trgeo_geo(trgeo_seq1, geom1);
-    printf("teq_trgeo_geo: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = trgeometry_restrict_tstzspan(trgeo_seq1, tstzspan1, true);
+    printf("trgeometry_restrict_tstzspan: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = tne_geo_trgeo(geom1, trgeo_seq1);
-    printf("tne_geo_trgeo: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = trgeometry_restrict_tstzspanset(trgeo_seq1, tstzspanset1, true);
+    printf("trgeometry_restrict_tstzspanset: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  { Temporal * r = tne_trgeo_geo(trgeo_seq1, geom1);
-    printf("tne_trgeo_geo: %s\n", r ? "OK" : "NULL");
+  { Temporal * r = trgeometry_at_geom(trgeo_seq1, geom1);
+    printf("trgeometry_at_geom: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
+  { Temporal * r = trgeometry_minus_geom(trgeo_seq1, geom1);
+    printf("trgeometry_minus_geom: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { Temporal * r = trgeometry_at_stbox(trgeo_seq1, stbox1, true);
+    printf("trgeometry_at_stbox: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { Temporal * r = trgeometry_minus_stbox(trgeo_seq1, stbox1, true);
+    printf("trgeometry_minus_stbox: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { Temporal * r = tdistance_trgeometry_geo(trgeo_seq1, geom1);
+    printf("tdistance_trgeometry_geo: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { Temporal * r = tdistance_trgeometry_tpoint(trgeo_seq1, tpoint1);
+    printf("tdistance_trgeometry_tpoint: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { Temporal * r = tdistance_trgeometry_trgeometry(trgeo_seq1, trgeo_seq1);
+    printf("tdistance_trgeometry_trgeometry: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { double r = nad_stbox_trgeometry(stbox1, trgeo_seq1);
+    printf("nad_stbox_trgeometry: %.6f\n", r); }
+  { double r = nad_trgeometry_geo(trgeo_seq1, geom1);
+    printf("nad_trgeometry_geo: %.6f\n", r); }
+  { double r = nad_trgeometry_stbox(trgeo_seq1, stbox1);
+    printf("nad_trgeometry_stbox: %.6f\n", r); }
+  { double r = nad_trgeometry_tpoint(trgeo_seq1, tpoint1);
+    printf("nad_trgeometry_tpoint: %.6f\n", r); }
+  { double r = nad_trgeometry_trgeometry(trgeo_seq1, trgeo_seq1);
+    printf("nad_trgeometry_trgeometry: %.6f\n", r); }
+  { TInstant * r = nai_trgeometry_geo(trgeo_seq1, geom1);
+    printf("nai_trgeometry_geo: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { TInstant * r = nai_trgeometry_tpoint(trgeo_seq1, tpoint1);
+    printf("nai_trgeometry_tpoint: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { TInstant * r = nai_trgeometry_trgeometry(trgeo_seq1, trgeo_seq1);
+    printf("nai_trgeometry_trgeometry: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { GSERIALIZED * r = shortestline_trgeometry_geo(trgeo_seq1, geom1);
+    printf("shortestline_trgeometry_geo: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { GSERIALIZED * r = shortestline_trgeometry_tpoint(trgeo_seq1, tpoint1);
+    printf("shortestline_trgeometry_tpoint: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { GSERIALIZED * r = shortestline_trgeometry_trgeometry(trgeo_seq1, trgeo_seq1);
+    printf("shortestline_trgeometry_trgeometry: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { int r = always_eq_geo_trgeometry(geom1, trgeo_seq1);
+    printf("always_eq_geo_trgeometry: %d\n", r); }
+  { int r = always_eq_trgeometry_geo(trgeo_seq1, geom1);
+    printf("always_eq_trgeometry_geo: %d\n", r); }
+  { int r = always_eq_trgeometry_trgeometry(trgeo_seq1, trgeo_seq1);
+    printf("always_eq_trgeometry_trgeometry: %d\n", r); }
+  { int r = always_ne_geo_trgeometry(geom1, trgeo_seq1);
+    printf("always_ne_geo_trgeometry: %d\n", r); }
+  { int r = always_ne_trgeometry_geo(trgeo_seq1, geom1);
+    printf("always_ne_trgeometry_geo: %d\n", r); }
+  { int r = always_ne_trgeometry_trgeometry(trgeo_seq1, trgeo_seq1);
+    printf("always_ne_trgeometry_trgeometry: %d\n", r); }
+  { int r = ever_eq_geo_trgeometry(geom1, trgeo_seq1);
+    printf("ever_eq_geo_trgeometry: %d\n", r); }
+  { int r = ever_eq_trgeometry_geo(trgeo_seq1, geom1);
+    printf("ever_eq_trgeometry_geo: %d\n", r); }
+  { int r = ever_eq_trgeometry_trgeometry(trgeo_seq1, trgeo_seq1);
+    printf("ever_eq_trgeometry_trgeometry: %d\n", r); }
+  { int r = ever_ne_geo_trgeometry(geom1, trgeo_seq1);
+    printf("ever_ne_geo_trgeometry: %d\n", r); }
+  { int r = ever_ne_trgeometry_geo(trgeo_seq1, geom1);
+    printf("ever_ne_trgeometry_geo: %d\n", r); }
+  { int r = ever_ne_trgeometry_trgeometry(trgeo_seq1, trgeo_seq1);
+    printf("ever_ne_trgeometry_trgeometry: %d\n", r); }
+  { Temporal * r = teq_geo_trgeometry(geom1, trgeo_seq1);
+    printf("teq_geo_trgeometry: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { Temporal * r = teq_trgeometry_geo(trgeo_seq1, geom1);
+    printf("teq_trgeometry_geo: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { Temporal * r = tne_geo_trgeometry(geom1, trgeo_seq1);
+    printf("tne_geo_trgeometry: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { Temporal * r = tne_trgeometry_geo(trgeo_seq1, geom1);
+    printf("tne_trgeometry_geo: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { int r = econtains_geo_trgeo(geom1, trgeo_seq1);
+    printf("econtains_geo_trgeo: %d\n", r); }
+  { int r = acontains_geo_trgeo(geom1, trgeo_seq1);
+    printf("acontains_geo_trgeo: %d\n", r); }
+  { int r = ecovers_geo_trgeo(geom1, trgeo_seq1);
+    printf("ecovers_geo_trgeo: %d\n", r); }
+  { int r = acovers_geo_trgeo(geom1, trgeo_seq1);
+    printf("acovers_geo_trgeo: %d\n", r); }
+  { int r = ecovers_trgeo_geo(trgeo_seq1, geom1);
+    printf("ecovers_trgeo_geo: %d\n", r); }
+  { int r = acovers_trgeo_geo(trgeo_seq1, geom1);
+    printf("acovers_trgeo_geo: %d\n", r); }
+  { int r = edisjoint_trgeo_geo(trgeo_seq1, geom1);
+    printf("edisjoint_trgeo_geo: %d\n", r); }
+  { int r = adisjoint_trgeo_geo(trgeo_seq1, geom1);
+    printf("adisjoint_trgeo_geo: %d\n", r); }
+  { int r = eintersects_trgeo_geo(trgeo_seq1, geom1);
+    printf("eintersects_trgeo_geo: %d\n", r); }
+  { int r = aintersects_trgeo_geo(trgeo_seq1, geom1);
+    printf("aintersects_trgeo_geo: %d\n", r); }
+  { int r = etouches_trgeo_geo(trgeo_seq1, geom1);
+    printf("etouches_trgeo_geo: %d\n", r); }
+  { int r = atouches_trgeo_geo(trgeo_seq1, geom1);
+    printf("atouches_trgeo_geo: %d\n", r); }
+  { int r = edwithin_trgeo_geo(trgeo_seq1, geom1, 1.0);
+    printf("edwithin_trgeo_geo: %d\n", r); }
+  { int r = adwithin_trgeo_geo(trgeo_seq1, geom1, 1.0);
+    printf("adwithin_trgeo_geo: %d\n", r); }
+  { int r = edisjoint_trgeo_trgeo(trgeo_seq1, trgeo_seq1);
+    printf("edisjoint_trgeo_trgeo: %d\n", r); }
+  { int r = adisjoint_trgeo_trgeo(trgeo_seq1, trgeo_seq1);
+    printf("adisjoint_trgeo_trgeo: %d\n", r); }
+  { int r = eintersects_trgeo_trgeo(trgeo_seq1, trgeo_seq1);
+    printf("eintersects_trgeo_trgeo: %d\n", r); }
+  { int r = aintersects_trgeo_trgeo(trgeo_seq1, trgeo_seq1);
+    printf("aintersects_trgeo_trgeo: %d\n", r); }
+  { int r = edwithin_trgeo_trgeo(trgeo_seq1, trgeo_seq1, 1.0);
+    printf("edwithin_trgeo_trgeo: %d\n", r); }
+  { int r = adwithin_trgeo_trgeo(trgeo_seq1, trgeo_seq1, 1.0);
+    printf("adwithin_trgeo_trgeo: %d\n", r); }
 
   /* Manually exercise trgeo_value_n (out-param GSERIALIZED **). */
   {
     GSERIALIZED *out_geom = NULL;
-    bool ok = trgeo_value_n(trgeo_seq1, 1, &out_geom);
-    printf("trgeo_value_n: ok=%d ptr=%s\n", (int) ok, out_geom ? "OK" : "NULL");
+    bool ok = trgeometry_value_n(trgeo_seq1, 1, &out_geom);
+    printf("trgeometry_value_n: ok=%d ptr=%s\n", (int) ok, out_geom ? "OK" : "NULL");
     if (out_geom) free(out_geom);
   }
 
   /* Cleanup. */
+  free(trgeo_inst1);
   free(trgeo_inst2);
   if (trgeo_seq1) free(trgeo_seq1);
   if (tpoint1) free(tpoint1);
