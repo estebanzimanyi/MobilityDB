@@ -99,6 +99,14 @@ option(POSE
   OFF
   )
 
+# Option for sampling PostGIS raster bands along trajectories.
+# Requires the postgis_raster extension (ships with postgresql-N-postgis-3).
+option(RASTER
+  "Set ON|OFF (default=OFF) to include PostGIS raster sampling operators.
+  Requires postgis_raster installed (ships with postgresql-N-postgis-3)."
+  OFF
+  )
+
 # Option for including rigid geometries, which depend on geoposes
 CMAKE_DEPENDENT_OPTION(RGEO
   "Set ON|OFF (default=OFF) to include rigid geometries
@@ -129,6 +137,14 @@ if(POSE)
 else()
   message(STATUS "Excluding geoposes")
   add_definitions(-DPOSE=0)
+endif()
+
+if(RASTER)
+  message(STATUS "Including PostGIS raster sampling operators")
+  add_definitions(-DRASTER=1)
+else()
+  message(STATUS "Excluding PostGIS raster sampling operators")
+  add_definitions(-DRASTER=0)
 endif()
 
 if(RGEO)
@@ -327,6 +343,13 @@ if(ICU_FOUND)
   message(STATUS "ICU Version '${ICU_VERSION}' found")
 else()
   message(STATUS "ICU NOT found")
+endif()
+
+# PostGIS is always required; postgis_raster is added when RASTER=ON.
+# The variable is substituted into mobilitydb.in.control by configure_file.
+set(MOBILITYDB_REQUIRES "postgis")
+if(RASTER)
+  set(MOBILITYDB_REQUIRES "${MOBILITYDB_REQUIRES}, postgis_raster")
 endif()
 
 #-------------------------------------
