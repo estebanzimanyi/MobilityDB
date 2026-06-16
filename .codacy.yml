@@ -23,6 +23,7 @@ engines:
       - "pointcloud-pg/**"
       - "contrib/**"
       - "arrow/**"
+      - "nanoarrow/**"
     config:
       languages:
         - "c"
@@ -40,6 +41,7 @@ exclude_paths:
   - "pointcloud-pg/**"
   - "contrib/**"
   - "arrow/**"
+  - "nanoarrow/**"
   - "meos/test/**"
   - "meos/examples/**"
   # h3-pg is a vendored copy of the Apache-2.0 h3-pg project; its

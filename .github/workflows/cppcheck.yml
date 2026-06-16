@@ -80,6 +80,15 @@ jobs:
             --suppress='*:postgis/*' \
             --suppress='*:*/pgtypes/*' \
             --suppress='*:pgtypes/*' \
+            --suppress='*:h3-pg/*' \
+            --suppress='*:*lwin_wkt_lex.c' \
+            --suppress='*:*lwin_wkt_lex.l' \
+            --suppress='*:*lwin_wkt_parse.c' \
+            --suppress='*:*lwin_wkt_parse.y' \
+            --suppress='*:lwin_wkt_lex.c' \
+            --suppress='*:lwin_wkt_lex.l' \
+            --suppress='*:lwin_wkt_parse.c' \
+            --suppress='*:lwin_wkt_parse.y' \
             --suppress='missingIncludeSystem' \
             --suppress='unmatchedSuppression' \
             --xml --xml-version=2 \
