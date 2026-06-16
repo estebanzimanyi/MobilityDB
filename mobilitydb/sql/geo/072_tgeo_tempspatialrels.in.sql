@@ -100,7 +100,7 @@ CREATE FUNCTION tIntersects(tgeometry, geometry)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tintersects_tgeo_geo'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
--- Alias for temporal equals, that is, tgeo_teq or #=
+-- Alias for temporal equals, that is, tEq or #=
 CREATE FUNCTION tIntersects(tgeometry, tgeometry)
   RETURNS tbool
   AS 'MODULE_PATHNAME', 'Tintersects_tgeo_tgeo'

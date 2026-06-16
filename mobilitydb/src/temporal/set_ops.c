@@ -427,7 +427,7 @@ PG_FUNCTION_INFO_V1(Union_value_set);
 /**
  * @ingroup mobilitydb_setspan_set
  * @brief Return the union of a value and a set
- * @sqlfn set_union()
+ * @sqlfn setUnion()
  * @sqlop @p +
  */
 inline Datum
@@ -441,7 +441,7 @@ PG_FUNCTION_INFO_V1(Union_set_value);
 /**
  * @ingroup mobilitydb_setspan_set
  * @brief Return the union of a set and a value
- * @sqlfn set_union()
+ * @sqlfn setUnion()
  * @sqlop @p +
  */
 inline Datum
@@ -455,7 +455,7 @@ PG_FUNCTION_INFO_V1(Union_set_set);
 /**
  * @ingroup mobilitydb_setspan_set
  * @brief Return the union of two sets
- * @sqlfn set_union()
+ * @sqlfn setUnion()
  * @sqlop @p +
  */
 inline Datum
@@ -473,7 +473,7 @@ PG_FUNCTION_INFO_V1(Intersection_value_set);
 /**
  * @ingroup mobilitydb_setspan_set
  * @brief Return the intersection of a value and a set
- * @sqlfn set_intersection()
+ * @sqlfn setIntersection()
  * @sqlop @p *
  */
 inline Datum
@@ -487,7 +487,7 @@ PG_FUNCTION_INFO_V1(Intersection_set_value);
 /**
  * @ingroup mobilitydb_setspan_set
  * @brief Return the intersection of a set and a value
- * @sqlfn set_intersection()
+ * @sqlfn setIntersection()
  * @sqlop @p *
  */
 inline Datum
@@ -501,7 +501,7 @@ PG_FUNCTION_INFO_V1(Intersection_set_set);
 /**
  * @ingroup mobilitydb_setspan_set
  * @brief Return the intersection of two sets
- * @sqlfn set_intersection()
+ * @sqlfn setIntersection()
  * @sqlop @p *
  */
 inline Datum
@@ -520,7 +520,7 @@ PG_FUNCTION_INFO_V1(Minus_value_set);
 /**
  * @ingroup mobilitydb_setspan_set
  * @brief Return the difference of a value and a set
- * @sqlfn set_minus()
+ * @sqlfn setMinus()
  * @sqlop @p -
  */
 inline Datum
@@ -536,7 +536,7 @@ PG_FUNCTION_INFO_V1(Minus_set_value);
 /**
  * @ingroup mobilitydb_setspan_set
  * @brief Return the difference of a set and a value
- * @sqlfn set_minus()
+ * @sqlfn setMinus()
  * @sqlop @p -
  */
 inline Datum
@@ -550,7 +550,7 @@ PG_FUNCTION_INFO_V1(Minus_set_set);
 /**
  * @ingroup mobilitydb_setspan_set
  * @brief Return the difference of two sets
- * @sqlfn set_minus()
+ * @sqlfn setMinus()
  * @sqlop @p -
  */
 inline Datum
@@ -568,7 +568,7 @@ PG_FUNCTION_INFO_V1(Distance_value_set);
 /**
  * @ingroup mobilitydb_setspan_dist
  * @brief Return the distance between a value and a set
- * @sqlfn set_distance()
+ * @sqlfn distance()
  * @sqlop @p <->
  */
 inline Datum
@@ -586,7 +586,7 @@ PG_FUNCTION_INFO_V1(Distance_set_value);
 /**
  * @ingroup mobilitydb_setspan_dist
  * @brief Return the distance between a set and a value
- * @sqlfn set_distance()
+ * @sqlfn distance()
  * @sqlop @p <->
  */
 Datum
@@ -604,7 +604,7 @@ PG_FUNCTION_INFO_V1(Distance_set_set);
 /**
  * @ingroup mobilitydb_setspan_dist
  * @brief Return the distance between two sets
- * @sqlfn set_distance()
+ * @sqlfn distance()
  * @sqlop @p <->
  */
 Datum

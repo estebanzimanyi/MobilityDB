@@ -123,16 +123,18 @@ static const IndexableFunction TemporalIndexableFunctions[] =
 };
 
 static const IndexableFunction TNumberIndexableFunctions[] = {
-  /* Ever/always comparison functions */
-  {"ever_eq", EVER_EQ_IDX, 2, 0},
-  {"always_eq", ALWAYS_EQ_IDX, 2, 0},
+  /* Ever/always comparison functions. The names are compared against the
+   * lower-cased pg_proc.proname returned by get_func_name(); PostgreSQL folds
+   * unquoted identifiers, so the SQL functions eEq/aEq register as eeq/aeq. */
+  {"eeq", EVER_EQ_IDX, 2, 0},
+  {"aeq", ALWAYS_EQ_IDX, 2, 0},
   {NULL, 0, 0, 0}
 };
 
 static const IndexableFunction TSpatialIndexableFunctions[] = {
-  /* Ever/always comparison functions */
-  {"ever_eq", EVER_EQ_IDX, 2, 0},
-  {"always_eq", ALWAYS_EQ_IDX, 2, 0},
+  /* Ever/always comparison functions (lower-cased proname, see above) */
+  {"eeq", EVER_EQ_IDX, 2, 0},
+  {"aeq", ALWAYS_EQ_IDX, 2, 0},
   /* Ever spatial relationships */
   {"econtains", ECONTAINS_IDX, 2, 0},
   {"edisjoint", EDISJOINT_IDX, 2, 0},
@@ -318,7 +320,7 @@ type_to_bbox(MeosType type)
  * @brief For functions that we want enhanced with spatial index lookups, add
  * this support function to the SQL function definition, for example:
  * @code
- * CREATE OR REPLACE FUNCTION ever_eq(tfloat, float)
+ * CREATE OR REPLACE FUNCTION eEq(tfloat, float)
  *   RETURNS boolean
  *   AS 'MODULE_PATHNAME','ever_eq_temporal_base'
  *   SUPPORT temporal_supportfn

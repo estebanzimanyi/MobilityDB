@@ -330,23 +330,23 @@ CREATE OPERATOR CLASS cbufferset_hash_ops
  * Operators
  ******************************************************************************/
 
-CREATE FUNCTION set_contains(cbufferset, cbuffer)
+CREATE FUNCTION contains(cbufferset, cbuffer)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Contains_set_value'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_contains(cbufferset, cbufferset)
+CREATE FUNCTION contains(cbufferset, cbufferset)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Contains_set_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR @> (
-  PROCEDURE = set_contains,
+  PROCEDURE = contains,
   LEFTARG = cbufferset, RIGHTARG = cbuffer,
   COMMUTATOR = <@
   -- RESTRICT = span_sel, JOIN = span_joinsel
 );
 CREATE OPERATOR @> (
-  PROCEDURE = set_contains,
+  PROCEDURE = contains,
   LEFTARG = cbufferset, RIGHTARG = cbufferset,
   COMMUTATOR = <@
   -- RESTRICT = span_sel, JOIN = span_joinsel
@@ -354,23 +354,23 @@ CREATE OPERATOR @> (
 
 /******************************************************************************/
 
-CREATE FUNCTION set_contained(cbuffer, cbufferset)
+CREATE FUNCTION contained(cbuffer, cbufferset)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Contained_value_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_contained(cbufferset, cbufferset)
+CREATE FUNCTION contained(cbufferset, cbufferset)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Contained_set_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR <@ (
-  PROCEDURE = set_contained,
+  PROCEDURE = contained,
   LEFTARG = cbuffer, RIGHTARG = cbufferset,
   COMMUTATOR = @>
   -- RESTRICT = span_sel, JOIN = span_joinsel
 );
 CREATE OPERATOR <@ (
-  PROCEDURE = set_contained,
+  PROCEDURE = contained,
   LEFTARG = cbufferset, RIGHTARG = cbufferset,
   COMMUTATOR = @>
   -- RESTRICT = span_sel, JOIN = span_joinsel
@@ -378,13 +378,13 @@ CREATE OPERATOR <@ (
 
 /******************************************************************************/
 
-CREATE FUNCTION set_overlaps(cbufferset, cbufferset)
+CREATE FUNCTION overlaps(cbufferset, cbufferset)
   RETURNS boolean
   AS 'MODULE_PATHNAME', 'Overlaps_set_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR && (
-  PROCEDURE = set_overlaps,
+  PROCEDURE = overlaps,
   LEFTARG = cbufferset, RIGHTARG = cbufferset,
   COMMUTATOR = &&
   -- RESTRICT = span_sel, JOIN = span_joinsel
@@ -392,121 +392,121 @@ CREATE OPERATOR && (
 
 /*****************************************************************************/
 
-CREATE FUNCTION set_union(cbuffer, cbufferset)
+CREATE FUNCTION setUnion(cbuffer, cbufferset)
   RETURNS cbufferset
   AS 'MODULE_PATHNAME', 'Union_value_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_union(cbufferset, cbuffer)
+CREATE FUNCTION setUnion(cbufferset, cbuffer)
   RETURNS cbufferset
   AS 'MODULE_PATHNAME', 'Union_set_value'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_union(cbufferset, cbufferset)
+CREATE FUNCTION setUnion(cbufferset, cbufferset)
   RETURNS cbufferset
   AS 'MODULE_PATHNAME', 'Union_set_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR + (
-  PROCEDURE = set_union,
+  PROCEDURE = setUnion,
   LEFTARG = cbuffer, RIGHTARG = cbufferset,
   COMMUTATOR = +
 );
 CREATE OPERATOR + (
-  PROCEDURE = set_union,
+  PROCEDURE = setUnion,
   LEFTARG = cbufferset, RIGHTARG = cbuffer,
   COMMUTATOR = +
 );
 CREATE OPERATOR + (
-  PROCEDURE = set_union,
+  PROCEDURE = setUnion,
   LEFTARG = cbufferset, RIGHTARG = cbufferset,
   COMMUTATOR = +
 );
 
 /*****************************************************************************/
 
-CREATE FUNCTION set_minus(cbuffer, cbufferset)
+CREATE FUNCTION setMinus(cbuffer, cbufferset)
   RETURNS cbuffer
   AS 'MODULE_PATHNAME', 'Minus_value_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_minus(cbufferset, cbuffer)
+CREATE FUNCTION setMinus(cbufferset, cbuffer)
   RETURNS cbufferset
   AS 'MODULE_PATHNAME', 'Minus_set_value'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_minus(cbufferset, cbufferset)
+CREATE FUNCTION setMinus(cbufferset, cbufferset)
   RETURNS cbufferset
   AS 'MODULE_PATHNAME', 'Minus_set_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR - (
-  PROCEDURE = set_minus,
+  PROCEDURE = setMinus,
   LEFTARG = cbuffer, RIGHTARG = cbufferset
 );
 CREATE OPERATOR - (
-  PROCEDURE = set_minus,
+  PROCEDURE = setMinus,
   LEFTARG = cbufferset, RIGHTARG = cbuffer
 );
 CREATE OPERATOR - (
-  PROCEDURE = set_minus,
+  PROCEDURE = setMinus,
   LEFTARG = cbufferset, RIGHTARG = cbufferset
 );
 
 /*****************************************************************************/
 
-CREATE FUNCTION set_intersection(cbuffer, cbufferset)
+CREATE FUNCTION setIntersection(cbuffer, cbufferset)
   RETURNS cbuffer
   AS 'MODULE_PATHNAME', 'Intersection_value_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_intersection(cbufferset, cbuffer)
+CREATE FUNCTION setIntersection(cbufferset, cbuffer)
   RETURNS cbuffer
   AS 'MODULE_PATHNAME', 'Intersection_set_value'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_intersection(cbufferset, cbufferset)
+CREATE FUNCTION setIntersection(cbufferset, cbufferset)
   RETURNS cbufferset
   AS 'MODULE_PATHNAME', 'Intersection_set_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR * (
-  PROCEDURE = set_intersection,
+  PROCEDURE = setIntersection,
   LEFTARG = cbuffer, RIGHTARG = cbufferset,
   COMMUTATOR = *
 );
 CREATE OPERATOR * (
-  PROCEDURE = set_intersection,
+  PROCEDURE = setIntersection,
   LEFTARG = cbufferset, RIGHTARG = cbuffer,
   COMMUTATOR = *
 );
 CREATE OPERATOR * (
-  PROCEDURE = set_intersection,
+  PROCEDURE = setIntersection,
   LEFTARG = cbufferset, RIGHTARG = cbufferset,
   COMMUTATOR = *
 );
 
 /*****************************************************************************/
 
-CREATE FUNCTION set_distance(cbuffer, cbufferset)
+CREATE FUNCTION distance(cbuffer, cbufferset)
   RETURNS float
   AS 'MODULE_PATHNAME', 'Distance_value_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_distance(cbufferset, cbuffer)
+CREATE FUNCTION distance(cbufferset, cbuffer)
   RETURNS float
   AS 'MODULE_PATHNAME', 'Distance_set_value'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
-CREATE FUNCTION set_distance(cbufferset, cbufferset)
+CREATE FUNCTION distance(cbufferset, cbufferset)
   RETURNS float
   AS 'MODULE_PATHNAME', 'Distance_set_set'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE OPERATOR <-> (
-  PROCEDURE = set_distance,
+  PROCEDURE = distance,
   LEFTARG = cbuffer, RIGHTARG = cbufferset,
   COMMUTATOR = <->
 );
 CREATE OPERATOR <-> (
-  PROCEDURE = set_distance,
+  PROCEDURE = distance,
   LEFTARG = cbufferset, RIGHTARG = cbuffer,
   COMMUTATOR = <->
 );
 CREATE OPERATOR <-> (
-  PROCEDURE = set_distance,
+  PROCEDURE = distance,
   LEFTARG = cbufferset, RIGHTARG = cbufferset,
   COMMUTATOR = <->
 );

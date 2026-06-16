@@ -405,7 +405,7 @@ PG_FUNCTION_INFO_V1(Union_value_span);
 /**
  * @ingroup mobilitydb_setspan_set
  * @brief Return the union of a value and a span
- * @sqlfn time_union()
+ * @sqlfn spanUnion()
  * @sqlop @p +
  */
 Datum
@@ -421,7 +421,7 @@ PG_FUNCTION_INFO_V1(Union_span_value);
 /**
  * @ingroup mobilitydb_setspan_set
  * @brief Return the union of a span and a value
- * @sqlfn time_union()
+ * @sqlfn spanUnion()
  * @sqlop @p +
  */
 Datum
@@ -437,7 +437,7 @@ PG_FUNCTION_INFO_V1(Union_span_span);
 /**
  * @ingroup mobilitydb_setspan_set
  * @brief Return the union of two spans
- * @sqlfn time_union()
+ * @sqlfn spanUnion()
  * @sqlop @p +
  */
 Datum
@@ -457,7 +457,7 @@ PG_FUNCTION_INFO_V1(Intersection_value_span);
 /**
  * @ingroup mobilitydb_setspan_set
  * @brief Return the intersection of a value and a span
- * @sqlfn span_intersection()
+ * @sqlfn spanIntersection()
  * @sqlop @p *
  */
 Datum
@@ -476,7 +476,7 @@ PG_FUNCTION_INFO_V1(Intersection_span_value);
 /**
  * @ingroup mobilitydb_setspan_set
  * @brief Return the intersection of a span and a value
- * @sqlfn span_intersection()
+ * @sqlfn spanIntersection()
  * @sqlop @p *
  */
 Datum
@@ -495,7 +495,7 @@ PG_FUNCTION_INFO_V1(Intersection_span_span);
 /**
  * @ingroup mobilitydb_setspan_set
  * @brief Return the intersection of two spans
- * @sqlfn span_intersection()
+ * @sqlfn spanIntersection()
  * @sqlop @p *
  */
 Datum
@@ -518,7 +518,7 @@ PG_FUNCTION_INFO_V1(Minus_value_span);
 /**
  * @ingroup mobilitydb_setspan_set
  * @brief Return the difference of a value and a span
- * @sqlfn span_intersection()
+ * @sqlfn spanMinus()
  * @sqlop @p *
  */
 Datum
@@ -537,7 +537,7 @@ PG_FUNCTION_INFO_V1(Minus_span_value);
 /**
  * @ingroup mobilitydb_setspan_set
  * @brief Return the difference of a span and a value
- * @sqlfn span_intersection()
+ * @sqlfn spanMinus()
  * @sqlop @p *
  */
 Datum
@@ -556,7 +556,7 @@ PG_FUNCTION_INFO_V1(Minus_span_span);
 /**
  * @ingroup mobilitydb_setspan_set
  * @brief Return the difference of two spans
- * @sqlfn time_minus()
+ * @sqlfn spanMinus()
  * @sqlop @p -
  */
 Datum
@@ -580,7 +580,7 @@ PG_FUNCTION_INFO_V1(Distance_value_value);
 /**
  * @ingroup mobilitydb_setspan_dist
  * @brief Return the distance between two values
- * @sqlfn span_distance()
+ * @sqlfn distance()
  * @sqlop @p <->
  */
 Datum
@@ -597,7 +597,7 @@ PG_FUNCTION_INFO_V1(Distance_value_span);
 /**
  * @ingroup mobilitydb_setspan_dist
  * @brief Return the distance between a value and a span
- * @sqlfn span_distance()
+ * @sqlfn distance()
  * @sqlop @p <->
  */
 Datum
@@ -613,7 +613,7 @@ PG_FUNCTION_INFO_V1(Distance_span_value);
 /**
  * @ingroup mobilitydb_setspan_dist
  * @brief Return the distance between a span and a value
- * @sqlfn span_distance()
+ * @sqlfn distance()
  * @sqlop @p <->
  */
 Datum
@@ -629,7 +629,7 @@ PG_FUNCTION_INFO_V1(Distance_span_span);
 /**
  * @ingroup mobilitydb_setspan_dist
  * @brief Return the distance between two spans
- * @sqlfn span_distance()
+ * @sqlfn distance()
  * @sqlop @p <->
  */
 Datum

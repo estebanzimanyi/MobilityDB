@@ -40,8 +40,8 @@
  * @endcode
  *
  * The program can be tested with several functions such as ever/alwayas and 
- * temporal comparisons `ever_eq`, `always_eq`, `teq_`, ..., `ever_lt`,
- * `always_lt`, `tlt_`, ...
+ * temporal comparisons `everEq`, `alwaysEq`, `teq_`, ..., `everLt`,
+ * `alwaysLt`, `tlt_`, ...
  * 
  * The program can be build as follows
  * @code
