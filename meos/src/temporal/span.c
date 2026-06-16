@@ -270,14 +270,25 @@ span_incr_bound(Datum lower, MeosType basetype)
   switch (basetype)
   {
     case T_INT4:
-      result = Int32GetDatum(DatumGetInt32(lower) + (int32) 1);
+    {
+      /* Saturate instead of overflowing at INT_MAX (e.g. the unbounded
+       * +infinity sentinel of an SP-GiST node box) */
+      int32 v = DatumGetInt32(lower);
+      result = Int32GetDatum(v == PG_INT32_MAX ? v : v + (int32) 1);
       break;
+    }
     case T_INT8:
-      result = Int64GetDatum(DatumGetInt64(lower) + (int64) 1);
+    {
+      int64 v = DatumGetInt64(lower);
+      result = Int64GetDatum(v == PG_INT64_MAX ? v : v + (int64) 1);
       break;
+    }
     case T_DATE:
-      result = DateADTGetDatum(DatumGetDateADT(lower) + 1);
+    {
+      DateADT v = DatumGetDateADT(lower);
+      result = DateADTGetDatum(v == DATEVAL_NOEND ? v : v + 1);
       break;
+    }
     default:
       result = lower;
   }
@@ -294,14 +305,25 @@ span_decr_bound(Datum lower, MeosType basetype)
   switch (basetype)
   {
     case T_INT4:
-      result = Int32GetDatum(DatumGetInt32(lower) - (int32) 1);
+    {
+      /* Saturate instead of underflowing at INT_MIN (e.g. the unbounded
+       * -infinity sentinel of an SP-GiST node box) */
+      int32 v = DatumGetInt32(lower);
+      result = Int32GetDatum(v == PG_INT32_MIN ? v : v - (int32) 1);
       break;
+    }
     case T_INT8:
-      result = Int64GetDatum(DatumGetInt64(lower) - (int64) 1);
+    {
+      int64 v = DatumGetInt64(lower);
+      result = Int64GetDatum(v == PG_INT64_MIN ? v : v - (int64) 1);
       break;
+    }
     case T_DATE:
-      result = DateADTGetDatum(DatumGetDateADT(lower) - 1);
+    {
+      DateADT v = DatumGetDateADT(lower);
+      result = DateADTGetDatum(v == DATEVAL_NOBEGIN ? v : v - 1);
       break;
+    }
     default:
       result = lower;
   }

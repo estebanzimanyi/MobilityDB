@@ -583,11 +583,30 @@ distance_tbox_nodebox(const TBox *query, const TboxNode *nodebox)
       datum_gt(nodebox->left.period.lower, query->period.upper, T_TIMESTAMPTZ)))
     return DBL_MAX;
 
-  /* Compute distance to left and right boundary boxes */
-  double d1 = nad_tbox_tbox(query, &nodebox->left);
-  double d2 = nad_tbox_tbox(query, &nodebox->right);
-  /* Return the minimum distance */
-  return Min(d1, d2);
+  /*
+   * The node box covers every leaf box whose value span has its lower bound in
+   * [left.span.lower, right.span.lower] and its upper bound in
+   * [left.span.upper, right.span.upper]; hence every such leaf is contained in
+   * the value range [left.span.lower, right.span.upper].  The nearest-approach
+   * distance from the query to ANY leaf in the node is therefore the distance
+   * from the query value span to that range -- an admissible (never
+   * over-estimating) lower bound, which is what the SP-GiST kNN priority queue
+   * requires for correctness.
+   *
+   * The previous implementation returned Min(nad(query, left),
+   * nad(query, right)), i.e. the distance to the two corner boxes only.  That
+   * is NOT a lower bound on the node's leaves: a leaf can lie between the two
+   * corners and be strictly closer to the query than either of them.  The
+   * resulting over-estimate made the SP-GiST kNN scan visit farther leaves
+   * first and stop early, returning wrong neighbours (044_temporal_indexes_tbl
+   * kdtree |=| query returned 0,1,1 instead of the correct 0,0,0; the tfloat
+   * case was off by ~50).
+   */
+  Span nodespan;
+  memcpy(&nodespan, &nodebox->left.span, sizeof(Span));
+  nodespan.upper = nodebox->right.span.upper;
+  Datum res = distance_span_span(&query->span, &nodespan);
+  return datum_double(res, query->span.basetype);
 }
 
 /**
