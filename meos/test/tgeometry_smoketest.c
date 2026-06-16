@@ -52,8 +52,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <meos.h>
+#include <meos_internal.h>
 #include <meos_geo.h>
-#include <meos_pose.h>
 
 
 #ifndef DatumDefined
@@ -100,6 +100,15 @@ main(void)
   printf("****************************************************************\n");
 
   /* SKIP geo_get_srid: unmapped return type 'int32' */
+  /* SKIP box3d_from_gbox: unmapped arg type 'GBOX *' */
+  { BOX3D * r = box3d_make(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0);
+    printf("box3d_make: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  /* SKIP box3d_out: unmapped arg type 'BOX3D *' */
+  { GBOX * r = gbox_make(true, true, true, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
+    printf("gbox_make: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  /* SKIP gbox_out: unmapped arg type 'GBOX *' */
   /* SKIP geo_as_ewkb: unmapped arg type 'char *' */
   { char *r = geo_as_ewkt(geom1, 1);
     printf("geo_as_ewkt: %s\n", r ? r : "NULL");
@@ -115,19 +124,12 @@ main(void)
   { char *r = geo_out(geom1);
     printf("geo_out: %s\n", r ? r : "NULL");
     if (r) free(r); }
-  /* SKIP geog_from_binary: needs spatial_ref_sys CSV */
   /* SKIP geog_from_hexewkb: needs spatial_ref_sys CSV */
   /* SKIP geog_in: needs spatial_ref_sys CSV */
   /* SKIP geom_from_hexewkb: unmapped arg type 'char *' */
   /* SKIP geom_in: unmapped arg type 'char *' */
-  { BOX3D * r = box3d_make(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0);
-    printf("box3d_make: %s\n", r ? "OK" : "NULL");
-    if (r) free(r); }
-  /* SKIP box3d_out: unmapped arg type 'BOX3D *' */
-  { GBOX * r = gbox_make(true, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0);
-    printf("gbox_make: %s\n", r ? "OK" : "NULL");
-    if (r) free(r); }
-  /* SKIP gbox_out: unmapped arg type 'GBOX *' */
+  /* SKIP box3d_in: unmapped arg type 'char *' */
+  /* SKIP gbox_in: unmapped arg type 'char *' */
   { GSERIALIZED * r = geo_copy(geom1);
     printf("geo_copy: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
@@ -160,6 +162,7 @@ main(void)
   { GSERIALIZED * r = line_point_n(geom1, 1);
     printf("line_point_n: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
+  /* SKIP geo_wlof: unmapped arg type 'GSERIALIZED * *' */
   { GSERIALIZED * r = geo_reverse(geom1);
     printf("geo_reverse: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
@@ -212,7 +215,7 @@ main(void)
   { GSERIALIZED * r = geom_intersection2d_coll(geom1, geom1);
     printf("geom_intersection2d_coll: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  /* SKIP geom_min_bounding_radius: unmapped arg type 'double *' */
+  /* SKIP geom_min_bounding_radius: unmapped return type 'MinBoundingCircle' */
   { GSERIALIZED * r = geom_shortestline2d(geom1, geom1);
     printf("geom_shortestline2d: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
@@ -238,10 +241,14 @@ main(void)
     printf("geom_covers: %d\n", (int) r); }
   { bool r = geom_disjoint2d(geom1, geom1);
     printf("geom_disjoint2d: %d\n", (int) r); }
+  { bool r = geom_dwithin(geom1, geom1, 1.0);
+    printf("geom_dwithin: %d\n", (int) r); }
   { bool r = geom_dwithin2d(geom1, geom1, 1.0);
     printf("geom_dwithin2d: %d\n", (int) r); }
   { bool r = geom_dwithin3d(geom1, geom1, 1.0);
     printf("geom_dwithin3d: %d\n", (int) r); }
+  { bool r = geom_intersects(geom1, geom1);
+    printf("geom_intersects: %d\n", (int) r); }
   { bool r = geom_intersects2d(geom1, geom1);
     printf("geom_intersects2d: %d\n", (int) r); }
   { bool r = geom_intersects3d(geom1, geom1);
@@ -269,6 +276,9 @@ main(void)
     printf("geo_same: %d\n", (int) r); }
   /* SKIP geogset_in: needs spatial_ref_sys CSV */
   /* SKIP geomset_in: unmapped arg type 'char *' */
+  { char *r = spatialset_out(geomset1, 1);
+    printf("spatialset_out: %s\n", r ? r : "NULL");
+    if (r) free(r); }
   { char *r = spatialset_as_text(geomset1, 1);
     printf("spatialset_as_text: %s\n", r ? r : "NULL");
     if (r) free(r); }
@@ -286,11 +296,10 @@ main(void)
     printf("geoset_start_value: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
   /* SKIP geoset_value_n: unmapped arg type 'GSERIALIZED * *' */
-  { GSERIALIZED * * r = geoset_values(geomset1);
-    printf("geoset_values: %s\n", r ? "OK" : "NULL");
+  { GSERIALIZED * * r = geoset_values(geomset1, &n_out);
+    printf("geoset_values: %s n=%d\n", r ? "OK" : "NULL", n_out);
     if (r) {
-      int _n = set_num_values(geomset1);
-      for (int _i = 0; _i < _n; _i++) if (r[_i]) free(r[_i]);
+      for (int _i = 0; _i < n_out; _i++) if (r[_i]) free(r[_i]);
       free(r);
     } }
   { bool r = contained_geo_set(geom1, geomset1);
@@ -499,6 +508,9 @@ main(void)
     printf("stbox_lt: %d\n", (int) r); }
   { bool r = stbox_ne(stbox1, stbox1);
     printf("stbox_ne: %d\n", (int) r); }
+  { char *r = tspatial_out(tgeo1, 1);
+    printf("tspatial_out: %s\n", r ? r : "NULL");
+    if (r) free(r); }
   /* SKIP tgeogpoint_from_mfjson: unmapped arg type 'char *' */
   /* SKIP tgeogpoint_in: unmapped arg type 'char *' */
   /* SKIP tgeography_from_mfjson: unmapped arg type 'char *' */
@@ -512,9 +524,6 @@ main(void)
     if (r) free(r); }
   { char *r = tspatial_as_text(tgeo1, 1);
     printf("tspatial_as_text: %s\n", r ? r : "NULL");
-    if (r) free(r); }
-  { char *r = tspatial_out(tgeo1, 1);
-    printf("tspatial_out: %s\n", r ? r : "NULL");
     if (r) free(r); }
   { Temporal * r = tgeo_from_base_temp(geom1, tgeo1);
     printf("tgeo_from_base_temp: %s\n", r ? "OK" : "NULL");
@@ -562,7 +571,7 @@ main(void)
   { Temporal * r = tgeompoint_to_tgeometry(tgeo1);
     printf("tgeompoint_to_tgeometry: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
-  /* SKIP tpoint_as_mvtgeom: unmapped arg type 'GSERIALIZED * *' */
+  /* SKIP tpoint_as_mvtgeom: unmapped return type 'MvtGeom' */
   /* SKIP tpoint_tfloat_to_geomeas: unmapped arg type 'GSERIALIZED * *' */
   { STBox * r = tspatial_to_stbox(tgeo1);
     printf("tspatial_to_stbox: %s\n", r ? "OK" : "NULL");
@@ -995,6 +1004,12 @@ main(void)
   { GSERIALIZED * r = shortestline_tgeo_tgeo(tgeo1, tgeo1);
     printf("shortestline_tgeo_tgeo: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
+  /* SKIP mindistance_tgeoarr_tgeoarr: unmapped arg type 'Temporal * *' */
+  { double r = mindistance_tgeo_tgeo(tgeo1, tgeo1, 1.0);
+    printf("mindistance_tgeo_tgeo: %.6f\n", r); }
+  /* SKIP edwithin_tgeoarr_tgeoarr: unmapped arg type 'Temporal * *' */
+  /* SKIP tdwithin_tgeoarr_tgeoarr: unmapped arg type 'Temporal * *' */
+  /* SKIP adisjoint_tgeoarr_tgeoarr: unmapped arg type 'Temporal * *' */
   /* SKIP tpoint_tcentroid_finalfn: aggregate state-handoff pattern incompatible with smoke-test ownership model */
   /* SKIP tpoint_tcentroid_transfn: aggregate state-handoff pattern incompatible with smoke-test ownership model */
   /* SKIP tspatial_extent_transfn: aggregate state-handoff pattern incompatible with smoke-test ownership model */
@@ -1008,8 +1023,8 @@ main(void)
     if (r) free(r); }
   /* SKIP stbox_space_time_tiles: interv1=NULL triggers assert(xsize>0||duration) */
   /* SKIP stbox_time_tiles: interv1=NULL triggers assert(xsize>0||duration) */
-  /* SKIP tgeo_space_split: unmapped arg type 'GSERIALIZED * **' */
-  /* SKIP tgeo_space_time_split: unmapped arg type 'GSERIALIZED * **' */
+  /* SKIP tgeo_space_split: unmapped return type 'SpaceSplit' */
+  /* SKIP tgeo_space_time_split: unmapped return type 'SpaceTimeSplit' */
   /* SKIP geo_cluster_kmeans: unmapped arg type 'GSERIALIZED * *' */
   /* SKIP geo_cluster_dbscan: unmapped arg type 'GSERIALIZED * *' */
   /* SKIP geo_cluster_intersecting: unmapped arg type 'GSERIALIZED * *' */

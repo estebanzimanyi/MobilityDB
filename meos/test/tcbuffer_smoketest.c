@@ -52,10 +52,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <meos.h>
-#include <meos_geo.h>
-#include <meos_pose.h>
-#include <meos_cbuffer.h>
 #include <meos_internal.h>
+#include <meos_geo.h>
+#include <meos_cbuffer.h>
 
 #ifndef DatumDefined
 typedef uintptr_t Datum;
@@ -212,11 +211,10 @@ main(void)
     printf("cbufferset_start_value: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
   /* SKIP cbufferset_value_n: unmapped arg type 'Cbuffer * *' */
-  { Cbuffer * * r = cbufferset_values(cbufferset1);
-    printf("cbufferset_values: %s\n", r ? "OK" : "NULL");
+  { Cbuffer * * r = cbufferset_values(cbufferset1, &n_out);
+    printf("cbufferset_values: %s n=%d\n", r ? "OK" : "NULL", n_out);
     if (r) {
-      int _n = set_num_values(cbufferset1);
-      for (int _i = 0; _i < _n; _i++) if (r[_i]) free(r[_i]);
+      for (int _i = 0; _i < n_out; _i++) if (r[_i]) free(r[_i]);
       free(r);
     } }
   /* SKIP cbuffer_union_transfn: aggregate state-handoff pattern incompatible with smoke-test ownership model */
@@ -243,8 +241,27 @@ main(void)
     printf("union_set_cbuffer: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
   /* SKIP tcbuffer_in: unmapped arg type 'char *' */
+  /* SKIP tcbuffer_from_mfjson: unmapped arg type 'char *' */
+  { TInstant * r = tcbufferinst_make(cbuffer1, tstz1);
+    printf("tcbufferinst_make: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
   { Temporal * r = tcbuffer_make(tcbuffer1, tcbuffer1);
     printf("tcbuffer_make: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { Temporal * r = tcbuffer_from_base_temp(cbuffer1, tcbuffer1);
+    printf("tcbuffer_from_base_temp: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { TSequence * r = tcbufferseq_from_base_tstzset(cbuffer1, cbufferset1);
+    printf("tcbufferseq_from_base_tstzset: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { TSequence * r = tcbufferseq_from_base_tstzspan(cbuffer1, tstzspan1, LINEAR);
+    printf("tcbufferseq_from_base_tstzspan: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { TSequenceSet * r = tcbufferseqset_from_base_tstzspanset(cbuffer1, tstzspanset1, LINEAR);
+    printf("tcbufferseqset_from_base_tstzspanset: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { Cbuffer * r = tcbuffer_end_value(tcbuffer1);
+    printf("tcbuffer_end_value: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
   { Set * r = tcbuffer_points(tcbuffer1);
     printf("tcbuffer_points: %s\n", r ? "OK" : "NULL");
@@ -255,6 +272,20 @@ main(void)
   { GSERIALIZED * r = tcbuffer_traversed_area(tcbuffer1, true);
     printf("tcbuffer_traversed_area: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
+  { GSERIALIZED * r = tcbuffer_convex_hull(tcbuffer1);
+    printf("tcbuffer_convex_hull: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { Cbuffer * r = tcbuffer_start_value(tcbuffer1);
+    printf("tcbuffer_start_value: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  /* SKIP tcbuffer_value_at_timestamptz: unmapped arg type 'Cbuffer * *' */
+  /* SKIP tcbuffer_value_n: unmapped arg type 'Cbuffer * *' */
+  { Cbuffer * * r = tcbuffer_values(tcbuffer1, &n_out);
+    printf("tcbuffer_values: %s n=%d\n", r ? "OK" : "NULL", n_out);
+    if (r) {
+      for (int _i = 0; _i < n_out; _i++) if (r[_i]) free(r[_i]);
+      free(r);
+    } }
   { Temporal * r = tcbuffer_to_tfloat(tcbuffer1);
     printf("tcbuffer_to_tfloat: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
@@ -302,6 +333,8 @@ main(void)
     printf("nad_tcbuffer_stbox: %.6f\n", r); }
   { double r = nad_tcbuffer_tcbuffer(tcbuffer1, tcbuffer1);
     printf("nad_tcbuffer_tcbuffer: %.6f\n", r); }
+  { double r = mindistance_tcbuffer_tcbuffer(tcbuffer1, tcbuffer1, 1.0);
+    printf("mindistance_tcbuffer_tcbuffer: %.6f\n", r); }
   { TInstant * r = nai_tcbuffer_cbuffer(tcbuffer1, cbuffer1);
     printf("nai_tcbuffer_cbuffer: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
@@ -372,6 +405,8 @@ main(void)
     printf("acovers_tcbuffer_cbuffer: %d\n", r); }
   { int r = acovers_tcbuffer_geo(tcbuffer1, geom1);
     printf("acovers_tcbuffer_geo: %d\n", r); }
+  { int r = acovers_tcbuffer_tcbuffer(tcbuffer1, tcbuffer1);
+    printf("acovers_tcbuffer_tcbuffer: %d\n", r); }
   { int r = adisjoint_tcbuffer_geo(tcbuffer1, geom1);
     printf("adisjoint_tcbuffer_geo: %d\n", r); }
   { int r = adisjoint_tcbuffer_cbuffer(tcbuffer1, cbuffer1);
@@ -404,6 +439,7 @@ main(void)
     printf("econtains_tcbuffer_geo: %d\n", r); }
   { int r = ecovers_cbuffer_tcbuffer(cbuffer1, tcbuffer1);
     printf("ecovers_cbuffer_tcbuffer: %d\n", r); }
+  /* SKIP ecovers_geo_tcbuffer: ever geo-covers-tcbuffer intentionally unsupported (assert !ever) */
   { int r = ecovers_tcbuffer_cbuffer(tcbuffer1, cbuffer1);
     printf("ecovers_tcbuffer_cbuffer: %d\n", r); }
   { int r = ecovers_tcbuffer_geo(tcbuffer1, geom1);

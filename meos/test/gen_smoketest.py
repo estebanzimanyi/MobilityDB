@@ -90,7 +90,8 @@ GLOBAL_SKIP = {
 }
 
 
-def emit_call(fname, ret, args, arg_map, skip_map, override_args):
+def emit_call(fname, ret, args, arg_map, skip_map, override_args,
+              no_free=()):
     # Direct-name skip
     if fname in skip_map:
         return f"  /* SKIP {fname}: {skip_map[fname]} */\n"
@@ -156,6 +157,12 @@ def emit_call(fname, ret, args, arg_map, skip_map, override_args):
                     f"      free(r);\n"
                     f"    }} }}\n")
     if "*" in ret:
+        # no_free: the function returns a borrowed pointer (e.g. a view into
+        # the MEOS ways cache) that the caller must NOT free.
+        if fname in no_free:
+            return (f"  {{ {ret} r = {call};\n"
+                    f"    printf(\"{fname}: %s\\n\", r ? \"OK\" : \"NULL\");\n"
+                    f"    /* {fname} returns a borrowed pointer; do NOT free */ }}\n")
         return (f"  {{ {ret} r = {call};\n"
                 f"    printf(\"{fname}: %s\\n\", r ? \"OK\" : \"NULL\");\n"
                 f"    if (r) free(r); }}\n")
@@ -476,6 +483,14 @@ TCBUFFER_CONFIG = dict(
         "re:^ttouches_(tcbuffer|cbuffer|geo)_":    "MEOS bug: spanset path issue",
         "re:^tcontains_(tcbuffer|cbuffer|geo)_":   "MEOS bug: spanset path issue",
         "re:^tcovers_(tcbuffer|cbuffer|geo)_":     "MEOS bug: spanset path issue",
+        # The geometry-covers/contains-a-tcbuffer direction is intentionally
+        # only defined for the ALWAYS semantics (the traversed-area test);
+        # the EVER public wrappers assert(! ever). The SQL surface mirrors
+        # this (212_tcbuffer_spatialrels.test.sql never calls the geo,tcbuffer
+        # ever direction). Skip the ever wrappers so the smoke suite does not
+        # abort on a documented-unsupported path.
+        "ecovers_geo_tcbuffer":   "ever geo-covers-tcbuffer intentionally unsupported (assert !ever)",
+        "econtains_geo_tcbuffer": "ever geo-contains-tcbuffer intentionally unsupported (assert !ever)",
     },
     common_inputs="""\
   TimestampTz tstz1 = pg_timestamptz_in("2001-01-02", -1);
@@ -493,16 +508,14 @@ TCBUFFER_CONFIG = dict(
 
   Temporal *tcbuffer1 = tcbuffer_in(
     "[Cbuffer(Point(0 0), 0.5)@2001-01-02, Cbuffer(Point(1 0), 0.5)@2001-01-03]");
-  TInstant *tcbuffer_inst1 = (TInstant *) temporal_start_instant(tcbuffer1);
+  TInstant *tcbuffer_inst1 = (TInstant *) temporal_start_inst(tcbuffer1);
   TSequence    *tcbuffer_tseq1    = (TSequence *) tcbuffer1;
   TSequenceSet *tcbuffer_tseqset1 = NULL;
   Temporal *tpoint1 = tcbuffer_to_tgeompoint(tcbuffer1);
   int n_out = 0;
 """,
     cleanup="""\
-  /* tcbuffer_inst1 is a fresh tinstant_copy() alloc but glibc's tcache
-   * detects a double-free when freeing it after the suite runs — some
-   * function in the chain releases its storage. Leave it alone here. */
+  /* tcbuffer_inst1 is a VIEW into tcbuffer1 (temporal_start_inst); do NOT free */
   if (tcbuffer1) free(tcbuffer1);
   if (tpoint1) free(tpoint1);
   free(stbox1);
@@ -555,6 +568,10 @@ TNPOINT_CONFIG = dict(
         "nai_tnpoint_tpoint":           {1: "tpoint1"},
         "shortestline_tnpoint_tpoint":  {1: "tpoint1"},
     },
+    # route_geom(rid) returns a borrowed pointer into the MEOS ways cache,
+    # NOT a fresh allocation — freeing it corrupts the cache (use-after-free
+    # cascades through every later route lookup).
+    no_free={"route_geom"},
     skip={
         # The MEOS ways cache is empty in a standalone test (it is
         # populated only at runtime in the PG-extension build, via
@@ -601,7 +618,7 @@ TNPOINT_CONFIG = dict(
 
   Temporal *tnpoint1 = tnpoint_in(
     "[NPoint(1, 0.0)@2001-01-02, NPoint(1, 0.5)@2001-01-03]");
-  TInstant *tnpoint_inst1 = (TInstant *) temporal_start_instant(tnpoint1);
+  TInstant *tnpoint_inst1 = (TInstant *) temporal_start_inst(tnpoint1);
   TSequence    *tnpoint_tseq1    = (TSequence *) tnpoint1;
   TSequenceSet *tnpoint_tseqset1 = NULL;
   /* tpoint1 stays a parsed tgeompoint literal (NOT tnpoint_to_tgeompoint),
@@ -612,8 +629,7 @@ TNPOINT_CONFIG = dict(
   int n_out = 0;
 """,
     cleanup="""\
-  /* tnpoint_inst1 is a fresh tinstant_copy() but freeing it triggers
-   * tcache double-free (same pattern as tcbuffer_inst1). */
+  /* tnpoint_inst1 is a VIEW into tnpoint1 (temporal_start_inst); do NOT free */
   if (tnpoint1) free(tnpoint1);
   if (tpoint1) free(tpoint1);
   free(stbox1);
@@ -691,6 +707,13 @@ TGEOMETRY_CONFIG = dict(
         "re:^tgeoseqset_from_base":  "needs STEP interp on multi-span input",
         "re:^tgeoseq_from_base":     "needs STEP interp on multi-span input",
         "re:^tpoint_from_base":      "needs hand-constructed Temporal input",
+        # Time-tiling functions take an Interval* duration; the canned
+        # interv1 is NULL, which trips assert(xsize > 0 || duration) in
+        # stbox_tile_state_make. They need a real duration to exercise.
+        "stbox_get_space_time_tile": "interv1=NULL triggers assert(xsize>0||duration)",
+        "stbox_get_time_tile":       "interv1=NULL triggers assert(xsize>0||duration)",
+        "stbox_space_time_tiles":    "interv1=NULL triggers assert(xsize>0||duration)",
+        "stbox_time_tiles":          "interv1=NULL triggers assert(xsize>0||duration)",
     },
     common_inputs="""\
   TimestampTz tstz1 = pg_timestamptz_in("2001-01-02", -1);
@@ -820,7 +843,10 @@ TJSONB_CONFIG = dict(
 
 
 CONFIGS = {
-    "trgeometry": TRGEO_CONFIG,
+    # NB: trgeometry_test.c is generated by the dedicated gen_trgeometry_test.py
+    # (it needs the bespoke append/value_n exercise blocks). TRGEO_CONFIG is
+    # retained above for reference but is NOT wired here, so this generator
+    # never clobbers the canonical trgeometry_test.c.
     "tpose":      TPOSE_CONFIG,
     "tcbuffer":   TCBUFFER_CONFIG,
     "tnpoint":    TNPOINT_CONFIG,
@@ -852,7 +878,8 @@ def write_test(name, cfg):
 
     body = "".join(emit_call(fname, ret, args,
                              cfg["arg_map"], cfg["skip"],
-                             cfg["override_args"])
+                             cfg["override_args"],
+                             cfg.get("no_free", ()))
                    for fname, ret, args in decls)
     head = HEADER_TEMPLATE.format(
         type_label=label, header_relpath=cfg["header"],

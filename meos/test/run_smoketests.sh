@@ -32,6 +32,19 @@ SUITES=(
   tgeometry_smoketest
 )
 
+# Regenerate the smoke-test C files from the INSTALLED MEOS headers so the
+# suite always matches the library it is about to link against. Committed
+# *.c files are generated artifacts and can go stale (e.g. when a public
+# signature changes); regenerating here is the contract the CI step name
+# ("Regenerate smoke suites and run") promises. gen_smoketest.py emits
+# tpose/tcbuffer/tnpoint/tgeometry/tjsonb; trgeometry_test.c has its own
+# bespoke generator (gen_trgeometry_test.py).
+if command -v python3 >/dev/null 2>&1; then
+  echo "[gen]   regenerating smoke suites from $MEOS_INCLUDE_DIR"
+  MEOS_INCLUDE_DIR="$MEOS_INCLUDE_DIR" python3 "$HERE/gen_smoketest.py"
+  MEOS_INCLUDE_DIR="$MEOS_INCLUDE_DIR" python3 "$HERE/gen_trgeometry_test.py"
+fi
+
 mkdir -p "$HERE/build"
 
 fail=0

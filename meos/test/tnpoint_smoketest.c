@@ -52,10 +52,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <meos.h>
-#include <meos_geo.h>
-#include <meos_pose.h>
-#include <meos_npoint.h>
 #include <meos_internal.h>
+#include <meos_geo.h>
+#include <meos_npoint.h>
 
 #ifndef DatumDefined
 typedef uintptr_t Datum;
@@ -161,7 +160,7 @@ main(void)
     printf("route_exists: %d\n", (int) r); }
   { GSERIALIZED * r = route_geom(1);
     printf("route_geom: %s\n", r ? "OK" : "NULL");
-    /* route_geom returns a pointer into the ways cache; do NOT free */ }
+    /* route_geom returns a borrowed pointer; do NOT free */ }
   { double r = route_length(1);
     printf("route_length: %.6f\n", r); }
   { Npoint * r = npoint_round(npoint1, 1);
@@ -223,11 +222,24 @@ main(void)
   /* SKIP union_npoint_set: needs ways cache */
   /* SKIP union_set_npoint: needs ways cache */
   /* SKIP tnpoint_in: unmapped arg type 'char *' */
+  /* SKIP tnpoint_from_mfjson: unmapped arg type 'char *' */
   { char *r = tnpoint_out(tnpoint1, 1);
     printf("tnpoint_out: %s\n", r ? r : "NULL");
     if (r) free(r); }
   { TInstant * r = tnpointinst_make(npoint1, tstz1);
     printf("tnpointinst_make: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { Temporal * r = tnpoint_from_base_temp(npoint1, tnpoint1);
+    printf("tnpoint_from_base_temp: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { TSequence * r = tnpointseq_from_base_tstzset(npoint1, npointset1);
+    printf("tnpointseq_from_base_tstzset: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { TSequence * r = tnpointseq_from_base_tstzspan(npoint1, tstzspan1, LINEAR);
+    printf("tnpointseq_from_base_tstzspan: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { TSequenceSet * r = tnpointseqset_from_base_tstzspanset(npoint1, tstzspanset1, LINEAR);
+    printf("tnpointseqset_from_base_tstzspanset: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
   { Temporal * r = tgeompoint_to_tnpoint(tnpoint1);
     printf("tgeompoint_to_tnpoint: %s\n", r ? "OK" : "NULL");
@@ -237,6 +249,9 @@ main(void)
     if (r) free(r); }
   { Temporal * r = tnpoint_cumulative_length(tnpoint1);
     printf("tnpoint_cumulative_length: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
+  { Npoint * r = tnpoint_end_value(tnpoint1);
+    printf("tnpoint_end_value: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
   { double r = tnpoint_length(tnpoint1);
     printf("tnpoint_length: %.6f\n", r); }
@@ -251,7 +266,18 @@ main(void)
   { Temporal * r = tnpoint_speed(tnpoint1);
     printf("tnpoint_speed: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
+  { Npoint * r = tnpoint_start_value(tnpoint1);
+    printf("tnpoint_start_value: %s\n", r ? "OK" : "NULL");
+    if (r) free(r); }
   /* SKIP tnpoint_trajectory: needs ways cache */
+  /* SKIP tnpoint_value_at_timestamptz: unmapped arg type 'Npoint * *' */
+  /* SKIP tnpoint_value_n: unmapped arg type 'Npoint * *' */
+  { Npoint * * r = tnpoint_values(tnpoint1, &n_out);
+    printf("tnpoint_values: %s n=%d\n", r ? "OK" : "NULL", n_out);
+    if (r) {
+      for (int _i = 0; _i < n_out; _i++) if (r[_i]) free(r[_i]);
+      free(r);
+    } }
   { GSERIALIZED * r = tnpoint_twcentroid(tnpoint1);
     printf("tnpoint_twcentroid: %s\n", r ? "OK" : "NULL");
     if (r) free(r); }
