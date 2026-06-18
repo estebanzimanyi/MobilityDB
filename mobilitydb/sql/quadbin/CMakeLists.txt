@@ -4,6 +4,10 @@ SET(LOCAL_FILES
   297_quadbin_ops
   298_tquadbin
   303_tquadbin_ops
+  304_tquadbin_compops
+  308_tquadbin_topops
+  309_tquadbin_posops
+  316_tquadbin_indexes
   )
 
 foreach (f ${LOCAL_FILES})

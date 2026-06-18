@@ -67,7 +67,10 @@
   #include "rgeo/trgeo.h"
   #include "rgeo/trgeo_inst.h"
   #include "rgeo/trgeo_boxops.h"
-#endif 
+#endif
+#if QUADBIN
+  #include "quadbin/tquadbin_boxops.h"
+#endif
 
 /*****************************************************************************
  * Input/output functions
@@ -447,6 +450,10 @@ tspatial_set_stbox(const Temporal *temp, STBox *box)
       else if (temp->temptype == T_TRGEOMETRY)
         trgeoinst_set_stbox(trgeoinst_geom_p((TInstant *) temp),
           (TInstant *) temp, box);
+#endif
+#if QUADBIN
+      else if (temp->temptype == T_TQUADBIN)
+        tquadbininst_set_stbox((TInstant *) temp, box);
 #endif
       else
         meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
