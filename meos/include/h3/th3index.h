@@ -33,17 +33,11 @@
  * boilerplate.
  *
  * This header is the analogue of `meos/include/cbuffer/tcbuffer.h`.
- * It carries:
- *   * the `VALIDATE_TH3INDEX(temp, ret)` macro used in every lifted
- *     function and public accessor,
- *   * extern decls for the static helpers in `th3index.c` that do
- *     not belong in the public `meos_h3.h`.
- *
- * The macro has two shapes: when the module is built against the
- * MEOS-standalone library (`MEOS=1`) it falls back to runtime
- * checks with clear error messages; when built against the
- * PostgreSQL extension it relies on asserts that cost nothing at
- * run-time.
+ * It carries the extern decls for the static helpers in `th3index.c`
+ * that do not belong in the public `meos_h3.h`. The validity macro
+ * `VALIDATE_TH3INDEX(temp, ret)`, used in every lifted function and
+ * public accessor, lives in the public `meos_h3.h` alongside the
+ * other type-validation macros so bindings can use it directly.
  */
 
 #ifndef __TH3INDEX_H__
@@ -56,29 +50,6 @@
 #include <meos.h>
 #include "temporal/meos_catalog.h"
 #include "temporal/temporal.h"
-
-/*****************************************************************************
- * Validation macros
- *****************************************************************************/
-
-/**
- * @brief Ensure that the temporal value is a temporal H3 cell.
- * Matches the pattern of `VALIDATE_TCBUFFER` / `VALIDATE_TBOOL`.
- */
-#if MEOS
-  #define VALIDATE_TH3INDEX(temp, ret) \
-    do { \
-      if (! ensure_not_null((void *) (temp)) || \
-          ! ensure_temporal_isof_type((Temporal *) (temp), T_TH3INDEX) ) \
-        return (ret); \
-    } while (0)
-#else
-  #define VALIDATE_TH3INDEX(temp, ret) \
-    do { \
-      assert(temp); \
-      assert(((Temporal *) (temp))->temptype == T_TH3INDEX); \
-    } while (0)
-#endif /* MEOS */
 
 /*****************************************************************************
  * Validators (bodies in th3index.c)
