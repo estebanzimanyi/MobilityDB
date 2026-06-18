@@ -328,7 +328,7 @@ static const temptype_catalog_struct MEOS_TEMPTYPE_CATALOG[] =
 /**
  * @brief Return the string representation of the MEOS type
  */
-inline const char *
+const char *
 meostype_name(MeosType type)
 {
   /* Defensive: an out-of-range or unmapped MeosType returns NULL from
@@ -347,7 +347,7 @@ meostype_name(MeosType type)
  * @brief Return the string representation of the subtype of the temporal type
  * corresponding to the enum value
  */
-inline const char *
+const char *
 tempsubtype_name(tempSubtype subtype)
 {
   return MEOS_TEMPSUBTYPE_NAMES[subtype];
@@ -436,7 +436,7 @@ temptype_subtype_all(tempSubtype subtype)
 /**
  * @brief Return the string name from a MEOS operator number
  */
-inline const char *
+const char *
 meosoper_name(MeosOper oper)
 {
   return MEOS_OPER_NAMES[oper];
@@ -464,7 +464,7 @@ meosoper_from_string(const char *str)
  * @brief Return the string representation of the subtype of the temporal type
  * corresponding to the enum value
  */
-inline const char *
+const char *
 interptype_name(interpType interp)
 {
   return MEOS_INTERPTYPE_NAMES[interp];
@@ -666,7 +666,7 @@ meos_basetype(MeosType type)
 /**
  * @brief Return true if the values of the base type are passed by value
  */
-inline bool
+bool
 basetype_byvalue(MeosType type)
 {
   return (type == T_BOOL || type == T_INT4 || type == T_INT8 || type == T_FLOAT8 ||
@@ -683,7 +683,7 @@ basetype_byvalue(MeosType type)
 /**
  * @brief Return true if the values of the base type are of variable length
  */
-inline bool
+bool
 basetype_varlength(MeosType type)
 {
   return (type == T_TEXT || type == T_GEOMETRY || type == T_GEOGRAPHY
@@ -792,7 +792,7 @@ alphanum_temptype(MeosType type)
 /**
  * @brief Return true if the type is a geo base type
  */
-inline bool
+bool
 geo_basetype(MeosType type)
 {
   return (type == T_GEOMETRY || type == T_GEOGRAPHY);
@@ -801,7 +801,7 @@ geo_basetype(MeosType type)
 /**
  * @brief Return true if the type is a spatial base type
  */
-inline bool
+bool
 spatial_basetype(MeosType type)
 {
   return (type == T_GEOMETRY || type == T_GEOGRAPHY
@@ -828,7 +828,7 @@ spatial_basetype(MeosType type)
 /**
  * @brief Return true if the type is a time type
  */
-inline bool
+bool
 time_type(MeosType type)
 {
   return (type == T_DATE || type == T_DATESET || type == T_DATESPAN ||
@@ -874,7 +874,7 @@ set_basetype(MeosType type)
 /**
  * @brief Return true if the type is a set type
  */
-inline bool
+bool
 set_type(MeosType type)
 {
   return (type == T_TSTZSET || type == T_DATESET || type == T_INTSET ||
@@ -907,7 +907,7 @@ set_type(MeosType type)
 /**
  * @brief Return true if the type is a number set type
  */
-inline bool
+bool
 numset_type(MeosType type)
 {
   return (type == T_INTSET || type == T_BIGINTSET || type == T_FLOATSET ||
@@ -933,7 +933,7 @@ ensure_numset_type(MeosType type)
 /**
  * @brief Return true if the type is a time set type
  */
-inline bool
+bool
 timeset_type(MeosType type)
 {
   return (type == T_DATESET || type == T_TSTZSET);
@@ -942,7 +942,7 @@ timeset_type(MeosType type)
 /**
  * @brief Return true if the type is a set type with a span as a bounding box
  */
-inline bool
+bool
 set_spantype(MeosType type)
 {
   return (type == T_INTSET || type == T_BIGINTSET || type == T_FLOATSET ||
@@ -965,7 +965,7 @@ ensure_set_spantype(MeosType type)
 /**
  * @brief Return true if the type is a set type
  */
-inline bool
+bool
 alphanumset_type(MeosType type)
 {
   return (type == T_TSTZSET || type == T_DATESET || type == T_INTSET ||
@@ -986,7 +986,7 @@ alphanumset_type(MeosType type)
 /**
  * @brief Return true if the type is a geo set type
  */
-inline bool
+bool
 geoset_type(MeosType type)
 {
   return (type == T_GEOMSET || type == T_GEOGSET);
@@ -1009,7 +1009,7 @@ ensure_geoset_type(MeosType type)
 /**
  * @brief Return true if the type is a geo set type
  */
-inline bool
+bool
 spatialset_type(MeosType type)
 {
   return (type == T_GEOMSET || type == T_GEOGSET
@@ -1071,7 +1071,7 @@ pointcloudset_type(MeosType type)
 /**
  * @brief Return true if the type is a span base type
  */
-inline bool
+bool
 span_basetype(MeosType type)
 {
   return (type == T_TIMESTAMPTZ || type == T_DATE || type == T_INT4 ||
@@ -1081,7 +1081,7 @@ span_basetype(MeosType type)
 /**
  * @brief Return true if the type is a canonical base type of a span type
  */
-inline bool
+bool
 span_canon_basetype(MeosType type)
 {
   return (type == T_DATE || type == T_INT4 || type == T_INT8);
@@ -1101,7 +1101,7 @@ span_type(MeosType type)
  * @brief Return true if the type has a span type as bounding box
  * @note This function is only used in the asserts
  */
-inline bool
+bool
 type_span_bbox(MeosType type)
 {
   return (set_spantype(type) || span_type(type) || spanset_type(type) ||
@@ -1112,7 +1112,7 @@ type_span_bbox(MeosType type)
  * @brief Return true if the type can be converted to a temporal box
  * @note This function is only used in the asserts
  */
-inline bool
+bool
 span_tbox_type(MeosType type)
 {
   return (type == T_INTSPAN || type == T_BIGINTSPAN || type == T_FLOATSPAN ||
@@ -1136,7 +1136,7 @@ ensure_span_tbox_type(MeosType type)
 /**
  * @brief Return true if the type is a number span type
  */
-inline bool
+bool
 numspan_basetype(MeosType type)
 {
   return (type == T_INT4 || type == T_INT8 || type == T_FLOAT8 ||
@@ -1147,7 +1147,7 @@ numspan_basetype(MeosType type)
 /**
  * @brief Return true if the type is a number span type
  */
-inline bool
+bool
 numspan_type(MeosType type)
 {
   return (type == T_INTSPAN || type == T_BIGINTSPAN || type == T_FLOATSPAN ||
@@ -1170,7 +1170,7 @@ ensure_numspan_type(MeosType type)
 /**
  * @brief Return true if the type is a time span type
  */
-inline bool
+bool
 timespan_basetype(MeosType type)
 {
   return (type == T_TIMESTAMPTZ || type == T_DATE);
@@ -1179,7 +1179,7 @@ timespan_basetype(MeosType type)
 /**
  * @brief Return true if the type is a time span type
  */
-inline bool
+bool
 timespan_type(MeosType type)
 {
   return (type == T_TSTZSPAN || type == T_DATESPAN);
@@ -1190,7 +1190,7 @@ timespan_type(MeosType type)
 /**
  * @brief Return true if the type is a span set type
  */
-inline bool
+bool
 spanset_type(MeosType type)
 {
   return (type == T_TSTZSPANSET || type == T_DATESPANSET ||
@@ -1200,7 +1200,7 @@ spanset_type(MeosType type)
 /**
  * @brief Return true if the type is a time span type
  */
-inline bool
+bool
 timespanset_type(MeosType type)
 {
   return (type == T_TSTZSPANSET || type == T_DATESPANSET);
@@ -1227,7 +1227,7 @@ ensure_timespanset_type(MeosType type)
  * @brief Return true if the type is an @b external temporal type
  * @note Function used in particular in the indexes
  */
-inline bool
+bool
 temporal_type(MeosType type)
 {
   return (type == T_TBOOL || type == T_TINT || type == T_TBIGINT ||
@@ -1302,7 +1302,7 @@ temporal_basetype(MeosType type)
  * subset whose values can vary linearly between samples (as opposed to
  * STEP-only types like tbool, tint, ttext, tgeometry, tgeography, th3index).
  */
-inline bool
+bool
 temptype_supports_linear(MeosType type)
 {
   bool result = (type == T_TFLOAT || type == T_TDOUBLE2 || type == T_TDOUBLE3 ||
@@ -1355,7 +1355,7 @@ ensure_talphanum_type(MeosType type)
  * @brief Return true if the type is a temporal alpha type (i.e., those whose
  * bounding box is a timestamptz span)
  */
-inline bool
+bool
 talpha_type(MeosType type)
 {
   return (type == T_TBOOL || type == T_TTEXT || type == T_TDOUBLE2 ||
@@ -1381,7 +1381,7 @@ tpointcloud_temptype(MeosType type)
 /**
  * @brief Return true if the type is a temporal number type
  */
-inline bool
+bool
 tnumber_type(MeosType type)
 {
   return (type == T_TINT || type == T_TBIGINT || type == T_TFLOAT);
@@ -1443,7 +1443,7 @@ tnumber_spantype(MeosType type)
  * types, in particular, all of them use the same bounding box @ STBox.
  * Therefore, it is used for the indexes and selectivity functions.
  */
-inline bool
+bool
 tspatial_type(MeosType type)
 {
   return (type == T_TGEOMPOINT || type == T_TGEOGPOINT || 
@@ -1487,7 +1487,7 @@ ensure_tspatial_type(MeosType type)
 /**
  * @brief Return true if a type is a temporal point type
  */
-inline bool
+bool
 tpoint_type(MeosType type)
 {
   return (type == T_TGEOMPOINT || type == T_TGEOGPOINT);
@@ -1509,7 +1509,7 @@ ensure_tpoint_type(MeosType type)
 /**
  * @brief Return true if a type is a temporal geo type
  */
-inline bool
+bool
 tgeo_type(MeosType type)
 {
   return (type == T_TGEOMETRY || type == T_TGEOGRAPHY);
@@ -1534,7 +1534,7 @@ ensure_tgeo_type(MeosType type)
  * @brief Return true if a type is a temporal type with geometry/geography as
  * base type
  */
-inline bool
+bool
 tgeo_type_all(MeosType type)
 {
   return (type == T_TGEOMETRY || type == T_TGEOGRAPHY ||
@@ -1559,7 +1559,7 @@ ensure_tgeo_type_all(MeosType type)
 /**
  * @brief Return true if a type is a temporal geometry type
  */
-inline bool
+bool
 tgeometry_type(MeosType type)
 {
   return (type == T_TGEOMPOINT || type == T_TGEOMETRY);
@@ -1582,7 +1582,7 @@ ensure_tgeometry_type(MeosType type)
 /**
  * @brief Return true if a type is a temporal geodetic type
  */
-inline bool
+bool
 tgeodetic_type(MeosType type)
 {
   return (type == T_TGEOGPOINT || type == T_TGEOGRAPHY
