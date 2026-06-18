@@ -1,7 +1,7 @@
 /***********************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2026, Universite libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
@@ -60,11 +60,13 @@
  * Data structures
  *****************************************************************************/
 
-/* Global static arrays for accumulating the results of the clipping process */
-static MeosArray *events = NULL;
-static MeosArray *intervals = NULL;
-static MeosArray *periods = NULL;
-static int *rtree_results = NULL;
+/* Per-thread arrays for accumulating the results of the clipping process.
+ * MEOS_TLS is required: concurrent callers from different threads would
+ * otherwise race on these file-scope pointers, causing heap corruption. */
+static MEOS_TLS MeosArray *events = NULL;
+static MEOS_TLS MeosArray *intervals = NULL;
+static MEOS_TLS MeosArray *periods = NULL;
+static MEOS_TLS int *rtree_results = NULL;
 
 /**
  * @brief Enumeration defining the edge types 
