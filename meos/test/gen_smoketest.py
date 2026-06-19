@@ -22,11 +22,20 @@ map, and the SKIP_REASON map. Add a new type by appending a config; no
 generator change needed.
 """
 
+import glob
+import json
 import os
 import re
 import sys
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
+
+# Self-contained, family-local smoke configs live here: a family ships
+# meos/test/smoke/<family>.json and is DISCOVERED by glob (in main) — the
+# generator never enumerates families. This mirrors the established
+# append_portable_aliases() file(GLOB ...) model on the SQL side, so a new
+# family adds zero edits to any central registry.
+SMOKE_DIR = os.path.join(ROOT, "smoke")
 
 # Generate against the *installed* MEOS headers — the contract the
 # resulting test will link against. Override with $MEOS_INCLUDE_DIR if
@@ -91,7 +100,7 @@ GLOBAL_SKIP = {
 
 
 def emit_call(fname, ret, args, arg_map, skip_map, override_args,
-              no_free=()):
+              no_free=(), value_returns=()):
     # Direct-name skip
     if fname in skip_map:
         return f"  /* SKIP {fname}: {skip_map[fname]} */\n"
@@ -129,6 +138,13 @@ def emit_call(fname, ret, args, arg_map, skip_map, override_args,
     if ret == "double":
         return (f"  {{ double r = {call};\n"
                 f"    printf(\"{fname}: %.6f\\n\", r); }}\n")
+    # By-value scalar returns the CONFIG declares (e.g. a cell index like
+    # Quadbin = uint64, or a uint32_t resolution): call and discard — a value
+    # return owns no storage, so there is nothing to free. Opt-in per config
+    # (default empty) so the existing suites' output is unchanged.
+    if ret in value_returns:
+        return (f"  {{ {ret} r = {call}; (void) r;\n"
+                f"    printf(\"{fname}: ok\\n\"); }}\n")
     # Double-pointer returns (T **) need element-by-element free using
     # the n_out count populated by the function's int* arg. The generator
     # only uses this shape when the call signature contains an `int *`
@@ -890,7 +906,8 @@ def write_test(name, cfg):
     body = "".join(emit_call(fname, ret, args,
                              cfg["arg_map"], cfg["skip"],
                              cfg["override_args"],
-                             cfg.get("no_free", ()))
+                             cfg.get("no_free", ()),
+                             cfg.get("value_returns", ()))
                    for fname, ret, args in decls)
     head = HEADER_TEMPLATE.format(
         type_label=label, header_relpath=cfg["header"],
@@ -904,12 +921,45 @@ def write_test(name, cfg):
     print(f"Wrote {out_path}: {len(decls)} declarations parsed.")
 
 
+def load_sidecar(path):
+    """Load a self-contained, family-local smoke config (data-only JSON) that a
+    family ships in meos/test/smoke/<family>.json. The schema mirrors the legacy
+    in-file CONFIG dicts, with two ergonomic differences for JSON:
+      - common_inputs / cleanup are arrays of lines (no C-newline escaping);
+      - override_args integer indices arrive as strings and are restored to int.
+    Everything else (header/out/arg_map/skip/value_returns/extra_includes) is
+    passed straight through to write_test()."""
+    with open(path) as f:
+        raw = json.load(f)
+    cfg = dict(raw)
+    cfg["common_inputs"] = "".join(line + "\n" for line in raw.get("common_inputs", []))
+    cfg["cleanup"] = "\n".join(raw.get("cleanup", []))
+    cfg.setdefault("extra_includes", "")
+    cfg.setdefault("arg_map", {})
+    cfg.setdefault("skip", {})
+    cfg.setdefault("value_returns", [])
+    cfg["override_args"] = {
+        fn: {int(k): v for k, v in ov.items()}
+        for fn, ov in raw.get("override_args", {}).items()
+    }
+    return cfg
+
+
 def main():
     target = sys.argv[1] if len(sys.argv) > 1 else None
     for name, cfg in CONFIGS.items():
         if target and name != target:
             continue
         write_test(name, cfg)
+    # Discovered, self-contained family sidecars: a new family drops
+    # meos/test/smoke/<family>.json and is generated here without the generator
+    # ever naming it (the append_portable_aliases file(GLOB ...) model). The
+    # legacy in-file CONFIGS above stay as-is and migrate to sidecars later.
+    for path in sorted(glob.glob(os.path.join(SMOKE_DIR, "*.json"))):
+        name = os.path.splitext(os.path.basename(path))[0]
+        if target and name != target:
+            continue
+        write_test(name, load_sidecar(path))
 
 
 if __name__ == "__main__":

@@ -32,6 +32,18 @@ SUITES=(
   tgeometry_smoketest
 )
 
+# Self-contained family suites: a family drops meos/test/smoke/<family>.json and
+# is DISCOVERED here (never centrally listed) — mirroring append_portable_aliases'
+# file(GLOB ...). Each suite name comes from the sidecar's "out" field. The
+# per-suite loop below skips any suite whose .c was not generated (its feature /
+# header absent on this build), so a discovered family is safe on a partial build.
+if command -v python3 >/dev/null 2>&1; then
+  for _sc in "$HERE"/smoke/*.json; do
+    [ -e "$_sc" ] || continue
+    SUITES+=("$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['out'][:-2])" "$_sc")")
+  done
+fi
+
 # Regenerate the smoke-test C files from the INSTALLED MEOS headers so the
 # suite always matches the library it is about to link against. Committed
 # *.c files are generated artifacts and can go stale (e.g. when a public

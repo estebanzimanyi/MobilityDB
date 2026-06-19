@@ -39,8 +39,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -DCMAKE_BUILD_TYPE=Debug -DMEOS=on \
-            -DRGEO=on -DPOSE=on -DCBUFFER=on -DNPOINT=on ..
+          cmake -DCMAKE_BUILD_TYPE=Debug -DMEOS=on ..
           make -j $(nproc)
           sudo make install
           sudo ldconfig
@@ -49,6 +48,9 @@ jobs:
         run: |
           export MEOS_INCLUDE_DIR=/usr/local/include
           export MEOS_BUILD_DIR=/usr/local/lib
+          # Generate suites from the installed headers (core + any discovered
+          # meos/test/smoke/*.json family sidecars), then build+valgrind them.
+          python3 ./meos/test/gen_smoketest.py
           ./meos/test/run_smoketests.sh
 
       - name: Upload valgrind logs on failure
