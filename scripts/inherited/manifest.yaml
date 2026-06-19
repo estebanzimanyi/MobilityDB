@@ -20,6 +20,10 @@ positions:
   spatialrels:     12
   tempspatialrels: 14
   indexes:         16
+  # Cell-index families split the GiST and SP-GiST opclasses into separate files
+  # (the canonical geo/h3 layout); the combined `indexes` above is the cbuffer form.
+  gist:            22
+  spgist:          23
 
 # Temporal<T> subclasses. `files` lists the inherited behaviours the subtype has
 # (a discrete cell-index has no continuous distance / tempspatialrels / spatialfuncs;
@@ -33,11 +37,12 @@ subtypes:
     category: tspatial
     # A cell-index (like h3) has NO scalar base::stbox cast — drop that block.
     scalar_stbox_cast: false
-    # compops/posops/topops/indexes are generic (topops' scalar cast stripped via
-    # the flag above). spatialrels delegates to the geo spatial relationships via
-    # the cell→boundary tgeometry conversion (quadbin_cell_to_boundary), the
-    # cell-index analogue of th3index 290.
-    files: [compops, posops, topops, indexes, spatialrels]
+    # compops/posops/topops are generic (topops' scalar cast stripped via the flag
+    # above). spatialrels delegates to the geo spatial relationships via the
+    # cell→boundary tgeometry conversion (quadbin_cell_to_boundary), the cell-index
+    # analogue of th3index 290. GiST/SP-GiST are split (322/323), the canonical
+    # cell-index layout (th3index 272/273), not the combined cbuffer `indexes` form.
+    files: [compops, posops, topops, spatialrels, gist, spgist]
 
   # ---- reference families (validate self-regeneration == committed; not new) ----
   - temp:  tcbuffer

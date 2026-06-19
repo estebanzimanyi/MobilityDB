@@ -8,7 +8,8 @@ SET(LOCAL_FILES
   308_tquadbin_topops
   309_tquadbin_posops
   312_tquadbin_spatialrels
-  316_tquadbin_indexes
+  322_tquadbin_gist
+  323_tquadbin_spgist
   )
 
 foreach (f ${LOCAL_FILES})
