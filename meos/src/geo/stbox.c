@@ -1059,11 +1059,11 @@ spatial_set_stbox(Datum d, MeosType basetype, STBox *result)
 #endif
 #if QUADBIN
     case T_QUADBIN:
-      return quadbin_set_stbox(DatumGetQuadbin(d), box);
+      return quadbin_set_stbox(DatumGetQuadbin(d), result);
 #endif
 #if H3
     case T_H3INDEX:
-      return h3index_set_stbox(DatumGetH3Index(d), box);
+      return h3index_set_stbox(DatumGetH3Index(d), result);
 #endif
     default: /* Error! */
       meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,

@@ -76,12 +76,7 @@ typedef struct struct_MEOSPROJSRSCache
  */
 #define PROJ_BACKEND_HASH_SIZE 256
 
-/* Per-thread PROJ object cache. Each entry owns LWPROJ structures created
- * inside the per-thread PJ_CONTEXT; the cache must therefore live in the
- * same thread as the context, otherwise PROJ objects from one context
- * would leak across into another. (A pin-merge artifact had dropped
- * MEOS_TLS here, reintroducing the #404/#815 data race that the TSan job
- * catches in GetMEOSPROJSRSCache.) */
+/* Global variable to hold the Proj object cache */
 static MEOS_TLS MEOSPROJSRSCache *MEOS_PROJ_CACHE = NULL;
 
 /**
@@ -117,6 +112,13 @@ meos_set_spatial_ref_sys_csv(const char* path)
   strcpy(SPATIAL_REF_SYS_CSV, path);
 }
 
+typedef struct
+{
+  char auth_name[256];
+  int32_t auth_srid;
+  char proj4text[2048];
+  char srtext[2048];
+} spatial_ref_sys_record;
 #endif /* MEOS */
 
 /*****************************************************************************
@@ -169,26 +171,15 @@ void
 meos_finalize_projsrs(void)
 {
   MEOSPROJSRSCache *cache = MEOS_PROJ_CACHE;
-  /* Idempotency: bail when no cache is live, and null the global slot
-   * after release so a second finalize call (or finalize before any
-   * init) does not pfree(NULL) / double-free. */
-  if (! cache)
-    return;
-  for (uint32_t i = 0; i < cache->PROJSRSCacheCount; i++)
+  if (cache)
   {
-    if (cache->MEOSPROJSRSCache[i].projection)
+    for (uint32_t i = 0; i < cache->PROJSRSCacheCount; i++)
     {
-      PROJSRSDestroyPJ(cache->MEOSPROJSRSCache[i].projection);
-      /* Null the slot so finalize stays idempotent. */
-      cache->MEOSPROJSRSCache[i].projection = NULL;
+      if (cache->MEOSPROJSRSCache[i].projection)
+        PROJSRSDestroyPJ(cache->MEOSPROJSRSCache[i].projection);
     }
   }
   pfree(cache);
-  /* Drop the dangling global pointer; otherwise a downstream
-   * dereference becomes use-after-free. The smoke suites surfaced a
-   * crash inside libproj/libsqlite3 reachable via this dangling
-   * pointer once code paths freed the cache via a different route. */
-  MEOS_PROJ_CACHE = NULL;
   return;
 }
 
@@ -261,15 +252,16 @@ GetProjStringsSPI(int32_t srid)
     return strs;
   }
 
-  /* Read the first line of the file with the headers */
-  int read = fscanf(file, "%1023s\n", header_buffer);
+  /* Read and discard the first line of the file with the headers */
+  int nread = fscanf(file, "%1023s\n", header_buffer);
+  (void) nread;
 
   /* Continue reading the file */
   bool found = false;
   do
   {
     /* Read each line from the file */
-    read = fscanf(file, "%255[^,^\n],%d,%2047[^,^\n],%2047[^\n]\n",
+    int read = fscanf(file, "%255[^,^\n],%d,%2047[^,^\n],%2047[^\n]\n",
       auth_name, &auth_srid, proj4text, srtext);
 
     if (ferror(file))
@@ -433,17 +425,8 @@ GetProjStrings(int32_t srid)
       else if (yzone == 0 || yzone == 5)
         lon_0 = 90.0 * (xzone - 2) + 45.0;
       else
-      {
-        /* See doc-comment on meos_error in meos/include/meos.h: handler is
-         * not guaranteed to abort. Bail explicitly so we don't silently
-         * emit a wrong-but-syntactically-valid projstring with lon_0=0
-         * for an unknown yzone. */
-        pfree(strs.proj4text);
-        strs.proj4text = NULL;
         meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
           "Unknown yzone encountered!");
-        return strs;
-      }
 
       snprintf(strs.proj4text, MAX_PROJ_LEN,
         "+proj=laea +ellps=WGS84 +datum=WGS84 +lat_0=%g +lon_0=%g +units=m +no_defs",
@@ -565,30 +548,18 @@ static LWPROJ *
 AddToMEOSPROJSRSCache(MEOSPROJSRSCache *PROJCache, int32_t srid_from,
   int32_t srid_to)
 {
-  char *pj_from_str, *pj_to_str;
+  PjStrs from_strs, to_strs;
 
   /* Turn the SRID number into a proj4 string, by reading from spatial_ref_sys
    * or instantiating a magical value from a negative srid */
   from_strs = GetProjStrings(srid_from);
   if (! pjstrs_has_entry(&from_strs))
-  {
-    /* See doc-comment on meos_error in meos/include/meos.h: handler is
-     * not guaranteed to abort. Free and return so we don't fall through
-     * to a downstream lwproj_from_str with empty PjStrs. */
-    pjstrs_pfree(&from_strs);
     meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
       "got NULL for SRID (%d)", srid_from);
-    return NULL;
-  }
-  PjStrs to_strs = GetProjStrings(srid_to);
+  to_strs = GetProjStrings(srid_to);
   if (! pjstrs_has_entry(&to_strs))
-  {
-    pjstrs_pfree(&from_strs);
-    pjstrs_pfree(&to_strs);
     meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
       "got NULL for SRID (%d)", srid_to);
-    return NULL;
-  }
 
   LWPROJ *projection = NULL;
   /* Try combinations of AUTH_NAME:AUTH_SRID/SRTEXT/PROJ4TEXT until we find
@@ -598,8 +569,8 @@ AddToMEOSPROJSRSCache(MEOSPROJSRSCache *PROJCache, int32_t srid_from,
   uint32_t i;
   for (i = 0; i < 9; i++)
   {
-    pj_from_str = pgstrs_get_entry(&from_strs, i / 3);
-    pj_to_str = pgstrs_get_entry(&to_strs, i % 3);
+    char *pj_from_str = pgstrs_get_entry(&from_strs, i / 3);
+    char *pj_to_str = pgstrs_get_entry(&to_strs, i % 3);
     if (! (pj_from_str && pj_to_str))
       continue;
 
@@ -621,12 +592,12 @@ AddToMEOSPROJSRSCache(MEOSPROJSRSCache *PROJCache, int32_t srid_from,
   {
     cache_position = 0;
     hits = PROJCache->MEOSPROJSRSCache[0].hits;
-    for (uint32_t j = 1; j < PROJ_CACHE_ITEMS; j++)
+    for (uint32_t i = 1; i < PROJ_CACHE_ITEMS; i++)
     {
-      if (PROJCache->MEOSPROJSRSCache[j].hits < hits)
+      if (PROJCache->MEOSPROJSRSCache[i].hits < hits)
       {
-        cache_position = j;
-        hits = PROJCache->MEOSPROJSRSCache[j].hits;
+        cache_position = i;
+        hits = PROJCache->MEOSPROJSRSCache[i].hits;
       }
     }
     DeleteFromMEOSPROJSRSCache(PROJCache, cache_position);

@@ -855,15 +855,13 @@ set_basetype(MeosType type)
 #if POSE || RGEO
       || type == T_POSE
 #endif
-  return (type == T_BOOL || type == T_INT4 || type == T_INT8 || type == T_FLOAT8 ||
-    type == T_DATE || type == T_TIMESTAMPTZ
 #if H3
-    || type == T_H3INDEX
+      || type == T_H3INDEX
 #endif
-#if QUADBIN
-    || type == T_QUADBIN
+#if POINTCLOUD
+      || type == T_PCPOINT || type == T_PCPATCH
 #endif
-    );
+      );
 }
 #endif
 

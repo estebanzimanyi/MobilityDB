@@ -467,7 +467,7 @@ tspatial_set_stbox(const Temporal *temp, STBox *result)
 #endif
 #if QUADBIN
       else if (temp->temptype == T_TQUADBIN)
-        tquadbininst_set_stbox((TInstant *) temp, box);
+        tquadbininst_set_stbox((TInstant *) temp, result);
 #endif
       else
         meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
