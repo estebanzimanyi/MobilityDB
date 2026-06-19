@@ -34,8 +34,10 @@ subtypes:
     # A cell-index (like h3) has NO scalar base::stbox cast — drop that block.
     scalar_stbox_cast: false
     # compops/posops/topops/indexes are generic (topops' scalar cast stripped via
-    # the flag above). spatialrels needs the h3 cell template — next.
-    files: [compops, posops, topops, indexes]
+    # the flag above). spatialrels delegates to the geo spatial relationships via
+    # the cell→boundary tgeometry conversion (quadbin_cell_to_boundary), the
+    # cell-index analogue of th3index 290.
+    files: [compops, posops, topops, indexes, spatialrels]
 
   # ---- reference families (validate self-regeneration == committed; not new) ----
   - temp:  tcbuffer

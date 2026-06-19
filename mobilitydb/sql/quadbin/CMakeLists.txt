@@ -7,6 +7,7 @@ SET(LOCAL_FILES
   304_tquadbin_compops
   308_tquadbin_topops
   309_tquadbin_posops
+  312_tquadbin_spatialrels
   316_tquadbin_indexes
   )
 
