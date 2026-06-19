@@ -78,6 +78,9 @@
 #include <utils/jsonb.h>
 #include <utils/numeric.h>
 #include <pgtypes.h>
+#if QUADBIN
+  #include "quadbin/tquadbin_boxops.h"
+#endif
 
 /*****************************************************************************
  * Input/output functions
@@ -461,6 +464,10 @@ tspatial_set_stbox(const Temporal *temp, STBox *result)
 #if H3
       else if (temp->temptype == T_TH3INDEX)
         th3indexinst_set_stbox((TInstant *) temp, result);
+#endif
+#if QUADBIN
+      else if (temp->temptype == T_TQUADBIN)
+        tquadbininst_set_stbox((TInstant *) temp, box);
 #endif
       else
         meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,

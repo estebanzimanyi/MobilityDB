@@ -782,9 +782,6 @@ alphanum_temptype(MeosType type)
 #if H3
     || type == T_TH3INDEX
 #endif
-#if QUADBIN
-    || type == T_TQUADBIN
-#endif
     );
 }
 #endif
@@ -977,9 +974,6 @@ alphanumset_type(MeosType type)
 #endif
 #if H3
     || type == T_H3INDEXSET
-#endif
-#if QUADBIN
-    || type == T_QUADBINSET
 #endif
     );
 }
