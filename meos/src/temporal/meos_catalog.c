@@ -708,9 +708,6 @@ inline bool
 alphanum_temptype(MeosType type)
 {
   return (type == T_TBOOL || type == T_TINT || type == T_TBIGINT ||
-#if QUADBIN
-    type == T_TQUADBIN ||
-#endif
     type == T_TFLOAT || type == T_TTEXT);
 }
 #endif
@@ -874,11 +871,7 @@ inline bool
 alphanumset_type(MeosType type)
 {
   return (type == T_TSTZSET || type == T_DATESET || type == T_INTSET ||
-    type == T_BIGINTSET || type == T_FLOATSET || type == T_TEXTSET
-#if QUADBIN
-    || type == T_QUADBINSET
-#endif
-    );
+    type == T_BIGINTSET || type == T_FLOATSET || type == T_TEXTSET);
 }
 
 #if MEOS

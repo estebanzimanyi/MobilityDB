@@ -72,6 +72,10 @@
 #if RGEO
   #include "rgeo/trgeo_boxops.h"
 #endif
+#if QUADBIN
+  #include "quadbin/quadbin_meos.h"
+  #include "quadbin/tquadbin_boxops.h"
+#endif
 
 /* Buffer size for input and output of STBox */
 #define MAXSTBOXLEN    256
@@ -1044,6 +1048,10 @@ spatial_set_stbox(Datum d, MeosType basetype, STBox *box)
 #if POSE || RGEO
     case T_POSE:
       return pose_set_stbox(DatumGetPoseP(d), box);
+#endif
+#if QUADBIN
+    case T_QUADBIN:
+      return quadbin_set_stbox(DatumGetQuadbin(d), box);
 #endif
     default: /* Error! */
       meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
