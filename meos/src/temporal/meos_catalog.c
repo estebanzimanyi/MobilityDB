@@ -704,9 +704,6 @@ inline bool
 alphanum_temptype(MeosType type)
 {
   return (type == T_TBOOL || type == T_TINT || type == T_TBIGINT ||
-#if H3
-    type == T_TH3INDEX ||
-#endif
     type == T_TFLOAT || type == T_TTEXT);
 }
 #endif
@@ -873,11 +870,7 @@ inline bool
 alphanumset_type(MeosType type)
 {
   return (type == T_TSTZSET || type == T_DATESET || type == T_INTSET ||
-    type == T_BIGINTSET || type == T_FLOATSET || type == T_TEXTSET
-#if H3
-    || type == T_H3INDEXSET
-#endif
-    );
+    type == T_BIGINTSET || type == T_FLOATSET || type == T_TEXTSET);
 }
 
 #if MEOS

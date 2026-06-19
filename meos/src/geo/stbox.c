@@ -72,6 +72,9 @@
 #if RGEO
   #include "rgeo/trgeo_boxops.h"
 #endif
+#if H3
+  #include "h3/th3index_boxops.h"
+#endif
 
 /* Buffer size for input and output of STBox */
 #define MAXSTBOXLEN    256
@@ -1044,6 +1047,10 @@ spatial_set_stbox(Datum d, MeosType basetype, STBox *box)
 #if POSE || RGEO
     case T_POSE:
       return pose_set_stbox(DatumGetPoseP(d), box);
+#endif
+#if H3
+    case T_H3INDEX:
+      return h3index_set_stbox(DatumGetH3Index(d), box);
 #endif
     default: /* Error! */
       meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
