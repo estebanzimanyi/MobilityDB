@@ -99,6 +99,12 @@
 #include "meos_tls.h"
 
 /*****************************************************************************
+ * Error codes
+ *****************************************************************************/
+
+#include "meos_error.h"
+
+/*****************************************************************************
  * Type definitions
  *****************************************************************************/
 
@@ -1835,8 +1841,6 @@ extern SkipList *tbool_tor_transfn(SkipList *state, const Temporal *temp);
 extern Span *temporal_extent_transfn(Span *sp, const Temporal *temp);
 extern SkipList *tbool_tor_combinefn(SkipList *state1, SkipList *state2);
 extern Span *temporal_extent_transfn(Span *s, const Temporal *temp);
-extern SkipList *temporal_merge_transfn(SkipList *state, const Temporal *temp);
-extern SkipList *temporal_merge_combinefn(SkipList *state1, SkipList *state2);
 extern Temporal *temporal_tagg_finalfn(SkipList *state);
 extern SkipList *temporal_tcount_transfn(SkipList *state, const Temporal *temp);
 extern SkipList *temporal_tcount_combinefn(SkipList *state1, SkipList *state2);
@@ -1867,6 +1871,8 @@ extern SkipList *tnumber_wavg_transfn(SkipList *state, const Temporal *temp, con
 extern SkipList *tstzset_tcount_transfn(SkipList *state, const Set *s);
 extern SkipList *tstzspan_tcount_transfn(SkipList *state, const Span *sp);
 extern SkipList *tstzspanset_tcount_transfn(SkipList *state, const SpanSet *ss);
+extern SkipList *temporal_merge_transfn(SkipList *state, const Temporal *temp);
+extern SkipList *temporal_merge_combinefn(SkipList *state1, SkipList *state2);
 extern SkipList *ttext_tmax_transfn(SkipList *state, const Temporal *temp);
 extern SkipList *ttext_tmax_combinefn(SkipList *state1, SkipList *state2);
 extern SkipList *ttext_tmin_transfn(SkipList *state, const Temporal *temp);

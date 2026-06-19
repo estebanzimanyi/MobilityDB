@@ -346,6 +346,7 @@ j2date(int jd, int *year, int *month, int *day)
   *month = (quad + 10) % MONTHS_PER_YEAR + 1;
 }                /* j2date() */
 
+
 /*
  * j2day - convert Julian date to day-of-week (0..6 == Sun..Sat)
  *
@@ -511,6 +512,7 @@ AppendSeconds(char *cp, int sec, fsec_t fsec, int precision, bool fillzeros)
   else
     return cp;
 }
+
 
 /*
  * Variant of above that's specialized to timestamp case.
@@ -1554,6 +1556,7 @@ pg_DecodeDateTime(char **field, int *ftype, int nf, int *dtype,
   return 0;
 }
 
+
 /* DetermineTimeZoneOffset()
  *
  * Given a struct pg_tm in which tm_year, tm_mon, tm_mday, tm_hour, tm_min,
@@ -1572,6 +1575,7 @@ DetermineTimeZoneOffset(struct pg_tm *tm, pg_tz *tzp)
   pg_time_t t;
   return DetermineTimeZoneOffsetInternal(tm, tzp, &t);
 }
+
 
 /* DetermineTimeZoneOffsetInternal()
  *

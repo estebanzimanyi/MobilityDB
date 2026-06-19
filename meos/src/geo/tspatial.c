@@ -75,6 +75,10 @@
 #include <utils/numeric.h>
 #include <pgtypes.h>
 
+#include <utils/jsonb.h>
+#include <utils/numeric.h>
+#include <pgtypes.h>
+
 /*****************************************************************************
  * Input/output functions
  *****************************************************************************/

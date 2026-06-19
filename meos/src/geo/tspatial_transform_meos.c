@@ -569,7 +569,7 @@ AddToMEOSPROJSRSCache(MEOSPROJSRSCache *PROJCache, int32_t srid_from,
 
   /* Turn the SRID number into a proj4 string, by reading from spatial_ref_sys
    * or instantiating a magical value from a negative srid */
-  PjStrs from_strs = GetProjStrings(srid_from);
+  from_strs = GetProjStrings(srid_from);
   if (! pjstrs_has_entry(&from_strs))
   {
     /* See doc-comment on meos_error in meos/include/meos.h: handler is

@@ -93,6 +93,10 @@
 #include <utils/numeric.h>
 #include <pgtypes.h>
 
+#include <utils/jsonb.h>
+#include <utils/numeric.h>
+#include <pgtypes.h>
+
 #define MEOS_WKT_BOOL_SIZE sizeof("false")
 #define MEOS_WKT_INT4_SIZE sizeof("+2147483647")
 #define MEOS_WKT_INT8_SIZE sizeof("+9223372036854775807")

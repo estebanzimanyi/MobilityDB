@@ -161,6 +161,10 @@ if(H3)
   message(STATUS "Including temporal H3 index objects")
   set(MEOS_OBJECTS ${MEOS_OBJECTS} "$<TARGET_OBJECTS:h3>")
 endif()
+# if(JSON)
+  # message(STATUS "Including JSON types")
+  # set(MEOS_OBJECTS ${MEOS_OBJECTS} "$<TARGET_OBJECTS:json>")
+# endif()
 if(NPOINT)
   message(STATUS "Including network points")
   set(MEOS_OBJECTS ${MEOS_OBJECTS} "$<TARGET_OBJECTS:npoint>")
@@ -265,6 +269,10 @@ target_link_libraries(${MEOS_LIB_NAME} postgis)
 # shared objects).
 target_link_libraries(${MEOS_LIB_NAME} ${GEOS_LIBRARY})
 target_link_libraries(${MEOS_LIB_NAME} ${PROJ_LIBRARIES})
+
+# Link the application to pgtypes and postgis
+target_link_libraries(${MEOS_LIB_NAME} pgtypes)
+target_link_libraries(${MEOS_LIB_NAME} postgis)
 
 #--------------------------------
 # Belongs to MEOS

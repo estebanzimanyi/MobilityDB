@@ -57,9 +57,7 @@ extern bool scanner_isspace(char ch);
 /* Function defined in formatting.c */
 extern bool scanner_isspace(char ch);
 
-/*****************************************************************************
- * Parsing functions
- *****************************************************************************/
+/*****************************************************************************/
 
 /**
  * @brief Ensure there is no more input excepted white spaces
