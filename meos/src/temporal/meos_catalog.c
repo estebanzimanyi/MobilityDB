@@ -779,9 +779,6 @@ alphanum_temptype(MeosType type)
 #if JSON
     || type == T_TJSONB
 #endif
-#if H3
-    || type == T_TH3INDEX
-#endif
     );
 }
 #endif
@@ -971,9 +968,6 @@ alphanumset_type(MeosType type)
     type == T_BIGINTSET || type == T_FLOATSET || type == T_TEXTSET
 #if JSON
     || type == T_JSONBSET
-#endif
-#if H3
-    || type == T_H3INDEXSET
 #endif
     );
 }

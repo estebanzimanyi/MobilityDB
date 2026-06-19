@@ -44,6 +44,26 @@
 #include <meos.h>
 #include <meos_geo.h>
 
+/**
+ * @brief Ensure that the temporal value is a temporal H3 cell.
+ * Matches the pattern of `VALIDATE_TCBUFFER` / `VALIDATE_TBOOL`.
+ */
+#if MEOS
+  #define VALIDATE_TH3INDEX(temp, ret) \
+    do { \
+      if (! ensure_not_null((void *) (temp)) || \
+          ! ensure_temporal_isof_type((Temporal *) (temp), T_TH3INDEX) ) \
+        return (ret); \
+    } while (0)
+#else
+  #define VALIDATE_TH3INDEX(temp, ret) \
+    do { \
+      assert(temp); \
+      assert(((Temporal *) (temp))->temptype == T_TH3INDEX); \
+      (void) (temp); \
+    } while (0)
+#endif /* MEOS */
+
 /*****************************************************************************
  * Static h3index SQL type — analogue of meos_cbuffer.h's
  * static-cbuffer section.
