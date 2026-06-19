@@ -166,6 +166,7 @@ datum_quadbin_cell_to_quadkey(Datum d)
 /**
  * @ingroup meos_cellindex
  * @brief Return the temporal quadkey (ttext) of a temporal quadbin cell.
+ * @csqlfn #Tquadbin_cell_to_quadkey()
  */
 Temporal *
 tquadbin_cell_to_quadkey(const Temporal *temp)

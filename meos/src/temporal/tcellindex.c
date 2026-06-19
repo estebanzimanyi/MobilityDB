@@ -151,6 +151,7 @@ tcellindex_lift_param1(const Temporal *temp, Datum (*func)(Datum, Datum),
 /**
  * @ingroup meos_cellindex
  * @brief Return the temporal resolution (tint) of a temporal cell index.
+ * @csqlfn #Tquadbin_get_resolution()
  */
 Temporal *
 tcellindex_get_resolution(const Temporal *temp)
@@ -167,6 +168,7 @@ tcellindex_get_resolution(const Temporal *temp)
  * @ingroup meos_cellindex
  * @brief Return a tbool stating at each instant whether the value is a valid
  * cell.
+ * @csqlfn #Tquadbin_is_valid_cell()
  */
 Temporal *
 tcellindex_is_valid_cell(const Temporal *temp)
@@ -182,6 +184,7 @@ tcellindex_is_valid_cell(const Temporal *temp)
 /**
  * @ingroup meos_cellindex
  * @brief Return the temporal parent cell at the given resolution.
+ * @csqlfn #Tquadbin_cell_to_parent()
  */
 Temporal *
 tcellindex_cell_to_parent(const Temporal *temp, int32 resolution)
@@ -198,6 +201,7 @@ tcellindex_cell_to_parent(const Temporal *temp, int32 resolution)
  * @ingroup meos_cellindex
  * @brief Return the temporal cell centroid as a temporal point (geodetic for
  * H3/S2, Web-Mercator for quadbin).
+ * @csqlfn #Tquadbin_cell_to_point()
  */
 Temporal *
 tcellindex_cell_to_point(const Temporal *temp)
@@ -213,6 +217,7 @@ tcellindex_cell_to_point(const Temporal *temp)
 /**
  * @ingroup meos_cellindex
  * @brief Return the temporal cell boundary as a temporal (multi)polygon.
+ * @csqlfn #Tquadbin_cell_to_boundary()
  */
 Temporal *
 tcellindex_cell_to_boundary(const Temporal *temp)
@@ -230,6 +235,7 @@ tcellindex_cell_to_boundary(const Temporal *temp)
 /**
  * @ingroup meos_cellindex
  * @brief Return the temporal cell area in square meters (tfloat).
+ * @csqlfn #Tquadbin_cell_area()
  */
 Temporal *
 tcellindex_cell_area(const Temporal *temp)
