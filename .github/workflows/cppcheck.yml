@@ -84,6 +84,8 @@ jobs:
             --suppress='*:clipper2/*' \
             --suppress='missingIncludeSystem' \
             --suppress='unmatchedSuppression' \
+            -DINT64_FORMAT='"%lld"' \
+            -DUINT64_FORMAT='"%llu"' \
             --xml --xml-version=2 \
             -j "$(nproc)" \
             2> cppcheck.xml || true
