@@ -988,7 +988,7 @@ ensure_spatialset_type(MeosType type)
 /**
  * @brief Return true if the type is a pgpointcloud base type (pcpoint, pcpatch)
  */
-inline bool
+bool
 pointcloud_basetype(MeosType type)
 {
   return (type == T_PCPOINT || type == T_PCPATCH);
@@ -1003,7 +1003,7 @@ pointcloud_basetype(MeosType type)
  * MEOS cannot do — the TPCBox bbox type is the separate structure that
  * carries pointcloud spatial bounds.
  */
-inline bool
+bool
 pointcloudset_type(MeosType type)
 {
   return (type == T_PCPOINTSET || type == T_PCPATCHSET);
@@ -1308,7 +1308,7 @@ talpha_type(MeosType type)
  * @brief Return true if the type is a temporal pgpointcloud type
  *   (tpcpoint, tpcpatch) — its bounding box is a TPCBox.
  */
-inline bool
+bool
 tpointcloud_temptype(MeosType type)
 {
   return (type == T_TPCPOINT || type == T_TPCPATCH);
