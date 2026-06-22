@@ -31,6 +31,7 @@
 <!ENTITY temporal_pointcloud SYSTEM "temporal_pointcloud.xml">
 <!ENTITY temporal_quadbin_index SYSTEM "temporal_quadbin_index.xml">
 <!ENTITY temporal_pointcloud SYSTEM "temporal_pointcloud.xml">
+<!ENTITY temporal_raster SYSTEM "temporal_raster.xml">
 <!ENTITY reference SYSTEM "reference.xml">
 <!ENTITY portable_sql SYSTEM "portable_sql.xml">
 <!ENTITY data_generator SYSTEM "data_generator.xml">
@@ -140,6 +141,7 @@
 	&temporal_pointcloud;
 	&temporal_quadbin_index;
 	&temporal_pointcloud;
+	&temporal_raster;
 	&reference;
 	&portable_sql;
 	&data_generator;
