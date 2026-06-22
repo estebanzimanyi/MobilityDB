@@ -1222,6 +1222,11 @@ temporal_from_mfjson(const char *mfjson, MeosType temptype)
     jtemptype = T_TCBUFFER;
 #endif /* CBUFFER */
 
+#if CBUFFER
+  else if (strcmp(typestr, "MovingCircularBuffer") == 0)
+    jtemptype = T_TCBUFFER;
+#endif /* CBUFFER */
+
   if (temptype != T_UNKNOWN && jtemptype != temptype)
   {
     meos_error(ERROR, MEOS_ERR_MFJSON_INPUT,
