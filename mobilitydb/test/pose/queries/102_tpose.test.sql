@@ -618,3 +618,6 @@ SELECT pg_typeof(tgeompoint(tpose '[Pose(Point(1 1),0.1)@2000-01-01]'));
 SELECT pg_typeof(tgeogpoint(tpose '[GeodPose(Point(1 1),0.1)@2000-01-01]'));
 
 -------------------------------------------------------------------------------/
+
+-- tprecision
+SELECT asText(tprecision(tpose '[Pose(Point(0 0),0)@2001-01-01, Pose(Point(4 0),0)@2001-01-01 00:00:04]', interval '2 secs'));
