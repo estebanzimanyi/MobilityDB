@@ -195,6 +195,10 @@ if(POINTCLOUD)
   message(STATUS "Including pgpointcloud temporal types")
   set(PROJECT_OBJECTS ${PROJECT_OBJECTS} "$<TARGET_OBJECTS:pointcloud>")
 endif()
+if(POINTCLOUD)
+  message(STATUS "Including pgpointcloud temporal types")
+  set(MEOS_OBJECTS ${MEOS_OBJECTS} "$<TARGET_OBJECTS:pointcloud>")
+endif()
 if(POSE)
   message(STATUS "Including geoposes")
   set(MEOS_OBJECTS ${MEOS_OBJECTS} "$<TARGET_OBJECTS:pose>")
@@ -426,6 +430,19 @@ if(MEOS)
     install(
       FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_quadbin.h"
       DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+  endif()
+  if(POINTCLOUD)
+    install(
+      FILES "${CMAKE_SOURCE_DIR}/meos/include/meos_pointcloud.h"
+      DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+    # The pgPointCloud serialization shim header is part of the public
+    # point-cloud surface a standalone consumer needs to build a patch
+    # value (meos_pc_patch_serialize, SERIALIZED_PATCH); install it under
+    # pointcloud/ so it is reached as <pointcloud/pgsql_compat.h> from the
+    # install prefix without adding the source tree to the include path.
+    install(
+      FILES "${CMAKE_SOURCE_DIR}/meos/include/pointcloud/pgsql_compat.h"
+      DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/pointcloud")
   endif()
 
   install(
