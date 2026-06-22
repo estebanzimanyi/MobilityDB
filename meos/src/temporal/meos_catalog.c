@@ -44,11 +44,11 @@
 /* MEOS */
 #include <meos.h>
 #include "temporal/doublen.h"
-#if NPOINT
-  #include "npoint/tnpoint.h"
-#endif
 #if CBUFFER
   #include <meos_cbuffer.h>
+#endif
+#if NPOINT
+  #include "npoint/tnpoint.h"
 #endif
 
 /*****************************************************************************
@@ -134,7 +134,6 @@ static const char *MEOS_TYPE_NAMES[] =
   [T_TH3INDEX] = "th3index",
   [T_H3INDEX] = "h3index",
   [T_H3INDEXSET] = "h3indexset",
-#if POINTCLOUD
   [T_PCPOINT] = "pcpoint",
   [T_PCPOINTSET] = "pcpointset",
   [T_TPCPOINT] = "tpcpoint",
@@ -142,7 +141,9 @@ static const char *MEOS_TYPE_NAMES[] =
   [T_PCPATCHSET] = "pcpatchset",
   [T_TPCPATCH] = "tpcpatch",
   [T_TPCBOX] = "tpcbox",
-#endif /* POINTCLOUD */
+  [T_TQUADBIN] = "tquadbin",
+  [T_QUADBIN] = "quadbin",
+  [T_QUADBINSET] = "quadbinset",
 };
 
 /**
@@ -249,14 +250,15 @@ static const settype_catalog_struct MEOS_SETTYPE_CATALOG[] =
   {T_POSESET,       T_POSE},
   {T_NPOINTSET,     T_NPOINT},
   {T_CBUFFERSET,    T_CBUFFER},
-  {T_H3INDEXSET,    T_H3INDEX},
 #if JSON
   {T_JSONBSET,      T_JSONB},
 #endif /* JSON */
-#if POINTCLOUD
+  {T_H3INDEXSET,    T_H3INDEX},
   {T_PCPOINTSET,    T_PCPOINT},
   {T_PCPATCHSET,    T_PCPATCH},
-#endif /* POINTCLOUD */
+#if QUADBIN
+  {T_QUADBINSET,    T_QUADBIN},
+#endif
 };
 
 /**
@@ -300,6 +302,9 @@ static const temptype_catalog_struct MEOS_TEMPTYPE_CATALOG[] =
   {T_TBOOL,      T_BOOL},
   {T_TBIGINT,    T_INT8},
   {T_TH3INDEX,   T_H3INDEX},
+#if QUADBIN
+  {T_TQUADBIN,   T_QUADBIN},
+#endif
   {T_TINT,       T_INT4},
   {T_TFLOAT,     T_FLOAT8},
   {T_TTEXT,      T_TEXT},
@@ -314,10 +319,8 @@ static const temptype_catalog_struct MEOS_TEMPTYPE_CATALOG[] =
 #if JSON
   {T_TJSONB,     T_JSONB},
 #endif /* JSON */
-#if POINTCLOUD
   {T_TPCPOINT,   T_PCPOINT},
   {T_TPCPATCH,   T_PCPATCH},
-#endif /* POINTCLOUD */
 };
 
 /*****************************************************************************/
@@ -653,6 +656,9 @@ meos_basetype(MeosType type)
 #if POINTCLOUD
     || type == T_PCPOINT || type == T_PCPATCH
 #endif
+#if QUADBIN
+    || type == T_QUADBIN
+#endif
     );
 }
 #endif
@@ -667,6 +673,9 @@ basetype_byvalue(MeosType type)
     type == T_DATE || type == T_TIMESTAMPTZ
 #if H3
     || type == T_H3INDEX
+#endif
+#if QUADBIN
+    || type == T_QUADBIN
 #endif
     );
 }
@@ -746,11 +755,14 @@ alphanum_basetype(MeosType type)
   return (type == T_BOOL || type == T_INT4 || type == T_INT8 ||
     type == T_FLOAT8 || type == T_TEXT || type == T_DATE ||
     type == T_TIMESTAMPTZ
+#if JSON
+      || type == T_JSONB
+#endif
 #if H3
     || type == T_H3INDEX
 #endif
-#if JSON
-    || type == T_JSONB
+#if QUADBIN
+    || type == T_QUADBIN
 #endif
     );
 }
@@ -798,6 +810,9 @@ spatial_basetype(MeosType type)
 #endif
 #if H3
     || type == T_H3INDEX
+#endif
+#if QUADBIN
+    || type == T_QUADBIN
 #endif
     );
 }
@@ -877,7 +892,10 @@ set_type(MeosType type)
 #if POINTCLOUD
       || type == T_PCPOINTSET || type == T_PCPATCHSET
 #endif
-      );
+#if QUADBIN
+    || type == T_QUADBINSET
+#endif
+    );
 }
 
 /**
@@ -1226,6 +1244,9 @@ temporal_type(MeosType type)
 #if POINTCLOUD
     || type == T_TPCPOINT || type == T_TPCPATCH
 #endif
+#if QUADBIN
+    || type == T_TQUADBIN
+#endif
     );
 }
 
@@ -1256,6 +1277,9 @@ temporal_basetype(MeosType type)
 #endif
 #if POINTCLOUD
     || type == T_PCPOINT || type == T_PCPATCH
+#endif
+#if QUADBIN
+    || type == T_QUADBIN
 #endif
     );
 }
@@ -1429,6 +1453,9 @@ tspatial_type(MeosType type)
 #endif
 #if H3
     || type == T_TH3INDEX
+#endif
+#if QUADBIN
+    || type == T_TQUADBIN
 #endif
     );
 }

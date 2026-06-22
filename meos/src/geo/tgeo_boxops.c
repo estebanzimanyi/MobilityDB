@@ -136,13 +136,13 @@ tspatialinst_set_stbox(const TInstant *inst, STBox *box)
   else if (inst->temptype == T_TRGEOMETRY)
     tposeinst_set_stbox(inst, (STBox *) box);
 #endif
-#if QUADBIN
-  else if (inst->temptype == T_TQUADBIN)
-    tquadbininst_set_stbox(inst, (STBox *) box);
-#endif
 #if H3
   else if (inst->temptype == T_TH3INDEX)
     th3indexinst_set_stbox(inst, (STBox *) box);
+#endif
+#if QUADBIN
+  else if (inst->temptype == T_TQUADBIN)
+    tquadbininst_set_stbox(inst, (STBox *) box);
 #endif
   else
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
@@ -259,13 +259,13 @@ tspatialinstarr_set_stbox(TInstant **instants, int count, bool lower_inc,
   else if (temptype == T_TRGEOMETRY)
     tposeinstarr_set_stbox(instants, count, (STBox *) box);
 #endif
-#if QUADBIN
-  else if (temptype == T_TQUADBIN)
-    tquadbininstarr_set_stbox(instants, count, (STBox *) box);
-#endif
 #if H3
   else if (temptype == T_TH3INDEX)
     th3indexinstarr_set_stbox(instants, count, (STBox *) box);
+#endif
+#if QUADBIN
+  else if (temptype == T_TQUADBIN)
+    tquadbininstarr_set_stbox(instants, count, (STBox *) box);
 #endif
   else
   {
@@ -326,13 +326,13 @@ tspatialseq_expand_stbox(TSequence *seq, const TInstant *inst)
   else if (seq->temptype == T_TRGEOMETRY)
     tposeseq_expand_stbox(seq, inst);
 #endif
-#if QUADBIN
-  else if (seq->temptype == T_TQUADBIN)
-    tquadbinseq_expand_stbox(seq, inst);
-#endif
 #if H3
   else if (seq->temptype == T_TH3INDEX)
     th3indexseq_expand_stbox(seq, inst);
+#endif
+#if QUADBIN
+  else if (seq->temptype == T_TQUADBIN)
+    tquadbinseq_expand_stbox(seq, inst);
 #endif
   else
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
@@ -388,6 +388,10 @@ spatialarr_set_bbox(const Datum *values, MeosType basetype, int count,
 #if POSE || RGEO
   else if (basetype == T_POSE)
     posearr_set_stbox(values, count, (STBox *) box);
+#endif
+#if QUADBIN
+  else if (basetype == T_QUADBIN)
+    quadbinarr_set_stbox(values, count, (STBox *) box);
 #endif
 #if H3
   else if (basetype == T_H3INDEX)

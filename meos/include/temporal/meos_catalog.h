@@ -116,25 +116,26 @@ typedef enum
   T_TGEOMETRY      = 60,  /**< temporal geometry type */
   T_TGEOGRAPHY     = 61,  /**< temporal geography type */
   T_TRGEOMETRY     = 62,  /**< temporal rigid geometry type */
+  T_TBIGINT        = 63,  /**< temporal big integer type */
 #if JSON
-  T_JSONB          = 63,  /**< base type for PostgreSQL jsonb */
-  T_JSONPATH       = 64,  /**< base type for PostgreSQL jsonpath */
-  T_JSONBSET       = 65,  /**< static set of JSONB values */
-  T_TJSONB         = 66,  /**< temporal JSONB value */
+  T_JSONB          = 74,  /**< base type for PostgreSQL jsonb */
+  T_JSONPATH       = 75,  /**< base type for PostgreSQL jsonpath */
+  T_JSONBSET       = 76,  /**< static set of JSONB values */
+  T_TJSONB         = 77,  /**< temporal JSONB value */
 #endif /* JSON */
-  T_TBIGINT        = 67,  /**< temporal big integer type */
-  T_H3INDEX        = 68,  /**< static H3 cell index type (uint64) */
-  T_H3INDEXSET     = 69,  /**< h3index set type */
-  T_TH3INDEX       = 70,  /**< temporal H3 index type (libh3 cell index over time) */
-#if POINTCLOUD
-  T_PCPOINT        = 71,  /**< pgpointcloud point type */
-  T_PCPOINTSET     = 72,  /**< pgpointcloud point set type */
-  T_TPCPOINT       = 73,  /**< temporal pgpointcloud point type */
-  T_PCPATCH        = 74,  /**< pgpointcloud patch type */
-  T_PCPATCHSET     = 75,  /**< pgpointcloud patch set type */
-  T_TPCPATCH       = 76,  /**< temporal pgpointcloud patch type */
-  T_TPCBOX         = 77,  /**< temporal pgpointcloud bounding box type */
-#endif /* POINTCLOUD */
+  T_H3INDEX        = 64,  /**< static H3 cell index type (uint64) */
+  T_H3INDEXSET     = 65,  /**< h3index set type */
+  T_TH3INDEX       = 66,  /**< temporal H3 index type (libh3 cell index over time) */
+  T_PCPOINT        = 67,  /**< pgpointcloud point type */
+  T_PCPOINTSET     = 68,  /**< pgpointcloud point set type */
+  T_TPCPOINT       = 69,  /**< temporal pgpointcloud point type */
+  T_PCPATCH        = 70,  /**< pgpointcloud patch type */
+  T_PCPATCHSET     = 71,  /**< pgpointcloud patch set type */
+  T_TPCPATCH       = 72,  /**< temporal pgpointcloud patch type */
+  T_TPCBOX         = 73,  /**< temporal pgpointcloud bounding box type */
+  T_QUADBIN        = 78,  /**< static CARTO quadbin cell index type (uint64) */
+  T_QUADBINSET     = 79,  /**< quadbin set type */
+  T_TQUADBIN       = 80,  /**< temporal quadbin index type (cell index over time) */
   NUM_MEOS_TYPES          /* Dummy value that determines the size of the
                            * lookup array MeosType -> Oid */
 } MeosType;
