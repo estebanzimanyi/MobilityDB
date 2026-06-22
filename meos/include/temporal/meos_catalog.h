@@ -126,6 +126,15 @@ typedef enum
   T_H3INDEX        = 68,  /**< static H3 cell index type (uint64) */
   T_H3INDEXSET     = 69,  /**< h3index set type */
   T_TH3INDEX       = 70,  /**< temporal H3 index type (libh3 cell index over time) */
+#if POINTCLOUD
+  T_PCPOINT        = 71,  /**< pgpointcloud point type */
+  T_PCPOINTSET     = 72,  /**< pgpointcloud point set type */
+  T_TPCPOINT       = 73,  /**< temporal pgpointcloud point type */
+  T_PCPATCH        = 74,  /**< pgpointcloud patch type */
+  T_PCPATCHSET     = 75,  /**< pgpointcloud patch set type */
+  T_TPCPATCH       = 76,  /**< temporal pgpointcloud patch type */
+  T_TPCBOX         = 77,  /**< temporal pgpointcloud bounding box type */
+#endif /* POINTCLOUD */
   NUM_MEOS_TYPES          /* Dummy value that determines the size of the
                            * lookup array MeosType -> Oid */
 } MeosType;
@@ -272,6 +281,11 @@ extern bool geoset_type(MeosType type);
 extern bool ensure_geoset_type(MeosType type);
 extern bool spatialset_type(MeosType type);
 extern bool ensure_spatialset_type(MeosType type);
+#if POINTCLOUD
+extern bool pointcloud_basetype(MeosType type);
+extern bool pointcloudset_type(MeosType type);
+extern bool tpointcloud_temptype(MeosType type);
+#endif /* POINTCLOUD */
 
 extern bool span_basetype(MeosType type);
 extern bool span_canon_basetype(MeosType type);
