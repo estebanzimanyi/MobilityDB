@@ -103,6 +103,10 @@ CMAKE_DEPENDENT_OPTION(RGEO "Set ON|OFF (default=OFF) to include rigid geometrie
 option(QUADBIN "Set ON|OFF (default=OFF) to include the temporal QUADBIN index type (tquadbin)" OFF)
 option(ARROW "Set ON|OFF (default=OFF) to include the Apache Arrow C Data Interface export" OFF)
 
+# Option for sampling PostGIS raster bands along trajectories.
+# Requires the postgis_raster extension (ships with postgresql-N-postgis-3).
+option(RASTER "Set ON|OFF (default=OFF) to include PostGIS raster sampling operators" OFF)
+
 # The JSON types are derived from PostgreSQL 18 and require a PostgreSQL 18
 # server. For the MobilityDB extension, detect the server version and disable
 # JSON on older PostgreSQL. The standalone MEOS library vendors PostgreSQL 18,
@@ -165,6 +169,13 @@ if(QUADBIN)
 else()
   message(STATUS "Excluding temporal QUADBIN index")
   add_definitions(-DQUADBIN=0)
+endif()
+if(RASTER)
+  message(STATUS "Including PostGIS raster sampling operators")
+  add_definitions(-DRASTER=1)
+else()
+  message(STATUS "Excluding PostGIS raster sampling operators")
+  add_definitions(-DRASTER=0)
 endif()
 if(RGEO)
   message(STATUS "Including rigid geometries")
@@ -457,6 +468,13 @@ if(ICU_FOUND)
   message(STATUS "ICU Version '${ICU_VERSION}' found")
 else()
   message(STATUS "ICU NOT found")
+endif()
+
+# PostGIS is always required; postgis_raster is added when RASTER=ON.
+# The variable is substituted into mobilitydb.in.control by configure_file.
+set(MOBILITYDB_REQUIRES "postgis")
+if(RASTER)
+  set(MOBILITYDB_REQUIRES "${MOBILITYDB_REQUIRES}, postgis_raster")
 endif()
 
 #-------------------------------------
