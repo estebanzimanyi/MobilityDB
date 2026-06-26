@@ -60,7 +60,6 @@
 #include <catalog/indexing.h>
 #endif
 #include <commands/extension.h>
-#include <utils/builtins.h>
 #include <utils/fmgroids.h>
 #include <utils/lsyscache.h>
 #include <utils/memutils.h>
@@ -69,6 +68,8 @@
 /* pgpointcloud */
 #include "pc_api.h"
 /* MEOS */
+#include <pgtypes.h>  /* text_to_cstring — NOT utils/builtins.h, whose
+                       * fmgrprotos.h json_object collides with json-c */
 #include <meos_pointcloud.h>  /* meos_pc_schema_register_xml */
 /* MobilityDB */
 #include "pg_pointcloud/schema_cache.h"
@@ -161,7 +162,9 @@ fetch_schema_xml(uint32_t pcid)
     /* schema is the third column (attnum 3) */
     Datum xml_datum = heap_getattr(tuple, 3, tupDesc, &isnull);
     if (! isnull)
-      xml = TextDatumGetCString(xml_datum);
+      /* TextDatumGetCString without pulling utils/builtins.h: detoast then
+       * use MEOS's text_to_cstring (declared in pgtypes.h). */
+      xml = text_to_cstring(DatumGetTextPP(xml_datum));
   }
 
   systable_endscan(scan);

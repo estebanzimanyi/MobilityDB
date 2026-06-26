@@ -51,10 +51,11 @@
 #include "pc_api.h"
 /* MEOS — we cannot include utils/builtins.h here: meos_internal.h pulls
  * in <json-c/json.h>, whose `struct json_object` collides with PG's
- * `Datum json_object(PG_FUNCTION_ARGS)` in utils/fmgrprotos.h. The
- * two headers are mutually exclusive. For `text_to_cstring` we inline
- * an equivalent below. */
+ * `Datum json_object(PG_FUNCTION_ARGS)` in utils/fmgrprotos.h. The two
+ * headers are mutually exclusive, so we take text_to_cstring from
+ * <pgtypes.h>, which declares it without pulling fmgrprotos. */
 #include <meos.h>
+#include <pgtypes.h>            /* text_to_cstring — NOT utils/builtins.h */
 #include <meos_geo.h>
 #include <meos_internal.h>
 #include <meos_internal_geo.h>  /* tgeo_restrict_stbox */
@@ -68,17 +69,6 @@
 #include "pointcloud/tpcbox.h"     /* PG_GETARG_TPCBOX_P */
 /* MobilityDB */
 #include "pg_pointcloud/schema_cache.h"
-
-/* Local minimal text→cstring — see rationale above. */
-static char *
-tpcpoint_text_to_cstring(const text *t)
-{
-  int len = (int) VARSIZE_ANY_EXHDR(t);
-  char *result = palloc(len + 1);
-  memcpy(result, VARDATA_ANY(t), (size_t) len);
-  result[len] = '\0';
-  return result;
-}
 
 /*****************************************************************************
  * Per-type pcid accessor
@@ -499,7 +489,7 @@ Tpcpoint_get_dim(PG_FUNCTION_ARGS)
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
   text *name_txt = PG_GETARG_TEXT_P(1);
   PCSCHEMA *schema = tpcpoint_schema(temp);
-  char *name = tpcpoint_text_to_cstring(name_txt);
+  char *name = text_to_cstring(name_txt);
   Temporal *result = tpcpoint_project(temp, schema, dim_get_by_name, name);
   pfree(name);
   PG_FREE_IF_COPY(temp, 0);
