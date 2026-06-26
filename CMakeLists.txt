@@ -101,6 +101,7 @@ CMAKE_DEPENDENT_OPTION(RGEO "Set ON|OFF (default=OFF) to include rigid geometrie
 # first-party in meos/src/quadbin/ (libm only), so no find_library /
 # vendored subtree is needed.
 option(QUADBIN "Set ON|OFF (default=OFF) to include the temporal QUADBIN index type (tquadbin)" OFF)
+option(ARROW "Set ON|OFF (default=OFF) to include the Apache Arrow C Data Interface export" OFF)
 
 # The JSON types are derived from PostgreSQL 18 and require a PostgreSQL 18
 # server. For the MobilityDB extension, detect the server version and disable
@@ -171,6 +172,13 @@ if(RGEO)
 else()
   message(STATUS "Excluding rigid geometries")
   add_definitions(-DRGEO=0)
+endif()
+if(ARROW)
+  message(STATUS "Including Apache Arrow C Data Interface export")
+  add_definitions(-DARROW=1)
+else()
+  message(STATUS "Excluding Apache Arrow C Data Interface export")
+  add_definitions(-DARROW=0)
 endif()
 
 # Build the 'requires =' clause for the generated mobilitydb.control file
@@ -391,6 +399,12 @@ find_package(GSL REQUIRED)
 include_directories(SYSTEM ${GSL_INCLUDE_DIRS})
 message(STATUS "GSL_VERSION: ${GSL_VERSION}")
 add_definitions(-DGSL_VERSION_STRING="${GSL_VERSION}")
+
+# Apache Arrow C Data Interface (vendored, header-only; no libarrow link).
+# Set at the top level so both the MEOS and the MobilityDB builds find it.
+if(ARROW)
+  include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/arrow")
+endif()
 
 #----------------------------------------------
 # Configure PostGIS with optional dependencies
