@@ -42,12 +42,11 @@
 /* PostgreSQL */
 #include <postgres.h>
 #include <fmgr.h>
+#include <utils/builtins.h>  /* text_to_cstring */
 /* pgpointcloud */
 #include "pc_api.h"
 /* MEOS */
 #include <meos.h>
-#include <pgtypes.h>  /* text_to_cstring — NOT utils/builtins.h, whose
-                       * fmgrprotos.h json_object collides with json-c */
 #include <meos_pointcloud.h>
 #include "pointcloud/pcpoint.h"
 #include "pointcloud/pcpatch.h"

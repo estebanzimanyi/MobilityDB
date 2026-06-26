@@ -73,13 +73,17 @@
 #if RGEO
   #include "rgeo/trgeo_boxops.h"
 #endif
-#if H3
-  #include "h3/th3index_boxops.h"
+#if QUADBIN
+  #include "quadbin/quadbin_meos.h"
+  #include "quadbin/tquadbin_boxops.h"
 #endif
 
 #include <utils/jsonb.h>
 #include <utils/numeric.h>
 #include <pgtypes.h>
+#if H3
+  #include "h3/th3index_boxops.h"
+#endif
 
 /* Buffer size for input and output of STBox */
 #define MAXSTBOXLEN    256
@@ -289,7 +293,7 @@ stbox_from_hexwkb(const char *hexwkb)
  * @param[in] box Spatiotemporal box
  * @param[in] variant Output variant
  * @param[out] size_out Size of the output
- * @csqlfn #Stbox_send(), #Stbox_as_wkb()
+ * @csqlfn #Stbox_recv(), #Stbox_as_wkb()
  */
 uint8_t *
 stbox_as_wkb(const STBox *box, uint8_t variant, size_t *size_out)
@@ -1052,6 +1056,10 @@ spatial_set_stbox(Datum d, MeosType basetype, STBox *result)
 #if POSE || RGEO
     case T_POSE:
       return pose_set_stbox(DatumGetPoseP(d), result);
+#endif
+#if QUADBIN
+    case T_QUADBIN:
+      return quadbin_set_stbox(DatumGetQuadbin(d), result);
 #endif
 #if H3
     case T_H3INDEX:

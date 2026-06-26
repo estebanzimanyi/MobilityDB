@@ -53,30 +53,34 @@
 #if CBUFFER
   #include "cbuffer/cbuffer.h"
   #include "cbuffer/tcbuffer_boxops.h"
-#endif 
+#endif
+#if H3
+  #include "h3/th3index_boxops.h"
+#endif
 #if NPOINT
   #include "npoint/tnpoint_boxops.h"
-#endif 
+#endif
 #if POSE
   #include "pose/pose.h"
   #include "pose/tpose_boxops.h"
-#endif 
+#endif
 #if RGEO
   #include "pose/pose.h"
   #include "rgeo/trgeo.h"
   #include "rgeo/trgeo_inst.h"
   #include "rgeo/trgeo_boxops.h"
 #endif
-#if H3
-  #include "h3/th3index_boxops.h"
-#endif
-#if QUADBIN
-  #include "quadbin/tquadbin_boxops.h"
-#endif
 
 #include <utils/jsonb.h>
 #include <utils/numeric.h>
 #include <pgtypes.h>
+
+#include <utils/jsonb.h>
+#include <utils/numeric.h>
+#include <pgtypes.h>
+#if QUADBIN
+  #include "quadbin/tquadbin_boxops.h"
+#endif
 
 /*****************************************************************************
  * Input/output functions

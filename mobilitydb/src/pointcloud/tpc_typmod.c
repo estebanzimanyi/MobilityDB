@@ -32,6 +32,8 @@
 
 #include <postgres.h>
 #include <fmgr.h>
+#include <stdlib.h>              /* strtol */
+#include <errno.h>
 #include <utils/array.h>
 #include <catalog/pg_type.h>     /* CSTRINGOID */
 #if POSTGRESQL_VERSION_NUMBER >= 160000
@@ -40,11 +42,9 @@
 
 /* meos_internal.h pulls in <json-c/json.h>, whose `struct json_object`
  * collides with PG's `Datum json_object(PG_FUNCTION_ARGS)` in
- * utils/fmgrprotos.h (transitively via utils/builtins.h). So we take the
- * int parser from <pgtypes.h> (int32_in), which declares it without
- * pulling fmgrprotos. */
+ * utils/fmgrprotos.h (transitively via utils/builtins.h). We only need
+ * MEOS public API + a hand-rolled strtoint, so we skip both. */
 #include <meos.h>
-#include <pgtypes.h>             /* int32_in — NOT utils/builtins.h */
 #include <meos_pointcloud.h>     /* pcpoint_get_pcid, pcpatch_get_pcid */
 #include "temporal/temporal.h"
 #include "pointcloud/pcpoint.h"
@@ -87,9 +87,16 @@ tpc_typmod_in_array(ArrayType *arr)
     ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
       errmsg("Empty pcid typmod")));
 
-  /* Parse with MEOS's int32_in (pgtypes.h); it validates and errors on
-   * overflow or trailing garbage, replacing the hand-rolled strtol. */
-  int32 pcid = int32_in(s);
+  /* Hand-rolled int32 parse — we can't include utils/builtins.h here
+   * (json-c collision), so don't use pg_strtoint32 / pg_atoi. */
+  errno = 0;
+  char *end = NULL;
+  long val = strtol(s, &end, 10);
+  if (errno != 0 || end == s || *end != '\0' ||
+      val < INT32_MIN || val > INT32_MAX)
+    ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+      errmsg("Invalid pcid typmod: %s (must be a positive integer)", s)));
+  int32 pcid = (int32) val;
   if (pcid <= 0)
     ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
       errmsg("Invalid pcid typmod: %d (must be a positive integer)", pcid)));
