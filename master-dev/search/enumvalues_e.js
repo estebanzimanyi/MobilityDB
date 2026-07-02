@@ -1,12 +1,15 @@
 var searchData=
 [
-  ['same_5fop_0',['SAME_OP',['../meos_2include_2temporal_2meos__catalog_8h_a0ef7795f6a16f1de1410c140102870db.html#a0ef7795f6a16f1de1410c140102870dbae64c7f3650d28cd551df97df2c306802',1,'meos_catalog.h']]],
-  ['skiplist_5fkeyvalue_1',['SKIPLIST_KEYVALUE',['../meos__internal_8h_ae55cc4ffdb0eda3ab655388783c3f8ae.html#ae55cc4ffdb0eda3ab655388783c3f8aeaa3f6428e7facfe90d62cf79a83470fb9',1,'meos_internal.h']]],
-  ['skiplist_5ftemporal_2',['SKIPLIST_TEMPORAL',['../meos__internal_8h_ae55cc4ffdb0eda3ab655388783c3f8ae.html#ae55cc4ffdb0eda3ab655388783c3f8aeabf45c14c1890f3a1feb197d1e8ce893e',1,'meos_internal.h']]],
-  ['spgist_5fkdtree_3',['SPGIST_KDTREE',['../mobilitydb_2pg__include_2pg__temporal_2temporal_8h_aedaaf18d83155150aa88bf91c8304cf9.html#aedaaf18d83155150aa88bf91c8304cf9a3c68fcf715b95a6200ae3e3a09430dc9',1,'temporal.h']]],
-  ['spgist_5fquadtree_4',['SPGIST_QUADTREE',['../mobilitydb_2pg__include_2pg__temporal_2temporal_8h_aedaaf18d83155150aa88bf91c8304cf9.html#aedaaf18d83155150aa88bf91c8304cf9aced67bbdec0ceea837b935e5dbd44e2b',1,'temporal.h']]],
-  ['step_5',['STEP',['../meos_8h_ad06cc805fa18b06ac937fd98a9eba0e7.html#ad06cc805fa18b06ac937fd98a9eba0e7ac0ba526afb7f54207517b48a892961c2',1,'meos.h']]],
-  ['sub_6',['SUB',['../tnumber__mathfuncs_8h_ab9654814a05e2032f6a912760d2f8092.html#ab9654814a05e2032f6a912760d2f8092a12b733d4941495e86811fe6ceeeff9da',1,'tnumber_mathfuncs.h']]],
-  ['synchronize_5fcross_7',['SYNCHRONIZE_CROSS',['../meos_2include_2temporal_2temporal_8h_a08e3b775868324e578c0fe6af893bf7d.html#a08e3b775868324e578c0fe6af893bf7da0289e1fda8bc12062f3a8d38bfe9b9f1',1,'temporal.h']]],
-  ['synchronize_5fnocross_8',['SYNCHRONIZE_NOCROSS',['../meos_2include_2temporal_2temporal_8h_a08e3b775868324e578c0fe6af893bf7d.html#a08e3b775868324e578c0fe6af893bf7da09ae318fad28ddcca9e39fafca76db78',1,'temporal.h']]]
+  ['pg_5fss_5fadisjoint_0',['PG_SS_ADISJOINT',['../mobilitydb_2src_2geo_2tgeo__spatialrels_8c_a0a938aaa84f95e6c1d0e7c8f63859918.html#a0a938aaa84f95e6c1d0e7c8f63859918afba21db3f86ebe7de240ae551d6231f8',1,'tgeo_spatialrels.c']]],
+  ['pg_5fss_5fadwithin_1',['PG_SS_ADWITHIN',['../mobilitydb_2src_2geo_2tgeo__spatialrels_8c_a0a938aaa84f95e6c1d0e7c8f63859918.html#a0a938aaa84f95e6c1d0e7c8f63859918a01e13f2602d5ec225db7ffdf16b03d7e',1,'tgeo_spatialrels.c']]],
+  ['pg_5fss_5faintersects_2',['PG_SS_AINTERSECTS',['../mobilitydb_2src_2geo_2tgeo__spatialrels_8c_a0a938aaa84f95e6c1d0e7c8f63859918.html#a0a938aaa84f95e6c1d0e7c8f63859918a181d2a8e603308ac367eaf528b213b7c',1,'tgeo_spatialrels.c']]],
+  ['pg_5fss_5fatouches_3',['PG_SS_ATOUCHES',['../mobilitydb_2src_2geo_2tgeo__spatialrels_8c_a0a938aaa84f95e6c1d0e7c8f63859918.html#a0a938aaa84f95e6c1d0e7c8f63859918a6c4b576147912d1f11f4ab9f4ed21eb6',1,'tgeo_spatialrels.c']]],
+  ['pg_5fss_5fedisjoint_4',['PG_SS_EDISJOINT',['../mobilitydb_2src_2geo_2tgeo__spatialrels_8c_a0a938aaa84f95e6c1d0e7c8f63859918.html#a0a938aaa84f95e6c1d0e7c8f63859918a2e9c05c293e4ef37a1af00ac7927d1f9',1,'tgeo_spatialrels.c']]],
+  ['pg_5fss_5fedwithin_5',['PG_SS_EDWITHIN',['../mobilitydb_2src_2geo_2tgeo__spatialrels_8c_a0a938aaa84f95e6c1d0e7c8f63859918.html#a0a938aaa84f95e6c1d0e7c8f63859918abde8b1698c848557fb3ef5512caf38a3',1,'tgeo_spatialrels.c']]],
+  ['pg_5fss_5feintersects_6',['PG_SS_EINTERSECTS',['../mobilitydb_2src_2geo_2tgeo__spatialrels_8c_a0a938aaa84f95e6c1d0e7c8f63859918.html#a0a938aaa84f95e6c1d0e7c8f63859918a1e7306f4e1fa0971a240e900621cd257',1,'tgeo_spatialrels.c']]],
+  ['pg_5fss_5fetouches_7',['PG_SS_ETOUCHES',['../mobilitydb_2src_2geo_2tgeo__spatialrels_8c_a0a938aaa84f95e6c1d0e7c8f63859918.html#a0a938aaa84f95e6c1d0e7c8f63859918a1dd309a8d17c708e53d756c165ad8dc0',1,'tgeo_spatialrels.c']]],
+  ['pg_5fss_5ftdisjoint_8',['PG_SS_TDISJOINT',['../mobilitydb_2src_2geo_2tgeo__spatialrels_8c_a0a938aaa84f95e6c1d0e7c8f63859918.html#a0a938aaa84f95e6c1d0e7c8f63859918a405c8bee60c712ef92b6b76fbae40b8d',1,'tgeo_spatialrels.c']]],
+  ['pg_5fss_5ftdwithin_9',['PG_SS_TDWITHIN',['../mobilitydb_2src_2geo_2tgeo__spatialrels_8c_a0a938aaa84f95e6c1d0e7c8f63859918.html#a0a938aaa84f95e6c1d0e7c8f63859918a362669b4c20e67927bf8b118fa29c0b4',1,'tgeo_spatialrels.c']]],
+  ['pg_5fss_5ftintersects_10',['PG_SS_TINTERSECTS',['../mobilitydb_2src_2geo_2tgeo__spatialrels_8c_a0a938aaa84f95e6c1d0e7c8f63859918.html#a0a938aaa84f95e6c1d0e7c8f63859918a5c2cedf682944d5a086a6955e640c85b',1,'tgeo_spatialrels.c']]],
+  ['pg_5fss_5fttouches_11',['PG_SS_TTOUCHES',['../mobilitydb_2src_2geo_2tgeo__spatialrels_8c_a0a938aaa84f95e6c1d0e7c8f63859918.html#a0a938aaa84f95e6c1d0e7c8f63859918a37a269f8ded83f0482b484565f2b6fb4',1,'tgeo_spatialrels.c']]]
 ];

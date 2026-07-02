@@ -1,17 +1,11 @@
 var searchData=
 [
-  ['ways_5fcache_5fsize_0',['WAYS_CACHE_SIZE',['../ways__meos_8c_a9797b4da055a66d65a32c08217ea10f5.html#a9797b4da055a66d65a32c08217ea10f5',1,'ways_meos.c']]],
-  ['with_5fgeom_1',['WITH_GEOM',['../trgeo_8h_aa03c2c862ea80cfefa8402842a72a3e4.html#aa03c2c862ea80cfefa8402842a72a3e4',1,'trgeo.h']]],
-  ['with_5fz_2',['WITH_Z',['../meos_2include_2temporal_2temporal_8h_a62afd9d0d14c085e65b000b5bb37af76.html#a62afd9d0d14c085e65b000b5bb37af76',1,'temporal.h']]],
-  ['wkb_5fextended_3',['WKB_EXTENDED',['../postgis__ext__defs_8in_8h_aa18d3243b54eda22077a4ccd0e36a7ed.html#aa18d3243b54eda22077a4ccd0e36a7ed',1,'postgis_ext_defs.in.h']]],
-  ['wkb_5fhex_4',['WKB_HEX',['../postgis__ext__defs_8in_8h_a7ae8c9b0af59077f54694d22002685e2.html#a7ae8c9b0af59077f54694d22002685e2',1,'postgis_ext_defs.in.h']]],
-  ['wkb_5fiso_5',['WKB_ISO',['../postgis__ext__defs_8in_8h_a236e1a188679a87c047449deb97cc9c8.html#a236e1a188679a87c047449deb97cc9c8',1,'postgis_ext_defs.in.h']]],
-  ['wkb_5fndr_6',['WKB_NDR',['../postgis__ext__defs_8in_8h_aa9c477b35e2160b4908883631a87ab01.html#aa9c477b35e2160b4908883631a87ab01',1,'postgis_ext_defs.in.h']]],
-  ['wkb_5fno_5fnpoints_7',['WKB_NO_NPOINTS',['../postgis__ext__defs_8in_8h_a37471152996fedb3d63d0bea92cea126.html#a37471152996fedb3d63d0bea92cea126',1,'postgis_ext_defs.in.h']]],
-  ['wkb_5fno_5fsrid_8',['WKB_NO_SRID',['../postgis__ext__defs_8in_8h_a131255379092a12ddeb430df0c3fa8ef.html#a131255379092a12ddeb430df0c3fa8ef',1,'postgis_ext_defs.in.h']]],
-  ['wkb_5fsfsql_9',['WKB_SFSQL',['../postgis__ext__defs_8in_8h_ae94a5a03cbf0adbf240563b04447a011.html#ae94a5a03cbf0adbf240563b04447a011',1,'postgis_ext_defs.in.h']]],
-  ['wkb_5fxdr_10',['WKB_XDR',['../postgis__ext__defs_8in_8h_af9f49eec6cde11d5601375c04de72b62.html#af9f49eec6cde11d5601375c04de72b62',1,'postgis_ext_defs.in.h']]],
-  ['wkt_5fextended_11',['WKT_EXTENDED',['../postgis__ext__defs_8in_8h_a4c2c398e84c8a183208b0b21dd604f8e.html#a4c2c398e84c8a183208b0b21dd604f8e',1,'postgis_ext_defs.in.h']]],
-  ['wkt_5fiso_12',['WKT_ISO',['../postgis__ext__defs_8in_8h_aa9351cce9401245ca5bdd8e86b3ea8aa.html#aa9351cce9401245ca5bdd8e86b3ea8aa',1,'postgis_ext_defs.in.h']]],
-  ['wkt_5fsfsql_13',['WKT_SFSQL',['../postgis__ext__defs_8in_8h_a12b2d0c15bb1930ba8dce5da92362204.html#a12b2d0c15bb1930ba8dce5da92362204',1,'postgis_ext_defs.in.h']]]
+  ['unary_5funion_0',['UNARY_UNION',['../meos_2include_2temporal_2temporal_8h_ad4916eebc2f77b698f2f527885a43d5a.html#ad4916eebc2f77b698f2f527885a43d5a',1,'temporal.h']]],
+  ['unary_5funion_5fno_1',['UNARY_UNION_NO',['../meos_2include_2temporal_2temporal_8h_a90ec5be4baa37a1bc25520cbe1c14d6d.html#a90ec5be4baa37a1bc25520cbe1c14d6d',1,'temporal.h']]],
+  ['upper_5fexc_2',['UPPER_EXC',['../meos_2include_2temporal_2temporal_8h_acbf712097103c3a91bf32dabddd4a243.html#acbf712097103c3a91bf32dabddd4a243',1,'temporal.h']]],
+  ['use_5fgerman_5fdates_3',['USE_GERMAN_DATES',['../meos_8c_ad9836f3cd23d1c2e5b2299d40d1e3366.html#ad9836f3cd23d1c2e5b2299d40d1e3366',1,'meos.c']]],
+  ['use_5fiso_5fdates_4',['USE_ISO_DATES',['../meos_8c_a449fb9e72222dfbdd3136adc71936907.html#a449fb9e72222dfbdd3136adc71936907',1,'meos.c']]],
+  ['use_5fpostgres_5fdates_5',['USE_POSTGRES_DATES',['../meos_8c_a2d4be95c5e727fa4bd6d62bd315f1e69.html#a2d4be95c5e727fa4bd6d62bd315f1e69',1,'meos.c']]],
+  ['use_5fsql_5fdates_6',['USE_SQL_DATES',['../meos_8c_a1bfccf7316c11f89b53b6687d1cc676b.html#a1bfccf7316c11f89b53b6687d1cc676b',1,'meos.c']]],
+  ['use_5fxsd_5fdates_7',['USE_XSD_DATES',['../meos_8c_ac2fbfb70952f973a1e3532a2aef54c27.html#ac2fbfb70952f973a1e3532a2aef54c27',1,'meos.c']]]
 ];

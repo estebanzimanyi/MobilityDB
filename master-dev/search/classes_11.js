@@ -1,4 +1,27 @@
 var searchData=
 [
-  ['varlena_0',['varlena',['../structvarlena.html',1,'']]]
+  ['tbox_0',['TBox',['../structTBox.html',1,'']]],
+  ['tboxgridstate_1',['TboxGridState',['../structTboxGridState.html',1,'']]],
+  ['tboxnode_2',['TboxNode',['../structTboxNode.html',1,'']]],
+  ['tcbbucket_3',['TcbBucket',['../structTcbBucket.html',1,'']]],
+  ['tcbgeom_4',['TcbGeom',['../structTcbGeom.html',1,'']]],
+  ['tcbseg_5',['TcbSeg',['../structTcbSeg.html',1,'']]],
+  ['tcbsortitem_6',['TcbSortItem',['../structTcbSortItem.html',1,'']]],
+  ['tcbwitness_7',['TcbWitness',['../structTcbWitness.html',1,'']]],
+  ['tdist_5farray_8',['tdist_array',['../structtdist__array.html',1,'']]],
+  ['tdist_5felem_9',['tdist_elem',['../structtdist__elem.html',1,'']]],
+  ['temporal_10',['Temporal',['../structTemporal.html',1,'']]],
+  ['temporalanalyzeextradata_11',['TemporalAnalyzeExtraData',['../structTemporalAnalyzeExtraData.html',1,'']]],
+  ['temptype_5fcatalog_5fstruct_12',['temptype_catalog_struct',['../structtemptype__catalog__struct.html',1,'']]],
+  ['tempunneststate_13',['TempUnnestState',['../structTempUnnestState.html',1,'']]],
+  ['textset_5frecord_14',['textset_record',['../structtextset__record.html',1,'']]],
+  ['tgeoarrjoinstate_15',['TgeoarrJoinState',['../structTgeoarrJoinState.html',1,'']]],
+  ['tgeoarrpair_16',['TgeoarrPair',['../structTgeoarrPair.html',1,'']]],
+  ['tinstant_17',['TInstant',['../structTInstant.html',1,'']]],
+  ['tpcbox_18',['TPCBox',['../structTPCBox.html',1,'']]],
+  ['tpcpatchpointsstate_19',['TpcpatchPointsState',['../structTpcpatchPointsState.html',1,'']]],
+  ['trip_5frecord_20',['trip_record',['../structtrip__record.html',1,'']]],
+  ['trip_5ft_21',['trip_t',['../structtrip__t.html',1,'']]],
+  ['tsequence_22',['TSequence',['../structTSequence.html',1,'']]],
+  ['tsequenceset_23',['TSequenceSet',['../structTSequenceSet.html',1,'']]]
 ];
