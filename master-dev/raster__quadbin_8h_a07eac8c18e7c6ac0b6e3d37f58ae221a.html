@@ -79,6 +79,7 @@ $(function() {
    <td valign="top">
       <div class="navtab">
         <table>
+          <tr><td class="navtab"><a class="navtab" href="raster__quadbin_8h_afbee819387dc775b1c13d7fdb565504c.html#afbee819387dc775b1c13d7fdb565504c">raster_quadbin_from_bounds</a></td></tr>
           <tr><td class="navtabHL"><a class="navtab" href="raster__quadbin_8h_a07eac8c18e7c6ac0b6e3d37f58ae221a.html#a07eac8c18e7c6ac0b6e3d37f58ae221a">raster_tile_value_quadbin</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="raster__quadbin_8h_a683d59d59af47d462f0a1b7bb844b77c.html#a683d59d59af47d462f0a1b7bb844b77c">trajectory_quadbins</a></td></tr>
         </table>
@@ -147,11 +148,11 @@ $(function() {
       </table>
 </div><div class="memdoc">
 
-<p>Sample a Raquet raster chip along a tgeompoint trajectory. </p>
+<p>Sample a <a class="el" href="structRaquet.html" title="Structure to represent a Raquet raster tile.">Raquet</a> raster chip along a tgeompoint trajectory. </p>
 <p >The chip is identified by its QUADBIN cell, which encodes the Web-Mercator tile coordinates and thus the full georeferencing without any separate metadata. Instants outside the tile extent or on nodata pixels are silently dropped; NULL is returned when no instants survive.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">pixels</td><td>Row-major pixel bytes (all bands interleaved or single-band depending on the Raquet producer) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pixels</td><td>Row-major pixel bytes (all bands interleaved or single-band depending on the <a class="el" href="structRaquet.html" title="Structure to represent a Raquet raster tile.">Raquet</a> producer) </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">width</td><td>Tile width in pixels (typically 256) </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">height</td><td>Tile height in pixels (typically 256) </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">quadbin</td><td>CARTO QUADBIN cell identifier (uint64) </td></tr>
