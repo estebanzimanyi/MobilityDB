@@ -3231,7 +3231,7 @@ tfunc_null_tcontseq_iter(const TSequence *seq, LiftedFunctionInfo *lfinfo,
   /* General case */
   TInstant **instants = palloc(sizeof(TInstant *) * seq->count);
   int ninsts = 0, nseqs = 0;
-  interpType interp = MEOS_FLAGS_GET_INTERP(seq->flags);
+  interpType interp = lfinfo->reslinear ? LINEAR : STEP;
   bool lower_inc = seq->period.lower_inc, upper_inc = seq->period.upper_inc;
   for (int i = 0; i < seq->count; i++)
   {

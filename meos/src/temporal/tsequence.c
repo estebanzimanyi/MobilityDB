@@ -40,11 +40,14 @@
 /* PostgreSQL */
 #include <postgres.h>
 #include <utils/float.h>
+#include <utils/jsonb.h>
+#include <utils/numeric.h>
 #include <utils/timestamp.h>
 #include <common/hashfn.h>
 #if POSTGRESQL_VERSION_NUMBER >= 160000
   #include "varatt.h"
 #endif
+#include <pgtypes.h>
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
@@ -81,9 +84,7 @@
   #include "rgeo/trgeo.h"
 #endif
 
-#include <utils/jsonb.h>
-#include <utils/numeric.h>
-#include <pgtypes.h>
+
 
 /*****************************************************************************
  * Collinear functions

@@ -108,13 +108,13 @@ extern Datum datum_jsonb_path_query_array(Datum jb, Datum jp, Datum vars, Datum 
 extern Datum datum_jsonb_path_query_first(Datum jb, Datum jp, Datum vars, Datum silent, Datum tz);
 extern Datum datum_jsonb_to_text(Datum jb);
 extern Datum datum_text_to_jsonb(Datum txt);
-extern Datum datum_jsonb_to_alphanum(Datum jb, Datum key, Datum temptype, Datum null_handle);
+extern Datum datum_jsonb_to_base(Datum jb, Datum key, Datum temptype, Datum null_handle);
 
 /*****************************************************************************
  * Temporal JSONB operations
  *****************************************************************************/
 
-extern Temporal *tjsonb_to_talphanum(const Temporal *temp, const char *key,
+extern Temporal *tjsonb_to_temporal(const Temporal *temp, const char *key,
   MeosType resbasetype, interpType interp, nullHandleType null_handle);
 
 /*****************************************************************************

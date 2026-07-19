@@ -355,7 +355,7 @@ jsonbset_to_alphanumset(const Set *set, const char *key, MeosType resbasetype,
   MeosType restype = basetype_settype(resbasetype);
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
-  lfinfo.func = (varfunc) &datum_jsonb_to_alphanum;
+  lfinfo.func = (varfunc) &datum_jsonb_to_base;
   lfinfo.argtype[0] = T_JSONB;
   lfinfo.numparam = 3;
   lfinfo.param[0] = PointerGetDatum(key);
@@ -369,7 +369,7 @@ jsonbset_to_alphanumset(const Set *set, const char *key, MeosType resbasetype,
 #if MEOS
 /**
  * @ingroup meos_json_set_json
- * @brief Convert a JSONB set to a temporal integer by extracting one key
+ * @brief Convert a JSONB set to an integer set by extracting one key
  * @param[in] set JSONB set object
  * @param[in] key Key to extract
  * @param[in] null_handle States the null value treatment
@@ -380,6 +380,21 @@ jsonbset_to_intset(const Set *set, const char *key,
   nullHandleType null_handle)
 {
   return jsonbset_to_alphanumset(set, key, T_INT4, null_handle);
+}
+
+/**
+ * @ingroup meos_json_set_json
+ * @brief Convert a JSONB set to a big integer set by extracting one key
+ * @param[in] set JSONB set object
+ * @param[in] key Key to extract
+ * @param[in] null_handle States the null value treatment
+ * @csqlfn #Jsonbset_to_bigintset()
+ */
+Set *
+jsonbset_to_bigintset(const Set *set, const char *key,
+  nullHandleType null_handle)
+{
+  return jsonbset_to_alphanumset(set, key, T_INT8, null_handle);
 }
 
 /**

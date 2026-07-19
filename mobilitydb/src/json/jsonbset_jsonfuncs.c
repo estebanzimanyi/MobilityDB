@@ -683,7 +683,7 @@ PGDLLEXPORT Datum Jsonbset_to_intset(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Jsonbset_to_intset);
 /**
  * @ingroup mobilitydb_json_json
- * @brief Convert a JSONB set value into a temporal integer
+ * @brief Convert a JSONB set value into an integer set
  * @sqlfn tint()
  */
 Datum
@@ -692,11 +692,24 @@ Jsonbset_to_intset(PG_FUNCTION_ARGS)
   return Jsonbset_to_alphanumset(fcinfo, T_INT4);
 }
 
+PGDLLEXPORT Datum Jsonbset_to_bigintset(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Jsonbset_to_bigintset);
+/**
+ * @ingroup mobilitydb_json_json
+ * @brief Convert a JSONB set value into a big integer set
+ * @sqlfn tint()
+ */
+Datum
+Jsonbset_to_bigintset(PG_FUNCTION_ARGS)
+{
+  return Jsonbset_to_alphanumset(fcinfo, T_INT8);
+}
+
 PGDLLEXPORT Datum Jsonbset_to_floatset(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Jsonbset_to_floatset);
 /**
  * @ingroup mobilitydb_json_json
- * @brief Convert a JSONB set value into a temporal float
+ * @brief Convert a JSONB set value into a float set
  * @sqlfn tfloat()
  */
 Datum

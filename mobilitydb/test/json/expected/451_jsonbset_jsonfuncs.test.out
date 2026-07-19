@@ -263,6 +263,30 @@ SELECT intset(jsonbset '{"{\"a\":\"1\", \"b\":2.5}"}', text 'a');
  {1}
 (1 row)
 
+SELECT bigintset(jsonbset '{"{\"a\":true, \"b\":2.5}"}', text 'a');
+ bigintset 
+-----------
+ {1}
+(1 row)
+
+SELECT bigintset(jsonbset '{"{\"a\":1, \"b\":2.5}"}', text 'a');
+ bigintset 
+-----------
+ {1}
+(1 row)
+
+SELECT bigintset(jsonbset '{"{\"a\":1, \"b\":2.5}"}', text 'b');
+ bigintset 
+-----------
+ {2}
+(1 row)
+
+SELECT bigintset(jsonbset '{"{\"a\":\"1\", \"b\":2.5}"}', text 'a');
+ bigintset 
+-----------
+ {1}
+(1 row)
+
 SELECT floatset(jsonbset '{"{\"a\":true, \"b\":2.5}"}', text 'a');
  floatset 
 ----------
@@ -279,6 +303,30 @@ SELECT floatset(jsonbset '{"{\"a\":1, \"b\":2.5}"}', text 'b');
  floatset 
 ----------
  {2.5}
+(1 row)
+
+SELECT floatset(jsonbset '{"{\"a\":\"1\", \"b\":2.5}"}', text 'a');
+ floatset 
+----------
+ {1}
+(1 row)
+
+SELECT textset(jsonbset '{"{\"a\":1, \"b\":2.5}"}', text 'a');
+ textset 
+---------
+ {"1"}
+(1 row)
+
+SELECT textset(jsonbset '{"{\"a\":1, \"b\":2.5}"}', text 'b');
+ textset 
+---------
+ {"2.5"}
+(1 row)
+
+SELECT textset(jsonbset '{"{\"a\":\"1\", \"b\":2.5}"}', text 'a');
+ textset 
+---------
+ {"1"}
 (1 row)
 
 /* Errors */

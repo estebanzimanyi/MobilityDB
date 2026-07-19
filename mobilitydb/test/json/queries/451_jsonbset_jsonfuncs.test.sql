@@ -113,9 +113,22 @@ SELECT intset(jsonbset '{"{\"a\":true, \"b\":2.5}"}', text 'a');
 SELECT intset(jsonbset '{"{\"a\":1, \"b\":2.5}"}', text 'a');
 SELECT intset(jsonbset '{"{\"a\":1, \"b\":2.5}"}', text 'b');
 SELECT intset(jsonbset '{"{\"a\":\"1\", \"b\":2.5}"}', text 'a');
+
+SELECT bigintset(jsonbset '{"{\"a\":true, \"b\":2.5}"}', text 'a');
+SELECT bigintset(jsonbset '{"{\"a\":1, \"b\":2.5}"}', text 'a');
+SELECT bigintset(jsonbset '{"{\"a\":1, \"b\":2.5}"}', text 'b');
+SELECT bigintset(jsonbset '{"{\"a\":\"1\", \"b\":2.5}"}', text 'a');
+
 SELECT floatset(jsonbset '{"{\"a\":true, \"b\":2.5}"}', text 'a');
 SELECT floatset(jsonbset '{"{\"a\":1, \"b\":2.5}"}', text 'a');
 SELECT floatset(jsonbset '{"{\"a\":1, \"b\":2.5}"}', text 'b');
+SELECT floatset(jsonbset '{"{\"a\":\"1\", \"b\":2.5}"}', text 'a');
+
+-- TODO The following query crashes the system
+-- SELECT textset(jsonbset '{"{\"a\":true, \"b\":2.5}"}', text 'a');
+SELECT textset(jsonbset '{"{\"a\":1, \"b\":2.5}"}', text 'a');
+SELECT textset(jsonbset '{"{\"a\":1, \"b\":2.5}"}', text 'b');
+SELECT textset(jsonbset '{"{\"a\":\"1\", \"b\":2.5}"}', text 'a');
 /* Errors */
 SELECT intset(jsonbset '{"{\"a\":1, \"b\":2.5}"}', text 'xxx');
 SELECT intset(jsonbset '{"{\"a\":\"xxx\", \"b\":2.5}"}', text 'a');

@@ -124,6 +124,11 @@ SELECT tjsonb '{[{"speed": 10}@2000-01-01, {"speed": 20, "units": "km/h"}@2000-0
 
 -------------------------------------------------------------------------------
 
+SELECT tbool(tjsonb '"{\"a\":true, \"b\":2.5}"@2001-01-01', text 'a');
+SELECT tbool(tjsonb '"{\"a\":1, \"b\":2.5}"@2001-01-01', text 'a');
+SELECT tbool(tjsonb '"{\"a\":1, \"b\":2.5}"@2001-01-01', text 'b');
+SELECT tbool(tjsonb '"{\"a\":\"1\", \"b\":2.5}"@2001-01-01', text 'a');
+
 SELECT tint(tjsonb '"{\"a\":true, \"b\":2.5}"@2001-01-01', text 'a');
 SELECT tint(tjsonb '"{\"a\":1, \"b\":2.5}"@2001-01-01', text 'a');
 SELECT tint(tjsonb '"{\"a\":1, \"b\":2.5}"@2001-01-01', text 'b');
@@ -137,6 +142,26 @@ SELECT tbigint(tjsonb '"{\"a\":\"1\", \"b\":2.5}"@2001-01-01', text 'a');
 SELECT tfloat(tjsonb '"{\"a\":true, \"b\":2.5}"@2001-01-01', text 'a');
 SELECT tfloat(tjsonb '"{\"a\":1, \"b\":2.5}"@2001-01-01', text 'a');
 SELECT tfloat(tjsonb '"{\"a\":1, \"b\":2.5}"@2001-01-01', text 'b');
+SELECT tfloat(tjsonb '"{\"a\":\"1\", \"b\":2.5}"@2001-01-01', text 'a');
+
+-- TODO The following query crashes the system
+-- SELECT ttext(tjsonb '"{\"a\":true, \"b\":2.5}"@2001-01-01', text 'a');
+SELECT ttext(tjsonb '"{\"a\":1, \"b\":2.5}"@2001-01-01', text 'a');
+SELECT ttext(tjsonb '"{\"a\":1, \"b\":2.5}"@2001-01-01', text 'b');
+SELECT ttext(tjsonb '"{\"a\":\"1\", \"b\":2.5}"@2001-01-01', text 'a');
+
+SELECT asEWKT(tgeompoint(tjsonb '"{\"a\":\"Point(1 1)\", \"b\":2.5}"@2001-01-01', text 'a'));
+SELECT asEWKT(tgeogpoint(tjsonb '"{\"a\":\"Point(1 1)\", \"b\":2.5}"@2001-01-01', text 'a'));
+SELECT asEWKT(tgeometry(tjsonb '"{\"a\":\"Point(1 1)\", \"b\":2.5}"@2001-01-01', text 'a'));
+SELECT asEWKT(tgeography(tjsonb '"{\"a\":\"Point(1 1)\", \"b\":2.5}"@2001-01-01', text 'a'));
+
+SELECT asEWKT(tcbuffer(tjsonb '"{\"a\":\"Cbuffer(Point(1 1), 1)\", \"b\":2.5}"@2001-01-01', text 'a'));
+
+SELECT tnpoint(tjsonb '"{\"a\":\"Npoint(1, 1)\", \"b\":2.5}"@2001-01-01', text 'a');
+
+SELECT asEWKT(tpose(tjsonb '"{\"a\":\"Pose(Point(1 1), 0.3)\", \"b\":2.5}"@2001-01-01', text 'a'));
+
+
 /* Errors */
 SELECT tint(tjsonb '"{\"a\":1, \"b\":2.5}"@2001-01-01', text 'xxx');
 SELECT tint(tjsonb '"{\"a\":\"xxx\", \"b\":2.5}"@2001-01-01', text 'a');

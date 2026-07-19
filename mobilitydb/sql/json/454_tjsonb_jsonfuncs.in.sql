@@ -202,6 +202,61 @@ CREATE FUNCTION ttext(tjsonb, text, null_handle text DEFAULT 'raise_exception')
 
 /*****************************************************************************/
 
+CREATE FUNCTION tgeompoint(tjsonb, text, interp text DEFAULT 'linear',
+    null_handle text DEFAULT 'raise_exception')
+  RETURNS tgeompoint
+  AS 'MODULE_PATHNAME', 'Tjsonb_to_tgeompoint'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tgeogpoint(tjsonb, text, interp text DEFAULT 'linear',
+    null_handle text DEFAULT 'raise_exception')
+  RETURNS tgeogpoint
+  AS 'MODULE_PATHNAME', 'Tjsonb_to_tgeogpoint'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tgeometry(tjsonb, text,
+    null_handle text DEFAULT 'raise_exception')
+  RETURNS tgeometry
+  AS 'MODULE_PATHNAME', 'Tjsonb_to_tgeometry'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION tgeography(tjsonb, text,
+    null_handle text DEFAULT 'raise_exception')
+  RETURNS tgeography
+  AS 'MODULE_PATHNAME', 'Tjsonb_to_tgeography'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tcbuffer(tjsonb, text, interp text DEFAULT 'linear',
+    null_handle text DEFAULT 'raise_exception')
+  RETURNS tcbuffer
+  AS 'MODULE_PATHNAME', 'Tjsonb_to_tcbuffer'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION th3index(tjsonb, text, interp text DEFAULT 'linear',
+    null_handle text DEFAULT 'raise_exception')
+  RETURNS th3index
+  AS 'MODULE_PATHNAME', 'Tjsonb_to_th3index'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tnpoint(tjsonb, text, interp text DEFAULT 'linear',
+    null_handle text DEFAULT 'raise_exception')
+  RETURNS tnpoint
+  AS 'MODULE_PATHNAME', 'Tjsonb_to_tnpoint'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION tpose(tjsonb, text, interp text DEFAULT 'linear',
+    null_handle text DEFAULT 'raise_exception')
+  RETURNS tpose
+  AS 'MODULE_PATHNAME', 'Tjsonb_to_tpose'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+-- TODO Determine how to input the reference geometry and the temporal pose
+-- CREATE FUNCTION trgeometry(tjsonb, text, interp text DEFAULT 'linear',
+    -- null_handle text DEFAULT 'raise_exception')
+  -- RETURNS tpose
+  -- AS 'MODULE_PATHNAME', 'Tjsonb_to_trgeometry'
+  -- LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+/*****************************************************************************/
+
 CREATE FUNCTION tjsonb_concat(jsonb, tjsonb)
   RETURNS tjsonb
   AS 'MODULE_PATHNAME', 'Concat_jsonb_tjsonb'

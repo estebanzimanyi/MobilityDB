@@ -2739,7 +2739,7 @@
 				</listitem>
 
 				<listitem>
-					<para><link linkend="tjsonb_talphanum"><varname>tbool</varname>, <varname>tint</varname>, <varname>tfloat</varname>, <varname>ttext</varname></link>: Extraer un valor alfanumérico temporal de un valor JSONB temporal dado por una clave</para>
+					<para><link linkend="tjsonb_temporal"><varname>tbool</varname>, <varname>tint</varname>, <varname>tbigint</varname>, <varname>tfloat</varname>, <varname>ttext</varname></link>: Extraer un valor temporal de un valor JSONB temporal dado por una clave</para>
 				</listitem>
 
 				<listitem>

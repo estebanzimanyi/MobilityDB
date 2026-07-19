@@ -259,8 +259,8 @@ extern MeosType basetype_settype(MeosType type);
 
 extern bool tnumber_basetype(MeosType type);
 extern bool geo_basetype(MeosType type);
-#ifndef NDEBUG
 extern bool meos_basetype(MeosType type);
+#ifndef NDEBUG
 extern bool alphanum_basetype(MeosType type);
 extern bool alphanum_temptype(MeosType type);
 #endif

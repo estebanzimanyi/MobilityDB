@@ -858,16 +858,10 @@ SELECT tjsonb_array_element(tjsonb '[["Grand Place", "La Bourse"]@2001-01-01,
 </programlisting>
 			</listitem>
 
-			<listitem xml:id="tjsonb_talphanum">
-				<indexterm significance="normal"><primary><varname>tbool</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>tint</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>tfloat</varname></primary></indexterm>
-				<indexterm significance="normal"><primary><varname>ttext</varname></primary></indexterm>
-				<para>Extract a temporal alphanumeric value from a temporal JSONB value given by a key</para>
-				<para><varname>tbool(tjsonb,text,null_handle text='raise_exception') → tbool</varname></para>
-				<para><varname>tint(tjsonb,text,null_handle text='raise_exception') → tint</varname></para>
-				<para><varname>tfloat(tjsonb,text,interp='linear',null_handle text='raise_exception') → tfloat</varname></para>
-				<para><varname>ttext(tjsonb,text, null_handle text='raise_exception') → ttext</varname></para>
+			<listitem xml:id="tjsonb_temporal">
+				<indexterm significance="normal"><primary><varname>ttype</varname></primary></indexterm>
+				<para>Extract a temporal value from a temporal JSONB value given by a key</para>
+				<para><varname>ttype(tjsonb,text,null_handle text='raise_exception') → ttype</varname></para>
 				<para>Note that the value <varname>use_json_null</varname> cannot be used for the above functions and thus the default value <varname>'raise_exception'</varname> is used.</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT tbool(tjsonb '[{"speed": 10, "lights": "on"}@2001-01-01,
@@ -884,6 +878,11 @@ SELECT ttext(tjsonb '[{"road": "Bvd Gén. Jacques", "category": "primary"}@2001-
   {"road": "Bvd Gén. Jacques", "category": "primary"}@2001-01-02,
   {"road": "Bvd de la Cambre", "category": "residential"}@2001-01-03]', 'category');
 -- [primary@2001-01-01, residential@2001-01-03]
+SELECT asText(tgeompoint(tjsonb '[
+  {"road": "Bvd Gén. Jacques", "location": "Point(1 1)"}@2001-01-01,
+  {"road": "Bvd Gén. Jacques", "location": "Point(2 2)"}@2001-01-02,
+  {"road": "Bvd de la Cambre", "location": "Point(4 4)"}@2001-01-03]', 'location'));
+--{[POINT(1 1)@2001-01-01, POINT(2 2)@2001-01-02, POINT(4 4)@2001-01-03]}
 </programlisting>
 			</listitem>
 

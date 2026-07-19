@@ -49,6 +49,7 @@
 #include "temporal/lifting.h"
 #include "temporal/type_parser.h"
 #include "temporal/type_util.h"
+#include "geo/tspatial_parser.h"
 #include "json/tjsonb.h"
 
 /*****************************************************************************
@@ -935,7 +936,7 @@ tjsonb_set(const Temporal *temp, text **keys, int count, const Jsonb *newjb,
 /*****************************************************************************/
 
 /**
- * @brief Convert a JSONB value into a base alphanumeric value
+ * @brief Convert a JSONB value into a MEOS base value
  * @param[in] jb JSONB value
  * @param[in] key Key to extract from the JSONB object
  * @param[in] resbasetype Resulting base type
@@ -943,10 +944,10 @@ tjsonb_set(const Temporal *temp, text **keys, int count, const Jsonb *newjb,
  * @note Supported JSONB types: boolean, numeric, string
  */
 static Datum
-jsonb_to_alphanum(const Jsonb *jb, const char *key, MeosType resbasetype,
+jsonb_to_base(const Jsonb *jb, const char *key, MeosType resbasetype,
   nullHandleType null_handle)
 {
-  assert(jb); assert(key); assert(alphanum_basetype(resbasetype));
+  assert(jb); assert(key); assert(meos_basetype(resbasetype));
 
   /* Lookup key in the JSONB object */
   JsonbValue k, *v;
@@ -959,8 +960,10 @@ jsonb_to_alphanum(const Jsonb *jb, const char *key, MeosType resbasetype,
   if (! v)
   {
     if (null_handle == NULL_ERROR)
+    {
       meos_error(ERROR, MEOS_ERR_NULL_RESULT,
         "The lifted operation returned NULL");
+    }
     if (null_handle == NULL_ERROR || null_handle == NULL_RETURN ||
         null_handle == NULL_DELETE)
     {
@@ -1036,7 +1039,7 @@ jsonb_to_alphanum(const Jsonb *jb, const char *key, MeosType resbasetype,
 
     case jbvString:
     {
-      Datum val;
+      Datum val = (Datum) 0; /* Initialized to NULL or ERROR */
       char *buf = palloc(v->val.string.len + 1);
       memcpy(buf, v->val.string.val, v->val.string.len);
       buf[v->val.string.len] = '\0';
@@ -1068,10 +1071,18 @@ jsonb_to_alphanum(const Jsonb *jb, const char *key, MeosType resbasetype,
         else /* resbasetype == T_FLOAT8 */
           return Float8GetDatum(dval);
       }
-      else /* resbasetype == T_TTEXT */
+      else 
       {
-        text *txt = pg_cstring_to_text(buf);
-        val = PointerGetDatum(txt);
+        if (resbasetype == T_TEXT)
+        {
+          text *txt = pg_cstring_to_text(buf);
+          val = PointerGetDatum(txt);
+        }
+        else /* The remaining base types will be input from the char string */
+        {
+          /* Datum last argument will be set to NULL on input error */
+          (void) basetype_in(buf, resbasetype, false, &val);
+        }
       }
       pfree(buf);
       return val;
@@ -1094,7 +1105,7 @@ jsonb_to_alphanum(const Jsonb *jb, const char *key, MeosType resbasetype,
 }
 
 /**
- * @brief Convert a JSONB value into a base alphanumeric value
+ * @brief Convert a JSONB value into a MEOS base value
  * @param[in] jb JSONB value
  * @param[in] key Key to extract from the JSONB object
  * @param[in] resbasetype Resulting type
@@ -1102,16 +1113,16 @@ jsonb_to_alphanum(const Jsonb *jb, const char *key, MeosType resbasetype,
  * @note Supported JSONB types: boolean, numeric, string
  */
 Datum
-datum_jsonb_to_alphanum(Datum jb, Datum key, Datum resbasetype,
+datum_jsonb_to_base(Datum jb, Datum key, Datum resbasetype,
   Datum null_handle)
 {
-  return jsonb_to_alphanum(DatumGetJsonbP(jb),
+  return jsonb_to_base(DatumGetJsonbP(jb),
     (const char *) DatumGetPointer(key), (MeosType) DatumGetInt32(resbasetype),
     (nullHandleType) DatumGetInt32(null_handle));
 }
 
 /**
- * @brief Convert a temporal JSONB value into a temporal alphanumeric value by
+ * @brief Convert a temporal JSONB value into a temporal value by
  * extracting one key
  * @param[in] temp Temporal JSONB value
  * @param[in] key Key to extract from the JSONB object
@@ -1121,17 +1132,17 @@ datum_jsonb_to_alphanum(Datum jb, Datum key, Datum resbasetype,
  * @note Supported JSONB types: boolean, numeric, string
  */
 Temporal *
-tjsonb_to_talphanum(const Temporal *temp, const char *key,
+tjsonb_to_temporal(const Temporal *temp, const char *key,
   MeosType restype, interpType interp, nullHandleType null_handle)
 {
   /* Ensure the validity of the arguments */
   assert(temp); assert(key); assert(temp->temptype == T_TJSONB);
-  assert(talphanum_type(restype));
+  assert(temporal_type(restype));
 
   MeosType resbasetype = temptype_basetype(restype);
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
-  lfinfo.func = (varfunc) &datum_jsonb_to_alphanum;
+  lfinfo.func = (varfunc) &datum_jsonb_to_base;
   lfinfo.argtype[0] = T_JSONB;
   lfinfo.numparam = 3;
   lfinfo.param[0] = PointerGetDatum(key);
@@ -1142,6 +1153,8 @@ tjsonb_to_talphanum(const Temporal *temp, const char *key,
   /* Set the error value to test */
   if (resbasetype == T_INT4)
     lfinfo.reserror = Int32GetDatum(INT_MAX); 
+  else if (resbasetype == T_INT8)
+    lfinfo.reserror = Int64GetDatum(LONG_MAX); 
   else if (resbasetype == T_FLOAT8)
     lfinfo.reserror = Float8GetDatum(DBL_MAX);
   lfinfo.resnull = null_handle; /* per-instant result may be NULL */
@@ -1162,7 +1175,7 @@ Temporal *
 tjsonb_to_tbool(const Temporal *temp, const char *key,
   nullHandleType null_handle)
 {
-  return tjsonb_to_talphanum(temp, key, T_TBOOL, STEP, null_handle);
+  return tjsonb_to_temporal(temp, key, T_TBOOL, STEP, null_handle);
 }
 
 /**
@@ -1178,7 +1191,7 @@ Temporal *
 tjsonb_to_tint(const Temporal *temp, const char *key,
   nullHandleType null_handle)
 {
-  return tjsonb_to_talphanum(temp, key, T_TINT, STEP, null_handle);
+  return tjsonb_to_temporal(temp, key, T_TINT, STEP, null_handle);
 }
 
 /**
@@ -1194,7 +1207,7 @@ Temporal *
 tjsonb_to_tbigint(const Temporal *temp, const char *key,
   nullHandleType null_handle)
 {
-  return tjsonb_to_talphanum(temp, key, T_TBIGINT, STEP, null_handle);
+  return tjsonb_to_temporal(temp, key, T_TBIGINT, STEP, null_handle);
 }
 
 /**
@@ -1211,7 +1224,7 @@ Temporal *
 tjsonb_to_tfloat(const Temporal *temp, const char *key, interpType interp,
   nullHandleType null_handle)
 {
-  return tjsonb_to_talphanum(temp, key, T_TFLOAT, interp, null_handle);
+  return tjsonb_to_temporal(temp, key, T_TFLOAT, interp, null_handle);
 }
 
 /**
@@ -1227,7 +1240,7 @@ Temporal *
 tjsonb_to_ttext_key(const Temporal *temp, const char *key,
   nullHandleType null_handle)
 {
-  return tjsonb_to_talphanum(temp, key, T_TTEXT, STEP, null_handle);
+  return tjsonb_to_temporal(temp, key, T_TTEXT, STEP, null_handle);
 }
 #endif /* MEOS */
 
