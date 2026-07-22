@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.5"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>MobilityDB: set</title>
+<title>MobilityDB: h3_cell_to_vertexes</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -70,7 +70,7 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="meos_2src_2quadbin_2CMakeLists_8txt.html">CMakeLists.txt</a></li>  </ul>
+<li class="navelem"><a class="el" href="group__meos__h3__vertex.html">Vertex functions</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="contents">
@@ -79,26 +79,32 @@ $(function() {
    <td valign="top">
       <div class="navtab">
         <table>
-          <tr><td class="navtabHL"><a class="navtab" href="meos_2src_2quadbin_2CMakeLists_8txt_abca7b157245cf7ff1f627fed8efa0233.html#abca7b157245cf7ff1f627fed8efa0233">set</a></td></tr>
+          <tr><td class="navtabHL"><a class="navtab" href="group__meos__h3__vertex_ga8f4671bdf7a3436346207a1927a88741.html#ga8f4671bdf7a3436346207a1927a88741">h3_cell_to_vertexes</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__meos__h3__vertex_ga8e5b118f6c7a7e937eaf208a0473263b.html#ga8e5b118f6c7a7e937eaf208a0473263b">th3index_cell_to_vertex</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__meos__h3__vertex_ga22461763d116b418eef220a73c8fc468.html#ga22461763d116b418eef220a73c8fc468">th3index_is_valid_vertex</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__meos__h3__vertex_gac57ba24a251f211fa102ac3411a27a2d.html#gac57ba24a251f211fa102ac3411a27a2d">th3index_vertex_to_latlng</a></td></tr>
         </table>
       </div>
    </td>
    <td valign="top" class="mempage">
-<a id="abca7b157245cf7ff1f627fed8efa0233" name="abca7b157245cf7ff1f627fed8efa0233"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abca7b157245cf7ff1f627fed8efa0233">&#9670;&#160;</a></span>set()</h2>
+<a id="ga8f4671bdf7a3436346207a1927a88741" name="ga8f4671bdf7a3436346207a1927a88741"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga8f4671bdf7a3436346207a1927a88741">&#9670;&#160;</a></span>h3_cell_to_vertexes()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">set </td>
+          <td class="memname"><a class="el" href="structSet.html">Set</a> * h3_cell_to_vertexes </td>
           <td>(</td>
-          <td class="paramtype">QUADBIN_SRCS quadbin.c quadbin_meos.c quadbinset_meos.c tquadbin_ops.c tquadbin.c tquadbin_boxops.c tquadbin_compops.&#160;</td>
-          <td class="paramname"><em>c</em></td><td>)</td>
+          <td class="paramtype">H3Index&#160;</td>
+          <td class="paramname"><em>cell</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Return the set of vertexes of an H3 cell @csqlfn <a class="el" href="group__mobilitydb__h3__set_gaee4bec64729355a7a7ba54f5f2866a7f.html#gaee4bec64729355a7a7ba54f5f2866a7f" title="Return the vertexes of a cell @sqlfn h3CellToVertexes()">H3_cell_to_vertexes()</a> </p>
+<p >Return all vertexes of <code>cell</code> (up to 6; pentagons have 5). </p>
 
 </div>
 </div>
