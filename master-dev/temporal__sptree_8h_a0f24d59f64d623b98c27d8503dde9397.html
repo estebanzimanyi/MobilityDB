@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.5"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>MobilityDB: set</title>
+<title>MobilityDB: SPTREE_NODEBOX_MAXSIZE</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -70,7 +70,7 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="meos_2src_2temporal_2CMakeLists_8txt.html">CMakeLists.txt</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_0fff62ca9c7e6b49d869dbbeba2dc9ed.html">meos</a></li><li class="navelem"><a class="el" href="dir_87ff05107218c94eb54c7d49f556ada2.html">include</a></li><li class="navelem"><a class="el" href="dir_aa92cce0f61242abd286802b3a4d1fb4.html">temporal</a></li><li class="navelem"><a class="el" href="temporal__sptree_8h.html">temporal_sptree.h</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="contents">
@@ -79,26 +79,26 @@ $(function() {
    <td valign="top">
       <div class="navtab">
         <table>
-          <tr><td class="navtabHL"><a class="navtab" href="meos_2src_2temporal_2CMakeLists_8txt_aff841fcee46b7aa36716b45373043210.html#aff841fcee46b7aa36716b45373043210">set</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="temporal__sptree_8h_a541b943b3f5f7a1c831e4b4612b5ee5c.html#a541b943b3f5f7a1c831e4b4612b5ee5c">SPNode</a></td></tr>
+          <tr><td class="navtabHL"><a class="navtab" href="temporal__sptree_8h_a0f24d59f64d623b98c27d8503dde9397.html#a0f24d59f64d623b98c27d8503dde9397">SPTREE_NODEBOX_MAXSIZE</a></td></tr>
         </table>
       </div>
    </td>
    <td valign="top" class="mempage">
-<a id="aff841fcee46b7aa36716b45373043210" name="aff841fcee46b7aa36716b45373043210"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aff841fcee46b7aa36716b45373043210">&#9670;&#160;</a></span>set()</h2>
+<a id="a0f24d59f64d623b98c27d8503dde9397" name="a0f24d59f64d623b98c27d8503dde9397"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0f24d59f64d623b98c27d8503dde9397">&#9670;&#160;</a></span>SPTREE_NODEBOX_MAXSIZE</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">set </td>
-          <td>(</td>
-          <td class="paramtype">TEMPORAL_SOURCES doublen.c error.c lifting.c meos.c meos_array.c meos_catalog.c skiplist.c set.c set_ops.c span.c span_aggfuncs.c span_index.c span_ops.c span_spgist.c spanset.c spanset_ops.c tbool_ops.c tbox.c tbox_index.c tcellindex.c temporal.c temporal_aggfuncs.c temporal_analytics.c temporal_boxops.c temporal_compops.c temporal_modif.c temporal_restrict.c temporal_rtree.c temporal_tile.c temporal_waggfuncs.c tinstant.c tnumber_distance.c tnumber_mathfuncs.c tnumber_spgist.c tsequence.c tsequenceset.c ttext_funcs.c type_in.c type_out.c type_parser.c type_util.&#160;</td>
-          <td class="paramname"><em>c</em></td><td>)</td>
-          <td></td>
+          <td class="memname">#define SPTREE_NODEBOX_MAXSIZE&#160;&#160;&#160;512</td>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>In-memory space-partitioning index (quad-tree and k-d tree) for MEOS bounding boxes, i.e., for <a class="el" href="structSpan.html" title="Structure to represent spans (a.k.a.">Span</a> and <a class="el" href="structTBox.html" title="Structure to represent temporal boxes.">TBox</a>. </p>
+<p >Maximum size in bytes of an inner node region (<a class="el" href="structSpanNode.html" title="Basic routines for indexing spans.">SpanNode</a>, <a class="el" href="structTboxNode.html" title="Basic routines for indexing temporal values.">TboxNode</a>) </p>
 
 </div>
 </div>
