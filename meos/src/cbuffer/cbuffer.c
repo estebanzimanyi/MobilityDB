@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -169,6 +169,18 @@ cbuffersegm_interpolate(const Cbuffer *start, const Cbuffer *end,
  *****************************************************************************/
 
 /**
+ * @brief Ensure the validity of two circular buffers
+ */
+bool
+ensure_valid_cbuffer_cbuffer(const Cbuffer *cb1, const Cbuffer *cb2)
+{
+  VALIDATE_NOT_NULL(cb1, false); VALIDATE_NOT_NULL(cb2, false);
+  if (! ensure_same_srid(cbuffer_srid(cb1), cbuffer_srid(cb2)))
+    return false;
+  return true;
+}
+
+/**
  * @brief Ensure the validity of a circular buffer and geometry
  */
 bool
@@ -189,18 +201,6 @@ ensure_valid_cbuffer_stbox(const Cbuffer *cb, const STBox *box)
   VALIDATE_NOT_NULL(cb, false); VALIDATE_NOT_NULL(box, false);
   if (! ensure_has_X(T_STBOX, box->flags) ||
       ! ensure_same_srid(cbuffer_srid(cb), box->srid))
-    return false;
-  return true;
-}
-
-/**
- * @brief Ensure the validity of two circular buffers
- */
-bool
-ensure_valid_cbuffer_cbuffer(const Cbuffer *cb1, const Cbuffer *cb2)
-{
-  VALIDATE_NOT_NULL(cb1, false); VALIDATE_NOT_NULL(cb2, false);
-  if (! ensure_same_srid(cbuffer_srid(cb1), cbuffer_srid(cb2)))
     return false;
   return true;
 }
@@ -591,11 +591,10 @@ geom_to_cbuffer(const GSERIALIZED *gs)
   Cbuffer *result = cbuffer_make(gscenter, radius);
   pfree(gscenter);
   return result;
-  
 }
 
 /**
- * @ingroup meos_cbuffer_base_conversion
+ * @ingroup meos_internal_cbuffer_base_conversion
  * @brief Return a geometry converted from an array of circular buffers
  * @param[in] cbarr Array of circular buffers
  * @param[in] count Number of elements in the input array
@@ -689,7 +688,6 @@ cbufferarr_set_stbox(const Datum *values, int count, STBox *box)
     cbuffer_set_stbox(DatumGetCbufferP(values[i]), &box1);
     stbox_expand(&box1, box);
   }
-  return;
 }
 
 /**
@@ -845,7 +843,6 @@ cbuffer_set_srid(Cbuffer *cb, int32_t srid)
   /* Ensure the validity of the arguments */
   assert(cb);
   cb->srid = srid;
-  return;
 }
 
 /*****************************************************************************/
@@ -950,9 +947,8 @@ cbuffer_transform_pipeline(const Cbuffer *cb, const char *pipeline,
 double
 cbuffer_distance(const Cbuffer *cb1, const Cbuffer *cb2)
 {
-  double result = Max(hypot(cb2->x - cb1->x, cb2->y - cb1->y) -
+  return Max(hypot(cb2->x - cb1->x, cb2->y - cb1->y) -
     cb1->radius - cb2->radius, 0);
-  return result;
 }
 
 /**
@@ -967,7 +963,6 @@ distance_cbuffer_cbuffer(const Cbuffer *cb1, const Cbuffer *cb2)
   /* Ensure the validity of the arguments */
   if (! ensure_valid_cbuffer_cbuffer(cb1, cb2))
     return -1.0;
-  /* The following function assumes that all validity tests have been done */
   return cbuffer_distance(cb1, cb2);
 }
 
@@ -980,7 +975,8 @@ distance_cbuffer_cbuffer(const Cbuffer *cb1, const Cbuffer *cb2)
 Datum
 datum_cbuffer_distance(Datum cb1, Datum cb2)
 {
-  return Float8GetDatum(cbuffer_distance(DatumGetCbufferP(cb1), DatumGetCbufferP(cb2)));
+  return Float8GetDatum(cbuffer_distance(DatumGetCbufferP(cb1),
+    DatumGetCbufferP(cb2)));
 }
 
 /*****************************************************************************/
@@ -1023,10 +1019,6 @@ distance_cbuffer_stbox(const Cbuffer *cb, const STBox *box)
   pfree(geo1); pfree(geo2); 
   return result;
 }
-
-/*****************************************************************************
- * Auxiliary functions for spatial relationships
- *****************************************************************************/
 
 /*****************************************************************************
  * Spatial relationship functions
@@ -1130,7 +1122,6 @@ cbuffer_dwithin(const Cbuffer *cb1, const Cbuffer *cb2, double dist)
   return (dist1 <= dist) ? 1 : 0;
 }
 
-
 /*****************************************************************************/
 
 /**
@@ -1143,6 +1134,7 @@ spatialrel_cbuffer(const Cbuffer *cb1, const Cbuffer *cb2,
   int (*func)(const Cbuffer *, const Cbuffer *))
 {
   /* Ensure the validity of the arguments */
+  assert(func);
   if (! ensure_valid_cbuffer_cbuffer(cb1, cb2))
     return -1;
   return func(cb1, cb2);
@@ -1219,7 +1211,8 @@ int
 dwithin_cbuffer_cbuffer(const Cbuffer *cb1, const Cbuffer *cb2, double dist)
 {
   /* Ensure the validity of the arguments */
-  if (! ensure_valid_cbuffer_cbuffer(cb1, cb2))
+  if (! ensure_valid_cbuffer_cbuffer(cb1, cb2) ||
+      ! ensure_not_negative_datum(Float8GetDatum(dist), T_FLOAT8))
     return -1;
   return cbuffer_dwithin(cb1, cb2, dist);
 }
@@ -1389,19 +1382,16 @@ cbuffer_nsame(const Cbuffer *cb1, const Cbuffer *cb2)
  * @brief Return -1, 0, or 1 depending on whether the first buffer
  * is less than, equal to, or greater than the second one
  * @param[in] cb1,cb2 Circular buffers
+ * @return On error return @p INT_MAX
  * @csqlfn #Cbuffer_cmp()
  */
 int
 cbuffer_cmp(const Cbuffer *cb1, const Cbuffer *cb2)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(cb1, false); VALIDATE_NOT_NULL(cb2, false);
+  if (! ensure_valid_cbuffer_cbuffer(cb1, cb2))
+    return INT_MAX;
 
-  /* Compare SRID */
-  if (cb1->srid < cb2->srid)
-    return -1;
-  if (cb1->srid > cb2->srid)
-    return 1;
   /* Compare coordinates */
   const POINT2D *pt1 = cbuffer_point2d_p(cb1);
   const POINT2D *pt2 = cbuffer_point2d_p(cb2);
@@ -1481,13 +1471,14 @@ cbuffer_ge(const Cbuffer *cb1, const Cbuffer *cb2)
  * @ingroup meos_cbuffer_base_accessor
  * @brief Return the 32-bit hash value of a circular buffer
  * @param[in] cb Circular buffer
+ * @return On error return @p UINT32_MAX
  * @csqlfn #Cbuffer_hash()
  */
 uint32
 cbuffer_hash(const Cbuffer *cb)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(cb, INT_MAX);
+  VALIDATE_NOT_NULL(cb, UINT32_MAX);
 
   /* Compute hashes of the coordinates and the radius */
   uint32 x_hash = float8_hash(cb->x);
@@ -1514,15 +1505,15 @@ cbuffer_hash(const Cbuffer *cb)
  * @brief Return the 64-bit hash value of a circular buffer using a seed
  * @param[in] cb Circular buffer
  * @param[in] seed Seed
- * csqlfn hash_extended
+ * @return On error return @p UINT64_MAX
  * @csqlfn #Cbuffer_hash_extended()
  */
 uint64
 cbuffer_hash_extended(const Cbuffer *cb, uint64 seed)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(cb, LONG_MAX);
-  /* PostGIS currently does not provide an extended hash function, */
+  VALIDATE_NOT_NULL(cb, UINT64_MAX);
+  // TODO: A cbuffer has fixed size
   return DatumGetUInt64(hash_any_extended(
     (unsigned char *) VARDATA_ANY(cb), VARSIZE_ANY_EXHDR(cb), seed));
 }

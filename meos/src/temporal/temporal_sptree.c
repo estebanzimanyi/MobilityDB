@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -48,6 +48,7 @@
 #include <meos_internal.h>
 #if POINTCLOUD
   #include <meos_pointcloud.h>
+  #include "pointcloud/tpcbox.h" /* tpcbox_set_stbox */
 #endif
 #include "temporal/temporal.h"
 #include "temporal/span_index.h"
@@ -244,10 +245,7 @@ stbox_leaf_consistent(const void *key, const void *query, RTreeSearchOp op)
 static void
 tpcbox_project(const void *in, void *out)
 {
-  STBox *box = tpcbox_to_stbox((const TPCBox *) in);
-  memcpy(out, box, sizeof(STBox));
-  pfree(box);
-  return;
+  tpcbox_set_stbox((const TPCBox *) in, (STBox *) out);
 }
 #endif /* POINTCLOUD */
 
@@ -271,7 +269,7 @@ sptree_create(MeosType bboxtype, SPTreeKind kind)
     );
   SPTree *sptree = palloc0(sizeof(SPTree));
   sptree->bboxtype = bboxtype;
-  sptree->boxsize = bbox_get_size(bboxtype);
+  sptree->bboxsize = bbox_get_size(bboxtype);
   sptree->kind = kind;
   sptree->root = NULL;
   if (span_type(bboxtype))
@@ -304,7 +302,7 @@ sptree_create(MeosType bboxtype, SPTreeKind kind)
     /* A tpcbox tree is internally an STBox tree: boxes and queries are
      * projected through #tpcbox_project on entry, so the box storage, the
      * node regions and every adapter are the STBox ones */
-    sptree->boxsize = sizeof(STBox);
+    sptree->bboxsize = sizeof(STBox);
     sptree->dims = -1;
     sptree->nodeboxsize = sizeof(STboxNode);
     sptree->project = &tpcbox_project;
@@ -450,10 +448,10 @@ sptree_create_tpcbox(SPTreeKind kind)
 static SPNode *
 spnode_make(const SPTree *sptree, const void *box, int id)
 {
-  SPNode *node = palloc0(sizeof(SPNode) + sptree->boxsize);
+  SPNode *node = palloc0(sizeof(SPNode) + sptree->bboxsize);
   node->id = id;
   node->children = palloc0((size_t) sptree->nchild * sizeof(SPNode *));
-  memcpy(node->centroid, box, sptree->boxsize);
+  memcpy(node->centroid, box, sptree->bboxsize);
   return node;
 }
 
@@ -496,7 +494,6 @@ sptree_insert(SPTree *sptree, void *box, int id)
     level++;
   }
   *slot = spnode_make(sptree, box, id);
-  return;
 }
 
 /*****************************************************************************
@@ -536,7 +533,6 @@ spnode_search(const SPTree *sptree, const SPNode *node, const void *nodebox,
     if (sptree->inner_consistent(next, query, op))
       spnode_search(sptree, child, next, op, query, level + 1, result);
   }
-  return;
 }
 
 /**
@@ -632,7 +628,6 @@ sptree_insert_temporal(SPTree *sptree, const Temporal *temp, int id)
   memset(&buf, 0, sizeof(buf));
   temporal_set_bbox(temp, &buf);
   sptree_insert(sptree, &buf, id);
-  return;
 }
 
 /**
@@ -676,7 +671,7 @@ sptree_search_temporal(const SPTree *sptree, RTreeSearchOp op,
  * @param[in] temp The temporal value to decompose
  * @param[in] maxboxes Maximum number of boxes produced for `temp`
  * @param[out] count Number of boxes in the returned array
- * @return Allocated array of `*count` bounding boxes, each of `sptree->boxsize`
+ * @return Allocated array of `*count` bounding boxes, each of `sptree->bboxsize`
  * bytes
  * @pre `temp` is compatible with `sptree` (verified by the callers)
  */
@@ -684,14 +679,14 @@ static void *
 sptree_temporal_split_boxes(const SPTree *sptree, const Temporal *temp,
   int maxboxes, int *count)
 {
-  assert(sptree); assert(temp); assert(count);
+  assert(temp); assert(count);
 
   /* Degenerate single minimum bounding box. The allocation is sized for any
    * MEOS bounding box type because the temporal type's box may be larger than
    * the internal one (a TPCBox is projected to an STBox at insertion) */
   if (maxboxes <= 1 || temp->subtype == TINSTANT)
   {
-    void *result = palloc0(sizeof(bboxunion));
+    void *result = palloc0(sptree->bboxsize);
     temporal_set_bbox(temp, result);
     *count = 1;
     return result;
@@ -742,9 +737,8 @@ sptree_insert_temporal_split(SPTree *sptree, const Temporal *temp, int id,
   if (! boxes)
     return;
   for (int i = 0; i < count; i++)
-    sptree_insert(sptree, (char *) boxes + (size_t) i * sptree->boxsize, id);
+    sptree_insert(sptree, (char *) boxes + (size_t) i * sptree->bboxsize, id);
   pfree(boxes);
-  return;
 }
 
 /**
@@ -787,7 +781,7 @@ sptree_search_temporal_dedup(const SPTree *sptree, RTreeSearchOp op,
   for (int i = 0; i < count; i++)
   {
     int nhits = sptree_search(sptree, op,
-      (char *) boxes + (size_t) i * sptree->boxsize, hits);
+      (char *) boxes + (size_t) i * sptree->bboxsize, hits);
     for (int j = 0; j < nhits; j++)
     {
       int id = *(int *) meos_array_get(hits, j);
@@ -835,7 +829,6 @@ spnode_free(const SPTree *sptree, SPNode *node)
     spnode_free(sptree, node->children[i]);
   pfree(node->children);
   pfree(node);
-  return;
 }
 
 /**
@@ -848,7 +841,6 @@ sptree_free(SPTree *sptree)
 {
   spnode_free(sptree, sptree->root);
   pfree(sptree);
-  return;
 }
 
 /*****************************************************************************
@@ -912,9 +904,8 @@ sptree_nodebox_distance(const SPTree *sptree, const void *query,
 static void
 sptree_box_nodebox(const SPTree *sptree, const void *box, void *nodebox)
 {
-  memcpy(nodebox, box, sptree->boxsize);
-  memcpy((char *) nodebox + sptree->boxsize, box, sptree->boxsize);
-  return;
+  memcpy(nodebox, box, sptree->bboxsize);
+  memcpy((char *) nodebox + sptree->bboxsize, box, sptree->bboxsize);
 }
 
 /**
@@ -970,7 +961,6 @@ spnn_heap_push(SPNNCursor *cursor, const SPNNEntry *entry)
     cursor->heap[i] = tmp;
     i = parent;
   }
-  return;
 }
 
 /**
@@ -1024,12 +1014,12 @@ sptree_nn_cursor_open(const SPTree *sptree, const void *query)
   assert(sptree); assert(query);
   SPNNCursor *cursor = palloc0(sizeof(SPNNCursor));
   cursor->sptree = sptree;
-  cursor->query = palloc(sptree->boxsize);
+  cursor->query = palloc(sptree->bboxsize);
   /* Project the query box into the internal box type (TPCBox: STBox) */
   if (sptree->project)
     sptree->project(query, cursor->query);
   else
-    memcpy(cursor->query, query, sptree->boxsize);
+    memcpy(cursor->query, query, sptree->bboxsize);
   cursor->capacity = 64;
   cursor->heap = palloc((size_t) cursor->capacity * sizeof(SPNNEntry));
   cursor->count = 0;
@@ -1123,7 +1113,6 @@ sptree_nn_cursor_close(SPNNCursor *cursor)
   pfree(cursor->heap);
   pfree(cursor->query);
   pfree(cursor);
-  return;
 }
 
 /*****************************************************************************/

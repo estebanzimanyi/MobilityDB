@@ -826,14 +826,17 @@ PG_FUNCTION_INFO_V1(Pose_cmp);
  * @brief Return -1, 0, or 1 depending on whether the first pose is less than,
  * equal to, or greater than the second one
  * @note Function used for B-tree comparison
- * @sqlfn pose_cmp()
+ * @sqlfn cmp()
  */
 Datum
 Pose_cmp(PG_FUNCTION_ARGS)
 {
   Pose *pose1 = PG_GETARG_POSE_P(0);
   Pose *pose2 = PG_GETARG_POSE_P(1);
-  PG_RETURN_INT32(pose_cmp(pose1, pose2));
+  int cmp = pose_cmp(pose1, pose2);
+  if (cmp == INT_MAX)
+    PG_RETURN_NULL();
+  PG_RETURN_INT32(cmp);
 }
 
 PGDLLEXPORT Datum Pose_lt(PG_FUNCTION_ARGS);

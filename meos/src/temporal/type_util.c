@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -771,7 +771,6 @@ datumarr_sort(Datum *values, int count, MeosType type)
 {
   qsort_arg(values, (size_t) count, sizeof(Datum),
     (qsort_arg_comparator) &datum_sort_cmp, &type);
-  return;
 }
 
 /**
@@ -782,7 +781,6 @@ tstzarr_sort(TimestampTz *times, int count)
 {
   qsort(times, (size_t) count, sizeof(TimestampTz),
     (qsort_comparator) &timestamptz_sort_cmp);
-  return;
 }
 
 /**
@@ -793,7 +791,6 @@ spanarr_sort(Span *spans, int count)
 {
   qsort(spans, (size_t) count, sizeof(Span),
     (qsort_comparator) &span_cmp);
-  return;
 }
 
 /**
@@ -804,7 +801,6 @@ tinstarr_sort(TInstant **instants, int count)
 {
   qsort(instants, (size_t) count, sizeof(TInstant *),
     (qsort_comparator) &tinstant_sort_cmp);
-  return;
 }
 
 /**
@@ -815,7 +811,6 @@ tseqarr_sort(TSequence **sequences, int count)
 {
   qsort(sequences, (size_t) count, sizeof(TSequence *),
     (qsort_comparator) &tsequence_sort_cmp);
-  return;
 }
 
 /*****************************************************************************
@@ -886,7 +881,6 @@ pfree_array(void **array, int count)
       pfree(array[i]);
   }
   pfree(array);
-  return;
 }
 
 /**

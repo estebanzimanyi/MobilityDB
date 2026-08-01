@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -929,7 +929,6 @@ bbox_expand(const void *box1, void *box2, MeosType temptype)
 #endif
   else /* tspatial_type(temptype) */
     stbox_expand((STBox *) box1, (STBox *) box2);
-  return;
 }
 
 /**
@@ -1278,7 +1277,6 @@ tsequence_restart(TSequence *seq, int count)
   size_t bboxsize = DOUBLE_PAD(temporal_bbox_size(seq->temptype));
   if (bboxsize != 0)
     tsequence_compute_bbox(seq);
-  return;
 }
 
 /**
@@ -1554,7 +1552,6 @@ tnumberseq_shift_scale_value_iter(TSequence *seq, Datum origin, Datum delta,
       tinstant_set(inst, value, inst->t);
     }
   }
-  return;
 }
 
 /**
@@ -1589,7 +1586,6 @@ tsequence_shift_scale_time_iter(TSequence *seq, TimestampTz delta,
     inst = (TInstant *) TSEQUENCE_INST_N(seq, seq->count - 1);
     inst->t = DatumGetTimestampTz(seq->period.upper);
   }
-  return;
 }
 
 /**
@@ -1904,7 +1900,6 @@ tsequence_set_tstzspan(const TSequence *seq, Span *s)
 {
   assert(seq); assert(s);
   memcpy(s, &seq->period, sizeof(Span));
-  return;
 }
 
 /**
@@ -2838,7 +2833,6 @@ tnumberseq_twavg(const TSequence *seq)
  * @param[in] seq1,seq2 Temporal sequences
  * @pre The arguments are of the same base type
  * @note The function #tsequence_cmp() is not used to increase efficiency
- * @csqlfn #Temporal_eq()
  */
 bool
 tsequence_eq(const TSequence *seq1, const TSequence *seq2)
@@ -2873,7 +2867,6 @@ tsequence_eq(const TSequence *seq1, const TSequence *seq2)
  * @pre The arguments are of the same base type
  * @note Period and bounding box comparison have been done by the calling
  * function #temporal_cmp()
- * @csqlfn #Temporal_cmp()
  */
 int
 tsequence_cmp(const TSequence *seq1, const TSequence *seq2)

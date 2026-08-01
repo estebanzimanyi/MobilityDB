@@ -1,12 +1,12 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -63,18 +63,27 @@
  * Datum-convention static-cell wrappers
  *****************************************************************************/
 
+/**
+ * @brief 
+ */
 static Datum
 datum_quadbin_get_resolution(Datum d)
 {
   return Int32GetDatum((int32) quadbin_get_resolution((Quadbin) DatumGetInt64(d)));
 }
 
+/**
+ * @brief 
+ */
 static Datum
 datum_quadbin_is_valid_cell(Datum d)
 {
   return BoolGetDatum(quadbin_is_valid_cell((Quadbin) DatumGetInt64(d)));
 }
 
+/**
+ * @brief 
+ */
 static Datum
 datum_quadbin_cell_to_parent(Datum cell_d, Datum res_d)
 {
@@ -83,6 +92,9 @@ datum_quadbin_cell_to_parent(Datum cell_d, Datum res_d)
   return Int64GetDatum((int64) parent);
 }
 
+/**
+ * @brief 
+ */
 static Datum
 datum_quadbin_cell_to_point(Datum d)
 {
@@ -95,6 +107,9 @@ datum_quadbin_cell_to_point(Datum d)
   return PointerGetDatum(gs);
 }
 
+/**
+ * @brief 
+ */
 static Datum
 datum_quadbin_cell_to_boundary(Datum d)
 {
@@ -116,6 +131,9 @@ datum_quadbin_cell_to_boundary(Datum d)
   return PointerGetDatum(gs);
 }
 
+/**
+ * @brief 
+ */
 static Datum
 datum_quadbin_cell_area(Datum d)
 {
@@ -154,6 +172,9 @@ const DggsCellOps quadbin_cellops =
  * exposes only the operations shared by every DGGS.
  *****************************************************************************/
 
+/**
+ * @brief 
+ */
 static Datum
 datum_quadbin_cell_to_quadkey(Datum d)
 {
@@ -171,6 +192,7 @@ datum_quadbin_cell_to_quadkey(Datum d)
 Temporal *
 tquadbin_cell_to_quadkey(const Temporal *temp)
 {
+  /* Ensure the validity of the arguments */
   VALIDATE_TQUADBIN(temp, NULL);
 
   LiftedFunctionInfo lfinfo;

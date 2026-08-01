@@ -31,28 +31,25 @@
  * @file
  * @brief PostgreSQL wrappers for the static-geometry → H3 cell helpers
  * declared in meos/include/meos_h3.h.
- *
- * Calls geo_to_h3index_set() and ever_eq_h3indexset_th3index() in
- * the MEOS core; thin shims for argument extraction and result return.
  */
 
+/* PostgreSQL */
 #include <postgres.h>
 #include <fmgr.h>
 #include <utils/timestamp.h>
-
+/* MEOS */
 #include <meos.h>
 #include <meos_geo.h>
 #include <meos_h3.h>
-
 #include "geo/stbox.h"                /* PG_RETURN_STBOX_P */
 #include "temporal/set.h"             /* PG_GETARG_SET_P / PG_RETURN_SET_P */
 #include "temporal/span.h"            /* PG_GETARG_SPAN_P */
+#include "h3/h3index.h"
+/* MobilityDB */
 #include "pg_temporal/temporal.h"     /* PG_GETARG_TEMPORAL_P */
 #include "pg_geo/postgis.h"           /* PG_GETARG_GSERIALIZED_P */
 
-/* h3index is stored on the int8 payload; DatumGetH3Index lives in
- * h3/h3index.h but this file only needs the fmgr-layer getter. */
-#define PG_GETARG_H3INDEX(n) ((H3Index) PG_GETARG_INT64(n))
+/*****************************************************************************/
 
 PGDLLEXPORT Datum Geo_point_to_h3index(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Geo_point_to_h3index);
@@ -65,7 +62,7 @@ Datum
 Geo_point_to_h3index(PG_FUNCTION_ARGS)
 {
   GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
-  int32 resolution = PG_GETARG_INT32(1);
+  uint32_t resolution = (uint32_t) PG_GETARG_INT32(1);
   H3Index cell = geo_to_h3index_cell(gs, resolution);
   PG_FREE_IF_COPY(gs, 0);
   if (cell == (H3Index) 0)
@@ -88,8 +85,8 @@ Datum
 Geo_to_h3indexset(PG_FUNCTION_ARGS)
 {
   GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
-  int32 resolution = PG_GETARG_INT32(1);
-  Set *result = geo_to_h3index_set(gs, resolution);
+  uint32_t resolution = (uint32_t) PG_GETARG_INT32(1);
+  Set *result = geo_to_h3indexset(gs, resolution);
   PG_FREE_IF_COPY(gs, 0);
   if (result == NULL)
     PG_RETURN_NULL();
@@ -100,13 +97,8 @@ PGDLLEXPORT Datum Ever_eq_h3indexset_th3index(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Ever_eq_h3indexset_th3index);
 /**
  * @ingroup mobilitydb_h3_comp
- * @brief True iff the th3index value sequence ever lies in any cell of
- *        the candidate set
- *
- * Cross-platform spatial prefilter consumer: typical use is
- * `geoToH3IndexSet(p.geom, 7) ?= t.trip_h3`
- * before the exact spatial predicate.
- *
+ * @brief Return true if the th3index value sequence ever lies in any cell of
+ * the candidate set
  * @sqlfn eEq()
  * @sqlop @p ?=
  */
@@ -171,3 +163,5 @@ H3index_tstzspan_to_stbox(PG_FUNCTION_ARGS)
   Span *s = PG_GETARG_SPAN_P(1);
   PG_RETURN_STBOX_P(h3index_tstzspan_to_stbox(cell, s));
 }
+
+/*****************************************************************************/

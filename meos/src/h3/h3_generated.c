@@ -1,12 +1,12 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -102,7 +102,7 @@ H3Index h3_get_directed_edge_destination_meos(H3Index edge)
 
 /* Extracted from h3-pg/h3/src/binding/hierarchy.c :: h3_cell_to_parent */
 /* Returns the parent (coarser) index containing given index */
-H3Index h3_cell_to_parent_meos(H3Index origin, int32 resolution)
+H3Index h3_cell_to_parent_meos(H3Index origin, uint32_t resolution)
 {
   H3Index parent;
 
@@ -114,7 +114,7 @@ H3Index h3_cell_to_parent_meos(H3Index origin, int32 resolution)
 
 /* Extracted from h3-pg/h3/src/binding/hierarchy.c :: h3_cell_to_center_child */
 /* Returns the center child (finer) index contained by input index at given resolution */
-H3Index h3_cell_to_center_child_meos(H3Index origin, int32 resolution)
+H3Index h3_cell_to_center_child_meos(H3Index origin, uint32_t resolution)
 {
   H3Index child;
 
@@ -193,7 +193,7 @@ bool h3_is_pentagon_meos(H3Index hex)
 
 /* Extracted from h3-pg/h3/src/binding/miscellaneous.c :: h3_get_num_cells */
 /* Number of unique H3 indexes at the given resolution */
-int64 h3_get_num_cells_meos(int32 resolution)
+int64 h3_get_num_cells_meos(uint32_t resolution)
 {
   int64_t cells;
 

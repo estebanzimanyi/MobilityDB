@@ -707,7 +707,10 @@ Cbuffer_cmp(PG_FUNCTION_ARGS)
 {
   Cbuffer *cb1 = PG_GETARG_CBUFFER_P(0);
   Cbuffer *cb2 = PG_GETARG_CBUFFER_P(1);
-  PG_RETURN_INT32(cbuffer_cmp(cb1, cb2));
+  int cmp = cbuffer_cmp(cb1, cb2);
+  if (cmp == INT_MAX)
+    PG_RETURN_NULL();
+  PG_RETURN_INT32(cmp);
 }
 
 PGDLLEXPORT Datum Cbuffer_lt(PG_FUNCTION_ARGS);

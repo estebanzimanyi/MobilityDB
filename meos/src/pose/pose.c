@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -68,6 +68,20 @@
  *****************************************************************************/
 
 /**
+ * @brief Ensure the validity of two circular poses
+ */
+bool
+ensure_valid_pose_pose(const Pose *pose1, const Pose *pose2)
+{
+  VALIDATE_NOT_NULL(pose1, false); VALIDATE_NOT_NULL(pose2, false); 
+  if (! ensure_same_geodetic(pose1->flags, pose2->flags) ||
+      ! ensure_same_dimensionality(pose1->flags, pose2->flags) ||
+      ! ensure_same_srid(pose_srid(pose1), pose_srid(pose2)))
+    return false;
+  return true;
+}
+
+/**
  * @brief Ensure the validity of a pose and a geometry/geography
  */
 bool
@@ -90,19 +104,6 @@ ensure_valid_pose_stbox(const Pose *pose, const STBox *box)
   VALIDATE_NOT_NULL(pose, false); VALIDATE_NOT_NULL(box, false);
   if (! ensure_has_X(T_STBOX, box->flags) ||
       ! ensure_same_srid(pose_srid(pose), box->srid))
-    return false;
-  return true;
-}
-
-/**
- * @brief Ensure the validity of two circular poses
- */
-bool
-ensure_valid_pose_pose(const Pose *pose1, const Pose *pose2)
-{
-  VALIDATE_NOT_NULL(pose1, false); VALIDATE_NOT_NULL(pose2, false); 
-  if (! ensure_same_srid(pose_srid(pose1), pose_srid(pose2)) ||
-      MEOS_FLAGS_GET_Z(pose1->flags) != MEOS_FLAGS_GET_Z(pose2->flags))
     return false;
   return true;
 }
@@ -137,8 +138,7 @@ ensure_valid_poseset_pose(const Set *s, const Pose *pose)
 Pose *
 posesegm_interpolate(const Pose *start, const Pose *end, double ratio)
 {
-  if (! ensure_valid_pose_pose(start, end))
-    return NULL; 
+  assert(start); assert(end); assert(pose_srid(start) == pose_srid(end));
   Pose *result;
   if (! MEOS_FLAGS_GET_Z(start->flags))
   {
@@ -231,10 +231,7 @@ posesegm_interpolate(const Pose *start, const Pose *end, double ratio)
 long double
 posesegm_locate(const Pose *start, const Pose *end, const Pose *value)
 {
-  if (! ensure_valid_pose_pose(start, end) ||
-      ! ensure_valid_pose_pose(start, value))
-    return -1.0;
-
+  assert(start); assert(end); assert(pose_srid(start) == pose_srid(end));
   GSERIALIZED *gs1 = pose_to_point(start);
   GSERIALIZED *gs2 = pose_to_point(end);
   GSERIALIZED *gs = pose_to_point(value);
@@ -1755,7 +1752,6 @@ pose_distance(Datum pose1, Datum pose2)
 double
 distance_pose_pose(const Pose *pose1, const Pose *pose2)
 {
-  VALIDATE_NOT_NULL(pose1, -1.0); VALIDATE_NOT_NULL(pose2, -1.0);
   /* Ensure the validity of the arguments */
   if (! ensure_valid_pose_pose(pose1, pose2))
     return -1.0;
@@ -1786,7 +1782,6 @@ datum_pose_distance(Datum pose1, Datum pose2)
 double
 distance_pose_geo(const Pose *pose, const GSERIALIZED *gs)
 {
-  VALIDATE_NOT_NULL(pose, -1.0); VALIDATE_NOT_NULL(gs, -1.0);
   /* Ensure the validity of the arguments */
   if (! ensure_valid_pose_geo(pose, gs) || gserialized_is_empty(gs))
     return -1.0;
@@ -1806,7 +1801,6 @@ distance_pose_geo(const Pose *pose, const GSERIALIZED *gs)
 double
 distance_pose_stbox(const Pose *pose, const STBox *box)
 {
-  VALIDATE_NOT_NULL(pose, -1.0); VALIDATE_NOT_NULL(box, -1.0);
   /* Ensure the validity of the arguments */
   if (! ensure_valid_pose_stbox(pose, box))
     return -1.0;
@@ -1910,29 +1904,18 @@ pose_nsame(const Pose *pose1, const Pose *pose2)
  * @brief Return -1, 0, or 1 depending on whether the first pose
  * is less than, equal to, or greater than the second one
  * @param[in] pose1,pose2 Poses
+ * @return On error return @p INT_MAX
  * @csqlfn #Pose_cmp()
  */
 int
 pose_cmp(const Pose *pose1, const Pose *pose2)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(pose1, false); VALIDATE_NOT_NULL(pose2, false);
+  if (! ensure_valid_pose_pose(pose1, pose2))
+    return INT_MAX;
 
-  /* Compare first the dimension, then the SRID,
-     then the position, then the orientation */
-  bool hasz1 = MEOS_FLAGS_GET_Z(pose1->flags),
-       hasz2 = MEOS_FLAGS_GET_Z(pose2->flags);
-  if (hasz1 != hasz2)
-    return (hasz1 ? 1 : -1);
-
-  int32 srid1 = pose_srid(pose1),
-        srid2 = pose_srid(pose2);
-  if (srid1 < srid2)
-    return -1;
-  else if (srid1 > srid2)
-    return 1;
-
-  if (hasz1)
+  /* Same dimension, same SRID: compare the position, then the orientation */
+  if (MEOS_FLAGS_GET_Z(pose1->flags))
     return memcmp(pose1->data, pose2->data, sizeof(double) * 7);
   else
     return memcmp(pose1->data, pose2->data, sizeof(double) * 3);
@@ -2004,13 +1987,14 @@ void hashlittle2(const void *key, size_t length, uint32_t *pc, uint32_t *pb);
  * @ingroup meos_pose_base_accessor
  * @brief Return the 32-bit hash value of a pose
  * @param[in] pose Pose
+ * @return On error return @p UINT32_MAX
  * @csqlfn #Pose_hash()
  */
 uint32
 pose_hash(const Pose *pose)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(pose, INT_MAX);
+  VALIDATE_NOT_NULL(pose, UINT32_MAX);
 
   /* Use same code as gserialized2_hash */
   int32_t hval;
@@ -2041,13 +2025,14 @@ pose_hash(const Pose *pose)
  * @brief Return the 64-bit hash value of a pose using a seed
  * @param[in] pose Pose
  * @param[in] seed Seed
- * csqlfn hash_extended
+ * @return On error return @p UINT64_MAX
  * @csqlfn #Pose_hash_extended()
  */
 uint64
 pose_hash_extended(const Pose *pose, uint64 seed)
 {
-  /* PostGIS currently does not provide an extended hash function, */
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(pose, UINT64_MAX);
   return DatumGetUInt64(hash_any_extended(
     (unsigned char *) VARDATA_ANY(pose), VARSIZE_ANY_EXHDR(pose), seed));
 }

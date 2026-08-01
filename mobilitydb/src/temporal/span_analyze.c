@@ -231,7 +231,6 @@ span_compute_stats_generic(VacAttrStats *stats, int non_null_cnt, int *slot_idx,
   (*slot_idx)++;
 
   MemoryContextSwitchTo(old_cxt);
-  return;
 }
 
 /**
@@ -341,7 +340,6 @@ span_compute_stats(VacAttrStats *stats, AnalyzeAttrFetchFunc fetchfunc,
   }
 
   pfree(lowers); pfree(uppers); pfree(lengths);
-  return;
 }
 
 /*****************************************************************************/

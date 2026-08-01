@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -315,7 +315,6 @@ geoarr_sort(GSERIALIZED **geoms, int count)
 {
   qsort(geoms, (size_t) count, sizeof(GSERIALIZED *),
     (qsort_comparator) &geoarr_sort_cmp);
-  return;
 }
 
 /**
@@ -399,7 +398,6 @@ cbufferarr_circles(TInstant **instants, int count, GSERIALIZED **result)
  * @ingroup meos_internal_cbuffer_spatial_accessor
  * @brief Return the traversed area of a temporal circular buffer instant
  * @param[in] inst Temporal circular buffer
- * @csqlfn #Tcbuffer_traversed_area()
  */
 GSERIALIZED *
 tcbufferinst_traversed_area(const TInstant *inst)
@@ -415,7 +413,6 @@ tcbufferinst_traversed_area(const TInstant *inst)
  * @param[in] seq Temporal circular buffer
  * @param[out] result Array of resulting geometries
  * @return Number of elements in the output array
- * @csqlfn #Tcbuffer_traversed_area()
  */
 int
 tcbufferseq_discstep_traversed_area(const TSequence *seq, GSERIALIZED **result)
@@ -504,7 +501,6 @@ tcbuffersegm_traversed_area(const TInstant *inst1, const TInstant *inst2)
  * linear interpolation (iterator function)
  * @param[in] seq Temporal circular buffer
  * @param[out] result Array of output geometries
- * @csqlfn #Tcbuffer_traversed_area()
  */
 int
 tcbufferseq_linear_traversed_area(const TSequence *seq, GSERIALIZED **result)
@@ -536,7 +532,6 @@ tcbufferseq_linear_traversed_area(const TSequence *seq, GSERIALIZED **result)
  * @param[in] seq Temporal circular buffer
  * @param[in] unary_union True when the traversed area is a single geometry
  * obtained by applying spatial union to the geometries of the segments
- * @csqlfn #Tcbuffer_traversed_area()
  */
 GSERIALIZED *
 tcbufferseq_traversed_area(const TSequence *seq, bool unary_union)
@@ -577,13 +572,12 @@ tcbufferseq_traversed_area(const TSequence *seq, bool unary_union)
 }
 
 /**
- * @ingroup meos_cbuffer_spatial_accessor
+ * @ingroup meos_internal_cbuffer_spatial_accessor
  * @brief Return the traversed area of a temporal circular buffer sequence set
  * with step interpolation
  * @param[in] ss Temporal circular buffer
  * @param[out] result Array of resulting geometries
  * @return Number of elements in the output array
- * @csqlfn #Tcbuffer_traversed_area()
  */
 int
 tcbufferseqset_step_traversed_area(const TSequenceSet *ss, GSERIALIZED **result)
@@ -602,7 +596,6 @@ tcbufferseqset_step_traversed_area(const TSequenceSet *ss, GSERIALIZED **result)
  * @param[in] ss Temporal circular buffer
  * @param[out] result Array of resulting geometries
  * @return Number of elements in the output array
- * @csqlfn #Tcbuffer_traversed_area()
  */
 int
 tcbufferseqset_linear_traversed_area(const TSequenceSet *ss, GSERIALIZED **result)
@@ -623,7 +616,6 @@ tcbufferseqset_linear_traversed_area(const TSequenceSet *ss, GSERIALIZED **resul
  * @param[in] ss Temporal circular buffer
  * @param[in] unary_union True when the traversed area is a single geometry
  * obtained by applying spatial union to the geometries of the segments
- * @csqlfn #Tcbuffer_traversed_area()
  */
 GSERIALIZED *
 tcbufferseqset_traversed_area(const TSequenceSet *ss, bool unary_union)

@@ -276,7 +276,7 @@ Always_ne_tpose_tpose(PG_FUNCTION_ARGS)
 /**
  * @brief Generic function for the temporal comparison operators
  * @param[in] fcinfo Catalog information about the external function
- * @param[in] func Specific function for the ever/always comparison
+ * @param[in] func Specific function for the temporal comparison
  */
 static Datum
 Tcomp_pose_tpose(FunctionCallInfo fcinfo,

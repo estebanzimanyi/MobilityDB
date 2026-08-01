@@ -1,8 +1,29 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
+ *
+ * MobilityDB includes portions of PostGIS version 3 source code released
+ * under the GNU General Public License (GPLv2 or later).
+ * Copyright (c) 2001-2026, PostGIS contributors
+ *
+ * Permission to use, copy, modify, and distribute this software and its
+ * documentation for any purpose, without fee, and without a written
+ * agreement is hereby granted, provided that the above copyright notice and
+ * this paragraph and the following two paragraphs appear in all copies.
+ *
+ * IN NO EVENT SHALL UNIVERSITE LIBRE DE BRUXELLES BE LIABLE TO ANY PARTY FOR
+ * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING
+ * LOST PROFITS, ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION,
+ * EVEN IF UNIVERSITE LIBRE DE BRUXELLES HAS BEEN ADVISED OF THE POSSIBILITY
+ * OF SUCH DAMAGE.
+ *
+ * UNIVERSITE LIBRE DE BRUXELLES SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS ON
+ * AN "AS IS" BASIS, AND UNIVERSITE LIBRE DE BRUXELLES HAS NO OBLIGATIONS TO
+ * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *
  *****************************************************************************/
 
@@ -25,17 +46,18 @@
 #if POSTGRESQL_VERSION_NUMBER >= 160000
   #include "varatt.h"
 #endif
+#include <utils/timestamp.h>   /* TimestampTzGetDatum */
 #include <pc_api.h>
-
+/* MEOS */
 #include <meos.h>
 #include <meos_geo.h>           /* nad_stbox_stbox */
 #include <meos_internal.h>
 #include "temporal/span.h"
 #include "temporal/temporal.h"
-#include <utils/timestamp.h>   /* TimestampTzGetDatum */
 #include "pointcloud/meos_schema_hook.h"
 #include "pointcloud/pcpoint.h"
 #include "pointcloud/pcpatch.h"
+#include "pointcloud/tpcbox.h"
 
 /*****************************************************************************
  * Single-instant → TPCBox
@@ -216,6 +238,11 @@ tpointcloudseqarr_set_tpcbox(TSequence **sequences, int count, TPCBox *box)
 TPCBox *
 tpcbox_extent_transfn(TPCBox *state, const Temporal *temp)
 {
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(state, NULL); VALIDATE_TPCPOINT(temp, NULL);
+  // if (state && state->pcid != box2->pcid)
+    // return NULL;
+
   if (! state && ! temp)
     return NULL;
   if (! temp)
@@ -283,38 +310,6 @@ boxop_tpointcloud_tpointcloud(const Temporal *temp1, const Temporal *temp2,
 }
 
 /*****************************************************************************
- * Lossy TPCBox → STBox conversion
- *
- * Used by the SP-GiST opclasses where the index storage is STBox.
- * Drops pcid; the operator's recheck restores pcid filtering on the
- * actual leaf entry. Period, srid and the X/Z/T dimension flags are
- * copied; GEODETIC is always cleared (tpointcloud values are
- * cartesian).
- *****************************************************************************/
-
-/**
- * @brief Lossy conversion from a TPCBox to an STBox
- * @details Copies period, srid, X/Z/T flags and spatial bounds; drops the
- *   pcid (the operator's recheck restores pcid filtering on the leaf
- *   entry) and clears the GEODETIC flag since tpointcloud values are
- *   cartesian.
- */
-void
-tpcbox_set_stbox(const TPCBox *src, STBox *dst)
-{
-  assert(src); assert(dst);
-  memset(dst, 0, sizeof(STBox));
-  dst->period = src->period;
-  dst->xmin = src->xmin; dst->ymin = src->ymin; dst->zmin = src->zmin;
-  dst->xmax = src->xmax; dst->ymax = src->ymax; dst->zmax = src->zmax;
-  dst->srid = src->srid;
-  MEOS_FLAGS_SET_X(dst->flags, MEOS_FLAGS_GET_X(src->flags));
-  MEOS_FLAGS_SET_Z(dst->flags, MEOS_FLAGS_GET_Z(src->flags));
-  MEOS_FLAGS_SET_T(dst->flags, MEOS_FLAGS_GET_T(src->flags));
-  MEOS_FLAGS_SET_GEODETIC(dst->flags, false);
-}
-
-/*****************************************************************************
  * Nearest-approach distance
  *
  * Reuses the stbox NAD machinery via the lossy tpcbox→stbox conversion.
@@ -332,9 +327,11 @@ tpcbox_set_stbox(const TPCBox *src, STBox *dst)
 double
 nad_tpcbox_tpcbox(const TPCBox *box1, const TPCBox *box2)
 {
-  assert(box1); assert(box2);
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(box1, DBL_MAX); VALIDATE_NOT_NULL(box2, DBL_MAX);
   if (box1->pcid != box2->pcid)
     return DBL_MAX;
+
   STBox sbox1, sbox2;
   tpcbox_set_stbox(box1, &sbox1);
   tpcbox_set_stbox(box2, &sbox2);
@@ -352,6 +349,8 @@ nad_tpcbox_tpcbox(const TPCBox *box1, const TPCBox *box2)
 double
 nad_tpointcloud_tpcbox(const Temporal *temp, const TPCBox *box)
 {
+  /* Ensure the validity of the arguments */
+  VALIDATE_TPCPOINT(temp, DBL_MAX); VALIDATE_NOT_NULL(box, DBL_MAX);
   TPCBox tmp;
   temporal_set_bbox(temp, &tmp);
   return nad_tpcbox_tpcbox(&tmp, box);
@@ -367,6 +366,8 @@ nad_tpointcloud_tpcbox(const Temporal *temp, const TPCBox *box)
 double
 nad_tpointcloud_tpointcloud(const Temporal *temp1, const Temporal *temp2)
 {
+  /* Ensure the validity of the arguments */
+  VALIDATE_TPCPOINT(temp1, DBL_MAX); VALIDATE_TPCPOINT(temp2, DBL_MAX);
   TPCBox tmp1, tmp2;
   temporal_set_bbox(temp1, &tmp1);
   temporal_set_bbox(temp2, &tmp2);

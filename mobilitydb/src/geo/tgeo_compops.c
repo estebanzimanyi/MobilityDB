@@ -53,7 +53,7 @@
  *****************************************************************************/
 
 /**
- * @brief Generic function for the temporal ever/always comparison operators
+ * @brief Generic function for the ever/always comparison operators
  * @param[in] fcinfo Catalog information about the external function
  * @param[in] func Specific function for the ever/always comparison
  */
@@ -72,7 +72,7 @@ EAcomp_geo_tspatial(FunctionCallInfo fcinfo,
 }
 
 /**
- * @brief Generic function for the temporal ever/always comparison operators
+ * @brief Generic function for the ever/always comparison operators
  * @param[in] fcinfo Catalog information about the external function
  * @param[in] func Specific function for the ever/always comparison
  */
@@ -290,7 +290,6 @@ Tcomp_geo_tspatial(FunctionCallInfo fcinfo,
     PG_RETURN_NULL();
   PG_RETURN_TEMPORAL_P(result);
 }
-
 
 /**
  * @brief Generic function for the temporal comparison operators

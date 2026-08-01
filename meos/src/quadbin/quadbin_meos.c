@@ -1,12 +1,12 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -36,10 +36,9 @@
  * `h3index` type. The kernel in quadbin.c owns the bit / value algebra
  * (tile/cell conversion, hierarchy, lat/lng, serialization); this file
  * adds the I/O and ordering layer the temporal `tquadbin` type relies on:
- *
- *   * a validating string parser that rejects values not encoding a
+ * - a validating string parser that rejects values not encoding a
  *     valid quadbin cell,
- *   * comparison / ordering / hashing helpers.
+ * - comparison / ordering / hashing helpers.
  *
  * Quadbin is a uint64-backed value. Comparison and hashing reduce to
  * plain int64 bit operations — they carry no geographic meaning but are

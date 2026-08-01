@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -35,6 +35,8 @@
 /* C */
 #include <float.h>
 #include <math.h>
+/* PostGIS */
+#include <liblwgeom_internal.h>
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>
@@ -328,17 +330,18 @@ nai_tcbufferseq(const TSequence *seq, const GeoDistGeom *g, GeoDistNai *w)
     }
     return;
   }
+  /* Linear interpolation */
   const TInstant *i1 = TSEQUENCE_INST_N(seq, 0);
+  const Cbuffer *c1 = DatumGetCbufferP(tinstant_value_p(i1));
+  const POINT2D *p1 = cbuffer_point2d_p(c1);
   for (int i = 1; i < seq->count && ! (w->set && w->d <= 0.0); i++)
   {
     const TInstant *i2 = TSEQUENCE_INST_N(seq, i);
-    const Cbuffer *c1 = DatumGetCbufferP(tinstant_value_p(i1));
     const Cbuffer *c2 = DatumGetCbufferP(tinstant_value_p(i2));
-    const POINT2D *p1 = cbuffer_point2d_p(c1);
     const POINT2D *p2 = cbuffer_point2d_p(c2);
     geodist_segm_nai(p1->x, p1->y, c1->radius, i1->t, p2->x, p2->y, c2->radius,
       i2->t, g, w);
-    i1 = i2;
+    i1 = i2; c1 = c2; p1 = p2;
   }
 }
 
@@ -567,16 +570,18 @@ tcbufferseq_nad(const TSequence *seq, const GeoDistGeom *g, double *best)
     }
     return;
   }
-  const TInstant *i1 = TSEQUENCE_INST_N(seq, 0);
+  /* Linear interpolation */
+  const Cbuffer *c1 =
+    DatumGetCbufferP(tinstant_value_p(TSEQUENCE_INST_N(seq, 0)));
+  const POINT2D *p1 = cbuffer_point2d_p(c1);
   for (int i = 1; i < seq->count && *best > 0.0; i++)
   {
-    const TInstant *i2 = TSEQUENCE_INST_N(seq, i);
-    const Cbuffer *c1 = DatumGetCbufferP(tinstant_value_p(i1));
-    const Cbuffer *c2 = DatumGetCbufferP(tinstant_value_p(i2));
-    const POINT2D *p1 = cbuffer_point2d_p(c1);
+    const Cbuffer *c2 =
+      DatumGetCbufferP(tinstant_value_p(TSEQUENCE_INST_N(seq, i)));
     const POINT2D *p2 = cbuffer_point2d_p(c2);
-    geodist_segm_nad(p1->x, p1->y, c1->radius, p2->x, p2->y, c2->radius, g, best);
-    i1 = i2;
+    geodist_segm_nad(p1->x, p1->y, c1->radius, p2->x, p2->y, c2->radius, g,
+      best);
+    c1 = c2; p1 = p2;
   }
 }
 
@@ -639,17 +644,18 @@ tcbufferseq_shortestline(const TSequence *seq, const GeoDistGeom *g,
     }
     return;
   }
-  const TInstant *i1 = TSEQUENCE_INST_N(seq, 0);
+  /* Linear interpolation */
+  const Cbuffer *c1 =
+    DatumGetCbufferP(tinstant_value_p(TSEQUENCE_INST_N(seq, 0)));
+  const POINT2D *p1 = cbuffer_point2d_p(c1);
   for (int i = 1; i < seq->count && ! (w->set && w->d <= 0.0); i++)
   {
-    const TInstant *i2 = TSEQUENCE_INST_N(seq, i);
-    const Cbuffer *c1 = DatumGetCbufferP(tinstant_value_p(i1));
-    const Cbuffer *c2 = DatumGetCbufferP(tinstant_value_p(i2));
-    const POINT2D *p1 = cbuffer_point2d_p(c1);
+    const Cbuffer *c2 =
+      DatumGetCbufferP(tinstant_value_p(TSEQUENCE_INST_N(seq, i)));
     const POINT2D *p2 = cbuffer_point2d_p(c2);
     geodist_segm_shortestline(p1->x, p1->y, c1->radius, p2->x, p2->y,
       c2->radius, g, w);
-    i1 = i2;
+    c1 = c2; p1 = p2;
   }
 }
 
@@ -802,8 +808,7 @@ tcbuffer_geo_ctx_free(void *ctx)
     meos_array_destroy(geodist_pip_results);
     geodist_pip_results = NULL;
   }
-  pfree(c->segs);
-  pfree(c);
+  pfree(c->segs); pfree(c);
 }
 
 /**
@@ -1013,7 +1018,7 @@ tcbuffer_double_cmp(const void *a, const void *b)
  * sub-interval is classified with the exact interior-aware unit distance.
  */
 int
-tcbufferseg_within_ctx(const Cbuffer *cb1, const Cbuffer *cb2, double dist,
+tcbuffersegm_within_ctx(const Cbuffer *cb1, const Cbuffer *cb2, double dist,
   const void *ctxv, double *outlo, double *outhi, int maxout)
 {
   const TcbufferGeoCtx *ctx = (const TcbufferGeoCtx *) ctxv;
@@ -1270,7 +1275,7 @@ tcbufferseg_sg_roots(const Cbuffer *cb1, const Cbuffer *cb2,
   for (int i = 0; i < nc && nout < maxout; i++)
   {
     double t = cand[i];
-    if (t <= 0.0 || t >= 1.0 || (nout > 0 && t - last <= 1e-12))
+    if (t <= 0.0 || t >= 1.0 || (nout > 0 && t - last <= FP_TOLERANCE))
       continue;
     double cx = cx1 + (cx2 - cx1) * t, cy = cy1 + (cy2 - cy1) * t;
     double r = r1 + (r2 - r1) * t;
@@ -1295,7 +1300,7 @@ tcbufferseg_sg_roots(const Cbuffer *cb1, const Cbuffer *cb2,
  * number of contact times written (at most @p maxout)
  */
 int
-tcbufferseg_touch_roots(const Cbuffer *cb1, const Cbuffer *cb2,
+tcbuffersegm_touch_roots(const Cbuffer *cb1, const Cbuffer *cb2,
   const void *ctxv, double *outt, int maxout)
 {
   return tcbufferseg_sg_roots(cb1, cb2, ctxv, outt, maxout, true);
@@ -1307,7 +1312,7 @@ tcbufferseg_touch_roots(const Cbuffer *cb1, const Cbuffer *cb2,
  * from either side
  * @details These are the instants at which the geometry can start or stop
  * containing or covering the disk, so they are the sub-interval breakpoints of
- * the contains/covers kernels. Unlike #tcbufferseg_touch_roots this keeps the
+ * the contains/covers kernels. Unlike #tcbuffersegm_touch_roots this keeps the
  * internal tangency, where the disk grazes the boundary from within and
  * containment changes but no touch occurs. Returns the number of times written
  * (at most @p maxout)
@@ -1338,7 +1343,7 @@ tcbuffer_disc_seg_roots(const Cbuffer *cb1, const Cbuffer *cb2,
   double A = a - s * s, B = b - 2 * m * s, C = c - m * m;
   double cand[2];
   int ncand = 0;
-  if (fabs(A) > 1e-12)
+  if (fabs(A) > FP_TOLERANCE)
   {
     double disc = B * B - 4 * A * C;
     if (disc >= 0)
@@ -1348,7 +1353,7 @@ tcbuffer_disc_seg_roots(const Cbuffer *cb1, const Cbuffer *cb2,
       cand[ncand++] = (-B + sq) / (2 * A);
     }
   }
-  else if (fabs(B) > 1e-12)
+  else if (fabs(B) > FP_TOLERANCE)
     cand[ncand++] = -C / B;
   int n = 0;
   for (int i = 0; i < ncand && n < maxout; i++)
@@ -1361,7 +1366,7 @@ tcbuffer_disc_seg_roots(const Cbuffer *cb1, const Cbuffer *cb2,
 }
 
 int
-tcbufferseg_boundary_roots(const Cbuffer *cb1, const Cbuffer *cb2,
+tcbuffersegm_boundary_roots(const Cbuffer *cb1, const Cbuffer *cb2,
   const void *ctxv, double *outt, int maxout)
 {
   if (*(const int *) ctxv == TCBUF_CTX_DISC)
@@ -1422,7 +1427,7 @@ nad_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs)
  * and a spatiotemporal box
  * @param[in] temp Temporal circular buffer
  * @param[in] box Spatiotemporal box
- * @csqlfn #NAD_tcbuffer_geo()
+ * @csqlfn #NAD_tcbuffer_stbox()
  */
 double
 nad_tcbuffer_stbox(const Temporal *temp, const STBox *box)

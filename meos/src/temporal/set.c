@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -1109,7 +1109,6 @@ set_unnest_state_next(SetUnnestState *state)
   state->i++;
   if (state->i == state->count)
     state->done = true;
-  return;
 }
 
 /*****************************************************************************
@@ -1167,6 +1166,7 @@ set_cmp(const Set *s1, const Set *s2)
   /* Ensure the validity of the arguments */
   if (! ensure_valid_set_set(s1, s2))
     return INT_MAX;
+
   int count = Min(s1->count, s2->count);
   int result = 0;
   for (int i = 0; i < count; i++)
@@ -1246,13 +1246,14 @@ set_ge(const Set *s1, const Set *s2)
  * @ingroup meos_setspan_accessor
  * @brief Return the 32-bit hash of a set
  * @param[in] s Set
+ * @return On error return @p UINT32_MAX
  * @csqlfn #Set_hash()
  */
 uint32
 set_hash(const Set *s)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(s, INT_MAX);
+  VALIDATE_NOT_NULL(s, UINT32_MAX);
   uint32 result = 1;
   for (int i = 0; i < s->count; i++)
   {
@@ -1267,13 +1268,14 @@ set_hash(const Set *s)
  * @brief Return the 64-bit hash of a set using a seed
  * @param[in] s Set
  * @param[in] seed Seed
+ * @return On error return @p UINT64_MAX
  * @csqlfn #Set_hash_extended()
  */
 uint64
 set_hash_extended(const Set *s, uint64 seed)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(s, LONG_MAX);
+  VALIDATE_NOT_NULL(s, UINT64_MAX);
   uint64 result = 1;
   for (int i = 0; i < s->count; i++)
   {

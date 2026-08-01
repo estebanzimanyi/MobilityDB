@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -93,7 +93,6 @@ apply_pose_point4d(POINT4D *p, const Pose *pose)
   double x = p->x, y = p->y;
   p->x = x * c - y * s + pose->data[0];
   p->y = x * s + y * c + pose->data[1];
-  return;
 }
 
 /**

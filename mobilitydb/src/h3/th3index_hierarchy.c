@@ -57,7 +57,7 @@ Datum
 Th3index_cell_to_parent(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  int32 resolution = PG_GETARG_INT32(1);
+  uint32_t resolution = (uint32_t) PG_GETARG_INT32(1);
   Temporal *result = th3index_cell_to_parent(temp, resolution);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_TEMPORAL_P(result);
@@ -94,7 +94,7 @@ Datum
 Th3index_cell_to_center_child(PG_FUNCTION_ARGS)
 {
   Temporal *temp = PG_GETARG_TEMPORAL_P(0);
-  int32 resolution = PG_GETARG_INT32(1);
+  uint32_t resolution = (uint32_t) PG_GETARG_INT32(1);
   Temporal *result = th3index_cell_to_center_child(temp, resolution);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_TEMPORAL_P(result);

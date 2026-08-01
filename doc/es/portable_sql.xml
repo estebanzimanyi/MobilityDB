@@ -9,9 +9,9 @@
    ****************************************************************************
 -->
 <chapter xml:id="portable_sql">
-	<title>Dialecto Portable de Funciones con Nombre</title>
+	<title>Dialecto SQL Portable</title>
 
-	<para>Todo operador de MobilityDB puede invocarse también como una función con nombre. Una consulta escrita únicamente con funciones con nombre, sin símbolos de operador, es portable: el mismo SQL se ejecuta sin cambios en todo el ecosistema MobilityDB — los motores de base de datos MobilityDB (PostgreSQL), MobilityDuck (DuckDB) y MobilitySpark (Apache Spark), y los motores de <foreignphrase>streaming</foreignphrase> —, varios de los cuales no pueden registrar símbolos de operador de PostgreSQL. Cada alias con nombre reutiliza la propia implementación del operador, por lo que devuelve exactamente el mismo resultado que el operador.</para>
+	<para>Todo operador de MobilityDB puede invocarse también como una función con nombre. Una consulta escrita únicamente con funciones con nombre, sin símbolos de operador, es portable: el mismo SQL se ejecuta sin cambios en todo el ecosistema MobilityDB: los motores de base de datos — MobilityDB (PostgreSQL), MobilityDuck (DuckDB), y MobilitySpark (Apache Spark), y los motores de <foreignphrase>streaming</foreignphrase> — MobilityFlink (Apache Flink), MobilityKafka (Apache Kafka), and MobilityNebula (NebulaStream) — varios de los cuales no pueden registrar símbolos de operador de PostgreSQL. Cada alias con nombre reutiliza la propia implementación del operador, por lo que devuelve exactamente el mismo resultado que el operador.</para>
 
 	<para>Este capítulo es la referencia canónica, a nivel de todo el ecosistema, de esa correspondencia. Un motor que no acepte un operador dado puede consultarlo aquí y usar la forma de función en su lugar. Por ejemplo, DuckDB no acepta ningún operador que contenga <literal>#</literal> (reserva <literal>#</literal> para las referencias posicionales de columna), de modo que en MobilityDuck las comparaciones temporales (<literal>#=</literal>, …) se escriben <varname>tEq</varname>, … y las pruebas de posición temporal (<literal>&lt;&lt;#</literal>, <literal>#&gt;&gt;</literal>, <literal>&amp;&lt;#</literal>, <literal>#&amp;&gt;</literal>) se escriben <varname>before</varname>, <varname>after</varname>, <varname>overbefore</varname>, <varname>overafter</varname>, mientras que los operadores que sí acepta pueden usarse directamente.</para>
 
@@ -28,63 +28,63 @@
 				</row>
 			</thead>
 			<tbody>
-				<row><entry>Topología</entry><entry>&amp;&amp;</entry><entry>overlaps(a, b)</entry></row>
-				<row><entry></entry><entry>@&gt;</entry><entry>contains(a, b)</entry></row>
-				<row><entry></entry><entry>&lt;@</entry><entry>contained(a, b)</entry></row>
-				<row><entry></entry><entry>-|-</entry><entry>adjacent(a, b)</entry></row>
-				<row><entry>Posición temporal</entry><entry>&lt;&lt;#</entry><entry>before(a, b)</entry></row>
-				<row><entry></entry><entry>#&gt;&gt;</entry><entry>after(a, b)</entry></row>
-				<row><entry></entry><entry>&amp;&lt;#</entry><entry>overbefore(a, b)</entry></row>
-				<row><entry></entry><entry>#&amp;&gt;</entry><entry>overafter(a, b)</entry></row>
-				<row><entry>Espacio, eje X</entry><entry>&lt;&lt;</entry><entry>left(a, b)</entry></row>
-				<row><entry></entry><entry>&gt;&gt;</entry><entry>right(a, b)</entry></row>
-				<row><entry></entry><entry>&amp;&lt;</entry><entry>overleft(a, b)</entry></row>
-				<row><entry></entry><entry>&amp;&gt;</entry><entry>overright(a, b)</entry></row>
-				<row><entry>Espacio, eje Y</entry><entry>&lt;&lt;|</entry><entry>below(a, b)</entry></row>
-				<row><entry></entry><entry>|&gt;&gt;</entry><entry>above(a, b)</entry></row>
-				<row><entry></entry><entry>&amp;&lt;|</entry><entry>overbelow(a, b)</entry></row>
-				<row><entry></entry><entry>|&amp;&gt;</entry><entry>overabove(a, b)</entry></row>
-				<row><entry>Espacio, eje Z</entry><entry>&lt;&lt;/</entry><entry>front(a, b)</entry></row>
-				<row><entry></entry><entry>/&gt;&gt;</entry><entry>back(a, b)</entry></row>
-				<row><entry></entry><entry>&amp;&lt;/</entry><entry>overfront(a, b)</entry></row>
-				<row><entry></entry><entry>/&amp;&gt;</entry><entry>overback(a, b)</entry></row>
-				<row><entry>Comparación temporal</entry><entry>#=</entry><entry>tEq(a, b)</entry></row>
-				<row><entry></entry><entry>#&lt;&gt;</entry><entry>tNe(a, b)</entry></row>
-				<row><entry></entry><entry>#&lt;</entry><entry>tLt(a, b)</entry></row>
-				<row><entry></entry><entry>#&lt;=</entry><entry>tLe(a, b)</entry></row>
-				<row><entry></entry><entry>#&gt;</entry><entry>tGt(a, b)</entry></row>
-				<row><entry></entry><entry>#&gt;=</entry><entry>tGe(a, b)</entry></row>
-				<row><entry>Distancia</entry><entry>&lt;-&gt;</entry><entry>tDistance(a, b)</entry></row>
-				<row><entry></entry><entry>|=|</entry><entry>nearestApproachDistance(a, b)</entry></row>
-				<row><entry>Igual</entry><entry>~=</entry><entry>same(a, b)</entry></row>
-				<row><entry>Comparación tradicional</entry><entry>=</entry><entry>eq(a, b)</entry></row>
-				<row><entry></entry><entry>&lt;&gt;</entry><entry>ne(a, b)</entry></row>
-				<row><entry></entry><entry>&lt;</entry><entry>lt(a, b)</entry></row>
-				<row><entry></entry><entry>&lt;=</entry><entry>le(a, b)</entry></row>
-				<row><entry></entry><entry>&gt;</entry><entry>gt(a, b)</entry></row>
-				<row><entry></entry><entry>&gt;=</entry><entry>ge(a, b)</entry></row>
-				<row><entry>Comparación alguna vez</entry><entry>?=</entry><entry>eEq(a, b)</entry></row>
-				<row><entry></entry><entry>?&lt;&gt;</entry><entry>eNe(a, b)</entry></row>
-				<row><entry></entry><entry>?&lt;</entry><entry>eLt(a, b)</entry></row>
-				<row><entry></entry><entry>?&lt;=</entry><entry>eLe(a, b)</entry></row>
-				<row><entry></entry><entry>?&gt;</entry><entry>eGt(a, b)</entry></row>
-				<row><entry></entry><entry>?&gt;=</entry><entry>eGe(a, b)</entry></row>
-				<row><entry>Comparación siempre</entry><entry>%=</entry><entry>aEq(a, b)</entry></row>
-				<row><entry></entry><entry>%&lt;&gt;</entry><entry>aNe(a, b)</entry></row>
-				<row><entry></entry><entry>%&lt;</entry><entry>aLt(a, b)</entry></row>
-				<row><entry></entry><entry>%&lt;=</entry><entry>aLe(a, b)</entry></row>
-				<row><entry></entry><entry>%&gt;</entry><entry>aGt(a, b)</entry></row>
-				<row><entry></entry><entry>%&gt;=</entry><entry>aGe(a, b)</entry></row>
-				<row><entry>Booleano (booleano temporales)</entry><entry>&amp;</entry><entry>tAnd(a, b)</entry></row>
-				<row><entry></entry><entry>|</entry><entry>tOr(a, b)</entry></row>
-				<row><entry></entry><entry>~</entry><entry>tNot(a)</entry></row>
-				<row><entry>Aritmética (números temporales)</entry><entry>+</entry><entry>tAdd(a, b)</entry></row>
-				<row><entry></entry><entry>-</entry><entry>tSub(a, b)</entry></row>
-				<row><entry></entry><entry>*</entry><entry>tMul(a, b)</entry></row>
-				<row><entry></entry><entry>/</entry><entry>tDiv(a, b)</entry></row>
-				<row><entry>Unión (set / span / span set)</entry><entry>+</entry><entry>setUnion / spanUnion / spansetUnion (a, b)</entry></row>
-				<row><entry>Intersección (set / span / span set)</entry><entry>*</entry><entry>setIntersection / spanIntersection / spansetIntersection (a, b)</entry></row>
-				<row><entry>Diferencia (set / span / span set)</entry><entry>-</entry><entry>setMinus / spanMinus / spansetMinus (a, b)</entry></row>
+				<row><entry>Topología</entry><entry><varname>&amp;&amp;</varname></entry><entry><varname>overlaps(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>@&gt;</varname></entry><entry><varname>contains(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>&lt;@</varname></entry><entry><varname>contained(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>-|-</varname></entry><entry><varname>adjacent(a, b)</varname></entry></row>
+				<row><entry>Posición temporal</entry><entry><varname>&lt;&lt;#</varname></entry><entry><varname>before(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>#&gt;&gt;</varname></entry><entry><varname>after(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>&amp;&lt;#</varname></entry><entry><varname>overbefore(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>#&amp;&gt;</varname></entry><entry><varname>overafter(a, b)</varname></entry></row>
+				<row><entry>Espacio, eje X</entry><entry><varname>&lt;&lt;</varname></entry><entry><varname>left(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>&gt;&gt;</varname></entry><entry><varname>right(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>&amp;&lt;</varname></entry><entry><varname>overleft(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>&amp;&gt;</varname></entry><entry><varname>overright(a, b)</varname></entry></row>
+				<row><entry>Espacio, eje Y</entry><entry><varname>&lt;&lt;|</varname></entry><entry><varname>below(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>|&gt;&gt;</varname></entry><entry><varname>above(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>&amp;&lt;|</varname></entry><entry><varname>overbelow(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>|&amp;&gt;</varname></entry><entry><varname>overabove(a, b)</varname></entry></row>
+				<row><entry>Espacio, eje Z</entry><entry><varname>&lt;&lt;/</varname></entry><entry><varname>front(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>/&gt;&gt;</varname></entry><entry><varname>back(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>&amp;&lt;/</varname></entry><entry><varname>overfront(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>/&amp;&gt;</varname></entry><entry><varname>overback(a, b)</varname></entry></row>
+				<row><entry>Comparación temporal</entry><entry><varname>#=</varname></entry><entry><varname>tEq(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>#&lt;&gt;</varname></entry><entry><varname>tNe(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>#&lt;</varname></entry><entry><varname>tLt(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>#&lt;=</varname></entry><entry><varname>tLe(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>#&gt;</varname></entry><entry><varname>tGt(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>#&gt;=</varname></entry><entry><varname>tGe(a, b)</varname></entry></row>
+				<row><entry>Distancia</entry><entry><varname>&lt;-&gt;</varname></entry><entry><varname>tDistance(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>|=|</varname></entry><entry><varname>nearestApproachDistance(a, b)</varname></entry></row>
+				<row><entry>Similar</entry><entry><varname>~=</varname></entry><entry><varname>same(a, b)</varname></entry></row>
+				<row><entry>Comparación tradicional</entry><entry><varname>=</varname></entry><entry><varname>eq(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>&lt;&gt;</varname></entry><entry><varname>ne(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>&lt;</varname></entry><entry><varname>lt(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>&lt;=</varname></entry><entry><varname>le(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>&gt;</varname></entry><entry><varname>gt(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>&gt;=</varname></entry><entry><varname>ge(a, b)</varname></entry></row>
+				<row><entry>Comparación alguna vez</entry><entry><varname>?=</varname></entry><entry><varname>eEq(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>?&lt;&gt;</varname></entry><entry><varname>eNe(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>?&lt;</varname></entry><entry><varname>eLt(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>?&lt;=</varname></entry><entry><varname>eLe(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>?&gt;</varname></entry><entry><varname>eGt(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>?&gt;=</varname></entry><entry><varname>eGe(a, b)</varname></entry></row>
+				<row><entry>Comparación siempre</entry><entry><varname>%=</varname></entry><entry><varname>aEq(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>%&lt;&gt;</varname></entry><entry><varname>aNe(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>%&lt;</varname></entry><entry><varname>aLt(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>%&lt;=</varname></entry><entry><varname>aLe(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>%&gt;</varname></entry><entry><varname>aGt(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>%&gt;=</varname></entry><entry><varname>aGe(a, b)</varname></entry></row>
+				<row><entry>Booleano (booleano temporales)</entry><entry><varname>&amp;</varname></entry><entry><varname>tAnd(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>|</varname></entry><entry><varname>tOr(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>~</varname></entry><entry><varname>tNot(a)</varname></entry></row>
+				<row><entry>Aritmética (números temporales)</entry><entry><varname>+</varname></entry><entry><varname>tAdd(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>-</varname></entry><entry><varname>tSub(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>*</varname></entry><entry><varname>tMul(a, b)</varname></entry></row>
+				<row><entry></entry><entry><varname>/</varname></entry><entry><varname>tDiv(a, b)</varname></entry></row>
+				<row><entry>Unión (set / span / span set)</entry><entry><varname>+</varname></entry><entry><varname>(set|span|spanset)Union(a, b)</varname></entry></row>
+				<row><entry>Intersección (set / span / span set)</entry><entry><varname>*</varname></entry><entry><varname>(set|span|spanset)Intersection(a, b)</varname></entry></row>
+				<row><entry>Diferencia (set / span / span set)</entry><entry><varname>-</varname></entry><entry><varname>(set|span|spanset)Minus(a, b)</varname></entry></row>
 			</tbody>
 		</tgroup>
 	</informaltable>

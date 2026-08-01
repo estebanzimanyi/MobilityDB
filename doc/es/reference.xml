@@ -3455,7 +3455,7 @@
 				<title>Entrada y salida</title>
 				<itemizedlist>
 					<listitem>
-						<para><link linkend="tpcpoint_asText"><varname>asText</varname>, <varname>tpcpoint::text</varname></link>: Devolver la representación textual, o convertir a texto</para>
+						<para><link linkend="tpcpoint_asText"><varname>asText</varname>, <varname>tpcpoint::text</varname></link>: Devuelve la representación textual, o convertir a texto</para>
 					</listitem>
 				</itemizedlist>
 			</sect3>
@@ -3597,7 +3597,7 @@
 				<title>Entrada y salida</title>
 				<itemizedlist>
 					<listitem>
-						<para><link linkend="tpcpatch_asText"><varname>asText</varname>, <varname>tpcpatch::text</varname></link>: Devolver la representación textual, o convertir a texto</para>
+						<para><link linkend="tpcpatch_asText"><varname>asText</varname>, <varname>tpcpatch::text</varname></link>: Devuelve la representación textual, o convertir a texto</para>
 					</listitem>
 				</itemizedlist>
 			</sect3>
@@ -3790,7 +3790,7 @@
 			<title>Operador de Muestreo</title>
 			<itemizedlist>
 				<listitem>
-					<para><link linkend="raster_value"><varname>raster_value</varname></link>: Muestrear una banda de ráster en cada instante de una trayectoria</para>
+					<para><link linkend="rasterValue"><varname>rasterValue</varname></link>: Muestrear una banda de ráster en cada instante de una trayectoria</para>
 				</listitem>
 			</itemizedlist>
 		</sect2>
@@ -3799,11 +3799,11 @@
 			<title>Muestreo Raquet / QUADBIN</title>
 			<itemizedlist>
 				<listitem>
-					<para><link linkend="trajectory_quadbins"><varname>trajectory_quadbins</varname></link>: Devolver las celdas QUADBIN distintas en un nivel de zoom cubiertas por una trayectoria</para>
+					<para><link linkend="trajectory_quadbins"><varname>quadbins</varname></link>: Devuelve las celdas QUADBIN distintas en un nivel de zoom cubiertas por una trayectoria</para>
 				</listitem>
 
 				<listitem>
-					<para><link linkend="raster_tile_value_quadbin"><varname>raster_tile_value_quadbin</varname></link>: Muestrear un chip ráster de Raquet a lo largo de una trayectoria usando una celda QUADBIN para la georreferenciación</para>
+					<para><link linkend="rasterTileValueQuadbin"><varname>rasterTileValueQuadbin</varname></link>: Muestrear un chip ráster de Raquet a lo largo de una trayectoria usando una celda QUADBIN para la georreferenciación</para>
 				</listitem>
 
 				<listitem>
@@ -3811,15 +3811,15 @@
 				</listitem>
 
 				<listitem>
-					<para><link linkend="raquet_read"><varname>raquet_read</varname></link>: Decodificar un archivo ráster en memoria en una tesela ráster Raquet mediante GDAL</para>
+					<para><link linkend="raquetRead"><varname>raquetRead</varname></link>: Decodificar un archivo ráster en memoria en una tesela ráster Raquet mediante GDAL</para>
 				</listitem>
 
 				<listitem>
-					<para><link linkend="raster_tile_value"><varname>raster_tile_value</varname></link>: Muestrear una tesela ráster raquet a lo largo de una trayectoria</para>
+					<para><link linkend="rasterTileValue"><varname>rasterTileValue</varname></link>: Muestrear una tesela ráster raquet a lo largo de una trayectoria</para>
 				</listitem>
 
 				<listitem>
-					<para><link linkend="raster_tile_value_array"><varname>raster_tile_value</varname></link>: Muestrear un arreglo de teselas ráster raquet a lo largo de una trayectoria, conservando la resolución más fina donde se solapan</para>
+					<para><link linkend="rasterTileValueArray"><varname>rasterTileValue</varname></link>: Muestrear un arreglo de teselas ráster raquet a lo largo de una trayectoria, conservando la resolución más fina donde se solapan</para>
 				</listitem>
 			</itemizedlist>
 		</sect2>
@@ -3828,23 +3828,23 @@
 			<title>Accesores y Comparación de Raquet</title>
 			<itemizedlist>
 				<listitem>
-					<para><link linkend="raquet_quadbin_accessor"><varname>quadbin</varname></link>: Devolver la celda QUADBIN de una tesela Raquet</para>
+					<para><link linkend="raquet_quadbin_accessor"><varname>quadbin</varname></link>: Devuelve la celda QUADBIN de una tesela Raquet</para>
 				</listitem>
 
 				<listitem>
-					<para><link linkend="raquet_width"><varname>width</varname></link>: Devolver el ancho en píxeles de una tesela Raquet</para>
+					<para><link linkend="raquet_width"><varname>width</varname></link>: Devuelve el ancho en píxeles de una tesela Raquet</para>
 				</listitem>
 
 				<listitem>
-					<para><link linkend="raquet_height"><varname>height</varname></link>: Devolver el alto en píxeles de una tesela Raquet</para>
+					<para><link linkend="raquet_height"><varname>height</varname></link>: Devuelve el alto en píxeles de una tesela Raquet</para>
 				</listitem>
 
 				<listitem>
-					<para><link linkend="raquet_nodata"><varname>nodata</varname></link>: Devolver el valor centinela nodata de una tesela Raquet</para>
+					<para><link linkend="raquet_nodata"><varname>nodata</varname></link>: Devuelve el valor centinela nodata de una tesela Raquet</para>
 				</listitem>
 
 				<listitem>
-					<para><link linkend="raquet_pixtype"><varname>pixtype</varname></link>: Devolver el nombre del tipo de dato de píxel de una tesela Raquet</para>
+					<para><link linkend="raquet_pixtype"><varname>pixtype</varname></link>: Devuelve el nombre del tipo de dato de píxel de una tesela Raquet</para>
 				</listitem>
 
 				<listitem>
@@ -3861,19 +3861,19 @@
 			<title>Operadores de Restricción y Predicado</title>
 			<itemizedlist>
 				<listitem>
-					<para><link linkend="atRasterValue"><varname>atRasterValue</varname></link>: Devolver los instantes de una trayectoria donde el valor ráster muestreado cae dentro de un rango de flotante</para>
+					<para><link linkend="atRasterValue"><varname>atRasterValue</varname></link>: Devuelve los instantes de una trayectoria donde el valor ráster muestreado cae dentro de un rango de flotante</para>
 				</listitem>
 
 				<listitem>
-					<para><link linkend="minusRasterValue"><varname>minusRasterValue</varname></link>: Devolver los instantes de una trayectoria donde el valor ráster muestreado cae fuera de un rango de flotante</para>
+					<para><link linkend="minusRasterValue"><varname>minusRasterValue</varname></link>: Devuelve los instantes de una trayectoria donde el valor ráster muestreado cae fuera de un rango de flotante</para>
 				</listitem>
 
 				<listitem>
-					<para><link linkend="eRasterValue"><varname>eRasterValue</varname></link>: Devolver verdadero si la trayectoria alguna vez muestrea un valor de píxel ráster dentro de un rango de flotante</para>
+					<para><link linkend="everRasterValue"><varname>everRasterValue</varname></link>: Devuelve verdadero si la trayectoria alguna vez muestrea un valor de píxel ráster dentro de un rango de flotante</para>
 				</listitem>
 
 				<listitem>
-					<para><link linkend="aRasterValue"><varname>aRasterValue</varname></link>: Devolver verdadero si cada instante de la trayectoria dentro de la extensión del ráster muestrea un valor de píxel dentro de un rango de flotante</para>
+					<para><link linkend="alwaysRasterValue"><varname>alwaysRasterValue</varname></link>: Devuelve verdadero si cada instante de la trayectoria dentro de la extensión del ráster muestrea un valor de píxel dentro de un rango de flotante</para>
 				</listitem>
 			</itemizedlist>
 		</sect2>

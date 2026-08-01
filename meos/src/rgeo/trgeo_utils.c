@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -173,7 +173,6 @@ lwgeom_affine_transform(LWGEOM *geom,
   affine.yoff =  yoff;
   affine.zoff =  zoff;
   lwgeom_affine(geom, &affine);
-  return;
 }
 
 /**
@@ -216,7 +215,6 @@ lwgeom_apply_pose(const Pose *pose, LWGEOM *geom)
       g, h, i,
       pose->data[0], pose->data[1], pose->data[2]);
   }
-  return;
 }
 
 /*****************************************************************************/

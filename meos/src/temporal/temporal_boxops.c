@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -226,7 +226,6 @@ tnumberinst_set_tbox(const TInstant *inst, TBox *box)
   span_set(time, time, true, true, T_TIMESTAMPTZ, T_TSTZSPAN, &tbox->period);
   MEOS_FLAGS_SET_X(tbox->flags, true);
   MEOS_FLAGS_SET_T(tbox->flags, true);
-  return;
 }
 
 /**
@@ -256,7 +255,6 @@ tinstant_set_bbox(const TInstant *inst, void *box)
 #endif
   else /* tspatial_type(inst->temptype) */
     tspatialinst_set_stbox(inst, (STBox *) box);
-  return;
 }
 
 /**
@@ -271,7 +269,6 @@ tnumberseq_set_tbox(const TSequence *seq, TBox *box)
 {
   assert(seq); assert(box); assert(tnumber_type(seq->temptype));
   memcpy(box, TSEQUENCE_BBOX_PTR(seq), sizeof(TBox));
-  return;
 }
 
 /**
@@ -286,7 +283,6 @@ tsequence_set_bbox(const TSequence *seq, void *box)
   assert(seq); assert(box);
   memset(box, 0, seq->bboxsize);
   memcpy(box, TSEQUENCE_BBOX_PTR(seq), seq->bboxsize);
-  return;
 }
 
 /**
@@ -301,7 +297,6 @@ tnumberseqset_set_tbox(const TSequenceSet *ss, TBox *box)
 {
   assert(ss); assert(box); assert(tnumber_type(ss->temptype));
   memcpy(box, TSEQUENCESET_BBOX_PTR(ss), sizeof(TBox));
-  return;
 }
 
 /**
@@ -317,7 +312,6 @@ tsequenceset_set_bbox(const TSequenceSet *ss, void *box)
   assert(ss); assert(box);
   memset(box, 0, ss->bboxsize);
   memcpy(box, TSEQUENCESET_BBOX_PTR(ss), ss->bboxsize);
-  return;
 }
 
 /**
@@ -342,7 +336,6 @@ tnumber_set_tbox(const Temporal *temp, TBox *box)
     default: /* TSEQUENCESET */
       tnumberseqset_set_tbox((TSequenceSet *) temp, box);
   }
-  return;
 }
 
 /*****************************************************************************/
@@ -408,7 +401,6 @@ tnumberinstarr_set_tbox(TInstant **instants, int count, bool lower_inc,
   /* Set the flags */
   MEOS_FLAGS_SET_X(box->flags, true);
   MEOS_FLAGS_SET_T(box->flags, true);
-  return;
 }
 
 /**
@@ -451,7 +443,6 @@ tinstarr_set_bbox(TInstant **instants, int count, bool lower_inc,
   Span *s = (Span *) box;
   s->lower_inc = lower_inc;
   s->upper_inc = upper_inc;
-  return;
 }
 
 /**
@@ -465,7 +456,6 @@ tnumberseq_expand_tbox(TSequence *seq, const TInstant *inst)
   TBox box;
   tnumberinst_set_tbox(inst, &box);
   tbox_expand(&box, (TBox *) TSEQUENCE_BBOX_PTR(seq));
-  return;
 }
 
 /**
@@ -496,7 +486,6 @@ tsequence_expand_bbox(TSequence *seq, const TInstant *inst)
 #endif
   else /* tspatial_type(seq->temptype) */
     tspatialseq_expand_stbox(seq, inst);
-  return;
 }
 
 /**
@@ -530,7 +519,6 @@ tsequenceset_expand_bbox(TSequenceSet *ss, const TSequence *seq)
   else /* tspatial_type(ss->temptype) */
     stbox_expand((STBox *) TSEQUENCE_BBOX_PTR(seq),
       (STBox *) TSEQUENCE_BBOX_PTR(ss));
-  return;
 }
 
 /**
@@ -547,7 +535,6 @@ tseqarr_set_tstzspan(TSequence **sequences, int count, Span *s)
   const Span *last = &sequences[count - 1]->period;
   span_set(first->lower, last->upper, first->lower_inc, last->upper_inc,
     T_TIMESTAMPTZ, T_TSTZSPAN, s);
-  return;
 }
 
 /**
@@ -566,7 +553,6 @@ tnumberseqarr_set_tbox(TSequence **sequences, int count, TBox *box)
     const TBox *box1 = TSEQUENCE_BBOX_PTR(sequences[i]);
     tbox_expand(box1, box);
   }
-  return;
 }
 
 /**
@@ -593,7 +579,6 @@ tseqarr_compute_bbox(TSequence **sequences, int count, void *box)
 #endif
   else /* tspatial_type(sequences[0]->temptype) */
     tspatialseqarr_set_stbox(sequences, count, (STBox *) box);
-  return;
 }
 
 /*****************************************************************************/
@@ -614,7 +599,6 @@ tsequence_compute_bbox(TSequence *seq)
   tinstarr_set_bbox(instants, seq->count, seq->period.lower_inc,
     seq->period.upper_inc, interp, TSEQUENCESET_BBOX_PTR(seq));
   pfree(instants);
-  return;
 }
 
 /**
@@ -630,7 +614,6 @@ tsequenceset_compute_bbox(TSequenceSet *ss)
     sequences[i] = (TSequence *) TSEQUENCESET_SEQ_N(ss, i);
   tseqarr_compute_bbox(sequences, ss->count, TSEQUENCESET_BBOX_PTR(ss));
   pfree(sequences);
-  return;
 }
 #endif /* MEOS */
 
@@ -652,7 +635,6 @@ tinstant_set_span(const TInstant *inst, Span *result)
   assert(inst); assert(result);
   span_set(TimestampTzGetDatum(inst->t), TimestampTzGetDatum(inst->t),
     true, true, T_TIMESTAMPTZ, T_TSTZSPAN, result);
-  return;
 }
 
 /**

@@ -1,13 +1,29 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
+ *
+ * MobilityDB includes portions of PostGIS version 3 source code released
+ * under the GNU General Public License (GPLv2 or later).
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
  * agreement is hereby granted, provided that the above copyright notice and
  * this paragraph and the following two paragraphs appear in all copies.
+ *
+ * IN NO EVENT SHALL UNIVERSITE LIBRE DE BRUXELLES BE LIABLE TO ANY PARTY FOR
+ * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING
+ * LOST PROFITS, ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION,
+ * EVEN IF UNIVERSITE LIBRE DE BRUXELLES HAS BEEN ADVISED OF THE POSSIBILITY
+ * OF SUCH DAMAGE.
+ *
+ * UNIVERSITE LIBRE DE BRUXELLES SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS ON
+ * AN "AS IS" BASIS, AND UNIVERSITE LIBRE DE BRUXELLES HAS NO OBLIGATIONS TO
+ * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *
  *****************************************************************************/
 
@@ -40,8 +56,10 @@
 #include "pc_api.h"
 /* MEOS */
 #include <meos.h>
+#include <meos_internal.h>
 #include <meos_pointcloud.h>
 #include "pointcloud/meos_schema_hook.h"
+#include "temporal/temporal.h"
 
 /*****************************************************************************
  * Struct-tail padding
@@ -309,6 +327,7 @@ pcpoint_get_pcid(const Pcpoint *pt)
 /**
  * @ingroup meos_pointcloud_base_accessor
  * @brief Return the 32-bit hash of a pcpoint
+ * @return On error return @p UINT32_MAX
  * @note Hashes only the meaningful-prefix bytes — pgpointcloud's
  *   struct-tail padding is skipped because it holds uninitialized heap
  *   bytes that differ between otherwise-identical values.
@@ -316,7 +335,8 @@ pcpoint_get_pcid(const Pcpoint *pt)
 uint32
 pcpoint_hash(const Pcpoint *pt)
 {
-  assert(pt);
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(pt, UINT32_MAX);
   return hash_any((const unsigned char *) pt,
     (int) pcpoint_meaningful_size(pt));
 }
@@ -324,11 +344,13 @@ pcpoint_hash(const Pcpoint *pt)
 /**
  * @ingroup meos_pointcloud_base_accessor
  * @brief Return the 64-bit seeded hash of a pcpoint
+ * @return On error return @p UINT64_MAX
  */
 uint64
 pcpoint_hash_extended(const Pcpoint *pt, uint64 seed)
 {
-  assert(pt);
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(pt, UINT64_MAX);
   return hash_any_extended((const unsigned char *) pt,
     (int) pcpoint_meaningful_size(pt), seed);
 }
@@ -353,7 +375,9 @@ pcpoint_hash_extended(const Pcpoint *pt, uint64 seed)
 int
 pcpoint_cmp(const Pcpoint *pt1, const Pcpoint *pt2)
 {
-  assert(pt1); assert(pt2);
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(pt1, -1); VALIDATE_NOT_NULL(pt2, -1);
+
   size_t sz1 = pcpoint_meaningful_size(pt1);
   size_t sz2 = pcpoint_meaningful_size(pt2);
   size_t minsz = (sz1 < sz2) ? sz1 : sz2;
@@ -368,21 +392,27 @@ pcpoint_cmp(const Pcpoint *pt1, const Pcpoint *pt2)
  * @brief Return true if two pcpoints are equal
  */
 bool pcpoint_eq(const Pcpoint *pt1, const Pcpoint *pt2)
-{ return pcpoint_cmp(pt1, pt2) == 0; }
+{
+  return pcpoint_cmp(pt1, pt2) == 0;
+}
 
 /**
  * @ingroup meos_pointcloud_base_comp
  * @brief Return true if two pcpoints differ
  */
 bool pcpoint_ne(const Pcpoint *pt1, const Pcpoint *pt2)
-{ return pcpoint_cmp(pt1, pt2) != 0; }
+{
+  return pcpoint_cmp(pt1, pt2) != 0;
+}
 
 /**
  * @ingroup meos_pointcloud_base_comp
  * @brief Return true if the first pcpoint precedes the second in total order
  */
 bool pcpoint_lt(const Pcpoint *pt1, const Pcpoint *pt2)
-{ return pcpoint_cmp(pt1, pt2) <  0; }
+{
+  return pcpoint_cmp(pt1, pt2) <  0;
+}
 
 /**
  * @ingroup meos_pointcloud_base_comp
@@ -390,14 +420,18 @@ bool pcpoint_lt(const Pcpoint *pt1, const Pcpoint *pt2)
  *   in total order
  */
 bool pcpoint_le(const Pcpoint *pt1, const Pcpoint *pt2)
-{ return pcpoint_cmp(pt1, pt2) <= 0; }
+{
+  return pcpoint_cmp(pt1, pt2) <= 0;
+}
 
 /**
  * @ingroup meos_pointcloud_base_comp
  * @brief Return true if the first pcpoint follows the second in total order
  */
 bool pcpoint_gt(const Pcpoint *pt1, const Pcpoint *pt2)
-{ return pcpoint_cmp(pt1, pt2) >  0; }
+{
+  return pcpoint_cmp(pt1, pt2) >  0;
+}
 
 /**
  * @ingroup meos_pointcloud_base_comp
@@ -405,7 +439,9 @@ bool pcpoint_gt(const Pcpoint *pt1, const Pcpoint *pt2)
  *   in total order
  */
 bool pcpoint_ge(const Pcpoint *pt1, const Pcpoint *pt2)
-{ return pcpoint_cmp(pt1, pt2) >= 0; }
+{
+  return pcpoint_cmp(pt1, pt2) >= 0;
+}
 
 /*****************************************************************************
  * Schema-aware accessors

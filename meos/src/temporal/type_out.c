@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -214,7 +214,6 @@ static void
 bool_as_mfjson_sb(stringbuffer_t *sb, bool b)
 {
   stringbuffer_aprintf(sb, "%s", b ? "true" : "false");
-  return;
 }
 
 /**
@@ -224,7 +223,6 @@ static void
 int32_as_mfjson_sb(stringbuffer_t *sb, int i)
 {
   stringbuffer_aprintf(sb, "%d", i);
-  return;
 }
 
 /**
@@ -234,7 +232,6 @@ static void
 int64_as_mfjson_sb(stringbuffer_t *sb, int64 i)
 {
   stringbuffer_aprintf(sb, INT64_FORMAT, i);
-  return;
 }
 
 /**
@@ -245,7 +242,6 @@ double_as_mfjson_sb(stringbuffer_t *sb, double d, int precision)
 {
   assert(precision <= OUT_MAX_DOUBLE_PRECISION);
   stringbuffer_append_double(sb, d, precision);
-  return;
 }
 
 /**
@@ -257,7 +253,6 @@ text_as_mfjson_sb(stringbuffer_t *sb, const text *txt)
   char *str = text_to_cstring(txt);
   stringbuffer_aprintf(sb, "\"%s\"", str);
   pfree(str);
-  return;
 }
 
 #if CBUFFER
@@ -284,7 +279,6 @@ cbuffer_as_mfjson_sb(stringbuffer_t *sb, const Cbuffer *cb, int precision)
   stringbuffer_append_double(sb, cbuffer_radius(cb), precision);
   stringbuffer_append_char(sb, '}');
   pfree(gs);
-  return;
 }
 #endif /* CBUFFER */
 
@@ -332,7 +326,6 @@ coordinates_as_mfjson_sb(stringbuffer_t *sb, const TInstant *inst, int precision
     stringbuffer_append_double(sb, pt->y, precision);
   }
   stringbuffer_append_char(sb, ']');
-  return;
 }
 
 #if NPOINT
@@ -352,7 +345,6 @@ npoint_as_mfjson_sb(stringbuffer_t *sb, const Npoint *np, int precision)
   stringbuffer_aprintf(sb, "{\"route\":" INT64_FORMAT ",\"position\":", np->rid);
   stringbuffer_append_double(sb, np->pos, precision);
   stringbuffer_append_char(sb, '}');
-  return;
 }
 #endif /* NPOINT */
 
@@ -454,7 +446,6 @@ pose_as_json_sb(stringbuffer_t *sb, const Pose *pose, int precision)
   }
 stringbuffer_append_char(sb, '}');
   pfree(gs);
-  return;
 }
 #endif /* POSE */
 
@@ -524,7 +515,6 @@ datetimes_as_mfjson_sb(stringbuffer_t *sb, TimestampTz t)
   tstr[10] = 'T';
   stringbuffer_aprintf(sb, "\"%s\"", tstr);
   pfree(tstr);
-  return;
 }
 
 /**
@@ -535,7 +525,6 @@ srs_as_mfjson_sb(stringbuffer_t *sb, const char *srs)
 {
   stringbuffer_append_len(sb, "\"crs\":{\"type\":\"Name\",", 21);
   stringbuffer_aprintf(sb, "\"properties\":{\"name\":\"%s\"}},", srs);
-  return;
 }
 
 /**
@@ -550,7 +539,6 @@ tstzspan_as_mfjson_sb(stringbuffer_t *sb, const Span *s)
   datetimes_as_mfjson_sb(sb, DatumGetTimestampTz(s->upper));
   stringbuffer_aprintf(sb, ",\"lower_inc\":%s,\"upper_inc\":%s},",
     s->lower_inc ? "true" : "false", s->upper_inc ? "true" : "false");
-  return;
 }
 
 /**
@@ -573,7 +561,6 @@ tbox_as_mfjson_sb(stringbuffer_t *sb, const TBox *box, int precision)
     stringbuffer_append_double(sb, DatumGetFloat8(box->span.upper), precision);
   stringbuffer_append_len(sb, "],", 2);
   tstzspan_as_mfjson_sb(sb, &box->period);
-  return;
 }
 
 /**
@@ -605,7 +592,6 @@ stbox_as_mfjson_sb(stringbuffer_t *sb, const STBox *box, int precision)
   }
   stringbuffer_append_len(sb, "]],", 3);
   tstzspan_as_mfjson_sb(sb, &box->period);
-  return;
 }
 
 #if POINTCLOUD
@@ -1122,7 +1108,7 @@ tsequenceset_as_mfjson_sb(stringbuffer_t *sb, const TSequenceSet *ss,
  * @param[in] flags Flags
  * @param[in] precision Number of decimal digits. It is only used when the base
  * type has floating point components, such as tfloat or tgeometry
- * @param[in] srs Spatial reference system, may be `NULL`
+ * @param[in] srs Spatial reference system, may be @p NULL
  * @return On error return @p NULL
  * @csqlfn #Temporal_as_mfjson()
  */

@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -61,7 +61,6 @@ tnpointinst_set_stbox(const TInstant *inst, STBox *box)
   span_set(TimestampTzGetDatum(inst->t), TimestampTzGetDatum(inst->t),
     true, true, T_TIMESTAMPTZ, T_TSTZSPAN, &box->period);
   MEOS_FLAGS_SET_T(box->flags, true);
-  return;
 }
 
 /**
@@ -81,7 +80,6 @@ tnpointinstarr_step_set_stbox(TInstant **instants, int count, STBox *box)
     tnpointinst_set_stbox(instants[i], &box1);
     stbox_expand(&box1, box);
   }
-  return;
 }
 
 /**
@@ -115,7 +113,6 @@ tnpointinstarr_linear_set_stbox(TInstant **instants, int count, STBox *box)
   MEOS_FLAGS_SET_T(box->flags, true);
   if (posmin != 0 || posmax != 1)
     pfree(gs);
-  return;
 }
 
 /**
@@ -134,7 +131,6 @@ tnpointinstarr_set_stbox(TInstant **instants, int count, interpType interp,
     tnpointinstarr_linear_set_stbox(instants, count, box);
   else
     tnpointinstarr_step_set_stbox(instants, count, box);
-  return;
 }
 
 /**
@@ -170,7 +166,6 @@ tnpointseq_expand_stbox(const TSequence *seq, const TInstant *inst)
   }
   /* Expand the bounding box of the sequence with the last edge */
   stbox_expand(&box, (STBox *) TSEQUENCE_BBOX_PTR(seq));
-  return;
 }
 
 

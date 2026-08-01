@@ -1,13 +1,29 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
+ *
+ * MobilityDB includes portions of PostGIS version 3 source code released
+ * under the GNU General Public License (GPLv2 or later).
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
  * agreement is hereby granted, provided that the above copyright notice and
  * this paragraph and the following two paragraphs appear in all copies.
+ *
+ * IN NO EVENT SHALL UNIVERSITE LIBRE DE BRUXELLES BE LIABLE TO ANY PARTY FOR
+ * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING
+ * LOST PROFITS, ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION,
+ * EVEN IF UNIVERSITE LIBRE DE BRUXELLES HAS BEEN ADVISED OF THE POSSIBILITY
+ * OF SUCH DAMAGE.
+ *
+ * UNIVERSITE LIBRE DE BRUXELLES SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS ON
+ * AN "AS IS" BASIS, AND UNIVERSITE LIBRE DE BRUXELLES HAS NO OBLIGATIONS TO
+ * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *
  *****************************************************************************/
 
@@ -33,6 +49,8 @@
 #include <liblwgeom.h>       /* parse_hex, deparse_hex */
 /* MEOS */
 #include <meos.h>
+#include <meos_internal.h>
+#include "temporal/temporal.h"
 
 /*****************************************************************************
  * Struct-tail padding
@@ -223,11 +241,13 @@ pcpatch_as_hexwkb(const Pcpatch *pa)
 /**
  * @ingroup meos_pointcloud_constructor
  * @brief Return a palloc'd copy of a pcpatch
+ * @return On error return @p NULL
  */
 Pcpatch *
 pcpatch_copy(const Pcpatch *pa)
 {
-  assert(pa);
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(pa, NULL);
   size_t sz = VARSIZE(pa);
   Pcpatch *result = palloc(sz);
   memcpy(result, pa, sz);
@@ -237,30 +257,40 @@ pcpatch_copy(const Pcpatch *pa)
 /**
  * @ingroup meos_pointcloud_base_accessor
  * @brief Return the pcid (schema id) of a pcpatch
+ * @return On error return @p UINT32_MAX
  * @csqlfn #Pcpatch_pcid()
  */
-uint32_t pcpatch_get_pcid(const Pcpatch *pa)
+uint32_t
+pcpatch_get_pcid(const Pcpatch *pa)
 {
-  assert(pa); return pa->pcid;
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(pa, UINT32_MAX);
+  return pa->pcid;
 }
 
 /**
  * @ingroup meos_pointcloud_base_accessor
  * @brief Return the number of points stored in a pcpatch
+ * @return On error return @p UINT32_MAX
  */
-uint32_t pcpatch_npoints(const Pcpatch *pa)
+uint32_t
+pcpatch_npoints(const Pcpatch *pa)
 {
-  assert(pa); return pa->npoints;
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(pa, UINT32_MAX);
+  return pa->npoints;
 }
 
 /**
  * @ingroup meos_pointcloud_base_accessor
  * @brief Return the 32-bit hash of a pcpatch
+ * @return On error return @p UINT32_MAX
  */
 uint32
 pcpatch_hash(const Pcpatch *pa)
 {
-  assert(pa);
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(pa, UINT32_MAX);
   return hash_any((const unsigned char *) pa,
     (int) pcpatch_meaningful_size(pa));
 }
@@ -268,11 +298,13 @@ pcpatch_hash(const Pcpatch *pa)
 /**
  * @ingroup meos_pointcloud_base_accessor
  * @brief Return the 64-bit hash of a pcpatch with a seed
+ * @return On error return @p UINT64_MAX
  */
 uint64
 pcpatch_hash_extended(const Pcpatch *pa, uint64 seed)
 {
-  assert(pa);
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(pa, UINT64_MAX);
   return hash_any_extended((const unsigned char *) pa,
     (int) pcpatch_meaningful_size(pa), seed);
 }
@@ -284,7 +316,8 @@ pcpatch_hash_extended(const Pcpatch *pa, uint64 seed)
 /**
  * @ingroup meos_pointcloud_base_comp
  * @brief Compare two pcpatch values byte-wise
- * @return -1 / 0 / 1
+ * @brief Return -1, 0, or 1 depending on whether the first pointcloud patch
+ * is less than, equal to, or greater than the second one
  * @note Compares only the meaningful-prefix bytes — pgpointcloud's
  *   struct-tail padding is skipped so two pcpatches that disagree only
  *   on those padding bytes compare equal.
@@ -292,7 +325,9 @@ pcpatch_hash_extended(const Pcpatch *pa, uint64 seed)
 int
 pcpatch_cmp(const Pcpatch *pa1, const Pcpatch *pa2)
 {
-  assert(pa1); assert(pa2);
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(pa1, -1); VALIDATE_NOT_NULL(pa2, -1);
+
   size_t sz1 = pcpatch_meaningful_size(pa1);
   size_t sz2 = pcpatch_meaningful_size(pa2);
   size_t minsz = (sz1 < sz2) ? sz1 : sz2;
@@ -307,21 +342,27 @@ pcpatch_cmp(const Pcpatch *pa1, const Pcpatch *pa2)
  * @brief Return true if two pcpatch values are equal
  */
 bool pcpatch_eq(const Pcpatch *pa1, const Pcpatch *pa2)
-{ return pcpatch_cmp(pa1, pa2) == 0; }
+{
+  return pcpatch_cmp(pa1, pa2) == 0;
+}
 
 /**
  * @ingroup meos_pointcloud_base_comp
  * @brief Return true if two pcpatch values differ
  */
 bool pcpatch_ne(const Pcpatch *pa1, const Pcpatch *pa2)
-{ return pcpatch_cmp(pa1, pa2) != 0; }
+{
+  return pcpatch_cmp(pa1, pa2) != 0;
+}
 
 /**
  * @ingroup meos_pointcloud_base_comp
  * @brief Return true if the first pcpatch precedes the second in total order
  */
 bool pcpatch_lt(const Pcpatch *pa1, const Pcpatch *pa2)
-{ return pcpatch_cmp(pa1, pa2) <  0; }
+{
+  return pcpatch_cmp(pa1, pa2) <  0;
+}
 
 /**
  * @ingroup meos_pointcloud_base_comp
@@ -329,14 +370,18 @@ bool pcpatch_lt(const Pcpatch *pa1, const Pcpatch *pa2)
  *   in total order
  */
 bool pcpatch_le(const Pcpatch *pa1, const Pcpatch *pa2)
-{ return pcpatch_cmp(pa1, pa2) <= 0; }
+{
+  return pcpatch_cmp(pa1, pa2) <= 0;
+}
 
 /**
  * @ingroup meos_pointcloud_base_comp
  * @brief Return true if the first pcpatch follows the second in total order
  */
 bool pcpatch_gt(const Pcpatch *pa1, const Pcpatch *pa2)
-{ return pcpatch_cmp(pa1, pa2) >  0; }
+{
+  return pcpatch_cmp(pa1, pa2) >  0;
+}
 
 /**
  * @ingroup meos_pointcloud_base_comp
@@ -344,6 +389,8 @@ bool pcpatch_gt(const Pcpatch *pa1, const Pcpatch *pa2)
  *   in total order
  */
 bool pcpatch_ge(const Pcpatch *pa1, const Pcpatch *pa2)
-{ return pcpatch_cmp(pa1, pa2) >= 0; }
+{
+  return pcpatch_cmp(pa1, pa2) >= 0;
+}
 
 /*****************************************************************************/

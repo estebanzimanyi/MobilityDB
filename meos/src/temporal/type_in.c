@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -1535,7 +1535,6 @@ wkb_parse_state_check(meos_wkb_parse_state *s, size_t next)
   if ((s->pos + next) > (s->wkb + s->wkb_size))
     meos_error(ERROR, MEOS_ERR_WKB_INPUT,
       "WKB structure does not match expected size!");
-  return;
 }
 
 /**
@@ -1865,7 +1864,6 @@ npoint_flags_from_wkb_state(meos_wkb_parse_state *s, uint8_t wkb_flags)
   s->has_srid = false;
   if (wkb_flags & MEOS_WKB_SRIDFLAG)
     s->has_srid = true;
-  return;
 }
 
 /**
@@ -1916,7 +1914,6 @@ pose_flags_from_wkb_state(meos_wkb_parse_state *s, uint8_t wkb_flags)
     s->geodetic = true;
   if (wkb_flags & MEOS_WKB_SRIDFLAG)
     s->has_srid = true;
-  return;
 }
 
 /**
@@ -2095,7 +2092,6 @@ bounds_from_wkb_state(uint8_t wkb_bounds, bool *lower_inc, bool *upper_inc)
     *upper_inc = true;
   else
     *upper_inc = false;
-  return;
 }
 
 /**
@@ -2120,7 +2116,6 @@ span_from_wkb_state_iter(meos_wkb_parse_state *s, Span *result)
   Datum upper = base_from_wkb_state(s);
   span_set(lower, upper, lower_inc, upper_inc, s->basetype, s->spantype,
     result);
-  return;
 }
 
 /**
@@ -2202,7 +2197,6 @@ set_flags_from_wkb_state(meos_wkb_parse_state *s, uint8_t wkb_flags)
     if (wkb_flags & MEOS_WKB_SRIDFLAG)
       s->has_srid = true;
   }
-  return;
 }
 
 /**
@@ -2256,7 +2250,6 @@ tbox_flags_from_wkb_state(meos_wkb_parse_state *s, uint8_t wkb_flags)
     s->hasx = true;
   if (wkb_flags & MEOS_WKB_TFLAG)
     s->hast = true;
-  return;
 }
 
 /**
@@ -2306,7 +2299,6 @@ stbox_flags_from_wkb_state(meos_wkb_parse_state *s, uint8_t wkb_flags)
     s->geodetic = true;
   if (wkb_flags & MEOS_WKB_SRIDFLAG)
     s->has_srid = true;
-  return;
 }
 
 /**
@@ -2387,9 +2379,7 @@ temporal_flags_from_wkb_state(meos_wkb_parse_state *s, uint8_t wkb_flags)
     default: /* Error! */
       meos_error(ERROR, MEOS_ERR_WKB_INPUT,
         "Unknown WKB flags: %d", wkb_flags);
-      break;
   }
-  return;
 }
 
 /**

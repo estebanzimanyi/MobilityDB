@@ -85,7 +85,6 @@ _PG_init(void)
 {
   /* elog(WARNING, "This is MobilityDB."); */
   mobilitydb_init();
-  return;
 }
 
 /*****************************************************************************
@@ -117,7 +116,6 @@ void
 store_fcinfo(FunctionCallInfo fcinfo)
 {
   MOBDB_PG_FCINFO = fcinfo;
-  return;
 }
 
 /*****************************************************************************
@@ -351,7 +349,6 @@ tinstant_write(const TInstant *inst, StringInfo buf)
   pq_sendbytes(buf, VARDATA(bt), VARSIZE(bt) - VARHDRSZ);
   pq_sendint32(buf, VARSIZE(bv) - VARHDRSZ);
   pq_sendbytes(buf, VARDATA(bv), VARSIZE(bv) - VARHDRSZ);
-  return;
 }
 
 /*****************************************************************************/
@@ -390,7 +387,6 @@ tsequence_write(const TSequence *seq, StringInfo buf)
   pq_sendbyte(buf, (uint8) MEOS_FLAGS_GET_INTERP(seq->flags));
   for (int i = 0; i < seq->count; i++)
     tinstant_write(TSEQUENCE_INST_N(seq, i), buf);
-  return;
 }
 
 /*****************************************************************************
@@ -470,7 +466,6 @@ temporal_write(const Temporal *temp, StringInfo buf)
     tinstant_write((TInstant *) temp, buf);
   else /* temp->subtype == TSEQUENCE */
     tsequence_write((TSequence *) temp, buf);
-  return;
 }
 
 PGDLLEXPORT Datum Temporal_recv(PG_FUNCTION_ARGS);
@@ -1908,7 +1903,6 @@ temporal_unnest_state_next(TempUnnestState *state)
   state->i++;
   if (state->i == state->count)
     state->done = true;
-  return;
 }
 
 PGDLLEXPORT Datum Temporal_unnest(PG_FUNCTION_ARGS);

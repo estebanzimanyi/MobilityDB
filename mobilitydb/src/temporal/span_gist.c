@@ -287,7 +287,6 @@ span_gist_fallback_split(GistEntryVector *entryvec, GIST_SPLITVEC *v)
 
   v->spl_ldatum = SpanPGetDatum(left_span);
   v->spl_rdatum = SpanPGetDatum(right_span);
-  return;
 }
 
 /**
@@ -376,7 +375,6 @@ span_gist_consider_split(ConsiderSplitContext *context, SpanBound *right_lower,
       context->common_right = left_count - min_left_count;
     }
   }
-  return;
 }
 
 /**
@@ -715,8 +713,6 @@ span_gist_double_sorting_split(GistEntryVector *entryvec, GIST_SPLITVEC *v)
   v->spl_rdatum = PointerGetDatum(right_span);
 
   pfree(common_entries);
-
-  return;
 }
 
 /*****************************************************************************

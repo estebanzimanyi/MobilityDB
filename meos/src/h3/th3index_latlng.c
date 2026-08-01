@@ -1,12 +1,12 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -72,7 +72,7 @@
  * @csqlfn #Geo_point_to_h3index()
  */
 H3Index
-geo_to_h3index_cell(const GSERIALIZED *point, int32 resolution)
+geo_to_h3index_cell(const GSERIALIZED *point, uint32_t resolution)
 {
   if (! ensure_srid_is_latlong(gserialized_get_srid(point)))
     return (H3Index) 0;
@@ -184,7 +184,7 @@ h3_cell_to_geom(H3Index cell)
  * guard lives in the static adapter `geo_to_h3index_cell`.
  */
 static TInstant *
-tpointinst_to_th3index(const TInstant *inst, int32 resolution)
+tpointinst_to_th3index(const TInstant *inst, uint32_t resolution)
 {
   const GSERIALIZED *gs = DatumGetGserializedP(tinstant_value(inst));
   H3Index cell = geo_to_h3index_cell(gs, resolution);
@@ -199,7 +199,7 @@ tpointinst_to_th3index(const TInstant *inst, int32 resolution)
  * straight-line segment between instants to walk).
  */
 static TSequence *
-tpointseq_densify_to_th3index(const TSequence *seq, int32 resolution)
+tpointseq_densify_to_th3index(const TSequence *seq, uint32_t resolution)
 {
   if (seq->count == 0)
     return NULL;
@@ -319,7 +319,7 @@ tpointseq_densify_to_th3index(const TSequence *seq, int32 resolution)
  * STEP TSequenceSet by per-sequence densification.
  */
 static TSequenceSet *
-tpointseqset_densify_to_th3index(const TSequenceSet *ss, int32 resolution)
+tpointseqset_densify_to_th3index(const TSequenceSet *ss, uint32_t resolution)
 {
   TSequence **sequences = palloc(sizeof(TSequence *) * (size_t) ss->count);
   int nseq = 0;
@@ -343,7 +343,7 @@ tpointseqset_densify_to_th3index(const TSequenceSet *ss, int32 resolution)
  * is produced and the dispatcher itself needs no separate guard.
  */
 static Temporal *
-tpoint_to_th3index_dense(const Temporal *temp, int32 resolution)
+tpoint_to_th3index_dense(const Temporal *temp, uint32_t resolution)
 {
   switch (temp->subtype)
   {
@@ -374,7 +374,7 @@ tpoint_to_th3index_dense(const Temporal *temp, int32 resolution)
  * @csqlfn #Tgeompoint_to_th3index()
  */
 Temporal *
-tgeompoint_to_th3index(const Temporal *temp, int32 resolution)
+tgeompoint_to_th3index(const Temporal *temp, uint32_t resolution)
 {
   assert(temp); assert(temp->temptype == T_TGEOMPOINT);
   return tpoint_to_th3index_dense(temp, resolution);
@@ -392,7 +392,7 @@ tgeompoint_to_th3index(const Temporal *temp, int32 resolution)
  * @csqlfn #Tgeogpoint_to_th3index()
  */
 Temporal *
-tgeogpoint_to_th3index(const Temporal *temp, int32 resolution)
+tgeogpoint_to_th3index(const Temporal *temp, uint32_t resolution)
 {
   assert(temp); assert(temp->temptype == T_TGEOGPOINT);
   return tpoint_to_th3index_dense(temp, resolution);

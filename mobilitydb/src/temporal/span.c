@@ -453,7 +453,6 @@ range_set_span(RangeType *range, TypeCacheEntry *typcache, Span *result)
   MeosType spantype = basetype_spantype(basetype);
   span_set(lower.val, upper.val, lower.inclusive, upper.inclusive, basetype,
     spantype, result);
-  return;
 }
 
 PGDLLEXPORT Datum Range_to_span(PG_FUNCTION_ARGS);

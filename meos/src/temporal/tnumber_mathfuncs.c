@@ -7,7 +7,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -916,7 +916,7 @@ datum_sin(Datum d)
  * analytic, so the result is EXACT rather than adaptively approximated.
  */
 static int
-tfloatseg_trig_extrema(double v1, double v2, TimestampTz lower,
+tfloatsegm_trig_extrema(double v1, double v2, TimestampTz lower,
   TimestampTz upper, double offset, TimestampTz **result)
 {
   double dv = v2 - v1;
@@ -951,25 +951,25 @@ tfloatseg_trig_extrema(double v1, double v2, TimestampTz lower,
 
 /**
  * @brief Exact turning points (extrema, where cos(theta) = 0) of sin over a
- * linear float segment; see #tfloatseg_trig_extrema
+ * linear float segment; see #tfloatsegm_trig_extrema
  */
 static int
-tfloatseg_sin_turnpt(Datum start, Datum end, TimestampTz lower,
+tfloatsegm_sin_turnpt(Datum start, Datum end, TimestampTz lower,
   TimestampTz upper, TimestampTz **result)
 {
-  return tfloatseg_trig_extrema(DatumGetFloat8(start), DatumGetFloat8(end),
+  return tfloatsegm_trig_extrema(DatumGetFloat8(start), DatumGetFloat8(end),
     lower, upper, 0.5, result);
 }
 
 /**
  * @brief Exact turning points (extrema, where sin(theta) = 0) of cos over a
- * linear float segment; see #tfloatseg_trig_extrema
+ * linear float segment; see #tfloatsegm_trig_extrema
  */
 static int
-tfloatseg_cos_turnpt(Datum start, Datum end, TimestampTz lower,
+tfloatsegm_cos_turnpt(Datum start, Datum end, TimestampTz lower,
   TimestampTz upper, TimestampTz **result)
 {
-  return tfloatseg_trig_extrema(DatumGetFloat8(start), DatumGetFloat8(end),
+  return tfloatsegm_trig_extrema(DatumGetFloat8(start), DatumGetFloat8(end),
     lower, upper, 0.0, result);
 }
 
@@ -980,7 +980,7 @@ tfloatseg_cos_turnpt(Datum start, Datum end, TimestampTz lower,
  * @note sin is oscillatory with an arbitrary number of turning points per linear
  * segment, but their locations are ANALYTIC (the extrema where cos = 0). The
  * result is densified at those EXACT turning points (no approximation); see
- * #tfunc_tlinearseq_set and #tfloatseg_sin_turnpt.
+ * #tfunc_tlinearseq_set and #tfloatsegm_sin_turnpt.
  * @csqlfn #Tfloat_sin()
  */
 Temporal *
@@ -995,7 +995,7 @@ tfloat_sin(const Temporal *temp)
   lfinfo.argtype[0] = T_TFLOAT;
   lfinfo.restype = T_TFLOAT;
   lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
-  lfinfo.tpfn_set = lfinfo.reslinear ? &tfloatseg_sin_turnpt : NULL;
+  lfinfo.tpfn_set = lfinfo.reslinear ? &tfloatsegm_sin_turnpt : NULL;
   return tfunc_temporal(temp, &lfinfo);
 }
 
@@ -1018,7 +1018,7 @@ datum_cos(Datum d)
  * @note cos is oscillatory with an arbitrary number of turning points per linear
  * segment, but their locations are ANALYTIC (the extrema where sin = 0). The
  * result is densified at those EXACT turning points (no approximation); see
- * #tfunc_tlinearseq_set and #tfloatseg_cos_turnpt.
+ * #tfunc_tlinearseq_set and #tfloatsegm_cos_turnpt.
  * @csqlfn #Tfloat_cos()
  */
 Temporal *
@@ -1033,7 +1033,7 @@ tfloat_cos(const Temporal *temp)
   lfinfo.argtype[0] = T_TFLOAT;
   lfinfo.restype = T_TFLOAT;
   lfinfo.reslinear = MEOS_FLAGS_LINEAR_INTERP(temp->flags);
-  lfinfo.tpfn_set = lfinfo.reslinear ? &tfloatseg_cos_turnpt : NULL;
+  lfinfo.tpfn_set = lfinfo.reslinear ? &tfloatsegm_cos_turnpt : NULL;
   return tfunc_temporal(temp, &lfinfo);
 }
 

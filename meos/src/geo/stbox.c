@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -122,7 +122,6 @@ stbox_expand(const STBox *box1, STBox *box2)
   }
   if (MEOS_FLAGS_GET_T(box2->flags))
     span_expand(&box1->period, &box2->period);
-  return;
 }
 
 /*****************************************************************************
@@ -404,7 +403,6 @@ stbox_set(bool hasx, bool hasz, bool geodetic, int32 srid, double xmin,
       result->zmax = Max(zmin, zmax);
     }
   }
-  return;
 }
 
 /**
@@ -502,7 +500,6 @@ stbox_set_gbox(const STBox *box, GBOX *result)
   FLAGS_SET_Z(result->flags, MEOS_FLAGS_GET_Z(box->flags));
   FLAGS_SET_M(result->flags, false);
   FLAGS_SET_GEODETIC(result->flags, MEOS_FLAGS_GET_GEODETIC(box->flags));
-  return;
 }
 
 /**
@@ -530,7 +527,6 @@ stbox_set_box3d(const STBox *box, BOX3D *result)
   }
   result->srid = box->srid;
   /* result does not have a flags attribute */
-  return;
 }
 
 /**
@@ -698,7 +694,6 @@ gbox_set_stbox(const GBOX *box, int32_t srid, STBox *result)
     result->zmax = box->zmax;
   }
   result->srid = srid;
-  return;
 }
 
 /**
@@ -767,7 +762,6 @@ point_get_coords(const GSERIALIZED *point, bool hasz, double *x, double *y,
     *x = p->x;
     *y = p->y;
   }
-  return;
 }
 
 /**
@@ -879,7 +873,6 @@ geoarr_set_stbox(const Datum *values, int count, STBox *result)
     geo_set_stbox(DatumGetGserializedP(values[i]), &box1);
     stbox_expand(&box1, result);
   }
-  return;
 }
 
 /**
@@ -898,7 +891,6 @@ timestamptz_set_stbox(TimestampTz t, STBox *box)
   Datum dt = TimestampTzGetDatum(t);
   span_set(dt, dt, true, true, T_TIMESTAMPTZ, T_TSTZSPAN, &box->period);
   MEOS_FLAGS_SET_T(box->flags, true);
-  return;
 }
 
 /**
@@ -930,7 +922,6 @@ tstzset_set_stbox(const Set *s, STBox *result)
   memset(result, 0, sizeof(STBox));
   set_set_span(s, &result->period);
   MEOS_FLAGS_SET_T(result->flags, true);
-  return;
 }
 
 /**
@@ -964,7 +955,6 @@ tstzspan_set_stbox(const Span *s, STBox *result)
   memset(result, 0, sizeof(STBox));
   memcpy(&result->period, s, sizeof(Span));
   MEOS_FLAGS_SET_T(result->flags, true);
-  return;
 }
 
 /**
@@ -998,7 +988,6 @@ tstzspanset_set_stbox(const SpanSet *ss, STBox *result)
   memset(result, 0, sizeof(STBox));
   memcpy(&result->period, &ss->span, sizeof(Span));
   MEOS_FLAGS_SET_T(result->flags, true);
-  return;
 }
 
 /**
@@ -1422,7 +1411,6 @@ stbox_round_set(const STBox *box, int maxdd, STBox *result)
     result->zmin = float8_round(box->zmin, maxdd);
     result->zmax = float8_round(box->zmax, maxdd);
   }
-  return;
 }
 
 /**
@@ -1784,7 +1772,6 @@ stbox_stbox_flags(const STBox *box1, const STBox *box2, bool *hasx,
   *hast = MEOS_FLAGS_GET_T(box1->flags) && MEOS_FLAGS_GET_T(box2->flags);
   *geodetic = MEOS_FLAGS_GET_GEODETIC(box1->flags) &&
     MEOS_FLAGS_GET_GEODETIC(box2->flags);
-  return;
 }
 
 /**
@@ -2491,13 +2478,14 @@ stbox_ne(const STBox *box1, const STBox *box2)
  * @brief Return -1, 0, or 1 depending on whether the first spatiotemporal
  * box is less than, equal to, or greater than the second one
  * @param[in] box1,box2 Spatiotemporal boxes
+ * @return On error return @p INT_MAX
  * @csqlfn #Stbox_cmp()
  */
 int
 stbox_cmp(const STBox *box1, const STBox *box2)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(box1, false); VALIDATE_NOT_NULL(box2, false);
+  VALIDATE_NOT_NULL(box1, INT_MAX); VALIDATE_NOT_NULL(box2, INT_MAX);
 
   /* Compare the SRID */
   if (box1->srid < box2->srid)
@@ -2616,15 +2604,14 @@ stbox_gt(const STBox *box1, const STBox *box2)
  * @ingroup meos_geo_box_accessor
  * @brief Return the 32-bit hash value of a spatiotemporal box
  * @param[in] box Spatiotemporal box
- * @return On error return @p INT_MAX
- * @sqlfn stbox_hash()
+ * @return On error return @p UINT32_MAX
  * @csqlfn #Stbox_hash()
  */
 uint32
 stbox_hash(const STBox *box)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(box, INT_MAX);
+  VALIDATE_NOT_NULL(box, UINT32_MAX);
 
   /* Determine the dimensions of the spatiotemporal box */
   bool hasx = MEOS_FLAGS_GET_X(box->flags);
@@ -2700,14 +2687,14 @@ stbox_hash(const STBox *box)
  * @brief Return the 64-bit hash of a spatiotemporal box using a seed
  * @param[in] box Spatiotemporal box
  * @param[in] seed Seed
- * @return On error return @p LONG_MAX
+ * @return On error return @p UINT64_MAX
  * @csqlfn #Stbox_hash_extended()
  */
 uint64
 stbox_hash_extended(const STBox *box, uint64 seed)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(box, LONG_MAX);
+  VALIDATE_NOT_NULL(box, UINT64_MAX);
 
   bool hasx = MEOS_FLAGS_GET_X(box->flags);
   bool hasz = MEOS_FLAGS_GET_Z(box->flags);

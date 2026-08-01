@@ -1,12 +1,12 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -29,6 +29,7 @@
 
 /**
  * @brief External API of the Mobility Engine Open Source (MEOS) library
+ * for the JSON data types: JSON / JSONB / JSONPATH
  */
 
 #ifndef __MEOS_JSON_H__
@@ -43,6 +44,7 @@
 #include <meos.h>
 #include <meos_internal.h>
 #include <pgtypes.h>
+
 /*****************************************************************************
  * Public base JSON / JSONB / JSONPATH API
  *
@@ -54,10 +56,7 @@
  * sources; the Jsonb/JsonPath/text/Numeric types come from <pgtypes.h> above.
  *****************************************************************************/
 
-/*****************************************************************************/
-
 /* Input and output functions */
-
 
 extern text *json_in(const char *str);
 extern char *json_out(const text *js);
@@ -84,7 +83,6 @@ extern int32 jsonb_to_int32(const Jsonb *jb);
 extern int64 jsonb_to_int64(const Jsonb *jb);
 extern Numeric jsonb_to_numeric(const Jsonb *jb);
 extern text *jsonb_to_text(const Jsonb *jb);
-
 
 /* Accessor functions */
 
@@ -155,8 +153,6 @@ extern Jsonb *jsonb_path_query_first(const Jsonb *jb, const JsonPath *jp, const 
 extern JsonPath *jsonpath_in(const char *str);
 extern JsonPath *jsonpath_copy(const JsonPath *jp);
 extern char *jsonpath_out(const JsonPath *jp);
-
-/*****************************************************************************/
 
 /*****************************************************************************
  * Type definitions

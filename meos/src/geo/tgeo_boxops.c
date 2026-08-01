@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -102,7 +102,6 @@ tgeoinst_set_stbox(const TInstant *inst, STBox *box)
   span_set(TimestampTzGetDatum(inst->t), TimestampTzGetDatum(inst->t),
     true, true, T_TIMESTAMPTZ, T_TSTZSPAN, &box->period);
   MEOS_FLAGS_SET_T(box->flags, true);
-  return;
 }
 
 /**
@@ -146,7 +145,6 @@ tspatialinst_set_stbox(const TInstant *inst, STBox *box)
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "Unknown temporal type for bounding box function: %s",
       meostype_name(inst->temptype));
-  return;
 }
 
 /**
@@ -163,7 +161,6 @@ tspatialseq_set_stbox(const TSequence *seq, STBox *box)
 {
   assert(seq); assert(box); assert(tspatial_type(seq->temptype));
   memcpy(box, TSEQUENCE_BBOX_PTR(seq), sizeof(STBox));
-  return;
 }
 
 /**
@@ -180,7 +177,6 @@ tspatialseqset_set_stbox(const TSequenceSet *ss, STBox *box)
 {
   assert(ss); assert(box); assert(tspatial_type(ss->temptype));
   memcpy(box, TSEQUENCESET_BBOX_PTR(ss), sizeof(STBox));
-  return;
 }
 
 /**
@@ -222,7 +218,6 @@ tgeoinstarr_set_stbox(TInstant **instants, int count, STBox *box)
   }
   MEOS_FLAGS_SET_Z(box->flags, hasz);
   MEOS_FLAGS_SET_GEODETIC(box->flags, geodetic);
-  return;
 }
 
 /**
@@ -277,9 +272,7 @@ tspatialinstarr_set_stbox(TInstant **instants, int count, bool lower_inc,
   Span *s = (Span *) box;
   s->lower_inc = lower_inc;
   s->upper_inc = upper_inc;
-  return;
 }
-
 /**
  * @brief Expand the bounding box of a temporal point sequence with an instant
  * @param[in] seq Temporal sequence
@@ -292,9 +285,7 @@ tgeoseq_expand_stbox(TSequence *seq, const TInstant *inst)
   STBox box;
   tgeoinst_set_stbox(inst, &box);
   stbox_expand(&box, (STBox *) TSEQUENCE_BBOX_PTR(seq));
-  return;
 }
-
 /**
  * @ingroup meos_internal_geo_bbox
  * @brief Expand the bounding box of a spatiotemporal sequence with an
@@ -336,9 +327,7 @@ tspatialseq_expand_stbox(TSequence *seq, const TInstant *inst)
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "Unknown temporal type for bounding box function: %s",
       meostype_name(seq->temptype));
-  return;
 }
-
 /**
  * @ingroup meos_internal_geo_bbox
  * @brief Return in the last argument the spatiotemporal box of an array of
@@ -357,9 +346,7 @@ tspatialseqarr_set_stbox(TSequence **sequences, int count, STBox *box)
     const STBox *box1 = TSEQUENCE_BBOX_PTR(sequences[i]);
     stbox_expand(box1, box);
   }
-  return;
 }
-
 /**
  * @brief Set a bounding box from an array of spatial set values
  * @param[in] values Values
@@ -399,9 +386,7 @@ spatialarr_set_bbox(const Datum *values, MeosType basetype, int count,
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "Unknown set type for computing the bounding box: %s",
       meostype_name(basetype));
-  return;
 }
-
 /*****************************************************************************
  * Boxes functions
  * These functions can be used for defining MultiEntry Search Trees indexes
@@ -1006,9 +991,7 @@ lwpoint_init_gbox(const POINT4D *p, bool hasz, bool hasm, bool geodetic,
   FLAGS_SET_Z(box->flags, hasz);
   FLAGS_SET_M(box->flags, hasm);
   FLAGS_SET_GEODETIC(box->flags, geodetic);
-  return;
 }
-
 /**
  * @brief Return the @p GBOX in the last argument merged with a @p LWPOINT
  * @param[in] p Point
@@ -1036,7 +1019,6 @@ lwpoint_merge_gbox(const POINT4D *p, bool hasz, bool hasm, bool geodetic,
     if (box->mmin > p->m) box->mmin = p->m;
     if (box->mmax < p->m) box->mmax = p->m;
   }
-  return;
 }
 
 /**
@@ -1402,7 +1384,6 @@ multiline_split_n_gboxes(const GSERIALIZED *gs, int box_count, int *count)
  * @param[in] gs (Multi)line
  * @param[in] box_count Number of boxes
  * @param[out] count Number of elements in the output array
- * @return On error return @p NULL
  */
 GBOX *
 geo_split_n_gboxes(const GSERIALIZED *gs, int box_count, int *count)
@@ -1421,17 +1402,15 @@ geo_split_n_gboxes(const GSERIALIZED *gs, int box_count, int *count)
  * @param[in] gs (Multi)line
  * @param[in] box_count Number of boxes
  * @param[out] count Number of elements in the output array
- * @sqlfn splitNStboxes()
  * @csqlfn #Geo_split_n_stboxes()
+ * @return On error return @p NULL
  */
 STBox *
 geo_split_n_stboxes(const GSERIALIZED *gs, int box_count, int *count)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(count, NULL);
-  /* The out parameter is defined even when a later check fails */
-  *count = 0;
-  VALIDATE_NOT_NULL(gs, NULL);
+  *count = 0; /* The out parameter is defined even when a later check fails */
+  VALIDATE_NOT_NULL(count, NULL); VALIDATE_NOT_NULL(gs, NULL);
   if (! ensure_not_empty(gs) || ! ensure_positive(box_count) ||
       ! ensure_mline_type(gs))
     return NULL;

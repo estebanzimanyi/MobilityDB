@@ -562,7 +562,6 @@ span_bin_state_set(Datum lower, Datum size, MeosType basetype,
 
   Datum upper = datum_add(lower, size, basetype);
   span_set(lower, upper, true, false, basetype, spantype, span);
-  return;
 }
 
 /**
@@ -595,7 +594,6 @@ span_bin_state_next(SpanBinState *state)
   state->value = datum_add(state->value, state->size, state->basetype);
   if (state->i > state->nbins)
     state->done = true;
-  return;
 }
 
 /*****************************************************************************/

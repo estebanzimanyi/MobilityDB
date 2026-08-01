@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -89,11 +89,13 @@ ensure_valid_pixtype(uint8 pixtype)
  * @brief Return a Raquet tile from its ASCII hex-encoded Well-Known Binary
  * (HexWKB) representation
  * @param[in] str HexWKB string
+ * @return On error return @p NULL
  * @csqlfn #Raquet_in()
  */
 Raquet *
 raquet_in(const char *str)
 {
+  /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(str, NULL);
   return DatumGetRaquetP(type_from_hexwkb(str, strlen(str), T_RAQUET));
 }
@@ -103,11 +105,13 @@ raquet_in(const char *str)
  * @brief Return the ASCII hex-encoded Well-Known Binary (HexWKB)
  * representation of a Raquet tile
  * @param[in] rq Raquet tile
+ * @return On error return @p NULL
  * @csqlfn #Raquet_out()
  */
 char *
 raquet_out(const Raquet *rq)
 {
+  /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(rq, NULL);
   size_t size;
   return (char *) datum_as_wkb(RaquetPGetDatum(rq), T_RAQUET,
@@ -119,11 +123,13 @@ raquet_out(const Raquet *rq)
  * @brief Return a Raquet tile from its Well-Known Binary (WKB) representation
  * @param[in] wkb WKB string
  * @param[in] size Size of the string
+ * @return On error return @p NULL
  * @csqlfn #Raquet_recv(), #Raquet_from_wkb()
  */
 Raquet *
 raquet_from_wkb(const uint8_t *wkb, size_t size)
 {
+  /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(wkb, NULL);
   return DatumGetRaquetP(type_from_wkb(wkb, size, T_RAQUET));
 }
@@ -133,11 +139,13 @@ raquet_from_wkb(const uint8_t *wkb, size_t size)
  * @brief Return a Raquet tile from its ASCII hex-encoded Well-Known Binary
  * (HexWKB) representation
  * @param[in] hexwkb HexWKB string
+ * @return On error return @p NULL
  * @csqlfn #Raquet_from_hexwkb()
  */
 Raquet *
 raquet_from_hexwkb(const char *hexwkb)
 {
+  /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(hexwkb, NULL);
   return DatumGetRaquetP(type_from_hexwkb(hexwkb, strlen(hexwkb), T_RAQUET));
 }
@@ -148,11 +156,13 @@ raquet_from_hexwkb(const char *hexwkb)
  * @param[in] rq Raquet tile
  * @param[in] variant Output variant
  * @param[out] size_out Size of the output
+ * @return On error return @p NULL
  * @csqlfn #Raquet_send(), #Raquet_as_wkb()
  */
 uint8_t *
 raquet_as_wkb(const Raquet *rq, uint8_t variant, size_t *size_out)
 {
+  /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(rq, NULL); VALIDATE_NOT_NULL(size_out, NULL);
   return datum_as_wkb(RaquetPGetDatum(rq), T_RAQUET, variant, size_out);
 }
@@ -164,11 +174,13 @@ raquet_as_wkb(const Raquet *rq, uint8_t variant, size_t *size_out)
  * @param[in] rq Raquet tile
  * @param[in] variant Output variant
  * @param[out] size_out Size of the output
+ * @return On error return @p NULL
  * @csqlfn #Raquet_as_hexwkb()
  */
 char *
 raquet_as_hexwkb(const Raquet *rq, uint8_t variant, size_t *size_out)
 {
+  /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(rq, NULL); VALIDATE_NOT_NULL(size_out, NULL);
   return (char *) datum_as_wkb(RaquetPGetDatum(rq), T_RAQUET,
     variant | (uint8_t) WKB_HEX, size_out);
@@ -190,12 +202,14 @@ raquet_as_hexwkb(const Raquet *rq, uint8_t variant, size_t *size_out)
  * @param[in] has_nodata Whether nodata filtering is active
  * @param[in] pixels Row-major packed pixel bytes (`width * height *
  * raquet_pixtype_size(pixtype)` bytes)
+ * @return On error return @p NULL
  * @csqlfn #Raquet_constructor()
  */
 Raquet *
 raquet_make(uint64 quadbin, uint16 width, uint16 height, MeosPixType pixtype,
   double nodata, bool has_nodata, const uint8_t *pixels)
 {
+  /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(pixels, NULL);
   if (! ensure_valid_pixtype((uint8) pixtype))
     return NULL;
@@ -224,10 +238,12 @@ raquet_make(uint64 quadbin, uint16 width, uint16 height, MeosPixType pixtype,
  * @ingroup meos_raster_base_constructor
  * @brief Return a copy of a Raquet tile
  * @param[in] rq Raquet tile
+ * @return On error return @p NULL
  */
 Raquet *
 raquet_copy(const Raquet *rq)
 {
+  /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(rq, NULL);
   Raquet *result = palloc(VARSIZE(rq));
   memcpy(result, rq, VARSIZE(rq));
@@ -242,10 +258,12 @@ raquet_copy(const Raquet *rq)
  * @ingroup meos_raster_base_accessor
  * @brief Return the QUADBIN cell of a Raquet tile
  * @csqlfn #Raquet_quadbin()
+ * @return On error return 0
  */
 uint64
 raquet_quadbin(const Raquet *rq)
 {
+  /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(rq, 0);
   return rq->quadbin;
 }
@@ -254,10 +272,12 @@ raquet_quadbin(const Raquet *rq)
  * @ingroup meos_raster_base_accessor
  * @brief Return the width in pixels of a Raquet tile
  * @csqlfn #Raquet_width()
+ * @return On error return -1
  */
 int
 raquet_width(const Raquet *rq)
 {
+  /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(rq, -1);
   return (int) rq->width;
 }
@@ -265,11 +285,13 @@ raquet_width(const Raquet *rq)
 /**
  * @ingroup meos_raster_base_accessor
  * @brief Return the height in pixels of a Raquet tile
+ * @return On error return -1
  * @csqlfn #Raquet_height()
  */
 int
 raquet_height(const Raquet *rq)
 {
+  /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(rq, -1);
   return (int) rq->height;
 }
@@ -277,11 +299,13 @@ raquet_height(const Raquet *rq)
 /**
  * @ingroup meos_raster_base_accessor
  * @brief Return the nodata sentinel value of a Raquet tile
+ * @return On error return 0.0
  * @csqlfn #Raquet_nodata()
  */
 double
 raquet_nodata(const Raquet *rq)
 {
+  /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(rq, 0.0);
   return rq->nodata;
 }
@@ -298,6 +322,7 @@ raquet_nodata(const Raquet *rq)
 char *
 raquet_pixtype(const Raquet *rq)
 {
+  /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(rq, NULL);
   switch ((MeosPixType) rq->pixtype)
   {
@@ -347,12 +372,14 @@ raquet_set_stbox(const Raquet *rq, STBox *box)
  * @ingroup meos_raster_base_conversion
  * @brief Convert a Raquet tile into a spatiotemporal box
  * @param[in] rq Raquet tile
- * @return The planar X/Y bounding box of the tile (SRID 4326, no T dimension)
+ * @return The planar X/Y bounding box of the tile (SRID 4326, no T dimension),
+ * on error return @p NULL
  * @csqlfn #Raquet_to_stbox()
  */
 STBox *
 raquet_to_stbox(const Raquet *rq)
 {
+  /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(rq, NULL);
   STBox box;
   raquet_set_stbox(rq, &box);
@@ -368,13 +395,15 @@ raquet_to_stbox(const Raquet *rq)
  * @brief Return -1, 0, or 1 depending on whether the first Raquet tile is
  * less than, equal to, or greater than the second one
  * @param[in] rq1,rq2 Raquet tiles
+ * @return On error return @p INT_MAX
  * @csqlfn #Raquet_cmp()
  */
 int
 raquet_cmp(const Raquet *rq1, const Raquet *rq2)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(rq1, false); VALIDATE_NOT_NULL(rq2, false);
+  VALIDATE_NOT_NULL(rq1, INT_MAX); VALIDATE_NOT_NULL(rq2, INT_MAX);
+
   if (rq1->quadbin != rq2->quadbin)
     return (rq1->quadbin < rq2->quadbin) ? -1 : 1;
   if (rq1->pixtype != rq2->pixtype)
@@ -472,12 +501,14 @@ raquet_gt(const Raquet *rq1, const Raquet *rq2)
  * @ingroup meos_raster_base_accessor
  * @brief Return the 32-bit hash of a Raquet tile
  * @param[in] rq Raquet tile
+ * @return On error return @p UINT32_MAX
  * @csqlfn #Raquet_hash()
  */
 uint32
 raquet_hash(const Raquet *rq)
 {
-  VALIDATE_NOT_NULL(rq, INT_MAX);
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(rq, UINT32_MAX);
   return hash_any(((const unsigned char *) rq) + VARHDRSZ,
     (int) raquet_meaningful_size(rq));
 }
@@ -487,12 +518,14 @@ raquet_hash(const Raquet *rq)
  * @brief Return the 64-bit hash of a Raquet tile using a seed
  * @param[in] rq Raquet tile
  * @param[in] seed Seed
+ * @return On error return @p UINT64_MAX
  * @csqlfn #Raquet_hash_extended()
  */
 uint64
 raquet_hash_extended(const Raquet *rq, uint64 seed)
 {
-  VALIDATE_NOT_NULL(rq, LONG_MAX);
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(rq, UINT64_MAX);
   return hash_any_extended(((const unsigned char *) rq) + VARHDRSZ,
     (int) raquet_meaningful_size(rq), seed);
 }
@@ -507,11 +540,13 @@ raquet_hash_extended(const Raquet *rq, uint64 seed)
  * trajectory
  * @param[in] rq Raquet tile
  * @param[in] traj Trajectory (temporal geometry point)
+ * @return On error return @p NULL
  * @csqlfn #Raster_tile_value()
  */
 Temporal *
 raster_tile_value(const Raquet *rq, const Temporal *traj)
 {
+  /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(rq, NULL); VALIDATE_NOT_NULL(traj, NULL);
   return raster_tile_value_quadbin(rq->pixels, rq->width, rq->height,
     rq->quadbin, (MeosPixType) rq->pixtype, rq->nodata, rq->has_nodata, traj);
@@ -537,6 +572,7 @@ raster_tile_value(const Raquet *rq, const Temporal *traj)
 Temporal *
 raster_tile_value_array(const Raquet **rqarr, int count, const Temporal *traj)
 {
+  /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(rqarr, NULL); VALIDATE_NOT_NULL(traj, NULL);
   if (! ensure_positive(count))
     return NULL;

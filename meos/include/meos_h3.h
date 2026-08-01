@@ -1,12 +1,12 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -220,9 +220,9 @@ extern Temporal *th3index_is_pentagon(const Temporal *temp);
  * Hierarchy
  *****************************************************************************/
 
-extern Temporal *th3index_cell_to_parent(const Temporal *temp, int32 resolution);
+extern Temporal *th3index_cell_to_parent(const Temporal *temp, uint32_t resolution);
 extern Temporal *th3index_cell_to_parent_next(const Temporal *temp);
-extern Temporal *th3index_cell_to_center_child(const Temporal *temp, int32 resolution);
+extern Temporal *th3index_cell_to_center_child(const Temporal *temp, uint32_t resolution);
 extern Temporal *th3index_cell_to_center_child_next(const Temporal *temp);
 extern Temporal *th3index_cell_to_child_pos(const Temporal *temp, int32 parent_res);
 extern Temporal *th3index_child_pos_to_cell(const Temporal *child_pos,
@@ -232,20 +232,20 @@ extern Temporal *th3index_child_pos_to_cell(const Temporal *child_pos,
  * Lat/Lng conversion
  *****************************************************************************/
 
-extern Temporal *tgeogpoint_to_th3index(const Temporal *temp, int32 resolution);
-extern Temporal *tgeompoint_to_th3index(const Temporal *temp, int32 resolution);
+extern Temporal *tgeogpoint_to_th3index(const Temporal *temp, uint32_t resolution);
+extern Temporal *tgeompoint_to_th3index(const Temporal *temp, uint32_t resolution);
 extern Temporal *th3index_to_tgeogpoint(const Temporal *temp);
 extern Temporal *th3index_to_tgeompoint(const Temporal *temp);
 extern Temporal *th3index_cell_to_boundary(const Temporal *temp);
 
 /* Static geometry → H3 cell / cell set.  See meos/src/h3/h3_geo.c. */
-extern H3Index geo_to_h3index_cell(const GSERIALIZED *point, int32 resolution);
-extern Set    *geo_to_h3index_set(const GSERIALIZED *gs,    int32 resolution);
-extern STBox  *h3index_to_stbox(H3Index cell);
-extern STBox  *h3index_timestamptz_to_stbox(H3Index cell, TimestampTz t);
-extern STBox  *h3index_tstzspan_to_stbox(H3Index cell, const Span *s);
-extern int     ever_eq_h3indexset_th3index(const Set *cells,
-                                                  const Temporal *th3idx);
+extern H3Index geo_to_h3index_cell(const GSERIALIZED *point, uint32_t resolution);
+extern Set *geo_to_h3indexset(const GSERIALIZED *gs, uint32_t resolution);
+extern STBox *h3index_to_stbox(H3Index cell);
+extern STBox *h3index_timestamptz_to_stbox(H3Index cell, TimestampTz t);
+extern STBox *h3index_tstzspan_to_stbox(H3Index cell, const Span *s);
+extern int ever_eq_h3indexset_th3index(const Set *cells,
+  const Temporal *th3idx);
 
 /*****************************************************************************
  * Directed edges
@@ -264,7 +264,8 @@ extern Temporal *th3index_directed_edge_to_boundary(const Temporal *edge);
  * Vertices
  *****************************************************************************/
 
-extern Temporal *th3index_cell_to_vertex(const Temporal *temp, int32 vertex_num);
+extern Temporal *th3index_cell_to_vertex(const Temporal *temp,
+  int32 vertex_num);
 extern Temporal *th3index_vertex_to_latlng(const Temporal *temp);
 extern Temporal *th3index_is_valid_vertex(const Temporal *temp);
 
@@ -287,5 +288,7 @@ extern Temporal *th3index_cell_area(const Temporal *temp, const char *unit);
 extern Temporal *th3index_edge_length(const Temporal *temp, const char *unit);
 extern Temporal *tgeogpoint_great_circle_distance(const Temporal *a,
   const Temporal *b, const char *unit);
+
+/*****************************************************************************/
 
 #endif /* __MEOS_H3_H__ */

@@ -45,13 +45,6 @@
 #include "h3/h3_generated.h"
 #include "pg_temporal/temporal.h"
 
-/* DatumGetH3Index / H3IndexGetDatum live in h3index.h.
- * PG_GETARG_H3INDEX / PG_RETURN_H3INDEX are the fmgr-layer
- * conveniences defined locally here because fmgr.h is a
- * MobilityDB-side dependency. */
-#define PG_GETARG_H3INDEX(n) DatumGetH3Index(PG_GETARG_DATUM(n))
-#define PG_RETURN_H3INDEX(x) PG_RETURN_DATUM(H3IndexGetDatum(x))
-
 /*****************************************************************************
  * Input / output
  *****************************************************************************/

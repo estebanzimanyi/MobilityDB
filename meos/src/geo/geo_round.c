@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -73,7 +73,6 @@ round_point_n(POINTARRAY *points, uint32_t n, int maxdd, bool hasz, bool hasm)
   else if (hasm)
     /* The m co ordinate is located at the third double of the point */
     pt->z = float8_round(pt->z, maxdd);
-  return;
 }
 
 /**
@@ -105,7 +104,6 @@ round_lwline(LWLINE *line, int maxdd, bool hasz, bool hasm)
   int npoints = line->points->npoints;
   for (int i = 0; i < npoints; i++)
     round_point_n(line->points, i, maxdd, hasz, hasm);
-  return;
 }
 
 /**
@@ -134,7 +132,6 @@ round_lwtriangle(LWTRIANGLE *triangle, int maxdd, bool hasz, bool hasm)
   int npoints = triangle->points->npoints;
   for (int i = 0; i < npoints; i++)
     round_point_n(triangle->points, i, maxdd, hasz, hasm);
-  return;
 }
 
 /**
@@ -165,7 +162,6 @@ round_lwcircstring(LWCIRCSTRING *circstring, int maxdd, bool hasz,
   int npoints = circstring->points->npoints;
   for (int i = 0; i < npoints; i++)
     round_point_n(circstring->points, i, maxdd, hasz, hasm);
-  return;
 }
 
 /**
@@ -200,7 +196,6 @@ round_lwpoly(LWPOLY *poly, int maxdd, bool hasz, bool hasm)
     for (int j = 0; j < npoints; j++)
       round_point_n(points, j, maxdd, hasz, hasm);
   }
-  return;
 }
 
 /**
@@ -233,7 +228,6 @@ round_lwmpoint(LWMPOINT *mpoint, int maxdd, bool hasz, bool hasm)
     LWPOINT *point = mpoint->geoms[i];
     round_point_n(point->point, 0, maxdd, hasz, hasm);
   }
-  return;
 }
 
 /**
@@ -268,7 +262,6 @@ round_lwmline(LWMLINE *mline, int maxdd, bool hasz, bool hasm)
     for (int j = 0; j < npoints; j++)
       round_point_n(line->points, j, maxdd, hasz, hasm);
   }
-  return;
 }
 
 /**
@@ -301,7 +294,6 @@ round_lwmpoly(LWMPOLY *mpoly, int maxdd, bool hasz, bool hasm)
     LWPOLY *poly = mpoly->geoms[i];
     round_lwpoly(poly, maxdd, hasz, hasm);
   }
-  return;
 }
 
 /**
@@ -343,7 +335,6 @@ round_lwcompound(LWCOMPOUND *comp, int maxdd, bool hasz, bool hasm)
     else /* geom->type == CIRCSTRINGTYPE */
       round_lwcircstring(lwgeom_as_lwcircstring(geom), maxdd, hasz, hasm);
   }
-  return;
 }
 
 /**
@@ -388,7 +379,6 @@ round_lwmcurve(LWMCURVE *mcurve, int maxdd, bool hasz, bool hasm)
     else /* geom->type == COMPOUNDTYPE */
       round_lwcompound(lwgeom_as_lwcompound(geom), maxdd, hasz, hasm);
   }
-  return;
 }
 
 /**
@@ -434,7 +424,6 @@ round_lwcurvepoly(LWCURVEPOLY *cpoly, int maxdd, bool hasz, bool hasm)
     else /* ring->type == COMPOUNDTYPE */
       round_lwcompound(lwgeom_as_lwcompound(ring), maxdd, hasz, hasm);
   }
-  return;
 }
 
 /**

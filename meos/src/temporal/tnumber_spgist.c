@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -158,7 +158,6 @@ tboxnode_init(TBox *centroid, TboxNode *nodebox)
   nodebox->left.period.basetype = nodebox->right.period.basetype =
     centroid->period.basetype;
   nodebox->left.flags = nodebox->right.flags = centroid->flags;
-  return;
 }
 
 /**
@@ -284,8 +283,6 @@ tboxnode_quadtree_next(const TboxNode *nodebox, const TBox *centroid,
     next_nodebox->right.period.lower = centroid->period.upper;
   else
     next_nodebox->right.period.upper = centroid->period.upper;
-
-  return;
 }
 
 /**
@@ -331,7 +328,6 @@ tboxnode_kdtree_next(const TboxNode *nodebox, const TBox *centroid,
     else
       next_nodebox->left.period.upper = centroid->period.upper;
   }
-  return;
 }
 
 /**
@@ -635,7 +631,6 @@ tnumber_spgist_get_tbox(Datum value, MeosType type, TBox *result)
   {
     meos_error(ERROR, MEOS_ERR_INTERNAL_ERROR,
       "Unsupported type for indexing: %d", type);
-    return;
   }
 }
 

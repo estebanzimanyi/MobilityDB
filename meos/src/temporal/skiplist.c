@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -171,7 +171,6 @@ skiplist_set_extra(SkipList *list, void *data, size_t size)
 #if ! MEOS
   MemoryContextSwitchTo(oldctx);
 #endif /* ! MEOS */
-  return;
 }
 
 /**
@@ -311,7 +310,6 @@ skiplist_delete(SkipList *list, int cur)
   list->elems[cur].value = NULL;
   list->freed[list->freecount++] = cur;
   list->length--;
-  return;
 }
 
 /**
@@ -345,7 +343,6 @@ skiplist_free(SkipList *list)
     pfree(list->elems);
   }
   pfree(list);
-  return;
 }
 
 /**
@@ -404,7 +401,6 @@ skiplist_print(const SkipList *list)
   }
   snprintf(buf + len, MAX_SKIPLIST_LEN - len - 1, "}\n");
   meos_error(WARNING, 0, "SKIPLIST: %s", buf);
-  return;
 }
 #endif
 
@@ -732,7 +728,6 @@ skiplist_splice(SkipList *list, void **keys, void **values, int count,
   /* Free memory */
   if (spliced_count != 0)
     pfree_array((void **) tofree, nfree);
-  return;
 }
 
 /**

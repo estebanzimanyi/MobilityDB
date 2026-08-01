@@ -26,44 +26,38 @@ CREATE EXTENSION mobilitydb CASCADE;
 		<title>Operador de Muestreo</title>
 
 		<itemizedlist>
-			<listitem xml:id="raster_value">
-				<indexterm significance="normal"><primary><varname>raster_value</varname></primary></indexterm>
+			<listitem xml:id="rasterValue">
+				<indexterm significance="normal"><primary><varname>rasterValue</varname></primary></indexterm>
 				<para>Muestrear una banda de ráster en cada instante de una trayectoria</para>
-				<para><varname>raster_value(raster,tgeompoint,band integer DEFAULT 1) → tfloat</varname></para>
+				<para><varname>rasterValue(raster,tgeompoint,band integer DEFAULT 1) → tfloat</varname></para>
 				<para>Evalúa el píxel de la <varname>band</varname> en cada instante de <varname>traj</varname> usando muestreo bilineal-vecino más próximo (<varname>ST_Value</varname> con <varname>resample=false</varname>). Devuelve un <varname>tfloat</varname> de conjunto de instantes cuyos valores se redondean a cuatro decimales. Devuelve <varname>NULL</varname> cuando ningún instante se interseca con el ráster.</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
--- Build a 3×3 synthetic elevation raster (SRID 4326, 1° pixels)
+-- Build a 3x3 synthetic elevation raster (SRID 4326, 1 degre pixels)
 WITH rast AS (
-  SELECT ST_SetValues(
-    ST_AddBand(
-      ST_MakeEmptyRaster(3, 3, 0.0, 3.0, 1.0, -1.0, 0.0, 0.0, 4326),
+  SELECT ST_SetValues(ST_AddBand(
+    ST_MakeEmptyRaster(3, 3, 0.0, 3.0, 1.0, -1.0, 0.0, 0.0, 4326),
       '32BF'::text, 0.0::float8, NULL::float8),
     1, 1, 1,
     ARRAY[[10.0::float4, 20.0::float4, 30.0::float4],
           [40.0::float4, 50.0::float4, 60.0::float4],
-          [70.0::float4, 80.0::float4, 90.0::float4]]) AS r
-)
-SELECT raster_value(r,
-  tgeompoint 'SRID=4326;[POINT(0.5 2.5)@2000-01-01 00:00:00+00,
-                          POINT(2.5 2.5)@2000-01-02 00:00:00+00,
-                          POINT(0.5 0.5)@2000-01-03 00:00:00+00]')::text
+          [70.0::float4, 80.0::float4, 90.0::float4]]) AS r )
+SELECT rasterValue(r, tgeompoint 'SRID=4326;[POINT(0.5 2.5)@2000-01-01, 
+  POINT(2.5 2.5)@2000-01-02, POINT(0.5 0.5)@2000-01-03]')::text
 FROM rast;
+-- {10@2000-01-01, 30@2000-01-02, 70@2000-01-03}
 </programlisting>
-				<para>Aplicado al conjunto de datos de trayectorias BerlinMOD con un ráster de elevación del terreno:</para>
+				<para>Aplicado a un conjunto de datos de trayectorias con un ráster de elevación del terreno:</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 -- Elevation profile per trip (requires a loaded elevation raster)
-SELECT tripid, raster_value(elev, trip4326) AS elevation
+SELECT tripid, rasterValue(elev, trip4326) AS elevation
 FROM trips, elevation_raster;
-
 -- Average elevation per trip
-SELECT tripid, avgValue(raster_value(elev, trip4326)) AS mean_elev
+SELECT tripid, avgValue(rasterValue(elev, trip4326)) AS mean_elev
 FROM trips, elevation_raster;
-
 -- Trips that crossed terrain above 200 m
 SELECT tripid
 FROM trips, elevation_raster
-WHERE atSpan(raster_value(elev, trip4326),
-             floatspan '[200, 9999]') IS NOT NULL;
+WHERE atSpan(rasterValue(elev, trip4326), floatspan '[200, 9999]') IS NOT NULL;
 </programlisting>
 			</listitem>
 		</itemizedlist>
@@ -79,10 +73,9 @@ WHERE atSpan(raster_value(elev, trip4326),
 -- Step 1: identify which tiles the trajectory overlaps
 SELECT DISTINCT q
 FROM unnest(trajectory_quadbins(traj, 8)) AS q;
-
 -- Step 2: sample each matching tile
-SELECT raster_tile_value_quadbin(
-    band_data, width, height, quadbin, 'FLOAT32', nodata, true, traj)
+SELECT raster_tile_value_quadbin(band_data, width, height, quadbin, 'FLOAT32', nodata,
+  true, traj)
 FROM elevation_raquet
 WHERE quadbin = ANY(trajectory_quadbins(traj, 8));
 </programlisting>
@@ -95,12 +88,9 @@ WHERE quadbin = ANY(trajectory_quadbins(traj, 8));
 				<para>Devuelve el conjunto de celdas QUADBIN únicas (deduplicadas) cuyas envolventes de tesela Web-Mercator contienen al menos un instante de <varname>traj</varname>. El resultado es adecuado como clave de unión en la cláusula WHERE contra una tabla Raquet. El parámetro <varname>zoom</varname> debe estar en [0, 15].</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 -- Three instants spanning three tiles at zoom 3
-SELECT trajectory_quadbins(
-  tgeompointFromText('SRID=4326;{Point(-60 45)@2024-01-01,
-                                  Point(0 45)@2024-01-02,
-                                  Point(60 45)@2024-01-03}'), 3);
-
--- Count of Raquet tiles a ship trajectory overlaps at zoom 8
+SELECT trajectory_quadbins(tgeompoint 'SRID=4326;{Point(-60 45)@2024-01-01,
+  Point(0 45)@2024-01-02, Point(60 45)@2024-01-03}'), 3);
+-- Count of Raquet tiles a trip trajectory overlaps at zoom 8
 SELECT array_length(trajectory_quadbins(trip4326, 8), 1) AS tile_count
 FROM trips
 ORDER BY tile_count DESC;
@@ -138,7 +128,7 @@ JOIN sst_raquet r
 				<indexterm significance="normal"><primary><varname>raquet</varname></primary></indexterm>
 				<para>Construir una tesela ráster Raquet a partir de sus bytes de píxeles, dimensiones, celda QUADBIN y tipo de píxel</para>
 				<para><varname>raquet(bytea,integer,integer,bigint,text,float8) → raquet</varname></para>
-				<para>Empaqueta un arreglo de píxeles <varname>pixels</varname> de banda única en orden de fila mayor de <varname>width</varname> × <varname>height</varname> píxeles de tipo <varname>pixtype</varname> (uno de <varname>UINT8</varname>, <varname>INT16</varname>, <varname>INT32</varname>, <varname>FLOAT32</varname> o <varname>FLOAT64</varname>), georreferenciado por la celda <varname>quadbin</varname>, en un único valor <varname>raquet</varname> autodescriptivo. El argumento <varname>nodata</varname> es opcional; cuando se omite (<varname>NULL</varname>) la tesela no lleva valor centinela de nodata. Se genera un error cuando el arreglo <varname>pixels</varname> es menor que <varname>width</varname> × <varname>height</varname> × el tamaño del píxel. Un <varname>raquet</varname> es un valor de longitud variable, libre de GDAL, con una representación portátil en texto Hex-WKB y binaria, distinto de y coexistente con el tipo <varname>raster</varname> de PostGIS usado por <link linkend="raster_value"><varname>raster_value</varname></link>.</para>
+				<para>Empaqueta un arreglo de píxeles <varname>pixels</varname> de banda única en orden de fila mayor de <varname>width</varname> × <varname>height</varname> píxeles de tipo <varname>pixtype</varname> (uno de <varname>UINT8</varname>, <varname>INT16</varname>, <varname>INT32</varname>, <varname>FLOAT32</varname> o <varname>FLOAT64</varname>), georreferenciado por la celda <varname>quadbin</varname>, en un único valor <varname>raquet</varname> autodescriptivo. El argumento <varname>nodata</varname> es opcional; cuando se omite (<varname>NULL</varname>) la tesela no lleva valor centinela de nodata. Se genera un error cuando el arreglo <varname>pixels</varname> es menor que <varname>width</varname> × <varname>height</varname> × el tamaño del píxel. Un <varname>raquet</varname> es un valor de longitud variable, libre de GDAL, con una representación portátil en texto Hex-WKB y binaria, distinto de y coexistente con el tipo <varname>raster</varname> de PostGIS usado por <link linkend="rasterValue"><varname>rasterValue</varname></link>.</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 -- Empaquetar las columnas sueltas de una tabla Raquet en valores raquet
 SELECT raquet(band_data, width, height, quadbin, 'FLOAT32', nodata) AS tile
@@ -165,14 +155,14 @@ FROM elevation_files;
 </programlisting>
 			</listitem>
 
-			<listitem xml:id="raster_tile_value">
-				<indexterm significance="normal"><primary><varname>raster_tile_value</varname></primary></indexterm>
+			<listitem xml:id="rasterTileValue">
+				<indexterm significance="normal"><primary><varname>rasterTileValue</varname></primary></indexterm>
 				<para>Muestrear una tesela ráster <varname>raquet</varname> a lo largo de una trayectoria</para>
-				<para><varname>raster_tile_value(raquet,tgeompoint) → tfloat</varname></para>
+				<para><varname>rasterTileValue(raquet,tgeompoint) → tfloat</varname></para>
 				<para>Evalúa la tesela en cada instante de <varname>traj</varname> (SRID 4326), devolviendo los valores de píxel muestreados como un <varname>tfloat</varname>. Es el equivalente tipado de <link linkend="raster_tile_value_quadbin"><varname>raster_tile_value_quadbin</varname></link>: las dimensiones, la celda QUADBIN, el tipo de píxel y el tratamiento de nodata se toman del valor <varname>raquet</varname> en lugar de argumentos separados. Devuelve <varname>NULL</varname> cuando ningún instante cae dentro de la tesela o sobrevive al filtrado de nodata.</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 -- Muestrear teselas raquet preempaquetadas a lo largo de trayectorias de barcos
-SELECT t.tripid, raster_tile_value(r.tile, t.trip4326)
+SELECT t.tripid, rasterTileValue(r.tile, t.trip4326)
 FROM trips t
 JOIN elevation_tiles r
   ON r.quadbin = ANY(trajectory_quadbins(t.trip4326, 8));
@@ -180,13 +170,13 @@ JOIN elevation_tiles r
 			</listitem>
 
 			<listitem xml:id="raster_tile_value_array">
-				<indexterm significance="normal"><primary><varname>raster_tile_value</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>rasterTileValue</varname></primary></indexterm>
 				<para>Muestrear un arreglo de teselas ráster <varname>raquet</varname> a lo largo de una trayectoria</para>
-				<para><varname>raster_tile_value(raquet[],tgeompoint) → tfloat</varname></para>
+				<para><varname>rasterTileValue(raquet[],tgeompoint) → tfloat</varname></para>
 				<para>Evalúa cada tesela de <varname>rast</varname> en cada instante de <varname>traj</varname> (SRID 4326) y devuelve los valores de píxel muestreados como un único <varname>tfloat</varname>. Una trayectoria que sale de una tesela queda cubierta por varias, y cada una aporta los instantes que caen dentro de ella. Las teselas de un mismo nivel de zoom particionan el plano, de modo que aportan instantes disjuntos. Las teselas de niveles de zoom distintos se solapan, y cuando dos de ellas muestrean el mismo instante se conserva el valor de la tesela de mayor zoom, que es la que tiene la resolución más fina. Devuelve <varname>NULL</varname> cuando ningún instante cae dentro de una tesela o sobrevive al filtrado de nodata.</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 -- Muestrear una trayectoria en todas las teselas que cruza, en un solo valor
-SELECT t.tripid, raster_tile_value(array_agg(r.tile), t.trip4326)
+SELECT t.tripid, rasterTileValue(array_agg(r.tile), t.trip4326)
 FROM trips t
 JOIN elevation_tiles r
   ON r.quadbin = ANY(trajectory_quadbins(t.trip4326, 8))
@@ -298,18 +288,17 @@ SELECT DISTINCT tile FROM elevation_tiles;
 	<sect1 xml:id="raster_restriction">
 		<title>Operadores de Restricción y Predicado</title>
 
-		<para>Los siguientes operadores definidos en SQL componen <varname>raster_value</varname> con las funciones estándar de restricción temporal y predicado de MobilityDB. Aceptan un argumento opcional <varname>band</varname> (por defecto 1) e invocan <varname>raster_value</varname> exactamente una vez por invocación.</para>
+		<para>Los siguientes operadores definidos en SQL componen <varname>rasterValue</varname> con las funciones estándar de restricción temporal y predicado de MobilityDB. Aceptan un argumento opcional <varname>band</varname> (por defecto 1) e invocan <varname>rasterValue</varname> exactamente una vez por invocación.</para>
 
 		<itemizedlist>
 			<listitem xml:id="atRasterValue">
 				<indexterm significance="normal"><primary><varname>atRasterValue</varname></primary></indexterm>
 				<para>Devolver los instantes de una trayectoria donde el valor ráster muestreado cae dentro de un rango de flotante</para>
 				<para><varname>atRasterValue(tgeompoint,raster,floatspan,band integer DEFAULT 1) → tgeompoint</varname></para>
-				<para>Evalúa <varname>raster_value</varname> en cada instante de <varname>traj</varname> y devuelve la sub-trayectoria restringida a los tiempos en que el valor del píxel está dentro de <varname>vspan</varname>. Devuelve <varname>NULL</varname> cuando ningún instante satisface la condición.</para>
+				<para>Evalúa <varname>rasterValue</varname> en cada instante de <varname>traj</varname> y devuelve la subtrayectoria restringida a los tiempos en que el valor del píxel está dentro de <varname>vspan</varname>. Devuelve <varname>NULL</varname> cuando ningún instante satisface la condición.</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 WITH rast AS (
-  SELECT ST_SetValues(
-    ST_AddBand(
+  SELECT ST_SetValues(ST_AddBand(
       ST_MakeEmptyRaster(3, 3, 0.0, 3.0, 1.0, -1.0, 0.0, 0.0, 4326),
       '32BF'::text, 0.0::float8, NULL::float8),
     1, 1, 1,
@@ -317,12 +306,10 @@ WITH rast AS (
           [40.0::float4, 50.0::float4, 60.0::float4],
           [70.0::float4, 80.0::float4, 90.0::float4]]) AS r
 )
-SELECT asText(atRasterValue(
-  tgeompoint 'SRID=4326;[POINT(0.5 2.5)@2000-01-01,
-                          POINT(1.5 1.5)@2000-01-02,
-                          POINT(0.5 0.5)@2000-01-03]',
-  r, floatspan '[40, 90]'))
+SELECT asText(atRasterValue(tgeompoint 'SRID=4326;[POINT(0.5 2.5)@2000-01-01,
+  POINT(1.5 1.5)@2000-01-02, POINT(0.5 0.5)@2000-01-03]', r, floatspan '[40, 90]'))
 FROM rast;
+-- {[POINT(1.5 1.5)@2000-01-02], [POINT(0.5 0.5)@2000-01-03]}
 </programlisting>
 			</listitem>
 
@@ -330,7 +317,7 @@ FROM rast;
 				<indexterm significance="normal"><primary><varname>minusRasterValue</varname></primary></indexterm>
 				<para>Devolver los instantes de una trayectoria donde el valor ráster muestreado cae fuera de un rango de flotante</para>
 				<para><varname>minusRasterValue(tgeompoint,raster,floatspan,band integer DEFAULT 1) → tgeompoint</varname></para>
-				<para>El complemento de <varname>atRasterValue</varname>: devuelve la sub-trayectoria restringida a los tiempos en que el valor del píxel está fuera de <varname>vspan</varname>. Devuelve <varname>NULL</varname> cuando todos los instantes satisfacen la condición.</para>
+				<para>El complemento de <varname>atRasterValue</varname>: devuelve la subtrayectoria restringida a los tiempos en que el valor del píxel está fuera de <varname>vspan</varname>. Devuelve <varname>NULL</varname> cuando todos los instantes satisfacen la condición.</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 -- Keep only the instant whose raster value (10) is below 40
 SELECT asText(minusRasterValue(traj, elev_raster, floatspan '[40, 9999]'))

@@ -131,12 +131,6 @@ CREATE CAST (h3index AS bigint) WITHOUT FUNCTION AS ASSIGNMENT;
 
 /******************************************************************************
  * Comparison operators
- *
- * Thin PG wrappers over the MEOS-layer `h3index_eq / _lt / …` helpers
- * declared in `h3/h3index.h`. H3 cell equality and ordering are
- * exactly int64 bit equality / ordering; putting the bodies at the
- * MEOS layer keeps the MobilityDB extension close to pure
- * boiler-plate and lets MobilityDuck consume the same primitives.
  ******************************************************************************/
 
 CREATE FUNCTION h3index_eq(h3index, h3index)

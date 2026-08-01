@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -107,7 +107,6 @@ tinstant_set(TInstant *inst, Datum value, TimestampTz t)
   assert(inst);
   inst->t = t;
   inst->value = value;
-  return;
 }
 
 /**
@@ -386,7 +385,6 @@ tinstant_set_tstzspan(const TInstant *inst, Span *s)
   assert(inst); assert(s);
   span_set(TimestampTzGetDatum(inst->t), TimestampTzGetDatum(inst->t),
     true, true, T_TIMESTAMPTZ, T_TSTZSPAN, s);
-  return;
 }
 
 /**
@@ -657,14 +655,14 @@ tinstant_cmp(const TInstant *inst1, const TInstant *inst2)
  * @ingroup meos_internal_temporal_accessor
  * @brief Return the 32-bit hash of a temporal instant
  * @param[in] inst Temporal instant
- * @return On error return @p INT_MAX
+ * @return On error return @p UINT32_MAX
  * @csqlfn #Temporal_hash()
  */
 uint32
 tinstant_hash(const TInstant *inst)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(inst, INT_MAX);
+  VALIDATE_NOT_NULL(inst, UINT32_MAX);
 
   MeosType basetype = temptype_basetype(inst->temptype);
   /* Apply the hash function to the base type */
@@ -687,14 +685,14 @@ tinstant_hash(const TInstant *inst)
  * @brief Return the 64-bit hash of a temporal instant using a seed
  * @param[in] inst Temporal instant
  * @param[in] seed Seed
- * @return On error return @p LONG_MAX
+ * @return On error return @p UINT64_MAX
  * @csqlfn #Temporal_hash_extended()
  */
 uint64
 tinstant_hash_extended(const TInstant *inst, uint64 seed)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(inst, LONG_MAX);
+  VALIDATE_NOT_NULL(inst, UINT64_MAX);
 
   MeosType basetype = temptype_basetype(inst->temptype);
   /* Apply the hash function to the base type */

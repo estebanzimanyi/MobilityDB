@@ -123,9 +123,9 @@ SELECT geoToH3IndexSet(geometry 'SRID=4326;POINT EMPTY', 7);
 (1 row)
 
 SELECT geoToH3IndexSet(geometry 'SRID=4326;POINT(4.35 50.85)', -1);
-ERROR:  geo_to_h3index_set: resolution must be in [0..15]
+ERROR:  Resolution must be in [0..15]
 SELECT geoToH3IndexSet(geometry 'SRID=4326;POINT(4.35 50.85)', 16);
-ERROR:  geo_to_h3index_set: resolution must be in [0..15]
+ERROR:  Resolution must be in [0..15]
 WITH t AS (
   SELECT th3index(
     tgeompoint 'SRID=4326;[POINT(4.35 50.85)@2024-01-01,

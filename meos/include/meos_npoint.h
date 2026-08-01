@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -28,7 +28,8 @@
  *****************************************************************************/
 
 /**
- * @brief API of the Mobility Engine Open Source (MEOS) library.
+ * @brief API of the Mobility Engine Open Source (MEOS) library for the
+ * network point data types derived from the npoint and nsegment data types
  */
 
 #ifndef __MEOS_NPOINT_H__
@@ -181,6 +182,7 @@ extern bool npoint_le(const Npoint *np1, const Npoint *np2);
 extern bool npoint_lt(const Npoint *np1, const Npoint *np2);
 extern bool npoint_ne(const Npoint *np1, const Npoint *np2);
 extern bool npoint_same(const Npoint *np1, const Npoint *np2);
+
 extern int nsegment_cmp(const Nsegment *ns1, const Nsegment *ns2);
 extern bool nsegment_eq(const Nsegment *ns1, const Nsegment *ns2);
 extern bool nsegment_ge(const Nsegment *ns1, const Nsegment *ns2);

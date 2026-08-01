@@ -1,12 +1,12 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -80,12 +80,12 @@ quadbinset_from_buffer(Quadbin *cells, int count)
 
 /*****************************************************************************
  * Grid traversal
- * @csqlfn #Quadbin_grid_disk()
  *****************************************************************************/
 
 /**
  * @ingroup meos_quadbin_accessor
  * @brief Return the set of QUADBIN cells within grid distance k of an origin cell
+ * @csqlfn #Quadbin_grid_disk()
  */
 Set *
 quadbin_grid_disk(Quadbin origin, int k)
@@ -103,12 +103,12 @@ quadbin_grid_disk(Quadbin origin, int k)
 
 /*****************************************************************************
  * Hierarchy
- * @csqlfn #Quadbin_cell_to_children()
  *****************************************************************************/
 
 /**
  * @ingroup meos_quadbin_accessor
  * @brief Return the set of children of a QUADBIN cell at a finer resolution
+ * @csqlfn #Quadbin_cell_to_children()
  */
 Set *
 quadbin_cell_to_children_set(Quadbin origin, int children_resolution)

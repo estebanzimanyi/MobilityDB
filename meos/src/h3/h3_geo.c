@@ -1,12 +1,12 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -186,7 +186,7 @@ h3_buf_to_set(h3_buf *buf)
  * @brief 
  */
 double
-h3_sample_step_deg(int32 resolution)
+h3_sample_step_deg(uint32_t resolution)
 {
   double edge_m;
   if (getHexagonEdgeLengthAvgM(resolution, &edge_m) != E_SUCCESS)
@@ -199,7 +199,7 @@ h3_sample_step_deg(int32 resolution)
  * @brief 
  */
 H3Index
-h3_latlng_deg_to_cell(double lat_deg, double lng_deg, int32 resolution)
+h3_latlng_deg_to_cell(double lat_deg, double lng_deg, uint32_t resolution)
 {
   LatLng ll = { .lat = degsToRads(lat_deg), .lng = degsToRads(lng_deg) };
   H3Index cell;
@@ -217,7 +217,7 @@ h3_latlng_deg_to_cell(double lat_deg, double lng_deg, int32 resolution)
  * @brief 
  */
 static void
-point_to_cells_into(const LWPOINT *lwp, int32 resolution, h3_buf *out)
+point_to_cells_into(const LWPOINT *lwp, uint32_t resolution, h3_buf *out)
 {
   POINT4D p;
   if (! lwpoint_getPoint4d_p(lwp, &p))
@@ -237,7 +237,7 @@ point_to_cells_into(const LWPOINT *lwp, int32 resolution, h3_buf *out)
  * @brief 
  */
 static void
-linestring_to_cells_into(const LWLINE *line, int32 resolution, h3_buf *out)
+linestring_to_cells_into(const LWLINE *line, uint32_t resolution, h3_buf *out)
 {
   POINTARRAY *pa = line->points;
   if (pa == NULL || pa->npoints == 0)
@@ -349,7 +349,7 @@ h3_buf_push_ring1(h3_buf *out, H3Index c)
  * Layers (a) and (b) merge via the sort+dedup in `h3_buf_to_set`.
  */
 static void
-polygon_to_cells_into(const LWPOLY *poly, int32 resolution, h3_buf *out)
+polygon_to_cells_into(const LWPOLY *poly, uint32_t resolution, h3_buf *out)
 {
   if (poly == NULL || poly->nrings == 0)
     return;
@@ -410,7 +410,7 @@ polygon_to_cells_into(const LWPOLY *poly, int32 resolution, h3_buf *out)
  * @brief 
  */
 static void
-lwgeom_to_cells_into(const LWGEOM *geom, int32 resolution, h3_buf *out)
+lwgeom_to_cells_into(const LWGEOM *geom, uint32_t resolution, h3_buf *out)
 {
   if (geom == NULL)
     return;
@@ -461,19 +461,20 @@ lwgeom_to_cells_into(const LWGEOM *geom, int32 resolution, h3_buf *out)
  * produced, or on libh3 error.  The returned Set is owned by the caller
  * and freed via @ref free.
  *
- * @param[in] gs         The geometry.
+ * @param[in] gs Geometry
  * @param[in] resolution H3 resolution (0..15).
  * @csqlfn #Geo_to_h3indexset()
  */
 Set *
-geo_to_h3index_set(const GSERIALIZED *gs, int32 resolution)
+geo_to_h3indexset(const GSERIALIZED *gs, uint32_t resolution)
 {
+  /* Ensure the validity of the arguments */
   if (gs == NULL)
     return NULL;
-  if (resolution < 0 || resolution > 15)
+  if (resolution > 15)
   {
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
-      "geo_to_h3index_set: resolution must be in [0..15]");
+      "Resolution must be in [0..15]");
     return NULL;
   }
   if (! ensure_srid_is_latlong(gserialized_get_srid(gs)))

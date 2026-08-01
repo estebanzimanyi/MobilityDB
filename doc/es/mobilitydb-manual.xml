@@ -10,7 +10,7 @@
 -->
 <!DOCTYPE book [
 
-<!ENTITY last_release_version "1.3">
+<!ENTITY last_release_version "1.4">
 
 <!ENTITY introduction SYSTEM "introduction.xml">
 <!ENTITY set_span_types SYSTEM "set_span_types.xml">
@@ -23,8 +23,8 @@
 <!ENTITY temporal_types_analytics SYSTEM "temporal_types_analytics.xml">
 <!ENTITY temporal_types_aggregation SYSTEM "temporal_types_aggregation.xml">
 <!ENTITY temporal_network_points SYSTEM "temporal_network_points.xml">
-<!ENTITY temporal_poses SYSTEM "temporal_poses.xml">
 <!ENTITY temporal_circular_buffers SYSTEM "temporal_circular_buffers.xml">
+<!ENTITY temporal_poses SYSTEM "temporal_poses.xml">
 <!ENTITY temporal_rigid_geometries SYSTEM "temporal_rigid_geometries.xml">
 <!ENTITY temporal_jsonb SYSTEM "temporal_jsonb.xml">
 <!ENTITY temporal_h3_index SYSTEM "temporal_h3_index.xml">
@@ -72,7 +72,7 @@
   xmlns:xl="http://www.w3.org/1999/xlink"
   xmlns:mml="https://www.w3.org/1998/Math/MathML" version="5.0" xml:lang="es">
 	<bookinfo>
-		<title>MobilityDB &last_release_version; Manual de usuario</title>
+		<title>MobilityDB 1.4 Manual de usuario</title>
 		<author>
 			<firstname>Esteban</firstname>
 			<surname>Zimányi</surname>
@@ -131,9 +131,9 @@
 	&temporal_spatial_p2;
 	&temporal_types_analytics;
 	&temporal_types_aggregation;
-	&temporal_poses;
 	&temporal_network_points;
 	&temporal_circular_buffers;
+	&temporal_poses;
 	&temporal_rigid_geometries;
 	&temporal_jsonb;
 	&temporal_h3_index;

@@ -155,7 +155,6 @@ stbox_adjust(void *bbox1, void *bbox2)
     DatumGetTimestampTz(box2->period.upper));
   box1->period.lower = TimestampTzGetDatum(tmin);
   box1->period.upper = TimestampTzGetDatum(tmax);
-  return;
 }
 
 PGDLLEXPORT Datum Stbox_gist_union(PG_FUNCTION_ARGS);
@@ -227,7 +226,6 @@ stbox_union_gist(const STBox *a, const STBox *b, STBox *new)
     DatumGetTimestampTz(b->period.upper));
   new->period.lower = TimestampTzGetDatum(tmin);
   new->period.upper = TimestampTzGetDatum(tmax);
-  return;
 }
 
 /**

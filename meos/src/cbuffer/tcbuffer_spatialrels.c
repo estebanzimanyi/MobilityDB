@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -1045,8 +1045,12 @@ ea_disjoint_tcbuffer_geo(const Temporal *temp, const GSERIALIZED *gs,
   geo_set_stbox(gs, &box2);
   if (! overlaps_stbox_stbox(&box1, &box2))
     return 1;
+
+  /* ALWAYS */
   if (! ever)
     return nad_tcbuffer_geo(temp, gs) > 0.0 ? 1 : 0;
+
+  /* EVER */
   int native = edisjoint_tcbuffer_geo_native(temp, gs);
   if (native >= 0)
     return native;

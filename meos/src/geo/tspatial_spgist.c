@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -112,8 +112,7 @@
 #include "geo/stbox_index.h"
 #if POINTCLOUD
   #include <meos_pointcloud.h>             /* TPCBox, DatumGetTpcboxP */
-  #include "pointcloud/tpcbox.h"
-  #include "pointcloud/tpc_boxops.h"       /* tpcbox_set_stbox */
+  #include "pointcloud/tpcbox.h"           /* tpcbox_set_stbox */
 #endif
 
 /*****************************************************************************
@@ -199,8 +198,6 @@ stboxnode_init(const STBox *centroid, STboxNode *nodebox)
 
   nodebox->left.srid = nodebox->right.srid = centroid->srid;
   nodebox->left.flags = nodebox->right.flags = centroid->flags;
-
-  return;
 }
 
 /**
@@ -257,8 +254,6 @@ stboxnode_quadtree_next(const STboxNode *nodebox, const STBox *centroid,
     next_nodebox->right.period.lower = centroid->period.upper;
   else
     next_nodebox->right.period.upper = centroid->period.upper;
-
-  return;
 }
 
 /**
@@ -336,7 +331,6 @@ stboxnode_kdtree_next(const STboxNode *nodebox, const STBox *centroid,
     else
       next_nodebox->left.period.upper = centroid->period.upper;
   }
-  return;
 }
 
 /**

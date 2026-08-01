@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -85,14 +85,14 @@ extern void tcbuffer_disc_ctx_free(void *ctx);
 extern int tcbuffer_geo_ctx_nsegs(const void *ctx);
 extern bool tcbuffer_disc_within_ctx(const Cbuffer *cb, double dist,
   const void *ctx);
-extern int tcbufferseg_within_ctx(const Cbuffer *cb1, const Cbuffer *cb2,
+extern int tcbuffersegm_within_ctx(const Cbuffer *cb1, const Cbuffer *cb2,
   double dist, const void *ctx, double *outlo, double *outhi, int maxout);
 extern bool tcbuffer_disc_touch_ctx(const Cbuffer *cb, const void *ctx);
-extern int tcbufferseg_touch_roots(const Cbuffer *cb1, const Cbuffer *cb2,
+extern int tcbuffersegm_touch_roots(const Cbuffer *cb1, const Cbuffer *cb2,
   const void *ctx, double *outt, int maxout);
 extern bool tcbuffer_disc_contains_ctx(const Cbuffer *cb, const void *ctx,
   bool strict);
-extern int tcbufferseg_boundary_roots(const Cbuffer *cb1, const Cbuffer *cb2,
+extern int tcbuffersegm_boundary_roots(const Cbuffer *cb1, const Cbuffer *cb2,
   const void *ctx, double *outt, int maxout);
 
 /*****************************************************************************/

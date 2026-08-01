@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -48,6 +48,7 @@
 #include <pgtypes.h>
 /* PostGIS */
 #include <liblwgeom.h>
+#include <liblwgeom_internal.h>
 #include <lwgeom_log.h>
 #include <intervaltree.h>
 #include <lwgeom_geos.h>
@@ -3096,9 +3097,6 @@ geog_intersects(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
   return geog_dwithin(gs1, gs2, 0.0, use_spheroid);
 }
 
-/* Defined in liblwgeom_internal.h */
-#define PGIS_FP_TOLERANCE 1e-12
-
 /**
  * @ingroup meos_geo_base_distance
  * @brief Return the distance between two geographies
@@ -3117,7 +3115,6 @@ geog_distance(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   if (gserialized_is_empty(gs1) || gserialized_is_empty(gs2) )
     return DBL_MAX;
 
-  double tolerance = PGIS_FP_TOLERANCE;
   bool use_spheroid = true;
 
   /* Initialize spheroid */
@@ -3135,7 +3132,8 @@ geog_distance(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   lwgeom_add_bbox_deep(lwgeom1, NULL);
   lwgeom_add_bbox_deep(lwgeom2, NULL);
 
-  double distance = lwgeom_distance_spheroid(lwgeom1, lwgeom2, &s, tolerance);
+  double distance = lwgeom_distance_spheroid(lwgeom1, lwgeom2, &s,
+    FP_TOLERANCE);
 
   /* Clean up */
   lwgeom_free(lwgeom1);
@@ -3768,7 +3766,6 @@ geography_valid_type(uint8_t type)
           type == MULTIPOLYGONTYPE || type == COLLECTIONTYPE) )
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_TYPE,
       "Geography type does not support %s", lwtype_name(type));
-  return;
 }
 
 /**
@@ -4327,7 +4324,6 @@ lwgeom_collect_points(const LWGEOM *geom, MeosArray *array)
     for (int i = 0; i < (int) col->ngeoms; i++)
       lwgeom_collect_points(col->geoms[i], array);
   }
-  return;
 }
 
 /**

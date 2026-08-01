@@ -583,7 +583,6 @@ tstzset_stbox_slice(Datum sdatum, STBox *box)
     s = (Set *) sdatum;
   tstzset_set_stbox(s, box);
   PG_FREE_IF_COPY_P(s, DatumGetPointer(sdatum));
-  return;
 }
 
 PGDLLEXPORT Datum Tstzset_to_stbox(PG_FUNCTION_ARGS);
@@ -632,7 +631,6 @@ tstzspanset_stbox_slice(Datum ssdatum, STBox *box)
     ss = (SpanSet *) ssdatum;
   tstzspanset_set_stbox(ss, box);
   PG_FREE_IF_COPY_P(ss, DatumGetPointer(ssdatum));
-  return;
 }
 
 PGDLLEXPORT Datum Tstzspanset_to_stbox(PG_FUNCTION_ARGS);

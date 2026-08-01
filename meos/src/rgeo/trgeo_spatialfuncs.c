@@ -49,6 +49,8 @@
 #include <float.h>
 #include <math.h>
 #include <utils/timestamp.h>
+/* PostGIS */
+#include <liblwgeom_internal.h>
 /* MEOS */
 #include <meos.h>
 #include <meos_geo.h>
@@ -91,10 +93,6 @@
  * FP tolerance, or a target geometry carrying interior rings (holes,
  * ignored by the M1 clip), raises an honest FEATURE_NOT_SUPPORTED error.
  *****************************************************************************/
-
-/* Floating-point tolerance for the pure-translation / rotation test;
- * matches the FP_TOLERANCE convention in trgeo_geom_clip.c */
-#define TRGEO_RESTRICT_TOLERANCE 1e-12
 
 /**
  * @brief Return true if any polygon component of an LWGEOM carries an
@@ -231,7 +229,7 @@ segment_overlap_spans(const GSERIALIZED *ref, const Pose *pose1,
   int nuniq = 0;
   for (int k = 0; k < nevents; k++)
     if (nuniq == 0 ||
-        fabs(events[k] - events[nuniq - 1]) > TRGEO_RESTRICT_TOLERANCE)
+        fabs(events[k] - events[nuniq - 1]) > FP_TOLERANCE)
       events[nuniq++] = events[k];
 
   /* Classify each inter-event sub-interval by an exact GEOS overlap test at
@@ -242,7 +240,7 @@ segment_overlap_spans(const GSERIALIZED *ref, const Pose *pose1,
   for (int k = 0; k < nuniq - 1; k++)
   {
     double ta = events[k], tb = events[k + 1];
-    if (tb - ta <= TRGEO_RESTRICT_TOLERANCE)
+    if (tb - ta <= FP_TOLERANCE)
       continue;
     double tm = 0.5 * (ta + tb);
     Pose *posem = posesegm_interpolate(pose1, pose2, tm);
@@ -405,7 +403,7 @@ trgeo_overlap_spanset(const Temporal *temp, const GSERIALIZED *gs,
         const Pose *pose1 = DatumGetPoseP(tinstant_value_p(inst1));
         const Pose *pose2 = DatumGetPoseP(tinstant_value_p(inst2));
         /* Pure-translation guard: any rotation is honestly not implemented. */
-        if (fabs(pose2->data[2] - pose1->data[2]) > TRGEO_RESTRICT_TOLERANCE)
+        if (fabs(pose2->data[2] - pose1->data[2]) > FP_TOLERANCE)
         {
           pfree(spans);
           if (temp->subtype == TSEQUENCESET)

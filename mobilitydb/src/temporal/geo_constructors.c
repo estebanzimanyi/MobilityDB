@@ -216,7 +216,6 @@ make_bound_box(POLYGON *poly)
   poly->boundbox.high.x = x2;
   poly->boundbox.low.y = y1;
   poly->boundbox.high.y = y2;
-  return;
 }
 
 PGDLLEXPORT Datum poly_constructor(PG_FUNCTION_ARGS);

@@ -315,7 +315,6 @@ spanset_span_slice(Datum d, Span *s)
     ss = (SpanSet *) d;
   memcpy(s, &ss->span, sizeof(Span));
   // PG_FREE_IF_COPY_P(ss, DatumGetPointer(d));
-  return;
 }
 
 PGDLLEXPORT Datum Spanset_to_span(PG_FUNCTION_ARGS);

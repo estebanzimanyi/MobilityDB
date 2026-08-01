@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -76,7 +76,6 @@ gsl_initialize(void)
     MEOS_AGGREGATION_RNG = gsl_rng_alloc(gsl_rng_ranlxd1);
     MEOS_GSL_INITIALIZED = true;
   }
-  return;
 }
 
 #if MEOS
@@ -89,7 +88,6 @@ gsl_finalize(void)
   gsl_rng_free(MEOS_GENERATION_RNG);
   gsl_rng_free(MEOS_AGGREGATION_RNG);
   MEOS_GSL_INITIALIZED = false;
-  return;
 }
 #endif /* MEOS */
 
@@ -131,7 +129,6 @@ proj_initialize(void)
 {
   if (! MEOS_PJ_CONTEXT)
     MEOS_PJ_CONTEXT = proj_context_create();
-  return;
 }
 
 #if MEOS
@@ -143,7 +140,6 @@ proj_finalize(void)
 {
   proj_context_destroy(MEOS_PJ_CONTEXT);
   MEOS_PJ_CONTEXT = NULL;
-  return;
 }
 #endif /* MEOS */
 
@@ -180,7 +176,6 @@ geos_initialize(void)
     GEOSContext_setNoticeHandler_r(MEOS_GEOS_CONTEXT, lwnotice);
     GEOSContext_setErrorHandler_r(MEOS_GEOS_CONTEXT, lwgeom_geos_error);
   }
-  return;
 }
 
 #if MEOS
@@ -196,7 +191,6 @@ geos_finalize(void)
     MEOS_GEOS_CONTEXT = NULL;
   }
   lwgeom_geos_finalize();
-  return;
 }
 #endif /* MEOS */
 
@@ -647,7 +641,6 @@ meos_initialize(void)
    * NULL handler (symmetric with the PG backend's mobilitydb_init). */
   meos_initialize_pointcloud();
 #endif
-  return;
 }
 
 /**
@@ -676,7 +669,6 @@ meos_finalize(void)
   geos_finalize();
   /* Finalize GSL */
   gsl_finalize();
-  return;
 }
 
 /*****************************************************************************/

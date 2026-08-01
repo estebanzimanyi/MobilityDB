@@ -50,33 +50,27 @@
 /* PostgreSQL */
 #include <postgres.h>
 #include <fmgr.h>
-/*
- * utils/builtins.h pulls in fmgrprotos.h, which declares `json_object` as a
- * PostgreSQL callable function.  meos_internal.h then includes json-c/json.h
- * which tries to typedef the same name as a struct — a C-level conflict.
- * Forward-declare only the symbols we need to avoid the full builtins.h include.
- */
-extern Datum regprocedurein(PG_FUNCTION_ARGS);
-extern text *cstring_to_text(const char *s);
-/* PostgreSQL array support (does not pull in fmgrprotos.h) */
+/* PostgreSQL */
 #include <utils/array.h>
-/* PostGIS liblwgeom (vendored) */
-#include <liblwgeom.h>        /* GSERIALIZED, GBOX, gserialized_get_gbox_p */
+/* PostGIS */
+#include <liblwgeom.h>
 /* MEOS */
 #include <meos.h>
 #include <meos_internal.h>    /* temporal_insts_p, tsequence_make_free */
 #include <meos_raster.h>      /* MeosPixType, raster_tile_value_quadbin */
+#include <pgtypes.h>
 #include "geo/stbox.h"        /* PG_RETURN_STBOX_P */
 #include "raster/raquet.h"    /* Raquet, PG_GETARG_RAQUET_P, raquet_pixtype_size */
+#include "raster/raster_quadbin.h"
 #include "temporal/tinstant.h"
 #include "temporal/tsequence.h"
 #include "temporal/type_util.h" /* bstring2bytea */
-/* MEOS raster kernel */
-#include "raster/raster_quadbin.h"
 /* MobilityDB */
 #include "pg_temporal/temporal.h"
 #include "pg_temporal/type_util.h" /* raquetarr_extract */
 #include "pg_raster/temporal_raster.h"
+
+extern Datum regprocedurein(PG_FUNCTION_ARGS);
 
 /*****************************************************************************
  * OID cache helpers
@@ -84,16 +78,14 @@ extern text *cstring_to_text(const char *s);
 
 /**
  * @brief Return the OID of a function identified by its SQL signature string.
- *
- * Uses regprocedurein so that type names are resolved in the current search
- * path without hard-coding any numeric OIDs.
+ * @details Uses regprocedurein so that type names are resolved in the current
+ * search path without hard-coding any numeric OIDs.
  */
 static Oid
 lookup_func_oid(const char *signature)
 {
-  return DatumGetObjectId(
-    DirectFunctionCall1(regprocedurein,
-      CStringGetDatum(signature)));
+  return DatumGetObjectId(DirectFunctionCall1(regprocedurein,
+    CStringGetDatum(signature)));
 }
 
 /** Cached OID for ST_ConvexHull(raster) → geometry */
@@ -102,14 +94,16 @@ static Oid st_convexhull_raster_oid = InvalidOid;
 /** Cached OID for ST_Value(raster, integer, geometry, boolean) → float8 */
 static Oid st_value_oid = InvalidOid;
 
+/**
+ * @brief 
+ */
 static void
 init_oids(void)
 {
   if (st_convexhull_raster_oid == InvalidOid)
-    st_convexhull_raster_oid =
-      lookup_func_oid("st_convexhull(raster)");
+    st_convexhull_raster_oid = lookup_func_oid("st_convexhull(raster)");
   if (st_value_oid == InvalidOid)
-    st_value_oid =
+    st_value_oid = 
       lookup_func_oid("st_value(raster,integer,geometry,boolean,text)");
 }
 
@@ -131,23 +125,22 @@ PG_FUNCTION_INFO_V1(Raster_value);
 Datum
 Raster_value(PG_FUNCTION_ARGS)
 {
-  /* ── arguments ──────────────────────────────────────────────────────── */
-  Datum     rast_datum = PG_GETARG_DATUM(0);
-  Temporal *traj       = PG_GETARG_TEMPORAL_P(1);
-  int32     band       = PG_ARGISNULL(2) ? 1 : PG_GETARG_INT32(2);
+  Datum rast_datum = PG_GETARG_DATUM(0);
+  Temporal *traj = PG_GETARG_TEMPORAL_P(1);
+  int32 band = PG_ARGISNULL(2) ? 1 : PG_GETARG_INT32(2);
 
-  /* ── OID resolution (once per session) ──────────────────────────────── */
+  /* OID resolution (once per session) */
   init_oids();
 
-  /* ── Raster convex hull — used as a bounding-box pre-filter ─────────── */
+  /* Raster convex hull — used as a bounding-box pre-filter */
   Datum hull_datum =
     OidFunctionCall1(st_convexhull_raster_oid, rast_datum);
   GSERIALIZED *hull_gs = (GSERIALIZED *) DatumGetPointer(hull_datum);
-  GBOX         hull_box;
+  GBOX hull_box;
   gserialized_get_gbox_p(hull_gs, &hull_box);
   pfree(hull_gs);
 
-  /* ── Iterate over trajectory instants ───────────────────────────────── */
+  /* Iterate over trajectory instants */
   int count;
   const TInstant **insts = temporal_insts_p(traj, &count);
 
@@ -160,7 +153,7 @@ Raster_value(PG_FUNCTION_ARGS)
 
   LOCAL_FCINFO(fcinfo_val, 5);
   InitFunctionCallInfoData(*fcinfo_val, &flinfo, 5,
-                           DEFAULT_COLLATION_OID, NULL, NULL);
+    DEFAULT_COLLATION_OID, NULL, NULL);
   /* Arg 0 (raster) and Arg 1 (band) are constant for every instant */
   fcinfo_val->args[0].value  = rast_datum;
   fcinfo_val->args[0].isnull = false;
@@ -178,30 +171,28 @@ Raster_value(PG_FUNCTION_ARGS)
   {
     Datum geom_datum = tinstant_value(insts[i]);
 
-    /* ── Bounding-box pre-filter ─────────────────────────────────────── */
+    /* Bounding-box pre-filter */
     GSERIALIZED *pt_gs = (GSERIALIZED *) DatumGetPointer(geom_datum);
-    GBOX         pt_box;
+    GBOX pt_box;
     gserialized_get_gbox_p(pt_gs, &pt_box);
     /* For a POINT, pt_box.xmin == xmax and ymin == ymax */
     if (pt_box.xmin < hull_box.xmin || pt_box.xmin > hull_box.xmax ||
         pt_box.ymin < hull_box.ymin || pt_box.ymin > hull_box.ymax)
       continue;
 
-    /* ── ST_Value call with NULL detection ───────────────────────────── */
-    fcinfo_val->args[2].value  = geom_datum;
+    /* ST_Value call with NULL detection */
+    fcinfo_val->args[2].value = geom_datum;
     fcinfo_val->args[2].isnull = false;
-    fcinfo_val->isnull         = false;   /* reset before every call */
+    fcinfo_val->isnull = false;   /* reset before every call */
 
     Datum pixval = FunctionCallInvoke(fcinfo_val);
     if (fcinfo_val->isnull)
       continue;   /* nodata pixel or geometry outside the pixel grid */
 
-    result_insts[ninsts++] =
-      tinstant_make(pixval, T_TFLOAT, insts[i]->t);
+    result_insts[ninsts++] = tinstant_make(pixval, T_TFLOAT, insts[i]->t);
   }
 
   pfree(insts);
-
   if (ninsts == 0)
   {
     pfree(result_insts);
@@ -209,8 +200,8 @@ Raster_value(PG_FUNCTION_ARGS)
     PG_RETURN_NULL();
   }
 
-  TSequence *result =
-    tsequence_make_free(result_insts, ninsts, true, true, DISCRETE, NORMALIZE);
+  TSequence *result = tsequence_make_free(result_insts, ninsts, true, true,
+    DISCRETE, NORMALIZE);
 
   PG_FREE_IF_COPY(traj, 1);
   PG_RETURN_POINTER(result);
@@ -220,12 +211,14 @@ Raster_value(PG_FUNCTION_ARGS)
  * raster_tile_value_quadbin
  *****************************************************************************/
 
-/** Map a pixtype name text argument to a MeosPixType code. */
+/**
+  @brief Map a pixtype name text argument to a MeosPixType code.
+ */
 static MeosPixType
 text_to_pixtype(const text *pt)
 {
   const char *s   = VARDATA_ANY(pt);
-  int         len = (int) VARSIZE_ANY_EXHDR(pt);
+  int len = (int) VARSIZE_ANY_EXHDR(pt);
   if (len == 5 && strncmp(s, "UINT8",   5) == 0) return MEOS_PT_UINT8;
   if (len == 5 && strncmp(s, "INT16",   5) == 0) return MEOS_PT_INT16;
   if (len == 5 && strncmp(s, "INT32",   5) == 0) return MEOS_PT_INT32;
@@ -243,37 +236,35 @@ PG_FUNCTION_INFO_V1(Raster_tile_value_quadbin);
 /**
  * @ingroup mobilitydb_raster
  * @brief Sample a Raquet raster chip along a tgeompoint trajectory
- * @param[in] pixels   Row-major pixel bytes (bytea)
- * @param[in] width    Tile width in pixels
- * @param[in] height   Tile height in pixels
- * @param[in] quadbin  CARTO QUADBIN cell (bigint)
- * @param[in] pixtype  Pixel type name: UINT8 | INT16 | INT32 | FLOAT32 | FLOAT64
- * @param[in] nodata   Nodata sentinel value
+ * @param[in] pixels Row-major pixel bytes (bytea)
+ * @param[in] width Tile width in pixels
+ * @param[in] height Tile height in pixels
+ * @param[in] quadbin CARTO QUADBIN cell (bigint)
+ * @param[in] pixtype Pixel type name: UINT8 | INT16 | INT32 | FLOAT32 | FLOAT64
+ * @param[in] nodata Nodata sentinel value
  * @param[in] has_nodata  Enable nodata filtering
- * @param[in] traj     Trajectory (tgeompoint, SRID 4326)
+ * @param[in] traj Trajectory (tgeompoint, SRID 4326)
  * @csqlfn #Raster_tile_value_quadbin()
  */
 Datum
 Raster_tile_value_quadbin(PG_FUNCTION_ARGS)
 {
-  bytea     *pxbytea   = PG_GETARG_BYTEA_PP(0);
-  int32      width     = PG_GETARG_INT32(1);
-  int32      height    = PG_GETARG_INT32(2);
-  int64      quadbin   = PG_GETARG_INT64(3);
-  text      *pixtype_t = PG_GETARG_TEXT_PP(4);
-  float8     nodata    = PG_GETARG_FLOAT8(5);
-  bool       has_nd    = PG_GETARG_BOOL(6);
-  Temporal  *traj      = PG_GETARG_TEMPORAL_P(7);
+  bytea *pxbytea = PG_GETARG_BYTEA_PP(0);
+  int32 width = PG_GETARG_INT32(1);
+  int32 height = PG_GETARG_INT32(2);
+  int64 quadbin = PG_GETARG_INT64(3);
+  text *pixtype_t = PG_GETARG_TEXT_PP(4);
+  float8 nodata = PG_GETARG_FLOAT8(5);
+  bool has_nd = PG_GETARG_BOOL(6);
+  Temporal *traj = PG_GETARG_TEMPORAL_P(7);
 
   const uint8_t *pixels = (const uint8_t *) VARDATA_ANY(pxbytea);
-  MeosPixType pixtype   = text_to_pixtype(pixtype_t);
+  MeosPixType pixtype = text_to_pixtype(pixtype_t);
 
-  Temporal *result = raster_tile_value_quadbin(pixels,
-    (uint16_t) width, (uint16_t) height, (uint64) quadbin,
-    pixtype, nodata, has_nd, traj);
+  Temporal *result = raster_tile_value_quadbin(pixels, (uint16_t) width,
+    (uint16_t) height, (uint64) quadbin, pixtype, nodata, has_nd, traj);
 
   PG_FREE_IF_COPY(traj, 7);
-
   if (result == NULL)
     PG_RETURN_NULL();
   PG_RETURN_POINTER(result);
@@ -355,12 +346,12 @@ PG_FUNCTION_INFO_V1(Raquet_constructor);
  * @ingroup mobilitydb_raster
  * @brief Construct a Raquet tile from a QUADBIN cell, dimensions, a pixel type
  * name and a row-major packed pixel array
- * @param[in] pixels   Row-major pixel bytes (bytea)
- * @param[in] width    Tile width in pixels
- * @param[in] height   Tile height in pixels
- * @param[in] quadbin  CARTO QUADBIN cell (bigint)
- * @param[in] pixtype  Pixel type name: UINT8 | INT16 | INT32 | FLOAT32 | FLOAT64
- * @param[in] nodata   Nodata sentinel value (NULL disables nodata filtering)
+ * @param[in] pixels Row-major pixel bytes (bytea)
+ * @param[in] width Tile width in pixels
+ * @param[in] height Tile height in pixels
+ * @param[in] quadbin CARTO QUADBIN cell (bigint)
+ * @param[in] pixtype Pixel type name: UINT8 | INT16 | INT32 | FLOAT32 | FLOAT64
+ * @param[in] nodata Nodata sentinel value (NULL disables nodata filtering)
  * @sqlfn raquet()
  */
 Datum
@@ -370,24 +361,28 @@ Raquet_constructor(PG_FUNCTION_ARGS)
   if (PG_ARGISNULL(0) || PG_ARGISNULL(1) || PG_ARGISNULL(2) ||
       PG_ARGISNULL(3) || PG_ARGISNULL(4))
     PG_RETURN_NULL();
-  bytea      *pxbytea   = PG_GETARG_BYTEA_PP(0);
-  int32       width     = PG_GETARG_INT32(1);
-  int32       height    = PG_GETARG_INT32(2);
-  int64       quadbin   = PG_GETARG_INT64(3);
-  text       *pixtype_t = PG_GETARG_TEXT_PP(4);
-  bool        has_nd    = ! PG_ARGISNULL(5);
-  float8      nodata    = has_nd ? PG_GETARG_FLOAT8(5) : 0.0;
-  MeosPixType pixtype   = text_to_pixtype(pixtype_t);
+  bytea *pxbytea = PG_GETARG_BYTEA_PP(0);
+  int32 width = PG_GETARG_INT32(1);
+  int32 height = PG_GETARG_INT32(2);
+  int64 quadbin = PG_GETARG_INT64(3);
+  text *pixtype_t = PG_GETARG_TEXT_PP(4);
+  bool has_nd = ! PG_ARGISNULL(5);
+  float8 nodata = has_nd ? PG_GETARG_FLOAT8(5) : 0.0;
+  MeosPixType pixtype = text_to_pixtype(pixtype_t);
 
   if (width <= 0 || height <= 0)
+  {
     ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
       errmsg("The width and height of a raquet tile must be positive")));
+  }
   size_t need = (size_t) width * height * raquet_pixtype_size(pixtype);
   if ((size_t) VARSIZE_ANY_EXHDR(pxbytea) < need)
+  {
     ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
       errmsg("The pixel array has %zu bytes but %zu are required for a "
         "%d x %d tile", (size_t) VARSIZE_ANY_EXHDR(pxbytea), need, width,
         height)));
+  }
 
   const uint8_t *pixels = (const uint8_t *) VARDATA_ANY(pxbytea);
   Raquet *result = raquet_make((uint64) quadbin, (uint16_t) width,
@@ -430,14 +425,14 @@ PG_FUNCTION_INFO_V1(Raster_tile_value);
 /**
  * @ingroup mobilitydb_raster
  * @brief Sample a Raquet tile along a tgeompoint trajectory
- * @param[in] rq    Raquet tile
- * @param[in] traj  Trajectory (tgeompoint)
+ * @param[in] rq Raquet tile
+ * @param[in] traj Trajectory (tgeompoint)
  * @sqlfn raster_tile_value()
  */
 Datum
 Raster_tile_value(PG_FUNCTION_ARGS)
 {
-  Raquet   *rq   = PG_GETARG_RAQUET_P(0);
+  Raquet *rq = PG_GETARG_RAQUET_P(0);
   Temporal *traj = PG_GETARG_TEMPORAL_P(1);
   Temporal *result = raster_tile_value(rq, traj);
   PG_FREE_IF_COPY(rq, 0);
@@ -484,35 +479,35 @@ PG_FUNCTION_INFO_V1(Trajectory_quadbins);
  * @ingroup mobilitydb_raster
  * @brief Return the distinct QUADBIN cells at a zoom level covered by a
  * trajectory, for use as a WHERE-clause join key against a Raquet table
- * @param[in] traj  Trajectory (tgeompoint, SRID 4326)
- * @param[in] zoom  QUADBIN zoom level (0–15)
+ * @param[in] traj Trajectory (tgeompoint, SRID 4326)
+ * @param[in] zoom QUADBIN zoom level (0–15)
  * @csqlfn #Trajectory_quadbins()
  */
 Datum
 Trajectory_quadbins(PG_FUNCTION_ARGS)
 {
   Temporal *traj = PG_GETARG_TEMPORAL_P(0);
-  int32     zoom = PG_GETARG_INT32(1);
-
+  int32 zoom = PG_GETARG_INT32(1);
   if (zoom < 0 || zoom > 15)
+  {
     ereport(ERROR,
       (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
        errmsg("zoom level must be between 0 and 15")));
+  }
 
-  int       ncells;
-  uint64   *cells = trajectory_quadbins(traj, (uint32_t) zoom, &ncells);
-
-  PG_FREE_IF_COPY(traj, 0);
+  int ncells;
+  uint64 *cells = trajectory_quadbins(traj, (uint32_t) zoom, &ncells);
 
   /* Build int8[] (bigint[]) from the uint64 cell array */
   Datum *elems = palloc(sizeof(Datum) * ncells);
   for (int i = 0; i < ncells; i++)
     elems[i] = Int64GetDatum((int64) cells[i]);
   pfree(cells);
-
-  ArrayType *arr = construct_array(elems, ncells, INT8OID, 8, true, TYPALIGN_DOUBLE);
+  ArrayType *arr = construct_array(elems, ncells, INT8OID, 8, true,
+    TYPALIGN_DOUBLE);
   pfree(elems);
 
+  PG_FREE_IF_COPY(traj, 0);
   PG_RETURN_ARRAYTYPE_P(arr);
 }
 
@@ -603,7 +598,7 @@ Raquet_pixtype(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************
- * Raquet type: comparison
+ * Comparison functions
  *****************************************************************************/
 
 PGDLLEXPORT Datum Raquet_eq(PG_FUNCTION_ARGS);
@@ -735,7 +730,7 @@ Raquet_cmp(PG_FUNCTION_ARGS)
 }
 
 /*****************************************************************************
- * Raquet type: hash
+ * Hash functions
  *****************************************************************************/
 
 PGDLLEXPORT Datum Raquet_hash(PG_FUNCTION_ARGS);
@@ -770,8 +765,6 @@ Raquet_hash_extended(PG_FUNCTION_ARGS)
   PG_FREE_IF_COPY(rq, 0);
   PG_RETURN_UINT64(result);
 }
-
-/*****************************************************************************/
 
 /*****************************************************************************
  * Raquet type: conversions

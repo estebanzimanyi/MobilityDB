@@ -50,8 +50,6 @@
 /* MobilityDB */
 #include "pg_temporal/type_util.h"
 
-#define PG_GETARG_H3INDEX(n) DatumGetH3Index(PG_GETARG_DATUM(n))
-
 /*****************************************************************************
  * Grid traversal
  *****************************************************************************/

@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -70,7 +70,7 @@ extern bool nad_tcont_tcont_sync_applies(const Temporal *temp1,
 extern double nad_tcont_tcont_sync(const Temporal *temp1,
   const Temporal *temp2, datum_func2 func, tpfunc_temp turnpt,
   seglb_func seglb, TimestampTz *tmin);
-extern double tpointseg_distance_lb(Datum start1, Datum end1, Datum start2,
+extern double tpointsegm_distance_lb(Datum start1, Datum end1, Datum start2,
   Datum end2);
 
 /*****************************************************************************/

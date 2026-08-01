@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -96,7 +96,6 @@ trgeoinst_set_stbox(const GSERIALIZED *geom, const TInstant *inst, STBox *box)
     box->zmin = gbox.zmin;
     box->zmax = gbox.zmax;
   }
-  return;
 }
 
 /**
@@ -138,7 +137,6 @@ trgeoinst_make_pose_stbox(const TInstant *inst, STBox *box)
   MEOS_FLAGS_SET_X(box->flags, true);
   MEOS_FLAGS_SET_Z(box->flags, MEOS_FLAGS_GET_Z(pose->flags));
   MEOS_FLAGS_SET_T(box->flags, true);
-  return;
 }
 
 /**
@@ -173,7 +171,6 @@ trgeoinstarr_rotating_stbox(const GSERIALIZED *geom, TInstant **instants,
   }
   box->srid = gserialized_get_srid(geom);
   MEOS_FLAGS_SET_GEODETIC(box->flags, false);
-  return;
 }
 
 /*****************************************************************************/
@@ -204,7 +201,6 @@ trgeoinstarr_compute_bbox(const GSERIALIZED *geom, TInstant **instants,
     meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
       "unknown bounding box function for temporal type: %s",
       meostype_name(instants[0]->temptype));
-  return;
 }
 
 /*****************************************************************************/

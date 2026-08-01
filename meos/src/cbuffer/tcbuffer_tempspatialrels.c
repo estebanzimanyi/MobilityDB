@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -748,7 +748,7 @@ tcbufferseq_linear_within_spanset(const TSequence *seq, double dist,
     const TInstant *inst2 = TSEQUENCE_INST_N(seq, i);
     bool upper_inc = seq->period.upper_inc;
     double dur = (double) (inst2->t - inst1->t);
-    int nr = tcbufferseg_within_ctx(DatumGetCbufferP(tinstant_value_p(inst1)),
+    int nr = tcbuffersegm_within_ctx(DatumGetCbufferP(tinstant_value_p(inst1)),
       DatumGetCbufferP(tinstant_value_p(inst2)), dist, ctx, rlo, rhi, maxo);
     for (int j = 0; j < nr; j++)
     {
@@ -1476,7 +1476,7 @@ tintersects_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
  *
  * A moving disk touches a geometry at the INSTANTS where its boundary meets the
  * geometry boundary with disjoint interiors (#tcbuffer_disc_touch_ctx /
- * #tcbufferseg_touch_roots). For linear interpolation these are isolated contact
+ * #tcbuffersegm_touch_roots). For linear interpolation these are isolated contact
  * instants; for step interpolation the constant disk touches over a whole
  * sub-period. The temporal touches Boolean is thus true exactly on the contact
  * set and false elsewhere, the moving-disk analogue of the temporal-point
@@ -1626,7 +1626,7 @@ tcbufferseq_touch_spanset(const TSequence *seq, const void *ctx)
   {
     const TInstant *inst2 = TSEQUENCE_INST_N(seq, i);
     double dur = (double) (inst2->t - inst1->t);
-    int nr = tcbufferseg_touch_roots(DatumGetCbufferP(tinstant_value_p(inst1)),
+    int nr = tcbuffersegm_touch_roots(DatumGetCbufferP(tinstant_value_p(inst1)),
       DatumGetCbufferP(tinstant_value_p(inst2)), ctx, rt, maxo);
     for (int j = 0; j < nr; j++)
     {
@@ -1838,7 +1838,7 @@ tcbufferseq_contains_spanset(const TSequence *seq, const void *ctx, bool strict)
     const Cbuffer *cb1 = DatumGetCbufferP(tinstant_value_p(inst1));
     const Cbuffer *cb2 = DatumGetCbufferP(tinstant_value_p(inst2));
     double dur = (double) (inst2->t - inst1->t);
-    int nr = tcbufferseg_boundary_roots(cb1, cb2, ctx, rt, maxo);
+    int nr = tcbuffersegm_boundary_roots(cb1, cb2, ctx, rt, maxo);
     /* Sort the roots ascending (insertion sort; nr is small) */
     for (int a = 1; a < nr; a++)
     {
@@ -2042,7 +2042,7 @@ tcbufferseq_ever_touches_native(const TSequence *seq, const void *ctx)
   for (int i = 1; i < seq->count && ! found; i++)
   {
     const TInstant *inst2 = TSEQUENCE_INST_N(seq, i);
-    if (tcbufferseg_touch_roots(DatumGetCbufferP(tinstant_value_p(inst1)),
+    if (tcbuffersegm_touch_roots(DatumGetCbufferP(tinstant_value_p(inst1)),
         DatumGetCbufferP(tinstant_value_p(inst2)), ctx, rt, maxo) > 0)
       found = true;
     inst1 = inst2;
@@ -2161,7 +2161,7 @@ tcbufferseq_ever_contains_native(const TSequence *seq, const void *ctx,
     const TInstant *inst2 = TSEQUENCE_INST_N(seq, i);
     const Cbuffer *cb1 = DatumGetCbufferP(tinstant_value_p(inst1));
     const Cbuffer *cb2 = DatumGetCbufferP(tinstant_value_p(inst2));
-    int nr = tcbufferseg_boundary_roots(cb1, cb2, ctx, rt, maxo);
+    int nr = tcbuffersegm_boundary_roots(cb1, cb2, ctx, rt, maxo);
     for (int a = 1; a < nr; a++)
     {
       double v = rt[a];

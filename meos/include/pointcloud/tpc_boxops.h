@@ -1,8 +1,29 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
+ *
+ * MobilityDB includes portions of PostGIS version 3 source code released
+ * under the GNU General Public License (GPLv2 or later).
+ * Copyright (c) 2001-2026, PostGIS contributors
+ *
+ * Permission to use, copy, modify, and distribute this software and its
+ * documentation for any purpose, without fee, and without a written
+ * agreement is hereby granted, provided that the above copyright notice and
+ * this paragraph and the following two paragraphs appear in all copies.
+ *
+ * IN NO EVENT SHALL UNIVERSITE LIBRE DE BRUXELLES BE LIABLE TO ANY PARTY FOR
+ * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING
+ * LOST PROFITS, ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION,
+ * EVEN IF UNIVERSITE LIBRE DE BRUXELLES HAS BEEN ADVISED OF THE POSSIBILITY
+ * OF SUCH DAMAGE.
+ *
+ * UNIVERSITE LIBRE DE BRUXELLES SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS ON
+ * AN "AS IS" BASIS, AND UNIVERSITE LIBRE DE BRUXELLES HAS NO OBLIGATIONS TO
+ * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
  *
  *****************************************************************************/
 
@@ -38,15 +59,7 @@ extern TPCBox *tpcbox_extent_transfn(TPCBox *state, const Temporal *temp);
 extern bool boxop_tpointcloud_tpcbox(const Temporal *temp, const TPCBox *box,
   bool (*func)(const TPCBox *, const TPCBox *), bool inverted);
 extern bool boxop_tpointcloud_tpointcloud(const Temporal *temp1,
-  const Temporal *temp2,
-  bool (*func)(const TPCBox *, const TPCBox *));
-
-/* Lossy tpcbox → stbox conversion: copies bounds + period + srid + the
- * X/Z/T dimension flags, drops pcid and never sets GEODETIC. Used by
- * the SP-GiST opclasses where the index storage is stbox and pcid
- * filtering is recovered by the operator's recheck. STBox is
- * typedef'd via meos.h above. */
-extern void tpcbox_set_stbox(const TPCBox *src, STBox *dst);
+  const Temporal *temp2, bool (*func)(const TPCBox *, const TPCBox *));
 
 /* Nearest-approach distance between two TPCBox values. Returns DBL_MAX
  * when their time spans don't overlap or the pcids differ. */

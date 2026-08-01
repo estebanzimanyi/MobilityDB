@@ -1,12 +1,12 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -60,6 +60,7 @@
 #include <inttypes.h>
 /* PostgreSQL */
 #include <postgres.h>
+#include <float.h>
 /* MEOS */
 #include <meos.h>
 #include "temporal/meos_catalog.h"
@@ -327,10 +328,6 @@ quadbin_k_ring(Quadbin cell, int k, int *count)
  * exploration branch (see project_quadbin_support_plan: assert pg_regress
  * parity against quadbin-py).
  *****************************************************************************/
-
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
 
 /**
  * @ingroup meos_quadbin

@@ -168,7 +168,6 @@ tbox_adjust(void *bbox1, void *bbox2)
     DatumGetTimestampTz(box2->period.upper));
   box1->period.lower = TimestampTzGetDatum(tmin);
   box1->period.upper = TimestampTzGetDatum(tmax);
-  return;
 }
 
 PGDLLEXPORT Datum Tbox_gist_union(PG_FUNCTION_ARGS);
@@ -241,7 +240,6 @@ tbox_union_rt(const TBox *a, const TBox *b, TBox *new)
     DatumGetTimestampTz(b->period.upper));
   new->period.lower = TimestampTzGetDatum(tmin);
   new->period.upper = TimestampTzGetDatum(tmax);
-  return;
 }
 
 /**
@@ -529,7 +527,6 @@ bbox_gist_fallback_split(GistEntryVector *entryvec, GIST_SPLITVEC *v,
 
   v->spl_ldatum = PointerGetDatum(leftBox);
   v->spl_rdatum = PointerGetDatum(rightBox);
-  return;
 }
 
 /**

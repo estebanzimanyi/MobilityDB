@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -535,7 +535,6 @@ bbox_union_span_span(const Span *s1, const Span *s2, Span *result)
   assert(s1); assert(s2); assert(s1->spantype == s2->spantype);
   memcpy(result, s1, sizeof(Span));
   span_expand(s2, result);
-  return;
 }
 
 /**

@@ -58,6 +58,11 @@
  * Shared helpers
  *****************************************************************************/
 
+/**
+ * @brief Generic function for the ever/always comparison operators
+ * @param[in] fcinfo Catalog information about the external function
+ * @param[in] func Specific function for the ever/always comparison
+ */
 static Datum
 EAcomp_quadbin_tquadbin(FunctionCallInfo fcinfo,
   int (*func)(Quadbin, const Temporal *))
@@ -71,6 +76,11 @@ EAcomp_quadbin_tquadbin(FunctionCallInfo fcinfo,
   PG_RETURN_BOOL(result);
 }
 
+/**
+ * @brief Generic function for the ever/always comparison operators
+ * @param[in] fcinfo Catalog information about the external function
+ * @param[in] func Specific function for the ever/always comparison
+ */
 static Datum
 EAcomp_tquadbin_quadbin(FunctionCallInfo fcinfo,
   int (*func)(const Temporal *, Quadbin))
@@ -84,6 +94,11 @@ EAcomp_tquadbin_quadbin(FunctionCallInfo fcinfo,
   PG_RETURN_BOOL(result);
 }
 
+/**
+ * @brief Generic function for the ever/always comparison operators
+ * @param[in] fcinfo Catalog information about the external function
+ * @param[in] func Specific function for the ever/always comparison
+ */
 static Datum
 EAcomp_tquadbin_tquadbin(FunctionCallInfo fcinfo,
   int (*func)(const Temporal *, const Temporal *))
@@ -98,6 +113,13 @@ EAcomp_tquadbin_tquadbin(FunctionCallInfo fcinfo,
   PG_RETURN_BOOL(result);
 }
 
+/*****************************************************************************/
+
+/**
+ * @brief Generic function for the temporal comparison operators
+ * @param[in] fcinfo Catalog information about the external function
+ * @param[in] func Specific function for the temporal comparison
+ */
 static Datum
 Tcomp_quadbin_tquadbin(FunctionCallInfo fcinfo,
   Temporal *(*func)(Quadbin, const Temporal *))
@@ -111,6 +133,11 @@ Tcomp_quadbin_tquadbin(FunctionCallInfo fcinfo,
   PG_RETURN_TEMPORAL_P(result);
 }
 
+/**
+ * @brief Generic function for the temporal comparison operators
+ * @param[in] fcinfo Catalog information about the external function
+ * @param[in] func Specific function for the temporal comparison
+ */
 static Datum
 Tcomp_tquadbin_quadbin(FunctionCallInfo fcinfo,
   Temporal *(*func)(const Temporal *, Quadbin))
@@ -124,6 +151,11 @@ Tcomp_tquadbin_quadbin(FunctionCallInfo fcinfo,
   PG_RETURN_TEMPORAL_P(result);
 }
 
+/**
+ * @brief Generic function for the temporal comparison operators
+ * @param[in] fcinfo Catalog information about the external function
+ * @param[in] func Specific function for the temporal comparison
+ */
 static Datum
 Tcomp_tquadbin_tquadbin(FunctionCallInfo fcinfo,
   Temporal *(*func)(const Temporal *, const Temporal *))
@@ -152,7 +184,9 @@ PG_FUNCTION_INFO_V1(Ever_eq_quadbin_tquadbin);
  */
 inline Datum
 Ever_eq_quadbin_tquadbin(PG_FUNCTION_ARGS)
-{ return EAcomp_quadbin_tquadbin(fcinfo, &ever_eq_quadbin_tquadbin); }
+{
+  return EAcomp_quadbin_tquadbin(fcinfo, &ever_eq_quadbin_tquadbin);
+}
 
 PGDLLEXPORT Datum Ever_eq_tquadbin_quadbin(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Ever_eq_tquadbin_quadbin);
@@ -164,7 +198,9 @@ PG_FUNCTION_INFO_V1(Ever_eq_tquadbin_quadbin);
  */
 inline Datum
 Ever_eq_tquadbin_quadbin(PG_FUNCTION_ARGS)
-{ return EAcomp_tquadbin_quadbin(fcinfo, &ever_eq_tquadbin_quadbin); }
+{
+  return EAcomp_tquadbin_quadbin(fcinfo, &ever_eq_tquadbin_quadbin);
+}
 
 PGDLLEXPORT Datum Ever_eq_tquadbin_tquadbin(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Ever_eq_tquadbin_tquadbin);
@@ -177,7 +213,9 @@ PG_FUNCTION_INFO_V1(Ever_eq_tquadbin_tquadbin);
  */
 inline Datum
 Ever_eq_tquadbin_tquadbin(PG_FUNCTION_ARGS)
-{ return EAcomp_tquadbin_tquadbin(fcinfo, &ever_eq_tquadbin_tquadbin); }
+{
+  return EAcomp_tquadbin_tquadbin(fcinfo, &ever_eq_tquadbin_tquadbin);
+}
 
 /*****************************************************************************
  * Always equal
@@ -193,7 +231,9 @@ PG_FUNCTION_INFO_V1(Always_eq_quadbin_tquadbin);
  */
 inline Datum
 Always_eq_quadbin_tquadbin(PG_FUNCTION_ARGS)
-{ return EAcomp_quadbin_tquadbin(fcinfo, &always_eq_quadbin_tquadbin); }
+{
+  return EAcomp_quadbin_tquadbin(fcinfo, &always_eq_quadbin_tquadbin);
+}
 
 PGDLLEXPORT Datum Always_eq_tquadbin_quadbin(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Always_eq_tquadbin_quadbin);
@@ -205,7 +245,9 @@ PG_FUNCTION_INFO_V1(Always_eq_tquadbin_quadbin);
  */
 inline Datum
 Always_eq_tquadbin_quadbin(PG_FUNCTION_ARGS)
-{ return EAcomp_tquadbin_quadbin(fcinfo, &always_eq_tquadbin_quadbin); }
+{
+  return EAcomp_tquadbin_quadbin(fcinfo, &always_eq_tquadbin_quadbin);
+}
 
 PGDLLEXPORT Datum Always_eq_tquadbin_tquadbin(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Always_eq_tquadbin_tquadbin);
@@ -218,7 +260,9 @@ PG_FUNCTION_INFO_V1(Always_eq_tquadbin_tquadbin);
  */
 inline Datum
 Always_eq_tquadbin_tquadbin(PG_FUNCTION_ARGS)
-{ return EAcomp_tquadbin_tquadbin(fcinfo, &always_eq_tquadbin_tquadbin); }
+{
+  return EAcomp_tquadbin_tquadbin(fcinfo, &always_eq_tquadbin_tquadbin);
+}
 
 /*****************************************************************************
  * Ever not equal
@@ -234,7 +278,9 @@ PG_FUNCTION_INFO_V1(Ever_ne_quadbin_tquadbin);
  */
 inline Datum
 Ever_ne_quadbin_tquadbin(PG_FUNCTION_ARGS)
-{ return EAcomp_quadbin_tquadbin(fcinfo, &ever_ne_quadbin_tquadbin); }
+{
+  return EAcomp_quadbin_tquadbin(fcinfo, &ever_ne_quadbin_tquadbin);
+}
 
 PGDLLEXPORT Datum Ever_ne_tquadbin_quadbin(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Ever_ne_tquadbin_quadbin);
@@ -246,7 +292,9 @@ PG_FUNCTION_INFO_V1(Ever_ne_tquadbin_quadbin);
  */
 inline Datum
 Ever_ne_tquadbin_quadbin(PG_FUNCTION_ARGS)
-{ return EAcomp_tquadbin_quadbin(fcinfo, &ever_ne_tquadbin_quadbin); }
+{
+  return EAcomp_tquadbin_quadbin(fcinfo, &ever_ne_tquadbin_quadbin);
+}
 
 PGDLLEXPORT Datum Ever_ne_tquadbin_tquadbin(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Ever_ne_tquadbin_tquadbin);
@@ -259,7 +307,9 @@ PG_FUNCTION_INFO_V1(Ever_ne_tquadbin_tquadbin);
  */
 inline Datum
 Ever_ne_tquadbin_tquadbin(PG_FUNCTION_ARGS)
-{ return EAcomp_tquadbin_tquadbin(fcinfo, &ever_ne_tquadbin_tquadbin); }
+{
+  return EAcomp_tquadbin_tquadbin(fcinfo, &ever_ne_tquadbin_tquadbin);
+}
 
 /*****************************************************************************
  * Always not equal
@@ -275,7 +325,9 @@ PG_FUNCTION_INFO_V1(Always_ne_quadbin_tquadbin);
  */
 inline Datum
 Always_ne_quadbin_tquadbin(PG_FUNCTION_ARGS)
-{ return EAcomp_quadbin_tquadbin(fcinfo, &always_ne_quadbin_tquadbin); }
+{
+  return EAcomp_quadbin_tquadbin(fcinfo, &always_ne_quadbin_tquadbin);
+}
 
 PGDLLEXPORT Datum Always_ne_tquadbin_quadbin(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Always_ne_tquadbin_quadbin);
@@ -287,7 +339,9 @@ PG_FUNCTION_INFO_V1(Always_ne_tquadbin_quadbin);
  */
 inline Datum
 Always_ne_tquadbin_quadbin(PG_FUNCTION_ARGS)
-{ return EAcomp_tquadbin_quadbin(fcinfo, &always_ne_tquadbin_quadbin); }
+{
+  return EAcomp_tquadbin_quadbin(fcinfo, &always_ne_tquadbin_quadbin);
+}
 
 PGDLLEXPORT Datum Always_ne_tquadbin_tquadbin(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Always_ne_tquadbin_tquadbin);
@@ -300,7 +354,9 @@ PG_FUNCTION_INFO_V1(Always_ne_tquadbin_tquadbin);
  */
 inline Datum
 Always_ne_tquadbin_tquadbin(PG_FUNCTION_ARGS)
-{ return EAcomp_tquadbin_tquadbin(fcinfo, &always_ne_tquadbin_tquadbin); }
+{
+  return EAcomp_tquadbin_tquadbin(fcinfo, &always_ne_tquadbin_tquadbin);
+}
 
 /*****************************************************************************
  * Temporal equal
@@ -316,7 +372,9 @@ PG_FUNCTION_INFO_V1(Teq_quadbin_tquadbin);
  */
 inline Datum
 Teq_quadbin_tquadbin(PG_FUNCTION_ARGS)
-{ return Tcomp_quadbin_tquadbin(fcinfo, &teq_quadbin_tquadbin); }
+{
+  return Tcomp_quadbin_tquadbin(fcinfo, &teq_quadbin_tquadbin);
+}
 
 PGDLLEXPORT Datum Teq_tquadbin_quadbin(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Teq_tquadbin_quadbin);
@@ -328,7 +386,9 @@ PG_FUNCTION_INFO_V1(Teq_tquadbin_quadbin);
  */
 inline Datum
 Teq_tquadbin_quadbin(PG_FUNCTION_ARGS)
-{ return Tcomp_tquadbin_quadbin(fcinfo, &teq_tquadbin_quadbin); }
+{
+  return Tcomp_tquadbin_quadbin(fcinfo, &teq_tquadbin_quadbin);
+}
 
 PGDLLEXPORT Datum Teq_tquadbin_tquadbin(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Teq_tquadbin_tquadbin);
@@ -341,7 +401,9 @@ PG_FUNCTION_INFO_V1(Teq_tquadbin_tquadbin);
  */
 inline Datum
 Teq_tquadbin_tquadbin(PG_FUNCTION_ARGS)
-{ return Tcomp_tquadbin_tquadbin(fcinfo, &teq_tquadbin_tquadbin); }
+{
+  return Tcomp_tquadbin_tquadbin(fcinfo, &teq_tquadbin_tquadbin);
+}
 
 /*****************************************************************************
  * Temporal not equal
@@ -357,7 +419,9 @@ PG_FUNCTION_INFO_V1(Tne_quadbin_tquadbin);
  */
 inline Datum
 Tne_quadbin_tquadbin(PG_FUNCTION_ARGS)
-{ return Tcomp_quadbin_tquadbin(fcinfo, &tne_quadbin_tquadbin); }
+{
+  return Tcomp_quadbin_tquadbin(fcinfo, &tne_quadbin_tquadbin);
+}
 
 PGDLLEXPORT Datum Tne_tquadbin_quadbin(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tne_tquadbin_quadbin);
@@ -369,7 +433,9 @@ PG_FUNCTION_INFO_V1(Tne_tquadbin_quadbin);
  */
 inline Datum
 Tne_tquadbin_quadbin(PG_FUNCTION_ARGS)
-{ return Tcomp_tquadbin_quadbin(fcinfo, &tne_tquadbin_quadbin); }
+{
+  return Tcomp_tquadbin_quadbin(fcinfo, &tne_tquadbin_quadbin);
+}
 
 PGDLLEXPORT Datum Tne_tquadbin_tquadbin(PG_FUNCTION_ARGS);
 PG_FUNCTION_INFO_V1(Tne_tquadbin_tquadbin);
@@ -382,6 +448,8 @@ PG_FUNCTION_INFO_V1(Tne_tquadbin_tquadbin);
  */
 inline Datum
 Tne_tquadbin_tquadbin(PG_FUNCTION_ARGS)
-{ return Tcomp_tquadbin_tquadbin(fcinfo, &tne_tquadbin_tquadbin); }
+{
+  return Tcomp_tquadbin_tquadbin(fcinfo, &tne_tquadbin_tquadbin);
+}
 
 /*****************************************************************************/

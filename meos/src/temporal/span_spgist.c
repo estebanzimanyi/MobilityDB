@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -118,7 +118,6 @@ spannode_init(SpanNode *nodebox, MeosType spantype, MeosType basetype)
   nodebox->right.lower = nodebox->right.upper = max;
   nodebox->left.spantype = nodebox->right.spantype = spantype;
   nodebox->left.basetype = nodebox->right.basetype = basetype;
-  return;
 }
 
 /**
@@ -171,7 +170,6 @@ spannode_quadtree_next(const SpanNode *nodebox, const Span *centroid,
     next_nodespan->right.upper = centroid->upper;
     next_nodespan->right.upper_inc = true;
   }
-  return;
 }
 
 /**
@@ -224,7 +222,6 @@ spannode_kdtree_next(const SpanNode *nodebox, const Span *centroid,
       next_nodespan->left.upper_inc = true;
     }
   }
-  return;
 }
 
 /**

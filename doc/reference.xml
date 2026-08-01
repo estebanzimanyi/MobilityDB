@@ -3768,7 +3768,7 @@
 			<title>Sampling Operator</title>
 			<itemizedlist>
 				<listitem>
-					<para><link linkend="raster_value"><varname>raster_value</varname></link>: Sample a raster band at each instant of a trajectory</para>
+					<para><link linkend="rasterValue"><varname>rasterValue</varname></link>: Sample a raster band at each instant of a trajectory</para>
 				</listitem>
 			</itemizedlist>
 		</sect2>
@@ -3777,11 +3777,11 @@
 			<title>Raquet / QUADBIN Sampling</title>
 			<itemizedlist>
 				<listitem>
-					<para><link linkend="trajectory_quadbins"><varname>trajectory_quadbins</varname></link>: Return the distinct QUADBIN cells at a zoom level covered by a trajectory</para>
+					<para><link linkend="trajectory_quadbins"><varname>quadbins</varname></link>: Return the distinct QUADBIN cells at a zoom level covered by a trajectory</para>
 				</listitem>
 
 				<listitem>
-					<para><link linkend="raster_tile_value_quadbin"><varname>raster_tile_value_quadbin</varname></link>: Sample a Raquet raster chip along a trajectory using a QUADBIN cell for georeferencing</para>
+					<para><link linkend="rasterTileValueQuadbin"><varname>rasterTileValueQuadbin</varname></link>: Sample a Raquet raster chip along a trajectory using a QUADBIN cell for georeferencing</para>
 				</listitem>
 
 				<listitem>
@@ -3789,15 +3789,15 @@
 				</listitem>
 
 				<listitem>
-					<para><link linkend="raquet_read"><varname>raquet_read</varname></link>: Decode an in-memory raster file into a Raquet raster tile via GDAL</para>
+					<para><link linkend="raquetRead"><varname>raquetRead</varname></link>: Decode an in-memory raster file into a Raquet raster tile via GDAL</para>
 				</listitem>
 
 				<listitem>
-					<para><link linkend="raster_tile_value"><varname>raster_tile_value</varname></link>: Sample a Raquet raster tile along a trajectory</para>
+					<para><link linkend="rasterTileValue"><varname>rasterTileValue</varname></link>: Sample a Raquet raster tile along a trajectory</para>
 				</listitem>
 
 				<listitem>
-					<para><link linkend="raster_tile_value_array"><varname>raster_tile_value</varname></link>: Sample an array of Raquet raster tiles along a trajectory, keeping the finer resolution where tiles overlap</para>
+					<para><link linkend="rasterTileValueArray"><varname>rasterTileValue</varname></link>: Sample an array of Raquet raster tiles along a trajectory, keeping the finer resolution where tiles overlap</para>
 				</listitem>
 			</itemizedlist>
 		</sect2>
@@ -3847,11 +3847,11 @@
 				</listitem>
 
 				<listitem>
-					<para><link linkend="eRasterValue"><varname>eRasterValue</varname></link>: Return true if the trajectory ever samples a raster pixel value inside a float range</para>
+					<para><link linkend="everRasterValue"><varname>everRasterValue</varname></link>: Return true if the trajectory ever samples a raster pixel value inside a float range</para>
 				</listitem>
 
 				<listitem>
-					<para><link linkend="aRasterValue"><varname>aRasterValue</varname></link>: Return true if every in-raster-extent instant of the trajectory samples a pixel value inside a float range</para>
+					<para><link linkend="alwaysRasterValue"><varname>alwaysRasterValue</varname></link>: Return true if every in-raster-extent instant of the trajectory samples a pixel value inside a float range</para>
 				</listitem>
 			</itemizedlist>
 		</sect2>
@@ -3859,3 +3859,4 @@
 
 </appendix>
 
+  

@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -1308,7 +1308,6 @@ spanarr_sort_size(Span *spans, int count)
 {
   qsort(spans, (size_t) count, sizeof(Span),
     (qsort_comparator) &span_cmp_size);
-  return;
 }
 
 /**
@@ -1541,14 +1540,14 @@ spanset_gt(const SpanSet *ss1, const SpanSet *ss2)
  * @ingroup meos_setspan_accessor
  * @brief Return the 32-bit hash value of a span set
  * @param[in] ss Span set
- * @return On error return @p INT_MAX
+ * @return On error return @p UINT32_MAX
  * @csqlfn #Spanset_hash()
  */
 uint32
 spanset_hash(const SpanSet *ss)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(ss, INT_MAX);
+  VALIDATE_NOT_NULL(ss, UINT32_MAX);
   uint32 result = 1;
   for (int i = 0; i < ss->count; i++)
   {
@@ -1563,14 +1562,14 @@ spanset_hash(const SpanSet *ss)
  * @brief Return the 64-bit hash value of a span set using a seed
  * @param[in] ss Span set
  * @param[in] seed Seed
- * @return On error return @p INT_MAX
+ * @return On error return @p UINT64_MAX
  * @csqlfn #Spanset_hash_extended()
  */
 uint64
 spanset_hash_extended(const SpanSet *ss, uint64 seed)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(ss, LONG_MAX);
+  VALIDATE_NOT_NULL(ss, UINT64_MAX);
   uint64 result = 1;
   for (int i = 0; i < ss->count; i++)
   {

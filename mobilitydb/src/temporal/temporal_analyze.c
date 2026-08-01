@@ -225,7 +225,6 @@ temporal_compute_stats(VacAttrStats *stats, AnalyzeAttrFetchFunc fetchfunc,
     pfree(value_lowers); pfree(value_uppers); pfree(value_lengths);
   }
   pfree(time_lowers); pfree(time_uppers); pfree(time_lengths);
-  return;
 }
 
 /*****************************************************************************
@@ -299,7 +298,6 @@ temporal_extra_info(VacAttrStats *stats)
 #else
   stats->minrows = 300 * stats->attr->attstattarget;
 #endif
-  return;
 }
 
 /*****************************************************************************/

@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -903,7 +903,6 @@ tnumberseq_step_value_split(const TSequence *seq, Datum start_bin,
     result[bin_no * numcols + seq_no] = tinstant_as_tsequence(inst1, STEP);
   }
   pfree_array((void **) tofree, nfree);
-  return;
 }
 
 /*****************************************************************************/
@@ -969,27 +968,19 @@ tnumberseq_linear_value_split(const TSequence *seq, Datum start_bin,
     if (cmp <= 0)
     {
       /* Both for constant and increasing segments */
-      min_value = value1;
-      max_value = value2;
-      first_bin = bin_no1;
-      last_bin = bin_no2;
-      first = 0;
-      last = 1;
-      lower_inc_def = true;
-      upper_inc_def = false;
+      min_value = value1; max_value = value2;
+      first_bin = bin_no1; last_bin = bin_no2;
+      first = 0; last = 1;
+      lower_inc_def = true; upper_inc_def = false;
       lower_inc1 = (i == 1) ? seq->period.lower_inc : true;
       upper_inc1 = (i == seq->count - 1) ? seq->period.upper_inc : false;
     }
     else
     {
-      min_value = value2;
-      max_value = value1;
-      first_bin = bin_no2;
-      last_bin = bin_no1;
-      first = 1;
-      last = 0;
-      lower_inc_def = false;
-      upper_inc_def = true;
+      min_value = value2; max_value = value1;
+      first_bin = bin_no2; last_bin = bin_no1;
+      first = 1; last = 0;
+      lower_inc_def = false; upper_inc_def = true;
       lower_inc1 = (i == seq->count - 1) ? seq->period.upper_inc : false;
       upper_inc1 = (i == 1) ? seq->period.lower_inc : true;
     }
@@ -1072,7 +1063,6 @@ tnumberseq_linear_value_split(const TSequence *seq, Datum start_bin,
     bin_no1 = bin_no2;
   }
   pfree_array((void **) tofree, nfree);
-  return;
 }
 
 /*****************************************************************************/
@@ -1135,8 +1125,7 @@ tnumberseq_cont_value_split(const TSequence *seq, Datum start_bin, Datum size,
     }
     bin_value = datum_add(bin_value, size, basetype);
   }
-  pfree(sequences);
-  pfree(nseqs);
+  pfree(sequences); pfree(nseqs);
   *bins = values;
   *newcount = nfrags;
   return result;

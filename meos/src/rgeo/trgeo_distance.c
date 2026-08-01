@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -715,7 +715,6 @@ compute_turnpoints_tpoly_point(cfp_elem *cfp_s, cfp_elem *cfp_e,
       append_tdist_elem(tda, td);
     }
   }
-  return;
 }
 
 /**
@@ -1847,7 +1846,6 @@ dist2d_trgeoseqset_geo(const TSequenceSet *ss, const GSERIALIZED *gs)
  * geometry/geography point
  * @param[in] temp Temporal
  * @param[in] gs Geometry
- * @sqlop @p <->
  * @csqlfn #Tdistance_trgeometry_geo()
  */
 Temporal *
@@ -1880,7 +1878,6 @@ tdistance_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
  * @ingroup meos_rgeo_dist
  * @brief Return the temporal distance between two
  * temporal rigid geometries.
- * @sqlop @p <->
  * @csqlfn #Tdistance_trgeometry_tpoint()
  */
 Temporal *
@@ -1900,7 +1897,6 @@ tdistance_trgeometry_tpoint(const Temporal *temp1 UNUSED,
 /**
  * @ingroup meos_rgeo_dist
  * @brief Return the temporal distance between two temporal rigid geometries
- * @sqlop @p <->
  * @csqlfn #Tdistance_trgeometry_trgeometry()
  */
 Temporal *
@@ -1925,7 +1921,7 @@ tdistance_trgeometry_trgeometry(const Temporal *temp1 UNUSED,
  * @ingroup meos_rgeo_dist
  * @brief Return the nearest approach instant between a temporal rigid geometry
  * and a geometry
- * @sqlfn nearestApproachInstant()
+ * @csqlfn NAI_trgeometry_geo()
  */
 TInstant *
 nai_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
@@ -1959,7 +1955,7 @@ nai_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
  * @ingroup meos_rgeo_dist
  * @brief Return the nearest approach instant between a temporal rigid
  * geometry and a temporal point
- * @sqlfn nearestApproachInstant()
+ * @csqlfn NAI_trgeometry_tpoint()
  */
 TInstant *
 nai_trgeometry_tpoint(const Temporal *temp1, const Temporal *temp2)
@@ -1987,7 +1983,7 @@ nai_trgeometry_tpoint(const Temporal *temp1, const Temporal *temp2)
  * @ingroup meos_rgeo_dist
  * @brief Return the nearest approach instant between two temporal rigid
  * geometries
- * @sqlfn nearestApproachInstant()
+ * @csqlfn NAI_trgeometry_trgeometry()
  */
 TInstant *
 nai_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2)
@@ -2020,7 +2016,7 @@ nai_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2)
  * @ingroup meos_rgeo_dist
  * @brief Return the nearest approach distance between a temporal rigid
  * geometry and a geometry
- * @sqlop @p |=|
+ * @return On error return @p DBL_MAX
  */
 double
 nad_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
@@ -2039,7 +2035,7 @@ nad_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
  * @ingroup meos_rgeo_dist
  * @brief Return the nearest approach distance between a temporal rigid
  * geometry and a spatiotemporal box
- * @sqlop @p |=|
+ * @return On error return @p DBL_MAX
  */
 double
 nad_trgeometry_stbox(const Temporal *temp, const STBox *box)
@@ -2075,7 +2071,6 @@ nad_trgeometry_stbox(const Temporal *temp, const STBox *box)
  * @ingroup meos_rgeo_dist
  * @brief Return the nearest approach distance between a spatiotemporal box and
  * a temporal rigid geometry
- * @sqlop @p |=|
  */
 double
 nad_stbox_trgeometry(const STBox *box, const Temporal *temp)
@@ -2087,7 +2082,7 @@ nad_stbox_trgeometry(const STBox *box, const Temporal *temp)
  * @ingroup meos_rgeo_dist
  * @brief Return the nearest approach distance between two temporal rigid
  * geometries
- * @sqlop @p |=|
+ * @return On error return @p DBL_MAX
  */
 double
 nad_trgeometry_tpoint(const Temporal *temp1, const Temporal *temp2)
@@ -2109,7 +2104,7 @@ nad_trgeometry_tpoint(const Temporal *temp1, const Temporal *temp2)
  * @ingroup meos_rgeo_dist
  * @brief Return the nearest approach distance between two temporal rigid
  * geometries
- * @sqlop @p |=|
+ * @return On error return @p DBL_MAX
  */
 double
 nad_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2)
@@ -2135,7 +2130,7 @@ nad_trgeometry_trgeometry(const Temporal *temp1, const Temporal *temp2)
  * @ingroup meos_rgeo_dist
  * @brief Return the line connecting the nearest approach point between a
  * temporal rigid geometry and a geometry
- * @sqlfn shortestLine()
+ * @return On error return @p NULL
  * @csqlfn #Shortestline_trgeometry_geo()
  */
 GSERIALIZED *
@@ -2161,7 +2156,7 @@ shortestline_trgeometry_geo(const Temporal *temp, const GSERIALIZED *gs)
  * @ingroup meos_rgeo_dist
  * @brief Return the line connecting the nearest approach point between a
  * temporal rigid geometry and a temporal geometry point
- * @sqlfn shortestLine()
+ * @return On error return @p NULL
  * @csqlfn #Shortestline_trgeometry_tpoint()
  */
 GSERIALIZED *
@@ -2189,7 +2184,7 @@ shortestline_trgeometry_tpoint(const Temporal *temp1, const Temporal *temp2)
  * @ingroup meos_rgeo_dist
  * @brief Return the line connecting the nearest approach point between two
  * temporal rigid geometries
- * @sqlfn shortestLine()
+ * @return On error return @p NULL
  * @csqlfn #Shortestline_trgeometry_trgeometry()
  */
 GSERIALIZED *

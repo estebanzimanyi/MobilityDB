@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -422,7 +422,6 @@ interpolate_point4d_spheroid(const POINT4D *p1, const POINT4D *p2,
     p->x = rad2deg(longitude_radians_normalize(g.lon));
     p->y = rad2deg(latitude_radians_normalize(g.lat));
   }
-  return;
 }
 
 /*****************************************************************************
@@ -671,7 +670,6 @@ lwpointarr_sort(LWPOINT **points, int count)
 {
   qsort(points, (size_t) count, sizeof(LWPOINT *),
     (qsort_comparator) &lwpoint_sort_cmp);
-  return;
 }
 
 /**
@@ -1888,7 +1886,6 @@ point_grid(Datum value, bool hasz, const gridspec *grid, POINT4D *p)
     p->y = rint((p->y - grid->ipy) / grid->ysize) * grid->ysize + grid->ipy;
   if (hasz && grid->zsize > 0)
     p->z = rint((p->z - grid->ipz) / grid->zsize) * grid->zsize + grid->ipz;
-  return;
 }
 
 /**
@@ -2534,7 +2531,6 @@ tpointseq_twcentroid_iter(const TSequence *seq, bool hasz, interpType interp,
   if (hasz)
     *seqz = tsequence_make_free(instantsz, seq->count, seq->period.lower_inc,
       seq->period.upper_inc, interp, NORMALIZE);
-  return;
 }
 
 /**
@@ -3209,9 +3205,6 @@ bearing_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
 
 /*****************************************************************************/
 
-/* Defined in liblwgeom_internal.h */
-#define PGIS_FP_TOLERANCE 1e-12
-
 /**
  * @brief Calculate the distance between two geography points given as GEOS
  * geometries
@@ -3241,7 +3234,7 @@ geog_distance_geos(const GEOSGeometry *pt1, const GEOSGeometry *pt2)
   if ( s.a == s.b )
     return distance;
   /* Below tolerance, actual distance isn't of interest */
-  else if ( distance < 0.95 * PGIS_FP_TOLERANCE )
+  else if ( distance < 0.95 * FP_TOLERANCE )
     return distance;
   /* Close or greater than tolerance, get the real answer to be sure */
   else

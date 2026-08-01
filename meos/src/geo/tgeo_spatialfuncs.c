@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -100,7 +100,6 @@ datum_point4d(Datum value, POINT4D *p)
     p->x = point->x;
     p->y = point->y;
   }
-  return;
 }
 
 /**
@@ -1354,7 +1353,6 @@ tgeoinst_affine_iter(const TInstant *inst, const AFFINE *a, TInstant **result)
   GSERIALIZED *gs1 = geo_serialize(geo);
   *result = tinstant_make_free(PointerGetDatum(gs1), inst->temptype, inst->t);
   lwgeom_free(geo);
-  return;
 }
 
 /**
@@ -1451,7 +1449,6 @@ tgeoinst_scale_iter(const TInstant *inst, const POINT4D *factors,
   GSERIALIZED *gs1 = geo_serialize(geom);
   lwgeom_free(geom);
   *result = tinstant_make_free(PointerGetDatum(gs1), inst->temptype, inst->t);
-  return;
 }
 
 /**

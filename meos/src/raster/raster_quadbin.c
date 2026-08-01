@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -52,7 +52,10 @@
 #include <math.h>
 #include <stdint.h>
 #include <string.h>
-/* liblwgeom (vendored) */
+/* PostgreSQL */
+#include <postgres.h>
+#include <float.h>
+/* PostGIS */
 #include <liblwgeom.h>
 /* MEOS */
 #include <meos.h>
@@ -66,10 +69,6 @@
  * QUADBIN helpers (self-contained Morton decode + bbox, matching quadbin.c)
  *****************************************************************************/
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
 /* Bit-layout constants — identical to meos/src/quadbin/quadbin.c */
 #define QB_HEADER  UINT64_C(0x4000000000000000)
 #define QB_FOOTER  UINT64_C(0x000FFFFFFFFFFFFF)
@@ -80,7 +79,8 @@
  * on both axes; QUADBIN tile (x, y, z) covers 2*QB_MERC_MAX / 2^z metres. */
 #define QB_MERC_MAX  20037508.342789244
 
-static const uint64_t QB_B[6] = {
+static const uint64_t QB_B[6] =
+{
   UINT64_C(0x5555555555555555), UINT64_C(0x3333333333333333),
   UINT64_C(0x0F0F0F0F0F0F0F0F), UINT64_C(0x00FF00FF00FF00FF),
   UINT64_C(0x0000FFFF0000FFFF), UINT64_C(0x00000000FFFFFFFF)
@@ -269,8 +269,8 @@ raster_quadbin_from_bounds(double origin_x, double origin_y, double pixel_w,
 
 /**
  * @brief Read a single pixel value at (col, row) from a row-major byte array.
- *
- * Pixel stride = sizeof(pixtype); no alignment assumptions (uses memcpy).
+ * @details Pixel stride = sizeof(pixtype); no alignment assumptions
+ * (uses memcpy).
  */
 static double
 read_pixel(const uint8_t *pixels, int col, int row, int width,
@@ -379,8 +379,8 @@ raster_tile_value_quadbin(const uint8_t *pixels, uint16_t width,
     pfree(result_insts);
     return NULL;
   }
-  return (Temporal *) tsequence_make_free(result_insts, ninsts,
-                                          true, true, DISCRETE, NORMALIZE);
+  return (Temporal *) tsequence_make_free(result_insts, ninsts, true, true,
+    DISCRETE, NORMALIZE);
 }
 
 /*****************************************************************************

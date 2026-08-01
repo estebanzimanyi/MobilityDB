@@ -1,12 +1,12 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -97,9 +97,9 @@ extern GSERIALIZED *cell_boundary_to_gs(const CellBoundary *bnd);
  * (th3index_latlng.c::tpointseq_densify_to_th3index). Nyquist step
  * = (edge_m / 2) / 111320 m-per-degree; cell lookup is a thin
  * latLngToCell wrapper that returns 0 on libh3 error. */
-extern double h3_sample_step_deg(int32 resolution);
+extern double h3_sample_step_deg(uint32_t resolution);
 extern H3Index h3_latlng_deg_to_cell(double lat_deg, double lng_deg,
-  int32 resolution);
+  uint32_t resolution);
 
 /* Hierarchy — next-resolution conveniences. Bodies in
  * th3index_hierarchy.c. */

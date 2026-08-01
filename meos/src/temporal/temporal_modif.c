@@ -518,7 +518,6 @@ temporal_convert_same_subtype(const Temporal *temp1, const Temporal *temp2,
     *out1 = new;
     *out2 = (Temporal *) temp2;
   }
-  return;
 }
 
 /**

@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -1481,7 +1481,6 @@ matrix_print(double *dist, int count1, int count2)
   /* make Codacy quiet by removing last assignment */
   snprintf(buf + len, MAX_MATRIX_LEN - len - 1, "\n"); 
   meos_error(WARNING, 0, "MATRIX:\n%s", buf);
-  return;
 }
 
 /* Maximum length of the path string */
@@ -1500,7 +1499,6 @@ path_print(Match *path, int count)
     len += snprintf(buf + len, MAX_PATH_LEN - len - 1,
       "%d: (%2d,%2d)\n", k++, path[i].i, path[i].j);
   meos_error(WARNING, 0, "PATH:\n%s", buf);
-  return;
 }
 #endif
 
@@ -1615,7 +1613,6 @@ tinstarr_similarity_matrix1(TInstant **instants1, int count1,
       }
     }
   }
-  return;
 }
 
 /**
@@ -2030,7 +2027,6 @@ tfloatseq_findsplit(const TSequence *seq, int i1, int i2, int *split,
       *dist = d;
     }
   }
-  return;
 }
 
 /***********************************************************************
@@ -2209,7 +2205,6 @@ tpointseq_findsplit(const TSequence *seq, int i1, int i2, bool syncdist,
     }
   }
   *dist = d;
-  return;
 }
 
 /*****************************************************************************/

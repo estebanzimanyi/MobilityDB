@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -162,7 +162,6 @@ default_error_handler(int errlevel, int errcode, const char *errmsg)
   meos_errno_set(errcode);
   if (errlevel == ERROR)
     exit(EXIT_FAILURE);
-  return;
 }
 
 /**
@@ -174,7 +173,6 @@ error_handler_errno(int errlevel pg_attribute_unused(), int errcode,
 {
   perror(errmsg);
   meos_errno_set(errcode);
-  return;
 }
 
 /**
@@ -190,7 +188,6 @@ meos_initialize_error_handler(error_handler_fn err_handler)
    * pgtypes vendoring reverted). */
   __atomic_store_n(&MEOS_ERROR_HANDLER,
     err_handler ? err_handler : &default_error_handler, __ATOMIC_RELEASE);
-  return;
 }
 
 /**
@@ -204,7 +201,6 @@ noexit_error_handler(int errlevel __attribute__((__unused__)), int errcode,
   const char *errmsg __attribute__((__unused__)))
 {
   meos_errno_set(errcode);
-  return;
 }
 
 /**
@@ -217,7 +213,6 @@ void
 meos_initialize_noexit_error_handler(void)
 {
   __atomic_store_n(&MEOS_ERROR_HANDLER, &noexit_error_handler, __ATOMIC_RELEASE);
-  return;
 }
 #endif /* MEOS */
 
@@ -231,7 +226,6 @@ static void
 pg_error(int errlevel, const char *errmsg)
 {
   ereport(errlevel, (errmsg_internal("%s", errmsg)));
-  return;
 }
 #endif /* ! MEOS */
 
@@ -275,7 +269,6 @@ meos_error(int errlevel, int errcode, const char *format, ...)
 #else
     pg_error(errlevel, strdup(buffer));
 #endif /* MEOS */
-  return;
 }
 
 /*****************************************************************************/

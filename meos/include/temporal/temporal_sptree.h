@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -74,7 +74,7 @@ struct SPTree
   MeosType bboxtype;    /**< Type of the bounding box */
   MeosType spantype;    /**< Span type (span box types only) */
   MeosType basetype;    /**< Base type (span box types only) */
-  size_t boxsize;       /**< Size of a bounding box */
+  size_t bboxsize;       /**< Size of a bounding box */
   size_t nodeboxsize;   /**< Size of an inner node region */
   int dims;             /**< Number of dimensions of the box */
   int nchild;           /**< Number of children per node */

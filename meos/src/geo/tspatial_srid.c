@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -289,7 +289,6 @@ tspatialinst_set_srid(TInstant *inst, int32_t srid)
   assert(inst); assert(tspatial_type(inst->temptype));
   MeosType basetype = temptype_basetype(inst->temptype);
   spatial_set_srid(tinstant_value_p(inst), basetype, srid);
-  return;
 }
 
 /**
@@ -308,7 +307,6 @@ tspatialseq_set_srid(TSequence *seq, int32_t srid)
   /* Set the SRID of the bounding box */
   STBox *box = TSEQUENCE_BBOX_PTR(seq);
   box->srid = srid;
-  return;
 }
 
 /**
@@ -330,7 +328,6 @@ tspatialseqset_set_srid(TSequenceSet *ss, int32_t srid)
   /* Set the SRID of the bounding box */
   STBox *box = TSEQUENCESET_BBOX_PTR(ss);
   box->srid = srid;
-  return;
 }
 
 /**

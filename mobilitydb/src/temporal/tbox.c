@@ -387,7 +387,6 @@ spanset_tbox_slice(Datum d, TBox *box)
   else
     tstzspan_set_tbox(&ss->span, box);
   PG_FREE_IF_COPY_P(ss, DatumGetPointer(d));
-  return;
 }
 
 PGDLLEXPORT Datum Spanset_to_tbox(PG_FUNCTION_ARGS);

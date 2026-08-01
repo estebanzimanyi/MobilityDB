@@ -1,12 +1,12 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -46,8 +46,8 @@ extern H3Index h3_cells_to_directed_edge_meos(H3Index origin,
 extern bool h3_is_valid_directed_edge_meos(H3Index edge);
 extern H3Index h3_get_directed_edge_origin_meos(H3Index edge);
 extern H3Index h3_get_directed_edge_destination_meos(H3Index edge);
-extern H3Index h3_cell_to_parent_meos(H3Index origin, int32 resolution);
-extern H3Index h3_cell_to_center_child_meos(H3Index origin, int32 resolution);
+extern H3Index h3_cell_to_parent_meos(H3Index origin, uint32_t resolution);
+extern H3Index h3_cell_to_center_child_meos(H3Index origin, uint32_t resolution);
 extern int64 h3_cell_to_child_pos_meos(H3Index child, int32 parentRes);
 extern H3Index h3_child_pos_to_cell_meos(int64 childPos, H3Index parent,
   int32 childRes);
@@ -56,7 +56,7 @@ extern int32 h3_get_base_cell_number_meos(H3Index hex);
 extern bool h3_is_valid_cell_meos(H3Index hex);
 extern bool h3_is_res_class_iii_meos(H3Index hex);
 extern bool h3_is_pentagon_meos(H3Index hex);
-extern int64 h3_get_num_cells_meos(int32 resolution);
+extern int64 h3_get_num_cells_meos(uint32_t resolution);
 extern int64 h3_grid_distance_meos(H3Index originIndex, H3Index h3Index);
 extern H3Index h3_cell_to_vertex_meos(H3Index cell, int32 vertexNum);
 extern bool h3_is_valid_vertex_meos(H3Index vertex);

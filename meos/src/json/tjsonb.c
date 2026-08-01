@@ -1,12 +1,12 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -250,8 +250,7 @@ TSequenceSet *
 tjsonbseqset_from_base_tstzspanset(const Jsonb *jb, const SpanSet *ss)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(jb, NULL);
-  VALIDATE_TSTZSPANSET(ss, NULL);
+  VALIDATE_NOT_NULL(jb, NULL); VALIDATE_TSTZSPANSET(ss, NULL);
   /* Delegate to the generic tsequenceset constructor, with STEP interpolation */
   return tsequenceset_from_base_tstzspanset(PointerGetDatum(jb),T_TJSONB, ss,
     STEP);

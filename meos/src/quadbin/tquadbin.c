@@ -1,12 +1,12 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -30,23 +30,20 @@
 /**
  * @file
  * @brief Type-inheritance boilerplate for `tquadbin`.
- *
- * This file is the analogue of `meos/src/h3/th3index.c`. Every
+ * @details This file is the analogue of `meos/src/h3/th3index.c`. Every
  * temporal type carries this layer to specialise the generic
  * `Temporal` machinery for its own value type:
- *
- *   * argument validators for every supported operand pair,
- *   * type-specific input parsers that delegate to the generic
- *     int-8 parser but tag the result with `T_TQUADBIN`,
- *   * type-specific constructors (`tquadbin_make`, `tquadbininst_make`,
- *     `tquadbinseq_make`, `tquadbinseqset_make`),
- *   * type-specific accessors (`tquadbin_start_value`,
- *     `tquadbin_end_value`, `tquadbin_value_n`, `tquadbin_values`,
- *     `tquadbin_value_at_timestamptz`) that hide the Datum-packing
- *     convention from callers,
- *   * MEOS-level conversions to and from `tbigint` for callers that
+ * - argument validators for every supported operand pair,
+ * - type-specific input parsers that delegate to the generic
+ *   int-8 parser but tag the result with `T_TQUADBIN`,
+ * - type-specific constructors (`tquadbin_make`, `tquadbininst_make`,
+ *   `tquadbinseq_make`, `tquadbinseqset_make`),
+ * - type-specific accessors (`tquadbin_start_value`,
+ *   `tquadbin_end_value`, `tquadbin_value_n`, `tquadbin_values`,
+ *   `tquadbin_value_at_timestamptz`) that hide the Datum-packing
+ *   convention from callers,
+ * - MEOS-level conversions to and from `tbigint` for callers that
  *     want the bit-identical representation without a SQL round trip.
- *
  * Quadbin cells are square Web-Mercator (planar) cells; the temporal
  * point bridge therefore uses `tgeompoint` rather than `tgeogpoint`.
  */
@@ -85,8 +82,7 @@
 bool
 ensure_valid_tquadbin_tquadbin(const Temporal *temp1, const Temporal *temp2)
 {
-  VALIDATE_TQUADBIN(temp1, false);
-  VALIDATE_TQUADBIN(temp2, false);
+  VALIDATE_TQUADBIN(temp1, false); VALIDATE_TQUADBIN(temp2, false);
   return true;
 }
 
@@ -118,10 +114,7 @@ ensure_valid_tquadbin_quadbin(const Temporal *temp, Quadbin cell)
 bool
 ensure_valid_tquadbin_tgeompoint(const Temporal *temp1, const Temporal *temp2)
 {
-  VALIDATE_TQUADBIN(temp1, false);
-  if (! ensure_not_null((void *) temp2) ||
-      ! ensure_temporal_isof_type((Temporal *) temp2, T_TGEOMPOINT))
-    return false;
+  VALIDATE_TQUADBIN(temp1, false); VALIDATE_TGEOMPOINT(temp2, false);
   return true;
 }
 
@@ -143,28 +136,28 @@ ensure_valid_tquadbin_tgeompoint(const Temporal *temp1, const Temporal *temp2)
 Temporal *
 tquadbin_in(const char *str)
 {
+  /* Ensure the validity of the arguments */
   if (! ensure_not_null((void *) str))
     return NULL;
   return temporal_parse(&str, T_TQUADBIN);
 }
 
 /**
- * @ingroup meos_quadbin_inout
+ * @ingroup meos_internal_quadbin_inout
  * @brief Parse a temporal quadbin cell instant from its Well-Known Text
  * representation.
  */
 TInstant *
 tquadbininst_in(const char *str)
 {
+  /* Call the superclass function */
   Temporal *temp = tquadbin_in(str);
-  if (! temp)
-    return NULL;
   assert(temp->subtype == TINSTANT);
   return (TInstant *) temp;
 }
 
 /**
- * @ingroup meos_quadbin_inout
+ * @ingroup meos_internal_quadbin_inout
  * @brief Parse a temporal quadbin cell sequence from its Well-Known Text
  * representation.
  *
@@ -173,27 +166,24 @@ tquadbininst_in(const char *str)
  * parity with the generic API and discarded.
  */
 TSequence *
-tquadbinseq_in(const char *str, interpType interp)
+tquadbinseq_in(const char *str, interpType interp UNUSED)
 {
-  (void) interp;
+  /* Call the superclass function */
   Temporal *temp = tquadbin_in(str);
-  if (! temp)
-    return NULL;
   assert(temp->subtype == TSEQUENCE);
   return (TSequence *) temp;
 }
 
 /**
- * @ingroup meos_quadbin_inout
+ * @ingroup meos_internal_quadbin_inout
  * @brief Parse a temporal quadbin cell sequence set from its Well-Known Text
  * representation.
  */
 TSequenceSet *
 tquadbinseqset_in(const char *str)
 {
+  /* Call the superclass function */
   Temporal *temp = tquadbin_in(str);
-  if (! temp)
-    return NULL;
   assert(temp->subtype == TSEQUENCESET);
   return (TSequenceSet *) temp;
 }
@@ -334,11 +324,12 @@ tquadbin_value_n(const Temporal *temp, int n, Quadbin *result)
 Quadbin *
 tquadbin_values(const Temporal *temp, int *count)
 {
+  /* Ensure the validity of the arguments */
+  *count = 0; /* The out parameter is defined even when a later check fails */
+  VALIDATE_TQUADBIN(temp, NULL);
   if (! ensure_not_null((void *) count))
     return NULL;
-  /* The out parameter is defined even when a later check fails */
-  *count = 0;
-  VALIDATE_TQUADBIN(temp, NULL);
+  
   Datum *datums = temporal_values(temp, count);
   if (datums == NULL)
     return NULL;
@@ -365,9 +356,9 @@ bool
 tquadbin_value_at_timestamptz(const Temporal *temp, TimestampTz t,
   bool strict, Quadbin *result)
 {
-  VALIDATE_TQUADBIN(temp, false);
-  if (! ensure_not_null((void *) result))
-    return false;
+  /* Ensure the validity of the arguments */
+  VALIDATE_TQUADBIN(temp, false); VALIDATE_NOT_NULL(result, false);
+
   Datum d;
   if (! temporal_value_at_timestamptz(temp, t, strict, &d))
     return false;
@@ -400,9 +391,8 @@ datum_quadbin_identity(Datum d)
 Temporal *
 tbigint_to_tquadbin(const Temporal *temp)
 {
-  if (! ensure_not_null((void *) temp) ||
-      ! ensure_temporal_isof_type((Temporal *) temp, T_TBIGINT))
-    return NULL;
+  /* Ensure the validity of the arguments */
+  VALIDATE_TBIGINT(temp, NULL);
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));
   lfinfo.func = (varfunc) datum_quadbin_identity;
@@ -420,6 +410,7 @@ tbigint_to_tquadbin(const Temporal *temp)
 Temporal *
 tquadbin_to_tbigint(const Temporal *temp)
 {
+  /* Ensure the validity of the arguments */
   VALIDATE_TQUADBIN(temp, NULL);
   LiftedFunctionInfo lfinfo;
   memset(&lfinfo, 0, sizeof(LiftedFunctionInfo));

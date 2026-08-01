@@ -1,12 +1,12 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -118,7 +118,7 @@ extern void quadbin_cell_to_bounding_box(Quadbin cell, double *xmin,
 
 /* Geometry (lon/lat, SRID 4326) */
 extern Quadbin geo_to_quadbin_cell(const GSERIALIZED *point,
-  int32 resolution);
+  uint32_t resolution);
 extern GSERIALIZED *quadbin_cell_to_geompoint(Quadbin cell);
 extern GSERIALIZED *quadbin_cell_to_geom(Quadbin cell);
 
@@ -220,12 +220,12 @@ extern Temporal *tne_tquadbin_tquadbin(const Temporal *temp1,
 // extern Temporal *tquadbin_is_valid_cell(const Temporal *temp);
 
 /* Hierarchy */
-// extern Temporal *tquadbin_cell_to_parent(const Temporal *temp, int32 resolution);
+// extern Temporal *tquadbin_cell_to_parent(const Temporal *temp, uint32_t resolution);
 // extern Temporal *tquadbin_cell_to_parent_next(const Temporal *temp);
-// extern Temporal *tquadbin_cell_to_children(const Temporal *temp, int32 resolution);
+// extern Temporal *tquadbin_cell_to_children(const Temporal *temp, uint32_t resolution);
 
 /* Lat/Lng conversion (Web-Mercator centroid / boundary) */
-// extern Temporal *tgeompoint_to_tquadbin(const Temporal *temp, int32 resolution);
+// extern Temporal *tgeompoint_to_tquadbin(const Temporal *temp, uint32_t resolution);
 // extern Temporal *tquadbin_to_tgeompoint(const Temporal *temp);
 // extern Temporal *tquadbin_cell_to_boundary(const Temporal *temp);
 
@@ -238,7 +238,7 @@ extern Temporal *tquadbin_cell_to_quadkey(const Temporal *temp);
 // extern Temporal *tquadbin_cell_area(const Temporal *temp);
 
 /* Static geometry → quadbin cell set + ever-intersects predicate */
-// extern Set *geo_to_quadbin_set(const GSERIALIZED *gs, int32 resolution);
+// extern Set *geo_to_quadbin_set(const GSERIALIZED *gs, uint32_t resolution);
 // extern int ever_eq_quadbinset_tquadbin(const Set *cells, const Temporal *tqb);
 
 #endif /* __MEOS_QUADBIN_H__ */

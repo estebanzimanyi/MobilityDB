@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -1256,7 +1256,6 @@ temporal_set_tstzspan(const Temporal *temp, Span *s)
     default: /* TSEQUENCESET */
       tsequenceset_set_tstzspan((TSequenceSet *) temp, s);
   }
-  return;
 }
 
 /**
@@ -1300,7 +1299,6 @@ tnumber_set_span(const Temporal *temp, Span *s)
     TBox *box = (TBox *) temporal_bbox_ptr(temp);
     memcpy(s, &box->span, sizeof(Span));
   }
-  return;
 }
 
 /**
@@ -1646,7 +1644,6 @@ temporal_restart(Temporal *temp, int count)
     tsequence_restart((TSequence *) temp, count);
   else /* temp->subtype == TSEQUENCESET */
     tsequenceset_restart((TSequenceSet *) temp, count);
-  return;
 }
 #endif /* MEOS */
 
@@ -3163,8 +3160,7 @@ tsequence_derivative(const TSequence *seq)
       datum_distance(value1, value2, basetype, seq->flags) / 
         ((double)(inst2->t - inst1->t) / 1000000);
     instants[i] = tinstant_make(Float8GetDatum(derivative), T_TFLOAT, inst1->t);
-    inst1 = inst2;
-    value1 = value2;
+    inst1 = inst2; value1 = value2;
   }
   instants[seq->count - 1] = tinstant_make(Float8GetDatum(derivative),
     T_TFLOAT, seq->period.upper);
@@ -3582,6 +3578,7 @@ temporal_ne(const Temporal *temp1, const Temporal *temp2)
  * @brief Return -1, 0, or 1 depending on whether the first temporal value is
  * less than, equal to, or greater than the second one
  * @param[in] temp1,temp2 Temporal values
+ * @return On error return INT_MAX
  * @note Function used for B-tree comparison
  * @csqlfn #Temporal_cmp()
  */
@@ -3711,14 +3708,14 @@ temporal_gt(const Temporal *temp1, const Temporal *temp2)
  * @ingroup meos_temporal_accessor
  * @brief Return the 32-bit hash value of a temporal value
  * @param[in] temp Temporal value
- * @return On error return @p INT_MAX
+ * @return On error return @p UINT32_MAX
  * @csqlfn #Temporal_hash()
  */
 uint32
 temporal_hash(const Temporal *temp)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(temp, INT_MAX);
+  VALIDATE_NOT_NULL(temp, UINT32_MAX);
 
   assert(temptype_subtype(temp->subtype));
   switch (temp->subtype)
@@ -3737,14 +3734,14 @@ temporal_hash(const Temporal *temp)
  * @brief Return the 64-bit hash value of a temporal value using a seed
  * @param[in] temp Temporal value
  * @param[in] seed Seed
- * @return On error return @p LONG_MAX
+ * @return On error return @p UINT64_MAX
  * @csqlfn #Temporal_hash_extended()
  */
 uint64
 temporal_hash_extended(const Temporal *temp, uint64 seed)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(temp, LONG_MAX);
+  VALIDATE_NOT_NULL(temp, UINT64_MAX);
 
   assert(temptype_subtype(temp->subtype));
   switch (temp->subtype)

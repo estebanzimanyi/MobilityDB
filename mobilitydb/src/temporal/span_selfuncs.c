@@ -801,7 +801,6 @@ span_const_to_span(Node *other, Span *span)
     const SpanSet *s = DatumGetSpanSetP(((Const *) other)->constvalue);
     memcpy(span, &s->span, sizeof(Span));
   }
-  return;
 }
 
 /**

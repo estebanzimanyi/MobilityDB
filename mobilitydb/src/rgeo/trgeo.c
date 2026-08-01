@@ -32,7 +32,6 @@
  * @brief General functions for temporal rigid geometries
  */
 
-
 #include "rgeo/trgeo.h"
 
 /* C */
@@ -368,8 +367,8 @@ Trgeometry_seqset_constructor_gaps(PG_FUNCTION_ARGS)
   /* Extract the array of instants */
   int count;
   TInstant **instants = (TInstant **) temparr_extract(array, &count);
-  TSequenceSet *result = trgeometryseqset_make_gaps(trgeoinst_geom_p(instants[0]),
-    instants, count, interp, maxt, maxdist);
+  TSequenceSet *result = trgeometryseqset_make_gaps(
+    trgeoinst_geom_p(instants[0]), instants, count, interp, maxt, maxdist);
   pfree(instants);
   PG_FREE_IF_COPY(array, 0);
   PG_RETURN_POINTER(result);

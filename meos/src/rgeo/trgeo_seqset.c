@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -239,11 +239,11 @@ trgeoseqset_make_exp(const GSERIALIZED *geom, TSequence **sequences,
  * @param[in] normalize True if the resulting value should be normalized.
  * In particular, normalize is false when synchronizing two
  * temporal sequence sets before applying an operation to them.
- * @sqlfn tbool_seqset(), tint_seqset(), tfloat_seqset(), ttext_seqset(), etc.
+ * @csqlfn Trgeometry_seqset_constructor()
  */
 TSequenceSet *
-trgeometryseqset_make(const GSERIALIZED *geom, TSequence **sequences, int count,
-  bool normalize)
+trgeometryseqset_make(const GSERIALIZED *geom, TSequence **sequences,
+  int count, bool normalize)
 {
   return trgeoseqset_make_exp(geom, sequences, count, count, normalize);
 }
@@ -306,8 +306,7 @@ trgeoseqset_make_valid_gaps(const GSERIALIZED *geom, TInstant **instants,
  * @param[in] interp Interpolation
  * @param[in] maxdist Maximum distance for defining a gap
  * @param[in] maxt Maximum time interval for defining a gap, may be `NULL`
- * @sqlfn tint_seqset_gaps(), tfloat_seqset_gaps(),
- * tgeompoint_seqset_gaps(), tgeogpoint_seqset_gaps()
+ * @csqlfn Trgeometry_seqset_constructor_gaps()
  */
 TSequenceSet *
 trgeometryseqset_make_gaps(const GSERIALIZED *geom, TInstant **instants,

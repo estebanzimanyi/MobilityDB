@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -85,7 +85,6 @@ trgeoinst_set_pose(TInstant *inst)
     SET_VARSIZE(inst, trgeoinst_pose_varsize(inst));
     MEOS_FLAGS_SET_GEOM(inst->flags, NO_GEOM);
   }
-  return;
 }
 
 /**

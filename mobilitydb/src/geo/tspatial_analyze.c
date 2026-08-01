@@ -74,7 +74,7 @@
 #include "pg_temporal/span_analyze.h"
 #include "pg_temporal/temporal_analyze.h"
 #if POINTCLOUD
-  #include "pointcloud/tpc_boxops.h"
+  #include "pointcloud/tpcbox.h" /* tpcbox_set_stbox */
 #endif
 
 /*****************************************************************************
@@ -320,7 +320,6 @@ nd_box_from_gbox(const GBOX *gbox, ND_BOX *nd_box)
     nd_box->min[d] = (float4) gbox->mmin;
     nd_box->max[d] = (float4) gbox->mmax;
   }
-  return;
 }
 
 /**
@@ -988,7 +987,6 @@ gserialized_compute_stats(VacAttrStats *stats, AnalyzeAttrFetchFunc fetchfunc,
   stats->stawidth = (int32) (total_width / notnull_cnt);
   stats->stadistinct = -1.0f;
   stats->stats_valid = true;
-  return;
 }
 
 /*****************************************************************************
@@ -1068,8 +1066,6 @@ spatialset_compute_stats(VacAttrStats *stats, AnalyzeAttrFetchFunc fetchfunc,
     stats->stawidth = 0;       /* unknown */
     stats->stadistinct = 0.0;  /* unknown */
   }
-
-  return;
 }
 
 /*****************************************************************************
@@ -1171,10 +1167,7 @@ tspatial_compute_stats(VacAttrStats *stats, AnalyzeAttrFetchFunc fetchfunc,
     stats->stadistinct = 0.0;  /* unknown */
   }
 
-  pfree(time_lowers);
-  pfree(time_uppers);
-  pfree(time_lengths);
-  return;
+  pfree(time_lowers); pfree(time_uppers); pfree(time_lengths);
 }
 
 /*****************************************************************************/

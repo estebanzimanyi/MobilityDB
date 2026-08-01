@@ -71,7 +71,6 @@ pg_error(const char *fmt, va_list ap)
   char errmsg[PGC_ERRMSG_MAXLEN];
   vsnprintf(errmsg, PGC_ERRMSG_MAXLEN, fmt, ap);
   ereport(ERROR, (errmsg_internal("%s", errmsg)));
-  return;
 }
 
 /**
@@ -83,7 +82,6 @@ pg_notice(const char *fmt, va_list ap)
   char errmsg[PGC_ERRMSG_MAXLEN];
   vsnprintf(errmsg, PGC_ERRMSG_MAXLEN, fmt, ap);
   ereport(NOTICE, (errmsg_internal("%s", errmsg)));
-  return;
 }
 
 #if POINTCLOUD
@@ -97,7 +95,6 @@ pg_info(const char *fmt, va_list ap)
   char errmsg[PGC_ERRMSG_MAXLEN];
   vsnprintf (errmsg, PGC_ERRMSG_MAXLEN, fmt, ap);
   ereport(INFO, (errmsg_internal("%s", errmsg)));
-  return;
 }
 #endif
 
@@ -132,7 +129,6 @@ mobilitydb_init()
    * schema XML embedded in incoming cross-cluster WKB blobs. */
   meos_pc_parse_xml_fn = mobilitydb_pc_parse_xml;
 #endif
-  return;
 }
 
 /*****************************************************************************

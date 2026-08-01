@@ -33,17 +33,17 @@
  * trajectories.
  *
  * Sampling functions:
- *   raster_value(raster, tgeompoint, band integer DEFAULT 1) → tfloat
- *   raster_tile_value_quadbin(bytea, ..., tgeompoint) → tfloat
- *   trajectory_quadbins(tgeompoint, integer) → bigint[]
+ *   rasterValue(raster, tgeompoint, band integer DEFAULT 1) → tfloat
+ *   rasterTileValueQuadbin(bytea, ..., tgeompoint) → tfloat
+ *   quadbins(tgeompoint, integer) → bigint[]
  *
  * Restriction functions (SQL-defined, compose the sampling operators):
  *   atRasterValue(tgeompoint, raster, floatspan, band DEFAULT 1) → tgeompoint
  *   minusRasterValue(tgeompoint, raster, floatspan, band DEFAULT 1) → tgeompoint
  *
  * Ever/always predicates (SQL-defined):
- *   eRasterValue(raster, tgeompoint, floatspan, band DEFAULT 1) → boolean
- *   aRasterValue(raster, tgeompoint, floatspan, band DEFAULT 1) → boolean
+ *   everRasterValue(raster, tgeompoint, floatspan, band DEFAULT 1) → boolean
+ *   alwaysRasterValue(raster, tgeompoint, floatspan, band DEFAULT 1) → boolean
  *
  * This file is compiled into the mobilitydb extension only when
  * MobilityDB is built with `-DRASTER=ON`; the generated
@@ -94,16 +94,11 @@ CREATE TYPE raquet (
  * raquet constructor
  ******************************************************************************/
 
-CREATE FUNCTION raquet(
-    pixels  bytea,
-    width   integer,
-    height  integer,
-    quadbin bigint,
-    pixtype text,
-    nodata  float8 DEFAULT NULL
-) RETURNS raquet
-  AS 'MODULE_PATHNAME', 'Raquet_constructor'
-  LANGUAGE C IMMUTABLE;
+CREATE FUNCTION raquet(pixels  bytea, width integer, height integer,
+  quadbin bigint, pixtype text, nodata float8 DEFAULT NULL) 
+RETURNS raquet
+AS 'MODULE_PATHNAME', 'Raquet_constructor'
+LANGUAGE C IMMUTABLE;
 
 /**
  * @ingroup mobilitydb_raster
@@ -113,15 +108,13 @@ CREATE FUNCTION raquet(
  * geotransform and EPSG:3857 spatial reference
  * @csqlfn #Raquet_read()
  */
-CREATE FUNCTION raquet_read(
-    rasterfile bytea,
-    quadbin    bigint DEFAULT NULL
-) RETURNS raquet
-  AS 'MODULE_PATHNAME', 'Raquet_read'
-  LANGUAGE C IMMUTABLE;
+CREATE FUNCTION raquetRead(rasterfile bytea, quadbin bigint DEFAULT NULL)
+RETURNS raquet
+AS 'MODULE_PATHNAME', 'Raquet_read'
+LANGUAGE C IMMUTABLE;
 
 /******************************************************************************
- * raster_value
+ * rasterValue
  *****************************************************************************/
 
 /**
@@ -133,47 +126,39 @@ CREATE FUNCTION raquet_read(
  * @param[in] band Band number (1-based, default 1)
  * @csqlfn #raster_value()
  */
-CREATE OR REPLACE FUNCTION raster_value(
-    rast  raster,
-    traj  tgeompoint,
-    band  integer DEFAULT 1
-) RETURNS tfloat
-  AS 'MODULE_PATHNAME', 'Raster_value'
-  LANGUAGE C STRICT;
+CREATE OR REPLACE FUNCTION rasterValue(rast  raster, traj tgeompoint,
+  band integer DEFAULT 1)
+RETURNS tfloat
+AS 'MODULE_PATHNAME', 'Raster_value'
+LANGUAGE C STRICT;
 
 /******************************************************************************
- * raster_tile_value_quadbin
+ * rasterTileValueQuadbin
  *****************************************************************************/
 
 /**
  * @ingroup mobilitydb_raster
  * @brief Return the values of a Raquet raster chip sampled at the instants of
  * a trajectory, using a QUADBIN cell to determine the tile georeferencing
- * @param[in] pixels    Row-major pixel bytes
- * @param[in] width     Tile width in pixels
- * @param[in] height    Tile height in pixels
- * @param[in] quadbin   CARTO QUADBIN cell identifier
- * @param[in] pixtype   Pixel type: UINT8 | INT16 | INT32 | FLOAT32 | FLOAT64
- * @param[in] nodata    Nodata sentinel value
+ * @param[in] pixels Row-major pixel bytes
+ * @param[in] width Tile width in pixels
+ * @param[in] height Tile height in pixels
+ * @param[in] quadbin CARTO QUADBIN cell identifier
+ * @param[in] pixtype Pixel type: UINT8 | INT16 | INT32 | FLOAT32 | FLOAT64
+ * @param[in] nodata Nodata sentinel value
  * @param[in] has_nodata Enable nodata filtering
- * @param[in] traj      Trajectory (SRID 4326)
+ * @param[in] traj Trajectory (SRID 4326)
  * @csqlfn #Raster_tile_value_quadbin()
  */
-CREATE OR REPLACE FUNCTION raster_tile_value_quadbin(
-    pixels     bytea,
-    width      integer,
-    height     integer,
-    quadbin    bigint,
-    pixtype    text,
-    nodata     float8,
-    has_nodata boolean,
-    traj       tgeompoint
-) RETURNS tfloat
-  AS 'MODULE_PATHNAME', 'Raster_tile_value_quadbin'
-  LANGUAGE C STRICT;
+CREATE OR REPLACE FUNCTION rasterTileValueQuadbin(pixels bytea,
+  width integer, height integer, quadbin bigint, pixtype text, nodata float8,
+  has_nodata boolean, traj tgeompoint)
+RETURNS tfloat
+AS 'MODULE_PATHNAME', 'Raster_tile_value_quadbin'
+LANGUAGE C STRICT;
 
 /******************************************************************************
- * raster_tile_value
+ * rasterTileValue
  *****************************************************************************/
 
 /**
@@ -183,12 +168,10 @@ CREATE OR REPLACE FUNCTION raster_tile_value_quadbin(
  * @param[in] traj Trajectory
  * @csqlfn #Raster_tile_value()
  */
-CREATE FUNCTION raster_tile_value(
-    rast raquet,
-    traj tgeompoint
-) RETURNS tfloat
-  AS 'MODULE_PATHNAME', 'Raster_tile_value'
-  LANGUAGE C STRICT;
+CREATE FUNCTION rasterTileValue(rast raquet, traj tgeompoint)
+RETURNS tfloat
+AS 'MODULE_PATHNAME', 'Raster_tile_value'
+LANGUAGE C STRICT;
 
 /**
  * @ingroup mobilitydb_raster
@@ -198,15 +181,13 @@ CREATE FUNCTION raster_tile_value(
  * @param[in] traj Trajectory
  * @csqlfn #Raster_tile_value_array()
  */
-CREATE FUNCTION raster_tile_value(
-    rast raquet[],
-    traj tgeompoint
-) RETURNS tfloat
-  AS 'MODULE_PATHNAME', 'Raster_tile_value_array'
-  LANGUAGE C STRICT;
+CREATE FUNCTION rasterTileValue(rast raquet[], traj tgeompoint)
+RETURNS tfloat
+AS 'MODULE_PATHNAME', 'Raster_tile_value_array'
+LANGUAGE C STRICT;
 
 /******************************************************************************
- * trajectory_quadbins
+ * quadbins
  *****************************************************************************/
 
 /**
@@ -217,12 +198,10 @@ CREATE FUNCTION raster_tile_value(
  * @param[in] zoom  QUADBIN zoom level (0–15)
  * @csqlfn #Trajectory_quadbins()
  */
-CREATE OR REPLACE FUNCTION trajectory_quadbins(
-    traj  tgeompoint,
-    zoom  integer
-) RETURNS bigint[]
-  AS 'MODULE_PATHNAME', 'Trajectory_quadbins'
-  LANGUAGE C STRICT;
+CREATE OR REPLACE FUNCTION quadbins(traj tgeompoint, zoom  integer)
+RETURNS bigint[]
+AS 'MODULE_PATHNAME', 'Trajectory_quadbins'
+LANGUAGE C STRICT;
 
 /******************************************************************************
  * atRasterValue
@@ -238,14 +217,11 @@ CREATE OR REPLACE FUNCTION trajectory_quadbins(
  * @param[in] band  Band number (1-based, default 1)
  * @csqlfn #atRasterValue()
  */
-CREATE OR REPLACE FUNCTION atRasterValue(
-    traj  tgeompoint,
-    rast  raster,
-    vspan floatspan,
-    band  integer DEFAULT 1
-) RETURNS tgeompoint AS $$
-  SELECT atTime($1, getTime(atSpan(v, $3)))
-  FROM (SELECT raster_value($2, $1, $4) AS v) t
+CREATE OR REPLACE FUNCTION atRasterValue(traj tgeompoint, rast raster,
+ vspan floatspan, band  integer DEFAULT 1)
+RETURNS tgeompoint AS 
+$$ SELECT atTime($1, getTime(atSpan(v, $3))) 
+   FROM (SELECT rasterValue($2, $1, $4) AS v) t
 $$ LANGUAGE SQL STRICT;
 
 /******************************************************************************
@@ -262,18 +238,16 @@ $$ LANGUAGE SQL STRICT;
  * @param[in] band  Band number (1-based, default 1)
  * @csqlfn #minusRasterValue()
  */
-CREATE OR REPLACE FUNCTION minusRasterValue(
-    traj  tgeompoint,
-    rast  raster,
-    vspan floatspan,
-    band  integer DEFAULT 1
-) RETURNS tgeompoint AS $$
+CREATE OR REPLACE FUNCTION minusRasterValue(traj tgeompoint, rast raster,
+  vspan floatspan, band  integer DEFAULT 1)
+RETURNS tgeompoint AS
+$$
   SELECT atTime($1, getTime(minusSpan(v, $3)))
-  FROM (SELECT raster_value($2, $1, $4) AS v) t
+  FROM (SELECT rasterValue($2, $1, $4) AS v) t
 $$ LANGUAGE SQL STRICT;
 
 /******************************************************************************
- * eRasterValue
+ * everRasterValue
  *****************************************************************************/
 
 /**
@@ -284,19 +258,16 @@ $$ LANGUAGE SQL STRICT;
  * @param[in] traj  Trajectory (SRID matching the raster)
  * @param[in] vspan Float value range
  * @param[in] band  Band number (1-based, default 1)
- * @csqlfn #eRasterValue()
+ * @csqlfn #ever_raster_value()
  */
-CREATE OR REPLACE FUNCTION eRasterValue(
-    rast  raster,
-    traj  tgeompoint,
-    vspan floatspan,
-    band  integer DEFAULT 1
-) RETURNS boolean AS $$
-  SELECT atSpan(raster_value($1, $2, $4), $3) IS NOT NULL
+CREATE OR REPLACE FUNCTION everRasterValue(rast raster, traj tgeompoint,
+  vspan floatspan, band integer DEFAULT 1)
+RETURNS boolean AS $$
+  SELECT atSpan(rasterValue($1, $2, $4), $3) IS NOT NULL
 $$ LANGUAGE SQL STRICT;
 
 /******************************************************************************
- * aRasterValue
+ * alwaysRasterValue
  *****************************************************************************/
 
 /**
@@ -307,16 +278,13 @@ $$ LANGUAGE SQL STRICT;
  * @param[in] traj  Trajectory (SRID matching the raster)
  * @param[in] vspan Float value range
  * @param[in] band  Band number (1-based, default 1)
- * @csqlfn #aRasterValue()
+ * @csqlfn #alwaysRasterValue()
  */
-CREATE OR REPLACE FUNCTION aRasterValue(
-    rast  raster,
-    traj  tgeompoint,
-    vspan floatspan,
-    band  integer DEFAULT 1
-) RETURNS boolean AS $$
+CREATE OR REPLACE FUNCTION alwaysRasterValue(rast raster, traj tgeompoint,
+  vspan floatspan, band integer DEFAULT 1)
+RETURNS boolean AS $$
   SELECT v IS NOT NULL AND minusSpan(v, $3) IS NULL
-  FROM (SELECT raster_value($1, $2, $4) AS v) t
+  FROM (SELECT rasterValue($1, $2, $4) AS v) t
 $$ LANGUAGE SQL STRICT;
 
 /******************************************************************************

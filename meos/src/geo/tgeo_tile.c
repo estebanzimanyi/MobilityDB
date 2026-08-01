@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -128,7 +128,6 @@ bitmatrix_set_cell(BitMatrix *bm, const int *coords, bool value)
   bm->byte[pos] &= (unsigned char)(~(1 << index));
   if (value)
     bm->byte[pos] |= (uint8_t)(1 << index);
-  return;
 }
 
 #if DEBUG_BUILD
@@ -192,7 +191,6 @@ bitmatrix_print2D(const BitMatrix *bm, int *coords)
   for (j = 0; j < bm->count[dim + 1]; j++)
     printf("%1d", j % 10);
   printf("\n");
-  return;
 }
 
 /**
@@ -252,7 +250,6 @@ bitmatrix_print(const BitMatrix *bm)
     }
   }
   printf("Total tiles: %d, Tiles set: %d\n", totalcount, count);
-  return;
 }
 #endif /* DEBUG_BUILD */
 
@@ -528,7 +525,6 @@ stbox_tile_state_set(double x, double y, double z, TimestampTz t, double xsize,
   }
   stbox_set(hasx, hasz, false, srid, xmin, xmax, ymin, ymax, zmin, zmax,
     hast ? &p : NULL, result);
-  return;
 }
 
 /**
@@ -613,7 +609,6 @@ stbox_tile_state_next(STboxGridState *state)
       }
     }
   }
-  return;
 }
 
 /**
@@ -1070,7 +1065,6 @@ tile_get_coords(double x, double y, double z, TimestampTz t,
   if (MEOS_FLAGS_GET_T(state->box.flags))
     coords[ncoords++] = (int) ((t - DatumGetTimestampTz(state->box.period.lower)) /
       state->tunits);
-  return;
 }
 
 /**
@@ -1092,7 +1086,6 @@ tile_get_fpos(double dx, double dy, double dz, TimestampTz dt,
     fpos[k++] = dz / state->zsize;
   if (MEOS_FLAGS_GET_T(state->box.flags))
     fpos[k++] = (double) dt / state->tunits;
-  return;
 }
 
 /**
@@ -1126,7 +1119,6 @@ tpointinst_get_coords_fpos(const TInstant *inst, bool hasz, bool hast,
   /* Transform the values in a tile into relative positions in matrix cells */
   if (fpos) /* Some methods do not need this information */
     tile_get_fpos(p.x - x, p.y - y, p.z - z, inst->t - t, state, fpos);
-  return;
 }
 
 /**

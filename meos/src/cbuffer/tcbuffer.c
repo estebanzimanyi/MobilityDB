@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -122,7 +122,7 @@ ensure_valid_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
 }
 
 /*****************************************************************************
- * Intersection functions
+ * Turning point functions
  *****************************************************************************/
 
 /**
@@ -575,7 +575,9 @@ tcbuffersegm_distance_turnpt(Datum start1, Datum end1, Datum start2,
     lower, upper, t1, t2);
 }
 
-/*****************************************************************************/
+/*****************************************************************************
+ * Intersection functions
+ *****************************************************************************/
 
 /**
  * @brief Return 1 or 2 if a temporal circular buffer segment and a circular
@@ -780,16 +782,16 @@ tcbuffer_make(const Temporal *tpoint, const Temporal *tfloat)
   switch (sync1->subtype)
   {
     case TINSTANT:
-      result = (Temporal *) tgeompoint_tfloat_to_tcbufferinst((TInstant *) sync1,
-        (TInstant *) sync2);
+      result = (Temporal *) tgeompoint_tfloat_to_tcbufferinst(
+        (TInstant *) sync1, (TInstant *) sync2);
       break;
     case TSEQUENCE:
-      result = (Temporal *) tgeompoint_tfloat_to_tcbufferseq((TSequence *) sync1,
-        (TSequence *) sync2);
+      result = (Temporal *) tgeompoint_tfloat_to_tcbufferseq(
+        (TSequence *) sync1, (TSequence *) sync2);
       break;
     default: /* TSEQUENCESET */
-      result = (Temporal *) tgeompoint_tfloat_to_tcbufferseqset((TSequenceSet *) sync1,
-        (TSequenceSet *) sync2);
+      result = (Temporal *) tgeompoint_tfloat_to_tcbufferseqset(
+        (TSequenceSet *) sync1, (TSequenceSet *) sync2);
   }
   pfree(sync1); pfree(sync2);
   return result;
@@ -946,7 +948,8 @@ tcbuffer_to_tgeompoint(const Temporal *temp)
     case TSEQUENCE:
       return (Temporal *) tcbufferseq_tgeompointseq((TSequence *) temp);
     default: /* TSEQUENCESET */
-      return (Temporal *) tcbufferseqset_tgeompointseqset((TSequenceSet *) temp);
+      return (Temporal *) tcbufferseqset_tgeompointseqset(
+        (TSequenceSet *) temp);
   }
 }
 
@@ -1193,16 +1196,17 @@ tcbuffer_values(const Temporal *temp, int *count)
 static Set *
 tcbufferinst_members(const TInstant *inst, bool point)
 {
-  Cbuffer *cb = DatumGetCbufferP(tinstant_value_p(inst));
+  const Cbuffer *cb = DatumGetCbufferP(tinstant_value_p(inst));
+  Datum value;
   if (point)
   {
     GSERIALIZED *gs = cbuffer_point(cb);
-    Datum value = PointerGetDatum(gs);
+    value = PointerGetDatum(gs);
     Set *result = set_make_exp(&value, 1, 1, T_GEOMETRY, ORDER_NO);
     pfree(gs);
     return result;
   }
-  Datum value = Float8GetDatum(cb->radius);
+  value = Float8GetDatum(cb->radius);
   return set_make_exp(&value, 1, 1, T_FLOAT8, ORDER_NO);
 }
 
@@ -1341,6 +1345,10 @@ tcbuffer_value_at_timestamptz(const Temporal *temp, TimestampTz t, bool strict,
 /**
  * @brief Return a temporal circular buffer instant with the radius expanded by
  * a distance
+ * @note The radius of each instant is expanded in a single pass, sourcing the
+ * point and radius directly from each circular buffer, which is equivalent to
+ * decomposing the value into its temporal point and temporal float radius,
+ * adding the distance to the radius, and recomposing the circular buffer
  */
 static TInstant *
 tcbufferinst_expand(const TInstant *inst, double dist)
@@ -1389,10 +1397,6 @@ tcbufferseqset_expand(const TSequenceSet *ss, double dist)
  * @param[in] temp Temporal value
  * @param[in] dist Distance
  * @csqlfn #Tcbuffer_expand()
- * @note The radius of each instant is expanded in a single pass, sourcing the
- * point and radius directly from each circular buffer, which is equivalent to
- * decomposing the value into its temporal point and temporal float radius,
- * adding the distance to the radius, and recomposing the circular buffer
  */
 Temporal *
 tcbuffer_expand(const Temporal *temp, double dist)
@@ -1428,6 +1432,7 @@ Temporal *
 tcbuffer_restrict_cbuffer(const Temporal *temp, const Cbuffer *cb, bool atfunc)
 {
   /* Ensure the validity of the arguments */
+  VALIDATE_TCBUFFER(temp, NULL); VALIDATE_NOT_NULL(cb, NULL);
   if (! ensure_valid_tcbuffer_cbuffer(temp, cb))
     return NULL;
 
@@ -1562,6 +1567,7 @@ tcbuffer_restrict_geom(const Temporal *temp, const GSERIALIZED *gs, bool
   atfunc)
 {
   /* Ensure the validity of the arguments */
+  VALIDATE_TCBUFFER(temp, NULL); VALIDATE_NOT_NULL(gs, NULL);
   if (! ensure_valid_tcbuffer_geo(temp, gs) || gserialized_is_empty(gs))
     return NULL;
 
@@ -1599,9 +1605,6 @@ tcbuffer_restrict_geom(const Temporal *temp, const GSERIALIZED *gs, bool
 Temporal *
 tcbuffer_at_geom(const Temporal *temp, const GSERIALIZED *gs)
 {
-  /* Ensure the validity of the arguments */
-  if (! ensure_valid_tcbuffer_geo(temp, gs))
-    return NULL;
   return tcbuffer_restrict_geom(temp, gs, REST_AT);
 }
 
@@ -1616,9 +1619,6 @@ tcbuffer_at_geom(const Temporal *temp, const GSERIALIZED *gs)
 Temporal *
 tcbuffer_minus_geom(const Temporal *temp, const GSERIALIZED *gs)
 {
-  /* Ensure the validity of the arguments */
-  if (! ensure_valid_tcbuffer_geo(temp, gs))
-    return NULL;
   return tcbuffer_restrict_geom(temp, gs, REST_MINUS);
 }
 

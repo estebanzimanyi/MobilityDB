@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -448,7 +448,8 @@ tsequenceset_make_free(TSequence **sequences, int count, bool normalize)
  * @param[in] merge True if a merge operation, which implies that the two
  *   consecutive instants may be equal
  * @param[in] maxdist Maximum distance to split the temporal sequence
- * @param[in] maxt Maximum time interval to split the temporal sequence, may be `NULL`
+ * @param[in] maxt Maximum time interval to split the temporal sequence,
+ * may be @p NULL
  * @param[out] nsplits Number of splits
  * @return Array of indices at which the temporal sequence is split
  */
@@ -535,7 +536,7 @@ tsequenceset_make_gaps_valid(TInstant **instants, int count, bool lower_inc,
  * @param[in] count Number of elements in the array
  * @param[in] interp Interpolation
  * @param[in] maxdist Maximum distance for defining a gap
- * @param[in] maxt Maximum time interval for defining a gap, may be `NULL`
+ * @param[in] maxt Maximum time interval for defining a gap, may be @p NULL
  * @csqlfn #Tsequenceset_constructor_gaps()
  */
 TSequenceSet *
@@ -989,7 +990,6 @@ tsequenceset_set_tstzspan(const TSequenceSet *ss, Span *s)
 {
   assert(ss); assert(s);
   memcpy(s, &ss->period, sizeof(Span));
-  return;
 }
 
 /**
@@ -1435,7 +1435,6 @@ tsequenceset_restart(TSequenceSet *ss, int count)
   size_t bboxsize = DOUBLE_PAD(temporal_bbox_size(ss->temptype));
   if (bboxsize != 0)
     tsequenceset_compute_bbox(ss);
-  return;
 }
 #endif /* MEOS */
 
@@ -2122,8 +2121,7 @@ tnumberseqset_twavg(const TSequenceSet *ss)
 bool
 tsequenceset_eq(const TSequenceSet *ss1, const TSequenceSet *ss2)
 {
-  assert(ss1); assert(ss2);
-  assert(ss1->temptype == ss2->temptype);
+  assert(ss1); assert(ss2); assert(ss1->temptype == ss2->temptype);
   /* If number of sequences or flags are not equal */
   if (ss1->count != ss2->count || ss1->flags != ss2->flags)
     return false;

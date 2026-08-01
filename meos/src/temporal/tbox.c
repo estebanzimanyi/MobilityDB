@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -78,6 +78,27 @@ ensure_same_dimensionality_tbox(const TBox *box1, const TBox *box2)
   meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
     "The boxes must be of the same dimensionality");
   return false;
+}
+
+/**
+ * @brief Return the ouput variables initialized with the flag values of the
+ * boxes
+ * @param[in] box1,box2 Input boxes
+ * @param[out] hasx,hast Boolean variables
+ */
+static bool
+ensure_valid_tbox_tbox(const TBox *box1, const TBox *box2, bool *hasx,
+  bool *hast)
+{
+  VALIDATE_NOT_NULL(box1, false); VALIDATE_NOT_NULL(box2, false);
+  assert(hasx); assert(hast);
+  if (! ensure_common_dimension(box1->flags, box2->flags))
+    return false;
+  *hasx = MEOS_FLAGS_GET_X(box1->flags) && MEOS_FLAGS_GET_X(box2->flags);
+  *hast = MEOS_FLAGS_GET_T(box1->flags) && MEOS_FLAGS_GET_T(box2->flags);
+  if (*hasx && ! ensure_same_span_type(&box1->span, &box2->span))
+    return false;
+  return true;
 }
 
 /*****************************************************************************
@@ -162,9 +183,9 @@ tbox_out(const TBox *box, int maxdd)
 /**
  * @ingroup meos_box_constructor
  * @brief Return a temporal box from a number span and a timestamptz span
- * @param[in] s Value span, may be `NULL`
- * @param[in] p Time span, may be `NULL`
- * @return On error return `NULL`
+ * @param[in] s Value span, may be @p NULL
+ * @param[in] p Time span, may be @p NULL
+ * @return On error return @p NULL
  */
 TBox *
 tbox_make(const Span *s, const Span *p)
@@ -206,7 +227,6 @@ tbox_set(const Span *s, const Span *p, TBox *box)
     memcpy(&box->period, p, sizeof(Span));
     MEOS_FLAGS_SET_T(box->flags, true);
   }
-  return;
 }
 
 /**
@@ -402,7 +422,6 @@ number_set_tbox(Datum value, MeosType basetype, TBox *box)
   MeosType spantype = basetype_spantype(basetype);
   span_set(value, value, true, true, basetype, spantype, &s);
   tbox_set(&s, NULL, box);
-  return;
 }
 
 /**
@@ -434,7 +453,6 @@ int_set_tbox(int i, TBox *box)
 {
   assert(box);
   number_set_tbox(Int32GetDatum(i), T_INT4, box);
-  return;
 }
 
 /**
@@ -463,7 +481,6 @@ bigint_set_tbox(int64 i, TBox *box)
 {
   assert(box);
   number_set_tbox(Int64GetDatum(i), T_INT8, box);
-  return;
 }
 
 /**
@@ -491,7 +508,6 @@ float_set_tbox(double d, TBox *box)
 {
   assert(box);
   number_set_tbox(Float8GetDatum(d), T_FLOAT8, box);
-  return;
 }
 
 /**
@@ -523,7 +539,6 @@ timestamptz_set_tbox(TimestampTz t, TBox *box)
   Datum dt = TimestampTzGetDatum(t);
   span_set(dt, dt, true, true, T_TIMESTAMPTZ, T_TSTZSPAN, &p);
   tbox_set(NULL, &p, box);
-  return;
 }
 
 /**
@@ -554,7 +569,6 @@ numset_set_tbox(const Set *s, TBox *box)
   Span span;
   set_set_span(s, &span);
   tbox_set(&span, NULL, box);
-  return;
 }
 
 /**
@@ -571,7 +585,6 @@ tstzset_set_tbox(const Set *s, TBox *box)
   Span p;
   set_set_span(s, &p);
   tbox_set(NULL, &p, box);
-  return;
 }
 
 /**
@@ -625,7 +638,6 @@ numspan_set_tbox(const Span *s, TBox *box)
 {
   assert(s); assert(box); assert(numspan_type(s->spantype));
   tbox_set(s, NULL, box);
-  return;
 }
 
 /**
@@ -640,7 +652,6 @@ tstzspan_set_tbox(const Span *s, TBox *box)
 {
   assert(s); assert(box); assert(s->spantype == T_TSTZSPAN);
   tbox_set(NULL, s, box);
-  return;
 }
 
 /**
@@ -1353,7 +1364,6 @@ tbox_expand(const TBox *box1, TBox *box2)
     span_expand(&box1->span, &box2->span);
   if (MEOS_FLAGS_GET_T(box2->flags))
     span_expand(&box1->period, &box2->period);
-  return;
 }
 
 /**
@@ -1519,26 +1529,6 @@ tbox_expand_time(const TBox *box, const Interval *interv)
  *****************************************************************************/
 
 /**
- * @brief Return the ouput variables initialized  with the flag values of the
- * boxes
- * @param[in] box1,box2 Input boxes
- * @param[out] hasx,hast Boolean variables
- */
-static bool
-ensure_valid_tbox_tbox(const TBox *box1, const TBox *box2, bool *hasx,
-  bool *hast)
-{
-  assert(box1); assert(box2); assert(hasx); assert(hast);
-  if (! ensure_common_dimension(box1->flags, box2->flags))
-    return false;
-  *hasx = MEOS_FLAGS_GET_X(box1->flags) && MEOS_FLAGS_GET_X(box2->flags);
-  *hast = MEOS_FLAGS_GET_T(box1->flags) && MEOS_FLAGS_GET_T(box2->flags);
-  if (*hasx && ! ensure_same_span_type(&box1->span, &box2->span))
-    return false;
-  return true;
-}
-
-/**
  * @ingroup meos_box_bbox_topo
  * @brief Return true if the first temporal box contains the second one
  * @param[in] box1,box2 Temporal boxes
@@ -1548,7 +1538,6 @@ bool
 contains_tbox_tbox(const TBox *box1, const TBox *box2)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(box1, false); VALIDATE_NOT_NULL(box2, false);
   bool hasx, hast;
   if (! ensure_valid_tbox_tbox(box1, box2, &hasx, &hast))
     return false;
@@ -1582,7 +1571,6 @@ bool
 overlaps_tbox_tbox(const TBox *box1, const TBox *box2)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(box1, false); VALIDATE_NOT_NULL(box2, false);
   bool hasx, hast;
   if (! ensure_valid_tbox_tbox(box1, box2, &hasx, &hast))
     return false;
@@ -1604,7 +1592,6 @@ bool
 same_tbox_tbox(const TBox *box1, const TBox *box2)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(box1, false); VALIDATE_NOT_NULL(box2, false);
   bool hasx, hast;
   if (! ensure_valid_tbox_tbox(box1, box2, &hasx, &hast))
     return false;
@@ -1626,7 +1613,6 @@ bool
 adjacent_tbox_tbox(const TBox *box1, const TBox *box2)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(box1, false); VALIDATE_NOT_NULL(box2, false);
   bool hasx, hast;
   if (! ensure_valid_tbox_tbox(box1, box2, &hasx, &hast))
     return false;
@@ -1924,16 +1910,17 @@ tbox_ne(const TBox *box1, const TBox *box2)
  * is less than, equal to, or greater than the second one
  * @param[in] box1,box2 Temporal boxes
  * @note The time dimension is compared first and then the value dimension
+ * @return On error return @p INT_MAX
  * @csqlfn #Tbox_cmp()
  */
 int
 tbox_cmp(const TBox *box1, const TBox *box2)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(box1, INT_MAX); VALIDATE_NOT_NULL(box2, INT_MAX);
+  bool hasx, hast;
+  if (! ensure_valid_tbox_tbox(box1, box2, &hasx, &hast))
+    return INT_MAX;
 
-  bool hasx = MEOS_FLAGS_GET_X(box1->flags) && MEOS_FLAGS_GET_X(box2->flags);
-  bool hast = MEOS_FLAGS_GET_T(box1->flags) && MEOS_FLAGS_GET_T(box2->flags);
   int cmp;
   if (hast)
   {
@@ -2015,14 +2002,14 @@ tbox_gt(const TBox *box1, const TBox *box2)
  * @ingroup meos_box_accessor
  * @brief Return the 32-bit hash of a temporal box
  * @param[in] box Temporal box
- * @return On error return @p INT_MAX
+ * @return On error return @p UINT32_MAX
  * @csqlfn #Tbox_hash()
  */
 uint32
 tbox_hash(const TBox *box)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(box, INT_MAX);
+  VALIDATE_NOT_NULL(box, UINT32_MAX);
 
   /* Determine the dimensions of the temporal box */
   bool hasx = MEOS_FLAGS_GET_X(box->flags);
@@ -2055,14 +2042,14 @@ tbox_hash(const TBox *box)
  * @brief Return the 64-bit hash of a temporal box using a seed
  * @param[in] box Temporal box
  * @param[in] seed Seed
- * @return On error return @p LONG_MAX
+ * @return On error return @p UINT64_MAX
  * @csqlfn #Tbox_hash_extended()
  */
 uint64
 tbox_hash_extended(const TBox *box, uint64 seed)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(box, LONG_MAX);
+  VALIDATE_NOT_NULL(box, UINT64_MAX);
 
   /* Determine the dimensions of the temporal box */
   bool hasx = MEOS_FLAGS_GET_X(box->flags);

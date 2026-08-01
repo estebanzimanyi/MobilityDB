@@ -278,7 +278,6 @@ similarity_path_state_next(SimilarityPathState *state)
   state->i--;
   if (state->i < 0)
     state->done = true;
-  return;
 }
 
 /*****************************************************************************

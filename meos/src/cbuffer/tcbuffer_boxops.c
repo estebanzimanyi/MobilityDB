@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -59,11 +59,11 @@
 void
 tcbufferinst_set_stbox(const TInstant *inst, STBox *box)
 {
+  assert(inst); assert(box);
   cbuffer_set_stbox(DatumGetCbufferP(tinstant_value_p(inst)), box);
   span_set(TimestampTzGetDatum(inst->t), TimestampTzGetDatum(inst->t),
     true, true, T_TIMESTAMPTZ, T_TSTZSPAN, &box->period);
   MEOS_FLAGS_SET_T(box->flags, true);
-  return;
 }
 
 /**
@@ -76,6 +76,7 @@ tcbufferinst_set_stbox(const TInstant *inst, STBox *box)
 void
 tcbufferinstarr_set_stbox(TInstant **instants, int count, STBox *box)
 {
+  assert(instants); assert(box);
   tcbufferinst_set_stbox(instants[0], box);
   for (int i = 1; i < count; i++)
   {
@@ -83,7 +84,6 @@ tcbufferinstarr_set_stbox(TInstant **instants, int count, STBox *box)
     tcbufferinst_set_stbox(instants[i], &box1);
     stbox_expand(&box1, box);
   }
-  return;
 }
 
 /**
@@ -95,12 +95,12 @@ tcbufferinstarr_set_stbox(TInstant **instants, int count, STBox *box)
 void
 tcbufferseq_expand_stbox(const TSequence *seq, const TInstant *inst)
 {
+  assert(seq); assert(inst);
   /* Compute the bounding box of the end point of the sequence and the instant */
   STBox box;
   tcbufferinst_set_stbox(inst, &box);
   /* Expand the bounding box of the sequence with the last edge */
   stbox_expand(&box, (STBox *) TSEQUENCE_BBOX_PTR(seq));
-  return;
 }
 
 /*****************************************************************************/
@@ -116,6 +116,7 @@ tcbufferseq_expand_stbox(const TSequence *seq, const TInstant *inst)
 void
 cbuffer_timestamptz_set_stbox(const Cbuffer *cb, TimestampTz t, STBox *box)
 {
+  assert(cb); assert(box);
   cbuffer_set_stbox(cb, box);
   span_set(TimestampTzGetDatum(t), TimestampTzGetDatum(t), true, true,
     T_TIMESTAMPTZ, T_TSTZSPAN, &box->period);
@@ -151,6 +152,7 @@ cbuffer_timestamptz_to_stbox(const Cbuffer *cb, TimestampTz t)
 void
 cbuffer_tstzspan_set_stbox(const Cbuffer *cb, const Span *s, STBox *box)
 {
+  assert(cb); assert(s); assert(box);
   cbuffer_set_stbox(cb, box);
   memcpy(&box->period, s, sizeof(Span));
   MEOS_FLAGS_SET_T(box->flags, true);

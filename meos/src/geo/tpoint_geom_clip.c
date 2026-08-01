@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -265,7 +265,6 @@ arc_set_bbox(Edge *e)
       if (ey[k] > ymax) ymax = ey[k];
     }
   e->xmin = xmin; e->xmax = xmax; e->ymin = ymin; e->ymax = ymax;
-  return;
 }
 
 /**
@@ -599,7 +598,6 @@ intervals_from_points(const POINT2D *a, const POINT2D *b, Edge **edges,
       meos_array_add(intervals, &in);
     }
   }
-  return;
 }
 
 /**
@@ -685,7 +683,6 @@ intervals_from_lines(const POINT2D *a, const POINT2D *b, Edge **edges,
       }
     }
   }
-  return;
 }
 
 /**
@@ -732,7 +729,6 @@ intervals_from_arcs(const POINT2D *a, const POINT2D *b, Edge **edges,
       meos_array_add(intervals, &in);
     }
   }
-  return;
 }
 
 /**
@@ -874,7 +870,6 @@ intervals_from_polygons(const POINT2D *a, const POINT2D *b, Edge **edges,
       meos_array_add(intervals, &in);
     }
   }
-  return;
 }
 
 /*****************************************************************************/
@@ -974,7 +969,6 @@ tpointinst_clip_edges(const TInstant *inst, Edge **edges, int nedges,
   span_set(TimestampTzGetDatum(inst->t), TimestampTzGetDatum(inst->t),
     true, true, T_TIMESTAMPTZ, T_TSTZSPAN, &s);
   meos_array_add(periods, &s);
-  return;
 }
 
 /**
@@ -1102,7 +1096,6 @@ next_segment:
     inst1 = inst2;
     a = b;
   }
-  return;
 }
 
 /*****************************************************************************
@@ -1132,7 +1125,6 @@ emit_ring_edges(const POINTARRAY *pa, MeosArray *edges, EdgeType etype)
     e.etype = etype;
     meos_array_add(edges, &e);
   }
-  return;
 }
 
 /**
@@ -1154,7 +1146,6 @@ extract_point(const LWPOINT *pt, MeosArray *edges)
   e.dx = e.dy = e.length = 0;
   e.etype = EDGE_POINT;
   meos_array_add(edges, &e);
-  return;
 }
 
 /**
@@ -1166,7 +1157,6 @@ extract_mpoint(const LWMPOINT *mp, MeosArray *edges)
 {
   for (int i = 0; i < (int) mp->ngeoms; i++)
     extract_point((const LWPOINT *) mp->geoms[i], edges);
-  return;
 }
 
 /**
@@ -1177,7 +1167,6 @@ static void
 extract_line(const LWLINE *line, MeosArray *edges)
 {
   emit_ring_edges(line->points, edges, EDGE_LINE);
-  return;
 }
 
 /**
@@ -1189,7 +1178,6 @@ extract_mline(const LWMLINE *ml, MeosArray *edges)
 {
   for (int i = 0; i < (int) ml->ngeoms; i++)
     extract_line(ml->geoms[i], edges);
-  return;
 }
 
 /**
@@ -1201,7 +1189,6 @@ extract_poly(const LWPOLY *poly, MeosArray *edges)
 {
   for (int r = 0; r < (int) poly->nrings; r++)
     emit_ring_edges(poly->rings[r], edges, EDGE_POLY);
-  return;
 }
 
 /**
@@ -1213,7 +1200,6 @@ extract_mpoly(const LWMPOLY *mp, MeosArray *edges)
 {
   for (int i = 0; i < (int) mp->ngeoms; i++)
     extract_poly(mp->geoms[i], edges);
-  return;
 }
 
 /**
@@ -1226,7 +1212,6 @@ static void
 extract_triangle(const LWTRIANGLE *tri, MeosArray *edges)
 {
   emit_ring_edges(tri->points, edges, EDGE_POLY);
-  return;
 }
 
 /**
@@ -1283,7 +1268,6 @@ emit_arc_edge(const POINT4D *pa, const POINT4D *pb, const POINT4D *pc,
   e.etype = arc_etype;
   arc_set_bbox(&e);
   meos_array_add(edges, &e);
-  return;
 }
 
 /**
@@ -1309,7 +1293,6 @@ emit_circstring_edges(const LWCIRCSTRING *circ, MeosArray *edges,
     (void) getPoint4d_p(pa, i + 2, &pc4);
     emit_arc_edge(&pa4, &pb4, &pc4, edges, line_etype, arc_etype);
   }
-  return;
 }
 
 /**
@@ -1320,7 +1303,6 @@ static void
 extract_circstring(const LWCIRCSTRING *circ, MeosArray *edges)
 {
   emit_circstring_edges(circ, edges, EDGE_LINE, EDGE_ARC);
-  return;
 }
 
 /**
@@ -1362,7 +1344,6 @@ extract_curvepoly_ring(const LWGEOM *ring, MeosArray *edges)
         "Unsupported curve polygon ring type");
       break;
   }
-  return;
 }
 
 /**
@@ -1374,7 +1355,6 @@ extract_curvepoly(const LWCURVEPOLY *cp, MeosArray *edges)
 {
   for (int r = 0; r < (int) cp->nrings; r++)
     extract_curvepoly_ring(cp->rings[r], edges);
-  return;
 }
 
 /**
@@ -1448,7 +1428,6 @@ geom_extract_edges_iter(const LWGEOM *geom, MeosArray *edges)
         "Unsupported geometry type");
       break;
   }
-  return;
 }
 
 /**
@@ -2432,7 +2411,6 @@ intervals_within_edges(const POINT2D *a, const POINT2D *b, Edge **sel_edges,
       meos_array_add(intervals, &in);
     }
   }
-  return;
 }
 
 /**
@@ -2453,7 +2431,6 @@ tpointinst_dwithin_edges(const TInstant *inst, Edge **edges, int nedges,
   span_set(TimestampTzGetDatum(inst->t), TimestampTzGetDatum(inst->t),
     true, true, T_TIMESTAMPTZ, T_TSTZSPAN, &s);
   meos_array_add(periods, &s);
-  return;
 }
 
 /**
@@ -2563,7 +2540,6 @@ next_segment:
     inst1 = inst2;
     a = b;
   }
-  return;
 }
 
 /**

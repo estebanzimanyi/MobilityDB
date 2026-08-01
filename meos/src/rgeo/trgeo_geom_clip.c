@@ -66,6 +66,7 @@
 #include <postgres.h>
 /* PostGIS */
 #include <liblwgeom.h>
+#include <liblwgeom_internal.h>
 /* MEOS */
 #include <meos.h>
 #include "temporal/span.h"
@@ -75,11 +76,6 @@
 /*****************************************************************************
  * Tunables
  *****************************************************************************/
-
-/* Floating-point tolerance — matches the convention in tpoint_geom_clip.c */
-#ifndef FP_TOLERANCE
-#define FP_TOLERANCE 1e-12
-#endif
 
 /* M2: below this absolute angular delta (radians) we use a Taylor
  * closed-form solver; above it we fall back to numerical bisection. */

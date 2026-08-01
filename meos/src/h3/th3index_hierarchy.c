@@ -1,12 +1,12 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -99,7 +99,7 @@ h3_cell_to_center_child_next_meos(H3Index cell)
  * @csqlfn #Th3index_cell_to_parent()
  */
 Temporal *
-th3index_cell_to_parent(const Temporal *temp, int32 resolution)
+th3index_cell_to_parent(const Temporal *temp, uint32_t resolution)
 {
   assert(temp); assert(temp->temptype == T_TH3INDEX);
 
@@ -152,7 +152,7 @@ th3index_cell_to_parent_next(const Temporal *temp)
  * @csqlfn #Th3index_cell_to_center_child()
  */
 Temporal *
-th3index_cell_to_center_child(const Temporal *temp, int32 resolution)
+th3index_cell_to_center_child(const Temporal *temp, uint32_t resolution)
 {
   assert(temp); assert(temp->temptype == T_TH3INDEX);
 

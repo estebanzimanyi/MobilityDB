@@ -68,7 +68,6 @@ void
 unset_aggregation_context(MemoryContext ctx)
 {
   MemoryContextSwitchTo(ctx);
-  return;
 }
 
 /*****************************************************************************
@@ -96,7 +95,6 @@ aggstate_write(SkipList *state, StringInfo buf)
   if (state->extra)
     pq_sendbytes(buf, state->extra, (int) state->extrasize);
   pfree(values);
-  return;
 }
 
 /**

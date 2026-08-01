@@ -101,8 +101,8 @@ Datum
 Quadbin_cell_to_parent(PG_FUNCTION_ARGS)
 {
   Quadbin cell = PG_GETARG_QUADBIN(0);
-  int32 resolution = PG_GETARG_INT32(1);
-  PG_RETURN_QUADBIN(quadbin_cell_to_parent(cell, (uint32_t) resolution));
+  uint32_t resolution = (uint32_t) PG_GETARG_INT32(1);
+  PG_RETURN_QUADBIN(quadbin_cell_to_parent(cell, resolution));
 }
 
 PGDLLEXPORT Datum Quadbin_cell_to_children(PG_FUNCTION_ARGS);
@@ -117,8 +117,8 @@ Datum
 Quadbin_cell_to_children(PG_FUNCTION_ARGS)
 {
   Quadbin cell = PG_GETARG_QUADBIN(0);
-  int32 resolution = PG_GETARG_INT32(1);
-  Set *result = quadbin_cell_to_children_set(cell, (uint32_t) resolution);
+  uint32_t resolution = (uint32_t) PG_GETARG_INT32(1);
+  Set *result = quadbin_cell_to_children_set(cell, resolution);
   if (! result)
     PG_RETURN_NULL();
   PG_RETURN_SET_P(result);
@@ -183,7 +183,7 @@ Datum
 Quadbin_point_to_cell(PG_FUNCTION_ARGS)
 {
   GSERIALIZED *gs = PG_GETARG_GSERIALIZED_P(0);
-  int32 resolution = PG_GETARG_INT32(1);
+  uint32_t resolution = (uint32_t) PG_GETARG_INT32(1);
   Quadbin result = geo_to_quadbin_cell(gs, resolution);
   PG_FREE_IF_COPY(gs, 0);
   PG_RETURN_QUADBIN(result);

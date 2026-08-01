@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -130,9 +130,8 @@ datum_geom_disjoint3d(Datum geom1, Datum geom2)
 
 /**
  * @brief Return a Datum true if two geographies are disjoint
- *
- * The geographic intersects predicate uses a `0.0` distance ε to match
- * PostGIS's `geography_intersects` semantics and MEOS's own static
+ * @details The geographic intersects predicate uses a `0.0` distance ε to
+ * match PostGIS's `geography_intersects` semantics and MEOS's own static
  * `geog_intersects` wrapper. lwgeom's internal convergence epsilon
  * (`PGIS_FP_TOLERANCE`, 1e-12) remains the implementation detail of
  * `geog_dwithin` and is unchanged. See #1091.
@@ -177,8 +176,7 @@ datum_geom_intersects3d(Datum geom1, Datum geom2)
 
 /**
  * @brief Return a Datum true if two geographies intersect
- *
- * Uses a `0.0` distance ε to match PostGIS's `geography_intersects`
+ * @details Uses a `0.0` distance ε to match PostGIS's `geography_intersects`
  * semantics and MEOS's own static `geog_intersects` wrapper. lwgeom's
  * internal convergence epsilon (`PGIS_FP_TOLERANCE`, 1e-12) remains
  * the implementation detail of `geog_dwithin` and is unchanged.
@@ -1000,15 +998,12 @@ ea_disjoint_tgeo_geo(const Temporal *temp, const GSERIALIZED *gs, bool ever)
   if (MEOS_FLAGS_GET_GEODETIC(temp->flags))
     return INVERT_RESULT(ea_dwithin_tgeo_geo(temp, gs, 0.0, ! ever));
 
-  int result;
-
   /* ALWAYS */
   if (! ever)
-  {
     return INVERT_RESULT(ea_intersects_tgeo_geo(temp, gs, EVER));
-  }
 
   /* EVER */
+  int result;
 
   /* Temporal point case: "ever disjoint" reduces to "not always covered". */
   if (tpoint_type(temp->temptype))

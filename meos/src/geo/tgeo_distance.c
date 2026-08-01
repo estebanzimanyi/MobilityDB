@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -179,7 +179,7 @@ geodist_geom_arc_contains_angle(const GeoDistEdge *e, double phi)
     geodist_angle_norm(e->at1 - e->at0) : geodist_angle_norm(e->at0 - e->at1);
   double off = e->accw ?
     geodist_angle_norm(phi - e->at0) : geodist_angle_norm(e->at0 - phi);
-  return off <= sweep + 1e-12;
+  return off <= sweep + FP_TOLERANCE;
 }
 
 /**
@@ -227,7 +227,7 @@ geodist_segs_add_arc(double ax, double ay, double bx, double by, double cx,
   }
   /* Twice the signed area of triangle ABC; zero => collinear */
   double d = 2.0 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by));
-  if (fabs(d) < 1e-12)
+  if (fabs(d) < FP_TOLERANCE)
   {
     /* Collinear: two straight segments A->B, B->C */
     for (int seg = 0; seg < 2; seg++)
@@ -404,10 +404,15 @@ geodist_geom_edges(const LWGEOM *lw, bool allow_arc, GeoDistEdge **arr, int *cap
  * line, and standalone (1D) arc edges (not @p is_poly) contribute nothing.
  */
 static void
-geodist_poly_seg_raycross(const GeoDistEdge *s, double x, double y, bool *inside)
+geodist_poly_segm_raycross(const GeoDistEdge *s, double x, double y,
+  bool *inside)
 {
+  /* Ensure the validity of the arguments */
+  assert(s); assert(inside);
   if (! s->is_poly)
     return;
+
+  /* Arc segment */
   if (s->is_arc)
   {
     /* The horizontal line at height y meets the supporting circle at
@@ -416,7 +421,7 @@ geodist_poly_seg_raycross(const GeoDistEdge *s, double x, double y, bool *inside
      * ray that only grazes the circle tangentially does not cross. */
     const double dyc = y - s->acy;
     const double h2 = s->arad * s->arad - dyc * dyc;
-    if (h2 <= 1e-12)
+    if (h2 <= FP_TOLERANCE)
       return;
     const double h = sqrt(h2);
     const double xhit[2] = {s->acx - h, s->acx + h};
@@ -429,12 +434,14 @@ geodist_poly_seg_raycross(const GeoDistEdge *s, double x, double y, bool *inside
         continue;
       if (! geodist_geom_arc_contains_angle(s, atan2(dyc, xi - s->acx)))
         continue;
-      /* Half-open ownership, mirroring the straight-edge rule: a crossing at an
-       * arc endpoint (a ring junction on the ray) is owned by this edge only if
-       * the arc interior rises above the ray there; an interior crossing is
-       * always transversal and always counted. */
-      const bool at_ep0 = fabs(xi - s->x1) < 1e-12 && fabs(y - s->y1) < 1e-12;
-      const bool at_ep1 = fabs(xi - s->x2) < 1e-12 && fabs(y - s->y2) < 1e-12;
+      /* Half-open ownership, mirroring the straight-edge rule: a crossing at
+       * an arc endpoint (a ring junction on the ray) is owned by this edge
+       * only if the arc interior rises above the ray there; an interior
+       * crossing is always transversal and always counted. */
+      const bool at_ep0 = fabs(xi - s->x1) < FP_TOLERANCE && 
+        fabs(y - s->y1) < FP_TOLERANCE;
+      const bool at_ep1 = fabs(xi - s->x2) < FP_TOLERANCE && 
+        fabs(y - s->y2) < FP_TOLERANCE;
       if (at_ep0 || at_ep1)
       {
         const double theta_e = at_ep0 ? s->at0 : s->at1;
@@ -446,6 +453,8 @@ geodist_poly_seg_raycross(const GeoDistEdge *s, double x, double y, bool *inside
     }
     return;
   }
+
+  /* Linear segment */
   double y1 = s->y1, y2 = s->y2;
   if ((y1 > y) != (y2 > y))
   {
@@ -865,7 +874,7 @@ geodist_geom_closest_on_arc(double px, double py, const GeoDistEdge *e,
 {
   double vx = px - e->acx, vy = py - e->acy;
   double vl = hypot(vx, vy);
-  if (vl > 1e-12 && geodist_geom_arc_contains_angle(e, atan2(vy, vx)))
+  if (vl > FP_TOLERANCE && geodist_geom_arc_contains_angle(e, atan2(vy, vx)))
   {
     *qx = e->acx + vx * (e->arad / vl);
     *qy = e->acy + vy * (e->arad / vl);
@@ -1004,7 +1013,7 @@ geodist_geom_point_inside(double x, double y, const GeoDistGeom *g)
     stbox_set(true, false, false, 0, x, g->xmax, y, y, 0, 0, NULL, &query);
     int nc = rtree_search(g->rtree, RTREE_OVERLAPS, &query, geodist_pip_results);
     for (int j = 0; j < nc; j++)
-      geodist_poly_seg_raycross(
+      geodist_poly_segm_raycross(
         &g->segs[*(int *) meos_array_get(geodist_pip_results, j)], x, y,
         &inside);
     return inside;
@@ -1016,7 +1025,7 @@ geodist_geom_point_inside(double x, double y, const GeoDistGeom *g)
       continue;
     int e = bk->start + bk->n;
     for (int i = bk->start; i < e; i++)
-      geodist_poly_seg_raycross(&g->segs[i], x, y, &inside);
+      geodist_poly_segm_raycross(&g->segs[i], x, y, &inside);
   }
   return inside;
 }
@@ -1025,7 +1034,7 @@ geodist_geom_point_inside(double x, double y, const GeoDistGeom *g)
  * @brief Squared distance from a point to a 2D segment
  */
 static inline double
-geodist_pt_seg_dist2(double px, double py, double ax, double ay, double bx,
+geodist_pt_segm_dist2(double px, double py, double ax, double ay, double bx,
   double by)
 {
   double abx = bx - ax, aby = by - ay;
@@ -1042,7 +1051,7 @@ geodist_pt_seg_dist2(double px, double py, double ax, double ay, double bx,
  * prune (no closest-point bookkeeping)
  */
 static inline double
-geodist_seg_seg_dist2(double ax, double ay, double bx, double by, double cx,
+geodist_segm_segm_dist2(double ax, double ay, double bx, double by, double cx,
   double cy, double dx, double dy)
 {
   /* Conservative crossing test (orientation signs, no division): a touch or
@@ -1056,11 +1065,11 @@ geodist_seg_seg_dist2(double ax, double ay, double bx, double by, double cx,
   if (((d1 <= 0.0 && d2 >= 0.0) || (d1 >= 0.0 && d2 <= 0.0)) &&
       ((d3 <= 0.0 && d4 >= 0.0) || (d3 >= 0.0 && d4 <= 0.0)))
     return 0.0;
-  double m = geodist_pt_seg_dist2(ax, ay, cx, cy, dx, dy);
+  double m = geodist_pt_segm_dist2(ax, ay, cx, cy, dx, dy);
   double v;
-  v = geodist_pt_seg_dist2(bx, by, cx, cy, dx, dy); if (v < m) m = v;
-  v = geodist_pt_seg_dist2(cx, cy, ax, ay, bx, by); if (v < m) m = v;
-  v = geodist_pt_seg_dist2(dx, dy, ax, ay, bx, by); if (v < m) m = v;
+  v = geodist_pt_segm_dist2(bx, by, cx, cy, dx, dy); if (v < m) m = v;
+  v = geodist_pt_segm_dist2(cx, cy, ax, ay, bx, by); if (v < m) m = v;
+  v = geodist_pt_segm_dist2(dx, dy, ax, ay, bx, by); if (v < m) m = v;
   return m;
 }
 
@@ -1133,7 +1142,7 @@ geodist_segm_nad(double cx1, double cy1, double r1, double cx2, double cy2,
         double rmax = fmax(r1, r2);
         double thr = *best + rmax;
         if (rmax > 0.0 &&
-            geodist_seg_seg_dist2(cx1, cy1, cx2, cy2, ed->x1, ed->y1,
+            geodist_segm_segm_dist2(cx1, cy1, cx2, cy2, ed->x1, ed->y1,
               ed->x2, ed->y2) >= thr * thr)
           continue;
       }
@@ -1222,7 +1231,7 @@ geodist_segm_shortestline(double cx1, double cy1, double r1, double cx2,
         double rmax = fmax(r1, r2);
         double thr = w->d + rmax;
         if (rmax > 0.0 &&
-            geodist_seg_seg_dist2(cx1, cy1, cx2, cy2, e->x1, e->y1,
+            geodist_segm_segm_dist2(cx1, cy1, cx2, cy2, e->x1, e->y1,
               e->x2, e->y2) >= thr * thr)
           continue;
       }
@@ -1243,7 +1252,7 @@ geodist_segm_shortestline(double cx1, double cy1, double r1, double cx2,
         double vx = qx - ccx, vy = qy - ccy;
         double vl = sqrt(vx * vx + vy * vy);
         double pxp, pyp;
-        if (vl <= 1e-12 || m <= 0.0)
+        if (vl <= FP_TOLERANCE || m <= 0.0)
         {
           /* Overlap or centre on the edge: degenerate line at the contact */
           pxp = qx; pyp = qy;
@@ -1332,7 +1341,7 @@ geodist_segm_nai(double cx1, double cy1, double r1, TimestampTz t1, double cx2,
         double rmax = fmax(r1, r2);
         double thr = w->d + rmax;
         if (rmax > 0.0 &&
-            geodist_seg_seg_dist2(cx1, cy1, cx2, cy2, e->x1, e->y1,
+            geodist_segm_segm_dist2(cx1, cy1, cx2, cy2, e->x1, e->y1,
               e->x2, e->y2) >= thr * thr)
           continue;
       }
@@ -1797,7 +1806,7 @@ tdistance_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
  * distance below. The radius is zero for a point
  */
 double
-tpointseg_distance_lb(Datum start1, Datum end1, Datum start2, Datum end2)
+tpointsegm_distance_lb(Datum start1, Datum end1, Datum start2, Datum end2)
 {
   const POINT2D *s1 = DATUM_POINT2D_P(start1);
   const POINT2D *e1 = DATUM_POINT2D_P(end1);
@@ -2307,6 +2316,7 @@ tgeoseq_nad(const TSequence *seq, const GeoDistGeom *g, double *best)
     }
     return;
   }
+  /* Linear interpolation */
   const TInstant *i1 = TSEQUENCE_INST_N(seq, 0);
   for (int i = 1; i < seq->count && *best > 0.0; i++)
   {
@@ -2372,6 +2382,7 @@ tpointseq_shortestline(const TSequence *seq, const GeoDistGeom *g,
     }
     return;
   }
+  /* Linear interpolation */
   const TInstant *i1 = TSEQUENCE_INST_N(seq, 0);
   for (int i = 1; i < seq->count && ! (w->set && w->d <= 0.0); i++)
   {
@@ -2450,6 +2461,7 @@ tgeoseq_nai(const TSequence *seq, const GeoDistGeom *g, GeoDistNai *w)
     }
     return;
   }
+  /* Linear interpolation */
   const TInstant *i1 = TSEQUENCE_INST_N(seq, 0);
   for (int i = 1; i < seq->count && ! (w->set && w->d <= 0.0); i++)
   {
@@ -2579,7 +2591,7 @@ nai_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
   {
     TimestampTz t;
     seglb_func lb = MEOS_FLAGS_GET_GEODETIC(temp1->flags) ? NULL :
-      &tpointseg_distance_lb;
+      &tpointsegm_distance_lb;
     if (nad_tcont_tcont_sync(temp1, temp2, geo_distance_fn(temp1->flags),
       &tpointsegm_distance_turnpt, lb, &t) != DBL_MAX)
     {
@@ -2776,7 +2788,7 @@ nad_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
   {
     TimestampTz t;
     seglb_func lb = MEOS_FLAGS_GET_GEODETIC(temp1->flags) ? NULL :
-      &tpointseg_distance_lb;
+      &tpointsegm_distance_lb;
     double d = nad_tcont_tcont_sync(temp1, temp2,
       geo_distance_fn(temp1->flags), &tpointsegm_distance_turnpt, lb, &t);
     if (d != DBL_MAX)
@@ -2901,7 +2913,7 @@ shortestline_tgeo_tgeo(const Temporal *temp1, const Temporal *temp2)
       nad_tcont_tcont_sync_applies(temp1, temp2))
   {
     seglb_func lb = MEOS_FLAGS_GET_GEODETIC(temp1->flags) ? NULL :
-      &tpointseg_distance_lb;
+      &tpointsegm_distance_lb;
     fast = nad_tcont_tcont_sync(temp1, temp2, geo_distance_fn(temp1->flags),
       &tpointsegm_distance_turnpt, lb, &tmin) != DBL_MAX;
   }

@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -204,7 +204,6 @@ nsegmentarr_sort(Nsegment **segments, int count)
 {
   qsort(segments, (size_t) count, sizeof(Nsegment *),
       (qsort_comparator) &nsegment_sort_cmp);
-  return;
 }
 
 /**
@@ -623,7 +622,6 @@ npoint_set(int64 rid, double pos, Npoint *np)
   /* Fill in the network point */
   np->rid = rid;
   np->pos = pos;
-  return;
 }
 
 /**
@@ -660,7 +658,6 @@ nsegment_set(int64 rid, double pos1, double pos2, Nsegment *ns)
   ns->rid = rid;
   ns->pos1 = Min(pos1, pos2);
   ns->pos2 = Max(pos1, pos2);
-  return;
 }
 
 /*****************************************************************************
@@ -733,7 +730,6 @@ npointarr_set_stbox(const Datum *values, int count, STBox *box)
     npoint_set_stbox(DatumGetNpointP(values[i]), &box1);
     stbox_expand(&box1, box);
   }
-  return;
 }
 
 /**
@@ -1199,13 +1195,14 @@ npoint_ne(const Npoint *np1, const Npoint *np2)
  * @brief Return -1, 0, or 1 depending on whether the first network point
  * is less than, equal to, or greater than the second one
  * @param[in] np1,np2 Network points
+ * @return On error return @p INT_MAX
  * @csqlfn #Npoint_cmp()
  */
 int
 npoint_cmp(const Npoint *np1, const Npoint *np2)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(np1, false); VALIDATE_NOT_NULL(np2, false);
+  VALIDATE_NOT_NULL(np1, INT_MAX); VALIDATE_NOT_NULL(np2, INT_MAX);
 
   if (np1->rid < np2->rid)
     return -1;
@@ -1310,7 +1307,7 @@ int
 nsegment_cmp(const Nsegment *ns1, const Nsegment *ns2)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(ns1, false); VALIDATE_NOT_NULL(ns2, false);
+  VALIDATE_NOT_NULL(ns1, -1); VALIDATE_NOT_NULL(ns2, -1);
 
   if (ns1->rid < ns2->rid)
     return -1;
@@ -1390,12 +1387,14 @@ nsegment_ge(const Nsegment *ns1, const Nsegment *ns2)
  * @ingroup meos_npoint_base_accessor
  * @brief Return the 32-bit hash value of a network point
  * @param[in] np Network point
+ * @return On error return @p UINT32_MAX
+ * @csqlfn #Npoint_hash()
  */
 uint32
 npoint_hash(const Npoint *np)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(np, INT_MAX);
+  VALIDATE_NOT_NULL(np, UINT32_MAX);
 
   /* Compute hashes of value and position */
   uint32 rid_hash = int64_hash(np->rid);
@@ -1417,12 +1416,13 @@ npoint_hash(const Npoint *np)
  * @brief Return the 64-bit hash value of a network point using a seed
  * @param[in] np Network point
  * @param[in] seed Seed
+ * @return On error return @p UINT64_MAX
  */
 uint64
 npoint_hash_extended(const Npoint *np, uint64 seed)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(np, LONG_MAX);
+  VALIDATE_NOT_NULL(np, UINT64_MAX);
 
   /* Compute hashes of value and position */
   uint64 rid_hash = int64_hash_extended(np->rid, seed);

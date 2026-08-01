@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -473,7 +473,6 @@ node_box_calculate(const RTree *rtree, const RTreeNode *node, void *box)
   memcpy(box, RTREE_NODE_BBOX_N(node, 0), rtree->bboxsize);
   for (int i = 1; i < node->count; ++i)
     rtree->bbox_expand(RTREE_NODE_BBOX_N(node, i), box);
-  return;
 }
 
 /**
@@ -532,7 +531,6 @@ node_move_box_at_index_into(RTreeNode *from, int index, RTreeNode *into)
   }
   from->count--;
   into->count++;
-  return;
 }
 
 /**
@@ -568,7 +566,6 @@ node_swap(const RTree *rtree, RTreeNode *node, int i, int j)
     node->nodes[i] = node->nodes[j];
     node->nodes[j] = tree;
   }
-  return;
 }
 
 /**
@@ -615,7 +612,6 @@ node_qsort(const RTree *rtree, RTreeNode *node, int index, bool upper, int s,
   node_swap(rtree, node, s + left, s + right);
   node_qsort(rtree, node, index, upper, s, s + left);
   node_qsort(rtree, node, index, upper, s + left + 1, e);
-  return;
 }
 
 /**
@@ -633,7 +629,6 @@ static void
 node_sort_axis(const RTree *rtree, RTreeNode *node, int index, bool upper)
 {
   node_qsort(rtree, node, index, upper, 0, node->count);
-  return;
 }
 
 /**
@@ -698,7 +693,6 @@ node_split(RTree *rtree, RTreeNode *node, void *box, RTreeNode **right_out)
     node_sort_axis(rtree, right, 0, false);
   }
   *right_out = right;
-  return;
 }
 
 /**
@@ -763,7 +757,6 @@ node_insert(RTree *rtree, void *node_bounding_box, RTreeNode *node,
   node->nodes[node->count] = right;
   node->count++;
   node_insert(rtree, node_bounding_box, node, new_box, id, split);
-  return;
 }
 
 
@@ -842,7 +835,6 @@ node_search(const RTree *rtree, const RTreeNode *node, RTreeSearchOp op,
         node_search(rtree, node->nodes[i], op, query, result);
     }
   }
-  return;
 }
 
 /**
@@ -1036,7 +1028,6 @@ rtree_insert(RTree *rtree, void *box, int id)
     rtree->root = new_root;
     rtree->root->count = 2;
   }
-  return;
 }
 
 /**
@@ -1115,7 +1106,6 @@ rtree_insert_temporal(RTree *rtree, const Temporal *temp, int id)
   memset(&buf, 0, sizeof(buf));
   temporal_set_bbox(temp, &buf);
   rtree_insert(rtree, &buf, id);
-  return;
 }
 
 /**
@@ -1254,7 +1244,6 @@ rtree_insert_temporal_split(RTree *rtree, const Temporal *temp, int id,
   for (int i = 0; i < count; i++)
     rtree_insert(rtree, (char *) boxes + (size_t) i * rtree->bboxsize, id);
   pfree(boxes);
-  return;
 }
 
 /**
@@ -1442,7 +1431,6 @@ nn_heap_push(RTreeNNCursor *cursor, RTreeNNEntry entry)
     cursor->heap[i] = tmp;
     i = parent;
   }
-  return;
 }
 
 /**
@@ -1586,7 +1574,6 @@ rtree_nn_cursor_close(RTreeNNCursor *cursor)
   pfree(cursor->heap);
   pfree(cursor->query);
   pfree(cursor);
-  return;
 }
 
 /**
@@ -1620,7 +1607,6 @@ rtree_free(RTree *rtree)
   if (rtree->root)
     node_free(rtree->root);
   pfree(rtree);
-  return;
 }
 
 /*****************************************************************************/

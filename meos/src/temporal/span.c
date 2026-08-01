@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -145,7 +145,6 @@ span_deserialize(const Span *s, SpanBound *lower, SpanBound *upper)
     upper->spantype = s->spantype;
     upper->basetype = s->basetype;
   }
-  return;
 }
 
 /**
@@ -490,7 +489,6 @@ span_set(Datum lower, Datum upper, bool lower_inc, bool upper_inc,
   s->upper_inc = upper_inc;
   s->spantype = spantype;
   s->basetype = basetype;
-  return;
 }
 
 /**
@@ -525,7 +523,6 @@ value_set_span(Datum value, MeosType basetype, Span *s)
   assert(s); assert(span_basetype(basetype));
   MeosType spantype = basetype_spantype(basetype);
   span_set(value, value, true, true, basetype, spantype, s);
-  return;
 }
 
 /**
@@ -557,7 +554,6 @@ set_set_subspan(const Set *s, int fromidx, int toidx, Span *result)
   MeosType spantype = basetype_spantype(s->basetype);
   span_set(SET_VAL_N(s, fromidx), SET_VAL_N(s, toidx), true, true,
     s->basetype, spantype, result);
-  return;
 }
 
 /**
@@ -618,7 +614,6 @@ intspan_set_bigintspan(const Span *s1, Span *s2)
   Datum lower = Int64GetDatum((int64) DatumGetInt32(s1->lower));
   Datum upper = Int64GetDatum((int64) (DatumGetInt32(s1->upper) - 1));
   span_set(lower, upper, true, true, T_INT8, T_BIGINTSPAN, s2);
-  return;
 }
 
 /**
@@ -650,7 +645,6 @@ bigintspan_set_intspan(const Span *s1, Span *s2)
   Datum lower = Int32GetDatum((int) DatumGetInt64(s1->lower));
   Datum upper = Int32GetDatum((int) (DatumGetInt64(s1->upper) - 1));
   span_set(lower, upper, true, true, T_INT4, T_INTSPAN, s2);
-  return;
 }
 
 /**
@@ -681,7 +675,6 @@ intspan_set_floatspan(const Span *s1, Span *s2)
   Datum lower = Float8GetDatum((double) DatumGetInt32(s1->lower));
   Datum upper = Float8GetDatum((double) (DatumGetInt32(s1->upper) - 1));
   span_set(lower, upper, true, true, T_FLOAT8, T_FLOATSPAN, s2);
-  return;
 }
 
 /**
@@ -714,7 +707,6 @@ bigintspan_set_floatspan(const Span *s1, Span *s2)
   Datum lower = Float8GetDatum((double) DatumGetInt64(s1->lower));
   Datum upper = Float8GetDatum((double) (DatumGetInt64(s1->upper) - 1));
   span_set(lower, upper, true, true, T_FLOAT8, T_FLOATSPAN, s2);
-  return;
 }
 
 /**
@@ -746,7 +738,6 @@ floatspan_set_bigintspan(const Span *s1, Span *s2)
   Datum lower = Int64GetDatum((int64) DatumGetFloat8(s1->lower));
   Datum upper = Int64GetDatum((int64) (DatumGetFloat8(s1->upper)));
   span_set(lower, upper, s1->lower_inc, s1->upper_inc, T_INT8, T_BIGINTSPAN, s2);
-  return;
 }
 
 /**
@@ -777,7 +768,6 @@ floatspan_set_intspan(const Span *s1, Span *s2)
   Datum lower = Int32GetDatum((int) DatumGetFloat8(s1->lower));
   Datum upper = Int32GetDatum((int) (DatumGetFloat8(s1->upper)));
   span_set(lower, upper, s1->lower_inc, s1->upper_inc, T_INT4, T_INTSPAN, s2);
-  return;
 }
 
 /**
@@ -812,7 +802,6 @@ datespan_set_tstzspan(const Span *s1, Span *s2)
     TimestampTzGetDatum(date_to_timestamptz(DatumGetDateADT(s1->upper)));
   /* Date spans are always canonicalized */
   span_set(lower, upper, true, false, T_TIMESTAMPTZ, T_TSTZSPAN, s2);
-  return;
 }
 
 /**
@@ -855,7 +844,6 @@ tstzspan_set_datespan(const Span *s1, Span *s2)
   /* Canonicalization takes place in the following function */
   span_set(DateADTGetDatum(lower), DateADTGetDatum(upper), lower_inc,
     upper_inc, T_DATE, T_DATESPAN, s2);
-  return;
 }
 
 /**
@@ -954,7 +942,6 @@ floatspan_round_set(const Span *s, int maxdd, Span *result)
   /* Set resulting span */
   span_set(Float8GetDatum(lower), Float8GetDatum(upper), lower_inc, upper_inc,
     s->basetype, s->spantype, result);
-  return;
 }
 
 /**
@@ -997,7 +984,6 @@ floatspan_floor_ceil_iter(Span *s, datum_func1 func)
     lower_inc = upper_inc = true;
   }
   span_set(lower, upper, lower_inc, upper_inc, s->basetype, s->spantype, s);
-  return;
 }
 
 /**
@@ -1085,7 +1071,6 @@ span_expand(const Span *s1, Span *s2)
   s2->lower_inc = lower1 ? s2->lower_inc : s1->lower_inc;
   s2->upper = upper1 ? s2->upper : s1->upper;
   s2->upper_inc = upper1 ? s2->upper_inc : s1->upper_inc;
-  return;
 }
 
 /*****************************************************************************/
@@ -1246,7 +1231,6 @@ span_bounds_shift_scale_value(Datum shift, Datum width, MeosType basetype,
       width = datum_add(width, 1, basetype);
     *upper = datum_add(*lower, width, basetype);
   }
-  return;
 }
 
 /**
@@ -1273,7 +1257,6 @@ span_bounds_shift_scale_time(const Interval *shift, const Interval *duration,
   }
   if (duration && ! instant)
     *upper = add_timestamptz_interval(*lower, (Interval *) duration);
-  return;
 }
 
 /**
@@ -1316,7 +1299,6 @@ numspan_delta_scale_iter(Span *s, Datum origin, Datum delta, bool hasdelta,
         s->upper = datum_add(s->upper, 1, type);
     }
   }
-  return;
 }
 
 /**
@@ -1351,7 +1333,6 @@ tstzspan_delta_scale_iter(Span *s, TimestampTz origin, TimestampTz delta,
       s->upper = TimestampTzGetDatum(
         origin + (TimestampTz) ((upper - origin) * scale));
   }
-  return;
 }
 
 /**
@@ -1399,7 +1380,6 @@ numspan_shift_scale_iter(Span *s, Datum shift, Datum width, bool hasshift,
   }
   s->lower = lower;
   s->upper = upper;
-  return;
 }
 
 /**
@@ -1425,7 +1405,6 @@ tstzspan_shift_scale1(Span *s, const Interval *shift, const Interval *duration,
       (double) (DatumGetTimestampTz(s->upper) - DatumGetTimestampTz(s->lower));
   s->lower = TimestampTzGetDatum(lower);
   s->upper = TimestampTzGetDatum(upper);
-  return;
 }
 
 /**
@@ -1738,14 +1717,14 @@ span_gt(const Span *s1, const Span *s2)
  * @ingroup meos_setspan_accessor
  * @brief Return the 32-bit hash of a span
  * @param[in] s Span
- * @return On error return @p INT_MAX
+ * @return On error return @p UINT32_MAX
  * @csqlfn #Span_hash()
  */
 uint32
 span_hash(const Span *s)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(s, INT_MAX);
+  VALIDATE_NOT_NULL(s, UINT32_MAX);
 
   /* Create flags from the lower_inc and upper_inc values */
   char flags = '\0';
@@ -1786,14 +1765,14 @@ span_hash(const Span *s)
  * @brief Return the 64-bit hash of a span using a seed
  * @param[in] s Span
  * @param[in] seed Seed
- * @return On error return @p LONG_MAX
+ * @return On error return @p UINT64_MAX
  * @csqlfn #Span_hash_extended()
  */
 uint64
 span_hash_extended(const Span *s, uint64 seed)
 {
   /* Ensure the validity of the arguments */
-  VALIDATE_NOT_NULL(s, LONG_MAX);
+  VALIDATE_NOT_NULL(s, UINT64_MAX);
 
   char flags = '\0';
   /* Create flags from the lower_inc and upper_inc values */

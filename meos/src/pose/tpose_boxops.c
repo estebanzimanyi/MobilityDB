@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -89,7 +89,6 @@ posearr_set_stbox(const Datum *values, int count, STBox *box)
     pose_set_stbox(DatumGetPoseP(values[i]), &box1);
     stbox_expand(&box1, box);
   }
-  return;
 }
 
 /**
@@ -124,7 +123,6 @@ tposeinst_set_stbox(const TInstant *inst, STBox *box)
   span_set(TimestampTzGetDatum(inst->t), TimestampTzGetDatum(inst->t),
     true, true, T_TIMESTAMPTZ, T_TSTZSPAN, &box->period);
   MEOS_FLAGS_SET_T(box->flags, true);
-  return;
 }
 
 /**
@@ -161,7 +159,6 @@ tposeinstarr_set_stbox(TInstant **instants, int count, STBox *box)
   }
   MEOS_FLAGS_SET_Z(box->flags, hasz);
   MEOS_FLAGS_SET_GEODETIC(box->flags, geodetic);
-  return;
 }
 
 /**
@@ -176,7 +173,6 @@ tposeseq_expand_stbox(TSequence *seq, const TInstant *inst)
   STBox box;
   tposeinst_set_stbox(inst, &box);
   stbox_expand(&box, (STBox *) TSEQUENCE_BBOX_PTR(seq));
-  return;
 }
 
 /*****************************************************************************/

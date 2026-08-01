@@ -1,12 +1,12 @@
 /*****************************************************************************
  *
  * This MobilityDB code is provided under The PostgreSQL License.
- * Copyright (c) 2016-2025, Université libre de Bruxelles and MobilityDB
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
  * contributors
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -62,12 +62,13 @@
  * @csqlfn #Quadbin_point_to_cell()
  */
 Quadbin
-geo_to_quadbin_cell(const GSERIALIZED *point, int32 resolution)
+geo_to_quadbin_cell(const GSERIALIZED *point, uint32_t resolution)
 {
+  /* Ensure the validity of the arguments */
   if (! ensure_srid_is_latlong(gserialized_get_srid(point)))
     return (Quadbin) 0;
   const POINT2D *p = GSERIALIZED_POINT2D_P(point);
-  return quadbin_point_to_cell(p->x, p->y, (uint32_t) resolution);
+  return quadbin_point_to_cell(p->x, p->y, resolution);
 }
 
 /*****************************************************************************

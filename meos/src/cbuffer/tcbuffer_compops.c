@@ -6,7 +6,7 @@
  *
  * MobilityDB includes portions of PostGIS version 3 source code released
  * under the GNU General Public License (GPLv2 or later).
- * Copyright (c) 2001-2025, PostGIS contributors
+ * Copyright (c) 2001-2026, PostGIS contributors
  *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose, without fee, and without a written
@@ -53,6 +53,7 @@
  * @param[in] cb Circular buffer
  * @param[in] ever True for the ever semantics, false for the always semantics
  * @param[in] func Comparison function
+ * @return On error return -1
  */
 int
 eacomp_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb,
@@ -71,6 +72,7 @@ eacomp_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb,
  * @param[in] temp1,temp2 Temporal values
  * @param[in] ever True for the ever semantics, false for the always semantics
  * @param[in] func Comparison function
+ * @return On error return -1
  */
 int
 eacomp_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2,
@@ -256,6 +258,7 @@ always_ne_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
  * @param[in] temp Temporal value
  * @param[in] cb Circular buffer
  * @param[in] func Comparison function
+ * @return On error return @p NULL
  */
 static Temporal *
 tcomp_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp,
@@ -274,6 +277,7 @@ tcomp_cbuffer_tcbuffer(const Cbuffer *cb, const Temporal *temp,
  * @param[in] temp Temporal value
  * @param[in] cb Circular buffer
  * @param[in] func Comparison function
+ * @return On error return @p NULL
  */
 static Temporal *
 tcomp_tcbuffer_cbuffer(const Temporal *temp, const Cbuffer *cb,
