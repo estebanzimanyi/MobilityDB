@@ -540,6 +540,7 @@ positive_datum(Datum d, MeosType basetype)
 bool
 ensure_positive_datum(Datum d, MeosType basetype)
 {
+  assert(basetype == T_INT4 || basetype == T_INT8 || basetype == T_FLOAT8);
   if (positive_datum(d, basetype))
     return true;
   char str[256];
@@ -547,7 +548,7 @@ ensure_positive_datum(Datum d, MeosType basetype)
     snprintf(str, sizeof(str), "%d", DatumGetInt32(d));
   else if (basetype == T_INT8)
     snprintf(str, sizeof(str), INT64_FORMAT, DatumGetInt64(d));
-  else if (basetype == T_FLOAT8)
+  else /* basetype == T_FLOAT8 */
     snprintf(str, sizeof(str), "%f", DatumGetFloat8(d));
   meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
     "The value must be strictly positive: %s", str);
