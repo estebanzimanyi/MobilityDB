@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.5"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>MobilityDB: process_file</title>
+<title>MobilityDB: h3_is_valid_vertex</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -70,7 +70,7 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="mobilitydb_2sql_2npoint_2CMakeLists_8txt.html">CMakeLists.txt</a></li>  </ul>
+<li class="navelem"><a class="el" href="group__meos__h3__base__accessor.html">Accessor functions</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="contents">
@@ -79,27 +79,37 @@ $(function() {
    <td valign="top">
       <div class="navtab">
         <table>
-          <tr><td class="navtabHL"><a class="navtab" href="mobilitydb_2sql_2npoint_2CMakeLists_8txt_a8feb682851e112ff5d2e1e4ff6da03c3.html#a8feb682851e112ff5d2e1e4ff6da03c3">process_file</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="mobilitydb_2sql_2npoint_2CMakeLists_8txt_afe47e1e3876a798b0de9c0d2bf918735.html#afe47e1e3876a798b0de9c0d2bf918735">SET</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__meos__h3__base__accessor_ga2a6b665bc7829b3324cb06c79ae4888f.html#ga2a6b665bc7829b3324cb06c79ae4888f">h3_is_valid_cell</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__meos__h3__base__accessor_ga0985902096208bda2067e55f6c00132f.html#ga0985902096208bda2067e55f6c00132f">h3_is_valid_directed_edge</a></td></tr>
+          <tr><td class="navtabHL"><a class="navtab" href="group__meos__h3__base__accessor_ga8cd7fae85f2e727100fef656eac873c6.html#ga8cd7fae85f2e727100fef656eac873c6">h3_is_valid_vertex</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__meos__h3__base__accessor_ga1f68818fd92ecc2b54663907998c26b6.html#ga1f68818fd92ecc2b54663907998c26b6">h3index_hash</a></td></tr>
         </table>
       </div>
    </td>
    <td valign="top" class="mempage">
-<a id="a8feb682851e112ff5d2e1e4ff6da03c3" name="a8feb682851e112ff5d2e1e4ff6da03c3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8feb682851e112ff5d2e1e4ff6da03c3">&#9670;&#160;</a></span>process_file()</h2>
+<a id="ga8cd7fae85f2e727100fef656eac873c6" name="ga8cd7fae85f2e727100fef656eac873c6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga8cd7fae85f2e727100fef656eac873c6">&#9670;&#160;</a></span>h3_is_valid_vertex()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">process_file </td>
+          <td class="memname">bool h3_is_valid_vertex </td>
           <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>${f} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}</em></td><td>)</td>
+          <td class="paramtype">H3Index&#160;</td>
+          <td class="paramname"><em>vertex</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Return true if an h3index is a valid H3 vertex. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">vertex</td><td>H3 index @csqlfn <a class="el" href="group__mobilitydb__h3__base__accessor_ga8c010f9daf5525ed0a7b557aad0fb85a.html#ga8c010f9daf5525ed0a7b557aad0fb85a" title="Return true if the value encodes a valid H3 vertex @sqlfn isValidVertex()">H3index_is_valid_vertex()</a> </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
