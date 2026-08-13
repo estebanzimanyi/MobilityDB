@@ -104,6 +104,7 @@ $(function() {
           <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__raster_ga2cb551252bc97f77549d33b1495eaa30.html#ga2cb551252bc97f77549d33b1495eaa30">Raquet_width</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__raster_gac9844764d81670c8c0429330e0c4665c.html#gac9844764d81670c8c0429330e0c4665c">Raster_at_value</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__raster_gac23a59c7ad06322241930b45d5543017.html#gac23a59c7ad06322241930b45d5543017">Raster_minus_value</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__raster_ga62dd24fd24b3e60b02e6a577c6eac980.html#ga62dd24fd24b3e60b02e6a577c6eac980">Raster_num_bands</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__raster_gaf0323c7209a520ec3dae3743a04ac175.html#gaf0323c7209a520ec3dae3743a04ac175">Raster_tile_value</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__raster_gafdccba2c5f8936bff8d92514d77c2524.html#gafdccba2c5f8936bff8d92514d77c2524">Raster_tile_value_array</a></td></tr>
           <tr><td class="navtabHL"><a class="navtab" href="group__mobilitydb__raster_ga3ec8080fa4f807997c628eba90802da9.html#ga3ec8080fa4f807997c628eba90802da9">Raster_tile_value_quadbin</a></td></tr>
@@ -132,14 +133,14 @@ $(function() {
 <p>Sample a <a class="el" href="structRaquet.html" title="Structure to represent a Raquet raster tile.">Raquet</a> raster chip along a tgeompoint trajectory. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">traj</td><td>Trajectory (tgeompoint, SRID 4326) </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">pixels</td><td>Row-major pixel bytes (bytea) </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">width</td><td>Tile width in pixels </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">height</td><td>Tile height in pixels </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">quadbin</td><td>CARTO QUADBIN cell (bigint) </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">pixtype</td><td>Pixel type name: UINT8 | INT16 | INT32 | FLOAT32 | FLOAT64 </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">pixtype</td><td>Pixel type name: UINT8, INT16, INT32, FLOAT32, FLOAT64 </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">nodata</td><td>Nodata sentinel value </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">has_nodata</td><td>Enable nodata filtering </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">traj</td><td>Trajectory (tgeompoint, SRID 4326) @csqlfn <a class="el" href="group__mobilitydb__raster_ga3ec8080fa4f807997c628eba90802da9.html#ga3ec8080fa4f807997c628eba90802da9" title="Sample a Raquet raster chip along a tgeompoint trajectory.">Raster_tile_value_quadbin()</a> </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">has_nodata</td><td>Enable nodata filtering @sqlfn rasterTileValueQuadbin() </td></tr>
   </table>
   </dd>
 </dl>
