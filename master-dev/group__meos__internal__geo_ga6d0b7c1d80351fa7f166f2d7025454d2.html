@@ -81,6 +81,8 @@ $(function() {
         <table>
           <tr><td class="navtabHL"><a class="navtab" href="group__meos__internal__geo_ga6d0b7c1d80351fa7f166f2d7025454d2.html#ga6d0b7c1d80351fa7f166f2d7025454d2">tpoint_linear_distance_geom</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__meos__internal__geo_ga28c9d7e1b6cb5456e301b5630d65814a.html#ga28c9d7e1b6cb5456e301b5630d65814a">tpoint_linear_dwithin_geom</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__meos__internal__geo_ga994483a673e894f7045a02d09a86fb2f.html#ga994483a673e894f7045a02d09a86fb2f">tpoint_linear_dwithin_geom_ctx</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__meos__internal__geo_gae3cdddc206cf6af95d65640cccaca6ae.html#gae3cdddc206cf6af95d65640cccaca6ae">tpoint_linear_inter_geom</a></td></tr>
         </table>
       </div>
    </td>
@@ -112,7 +114,7 @@ $(function() {
 </div><div class="memdoc">
 
 <p>Return the temporal float distance between a temporal geometric point with linear interpolation and a 2D geometry. </p>
-<p >Native GEOS-free counterpart of the generic distance lifting for a non-point geometry operand: the distance to a multi-edge or curved target has an arbitrary number of turning points per segment which the point-only base turning-point function cannot represent. The result is a temporal float with linear interpolation whose values at the analytic turning points and at the trajectory instants are the exact distance to the geometry </p><dl class="section pre"><dt>Precondition</dt><dd>The arguments have the same SRID, are 2D and planar, and the geometry is not empty and is supported by the clip engine. This is verified by the caller </dd></dl>
+<p >Native counterpart of the generic distance lifting for a non-point geometry operand: the distance to a multi-edge or curved target has an arbitrary number of turning points per segment which the point-only base turning-point function cannot represent. The result is a temporal float with linear interpolation whose values at the analytic turning points and at the trajectory instants are the exact distance to the geometry </p><dl class="section pre"><dt>Precondition</dt><dd>The arguments have the same SRID, are 2D and planar, and the geometry is not empty and is supported by the clip engine. This is verified by the caller </dd></dl>
 
 </div>
 </div>
