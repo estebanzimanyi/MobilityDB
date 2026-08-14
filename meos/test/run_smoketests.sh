@@ -69,15 +69,15 @@ for suite in "${SUITES[@]}"; do
     -L"$MEOS_BUILD_DIR" -lmeos -lm
   echo "[run]   $suite"
   # Leak-check mode is coupled to what the current base library already fixes:
-  #  - trgeometry/tpose/tnpoint: build on the temporal pose, whose bbox accessor
-  #    leaks are not yet fixed in this base, so they run summary until the pose
-  #    leak-fix PRs land; they still surface crashes, invalid memory and new
-  #    leaks. Flip them to full once those fixes are in the base.
-  #  - everything else (tgeometry, tcbuffer, ...) is leak-clean and runs the
-  #    strict full check; meos_smoketest.supp filters the PROJ/SQLite3 SRS
-  #    possibly-lost noise so it only reports genuine MEOS/liblwgeom leaks.
+  #  - tpose/tnpoint: build on the temporal pose, whose bbox accessor leaks are
+  #    not yet fixed in this base, so they run summary until the pose leak-fix
+  #    PRs land; they still surface crashes, invalid memory and new leaks. Flip
+  #    them to full once those fixes are in the base.
+  #  - everything else (trgeometry, tgeometry, tcbuffer, ...) is leak-clean and
+  #    runs the strict full check; meos_smoketest.supp filters the PROJ/SQLite3
+  #    SRS possibly-lost noise so it only reports genuine MEOS/liblwgeom leaks.
   case "$suite" in
-    trgeometry_test|tpose_smoketest|tnpoint_smoketest)
+    tpose_smoketest|tnpoint_smoketest)
       vg_leak="--leak-check=summary" ;;
     *)
       vg_leak="--leak-check=full" ;;

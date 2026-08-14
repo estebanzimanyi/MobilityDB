@@ -554,6 +554,7 @@ TRGEO_CONFIG = dict(
   free(trgeo_inst3);
   free(trgeo_inst4);
   if (trgeo_tseq2) free(trgeo_tseq2);
+  if (trgeo_inst1) free(trgeo_inst1);
   if (trgeo_seq1) free(trgeo_seq1);
   if (tpoint1) free(tpoint1);
   if (tpose1) free(tpose1);
