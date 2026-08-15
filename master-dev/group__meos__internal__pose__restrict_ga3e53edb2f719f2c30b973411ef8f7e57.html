@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.5"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>MobilityDB: Trgeometry_to_tpoint</title>
+<title>MobilityDB: tpose_restrict_elevation</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -70,7 +70,7 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="group__mobilitydb__rgeo__conversion.html">Conversion functions</a></li>  </ul>
+<li class="navelem"><a class="el" href="group__meos__internal__pose__restrict.html">Restriction functions</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="contents">
@@ -79,31 +79,54 @@ $(function() {
    <td valign="top">
       <div class="navtab">
         <table>
-          <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__rgeo__conversion_ga0c43b4928ac446b1ef3aa7abc4d3df7e.html#ga0c43b4928ac446b1ef3aa7abc4d3df7e">Trgeometry_to_geom</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__rgeo__conversion_gafa4b17de12e039a850d91c325e8ddd8f.html#gafa4b17de12e039a850d91c325e8ddd8f">Trgeometry_to_tgeometry</a></td></tr>
-          <tr><td class="navtabHL"><a class="navtab" href="group__mobilitydb__rgeo__conversion_ga142de800850dfec13ccdea0a3a26641a.html#ga142de800850dfec13ccdea0a3a26641a">Trgeometry_to_tpoint</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__rgeo__conversion_ga82788f37cecb7afd360466bda115f43e.html#ga82788f37cecb7afd360466bda115f43e">Trgeometry_to_tpose</a></td></tr>
+          <tr><td class="navtabHL"><a class="navtab" href="group__meos__internal__pose__restrict_ga3e53edb2f719f2c30b973411ef8f7e57.html#ga3e53edb2f719f2c30b973411ef8f7e57">tpose_restrict_elevation</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__meos__internal__pose__restrict_ga1c0c1575789e36a3f6d7940ba311462d.html#ga1c0c1575789e36a3f6d7940ba311462d">tpose_restrict_geom</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__meos__internal__pose__restrict_ga598a06318d8a900e7a737f7d0ad73c92.html#ga598a06318d8a900e7a737f7d0ad73c92">tpose_restrict_stbox</a></td></tr>
         </table>
       </div>
    </td>
    <td valign="top" class="mempage">
-<a id="ga142de800850dfec13ccdea0a3a26641a" name="ga142de800850dfec13ccdea0a3a26641a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga142de800850dfec13ccdea0a3a26641a">&#9670;&#160;</a></span>Trgeometry_to_tpoint()</h2>
+<a id="ga3e53edb2f719f2c30b973411ef8f7e57" name="ga3e53edb2f719f2c30b973411ef8f7e57"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga3e53edb2f719f2c30b973411ef8f7e57">&#9670;&#160;</a></span>tpose_restrict_elevation()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="postgres__ext__defs_8in_8h_a43879eb52e27b2413d7a05056a173ca6.html#a43879eb52e27b2413d7a05056a173ca6">Datum</a> Trgeometry_to_tpoint </td>
+          <td class="memname"><a class="el" href="structTemporal.html">Temporal</a> * tpose_restrict_elevation </td>
           <td>(</td>
-          <td class="paramtype">PG_FUNCTION_ARGS&#160;</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype">const <a class="el" href="structTemporal.html">Temporal</a> *&#160;</td>
+          <td class="paramname"><em>temp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">const <a class="el" href="structSpan.html">Span</a> *&#160;</td>
+          <td class="paramname"><em>s</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>atfunc</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Convert a temporal rigid geometry into a temporal point @sqlfn tgeompoint(), tgeogpoint() </p>
+<p>Return a temporal pose restricted to (the complement of) an elevation span. </p>
+<p >The elevation of a pose is the elevation of its position, so the restriction is taken on the temporal point of the positions and the result is the temporal pose restricted to the times it keeps </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">temp</td><td><a class="el" href="structTemporal.html" title="Structure to represent the common structure of temporal values of any temporal subtype.">Temporal</a> pose </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">s</td><td>Elevation span </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">atfunc</td><td>True if the restriction is <code>at</code>, false for <code>minus</code> </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
