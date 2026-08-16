@@ -3992,6 +3992,54 @@ relate_point_in_linear(double x, double y, Edge **edges, int nedges)
 
 /**
  * @brief Return the points of a point geometry
+ * @details A multipoint and a collection share the collection memory layout,
+ * so a point geometry is walked to any depth the same way #geom_extract_edges
+ * walks one. Reading the components of a collection as points instead reads a
+ * nested multipoint as a point
+ */
+static int
+relate_count_points(const LWGEOM *geom)
+{
+  if (! geom || lwgeom_is_empty(geom))
+    return 0;
+  if (geom->type == POINTTYPE)
+    return 1;
+  if (geom->type != MULTIPOINTTYPE && geom->type != COLLECTIONTYPE)
+    return 0;
+  const LWCOLLECTION *col = (const LWCOLLECTION *) geom;
+  int result = 0;
+  for (uint32_t i = 0; i < col->ngeoms; i++)
+    result += relate_count_points(col->geoms[i]);
+  return result;
+}
+
+/**
+ * @brief Append the points of a point geometry to an array
+ */
+static void
+relate_extract_points_iter(const LWGEOM *geom, POINT2D *result, int *count)
+{
+  if (! geom || lwgeom_is_empty(geom))
+    return;
+  if (geom->type == POINTTYPE)
+  {
+    POINT4D p;
+    getPoint4d_p(((const LWPOINT *) geom)->point, 0, &p);
+    result[*count].x = p.x;
+    result[*count].y = p.y;
+    (*count)++;
+    return;
+  }
+  if (geom->type != MULTIPOINTTYPE && geom->type != COLLECTIONTYPE)
+    return;
+  const LWCOLLECTION *col = (const LWCOLLECTION *) geom;
+  for (uint32_t i = 0; i < col->ngeoms; i++)
+    relate_extract_points_iter(col->geoms[i], result, count);
+  return;
+}
+
+/**
+ * @brief Return the points of a point geometry
  * @details A POINT and a MULTIPOINT are the same kind of set to the relation,
  * one of them holding a single element, so both are related by the same code
  * @param[in] geom Point geometry
@@ -4000,35 +4048,10 @@ relate_point_in_linear(double x, double y, Edge **edges, int nedges)
 static POINT2D *
 relate_extract_points(const LWGEOM *geom, int *count)
 {
+  POINT2D *result = palloc(sizeof(POINT2D) *
+    (size_t) (relate_count_points(geom) + 1));
   *count = 0;
-  if (geom->type == POINTTYPE)
-  {
-    const LWPOINT *point = (const LWPOINT *) geom;
-    POINT2D *result = palloc(sizeof(POINT2D));
-    if (point->point && point->point->npoints > 0)
-    {
-      POINT4D p;
-      getPoint4d_p(point->point, 0, &p);
-      result[0].x = p.x;
-      result[0].y = p.y;
-      *count = 1;
-    }
-    return result;
-  }
-
-  const LWMPOINT *mpoint = (const LWMPOINT *) geom;
-  POINT2D *result = palloc(sizeof(POINT2D) * (size_t) (mpoint->ngeoms + 1));
-  for (uint32_t i = 0; i < mpoint->ngeoms; i++)
-  {
-    const LWPOINT *point = mpoint->geoms[i];
-    if (! point->point || point->point->npoints == 0)
-      continue;
-    POINT4D p;
-    getPoint4d_p(point->point, 0, &p);
-    result[*count].x = p.x;
-    result[*count].y = p.y;
-    (*count)++;
-  }
+  relate_extract_points_iter(geom, result, count);
   return result;
 }
 
@@ -5840,6 +5863,19 @@ relate_area_area(const LWGEOM *g1, const LWGEOM *g2, MeosDE9IM *m)
     de9im_add(&m->ie, 2);
   if (m->eb == 1)
     de9im_add(&m->ei, 2);
+
+  /* A third source, the one that answers a hole of A covered by B. A point
+   * where the boundary of A meets the interior of B has a neighbourhood
+   * inside B, and the far side of that boundary is the exterior of A, so the
+   * two meet in a two-dimensional set. Neither source above sees it when B
+   * covers a hole of A: the boundary of B stays clear of the exterior of A,
+   * and the interior witness of B lands in the body of A rather than in the
+   * hole */
+  if (m->bi != -1)
+    de9im_add(&m->ei, 2);
+  if (m->ib != -1)
+    de9im_add(&m->ie, 2);
+
   double x, y;
   if (relate_area_find_interior_point(e1, n1, &x, &y) &&
       relate_point_in_area(x, y, e2, n2) == 2)
