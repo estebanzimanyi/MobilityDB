@@ -3890,39 +3890,6 @@ relate_point_in_area(double x, double y, Edge **edges, int nedges)
  * Point / Point
  *****************************************************************************/
 
-/**
- * @brief 
- */
-static void
-relate_point_point(const LWGEOM *g1, const LWGEOM *g2, MeosDE9IM *m)
-{
-  const LWPOINT *p1 = (const LWPOINT *) g1;
-  const LWPOINT *p2 = (const LWPOINT *) g2;
-
-  /* Empty points have empty interiors and therefore everything is exterior */
-  if (! p1->point || ! p2->point || p1->point->npoints == 0 ||
-      p2->point->npoints == 0)
-  {
-    m->ee = 2;
-    return;
-  }
-
-  POINT4D a, b;
-  getPoint4d_p(p1->point, 0, &a);
-  getPoint4d_p(p2->point, 0, &b);
-  if (fabs(a.x - b.x) <= FP_TOLERANCE && fabs(a.y - b.y) <= FP_TOLERANCE)
-  {
-    m->ii = 0;
-    m->ee = 2;
-  }
-  else
-  {
-    m->ie = 0;
-    m->ei = 0;
-    m->ee = 2;
-  }
-}
-
 /*****************************************************************************
  * Linear geometry boundary handling
  *****************************************************************************/
@@ -4023,74 +3990,194 @@ relate_point_in_linear(double x, double y, Edge **edges, int nedges)
   return 0;
 }
 
-/*****************************************************************************
- * Point / Linear
- *****************************************************************************/
+/**
+ * @brief Return the points of a point geometry
+ * @details A POINT and a MULTIPOINT are the same kind of set to the relation,
+ * one of them holding a single element, so both are related by the same code
+ * @param[in] geom Point geometry
+ * @param[out] count Number of points, zero for an empty geometry
+ */
+static POINT2D *
+relate_extract_points(const LWGEOM *geom, int *count)
+{
+  *count = 0;
+  if (geom->type == POINTTYPE)
+  {
+    const LWPOINT *point = (const LWPOINT *) geom;
+    POINT2D *result = palloc(sizeof(POINT2D));
+    if (point->point && point->point->npoints > 0)
+    {
+      POINT4D p;
+      getPoint4d_p(point->point, 0, &p);
+      result[0].x = p.x;
+      result[0].y = p.y;
+      *count = 1;
+    }
+    return result;
+  }
+
+  const LWMPOINT *mpoint = (const LWMPOINT *) geom;
+  POINT2D *result = palloc(sizeof(POINT2D) * (size_t) (mpoint->ngeoms + 1));
+  for (uint32_t i = 0; i < mpoint->ngeoms; i++)
+  {
+    const LWPOINT *point = mpoint->geoms[i];
+    if (! point->point || point->point->npoints == 0)
+      continue;
+    POINT4D p;
+    getPoint4d_p(point->point, 0, &p);
+    result[*count].x = p.x;
+    result[*count].y = p.y;
+    (*count)++;
+  }
+  return result;
+}
 
 /**
- * @brief 
+ * @brief Return true if a point belongs to a set of points
+ */
+static bool
+relate_point_in_points(double x, double y, const POINT2D *points, int count)
+{
+  for (int i = 0; i < count; i++)
+  {
+    if (relate_same_point(x, y, points[i].x, points[i].y))
+      return true;
+  }
+  return false;
+}
+
+/**
+ * @brief Compute the DE-9IM matrix for two point geometries
+ * @details A point geometry is its own interior and has an empty boundary, so
+ * the boundary row and the boundary column stay F and the two interiors are
+ * compared element by element
+ */
+static void
+relate_point_point(const LWGEOM *g1, const LWGEOM *g2, MeosDE9IM *m)
+{
+  int n1, n2;
+  POINT2D *p1 = relate_extract_points(g1, &n1);
+  POINT2D *p2 = relate_extract_points(g2, &n2);
+
+  for (int i = 0; i < n1; i++)
+  {
+    if (relate_point_in_points(p1[i].x, p1[i].y, p2, n2))
+      de9im_add(&m->ii, 0);
+    else
+      de9im_add(&m->ie, 0);
+  }
+  for (int i = 0; i < n2; i++)
+  {
+    if (! relate_point_in_points(p2[i].x, p2[i].y, p1, n1))
+      de9im_add(&m->ei, 0);
+  }
+
+  de9im_add(&m->ee, 2);
+  pfree(p1); pfree(p2);
+  return;
+}
+
+/**
+ * @brief Compute the DE-9IM matrix for a point geometry and a linear geometry
  */
 static void
 relate_point_linear(const LWGEOM *point_geom, const LWGEOM *line_geom,
   MeosDE9IM *m)
 {
-  const LWPOINT *point = (const LWPOINT *) point_geom;
-  if (!point->point || point->point->npoints == 0)
-  {
-    m->ee = 2;
-    return;
-  }
-
-  POINT4D p;
-  getPoint4d_p(point->point, 0, &p);
+  int np;
+  POINT2D *points = relate_extract_points(point_geom, &np);
   MeosArray *arr = geom_extract_edges(line_geom);
   int nedges = (int) arr->count;
-  Edge **edges = palloc(sizeof(Edge *) * nedges);
+  Edge **edges = palloc(sizeof(Edge *) * (size_t) (nedges + 1));
   for (int i = 0; i < nedges; i++)
     edges[i] = (Edge *) meos_array_get(arr, i);
 
-  /* Classify the point against the complete linear geometry */
-  int loc = relate_point_in_linear(p.x, p.y, edges, nedges);
-  switch (loc)
+  /* Each point lies in the interior of the linear geometry, on its Mod-2
+   * boundary, or outside it. A point geometry has an empty boundary, so its
+   * boundary row stays F */
+  for (int i = 0; i < np; i++)
   {
-    case 0:
-      /* Point is in the interior of the line */
-      de9im_add(&m->ii, 0);
-      break;
-    case 1:
-      /* Point is on the boundary of the line */
-      de9im_add(&m->ib, 0);
-      break;
-    case 2:
-      /* Point is in the exterior of the line */
-      de9im_add(&m->ie, 0);
-      break;
+    switch (relate_point_in_linear(points[i].x, points[i].y, edges, nedges))
+    {
+      case 0:
+        de9im_add(&m->ii, 0);
+        break;
+      case 1:
+        de9im_add(&m->ib, 0);
+        break;
+      default:
+        de9im_add(&m->ie, 0);
+        break;
+    }
   }
 
-  /* Removing a single point from a linear geometry leaves a 1-dimensional
-   * part of its interior outside the point */
+  /* Removing a finite set of points from a linear geometry leaves a
+   * 1-dimensional part of its interior outside them */
   de9im_add(&m->ei, 1);
 
-  /* A point has an empty boundary, so the whole boundary row stays F. Each
-   * Mod-2 boundary point of the linear geometry other than the point itself
-   * lies in the exterior of the point */
+  /* Each Mod-2 boundary point of the linear geometry that is none of the
+   * points lies in their exterior */
   int nb;
   POINT2D *bpts = relate_linear_boundary_points(edges, nedges, &nb);
   for (int i = 0; i < nb; i++)
   {
-    if (relate_same_point(p.x, p.y, bpts[i].x, bpts[i].y))
+    if (relate_point_in_points(bpts[i].x, bpts[i].y, points, np))
       continue;
     de9im_add(&m->eb, 0);
     break;
   }
-  pfree(bpts);
 
-  /* The exterior of a non-empty linear geometry is 2-dimensional */
   de9im_add(&m->ee, 2);
-
-  pfree(edges); meos_array_destroy(arr);
+  pfree(bpts); pfree(points); pfree(edges); meos_array_destroy(arr);
   return;
 }
+
+/**
+ * @brief Compute the DE-9IM matrix for a point geometry and an areal geometry
+ */
+static void
+relate_point_area(const LWGEOM *point_geom, const LWGEOM *area_geom,
+  MeosDE9IM *m)
+{
+  int np;
+  POINT2D *points = relate_extract_points(point_geom, &np);
+  MeosArray *arr = geom_extract_edges(area_geom);
+  int nedges = (int) arr->count;
+  Edge **edges = palloc(sizeof(Edge *) * (size_t) (nedges + 1));
+  for (int i = 0; i < nedges; i++)
+    edges[i] = (Edge *) meos_array_get(arr, i);
+
+  /* Each point lies in the interior of the area, on its boundary, or outside
+   * it. A point geometry has an empty boundary, so its boundary row stays F */
+  for (int i = 0; i < np; i++)
+  {
+    switch (relate_point_in_area(points[i].x, points[i].y, edges, nedges))
+    {
+      case 0:
+        de9im_add(&m->ii, 0);
+        break;
+      case 1:
+        de9im_add(&m->ib, 0);
+        break;
+      default:
+        de9im_add(&m->ie, 0);
+        break;
+    }
+  }
+
+  /* The interior of an areal geometry is two-dimensional and its boundary is
+   * one-dimensional, and a finite set of points covers neither */
+  de9im_add(&m->ei, 2);
+  de9im_add(&m->eb, 1);
+  de9im_add(&m->ee, 2);
+
+  pfree(points); pfree(edges); meos_array_destroy(arr);
+  return;
+}
+
+/*****************************************************************************
+ * Point / Linear
+ *****************************************************************************/
 
 /*****************************************************************************
  * Linear / Point
@@ -4169,53 +4256,6 @@ relate_linear_edges_overlap(const Edge *a, const Edge *b, double *t0,
 /*****************************************************************************
  * Point / Area
  *****************************************************************************/
-
-/**
- * @brief 
- */
-static void
-relate_point_area(const LWGEOM *point_geom, const LWGEOM *area_geom,
-  MeosDE9IM *m)
-{
-  const LWPOINT *point = (const LWPOINT *) point_geom;
-  if (! point->point || point->point->npoints == 0)
-  {
-    m->ee = 2;
-    return;
-  }
-
-  POINT4D p;
-  getPoint4d_p(point->point, 0, &p);
-  MeosArray *arr = geom_extract_edges(area_geom);
-  int nedges = (int) arr->count;
-  Edge **edges = palloc(sizeof(Edge *) * nedges);
-  for (int i = 0; i < nedges; i++)
-    edges[i] = (Edge *) meos_array_get(arr, i);
-
-  int loc = relate_point_in_area(p.x, p.y, edges, nedges);
-  switch (loc)
-  {
-    case 0:
-      m->ii = 0;
-      break;
-    case 1:
-      m->ib = 0;
-      break;
-    default:
-      m->ie = 0;
-      break;
-  }
-
-  /* The area interior has dimension 2 */
-  m->ei = 2;
-
-  /* Boundary has dimension 1 */
-  m->eb = 1;
-  m->ee = 2;
-
-  pfree(edges); meos_array_destroy(arr);
-  return;
-}
 
 /*****************************************************************************
  * Area / Point
@@ -5941,11 +5981,6 @@ meos_relate(const LWGEOM *g1, const LWGEOM *g2, char result[10])
   int mask2 = relate_dim_mask(g2);
   if (mask1 == 0 || mask2 == 0 || (mask1 & (mask1 - 1)) != 0 ||
       (mask2 & (mask2 - 1)) != 0)
-    return false;
-
-  /* On the point side the engine covers a single POINT */
-  if ((mask1 == 1 && g1->type != POINTTYPE) ||
-      (mask2 == 1 && g2->type != POINTTYPE))
     return false;
 
   if (mask1 == 1 && mask2 == 1)
