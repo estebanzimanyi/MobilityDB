@@ -3469,7 +3469,7 @@ mrr_make_geometry(int32_t srid, const POINT2D rect[5], uint32_t nhull)
  * structure. No curve-to-line conversion and no polygonization is performed.
  */
 LWGEOM *
-minimum_rotated_rectangle(const LWGEOM *geom)
+geom_oriented_envelope_native(const LWGEOM *geom)
 {
   assert(geom);
 
@@ -5969,21 +5969,50 @@ relate_boundary_dimension(const LWGEOM *geom)
 }
 
 /**
+ * @brief Return true if the native DE-9IM engine covers a geometry pair
+ * @details A caller tests this before #geom_relate_native so that a pair the
+ * engine leaves alone is answered another way
+ */
+bool
+geom_relate_supported(const LWGEOM *g1, const LWGEOM *g2)
+{
+  /* The whole engine works on the edge decomposition, so a geometry the clip
+   * engine does not decompose is left to the caller */
+  if (! geom_clip_supported(g1) || ! geom_clip_supported(g2))
+    return false;
+  /* The interior and the boundary of a collection are those of the union of
+   * its components, not the union of theirs: a point on the shared edge of
+   * two polygons of one collection is interior to the collection, which the
+   * per-component classification calls a boundary. Answering a collection
+   * needs the local topology around such a point, so it is left to the
+   * caller */
+  if (g1->type == COLLECTIONTYPE || g2->type == COLLECTIONTYPE)
+    return false;
+  /* An empty operand is answered from the dimensions of the other alone */
+  if (lwgeom_is_empty(g1) || lwgeom_is_empty(g2))
+    return true;
+  int mask1 = relate_dim_mask(g1);
+  int mask2 = relate_dim_mask(g2);
+  if (mask1 == 0 || mask2 == 0)
+    return false;
+  return (mask1 & (mask1 - 1)) == 0 && (mask2 & (mask2 - 1)) == 0;
+}
+
+/**
  * @brief Compute the DE-9IM intersection matrix
- * @details This is the native MEOS counterpart of ST_Relate over the
+ * @details This is the native counterpart of PostGIS @p ST_Relate over the
  * geometry combinations the engine covers
- * @return true if the geometry pair is supported. A false return means the
+ * @return true if the geometry pair is supported, which is what
+ * #geom_relate_supported answers ahead of the call. A false return means the
  * pair is outside that coverage, @b not that the geometries are unrelated, so
  * a caller must answer it another way rather than read @p result
  */
 bool
-meos_relate(const LWGEOM *g1, const LWGEOM *g2, char result[10])
+geom_relate_native(const LWGEOM *g1, const LWGEOM *g2, char result[10])
 {
   assert(g1); assert(g2); assert(result);
 
-  /* The whole engine works on the edge decomposition, so a geometry the clip
-   * engine does not decompose is left to the caller */
-  if (! geom_clip_supported(g1) || ! geom_clip_supported(g2))
+  if (! geom_relate_supported(g1, g2))
     return false;
 
   MeosDE9IM m;
@@ -6011,14 +6040,8 @@ meos_relate(const LWGEOM *g1, const LWGEOM *g2, char result[10])
     return true;
   }
 
-  /* A collection mixing dimensions needs each of its parts related
-   * separately, which the engine does not do */
   int mask1 = relate_dim_mask(g1);
   int mask2 = relate_dim_mask(g2);
-  if (mask1 == 0 || mask2 == 0 || (mask1 & (mask1 - 1)) != 0 ||
-      (mask2 & (mask2 - 1)) != 0)
-    return false;
-
   if (mask1 == 1 && mask2 == 1)
     relate_point_point(g1, g2, &m);
   else if (mask1 == 1 && mask2 == 2)
@@ -6046,10 +6069,10 @@ meos_relate(const LWGEOM *g1, const LWGEOM *g2, char result[10])
  * @brief Return true if two geometries satisfy a DE-9IM pattern
  */
 bool
-meos_relate_pattern(const LWGEOM *g1, const LWGEOM *g2, const char *pattern)
+geom_relate_pattern_native(const LWGEOM *g1, const LWGEOM *g2, const char *pattern)
 {
   char matrix[10];
-  if (! meos_relate(g1, g2, matrix))
+  if (! geom_relate_native(g1, g2, matrix))
     return false;
   return de9im_match(matrix, pattern);
 }

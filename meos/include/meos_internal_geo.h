@@ -246,9 +246,10 @@ extern Temporal *tpoint_linear_dwithin_geom_ctx(const Temporal *temp, const void
 extern Temporal *tpoint_linear_distance_geom(const Temporal *temp, const GSERIALIZED *gs);
 extern Temporal *tpoint_linear_restrict_geom(const Temporal *temp, const GSERIALIZED *gs, bool atfunc);
 extern bool geom_clip_supported(const LWGEOM *geom);
-extern bool meos_relate(const LWGEOM *g1, const LWGEOM *g2, char result[10]);
-extern bool meos_relate_pattern(const LWGEOM *g1, const LWGEOM *g2, const char *pattern);
-extern LWGEOM *minimum_rotated_rectangle(const LWGEOM *geom);
+extern bool geom_relate_supported(const LWGEOM *g1, const LWGEOM *g2);
+extern bool geom_relate_native(const LWGEOM *g1, const LWGEOM *g2, char result[10]);
+extern bool geom_relate_pattern_native(const LWGEOM *g1, const LWGEOM *g2, const char *pattern);
+extern LWGEOM *geom_oriented_envelope_native(const LWGEOM *geom);
 
 /*****************************************************************************/
 

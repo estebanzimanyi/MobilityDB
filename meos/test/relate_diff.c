@@ -5,7 +5,7 @@
  * standard input, one `wkt1|wkt2` or `wkt1|wkt2|expected` record per line
  * @details A record without an expected matrix prints the nine-character
  * matrix, or the word `UNSUPPORTED` when the pair falls outside the coverage
- * of #meos_relate, which compares against the answers another implementation
+ * of #geom_relate_native, which compares against the answers another implementation
  * gives for the same corpus. A record with an expected matrix is checked
  * against it and counted, the exit status reporting whether every record
  * passed. An uncovered pair counts as a failure, so a coverage gap shows up
@@ -46,9 +46,15 @@ matrix_matches(const char *matrix, const char *pattern)
 }
 
 int
-main(void)
+main(int argc, char **argv)
 {
+  /* The wired mode exercises the public geom_relate, which answers an
+   * uncovered pair through GEOS, rather than the native engine alone */
+  bool wired = (argc > 1 && strcmp(argv[1], "--wired") == 0);
   meos_initialize();
+  /* A record the engine cannot answer must not end the run, so the handler
+   * returns instead of exiting */
+  meos_initialize_noexit_error_handler();
   /* The corpus holds geometries of any size, and a truncated line would be
    * reported as a parse failure of the engine rather than of the reader */
   char *line = NULL;
@@ -71,15 +77,36 @@ main(void)
     if (expected)
       *expected++ = '\0';
 
-    LWGEOM *g1 = lwgeom_from_wkt(line, LW_PARSER_CHECK_NONE);
-    LWGEOM *g2 = lwgeom_from_wkt(second, LW_PARSER_CHECK_NONE);
-    if (! g1 || ! g2)
-    {
-      printf("PARSE-ERROR\n");
-      continue;
-    }
     char matrix[10];
-    bool covered = meos_relate(g1, g2, matrix);
+    bool covered;
+    if (wired)
+    {
+      GSERIALIZED *gs1 = geom_in(line, -1);
+      GSERIALIZED *gs2 = geom_in(second, -1);
+      char *answer = (gs1 && gs2) ? geom_relate(gs1, gs2) : NULL;
+      covered = (answer != NULL);
+      if (covered)
+      {
+        strncpy(matrix, answer, 9);
+        matrix[9] = '\0';
+        pfree(answer);
+      }
+      if (gs1) pfree(gs1);
+      if (gs2) pfree(gs2);
+    }
+    else
+    {
+      LWGEOM *g1 = lwgeom_from_wkt(line, LW_PARSER_CHECK_NONE);
+      LWGEOM *g2 = lwgeom_from_wkt(second, LW_PARSER_CHECK_NONE);
+      if (! g1 || ! g2)
+      {
+        printf("PARSE-ERROR\n");
+        continue;
+      }
+      covered = geom_relate_native(g1, g2, matrix);
+      lwgeom_free(g1);
+      lwgeom_free(g2);
+    }
     if (! expected)
       printf("%s\n", covered ? matrix : "UNSUPPORTED");
     else if (! covered)
@@ -96,8 +123,6 @@ main(void)
         printf("FAIL got=%s expected=%s  %s|%s\n", matrix, expected, line,
           second);
     }
-    lwgeom_free(g1);
-    lwgeom_free(g2);
   }
   free(line);
   meos_finalize();

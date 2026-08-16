@@ -1999,7 +1999,26 @@ geom_relate_pattern(const GSERIALIZED *gs1, const GSERIALIZED *gs2, char *p)
   if (! ensure_valid_geo_geo(gs1, gs2) || ! ensure_not_geodetic_geo(gs1))
     return false;
 
-  /* TODO handle empty */
+  /*
+  ** Need to make sure 't' and 'f' are upper-case before matching the pattern
+  */
+  for (size_t i = 0; i < strlen(p); i++ )
+  {
+    if ( p[i] == 't' ) p[i] = 'T';
+    if ( p[i] == 'f' ) p[i] = 'F';
+  }
+
+  /* The native engine answers the combinations it covers, the empty
+   * geometries among them, and leaves the rest to GEOS below */
+  LWGEOM *lw1 = lwgeom_from_gserialized(gs1);
+  LWGEOM *lw2 = lwgeom_from_gserialized(gs2);
+  if (geom_relate_supported(lw1, lw2))
+  {
+    bool result = geom_relate_pattern_native(lw1, lw2, p);
+    lwgeom_free(lw1); lwgeom_free(lw2);
+    return result;
+  }
+  lwgeom_free(lw1); lwgeom_free(lw2);
 
   GEOSContextHandle_t ctx = geos_get_context();
 
@@ -2017,15 +2036,6 @@ geom_relate_pattern(const GSERIALIZED *gs1, const GSERIALIZED *gs2, char *p)
     meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
       "Second argument geometry could not be converted to GEOS");
     return false;
-  }
-
-  /*
-  ** Need to make sure 't' and 'f' are upper-case before handing to GEOS
-  */
-  for (size_t i = 0; i < strlen(p); i++ )
-  {
-    if ( p[i] == 't' ) p[i] = 'T';
-    if ( p[i] == 'f' ) p[i] = 'F';
   }
 
   char result = GEOSRelatePattern_r(ctx, geos1, geos2, p);
@@ -4519,8 +4529,133 @@ line_substring(const GSERIALIZED *gs, double from, double to)
 }
 
 /*****************************************************************************
+ * DE-9IM implementation improving the performance of the PostGIS functions
+ * ST_Relate and ST_OrientedEnvelope
+ *****************************************************************************/
+
+/**
+ * @ingroup meos_geo_base_rel
+ * @brief Return the DE-9IM intersection matrix of two geometries
+ * @param[in] gs1,gs2 Geometries
+ * @return On error return @p NULL
+ * @note PostGIS function: @p ST_Relate(geometry, geometry)
+ * @note The native engine answers the geometry combinations it covers,
+ * a geometry collection mixing dimensions being left to GEOS
+ */
+char *
+geom_relate(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
+{
+  /* Ensure the validity of the arguments */
+  if (! ensure_valid_geo_geo(gs1, gs2) || ! ensure_not_geodetic_geo(gs1))
+    return NULL;
+
+  LWGEOM *lw1 = lwgeom_from_gserialized(gs1);
+  LWGEOM *lw2 = lwgeom_from_gserialized(gs2);
+  if (geom_relate_supported(lw1, lw2))
+  {
+    char *result = palloc(10);
+    bool found = geom_relate_native(lw1, lw2, result);
+    lwgeom_free(lw1); lwgeom_free(lw2);
+    if (found)
+      return result;
+    pfree(result);
+  }
+  else
+  {
+    lwgeom_free(lw1); lwgeom_free(lw2);
+  }
+
+  GEOSContextHandle_t ctx = geos_get_context();
+  GEOSGeometry *geos1 = POSTGIS2GEOS(gs1);
+  if (! geos1)
+  {
+    meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
+      "First argument geometry could not be converted to GEOS");
+    return NULL;
+  }
+  GEOSGeometry *geos2 = POSTGIS2GEOS(gs2);
+  if (! geos2)
+  {
+    GEOSGeom_destroy_r(ctx, geos1);
+    meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
+      "Second argument geometry could not be converted to GEOS");
+    return NULL;
+  }
+  char *matrix = GEOSRelate_r(ctx, geos1, geos2);
+  GEOSGeom_destroy_r(ctx, geos1);
+  GEOSGeom_destroy_r(ctx, geos2);
+  if (! matrix)
+  {
+    meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR, "GEOSRelate returned error");
+    return NULL;
+  }
+  char *result = pstrdup(matrix);
+  GEOSFree_r(ctx, matrix);
+  return result;
+}
+
+/**
+ * @ingroup meos_geo_base_spatial
+ * @brief Return the minimum-area rectangle enclosing a geometry, in any
+ * orientation
+ * @param[in] gs Geometry
+ * @return On error return @p NULL
+ * @note PostGIS function: @p ST_OrientedEnvelope(geometry)
+ * @note The rotating calipers run on the exact circular arcs of the edge
+ * decomposition, so a curved geometry keeps its arcs instead of being stroked
+ */
+GSERIALIZED *
+geom_oriented_envelope(const GSERIALIZED *gs)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(gs, NULL);
+  if (! ensure_not_geodetic_geo(gs))
+    return NULL;
+
+  /* Empty.OrientedEnvelope() == Empty */
+  if (gserialized_is_empty(gs))
+    return geo_copy(gs);
+
+  LWGEOM *lw = lwgeom_from_gserialized(gs);
+  if (geom_clip_supported(lw))
+  {
+    LWGEOM *env = geom_oriented_envelope_native(lw);
+    lwgeom_free(lw);
+    if (env)
+    {
+      GSERIALIZED *result = geo_serialize(env);
+      lwgeom_free(env);
+      return result;
+    }
+  }
+  else
+    lwgeom_free(lw);
+
+  GEOSContextHandle_t ctx = geos_get_context();
+  GEOSGeometry *geos = POSTGIS2GEOS(gs);
+  if (! geos)
+  {
+    meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
+      "Argument geometry could not be converted to GEOS");
+    return NULL;
+  }
+  GEOSGeometry *env = GEOSMinimumRotatedRectangle_r(ctx, geos);
+  GEOSGeom_destroy_r(ctx, geos);
+  if (! env)
+  {
+    meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
+      "GEOSMinimumRotatedRectangle returned error");
+    return NULL;
+  }
+  GEOSSetSRID_r(ctx, env, gserialized_get_srid(gs));
+  GSERIALIZED *result = GEOS2POSTGIS(env, FLAGS_GET_Z(gs->gflags));
+  GEOSGeom_destroy_r(ctx, env);
+  return result;
+}
+
+/*****************************************************************************
  * Minimum Enclosing Circle implementation improving the performance of the
- * PostGIS function ST_MinimumBoundingCircle
+ * PostGIS function ST_MinimumBoundingRadius
  *****************************************************************************/
 
 /**
