@@ -48,6 +48,7 @@
 #include <meos_geo.h>
 #include <meos_internal_geo.h>  /* GSERIALIZED_POINT2D_P */
 #include <meos_quadbin.h>
+#include "geo/postgis_funcs.h"
 #include "geo/tgeo_spatialfuncs.h"
 
 /*****************************************************************************

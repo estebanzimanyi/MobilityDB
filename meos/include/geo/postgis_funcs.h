@@ -71,6 +71,7 @@
 
 extern GSERIALIZED* geom_serialize(LWGEOM *lwgeom);
 extern GSERIALIZED* geog_serialize(LWGEOM *lwgeom);
+extern GSERIALIZED *geo_serialize(const LWGEOM *geom);
 
 /* Functions adapted from gserialized_typmod.c */
 
@@ -100,6 +101,9 @@ extern bool meos_point_in_polygon(const GSERIALIZED *gs1,
 
 extern LWGEOM *lwgeom_line_interpolate_point(LWGEOM *geom, double fraction,
   int32_t srid, char repeat);
+
+extern GSERIALIZED **geo_extract_elements(const GSERIALIZED *gs, int *count);
+
 
 /*****************************************************************************/
 

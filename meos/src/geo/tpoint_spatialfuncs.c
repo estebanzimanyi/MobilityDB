@@ -52,6 +52,7 @@
 #include "temporal/tnumber_mathfuncs.h"
 #include "temporal/tsequence.h"
 #include "temporal/type_util.h"
+#include "geo/geo_funcs.h"
 #include "geo/postgis_funcs.h"
 #include "geo/stbox.h"
 #include "geo/tgeo.h"
@@ -3203,6 +3204,251 @@ bearing_tpoint_tpoint(const Temporal *temp1, const Temporal *temp2)
 /*****************************************************************************/
 
 /**
+ * @brief Calculate the distance between the input geographies
+ * @return On error return @p DBL_MAX
+ * @note The computation is always done in 2D
+ */
+static double
+lwgeog_distance(LWGEOM *lwgeom1, LWGEOM *lwgeom2)
+{
+  /* The validity of the arguments has been verified before */
+  double tolerance = FP_TOLERANCE;
+  /* Initialize spheroid */
+  SPHEROID s;
+  spheroid_init_from_srid(lwgeom1->srid, &s);
+  /* Make sure we have boxes attached */
+  lwgeom_add_bbox_deep(lwgeom1, NULL);
+  lwgeom_add_bbox_deep(lwgeom2, NULL);
+  double distance = lwgeom_distance_spheroid(lwgeom1, lwgeom2, &s, tolerance);
+  /* Something went wrong, negative or infinite return... */
+  if (distance < 0.0 || distance == DBL_MAX)
+  {
+    meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
+      "geography_distance returned distance < 0.0");
+    return DBL_MAX;
+  }
+  return distance;
+}
+
+/**
+ * @brief Calculate the length of the diagonal of the minimum rotated rectangle
+ * of the input geometry
+ * @return On error return @p DBL_MAX
+ * @note The computation is always done in 2D
+ */
+static double
+mrr_distance(LWGEOM *geom, bool geodetic)
+{
+  double result = 0.0;
+  const LWCOLLECTION *col = lwgeom_as_lwcollection(geom);
+  int ngeoms = lwcollection_ngeoms(col);
+  if (ngeoms == 2)
+  {
+    LWGEOM *pt1 = col->geoms[0];
+    LWGEOM *pt2 = col->geoms[1];
+    if (geodetic)
+      result = lwgeog_distance(pt1, pt2);
+    else
+      result = lwgeom_mindistance2d(pt1, pt2);
+  }
+  else if (ngeoms > 2)
+  {
+    LWGEOM *mrr = meos_oriented_envelope(geom);
+    LWGEOM *pt1, *pt2;
+    switch (mrr->type)
+    {
+      case POINTTYPE:
+        result = 0;
+        break;
+      case LINETYPE: /* compute length of linestring */
+        pt1 = (LWGEOM *) lwline_get_lwpoint((LWLINE *) mrr, 0);
+        pt2 = (LWGEOM *) lwline_get_lwpoint((LWLINE *) mrr, 1);
+        if (geodetic)
+          result = lwgeog_distance(pt1, pt2);
+        else
+          result = lwgeom_mindistance2d(pt1, pt2);
+        lwgeom_free(pt1); lwgeom_free(pt2);
+        break;
+      case POLYGONTYPE: /* compute length of diagonal */
+        pt1 = (LWGEOM *) lwline_get_lwpoint((LWLINE *) mrr, 0);
+        pt2 = (LWGEOM *) lwline_get_lwpoint((LWLINE *) mrr, 2);
+        if (geodetic)
+          result = lwgeog_distance(pt1, pt2);
+        else
+          result = lwgeom_mindistance2d(pt1, pt2);
+        lwgeom_free(pt1); lwgeom_free(pt2);
+        break;
+      default:
+        lwgeom_free(mrr);
+        meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+          "Invalid geometry type for Minimum Rotated Rectangle");
+        return DBL_MAX;
+    }
+    lwgeom_free(mrr);
+  }
+  return result;
+}
+
+/**
+ * @brief Create a multipoint geometry from a part (defined by start and
+ * end) of a temporal point sequence
+ */
+static LWGEOM *
+multipoint_make(const TSequence *seq, int start, int end)
+{
+  int32_t srid = tspatial_srid((Temporal *) seq);
+  LWGEOM **points = palloc(sizeof(LWGEOM *) * (end - start + 1));
+  for (int i = 0; i < end - start + 1; ++i)
+  {
+    const POINT2D *pt = NULL; /* make compiler quiet */
+    if (tpoint_type(seq->temptype))
+      pt = GSERIALIZED_POINT2D_P(DatumGetGserializedP(
+        tinstant_value_p(TSEQUENCE_INST_N(seq, start + i))));
+#if CBUFFER
+    else if (seq->temptype == T_TCBUFFER)
+      pt = cbuffer_point2d_p(DatumGetCbufferP(
+        tinstant_value_p(TSEQUENCE_INST_N(seq, start + i))));
+#endif
+#if NPOINT
+    else if (seq->temptype == T_TNPOINT)
+      pt = GSERIALIZED_POINT2D_P(npoint_to_geompoint(DatumGetNpointP(
+        tinstant_value_p(TSEQUENCE_INST_N(seq, start + i)))));
+#endif
+    else
+    {
+      meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+        "Sequence must have a spatial point base type");
+      return NULL;
+    }
+    points[i] = (LWGEOM *) lwpoint_make2d(srid, pt->x, pt->y);
+  }
+  LWGEOM *result = (LWGEOM *) lwcollection_construct(MULTIPOINTTYPE, srid,
+      NULL, (uint32_t) (end - start + 1), points);
+  /* Clean up and return */
+  for (int i = 0; i < end - start + 1; ++i)
+    lwpoint_free((LWPOINT *) points[i]);
+  pfree(points);
+  return result;
+}
+
+/**
+ * @brief Add the point stored in the given instant to a multipoint geometry
+ */
+static LWGEOM *
+multipoint_add_inst_free(LWGEOM *geom, const TInstant *inst)
+{
+  GSERIALIZED *gs = NULL; /* only set (and freed) for the npoint case */
+  const POINT2D *pt = NULL; /* make compiler quiet */
+  if (tpoint_type(inst->temptype))
+    pt = GSERIALIZED_POINT2D_P(DatumGetGserializedP(tinstant_value_p(inst)));
+#if CBUFFER
+  else if (inst->temptype == T_TCBUFFER)
+    pt = cbuffer_point2d_p(DatumGetCbufferP(tinstant_value_p(inst)));
+#endif
+#if NPOINT
+  else if (inst->temptype == T_TNPOINT)
+  {
+    gs = npoint_to_geompoint(DatumGetNpointP(tinstant_value_p(inst)));
+    pt = GSERIALIZED_POINT2D_P(gs);
+  }
+#endif
+  else
+  {
+    meos_error(ERROR, MEOS_ERR_INVALID_ARG_VALUE,
+      "Instant must have a spatial point base type");
+    return NULL;
+  }
+
+  LWPOINT *point = lwpoint_make2d(geom->srid, pt->x, pt->y);
+  LWGEOM *result = lwgeom_clone_deep(geom);
+  lwmpoint_add_lwpoint((LWMPOINT *) result, point);
+  lwpoint_free(point); lwgeom_free(geom);
+  if (gs != NULL)
+    pfree(gs);
+  return result;
+}
+
+/**
+ * @brief Return the subsequences where the temporal value stays within an area
+ * with a given maximum size for at least the specified duration
+ * (iterator function)
+ * @param[in] seq Temporal sequence
+ * @param[in] maxdist Maximum distance
+ * @param[in] mintunits Minimum duration
+ * @param[out] result Resulting sequences
+ * @pre The temporal sequence is not instantaneous
+ */
+int
+tpointseq_stops_iter_new(const TSequence *seq, double maxdist, int64 mintunits,
+  TSequence **result)
+{
+  assert(seq); assert(seq->count > 1);
+  assert(MEOS_FLAGS_LINEAR_INTERP(seq->flags));
+  assert(tpoint_type(seq->temptype) || seq->temptype == T_TNPOINT
+#if CBUFFER
+    || seq->temptype == T_TCBUFFER
+#endif
+    );
+
+  bool geodetic = MEOS_FLAGS_GET_GEODETIC(seq->flags);
+  int32_t srid = tspatial_srid((Temporal *) seq);
+  LWGEOM *geom = (LWGEOM *) lwmpoint_construct_empty(srid, 0, 0);
+  const TInstant *inst1 = NULL, *inst2 = NULL; /* make compiler quiet */
+  int end, start = 0, nseqs = 0;
+  bool is_stopped = false, previously_stopped = false, rebuild_geom = false;
+  for (end = 0; end < seq->count; ++end)
+  {
+    inst1 = TSEQUENCE_INST_N(seq, start);
+    inst2 = TSEQUENCE_INST_N(seq, end);
+    while (! is_stopped && end - start > 1 &&
+      (int64)(inst2->t - inst1->t) >= mintunits)
+    {
+      inst1 = TSEQUENCE_INST_N(seq, ++start);
+      rebuild_geom = true;
+    }
+    if (rebuild_geom)
+    {
+      lwgeom_free(geom);
+      geom = (LWGEOM *) lwmpoint_construct_empty(srid, 0, 0);
+      rebuild_geom = false;
+    }
+    else
+      geom = multipoint_add_inst_free((LWGEOM *) geom, inst2);
+    if (end - start == 0)
+      continue;
+
+    is_stopped = mrr_distance(geom, geodetic) <= maxdist;
+    inst2 = TSEQUENCE_INST_N(seq, end - 1);
+    if (! is_stopped && previously_stopped &&
+      (int64)(inst2->t - inst1->t) >= mintunits) /* Found a stop */
+    {
+      TInstant **instants = palloc(sizeof(TInstant *) * (end - start));
+      for (int i = 0; i < end - start; ++i)
+        instants[i] = (TInstant *) TSEQUENCE_INST_N(seq, start + i);
+      result[nseqs++] = tsequence_make(instants, end - start, true, true,
+        LINEAR, NORMALIZE_NO);
+      start = end;
+      rebuild_geom = true;
+    }
+    previously_stopped = is_stopped;
+  }
+  lwgeom_free(geom);
+
+  inst2 = TSEQUENCE_INST_N(seq, end - 1);
+  if (is_stopped && (int64)(inst2->t - inst1->t) >= mintunits)
+  {
+    TInstant **instants = palloc(sizeof(TInstant *) * (end - start));
+    for (int i = 0; i < end - start; ++i)
+      instants[i] = (TInstant *) TSEQUENCE_INST_N(seq, start + i);
+    result[nseqs++] = tsequence_make(instants, end - start, true, true, LINEAR,
+      NORMALIZE_NO);
+  }
+  return nseqs;
+}
+
+/*****************************************************************************/
+
+/**
  * @brief Calculate the distance between two geography points given as GEOS
  * geometries
  */
@@ -3249,8 +3495,8 @@ mrr_distance_geos(GEOSGeometry *geom, bool geodetic)
 {
   GEOSContextHandle_t ctx = geos_get_context();
   double result = 0.0;
-  int numGeoms = GEOSGetNumGeometries_r(ctx, geom);
-  if (numGeoms == 2)
+  int ngeoms = GEOSGetNumGeometries_r(ctx, geom);
+  if (ngeoms == 2)
   {
     const GEOSGeometry *pt1 = GEOSGetGeometryN_r(ctx, geom, 0);
     const GEOSGeometry *pt2 = GEOSGetGeometryN_r(ctx, geom, 1);
@@ -3259,7 +3505,7 @@ mrr_distance_geos(GEOSGeometry *geom, bool geodetic)
     else
       GEOSDistance_r(ctx, pt1, pt2, &result);
   }
-  else if (numGeoms > 2)
+  else if (ngeoms > 2)
   {
     GEOSGeometry *mrr_geom = GEOSMinimumRotatedRectangle_r(ctx, geom);
     GEOSGeometry *pt1, *pt2;
@@ -3306,7 +3552,7 @@ mrr_distance_geos(GEOSGeometry *geom, bool geodetic)
  * end) of a temporal point sequence
  */
 static GEOSGeometry *
-multipoint_make(const TSequence *seq, int start, int end)
+multipoint_make_geos(const TSequence *seq, int start, int end)
 {
   GEOSContextHandle_t ctx = geos_get_context();
   GEOSGeometry **geoms = palloc(sizeof(GEOSGeometry *) * (end - start + 1));
@@ -3344,7 +3590,7 @@ multipoint_make(const TSequence *seq, int start, int end)
  * geometry
  */
 static GEOSGeometry *
-multipoint_add_inst_free(GEOSGeometry *geom, const TInstant *inst)
+multipoint_add_inst_free_geos(GEOSGeometry *geom, const TInstant *inst)
 {
   GEOSContextHandle_t ctx = geos_get_context();
   GSERIALIZED *gs = NULL; /* only set (and freed) for the npoint case */
@@ -3423,11 +3669,11 @@ tpointseq_stops_iter(const TSequence *seq, double maxdist, int64 mintunits,
     if (rebuild_geom)
     {
       GEOSGeom_destroy_r(ctx, geom);
-      geom = multipoint_make(seq, start, end);
+      geom = multipoint_make_geos(seq, start, end);
       rebuild_geom = false;
     }
     else
-      geom = multipoint_add_inst_free(geom, inst2);
+      geom = multipoint_add_inst_free_geos(geom, inst2);
 
     if (end - start == 0)
       continue;

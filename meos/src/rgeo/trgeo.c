@@ -50,6 +50,7 @@
 #include "temporal/spanset.h"
 #include "temporal/temporal.h"
 #include "temporal/type_util.h"
+#include "geo/postgis_funcs.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/tspatial_parser.h"
 #include "pose/pose.h"

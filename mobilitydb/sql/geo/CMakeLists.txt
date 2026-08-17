@@ -1,4 +1,5 @@
 SET(LOCAL_FILES
+  050_geo_funcs
   050_geoset
   051_stbox
   052_tpoint

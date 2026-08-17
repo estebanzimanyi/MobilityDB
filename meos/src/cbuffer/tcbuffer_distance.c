@@ -43,6 +43,7 @@
 #include "temporal/tinstant.h"
 #include "temporal/tsequence.h"
 #include "temporal/tsequenceset.h"
+#include "geo/postgis_funcs.h"
 #include "geo/stbox.h"
 #include "geo/tgeo.h"
 #include "geo/tgeo_distance.h"
@@ -746,7 +747,7 @@ nai_tcbuffer_tcbuffer(const Temporal *temp1, const Temporal *temp2)
  * in t, so f(t) = sqrt(quadratic) - linear is minimised in closed form by
  * evaluating the interval endpoints and the roots of the squared
  * stationarity equation. A polygon that contains a segment centre gives a
- * zero distance directly. No GEOS call is made.
+ * zero distance directly.
  *****************************************************************************/
 
 /**

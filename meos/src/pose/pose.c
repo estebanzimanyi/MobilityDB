@@ -53,6 +53,7 @@
 #include "temporal/type_parser.h"
 #include "temporal/type_util.h"
 #include "geo/meos_transform.h"
+#include "geo/postgis_funcs.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/tspatial.h"
 #include "geo/tspatial_parser.h"

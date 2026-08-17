@@ -48,6 +48,7 @@
 #include "geo/meos_transform.h"
 #include "geo/stbox.h"
 #include "geo/tgeo.h"
+#include "geo/postgis_funcs.h"
 #include "geo/tgeo_spatialfuncs.h"
 #if CBUFFER
   #include <meos_cbuffer.h>

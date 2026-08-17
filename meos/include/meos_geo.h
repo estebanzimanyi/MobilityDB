@@ -401,9 +401,7 @@ extern GSERIALIZED **geo_pointarr(const GSERIALIZED *gs, int *count);
 extern GSERIALIZED *geo_points(const GSERIALIZED *gs);
 extern GSERIALIZED *geom_array_union(GSERIALIZED **gsarr, int count);
 extern GSERIALIZED *geom_boundary(const GSERIALIZED *gs);
-extern GSERIALIZED *geom_buffer(const GSERIALIZED *gs, double size, const char *params);
 extern GSERIALIZED *geom_centroid(const GSERIALIZED *gs);
-extern GSERIALIZED *geom_convex_hull(const GSERIALIZED *gs);
 extern GSERIALIZED *geom_difference2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
 extern GSERIALIZED *geom_intersection2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
 extern GSERIALIZED *geom_intersection2d_coll(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
@@ -414,6 +412,15 @@ extern GSERIALIZED *geom_unary_union(const GSERIALIZED *gs, double prec);
 extern GSERIALIZED *line_interpolate_point(const GSERIALIZED *gs, double distance_fraction, bool repeat);
 extern double line_locate_point(const GSERIALIZED *gs1, const GSERIALIZED *gs2);
 extern GSERIALIZED *line_substring(const GSERIALIZED *gs, double from, double to);
+
+/* MEOS Native spatial processing functions */
+
+// For the moment we keep the GEOS and the non-GEOS functions that break the tests
+extern GSERIALIZED *geom_buffer(const GSERIALIZED *gs, double size, const char *params);
+extern GSERIALIZED *geom_buffer_meos(const GSERIALIZED *gs, double size, const char *params);
+extern GSERIALIZED *geom_oriented_envelope(const GSERIALIZED *geom);
+extern GSERIALIZED *geom_convex_hull(const GSERIALIZED *gs);
+extern GSERIALIZED *geom_convex_hull_meos(const GSERIALIZED *gs);
 
 /* Spatial relationship functions */
 

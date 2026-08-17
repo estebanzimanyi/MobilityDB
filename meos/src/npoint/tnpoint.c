@@ -44,6 +44,7 @@
 #include "temporal/span.h"
 #include "temporal/spanset.h"
 #include "temporal/type_util.h"
+#include "geo/postgis_funcs.h"
 #include "geo/tgeo_spatialfuncs.h"
 #include "geo/tspatial_parser.h"
 

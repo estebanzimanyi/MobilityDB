@@ -37,13 +37,13 @@
  * outer loop, body shape replaced.
  */
 
+/* C */
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
+/* MEOS */
 #include <meos.h>
 #include <liblwgeom.h>
-
 #include "pose/pose.h"
 #include "rgeo/trgeo_geom_clip.h"
 

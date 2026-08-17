@@ -1,0 +1,120 @@
+/*****************************************************************************
+ *
+ * This MobilityDB code is provided under The PostgreSQL License.
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
+ * contributors
+ *
+ * MobilityDB includes portions of PostGIS version 3 source code released
+ * under the GNU General Public License (GPLv2 or later).
+ * Copyright (c) 2001-2025, PostGIS contributors
+ *
+ * Permission to use, copy, modify, and distribute this software and its
+ * documentation for any purpose, without fee, and without a written
+ * agreement is hereby granted, provided that the above copyright notice and
+ * this paragraph and the following two paragraphs appear in all copies.
+ *
+ * IN NO EVENT SHALL UNIVERSITE LIBRE DE BRUXELLES BE LIABLE TO ANY PARTY FOR
+ * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING
+ * LOST PROFITS, ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION,
+ * EVEN IF UNIVERSITE LIBRE DE BRUXELLES HAS BEEN ADVISED OF THE POSSIBILITY
+ * OF SUCH DAMAGE.
+ *
+ * UNIVERSITE LIBRE DE BRUXELLES SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS ON
+ * AN "AS IS" BASIS, AND UNIVERSITE LIBRE DE BRUXELLES HAS NO OBLIGATIONS TO
+ * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+ *
+ *****************************************************************************/
+
+/**
+ * @brief PostGIS functions implemented in MEOS natively to improve performance
+ * or to avoid polygonalization of circular strings
+ */
+
+#ifndef __GEO_FUNCS_H__
+#define __GEO_FUNCS_H__
+
+/* PostgreSQL */
+#include <postgres.h>
+/* PostGIS */
+#include <liblwgeom.h>
+/* MEOS */
+#include <meos.h>
+
+/*****************************************************************************/
+
+/**
+ * @brief Enumeration defining the edge types 
+ */
+typedef enum
+{
+  EDGE_POINT = 0,
+  EDGE_LINE,
+  EDGE_POLY,
+  EDGE_ARC,
+  EDGE_POLYARC
+} EdgeType;
+
+/**
+ * @brief Structure keeping a geometry edge
+ */
+typedef struct
+{
+  double x1, y1, x2, y2;         /**< Coordinates of the start/end 2D points */
+  double xmin, ymin, xmax, ymax; /**< Precomputed bounding box of the edge */
+  double dx, dy, length;         /**< Precomputed dx, dy, and length */
+  double cx, cy, radius;         /**< Arc center and radius (EDGE_ARC only) */
+  double theta0, theta1;         /**< Arc start/end angles (EDGE_ARC only) */
+  bool ccw;                      /**< Arc traversed counterclockwise (EDGE_ARC) */
+  EdgeType etype;                /**< Edge type */
+} Edge;
+
+/**
+ * @brief Enumeration defining the intersection types 
+ */
+typedef enum
+{
+  INTERSECT_NONE = 0,
+  INTERSECT_POINT,
+  INTERSECT_OVERLAP
+} IntersectType;
+
+/**
+ * @brief Structure keeping an intersection result
+ */
+typedef struct
+{
+  IntersectType type;  /**< Intersection type */
+  double t0;           /**< Always valid if type != NONE */
+  double t1;           /**< Only valid for OVERLAP */
+} IntersectResult;
+
+/*****************************************************************************/
+
+extern RTree *build_edge_rtree(const Edge *edges, int nedges, int32_t srid);
+extern MeosArray *geom_extract_edges(const LWGEOM *geom);
+extern double angle_normalize(double a);
+extern IntersectResult linesegm_intersect(double ax, double ay, double rx,
+  double ry, double cx, double cy, double dx, double dy);
+extern int arcsegm_intersect(double ax, double ay, double rx, double ry,
+  const Edge *e, double out[2]);
+extern bool arcarc_intersect(const Edge *e1, const Edge *e2);
+extern int point_in_polygon(double x, double y, Edge **edges, int nedges);
+extern bool point_on_arc(double px, double py, const Edge *e);
+extern bool arc_contains_angle(const Edge *e, double phi);
+void arc_set_bbox(Edge *e);
+extern bool relate_point_on_boundary(double x, double y, Edge **edges,
+  int nedges);
+extern int relate_point_in_area(double x, double y, Edge **edges, int nedges);
+extern bool point_on_segment(double px, double py, double x1, double y1,
+  double x2, double y2);
+
+extern LWGEOM *lwcircle_make(double x, double y, double radius, int32_t srid);
+extern GSERIALIZED *geocircle_make(double x, double y, double radius,
+  int32_t srid);
+extern LWGEOM *meos_oriented_envelope(const LWGEOM *geom);
+
+/*****************************************************************************/
+
+#endif /* __GEO_FUNCS_H__ */

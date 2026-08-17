@@ -50,7 +50,7 @@
 #include <meos_internal_geo.h>
 #include "temporal/lifting.h"
 #include "temporal/type_util.h"
-#include "geo/tgeo_spatialfuncs.h"
+#include "geo/postgis_funcs.h"
 #include "geo/tgeo_spatialrels.h"
 #include "cbuffer/cbuffer.h"
 #include "cbuffer/tcbuffer.h"

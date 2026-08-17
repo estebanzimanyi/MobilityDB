@@ -101,6 +101,9 @@
  * Common helpers
  *****************************************************************************/
 
+/**
+ * @brief 
+ */
 static int
 double_cmp(const void *a, const void *b)
 {
@@ -231,8 +234,7 @@ dedup_sorted(double *events, int n)
  */
 static int
 walk_events_and_emit(const double *events, int nuniq,
-  bool (*intersects)(double t_m, void *ctx), void *ctx,
-  Span *out)
+  bool (*intersects)(double t_m, void *ctx), void *ctx, Span *out)
 {
   int nout = 0;
   for (int k = 0; k < nuniq - 1; k++)
@@ -269,14 +271,12 @@ walk_events_and_emit(const double *events, int nuniq,
 
 /**
  * @brief Solve "moving endpoint a + t*delta lies on polygon edge p1 -> p2".
- *
- * 2x2 linear system in (s, t). Returns the t-coordinate (modulo
+ * @details 2x2 linear system in (s, t). Returns the t-coordinate (modulo
  * tolerance) if a valid intersection exists with s in [0, 1].
  */
 static bool
 solve_m1_endpoint_on_edge(double ax, double ay, double dxd, double dyd,
-  double px1, double py1, double px2, double py2,
-  double *t_out)
+  double px1, double py1, double px2, double py2, double *t_out)
 {
   double ex = px2 - px1;
   double ey = py2 - py1;
@@ -298,9 +298,8 @@ solve_m1_endpoint_on_edge(double ax, double ay, double dxd, double dyd,
  * at parameter u in [0, 1]".
  */
 static bool
-solve_m1_p_on_movingedge(double px, double py,
-  double a1x, double a1y, double b1x, double b1y,
-  double dxd, double dyd, double *t_out)
+solve_m1_p_on_movingedge(double px, double py, double a1x, double a1y,
+  double b1x, double b1y, double dxd, double dyd, double *t_out)
 {
   double ux = b1x - a1x;
   double uy = b1y - a1y;
@@ -317,12 +316,18 @@ solve_m1_p_on_movingedge(double px, double py,
   return true;
 }
 
-/* M1 midpoint-test context: linear translation. */
-typedef struct {
+/**
+ * @brief M1 midpoint-test context: linear translation
+ */
+typedef struct
+{
   double a1x, a1y, b1x, b1y, dxd, dyd;
   const POINTARRAY *pa;
 } M1Ctx;
 
+/**
+ * @brief 
+ */
 static bool
 m1_intersects_at(double t_m, void *ctx_)
 {
@@ -334,10 +339,13 @@ m1_intersects_at(double t_m, void *ctx_)
   return segment_intersects_polygon(sax, say, sbx, sby, ctx->pa);
 }
 
+/**
+ * @brief 
+ */
 int
 trgeo_geom_clip_polygon(const POINT2D *a1, const POINT2D *b1,
-  const POINT2D *a2, const POINT2D *b2,
-  const POINTARRAY *pa, Span **intervals_out)
+  const POINT2D *a2, const POINT2D *b2, const POINTARRAY *pa,
+  Span **intervals_out)
 {
   if (! a1 || ! b1 || ! a2 || ! b2 || ! pa || ! intervals_out)
     return -1;
@@ -397,10 +405,12 @@ trgeo_geom_clip_polygon(const POINT2D *a1, const POINT2D *b1,
   return nout;
 }
 
+/**
+ * @brief 
+ */
 int
-trgeo_geom_clip_lwpoly(const POINT2D *a1, const POINT2D *b1,
-  const POINT2D *a2, const POINT2D *b2,
-  const LWPOLY *poly, Span **intervals_out)
+trgeo_geom_clip_lwpoly(const POINT2D *a1, const POINT2D *b1, const POINT2D *a2,
+  const POINT2D *b2, const LWPOLY *poly, Span **intervals_out)
 {
   if (! poly || poly->nrings < 1)
     return -1;
@@ -408,10 +418,12 @@ trgeo_geom_clip_lwpoly(const POINT2D *a1, const POINT2D *b1,
     intervals_out);
 }
 
+/**
+ * @brief 
+ */
 int
-trgeo_geom_clip_box(const POINT2D *a1, const POINT2D *b1,
-  const POINT2D *a2, const POINT2D *b2,
-  double xmin, double ymin, double xmax, double ymax,
+trgeo_geom_clip_box(const POINT2D *a1, const POINT2D *b1, const POINT2D *a2,
+  const POINT2D *b2, double xmin, double ymin, double xmax, double ymax,
   Span **intervals_out)
 {
   POINTARRAY *pa = ptarray_construct_empty(0, 0, 5);
@@ -443,9 +455,9 @@ trgeo_geom_clip_box(const POINT2D *a1, const POINT2D *b1,
  *****************************************************************************/
 
 /**
- * @brief Read 2D pose components into local doubles. Returns false on
- * 3D pose input (M2 is 2D only — same constraint as cbuffer's
- * 2D-only design).
+ * @brief Read 2D pose components into local doubles
+ * @return Returns false on 3D pose input (M2 is 2D only — same constraint as
+ * cbuffer's 2D-only design).
  */
 static bool
 pose2d_read(const Pose *pose, double *x, double *y, double *theta)
@@ -463,10 +475,8 @@ pose2d_read(const Pose *pose, double *x, double *y, double *theta)
  * interpolated pose at time t.
  */
 static inline void
-posed_endpoint_at(double t, double x1, double y1, double th1,
-  double x2, double y2, double th2,
-  double px, double py,
-  double *out_x, double *out_y)
+posed_endpoint_at(double t, double x1, double y1, double th1, double x2,
+  double y2, double th2, double px, double py, double *out_x, double *out_y)
 {
   double cx = x1 + t * (x2 - x1);
   double cy = y1 + t * (y2 - y1);
@@ -478,15 +488,12 @@ posed_endpoint_at(double t, double x1, double y1, double th1,
 
 /**
  * @brief Boundary residual for the u=0 / u=1 cases.
- *
- * "moving body's local point traced through pose interpolation lies
- * on the static polygon edge from p1 to p2".
+ * @details Moving body's local point traced through pose interpolation lies
+ * on the static polygon edge from p1 to p2
  */
 static double
-m2_residual_endpoint_on_edge(double t,
-  double x1, double y1, double th1,
-  double x2, double y2, double th2,
-  double px_local, double py_local,
+m2_residual_endpoint_on_edge(double t, double x1, double y1, double th1,
+  double x2, double y2, double th2, double px_local, double py_local,
   double e1x, double e1y, double e2x, double e2y)
 {
   double ex, ey;
@@ -498,16 +505,13 @@ m2_residual_endpoint_on_edge(double t,
 
 /**
  * @brief Boundary residual for the s=0 / s=1 cases.
- *
- * "polygon edge endpoint p_e lies on the moving edge (between
- * the body's two body-local endpoint trajectories) at time t".
+ * @details Polygon edge endpoint p_e lies on the moving edge (between
+ * the body's two body-local endpoint trajectories) at time t
  */
 static double
-m2_residual_polypoint_on_movingedge(double t,
-  double x1, double y1, double th1,
-  double x2, double y2, double th2,
-  double pa_x, double pa_y, double pb_x, double pb_y,
-  double pe_x, double pe_y)
+m2_residual_polypoint_on_movingedge(double t, double x1, double y1, double th1,
+  double x2, double y2, double th2, double pa_x, double pa_y, double pb_x,
+  double pb_y, double pe_x, double pe_y)
 {
   double ax, ay, bx, by;
   posed_endpoint_at(t, x1, y1, th1, x2, y2, th2, pa_x, pa_y, &ax, &ay);
@@ -516,30 +520,46 @@ m2_residual_polypoint_on_movingedge(double t,
   return rx * (pe_y - ay) - ry * (pe_x - ax);
 }
 
+/**
+ * @brief 
+ */
 typedef double (*residual_fn)(double t, void *state);
 
-typedef struct {
+/**
+ * @brief 
+ */
+typedef struct
+{
   double x1, y1, th1, x2, y2, th2;
   double px_local, py_local;
   double e1x, e1y, e2x, e2y;
 } EndpointEdgeState;
 
-typedef struct {
+/**
+ * @brief 
+ */
+typedef struct
+{
   double x1, y1, th1, x2, y2, th2;
   double pa_x, pa_y, pb_x, pb_y;
   double pe_x, pe_y;
 } PolypointMovingEdgeState;
 
+/**
+ * @brief 
+ */
 static double
 /* cppcheck-suppress constParameterCallback */
 residual_endpoint_on_edge_wrap(double t, void *state)
 {
   const EndpointEdgeState *s = (const EndpointEdgeState *) state;
-  return m2_residual_endpoint_on_edge(t, s->x1, s->y1, s->th1,
-    s->x2, s->y2, s->th2, s->px_local, s->py_local,
-    s->e1x, s->e1y, s->e2x, s->e2y);
+  return m2_residual_endpoint_on_edge(t, s->x1, s->y1, s->th1, s->x2, s->y2,
+    s->th2, s->px_local, s->py_local, s->e1x, s->e1y, s->e2x, s->e2y);
 }
 
+/**
+ * @brief 
+ */
 static double
 /* cppcheck-suppress constParameterCallback */
 residual_polypoint_on_movingedge_wrap(double t, void *state)
@@ -594,11 +614,9 @@ solve_m2_numerical(residual_fn f, void *state, double *roots, int max_roots)
 
 /**
  * @brief Closed-form Taylor solver for the u=0 / u=1 case.
- *
- * Linearises cos(theta(t)) and sin(theta(t)) around theta_1, valid for
- * |Delta theta| < TAYLOR_THRESHOLD. Yields a residual linear in t →
+ * @details Linearises cos(theta(t)) and sin(theta(t)) around theta_1, valid
+ * for |Delta theta| < TAYLOR_THRESHOLD. Yields a residual linear in t ->
  * single closed-form root.
- *
  * @return 1 if a root in [0, 1] exists, else 0.
  */
 static int
@@ -628,13 +646,19 @@ solve_m2_taylor_endpoint_on_edge(const EndpointEdgeState *s, double *root)
   return 1;
 }
 
-/* M2 midpoint-test context: full pose interpolation. */
-typedef struct {
+/**
+ * @brief M2 midpoint-test context: full pose interpolation
+ */
+typedef struct
+{
   double x1, y1, th1, x2, y2, th2;
   double pa_x, pa_y, pb_x, pb_y;
   const POINTARRAY *pa_ring;
 } M2Ctx;
 
+/**
+ * @brief 
+ */
 static bool
 m2_intersects_at(double t_m, void *ctx_)
 {
@@ -647,10 +671,12 @@ m2_intersects_at(double t_m, void *ctx_)
   return segment_intersects_polygon(sax, say, sbx, sby, ctx->pa_ring);
 }
 
+/**
+ * @brief 
+ */
 int
 trgeo_geom_clip_polygon_posed(const POINT2D *p_a_local,
-  const POINT2D *p_b_local,
-  const struct Pose *pose1, const struct Pose *pose2,
+  const POINT2D *p_b_local, const struct Pose *pose1, const struct Pose *pose2,
   const POINTARRAY *pa, Span **intervals_out)
 {
   if (! p_a_local || ! p_b_local || ! pose1 || ! pose2 || ! pa ||
@@ -775,10 +801,12 @@ trgeo_geom_clip_polygon_posed(const POINT2D *p_a_local,
   return nout;
 }
 
+/**
+ * @brief 
+ */
 int
 trgeo_geom_clip_lwpoly_posed(const POINT2D *p_a_local,
-  const POINT2D *p_b_local,
-  const struct Pose *pose1, const struct Pose *pose2,
+  const POINT2D *p_b_local, const struct Pose *pose1, const struct Pose *pose2,
   const LWPOLY *poly, Span **intervals_out)
 {
   if (! poly || poly->nrings < 1)
@@ -787,12 +815,13 @@ trgeo_geom_clip_lwpoly_posed(const POINT2D *p_a_local,
     pose1, pose2, poly->rings[0], intervals_out);
 }
 
+/**
+ * @brief 
+ */
 int
 trgeo_geom_clip_box_posed(const POINT2D *p_a_local,
-  const POINT2D *p_b_local,
-  const struct Pose *pose1, const struct Pose *pose2,
-  double xmin, double ymin, double xmax, double ymax,
-  Span **intervals_out)
+  const POINT2D *p_b_local, const struct Pose *pose1, const struct Pose *pose2,
+  double xmin, double ymin, double xmax, double ymax, Span **intervals_out)
 {
   POINTARRAY *pa = ptarray_construct_empty(0, 0, 5);
   POINT4D pt;
@@ -815,10 +844,12 @@ trgeo_geom_clip_box_posed(const POINT2D *p_a_local,
  * against). This gives full geometry-subtype parity with tpoint_geom_clip.
  *****************************************************************************/
 
+/**
+ * @brief 
+ */
 static int
-clip_lwgeom_m1_accum(const POINT2D *a1, const POINT2D *b1,
-  const POINT2D *a2, const POINT2D *b2,
-  const LWGEOM *geom, Span **buf, int *cap, int n)
+clip_lwgeom_m1_accum(const POINT2D *a1, const POINT2D *b1, const POINT2D *a2,
+  const POINT2D *b2, const LWGEOM *geom, Span **buf, int *cap, int n)
 {
   if (!geom) return n;
   switch (geom->type)
@@ -859,10 +890,12 @@ clip_lwgeom_m1_accum(const POINT2D *a1, const POINT2D *b1,
   return n;
 }
 
+/**
+ * @brief 
+ */
 int
-trgeo_geom_clip_lwgeom(const POINT2D *a1, const POINT2D *b1,
-  const POINT2D *a2, const POINT2D *b2,
-  const LWGEOM *geom, Span **intervals_out)
+trgeo_geom_clip_lwgeom(const POINT2D *a1, const POINT2D *b1, const POINT2D *a2,
+  const POINT2D *b2, const LWGEOM *geom, Span **intervals_out)
 {
   if (!geom || !intervals_out) return -1;
   int cap = 16;
@@ -878,10 +911,13 @@ trgeo_geom_clip_lwgeom(const POINT2D *a1, const POINT2D *b1,
   return n;
 }
 
+/**
+ * @brief 
+ */
 static int
 clip_lwgeom_m2_accum(const POINT2D *p_a_local, const POINT2D *p_b_local,
-  const struct Pose *pose1, const struct Pose *pose2,
-  const LWGEOM *geom, Span **buf, int *cap, int n)
+  const struct Pose *pose1, const struct Pose *pose2, const LWGEOM *geom,
+  Span **buf, int *cap, int n)
 {
   if (!geom) return n;
   switch (geom->type)
@@ -922,10 +958,12 @@ clip_lwgeom_m2_accum(const POINT2D *p_a_local, const POINT2D *p_b_local,
   return n;
 }
 
+/**
+ * @brief 
+ */
 int
 trgeo_geom_clip_lwgeom_posed(const POINT2D *p_a_local,
-  const POINT2D *p_b_local,
-  const struct Pose *pose1, const struct Pose *pose2,
+  const POINT2D *p_b_local, const struct Pose *pose1, const struct Pose *pose2,
   const LWGEOM *geom, Span **intervals_out)
 {
   if (!geom || !intervals_out) return -1;

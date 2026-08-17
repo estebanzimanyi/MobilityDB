@@ -47,7 +47,7 @@
 #include <meos_internal.h>
 #include <meos_internal_geo.h>
 #include "temporal/lifting.h"
-#include "geo/tgeo_spatialfuncs.h"
+#include "geo/postgis_funcs.h"
 /* MobilityDB */
 #include "pg_geo/postgis.h"
 

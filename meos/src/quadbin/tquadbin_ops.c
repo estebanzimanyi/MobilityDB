@@ -58,6 +58,7 @@
 #include "temporal/tcellindex.h"
 #include "temporal/temporal.h"
 #include "temporal/lifting.h"
+#include "geo/postgis_funcs.h"
 #include "geo/tgeo_spatialfuncs.h"
 
 /*****************************************************************************

@@ -49,13 +49,13 @@ extern "C" {
 #include <postgres.h>
 #include "utils/timestamp.h"  /* for TimestampTzGetDatum */
 #include <liblwgeom.h>
-#include "geo/tgeo_spatialfuncs.h"  /* for geo_serialize */
 #include "meos.h"
 #include "meos_internal.h"
 #include "meos_internal_geo.h"
 #include "temporal/temporal.h"
 #include "temporal/tsequence.h"
 #include "temporal/type_util.h"
+#include "geo/postgis_funcs.h"  /* for geo_serialize */
 }
 
 using Clipper2Lib::Clipper64;

@@ -70,8 +70,6 @@ extern Datum datum2_point_same(Datum point1, Datum point2);
 extern Datum datum2_point_nsame(Datum point1, Datum point2);
 extern Datum datum2_geom_centroid(Datum geo);
 extern Datum datum2_geog_centroid(Datum geo);
-extern GSERIALIZED **geo_extract_elements(const GSERIALIZED *gs, int *count);
-extern GSERIALIZED *geo_serialize(const LWGEOM *geom);
 
 /* Generic functions */
 
@@ -171,9 +169,7 @@ extern void interpolate_point4d_spheroid(const POINT4D *p1, const POINT4D *p2,
 
 extern GSERIALIZED *geopoint_make(double x, double y, double z, bool hasz,
   bool geodetic, int32_t srid);
-extern LWGEOM *lwcircle_make(double x, double y, double radius, int32_t srid);
-extern GSERIALIZED *geocircle_make(double x, double y, double radius,
-  int32_t srid);
+
 extern Datum pointsegm_interpolate(Datum start, Datum end,
   long double ratio);
 extern long double pointsegm_locate(Datum start, Datum end, Datum point,
