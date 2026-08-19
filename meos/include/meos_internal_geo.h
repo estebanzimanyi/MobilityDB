@@ -245,7 +245,7 @@ extern Temporal *tpoint_linear_dwithin_geom(const Temporal *temp, const GSERIALI
 extern Temporal *tpoint_linear_dwithin_geom_ctx(const Temporal *temp, const void *ctx, double dist);
 extern Temporal *tpoint_linear_distance_geom(const Temporal *temp, const GSERIALIZED *gs);
 extern Temporal *tpoint_linear_restrict_geom(const Temporal *temp, const GSERIALIZED *gs, bool atfunc);
-extern bool geom_clip_supported(const LWGEOM *geom);
+extern bool geom_meos_supported(const LWGEOM *geom);
 
 /*****************************************************************************/
 
