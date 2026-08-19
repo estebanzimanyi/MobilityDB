@@ -4246,7 +4246,7 @@ meos_buffer_mpoint(const LWMPOINT *mpoint, double radius)
  *****************************************************************************/
 
 /**
- * @brief Construct a curved buffer around a LINESTRING
+ * @brief Construct a curved buffer around a LINESTRING by offsetting it
  * @details The boundary consists of LINESTRING and CIRCULARSTRING components.
  * Supported:
  *   - round joins
@@ -4255,10 +4255,13 @@ meos_buffer_mpoint(const LWMPOINT *mpoint, double radius)
  *   - round caps
  *   - flat caps
  *   - square caps
+ * @return The buffer, or @p NULL when the offset of the line crosses itself,
+ * which leaves a ring bounding no surface. #meos_buffer_line answers that case
+ * by cutting the line where it crosses itself.
  */
 static LWGEOM *
-meos_buffer_line(const LWLINE *line, double radius, JoinStyle join_style,
-  EndCapStyle cap_style, double mitre_limit)
+meos_buffer_line_offset(const LWLINE *line, double radius,
+  JoinStyle join_style, EndCapStyle cap_style, double mitre_limit)
 {
   assert(line); assert(radius > 0.0);
   const int32_t srid = lwgeom_get_srid((const LWGEOM *) line);
@@ -4505,6 +4508,158 @@ meos_buffer_line(const LWLINE *line, double radius, JoinStyle join_style,
     return NULL;
   }
   return result;
+}
+
+/**
+ * @brief Construct a curved buffer around a LINESTRING that crosses itself
+ * @details The offset of a line that crosses itself crosses itself too, and
+ * the loop it leaves bounds no part of the buffer, so #meos_buffer_line_offset
+ * declines the line as a whole. The buffer of a line is the set of points
+ * within the distance of it, so the buffer of a union of lines is the union of
+ * their buffers. The line is therefore cut where it crosses itself into
+ * fragments that do not, each fragment is buffered on its own, and the
+ * fragments' buffers are merged.
+ *
+ * A cut keeps its point in both fragments, so the fragments cover the whole
+ * line, but the two round caps that meet at a cut cover the disk around it
+ * only where the line runs straight through: where it turns, the caps leave
+ * the wedge of the turn uncovered. The disk around a cut point is part of the
+ * buffer because the point is on the line, so it is merged in as well, and
+ * every cut is covered whatever the turn.
+ *
+ * The identity holds for round joins and round caps only. A flat or square
+ * cap and a mitre or bevel join answer something other than the points within
+ * the distance, and what they answer does not distribute over a union: the cut
+ * would show up in the result as a notch or a spike. The caller applies this
+ * only for the round styles.
+ * @param[in] line LINESTRING to buffer, crossing itself
+ * @param[in] radius Buffer radius
+ * @param[in] join_style Join style
+ * @param[in] cap_style End-cap style
+ * @param[in] mitre_limit Mitre limit
+ * @return The buffer, or @p NULL if the line does not cross itself, if a
+ * fragment cannot be buffered, or if the union does not cover the topology
+ */
+static LWGEOM *
+meos_buffer_line_split(const LWLINE *line, double radius, JoinStyle join_style,
+  EndCapStyle cap_style, double mitre_limit)
+{
+  assert(line); assert(radius > 0.0);
+  const int32_t srid = lwgeom_get_srid((const LWGEOM *) line);
+  if (! line->points || line->points->npoints < 3)
+    return NULL;
+
+  /* Collect the vertices, dropping a point that repeats the one before it so
+   * that only a genuine crossing is reported as a cut */
+  uint32_t npoints = line->points->npoints;
+  POINT2D *points = palloc(sizeof(POINT2D) * npoints);
+  uint32_t nvalid = 0;
+  for (uint32_t i = 0; i < npoints; i++)
+  {
+    POINT4D point;
+    getPoint4d_p(line->points, i, &point);
+    if (nvalid == 0 ||
+        hypot(point.x - points[nvalid - 1].x,
+              point.y - points[nvalid - 1].y) > FP_TOLERANCE)
+    {
+      points[nvalid].x = point.x;
+      points[nvalid].y = point.y;
+      nvalid++;
+    }
+  }
+  npoints = nvalid;
+  if (npoints < 3)
+  {
+    pfree(points);
+    return NULL;
+  }
+
+  /* Find the vertices at which the line crosses itself */
+  const POINT2D **ptrs = palloc(sizeof(POINT2D *) * npoints);
+  for (uint32_t i = 0; i < npoints; i++)
+    ptrs[i] = &points[i];
+  int nsplits = 0;
+  bool *splits = pointarr_find_splits(ptrs, (int) npoints, &nsplits);
+  pfree(ptrs);
+  if (nsplits == 0)
+  {
+    pfree(splits); pfree(points);
+    return NULL;
+  }
+
+  /* One buffer per fragment, plus one disk per cut point */
+  LWGEOM **buffers = palloc(sizeof(LWGEOM *) * (2 * (uint32_t) nsplits + 1));
+  uint32_t count = 0;
+  bool ok = true;
+  uint32_t start = 0;
+  while (ok && start < npoints - 1)
+  {
+    uint32_t end = start + 1;
+    while (end < npoints - 1 && ! splits[end])
+      end++;
+    /* The fragment runs from start to end inclusive */
+    POINTARRAY *pa = ptarray_construct_empty(0, 0, end - start + 1);
+    POINT4D point;
+    point.z = 0.0; point.m = 0.0;
+    for (uint32_t i = start; i <= end; i++)
+    {
+      point.x = points[i].x; point.y = points[i].y;
+      ptarray_append_point(pa, &point, LW_TRUE);
+    }
+    LWLINE *fragment = lwline_construct(srid, NULL, pa);
+    LWGEOM *buffer = meos_buffer_line_offset(fragment, radius, join_style,
+      cap_style, mitre_limit);
+    lwline_free(fragment);
+    if (! buffer)
+      ok = false;
+    else
+    {
+      buffers[count++] = buffer;
+      /* The disk around the cut fills the wedge the two caps leave */
+      if (end < npoints - 1)
+        buffers[count++] = lwcircle_make(points[end].x, points[end].y, radius,
+          srid);
+    }
+    start = end;
+  }
+  pfree(splits); pfree(points);
+
+  if (! ok)
+  {
+    for (uint32_t i = 0; i < count; i++)
+      lwgeom_free(buffers[i]);
+    pfree(buffers);
+    return NULL;
+  }
+  LWGEOM *result = buffer_union_components(buffers, count, srid);
+  pfree(buffers);
+  return result;
+}
+
+/**
+ * @brief Construct a curved buffer around a LINESTRING
+ * @details The line is offset to either side, and a line that crosses itself,
+ * whose offset bounds no surface, is cut into fragments that do not.
+ * @param[in] line LINESTRING to buffer
+ * @param[in] radius Buffer radius
+ * @param[in] join_style Join style
+ * @param[in] cap_style End-cap style
+ * @param[in] mitre_limit Mitre limit
+ * @return The buffer, or @p NULL if it is not covered
+ */
+static LWGEOM *
+meos_buffer_line(const LWLINE *line, double radius, JoinStyle join_style,
+  EndCapStyle cap_style, double mitre_limit)
+{
+  assert(line); assert(radius > 0.0);
+  LWGEOM *result = meos_buffer_line_offset(line, radius, join_style, cap_style,
+    mitre_limit);
+  /* Cutting the line answers the points within the distance of it, which is
+   * what the round styles ask for and the other styles do not */
+  if (result || join_style != JOIN_ROUND || cap_style != ENDCAP_ROUND)
+    return result;
+  return meos_buffer_line_split(line, radius, join_style, cap_style,
+    mitre_limit);
 }
 
 /*****************************************************************************
