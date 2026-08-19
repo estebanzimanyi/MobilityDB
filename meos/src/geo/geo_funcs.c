@@ -195,6 +195,36 @@ emit_arc_edge(const POINT4D *pa, const POINT4D *pb, const POINT4D *pc,
   /* Twice the signed area of the triangle; zero when the points are collinear */
   double d = 2 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by));
 
+  /* A triple closing on itself is a full circle, whose two distinct points
+   * span a diameter and leave the circumcircle below undefined: the triple
+   * reads as collinear and the circle would degenerate into two segments. The
+   * circle is emitted as its two half arcs instead, which also keeps every
+   * consumer on an arc that sweeps less than a full turn, the sweep of a
+   * single-arc circle being indistinguishable from an empty one. */
+  if (fabs(ax - cx) < FP_TOLERANCE && fabs(ay - cy) < FP_TOLERANCE &&
+      (fabs(ax - bx) > FP_TOLERANCE || fabs(ay - by) > FP_TOLERANCE))
+  {
+    Edge e;
+    e.cx = (ax + bx) / 2; e.cy = (ay + by) / 2;
+    e.radius = hypot(ax - bx, ay - by) / 2;
+    double theta_a = atan2(ay - e.cy, ax - e.cx);
+    double theta_b = atan2(by - e.cy, bx - e.cx);
+    e.dx = e.dy = e.length = 0;
+    e.etype = arc_etype;
+    e.ccw = true;
+    /* The half arc from the start point to the middle one */
+    e.x1 = ax; e.y1 = ay; e.x2 = bx; e.y2 = by;
+    e.theta0 = theta_a; e.theta1 = theta_b;
+    arc_set_bbox(&e);
+    meos_array_add(edges, &e);
+    /* and the one closing the circle */
+    e.x1 = bx; e.y1 = by; e.x2 = ax; e.y2 = ay;
+    e.theta0 = theta_b; e.theta1 = theta_a;
+    arc_set_bbox(&e);
+    meos_array_add(edges, &e);
+    return;
+  }
+
   /* Collinear points: emit straight line edges */
   if (fabs(d) < FP_TOLERANCE)
   {
