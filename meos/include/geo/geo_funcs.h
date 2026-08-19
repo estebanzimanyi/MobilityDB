@@ -110,6 +110,9 @@ extern int relate_point_in_area(double x, double y, Edge **edges, int nedges);
 extern bool point_on_segment(double px, double py, double x1, double y1,
   double x2, double y2);
 
+extern bool *pointarr_find_splits(const POINT2D **points, int npoints,
+  int *count);
+
 extern LWGEOM *lwcircle_make(double x, double y, double radius, int32_t srid);
 extern GSERIALIZED *geocircle_make(double x, double y, double radius,
   int32_t srid);
