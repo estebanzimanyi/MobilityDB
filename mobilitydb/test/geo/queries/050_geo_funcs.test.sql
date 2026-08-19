@@ -1,0 +1,77 @@
+-------------------------------------------------------------------------------
+--
+-- This MobilityDB code is provided under The PostgreSQL License.
+-- Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
+-- contributors
+--
+-- MobilityDB includes portions of PostGIS version 3 source code released
+-- under the GNU General Public License (GPLv2 or later).
+-- Copyright (c) 2001-2025, PostGIS contributors
+--
+-- Permission to use, copy, modify, and distribute this software and its
+-- documentation for any purpose, without fee, and without a written
+-- agreement is hereby granted, provided that the above copyright notice and
+-- this paragraph and the following two paragraphs appear in all copies.
+--
+-- IN NO EVENT SHALL UNIVERSITE LIBRE DE BRUXELLES BE LIABLE TO ANY PARTY FOR
+-- DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING
+-- LOST PROFITS, ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION,
+-- EVEN IF UNIVERSITE LIBRE DE BRUXELLES HAS BEEN ADVISED OF THE POSSIBILITY
+-- OF SUCH DAMAGE.
+--
+-- UNIVERSITE LIBRE DE BRUXELLES SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+-- INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+-- AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS ON
+-- AN "AS IS" BASIS, AND UNIVERSITE LIBRE DE BRUXELLES HAS NO OBLIGATIONS TO
+-- PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+--
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+-- Simple geometries
+-- The cases are those the GEOS project asserts in its own test suite, in
+-- tests/xmltester/tests/general/TestSimple.xml
+-------------------------------------------------------------------------------
+
+SELECT isSimple(geometry 'POINT(10 10)');
+
+SELECT isSimple(geometry 'MULTIPOINT ((80 280), (80 220), (160 220))');
+SELECT isSimple(geometry 'MULTIPOINT ((80 280), (80 220), (160 220), (80 220))');
+SELECT isSimple(geometry 'MULTIPOINT EMPTY');
+
+-- A repeated point is a segment of no length, not the line meeting itself
+SELECT isSimple(geometry 'LINESTRING(10 10, 20 20)');
+SELECT isSimple(geometry 'LINESTRING(10 10, 10 10, 20 20, 20 20)');
+SELECT isSimple(geometry 'LINESTRING(10 10, 10 10, 10 10)');
+SELECT isSimple(geometry 'LINESTRING EMPTY');
+-- A line closing on itself meets itself only where it closes
+SELECT isSimple(geometry 'LINESTRING (20 20, 80 20, 80 80, 20 20)');
+SELECT isSimple(geometry 'LINESTRING (10 10, 2 2, 20 2, 10 10, 10 10)');
+-- Crossing itself, doubling back on itself, and meeting itself at a vertex
+SELECT isSimple(geometry 'LINESTRING (20 60, 160 60, 80 160, 80 20)');
+SELECT isSimple(geometry 'LINESTRING (10 10, 20 20, 10 10)');
+SELECT isSimple(geometry 'LINESTRING (20 60, 100 60, 60 100, 60 60)');
+SELECT isSimple(geometry 'LINESTRING (80 80, 20 20, 20 80, 140 80, 140 140, 80 80)');
+
+-- Two lines may meet only at a point that ends both of them
+SELECT isSimple(geometry 'MULTILINESTRING ((20 160, 20 20), (100 160, 100 20))');
+SELECT isSimple(geometry 'MULTILINESTRING ((60 140, 20 80, 60 40), (60 40, 100 80, 60 140))');
+SELECT isSimple(geometry 'MULTILINESTRING ((40 140, 160 40), (160 140, 40 40))');
+SELECT isSimple(geometry 'MULTILINESTRING ((0 0, 100 100), (100 100, 0 0))');
+SELECT isSimple(geometry 'MULTILINESTRING ((60 40, 140 40, 100 120, 100 0), (100 200, 200 120))');
+SELECT isSimple(geometry 'MULTILINESTRING ((40 120, 100 60), (160 120, 100 60), (40 60, 160 60))');
+
+-- An areal geometry is simple when each of its rings is
+SELECT isSimple(geometry 'POLYGON ((180 260, 80 300, 40 180, 160 120, 180 260))');
+SELECT isSimple(geometry 'POLYGON ((100 100, 100 200, 200 100, 200 200, 100 100))');
+SELECT isSimple(geometry 'POLYGON ((50 90, 90 90, 90 50, 50 50, 10 10, 50 50, 50 90))');
+SELECT isSimple(geometry 'POLYGON EMPTY');
+SELECT isSimple(geometry 'MULTIPOLYGON (((240 160, 100 240, 80 60, 220 40, 240 160)), ((160 380, 100 240, 20 380, 160 380), (120 340, 60 360, 80 320, 120 340)))');
+SELECT isSimple(geometry 'MULTIPOLYGON (((100 100, 100 200, 200 100, 200 200, 100 100)), ((100 400, 200 400, 200 300, 100 300, 100 400)))');
+
+-- The components of a collection are answered one by one
+SELECT isSimple(geometry 'GEOMETRYCOLLECTION (POLYGON ((100 200, 200 200, 200 100, 100 100, 100 200)), LINESTRING (100 300, 200 250), POINT (250 250), POINT (250 150))');
+SELECT isSimple(geometry 'GEOMETRYCOLLECTION (POLYGON ((100 100, 100 200, 200 100, 200 200, 100 100)), LINESTRING (100 300, 200 250), POINT (250 250), POINT (250 150))');
+SELECT isSimple(geometry 'GEOMETRYCOLLECTION (POLYGON ((0 10, 10 10, 10 0, 0 0, 0 10)), LINESTRING (100 300, 200 250), POINT EMPTY)');
+
+-------------------------------------------------------------------------------

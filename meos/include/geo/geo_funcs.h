@@ -117,6 +117,7 @@ extern LWGEOM *lwcircle_make(double x, double y, double radius, int32_t srid);
 extern GSERIALIZED *geocircle_make(double x, double y, double radius,
   int32_t srid);
 extern LWGEOM *meos_oriented_envelope(const LWGEOM *geom);
+extern bool meos_is_simple(const LWGEOM *geom, bool *result);
 
 /*****************************************************************************/
 

@@ -421,6 +421,7 @@ extern GSERIALIZED *geom_buffer_meos(const GSERIALIZED *gs, double size, const c
 extern GSERIALIZED *geom_oriented_envelope(const GSERIALIZED *geom);
 extern GSERIALIZED *geom_convex_hull(const GSERIALIZED *gs);
 extern GSERIALIZED *geom_convex_hull_meos(const GSERIALIZED *gs);
+extern bool geom_is_simple(const GSERIALIZED *gs);
 
 /* Spatial relationship functions */
 

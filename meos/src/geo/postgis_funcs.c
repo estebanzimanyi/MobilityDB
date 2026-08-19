@@ -59,6 +59,7 @@
 #include <meos_internal_geo.h>
 #include "temporal/type_util.h"
 #include "geo/geo_poly_clip.h"  /* clip_poly_poly fast-path for polygon ∩/− polygon */
+#include "geo/geo_funcs.h"
 #include "geo/meos_transform.h"
 #include "geo/tgeo.h"
 #include "geo/tgeo_spatialfuncs.h"
@@ -2350,6 +2351,55 @@ geom_unary_union(const GSERIALIZED *gs, double prec)
   GSERIALIZED *result = geo_serialize(lwresult);
   lwgeom_free(lwgeom); lwgeom_free(lwresult);
   return result;
+#endif /* GEOS */
+}
+
+/**
+ * @ingroup meos_geo_base_accessor
+ * @brief Return true if a geometry has no anomalous point, which is a point
+ * at which it crosses or touches itself
+ * @details A point is always simple, a multipoint is simple when it repeats
+ * no point, a line is simple when it meets itself only where two of its
+ * segments follow one another and, when it closes, at the point where it
+ * closes, and an areal geometry is simple when each of its rings is. The
+ * lines of a multiline may additionally meet at a point that ends both.
+ * @param[in] gs Geometry
+ * @note PostGIS function: @p ST_IsSimple(PG_FUNCTION_ARGS). With respect to
+ * the original function we do not use the @p flags argument.
+ * @csqlfn #Geom_is_simple()
+ */
+bool
+geom_is_simple(const GSERIALIZED *gs)
+{
+  /* Ensure the validity of the arguments */
+  VALIDATE_NOT_NULL(gs, false);
+  if (! ensure_not_geodetic_geo(gs))
+    return false;
+
+  LWGEOM *geom = lwgeom_from_gserialized(gs);
+  bool result;
+  bool covered = meos_is_simple(geom, &result);
+  if (covered)
+  {
+    lwgeom_free(geom);
+    return result;
+  }
+
+#if ! GEOS
+  lwgeom_free(geom);
+  meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
+    "Whether this geometry is simple is not supported without GEOS");
+  return false;
+#else
+  int simple = lwgeom_is_simple(geom);
+  lwgeom_free(geom);
+  if (simple < 0)
+  {
+    meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
+      "Whether the geometry is simple could not be determined");
+    return false;
+  }
+  return simple != 0;
 #endif /* GEOS */
 }
 

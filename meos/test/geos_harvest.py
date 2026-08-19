@@ -12,6 +12,7 @@ Usage::
 
     geos_harvest.py <geos-source-dir> convexhull > convexhull_corpus_geos.txt
     geos_harvest.py <geos-source-dir> buffer     > buffer_corpus_geos.txt
+    geos_harvest.py <geos-source-dir> issimple   > issimple_corpus_geos.txt
 
 where ``<geos-source-dir>`` is a GEOS checkout or unpacked release.  Point it
 at a newer GEOS to refresh the corpus.  Each output record is
@@ -29,10 +30,12 @@ import os
 import re
 import sys
 
-# The XML file stem each operation is asserted in
+# The XML file stem each operation is asserted in, and the name the suite
+# gives the operation, which is not always the name used here
 SUITES = {
-    "convexhull": "TestConvexHull*.xml",
-    "buffer": "TestBuffer*.xml",
+    "convexhull": ("TestConvexHull*.xml", "convexhull"),
+    "buffer": ("TestBuffer*.xml", "buffer"),
+    "issimple": ("TestSimple*.xml", "isSimple"),
 }
 
 # A JTS type liblwgeom does not parse, so it is outside the geometry model MEOS
@@ -42,11 +45,12 @@ UNPARSEABLE = ("LINEARRING",)
 
 def harvest(geos_dir, op):
     """Return the (wkt, arg, expected, source) records of a GEOS checkout."""
+    suite, opname = SUITES[op]
     pattern = os.path.join(geos_dir, "tests", "xmltester", "tests", "general",
-                           SUITES[op])
+                           suite)
     files = sorted(glob.glob(pattern))
     if not files:
-        sys.exit("no %s under %s" % (SUITES[op], os.path.dirname(pattern)))
+        sys.exit("no %s under %s" % (suite, os.path.dirname(pattern)))
     records, skipped = [], 0
     for path in files:
         with open(path, encoding="utf-8", errors="replace") as fh:
@@ -57,7 +61,7 @@ def harvest(geos_dir, op):
                 continue
             wkt = " ".join(a.group(1).split())
             for tag, expected in re.findall(
-                    r'(<op\s+name=[\'"]%s[\'"][^>]*>)(.*?)</op>' % op, case,
+                    r'(<op\s+name=[\'"]%s[\'"][^>]*>)(.*?)</op>' % opname, case,
                     re.S):
                 if not re.search(r'arg1=[\'"]A[\'"]', tag):
                     continue
