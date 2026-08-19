@@ -1,4 +1,11 @@
+# The entry points of liblwgeom's GEOS files that the rest of liblwgeom still
+# calls, which a build leaving those files out has to answer
+if(NOT GEOS)
+  set(GEO_LWGEOM_NONE geo_lwgeom_none.c)
+endif()
+
 set(GEO_SOURCES
+  ${GEO_LWGEOM_NONE}
   geo_buffer.c
   geo_funcs.c
   geo_round.c

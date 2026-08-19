@@ -136,6 +136,14 @@ tinstant_merge(const TInstant *inst1, const TInstant *inst2)
 GSERIALIZED *
 geoarr_merge(GSERIALIZED **gsarr, int count)
 {
+#if ! GEOS
+  /* Merging the lines of a geometry is answered by the GEOS library through
+   * liblwgeom, and no native implementation covers it */
+  (void) gsarr; (void) count;
+  meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
+    "Merging the lines of a geometry is not supported without GEOS");
+  return NULL;
+#else
   assert(gsarr); assert(count > 0);
   GSERIALIZED *result = geom_array_union(gsarr, count);
   /*
@@ -152,6 +160,7 @@ geoarr_merge(GSERIALIZED **gsarr, int count)
     result = tmp;
   }
   return result;
+#endif /* GEOS */
 }
 
 /**

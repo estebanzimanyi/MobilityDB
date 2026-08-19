@@ -1674,6 +1674,12 @@ geom_centroid(const GSERIALIZED *gs)
   if (! ensure_not_geodetic_geo(gs))
     return NULL;
 
+#if ! GEOS
+  /* No native implementation covers the centroid */
+  meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
+    "The centroid of a geometry is not supported without GEOS");
+  return NULL;
+#else
   LWGEOM *lwgeom = lwgeom_from_gserialized(gs);
   LWGEOM *lwresult = lwgeom_centroid(lwgeom);
   lwgeom_free(lwgeom);
@@ -1682,6 +1688,7 @@ geom_centroid(const GSERIALIZED *gs)
   GSERIALIZED *result = geo_serialize(lwresult);
   lwgeom_free(lwresult);
   return result;
+#endif /* GEOS */
 }
 
 /**
@@ -2105,6 +2112,13 @@ geom_intersection2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   if (geo_is_planar_polygonal(gs1) && geo_is_planar_polygonal(gs2))
     return clip_poly_poly(gs1, gs2, CL_INTERSECTION);
 
+#if ! GEOS
+  /* Clipper2 answers the polygonal geometries above, and no native
+   * implementation covers the others */
+  meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
+    "The intersection of these geometries is not supported without GEOS");
+  return NULL;
+#else
   /* Other types fall through to GEOS */
   LWGEOM *geom1 = lwgeom_from_gserialized(gs1);
   LWGEOM *geom2 = lwgeom_from_gserialized(gs2);
@@ -2112,6 +2126,7 @@ geom_intersection2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   GSERIALIZED *result = geo_serialize(lwresult);
   lwgeom_free(geom1); lwgeom_free(geom2); lwgeom_free(lwresult);
   return result;
+#endif /* GEOS */
 }
 
 /**
@@ -2132,6 +2147,13 @@ geom_difference2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   if (geo_is_planar_polygonal(gs1) && geo_is_planar_polygonal(gs2))
     return clip_poly_poly(gs1, gs2, CL_DIFFERENCE);
 
+#if ! GEOS
+  /* Clipper2 answers the polygonal geometries above, and no native
+   * implementation covers the others */
+  meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
+    "The difference of these geometries is not supported without GEOS");
+  return NULL;
+#else
   /* Other types fall through to GEOS */
   LWGEOM *geom1 = lwgeom_from_gserialized(gs1);
   LWGEOM *geom2 = lwgeom_from_gserialized(gs2);
@@ -2139,6 +2161,7 @@ geom_difference2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   GSERIALIZED *result = geo_serialize(lwresult);
   lwgeom_free(geom1); lwgeom_free(geom2); lwgeom_free(lwresult);
   return result;
+#endif /* GEOS */
 }
 
 /**
@@ -2303,6 +2326,19 @@ geom_unary_union(const GSERIALIZED *gs, double prec)
   if (! ensure_not_geodetic_geo(gs))
     return NULL;
 
+#if ! GEOS
+  /* Clipper2 answers on the grid of its own integer arithmetic */
+  (void) prec;
+  /* The union of a polygonal geometry with itself dissolves the parts that
+   * overlap, which is what a unary union does, and Clipper2 answers it. The
+   * fast path is left to a build carrying no GEOS so that one carrying it
+   * keeps answering exactly as it does. */
+  if (geo_is_planar_polygonal(gs))
+    return clip_poly_poly(gs, gs, CL_UNION);
+  meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
+    "The unary union of this geometry is not supported without GEOS");
+  return NULL;
+#else
   LWGEOM *lwgeom = lwgeom_from_gserialized(gs) ;
   LWGEOM *lwresult = lwgeom_unaryunion_prec(lwgeom, prec);
   /* MEOS: PostGIS function #lwgeom_unaryunion_prec only propagates the SRID
@@ -2314,6 +2350,7 @@ geom_unary_union(const GSERIALIZED *gs, double prec)
   GSERIALIZED *result = geo_serialize(lwresult);
   lwgeom_free(lwgeom); lwgeom_free(lwresult);
   return result;
+#endif /* GEOS */
 }
 
 /**

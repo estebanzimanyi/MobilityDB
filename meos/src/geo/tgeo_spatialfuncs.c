@@ -1890,6 +1890,15 @@ uint32_t *
 geo_cluster_dbscan(const GSERIALIZED **geoms, uint32_t ngeoms,
   double tolerance, int minpoints, int *count)
 {
+#if ! GEOS
+  /* No native implementation covers the clustering, and a build carrying no
+   * GEOS has nothing to answer it with */
+  (void) geoms; (void) ngeoms; (void) tolerance; (void) minpoints;
+  (void) count;
+  meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
+    "Clustering geometries by density is not supported without GEOS");
+  return NULL;
+#else
   /* The out parameter is defined even when a later check fails */
   VALIDATE_NOT_NULL(count, NULL); 
   *count = 0;
@@ -1939,6 +1948,7 @@ geo_cluster_dbscan(const GSERIALIZED **geoms, uint32_t ngeoms,
   if (is_in_cluster)
     lwfree(is_in_cluster);
   return result_ids;
+#endif /* GEOS */
 }
 
 /**
@@ -2048,6 +2058,14 @@ GSERIALIZED **
 geo_cluster_within(const GSERIALIZED **geoms, uint32_t ngeoms,
   double tolerance, int *count)
 {
+#if ! GEOS
+  /* No native implementation covers the clustering, and a build carrying no
+   * GEOS has nothing to answer it with */
+  (void) geoms; (void) ngeoms; (void) tolerance; (void) count;
+  meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
+    "Clustering geometries within a distance is not supported without GEOS");
+  return NULL;
+#else
   /* The out parameter is defined even when a later check fails */
   VALIDATE_NOT_NULL(count, NULL); 
   *count = 0;
@@ -2091,6 +2109,7 @@ geo_cluster_within(const GSERIALIZED **geoms, uint32_t ngeoms,
   lwfree(lw_results);
   *count = nclusters;
   return result;
+#endif /* GEOS */
 }
 
 /*****************************************************************************/

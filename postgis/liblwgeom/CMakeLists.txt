@@ -1,3 +1,17 @@
+# The files reaching the GEOS library are the whole of what a build carrying
+# none has to leave out; every other file of liblwgeom references no GEOS entry
+# point at all.
+if(GEOS)
+  set(LWGEOM_GEOS_SOURCES
+    lwgeom_geos.c
+    lwgeom_geos_clean.c
+    lwgeom_geos_cluster.c
+    lwgeom_geos_node.c
+    lwgeom_geos_split.c)
+else()
+  set(LWGEOM_GEOS_SOURCES)
+endif()
+
 # if(NOT MEOS)
   # set(lwgeom_transform.c lwgeom_transform.c)
 # endif()
@@ -24,11 +38,7 @@ add_library(liblwgeom OBJECT
   lwgeom.c
   lwgeom_api.c
   lwgeom_debug.c
-  lwgeom_geos.c
-  lwgeom_geos_clean.c
-  lwgeom_geos_cluster.c
-  lwgeom_geos_node.c
-  lwgeom_geos_split.c
+  ${LWGEOM_GEOS_SOURCES}
   lwgeom_median.c
   # lwgeom_topo.c
   lwgeom_transform.c
