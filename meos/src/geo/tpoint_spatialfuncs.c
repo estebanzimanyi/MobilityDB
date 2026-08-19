@@ -3446,6 +3446,9 @@ tpointseq_stops_iter_new(const TSequence *seq, double maxdist, int64 mintunits,
   return nseqs;
 }
 
+#if GEOS
+
+
 /*****************************************************************************/
 
 /**
@@ -3706,6 +3709,28 @@ tpointseq_stops_iter(const TSequence *seq, double maxdist, int64 mintunits,
   }
   return nseqs;
 }
+
+#else /* ! GEOS */
+
+/**
+ * @brief Return the subsequences where the temporal value stays within an area
+ * with a given maximum size for at least the specified duration
+ * (iterator function)
+ * @details A build carrying no GEOS answers this from the minimum rotated
+ * rectangle the native implementation computes.
+ * @param[in] seq Temporal sequence
+ * @param[in] maxdist Maximum distance
+ * @param[in] mintunits Minimum duration
+ * @param[out] result Resulting sequences
+ */
+int
+tpointseq_stops_iter(const TSequence *seq, double maxdist, int64 mintunits,
+  TSequence **result)
+{
+  return tpointseq_stops_iter_new(seq, maxdist, mintunits, result);
+}
+
+#endif /* GEOS */
 
 /*****************************************************************************
  * Functions computing the intersection of two segments derived from PostGIS

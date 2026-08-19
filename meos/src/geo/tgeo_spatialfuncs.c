@@ -1964,6 +1964,13 @@ geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms,
   if (! ensure_positive(ngeoms))
     return NULL;
 
+#if ! GEOS
+  /* No native implementation covers the clustering, and a build carrying no
+   * GEOS has nothing to answer it with */
+  meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
+    "Clustering intersecting geometries is not supported without GEOS");
+  return NULL;
+#else
   int is3d = 0;
   uint32_t nclusters, i, j;
   int32_t srid = SRID_UNKNOWN;
@@ -2023,6 +2030,7 @@ geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms,
   lwfree(geos_results);
   *count = nclusters;
   return result;
+#endif /* GEOS */
 }
 
 /**

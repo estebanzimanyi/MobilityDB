@@ -1745,6 +1745,7 @@ meos_point_in_polygon(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
   return result;
 }
 
+#if GEOS
 /**
  * @brief Tranform a PostGIS geometry to a GEOS one
  */
@@ -1764,7 +1765,9 @@ POSTGIS2GEOS(const GSERIALIZED *gs)
   lwgeom_free(lwgeom);
   return result;
 }
+#endif /* GEOS */
 
+#if GEOS
 /**
  * @brief Tranform a GEOS geometry to a PostGIS one
  */
@@ -1785,7 +1788,9 @@ GEOS2POSTGIS(GEOSGeom geom, char want3d)
   lwgeom_free(lwgeom);
   return result;
 }
+#endif /* GEOS */
 
+#if GEOS
 /**
  * @brief Transform two @p GSERIALIZED geometries into @p GEOSGeometry and
  * call the GEOS function passed as argument
@@ -1830,6 +1835,7 @@ meos_call_geos2(const GSERIALIZED *gs1, const GSERIALIZED *gs2,
   }
   return (bool) result;
 }
+#endif /* GEOS */
 
 /**
  * @ingroup meos_internal_geo_base_rel
@@ -1891,6 +1897,7 @@ geom_spatialrel(const GSERIALIZED *gs1, const GSERIALIZED *gs2, spatialRel rel)
   /* Call GEOS function */
   assert(rel == INTERSECTS || rel == CONTAINS || rel == TOUCHES ||
     rel == COVERS);
+#if GEOS
   switch (rel)
   {
     case INTERSECTS:
@@ -1905,6 +1912,15 @@ geom_spatialrel(const GSERIALIZED *gs1, const GSERIALIZED *gs2, spatialRel rel)
       /* keep compiler quiet */
       return false;
   }
+#else
+  /* The short circuits above answer the geometry pairs a native
+   * implementation covers, and a build carrying no GEOS has nothing to answer
+   * the others with */
+  meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
+    "The spatial relationship between these geometries is not supported "
+    "without GEOS");
+  return false;
+#endif /* GEOS */
 }
 
 /**
@@ -2000,6 +2016,13 @@ geom_relate_pattern(const GSERIALIZED *gs1, const GSERIALIZED *gs2, char *p)
     return false;
 
   /* TODO handle empty */
+#if ! GEOS
+  /* The native matrix above answers every geometry it covers, and a build
+   * carrying no GEOS has nothing to answer the others with */
+  meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
+    "The relationship between these geometries is not supported without GEOS");
+  return false;
+#else
 
   GEOSContextHandle_t ctx = geos_get_context();
 
@@ -2041,6 +2064,7 @@ geom_relate_pattern(const GSERIALIZED *gs1, const GSERIALIZED *gs2, char *p)
     return false;
   }
   return (bool) result;
+#endif /* GEOS */
 }
 
 /**
@@ -2141,6 +2165,12 @@ geom_array_union(GSERIALIZED **gsarr, int count)
   if (count == 1)
     return gsarr[0];
 
+#if ! GEOS
+  /* No native implementation covers the union of an array of geometries */
+  meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
+    "The union of an array of geometries is not supported without GEOS");
+  return NULL;
+#else
   bool is3d = false, gotsrid = false;
   int curgeom = 0;
   uint8_t empty_type = 0;
@@ -2255,6 +2285,7 @@ geom_array_union(GSERIALIZED **gsarr, int count)
     /* Union returned a NULL geometry */
     return NULL;
   return result;
+#endif /* GEOS */
 }
 
 /**
@@ -2304,6 +2335,10 @@ geom_convex_hull(const GSERIALIZED *gs)
   if ( gserialized_is_empty(gs) )
     return geo_copy(gs);
 
+#if ! GEOS
+  /* The native implementation answers it instead */
+  return geom_convex_hull_meos(gs);
+#else
   int32_t srid = gserialized_get_srid(gs);
 
   GEOSContextHandle_t ctx = geos_get_context();
@@ -2356,6 +2391,7 @@ geom_convex_hull(const GSERIALIZED *gs)
     return NULL;
   }
   return result;
+#endif /* GEOS */
 }
 
 /**
@@ -2375,6 +2411,10 @@ geom_buffer(const GSERIALIZED *gs, double size, const char *params)
   VALIDATE_NOT_NULL(gs, NULL); VALIDATE_NOT_NULL(params, NULL);
   if (! ensure_not_geodetic_geo(gs))
     return NULL;
+#if ! GEOS
+  /* The arc-exact implementation answers it instead */
+  return geom_buffer_meos(gs, size, params);
+#else
 
   GEOSBufferParams *bufferparams;
   GEOSGeometry *g1, *g3 = NULL;
@@ -2567,6 +2607,7 @@ geom_buffer(const GSERIALIZED *gs, double size, const char *params)
     return NULL; /* never get here */
   }
   return result;
+#endif /* GEOS */
 }
 
 /*****************************************************************************/
@@ -2698,6 +2739,14 @@ geo_equals(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   if (VARSIZE(gs1) == VARSIZE(gs2) && ! memcmp(gs1, gs2, VARSIZE(gs1)))
       return 1;
 
+#if ! GEOS
+  /* No native implementation covers the equality of two geometries whose
+   * serializations differ */
+  meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
+    "Testing whether two geometries are equal is not supported without GEOS");
+  return -1;
+#else
+
   GEOSContextHandle_t ctx = geos_get_context();
 
   GEOSGeometry *geos1 = POSTGIS2GEOS(gs1);
@@ -2730,6 +2779,7 @@ geo_equals(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
   }
 
   return result;
+#endif /* GEOS */
 }
 
 /*****************************************************************************
