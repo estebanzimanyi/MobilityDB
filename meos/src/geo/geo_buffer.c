@@ -192,31 +192,6 @@ buffer_append_point(POINTARRAY *pa, double x, double y)
 }
 
 /**
- * @brief Append a 2D CIRCSTRING arc to a point array
- */
-static void
-buffer_append_arc(POINTARRAY *pa, double cx, double cy, double radius,
-  double start_angle, double end_angle, bool ccw)
-{
-  assert(pa); assert(radius >= 0);
-  double sweep = ccw ? 
-    angle_normalize(end_angle - start_angle) :
-    angle_normalize(start_angle - end_angle);
-  if (sweep <= FP_TOLERANCE)
-    return;
-  /* A CIRCSTRING arc is represented by three points.
-   * Split arcs larger than PI into several pieces in the caller. */
-  double middle_angle = ccw ?
-    start_angle + sweep * 0.5 : start_angle - sweep * 0.5;
-  buffer_append_point(pa, cx + radius * cos(start_angle),
-    cy + radius * sin(start_angle));
-  buffer_append_point(pa, cx + radius * cos(middle_angle),
-    cy + radius * sin(middle_angle));
-  buffer_append_point(pa, cx + radius * cos(end_angle),
-    cy + radius * sin(end_angle));
-};
-
-/**
  * @brief Compute the intersection of two infinite lines
  * @details The first line is P + tR and the second line is Q + uS.
  */
@@ -887,6 +862,57 @@ buffer_boundary_intersection(const Edge *e1, const Edge *e2)
   }
 
   return -1;
+}
+
+
+/**
+ * @brief Return true if two coordinate pairs are the same topological node
+ */
+static inline bool
+buffer_nodes_equal(double x1, double y1, double x2, double y2)
+{
+  return fabs(x1 - x2) <= FP_TOLERANCE && fabs(y1 - y2) <= FP_TOLERANCE;
+}
+
+/**
+ * @brief Return true if the boundary of a geometry crosses itself
+ * @details Two edges of one ring that are not consecutive must not meet: an
+ * offset ring that crosses itself does not bound a surface, and resolving it
+ * into the surfaces it does bound needs the boundary overlay. Consecutive
+ * edges meet at the node they share by construction and are skipped.
+ */
+static bool
+buffer_boundary_self_intersects(const LWGEOM *geom)
+{
+  assert(geom);
+  MeosArray *edges = geom_extract_edges(geom);
+  if (! edges)
+    return false;
+  bool result = false;
+  for (uint32_t i = 0; i < edges->count && ! result; i++)
+  {
+    const Edge *e1 = (const Edge *) meos_array_get(edges, i);
+    if (! e1 || ! buffer_is_boundary_edge(e1))
+      continue;
+    for (uint32_t j = i + 1; j < edges->count; j++)
+    {
+      const Edge *e2 = (const Edge *) meos_array_get(edges, j);
+      if (! e2 || ! buffer_is_boundary_edge(e2))
+        continue;
+      if (buffer_nodes_equal(e1->x2, e1->y2, e2->x1, e2->y1) ||
+          buffer_nodes_equal(e2->x2, e2->y2, e1->x1, e1->y1) ||
+          buffer_nodes_equal(e1->x1, e1->y1, e2->x1, e2->y1) ||
+          buffer_nodes_equal(e1->x2, e1->y2, e2->x2, e2->y2))
+        continue;
+      if (buffer_boundary_intersection(e1, e2) >= 0)
+      {
+        result = true;
+        break;
+      }
+    }
+  }
+  meos_array_destroy(edges);
+  return result;
 }
 
 /*****************************************************************************
@@ -3332,30 +3358,69 @@ buffer_ring_outward_left(const POINTARRAY *pa)
 }
 
 /**
- * @brief Construct an offset ring.
- * @details The ring is constructed from the offset segments of the input ring.
- * Convex vertices on the buffered side are connected using the requested
- * join style. Concave vertices are connected by the intersection of the
- * two offset lines. Round joins are represented by exact circular arcs.
- * @param[in] source Source polygon ring
+ * @brief Return true if a polygon ring is convex
+ * @details Every vertex of a convex ring turns the same way. Contracting such
+ * a ring past its own width leaves nothing, whereas a ring that is not convex
+ * may instead fall apart into several surfaces, which only the boundary
+ * overlay can name.
+ */
+static bool
+buffer_ring_is_convex(const POINTARRAY *pa)
+{
+  assert(pa);
+  if (pa->npoints < 4)
+    return false;
+  uint32_t n = pa->npoints - 1;
+  int sign = 0;
+  for (uint32_t i = 0; i < n; i++)
+  {
+    POINT4D a, b, c;
+    getPoint4d_p(pa, i, &a);
+    getPoint4d_p(pa, (i + 1) % n, &b);
+    getPoint4d_p(pa, (i + 2) % n, &c);
+    double turn = buffer_cross(b.x - a.x, b.y - a.y, c.x - b.x, c.y - b.y);
+    if (fabs(turn) <= FP_TOLERANCE)
+      continue;
+    int current = turn > 0.0 ? 1 : -1;
+    if (sign == 0)
+      sign = current;
+    else if (sign != current)
+      return false;
+  }
+  return sign != 0;
+}
+
+/**
+ * @brief Construct the offset of a polygon ring
+ * @details The offset of every segment is joined to the next one at the
+ * vertex between them: on the side the ring turns away from, the two offset
+ * segments leave a gap that the requested join style fills, and on the other
+ * side they cross and their intersection is the single point the boundary
+ * passes through.
+ *
+ * The ring therefore alternates straight portions with joins, which is a
+ * compound curve, exactly as the boundary of a line buffer is. A circular
+ * string cannot carry it, because every three consecutive points of one read
+ * as an arc, so a straight portion would have to be written as a collinear
+ * triple and every join would have to align with that parity.
+ * @param[in] source Source polygon ring, explicitly closed
  * @param[in] radius Buffer distance
  * @param[in] outward_left True if the buffered side is left of the ring
  * traversal direction
  * @param[in] join_style Join style
  * @param[in] mitre_limit Maximum mitre ratio
  * @param[in] srid Spatial reference identifier
- * @return The buffered ring as a CircularString, or @p NULL if the offset
- * cannot be constructed
+ * @return The offset ring, or @p NULL if it cannot be constructed
  */
-static LWCIRCSTRING *
+static LWCOMPOUND *
 buffer_ring(const POINTARRAY *source, double radius, bool outward_left,
   JoinStyle join_style, double mitre_limit, int32_t srid)
 {
   assert(source); assert(radius > 0.0);
   if (source->npoints < 4)
     return NULL;
-  /* The input ring is explicitly closed. The last point is therefore
-   * identical to the first point and is not treated as a separate vertex. */
+  /* The last point of a closed ring repeats the first one and is not a vertex
+   * of its own */
   uint32_t n = source->npoints - 1;
   if (n < 3)
     return NULL;
@@ -3367,7 +3432,8 @@ buffer_ring(const POINTARRAY *source, double radius, bool outward_left,
     points[i].x = p.x;
     points[i].y = p.y;
   }
-  /* For every input segment we compute its unit normal on the buffered side */
+
+  /* The unit normal of every segment, pointing to the buffered side */
   double *nx = palloc(sizeof(double) * n);
   double *ny = palloc(sizeof(double) * n);
   for (uint32_t i = 0; i < n; i++)
@@ -3383,146 +3449,90 @@ buffer_ring(const POINTARRAY *source, double radius, bool outward_left,
     }
     dx /= len;
     dy /= len;
-    if (outward_left)
-    {
-      nx[i] = -dy;
-      ny[i] = dx;
-    }
-    else
-    {
-      nx[i] = dy;
-      ny[i] = -dx;
-    }
+    nx[i] = outward_left ? -dy : dy;
+    ny[i] = outward_left ? dx : -dx;
   }
 
-  /* Allocate enough room for the CircularString. Round joins may be split
-   * into several arcs. The allocation is deliberately generous. */
-  POINTARRAY *ring = ptarray_construct_empty(LW_FALSE, LW_FALSE, 8 * n + 8);
-  /* At vertex i:
-   * - incoming = offset endpoint of segment (i-1) -> i
-   * - outgoing = offset start point of segment i -> (i+1)
-   * These are the two tangent points that must be connected by the
-   * appropriate join. */
+  LWCOMPOUND *ring = lwcompound_construct_empty(srid, 0, 0);
+  POINT2D first = { 0, 0 }, cursor = { 0, 0 };
+  bool started = false;
   for (uint32_t i = 0; i < n; i++)
   {
     uint32_t prev = (i + n - 1) % n;
     uint32_t next = (i + 1) % n;
+    /* The boundary reaches the vertex along the offset of the segment ending
+     * there and leaves it along the offset of the one starting there */
     POINT2D incoming, outgoing;
     incoming.x = points[i].x + radius * nx[prev];
     incoming.y = points[i].y + radius * ny[prev];
     outgoing.x = points[i].x + radius * nx[i];
     outgoing.y = points[i].y + radius * ny[i];
-    /* For the first vertex we start at the incoming tangent point */
-    if (i == 0)
-      buffer_append_point(ring, incoming.x, incoming.y);
-    else
-      /* The previous join ended at the outgoing tangent point of the previous
-       * vertex. Connect that point to the incoming tangent point of this
-       * vertex. This is an offset straight segment. */
-      buffer_append_point(ring, incoming.x, incoming.y);
 
-    /* Determine the turn of the original ring */
-    double dx1 = points[i].x - points[prev].x;
-    double dy1 = points[i].y - points[prev].y;
-    double dx2 = points[next].x - points[i].x;
-    double dy2 = points[next].y - points[i].y;
-    double turn = buffer_cross(dx1, dy1, dx2, dy2);
-    /* Determine whether the vertex is convex on the buffered side.
-     * For a left-side offset: positive turn -> convex
-     * For a right-side offset: negative turn -> convex */
-    bool convex;
-    if (outward_left)
-      convex = turn > FP_TOLERANCE;
-    else
-      convex = turn < -FP_TOLERANCE;
+    double in_dx = points[i].x - points[prev].x;
+    double in_dy = points[i].y - points[prev].y;
+    double out_dx = points[next].x - points[i].x;
+    double out_dy = points[next].y - points[i].y;
+    double turn = buffer_cross(in_dx, in_dy, out_dx, out_dy);
+    /* The buffered side is convex at the vertex when the ring turns away
+     * from it, which is a right turn when that side is the left one */
+    bool convex = outward_left ? turn < -FP_TOLERANCE : turn > FP_TOLERANCE;
 
-    /* A concave vertex does not receive a round/bevel/miter lobe.
-     * Instead the two offset segments meet at their intersection. */
+    POINT2D enter = incoming, leave = outgoing;
     if (! convex)
     {
-      POINT2D intersection;
-      /* Incoming offset line */
-      double in_dx = points[i].x - points[prev].x;
-      double in_dy = points[i].y - points[prev].y;
-      /* Outgoing offset line */
-      double out_dx = points[next].x - points[i].x;
-      double out_dy = points[next].y - points[i].y;
-      if (! buffer_line_intersection(incoming, in_dx, in_dy, outgoing,
-          out_dx, out_dy, &intersection))
+      POINT2D crossing;
+      if (! buffer_line_intersection(incoming, in_dx, in_dy, outgoing, out_dx,
+          out_dy, &crossing))
       {
-        pfree(points); pfree(nx); pfree(ny); ptarray_free(ring);
+        pfree(points); pfree(nx); pfree(ny);
+        lwgeom_free(lwcompound_as_lwgeom(ring));
         return NULL;
       }
-      buffer_append_point(ring, intersection.x, intersection.y);
-      continue;
+      enter = leave = crossing;
     }
 
-    /* Convex vertex */
-    switch (join_style)
+    if (! started)
     {
-      case JOIN_ROUND:
-      {
-        double a1 = atan2(incoming.y - points[i].y, incoming.x - points[i].x);
-        double a2 = atan2(outgoing.y - points[i].y, outgoing.x - points[i].x);
-        /* For a convex corner, the arc must travel through the exterior of the
-         * original polygon */
-        bool ccw = outward_left;
-        buffer_append_arc(ring, points[i].x, points[i].y, radius, a1, a2, ccw);
-        break;
-      }
-      case JOIN_BEVEL:
-      {
-        /* A bevel join is simply the straight segment joining the two tangent
-         * points */
-        buffer_append_point(ring, outgoing.x, outgoing.y);
-        break;
-      }
-      case JOIN_MITRE:
-      {
-        POINT2D intersection;
-        double in_dx = points[i].x - points[prev].x;
-        double in_dy = points[i].y - points[prev].y;
-        double out_dx = points[next].x - points[i].x;
-        double out_dy = points[next].y - points[i].y;
-        bool ok = buffer_line_intersection(incoming, in_dx, in_dy, outgoing,
-          out_dx, out_dy, &intersection);
-        if (! ok)
-        {
-          /* Parallel offset lines. Fall back to bevel. */
-          buffer_append_point(ring, outgoing.x, outgoing.y);
-          break;
-        }
-        double miter_length = hypot(intersection.x - points[i].x,
-          intersection.y - points[i].y);
-        if (miter_length > radius * mitre_limit + FP_TOLERANCE)
-        {
-          /* PostGIS-style miter limit fallback */
-          buffer_append_point(ring, outgoing.x, outgoing.y);
-        }
-        else
-        {
-          buffer_append_point(ring, intersection.x, intersection.y);
-          buffer_append_point(ring, outgoing.x, outgoing.y);
-        }
-        break;
-      }
-      default:
-        pfree(points); pfree(nx); pfree(ny); ptarray_free(ring);
-        return NULL;
+      first = enter;
+      started = true;
     }
+    else
+    {
+      /* The offset of the segment ending at this vertex. An offset running
+       * opposite to the segment it comes from has been consumed: the ring is
+       * contracted past its own width there and bounds no surface, which the
+       * boundary overlay would have to resolve. */
+      if ((enter.x - cursor.x) * in_dx + (enter.y - cursor.y) * in_dy <
+          -FP_TOLERANCE)
+      {
+        pfree(points); pfree(nx); pfree(ny);
+        lwgeom_free(lwcompound_as_lwgeom(ring));
+        return NULL;
+      }
+      buffer_add_segment(ring, srid, cursor, enter);
+    }
+    if (convex)
+      buffer_add_join(ring, srid, points[i], incoming, outgoing, radius,
+        join_style, mitre_limit, true);
+    cursor = leave;
   }
+  /* The offset of the segment closing the ring */
+  if ((first.x - cursor.x) * (points[0].x - points[n - 1].x) +
+      (first.y - cursor.y) * (points[0].y - points[n - 1].y) < -FP_TOLERANCE)
+  {
+    pfree(points); pfree(nx); pfree(ny);
+    lwgeom_free(lwcompound_as_lwgeom(ring));
+    return NULL;
+  }
+  buffer_add_segment(ring, srid, cursor, first);
 
-  /* Close the ring by returning to the first point. The first input vertex
-   * was processed last through the cyclic construction, so the final point
-   * is the initial incoming tangent point. */
-  POINT2D first;
-  first.x = points[0].x + radius * nx[n - 1];
-  first.y = points[0].y + radius * ny[n - 1];
-  buffer_append_point(ring, first.x, first.y);
-  /* Construct the exact circular string */
-  LWCIRCSTRING *result = lwcircstring_construct(srid, NULL, ring);
   pfree(points); pfree(nx); pfree(ny);
-  return result;
+  if (ring->ngeoms == 0)
+  {
+    lwgeom_free(lwcompound_as_lwgeom(ring));
+    return NULL;
+  }
+  return ring;
 }
 
 /*****************************************************************************
@@ -3973,7 +3983,7 @@ meos_buffer_mline(const LWMLINE *mline, double radius, JoinStyle join_style,
  */
 static LWGEOM *
 meos_buffer_poly(const LWPOLY *poly, double radius, JoinStyle join_style,
-  EndCapStyle cap_style, double mitre_limit)
+  EndCapStyle cap_style, double mitre_limit, bool inward)
 {
   assert(poly); assert(radius > 0.0);
   (void) cap_style;
@@ -3985,16 +3995,21 @@ meos_buffer_poly(const LWPOLY *poly, double radius, JoinStyle join_style,
     return lwcollection_as_lwgeom(result);
   }
 
-  /* The first ring is the exterior ring */
+  /* The first ring is the exterior ring, which a buffer expands and an
+   * erosion contracts */
   bool exterior_left = buffer_ring_outward_left(poly->rings[0]);
-  LWCIRCSTRING *exterior = buffer_ring(poly->rings[0], radius, exterior_left,
+  if (inward)
+    exterior_left = ! exterior_left;
+  LWCOMPOUND *exterior = buffer_ring(poly->rings[0], radius, exterior_left,
     join_style, mitre_limit, srid);
   if (! exterior)
-    return NULL;
+    /* A convex ring contracted past its own width leaves nothing */
+    return (inward && buffer_ring_is_convex(poly->rings[0])) ?
+      lwpoly_as_lwgeom(lwpoly_construct_empty(srid, 0, 0)) : NULL;
 
   /* Construct the curved polygon */
   LWCURVEPOLY *result = lwcurvepoly_construct_empty(srid, 0, 0);
-  lwcurvepoly_add_ring(result, lwcircstring_as_lwgeom(exterior));
+  lwcurvepoly_add_ring(result, lwcompound_as_lwgeom(exterior));
 
   /* Holes.
    * A positive polygon buffer contracts the holes. Therefore the
@@ -4002,17 +4017,28 @@ meos_buffer_poly(const LWPOLY *poly, double radius, JoinStyle join_style,
    */
   for (uint32_t i = 1; i < poly->nrings; i++)
   {
-    LWCIRCSTRING *hole = buffer_ring(poly->rings[i], radius,
-      ! buffer_ring_outward_left(poly->rings[i]), join_style, mitre_limit,
-      srid);
+    bool hole_left = ! buffer_ring_outward_left(poly->rings[i]);
+    if (inward)
+      hole_left = ! hole_left;
+    LWCOMPOUND *hole = buffer_ring(poly->rings[i], radius, hole_left,
+      join_style, mitre_limit, srid);
     if (! hole)
     {
       lwgeom_free(lwcurvepoly_as_lwgeom(result));
       return NULL;
     }
-    lwcurvepoly_add_ring(result, lwcircstring_as_lwgeom(hole));
+    lwcurvepoly_add_ring(result, lwcompound_as_lwgeom(hole));
   }
-  return lwcurvepoly_as_lwgeom(result);
+
+  /* A ring contracted past the width of the polygon crosses itself, and it
+   * takes the boundary overlay to say which surfaces the crossing leaves */
+  LWGEOM *geom = lwcurvepoly_as_lwgeom(result);
+  if (inward && buffer_boundary_self_intersects(geom))
+  {
+    lwgeom_free(geom);
+    return NULL;
+  }
+  return geom;
 }
 
 /*****************************************************************************
@@ -4058,7 +4084,7 @@ meos_buffer_mpoly(const LWMPOLY *mpoly, double radius, JoinStyle join_style,
     if (component->type != POLYGONTYPE)
       continue;
     LWGEOM *buffer = meos_buffer_poly((const LWPOLY *) component, radius,
-      join_style, cap_style, mitre_limit);
+      join_style, cap_style, mitre_limit, false);
     if (buffer)
       buffers[count++] = buffer;
   }
@@ -4164,6 +4190,55 @@ meos_buffer_collection(const LWCOLLECTION *collection, double radius,
  *****************************************************************************/
 
 /**
+ * @brief Erode a MULTIPOLYGON
+ * @details Erosion only ever shrinks a component, so the eroded components
+ * stay as disjoint as the ones they come from and need no union. A component
+ * eroded away contributes nothing.
+ */
+static LWGEOM *
+meos_erode_mpoly(const LWMPOLY *mpoly, double radius, JoinStyle join_style,
+  EndCapStyle cap_style, double mitre_limit)
+{
+  assert(mpoly); assert(radius > 0.0);
+  int32_t srid = lwgeom_get_srid((const LWGEOM *) mpoly);
+  LWGEOM **eroded = palloc(sizeof(LWGEOM *) * (mpoly->ngeoms + 1));
+  uint32_t count = 0;
+  for (uint32_t i = 0; i < mpoly->ngeoms; i++)
+  {
+    const LWGEOM *component = (const LWGEOM *) mpoly->geoms[i];
+    if (! component || lwgeom_is_empty(component) ||
+        component->type != POLYGONTYPE)
+      continue;
+    LWGEOM *part = meos_buffer_poly((const LWPOLY *) component, radius,
+      join_style, cap_style, mitre_limit, true);
+    /* A component the erosion does not cover leaves the whole result
+     * uncovered, since dropping it would answer a smaller geometry */
+    if (! part)
+    {
+      for (uint32_t j = 0; j < count; j++)
+        lwgeom_free(eroded[j]);
+      pfree(eroded);
+      return NULL;
+    }
+    eroded[count++] = part;
+  }
+  if (count == 0)
+  {
+    pfree(eroded);
+    return lwpoly_as_lwgeom(lwpoly_construct_empty(srid, 0, 0));
+  }
+  if (count == 1)
+  {
+    LWGEOM *result = eroded[0];
+    pfree(eroded);
+    return result;
+  }
+  /* lwcollection_construct() takes ownership of the geometry array */
+  return lwcollection_as_lwgeom(lwcollection_construct(MULTISURFACETYPE, srid,
+    NULL, count, eroded));
+}
+
+/**
  * @brief Native MEOS implementation of ST_Buffer.
  * @details Currently supported:
  * - POINT
@@ -4183,15 +4258,26 @@ meos_buffer(const LWGEOM *geom, double radius, JoinStyle join_style,
 {
   assert(geom);
   int32_t srid = lwgeom_get_srid(geom);
-  /* ST_Buffer with a non-positive distance produces an empty polygon
-   * for the geometry types handled here */
-  if (radius <= 0.0)
-  {
-    LWPOLY *empty = lwpoly_construct_empty(srid, 0, 0);
-    return lwpoly_as_lwgeom(empty);
-  }
   if (mitre_limit <= 0.0)
     mitre_limit = 5.0;
+
+  /* A buffer of a non-positive distance keeps the points of the geometry that
+   * are at least that far from its exterior, which is nothing unless the
+   * geometry has an interior of its own */
+  if (radius <= 0.0)
+  {
+    bool areal = geom->type == POLYGONTYPE || geom->type == MULTIPOLYGONTYPE;
+    if (! areal)
+      return lwpoly_as_lwgeom(lwpoly_construct_empty(srid, 0, 0));
+    /* A zero distance keeps the geometry itself */
+    if (radius == 0.0)
+      return lwgeom_clone_deep(geom);
+    if (geom->type == POLYGONTYPE)
+      return meos_buffer_poly((const LWPOLY *) geom, -radius, join_style,
+        cap_style, mitre_limit, true);
+    return meos_erode_mpoly((const LWMPOLY *) geom, -radius, join_style,
+      cap_style, mitre_limit);
+  }
   switch (geom->type)
   {
     case POINTTYPE:
@@ -4206,7 +4292,7 @@ meos_buffer(const LWGEOM *geom, double radius, JoinStyle join_style,
         cap_style, mitre_limit);
     case POLYGONTYPE:
       return meos_buffer_poly((const LWPOLY *) geom, radius, join_style,
-        cap_style, mitre_limit);
+        cap_style, mitre_limit, false);
     case MULTIPOLYGONTYPE:
       return meos_buffer_mpoly((const LWMPOLY *) geom, radius, join_style,
         cap_style, mitre_limit);
