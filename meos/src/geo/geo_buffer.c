@@ -253,7 +253,8 @@ buffer_make_segment(int32_t srid, POINT2D p1, POINT2D p2)
  */
 static LWCIRCSTRING *
 buffer_make_arc(int32_t srid, double cx, double cy, double radius,
-  double start_angle, double end_angle, bool ccw)
+  double start_angle, double end_angle, bool ccw, const POINT2D *start,
+  const POINT2D *end)
 {
   double sweep, middle_angle;
   POINTARRAY *points;
@@ -265,15 +266,24 @@ buffer_make_arc(int32_t srid, double cx, double cy, double radius,
     return NULL;
 
   /* A CIRCSTRING arc is represented by three points.
-   * Split arcs larger than PI into several pieces in the caller. */
+   * Split arcs larger than PI into several pieces in the caller.
+   * An endpoint the caller knows exactly is taken from it: recomputing it
+   * from its angle moves it by a rounding step, which leaves the ring the
+   * arcs belong to unclosed. */
   middle_angle = ccw ? start_angle + sweep * 0.5 : start_angle - sweep * 0.5;
   points = ptarray_construct_empty(LW_FALSE, LW_FALSE, 3);
-  buffer_append_point(points, cx + radius * cos(start_angle),
-    cy + radius * sin(start_angle));
+  if (start)
+    buffer_append_point(points, start->x, start->y);
+  else
+    buffer_append_point(points, cx + radius * cos(start_angle),
+      cy + radius * sin(start_angle));
   buffer_append_point(points, cx + radius * cos(middle_angle),
     cy + radius * sin(middle_angle));
-  buffer_append_point(points, cx + radius * cos(end_angle),
-    cy + radius * sin(end_angle));
+  if (end)
+    buffer_append_point(points, end->x, end->y);
+  else
+    buffer_append_point(points, cx + radius * cos(end_angle),
+      cy + radius * sin(end_angle));
   return lwcircstring_construct(srid, NULL, points);
 }
 
@@ -295,7 +305,8 @@ buffer_add_segment(LWCOMPOUND *curve, int32_t srid, POINT2D p1, POINT2D p2)
  */
 static void
 buffer_add_arc(LWCOMPOUND *curve, int32_t srid, double cx, double cy,
-  double radius, double start_angle, double end_angle, bool ccw)
+  double radius, double start_angle, double end_angle, bool ccw,
+  const POINT2D *start, const POINT2D *end)
 {
   assert(curve);
   double sweep = ccw ? 
@@ -315,7 +326,8 @@ buffer_add_arc(LWCOMPOUND *curve, int32_t srid, double cx, double cy,
     double a0 = ccw ? start_angle + delta * i : start_angle - delta * i;
     double a1 = ccw ? start_angle + delta * (i + 1) : 
       start_angle - delta * (i + 1);
-    LWCIRCSTRING *arc = buffer_make_arc(srid, cx, cy, radius, a0, a1, ccw);
+    LWCIRCSTRING *arc = buffer_make_arc(srid, cx, cy, radius, a0, a1, ccw,
+      i == 0 ? start : NULL, i == count - 1 ? end : NULL);
     if (arc)
       lwcompound_add_lwgeom(curve, lwcircstring_as_lwgeom(arc));
   }
@@ -332,7 +344,7 @@ buffer_add_round_join(LWCOMPOUND *curve, int32_t srid, POINT2D vertex,
   double start_angle = atan2(p1.y - vertex.y, p1.x - vertex.x);
   double end_angle = atan2(p2.y - vertex.y, p2.x - vertex.x);
   buffer_add_arc(curve, srid, vertex.x, vertex.y, radius, start_angle,
-    end_angle, ccw);
+    end_angle, ccw, &p1, &p2);
 }
 
 /**
@@ -435,7 +447,7 @@ buffer_add_round_cap(LWCOMPOUND *curve, int32_t srid, POINT2D center,
   double start_angle = atan2(p1.y - center.y, p1.x - center.x);
   double end_angle = atan2( p2.y - center.y, p2.x - center.x);
   buffer_add_arc(curve, srid, center.x, center.y, radius, start_angle,
-    end_angle, ccw);
+    end_angle, ccw, &p1, &p2);
 }
 
 /*****************************************************************************
@@ -2509,7 +2521,7 @@ buffer_append_piece_to_curve(LWCOMPOUND *curve, int32_t srid,
     buffer_add_segment(curve, srid, p1, p2);
   else if (piece->type == BUFFER_ARC)
     buffer_add_arc(curve, srid, piece->cx, piece->cy, piece->radius,
-      piece->theta1, piece->theta2, piece->ccw);
+      piece->theta1, piece->theta2, piece->ccw, &p1, &p2);
 }
 
 /**
@@ -3859,22 +3871,39 @@ meos_buffer_line(const LWLINE *line, double radius, JoinStyle join_style,
   /* Construct the outer boundary as a compound curve */
   LWCOMPOUND *ring = lwcompound_construct_empty(srid, 0, 0);
 
-  /* Left side */
-  buffer_add_segment(ring, srid, left[0], left[1]);
+  /* Left side. On the outer side of a turn the two offset segments do not
+   * meet and the join fills the gap between their endpoints; on the inner
+   * side they cross and their intersection is the single shared endpoint. */
+  POINT2D cursor = left[0];
   for (uint32_t i = 1; i < npoints - 1; i++)
   {
+    /* A left turn leaves the left side concave, so its offset segments cross
+     * and the join belongs to the right side, and conversely */
     double turn = buffer_cross(dx[i - 1], dy[i - 1], dx[i], dy[i]);
-    bool outer = turn > FP_TOLERANCE;
-    buffer_add_join(ring, srid, points[i], left[i], left[i], radius,
-      join_style, mitre_limit, outer);
-    buffer_add_segment(ring, srid, left[i], left[i + 1]);
+    if (turn < -FP_TOLERANCE)
+    {
+      POINT2D p1 = buffer_point_offset(points[i].x, points[i].y, nx[i - 1],
+        ny[i - 1], radius);
+      POINT2D p2 = buffer_point_offset(points[i].x, points[i].y, nx[i], ny[i],
+        radius);
+      buffer_add_segment(ring, srid, cursor, p1);
+      buffer_add_join(ring, srid, points[i], p1, p2, radius, join_style,
+        mitre_limit, true);
+      cursor = p2;
+    }
+    else
+    {
+      buffer_add_segment(ring, srid, cursor, left[i]);
+      cursor = left[i];
+    }
   }
+  buffer_add_segment(ring, srid, cursor, left[npoints - 1]);
 
   /* End cap */
   if (cap_style == ENDCAP_ROUND)
   {
     buffer_add_round_cap(ring, srid, points[npoints - 1], left[npoints - 1],
-      right[npoints - 1], radius, true);
+      right[npoints - 1], radius, false);
   }
   else
   {
@@ -3890,22 +3919,36 @@ meos_buffer_line(const LWLINE *line, double radius, JoinStyle join_style,
     buffer_add_segment(ring, srid, l, r);
   }
 
-  /* Rigth side, in reverse direction */
-  buffer_add_segment(ring, srid, right[npoints - 1], right[npoints - 2]);
+  /* Right side, walked backwards, where the outer side of a turn is the
+   * other one */
+  cursor = right[npoints - 1];
   for (int i = (int) npoints - 2; i > 0; i--)
   {
     double turn = buffer_cross(dx[i - 1], dy[i - 1], dx[i], dy[i]);
-    bool outer = turn < -FP_TOLERANCE;
-    buffer_add_join(ring, srid, points[i], right[i], right[i], radius,
-      join_style, mitre_limit, outer);
-    buffer_add_segment(ring, srid, right[i], right[i - 1]);
+    if (turn > FP_TOLERANCE)
+    {
+      POINT2D p1 = buffer_point_offset(points[i].x, points[i].y, -nx[i],
+        -ny[i], radius);
+      POINT2D p2 = buffer_point_offset(points[i].x, points[i].y, -nx[i - 1],
+        -ny[i - 1], radius);
+      buffer_add_segment(ring, srid, cursor, p1);
+      buffer_add_join(ring, srid, points[i], p1, p2, radius, join_style,
+        mitre_limit, true);
+      cursor = p2;
+    }
+    else
+    {
+      buffer_add_segment(ring, srid, cursor, right[i]);
+      cursor = right[i];
+    }
   }
+  buffer_add_segment(ring, srid, cursor, right[0]);
 
   /* Start cap */
   if (cap_style == ENDCAP_ROUND)
   {
     buffer_add_round_cap(ring, srid, points[0], right[0], left[0], radius,
-      true);
+      false);
   }
   else
   {
@@ -3919,15 +3962,6 @@ meos_buffer_line(const LWLINE *line, double radius, JoinStyle join_style,
       l.y -= dy[0] * radius;
     }
     buffer_add_segment(ring, srid, r, l);
-  }
-
-  /* Close the compound curve */
-  if (ring->ngeoms > 0)
-  {
-    LWGEOM *first = ring->geoms[0];
-    LWGEOM *last = ring->geoms[ring->ngeoms - 1];
-    (void) first;
-    (void) last;
   }
 
   /* A CURVEPOLYGON can directly contain the compound curve */
@@ -4284,10 +4318,11 @@ meos_buffer_collection(const LWCOLLECTION *collection, double radius,
   }
 
   /* All component buffers are disjoint. They can therefore safely
-   * be represented as a MULTISURFACE without performing a union. */
+   * be represented as a MULTISURFACE without performing a union.
+   * lwcollection_construct() takes ownership of the geometry array, so
+   * buffers must NOT be freed after this call. */
   LWCOLLECTION *result = lwcollection_construct(MULTISURFACETYPE, srid, NULL,
     count, buffers);
-  pfree(buffers);
   return lwcollection_as_lwgeom(result);
 }
 
