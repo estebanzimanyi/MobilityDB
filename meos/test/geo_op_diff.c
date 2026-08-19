@@ -36,6 +36,9 @@
  * GEOS project asserts for the operation. The comparison criterion is the one
  * the reference project applies to that operation:
  * - a convex hull is an exact answer, so the result must equal the assertion;
+ * - the GEOS suite asserts no oriented envelope, so that operation is checked
+ *   against the answer of GEOS itself, exactly, both being rectangles that no
+ *   approximation stands between;
  * - a buffer is an approximation, and this implementation answers it with
  *   exact circular arcs where GEOS polygonizes them, so the two results
  *   necessarily differ vertex by vertex. The criterion is therefore the one
@@ -48,8 +51,9 @@
  *
  * Usage:
  * @code
- * geo_op_diff convexhull < convexhull_corpus_geos.txt
- * geo_op_diff buffer     < buffer_corpus_geos.txt
+ * geo_op_diff convexhull        < convexhull_corpus_geos.txt
+ * geo_op_diff buffer            < buffer_corpus_geos.txt
+ * geo_op_diff orientedenvelope  < any corpus, whose first field is read
  * @endcode
  */
 
@@ -69,6 +73,8 @@
 #define MAX_RELATIVE_AREA_DIFFERENCE 1.0e-3
 #define MAX_HAUSDORFF_DISTANCE_FACTOR 100.0
 #define MIN_DISTANCE_TOLERANCE 1.0e-8
+/* Two answers that are both exact agree to a rounding artefact of the area */
+#define EXACT_AREA_DIFFERENCE 1.0e-9
 /* The densify fraction DiscreteHausdorffDistance is given there */
 #define HAUSDORFF_DENSIFY_FRACTION 0.25
 /* The number of segments per quadrant an arc is stroked with. It is the
@@ -124,6 +130,36 @@ area_tolerance(void)
   double deficit = 1.0 - (2.0 * q / M_PI) * sin(M_PI / (2.0 * q));
   return deficit > MAX_RELATIVE_AREA_DIFFERENCE ?
     deficit : MAX_RELATIVE_AREA_DIFFERENCE;
+}
+
+/**
+ * @brief Return the oriented envelope GEOS answers for a geometry
+ */
+static GSERIALIZED *
+geos_oriented_envelope(const GSERIALIZED *gs)
+{
+  GEOSGeometry *input = geos_stroked(gs);
+  if (! input)
+    return NULL;
+  GEOSGeometry *mrr = GEOSMinimumRotatedRectangle(input);
+  GEOSGeom_destroy(input);
+  if (! mrr)
+    return NULL;
+  size_t size;
+  unsigned char *hex = GEOSGeomToHEX_buf(mrr, &size);
+  GEOSGeom_destroy(mrr);
+  if (! hex)
+    return NULL;
+  GSERIALIZED *result = geom_in((const char *) hex, -1);
+  GEOSFree(hex);
+  /* The round trip through GEOS drops the reference system */
+  if (result)
+  {
+    GSERIALIZED *located = geo_set_srid(result, geo_srid(gs));
+    free(result);
+    result = located;
+  }
+  return result;
 }
 
 /**
@@ -221,6 +257,54 @@ boundary_hausdorff_in_tolerance(const GEOSGeometry *actual,
 }
 
 /**
+ * @brief Return true if two exact polygons cover the same region
+ * @details Neither answer is an approximation, so the two rectangles agree
+ * whenever their symmetric difference is a rounding artefact. Comparing them
+ * with @p geo_equals() instead would answer on their bounding boxes, which it
+ * compares exactly and which a rounding step apart already separates.
+ */
+static bool
+polygons_match(const GSERIALIZED *actual, const GSERIALIZED *expected,
+  char *reason, size_t size)
+{
+  bool e1 = geo_is_empty(actual), e2 = geo_is_empty(expected);
+  if (e1 && e2)
+    return true;
+  if (e1 || e2)
+  {
+    snprintf(reason, size, "one result is empty and the other is not");
+    return false;
+  }
+  GEOSGeometry *g1 = geos_stroked(actual);
+  GEOSGeometry *g2 = geos_stroked(expected);
+  if (! g1 || ! g2)
+  {
+    snprintf(reason, size, "a result does not convert to a polygon");
+    if (g1) GEOSGeom_destroy(g1);
+    if (g2) GEOSGeom_destroy(g2);
+    return false;
+  }
+  double area, diff;
+  bool result = false;
+  GEOSGeometry *sym = GEOSSymDifference(g1, g2);
+  if (sym && GEOSArea(g2, &area) && GEOSArea(sym, &diff))
+  {
+    if (diff <= 0.0 || (area > 0.0 && diff / area < EXACT_AREA_DIFFERENCE))
+      result = true;
+    else
+      snprintf(reason, size, "the symmetric difference covers %g of the area, "
+        "over the tolerated %g", area > 0.0 ? diff / area : diff,
+        EXACT_AREA_DIFFERENCE);
+  }
+  else
+    snprintf(reason, size, "the symmetric difference is not available");
+  if (sym)
+    GEOSGeom_destroy(sym);
+  GEOSGeom_destroy(g1); GEOSGeom_destroy(g2);
+  return result;
+}
+
+/**
  * @brief Return true if a buffer matches the one the GEOS suite asserts
  */
 static bool
@@ -254,13 +338,15 @@ buffer_matches(const GSERIALIZED *actual, const GSERIALIZED *expected,
 int
 main(int argc, char **argv)
 {
-  if (argc != 2 ||
-      (strcmp(argv[1], "convexhull") && strcmp(argv[1], "buffer")))
+  if (argc != 2 || (strcmp(argv[1], "convexhull") && strcmp(argv[1], "buffer")
+      && strcmp(argv[1], "orientedenvelope")))
   {
-    fprintf(stderr, "usage: %s {convexhull|buffer} < corpus\n", argv[0]);
+    fprintf(stderr, "usage: %s {convexhull|buffer|orientedenvelope} < corpus\n",
+      argv[0]);
     return 2;
   }
   bool is_buffer = ! strcmp(argv[1], "buffer");
+  bool is_envelope = ! strcmp(argv[1], "orientedenvelope");
   meos_initialize();
   /* A geometry the native implementation declines raises an error, and the
    * corpus is walked to its end rather than stopped on the first one */
@@ -279,16 +365,21 @@ main(int argc, char **argv)
     if (nl)
       *nl = '\0';
     char *arg = strchr(line, '|');
-    if (! arg)
+    char *expected_wkt = NULL;
+    if (arg)
+    {
+      *arg++ = '\0';
+      expected_wkt = strchr(arg, '|');
+      if (expected_wkt)
+        *expected_wkt++ = '\0';
+    }
+    if (! is_envelope && (! arg || ! expected_wkt))
       continue;
-    *arg++ = '\0';
-    char *expected_wkt = strchr(arg, '|');
-    if (! expected_wkt)
-      continue;
-    *expected_wkt++ = '\0';
 
     GSERIALIZED *gs = geom_in(line, -1);
-    GSERIALIZED *expected = geom_in(expected_wkt, -1);
+    /* The GEOS suite asserts no oriented envelope, so GEOS answers it here */
+    GSERIALIZED *expected = is_envelope ? geos_oriented_envelope(gs) :
+      geom_in(expected_wkt, -1);
     if (! gs || ! expected)
     {
       fprintf(stderr, "PARSE %.90s\n", line);
@@ -296,8 +387,8 @@ main(int argc, char **argv)
       continue;
     }
     double distance = is_buffer ? atof(arg) : 0.0;
-    GSERIALIZED *actual = is_buffer ?
-      geom_buffer_meos(gs, distance, "") : geom_convex_hull_meos(gs);
+    GSERIALIZED *actual = is_buffer ? geom_buffer_meos(gs, distance, "") :
+      (is_envelope ? geom_oriented_envelope(gs) : geom_convex_hull_meos(gs));
     if (! actual)
     {
       nunsupported++;
@@ -309,7 +400,9 @@ main(int argc, char **argv)
     char reason[256] = "the result differs from the assertion";
     bool ok = is_buffer ?
       buffer_matches(actual, expected, distance, reason, sizeof(reason)) :
-      geo_equals(actual, expected) == 1;
+      (is_envelope ?
+        polygons_match(actual, expected, reason, sizeof(reason)) :
+        geo_equals(actual, expected) == 1);
     if (! ok)
     {
       nfailed++;
@@ -317,6 +410,8 @@ main(int argc, char **argv)
       printf("FAIL   in       %.100s\n", line);
       if (is_buffer)
         printf("       distance %g: %s\n", distance, reason);
+      else if (is_envelope)
+        printf("       %s\n", reason);
       printf("       expected %.100s\n", we);
       printf("       actual   %.100s\n", wa);
       free(wa); free(we);
