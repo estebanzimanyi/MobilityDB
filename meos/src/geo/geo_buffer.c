@@ -232,7 +232,7 @@ union_edges_add(UnionEdges *edges, const Edge *edge, uint32_t source)
  * @details Only region-boundary edges are retained:
  *   EDGE_POLYSEG straight boundary
  *   EDGE_POLYARC circular boundary
- * This excludes EDGE_LINE and EDGE_ARC because the union operation 
+ * This excludes EDGE_LINESEG and EDGE_LINEARC because the union operation 
  * works on surfaces, not on standalone one-dimensional geometries.
  */
 static void
@@ -706,17 +706,17 @@ buffer_geometries_intersect(const LWGEOM *geom1, const LWGEOM *geom2)
   {
     const Edge *a = e1[i];
     if (a->etype != EDGE_POLYSEG && a->etype != EDGE_POLYARC &&
-        a->etype != EDGE_ARC && a->etype != EDGE_LINE)
+        a->etype != EDGE_LINEARC && a->etype != EDGE_LINESEG)
       continue;
     for (int j = 0; j < n2; j++)
     {
       const Edge *b = e2[j];
       if (b->etype != EDGE_POLYSEG && b->etype != EDGE_POLYARC &&
-          b->etype != EDGE_ARC && b->etype != EDGE_LINE)
+          b->etype != EDGE_LINEARC && b->etype != EDGE_LINESEG)
         continue;
 
       /* Line / line */
-      if (a->etype == EDGE_LINE && b->etype == EDGE_LINE)
+      if (a->etype == EDGE_LINESEG && b->etype == EDGE_LINESEG)
       {
         IntersectResult r = linesegm_intersect(a->x1, a->y1, a->dx, a->dy,
           b->x1, b->y1, b->x2, b->y2);
@@ -728,7 +728,7 @@ buffer_geometries_intersect(const LWGEOM *geom1, const LWGEOM *geom2)
       }
 
       /* Line / arc */
-      else if (a->etype == EDGE_LINE && b->etype == EDGE_ARC)
+      else if (a->etype == EDGE_LINESEG && b->etype == EDGE_LINEARC)
       {
         double roots[2];
         int n = arcsegm_intersect(a->x1, a->y1, a->dx, a->dy, b, roots);
@@ -740,7 +740,7 @@ buffer_geometries_intersect(const LWGEOM *geom1, const LWGEOM *geom2)
       }
 
       /* Arc / line */
-      else if (a->etype == EDGE_ARC && b->etype == EDGE_LINE)
+      else if (a->etype == EDGE_LINEARC && b->etype == EDGE_LINESEG)
       {
         double roots[2];
         int n = arcsegm_intersect(b->x1, b->y1, b->dx, b->dy, a, roots);
@@ -752,7 +752,7 @@ buffer_geometries_intersect(const LWGEOM *geom1, const LWGEOM *geom2)
       }
 
       /* Arc / arc */
-      else if (a->etype == EDGE_ARC && b->etype == EDGE_ARC)
+      else if (a->etype == EDGE_LINEARC && b->etype == EDGE_LINEARC)
       {
         if (arcarc_intersect(a, b))
         {
@@ -862,12 +862,12 @@ buffer_components_overlap(const LWGEOM *geom1, const LWGEOM *geom2)
     {
       const Edge *e = e1[i];
       double x, y;
-      if (e->etype == EDGE_LINE || e->etype == EDGE_POLYSEG)
+      if (e->etype == EDGE_LINESEG || e->etype == EDGE_POLYSEG)
       {
         x = (e->x1 + e->x2) * 0.5;
         y = (e->y1 + e->y2) * 0.5;
       }
-      else if (e->etype == EDGE_ARC || e->etype == EDGE_POLYARC)
+      else if (e->etype == EDGE_LINEARC || e->etype == EDGE_POLYARC)
       {
         double sweep = e->ccw ? angle_normalize(e->theta1 - e->theta0) :
           angle_normalize(e->theta0 - e->theta1);
@@ -891,12 +891,12 @@ buffer_components_overlap(const LWGEOM *geom1, const LWGEOM *geom2)
     {
       const Edge *e = e2[i];
       double x, y;
-      if (e->etype == EDGE_LINE || e->etype == EDGE_POLYSEG)
+      if (e->etype == EDGE_LINESEG || e->etype == EDGE_POLYSEG)
       {
         x = (e->x1 + e->x2) * 0.5;
         y = (e->y1 + e->y2) * 0.5;
       }
-      else if (e->etype == EDGE_ARC || e->etype == EDGE_POLYARC)
+      else if (e->etype == EDGE_LINEARC || e->etype == EDGE_POLYARC)
       {
         double sweep = e->ccw ? angle_normalize(e->theta1 - e->theta0) :
           angle_normalize(e->theta0 - e->theta1);
@@ -1019,12 +1019,12 @@ buffer_areal_representative_point(const LWGEOM *geom, double *x, double *y)
     return false;
   }
   const Edge *edge = (const Edge *) meos_array_get(arr, 0);
-  if (edge->etype == EDGE_POLYSEG || edge->etype == EDGE_LINE)
+  if (edge->etype == EDGE_POLYSEG || edge->etype == EDGE_LINESEG)
   {
     *x = (edge->x1 + edge->x2) * 0.5;
     *y = (edge->y1 + edge->y2) * 0.5;
   }
-  else if (edge->etype == EDGE_POLYARC || edge->etype == EDGE_ARC)
+  else if (edge->etype == EDGE_POLYARC || edge->etype == EDGE_LINEARC)
   {
     double sweep = edge->ccw ? angle_normalize(edge->theta1 - edge->theta0) :
       angle_normalize(edge->theta0 - edge->theta1);
@@ -1547,7 +1547,7 @@ buffer_add_linear_edge(Edge *edges, uint32_t *count, double x1, double y1,
   edge->theta0 = 0.0;
   edge->theta1 = 0.0;
   edge->ccw = false;
-  edge->etype = EDGE_LINE;
+  edge->etype = EDGE_LINESEG;
   (*count)++;
 }
 
@@ -1601,7 +1601,7 @@ buffer_add_arc_edge(Edge *edges, uint32_t *count, double x1, double y1,
       edge->ymax = fmax(edge->ymax, y);
     }
   }
-  edge->etype = EDGE_ARC;
+  edge->etype = EDGE_LINEARC;
   (*count)++;
 }
 
@@ -2267,7 +2267,7 @@ buffer_intersect_arcs(const BufferPiece *a, const BufferPiece *b,
   memset(&edge_b, 0, sizeof(Edge));
 
   /* Edge a */
-  edge_a.etype = EDGE_ARC;
+  edge_a.etype = EDGE_LINEARC;
   edge_a.x1 = a->x1;
   edge_a.y1 = a->y1;
   edge_a.x2 = a->x2;
@@ -2279,7 +2279,7 @@ buffer_intersect_arcs(const BufferPiece *a, const BufferPiece *b,
   edge_a.theta1 = a->theta2;
   edge_a.ccw = a->ccw;
   /* Edge b */
-  edge_b.etype = EDGE_ARC;
+  edge_b.etype = EDGE_LINEARC;
   edge_b.x1 = b->x1;
   edge_b.y1 = b->y1;
   edge_b.x2 = b->x2;
@@ -2368,7 +2368,7 @@ buffer_intersect_segment_arc(const BufferPiece *segment,
   memset(&edge_arc, 0, sizeof(Edge));
 
   /* Segment */
-  edge_segment.etype = EDGE_LINE;
+  edge_segment.etype = EDGE_LINESEG;
   edge_segment.x1 = segment->x1;
   edge_segment.y1 = segment->y1;
   edge_segment.x2 = segment->x2;
@@ -2377,7 +2377,7 @@ buffer_intersect_segment_arc(const BufferPiece *segment,
   edge_segment.dy = segment->y2 - segment->y1;
 
   /* Arc */
-  edge_arc.etype = EDGE_ARC;
+  edge_arc.etype = EDGE_LINEARC;
   edge_arc.x1 = arc->x1;
   edge_arc.y1 = arc->y1;
   edge_arc.x2 = arc->x2;
@@ -4219,7 +4219,7 @@ buffer_ring_find_interior_point(const LWCOMPOUND *ring, int32_t srid,
       ny =  (edge->x2 - edge->x1) / length;
     }
     /* Circular arcs */
-    else if (edge->etype == EDGE_POLYARC || edge->etype == EDGE_ARC)
+    else if (edge->etype == EDGE_LINEARC || edge->etype == EDGE_POLYARC)
     {
       double sweep = edge->ccw ?
         angle_normalize(edge->theta1 - edge->theta0) :
@@ -4824,7 +4824,7 @@ buffer_build_surfaces_from_rings(const MeosArray *rings, int32_t srid)
  * Shell/hole classification is handled by a later topology stage.
  */
 static LWGEOM *
-buffer_make_curvepolygon_from_pieces(const MeosArray *pieces, int32_t srid)
+buffer_make_surfaces_from_pieces(const MeosArray *pieces, int32_t srid)
 {
   assert(pieces);
   MeosArray *rings = meos_array_create(sizeof(BufferRingInfo));
@@ -4965,6 +4965,7 @@ buffer_union_crossing(const LWGEOM *geom1, const LWGEOM *geom2)
   MeosArray *selected = meos_array_create(sizeof(BufferPiece));
   MeosArray *boundary = meos_array_create(sizeof(BufferPiece));
   buffer_select_union_boundary(split_a, geom2, split_b, geom1, selected, boundary);
+
   /* We reject unresolved coincident pieces here */
   if (meos_array_count(boundary) > 0)
   {
@@ -4973,10 +4974,16 @@ buffer_union_crossing(const LWGEOM *geom1, const LWGEOM *geom2)
     pfree(raw_a); pfree(raw_b); meos_array_destroy(intersections);
     return NULL;
   }
-
-  /* Chain the selected exterior pieces into one closed curve */
+  /* Reconstruct the complete union boundary:
+   * selected pieces
+   * -> closed rings
+   * -> containment hierarchy
+   * -> shell/hole classification
+   * -> orientation normalization
+   * -> CURVEPOLYGON / MULTISURFACE
+   */
   int32_t srid = lwgeom_get_srid(geom1);
-  LWGEOM *result = buffer_make_curvepolygon_from_pieces(selected, srid);
+  LWGEOM *result = buffer_make_surfaces_from_pieces(selected, srid);
   /* Clean up and return */
   meos_array_destroy(selected); meos_array_destroy(boundary);
   meos_array_destroy(split_a); meos_array_destroy(split_b);
@@ -5505,8 +5512,8 @@ meos_buffer_mline(const LWMLINE *mline, double radius, JoinStyle join_style,
   /* Empty MULTILINESTRING. */
   if (ngeoms == 0)
   {
-    LWCOLLECTION *result = lwcollection_construct_empty(MULTISURFACETYPE, srid,
-      0, 0);
+    LWCOLLECTION *result = lwcollection_construct_empty(MULTISURFACETYPE,
+      srid, 0, 0);
     return lwcollection_as_lwgeom(result);
   }
 
@@ -5534,8 +5541,8 @@ meos_buffer_mline(const LWMLINE *mline, double radius, JoinStyle join_style,
   if (count == 0)
   {
     pfree(buffers);
-    LWCOLLECTION *result = lwcollection_construct_empty(MULTISURFACETYPE, srid,
-      0, 0);
+    LWCOLLECTION *result = lwcollection_construct_empty(MULTISURFACETYPE,
+      srid, 0, 0);
     return lwcollection_as_lwgeom(result);
   }
 
@@ -5602,8 +5609,8 @@ meos_buffer_poly(const LWPOLY *poly, double radius, JoinStyle join_style,
   int32_t srid = lwgeom_get_srid((const LWGEOM *) poly);
   if (poly->nrings == 0)
   {
-    LWCOLLECTION *result = lwcollection_construct_empty(MULTISURFACETYPE, srid,
-      0, 0);
+    LWCOLLECTION *result = lwcollection_construct_empty(MULTISURFACETYPE,
+      srid, 0, 0);
     return lwcollection_as_lwgeom(result);
   }
 
@@ -5664,8 +5671,8 @@ meos_buffer_mpoly(const LWMPOLY *mpoly, double radius, JoinStyle join_style,
   int32_t srid = lwgeom_get_srid((const LWGEOM *) mpoly);
   if (ngeoms == 0)
   {
-    LWCOLLECTION *result = lwcollection_construct_empty(MULTISURFACETYPE, srid,
-      0, 0);
+    LWCOLLECTION *result = lwcollection_construct_empty(MULTISURFACETYPE,
+      srid, 0, 0);
     return lwcollection_as_lwgeom(result);
   }
 
@@ -5689,8 +5696,8 @@ meos_buffer_mpoly(const LWMPOLY *mpoly, double radius, JoinStyle join_style,
   if (count == 0)
   {
     pfree(buffers);
-    LWCOLLECTION *result = lwcollection_construct_empty(MULTISURFACETYPE, srid,
-      0, 0);
+    LWCOLLECTION *result = lwcollection_construct_empty(MULTISURFACETYPE,
+      srid, 0, 0);
     return lwcollection_as_lwgeom(result);
   }
 
@@ -5790,8 +5797,8 @@ meos_buffer_collection(const LWCOLLECTION *collection, double radius,
   if (count == 0)
   {
     pfree(buffers);
-    LWCOLLECTION *result = lwcollection_construct_empty(MULTISURFACETYPE, srid,
-      0, 0);
+    LWCOLLECTION *result = lwcollection_construct_empty(MULTISURFACETYPE,
+      srid, 0, 0);
     return lwcollection_as_lwgeom(result);
   }
 

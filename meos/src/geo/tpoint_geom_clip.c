@@ -607,7 +607,7 @@ intervals_from_lines(const POINT2D *a, const POINT2D *b, Edge **edges,
   {
     const Edge *e = edges[i];
     /* Iterate only for the line edges */
-    if (e->etype != EDGE_LINE)
+    if (e->etype != EDGE_LINESEG)
       continue;
 
     /* Bounding box filter */
@@ -643,7 +643,7 @@ intervals_from_lines(const POINT2D *a, const POINT2D *b, Edge **edges,
     {
       const Edge *e = edges[i];
       /* Iterate only for the lines edges */
-      if (e->etype != EDGE_LINE)
+      if (e->etype != EDGE_LINESEG)
         continue;
 
       /* Fast bbox check first */
@@ -689,7 +689,7 @@ intervals_from_arcs(const POINT2D *a, const POINT2D *b, Edge **edges,
   for (int i = 0; i < nedges; i++)
   {
     const Edge *e = edges[i];
-    if (e->etype != EDGE_ARC)
+    if (e->etype != EDGE_LINEARC)
       continue;
 
     /* Bounding box filter */
@@ -929,12 +929,12 @@ point_inter_points_lines(const POINT2D *a, Edge **edges, int nedges)
       if (fabs(e->x1 - ax) < FP_TOLERANCE && fabs(e->y1 - ay) < FP_TOLERANCE)
         return true;
     }
-    else if (e->etype == EDGE_LINE)
+    else if (e->etype == EDGE_LINESEG)
     {
       if (point_on_segment(ax, ay, e->x1, e->y1, e->x2, e->y2))
         return true;
     }
-    else if (e->etype == EDGE_ARC)
+    else if (e->etype == EDGE_LINEARC)
     {
       if (point_on_arc(ax, ay, e))
         return true;
@@ -1062,8 +1062,8 @@ edge_intersect(const Edge *e1, const Edge *e2)
       e1->ymax < e2->ymin - FP_TOLERANCE || e2->ymax < e1->ymin - FP_TOLERANCE)
     return false;
 
-  bool arc1 = (e1->etype == EDGE_ARC || e1->etype == EDGE_POLYARC);
-  bool arc2 = (e2->etype == EDGE_ARC || e2->etype == EDGE_POLYARC);
+  bool arc1 = (e1->etype == EDGE_LINEARC || e1->etype == EDGE_POLYARC);
+  bool arc2 = (e2->etype == EDGE_LINEARC || e2->etype == EDGE_POLYARC);
 
   /* A point edge meets another edge only by lying on it */
   if (e1->etype == EDGE_POINT && e2->etype == EDGE_POINT)
@@ -1249,12 +1249,12 @@ edges_contain_point(double px, double py, Edge **edges, int nedges,
       if (fabs(px - e->x1) < FP_TOLERANCE && fabs(py - e->y1) < FP_TOLERANCE)
         return true;
     }
-    else if (e->etype == EDGE_ARC || e->etype == EDGE_POLYARC)
+    else if (e->etype == EDGE_LINEARC || e->etype == EDGE_POLYARC)
     {
       if (point_on_arc(px, py, e))
         return true;
     }
-    else /* EDGE_LINE, EDGE_POLYSEG */
+    else /* EDGE_LINESEG, EDGE_POLYSEG */
     {
       if (point_on_segment(px, py, e->x1, e->y1, e->x2, e->y2))
         return true;
@@ -1284,7 +1284,7 @@ segment_within_closure(const Edge *e, Edge **aedges, int na, bool has_area)
   for (int i = 0; i < na; i++)
   {
     const Edge *ea = aedges[i];
-    if (ea->etype == EDGE_ARC || ea->etype == EDGE_POLYARC)
+    if (ea->etype == EDGE_LINEARC || ea->etype == EDGE_POLYARC)
     {
       double out[2];
       int m = arcsegm_intersect(e->x1, e->y1, e->dx, e->dy, ea, out);
@@ -1446,7 +1446,7 @@ geo_covers2d(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
     const Edge *e = bedges[i];
     if (e->etype == EDGE_POINT)
       continue;
-    if (e->etype == EDGE_ARC || e->etype == EDGE_POLYARC)
+    if (e->etype == EDGE_LINEARC || e->etype == EDGE_POLYARC)
     {
       if (! arc_within_closure(e, aedges, na, has_area))
         result = false;
@@ -1519,10 +1519,10 @@ point_edge_dist2(double px, double py, const Edge *e)
       const double dx = px - e->x1, dy = py - e->y1;
       return dx * dx + dy * dy;
     }
-    case EDGE_LINE:
+    case EDGE_LINESEG:
     case EDGE_POLYSEG:
       return point_seg_dist2(px, py, e->x1, e->y1, e->x2, e->y2);
-    default: /* EDGE_ARC / EDGE_POLYARC */
+    default: /* EDGE_LINEARC / EDGE_POLYARC */
       return point_arc_dist2(px, py, e);
   }
 }
@@ -1626,7 +1626,7 @@ within_roots_from_edge(double ax, double ay, double rx, double ry,
         wx * wx + wy * wy - d2, ev);
       return;
     }
-    case EDGE_LINE:
+    case EDGE_LINESEG:
     case EDGE_POLYSEG:
     {
       /* Endpoint caps: discs of radius dist around each segment endpoint */
@@ -1653,7 +1653,7 @@ within_roots_from_edge(double ax, double ay, double rx, double ry,
       }
       return;
     }
-    default: /* EDGE_ARC / EDGE_POLYARC */
+    default: /* EDGE_LINEARC / EDGE_POLYARC */
     {
       const double wx = ax - e->cx, wy = ay - e->cy;
       const double B = 2.0 * (wx * rx + wy * ry);
@@ -1830,7 +1830,7 @@ distance_cands_from_edge(double ax, double ay, double rx, double ry,
       add_within_root(-(wx * rx + wy * ry) / A, ev);
       return;
     }
-    case EDGE_LINE:
+    case EDGE_LINESEG:
     case EDGE_POLYSEG:
     {
       const double w0x = ax - e->x1, w0y = ay - e->y1;
@@ -1857,7 +1857,7 @@ distance_cands_from_edge(double ax, double ay, double rx, double ry,
       }
       return;
     }
-    default: /* EDGE_ARC / EDGE_POLYARC */
+    default: /* EDGE_LINEARC / EDGE_POLYARC */
     {
       const double wx = ax - e->cx, wy = ay - e->cy;
       /* Radial extremum: the time at which || P(t) - center || is stationary

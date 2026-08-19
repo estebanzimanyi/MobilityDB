@@ -49,9 +49,9 @@
  */
 typedef enum
 {
-  EDGE_POINT = 0,
-  EDGE_LINE,
-  EDGE_ARC,
+  EDGE_POINT = 0, 
+  EDGE_LINESEG,
+  EDGE_LINEARC,
   EDGE_POLYSEG,
   EDGE_POLYARC
 } EdgeType;
@@ -64,9 +64,9 @@ typedef struct
   double x1, y1, x2, y2;         /**< Coordinates of the start/end 2D points */
   double xmin, ymin, xmax, ymax; /**< Precomputed bounding box of the edge */
   double dx, dy, length;         /**< Precomputed dx, dy, and length */
-  double cx, cy, radius;         /**< Arc center and radius (EDGE_ARC only) */
-  double theta0, theta1;         /**< Arc start/end angles (EDGE_ARC only) */
-  bool ccw;                      /**< Arc traversed counterclockwise (EDGE_ARC) */
+  double cx, cy, radius;         /**< Arc center and radius (EDGE_LINEARC only) */
+  double theta0, theta1;         /**< Arc start/end angles (EDGE_LINEARC only) */
+  bool ccw;                      /**< Arc traversed counterclockwise (EDGE_LINEARC) */
   EdgeType etype;                /**< Edge type */
 } Edge;
 
