@@ -7,6 +7,7 @@ endif()
 set(GEO_SOURCES
   ${GEO_LWGEOM_NONE}
   geo_buffer.c
+  geo_cluster.c
   geo_funcs.c
   geo_round.c
   postgis_funcs.c
