@@ -1194,7 +1194,7 @@ buffer_intersections_add(MeosArray *array, double x, double y)
   /* Avoid inserting the same node more than once */
   for (uint32_t i = 0; i < array->count; i++)
   {
-    POINT2D *point = (POINT2D *) meos_array_get(array, i);
+    const POINT2D *point = (POINT2D *) meos_array_get(array, i);
     if (fabs(point->x - x) <= FP_TOLERANCE && 
         fabs(point->y - y) <= FP_TOLERANCE)
       return;
@@ -1543,7 +1543,7 @@ buffer_piece_array_contains(const MeosArray *pieces, const BufferPiece *piece)
   assert(pieces); assert(piece);
   for (uint32_t i = 0; i < pieces->count; i++)
   {
-    BufferPiece *piece_i = (BufferPiece *) meos_array_get(pieces, i);
+    const BufferPiece *piece_i = (BufferPiece *) meos_array_get(pieces, i);
     if (buffer_pieces_equal(piece_i, piece))
       return true;
   }
@@ -1867,7 +1867,7 @@ buffer_pieces_from_geometry(const LWGEOM *geom, MeosArray *pieces)
 /**
  * @brief Split all pieces of a buffer boundary at intersection nodes.
  * @details Every resulting piece is either a straight segment or an exact
- * circular arc. Circular arcs are never replaced by chords.
+ * circular arc. A circular arc stays an arc, never a chord approximating it.
  */
 static void
 buffer_split_pieces(const MeosArray *pieces, const MeosArray *intersections,
@@ -1964,7 +1964,7 @@ buffer_classify_piece(const BufferPiece *piece, const LWGEOM *other)
  * @details The piece orientation determines the tangent direction.
  * For a circular arc, the tangent is evaluated at the angular midpoint.
  * The returned points are very close to the boundary. They are used only to
- * determine which side of a coincident boundary is occupied by the other buffer.
+ * determine which side of a coincident boundary the other buffer occupies.
  */
 static bool
 buffer_piece_side_points(const BufferPiece *piece, double epsilon,
@@ -2346,7 +2346,7 @@ buffer_find_connected_piece(const MeosArray *pieces, const bool *used,
   {
     if (used[i])
       continue;
-    BufferPiece *piece = (BufferPiece *) meos_array_get(pieces, i);
+    const BufferPiece *piece = (BufferPiece *) meos_array_get(pieces, i);
     POINT2D start = buffer_piece_start(piece);
     POINT2D end = buffer_piece_end(piece);
     /* Prefer the natural orientation */
@@ -2670,7 +2670,8 @@ buffer_classify_rings(const MeosArray *rings, int32_t srid,
    * point strictly inside every ring */
   for (uint32_t i = 0; i < count; i++)
   {
-    BufferRingInfo *ring_info = (BufferRingInfo *) meos_array_get(rings, i);
+    const BufferRingInfo *ring_info =
+      (BufferRingInfo *) meos_array_get(rings, i);
     if (! ring_info || ! ring_info->ring || ! ring_info->pieces)
     {
       pfree(info);
@@ -3271,7 +3272,8 @@ buffer_union_crossing(const LWGEOM *geom1, const LWGEOM *geom2,
   /* Select the exterior portions of both boundaries */
   MeosArray *selected = meos_array_create(sizeof(BufferPiece));
   MeosArray *boundary = meos_array_create(sizeof(BufferPiece));
-  buffer_select_union_boundary(split_a, geom2, split_b, geom1, selected, boundary);
+  buffer_select_union_boundary(split_a, geom2, split_b, geom1, selected,
+    boundary);
 
   /* Two boundaries that meet only at isolated points without their interiors
    * overlapping, as two discs touching at one point do, leave every piece of
@@ -3415,13 +3417,12 @@ buffer_ring(const POINTARRAY *source, double radius, bool outward_left,
   JoinStyle join_style, double mitre_limit, int32_t srid)
 {
   assert(source); assert(radius > 0.0);
+  /* The last point of a closed ring repeats the first one and is not a vertex
+   * of its own, so four points are what carries the three distinct vertices a
+   * ring must have */
   if (source->npoints < 4)
     return NULL;
-  /* The last point of a closed ring repeats the first one and is not a vertex
-   * of its own */
   uint32_t n = source->npoints - 1;
-  if (n < 3)
-    return NULL;
   POINT2D *points = palloc(sizeof(POINT2D) * n);
   for (uint32_t i = 0; i < n; i++)
   {

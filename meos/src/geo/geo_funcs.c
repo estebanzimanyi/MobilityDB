@@ -192,7 +192,8 @@ emit_arc_edge(const POINT4D *pa, const POINT4D *pb, const POINT4D *pc,
   double ax = pa->x, ay = pa->y;
   double bx = pb->x, by = pb->y;
   double cx = pc->x, cy = pc->y;
-  /* Twice the signed area of the triangle; zero when the points are collinear */
+  /* Twice the signed area of the triangle; zero when the points are
+   * collinear */
   double d = 2 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by));
 
   /* A triple closing on itself is a full circle, whose two distinct points
@@ -270,8 +271,8 @@ emit_arc_edge(const POINT4D *pa, const POINT4D *pb, const POINT4D *pc,
  * from a circular string, emitting them with the given line/arc edge types
  * @details Straight components (collinear point triples) are emitted with
  * @p line_etype and genuine arcs with @p arc_etype. A standalone circular
- * string uses the 1D types (#EDGE_LINESEG / #EDGE_LINEARC); a circular string that
- * bounds a curve polygon ring uses the region types (#EDGE_POLYSEG /
+ * string uses the 1D types (#EDGE_LINESEG / #EDGE_LINEARC); one bounding a
+ * curve polygon ring uses the region types (#EDGE_POLYSEG /
  * #EDGE_POLYARC)
  */
 static void
@@ -831,7 +832,8 @@ geom_min_bounding_radius(const GSERIALIZED *geom, double *radius)
 
   if (lwgeom_is_empty(input))
   {
-    center = (LWGEOM *) lwpoint_construct_empty(input->srid, LW_FALSE, LW_FALSE);
+    center = (LWGEOM *) lwpoint_construct_empty(input->srid, LW_FALSE,
+      LW_FALSE);
     *radius = 0;
   }
   else if (lwgeom_mec_supported_type(input))
@@ -1262,7 +1264,7 @@ meos_oriented_envelope(const LWGEOM *geom)
   /* Extract the exact extremal points */
   for (uint32_t i = 0; i < nedges; i++)
   {
-    Edge *e = (Edge *) meos_array_get(edge_array, i);
+    const Edge *e = (Edge *) meos_array_get(edge_array, i);
     add_edge_points(e, points, &npoints);
   }
 
@@ -1328,7 +1330,7 @@ meos_oriented_envelope(const LWGEOM *geom)
   nedges = edge_array->count;
   for (uint32_t i = 0; i < nedges; i++)
   {
-    Edge *e = (Edge *) meos_array_get(edge_array, i);
+    const Edge *e = (Edge *) meos_array_get(edge_array, i);
     /* Only directions which can define a support side need to be considered */
     mrr_add_edge_directions(e, angles, &nangles);
   }
@@ -1387,10 +1389,11 @@ meos_oriented_envelope(const LWGEOM *geom)
 
 /**
  * @ingroup meos_geo_base_spatial
- * @brief Return the oriented envelop (a.k.a. minimum-area rotated rectangle)
+ * @brief Return the oriented envelope (a.k.a. minimum-area rotated rectangle)
  * of a geometry
  * @param[in] gs Geometry
  * @note PostGIS function: @p ST_OrientedEnvelope(PG_FUNCTION_ARGS).
+ * @csqlfn #Geom_oriented_envelope()
  */
 GSERIALIZED *
 geom_oriented_envelope(const GSERIALIZED *gs)
@@ -1443,7 +1446,7 @@ convex_hull(const LWGEOM *geom)
   /* Extract the exact extremal points */
   for (uint32_t i = 0; i < nedges; i++)
   {
-    Edge *e = (Edge *) meos_array_get(edge_array, i);
+    const Edge *e = (Edge *) meos_array_get(edge_array, i);
     add_edge_points(e, points, &npoints);
   }
 
@@ -2898,8 +2901,8 @@ relate_linear_area(const LWGEOM *line_geom, const LWGEOM *area_geom,
       const Edge *line = lines[i];
       if (line->etype != EDGE_LINESEG && line->etype != EDGE_LINEARC)
         continue;
-      double x[2] = {line->x1, line->x2};
-      double y[2] = {line->y1, line->y2};
+      const double x[2] = {line->x1, line->x2};
+      const double y[2] = {line->y1, line->y2};
       for (int k = 0; k < 2; k++)
       {
         if (!relate_point_on_linear_boundary(x[k], y[k], lines, nl))

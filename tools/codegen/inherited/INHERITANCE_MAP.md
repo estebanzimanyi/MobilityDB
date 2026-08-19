@@ -506,6 +506,11 @@ Reading the table:
   `spatialrel-wrapper-surface-is-inherited-generate-it`) — npoint needs no native
   kernel, its ever/always relationships cast-delegate to `tgeometry` in pure SQL
   (320, previous bullet).
+- `geo/050_geo_funcs` holds the geometry functions MEOS implements natively in
+  place of the PostGIS ones — `OrientedEnvelope`, `ConvexHull` and `Buffer`. It is
+  hand-written and listed in `coverage_exceptions.txt`: the three are plain
+  geometry entries of the geo reference layout rather than a behaviour any family
+  inherits, so no axis governs them.
 - The **geo/tpoint/tgeo** family SQL surfaces are not in the `subtypes:` list at all
   (geo is the hand-written reference layout the generator derives from) — **except
   `compops`**: `temporal`/`tgeo`/`tpoint` each carry an explicit multi-pair
