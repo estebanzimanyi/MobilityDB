@@ -4008,6 +4008,28 @@ meos_buffer_mline(const LWMLINE *mline, double radius, JoinStyle join_style,
  *****************************************************************************/
 
 /**
+ * @brief Return true if a boundary ring encloses no area
+ * @details A ring contracted to exactly the width of the geometry it comes
+ * from keeps its shape and its orientation and crosses itself nowhere, so only
+ * the area it encloses tells it apart from one that still bounds a surface.
+ */
+static bool
+buffer_ring_encloses_no_area(const LWCOMPOUND *ring, int32_t srid)
+{
+  assert(ring);
+  LWCURVEPOLY *probe = lwcurvepoly_construct_empty(srid, 0, 0);
+  lwcurvepoly_add_ring(probe, lwgeom_clone_deep(lwcompound_as_lwgeom(
+    (LWCOMPOUND *) ring)));
+  MeosArray *pieces = meos_array_create(sizeof(BufferPiece));
+  LWGEOM *geom = lwcurvepoly_as_lwgeom(probe);
+  bool result = ! buffer_pieces_from_geometry(geom, pieces) ||
+    fabs(buffer_ring_signed_area(pieces)) <= FP_TOLERANCE;
+  meos_array_destroy(pieces);
+  lwgeom_free(geom);
+  return result;
+}
+
+/**
  * @brief Buffer a POLYGON.
  * @details The exterior ring is expanded and interior rings are contracted.
  * Round joins are represented using exact circular arcs.
@@ -4072,6 +4094,13 @@ meos_buffer_poly(const LWPOLY *poly, double radius, JoinStyle join_style,
   {
     lwgeom_free(geom);
     return NULL;
+  }
+  /* A ring contracted to exactly the width of the polygon encloses no area,
+   * and a surface of no area is nothing */
+  if (inward && buffer_ring_encloses_no_area(exterior, srid))
+  {
+    lwgeom_free(geom);
+    return lwpoly_as_lwgeom(lwpoly_construct_empty(srid, 0, 0));
   }
   return geom;
 }
@@ -4225,6 +4254,51 @@ meos_buffer_collection(const LWCOLLECTION *collection, double radius,
  *****************************************************************************/
 
 /**
+ * @brief Buffer a TRIANGLE
+ * @details A triangle is a polygon of a single ring.
+ */
+static LWGEOM *
+meos_buffer_triangle(const LWTRIANGLE *triangle, double radius,
+  JoinStyle join_style, EndCapStyle cap_style, double mitre_limit)
+{
+  assert(triangle); assert(radius > 0.0);
+  int32_t srid = lwgeom_get_srid((const LWGEOM *) triangle);
+  POINTARRAY **rings = lwalloc(sizeof(POINTARRAY *));
+  rings[0] = ptarray_clone_deep(triangle->points);
+  LWPOLY *poly = lwpoly_construct(srid, NULL, 1, rings);
+  LWGEOM *result = meos_buffer_poly(poly, radius, join_style, cap_style,
+    mitre_limit, false);
+  lwpoly_free(poly);
+  return result;
+}
+
+/**
+ * @brief Return true if an areal geometry encloses no area
+ * @details A ring whose vertices are collinear, or that repeats one point,
+ * bounds nothing, and the geometry it belongs to has no interior to keep.
+ */
+static bool
+buffer_areal_is_degenerate(const LWGEOM *geom)
+{
+  assert(geom);
+  if (geom->type == POLYGONTYPE)
+  {
+    const LWPOLY *poly = (const LWPOLY *) geom;
+    return poly->nrings == 0 ||
+      fabs(buffer_ring_area(poly->rings[0])) <= FP_TOLERANCE;
+  }
+  if (geom->type == MULTIPOLYGONTYPE)
+  {
+    const LWMPOLY *mpoly = (const LWMPOLY *) geom;
+    for (uint32_t i = 0; i < mpoly->ngeoms; i++)
+      if (! buffer_areal_is_degenerate((const LWGEOM *) mpoly->geoms[i]))
+        return false;
+    return true;
+  }
+  return true;
+}
+
+/**
  * @brief Erode a MULTIPOLYGON
  * @details Erosion only ever shrinks a component, so the eroded components
  * stay as disjoint as the ones they come from and need no union. A component
@@ -4282,6 +4356,7 @@ meos_erode_mpoly(const LWMPOLY *mpoly, double radius, JoinStyle join_style,
  * - MULTILINESTRING
  * - POLYGONTYPE
  * - MULTIPOLYGONTYPE
+ * - TRIANGLE
  * - GEOMETRYCOLLECTION
  * Polygon buffering is handled by the polygon buffering layer.
  * Component buffers are not unioned yet. If buffering a collection
@@ -4304,9 +4379,11 @@ meos_buffer(const LWGEOM *geom, double radius, JoinStyle join_style,
     bool areal = geom->type == POLYGONTYPE || geom->type == MULTIPOLYGONTYPE;
     if (! areal)
       return lwpoly_as_lwgeom(lwpoly_construct_empty(srid, 0, 0));
-    /* A zero distance keeps the geometry itself */
+    /* A zero distance keeps the geometry itself, unless it encloses no area */
     if (radius == 0.0)
-      return lwgeom_clone_deep(geom);
+      return buffer_areal_is_degenerate(geom) ?
+        lwpoly_as_lwgeom(lwpoly_construct_empty(srid, 0, 0)) :
+        lwgeom_clone_deep(geom);
     if (geom->type == POLYGONTYPE)
       return meos_buffer_poly((const LWPOLY *) geom, -radius, join_style,
         cap_style, mitre_limit, true);
@@ -4331,6 +4408,9 @@ meos_buffer(const LWGEOM *geom, double radius, JoinStyle join_style,
     case MULTIPOLYGONTYPE:
       return meos_buffer_mpoly((const LWMPOLY *) geom, radius, join_style,
         cap_style, mitre_limit);
+    case TRIANGLETYPE:
+      return meos_buffer_triangle((const LWTRIANGLE *) geom, radius,
+        join_style, cap_style, mitre_limit);
     case COLLECTIONTYPE:
       return meos_buffer_collection((const LWCOLLECTION *) geom, radius,
         join_style, cap_style, mitre_limit);
