@@ -1124,6 +1124,74 @@ make_geometry_points(int32_t srid, const POINT2D *points, uint32_t nhull)
 }
 
 /**
+ * @brief Order the two vertices of a degenerate hull as they appear in the
+ * geometry
+ * @details PostGIS function @p ST_ConvexHull() reports a two-vertex hull in
+ * the order the vertices occur in its argument, which the sort performed by
+ * #convex_hull_points() loses.
+ */
+static void
+hull_order_as_input(const POINT2D *points, uint32_t npoints, POINT2D *hull)
+{
+  for (uint32_t i = 0; i < npoints; i++)
+  {
+    if (points[i].x == hull[0].x && points[i].y == hull[0].y)
+      return;
+    if (points[i].x == hull[1].x && points[i].y == hull[1].y)
+    {
+      POINT2D tmp = hull[0];
+      hull[0] = hull[1];
+      hull[1] = tmp;
+      return;
+    }
+  }
+}
+
+/**
+ * @brief Construct a POINT/LINESTRING/POLYGON from the vertices of a convex
+ * hull
+ * @details The hull computed by #convex_hull_points() is not closed, so the
+ * polygon ring repeats the first vertex. One and two vertices give a POINT and
+ * a LINESTRING, as PostGIS function @p ST_ConvexHull() does.
+ */
+static LWGEOM *
+make_geometry_hull(int32_t srid, const POINT2D *hull, uint32_t nhull)
+{
+  /* Point and line */
+  if (nhull <= 2)
+    return make_geometry_points(srid, hull, nhull);
+
+  /* Polygon.
+   * #convex_hull_points() delivers the vertices counterclockwise starting at
+   * an arbitrary vertex. PostGIS function @p ST_ConvexHull() reports the ring
+   * clockwise starting at its lowest vertex, so the ring is emitted in that
+   * order to keep both functions textually interchangeable. */
+  uint32_t start = 0;
+  for (uint32_t i = 1; i < nhull; i++)
+  {
+    if (hull[i].y < hull[start].y ||
+        (hull[i].y == hull[start].y && hull[i].x < hull[start].x))
+      start = i;
+  }
+  POINTARRAY *pa = ptarray_construct_empty(0, 0, nhull + 1);
+  POINT4D p;
+  p.z = 0.0;
+  p.m = 0.0;
+  for (uint32_t i = 0; i <= nhull; i++)
+  {
+    /* Walking the counterclockwise vertices backwards gives the clockwise
+     * ring, and the last vertex closes it on the first one */
+    const POINT2D *v = &hull[(start + nhull - i % nhull) % nhull];
+    p.x = v->x;
+    p.y = v->y;
+    ptarray_append_point(pa, &p, LW_TRUE);
+  }
+  LWPOLY *poly = lwpoly_construct_empty(srid, 0, 0);
+  lwpoly_add_ring(poly, pa);
+  return lwpoly_as_lwgeom(poly);
+}
+
+/**
  * @brief Return the oriented envelop (a.k.a. minimum-area rotated rectangle)
  * of a geometry
  * @details Works directly on the exact circular arcs represented by the Edge
@@ -1248,7 +1316,17 @@ meos_oriented_envelope(const LWGEOM *geom)
     angles[nangles++] = angle;
   }
 
-  /* Find the minimum-area rectangle */
+  /* No candidate direction: the hull has no support side to align with */
+  if (nangles == 0)
+  {
+    pfree(angles); pfree(hull);
+    return lwpoly_as_lwgeom(lwpoly_construct_empty(geom->srid, 0, 0));
+  }
+
+  /* Find the minimum-area rectangle. The rectangle of the first direction
+   * seeds the result: a comparison against it is false for every direction
+   * when a coordinate is not a number, and the rectangle must be defined in
+   * that case too. */
   double best_area = DBL_MAX;
   POINT2D best_rect[5];
   for (uint32_t i = 0; i < nangles; i++)
@@ -1258,7 +1336,7 @@ meos_oriented_envelope(const LWGEOM *geom)
     double uy = sin(angle);
     POINT2D rect[5];
     double area = mrr_rectangle_for_direction(hull, nhull, ux, uy, rect);
-    if (area < best_area)
+    if (i == 0 || area < best_area)
     {
       best_area = area;
       for (int j = 0; j < 5; j++)
@@ -1339,11 +1417,16 @@ convex_hull(const LWGEOM *geom)
   /* Convex hull */
   POINT2D *hull = NULL;
   uint32_t nhull = convex_hull_points(points, npoints, &hull);
-  pfree(points);
   if (nhull == 0)
+  {
+    pfree(points);
     return lwpoly_as_lwgeom(lwpoly_construct_empty(geom->srid, 0, 0));
+  }
+  if (nhull == 2)
+    hull_order_as_input(points, npoints, hull);
+  pfree(points);
 
-  LWGEOM *result = make_geometry_points(geom->srid, points, nhull);
+  LWGEOM *result = make_geometry_hull(geom->srid, hull, nhull);
   pfree(hull);
   return result;
 }
@@ -1898,26 +1981,6 @@ static int
 relate_linear_point_location(double x, double y, Edge **edges, int nedges)
 {
   return relate_point_in_linear(x, y, edges, nedges);
-}
-
-/**
- * @brief Return true if an intersection between two linear edges contains
- * a one-dimensional portion.
- * @details The function preserves the exact line/arc intersection
- */
-static bool
-relate_linear_edges_overlap(const Edge *a, const Edge *b)
-{
-  if (a->etype == EDGE_LINESEG && b->etype == EDGE_LINESEG)
-  {
-    IntersectResult r = linesegm_intersect(a->x1, a->y1, a->dx, a->dy,
-        b->x1, b->y1, b->x2, b->y2);
-    return r.type == INTERSECT_OVERLAP;
-  }
-
-  /* A line and a circular arc can intersect only in points unless
-   * the line is degenerate, which is excluded here. */
-  return false;
 }
 
 /**

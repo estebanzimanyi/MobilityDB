@@ -3409,7 +3409,7 @@ tpointseq_stops_iter_new(const TSequence *seq, double maxdist, int64 mintunits,
     if (rebuild_geom)
     {
       lwgeom_free(geom);
-      geom = (LWGEOM *) lwmpoint_construct_empty(srid, 0, 0);
+      geom = multipoint_make(seq, start, end);
       rebuild_geom = false;
     }
     else
