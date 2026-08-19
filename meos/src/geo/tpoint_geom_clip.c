@@ -465,7 +465,7 @@ point_in_polygon_impl(double x, double y, Edge **edges, int nedges,
       continue;
     }
 
-    if (e->etype != EDGE_POLY)
+    if (e->etype != EDGE_POLYSEG)
       continue;
 
     const double dx  = e->dx;
@@ -723,7 +723,7 @@ float8_qsort_cmp(const void *a1, const void *a2)
 /**
  * @brief Return true if a point lies on the boundary of a polygonal component
  * @details Only the polygon boundary edges are considered, straight
- * (#EDGE_POLY) and circular (#EDGE_POLYARC). The candidate array filtered by
+ * (#EDGE_POLYSEG) and circular (#EDGE_POLYARC). The candidate array filtered by
  * the box of a segment suffices for a point lying on that segment: a boundary
  * edge through such a point has a box meeting the segment box, so it is in the
  * candidates
@@ -734,7 +734,7 @@ point_on_poly_boundary(double px, double py, Edge **edges, int nedges)
   for (int i = 0; i < nedges; i++)
   {
     const Edge *e = edges[i];
-    if (e->etype == EDGE_POLY)
+    if (e->etype == EDGE_POLYSEG)
     {
       if (point_on_segment(px, py, e->x1, e->y1, e->x2, e->y2))
         return true;
@@ -784,13 +784,13 @@ intervals_from_polygons(const POINT2D *a, const POINT2D *b, Edge **edges,
   const double ry = by - ay;
 
   /* Check whether any polygon boundary edges exist using the full edge array.
-   * A curve polygon contributes straight (EDGE_POLY) and arc (EDGE_POLYARC)
+   * A curve polygon contributes straight (EDGE_POLYSEG) and arc (EDGE_POLYARC)
    * boundary edges */
   bool has_polys = false;
   for (int i = 0; i < all_nedges; i++)
   {
     EdgeType et = all_edges[i]->etype;
-    if (et == EDGE_POLY || et == EDGE_POLYARC)
+    if (et == EDGE_POLYSEG || et == EDGE_POLYARC)
     {
       has_polys = true;
       break;
@@ -805,7 +805,7 @@ intervals_from_polygons(const POINT2D *a, const POINT2D *b, Edge **edges,
   {
     const Edge *e = edges[i];
     /* Iterate only for the polygon boundary edges (straight or arc) */
-    if (e->etype != EDGE_POLY && e->etype != EDGE_POLYARC)
+    if (e->etype != EDGE_POLYSEG && e->etype != EDGE_POLYARC)
       continue;
 
     /* Bounding box filter */
@@ -813,7 +813,7 @@ intervals_from_polygons(const POINT2D *a, const POINT2D *b, Edge **edges,
         e->ymax < seg_ymin || e->ymin > seg_ymax)
       continue;
 
-    if (e->etype == EDGE_POLY)
+    if (e->etype == EDGE_POLYSEG)
     {
       /* Compute the crossing with the straight boundary segment */
       IntersectResult r = linesegm_intersect(ax, ay, rx, ry,
@@ -1101,7 +1101,7 @@ static bool
 edges_have_area(Edge **edges, int nedges)
 {
   for (int i = 0; i < nedges; i++)
-    if (edges[i]->etype == EDGE_POLY || edges[i]->etype == EDGE_POLYARC)
+    if (edges[i]->etype == EDGE_POLYSEG || edges[i]->etype == EDGE_POLYARC)
       return true;
   return false;
 }
@@ -1254,7 +1254,7 @@ edges_contain_point(double px, double py, Edge **edges, int nedges,
       if (point_on_arc(px, py, e))
         return true;
     }
-    else /* EDGE_LINE, EDGE_POLY */
+    else /* EDGE_LINE, EDGE_POLYSEG */
     {
       if (point_on_segment(px, py, e->x1, e->y1, e->x2, e->y2))
         return true;
@@ -1520,7 +1520,7 @@ point_edge_dist2(double px, double py, const Edge *e)
       return dx * dx + dy * dy;
     }
     case EDGE_LINE:
-    case EDGE_POLY:
+    case EDGE_POLYSEG:
       return point_seg_dist2(px, py, e->x1, e->y1, e->x2, e->y2);
     default: /* EDGE_ARC / EDGE_POLYARC */
       return point_arc_dist2(px, py, e);
@@ -1627,7 +1627,7 @@ within_roots_from_edge(double ax, double ay, double rx, double ry,
       return;
     }
     case EDGE_LINE:
-    case EDGE_POLY:
+    case EDGE_POLYSEG:
     {
       /* Endpoint caps: discs of radius dist around each segment endpoint */
       const double w0x = ax - e->x1, w0y = ay - e->y1;
@@ -1831,7 +1831,7 @@ distance_cands_from_edge(double ax, double ay, double rx, double ry,
       return;
     }
     case EDGE_LINE:
-    case EDGE_POLY:
+    case EDGE_POLYSEG:
     {
       const double w0x = ax - e->x1, w0y = ay - e->y1;
       const double w1x = ax - e->x2, w1y = ay - e->y2;

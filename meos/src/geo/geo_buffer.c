@@ -147,7 +147,11 @@ typedef enum
 
 /**
  * @brief Topological classification of a closed buffer boundary ring.
- * @details 
+ * @details
+ * - ring Boundary ring
+ * - pieces The ordered pieces used to construct the ring. The ring owns the
+ *   geometric representation, while this array contains copies of the
+ *   BufferPiece descriptors needed by later topology stages.
  * - parent is the index of the immediately containing ring, or -1 when
  *   the ring has no containing ring.
  * - depth is the number of containing rings between the ring and the
@@ -158,15 +162,13 @@ typedef enum
 typedef struct
 {
   LWCOMPOUND *ring;
+  MeosArray *pieces;
   double x;
   double y;
   int32_t parent;
   uint32_t depth;
   int32_t shell;
 } BufferRingInfo;
-
-
-
 /* Temporary forward declaration */
 extern LWGEOM *
 meos_buffer(const LWGEOM *geom, double radius, JoinStyle join_style,
@@ -228,11 +230,10 @@ union_edges_add(UnionEdges *edges, const Edge *edge, uint32_t source)
 /**
  * @brief Collect the boundary edges of one polygonal geometry.
  * @details Only region-boundary edges are retained:
- *   EDGE_POLY    straight boundary
+ *   EDGE_POLYSEG straight boundary
  *   EDGE_POLYARC circular boundary
- * This deliberately excludes EDGE_LINE and EDGE_ARC because the union
- * operation works on surfaces, not on standalone one-dimensional
- * geometries.
+ * This excludes EDGE_LINE and EDGE_ARC because the union operation 
+ * works on surfaces, not on standalone one-dimensional geometries.
  */
 static void
 union_collect_geometry(const LWGEOM *geom, uint32_t source, UnionEdges *result)
@@ -242,7 +243,7 @@ union_collect_geometry(const LWGEOM *geom, uint32_t source, UnionEdges *result)
   for (uint32_t i = 0; i < array->count; i++)
   {
     const Edge *edge = (const Edge *) meos_array_get(array, i);
-    if (edge->etype != EDGE_POLY && edge->etype != EDGE_POLYARC)
+    if (edge->etype != EDGE_POLYSEG && edge->etype != EDGE_POLYARC)
       continue;
     union_edges_add(result, edge, source);
   }
@@ -280,7 +281,7 @@ union_count_edges(LWGEOM **geoms, uint32_t ngeoms)
     for (uint32_t j = 0; j < array->count; j++)
     {
       const Edge *edge = (const Edge *) meos_array_get(array, j);
-      if (edge->etype == EDGE_POLY || edge->etype == EDGE_POLYARC)
+      if (edge->etype == EDGE_POLYSEG || edge->etype == EDGE_POLYARC)
         count++;
     }
     meos_array_destroy(array);
@@ -461,6 +462,7 @@ static bool
 buffer_line_intersection(POINT2D p, double rx, double ry, POINT2D q,
   double sx, double sy, POINT2D *result)
 {
+  assert(result);
   double denominator = buffer_cross(rx, ry, sx, sy);
   if (fabs(denominator) <= FP_TOLERANCE)
     return false;
@@ -491,8 +493,7 @@ static LWCIRCSTRING *
 buffer_make_arc(int32_t srid, double cx, double cy, double radius,
   double start_angle, double end_angle, bool ccw)
 {
-  double sweep;
-  double middle_angle;
+  double sweep, middle_angle;
   POINTARRAY *points;
   if (ccw)
     sweep = angle_normalize(end_angle - start_angle);
@@ -578,6 +579,7 @@ buffer_add_round_join(LWCOMPOUND *curve, int32_t srid, POINT2D vertex,
 static void
 buffer_add_bevel_join(LWCOMPOUND *curve, int32_t srid, POINT2D p1, POINT2D p2)
 {
+  assert(curve);
   buffer_add_segment(curve, srid, p1, p2);
 }
 
@@ -667,6 +669,7 @@ static void
 buffer_add_round_cap(LWCOMPOUND *curve, int32_t srid, POINT2D center,
   POINT2D p1, POINT2D p2, double radius, bool ccw)
 {
+  assert(curve);
   double start_angle = atan2(p1.y - center.y, p1.x - center.x);
   double end_angle = atan2( p2.y - center.y, p2.x - center.x);
   buffer_add_arc(curve, srid, center.x, center.y, radius, start_angle,
@@ -685,11 +688,11 @@ buffer_add_round_cap(LWCOMPOUND *curve, int32_t srid, POINT2D center,
  * This first implementation performs a boundary intersection test.
  */
 static bool
-buffer_geometries_intersect(const LWGEOM *g1, const LWGEOM *g2)
+buffer_geometries_intersect(const LWGEOM *geom1, const LWGEOM *geom2)
 {
-  assert(g1); assert(g2);
-  MeosArray *a1 = geom_extract_edges(g1);
-  MeosArray *a2 = geom_extract_edges(g2);
+  assert(geom1); assert(geom2);
+  MeosArray *a1 = geom_extract_edges(geom1);
+  MeosArray *a2 = geom_extract_edges(geom2);
   int n1 = (int) a1->count;
   int n2 = (int) a2->count;
   Edge **e1 = palloc(sizeof(Edge *) * n1);
@@ -702,13 +705,13 @@ buffer_geometries_intersect(const LWGEOM *g1, const LWGEOM *g2)
   for (int i = 0; i < n1 && ! result; i++)
   {
     const Edge *a = e1[i];
-    if (a->etype != EDGE_POLY && a->etype != EDGE_POLYARC &&
+    if (a->etype != EDGE_POLYSEG && a->etype != EDGE_POLYARC &&
         a->etype != EDGE_ARC && a->etype != EDGE_LINE)
       continue;
     for (int j = 0; j < n2; j++)
     {
       const Edge *b = e2[j];
-      if (b->etype != EDGE_POLY && b->etype != EDGE_POLYARC &&
+      if (b->etype != EDGE_POLYSEG && b->etype != EDGE_POLYARC &&
           b->etype != EDGE_ARC && b->etype != EDGE_LINE)
         continue;
 
@@ -760,8 +763,8 @@ buffer_geometries_intersect(const LWGEOM *g1, const LWGEOM *g2)
 
       /* Polygon boundary / polygon boundary.
        * The existing edge engine represents polygon straight boundaries as
-       * EDGE_POLY and curved boundaries as EDGE_POLYARC. */
-      else if (a->etype == EDGE_POLY && b->etype == EDGE_POLY)
+       * EDGE_POLYSEG and curved boundaries as EDGE_POLYARC. */
+      else if (a->etype == EDGE_POLYSEG && b->etype == EDGE_POLYSEG)
       {
         IntersectResult r = linesegm_intersect(a->x1, a->y1, a->dx, a->dy,
           b->x1, b->y1, b->x2, b->y2);
@@ -771,7 +774,7 @@ buffer_geometries_intersect(const LWGEOM *g1, const LWGEOM *g2)
           break;
         }
       }
-      else if (a->etype == EDGE_POLY && b->etype == EDGE_POLYARC)
+      else if (a->etype == EDGE_POLYSEG && b->etype == EDGE_POLYARC)
       {
         double roots[2];
         int n = arcsegm_intersect(a->x1, a->y1, a->dx, a->dy, b, roots);
@@ -781,7 +784,7 @@ buffer_geometries_intersect(const LWGEOM *g1, const LWGEOM *g2)
           break;
         }
       }
-      else if (a->etype == EDGE_POLYARC && b->etype == EDGE_POLY)
+      else if (a->etype == EDGE_POLYARC && b->etype == EDGE_POLYSEG)
       {
         double roots[2];
         int n = arcsegm_intersect(b->x1, b->y1, b->dx, b->dy, a, roots);
@@ -832,11 +835,11 @@ buffer_point_in_geometry(double x, double y, const LWGEOM *geom)
  * the other geometry.
  */
 static bool
-buffer_components_overlap(const LWGEOM *g1, const LWGEOM *g2)
+buffer_components_overlap(const LWGEOM *geom1, const LWGEOM *geom2)
 {
-  assert(g1); assert(g2);
-  MeosArray *a1 = geom_extract_edges(g1);
-  MeosArray *a2 = geom_extract_edges(g2);
+  assert(geom1); assert(geom2);
+  MeosArray *a1 = geom_extract_edges(geom1);
+  MeosArray *a2 = geom_extract_edges(geom2);
   int n1 = (int) a1->count;
   int n2 = (int) a2->count;
   Edge **e1 = palloc(sizeof(Edge *) * n1);
@@ -848,7 +851,7 @@ buffer_components_overlap(const LWGEOM *g1, const LWGEOM *g2)
   bool result = false;
 
   /* First check proper boundary intersections */
-  if (buffer_geometries_intersect(g1, g2))
+  if (buffer_geometries_intersect(geom1, geom2))
   {
     /*  A boundary intersection can mean either:
      *    1. the interiors overlap, or
@@ -859,7 +862,7 @@ buffer_components_overlap(const LWGEOM *g1, const LWGEOM *g2)
     {
       const Edge *e = e1[i];
       double x, y;
-      if (e->etype == EDGE_LINE || e->etype == EDGE_POLY)
+      if (e->etype == EDGE_LINE || e->etype == EDGE_POLYSEG)
       {
         x = (e->x1 + e->x2) * 0.5;
         y = (e->y1 + e->y2) * 0.5;
@@ -875,7 +878,7 @@ buffer_components_overlap(const LWGEOM *g1, const LWGEOM *g2)
       }
       else
         continue;
-      if (buffer_point_in_geometry(x, y, g2))
+      if (buffer_point_in_geometry(x, y, geom2))
       {
         result = true;
         break;
@@ -883,12 +886,12 @@ buffer_components_overlap(const LWGEOM *g1, const LWGEOM *g2)
     }
 
     /* Symmetric test.
-     * This is important when g1 is completely contained inside g2. */
+     * This is important when geom1 is completely contained inside geom2. */
     for (int i = 0; i < n2 && ! result; i++)
     {
       const Edge *e = e2[i];
       double x, y;
-      if (e->etype == EDGE_LINE || e->etype == EDGE_POLY)
+      if (e->etype == EDGE_LINE || e->etype == EDGE_POLYSEG)
       {
         x = (e->x1 + e->x2) * 0.5;
         y = (e->y1 + e->y2) * 0.5;
@@ -904,7 +907,7 @@ buffer_components_overlap(const LWGEOM *g1, const LWGEOM *g2)
       }
       else
         continue;
-      if (buffer_point_in_geometry(x, y, g1))
+      if (buffer_point_in_geometry(x, y, geom1))
       {
         result = true;
         break;
@@ -931,7 +934,7 @@ buffer_edges_intersect(const Edge *e1, const Edge *e2)
     return false;
 
   /* Line / Line */
-  if (e1->etype == EDGE_POLY && e2->etype == EDGE_POLY)
+  if (e1->etype == EDGE_POLYSEG && e2->etype == EDGE_POLYSEG)
   {
     IntersectResult r = linesegm_intersect(e1->x1, e1->y1, e1->dx, e1->dy,
       e2->x1, e2->y1, e2->x2, e2->y2);
@@ -939,7 +942,7 @@ buffer_edges_intersect(const Edge *e1, const Edge *e2)
   }
 
   /* Line / Arc */
-  if (e1->etype == EDGE_POLY && e2->etype == EDGE_POLYARC)
+  if (e1->etype == EDGE_POLYSEG && e2->etype == EDGE_POLYARC)
   {
     double roots[2];
     int n = arcsegm_intersect(e1->x1, e1->y1, e1->dx, e1->dy, e2, roots);
@@ -947,7 +950,7 @@ buffer_edges_intersect(const Edge *e1, const Edge *e2)
   }
 
   /* Arc / Line */
-  if (e1->etype == EDGE_POLYARC && e2->etype == EDGE_POLY)
+  if (e1->etype == EDGE_POLYARC && e2->etype == EDGE_POLYSEG)
   {
     double roots[2];
     int n = arcsegm_intersect(e2->x1, e2->y1, e2->dx, e2->dy, e1, roots);
@@ -967,11 +970,11 @@ buffer_edges_intersect(const Edge *e1, const Edge *e2)
  * using the line/arc intersection functions.
  */
 static bool
-buffer_boundaries_intersect(const LWGEOM *g1, const LWGEOM *g2)
+buffer_boundaries_intersect(const LWGEOM *geom1, const LWGEOM *geom2)
 {
-  assert(g1); assert(g2);
-  MeosArray *a1 = geom_extract_edges(g1);
-  MeosArray *a2 = geom_extract_edges(g2);
+  assert(geom1); assert(geom2);
+  MeosArray *a1 = geom_extract_edges(geom1);
+  MeosArray *a2 = geom_extract_edges(geom2);
   uint32_t n1 = a1->count;
   uint32_t n2 = a2->count;
   for (uint32_t i = 0; i < n1; i++)
@@ -1008,6 +1011,7 @@ buffer_boundaries_intersect(const LWGEOM *g1, const LWGEOM *g2)
 static bool
 buffer_areal_representative_point(const LWGEOM *geom, double *x, double *y)
 {
+  assert(geom); assert(x); assert(y);
   MeosArray *arr = geom_extract_edges(geom);
   if (arr->count == 0)
   {
@@ -1015,7 +1019,7 @@ buffer_areal_representative_point(const LWGEOM *geom, double *x, double *y)
     return false;
   }
   const Edge *edge = (const Edge *) meos_array_get(arr, 0);
-  if (edge->etype == EDGE_POLY || edge->etype == EDGE_LINE)
+  if (edge->etype == EDGE_POLYSEG || edge->etype == EDGE_LINE)
   {
     *x = (edge->x1 + edge->x2) * 0.5;
     *y = (edge->y1 + edge->y2) * 0.5;
@@ -1046,6 +1050,7 @@ buffer_areal_representative_point(const LWGEOM *geom, double *x, double *y)
 static bool
 buffer_areal_contains_point(const LWGEOM *geom, double x, double y)
 {
+  assert(geom);
   MeosArray *arr = geom_extract_edges(geom);
   int nedges = (int) arr->count;
   if (nedges == 0)
@@ -1077,15 +1082,14 @@ buffer_areal_contains_point(const LWGEOM *geom, double x, double y)
 static bool
 buffer_areal_contains(const LWGEOM *outer, const LWGEOM *inner)
 {
+  assert(outer); assert(inner);
   double x, y;
   if (! buffer_areal_representative_point(inner, &x, &y))
     return false;
-
   /* If the representative point is not in the interior, the inner
    * geometry cannot be strictly contained */
   if (! buffer_areal_contains_point(outer, x, y))
     return false;
-
   /* Verify that no boundary of the inner geometry intersects the
    * boundary of the outer geometry */
   if (buffer_geometries_intersect(outer, inner))
@@ -1097,13 +1101,13 @@ buffer_areal_contains(const LWGEOM *outer, const LWGEOM *inner)
  * @brief Construct a MULTISURFACE from two disjoint areal geometries.
  */
 static LWGEOM *
-buffer_areal_collection(const LWGEOM *g1, const LWGEOM *g2)
+buffer_areal_collection(const LWGEOM *geom1, const LWGEOM *geom2)
 {
-  assert(g1); assert(g2);
-  int32_t srid = lwgeom_get_srid(g1);
+  assert(geom1); assert(geom2);
+  int32_t srid = lwgeom_get_srid(geom1);
   LWGEOM **geoms = palloc(sizeof(LWGEOM *) * 2);
-  geoms[0] = lwgeom_clone(g1);
-  geoms[1] = lwgeom_clone(g2);
+  geoms[0] = lwgeom_clone(geom1);
+  geoms[1] = lwgeom_clone(geom2);
   LWCOLLECTION *result = lwcollection_construct(MULTISURFACETYPE, srid,
     NULL, 2, geoms);
   return lwcollection_as_lwgeom(result);
@@ -1114,7 +1118,7 @@ buffer_areal_collection(const LWGEOM *g1, const LWGEOM *g2)
  * @details The implementation is defined later in this file.
  */
 static LWGEOM *
-buffer_union_crossing(const LWGEOM *g1, const LWGEOM *g2);
+buffer_union_crossing(const LWGEOM *geom1, const LWGEOM *geom2);
 
 /**
  * @brief Return the union of two areal geometries for the
@@ -1128,33 +1132,29 @@ buffer_union_crossing(const LWGEOM *g1, const LWGEOM *g2);
  * extraction.
  */
 static LWGEOM *
-buffer_areal_union_simple(const LWGEOM *g1, const LWGEOM *g2)
+buffer_areal_union_simple(const LWGEOM *geom1, const LWGEOM *geom2)
 {
-  assert(g1); assert(g2);
+  assert(geom1); assert(geom2);
 
   /* A contains B */
-  if (buffer_areal_contains(g1, g2))
-    return lwgeom_clone(g1);
+  if (buffer_areal_contains(geom1, geom2))
+    return lwgeom_clone(geom1);
   /* B contains A */
-  if (buffer_areal_contains(g2, g1))
-    return lwgeom_clone(g2);
+  if (buffer_areal_contains(geom2, geom1))
+    return lwgeom_clone(geom2);
 
   /* If the boundaries do not intersect, the geometries are disjoint */
-  if (! buffer_geometries_intersect(g1, g2))
-    return buffer_areal_collection(g1, g2);
+  if (! buffer_geometries_intersect(geom1, geom2))
+    return buffer_areal_collection(geom1, geom2);
 
-  /*
-   * The boundaries intersect. Try the curved-boundary union.
-   *
-   * At this stage buffer_union_crossing() handles the case where
+  /* The boundaries intersect. Try the curved-boundary union.
+   * At this stage #buffer_union_crossing() handles the case where
    * the boundaries cross at discrete intersection points and the
    * resulting exterior boundary consists of one connected component.
-   *
    * More difficult cases, such as coincident boundaries, touching
-   * boundaries, and multiple resulting rings, deliberately return NULL
-   * and will be handled by subsequent overlay slices.
-   */
-  LWGEOM *result = buffer_union_crossing(g1, g2);
+   * boundaries, and multiple resulting rings, return @p NULL
+   * and will be handled by subsequent overlay slices. */
+  LWGEOM *result = buffer_union_crossing(geom1, geom2);
   if (result)
     return result;
   return NULL;
@@ -1172,6 +1172,7 @@ buffer_areal_union_simple(const LWGEOM *g1, const LWGEOM *g2)
 static bool
 buffer_is_circular_ring(const LWGEOM *geom)
 {
+  assert(geom);
   if (! geom || geom->type != CURVEPOLYTYPE)
     return false;
   const LWCURVEPOLY *curvepoly = (const LWCURVEPOLY *) geom;
@@ -1187,13 +1188,13 @@ buffer_is_circular_ring(const LWGEOM *geom)
  * @details Buffer boundaries can contain both straight segments and exact
  * circular arcs. The existing buffer implementation represents round joins
  * and caps using CircularStrings, which are exposed by geom_extract_edges()
- * as EDGE_POLY and EDGE_POLYARC edges.
+ * as EDGE_POLYSEG and EDGE_POLYARC edges.
  */
 static bool
 buffer_is_boundary_edge(const Edge *edge)
 {
   assert(edge);
-  return edge->etype == EDGE_POLY || edge->etype == EDGE_POLYARC;
+  return edge->etype == EDGE_POLYSEG || edge->etype == EDGE_POLYARC;
 }
 
 /**
@@ -1207,7 +1208,7 @@ buffer_boundary_intersection(const Edge *e1, const Edge *e2)
   assert(e1); assert(e2);
 
   /* Straight segment / straight segment */
-  if (e1->etype == EDGE_POLY && e2->etype == EDGE_POLY)
+  if (e1->etype == EDGE_POLYSEG && e2->etype == EDGE_POLYSEG)
   {
     IntersectResult result = linesegm_intersect(e1->x1, e1->y1, e1->dx, e1->dy,
       e2->x1, e2->y1, e2->x2, e2->y2);
@@ -1219,7 +1220,7 @@ buffer_boundary_intersection(const Edge *e1, const Edge *e2)
   }
 
   /* Straight segment / circular arc */
-  if (e1->etype == EDGE_POLY && e2->etype == EDGE_POLYARC)
+  if (e1->etype == EDGE_POLYSEG && e2->etype == EDGE_POLYARC)
   {
     double roots[2];
     int n = arcsegm_intersect(e1->x1, e1->y1, e1->dx, e1->dy, e2, roots);
@@ -1227,7 +1228,7 @@ buffer_boundary_intersection(const Edge *e1, const Edge *e2)
   }
 
   /* Circular arc / straight segment */
-  if (e1->etype == EDGE_POLYARC && e2->etype == EDGE_POLY)
+  if (e1->etype == EDGE_POLYARC && e2->etype == EDGE_POLYSEG)
   {
     double roots[2];
     int n = arcsegm_intersect(e2->x1, e2->y1, e2->dx, e2->dy, e1, roots);
@@ -1306,7 +1307,7 @@ buffer_boundary_representative_point(const LWGEOM *geom, double *x, double *y)
     if (! buffer_is_boundary_edge(edge))
       continue;
 
-    if (edge->etype == EDGE_POLY)
+    if (edge->etype == EDGE_POLYSEG)
     {
       *x = (edge->x1 + edge->x2) * 0.5;
       *y = (edge->y1 + edge->y2) * 0.5;
@@ -1360,15 +1361,15 @@ buffer_containment_epsilon(const LWGEOM *geom)
 
 /**
  * @brief Return the normal direction of a buffer boundary edge.
- * @details The function returns both possible normals because the orientation
- * of an arbitrary buffer boundary cannot be assumed here.
+ * @details The function returns both possible normals because the
+ * orientation of an arbitrary buffer boundary cannot be assumed here.
  */
 static bool
 buffer_edge_normals(const Edge *edge, double *nx, double *ny)
 {
   assert(edge); assert(nx); assert(ny);
 
-  if (edge->etype == EDGE_POLY)
+  if (edge->etype == EDGE_POLYSEG)
   {
     double dx = edge->x2 - edge->x1;
     double dy = edge->y2 - edge->y1;
@@ -1502,16 +1503,16 @@ buffer_is_contained(const LWGEOM *inner, const LWGEOM *outer)
  *   4 = coincident/degenerate relationship
  */
 static int
-buffer_components_relation(const LWGEOM *g1, const LWGEOM *g2)
+buffer_components_relation(const LWGEOM *geom1, const LWGEOM *geom2)
 {
-  assert(g1); assert(g2);
+  assert(geom1); assert(geom2);
   /* Boundary intersection has priority */
-  if (buffer_boundaries_intersect(g1, g2))
+  if (buffer_boundaries_intersect(geom1, geom2))
     return 1;
   /* Boundaries are disjoint. Therefore containment can be tested */
-  if (buffer_is_contained(g1, g2))
+  if (buffer_is_contained(geom1, geom2))
     return 2;
-  if (buffer_is_contained(g2, g1))
+  if (buffer_is_contained(geom2, geom1))
     return 3;
   return 0;
 }
@@ -1772,6 +1773,7 @@ static void
 buffer_collect_line_line_intersections(const Edge *e1, const Edge *e2,
   MeosArray *points)
 {
+  assert(e1); assert(e2); assert(points);
   IntersectResult result = linesegm_intersect(e1->x1, e1->y1, e1->dx, e1->dy,
     e2->x1, e2->y1, e2->x2, e2->y2);
   if (result.type == INTERSECT_POINT)
@@ -1802,6 +1804,7 @@ static void
 buffer_collect_line_arc_intersections(const Edge *line, const Edge *arc,
   MeosArray *points)
 {
+  assert(line); assert(arc); assert(points);
   double roots[2];
   int n = arcsegm_intersect(line->x1, line->y1, line->dx, line->dy, arc,
     roots);
@@ -1823,6 +1826,7 @@ static void
 buffer_collect_arc_arc_intersections(const Edge *e1, const Edge *e2,
   MeosArray *points)
 {
+  assert(e1); assert(e2); assert(points);
   double dx = e2->cx - e1->cx;
   double dy = e2->cy - e1->cy;
   double d = hypot(dx, dy);
@@ -1896,12 +1900,12 @@ buffer_collect_arc_arc_intersections(const Edge *e1, const Edge *e2,
  * @details The result contains exact Cartesian intersection coordinates.
  */
 static MeosArray *
-buffer_collect_intersections(const LWGEOM *g1, const LWGEOM *g2)
+buffer_collect_intersections(const LWGEOM *geom1, const LWGEOM *geom2)
 {
-  assert(g1); assert(g2);
+  assert(geom1); assert(geom2);
   MeosArray *result = meos_array_create(sizeof(POINT2D));
-  MeosArray *a1 = geom_extract_edges(g1);
-  MeosArray *a2 = geom_extract_edges(g2);
+  MeosArray *a1 = geom_extract_edges(geom1);
+  MeosArray *a2 = geom_extract_edges(geom2);
   for (uint32_t i = 0; i < a1->count; i++)
   {
     const Edge *e1 = (const Edge *) meos_array_get(a1, i);
@@ -1912,11 +1916,11 @@ buffer_collect_intersections(const LWGEOM *g1, const LWGEOM *g2)
       const Edge *e2 = (const Edge *) meos_array_get(a2, j);
       if (! buffer_is_boundary_edge(e2))
         continue;
-      if (e1->etype == EDGE_POLY && e2->etype == EDGE_POLY)
+      if (e1->etype == EDGE_POLYSEG && e2->etype == EDGE_POLYSEG)
         buffer_collect_line_line_intersections(e1, e2, result);
-      else if (e1->etype == EDGE_POLY && e2->etype == EDGE_POLYARC)
+      else if (e1->etype == EDGE_POLYSEG && e2->etype == EDGE_POLYARC)
         buffer_collect_line_arc_intersections(e1, e2, result);
-      else if (e1->etype == EDGE_POLYARC && e2->etype == EDGE_POLY)
+      else if (e1->etype == EDGE_POLYARC && e2->etype == EDGE_POLYSEG)
         buffer_collect_line_arc_intersections(e2, e1, result);
       else if (e1->etype == EDGE_POLYARC && e2->etype == EDGE_POLYARC)
         buffer_collect_arc_arc_intersections(e1, e2, result);
@@ -1931,9 +1935,10 @@ buffer_collect_intersections(const LWGEOM *g1, const LWGEOM *g2)
  * buffer boundaries.
  */
 static uint32_t
-buffer_intersection_count(const LWGEOM *g1, const LWGEOM *g2)
+buffer_intersection_count(const LWGEOM *geom1, const LWGEOM *geom2)
 {
-  MeosArray *points = buffer_collect_intersections(g1, g2);
+  assert(geom1); assert(geom2);
+  MeosArray *points = buffer_collect_intersections(geom1, geom2);
   uint32_t result = points->count;
   meos_array_destroy(points);
   return result;
@@ -1945,7 +1950,7 @@ buffer_intersection_count(const LWGEOM *g1, const LWGEOM *g2)
 static bool
 buffer_ring_points(const LWGEOM *geom, POINT2D **points, uint32_t *count)
 {
-  assert(points); assert(count);
+  assert(geom); assert(points); assert(count);
   *points = NULL;
   *count = 0;
   if (! geom || geom->type != CURVEPOLYTYPE)
@@ -2006,6 +2011,7 @@ buffer_circle_from_points(POINT2D p1, POINT2D p2, POINT2D p3, double *cx,
 static bool
 buffer_piece_from_arc(POINT2D p1, POINT2D p2, POINT2D p3, BufferPiece *piece)
 {
+  assert(piece);
   double cx, cy, radius;
   if (! buffer_circle_from_points(p1, p2, p3, &cx, &cy, &radius))
     return false;
@@ -2013,8 +2019,8 @@ buffer_piece_from_arc(POINT2D p1, POINT2D p2, POINT2D p3, BufferPiece *piece)
   double theta2 = atan2(p3.y - cy, p3.x - cx);
   double thetam = atan2(p2.y - cy, p2.x - cx);
 
-  /* Determine which direction from theta1 to theta2 passes through the middle
-   * point */
+  /* Determine which direction from theta1 to theta2 passes through the
+   * middle point */
   double ccw_sweep = angle_normalize(theta2 - theta1);
   double ccw_middle = angle_normalize(thetam - theta1);
   bool ccw = ccw_middle <= ccw_sweep + FP_TOLERANCE;
@@ -2677,7 +2683,7 @@ buffer_pieces_add_unique(MeosArray *pieces, BufferPiece *piece)
 static double
 buffer_arc_parameter(const BufferPiece *piece, POINT2D *point)
 {
-  assert(piece); assert(piece->type == BUFFER_ARC);
+  assert(piece); assert(point); assert(piece->type == BUFFER_ARC);
   double theta = atan2(point->y - piece->cy, point->x - piece->cx);
   if (piece->ccw)
     return angle_normalize(theta - piece->theta1);
@@ -2705,7 +2711,7 @@ buffer_arc_sweep(const BufferPiece *piece)
 static bool
 buffer_piece_contains_point(const BufferPiece *piece, POINT2D *point)
 {
-  assert(piece);
+  assert(piece); assert(point);
   if (piece->type == BUFFER_SEGMENT)
   {
     double dx = piece->x2 - piece->x1;
@@ -2747,6 +2753,7 @@ buffer_piece_contains_point(const BufferPiece *piece, POINT2D *point)
 static int
 buffer_split_point_cmp(const void *a, const void *b)
 {
+  assert(a); assert(b);
   const BufferSplitPoint *p1 = (const BufferSplitPoint *) a;
   const BufferSplitPoint *p2 = (const BufferSplitPoint *) b;
   if (p1->parameter < p2->parameter)
@@ -2763,7 +2770,7 @@ static void
 buffer_split_point_add(BufferSplitPoint *points, uint32_t *count,
   uint32_t capacity, POINT2D *point, double parameter)
 {
-  assert(points); assert(count);
+  assert(points); assert(count); assert(point);
   /* Duplicate parameters correspond either to duplicate intersection
    * nodes or to an intersection occurring at an existing endpoint */
   for (uint32_t i = 0; i < *count; i++)
@@ -2862,8 +2869,8 @@ buffer_split_boundary_pieces(BufferPiece *pieces, uint32_t count,
  * intersection nodes, while circular pieces are currently preserved.
  */
 static bool
-buffer_ring_pieces_split(const LWGEOM *geom,
-  const MeosArray *intersections, MeosArray *result)
+buffer_ring_pieces_split(const LWGEOM *geom, const MeosArray *intersections,
+  MeosArray *result)
 {
   assert(geom); assert(intersections); assert(result);
   BufferPiece *pieces = NULL;
@@ -3088,8 +3095,7 @@ buffer_classify_piece(const BufferPiece *piece, const LWGEOM *other)
  */
 static void
 buffer_classify_pieces(const MeosArray *pieces, const LWGEOM *other,
-  MeosArray *exterior, MeosArray *interior,
-  MeosArray *boundary)
+  MeosArray *exterior, MeosArray *interior, MeosArray *boundary)
 {
   assert(pieces); assert(other); assert(exterior); assert(interior);
   assert(boundary);
@@ -3125,8 +3131,8 @@ buffer_classify_pieces(const MeosArray *pieces, const LWGEOM *other,
  */
 static bool
 buffer_split_and_classify(const LWGEOM *geom, const LWGEOM *other,
-  const MeosArray *intersections, MeosArray *exterior,
-  MeosArray *interior, MeosArray *boundary)
+  const MeosArray *intersections, MeosArray *exterior, MeosArray *interior,
+  MeosArray *boundary)
 {
   assert(geom); assert(other); assert(intersections);
   assert(exterior); assert(interior); assert(boundary);
@@ -3149,9 +3155,8 @@ buffer_split_and_classify(const LWGEOM *geom, const LWGEOM *other,
  * @brief Compute a point on the left/right side of a buffer piece.
  * @details The piece orientation determines the tangent direction.
  * For a circular arc, the tangent is evaluated at the angular midpoint.
- * The returned points are deliberately very close to the boundary.
- * They are used only to determine which side of a coincident boundary is
- * occupied by the other buffer.
+ * The returned points are very close to the boundary. They are used only to
+ * determine which side of a coincident boundary is occupied by the other buffer.
  */
 static bool
 buffer_piece_side_points(const BufferPiece *piece, double epsilon,
@@ -3327,8 +3332,7 @@ buffer_resolve_coincident_piece(BufferPiece *piece, const LWGEOM *owner,
  * when none exists.
  */
 static uint32_t
-buffer_find_equal_piece(const MeosArray *pieces,
-  const BufferPiece *piece)
+buffer_find_equal_piece(const MeosArray *pieces, const BufferPiece *piece)
 {
   assert(pieces); assert(piece);
   for (uint32_t i = 0; i < pieces->count; i++)
@@ -3384,8 +3388,7 @@ buffer_resolve_coincident_pieces(const MeosArray *pieces1,
  */
 static void
 buffer_select_split_noncoincident_pieces(const MeosArray *pieces,
-  const LWGEOM *other, const MeosArray *other_pieces,
-  MeosArray *result)
+  const LWGEOM *other, const MeosArray *other_pieces, MeosArray *result)
 {
   assert(pieces); assert(other); assert(other_pieces); assert(result);
   for (uint32_t i = 0; i < pieces->count; i++)
@@ -3440,12 +3443,12 @@ buffer_select_split_union_pieces(const MeosArray *pieces1,
  * the resulting points to MeosArray.
  */
 static bool
-buffer_collect_boundary_intersections(const LWGEOM *g1, const LWGEOM *g2,
+buffer_collect_boundary_intersections(const LWGEOM *geom1, const LWGEOM *geom2,
   MeosArray *intersections)
 {
-  assert(g1); assert(g2); assert(intersections);
-  MeosArray *a1 = geom_extract_edges(g1);
-  MeosArray *a2 = geom_extract_edges(g2);
+  assert(geom1); assert(geom2); assert(intersections);
+  MeosArray *a1 = geom_extract_edges(geom1);
+  MeosArray *a2 = geom_extract_edges(geom2);
   if (! a1 || ! a2)
   {
     if (a1)
@@ -3472,11 +3475,11 @@ buffer_collect_boundary_intersections(const LWGEOM *g1, const LWGEOM *g2,
         return false;
       }
 
-      if (e1->etype == EDGE_POLY && e2->etype == EDGE_POLY)
+      if (e1->etype == EDGE_POLYSEG && e2->etype == EDGE_POLYSEG)
         buffer_collect_line_line_intersections(e1, e2, points);
-      else if (e1->etype == EDGE_POLY && e2->etype == EDGE_POLYARC)
+      else if (e1->etype == EDGE_POLYSEG && e2->etype == EDGE_POLYARC)
         buffer_collect_line_arc_intersections(e1, e2, points);
-      else if (e1->etype == EDGE_POLYARC && e2->etype == EDGE_POLY)
+      else if (e1->etype == EDGE_POLYARC && e2->etype == EDGE_POLYSEG)
         buffer_collect_line_arc_intersections(e2, e1, points);
       else if (e1->etype == EDGE_POLYARC && e2->etype == EDGE_POLYARC)
         buffer_collect_arc_arc_intersections(e1, e2, points);
@@ -3627,8 +3630,8 @@ buffer_piece_is_union_exterior(const BufferPiece *piece, const LWGEOM *other)
  * boundary of a union.
  */
 static void
-buffer_select_union_exterior(const MeosArray *pieces,
-  const LWGEOM *other, MeosArray *result)
+buffer_select_union_exterior(const MeosArray *pieces, const LWGEOM *other,
+  MeosArray *result)
 {
   assert(pieces); assert(other); assert(result);
   for (uint32_t i = 0; i < pieces->count; i++)
@@ -3698,8 +3701,7 @@ buffer_select_union_boundary(const MeosArray *pieces_a, const LWGEOM *geom_b,
  */
 static bool
 buffer_prepare_union_pieces(const LWGEOM *geom_a, const LWGEOM *geom_b,
-  const MeosArray *intersections, MeosArray *result,
-  MeosArray *boundary)
+  const MeosArray *intersections, MeosArray *result, MeosArray *boundary)
 {
   assert(geom_a); assert(geom_b); assert(intersections); assert(result);
   assert(boundary);
@@ -3963,62 +3965,140 @@ buffer_find_unused_connected_piece(const MeosArray *pieces, const bool *used,
 }
 
 /**
- * @brief Chain one connected component of boundary pieces into a ring.
- * @details The pieces are consumed through the used array. The resulting
- * compound curve is closed and contains only pieces belonging to one
- * connected boundary component.
- * @param[in] pieces Boundary pieces
- * @param[in,out] used Flags indicating consumed pieces
- * @param[in] start_index Index of the first piece of the component
- * @param[in] srid Spatial reference identifier
- * @return A closed compound curve, or NULL if the component cannot be closed
+ * @brief Chain one connected boundary component and retain its ordered pieces.
+ * @details The returned piece array contains copies of the pieces in exactly
+ * the traversal order used to construct the compound curve.
+ * The input array is never modified.
+ */
+static LWCOMPOUND *
+buffer_chain_ring_with_pieces(const MeosArray *pieces, bool *used,
+  uint32_t start_index, int32_t srid, MeosArray *ordered)
+{
+  assert(pieces); assert(used); assert(ordered);
+  assert(start_index < pieces->count);
+  const BufferPiece *first = (const BufferPiece *) meos_array_get(pieces,
+    start_index);
+  if (! first)
+    return NULL;
+  LWCOMPOUND *curve = lwcompound_construct_empty(srid, 0, 0);
+  if (! curve)
+    return NULL;
+  BufferPiece oriented = *first;
+  buffer_append_piece_to_curve(curve, srid, &oriented);
+  meos_array_add(ordered, &oriented);
+  used[start_index] = true;
+  POINT2D start = buffer_piece_start(&oriented);
+  POINT2D current = buffer_piece_end(&oriented);
+  while (! buffer_points_equal(current, start))
+  {
+    bool reverse = false;
+    int index = buffer_find_connected_piece(pieces, used, current, &reverse);
+    if (index < 0)
+    {
+      lwgeom_free(lwcompound_as_lwgeom(curve));
+      return NULL;
+    }
+    const BufferPiece *piece = (const BufferPiece *) meos_array_get(pieces,
+      (uint32_t) index);
+    if (! piece)
+    {
+      lwgeom_free(lwcompound_as_lwgeom(curve));
+      return NULL;
+    }
+    oriented = *piece;
+    /* Reverse only the local copy. The input pieces must remain unchanged. */
+    if (reverse)
+      buffer_piece_reverse(&oriented);
+    buffer_append_piece_to_curve(curve, srid, &oriented);
+    meos_array_add(ordered, &oriented);
+    used[(uint32_t) index] = true;
+    current = buffer_piece_end(&oriented);
+  }
+  return curve;
+}
+
+/**
+ * @brief Chain one connected boundary component into a closed ring.
  */
 static LWCOMPOUND *
 buffer_chain_ring(const MeosArray *pieces, bool *used, uint32_t start_index,
   int32_t srid)
 {
-  assert(pieces); assert(used); assert(start_index < pieces->count);
-  const BufferPiece *first =
-    (const BufferPiece *) meos_array_get(pieces, start_index);
-  if (! first)
+  assert(pieces); assert(used);
+  MeosArray *ordered = meos_array_create(sizeof(BufferPiece));
+  if (! ordered)
     return NULL;
-  LWCOMPOUND *curve = lwcompound_construct_empty(srid, 0, 0);
-  POINT2D start_point = buffer_piece_start(first);
-  POINT2D current_point = buffer_piece_end(first);
-  /* The first piece establishes the initial traversal direction */
-  BufferPiece first_copy = *first;
-  buffer_append_piece_to_curve(curve, srid, &first_copy);
-  used[start_index] = true;
-  uint32_t used_count = 1;
-  while (! buffer_points_equal(current_point, start_point))
+  LWCOMPOUND *ring = buffer_chain_ring_with_pieces(pieces, used, start_index,
+    srid, ordered);
+  meos_array_destroy(ordered);
+  return ring;
+}
+
+/**
+ * @brief Chain all selected boundary pieces into closed rings.
+ * @details The resulting BufferRingInfo objects retain both the geometric
+ * ring and the ordered boundary pieces used to construct it.
+ */
+static bool
+buffer_chain_ring_infos(const MeosArray *pieces, int32_t srid,
+  MeosArray *rings)
+{
+  assert(pieces); assert(rings);
+  if (pieces->count == 0)
+    return true;
+  bool *used = palloc0(sizeof(bool) * pieces->count);
+  uint32_t used_count = 0;
+  while (used_count < pieces->count)
   {
-    bool reverse = false;
-    int index = buffer_find_unused_connected_piece(pieces, used, current_point,
-      &reverse);
-    if (index < 0)
+    uint32_t start_index = UINT32_MAX;
+    for (uint32_t i = 0; i < pieces->count; i++)
     {
-      /* The component cannot currently be closed. Do not return an
-       * invalid ring. */
-      lwgeom_free(lwcompound_as_lwgeom(curve));
-      return NULL;
+      if (! used[i])
+      {
+        start_index = i;
+        break;
+      }
     }
-    const BufferPiece *piece =
-      (const BufferPiece *) meos_array_get(pieces, (uint32_t) index);
-    /* Work on a local copy. The input array must remain unchanged because
-     * the same pieces may be inspected by later topology stages. */
-    BufferPiece oriented = *piece;
-    if (reverse)
-      buffer_piece_reverse(&oriented);
-    buffer_append_piece_to_curve(curve, srid, &oriented);
-    current_point = buffer_piece_end(&oriented);
-    used[(uint32_t) index] = true;
-    used_count++;
+    if (start_index == UINT32_MAX)
+      break;
+    MeosArray *ordered = meos_array_create(sizeof(BufferPiece));
+    if (! ordered)
+    {
+      pfree(used);
+      return false;
+    }
+    LWCOMPOUND *ring = buffer_chain_ring_with_pieces(pieces, used, start_index,
+      srid, ordered);
+    if (! ring)
+    {
+      meos_array_destroy(ordered); pfree(used);
+      return false;
+    }
+    /* Count the pieces consumed by this ring */
+    uint32_t new_used_count = 0;
+    for (uint32_t i = 0; i < pieces->count; i++)
+    {
+      if (used[i])
+        new_used_count++;
+    }
+    if (new_used_count == used_count)
+    {
+      lwgeom_free(lwcompound_as_lwgeom(ring));
+      meos_array_destroy(ordered); pfree(used);
+      return false;
+    }
+    used_count = new_used_count;
+    BufferRingInfo info;
+    memset(&info, 0, sizeof(BufferRingInfo));
+    info.ring = ring;
+    info.pieces = ordered;
+    info.parent = -1;
+    info.depth = 0;
+    info.shell = -1;
+    meos_array_add(rings, &info);
   }
-  /* A closed component has been constructed. used_count is intentionally
-   * not required to equal pieces->count because the input may contain
-   * several disconnected boundary components. */
-  (void) used_count;
-  return curve;
+  pfree(used);
+  return used_count == pieces->count;
 }
 
 /**
@@ -4257,15 +4337,16 @@ buffer_ring_contains_ring(const BufferRingInfo *outer,
 
 /**
  * @brief Build the containment hierarchy of closed boundary rings.
- * @details For every ring, the smallest containing ring is identified as
- * its parent. The depth is then derived from the parent hierarchy:
+ * @details For every ring, the immediate containing ring is identified
+ * using the containment relation between rings. No ring orientation or
+ * area calculation is required.
+ * If A contains B and B contains C, then B is the parent of C even
+ * though A also contains C. The depth is the number of ancestors:
  *   depth 0 -> shell
  *   depth 1 -> hole
  *   depth 2 -> shell
  *   depth 3 -> hole
  *   ...
- * The hierarchy is constructed from strict interior containment,
- * so touching boundaries are not treated as containment.
  */
 static bool
 buffer_classify_rings(const MeosArray *rings, int32_t srid,
@@ -4275,19 +4356,19 @@ buffer_classify_rings(const MeosArray *rings, int32_t srid,
   uint32_t count = rings->count;
   if (count == 0)
     return true;
+  BufferRingInfo *info = palloc0(sizeof(BufferRingInfo) * count);
 
   /* Initialize the ring information and compute one representative
    * point strictly inside every ring */
-  BufferRingInfo *info = palloc0(sizeof(BufferRingInfo) * count);
   for (uint32_t i = 0; i < count; i++)
   {
-    LWCOMPOUND **ring = (LWCOMPOUND **) meos_array_get(rings, i);
-    if (! ring || ! *ring)
+    BufferRingInfo *ring_info = (BufferRingInfo *) meos_array_get(rings, i);
+    if (! ring_info || ! ring_info->ring || ! ring_info->pieces)
     {
       pfree(info);
       return false;
     }
-    info[i].ring = *ring;
+    info[i] = *ring_info;
     info[i].parent = -1;
     info[i].depth = 0;
     info[i].shell = -1;
@@ -4299,65 +4380,95 @@ buffer_classify_rings(const MeosArray *rings, int32_t srid,
     }
   }
 
-  /* Find the immediate containing ring for every ring.
-   * A ring may be contained by several rings. The immediate parent is
-   * the containing ring with the smallest area among those containers.
-   * We do not use ring orientation here: topology is determined solely
-   * by containment. */
+  /* First determine all pairwise containment relationships.
+   * contains[i * count + j] means that ring i strictly contains
+   * the representative point of ring j. */
+  bool *contains = palloc0(sizeof(bool) * count * count);
   for (uint32_t i = 0; i < count; i++)
   {
-    double best_area = DBL_MAX;
-    int32_t best_parent = -1;
     for (uint32_t j = 0; j < count; j++)
     {
       if (i == j)
         continue;
-      /* The candidate parent must contain the representative point
-       * of the current ring */
-      if (! buffer_ring_contains_ring(
-          &info[j], &info[i], srid))
-        continue;
-      double area = fabs( lwgeom_area(lwcompound_as_lwgeom(info[j].ring)));
-      /* The smallest containing ring is the immediate parent */
-      if (area < best_area)
-      {
-        best_area = area;
-        best_parent = (int32_t) j;
-      }
+      contains[i * count + j] = buffer_ring_contains_ring(&info[i], &info[j],
+        srid);
     }
-    info[i].parent = best_parent;
   }
 
-  /* Derive the depth from the parent hierarchy.
-   * Since the parent is always strictly containing, following parent
-   * links must eventually reach an exterior ring. */
+  /* Determine the immediate parent.
+   * Candidate j contains ring i. It is the immediate parent if there
+   * is no third ring k such that:
+   *   j contains k
+   *   k contains i
+   * In other words, no containing ring may lie strictly between j and i
+   * in the containment hierarchy. */
+  for (uint32_t i = 0; i < count; i++)
+  {
+    int32_t parent = -1;
+    for (uint32_t j = 0; j < count; j++)
+    {
+      if (i == j)
+        continue;
+      if (! contains[j * count + i])
+        continue;
+      bool is_immediate = true;
+      for (uint32_t k = 0; k < count; k++)
+      {
+        if (k == i || k == j)
+          continue;
+
+        /* k must be between j and i:
+         *     j contains k
+         *     k contains i */
+        if (contains[j * count + k] && contains[k * count + i])
+        {
+          is_immediate = false;
+          break;
+        }
+      }
+      if (is_immediate)
+      {
+        /* There must be at most one immediate parent in a valid
+         * non-intersecting ring hierarchy */
+        if (parent >= 0)
+        {
+          pfree(contains); pfree(info);
+          return false;
+        }
+        parent = (int32_t) j;
+      }
+    }
+    info[i].parent = parent;
+  }
+
+  /* Derive the depth from the parent hierarchy */
   for (uint32_t i = 0; i < count; i++)
   {
     uint32_t depth = 0;
     int32_t current = info[i].parent;
-    /* Guard against an unexpected cyclic containment relation */
     uint32_t steps = 0;
     while (current >= 0)
     {
       if ((uint32_t) current >= count)
       {
-        pfree(info);
+        pfree(contains); pfree(info);
         return false;
       }
       depth++;
       current = info[current].parent;
+      /* A valid containment hierarchy is acyclic */
       if (++steps > count)
       {
-        pfree(info);
+        pfree(contains); pfree(info);
         return false;
       }
     }
     info[i].depth = depth;
   }
 
-  /* A hole belongs to its immediate containing shell. Because parity
-   * alternates at every containment level, the parent of a hole is
-   * necessarily a shell. */
+  /* Assign every hole to its immediate containing shell.
+   * Because depth alternates between shells and holes, the parent
+   * of every odd-depth ring must be an even-depth ring. */
   for (uint32_t i = 0; i < count; i++)
   {
     if ((info[i].depth & 1) == 0)
@@ -4365,28 +4476,214 @@ buffer_classify_rings(const MeosArray *rings, int32_t srid,
     int32_t parent = info[i].parent;
     if (parent < 0 || (uint32_t) parent >= count)
     {
-      pfree(info);
+      pfree(contains); pfree(info);
       return false;
     }
-    /* The parent of a hole must be a shell */
     if ((info[parent].depth & 1) != 0)
     {
-      pfree(info);
+      pfree(contains); pfree(info);
       return false;
     }
     info[i].shell = parent;
   }
-  /* Transfer the classification information to the generic array */
+  /* Transfer the classification information into the generic array */
   for (uint32_t i = 0; i < count; i++)
     meos_array_add(classified, &info[i]);
-  pfree(info);
+  pfree(contains); pfree(info);
   return true;
 }
 
 /**
- * @brief Build polygonal surfaces from classified boundary rings.
- * @details Every even-depth ring is a shell. Every odd-depth ring is a
- * hole and is attached to its immediate containing shell.
+ * @brief Compute the signed area contribution of a straight buffer piece.
+ * @details The contribution is one half of the line integral
+ *   x dy - y dx
+ * along the segment.
+ */
+static double
+buffer_segment_signed_area(const BufferPiece *piece)
+{
+  assert(piece);
+  assert(piece->type == BUFFER_SEGMENT);
+  return 0.5 * (piece->x1 * piece->y2 - piece->x2 * piece->y1);
+}
+
+/**
+ * @brief Compute the signed area contribution of a circular buffer arc.
+ * @details The arc contribution is obtained from the line integral
+ *   1/2 * integral(x dy - y dx)
+ * along the directed circular arc. The sign of the angular sweep follows
+ * the traversal direction: positive for CCW and negative for CW.
+ */
+static double
+buffer_arc_signed_area(const BufferPiece *piece)
+{
+  assert(piece); assert(piece->type == BUFFER_ARC);
+  double theta1 = piece->theta1;
+  double theta2 = piece->theta2;
+  /* Directed angular sweep.
+   * Unlike #buffer_arc_sweep(), the sign is retained because it
+   * determines the orientation of the complete ring. */
+  double delta = piece->ccw ?
+    angle_normalize(theta2 - theta1) : -angle_normalize(theta1 - theta2);
+  /* Integral of x dy - y dx for
+   *   x = cx + r cos(theta)
+   *   y = cy + r sin(theta)
+   * is
+   *   r*cx*sin(theta)
+   * - r*cy*cos(theta)
+   * + r^2*theta */
+  double contribution = piece->radius * piece->cx * 
+      (sin(theta2) - sin(theta1)) +
+    piece->radius * piece->cy * (cos(theta1) - cos(theta2)) +
+    piece->radius * piece->radius * delta;
+  return 0.5 * contribution;
+}
+
+/**
+ * @brief Compute the signed area of an ordered buffer ring.
+ * @details The ring may contain both straight segments and exact circular
+ * arcs. A positive value means counter-clockwise traversal and a negative
+ * value means clockwise traversal.
+ */
+static double
+buffer_ring_signed_area(const MeosArray *pieces)
+{
+  assert(pieces);
+  double area = 0.0;
+  for (uint32_t i = 0; i < pieces->count; i++)
+  {
+    const BufferPiece *piece = (const BufferPiece *) meos_array_get(pieces, i);
+    if (! piece)
+      continue;
+    if (piece->type == BUFFER_SEGMENT)
+      area += buffer_segment_signed_area(piece);
+    else if (piece->type == BUFFER_ARC)
+      area += buffer_arc_signed_area(piece);
+  }
+  return area;
+}
+
+/**
+ * @brief Reverse the traversal direction of a complete boundary ring.
+ * @details The piece order is reversed and every individual piece is
+ * reversed. The resulting sequence represents exactly the same geometric
+ * ring with the opposite orientation.
+ */
+static MeosArray *
+buffer_reverse_ring_pieces(const MeosArray *pieces)
+{
+  assert(pieces);
+  MeosArray *reversed = meos_array_create(sizeof(BufferPiece));
+  if (! reversed)
+    return NULL;
+  for (uint32_t i = pieces->count; i > 0; i--)
+  {
+    const BufferPiece *source = 
+      (const BufferPiece *) meos_array_get(pieces, i - 1);
+    if (! source)
+    {
+      meos_array_destroy(reversed);
+      return NULL;
+    }
+    BufferPiece piece = *source;
+    buffer_piece_reverse(&piece);
+    meos_array_add(reversed, &piece);
+  }
+  return reversed;
+}
+
+/**
+ * @brief Construct a compound curve from an ordered buffer-piece sequence.
+ */
+static LWCOMPOUND *
+buffer_build_ring_from_pieces(const MeosArray *pieces, int32_t srid)
+{
+  assert(pieces);
+  if (pieces->count == 0)
+    return NULL;
+  LWCOMPOUND *ring = lwcompound_construct_empty(srid, 0, 0);
+  if (! ring)
+    return NULL;
+  for (uint32_t i = 0; i < pieces->count; i++)
+  {
+    const BufferPiece *piece = (const BufferPiece *) meos_array_get(pieces, i);
+    if (! piece)
+    {
+      lwgeom_free(lwcompound_as_lwgeom(ring));
+      return NULL;
+    }
+    buffer_append_piece_to_curve(ring, srid, piece);
+  }
+  return ring;
+}
+
+/**
+ * @brief Normalize the orientation of one classified boundary ring.
+ * @details Shells are normalized to counter-clockwise traversal and holes
+ * to clockwise traversal.
+ * If the current orientation already matches the desired orientation,
+ * the existing ring and piece sequence are retained.
+ */
+static bool
+buffer_normalize_ring_orientation(BufferRingInfo *info, int32_t srid)
+{
+  assert(info); assert(info->ring); assert(info->pieces);
+  double area =
+    buffer_ring_signed_area(info->pieces);
+  if (fabs(area) <= FP_TOLERANCE)
+    return false;
+  /* Even depth = shell = CCW
+   * Odd depth  = hole  = CW */
+  bool want_ccw = (info->depth & 1) == 0;
+  bool is_ccw = area > 0.0;
+  if (is_ccw == want_ccw)
+    return true;
+  /* Reverse both the ordered pieces and the compound curve */
+  MeosArray *reversed = buffer_reverse_ring_pieces(info->pieces);
+  if (! reversed)
+    return false;
+  LWCOMPOUND *ring = buffer_build_ring_from_pieces(reversed, srid);
+  if (! ring)
+  {
+    meos_array_destroy(reversed);
+    return false;
+  }
+  lwgeom_free(lwcompound_as_lwgeom(info->ring));
+  meos_array_destroy(info->pieces);
+  info->ring = ring;
+  info->pieces = reversed;
+  /* Reversing a closed ring does not change its interior or its
+   * containment relationship, so x/y, parent, depth and shell remain
+   * unchanged. */
+  return true;
+}
+
+/**
+ * @brief Normalize the orientation of all classified boundary rings.
+ */
+static bool
+buffer_normalize_ring_orientations(MeosArray *classified, int32_t srid)
+{
+  assert(classified);
+  for (uint32_t i = 0; i < classified->count; i++)
+  {
+    BufferRingInfo *info = (BufferRingInfo *) meos_array_get(classified, i);
+    if (! info)
+      return false; 
+    if (! buffer_normalize_ring_orientation(info, srid))
+      return false;
+  }
+  return true;
+}
+
+/**
+ * @brief Construct polygonal surfaces from classified boundary rings.
+ * @details The topology stage has already classified every ring as either
+ * a shell or a hole and assigned every hole to its immediate shell.
+ * This function therefore performs no further geometric reasoning.
+ * It simply constructs one CURVEPOLYGON for every shell and attaches the
+ * holes belonging directly to that shell.
+ * Shells and holes are already oriented by the preceding topology stage.
  */
 static LWGEOM *
 buffer_build_surfaces_from_classified_rings(const MeosArray *classified,
@@ -4394,61 +4691,86 @@ buffer_build_surfaces_from_classified_rings(const MeosArray *classified,
 {
   assert(classified);
   uint32_t nshells = 0;
-  /* Count the shells first */
+  /* Count the shells */
   for (uint32_t i = 0; i < classified->count; i++)
   {
     const BufferRingInfo *info =
       (const BufferRingInfo *) meos_array_get(classified, i);
+    if (! info)
+      return NULL;
     if ((info->depth & 1) == 0)
       nshells++;
   }
+  /* No shells means that there is no areal result */
   if (nshells == 0)
     return NULL;
   LWGEOM **surfaces = palloc0(sizeof(LWGEOM *) * nshells);
   uint32_t surface_count = 0;
-  /* Every shell becomes one CURVEPOLYGON */
+  /* Construct one CURVEPOLYGON for every shell */
   for (uint32_t i = 0; i < classified->count; i++)
   {
     const BufferRingInfo *shell =
       (const BufferRingInfo *) meos_array_get(classified, i);
+    if (! shell)
+      goto fail;
+    /* Odd depth means hole */
     if ((shell->depth & 1) != 0)
       continue;
     LWCURVEPOLY *polygon = lwcurvepoly_construct_empty(srid, 0, 0);
     if (! polygon)
       goto fail;
-    /* The shell ring is cloned because the classification array continues
-     * to own the original ring */
+    /* Add the shell.
+     * The output geometry receives its own copy because the classified
+     * ring remains owned by BufferRingInfo until the classification
+     * array is destroyed. */
     LWCOMPOUND *shell_ring = (LWCOMPOUND *) lwgeom_clone(
         lwcompound_as_lwgeom(shell->ring));
-    lwcurvepoly_add_ring( polygon, lwcompound_as_lwgeom(shell_ring));
-    /* Attach the holes belonging directly to this shell */
+    if (! shell_ring)
+    {
+      lwgeom_free(lwcurvepoly_as_lwgeom(polygon));
+      goto fail;
+    }
+    lwcurvepoly_add_ring(polygon, lwcompound_as_lwgeom(shell_ring));
+    /* Attach only the holes whose immediate shell is this shell */
     for (uint32_t j = 0; j < classified->count; j++)
     {
       const BufferRingInfo *hole =
         (const BufferRingInfo *) meos_array_get(classified, j);
+      if (! hole)
+      {
+        lwgeom_free(lwcurvepoly_as_lwgeom(polygon));
+        goto fail;
+      }
       if ((hole->depth & 1) == 0)
         continue;
       if (hole->shell != (int32_t) i)
         continue;
       LWCOMPOUND *hole_ring = (LWCOMPOUND *) lwgeom_clone(
           lwcompound_as_lwgeom(hole->ring));
+      if (! hole_ring)
+      {
+        lwgeom_free(lwcurvepoly_as_lwgeom(polygon));
+        goto fail;
+      }
       lwcurvepoly_add_ring(polygon, lwcompound_as_lwgeom(hole_ring));
     }
     surfaces[surface_count++] = lwcurvepoly_as_lwgeom(polygon);
   }
 
-  /* One shell gives one CURVEPOLYGON */
-  if (nshells == 1)
+  /* Exactly one shell gives a single CURVEPOLYGON */
+  if (surface_count == 1)
   {
     LWGEOM *result = surfaces[0];
     pfree(surfaces);
     return result;
   }
   /* Several independent shells give a MULTISURFACE */
-  LWCOLLECTION *result = lwcollection_construct(MULTISURFACETYPE, srid, NULL,
-      nshells, surfaces);
+  LWCOLLECTION *collection = lwcollection_construct(MULTISURFACETYPE, srid,
+    NULL, surface_count, surfaces);
+  if (! collection)
+    goto fail;
   pfree(surfaces);
-  return lwcollection_as_lwgeom(result);
+  return lwcollection_as_lwgeom(collection);
 
 fail:
   for (uint32_t i = 0; i < surface_count; i++)
@@ -4482,6 +4804,13 @@ buffer_build_surfaces_from_rings(const MeosArray *rings, int32_t srid)
     meos_array_destroy(classified);
     return NULL;
   }
+  /* Normalize shell/hole orientation only after the containment
+   * hierarchy has been established */
+  if (! buffer_normalize_ring_orientations(classified, srid))
+  {
+    meos_array_destroy(classified);
+    return NULL;
+  }
   LWGEOM *result = buffer_build_surfaces_from_classified_rings(classified,
     srid);
   meos_array_destroy(classified);
@@ -4498,10 +4827,10 @@ static LWGEOM *
 buffer_make_curvepolygon_from_pieces(const MeosArray *pieces, int32_t srid)
 {
   assert(pieces);
-  MeosArray *rings = meos_array_create(sizeof(LWCOMPOUND *));
+  MeosArray *rings = meos_array_create(sizeof(BufferRingInfo));
   if (! rings)
     return NULL;
-  if (! buffer_chain_rings(pieces, srid, rings))
+  if (! buffer_chain_ring_infos(pieces, srid, rings))
   {
     meos_array_destroy(rings);
     return NULL;
@@ -4519,17 +4848,16 @@ buffer_make_curvepolygon_from_pieces(const MeosArray *pieces, int32_t srid)
 
 /**
  * @brief Determine whether two buffer boundaries have a proper crossing.
- * @details A proper crossing means that at least one boundary intersection is
- * an isolated point and the two surfaces overlap in their interiors.
- *
+ * @details A proper crossing means that at least one boundary intersection
+ * is an isolated point and the two surfaces overlap in their interiors.
  * A point-touch without interior overlap is NOT a crossing.
  */
 static bool
-buffer_boundaries_cross(const LWGEOM *g1, const LWGEOM *g2)
+buffer_boundaries_cross(const LWGEOM *geom1, const LWGEOM *geom2)
 {
-  assert(g1); assert(g2);
-  MeosArray *a1 = geom_extract_edges(g1);
-  MeosArray *a2 = geom_extract_edges(g2);
+  assert(geom1); assert(geom2);
+  MeosArray *a1 = geom_extract_edges(geom1);
+  MeosArray *a2 = geom_extract_edges(geom2);
   if (! a1 || ! a2)
   {
     if (a1)
@@ -4582,10 +4910,10 @@ buffer_boundaries_cross(const LWGEOM *g1, const LWGEOM *g2)
  * - the selected exterior pieces form one connected boundary.
  */
 static LWGEOM *
-buffer_union_crossing(const LWGEOM *g1, const LWGEOM *g2)
+buffer_union_crossing(const LWGEOM *geom1, const LWGEOM *geom2)
 {
-  assert(g1); assert(g2);
-  int relation = buffer_components_relation(g1, g2);
+  assert(geom1); assert(geom2);
+  int relation = buffer_components_relation(geom1, geom2);
   /* This routine is only for the proper crossing/partial-overlap case */
   if (relation != 1)
     return NULL;
@@ -4593,12 +4921,12 @@ buffer_union_crossing(const LWGEOM *g1, const LWGEOM *g2)
   /* A point intersection by itself does not imply an overlapping union
    * boundary. In particular, two buffers may merely touch at one point.
    * Such components should remain separate surfaces. */
-  if (! buffer_boundaries_cross(g1, g2))
+  if (! buffer_boundaries_cross(geom1, geom2))
     return NULL;
 
   /* Collect the exact intersection nodes */
   MeosArray *intersections = meos_array_create(sizeof(POINT2D));
-  if (! buffer_collect_boundary_intersections(g1, g2, intersections))
+  if (! buffer_collect_boundary_intersections(geom1, geom2, intersections))
   {
     meos_array_destroy(intersections);
     return NULL;
@@ -4616,12 +4944,12 @@ buffer_union_crossing(const LWGEOM *g1, const LWGEOM *g2)
   /* Extract and split both complete boundaries */
   BufferPiece *raw_a = NULL, *raw_b = NULL;
   uint32_t raw_count_a = 0, raw_count_b = 0;
-  if (! buffer_ring_pieces(g1, &raw_a, &raw_count_a))
+  if (! buffer_ring_pieces(geom1, &raw_a, &raw_count_a))
   {
     meos_array_destroy(intersections);
     return NULL;
   }
-  if (! buffer_ring_pieces(g2, &raw_b, &raw_count_b))
+  if (! buffer_ring_pieces(geom2, &raw_b, &raw_count_b))
   {
     pfree(raw_a);
     meos_array_destroy(intersections);
@@ -4636,8 +4964,8 @@ buffer_union_crossing(const LWGEOM *g1, const LWGEOM *g2)
   /* Select the exterior portions of both boundaries */
   MeosArray *selected = meos_array_create(sizeof(BufferPiece));
   MeosArray *boundary = meos_array_create(sizeof(BufferPiece));
-  buffer_select_union_boundary(split_a, g2, split_b, g1, selected, boundary);
-  /* We deliberately reject unresolved coincident pieces here */
+  buffer_select_union_boundary(split_a, geom2, split_b, geom1, selected, boundary);
+  /* We reject unresolved coincident pieces here */
   if (meos_array_count(boundary) > 0)
   {
     meos_array_destroy(selected); meos_array_destroy(boundary);
@@ -4647,7 +4975,7 @@ buffer_union_crossing(const LWGEOM *g1, const LWGEOM *g2)
   }
 
   /* Chain the selected exterior pieces into one closed curve */
-  int32_t srid = lwgeom_get_srid(g1);
+  int32_t srid = lwgeom_get_srid(geom1);
   LWGEOM *result = buffer_make_curvepolygon_from_pieces(selected, srid);
   /* Clean up and return */
   meos_array_destroy(selected); meos_array_destroy(boundary);
@@ -4691,6 +5019,7 @@ buffer_ring_area(const POINTARRAY *pa)
 static bool
 buffer_ring_outward_left(const POINTARRAY *pa)
 {
+  assert(pa);
   return buffer_ring_area(pa) < 0.0;
 }
 
@@ -5218,10 +5547,9 @@ meos_buffer_mline(const LWMLINE *mline, double radius, JoinStyle join_style,
     return result;
   }
 
-  /* Determine whether component buffers intersect.
-   * We only detect the relation here. We deliberately do not perform
-   * the union yet. The intersection information will be consumed by
-   * the polygon overlay layer implemented next.
+  /* Determine whether component buffers intersect. We only detect the
+   * relation here. We do not perform the union yet. The intersection
+   * information will be consumed by the polygon overlay layer.
    */
   bool overlap = false;
   for (uint32_t i = 0; i < count && ! overlap; i++)
@@ -5319,7 +5647,7 @@ meos_buffer_poly(const LWPOLY *poly, double radius, JoinStyle join_style,
  * If the resulting components are disjoint, the result is returned as a
  * MULTISURFACE. If two component buffers overlap, they must be unioned
  * before returning the result. The polygon overlay/union layer is
- * responsible for that operation and is deliberately not performed here.
+ * responsible for that operation and is not performed here.
  * @param[in] mpoly MULTIPOLYGON
  * @param[in] radius Buffer radius
  * @param[in] join_style Join style
@@ -5370,7 +5698,7 @@ meos_buffer_mpoly(const LWMPOLY *mpoly, double radius, JoinStyle join_style,
    * curved-boundary union.
    * At this stage the union implementation supports the crossing case
    * with discrete boundary intersections and one connected resulting
-   * boundary. Unsupported topology deliberately returns NULL. */
+   * boundary. Unsupported topology returns NULL. */
   if (count == 2)
   {
     if (buffer_components_overlap(buffers[0], buffers[1]))
@@ -5476,9 +5804,8 @@ meos_buffer_collection(const LWCOLLECTION *collection, double radius,
   }
 
   /* Check whether any two component buffers overlap.
-   * We deliberately do not union them yet. Returning the individual
-   * overlapping surfaces would produce a geometrically incorrect
-   * ST_Buffer result. */
+   * We do not union them yet. Returning the individual overlapping
+   * surfaces would produce a geometrically incorrect result. */
   for (uint32_t i = 0; i < count; i++)
   {
     for (uint32_t j = i + 1; j < count; j++)

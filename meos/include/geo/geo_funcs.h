@@ -51,8 +51,8 @@ typedef enum
 {
   EDGE_POINT = 0,
   EDGE_LINE,
-  EDGE_POLY,
   EDGE_ARC,
+  EDGE_POLYSEG,
   EDGE_POLYARC
 } EdgeType;
 

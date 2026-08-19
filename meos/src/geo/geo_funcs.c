@@ -149,7 +149,7 @@ static void
 extract_poly(const LWPOLY *poly, MeosArray *edges)
 {
   for (int r = 0; r < (int) poly->nrings; r++)
-    emit_ring_edges(poly->rings[r], edges, EDGE_POLY);
+    emit_ring_edges(poly->rings[r], edges, EDGE_POLYSEG);
   return;
 }
 
@@ -174,7 +174,7 @@ extract_mpoly(const LWMPOLY *mp, MeosArray *edges)
 static void
 extract_triangle(const LWTRIANGLE *tri, MeosArray *edges)
 {
-  emit_ring_edges(tri->points, edges, EDGE_POLY);
+  emit_ring_edges(tri->points, edges, EDGE_POLYSEG);
   return;
 }
 
@@ -241,7 +241,7 @@ emit_arc_edge(const POINT4D *pa, const POINT4D *pb, const POINT4D *pc,
  * @details Straight components (collinear point triples) are emitted with
  * @p line_etype and genuine arcs with @p arc_etype. A standalone circular
  * string uses the 1D types (#EDGE_LINE / #EDGE_ARC); a circular string that
- * bounds a curve polygon ring uses the region types (#EDGE_POLY /
+ * bounds a curve polygon ring uses the region types (#EDGE_POLYSEG /
  * #EDGE_POLYARC)
  */
 static void
@@ -277,7 +277,7 @@ extract_circstring(const LWCIRCSTRING *circ, MeosArray *edges)
  * edges obtained from a ring of a curve polygon
  * @details A ring is a line string, a circular string, or a compound curve
  * chaining both. Every edge is emitted with polygon (region) semantics
- * (#EDGE_POLY / #EDGE_POLYARC) so that the even-odd containment test in
+ * (#EDGE_POLYSEG / #EDGE_POLYARC) so that the even-odd containment test in
  * #point_in_polygon treats it as a boundary rather than a 1D feature
  */
 static void
@@ -286,11 +286,11 @@ extract_curvepoly_ring(const LWGEOM *ring, MeosArray *edges)
   switch (ring->type)
   {
     case LINETYPE:
-      emit_ring_edges(((const LWLINE *) ring)->points, edges, EDGE_POLY);
+      emit_ring_edges(((const LWLINE *) ring)->points, edges, EDGE_POLYSEG);
       break;
 
     case CIRCSTRINGTYPE:
-      emit_circstring_edges((const LWCIRCSTRING *) ring, edges, EDGE_POLY,
+      emit_circstring_edges((const LWCIRCSTRING *) ring, edges, EDGE_POLYSEG,
         EDGE_POLYARC);
       break;
 
@@ -1600,7 +1600,7 @@ relate_point_on_boundary(double x, double y, Edge **edges, int nedges)
     const Edge *e = edges[i];
     switch (e->etype)
     {
-      case EDGE_POLY:
+      case EDGE_POLYSEG:
         if (point_on_segment(x, y, e->x1, e->y1, e->x2, e->y2))
           return true;
         break;
@@ -2271,7 +2271,7 @@ relate_arc_parameter(const Edge *e, double x, double y)
 static void
 relate_edge_point(const Edge *e, double t, double *x, double *y)
 {
-  if (e->etype == EDGE_LINE || e->etype == EDGE_POLY)
+  if (e->etype == EDGE_LINE || e->etype == EDGE_POLYSEG)
   {
     *x = e->x1 + t * (e->x2 - e->x1);
     *y = e->y1 + t * (e->y2 - e->y1);
@@ -2494,7 +2494,7 @@ relate_linear_area_edge_intersection(const Edge *line, const Edge *boundary,
   int maxparams)
 {
   /* Line / Poly */
-  if (line->etype == EDGE_LINE && boundary->etype == EDGE_POLY)
+  if (line->etype == EDGE_LINE && boundary->etype == EDGE_POLYSEG)
   {
     IntersectResult r =  linesegm_intersect(line->x1, line->y1, line->dx,
       line->dy, boundary->x1, boundary->y1, boundary->x2, boundary->y2);
@@ -2549,7 +2549,7 @@ relate_linear_area_edge_intersection(const Edge *line, const Edge *boundary,
    * we call it with the polygon edge as the trajectory and convert
    * the resulting point to the parameter of the linear arc.
    */
-  if (line->etype == EDGE_ARC && boundary->etype == EDGE_POLY)
+  if (line->etype == EDGE_ARC && boundary->etype == EDGE_POLYSEG)
   {
     double roots[2];
     int n = arcsegm_intersect(boundary->x1, boundary->y1,
@@ -2709,7 +2709,7 @@ relate_linear_area(const LWGEOM *line_geom, const LWGEOM *area_geom,
     for (int j = 0; j < na; j++)
     {
       const Edge *boundary = area_edges[j];
-      if (boundary->etype != EDGE_POLY && boundary->etype != EDGE_POLYARC)
+      if (boundary->etype != EDGE_POLYSEG && boundary->etype != EDGE_POLYARC)
         continue;
       relate_linear_area_edge_intersection(line, boundary, lines, nl, m,
         params, &nparams, maxparams);
@@ -2856,7 +2856,7 @@ relate_area_linear(const LWGEOM *area_geom, const LWGEOM *line_geom,
 static inline bool
 relate_area_boundary_edge(const Edge *e)
 {
-  return e->etype == EDGE_POLY || e->etype == EDGE_POLYARC;
+  return e->etype == EDGE_POLYSEG || e->etype == EDGE_POLYARC;
 }
 
 /**
@@ -2869,7 +2869,7 @@ relate_area_boundary_edge(const Edge *e)
 static void
 relate_area_edge_point(const Edge *e, double t, double *x, double *y)
 {
-  if (e->etype == EDGE_POLY)
+  if (e->etype == EDGE_POLYSEG)
   {
     *x = e->x1 + t * (e->x2 - e->x1);
     *y = e->y1 + t * (e->y2 - e->y1);
@@ -2894,7 +2894,7 @@ relate_area_edge_point(const Edge *e, double t, double *x, double *y)
 static double
 relate_area_edge_parameter(const Edge *e, double x, double y)
 {
-  if (e->etype == EDGE_POLY)
+  if (e->etype == EDGE_POLYSEG)
   {
     double dx = e->x2 - e->x1;
     double dy = e->y2 - e->y1;
@@ -2959,7 +2959,7 @@ relate_area_parameter_cmp(const void *a, const void *b)
 static bool
 relate_area_line_overlap(const Edge *a, const Edge *b)
 {
-  if (a->etype != EDGE_POLY || b->etype != EDGE_POLY)
+  if (a->etype != EDGE_POLYSEG || b->etype != EDGE_POLYSEG)
     return false;
   IntersectResult r = linesegm_intersect(a->x1, a->y1, a->dx, a->dy,
       b->x1, b->y1, b->x2, b->y2);
@@ -2979,7 +2979,7 @@ relate_area_edge_intersection(const Edge *a, const Edge *b, double ix[2],
   double iy[2])
 {
   /* Line / Line */
-  if (a->etype == EDGE_POLY && b->etype == EDGE_POLY)
+  if (a->etype == EDGE_POLYSEG && b->etype == EDGE_POLYSEG)
   {
     IntersectResult r = linesegm_intersect(a->x1, a->y1, a->dx, a->dy,
       b->x1, b->y1, b->x2, b->y2);
@@ -2997,7 +2997,7 @@ relate_area_edge_intersection(const Edge *a, const Edge *b, double ix[2],
   }
 
   /* Line / Arc */
-  if (a->etype == EDGE_POLY && b->etype == EDGE_POLYARC)
+  if (a->etype == EDGE_POLYSEG && b->etype == EDGE_POLYARC)
   {
     double roots[2];
     int n = arcsegm_intersect(a->x1, a->y1, a->dx, a->dy, b, roots);
@@ -3014,7 +3014,7 @@ relate_area_edge_intersection(const Edge *a, const Edge *b, double ix[2],
   }
 
   /* Arc / Line */
-  if (a->etype == EDGE_POLYARC && b->etype == EDGE_POLY)
+  if (a->etype == EDGE_POLYARC && b->etype == EDGE_POLYSEG)
   {
     double roots[2];
     int n = arcsegm_intersect(b->x1, b->y1, b->dx, b->dy, a, roots);
@@ -3055,7 +3055,7 @@ relate_area_edge_inside_area(const Edge *edge, Edge **area_edges, int narea)
 {
   double x, y;
   /* Midpoint of a straight boundary edge */
-  if (edge->etype == EDGE_POLY)
+  if (edge->etype == EDGE_POLYSEG)
   {
     x = (edge->x1 + edge->x2) * 0.5;
     y = (edge->y1 + edge->y2) * 0.5;
@@ -3263,7 +3263,7 @@ relate_area_find_interior_point(Edge **edges, int nedges, double *x,
     relate_area_edge_point(e, 0.5, &px, &py);
     /* Estimate a local tangent */
     double tx, ty;
-    if (e->etype == EDGE_POLY)
+    if (e->etype == EDGE_POLYSEG)
     {
       tx = e->x2 - e->x1;
       ty = e->y2 - e->y1;
