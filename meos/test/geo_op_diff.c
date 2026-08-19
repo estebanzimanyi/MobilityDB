@@ -77,14 +77,19 @@
 #define EXACT_AREA_DIFFERENCE 1.0e-9
 /* The densify fraction DiscreteHausdorffDistance is given there */
 #define HAUSDORFF_DENSIFY_FRACTION 0.25
-/* The number of segments per quadrant an arc is stroked with. It is the
- * default quad_segs of GEOS, so the exact arcs of the native answer are
- * sampled as densely as the assertion polygonizes them. A finer sampling makes
- * the native answer the more accurate of the two and the symmetric difference
- * then measures the polygonization error of the assertion rather than any
- * disagreement: for a full circle that error alone is 0.6% of the area,
- * six times the tolerance below. */
-#define STROKE_SEGS_PER_QUAD 8
+/* The number of segments per quadrant the exact arcs of the native answer are
+ * sampled at before the comparison. It is fine enough for the sampling to
+ * carry no error of its own, which leaves the assertion the only approximate
+ * side and its polygonization the whole tolerance. Sampling the native answer
+ * as coarsely as the assertion instead makes the comparison depend on the
+ * radii each side carries: the buffer of a circular string is bounded by arcs
+ * of the radius of that string, which the assertion never holds, and
+ * polygonizing them at the same rate loses more area than the assertion loses
+ * on its own joins. */
+#define STROKE_SEGS_PER_QUAD 256
+/* The quad_segs GEOS answers a buffer with, which is what the assertion
+ * carries and therefore what the comparison tolerates */
+#define ASSERTION_SEGS_PER_QUAD 8
 
 static void
 geos_notice(const char *fmt __attribute__((unused)), ...)
@@ -122,12 +127,17 @@ geos_stroked(const GSERIALIZED *gs)
  * @f$1 - \frac{2q}{\pi}\sin\frac{\pi}{2q}@f$ for @p q segments per
  * quadrant. That bound is the criterion whenever it exceeds the one the GEOS
  * test runner applies between two polygonal results.
+ * @note Only the assertion is polygonal here, the native answer being sampled
+ * finely enough to carry no error of its own.
  */
 static double
 area_tolerance(void)
 {
-  double q = STROKE_SEGS_PER_QUAD;
+  double q = ASSERTION_SEGS_PER_QUAD;
   double deficit = 1.0 - (2.0 * q / M_PI) * sin(M_PI / (2.0 * q));
+  /* The deficit is a fraction of the circle and the comparison is a fraction
+   * of the polygon inscribed in it */
+  deficit /= 1.0 - deficit;
   return deficit > MAX_RELATIVE_AREA_DIFFERENCE ?
     deficit : MAX_RELATIVE_AREA_DIFFERENCE;
 }
@@ -206,20 +216,81 @@ symdiff_area_in_tolerance(const GEOSGeometry *actual,
 
 /**
  * @brief Return how far apart the two boundaries may lie
- * @details Each boundary is a polygonization of the same arcs and therefore
- * lies within one sagitta of them, @f$d(1 - \cos\frac{\pi}{2q})@f$ for a
- * buffer distance @p d and @p q segments per quadrant, so two of them lie
- * within twice that. The criterion of the GEOS test runner, a hundredth of the
- * buffer distance, applies whenever it is the larger of the two.
+ * @details The assertion polygonizes every arc of the answer and therefore
+ * lies within one sagitta of it, @f$r(1 - \cos\frac{\pi}{2q})@f$ for an arc
+ * of radius @p r and @p q segments per quadrant. The arcs bounding the buffer
+ * of a curved geometry carry the radius of that geometry rather than the
+ * buffer distance, so the larger of the two governs. The criterion of the GEOS
+ * test runner, a hundredth of the buffer distance, applies whenever it is
+ * larger still.
  */
 static double
-hausdorff_tolerance(double distance)
+hausdorff_tolerance(double distance, double radius)
 {
-  double q = STROKE_SEGS_PER_QUAD;
-  double sagitta = 2.0 * fabs(distance) * (1.0 - cos(M_PI / (2.0 * q)));
+  double q = ASSERTION_SEGS_PER_QUAD;
+  /* The assertion polygonizes every arc it holds, and the largest of them
+   * governs how far it lies from the exact boundary */
+  double largest = radius > fabs(distance) ? radius : fabs(distance);
+  double sagitta = largest * (1.0 - cos(M_PI / (2.0 * q)));
   double geos = fabs(distance) / MAX_HAUSDORFF_DISTANCE_FACTOR;
   double result = sagitta > geos ? sagitta : geos;
   return result < MIN_DISTANCE_TOLERANCE ? MIN_DISTANCE_TOLERANCE : result;
+}
+
+/**
+ * @brief Return the radius of the largest circular arc of a geometry
+ */
+static double
+largest_arc_radius(const LWGEOM *geom)
+{
+  double result = 0.0;
+  if (! geom)
+    return 0.0;
+  if (geom->type == CIRCSTRINGTYPE)
+  {
+    const POINTARRAY *pa = ((const LWCIRCSTRING *) geom)->points;
+    for (uint32_t i = 0; i + 2 < pa->npoints; i += 2)
+    {
+      POINT4D a, b, c;
+      getPoint4d_p(pa, i, &a);
+      getPoint4d_p(pa, i + 1, &b);
+      getPoint4d_p(pa, i + 2, &c);
+      double d = 2 * (a.x * (b.y - c.y) + b.x * (c.y - a.y) +
+        c.x * (a.y - b.y));
+      if (fabs(d) < 1.0e-12)
+        continue;
+      double a2 = a.x * a.x + a.y * a.y, b2 = b.x * b.x + b.y * b.y;
+      double c2 = c.x * c.x + c.y * c.y;
+      double cx = (a2 * (b.y - c.y) + b2 * (c.y - a.y) + c2 * (a.y - b.y)) / d;
+      double cy = (a2 * (c.x - b.x) + b2 * (a.x - c.x) + c2 * (b.x - a.x)) / d;
+      double r = hypot(a.x - cx, a.y - cy);
+      if (r > result)
+        result = r;
+    }
+    return result;
+  }
+  if (geom->type == CURVEPOLYTYPE)
+  {
+    const LWCURVEPOLY *cp = (const LWCURVEPOLY *) geom;
+    for (uint32_t i = 0; i < cp->nrings; i++)
+    {
+      double r = largest_arc_radius(cp->rings[i]);
+      if (r > result)
+        result = r;
+    }
+    return result;
+  }
+  if (lwgeom_is_collection(geom))
+  {
+    const LWCOLLECTION *col = (const LWCOLLECTION *) geom;
+    for (uint32_t i = 0; i < col->ngeoms; i++)
+    {
+      double r = largest_arc_radius(col->geoms[i]);
+      if (r > result)
+        result = r;
+    }
+  }
+  return result;
 }
 
 /**
@@ -228,7 +299,8 @@ hausdorff_tolerance(double distance)
  */
 static bool
 boundary_hausdorff_in_tolerance(const GEOSGeometry *actual,
-  const GEOSGeometry *expected, double distance, char *reason, size_t size)
+  const GEOSGeometry *expected, double distance, double radius, char *reason,
+  size_t size)
 {
   GEOSGeometry *b1 = GEOSBoundary(actual);
   GEOSGeometry *b2 = GEOSBoundary(expected);
@@ -248,7 +320,7 @@ boundary_hausdorff_in_tolerance(const GEOSGeometry *actual,
     snprintf(reason, size, "the Hausdorff distance is not available");
     return false;
   }
-  double tolerance = hausdorff_tolerance(distance);
+  double tolerance = hausdorff_tolerance(distance, radius);
   if (found <= tolerance)
     return true;
   snprintf(reason, size, "the boundaries are %g apart, over the tolerated %g",
@@ -329,8 +401,11 @@ buffer_matches(const GSERIALIZED *actual, const GSERIALIZED *expected,
     if (g2) GEOSGeom_destroy(g2);
     return false;
   }
+  LWGEOM *lwactual = lwgeom_from_gserialized(actual);
+  double radius = largest_arc_radius(lwactual);
+  lwgeom_free(lwactual);
   bool result = symdiff_area_in_tolerance(g1, g2, reason, size) &&
-    boundary_hausdorff_in_tolerance(g1, g2, distance, reason, size);
+    boundary_hausdorff_in_tolerance(g1, g2, distance, radius, reason, size);
   GEOSGeom_destroy(g1); GEOSGeom_destroy(g2);
   return result;
 }

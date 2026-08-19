@@ -899,10 +899,11 @@ buffer_boundary_self_intersects(const LWGEOM *geom)
       const Edge *e2 = (const Edge *) meos_array_get(edges, j);
       if (! e2 || ! buffer_is_boundary_edge(e2))
         continue;
+      /* Only two consecutive edges meet by construction, which is where the
+       * end of one is the start of the other. Two that share a start or an
+       * end point instead meet where the boundary touches itself. */
       if (buffer_nodes_equal(e1->x2, e1->y2, e2->x1, e2->y1) ||
-          buffer_nodes_equal(e2->x2, e2->y2, e1->x1, e1->y1) ||
-          buffer_nodes_equal(e1->x1, e1->y1, e2->x1, e2->y1) ||
-          buffer_nodes_equal(e1->x2, e1->y2, e2->x2, e2->y2))
+          buffer_nodes_equal(e2->x2, e2->y2, e1->x1, e1->y1))
         continue;
       if (buffer_boundary_intersection(e1, e2) >= 0)
       {
@@ -1815,6 +1816,34 @@ buffer_split_arc(const BufferPiece *piece, const MeosArray *intersections,
  * that is not one circular ring: the buffer of a line string is a compound
  * curve, and the union of two buffers has holes and several surfaces.
  */
+static void
+buffer_piece_from_edge(const Edge *edge, BufferPiece *piece)
+{
+  assert(edge); assert(piece);
+  memset(piece, 0, sizeof(BufferPiece));
+  piece->x1 = edge->x1;
+  piece->y1 = edge->y1;
+  piece->x2 = edge->x2;
+  piece->y2 = edge->y2;
+  if (edge->etype == EDGE_POLYARC || edge->etype == EDGE_LINEARC)
+  {
+    piece->type = BUFFER_ARC;
+    piece->cx = edge->cx;
+    piece->cy = edge->cy;
+    piece->radius = edge->radius;
+    /* An Edge names the arc angles theta0/theta1 and a piece theta1/theta2 */
+    piece->theta1 = edge->theta0;
+    piece->theta2 = edge->theta1;
+    piece->ccw = edge->ccw;
+  }
+  else
+    piece->type = BUFFER_SEGMENT;
+}
+
+/**
+ * @brief Collect the boundary pieces of an areal geometry
+ * @details See #buffer_piece_from_edge()
+ */
 static bool
 buffer_pieces_from_geometry(const LWGEOM *geom, MeosArray *pieces)
 {
@@ -1827,24 +1856,8 @@ buffer_pieces_from_geometry(const LWGEOM *geom, MeosArray *pieces)
     const Edge *edge = (const Edge *) meos_array_get(edges, i);
     if (! edge || ! buffer_is_boundary_edge(edge))
       continue;
-    BufferPiece piece = {0};
-    piece.x1 = edge->x1;
-    piece.y1 = edge->y1;
-    piece.x2 = edge->x2;
-    piece.y2 = edge->y2;
-    if (edge->etype == EDGE_POLYARC)
-    {
-      piece.type = BUFFER_ARC;
-      piece.cx = edge->cx;
-      piece.cy = edge->cy;
-      piece.radius = edge->radius;
-      /* An Edge names the arc angles theta0/theta1 and a piece theta1/theta2 */
-      piece.theta1 = edge->theta0;
-      piece.theta2 = edge->theta1;
-      piece.ccw = edge->ccw;
-    }
-    else
-      piece.type = BUFFER_SEGMENT;
+    BufferPiece piece;
+    buffer_piece_from_edge(edge, &piece);
     meos_array_add(pieces, &piece);
   }
   meos_array_destroy(edges);
@@ -3521,6 +3534,572 @@ buffer_ring(const POINTARRAY *source, double radius, bool outward_left,
 }
 
 /*****************************************************************************
+ * Buffer - offsetting a chain of edges
+ *****************************************************************************/
+
+/**
+ * @brief Offset one edge of a boundary
+ * @details A straight edge moves along its normal, and a circular arc keeps
+ * its centre and its angles and changes only its radius, which is what lets a
+ * curved geometry be buffered without stroking it. The left of an arc
+ * traversed counterclockwise points to its centre, so the radius decreases
+ * there and increases on the other side.
+ * @return False if the edge is degenerate, or if the arc is contracted past
+ * its own radius and leaves no curve
+ */
+static bool
+buffer_offset_edge(const Edge *edge, double radius, bool left,
+  BufferPiece *piece)
+{
+  assert(edge); assert(piece);
+  memset(piece, 0, sizeof(BufferPiece));
+  if (edge->etype == EDGE_POLYSEG || edge->etype == EDGE_LINESEG)
+  {
+    double length = hypot(edge->x2 - edge->x1, edge->y2 - edge->y1);
+    if (length <= FP_TOLERANCE)
+      return false;
+    double nx = -(edge->y2 - edge->y1) / length;
+    double ny =  (edge->x2 - edge->x1) / length;
+    if (! left)
+    {
+      nx = -nx;
+      ny = -ny;
+    }
+    piece->type = BUFFER_SEGMENT;
+    piece->x1 = edge->x1 + radius * nx;
+    piece->y1 = edge->y1 + radius * ny;
+    piece->x2 = edge->x2 + radius * nx;
+    piece->y2 = edge->y2 + radius * ny;
+    return true;
+  }
+  if (edge->etype == EDGE_POLYARC || edge->etype == EDGE_LINEARC)
+  {
+    bool inward = edge->ccw ? left : ! left;
+    double r = inward ? edge->radius - radius : edge->radius + radius;
+    if (r <= FP_TOLERANCE)
+      return false;
+    piece->type = BUFFER_ARC;
+    piece->cx = edge->cx;
+    piece->cy = edge->cy;
+    piece->radius = r;
+    piece->theta1 = edge->theta0;
+    piece->theta2 = edge->theta1;
+    piece->ccw = edge->ccw;
+    piece->x1 = edge->cx + r * cos(piece->theta1);
+    piece->y1 = edge->cy + r * sin(piece->theta1);
+    piece->x2 = edge->cx + r * cos(piece->theta2);
+    piece->y2 = edge->cy + r * sin(piece->theta2);
+    return true;
+  }
+  return false;
+}
+
+/**
+ * @brief Return the direction an edge leaves its start point in
+ */
+static void
+buffer_edge_start_tangent(const Edge *edge, double *dx, double *dy)
+{
+  assert(edge); assert(dx); assert(dy);
+  if (edge->etype == EDGE_POLYARC || edge->etype == EDGE_LINEARC)
+  {
+    double s = sin(edge->theta0), c = cos(edge->theta0);
+    *dx = edge->ccw ? -s : s;
+    *dy = edge->ccw ? c : -c;
+    return;
+  }
+  *dx = edge->x2 - edge->x1;
+  *dy = edge->y2 - edge->y1;
+}
+
+/**
+ * @brief Return the direction an edge arrives at its end point in
+ */
+static void
+buffer_edge_end_tangent(const Edge *edge, double *dx, double *dy)
+{
+  assert(edge); assert(dx); assert(dy);
+  if (edge->etype == EDGE_POLYARC || edge->etype == EDGE_LINEARC)
+  {
+    double s = sin(edge->theta1), c = cos(edge->theta1);
+    *dx = edge->ccw ? -s : s;
+    *dy = edge->ccw ? c : -c;
+    return;
+  }
+  *dx = edge->x2 - edge->x1;
+  *dy = edge->y2 - edge->y1;
+}
+
+/**
+ * @brief Move the end point of an offset piece onto a point of its support
+ */
+static void
+buffer_piece_set_end(BufferPiece *piece, double x, double y)
+{
+  assert(piece);
+  piece->x2 = x;
+  piece->y2 = y;
+  if (piece->type == BUFFER_ARC)
+    piece->theta2 = atan2(y - piece->cy, x - piece->cx);
+}
+
+/**
+ * @brief Move the start point of an offset piece onto a point of its support
+ */
+static void
+buffer_piece_set_start(BufferPiece *piece, double x, double y)
+{
+  assert(piece);
+  piece->x1 = x;
+  piece->y1 = y;
+  if (piece->type == BUFFER_ARC)
+    piece->theta1 = atan2(y - piece->cy, x - piece->cx);
+}
+
+/**
+ * @brief Keep the candidate closest to a point
+ */
+static void
+buffer_keep_closest(double x, double y, double px, double py, double *bestx,
+  double *besty, double *best, bool *found)
+{
+  double distance = hypot(x - px, y - py);
+  if (! *found || distance < *best)
+  {
+    *found = true;
+    *best = distance;
+    *bestx = x;
+    *besty = y;
+  }
+}
+
+/**
+ * @brief Return the point where the supports of two offset pieces meet
+ * @details On the inner side of a turn the two offset pieces cross, and the
+ * boundary passes through the crossing closest to the vertex between them.
+ * The supports are a whole line and a whole circle, since the crossing may lie
+ * beyond the ends of both pieces, which is what shortens them.
+ */
+static bool
+buffer_pieces_meet(const BufferPiece *a, const BufferPiece *b, double vx,
+  double vy, double *x, double *y)
+{
+  assert(a); assert(b); assert(x); assert(y);
+  bool found = false;
+  double best = 0.0;
+
+  /* Two straight supports meet in one point */
+  if (a->type == BUFFER_SEGMENT && b->type == BUFFER_SEGMENT)
+  {
+    POINT2D p = { a->x1, a->y1 }, q = { b->x1, b->y1 };
+    POINT2D result;
+    if (! buffer_line_intersection(p, a->x2 - a->x1, a->y2 - a->y1, q,
+        b->x2 - b->x1, b->y2 - b->y1, &result))
+      return false;
+    *x = result.x;
+    *y = result.y;
+    return true;
+  }
+
+  /* A straight support and a circular one meet in at most two points */
+  if (a->type != b->type)
+  {
+    const BufferPiece *line = a->type == BUFFER_SEGMENT ? a : b;
+    const BufferPiece *arc = a->type == BUFFER_SEGMENT ? b : a;
+    double dx = line->x2 - line->x1, dy = line->y2 - line->y1;
+    double length = hypot(dx, dy);
+    if (length <= FP_TOLERANCE)
+      return false;
+    dx /= length;
+    dy /= length;
+    /* The projection of the centre on the line, and the half chord there */
+    double t = (arc->cx - line->x1) * dx + (arc->cy - line->y1) * dy;
+    double px = line->x1 + t * dx, py = line->y1 + t * dy;
+    double gap = hypot(arc->cx - px, arc->cy - py);
+    if (gap > arc->radius + FP_TOLERANCE)
+      return false;
+    double half = arc->radius * arc->radius - gap * gap;
+    half = half > 0.0 ? sqrt(half) : 0.0;
+    buffer_keep_closest(px + half * dx, py + half * dy, vx, vy, x, y, &best,
+      &found);
+    buffer_keep_closest(px - half * dx, py - half * dy, vx, vy, x, y, &best,
+      &found);
+    return found;
+  }
+
+  /* Two circular supports meet on their radical line */
+  double dx = b->cx - a->cx, dy = b->cy - a->cy;
+  double distance = hypot(dx, dy);
+  if (distance <= FP_TOLERANCE ||
+      distance > a->radius + b->radius + FP_TOLERANCE ||
+      distance < fabs(a->radius - b->radius) - FP_TOLERANCE)
+    return false;
+  double along = (distance * distance + a->radius * a->radius -
+    b->radius * b->radius) / (2 * distance);
+  double half = a->radius * a->radius - along * along;
+  half = half > 0.0 ? sqrt(half) : 0.0;
+  double ux = dx / distance, uy = dy / distance;
+  double mx = a->cx + along * ux, my = a->cy + along * uy;
+  buffer_keep_closest(mx - half * uy, my + half * ux, vx, vy, x, y, &best,
+    &found);
+  buffer_keep_closest(mx + half * uy, my - half * ux, vx, vy, x, y, &best,
+    &found);
+  return found;
+}
+
+/**
+ * @brief Offset a chain of edges onto one boundary
+ * @details Every edge is offset on the given side, and consecutive offsets are
+ * joined at the vertex between them: where the chain turns away from the
+ * buffered side the two offsets leave a gap that the join style fills, and
+ * where it turns towards it they cross and both are shortened to the crossing.
+ * @param[in] edges Edges of the chain
+ * @param[in] radius Buffer distance
+ * @param[in] left True to offset to the left of the traversal direction
+ * @param[in] join_style Join style
+ * @param[in] mitre_limit Maximum mitre ratio
+ * @param[in] closed True if the last edge of the chain meets the first one
+ * @param[in] srid Spatial reference identifier
+ * @param[out] curve Curve the offset is appended to
+ * @param[out] first,last Points the offset starts and ends at, which a cap
+ * joining two offsets must be given rather than recompute, since a point
+ * recomputed from its angle lands a rounding step away and leaves the boundary
+ * they belong to unclosed
+ * @return False if an edge or a junction leaves no curve
+ */
+static bool
+buffer_offset_edges(const MeosArray *edges, double radius, bool left,
+  JoinStyle join_style, double mitre_limit, bool closed, int32_t srid,
+  LWCOMPOUND *curve, POINT2D *first, POINT2D *last)
+{
+  assert(edges); assert(curve); assert(radius > 0.0);
+  uint32_t count = edges->count;
+  if (count == 0)
+    return false;
+  BufferPiece *pieces = palloc(sizeof(BufferPiece) * count);
+  bool *join = palloc0(sizeof(bool) * count);
+  for (uint32_t i = 0; i < count; i++)
+  {
+    const Edge *edge = (const Edge *) meos_array_get(edges, i);
+    if (! edge || ! buffer_offset_edge(edge, radius, left, &pieces[i]))
+    {
+      pfree(pieces); pfree(join);
+      return false;
+    }
+  }
+
+  /* Settle every junction between two consecutive offsets */
+  uint32_t njunctions = closed ? count : count - 1;
+  for (uint32_t i = 0; i < njunctions; i++)
+  {
+    uint32_t next = (i + 1) % count;
+    const Edge *e1 = (const Edge *) meos_array_get(edges, i);
+    const Edge *e2 = (const Edge *) meos_array_get(edges, next);
+    double in_dx, in_dy, out_dx, out_dy;
+    buffer_edge_end_tangent(e1, &in_dx, &in_dy);
+    buffer_edge_start_tangent(e2, &out_dx, &out_dy);
+    double turn = buffer_cross(in_dx, in_dy, out_dx, out_dy);
+    /* The buffered side is convex at the vertex when the chain turns away
+     * from it, which is a right turn when that side is the left one */
+    if (left ? turn < -FP_TOLERANCE : turn > FP_TOLERANCE)
+    {
+      join[i] = true;
+      continue;
+    }
+    /* Tangent edges continue into each other */
+    if (fabs(turn) <= FP_TOLERANCE)
+      continue;
+    double x, y;
+    if (! buffer_pieces_meet(&pieces[i], &pieces[next], e1->x2, e1->y2, &x, &y))
+    {
+      pfree(pieces); pfree(join);
+      return false;
+    }
+    buffer_piece_set_end(&pieces[i], x, y);
+    buffer_piece_set_start(&pieces[next], x, y);
+  }
+
+  /* Emit the offsets and the joins between them */
+  for (uint32_t i = 0; i < count; i++)
+  {
+    buffer_append_piece_to_curve(curve, srid, &pieces[i]);
+    if (! join[i])
+      continue;
+    uint32_t next = (i + 1) % count;
+    const Edge *edge = (const Edge *) meos_array_get(edges, i);
+    POINT2D vertex = { edge->x2, edge->y2 };
+    POINT2D p1 = { pieces[i].x2, pieces[i].y2 };
+    POINT2D p2 = { pieces[next].x1, pieces[next].y1 };
+    buffer_add_join(curve, srid, vertex, p1, p2, radius, join_style,
+      mitre_limit, true);
+  }
+  if (first)
+  {
+    first->x = pieces[0].x1;
+    first->y = pieces[0].y1;
+  }
+  if (last)
+  {
+    last->x = pieces[count - 1].x2;
+    last->y = pieces[count - 1].y2;
+  }
+  pfree(pieces); pfree(join);
+  return true;
+}
+
+/**
+ * @brief Reverse the direction an edge is traversed in
+ */
+static void
+buffer_edge_reverse(Edge *edge)
+{
+  assert(edge);
+  double tmp = edge->x1;
+  edge->x1 = edge->x2;
+  edge->x2 = tmp;
+  tmp = edge->y1;
+  edge->y1 = edge->y2;
+  edge->y2 = tmp;
+  if (edge->etype == EDGE_POLYARC || edge->etype == EDGE_LINEARC)
+  {
+    tmp = edge->theta0;
+    edge->theta0 = edge->theta1;
+    edge->theta1 = tmp;
+    edge->ccw = ! edge->ccw;
+  }
+  else
+  {
+    edge->dx = -edge->dx;
+    edge->dy = -edge->dy;
+  }
+}
+
+/**
+ * @brief Return the edges of a chain traversed backwards
+ */
+static MeosArray *
+buffer_edges_reversed(const MeosArray *edges)
+{
+  assert(edges);
+  MeosArray *result = meos_array_create(sizeof(Edge));
+  if (! result)
+    return NULL;
+  for (uint32_t i = edges->count; i > 0; i--)
+  {
+    const Edge *edge = (const Edge *) meos_array_get(edges, i - 1);
+    if (! edge)
+      continue;
+    Edge reversed = *edge;
+    buffer_edge_reverse(&reversed);
+    meos_array_add(result, &reversed);
+  }
+  return result;
+}
+
+/**
+ * @brief Return true if the exterior of a ring given as edges lies left of the
+ * direction it is traversed in
+ */
+static bool
+buffer_ring_edges_outward_left(const MeosArray *edges)
+{
+  assert(edges);
+  MeosArray *pieces = meos_array_create(sizeof(BufferPiece));
+  if (! pieces)
+    return false;
+  for (uint32_t i = 0; i < edges->count; i++)
+  {
+    const Edge *edge = (const Edge *) meos_array_get(edges, i);
+    if (! edge)
+      continue;
+    BufferPiece piece;
+    buffer_piece_from_edge(edge, &piece);
+    meos_array_add(pieces, &piece);
+  }
+  /* A ring traversed clockwise, whose area is negative, has its exterior on
+   * its left */
+  double area = buffer_ring_signed_area(pieces);
+  meos_array_destroy(pieces);
+  return area < 0.0;
+}
+
+/**
+ * @brief Buffer a curve, which is a circular string or a compound curve
+ * @details The boundary walks the offset of the curve on its left, caps the
+ * far end, walks the offset of the reversed curve, which is its right, and
+ * caps the near end, exactly as the boundary of a line buffer does. A curve
+ * closing on itself has no end to cap and bounds a band instead, whose outer
+ * boundary is the surface and whose inner one is its hole.
+ */
+static LWGEOM *
+meos_buffer_curve(const LWGEOM *geom, double radius, JoinStyle join_style,
+  EndCapStyle cap_style, double mitre_limit)
+{
+  assert(geom); assert(radius > 0.0);
+  int32_t srid = lwgeom_get_srid(geom);
+  MeosArray *edges = geom_extract_edges(geom);
+  if (! edges || edges->count == 0)
+  {
+    if (edges)
+      meos_array_destroy(edges);
+    return NULL;
+  }
+  const Edge *first = (const Edge *) meos_array_get(edges, 0);
+  const Edge *last = (const Edge *) meos_array_get(edges, edges->count - 1);
+  bool closed = buffer_nodes_equal(first->x1, first->y1, last->x2, last->y2);
+
+  if (closed)
+  {
+    /* The ring bounds the surface on the side its exterior lies, which the
+     * direction it is traversed in decides */
+    bool outward = buffer_ring_edges_outward_left(edges);
+    LWCOMPOUND *outer = lwcompound_construct_empty(srid, 0, 0);
+    LWCOMPOUND *inner = lwcompound_construct_empty(srid, 0, 0);
+    bool ok = buffer_offset_edges(edges, radius, outward, join_style,
+      mitre_limit, true, srid, outer, NULL, NULL);
+    bool has_hole = ok && buffer_offset_edges(edges, radius, ! outward,
+      join_style, mitre_limit, true, srid, inner, NULL, NULL);
+    meos_array_destroy(edges);
+    if (! ok)
+    {
+      lwgeom_free(lwcompound_as_lwgeom(outer));
+      lwgeom_free(lwcompound_as_lwgeom(inner));
+      return NULL;
+    }
+    LWCURVEPOLY *result = lwcurvepoly_construct_empty(srid, 0, 0);
+    lwcurvepoly_add_ring(result, lwcompound_as_lwgeom(outer));
+    if (has_hole)
+      lwcurvepoly_add_ring(result, lwcompound_as_lwgeom(inner));
+    else
+      lwgeom_free(lwcompound_as_lwgeom(inner));
+    return lwcurvepoly_as_lwgeom(result);
+  }
+
+  /* An open curve: the two offsets and the caps between them */
+  MeosArray *backwards = buffer_edges_reversed(edges);
+  LWCOMPOUND *ring = lwcompound_construct_empty(srid, 0, 0);
+  LWCOMPOUND *back_curve = lwcompound_construct_empty(srid, 0, 0);
+  POINT2D left_first, left_last, right_first, right_last;
+  double start_dx, start_dy, end_dx, end_dy;
+  buffer_edge_start_tangent(first, &start_dx, &start_dy);
+  buffer_edge_end_tangent(last, &end_dx, &end_dy);
+  POINT2D far = { last->x2, last->y2 }, near = { first->x1, first->y1 };
+  bool ok = backwards &&
+    buffer_offset_edges(edges, radius, true, join_style, mitre_limit, false,
+      srid, ring, &left_first, &left_last) &&
+    buffer_offset_edges(backwards, radius, true, join_style, mitre_limit,
+      false, srid, back_curve, &right_first, &right_last);
+  meos_array_destroy(edges);
+  if (backwards)
+    meos_array_destroy(backwards);
+  if (! ok)
+  {
+    lwgeom_free(lwcompound_as_lwgeom(ring));
+    lwgeom_free(lwcompound_as_lwgeom(back_curve));
+    return NULL;
+  }
+
+  /* The cap at the far end, then the offset of the reversed curve, then the
+   * cap at the near end */
+  if (cap_style == ENDCAP_ROUND)
+    buffer_add_round_cap(ring, srid, far, left_last, right_first, radius,
+      false);
+  else
+  {
+    POINT2D l = left_last, r = right_first;
+    if (cap_style == ENDCAP_SQUARE)
+    {
+      double length = hypot(end_dx, end_dy);
+      l.x += end_dx / length * radius; l.y += end_dy / length * radius;
+      r.x += end_dx / length * radius; r.y += end_dy / length * radius;
+    }
+    buffer_add_segment(ring, srid, l, r);
+  }
+  for (uint32_t i = 0; i < back_curve->ngeoms; i++)
+    lwcompound_add_lwgeom(ring, back_curve->geoms[i]);
+  /* The pieces belong to the ring now, so only the shell is released */
+  lwfree(back_curve->geoms);
+  lwfree(back_curve);
+  if (cap_style == ENDCAP_ROUND)
+    buffer_add_round_cap(ring, srid, near, right_last, left_first, radius,
+      false);
+  else
+  {
+    POINT2D l = left_first, r = right_last;
+    if (cap_style == ENDCAP_SQUARE)
+    {
+      double length = hypot(start_dx, start_dy);
+      l.x -= start_dx / length * radius; l.y -= start_dy / length * radius;
+      r.x -= start_dx / length * radius; r.y -= start_dy / length * radius;
+    }
+    buffer_add_segment(ring, srid, r, l);
+  }
+
+  LWCURVEPOLY *curvepoly = lwcurvepoly_construct_empty(srid, 0, 0);
+  lwcurvepoly_add_ring(curvepoly, lwcompound_as_lwgeom(ring));
+  LWGEOM *result = lwcurvepoly_as_lwgeom(curvepoly);
+  if (buffer_boundary_self_intersects(result))
+  {
+    lwgeom_free(result);
+    return NULL;
+  }
+  return result;
+}
+
+/**
+ * @brief Buffer a CURVEPOLYGON
+ * @details Its rings are offset the way those of a polygon are, the exterior
+ * one away from the surface and the holes into it, except that a ring holding
+ * circular arcs is offset arc by arc rather than vertex by vertex.
+ */
+static LWGEOM *
+meos_buffer_curvepoly(const LWCURVEPOLY *curvepoly, double radius,
+  JoinStyle join_style, double mitre_limit, bool inward)
+{
+  assert(curvepoly); assert(radius > 0.0);
+  int32_t srid = lwgeom_get_srid((const LWGEOM *) curvepoly);
+  if (curvepoly->nrings == 0)
+    return lwcollection_as_lwgeom(lwcollection_construct_empty(
+      MULTISURFACETYPE, srid, 0, 0));
+  LWCURVEPOLY *result = lwcurvepoly_construct_empty(srid, 0, 0);
+  for (uint32_t i = 0; i < curvepoly->nrings; i++)
+  {
+    MeosArray *edges = geom_extract_edges(curvepoly->rings[i]);
+    if (! edges || edges->count == 0)
+    {
+      if (edges)
+        meos_array_destroy(edges);
+      lwgeom_free(lwcurvepoly_as_lwgeom(result));
+      return NULL;
+    }
+    /* The exterior ring is buffered away from the surface and a hole into it,
+     * and an erosion reverses both */
+    bool outward = buffer_ring_edges_outward_left(edges);
+    bool left = (i == 0) ? outward : ! outward;
+    if (inward)
+      left = ! left;
+    LWCOMPOUND *ring = lwcompound_construct_empty(srid, 0, 0);
+    bool ok = buffer_offset_edges(edges, radius, left, join_style, mitre_limit,
+      true, srid, ring, NULL, NULL);
+    meos_array_destroy(edges);
+    if (! ok)
+    {
+      lwgeom_free(lwcompound_as_lwgeom(ring));
+      lwgeom_free(lwcurvepoly_as_lwgeom(result));
+      return NULL;
+    }
+    lwcurvepoly_add_ring(result, lwcompound_as_lwgeom(ring));
+  }
+  LWGEOM *geom = lwcurvepoly_as_lwgeom(result);
+  if (buffer_boundary_self_intersects(geom))
+  {
+    lwgeom_free(geom);
+    return NULL;
+  }
+  return geom;
+}
+
+/*****************************************************************************
  * Buffer - combining the component buffers
  *****************************************************************************/
 
@@ -4357,6 +4936,8 @@ meos_erode_mpoly(const LWMPOLY *mpoly, double radius, JoinStyle join_style,
  * - POLYGONTYPE
  * - MULTIPOLYGONTYPE
  * - TRIANGLE
+ * - CIRCULARSTRING, COMPOUNDCURVE and MULTICURVE
+ * - CURVEPOLYGON and MULTISURFACE
  * - GEOMETRYCOLLECTION
  * Polygon buffering is handled by the polygon buffering layer.
  * Component buffers are not unioned yet. If buffering a collection
@@ -4411,6 +4992,15 @@ meos_buffer(const LWGEOM *geom, double radius, JoinStyle join_style,
     case TRIANGLETYPE:
       return meos_buffer_triangle((const LWTRIANGLE *) geom, radius,
         join_style, cap_style, mitre_limit);
+    case CIRCSTRINGTYPE:
+    case COMPOUNDTYPE:
+      return meos_buffer_curve(geom, radius, join_style, cap_style,
+        mitre_limit);
+    case CURVEPOLYTYPE:
+      return meos_buffer_curvepoly((const LWCURVEPOLY *) geom, radius,
+        join_style, mitre_limit, false);
+    case MULTICURVETYPE:
+    case MULTISURFACETYPE:
     case COLLECTIONTYPE:
       return meos_buffer_collection((const LWCOLLECTION *) geom, radius,
         join_style, cap_style, mitre_limit);
