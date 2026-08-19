@@ -1,0 +1,332 @@
+/*****************************************************************************
+ *
+ * This MobilityDB code is provided under The PostgreSQL License.
+ * Copyright (c) 2016-2026, Université libre de Bruxelles and MobilityDB
+ * contributors
+ *
+ * MobilityDB includes portions of PostGIS version 3 source code released
+ * under the GNU General Public License (GPLv2 or later).
+ * Copyright (c) 2001-2025, PostGIS contributors
+ *
+ * Permission to use, copy, modify, and distribute this software and its
+ * documentation for any purpose, without fee, and without a written
+ * agreement is hereby granted, provided that the above copyright notice and
+ * this paragraph and the following two paragraphs appear in all copies.
+ *
+ * IN NO EVENT SHALL UNIVERSITE LIBRE DE BRUXELLES BE LIABLE TO ANY PARTY FOR
+ * DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, INCLUDING
+ * LOST PROFITS, ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION,
+ * EVEN IF UNIVERSITE LIBRE DE BRUXELLES HAS BEEN ADVISED OF THE POSSIBILITY
+ * OF SUCH DAMAGE.
+ *
+ * UNIVERSITE LIBRE DE BRUXELLES SPECIFICALLY DISCLAIMS ANY WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE PROVIDED HEREUNDER IS ON
+ * AN "AS IS" BASIS, AND UNIVERSITE LIBRE DE BRUXELLES HAS NO OBLIGATIONS TO
+ * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+ *
+ *****************************************************************************/
+
+/**
+ * @file
+ * @brief Check a native spatial operation against the assertions of the GEOS
+ * test suite
+ * @details The corpus is produced by @p geos_harvest.py and holds one
+ * @p wkt|arg|expected record per line, where @p expected is the result the
+ * GEOS project asserts for the operation. The comparison criterion is the one
+ * the reference project applies to that operation:
+ * - a convex hull is an exact answer, so the result must equal the assertion;
+ * - a buffer is an approximation, and this implementation answers it with
+ *   exact circular arcs where GEOS polygonizes them, so the two results
+ *   necessarily differ vertex by vertex. The criterion is therefore the one
+ *   @p BufferResultMatcher of the GEOS test runner applies: the symmetric
+ *   difference covers less than @p MAX_RELATIVE_AREA_DIFFERENCE of the
+ *   expected area, and the oriented discrete Hausdorff distance between the
+ *   two boundaries stays under a hundredth of the buffer distance. The arcs of
+ *   the native answer are stroked before the comparison, since an area and a
+ *   Hausdorff distance are defined on the polygonal representation.
+ *
+ * Usage:
+ * @code
+ * geo_op_diff convexhull < convexhull_corpus_geos.txt
+ * geo_op_diff buffer     < buffer_corpus_geos.txt
+ * @endcode
+ */
+
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+/* GEOS */
+#include <geos_c.h>
+/* PostGIS */
+#include <liblwgeom.h>
+/* MEOS */
+#include <meos.h>
+#include <meos_geo.h>
+
+/* The tolerances of BufferResultMatcher of the GEOS test runner */
+#define MAX_RELATIVE_AREA_DIFFERENCE 1.0e-3
+#define MAX_HAUSDORFF_DISTANCE_FACTOR 100.0
+#define MIN_DISTANCE_TOLERANCE 1.0e-8
+/* The densify fraction DiscreteHausdorffDistance is given there */
+#define HAUSDORFF_DENSIFY_FRACTION 0.25
+/* The number of segments per quadrant an arc is stroked with. It is the
+ * default quad_segs of GEOS, so the exact arcs of the native answer are
+ * sampled as densely as the assertion polygonizes them. A finer sampling makes
+ * the native answer the more accurate of the two and the symmetric difference
+ * then measures the polygonization error of the assertion rather than any
+ * disagreement: for a full circle that error alone is 0.6% of the area,
+ * six times the tolerance below. */
+#define STROKE_SEGS_PER_QUAD 8
+
+static void
+geos_notice(const char *fmt __attribute__((unused)), ...)
+{
+  return;
+}
+
+/**
+ * @brief Return the GEOS geometry of a serialized geometry, with every
+ * circular arc stroked
+ */
+static GEOSGeometry *
+geos_stroked(const GSERIALIZED *gs)
+{
+  LWGEOM *lwgeom = lwgeom_from_gserialized(gs);
+  LWGEOM *stroked = lwgeom_stroke(lwgeom, STROKE_SEGS_PER_QUAD);
+  char *hex = lwgeom_to_hexwkb_buffer(stroked, WKB_ISO | WKB_NDR);
+  GEOSGeometry *result = GEOSGeomFromHEX_buf((const unsigned char *) hex,
+    strlen(hex));
+  lwfree(hex);
+  lwgeom_free(stroked);
+  lwgeom_free(lwgeom);
+  return result;
+}
+
+/**
+ * @brief Return the fraction of the area the symmetric difference may cover
+ * @details The assertion of the GEOS suite polygonizes every arc, while this
+ * implementation answers it exactly, so the two boundaries are two different
+ * polygonizations of the same circles once the exact answer is stroked. Both
+ * are inscribed in those circles and therefore lie between the circle and the
+ * regular polygon of @p STROKE_SEGS_PER_QUAD segments per quadrant inscribed
+ * in it, which bounds their symmetric difference by the area that polygon
+ * leaves out of the circle,
+ * @f$1 - \frac{2q}{\pi}\sin\frac{\pi}{2q}@f$ for @p q segments per
+ * quadrant. That bound is the criterion whenever it exceeds the one the GEOS
+ * test runner applies between two polygonal results.
+ */
+static double
+area_tolerance(void)
+{
+  double q = STROKE_SEGS_PER_QUAD;
+  double deficit = 1.0 - (2.0 * q / M_PI) * sin(M_PI / (2.0 * q));
+  return deficit > MAX_RELATIVE_AREA_DIFFERENCE ?
+    deficit : MAX_RELATIVE_AREA_DIFFERENCE;
+}
+
+/**
+ * @brief Return true if the symmetric difference of two geometries covers a
+ * negligible fraction of the expected area
+ */
+static bool
+symdiff_area_in_tolerance(const GEOSGeometry *actual,
+  const GEOSGeometry *expected, char *reason, size_t size)
+{
+  double area, diff;
+  if (! GEOSArea(expected, &area))
+  {
+    snprintf(reason, size, "the expected area is not available");
+    return false;
+  }
+  GEOSGeometry *sym = GEOSSymDifference(actual, expected);
+  if (! sym)
+  {
+    snprintf(reason, size, "the symmetric difference is not available");
+    return false;
+  }
+  bool ok = GEOSArea(sym, &diff) != 0;
+  GEOSGeom_destroy(sym);
+  if (! ok)
+  {
+    snprintf(reason, size, "the symmetric difference area is not available");
+    return false;
+  }
+  if (diff <= 0.0)
+    return true;
+  if (area <= 0.0)
+  {
+    snprintf(reason, size, "the expected area is %g", area);
+    return false;
+  }
+  double tolerance = area_tolerance();
+  if (diff / area < tolerance)
+    return true;
+  snprintf(reason, size, "the symmetric difference covers %g of the area, "
+    "over the tolerated %g", diff / area, tolerance);
+  return false;
+}
+
+/**
+ * @brief Return how far apart the two boundaries may lie
+ * @details Each boundary is a polygonization of the same arcs and therefore
+ * lies within one sagitta of them, @f$d(1 - \cos\frac{\pi}{2q})@f$ for a
+ * buffer distance @p d and @p q segments per quadrant, so two of them lie
+ * within twice that. The criterion of the GEOS test runner, a hundredth of the
+ * buffer distance, applies whenever it is the larger of the two.
+ */
+static double
+hausdorff_tolerance(double distance)
+{
+  double q = STROKE_SEGS_PER_QUAD;
+  double sagitta = 2.0 * fabs(distance) * (1.0 - cos(M_PI / (2.0 * q)));
+  double geos = fabs(distance) / MAX_HAUSDORFF_DISTANCE_FACTOR;
+  double result = sagitta > geos ? sagitta : geos;
+  return result < MIN_DISTANCE_TOLERANCE ? MIN_DISTANCE_TOLERANCE : result;
+}
+
+/**
+ * @brief Return true if the two boundaries stay within the polygonization of
+ * each other
+ */
+static bool
+boundary_hausdorff_in_tolerance(const GEOSGeometry *actual,
+  const GEOSGeometry *expected, double distance, char *reason, size_t size)
+{
+  GEOSGeometry *b1 = GEOSBoundary(actual);
+  GEOSGeometry *b2 = GEOSBoundary(expected);
+  if (! b1 || ! b2)
+  {
+    if (b1) GEOSGeom_destroy(b1);
+    if (b2) GEOSGeom_destroy(b2);
+    snprintf(reason, size, "a boundary is not available");
+    return false;
+  }
+  double found;
+  int ok = GEOSHausdorffDistanceDensify(b1, b2, HAUSDORFF_DENSIFY_FRACTION,
+    &found);
+  GEOSGeom_destroy(b1); GEOSGeom_destroy(b2);
+  if (! ok)
+  {
+    snprintf(reason, size, "the Hausdorff distance is not available");
+    return false;
+  }
+  double tolerance = hausdorff_tolerance(distance);
+  if (found <= tolerance)
+    return true;
+  snprintf(reason, size, "the boundaries are %g apart, over the tolerated %g",
+    found, tolerance);
+  return false;
+}
+
+/**
+ * @brief Return true if a buffer matches the one the GEOS suite asserts
+ */
+static bool
+buffer_matches(const GSERIALIZED *actual, const GSERIALIZED *expected,
+  double distance, char *reason, size_t size)
+{
+  bool e1 = geo_is_empty(actual), e2 = geo_is_empty(expected);
+  if (e1 && e2)
+    return true;
+  if (e1 || e2)
+  {
+    snprintf(reason, size, "one result is empty and the other is not");
+    return false;
+  }
+  GEOSGeometry *g1 = geos_stroked(actual);
+  GEOSGeometry *g2 = geos_stroked(expected);
+  if (! g1 || ! g2)
+  {
+    snprintf(reason, size, "the %s result does not convert to a polygon",
+      g1 ? "expected" : "actual");
+    if (g1) GEOSGeom_destroy(g1);
+    if (g2) GEOSGeom_destroy(g2);
+    return false;
+  }
+  bool result = symdiff_area_in_tolerance(g1, g2, reason, size) &&
+    boundary_hausdorff_in_tolerance(g1, g2, distance, reason, size);
+  GEOSGeom_destroy(g1); GEOSGeom_destroy(g2);
+  return result;
+}
+
+int
+main(int argc, char **argv)
+{
+  if (argc != 2 ||
+      (strcmp(argv[1], "convexhull") && strcmp(argv[1], "buffer")))
+  {
+    fprintf(stderr, "usage: %s {convexhull|buffer} < corpus\n", argv[0]);
+    return 2;
+  }
+  bool is_buffer = ! strcmp(argv[1], "buffer");
+  meos_initialize();
+  /* A geometry the native implementation declines raises an error, and the
+   * corpus is walked to its end rather than stopped on the first one */
+  meos_initialize_noexit_error_handler();
+  initGEOS(geos_notice, geos_notice);
+
+  char *line = NULL;
+  size_t cap = 0;
+  ssize_t len;
+  int nchecked = 0, nfailed = 0, nunsupported = 0;
+  while ((len = getline(&line, &cap, stdin)) > 0)
+  {
+    if (line[0] == '#' || line[0] == '\n')
+      continue;
+    char *nl = strpbrk(line, "\r\n");
+    if (nl)
+      *nl = '\0';
+    char *arg = strchr(line, '|');
+    if (! arg)
+      continue;
+    *arg++ = '\0';
+    char *expected_wkt = strchr(arg, '|');
+    if (! expected_wkt)
+      continue;
+    *expected_wkt++ = '\0';
+
+    GSERIALIZED *gs = geom_in(line, -1);
+    GSERIALIZED *expected = geom_in(expected_wkt, -1);
+    if (! gs || ! expected)
+    {
+      fprintf(stderr, "PARSE %.90s\n", line);
+      free(gs); free(expected);
+      continue;
+    }
+    double distance = is_buffer ? atof(arg) : 0.0;
+    GSERIALIZED *actual = is_buffer ?
+      geom_buffer_meos(gs, distance, "") : geom_convex_hull_meos(gs);
+    if (! actual)
+    {
+      nunsupported++;
+      printf("UNSUPPORTED %.90s\n", line);
+      free(gs); free(expected);
+      continue;
+    }
+    nchecked++;
+    char reason[256] = "the result differs from the assertion";
+    bool ok = is_buffer ?
+      buffer_matches(actual, expected, distance, reason, sizeof(reason)) :
+      geo_equals(actual, expected) == 1;
+    if (! ok)
+    {
+      nfailed++;
+      char *wa = geo_as_ewkt(actual, 8), *we = geo_as_ewkt(expected, 8);
+      printf("FAIL   in       %.100s\n", line);
+      if (is_buffer)
+        printf("       distance %g: %s\n", distance, reason);
+      printf("       expected %.100s\n", we);
+      printf("       actual   %.100s\n", wa);
+      free(wa); free(we);
+    }
+    free(actual); free(gs); free(expected);
+  }
+  free(line);
+  printf("%d of %d checked records pass, %d unsupported\n",
+    nchecked - nfailed, nchecked, nunsupported);
+  finishGEOS();
+  meos_finalize();
+  return (nfailed || nunsupported) ? 1 : 0;
+}

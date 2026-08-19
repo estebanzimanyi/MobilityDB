@@ -1328,7 +1328,7 @@ meos_oriented_envelope(const LWGEOM *geom)
    * when a coordinate is not a number, and the rectangle must be defined in
    * that case too. */
   double best_area = DBL_MAX;
-  POINT2D best_rect[5];
+  POINT2D best_rect[5] = {0};
   for (uint32_t i = 0; i < nangles; i++)
   {
     double angle = angles[i];

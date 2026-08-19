@@ -4500,6 +4500,16 @@ geom_buffer_meos(const GSERIALIZED *gs, double size, const char *params)
   }
 
   LWGEOM *res = meos_buffer(lwg, size, join_style, cap_style, mitre_limit);
+  /* A geometry the arc-exact buffer does not cover, such as one whose offset
+   * ring collapses or self-intersects, which the boundary overlay resolves
+   * only for the configurations it reaches */
+  if (! res)
+  {
+    meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
+      "The buffer of the geometry is not supported: %s", geo_out(gs));
+    lwgeom_free(lwg);
+    return NULL;
+  }
   GSERIALIZED *result = geo_serialize(res);
   lwgeom_free(lwg); lwgeom_free(res);
   return result;
