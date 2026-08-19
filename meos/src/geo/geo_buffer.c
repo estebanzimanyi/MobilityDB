@@ -3731,6 +3731,44 @@ meos_buffer_line(const LWLINE *line, double radius, JoinStyle join_style,
   }
   npoints = nvalid;
 
+  /* A closed line has no end to cap: its buffer is the band of twice the
+   * distance centred on it, whose two boundaries are the line offset to either
+   * side. The outer one bounds the surface and the inner one is its hole,
+   * which the line encloses only while it stays wider than the distance. */
+  if (npoints >= 4 && buffer_nodes_equal(points[0].x, points[0].y,
+        points[npoints - 1].x, points[npoints - 1].y))
+  {
+    POINTARRAY *ring = ptarray_construct_empty(LW_FALSE, LW_FALSE, npoints);
+    for (uint32_t i = 0; i < npoints; i++)
+      buffer_append_point(ring, points[i].x, points[i].y);
+    pfree(points);
+    bool outward = buffer_ring_outward_left(ring);
+    LWCOMPOUND *outer = buffer_ring(ring, radius, outward, join_style,
+      mitre_limit, srid);
+    if (! outer)
+    {
+      ptarray_free(ring);
+      return NULL;
+    }
+    LWCURVEPOLY *result = lwcurvepoly_construct_empty(srid, 0, 0);
+    lwcurvepoly_add_ring(result, lwcompound_as_lwgeom(outer));
+    LWCOMPOUND *inner = buffer_ring(ring, radius, ! outward, join_style,
+      mitre_limit, srid);
+    if (inner)
+      lwcurvepoly_add_ring(result, lwcompound_as_lwgeom(inner));
+    else if (! buffer_ring_is_convex(ring))
+    {
+      /* The hole is uncovered rather than absent: contracting a ring that is
+       * not convex may leave several holes, which the boundary overlay has to
+       * name */
+      lwgeom_free(lwcurvepoly_as_lwgeom(result));
+      ptarray_free(ring);
+      return NULL;
+    }
+    ptarray_free(ring);
+    return lwcurvepoly_as_lwgeom(result);
+  }
+
   /* Compute the direction and normal of every segment */
   double *dx = palloc(sizeof(double) * (npoints - 1));
   double *dy = palloc(sizeof(double) * (npoints - 1));
