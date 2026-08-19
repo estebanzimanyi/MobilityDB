@@ -2517,63 +2517,44 @@ buffer_ring_find_interior_point(const LWCOMPOUND *ring, int32_t srid,
 
     double mx, my;
     double nx, ny;
+    double scale;
     /* Straight edges */
-    if (edge->etype == EDGE_POLYARC)
+    if (edge->etype == EDGE_POLYSEG || edge->etype == EDGE_LINESEG)
     {
       mx = (edge->x1 + edge->x2) * 0.5;
       my = (edge->y1 + edge->y2) * 0.5;
       double length = hypot(edge->x2 - edge->x1, edge->y2 - edge->y1);
-      if (length == 0.0)
+      if (length <= 0.0)
         continue;
-      /* Unit normal to the left side of the directed edge */
+      /* Unit normal of the directed edge */
       nx = -(edge->y2 - edge->y1) / length;
       ny =  (edge->x2 - edge->x1) / length;
+      scale = length;
     }
     /* Circular arcs */
-    else if (edge->etype == EDGE_LINEARC || edge->etype == EDGE_POLYARC)
+    else if (edge->etype == EDGE_POLYARC || edge->etype == EDGE_LINEARC)
     {
       double sweep = edge->ccw ?
         angle_normalize(edge->theta1 - edge->theta0) :
         angle_normalize(edge->theta0 - edge->theta1);
-      if (sweep == 0.0 || edge->radius <= 0.0)
+      if (sweep <= 0.0 || edge->radius <= 0.0)
         continue;
       double theta = edge->ccw ?
         edge->theta0 + sweep * 0.5 : edge->theta0 - sweep * 0.5;
       mx = edge->cx + edge->radius * cos(theta);
       my = edge->cy + edge->radius * sin(theta);
-
-      /* The radial direction points away from the circle centre.
-       * For a CCW arc, the left-hand side is toward the centre;
-       * for a clockwise arc it is away from the centre. */
-      double rx = mx - edge->cx;
-      double ry = my - edge->cy;
-      double radius = hypot(rx, ry);
-      if (radius == 0.0)
-        continue;
-      if (edge->ccw)
-      {
-        nx = -rx / radius;
-        ny = -ry / radius;
-      }
-      else
-      {
-        nx = rx / radius;
-        ny = ry / radius;
-      }
+      /* The radial direction, which is the normal of the arc there */
+      nx = (mx - edge->cx) / edge->radius;
+      ny = (my - edge->cy) / edge->radius;
+      scale = edge->radius;
     }
     else
       continue;
 
-    /* Estimate a suitable displacement from the edge length/radius.
-     * The progressively smaller offsets make the test robust near
-     * narrow regions. */
-    double scale;
-    if (edge->etype == EDGE_POLYARC)
-      scale = hypot(edge->x2 - edge->x1, edge->y2 - edge->y1);
-    else
-      scale = edge->radius;
-    if (scale <= 0.0)
-      continue;
+    /* Estimate a suitable displacement from the edge length or radius. The
+     * progressively smaller ones keep the test usable in a narrow region, and
+     * both sides are tried because which one the ring encloses depends on its
+     * orientation. */
     double offsets[] = {
       scale * 1.0e-3,
       scale * 1.0e-4,
@@ -2583,26 +2564,29 @@ buffer_ring_find_interior_point(const LWCOMPOUND *ring, int32_t srid,
     };
     for (size_t k = 0; k < sizeof(offsets) / sizeof(offsets[0]); k++)
     {
-      double cx = mx + nx * offsets[k];
-      double cy = my + ny * offsets[k];
-      /* Construct the temporary areal geometry only for the
-       * containment test */
-      LWCOMPOUND *copy = (LWCOMPOUND *) lwgeom_clone(
-          lwcompound_as_lwgeom(ring));
-      LWGEOM *polygon = buffer_make_single_ring_polygon(copy, srid);
-      if (! polygon)
+      for (int side = 0; side < 2; side++)
       {
-        meos_array_destroy(arr);
-        return false;
-      }
-      bool inside = buffer_areal_contains_point(polygon, cx, cy);
-      lwgeom_free(polygon);
-      if (inside)
-      {
-        *x = cx;
-        *y = cy;
-        meos_array_destroy(arr);
-        return true;
+        double sign = side ? -1.0 : 1.0;
+        double cx = mx + sign * nx * offsets[k];
+        double cy = my + sign * ny * offsets[k];
+        /* The temporary areal geometry serves only the containment test */
+        LWCOMPOUND *copy = (LWCOMPOUND *) lwgeom_clone(
+            lwcompound_as_lwgeom(ring));
+        LWGEOM *polygon = buffer_make_single_ring_polygon(copy, srid);
+        if (! polygon)
+        {
+          meos_array_destroy(arr);
+          return false;
+        }
+        bool inside = buffer_areal_contains_point(polygon, cx, cy);
+        lwgeom_free(polygon);
+        if (inside)
+        {
+          *x = cx;
+          *y = cy;
+          meos_array_destroy(arr);
+          return true;
+        }
       }
     }
   }
@@ -3075,12 +3059,13 @@ buffer_build_surfaces_from_classified_rings(const MeosArray *classified,
     pfree(surfaces);
     return result;
   }
-  /* Several independent shells give a MULTISURFACE */
+  /* Several independent shells give a MULTISURFACE. lwcollection_construct()
+   * takes ownership of the geometry array, so surfaces must NOT be freed
+   * after this call. */
   LWCOLLECTION *collection = lwcollection_construct(MULTISURFACETYPE, srid,
     NULL, surface_count, surfaces);
   if (! collection)
     goto fail;
-  pfree(surfaces);
   return lwcollection_as_lwgeom(collection);
 
 fail:
@@ -3922,12 +3907,24 @@ meos_buffer_line(const LWLINE *line, double radius, JoinStyle join_style,
   }
 
   /* A CURVEPOLYGON can directly contain the compound curve */
-  LWCURVEPOLY *result = lwcurvepoly_construct_empty(srid, 0, 0);
-  lwcurvepoly_add_ring(result, lwcompound_as_lwgeom(ring));
+  LWCURVEPOLY *curvepoly = lwcurvepoly_construct_empty(srid, 0, 0);
+  lwcurvepoly_add_ring(curvepoly, lwcompound_as_lwgeom(ring));
 
   pfree(points); pfree(dx); pfree(dy); pfree(nx); pfree(ny); pfree(left);
   pfree(right);
-  return lwcurvepoly_as_lwgeom(result);
+
+  /* The offsets of two segments meeting at a sharp turn cross on the inner
+   * side, and the loop they leave is not part of the buffer. Naming the
+   * surfaces the crossing bounds takes the boundary overlay, so the geometry
+   * is reported as not supported rather than answered by a ring that bounds
+   * no surface. */
+  LWGEOM *result = lwcurvepoly_as_lwgeom(curvepoly);
+  if (buffer_boundary_self_intersects(result))
+  {
+    lwgeom_free(result);
+    return NULL;
+  }
+  return result;
 }
 
 /*****************************************************************************
