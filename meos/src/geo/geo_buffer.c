@@ -425,6 +425,81 @@ buffer_add_round_cap(LWCOMPOUND *curve, int32_t srid, POINT2D center,
     end_angle, ccw, &p1, &p2);
 }
 
+/**
+ * @brief Return the points of a piece of a compound curve
+ */
+static POINTARRAY *
+buffer_curve_points(const LWGEOM *geom)
+{
+  assert(geom);
+  switch (geom->type)
+  {
+    case LINETYPE:
+      return ((const LWLINE *) geom)->points;
+    case CIRCSTRINGTYPE:
+      return ((const LWCIRCSTRING *) geom)->points;
+    default:
+      return NULL;
+  }
+}
+
+/**
+ * @brief Weld every piece of a ring to the one before it, and the ring to
+ * itself
+ * @details Every piece of a ring is placed from the geometry it offsets, the
+ * arcs from the trigonometry of their centre and radius, so the point one
+ * piece ends on is the point the next one starts from only up to the rounding
+ * of the arithmetic that places it. Two pieces meeting a rounding step apart
+ * are not one boundary, and a ring whose ends differ by such a step is not a
+ * ring: the reader of a linear ring compares its endpoints exactly and
+ * refuses one that misses its start at all, and a joint that misses by the
+ * same residue reads as the boundary crossing itself there.
+ *
+ * The point a piece starts from is therefore taken from the piece before it
+ * rather than computed a second time, and the point the ring closes on from
+ * the piece it starts with.
+ * @param[in,out] ring Ring to weld
+ */
+static void
+buffer_ring_weld(LWCOMPOUND *ring)
+{
+  assert(ring);
+  if (ring->ngeoms == 0)
+    return;
+  POINTARRAY *first = buffer_curve_points(ring->geoms[0]);
+  if (! first || first->npoints == 0)
+    return;
+  /* Every piece starts where the one before it ends */
+  POINTARRAY *prev = first;
+  for (uint32_t i = 1; i < ring->ngeoms; i++)
+  {
+    POINTARRAY *points = buffer_curve_points(ring->geoms[i]);
+    if (! points || points->npoints == 0)
+      return;
+    POINT4D end;
+    getPoint4d_p(prev, prev->npoints - 1, &end);
+    ptarray_set_point4d(points, 0, &end);
+    prev = points;
+  }
+  /* And the ring ends where it starts */
+  POINT4D start;
+  getPoint4d_p(first, 0, &start);
+  ptarray_set_point4d(prev, prev->npoints - 1, &start);
+}
+
+/**
+ * @brief Add a ring to a curve polygon, closed on the point it starts from
+ * @param[in,out] poly Curve polygon the ring is added to
+ * @param[in,out] ring Ring to add
+ */
+static void
+buffer_curvepoly_add_ring(LWCURVEPOLY *poly, LWCOMPOUND *ring)
+{
+  assert(poly); assert(ring);
+  buffer_ring_weld(ring);
+  lwcurvepoly_add_ring(poly, lwcompound_as_lwgeom(ring));
+}
+
 /*****************************************************************************
  * Buffer intersection
  *****************************************************************************/
@@ -2496,7 +2571,7 @@ buffer_make_single_ring_polygon(LWCOMPOUND *ring, int32_t srid)
   LWCURVEPOLY *polygon = lwcurvepoly_construct_empty(srid, 0, 0);
   if (! polygon)
     return NULL;
-  lwcurvepoly_add_ring(polygon, lwcompound_as_lwgeom(ring));
+  buffer_curvepoly_add_ring(polygon, ring);
   return lwcurvepoly_as_lwgeom(polygon);
 }
 
@@ -3039,7 +3114,7 @@ buffer_build_surfaces_from_classified_rings(const MeosArray *classified,
       lwgeom_free(lwcurvepoly_as_lwgeom(polygon));
       goto fail;
     }
-    lwcurvepoly_add_ring(polygon, lwcompound_as_lwgeom(shell_ring));
+    buffer_curvepoly_add_ring(polygon, shell_ring);
     /* Attach only the holes whose immediate shell is this shell */
     for (uint32_t j = 0; j < classified->count; j++)
     {
@@ -3061,7 +3136,7 @@ buffer_build_surfaces_from_classified_rings(const MeosArray *classified,
         lwgeom_free(lwcurvepoly_as_lwgeom(polygon));
         goto fail;
       }
-      lwcurvepoly_add_ring(polygon, lwcompound_as_lwgeom(hole_ring));
+      buffer_curvepoly_add_ring(polygon, hole_ring);
     }
     surfaces[surface_count++] = lwcurvepoly_as_lwgeom(polygon);
   }
@@ -3968,9 +4043,9 @@ meos_buffer_curve(const LWGEOM *geom, double radius, JoinStyle join_style,
       return NULL;
     }
     LWCURVEPOLY *result = lwcurvepoly_construct_empty(srid, 0, 0);
-    lwcurvepoly_add_ring(result, lwcompound_as_lwgeom(outer));
+    buffer_curvepoly_add_ring(result, outer);
     if (has_hole)
-      lwcurvepoly_add_ring(result, lwcompound_as_lwgeom(inner));
+      buffer_curvepoly_add_ring(result, inner);
     else
       lwgeom_free(lwcompound_as_lwgeom(inner));
     return lwcurvepoly_as_lwgeom(result);
@@ -4037,7 +4112,7 @@ meos_buffer_curve(const LWGEOM *geom, double radius, JoinStyle join_style,
   }
 
   LWCURVEPOLY *curvepoly = lwcurvepoly_construct_empty(srid, 0, 0);
-  lwcurvepoly_add_ring(curvepoly, lwcompound_as_lwgeom(ring));
+  buffer_curvepoly_add_ring(curvepoly, ring);
   LWGEOM *result = lwcurvepoly_as_lwgeom(curvepoly);
   if (buffer_boundary_self_intersects(result))
   {
@@ -4089,7 +4164,7 @@ meos_buffer_curvepoly(const LWCURVEPOLY *curvepoly, double radius,
       lwgeom_free(lwcurvepoly_as_lwgeom(result));
       return NULL;
     }
-    lwcurvepoly_add_ring(result, lwcompound_as_lwgeom(ring));
+    buffer_curvepoly_add_ring(result, ring);
   }
   LWGEOM *geom = lwcurvepoly_as_lwgeom(result);
   if (buffer_boundary_self_intersects(geom))
@@ -4319,11 +4394,11 @@ meos_buffer_line_offset(const LWLINE *line, double radius,
       return NULL;
     }
     LWCURVEPOLY *result = lwcurvepoly_construct_empty(srid, 0, 0);
-    lwcurvepoly_add_ring(result, lwcompound_as_lwgeom(outer));
+    buffer_curvepoly_add_ring(result, outer);
     LWCOMPOUND *inner = buffer_ring(ring, radius, ! outward, join_style,
       mitre_limit, srid);
     if (inner)
-      lwcurvepoly_add_ring(result, lwcompound_as_lwgeom(inner));
+      buffer_curvepoly_add_ring(result, inner);
     else if (! buffer_ring_is_convex(ring))
     {
       /* The hole is uncovered rather than absent: contracting a ring that is
@@ -4491,7 +4566,7 @@ meos_buffer_line_offset(const LWLINE *line, double radius,
 
   /* A CURVEPOLYGON can directly contain the compound curve */
   LWCURVEPOLY *curvepoly = lwcurvepoly_construct_empty(srid, 0, 0);
-  lwcurvepoly_add_ring(curvepoly, lwcompound_as_lwgeom(ring));
+  buffer_curvepoly_add_ring(curvepoly, ring);
 
   pfree(points); pfree(dx); pfree(dy); pfree(nx); pfree(ny); pfree(left);
   pfree(right);
@@ -4801,7 +4876,7 @@ meos_buffer_poly(const LWPOLY *poly, double radius, JoinStyle join_style,
 
   /* Construct the curved polygon */
   LWCURVEPOLY *result = lwcurvepoly_construct_empty(srid, 0, 0);
-  lwcurvepoly_add_ring(result, lwcompound_as_lwgeom(exterior));
+  buffer_curvepoly_add_ring(result, exterior);
 
   /* Holes.
    * A positive polygon buffer contracts the holes. Therefore the
@@ -4819,7 +4894,7 @@ meos_buffer_poly(const LWPOLY *poly, double radius, JoinStyle join_style,
       lwgeom_free(lwcurvepoly_as_lwgeom(result));
       return NULL;
     }
-    lwcurvepoly_add_ring(result, lwcompound_as_lwgeom(hole));
+    buffer_curvepoly_add_ring(result, hole);
   }
 
   /* A ring contracted past the width of the polygon crosses itself, and it
