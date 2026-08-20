@@ -41,6 +41,7 @@
 #include <liblwgeom.h>
 /* MEOS */
 #include <meos.h>
+#include <meos_geo.h>
 
 /*****************************************************************************/
 
@@ -122,6 +123,9 @@ extern bool meos_relate(const LWGEOM *g1, const LWGEOM *g2, char result[10]);
 extern bool meos_relate_pattern(const LWGEOM *g1, const LWGEOM *g2,
   const char *pattern);
 extern bool de9im_match(const char matrix[10], const char pattern[10]);
+extern bool geom_relate_supported(const LWGEOM *g1, const LWGEOM *g2);
+extern bool meos_spatialrel(const LWGEOM *g1, const LWGEOM *g2, spatialRel rel,
+  bool *result);
 
 /*****************************************************************************/
 

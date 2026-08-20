@@ -7,7 +7,7 @@ SELECT COUNT(*) FROM tbl_geometry, tbl_tcbuffer WHERE aContains(g, temp);
 SELECT COUNT(*) FROM tbl_tcbuffer, tbl_geometry WHERE eContains(temp, g);
  count 
 -------
-  5153
+  5148
 (1 row)
 
 SELECT COUNT(*) FROM tbl_tcbuffer, tbl_geometry WHERE aContains(temp, g);

@@ -60,6 +60,13 @@
 #include "temporal/type_util.h"
 #include "geo/geo_poly_clip.h"  /* clip_poly_poly fast-path for polygon ∩/− polygon */
 #include "geo/geo_funcs.h"
+
+/* Whether the build carries GEOS to answer what the native engine declines */
+#if GEOS
+  #define GEOS_PRESENT true
+#else
+  #define GEOS_PRESENT false
+#endif
 #include "geo/meos_transform.h"
 #include "geo/tgeo.h"
 #include "geo/tgeo_spatialfuncs.h"
@@ -1902,9 +1909,35 @@ geom_spatialrel(const GSERIALIZED *gs1, const GSERIALIZED *gs2, spatialRel rel)
       (gserialized_is_point(gs1) && gserialized_is_poly(gs2))))
     return meos_point_in_polygon(gs1, gs2, TOUCHES);
 
-  /* Call GEOS function */
+  /*
+   * The native DE-9IM engine answers every pair it covers, which is every
+   * geometry the edge decomposition reaches outside collections, and it does
+   * so without the round-trip into the GEOS geometry model that the call
+   * below pays on every invocation.
+   */
   assert(rel == INTERSECTS || rel == CONTAINS || rel == TOUCHES ||
     rel == COVERS);
+  if (! FLAGS_GET_GEODETIC(gs1->gflags) && ! FLAGS_GET_GEODETIC(gs2->gflags))
+  {
+    LWGEOM *g1 = lwgeom_from_gserialized(gs1);
+    LWGEOM *g2 = lwgeom_from_gserialized(gs2);
+    /* A geometry holding a circular arc has no counterpart in the GEOS
+     * geometry model, so the conversion below replaces each arc with a chain
+     * of chords and the answer is the one those chords give. The native
+     * engine intersects the arc itself, so it is asked first for such a pair
+     * whatever the build carries. For a geometry of straight edges the two
+     * answer alike, and GEOS is asked first because it answers faster. */
+    bool curved = lwgeom_has_arc(g1) || lwgeom_has_arc(g2);
+    bool covered = false, result = false;
+    if (curved || ! GEOS_PRESENT)
+      covered = geom_relate_supported(g1, g2) &&
+        meos_spatialrel(g1, g2, rel, &result);
+    lwgeom_free(g1); lwgeom_free(g2);
+    if (covered)
+      return result;
+  }
+
+  /* Call GEOS function */
 #if GEOS
   switch (rel)
   {
@@ -2024,6 +2057,21 @@ geom_relate_pattern(const GSERIALIZED *gs1, const GSERIALIZED *gs2, char *p)
     return false;
 
   /* TODO handle empty */
+
+  /* The native DE-9IM engine answers every pair it covers, without the
+   * round-trip into the GEOS geometry model the call below pays */
+  {
+    LWGEOM *g1 = lwgeom_from_gserialized(gs1);
+    LWGEOM *g2 = lwgeom_from_gserialized(gs2);
+    char matrix[10];
+    bool curved = lwgeom_has_arc(g1) || lwgeom_has_arc(g2);
+    bool covered = (curved || ! GEOS_PRESENT) &&
+      geom_relate_supported(g1, g2) && meos_relate(g1, g2, matrix);
+    lwgeom_free(g1); lwgeom_free(g2);
+    if (covered)
+      return de9im_match(matrix, p);
+  }
+
 #if ! GEOS
   /* The native matrix above answers every geometry it covers, and a build
    * carrying no GEOS has nothing to answer the others with */

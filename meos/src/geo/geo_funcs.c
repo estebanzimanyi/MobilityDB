@@ -4603,6 +4603,50 @@ meos_relate(const LWGEOM *g1, const LWGEOM *g2, char result[10])
 }
 
 /**
+ * @brief Return whether two geometries stand in one of the spatial
+ * relationships MEOS asks for
+ * @details Each relationship is the pattern the standard gives it, matched
+ * against the DE-9IM matrix, so the four share the one engine and hold the
+ * pattern in one place. Two geometries intersect where they are not disjoint;
+ * one contains another where their interiors meet and nothing of the other
+ * falls outside; they touch where their interiors do not meet while a boundary
+ * meets the other geometry; and one covers another where nothing of the other
+ * falls outside, whichever part of the first it meets.
+ * @param[in] g1,g2 Geometries
+ * @param[in] rel Relationship asked for
+ * @param[out] result True if the geometries stand in the relationship
+ * @return True if the pair is covered
+ */
+bool
+meos_spatialrel(const LWGEOM *g1, const LWGEOM *g2, spatialRel rel,
+  bool *result)
+{
+  assert(g1); assert(g2); assert(result);
+  char m[10];
+  if (! meos_relate(g1, g2, m))
+    return false;
+  switch (rel)
+  {
+    case INTERSECTS:
+      *result = ! de9im_match(m, "FF*FF****");
+      return true;
+    case CONTAINS:
+      *result = de9im_match(m, "T*****FF*");
+      return true;
+    case TOUCHES:
+      *result = de9im_match(m, "FT*******") || de9im_match(m, "F**T*****") ||
+        de9im_match(m, "F***T****");
+      return true;
+    case COVERS:
+      *result = de9im_match(m, "T*****FF*") || de9im_match(m, "*T****FF*") ||
+        de9im_match(m, "***T**FF*") || de9im_match(m, "****T*FF*");
+      return true;
+    default:
+      return false;
+  }
+}
+
+/**
  * @brief Return true if two geometries satisfy a DE-9IM pattern
  */
 bool
