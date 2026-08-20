@@ -2130,7 +2130,6 @@ meos_is_simple(const LWGEOM *geom, bool *result)
   }
 }
 
-
 /*****************************************************************************
  * DE-9IM / ST_Relate
  *****************************************************************************/
@@ -2170,6 +2169,25 @@ de9im_init(MeosDE9IM *m)
   m->ei = -1;
   m->eb = -1;
   m->ee = -1;
+  return;
+}
+
+static POINT2D *relate_linear_boundary_points(Edge **edges, int nedges,
+  int *count);
+
+/**
+ * @brief Accumulate a dimension into a DE-9IM cell
+ * @details A cell records the @b maximum dimension of the corresponding
+ * intersection, so a contribution can only raise it. Assigning instead of
+ * accumulating lets a later zero-dimensional contribution overwrite an
+ * earlier one-dimensional one, which makes the matrix depend on the order in
+ * which the edge pairs happen to be visited
+ */
+static inline void
+de9im_add(int8_t *cell, int8_t dim)
+{
+  if (dim > *cell)
+    *cell = dim;
   return;
 }
 
@@ -2283,6 +2301,7 @@ relate_is_areal(const LWGEOM *geom)
   }
 }
 
+
 /**
  * @brief Return true if a geometry is a point geometry
  */
@@ -2391,39 +2410,6 @@ relate_point_in_area(double x, double y, Edge **edges, int nedges)
  * Point / Point
  *****************************************************************************/
 
-/**
- * @brief 
- */
-static void
-relate_point_point(const LWGEOM *g1, const LWGEOM *g2, MeosDE9IM *m)
-{
-  const LWPOINT *p1 = (const LWPOINT *) g1;
-  const LWPOINT *p2 = (const LWPOINT *) g2;
-
-  /* Empty points have empty interiors and therefore everything is exterior */
-  if (! p1->point || ! p2->point || p1->point->npoints == 0 ||
-      p2->point->npoints == 0)
-  {
-    m->ee = 2;
-    return;
-  }
-
-  POINT4D a, b;
-  getPoint4d_p(p1->point, 0, &a);
-  getPoint4d_p(p2->point, 0, &b);
-  if (fabs(a.x - b.x) <= FP_TOLERANCE && fabs(a.y - b.y) <= FP_TOLERANCE)
-  {
-    m->ii = 0;
-    m->ee = 2;
-  }
-  else
-  {
-    m->ie = 0;
-    m->ei = 0;
-    m->ee = 2;
-  }
-}
-
 /*****************************************************************************
  * Linear geometry boundary handling
  *****************************************************************************/
@@ -2524,82 +2510,217 @@ relate_point_in_linear(double x, double y, Edge **edges, int nedges)
   return 0;
 }
 
-/*****************************************************************************
- * Point / Linear
- *****************************************************************************/
+/**
+ * @brief Return the points of a point geometry
+ * @details A multipoint and a collection share the collection memory layout,
+ * so a point geometry is walked to any depth the same way #geom_extract_edges
+ * walks one. Reading the components of a collection as points instead reads a
+ * nested multipoint as a point
+ */
+static int
+relate_count_points(const LWGEOM *geom)
+{
+  if (! geom || lwgeom_is_empty(geom))
+    return 0;
+  if (geom->type == POINTTYPE)
+    return 1;
+  if (geom->type != MULTIPOINTTYPE && geom->type != COLLECTIONTYPE)
+    return 0;
+  const LWCOLLECTION *col = (const LWCOLLECTION *) geom;
+  int result = 0;
+  for (uint32_t i = 0; i < col->ngeoms; i++)
+    result += relate_count_points(col->geoms[i]);
+  return result;
+}
 
 /**
- * @brief 
+ * @brief Append the points of a point geometry to an array
+ */
+static void
+relate_extract_points_iter(const LWGEOM *geom, POINT2D *result, int *count)
+{
+  if (! geom || lwgeom_is_empty(geom))
+    return;
+  if (geom->type == POINTTYPE)
+  {
+    POINT4D p;
+    getPoint4d_p(((const LWPOINT *) geom)->point, 0, &p);
+    result[*count].x = p.x;
+    result[*count].y = p.y;
+    (*count)++;
+    return;
+  }
+  if (geom->type != MULTIPOINTTYPE && geom->type != COLLECTIONTYPE)
+    return;
+  const LWCOLLECTION *col = (const LWCOLLECTION *) geom;
+  for (uint32_t i = 0; i < col->ngeoms; i++)
+    relate_extract_points_iter(col->geoms[i], result, count);
+  return;
+}
+
+/**
+ * @brief Return the points of a point geometry
+ * @details A POINT and a MULTIPOINT are the same kind of set to the relation,
+ * one of them holding a single element, so both are related by the same code
+ * @param[in] geom Point geometry
+ * @param[out] count Number of points, zero for an empty geometry
+ */
+static POINT2D *
+relate_extract_points(const LWGEOM *geom, int *count)
+{
+  POINT2D *result = palloc(sizeof(POINT2D) *
+    (size_t) (relate_count_points(geom) + 1));
+  *count = 0;
+  relate_extract_points_iter(geom, result, count);
+  return result;
+}
+
+/**
+ * @brief Return true if a point belongs to a set of points
+ */
+static bool
+relate_point_in_points(double x, double y, const POINT2D *points, int count)
+{
+  for (int i = 0; i < count; i++)
+  {
+    if (relate_same_point(x, y, points[i].x, points[i].y))
+      return true;
+  }
+  return false;
+}
+
+/**
+ * @brief Compute the DE-9IM matrix for two point geometries
+ * @details A point geometry is its own interior and has an empty boundary, so
+ * the boundary row and the boundary column stay F and the two interiors are
+ * compared element by element
+ */
+static void
+relate_point_point(const LWGEOM *g1, const LWGEOM *g2, MeosDE9IM *m)
+{
+  int n1, n2;
+  POINT2D *p1 = relate_extract_points(g1, &n1);
+  POINT2D *p2 = relate_extract_points(g2, &n2);
+
+  for (int i = 0; i < n1; i++)
+  {
+    if (relate_point_in_points(p1[i].x, p1[i].y, p2, n2))
+      de9im_add(&m->ii, 0);
+    else
+      de9im_add(&m->ie, 0);
+  }
+  for (int i = 0; i < n2; i++)
+  {
+    if (! relate_point_in_points(p2[i].x, p2[i].y, p1, n1))
+      de9im_add(&m->ei, 0);
+  }
+
+  de9im_add(&m->ee, 2);
+  pfree(p1); pfree(p2);
+  return;
+}
+
+/**
+ * @brief Compute the DE-9IM matrix for a point geometry and a linear geometry
  */
 static void
 relate_point_linear(const LWGEOM *point_geom, const LWGEOM *line_geom,
   MeosDE9IM *m)
 {
-  const LWPOINT *point = (const LWPOINT *) point_geom;
-  if (!point->point || point->point->npoints == 0)
-  {
-    m->ee = 2;
-    return;
-  }
-
-  POINT4D p;
-  getPoint4d_p(point->point, 0, &p);
+  int np;
+  POINT2D *points = relate_extract_points(point_geom, &np);
   MeosArray *arr = geom_extract_edges(line_geom);
   int nedges = (int) arr->count;
-  Edge **edges = palloc(sizeof(Edge *) * nedges);
+  Edge **edges = palloc(sizeof(Edge *) * (size_t) (nedges + 1));
   for (int i = 0; i < nedges; i++)
     edges[i] = (Edge *) meos_array_get(arr, i);
 
-  /* Classify the point against the complete linear geometry */
-  int loc = relate_point_in_linear(p.x, p.y, edges, nedges);
-  switch (loc)
+  /* Each point lies in the interior of the linear geometry, on its Mod-2
+   * boundary, or outside it. A point geometry has an empty boundary, so its
+   * boundary row stays F */
+  for (int i = 0; i < np; i++)
   {
-    case 0:
-      /* Point is in the interior of the line */
-      m->ii = 0;
-      break;
-    case 1:
-      /* Point is on the boundary of the line */
-      m->ib = 0;
-      break;
-    case 2:
-      /* Point is in the exterior of the line */
-      m->ie = 0;
-      break;
-  }
-
-  /* A non-empty linear geometry has a 1-dimensional interior */
-  m->ei = 1;
-
-  /* The boundary of a linear geometry is 0-dimensional if non-empty.
-   * We determine whether the geometry has at least one odd endpoint. */
-  bool has_boundary = false;
-
-  for (int i = 0; i < nedges && !has_boundary; i++)
-  {
-    const Edge *e = edges[i];
-    if (e->etype != EDGE_LINESEG && e->etype != EDGE_LINEARC)
-      continue;
-    if (!relate_edge_nonempty(e))
-      continue;
-    /* Test the endpoint against the complete linear geometry.
-     * If it has odd endpoint parity, it belongs to the boundary. */
-    if (relate_point_on_linear_boundary(e->x1, e->y1, edges, nedges) ||
-        relate_point_on_linear_boundary(e->x2, e->y2, edges, nedges))
+    switch (relate_point_in_linear(points[i].x, points[i].y, edges, nedges))
     {
-      has_boundary = true;
+      case 0:
+        de9im_add(&m->ii, 0);
+        break;
+      case 1:
+        de9im_add(&m->ib, 0);
+        break;
+      default:
+        de9im_add(&m->ie, 0);
+        break;
     }
   }
 
-  if (has_boundary)
-    m->bi = 0;
+  /* Removing a finite set of points from a linear geometry leaves a
+   * 1-dimensional part of its interior outside them */
+  de9im_add(&m->ei, 1);
 
-  /* The exterior of a non-empty linear geometry is 2-dimensional. */
-  m->ee = 2;
+  /* Each Mod-2 boundary point of the linear geometry that is none of the
+   * points lies in their exterior */
+  int nb;
+  POINT2D *bpts = relate_linear_boundary_points(edges, nedges, &nb);
+  for (int i = 0; i < nb; i++)
+  {
+    if (relate_point_in_points(bpts[i].x, bpts[i].y, points, np))
+      continue;
+    de9im_add(&m->eb, 0);
+    break;
+  }
 
-  pfree(edges); meos_array_destroy(arr);
+  de9im_add(&m->ee, 2);
+  pfree(bpts); pfree(points); pfree(edges); meos_array_destroy(arr);
   return;
 }
+
+/**
+ * @brief Compute the DE-9IM matrix for a point geometry and an areal geometry
+ */
+static void
+relate_point_area(const LWGEOM *point_geom, const LWGEOM *area_geom,
+  MeosDE9IM *m)
+{
+  int np;
+  POINT2D *points = relate_extract_points(point_geom, &np);
+  MeosArray *arr = geom_extract_edges(area_geom);
+  int nedges = (int) arr->count;
+  Edge **edges = palloc(sizeof(Edge *) * (size_t) (nedges + 1));
+  for (int i = 0; i < nedges; i++)
+    edges[i] = (Edge *) meos_array_get(arr, i);
+
+  /* Each point lies in the interior of the area, on its boundary, or outside
+   * it. A point geometry has an empty boundary, so its boundary row stays F */
+  for (int i = 0; i < np; i++)
+  {
+    switch (relate_point_in_area(points[i].x, points[i].y, edges, nedges))
+    {
+      case 0:
+        de9im_add(&m->ii, 0);
+        break;
+      case 1:
+        de9im_add(&m->ib, 0);
+        break;
+      default:
+        de9im_add(&m->ie, 0);
+        break;
+    }
+  }
+
+  /* The interior of an areal geometry is two-dimensional and its boundary is
+   * one-dimensional, and a finite set of points covers neither */
+  de9im_add(&m->ei, 2);
+  de9im_add(&m->eb, 1);
+  de9im_add(&m->ee, 2);
+
+  pfree(points); pfree(edges); meos_array_destroy(arr);
+  return;
+}
+
+/*****************************************************************************
+ * Point / Linear
+ *****************************************************************************/
 
 /*****************************************************************************
  * Linear / Point
@@ -2648,293 +2769,36 @@ relate_linear_point(const LWGEOM *line_geom, const LWGEOM *point_geom,
  *****************************************************************************/
 
 /**
- * @brief Determine the location of a point relative to a linear geometry.
- * @details  Convenience wrapper used by the linear/linear DE-9IM computation.
+ * @brief Return true if an intersection between two linear edges contains
+ * a one-dimensional portion, and report the covered parameter interval
+ * @details The function preserves the exact line/arc intersection
+ * @param[in] a,b Edges to intersect
+ * @param[out] t0,t1 Interval of @p a covered by @p b, only set on success
  */
-static int
-relate_linear_point_location(double x, double y, Edge **edges, int nedges)
+static bool
+relate_linear_edges_overlap(const Edge *a, const Edge *b, double *t0,
+  double *t1)
 {
-  return relate_point_in_linear(x, y, edges, nedges);
-}
-
-/**
- * @brief Determine whether two linear edges intersect.
- * @details Return:
- *   0 = no intersection
- *   1 = point intersection
- *   2 = one-dimensional overlap
- */
-static int
-relate_linear_edges_intersection(const Edge *a, const Edge *b)
-{
-  /* Line / line */
   if (a->etype == EDGE_LINESEG && b->etype == EDGE_LINESEG)
   {
     IntersectResult r = linesegm_intersect(a->x1, a->y1, a->dx, a->dy,
         b->x1, b->y1, b->x2, b->y2);
-    if (r.type == INTERSECT_OVERLAP)
-      return 2;
-    if (r.type == INTERSECT_POINT)
-      return 1;
-    return 0;
+    if (r.type != INTERSECT_OVERLAP)
+      return false;
+    /* The parameters are expressed on the first edge */
+    *t0 = r.t0;
+    *t1 = r.t1;
+    return true;
   }
 
-  /* Line / arc */
-  if (a->etype == EDGE_LINESEG && b->etype == EDGE_LINEARC)
-  {
-    double roots[2];
-    int n = arcsegm_intersect(a->x1, a->y1, a->dx, a->dy, b, roots);
-    return n > 0 ? 1 : 0;
-  }
-
-  /* Arc / line */
-  if (a->etype == EDGE_LINEARC && b->etype == EDGE_LINESEG)
-  {
-    double roots[2];
-    int n = arcsegm_intersect(b->x1, b->y1, b->dx, b->dy, a, roots);
-    return n > 0 ? 1 : 0;
-  }
-
-  /* Arc / arc */
-  if (a->etype == EDGE_LINEARC && b->etype == EDGE_LINEARC)
-  {
-    return arcarc_intersect(a, b) ? 1 : 0;
-  }
-  return 0;
-}
-
-/**
- * @brief Compute the DE-9IM matrix for two linear geometries.
- * @details The implementation distinguishes:
- *   II = interior/interior
- *   IB = interior/boundary
- *   BI = boundary/interior
- *   BB = boundary/boundary
- * while retaining exact line/arc intersection.
- */
-static void
-relate_linear_linear(const LWGEOM *g1, const LWGEOM *g2, MeosDE9IM *m)
-{
-  MeosArray *a1 = geom_extract_edges(g1);
-  MeosArray *a2 = geom_extract_edges(g2);
-  int n1 = (int) a1->count;
-  int n2 = (int) a2->count;
-  Edge **e1 = palloc(sizeof(Edge *) * n1);
-  Edge **e2 = palloc(sizeof(Edge *) * n2);
-  for (int i = 0; i < n1; i++)
-    e1[i] = (Edge *) meos_array_get(a1, i);
-  for (int i = 0; i < n2; i++)
-    e2[i] = (Edge *) meos_array_get(a2, i);
-
-  /* First determine whether the two interiors have a one-dimensional
-  * intersection. */
-  bool interior_overlap = false;
-
-  /*
-   * Point intersections need further classification:
-   *   II
-   *   IB
-   *   BI
-   *   BB
-   * depending on whether the intersection point is in the interior or boundary
-   * of each complete linear geometry.
-   */
-  bool ii_point = false;
-  bool ib_point = false;
-  bool bi_point = false;
-  bool bb_point = false;
-  for (int i = 0; i < n1; i++)
-  {
-    const Edge *a = e1[i];
-    if (a->etype != EDGE_LINESEG && a->etype != EDGE_LINEARC)
-      continue;
-    for (int j = 0; j < n2; j++)
-    {
-      const Edge *b = e2[j];
-      if (b->etype != EDGE_LINESEG && b->etype != EDGE_LINEARC)
-        continue;
-      int type = relate_linear_edges_intersection(a, b);
-      if (type == 2)
-      {
-        /* A line/line overlap is necessarily an interior/interior
-         * one-dimensional intersection */
-        interior_overlap = true;
-        continue;
-      }
-      if (type != 1)
-        continue;
-
-      /*
-       * We have a point intersection. The existing intersection
-       * routines do not return the point itself, so use the
-       * endpoints of the participating edges as candidates.
-       *
-       * For line/arc and arc/arc intersections, the endpoints alone
-       * are insufficient in the general case. Therefore we classify
-       * the endpoints first, and leave the dimensional intersection
-       * represented by II when the intersection is not a boundary
-       * endpoint.
-       */
-
-      double candidates_x[4];
-      double candidates_y[4];
-      int ncandidates = 0;
-
-      candidates_x[ncandidates] = a->x1;
-      candidates_y[ncandidates++] = a->y1;
-
-      candidates_x[ncandidates] = a->x2;
-      candidates_y[ncandidates++] = a->y2;
-
-      candidates_x[ncandidates] = b->x1;
-      candidates_y[ncandidates++] = b->y1;
-
-      candidates_x[ncandidates] = b->x2;
-      candidates_y[ncandidates++] = b->y2;
-
-      bool classified = false;
-      for (int k = 0; k < ncandidates; k++)
-      {
-        double x = candidates_x[k];
-        double y = candidates_y[k];
-        bool on_a = (a->etype == EDGE_LINESEG) ?
-          point_on_segment(x, y, a->x1, a->y1, a->x2, a->y2) :
-          point_on_arc(x, y, a);
-        bool on_b = (b->etype == EDGE_LINESEG) ?
-          point_on_segment(x, y, b->x1, b->y1, b->x2, b->y2) :
-          point_on_arc(x, y, b);
-        if (! on_a || ! on_b)
-          continue;
-        int loc1 = relate_linear_point_location(x, y, e1, n1);
-        int loc2 = relate_linear_point_location(x, y, e2, n2);
-        if (loc1 == 0 && loc2 == 0)
-          ii_point = true;
-        else if (loc1 == 0 && loc2 == 1)
-          ib_point = true;
-        else if (loc1 == 1 && loc2 == 0)
-          bi_point = true;
-        else if (loc1 == 1 && loc2 == 1)
-          bb_point = true;
-        classified = true;
-      }
-
-      /*
-       * If this was a genuine line/arc or arc/arc intersection occurring away
-       * from endpoints, it belongs to the interiors. This preserves the exact
-       * arc engine rather than polygonizing the arc.
-       */
-      if (!classified)
-        ii_point = true;
-    }
-  }
-
-  /* II */
-  if (interior_overlap)
-    m->ii = 1;
-  else if (ii_point)
-    m->ii = 0;
-
-  /* IB, BI and BB */
-  if (ib_point)
-    m->ib = 0;
-  if (bi_point)
-    m->bi = 0;
-  if (bb_point)
-    m->bb = 0;
-
-  /* Determine whether the boundaries themselves are non-empty */
-  bool boundary1 = false;
-  bool boundary2 = false;
-  for (int i = 0; i < n1 && !boundary1; i++)
-  {
-    const Edge *e = e1[i];
-    if (e->etype != EDGE_LINESEG && e->etype != EDGE_LINEARC)
-      continue;
-    if (!relate_edge_nonempty(e))
-      continue;
-    if (relate_point_on_linear_boundary(e->x1, e->y1, e1, n1) ||
-        relate_point_on_linear_boundary(e->x2, e->y2, e1, n1))
-      boundary1 = true;
-  }
-
-  for (int i = 0; i < n2 && !boundary2; i++)
-  {
-    const Edge *e = e2[i];
-    if (e->etype != EDGE_LINESEG && e->etype != EDGE_LINEARC)
-      continue;
-    if (!relate_edge_nonempty(e))
-      continue;
-    if (relate_point_on_linear_boundary(e->x1, e->y1, e2, n2) ||
-        relate_point_on_linear_boundary(e->x2, e->y2, e2, n2))
-      boundary2 = true;
-  }
-
-  /*
-   * The boundary/exterior intersections are non-empty whenever the
-   * corresponding boundary exists and the other geometry does not contain the
-   * entire boundary.
-   * For ordinary finite linear geometries the exterior is two-dimensional.
-   */
-  if (boundary1)
-    m->be = 0;
-  if (boundary2)
-    m->eb = 0;
-  m->ee = 2;
-
-  pfree(e1); pfree(e2); meos_array_destroy(a1); meos_array_destroy(a2);
-  return;
+  /* A line and a circular arc can intersect only in points unless
+   * the line is degenerate, which is excluded here. */
+  return false;
 }
 
 /*****************************************************************************
  * Point / Area
  *****************************************************************************/
-
-/**
- * @brief 
- */
-static void
-relate_point_area(const LWGEOM *point_geom, const LWGEOM *area_geom,
-  MeosDE9IM *m)
-{
-  const LWPOINT *point = (const LWPOINT *) point_geom;
-  if (! point->point || point->point->npoints == 0)
-  {
-    m->ee = 2;
-    return;
-  }
-
-  POINT4D p;
-  getPoint4d_p(point->point, 0, &p);
-  MeosArray *arr = geom_extract_edges(area_geom);
-  int nedges = (int) arr->count;
-  Edge **edges = palloc(sizeof(Edge *) * nedges);
-  for (int i = 0; i < nedges; i++)
-    edges[i] = (Edge *) meos_array_get(arr, i);
-
-  int loc = relate_point_in_area(p.x, p.y, edges, nedges);
-  switch (loc)
-  {
-    case 0:
-      m->ii = 0;
-      break;
-    case 1:
-      m->ib = 0;
-      break;
-    default:
-      m->ie = 0;
-      break;
-  }
-
-  /* The area interior has dimension 2 */
-  m->ei = 2;
-
-  /* Boundary has dimension 1 */
-  m->eb = 1;
-  m->ee = 2;
-
-  pfree(edges); meos_array_destroy(arr);
-  return;
-}
 
 /*****************************************************************************
  * Area / Point
@@ -3372,15 +3236,15 @@ relate_linear_area_interval(const Edge *line, double t0, double t1,
     case 0:
       /* A non-zero open portion of the linear geometry is inside
        * the area: I/I has dimension 1. */
-      m->ii = 1;
+      de9im_add(&m->ii, 1);
       break;
     case 1:
       /* A non-zero open portion coincides with the area boundary. */
-      m->ib = 1;
+      de9im_add(&m->ib, 1);
       break;
     case 2:
       /* A non-zero open portion is outside the area. */
-      m->ie = 1;
+      de9im_add(&m->ie, 1);
       break;
   }
   return;
@@ -3399,6 +3263,360 @@ relate_parameter_cmp(const void *a, const void *b)
   if (da > db)
     return 1;
   return 0;
+}
+
+/*****************************************************************************
+ * Linear / Linear
+ *****************************************************************************/
+
+/**
+ * @brief Structure keeping a parameter interval of an edge
+ */
+typedef struct
+{
+  double t0;    /**< Start parameter, in [0,1] */
+  double t1;    /**< End parameter, in [0,1], never less than t0 */
+} RelateInterval;
+
+/**
+ * @brief Comparator ordering parameter intervals by their start
+ */
+static int
+relate_interval_cmp(const void *a, const void *b)
+{
+  const RelateInterval *i1 = (const RelateInterval *) a;
+  const RelateInterval *i2 = (const RelateInterval *) b;
+  if (i1->t0 < i2->t0)
+    return -1;
+  if (i1->t0 > i2->t0)
+    return 1;
+  return 0;
+}
+
+/**
+ * @brief Return true if a set of parameter intervals covers the whole
+ * parameter range of an edge
+ * @details The intervals are sorted in place and swept once, tracking the
+ * furthest parameter reached without a gap. A gap of positive length is
+ * a part of the edge that no interval covers
+ * @param[in,out] intervals Intervals to test, reordered by the function
+ * @param[in] count Number of intervals
+ */
+static bool
+relate_intervals_cover(RelateInterval *intervals, int count)
+{
+  if (count == 0)
+    return false;
+  qsort(intervals, (size_t) count, sizeof(RelateInterval),
+    relate_interval_cmp);
+  if (intervals[0].t0 > FP_TOLERANCE)
+    return false;
+  double reach = intervals[0].t1;
+  for (int i = 1; i < count; i++)
+  {
+    if (reach >= 1.0 - FP_TOLERANCE)
+      break;
+    if (intervals[i].t0 > reach + FP_TOLERANCE)
+      return false;
+    if (intervals[i].t1 > reach)
+      reach = intervals[i].t1;
+  }
+  return reach >= 1.0 - FP_TOLERANCE;
+}
+
+/**
+ * @brief Return the parameter intervals of an arc covered by another arc
+ * @details Two arcs of the same circle can overlap in two disjoint pieces,
+ * for example when both sweep more than half of the circle, so every piece
+ * is reported separately instead of being merged into one enclosing interval
+ * @param[in] a,b Arc edges
+ * @param[out] out Covered intervals, expressed on @p a, at most three
+ * @return Number of intervals reported
+ */
+static int
+relate_arc_overlap_ranges(const Edge *a, const Edge *b, RelateInterval *out)
+{
+  if (! relate_same_circle(a, b))
+    return 0;
+
+  /* Candidate interval bounds: the ends of a, plus the ends of b that lie
+   * on a, all expressed in the parameter space of a */
+  double p[4];
+  int np = 0;
+  p[np++] = 0.0;
+  p[np++] = 1.0;
+  if (point_on_arc(b->x1, b->y1, a))
+    p[np++] = relate_arc_parameter(a, b->x1, b->y1);
+  if (point_on_arc(b->x2, b->y2, a))
+    p[np++] = relate_arc_parameter(a, b->x2, b->y2);
+  qsort(p, (size_t) np, sizeof(double), relate_parameter_cmp);
+
+  int count = 0;
+  for (int i = 0; i + 1 < np; i++)
+  {
+    if (p[i + 1] - p[i] <= FP_TOLERANCE)
+      continue;
+    /* A piece is covered when its midpoint is on the other arc */
+    double x, y;
+    relate_edge_point(a, (p[i] + p[i + 1]) * 0.5, &x, &y);
+    if (! point_on_arc(x, y, b))
+      continue;
+    out[count].t0 = p[i];
+    out[count].t1 = p[i + 1];
+    count++;
+  }
+  return count;
+}
+
+/**
+ * @brief Return true if every edge of a linear geometry is entirely covered
+ * by the edges of another linear geometry
+ * @details An uncovered part of a linear geometry is one-dimensional, so the
+ * answer decides the interior/exterior cell of the DE-9IM matrix. Only the
+ * one-dimensional intersections cover anything: a line and an arc, and two
+ * arcs of different circles, meet in isolated points that cover no length
+ */
+static bool
+relate_linear_covered(Edge **edges, int nedges, Edge **others, int nothers)
+{
+  /* Two arcs contribute at most three pieces, a line pair exactly one */
+  RelateInterval *intervals = palloc(sizeof(RelateInterval) *
+    (size_t) (3 * nothers + 1));
+  bool result = true;
+  for (int i = 0; i < nedges && result; i++)
+  {
+    const Edge *a = edges[i];
+    if (a->etype != EDGE_LINESEG && a->etype != EDGE_LINEARC)
+      continue;
+    if (! relate_edge_nonempty(a))
+      continue;
+    int count = 0;
+    for (int j = 0; j < nothers; j++)
+    {
+      const Edge *b = others[j];
+      if (b->etype != EDGE_LINESEG && b->etype != EDGE_LINEARC)
+        continue;
+      if (a->etype == EDGE_LINEARC && b->etype == EDGE_LINEARC)
+        count += relate_arc_overlap_ranges(a, b, intervals + count);
+      else if (relate_linear_edges_overlap(a, b, &intervals[count].t0,
+          &intervals[count].t1))
+        count++;
+    }
+    if (! relate_intervals_cover(intervals, count))
+      result = false;
+  }
+  pfree(intervals);
+  return result;
+}
+
+/**
+ * @brief Return the boundary points of a linear geometry
+ * @details Under the OGC Mod-2 rule a point belongs to the boundary of a
+ * linear geometry when it is an endpoint of an odd number of the component
+ * curves. Counting edge endpoints gives the same parity, because an interior
+ * vertex of a chain is shared by exactly two edges and therefore cancels
+ * @param[in] edges,nedges Edges of the geometry
+ * @param[out] count Number of boundary points, possibly zero for a geometry
+ * made of closed components
+ */
+static POINT2D *
+relate_linear_boundary_points(Edge **edges, int nedges, int *count)
+{
+  POINT2D *result = palloc(sizeof(POINT2D) * (size_t) (2 * nedges + 1));
+  *count = 0;
+  for (int i = 0; i < nedges; i++)
+  {
+    const Edge *e = edges[i];
+    if (e->etype != EDGE_LINESEG && e->etype != EDGE_LINEARC)
+      continue;
+    if (! relate_edge_nonempty(e))
+      continue;
+    for (int k = 0; k < 2; k++)
+    {
+      double x = (k == 0) ? e->x1 : e->x2;
+      double y = (k == 0) ? e->y1 : e->y2;
+      /* Keep a single entry per distinct point */
+      bool seen = false;
+      for (int j = 0; j < *count && ! seen; j++)
+        seen = relate_same_point(x, y, result[j].x, result[j].y);
+      if (seen)
+        continue;
+      if (! relate_point_on_linear_boundary(x, y, edges, nedges))
+        continue;
+      result[*count].x = x;
+      result[*count].y = y;
+      (*count)++;
+    }
+  }
+  return result;
+}
+
+/**
+ * @brief Append the isolated intersection points of two linear edges
+ * @param[in] a,b Edges to intersect
+ * @param[out] out Intersection points, at most two
+ * @return Number of points appended
+ */
+static int
+relate_linear_edge_points(const Edge *a, const Edge *b, POINT2D *out)
+{
+  int count = 0;
+  if (a->etype == EDGE_LINESEG && b->etype == EDGE_LINESEG)
+  {
+    IntersectResult r = linesegm_intersect(a->x1, a->y1, a->dx, a->dy,
+      b->x1, b->y1, b->x2, b->y2);
+    if (r.type == INTERSECT_POINT)
+    {
+      relate_edge_point(a, r.t0, &out[count].x, &out[count].y);
+      count++;
+    }
+  }
+  else if (a->etype == EDGE_LINESEG && b->etype == EDGE_LINEARC)
+  {
+    double roots[2];
+    int n = arcsegm_intersect(a->x1, a->y1, a->dx, a->dy, b, roots);
+    for (int k = 0; k < n; k++)
+    {
+      relate_edge_point(a, roots[k], &out[count].x, &out[count].y);
+      count++;
+    }
+  }
+  else if (a->etype == EDGE_LINEARC && b->etype == EDGE_LINESEG)
+  {
+    double roots[2];
+    int n = arcsegm_intersect(b->x1, b->y1, b->dx, b->dy, a, roots);
+    for (int k = 0; k < n; k++)
+    {
+      relate_edge_point(b, roots[k], &out[count].x, &out[count].y);
+      count++;
+    }
+  }
+  else if (a->etype == EDGE_LINEARC && b->etype == EDGE_LINEARC)
+  {
+    double x[2], y[2];
+    bool overlap = false;
+    int n = relate_arc_arc_points(a, b, x, y, &overlap);
+    for (int k = 0; k < n; k++)
+    {
+      out[count].x = x[k];
+      out[count].y = y[k];
+      count++;
+    }
+  }
+  return count;
+}
+
+/**
+ * @brief Compute the DE-9IM matrix for two linear geometries
+ * @details Every cell has exactly one source, so no cell can be attributed
+ * twice or left to the visiting order of the edge pairs:
+ * - II comes from the one-dimensional overlaps and from the intersection
+ *   points that are interior to both geometries
+ * - the boundary row of @p g1 comes from classifying each Mod-2 boundary
+ *   point of @p g1 against @p g2, and symmetrically for @p g2
+ * - IE and EI come from whether one geometry covers the other entirely,
+ *   an uncovered part of a linear geometry being one-dimensional
+ * The line/arc and arc/arc intersections stay exact, so a circular string
+ * is related without being stroked into segments first
+ */
+static void
+relate_linear_linear(const LWGEOM *g1, const LWGEOM *g2, MeosDE9IM *m)
+{
+  MeosArray *a1 = geom_extract_edges(g1);
+  MeosArray *a2 = geom_extract_edges(g2);
+  int n1 = (int) a1->count;
+  int n2 = (int) a2->count;
+  Edge **e1 = palloc(sizeof(Edge *) * (size_t) (n1 + 1));
+  Edge **e2 = palloc(sizeof(Edge *) * (size_t) (n2 + 1));
+  for (int i = 0; i < n1; i++)
+    e1[i] = (Edge *) meos_array_get(a1, i);
+  for (int i = 0; i < n2; i++)
+    e2[i] = (Edge *) meos_array_get(a2, i);
+
+  /* The Mod-2 boundary of each operand, empty for closed components */
+  int nb1, nb2;
+  POINT2D *b1 = relate_linear_boundary_points(e1, n1, &nb1);
+  POINT2D *b2 = relate_linear_boundary_points(e2, n2, &nb2);
+
+  /* Interior/interior. A positive-length overlap of any edge pair is a
+   * one-dimensional intersection of the two interiors. An intersection point
+   * that is on neither Mod-2 boundary is a zero-dimensional one; a point on
+   * a boundary is accounted for by the boundary row or column below */
+  POINT2D points[2];
+  for (int i = 0; i < n1; i++)
+  {
+    const Edge *a = e1[i];
+    if (a->etype != EDGE_LINESEG && a->etype != EDGE_LINEARC)
+      continue;
+    for (int j = 0; j < n2; j++)
+    {
+      const Edge *b = e2[j];
+      if (b->etype != EDGE_LINESEG && b->etype != EDGE_LINEARC)
+        continue;
+      double t0, t1;
+      if (a->etype == EDGE_LINEARC && b->etype == EDGE_LINEARC)
+      {
+        RelateInterval iv[3];
+        if (relate_arc_overlap_ranges(a, b, iv) > 0)
+          de9im_add(&m->ii, 1);
+      }
+      else if (relate_linear_edges_overlap(a, b, &t0, &t1))
+        de9im_add(&m->ii, 1);
+
+      int np = relate_linear_edge_points(a, b, points);
+      for (int k = 0; k < np; k++)
+      {
+        bool on_b1 = false, on_b2 = false;
+        for (int p = 0; p < nb1 && ! on_b1; p++)
+          on_b1 = relate_same_point(points[k].x, points[k].y, b1[p].x,
+            b1[p].y);
+        for (int p = 0; p < nb2 && ! on_b2; p++)
+          on_b2 = relate_same_point(points[k].x, points[k].y, b2[p].x,
+            b2[p].y);
+        if (! on_b1 && ! on_b2)
+          de9im_add(&m->ii, 0);
+      }
+    }
+  }
+
+  /* Boundary row of g1: each of its boundary points lies on the boundary of
+   * g2, in the interior of g2, or outside g2 altogether */
+  for (int p = 0; p < nb1; p++)
+  {
+    int loc = relate_point_in_linear(b1[p].x, b1[p].y, e2, n2);
+    if (loc == 1)
+      de9im_add(&m->bb, 0);
+    else if (loc == 0)
+      de9im_add(&m->bi, 0);
+    else
+      de9im_add(&m->be, 0);
+  }
+
+  /* Boundary column of g2, symmetrically */
+  for (int p = 0; p < nb2; p++)
+  {
+    int loc = relate_point_in_linear(b2[p].x, b2[p].y, e1, n1);
+    if (loc == 1)
+      de9im_add(&m->bb, 0);
+    else if (loc == 0)
+      de9im_add(&m->ib, 0);
+    else
+      de9im_add(&m->eb, 0);
+  }
+
+  /* Interior/exterior. Whatever of g1 the edges of g2 do not cover is a
+   * one-dimensional part of the interior of g1 lying outside g2 */
+  if (! relate_linear_covered(e1, n1, e2, n2))
+    de9im_add(&m->ie, 1);
+  if (! relate_linear_covered(e2, n2, e1, n1))
+    de9im_add(&m->ei, 1);
+
+  /* The exterior of a bounded planar geometry is two-dimensional */
+  de9im_add(&m->ee, 2);
+
+  pfree(b1); pfree(b2); pfree(e1); pfree(e2);
+  meos_array_destroy(a1); meos_array_destroy(a2);
+  return;
 }
 
 /**
@@ -3485,23 +3703,25 @@ relate_linear_area(const LWGEOM *line_geom, const LWGEOM *area_geom,
       int aloc = relate_point_in_area(x, y, area_edges, na);
       if (lloc == 0)
       {
-        /* Linear interior ∩ area */
+        /* Linear interior ∩ area. An endpoint contributes dimension 0, which
+         * must not demote the dimension 1 an open portion of the same edge
+         * has already contributed to the very same cell */
         if (aloc == 0)
-          m->ii = 0;
+          de9im_add(&m->ii, 0);
         else if (aloc == 1)
-          m->ib = 0;
+          de9im_add(&m->ib, 0);
         else
-          m->ie = 0;
+          de9im_add(&m->ie, 0);
       }
       else
       {
         /* Linear boundary ∩ area */
         if (aloc == 0)
-          m->bi = 0;
+          de9im_add(&m->bi, 0);
         else if (aloc == 1)
-          m->bb = 0;
+          de9im_add(&m->bb, 0);
         else
-          m->be = 0;
+          de9im_add(&m->be, 0);
       }
     }
   }
@@ -3924,7 +4144,7 @@ relate_area_boundary_points(Edge **aedges, int na, Edge **bedges, int nb,
       /*  A one-dimensional overlap */
       if (n == 2 && relate_area_line_overlap(a, b))
       {
-        m->bb = 1;
+        de9im_add(&m->bb, 1);
         continue;
       }
 
@@ -3937,20 +4157,16 @@ relate_area_boundary_points(Edge **aedges, int na, Edge **bedges, int nb,
         (void) relate_arc_arc_points(a, b, ix, iy, &overlap);
         if (overlap)
         {
-          m->bb = 1;
+          de9im_add(&m->bb, 1);
           continue;
         }
       }
 
-      /* Point intersections */
-      for (int k = 0; k < n; k++)
-      {
-        /* Boundary/boundary intersection is zero-dimensional
-         * unless a one-dimensional overlap was detected above. */
-        (void) ix;
-        (void) iy;
-        m->bb = 0;
-      }
+      /* Point intersections. The cell keeps the largest dimension found over
+       * all the edge pairs, so a shared boundary segment is not demoted by a
+       * later pair that meets in a single point */
+      if (n > 0)
+        de9im_add(&m->bb, 0);
     }
   }
   return;
@@ -3987,14 +4203,12 @@ relate_area_has_vertex_interior(Edge **edges, int nedges, Edge **other_edges,
  * implementation and works directly with circular boundaries.
  */
 static bool
-relate_area_find_interior_point(Edge **edges, int nedges, double *x,
-  double *y)
+relate_area_edge_interior_point(const Edge *e, Edge **edges, int nedges,
+  double *x, double *y)
 {
-  for (int i = 0; i < nedges; i++)
   {
-    const Edge *e = edges[i];
     if (! relate_area_boundary_edge(e))
-      continue;
+      return false;
     /* Take the midpoint of the edge */
     double px, py;
     relate_area_edge_point(e, 0.5, &px, &py);
@@ -4027,7 +4241,7 @@ relate_area_find_interior_point(Edge **edges, int nedges, double *x,
     }
     double len = hypot(tx, ty);
     if (len <= FP_TOLERANCE)
-      continue;
+      return false;
     tx /= len;
     ty /= len;
 
@@ -4056,6 +4270,35 @@ relate_area_find_interior_point(Edge **edges, int nedges, double *x,
       *y = qy;
       return true;
     }
+  }
+  return false;
+}
+
+/**
+ * @brief Return true if an areal geometry holds an interior point standing to
+ * another areal geometry in a given location
+ * @details A single witness does not answer a geometry of several components:
+ * the one the search returns first belongs to the first component, and a
+ * component further on may stand differently. Two multipolygons sharing a
+ * component exactly are the case that shows it, the shared component making
+ * the interiors meet while the witness of the first component lies outside.
+ * Every boundary edge therefore contributes its own witness.
+ * @param[in] edges,nedges Edges of the geometry the witness comes from
+ * @param[in] other,nother Edges of the geometry the witness is located in
+ * @param[in] location Location to look for, as #relate_point_in_area reports
+ * it: 0 for the interior and 2 for the exterior
+ */
+static bool
+relate_area_interior_point_located(Edge **edges, int nedges, Edge **other,
+  int nother, int location)
+{
+  for (int i = 0; i < nedges; i++)
+  {
+    double x, y;
+    if (! relate_area_edge_interior_point(edges[i], edges, nedges, &x, &y))
+      continue;
+    if (relate_point_in_area(x, y, other, nother) == location)
+      return true;
   }
   return false;
 }
@@ -4095,50 +4338,11 @@ relate_area_interiors_intersect(Edge **aedges, int na, Edge **bedges, int nb)
 
   /* Finally handle coincident boundaries / complete containment
    * where every tested vertex may lie on the other boundary.
-   * Find an interior witness point of A and test it against B. */
-  double x, y;
-  if (relate_area_find_interior_point(aedges, na, &x, &y))
-  {
-    if (relate_point_in_area(x, y, bedges, nb) == 0)
-      return true;
-  }
-  if (relate_area_find_interior_point(bedges, nb, &x, &y))
-  {
-    if (relate_point_in_area(x, y, aedges, na) == 0)
-      return true;
-  }
-  return false;
-}
-
-/**
- * @brief Determine whether an areal geometry has an exterior
- * intersection with another areal geometry.
- */
-static bool
-relate_area_has_exterior(Edge **edges, int nedges, Edge **other_edges,
-  int nother)
-{
-  /* If a boundary edge has an open portion outside the other geometry,
-   * the corresponding area also has an exterior portion */
-  for (int i = 0; i < nedges; i++)
-  {
-    const Edge *e = edges[i];
-    if (!relate_area_boundary_edge(e))
-      continue;
-    double x, y;
-    relate_area_edge_point(e, 0.5, &x, &y);
-    if (relate_point_in_area(x, y, other_edges, nother) == 2)
-      return true;
-  }
-
-  /* If a boundary midpoint happens to be on the other boundary,
-   * use an interior witness */
-  double x, y;
-  if (relate_area_find_interior_point(edges, nedges, &x, &y))
-  {
-    if (relate_point_in_area(x, y, other_edges, nother) != 0)
-      return true;
-  }
+   * An interior witness of either geometry inside the other answers it */
+  if (relate_area_interior_point_located(aedges, na, bedges, nb, 0))
+    return true;
+  if (relate_area_interior_point_located(bedges, nb, aedges, na, 0))
+    return true;
   return false;
 }
 
@@ -4186,37 +4390,41 @@ relate_area_area(const LWGEOM *g1, const LWGEOM *g2, MeosDE9IM *m)
    * Coincident/overlapping boundary portions give dimension 1. */
   relate_area_boundary_points(e1, n1, e2, n2, m);
 
-  /* Boundary / Exterior.
-   * A polygon boundary has dimension 1. */
-  if (relate_area_has_exterior(e1, n1, e2, n2))
-  {
-    m->be = 1;
-  }
-  if (relate_area_has_exterior(e2, n2, e1, n1))
-  {
-    m->eb = 1;
-  }
+  /* Interior / Exterior, of dimension 2 because a non-empty open region is
+   * two-dimensional. Two independent sources answer it, and either one alone
+   * misses cases the other catches:
+   * - a piece of the boundary of A running outside B, which
+   *   #relate_area_edge_intervals has already recorded in BE, has a
+   *   neighbourhood inside A that is outside B as well. This covers every
+   *   partial overlap, where an interior witness can land inside B
+   * - an interior point of A outside B covers the case where the whole
+   *   boundary of A lies within B while a hole of B falls inside A */
+  if (m->be == 1)
+    de9im_add(&m->ie, 2);
+  if (m->eb == 1)
+    de9im_add(&m->ei, 2);
 
-  /* Interior / Exterior.
-   * A polygon interior has dimension 2.
-   * If A has an interior point outside B, IE = 2.
-   * If B has an interior point outside A, EI = 2. */
-  double x, y;
-  if (relate_area_find_interior_point(e1, n1, &x, &y))
-  {
-    if (relate_point_in_area(x, y, e2, n2) == 2)
-      m->ie = 2;
-  }
-  if (relate_area_find_interior_point(e2, n2, &x, &y))
-  {
-    if (relate_point_in_area(x, y, e1, n1) == 2)
-      m->ei = 2;
-  }
+  /* A third source, the one that answers a hole of A covered by B. A point
+   * where the boundary of A meets the interior of B has a neighbourhood
+   * inside B, and the far side of that boundary is the exterior of A, so the
+   * two meet in a two-dimensional set. Neither source above sees it when B
+   * covers a hole of A: the boundary of B stays clear of the exterior of A,
+   * and the interior witness of B lands in the body of A rather than in the
+   * hole */
+  if (m->bi != -1)
+    de9im_add(&m->ei, 2);
+  if (m->ib != -1)
+    de9im_add(&m->ie, 2);
+
+  if (relate_area_interior_point_located(e1, n1, e2, n2, 2))
+    de9im_add(&m->ie, 2);
+  if (relate_area_interior_point_located(e2, n2, e1, n1, 2))
+    de9im_add(&m->ei, 2);
 
   /* Exterior / Exterior.
    * Two ordinary finite areal geometries always have a
    * two-dimensional common exterior. */
-  m->ee = 2;
+  de9im_add(&m->ee, 2);
 
   pfree(e1); pfree(e2);
   meos_array_destroy(a1); meos_array_destroy(a2);
@@ -4228,125 +4436,170 @@ relate_area_area(const LWGEOM *g1, const LWGEOM *g2, MeosDE9IM *m)
  *****************************************************************************/
 
 /**
+ * @brief Return the bitmask of the topological dimensions occurring in a
+ * geometry
+ * @details Bit @p k is set when the geometry has a component of dimension
+ * @p k, so a collection mixing dimensions sets more than one bit. Testing
+ * each dimension with a separate predicate cannot distinguish such a
+ * collection from a homogeneous one, and routes it to whichever predicate is
+ * tried first
+ */
+static int
+relate_dim_mask(const LWGEOM *geom)
+{
+  if (! geom || lwgeom_is_empty(geom))
+    return 0;
+  switch (geom->type)
+  {
+    case POINTTYPE:
+    case MULTIPOINTTYPE:
+      return 1;
+    case LINETYPE:
+    case MULTILINETYPE:
+    case CIRCSTRINGTYPE:
+    case COMPOUNDTYPE:
+    case MULTICURVETYPE:
+      return 2;
+    case POLYGONTYPE:
+    case MULTIPOLYGONTYPE:
+    case TRIANGLETYPE:
+    case CURVEPOLYTYPE:
+    case MULTISURFACETYPE:
+      return 4;
+    case COLLECTIONTYPE:
+    {
+      const LWCOLLECTION *col = (const LWCOLLECTION *) geom;
+      int mask = 0;
+      for (uint32_t i = 0; i < col->ngeoms; i++)
+        mask |= relate_dim_mask(col->geoms[i]);
+      return mask;
+    }
+    default:
+      return 0;
+  }
+}
+
+/**
+ * @brief Return the topological dimension of the boundary of a geometry
+ * @details Following the OGC rules a point geometry has an empty boundary,
+ * an areal geometry has a one-dimensional boundary, and a linear geometry has
+ * a zero-dimensional boundary that is empty when every component is closed,
+ * as for a linear ring
+ * @return The dimension, or -1 when the boundary is empty
+ */
+static int8_t
+relate_boundary_dimension(const LWGEOM *geom)
+{
+  if (relate_is_areal(geom))
+    return 1;
+  if (! relate_is_linear(geom))
+    return -1;
+  MeosArray *arr = geom_extract_edges(geom);
+  int nedges = (int) arr->count;
+  Edge **edges = palloc(sizeof(Edge *) * (size_t) (nedges + 1));
+  for (int i = 0; i < nedges; i++)
+    edges[i] = (Edge *) meos_array_get(arr, i);
+  int count;
+  POINT2D *points = relate_linear_boundary_points(edges, nedges, &count);
+  pfree(points); pfree(edges); meos_array_destroy(arr);
+  return (count > 0) ? 0 : -1;
+}
+
+/**
+ * @brief Return true if the native DE-9IM engine covers a geometry pair
+ * @details A caller tests this before #meos_relate so that a pair the
+ * engine leaves alone is answered another way
+ */
+bool
+geom_relate_supported(const LWGEOM *g1, const LWGEOM *g2)
+{
+  /* The whole engine works on the edge decomposition, so a geometry the clip
+   * engine does not decompose is left to the caller */
+  if (! geom_meos_supported(g1) || ! geom_meos_supported(g2))
+    return false;
+  /* The interior and the boundary of a collection are those of the union of
+   * its components, not the union of theirs: a point on the shared edge of
+   * two polygons of one collection is interior to the collection, which the
+   * per-component classification calls a boundary. Answering a collection
+   * needs the local topology around such a point, so it is left to the
+   * caller */
+  if (g1->type == COLLECTIONTYPE || g2->type == COLLECTIONTYPE)
+    return false;
+  /* An empty operand is answered from the dimensions of the other alone */
+  if (lwgeom_is_empty(g1) || lwgeom_is_empty(g2))
+    return true;
+  int mask1 = relate_dim_mask(g1);
+  int mask2 = relate_dim_mask(g2);
+  if (mask1 == 0 || mask2 == 0)
+    return false;
+  return (mask1 & (mask1 - 1)) == 0 && (mask2 & (mask2 - 1)) == 0;
+}
+
+/**
  * @brief Compute the DE-9IM intersection matrix
- * @details This is the native MEOS counterpart of ST_Relate for the geometry
- * combinations implemented by this first version
- * @return true if the geometry pair is supported
+ * @details This is the native counterpart of PostGIS @p ST_Relate over the
+ * geometry combinations the engine covers
+ * @return true if the geometry pair is supported, which is what
+ * #geom_relate_supported answers ahead of the call. A false return means the
+ * pair is outside that coverage, @b not that the geometries are unrelated, so
+ * a caller must answer it another way rather than read @p result
  */
 bool
 meos_relate(const LWGEOM *g1, const LWGEOM *g2, char result[10])
 {
   assert(g1); assert(g2); assert(result);
+
+  if (! geom_relate_supported(g1, g2))
+    return false;
+
   MeosDE9IM m;
   de9im_init(&m);
 
-  /* Empty geometries */
-  if (lwgeom_is_empty(g1) || lwgeom_is_empty(g2))
+  /* An empty operand meets nothing, so the interior and the boundary of the
+   * other operand fall entirely in its exterior, each keeping its own
+   * dimension. The two exteriors meet in dimension 2 */
+  bool empty1 = lwgeom_is_empty(g1);
+  bool empty2 = lwgeom_is_empty(g2);
+  if (empty1 || empty2)
   {
-    int d1 = relate_dimension(g1);
-    int d2 = relate_dimension(g2);
-    (void) d1;
-    (void) d2;
-
-    /* If one operand is empty, its intersection with every
-     * non-exterior component is empty. The two exteriors meet
-     * in dimension 2 */
-    m.ee = 2;
+    if (! empty2)
+    {
+      de9im_add(&m.ei, (int8_t) relate_dimension(g2));
+      de9im_add(&m.eb, relate_boundary_dimension(g2));
+    }
+    if (! empty1)
+    {
+      de9im_add(&m.ie, (int8_t) relate_dimension(g1));
+      de9im_add(&m.be, relate_boundary_dimension(g1));
+    }
+    de9im_add(&m.ee, 2);
     de9im_to_string(&m, result);
     return true;
   }
 
-  /* Point / Point */
-  if (relate_is_point(g1) && relate_is_point(g2))
-  {
-    /* The first implementation handles simple POINTs directly.
-     * MULTIPOINT is handled by the existing edge representation
-     * in a later extension. */
-    if (g1->type == POINTTYPE && g2->type == POINTTYPE)
-    {
-      relate_point_point(g1, g2, &m);
-      de9im_to_string(&m, result);
-      return true;
-    }
-  }
-
-  /* Point / Linear */
-  if (relate_is_point(g1) && relate_is_linear(g2))
-  {
-    if (g1->type == POINTTYPE)
-    {
-      relate_point_linear(g1, g2, &m);
-      de9im_to_string(&m, result);
-      return true;
-    }
-  }
-
-  /* Linear / Point */
-  if (relate_is_linear(g1) && relate_is_point(g2))
-  {
-    if (g2->type == POINTTYPE)
-    {
-      relate_linear_point(g1, g2, &m);
-      de9im_to_string(&m, result);
-      return true;
-    }
-  }
-
-  /* Point / Area */
-  if (relate_is_point(g1) && relate_is_areal(g2))
-  {
-    if (g1->type == POINTTYPE)
-    {
-      relate_point_area(g1, g2, &m);
-      de9im_to_string(&m, result);
-      return true;
-    }
-  }
-
-  /* Area / Point */
-  if (relate_is_areal(g1) && relate_is_point(g2))
-  {
-    if (g2->type == POINTTYPE)
-    {
-      relate_area_point(g1, g2, &m);
-      de9im_to_string(&m, result);
-      return true;
-    }
-  }
-
-  /* Linear / Linear */
-  if (relate_is_linear(g1) && relate_is_linear(g2))
-  {
+  int mask1 = relate_dim_mask(g1);
+  int mask2 = relate_dim_mask(g2);
+  if (mask1 == 1 && mask2 == 1)
+    relate_point_point(g1, g2, &m);
+  else if (mask1 == 1 && mask2 == 2)
+    relate_point_linear(g1, g2, &m);
+  else if (mask1 == 2 && mask2 == 1)
+    relate_linear_point(g1, g2, &m);
+  else if (mask1 == 1 && mask2 == 4)
+    relate_point_area(g1, g2, &m);
+  else if (mask1 == 4 && mask2 == 1)
+    relate_area_point(g1, g2, &m);
+  else if (mask1 == 2 && mask2 == 2)
     relate_linear_linear(g1, g2, &m);
-    de9im_to_string(&m, result);
-    return true;
-  }
-
-  /* Linear / Area */
-  if (relate_is_linear(g1) && relate_is_areal(g2))
-  {
+  else if (mask1 == 2 && mask2 == 4)
     relate_linear_area(g1, g2, &m);
-    de9im_to_string(&m, result);
-    return true;
-  }
-
-  /* Area / Linear */
-  if (relate_is_areal(g1) && relate_is_linear(g2))
-  {
+  else if (mask1 == 4 && mask2 == 2)
     relate_area_linear(g1, g2, &m);
-    de9im_to_string(&m, result);
-    return true;
-  }
-
-  /* Area / Area */
-  if (relate_is_areal(g1) && relate_is_areal(g2))
-  {
+  else
     relate_area_area(g1, g2, &m);
-    de9im_to_string(&m, result);
-    return true;
-  }
 
-  return false;
+  de9im_to_string(&m, result);
+  return true;
 }
 
 /**
