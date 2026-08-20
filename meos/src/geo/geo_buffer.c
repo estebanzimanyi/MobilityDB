@@ -4059,7 +4059,8 @@ meos_buffer_curve(const LWGEOM *geom, double radius, JoinStyle join_style,
   double start_dx, start_dy, end_dx, end_dy;
   buffer_edge_start_tangent(first, &start_dx, &start_dy);
   buffer_edge_end_tangent(last, &end_dx, &end_dy);
-  POINT2D far = { last->x2, last->y2 }, near = { first->x1, first->y1 };
+  POINT2D far_end = { last->x2, last->y2 };
+  POINT2D near_end = { first->x1, first->y1 };
   bool ok = backwards &&
     buffer_offset_edges(edges, radius, true, join_style, mitre_limit, false,
       srid, ring, &left_first, &left_last) &&
@@ -4078,7 +4079,7 @@ meos_buffer_curve(const LWGEOM *geom, double radius, JoinStyle join_style,
   /* The cap at the far end, then the offset of the reversed curve, then the
    * cap at the near end */
   if (cap_style == ENDCAP_ROUND)
-    buffer_add_round_cap(ring, srid, far, left_last, right_first, radius,
+    buffer_add_round_cap(ring, srid, far_end, left_last, right_first, radius,
       false);
   else
   {
@@ -4097,7 +4098,7 @@ meos_buffer_curve(const LWGEOM *geom, double radius, JoinStyle join_style,
   lwfree(back_curve->geoms);
   lwfree(back_curve);
   if (cap_style == ENDCAP_ROUND)
-    buffer_add_round_cap(ring, srid, near, right_last, left_first, radius,
+    buffer_add_round_cap(ring, srid, near_end, right_last, left_first, radius,
       false);
   else
   {
