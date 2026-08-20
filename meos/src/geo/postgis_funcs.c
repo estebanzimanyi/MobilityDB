@@ -2124,6 +2124,79 @@ geom_relate_pattern(const GSERIALIZED *gs1, const GSERIALIZED *gs2, char *p)
 }
 
 /**
+ * @ingroup meos_geo_base_rel
+ * @brief Return the DE-9IM intersection matrix of two geometries
+ * @param[in] gs1,gs2 Geometries
+ * @return On error return @p NULL
+ * @note PostGIS function: @p ST_Relate(geometry, geometry)
+ * @details The native engine answers a pair holding a circular arc exactly,
+ * where GEOS answers about the chords it replaces the arc with, and answers
+ * every pair where the build carries no GEOS. A pair of straight geometries
+ * goes to GEOS, which answers alike and faster. A geometry collection is
+ * outside what the engine covers and goes to GEOS as well
+ */
+char *
+geom_relate(const GSERIALIZED *gs1, const GSERIALIZED *gs2)
+{
+  /* Ensure the validity of the arguments */
+  if (! ensure_valid_geo_geo(gs1, gs2) || ! ensure_not_geodetic_geo(gs1))
+    return NULL;
+
+  /* The native DE-9IM engine answers every pair it covers, without the
+   * round-trip into the GEOS geometry model the call below pays */
+  {
+    LWGEOM *g1 = lwgeom_from_gserialized(gs1);
+    LWGEOM *g2 = lwgeom_from_gserialized(gs2);
+    char matrix[10];
+    bool curved = lwgeom_has_arc(g1) || lwgeom_has_arc(g2);
+    bool covered = (curved || ! GEOS_PRESENT) &&
+      geom_relate_supported(g1, g2) && meos_relate(g1, g2, matrix);
+    lwgeom_free(g1); lwgeom_free(g2);
+    if (covered)
+      return pstrdup(matrix);
+  }
+
+#if ! GEOS
+  /* The native matrix above answers every geometry it covers, and a build
+   * carrying no GEOS has nothing to answer the others with */
+  meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
+    "The relationship between these geometries is not supported without GEOS");
+  return NULL;
+#else
+  GEOSContextHandle_t ctx = geos_get_context();
+
+  GEOSGeometry *geos1 = POSTGIS2GEOS(gs1);
+  if (! geos1)
+  {
+    meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
+      "First argument geometry could not be converted to GEOS");
+    return NULL;
+  }
+  GEOSGeometry *geos2 = POSTGIS2GEOS(gs2);
+  if (! geos2)
+  {
+    GEOSGeom_destroy_r(ctx, geos1);
+    meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
+      "Second argument geometry could not be converted to GEOS");
+    return NULL;
+  }
+
+  char *matrix = GEOSRelate_r(ctx, geos1, geos2);
+  GEOSGeom_destroy_r(ctx, geos1);
+  GEOSGeom_destroy_r(ctx, geos2);
+  if (! matrix)
+  {
+    meos_error(ERROR, MEOS_ERR_INTERNAL_TYPE_ERROR,
+      "GEOSRelate returned error");
+    return NULL;
+  }
+  char *result = pstrdup(matrix);
+  GEOSFree_r(ctx, matrix);
+  return result;
+#endif /* GEOS */
+}
+
+/**
  * @brief Return @c true iff @p gs is a 2D POLYGON or MULTIPOLYGON.
  * @internal Used by #geom_intersection2d / #geom_difference2d to decide
  * whether to fast-path through the Clipper2-backed @c clip_poly_poly.
