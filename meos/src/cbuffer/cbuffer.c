@@ -585,7 +585,7 @@ geom_to_cbuffer(const GSERIALIZED *gs)
   else
   /* geotype != POINTTYPE && geotype != CURVEPOLYTYPE */
   {
-    gscenter = geom_min_bounding_radius(gs, &radius);
+    gscenter = geom_minimum_bounding_radius(gs, &radius);
   }
   Cbuffer *result = cbuffer_make(gscenter, radius);
   pfree(gscenter);
