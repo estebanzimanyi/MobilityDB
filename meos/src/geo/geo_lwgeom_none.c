@@ -69,6 +69,13 @@ lwgeom_centroid(const LWGEOM *geom)
 }
 
 LWGEOM *
+lwgeom_make_valid(LWGEOM *geom)
+{
+  (void) geom;
+  return lwgeom_needs_geos(__func__);
+}
+
+LWGEOM *
 lwgeom_intersection_prec(const LWGEOM *geom1, const LWGEOM *geom2,
   double gridSize)
 {

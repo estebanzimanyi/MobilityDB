@@ -2221,7 +2221,7 @@ de9im_to_string(const MeosDE9IM *m, char result[10])
  *   2 = area
  *   * = don't care
  */
-static bool
+bool
 de9im_match(const char matrix[10], const char pattern[10])
 {
   for (int i = 0; i < 9; i++)
@@ -4233,7 +4233,7 @@ relate_area_area(const LWGEOM *g1, const LWGEOM *g2, MeosDE9IM *m)
  * combinations implemented by this first version
  * @return true if the geometry pair is supported
  */
-static bool
+bool
 meos_relate(const LWGEOM *g1, const LWGEOM *g2, char result[10])
 {
   assert(g1); assert(g2); assert(result);

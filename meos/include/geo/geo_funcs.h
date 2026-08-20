@@ -118,6 +118,10 @@ extern GSERIALIZED *geocircle_make(double x, double y, double radius,
   int32_t srid);
 extern LWGEOM *meos_oriented_envelope(const LWGEOM *geom);
 extern bool meos_is_simple(const LWGEOM *geom, bool *result);
+extern bool meos_relate(const LWGEOM *g1, const LWGEOM *g2, char result[10]);
+extern bool meos_relate_pattern(const LWGEOM *g1, const LWGEOM *g2,
+  const char *pattern);
+extern bool de9im_match(const char matrix[10], const char pattern[10]);
 
 /*****************************************************************************/
 

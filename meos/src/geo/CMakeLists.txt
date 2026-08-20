@@ -1,7 +1,8 @@
 # The entry points of liblwgeom's GEOS files that the rest of liblwgeom still
-# calls, which a build leaving those files out has to answer
+# calls, and the GEOS entry points the vendored raster core calls directly,
+# which a build carrying no GEOS has to answer
 if(NOT GEOS)
-  set(GEO_LWGEOM_NONE geo_lwgeom_none.c)
+  set(GEO_LWGEOM_NONE geo_lwgeom_none.c geo_geos_none.c)
 endif()
 
 set(GEO_SOURCES
