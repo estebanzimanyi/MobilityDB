@@ -1976,6 +1976,7 @@ geo_cluster_intersecting(const GSERIALIZED **geoms, uint32_t ngeoms,
 #if ! GEOS
   /* No native implementation covers the clustering, and a build carrying no
    * GEOS has nothing to answer it with */
+  (void) geoms;
   meos_error(ERROR, MEOS_ERR_FEATURE_NOT_SUPPORTED,
     "Clustering intersecting geometries is not supported without GEOS");
   return NULL;
