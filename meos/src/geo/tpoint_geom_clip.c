@@ -5683,14 +5683,12 @@ relate_area_has_vertex_interior(Edge **edges, int nedges, Edge **other_edges,
  * implementation and works directly with circular boundaries.
  */
 static bool
-relate_area_find_interior_point(Edge **edges, int nedges, double *x,
-  double *y)
+relate_area_edge_interior_point(const Edge *e, Edge **edges, int nedges,
+  double *x, double *y)
 {
-  for (int i = 0; i < nedges; i++)
   {
-    const Edge *e = edges[i];
     if (! relate_area_boundary_edge(e))
-      continue;
+      return false;
     /* Take the midpoint of the edge */
     double px, py;
     relate_area_edge_point(e, 0.5, &px, &py);
@@ -5723,7 +5721,7 @@ relate_area_find_interior_point(Edge **edges, int nedges, double *x,
     }
     double len = hypot(tx, ty);
     if (len <= FP_TOLERANCE)
-      continue;
+      return false;
     tx /= len;
     ty /= len;
 
@@ -5752,6 +5750,35 @@ relate_area_find_interior_point(Edge **edges, int nedges, double *x,
       *y = qy;
       return true;
     }
+  }
+  return false;
+}
+
+/**
+ * @brief Return true if an areal geometry holds an interior point standing to
+ * another areal geometry in a given location
+ * @details A single witness does not answer a geometry of several components:
+ * the one the search returns first belongs to the first component, and a
+ * component further on may stand differently. Two multipolygons sharing a
+ * component exactly are the case that shows it, the shared component making
+ * the interiors meet while the witness of the first component lies outside.
+ * Every boundary edge therefore contributes its own witness.
+ * @param[in] edges,nedges Edges of the geometry the witness comes from
+ * @param[in] other,nother Edges of the geometry the witness is located in
+ * @param[in] location Location to look for, as #relate_point_in_area reports
+ * it: 0 for the interior and 2 for the exterior
+ */
+static bool
+relate_area_interior_point_located(Edge **edges, int nedges, Edge **other,
+  int nother, int location)
+{
+  for (int i = 0; i < nedges; i++)
+  {
+    double x, y;
+    if (! relate_area_edge_interior_point(edges[i], edges, nedges, &x, &y))
+      continue;
+    if (relate_point_in_area(x, y, other, nother) == location)
+      return true;
   }
   return false;
 }
@@ -5791,18 +5818,11 @@ relate_area_interiors_intersect(Edge **aedges, int na, Edge **bedges, int nb)
 
   /* Finally handle coincident boundaries / complete containment
    * where every tested vertex may lie on the other boundary.
-   * Find an interior witness point of A and test it against B. */
-  double x, y;
-  if (relate_area_find_interior_point(aedges, na, &x, &y))
-  {
-    if (relate_point_in_area(x, y, bedges, nb) == 0)
-      return true;
-  }
-  if (relate_area_find_interior_point(bedges, nb, &x, &y))
-  {
-    if (relate_point_in_area(x, y, aedges, na) == 0)
-      return true;
-  }
+   * An interior witness of either geometry inside the other answers it */
+  if (relate_area_interior_point_located(aedges, na, bedges, nb, 0))
+    return true;
+  if (relate_area_interior_point_located(bedges, nb, aedges, na, 0))
+    return true;
   return false;
 }
 
@@ -5876,12 +5896,9 @@ relate_area_area(const LWGEOM *g1, const LWGEOM *g2, MeosDE9IM *m)
   if (m->ib != -1)
     de9im_add(&m->ie, 2);
 
-  double x, y;
-  if (relate_area_find_interior_point(e1, n1, &x, &y) &&
-      relate_point_in_area(x, y, e2, n2) == 2)
+  if (relate_area_interior_point_located(e1, n1, e2, n2, 2))
     de9im_add(&m->ie, 2);
-  if (relate_area_find_interior_point(e2, n2, &x, &y) &&
-      relate_point_in_area(x, y, e1, n1) == 2)
+  if (relate_area_interior_point_located(e2, n2, e1, n1, 2))
     de9im_add(&m->ei, 2);
 
   /* Exterior / Exterior.
