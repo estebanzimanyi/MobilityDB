@@ -780,15 +780,15 @@ node_insert(RTree *rtree, void *node_bounding_box, RTreeNode *node,
  */
 static bool
 leaf_consistent(const RTree *rtree, const void *key, const void *query,
-  RTreeSearchOp op)
+  IndexSearchOp op)
 {
   switch (op)
   {
-    case RTREE_OVERLAPS:
+    case INDEX_OVERLAPS:
       return rtree->bbox_overlaps(key, query);
-    case RTREE_CONTAINS:
+    case INDEX_CONTAINS:
       return rtree->bbox_contains(key, query);
-    case RTREE_CONTAINED_BY:
+    case INDEX_CONTAINED_BY:
       return rtree->bbox_contains(query, key);
   }
   return false;
@@ -804,14 +804,14 @@ leaf_consistent(const RTree *rtree, const void *key, const void *query,
  */
 static bool
 inner_consistent(const RTree *rtree, const void *key, const void *query,
-  RTreeSearchOp op)
+  IndexSearchOp op)
 {
   switch (op)
   {
-    case RTREE_OVERLAPS:
-    case RTREE_CONTAINED_BY:
+    case INDEX_OVERLAPS:
+    case INDEX_CONTAINED_BY:
       return rtree->bbox_overlaps(key, query);
-    case RTREE_CONTAINS:
+    case INDEX_CONTAINS:
       return rtree->bbox_contains(key, query);
   }
   return false;
@@ -826,7 +826,7 @@ inner_consistent(const RTree *rtree, const void *key, const void *query,
  * @param[out] result MeosArray to collect matching IDs
  */
 static void
-node_search(const RTree *rtree, const RTreeNode *node, RTreeSearchOp op,
+node_search(const RTree *rtree, const RTreeNode *node, IndexSearchOp op,
   const void *query, MeosArray *result)
 {
   for (int i = 0; i < node->count; ++i)
@@ -869,7 +869,7 @@ node_search(const RTree *rtree, const RTreeNode *node, RTreeSearchOp op,
 static void
 node_join(const RTree *rtree1, const RTreeNode *node1, const void *box1,
   const RTree *rtree2, const RTreeNode *node2, const void *box2,
-  RTreeSearchOp op, MeosArray *result)
+  IndexSearchOp op, MeosArray *result)
 {
   if (box1 && box2 && ! rtree1->bbox_overlaps(box1, box2))
     return;
@@ -1066,8 +1066,12 @@ rtree_create_tpcbox()
 #endif
 
 /*****************************************************************************
- * STR bulk load (PROTOTYPE, for measurement)
+ * Build from a whole entry set
  *****************************************************************************/
+
+/* The build releases the nodes the tree holds, which the recursive release
+ * below it does */
+static void node_free(RTreeNode *node);
 
 typedef struct
 {
@@ -1141,12 +1145,18 @@ str_pack_level(RTree *rtree, STRItem *items, int count, bool leaf, int *nout)
 }
 
 /**
- * @ingroup meos_geo_box_index
+ * @ingroup meos_temporal_box_index
  * @brief Build an RTree from all of its entries at once
  * @details Bottom-up Sort-Tile-Recursive packing. The result answers the same
  * queries as inserting every entry one by one, but the whole set is known in
  * advance, so nodes are filled to capacity and no node is ever split.
- * @param[in] rtree An EMPTY RTree of the appropriate bounding box type
+ *
+ * The tree ends up holding exactly the entries given, whatever it holds on
+ * entry, so this is both the fast first build and the only way to make an
+ * index smaller: an index has no removal entry point, and a caller that has to
+ * drop entries rebuilds from the ones it keeps. Loading no entries leaves an
+ * empty tree.
+ * @param[in] rtree An RTree of the appropriate bounding box type
  * @param[in] boxes Contiguous array of @p count boxes of the tree bbox size
  * @param[in] ids The id of each box
  * @param[in] count Number of entries
@@ -1154,6 +1164,15 @@ str_pack_level(RTree *rtree, STRItem *items, int count, bool leaf, int *nout)
 void
 rtree_load(RTree *rtree, const void *boxes, const int64 *ids, int count)
 {
+  /* The packing assigns the root, so the nodes the tree holds are released
+   * before it does, and are released whatever the number of entries given: an
+   * empty entry set leaves an empty tree rather than the previous one */
+  if (rtree->root)
+  {
+    node_free(rtree->root);
+    rtree->root = NULL;
+  }
+
   if (count <= 0)
     return;
 
@@ -1203,7 +1222,7 @@ rtree_load(RTree *rtree, const void *boxes, const int64 *ids, int count)
 
 
 /**
- * @ingroup meos_geo_box_index
+ * @ingroup meos_temporal_box_index
  * @brief Insert a bounding box into the RTree index.
  * @note The parameter `id` is used for the search function, when a match
  * is found the id will be returned. The bounding box will be copied into the
@@ -1247,23 +1266,23 @@ rtree_insert(RTree *rtree, void *box, int64 id)
 }
 
 /**
- * @ingroup meos_geo_box_index
+ * @ingroup meos_temporal_box_index
  * @brief Search an RTree with a bounding box, collecting matching IDs into
  * a MeosArray
  * @details The result array is reset before the search. After the call,
  * use the returned count and #meos_array_get to read the matching IDs.
  * The same array can be reused across multiple searches without reallocating.
  * @param[in] rtree The RTree to query
- * @param[in] op The search operation: @p RTREE_OVERLAPS finds boxes that
- * overlap the query, @p RTREE_CONTAINS finds boxes that contain the query,
- * @p RTREE_CONTAINED_BY finds boxes contained by the query
+ * @param[in] op The search operation: @p INDEX_OVERLAPS finds boxes that
+ * overlap the query, @p INDEX_CONTAINS finds boxes that contain the query,
+ * @p INDEX_CONTAINED_BY finds boxes contained by the query
  * @param[in] query The bounding box that serves as query
  * @param[out] result MeosArray of int to collect matching IDs (created by the
  * caller with `meos_array_create(sizeof(int64))`)
  * @return Number of matching IDs
  */
 int
-rtree_search(const RTree *rtree, RTreeSearchOp op, const void *query,
+rtree_search(const RTree *rtree, IndexSearchOp op, const void *query,
   MeosArray *result)
 {
   meos_array_reset(result);
@@ -1273,7 +1292,7 @@ rtree_search(const RTree *rtree, RTreeSearchOp op, const void *query,
 }
 
 /**
- * @ingroup meos_geo_box_index
+ * @ingroup meos_temporal_box_index
  * @brief Join two RTrees, collecting the ids of every qualifying pair into a
  * MeosArray
  * @details Descends both trees at once, skipping the entries of a subtree pair
@@ -1284,16 +1303,16 @@ rtree_search(const RTree *rtree, RTreeSearchOp op, const void *query,
  * entry of @p rtree1 followed by the entry of @p rtree2, so pair `k` is read
  * with #meos_array_get at positions `2 * k` and `2 * k + 1`.
  * @param[in] rtree1,rtree2 The RTrees to join, of the same bounding box type
- * @param[in] op The join operation: @p RTREE_OVERLAPS pairs entries that
- * overlap, @p RTREE_CONTAINS pairs entries of @p rtree1 that contain an entry
- * of @p rtree2, @p RTREE_CONTAINED_BY pairs entries of @p rtree1 contained by
+ * @param[in] op The join operation: @p INDEX_OVERLAPS pairs entries that
+ * overlap, @p INDEX_CONTAINS pairs entries of @p rtree1 that contain an entry
+ * of @p rtree2, @p INDEX_CONTAINED_BY pairs entries of @p rtree1 contained by
  * an entry of @p rtree2
  * @param[out] result MeosArray of int to collect the ids (created by the caller
  * with `meos_array_create(sizeof(int64))`)
  * @return Number of qualifying pairs, half the number of collected ids
  */
 int
-rtree_join(const RTree *rtree1, const RTree *rtree2, RTreeSearchOp op,
+rtree_join(const RTree *rtree1, const RTree *rtree2, IndexSearchOp op,
   MeosArray *result)
 {
   assert(rtree1->bboxtype == rtree2->bboxtype);
@@ -1342,7 +1361,7 @@ rtree_insert_temporal(RTree *rtree, const Temporal *temp, int64 id)
  * @return Number of matching IDs
  */
 int
-rtree_search_temporal(const RTree *rtree, RTreeSearchOp op,
+rtree_search_temporal(const RTree *rtree, IndexSearchOp op,
   const Temporal *temp, MeosArray *result)
 {
   if (! ensure_bbox_temporal_compatible(rtree->bboxtype, temp))
@@ -1446,7 +1465,7 @@ rtree_id_cmp(const void *a, const void *b)
 }
 
 int
-rtree_search_temporal_dedup(const RTree *rtree, RTreeSearchOp op,
+rtree_search_temporal_dedup(const RTree *rtree, IndexSearchOp op,
   const Temporal *temp, int maxboxes, MeosArray *result)
 {
   meos_array_reset(result);
@@ -1641,7 +1660,7 @@ nn_heap_pop(RTreeNNCursor *cursor)
 }
 
 /**
- * @ingroup meos_geo_box_index
+ * @ingroup meos_temporal_box_index
  * @brief Open a nearest-neighbour cursor that yields the ids stored in an
  * RTree in order of increasing distance to a query bounding box
  * @details The cursor performs an incremental best-first traversal: repeated
@@ -1683,7 +1702,7 @@ rtree_nn_cursor_open(const RTree *rtree, const void *query)
 }
 
 /**
- * @ingroup meos_geo_box_index
+ * @ingroup meos_temporal_box_index
  * @brief Advance a nearest-neighbour cursor to the next closest id
  * @details Returns the next id in order of increasing distance to the query
  * box. When @p id_out or @p dist_out is not @p NULL it receives the id and its
@@ -1737,7 +1756,7 @@ rtree_nn_cursor_next(RTreeNNCursor *cursor, int64 *id_out, double *dist_out)
 }
 
 /**
- * @ingroup meos_geo_box_index
+ * @ingroup meos_temporal_box_index
  * @brief Close a nearest-neighbour cursor and free its resources
  * @param[in] cursor The cursor to close; @p NULL is ignored
  */

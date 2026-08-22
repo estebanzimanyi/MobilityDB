@@ -100,8 +100,8 @@ struct SPTree
   void (*kdtree_next)(const void *nodebox, const void *centroid, uint8 node,
     int level, void *next);
   bool (*inner_consistent)(const void *nodebox, const void *query,
-    RTreeSearchOp op);
-  bool (*leaf_consistent)(const void *key, const void *query, RTreeSearchOp op);
+    IndexSearchOp op);
+  bool (*leaf_consistent)(const void *key, const void *query, IndexSearchOp op);
 };
 
 /*****************************************************************************/

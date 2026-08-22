@@ -341,14 +341,16 @@ extern void meos_array_destroy_free(MeosArray *array);
 /*****************************************************************************/
 
 /**
- * @brief Enumeration that defines the search operations for an RTree.
+ * @brief Enumeration that defines the search operations of an in-memory index
+ * @details The RTree and the space-partitioning index answer the same
+ * operations, so the operations carry the name of neither.
  */
 typedef enum
 {
-  RTREE_OVERLAPS,      /**< Find stored boxes that overlap the query */
-  RTREE_CONTAINS,      /**< Find stored boxes that contain the query */
-  RTREE_CONTAINED_BY   /**< Find stored boxes contained by the query */
-} RTreeSearchOp;
+  INDEX_OVERLAPS,      /**< Find stored boxes that overlap the query */
+  INDEX_CONTAINS,      /**< Find stored boxes that contain the query */
+  INDEX_CONTAINED_BY   /**< Find stored boxes contained by the query */
+} IndexSearchOp;
 
 /**
  * Structure for the in-memory Rtree index
@@ -372,10 +374,10 @@ extern void rtree_insert(RTree *rtree, void *box, int64 id);
 extern void rtree_load(RTree *rtree, const void *boxes, const int64 *ids, int count);
 extern void rtree_insert_temporal(RTree *rtree, const Temporal *temp, int64 id);
 extern void rtree_insert_temporal_split(RTree *rtree, const Temporal *temp, int64 id, int maxboxes);
-extern int rtree_search(const RTree *rtree, RTreeSearchOp op, const void *query, MeosArray *result);
-extern int rtree_join(const RTree *rtree1, const RTree *rtree2, RTreeSearchOp op, MeosArray *result);
-extern int rtree_search_temporal(const RTree *rtree, RTreeSearchOp op, const Temporal *temp, MeosArray *result);
-extern int rtree_search_temporal_dedup(const RTree *rtree, RTreeSearchOp op, const Temporal *temp, int maxboxes, MeosArray *result);
+extern int rtree_search(const RTree *rtree, IndexSearchOp op, const void *query, MeosArray *result);
+extern int rtree_join(const RTree *rtree1, const RTree *rtree2, IndexSearchOp op, MeosArray *result);
+extern int rtree_search_temporal(const RTree *rtree, IndexSearchOp op, const Temporal *temp, MeosArray *result);
+extern int rtree_search_temporal_dedup(const RTree *rtree, IndexSearchOp op, const Temporal *temp, int maxboxes, MeosArray *result);
 
 /**
  * Cursor for a nearest-neighbour scan of an in-memory Rtree index
@@ -415,11 +417,12 @@ extern SPTree *sptree_create_tpcbox(SPTreeKind kind);
 #endif
 extern void sptree_free(SPTree *sptree);
 extern void sptree_insert(SPTree *sptree, void *box, int64 id);
+extern void sptree_load(SPTree *sptree, const void *boxes, const int64 *ids, int count);
 extern void sptree_insert_temporal(SPTree *sptree, const Temporal *temp, int64 id);
 extern void sptree_insert_temporal_split(SPTree *sptree, const Temporal *temp, int64 id, int maxboxes);
-extern int sptree_search(const SPTree *sptree, RTreeSearchOp op, const void *query, MeosArray *result);
-extern int sptree_search_temporal(const SPTree *sptree, RTreeSearchOp op, const Temporal *temp, MeosArray *result);
-extern int sptree_search_temporal_dedup(const SPTree *sptree, RTreeSearchOp op, const Temporal *temp, int maxboxes, MeosArray *result);
+extern int sptree_search(const SPTree *sptree, IndexSearchOp op, const void *query, MeosArray *result);
+extern int sptree_search_temporal(const SPTree *sptree, IndexSearchOp op, const Temporal *temp, MeosArray *result);
+extern int sptree_search_temporal_dedup(const SPTree *sptree, IndexSearchOp op, const Temporal *temp, int maxboxes, MeosArray *result);
 
 /**
  * Cursor for a nearest-neighbour scan of an in-memory space-partitioning index

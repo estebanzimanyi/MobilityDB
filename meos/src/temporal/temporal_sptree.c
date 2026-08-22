@@ -114,24 +114,24 @@ span_kdtree_next(const void *nodebox, const void *centroid, uint8 node,
 }
 
 static bool
-span_inner_consistent(const void *nodebox, const void *query, RTreeSearchOp op)
+span_inner_consistent(const void *nodebox, const void *query, IndexSearchOp op)
 {
   const SpanNode *n = (const SpanNode *) nodebox;
   const Span *q = (const Span *) query;
-  if (op == RTREE_CONTAINS)
+  if (op == INDEX_CONTAINS)
     return contain2D(n, q);
-  /* RTREE_OVERLAPS and RTREE_CONTAINED_BY prune on overlap */
+  /* INDEX_OVERLAPS and INDEX_CONTAINED_BY prune on overlap */
   return overlap2D(n, q);
 }
 
 static bool
-span_leaf_consistent(const void *key, const void *query, RTreeSearchOp op)
+span_leaf_consistent(const void *key, const void *query, IndexSearchOp op)
 {
   const Span *k = (const Span *) key;
   const Span *q = (const Span *) query;
-  if (op == RTREE_CONTAINS)
+  if (op == INDEX_CONTAINS)
     return contains_span_span(k, q);
-  if (op == RTREE_CONTAINED_BY)
+  if (op == INDEX_CONTAINED_BY)
     return contains_span_span(q, k);
   return overlaps_span_span(k, q);
 }
@@ -170,23 +170,23 @@ tbox_kdtree_next(const void *nodebox, const void *centroid, uint8 node,
 }
 
 static bool
-tbox_inner_consistent(const void *nodebox, const void *query, RTreeSearchOp op)
+tbox_inner_consistent(const void *nodebox, const void *query, IndexSearchOp op)
 {
   const TboxNode *n = (const TboxNode *) nodebox;
   const TBox *q = (const TBox *) query;
-  if (op == RTREE_CONTAINS)
+  if (op == INDEX_CONTAINS)
     return contain4D(n, q);
   return overlap4D(n, q);
 }
 
 static bool
-tbox_leaf_consistent(const void *key, const void *query, RTreeSearchOp op)
+tbox_leaf_consistent(const void *key, const void *query, IndexSearchOp op)
 {
   const TBox *k = (const TBox *) key;
   const TBox *q = (const TBox *) query;
-  if (op == RTREE_CONTAINS)
+  if (op == INDEX_CONTAINS)
     return contains_tbox_tbox(k, q);
-  if (op == RTREE_CONTAINED_BY)
+  if (op == INDEX_CONTAINED_BY)
     return contains_tbox_tbox(q, k);
   return overlaps_tbox_tbox(k, q);
 }
@@ -231,23 +231,23 @@ stbox_kdtree_next(const void *nodebox, const void *centroid, uint8 node,
 }
 
 static bool
-stbox_inner_consistent(const void *nodebox, const void *query, RTreeSearchOp op)
+stbox_inner_consistent(const void *nodebox, const void *query, IndexSearchOp op)
 {
   const STboxNode *n = (const STboxNode *) nodebox;
   const STBox *q = (const STBox *) query;
-  if (op == RTREE_CONTAINS)
+  if (op == INDEX_CONTAINS)
     return contain8D(n, q);
   return overlap8D(n, q);
 }
 
 static bool
-stbox_leaf_consistent(const void *key, const void *query, RTreeSearchOp op)
+stbox_leaf_consistent(const void *key, const void *query, IndexSearchOp op)
 {
   const STBox *k = (const STBox *) key;
   const STBox *q = (const STBox *) query;
-  if (op == RTREE_CONTAINS)
+  if (op == INDEX_CONTAINS)
     return contains_stbox_stbox(k, q);
-  if (op == RTREE_CONTAINED_BY)
+  if (op == INDEX_CONTAINED_BY)
     return contains_stbox_stbox(q, k);
   return overlaps_stbox_stbox(k, q);
 }
@@ -485,11 +485,51 @@ spnode_make(const SPTree *sptree, const void *box, int64 id)
 }
 
 /**
+ * @brief Return the number of dimensions a box type carries, for a type that
+ * determines it from the data rather than from the type
+ * @details An STBox tree partitions on 6 dimensions for 2D+T and on 8 for
+ * 3D+T, so the dimensions, the bit each level narrows and the number of
+ * children per node are all read from the first box the tree receives.
+ */
+static void
+sptree_set_dims(SPTree *sptree, const void *box)
+{
+  sptree->dims = sptree->box_dims(box);
+  sptree->kd_bits = (sptree->dims == 8) ? STBOX_KD_BITS_Z : STBOX_KD_BITS;
+  sptree->nchild = (sptree->kind == SPTREE_QUADTREE) ? (1 << sptree->dims) : 2;
+  return;
+}
+
+/**
+ * @brief Return the child slot a box occupies under a node at a given level
+ * @details A quad-tree slot is the whole quadrant of the box with respect to
+ * the centroid. A k-d tree slot is the single bit of that quadrant carrying
+ * the dimension the search narrows at this level, so that the region a search
+ * descends into is the region the box was partitioned by.
+ * @param[in] sptree The SPTree
+ * @param[in] centroid The bounding box held by the node
+ * @param[in] box The bounding box being placed or sought
+ * @param[in] level The depth of the node
+ */
+static int
+spnode_child(const SPTree *sptree, const void *centroid, const void *box,
+  int level)
+{
+  uint8 quadrant = sptree->get_quadrant(centroid, box);
+  return (sptree->kind == SPTREE_QUADTREE) ? (int) quadrant :
+    (int) ((quadrant >> sptree->kd_bits[level % sptree->dims]) & 1);
+}
+
+/**
  * @ingroup meos_temporal_box_index
  * @brief Insert a bounding box into an in-memory space-partitioning index
  * @details The box is stored at the first empty child slot reached while
  * descending from the root by quadrant. Equal boxes chain through the first
  * child, so the search still finds every id.
+ *
+ * The depth a box reaches depends on the order the boxes arrive in, so a tree
+ * grown from an ordered set is deep and prunes little. #sptree_load builds the
+ * same index from a whole entry set at once and chooses the depth itself.
  * @param[in] sptree The SPTree previously initialized
  * @param[in] box The bounding box to insert
  * @param[in] id The id associated with the box
@@ -504,29 +544,300 @@ sptree_insert(SPTree *sptree, void *box, int64 id)
     sptree->project(box, &proj);
     box = &proj;
   }
-  /* Determine the deferred dimensions from the first box (STBox: 6 for 2D+T,
-   * 8 for 3D+T) and hence the number of children per node */
   if (sptree->dims < 0)
-  {
-    sptree->dims = sptree->box_dims(box);
-    sptree->kd_bits = (sptree->dims == 8) ? STBOX_KD_BITS_Z : STBOX_KD_BITS;
-    sptree->nchild = (sptree->kind == SPTREE_QUADTREE) ?
-      (1 << sptree->dims) : 2;
-  }
+    sptree_set_dims(sptree, box);
   SPNode **slot = &sptree->root;
   int level = 0;
   while (*slot != NULL)
   {
-    uint8 quadrant = sptree->get_quadrant((*slot)->centroid, box);
-    /* Store the box under the bit of the dimension the search narrows at this
-     * level, so that the region a search descends into is the region the box
-     * was partitioned by */
-    int child = (sptree->kind == SPTREE_QUADTREE) ? (int) quadrant :
-      (int) ((quadrant >> sptree->kd_bits[level % sptree->dims]) & 1);
-    slot = &(*slot)->children[child];
+    slot = &(*slot)->children[spnode_child(sptree, (*slot)->centroid, box,
+      level)];
     level++;
   }
   *slot = spnode_make(sptree, box, id);
+  return;
+}
+
+/*****************************************************************************
+ * Build from a whole entry set
+ *****************************************************************************/
+
+/* The build releases the nodes the tree holds, which the recursive release
+ * below it does */
+static void spnode_free(const SPTree *sptree, SPNode *node);
+
+/**
+ * @brief The entries a build is arranging, and the scratch it arranges them in
+ * @details The boxes are held in the internal box type and are permuted in
+ * place, each permutation carrying its id along, so that the entries of a
+ * subtree occupy a contiguous range and a node is described by a position and
+ * a count.
+ */
+typedef struct
+{
+  SPTree *sptree;
+  char *boxes;        /**< The entries, in the internal box type */
+  int64 *ids;         /**< The id of each entry, permuted with the boxes */
+  void *tmpbox;       /**< Holds one box while two entries are exchanged */
+  void *pivotbox;     /**< Holds the box a selection compares against */
+  char *scratchboxes; /**< Receives one range while it is being bucketed */
+  int64 *scratchids;
+} SPBuild;
+
+/**
+ * @brief Return the address of the n-th box of an array of internal boxes
+ */
+static void *
+spbox_n(const SPTree *sptree, char *boxes, int n)
+{
+  return (void *) (boxes + (size_t) n * sptree->boxsize);
+}
+
+/**
+ * @brief Exchange two entries
+ */
+static void
+spitems_swap(SPBuild *build, int i, int j)
+{
+  const SPTree *sptree = build->sptree;
+  if (i == j)
+    return;
+  void *boxi = spbox_n(sptree, build->boxes, i);
+  void *boxj = spbox_n(sptree, build->boxes, j);
+  memcpy(build->tmpbox, boxi, sptree->boxsize);
+  memcpy(boxi, boxj, sptree->boxsize);
+  memcpy(boxj, build->tmpbox, sptree->boxsize);
+  int64 id = build->ids[i];
+  build->ids[i] = build->ids[j];
+  build->ids[j] = id;
+  return;
+}
+
+/**
+ * @brief Return true if @p box is above @p base on the dimension a quadrant
+ * bit carries
+ * @details The order is the one the tree itself partitions by: the quadrant of
+ * @p box with respect to @p base carries the bit exactly when @p box is above
+ * @p base on that dimension. Reading it in both directions distinguishes the
+ * boxes that tie on the dimension from those that are below.
+ */
+static bool
+spbox_above(const SPTree *sptree, const void *box, const void *base, uint8 bit)
+{
+  return ((sptree->get_quadrant(base, box) >> bit) & 1) != 0;
+}
+
+/**
+ * @brief Reorder a range so that the entry at position @p k is the one the
+ * dimension of @p bit orders there
+ * @details Every entry before @p k is then no higher on that dimension and
+ * every entry after it is no lower, which is all a build needs to choose a
+ * centroid that halves the range. The entries that tie with the one compared
+ * against are gathered in one pass, so a range that ties throughout is
+ * recognised at once rather than peeled one entry at a time.
+ * @param[in] build The entries being arranged
+ * @param[in] from,count The range
+ * @param[in] k Position, relative to @p from, to settle
+ * @param[in] bit Quadrant bit carrying the dimension to order on
+ */
+static void
+spitems_select(SPBuild *build, int from, int count, int k, uint8 bit)
+{
+  const SPTree *sptree = build->sptree;
+  int lo = from, hi = from + count - 1;
+  k += from;
+  while (lo < hi)
+  {
+    /* Compare against the middle entry of the range, held aside since its
+     * position takes part in the exchanges below */
+    spitems_swap(build, lo + (hi - lo) / 2, lo);
+    memcpy(build->pivotbox, spbox_n(sptree, build->boxes, lo),
+      sptree->boxsize);
+    /* Gather the range into the entries below the one compared against, those
+     * tying with it, and those above it */
+    int lt = lo, i = lo, gt = hi;
+    while (i <= gt)
+    {
+      const void *box = spbox_n(sptree, build->boxes, i);
+      if (spbox_above(sptree, build->pivotbox, box, bit))
+        spitems_swap(build, lt++, i++);
+      else if (spbox_above(sptree, box, build->pivotbox, bit))
+        spitems_swap(build, i, gt--);
+      else
+        i++;
+    }
+    if (k < lt)
+      hi = lt - 1;
+    else if (k > gt)
+      lo = gt + 1;
+    else
+      return;
+  }
+  return;
+}
+
+/**
+ * @brief Gather a range into contiguous buckets, one per child slot of a node
+ * @param[in] build The entries being arranged
+ * @param[in] from,count The range
+ * @param[in] centroid The bounding box held by the node
+ * @param[in] level The depth of the node
+ * @param[out] counts Number of entries of each child slot, in slot order
+ */
+static void
+spitems_bucket(SPBuild *build, int from, int count, const void *centroid,
+  int level, int *counts)
+{
+  const SPTree *sptree = build->sptree;
+  int nchild = sptree->nchild;
+  memset(counts, 0, (size_t) nchild * sizeof(int));
+  for (int i = 0; i < count; i++)
+    counts[spnode_child(sptree, centroid,
+      spbox_n(sptree, build->boxes, from + i), level)]++;
+  /* The first position of each bucket, which filling it then advances */
+  int *cursor = palloc((size_t) nchild * sizeof(int));
+  int offset = 0;
+  for (int c = 0; c < nchild; c++)
+  {
+    cursor[c] = offset;
+    offset += counts[c];
+  }
+  for (int i = 0; i < count; i++)
+  {
+    const void *box = spbox_n(sptree, build->boxes, from + i);
+    int pos = cursor[spnode_child(sptree, centroid, box, level)]++;
+    memcpy(spbox_n(sptree, build->scratchboxes, pos), box, sptree->boxsize);
+    build->scratchids[pos] = build->ids[from + i];
+  }
+  memcpy(spbox_n(sptree, build->boxes, from), build->scratchboxes,
+    (size_t) count * sptree->boxsize);
+  memcpy(build->ids + from, build->scratchids,
+    (size_t) count * sizeof(int64));
+  pfree(cursor);
+  return;
+}
+
+/**
+ * @brief Build the subtree holding a range of entries
+ * @details The centroid is the entry the level's dimension orders in the
+ * middle, so a k-d node hands half the range to each of its two children and
+ * the depth is logarithmic in the number of entries whatever order they
+ * arrive in. The remaining entries go to the child slot an insertion would
+ * descend into at this level, which is what makes the result a tree the search
+ * reads like any other.
+ *
+ * Entries that a slot cannot separate, equal boxes above all, descend as a
+ * chain, exactly as inserting them one by one produces.
+ * @param[in] build The entries being arranged
+ * @param[in] from,count The range
+ * @param[in] level The depth of the subtree root
+ */
+static SPNode *
+spnode_build(SPBuild *build, int from, int count, int level)
+{
+  SPTree *sptree = build->sptree;
+  if (count <= 0)
+    return NULL;
+
+  int mid = count / 2;
+  spitems_select(build, from, count, mid,
+    sptree->kd_bits[level % sptree->dims]);
+  SPNode *node = spnode_make(sptree,
+    spbox_n(sptree, build->boxes, from + mid), build->ids[from + mid]);
+
+  /* The node holds a copy of its centroid, so the entry it was taken from
+   * leaves the range through its end */
+  spitems_swap(build, from + mid, from + count - 1);
+  int rest = count - 1;
+  if (rest > 0)
+  {
+    int *counts = palloc((size_t) sptree->nchild * sizeof(int));
+    spitems_bucket(build, from, rest, node->centroid, level, counts);
+    int offset = 0;
+    for (int c = 0; c < sptree->nchild; c++)
+    {
+      if (counts[c] > 0)
+        node->children[c] = spnode_build(build, from + offset, counts[c],
+          level + 1);
+      offset += counts[c];
+    }
+    pfree(counts);
+  }
+  return node;
+}
+
+/**
+ * @ingroup meos_temporal_box_index
+ * @brief Build an in-memory space-partitioning index from all of its entries
+ * at once
+ * @details Top-down median partitioning. The result answers the same queries
+ * as inserting every entry one by one, but the whole set is known in advance,
+ * so each node halves what is left of its range on the dimension its level
+ * narrows and the depth no longer depends on the order the entries arrive in.
+ * The kind of tree given at creation is the kind that is built: a quad-tree
+ * node hands the entries to one of its @p 2^dims quadrant slots, a k-d tree
+ * node to one of its two.
+ *
+ * The tree ends up holding exactly the entries given, whatever it holds on
+ * entry, so this is both the fast first build and the only way to make an
+ * index smaller: an index has no removal entry point, and a caller that has to
+ * drop entries rebuilds from the ones it keeps. Loading no entries leaves an
+ * empty tree.
+ * @param[in] sptree An SPTree of the appropriate bounding box type
+ * @param[in] boxes Contiguous array of @p count boxes of the tree bbox size
+ * @param[in] ids The id of each box
+ * @param[in] count Number of entries
+ */
+void
+sptree_load(SPTree *sptree, const void *boxes, const int64 *ids, int count)
+{
+  /* The build assigns the root, so the nodes the tree holds are released
+   * before it does, and are released whatever the number of entries given: an
+   * empty entry set leaves an empty tree rather than the previous one */
+  if (sptree->root)
+  {
+    spnode_free(sptree, sptree->root);
+    sptree->root = NULL;
+  }
+
+  if (count <= 0)
+    return;
+
+  /* A type indexed through a projection is given boxes of its own type and
+   * holds them as the type it partitions (TPCBox: STBox), so the entries are
+   * read at the stride of the type and held at the stride of the tree */
+  size_t insize = bbox_get_size(sptree->bboxtype);
+  SPBuild build;
+  build.sptree = sptree;
+  build.boxes = palloc((size_t) count * sptree->boxsize);
+  for (int i = 0; i < count; i++)
+  {
+    const void *in = (const char *) boxes + (size_t) i * insize;
+    void *out = spbox_n(sptree, build.boxes, i);
+    if (sptree->project)
+      sptree->project(in, out);
+    else
+      memcpy(out, in, sptree->boxsize);
+  }
+
+  if (sptree->dims < 0)
+    sptree_set_dims(sptree, build.boxes);
+
+  build.ids = palloc((size_t) count * sizeof(int64));
+  memcpy(build.ids, ids, (size_t) count * sizeof(int64));
+  build.tmpbox = palloc(sptree->boxsize);
+  build.pivotbox = palloc(sptree->boxsize);
+  build.scratchboxes = palloc((size_t) count * sptree->boxsize);
+  build.scratchids = palloc((size_t) count * sizeof(int64));
+
+  sptree->root = spnode_build(&build, 0, count, 0);
+
+  pfree(build.scratchids);
+  pfree(build.scratchboxes);
+  pfree(build.pivotbox);
+  pfree(build.tmpbox);
+  pfree(build.ids);
+  pfree(build.boxes);
   return;
 }
 
@@ -546,7 +857,7 @@ sptree_insert(SPTree *sptree, void *box, int64 id)
  */
 static void
 spnode_search(const SPTree *sptree, const SPNode *node, const void *nodebox,
-  RTreeSearchOp op, const void *query, int level, MeosArray *result)
+  IndexSearchOp op, const void *query, int level, MeosArray *result)
 {
   if (sptree->leaf_consistent(node->centroid, query, op))
   {
@@ -576,15 +887,15 @@ spnode_search(const SPTree *sptree, const SPNode *node, const void *nodebox,
  * collecting matching ids into a MeosArray
  * @details The result array is reset before the search.
  * @param[in] sptree The SPTree to query
- * @param[in] op The search operation: @p RTREE_OVERLAPS finds boxes that
- * overlap the query, @p RTREE_CONTAINS finds boxes that contain the query,
- * @p RTREE_CONTAINED_BY finds boxes contained by the query
+ * @param[in] op The search operation: @p INDEX_OVERLAPS finds boxes that
+ * overlap the query, @p INDEX_CONTAINS finds boxes that contain the query,
+ * @p INDEX_CONTAINED_BY finds boxes contained by the query
  * @param[in] query The bounding box that serves as query
  * @param[out] result MeosArray of int to collect matching ids
  * @return Number of matching ids
  */
 int
-sptree_search(const SPTree *sptree, RTreeSearchOp op, const void *query,
+sptree_search(const SPTree *sptree, IndexSearchOp op, const void *query,
   MeosArray *result)
 {
   /* Project the query box into the internal box type (TPCBox: STBox) */
@@ -651,7 +962,7 @@ sptree_insert_temporal(SPTree *sptree, const Temporal *temp, int64 id)
  * @return Number of matching ids
  */
 int
-sptree_search_temporal(const SPTree *sptree, RTreeSearchOp op,
+sptree_search_temporal(const SPTree *sptree, IndexSearchOp op,
   const Temporal *temp, MeosArray *result)
 {
   if (! ensure_bbox_temporal_compatible(sptree->bboxtype, temp))
@@ -729,7 +1040,7 @@ sptree_id_cmp(const void *a, const void *b)
 }
 
 int
-sptree_search_temporal_dedup(const SPTree *sptree, RTreeSearchOp op,
+sptree_search_temporal_dedup(const SPTree *sptree, IndexSearchOp op,
   const Temporal *temp, int maxboxes, MeosArray *result)
 {
   meos_array_reset(result);
