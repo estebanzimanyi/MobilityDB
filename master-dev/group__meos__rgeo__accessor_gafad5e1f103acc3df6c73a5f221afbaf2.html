@@ -79,6 +79,7 @@ $(function() {
    <td valign="top">
       <div class="navtab">
         <table>
+          <tr><td class="navtab"><a class="navtab" href="group__meos__rgeo__accessor_ga73e2e7b2bb582a0711bc8fff1a0c920d.html#ga73e2e7b2bb582a0711bc8fff1a0c920d">trgeometry_angular_speed</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__meos__rgeo__accessor_ga6ba5d0d649d65cad15b04be45dab476a.html#ga6ba5d0d649d65cad15b04be45dab476a">trgeometry_centroid</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__meos__rgeo__accessor_ga5b5ed05a56dfd75659d65bf3ae60983e.html#ga5b5ed05a56dfd75659d65bf3ae60983e">trgeometry_convex_hull</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__meos__rgeo__accessor_gac4b85dc8a13a6f17aebb395493ebd3cb.html#gac4b85dc8a13a6f17aebb395493ebd3cb">trgeometry_cumulative_length</a></td></tr>
@@ -140,7 +141,7 @@ $(function() {
   </table>
   </dd>
 </dl>
-<dl class="section note"><dt>Note</dt><dd>Mirrors the collect-then-union pattern of <code>tgeo_traversed_area</code> for general temporal geometries; the trgeometry-specific step is materialising the reference polygon at every emitted sample via <code>geom_apply_pose</code>. Sample selection mirrors the adaptive recursive bisection in <code>tdistance_trgeoseq_trgeoseq_linear</code>: each input instant is emitted; between two consecutive instants the segment is bisected while the rotation magnitude across the half-segment exceeds <code>TRGEO_TRAVERSED_AREA_ANGLE_TOL</code> and the recursion depth is below <code>TRGEO_TRAVERSED_AREA_MAX_DEPTH</code>. Pure-translation segments terminate at depth 0 with two samples (start and end). The unary union dissolves any redundant overlap between samples. </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>Mirrors the collect-then-union pattern of <code>tgeo_traversed_area</code> for general temporal geometries; the trgeometry-specific step is materialising the reference polygon at every emitted sample via <code>pose_apply_geo</code>. Sample selection mirrors the adaptive recursive bisection in <code>tdistance_trgeoseq_trgeoseq_linear</code>: each input instant is emitted; between two consecutive instants the segment is bisected while the rotation magnitude across the half-segment exceeds <code>TRGEO_TRAVERSED_AREA_ANGLE_TOL</code> and the recursion depth is below <code>TRGEO_TRAVERSED_AREA_MAX_DEPTH</code>. Pure-translation segments terminate at depth 0 with two samples (start and end). The unary union dissolves any redundant overlap between samples. </dd></dl>
 
 </div>
 </div>
