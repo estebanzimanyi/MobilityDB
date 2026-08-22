@@ -243,6 +243,22 @@ test_answers(SPTreeKind kind, const char *kindname, TBox **boxes,
     }
     free(want);
   }
+  /* (iv) the build chooses the depth. An ordered entry set is the one that
+   * sends every insertion one level deeper, so a tree grown from it is a chain
+   * and a tree built from it is not. Comparing the two heights states the
+   * property the build exists for, which the answers alone cannot show. */
+  if (strcmp(shape, "ordered") == 0)
+  {
+    int h_grown = sptree_height(grown), h_loaded = sptree_height(loaded);
+    if (h_loaded >= h_grown)
+    {
+      printf("sptree_load: %s %s: an ordered entry set builds a tree of %d "
+        "levels against the %d of the tree grown from it, so the build does "
+        "not choose the depth\n", shape, kindname, h_loaded, h_grown);
+      failures++;
+    }
+  }
+
   free(got); free(whole); free(flat);
   sptree_free(grown);
   sptree_free(loaded);
