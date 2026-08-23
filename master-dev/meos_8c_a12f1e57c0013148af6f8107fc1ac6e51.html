@@ -115,6 +115,7 @@ $(function() {
           <tr><td class="navtab"><a class="navtab" href="meos_8c_ab62cca957071ce80eb5312573383b741.html#ab62cca957071ce80eb5312573383b741">meos_lwnotice_handler</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_8c_ae1854fb656fd11bc29e3305ce5868f71.html#ae1854fb656fd11bc29e3305ce5868f71">MEOS_PJ_CONTEXT</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_8c_af52c3a11f705f29e015b1c032dcb99e2.html#af52c3a11f705f29e015b1c032dcb99e2">MEOS_PRNG_INITIALIZED</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="meos_8c_ab8793584818fa28f9e6bae6d724deb67.html#ab8793584818fa28f9e6bae6d724deb67">meos_proj_get_context</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_8c_a251cb4298b09367db9c6ae36bf3c1c79.html#a251cb4298b09367db9c6ae36bf3c1c79">meos_random_binomial20_half</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_8c_a1222ec4b945c4833371a93fe05d6c805.html#a1222ec4b945c4833371a93fe05d6c805">meos_random_double</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_8c_a9292693d9b5a8bae1b00944880f5ed4f.html#a9292693d9b5a8bae1b00944880f5ed4f">meos_random_exponential</a></td></tr>
@@ -125,7 +126,6 @@ $(function() {
           <tr><td class="navtab"><a class="navtab" href="meos_8c_ab6a33c283363e39b7101f4081907ad6c.html#ab6a33c283363e39b7101f4081907ad6c">prng_get_generation_rng</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_8c_a7066e9760480be70ec09492ff99a30b5.html#a7066e9760480be70ec09492ff99a30b5">prng_initialize</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_8c_ae80edd4cdb1a2f5833491effeb1cf54a.html#ae80edd4cdb1a2f5833491effeb1cf54a">proj_finalize</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="meos_8c_afb4ea3ec36162407424522d39c0c4f6c.html#afb4ea3ec36162407424522d39c0c4f6c">proj_get_context</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_8c_a98576dd698e254d2b8b341fb15da84cf.html#a98576dd698e254d2b8b341fb15da84cf">proj_initialize</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_8c_a78c61a21bb91d32b8db57956c75f234f.html#a78c61a21bb91d32b8db57956c75f234f">split_to_stringlist</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_8c_ad9836f3cd23d1c2e5b2299d40d1e3366.html#ad9836f3cd23d1c2e5b2299d40d1e3366">USE_GERMAN_DATES</a></td></tr>
@@ -172,7 +172,7 @@ $(function() {
 </div><div class="memdoc">
 
 <p>Report a liblwgeom error through the MEOS error channel. </p>
-<p >liblwgeom reports through a handler the embedder installs, and a PostgreSQL backend installs one in <code>mobilitydb_init</code> that raises. A standalone MEOS program installs none, so liblwgeom keeps its own default, which writes the message to <code>stderr</code> and ends the process — the message reaches the caller with no error code, and a host that meant to catch it never gets the chance. </p><dl class="section note"><dt>Note</dt><dd>This handler does NOT return. liblwgeom's callers continue as though the value were valid — <code>bytes_from_hexbytes</code> reads on after reporting an odd-length string — so returning would hand them uninitialised memory. The host's own handler decides what happens first: one that raises (an exception, a longjmp) never comes back here, which is the case this exists to serve. One that returns leaves no way to honour liblwgeom's contract except to end the process, exactly as its own default does. </dd></dl>
+<p >liblwgeom reports through a handler the embedder installs, and a PostgreSQL backend installs one in <code>mobilitydb_init</code> that raises. A standalone MEOS program installs none, so liblwgeom keeps its own default, which writes the message to <code>stderr</code> and ends the process — the message reaches the caller with no error code, and a host that meant to catch it never gets the chance. </p><dl class="section note"><dt>Note</dt><dd>The error reaches the caller the way every other MEOS error does: the installed error handler decides what follows. The default one ends the process on <code>ERROR</code>, so a standalone program behaves as liblwgeom's own default does. A host that installed the no-exit handler regains control with <code><a class="el" href="group__meos__misc_gada390bc9c4a7a12ae8d2393a9dc3bee3.html#gada390bc9c4a7a12ae8d2393a9dc3bee3" title="Read an error number.">meos_errno()</a></code> set, which is what that handler exists to promise — a foreign thread in a JVM (JNR-FFI on Spark or JMEOS) keeps its process. </dd></dl>
 
 </div>
 </div>
