@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.5"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>MobilityDB: Tpoint_AsMVTGeom</title>
+<title>MobilityDB: pcpatch_make</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -70,7 +70,7 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="group__mobilitydb__geo__transf.html">Transformation functions</a></li>  </ul>
+<li class="navelem"><a class="el" href="group__meos__pointcloud__base__constructor.html">Constructor functions</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="contents">
@@ -79,32 +79,50 @@ $(function() {
    <td valign="top">
       <div class="navtab">
         <table>
-          <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__geo__transf_ga35c4c21596947cddef3a6025a36759c0.html#ga35c4c21596947cddef3a6025a36759c0">Geo_round</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__geo__transf_ga711920dbe255f431286077446b433ae1.html#ga711920dbe255f431286077446b433ae1">Tgeo_affine</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__geo__transf_gac89c57335a26dc906583c1bf999c6234.html#gac89c57335a26dc906583c1bf999c6234">Tgeo_scale</a></td></tr>
-          <tr><td class="navtabHL"><a class="navtab" href="group__mobilitydb__geo__transf_ga339c21aae289b5fd8bd27c266922a8eb.html#ga339c21aae289b5fd8bd27c266922a8eb">Tpoint_AsMVTGeom</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__geo__transf_ga033e8c686e966e7b8ec851ce0e9320f8.html#ga033e8c686e966e7b8ec851ce0e9320f8">Tpoint_make_simple</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__meos__pointcloud__base__constructor_ga56e99ae387361716aacee68d58e78669.html#ga56e99ae387361716aacee68d58e78669">pcpatch_copy</a></td></tr>
+          <tr><td class="navtabHL"><a class="navtab" href="group__meos__pointcloud__base__constructor_gab6e3403f3fd1ac2bd51f67fab614bc61.html#gab6e3403f3fd1ac2bd51f67fab614bc61">pcpatch_make</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__meos__pointcloud__base__constructor_gaf91ee581da6603bc2b7e6c21232f2275.html#gaf91ee581da6603bc2b7e6c21232f2275">pcpoint_copy</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__meos__pointcloud__base__constructor_ga8daa93987047d04540e8697ae02dfcd0.html#ga8daa93987047d04540e8697ae02dfcd0">pcpoint_make</a></td></tr>
         </table>
       </div>
    </td>
    <td valign="top" class="mempage">
-<a id="ga339c21aae289b5fd8bd27c266922a8eb" name="ga339c21aae289b5fd8bd27c266922a8eb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga339c21aae289b5fd8bd27c266922a8eb">&#9670;&#160;</a></span>Tpoint_AsMVTGeom()</h2>
+<a id="gab6e3403f3fd1ac2bd51f67fab614bc61" name="gab6e3403f3fd1ac2bd51f67fab614bc61"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gab6e3403f3fd1ac2bd51f67fab614bc61">&#9670;&#160;</a></span>pcpatch_make()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="postgres__ext__defs_8in_8h_a43879eb52e27b2413d7a05056a173ca6.html#a43879eb52e27b2413d7a05056a173ca6">Datum</a> Tpoint_AsMVTGeom </td>
+          <td class="memname"><a class="el" href="structPcpatch.html">Pcpatch</a> * pcpatch_make </td>
           <td>(</td>
-          <td class="paramtype">PG_FUNCTION_ARGS&#160;</td>
-          <td class="paramname"></td><td>)</td>
+          <td class="paramtype">const <a class="el" href="structPcpoint.html">Pcpoint</a> **&#160;</td>
+          <td class="paramname"><em>points</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>count</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Return a temporal point transformed to the Mapbox Vector Tile representation @sqlfn asMVTGeom() </p>
+<p>Return a pcpatch from an array of pcpoints. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">points</td><td>Array of points, all of the same schema </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">count</td><td>Number of points </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>On error return <code>NULL</code> </dd></dl>
+<dl class="section note"><dt>Note</dt><dd>The schema is resolved through the MEOS cache, so a schema stated in SQL and one parsed from an XML document build a value alike. @csqlfn <a class="el" href="group__mobilitydb__pointcloud__base__constructor_gac4168e0929d8d82fbddc7f9537ee2ba9.html#gac4168e0929d8d82fbddc7f9537ee2ba9" title="Return a pcpatch from a point cloud identifier and an array of pcpoints of the schema it names @sqlfn...">Pcpatch_make()</a> </dd></dl>
 
 </div>
 </div>
