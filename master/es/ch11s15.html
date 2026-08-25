@@ -9,12 +9,12 @@ SELECT tnpoint '{[NPoint(1, 0.1)@2001-01-01, NPoint(1, 0.5)@2001-01-03]}' &lt;&g
 SELECT tnpoint '[NPoint(1, 0.1)@2001-01-01, NPoint(1, 0.5)@2001-01-03]' &lt;
   tnpoint '[NPoint(1, 0.1)@2001-01-01, NPoint(1, 0.6)@2001-01-03]';
 -- true
-</pre></li><li class="listitem"><a name="tnpoint_ever_always"></a><a class="indexterm" name="id8522"></a><a class="indexterm" name="id8525"></a><p>Comparaciones alguna vez y siempre</p><p><code class="varname">{npoint,tnpoint} {?=, %=} {npoint,tnpoint} → boolean</code></p><pre class="programlisting">
+</pre></li><li class="listitem"><a name="tnpoint_ever_always"></a><a class="indexterm" name="id8522"></a><a class="indexterm" name="id8525"></a><a class="indexterm" name="id8528"></a><a class="indexterm" name="id8531"></a><p>Comparaciones alguna vez y siempre</p><p><code class="varname">{npoint,tnpoint} {?=, ?&lt;&gt;, %=, %&lt;&gt;} {npoint,tnpoint} → boolean</code></p><pre class="programlisting">
 SELECT tnpoint '[Npoint(1, 0.2)@2001-01-01, Npoint(1, 0.4)@2001-01-04)' ?= Npoint(1, 0.3);
 -- true
 SELECT tnpoint '[Npoint(1, 0.2)@2001-01-01, Npoint(1, 0.2)@2001-01-04)' &amp;= Npoint(1, 0.2);
 -- true
-</pre></li><li class="listitem"><a name="tnpoint_tcomp"></a><a class="indexterm" name="id8533"></a><p>Comparaciones temporales</p><p><code class="varname">{npoint,tnpoint} {#=, #&lt;&gt;} {npoint,tnpoint} → tbool</code></p><pre class="programlisting">
+</pre></li><li class="listitem"><a name="tnpoint_tcomp"></a><a class="indexterm" name="id8539"></a><a class="indexterm" name="id8542"></a><p>Comparaciones temporales</p><p><code class="varname">{npoint,tnpoint} {#=, #&lt;&gt;} {npoint,tnpoint} → tbool</code></p><pre class="programlisting">
 SELECT tnpoint '[NPoint(1, 0.2)@2001-01-01, NPoint(1, 0.4)@2001-01-03)' #=
   npoint 'NPoint(1, 0.3)';
 -- {[f@2001-01-01, t@2001-01-02], (f@2001-01-02, f@2001-01-03)}
