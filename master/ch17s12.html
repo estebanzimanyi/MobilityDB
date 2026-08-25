@@ -9,8 +9,10 @@ SELECT th3index '[831c02fffffffff@2001-01-01, 880326b885fffff@2001-01-05]' &lt;
   th3index '[871fa44a8ffffff@2001-01-01, 871fa44a9ffffff@2001-01-03]';
 -- true
 </pre></li><li class="listitem"><a name="th3_ever_always"></a><a class="indexterm" name="id14325"></a><a class="indexterm" name="id14328"></a><a class="indexterm" name="id14331"></a><a class="indexterm" name="id14334"></a><p>Ever and always comparisons</p><p><code class="varname">{h3index,th3index} {?=, ?&lt;&gt;, %=, %&lt;&gt;} {h3index,th3index}</code></p><pre class="programlisting">
-SELECT th3index '[831c02fffffffff@2001-01-01, 880326b885fffff@2001-01-05]'
-  ?= 880326b885fffff::h3index;
+SELECT th3index '[831c02fffffffff@2001-01-01, 880326b885fffff@2001-01-05]' ?= 
+  880326b885fffff::h3index;
+-- true
+SELECT th3index '871fa44a8ffffff@2001-01-01' ?&lt;&gt; h3index '871fa44aeffffff';
 -- true
 </pre></li><li class="listitem"><a name="th3_tcomp"></a><a class="indexterm" name="id14342"></a><a class="indexterm" name="id14345"></a><p>Temporal comparisons</p><p><code class="varname">{h3index,th3index} {#=, #&lt;&gt;} {h3index,th3index}</code></p><pre class="programlisting">
 SELECT th3index '871fa44a8ffffff@2001-01-01' #= h3index '871fa44a8ffffff';

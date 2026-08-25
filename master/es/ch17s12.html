@@ -9,7 +9,8 @@ SELECT th3index '[831c02fffffffff@2001-01-01, 880326b885fffff@2001-01-05]' &lt;
   th3index '[871fa44a8ffffff@2001-01-01, 871fa44a9ffffff@2001-01-03]';
 -- true
 </pre></li><li class="listitem"><a name="th3_ever_always"></a><a class="indexterm" name="id13730"></a><a class="indexterm" name="id13733"></a><a class="indexterm" name="id13736"></a><a class="indexterm" name="id13739"></a><p>Comparaciones alguna vez y siempre</p><p><code class="varname">{h3index,th3index} {?=, ?&lt;&gt;, %=, %&lt;&gt;} {h3index,th3index}</code></p><pre class="programlisting">
-SELECT th3index '[831c02fffffffff@2001-01-01, 880326b885fffff@2001-01-05]' ?= 880326b885fffff::h3index;
+SELECT th3index '[831c02fffffffff@2001-01-01, 880326b885fffff@2001-01-05]' ?= 
+  880326b885fffff::h3index;
 -- true
 SELECT th3index '871fa44a8ffffff@2001-01-01' ?&lt;&gt; h3index '871fa44aeffffff';
 -- true
