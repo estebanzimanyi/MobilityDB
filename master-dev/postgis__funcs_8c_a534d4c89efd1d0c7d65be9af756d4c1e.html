@@ -140,6 +140,8 @@ $(function() {
           <tr><td class="navtab"><a class="navtab" href="postgis__funcs_8c_ae526396a025c1acb33c113bd37f7dede.html#ae526396a025c1acb33c113bd37f7dede">geography_centroid_from_wpoints</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="postgis__funcs_8c_ab6476731f7d2ca148769eeec3bc843c3.html#ab6476731f7d2ca148769eeec3bc843c3">geography_valid_type</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="postgis__funcs_8c_a4066a46461cc6ea897b30f6877399a16.html#a4066a46461cc6ea897b30f6877399a16">geom_array_areal_union</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="postgis__funcs_8c_ade691ddd1920609e08cbcd1657a2fa75.html#ade691ddd1920609e08cbcd1657a2fa75">geom_array_linear_union</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="postgis__funcs_8c_a6b9fcd1ef55c79b79b25d07ded9bf31c.html#a6b9fcd1ef55c79b79b25d07ded9bf31c">geom_array_point_only</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__meos__geo__base__spatial_ga5c6b62f78eb896585e14a37b0a67c062.html#ga5c6b62f78eb896585e14a37b0a67c062">geom_array_union</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__meos__geo__base__accessor_ga28dca3f4d5f757de8c4d247ce8f25b82.html#ga28dca3f4d5f757de8c4d247ce8f25b82">geom_azimuth</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__meos__geo__base__spatial_gae1a691de029d9e78f2efdde304b40751.html#gae1a691de029d9e78f2efdde304b40751">geom_boundary</a></td></tr>
@@ -165,6 +167,7 @@ $(function() {
           <tr><td class="navtab"><a class="navtab" href="group__meos__geo__base__dist_ga0c18770aa69b48590ce60b2d104a8848.html#ga0c18770aa69b48590ce60b2d104a8848">geom_max_distance2d</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__meos__geo__base__spatial_ga3876c5dc724b33d8f21018f0b7c741c2.html#ga3876c5dc724b33d8f21018f0b7c741c2">geom_min_bounding_radius</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__meos__geo__base__accessor_ga35cd617a271bf5569039434a60e41318.html#ga35cd617a271bf5569039434a60e41318">geom_perimeter</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__meos__geo__base__rel_ga29d40852f27e1ffeb838931f63727696.html#ga29d40852f27e1ffeb838931f63727696">geom_relate</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__meos__geo__base__rel_ga03c25b0533ce2ec1c3676d3a31a52834.html#ga03c25b0533ce2ec1c3676d3a31a52834">geom_relate_pattern</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="postgis__funcs_8c_a16db86f481e6411943882399278d29a6.html#a16db86f481e6411943882399278d29a6">geom_serialize</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__meos__geo__base__spatial_ga3625560eff370095b7c7cd1494ed52d6.html#ga3625560eff370095b7c7cd1494ed52d6">geom_shortestline2d</a></td></tr>
@@ -243,7 +246,7 @@ $(function() {
 </div><div class="memdoc">
 
 <p>Return the type that keeps a pair of geometries from the native engine. </p>
-<p >The native engine answers every type <a class="el" href="meos__internal__geo_8h_ac19306df3cd4c8276d0cdb104792eabc.html#ac19306df3cd4c8276d0cdb104792eabc" title="Return true if a geometry is composed solely of the types the native implementations can extract into...">geom_meos_supported()</a> accepts; a polyhedral surface and a TIN fall outside it. </p><dl class="params"><dt>Parameters</dt><dd>
+<p >The native engine answers every type <a class="el" href="meos__internal__geo_8h_ac19306df3cd4c8276d0cdb104792eabc.html#ac19306df3cd4c8276d0cdb104792eabc" title="Return true if a geometry is composed solely of the types the native implementations can extract into...">geom_meos_supported()</a> accepts, which is every type the edge decomposition reaches, and a type it declines is answered by nobody. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">geom1,geom2</td><td>Geometries the operation is asked about </td></tr>
   </table>
