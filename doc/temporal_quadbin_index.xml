@@ -144,10 +144,9 @@ SELECT endValue(tquadbin '{480fffffffffffff@2001-01-01, 48427fffffffffff@2001-01
 
 			<listitem xml:id="tquadbin_valueN">
 				<indexterm significance="normal"><primary><varname>valueN</varname></primary></indexterm>
-				<para>Return the <varname>n</varname>th distinct QUADBIN cell identifier (1-indexed). Returns <varname>NULL</varname> if out of range.</para>
-				<programlisting xml:space="preserve" format="linespecific">
-valueN(tquadbin,integer) → quadbin
-</programlisting>
+				<para>Return the n-th distinct QUADBIN cell identifier (1-indexed)</para>
+				<para><varname>valueN(tquadbin,integer) → quadbin</varname></para>
+				<para>Returns <varname>NULL</varname> if out of range.</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT valueN(tquadbin '{480fffffffffffff@2001-01-01, 48427fffffffffff@2001-01-02}', 1);
 -- 480fffffffffffff

@@ -393,8 +393,8 @@ SELECT tgeometry '[Point(0 0)@2001-01-01, Linestring(0 0,1 1)@2001-01-02]' &lt;-
 		</itemizedlist>
 	</sect1>
 
-	<sect1 xml:id="tgeo_spatial_rel">
-		<title>Spatial Relationships</title>
+	<sect1 xml:id="tgeo_spatiotemp_rel">
+		<title>Spatiotemporal Relationships</title>
 
 		<para>The topological relationships such as <varname>ST_Intersects</varname> and the distance relationships such as <varname>ST_DWithin</varname> can be generalized for temporal geometries. The arguments of these generalized functions are either a temporal geometry (that is, a <varname>tgeometry</varname>, a <varname>tgeography</varname>, a <varname>tgeompoint</varname>, or a <varname>tgeogpoint)</varname> and a base type (that is, a <varname>geometry</varname> or a <varname>geography</varname>) or two temporal geometries. Furthermore, both arguments must be of the same base type or the same temporal type, for example, these functions do not allow to mix a <varname>tgeometry</varname> and a <varname>geography</varname> or a <varname>tgeometry</varname> and a <varname>tgeompoint</varname>.</para>
 

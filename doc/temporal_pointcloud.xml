@@ -1453,9 +1453,9 @@ SELECT aDwithin(tpcpointSeq(ARRAY[
 			</itemizedlist>
 		</sect2>
 
-		<sect2 xml:id="tpcpoint_tempspatialrels">
-			<title>Temporal Spatial Relationships</title>
-			<para>The <emphasis>temporal</emphasis> relationships compute the topological or distance relationship at each instant and result in a <varname>tbool</varname>. They read the same <varname>tgeompoint</varname> projection the ever/always relationships read, and are wired in the same three argument orders. A tpcpoint carries the Z its schema declares, if any: <varname>tContains</varname>, <varname>tCovers</varname> and <varname>tTouches</varname> are planar relationships, so a schema whose dimensions do not include Z answers them and one carrying Z is refused. That projection carries the interpolation of its source, so a tpcpoint sequence is answered along its trajectory rather than at its instants alone.</para>
+		<sect2 xml:id="tpcpoint_spatiotemp_rels">
+		<title>Spatiotemporal Relationships</title>
+			<para>The spatiotemporal relationships compute the topological or distance relationship at each instant and result in a <varname>tbool</varname>. They read the same <varname>tgeompoint</varname> projection the ever/always relationships read, and are wired in the same three argument orders. A tpcpoint carries the Z its schema declares, if any: <varname>tContains</varname>, <varname>tCovers</varname> and <varname>tTouches</varname> are planar relationships, so a schema whose dimensions do not include Z answers them and one carrying Z is refused. That projection carries the interpolation of its source, so a tpcpoint sequence is answered along its trajectory rather than at its instants alone.</para>
 			<itemizedlist>
 				<listitem xml:id="tpcpoint_tspatialrels">
 					<indexterm significance="normal"><primary><varname>tContains</varname></primary></indexterm>
@@ -2000,7 +2000,7 @@ SELECT asText(tpcpatch(pcpatch(pcpoint(1, 1, 1, 1), pcpoint(1, 2, 2, 2)),
 		</sect2>
 
 		<sect2 xml:id="tpcpatch_tempspatialrels">
-			<title>Temporal Spatial Relationships</title>
+			<title>Spatiotemporal Relationships</title>
 			<para>The <emphasis>temporal</emphasis> relationships compute the topological or distance relationship at each instant and result in a <varname>tbool</varname>. A patch reaches the geometry engine through the <varname>tgeometry</varname> conversion above, so one point of a patch inside the argument is enough for the patch to intersect it. A tpcpatch carries the Z its schema declares, and <varname>tContains</varname>, <varname>tCovers</varname> and <varname>tTouches</varname> are planar relationships that refuse a Z dimension, so the type answers the three that a Z-carrying value can.</para>
 			<itemizedlist>
 				<listitem xml:id="tpcpatch_tspatialrels">
@@ -2459,14 +2459,22 @@ sudo cmake --install build]]></programlisting>
 
 		<itemizedlist>
 			<listitem>
-				<para><varname>pcpatch_to_pcd(pcpatch) → bytea</varname> and <varname>pcpatch_from_pcd(bytea, pcid) → pcpatch</varname>, round-trip through PCL's PCD wire format. Round-trip preserves all dim values bit-exactly.</para>
+				<para>Round-trip through PCL's PCD wire format. Round-trip preserves all dim values bit-exactly.</para>
+				<para><varname>pcpatch_to_pcd(pcpatch) → bytea</varname></para>
+				<para><varname>pcpatch_from_pcd(bytea, pcid) → pcpatch</varname>.</para>
 			</listitem>
+
 			<listitem>
-				<para><varname>pcpatch_voxel_grid(pcpatch, leaf double precision) → pcpatch</varname>, VoxelGrid down-sampling, leaf in the schema's spatial units. Preserves Intensity / RGB.</para>
+				<para>VoxelGrid down-sampling, leaf in the schema's spatial units. Preserves Intensity / RGB.</para>
+				<para><varname>pcpatch_voxel_grid(pcpatch, leaf double precision) → pcpatch</varname></para>
 			</listitem>
+
 			<listitem>
-				<para><varname>pcpatch_sor(pcpatch, k integer DEFAULT 50, stddev_mul double precision DEFAULT 1.0) → pcpatch</varname>, Statistical Outlier Removal. Drops points whose mean distance to their k nearest neighbours falls outside (mean ± stddev_mul × stddev). Preserves Intensity / RGB.</para>
+				<para>Statistical Outlier Removal</para>
+				<para><varname>pcpatch_sor(pcpatch, k integer DEFAULT 50, stddev_mul double precision DEFAULT 1.0) → pcpatch</varname></para>
+				<para>Drops points whose mean distance to their k nearest neighbours falls outside (mean ± stddev_mul × stddev). Preserves Intensity / RGB.</para>
 			</listitem>
+
 			<listitem>
 				<para><varname>pcpatch_icp(source pcpatch, target pcpatch, max_iter int DEFAULT 50, max_corr double DEFAULT 1.0) → double[]</varname> and <varname>pcpatch_gicp(...)</varname> with the same signature, IterativeClosestPoint and GeneralizedICP rigid registration. Both return an 8-element double array <varname>[tx, ty, tz, qw, qx, qy, qz, fitness]</varname> composable into a MobilityDB pose via <function>pose_make_3d</function>. GICP's Mahalanobis cost over per-point local covariances is markedly more robust than ICP on non-planar / vegetated surfaces (road-corridor scans, photogrammetric heritage facades).</para>
 			</listitem>

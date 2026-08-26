@@ -160,7 +160,7 @@ SELECT asEWKT(posechain(pose 'SRID=3812;Pose(Point(1 2),0.5)'));
 pose(posechain) → pose
 pose(posechain,integer) → pose
 </programlisting>
-					<para>With one argument the whole chain is composed, giving the pose of its innermost frame. With two the first <varname>n</varname> links are composed, giving the pose of the frame the <varname>n</varname>-th link defines, that is, where that joint of the chain sits.</para>
+					<para>With one argument the whole chain is composed, giving the pose of its innermost frame. With two the first <varname>n</varname> links are composed, giving the pose of the frame the n-th link defines, that is, where that joint of the chain sits.</para>
 					<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT asEWKT(pose(posechain
   'PoseChain(Pose(Point(0 0),0),Pose(Point(1 0),0),Pose(Point(1 0),0))'));
@@ -465,10 +465,8 @@ SELECT asMFJSON(tposechain 'PoseChain(Pose(Point(1 1), 0.5))@2001-01-01');
 					<indexterm significance="normal"><primary><varname>tposechain</varname></primary></indexterm>
 					<para>Construct a temporal pose chain from a pose chain and a time value</para>
 					<programlisting xml:space="preserve" format="linespecific">
-tposechain(posechain, timestamptz) → tposechain
-tposechain(posechain, tstzset) → tposechain
-tposechain(posechain, tstzspan, text DEFAULT 'linear') → tposechain
-tposechain(posechain, tstzspanset, text DEFAULT 'linear') → tposechain
+tposechain(posechain,{timestamptz,tstzset}) → tposechain
+tposechain(posechain,{tstzspan,tstzspanset},text='linear') → tposechain
 </programlisting>
 					<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT asEWKT(tposechain(posechain 'PoseChain(Pose(Point(1 1), 0.5))',
@@ -576,7 +574,7 @@ SELECT round(stbox(tposechain
 					<indexterm significance="normal"><primary><varname>shiftTime</varname></primary></indexterm>
 					<para>Round the coordinates to a number of decimal places, or shift the time</para>
 					<programlisting xml:space="preserve" format="linespecific">
-round(tposechain, integer DEFAULT 0) → tposechain
+round(tposechain, integer=0) → tposechain
 shiftTime(tposechain, interval) → tposechain
 </programlisting>
 					<programlisting language="sql" xml:space="preserve" format="linespecific">
@@ -773,8 +771,8 @@ SELECT tposechain '[PoseChain(Pose(Point(1 1), 0.5))@2001-01-01,
 			</itemizedlist>
 		</sect2>
 
-		<sect2 xml:id="tposechain_tempspatialrels">
-			<title>Temporal Spatial Relationships</title>
+		<sect2 xml:id="tposechain_spatiotemp_rels">
+			<title>Spatiotemporal Relationships</title>
 			<itemizedlist>
 				<listitem xml:id="tposechain_tspatialrels">
 					<indexterm significance="normal"><primary><varname>tContains</varname></primary></indexterm>
@@ -783,7 +781,7 @@ SELECT tposechain '[PoseChain(Pose(Point(1 1), 0.5))@2001-01-01,
 					<indexterm significance="normal"><primary><varname>tDwithin</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>tIntersects</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>tTouches</varname></primary></indexterm>
-					<para>The <emphasis>temporal</emphasis> relationships compute the topological or distance relationship at each instant and result in a <varname>tbool</varname>. A temporal pose chain answers them at the position its composed pose occupies, so a chain with linear interpolation is answered along its trajectory rather than at its instants alone. The chain declares the relationships a moving point answers: <varname>tContains</varname> and <varname>tCovers</varname> take the geometry first only, and <varname>tTouches</varname> has no direction between two chains, since a moving point neither contains nor covers a geometry and two moving points do not touch.</para>
+					<para>The spatiotemporal relationships compute the topological or distance relationship at each instant and result in a <varname>tbool</varname>. A temporal pose chain answers them at the position its composed pose occupies, so a chain with linear interpolation is answered along its trajectory rather than at its instants alone. The chain declares the relationships a moving point answers: <varname>tContains</varname> and <varname>tCovers</varname> take the geometry first only, and <varname>tTouches</varname> has no direction between two chains, since a moving point neither contains nor covers a geometry and two moving points do not touch.</para>
 					<programlisting xml:space="preserve" format="linespecific">
 tContains(geometry,tposechain) &#8594; tbool
 tCovers(geometry,tposechain) &#8594; tbool

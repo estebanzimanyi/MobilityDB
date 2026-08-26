@@ -30,6 +30,7 @@
 <!ENTITY temporal_jsonb SYSTEM "temporal_jsonb.xml">
 <!ENTITY temporal_h3_index SYSTEM "temporal_h3_index.xml">
 <!ENTITY temporal_quadbin_index SYSTEM "temporal_quadbin_index.xml">
+<!ENTITY temporal_s2 SYSTEM "temporal_s2.xml">
 <!ENTITY temporal_pointcloud SYSTEM "temporal_pointcloud.xml">
 <!ENTITY temporal_raster SYSTEM "temporal_raster.xml">
 <!ENTITY reference SYSTEM "reference.xml">
@@ -140,6 +141,7 @@
 	&temporal_jsonb;
 	&temporal_h3_index;
 	&temporal_quadbin_index;
+	&temporal_s2;
 	&temporal_pointcloud;
 	&temporal_raster;
 	&reference;

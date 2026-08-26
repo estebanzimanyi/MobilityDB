@@ -160,7 +160,7 @@ SELECT asEWKT(posechain(pose 'SRID=3812;Pose(Point(1 2),0.5)'));
 pose(posechain) → pose
 pose(posechain,integer) → pose
 </programlisting>
-					<para>Con un argumento se compone toda la cadena, lo que da la pose de su marco más interior. Con dos se componen los primeros <varname>n</varname> eslabones, lo que da la pose del marco que define el eslabón <varname>n</varname>-ésimo, es decir, dónde se sitúa esa articulación de la cadena.</para>
+					<para>Con un argumento se compone toda la cadena, lo que da la pose de su marco más interior. Con dos se componen los primeros <varname>n</varname> eslabones, lo que da la pose del marco que define el eslabón n-ésimo, es decir, dónde se sitúa esa articulación de la cadena.</para>
 					<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT asEWKT(pose(posechain
   'PoseChain(Pose(Point(0 0),0),Pose(Point(1 0),0),Pose(Point(1 0),0))'));
@@ -465,10 +465,8 @@ SELECT asMFJSON(tposechain 'PoseChain(Pose(Point(1 1), 0.5))@2001-01-01');
 					<indexterm significance="normal"><primary><varname>tposechain</varname></primary></indexterm>
 					<para>Construye una cadena de poses temporal a partir de una cadena de poses y un valor de tiempo</para>
 					<programlisting xml:space="preserve" format="linespecific">
-tposechain(posechain, timestamptz) → tposechain
-tposechain(posechain, tstzset) → tposechain
-tposechain(posechain, tstzspan, text DEFAULT 'linear') → tposechain
-tposechain(posechain, tstzspanset, text DEFAULT 'linear') → tposechain
+tposechain(posechain,{timestamptz,tstzset}) → tposechain
+tposechain(posechain,{tstzspan,tstzspanset},text='linear') → tposechain
 </programlisting>
 					<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT asEWKT(tposechain(posechain 'PoseChain(Pose(Point(1 1), 0.5))',
@@ -576,8 +574,8 @@ SELECT round(stbox(tposechain
 					<indexterm significance="normal"><primary><varname>shiftTime</varname></primary></indexterm>
 					<para>Redondea las coordenadas a un número de decimales, o desplaza el tiempo</para>
 					<programlisting xml:space="preserve" format="linespecific">
-round(tposechain, integer DEFAULT 0) → tposechain
-shiftTime(tposechain, interval) → tposechain
+round(tposechain,integer=0) → tposechain
+shiftTime(tposechain,interval) → tposechain
 </programlisting>
 					<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT asEWKT(round(tposechain
@@ -712,8 +710,8 @@ SELECT asGeoPose(ARRAY[
 					<indexterm significance="normal"><primary><varname>atValue</varname></primary></indexterm>
 					<para>Restringe una cadena de poses temporal a un tiempo o a un valor</para>
 					<programlisting xml:space="preserve" format="linespecific">
-atTime(tposechain, time) → tposechain
-atValue(tposechain, posechain) → tposechain
+atTime(tposechain,time) → tposechain
+atValue(tposechain,posechain) → tposechain
 </programlisting>
 					<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT asEWKT(atTime(tposechain '[PoseChain(Pose(Point(1 1), 0.5))@2001-01-01,
@@ -729,14 +727,14 @@ SELECT asEWKT(atValue(tposechain '{PoseChain(Pose(Point(1 1), 0.5))@2001-01-01,
 		</sect2>
 
 		<sect2 xml:id="tposechain_comparison">
-			<title>Funciones y operadores de comparación</title>
+			<title>Operadores de comparación</title>
 			<itemizedlist>
 				<listitem xml:id="tposechain_eq">
-					<indexterm significance="normal"><primary><varname>eEq</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>=</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>&lt;&gt;</varname></primary></indexterm>
 					<para>Compara dos cadenas de poses temporales, o una cadena de poses temporal y una cadena de poses</para>
 					<programlisting xml:space="preserve" format="linespecific">
-tposechain operator tposechain → boolean
-eEq(tposechain, posechain) → boolean
+tposechain {=, &lt;&gt;} tposechain → boolean
 </programlisting>
 					<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT tposechain 'PoseChain(Pose(Point(1 1), 0.5))@2001-01-01' =
@@ -773,8 +771,8 @@ SELECT tposechain '[PoseChain(Pose(Point(1 1), 0.5))@2001-01-01,
 			</itemizedlist>
 		</sect2>
 
-		<sect2 xml:id="tposechain_tempspatialrels">
-			<title>Relaciones espaciales temporales</title>
+		<sect2 xml:id="tposechain_spatiotemp_rels">
+			<title>Relaciones espaciotemporales</title>
 			<itemizedlist>
 				<listitem xml:id="tposechain_tspatialrels">
 					<indexterm significance="normal"><primary><varname>tContains</varname></primary></indexterm>

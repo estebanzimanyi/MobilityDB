@@ -358,9 +358,7 @@ SELECT ST_AsText(geom(trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));Pose(Point(5 0)
 			<listitem xml:id="trgeometry_traversedArea_func">
 				<indexterm significance="normal"><primary><varname>traversedArea</varname></primary></indexterm>
 				<para>Return the area traversed by the temporal rigid geometry</para>
-				<programlisting xml:space="preserve" format="linespecific">
-traversedArea(trgeometry, unary_union=false) → geometry
-</programlisting>
+				<para><varname>traversedArea(trgeometry,unary_union bool=false) → geometry</varname></para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT ST_AsText(traversedArea(
   trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));[Pose(Point(0 0), 0.0)@2001-01-01,
@@ -576,14 +574,12 @@ minusGeometry(trgeometry, geometry) → trgeometry
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT temporalTime(atGeometry(
   trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));[Pose(Point(0 0), 0.0)@2001-01-01,
-  Pose(Point(4 0), 0.0)@2001-01-05]',
-  geometry 'Polygon((1 -1,3 -1,3 1,1 1,1 -1))'));
+  Pose(Point(4 0), 0.0)@2001-01-05]', geometry 'Polygon((1 -1,3 -1,3 1,1 1,1 -1))'));
 -- {[2001-01-02, 2001-01-04]}
 
 SELECT temporalTime(minusGeometry(
   trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));[Pose(Point(0 0), 0.0)@2001-01-01,
-  Pose(Point(4 0), 0.0)@2001-01-05]',
-  geometry 'Polygon((1 -1,3 -1,3 1,1 1,1 -1))'));
+  Pose(Point(4 0), 0.0)@2001-01-05]',geometry 'Polygon((1 -1,3 -1,3 1,1 1,1 -1))'));
 -- {[2001-01-01, 2001-01-02), (2001-01-04, 2001-01-05]}
 </programlisting>
 				<para>Restriction against an empty geometry returns NULL for <varname>atGeometry</varname> and the original input for <varname>minusGeometry</varname>.</para>
@@ -593,21 +589,17 @@ SELECT temporalTime(minusGeometry(
 				<indexterm significance="normal"><primary><varname>atStbox</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>minusStbox</varname></primary></indexterm>
 				<para>Restrict a trgeometry to (the complement of) a spatiotemporal box</para>
-				<programlisting xml:space="preserve" format="linespecific">
-atStbox(trgeometry, stbox [, border_inc boolean = true]) → trgeometry
-minusStbox(trgeometry, stbox [, border_inc boolean = true]) → trgeometry
-</programlisting>
+				<para><varname>atStbox(trgeometry,stbox[,border_inc boolean = true]) → trgeometry</varname></para>
+				<para><varname>minusStbox(trgeometry,stbox[,border_inc boolean = true]) → trgeometry</varname></para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT temporalTime(atStbox(
   trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));[Pose(Point(0 0), 0.0)@2001-01-01,
-  Pose(Point(4 0), 0.0)@2001-01-05]',
-  stbox 'STBOX X((1, -1), (3, 1))'));
+  Pose(Point(4 0), 0.0)@2001-01-05]', stbox 'STBOX X((1, -1), (3, 1))'));
 -- {[2001-01-02, 2001-01-04]}
 
 SELECT temporalTime(atStbox(
   trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));[Pose(Point(0 0), 0.0)@2001-01-01,
-  Pose(Point(4 0), 0.0)@2001-01-05]',
-  stbox 'STBOX T([2001-01-02, 2001-01-04])'));
+  Pose(Point(4 0), 0.0)@2001-01-05]', stbox 'STBOX T([2001-01-02, 2001-01-04])'));
 -- {[2001-01-02, 2001-01-04]}
 </programlisting>
 				<para>If the STBox has only a temporal component the call collapses to the standard <varname>atTime</varname>; if it has only a spatial component the temporal domain is preserved.</para>
@@ -784,39 +776,37 @@ SELECT dynTimeWarpPath(
 	<sect1 xml:id="trgeometry_comparisons">
 		<title>Comparisons</title>
 
-		<para>Equality and ever / always operators compare two temporal rigid geometries on the materialised geometry, both the reference shape and the pose path must agree at every shared instant.</para>
-
 		<itemizedlist>
-			<listitem xml:id="trgeometry_eq">
+			<listitem xml:id="trgeometry_comp">
 				<indexterm significance="normal"><primary><varname>=</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>&lt;&gt;</varname></primary></indexterm>
-				<para>Test exact (in)equality of two temporal rigid geometries</para>
-				<programlisting xml:space="preserve" format="linespecific">
-trgeometry = trgeometry → boolean
-trgeometry &lt;&gt; trgeometry → boolean
-</programlisting>
-							<programlisting language="sql" xml:space="preserve" format="linespecific">
+				<indexterm significance="normal"><primary><varname>&lt;</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>&gt;</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>&lt;=</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>&gt;=</varname></primary></indexterm>
+				<para>Traditional comparisons</para>
+				<para><varname>trgeometry {=, &lt;&gt;, &lt;, &gt;, &lt;=, &gt;=} trgeometry → boolean</varname></para>
+				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));
-  [Pose(Point(0 0), 0.0)@2001-01-01, Pose(Point(10 0),
-  0.0)@2001-01-02]' = trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));
-  [Pose(Point(0 0), 0.0)@2001-01-01, Pose(Point(10 0), 0.0)@2001-01-02]';
+    [Pose(Point(0 0), 0.0)@2001-01-01, Pose(Point(10 0), 0.0)@2001-01-02]' = 
+  trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));
+    [Pose(Point(0 0), 0.0)@2001-01-01, Pose(Point(10 0), 0.0)@2001-01-02]';
 -- t
 SELECT trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));
-  [Pose(Point(0 0), 0.0)@2001-01-01, Pose(Point(10 0),
-  0.0)@2001-01-02]' &lt;&gt; trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));
-  [Pose(Point(0 0), 0.0)@2001-01-01, Pose(Point(10 0), 0.0)@2001-01-02]';
+    [Pose(Point(0 0), 0.0)@2001-01-01, Pose(Point(10 0),0.0)@2001-01-02]' &lt;&gt; 
+  trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));
+    [Pose(Point(0 0), 0.0)@2001-01-01, Pose(Point(10 0), 0.0)@2001-01-02]';
 -- f
 </programlisting>
 			</listitem>
 
-			<listitem xml:id="trgeometry_evereq">
+			<listitem xml:id="trgeometry_ever_always">
 				<indexterm significance="normal"><primary><varname>?=</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>%=</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>?&lt;&gt;</varname></primary></indexterm>
-				<para>Test whether the materialised geometry is ever (not) equal to the operand at any time</para>
-				<programlisting xml:space="preserve" format="linespecific">
-{geometry,trgeometry} ?= {geometry,trgeometry} → boolean
-{geometry,trgeometry} ?&lt;&gt; {geometry,trgeometry} → boolean
-</programlisting>
+				<indexterm significance="normal"><primary><varname>%&lt;&gt;</varname></primary></indexterm>
+				<para>Ever and always comparisons</para>
+				<para><varname>{geometry,trgeometry} {?=, ?&lt;&gt;} {geometry,trgeometry} → boolean</varname></para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));[Pose(Point(0 0), 0.0)@2001-01-01,
   Pose(Point(5 0), 0.0)@2001-01-02]'
@@ -825,15 +815,12 @@ SELECT trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));[Pose(Point(0 0), 0.0)@2001-01
 </programlisting>
 			</listitem>
 
-			<listitem xml:id="trgeometry_alwayseq">
+			<listitem xml:id="trgeometry_tcomp">
 				<indexterm significance="normal"><primary><varname>%=</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>%&lt;&gt;</varname></primary></indexterm>
-				<para>Test whether the materialised geometry is always (not) equal to the operand</para>
-				<programlisting xml:space="preserve" format="linespecific">
-{geometry,trgeometry} %= {geometry,trgeometry} → boolean
-{geometry,trgeometry} %&lt;&gt; {geometry,trgeometry} → boolean
-</programlisting>
-							<programlisting language="sql" xml:space="preserve" format="linespecific">
+				<para>Temporal comparisons</para>
+				<para><varname>{geometry,trgeometry} {%=, %&lt;&gt;} {geometry,trgeometry} → boolean</varname></para>
+				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));
   [Pose(Point(0 0), 0.0)@2001-01-01, Pose(Point(10 0),
   0.0)@2001-01-02]' %= trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));

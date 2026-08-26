@@ -1213,10 +1213,10 @@ SELECT round(tpose '[Pose(Point(1 1), 0.3)@2001-01-01,
 		</itemizedlist>
 	</sect1>
 
-	<sect1 xml:id="tpose_spatial_rels">
-		<title>Relaciones espaciales</title>
+	<sect1 xml:id="tpose_spatiotemp_rels">
+		<title>Relaciones espaciotemporales</title>
 		<para>
-			Las relaciones topológicas y de distancia descritas en la <xref linkend="tgeo_spatial_rel"/> tales como <varname>eIntersects</varname>, <varname>aDwithin</varname> o <varname>tContains</varname> solo consideran la ubicación de un valor, no su orientación. Una pose temporal las acepta directamente y las responde en la posición que ocupa su pose, que es el punto que nombra el destino de conversión <varname>tgeompoint</varname>. Las funciones <varname>geometry</varname> y <varname>tgeompoint</varname> y los castings explícitos <varname>::</varname> correspondientes siguen disponibles cuando lo que se quiere es la geometría misma.
+			Las relaciones topológicas y de distancia descritas en la <xref linkend="tgeo_spatiotemp_rel"/> tales como <varname>eIntersects</varname>, <varname>aDwithin</varname> o <varname>tContains</varname> solo consideran la ubicación de un valor, no su orientación. Una pose temporal las acepta directamente y las responde en la posición que ocupa su pose, que es el punto que nombra el destino de conversión <varname>tgeompoint</varname>. Las funciones <varname>geometry</varname> y <varname>tgeompoint</varname> y los castings explícitos <varname>::</varname> correspondientes siguen disponibles cuando lo que se quiere es la geometría misma.
 		</para>
 
 		<itemizedlist>
@@ -1345,10 +1345,10 @@ SELECT tpose '[Pose(Point(1 1), 0.1)@2001-01-01,
 			<listitem xml:id="tpose_ever_always">
 				<indexterm significance="normal"><primary><varname>?=</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>%=</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>?&lt;&gt;</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>%&lt;&gt;</varname></primary></indexterm>
 				<para>Comparaciones alguna vez y siempre</para>
-				<programlisting xml:space="preserve" format="linespecific">
-tpose {?=, %=} tpose → boolean
-</programlisting>
+				<para><varname>tpose {?=, ?&lt;&gt;, %=, %&lt;&gt;} tpose → boolean</varname></para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT tpose '[Pose(Point(1 1), 0.2)@2001-01-01, 
   Pose(Point(1 1), 0.4)@2001-01-04)' ?= Pose(Point(1 1), 0.3);

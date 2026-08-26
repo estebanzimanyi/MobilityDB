@@ -1106,7 +1106,7 @@
 			</itemizedlist>
 		</sect2>
 		<sect2>
-			<title>Spatial Relationships</title>
+			<title>Spatiotemporal Relationships</title>
 			<sect3>
 				<title>Ever and Always Relationships</title>
 				<itemizedlist>
@@ -1548,7 +1548,7 @@
 				</itemizedlist>
 			</sect3>
 			<sect3>
-				<title>Spatial Relationships</title>
+				<title>Spatiotemporal Relationships</title>
 				<itemizedlist>
 					<listitem>
 						<para><link linkend="tpose_espatialrels"><varname>eContains</varname>, <varname>aContains</varname>, <varname>eCovers</varname>, <varname>aCovers</varname>, <varname>eDisjoint</varname>, <varname>aDisjoint</varname>, <varname>eDwithin</varname>, <varname>aDwithin</varname>, <varname>eIntersects</varname>, <varname>aIntersects</varname>, <varname>eTouches</varname>, <varname>aTouches</varname></link>: The <emphasis>ever</emphasis> and <emphasis>always</emphasis> relationships determine whether the topological or distance relationship is ever or always satisfied and result in a <varname>boolean</varname>. A temporal pose answers them at the position it occupies, so a value with linear interpolation is answered along its trajectory rather than at its instants alone. The temporal pose declares the relationships a moving point answers: <varname>eContains</varname>, <varname>aContains</varname>, <varname>eCovers</varname> and <varname>aCovers</varname> take the geometry first only, and <varname>eTouches</varname> and <varname>aTouches</varname> have no direction between two temporal poses, since a moving point neither contains nor covers a geometry and two moving points do not touch.</para>
@@ -1855,7 +1855,7 @@
 				</itemizedlist>
 			</sect3>
 			<sect3>
-				<title>Temporal Spatial Relationships</title>
+				<title>Spatiotemporal Relationships</title>
 				<itemizedlist>
 					<listitem>
 						<para><link linkend="tposechain_tspatialrels"><varname>tContains</varname>, <varname>tCovers</varname>, <varname>tDisjoint</varname>, <varname>tDwithin</varname>, <varname>tIntersects</varname>, <varname>tTouches</varname></link>: The <emphasis>temporal</emphasis> relationships compute the topological or distance relationship at each instant and result in a <varname>tbool</varname>. A temporal pose chain answers them at the position its composed pose occupies, so a chain with linear interpolation is answered along its trajectory rather than at its instants alone. The chain declares the relationships a moving point answers: <varname>tContains</varname> and <varname>tCovers</varname> take the geometry first only, and <varname>tTouches</varname> has no direction between two chains, since a moving point neither contains nor covers a geometry and two moving points do not touch.</para>
@@ -2100,8 +2100,9 @@
 					</listitem>
 				</itemizedlist>
 			</sect3>
+
 			<sect3>
-				<title>Spatial Relationships</title>
+				<title>Spatiotemporal Relationships</title>
 				<itemizedlist>
 					<listitem>
 						<para><link linkend="tnpoint_espatialrels"><varname>eContains</varname>, <varname>aContains</varname>, <varname>eCovers</varname>, <varname>aCovers</varname>, <varname>eDisjoint</varname>, <varname>aDisjoint</varname>, <varname>eDwithin</varname>, <varname>aDwithin</varname>, <varname>eIntersects</varname>, <varname>aIntersects</varname>, <varname>eTouches</varname>, <varname>aTouches</varname></link>: The <emphasis>ever</emphasis> and <emphasis>always</emphasis> relationships determine whether the topological or distance relationship is ever or always satisfied and result in a <varname>boolean</varname>. A temporal network point answers them at the position its route and fraction resolve to, so a sequence with linear interpolation is answered along its route rather than at its instants alone. The temporal network point declares the relationships a moving point answers: <varname>eContains</varname>, <varname>aContains</varname>, <varname>eCovers</varname> and <varname>aCovers</varname> take the geometry first only, and <varname>eTouches</varname> and <varname>aTouches</varname> have no direction between two temporal network points, since a moving point neither contains nor covers a geometry and two moving points do not touch.</para>
@@ -2111,6 +2112,7 @@
 					</listitem>
 				</itemizedlist>
 			</sect3>
+
 			<sect3>
 				<title>Comparisons</title>
 				<itemizedlist>
@@ -2125,6 +2127,7 @@
 					</listitem>
 				</itemizedlist>
 			</sect3>
+
 			<sect3>
 				<title>Aggregations</title>
 				<itemizedlist>
@@ -2401,7 +2404,7 @@
 				</itemizedlist>
 			</sect3>
 			<sect3>
-				<title>Spatial Relationships</title>
+				<title>Spatiotemporal Relationships</title>
 				<itemizedlist>
 					<listitem>
 						<para><link linkend="tcbuffer_espatialrels"><varname>eContains</varname>, <varname>aContains</varname>, <varname>eCovers</varname>, <varname>aCovers</varname>, <varname>eDisjoint</varname>, <varname>aDisjoint</varname>, <varname>eDwithin</varname>, <varname>aDwithin</varname>, <varname>eIntersects</varname>, <varname>aIntersects</varname>, <varname>eTouches</varname>, <varname>aTouches</varname></link>: The <emphasis>ever</emphasis> and <emphasis>always</emphasis> relationships determine whether the topological or distance relationship is ever or always satisfied (see <xref linkend="ever_always_comparison"/>) and return a <varname>boolean</varname>. Examples are the <varname>eIntersects</varname> and <varname>aIntersects</varname> functions.</para>
@@ -2916,7 +2919,7 @@
 					<para><link linkend="th3_startValue"><varname>startValue</varname>, <varname>endValue</varname></link>: Return the first or last H3 cell identifier of a temporal value</para>
 				</listitem>
 				<listitem>
-					<para><link linkend="th3_valueN"><varname>valueN</varname></link>: Return the <varname>n</varname>th distinct H3 cell identifier (1-indexed). Returns <varname>NULL</varname> if out of range.</para>
+					<para><link linkend="th3_valueN"><varname>valueN</varname></link>: Return the n-th distinct H3 cell identifier (1-indexed). Returns <varname>NULL</varname> if out of range.</para>
 				</listitem>
 				<listitem>
 					<para><link linkend="th3_getValues"><varname>getValues</varname></link>: Return the set of distinct H3 cell identifiers the trajectory takes</para>
@@ -3111,7 +3114,7 @@
 			</itemizedlist>
 		</sect2>
 		<sect2>
-			<title>Spatial Relationships</title>
+			<title>Spatiotemporal Relationships</title>
 			<itemizedlist>
 				<listitem>
 					<para><link linkend="th3_rel_contains"><varname>eContains</varname>, <varname>aContains</varname>, <varname>tContains</varname></link>: Whether one footprint contains the other (interiors only)</para>
@@ -3188,7 +3191,7 @@
 					<para><link linkend="tquadbin_startValue"><varname>startValue</varname>, <varname>endValue</varname></link>: Return the first or last QUADBIN cell identifier of a temporal value</para>
 				</listitem>
 				<listitem>
-					<para><link linkend="tquadbin_valueN"><varname>valueN</varname></link>: Return the <varname>n</varname>th distinct QUADBIN cell identifier (1-indexed). Returns <varname>NULL</varname> if out of range.</para>
+					<para><link linkend="tquadbin_valueN"><varname>valueN</varname></link>: Return the n-th distinct QUADBIN cell identifier (1-indexed). Returns <varname>NULL</varname> if out of range.</para>
 				</listitem>
 				<listitem>
 					<para><link linkend="tquadbin_getValues"><varname>getValues</varname></link>: Return the set of distinct QUADBIN cell identifiers the trajectory takes</para>
@@ -3621,7 +3624,7 @@
 				</itemizedlist>
 			</sect3>
 			<sect3>
-				<title>Temporal Spatial Relationships</title>
+				<title>Spatiotemporal Relationships</title>
 				<itemizedlist>
 					<listitem>
 						<para><link linkend="tpcpoint_tspatialrels"><varname>tContains</varname>, <varname>tCovers</varname>, <varname>tDisjoint</varname>, <varname>tDwithin</varname>, <varname>tIntersects</varname>, <varname>tTouches</varname></link>: Temporal spatial relationships</para>
@@ -3738,7 +3741,7 @@
 				</itemizedlist>
 			</sect3>
 			<sect3>
-				<title>Temporal Spatial Relationships</title>
+				<title>Spatiotemporal Relationships</title>
 				<itemizedlist>
 					<listitem>
 						<para><link linkend="tpcpatch_tspatialrels"><varname>tContains</varname>, <varname>tCovers</varname>, <varname>tDisjoint</varname>, <varname>tDwithin</varname>, <varname>tIntersects</varname>, <varname>tTouches</varname></link>: Temporal spatial relationships</para>

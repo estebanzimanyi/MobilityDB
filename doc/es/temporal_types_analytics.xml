@@ -47,12 +47,10 @@ SELECT asText(minTimeDeltaSimplify(tgeogpoint '[Point(1 1 1)@2001-01-01,
 				<indexterm significance="normal"><primary><varname>maxDistSimplify</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>douglasPeuckerSimplify</varname></primary></indexterm>
 				<para>Simplificar un flotante o un punto temporal usando el <ulink url="https://es.wikipedia.org/wiki/Algoritmo_de_Ramer%E2%80%93Douglas%E2%80%93Peucker">algoritmo de Douglas-Peucker</ulink> &Z_support;</para>
-				<programlisting xml:space="preserve" format="linespecific">
-maxDistSimplify({tfloat,tgeompoint},maxdist float,syncdist=true) →
-  {tfloat,tgeompoint}
-douglasPeuckerSimplify({tfloat,tgeompoint},maxdist float,syncdist=true) →
-  {tfloat,tgeompoint}
-</programlisting>
+				<para><varname>maxDistSimplify({tfloat,tgeompoint},maxdist float,syncdist bool=true) →</varname></para>
+				<para><varname>  {tfloat,tgeompoint}</varname></para>
+				<para><varname>douglasPeuckerSimplify({tfloat,tgeompoint},maxdist float,syncdist bool=true) →</varname></para>
+				<para><varname>  {tfloat,tgeompoint}</varname></para>
 				<para>La diferencia entre las dos funciones es que <varname>maxDistSimplify</varname> usa una versión del algoritmo de un solo recorrido, mientras que <varname>douglasPeuckerSimplify</varname> usa el algoritmo recursivo estándar.</para>
 				<para>La función elimina los valores or los puntos cuya distancia es menor que la distancia pasada como segundo argumento. En el caso de puntos temporales la distancia se especifica en las unidades del sistema de coordenadas. El tercer argumento se aplica solo a puntos temporales y especifica si se utiliza la distancia espacial o la distancia  sincronizada. Observe que la simplificación se aplica sólo a secuencias temporales o conjuntos de secuencias con interpolación lineal. En todos los demás casos, se devuelve una copia del punto temporal dado.</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
@@ -104,7 +102,7 @@ SELECT asText(douglasPeuckerSimplify(tgeompoint '[Point(1 1)@2001-01-01,
 				<para>Muestrear un valor temporal con respecto a un intervalo</para>
 				<programlisting xml:space="preserve" format="linespecific">
 tsample(temporal,duration interval,torigin timestamptz='2000-01-03',
-  interp='discrete') → temporal
+  interp text='discrete') → temporal
 </programlisting>
 				<para>Si el origen no se especifica, su valor se establece por defecto en lunes 3 de enero de 2000. El intervalo dado debe ser estrictamente mayor que cero.</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
@@ -147,8 +145,7 @@ SELECT asText(tsample(tgeompoint '{[Point(1 1)@2001-01-01, Point(5 5)@2001-01-05
 				<para>Reducir la precisión temporal de un valor temporal con respecto a un intervalo calculando el promedio/centroide ponderado por el tiempo en cada intervalo de tiempo</para>
 				<programlisting xml:space="preserve" format="linespecific">
 tprecision({tnumber,tgeompoint,tcbuffer,tpose,tgeo,trgeometry},duration interval,
-  torigin timestamptz='2000-01-03')
-  → {tnumber,tgeompoint,tcbuffer,tpose,tgeo,trgeometry}
+  torigin timestamptz='2000-01-03') → {tnumber,tgeompoint,tcbuffer,tpose,tgeo,trgeometry}
 </programlisting>
 				<para>Si el origen no se especifica, su valor se establece por defecto en lunes 3 de enero de 2000. El intervalo dado debe ser estrictamente mayor que cero.</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
@@ -202,11 +199,11 @@ SELECT asText(tprecision(tgeompoint '[Point(1 1)@2001-01-01, Point(5 5)@2001-01-
 				<indexterm significance="normal"><primary><varname>lcssDistance</varname></primary></indexterm>
 				<para>Devuelve la <ulink url="https://en.wikipedia.org/wiki/Hausdorff_distance">distancia de Hausdorff</ulink> discreta, la <ulink url="https://en.wikipedia.org/wiki/Fr%C3%A9chet_distance">distancia de Fréchet</ulink> discreta, la distancia de distorsión de tiempo dinámica (<ulink url="https://en.wikipedia.org/wiki/Dynamic_time_warping">Dynamic Time Warp</ulink> o DTW), la distancia de Hausdorff promedio, o la distancia de <ulink url="https://en.wikipedia.org/wiki/Longest_common_subsequence">subsecuencia común más larga</ulink> (Longest Common SubSequence o LCSS) entre dos valores temporales &Z_support; &geography_support;</para>
 				<programlisting xml:space="preserve" format="linespecific">
-hausdorffDistance({tnumber, tgeo}, {tnumber, tgeo}) → float
-frechetDistance({tnumber, tgeo}, {tnumber, tgeo}) → float
-dynTimeWarpDistance({tnumber, tgeo}, {tnumber, tgeo}) → float
-averageHausdorffDistance({tnumber, tgeo}, {tnumber, tgeo}) → float
-lcssDistance({tnumber, tgeo}, {tnumber, tgeo}, float) → float
+hausdorffDistance({tnumber,tgeo},{tnumber,tgeo}) → float
+frechetDistance({tnumber,tgeo},{tnumber,tgeo}) → float
+dynTimeWarpDistance({tnumber,tgeo},{tnumber,tgeo}) → float
+averageHausdorffDistance({tnumber, tgeo},{tnumber,tgeo}) → float
+lcssDistance({tnumber,tgeo},{tnumber, tgeo},float) → float
 </programlisting>
 				<para>La función <varname>lcssDistance</varname> requiere un parámetro adicional que especifica el umbral de distancia por debajo del cual dos valores se consideran coincidentes.</para>
 				<para>Estas funciones tienen una complejidad de espacio lineal ya que solo dos filas de la matriz de distancia son asignadas en la memoria. Sin embargo, su complejidad de tiempo es cuadrática en el número de instantes de los valores temporales. Por lo tanto, las funciones requerien un tiempo considerable para valores temporales con gran número de instantes.</para>
@@ -270,8 +267,8 @@ SELECT round(lcssDistance(tgeompoint '[Point(1 1)@2001-01-01, Point(3 3)@2001-01
 				<indexterm significance="normal"><primary><varname>dynTimeWarpPath</varname></primary></indexterm>
 				<para>Devuelve las parejas de correspondencia entre dos valores temporales con respecto a la distancia de Fréchet discreta o la distance de distorsión de tiempo dinámica (Dynamic Time Warp o DTW) &Z_support; &geography_support; &SRF;</para>
 				<programlisting xml:space="preserve" format="linespecific">
-frechetDistancePath({tnumber, tgeo}, {tnumber, tgeo}) → {(i,j)}
-dynTimeWarpPath({tnumber, tgeo}, {tnumber, tgeo}) → {(i,j)}
+frechetDistancePath({tnumber,tgeo},{tnumber,tgeo}) → {(i,j)}
+dynTimeWarpPath({tnumber,tgeo},{tnumber,tgeo}) → {(i,j)}
 </programlisting>
 				<para>El resultado es un conjunto de pares <varname>(i,j)</varname>. Esta función requiere ubicar en memoria una matriz de distancias cuyo tamaño es cuadrático en el número de instantes de los valores temporales. Por tanto, la función fallará para valores temporales con gran número de instantes dependiendo de la memoria disponible.</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
@@ -322,10 +319,8 @@ SELECT dynTimeWarpPath(tgeompoint '[Point(1 1)@2001-01-01, Point(3 3)@2001-01-03
 				<para>Devolver un flotante temporal o un punto temporal suavizado, obtenido al filtrar una trayectoria ruidosa con un <ulink url="https://es.wikipedia.org/wiki/Filtro_de_Kalman">filtro de Kalman extendido</ulink> &Z_support;
 </para>
 				<programlisting xml:space="preserve" format="linespecific">
-extendedKalmanFilter(tfloat, gate float, q float, variance float,
-  to_drop boolean DEFAULT TRUE) → tfloat
-extendedKalmanFilter(tgeompoint, gate float, q float, variance float,
-  to_drop boolean DEFAULT TRUE) → tgeompoint
+extendedKalmanFilter(tfloat,gate float,q float,variance float,to_drop boolean=TRUE) → tfloat
+extendedKalmanFilter(tgeompoint,gate float,q float,variance float,to_drop boolean=TRUE) → tgeompoint
 </programlisting>
 				<para>El filtro modela el movimiento subyacente de un objeto móvil y lo separa del ruido de medición y de los valores atípicos ocasionales. El parámetro <varname>gate</varname> controla el rigor de la detección de atípicos, <varname>q</varname> es la escala del ruido de proceso, <varname>variance</varname> es la varianza del ruido de medición y <varname>to_drop</varname> elige si los atípicos se eliminan (<literal>true</literal>) o se reemplazan por la trayectoria predicha (<literal>false</literal>).</para>
 				<para>Estas funciones están pensadas para trayectorias con al menos tres instantes y se aplican normalmente a valores temporales con interpolación lineal.</para>
@@ -355,7 +350,7 @@ SELECT asEWKT(extendedKalmanFilter(tgeompoint
 				<indexterm significance="normal"><primary><varname>splitNSpans</varname></primary></indexterm>
 				<para>Devuelve una matriz de N rangos de tiempo a partir de los instantes o segmentos de un valor temporal &Z_support; &geography_support;</para>
 				<programlisting xml:space="preserve" format="linespecific">
-splitNSpans(temp, integer) → tstzspan[]
+splitNSpans(temp,integer) → tstzspan[]
 </programlisting>
 				<para>La elección entre instantes o segmentos depende de si la interpolación es discreta o continua. El último argumento especifica el número de rangos de salida. Si el número de instantes o segmentos es inferior o igual al número especificado, la matriz resultante tendrá un rango por instante o segmento del valor temporal. En caso contrario, el número de rangos especificado se obtendrá fusionando instantes o segmentos consecutivos.</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
@@ -386,7 +381,7 @@ SELECT splitNSpans(ttext '[A@2000-01-01, B@2000-01-02, A@2000-01-03, B@2000-01-0
 				<indexterm significance="normal"><primary><varname>splitEachNSpans</varname></primary></indexterm>
 				<para>Devuelve una matriz de rangos de tiempo obtenida fusionando N instantes o segmentos consecutivos de un valor temporal &Z_support; &geography_support;</para>
 				<programlisting xml:space="preserve" format="linespecific">
-splitEachNSpans(temp, integer) → tstzspan[]
+splitEachNSpans(temp,integer) → tstzspan[]
 </programlisting>
 				<para>La elección entre instantes o segmentos depende de si la interpolación es discreta o continua. El último argumento especifica el número de instantes o segmentos de entrada que se fusionan para producir un rango de salida. Si el número de instantes o segmentos es inferior o igual al número especificado, la matriz resultante tendrá un único rango por secuencia. En caso contrario, el número especificado de instantes o segmentos consecutivos será fusionado en cada rango de salida. Observe que, a diferencia de la función <link linkend="ttype_splitNSpans"><varname>splitNSpans</varname></link>, el número de cuadros en el resultado depende del número de instantes o de segmentos de entrada.</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
@@ -413,7 +408,7 @@ SELECT splitEachNSpans(tgeogpoint '{[Point(1 1 1)@2000-01-01, Point(2 2 2)@2000-
 				<indexterm significance="normal"><primary><varname>splitNTboxes</varname></primary></indexterm>
 				<para>Devuelve una matriz de N cuadros temporales obtenida fusionando los instantes o segmentos de un número temporal</para>
 				<programlisting xml:space="preserve" format="linespecific">
-splitNTboxes(tnumber, integer) → tbox[]
+splitNTboxes(tnumber,integer) → tbox[]
 </programlisting>
 				<para>La elección entre instantes o segmentos depende de si la interpolación es discreta or continua. El último argumento especifica el número de cuadros de salida. Si el número de instantes o segmentos es inferior o igual al numéro especificado, la matriz resultante tendrá un cuadro por instante o segmento del número temporal. En caso contrario, En caso contrario, el número de cuadros especificado se obtendrá fusionando instantes o segmentos consecutivos.</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
@@ -449,7 +444,7 @@ SELECT splitNTboxes(tint '[1@2000-01-01, 2@2000-01-02, 1@2000-01-03, 4@2000-01-0
 				<indexterm significance="normal"><primary><varname>splitEachNTboxes</varname></primary></indexterm>
 				<para>Devuelve una matriz de cuadros temporales obtenida fusionando N instantes o segmentos consecutivos de un número temporal</para>
 				<programlisting xml:space="preserve" format="linespecific">
-splitEachNTboxes(tnumber, integer) → tbox[]
+splitEachNTboxes(tnumber,integer) → tbox[]
 </programlisting>
 				<para>La elección entre instantes o segmentos depende de si la interpolación es discreta or continua. El último argumento especifica el número de instantes o segmentos de entrada que se fusionan para producir un cuadro de salida. Si el número de instantes o segmentos es inferior o igual al número especificado, la matriz resultante tendrá un único cuadro por secuencia. En caso contrario, el número especificado de instantes o segmentos consecutivos será fusionado en cada cuadro de salida. Observe que, a diferencia de la función <link linkend="ttype_splitNTboxes"><varname>splitNTboxes</varname></link>, el número de cuadros en el resultado depende del número de instantes o de segmentos de entrada.</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
@@ -482,8 +477,8 @@ SELECT splitEachNTboxes(tfloat '{[1@2000-01-01, 2@2000-01-02], [1@2000-01-03,
 				<indexterm significance="normal"><primary><varname>splitNStboxes</varname></primary></indexterm>
 				<para>Devuelve ya sea una matriz de N cuadros espaciales obtenida fusionando los segmentos de una (multi)línea o una matriz de N cuadros espaciotemporales obtenida fusionando los instantes o segmentos de un punto temporal &Z_support; &geography_support;</para>
 				<programlisting xml:space="preserve" format="linespecific">
-splitNStboxes(lines, integer) → stbox[]
-splitNStboxes(tpoint, integer) → stbox[]
+splitNStboxes(lines,integer) → stbox[]
+splitNStboxes(tpoint,integer) → stbox[]
 </programlisting>
 				<para>Para puntos temporales, la elección entre instantes o segmentos depende de si la interpolación es discreta or continua. El último argumento especifica el número de cuadros de salida. Si el número de instantes o segmentos es menor que el número dado, la matriz resultante tendrá un cuadro por segmento de la (multi)línea o un cuadro por instante o segmento del punto temporal. En caso contrario, el número de cuadros especificado se obtendrá fusionando instantes o segmentos consecutivos.</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
@@ -533,8 +528,8 @@ SELECT splitNStboxes(tgeompoint '[Point(1 1)@2000-01-01, Point(2 2)@2000-01-02,
 				<indexterm significance="normal"><primary><varname>splitEachNStboxes</varname></primary></indexterm>
 				<para>Devuelve ya sea una matriz de cuadros espaciales obtenida fusionando N segmentos consecutivos de una (multi)línea o una matriz de cuadros espaciotemporales obtenida fusionando N instantes o segmentos consecutivos de un punto temporal &Z_support; &geography_support;</para>
 				<programlisting xml:space="preserve" format="linespecific">
-splitEachNStboxes(lines, integer) → stbox[]
-splitEachNStboxes(tpoint, integer) → stbox[]
+splitEachNStboxes(lines,integer) → stbox[]
+splitEachNStboxes(tpoint,integer) → stbox[]
 </programlisting>
 				<para>Para puntos temporales, la elección entre instantes o segmentos depende de si la interpolación es discreta or continua. El último argumento especifica el número de instantes o segmentos de entrada que se fusionan para producir un cuadro de salida. Si el número de instantes o segmentos es menor que el número dado, la matriz resultante tendrá un único cuadro por secuencia. En caso contrario, el número especificado de instantes o segmentos consecutivos será fusionado en cada cuadro de salida. Observe que, a diferencia de la función <link linkend="ttype_splitNStboxes"><varname>splitNStboxes</varname></link>, el número de cuadros en el resultado depende del número de instantes o de segmentos de entrada.</para>
 					<programlisting language="sql" xml:space="preserve" format="linespecific">

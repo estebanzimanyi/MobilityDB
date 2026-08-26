@@ -540,18 +540,18 @@ SELECT cmp(tfloat '[1@2001-01-01, 1@2001-01-04)', '[2@2001-01-03, 2@2001-01-05)'
 				A possible generalization of the traditional comparison operators (<varname>=</varname>, <varname>&lt;&gt;</varname>, <varname>&lt;</varname>, <varname>&lt;=</varname>, etc.) to temporal types consists in determining whether the comparison is ever or always true. In this case, the result is a Boolean value. MobilityDB provides operators to test whether the comparison of a temporal value and a value of the base type or two temporal values is ever or always true. These operators are denoted by prefixing the traditional comparison operators with, respectively, <varname>?</varname> (ever) and <varname>%</varname> (always). Some examples are <varname>?=</varname>, <varname>%&lt;&gt;</varname>, or <varname>?&lt;=</varname>. Ever and always equality and non-equality are available for all temporal types, while ever and always inequalities are only available for temporal types whose base type has a total order defined, that is, <varname>tint</varname>, <varname>tfloat</varname>, or <varname>ttext</varname>. The ever and always comparisons are inverse operators: for example, <varname>?=</varname> is the inverse of <varname>%&lt;&gt;</varname>, and <varname>?&gt;</varname> is the inverse of <varname>%&lt;=</varname>.
 			</para>
 			<itemizedlist>
-				<listitem xml:id="ttype_eveq">
+				<listitem xml:id="ttype_ever_always">
 					<indexterm significance="normal"><primary><varname>?=</varname></primary></indexterm>
-					<indexterm significance="normal"><primary><varname>%=</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>?&lt;&gt;</varname></primary></indexterm>
-					<indexterm significance="normal"><primary><varname>%&lt;&gt;</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>?&lt;</varname></primary></indexterm>
-					<indexterm significance="normal"><primary><varname>%&lt;</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>?&gt;</varname></primary></indexterm>
-					<indexterm significance="normal"><primary><varname>%&gt;</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>?&lt;=</varname></primary></indexterm>
-					<indexterm significance="normal"><primary><varname>%&lt;=</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>?&gt;=</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>%=</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>%&lt;&gt;</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>%&lt;</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>%&gt;</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>%&lt;=</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>%&gt;=</varname></primary></indexterm>
 					<para>Ever and always comparisons</para>
 					<programlisting xml:space="preserve" format="linespecific">
@@ -618,7 +618,7 @@ SELECT ttext '{[AAA@2001-01-01, AAA@2001-01-03), [BBB@2001-01-04, BBB@2001-01-05
 			<para>Another possible generalization of the traditional comparison operators (<varname>=</varname>, <varname>&lt;&gt;</varname>, <varname>&lt;</varname>, <varname>&lt;=</varname>,  etc.) to temporal types consists in determining whether the comparison is true or false at each instant. In this case, the result is a temporal Boolean. The temporal comparison operators are denoted by prefixing the traditional comparison operators with <varname>#</varname>. Some examples are <varname>#=</varname> or <varname>#&lt;=</varname>. Temporal equality and non-equality are available for all temporal types, while temporal inequalities are only available for temporal types whose base type has a total order defined, that is, <varname>tint</varname>, <varname>tfloat</varname>, or <varname>ttext</varname>.</para>
 
 			<itemizedlist>
-				<listitem xml:id="ttype_teq">
+				<listitem xml:id="ttype_tcomp">
 					<indexterm significance="normal"><primary><varname>#=</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>#&lt;&gt;</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>#&lt;</varname></primary></indexterm>

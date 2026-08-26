@@ -532,18 +532,18 @@ SELECT tint '[1@2001-01-01, 1@2001-01-04)' &gt;= tint '[2@2001-01-03, 2@2001-01-
 			<para>Una posible generalización de los operadores de comparación tradicionales (<varname>=</varname>, <varname>&lt;&gt;</varname>, <varname>&lt;</varname>, <varname>&lt;=</varname>, etc.) a tipos temporales consiste en determinar si la comparación es alguna vez o siempre verdadera. En este caso, el resultado es un valor booleano. MobilityDB proporciona operadores para probar si la comparación de un valor temporal y un valor del tipo base or dos valores temporales es alguna vez o siempre verdadera. Estos operadores se indican anteponiendo los operadores de comparación tradicionales con, respectivamente, <varname>?</varname> (alguna vez) y <varname>%</varname> (siempre). Algunos ejemplos son <varname>?=</varname>, <varname>%&lt;&gt;</varname> o <varname>?&lt;=</varname>. La igualdad y la no igualdad alguna vez o siempre están disponibles para todos los tipos temporales, mientras que las desigualdades alguna vez o siempre sólo están disponibles para los tipos temporales cuyo tipo base tiene un orden total definido, es decir, <varname>tint</varname>, <varname>tfloat</varname> o <varname>ttext</varname>. Las comparaciones alguna vez y siempre son operadores inversos: por ejemplo, <varname>?=</varname> es el inverso de <varname>%&lt;&gt;</varname> y <varname>?&gt;</varname> es el inverso de <varname>%&lt;=</varname>.</para>
 
 			<itemizedlist>
-				<listitem xml:id="ttype_eveq">
+				<listitem xml:id="ttype_ever_always">
 					<indexterm significance="normal"><primary><varname>?=</varname></primary></indexterm>
-					<indexterm significance="normal"><primary><varname>%=</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>?&lt;&gt;</varname></primary></indexterm>
-					<indexterm significance="normal"><primary><varname>%&lt;&gt;</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>?&lt;</varname></primary></indexterm>
-					<indexterm significance="normal"><primary><varname>%&lt;</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>?&gt;</varname></primary></indexterm>
-					<indexterm significance="normal"><primary><varname>%&gt;</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>?&lt;=</varname></primary></indexterm>
-					<indexterm significance="normal"><primary><varname>%&lt;=</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>?&gt;=</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>%=</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>%&lt;&gt;</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>%&lt;</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>%&gt;</varname></primary></indexterm>
+					<indexterm significance="normal"><primary><varname>%&lt;=</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>%&gt;=</varname></primary></indexterm>
 					<para>Comparaciones alguna vez y siempre</para>
 					<programlisting xml:space="preserve" format="linespecific">
@@ -610,7 +610,7 @@ SELECT ttext '{[AAA@2001-01-01, AAA@2001-01-03), [BBB@2001-01-04, BBB@2001-01-05
 			<para>Otra posible generalización de los operadores de comparación tradicionales (<varname>=</varname>, <varname>&lt;&gt;</varname>, <varname>&lt;</varname>, <varname>&lt;=</varname>, etc.) a tipos temporales consiste en determinar si la comparación es verdadera o falsa en cada instante. En este caso, el resultado es un booleano temporal. Los operadores de comparación temporal se indican anteponiendo los operadores de comparación tradicionales con <varname>#</varname>. Algunos ejemplos son <varname>#=</varname> o <varname>#&lt;=</varname>. La igualdad y no igualdad temporal están disponibles para todos los tipos temporales, mientras que las desigualdades temporales sólo están disponibles para los tipos temporales cuyo tipo base tiene un orden total definido, es decir, <varname>tint</varname>, <varname>tfloat</varname> o <varname>ttext</varname>.</para>
 
 			<itemizedlist>
-				<listitem xml:id="ttype_teq">
+				<listitem xml:id="ttype_tcomp">
 					<indexterm significance="normal"><primary><varname>#=</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>#&lt;&gt;</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>#&lt;</varname></primary></indexterm>

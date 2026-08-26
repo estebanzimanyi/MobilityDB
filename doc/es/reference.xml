@@ -1106,7 +1106,7 @@
 			</itemizedlist>
 		</sect2>
 		<sect2>
-			<title>Relaciones espaciales</title>
+			<title>Relaciones espaciotemporales</title>
 			<sect3>
 				<title>Relaciones alguna vez o siempre</title>
 				<itemizedlist>
@@ -1546,7 +1546,7 @@
 			</itemizedlist>
 		</sect2>
 		<sect2>
-			<title>Relaciones espaciales</title>
+			<title>Relaciones espaciotemporales</title>
 			<itemizedlist>
 				<listitem>
 					<para><link linkend="tpose_espatialrels"><varname>eContains</varname>, <varname>aContains</varname>, <varname>eCovers</varname>, <varname>aCovers</varname>, <varname>eDisjoint</varname>, <varname>aDisjoint</varname>, <varname>eDwithin</varname>, <varname>aDwithin</varname>, <varname>eIntersects</varname>, <varname>aIntersects</varname>, <varname>eTouches</varname>, <varname>aTouches</varname></link>: Las relaciones <emphasis>alguna vez</emphasis> y <emphasis>siempre</emphasis> determinan si la relación topológica o de distancia se satisface alguna vez o siempre y dan como resultado un <varname>boolean</varname>. Una pose temporal las responde en la posición que ocupa, de modo que un valor con interpolación lineal se responde a lo largo de su trayectoria y no solo en sus instantes. La pose temporal declara las relaciones que responde un punto en movimiento: <varname>eContains</varname>, <varname>aContains</varname>, <varname>eCovers</varname> y <varname>aCovers</varname> toman la geometría en primer lugar únicamente, y <varname>eTouches</varname> y <varname>aTouches</varname> no tienen dirección entre dos poses temporales, ya que un punto en movimiento no contiene ni cubre una geometría y dos puntos en movimiento no se tocan.</para>
@@ -1852,7 +1852,7 @@
 				</itemizedlist>
 			</sect3>
 			<sect3>
-				<title>Relaciones espaciales temporales</title>
+				<title>Relaciones espaciotemporales</title>
 				<itemizedlist>
 					<listitem>
 						<para><link linkend="tposechain_tspatialrels"><varname>tContains</varname>, <varname>tCovers</varname>, <varname>tDisjoint</varname>, <varname>tDwithin</varname>, <varname>tIntersects</varname>, <varname>tTouches</varname></link>: Las relaciones <emphasis>temporales</emphasis> calculan la relación topológica o de distancia en cada instante y dan como resultado un <varname>tbool</varname>. Una cadena de poses temporal las responde en la posición que ocupa la pose que compone, de modo que una cadena con interpolación lineal se responde a lo largo de su trayectoria y no solo en sus instantes. La cadena declara las relaciones que responde un punto en movimiento: <varname>tContains</varname> y <varname>tCovers</varname> toman la geometría en primer lugar únicamente, y <varname>tTouches</varname> no tiene dirección entre dos cadenas, ya que un punto en movimiento no contiene ni cubre una geometría y dos puntos en movimiento no se tocan.</para>
@@ -2096,7 +2096,7 @@
 			</itemizedlist>
 		</sect2>
 		<sect2>
-			<title>Relaciones espaciales</title>
+			<title>Relaciones espaciotemporales</title>
 			<itemizedlist>
 				<listitem>
 					<para><link linkend="tnpoint_espatialrels"><varname>eContains</varname>, <varname>aContains</varname>, <varname>eCovers</varname>, <varname>aCovers</varname>, <varname>eDisjoint</varname>, <varname>aDisjoint</varname>, <varname>eDwithin</varname>, <varname>aDwithin</varname>, <varname>eIntersects</varname>, <varname>aIntersects</varname>, <varname>eTouches</varname>, <varname>aTouches</varname></link>: Las relaciones <emphasis>alguna vez</emphasis> y <emphasis>siempre</emphasis> determinan si la relación topológica o de distancia se satisface alguna vez o siempre y dan como resultado un <varname>boolean</varname>. Un punto de red temporal las responde en la posición a la que se resuelven su ruta y su fracción, de modo que una secuencia con interpolación lineal se responde a lo largo de su ruta y no solo en sus instantes. El punto de red temporal declara las relaciones que responde un punto en movimiento: <varname>eContains</varname>, <varname>aContains</varname>, <varname>eCovers</varname> y <varname>aCovers</varname> toman la geometría en primer lugar únicamente, y <varname>eTouches</varname> y <varname>aTouches</varname> no tienen dirección entre dos puntos de red temporales, ya que un punto en movimiento no contiene ni cubre una geometría y dos puntos en movimiento no se tocan.</para>
@@ -2340,13 +2340,13 @@
 					<para><link linkend="tcbuffer_nearestApproachDistance"><varname>|=|</varname></link>: Devuelve la distancia más cercana</para>
 				</listitem>
 				<listitem>
-					<para><link linkend="tcbuffer_nearestApproachInstant"><varname>nearestApproachInstant</varname></link>: TODO Devuelve el instante del primer búfer circular temporal en el que los dos argumentos están a la distancia más cercana</para>
+					<para><link linkend="tcbuffer_nearestApproachInstant"><varname>nearestApproachInstant</varname></link>Devuelve el instante del primer búfer circular temporal en el que los dos argumentos están a la distancia más cercana</para>
 				</listitem>
 				<listitem>
-					<para><link linkend="tcbuffer_shortestLine"><varname>shortestLine</varname></link>: TODO Devuelve la línea que conecta el punto de aproximación más cercano entre los dos argumentos</para>
+					<para><link linkend="tcbuffer_shortestLine"><varname>shortestLine</varname></link>Devuelve la línea que conecta el punto de aproximación más cercano entre los dos argumentos</para>
 				</listitem>
 				<listitem>
-					<para><link linkend="tcbuffer_tdistance"><varname>&lt;-&gt;</varname></link>: TODO Devuelve la distancia temporal</para>
+					<para><link linkend="tcbuffer_tdistance"><varname>&lt;-&gt;</varname></link>Devuelve la distancia temporal</para>
 				</listitem>
 				<listitem>
 					<para><link linkend="tcbuffer_minDistance"><varname>minDistance</varname></link>: Devuelve la distancia espacial mínima, ignorando el tiempo</para>
@@ -2360,7 +2360,7 @@
 					<para><link linkend="tcbuffer_atValues"><varname>atValue</varname>, <varname>minusValue</varname>, <varname>atValues</varname>, <varname>minusValues</varname></link>: Restringir al (complemento de) un valor o un conjunto de valores</para>
 				</listitem>
 				<listitem>
-					<para><link linkend="tcbuffer_atGeometry"><varname>atGeometry</varname>, <varname>minusGeometry</varname></link>: TODO Restringir al (complemento de) una geometría</para>
+					<para><link linkend="tcbuffer_atGeometry"><varname>atGeometry</varname>, <varname>minusGeometry</varname></link>Restringir al (complemento de) una geometría</para>
 				</listitem>
 				<listitem>
 					<para><link linkend="tcbuffer_atStbox"><varname>atStbox</varname>, <varname>minusStbox</varname></link>: Restringir un búfer circular temporal a (el complemento de) una caja espaciotemporal</para>
@@ -2393,13 +2393,13 @@
 			</itemizedlist>
 		</sect2>
 		<sect2>
-			<title>Relaciones espaciales</title>
+			<title>Relaciones espaciotemporales</title>
 			<itemizedlist>
 				<listitem>
-					<para><link linkend="tcbuffer_espatialrels"><varname>eContains</varname>, <varname>aContains</varname>, <varname>eDisjoint</varname>, <varname>aDisjoint</varname>, <varname>eDwithin</varname>, <varname>aDwithin</varname>, <varname>eIntersects</varname>, <varname>aIntersects</varname>, <varname>eTouches</varname>, <varname>aTouches</varname>, <varname>eCovers</varname>, <varname>aCovers</varname></link>: TODO Relaciones alguna vez y siempre</para>
+					<para><link linkend="tcbuffer_espatialrels"><varname>eContains</varname>, <varname>aContains</varname>, <varname>eDisjoint</varname>, <varname>aDisjoint</varname>, <varname>eDwithin</varname>, <varname>aDwithin</varname>, <varname>eIntersects</varname>, <varname>aIntersects</varname>, <varname>eTouches</varname>, <varname>aTouches</varname>, <varname>eCovers</varname>, <varname>aCovers</varname></link>Relaciones alguna vez y siempre</para>
 				</listitem>
 				<listitem>
-					<para><link linkend="tcbuffer_tspatialrels"><varname>tContains</varname>, <varname>tDisjoint</varname>, <varname>tDwithin</varname>, <varname>tIntersects</varname>, <varname>tTouches</varname></link>: TODO Relaciones espaciotemporales</para>
+					<para><link linkend="tcbuffer_tspatialrels"><varname>tContains</varname>, <varname>tDisjoint</varname>, <varname>tDwithin</varname>, <varname>tIntersects</varname>, <varname>tTouches</varname></link>Relaciones espaciotemporales</para>
 				</listitem>
 			</itemizedlist>
 		</sect2>
@@ -2907,7 +2907,7 @@
 					<para><link linkend="th3_startValue"><varname>startValue</varname>, <varname>endValue</varname></link>: Devolver el primer o el último identificador de celda H3 de un valor temporal</para>
 				</listitem>
 				<listitem>
-					<para><link linkend="th3_valueN"><varname>valueN</varname></link>: Devolver el <varname>n</varname>-ésimo identificador de celda H3 distinto (indexado desde 1). Devuelve <varname>NULL</varname> si está fuera del rango.</para>
+					<para><link linkend="th3_valueN"><varname>valueN</varname></link>: Devolver el n-ésimo identificador de celda H3 distinto (indexado desde 1). Devuelve <varname>NULL</varname> si está fuera del rango.</para>
 				</listitem>
 				<listitem>
 					<para><link linkend="th3_getValues"><varname>getValues</varname></link>: Devolver el conjunto de identificadores de celda H3 distintos que toma la trayectoria</para>
@@ -3179,7 +3179,7 @@
 					<para><link linkend="tquadbin_startValue"><varname>startValue</varname>, <varname>endValue</varname></link>: Devuelve el primer o el último identificador de celda QUADBIN de un valor temporal</para>
 				</listitem>
 				<listitem>
-					<para><link linkend="tquadbin_valueN"><varname>valueN</varname></link>: Devuelve el <varname>n</varname>-ésimo identificador de celda QUADBIN distinto (índice base 1). Devuelve <varname>NULL</varname> si está fuera de rango.</para>
+					<para><link linkend="tquadbin_valueN"><varname>valueN</varname></link>: Devuelve el n-ésimo identificador de celda QUADBIN distinto (índice base 1)</para>
 				</listitem>
 				<listitem>
 					<para><link linkend="tquadbin_getValues"><varname>getValues</varname></link>: Devuelve el conjunto de identificadores de celda QUADBIN distintos que toma la trayectoria</para>
@@ -3595,7 +3595,7 @@
 				</itemizedlist>
 			</sect3>
 			<sect3>
-				<title>Relaciones espaciales</title>
+				<title>Relaciones espaciotemporales</title>
 				<itemizedlist>
 					<listitem>
 						<para><link linkend="tpcpoint_planarrels"><varname>eContains</varname>, <varname>aContains</varname>, <varname>eCovers</varname>, <varname>aCovers</varname>, <varname>eTouches</varname>, <varname>aTouches</varname></link>: Contiene, cubre y toca alguna vez / siempre</para>
@@ -3612,10 +3612,10 @@
 				</itemizedlist>
 			</sect3>
 			<sect3>
-				<title>Relaciones espaciales temporales</title>
+				<title>Relaciones espaciotemporales</title>
 				<itemizedlist>
 					<listitem>
-						<para><link linkend="tpcpoint_tspatialrels"><varname>tContains</varname>, <varname>tCovers</varname>, <varname>tDisjoint</varname>, <varname>tDwithin</varname>, <varname>tIntersects</varname>, <varname>tTouches</varname></link>: Relaciones espaciales temporales</para>
+						<para><link linkend="tpcpoint_tspatialrels"><varname>tContains</varname>, <varname>tCovers</varname>, <varname>tDisjoint</varname>, <varname>tDwithin</varname>, <varname>tIntersects</varname>, <varname>tTouches</varname></link>: Relaciones espaciotemporales temporales</para>
 					</listitem>
 				</itemizedlist>
 			</sect3>
@@ -3713,7 +3713,7 @@
 				</itemizedlist>
 			</sect3>
 			<sect3>
-				<title>Relaciones espaciales</title>
+				<title>Relaciones espaciotemporales</title>
 				<itemizedlist>
 					<listitem>
 						<para><link linkend="tpcpatch_eIntersects"><varname>eIntersects</varname>, <varname>aIntersects</varname>, <varname>eContains</varname>, <varname>aContains</varname>, <varname>eCovers</varname>, <varname>aCovers</varname>, <varname>eDisjoint</varname>, <varname>aDisjoint</varname>, <varname>eTouches</varname>, <varname>aTouches</varname>, <varname>eDwithin</varname>, <varname>aDwithin</varname></link>: Devolver verdadero si y solo si al menos un punto de alguno de los instantes del tpcpatch intersecta la geometría (solo XY).</para>
@@ -3729,10 +3729,10 @@
 				</itemizedlist>
 			</sect3>
 			<sect3>
-				<title>Relaciones espaciales temporales</title>
+				<title>Relaciones espaciotemporales</title>
 				<itemizedlist>
 					<listitem>
-						<para><link linkend="tpcpatch_tspatialrels"><varname>tContains</varname>, <varname>tCovers</varname>, <varname>tDisjoint</varname>, <varname>tDwithin</varname>, <varname>tIntersects</varname>, <varname>tTouches</varname></link>: Relaciones espaciales temporales</para>
+						<para><link linkend="tpcpatch_tspatialrels"><varname>tContains</varname>, <varname>tCovers</varname>, <varname>tDisjoint</varname>, <varname>tDwithin</varname>, <varname>tIntersects</varname>, <varname>tTouches</varname></link>: Relaciones espaciaotemporles temporales</para>
 					</listitem>
 				</itemizedlist>
 			</sect3>

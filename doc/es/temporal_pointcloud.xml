@@ -544,7 +544,7 @@ SELECT tpcbox(0, 0, 5, 5, 1, 0) * tpcbox(3, 3, 10, 10, 1, 0);
 
 		<sect2 xml:id="tpcbox_topo">
 			<title>Operadores Topológicos</title>
-			<para>Todos los operadores topológicos toman dos valores <varname>tpcbox</varname> con <varname>pcid</varname> coincidente. Una discrepancia de pcid siempre devuelve false (no un error) para que los escaneos de índice se comporten de forma intuitiva.</para>
+			<para>Todos los operadores topológicos toman dos valores <varname>tpcbox</varname> con <varname>pcid</varname> coincidente. Una discrepancia de pcid siempre devuelve falso (no un error) para que los escaneos de índice se comporten de forma intuitiva.</para>
 			<itemizedlist>
 				<listitem xml:id="tpcbox_contains">
 					<indexterm significance="normal"><primary><varname>@&gt;</varname></primary></indexterm>
@@ -611,7 +611,7 @@ SELECT tpcbox(0, 0, 2, 2) -|- tpcbox(5, 5, 7, 7);
 
 		<sect2 xml:id="tpcbox_pos">
 			<title>Operadores de Posición</title>
-			<para>Dieciséis predicados de posición alineados por eje, paralelos a los de <varname>stbox</varname>. Cada uno comprueba la relación estricta o de solapamiento a lo largo de un eje. Todos requieren <varname>pcid</varname> coincidente; la discrepancia devuelve false. Los predicados del eje Z requieren que ambas cajas tengan dimensión Z; los del eje T requieren que ambas tengan dimensión T.</para>
+			<para>Dieciséis predicados de posición alineados por eje, paralelos a los de <varname>stbox</varname>. Cada uno comprueba la relación estricta o de solapamiento a lo largo de un eje. Todos requieren <varname>pcid</varname> coincidente; la discrepancia devuelve falso. Los predicados del eje Z requieren que ambas cajas tengan dimensión Z; los del eje T requieren que ambas tengan dimensión T.</para>
 			<itemizedlist>
 				<listitem xml:id="tpcbox_left_right">
 					<indexterm significance="normal"><primary><varname>&lt;&lt;</varname></primary></indexterm>
@@ -650,12 +650,10 @@ SELECT tpcbox(0, 0, 2, 2) &lt;&lt;| tpcbox(5, 5, 7, 7);
 					<indexterm significance="normal"><primary><varname>&amp;&lt;/</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>/&gt;&gt;</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>/&amp;&gt;</varname></primary></indexterm>
-					<para>Comprueba el orden en el eje Z de dos tpcboxes (devuelve false si alguna carece de Z)</para>
-					<para><varname>tpcbox &lt;&lt;/ tpcbox → boolean</varname>  (estrictamente al frente)</para>
-					<para><varname>tpcbox &amp;&lt;/ tpcbox → boolean</varname>  (no se extiende hacia atrás)</para>
-					<para><varname>tpcbox /&gt;&gt; tpcbox → boolean</varname>  (estrictamente detrás)</para>
-					<para><varname>tpcbox /&amp;&gt; tpcbox → boolean</varname>  (no se extiende hacia el frente)</para>
-									<programlisting language="sql" xml:space="preserve" format="linespecific">
+					<para>Comprueba el orden en el eje Z de dos tpcboxes</para>
+					<para><varname>tpcbox {&lt;&lt;/, &amp;&lt;/, /&gt;&gt;, /&amp;&gt;} tpcbox → boolean</varname></para>
+					<para>La función devuelve falso si alguna carece de Z.</para>
+					<programlisting language="sql" xml:space="preserve" format="linespecific">
 -- Neither box carries a z dimension, so the front/back test is false.
 SELECT tpcbox(0, 0, 2, 2) &lt;&lt;/ tpcbox(5, 5, 7, 7);
 -- f
@@ -667,12 +665,10 @@ SELECT tpcbox(0, 0, 2, 2) &lt;&lt;/ tpcbox(5, 5, 7, 7);
 					<indexterm significance="normal"><primary><varname>&amp;&lt;#</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>#&gt;&gt;</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>#&amp;&gt;</varname></primary></indexterm>
-					<para>Comprueba el orden en el eje temporal de dos tpcboxes (devuelve false si alguna carece de T)</para>
-					<para><varname>tpcbox &lt;&lt;# tpcbox → boolean</varname>  (estrictamente antes)</para>
-					<para><varname>tpcbox &amp;&lt;# tpcbox → boolean</varname>  (no se extiende después)</para>
-					<para><varname>tpcbox #&gt;&gt; tpcbox → boolean</varname>  (estrictamente después)</para>
-					<para><varname>tpcbox #&amp;&gt; tpcbox → boolean</varname>  (no se extiende antes)</para>
-									<programlisting language="sql" xml:space="preserve" format="linespecific">
+					<para>Comprueba el orden en el eje temporal de dos tpcboxes</para>
+					<para><varname>tpcbox {&lt;&lt;#, &amp;&lt;#, #&gt;&gt;, #&amp;&gt;} tpcbox → boolean</varname></para>
+					<para>La función devuelve falso si alguna carece de T.</para>
+					<programlisting language="sql" xml:space="preserve" format="linespecific">
 -- Neither box carries a time span, so the before/after test is false.
 SELECT tpcbox(0, 0, 2, 2) &lt;&lt;# tpcbox(5, 5, 7, 7);
 -- f
@@ -691,16 +687,10 @@ SELECT tpcbox(0, 0, 2, 2) &lt;&lt;# tpcbox(5, 5, 7, 7);
 					<indexterm significance="normal"><primary><varname>&lt;=</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>&gt;=</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>&gt;</varname></primary></indexterm>
-					<para>Compara dos tpcboxes; orden total sobre la codificación canónica (pcid, srid, flags, período y a continuación límites espaciales en orden XYZ-min/max)</para>
-					<programlisting xml:space="preserve" format="linespecific">
-tpcbox = tpcbox → boolean
-tpcbox &lt;&gt; tpcbox → boolean
-tpcbox &lt; tpcbox → boolean
-tpcbox &lt;= tpcbox → boolean
-tpcbox &gt; tpcbox → boolean
-tpcbox &gt;= tpcbox → boolean
-</programlisting>
-									<programlisting language="sql" xml:space="preserve" format="linespecific">
+					<para>Comparaciones tradicionales</para>
+					<para><varname>tpcbox {=, &lt;&gt;, &lt;, &lt;=, &gt;, &gt;=} tpcbox → boolean</varname></para>
+					<para>La función compara en el orden siguiente: pcid, srid, flags, período y a continuación límites espaciales en orden XYZ-min/max)</para>
+						<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT tpcbox(0, 0, 2, 2) = tpcbox(0, 0, 2, 2);
 -- t
 SELECT tpcbox(0, 0, 2, 2) &lt;&gt; tpcbox(5, 5, 7, 7);
@@ -712,6 +702,7 @@ SELECT tpcbox(0, 0, 2, 2) &lt; tpcbox(5, 5, 7, 7);
 			</itemizedlist>
 		</sect2>
 	</sect1>
+
 	<sect1 xml:id="tpcpoint">
 		<title>Tipo Temporal <varname>tpcpoint</varname></title>
 
@@ -1352,8 +1343,8 @@ SELECT round((tpcpoint(pcpoint(1, 1, 1, 1), '2001-01-01'::timestamptz) |=|
 			<para>Para una ordenación con significado espacial, proyecte a un <varname>tgeompoint</varname> mediante la conversión con conocimiento de esquema y use el KNN <varname>&lt;-&gt;</varname> de PostGIS sobre la geometría resultante, o use el operador KNN GiST <link linkend="tpcpoint_knn"><varname>|=|</varname></link> directamente sobre el tpcpoint. Para una ordenación con significado temporal, proyecte a <varname>startTimestamp</varname> o <varname>timespan</varname> y ordene sobre ese valor.</para>
 		</sect2>
 
-		<sect2 xml:id="tpcpoint_spatialrels">
-			<title>Relaciones espaciales</title>
+		<sect2 xml:id="tpcpoint_spatiotemp_rels">
+			<title>Relaciones espaciotemporales</title>
 			<para>Se evalúan proyectando el tpcpoint a un <varname>tgeompoint</varname> a través de la caché de esquemas y delegando en la relación tgeompoint correspondiente. Cada función está conectada en tres órdenes de argumentos: <varname>(geometry, tpcpoint)</varname>, <varname>(tpcpoint, geometry)</varname> y <varname>(tpcpoint, tpcpoint)</varname>. Las relaciones ever/always están conectadas solo para tpcpoint; un tpcpatch responde en cambio las relaciones temporales, leyendo un parche como el multipunto de las posiciones que ocupan sus puntos. Un tpcpoint declara las relaciones que declara su destino de conversión, de modo que <varname>eContains</varname>, <varname>eCovers</varname> y <varname>eTouches</varname> y sus gemelas siempre también están conectadas: un esquema cuyas dimensiones no incluyen Z las responde, y uno que lleva Z encuentra el rechazo planar <varname>The tgeompoint cannot have Z dimension</varname>, exactamente como lo hace un punto geométrico temporal tridimensional.</para>
 			<itemizedlist>
 				<listitem xml:id="tpcpoint_planarrels">
@@ -1449,7 +1440,7 @@ SELECT aDwithin(tpcpointSeq(ARRAY[
 		</sect2>
 
 		<sect2 xml:id="tpcpoint_tempspatialrels">
-			<title>Relaciones espaciales temporales</title>
+			<title>Relaciones espaciotemporales</title>
 			<para>Las relaciones <emphasis>temporales</emphasis> calculan la relación topológica o de distancia en cada instante y dan como resultado un <varname>tbool</varname>. Leen la misma proyección a <varname>tgeompoint</varname> que leen las relaciones ever/always, y están conectadas en los mismos tres órdenes de argumentos. Un tpcpoint lleva la Z que declara su esquema, si la hay: <varname>tContains</varname>, <varname>tCovers</varname> y <varname>tTouches</varname> son relaciones planares, de modo que un esquema cuyas dimensiones no incluyen Z las responde y uno que lleva Z es rechazado. Esa proyección lleva la interpolación de su origen, de modo que una secuencia tpcpoint se responde a lo largo de su trayectoria y no solo en sus instantes.</para>
 			<itemizedlist>
 				<listitem xml:id="tpcpoint_tspatialrels">
@@ -1459,7 +1450,7 @@ SELECT aDwithin(tpcpointSeq(ARRAY[
 					<indexterm significance="normal"><primary><varname>tDwithin</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>tIntersects</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>tTouches</varname></primary></indexterm>
-					<para>Relaciones espaciales temporales</para>
+					<para>Relaciones espaciotemporales</para>
 					<programlisting xml:space="preserve" format="linespecific">
 tDisjoint({geometry,tpcpoint},{geometry,tpcpoint}) &#8594; tbool
 tDwithin({geometry,tpcpoint},{geometry,tpcpoint},float) &#8594; tbool
@@ -1943,7 +1934,7 @@ SELECT splitNSpans(tpcpatchSeq(ARRAY[
 		</sect2>
 
 		<sect2 xml:id="tpcpatch_spatialrels">
-			<title>Relaciones espaciales</title>
+			<title>Relaciones espaciotemporales</title>
 			<itemizedlist>
 				<listitem xml:id="tpcpatch_eIntersects">
 					<indexterm significance="normal"><primary><varname>eIntersects</varname></primary></indexterm>
@@ -1994,7 +1985,7 @@ SELECT asText(tpcpatch(pcpatch(pcpoint(1, 1, 1, 1), pcpoint(1, 2, 2, 2)),
 		</sect2>
 
 		<sect2 xml:id="tpcpatch_tempspatialrels">
-			<title>Relaciones espaciales temporales</title>
+			<title>Relaciones espaciotemporales</title>
 			<para>Las relaciones <emphasis>temporales</emphasis> calculan la relación topológica o de distancia en cada instante y dan como resultado un <varname>tbool</varname>. Un parche llega al motor de geometría a través de la conversión a <varname>tgeometry</varname> anterior, por lo que basta con que un punto del parche esté dentro del argumento para que el parche lo intersecte. Un tpcpatch lleva la Z que declara su esquema, y <varname>tContains</varname>, <varname>tCovers</varname> y <varname>tTouches</varname> son relaciones planas que rechazan una dimensión Z, de modo que el tipo responde las tres que un valor con Z puede responder.</para>
 			<itemizedlist>
 				<listitem xml:id="tpcpatch_tspatialrels">
@@ -2004,7 +1995,7 @@ SELECT asText(tpcpatch(pcpatch(pcpoint(1, 1, 1, 1), pcpoint(1, 2, 2, 2)),
 					<indexterm significance="normal"><primary><varname>tDwithin</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>tIntersects</varname></primary></indexterm>
 					<indexterm significance="normal"><primary><varname>tTouches</varname></primary></indexterm>
-					<para>Relaciones espaciales temporales</para>
+					<para>Relaciones espaciotemporales</para>
 					<programlisting xml:space="preserve" format="linespecific">
 tDisjoint({geometry,tpcpatch},{geometry,tpcpatch}) &#8594; tbool
 tDwithin({geometry,tpcpatch},{geometry,tpcpatch},float) &#8594; tbool

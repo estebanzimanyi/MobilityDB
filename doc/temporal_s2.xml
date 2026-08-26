@@ -1,0 +1,621 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+   ****************************************************************************
+    MobilityDB Manual
+    Copyright(c) MobilityDB Contributors
+
+    This documentation is licensed under a Creative Commons Attribution-Share
+    Alike 3.0 License: https://creativecommons.org/licenses/by-sa/3.0/
+   ****************************************************************************
+-->
+<chapter xml:id="ts2index">
+		<title>Temporal S2 Cell Indices</title>
+		<para>
+			The temporal S2 cell index type <varname>ts2index</varname> represents the movement of objects as a sequence of S2 cell identifiers. <ulink url="https://s2geometry.io/">S2 Geometry</ulink> is a discrete global grid system that decomposes the sphere into six level-0 cells corresponding to the faces of a projected cube and recursively subdivides every cell into four children at each finer level. S2 supports levels 0 through 30. Each cell has a 64-bit <varname>S2CellId</varname> that encodes its face, hierarchical position, and level. Increasing cell identifiers follow the S2 Hilbert space-filling curve and therefore provide a spatial ordering useful for indexing.
+		</para>
+
+		<para>
+			The <varname>ts2index</varname> type shares its on-disk representation with <varname>tbigint</varname>: both store a temporal 64-bit integer. The distinct SQL type exists to let the type-checker reject S2-specific functions when applied to arbitrary bigint trajectories and vice versa. The S2 cell identifier is treated as an unsigned 64-bit value by the S2 API, although its binary representation is stored using the existing 64-bit temporal integer representation.
+		</para>
+
+		<para>
+			Casts to and from <varname>tbigint</varname> are explicit (<varname>AS ASSIGNMENT</varname>) and binary-coercion only, zero-cost at runtime but requiring an explicit <varname>::</varname> in SQL.
+		</para>
+
+		<para>
+			As with other temporal types, <varname>ts2index</varname> has four temporal subtypes: <varname>Instant</varname>, discrete sequence, continuous sequence with step interpolation, and <varname>SequenceSet</varname>. S2 cell identifiers are discrete spatial values; consequently linear interpolation between two cell identifiers has no spatial meaning and step interpolation is used.
+		</para>
+
+		<sect1 xml:id="ts2_inout">
+		<title>Input and Output</title>
+
+		<para>
+			A <varname>ts2index</varname> value is entered using the standard temporal syntax with the underlying 64-bit S2 cell identifier. The preferred textual representation is the canonical S2 token, which is a hexadecimal string with trailing zeroes omitted. The token length is at most 16 characters. An optional <varname>0x</varname> prefix may be accepted for convenience. The value must denote a valid S2 cell identifier.
+		</para>
+
+		<para>
+			S2 tokens are preferable to decimal integers because they are the standard compact textual representation used by the S2 ecosystem. The special token <varname>X</varname> denotes the zero identifier in the underlying S2 implementation, but zero is not a valid S2 cell identifier and is therefore rejected by the temporal S2 cell parser.
+		</para>
+
+		<programlisting language="sql" xml:space="preserve" format="linespecific">
+SELECT ts2index '2ef59bd352b93ac3@2001-01-01';
+SELECT ts2index '{2ef59bd352b93ac3@2001-01-01, 2ef59bd352b93ac3@2001-01-02}';
+SELECT ts2index '[2ef59bd352b93ac3@2001-01-01, 2ef59bd352b93ac3@2001-01-02]';
+SELECT ts2index '{[2ef59bd352b93ac3@2001-01-01, 2ef59bd352b93ac3@2001-01-02],
+  [2ef59bd352b93ac5@2001-01-03, 2ef59bd352b93ac7@2001-01-04]}';
+		</programlisting>
+
+		<para>
+			The type accepts type modifiers (<varname>typmod</varname>) to constrain a column to a specific subtype: <varname>Instant</varname>, <varname>Sequence</varname>, or <varname>SequenceSet</varname>.
+		</para>
+
+		<programlisting language="sql" xml:space="preserve" format="linespecific">
+SELECT ts2index(Instant) '2ef59bd352b93ac3@2001-01-01';
+SELECT ts2index(SequenceSet) '{[2ef59bd352b93ac3@2001-01-01,
+  2ef59bd352b93ac3@2001-01-02]}';
+-- ERROR: temporal type (Instant) does not match column type (Sequence)
+SELECT ts2index(Sequence) '2ef59bd352b93ac3@2001-01-01';
+		</programlisting>
+
+		<para>
+			The functions <varname>asText</varname>, <varname>asBinary</varname>, and <varname>asHexWKB</varname> serialize a <varname>ts2index</varname> value, and <varname>ts2indexFromBinary</varname> and <varname>ts2indexFromHexWKB</varname> reconstruct it. The hexadecimal WKB form lets a temporal S2 index column round-trip through a text-based <varname>COPY</varname>.
+		</para>
+
+		<programlisting language="sql" xml:space="preserve" format="linespecific">
+SELECT asHexWKB(ts2index '2ef59bd352b93ac3@2001-01-01');
+
+SELECT ts2indexFromHexWKB(asHexWKB(ts2index '2ef59bd352b93ac3@2001-01-01'));
+-- 2ef59bd352b93ac3@2001-01-01
+		</programlisting>
+
+		</sect1>
+
+		<sect1 xml:id="ts2_conversions">
+		<title>Conversions</title>
+		<para>
+			A <varname>ts2index</varname> value shares the same on-disk representation as <varname>tbigint</varname>. The binary-coercion cast between them is explicit, requiring <varname>::</varname>, so S2-specific functions cannot be silently called on arbitrary bigint trajectories.
+		</para>
+
+		<itemizedlist>
+			<listitem xml:id="ts2_tbigint">
+				<indexterm significance="normal"> <primary><varname>::</varname></primary></indexterm>
+				<para>Convert between a <varname>ts2index</varname> and a <varname>tbigint</varname></para>
+				<para><varname>{tbigint,ts2index}::{tbigint,ts2index}</varname></para>
+				<programlisting language="sql" xml:space="preserve" format="linespecific">
+SELECT (tbigint '3383782026967071427@2001-01-01')::ts2index;
+
+SELECT ((ts2index '2ef59bd352b93ac3@2001-01-01')::tbigint)::ts2index =
+  ts2index '2ef59bd352b93ac3@2001-01-01';
+-- true
+				</programlisting>
+			</listitem>
+
+			<listitem xml:id="ts2_tgeogpoint">
+				<indexterm significance="normal"><primary><varname>::</varname></primary> </indexterm>
+				<para>Cast a temporal S2 cell index to a temporal geodetic or planar point representing the center of each S2 cell</para>
+				<para><varname>{ts2index,tgeogpoint}::{ts2index,tgeogpoint}</varname></para>
+				<para>
+					The two overloads provide geodetic (<varname>tgeogpoint</varname>) and SRID-4326 planar (<varname>tgeompoint</varname>) representations.
+				</para>
+				<programlisting language="sql" xml:space="preserve" format="linespecific">
+SELECT (ts2index '2ef59bd352b93ac3@2001-01-01')::tgeogpoint;
+
+SELECT (ts2index '2ef59bd352b93ac3@2001-01-01')::tgeompoint;
+				</programlisting>
+			</listitem>
+		</itemizedlist>
+		</sect1>
+
+		<sect1 xml:id="ts2_geo_coverage">
+		<title>Static Geometry Coverage</title>
+
+		<para>
+			These functions convert an ordinary geometry into an S2 cell or cell set covering it at a specified level. S2 operates on the sphere, and therefore the coverage is based on the geodetic interpretation of the input coordinates. A <varname>tgeompoint</varname> overload is accepted only when its SRID is 4326.
+		</para>
+
+		<itemizedlist>
+			<listitem xml:id="ts2_geoToS2Cell">
+				<indexterm significance="normal"><primary><varname>geoToS2Cell</varname></primary></indexterm>
+				<para>Return the S2 cell at the given level containing a point</para>
+				<para><varname>geoToS2Cell(geometry,integer) → s2index</varname></para>
+				<para>
+					The geometry must be a <varname>POINT</varname>.
+				</para>
+				<programlisting language="sql" xml:space="preserve" format="linespecific">
+SELECT geoToS2Cell(geometry 'SRID=4326;Point(105.641318 -10.490091)', 10);
+				</programlisting>
+			</listitem>
+
+			<listitem xml:id="ts2_geoToS2IndexSet">
+				<indexterm significance="normal"><primary><varname>geoToS2IndexSet</varname></primary></indexterm>
+				<para>Return a set of S2 cells covering a geometry between the specified minimum and maximum levels</para>
+				<para><varname>geoToS2IndexSet(geometry,integer[,integer]) → s2indexset</varname></para>
+				<para>
+					The result is represented by <varname>s2indexset</varname>. A point yields a single cell; lines and polygons are covered by a hierarchy of S2 cells.
+				</para>
+				<programlisting language="sql" xml:space="preserve" format="linespecific">
+SELECT geoToS2IndexSet(geometry 'SRID=4326;Point(105.641318 -10.490091)', 10);
+
+SELECT geoToS2IndexSet(geometry 'SRID=4326;Polygon((4.20 50.70, 4.50 50.70,
+  4.50 50.90, 4.20 50.90, 4.20 50.70))', 8, 12);
+				</programlisting>
+			</listitem>
+
+			<listitem xml:id="ts2_ever_always_set">
+				<indexterm significance="normal"><primary><varname>?=</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>?&lt;&gt;</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>%=</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>%&lt;&gt;</varname></primary></indexterm>
+				<para>Return whether a temporal S2 trajectory ever takes one of the cells in a cell set</para>
+				<para><varname>s2indexset {?=, ?&lt;&gt;, %=, %&lt;&gt;} ts2index → boolean</varname></para>
+				<para>
+					Combined with <varname>geoToS2IndexSet</varname>, this provides a conservative spatial prefilter for exact spatial predicates.
+				</para>
+			</listitem>
+		</itemizedlist>
+		</sect1>
+
+		<sect1 xml:id="ts2_accessors">
+		<title>Accessors</title>
+
+		<itemizedlist>
+			<listitem xml:id="ts2_startValue">
+				<indexterm significance="normal"><primary><varname>startValue</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>endValue</varname></primary></indexterm>
+				<para>Return the first or last S2 cell identifier of a temporal value</para>
+				<para><varname>startValue(ts2index) → s2index</varname></para>
+				<para><varname>endValue(ts2index) → s2index</varname></para>
+			</listitem>
+
+			<listitem xml:id="ts2_valueN">
+				<indexterm significance="normal"><primary><varname>valueN</varname></primary></indexterm>
+				<para>Return the n-th distinct S2 cell identifier (1-indexed)</para>
+				<para><varname>valueN(ts2index,integer) → s2index</varname></para>
+				<para>
+					Returns <varname>NULL</varname> if the cell identifier is out of range.
+				</para>
+			</listitem>
+
+			<listitem xml:id="ts2_getValues">
+				<indexterm significance="normal"><primary><varname>getValues</varname></primary></indexterm>
+				<para>Return the set of distinct S2 cell identifiers taken by the trajectory</para>
+				<para><varname>getValues(ts2index) → s2indexset</varname></para>
+			</listitem>
+
+			<listitem xml:id="ts2_valueAtTimestamp">
+				<indexterm significance="normal"><primary><varname>valueAtTimestamp</varname></primary></indexterm>
+				<para>Return the S2 cell identifier at a given timestamp using step interpolation</para>
+				<para><varname>valueAtTimestamp(ts2index,timestamptz) → s2index</varname></para>
+			</listitem>
+		</itemizedlist>
+		</sect1>
+
+		<sect1 xml:id="ts2_inspection">
+		<title>Index Inspection</title>
+
+		<itemizedlist>
+			<listitem xml:id="ts2_get_level">
+				<indexterm significance="normal"><primary><varname>ts2GetLevel</varname></primary></indexterm>
+				<para>Return the S2 hierarchy level (0--30) of each cell in a trajectory</para>
+				<para><varname>ts2GetLevel(ts2index) → tint</varname></para>
+			</listitem>
+
+			<listitem xml:id="ts2_get_face">
+				<indexterm significance="normal"><primary><varname>ts2GetFace</varname></primary></indexterm>
+				<para>Return the S2 cube face (0--5) containing each cell in a trajectory</para>
+				<para><varname>ts2GetFace(ts2index) → tint</varname></para>
+			</listitem>
+
+			<listitem xml:id="ts2_is_valid_cell">
+				<indexterm significance="normal"><primary><varname>ts2IsValidCell</varname></primary></indexterm>
+				<para>Return a temporal boolean stating at each instant whether the value is a valid S2 cell identifier</para>
+				<para><varname>ts2IsValidCell(ts2index) → tbool</varname></para>
+			</listitem>
+
+			<listitem xml:id="ts2_to_token">
+				<indexterm significance="normal"><primary><varname>ts2CellToToken</varname></primary></indexterm>
+				<para>Return the canonical S2 token representation of every cell.</para>
+				<para><varname>ts2CellToToken(ts2index) → ttext</varname></para>
+			</listitem>
+
+			<listitem xml:id="ts2_common_ancestor">
+				<indexterm significance="normal"><primary><varname>ts2GetCommonAncestorLevel</varname></primary></indexterm>
+				<para>Return the level of the lowest common ancestor of two temporal S2 cells</para>
+				<para><varname>ts2GetCommonAncestorLevel(ts2index,ts2index) → tint</varname></para>
+				<para>
+					A <varname>NULL</varname> value indicates that the cells belong to different S2 cube faces.
+				</para>
+			</listitem>
+		</itemizedlist>
+		</sect1>
+
+		<sect1 xml:id="ts2_hierarchy">
+		<title>Hierarchy</title>
+
+		<para>
+			S2 cells form a quadtree hierarchy. Every non-leaf cell has four children and every cell has a unique parent at each coarser level. Levels range from 0 to 30.
+		</para>
+
+		<itemizedlist>
+			<listitem xml:id="ts2_cell_to_parent">
+				<indexterm significance="normal"><primary><varname>ts2CellToParent</varname></primary></indexterm>
+				<para>Return the temporal parent cell at the specified level</para>
+				<para><varname>ts2CellToParent(ts2index[,integer]) → ts2index</varname></para>
+				<para>
+					The no-argument form returns the parent at the next coarser level.
+				</para>
+			</listitem>
+
+			<listitem xml:id="ts2_cell_to_children">
+				<indexterm significance="normal"><primary><varname>ts2CellToChildren</varname></primary></indexterm>
+				<para>Return all children of a temporal S2 cell at the specified target level</para>
+				<para><varname>ts2CellToChildren(ts2index,integer) → ts2indexset</varname></para>
+				<para>
+					The result contains four children when the target level is exactly one level finer.
+				</para>
+			</listitem>
+
+			<listitem xml:id="ts2_cell_to_child">
+				<indexterm significance="normal"><primary><varname>ts2CellToChild</varname></primary></indexterm>
+				<para>Return the child at the specified ordinal position (0--3) at the requested level</para>
+				<para><varname>ts2CellToChild(ts2index,integer,integer) → ts2index</varname></para>
+			</listitem>
+
+			<listitem xml:id="ts2_cell_contains">
+				<indexterm significance="normal"><primary><varname>ts2CellContains</varname></primary></indexterm>
+				<para>Return a temporal boolean stating whether the first S2 cell contains the second S2 cell at each instant</para>
+				<para><varname>ts2CellContains(ts2index,ts2index) → tbool</varname></para>
+			</listitem>
+		</itemizedlist>
+		</sect1>
+
+		<sect1 xml:id="ts2_latlng">
+		<title>Latitude/Longitude Conversions</title>
+
+		<itemizedlist>
+			<listitem xml:id="ts2_tgeompoint_to_ts2">
+				<indexterm significance="normal"><primary><varname>ts2index</varname></primary></indexterm>
+				<para>Return the S2 cell at the given level containing each point in a temporal geodetic or planar point</para>
+				<para><varname>ts2index(tpoint,integer) → ts2index</varname></para>
+				<para>
+					The <varname>tgeompoint</varname> overload requires SRID 4326.
+				</para>
+				<programlisting language="sql" xml:space="preserve" format="linespecific">
+SELECT ts2GetLevel(ts2index(tgeogpoint 'POINT(105.641318 -10.490091)@2001-01-01', 10));
+
+SELECT ts2GetLevel(ts2index(
+  tgeompoint 'SRID=4326;POINT(105.641318 -10.490091)@2001-01-01', 10));
+				</programlisting>
+			</listitem>
+
+			<listitem xml:id="ts2_cell_to_latlng">
+				<indexterm significance="normal"><primary><varname>ts2CellToLatlng</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>ts2CellToLatlngTgeompoint</varname></primary></indexterm>
+				<para>Return the temporal geodetic centroid of each S2 cell</para>
+				<para><varname>ts2CellToLatlng(ts2index) → tgeogpoint</varname></para>
+				<para><varname>ts2CellToLatlngTgeompoint(ts2index) → tgeompoint</varname></para>
+				<para>
+					A planar SRID-4326 overload is available under the name <varname>ts2CellToLatlngTgeompoint</varname>.
+				</para>
+			</listitem>
+
+			<listitem xml:id="ts2_cell_to_boundary">
+				<indexterm significance="normal"><primary><varname>ts2CellToBoundary</varname></primary></indexterm>
+				<para>Return the temporal polygonal boundary of each S2 cell as a temporal geography</para>
+				<para><varname>ts2CellToBoundary(ts2index) → tgeography</varname></para>
+				<para>
+					An S2 cell has four edges and its boundary is formed by four geodesic edges on the sphere.
+				</para>
+			</listitem>
+		</itemizedlist>
+		</sect1>
+
+		<sect1 xml:id="ts2_spatial_order">
+		<title>Hilbert Ordering</title>
+
+		<para>
+			S2 cell identifiers are ordered according to the S2 Hilbert space-filling curve. Consequently, the numerical order of valid S2 cell identifiers provides a spatial ordering, although nearby cells are not guaranteed to be adjacent in every situation. This ordering is particularly useful for sorting, range construction, and index building.
+		</para>
+
+		<itemizedlist>
+			<listitem xml:id="ts2_cell_compare">
+				<indexterm significance="normal"><primary><varname>ts2CellCompare</varname></primary></indexterm>
+				<para>Compare two temporal S2 cells according to their S2CellId ordering</para>
+				<para><varname>ts2CellCompare(ts2index,ts2index) → tint</varname></para>
+			</listitem>
+
+			<listitem xml:id="ts2_cell_range">
+				<indexterm significance="normal"><primary><varname>ts2CellRange</varname></primary></indexterm>
+				<para>Return the temporal lower and upper S2 cell identifiers delimiting the descendants of each temporal S2 cell</para>
+				<para><varname>ts2CellRange(ts2index) → tstzspan</varname></para>
+				<para>
+					The range is intended for hierarchical filtering and index construction.
+				</para>
+				<note>
+					<para>
+						The precise SQL return type of this function should be finalized together with the implementation of the S2 index operator class. The important API property is that descendants of a cell occupy a contiguous interval in S2CellId order.
+					</para>
+				</note>
+			</listitem>
+		</itemizedlist>
+		</sect1>
+
+		<sect1 xml:id="ts2_metrics">
+		<title>Metrics</title>
+
+		<para>
+			S2 cells are spherical cells. Metric functions therefore use spherical measurements. For areas, the supported units are <varname>km2</varname>, <varname>m2</varname>, and <varname>rads2</varname>. For lengths, the supported units are <varname>km</varname>, <varname>m</varname>, and <varname>rads</varname>.
+		</para>
+
+		<itemizedlist>
+			<listitem xml:id="ts2_cell_area">
+				<indexterm significance="normal"><primary><varname>ts2CellArea</varname></primary></indexterm>
+				<para>Return the spherical area of each S2 cell in a trajectory</para>
+				<para><varname>ts2CellArea(ts2index,text='km2') → tfloat</varname></para>
+			</listitem>
+
+			<listitem xml:id="ts2_cell_edge_length">
+				<indexterm significance="normal"><primary><varname>ts2CellEdgeLength</varname></primary></indexterm>
+				<para>Return the length of the specified S2 cell edge</para>
+				<para><varname>ts2CellEdgeLength(ts2index,integer,text='km') → tfloat</varname></para>
+			</listitem>
+
+			<listitem xml:id="ts2_great_circle_distance">
+				<indexterm significance="normal"><primary><varname>greatCircleDistance</varname></primary></indexterm>
+				<para>Return the temporal great-circle distance between two temporal geodetic points</para>
+				<para><varname>greatCircleDistance(tgeogpoint,tgeogpoint,text='km') → tfloat</varname></para>
+				<para>
+					The two operands are synchronised.
+				</para>
+			</listitem>
+		</itemizedlist>
+		</sect1>
+
+		<sect1 xml:id="ts2_comparisons">
+		<title>Comparisons</title>
+
+		<itemizedlist>
+			<listitem xml:id="ts2_comp">
+				<indexterm significance="normal"><primary><varname>=</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>&lt;&gt;</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>&lt;</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>&gt;</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>&lt;=</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>&gt;=</varname></primary></indexterm>
+				<para>Traditional comparisons</para>
+				<para><varname>ts2index {=, &lt;&gt;, &lt;, &gt;, &lt;, &gt;=} ts2index</varname></para>
+			</listitem>
+
+			<listitem xml:id="ts2_ever_always">
+				<indexterm significance="normal"><primary><varname>?=</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>?&lt;&gt;</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>%=</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>%&lt;&gt;</varname></primary></indexterm>
+				<para>Ever and always comparisons</para>
+				<para><varname>{s2index,ts2index} {?=, %=, %=, %&lt;&gt;} {s2index,ts2index}</varname></para>
+			</listitem>
+
+			<listitem xml:id="ts2_tcomp">
+				<indexterm significance="normal"><primary><varname>#=</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>#&lt;&gt;</varname></primary></indexterm>
+				<para>Temporal comparisons</para>
+				<para><varname>{s2index,ts2index} {#=, #&lt;&gt;} {s2index,ts2index}</varname></para>
+			</listitem>
+		</itemizedlist>
+		</sect1>
+
+		<sect1 xml:id="ts2_bbox_ops">
+		<title>Bounding-box operators</title>
+
+		<para>
+			The bounding-box operators use the temporal S2 cell extent and its time period. The spatial extent is represented by the geodetic extent of the S2 cell boundaries.
+		</para>
+
+		<itemizedlist>
+			<listitem xml:id="ts2_topo">
+				<indexterm significance="normal"><primary><varname>&amp;&amp;</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>@&gt;</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>&lt;@</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>~=</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>-|-</varname></primary></indexterm>
+				<para>Topological operators</para>
+				<para><varname>ts2index {&amp;&amp;, @&gt;, &lt;@, ~=, -|-} {tstzspan,stbox,ts2index} → boolean</varname></para>
+			</listitem>
+
+			<listitem xml:id="ts2_position">
+				<indexterm significance="normal"><primary><varname>&lt;&lt;#</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>&amp;&lt;#</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>#&gt;&gt;</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>#&amp;&gt;</varname></primary></indexterm>
+				<para>Position operators</para>
+				<para><varname>ts2index {&lt;&lt;#, &amp;&lt;#, #&gt;&gt;, #&amp;&gt;} {tstzspan,stbox,ts2index} → boolean</varname></para>
+			</listitem>
+		</itemizedlist>
+		</sect1>
+
+		<sect1 xml:id="ts2_set_returning">
+		<title>Set-Returning Functions</title>
+
+		<para>
+			The following static functions return an <varname>s2indexset</varname>, the finite-collection companion type of <varname>s2index</varname>. They operate on static S2 cells and are not lifted to <varname>ts2index</varname>.
+		</para>
+
+		<itemizedlist>
+			<listitem xml:id="ts2_cell_to_children_1">
+				<indexterm significance="normal"><primary><varname>s2CellToChildren</varname></primary></indexterm>
+				<para>Return all descendants of an S2 cell at the requested target level.</para>
+				<para><varname>s2CellToChildren(s2index,integer) → s2indexset</varname></para>
+			</listitem>
+
+			<listitem xml:id="ts2_cell_neighbors">
+				<indexterm significance="normal"><primary><varname>s2CellNeighbors</varname></primary></indexterm>
+				<para>Return the four cells adjacent to the four edges of an S2 cell.</para>
+				<para><varname>s2CellNeighbors(s2index) → s2indexset</varname></para>
+			</listitem>
+
+			<listitem xml:id="ts2_cell_covering">
+				<indexterm significance="normal"><primary><varname>s2CellCovering</varname></primary></indexterm>
+				<para>Return an S2 covering of a static geometry</para>
+				<para><varname>s2CellCovering(geometry,integer,integer) → s2indexset</varname></para>
+				<para>
+					The covering may contain cells at different levels.
+				</para>
+			</listitem>
+
+			<listitem xml:id="ts2_compact_cells">
+				<indexterm significance="normal"><primary><varname>s2CompactCells</varname></primary></indexterm>
+				<para>Return a compacted S2 cell set by replacing a complete set of four siblings by their parent whenever possible</para>
+				<para><varname>s2CompactCells(s2indexset) → s2indexset</varname></para>
+			</listitem>
+
+			<listitem xml:id="ts2_uncompact_cells">
+				<indexterm significance="normal"><primary><varname>s2UncompactCells</varname></primary></indexterm>
+				<para>Expand a compacted S2 cell set to the specified level</para>
+				<para><varname>s2UncompactCells(s2indexset,integer) → s2indexset</varname></para>
+			</listitem>
+		</itemizedlist>
+		</sect1>
+
+		<sect1 xml:id="ts2_spatiotemp_rels">
+		<title>Spatiotemporal Relationships</title>
+
+		<para>
+			The spatiotemporal relationships evaluate a <varname>ts2index</varname> argument through its per-instant S2 cell-boundary geometry. Unlike a planar tile system, S2 cell boundaries are spherical geodesic edges. The implementation therefore uses the geodetic interpretation of the S2 cell footprint.
+		</para>
+
+		<para>
+			Each relationship has three quantified forms: the <varname>e</varname>-prefixed <emphasis>ever</emphasis> form returns true when the relationship holds at some instant, the <varname>a</varname>-prefixed <emphasis>always</emphasis> form when it holds at every instant, and the <varname>t</varname>-prefixed <emphasis>temporal</emphasis> form returns a <varname>tbool</varname> of the instant-by-instant result. Every form accepts the argument orderings <varname>(geometry,ts2index)</varname>, <varname>(ts2index,geometry)</varname>, and <varname>(ts2index,ts2index)</varname>.
+		</para>
+
+		<itemizedlist>
+			<listitem xml:id="ts2_rel_contains">
+				<indexterm significance="normal"><primary><varname>eContains</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>aContains</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>tContains</varname></primary></indexterm>
+				<para>Return true when one S2 cell footprint contains the other</para>
+				<para><varname>eContains(geometry,ts2index) → boolean</varname></para>
+				<para><varname>aContains(geometry,ts2index) → boolean</varname></para>
+				<para><varname>tContains(geometry,ts2index) → tbool</varname></para>
+			</listitem>
+
+			<listitem xml:id="ts2_rel_covers">
+				<indexterm significance="normal"><primary><varname>eCovers</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>aCovers</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>tCovers</varname></primary></indexterm>
+				<para>Return true when one S2 cell footprint covers the other, including boundary points</para>
+				<para><varname>eCovers(geometry,ts2index) → boolean</varname></para>
+				<para><varname>aCovers(geometry,ts2index) → boolean</varname></para>
+				<para><varname>tCovers(geometry,ts2index) → tbool</varname></para>
+			</listitem>
+
+			<listitem xml:id="ts2_rel_disjoint">
+				<indexterm significance="normal"><primary><varname>eDisjoint</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>aDisjoint</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>tDisjoint</varname></primary></indexterm>
+				<para>Return true when two S2 footprints share no point.</para>
+				<para><varname>eDisjoint(geometry,ts2index) → boolean</varname></para>
+				<para><varname>aDisjoint(geometry,ts2index) → boolean</varname></para>
+				<para><varname>tDisjoint(geometry,ts2index) → boolean</varname></para>
+			</listitem>
+
+			<listitem xml:id="ts2_rel_intersects">
+				<indexterm significance="normal"><primary><varname>eIntersects</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>aIntersects</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>tIntersects</varname></primary></indexterm>
+				<para>Return true when two S2 footprints share at least one point</para>
+				<para><varname>eIntersects(geometry,ts2index) → boolean</varname></para>
+				<para><varname>aIntersects(geometry,ts2index) → boolean</varname></para>
+				<para><varname>tIntersects(geometry,ts2index) → boolean</varname></para>
+			</listitem>
+
+			<listitem xml:id="ts2_rel_touches">
+				<indexterm significance="normal"><primary><varname>eTouches</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>aTouches</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>tTouches</varname></primary></indexterm>
+				<para>Return true when two S2 footprints share a boundary point but no interior point</para>
+				<para><varname>eTouches(geometry,ts2index) → boolean</varname></para>
+				<para><varname>aTouches(geometry,ts2index) → boolean</varname></para>
+				<para><varname>tTouches(geometry,ts2index) → tbool</varname></para>
+			</listitem>
+
+			<listitem xml:id="ts2_rel_dwithin">
+				<indexterm significance="normal"><primary><varname>eDwithin</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>aDwithin</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>tDwithin</varname></primary></indexterm>
+				<para>Return true when two S2 footprints lie within the specified spherical distance</para>
+				<para><varname>eDwithin(geometry,ts2index,float) → boolean</varname></para>
+				<para><varname>aDwithin(geometry,ts2index,float) → boolean</varname></para>
+				<para><varname>tDwithin(geometry,ts2index,float) → boolean</varname></para>
+			</listitem>
+		</itemizedlist>
+		</sect1>
+
+		<sect1 xml:id="ts2_aggregations">
+		<title>Aggregations</title>
+
+		<itemizedlist>
+			<listitem xml:id="ts2_tCount">
+				<indexterm significance="normal"><primary><varname>tCount</varname></primary></indexterm>
+				<para>Temporal count of the number of temporal S2 values present at each instant</para>
+				<para><varname>tCount(ts2index) → {tintSeq,tintSeqSet}</varname></para>
+			</listitem>
+
+			<listitem xml:id="ts2_wCount">
+				<indexterm significance="normal"><primary><varname>wCount</varname></primary></indexterm>
+				<para>Window count over temporal S2 trajectories</para>
+				<para><varname>wCount(ts2index,interval) → {tintSeq,tintSeqSet}</varname></para>
+			</listitem>
+		</itemizedlist>
+		</sect1>
+
+		<sect1 xml:id="ts2_indexing">
+		<title>Indexing</title>
+
+		<para>
+			GiST and SP-GiST operator classes are defined so that the bounding-box operators of the previous sections can be used with corresponding indexes.
+		</para>
+
+		<para>
+			The initial implementation uses the temporal S2 cell extent and time period as the indexed bounding box. A later optimization may exploit the fact that S2CellIds follow a Hilbert space-filling curve and that the descendants of an S2 cell form a contiguous identifier interval.
+		</para>
+
+		<itemizedlist>
+			<listitem xml:id="ts2_rtree_ops">
+				<indexterm significance="normal"><primary><varname>ts2_rtree_ops</varname></primary></indexterm>
+				<para>GiST operator class for temporal S2 cells</para>
+				<para><varname>CREATE INDEX ON trips USING gist(cells);</varname></para>
+				<para><varname>CREATE INDEX ON trips USING gist(cells ts2_rtree_ops);</varname></para>
+				<para>
+					The initial implementation indexes an <varname>stbox</varname> spatiotemporal bounding box per row, representing the geodetic extent of the S2 cell boundaries together with the temporal extent.
+				</para>
+			</listitem>
+
+
+			<listitem xml:id="ts2_quadtree_ops">
+				<indexterm significance="normal"><primary><varname>ts2_quadtree_ops</varname></primary></indexterm>
+				<para>
+				SP-GiST operator class for temporal S2 cells using the temporal S2 extent as the indexed key. The operator class provides the initial spatial partitioning implementation.
+				</para>
+				<programlisting language="sql" xml:space="preserve" format="linespecific">
+CREATE INDEX ON trips USING spgist(cells);
+CREATE INDEX ON trips USING spgist(cells ts2_quadtree_ops);
+			</programlisting>
+				<para>
+					SP-GiST operator class for temporal S2 cells using the temporal S2 extent as the indexed key. The operator class provides the initial spatial partitioning implementation.
+				</para>
+			</listitem>
+
+			<listitem xml:id="ts2_hilbert_ops">
+				<indexterm significance="normal"><primary><varname>ts2_hilbert_ops</varname></primary></indexterm>
+				<para>
+					Experimental GiST operator class exploiting the numerical ordering of S2CellIds along the S2 Hilbert curve. This operator class is intended for research on build-sort construction and spatiotemporal locality. It is not part of the initial compatibility implementation.
+				</para>
+				<programlisting language="sql" xml:space="preserve" format="linespecific">
+CREATE INDEX ON trips USING gist(cells ts2_hilbert_ops);
+				</programlisting>
+			</listitem>
+		</itemizedlist>
+
+		</sect1>
+
+</chapter>

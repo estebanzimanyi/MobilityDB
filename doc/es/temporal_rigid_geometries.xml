@@ -358,9 +358,9 @@ SELECT ST_AsText(geom(trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));Pose(Point(5 0)
 			<listitem xml:id="trgeometry_traversedArea_func">
 				<indexterm significance="normal"><primary><varname>traversedArea</varname></primary></indexterm>
 				<para>Devuelve el área atravesada por la geometría rígida temporal</para>
-				<programlisting xml:space="preserve" format="linespecific">
-traversedArea(trgeometry, unary_union=false) → geometry
-</programlisting>
+				<para><varname>traversedArea(trgeometry,unary_union bool=false) → geometry</varname></para>
+				<para>El argumento es falso salvo que se indique, y la función responde entonces las colocaciones mismas reunidas en una geometría, un multipolígono para un cuerpo que es un polígono, que es lo que quiere quien llama y hace su propio posprocesamiento. Con <varname>unary_union = true</varname> se disuelven en la región que cubren.</para>
+				<para><emphasis>Advertencia de muestreo:</emphasis> la implementación muestrea en los instantes de entrada, de modo que los segmentos de traslación pura son exactos, pero la cinta barrida entre dos instantes donde ocurre una rotación se aproxima mediante la envolvente convexa de los dos polígonos extremos. Sobremuestrear la <varname>tpose</varname> antes de construir la <varname>trgeometry</varname> ajusta la aproximación.</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT ST_AsText(traversedArea(
   trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));[Pose(Point(0 0), 0.0)@2001-01-01,
@@ -371,8 +371,6 @@ SELECT ST_AsText(traversedArea(
   Pose(Point(10 0), 0.0)@2001-01-02]', true));
 -- POLYGON((0 0,0 1,11 1,11 0,0 0))
 </programlisting>
-				<para>El argumento es falso salvo que se indique, y la función responde entonces las colocaciones mismas reunidas en una geometría, un multipolígono para un cuerpo que es un polígono, que es lo que quiere quien llama y hace su propio posprocesamiento. Con <varname>unary_union = true</varname> se disuelven en la región que cubren.</para>
-				<para><emphasis>Advertencia de muestreo:</emphasis> la implementación muestrea en los instantes de entrada, de modo que los segmentos de traslación pura son exactos, pero la cinta barrida entre dos instantes donde ocurre una rotación se aproxima mediante la envolvente convexa de los dos polígonos extremos. Sobremuestrear la <varname>tpose</varname> antes de construir la <varname>trgeometry</varname> ajusta la aproximación.</para>
 			</listitem>
 		</itemizedlist>
 	</sect1>
@@ -569,21 +567,17 @@ SELECT asText(shiftScaleTime(trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));
 				<indexterm significance="normal"><primary><varname>atGeometry</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>minusGeometry</varname></primary></indexterm>
 				<para>Restringir una trgeometry a (el complemento de) una geometría</para>
-				<programlisting xml:space="preserve" format="linespecific">
-atGeometry(trgeometry, geometry) → trgeometry
-minusGeometry(trgeometry, geometry) → trgeometry
-</programlisting>
+				<para><varname>atGeometry(trgeometry,geometry) → trgeometry</varname></para>
+				<para><varname>minusGeometry(trgeometry,geometry) → trgeometry</varname></para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT temporalTime(atGeometry(
   trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));[Pose(Point(0 0), 0.0)@2001-01-01,
-  Pose(Point(4 0), 0.0)@2001-01-05]',
-  geometry 'Polygon((1 -1,3 -1,3 1,1 1,1 -1))'));
+  Pose(Point(4 0), 0.0)@2001-01-05]', geometry 'Polygon((1 -1,3 -1,3 1,1 1,1 -1))'));
 -- {[2001-01-02, 2001-01-04]}
 
 SELECT temporalTime(minusGeometry(
   trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));[Pose(Point(0 0), 0.0)@2001-01-01,
-  Pose(Point(4 0), 0.0)@2001-01-05]',
-  geometry 'Polygon((1 -1,3 -1,3 1,1 1,1 -1))'));
+  Pose(Point(4 0), 0.0)@2001-01-05]', geometry 'Polygon((1 -1,3 -1,3 1,1 1,1 -1))'));
 -- {[2001-01-01, 2001-01-02), (2001-01-04, 2001-01-05]}
 </programlisting>
 				<para>La restricción contra una geometría vacía devuelve NULL para <varname>atGeometry</varname> y la entrada original para <varname>minusGeometry</varname>.</para>
@@ -593,10 +587,8 @@ SELECT temporalTime(minusGeometry(
 				<indexterm significance="normal"><primary><varname>atStbox</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>minusStbox</varname></primary></indexterm>
 				<para>Restringir una trgeometry a (el complemento de) una caja espaciotemporal</para>
-				<programlisting xml:space="preserve" format="linespecific">
-atStbox(trgeometry, stbox [, border_inc boolean = true]) → trgeometry
-minusStbox(trgeometry, stbox [, border_inc boolean = true]) → trgeometry
-</programlisting>
+				<para><varname>atStbox(trgeometry,stbox[,border_inc boolean = true]) → trgeometry</varname></para>
+				<para><varname>minusStbox(trgeometry,stbox[,border_inc boolean = true]) → trgeometry</varname></para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT temporalTime(atStbox(
   trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));[Pose(Point(0 0), 0.0)@2001-01-01,
@@ -811,16 +803,14 @@ SELECT trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));
 
 			<listitem xml:id="trgeometry_evereq">
 				<indexterm significance="normal"><primary><varname>?=</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>%=</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>?&lt;&gt;</varname></primary></indexterm>
-				<para>Probar si la geometría materializada es alguna vez (no) igual al operando en algún momento</para>
-				<programlisting xml:space="preserve" format="linespecific">
-{geometry,trgeometry} ?= {geometry,trgeometry} → boolean
-{geometry,trgeometry} ?&lt;&gt; {geometry,trgeometry} → boolean
-</programlisting>
+				<indexterm significance="normal"><primary><varname>%&lt;&gt;</varname></primary></indexterm>
+				<para>Comparaciones alguna vez y siempre</para>
+				<para><varname>{geometry,trgeometry} {?=, ?&lt;&gt;} {geometry,trgeometry} → boolean</varname></para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));[Pose(Point(0 0), 0.0)@2001-01-01,
-  Pose(Point(5 0), 0.0)@2001-01-02]'
-       ?= geometry 'Polygon((5 0,6 0,6 1,5 1,5 0))';
+  Pose(Point(5 0), 0.0)@2001-01-02]' ?= geometry 'Polygon((5 0,6 0,6 1,5 1,5 0))';
 -- t
 </programlisting>
 			</listitem>
@@ -828,12 +818,9 @@ SELECT trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));[Pose(Point(0 0), 0.0)@2001-01
 			<listitem xml:id="trgeometry_alwayseq">
 				<indexterm significance="normal"><primary><varname>%=</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>%&lt;&gt;</varname></primary></indexterm>
-				<para>Probar si la geometría materializada es siempre (no) igual al operando</para>
-				<programlisting xml:space="preserve" format="linespecific">
-{geometry,trgeometry} %= {geometry,trgeometry} → boolean
-{geometry,trgeometry} %&lt;&gt; {geometry,trgeometry} → boolean
-</programlisting>
-							<programlisting language="sql" xml:space="preserve" format="linespecific">
+					<para>Comparaciones temporales</para>
+				<para><varname>{geometry,trgeometry} {%=, %&lt;&gt;} {geometry,trgeometry} → boolean</varname></para>
+				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));
   [Pose(Point(0 0), 0.0)@2001-01-01, Pose(Point(10 0),
   0.0)@2001-01-02]' %= trgeometry 'Polygon((0 0,1 0,1 1,0 1,0 0));

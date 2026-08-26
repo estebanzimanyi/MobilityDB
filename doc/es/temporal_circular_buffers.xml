@@ -547,10 +547,8 @@ SELECT asText(tcbuffer('Cbuffer(Point(1 1), 0.2)',
 			<listitem xml:id="tcbufferSeq">
 				<indexterm significance="normal"><primary><varname>tcbufferSeq</varname></primary></indexterm>
 				<para>Constructor para búferes circulares temporales de subtipo secuencia</para>
-				<programlisting xml:space="preserve" format="linespecific">
-tcbufferSeq(tcbufferInst[],interp='linear',leftInc boolean=true,
-  rightInc boolean=true) →tcbufferSeq
-</programlisting>
+				<para><varname>tcbufferSeq(tcbufferInst[],interp='linear',leftInc boolean=true,</varname></para>
+				<para><varname>  rightInc boolean=true) → tcbufferSeq</varname></para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT asText(tcbufferSeq(ARRAY[tcbuffer 'Cbuffer(Point(1 1), 0.3)@2001-01-01',
   'Cbuffer(Point(2 2), 0.5)@2001-01-02', 'Cbuffer(Point(1 1), 0.5)@2001-01-03']));
@@ -593,9 +591,7 @@ SELECT asText(tcbufferSeqSetGaps(ARRAY[tcbuffer 'Cbuffer(Point(1 1),0.1)@2001-01
 			<listitem xml:id="tgeompoint_tfloat_tcbuffer">
 				<indexterm significance="normal"><primary><varname>tcbuffer</varname></primary></indexterm>
 				<para>Construir un búfer circular temporal a partir de un punto de geometría temporal y un flotante temporal</para>
-				<programlisting xml:space="preserve" format="linespecific">
-tcbuffer(tgeompoint, tfloat) → tcbuffer
-</programlisting>
+				<para><varname>tcbuffer(tgeompoint,tfloat) → tcbuffer</varname></para>
 				<para>El marco de tiempo del resultado es la intersección de los marcos de tiempo del punto temporal y el flotante temporal. Si no se intersecan, se devuelve un valor nulo</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT asText(tcbuffer(tgeompoint '[POINT(1 1)@2001-01-01, POINT(2 2)@2001-01-02)',
@@ -719,9 +715,7 @@ SELECT asText(tcbufferSeqSet(tcbuffer 'Cbuffer(Point(1 1), 0.5)@2001-01-01'));
 			<listitem xml:id="tcbuffer_setInterp">
 				<indexterm significance="normal"><primary><varname>setInterp</varname></primary></indexterm>
 				<para>Transformar un búfer circular temporal en otra interpolación</para>
-				<programlisting xml:space="preserve" format="linespecific">
-setInterp(tcbuffer, interp) → tcbuffer
-</programlisting>
+				<para><varname>setInterp(tcbuffer,interp) → tcbuffer</varname></para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT asText(setInterp(tcbuffer 'Cbuffer(Point(1 1),0.2)@2001-01-01','linear'));
 -- [Cbuffer(Point(1 1),0.2)@2001-01-01]
@@ -848,9 +842,7 @@ FROM test;
 			<listitem xml:id="tcbuffer_traversedArea">
 				<indexterm significance="normal"><primary><varname>traversedArea</varname></primary></indexterm>
 				<para>Devuelve el área atravesada por el búfer circular temporal</para>
-				<programlisting xml:space="preserve" format="linespecific">
-traversedArea(tcbuffer, unary_union=false) → geometry
-</programlisting>
+				<para><varname>traversedArea(tcbuffer,unary_union bool=false) → geometry</varname></para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT ST_AsText(traversedArea(tcbuffer '[Cbuffer(Point(1 1), 0.3)@2001-01-01,
   Cbuffer(Point(1 1), 0.5)@2001-01-02]'));
@@ -913,7 +905,7 @@ SELECT tcbuffer '[Cbuffer(Point(2 2), 0.3)@2001-01-01,
 
 			<listitem xml:id="tcbuffer_nearestApproachInstant">
 				<indexterm significance="normal"><primary><varname>nearestApproachInstant</varname></primary></indexterm>
-				<para>TODO Devuelve el instante del primer búfer circular temporal en el que los dos argumentos están a la distancia más cercana</para>
+				<para>Devuelve el instante del primer búfer circular temporal en el que los dos argumentos están a la distancia más cercana</para>
 				<programlisting xml:space="preserve" format="linespecific">
 nearestApproachInstant({geo,cbuffer,tcbuffer},{geo,cbuffer,tcbuffer}) → tcbuffer
 </programlisting>
@@ -929,7 +921,7 @@ SELECT nearestApproachInstant(tcbuffer '[Cbuffer(Point(2 2), 0.3)@2001-01-01,
 
 			<listitem xml:id="tcbuffer_shortestLine">
 				<indexterm significance="normal"><primary><varname>shortestLine</varname></primary></indexterm>
-				<para>TODO Devuelve la línea que conecta el punto de aproximación más cercano entre los dos argumentos</para>
+				<para>Devuelve la línea que conecta el punto de aproximación más cercano entre los dos argumentos</para>
 				<programlisting xml:space="preserve" format="linespecific">
 shortestLine({geo,cbuffer,tcbuffer},{geo,cbuffer,tcbuffer}) → geometry
 </programlisting>
@@ -946,7 +938,7 @@ SELECT ST_AsText(shortestLine(tcbuffer '[Cbuffer(Point(2 2), 0.3)@2001-01-01,
 
 			<listitem xml:id="tcbuffer_tdistance">
 				<indexterm significance="normal"><primary><varname>&lt;-&gt;</varname></primary></indexterm>
-				<para>TODO Devuelve la distancia temporal</para>
+				<para>Devuelve la distancia temporal</para>
 				<programlisting xml:space="preserve" format="linespecific">
 {geo,cbuffer,tcbuffer} &lt;-&gt; {geo,cbuffer,tcbuffer} → tfloat
 </programlisting>
@@ -1016,7 +1008,7 @@ SELECT asText(minusValue(tcbuffer '[Cbuffer(Point(2 2), 0.3)@2001-01-01,
 			<listitem xml:id="tcbuffer_atGeometry">
 				<indexterm significance="normal"><primary><varname>atGeometry</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>minusGeometry</varname></primary></indexterm>
-				<para>TODO Restringir al (complemento de) una geometría</para>
+				<para>Restringir al (complemento de) una geometría</para>
 				<programlisting xml:space="preserve" format="linespecific">
 atGeometry(tcbuffer,geometry) → tcbuffer
 minusGeometry(tcbuffer,geometry) → tcbuffer
@@ -1081,11 +1073,11 @@ SELECT tcbuffer '[Cbuffer(Point(1 1), 0.1)@2001-01-01,
 
 			<listitem xml:id="tcbuffer_ever_always">
 				<indexterm significance="normal"><primary><varname>?=</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>?&lt;&gt;</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>%=</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>%&lt;&gt;</varname></primary></indexterm>
 				<para>Comparaciones alguna vez y siempre</para>
-				<programlisting xml:space="preserve" format="linespecific">
-{tcbuffer,cbuffer} {?=, %=} {tcbuffer,cbuffer} → boolean
-</programlisting>
+				<para><varname>{tcbuffer,cbuffer} {?=, ?&lt;&gt;, %=, %&lt;&gt;} {tcbuffer,cbuffer} → boolean</varname></para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT tcbuffer '[Cbuffer(Point(1 1), 0.2)@2001-01-01,
   Cbuffer(Point(1 1), 0.4)@2001-01-03)' ?= cbuffer 'Cbuffer(Point(1 1), 0.3)';
@@ -1101,7 +1093,8 @@ SELECT tcbuffer '[Cbuffer(Point(1 1), 0.2)@2001-01-01,
 			</listitem>
 
 			<listitem xml:id="tcbuffer_tcomp">
-				<indexterm significance="normal"><primary><varname>::</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>#=</varname></primary></indexterm>
+				<indexterm significance="normal"><primary><varname>#&lt;&gt;</varname></primary></indexterm>
 				<para>Comparaciones temporales</para>
 				<programlisting xml:space="preserve" format="linespecific">
 tcbuffer {#=, #&lt;&gt;} tcbuffer → tbool
@@ -1176,10 +1169,10 @@ SELECT tcbuffer '[Cbuffer(Point(1 1), 0.3)@2001-01-01,
 		</itemizedlist>
 	</sect1>
 
-	<sect1 xml:id="tcbuffer_spatial_rels">
-		<title>Relaciones espaciales</title>
+	<sect1 xml:id="tcbuffer_spatiotemp_rels">
+		<title>Relaciones espaciotemporales</title>
 		<itemizedlist>
-			<listitem xml:id="tcbuffer_espatialrels">
+			<listitem xml:id="tcbuffer_ea_rels">
 				<indexterm significance="normal"><primary><varname>eContains</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>aContains</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>eDisjoint</varname></primary></indexterm>
@@ -1192,7 +1185,7 @@ SELECT tcbuffer '[Cbuffer(Point(1 1), 0.3)@2001-01-01,
 				<indexterm significance="normal"><primary><varname>aTouches</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>eCovers</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>aCovers</varname></primary></indexterm>
-				<para>TODO Relaciones alguna vez y siempre</para>
+				<para>Relaciones alguna vez y siempre</para>
 				<programlisting xml:space="preserve" format="linespecific">
 eContains(geometry,tcbuffer) → boolean
 aContains(geometry,tcbuffer) → boolean
@@ -1219,13 +1212,13 @@ SELECT eIntersects(tcbuffer '[Cbuffer(Point(1 1), 0.1)@2001-01-01,
 </programlisting>
 			</listitem>
 
-			<listitem xml:id="tcbuffer_tspatialrels">
+			<listitem xml:id="tcbuffer_temp_rels">
 				<indexterm significance="normal"><primary><varname>tContains</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>tDisjoint</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>tDwithin</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>tIntersects</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>tTouches</varname></primary></indexterm>
-				<para>TODO Relaciones espaciotemporales</para>
+				<para>Relaciones espaciotemporales</para>
 				<programlisting xml:space="preserve" format="linespecific">
 tContains(geometry,tcbuffer) → boolean
 tDisjoint({geometry,cbuffer,tcbuffer},{geometry,cbuffer,tcbuffer}) → boolean
@@ -1348,10 +1341,8 @@ SELECT asText(minTimeDeltaSimplify(tcbuffer
 				<indexterm significance="normal"><primary><varname>maxDistSimplify</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>douglasPeuckerSimplify</varname></primary></indexterm>
 				<para>Devuelve un búfer circular temporal simplificado usando el <ulink url="https://es.wikipedia.org/wiki/Algoritmo_de_Ramer%E2%80%93Douglas%E2%80%93Peucker">algoritmo de Douglas-Peucker</ulink></para>
-				<programlisting xml:space="preserve" format="linespecific">
-maxDistSimplify(tcbuffer,maxdist float,syncdist=true) → tcbuffer
-douglasPeuckerSimplify(tcbuffer,maxdist float,syncdist=true) → tcbuffer
-</programlisting>
+				<para><varname>maxDistSimplify(tcbuffer,maxdist float,syncdist bool=true) → tcbuffer</varname></para>
+				<para><varname>douglasPeuckerSimplify(tcbuffer,maxdist float,syncdist bool=true) → tcbuffer</varname></para>
 				<para>La diferencia entre las dos funciones es que <varname>maxDistSimplify</varname> utiliza una versión de un solo paso del algoritmo mientras que <varname>douglasPeuckerSimplify</varname> utiliza el algoritmo recursivo estándar. Al igual que las funciones anteriores, la simplificación opera sobre la trayectoria de los centros y conserva el radio en cada instante que sobrevive.</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT asText(douglasPeuckerSimplify(tcbuffer '[Cbuffer(Point(1 1),0.5)@2000-01-01,

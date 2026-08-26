@@ -404,7 +404,6 @@ SELECT jsonbsetPathQueryFirst(jsonbset
   '[{"speed":10}, {"speed": 20, "units": "km/h"}]',
   '$.speed ? (@ &gt;= $min &amp;&amp; @ &lt;= $max'), '{"min":10, "max":30}');
 -- [[{"speed": 10}], [{"speed": 20, "units": "km/h"}]]
--- TODO, it works without "_tz"
 SELECT jsonbsetPathQueryArrayTz(jsonbset
   '[{"cameraId":25, "inspections":["2000-01-03", "2000-01-06", "2000-01-09"]},
    {"cameraId":35, "inspections":["2000-01-04", "2000-01-07", "2000-01-10"]}]',

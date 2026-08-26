@@ -48,12 +48,10 @@ SELECT asText(minTimeDeltaSimplify(tgeogpoint '[Point(1 1 1)@2001-01-01,
 				<indexterm significance="normal"><primary><varname>maxDistSimplify</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>douglasPeuckerSimplify</varname></primary></indexterm>
 				<para>Return a temporal float or a temporal point simplified using the <ulink url="https://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm">Douglas-Peucker algorithm</ulink> &Z_support;</para>
-				<programlisting xml:space="preserve" format="linespecific">
-maxDistSimplify({tfloat,tgeompoint},maxdist float,syncdist=true) →
-  {tfloat,tgeompoint}
-douglasPeuckerSimplify({tfloat,tgeompoint},maxdist float,syncdist=true) →
-  {tfloat,tgeompoint}
-</programlisting>
+				<para><varname>maxDistSimplify({tfloat,tgeompoint},maxdist float,syncdist bool=true) →</varname></para>
+				<para><varname>  {tfloat,tgeompoint}</varname></para>
+				<para><varname>douglasPeuckerSimplify({tfloat,tgeompoint},maxdist float,syncdist bool=true) →</varname></para>
+				<para><varname>  {tfloat,tgeompoint}</varname></para>
 				<para>The difference between the two functions is that <varname>maxDistSimplify</varname> uses a single-pass version of the algorithm whereas <varname>douglasPeuckerSimplify</varname> uses the standard recursive algorithm.</para>
 				<para>The function removes values or points that are less than or equal to the distance passed as second argument. In the case of temporal points, the distance is specified in the units of the coordinate system. The third argument applies only for temporal points and specifies whether the spatial or the synchronized distance is used. Notice that simplification applies only to temporal sequences or sequence sets with linear interpolation. In all other cases, a copy of the given temporal value is returned.</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
@@ -326,10 +324,8 @@ SELECT dynTimeWarpPath(tgeompoint '[Point(1 1)@2001-01-01, Point(3 3)@2001-01-03
 				<para>Return a smoothed temporal float or temporal point obtained by filtering a noisy trajectory with an <ulink url="https://en.wikipedia.org/wiki/Kalman_filter">Extended Kalman Filter</ulink> &Z_support;
 </para>
 				<programlisting xml:space="preserve" format="linespecific">
-extendedKalmanFilter(tfloat, gate float, q float, variance float,
-  to_drop boolean DEFAULT TRUE) → tfloat
-extendedKalmanFilter(tgeompoint, gate float, q float, variance float,
-  to_drop boolean DEFAULT TRUE) → tgeompoint
+extendedKalmanFilter(tfloat,gate float,q float,variance float,to_drop boolean=TRUE) → tfloat
+extendedKalmanFilter(tgeompoint,gate float,q float,variance float,to_drop boolean=TRUE) → tgeompoint
 </programlisting>
 				<para>The filter models the underlying motion of a moving object and separates it from measurement noise and occasional outliers. The <varname>gate</varname> parameter controls how strict the outlier detection is, <varname>q</varname> is the process-noise scale, <varname>variance</varname> is the measurement-noise variance, and <varname>to_drop</varname> chooses whether outliers are removed (<literal>true</literal>) or replaced by the predicted trajectory (<literal>false</literal>).</para>
 				<para>These functions are intended for trajectories with at least three instants and are typically applied to temporal values with linear interpolation.</para>

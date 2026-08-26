@@ -46,12 +46,10 @@ SELECT tjsonb '[{"unit": "km", "speed": 10}@2001-01-01,
 				<indexterm significance="normal"><primary><varname>jsonbsetObjectField</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>jsonbsetObjectFieldText</varname></primary></indexterm>
 				<para>Extract a JSON object field specified by a key</para>
-				<programlisting xml:space="preserve" format="linespecific">
-{textset,jsonbset} -> text → {textset,jsonbset}
-jsonbset ->> text → textset
-jsonbsetObjectField(jsonbset,text,null_handle text='use_json_null') → jsonbset
-jsonbsetObjectFieldText(jsonbset,text,null_handle text='use_json_null') → textset
-</programlisting>
+				<para><varname>{textset,jsonbset} -> text → {textset,jsonbset}</varname></para>
+				<para><varname>jsonbset ->> text → textset</varname></para>
+				<para><varname>jsonbsetObjectField(jsonbset,text,null_handle text='use_json_null') → jsonbset</varname></para>
+				<para><varname>jsonbsetObjectFieldText(jsonbset,text,null_handle text='use_json_null') → textset</varname></para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT textset '{[{"unit": "km", "speed": 10}, 
   {"unit": "km", "speed": 20}]}' -> text 'speed';
@@ -90,11 +88,9 @@ SELECT jsonbsetObjectField(textset '{[{"unit": "km", "speed": 10},
 				<indexterm significance="normal"><primary><varname>jsonbsetExtractPath</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>jsonbsetExtractPathText</varname></primary></indexterm>
 				<para>Extract a JSON object field specified by a path</para>
-				<programlisting xml:space="preserve" format="linespecific">
-{textset,jsonbset} #> text[] → {textset,jsonbset}
-jsonbsetExtractPath(jsonbset,text[],null_handle text='use_json_null') → jsonbset
-jsonbsetExtractPathText(jsonbset,text[],null_handle text='use_json_null') → textset
-</programlisting>
+				<para><varname>{textset,jsonbset} #> text[] → {textset,jsonbset}</varname></para>
+				<para><varname>jsonbsetExtractPath(jsonbset,text[],null_handle text='use_json_null') → jsonbset</varname></para>
+				<para><varname>jsonbsetExtractPathText(jsonbset,text[],null_handle text='use_json_null') → textset</varname></para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT textset '[{"speed": {"unit": "km", "value": 10}}, 
   {"speed": {"unit": "km", "value": 20}}]' #> ARRAY[text 'speed', 'value'];
@@ -110,10 +106,8 @@ SELECT jsonbset '[{"position":"Point(1 1)", "PoIs":["Grand Place", "La Bourse"]}
 				<indexterm significance="normal"><primary><varname>jsonbsetArrayElement</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>jsonbsetArrayElementText</varname></primary></indexterm>
 				<para>Extract an element from a JSON array</para>
-				<programlisting xml:space="preserve" format="linespecific">
-jsonbsetArrayElement(jsonbset,integer,null_handle text='use_json_null') → jsonbset
-jsonbsetArrayElementText(jsonbset,integer,null_handle text='use_json_null') → jsonbset
-</programlisting>
+				<para><varname>jsonbsetArrayElement(jsonbset,integer,null_handle text='use_json_null') → jsonbset</varname></para>
+				<para><varname>jsonbsetArrayElementText(jsonbset,integer,null_handle text='use_json_null') → jsonbset</varname></para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT jsonbsetArrayElement(textset '[["Grand Place", "La Bourse"],
   ["Palais Royal", "Manneken Pis"]]', 0);
@@ -129,11 +123,9 @@ SELECT jsonbsetArrayElement(jsonbset '[["Grand Place", "La Bourse"],
 				<indexterm significance="normal"><primary><varname>floatset</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>textset</varname></primary></indexterm>
 				<para>Extract a alphanumeric value from a JSONB set given by a key</para>
-				<programlisting xml:space="preserve" format="linespecific">
-intset(jsonbset,text,null_handle text='raise_exception') → tint
-floatset(jsonbset,text,null_handle text='raise_exception') → tfloat
-textset(jsonbset,text,null_handle text='raise_exception') → textset
-</programlisting>
+				<para><varname>intset(jsonbset,text,null_handle text='raise_exception') → tint</varname></para>
+				<para><varname>floatset(jsonbset,text,null_handle text='raise_exception') → tfloat</varname></para>
+				<para><varname>textset(jsonbset,text,null_handle text='raise_exception') → textset</varname></para>
 				<para>Note that the value <varname>use_json_null</varname> cannot be used for the above functions and thus the default value <varname>'raise_exception'</varname> is used.</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT intset(jsonbset '{"{\"speed\": 10, \"units\": \"km/h\"}",
@@ -151,9 +143,7 @@ SELECT textset(jsonbset '{"{\"road\": \"Bvd Gén. Jacques\", \"category\": \"pri
 			<listitem xml:id="jsonbset_concat">
 				<indexterm significance="normal"><primary><varname>||</varname></primary></indexterm>
 				<para>Temporal JSONB concatenation</para>
-				<programlisting xml:space="preserve" format="linespecific">
-jsonbset || {jsonb,jsonbset} → jsonbset
-</programlisting>
+				<para><varname>jsonbset || {jsonb,jsonbset} → jsonbset</varname></para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT jsonbset '{[{"speed":10}, {"speed":20}]}' ||
   '{"unit":"km"}'::jsonb;
@@ -168,10 +158,8 @@ SELECT jsonbset '{[{"speed":10}, {"speed":20}]}' ||
 			<listitem xml:id="jsonbset_delete">
 				<indexterm significance="normal"><primary><varname>-</varname></primary></indexterm>
 				<para>Temporal JSONB deletion</para>
-				<programlisting xml:space="preserve" format="linespecific">
-jsonbset - {int,text,text[]} → jsonbset
-jsonbset #- text[] → jsonbset
-</programlisting>
+				<para><varname>jsonbset - {int,text,text[]} → jsonbset</varname></para>
+				<para><varname>jsonbset #- text[] → jsonbset</varname></para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT jsonbset '{[{"unit": "km", "speed": 10},
   {"unit": "km", "speed": 20}]}' - 'unit';
@@ -207,11 +195,9 @@ SELECT minusValues(jsonbset '[["Grand Place", "La Bourse"],
 			<listitem xml:id="jsonbset_exists">
 				<indexterm significance="normal"><primary><varname>?</varname></primary></indexterm>
 				<para>JSONB set exists</para>
-				<programlisting xml:space="preserve" format="linespecific">
-jsonbset ? text → boolean[]
-jsonbset ?| text[] → boolean[]
-jsonbset ?&amp; text[] → boolean[]
-</programlisting>
+				<para><varname>jsonbset ? text → boolean[]</varname></para>
+				<para><varname>jsonbset ?| text[] → boolean[]</varname></para>
+				<para><varname>jsonbset ?&amp; text[] → boolean[]</varname></para>
 				<para>As in PostgreSQL, the operators <varname>?|</varname> and <varname>?&amp;</varname> test, respectively, whether <emphasis>any</emphasis> or <emphasis>all</emphasis> of the strings in the text array exist as top-level keys or array elements.</para>
 				<para>The result is a Boolean for every value of the set, in the order of the values of the set.</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
@@ -234,13 +220,11 @@ SELECT jsonbset '{"{\"speed\": 10}", "{\"speed\": 20, \"units\": \"km/h\"}"}'
 				<indexterm significance="normal"><primary><varname>jsonbsetSet</varname></primary></indexterm>
 				<indexterm significance="normal"><primary><varname>jsonbsetSetLax</varname></primary></indexterm>
 				<para>Temporal JSONB set</para>
-				<programlisting xml:space="preserve" format="linespecific">
-jsonbsetSet(jsonbset,path text[],jsonb,create boolean=true) → jsonbset
-jsonbsetSetLax(jsonbset,path text[],jsonb,create boolean=true,
-  handle_null text) → jsonbset
-</programlisting>
-				<para>Return the <varname>jsonbset</varname> value with the item specified by path replaced by <varname>jsonb</varname>, or added if <varname>create</varname> is true and the item does not exist. All earlier steps in the path must exist, or the target is returned unchanged. As with the path oriented operators, negative integers that appear in the path count from the end of JSON arrays. If the last path step is an array index that is out of range, and create_if_missing is true, the new value is added at the beginning of the array if the index is negative, or at the end of the array if it is positive.
-        </para>
+				<para>Return the <varname>jsonbset</varname> value with the item specified by path replaced by <varname>jsonb</varname>, or added if <varname>create</varname> is true and the item does not exist</para>
+				<para><varname>jsonbsetSet(jsonbset,path text[],jsonb,create boolean=true) → jsonbset</varname></para>
+				<para><varname>jsonbsetSetLax(jsonbset,path text[],jsonb,create boolean=true,</varname></para>
+				<para><varname>  handle_null text) → jsonbset</varname></para>
+				<para>All earlier steps in the path must exist, or the target is returned unchanged. As with the path oriented operators, negative integers that appear in the path count from the end of JSON arrays. If the last path step is an array index that is out of range, and create_if_missing is true, the new value is added at the beginning of the array if the index is negative, or at the end of the array if it is positive.</para>
 				<para>Function <varname>jsonbsetSetLax</varname> behaves identically to <varname>jsonbsetSet</varname> if the given value is not NULL, Otherwise, it behaves according to the value of <varname>handle_null</varname>, which must be one of <varname>'raise_exception'</varname>, <varname>'use_json_null'</varname>, <varname>'delete_key'</varname>, or <varname>'return_source'</varname>. As stated above, we kept PostgreSQL behavior for this function enabling the value <varname>'return_source'</varname> whereas for all other <emphasis>query</emphasis> operations, this value has been replaced with <varname>'return_null'</varname>.</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT jsonbsetSet(jsonbset '[{"speed":10}, {"speed":20}]',
@@ -260,11 +244,9 @@ SELECT jsonbsetSetLax(jsonbset '[{"speed": 10, "units": "km/h"},
 
 			<listitem xml:id="jsonbset_insert">
 				<indexterm significance="normal"><primary><varname>jsonbsetInsert</varname></primary></indexterm>
-				<para>Temporal JSONB insert</para>
-				<programlisting xml:space="preserve" format="linespecific">
-jsonbsetInsert(jsonbset,path text[],jsonb,after boolean=false) → jsonbset
-</programlisting>
-				<para>Return the <varname>jsonbset</varname> value with <varname>jsonb</varname> inserted. If the item specified by the path is an array element, the new value will be inserted before that item if <varname>after</varname> is false, or after it otherwise. If the item specified by the path is an object field, the new value will be inserted only if the object does not already contain that key. All earlier steps in the path must exist, or the target is returned unchanged. As with the path oriented operators, negative integers that appear in the path count from the end of JSON arrays. If the last path step is an array index that is out of range, the new value is added at the beginning of the array if the index is negative, or at the end of the array if it is positive.</para>
+				<para>Return the <varname>jsonbset</varname> value with <varname>jsonb</varname> inserted</para>
+				<para><varname>jsonbsetInsert(jsonbset,path text[],jsonb,after boolean=false) → jsonbset</varname></para>
+				<para>If the item specified by the path is an array element, the new value will be inserted before that item if <varname>after</varname> is false, or after it otherwise. If the item specified by the path is an object field, the new value will be inserted only if the object does not already contain that key. All earlier steps in the path must exist, or the target is returned unchanged. As with the path oriented operators, negative integers that appear in the path count from the end of JSON arrays. If the last path step is an array index that is out of range, the new value is added at the beginning of the array if the index is negative, or at the end of the array if it is positive.</para>
 				<programlisting language="sql" xml:space="preserve" format="linespecific">
 SELECT jsonbsetInsert(jsonbset '[{"speed":10}, {"speed":20}]',
   ARRAY['units'], '"km/h"'::jsonb);
@@ -380,7 +362,6 @@ SELECT jsonbsetPathQueryArray(jsonbset
   '[{"speed":10}, {"speed": 20, "units": "km/h"}]',
   '$ ? (@.speed &gt;= $min &amp;&amp; @.speed &lt;= $max)', '{"min":10, "max":30}');
 -- [[{"speed": 10}], [{"speed": 20, "units": "km/h"}]]
--- TODO, it works without "_tz"
 SELECT jsonbsetPathQueryArrayTz(jsonbset
   '[{"cameraId":25, "inspections":["2000-01-03", "2000-01-06", "2000-01-09"]},
    {"cameraId":35, "inspections":["2000-01-04", "2000-01-07", "2000-01-10"]}]',

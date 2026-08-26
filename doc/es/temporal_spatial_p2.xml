@@ -393,8 +393,8 @@ SELECT tgeometry '[Point(0 0)@2001-01-01, Linestring(0 0,1 1)@2001-01-02]' &lt;-
 		</itemizedlist>
 	</sect1>
 
-	<sect1 xml:id="tgeo_spatial_rel">
-		<title>Relaciones espaciales</title>
+	<sect1 xml:id="tgeo_spatiotemp_rel">
+		<title>Relaciones espaciotemporales</title>
 
 		<para>Las relaciones topológicas como <varname>ST_Intersects</varname> y las relaciones de distancia como <varname>ST_DWithin</varname> pueden ser generalizadas a los puntos temporales. Los argumentos de estas funciones generalizadas son un punto temporal y un tipo base (es decir, un <varname>geometry</varname> o un <varname>geography</varname>) o dos puntos temporales. Además, ambos argumentos deben ser del mismo tipo base, es decir, estas funciones no permiten merzclar un punto de geometría temporal (o una geometría) y un punto de geografía temporal (o una geografía).</para>
 
