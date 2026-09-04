@@ -46,21 +46,14 @@ SELECT to_timestamp(ST_ClosestPointOfApproach( tgeompoint '[Point(0 0 0)@2001-01
   tgeompoint '[Point(2 0 0)@2001-01-02, Point(1 1 1)@2001-01-04,
   Point(2 2 2)@2001-01-06)'::geometry));
 -- 2001-01-03 12:00:00
-</pre></li><li class="listitem"><a name="tgeo_minDistance"></a><a class="indexterm" name="id5565"></a><p>Devuelve la distancia espacial mínima entre dos geometrías temporales sobre la unión de sus extensiones temporales</p><pre class="programlisting">
-minDistance({tgeo,geo},{tgeo,geo}) → float
+</pre></li><li class="listitem"><a name="tgeo_minDistance"></a><a class="indexterm" name="id5565"></a><p>Devuelve la distancia espacial mínima entre dos conjuntos de geometrías temporales, ignorando el tiempo</p><pre class="programlisting">
 minDistance(tgeo[],tgeo[]) → float
-minDistance(tgeo,tgeo) → float
-</pre><p>La forma escalar devuelve la distancia mínima alcanzada entre los dos argumentos sobre la intersección de sus extensiones temporales, equivalente al valor mínimo de la distancia temporal <code class="varname">&lt;-&gt;</code>. La forma de arreglo generaliza esto a dos conjuntos de geometrías temporales y devuelve el mínimo sobre todos los pares. La forma de agregado, utilizada con <code class="varname">GROUP BY</code>, devuelve la distancia mínima alcanzada sobre todos los pares agregados en el grupo.</p><pre class="programlisting">
-SELECT minDistance(tgeompoint '[Point(0 0)@2001-01-01, Point(1 1)@2001-01-03)',
-  geometry 'Point(0 1)');
--- 0.707106781186548
+</pre><p>La distancia se mide entre las trayectorias descartando el tiempo, igual a <code class="varname">ST_Distance</code> de la trayectoria de cada argumento, y el resultado es el mínimo sobre todos los pares tomados de los dos conjuntos. Por lo tanto, dos valores que siguen el mismo camino en momentos distintos están a distancia cero. La cantidad sincronizada en el tiempo, que compara dos argumentos solo en los instantes que comparten, es <a class="link" href="ch08s04.html#tgeo_nearestApproachDistance"><code class="varname">nearestApproachDistance</code></a>. Un solo par es el caso de un elemento.</p><pre class="programlisting">
 SELECT minDistance(ARRAY[tgeompoint '[Point(0 0)@2001-01-01, Point(1 1)@2001-01-03)',
   tgeompoint '[Point(5 5)@2001-01-01, Point(6 6)@2001-01-03)'],
   ARRAY[tgeompoint '[Point(0 1)@2001-01-01, Point(1 0)@2001-01-03)']);
 -- 0
-SELECT g, minDistance(t1.Trip, t2.Trip) FROM Trips t1, Trips t2, Groups g
-WHERE t1.GroupId = g AND t2.GroupId = g AND t1.TripId &lt; t2.TripId GROUP BY g;
-</pre><p>La forma de agregado se adapta bien a las consultas tipo BerlinMOD que calculan la distancia mínima de aproximación entre pares de trayectorias agrupados por licencia o tipo de vehículo. En un grupo de una sola fila, el agregado se reduce a la distancia mínima escalar entre el par.</p></li><li class="listitem"><a name="tgeo_setset_join"></a><a class="indexterm" name="id5576"></a><a class="indexterm" name="id5579"></a><a class="indexterm" name="id5582"></a><a class="indexterm" name="id5585"></a><a class="indexterm" name="id5588"></a><a class="indexterm" name="id5591"></a><a class="indexterm" name="id5594"></a><a class="indexterm" name="id5597"></a><a class="indexterm" name="id5600"></a><a class="indexterm" name="id5603"></a><a class="indexterm" name="id5606"></a><a class="indexterm" name="id5609"></a><p>Devuelve los pares de índices que cumplen la relación entre dos arreglos de geometrías temporales, generalizando las relaciones espaciales escalares a una unión espacial conjunto-conjunto</p><pre class="programlisting">
+</pre></li><li class="listitem"><a name="tgeo_setset_join"></a><a class="indexterm" name="id5576"></a><a class="indexterm" name="id5579"></a><a class="indexterm" name="id5582"></a><a class="indexterm" name="id5585"></a><a class="indexterm" name="id5588"></a><a class="indexterm" name="id5591"></a><a class="indexterm" name="id5594"></a><a class="indexterm" name="id5597"></a><a class="indexterm" name="id5600"></a><a class="indexterm" name="id5603"></a><a class="indexterm" name="id5606"></a><a class="indexterm" name="id5609"></a><p>Devuelve los pares de índices que cumplen la relación entre dos arreglos de geometrías temporales, generalizando las relaciones espaciales escalares a una unión espacial conjunto-conjunto</p><pre class="programlisting">
 eDwithinPairs(tgeo[],tgeo[],float) → setof(i integer,j integer)
 aDwithinPairs(tgeo[],tgeo[],float) → setof(i integer,j integer)
 eIntersectsPairs(tgeo[],tgeo[]) → setof(i integer,j integer)

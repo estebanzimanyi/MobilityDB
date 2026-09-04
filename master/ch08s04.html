@@ -46,21 +46,14 @@ SELECT to_timestamp(ST_ClosestPointOfApproach( tgeompoint '[Point(0 0 0)@2001-01
   tgeompoint '[Point(2 0 0)@2001-01-02, Point(1 1 1)@2001-01-04,
   Point(2 2 2)@2001-01-06)'::geometry));
 -- 2001-01-03 12:00:00
-</pre></li><li class="listitem"><a name="tgeo_minDistance"></a><a class="indexterm" name="id6116"></a><p>Return the minimum spatial distance between two temporal geometries over the union of their temporal extents</p><pre class="programlisting">
-minDistance({tgeo,geo},{tgeo,geo}) → float
+</pre></li><li class="listitem"><a name="tgeo_minDistance"></a><a class="indexterm" name="id6116"></a><p>Return the minimum spatial distance between two sets of temporal geometries, ignoring time</p><pre class="programlisting">
 minDistance(tgeo[],tgeo[]) → float
-minDistance(tgeo,tgeo) → float
-</pre><p>The scalar form returns the minimum distance reached between the two arguments over the intersection of their temporal extents, equivalent to the minimum value of the temporal distance <code class="varname">&lt;-&gt;</code>. The array form generalises this to two sets of temporal geometries and returns the minimum across all pairs. The aggregate form, used with <code class="varname">GROUP BY</code>, returns the minimum distance reached over all aggregated pairs in the group.</p><pre class="programlisting">
-SELECT minDistance(tgeompoint '[Point(0 0)@2001-01-01, Point(1 1)@2001-01-03)',
-  geometry 'Point(0 1)');
--- 0.707106781186548
+</pre><p>The distance is measured between the trajectories with time discarded, equal to <code class="varname">ST_Distance</code> of the trajectory of each argument, and the result is the minimum over every pair drawn from the two sets. Two values that follow the same path at different times are therefore at distance zero. The time-synchronous quantity, which compares two arguments only at the instants they share, is <a class="link" href="ch08s04.html#tgeo_nearestApproachDistance"><code class="varname">nearestApproachDistance</code></a>. A single pair is the one-element case.</p><pre class="programlisting">
 SELECT minDistance(ARRAY[tgeompoint '[Point(0 0)@2001-01-01, Point(1 1)@2001-01-03)',
   tgeompoint '[Point(5 5)@2001-01-01, Point(6 6)@2001-01-03)'],
   ARRAY[tgeompoint '[Point(0 1)@2001-01-01, Point(1 0)@2001-01-03)']);
 -- 0
-SELECT g, minDistance(t1.Trip, t2.Trip) FROM Trips t1, Trips t2, Groups g
-WHERE t1.GroupId = g AND t2.GroupId = g AND t1.TripId &lt; t2.TripId GROUP BY g;
-</pre><p>The aggregate form is well suited to BerlinMOD-style queries that compute the minimum approach distance between trip pairs grouped by license or vehicle class. On a single-row group the aggregate degenerates to the scalar minimum distance between the pair.</p></li><li class="listitem"><a name="tgeo_setset_join"></a><a class="indexterm" name="id6127"></a><a class="indexterm" name="id6130"></a><a class="indexterm" name="id6133"></a><a class="indexterm" name="id6136"></a><a class="indexterm" name="id6139"></a><a class="indexterm" name="id6142"></a><a class="indexterm" name="id6145"></a><a class="indexterm" name="id6148"></a><a class="indexterm" name="id6151"></a><a class="indexterm" name="id6154"></a><a class="indexterm" name="id6157"></a><a class="indexterm" name="id6160"></a><p>Return the qualifying index pairs of two arrays of temporal geometries, generalising the scalar spatial relationships to a set-set spatial join</p><pre class="programlisting">
+</pre></li><li class="listitem"><a name="tgeo_setset_join"></a><a class="indexterm" name="id6127"></a><a class="indexterm" name="id6130"></a><a class="indexterm" name="id6133"></a><a class="indexterm" name="id6136"></a><a class="indexterm" name="id6139"></a><a class="indexterm" name="id6142"></a><a class="indexterm" name="id6145"></a><a class="indexterm" name="id6148"></a><a class="indexterm" name="id6151"></a><a class="indexterm" name="id6154"></a><a class="indexterm" name="id6157"></a><a class="indexterm" name="id6160"></a><p>Return the qualifying index pairs of two arrays of temporal geometries, generalising the scalar spatial relationships to a set-set spatial join</p><pre class="programlisting">
 eDwithinPairs(tgeo[],tgeo[],float) → setof(i integer,j integer)
 aDwithinPairs(tgeo[],tgeo[],float) → setof(i integer,j integer)
 eIntersectsPairs(tgeo[],tgeo[]) → setof(i integer,j integer)
