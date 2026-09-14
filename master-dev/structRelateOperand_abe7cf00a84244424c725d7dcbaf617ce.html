@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.5"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>MobilityDB: H3SegmentPath::azimuth</title>
+<title>MobilityDB: RelateOperand::own</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -70,7 +70,7 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="structH3SegmentPath.html">H3SegmentPath</a></li>  </ul>
+<li class="navelem"><a class="el" href="structRelateOperand.html">RelateOperand</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="contents">
@@ -79,33 +79,26 @@ $(function() {
    <td valign="top">
       <div class="navtab">
         <table>
-          <tr><td class="navtab"><a class="navtab" href="structH3SegmentPath_aa87000eaf54944c43b528ebe29bd1d6b.html#aa87000eaf54944c43b528ebe29bd1d6b">a</a></td></tr>
-          <tr><td class="navtabHL"><a class="navtab" href="structH3SegmentPath_aa70684fce193e65ff582779296ef80d2.html#aa70684fce193e65ff582779296ef80d2">azimuth</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="structH3SegmentPath_ae78495fe04ec072f46de0bd6a5e7e34b.html#ae78495fe04ec072f46de0bd6a5e7e34b">dist</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="structH3SegmentPath_a0f0dcfb368ed131e37fcee53078b5096.html#a0f0dcfb368ed131e37fcee53078b5096">dlat</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="structH3SegmentPath_aecb7ed6a8f276565c55a7024c64a8dd4.html#aecb7ed6a8f276565c55a7024c64a8dd4">dlon</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="structH3SegmentPath_ae3837088fde495efc372afbe2e30193e.html#ae3837088fde495efc372afbe2e30193e">g1</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="structH3SegmentPath_a22470006cdb58421e7dd5c1bc0c337d1.html#a22470006cdb58421e7dd5c1bc0c337d1">geodetic</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="structH3SegmentPath_ac2f7cc1834933e7d61e69edca736ef46.html#ac2f7cc1834933e7d61e69edca736ef46">lat1</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="structH3SegmentPath_a09a9d7a6c7346eaddd9d3f0bd7985d9d.html#a09a9d7a6c7346eaddd9d3f0bd7985d9d">lon1</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="structH3SegmentPath_a45e4bc1bd970b6ec290ab2bedc7e10fe.html#a45e4bc1bd970b6ec290ab2bedc7e10fe">normal</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="structRelateOperand_a286e206f9767d0bd5f46ecadf878e1eb.html#a286e206f9767d0bd5f46ecadf878e1eb">arr</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="structRelateOperand_ae8ecfd5386b5791d2952ed27cb835f54.html#ae8ecfd5386b5791d2952ed27cb835f54">geom</a></td></tr>
+          <tr><td class="navtabHL"><a class="navtab" href="structRelateOperand_abe7cf00a84244424c725d7dcbaf617ce.html#abe7cf00a84244424c725d7dcbaf617ce">own</a></td></tr>
         </table>
       </div>
    </td>
    <td valign="top" class="mempage">
-<a id="aa70684fce193e65ff582779296ef80d2" name="aa70684fce193e65ff582779296ef80d2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa70684fce193e65ff582779296ef80d2">&#9670;&#160;</a></span>azimuth</h2>
+<a id="abe7cf00a84244424c725d7dcbaf617ce" name="abe7cf00a84244424c725d7dcbaf617ce"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abe7cf00a84244424c725d7dcbaf617ce">&#9670;&#160;</a></span>own</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">double H3SegmentPath::azimuth</td>
+          <td class="memname"><a class="el" href="structMeosArray.html">MeosArray</a>* RelateOperand::own</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Geodetic path: its azimuth at the first endpoint. </p>
+<p>Its own edges, ending at the input vertices: the array <a class="el" href="structRelateOperand_a286e206f9767d0bd5f46ecadf878e1eb.html#a286e206f9767d0bd5f46ecadf878e1eb" title="Edges its interior and boundary are read from.">arr</a> is cut from for a value <a class="el" href="meos_2src_2geo_2geo__funcs_8c_a55a0fc68a9e2ee014cb293d501314268.html#a55a0fc68a9e2ee014cb293d501314268" title="Return true if the interior and boundary of a geometry are those of the union of its members rather t...">relate_reads_union</a> names, <a class="el" href="structRelateOperand_a286e206f9767d0bd5f46ecadf878e1eb.html#a286e206f9767d0bd5f46ecadf878e1eb" title="Edges its interior and boundary are read from.">arr</a> itself otherwise. </p>
 
 </div>
 </div>
