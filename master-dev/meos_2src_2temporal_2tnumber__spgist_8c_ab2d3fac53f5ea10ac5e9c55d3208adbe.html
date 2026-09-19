@@ -91,7 +91,9 @@ $(function() {
           <tr><td class="navtab"><a class="navtab" href="meos_2src_2temporal_2tnumber__spgist_8c_ada36296ac516d829f6953b8c100820a0.html#ada36296ac516d829f6953b8c100820a0">overLeft4D</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_2src_2temporal_2tnumber__spgist_8c_ae0b626642380f9576548b9263e9363f1.html#ae0b626642380f9576548b9263e9363f1">overRight4D</a></td></tr>
           <tr><td class="navtabHL"><a class="navtab" href="meos_2src_2temporal_2tnumber__spgist_8c_ab2d3fac53f5ea10ac5e9c55d3208adbe.html#ab2d3fac53f5ea10ac5e9c55d3208adbe">right4D</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="meos_2src_2temporal_2tnumber__spgist_8c_a31563788493fb21f7bf78c0a9d9f0829.html#a31563788493fb21f7bf78c0a9d9f0829">tbox_index_dims</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_2src_2temporal_2tnumber__spgist_8c_a0fc4f1a48b250a4c0b189d1a451786f1.html#a0fc4f1a48b250a4c0b189d1a451786f1">tbox_level_cmp</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="meos_2src_2temporal_2tnumber__spgist_8c_a1772b27181cf4cf50fc9f9e60d8f4657.html#a1772b27181cf4cf50fc9f9e60d8f4657">tbox_quadrant_bit</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_2src_2temporal_2tnumber__spgist_8c_a0ef7ce0bee0597d23fba9071d97825e4.html#a0ef7ce0bee0597d23fba9071d97825e4">tbox_tmax_cmp</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_2src_2temporal_2tnumber__spgist_8c_ae24f08b0b05abad58f0c196264a3d08f.html#ae24f08b0b05abad58f0c196264a3d08f">tbox_tmin_cmp</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_2src_2temporal_2tnumber__spgist_8c_a47d00a60f96be728ac830a6cc8fad42d.html#a47d00a60f96be728ac830a6cc8fad42d">tbox_xmax_cmp</a></td></tr>
@@ -135,7 +137,7 @@ $(function() {
 <p >A span <code>s1</code> is to the right of a span <code>s2</code> if <code>s1.lower &gt; s2.upper</code>. Therefore, given a query box and a node box, a box in the node box may may be to the left of the query box if for dimension X</p><ul>
 <li><code>nodebox-&gt;left.span.lower</code> (the minimum of the lower bounds in the node box) &gt; <code>query-&gt;span.upper</code> (the upper bound of the query).</li>
 </ul>
-<p >Continuing with the example at the top of this file, if <code><a class="el" href="structTboxNode.html" title="Basic routines for indexing temporal values.">TboxNode</a></code> is </p><div class="fragment"><div class="line">left = TBOXFLOAT XT([3, 7],[2001-01-03, 2001-01-07])</div>
+<p >Continuing with the example at the top of this file, if <code><a class="el" href="structTboxNode.html" title="Structure to represent the bounding box of an inner node containing a set of temporal boxes.">TboxNode</a></code> is </p><div class="fragment"><div class="line">left = TBOXFLOAT XT([3, 7],[2001-01-03, 2001-01-07])</div>
 <div class="line">right = TBOXFLOAT XT([5, 9],[2001-01-05, 2001-01-09])</div>
 </div><!-- fragment --><p> a query `TBOXFLOAT XT([10, 12],[2001-01-10, 2001-01-12]) satisfies the above condition. </p>
 
