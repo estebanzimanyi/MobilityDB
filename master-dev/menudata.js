@@ -183,6 +183,7 @@ var menudata={children:[
 {text:"d",url:"globals_type.html#index_d"},
 {text:"e",url:"globals_type.html#index_e"},
 {text:"f",url:"globals_type.html#index_f"},
+{text:"g",url:"globals_type.html#index_g"},
 {text:"h",url:"globals_type.html#index_h"},
 {text:"i",url:"globals_type.html#index_i"},
 {text:"l",url:"globals_type.html#index_l"},
@@ -197,7 +198,6 @@ var menudata={children:[
 {text:"v",url:"globals_type.html#index_v"},
 {text:"w",url:"globals_type.html#index_w"}]},
 {text:"Enumerations",url:"globals_enum.html",children:[
-{text:"b",url:"globals_enum.html#index_b"},
 {text:"c",url:"globals_enum.html#index_c"},
 {text:"e",url:"globals_enum.html#index_e"},
 {text:"f",url:"globals_enum.html#index_f"},
