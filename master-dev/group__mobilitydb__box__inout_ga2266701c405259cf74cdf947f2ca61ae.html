@@ -83,6 +83,7 @@ $(function() {
           <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__box__inout_ga3652580daaafd89eb40e42e0df2101bf.html#ga3652580daaafd89eb40e42e0df2101bf">Tbox_as_text</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__box__inout_ga63179fffbb26fd0811959cdc29c91f5b.html#ga63179fffbb26fd0811959cdc29c91f5b">Tbox_as_wkb</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__box__inout_gada2b8c180134cd99b5367f37214c08fc.html#gada2b8c180134cd99b5367f37214c08fc">Tbox_from_hexwkb</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__box__inout_ga7261ac44cc9477902aac4f5a3b416685.html#ga7261ac44cc9477902aac4f5a3b416685">Tbox_from_text</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__box__inout_ga402471a77c976fbd9628e547cffd28ed.html#ga402471a77c976fbd9628e547cffd28ed">Tbox_from_wkb</a></td></tr>
           <tr><td class="navtabHL"><a class="navtab" href="group__mobilitydb__box__inout_ga2266701c405259cf74cdf947f2ca61ae.html#ga2266701c405259cf74cdf947f2ca61ae">Tbox_in</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__box__inout_ga00b92523eca30aefd4df5cb7799512fc.html#ga00b92523eca30aefd4df5cb7799512fc">Tbox_out</a></td></tr>
@@ -99,7 +100,7 @@ $(function() {
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="postgres__ext__defs_8in_8h_a43879eb52e27b2413d7a05056a173ca6.html#a43879eb52e27b2413d7a05056a173ca6">Datum</a> Tbox_in </td>
+          <td class="memname">Datum Tbox_in </td>
           <td>(</td>
           <td class="paramtype">PG_FUNCTION_ARGS&#160;</td>
           <td class="paramname"></td><td>)</td>
@@ -112,8 +113,9 @@ $(function() {
 <p >Examples of input: </p><div class="fragment"><div class="line">TBOX XT([1.0, 3.0), [2020-01-01, 2020-01-03])   -- Both X and T dimensions</div>
 <div class="line">TBOXINT X([1, 3))     -- Only X dimension, integer span</div>
 <div class="line">TBOXFLOAT X([1, 3))   -- Only X dimension, <span class="keywordtype">float</span> span</div>
-<div class="line">TBOX X([1.0, 3.0))    -- Only X dimension, <span class="keywordtype">float</span> span is assumed</div>
+<div class="line">TBOX X([1.0, 3.0))    -- Only X dimension, <span class="keywordtype">float</span> span <a class="code hl_variable" href="trgeo__distance_8txt_af053ff65b5890312933da01148b62f23.html#af053ff65b5890312933da01148b62f23">is</a> assumed</div>
 <div class="line">TBOX T([2020-01-01, 2020-01-03])  -- Only T dimension</div>
+<div class="ttc" id="atrgeo__distance_8txt_af053ff65b5890312933da01148b62f23_html_af053ff65b5890312933da01148b62f23"><div class="ttname"><a href="trgeo__distance_8txt_af053ff65b5890312933da01148b62f23.html#af053ff65b5890312933da01148b62f23">is</a></div><div class="ttdeci">meos src rgeo trgeo_distance txt Temporal Distance for Rigid a temporal point or another temporal rigid geometry The algorithm follows the paper of Sakr and Zimanyi[1] It follows the pair of closest and it gets the distance from this pair This file adds three things to the the extrema of the distance and the times of contact *The solver finds all the roots of a with a proof for each part of the interval The paper uses a numerical method and assumes that the method finds all the roots *The two bodies can overlap Then the distance is zero The paper does not handle this case The walk over the closest features and the complexity results of the paper do not change Motion A rigid geometry is a reference polygon and a temporal pose In a segment of the temporal the time t goes from and the pose changes linearly A point a of body relative to the rotation center of moves as cA is the rotation center at dA is the displacement of the and wA is the rotation in the segment This is thus the lengths and directions of its edges and the radii of its vertices are constants The notation is</div><div class="ttdef"><b>Definition:</b> trgeo_distance.txt:47</div></div>
 </div><!-- fragment --><p> @sqlfn <a class="el" href="group__meos__box__inout_ga5f8276f97ecf7ee2d0688a9e78897f3f.html#ga5f8276f97ecf7ee2d0688a9e78897f3f" title="Return a temporal box from its Well-Known Text (WKT) representation.">tbox_in()</a> </p>
 
 </div>
