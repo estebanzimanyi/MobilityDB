@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.5"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>MobilityDB: Trgeometry_at_elevation</title>
+<title>MobilityDB: Cbuffer_contains</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -70,7 +70,7 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="group__mobilitydb__rgeo__restrict.html">Restriction functions</a></li>  </ul>
+<li class="navelem"><a class="el" href="group__mobilitydb__cbuffer__base__rel.html">Spatial relationship functions</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="contents">
@@ -79,41 +79,33 @@ $(function() {
    <td valign="top">
       <div class="navtab">
         <table>
-          <tr><td class="navtabHL"><a class="navtab" href="group__mobilitydb__rgeo__restrict_gaf3c9cfa410cbf435e4fb0c7aae8005e6.html#gaf3c9cfa410cbf435e4fb0c7aae8005e6">Trgeometry_at_elevation</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__rgeo__restrict_gabcbdf14ab56a26cc5fb13014fba61a22.html#gabcbdf14ab56a26cc5fb13014fba61a22">Trgeometry_at_geom</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__rgeo__restrict_ga2231f6f737a140ae7c27cf30d7037832.html#ga2231f6f737a140ae7c27cf30d7037832">Trgeometry_at_stbox</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__rgeo__restrict_gaa8330bb30c832bf1c9b0b1d19aa2258e.html#gaa8330bb30c832bf1c9b0b1d19aa2258e">Trgeometry_minus_elevation</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__rgeo__restrict_gaa2d481a506b8476de41f7368ae4cc913.html#gaa2d481a506b8476de41f7368ae4cc913">Trgeometry_minus_geom</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__rgeo__restrict_ga56e8b19ad28d6e2cbac814c033a70e93.html#ga56e8b19ad28d6e2cbac814c033a70e93">Trgeometry_minus_stbox</a></td></tr>
+          <tr><td class="navtabHL"><a class="navtab" href="group__mobilitydb__cbuffer__base__rel_ga5bcfcdeb915e4d208ff16bf17c5231cf.html#ga5bcfcdeb915e4d208ff16bf17c5231cf">Cbuffer_contains</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__cbuffer__base__rel_gac6ff2e473801a93e322bb6975170e3fd.html#gac6ff2e473801a93e322bb6975170e3fd">Cbuffer_covers</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__cbuffer__base__rel_gad6f10f2d1591d9e6c977d3f71419a01b.html#gad6f10f2d1591d9e6c977d3f71419a01b">Cbuffer_disjoint</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__cbuffer__base__rel_ga0e0b9f74385a0706ea025c2ebcf1761f.html#ga0e0b9f74385a0706ea025c2ebcf1761f">Cbuffer_dwithin</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__cbuffer__base__rel_ga3bb6ab306083073e46918fb46af523a6.html#ga3bb6ab306083073e46918fb46af523a6">Cbuffer_intersects</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__mobilitydb__cbuffer__base__rel_ga7abfd5009409c05806a61186d176614e.html#ga7abfd5009409c05806a61186d176614e">Cbuffer_touches</a></td></tr>
         </table>
       </div>
    </td>
    <td valign="top" class="mempage">
-<a id="gaf3c9cfa410cbf435e4fb0c7aae8005e6" name="gaf3c9cfa410cbf435e4fb0c7aae8005e6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gaf3c9cfa410cbf435e4fb0c7aae8005e6">&#9670;&#160;</a></span>Trgeometry_at_elevation()</h2>
+<a id="ga5bcfcdeb915e4d208ff16bf17c5231cf" name="ga5bcfcdeb915e4d208ff16bf17c5231cf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga5bcfcdeb915e4d208ff16bf17c5231cf">&#9670;&#160;</a></span>Cbuffer_contains()</h2>
 
 <div class="memitem">
 <div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">Datum Trgeometry_at_elevation </td>
+          <td class="memname">Datum Cbuffer_contains </td>
           <td>(</td>
           <td class="paramtype">PG_FUNCTION_ARGS&#160;</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
       </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
 </div><div class="memdoc">
 
-<p>Return a temporal rigid geometry restricted to an elevation span @sqlfn atElevation() </p>
+<p>Return true if the first circular buffer contains the second one @sqlfn <a class="el" href="postgis_8h_a0cfa09cd454140cb1bf1e61d5f055988.html#a0cfa09cd454140cb1bf1e61d5f055988">contains()</a> </p>
 
 </div>
 </div>
