@@ -136,6 +136,9 @@ Functions</h2></td></tr>
 <tr class="memitem:gae22b02f8003a86519af286bb7222d371"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structSet.html">Set</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__meos__h3__set__conversion_gae22b02f8003a86519af286bb7222d371.html#gae22b02f8003a86519af286bb7222d371">h3index_to_set</a> (H3Index <a class="el" href="trgeo__distance_8txt_a18d59f91a34bc81e9ea68bb6d10d086f.html#a18d59f91a34bc81e9ea68bb6d10d086f">cell</a>)</td></tr>
 <tr class="memdesc:gae22b02f8003a86519af286bb7222d371"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert an H3 cell into a H3 cell set.  <a href="group__meos__h3__set__conversion_gae22b02f8003a86519af286bb7222d371.html#gae22b02f8003a86519af286bb7222d371">More...</a><br /></td></tr>
 <tr class="separator:gae22b02f8003a86519af286bb7222d371"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gac27074d046df520f8f755b32758af37c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structSet.html">Set</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__meos__h3__set__setops_gac27074d046df520f8f755b32758af37c.html#gac27074d046df520f8f755b32758af37c">h3index_union_transfn</a> (<a class="el" href="structSet.html">Set</a> *state, H3Index <a class="el" href="trgeo__distance_8txt_a18d59f91a34bc81e9ea68bb6d10d086f.html#a18d59f91a34bc81e9ea68bb6d10d086f">cell</a>)</td></tr>
+<tr class="memdesc:gac27074d046df520f8f755b32758af37c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Transition function for set union aggregate of H3 cells.  <a href="group__meos__h3__set__setops_gac27074d046df520f8f755b32758af37c.html#gac27074d046df520f8f755b32758af37c">More...</a><br /></td></tr>
+<tr class="separator:gac27074d046df520f8f755b32758af37c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga894050d7eb820cefc793894da3469b8c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structSet.html">Set</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__meos__h3__conversion_ga894050d7eb820cefc793894da3469b8c.html#ga894050d7eb820cefc793894da3469b8c">h3indexset_cover_cells</a> (const <a class="el" href="structSet.html">Set</a> *cells, int32 resolution)</td></tr>
 <tr class="memdesc:ga894050d7eb820cefc793894da3469b8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the set of H3 cells covering the cells of an H3 cell set at the given resolution.  <a href="group__meos__h3__conversion_ga894050d7eb820cefc793894da3469b8c.html#ga894050d7eb820cefc793894da3469b8c">More...</a><br /></td></tr>
 <tr class="separator:ga894050d7eb820cefc793894da3469b8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -193,7 +196,7 @@ Functions</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >MEOS implementations of the nine set-returning h3-pg functions, returning <code>h3indexset</code> / <code>intset</code> </p>
-<p >Shape of every function below:</p><ol type="1">
+<p ><a class="el" href="structShape.html">Shape</a> of every function below:</p><ol type="1">
 <li>Ask libh3 for the output buffer size (where applicable).</li>
 <li><code>palloc</code> the buffer.</li>
 <li>Call the libh3 fill function.</li>
