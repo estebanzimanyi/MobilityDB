@@ -2122,29 +2122,6 @@ buffer_node_tolerance(double x, double y)
 }
 
 /**
- * @brief Add an intersection point to an array
- * @details Duplicate points are ignored. This is important because
- * adjacent buffer segments may report the same topological node.
- */
-static void
-buffer_intersections_add(MeosArray *array, double x, double y)
-{
-  assert(array);
-  /* Avoid inserting the same node more than once */
-  for (uint32_t i = 0; i < array->count; i++)
-  {
-    const POINT2D *point = (POINT2D *) meos_array_get_intl(array, i);
-    double tol = buffer_node_tolerance(x, y);
-    if (fabs(point->x - x) <= tol && fabs(point->y - y) <= tol)
-      return;
-  }
-  POINT2D new;
-  new.x = x;
-  new.y = y;
-  meos_array_add(array, &new);
-}
-
-/**
  * @brief Add an intersection point to an array if it is not already present
  */
 static void
@@ -2714,10 +2691,12 @@ buffer_node_index_at(BufferNodeIndex *ix, POINT2D point, uint32_t *ncand)
 /**
  * @brief Add to an array of nodes each of the points given, in their order,
  * unless a node already added lies within the tolerance of it
- * @details The answer is the one #buffer_intersections_add gives called on
- * each point in turn: whether a node lies within the tolerance of a point
- * does not depend on the order the nodes are read in, and the points are
- * taken in the order given, which decides the copy a node found twice keeps.
+ * @details A point is kept unless a node already kept differs from it by no
+ * more than #buffer_node_tolerance of the point along each axis. The answer
+ * is the one a scan over every kept node gives for each point in turn:
+ * whether a node lies within the tolerance of a point does not depend on the
+ * order the nodes are read in, and the points are taken in the order given,
+ * which decides the copy a node found twice keeps.
  * The nodes are read out of a node index rather than all of them. Its cell
  * is sized from the largest coordinate of any point, and the tolerance grows
  * with the coordinate, so no tolerance a point reads is wider than a cell and
@@ -3645,8 +3624,8 @@ buffer_resolve_coincident_piece(Edge *piece, BufferLocator *owner,
 }
 
 /**
- * @brief Collect the exact intersection nodes of two edge sets, read over the
- * pairs of their edges whose boxes may meet, into the intersection array
+ * @brief Collect the exact intersection points of two edge sets, read over
+ * the pairs of their edges whose boxes may meet, into an array of crossings
  * @details The existing low-level intersection routines operate on MeosArray,
  * so the points of one edge pair are collected into a scratch array and
  * transferred. That array is built ONCE for the whole walk and reset per pair:
@@ -3654,15 +3633,22 @@ buffer_resolve_coincident_piece(Edge *piece, BufferLocator *owner,
  * per-pair while its storage is not, and #meos_array_create would otherwise
  * allocate MEOS_ARRAY_INITIAL_SIZE slots and free them again for every one of
  * the n*m pairs.
+ *
+ * The crossings are appended in the order the pairs find them, a node found
+ * by several pairs once per pair. The caller keeps one copy of each node with
+ * #buffer_intersections_add_all once every pair is read, as
+ * #buffer_ring_rebuild_at_nodes() does: testing each point against all the
+ * nodes kept before it costs the square of the nodes, which a union of
+ * thousands of surfaces does not finish.
  * @param[in] a1,a2 Edges of the two sets
  * @param[in] pairs,npairs The pairs #buffer_edge_pairs_across() returns
- * @param[in,out] intersections Nodes
+ * @param[in,out] crossings Crossings, appended to
  */
 static bool
 buffer_pairs_collect(const MeosArray *a1, const MeosArray *a2,
-  const BufferEdgePair *pairs, uint32_t npairs, MeosArray *intersections)
+  const BufferEdgePair *pairs, uint32_t npairs, MeosArray *crossings)
 {
-  assert(a1); assert(a2); assert(intersections);
+  assert(a1); assert(a2); assert(crossings);
   /* The scratch array the collectors write into, reused across the walk */
   MeosArray *points = meos_array_create(sizeof(POINT2D));
   if (! points)
@@ -3699,12 +3685,12 @@ buffer_pairs_collect(const MeosArray *a1, const MeosArray *a2,
     else if (e1->etype == EDGE_POLYARC && e2->etype == EDGE_POLYARC)
       buffer_collect_arc_arc_intersections(e1, e2, points);
 
-    /* Transfer the points to the intersection array */
+    /* Transfer the points to the crossings, which the caller deduplicates */
     for (uint32_t k = 0; k < points->count; k++)
     {
       const POINT2D *point = (const POINT2D *) meos_array_get_intl(points, k);
       if (point)
-        buffer_intersections_add(intersections, point->x, point->y);
+        meos_array_add(crossings, (void *) point);
     }
   }
   meos_array_destroy(points);
@@ -3712,21 +3698,22 @@ buffer_pairs_collect(const MeosArray *a1, const MeosArray *a2,
 }
 
 /**
- * @brief Collect all exact boundary intersection nodes of two geometries into
- * the intersection array
+ * @brief Collect all exact boundary intersection points of two geometries
+ * into an array of crossings
  * @details #buffer_pairs_collect() over the pairs of their edges
- * #buffer_edge_pairs_across() returns
+ * #buffer_edge_pairs_across() returns, a node found by several pairs once per
+ * pair; the caller keeps one copy of each with #buffer_intersections_add_all
  */
 static bool
 buffer_collect_boundary_intersections(const LWGEOM *geom1, const LWGEOM *geom2,
-  MeosArray *intersections)
+  MeosArray *crossings)
 {
-  assert(geom1); assert(geom2); assert(intersections);
+  assert(geom1); assert(geom2); assert(crossings);
   MeosArray *a1 = geom_extract_edges(geom1);
   MeosArray *a2 = geom_extract_edges(geom2);
   uint32_t npairs;
   BufferEdgePair *pairs = buffer_edge_pairs_across(a1, a2, &npairs);
-  bool result = buffer_pairs_collect(a1, a2, pairs, npairs, intersections);
+  bool result = buffer_pairs_collect(a1, a2, pairs, npairs, crossings);
   if (pairs)
     pfree(pairs);
   meos_array_destroy(a1); meos_array_destroy(a2);
@@ -5850,10 +5837,15 @@ buffer_areal_overlay(const LWGEOM *geom1, const LWGEOM *geom2, ClipOper oper,
   /* Collect the exact intersection nodes. Boundaries that stay apart have
    * none, and the split below then leaves every piece whole */
   MeosArray *intersections = meos_array_create(sizeof(POINT2D));
+  MeosArray *crossings = meos_array_create(sizeof(POINT2D));
   bool collected = ! crossing || buffer_pairs_collect(edges_a, edges_b,
-    pairs, npairs, intersections);
+    pairs, npairs, crossings);
   if (pairs)
     pfree(pairs);
+  /* A node found by several pairs is kept once, as the first pair found it */
+  if (collected)
+    buffer_intersections_add_all(crossings, intersections);
+  meos_array_destroy(crossings);
   /* A boundary intersection reported with no discrete node is a
    * coincident/overlapping-boundary case, deferred to the next topology
    * layer */
@@ -7366,9 +7358,9 @@ buffer_union_arrangement(LWGEOM **surfaces, uint32_t count, int32_t srid)
   for (uint32_t i = 0; i < count; i++)
     buffer_component_extent(surfaces[i], &extents[i]);
 
-  /* Every node, collected once over every pair of surfaces whose boundaries
-   * meet */
-  MeosArray *intersections = meos_array_create(sizeof(POINT2D));
+  /* Every crossing, collected over every pair of surfaces whose boundaries
+   * meet, and every node kept once, as the first pair found it */
+  MeosArray *crossings = meos_array_create(sizeof(POINT2D));
   bool ok = true;
   for (uint32_t i = 0; i < count && ok; i++)
     for (uint32_t j = i + 1; j < count && ok; j++)
@@ -7377,14 +7369,17 @@ buffer_union_arrangement(LWGEOM **surfaces, uint32_t count, int32_t srid)
           ! buffer_boundaries_intersect(surfaces[i], surfaces[j]))
         continue;
       ok = buffer_collect_boundary_intersections(surfaces[i], surfaces[j],
-        intersections);
+        crossings);
     }
   pfree(extents);
   if (! ok)
   {
-    meos_array_destroy(intersections);
+    meos_array_destroy(crossings);
     return NULL;
   }
+  MeosArray *intersections = meos_array_create(sizeof(POINT2D));
+  buffer_intersections_add_all(crossings, intersections);
+  meos_array_destroy(crossings);
 
   /* Each boundary cut at every node */
   MeosArray **split = palloc0(sizeof(MeosArray *) * count);
