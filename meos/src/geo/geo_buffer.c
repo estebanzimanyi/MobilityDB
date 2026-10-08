@@ -2410,38 +2410,6 @@ typedef struct
 } BufferNodeEnd;
 
 /**
- * @brief A node of an index as a read over a box orders it
- */
-typedef struct
-{
-  double x;        /**< The x of the node */
-  uint32_t at;     /**< Where the index holds the node */
-} BufferNodeByX;
-
-/**
- * @brief Order the nodes of an index by their x, then by where the index
- * holds them, which makes the order total
- */
-static inline int
-buffer_node_byx_cmp(const BufferNodeByX *n1, const BufferNodeByX *n2)
-{
-  if (n1->x < n2->x)
-    return -1;
-  if (n1->x > n2->x)
-    return 1;
-  return (n1->at < n2->at) ? -1 : (n1->at > n2->at) ? 1 : 0;
-}
-
-/* Sort the nodes of an index with their order written into the sort */
-#define ST_SORT buffer_node_byx_sort
-#define ST_ELEMENT_TYPE BufferNodeByX
-#define ST_COMPARE(a, b) buffer_node_byx_cmp(a, b)
-#define ST_SCOPE static
-#define ST_DECLARE
-#define ST_DEFINE
-#include "port/sort_template.h"
-
-/**
  * @brief The ends of a ring's boundary pieces, read by the node they sit at
  * @details Chaining a ring asks, once per step, which unused piece continues
  * the boundary at the node the walk stands on. Asking it of every piece makes
@@ -2471,10 +2439,15 @@ typedef struct
   uint32_t *cand;       /**< Scratch the candidates of one node are read into */
   uint32_t *stamp;      /**< Generation a piece was last gathered in */
   uint32_t gen;         /**< Generation of the node being read */
-  BufferNodeByX *byx;   /**< Nodes by x, built by the first box read */
-  uint32_t nbyx;        /**< Nodes held by x */
-  uint32_t *nanx;       /**< Nodes whose x is not a number */
-  uint32_t nnanx;       /**< Nodes whose x is not a number */
+  uint32_t *coarse;     /**< Ends by coarse cell, built by the first box
+                             read wider than the grid */
+  uint32_t *coarse_off; /**< First end of each coarse cell, one past the
+                             last for the last cell */
+  uint32_t ncx, ncy;    /**< Coarse cells along x and along y */
+  double cx0, cy0;      /**< Corner of the coarse grid */
+  double cwx, cwy;      /**< Side of a coarse cell along x and along y */
+  uint32_t *odd;        /**< Ends with a coordinate that is not finite */
+  uint32_t nodd;        /**< Ends with a coordinate that is not finite */
 } BufferNodeIndex;
 
 /**
@@ -2553,8 +2526,8 @@ buffer_node_index_alloc(BufferNodeIndex *ix, uint32_t nids, uint32_t nnodes,
   ix->cand = palloc(sizeof(uint32_t) * Max(nids, 1u));
   ix->stamp = palloc0(sizeof(uint32_t) * Max(nids, 1u));
   ix->gen = 0;
-  ix->byx = NULL; ix->nbyx = 0;
-  ix->nanx = NULL; ix->nnanx = 0;
+  ix->coarse = NULL; ix->coarse_off = NULL; ix->ncx = ix->ncy = 0;
+  ix->odd = NULL; ix->nodd = 0;
   return;
 }
 
@@ -2625,11 +2598,13 @@ buffer_node_index_free(BufferNodeIndex *ix)
   assert(ix);
   pfree(ix->cells); pfree(ix->ends); pfree(ix->cand); pfree(ix->stamp);
   ix->cells = NULL; ix->ends = NULL; ix->cand = NULL; ix->stamp = NULL;
-  if (ix->byx)
-    pfree(ix->byx);
-  if (ix->nanx)
-    pfree(ix->nanx);
-  ix->byx = NULL; ix->nanx = NULL;
+  if (ix->coarse)
+    pfree(ix->coarse);
+  if (ix->coarse_off)
+    pfree(ix->coarse_off);
+  if (ix->odd)
+    pfree(ix->odd);
+  ix->coarse = NULL; ix->coarse_off = NULL; ix->odd = NULL;
   return;
 }
 
@@ -2754,25 +2729,113 @@ buffer_node_index_gather(BufferNodeIndex *ix, uint32_t at, double xmin,
   if (ix->stamp[node->id] == ix->gen)
     return;
   ix->stamp[node->id] = ix->gen;
-  /* Ascending order, by insertion */
-  uint32_t k = (*n)++;
-  while (k > 0 && ix->cand[k - 1] > node->id)
+  /* Appended; the box read puts the candidates in ascending order once */
+  ix->cand[(*n)++] = node->id;
+  return;
+}
+
+/* Sort the candidates of a box read, node ids that are unique within one
+ * read, in ascending order */
+#define ST_SORT buffer_node_cand_sort
+#define ST_ELEMENT_TYPE uint32_t
+#define ST_COMPARE(a, b) ((*(a) < *(b)) ? -1 : (*(a) > *(b)) ? 1 : 0)
+#define ST_SCOPE static
+#define ST_DECLARE
+#define ST_DEFINE
+#include "port/sort_template.h"
+
+/**
+ * @brief Return the coarse cell a coordinate falls in along one axis,
+ * clamped to the grid
+ */
+static inline uint32_t
+buffer_node_coarse_cell(double v, double v0, double w, uint32_t n)
+{
+  double c = floor((v - v0) / w);
+  if (c < 0.0)
+    return 0;
+  if (c >= (double) n)
+    return n - 1;
+  return (uint32_t) c;
+}
+
+/**
+ * @brief Build the coarse grid of the ends of a node index
+ * @details The grid spans the extent of the ends whose coordinates are
+ * finite, about one end per cell, and lists the ends of each cell together.
+ * An end with a coordinate that is not finite has no cell and is listed
+ * apart, so that a box read gathers it as a walk over every end does.
+ */
+static void
+buffer_node_index_coarse(BufferNodeIndex *ix)
+{
+  assert(ix); assert(! ix->coarse);
+  uint32_t nfinite = 0;
+  double xmin = 0.0, ymin = 0.0, xmax = 0.0, ymax = 0.0;
+  ix->odd = palloc(sizeof(uint32_t) * Max(ix->nends, 1u));
+  ix->nodd = 0;
+  for (uint32_t at = 0; at < ix->nends; at++)
   {
-    ix->cand[k] = ix->cand[k - 1];
-    k--;
+    const BufferNodeEnd *end = &ix->ends[at];
+    if (! isfinite(end->x) || ! isfinite(end->y))
+    {
+      ix->odd[ix->nodd++] = at;
+      continue;
+    }
+    if (nfinite++ == 0)
+    {
+      xmin = xmax = end->x; ymin = ymax = end->y;
+    }
+    else
+    {
+      xmin = Min(xmin, end->x); xmax = Max(xmax, end->x);
+      ymin = Min(ymin, end->y); ymax = Max(ymax, end->y);
+    }
   }
-  ix->cand[k] = node->id;
+  uint32_t g = (uint32_t) ceil(sqrt((double) Max(nfinite, 1u)));
+  ix->ncx = ix->ncy = g;
+  ix->cx0 = xmin; ix->cy0 = ymin;
+  ix->cwx = (xmax > xmin) ? (xmax - xmin) / g : 1.0;
+  ix->cwy = (ymax > ymin) ? (ymax - ymin) / g : 1.0;
+  uint32_t ncells = g * g;
+  ix->coarse_off = palloc0(sizeof(uint32_t) * (ncells + 1));
+  ix->coarse = palloc(sizeof(uint32_t) * Max(nfinite, 1u));
+  /* Count the ends of each cell, turn the counts into first positions, and
+   * place each end at the position of its cell */
+  for (uint32_t at = 0; at < ix->nends; at++)
+  {
+    const BufferNodeEnd *end = &ix->ends[at];
+    if (! isfinite(end->x) || ! isfinite(end->y))
+      continue;
+    uint32_t c = buffer_node_coarse_cell(end->y, ix->cy0, ix->cwy, g) * g +
+      buffer_node_coarse_cell(end->x, ix->cx0, ix->cwx, g);
+    ix->coarse_off[c + 1]++;
+  }
+  for (uint32_t c = 0; c < ncells; c++)
+    ix->coarse_off[c + 1] += ix->coarse_off[c];
+  uint32_t *fill = palloc(sizeof(uint32_t) * ncells);
+  memcpy(fill, ix->coarse_off, sizeof(uint32_t) * ncells);
+  for (uint32_t at = 0; at < ix->nends; at++)
+  {
+    const BufferNodeEnd *end = &ix->ends[at];
+    if (! isfinite(end->x) || ! isfinite(end->y))
+      continue;
+    uint32_t c = buffer_node_coarse_cell(end->y, ix->cy0, ix->cwy, g) * g +
+      buffer_node_coarse_cell(end->x, ix->cx0, ix->cwx, g);
+    ix->coarse[fill[c]++] = at;
+  }
+  pfree(fill);
   return;
 }
 
 /**
- * @brief Return the nodes standing in a box, in the order a walk over every
- * node reaches them
+ * @brief Return the nodes standing in a box, in no particular order
  * @details The box is the extent a piece is split along, grown by the caller
  * to cover whatever a node may stand off it by. The cells it spans are read
  * whole, so the answer holds every node of the box and some beyond it, which
- * the caller's own test then decides, and it is reported in ASCENDING NODE
- * ORDER, the order the nodes themselves stand in.
+ * the caller's own test then decides. The caller puts the nodes it keeps in
+ * ascending node order, the order the nodes themselves stand in, so the order
+ * is paid for the nodes kept and not for every node the cells hold.
  * @param[in,out] ix Index to read
  * @param[in] xmin,ymin,xmax,ymax Box to read it over
  * @param[out] ncand Nodes gathered
@@ -2789,46 +2852,33 @@ buffer_node_index_box(BufferNodeIndex *ix, double xmin, double ymin,
   double d1 = buffer_node_cell(ymax, ix->cell);
   uint32_t n = 0;
   ix->gen++;
-  /* A piece spanning more cells than the index holds nodes is read by walking
-   * the NODES instead, which costs what the grid is there to avoid only where
-   * the grid would cost more */
+  /* A piece spanning more cells than the index holds nodes is read over a
+   * coarse grid of the nodes instead, about one node per cell, so the box
+   * reads the cells it overlaps rather than every node */
   double cells = (c1 - c0 + 1.0) * (d1 - d0 + 1.0);
-  if (cells > (double) ix->nends && ! isnan(xmin) && ! isnan(xmax))
+  if (cells > (double) ix->nends && ! isnan(xmin) && ! isnan(xmax) &&
+      ! isnan(ymin) && ! isnan(ymax))
   {
-    /* The nodes are read by x, from the first at or past the left of the box
-     * to the last at or before its right, which is every node the test below
-     * keeps whose x is a number; one whose x is not passes the comparisons on
-     * x and is read apart. The same test decides each, so the nodes gathered
-     * are the ones a walk over every node gathers */
-    if (! ix->byx)
-    {
-      ix->byx = palloc(sizeof(BufferNodeByX) * Max(ix->nends, 1u));
-      ix->nanx = palloc(sizeof(uint32_t) * Max(ix->nends, 1u));
-      for (uint32_t at = 0; at < ix->nends; at++)
+    /* The cells the box overlaps hold every node of the box whose
+     * coordinates are finite; a node with one that is not lies in no cell and
+     * is read apart. The test of #buffer_node_index_gather decides each, so
+     * the nodes gathered are the ones a walk over every node gathers */
+    if (! ix->coarse)
+      buffer_node_index_coarse(ix);
+    uint32_t i0 = buffer_node_coarse_cell(xmin, ix->cx0, ix->cwx, ix->ncx);
+    uint32_t i1 = buffer_node_coarse_cell(xmax, ix->cx0, ix->cwx, ix->ncx);
+    uint32_t j0 = buffer_node_coarse_cell(ymin, ix->cy0, ix->cwy, ix->ncy);
+    uint32_t j1 = buffer_node_coarse_cell(ymax, ix->cy0, ix->cwy, ix->ncy);
+    for (uint32_t j = j0; j <= j1; j++)
+      for (uint32_t i = i0; i <= i1; i++)
       {
-        if (isnan(ix->ends[at].x))
-          ix->nanx[ix->nnanx++] = at;
-        else
-        {
-          ix->byx[ix->nbyx].x = ix->ends[at].x;
-          ix->byx[ix->nbyx++].at = at;
-        }
+        uint32_t c = j * ix->ncx + i;
+        for (uint32_t k = ix->coarse_off[c]; k < ix->coarse_off[c + 1]; k++)
+          buffer_node_index_gather(ix, ix->coarse[k], xmin, ymin, xmax, ymax,
+            &n);
       }
-      buffer_node_byx_sort(ix->byx, ix->nbyx);
-    }
-    uint32_t lo = 0, hi = ix->nbyx;
-    while (lo < hi)
-    {
-      uint32_t mid = lo + (hi - lo) / 2;
-      if (ix->byx[mid].x < xmin)
-        lo = mid + 1;
-      else
-        hi = mid;
-    }
-    for (uint32_t k = lo; k < ix->nbyx && ix->byx[k].x <= xmax; k++)
-      buffer_node_index_gather(ix, ix->byx[k].at, xmin, ymin, xmax, ymax, &n);
-    for (uint32_t k = 0; k < ix->nnanx; k++)
-      buffer_node_index_gather(ix, ix->nanx[k], xmin, ymin, xmax, ymax, &n);
+    for (uint32_t k = 0; k < ix->nodd; k++)
+      buffer_node_index_gather(ix, ix->odd[k], xmin, ymin, xmax, ymax, &n);
     *ncand = n;
     return ix->cand;
   }
@@ -2842,13 +2892,7 @@ buffer_node_index_box(BufferNodeIndex *ix, double xmin, double ymin,
       if (ix->stamp[node->id] == ix->gen)
         continue;
       ix->stamp[node->id] = ix->gen;
-      uint32_t k = n++;
-      while (k > 0 && ix->cand[k - 1] > node->id)
-      {
-        ix->cand[k] = ix->cand[k - 1];
-        k--;
-      }
-      ix->cand[k] = node->id;
+      ix->cand[n++] = node->id;
     }
     *ncand = n;
     return ix->cand;
@@ -2868,13 +2912,7 @@ buffer_node_index_box(BufferNodeIndex *ix, double xmin, double ymin,
         if (node->x < xmin || node->x > xmax || node->y < ymin || node->y > ymax)
           continue;
         ix->stamp[node->id] = ix->gen;
-        uint32_t k = n++;
-        while (k > 0 && ix->cand[k - 1] > node->id)
-        {
-          ix->cand[k] = ix->cand[k - 1];
-          k--;
-        }
-        ix->cand[k] = node->id;
+        ix->cand[n++] = node->id;
       }
     }
   }
@@ -2883,8 +2921,8 @@ buffer_node_index_box(BufferNodeIndex *ix, double xmin, double ymin,
 }
 
 /**
- * @brief Return the intersections that can lie on a piece, in the order a walk
- * over every intersection reaches them
+ * @brief Return the intersections that can lie on a piece, in no particular
+ * order
  * @details The extent read is the piece's own, grown by the tolerance
  * #buffer_piece_contains_point accepts a node off it by, so every node that
  * test accepts is gathered and the test still decides each one. A segment is
@@ -3089,11 +3127,19 @@ buffer_split_segment(const Edge *piece, const MeosArray *intersections,
   POINT2D end = {piece->x2, piece->y2};
   buffer_split_point_add(points, &count, capacity, &start, 0.0);
   buffer_split_point_add(points, &count, capacity, &end, 1.0);
+  /* The candidates come in no order: the nodes the piece holds are kept and
+   * put in the order a walk over every node reaches them, which decides the
+   * copy of a node kept below */
+  uint32_t *held = palloc(sizeof(uint32_t) * Max(ncand, 1));
+  uint32_t nheld = 0;
   for (uint32_t c = 0; c < ncand; c++)
+    if (buffer_piece_contains_point(piece,
+          (POINT2D *) meos_array_get_intl(intersections, cand[c])))
+      held[nheld++] = cand[c];
+  buffer_node_cand_sort(held, nheld);
+  for (uint32_t c = 0; c < nheld; c++)
   {
-    POINT2D *point = (POINT2D *) meos_array_get_intl(intersections, cand[c]);
-    if (! buffer_piece_contains_point(piece, point))
-      continue;
+    POINT2D *point = (POINT2D *) meos_array_get_intl(intersections, held[c]);
     double parameter = buffer_segment_parameter(piece, point->x, point->y);
     /* Ignore nodes outside the segment due to numerical noise */
     if (parameter < -MEOS_GEOM_TOLERANCE || parameter > 1.0 + MEOS_GEOM_TOLERANCE)
@@ -3104,6 +3150,7 @@ buffer_split_segment(const Edge *piece, const MeosArray *intersections,
       parameter = 1.0;
     buffer_split_point_add(points, &count, capacity, point, parameter);
   }
+  pfree(held);
   buffer_split_point_sort(points, count);
 
   /* Generate one segment between every pair of consecutive nodes */
@@ -3144,11 +3191,19 @@ buffer_split_arc(const Edge *piece, const MeosArray *intersections,
   double sweep = buffer_arc_sweep(piece);
   buffer_split_point_add(points, &count, capacity, &start, 0.0);
   buffer_split_point_add(points, &count, capacity, &end, sweep);
+  /* The candidates come in no order: the nodes the piece holds are kept and
+   * put in the order a walk over every node reaches them, which decides the
+   * copy of a node kept below */
+  uint32_t *held = palloc(sizeof(uint32_t) * Max(ncand, 1));
+  uint32_t nheld = 0;
   for (uint32_t c = 0; c < ncand; c++)
+    if (buffer_piece_contains_point(piece,
+          (POINT2D *) meos_array_get_intl(intersections, cand[c])))
+      held[nheld++] = cand[c];
+  buffer_node_cand_sort(held, nheld);
+  for (uint32_t c = 0; c < nheld; c++)
   {
-    POINT2D *point = (POINT2D *) meos_array_get_intl(intersections, cand[c]);
-    if (! buffer_piece_contains_point(piece, point))
-      continue;
+    POINT2D *point = (POINT2D *) meos_array_get_intl(intersections, held[c]);
     double parameter = buffer_arc_parameter(piece, point);
     /* Ignore nodes outside the finite arc */
     if (parameter < -MEOS_GEOM_TOLERANCE || parameter > sweep + MEOS_GEOM_TOLERANCE)
@@ -3159,6 +3214,7 @@ buffer_split_arc(const Edge *piece, const MeosArray *intersections,
       parameter = sweep;
     buffer_split_point_add(points, &count, capacity, point, parameter);
   }
+  pfree(held);
   buffer_split_point_sort(points, count);
   /* Generate one circular arc between every consecutive pair of nodes */
   for (uint32_t i = 0; i + 1 < count; i++)
@@ -3276,6 +3332,10 @@ buffer_pieces_from_geometry(const LWGEOM *geom, MeosArray *pieces)
  * circular arc. A circular arc stays an arc, never a chord approximating it.
  */
 static void
+buffer_split_pieces_index(const MeosArray *pieces,
+  const MeosArray *intersections, BufferNodeIndex *ix, MeosArray *result);
+
+static void
 buffer_split_pieces(const MeosArray *pieces, const MeosArray *intersections,
   MeosArray *result)
 {
@@ -3284,17 +3344,37 @@ buffer_split_pieces(const MeosArray *pieces, const MeosArray *intersections,
    * for all of them rather than scanned once per piece */
   BufferNodeIndex ix;
   buffer_node_index_nodes(&ix, intersections, 0.0);
+  buffer_split_pieces_index(pieces, intersections, &ix, result);
+  buffer_node_index_free(&ix);
+}
+
+/**
+ * @brief Split all pieces of a buffer boundary at intersection nodes read out
+ * of a node index of them the caller builds
+ * @details The split #buffer_split_pieces makes, with the index taken from
+ * the caller as #buffer_split_segment and #buffer_split_arc take it, so that
+ * the boundaries of many surfaces cut at the same intersections read one
+ * index rather than build one each
+ * @param[in] pieces Pieces of one boundary
+ * @param[in] intersections Intersection nodes
+ * @param[in,out] ix Node index of @p intersections
+ * @param[in,out] result Pieces the boundary is split into, appended to
+ */
+static void
+buffer_split_pieces_index(const MeosArray *pieces,
+  const MeosArray *intersections, BufferNodeIndex *ix, MeosArray *result)
+{
+  assert(pieces); assert(intersections); assert(ix); assert(result);
   for (uint32_t i = 0; i < pieces->count; i++)
   {
     const Edge *piece = (const Edge *) meos_array_get_intl(pieces, i);
     if (! piece)
       continue;
     if (piece->etype == EDGE_POLYSEG)
-      buffer_split_segment(piece, intersections, &ix, result);
+      buffer_split_segment(piece, intersections, ix, result);
     else if (piece->etype == EDGE_POLYARC)
-      buffer_split_arc(piece, intersections, &ix, result);
+      buffer_split_arc(piece, intersections, ix, result);
   }
-  buffer_node_index_free(&ix);
 }
 
 /*****************************************************************************
@@ -7381,9 +7461,11 @@ buffer_union_arrangement(LWGEOM **surfaces, uint32_t count, int32_t srid)
   buffer_intersections_add_all(crossings, intersections);
   meos_array_destroy(crossings);
 
-  /* Each boundary cut at every node */
+  /* Each boundary cut at every node, the nodes indexed once for all of them */
   MeosArray **split = palloc0(sizeof(MeosArray *) * count);
   int npieces = 0;
+  BufferNodeIndex nodeix;
+  buffer_node_index_nodes(&nodeix, intersections, 0.0);
   for (uint32_t i = 0; i < count && ok; i++)
   {
     MeosArray *raw = meos_array_create(sizeof(Edge));
@@ -7391,11 +7473,12 @@ buffer_union_arrangement(LWGEOM **surfaces, uint32_t count, int32_t srid)
     ok = buffer_pieces_from_geometry(surfaces[i], raw);
     if (ok)
     {
-      buffer_split_pieces(raw, intersections, split[i]);
+      buffer_split_pieces_index(raw, intersections, &nodeix, split[i]);
       npieces += (int) meos_array_count(split[i]);
     }
     meos_array_destroy(raw);
   }
+  buffer_node_index_free(&nodeix);
 
   /* Each surface's edges are read once for the whole selection, which locates
    * a point per piece and up to eight more per coincident piece */
