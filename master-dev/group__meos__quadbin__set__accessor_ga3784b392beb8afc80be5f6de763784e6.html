@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.5"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>MobilityDB: set</title>
+<title>MobilityDB: quadbinset_value_n</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -70,7 +70,7 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="mobilitydb_2test_2scripts_2CMakeLists_8txt.html">CMakeLists.txt</a></li>  </ul>
+<li class="navelem"><a class="el" href="group__meos__quadbin__set__accessor.html">Accessor functions</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="contents">
@@ -79,26 +79,56 @@ $(function() {
    <td valign="top">
       <div class="navtab">
         <table>
-          <tr><td class="navtabHL"><a class="navtab" href="mobilitydb_2test_2scripts_2CMakeLists_8txt_a032cbe87a962053232fcf7f10d19e80c.html#a032cbe87a962053232fcf7f10d19e80c">set</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__meos__quadbin__set__accessor_ga1974db13826f55cb5173a4e10f77bd96.html#ga1974db13826f55cb5173a4e10f77bd96">quadbinset_end_value</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__meos__quadbin__set__accessor_ga31da90f000da9472fb0559e0fa08f7cf.html#ga31da90f000da9472fb0559e0fa08f7cf">quadbinset_start_value</a></td></tr>
+          <tr><td class="navtabHL"><a class="navtab" href="group__meos__quadbin__set__accessor_ga3784b392beb8afc80be5f6de763784e6.html#ga3784b392beb8afc80be5f6de763784e6">quadbinset_value_n</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__meos__quadbin__set__accessor_gaf45a60bd148a0421b5d3e73fab23bbf7.html#gaf45a60bd148a0421b5d3e73fab23bbf7">quadbinset_values</a></td></tr>
         </table>
       </div>
    </td>
    <td valign="top" class="mempage">
-<a id="a032cbe87a962053232fcf7f10d19e80c" name="a032cbe87a962053232fcf7f10d19e80c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a032cbe87a962053232fcf7f10d19e80c">&#9670;&#160;</a></span>set()</h2>
+<a id="ga3784b392beb8afc80be5f6de763784e6" name="ga3784b392beb8afc80be5f6de763784e6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga3784b392beb8afc80be5f6de763784e6">&#9670;&#160;</a></span>quadbinset_value_n()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">set </td>
+          <td class="memname">bool quadbinset_value_n </td>
           <td>(</td>
-          <td class="paramtype">CTEST_PARALLEL_LEVEL&#160;</td>
-          <td class="paramname"><em>1</em></td><td>)</td>
+          <td class="paramtype">const <a class="el" href="structSet.html">Set</a> *&#160;</td>
+          <td class="paramname"><em>s</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>n</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="meos__quadbin_8h_a62e3d9d99cbf73b81567f1958cb16c4a.html#a62e3d9d99cbf73b81567f1958cb16c4a">Quadbin</a> *&#160;</td>
+          <td class="paramname"><em>result</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Return in the last argument the n-th value of a QUADBIN cell set. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">s</td><td><a class="el" href="structSet.html" title="Structure to represent sets of values.">Set</a> </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">n</td><td>Number (1-based) </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">result</td><td>Value </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Return true if the value is found @csqlfn <a class="el" href="group__mobilitydb__setspan__accessor_ga5f7ac589fed045f6e56be9d53486ace4.html#ga5f7ac589fed045f6e56be9d53486ace4" title="Return the n-th value of a set @sqlfn valueN()">Set_value_n()</a> </dd></dl>
 
 </div>
 </div>
