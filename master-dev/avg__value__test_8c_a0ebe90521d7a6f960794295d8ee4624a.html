@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.5"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>MobilityDB: SpanBinState::nbins</title>
+<title>MobilityDB: check_avg</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -70,7 +70,7 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="structSpanBinState.html">SpanBinState</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_0fff62ca9c7e6b49d869dbbeba2dc9ed.html">meos</a></li><li class="navelem"><a class="el" href="dir_b0e6555625305bf6f77beb749e7698be.html">test</a></li><li class="navelem"><a class="el" href="avg__value__test_8c.html">avg_value_test.c</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="contents">
@@ -79,32 +79,54 @@ $(function() {
    <td valign="top">
       <div class="navtab">
         <table>
-          <tr><td class="navtab"><a class="navtab" href="structSpanBinState_af7539924633d440332c9f4d202bc4f4f.html#af7539924633d440332c9f4d202bc4f4f">basetype</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="structSpanBinState_ac1296a730c8c9bc7849c66ae6054f220.html#ac1296a730c8c9bc7849c66ae6054f220">done</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="structSpanBinState_af76be5bdfe96a5b8b63d74e4286fd4ee.html#af76be5bdfe96a5b8b63d74e4286fd4ee">i</a></td></tr>
-          <tr><td class="navtabHL"><a class="navtab" href="structSpanBinState_a349567708657738c8931649bc0e35b50.html#a349567708657738c8931649bc0e35b50">nbins</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="structSpanBinState_ad11bc7b35c0d5f5e0b179bcd3b55359e.html#ad11bc7b35c0d5f5e0b179bcd3b55359e">origin</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="structSpanBinState_a2df176db5e5699213abfac1dafaa7515.html#a2df176db5e5699213abfac1dafaa7515">size</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="structSpanBinState_ad6ea9f164b7d052c0e0ba73ea17ac58a.html#ad6ea9f164b7d052c0e0ba73ea17ac58a">span</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="structSpanBinState_a35d340c802ed91ee8e34041914abb177.html#a35d340c802ed91ee8e34041914abb177">to_split</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="structSpanBinState_a90b4f7470d0305faf7e3799091b13076.html#a90b4f7470d0305faf7e3799091b13076">value</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="avg__value__test_8c_ac0a3b6e6b79afea10748abdadda318d1.html#ac0a3b6e6b79afea10748abdadda318d1">check</a></td></tr>
+          <tr><td class="navtabHL"><a class="navtab" href="avg__value__test_8c_a0ebe90521d7a6f960794295d8ee4624a.html#a0ebe90521d7a6f960794295d8ee4624a">check_avg</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="avg__value__test_8c_a5c7ba59d434acf5dafb8ec5fd28e9a1e.html#a5c7ba59d434acf5dafb8ec5fd28e9a1e">failures</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="avg__value__test_8c_a9d026de6c70e3968c8ce0c810a123f19.html#a9d026de6c70e3968c8ce0c810a123f19">internal_avg_value</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="avg__value__test_8c_a840291bc02cba5474a4cb46a9b9566fe.html#a840291bc02cba5474a4cb46a9b9566fe">main</a></td></tr>
         </table>
       </div>
    </td>
    <td valign="top" class="mempage">
-<a id="a349567708657738c8931649bc0e35b50" name="a349567708657738c8931649bc0e35b50"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a349567708657738c8931649bc0e35b50">&#9670;&#160;</a></span>nbins</h2>
+<a id="a0ebe90521d7a6f960794295d8ee4624a" name="a0ebe90521d7a6f960794295d8ee4624a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0ebe90521d7a6f960794295d8ee4624a">&#9670;&#160;</a></span>check_avg()</h2>
 
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">int SpanBinState::nbins</td>
+          <td class="memname">static void check_avg </td>
+          <td>(</td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>str</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="structTemporal.html">Temporal</a> *&#160;</td>
+          <td class="paramname"><em>temp</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>expected</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
-
-<p>Total number of bins. </p>
 
 </div>
 </div>
