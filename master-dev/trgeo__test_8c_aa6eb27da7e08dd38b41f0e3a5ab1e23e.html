@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.5"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>MobilityDB: trgeoseq_as_tsequenceset</title>
+<title>MobilityDB: counting_malloc</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -70,7 +70,7 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="group__meos__internal__rgeo__transf.html">Transformation functions</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_0fff62ca9c7e6b49d869dbbeba2dc9ed.html">meos</a></li><li class="navelem"><a class="el" href="dir_b0e6555625305bf6f77beb749e7698be.html">test</a></li><li class="navelem"><a class="el" href="trgeo__test_8c.html">trgeo_test.c</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="contents">
@@ -79,40 +79,38 @@ $(function() {
    <td valign="top">
       <div class="navtab">
         <table>
-          <tr><td class="navtab"><a class="navtab" href="group__meos__internal__rgeo__transf_gaa626d056664d7b266d84c3fc61b290fe.html#gaa626d056664d7b266d84c3fc61b290fe">trgeoinst_as_tsequence</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="group__meos__internal__rgeo__transf_ga13965269ec4716095c661be04880d74a.html#ga13965269ec4716095c661be04880d74a">trgeoinst_as_tsequenceset</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="group__meos__internal__rgeo__transf_gaf8674a670a97cac435ee8cfaef010319.html#gaf8674a670a97cac435ee8cfaef010319">trgeoseq_as_tinstant</a></td></tr>
-          <tr><td class="navtabHL"><a class="navtab" href="group__meos__internal__rgeo__transf_ga16ea28b960301036169e21c14db0f50e.html#ga16ea28b960301036169e21c14db0f50e">trgeoseq_as_tsequenceset</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="group__meos__internal__rgeo__transf_gaca96c0579ffee6115fe01367a29a6608.html#gaca96c0579ffee6115fe01367a29a6608">trgeoseq_to_tsequenceset_free</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="group__meos__internal__rgeo__transf_ga9ebdf20a25e36671ceabdc27b6922a42.html#ga9ebdf20a25e36671ceabdc27b6922a42">trgeoseqset_as_tinstant</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="group__meos__internal__rgeo__transf_gacdc811c99f994737afb609dbdb1fab37.html#gacdc811c99f994737afb609dbdb1fab37">trgeoseqset_as_tsequence</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="trgeo__test_8c_a7626d77ba4356653bac144c2ab3ac087.html#a7626d77ba4356653bac144c2ab3ac087">counting_free</a></td></tr>
+          <tr><td class="navtabHL"><a class="navtab" href="trgeo__test_8c_aa6eb27da7e08dd38b41f0e3a5ab1e23e.html#aa6eb27da7e08dd38b41f0e3a5ab1e23e">counting_malloc</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="trgeo__test_8c_a48cbd73d3df916c7d4a372ce12eb7067.html#a48cbd73d3df916c7d4a372ce12eb7067">counting_realloc</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="trgeo__test_8c_ab859d3dc12e4fb9bbc0a3a071ebd0c1e.html#ab859d3dc12e4fb9bbc0a3a071ebd0c1e">live_bytes</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="trgeo__test_8c_a840291bc02cba5474a4cb46a9b9566fe.html#a840291bc02cba5474a4cb46a9b9566fe">main</a></td></tr>
         </table>
       </div>
    </td>
    <td valign="top" class="mempage">
-<a id="ga16ea28b960301036169e21c14db0f50e" name="ga16ea28b960301036169e21c14db0f50e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga16ea28b960301036169e21c14db0f50e">&#9670;&#160;</a></span>trgeoseq_as_tsequenceset()</h2>
+<a id="aa6eb27da7e08dd38b41f0e3a5ab1e23e" name="aa6eb27da7e08dd38b41f0e3a5ab1e23e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa6eb27da7e08dd38b41f0e3a5ab1e23e">&#9670;&#160;</a></span>counting_malloc()</h2>
 
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structTSequenceSet.html">TSequenceSet</a> * trgeoseq_as_tsequenceset </td>
+          <td class="memname">static void * counting_malloc </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structTSequence.html">TSequence</a> *&#160;</td>
-          <td class="paramname"><em>seq</em></td><td>)</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
-
-<p>Return a temporal sequence transformed into a temporal sequence set. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">seq</td><td><a class="el" href="structTemporal.html" title="Structure to represent the common structure of temporal values of any temporal subtype.">Temporal</a> sequence </td></tr>
-  </table>
-  </dd>
-</dl>
 
 </div>
 </div>

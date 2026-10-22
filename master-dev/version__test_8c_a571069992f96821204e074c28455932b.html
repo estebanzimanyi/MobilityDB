@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.5"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>MobilityDB: trgeoinst_as_tsequenceset</title>
+<title>MobilityDB: check_version</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -70,7 +70,7 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="group__meos__internal__rgeo__transf.html">Transformation functions</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_0fff62ca9c7e6b49d869dbbeba2dc9ed.html">meos</a></li><li class="navelem"><a class="el" href="dir_b0e6555625305bf6f77beb749e7698be.html">test</a></li><li class="navelem"><a class="el" href="version__test_8c.html">version_test.c</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="contents">
@@ -79,34 +79,32 @@ $(function() {
    <td valign="top">
       <div class="navtab">
         <table>
-          <tr><td class="navtab"><a class="navtab" href="group__meos__internal__rgeo__transf_gaa626d056664d7b266d84c3fc61b290fe.html#gaa626d056664d7b266d84c3fc61b290fe">trgeoinst_as_tsequence</a></td></tr>
-          <tr><td class="navtabHL"><a class="navtab" href="group__meos__internal__rgeo__transf_ga13965269ec4716095c661be04880d74a.html#ga13965269ec4716095c661be04880d74a">trgeoinst_as_tsequenceset</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="group__meos__internal__rgeo__transf_gaf8674a670a97cac435ee8cfaef010319.html#gaf8674a670a97cac435ee8cfaef010319">trgeoseq_as_tinstant</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="group__meos__internal__rgeo__transf_ga16ea28b960301036169e21c14db0f50e.html#ga16ea28b960301036169e21c14db0f50e">trgeoseq_as_tsequenceset</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="group__meos__internal__rgeo__transf_gaca96c0579ffee6115fe01367a29a6608.html#gaca96c0579ffee6115fe01367a29a6608">trgeoseq_to_tsequenceset_free</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="group__meos__internal__rgeo__transf_ga9ebdf20a25e36671ceabdc27b6922a42.html#ga9ebdf20a25e36671ceabdc27b6922a42">trgeoseqset_as_tinstant</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="group__meos__internal__rgeo__transf_gacdc811c99f994737afb609dbdb1fab37.html#gacdc811c99f994737afb609dbdb1fab37">trgeoseqset_as_tsequence</a></td></tr>
+          <tr><td class="navtabHL"><a class="navtab" href="version__test_8c_a571069992f96821204e074c28455932b.html#a571069992f96821204e074c28455932b">check_version</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="version__test_8c_a840291bc02cba5474a4cb46a9b9566fe.html#a840291bc02cba5474a4cb46a9b9566fe">main</a></td></tr>
         </table>
       </div>
    </td>
    <td valign="top" class="mempage">
-<a id="ga13965269ec4716095c661be04880d74a" name="ga13965269ec4716095c661be04880d74a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga13965269ec4716095c661be04880d74a">&#9670;&#160;</a></span>trgeoinst_as_tsequenceset()</h2>
+<a id="a571069992f96821204e074c28455932b" name="a571069992f96821204e074c28455932b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a571069992f96821204e074c28455932b">&#9670;&#160;</a></span>check_version()</h2>
 
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structTSequenceSet.html">TSequenceSet</a> * trgeoinst_as_tsequenceset </td>
+          <td class="memname">static void check_version </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structTInstant.html">TInstant</a> *&#160;</td>
-          <td class="paramname"><em>inst</em>, </td>
+          <td class="paramtype">const char *&#160;</td>
+          <td class="paramname"><em>fn</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="meos_8h_ad06cc805fa18b06ac937fd98a9eba0e7.html#ad06cc805fa18b06ac937fd98a9eba0e7">interpType</a>&#160;</td>
-          <td class="paramname"><em>interp</em>&#160;</td>
+          <td class="paramtype">char *&#160;</td>
+          <td class="paramname"><em>version</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -114,16 +112,12 @@ $(function() {
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
-
-<p>Return a temporal instant transformed into a temporal sequence set. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">inst</td><td><a class="el" href="structTemporal.html" title="Structure to represent the common structure of temporal values of any temporal subtype.">Temporal</a> instant </td></tr>
-    <tr><td class="paramdir">[out]</td><td class="paramname">interp</td><td>Interpolation </td></tr>
-  </table>
-  </dd>
-</dl>
 
 </div>
 </div>

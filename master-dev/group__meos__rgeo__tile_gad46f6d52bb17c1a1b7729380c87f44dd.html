@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.5"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>MobilityDB: trgeo_geom_clip_box_posed</title>
+<title>MobilityDB: trgeometry_time_boxes</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -70,7 +70,7 @@ $(function() {
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="dir_0fff62ca9c7e6b49d869dbbeba2dc9ed.html">meos</a></li><li class="navelem"><a class="el" href="dir_87ff05107218c94eb54c7d49f556ada2.html">include</a></li><li class="navelem"><a class="el" href="dir_9758020eed28f3974c542c61c7605dc9.html">rgeo</a></li><li class="navelem"><a class="el" href="trgeo__geom__clip_8h.html">trgeo_geom_clip.h</a></li>  </ul>
+<li class="navelem"><a class="el" href="group__meos__rgeo__tile.html">Tile functions</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="contents">
@@ -79,77 +79,54 @@ $(function() {
    <td valign="top">
       <div class="navtab">
         <table>
-          <tr><td class="navtab"><a class="navtab" href="trgeo__geom__clip_8h_aa53a2bba99ebdcfcee94756e4d206be1.html#aa53a2bba99ebdcfcee94756e4d206be1">trgeo_geom_clip_box</a></td></tr>
-          <tr><td class="navtabHL"><a class="navtab" href="trgeo__geom__clip_8h_a8a3a3010110ab615e4b18dfbddecc727.html#a8a3a3010110ab615e4b18dfbddecc727">trgeo_geom_clip_box_posed</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="trgeo__geom__clip_8h_a0a544235cfec40aad4251b6ae52acad7.html#a0a544235cfec40aad4251b6ae52acad7">trgeo_geom_clip_lwgeom</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="trgeo__geom__clip_8h_a987e5ff59ffa18d582854f583d4be6dc.html#a987e5ff59ffa18d582854f583d4be6dc">trgeo_geom_clip_lwgeom_posed</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="trgeo__geom__clip_8h_ada3691cb7b0af74ddd7be76ed62b5583.html#ada3691cb7b0af74ddd7be76ed62b5583">trgeo_geom_clip_lwpoly</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="trgeo__geom__clip_8h_a592dcbb905c488eee310a6a315579ec1.html#a592dcbb905c488eee310a6a315579ec1">trgeo_geom_clip_lwpoly_posed</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="trgeo__geom__clip_8h_a69f0e690474f92dd99c699657a719dcd.html#a69f0e690474f92dd99c699657a719dcd">trgeo_geom_clip_polygon</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="trgeo__geom__clip_8h_a692761c8ed382a447438fa7dd644e0c8.html#a692761c8ed382a447438fa7dd644e0c8">trgeo_geom_clip_polygon_posed</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__meos__rgeo__tile_ga2e267c2471beaaa7cfb600081d95250d.html#ga2e267c2471beaaa7cfb600081d95250d">trgeometry_space_boxes</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__meos__rgeo__tile_ga73f6f5bfcea053c20ebab3376481d877.html#ga73f6f5bfcea053c20ebab3376481d877">trgeometry_space_time_boxes</a></td></tr>
+          <tr><td class="navtabHL"><a class="navtab" href="group__meos__rgeo__tile_gad46f6d52bb17c1a1b7729380c87f44dd.html#gad46f6d52bb17c1a1b7729380c87f44dd">trgeometry_time_boxes</a></td></tr>
         </table>
       </div>
    </td>
    <td valign="top" class="mempage">
-<a id="a8a3a3010110ab615e4b18dfbddecc727" name="a8a3a3010110ab615e4b18dfbddecc727"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8a3a3010110ab615e4b18dfbddecc727">&#9670;&#160;</a></span>trgeo_geom_clip_box_posed()</h2>
+<a id="gad46f6d52bb17c1a1b7729380c87f44dd" name="gad46f6d52bb17c1a1b7729380c87f44dd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gad46f6d52bb17c1a1b7729380c87f44dd">&#9670;&#160;</a></span>trgeometry_time_boxes()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int trgeo_geom_clip_box_posed </td>
+          <td class="memname"><a class="el" href="structSTBox.html">STBox</a> * trgeometry_time_boxes </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="structPOINT2D.html">POINT2D</a> *&#160;</td>
-          <td class="paramname"><em>p_a_local</em>, </td>
+          <td class="paramtype">const <a class="el" href="structTemporal.html">Temporal</a> *&#160;</td>
+          <td class="paramname"><em>temp</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="structPOINT2D.html">POINT2D</a> *&#160;</td>
-          <td class="paramname"><em>p_b_local</em>, </td>
+          <td class="paramtype">const <a class="el" href="structInterval.html">Interval</a> *&#160;</td>
+          <td class="paramname"><em>duration</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const struct <a class="el" href="structPose.html">Pose</a> *&#160;</td>
-          <td class="paramname"><em>pose1</em>, </td>
+          <td class="paramtype">TimestampTz&#160;</td>
+          <td class="paramname"><em>torigin</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const struct <a class="el" href="structPose.html">Pose</a> *&#160;</td>
-          <td class="paramname"><em>pose2</em>, </td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>bitmatrix</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>xmin</em>, </td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>border_inc</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>ymin</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>xmax</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">double&#160;</td>
-          <td class="paramname"><em>ymax</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="structSpan.html">Span</a> **&#160;</td>
-          <td class="paramname"><em>intervals_out</em>&#160;</td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>count</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -159,7 +136,18 @@ $(function() {
       </table>
 </div><div class="memdoc">
 
-<p>Box convenience wrapper around <code>trgeo_geom_clip_polygon_posed</code> </p>
+<p>Return the spatiotemporal boxes of a temporal rigid geometry split with respect to a time grid. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">temp</td><td><a class="el" href="structTemporal.html" title="Structure to represent the common structure of temporal values of any temporal subtype.">Temporal</a> rigid geometry </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">duration</td><td>Size of the temporal dimension as an interval, which must be positive </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">torigin</td><td>Origin of the temporal grid </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">bitmatrix</td><td>True when using a bitmatrix to speed up the computation </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">border_inc</td><td>True when the box contains the upper border </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">count</td><td>Number of elements in the output array @csqlfn <a class="el" href="group__mobilitydb__rgeo__tile_ga33a9e466f7efff0f5b938b29b2bf1b9a.html#ga33a9e466f7efff0f5b938b29b2bf1b9a" title="Return the spatiotemporal boxes of a temporal rigid geometry split with respect to time bins @sqlfn t...">Trgeo_time_boxes()</a> </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
