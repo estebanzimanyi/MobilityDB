@@ -725,10 +725,12 @@ meos_initialize(void)
   /* Install the default (libc) allocator before anything else can allocate */
   meos_initialize_allocator(NULL, NULL, NULL);
   meos_initialize_error_handler(NULL);
-  /* Route liblwgeom's messages into the MEOS error channel, symmetric with the
-   * PG backend's mobilitydb_init. The allocators stay liblwgeom's own: a
-   * backend passes palloc, a standalone program keeps malloc. */
-  lwgeom_set_handlers(NULL, NULL, NULL, meos_lwerror_handler,
+  /* Route liblwgeom's allocations and messages through MEOS, symmetric with
+   * the PG backend's mobilitydb_init. liblwgeom allocates the geometries MEOS
+   * answers and frees with pfree, and MEOS frees with pfree the objects
+   * liblwgeom builds, so both allocate from the hook that
+   * meos_initialize_allocator installs, libc malloc by default. */
+  lwgeom_set_handlers(palloc, repalloc, pfree, meos_lwerror_handler,
     meos_lwnotice_handler);
   meos_initialize_timezone(NULL);
   /* Initialize collation */

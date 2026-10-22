@@ -34,8 +34,11 @@
  * builds and
  * frees a temporal value, and verifies that (a) the custom allocator was
  * actually invoked (interposition) and (b) the tracked live bytes return to
- * zero after freeing (no leak, so free routes through the hook too). Finally it
- * reinstalls the default (libc) allocator.
+ * zero after freeing (no leak, so free routes through the hook too). It then
+ * installs an allocator that knows the pointers it handed out and runs the
+ * geometry operations, whose objects liblwgeom builds, checking that the hook
+ * frees nothing it did not allocate and gets back everything it did. Finally
+ * it reinstalls the default (libc) allocator.
  *
  * The program can be build as follows
  * @code
@@ -45,9 +48,12 @@
 
 #include <assert.h>
 #include <malloc.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <meos.h>
+#include <meos_geo.h>
+#include <meos_pose.h>
 
 /* The palloc/pfree entry points route MEOS working-memory allocations through
  * the hook. They are exported by libmeos but are not part of the typed API, so
@@ -101,6 +107,139 @@ counting_free(void *ptr)
     n_free++;
     free(ptr);
   }
+}
+
+/*
+ * Owning allocator. It records every pointer it hands out in an open-addressing
+ * table, so that a free of a pointer it never allocated, as a host allocator
+ * that owns its blocks would see it, is counted rather than released blindly.
+ */
+#define OWN_SLOTS (1 << 16)
+#define OWN_TOMB ((void *) 1)
+static void *own_slot[OWN_SLOTS];
+static size_t own_live = 0;
+static long own_foreign = 0;
+
+static size_t
+own_hash(void *p)
+{
+  return (size_t) ((((uintptr_t) p) >> 4) * 11400714819323198485ull) &
+    (OWN_SLOTS - 1);
+}
+
+static void
+own_put(void *p)
+{
+  size_t i = own_hash(p);
+  while (own_slot[i] && own_slot[i] != OWN_TOMB)
+    i = (i + 1) & (OWN_SLOTS - 1);
+  own_slot[i] = p;
+  own_live += malloc_usable_size(p);
+}
+
+/* Forget a pointer the allocator handed out; count one it never did */
+static void
+own_take(void *p)
+{
+  for (size_t i = own_hash(p); own_slot[i]; i = (i + 1) & (OWN_SLOTS - 1))
+  {
+    if (own_slot[i] == p)
+    {
+      own_slot[i] = OWN_TOMB;
+      own_live -= malloc_usable_size(p);
+      return;
+    }
+  }
+  own_foreign++;
+}
+
+static void *
+owning_malloc(size_t size)
+{
+  void *p = malloc(size);
+  if (p)
+    own_put(p);
+  return p;
+}
+
+static void *
+owning_realloc(void *ptr, size_t size)
+{
+  if (ptr)
+    own_take(ptr);
+  void *p = realloc(ptr, size);
+  if (p)
+    own_put(p);
+  return p;
+}
+
+static void
+owning_free(void *ptr)
+{
+  if (ptr)
+  {
+    own_take(ptr);
+    free(ptr);
+  }
+}
+
+/* Geometry operations whose objects liblwgeom builds */
+static void
+geo_case_pose_distance(void)
+{
+  Pose *pose1 = pose_make_2d(1, 1, 0.5, false, 0);
+  Pose *pose2 = pose_make_2d(4, 5, 0, false, 0);
+  double dist = distance_pose_pose(pose1, pose2);
+  assert(dist == 5.0);
+  pfree(pose1); pfree(pose2);
+}
+
+static void
+geo_case_pose_to_point(void)
+{
+  Pose *pose = pose_make_3d(1, 2, 3, 1, 0, 0, 0, false, 0);
+  GSERIALIZED *gs = pose_to_point(pose);
+  assert(gs != NULL);
+  pfree(gs); pfree(pose);
+}
+
+static void
+geo_case_geom_in_out(void)
+{
+  GSERIALIZED *gs = geom_in("Linestring(1 1,2 2,3 1)", -1);
+  char *hexwkb = geo_out(gs);
+  char *wkt = geo_as_text(gs, 6);
+  assert(hexwkb != NULL && wkt != NULL);
+  pfree(wkt); pfree(hexwkb); pfree(gs);
+}
+
+static void
+geo_case_trajectory(void)
+{
+  Temporal *temp = tgeompoint_in(
+    "[Point(1 1)@2001-01-01, Point(3 3)@2001-01-02, Point(3 1)@2001-01-03]");
+  GSERIALIZED *traj = tpoint_trajectory(temp, false);
+  assert(traj != NULL);
+  pfree(traj); pfree(temp);
+}
+
+static void
+geo_case_gaps_by_distance(void)
+{
+  TInstant *instants[3];
+  const char *wkt[3] = {"Point(1 1)", "Point(2 1)", "Point(20 1)"};
+  const char *ts[3] = {"2001-01-01", "2001-01-02", "2001-01-03"};
+  for (int i = 0; i < 3; i++)
+  {
+    GSERIALIZED *gs = geom_in(wkt[i], -1);
+    instants[i] = tpointinst_make(gs, timestamptz_in(ts[i], -1));
+    pfree(gs);
+  }
+  TSequenceSet *ss = tsequenceset_make_gaps(instants, 3, LINEAR, NULL, 5.0);
+  assert(ss != NULL && temporal_num_sequences((Temporal *) ss) == 2);
+  pfree(ss);
+  for (int i = 0; i < 3; i++)
+    pfree(instants[i]);
 }
 
 /* Main program */
@@ -157,6 +296,35 @@ int main(void)
   assert(live_bytes == 0);
 
   printf("Allocator hook interposition and zero-leak: OK\n");
+  printf("****************************************************************\n");
+
+  /* Geometry operations under an allocator that owns its blocks: the objects
+   * liblwgeom builds come from the hook as the ones MEOS builds do, so the
+   * hook frees only what it allocated and gets all of it back */
+  struct { const char *name; void (*fn)(void); } geo_cases[] = {
+    {"distance_pose_pose", geo_case_pose_distance},
+    {"pose_to_point", geo_case_pose_to_point},
+    {"geom_in, geo_out, geo_as_text", geo_case_geom_in_out},
+    {"tpoint_trajectory", geo_case_trajectory},
+    {"tsequenceset_make_gaps by distance", geo_case_gaps_by_distance},
+  };
+  int ngeo = (int) (sizeof(geo_cases) / sizeof(geo_cases[0]));
+  /* Warm the lazily-initialized caches these operations read */
+  meos_initialize_allocator(NULL, NULL, NULL);
+  for (int i = 0; i < ngeo; i++)
+    geo_cases[i].fn();
+  meos_initialize_allocator(owning_malloc, owning_realloc, owning_free);
+  for (int i = 0; i < ngeo; i++)
+  {
+    own_foreign = 0;
+    size_t live0 = own_live;
+    geo_cases[i].fn();
+    printf("%s: %ld foreign free(s), %zu byte(s) left\n", geo_cases[i].name,
+      own_foreign, own_live - live0);
+    assert(own_foreign == 0);
+    assert(own_live == live0);
+  }
+  printf("Allocator hook owns the liblwgeom objects: OK\n");
   printf("****************************************************************\n");
 
   /* Reinstall the default allocator and finalize MEOS */

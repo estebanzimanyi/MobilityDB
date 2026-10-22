@@ -159,14 +159,16 @@ lwgeom_set_handlers(lwallocator allocator, lwreallocator reallocator,
 	        lwfreeor freeor, lwreporter errorreporter,
 	        lwreporter noticereporter) {
 
-	if ( allocator ) lwalloc_var = allocator;
-	if ( reallocator ) lwrealloc_var = reallocator;
-	if ( freeor ) lwfree_var = freeor;
-
-	/* MEOS: the reporters are process-wide policy that every host thread
-	 * installs through meos_initialize, so publish them atomically, the same
-	 * release/acquire pair MEOS uses for its own error handler. The allocators
-	 * keep plain assignment: a host chooses those before it starts threads. */
+	/* MEOS: the allocators and the reporters are process-wide policy that
+	 * every host thread installs through meos_initialize, so publish them
+	 * atomically, the same release/acquire pair MEOS uses for its own error
+	 * handler. */
+	if ( allocator )
+		__atomic_store_n(&lwalloc_var, allocator, __ATOMIC_RELEASE);
+	if ( reallocator )
+		__atomic_store_n(&lwrealloc_var, reallocator, __ATOMIC_RELEASE);
+	if ( freeor )
+		__atomic_store_n(&lwfree_var, freeor, __ATOMIC_RELEASE);
 	if ( errorreporter )
 		__atomic_store_n(&lwerror_var, errorreporter, __ATOMIC_RELEASE);
 	if ( noticereporter )
@@ -234,14 +236,16 @@ lwtype_name(uint8_t type)
 void *
 lwalloc(size_t size)
 {
-	void *mem = lwalloc_var(size);
+	/* MEOS: paired with the release store in lwgeom_set_handlers, as #lwerror */
+	void *mem = (*__atomic_load_n(&lwalloc_var, __ATOMIC_ACQUIRE))(size);
 	return mem;
 }
 
 void *
 lwalloc0(size_t size)
 {
-	void *mem = lwalloc_var(size);
+	/* MEOS: paired with the release store in lwgeom_set_handlers, as #lwerror */
+	void *mem = (*__atomic_load_n(&lwalloc_var, __ATOMIC_ACQUIRE))(size);
 	memset(mem, 0, size);
 	return mem;
 }
@@ -249,13 +253,15 @@ lwalloc0(size_t size)
 void *
 lwrealloc(void *mem, size_t size)
 {
-	return lwrealloc_var(mem, size);
+	/* MEOS: paired with the release store in lwgeom_set_handlers, as #lwerror */
+	return (*__atomic_load_n(&lwrealloc_var, __ATOMIC_ACQUIRE))(mem, size);
 }
 
 void
 lwfree(void *mem)
 {
-	lwfree_var(mem);
+	/* MEOS: paired with the release store in lwgeom_set_handlers, as #lwerror */
+	(*__atomic_load_n(&lwfree_var, __ATOMIC_ACQUIRE))(mem);
 }
 
 char *
