@@ -61,6 +61,7 @@
 #include <meos.h>
 #include <meos_geo.h>
 #include <meos_pointcloud.h>
+#include <meos_pose.h>
 
 #define MAXB 2400
 
@@ -188,7 +189,10 @@ int main(void)
    * same shapes and several schema ids, each naming a schema of one of these
    * SRIDs, the SRID a point cloud box takes from its schema id */
   const int32_t srids[] = {0, 3857, 4326};
-  const double coords[] = {-INFINITY, -1e300, -1.0, -0.0, 0.0, 0.5, 1e300};
+  /* NaN is the bound of the box of a pose or a circular buffer whose
+   * coordinate is NaN, which their input accepts */
+  const double coords[] = {-INFINITY, -1e300, -1.0, -0.0, 0.0, 0.5, 1e300,
+    NAN};
   const int nc = sizeof(coords) / sizeof(coords[0]);
   const struct { uint32_t pcid; int32_t srid; } schemas[] = {
     {0, 0}, {1, 0}, {2, 3857}, {3, 4326}, {0x80000000u, 3857},
@@ -241,8 +245,25 @@ int main(void)
       boxcorpus_check("tpcbox", (boxcorpus_cmp) tpcbox_cmp,
         (boxcorpus_eq) tpcbox_eq, (boxcorpus_key) tpcbox_sortkey);
     else
+    {
+      /* The constructor of a spatiotemporal box refuses a NaN bound, but the
+       * box of a pose whose coordinate is NaN, which the input of a pose
+       * accepts, carries one */
+      const char *poses[] = {"Pose(Point(NaN 1), 0.5)",
+        "Pose(Point(1 NaN), 0.5)", "Pose(Point(NaN NaN), 0)",
+        "Pose(Point(-0 1), 0.5)", "Pose(Point(0 1), 0.5)",
+        "SRID=3857;Pose(Point(NaN 1), 0.5)",
+        "Pose(Point Z(1 1 NaN), 1, 0, 0, 0)"};
+      for (size_t i = 0; i < sizeof(poses) / sizeof(char *); i++)
+      {
+        Pose *pose = pose_in(poses[i]);
+        if (pose)
+          boxcorpus_add(pose_to_stbox(pose));
+        free(pose);
+      }
       boxcorpus_check("stbox", (boxcorpus_cmp) stbox_cmp,
         (boxcorpus_eq) stbox_eq, (boxcorpus_key) stbox_sortkey);
+    }
   }
 
   /* A null box or a null size is reported rather than dereferenced */
