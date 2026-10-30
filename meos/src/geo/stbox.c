@@ -42,6 +42,7 @@
 #include <postgres.h>
 #include <pgtypes.h>
 #include "common/hashfn.h"
+#include <utils/float.h>
 #include "port/pg_bitutils.h"
 #include "utils/timestamp.h"
 /* PostGIS */
@@ -2954,9 +2955,12 @@ stbox_eq(const STBox *box1, const STBox *box2)
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(box1, false); VALIDATE_NOT_NULL(box2, false);
   if (box1->flags != box2->flags ||
-      box1->xmin != box2->xmin || box1->ymin != box2->ymin ||
-      box1->zmin != box2->zmin || box1->xmax != box2->xmax ||
-      box1->ymax != box2->ymax || box1->zmax != box2->zmax ||
+      ! float8_eq(box1->xmin, box2->xmin) ||
+      ! float8_eq(box1->ymin, box2->ymin) ||
+      ! float8_eq(box1->zmin, box2->zmin) ||
+      ! float8_eq(box1->xmax, box2->xmax) ||
+      ! float8_eq(box1->ymax, box2->ymax) ||
+      ! float8_eq(box1->zmax, box2->zmax) ||
       box1->srid != box2->srid ||
       /* A box without a time dimension holds no period to compare */
       (MEOS_FLAGS_GET_T(box1->flags) &&
@@ -2986,7 +2990,12 @@ stbox_ne(const STBox *box1, const STBox *box2)
  * @errval INT_MAX
  * @note The SRID is compared first, then the flags stating the dimensions
  * and whether the box is geodetic, then the time dimension, and finally the
- * space dimension, so that boxes of different dimensions are totally ordered
+ * space dimension, so that boxes of different dimensions are totally ordered.
+ * The bounds are compared as #float8_lt and #float8_gt compare doubles, the
+ * order #stbox_eq agrees with: -0.0 and 0.0 are equal, and NaN, the bound of
+ * the box of a pose or a circular buffer whose coordinate is NaN, is equal to
+ * NaN and greater than every other value, as the sort key of a box
+ * (#stbox_sortkey) places it
  * @csqlfn #Stbox_cmp()
  */
 int
@@ -3020,35 +3029,35 @@ stbox_cmp(const STBox *box1, const STBox *box2)
   if (hasx)
   {
     /* Compare the box minima */
-    if (box1->xmin < box2->xmin)
+    if (float8_lt(box1->xmin, box2->xmin))
       return -1;
-    if (box1->xmin > box2->xmin)
+    if (float8_gt(box1->xmin, box2->xmin))
       return 1;
-    if (box1->ymin < box2->ymin)
+    if (float8_lt(box1->ymin, box2->ymin))
       return -1;
-    if (box1->ymin > box2->ymin)
+    if (float8_gt(box1->ymin, box2->ymin))
       return 1;
     if (hasz)
     {
-      if (box1->zmin < box2->zmin)
+      if (float8_lt(box1->zmin, box2->zmin))
         return -1;
-      if (box1->zmin > box2->zmin)
+      if (float8_gt(box1->zmin, box2->zmin))
         return 1;
     }
     /* Compare the box maxima */
-    if (box1->xmax < box2->xmax)
+    if (float8_lt(box1->xmax, box2->xmax))
       return -1;
-    if (box1->xmax > box2->xmax)
+    if (float8_gt(box1->xmax, box2->xmax))
       return 1;
-    if (box1->ymax < box2->ymax)
+    if (float8_lt(box1->ymax, box2->ymax))
       return -1;
-    if (box1->ymax > box2->ymax)
+    if (float8_gt(box1->ymax, box2->ymax))
       return 1;
     if (hasz)
     {
-      if (box1->zmax < box2->zmax)
+      if (float8_lt(box1->zmax, box2->zmax))
         return -1;
-      if (box1->zmax > box2->zmax)
+      if (float8_gt(box1->zmax, box2->zmax))
         return 1;
     }
   }

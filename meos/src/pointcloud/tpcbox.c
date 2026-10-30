@@ -55,6 +55,7 @@
 #include <string.h>
 /* PostgreSQL */
 #include <postgres.h>
+#include <utils/float.h>
 #include <utils/timestamp.h>
 /* MEOS */
 #include <meos.h>
@@ -1415,14 +1416,18 @@ tpcbox_cmp(const TPCBox *box1, const TPCBox *box2)
   }
   if (MEOS_FLAGS_GET_X(box1->flags))
   {
-    if (box1->xmin != box2->xmin) return (box1->xmin < box2->xmin) ? -1 : 1;
-    if (box1->ymin != box2->ymin) return (box1->ymin < box2->ymin) ? -1 : 1;
-    if (MEOS_FLAGS_GET_Z(box1->flags) && box1->zmin != box2->zmin)
-      return (box1->zmin < box2->zmin) ? -1 : 1;
-    if (box1->xmax != box2->xmax) return (box1->xmax < box2->xmax) ? -1 : 1;
-    if (box1->ymax != box2->ymax) return (box1->ymax < box2->ymax) ? -1 : 1;
-    if (MEOS_FLAGS_GET_Z(box1->flags) && box1->zmax != box2->zmax)
-      return (box1->zmax < box2->zmax) ? -1 : 1;
+    if (! float8_eq(box1->xmin, box2->xmin))
+      return float8_lt(box1->xmin, box2->xmin) ? -1 : 1;
+    if (! float8_eq(box1->ymin, box2->ymin))
+      return float8_lt(box1->ymin, box2->ymin) ? -1 : 1;
+    if (MEOS_FLAGS_GET_Z(box1->flags) && ! float8_eq(box1->zmin, box2->zmin))
+      return float8_lt(box1->zmin, box2->zmin) ? -1 : 1;
+    if (! float8_eq(box1->xmax, box2->xmax))
+      return float8_lt(box1->xmax, box2->xmax) ? -1 : 1;
+    if (! float8_eq(box1->ymax, box2->ymax))
+      return float8_lt(box1->ymax, box2->ymax) ? -1 : 1;
+    if (MEOS_FLAGS_GET_Z(box1->flags) && ! float8_eq(box1->zmax, box2->zmax))
+      return float8_lt(box1->zmax, box2->zmax) ? -1 : 1;
   }
   return 0;
 }
