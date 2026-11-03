@@ -249,6 +249,7 @@ tpointinst_to_th3index(const TInstant *inst, int32 resolution)
 static TSequence *
 tpointseq_densify_to_th3index(const TSequence *seq, int32 resolution)
 {
+  /* An empty sequence has no cell */
   if (seq->count == 0)
     return NULL;
 
