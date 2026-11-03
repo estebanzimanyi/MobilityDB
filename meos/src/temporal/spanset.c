@@ -1190,8 +1190,7 @@ spanset_num_spans(const SpanSet *ss)
   /* Ensure the validity of the arguments */
   VALIDATE_NOT_NULL(ss, -1);
   /* The number of spans of the span set */
-  SpanSet *proof = (SpanSet *) ss;
-  return proof->count;
+  return ss->count;
 }
 
 /**
