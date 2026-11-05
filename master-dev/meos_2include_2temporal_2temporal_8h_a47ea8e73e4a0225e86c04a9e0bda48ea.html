@@ -105,6 +105,7 @@ $(function() {
           <tr><td class="navtab"><a class="navtab" href="meos_2include_2temporal_2temporal_8h_affcad797918f9407afa91df7f2591e9e.html#affcad797918f9407afa91df7f2591e9e">DEFAULT_INTSPAN_ORIGIN</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_2include_2temporal_2temporal_8h_a35e970642f88ebebae02bafbd9d8fd9d.html#a35e970642f88ebebae02bafbd9d8fd9d">DEFAULT_TIME_ORIGIN</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_2include_2temporal_2temporal_8h_a9e2e6c0d74336fd387f1805faa853229.html#a9e2e6c0d74336fd387f1805faa853229">DELTA_UNIX_POSTGRES_EPOCH</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="meos_2include_2temporal_2temporal_8h_a4a593349a30529be943069b76e5653f7.html#a4a593349a30529be943069b76e5653f7">dimension_is_common</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_2include_2temporal_2temporal_8h_a04b3107dfcf77825787f00d509bb98d0.html#a04b3107dfcf77825787f00d509bb98d0">DISCONTINUOUS</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_2include_2temporal_2temporal_8h_ab26a31953f73bd85a5b5734b77fa31e4.html#ab26a31953f73bd85a5b5734b77fa31e4">Double2PGetDatum</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_2include_2temporal_2temporal_8h_a510bcaed2c65d1111a7492315648df86.html#a510bcaed2c65d1111a7492315648df86">Double3PGetDatum</a></td></tr>
@@ -277,7 +278,7 @@ $(function() {
       </table>
 </div><div class="memdoc">
 
-<p>Ensure that a temporal number and a temporal box have the same span type. </p>
+<p>Ensure that two temporal values have the same temporal type and, when they are spatial, the same SRID as <a class="el" href="tgeo__spatialfuncs_8h_ae7b34ef924aa1a95c6197e9f62ffdef8.html#ae7b34ef924aa1a95c6197e9f62ffdef8" title="Ensure that two temporal numbers have the same span type.">ensure_valid_tspatial_tspatial</a> requires, since values in two reference systems are not comparable. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">temp1,temp2</td><td><a class="el" href="structTemporal.html" title="Structure to represent the common structure of temporal values of any temporal subtype.">Temporal</a> values </td></tr>

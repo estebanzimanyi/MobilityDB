@@ -96,6 +96,7 @@ $(function() {
           <tr><td class="navtab"><a class="navtab" href="meos_2src_2temporal_2temporal__analytics_8c_a09f4f8da75551a41bcf740e3786313e6.html#a09f4f8da75551a41bcf740e3786313e6">innovation_distance</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_2src_2temporal_2temporal__analytics_8c_ae461ee07e546737f7c0a3a7ed1337c6c.html#ae461ee07e546737f7c0a3a7ed1337c6c">int_cmp</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_2src_2temporal_2temporal__analytics_8c_a403ea583e444a2165ced0f358b927931.html#a403ea583e444a2165ced0f358b927931">MAX_MATRIX_LEN</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="meos_2src_2temporal_2temporal__analytics_8c_a646b88d135ce9e9676e87d682b78aaea.html#a646b88d135ce9e9676e87d682b78aaea">similarity_flags</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__meos__temporal__analytics__similarity_gabdc0736f95ba5ec21794574863cd9455.html#gabdc0736f95ba5ec21794574863cd9455">temporal_average_hausdorff_distance</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__meos__temporal__analytics__similarity_ga08bcfc1855109c05d6d0b7a2a7ec6a71.html#ga08bcfc1855109c05d6d0b7a2a7ec6a71">temporal_dyntimewarp_distance</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__meos__temporal__analytics__similarity_ga8e9908307c8e8a45f87b6e9f3604ef80.html#ga8e9908307c8e8a45f87b6e9f3604ef80">temporal_dyntimewarp_path</a></td></tr>
@@ -193,7 +194,7 @@ $(function() {
 </div><div class="memdoc">
 
 <p>Compute the family-specific time-weighted precision value of a bin. </p>
-<p >Dispatch to the per-type precision function and return true; return false when the temporal type has no specific implementation so that the caller applies the generic twAvg/twCentroid. Each optional family registers its own case in its own <a class="el" href="meos_2src_2pointcloud_2CMakeLists_8txt_a21256e6c02b90ef535d2f24e71930eb4.html#a21256e6c02b90ef535d2f24e71930eb4">if</a> block (disjoint), so no family edits the shared dispatch body in the tprecision functions. </p><dl class="params"><dt>Parameters</dt><dd>
+<p >Dispatch to the per-type precision function and return true; return false when the temporal type has no specific implementation so that the caller applies the generic twAvg/twCentroid. Each optional family registers its own case in its own <a class="el" href="meos_2src_2pointcloud_2CMakeLists_8txt_a605485f8ee4cab0319bef51d3d67b986.html#a605485f8ee4cab0319bef51d3d67b986">if</a> block (disjoint), so no family edits the shared dispatch body in the tprecision functions. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">temptype</td><td><a class="el" href="structTemporal.html" title="Structure to represent the common structure of temporal values of any temporal subtype.">Temporal</a> type of the input </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">temp</td><td><a class="el" href="structTemporal.html" title="Structure to represent the common structure of temporal values of any temporal subtype.">Temporal</a> value of the bin </td></tr>

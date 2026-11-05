@@ -186,7 +186,9 @@ Functions</h2></td></tr>
 <li>An index is append-only: there is no removal entry point, and an entry stays until the index is rebuilt or freed. A caller that has to hide an entry filters the ids a search returns.</li>
 <li><code>_load</code> therefore has a second use beyond speed. It leaves the index holding exactly the entries it is given, releasing whatever the index held, so it is the way an index that has grown stale is rebuilt from the entries a caller keeps. Loading no entries leaves an empty index.</li>
 <li>An index that has been loaded is indistinguishable from a freshly created one of the same type: the same queries answer the same, and it can be filled further by <code>_insert</code>.</li>
-<li><code>_free</code> releases the index and everything it holds. </li>
+<li><code>_free</code> releases the index and everything it holds.</li>
+<li>An index holds boxes of any structure: any axes, and any span type, SRID, geodetic flag or point cloud schema. It keeps the boxes of each structure in a tree of their own, so that a tree partitions only axes all its boxes carry.</li>
+<li>A search answers as its operation applied to every stored box does, as a scan of the boxes would: the ids of the boxes it holds for, or the error it raises on the boxes of some structure, such as a box without the axis the operation orders. The operation is one the box type answers: a span orders its single axis to the left and to the right, whether it holds values or times, a temporal box orders its value to the left and to the right and its time before and after, and a spatiotemporal or point cloud box orders also its other spatial axes. </li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

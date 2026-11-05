@@ -146,7 +146,7 @@ $(function() {
 <p >As for <a class="el" href="group__meos__temporal__box__index_ga7d765874fe7316bef6f3eedaf12b2c64.html#ga7d765874fe7316bef6f3eedaf12b2c64" title="Search an in-memory space-partitioning index with a bounding box, collecting matching ids into a Meos...">sptree_search</a>, the query box is validated here, at the entry point, so that every distance the traversal computes can assume it. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">sptree</td><td>The <a class="el" href="structSPTree.html" title="In-memory space-partitioning index (quad-tree or k-d tree)">SPTree</a> to query </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">query</td><td>The query bounding box of type <code>sptree-&gt;bboxtype</code> and of the SRID the tree holds </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">query</td><td>The query bounding box of type <code>sptree-&gt;bboxtype</code>, of the SRID of every box of the index carrying a spatial axis </td></tr>
   </table>
   </dd>
 </dl>
