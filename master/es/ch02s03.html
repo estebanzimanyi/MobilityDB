@@ -32,7 +32,21 @@ SELECT ST_AsText(geomset '{"Point(1 1)"}'::geometry);
 -- MULTIPOINT((1 1))
 SELECT ST_AsText(geometry(geomset '{"Point(1 1)", "Linestring(0 0,1 1)"}'));
 -- GEOMETRYCOLLECTION(POINT(1 1),LINESTRING(0 0,1 1))
-</pre></li><li class="listitem"><a name="span_convert"></a><a class="indexterm" name="id2207"></a><a class="indexterm" name="id2210"></a><p>Convierte un valor de rango a un valor de conjunto de rangos</p><pre class="programlisting">
+</pre></li><li class="listitem"><a name="geo_geog_convert"></a><a class="indexterm" name="id2207"></a><a class="indexterm" name="id2210"></a><a class="indexterm" name="id2213"></a><p>Convierte entre una geometría y una geografía</p><pre class="programlisting">
+geomset::geogset
+geogset::geomset
+geogset(geomset) → geogset
+geomset(geogset) → geomset
+</pre><p><span class="strong"><strong>Un valor espacial de cualquier tipo se convierte a una geometría y a una geografía, sea planar o geodésico.</strong></span> La conversión cambia el tipo y nunca las coordenadas, de modo que una medida sigue luego al destino: sobre el plano para una geometría, sobre la superficie de la Tierra para una geografía. Como geografía, un valor sin SRID tiene el SRID 4326 y un valor en un sistema de referencia proyectado genera un error, como en PostGIS. La regla vale para todo tipo espacial y todo tipo temporal, cada uno de los cuales llega a la misma conversión de sus valores de geometría o geografía.</p><pre class="programlisting">
+SELECT ST_AsEWKT(geometry 'Point(1 2)'::geography);
+-- SRID=4326;POINT(1 2)
+SELECT asEWKT(geomset '{"Point(1 2)"}'::geogset);
+-- SRID=4326;{"POINT(1 2)"}
+SELECT asEWKT(geogset '{"Point(1 2)"}'::geomset);
+-- SRID=4326;{"POINT(1 2)"}
+SELECT geomset 'SRID=3857;{"Point(1 2)"}'::geogset;
+-- ERROR:  Only lon/lat coordinate systems are supported
+</pre></li><li class="listitem"><a name="span_convert"></a><a class="indexterm" name="id2222"></a><a class="indexterm" name="id2225"></a><p>Convierte un valor de rango a un valor de conjunto de rangos</p><pre class="programlisting">
 span::spanset
 spanset(span) → spanset
 </pre><pre class="programlisting">
@@ -40,7 +54,7 @@ SELECT floatspan '[1.5,2.5]'::floatspanset;
 -- {[1.5, 2.5]}
 SELECT tstzspan '[2001-01-01 08:00:00, 2001-01-01 08:30:00)'::tstzspanset;
 -- {[2001-01-01 08:00:00, 2001-01-01 08:30:00)}
-</pre></li><li class="listitem"><a name="setspan_span"></a><a class="indexterm" name="id2217"></a><p>Convierte un conjunto de valores o un conjunto de rangos a un rango, ignorando las posibles brechas de tiempo</p><pre class="programlisting">
+</pre></li><li class="listitem"><a name="setspan_span"></a><a class="indexterm" name="id2232"></a><p>Convierte un conjunto de valores o un conjunto de rangos a un rango, ignorando las posibles brechas de tiempo</p><pre class="programlisting">
 {set,spanset}::span
 span({set,spanset}) → span
 </pre><pre class="programlisting">
@@ -48,7 +62,7 @@ SELECT span(dateset '{2001-01-01, 2001-01-03, 2001-01-05}');
 -- [2001-01-01, 2001-01-06)
 SELECT span(tstzspanset '{[2001-01-01, 2001-01-02), [2001-01-03, 2001-01-04)}');
 -- [2001-01-01, 2001-01-04)
-</pre></li><li class="listitem"><a name="range_convert"></a><a class="indexterm" name="id2224"></a><a class="indexterm" name="id2227"></a><a class="indexterm" name="id2230"></a><p>Convierte un valor de de rango en MobilityDB hacia y desde un valor de rango de PostgreSQL</p><pre class="programlisting">
+</pre></li><li class="listitem"><a name="range_convert"></a><a class="indexterm" name="id2239"></a><a class="indexterm" name="id2242"></a><a class="indexterm" name="id2245"></a><p>Convierte un valor de de rango en MobilityDB hacia y desde un valor de rango de PostgreSQL</p><pre class="programlisting">
 {span,range}::{range,span}
 range(span) → range
 span(range) → span
@@ -65,7 +79,7 @@ SELECT int4range '[10,)'::intspan;
 -- ERROR:  Range bounds cannot be infinite
 SELECT tstzrange '[2001-01-01 08:00:00, 2001-01-01 08:30:00)'::tstzspan;
 -- [2001-01-01 08:00:00, 2001-01-01 08:30:00)
-</pre></li><li class="listitem"><a name="multirange_convert"></a><a class="indexterm" name="id2238"></a><a class="indexterm" name="id2241"></a><a class="indexterm" name="id2244"></a><p>Convierte un valor de conjunto de rangos de MobilityDB hacia y desde un valor de multirango de PostgreSQL</p><pre class="programlisting">
+</pre></li><li class="listitem"><a name="multirange_convert"></a><a class="indexterm" name="id2253"></a><a class="indexterm" name="id2256"></a><a class="indexterm" name="id2259"></a><p>Convierte un valor de conjunto de rangos de MobilityDB hacia y desde un valor de multirango de PostgreSQL</p><pre class="programlisting">
 {spanset,multirange}::{multirange,spanset}
 multirange(spanset) → multirange
 spanset(multirange) → spanset
