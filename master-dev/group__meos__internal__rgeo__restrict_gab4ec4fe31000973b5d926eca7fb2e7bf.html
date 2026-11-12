@@ -81,12 +81,7 @@ $(function() {
         <table>
           <tr><td class="navtabHL"><a class="navtab" href="group__meos__internal__rgeo__restrict_gab4ec4fe31000973b5d926eca7fb2e7bf.html#gab4ec4fe31000973b5d926eca7fb2e7bf">trgeometry_restrict_geom</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__meos__internal__rgeo__restrict_ga5946c7e2fe889bc4bf0aadf412088a1c.html#ga5946c7e2fe889bc4bf0aadf412088a1c">trgeometry_restrict_stbox</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="group__meos__internal__rgeo__restrict_ga371932a5b12da7eb3ebb87e49dc7f40e.html#ga371932a5b12da7eb3ebb87e49dc7f40e">trgeometry_restrict_timestamptz</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="group__meos__internal__rgeo__restrict_ga14f961a710f654e10309a72f7fe3e56d.html#ga14f961a710f654e10309a72f7fe3e56d">trgeometry_restrict_tstzset</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="group__meos__internal__rgeo__restrict_ga56e46b01fa48ad9ee050724842621efc.html#ga56e46b01fa48ad9ee050724842621efc">trgeometry_restrict_tstzspan</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="group__meos__internal__rgeo__restrict_gac77848594e21226185c52279d6469c02.html#gac77848594e21226185c52279d6469c02">trgeometry_restrict_tstzspanset</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__meos__internal__rgeo__restrict_ga2da745c49183cd3c1eaab9e742c4bc6a.html#ga2da745c49183cd3c1eaab9e742c4bc6a">trgeometry_restrict_value</a></td></tr>
-          <tr><td class="navtab"><a class="navtab" href="group__meos__internal__rgeo__restrict_ga83002ed1a7271dfda3ddda69b41f0540.html#ga83002ed1a7271dfda3ddda69b41f0540">trgeometry_restrict_values</a></td></tr>
         </table>
       </div>
    </td>
@@ -124,7 +119,7 @@ $(function() {
 </div><div class="memdoc">
 
 <p>Return a temporal rigid geometry restricted to (the complement of) a geometry. </p>
-<p >The restriction is exact on the body extent for pure-translation trgeometries. Rotating segments and holey targets raise an honest FEATURE_NOT_SUPPORTED error. </p><dl class="params"><dt>Parameters</dt><dd>
+<p >The restriction is exact on the body extent for pure-translation trgeometries, and a value in step or discrete interpolation is restricted by its placements, holes of the target included. A target with holes for a value in linear interpolation raises a FEATURE_NOT_SUPPORTED error. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">temp</td><td><a class="el" href="structTemporal.html" title="Structure to represent the common structure of temporal values of any temporal subtype.">Temporal</a> rigid geometry </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">gs</td><td>Geometry </td></tr>

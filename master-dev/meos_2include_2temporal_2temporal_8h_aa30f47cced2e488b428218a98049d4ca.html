@@ -222,6 +222,7 @@ $(function() {
           <tr><td class="navtab"><a class="navtab" href="meos_2include_2temporal_2temporal_8h_a82fa90dc7e18266f3c940bc2420d92d9.html#a82fa90dc7e18266f3c940bc2420d92d9">SPACES_NO</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_2include_2temporal_2temporal_8h_a08e3b775868324e578c0fe6af893bf7d.html#a08e3b775868324e578c0fe6af893bf7d">SyncMode</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_2include_2temporal_2temporal_8h_a6f04cb640135b29de7dfb3c9a475bbde.html#a6f04cb640135b29de7dfb3c9a475bbde">temporal_attach_geom</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="meos_2include_2temporal_2temporal_8h_a9245b2eccbe517a2b9d3327eb63891bc.html#a9245b2eccbe517a2b9d3327eb63891bc">temporal_attach_geom_array</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_2include_2temporal_2temporal_8h_a1c76e86caacc3be237afe15a6018d135.html#a1c76e86caacc3be237afe15a6018d135">temporal_bbox_ptr</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_2include_2temporal_2temporal_8h_a934a559be4356ed2218a7a1328411b18.html#a934a559be4356ed2218a7a1328411b18">temporal_bbox_restrict_value</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="meos_2include_2temporal_2temporal_8h_a8c31755938cda2c98bea89e59105d060.html#a8c31755938cda2c98bea89e59105d060">temporal_geom_combinable</a></td></tr>
@@ -262,7 +263,7 @@ $(function() {
           <td class="memname">#define DATUM_FREE</td>
           <td>(</td>
           <td class="paramtype">&#160;</td>
-          <td class="paramname">value, </td>
+          <td class="paramname"><a class="el" href="delete__timestamptz__test_8c_a8556878012feffc9e0beb86cd78f424d.html#a8556878012feffc9e0beb86cd78f424d">value</a>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -279,9 +280,10 @@ $(function() {
 </div><div class="memdoc">
 <b>Value:</b><div class="fragment"><div class="line">  <span class="keywordflow">do</span> { \</div>
 <div class="line">    if (! <a class="code hl_function" href="meos_2include_2temporal_2meos__catalog_8h_ad46798dff7c766b3292d294dbd1b4a45.html#ad46798dff7c766b3292d294dbd1b4a45">basetype_byvalue</a>(basetype)) \</div>
-<div class="line">      pfree(<a class="code hl_define" href="postgres__ext__defs_8in_8h_a728d1259d508437d9be53bf0b19c89da.html#a728d1259d508437d9be53bf0b19c89da">DatumGetPointer</a>(value)); \</div>
+<div class="line">      pfree(<a class="code hl_define" href="postgres__ext__defs_8in_8h_a728d1259d508437d9be53bf0b19c89da.html#a728d1259d508437d9be53bf0b19c89da">DatumGetPointer</a>(<a class="code hl_variable" href="delete__timestamptz__test_8c_a8556878012feffc9e0beb86cd78f424d.html#a8556878012feffc9e0beb86cd78f424d">value</a>)); \</div>
 <div class="line">  } <span class="keywordflow">while</span> (0)</div>
-<div class="ttc" id="ameos_2include_2temporal_2meos__catalog_8h_ad46798dff7c766b3292d294dbd1b4a45_html_ad46798dff7c766b3292d294dbd1b4a45"><div class="ttname"><a href="meos_2include_2temporal_2meos__catalog_8h_ad46798dff7c766b3292d294dbd1b4a45.html#ad46798dff7c766b3292d294dbd1b4a45">basetype_byvalue</a></div><div class="ttdeci">bool basetype_byvalue(MeosType type)</div><div class="ttdoc">Return true if the values of the base type are passed by value.</div><div class="ttdef"><b>Definition:</b> meos_catalog.c:766</div></div>
+<div class="ttc" id="adelete__timestamptz__test_8c_a8556878012feffc9e0beb86cd78f424d_html_a8556878012feffc9e0beb86cd78f424d"><div class="ttname"><a href="delete__timestamptz__test_8c_a8556878012feffc9e0beb86cd78f424d.html#a8556878012feffc9e0beb86cd78f424d">value</a></div><div class="ttdeci">const char * value</div><div class="ttdef"><b>Definition:</b> delete_timestamptz_test.c:71</div></div>
+<div class="ttc" id="ameos_2include_2temporal_2meos__catalog_8h_ad46798dff7c766b3292d294dbd1b4a45_html_ad46798dff7c766b3292d294dbd1b4a45"><div class="ttname"><a href="meos_2include_2temporal_2meos__catalog_8h_ad46798dff7c766b3292d294dbd1b4a45.html#ad46798dff7c766b3292d294dbd1b4a45">basetype_byvalue</a></div><div class="ttdeci">bool basetype_byvalue(MeosType type)</div><div class="ttdoc">Return true if the values of the base type are passed by value.</div><div class="ttdef"><b>Definition:</b> meos_catalog.c:770</div></div>
 <div class="ttc" id="apostgres__ext__defs_8in_8h_a728d1259d508437d9be53bf0b19c89da_html_a728d1259d508437d9be53bf0b19c89da"><div class="ttname"><a href="postgres__ext__defs_8in_8h_a728d1259d508437d9be53bf0b19c89da.html#a728d1259d508437d9be53bf0b19c89da">DatumGetPointer</a></div><div class="ttdeci">#define DatumGetPointer(X)</div><div class="ttdef"><b>Definition:</b> postgres_ext_defs.in.h:11</div></div>
 </div><!-- fragment -->
 </div>
