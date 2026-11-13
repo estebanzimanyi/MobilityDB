@@ -67,12 +67,15 @@
  * The function only return an intersection at the middle, that is, it
  * it returns false if the timestamp found is not at a bound
  * @note This function is called only when both sequences are linear
+ * @param[out] values Values of the function at the instants, which this
+ * function does not write, NULL
  */
 int
 tfloat_arithop_turnpt(Datum start1, Datum end1, Datum start2, Datum end2,
   Datum param UNUSED, TimestampTz lower, TimestampTz upper,
-  TimestampTz *tps, int cap UNUSED)
+  TimestampTz *tps, Datum *values UNUSED, int cap UNUSED)
 {
+  assert(! values);
   assert(lower < upper); assert(tps); assert(cap >= 2);
   double x1 = DatumGetFloat8(start1);
   double x2 = DatumGetFloat8(end1);
@@ -1229,11 +1232,15 @@ datum_exp(Datum d)
  * slope.  Inserting one instant there reduces the piecewise-linear
  * approximation error from first- to second-order in the segment width.
  * @pre The segment is not constant.
+ * @param[out] values Values of the function at the instants, which this
+ * function does not write, NULL
  */
 static int
 tfloat_exp_turnpt(Datum start, Datum end,
-  TimestampTz lower, TimestampTz upper, TimestampTz *tps, int cap UNUSED)
+  TimestampTz lower, TimestampTz upper, TimestampTz *tps, Datum *values UNUSED,
+  int cap UNUSED)
 {
+  assert(! values);
   assert(lower < upper); assert(tps); assert(cap >= 2);
   double a = DatumGetFloat8(start);
   double b = DatumGetFloat8(end);
@@ -1306,11 +1313,15 @@ datum_ln(Datum d)
  * strictly between @p start and @p end for unequal positive values; the
  * in-range guard is defensive against floating-point rounding.
  * @pre The segment is not constant; both endpoints are strictly positive.
+ * @param[out] values Values of the function at the instants, which this
+ * function does not write, NULL
  */
 static int
 tfloat_ln_turnpt(Datum start, Datum end,
-  TimestampTz lower, TimestampTz upper, TimestampTz *tps, int cap UNUSED)
+  TimestampTz lower, TimestampTz upper, TimestampTz *tps, Datum *values UNUSED,
+  int cap UNUSED)
 {
+  assert(! values);
   assert(lower < upper); assert(tps); assert(cap >= 2);
   double a = DatumGetFloat8(start);
   double b = DatumGetFloat8(end);
@@ -1375,12 +1386,14 @@ datum_log10(Datum d)
  * @details log10(x) = ln(x)/ln(10); the constant factor cancels in the
  * slope-matching condition, so the turning-point fraction is identical to
  * #tfloat_ln_turnpt.
+ * @param[out] values Values of the function at the instants, passed on
  */
 static int
 tfloat_log10_turnpt(Datum start, Datum end,
-  TimestampTz lower, TimestampTz upper, TimestampTz *tps, int cap)
+  TimestampTz lower, TimestampTz upper, TimestampTz *tps, Datum *values,
+  int cap)
 {
-  return tfloat_ln_turnpt(start, end, lower, upper, tps, cap);
+  return tfloat_ln_turnpt(start, end, lower, upper, tps, values, cap);
 }
 
 /**
@@ -1483,11 +1496,14 @@ tfloatseg_trig_extrema(double v1, double v2, TimestampTz lower,
 /**
  * @brief Exact turning points (extrema, where cos(theta) = 0) of sin over a
  * linear float segment; see #tfloatseg_trig_extrema
+ * @param[out] values Values of the function at the instants, which this
+ * function does not write, NULL
  */
 static int
 tfloatseg_sin_turnpt(Datum start, Datum end, TimestampTz lower,
-  TimestampTz upper, TimestampTz *tps, int cap)
+  TimestampTz upper, TimestampTz *tps, Datum *values UNUSED, int cap)
 {
+  assert(! values);
   return tfloatseg_trig_extrema(DatumGetFloat8(start), DatumGetFloat8(end),
     lower, upper, 0.5, tps, cap);
 }
@@ -1495,11 +1511,14 @@ tfloatseg_sin_turnpt(Datum start, Datum end, TimestampTz lower,
 /**
  * @brief Exact turning points (extrema, where sin(theta) = 0) of cos over a
  * linear float segment; see #tfloatseg_trig_extrema
+ * @param[out] values Values of the function at the instants, which this
+ * function does not write, NULL
  */
 static int
 tfloatseg_cos_turnpt(Datum start, Datum end, TimestampTz lower,
-  TimestampTz upper, TimestampTz *tps, int cap)
+  TimestampTz upper, TimestampTz *tps, Datum *values UNUSED, int cap)
 {
+  assert(! values);
   return tfloatseg_trig_extrema(DatumGetFloat8(start), DatumGetFloat8(end),
     lower, upper, 0.0, tps, cap);
 }

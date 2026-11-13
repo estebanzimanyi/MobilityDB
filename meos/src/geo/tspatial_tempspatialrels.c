@@ -1685,7 +1685,7 @@ tdwithin_tlinearseq_tlinearseq_iter(const TSequence *seq1,
       Datum sev1 = linear1 ? ev1 : sv1;
       Datum sev2 = linear2 ? ev2 : sv2;
       int solutions = tpfn(sv1, sev1, sv2, sev2, lfinfo->param[0], lower,
-        upper, tps, 2);
+        upper, tps, NULL, 2);
       assert(solutions <= 2);
       if (solutions == 1)
         tps[1] = tps[0];
@@ -1823,7 +1823,7 @@ tdwithin_tlinearseq_base_iter(const TSequence *seq, Datum point,
        * interval of that instant */
       TimestampTz tps[2] = {0, 0};
       int solutions = tpfn(startvalue, endvalue, point, point,
-        lfinfo->param[0], lower, upper, tps, 2);
+        lfinfo->param[0], lower, upper, tps, NULL, 2);
       assert(solutions <= 2);
       if (solutions == 1)
         tps[1] = tps[0];

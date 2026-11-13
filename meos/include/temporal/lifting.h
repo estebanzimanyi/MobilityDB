@@ -90,6 +90,13 @@ typedef struct
                                  the right-hand bytes through the wrong type. */
   tpfunc_base tpfn_base;      /**< Turning point function for temporal and base types*/
   tpfunc_temp tpfn_temp;      /**< Turning point function for two temporal types */
+  bool tpfn_value;            /**< True if the turning point function writes,
+                                 beside each instant, the value of the lifted
+                                 function at the exact time of which the
+                                 instant is the nearest microsecond, which the
+                                 readers take in place of evaluating the
+                                 function on the values placed at the instant,
+                                 and free as they free a value they compute */
   tpfunc_temp_at tpfn_temp_at; /**< Value of the predicate at a turning point
                                  strictly inside a segment, when the turning
                                  point function dates it at an instant at which
