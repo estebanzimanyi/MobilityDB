@@ -30,7 +30,8 @@ SELECT tcbuffer '[Cbuffer(Point(1 1), 0.2)@2001-01-01,
 </pre></li><li class="listitem"><a name="tcbuffer_ever_always_overlaps"></a><a class="indexterm" name="id10278"></a><a class="indexterm" name="id10281"></a><p>Ever and always overlaps</p><pre class="programlisting">
 tcbuffer {?&amp;&amp;, %&amp;&amp;} stbox → boolean
 stbox {?&amp;&amp;, %&amp;&amp;} tcbuffer → boolean
-</pre><p>Whether the value lies in a spatiotemporal box at some instant, or at every instant at which it is defined, as <a class="xref" href="ch05s04.html#ttype_ever_always_overlaps">???</a> states it for the temporal geometries; a circular buffer lies in a box when it intersects it, as the restriction of a temporal circular buffer to a box reads it.</p><pre class="programlisting">
+tcbuffer {?&amp;&amp;, %&amp;&amp;} tcbuffer → boolean
+</pre><p>Whether the value lies in a spatiotemporal box at some instant, or at every instant at which it is defined, as <a class="xref" href="ch05s04.html#ttype_ever_always_overlaps">???</a> states it for the temporal geometries; a circular buffer lies in a box when it intersects it, as the restriction of a temporal circular buffer to a box reads it. Two values overlap where the boxes of their circular buffers overlap at a time they share, that is, where the larger of the distances of their centres along x and y is at most the sum of their radii; the boxes are compared between the instants of the values too, where two moving buffers may overlap for a moment only, and two values that share no time answer NULL.</p><pre class="programlisting">
 SELECT tcbuffer '[Cbuffer(Point(0 0), 1)@2001-01-01 00:00,
   Cbuffer(Point(10 10), 1)@2001-01-01 10:00]' ?&amp;&amp;
   stbox 'STBOX XT(((8,0),(10,2)),[2001-01-01 00:00, 2001-01-01 10:00])';
@@ -47,6 +48,16 @@ SELECT tcbuffer '[Cbuffer(Point(0 0), 1)@2001-01-01 00:00,
   Cbuffer(Point(10 10), 1)@2001-01-01 10:00]' %&amp;&amp;
   stbox 'STBOX X((-1,-1),(11,11))';
 -- true
+SELECT tcbuffer '[Cbuffer(Point(0 0), 1)@2001-01-01, Cbuffer(Point(10 0), 1)@2001-01-03]' ?&amp;&amp;
+  tcbuffer '[Cbuffer(Point(10 0), 1)@2001-01-01, Cbuffer(Point(0 0), 1)@2001-01-03]';
+-- true
+SELECT tcbuffer '[Cbuffer(Point(0 0), 1)@2001-01-01, Cbuffer(Point(0 0), 1)@2001-01-03]' ?&amp;&amp;
+  tcbuffer '[Cbuffer(Point(2.5 -6), 1)@2001-01-01, Cbuffer(Point(2.5 6), 1)@2001-01-03]';
+-- false
+SELECT tcbuffer '[Cbuffer(Point(0 0), 1)@2001-01-01, Cbuffer(Point(0 0), 1)@2001-01-03]' %&amp;&amp;
+  tcbuffer '[Cbuffer(Point(2 0), 1)@2001-01-01, Cbuffer(Point(6 0), 1)@2001-01-02,
+  Cbuffer(Point(2 0), 1)@2001-01-03]';
+-- false
 </pre></li><li class="listitem"><a name="tcbuffer_tcomp"></a><a class="indexterm" name="id10290"></a><a class="indexterm" name="id10293"></a><p>Temporal comparisons</p><pre class="programlisting">
 {tcbuffer,cbuffer} {#=, #&lt;&gt;} {tcbuffer,cbuffer} → tbool
 </pre><pre class="programlisting">
