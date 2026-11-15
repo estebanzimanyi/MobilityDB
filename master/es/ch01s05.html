@@ -73,7 +73,7 @@ CREATE EXTENSION mobilitydb CASCADE;
 				<span class="bold"><strong>Dependencias de compilación</strong></span>
 			</p><p>
 				Para poder compilar MobilityDB, asegúrese de que se cumplan las siguientes dependencias:
-			</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Sistema de compilación multiplataforma <code class="filename">CMake</code>.</p></li><li class="listitem"><p>Compilador C <code class="filename">gcc</code> o <code class="filename">clang</code>. Se pueden usar otros compiladores ANSI C, pero pueden causar problemas al compilar algunas dependencias.</p></li><li class="listitem"><p>GNU Make (<code class="filename">gmake</code> o <code class="filename">make</code>) versión 3.1 o superior. Para muchos sistemas, GNU make es la versión predeterminada de make. Verifique la versión invocando <code class="filename">make -v</code>.</p></li><li class="listitem"><p>PostgreSQL versión 16 a 19. Fuera de ese rango, la configuración se detiene con un error explícito. PostgreSQL está disponible en <a class="ulink" href="http://www.postgresql.org" target="_top">http://www.postgresql.org</a>.</p></li><li class="listitem"><p>PostGIS versión 3 o superior. PostGIS está disponible en <a class="ulink" href="https://postgis.net/" target="_top">https://postgis.net/</a>.</p></li></ul></div><p>
+			</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Sistema de compilación multiplataforma <code class="filename">CMake</code>.</p></li><li class="listitem"><p>Compilador C <code class="filename">gcc</code> o <code class="filename">clang</code> en una plataforma de 64 bits, que proporcionan los enteros de 128 bits con los que calcula MEOS. Un compilador sin ellos, <code class="filename">gcc</code> en una plataforma de 32 bits o el <code class="filename">cl.exe</code> de Microsoft Visual C++, detiene la configuración con un error explícito; en Windows, <code class="filename">gcc</code> de MinGW-w64 o <code class="filename">clang-cl</code> compilan MobilityDB.</p></li><li class="listitem"><p>GNU Make (<code class="filename">gmake</code> o <code class="filename">make</code>) versión 3.1 o superior. Para muchos sistemas, GNU make es la versión predeterminada de make. Verifique la versión invocando <code class="filename">make -v</code>.</p></li><li class="listitem"><p>PostgreSQL versión 16 a 19. Fuera de ese rango, la configuración se detiene con un error explícito. PostgreSQL está disponible en <a class="ulink" href="http://www.postgresql.org" target="_top">http://www.postgresql.org</a>.</p></li><li class="listitem"><p>PostGIS versión 3 o superior. PostGIS está disponible en <a class="ulink" href="https://postgis.net/" target="_top">https://postgis.net/</a>.</p></li></ul></div><p>
 				Nótese que PostGIS tiene sus propias dependencias, como Proj, GEOS, LibXML2 o JSON-C. MobilityDB también utiliza Proj y JSON-C, mientras que calcula por sí mismo las operaciones geométricas y no utiliza GEOS. Consulte <a class="ulink" href="http://trac.osgeo.org/postgis/wiki/UsersWikiPostgreSQLPostGIS" target="_top">http://trac.osgeo.org/postgis/wiki/UsersWikiPostgreSQLPostGIS</a> para obtener una matriz de compatibilidad de PostGIS con PostgreSQL, GEOS y Proj.
 			</p><p>
 				<span class="bold"><strong>Dependencias opcionales</strong></span>
@@ -116,20 +116,22 @@ rm -rf build
 </pre><p>
 				e inicie el proceso de construcción como se mencionó anteriormente.
 			</p></div><div class="sect2"><div class="titlepage"><div><div><h3 class="title"><a name="testing"></a>Pruebas</h3></div></div></div><p>
-				MobilityDB utiliza <code class="varname">ctest</code>, el programa controlador de pruebas de CMake, para realizar pruebas. Este programa ejecutará las pruebas e informará los resultados.
+				MobilityDB utiliza <code class="varname">ctest</code>, el programa controlador de pruebas de CMake, para realizar pruebas. Los archivos de prueba son ejecutados por <code class="varname">pg_regress</code>, el programa de pruebas de regresión de PostgreSQL, como una única prueba de <code class="varname">ctest</code> llamada <code class="varname">regress</code>.
 			</p><p>
 				Para ejecutar todas las pruebas
 			</p><pre class="programlisting">
 ctest
 </pre><p>
-				Para ejecutar un archivo de prueba dado
+				Para ejecutar un archivo de prueba dado, la variable de entorno <code class="varname">MOBILITYDB_TESTS</code> indica una expresión regular, que selecciona las pruebas cuyos nombres coinciden con ella
 			</p><pre class="programlisting">
-ctest -R '021_tbox'
+MOBILITYDB_TESTS='^021_tbox$' ctest -R regress
 </pre><p>
-				Para ejecutar un conjunto de archivos de prueba determinados se pueden utilizar comodines
+				Para ejecutar un conjunto de archivos de prueba determinados, se indica la parte de sus nombres que comparten
 			</p><pre class="programlisting">
-ctest -R '022_*'
+MOBILITYDB_TESTS=022_ ctest -R regress
 </pre><p>
+				Las diferencias entre la salida de las pruebas que fallan y su salida esperada se escriben en el archivo <code class="varname">mobilitydb/test/regress/regression.diffs</code> del directorio de compilación.
+			</p><p>
 				Las pruebas se ejecutan en un clúster temporal de PostgreSQL en el directorio <code class="varname">tmptest</code> del directorio de compilación, cuyo servidor escucha en un socket de dominio Unix en un directorio corto bajo <code class="varname">/tmp</code>, ya que PostgreSQL no arranca cuando la ruta del socket supera los 107 bytes. Otro directorio para el clúster puede indicarse en la configuración con la variable <code class="varname">MOBILITYDB_TEST_TMPDIR</code>. El clúster se crea con la configuración regional C y en UTF-8, salvo que la variable <code class="varname">MOBILITYDB_TEST_ENCODING</code> indique otra codificación, como <code class="varname">SQL_ASCII</code>
 			</p><pre class="programlisting">
 cmake -DMOBILITYDB_TEST_TMPDIR=/tmp/mobilitydb-test ..
