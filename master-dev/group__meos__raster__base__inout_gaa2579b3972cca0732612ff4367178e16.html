@@ -79,6 +79,8 @@ $(function() {
    <td valign="top">
       <div class="navtab">
         <table>
+          <tr><td class="navtab"><a class="navtab" href="group__meos__raster__base__inout_gab8f3139f76dc6f3dbd5f0cb1db0c5583.html#gab8f3139f76dc6f3dbd5f0cb1db0c5583">bandstats_in</a></td></tr>
+          <tr><td class="navtab"><a class="navtab" href="group__meos__raster__base__inout_ga13b110a28f5473e8a88cf16e1782710d.html#ga13b110a28f5473e8a88cf16e1782710d">bandstats_out</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__meos__raster__base__inout_ga2df5742910af782729613d1591f0d089.html#ga2df5742910af782729613d1591f0d089">raquet_as_coveragejson</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__meos__raster__base__inout_ga9e953cb1db5f8340ca864740dc1f9716.html#ga9e953cb1db5f8340ca864740dc1f9716">raquet_as_hexwkb</a></td></tr>
           <tr><td class="navtab"><a class="navtab" href="group__meos__raster__base__inout_gae6b108a0bd074be1d08652e05a8abb1d.html#gae6b108a0bd074be1d08652e05a8abb1d">raquet_as_wkb</a></td></tr>
@@ -152,10 +154,10 @@ $(function() {
 </div><div class="memdoc">
 
 <p>Return a raster written in a format of GDAL. </p>
-<p >The raster is written as PostGIS's <code>ST_AsGDALRaster</code> writes it. Each call writes into a virtual file of its own, so that calls in several threads never write into one another's file </p><dl class="params"><dt>Parameters</dt><dd>
+<p >The raster is written as PostGIS's <code>ST_AsGDALRaster</code> writes it. Each call writes into a virtual file of its own, so that calls in several threads never write into one another's file. A format whose library cannot write into memory, as netCDF, is written to a file of the call's own in GDAL's scratch directory, deleted before the call returns </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">rast</td><td>Raster </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>Short name of the GDAL driver, as <code>GTiff</code>, <code>PNG</code> or <code>JPEG</code> </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">format</td><td>Short name of the GDAL driver, as <code>GTiff</code>, <code>PNG</code>, <code>JPEG</code> or <code>netCDF</code> </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">options</td><td>Creation options of the driver, one <code>KEY=VALUE</code> an element, a NULL element stating none, as GDAL takes them (accepts <code>NULL</code>) </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">count</td><td>Number of elements of the options </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">srid</td><td>Spatial reference system the file states, or 0 for the raster's own; the pixels are not reprojected </td></tr>
