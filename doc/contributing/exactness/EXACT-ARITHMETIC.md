@@ -444,7 +444,7 @@ layer holds it for every question. The phases, each a series of pull requests:
    merged, for a geometry of segments; the engine,
    `motion_edges_dwithin_periods`, reads the R-tree candidates of each segment through filters
    in doubles before its exact signs, #3941; a geometry carrying an arc, of a line or bounding an
-   area, is MobilityDB #3981, open: an arc gives the periods of its two ends and, on the wedge of
+   area, is MobilityDB #3981, merged as `bfd696f3d3`: an arc gives the periods of its two ends and, on the wedge of
    the arc, those of the band `|c(t) - O| = R +- (r(t) + d)`, the quartic
    `(s - R^2 - L^2)^2 - 4 R^2 L^2` whose roots a Sturm chain places in whole microseconds, and
    the ray parity of the gaps crosses an arc by its chord and the part of the disc it cuts off;
