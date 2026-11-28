@@ -28,7 +28,11 @@ crs:
 ```
 
 A document valid against the schema cannot satisfy the requirement, and the
-reverse. Both stand in 1.1 (`1.1.0-final`) and on the repository's master.
+reverse. Both stand in 1.1 (`1.1.0-final`) and on the repository's master
+(`3e0a001`, 2026-11-19). Issue #459 raised the contradiction; the fix it
+recorded made the requirement an object with `crs` and `wkt` and left the
+schema an array of strings. Item 6 of #716, "crs: several incompatible forms",
+collects it for 1.3, so this is filed as a comment there.
 
 **Resolution.** State `/req/edr/rc-crs` over the schema's form: each element of
 `crs` is a string naming a coordinate reference system by its URI, as OGC API -

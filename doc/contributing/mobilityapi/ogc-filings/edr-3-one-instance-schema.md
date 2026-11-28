@@ -20,7 +20,7 @@ Its evidence is MobilityAPI row U3; it is filed with that row merged.
 `links` and `instances`, an array of `collection.yaml` items. A document
 describing one instance is one such item, not the list, so a server answering
 the requirement as written answers a list of one where a single description is
-asked for.
+asked for. B stands so on the repository's master (`3e0a001`, 2026-11-19).
 
 **Resolution.** In `/req/instances/src-md-success` B, name
 `collections/collection.yaml`, the schema of one item of `instances`, and keep

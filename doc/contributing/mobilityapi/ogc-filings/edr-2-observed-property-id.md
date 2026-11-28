@@ -24,7 +24,8 @@ required:
 
 and CoverageJSON (OGC 21-069r2), in which an EDR answer is written, also makes
 `id` optional for an observed property. A parameter that names no registry
-entry has no `id` to give, so the requirement forces an invented one.
+entry has no `id` to give, so the requirement forces an invented one. Both
+stand on the repository's master (`3e0a001`, 2026-11-19).
 
 **Resolution.** Align the requirement with the schema and with CoverageJSON:
 "which SHALL have the member "label" and which MAY have the members "id" and

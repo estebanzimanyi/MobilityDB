@@ -21,7 +21,11 @@ one collection to its entry in `/collections`. Applied to an instance it states
 that every instance has the `id` and the `extent` of its collection, so no two
 instances differ, while instances exist to be versions of the collection over
 different times (model runs, periods), each with its own extent. Issue #526
-met the temporal half of this for model runs.
+met the temporal half of this for model runs, and its answer states the
+reading this filing proposes: the extent of the collection "should describe
+the temporal extent of all instances, the individual instance response extents
+would describe the temporal extent covered by each instance". C stands
+unchanged on the repository's master (`3e0a001`, 2026-11-19).
 
 **Resolution.** State C over the list of instances: "The content of that
 response SHALL be consistent with the content for this instance in the
