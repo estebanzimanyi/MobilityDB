@@ -379,16 +379,16 @@ layer holds it for every question. The phases, each a series of pull requests:
    disc in `tcbuffer_region_within_roots` by `point_motion_dwithin_period_exact` (C4, #3588,
    merged, for a geometry of segments; the engine,
    `motion_edges_dwithin_periods`, reads the R-tree candidates of each segment through filters
-   in doubles before its exact signs, #3941; a geometry carrying an arc is the branch
-   `fix/within-periods-arc-edges`, whose first commit is its witness: the engine refuses an arc edge, so a
-   moving point falls back to `intervals_within_edges` and a disc to `tcbufferseg_within_ctx`,
-   and on arcs whose answers are known in closed form these answer every case at scale 1 but
-   fail 7 of 30 at 2^-30 and 2^-40, the point within for the whole motion and the disc never;
-   judged by CGAL with exact square roots, 64 of 100 dyadic refuting rows and 176 of 300 random
-   rows at 2^20 to 2^-52 agree, the rest whole motions, no period, or bounds one microsecond
-   late where the fallback rounds a bound the engine truncates. The arc is answered in the
-   engine as its two ends and, on the wedge of the arc, the band `|c(t) - O| = R +- (r(t) + d)`,
-   read exactly from the circle of `tower_arc_circle`), and `seg2d_side` by
+   in doubles before its exact signs, #3941; a geometry carrying an arc, of a line or bounding an
+   area, is MobilityDB #3981, open: an arc gives the periods of its two ends and, on the wedge of
+   the arc, those of the band `|c(t) - O| = R +- (r(t) + d)`, the quartic
+   `(s - R^2 - L^2)^2 - 4 R^2 L^2` whose roots a Sturm chain places in whole microseconds, and
+   the ray parity of the gaps crosses an arc by its chord and the part of the disc it cuts off;
+   the routes in doubles it replaces answer 14 of 42 closed-form checks wrongly at 2^-30 and
+   2^-40, and CGAL with exact square roots agrees with every period it answers on 300 random
+   arcs, 100 dyadic refuters, 52 rows of sub-microsecond periods, whole circles and the scales
+   2^+-150, and 110 areas arcs bound, where the routes in doubles agree on 176, 64 and 62), and
+   `seg2d_side` by
    `cross_product_sign` (C5, #3593, merged). These change answers, where the tolerance answers
    wrongly, so each comes with a witness CGAL judges. Relate on arcs near an end
    (#3598, merged): whether two boundary edges meet is decided by
