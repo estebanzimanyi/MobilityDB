@@ -94,6 +94,14 @@ and Flink surfaces with MobilityDB's, is measured at MobilityDB master `30a9a730
   branch `perf/within-periods-filters` rewrites `735e372a2e` there, the exact centre of the ray parity, built at the first edge the doubles leave;
   branch `perf/within-periods-filters` rewrites `b2c0122cf4` there, the arena of the ray parity.
   MERGED as MobilityDB #3941 (`88bb092e9d`).
+- **The exact engine of the periods within a distance of a geometry answers arcs** (C4 of the
+  exactness plan, #3287), as the owner ordered on 2026-11-28 ("Start with C4 on arcs ...
+  motion_edges_dwithin_periods (geo_funcs.c) returns -1 on an arc edge"): an arc of a line or one
+  bounding an area gives its periods by `point_motion_arc_dwithin_periods`, and the ray parity of
+  the gaps crosses an arc (`motion_arc_ray_crosses`):
+  branch `fix/within-periods-arc-edges` rewrites `88bb092e9d` there, the refusal of an arc (the
+  `arc` member of `MotionEdges` and its `return -1`), the room of the periods, which an arc fills
+  with up to `MOTION_EDGE_PERIODS`, and the box of the region edges, which holds the box of an arc.
 - **The conversion of a temporal network point to a temporal geometry point builds each point in
   the stack**, outside the plan, as the owner decided on 2026-11-07 ("approve the rewrite"):
   branch `perf/tnpoint-to-tgeompoint-points` rewrites `842c640e83` there, the
