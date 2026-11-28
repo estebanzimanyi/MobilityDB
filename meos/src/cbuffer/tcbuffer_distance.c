@@ -1672,14 +1672,14 @@ tcbuffer_double_cmp(const void *a, const void *b)
  * segment of @p D microseconds is within a distance of the geometry of a
  * context, decided exactly, or -1 for a geometry it does not answer
  * @details The single within engine (#motion_edges_dwithin_periods), which
- * does not answer an arc, nor faces that overlap; the bounds are
- * microseconds from the start of the segment
+ * does not answer faces that overlap; the bounds are microseconds from the
+ * start of the segment
  * @param[in] cb1,cb2 Disc at the start and at the end of the segment
  * @param[in] dist Distance
  * @param[in] ctxv Geometry context (#tcbuffer_geo_ctx_make)
  * @param[in] D Duration of the segment in microseconds
- * @param[out] lo,hi Bounds of the periods, room for the number of edges of
- * the context plus one each
+ * @param[out] lo,hi Bounds of the periods, room for #MOTION_EDGE_PERIODS
+ * times the number of edges of the context plus one each
  */
 int
 tcbufferseg_within_exact_ctx(const Cbuffer *cb1, const Cbuffer *cb2,

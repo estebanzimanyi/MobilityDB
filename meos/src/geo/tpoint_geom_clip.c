@@ -2994,8 +2994,8 @@ tpointseq_dwithin_edges(const TSequence *seq, Edge **edges, int nedges,
   Edge **sel_edges = edges;
   int sel_nedges = nedges;
   /* The bounds of the periods of the exact engine of one segment */
-  int64 *exact_lo = palloc(sizeof(int64) * (nedges + 1));
-  int64 *exact_hi = palloc(sizeof(int64) * (nedges + 1));
+  int64 *exact_lo = palloc(sizeof(int64) * MOTION_EDGE_PERIODS * (nedges + 1));
+  int64 *exact_hi = palloc(sizeof(int64) * MOTION_EDGE_PERIODS * (nedges + 1));
   MotionEdges me;
   motion_edges_init(&me, (const Edge *const *) edges, nedges);
   /* Loop for each segment */
@@ -3024,7 +3024,7 @@ tpointseq_dwithin_edges(const TSequence *seq, Edge **edges, int nedges,
     }
 
     /* The exact engine dates the periods in whole microseconds; a geometry
-     * it does not answer, an arc, takes the roots below */
+     * it does not answer, an area an arc bounds, takes the roots below */
     int64 D = inst2->t - inst1->t;
     int np = motion_edges_dwithin_periods(c0, c1, 0.0, 0.0, &me,
       use_index ? (const Edge *const *) sel_edges : NULL, sel_nedges, dist, D,

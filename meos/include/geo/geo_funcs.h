@@ -223,6 +223,11 @@ typedef struct
   EdgeType etype;                /**< Edge type */
 } Edge;
 
+/** Most periods one edge gives #motion_edges_dwithin_periods: an arc gives
+ * one for each of its ends and three on each of the two parts its wedge
+ * may take of a segment, where its quartic is not positive */
+#define MOTION_EDGE_PERIODS 8
+
 /**
  * @brief The edges of a geometry as #motion_edges_dwithin_periods reads them,
  * described once for every segment of a motion (#motion_edges_init)
@@ -231,9 +236,8 @@ typedef struct
 {
   const Edge *const *edges;     /**< Edges of the geometry */
   int nedges;                   /**< Number of edges */
-  bool arc;                     /**< An edge is an arc */
   bool region;                  /**< An edge bounds an area */
-  double rx0, rx1, ry0, ry1;    /**< Box of the ends of the region edges */
+  double rx0, rx1, ry0, ry1;    /**< Box of the region edges */
 } MotionEdges;
 
 /**
