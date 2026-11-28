@@ -236,9 +236,8 @@ typedef struct
 {
   const Edge *const *edges;     /**< Edges of the geometry */
   int nedges;                   /**< Number of edges */
-  bool arc;                     /**< An arc bounds an area */
   bool region;                  /**< An edge bounds an area */
-  double rx0, rx1, ry0, ry1;    /**< Box of the ends of the region edges */
+  double rx0, rx1, ry0, ry1;    /**< Box of the region edges */
 } MotionEdges;
 
 /**

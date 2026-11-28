@@ -6070,15 +6070,68 @@ point_motion_segm_dwithin_period_exact(const double *c0, const double *c1,
   return result;
 }
 
+/* Whether the ray to the right of the centre `P / D` crosses the segment
+ * from (x1, y1) to (x2, y2), by the half-open rule of #point_in_rings_exact:
+ * the side of the segment it lies on is the sign of `(b - a) x (P - D a)`,
+ * and one on the line of the segment stands to its right, as
+ * #point_line_side_moved moves it */
+static bool
+motion_segm_ray_crosses(DyadicWideArena *ar, const DyadicWide *wD,
+  DyadicWide *const *P, const DyadicWide *negPy, double x1, double y1,
+  double x2, double y2)
+{
+  /* The signs of D a_y - P_y and D b_y - P_y */
+  const DyadicWide *ay, *by, *ax, *ux, *uy, *qx, *qy, *p, *s;
+  DyadicWide *q;
+  ay = dyadic_wide_zero(ar);
+  ay = dyadic_wide_add_double(ar, ay, y1, 1);
+  by = dyadic_wide_zero(ar);
+  by = dyadic_wide_add_double(ar, by, y2, 1);
+  q = dyadic_wide_mul(ar, ay, wD);
+  p = dyadic_wide_add(ar, q, negPy);
+  int sa = p->sign;
+  q = dyadic_wide_mul(ar, by, wD);
+  p = dyadic_wide_add(ar, q, negPy);
+  int sb = p->sign;
+  /* Up: a_y <= p_y < b_y; down: b_y <= p_y < a_y */
+  bool up = sa <= 0 && sb > 0, down = sb <= 0 && sa > 0;
+  if (! up && ! down)
+    return false;
+  /* (b - a) x (P - D a) */
+  ux = dyadic_wide_zero(ar);
+  ux = dyadic_wide_add_double(ar, ux, x2, 1);
+  ux = dyadic_wide_add_double(ar, ux, x1, -1);
+  uy = dyadic_wide_zero(ar);
+  uy = dyadic_wide_add_double(ar, uy, y2, 1);
+  uy = dyadic_wide_add_double(ar, uy, y1, -1);
+  ax = dyadic_wide_zero(ar);
+  ax = dyadic_wide_add_double(ar, ax, x1, 1);
+  q = dyadic_wide_mul(ar, ax, wD);
+  q->sign = - q->sign;
+  qx = dyadic_wide_add(ar, P[0], q);
+  q = dyadic_wide_mul(ar, ay, wD);
+  q->sign = - q->sign;
+  qy = dyadic_wide_add(ar, P[1], q);
+  p = dyadic_wide_mul(ar, ux, qy);
+  q = dyadic_wide_mul(ar, uy, qx);
+  q->sign = - q->sign;
+  s = dyadic_wide_add(ar, p, q);
+  return (up && s->sign > 0) || (down && s->sign < 0);
+}
+
+static bool motion_arc_ray_crosses(DyadicWideArena *ar, const DyadicWide *wD,
+  DyadicWide *const *P, const DyadicWide *negPy, const Edge *e);
+
 /**
  * @brief Return true if the centre of a disc moving linearly over a segment
- * of @p D microseconds lies inside the area some segments bound at the
- * microsecond @p n of it, the centre lying on none of them, decided exactly
+ * of @p D microseconds lies inside the area some segments and arcs bound at
+ * the microsecond @p n of it, the centre lying on none of them, decided
+ * exactly
  * @details The centre is `P / D` with `P = D c0 + n (c1 - c0)`, a rational
- * point. A ray cast to its right crosses an edge by the half-open rule of
- * #point_in_rings_exact, and the side of the edge it lies on is the sign of
- * `(b - a) x (P - D a)`, held exactly, which is never zero where the ray
- * crosses the edge since the centre lies on no edge
+ * point. A ray cast to its right crosses a segment by the half-open rule of
+ * #point_in_rings_exact (#motion_segm_ray_crosses) and an arc as
+ * #point_arc_ray_parity reads it (#motion_arc_ray_crosses), every sign held
+ * exactly
  */
 static bool
 motion_point_inside_segms(const double *c0, const double *c1, int64 D,
@@ -6107,9 +6160,9 @@ motion_point_inside_segms(const double *c0, const double *c1, int64 D,
   for (int k = 0; k < nedges; k++)
   {
     const Edge *e = edges[k];
-    if (e->etype != EDGE_POLYSEG)
+    if (e->etype != EDGE_POLYSEG && e->etype != EDGE_POLYARC)
       continue;
-    if (filter)
+    if (filter && e->etype == EDGE_POLYSEG)
     {
       double ya = e->y1 * dD - Pyd, yb = e->y2 * dD - Pyd;
       double ea = 0x1p-46 * (fabs(e->y1) * dD + Pymag);
@@ -6154,43 +6207,10 @@ motion_point_inside_segms(const double *c0, const double *c1, int64 D,
     }
     else
       dyadic_wide_arena_release(ar, m);
-    /* The signs of D a_y - P_y and D b_y - P_y */
-    const DyadicWide *ay, *by, *ax, *ux, *uy, *qx, *qy, *p, *s;
-    DyadicWide *q;
-    ay = dyadic_wide_zero(ar);
-    ay = dyadic_wide_add_double(ar, ay, e->y1, 1);
-    by = dyadic_wide_zero(ar);
-    by = dyadic_wide_add_double(ar, by, e->y2, 1);
-    q = dyadic_wide_mul(ar, ay, wD);
-    p = dyadic_wide_add(ar, q, negPy);
-    int sa = p->sign;
-    q = dyadic_wide_mul(ar, by, wD);
-    p = dyadic_wide_add(ar, q, negPy);
-    int sb = p->sign;
-    /* Up: a_y <= p_y < b_y; down: b_y <= p_y < a_y */
-    bool up = sa <= 0 && sb > 0, down = sb <= 0 && sa > 0;
-    if (! up && ! down)
-      continue;
-    /* (b - a) x (P - D a) */
-    ux = dyadic_wide_zero(ar);
-    ux = dyadic_wide_add_double(ar, ux, e->x2, 1);
-    ux = dyadic_wide_add_double(ar, ux, e->x1, -1);
-    uy = dyadic_wide_zero(ar);
-    uy = dyadic_wide_add_double(ar, uy, e->y2, 1);
-    uy = dyadic_wide_add_double(ar, uy, e->y1, -1);
-    ax = dyadic_wide_zero(ar);
-    ax = dyadic_wide_add_double(ar, ax, e->x1, 1);
-    q = dyadic_wide_mul(ar, ax, wD);
-    q->sign = - q->sign;
-    qx = dyadic_wide_add(ar, P[0], q);
-    q = dyadic_wide_mul(ar, ay, wD);
-    q->sign = - q->sign;
-    qy = dyadic_wide_add(ar, P[1], q);
-    p = dyadic_wide_mul(ar, ux, qy);
-    q = dyadic_wide_mul(ar, uy, qx);
-    q->sign = - q->sign;
-    s = dyadic_wide_add(ar, p, q);
-    if ((up && s->sign > 0) || (down && s->sign < 0))
+    bool cross = (e->etype == EDGE_POLYARC) ?
+      motion_arc_ray_crosses(ar, wD, P, negPy, e) :
+      motion_segm_ray_crosses(ar, wD, P, negPy, e->x1, e->y1, e->x2, e->y2);
+    if (cross)
       inside = ! inside;
   }
   if (exact)
@@ -6250,22 +6270,20 @@ motion_edges_init(MotionEdges *me, const Edge *const *edges, int nedges)
 {
   me->edges = edges;
   me->nedges = nedges;
-  me->arc = me->region = false;
-  /* The box of the ends of the region edges, the ones the ray casts read */
+  me->region = false;
+  /* The box of the region edges, the ones the ray casts read */
   me->rx0 = me->ry0 = DBL_MAX;
   me->rx1 = me->ry1 = - DBL_MAX;
   for (int k = 0; k < nedges; k++)
   {
     const Edge *e = edges[k];
-    if (e->etype == EDGE_POLYARC)
-      me->arc = true;
-    else if (e->etype == EDGE_POLYSEG)
+    if (e->etype == EDGE_POLYSEG || e->etype == EDGE_POLYARC)
     {
       me->region = true;
-      me->rx0 = Min(me->rx0, Min(e->x1, e->x2));
-      me->rx1 = Max(me->rx1, Max(e->x1, e->x2));
-      me->ry0 = Min(me->ry0, Min(e->y1, e->y2));
-      me->ry1 = Max(me->ry1, Max(e->y1, e->y2));
+      me->rx0 = Min(me->rx0, e->xmin);
+      me->rx1 = Max(me->rx1, e->xmax);
+      me->ry0 = Min(me->ry0, e->ymin);
+      me->ry1 = Max(me->ry1, e->ymax);
     }
   }
   return;
@@ -6301,7 +6319,7 @@ motion_edges_reach_box(const double *c0, const double *c1, double r0,
  * over a segment is within a distance of a geometry, decided exactly
  * @details The single engine of the within periods of a moving disc, a point
  * being a disc of radius 0. Each segment contributes the period of
- * #point_motion_segm_dwithin_period_exact, each arc of a line those of
+ * #point_motion_segm_dwithin_period_exact, each arc those of
  * #point_motion_arc_dwithin_periods, an edge whose box lies beyond the
  * reach of the swept box contributing none. Periods no whole microsecond
  * separates are merged, which holds the same microseconds. Every other gap,
@@ -6322,8 +6340,7 @@ motion_edges_reach_box(const double *c0, const double *c1, double r0,
  * @param[in] D Duration of the segment in microseconds
  * @param[out] lo,hi Bounds of the periods, room for #MOTION_EDGE_PERIODS
  * times the number of candidates plus one each
- * @return The number of periods, or -1 where an arc bounds an area, which
- * this engine does not answer
+ * @return The number of periods
  * @pre The radii and the distance are finite and not negative, `D > 0`, and
  * the region edges bound areas that do not overlap
  */
@@ -6332,8 +6349,6 @@ motion_edges_dwithin_periods(const double *c0, const double *c1, double r0,
   double r1, const MotionEdges *me, const Edge *const *cand, int ncand,
   double d, int64 D, int64 *lo, int64 *hi)
 {
-  if (me->arc)
-    return -1;
   if (! cand)
   {
     cand = me->edges;
@@ -6357,7 +6372,7 @@ motion_edges_dwithin_periods(const double *c0, const double *c1, double r0,
     if (e->xmax < box[0] || e->xmin > box[1] || e->ymax < box[2] ||
         e->ymin > box[3])
       continue;
-    if (e->etype == EDGE_LINEARC)
+    if (e->etype == EDGE_LINEARC || e->etype == EDGE_POLYARC)
     {
       np += point_motion_arc_dwithin_periods(c0, c1, r0, r1, e, d, D,
         &per[2 * np]);
@@ -13461,7 +13476,7 @@ cell_cmp(const void *a, const void *b)
  * the parts are merged where no whole microsecond separates them.
  * @param[in] c0,c1 Centre of the disc at the start and at the end
  * @param[in] r0,r1 Radius of the disc at the start and at the end
- * @param[in] e Arc, an edge of type #EDGE_LINEARC
+ * @param[in] e Arc, an edge of type #EDGE_LINEARC or #EDGE_POLYARC
  * @param[in] d Distance
  * @param[in] D Duration of the segment in microseconds
  * @param[out] per Bounds of the periods as pairs, room for
@@ -13608,6 +13623,65 @@ point_motion_arc_dwithin_periods(const double *c0, const double *c1,
   }
   dyadic_ctx_free(&ctx);
   return np;
+}
+
+/* Whether the ray to the right of the centre `P / D` crosses an arc an odd
+ * number of times, as #point_arc_ray_parity reads it for a point of doubles:
+ * the crossing of its chord, changed where the centre lies in the part of
+ * the disc the arc cuts off on its side of the chord, a centre on the chord
+ * or on the circle moved as #point_line_side_moved and
+ * #point_arc_circle_side_pred move it, to the right and then up; the circle
+ * is the one #tower_arc_read reads */
+static bool
+motion_arc_ray_crosses(DyadicWideArena *ar, const DyadicWide *wD,
+  DyadicWide *const *P, const DyadicWide *negPy, const Edge *e)
+{
+  bool parity = motion_segm_ray_crosses(ar, wD, P, negPy, e->x1, e->y1,
+    e->x2, e->y2);
+  ExactArc ea;
+  exact_arc_from_edge(e, &ea);
+  /* A half circle runs counterclockwise on the right of its chord */
+  int side = ea.half ? -1 : cross_product_sign(ea.s[0], ea.s[1], ea.e[0],
+    ea.e[1], ea.s[0], ea.s[1], ea.m[0], ea.m[1]);
+  /* The side of the chord the centre lies on, (b - a) x (P - D a) */
+  const double a[2] = {e->x1, e->y1}, b[2] = {e->x2, e->y2};
+  const DyadicWide *u[2], *q[2];
+  for (int i = 0; i < 2; i++)
+  {
+    u[i] = dyadic_wide_add_double(ar, dyadic_wide_of_double(ar, b[i]), a[i],
+      -1);
+    q[i] = dyadic_wide_sub(ar, P[i],
+      dyadic_wide_mul(ar, dyadic_wide_of_double(ar, a[i]), wD));
+  }
+  int sp = dyadic_wide_product_cmp(ar, u[0], q[1], u[1], q[0]);
+  if (sp == 0)
+    sp = (a[1] != b[1]) ? ((b[1] > a[1]) ? -1 : 1) : ((b[0] > a[0]) ? 1 : -1);
+  if (sp != side)
+    return parity;
+  /* Inside the circle: with the centre a + c / w and r2 the square of the
+   * radius times w^2, W = w P - D (w a + c), the sign of D^2 r2 - |W|^2; on
+   * it, moved to the right then up, the sign of - W */
+  DyadicCtx ctx;
+  dyadic_ctx_init(&ctx, true);
+  TowerArc ta;
+  tower_arc_read(&ctx, &ea, a[0], a[1], &ta);
+  const DyadicWide *W[2], *c[2] = {ta.cx.w, ta.cy.w};
+  for (int i = 0; i < 2; i++)
+  {
+    const DyadicWide *t = dyadic_wide_add(ar,
+      dyadic_wide_mul(ar, ta.w.w, dyadic_wide_of_double(ar, a[i])), c[i]);
+    W[i] = dyadic_wide_sub(ar, dyadic_wide_mul(ar, ta.w.w, P[i]),
+      dyadic_wide_mul(ar, wD, t));
+  }
+  const DyadicWide *D2R2 = dyadic_wide_mul(ar, dyadic_wide_mul(ar, wD, wD),
+    ta.r2.w);
+  const DyadicWide *W2 = dyadic_wide_add(ar, dyadic_wide_mul(ar, W[0], W[0]),
+    dyadic_wide_mul(ar, W[1], W[1]));
+  int in = dyadic_wide_cmp(D2R2, W2);
+  if (in == 0)
+    in = (W[0]->sign != 0) ? - W[0]->sign : - W[1]->sign;
+  dyadic_ctx_free(&ctx);
+  return (in > 0) ? ! parity : parity;
 }
 
 /* Whether a gap in doubles with a margin lies past a distance exactly */

@@ -859,8 +859,7 @@ tcbufferseq_linear_within_spanset(const TSequence *seq, double dist,
     const Cbuffer *cb1 = DatumGetCbufferP(tinstant_value_p(inst1));
     const Cbuffer *cb2 = DatumGetCbufferP(tinstant_value_p(inst2));
     /* The exact engine dates the periods in whole microseconds; a geometry
-     * it does not answer, an area an arc bounds or faces that overlap, takes
-     * the roots */
+     * it does not answer, faces that overlap, takes the roots */
     int64 D = inst2->t - inst1->t;
     int nr = tcbufferseg_within_exact_ctx(cb1, cb2, dist, ctx, D, nlo, nhi);
     if (nr < 0)
