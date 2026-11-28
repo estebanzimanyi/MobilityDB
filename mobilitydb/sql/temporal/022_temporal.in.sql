@@ -53,6 +53,16 @@ CREATE FUNCTION mobilitydbFullVersion()
   AS 'MODULE_PATHNAME', 'Mobilitydb_full_version'
   LANGUAGE C IMMUTABLE PARALLEL SAFE;
 
+CREATE FUNCTION meosVersion()
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Meos_version'
+  LANGUAGE C IMMUTABLE PARALLEL SAFE;
+
+CREATE FUNCTION meosFullVersion()
+  RETURNS text
+  AS 'MODULE_PATHNAME', 'Meos_full_version'
+  LANGUAGE C IMMUTABLE PARALLEL SAFE;
+
 /******************************************************************************
  * Input/Output
  ******************************************************************************/
@@ -1522,6 +1532,79 @@ CREATE FUNCTION shiftScaleTime(tfloat, interval, interval)
 CREATE FUNCTION shiftScaleTime(ttext, interval, interval)
   RETURNS ttext
   AS 'MODULE_PATHNAME', 'Temporal_shift_scale_time'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION occurrence(tbool, ref timestamptz, origin timestamptz)
+  RETURNS tbool
+  AS 'MODULE_PATHNAME', 'Temporal_occurrence'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION occurrence(tint, ref timestamptz, origin timestamptz)
+  RETURNS tint
+  AS 'MODULE_PATHNAME', 'Temporal_occurrence'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION occurrence(tbigint, ref timestamptz, origin timestamptz)
+  RETURNS tbigint
+  AS 'MODULE_PATHNAME', 'Temporal_occurrence'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION occurrence(tfloat, ref timestamptz, origin timestamptz)
+  RETURNS tfloat
+  AS 'MODULE_PATHNAME', 'Temporal_occurrence'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION occurrence(ttext, ref timestamptz, origin timestamptz)
+  RETURNS ttext
+  AS 'MODULE_PATHNAME', 'Temporal_occurrence'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION occurrenceOrigins(tbool, ref timestamptz, origins tstzset,
+  period tstzspan)
+  RETURNS tstzset
+  AS 'MODULE_PATHNAME', 'Temporal_occurrence_origins'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION occurrenceOrigins(tint, ref timestamptz, origins tstzset,
+  period tstzspan)
+  RETURNS tstzset
+  AS 'MODULE_PATHNAME', 'Temporal_occurrence_origins'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION occurrenceOrigins(tbigint, ref timestamptz, origins tstzset,
+  period tstzspan)
+  RETURNS tstzset
+  AS 'MODULE_PATHNAME', 'Temporal_occurrence_origins'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION occurrenceOrigins(tfloat, ref timestamptz, origins tstzset,
+  period tstzspan)
+  RETURNS tstzset
+  AS 'MODULE_PATHNAME', 'Temporal_occurrence_origins'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION occurrenceOrigins(ttext, ref timestamptz, origins tstzset,
+  period tstzspan)
+  RETURNS tstzset
+  AS 'MODULE_PATHNAME', 'Temporal_occurrence_origins'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+
+CREATE FUNCTION occurrences(tbool, ref timestamptz, origins tstzset,
+  period tstzspan)
+  RETURNS TABLE(origin timestamptz, occurrence tbool)
+  AS 'MODULE_PATHNAME', 'Temporal_occurrences'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION occurrences(tint, ref timestamptz, origins tstzset,
+  period tstzspan)
+  RETURNS TABLE(origin timestamptz, occurrence tint)
+  AS 'MODULE_PATHNAME', 'Temporal_occurrences'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION occurrences(tbigint, ref timestamptz, origins tstzset,
+  period tstzspan)
+  RETURNS TABLE(origin timestamptz, occurrence tbigint)
+  AS 'MODULE_PATHNAME', 'Temporal_occurrences'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION occurrences(tfloat, ref timestamptz, origins tstzset,
+  period tstzspan)
+  RETURNS TABLE(origin timestamptz, occurrence tfloat)
+  AS 'MODULE_PATHNAME', 'Temporal_occurrences'
+  LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
+CREATE FUNCTION occurrences(ttext, ref timestamptz, origins tstzset,
+  period tstzspan)
+  RETURNS TABLE(origin timestamptz, occurrence ttext)
+  AS 'MODULE_PATHNAME', 'Temporal_occurrences'
   LANGUAGE C IMMUTABLE STRICT PARALLEL SAFE;
 
 CREATE FUNCTION tprecision(tint, duration interval,

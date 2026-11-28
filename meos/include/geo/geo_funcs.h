@@ -223,6 +223,23 @@ typedef struct
   EdgeType etype;                /**< Edge type */
 } Edge;
 
+/** Most periods one edge gives #motion_edges_dwithin_periods: an arc gives
+ * one for each of its ends and three on each of the two parts its wedge
+ * may take of a segment, where its quartic is not positive */
+#define MOTION_EDGE_PERIODS 8
+
+/**
+ * @brief The edges of a geometry as #motion_edges_dwithin_periods reads them,
+ * described once for every segment of a motion (#motion_edges_init)
+ */
+typedef struct
+{
+  const Edge *const *edges;     /**< Edges of the geometry */
+  int nedges;                   /**< Number of edges */
+  bool region;                  /**< An edge bounds an area */
+  double rx0, rx1, ry0, ry1;    /**< Box of the region edges */
+} MotionEdges;
+
 /**
  * @brief Enumeration defining the intersection types 
  */
@@ -424,9 +441,13 @@ extern int point_motion_dwithin_period_exact(const double *a0,
   const double *a1, const double *b0, const double *b1, int ndims,
   double ra0, double ra1, double rb0, double rb1, double d, int64 D,
   int64 *n1, int64 *n2);
+extern void motion_edges_init(MotionEdges *me, const Edge *const *edges,
+  int nedges);
+extern void motion_edges_reach_box(const double *c0, const double *c1,
+  double r0, double r1, double d, double *box);
 extern int motion_edges_dwithin_periods(const double *c0, const double *c1,
-  double r0, double r1, const Edge *const *edges, int nedges, double d,
-  int64 D, int64 *lo, int64 *hi);
+  double r0, double r1, const MotionEdges *me, const Edge *const *cand,
+  int ncand, double d, int64 D, int64 *lo, int64 *hi);
 extern int point_motion_segm_dwithin_period_exact(const double *c0,
   const double *c1, double r0, double r1, const double *a, const double *b,
   double d, int64 D, int64 *n1, int64 *n2);

@@ -42,6 +42,7 @@
 #include <pgtypes.h>
 #include <funcapi.h>
 #include <access/heaptoast.h>
+#include <access/htup_details.h>
 #include <access/detoast.h>
 #include <libpq/pqformat.h>
 #include <utils/lsyscache.h>
@@ -328,10 +329,7 @@ PG_FUNCTION_INFO_V1(Mobilitydb_version);
 Datum
 Mobilitydb_version(PG_FUNCTION_ARGS UNUSED)
 {
-  size_t size_out;
-  char *version = mobilitydb_version(&size_out);
-  text *result = cstring_to_text(version);
-  pfree(version);
+  text *result = cstring_to_text(MOBILITYDB_VERSION_STRING);
   PG_RETURN_TEXT_P(result);
 }
 
@@ -339,14 +337,54 @@ PGDLLEXPORT Datum Mobilitydb_full_version(PG_FUNCTION_ARGS UNUSED);
 PG_FUNCTION_INFO_V1(Mobilitydb_full_version);
 /**
  * @ingroup mobilitydb_misc
- * @brief Return the versions of the MobilityDB extension and its dependencies
+ * @brief Return the versions of the MobilityDB extension and its dependencies,
+ * the MEOS library first
+ * @details The dependencies are those #meos_full_version names
  * @sqlfn mobilitydbFullVersion()
  */
 Datum
 Mobilitydb_full_version(PG_FUNCTION_ARGS UNUSED)
 {
   size_t size_out;
-  char *version = mobilitydb_full_version(&size_out);
+  char *meos = meos_full_version(&size_out);
+  char *version = psprintf("%s, %s", MOBILITYDB_VERSION_STRING, meos);
+  text *result = cstring_to_text(version);
+  pfree(meos);
+  pfree(version);
+  PG_RETURN_TEXT_P(result);
+}
+
+PGDLLEXPORT Datum Meos_version(PG_FUNCTION_ARGS UNUSED);
+PG_FUNCTION_INFO_V1(Meos_version);
+/**
+ * @ingroup mobilitydb_misc
+ * @brief Return the version of the MEOS library
+ * @details As #Mobilitydb_version returns the version of the extension
+ * @sqlfn meosVersion()
+ */
+Datum
+Meos_version(PG_FUNCTION_ARGS UNUSED)
+{
+  size_t size_out;
+  char *version = meos_version(&size_out);
+  text *result = cstring_to_text(version);
+  pfree(version);
+  PG_RETURN_TEXT_P(result);
+}
+
+PGDLLEXPORT Datum Meos_full_version(PG_FUNCTION_ARGS UNUSED);
+PG_FUNCTION_INFO_V1(Meos_full_version);
+/**
+ * @ingroup mobilitydb_misc
+ * @brief Return the versions of the MEOS library and its dependencies
+ * @details As #Mobilitydb_full_version returns those of the extension
+ * @sqlfn meosFullVersion()
+ */
+Datum
+Meos_full_version(PG_FUNCTION_ARGS UNUSED)
+{
+  size_t size_out;
+  char *version = meos_full_version(&size_out);
   text *result = cstring_to_text(version);
   pfree(version);
   PG_RETURN_TEXT_P(result);
@@ -1708,6 +1746,101 @@ Temporal_shift_time(PG_FUNCTION_ARGS)
   Temporal *result = temporal_shift_time(temp, shift);
   PG_FREE_IF_COPY(temp, 0);
   PG_RETURN_TEMPORAL_P(result);
+}
+
+PGDLLEXPORT Datum Temporal_occurrence(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Temporal_occurrence);
+/**
+ * @ingroup mobilitydb_temporal_transf
+ * @brief Return the occurrence of a temporal value at an origin
+ * @sqlfn occurrence()
+ */
+Datum
+Temporal_occurrence(PG_FUNCTION_ARGS)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  TimestampTz ref = PG_GETARG_TIMESTAMPTZ(1);
+  TimestampTz origin = PG_GETARG_TIMESTAMPTZ(2);
+  Temporal *result = temporal_occurrence(temp, ref, origin);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_RETURN_TEMPORAL_P(result);
+}
+
+PGDLLEXPORT Datum Temporal_occurrence_origins(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Temporal_occurrence_origins);
+/**
+ * @ingroup mobilitydb_temporal_transf
+ * @brief Return the origins at which the occurrence of a temporal value meets
+ * a period
+ * @sqlfn occurrenceOrigins()
+ */
+Datum
+Temporal_occurrence_origins(PG_FUNCTION_ARGS)
+{
+  Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+  TimestampTz ref = PG_GETARG_TIMESTAMPTZ(1);
+  Set *origins = PG_GETARG_SET_P(2);
+  Span *s = PG_GETARG_SPAN_P(3);
+  Set *result = temporal_occurrence_origins(temp, ref, origins, s);
+  PG_FREE_IF_COPY(temp, 0);
+  PG_FREE_IF_COPY(origins, 2);
+  if (! result)
+    PG_RETURN_NULL();
+  PG_RETURN_SET_P(result);
+}
+
+PGDLLEXPORT Datum Temporal_occurrences(PG_FUNCTION_ARGS);
+PG_FUNCTION_INFO_V1(Temporal_occurrences);
+/**
+ * @ingroup mobilitydb_temporal_transf
+ * @brief Return the occurrences of a temporal value that meet a period, with
+ * their origins
+ * @sqlfn occurrences()
+ * @note Built as #Temporal_time_split returns its fragments with their bins
+ */
+Datum
+Temporal_occurrences(PG_FUNCTION_ARGS)
+{
+  FuncCallContext *funcctx;
+
+  if (SRF_IS_FIRSTCALL())
+  {
+    funcctx = SRF_FIRSTCALL_INIT();
+    /* The occurrences are kept across the calls, so they are computed in the
+     * context that outlives them */
+    MemoryContext oldcontext =
+      MemoryContextSwitchTo(funcctx->multi_call_memory_ctx);
+    Temporal *temp = PG_GETARG_TEMPORAL_P(0);
+    TimestampTz ref = PG_GETARG_TIMESTAMPTZ(1);
+    Set *origins = PG_GETARG_SET_P(2);
+    Span *s = PG_GETARG_SPAN_P(3);
+    TimestampTz *occ_origins = NULL;
+    int count;
+    Temporal **occs = temporal_occurrences(temp, ref, origins, s,
+      &occ_origins, &count);
+    Datum *state = palloc(sizeof(Datum) * 2);
+    state[0] = PointerGetDatum(occ_origins);
+    state[1] = PointerGetDatum(occs);
+    funcctx->user_fctx = state;
+    funcctx->max_calls = count;
+    get_call_result_type(fcinfo, 0, &funcctx->tuple_desc);
+    BlessTupleDesc(funcctx->tuple_desc);
+    MemoryContextSwitchTo(oldcontext);
+  }
+
+  funcctx = SRF_PERCALL_SETUP();
+  if (funcctx->call_cntr >= funcctx->max_calls)
+    SRF_RETURN_DONE(funcctx);
+  Datum *state = (Datum *) funcctx->user_fctx;
+  const TimestampTz *occ_origins =
+    (const TimestampTz *) DatumGetPointer(state[0]);
+  Temporal **occs = (Temporal **) DatumGetPointer(state[1]);
+  Datum values[2];
+  bool isnull[2] = {false, false};
+  values[0] = TimestampTzGetDatum(occ_origins[funcctx->call_cntr]);
+  values[1] = PointerGetDatum(occs[funcctx->call_cntr]);
+  HeapTuple tuple = heap_form_tuple(funcctx->tuple_desc, values, isnull);
+  SRF_RETURN_NEXT(funcctx, HeapTupleGetDatum(tuple));
 }
 
 PGDLLEXPORT Datum Temporal_scale_time(PG_FUNCTION_ARGS);

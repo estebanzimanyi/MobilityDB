@@ -6070,107 +6070,186 @@ point_motion_segm_dwithin_period_exact(const double *c0, const double *c1,
   return result;
 }
 
+/* Whether the ray to the right of the centre `P / D` crosses the segment
+ * from (x1, y1) to (x2, y2), by the half-open rule of #point_in_rings_exact:
+ * the side of the segment it lies on is the sign of `(b - a) x (P - D a)`,
+ * and one on the line of the segment stands to its right, as
+ * #point_line_side_moved moves it */
+static bool
+motion_segm_ray_crosses(DyadicWideArena *ar, const DyadicWide *wD,
+  DyadicWide *const *P, const DyadicWide *negPy, double x1, double y1,
+  double x2, double y2)
+{
+  /* The signs of D a_y - P_y and D b_y - P_y */
+  const DyadicWide *ay, *by, *ax, *ux, *uy, *qx, *qy, *p, *s;
+  DyadicWide *q;
+  ay = dyadic_wide_zero(ar);
+  ay = dyadic_wide_add_double(ar, ay, y1, 1);
+  by = dyadic_wide_zero(ar);
+  by = dyadic_wide_add_double(ar, by, y2, 1);
+  q = dyadic_wide_mul(ar, ay, wD);
+  p = dyadic_wide_add(ar, q, negPy);
+  int sa = p->sign;
+  q = dyadic_wide_mul(ar, by, wD);
+  p = dyadic_wide_add(ar, q, negPy);
+  int sb = p->sign;
+  /* Up: a_y <= p_y < b_y; down: b_y <= p_y < a_y */
+  bool up = sa <= 0 && sb > 0, down = sb <= 0 && sa > 0;
+  if (! up && ! down)
+    return false;
+  /* (b - a) x (P - D a) */
+  ux = dyadic_wide_zero(ar);
+  ux = dyadic_wide_add_double(ar, ux, x2, 1);
+  ux = dyadic_wide_add_double(ar, ux, x1, -1);
+  uy = dyadic_wide_zero(ar);
+  uy = dyadic_wide_add_double(ar, uy, y2, 1);
+  uy = dyadic_wide_add_double(ar, uy, y1, -1);
+  ax = dyadic_wide_zero(ar);
+  ax = dyadic_wide_add_double(ar, ax, x1, 1);
+  q = dyadic_wide_mul(ar, ax, wD);
+  q->sign = - q->sign;
+  qx = dyadic_wide_add(ar, P[0], q);
+  q = dyadic_wide_mul(ar, ay, wD);
+  q->sign = - q->sign;
+  qy = dyadic_wide_add(ar, P[1], q);
+  p = dyadic_wide_mul(ar, ux, qy);
+  q = dyadic_wide_mul(ar, uy, qx);
+  q->sign = - q->sign;
+  s = dyadic_wide_add(ar, p, q);
+  return (up && s->sign > 0) || (down && s->sign < 0);
+}
+
+static bool motion_arc_ray_crosses(DyadicWideArena *ar, const DyadicWide *wD,
+  DyadicWide *const *P, const DyadicWide *negPy, const Edge *e);
+
 /**
  * @brief Return true if the centre of a disc moving linearly over a segment
- * of @p D microseconds lies inside the area some segments bound at the
- * microsecond @p n of it, the centre lying on none of them, decided exactly
+ * of @p D microseconds lies inside the area some segments and arcs bound at
+ * the microsecond @p n of it, the centre lying on none of them, decided
+ * exactly
  * @details The centre is `P / D` with `P = D c0 + n (c1 - c0)`, a rational
- * point. A ray cast to its right crosses an edge by the half-open rule of
- * #point_in_rings_exact, and the side of the edge it lies on is the sign of
- * `(b - a) x (P - D a)`, held exactly, which is never zero where the ray
- * crosses the edge since the centre lies on no edge
+ * point. A ray cast to its right crosses a segment by the half-open rule of
+ * #point_in_rings_exact (#motion_segm_ray_crosses) and an arc as
+ * #point_arc_ray_parity reads it (#motion_arc_ray_crosses), every sign held
+ * exactly
  */
 static bool
 motion_point_inside_segms(const double *c0, const double *c1, int64 D,
   int64 n, const Edge *const *edges, int nedges)
 {
   DyadicWideArena arena, *ar = &arena;
-  dyadic_wide_arena_init(ar);
-  const DyadicWide *wD, *wn, *t;
-  DyadicWide *P[2];
-  wD = dyadic_wide_of_int64(ar, D);
-  wn = dyadic_wide_of_int64(ar, n);
-  for (int i = 0; i < 2; i++)
-  {
-    const DyadicWide *c, *dc;
-    c = dyadic_wide_zero(ar);
-    c = dyadic_wide_add_double(ar, c, c0[i], 1);
-    dc = dyadic_wide_zero(ar);
-    dc = dyadic_wide_add_double(ar, dc, c1[i], 1);
-    dc = dyadic_wide_add_double(ar, dc, c0[i], -1);
-    P[i] = dyadic_wide_mul(ar, c, wD);
-    t = dyadic_wide_mul(ar, dc, wn);
-    P[i] = dyadic_wide_add(ar, P[i], t);
-  }
-  const DyadicWide *negPy = dyadic_wide_neg(ar, P[1]);
-  /* The values of each edge are released at the next */
-  DyadicWideMark m = dyadic_wide_arena_mark(ar);
-  /* A filter: the height `P_y` in doubles, `c0_y D + n (c1_y - c0_y)`,
-   * within 2^-50 of the magnitudes it combines, so an edge both of whose
-   * ends stand beyond that, on one side of it, crosses no ray, and only
-   * the edges the doubles leave are read exactly */
+  /* The exact centre, built at the first edge the doubles leave */
+  bool exact = false;
+  const DyadicWide *wD = NULL, *negPy = NULL;
+  DyadicWide *P[2] = {NULL, NULL};
+  DyadicWideMark m = {0, 0};
+  /* A filter: the centre `P` in doubles, `c0 D + n (c1 - c0)`, within 2^-50
+   * of the magnitudes it combines. An edge both of whose ends stand beyond
+   * that on one side of the height `P_y`, or both to the left of `P_x`,
+   * crosses no ray; one both of whose ends stand to the right of `P_x`, one
+   * on either side of `P_y`, crosses it. Only the edges the doubles leave
+   * are read exactly */
   double dD = (double) D, dn = (double) n;
   double Pyd = c0[1] * dD + dn * (c1[1] - c0[1]);
   double Pymag = fabs(c0[1]) * dD + dn * (fabs(c1[1]) + fabs(c0[1]));
-  bool filter = isfinite(Pyd) && isfinite(Pymag) && D <= DWITHIN_GRID_EXACT_N
-    && n <= DWITHIN_GRID_EXACT_N;
+  double Pxd = c0[0] * dD + dn * (c1[0] - c0[0]);
+  double Pxmag = fabs(c0[0]) * dD + dn * (fabs(c1[0]) + fabs(c0[0]));
+  bool filter = isfinite(Pyd) && isfinite(Pymag) && isfinite(Pxd) &&
+    isfinite(Pxmag) && D <= DWITHIN_GRID_EXACT_N && n <= DWITHIN_GRID_EXACT_N;
   bool inside = false;
   for (int k = 0; k < nedges; k++)
   {
-    dyadic_wide_arena_release(ar, m);
     const Edge *e = edges[k];
-    if (e->etype != EDGE_POLYSEG)
+    if (e->etype != EDGE_POLYSEG && e->etype != EDGE_POLYARC)
       continue;
-    if (filter)
+    if (filter && e->etype == EDGE_POLYSEG)
     {
       double ya = e->y1 * dD - Pyd, yb = e->y2 * dD - Pyd;
       double ea = 0x1p-46 * (fabs(e->y1) * dD + Pymag);
       double eb = 0x1p-46 * (fabs(e->y2) * dD + Pymag);
       if ((ya > ea && yb > eb) || (ya < - ea && yb < - eb))
         continue;
+      double xa = e->x1 * dD - Pxd, xb = e->x2 * dD - Pxd;
+      double fa = 0x1p-46 * (fabs(e->x1) * dD + Pxmag);
+      double fb = 0x1p-46 * (fabs(e->x2) * dD + Pxmag);
+      if (xa < - fa && xb < - fb)
+        continue;
+      if (xa > fa && xb > fb && (ya > ea || ya < - ea) &&
+          (yb > eb || yb < - eb))
+      {
+        /* The ends on either side of `P_y`, the edge goes up or down */
+        if ((ya < 0) != (yb < 0))
+          inside = ! inside;
+        continue;
+      }
     }
-    /* The signs of D a_y - P_y and D b_y - P_y */
-    const DyadicWide *ay, *by, *ax, *ux, *uy, *qx, *qy, *p, *s;
-    DyadicWide *q;
-    ay = dyadic_wide_zero(ar);
-    ay = dyadic_wide_add_double(ar, ay, e->y1, 1);
-    by = dyadic_wide_zero(ar);
-    by = dyadic_wide_add_double(ar, by, e->y2, 1);
-    q = dyadic_wide_mul(ar, ay, wD);
-    p = dyadic_wide_add(ar, q, negPy);
-    int sa = p->sign;
-    q = dyadic_wide_mul(ar, by, wD);
-    p = dyadic_wide_add(ar, q, negPy);
-    int sb = p->sign;
-    /* Up: a_y <= p_y < b_y; down: b_y <= p_y < a_y */
-    bool up = sa <= 0 && sb > 0, down = sb <= 0 && sa > 0;
-    if (! up && ! down)
-      continue;
-    /* (b - a) x (P - D a) */
-    ux = dyadic_wide_zero(ar);
-    ux = dyadic_wide_add_double(ar, ux, e->x2, 1);
-    ux = dyadic_wide_add_double(ar, ux, e->x1, -1);
-    uy = dyadic_wide_zero(ar);
-    uy = dyadic_wide_add_double(ar, uy, e->y2, 1);
-    uy = dyadic_wide_add_double(ar, uy, e->y1, -1);
-    ax = dyadic_wide_zero(ar);
-    ax = dyadic_wide_add_double(ar, ax, e->x1, 1);
-    q = dyadic_wide_mul(ar, ax, wD);
-    q->sign = - q->sign;
-    qx = dyadic_wide_add(ar, P[0], q);
-    q = dyadic_wide_mul(ar, ay, wD);
-    q->sign = - q->sign;
-    qy = dyadic_wide_add(ar, P[1], q);
-    p = dyadic_wide_mul(ar, ux, qy);
-    q = dyadic_wide_mul(ar, uy, qx);
-    q->sign = - q->sign;
-    s = dyadic_wide_add(ar, p, q);
-    if ((up && s->sign > 0) || (down && s->sign < 0))
+    if (! exact)
+    {
+      dyadic_wide_arena_init(ar);
+      wD = dyadic_wide_of_int64(ar, D);
+      const DyadicWide *wn = dyadic_wide_of_int64(ar, n), *t;
+      for (int i = 0; i < 2; i++)
+      {
+        const DyadicWide *c, *dc;
+        c = dyadic_wide_zero(ar);
+        c = dyadic_wide_add_double(ar, c, c0[i], 1);
+        dc = dyadic_wide_zero(ar);
+        dc = dyadic_wide_add_double(ar, dc, c1[i], 1);
+        dc = dyadic_wide_add_double(ar, dc, c0[i], -1);
+        P[i] = dyadic_wide_mul(ar, c, wD);
+        t = dyadic_wide_mul(ar, dc, wn);
+        P[i] = dyadic_wide_add(ar, P[i], t);
+      }
+      negPy = dyadic_wide_neg(ar, P[1]);
+      /* The values of each edge are released at the next */
+      m = dyadic_wide_arena_mark(ar);
+      exact = true;
+    }
+    else
+      dyadic_wide_arena_release(ar, m);
+    bool cross = (e->etype == EDGE_POLYARC) ?
+      motion_arc_ray_crosses(ar, wD, P, negPy, e) :
+      motion_segm_ray_crosses(ar, wD, P, negPy, e->x1, e->y1, e->x2, e->y2);
+    if (cross)
       inside = ! inside;
   }
-  dyadic_wide_arena_free(ar);
+  if (exact)
+    dyadic_wide_arena_free(ar);
   return inside;
 }
+
+/**
+ * @brief Return true where the doubles prove a point nearer than @p R to the
+ * segment from (x1, y1) to (x2, y2), false where they leave it
+ * @details Each difference of two coordinates is rounded once, so it lies
+ * within 2^-53 of the exact one relatively, and each product or sum of them
+ * within 2^-50 of the magnitudes it combines, which the margins of 2^-44 on
+ * the squares cover. The point is nearer than @p R to an end, or to the line
+ * where its projection lies strictly inside the segment
+ */
+static bool
+point_segm_within_approx(const double *c, double R, double x1, double y1,
+  double x2, double y2)
+{
+  double R2 = R * R * (1.0 - 0x1p-44);
+  if (! isfinite(R2))
+    return false;
+  double ax = x1 - c[0], ay = y1 - c[1], bx = x2 - c[0], by = y2 - c[1];
+  if (ax * ax + ay * ay < R2 || bx * bx + by * by < R2)
+    return true;
+  double ux = x2 - x1, uy = y2 - y1;
+  double uu = ux * ux + uy * uy;
+  double dot = - (ax * ux + ay * uy);
+  double edot = 0x1p-48 * (fabs(ax * ux) + fabs(ay * uy) + uu);
+  if (! (dot > edot && dot + edot < uu))
+    return false;
+  double cr = fabs(ax * uy - ay * ux) + 0x1p-48 * (fabs(ax * uy) + fabs(ay * ux));
+  return isfinite(cr) && cr * cr < R2 * uu * (1.0 - 0x1p-44);
+}
+
+static int point_motion_arc_dwithin_periods(const double *c0,
+  const double *c1, double r0, double r1, const Edge *e, double d, int64 D,
+  int64 *per);
 
 /* Order the periods by their start */
 static int
@@ -6181,11 +6260,67 @@ period_cmp(const void *a, const void *b)
 }
 
 /**
+ * @brief Describe the edges of a geometry for #motion_edges_dwithin_periods
+ * @param[out] me Description
+ * @param[in] edges,nedges Edges of the geometry (#geom_extract_edges), which
+ * the description points to
+ */
+void
+motion_edges_init(MotionEdges *me, const Edge *const *edges, int nedges)
+{
+  me->edges = edges;
+  me->nedges = nedges;
+  me->region = false;
+  /* The box of the region edges, the ones the ray casts read */
+  me->rx0 = me->ry0 = DBL_MAX;
+  me->rx1 = me->ry1 = - DBL_MAX;
+  for (int k = 0; k < nedges; k++)
+  {
+    const Edge *e = edges[k];
+    if (e->etype == EDGE_POLYSEG || e->etype == EDGE_POLYARC)
+    {
+      me->region = true;
+      me->rx0 = Min(me->rx0, e->xmin);
+      me->rx1 = Max(me->rx1, e->xmax);
+      me->ry0 = Min(me->ry0, e->ymin);
+      me->ry1 = Max(me->ry1, e->ymax);
+    }
+  }
+  return;
+}
+
+/**
+ * @brief Write in @p box the box holding every edge a period of a disc moving
+ * linearly over a segment can come from: the swept box of the centre grown
+ * by the reach, padded by the rounding of its doubles, so it only admits
+ * @param[in] c0,c1 Centre of the disc at the start and at the end
+ * @param[in] r0,r1 Radius of the disc at the start and at the end
+ * @param[in] d Distance
+ * @param[out] box The box, as xmin, xmax, ymin and ymax
+ */
+void
+motion_edges_reach_box(const double *c0, const double *c1, double r0,
+  double r1, double d, double *box)
+{
+  double reach = d + Max(r0, r1);
+  double bx0 = Min(c0[0], c1[0]), bx1 = Max(c0[0], c1[0]);
+  double by0 = Min(c0[1], c1[1]), by1 = Max(c0[1], c1[1]);
+  double mag = Max(Max(fabs(bx0), fabs(bx1)), Max(fabs(by0), fabs(by1)));
+  double pad = reach + 0x1p-50 * (mag + reach);
+  box[0] = bx0 - pad;
+  box[1] = bx1 + pad;
+  box[2] = by0 - pad;
+  box[3] = by1 + pad;
+  return;
+}
+
+/**
  * @brief Return the number of periods during which a disc moving linearly
  * over a segment is within a distance of a geometry, decided exactly
  * @details The single engine of the within periods of a moving disc, a point
- * being a disc of radius 0. Each edge contributes the period of
- * #point_motion_segm_dwithin_period_exact, an edge whose box lies beyond the
+ * being a disc of radius 0. Each segment contributes the period of
+ * #point_motion_segm_dwithin_period_exact, each arc those of
+ * #point_motion_arc_dwithin_periods, an edge whose box lies beyond the
  * reach of the swept box contributing none. Periods no whole microsecond
  * separates are merged, which holds the same microseconds. Every other gap,
  * before the first period, between two, after the last, or the whole segment
@@ -6197,42 +6332,63 @@ period_cmp(const void *a, const void *b)
  * #point_motion_dwithin_period_exact dates them.
  * @param[in] c0,c1 Centre of the disc at the start and at the end
  * @param[in] r0,r1 Radius of the disc at the start and at the end
- * @param[in] edges,nedges Edges of the geometry (#geom_extract_edges)
+ * @param[in] me Edges of the geometry (#motion_edges_init)
+ * @param[in] cand,ncand Candidate edges of the segment, holding every edge of
+ * @p me whose box meets the box of #motion_edges_reach_box, or NULL to read
+ * all the edges
  * @param[in] d Distance
  * @param[in] D Duration of the segment in microseconds
- * @param[out] lo,hi Bounds of the periods, room for @p nedges + 1 each
- * @return The number of periods, or -1 where an edge is an arc, which this
- * engine does not answer
+ * @param[out] lo,hi Bounds of the periods, room for #MOTION_EDGE_PERIODS
+ * times the number of candidates plus one each
+ * @return The number of periods
  * @pre The radii and the distance are finite and not negative, `D > 0`, and
  * the region edges bound areas that do not overlap
  */
 int
 motion_edges_dwithin_periods(const double *c0, const double *c1, double r0,
-  double r1, const Edge *const *edges, int nedges, double d, int64 D,
-  int64 *lo, int64 *hi)
+  double r1, const MotionEdges *me, const Edge *const *cand, int ncand,
+  double d, int64 D, int64 *lo, int64 *hi)
 {
-  bool region = false;
-  for (int k = 0; k < nedges; k++)
+  if (! cand)
   {
-    if (edges[k]->etype == EDGE_LINEARC || edges[k]->etype == EDGE_POLYARC)
-      return -1;
-    region |= (edges[k]->etype == EDGE_POLYSEG);
+    cand = me->edges;
+    ncand = me->nedges;
   }
-  /* The swept box grown by the reach admits every edge a period can come
-   * from; padded by the rounding of its doubles, it only admits */
-  double reach = d + Max(r0, r1);
-  double bx0 = Min(c0[0], c1[0]), bx1 = Max(c0[0], c1[0]);
-  double by0 = Min(c0[1], c1[1]), by1 = Max(c0[1], c1[1]);
-  double mag = Max(Max(fabs(bx0), fabs(bx1)), Max(fabs(by0), fabs(by1)));
-  double pad = reach + 0x1p-50 * (mag + reach);
-  int64 *per = palloc(sizeof(int64) * 2 * (nedges + 1));
+  double box[4];
+  motion_edges_reach_box(c0, c1, r0, r1, d, box);
+  /* The centre stays in the swept box, so where that box lies apart from the
+   * box of the region edges, the centre is outside the area they bound
+   * throughout and no gap is read */
+  bool region = me->region &&
+    ! (Max(c0[0], c1[0]) < me->rx0 || Min(c0[0], c1[0]) > me->rx1 ||
+       Max(c0[1], c1[1]) < me->ry0 || Min(c0[1], c1[1]) > me->ry1);
+  const Edge *const *edges = me->edges;
+  int nedges = me->nedges;
+  int64 *per = palloc(sizeof(int64) * 2 * (MOTION_EDGE_PERIODS * ncand + 1));
   int np = 0;
-  for (int k = 0; k < nedges; k++)
+  for (int k = 0; k < ncand; k++)
   {
-    const Edge *e = edges[k];
-    if (e->xmax < bx0 - pad || e->xmin > bx1 + pad ||
-        e->ymax < by0 - pad || e->ymin > by1 + pad)
+    const Edge *e = cand[k];
+    if (e->xmax < box[0] || e->xmin > box[1] || e->ymax < box[2] ||
+        e->ymin > box[3])
       continue;
+    if (e->etype == EDGE_LINEARC || e->etype == EDGE_POLYARC)
+    {
+      np += point_motion_arc_dwithin_periods(c0, c1, r0, r1, e, d, D,
+        &per[2 * np]);
+      continue;
+    }
+    /* The distance of the centre to the edge less the radius is convex in
+     * the fraction of the segment, so a disc within of the edge at both ends
+     * is within of it throughout, and the segment is one period */
+    if (point_segm_within_approx(c0, r0 + d, e->x1, e->y1, e->x2, e->y2) &&
+        point_segm_within_approx(c1, r1 + d, e->x1, e->y1, e->x2, e->y2))
+    {
+      pfree(per);
+      lo[0] = 0;
+      hi[0] = D;
+      return 1;
+    }
     const double a[2] = {e->x1, e->y1}, b[2] = {e->x2, e->y2};
     int64 n1, n2;
     if (point_motion_segm_dwithin_period_exact(c0, c1, r0, r1, a, b, d, D,
@@ -12738,6 +12894,794 @@ exact_arc_from_edge(const Edge *e, ExactArc *arc)
   double box[4];
   exact_arc_bound(arc, box);
   return;
+}
+
+/*****************************************************************************
+ * The periods within a distance of an arc
+ *****************************************************************************/
+
+/**
+ * @brief A polynomial of degree at most 4 in the fraction of a segment, its
+ * coefficients exact, the lowest first, @p deg -1 for the zero polynomial,
+ * the quadratic of #dwithin_grid_set read to the fourth degree
+ */
+typedef struct
+{
+  int deg;
+  const DyadicWide *c[5];
+} WidePoly;
+
+/** @brief A rational number `p / q`, `q > 0`, its two terms exact */
+typedef struct
+{
+  const DyadicWide *p, *q;
+} WideFrac;
+
+/* Drop the leading coefficients of a polynomial that are zero */
+static void
+wide_poly_trim(WidePoly *p)
+{
+  while (p->deg >= 0 && p->c[p->deg]->sign == 0)
+    p->deg--;
+  return;
+}
+
+/* The polynomial p + sign q */
+static WidePoly
+wide_poly_add(DyadicWideArena *ar, const WidePoly *p, const WidePoly *q,
+  int sign)
+{
+  WidePoly r = {0};
+  r.deg = Max(p->deg, q->deg);
+  for (int i = 0; i <= r.deg; i++)
+  {
+    if (i > q->deg)
+      r.c[i] = p->c[i];
+    else if (i > p->deg)
+      r.c[i] = dyadic_wide_signed(ar, q->c[i], sign);
+    else
+      r.c[i] = dyadic_wide_add_signed(ar, p->c[i], 1, q->c[i], sign);
+  }
+  wide_poly_trim(&r);
+  return r;
+}
+
+/* The polynomial p q, of degree at most 4 */
+static WidePoly
+wide_poly_mul(DyadicWideArena *ar, const WidePoly *p, const WidePoly *q)
+{
+  WidePoly r = {0};
+  r.deg = (p->deg < 0 || q->deg < 0) ? -1 : p->deg + q->deg;
+  assert(r.deg <= 4);
+  for (int k = 0; k <= r.deg; k++)
+  {
+    const DyadicWide *s = dyadic_wide_zero(ar);
+    for (int i = Max(0, k - q->deg); i <= Min(k, p->deg); i++)
+      s = dyadic_wide_add(ar, s, dyadic_wide_mul(ar, p->c[i], q->c[k - i]));
+    r.c[k] = s;
+  }
+  wide_poly_trim(&r);
+  return r;
+}
+
+/* The polynomial k p */
+static WidePoly
+wide_poly_scale(DyadicWideArena *ar, const WidePoly *p, const DyadicWide *k)
+{
+  WidePoly r = {0};
+  r.deg = p->deg;
+  for (int i = 0; i <= r.deg; i++)
+    r.c[i] = dyadic_wide_mul(ar, p->c[i], k);
+  wide_poly_trim(&r);
+  return r;
+}
+
+/* The polynomial c0 + c1 f */
+static WidePoly
+wide_poly_linear(const DyadicWide *c0, const DyadicWide *c1)
+{
+  WidePoly r = {0};
+  r.deg = 1;
+  r.c[0] = c0;
+  r.c[1] = c1;
+  wide_poly_trim(&r);
+  return r;
+}
+
+/* The derivative of a polynomial */
+static WidePoly
+wide_poly_deriv(DyadicWideArena *ar, const WidePoly *p)
+{
+  WidePoly r = {0};
+  r.deg = p->deg - 1;
+  for (int i = 1; i <= p->deg; i++)
+    r.c[i - 1] = dyadic_wide_mul(ar, p->c[i], dyadic_wide_of_int64(ar, i));
+  wide_poly_trim(&r);
+  return r;
+}
+
+/* The sign of a polynomial at `P / Q`, `Q > 0`: that of `Q^deg p(P / Q)`,
+ * read by Horner's rule on the homogeneous form, as #dwithin_grid_sign reads
+ * its quadratic at `n / D` */
+static int
+wide_poly_sign_at(DyadicWideArena *ar, const WidePoly *p, const WideFrac *x)
+{
+  if (p->deg < 0)
+    return 0;
+  DyadicWideMark m = dyadic_wide_arena_mark(ar);
+  const DyadicWide *v = p->c[p->deg], *qk = x->q;
+  for (int i = p->deg - 1; i >= 0; i--)
+  {
+    v = dyadic_wide_add(ar, dyadic_wide_mul(ar, v, x->p),
+      dyadic_wide_mul(ar, p->c[i], qk));
+    if (i > 0)
+      qk = dyadic_wide_mul(ar, qk, x->q);
+  }
+  int sign = v->sign;
+  dyadic_wide_arena_release(ar, m);
+  return sign;
+}
+
+/* The pseudo-remainder of A by B, `lc(B)^(deg A - deg B + 1) A` less a
+ * multiple of B, and in @p quo, if not NULL, that multiple over B, with no
+ * division, so that both stay dyadic */
+static WidePoly
+wide_poly_prem(DyadicWideArena *ar, const WidePoly *A, const WidePoly *B,
+  WidePoly *quo)
+{
+  assert(B->deg >= 0);
+  WidePoly R = *A, Q = {0};
+  Q.deg = Max(A->deg - B->deg, -1);
+  for (int i = 0; i <= Q.deg; i++)
+    Q.c[i] = dyadic_wide_zero(ar);
+  const DyadicWide *lb = B->c[B->deg];
+  int e = A->deg - B->deg + 1;
+  while (R.deg >= B->deg)
+  {
+    int sh = R.deg - B->deg;
+    const DyadicWide *lr = R.c[R.deg];
+    /* R = lb R - lr x^sh B, Q = lb Q + lr x^sh: the leading coefficient
+     * cancels exactly */
+    WidePoly S = {0};
+    S.deg = R.deg - 1;
+    for (int i = 0; i <= S.deg; i++)
+    {
+      const DyadicWide *t = dyadic_wide_mul(ar, R.c[i], lb);
+      if (i >= sh)
+        t = dyadic_wide_sub(ar, t, dyadic_wide_mul(ar, lr, B->c[i - sh]));
+      S.c[i] = t;
+    }
+    wide_poly_trim(&S);
+    for (int i = 0; i <= Q.deg; i++)
+      Q.c[i] = dyadic_wide_mul(ar, Q.c[i], lb);
+    Q.c[sh] = dyadic_wide_add(ar, Q.c[sh], lr);
+    R = S;
+    e--;
+  }
+  for (; e > 0; e--)
+  {
+    R = wide_poly_scale(ar, &R, lb);
+    if (quo)
+      Q = wide_poly_scale(ar, &Q, lb);
+  }
+  if (quo)
+  {
+    wide_poly_trim(&Q);
+    *quo = Q;
+  }
+  return R;
+}
+
+/**
+ * @brief The Sturm chain of a polynomial, each term a positive multiple of
+ * the remainder Sturm's theorem takes, so that the variations of its signs
+ * count the distinct real roots
+ */
+typedef struct
+{
+  int n;
+  WidePoly s[6];
+} WideSturm;
+
+/* The Sturm chain of p, of degree 1 at least */
+static void
+wide_sturm_set(DyadicWideArena *ar, const WidePoly *p, WideSturm *st)
+{
+  st->s[0] = *p;
+  st->s[1] = wide_poly_deriv(ar, p);
+  st->n = 2;
+  while (st->s[st->n - 1].deg > 0)
+  {
+    const WidePoly *a = &st->s[st->n - 2], *b = &st->s[st->n - 1];
+    WidePoly r = wide_poly_prem(ar, a, b, NULL);
+    if (r.deg < 0)
+      break;
+    /* The remainder is the pseudo-remainder over lc(b)^(deg a - deg b + 1),
+     * whose sign that of lc(b) to that power gives, and the chain takes its
+     * opposite */
+    int s = ((a->deg - b->deg + 1) % 2 == 0) ? 1 : b->c[b->deg]->sign;
+    st->s[st->n++] = wide_poly_scale(ar, &r, dyadic_wide_of_int64(ar, - s));
+  }
+  return;
+}
+
+/* The number of variations of the signs of a Sturm chain at x, its zero
+ * terms skipped: where its square-free polynomial is zero at x, the count
+ * is that just right of x, its sign there being that of its derivative,
+ * which follows it in the chain, and a root at x lies in any (a, x]: the
+ * number of distinct roots in (a, b] is the variation at a less that at b */
+static int
+wide_sturm_var(DyadicWideArena *ar, const WideSturm *st, const WideFrac *x)
+{
+  int prev = 0, var = 0;
+  for (int i = 0; i < st->n; i++)
+  {
+    int s = wide_poly_sign_at(ar, &st->s[i], x);
+    if (s == 0)
+      continue;
+    if (prev != 0 && s != prev)
+      var++;
+    prev = s;
+  }
+  return var;
+}
+
+/* -1, 0 or 1 where a < b, a = b or a > b */
+static int
+wide_frac_cmp(DyadicWideArena *ar, const WideFrac *a, const WideFrac *b)
+{
+  return dyadic_wide_product_cmp(ar, a->p, b->q, b->p, a->q);
+}
+
+/* The microsecond n of a segment of D microseconds, as the fraction n / D */
+static WideFrac
+wide_frac_grid(DyadicWideArena *ar, int64 n, int64 D)
+{
+  WideFrac x = {dyadic_wide_of_int64(ar, n), dyadic_wide_of_int64(ar, D)};
+  return x;
+}
+
+/* The operands of #wide_frac_grid_sign */
+typedef struct
+{
+  DyadicWideArena *ar;
+  const WideFrac *x;
+  int64 D;
+} WideFracGrid;
+
+/* The sign of n / D - x, a #GridSignFn */
+static int
+wide_frac_grid_sign(const void *ctx, int64 n)
+{
+  const WideFracGrid *g = (const WideFracGrid *) ctx;
+  WideFrac v = wide_frac_grid(g->ar, n, g->D);
+  return wide_frac_cmp(g->ar, &v, g->x);
+}
+
+/* The truncation of D x, for x in [0, 1]: the last n with n / D <= x, found
+ * by #grid_sign_last from an estimate in doubles */
+static int64
+wide_frac_floor(DyadicWideArena *ar, const WideFrac *x, int64 D)
+{
+  WideFracGrid g = {ar, x, D};
+  if (wide_frac_grid_sign(&g, D) <= 0)
+    return D;
+  int ep, eq;
+  double mp = dyadic_wide_frexp(x->p, &ep), mq = dyadic_wide_frexp(x->q, &eq);
+  double est = x->p->sign * ldexp(mp / mq, ep - eq) * (double) D;
+  return grid_sign_last(&g, wide_frac_grid_sign, 0, D, est);
+}
+
+/* The larger of two fractions where @p max, the smaller otherwise */
+static const WideFrac *
+wide_frac_max(DyadicWideArena *ar, const WideFrac *a, const WideFrac *b,
+  bool max)
+{
+  int c = wide_frac_cmp(ar, a, b);
+  return ((c >= 0) == max) ? a : b;
+}
+
+/** @brief An interval of the fractions of a segment, @p empty or [lo, hi] */
+typedef struct
+{
+  bool empty;
+  WideFrac lo, hi;
+} WideSpan;
+
+/* The fractions of [0, 1] at which c0 + c1 f is not negative */
+static WideSpan
+wide_span_nonneg(DyadicWideArena *ar, const WidePoly *l)
+{
+  WideSpan s;
+  s.lo = wide_frac_grid(ar, 0, 1);
+  s.hi = wide_frac_grid(ar, 1, 1);
+  if (l->deg <= 0)
+  {
+    s.empty = l->deg == 0 && l->c[0]->sign < 0;
+    return s;
+  }
+  /* The root - c0 / c1 */
+  WideFrac r;
+  if (l->c[1]->sign > 0)
+  {
+    r.p = dyadic_wide_neg(ar, l->c[0]);
+    r.q = l->c[1];
+    s.lo = *wide_frac_max(ar, &s.lo, &r, true);
+  }
+  else
+  {
+    r.p = l->c[0];
+    r.q = dyadic_wide_neg(ar, l->c[1]);
+    s.hi = *wide_frac_max(ar, &s.hi, &r, false);
+  }
+  s.empty = wide_frac_cmp(ar, &s.lo, &s.hi) > 0;
+  return s;
+}
+
+/* Add the period [lo, hi] to a list of periods held in ascending order of
+ * their starts, merging those no whole microsecond separates, as
+ * #motion_edges_dwithin_periods merges those of its edges */
+static void
+arc_periods_add(int64 *per, int *np, int64 lo, int64 hi)
+{
+  int i = *np;
+  while (i > 0 && per[2 * (i - 1)] > lo)
+  {
+    per[2 * i] = per[2 * (i - 1)];
+    per[2 * i + 1] = per[2 * (i - 1) + 1];
+    i--;
+  }
+  per[2 * i] = lo;
+  per[2 * i + 1] = hi;
+  int k = 0;
+  for (int j = 1; j <= *np; j++)
+  {
+    if (per[2 * j] <= per[2 * k + 1] + 1)
+      per[2 * k + 1] = Max(per[2 * k + 1], per[2 * j + 1]);
+    else
+    {
+      k++;
+      per[2 * k] = per[2 * j];
+      per[2 * k + 1] = per[2 * j + 1];
+    }
+  }
+  *np = k + 1;
+  return;
+}
+
+/* Add to @p per the microseconds from @p ka to @p kb whose cell [n, n + 1)
+ * holds a fraction of [l, u] at which G is not positive: a cell holding a
+ * root of G (@p roots, ascending) holds one, and G keeps its sign over the
+ * cells between two of them, read at one fraction they hold in [l, u] */
+static void
+arc_band_cells(DyadicWideArena *ar, const WidePoly *G, const WideFrac *l,
+  const WideFrac *u, int64 D, const int64 *roots, int nroots, int64 ka,
+  int64 kb, int64 *per, int *np)
+{
+  int64 start = -1;
+  int r = 0;
+  for (int64 k = ka; k <= kb; )
+  {
+    bool in;
+    int64 next;
+    while (r < nroots && roots[r] < k)
+      r++;
+    if (r < nroots && roots[r] == k)
+    {
+      in = true;
+      next = k + 1;
+    }
+    else
+    {
+      int64 last = (r < nroots) ? Min(roots[r] - 1, kb) : kb;
+      WideFrac a = wide_frac_grid(ar, k, D), b = wide_frac_grid(ar, last + 1,
+        D);
+      const WideFrac *lo = wide_frac_max(ar, &a, l, true);
+      const WideFrac *hi = wide_frac_max(ar, &b, u, false);
+      WideFrac mid = *lo;
+      if (wide_frac_cmp(ar, lo, hi) < 0)
+      {
+        /* (lo + hi) / 2 = (lo.p hi.q + hi.p lo.q) / (2 lo.q hi.q) */
+        mid.p = dyadic_wide_add(ar, dyadic_wide_mul(ar, lo->p, hi->q),
+          dyadic_wide_mul(ar, hi->p, lo->q));
+        mid.q = dyadic_wide_mul(ar, dyadic_wide_mul(ar, lo->q, hi->q),
+          dyadic_wide_of_int64(ar, 2));
+      }
+      in = wide_poly_sign_at(ar, G, &mid) <= 0;
+      next = last + 1;
+    }
+    if (in && start < 0)
+      start = k;
+    if (! in && start >= 0)
+    {
+      arc_periods_add(per, np, start, k - 1);
+      start = -1;
+    }
+    k = next;
+  }
+  if (start >= 0)
+    arc_periods_add(per, np, start, kb);
+  return;
+}
+
+/** Most cells holding a root of the quartic of an arc in a part of its wedge */
+#define ARC_BAND_ROOTS 8
+
+/* Add to @p roots the cells holding a root in (a, b] of the square-free
+ * polynomial of a Sturm chain, halving the cells on whole microseconds; @p va
+ * and @p vb are the variations of the chain at a and b */
+static void
+arc_band_roots(DyadicWideArena *ar, const WideSturm *st, const WideFrac *a,
+  int va, const WideFrac *b, int vb, int64 D, int64 *roots, int *nroots)
+{
+  int n = va - vb;
+  if (n <= 0)
+    return;
+  int64 ka = wide_frac_floor(ar, a, D), kb = wide_frac_floor(ar, b, D);
+  WideFrac gb = wide_frac_grid(ar, kb, D);
+  bool bgrid = wide_frac_cmp(ar, &gb, b) == 0;
+  if (ka == kb || (kb == ka + 1 && bgrid))
+  {
+    /* A root at b lies in the cell of b, every other one in that of a */
+    int atb = (wide_poly_sign_at(ar, &st->s[0], b) == 0) ? 1 : 0;
+    if (n > atb && *nroots < ARC_BAND_ROOTS)
+      roots[(*nroots)++] = ka;
+    if (atb && *nroots < ARC_BAND_ROOTS)
+      roots[(*nroots)++] = kb;
+    return;
+  }
+  int64 km = ka + (kb - ka + 1) / 2;
+  WideFrac m = wide_frac_grid(ar, km, D);
+  int vm = wide_sturm_var(ar, st, &m);
+  arc_band_roots(ar, st, a, va, &m, vm, D, roots, nroots);
+  arc_band_roots(ar, st, &m, vm, b, vb, D, roots, nroots);
+  return;
+}
+
+/* Add to @p roots the cells holding a root in (lo, hi] of the square-free
+ * polynomial of a Sturm chain, first in the cells of the estimates @p est
+ * of its roots: where the counts of the chain over those cells add up to
+ * its count over (lo, hi], they hold every root, and otherwise the cells
+ * are halved from (lo, hi] (#arc_band_roots) */
+static void
+arc_band_roots_from(DyadicWideArena *ar, const WideSturm *st,
+  const WideFrac *lo, const WideFrac *hi, const double *est, int nest,
+  int64 D, int64 *roots, int *nroots)
+{
+  int vlo = wide_sturm_var(ar, st, lo), vhi = wide_sturm_var(ar, st, hi);
+  int total = vlo - vhi;
+  if (total <= 0)
+    return;
+  int64 ka = wide_frac_floor(ar, lo, D), kb = wide_frac_floor(ar, hi, D);
+  int64 cells[4];
+  int ncells = 0;
+  for (int i = 0; i < nest; i++)
+  {
+    double k = floor(est[i] * (double) D);
+    if (! (k >= (double) ka && k <= (double) kb))
+      continue;
+    int64 c = llrint(k);
+    bool seen = false;
+    for (int j = 0; j < ncells; j++)
+      seen |= cells[j] == c;
+    if (! seen && ncells < 4)
+      cells[ncells++] = c;
+  }
+  int found = 0, nr = *nroots;
+  for (int j = 0; j < ncells; j++)
+  {
+    /* The cell (x, y] of [lo, hi] */
+    WideFrac gx = wide_frac_grid(ar, cells[j], D),
+      gy = wide_frac_grid(ar, cells[j] + 1, D);
+    const WideFrac *x = wide_frac_max(ar, &gx, lo, true);
+    const WideFrac *y = wide_frac_max(ar, &gy, hi, false);
+    if (wide_frac_cmp(ar, x, y) >= 0)
+      continue;
+    int vx = wide_sturm_var(ar, st, x), vy = wide_sturm_var(ar, st, y);
+    found += vx - vy;
+    arc_band_roots(ar, st, x, vx, y, vy, D, roots, nroots);
+  }
+  if (found == total)
+    return;
+  *nroots = nr;
+  arc_band_roots(ar, st, lo, vlo, hi, vhi, D, roots, nroots);
+  return;
+}
+
+/* Estimates in doubles of the roots in [0, 1] of G = h+ h-, with
+ * h+- = S - R2 -+ 2 R Ls - Ls^2 the quadratics whose roots are those of G;
+ * none where a coefficient leaves the range of the doubles */
+static int
+arc_band_estimates(const WidePoly *S, const WidePoly *Ls,
+  const DyadicWide *R2, double *est)
+{
+  double s[3] = {0.0, 0.0, 0.0}, l[2] = {0.0, 0.0};
+  for (int i = 0; i <= S->deg; i++)
+    s[i] = dyadic_wide_approx(S->c[i]);
+  for (int i = 0; i <= Ls->deg; i++)
+    l[i] = dyadic_wide_approx(Ls->c[i]);
+  double r2 = dyadic_wide_approx(R2), r = sqrt(r2);
+  if (! isfinite(s[0] + s[1] + s[2] + l[0] + l[1] + r2))
+    return 0;
+  int n = 0;
+  for (int side = -1; side <= 1; side += 2)
+  {
+    double qa = s[2] - l[1] * l[1];
+    double qb = s[1] + side * 2.0 * r * l[1] - 2.0 * l[0] * l[1];
+    double qc = s[0] - r2 + side * 2.0 * r * l[0] - l[0] * l[0];
+    double t[2];
+    int nt = 0;
+    if (qa == 0.0)
+    {
+      if (qb != 0.0)
+        t[nt++] = - qc / qb;
+    }
+    else
+    {
+      double disc = qb * qb - 4.0 * qa * qc;
+      if (disc >= 0.0)
+      {
+        /* The root of larger magnitude first, the other from the product */
+        double q = -0.5 * (qb + copysign(sqrt(disc), qb));
+        if (q != 0.0)
+        {
+          t[nt++] = q / qa;
+          t[nt++] = qc / q;
+        }
+        else
+          t[nt++] = 0.0;
+      }
+    }
+    for (int i = 0; i < nt; i++)
+      if (isfinite(t[i]) && t[i] >= -0x1p-20 && t[i] <= 1.0 + 0x1p-20)
+        est[n++] = Min(Max(t[i], 0.0), 1.0);
+  }
+  return n;
+}
+
+/* Order the cells, as #period_cmp orders the periods */
+static int
+cell_cmp(const void *a, const void *b)
+{
+  int64 x = *(const int64 *) a, y = *(const int64 *) b;
+  return (x > y) - (x < y);
+}
+
+/**
+ * @brief Return the number of periods during which a disc moving linearly
+ * over a segment of @p D microseconds is within a distance of an arc,
+ * decided exactly, the twin of #point_motion_segm_dwithin_period_exact for an
+ * arc
+ * @details The distance of a point c to the arc is `| |c - O| - R |` where
+ * the ray from the centre O of its circle through c meets the arc, and the
+ * distance to the nearer end elsewhere. The disc is within where it is within
+ * of an end, the periods of #point_motion_segm_dwithin_period_exact, or where
+ * its centre lies in the closed wedge of the arc, an interval of fractions
+ * or two bounded by the signs of the cross products of `c - O` with the
+ * radii to the ends, and `|c - O|` lies within `L` of `R`, `L` the radius
+ * plus the distance. With `s = |c - O|^2`, that is
+ * `G = (s - R^2 - L^2)^2 - 4 R^2 L^2 <= 0`, a quartic in the fraction f of
+ * the segment: it says `(R - L)^2 <= s <= (R + L)^2`, which nearer the centre
+ * than `L - R` fails where the disc is within anyway, of an end, the distance
+ * to an end being at most `|c - O| + R`. Scaled by powers of the weight of
+ * the centre that #tower_arc_circle forms, every coefficient of G and of the
+ * cross products is dyadic, and every sign is
+ * read exactly at fractions `n / D` or at the roots of the cross products,
+ * quotients of two exact values. A microsecond n is within a part where the
+ * part holds an instant of [n, n + 1), which is how a within bound is dated,
+ * by truncation (#point_motion_dwithin_period_exact): the cells holding a
+ * root of G are found by halving the cells on the count of the Sturm chain
+ * of its square-free part, each holds a fraction at which G is zero, and
+ * between two of them G keeps its sign, read at one fraction. The periods of
+ * the parts are merged where no whole microsecond separates them.
+ * @param[in] c0,c1 Centre of the disc at the start and at the end
+ * @param[in] r0,r1 Radius of the disc at the start and at the end
+ * @param[in] e Arc, an edge of type #EDGE_LINEARC or #EDGE_POLYARC
+ * @param[in] d Distance
+ * @param[in] D Duration of the segment in microseconds
+ * @param[out] per Bounds of the periods as pairs, room for
+ * #MOTION_EDGE_PERIODS of them
+ * @pre The radii and the distance are finite and not negative, `D > 0`
+ */
+static int
+point_motion_arc_dwithin_periods(const double *c0, const double *c1,
+  double r0, double r1, const Edge *e, double d, int64 D, int64 *per)
+{
+  int np = 0;
+  int64 n1, n2;
+  const double a[2] = {e->x1, e->y1}, b[2] = {e->x2, e->y2};
+  if (point_motion_segm_dwithin_period_exact(c0, c1, r0, r1, a, a, d, D, &n1,
+      &n2) > 0)
+    arc_periods_add(per, &np, n1, n2);
+  if (point_motion_segm_dwithin_period_exact(c0, c1, r0, r1, b, b, d, D, &n1,
+      &n2) > 0)
+    arc_periods_add(per, &np, n1, n2);
+
+  /* The circle of the arc and its radii to the ends, from the end the arc
+   * starts at to the one it ends at turning counterclockwise, as
+   * #tower_arc_read reads them for every exact question about an arc,
+   * taken from the start a of the arc: the centre O is a + N / den, den > 0,
+   * and R2 is the square of the radius times den^2 */
+  DyadicCtx ctx;
+  dyadic_ctx_init(&ctx, true);
+  DyadicWideArena *ar = &ctx.warena;
+  ExactArc ea;
+  exact_arc_from_edge(e, &ea);
+  TowerArc ta;
+  tower_arc_read(&ctx, &ea, a[0], a[1], &ta);
+  const DyadicWide *den = ta.w.w, *N[2] = {ta.cx.w, ta.cy.w};
+  const DyadicWide *ua[2] = {ta.ax.w, ta.ay.w}, *ub[2] = {ta.bx.w, ta.by.w};
+  const DyadicWide *R2 = ta.r2.w;
+  /* V(f) = den (c(f) - O) = den (c0 - a) - N + f den (c1 - c0) */
+  WidePoly V[2];
+  for (int i = 0; i < 2; i++)
+  {
+    const DyadicWide *t = dyadic_wide_add_double(ar,
+      dyadic_wide_of_double(ar, c0[i]), a[i], -1);
+    const DyadicWide *v0 = dyadic_wide_sub(ar, dyadic_wide_mul(ar, den, t),
+      N[i]);
+    t = dyadic_wide_add_double(ar, dyadic_wide_of_double(ar, c1[i]), c0[i],
+      -1);
+    V[i] = wide_poly_linear(v0, dyadic_wide_mul(ar, den, t));
+  }
+  /* The wedge: ua x V >= 0 and V x ub >= 0 where the arc turns less than a
+   * half circle, either of them where it turns more, the first alone for a
+   * half circle */
+  WidePoly la, lb, t1, t2;
+  t1 = wide_poly_scale(ar, &V[1], ua[0]);
+  t2 = wide_poly_scale(ar, &V[0], ua[1]);
+  la = wide_poly_add(ar, &t1, &t2, -1);
+  t1 = wide_poly_scale(ar, &V[0], ub[1]);
+  t2 = wide_poly_scale(ar, &V[1], ub[0]);
+  lb = wide_poly_add(ar, &t1, &t2, -1);
+  int x = ta.sab;
+  WideSpan sa = wide_span_nonneg(ar, &la), sb = wide_span_nonneg(ar, &lb);
+  WideSpan wedge[2];
+  int nw = 0;
+  if (x == 0)
+    wedge[nw++] = sa;
+  else if (x > 0)
+  {
+    WideSpan s;
+    s.empty = sa.empty || sb.empty;
+    s.lo = sa.lo;
+    s.hi = sa.hi;
+    if (! s.empty)
+    {
+      s.lo = *wide_frac_max(ar, &sa.lo, &sb.lo, true);
+      s.hi = *wide_frac_max(ar, &sa.hi, &sb.hi, false);
+      s.empty = wide_frac_cmp(ar, &s.lo, &s.hi) > 0;
+    }
+    wedge[nw++] = s;
+  }
+  else
+  {
+    wedge[nw++] = sa;
+    wedge[nw++] = sb;
+  }
+
+  /* G = (S - R2 - Ls^2)^2 - 4 R2 Ls^2, with S = |V|^2, R2 = |N|^2 and
+   * Ls = den (r0 + d + f (r1 - r0)) */
+  WidePoly S = wide_poly_mul(ar, &V[0], &V[0]);
+  t1 = wide_poly_mul(ar, &V[1], &V[1]);
+  S = wide_poly_add(ar, &S, &t1, 1);
+  const DyadicWide *L0 = dyadic_wide_add_double(ar,
+    dyadic_wide_of_double(ar, r0), d, 1);
+  const DyadicWide *dL = dyadic_wide_add_double(ar,
+    dyadic_wide_of_double(ar, r1), r0, -1);
+  WidePoly Ls = wide_poly_linear(dyadic_wide_mul(ar, den, L0),
+    dyadic_wide_mul(ar, den, dL));
+  WidePoly Ls2 = wide_poly_mul(ar, &Ls, &Ls);
+  WidePoly cR2 = wide_poly_linear(R2, dyadic_wide_zero(ar));
+  WidePoly T = wide_poly_add(ar, &S, &cR2, -1);
+  T = wide_poly_add(ar, &T, &Ls2, -1);
+  WidePoly G = wide_poly_mul(ar, &T, &T);
+  t1 = wide_poly_scale(ar, &Ls2, dyadic_wide_mul(ar, R2,
+    dyadic_wide_of_int64(ar, 4)));
+  G = wide_poly_add(ar, &G, &t1, -1);
+
+  /* The Sturm chain of the square-free part of G, G over its greatest
+   * common divisor with its derivative, the last term of its own chain */
+  WideSturm st;
+  bool chain = G.deg >= 1;
+  if (chain)
+  {
+    /* Where the divisor is a constant, G is square-free and its chain the
+     * one read */
+    wide_sturm_set(ar, &G, &st);
+    const WidePoly *g = &st.s[st.n - 1];
+    if (g->deg >= 1)
+    {
+      WidePoly Gs;
+      (void) wide_poly_prem(ar, &G, g, &Gs);
+      wide_sturm_set(ar, &Gs, &st);
+    }
+  }
+  double est[4];
+  int nest = chain ? arc_band_estimates(&S, &Ls, R2, est) : 0;
+
+  for (int j = 0; j < nw; j++)
+  {
+    const WideSpan *w = &wedge[j];
+    if (w->empty)
+      continue;
+    int64 ka = wide_frac_floor(ar, &w->lo, D);
+    int64 kb = wide_frac_floor(ar, &w->hi, D);
+    int64 roots[ARC_BAND_ROOTS] = {0};
+    int nroots = 0;
+    if (chain)
+    {
+      if (wide_poly_sign_at(ar, &st.s[0], &w->lo) == 0)
+        roots[nroots++] = ka;
+      if (wide_frac_cmp(ar, &w->lo, &w->hi) < 0)
+        arc_band_roots_from(ar, &st, &w->lo, &w->hi, est, nest, D, roots,
+          &nroots);
+      qsort(roots, nroots, sizeof(int64), cell_cmp);
+    }
+    arc_band_cells(ar, &G, &w->lo, &w->hi, D, roots, nroots, ka, kb, per,
+      &np);
+  }
+  dyadic_ctx_free(&ctx);
+  return np;
+}
+
+/* Whether the ray to the right of the centre `P / D` crosses an arc an odd
+ * number of times, as #point_arc_ray_parity reads it for a point of doubles:
+ * the crossing of its chord, changed where the centre lies in the part of
+ * the disc the arc cuts off on its side of the chord, a centre on the chord
+ * or on the circle moved as #point_line_side_moved and
+ * #point_arc_circle_side_pred move it, to the right and then up; the circle
+ * is the one #tower_arc_read reads */
+static bool
+motion_arc_ray_crosses(DyadicWideArena *ar, const DyadicWide *wD,
+  DyadicWide *const *P, const DyadicWide *negPy, const Edge *e)
+{
+  bool parity = motion_segm_ray_crosses(ar, wD, P, negPy, e->x1, e->y1,
+    e->x2, e->y2);
+  ExactArc ea;
+  exact_arc_from_edge(e, &ea);
+  /* A half circle runs counterclockwise on the right of its chord */
+  int side = ea.half ? -1 : cross_product_sign(ea.s[0], ea.s[1], ea.e[0],
+    ea.e[1], ea.s[0], ea.s[1], ea.m[0], ea.m[1]);
+  /* The side of the chord the centre lies on, (b - a) x (P - D a) */
+  const double a[2] = {e->x1, e->y1}, b[2] = {e->x2, e->y2};
+  const DyadicWide *u[2], *q[2];
+  for (int i = 0; i < 2; i++)
+  {
+    u[i] = dyadic_wide_add_double(ar, dyadic_wide_of_double(ar, b[i]), a[i],
+      -1);
+    q[i] = dyadic_wide_sub(ar, P[i],
+      dyadic_wide_mul(ar, dyadic_wide_of_double(ar, a[i]), wD));
+  }
+  int sp = dyadic_wide_product_cmp(ar, u[0], q[1], u[1], q[0]);
+  if (sp == 0)
+    sp = (a[1] != b[1]) ? ((b[1] > a[1]) ? -1 : 1) : ((b[0] > a[0]) ? 1 : -1);
+  if (sp != side)
+    return parity;
+  /* Inside the circle: with the centre a + c / w and r2 the square of the
+   * radius times w^2, W = w P - D (w a + c), the sign of D^2 r2 - |W|^2; on
+   * it, moved to the right then up, the sign of - W */
+  DyadicCtx ctx;
+  dyadic_ctx_init(&ctx, true);
+  TowerArc ta;
+  tower_arc_read(&ctx, &ea, a[0], a[1], &ta);
+  const DyadicWide *W[2], *c[2] = {ta.cx.w, ta.cy.w};
+  for (int i = 0; i < 2; i++)
+  {
+    const DyadicWide *t = dyadic_wide_add(ar,
+      dyadic_wide_mul(ar, ta.w.w, dyadic_wide_of_double(ar, a[i])), c[i]);
+    W[i] = dyadic_wide_sub(ar, dyadic_wide_mul(ar, ta.w.w, P[i]),
+      dyadic_wide_mul(ar, wD, t));
+  }
+  const DyadicWide *D2R2 = dyadic_wide_mul(ar, dyadic_wide_mul(ar, wD, wD),
+    ta.r2.w);
+  const DyadicWide *W2 = dyadic_wide_add(ar, dyadic_wide_mul(ar, W[0], W[0]),
+    dyadic_wide_mul(ar, W[1], W[1]));
+  int in = dyadic_wide_cmp(D2R2, W2);
+  if (in == 0)
+    in = (W[0]->sign != 0) ? - W[0]->sign : - W[1]->sign;
+  dyadic_ctx_free(&ctx);
+  return (in > 0) ? ! parity : parity;
 }
 
 /* Whether a gap in doubles with a margin lies past a distance exactly */

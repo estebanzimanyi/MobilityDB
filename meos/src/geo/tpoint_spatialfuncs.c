@@ -211,6 +211,60 @@ tpoint_get_z(const Temporal *temp)
   return tpoint_get_coord(temp, 2);
 }
 
+/**
+ * @ingroup meos_geo_accessor
+ * @brief Return the coordinates and the timestamps of the distinct instants
+ * of a temporal point as parallel arrays
+ * @details The arrays are those #tpointseq_make_coords takes, so a sequence
+ * is made again from the arrays of its instants. The instants of a sequence
+ * set follow one another across its sequences, an instant ending one sequence
+ * and starting the next being read once.
+ * @param[in] temp Temporal point
+ * @param[out] ycoords Array of the y coordinates
+ * @param[out] zcoords Array of the z coordinates, NULL for a point without Z
+ * @param[out] times Array of the timestamps
+ * @param[out] count Number of instants
+ * @return Array of the x coordinates
+ * @errval NULL
+ */
+double *
+tpoint_coords(const Temporal *temp, double **ycoords, double **zcoords,
+  TimestampTz **times, int *count)
+{
+  /* The out parameters are defined even when a later check fails */
+  VALIDATE_NOT_NULL(ycoords, NULL); VALIDATE_NOT_NULL(zcoords, NULL);
+  VALIDATE_NOT_NULL(times, NULL); VALIDATE_NOT_NULL(count, NULL);
+  *ycoords = *zcoords = NULL;
+  *times = NULL;
+  *count = 0;
+  /* Ensure the validity of the arguments */
+  VALIDATE_TPOINT(temp, NULL);
+
+  int ninsts;
+  const TInstant **instants = temporal_insts_p(temp, &ninsts);
+  bool hasz = MEOS_FLAGS_GET_Z(temp->flags);
+  double *xs = palloc(sizeof(double) * ninsts);
+  double *ys = palloc(sizeof(double) * ninsts);
+  double *zs = hasz ? palloc(sizeof(double) * ninsts) : NULL;
+  TimestampTz *ts = palloc(sizeof(TimestampTz) * ninsts);
+  for (int i = 0; i < ninsts; i++)
+  {
+    POINT4D p;
+    datum_point4d(tinstant_value_p(instants[i]), &p);
+    xs[i] = p.x;
+    ys[i] = p.y;
+    if (hasz)
+      zs[i] = p.z;
+    ts[i] = instants[i]->t;
+  }
+  pfree(instants);
+  *ycoords = ys;
+  *zcoords = zs;
+  *times = ts;
+  *count = ninsts;
+  return xs;
+}
+
 /*****************************************************************************
  * Functions derived from PostGIS to increase floating-point precision
  *****************************************************************************/
@@ -528,7 +582,7 @@ geogpointsegm_closest(Datum start, Datum end, Datum point)
  * @param[in] start2,end2 Coordinates of the ends of the second segment
  * @param[in] n Number of coordinates, 2 or 3
  */
-static int
+int
 pointsegm_meet_coord(const double *start1, const double *end1,
   const double *start2, const double *end2, int n)
 {
@@ -3363,6 +3417,13 @@ tpointseq_decouple(const TSequence *seq, int64 **timesarr, int *count)
 /**
  * @brief Decouple the points and the timestamptz values of a temporal point
  * sequence set
+ * @details A vector tile cannot encode a geometry collection. As PostGIS
+ * `ST_AsMVTGeom` keeps the components of the highest dimension of a
+ * collection (`lwgeom_to_basic_type` in its `mvt.c`), the result is a line
+ * or a multiline composed of the sequences with more than one instant, each
+ * one decoupled by #tpointseq_decouple_iter, when the interpolation is linear
+ * and there is such a sequence, and a multipoint composed of every instant
+ * otherwise
  * @param[in] ss Temporal point
  * @param[out] timesarr Array of timestamps encoded in Unix epoch
  * @param[out] count Number of elements in the output array
@@ -3378,31 +3439,58 @@ tpointseqset_decouple(const TSequenceSet *ss, int64 **timesarr, int *count)
     return tpointseq_decouple(TSEQUENCESET_SEQ_N(ss, 0), timesarr, count);
 
   /* General case */
-  uint32_t colltype = 0;
-  LWGEOM **geoms = palloc(sizeof(LWGEOM *) * ss->count);
+  bool lines = false;
+  if (MEOS_FLAGS_LINEAR_INTERP(ss->flags))
+  {
+    for (int i = 0; i < ss->count; i++)
+    {
+      if (TSEQUENCESET_SEQ_N(ss, i)->count > 1)
+      {
+        lines = true;
+        break;
+      }
+    }
+  }
+  LWGEOM **geoms = palloc(sizeof(LWGEOM *) * ss->totalcount);
   int64 *times = palloc(sizeof(int64) * ss->totalcount);
-  int ntimes = 0;
+  int ngeoms = 0, ntimes = 0;
   for (int i = 0; i < ss->count; i++)
   {
     const TSequence *seq = TSEQUENCESET_SEQ_N(ss, i);
-    geoms[i] = tpointseq_decouple_iter(seq, &times[ntimes]);
-    ntimes += seq->count;
-    /* If output type not initialized make geom type as output type */
-    if (! colltype)
-      colltype = lwtype_get_collectiontype(geoms[i]->type);
-    /* If geom type is not compatible with current output type
-     * make output type a collection */
-    else if (colltype != COLLECTIONTYPE &&
-      lwtype_get_collectiontype(geoms[i]->type) != colltype)
-      colltype = COLLECTIONTYPE;
+    if (lines)
+    {
+      /* An instant beside the lines has a lower dimension */
+      if (seq->count == 1)
+        continue;
+      geoms[ngeoms++] = tpointseq_decouple_iter(seq, &times[ntimes]);
+      ntimes += seq->count;
+    }
+    else
+    {
+      for (int j = 0; j < seq->count; j++)
+      {
+        const TInstant *inst = TSEQUENCE_INST_N(seq, j);
+        geoms[ngeoms++] = lwgeom_from_gserialized(
+          DatumGetGserializedP(tinstant_value_p(inst)));
+        times[ntimes++] = timestamptz_unix_seconds(inst->t);
+      }
+    }
   }
-  LWGEOM *coll = (LWGEOM *) lwcollection_construct((uint8_t) colltype,
-    geoms[0]->srid, NULL, (uint32_t) ss->count, geoms);
-  GSERIALIZED *result = geo_serialize(coll);
+  LWGEOM *geom;
+  if (ngeoms == 1)
+  {
+    geom = geoms[0];
+    pfree(geoms);
+  }
+  else
+    /* The collection takes the ownership of the array and its elements */
+    geom = (LWGEOM *) lwcollection_construct(
+      lines ? MULTILINETYPE : MULTIPOINTTYPE, geoms[0]->srid, NULL,
+      (uint32_t) ngeoms, geoms);
+  GSERIALIZED *result = geo_serialize(geom);
   *timesarr = times;
-  *count = ss->totalcount;
-  /* We cannot lwgeom_free(geoms[i]) or pfree(geoms) */
-  lwgeom_free(coll);
+  *count = ntimes;
+  lwgeom_free(geom);
   return result;
 }
 

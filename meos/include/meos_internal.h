@@ -578,6 +578,10 @@
  * bounding boxes: a key standing for boxes of several structures, see
  * #bbox_same_structure */
 #define MEOS_FLAG_PARTS      0x0200  // 512
+/* The following flag is only used for the keys of a multi-entry index over
+ * bounding boxes: the key of the box of a whole value, beside the keys of the
+ * boxes of its pieces, a structure of its own, see #bbox_same_structure */
+#define MEOS_FLAG_WHOLE      0x0400  // 1024
 
 #define MEOS_FLAGS_GET_BYVAL(flags)      ((bool) (((flags) & MEOS_FLAG_BYVAL)))
 #define MEOS_FLAGS_GET_ORDERED(flags)    ((bool) (((flags) & MEOS_FLAG_ORDERED)>>1))
@@ -588,6 +592,7 @@
 #define MEOS_FLAGS_GET_GEODETIC(flags)   ((bool) (((flags) & MEOS_FLAG_GEODETIC)>>7))
 #define MEOS_FLAGS_GET_GEOM(flags)       ((bool) (((flags) & MEOS_FLAG_GEOM)>>8))
 #define MEOS_FLAGS_GET_PARTS(flags)      ((bool) (((flags) & MEOS_FLAG_PARTS)>>9))
+#define MEOS_FLAGS_GET_WHOLE(flags)      ((bool) (((flags) & MEOS_FLAG_WHOLE)>>10))
 
 #define MEOS_FLAGS_BYREF(flags)          ((bool) (((flags) & ! MEOS_FLAG_BYVAL)))
 
@@ -609,6 +614,8 @@
   ((flags) = (value) ? ((flags) | MEOS_FLAG_GEOM) : ((flags) & ~MEOS_FLAG_GEOM))
 #define MEOS_FLAGS_SET_PARTS(flags, value) \
   ((flags) = (value) ? ((flags) | MEOS_FLAG_PARTS) : ((flags) & ~MEOS_FLAG_PARTS))
+#define MEOS_FLAGS_SET_WHOLE(flags, value) \
+  ((flags) = (value) ? ((flags) | MEOS_FLAG_WHOLE) : ((flags) & ~MEOS_FLAG_WHOLE))
 
 #define MEOS_FLAGS_GET_INTERP(flags) (((flags) & MEOS_FLAGS_INTERP) >> 2)
 #define MEOS_FLAGS_SET_INTERP(flags, value) ((flags) = (((flags) & ~MEOS_FLAGS_INTERP) | ((value & 0x0003) << 2)))
@@ -1148,7 +1155,6 @@ extern TSequence *tboolseq_in(const char *str, interpType interp);
 extern TSequenceSet *tboolseqset_from_mfjson(json_object *mfjson);
 extern TSequenceSet *tboolseqset_in(const char *str);
 extern Temporal *temporal_in(const char *str, MeosType temptype);
-extern char **temparr_out(const Temporal **temparr, int count, int maxdd);
 extern TInstant *tfloatinst_from_mfjson(json_object *mfjson);
 extern TInstant *tfloatinst_in(const char *str);
 extern TSequence *tfloatseq_from_mfjson(json_object *mfjson, interpType interp);
