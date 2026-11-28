@@ -53,6 +53,11 @@
  * a point, or a disc of radius 2, moving along y = 12 from x = -40 to 40 is
  * within 12 of it, or 10 of the disc, while 13 <= |c| <= 37, 5 <= |x| <= 35:
  * two periods, from second 1.25 to 8.75 and from second 11.25 to 18.75.
+ * A point moving along the x axis from -10 to 10 is within 1 of the disc of
+ * radius 5 from second 4 to second 16, its inside included, and of the
+ * annulus of radii 2 and 5 from second 4 to 9 and from second 11 to 16; one
+ * moving up the y axis from -8 to 8 is within 1 of the half disc above the x
+ * axis from second 8.75 to second 17.5.
  * Each runs at the scales 1, 2^-30 and 2^-40, which are exact on doubles, so
  * an answer depends on no magnitude.
  */
@@ -203,6 +208,60 @@ arc_cases(double s)
   return;
 }
 
+/* The areas arcs bound: the disc of radius 5 about the origin, the annulus
+ * of radii 2 and 5, and the half disc above the x axis */
+static void
+region_cases(double s)
+{
+  char wkt[512];
+  snprintf(wkt, sizeof(wkt), "[POINT(%.17g 0)@2001-01-01 00:00:00+00, "
+    "POINT(%.17g 0)@2001-01-01 00:00:20+00]", -10 * s, 10 * s);
+  Temporal *alongx = tgeompoint_in(wkt);
+  snprintf(wkt, sizeof(wkt), "[POINT(0 %.17g)@2001-01-01 00:00:00+00, "
+    "POINT(0 %.17g)@2001-01-01 00:00:20+00]", -8 * s, 8 * s);
+  Temporal *upy = tgeompoint_in(wkt);
+
+  snprintf(wkt, sizeof(wkt), "CURVEPOLYGON(CIRCULARSTRING(%.17g 0,%.17g 0,"
+    "%.17g 0))", 5 * s, -5 * s, 5 * s);
+  GSERIALIZED *disc = geom_in(wkt, -1);
+  snprintf(wkt, sizeof(wkt), "CURVEPOLYGON(CIRCULARSTRING(%.17g 0,%.17g 0,"
+    "%.17g 0),CIRCULARSTRING(%.17g 0,%.17g 0,%.17g 0))", 5 * s, -5 * s, 5 * s,
+    2 * s, -2 * s, 2 * s);
+  GSERIALIZED *annulus = geom_in(wkt, -1);
+  snprintf(wkt, sizeof(wkt), "CURVEPOLYGON(COMPOUNDCURVE(CIRCULARSTRING("
+    "%.17g 0,0 %.17g,%.17g 0),(%.17g 0,%.17g 0)))", 5 * s, 5 * s, -5 * s,
+    -5 * s, 5 * s);
+  GSERIALIZED *halfdisc = geom_in(wkt, -1);
+
+  const long long disc_lo[] = {4000000}, disc_hi[] = {16000000},
+    ann_lo[] = {4000000, 11000000}, ann_hi[] = {9000000, 16000000},
+    half_lo[] = {8750000}, half_hi[] = {17500000};
+  Temporal *r;
+  r = tdwithin_tgeo_geo(alongx, disc, s, false);
+  check_periods("point through a disc", s, alongx, r, 1, disc_lo, disc_hi);
+  free(r);
+  r = tdwithin_tgeo_geo(alongx, annulus, s, false);
+  check_periods("point through an annulus", s, alongx, r, 2, ann_lo, ann_hi);
+  free(r);
+  r = tdwithin_tgeo_geo(upy, halfdisc, s, false);
+  check_periods("point through a half disc", s, upy, r, 1, half_lo, half_hi);
+  free(r);
+#if CBUFFER
+  snprintf(wkt, sizeof(wkt), "[Cbuffer(Point(%.17g 0),%.17g)@2001-01-01 "
+    "00:00:00+00, Cbuffer(Point(%.17g 0),%.17g)@2001-01-01 00:00:20+00]",
+    -10 * s, 0.5 * s, 10 * s, 0.5 * s);
+  Temporal *cdisc = tcbuffer_in(wkt);
+  r = tdwithin_tcbuffer_geo(cdisc, annulus, 0.5 * s);
+  check_periods("disc through an annulus", s, cdisc, r, 2, ann_lo, ann_hi);
+  free(r);
+  free(cdisc);
+#endif
+
+  free(alongx); free(upy);
+  free(disc); free(annulus); free(halfdisc);
+  return;
+}
+
 static void
 within_cases(double s)
 {
@@ -270,6 +329,7 @@ main(void)
   {
     within_cases(scales[k]);
     arc_cases(scales[k]);
+    region_cases(scales[k]);
   }
   printf("%d of %d checks pass\n", checks - failures, checks);
   meos_finalize();
