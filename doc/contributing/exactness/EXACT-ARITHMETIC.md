@@ -326,7 +326,8 @@ the CGAL corpora make to both forms, replay both, count the disagreements; then 
 | AM3 | One arc for every exact question: `ExactArc` extended to the centred and offset arcs, so that `TowerCircle` reads it and `exact_arc_from_edge` refuses none | the buffer's whole circles and offset arcs | the buffer corpora |
 | AM4 | `HullFeature`'s tolerance answered by the exact hull, the minimum rotated rectangle reading `HullExact`, and one angular origin | `mrr_arc_rectangle` | a CGAL judge of the minimum rotated rectangle of curves (none yet) |
 | TM1 | One microsecond search: one side function and one clamp of the estimate for `linear_cross_offset`, `grid_sign_last` / `grid_sign_first` and `dggs_geodetic_edge_offset`, and `linear_crossing_nearest` on the same search over half microseconds | every dated bound | every corpus that dates a bound, answers bit for bit |
-| TM2 | One dating rule: whether a within period and a crossing offset of `geo_funcs.c` keep truncation or take the nearest microsecond of `tsequence.c` | every function of the fraction form | owner's ruling first: the nearest-microsecond rule governs a returned crossing, and whether a condition's restriction (`whenTrue`) follows it or the region rule is open |
+| TM2 | One dating rule for a within period, the region rule: it holds exactly the whole microseconds at which the two are within, a crossing dated by the first microsecond within where it enters and the last where it leaves, through one function (`grid_sign_within`) that `grid_sign_first` / `grid_sign_last`, the walk on the sphere and the spheroid read; a returned crossing instant keeps the nearest microsecond | every within form: the point, segment and arc engines, the temporal circular buffer and rigid geometry through them, the temporal geography point on the sphere and the spheroid | the C4 corpora under judges dating by the region rule, and a geodetic judge (`cgal_geowithin_judge`) of points on the equator or one meridian, whose sphere rows are its witness |
+| TM5 | The spheroid's within decision exact, as the sphere's is: `geogsegmpair_crossings` and `geogsegmpair_dist` compute in doubles, so a crossing near a microsecond is dated one off and a period whose roots the doubles miss is not found | the temporal geography point on the spheroid | the spheroid rows of the geodetic judge: 13 of 157 answered wrongly on TM2's head (61 right on master) |
 | TM3 | One time form: the two points at integer instants read as a segment of `D` microseconds | the 4 continuous-time functions | the nearest-approach corpora |
 | TM4 | One polynomial grid: the quadratic of the point engine (`DWithinGrid`, `dwithin_grid_sign`) read as the degree-2 case of the polynomials and Sturm chains of the arc periods (MobilityDB #3981) | the periods within a distance | the C4 corpora, and their speed |
 
@@ -552,7 +553,9 @@ layer holds it for every question. The phases, each a series of pull requests:
    band sized to the rounding of the constructed value (EXACT-POSE.md P2), not a fixed 1e-6.
 4. **One arithmetic (EA1, EA4 to EA8, EA10, EA11).** One ladder, one pair type, one wide number, one
    search, every sign with every tier; then one arc model and one time model, each merge after a
-   differential (Section 4.8, rows AM1 to AM4 and TM1 to TM4; TM2 waits on the owner's ruling); then the double nearest a transcendental value (EA8), read by the one search;
+   differential (Section 4.8, rows AM1 to AM4 and TM1 to TM5; TM2 dates a within period by the region
+   rule, the owner's ruling of 2026-11-28); then the double nearest a transcendental value (EA8), read by
+   the one search;
    then the near contacts of a turning body decided on the operands placed by the exact poses
    (EA11, the shared layer's step that the walk of the rigid geometry distance reads), on EA8's
    sine and cosine read in radians, its witness stated with the step.
