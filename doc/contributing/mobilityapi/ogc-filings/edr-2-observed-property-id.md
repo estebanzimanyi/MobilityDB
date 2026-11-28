@@ -39,5 +39,5 @@ CoverageJSON answers of the same collection label it, and given no `id`, since
 a band of a raster names no entry of any registry.
 
 **Evidence.** MobilityAPI `coverage.go` (`coverageDescription`) at commit
-`baf7261`; `TestLiveRasterCollection` reads `parameter_names` of a raster
+`68b2b62`; `TestLiveRasterCollection` reads `parameter_names` of a raster
 collection.

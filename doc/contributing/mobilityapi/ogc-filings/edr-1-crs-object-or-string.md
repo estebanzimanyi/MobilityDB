@@ -42,6 +42,6 @@ of `/collections` carries `crs` as an array of URI strings,
 geometries or rasters, the same form its Moving Features collections carry.
 
 **Evidence.** MobilityAPI `coverage.go` (`coverageDescription`) and `main.go`
-(`listCollections`) at commit `baf7261`; `TestLiveRasterCollection` reads the
+(`listCollections`) at commit `68b2b62`; `TestLiveRasterCollection` reads the
 description of a raster collection in `/collections` and in
 `/collections/{collectionId}` and compares them member by member.
