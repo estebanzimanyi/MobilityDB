@@ -260,11 +260,75 @@ Built apart, the implementations of one question drift apart in contract:
 - **Bounds.** One expression, the sum of two products of differences, is filtered under five
   different bounds (`cross_product_sign`, `relate_orientation`, `arr_cross_ival`,
   `point_segment_dot_sign_inputs`, `sum_point_orient`).
-- **Models.** Six arc models (`Edge`, `ExactArc`, `ArcsegExact`, `TowerArc`, `MecExact`, the hull
-  feature), two angular origins (+x for the turn of edges, (0, -1) for the hull), two time models
-  (integer timestamps for two points in 2D, a fraction of a segment of microseconds for discs in
-  2D and 3D), five carriers of tiers 0 and 1 (`DDBound`, the caller-bounded pairs,
-  `ArcsegFilter`, the intervals of `geo_arrange.c`, `SumPoint`).
+- **Models.** The arc is held by `Edge`, `ExactArc`, `TowerArc`, `TowerCircle`, the exact hull
+  (`HullAt`, `HullExact`), the intervals of `geo_arrange.c` and, in doubles with a tolerance,
+  `HullFeature`; `MecExact` holds a whole circle through three points, and `ArcsegExact` is a
+  number, the expansion the arena forms of the circle are computed in (Section 4.8). Two
+  angular origins (+x for the turn of edges, (0, -1) for the hull), three time forms and two
+  dating rules (Section 4.8), five carriers of tiers 0 and 1 (`DDBound`, the caller-bounded
+  pairs, `ArcsegFilter`, the intervals of `geo_arrange.c`, `SumPoint`).
+
+### 4.8 The arc models and the time models
+
+Read on master `a4628bfc7d`, every claim at a function of `geo_funcs.c` unless another file is
+named.
+
+**The circle of an arc is formed by four exact functions.** `tower_arc_circle` forms it in the
+arithmetic of a `DyadicCtx`, at every tier, for `TowerArc` (`tower_arc_read`), the exact hull
+(`hull_exact`), `TowerCircle` (`tower_circle_of`), the turn of the buffer walk, the offset ends and
+the smallest enclosing circle's check; the arc meetings of the arena form it again,
+`arcarc_centre_exact` and `arcarc_radius2_exact` in expansions, the centre `M + N / D` with `D`
+signed; `mec_exact_set` (`postgis_funcs.c`) holds a circle through three points in `ExactSum`
+terms; `arr_circle` (`geo_arrange.c`) holds it in intervals. The segment-arc meeting holds no
+centre, reading the incircle polynomials of S, M and E (`ARCSEG_POLYNOMIALS`). `Edge` keeps a
+centre and a radius rounded to doubles and angles from `atan2`, which no exact question reads: they
+read the points `sx` to `ey`.
+
+**The arc is read through `ExactArc`** (its three points, a half circle, a circle in doubles with
+a bound used as a filter) by the distances to an arc (`point_arc_within_exact`,
+`arcsegm_within_exact`, `arcarc_within_exact`), the ray parity (`point_arc_ray_parity`), the
+smallest enclosing circle (`tower_arc_within_disc`) and the buffer, and through its tower reading
+`TowerArc` by five predicates and the periods within a distance (MobilityDB #3981). It comes from an
+`Edge` by `exact_arc_from_edge`, which refuses a centred arc (the buffer's whole circles and
+offset arcs): those read `TowerCircle`. The arena's arc questions read the `Edge` itself.
+
+**`HullFeature`** copies an `Edge`'s centre, radius and angles in doubles, and `hull_arc_holds`
+reads whether a direction falls on the arc within `MEOS_GEOM_TOLERANCE`; only the minimum rotated
+rectangle reads it. The exact hull is `HullAt` and `HullExact`, ordered counterclockwise from
+(0, -1).
+
+**Time is held in three forms, dated by two rules.** Two points at integer instants (4 functions,
+`point_motion_nad_exact`, `point_motion_dwithin_exact`, `point_motion_edges_distance_at`,
+`point_motion_in_polygon_at`) answer in continuous time and date nothing. A fraction `n / D` of a
+segment of `D` microseconds (about 14 public functions and 6 helpers: the periods within a distance,
+`linear_cross_offset` and its edge and grid twins, `point_segment_nearest_microsecond`, the
+geodetic within at an instant and its crossings, `dggs_geodetic_edge_offset` in `tcellindex.c`)
+dates a bound by TRUNCATION. The crossings of `tsequence.c` (`floatsegm_crossing`,
+`tnumbersegm_crossing`, `tfloatsegm_crossing`, and `tgeompointsegm_crossing` and
+`geogpointsegm_angle_date` in `tpoint_spatialfuncs.c`) take the bounds of the segment as
+timestamps and date a crossing to the NEAREST microsecond, a tie to the even timestamp
+(`linear_crossing_nearest`). `convex_motion_nad_exact` and `convex_motion_meet_exact` read a
+fraction of [0, 1] and date nothing.
+
+**The microsecond search is copied.** `linear_cross_offset`, `grid_sign_last` (and its mirror
+`grid_sign_first`) and `dggs_geodetic_edge_offset` are one search, the last microsecond whose
+sign is still the start's, each with its own side function for `monotone_search` and its own clamp
+of the estimate in doubles (`dwithin_grid_start` for the grid); `linear_crossing_nearest` is the
+same search on half microseconds; `geog_dwithin_grid_walk` halves with `monotone_halve`.
+
+**The rows that follow, each merged after a differential** (record the calls the speed cells and
+the CGAL corpora make to both forms, replay both, count the disagreements; then one PR per row):
+
+| Row | The merge | What it reads | Its differential |
+|---|---|---|---|
+| AM1 | The arena's circle (`arcarc_centre_exact`, `arcarc_radius2_exact`) read from `tower_arc_circle` in the expansion tier | the arc meetings, `edge_direction_exact`, `meet_point_exact`, `meets_order_scaled` | the arc-arc and arc-segment corpora of relate and of the buffer, and their speed cells |
+| AM2 | `mec_exact_set` and the arrangement's `arr_circle` as tiers of the same circle: the polynomial terms and the intervals as its filters | the smallest enclosing circle, the arrangement | the MEC corpus with CGAL's `Min_circle_2`, the buffer corpora |
+| AM3 | One arc for every exact question: `ExactArc` extended to the centred and offset arcs, so that `TowerCircle` reads it and `exact_arc_from_edge` refuses none | the buffer's whole circles and offset arcs | the buffer corpora |
+| AM4 | `HullFeature`'s tolerance answered by the exact hull, the minimum rotated rectangle reading `HullExact`, and one angular origin | `mrr_arc_rectangle` | a CGAL judge of the minimum rotated rectangle of curves (none yet) |
+| TM1 | One microsecond search: one side function and one clamp of the estimate for `linear_cross_offset`, `grid_sign_last` / `grid_sign_first` and `dggs_geodetic_edge_offset`, and `linear_crossing_nearest` on the same search over half microseconds | every dated bound | every corpus that dates a bound, answers bit for bit |
+| TM2 | One dating rule: whether a within period and a crossing offset of `geo_funcs.c` keep truncation or take the nearest microsecond of `tsequence.c` | every function of the fraction form | owner's ruling first: the nearest-microsecond rule governs a returned crossing, and whether a condition's restriction (`whenTrue`) follows it or the region rule is open |
+| TM3 | One time form: the two points at integer instants read as a segment of `D` microseconds | the 4 continuous-time functions | the nearest-approach corpora |
+| TM4 | One polynomial grid: the quadratic of the point engine (`DWithinGrid`, `dwithin_grid_sign`) read as the degree-2 case of the polynomials and Sturm chains of the arc periods (MobilityDB #3981) | the periods within a distance | the C4 corpora, and their speed |
 
 ## 5. The rule
 
@@ -488,7 +552,7 @@ layer holds it for every question. The phases, each a series of pull requests:
    band sized to the rounding of the constructed value (EXACT-POSE.md P2), not a fixed 1e-6.
 4. **One arithmetic (EA1, EA4 to EA8, EA10, EA11).** One ladder, one pair type, one wide number, one
    search, every sign with every tier; then one arc model and one time model, each merge after a
-   differential; then the double nearest a transcendental value (EA8), read by the one search;
+   differential (Section 4.8, rows AM1 to AM4 and TM1 to TM4; TM2 waits on the owner's ruling); then the double nearest a transcendental value (EA8), read by the one search;
    then the near contacts of a turning body decided on the operands placed by the exact poses
    (EA11, the shared layer's step that the walk of the rigid geometry distance reads), on EA8's
    sine and cosine read in radians, its witness stated with the step.
