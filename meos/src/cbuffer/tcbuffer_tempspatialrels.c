@@ -847,8 +847,8 @@ tcbufferseq_linear_within_spanset(const TSequence *seq, double dist,
   int maxo = tcbuffer_geo_ctx_nsegs(ctx) + 2;
   double *rlo = palloc(sizeof(double) * maxo);
   double *rhi = palloc(sizeof(double) * maxo);
-  int64 *nlo = palloc(sizeof(int64) * maxo);
-  int64 *nhi = palloc(sizeof(int64) * maxo);
+  int64 *nlo = palloc(sizeof(int64) * MOTION_EDGE_PERIODS * maxo);
+  int64 *nhi = palloc(sizeof(int64) * MOTION_EDGE_PERIODS * maxo);
   SpanSet *ss = NULL;
   bool lower_inc = seq->period.lower_inc;
   const TInstant *inst1 = TSEQUENCE_INST_N(seq, 0);
@@ -859,7 +859,8 @@ tcbufferseq_linear_within_spanset(const TSequence *seq, double dist,
     const Cbuffer *cb1 = DatumGetCbufferP(tinstant_value_p(inst1));
     const Cbuffer *cb2 = DatumGetCbufferP(tinstant_value_p(inst2));
     /* The exact engine dates the periods in whole microseconds; a geometry
-     * it does not answer, an arc or faces that overlap, takes the roots */
+     * it does not answer, an area an arc bounds or faces that overlap, takes
+     * the roots */
     int64 D = inst2->t - inst1->t;
     int nr = tcbufferseg_within_exact_ctx(cb1, cb2, dist, ctx, D, nlo, nhi);
     if (nr < 0)
